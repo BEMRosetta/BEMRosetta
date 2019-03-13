@@ -5,7 +5,7 @@
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
 
-#include <BEMRosetta_cl/BEMRosetta.h>
+#include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
 using namespace Upp;
 
@@ -23,11 +23,11 @@ public:
 };
 
 
-#define LAYOUTFILE <BEMRosetta/main.lay>
+#define LAYOUTFILE <BEMRosetta/BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
 
 #define IMAGECLASS Img
-#define IMAGEFILE <BEMRosetta/main.iml>
+#define IMAGEFILE <BEMRosetta/BEMRosetta/main.iml>
 #include <Draw/iml_header.h>
 
 #include "arrange.h"

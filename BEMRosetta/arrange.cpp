@@ -1,4 +1,4 @@
-#include <BEMRosetta_cl/BEMRosetta.h>
+#include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 #include "arrange.h"
 
 

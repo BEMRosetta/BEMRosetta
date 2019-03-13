@@ -1,10 +1,10 @@
 #include "main.h"
 
 #define IMAGECLASS Img
-#define IMAGEFILE <BEMRosetta/main.iml>
+#define IMAGEFILE <BEMRosetta/BEMRosetta/main.iml>
 #include <Draw/iml_source.h>
 
-#define TOPICFILE <BEMRosetta/main.tpp/all.i>
+#define TOPICFILE <BEMRosetta/BEMRosetta/main.tpp/all.i>
 #include <Core/topic_group.h>
 
 void Main::Init() {
