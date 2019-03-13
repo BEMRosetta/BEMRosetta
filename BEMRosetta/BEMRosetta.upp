@@ -1,8 +1,8 @@
 uses
 	CtrlLib,
 	ScatterCtrl,
-	BEMRosetta_cl,
-	Controls4U;
+	Controls4U,
+	BEMRosetta/BEMRosetta_cl;
 
 file
 	main.cpp,

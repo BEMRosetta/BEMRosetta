@@ -5,7 +5,7 @@
 
 using namespace Upp;
 
-#define LAYOUTFILE <BEMRosetta/arrange.lay>
+#define LAYOUTFILE <BEMRosetta/BEMRosetta/arrange.lay>
 #include <CtrlCore/lay.h>
 
 
