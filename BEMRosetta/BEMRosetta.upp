@@ -1,0 +1,21 @@
+uses
+	CtrlLib,
+	ScatterCtrl,
+	BEMRosetta_cl,
+	Controls4U;
+
+file
+	main.cpp,
+	main.h,
+	main.tpp,
+	main.lay,
+	main.iml,
+	arrange.cpp,
+	arrange.h,
+	arrange.lay,
+	license.txt,
+	main.rc;
+
+mainconfig
+	"" = "GUI";
+
