@@ -4,6 +4,7 @@
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
+#include <GLCanvas/GLCanvas.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -106,10 +107,28 @@ public:
 	typedef MainArrange CLASSNAME;
 	void Init();
 	void Clear();
-	void Load(Upp::Array<Hydro> &hydro);
+	void Load(Upp::Array<HydroClass> &hydro);
 	
 private:
 	Upp::Array<ArrangeDOF> arrangeDOF;
+};
+
+class MainView : public WithMainView<StaticRect> {
+public:
+	typedef MainView CLASSNAME;
+	
+	MainView() : maxX(Null), maxY(Null), maxZ(Null) {}
+	void Init();
+	
+	void CalcEnvelope();
+		
+	VolumeEnvelope env;
+	double maxX, maxY, maxZ;
+	
+	void ZoomToFit();
+	
+private:
+	void OnPaint();
 };
 
 
@@ -117,9 +136,9 @@ class MainPlot : public WithMainPlot<StaticRect> {
 public:
 	typedef MainPlot CLASSNAME;
 	void Init(int i, int j_h, double h, DataToShow dataToShow);
-	bool Load(Upp::Array<Hydro> &hydro);
+	bool Load(Upp::Array<HydroClass> &hydro);
 	
-	Upp::Array<HydroSource> ABF_source;
+	Upp::Array<HydroSource> ABF_source, ABF_source2;
 	Upp::Array<HydroSource> Ainf_source;
 	int i, j_h;
 	DataToShow dataToShow;
@@ -130,7 +149,7 @@ public:
 	typedef MainABForce CLASSNAME;
 	void Init(DataToShow dataToShow);
 	void Clear();
-	bool Load(Upp::Array<Hydro> &hydro);
+	bool Load(Upp::Array<HydroClass> &hydro);
 	
 	Upp::Array<Upp::Array<MainPlot>> plots;
 
@@ -151,6 +170,7 @@ public:
 	
 	void OnLoad();
 	void OnConvert();
+	void OnView();
 	void OnOpt();
 	
 	int LoadSerializeJson() {
@@ -181,6 +201,7 @@ public:
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
+	WithMenuView<StaticRect> menuView;
 	MenuAbout menuAbout;
 	
 	MainSummary mainSummary;
@@ -188,9 +209,11 @@ public:
 	MainABForce mainA;
 	MainABForce mainB;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
+	MainView mainView;
 	MainOutput mainOutput;
 	
-	Upp::Array<Hydro> hydro;
+	Upp::Array<HydroClass> hydros;
+	Upp::Array<MeshClass> surfs;
 	
 private:
 	MainPlot &GetSelPlot();

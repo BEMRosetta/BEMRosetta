@@ -26,7 +26,7 @@ void Hydro::Initialize_Forces(Forces &f) {
 	}
 }
 
-int Hydro::GetK_AB(int i, int j) {
+inline int Hydro::GetK_AB(int i, int j) {
 	while (i > 5)
 		i -= 6;
 	while (j > 5)
@@ -39,7 +39,7 @@ int Hydro::GetK_AB(int i, int j) {
 		return 4;
 }
 
-int Hydro::GetK_F(int i) {
+inline int Hydro::GetK_F(int i) {
 	while (i > 5)
 		i -= 6;
 	if (i < 3)
@@ -48,7 +48,7 @@ int Hydro::GetK_F(int i) {
 		return 3;
 }
 
-int Hydro::GetK_C(int i, int j) {
+inline int Hydro::GetK_C(int i, int j) {
 	if (i == 2 && j == 2)
 		return 2;	
 	else if (i < 3) 
@@ -157,12 +157,13 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 	}
 }
 
-void Hydro::Save(String file, BEM_SOFT type) {
-	switch (type) {
-	case WAMIT:			static_cast<Wamit*>(this)->Save(file);			break;
-	case FAST_WAMIT:	static_cast<Fast*>(this)->Save(file, true);		break;
-	case WAMIT_1_3:		static_cast<Fast*>(this)->Save(file, false);	break;
-	case NEMOH:			static_cast<Nemoh*>(this)->Save(file);			break;
+void Hydro::SaveAs(String file, BEM_SOFT type) {
+	if (type == WAMIT_1_3) {
+		Fast data(this);
+		data.Save(file, false);	
+	} else if (type == FAST_WAMIT) {
+		Fast data(this);
+		data.Save(file, true);		
 	}
 }
 
@@ -201,24 +202,24 @@ void Hydro::Report() {
 	}
 }
 
-bool Hydro::MatchCoeffStructure(Upp::Array<Hydro> &hydro, String &strError) {
+bool HydroClass::MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError) {
 	strError.Clear();
 	if (hydro.IsEmpty()) {
 		strError = "No data loaded";
 		return false;
 	}
-	int Nb = hydro[0].Nb;
-	int Nh = hydro[0].Nh;
+	int Nb = hydro[0].hd().Nb;
+	int Nh = hydro[0].hd().Nh;
 	for (int i = 1; i < hydro.GetCount(); ++i) {
-		if (hydro[i].Nb != Nb) {
+		if (hydro[i].hd().Nb != Nb) {
 			strError = "Different number of bodies";
 			return false;
-		} else if (hydro[i].Nh != Nh) {
+		} else if (hydro[i].hd().Nh != Nh) {
 			strError = "Different number of wave headings";
 			return false;
 		} else {
 			for (int ih = 0; ih < Nh; ++ih) {
-				if (hydro[i].head[ih] != hydro[0].head[ih]) {
+				if (hydro[i].hd().head[ih] != hydro[0].hd().head[ih]) {
 					strError = "Wave headings do not match";
 					return false;
 				}
