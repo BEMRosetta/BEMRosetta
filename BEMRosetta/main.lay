@@ -16,8 +16,8 @@ END_LAYOUT
 LAYOUT(MenuConvert, 632, 48)
 	ITEM(Label, dv___0, SetLabel(t_("Model:")).LeftPosZ(4, 40).TopPosZ(4, 19))
 	ITEM(EditFile, file, HSizePosZ(264, 64).TopPosZ(4, 19))
-	ITEM(Button, butLoad, SetLabel(t_("Save")).RightPosZ(4, 56).TopPosZ(4, 20))
-	ITEM(Switch, opt, SetLabel(t_("Wamit .1.3.hst\nWamit .out\nFAST .dat\nNemoh .cal")).LeftPosZ(268, 352).TopPosZ(28, 16))
+	ITEM(Button, butLoad, SetLabel(t_("Convert")).RightPosZ(4, 56).TopPosZ(4, 20))
+	ITEM(Switch, opt, SetLabel(t_("Wamit .1.3.hst\nFAST .dat")).LeftPosZ(268, 352).TopPosZ(28, 16))
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(44, 172).TopPosZ(4, 40))
 	ITEM(Label, dv___5, SetLabel(t_("Format:")).LeftPosZ(224, 40).TopPosZ(28, 16))
 	ITEM(Label, dv___6, SetLabel(t_("File:")).LeftPosZ(224, 40).TopPosZ(4, 19))
@@ -27,6 +27,16 @@ LAYOUT(MenuPlot, 400, 48)
 	ITEM(Button, butZoomToFit, SetLabel(t_("Zoom to Fit")).LeftPosZ(76, 84).TopPosZ(0, 20))
 	ITEM(Option, showPoints, SetLabel(t_("Show points")).LeftPosZ(4, 92).TopPosZ(20, 16))
 	ITEM(Option, autoFit, SetLabel(t_("Auto fit")).LeftPosZ(4, 68).TopPosZ(0, 16))
+END_LAYOUT
+
+LAYOUT(MenuView, 572, 48)
+	ITEM(Label, dv___0, SetLabel(t_("File:")).LeftPosZ(0, 40).TopPosZ(4, 19))
+	ITEM(EditFile, file, HSizePosZ(40, 308).TopPosZ(4, 19))
+	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(248, 56).TopPosZ(4, 20))
+	ITEM(Switch, optLoadIn, SetLabel(t_("Load\nLoad in parallel")).RightPosZ(92, 144).TopPosZ(8, 16))
+	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
+	ITEM(Switch, opt, SetLabel(t_("Wamit .gdf\nNemoh .dat\nAll")).LeftPosZ(44, 512).TopPosZ(28, 16))
+	ITEM(Label, dv___6, SetLabel(t_("Format:")).LeftPosZ(0, 40).TopPosZ(28, 16))
 END_LAYOUT
 
 LAYOUT(MenuAbout, 540, 288)
@@ -52,6 +62,10 @@ END_LAYOUT
 
 LAYOUT(MainPlot, 412, 228)
 	ITEM(ScatterCtrl, scatter, SetPlotAreaLeftMargin(90).SetPlotAreaBottomMargin(50).SetTitleFont(SansSerifZ(12)).HSizePosZ(0, 0).VSizePosZ(0, 0))
+END_LAYOUT
+
+LAYOUT(MainView, 400, 200)
+	ITEM(GLCanvas, gl, SetFrame(ThinInsetFrame()).HSizePosZ(0, 0).VSizePosZ(0, 0))
 END_LAYOUT
 
 LAYOUT(WamitLoad, 180, 72)

@@ -1,8 +1,11 @@
+description "Hydrodynamic coefficients converter GUI\377";
+
 uses
 	CtrlLib,
 	ScatterCtrl,
 	Controls4U,
-	BEMRosetta/BEMRosetta_cl;
+	BEMRosetta/BEMRosetta_cl,
+	GLCanvas;
 
 file
 	main.cpp,
@@ -19,3 +22,4 @@ file
 mainconfig
 	"" = "GUI";
 
+ spellcheck_comments "EN-GB"

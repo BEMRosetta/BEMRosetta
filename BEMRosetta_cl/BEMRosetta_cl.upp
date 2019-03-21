@@ -1,4 +1,4 @@
-description "Hydrodynamic coefficients converter\377";
+description "Hydrodynamic coefficients converter command line utility\377";
 
 uses
 	Core,
@@ -12,15 +12,16 @@ options(MSC) -D_SCL_SECURE_NO_WARNINGS;
 
 file
 	main.cpp,
-	BEMRosetta.cpp,
-	BEMRosetta.h,
-	Nemoh.cpp,
-	Wamit.cpp,
-	Fast.cpp,
+	bemrosetta.cpp,
+	bemrosetta.h,
+	nemoh.cpp,
+	wamit.cpp,
+	fast.cpp,
 	data.brc,
-	HydroDyn.dat,
+	hydrodyn.dat,
 	license.txt;
 
 mainconfig
 	"" = "";
 
+ spellcheck_comments "EN-GB"

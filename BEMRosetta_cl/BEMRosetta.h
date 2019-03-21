@@ -3,6 +3,7 @@
 
 #include <Core/Core.h>
 #include <SysInfo/SysInfo.h>
+#include <GLCanvas/surface.h>
 
 using namespace Upp;
 
@@ -15,14 +16,12 @@ class Hydro {
 public:
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH};
 	
-	void Save(String file, BEM_SOFT type);
+	void SaveAs(String file, BEM_SOFT type);
 	void Report();
 	Hydro() : g(Null), h(Null), rho(Null), Nb(Null), Nf(Null), Nh(Null) {}
 	virtual ~Hydro() {}	
 
 	static Function <void(String)> Print, PrintError;	
-
-	static bool MatchCoeffStructure(Upp::Array<Hydro> &hydro, String &strError);
 	
 	String GetCodeStr()	{
 		switch (code) {
@@ -40,7 +39,7 @@ public:
 			   (!A.IsEmpty() && A[0].size() > 0 && !IsNaN(A[0]((ib+1)*idof, (ib+1)*idof)));
 	}
 
-	String file;        	// BEM output filename
+	String file;        	// BEM output file name
 	String name;
     double g;           	// gravity
     double h;           	// water depth
@@ -57,9 +56,9 @@ public:
     Vector<double> head;	// [Nh]                	Wave headings (deg)
     Vector<String> names;  	// {Nb}                	Body names
     Upp::Array<MatrixXd> C; // [Nb](6, 6)          	Hydrostatic restoring coefficients:
-    MatrixXd cb;          	// (3,Nb)            	Center of buoyancy
-    MatrixXd cg;          	// (3,Nb)     			Center of gravity
-    BEM_SOFT code;        	// BEM_SOFT				BEM code (WAMIT, AQWA, or NEMOH)
+    MatrixXd cb;          	// (3,Nb)            	Centre of buoyancy
+    MatrixXd cg;          	// (3,Nb)     			Centre of gravity
+    BEM_SOFT code;        	// BEM_SOFT				BEM code 
     Vector<int> dof;      	// [Nb]             	Degrees of freedom for each body 
     Vector<int> dofOrder;	//						Order of DOF
     
@@ -81,15 +80,15 @@ public:
     
     static String C_units(int i, int j);
     
-protected:
+
 	void AfterLoad();
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f);
-	inline int GetK_AB(int i, int j);
-	inline int GetK_F(int i);
-	inline int GetK_C(int i, int j);
+	static int GetK_AB(int i, int j);
+	static int GetK_F(int i);
+	static int GetK_C(int i, int j);
 	
 	void GetBodyDOF();
 	
@@ -142,24 +141,92 @@ public:
 	String GetLastError()	{return lastError;}
 };
 
-
-class Wamit : public Hydro {
+class HydroData {
 public:
+	HydroData(Hydro *data = 0) {
+		if (!data) {
+			manages = true;
+			this->data = new Hydro();
+		} else {
+			manages = false;
+			this->data = data;
+		}
+	}
+	Hydro &operator()()		{return *data;}
+	virtual ~HydroData() {
+		if (manages)
+			delete data;
+	}
+	
+private:
+	Hydro *data;	
+	bool manages;
+};
+
+class HydroClass {
+public:
+	HydroClass()							{}
+	HydroClass(Hydro *hydro) : hd(hydro)	{}
+	virtual ~HydroClass()		{}
+	
+	HydroData hd;	
+	
+	static bool MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError);
+};
+
+class MeshData {
+public:
+	MeshData(Surface *data = 0) {
+		if (!data) {
+			manages = true;
+			this->data = new Surface();
+		} else {
+			manages = false;
+			this->data = data;
+		}
+	}
+	Surface &operator()()	{return *data;}
+	virtual ~MeshData() {
+		if (manages)
+			delete data;
+	}
+	
+private:
+	Surface *data;	
+	bool manages;
+};
+
+class MeshClass {
+public:
+	MeshClass()							{}
+	MeshClass(Surface *surf) : mh(surf)	{}
+	virtual ~MeshClass()		{}
+	
+	MeshData mh;	
+};
+
+class Wamit : public HydroClass, public MeshClass {
+public:
+	Wamit(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf) {}
 	bool Load(String file, double rho = 1000);
 	void Save(String file);
+	virtual ~Wamit()	{}
 	
-private:	
+	bool LoadMesh(String file);
+	
+private:
 	bool Load_out();
 	void Load_A(FileIn &in, MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
 };
 
-class Fast : public Hydro {
+class Fast : public HydroClass, public MeshClass {
 public:
-	Fast() : WaveNDir(Null), WaveDirRange(Null) {}
+	Fast(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, double g = 9.81);
 	void Save(String file, bool isFast);
+	virtual ~Fast()	{}
 	
 private:
 	bool Load_dat();	
@@ -178,10 +245,14 @@ private:
 	double WaveDirRange;
 };
 
-class Nemoh : public Hydro {
+class Nemoh : public HydroClass, public MeshClass {
 public:
+	Nemoh(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
+	virtual ~Nemoh()	{}
+	
+	bool LoadMesh(String file);
 	
 private:
 	String folder;
@@ -194,7 +265,7 @@ private:
 	bool Load_Excitation(String folder);
 	bool Load_Diffraction(String folder);
 	bool Load_FroudeKrylov(String folder);
-	bool Load_Forces(Forces &f, String nfolder, String fileName, String textDelim);
+	bool Load_Forces(Hydro::Forces &f, String nfolder, String fileName, String textDelim);
 	bool Load_IRF(String fileName);
 };
 
