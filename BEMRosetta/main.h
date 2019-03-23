@@ -46,9 +46,8 @@ public:
 		this->data = &data;
 		this->i = data.dofOrder[i];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
-			this->j_h = data.dofOrder[j_h];
-		else
-			this->j_h = j_h;
+			j_h = data.dofOrder[j_h];
+		this->j_h = j_h;
 		this->dataToPlot = dataToPlot;
 		if (IsNaN(y(0)))
 			return false;

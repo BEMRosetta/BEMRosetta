@@ -33,7 +33,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 			for (int i = 0; i < dofList.GetCount(); ++i) {
 				int ib, idof;
 				Hydro::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idof); 
-				order << idof;
+				order << idof + 6*ib;
 			}
 			Vector<int> neworder;
 			for (int i = 0; i < order.GetCount(); ++i) {

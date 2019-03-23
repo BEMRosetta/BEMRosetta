@@ -29,9 +29,9 @@ void Main::Init() {
 	menuOpen.butLoad <<= THISBACK(OnLoad);
 	if (ret == 1) {
 		menuOpen.optLoadIn = 1;
-		menuOpen.opt = 4;
+		//menuOpen.opt = 4;
 	}
-	menuOpen.opt <<= THISBACK(OnOpt);
+	//menuOpen.opt <<= THISBACK(OnOpt);
 	menuOpen.butRemove.WhenAction = [&] {
 		hydros.Clear();
 		mainSummary.Clear();
@@ -48,9 +48,9 @@ void Main::Init() {
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
 	menuConvert.file.BrowseRightWidth(40);
 	menuConvert.butLoad <<= THISBACK(OnConvert);
-	if (ret == 1) 
-		menuConvert.opt = 0;
-	menuConvert.opt <<= THISBACK(OnOpt);
+	//if (ret == 1) 
+	//	menuConvert.opt = 0;
+	//menuConvert.opt <<= THISBACK(OnOpt);
 	menuConvert.arrayModel.SetLineCy(EditField::GetStdHeight());
 	menuConvert.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuConvert.arrayModel.AddColumn("", 20);	
@@ -73,9 +73,9 @@ void Main::Init() {
 	menuView.butLoad <<= THISBACK(OnView);
 	if (ret == 1) {
 		menuView.optLoadIn = 0;
-		menuView.opt = 2;
+	//	menuView.opt = 2;
 	}
-	menuView.opt <<= THISBACK(OnOpt);
+	//menuView.opt <<= THISBACK(OnOpt);
 	menuView.butRemove.WhenAction = [&] {
 		surfs.Clear();
 	};
@@ -169,13 +169,13 @@ static String ForceExtSafe(String fileName, String ext) {
 
 void Main::OnOpt() {
 	menuOpen.file.ClearTypes();
-	switch (menuOpen.opt) {
+	/*switch (menuOpen.opt) {
 	case 0:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".1");		break;
 	case 1:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".out"); 	break;
 	case 2:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".dat"); 	break;
 	case 3:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".cal"); 	break;
 	case 4:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".inf"); 	break;
-	}
+	}*/
 	menuOpen.file.Type("Wamit .1.3.hst file", "*.1 *.3 *.hst");
 	menuOpen.file.Type("Wamit .out file", "*.out");	
 	menuOpen.file.Type("FAST HydroDyn file", "*.dat");	
@@ -183,6 +183,7 @@ void Main::OnOpt() {
 	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
 	menuOpen.file.Type("All supported BEM files", "*.1 *.hst *.out *.dat *.cal *.inf");
 	menuOpen.file.AllFilesType();
+	menuOpen.file.ActiveType(5);
 	
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
@@ -193,16 +194,18 @@ void Main::OnOpt() {
 	menuConvert.file.Type("FAST HydroDyn file", "*.dat");
 	menuConvert.file.Type("All converted files", "*.1 *.dat");
 	menuConvert.file.AllFilesType();
+	menuConvert.file.ActiveType(2);
 	
 	menuView.file.ClearTypes();
-	switch (menuView.opt) {
+	/*switch (menuView.opt) {
 	case 0:	menuView.file = ForceExtSafe(~menuView.file, ".gdf");	break;
 	case 1:	menuView.file = ForceExtSafe(~menuView.file, ".dat"); 	break;
-	}
+	}*/
 	menuView.file.Type("Wamit .gdf file", "*.gdf");	
 	menuView.file.Type("Nemoh .dat file", "*.dat");
-	menuView.file.Type("All mesh files", "*.gdf *.dat");
+	menuView.file.Type("All supported mesh files", "*.gdf *.dat");
 	menuView.file.AllFilesType();	
+	menuView.file.ActiveType(2);
 }
 
 void Main::OnLoad() {
@@ -305,7 +308,7 @@ void Main::OnLoad() {
 	HydroClass &data = hydros[id];
 	data.hd().Report();
 	mainSummary.Report(data.hd(), id);
-	if (data.hd().Nh < 0 || data.hd().Nf < 0)
+	if (data.hd().Nf < 0)
 		return;
 	mainArrange.Load(hydros);
 	menuConvert.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
@@ -385,14 +388,14 @@ void Main::Close(bool store) {
 void Main::Jsonize(JsonIO &json) {
 	json
 		("menuOpen_file", menuOpen.file)
-		("menuOpen_opt", menuOpen.opt)
+		//("menuOpen_opt", menuOpen.opt)
 		("menuOpen_optLoadIn", menuOpen.optLoadIn)
 		("menuConvert_file", menuConvert.file)
 		("menuConvert_opt", menuConvert.opt)
 		("menuPlot_autoFit", menuPlot.autoFit)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuView_file", menuView.file)
-		("menuView_opt", menuView.opt)
+		//("menuView_opt", menuView.opt)
 		("menuView_optLoadIn", menuView.optLoadIn)
 	;
 }
@@ -702,7 +705,7 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 			if (hydro[id].hd().IsLoadedAwinf()) {
 				if (Ainf_source[id].Init(hydro[id].hd(), i, j_h, PLOT_AINF)) {
 					loaded = true;
-					scatter.AddSeries(Ainf_source[id]).Legend("Ainf_" + hydro[id].hd().name).Dash(LINE_DOTTED).Stroke(2, acolor);
+					scatter.AddSeries(Ainf_source[id]).Legend("Ainf_" + hydro[id].hd().name).Dash(LINE_DOTTED).Stroke(2, acolor).NoMark();
 				}
 			}
 		} else if (dataToShow == DATA_B && hydro[id].hd().IsLoadedB()) {

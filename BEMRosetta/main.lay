@@ -9,8 +9,6 @@ LAYOUT(MenuOpen, 676, 48)
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(248, 56).TopPosZ(4, 20))
 	ITEM(Switch, optLoadIn, SetLabel(t_("Load\nLoad in parallel")).RightPosZ(92, 144).TopPosZ(8, 16))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
-	ITEM(Switch, opt, SetLabel(t_("Wamit .1.3.hst\nWamit .out\nFAST .dat\nNemoh .cal\nSeaFEM .flavia.inf\nAll")).LeftPosZ(44, 512).TopPosZ(28, 16))
-	ITEM(Label, dv___6, SetLabel(t_("Format:")).LeftPosZ(0, 40).TopPosZ(28, 16))
 END_LAYOUT
 
 LAYOUT(MenuConvert, 632, 48)
@@ -35,8 +33,6 @@ LAYOUT(MenuView, 572, 48)
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(248, 56).TopPosZ(4, 20))
 	ITEM(Switch, optLoadIn, SetLabel(t_("Load\nLoad in parallel")).RightPosZ(92, 144).TopPosZ(8, 16))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
-	ITEM(Switch, opt, SetLabel(t_("Wamit .gdf\nNemoh .dat\nAll")).LeftPosZ(44, 512).TopPosZ(28, 16))
-	ITEM(Label, dv___6, SetLabel(t_("Format:")).LeftPosZ(0, 40).TopPosZ(28, 16))
 END_LAYOUT
 
 LAYOUT(MenuAbout, 540, 288)
