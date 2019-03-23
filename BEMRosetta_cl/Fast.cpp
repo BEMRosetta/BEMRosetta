@@ -31,6 +31,11 @@ bool Fast::Load(String file, double g) {
 		
 		String file1 = ForceExt(hydroFile, ".1");
 		hd().Print("\n" + Format("- Hydrodynamic coefficients A and B file '%s'", GetFileName(file1)));
+		
+		hd().w.Clear();
+		hd().Nf = Null;
+		hd().Nh = Null;
+		
 		if (!Load_1(file1))
 			hd().Print(": **Not found**");
 		else if (isFast && hd().Nb > 1)
@@ -93,9 +98,6 @@ bool Fast::Load_dat() {
 }
 
 bool Fast::Load_1(String fileName) {
-	hd().w.Clear();
-	hd().Nf = Null;
-		
 	FileIn in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -175,6 +177,8 @@ bool Fast::Load_1(String fileName) {
 				ifr = FindIndex(hd().w, freq);
 			else
 				ifr = FindIndex(hd().T, freq);
+			if (i == 8 && j == 8)
+				int kk = 1; 
 		  	hd().A[ifr](i, j) = Aij;    
 		  	hd().B[ifr](i, j) = f.GetDouble(4);   	
 		}
@@ -183,8 +187,6 @@ bool Fast::Load_1(String fileName) {
 }
  
 bool Fast::Load_3(String fileName) {
-	hd().Nh = Null;
-	
 	FileIn in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -208,9 +210,6 @@ bool Fast::Load_3(String fileName) {
 	
 	if (hd().head.GetCount() == 0)
 		throw Exc(Format("Wrong format in Wamit file '%s'", hd().file));
-	
-	double kk = hd().Nh;
-	double kw = hd().head.GetCount();
 	
 	if (!IsNull(hd().Nh) && hd().Nh != hd().head.GetCount())
 		throw Exc(Format("Number of headings in .dat does not match with .3 (%d != %d)", hd().Nh, hd().head.GetCount()));
