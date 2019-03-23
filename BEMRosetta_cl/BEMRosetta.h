@@ -115,7 +115,7 @@ public:
 	
 	static void DOFFromStr(String str, int &ib, int &idof) {
 		int pos = str.Find(".");
-		ib = ScanInt(str.Left(pos-1));
+		ib = ScanInt(str.Left(pos))-1;
 		String sdof = str.Mid(pos+1);
 		idof = DOFStr(sdof);	
 	}

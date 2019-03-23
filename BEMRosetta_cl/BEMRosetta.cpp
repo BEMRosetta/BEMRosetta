@@ -240,8 +240,8 @@ void Hydro::GetBodyDOF() {
 void Hydro::AfterLoad() {
 	dofOrder.SetCount(6*Nb);
 	for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) {
-		if (order >= 6)
-			order = 0;
+		//if (order >= 6)
+		//	order = 0;
 		dofOrder[i] = order;
 	}
 }
