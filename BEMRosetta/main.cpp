@@ -196,7 +196,7 @@ void Main::OnOpt() {
 	menuConvert.file.AllFilesType();
 	menuConvert.file.ActiveType(2);
 	
-	menuView.file.ClearTypes();
+	menuView.file.ClearTypes(); 
 	/*switch (menuView.opt) {
 	case 0:	menuView.file = ForceExtSafe(~menuView.file, ".gdf");	break;
 	case 1:	menuView.file = ForceExtSafe(~menuView.file, ".dat"); 	break;
