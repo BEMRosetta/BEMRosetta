@@ -42,10 +42,8 @@ _Excitation force for different offshore wind floating platforms_
 
 ## Acknowledgments
 
-Markel Peñalba, João C. C. Henriques, Yerai Peña, Juan C. C. Portillo.
-
-Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).
-
+Markel Peñalba, João C. C. Henriques, Yerai Peña, Juan C. C. Portillo.<br/>
+Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
@@ -56,9 +54,6 @@ Copyright 2019 Iñaki Zabala
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>
 Rosetta stone image from https://www.iconspng.com/. The pictures are free for personal and even for commercial use. You can modify, copy and distribute the vectors on The Rosetta Stone in iconspng.com. All without asking for permission or setting a link to the source. So, attribution is not required.<br/>
-Some file parsing strategies and samples from [the BEMIO project](https://wec-sim.github.io/bemio/license.html).
-
-
-
+<br/><br/><br/>
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/BEMRosetta/icon256x256.png" width="100" title="BEMRosetta"></p>
 
