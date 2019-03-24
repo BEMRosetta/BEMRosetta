@@ -24,6 +24,7 @@ _Excitation force for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
+* Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
 * Load the hydrodynamic coefficients for different geometries to compare them
 
 _Damping for different offshore wind floating platforms_
