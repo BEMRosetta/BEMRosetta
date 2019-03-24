@@ -1,6 +1,36 @@
 # BEMRosetta
 Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats
 
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="500" title="Github Logo"></p>
+
+Boundary Element Methods are extensively used to model hydrodynamic forces in offshore devices like ships, offshore wind platforms and wave energy converters. These solvers use device geometry mesh to get some hydrodynamics coefficients as radiation damping, added mass, wave diffraction force, and wave excitation force. All these data is saved in file formats incompatible between them. These may avoid to use the coefficients between programs. 
+
+BEMRosetta allows to load the hydrodynamic coefficients from a format saving it in another. In addition it allows to compare the results obtained between programs, the results between similar geometries and the same geometry with different discretization levels.
+
+As an additional advantage, BEMRosetta allows to view and visually compare the meshes from different programs.
+
+
+
+## Features
+
+
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20B.jpg" width="500" title="Github Logo"></p>
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="500" title="Github Logo"></p>
+
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20B.png" width="500" title="Github Logo"></p>
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="500" title="Github Logo"></p>
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="500" title="Github Logo"></p>
+
+
+
+
+
+
 
 ## Acknowledgments
 
