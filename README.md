@@ -57,5 +57,6 @@ Rosetta stone image from https://www.iconspng.com/. The pictures are free for pe
 Some file parsing strategies and samples from the BEMIO project https://wec-sim.github.io/bemio/license.html.
 
 
+
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/BEMRosetta/icon256x256.png" width="100" title="BEMRosetta"></p>
 
