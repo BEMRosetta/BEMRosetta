@@ -6,10 +6,8 @@ topic "This is a test";
 [s0; Hydrodynamic coefficients viewer and converter for Boundary 
 Element Method solver formats.&]
 [s0;2 &]
-[s0; [2 Version ALPHA `[Build Info`].]&]
-[s0; [_2 Preliminary version addressed to the recipient, some instabilities 
-are expected... too preliminary for distribution!]&]
-[s0;2 &]
+[s0; [2 Version BETA `[Build Info`].]&]
+[s0;_2 &]
 [s0;2 &]
 [s0; Acknowledgments&]
 [s0;2 &]
