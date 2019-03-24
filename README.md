@@ -20,16 +20,17 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20B.jpg" width="300" title="Damping for the same geometry got from different solvers"></p>
 
   * _Excitation force for the same geometry got from different solvers_
+  
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
 * Load the hydrodynamic coefficients for different geometries to compare them
   * _Damping for different offshore wind floating platforms_
   
-
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20B.png" width="300" title="Github Logo"></p>
 
   * _Excitation force for different offshore wind floating platforms_
   
-
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Github Logo"></p>
 
 * Mesh loading, combining them for visual comparison 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="300" title="Mesh loading"></p>
