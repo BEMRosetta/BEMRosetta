@@ -62,9 +62,11 @@ void Main::Init() {
 	menuPlot.butZoomToFit.WhenAction = [&] {GetSelPlot().scatter.ZoomToFit(true, true);};
 	menuPlot.autoFit.WhenAction 	 = [&] {GetSelTab().Load(hydros);};
 	menuPlot.showPoints.WhenAction 	 = [&] {GetSelTab().Load(hydros);};
+	menuPlot.showPhase.WhenAction 	 = [&] {GetSelTab().Load(hydros);};
 	if (ret == 1) {
 		menuPlot.autoFit = true;
 		menuPlot.showPoints = true;
+		menuPlot.showPhase = true;
 	}
 	
 	CtrlLayout(menuView);
@@ -100,18 +102,25 @@ void Main::Init() {
 	
 	mainTab.WhenSet = [&] {
 		bool plot = true;
-		if (mainTab.IsAt(mainA)) 
+		if (mainTab.IsAt(mainA)) {
 			mainA.Load(hydros);
-		else if (mainTab.IsAt(mainB)) 
+			menuPlot.showPhase.Enable(false);
+		} else if (mainTab.IsAt(mainB)) {
 			mainB.Load(hydros);
-		else if (mainTab.IsAt(mainForceSC)) 
+			menuPlot.showPhase.Enable(false);
+		} else if (mainTab.IsAt(mainForceSC)) {
 			mainForceSC.Load(hydros);
-		else if (mainTab.IsAt(mainForceFK)) 
+			menuPlot.showPhase.Enable(true);
+		} else if (mainTab.IsAt(mainForceFK)) {
 			mainForceFK.Load(hydros);
-		else if (mainTab.IsAt(mainForceEX)) 
+			menuPlot.showPhase.Enable(true);
+		} else if (mainTab.IsAt(mainForceEX)) {
 			mainForceEX.Load(hydros);
-		else 
+			menuPlot.showPhase.Enable(true);
+		} else {
 			plot = false;
+			menuPlot.showPhase.Enable(false);
+		}
 		TabCtrl::Item& plotIt = menuTab.GetItem(menuTab.Find(menuPlot));
 		plotIt.Enable(plot);
 		if (plot) {
@@ -394,6 +403,7 @@ void Main::Jsonize(JsonIO &json) {
 		("menuConvert_opt", menuConvert.opt)
 		("menuPlot_autoFit", menuPlot.autoFit)
 		("menuPlot_showPoints", menuPlot.showPoints)
+		("menuPlot_showPhase", menuPlot.showPhase)
 		("menuView_file", menuView.file)
 		//("menuView_opt", menuView.opt)
 		("menuView_optLoadIn", menuView.optLoadIn)
@@ -720,7 +730,8 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 			}
 			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_SC_PH)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source2[id]).Legend("Fsc_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ma().menuPlot.showPhase)
+					scatter.AddSeries(ABF_source2[id]).Legend("Fsc_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 			}
 		} else if (dataToShow == DATA_FORCE_FK && hydro[id].hd().IsLoadedFfk()) {
 			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_MA)) {
@@ -729,7 +740,8 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 			}
 			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_PH)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source2[id]).Legend("Ffk_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ma().menuPlot.showPhase)
+					scatter.AddSeries(ABF_source2[id]).Legend("Ffk_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 			}
 		} else if (dataToShow == DATA_FORCE_EX && hydro[id].hd().IsLoadedFex()) {
 			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_MA)) {
@@ -738,7 +750,8 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 			}
 			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_PH)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source2[id]).Legend("Fex_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ma().menuPlot.showPhase)
+					scatter.AddSeries(ABF_source2[id]).Legend("Fex_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 			}
 		}
 	}

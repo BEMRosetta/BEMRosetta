@@ -23,8 +23,9 @@ END_LAYOUT
 
 LAYOUT(MenuPlot, 400, 48)
 	ITEM(Button, butZoomToFit, SetLabel(t_("Zoom to Fit")).LeftPosZ(76, 84).TopPosZ(0, 20))
-	ITEM(Option, showPoints, SetLabel(t_("Show points")).LeftPosZ(4, 92).TopPosZ(20, 16))
+	ITEM(Option, showPhase, SetLabel(t_("Show phase")).LeftPosZ(100, 92).TopPosZ(20, 16))
 	ITEM(Option, autoFit, SetLabel(t_("Auto fit")).LeftPosZ(4, 68).TopPosZ(0, 16))
+	ITEM(Option, showPoints, SetLabel(t_("Show points")).LeftPosZ(4, 92).TopPosZ(20, 16))
 END_LAYOUT
 
 LAYOUT(MenuView, 572, 48)
