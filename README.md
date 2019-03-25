@@ -13,15 +13,15 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
 ## Features
 #### Supported file formats
 
-  * BEM coefficients
-    * Load
-      * Wamit
-      * Nemoh
-    * Save	
-	
-  * Mesh load
-    * Wamit .gdf
-    * Nemoh .dat	
+* BEM coefficients
+  * Load
+    * [Wamit](https://www.wamit.com/)
+    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, /Mesh/Hydrostatics*.dat, /Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
+  * Save
+    * Nemoh	
+* Mesh load
+  * Wamit .gdf
+  * Nemoh .dat	
 
 #### Load the hydrodynamic coefficients from one format and save them in another.
 
