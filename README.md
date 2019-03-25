@@ -15,13 +15,16 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
 
 * BEM coefficients
   * Load
-    * [Wamit](https://www.wamit.com/)
+    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .hst
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, /Mesh/Hydrostatics*.dat, /Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
+    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
+    * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
   * Save
-    * Nemoh	
+    * [Wamit](https://www.wamit.com/): .1, .3, .hst
+    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
 * Mesh load
-  * Wamit .gdf
-  * Nemoh .dat	
+  * [Wamit](https://www.wamit.com/) .gdf
+  * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974) .dat	
 
 #### Load the hydrodynamic coefficients from one format and save them in another.
 
