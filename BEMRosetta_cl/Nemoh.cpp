@@ -25,10 +25,10 @@ bool Nemoh::Load(String file, double) {
 		
 		String fileRad, folderForces;
 		if (hd().code == Hydro::NEMOH) {
-			hd().Print("\n- Hydrostatics file(s) '/Mesh/Hydrostatics*.dat'");
+			hd().Print("\n- Hydrostatics file(s) 'Mesh/Hydrostatics*.dat'");
 			if (!Load_Hydrostatics())
 				hd().PrintError(": **Not found**");
-			hd().Print("\n- KH file(s) '/Mesh/KH*.dat'");
+			hd().Print("\n- KH file(s) 'Mesh/KH*.dat'");
 			if (!Load_KH())
 				hd().PrintError(": **Not found**");
 			fileRad = AppendFileName(folder, AppendFileName("Results", "RadiationCoefficients.tec"));
@@ -40,7 +40,7 @@ bool Nemoh::Load(String file, double) {
 			}
 			fileRad = AppendFileName(folder, AppendFileName("Nemoh_output/Results", "RadiationCoefficients.tec"));
 			folderForces = AppendFileName(folder, "Nemoh_output");
-		}
+		} 
 		
 		hd().Print("\n- Radiation file 'RadiationCoefficients.tec'");
 		if (!Load_Radiation(fileRad))

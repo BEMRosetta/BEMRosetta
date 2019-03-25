@@ -27,10 +27,10 @@ void Main::Init() {
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
 	menuOpen.file.BrowseRightWidth(40);
 	menuOpen.butLoad <<= THISBACK(OnLoad);
-	if (ret == 1) {
+	if (ret == 1 || IsNull(menuOpen.optLoadIn)) 
 		menuOpen.optLoadIn = 1;
-		//menuOpen.opt = 4;
-	}
+	//menuOpen.opt = 4;
+	
 	//menuOpen.opt <<= THISBACK(OnOpt);
 	menuOpen.butRemove.WhenAction = [&] {
 		hydros.Clear();
@@ -73,10 +73,10 @@ void Main::Init() {
 	menuView.file.WhenChange = THISBACK(OnView);
 	menuView.file.BrowseRightWidth(40);
 	menuView.butLoad <<= THISBACK(OnView);
-	if (ret == 1) {
-		menuView.optLoadIn = 0;
+	if (ret == 1 || IsNull(menuView.optLoadIn)) 
+		menuView.optLoadIn = 1;
 	//	menuView.opt = 2;
-	}
+	
 	//menuView.opt <<= THISBACK(OnOpt);
 	menuView.butRemove.WhenAction = [&] {
 		surfs.Clear();
