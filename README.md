@@ -66,5 +66,5 @@ BEMRosetta is free software: you can redistribute it and/or modify it under the 
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>
 Rosetta stone image from https://www.iconspng.com/. The pictures are free for personal and even for commercial use. You can modify, copy and distribute the vectors on The Rosetta Stone in iconspng.com. All without asking for permission or setting a link to the source. So, attribution is not required.<br/>
 <br/><br/><br/>
-<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/BEMRosetta/icon256x256.png" width="100" title="BEMRosetta"></p>
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Rosetta.png" width="100" title="BEMRosetta"></p>
 
