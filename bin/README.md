@@ -1,4 +1,4 @@
 ## BEMRosetta Install
 
 ### Windows
-No install is required. Just run BEMRosetta.exe, dodge Windows warnings and run it. 
+No install is required. Just open BEMRosetta.exe and dodge Windows warnings. 
