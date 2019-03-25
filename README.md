@@ -22,6 +22,7 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
   * Save
     * [Wamit](https://www.wamit.com/): .1, .3, .hst
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
+    * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
 * Mesh load
   * [Wamit](https://www.wamit.com/): .gdf
   * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
@@ -50,6 +51,8 @@ _Excitation force for different offshore wind floating platforms_
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
 #### Mesh loading, combining them for visual comparison 
+
+Several meshes can be loaded in this basic viewer, allowing a visual comparison of geometries.
 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="300" title="Mesh loading"></p>
 
