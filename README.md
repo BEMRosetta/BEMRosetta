@@ -11,21 +11,25 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
 
 
 ## Features
+#### Supported file formats
 
-* Supported file formats
-  * BEM coefficients
-    * Load
-      * Wamit
-      * Nemoh
-    * Save	
-	
-  * Mesh load
-    * Wamit .gdf
-    * Nemoh .dat	
+* BEM coefficients
+  * Load
+    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .hst
+    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
+    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
+    * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
+  * Save
+    * [Wamit](https://www.wamit.com/): .1, .3, .hst
+    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
+    * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
+* Mesh load
+  * [Wamit](https://www.wamit.com/): .gdf
+  * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
 
-* Load the hydrodynamic coefficients from one format and save them in another.
+#### Load the hydrodynamic coefficients from one format and save them in another.
 
-* Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
+#### Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
 
 _Damping for the same geometry got from different solvers_
   
@@ -35,8 +39,8 @@ _Excitation force for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
-* Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
-* Load the hydrodynamic coefficients for different geometries to compare them
+#### Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
+#### Load the hydrodynamic coefficients for different geometries to compare them
 
 _Damping for different offshore wind floating platforms_
   
@@ -46,7 +50,9 @@ _Excitation force for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
-* Mesh loading, combining them for visual comparison 
+#### Mesh loading, combining them for visual comparison 
+
+Several meshes can be loaded in this basic viewer, allowing a visual comparison of geometries.
 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="300" title="Mesh loading"></p>
 
