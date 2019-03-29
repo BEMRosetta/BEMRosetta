@@ -27,7 +27,7 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
   * [Wamit](https://www.wamit.com/): .gdf
   * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
 
-### Load the hydrodynamic coefficients from one format and save them in another.
+### Load the hydrodynamic coefficients from one format and save them in another
 
 ### Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
 
@@ -68,6 +68,7 @@ Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 * Linux version
 * Command line version
+* Loading files in [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa) format
 
 
 ## License
