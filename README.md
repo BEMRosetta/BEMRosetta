@@ -64,6 +64,12 @@ Some file parsing strategies taken from the [BEMIO project](https://wec-sim.gith
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
+## New features in process
+
+* Linux version
+* Command line version
+
+
 ## License
 
 Copyright 2019 Iñaki Zabala
