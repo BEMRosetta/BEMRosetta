@@ -15,7 +15,7 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
 
 * BEM coefficients
   * Load
-    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .hst
+    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
     * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
@@ -59,14 +59,14 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ## Acknowledgments
 
-Markel Peñalba, João C. C. Henriques, Yerai Peña, Juan C. C. Portillo.<br/>
+Markel Peñalba, Juan C. C. Portillo, João C. C. Henriques, Yerai Peña.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
 ## License
 
-Copyright 2019 Iñaki Zabala
+Copyright (c) 2019 Iñaki Zabala
 
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>

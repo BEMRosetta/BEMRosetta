@@ -42,6 +42,7 @@ void Main::Init() {
 		mainForceSC.Clear();	mainTab.GetItem(mainTab.Find(mainForceSC)).Disable();
 		mainForceFK.Clear();	mainTab.GetItem(mainTab.Find(mainForceFK)).Disable();
 		mainForceEX.Clear();	mainTab.GetItem(mainTab.Find(mainForceEX)).Disable();
+		mainRAO.Clear();		mainTab.GetItem(mainTab.Find(mainRAO)).Disable();
 	};
 	
 	CtrlLayout(menuConvert);
@@ -117,6 +118,9 @@ void Main::Init() {
 		} else if (mainTab.IsAt(mainForceEX)) {
 			mainForceEX.Load(hydros);
 			menuPlot.showPhase.Enable(true);
+		} else if (mainTab.IsAt(mainRAO)) {
+			mainRAO.Load(hydros);
+			menuPlot.showPhase.Enable(true);
 		} else {
 			plot = false;
 			menuPlot.showPhase.Enable(false);
@@ -150,6 +154,9 @@ void Main::Init() {
 	
 	mainForceFK.Init(DATA_FORCE_FK);
 	mainTab.Add(mainForceFK.SizePos(), "Ffk").Disable();
+	
+	mainRAO.Init(DATA_RAO);
+	mainTab.Add(mainRAO.SizePos(), "RAO").Disable();
 	
 	mainView.Init();
 	mainTab.Add(mainView.SizePos(), "View");
@@ -185,12 +192,12 @@ void Main::OnOpt() {
 	case 3:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".cal"); 	break;
 	case 4:	menuOpen.file = ForceExtSafe(~menuOpen.file, ".inf"); 	break;
 	}*/
-	menuOpen.file.Type("Wamit .1.3.hst file", "*.1 *.3 *.hst");
-	menuOpen.file.Type("Wamit .out file", "*.out");	
+	menuOpen.file.Type("Wamit .1.3.4.hst file", "*.1 *.3 *.4 *.hst");
+	menuOpen.file.Type("Wamit .out.4 file", "*.out *.4");	
 	menuOpen.file.Type("FAST HydroDyn file", "*.dat");	
 	menuOpen.file.Type("Nemoh .cal file", "*.cal");	
 	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
-	menuOpen.file.Type("All supported BEM files", "*.1 *.hst *.out *.dat *.cal *.inf");
+	menuOpen.file.Type("All supported BEM files", "*.1 *.hst *.4 *.out *.dat *.cal *.inf");
 	menuOpen.file.AllFilesType();
 	menuOpen.file.ActiveType(5);
 	
@@ -274,7 +281,7 @@ void Main::OnLoad() {
 		
 		data.hd().Dimensionalize();
 		
-	} else if (ext == ".1" || ext == ".3" || ext == ".hst") {
+	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
 		Fast &data = hydros.Create<Fast>();
 		if (!data.Load(file, Null)) {
 			Exclamation(DeQtfLf(Format("Problem loading '%s'\n%s", file, data.hd().GetLastError())));		
@@ -329,6 +336,7 @@ void Main::OnLoad() {
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(hydros));
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(hydros));
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(hydros));
+	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(hydros));
 	mainTab.GetItem(mainTab.Find(mainView)).Enable(true);
 }
 
@@ -414,17 +422,8 @@ void MenuAbout::Init() {
 	CtrlLayout(*this);
 	
 	String qtf = GetTopic(String("BEMRosetta/BEMRosetta/main/About$en-us")); 
-	HelpHandler(qtf);
+	Hydro::SetBuildInfo(qtf);
 	info.SetQTF(qtf);
-}
-
-void MenuAbout::HelpHandler(String &str) {
-	String name, mode;
-	Time date;
-	int version, bits;
-	GetCompilerInfo(name, version, date, mode, bits);
-	str.Replace(DeQtf("[Build Info]"), Format("%4d%02d%02d%02d, %s, %d bits", 
-						date.year, date.month, date.day, date.hour, mode, bits)); 
 }
 	
 void MainSummary::Init() {
@@ -483,6 +482,8 @@ void MainSummary::Report(Hydro &data, int id) {
 	array.Set(row, 0, "Fex available");		array.Set(row++, col, data.IsLoadedFex() ? "Yes" : "No");
 	array.Set(row, 0, "Fsc available");		array.Set(row++, col, data.IsLoadedFsc() ? "Yes" : "No");
 	array.Set(row, 0, "Ffk available");		array.Set(row++, col, data.IsLoadedFfk() ? "Yes" : "No");
+	array.Set(row, 0, "RAO available");		array.Set(row++, col, data.IsLoadedRAO() ? "Yes" : "No");
+	
 	array.Set(row, 0, "#bodies");			array.Set(row++, col, data.Nb);
 	for (int ib = 0; ib < data.Nb; ++ib) {
 		String sib = Format("#%d", ib+1);
@@ -625,6 +626,7 @@ bool MainABForce::Load(Upp::Array<HydroClass> &hydro) {
 	case DATA_FORCE_SC:	format = "Fsc%s%.1fº";	break;
 	case DATA_FORCE_FK:	format = "Ffk%s%.1fº";	break;
 	case DATA_FORCE_EX:	format = "Fex%s%.1fº";	break;
+	case DATA_RAO:		format = "RAO%s%.1fº";	break;
 	}
 	int sdof = 6*hydro[0].hd().Nb;
 	if (dataToShow == DATA_A || dataToShow == DATA_B) {
@@ -671,18 +673,27 @@ void MainPlot::Init(int i, int j_h, double h, DataToShow dataToShow) {
 	String title, labelY, labelY2;
 	switch (dataToShow) {
 	case DATA_A:		title = Format("Added mass A%s_%s", Hydro::StrDOF(i), Hydro::StrDOF(j_h));		
-						labelY = "Added mass [Ns2/m]";				break;		
+						labelY = "Added mass [Ns2/m]";				
+						break;		
 	case DATA_B:		title = Format("Radiation damping B%s_%s", Hydro::StrDOF(i), Hydro::StrDOF(j_h));
-						labelY = "Radiation damping [Ns/m]";		break;
+						labelY = "Radiation damping [Ns/m]";		
+						break;
 	case DATA_FORCE_SC:	title = Format("Diffraction scattering force %s heading %.1fº", Hydro::StrDOF(i), h);
 						labelY = "Diffraction scattering force [N]";
-						labelY2 = "Diffraction scattering force phase [º]";	break;
+						labelY2 = "Diffraction scattering force phase [º]";	
+						break;
 	case DATA_FORCE_FK:	title = Format("Froude-Krylov force %s heading %.1fº", Hydro::StrDOF(i), h);
 						labelY = "Froude-Krylov force [N]";		
-						labelY2 = "Froude-Krylov force phase [º]";			break;
+						labelY2 = "Froude-Krylov force phase [º]";			
+						break;
 	case DATA_FORCE_EX:	title = Format("Excitation Force %s heading %.1fº", Hydro::StrDOF(i), h);
 						labelY = "Excitation force [N]";		
-						labelY2 = "Excitation force phase [º]";				break;
+						labelY2 = "Excitation force phase [º]";				
+						break;
+	case DATA_RAO:		title = Format("Response Amplitude Operator %s heading %.1fº", Hydro::StrDOF(i), h);
+						labelY = "RAO []";		
+						labelY2 = "RAO phase [º]";							
+						break;
 	}
 	scatter.SetTitle(title);
 	scatter.SetLabelX("w [rad/s]");
@@ -753,6 +764,16 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 				if (ma().menuPlot.showPhase)
 					scatter.AddSeries(ABF_source2[id]).Legend("Fex_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 			}
+		} else if (dataToShow == DATA_RAO && hydro[id].hd().IsLoadedRAO()) {
+			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_MA)) {
+				loaded = true;
+				scatter.AddSeries(ABF_source[id]).Legend("RAO_ma_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+			}
+			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_PH)) {
+				loaded = true;
+				if (ma().menuPlot.showPhase)
+					scatter.AddSeries(ABF_source2[id]).Legend("RAO_ph_" + hydro[id].hd().name).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+			}
 		}
 	}
 	if (ma().menuPlot.autoFit)
@@ -817,19 +838,12 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
-void Assert(const char *s) {
-	NotPanic();
-	throw Exc(s);
-}
-	
 GUI_APP_MAIN {
 	Ctrl::SetAppName(t_("Hydrodynamic coefficents viewer and converter"));
 	Ctrl::GlobalBackPaint();
 	
 	String errorStr;
 	try {
-		SetAssertFailedHook(Assert);
-		
 		Main main;
 		
 		main.Init();

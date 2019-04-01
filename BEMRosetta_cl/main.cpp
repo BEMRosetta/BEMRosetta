@@ -4,16 +4,22 @@
 
 
 CONSOLE_APP_MAIN {
+	String str = "BEMRosetta Copyright (c) Inaki Zabala\nHydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta [Build Info]";
+	Hydro::SetBuildInfo(str);
+	Cout() << str;
+	
+	const Vector<String>& command = CommandLine();
+	
 	String errorStr;
 	
 	String fileName;
 	try {
 		Nemoh nem;
 		nem.Load(fileName);
-		nem.Report();
+		
 		Wamit wam;
 		wam.Load(fileName);
-		wam.Report();
+		
 	} catch (Exc e) {
 		errorStr = e;
 	} catch(const char *cad) {

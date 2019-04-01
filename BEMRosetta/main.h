@@ -33,9 +33,9 @@ public:
 
 #include "arrange.h"
 
-enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX};
+enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO};
 enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
-				PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH};
+				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, PLOT_RAO_MA, PLOT_RAO_PH};
     
 class HydroSource : public DataSource {
 public:
@@ -64,6 +64,8 @@ public:
 		case PLOT_FORCE_FK_PH:	return data->fk.ph[j_h](int(id), i);
 		case PLOT_FORCE_EX_MA:	return data->ex.ma[j_h](int(id), i);
 		case PLOT_FORCE_EX_PH:	return data->ex.ph[j_h](int(id), i);
+		case PLOT_RAO_MA:		return data->rao.ma[j_h](int(id), i);
+		case PLOT_RAO_PH:		return data->rao.ph[j_h](int(id), i);
 		default:				NEVER();	return Null;
 		}
 	}
@@ -158,6 +160,8 @@ private:
 	DataToShow dataToShow;
 };
 
+typedef class MainABForce MainRAO;
+
 class Main : public WithMain<TopWindow> {
 public:
 	typedef Main CLASSNAME;
@@ -208,6 +212,7 @@ public:
 	MainABForce mainA;
 	MainABForce mainB;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
+	MainRAO mainRAO;
 	MainView mainView;
 	MainOutput mainOutput;
 	

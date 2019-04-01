@@ -26,35 +26,8 @@ void Hydro::Initialize_Forces(Forces &f) {
 	}
 }
 
-inline int Hydro::GetK_AB(int i, int j) {
-	while (i > 5)
-		i -= 6;
-	while (j > 5)
-		j -= 6;
-	if      ((i == 0 || i == 1 || i == 2) && (j == 0 || j == 1 || j == 2))
-		return 3;
-	else if ((i == 3 || i == 4 || i == 5) && (j == 3 || j == 4 || j == 5))
-		return 5;
-	else
-		return 4;
-}
-
-inline int Hydro::GetK_F(int i) {
-	while (i > 5)
-		i -= 6;
-	if (i < 3)
-		return 2;
-	else
-		return 3;
-}
-
-inline int Hydro::GetK_C(int i, int j) {
-	if (i == 2 && j == 2)
-		return 2;	
-	else if (i < 3) 
-		return 3;
-	else
-		return 4;
+void Hydro::Initialize_RAO() {
+	Initialize_Forces(rao);
 }
 
 void Hydro::Normalize() {
@@ -93,6 +66,18 @@ void Hydro::Normalize() {
 		Normalize_Forces(sc);
 	if (IsLoadedFfk())
 		Normalize_Forces(fk);
+	double A = 1;
+	if (IsLoadedRAO()) {
+		for (int h = 0; h < Nh; ++h) {
+			for (int ifr = 0; ifr < Nf; ++ifr) {
+				for (int i = 0; i < 6*Nb; ++i) {	 
+					rao.ma[h](ifr, i) /= A/pow(len, GetK_RAO(i));
+					rao.re[h](ifr, i) /= A/pow(len, GetK_RAO(i));
+					rao.im[h](ifr, i) /= A/pow(len, GetK_RAO(i));
+				}
+			}
+		}
+	}
 }
 
 void Hydro::Dimensionalize() {
@@ -131,6 +116,18 @@ void Hydro::Dimensionalize() {
 		Dimensionalize_Forces(sc);
 	if (IsLoadedFfk())
 		Dimensionalize_Forces(fk);
+	double A = 1;
+	if (IsLoadedRAO()) {
+		for (int h = 0; h < Nh; ++h) {
+			for (int ifr = 0; ifr < Nf; ++ifr) {
+				for (int i = 0; i < 6*Nb; ++i) {	 
+					rao.ma[h](ifr, i) *= A/pow(len, GetK_RAO(i));
+					rao.re[h](ifr, i) *= A/pow(len, GetK_RAO(i));
+					rao.im[h](ifr, i) *= A/pow(len, GetK_RAO(i));
+				}
+			}
+		}
+	}
 }
 
 void Hydro::Normalize_Forces(Forces &f) {
