@@ -45,9 +45,15 @@ bool Fast::Load(String file, double g) {
 		hd().Print("\n" + Format("- Diffraction exciting file '%s'", GetFileName(file3)));
 		if (!Load_3(file3))
 			hd().Print(": **Not found**");
+		
 		String fileHST = ForceExt(hydroFile, ".hst");
 		hd().Print("\n" + Format("- Hydrostatic restoring file '%s'", GetFileName(fileHST)));
 		if (!Load_hst(fileHST))
+			hd().Print(": **Not found**");
+		
+		String fileRAO = ForceExt(file, ".4");
+		hd().Print("\n" + Format("- RAO file '%s'", GetFileName(fileRAO)));
+		if (!Load_4(fileRAO))
 			hd().Print(": **Not found**");
 		
 		hd().AfterLoad();
@@ -128,8 +134,16 @@ bool Fast::Load_1(String fileName) {
 			maxDof = dof-1;
 	}
 	
-	hd().Nb = 1 + int(maxDof/6);
-	hd().Nf = hd().w.GetCount();
+	int Nb = 1 + int(maxDof/6);
+	if (!IsNull(hd().Nb) && hd().Nb < Nb)
+		throw Exc(Format("Number of bodies loaded is lower than found in .4 (%d != %d)", hd().Nb, Nb));
+	hd().Nb = Nb;	
+	
+	int Nf = hd().w.GetCount();
+	if (!IsNull(hd().Nf) && hd().Nf != Nf)
+		throw Exc(Format("Number of frequencies loaded is different than found in .4 (%d != %d)", hd().Nf, Nf));
+	hd().Nf = Nf;
+	
 	if (hd().Nb == 0 || hd().Nf < 2)
 		throw Exc(Format("Wrong format in Wamit file '%s'", hd().file));
 	
@@ -177,8 +191,9 @@ bool Fast::Load_1(String fileName) {
 				ifr = FindIndex(hd().w, freq);
 			else
 				ifr = FindIndex(hd().T, freq);
-			if (i == 8 && j == 8)
-				int kk = 1; 
+			if (ifr < 0)
+				throw Exc(Format("Unknown frequency %f", freq));
+		
 		  	hd().A[ifr](i, j) = Aij;    
 		  	hd().B[ifr](i, j) = f.GetDouble(4);   	
 		}
@@ -212,13 +227,20 @@ bool Fast::Load_3(String fileName) {
 		throw Exc(Format("Wrong format in Wamit file '%s'", hd().file));
 	
 	if (!IsNull(hd().Nh) && hd().Nh != hd().head.GetCount())
-		throw Exc(Format("Number of headings in .dat does not match with .3 (%d != %d)", hd().Nh, hd().head.GetCount()));
+		throw Exc(Format("Number of headings loaded do not match with .3 (%d != %d)", hd().Nh, hd().head.GetCount()));
 	hd().Nh = hd().head.GetCount();
 	
 	if (abs(hd().head[0]) != abs(hd().head[hd().head.GetCount()-1]))
 		hd().Print(Format("Fast requires simetric wave headings. .3 file headings found from %f to %f", hd().head[0], hd().head[hd().head.GetCount()-1])); 
 		
 	hd().Initialize_Forces();
+	
+	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+		if (readW)
+			hd().T[ifr] = 2*M_PI/hd().w[ifr];
+		else
+			hd().w[ifr] = 2*M_PI/hd().T[ifr];
+	}
 	
 	in.Seek(fpos);
 	
@@ -276,6 +298,103 @@ bool Fast::Load_hst(String fileName) {
 		j = j - ib_j*6;
 		if (ib_i == ib_j) 
 			hd().C[ib_i](i, j) = f.GetDouble(2);
+	}
+		
+	return true;
+}
+
+bool Fast::Load_4(String fileName) {
+	FileIn in(fileName);
+	if (!in.IsOpen())
+		return false;
+	FieldSplit f;
+ 
+ 	int64 fpos = 0;
+ 	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
+ 		fpos = in.GetPos();
+	if (in.IsEof())
+		throw Exc("Error in file format");
+	
+	in.Seek(fpos);
+	
+	int maxDof = 0;
+	hd().head.Clear();
+	while (!in.IsEof()) {
+		f.Load(in.GetLine());
+		double freq = f.GetDouble(0);
+		FindAdd(hd().w, freq);
+		
+		int dof = f.GetInt(2);
+		if (dof > maxDof)
+			maxDof = dof-1;
+		
+		double head = f.GetDouble(1);
+		
+		FindAdd(hd().head, head);
+	}
+
+	if (hd().head.GetCount() == 0)
+		throw Exc(Format("Wrong format in Wamit file '%s'", hd().file));
+	
+	if (!IsNull(hd().Nh) && hd().Nh != hd().head.GetCount())
+		throw Exc(Format("Number of headings loaded do not match with .4 (%d != %d)", hd().Nh, hd().head.GetCount()));
+	hd().Nh = hd().head.GetCount();
+	
+	int Nb = 1 + int(maxDof/6);
+	if (!IsNull(hd().Nb) && hd().Nb < Nb)
+		throw Exc(Format("Number of bodies loaded is lower than found in .4 (%d != %d)", hd().Nb, Nb));
+	hd().Nb = Nb;
+	
+	int Nf = hd().w.GetCount();
+	if (!IsNull(hd().Nf) && hd().Nf != Nf)
+		throw Exc(Format("Number of frequencies loaded is different than found in .4 (%d != %d)", hd().Nf, Nf));
+	hd().Nf = Nf;
+	
+	if (hd().Nb == 0 || hd().Nf < 2)
+		throw Exc(Format("Wrong format in Wamit file '%s'", hd().file));
+	
+	bool readW;
+	if (hd().w[0] > hd().w[1]) {
+		readW = false;
+		hd().T = pick(hd().w);
+		hd().w.SetCount(hd().Nf);	
+	} else {
+		readW = true;
+		hd().T.SetCount(hd().Nf);
+	}
+	
+	hd().Initialize_RAO();
+	
+	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+		if (readW)
+			hd().T[ifr] = 2*M_PI/hd().w[ifr];
+		else
+			hd().w[ifr] = 2*M_PI/hd().T[ifr];
+	}
+	
+	in.Seek(fpos);
+	
+	while (!in.IsEof()) {
+		f.Load(in.GetLine());
+		double freq = f.GetDouble(0);
+		int ifr;
+		if (readW)
+		 	ifr = FindIndex(hd().w, freq);
+		else
+			ifr = FindIndex(hd().T, freq);
+		if (ifr < 0)
+			throw Exc(Format("Unknown frequency %f", freq));
+		double head = f.GetDouble(1);
+		int ih = FindIndex(hd().head, head);
+		if (ih < 0)
+			throw Exc(Format("Unknown heading %f", head));
+			
+		int i = f.GetInt(2) - 1;		
+		
+       	hd().rao.ma[ih](ifr, i) = f.GetDouble(3);
+     	hd().rao.ph[ih](ifr, i) = f.GetDouble(4);
+        hd().rao.re[ih](ifr, i) = f.GetDouble(5);
+        hd().rao.im[ih](ifr, i) = f.GetDouble(6);
 	}
 		
 	return true;

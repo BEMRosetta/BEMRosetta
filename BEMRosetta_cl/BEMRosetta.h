@@ -21,6 +21,15 @@ public:
 	Hydro() : g(Null), h(Null), rho(Null), Nb(Null), Nf(Null), Nh(Null) {}
 	virtual ~Hydro() {}	
 
+	static void SetBuildInfo(String &str) {
+		String name, mode;
+		Time date;
+		int version, bits;
+		GetCompilerInfo(name, version, date, mode, bits);
+		str.Replace("[Build Info]", Format("%4d%02d%02d%02d, %s, %d bits", 
+					date.year, date.month, date.day, date.hour, mode, bits)); 
+	}
+	
 	static Function <void(String)> Print, PrintError;	
 	
 	String GetCodeStr()	{
@@ -71,6 +80,10 @@ public:
     Forces sc; 				// Diffraction scattering
     Forces fk; 				// Froude-Krylov
     
+  	typedef struct Forces RAO;
+   
+   	RAO rao;
+    
     Vector<double> T; 		// [Nf]    				Wave periods
     Vector<double> w;      	// [Nf]               	Wave frequencies
     Vector<double> Vo;    	// [Nb]             	Displaced volume
@@ -86,9 +99,44 @@ public:
 	void Dimensionalize_Forces(Forces &f);
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f);
-	static int GetK_AB(int i, int j);
-	static int GetK_F(int i);
-	static int GetK_C(int i, int j);
+	void Initialize_RAO();
+	static int GetK_AB(int i, int j) {
+		while (i > 5)
+			i -= 6;
+		while (j > 5)
+			j -= 6;
+		if      ((i == 0 || i == 1 || i == 2) && (j == 0 || j == 1 || j == 2))
+			return 3;
+		else if ((i == 3 || i == 4 || i == 5) && (j == 3 || j == 4 || j == 5))
+			return 5;
+		else
+			return 4;
+	}
+	
+	static int GetK_F(int i) {
+		while (i > 5)
+			i -= 6;
+		if (i < 3)
+			return 2;
+		else
+			return 3;
+	}
+	
+	static int GetK_C(int i, int j) {
+		if (i == 2 && j == 2)
+			return 2;	
+		else if (i < 3) 
+			return 3;
+		else
+			return 4;
+	}
+	
+	static int GetK_RAO(int i) {
+		if (i < 3)
+			return 0;	
+		else
+			return 1;
+	}
 	
 	void GetBodyDOF();
 	
@@ -134,6 +182,7 @@ public:
 	bool IsLoadedFex() 	{return ex.ma.GetCount() > 0;}
 	bool IsLoadedFsc() 	{return sc.ma.GetCount() > 0;}
 	bool IsLoadedFfk() 	{return fk.ma.GetCount() > 0;}
+	bool IsLoadedRAO() 	{return rao.ma.GetCount() > 0;}
 	
 	const Vector<int> &GetOrder()		{return dofOrder;}
 	void SetOrder(Vector<int> &order)	{dofOrder = pick(order);}
@@ -233,6 +282,7 @@ private:
 	bool Load_1(String fileName);
 	bool Load_3(String fileName);
 	bool Load_hst(String fileName);
+	bool Load_4(String fileName);
 	
 	void Save_dat(String fileName, bool force);	
 	void Save_1(String fileName);
