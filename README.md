@@ -11,7 +11,7 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
 
 
 ## Features
-#### Supported file formats
+### Supported file formats
 
 * BEM coefficients
   * Load
@@ -23,13 +23,13 @@ As an additional advantage, BEMRosetta allows to view and visually compare the m
     * [Wamit](https://www.wamit.com/): .1, .3, .hst
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
     * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
-* Mesh load
+* Mesh view
   * [Wamit](https://www.wamit.com/): .gdf
   * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
 
-#### Load the hydrodynamic coefficients from one format and save them in another.
+### Load the hydrodynamic coefficients from one format and save them in another
 
-#### Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
+### Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
 
 _Damping for the same geometry got from different solvers_
   
@@ -39,8 +39,8 @@ _Excitation force for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
-#### Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
-#### Load the hydrodynamic coefficients for different geometries to compare them
+### Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
+### Load the hydrodynamic coefficients for different geometries to compare them
 
 _Damping for different offshore wind floating platforms_
   
@@ -50,7 +50,7 @@ _Excitation force for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
-#### Mesh loading, combining them for visual comparison 
+### Mesh loading, combining them for visual comparison 
 
 Several meshes can be loaded in this basic viewer, allowing a visual comparison of geometries.
 
@@ -62,6 +62,13 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 Markel Peñalba, Juan C. C. Portillo, João C. C. Henriques, Yerai Peña.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
+
+
+## New features in process
+
+* Linux version
+* Command line version
+* Loading files in [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa) format
 
 
 ## License
