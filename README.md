@@ -1,5 +1,5 @@
 # BEMRosetta
-Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats
+Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="45%" title="DeepCWind in Windows">
