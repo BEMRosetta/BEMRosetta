@@ -187,7 +187,7 @@ bool Wamit::Load_out() {
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
 								in.GetLine(); in.GetLine(); in.GetLine();
-								int idof = 0;
+								//int idof = 0;
 								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
 									f.Load(line);
 									double ma = f.GetDouble(1);

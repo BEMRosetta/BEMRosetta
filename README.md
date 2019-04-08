@@ -1,13 +1,15 @@
 # BEMRosetta
 Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats
 
-<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="500" title="Github Logo"></p>
+<img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" style="float: left; width: 40%; margin-right: 1%; margin-bottom: 0.5em;">style="float: left; width: 30%; margin-right: 1%; margin-bottom: 0.5em;" title="Mesh loaded in Windows"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind_linux.jpg" style="float: left; width: 40%; margin-right: 1%; margin-bottom: 0.5em;">style="float: left; width: 30%; margin-right: 1%; margin-bottom: 0.5em;" title="Mesh in Linux">
 
 Boundary Element Methods are extensively used to model hydrodynamic forces in offshore devices like ships, offshore wind platforms and wave energy converters. These solvers use device geometry mesh to get some hydrodynamics coefficients as radiation damping, added mass, wave diffraction force, and wave excitation force. All these data is saved in file formats incompatible between them. These may avoid to use the coefficients between programs. 
 
 BEMRosetta allows to load the hydrodynamic coefficients from a format saving it in another. In addition it allows to compare the results obtained between programs, the results between similar geometries and the same geometry with different discretization levels.
 
-As an additional advantage, BEMRosetta allows to view and visually compare the meshes from different programs.
+In addition, BEMRosetta allows to view and visually compare the meshes from different programs.
+
+BEMRosetta runs in Windows and Linux and is done in C++, so it does not depend on any scripting language.
 
 
 ## Features
@@ -66,7 +68,6 @@ Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 ## New features in process
 
-* Linux version
 * Command line version
 * Loading files in [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa) format
 
