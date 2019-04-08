@@ -1,16 +1,20 @@
-#include "main.h"
+#include <CtrlLib/CtrlLib.h>
+#include <Controls4U/Controls4U.h>
+#include <ScatterCtrl/ScatterCtrl.h>
+#include <GLCanvas/GLCanvas.h>
+
+#include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
+
+using namespace Upp;
 
 #define IMAGECLASS Img
 #define IMAGEFILE <BEMRosetta/BEMRosetta/main.iml>
-#include <Draw/iml_source.h>
+#include <Draw/iml.h>
 
 #define TOPICFILE <BEMRosetta/BEMRosetta/main.tpp/all.i>
 #include <Core/topic_group.h>
 
-#include <GLCanvas/GLCanvas.h>
-
-using namespace Upp;
-
+#include "main.h"
 
 void Main::Init() {
 	CtrlLayout(*this, "BEMRosetta");

@@ -392,15 +392,6 @@ private:
 	}
 };
 
-template <class Range, class V>
-void FindAdd(Range& r, const V& value, int from = 0)
-{
-	for(int i = from; i < r.GetCount(); i++)
-		if(r[i] == value) 
-			return;
-	r.Add(value);
-}
-
 String FormatWam(double d);
 
 #define TV(v, i)		TV_(v, i, #v, #i, __FILE__, __LINE__)

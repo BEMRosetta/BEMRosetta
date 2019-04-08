@@ -1,15 +1,6 @@
 #ifndef _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
-#include <CtrlLib/CtrlLib.h>
-#include <Controls4U/Controls4U.h>
-#include <ScatterCtrl/ScatterCtrl.h>
-#include <GLCanvas/GLCanvas.h>
-
-#include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
-
-using namespace Upp;
-
 class RichTextView2 : public RichTextView {
 public:
 	RichTextView2() {
@@ -27,9 +18,6 @@ public:
 #define LAYOUTFILE <BEMRosetta/BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
 
-#define IMAGECLASS Img
-#define IMAGEFILE <BEMRosetta/BEMRosetta/main.iml>
-#include <Draw/iml_header.h>
 
 #include "arrange.h"
 
