@@ -12,8 +12,7 @@ BEMRosetta allows to load the hydrodynamic coefficients from a format saving it 
 
 In addition, BEMRosetta allows to view and visually compare the meshes from different programs.
 
-BEMRosetta runs in Windows and Linux and is done in C++, so it does not depend on any scripting language.<br/>
-[Install instructions are here](https://github.com/izabala123/BEMRosetta/tree/master/install).
+BEMRosetta runs in Windows and Linux and is done in C++, so it does not depend on any scripting language and [install is simple](https://github.com/izabala123/BEMRosetta/tree/master/install).
 
 
 ## Features
