@@ -43,5 +43,5 @@ make
 ```
 
 Now you can start playing with BEMRosetta by invoking ./BEMRosetta/BEMRosetta.out
-You might want to put BEMRosetta elsewhere later, e.g. inside ~/bin/ for example
+You might want to put BEMRosetta elsewhere later, e.g. inside ~/bin/ for example.
 
