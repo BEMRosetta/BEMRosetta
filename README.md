@@ -1,7 +1,10 @@
 # BEMRosetta
-Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats
+Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
 
-<img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" style="float: left; width: 40%; margin-right: 1%; margin-bottom: 0.5em;">style="float: left; width: 30%; margin-right: 1%; margin-bottom: 0.5em;" title="Mesh loaded in Windows"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind_linux.jpg" style="float: left; width: 40%; margin-right: 1%; margin-bottom: 0.5em;">style="float: left; width: 30%; margin-right: 1%; margin-bottom: 0.5em;" title="Mesh in Linux">
+<p align="center">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="45%" title="DeepCWind in Windows">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind_linux.JPG" width="45%" title="DeepCWind in Linux">
+</p>
 
 Boundary Element Methods are extensively used to model hydrodynamic forces in offshore devices like ships, offshore wind platforms and wave energy converters. These solvers use device geometry mesh to get some hydrodynamics coefficients as radiation damping, added mass, wave diffraction force, and wave excitation force. All these data is saved in file formats incompatible between them. These may avoid to use the coefficients between programs. 
 
