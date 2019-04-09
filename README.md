@@ -16,7 +16,7 @@ BEMRosetta runs in Windows and Linux and is done in C++, so [install is simple](
 
 
 ## Features
-### Supported file formats
+### - Supported file formats
 
 * BEM coefficients
   * Load
@@ -32,9 +32,9 @@ BEMRosetta runs in Windows and Linux and is done in C++, so [install is simple](
   * [Wamit](https://www.wamit.com/): .gdf
   * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
 
-### Load the hydrodynamic coefficients from one format and save them in another
+### - Load the hydrodynamic coefficients from one format and save them in another
 
-### Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
+### - Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
 
 _Damping for the same geometry got from different solvers_
   
@@ -44,8 +44,8 @@ _Excitation force for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
-### Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
-### Load the hydrodynamic coefficients for different geometries to compare them
+### - Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
+### - Load the hydrodynamic coefficients for different geometries to compare them
 
 _Damping for different offshore wind floating platforms_
   
@@ -55,7 +55,7 @@ _Excitation force for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
-### Mesh loading, combining them for visual comparison 
+### - Mesh loading, combining them for visual comparison 
 
 Several meshes can be loaded in this basic viewer, allowing a visual comparison of geometries.
 
