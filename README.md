@@ -64,7 +64,7 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ## Acknowledgments
 
-Markel Peñalba, Juan C. C. Portillo, João C. C. Henriques, Yerai Peña.<br/>
+M. Peñalba, J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
