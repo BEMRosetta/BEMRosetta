@@ -73,6 +73,7 @@ Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 * Command line version
 * Loading files in [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa) format
+* Internationalization
 
 
 ## License
