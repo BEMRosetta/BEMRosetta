@@ -17,7 +17,8 @@ file
 	arrange.h,
 	arrange.lay,
 	license.txt,
-	main.rc;
+	main.rc,
+	bemrosetta.t;
 
 mainconfig
 	"" = "GUI";

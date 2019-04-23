@@ -1,0 +1,1069 @@
+ -->	********* VER. 1, 1 ********* 
+ -->	Frequency domain module is based on NEMOH (Ecole Centrale de Nantes)
+ -->	Reading body meshes
+ -->	Reading Body_data_Auto1
+ 		** WARNING ** 
+-->	K[3][3]<0, Check body boundary condition: 1.
+ 		** WARNING ** 
+-->	Gravity center might be too high and might cause unstable results (pitch): 1.
+ -->	Inputs read OK
+ -->	Water depth = 70.00 m
+ -->	Number of periods = 60
+ -->	Minimum wave period = 4.0000
+ -->	Number of wave directions = 10
+ -->	Minimum direction angle =-1.5708
+ -->	Number of Problems = 960
+ -->	Assembly done OK
+ -->	Initialization done OK
+ -->	**** "Body_data_Auto1" body data ****
+ -->	Mass [kg]=-16399.9922
+ -->	XG [m]= 0.0000E+00
+ -->	YG [m]= 0.0000E+00
+ -->	ZG [m]= 0.0000E+00
+ -->	Ixx [kg*m2]=-16399.9922
+ -->	Iyy [kg*m2]=-16399.9922
+ -->	Izz [kg*m2]=-16399.9922
+ -->	Ixy [kg*m2]= 0.0000E+00
+ -->	Ixz [kg*m2]= 0.0000E+00
+ -->	Iyz [kg*m2]= 0.0000E+00
+ -->	XC [m]= 1.41421425
+ -->	YC [m]= 0.8118E-17
+ -->	ZC [m]=-2.00000095
+ -->	Displacement [m3]=-15.9999933
+ -->	Displacement [kg]=-16399.9922
+ -->	K [3][3] [N/m]=-80414.1172
+ -->	K [3][4] [N/rad]= 0.2145E-11
+ -->	K [3][5] [N/rad]= 113722.742
+ -->	K [4][4] [Nm/rad]= 308254.125
+ -->	K [4][5] [Nm/rad]= 0.6343E-11
+ -->	K [4][6] [Nm/rad]= 227445.484
+ -->	K [5][5] [Nm/rad]=-13402.3564
+ -->	K [5][6] [Nm/rad]= 0.1306E-11
+ -->	A_Flot [m2]=-8.00000000
+ -->	Solve BVPs and calculate forces
+ -->	Calculating frequency: 1 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 2 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 3 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 4 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 5 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 6 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 7 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 8 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 9 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 10 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 11 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 12 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 13 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 14 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 15 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 16 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 17 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 18 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 19 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 20 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 21 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 22 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 23 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 24 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 25 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 26 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 27 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 28 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 29 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 30 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 31 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 32 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 33 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 34 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 35 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 36 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 37 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 38 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 39 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 40 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 41 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 42 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 43 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 44 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 45 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 46 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 47 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 48 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 49 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 50 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 51 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 52 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 53 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 54 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 55 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 56 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 57 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 58 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 59 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Calculating frequency: 60 / 60
+ -->		Solve Diffraction Problem for direction: 1 / 10
+ -->		Solve Diffraction Problem for direction: 2 / 10
+ -->		Solve Diffraction Problem for direction: 3 / 10
+ -->		Solve Diffraction Problem for direction: 4 / 10
+ -->		Solve Diffraction Problem for direction: 5 / 10
+ -->		Solve Diffraction Problem for direction: 6 / 10
+ -->		Solve Diffraction Problem for direction: 7 / 10
+ -->		Solve Diffraction Problem for direction: 8 / 10
+ -->		Solve Diffraction Problem for direction: 9 / 10
+ -->		Solve Diffraction Problem for direction: 10 / 10
+ -->		Solve Radiation Problem: 1 / 6
+ -->		Solve Radiation Problem: 2 / 6
+ -->		Solve Radiation Problem: 3 / 6
+ -->		Solve Radiation Problem: 4 / 6
+ -->		Solve Radiation Problem: 5 / 6
+ -->		Solve Radiation Problem: 6 / 6
+ -->	Time: Compute all problems: 397.875
+ -->	Save results 
+ -->	Computing RAOs
+ -->	Computing Drift Forces
+ -->	Saving results
+ -->	Execution Finished OK

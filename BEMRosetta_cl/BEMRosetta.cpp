@@ -1,11 +1,12 @@
 #include "BEMRosetta.h"
 
 
-Function <void(String)> Hydro::Print = [](String s) {Cout() << s;};
-Function <void(String)> Hydro::PrintError = [](String s) {Cout() << s;};
+Function <void(String)> Hydro::Print 		= [](String s) {Cout() << s;};
+Function <void(String)> Hydro::PrintWarning = [](String s) {Cout() << s;};
+Function <void(String)> Hydro::PrintError 	= [](String s) {Cout() << s;};
 
-const char *Hydro::strDOF[] 	 = {"surge", "sway", "heave", "roll", "pitch", "yaw"};
-const char *Hydro::strDOFAbrev[] = {"s", "w", "h", "r", "p", "y"};
+const char *Hydro::strDOF[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
+const char *Hydro::strDOFAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
 	
 void Hydro::Initialize_Forces() {
 	Initialize_Forces(ex);
@@ -19,10 +20,10 @@ void Hydro::Initialize_Forces(Forces &f) {
 	f.re.SetCount(Nh);
 	f.im.SetCount(Nh);
 	for (int ih = 0; ih < Nh; ++ih) {
-		f.ma[ih].setConstant(Nf, Nb*6, nan(""));
-		f.ph[ih].setConstant(Nf, Nb*6, nan(""));
-		f.re[ih].setConstant(Nf, Nb*6, nan(""));
-		f.im[ih].setConstant(Nf, Nb*6, nan(""));
+		f.ma[ih].setConstant(Nf, Nb*6, Null);
+		f.ph[ih].setConstant(Nf, Nb*6, Null);
+		f.re[ih].setConstant(Nf, Nb*6, Null);
+		f.im[ih].setConstant(Nf, Nb*6, Null);
 	}
 }
 
@@ -155,45 +156,55 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 }
 
 void Hydro::SaveAs(String file, BEM_SOFT type) {
+	if (type == UNKNOWN) {
+		String ext = ToLower(GetFileExt(file));
+		
+		if (ext == ".1" || ext == ".3" || ext == ".hst")
+			type = Hydro::WAMIT_1_3;
+		else if (ext == ".dat")
+			type = Hydro::FAST_WAMIT;	
+		else
+			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
+	}
 	if (type == WAMIT_1_3) {
-		Fast data(this);
-		data.Save(file, false);	
+		Wamit data(this);
+		data.Save(file);	
 	} else if (type == FAST_WAMIT) {
 		Fast data(this);
-		data.Save(file, true);		
+		data.Save(file);		
 	}
 }
 
 void Hydro::Report() {
-	Print(Format("\n%s file '%s'", GetCodeStr(), file));
-	Print(Format("\ng [m/s2]: %.3f, h [m]: %.3f, rho [kg/m3]: %.3f length scale [m]: %.1f", g, h, rho, len));
+	Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
+	Print("\n" + Format(t_("g [m/s2]: %.3f, h [m]: %s, rho [kg/m3]: %.3f length scale [m]: %.1f"), g, h < 0 ? x_(t_("INFINITY")) : FormatDouble(h), rho, len));
 	String freqs;
 	if (w.IsEmpty()) 
-		freqs = "NONE";
+		freqs = t_("NONE");
 	else
-		freqs = Format("%.3f to %.3f steps %.3f [rad/s]", w[0], w[w.GetCount()-1], w[1]-w[0]);
+		freqs = Format(t_("%.3f to %.3f steps %.3f [rad/s]"), w[0], w[w.GetCount()-1], w[1]-w[0]);
 	String heads;
 	if (head.IsEmpty())
-		heads = "NONE";
+		heads = t_("NONE");
 	else if (head.GetCount() > 1)
-	 	heads = Format("%.1f to %.1f steps %.1f [º]", head[0], head[head.GetCount()-1], head[1] - head[0]);	
+	 	heads = Format(t_("%.1f to %.1f steps %.1f [º]"), head[0], head[head.GetCount()-1], head[1] - head[0]);	
 	else
-		heads = Format("%.1f [º]", head[0]);
+		heads = Format(t_("%.1f [º]"), head[0]);
 		
-	Print(Format("\n#freqs: %d (%s), #headings: %d (%s)", Nf, freqs, Nh, heads)); 
-	Print(Format("\n#bodies: %d", Nb));
+	Print("\n" + Format(t_("#freqs: %d (%s), #headings: %d (%s)"), Nf, freqs, Nh, heads)); 
+	Print("\n" + Format(t_("#bodies: %d"), Nb));
 	for (int ib = 0; ib < Nb; ++ib) {
 		String str = Format("\n%d.", ib+1);
 		if (names.GetCount() > ib)
 			str += " '" + names[ib] + "'";
 		if (dof.GetCount() > ib)
-			str += " dof: " + dof[ib];
-		if (Vo.size() > ib)
-			str += " vol [m3]: " + FormatDouble(Vo[ib]);
-		if (cg.size() > 3*ib)
-			str += Format(" cg(%.3f, %.3f, %.3f)[m]", cg(0, ib), cg(1, ib), cg(2, ib));
-		if (cb.size() > 3*ib)
-			str += Format(" cb(%.3f, %.3f, %.3f)[m]", cb(0, ib), cb(1, ib), cb(2, ib));
+			str += x_(" ") + t_("dof") + ": " + FormatInt(dof[ib]);
+		if (Vo.size() > ib && !IsNull(Vo[ib]))
+			str += x_(" ") + t_("vol [m3]") + ": " + FormatDouble(Vo[ib]);
+		if (cg.size() > 3*ib && !IsNull(cg(0, ib)))
+			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", cg(0, ib), cg(1, ib), cg(2, ib));
+		if (cb.size() > 3*ib && !IsNull(cb(0, ib)))
+			str += " " + Format("Cb(%.3f, %.3f, %.3f)[m]", cb(0, ib), cb(1, ib), cb(2, ib));
 		
 		Print(str);
 	}
@@ -202,22 +213,22 @@ void Hydro::Report() {
 bool HydroClass::MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError) {
 	strError.Clear();
 	if (hydro.IsEmpty()) {
-		strError = "No data loaded";
+		strError = t_("No data loaded");
 		return false;
 	}
 	int Nb = hydro[0].hd().Nb;
 	int Nh = hydro[0].hd().Nh;
 	for (int i = 1; i < hydro.GetCount(); ++i) {
 		if (hydro[i].hd().Nb != Nb) {
-			strError = "Different number of bodies";
+			strError = t_("Different number of bodies");
 			return false;
 		} else if (hydro[i].hd().Nh != Nh) {
-			strError = "Different number of wave headings";
+			strError = t_("Different number of wave headings");
 			return false;
 		} else {
 			for (int ih = 0; ih < Nh; ++ih) {
 				if (hydro[i].hd().head[ih] != hydro[0].hd().head[ih]) {
-					strError = "Wave headings do not match";
+					strError = t_("Wave headings do not match");
 					return false;
 				}
 			}
@@ -259,6 +270,62 @@ String Hydro::C_units(int i, int j) {
 	if (ret.IsEmpty())
 		return C_units_base(j, i);
 	return ret;
+}
+
+void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData) {
+	for (int i = 0; i < hydros.GetCount(); ++i) {
+		if (hydros[i].hd().file == file) 
+			throw Exc(Format(t_("Model '%s' already loaded"), file));
+	}
+	String ext = ToLower(GetFileExt(file));
+	if (ext == ".cal") {
+		Nemoh &data = hydros.Create<Nemoh>();
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+	} else if (ext == ".inf") {
+		Nemoh &data = hydros.Create<Nemoh>();
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+	} else if (ext == ".out") {
+		Wamit &data = hydros.Create<Wamit>();
+		if (!data.Load(file, Null)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));
+		}
+		AdditionalData(*this, data);
+		
+		data.hd().Dimensionalize();
+		
+	} else if (ext == ".dat") {
+		Fast &data = hydros.Create<Fast>();
+		if (!data.Load(file, Null)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));		
+		}
+		AdditionalData(*this, data);
+				
+		data.hd().Dimensionalize();
+		
+	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
+		Wamit &data = hydros.Create<Wamit>();
+		if (!data.Load(file, Null)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));		
+		}
+		AdditionalData(*this, data);
+
+		data.hd().Dimensionalize();		
+	} else 
+		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
 }
 
 int IsTabSpace(int c) {
