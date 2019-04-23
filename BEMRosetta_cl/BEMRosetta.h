@@ -14,11 +14,11 @@ using namespace Eigen;
 
 class Hydro {
 public:
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH};
+	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, UNKNOWN};
 	
-	void SaveAs(String file, BEM_SOFT type);
+	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
-	Hydro() : g(Null), h(Null), rho(Null), Nb(Null), Nf(Null), Nh(Null) {}
+	Hydro() : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null) {}
 	virtual ~Hydro() {}	
 
 	static void SetBuildInfo(String &str) {
@@ -26,26 +26,26 @@ public:
 		Time date;
 		int version, bits;
 		GetCompilerInfo(name, version, date, mode, bits);
-		str.Replace("[Build Info]", Format("%4d%02d%02d%02d, %s, %d bits", 
+		str.Replace("BUILDINFO", Format("%4d%02d%02d%02d, %s, %d bits", 
 					date.year, date.month, date.day, date.hour, mode, bits)); 
 	}
 	
-	static Function <void(String)> Print, PrintError;	
+	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
 	String GetCodeStr()	{
 		switch (code) {
-		case WAMIT: 		return "Wamit";
-		case WAMIT_1_3: 	return "Wamit.1.3";
-		case FAST_WAMIT: 	return "FAST-Wamit";
-		case NEMOH:			return "Nemoh";
-		case SEAFEM_NEMOH:	return "SeaFEM-Nemoh";
+		case WAMIT: 		return t_("Wamit");
+		case WAMIT_1_3: 	return t_("Wamit.1.3");
+		case FAST_WAMIT: 	return t_("FAST-Wamit");
+		case NEMOH:			return t_("Nemoh");
+		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
 		}
-		return "Unknown";
+		return t_("Unknown");
 	}
 	
 	inline bool IsAvailableDOF(int ib, int idof) {
-		return (Awinf.size() > 0 && !IsNaN(Awinf((ib+1)*idof, (ib+1)*idof))) || 
-			   (!A.IsEmpty() && A[0].size() > 0 && !IsNaN(A[0]((ib+1)*idof, (ib+1)*idof)));
+		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idof, (ib+1)*idof))) || 
+			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[0]((ib+1)*idof, (ib+1)*idof)));
 	}
 
 	String file;        	// BEM output file name
@@ -53,10 +53,10 @@ public:
     double g;           	// gravity
     double h;           	// water depth
    	double rho;        		// density
+   	double len;				// Length scale
     int Nb;          		// number of bodies
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
- 	double len;
  	
 	Upp::Array<MatrixXd> A;	// [Nf](6*Nb, 6*Nb)		Added mass
     MatrixXd Awinf;        	// (6*Nb, 6*Nb)        	Infinite frequency added mass
@@ -263,31 +263,33 @@ public:
 	
 	bool LoadMesh(String file);
 	
-private:
-	bool Load_out();
+protected:
+	bool Load_out();							
 	void Load_A(FileIn &in, MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
-};
 
-class Fast : public HydroClass, public MeshClass {
-public:
-	Fast(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf), WaveNDir(Null), WaveDirRange(Null) {}
-	bool Load(String file, double g = 9.81);
-	void Save(String file, bool isFast);
-	virtual ~Fast()	{}
-	
-private:
-	bool Load_dat();	
-	bool Load_1(String fileName);
+	bool Load_1(String fileName);				
 	bool Load_3(String fileName);
 	bool Load_hst(String fileName);
 	bool Load_4(String fileName);
 	
-	void Save_dat(String fileName, bool force);	
 	void Save_1(String fileName);
 	void Save_3(String fileName);
 	void Save_hst(String fileName);
+};
+
+class Fast : public Wamit {
+public:
+	Fast(Hydro *hydro = 0, Surface *surf = 0) : Wamit(hydro, surf), WaveNDir(Null), WaveDirRange(Null) {}
+	bool Load(String file, double g = 9.81);
+	void Save(String file);
+	virtual ~Fast()	{}
+	
+private:
+	bool Load_dat();	
+	
+	void Save_dat(String fileName, bool force);	
 	
 	String hydroFolder;
 	bool readW;
@@ -372,14 +374,14 @@ public:
 		CheckId(i);
 		int res = ScanInt(fields[i]);
 		if (IsNull(res))
-			throw Exc(Format("Bad integer '%s' in field #%d, line '%s'", fields[i], i+1, line));
+			throw Exc(Format(t_("Bad %s '%s' in field #%d, line '%s'"), "integer", fields[i], i+1, line));
 		return res;
 	}
 	double GetDouble(int i) {
 		CheckId(i);
 		double res = ScanDouble(fields[i]);
 		if (IsNull(res))
-			throw Exc(Format("Bad double '%s' in field #%d, line '%s'", fields[i], i+1, line));
+			throw Exc(Format(t_("Bad %s '%s' in field #%d, line '%s'"), "double", fields[i], i+1, line));
 		return res;
 	}
 private:
@@ -388,19 +390,69 @@ private:
 	
 	void CheckId(int i) {
 		if (i >= fields.GetCount())
-			throw Exc(Format("Field #%d not found in line '%s'", i+1, line));
+			throw Exc(Format(t_("Field #%d not found in line '%s'"), i+1, line));
 	}
 };
 
 String FormatWam(double d);
 
-#define TV(v, i)		TV_(v, i, #v, #i, __FILE__, __LINE__)
+class BEMData {
+public:
+	Upp::Array<HydroClass> hydros;
+	double depth, rho, g, length;
+	
+	void Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData);
+	
+	bool LoadSerializeJson() {
+		bool ret;
+		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
+		DirectoryCreate(folder);
+		if (!DirectoryExists(folder))
+			ret = false;
+		else {
+			String fileName = AppendFileName(folder, "configdata.cf");
+			if (!FileExists(fileName)) 
+				ret = false;
+			else {
+				String jsonText = LoadFile(fileName);
+				if (jsonText.IsEmpty())
+					ret = false;
+				else {
+					if (!LoadFromJson(*this, jsonText))
+						ret = false;
+					else
+						ret = true;
+				}
+			}
+		}
+		if (!ret || IsNull(g)) 
+			g = 9.81;
+		if (!ret || IsNull(depth)) 
+			depth = 100;
+		if (!ret || IsNull(rho)) 
+			rho = 1000;
+		if (!ret || IsNull(length)) 
+			length = 1;
+		return true;
+	}
+	bool StoreSerializeJson() {
+		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
+		DirectoryCreate(folder);
+		if (!DirectoryExists(folder))
+			return 0;
+		String fileName = AppendFileName(folder, "configdata.cf");
+		return StoreAsJsonFile(*this, fileName, true);
+	}
+	
+	void Jsonize(JsonIO &json) {
+		json
+			("depth", depth)
+			("rho", rho)
+			("g", g)
+			("length", length)
+		;
+	}
+};
 
-template <class T>
-inline T& TV_(T &v, int i, const char *strvar, const char *strindex, const char *strfile, int strline) {
-	if (i < 0 || i >= v.GetCount()) 
-		throw Exc(Format("Array %s[%s] is out of limits in file '%s', line '%d'", strvar, strindex, strfile, strline));
-	return v;
-}
 	
 #endif

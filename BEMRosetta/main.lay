@@ -15,17 +15,21 @@ LAYOUT(MenuConvert, 632, 48)
 	ITEM(Label, dv___0, SetLabel(t_("Model:")).LeftPosZ(4, 40).TopPosZ(4, 19))
 	ITEM(EditFile, file, HSizePosZ(264, 64).TopPosZ(4, 19))
 	ITEM(Button, butLoad, SetLabel(t_("Convert")).RightPosZ(4, 56).TopPosZ(4, 20))
-	ITEM(Switch, opt, SetLabel(t_("Wamit .1.3.hst\nFAST .dat")).LeftPosZ(268, 352).TopPosZ(28, 16))
+	ITEM(Switch, opt, SetLabel(t_("Wamit .1.3.hst\nFAST .dat\nBy extension")).LeftPosZ(268, 352).TopPosZ(28, 16))
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(44, 172).TopPosZ(4, 40))
 	ITEM(Label, dv___5, SetLabel(t_("Format:")).LeftPosZ(224, 40).TopPosZ(28, 16))
 	ITEM(Label, dv___6, SetLabel(t_("File:")).LeftPosZ(224, 40).TopPosZ(4, 19))
 END_LAYOUT
 
 LAYOUT(MenuPlot, 400, 48)
-	ITEM(Button, butZoomToFit, SetLabel(t_("Zoom to Fit")).LeftPosZ(76, 84).TopPosZ(0, 20))
-	ITEM(Option, showPhase, SetLabel(t_("Show phase")).LeftPosZ(100, 92).TopPosZ(20, 16))
-	ITEM(Option, autoFit, SetLabel(t_("Auto fit")).LeftPosZ(4, 68).TopPosZ(0, 16))
-	ITEM(Option, showPoints, SetLabel(t_("Show points")).LeftPosZ(4, 92).TopPosZ(20, 16))
+	ITEM(Button, butZoomToFit, SetLabel(t_("Zoom to Fit")).LeftPosZ(8, 100).TopPosZ(28, 16))
+	ITEM(Option, showPhase, SetLabel(t_("Phase")).LeftPosZ(128, 60).TopPosZ(28, 16))
+	ITEM(Option, autoFit, SetLabel(t_("Auto fit")).LeftPosZ(8, 68).TopPosZ(12, 16))
+	ITEM(Option, showPoints, SetLabel(t_("Points")).LeftPosZ(128, 60).TopPosZ(12, 16))
+	ITEM(Switch, opwT, SetLabel(t_("w [rad/s]\nT [s]")).LeftPosZ(208, 64).TopPosZ(16, 32))
+	ITEM(LabelBox, dv___5, SetLabel(t_("Plot fit")).LeftPosZ(4, 112).TopPosZ(0, 48))
+	ITEM(LabelBox, dv___6, SetLabel(t_("Horizontal axis")).LeftPosZ(200, 96).TopPosZ(0, 48))
+	ITEM(LabelBox, dv___7, SetLabel(t_("Show")).LeftPosZ(124, 68).TopPosZ(0, 48))
 END_LAYOUT
 
 LAYOUT(MenuView, 572, 48)
@@ -34,6 +38,19 @@ LAYOUT(MenuView, 572, 48)
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(248, 56).TopPosZ(4, 20))
 	ITEM(Switch, optLoadIn, SetLabel(t_("Load\nLoad in parallel")).RightPosZ(92, 144).TopPosZ(8, 16))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
+END_LAYOUT
+
+LAYOUT(MenuOptions, 632, 48)
+	ITEM(Button, butSave, SetLabel(t_("Save")).RightPosZ(4, 56).TopPosZ(4, 20))
+	ITEM(LabelBox, dv___1, SetLabel(t_("Physical parameters")).LeftPosZ(4, 504).TopPosZ(4, 40))
+	ITEM(Label, dv___2, SetLabel(t_("rho [Kg/m3]:")).LeftPosZ(260, 80).TopPosZ(20, 19))
+	ITEM(Label, dv___3, SetLabel(t_("Length scale []:")).LeftPosZ(388, 80).TopPosZ(20, 19))
+	ITEM(Label, dv___4, SetLabel(t_("Depth [m]:")).LeftPosZ(140, 72).TopPosZ(20, 19))
+	ITEM(Label, dv___5, SetLabel(t_("Gravity [m/s2]:")).LeftPosZ(12, 80).TopPosZ(20, 19))
+	ITEM(EditDouble, depth, LeftPosZ(212, 40).TopPosZ(20, 19))
+	ITEM(EditDouble, rho, LeftPosZ(340, 40).TopPosZ(20, 19))
+	ITEM(EditDouble, length, LeftPosZ(468, 32).TopPosZ(20, 19))
+	ITEM(EditDouble, g, LeftPosZ(92, 40).TopPosZ(20, 19))
 END_LAYOUT
 
 LAYOUT(MenuAbout, 540, 288)
@@ -65,14 +82,8 @@ LAYOUT(MainView, 400, 200)
 	ITEM(GLCanvas, gl, SetFrame(ThinInsetFrame()).HSizePosZ(0, 0).VSizePosZ(0, 0))
 END_LAYOUT
 
-LAYOUT(WamitLoad, 180, 72)
-	ITEM(Label, dv___0, SetLabel(t_("Water density [Kg/m3]:")).LeftPosZ(12, 120).TopPosZ(8, 19))
-	ITEM(EditDouble, rho, LeftPosZ(132, 40).TopPosZ(8, 19))
-	ITEM(Button, ok, SetLabel(t_("Ok")).HSizePosZ(120, 4).VSizePosZ(48, 4))
-END_LAYOUT
-
-LAYOUT(Wamit13Load, 180, 144)
-	ITEM(Label, dv___0, SetLabel(t_("Height [m]:")).LeftPosZ(12, 120).TopPosZ(80, 19))
+LAYOUT(WamitLoad, 180, 144)
+	ITEM(Label, dv___0, SetLabel(t_("Depth [m]:")).LeftPosZ(12, 120).TopPosZ(80, 19))
 	ITEM(EditDouble, h, LeftPosZ(132, 40).TopPosZ(80, 19))
 	ITEM(Label, dv___2, SetLabel(t_("Water density [Kg/m3]:")).LeftPosZ(12, 120).TopPosZ(32, 19))
 	ITEM(EditDouble, rho, LeftPosZ(132, 40).TopPosZ(32, 19))
@@ -81,11 +92,5 @@ LAYOUT(Wamit13Load, 180, 144)
 	ITEM(Button, ok, SetLabel(t_("Ok")).RightPosZ(4, 56).BottomPosZ(4, 20))
 	ITEM(Label, dv___7, SetLabel(t_("Length scale [m]:")).LeftPosZ(12, 120).TopPosZ(56, 19))
 	ITEM(EditDouble, len, LeftPosZ(132, 40).TopPosZ(56, 19))
-END_LAYOUT
-
-LAYOUT(FastLoad, 180, 72)
-	ITEM(Label, dv___0, SetLabel(t_("Gravity [m/s2]:")).LeftPosZ(12, 120).TopPosZ(8, 19))
-	ITEM(EditDouble, g, LeftPosZ(132, 40).TopPosZ(8, 19))
-	ITEM(Button, ok, SetLabel(t_("Ok")).HSizePosZ(120, 4).VSizePosZ(48, 4))
 END_LAYOUT
 

@@ -6,13 +6,13 @@ topic "This is a test";
 [s0; Hydrodynamic coefficients viewer and converter for Boundary 
 Element Method solver formats.&]
 [s0;2 &]
-[s0; [2 Version BETA `[Build Info`].]&]
+[s0; [2 Version beta BUILDINFO.]&]
 [s0;_2 &]
 [s0;2 &]
 [s0; Acknowledgments&]
 [s0;2 &]
-[s0; [2 Markel Peñalba, Juan C. C. Portillo, João C. C. Henriques, 
-Yerai Peña.]&]
+[s0; [2 M. Peñalba, J. C. C. Portillo, J. C. C. Henriques, Y. Peña, 
+M. J. Sanchez`-Lara.]&]
 [s0; [2 Some file parsing strategies taken from ][^https`:`/`/wec`-sim`.github`.io`/bemio`/^2 t
 he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 

@@ -1,7 +1,7 @@
 # BEMRosetta Install
 
 ## Windows
-No install is required. Just copy BEMRosetta.exe anywhere and dodge Windows warnings. 
+No install is required. Just copy BEMRosetta.exe and BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
 
 ## U++ POSIX installation
 
@@ -31,10 +31,10 @@ su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox
 
 First, uncompress source tarball and change dir to the new created directory.
 
-Example: for bemrosetta_linux.tar.tar.gz
+Example: for bemrosetta_linux.tar.gz
 ```
-tar zxvf bemrosetta_linux.tar.tar.gz
-cd bemrosetta_linux.tar
+tar zxvf bemrosetta_linux.tar.gz
+cd bemrosetta_linux
 ```
 
 Use 'make' to compile and generate BEMRosetta.out:
@@ -44,4 +44,6 @@ make
 
 Now you can start playing with BEMRosetta by invoking ./BEMRosetta/BEMRosetta.out
 You might want to put BEMRosetta elsewhere later, e.g. inside ~/bin/ for example.
+
+The same procedure can be followed to install bemrosetta_cl_linux.tar.gz
 
