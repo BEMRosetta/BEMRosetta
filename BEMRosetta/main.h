@@ -28,16 +28,21 @@ enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 class HydroSource : public DataSource {
 public:
 	HydroSource() : data(0) {}
-	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot)	{Init(data, i, j_h, dataToPlot);}
-	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot) 	{return Init(*data, i, j_h, dataToPlot);}
-	bool Init(Hydro &data, int i, int j_h, DataToPlot dataToPlot) {
+	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w) {
+		Init(data, i, j_h, dataToPlot, show_w);
+	}
+	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w) 	{
+		return Init(*data, i, j_h, dataToPlot, show_w);
+	}
+	bool Init(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w) {
 		this->data = &data;
 		this->i = data.dofOrder[i];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
 			j_h = data.dofOrder[j_h];
 		this->j_h = j_h;
 		this->dataToPlot = dataToPlot;
-		if (IsNaN(y(0)))
+		this->show_w = show_w;
+		if (IsNull(y(0)))
 			return false;
 		return true;
 	}
@@ -57,13 +62,32 @@ public:
 		default:				NEVER();	return Null;
 		}
 	}
-	virtual inline double x(int64 id) 	{return data->w[int(id)];}
+	virtual inline double x(int64 id) 	{
+		if (show_w)
+			return data->w[int(id)];
+		else
+			return data->T[int(id)];
+	}
 	virtual int64 GetCount()		  	{return data->Nf;}
 	
 private:
 	Hydro *data;
 	int i, j_h;
 	DataToPlot dataToPlot;
+	bool show_w;
+};
+
+class MenuOptions : public WithMenuOptions<StaticRect> {
+public:
+	typedef MenuOptions CLASSNAME;
+	MenuOptions() : md(0) {}
+	void Init(BEMData &md);
+	void Load();
+	void OnSave();
+	bool IsChanged();
+	
+private:
+	BEMData *md;
 };
 
 class MenuAbout : public WithMenuAbout<StaticRect> {
@@ -164,21 +188,58 @@ public:
 	void OnView();
 	void OnOpt();
 	
-	int LoadSerializeJson() {
+	void WindowWamitAdditionalData(BEMData &md, HydroClass &data);
+		
+	bool LoadSerializeJson() {
+		bool ret;
 		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
 		DirectoryCreate(folder);
 		if (!DirectoryExists(folder))
-			return 0;
-		String fileName = AppendFileName(folder, "config.cf");
-		if (!FileExists(fileName)) 
-			return 1;
-		String jsonText = LoadFile(fileName);
-		if (jsonText.IsEmpty())
-			return 0;
-		if (!LoadFromJson(*this, jsonText))
-			return 0;
-		return 2;
+			ret = false;
+		else {
+			String fileName = AppendFileName(folder, "config.cf");
+			if (!FileExists(fileName)) 
+				ret = false;
+			else {
+				String jsonText = LoadFile(fileName);
+				if (jsonText.IsEmpty())
+					ret = false;
+				else {
+					if (!LoadFromJson(*this, jsonText))
+						ret = false;
+					else
+						ret = true;
+				}
+			}
+		}
+		
+		if (!ret || IsNull(menuOpen.optLoadIn)) 
+			menuOpen.optLoadIn = 1;
+
+		if (!ret || IsNull(menuPlot.autoFit)) 
+			menuPlot.autoFit = true;
+		
+		if (!ret || IsNull(menuPlot.opwT)) 
+			menuPlot.opwT = 0;
+	
+		if (!ret || IsNull(menuPlot.showPoints)) 
+			menuPlot.showPoints = true;
+		
+		if (!ret || IsNull(menuPlot.showPhase)) 
+			menuPlot.showPhase = true;
+
+		if (!ret || IsNull(menuView.optLoadIn)) 
+			menuView.optLoadIn = 1;
+		
+		if (!ret || IsNull(menuConvert.opt)) 
+			menuConvert.opt = 0;
+		
+		if (!ret)
+			menuTab.Set(menuAbout);
+		
+		return ret;
 	}
+	
 	bool StoreSerializeJson() {
 		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
 		DirectoryCreate(folder);
@@ -193,6 +254,7 @@ public:
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
 	WithMenuView<StaticRect> menuView;
+	MenuOptions menuOptions;
 	MenuAbout menuAbout;
 	
 	MainSummary mainSummary;
@@ -204,7 +266,7 @@ public:
 	MainView mainView;
 	MainOutput mainOutput;
 	
-	Upp::Array<HydroClass> hydros;
+	BEMData md;
 	Upp::Array<MeshClass> surfs;
 	
 private:

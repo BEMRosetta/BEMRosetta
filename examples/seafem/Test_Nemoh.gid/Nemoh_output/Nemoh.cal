@@ -1,0 +1,62 @@
+--- Environment ------------------------------------------------------------------------------------------------------------------
+1025 ! RHO ! KG/M**3 ! Fluid specific volume
+9.8066 ! G ! M/S**2 ! Gravity
+70 ! DEPTH ! M ! Water depth
+0.0 0.0 ! XEFF YEFF ! M ! Wave measurement point
+--- Description of floating bodies -----------------------------------------------------------------------------------------------
+1 ! Number of bodies
+--- Body data Auto1 -----------------------------------------------------------------------------------------------------------------------
+Body_data_Auto1_fd.msh ! Name of mesh file
+1320 1316 ! Number of nodes and number of elements
+6 ! Number of degrees of freedom
+1 1 0 0 0 0 0 ! Surge
+1 0 1 0 0 0 0 ! Sway
+1 0 0 1 0 0 0 ! Heave
+2 1 0 0 0.0 0.0 0.0 ! Roll about CdG
+2 0 1 0 0.0 0.0 0.0 ! Pitch about CdG
+2 0 0 1 0.0 0.0 0.0 ! Yaw about CdG
+6 ! Number of resulting generalised forces
+1 1 0 0 0 0 0 ! Force in x direction
+1 0 1 0 0 0 0 ! Force in y direction
+1 0 0 1 0 0 0 ! Force in z direction
+2 1 0 0 0.0 0.0 0.0 ! Moment force in x direction about CdG
+2 0 1 0 0.0 0.0 0.0 ! Moment force in y direction about CdG
+2 0 0 1 0.0 0.0 0.0 ! Moment force in z direction about CdG
+24 ! Number of lines of additional information
+1 0.0 0.0 0.0 ! Center Of Gravity of the body
+2 1.0 0 0 ! Radii of gyration of the body (matrix) : Rxx Rxy Rxz
+3 0 1.0 0 ! Rxy Ryy Ryz
+4 0 0 1.0 ! Rxz Ryz Rzz
+5 0. ! Mass of body
+6 0.0 0.0 0.0 ! Reference point
+7 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Inertia matrix (row 1)
+8 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Inertia matrix (row 2)
+9 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Inertia matrix (row 3)
+10 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Inertia matrix (row 4)
+11 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Inertia matrix (row 5)
+12 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Inertia matrix (row 6)
+13 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Restoration matrix (row 1)
+14 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Restoration matrix (row 2)
+15 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Restoration matrix (row 3)
+16 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Restoration matrix (row 4)
+17 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Restoration matrix (row 5)
+18 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Restoration matrix (row 6)
+19 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Damping matrix (row 1)
+20 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Damping matrix (row 2)
+21 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Damping matrix (row 3)
+22 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Damping matrix (row 4)
+23 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Damping matrix (row 5)
+24 0.0 0.0 0.0 0.0 0.0 0.0 ! Additional Damping matrix (row 6)
+--- Load cases to be solved -------------------------------------------------------------------------------------------------------
+60 1.5708 0.41888  ! Number of wave frequencies, Min, and Max (rad/s)
+10 -90.0 90.0  ! Number of wave directions, Min and Max (degrees)
+--- Post processing ---------------------------------------------------------------------------------------------------------------
+1 0.1 10. ! IRF  ! IRF calculation (0 for no calculation), time step and duration
+1 ! Show pressure
+721 0. 360. ! Kochin function  ! Number of directions of calculation (0 for no calculations), Min and Max (degrees)
+none 0 0 ! Free surface elevation ! Name of free surface file ('none' for no free surface), number of nodes and number of panels.
+--- GiD Inputs ---------------------------------------------------------------------------------------------------------------
+0.0 0.0 ! Speed (m/s) ! Speed direction (degrees)
+4 ! Results file
+0 ! Critical Damping Coefficient
+8 ! Number of CPUs

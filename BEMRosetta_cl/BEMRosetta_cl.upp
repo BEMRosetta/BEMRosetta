@@ -19,7 +19,9 @@ file
 	fast.cpp,
 	data.brc,
 	hydrodyn.dat,
-	license.txt;
+	license.txt,
+	bemrosetta_cl.t,
+	main.rc;
 
 mainconfig
 	"" = "";
