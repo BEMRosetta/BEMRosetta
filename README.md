@@ -5,6 +5,7 @@
   -->
 
 # BEMRosetta
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
 
 <p align="center">
