@@ -1,3 +1,9 @@
+<!--
+  Title: BEMRosetta
+  Description: Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
+  Author: Iñaki Zabala
+  -->
+
 # BEMRosetta
 Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
 
@@ -36,22 +42,22 @@ BEMRosetta runs in Windows and Linux, it is done in C++ [so install is simple](h
 
 ### - Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
 
-_Damping for the same geometry got from different solvers_
+  _Damping for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20B.jpg" width="300" title="Damping for the same geometry got from different solvers"></p>
 
-_Excitation force for the same geometry got from different solvers_
+  _Excitation force for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
 ### - Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
 ### - Load the hydrodynamic coefficients for different geometries to compare them
 
-_Damping for different offshore wind floating platforms_
+  _Damping for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20B.png" width="300" title="Damping for different offshore wind floating platforms"></p>
 
-_Excitation force for different offshore wind floating platforms_
+  _Excitation force for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
