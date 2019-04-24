@@ -4,6 +4,9 @@ BEMRosetta_cl includes the features of BEMRosetta that do not need a graphical u
 
 This simple demo just loads a Nemoh model (-i --input option), prints some data about the model (-r --report option), and exports it to Wamit format and to FAST format (-c --convert option).
 
+Parameters are done in sequence: if a physical parameter is changed after export, saved files will not include the change. In addition, they can be repeated as desired.
+
+
 ```
 BEMRosetta\other\test>md ".\testWamit"
 BEMRosetta\other\test>md ".\testFAST"
