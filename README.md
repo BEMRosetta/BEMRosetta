@@ -7,7 +7,7 @@
 # BEMRosetta
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
+**Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="45%" title="DeepCWind mesh in Windows">
