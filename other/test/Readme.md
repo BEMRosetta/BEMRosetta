@@ -3,6 +3,7 @@
 BEMRosetta_cl includes the features of BEMRosetta that do not need a graphical user interface.
 This simple demo just loads a Nemoh model (-i --input option), prints some data about the model (-r --report option), and exports it to Wamit format and to FAST format (-c --convert option).
 
+```
 BEMRosetta\other\test>md ".\testWamit"
 BEMRosetta\other\test>md ".\testFAST"
 BEMRosetta\other\test>..\..\install\bemrosetta_cl -i "..\..\examples\nemoh\ellipsoid\Nemoh.cal" -r -c ".\testWamit\ellip.1" -c ".\testFAST\ellip.dat"
@@ -35,3 +36,4 @@ File '.\testWamit\ellip.1' converted
 File '.\testFAST\ellip.dat' converted
 BEMRosetta\other\test>pause
 Press any key to continue . . .
+```
