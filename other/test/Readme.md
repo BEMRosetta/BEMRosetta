@@ -20,7 +20,6 @@ BEMRosetta Copyright (c) 2019 Iñaki Zabala
 Hydrodynamic coefficients converter for Boundary Element Method solver formats
 Version beta 2019042317, release, 64 bits
 
-
 Loading '..\..\examples\nemoh\ellipsoid\Nemoh.cal'
 - Hydrostatics file(s) 'Mesh/Hydrostatics*.dat': **Not found**
 - KH file(s) 'Mesh/KH*.dat': **Not found**
