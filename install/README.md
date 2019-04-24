@@ -3,7 +3,7 @@
 ## Windows
 No install is required. Just copy BEMRosetta.exe and BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
 
-## U++ POSIX installation
+## Linux POSIX 
 
 Standard POSIX distribution of BEMRosetta comes as a source tarball.
 
