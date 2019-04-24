@@ -31,7 +31,7 @@ su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox
 
 First, uncompress source tarball and change dir to the new created directory.
 
-Example: for bemrosetta_linux.tar.gz
+Example: for GUI version bemrosetta_linux.tar.gz
 ```
 tar zxvf bemrosetta_linux.tar.gz
 cd bemrosetta_linux
@@ -45,5 +45,5 @@ make
 Now you can start playing with BEMRosetta by invoking ./BEMRosetta/BEMRosetta.out
 You might want to put BEMRosetta elsewhere later, e.g. inside ~/bin/ for example.
 
-The same procedure can be followed to install bemrosetta_cl_linux.tar.gz
+The same procedure can be followed to install command line version bemrosetta_cl_linux.tar.gz
 
