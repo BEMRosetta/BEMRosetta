@@ -347,7 +347,7 @@ void Nemoh::Save(String file) {
 	throw Exc("Option not implemented");
 }		
 
-bool Nemoh::LoadMesh(String fileName) {
+bool Nemoh::LoadDatMesh(String fileName) {
 	FileIn in(fileName);
 	if (!in.IsOpen()) {
 		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
