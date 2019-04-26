@@ -261,7 +261,8 @@ public:
 	void Save(String file);
 	virtual ~Wamit()	{}
 	
-	bool LoadMesh(String file);
+	bool LoadGdfMesh(String file);
+	bool LoadDatMesh(String file);
 	
 protected:
 	bool Load_out();							
@@ -304,7 +305,7 @@ public:
 	void Save(String file);
 	virtual ~Nemoh()	{}
 	
-	bool LoadMesh(String file);
+	bool LoadDatMesh(String file);
 	
 private:
 	String folder;

@@ -38,7 +38,7 @@ BEMRosetta runs in Windows and Linux, it is done in C++ [so install is simple](h
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
     * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
 * Mesh view
-  * [Wamit](https://www.wamit.com/): .gdf
+  * [Wamit](https://www.wamit.com/): .gdf, pan.dat
   * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
 
 ### - Load the hydrodynamic coefficients from one format and save them in another

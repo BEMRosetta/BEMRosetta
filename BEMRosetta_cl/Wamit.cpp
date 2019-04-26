@@ -726,7 +726,106 @@ void Wamit::Save_hst(String fileName) {
 	}
 }
 
-bool Wamit::LoadMesh(String fileName) {
+bool Wamit::LoadDatMesh(String fileName) {
+	FileIn in(fileName);
+	if (!in.IsOpen()) {
+		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
+		mh().lastError = Format(t_("Impossible to open file '%s'"), fileName);
+		return false;
+	}
+	mh().file = fileName;
+	
+	String line;
+	FieldSplit f;	
+	
+	try {
+		line = ToUpper(TrimBoth(in.GetLine()));
+		if (!line.StartsWith("ZONE"))
+			throw Exc(t_("'ZONE' field not found"));
+		line.Replace("\"", "");
+		line.Replace(" ", "");
+		
+		int pos;
+		int T = Null;
+		pos = line.FindAfter("T=");
+		if (pos > 0) 
+			T = ScanInt(line.Mid(pos));
+		int I = Null;
+		pos = line.FindAfter("I=");
+		if (pos > 0) 
+			I = ScanInt(line.Mid(pos));
+		int J = Null;
+		pos = line.FindAfter("J=");
+		if (pos > 0) 
+			J = ScanInt(line.Mid(pos));
+		String F;
+		pos = line.FindAfter("F=");
+		if (pos > 0) 
+			F = line.Mid(pos);
+		
+		if (IsNull(T)) {
+			while(!in.IsEof()) {
+				int id0 = mh().nodes.GetCount();
+				for (int i = 0; i < I*J; ++i) {
+					line = in.GetLine();	
+					f.Load(line);
+					
+					double x = f.GetDouble(0);	
+					double y = f.GetDouble(1);	
+					double z = f.GetDouble(2);	
+						
+					Point3D &node = mh().nodes.Add();
+					node.x = x;
+					node.y = y;
+					node.z = z;
+				}
+				for (int i = 0; i < I-1; ++i) {
+					for (int j = 0; j < J-1; ++j) {
+						Panel &panel = mh().panels.Add();
+						panel.id0 = id0 + I*j     + i;
+						panel.id1 = id0 + I*j     + i+1;
+						panel.id2 = id0 + I*(j+1) + i;
+						panel.id3 = id0 + I*(j+1) + i+1;
+					}
+				}
+				in.GetLine();
+			}
+		} else {
+			for (int i = 0; i < I; ++i) {
+				line = in.GetLine();	
+				f.Load(line);
+				
+				double x = f.GetDouble(0);	
+				double y = f.GetDouble(1);	
+				double z = f.GetDouble(2);	
+					
+				Point3D &node = mh().nodes.Add();
+				node.x = x;
+				node.y = y;
+				node.z = z;
+			}
+			for (int i = 0; i < I/4; ++i) {
+				line = in.GetLine();	
+				f.Load(line);
+				
+				Panel &panel = mh().panels.Add();
+				panel.id0 = f.GetInt(0) - 1;
+				panel.id1 = f.GetInt(1) - 1;
+				panel.id2 = f.GetInt(2) - 1;
+				panel.id3 = f.GetInt(3) - 1;
+			}
+		}
+		mh().GetLimits();
+	} catch (Exc e) {
+		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		mh().lastError = e;
+		return false;
+	}
+	
+	return true;
+}
+	
+bool Wamit::LoadGdfMesh(String fileName) {
 	FileIn in(fileName);
 	if (!in.IsOpen()) {
 		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
@@ -743,7 +842,9 @@ bool Wamit::LoadMesh(String fileName) {
 		line = in.GetLine();	
 		f.Load(line);
 		double scale = f.GetDouble(0);
-		
+		if (scale < 1)
+			throw Exc(t_("Wrong scale in .gdf file"));
+					
 		line = in.GetLine();	
 		f.Load(line);
 		mh().y0z = f.GetInt(0) != 0;
@@ -752,7 +853,9 @@ bool Wamit::LoadMesh(String fileName) {
 		line = in.GetLine();	
 		f.Load(line);
 		int nPatches = f.GetInt(0);
-		
+		if (nPatches < 1)
+			throw Exc(t_("Wrong number of patches in .gdf file"));
+				
 		mh().nodes.Clear();
 		mh().panels.Clear();
 		
