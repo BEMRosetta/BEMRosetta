@@ -2,10 +2,15 @@
 
 BEMRosetta_cl includes the features of BEMRosetta that do not need a graphical user interface.
 
-This simple demo just loads a Nemoh model (-i --input option), prints some data about the model (-r --report option), and exports it to Wamit format and to FAST format (-c --convert option).
+This simple demo just loads a Nemoh model (-i --input option), prints some data about the model (-r --report option), and exports it to Wamit format and to FAST format (-c --convert option). The command is:
+
+```
+bemrosetta_cl -i "..\..\examples\nemoh\ellipsoid\Nemoh.cal" -r -c ".\testWamit\ellip.1" -c ".\testFAST\ellip.dat"
+```
 
 Parameters are done in sequence: if a physical parameter is changed after export, saved files will not include the change. In addition, they can be repeated as desired.
 
+The complete test output is shown below:
 
 ```
 BEMRosetta\other\test>md ".\testWamit"
@@ -14,7 +19,6 @@ BEMRosetta\other\test>..\..\install\bemrosetta_cl -i "..\..\examples\nemoh\ellip
 BEMRosetta Copyright (c) 2019 Iñaki Zabala
 Hydrodynamic coefficients converter for Boundary Element Method solver formats
 Version beta 2019042317, release, 64 bits
-
 
 Loading '..\..\examples\nemoh\ellipsoid\Nemoh.cal'
 - Hydrostatics file(s) 'Mesh/Hydrostatics*.dat': **Not found**
