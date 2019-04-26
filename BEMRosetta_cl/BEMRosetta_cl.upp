@@ -1,5 +1,7 @@
 description "Hydrodynamic coefficients converter command line utility\377";
 
+noblitz;
+
 uses
 	Core,
 	plugin\Eigen,
@@ -21,7 +23,7 @@ file
 	hydrodyn.dat,
 	license.txt,
 	bemrosetta_cl.t,
-	main.rc;
+	main_cl.rc;
 
 mainconfig
 	"" = "";

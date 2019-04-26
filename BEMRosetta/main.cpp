@@ -78,6 +78,8 @@ void Main::Init() {
 	menuView.butLoad <<= THISBACK(OnView);
 
 	menuView.butRemove.WhenAction = [&] {
+		WaitCursor waitcursor;
+		
 		surfs.Clear();
 	};
 	
@@ -251,7 +253,7 @@ void Main::OnOpt() {
 	menuView.file.ClearTypes(); 
 
 	menuView.file.Type("Wamit .gdf file", "*.gdf");	
-	menuView.file.Type("Nemoh .dat file", "*.dat");
+	menuView.file.Type("Nemoh .dat and Wamit panel .dat file", "*.dat");
 	menuView.file.Type("All supported mesh files", "*.gdf *.dat");
 	menuView.file.AllFilesType();
 	String extView = ToLower(GetFileExt(menuView.file.GetData().ToString()));
@@ -373,14 +375,18 @@ void Main::OnView() {
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".dat") {
 		Nemoh &data = surfs.Create<Nemoh>();
-		if (!data.LoadMesh(file)) {
-			Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
+		if (!data.LoadDatMesh(file)) {
 			surfs.SetCount(surfs.GetCount()-1);
-			return;
-		}
+			Wamit &data = surfs.Create<Wamit>();
+			if (!data.LoadDatMesh(file)) {
+				Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
+				surfs.SetCount(surfs.GetCount()-1);
+				return;
+			}		
+		} 
 	} else if (ext == ".gdf") {
 		Wamit &data = surfs.Create<Wamit>();
-		if (!data.LoadMesh(file)) {
+		if (!data.LoadGdfMesh(file)) {
 			Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
 			surfs.SetCount(surfs.GetCount()-1);
 			return;
