@@ -43,7 +43,10 @@ void ArrangeDOF::Init(Hydro &hydro) {
 			hydro.SetOrder(neworder);
 		}
 	};
-	dofList.WhenDrag = [=] { Drag(); };
+	dofList.WhenDrag = [=] { 
+		if(dofList.DoDragAndDrop(InternalClip(dofList, "array")) == DND_MOVE)
+			dofList.RemoveSelection();
+	};
 	dofList.WhenSel = [this] {
 		if (!selecting) {
 			selecting = true;
@@ -69,10 +72,5 @@ bool ArrangeDOF::DnDInsert(int line, PasteClip& d) {
 		return true;
 	}
 	return false;
-}
-
-void ArrangeDOF::Drag() {
-	if(dofList.DoDragAndDrop(InternalClip(dofList, "array")) == DND_MOVE)
-		dofList.RemoveSelection();
 }
 

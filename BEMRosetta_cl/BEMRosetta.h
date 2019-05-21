@@ -14,7 +14,7 @@ using namespace Eigen;
 
 class Hydro {
 public:
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, UNKNOWN};
+	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, UNKNOWN};
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
@@ -39,6 +39,8 @@ public:
 		case FAST_WAMIT: 	return t_("FAST-Wamit");
 		case NEMOH:			return t_("Nemoh");
 		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
+		case AQWA:			return t_("AQWA");
+		case UNKNOWN:			return t_("Unknown");
 		}
 		return t_("Unknown");
 	}
@@ -140,13 +142,16 @@ public:
 	
 	void GetBodyDOF();
 	
+	int GetIrregularHead();	
+	int GetIrregularFreq();	
+	
 	String lastError;
 
 private:
 	static const char *strDOF[6];
 	static const char *strDOFAbrev[6];
 	static String C_units_base(int i, int j);
-		
+	
 public:
 	static String StrDOF(int i) {
 		int ib = i/6 + 1;
@@ -190,6 +195,17 @@ public:
 	String GetLastError()	{return lastError;}
 };
 
+void Compare_rho(Hydro &a, Hydro &b);
+void Compare_g(Hydro &a, Hydro &b);
+void Compare_h(Hydro &a, Hydro &b);
+void Compare_w(Hydro &a, Hydro &b);
+void Compare_head(Hydro &a, Hydro &b);
+void Compare_Nb(Hydro &a, Hydro &b);
+void Compare_A(Hydro &a, Hydro &b);
+void Compare_B(Hydro &a, Hydro &b);
+void Compare_C(Hydro &a, Hydro &b);
+void Compare_cg(Hydro &a, Hydro &b);
+		
 class HydroData {
 public:
 	HydroData(Hydro *data = 0) {
@@ -216,7 +232,7 @@ class HydroClass {
 public:
 	HydroClass()							{}
 	HydroClass(Hydro *hydro) : hd(hydro)	{}
-	virtual ~HydroClass()		{}
+	virtual ~HydroClass()					{}
 	
 	HydroData hd;	
 	
@@ -249,10 +265,28 @@ class MeshClass {
 public:
 	MeshClass()							{}
 	MeshClass(Surface *surf) : mh(surf)	{}
-	virtual ~MeshClass()		{}
+	virtual ~MeshClass()				{}
 	
 	MeshData mh;	
 };
+
+class FileInLine : public FileIn {
+public:
+	FileInLine(String data) : FileIn(data), line(0) {};
+	String GetLine() {
+		line++;	
+		return FileIn::GetLine();
+	}
+	void GetLine(int num) {
+		for (int i = 0; i < num; ++i)
+			GetLine();
+	}
+	int GetLineNumber()	{return line;}
+
+private:
+	int line;
+};
+
 
 class Wamit : public HydroClass, public MeshClass {
 public:
@@ -266,7 +300,7 @@ public:
 	
 protected:
 	bool Load_out();							
-	void Load_A(FileIn &in, MatrixXd &A);
+	void Load_A(FileInLine &in, MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
 
@@ -322,6 +356,18 @@ private:
 	bool Load_IRF(String fileName);
 };
 
+class Aqwa : public HydroClass, public MeshClass {
+public:
+	Aqwa(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf) {}
+	bool Load(String file, double rho = Null);
+	void Save(String file);
+	virtual ~Aqwa()	{}
+	
+private:
+	bool Load_AH1();
+	bool Load_LIS();
+};
+
 template <class T>
 void LinSpaced(Vector<T> &v, int n, T min, T max) {
 	ASSERT(n > 0);
@@ -338,9 +384,15 @@ int IsTabSpace(int c);
 
 class FieldSplit {
 public:
-	void Load(String line) {
+	const int FIRST = 0;
+	const int LAST = Null;
+	
+	FieldSplit(FileInLine &in) {this->in = &in;}
+	
+	FieldSplit& Load(String line) {
 		this->line = line;
 		fields = Split(line, IsTabSpace, true);
+		return *this;
 	}
 	void LoadWamitJoinedFields(String line) {		// Trick for "glued" fields in Wamit
 		this->line = line;
@@ -368,30 +420,47 @@ public:
 		}
 	}
 	String GetText(int i) {
+		if (fields.IsEmpty())
+			throw Exc(Format(t_("[%d] No data available"), in->GetLineNumber()));
+		if (IsNull(i))
+			i = fields.GetCount()-1;
 		CheckId(i);
 		return fields[i];
 	}
 	int GetInt(int i) {
+		if (fields.IsEmpty())
+			throw Exc(Format(t_("[%d] No data available"), in->GetLineNumber()));
+		if (IsNull(i))
+			i = fields.GetCount()-1;
 		CheckId(i);
 		int res = ScanInt(fields[i]);
 		if (IsNull(res))
-			throw Exc(Format(t_("Bad %s '%s' in field #%d, line '%s'"), "integer", fields[i], i+1, line));
+			throw Exc(Format(t_("[%d] Bad %s '%s' in field #%d, line\n'%s'"), in->GetLineNumber(), "integer", fields[i], i+1, line));
 		return res;
 	}
 	double GetDouble(int i) {
+		if (fields.IsEmpty())
+			throw Exc(Format(t_("[%d] No data available"), in->GetLineNumber()));
+		if (IsNull(i))
+			i = fields.GetCount()-1;
 		CheckId(i);
 		double res = ScanDouble(fields[i]);
 		if (IsNull(res))
-			throw Exc(Format(t_("Bad %s '%s' in field #%d, line '%s'"), "double", fields[i], i+1, line));
+			throw Exc(Format(t_("[%d] Bad %s '%s' in field #%d, line\n'%s'"), in->GetLineNumber(), "double", fields[i], i+1, line));
 		return res;
 	}
+	int GetCount() {
+		return fields.GetCount();
+	}
+	
 private:
 	String line;
 	Vector<String> fields;
+	FileInLine *in;
 	
 	void CheckId(int i) {
-		if (i >= fields.GetCount())
-			throw Exc(Format(t_("Field #%d not found in line '%s'"), i+1, line));
+		if (i >= fields.GetCount() || i < 0)
+			throw Exc(Format(t_("[%d] Field #%d not found in line\n'%s'"), in->GetLineNumber(), i+1, line));
 	}
 };
 
