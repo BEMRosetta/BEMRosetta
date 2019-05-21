@@ -44,6 +44,7 @@ void WamitAdditionalData(BEMData &md, HydroClass &data) {
 		data.hd().h = md.depth;
 }
 
+
 CONSOLE_APP_MAIN {
 	String str = t_("BEMRosetta Copyright (c) 2019 Iñaki Zabala\nHydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
 	Hydro::SetBuildInfo(str);

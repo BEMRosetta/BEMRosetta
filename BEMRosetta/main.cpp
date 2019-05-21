@@ -34,8 +34,8 @@ void Main::Init() {
 	}
 	
 	CtrlLayout(menuOpen);
-	menuOpen.file.WhenChange = THISBACK(OnLoad);
-	menuOpen.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
+	menuOpen.file <<= THISBACK(OnLoad);
+	menuOpen.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
 	menuOpen.butLoad <<= THISBACK(OnLoad);
 	
 	menuOpen.butRemove.WhenAction = [&] {
@@ -52,7 +52,7 @@ void Main::Init() {
 	};
 	
 	CtrlLayout(menuConvert);
-	menuConvert.file.WhenChange = THISBACK(OnConvert);
+	menuConvert.file <<= THISBACK(OnConvert);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.butLoad <<= THISBACK(OnConvert);
 
@@ -73,7 +73,7 @@ void Main::Init() {
 	menuPlot.showPhase.WhenAction 	 = [&] {GetSelTab().Load(md.hydros);};
 	
 	CtrlLayout(menuView);
-	menuView.file.WhenChange = THISBACK(OnView);
+	menuView.file <<= THISBACK(OnView);
 	menuView.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuView.butLoad <<= THISBACK(OnView);
 
@@ -180,9 +180,9 @@ void Main::Init() {
 	mainOutput.Init();
 	mainTab.Add(mainOutput.SizePos(), t_("Output"));
 	
-	Hydro::Print 	  	= [this](String s) {mainOutput.Print(s);};
-	Hydro::PrintWarning = [this](String s) {mainOutput.Print(s);};
-	Hydro::PrintError 	= [this](String s) {mainOutput.Print(s); mainTab.Set(mainOutput);};
+	Hydro::Print 	  	= [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
+	Hydro::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
+	Hydro::PrintError 	= [this](String s) {printf("%s", ~s); mainOutput.Print(s); mainTab.Set(mainOutput);};
 	
 	if (firstTime)
 		menuTab.Set(menuAbout);
@@ -211,7 +211,8 @@ void Main::OnOpt() {
 	menuOpen.file.Type("FAST HydroDyn file", "*.dat");	
 	menuOpen.file.Type("Nemoh .cal file", "*.cal");	
 	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
-	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf");
+	menuOpen.file.Type("AQWA .AH1.LIS file", "*.ah1 *.lis");
+	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis");
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
@@ -226,8 +227,10 @@ void Main::OnOpt() {
 		menuOpen.file.ActiveType(3);
 	else if (String(".inf").Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(4);
-	else
+	else if (String(".ah1 .lis").Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(5);
+	else
+		menuOpen.file.ActiveType(6);
 	
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
@@ -271,42 +274,43 @@ void Main::OnLoad() {
 	String file = ~menuOpen.file;
 	
 	try {
+		WaitCursor cursor;
+		
 		md.Load(file, THISBACK(WindowWamitAdditionalData));
+	
+		if (menuOpen.optLoadIn == 0) {
+			md.hydros.Remove(0, md.hydros.GetCount()-1);
+			mainSummary.array.Reset();
+		}
+		String strError;
+		if (!HydroClass::MatchCoeffStructure(md.hydros, strError)) {
+			md.hydros.SetCount(md.hydros.GetCount()-1);
+			Exclamation(Format(t_("Model '%s' does not match with the one previously loaded: %s"), DeQtf(file), strError));
+		}
+		
+		int id = md.hydros.GetCount()-1;
+		HydroClass &data = md.hydros[id];
+		
+		data.hd().Report();
+		mainSummary.Report(data.hd(), id);
+		if (data.hd().Nf < 0)
+			return;
+		
+		mainArrange.Load(md.hydros);
+		menuConvert.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
+		if (menuConvert.arrayModel.GetCursor() < 0)
+			menuConvert.arrayModel.SetCursor(0);
+		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(md.hydros));	
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(md.hydros));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(md.hydros));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(md.hydros));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(md.hydros));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(md.hydros));
+		mainTab.GetItem(mainTab.Find(mainView)).Enable(true);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
-		return;
 	}
-	
-	if (menuOpen.optLoadIn == 0) {
-		md.hydros.Remove(0, md.hydros.GetCount()-1);
-		mainSummary.array.Reset();
-	}
-	String strError;
-	if (!HydroClass::MatchCoeffStructure(md.hydros, strError)) {
-		md.hydros.SetCount(md.hydros.GetCount()-1);
-		Exclamation(Format(t_("Model '%s' does not match with the one previously loaded: %s"), DeQtf(file), strError));
-	}
-	
-	int id = md.hydros.GetCount()-1;
-	HydroClass &data = md.hydros[id];
-	
-	data.hd().Report();
-	mainSummary.Report(data.hd(), id);
-	if (data.hd().Nf < 0)
-		return;
-	
-	mainArrange.Load(md.hydros);
-	menuConvert.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
-	if (menuConvert.arrayModel.GetCursor() < 0)
-		menuConvert.arrayModel.SetCursor(0);
-	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
-	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(md.hydros));	
-	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(md.hydros));
-	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(md.hydros));
-	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(md.hydros));
-	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(md.hydros));
-	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(md.hydros));
-	mainTab.GetItem(mainTab.Find(mainView)).Enable(true);
 }
 
 void Main::WindowWamitAdditionalData(BEMData &md, HydroClass &data) {
@@ -347,19 +351,23 @@ void Main::WindowWamitAdditionalData(BEMData &md, HydroClass &data) {
 }
 		
 void Main::OnConvert() {
-	int id = menuConvert.arrayModel.GetCursor();
-	if (id < 0) {
-		Exclamation(t_("Please select a model to export"));
-		return;
+	try {
+		int id = menuConvert.arrayModel.GetCursor();
+		if (id < 0) {
+			Exclamation(t_("Please select a model to export"));
+			return;
+		}
+		Hydro::BEM_SOFT type;	
+		switch (menuConvert.opt) {
+		case 0:	type = Hydro::WAMIT_1_3;	break;
+		case 1:	type = Hydro::FAST_WAMIT;	break;
+		case 2:	type = Hydro::UNKNOWN;		break;
+		default: throw Exc(t_("Unknown type in OnConvert()"));
+		}
+		md.hydros[id].hd().SaveAs(~menuConvert.file, type);	
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
 	}
-	Hydro::BEM_SOFT type;	
-	switch (menuConvert.opt) {
-	case 0:	type = Hydro::WAMIT_1_3;	break;
-	case 1:	type = Hydro::FAST_WAMIT;	break;
-	case 2:	type = Hydro::UNKNOWN;		break;
-	default: throw Exc(t_("Unknown type in OnConvert()"));
-	}
-	md.hydros[id].hd().SaveAs(~menuConvert.file, type);	
 }
 
 void Main::OnView() {
@@ -492,16 +500,32 @@ void MainSummary::Report(Hydro &data, int id) {
 	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, data.rho);
 	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++, col,data.h < 0 ? x_(t_("INFINITY")) : FormatDouble(data.h));
 	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, data.len);
-	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl(data.Nf, 0));
+	
+	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl(data.Nf, 0)); 
 	if (!data.w.IsEmpty()) {
 		array.Set(row, 0, t_("freq_0 [rad/s]"));	array.Set(row++, col, data.w[0]);
-		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, data.w[data.w.GetCount()-1]);
-		array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, data.w[1]-data.w[0]);
 	} else {
 		array.Set(row, 0, t_("freq_0 [rad/s]"));	array.Set(row++, col, "-");
+	}
+	if (data.w.GetCount() > 1) {
+		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, data.w[data.w.GetCount()-1]);
+		if (data.GetIrregularFreq() < 0) { 
+			array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, data.w[1] - data.w[0]);
+		} else {
+			String strHead;
+			for (int i = 0; i < data.w.GetCount(); ++i) {
+				if (i > 0)
+					strHead << ", ";
+				strHead << data.w[i];
+			}
+			array.Set(row, 0, t_("freq_delta [rad/s]"));
+			array.Set(row++, col, Format(t_("Non constant delta (%s)"), strHead));
+		}
+	} else {
 		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, "-");
 		array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, "-");
 	}
+	
 	array.Set(row, 0, t_("#headings"));			array.Set(row++, col, Nvl(data.Nh, 0));
 	if (!data.head.IsEmpty()) {
 		array.Set(row, 0, t_("head_0 [º]"));	array.Set(row++, col, data.head[0]);
@@ -510,20 +534,32 @@ void MainSummary::Report(Hydro &data, int id) {
 	}
 	if (data.head.GetCount() > 1) {
 		array.Set(row, 0, t_("head_end [º]"));	array.Set(row++, col, data.head[data.head.GetCount()-1]);
-		array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, data.head[1] - data.head[0]);
+		if (data.GetIrregularHead() < 0) { 
+			array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, data.head[1] - data.head[0]);
+		} else {
+			String strHead;
+			for (int i = 0; i < data.head.GetCount(); ++i) {
+				if (i > 0)
+					strHead << ", ";
+				strHead << data.head[i];
+			}
+			array.Set(row, 0, t_("head_delta [º]"));
+			array.Set(row++, col, Format(t_("Non constant delta (%s)"), strHead));
+		}
 	} else {
 		array.Set(row, 0, t_("head_end [º]"));	array.Set(row++, col, "-");
 		array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, "-");
 	}
-	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, data.IsLoadedAw0() ? "Yes" : "No");
-	array.Set(row, 0, t_("Ainf available"));	array.Set(row++, col, data.IsLoadedAwinf() ? "Yes" : "No");
-	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() ? "Yes" : "No");
-	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() ? "Yes" : "No");
-	array.Set(row, 0, t_("C available"));		array.Set(row++, col, data.IsLoadedC() ? "Yes" : "No");
-	array.Set(row, 0, t_("Fex available"));		array.Set(row++, col, data.IsLoadedFex() ? "Yes" : "No");
-	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc() ? "Yes" : "No");
-	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk() ? "Yes" : "No");
-	array.Set(row, 0, t_("RAO available"));		array.Set(row++, col, data.IsLoadedRAO() ? "Yes" : "No");
+	
+	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, data.IsLoadedAw0()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Ainf available"));	array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() 	   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() 	   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("C available"));		array.Set(row++, col, data.IsLoadedC() 	   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Fex available"));		array.Set(row++, col, data.IsLoadedFex()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("RAO available"));		array.Set(row++, col, data.IsLoadedRAO()   ? t_("Yes") : t_("No"));
 	
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, data.Nb);
 	for (int ib = 0; ib < data.Nb; ++ib) {
@@ -884,7 +920,10 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
+
 GUI_APP_MAIN {
+	ConsoleOutput console;
+	
 	Ctrl::SetAppName(t_("Hydrodynamic coefficents viewer and converter"));
 	Ctrl::GlobalBackPaint();
 	

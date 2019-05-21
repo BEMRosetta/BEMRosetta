@@ -71,14 +71,14 @@ bool Nemoh::Load(String file, double) {
 }
 
 bool Nemoh::Load_Cal(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
 	hd().rho = hd().g = hd().h = Null;
 	
 	String line;
-	FieldSplit f;
+	FieldSplit f(in);
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		
@@ -130,7 +130,7 @@ bool Nemoh::Load_Inf(String fileName) {
 	hd().C.SetCount(1);
 	hd().C[0].setConstant(6, 6, Null);   
 	
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
@@ -177,7 +177,7 @@ bool Nemoh::Load_Hydrostatics() {
 	hd().cb.setConstant(3, hd().Nb, Null);
 	hd().Vo.SetCount(hd().Nb, Null);
 	String line;
-	FieldSplit f;
+	
 	for (int b = 0; b < hd().Nb; ++b) {
 	    String fileHydro;
 	    if (hd().Nb == 1)
@@ -185,9 +185,11 @@ bool Nemoh::Load_Hydrostatics() {
 	    else
 	        fileHydro = AppendFileName(folder, AppendFileName("Mesh", Format("Hydrostatics_%d.dat", b)));
 	    
-	    FileIn in(fileHydro);
+	    FileInLine in(fileHydro);
 	    if (!in.IsOpen())
 	        return false;
+	    
+	    FieldSplit f(in);
 	    for (int i = 0; i < 3 && !in.IsEof(); ++i) {
 			f.Load(in.GetLine());
 			hd().cg(i, b) = f.GetDouble(6);
@@ -201,7 +203,6 @@ bool Nemoh::Load_Hydrostatics() {
 
 bool Nemoh::Load_KH() {
 	hd().C.SetCount(hd().Nb);
-	FieldSplit f;
 	for (int ib = 0; ib < hd().Nb; ++ib) {
 	    String fileKH;
 	    if (hd().Nb == 1) {
@@ -211,10 +212,11 @@ bool Nemoh::Load_KH() {
 	    }
 	    
 		hd().C[ib].setConstant(6, 6, Null);    
-	    FileIn in(fileKH);
-	    if (!in.IsOpen()) {
+	    FileInLine in(fileKH);
+	    if (!in.IsOpen()) 
 	        return false;
-	    }
+	    
+	    FieldSplit f(in);
 		for (int i = 0; i < 6 && !in.IsEof(); ++i) {
 			f.Load(in.GetLine());
 			for (int ifr = 0; ifr < 6; ++ifr)
@@ -225,11 +227,11 @@ bool Nemoh::Load_KH() {
 }
 
 bool Nemoh::Load_Radiation(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f;
+	FieldSplit f(in);
 	hd().dof.Clear();	 hd().dof.SetCount(hd().Nb, 0);
 	in.GetLine();
 	while(!in.IsEof()) {
@@ -278,11 +280,11 @@ bool Nemoh::Load_FroudeKrylov(String folder) {
 
 bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName, String textDelim) {
 	hd().Initialize_Forces(fc);
-	FileIn in(AppendFileName(nfolder, AppendFileName("Results", fileName)));
+	FileInLine in(AppendFileName(nfolder, AppendFileName("Results", fileName)));
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f;
+	FieldSplit f(in);
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		if (line.Find(textDelim) >= 0)
@@ -318,11 +320,11 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName, Stri
 }
 
 bool Nemoh::Load_IRF(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f;	
+	FieldSplit f(in);	
 	hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 	int ibodydof = 0;
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
@@ -348,7 +350,7 @@ void Nemoh::Save(String file) {
 }		
 
 bool Nemoh::LoadDatMesh(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen()) {
 		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
 		mh().lastError = Format(t_("Impossible to open file '%s'"), fileName);
@@ -357,7 +359,7 @@ bool Nemoh::LoadDatMesh(String fileName) {
 	mh().file = fileName;
 	
 	String line;
-	FieldSplit f;	
+	FieldSplit f(in);	
 		
 	try {
 		line = in.GetLine();	

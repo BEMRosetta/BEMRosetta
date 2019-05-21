@@ -46,7 +46,7 @@ bool Fast::Load(String file, double g) {
 }
 
 bool Fast::Load_dat() {
-	FileIn in(hd().file);
+	FileInLine in(hd().file);
 	if (!in.IsOpen())
 		return false;
 
@@ -54,7 +54,7 @@ bool Fast::Load_dat() {
 	hd().Vo.SetCount(hd().Nb, 0);
 	hd().rho = hd().h = hd().len = WaveDirRange = Null;
 	
-	FieldSplit f;
+	FieldSplit f(in);
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		if (f.GetText(1) == "WtrDens") 
@@ -108,11 +108,11 @@ void Fast::Save_dat(String fileName, bool force) {
 		double lVo = Null, lrho = Null, lh = Null, llen = Null, lWaveDirRange = Null;
 		int lWaveNDir = Null;
 		
-		FileIn in(fileName);
+		FileInLine in(fileName);
 		if (!in.IsOpen())
 			return;
 	
-		FieldSplit f;
+		FieldSplit f(in);
 		while (!in.IsEof()) {
 			f.Load(in.GetLine());
 			if (f.GetText(1) == "WtrDens") 

@@ -44,6 +44,10 @@ bool Wamit::Load(String file, double rho) {
 		if (!Load_4(fileRAO))
 			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
 		
+		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
+		for (int i = 0; i < hd().Nb; ++i)
+			hd().dof[i] = 6;
+	
 		hd().AfterLoad();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -81,11 +85,12 @@ bool Wamit::Load_out() {
 	int pos;
 	int ibody = -1;
 	
-	FileIn in(hd().file);
+	FileInLine in(hd().file);
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f;
+	FieldSplit f(in);
+	
 	hd().names.Clear();
 	while(!in.IsEof()) {
 		line = in.GetLine();
@@ -205,7 +210,7 @@ bool Wamit::Load_out() {
 							hd().A.SetCount(hd().Nf);
 							hd().B.SetCount(hd().Nf);
 						}
-						in.GetLine();	in.GetLine();
+						in.GetLine(2);
 						hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 		            	hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 		            
@@ -230,7 +235,7 @@ bool Wamit::Load_out() {
 						while (!in.IsEof()) {		
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
-								in.GetLine(); in.GetLine(); in.GetLine();
+								in.GetLine(3); 
 								//int idof = 0;
 								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
 									f.Load(line);
@@ -264,13 +269,13 @@ bool Wamit::Load_out() {
 }
 
 
-void Wamit::Load_A(FileIn &in, MatrixXd &A) {
-	in.GetLine(); in.GetLine(); in.GetLine(); in.GetLine(); in.GetLine(); in.GetLine();
+void Wamit::Load_A(FileInLine &in, MatrixXd &A) {
+	in.GetLine(6);
 	while (!in.IsEof()) {
 		String line = TrimBoth(in.GetLine());
 		if (line.IsEmpty())
            	break;
-		FieldSplit f;
+		FieldSplit f(in);
 		f.Load(line);
 		int i = f.GetInt(0) - 1;
 		int j = f.GetInt(1) - 1;
@@ -280,10 +285,10 @@ void Wamit::Load_A(FileIn &in, MatrixXd &A) {
 }
 
 bool Wamit::Load_Scattering(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f;
+	FieldSplit f(in);
 	
 	hd().Initialize_Forces(hd().sc);
 	
@@ -305,10 +310,10 @@ bool Wamit::Load_Scattering(String fileName) {
 }
 		
 bool Wamit::Load_FK(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f;
+	FieldSplit f(in);
 	
 	hd().Initialize_Forces(hd().fk);
 	
@@ -330,10 +335,10 @@ bool Wamit::Load_FK(String fileName) {
 }
 
 bool Wamit::Load_1(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f;
+	FieldSplit f(in);
  
  	int64 fpos = 0;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
@@ -440,10 +445,10 @@ bool Wamit::Load_1(String fileName) {
 }
  
 bool Wamit::Load_3(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f;
+	FieldSplit f(in);
  
  	int64 fpos = 0;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
@@ -532,10 +537,10 @@ bool Wamit::Load_3(String fileName) {
 }
 
 bool Wamit::Load_hst(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f;
+	FieldSplit f(in);
  
  	int64 fpos = 0;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
@@ -565,10 +570,10 @@ bool Wamit::Load_hst(String fileName) {
 }
 
 bool Wamit::Load_4(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f;
+	FieldSplit f(in);
  
  	int64 fpos = 0;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
@@ -727,7 +732,7 @@ void Wamit::Save_hst(String fileName) {
 }
 
 bool Wamit::LoadDatMesh(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen()) {
 		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
 		mh().lastError = Format(t_("Impossible to open file '%s'"), fileName);
@@ -736,7 +741,7 @@ bool Wamit::LoadDatMesh(String fileName) {
 	mh().file = fileName;
 	
 	String line;
-	FieldSplit f;	
+	FieldSplit f(in);	
 	
 	try {
 		line = ToUpper(TrimBoth(in.GetLine()));
@@ -826,7 +831,7 @@ bool Wamit::LoadDatMesh(String fileName) {
 }
 	
 bool Wamit::LoadGdfMesh(String fileName) {
-	FileIn in(fileName);
+	FileInLine in(fileName);
 	if (!in.IsOpen()) {
 		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
 		mh().lastError = Format(t_("Impossible to open file '%s'"), fileName);
@@ -835,7 +840,7 @@ bool Wamit::LoadGdfMesh(String fileName) {
 	mh().file = fileName;
 	
 	String line;
-	FieldSplit f;	
+	FieldSplit f(in);	
 	
 	try {
 		in.GetLine();

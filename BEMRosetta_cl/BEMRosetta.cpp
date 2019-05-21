@@ -156,6 +156,17 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 }
 
 void Hydro::SaveAs(String file, BEM_SOFT type) {
+	int realNh = Nh;
+	int realNf = Nf;
+	
+	int lastHead = GetIrregularHead();
+	if (lastHead >= 0)
+		Nh = lastHead+1;
+	
+	int lastFreq = GetIrregularFreq();
+	if (lastFreq >= 0)
+		Nf = lastFreq+1;
+	
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(file));
 		
@@ -173,6 +184,8 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 		Fast data(this);
 		data.Save(file);		
 	}
+	Nh = realNh;
+	Nf = realNf;
 }
 
 void Hydro::Report() {
@@ -181,17 +194,45 @@ void Hydro::Report() {
 	String freqs;
 	if (w.IsEmpty()) 
 		freqs = t_("NONE");
-	else
-		freqs = Format(t_("%.3f to %.3f steps %.3f [rad/s]"), w[0], w[w.GetCount()-1], w[1]-w[0]);
+	else if (w.GetCount() > 1) {
+		String strDeltaH;
+		if (GetIrregularFreq() < 0) 
+			strDeltaH = Format(t_("delta %.1f [rad/s]"), w[1] - w[0]);
+		else {
+			String strHead;
+			for (int i = 0; i < w.GetCount(); ++i) {
+				if (i > 0)
+					strHead << ", ";
+				strHead << w[i];
+			}
+			strDeltaH = Format(t_("non constant delta (%s)"), strHead); 
+		}
+	 	freqs = Format(t_("%.1f to %.1f %s"), w[0], w[w.GetCount()-1], strDeltaH);	
+	} else
+		freqs = Format(t_("%.1f [rad/s]"), w[0]);
+	
 	String heads;
 	if (head.IsEmpty())
 		heads = t_("NONE");
-	else if (head.GetCount() > 1)
-	 	heads = Format(t_("%.1f to %.1f steps %.1f [º]"), head[0], head[head.GetCount()-1], head[1] - head[0]);	
-	else
+	else if (head.GetCount() > 1) {
+		String strDeltaH;
+		if (GetIrregularHead() < 0) 
+			strDeltaH = Format(t_("delta %.1f [º]"), head[1] - head[0]);
+		else {
+			String strHead;
+			for (int i = 0; i < head.GetCount(); ++i) {
+				if (i > 0)
+					strHead << ", ";
+				strHead << head[i];
+			}
+			strDeltaH = Format(t_("non constant delta (%s)"), strHead); 
+		}
+	 	heads = Format(t_("%.1f to %.1f %s"), head[0], head[head.GetCount()-1], strDeltaH);	
+	} else
 		heads = Format(t_("%.1f [º]"), head[0]);
-		
-	Print("\n" + Format(t_("#freqs: %d (%s), #headings: %d (%s)"), Nf, freqs, Nh, heads)); 
+	
+	Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
+	Print("\n" + Format(t_("#headings: %d (%s)"), Nh, heads)); 
 	Print("\n" + Format(t_("#bodies: %d"), Nb));
 	for (int ib = 0; ib < Nb; ++ib) {
 		String str = Format("\n%d.", ib+1);
@@ -272,6 +313,127 @@ String Hydro::C_units(int i, int j) {
 	return ret;
 }
 
+int Hydro::GetIrregularHead() {
+	if (head.GetCount() <= 2)
+		return -1;
+	double delta0 = head[1] - head[0];
+	for (int i = 1; i < head.GetCount() - 1; ++i) {
+		double delta = head[i+1] - head[i];
+		if (abs((delta - delta0)/delta0) > 0.001)
+			return i;
+	}
+	return -1;
+}
+
+int Hydro::GetIrregularFreq() {
+	if (w.GetCount() <= 2)
+		return -1;
+	double delta0 = w[1] - w[0];
+	for (int i = 1; i < w.GetCount() - 1; ++i) {
+		double delta = w[i+1] - w[i];
+		if (abs((delta - delta0)/delta0) > 0.001)
+			return i;
+	}
+	return -1;
+}
+
+void Compare_rho(Hydro &a, Hydro &b) {
+	if (a.rho != b.rho)
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Density rho"), a.rho, b.rho));
+}
+
+void Compare_g(Hydro &a, Hydro &b) {
+	if (a.g != b.g)
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Gravity g"), a.g, b.g));
+}
+
+void Compare_h(Hydro &a, Hydro &b) {
+	if (a.h != b.h)
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Water depth h"), a.h, b.h));
+}
+
+void Compare_Nb(Hydro &a, Hydro &b) {
+	if (a.Nb != b.Nb)
+		throw Exc(Format(t_("%s is not the same %d<>%d"), t_("Number of bodies"), a.Nb, b.Nb));
+}
+
+void Compare_w(Hydro &a, Hydro &b) {
+	if (a.Nf != b.Nf)	
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.Nf, b.Nf));
+	for (int i = 0; i < a.Nf; ++i) {
+		if (abs((a.w[i] - b.w[i])/b.w[i]) > 0.0001)
+			throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], b.w[i]));
+	}
+}
+
+void Compare_head(Hydro &a, Hydro &b) {
+	if (a.Nh != b.Nh)	
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of headings"), a.Nh, b.Nh));
+	for (int i = 0; i < a.Nh; ++i) {
+		if (a.head[i] != b.head[i])
+			throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], b.w[i]));
+	}
+}
+
+void Compare_A(Hydro &a, Hydro &b) {
+	for (int ifr = 0; ifr < a.Nf; ifr++) {
+		for (int idof = 0; idof < 6*a.Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
+				double Aa = a.A[ifr](idof, jdof);
+				double Ab = b.A[ifr](idof, jdof);
+				if (!IsNull(Aa) && !IsNull(Ab) && Aa != Ab)
+					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idof+1, jdof+1), 
+							Aa, Ab));
+			}
+		}
+	}
+}
+
+void Compare_B(Hydro &a, Hydro &b) {
+	for (int ifr = 0; ifr < a.Nf; ifr++) {
+		for (int idof = 0; idof < 6*a.Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
+				double Ba = a.B[ifr](idof, jdof);
+				double Bb = b.B[ifr](idof, jdof);
+				if (!IsNull(Ba) && !IsNull(Bb) && Ba != Bb)
+					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idof+1, jdof+1), 
+							Ba, Bb));
+			}
+		}
+	}
+}
+
+void Compare_C(Hydro &a, Hydro &b) {
+	for (int ib = 0; ib < a.Nb; ib++) {
+		for (int idof = 0; idof < 6; ++idof) {
+			for (int jdof = 0; jdof < 6; ++jdof) {
+				double Ca = a.C[ib](idof, jdof);
+				double Cb = b.C[ib](idof, jdof);
+				if (!IsNull(Ca) && !IsNull(Cb) && abs((Ca-Cb)/Cb) > 0.0001 )
+					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idof+1, jdof+1), 
+							Ca, Cb));
+			}
+		}
+	}
+}
+
+void Compare_cg(Hydro &a, Hydro &b) {
+	for (int i = 0; i < 3; i++) {
+		for (int ib = 0; ib < a.Nb; ib++) {
+			if (a.cg(i, ib) != b.cg(i, ib))
+				throw Exc(Format(t_("%s is not the same %f<>%f"), 
+						Format(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
+							a.cg(i, ib), b.cg(i, ib)));
+		}
+	}
+}
+    
+
 void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData) {
 	for (int i = 0; i < hydros.GetCount(); ++i) {
 		if (hydros[i].hd().file == file) 
@@ -324,6 +486,13 @@ void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> Addition
 		AdditionalData(*this, data);
 
 		data.hd().Dimensionalize();		
+	} else if (ext == ".ah1" || ext == ".lis") {
+		Aqwa &data = hydros.Create<Aqwa>();
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
 	} else 
 		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
 }
