@@ -220,24 +220,27 @@ bool Aqwa::Load_LIS() {
 	
 	String line; 
 	FieldSplit f(in);
+	int pos;
 	
-	int idbcg = -1;
-	
+	hd().Nb = 0;
+	while(!in.IsEof()) {
+		line = TrimBoth(in.GetLine());
+		
+		if ((pos = line.FindAfter("F O R   S T R U C T U R E")) >= 0) {
+			int ib = ScanInt(line.Mid(pos)); 
+			hd().Nb = max(ib, hd().Nb);
+		}
+	}
+	if (hd().Nb == 0)
+		throw Exc(t_("Number of bodies not found"));
+					
+	in.Seek(0);			
+				
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		f.Load(line);
 		
-		if (line.Find("G E O M E T R I C   P A R A M E T E R   N U M B E R") >= 0) {
-			in.GetLine(5);
-			hd().Nb = 0;
-			while (!in.IsEof()) {
-				line = in.GetLine();
-				if (line[0] == '1')
-					break;
-				f.Load(line);
-				hd().Nb = f.GetInt(f.FIRST);
-			}
-		} else 	if (line.StartsWith("WATER  DEPTH")) 
+		if (line.StartsWith("WATER  DEPTH")) 
 			hd().h = f.GetDouble(f.LAST);
 		else if (line.StartsWith("DENSITY  OF  WATER")) 
 			hd().rho = f.GetDouble(f.LAST);
@@ -246,8 +249,6 @@ bool Aqwa::Load_LIS() {
 			break;
 		}
 	}
-	if (IsNull(hd().Nb))
-		throw Exc(t_("Number of bodies not found"));
 	
 	hd().Vo.SetCount(hd().Nb, Null);
 	hd().cg.setConstant(3, hd().Nb, Null);
@@ -256,15 +257,20 @@ bool Aqwa::Load_LIS() {
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, Null);
 	
+	int idb;	
+	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		
-		if (line.StartsWith("CENTRE OF GRAVITY")) {
+		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
+			idb = ScanInt(line.Mid(pos)) - 1; 
+			if (idb >= hd().Nb)
+				throw Exc(Format(t_("[%d] Wrong body %d"), in.GetLineNumber(), idb));
+		} else if (line.StartsWith("CENTRE OF GRAVITY")) {
 			f.Load(line);
-			idbcg++;
-			hd().cg(0, idbcg) = f.GetDouble(3);
-			hd().cg(1, idbcg) = f.GetDouble(4);
-			hd().cg(2, idbcg) = f.GetDouble(5);
+			hd().cg(0, idb) = f.GetDouble(3);
+			hd().cg(1, idb) = f.GetDouble(4);
+			hd().cg(2, idb) = f.GetDouble(5);
 		} else if (IsNull(hd().Nf) && line.Find("W A V E   F R E Q U E N C I E S / P E R I O D S   A N D   D I R E C T I O N S") >= 0) {
 			in.GetLine(5);
 			hd().Nf = 0;
@@ -325,13 +331,10 @@ bool Aqwa::Load_LIS() {
 	hd().Initialize_Forces(hd().sc);
 	hd().Initialize_RAO();
 	
-	int idb;
-	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		
-		int pos;
-		if ((pos = line.FindAfter("F O R   S T R U C T U R E")) >= 0) {
+		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
 			idb = ScanInt(line.Mid(pos)) - 1; 
 			if (idb >= hd().Nb)
 				throw Exc(Format(t_("[%d] Wrong body %d"), in.GetLineNumber(), idb));
