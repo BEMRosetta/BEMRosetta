@@ -6,6 +6,7 @@ uses
 	Core,
 	plugin\Eigen,
 	SysInfo,
+	plugin/matio,
 	plugin/zstd;
 
 options(MSC) /bigobj;
@@ -19,6 +20,7 @@ file
 	nemoh.cpp,
 	wamit.cpp,
 	fast.cpp,
+	aqwa.cpp,
 	data.brc,
 	hydrodyn.dat,
 	license.txt,

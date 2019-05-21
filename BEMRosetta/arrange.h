@@ -15,7 +15,6 @@ public:
 
 private:		
 	bool DnDInsert(int line, PasteClip& d);
-	void Drag();
 	bool selecting;
 };
 	
