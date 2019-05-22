@@ -282,7 +282,25 @@ public:
 			GetLine();
 	}
 	int GetLineNumber()	{return line;}
-
+	
+	struct Pos {
+		Pos() : byt(0), line(0) {}
+		int64 byt;
+		int line;
+	};
+	
+	Pos GetPos() {
+		Pos ret;
+		ret.byt = FileIn::GetPos();
+		ret.line = line;
+		return ret;
+	}
+	
+	void Seek(Pos &pos) {
+		FileIn::Seek(pos.byt);
+		line = pos.line;
+	}
+	
 private:
 	int line;
 };
