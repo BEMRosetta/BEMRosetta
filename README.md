@@ -43,7 +43,7 @@ BEMRosetta runs on Windows and Linux, it is done in C++ [so install is simple](h
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
 
-### - Load the hydrodynamic coefficients for the same geometry from different softwares and compare the results
+### - Load the hydrodynamic coefficients for the same geometry from different software and compare the results
 
 - _Damping for the same geometry got from different solvers_
   
