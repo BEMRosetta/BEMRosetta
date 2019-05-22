@@ -33,6 +33,7 @@ BEMRosetta runs on Windows and Linux, it is done in C++ [so install is simple](h
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
     * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
+	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .LIS, .AH1
   * Save
     * [Wamit](https://www.wamit.com/): .1, .3, .hst
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
@@ -43,9 +44,12 @@ BEMRosetta runs on Windows and Linux, it is done in C++ [so install is simple](h
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
 
+A great effort has been made to have a good robustness in the handling of files
+
+
 ### - Load the hydrodynamic coefficients for the same geometry from different software and compare the results
 
-- _Damping for the same geometry got from different solvers_
+- _Damping for the same geometry got from different solvers
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20B.jpg" width="300" title="Damping for the same geometry got from different solvers"></p>
 
@@ -76,14 +80,6 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 M. Peñalba, J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
-
-
-## New features in process
-
-- [X] Linux version
-- [X] Command line version 
-- [ ] Loading files in [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa) format
-- [ ] Internationalization
 
 
 ## License
