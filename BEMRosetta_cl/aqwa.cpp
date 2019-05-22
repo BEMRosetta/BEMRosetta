@@ -1,4 +1,4 @@
-#include "bemrosetta.h"
+#include "BEMRosetta.h"
 
 bool Aqwa::Load(String file, double) {
 	hd().file = file;
