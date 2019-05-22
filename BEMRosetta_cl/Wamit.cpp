@@ -145,7 +145,7 @@ bool Wamit::Load_out() {
 			hd().C[ibody](4, 5) = hd().C[ibody](5, 4) = f.GetDouble(2);
 		} else if (line.Find("Output from  WAMIT") >= 0) {
 			hd().head.Clear();
-			int64 fpos = in.GetPos();
+			FileInLine::Pos fpos = in.GetPos();
 			
 			bool foundNh = false;
 			while (!in.IsEof()) {
@@ -340,7 +340,7 @@ bool Wamit::Load_1(String fileName) {
 		return false;
 	FieldSplit f(in);
  
- 	int64 fpos = 0;
+ 	FileInLine::Pos fpos;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())
@@ -450,7 +450,7 @@ bool Wamit::Load_3(String fileName) {
 		return false;
 	FieldSplit f(in);
  
- 	int64 fpos = 0;
+ 	FileInLine::Pos fpos;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())
@@ -542,7 +542,7 @@ bool Wamit::Load_hst(String fileName) {
 		return false;
 	FieldSplit f(in);
  
- 	int64 fpos = 0;
+ 	FileInLine::Pos fpos;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())
@@ -575,7 +575,7 @@ bool Wamit::Load_4(String fileName) {
 		return false;
 	FieldSplit f(in);
  
- 	int64 fpos = 0;
+ 	FileInLine::Pos fpos;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())

@@ -189,14 +189,14 @@ bool Aqwa::Load_AH1() {
 		                    int itfr = f.GetInt(2);
 							if (itfr - 1 != ifr)
 								throw Exc(Format(t_("[%d] Frequency # does not match in 'FORCERAO' %d<>%d"), in.GetLineNumber(), itfr, ifr+1));
-			                hd().ex.ma[ih](ifr, idof*ib) = f.GetDouble(idof + 3);
+			                hd().ex.ma[ih](ifr, idof + 6*ib) = f.GetDouble(idof + 3);
 	                  	}
 	                  	f.Load(in.GetLine());
 	                  	for (int idof = 0; idof < 6; ++idof) 
-	                       	hd().ex.ph[ih](ifr, idof*ib) = -f.GetDouble(idof)*M_PI/180;
+	                       	hd().ex.ph[ih](ifr, idof + 6*ib) = -f.GetDouble(idof)*M_PI/180;
 	                    for (int idof = 0; idof < 6; ++idof) {   	
-		                    hd().ex.re[ih](ifr, idof*ib) = hd().ex.ma[ih](ifr, idof*ib)*cos(hd().ex.ph[ih](ifr, idof*ib));
-		       				hd().ex.im[ih](ifr, idof*ib) = hd().ex.ma[ih](ifr, idof*ib)*sin(hd().ex.ph[ih](ifr, idof*ib));
+		                    hd().ex.re[ih](ifr, idof + 6*ib) = hd().ex.ma[ih](ifr, idof + 6*ib)*cos(hd().ex.ph[ih](ifr, idof*ib));
+		       				hd().ex.im[ih](ifr, idof + 6*ib) = hd().ex.ma[ih](ifr, idof + 6*ib)*sin(hd().ex.ph[ih](ifr, idof*ib));
 	                    }
 	                }
 	            }
@@ -222,6 +222,8 @@ bool Aqwa::Load_LIS() {
 	FieldSplit f(in);
 	int pos;
 	
+	FileInLine::Pos fpos = in.GetPos();
+	
 	hd().Nb = 0;
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -234,7 +236,7 @@ bool Aqwa::Load_LIS() {
 	if (hd().Nb == 0)
 		throw Exc(t_("Number of bodies not found"));
 					
-	in.Seek(0);			
+	in.Seek(fpos);			
 				
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -374,71 +376,44 @@ bool Aqwa::Load_LIS() {
 			hd().cb(0, idb) = f.GetDouble(8);	
 			hd().cb(1, idb) = f.Load(in.GetLine()).GetDouble(2);
 			hd().cb(2, idb) = f.Load(in.GetLine()).GetDouble(2);
-		} else if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
-			in.GetLine(6);
-			f.Load(in.GetLine());
-			double heading = f.GetDouble(2);
-			int idh = FindIndex(hd().head, heading);
-			if (idh < 0)
-				throw Exc(Format(t_("[%d] Heading %f not found"), in.GetLineNumber(), heading));
-			int dd = 1;
-			for (int i = 0; i < hd().Nf; ++i) {
-				double freq = f.GetDouble(1);
-				int ifr = FindIndexDelta(hd().w, freq, 0.001);
-				if (ifr < 0)
-					throw Exc(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq));
-				for (int idof = 0; idof < 6; ++idof) {
-					hd().fk.ma[idh](ifr, idof*idb) = f.GetDouble(2 + dd + idof*2);
-					hd().fk.ph[idh](ifr, idof*idb) = f.GetDouble(2 + dd + idof*2 + 1);
-					hd().fk.re[idh](ifr, idof*idb) = hd().fk.ma[idh](ifr, idof*idb)*cos(hd().fk.ph[idh](ifr, idof*idb));
-		       		hd().fk.im[idh](ifr, idof*idb) = hd().fk.ma[idh](ifr, idof*idb)*sin(hd().fk.ph[idh](ifr, idof*idb));
-				}
-				dd = 0;
+		} else if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
+			Hydro::Forces *pfrc;
+			if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+				pfrc = &hd().fk;
+			else if (line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+				pfrc = &hd().sc;
+			else if (line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+				pfrc = &hd().rao;
+			Hydro::Forces &frc = *pfrc; 
+			
+			in.GetLine(5);
+			line = in.GetLine();
+			while(!in.IsEof()) {
+				if (line[0] == '1')
+					break;
 				f.Load(in.GetLine());
-			}
-		} else if (line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
-			in.GetLine(6);
-			f.Load(in.GetLine());
-			double heading = f.GetDouble(2);
-			int idh = FindIndex(hd().head, heading);
-			if (idh < 0)
-				throw Exc(Format(t_("[%d] Heading %f not found"), in.GetLineNumber(), heading));
-			int dd = 1;
-			for (int i = 0; i < hd().Nf; ++i) {
-				double freq = f.GetDouble(1);
-				int ifr = FindIndexDelta(hd().w, freq, 0.001);
-				if (ifr < 0)
-					throw Exc(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq));
-				for (int idof = 0; idof < 6; ++idof) {
-					hd().sc.ma[idh](ifr, idof*idb) = f.GetDouble(2 + dd + idof*2);
-					hd().sc.ph[idh](ifr, idof*idb) = f.GetDouble(2 + dd + idof*2 + 1);
-					hd().sc.re[idh](ifr, idof*idb) = hd().sc.ma[idh](ifr, idof*idb)*cos(hd().sc.ph[idh](ifr, idof*idb));
-		       		hd().sc.im[idh](ifr, idof*idb) = hd().sc.ma[idh](ifr, idof*idb)*sin(hd().sc.ph[idh](ifr, idof*idb));
+				double heading = f.GetDouble(2);
+				int idh = FindIndex(hd().head, heading);
+				if (idh < 0)
+					throw Exc(Format(t_("[%d] Heading %f not found"), in.GetLineNumber(), heading));
+				int dd = 1;
+				for (int i = 0; i < hd().Nf; ++i) {
+					double freq = f.GetDouble(1);
+					int ifr = FindIndexDelta(hd().w, freq, 0.001);
+					if (ifr < 0)
+						throw Exc(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq));
+					for (int idof = 0; idof < 6; ++idof) {
+						frc.ma[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2);
+						frc.ph[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2 + 1);
+						frc.re[idh](ifr, idof + 6*idb) = frc.ma[idh](ifr, idof + 6*idb)*cos(frc.ph[idh](ifr, idof + 6*idb));
+			       		frc.im[idh](ifr, idof + 6*idb) = frc.ma[idh](ifr, idof + 6*idb)*sin(frc.ph[idh](ifr, idof + 6*idb));
+					}
+					dd = 0;
+					line = in.GetLine();
+					f.Load(line);
 				}
-				dd = 0;
-				f.Load(in.GetLine());
-			}
-		} else if (line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
-			in.GetLine(6);
-			f.Load(in.GetLine());
-			double heading = f.GetDouble(2);
-			int idh = FindIndex(hd().head, heading);
-			if (idh < 0)
-				throw Exc(Format(t_("[%d] Heading %f not found"), in.GetLineNumber(), heading));
-			int dd = 1;
-			for (int i = 0; i < hd().Nf; ++i) {
-				double freq = f.GetDouble(1);
-				int ifr = FindIndexDelta(hd().w, freq, 0.001);
-				if (ifr < 0)
-					throw Exc(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq));
-				for (int idof = 0; idof < 6; ++idof) {
-					hd().rao.ma[idh](ifr, idof*idb) = f.GetDouble(2 + dd + idof*2);
-					hd().rao.ph[idh](ifr, idof*idb) = f.GetDouble(2 + dd + idof*2 + 1);
-					hd().rao.re[idh](ifr, idof*idb) = hd().rao.ma[idh](ifr, idof*idb)*cos(hd().rao.ph[idh](ifr, idof*idb));
-		       		hd().rao.im[idh](ifr, idof*idb) = hd().rao.ma[idh](ifr, idof*idb)*sin(hd().rao.ph[idh](ifr, idof*idb));
-				}
-				dd = 0;
-				f.Load(in.GetLine());
 			}
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			f.Load(line);
