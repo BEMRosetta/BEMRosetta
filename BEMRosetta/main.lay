@@ -5,9 +5,8 @@ END_LAYOUT
 
 LAYOUT(MenuOpen, 676, 48)
 	ITEM(Label, dv___0, SetLabel(t_("File:")).LeftPosZ(0, 40).TopPosZ(4, 19))
-	ITEM(EditFile, file, HSizePosZ(40, 308).TopPosZ(4, 19))
-	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(248, 56).TopPosZ(4, 20))
-	ITEM(Switch, optLoadIn, SetLabel(t_("Load\nLoad in parallel")).RightPosZ(92, 144).TopPosZ(8, 16))
+	ITEM(EditFile, file, HSizePosZ(40, 148).TopPosZ(4, 19))
+	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(88, 56).TopPosZ(4, 20))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
 END_LAYOUT
 
@@ -40,16 +39,16 @@ LAYOUT(MenuView, 572, 48)
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
 END_LAYOUT
 
-LAYOUT(MenuOptions, 632, 48)
+LAYOUT(MenuOptions, 780, 48)
 	ITEM(Button, butSave, SetLabel(t_("Save")).RightPosZ(4, 56).TopPosZ(4, 20))
-	ITEM(LabelBox, dv___1, SetLabel(t_("Physical parameters")).LeftPosZ(4, 504).TopPosZ(4, 40))
+	ITEM(LabelBox, dv___1, SetLabel(t_("Physical parameters")).LeftPosZ(4, 512).TopPosZ(4, 40))
 	ITEM(Label, dv___2, SetLabel(t_("rho [Kg/m3]:")).LeftPosZ(260, 80).TopPosZ(20, 19))
-	ITEM(Label, dv___3, SetLabel(t_("Length scale []:")).LeftPosZ(388, 80).TopPosZ(20, 19))
-	ITEM(Label, dv___4, SetLabel(t_("Depth [m]:")).LeftPosZ(140, 72).TopPosZ(20, 19))
-	ITEM(Label, dv___5, SetLabel(t_("Gravity [m/s2]:")).LeftPosZ(12, 80).TopPosZ(20, 19))
+	ITEM(Label, dv___3, SetLabel(t_("Depth [m]:")).LeftPosZ(140, 72).TopPosZ(20, 19))
+	ITEM(Label, dv___4, SetLabel(t_("Gravity [m/s2]:")).LeftPosZ(12, 80).TopPosZ(20, 19))
 	ITEM(EditDouble, depth, LeftPosZ(212, 40).TopPosZ(20, 19))
 	ITEM(EditDouble, rho, LeftPosZ(340, 40).TopPosZ(20, 19))
-	ITEM(EditDouble, length, LeftPosZ(468, 32).TopPosZ(20, 19))
+	ITEM(Label, dv___7, SetLabel(t_("Length scale [m]:")).LeftPosZ(388, 88).TopPosZ(20, 19))
+	ITEM(EditDouble, length, LeftPosZ(476, 32).TopPosZ(20, 19))
 	ITEM(EditDouble, g, LeftPosZ(92, 40).TopPosZ(20, 19))
 END_LAYOUT
 

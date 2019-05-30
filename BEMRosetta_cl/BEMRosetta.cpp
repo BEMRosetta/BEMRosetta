@@ -155,17 +155,166 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 	}
 }
 
+void Hydro::RemoveThresDOF_A(double thres) {
+	if (!IsLoadedA())
+		return;
+	for (int idof = 0; idof < 6*Nb; ++idof) {
+		for (int jdof = 0; jdof < 6*Nb; ++jdof) {
+			double mx = 0;
+			for (int ifr = 0; ifr < Nf; ifr++) 
+				mx = max(mx, abs(A[ifr](idof, jdof)));
+			if (mx < thres) {
+				for (int ifr = 0; ifr < Nf; ifr++) 
+					A[ifr](idof, jdof) = Null;	
+			}
+		}
+	}
+}
+
+void Hydro::RemoveThresDOF_B(double thres) {
+	if (!IsLoadedB())
+		return;
+	for (int idof = 0; idof < 6*Nb; ++idof) {
+		for (int jdof = 0; jdof < 6*Nb; ++jdof) {
+			double mx = 0;
+			for (int ifr = 0; ifr < Nf; ifr++) 
+				mx = max(mx, abs(B[ifr](idof, jdof)));
+			if (mx < thres) {
+				for (int ifr = 0; ifr < Nf; ifr++) 
+					B[ifr](idof, jdof) = Null;	
+			}
+		}
+	}
+}
+
+void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
+	if (!IsLoadedForce(f))
+		return;
+	for (int h = 0; h < Nh; ++h) {
+		for (int i = 0; i < 6*Nb; ++i) {	 
+			double mx = 0;
+			for (int ifr = 0; ifr < Nf; ++ifr) 
+				mx = max(mx, f.ma[h](ifr, i));
+			if (mx < thres) {
+				for (int ifr = 0; ifr < Nf; ifr++) 
+					f.ma[h](ifr, i) = Null;	
+			}
+		}
+	} 	
+}
+
+
+void Hydro::Compare_rho(Hydro &a) {
+	if (a.rho != rho)
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Density rho"), a.rho, rho));
+}
+
+void Hydro::Compare_g(Hydro &a) {
+	if (a.g != g)
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Gravity g"), a.g, g));
+}
+
+void Hydro::Compare_h(Hydro &a) {
+	if (a.h != h)
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Water depth h"), a.h, h));
+}
+
+void Hydro::Compare_Nb(Hydro &a) {
+	if (a.Nb != Nb)
+		throw Exc(Format(t_("%s is not the same %d<>%d"), t_("Number of bodies"), a.Nb, Nb));
+}
+
+void Hydro::Compare_w(Hydro &a) {
+	if (a.Nf != Nf)	
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.Nf, Nf));
+	for (int i = 0; i < a.Nf; ++i) {
+		if (abs((a.w[i] - w[i])/w[i]) > 0.0001)
+			throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], w[i]));
+	}
+}
+
+void Hydro::Compare_head(Hydro &a) {
+	if (a.Nh != Nh)	
+		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of headings"), a.Nh, Nh));
+	for (int i = 0; i < a.Nh; ++i) {
+		if (a.head[i] != head[i])
+			throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], w[i]));
+	}
+}
+
+void Hydro::Compare_A(Hydro &a) {
+	for (int ifr = 0; ifr < a.Nf; ifr++) {
+		for (int idof = 0; idof < 6*a.Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
+				double Aa = a.A[ifr](idof, jdof);
+				double Ab = A[ifr](idof, jdof);
+				if (!IsNull(Aa) && !IsNull(Ab) && Aa != Ab)
+					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idof+1, jdof+1), 
+							Aa, Ab));
+			}
+		}
+	}
+}
+
+void Hydro::Compare_B(Hydro &a) {
+	for (int ifr = 0; ifr < a.Nf; ifr++) {
+		for (int idof = 0; idof < 6*a.Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
+				double Ba = a.B[ifr](idof, jdof);
+				double Bb = B[ifr](idof, jdof);
+				if (!IsNull(Ba) && !IsNull(Bb) && Ba != Bb)
+					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idof+1, jdof+1), 
+							Ba, Bb));
+			}
+		}
+	}
+}
+
+void Hydro::Compare_C(Hydro &a) {
+	for (int ib = 0; ib < a.Nb; ib++) {
+		for (int idof = 0; idof < 6; ++idof) {
+			for (int jdof = 0; jdof < 6; ++jdof) {
+				double Ca = a.C[ib](idof, jdof);
+				double Cb = C[ib](idof, jdof);
+				if (!IsNull(Ca) && !IsNull(Cb) && abs((Ca-Cb)/Cb) > 0.0001 )
+					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idof+1, jdof+1), 
+							Ca, Cb));
+			}
+		}
+	}
+}
+
+void Hydro::Compare_cg(Hydro &a) {
+	for (int i = 0; i < 3; i++) {
+		for (int ib = 0; ib < a.Nb; ib++) {
+			if (a.cg(i, ib) != cg(i, ib))
+				throw Exc(Format(t_("%s is not the same %f<>%f"), 
+						Format(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
+							a.cg(i, ib), cg(i, ib)));
+		}
+	}
+}
+
 void Hydro::SaveAs(String file, BEM_SOFT type) {
 	int realNh = Nh;
 	int realNf = Nf;
 	
-	int lastHead = GetIrregularHead();
-	if (lastHead >= 0)
-		Nh = lastHead+1;
+//	int lastHead = GetIrregularHead();
+//	if (lastHead >= 0) {
+//		Nh = lastHead+1;
+//		Print("\n" + t_("Head spread is not homogeneous, so it has been reduced for Wamit"));
+//	}
 	
-	int lastFreq = GetIrregularFreq();
-	if (lastFreq >= 0)
-		Nf = lastFreq+1;
+//	int lastFreq = GetIrregularFreq();
+//	if (lastFreq >= 0) {
+//		Nf = lastFreq+1;
+//		Print("\n" + t_("Frequency spread is not homogeneous, so it has been reduced for Wamit"));
+//	}
 	
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(file));
@@ -337,102 +486,6 @@ int Hydro::GetIrregularFreq() {
 	return -1;
 }
 
-void Compare_rho(Hydro &a, Hydro &b) {
-	if (a.rho != b.rho)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Density rho"), a.rho, b.rho));
-}
-
-void Compare_g(Hydro &a, Hydro &b) {
-	if (a.g != b.g)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Gravity g"), a.g, b.g));
-}
-
-void Compare_h(Hydro &a, Hydro &b) {
-	if (a.h != b.h)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Water depth h"), a.h, b.h));
-}
-
-void Compare_Nb(Hydro &a, Hydro &b) {
-	if (a.Nb != b.Nb)
-		throw Exc(Format(t_("%s is not the same %d<>%d"), t_("Number of bodies"), a.Nb, b.Nb));
-}
-
-void Compare_w(Hydro &a, Hydro &b) {
-	if (a.Nf != b.Nf)	
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.Nf, b.Nf));
-	for (int i = 0; i < a.Nf; ++i) {
-		if (abs((a.w[i] - b.w[i])/b.w[i]) > 0.0001)
-			throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], b.w[i]));
-	}
-}
-
-void Compare_head(Hydro &a, Hydro &b) {
-	if (a.Nh != b.Nh)	
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of headings"), a.Nh, b.Nh));
-	for (int i = 0; i < a.Nh; ++i) {
-		if (a.head[i] != b.head[i])
-			throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], b.w[i]));
-	}
-}
-
-void Compare_A(Hydro &a, Hydro &b) {
-	for (int ifr = 0; ifr < a.Nf; ifr++) {
-		for (int idof = 0; idof < 6*a.Nb; ++idof) {
-			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
-				double Aa = a.A[ifr](idof, jdof);
-				double Ab = b.A[ifr](idof, jdof);
-				if (!IsNull(Aa) && !IsNull(Ab) && Aa != Ab)
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idof+1, jdof+1), 
-							Aa, Ab));
-			}
-		}
-	}
-}
-
-void Compare_B(Hydro &a, Hydro &b) {
-	for (int ifr = 0; ifr < a.Nf; ifr++) {
-		for (int idof = 0; idof < 6*a.Nb; ++idof) {
-			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
-				double Ba = a.B[ifr](idof, jdof);
-				double Bb = b.B[ifr](idof, jdof);
-				if (!IsNull(Ba) && !IsNull(Bb) && Ba != Bb)
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idof+1, jdof+1), 
-							Ba, Bb));
-			}
-		}
-	}
-}
-
-void Compare_C(Hydro &a, Hydro &b) {
-	for (int ib = 0; ib < a.Nb; ib++) {
-		for (int idof = 0; idof < 6; ++idof) {
-			for (int jdof = 0; jdof < 6; ++jdof) {
-				double Ca = a.C[ib](idof, jdof);
-				double Cb = b.C[ib](idof, jdof);
-				if (!IsNull(Ca) && !IsNull(Cb) && abs((Ca-Cb)/Cb) > 0.0001 )
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idof+1, jdof+1), 
-							Ca, Cb));
-			}
-		}
-	}
-}
-
-void Compare_cg(Hydro &a, Hydro &b) {
-	for (int i = 0; i < 3; i++) {
-		for (int ib = 0; ib < a.Nb; ib++) {
-			if (a.cg(i, ib) != b.cg(i, ib))
-				throw Exc(Format(t_("%s is not the same %f<>%f"), 
-						Format(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
-							a.cg(i, ib), b.cg(i, ib)));
-		}
-	}
-}
-    
 
 void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData) {
 	for (int i = 0; i < hydros.GetCount(); ++i) {
@@ -464,7 +517,6 @@ void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> Addition
 		AdditionalData(*this, data);
 		
 		data.hd().Dimensionalize();
-		
 	} else if (ext == ".dat") {
 		Fast &data = hydros.Create<Fast>();
 		if (!data.Load(file, Null)) {
@@ -475,7 +527,6 @@ void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> Addition
 		AdditionalData(*this, data);
 				
 		data.hd().Dimensionalize();
-		
 	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
 		Wamit &data = hydros.Create<Wamit>();
 		if (!data.Load(file, Null)) {
@@ -495,6 +546,14 @@ void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> Addition
 		}
 	} else 
 		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
+	
+	/*Hydro &justLoaded = hydros[hydros.GetCount()-1].hd();
+	justLoaded.RemoveThresDOF_A(thres);
+	justLoaded.RemoveThresDOF_B(thres);
+	justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
+	justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
+	justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
+	justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres);*/
 }
 
 int IsTabSpace(int c) {

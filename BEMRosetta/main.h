@@ -213,8 +213,8 @@ public:
 			}
 		}
 		
-		if (!ret || IsNull(menuOpen.optLoadIn)) 
-			menuOpen.optLoadIn = 1;
+		//if (!ret || IsNull(menuOpen.optLoadIn)) 
+		//	menuOpen.optLoadIn = 1;
 
 		if (!ret || IsNull(menuPlot.autoFit)) 
 			menuPlot.autoFit = true;
