@@ -14,6 +14,7 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("                    length length scale  []        ") << md.length;
 	Cout() << "\n" << t_("                    rho    water density [Kg/m3]   ") << md.rho;
 	Cout() << "\n" << t_("                    depth  water depth   [m]       ") << md.depth;
+	//Cout() << "\n" << t_("                    thres  threshold to discard DOF") << md.thres;
 	Cout() << "\n" << t_("-i  --input    -- load model");
 	Cout() << "\n" << t_("-e  --export   -- export from input file to output file");
 	Cout() << "\n" << t_("-c  --compare  -- compare input files");
@@ -39,6 +40,9 @@ void WamitAdditionalData(BEMData &md, HydroClass &data) {
 	
 	if (IsNull(data.hd().rho)) 
 		data.hd().rho = md.rho;
+	
+	//if (IsNull(data.hd().thres)) 
+	//	data.hd().thres = md.thres;
 	
 	if (IsNull(data.hd().h)) 
 		data.hd().h = md.depth;
@@ -128,7 +132,14 @@ CONSOLE_APP_MAIN {
 							if (IsNull(depth))
 								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
 							md.depth = depth;
-						} else 
+						} /*else if (command[i] == "thres") {
+							i++;
+							CheckNumArgs(command, i, "-p thres");
+							double thres = ScanDouble(command[i]);
+							if (IsNull(thres))
+								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
+							md.thres = thres;
+						} */else 
 							throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
 					}
 				} else 
@@ -148,6 +159,7 @@ CONSOLE_APP_MAIN {
 	}	
 	if (!errorStr.IsEmpty())
 		Cerr() << Format("\n%s: %s", t_("Error"), errorStr);
+	Cout() << "\n";
 }
 
 #endif

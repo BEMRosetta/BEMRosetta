@@ -41,9 +41,13 @@ bool Wamit::Load(String file, double rho) {
 		}
 		String fileRAO = ForceExt(file, ".4");
 		hd().Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
-		if (!Load_4(fileRAO))
-			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
-		
+		try {
+			if (!Load_4(fileRAO))
+				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+		} catch(Exc e) {
+			hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+			hd().lastError = e;
+		}
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
@@ -60,17 +64,27 @@ bool Wamit::Load(String file, double rho) {
 
 void Wamit::Save(String file) {
 	try {
-		String file1 = ForceExt(file, ".1");
-		hd().Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(file1)));
-		Save_1(file1);
+		if (hd().IsLoadedA() && hd().IsLoadedB()) {
+			String file1 = ForceExt(file, ".1");
+			hd().Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(file1)));
+			Save_1(file1);
+		}
 		
-		String file3 = ForceExt(file, ".3");
-		hd().Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(file3)));
-		Save_3(file3);
-
-		String fileHST = ForceExt(file, ".hst");
-		hd().Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
-		Save_hst(fileHST);
+		if (hd().IsLoadedFex()) {
+			String file3 = ForceExt(file, ".3");
+			hd().Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(file3)));
+			Save_3(file3);
+		}
+		if (hd().IsLoadedC()) {
+			String fileHST = ForceExt(file, ".hst");
+			hd().Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
+			Save_hst(fileHST);
+		}
+		if (hd().IsLoadedRAO()) {
+			String fileRAO = ForceExt(file, ".4");
+			hd().Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
+			Save_4(fileRAO);
+		}
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -493,6 +507,7 @@ bool Wamit::Load_3(String fileName) {
 	}
 	
 	hd().Initialize_Forces(hd().ex);
+	
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 		if (readW)
 			T[ifr] = 2*M_PI/w[ifr];
@@ -581,6 +596,9 @@ bool Wamit::Load_4(String fileName) {
 	if (in.IsEof())
 		throw Exc("Error in file format");
 	
+	Vector<double> T; 	
+    Vector<double> w;
+    
 	in.Seek(fpos);
 	
 	int maxDof = 0;
@@ -588,7 +606,7 @@ bool Wamit::Load_4(String fileName) {
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		double freq = f.GetDouble(0);
-		FindAdd(hd().w, freq);
+		FindAdd(w, freq);
 		
 		int dof = f.GetInt(2);
 		if (dof > maxDof)
@@ -611,7 +629,7 @@ bool Wamit::Load_4(String fileName) {
 		throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
 	hd().Nb = Nb;
 	
-	int Nf = hd().w.GetCount();
+	int Nf = w.GetCount();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
 		throw Exc(Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
@@ -620,23 +638,31 @@ bool Wamit::Load_4(String fileName) {
 		throw Exc(Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	bool readW;
-	if (hd().w[0] > hd().w[1]) {
+	if (w[0] > w[1]) {
 		readW = false;
-		hd().T = pick(hd().w);
-		hd().w.SetCount(hd().Nf);	
+		T = pick(w);
+		w.SetCount(hd().Nf);	
 	} else {
 		readW = true;
-		hd().T.SetCount(hd().Nf);
+		T.SetCount(hd().Nf);
 	}
 	
 	hd().Initialize_RAO();
 	
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 		if (readW)
-			hd().T[ifr] = 2*M_PI/hd().w[ifr];
+			T[ifr] = 2*M_PI/w[ifr];
 		else
-			hd().w[ifr] = 2*M_PI/hd().T[ifr];
+			w[ifr] = 2*M_PI/T[ifr];
 	}
+	
+	if (hd().w.IsEmpty()) {
+		hd().w = pick(w);
+		hd().T = pick(T);
+	} else if (!Compare(hd().w, w))
+		throw(t_("Frequencies loaded are different than previous"));
+	else if (!Compare(hd().T, T))
+		throw(t_("Periods loaded are different than previous"));
 	
 	in.Seek(fpos);
 	
@@ -726,10 +752,31 @@ void Wamit::Save_hst(String fileName) {
 				int ii = i - ib_i*6;
 				int ib_j = j/6;
 				int jj = j - ib_j*6;
-				out << Format(" %5d %5d  %s\n", i+1, j+1, FormatWam(hd().C[ib_i](ii, jj)/(hd().g*hd().rho*pow(hd().len, Hydro::GetK_C(i, j)))));
+				if (!IsNull(hd().C[ib_i](ii, jj))) 
+					out << Format(" %5d %5d  %s\n", i+1, j+1, FormatWam(hd().C[ib_i](ii, jj)/(hd().g*hd().rho*pow(hd().len, Hydro::GetK_C(i, j)))));
 			}
 	}
 }
+
+void Wamit::Save_4(String fileName) {
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+	
+	double A = 1;
+	if (hd().IsLoadedRAO()) {
+		for (int ifr = 0; ifr < hd().Nf; ++ifr)
+			for (int ih = 0; ih < hd().Nh; ++ih)
+				for (int i = 0; i < hd().Nb*6; ++i)
+					if (!IsNull(hd().rao.ma[ih](ifr, i))) {
+						double k = A/pow(hd().len, Hydro::GetK_RAO(i));
+						out << Format(" %s %s %5d %s %s %s %s\n", FormatWam(hd().T[ifr]), FormatWam(hd().head[ih]), i+1,
+										FormatWam(hd().rao.ma[ih](ifr, i)/k), FormatWam(hd().rao.ph[ih](ifr, i)),
+										FormatWam(hd().rao.re[ih](ifr, i)/k), FormatWam(hd().rao.im[ih](ifr, i)/k));
+					}
+	}
+}
+					
 
 bool Wamit::LoadDatMesh(String fileName) {
 	FileInLine in(fileName);

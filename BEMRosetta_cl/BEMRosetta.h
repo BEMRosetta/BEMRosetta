@@ -18,7 +18,7 @@ public:
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
-	Hydro() : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null) {}
+	Hydro() : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null)/*, thres(Null)*/ {}
 	virtual ~Hydro() {}	
 
 	static void SetBuildInfo(String &str) {
@@ -59,6 +59,7 @@ public:
     int Nb;          		// number of bodies
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
+ 	//double thres;			// Threshold to discard data if it is lower
  	
 	Upp::Array<MatrixXd> A;	// [Nf](6*Nb, 6*Nb)		Added mass
     MatrixXd Awinf;        	// (6*Nb, 6*Nb)        	Infinite frequency added mass
@@ -188,6 +189,22 @@ public:
 	bool IsLoadedFsc() 	{return sc.ma.GetCount() > 0;}
 	bool IsLoadedFfk() 	{return fk.ma.GetCount() > 0;}
 	bool IsLoadedRAO() 	{return rao.ma.GetCount() > 0;}
+	bool IsLoadedForce(Forces &f)	{return f.ma.GetCount() > 0;}
+	
+	void RemoveThresDOF_A(double thres);
+	void RemoveThresDOF_B(double thres);
+	void RemoveThresDOF_Force(Forces &f, double thres);
+	
+	void Compare_rho(Hydro &a);
+	void Compare_g(Hydro &a);
+	void Compare_h(Hydro &a);
+	void Compare_w(Hydro &a);
+	void Compare_head(Hydro &a);
+	void Compare_Nb(Hydro &a);
+	void Compare_A(Hydro &a);
+	void Compare_B(Hydro &a);
+	void Compare_C(Hydro &a);
+	void Compare_cg(Hydro &a);
 	
 	const Vector<int> &GetOrder()		{return dofOrder;}
 	void SetOrder(Vector<int> &order)	{dofOrder = pick(order);}
@@ -195,16 +212,6 @@ public:
 	String GetLastError()	{return lastError;}
 };
 
-void Compare_rho(Hydro &a, Hydro &b);
-void Compare_g(Hydro &a, Hydro &b);
-void Compare_h(Hydro &a, Hydro &b);
-void Compare_w(Hydro &a, Hydro &b);
-void Compare_head(Hydro &a, Hydro &b);
-void Compare_Nb(Hydro &a, Hydro &b);
-void Compare_A(Hydro &a, Hydro &b);
-void Compare_B(Hydro &a, Hydro &b);
-void Compare_C(Hydro &a, Hydro &b);
-void Compare_cg(Hydro &a, Hydro &b);
 		
 class HydroData {
 public:
@@ -330,6 +337,7 @@ protected:
 	void Save_1(String fileName);
 	void Save_3(String fileName);
 	void Save_hst(String fileName);
+	void Save_4(String fileName);
 };
 
 class Fast : public Wamit {
@@ -487,7 +495,7 @@ String FormatWam(double d);
 class BEMData {
 public:
 	Upp::Array<HydroClass> hydros;
-	double depth, rho, g, length;
+	double depth, rho, g, length;//, thres;
 	
 	void Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData);
 	
@@ -521,6 +529,8 @@ public:
 			rho = 1000;
 		if (!ret || IsNull(length)) 
 			length = 1;
+		//if (!ret || IsNull(thres)) 
+		//	thres = 2;
 		return true;
 	}
 	bool StoreSerializeJson() {
@@ -538,6 +548,7 @@ public:
 			("rho", rho)
 			("g", g)
 			("length", length)
+		//	("thres", thres)
 		;
 	}
 };
