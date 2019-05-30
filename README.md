@@ -35,7 +35,7 @@ BEMRosetta runs on Windows and Linux, it is done in C++ [so install is simple](h
     * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
 	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .LIS, .AH1
   * Save
-    * [Wamit](https://www.wamit.com/): .1, .3, .hst
+    * [Wamit](https://www.wamit.com/): .1, .3, .hst, .4
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
     * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
 * Mesh view

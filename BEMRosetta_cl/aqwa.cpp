@@ -25,16 +25,16 @@ bool Aqwa::Load(String file, double) {
 				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
 			else {
 				hd().Print("\n" + Format(t_("Comparing LIS and AH1 files..."), file));
-				Compare_rho(hd(), ah1.hd());
-				Compare_g(hd(), ah1.hd());
-				Compare_h(hd(), ah1.hd());
-				Compare_w(hd(), ah1.hd());
-				Compare_head(hd(), ah1.hd());
-				Compare_Nb(hd(), ah1.hd());
-				Compare_A(hd(), ah1.hd());
-				Compare_B(hd(), ah1.hd());
-				Compare_C(hd(), ah1.hd());
-				Compare_cg(hd(), ah1.hd());
+				hd().Compare_rho(ah1.hd());
+				hd().Compare_g(ah1.hd());
+				hd().Compare_h(ah1.hd());
+				hd().Compare_w(ah1.hd());
+				hd().Compare_head(ah1.hd());
+				hd().Compare_Nb(ah1.hd());
+				hd().Compare_A(ah1.hd());
+				hd().Compare_B(ah1.hd());
+				hd().Compare_C(ah1.hd());
+				hd().Compare_cg(ah1.hd());
 				
 				hd().ex = pick(ah1.hd().ex);
 				hd().Print(t_("Comparison is OK"));

@@ -278,10 +278,10 @@ void Main::OnLoad() {
 		
 		md.Load(file, THISBACK(WindowWamitAdditionalData));
 	
-		if (menuOpen.optLoadIn == 0) {
-			md.hydros.Remove(0, md.hydros.GetCount()-1);
-			mainSummary.array.Reset();
-		}
+		//if (menuOpen.optLoadIn == 0) {
+		//	md.hydros.Remove(0, md.hydros.GetCount()-1);
+		//	mainSummary.array.Reset();
+		//}
 		String strError;
 		if (!HydroClass::MatchCoeffStructure(md.hydros, strError)) {
 			md.hydros.SetCount(md.hydros.GetCount()-1);
@@ -314,7 +314,8 @@ void Main::OnLoad() {
 }
 
 void Main::WindowWamitAdditionalData(BEMData &md, HydroClass &data) {
-	if (!IsNull(data.hd().g) && !IsNull(data.hd().len) && !IsNull(data.hd().rho) && !IsNull(data.hd().h))
+	if (!IsNull(data.hd().g) && !IsNull(data.hd().len) && !IsNull(data.hd().rho) 
+		&& !IsNull(data.hd().h))
 		return;
 		
 	WithWamitLoad<TopWindow> dialog;
@@ -427,7 +428,7 @@ void Main::Close(bool store) {
 void Main::Jsonize(JsonIO &json) {
 	json
 		("menuOpen_file", menuOpen.file)
-		("menuOpen_optLoadIn", menuOpen.optLoadIn)
+		//("menuOpen_optLoadIn", menuOpen.optLoadIn)
 		("menuConvert_file", menuConvert.file)
 		("menuConvert_opt", menuConvert.opt)
 		("menuPlot_autoFit", menuPlot.autoFit)
@@ -451,6 +452,7 @@ void MenuOptions::Load() {
 	rho <<= md->rho;
 	length <<= md->length;
 	depth <<= md->depth;
+	//thres <<= md->thres;
 }
 
 void MenuOptions::OnSave() {
@@ -458,10 +460,11 @@ void MenuOptions::OnSave() {
 	md->rho = ~rho;
 	md->length = ~length;
 	md->depth = ~depth;
+	//md->thres = ~thres;
 }
 
 bool MenuOptions::IsChanged() {
-	if ((md->g != ~g) || (md->rho != ~rho) || (md->length != ~length) || (md->depth != ~depth))
+	if ((md->g != ~g) || (md->rho != ~rho) || (md->length != ~length) || (md->depth != ~depth)/* || (md->thres != ~thres)*/)
 		return true;
 	
 	return false;
@@ -820,41 +823,41 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_SC_MA, show_w)) {
 				loaded = true;
 				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fsc_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("N");
-			}
-			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_SC_PH, show_w)) {
-				loaded = true;
-				if (ma().menuPlot.showPhase)
-					scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fsc_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_SC_PH, show_w)) {
+					loaded = true;
+					if (ma().menuPlot.showPhase)
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fsc_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				}
 			}
 		} else if (dataToShow == DATA_FORCE_FK && hydro[id].hd().IsLoadedFfk()) {
 			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_MA, show_w)) {
 				loaded = true;
 				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Ffk_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("N");
-			}
-			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_PH, show_w)) {
-				loaded = true;
-				if (ma().menuPlot.showPhase)
-					scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Ffk_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_PH, show_w)) {
+					loaded = true;
+					if (ma().menuPlot.showPhase)
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Ffk_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				}
 			}
 		} else if (dataToShow == DATA_FORCE_EX && hydro[id].hd().IsLoadedFex()) {
 			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_MA, show_w)) {
 				loaded = true;
 				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fex_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("N");
-			}
-			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_PH, show_w)) {
-				loaded = true;
-				if (ma().menuPlot.showPhase)
-					scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fex_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_PH, show_w)) {
+					loaded = true;
+					if (ma().menuPlot.showPhase)
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fex_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				}
 			}
 		} else if (dataToShow == DATA_RAO && hydro[id].hd().IsLoadedRAO()) {
 			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_MA, show_w)) {
 				loaded = true;
 				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("RAO_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-			}
-			if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_PH, show_w)) {
-				loaded = true;
-				if (ma().menuPlot.showPhase)
-					scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("RAO_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_PH, show_w)) {
+					loaded = true;
+					if (ma().menuPlot.showPhase)
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("RAO_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+				}
 			}
 		}
 	}
