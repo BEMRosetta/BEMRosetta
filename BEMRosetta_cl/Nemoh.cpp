@@ -99,19 +99,19 @@ bool Nemoh::Load_Cal(String fileName) {
 			hd().names << GetFileTitle(f.GetText(0));
 		} else if (line.Find("Number of wave frequencies") >= 0) {
 			f.Load(line);
-			hd().Nf = f.GetInt(0);  						// Number of wave frequencies
+			hd().Nf = f.GetInt(0);  						
 			double minF = f.GetDouble(1);
 			double maxF = f.GetDouble(2);
-        	LinSpaced(hd().w, hd().Nf, minF, maxF); 			// Wave frequencies
+        	LinSpaced(hd().w, hd().Nf, minF, maxF); 
         	hd().T.SetCount(hd().Nf);
         	for (int i = 0; i < hd().Nf; ++i)
-        		hd().T[i] = 2*M_PI/hd().w[i];  			// Wave periods
+        		hd().T[i] = 2*M_PI/hd().w[i];  				
 		} else if (line.Find("Number of wave directions") >= 0) {
 			f.Load(line);
-			hd().Nh = f.GetInt(0);  						// Number of wave headings
+			hd().Nh = f.GetInt(0);  						
 			double minD = f.GetDouble(1);
 			double maxD = f.GetDouble(2);
-        	LinSpaced(hd().head, hd().Nh, minD, maxD); 				// Wave frequencies
+        	LinSpaced(hd().head, hd().Nh, minD, maxD); 		
 		}
 	}
 	if (hd().Nb == 0 || hd().Nf == 0 || hd().Nh == 0 || IsNull(hd().rho) || IsNull(hd().g) || IsNull(hd().h))
@@ -196,7 +196,7 @@ bool Nemoh::Load_Hydrostatics() {
 			hd().cb(i, b) = f.GetDouble(2);
 	    }
 		f.Load(in.GetLine());
-	    hd().Vo[b] = f.GetDouble(2); 		// Displacement volume
+	    hd().Vo[b] = f.GetDouble(2); 		
 	}
 	return true;
 }
@@ -299,10 +299,10 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName, Stri
 			f.Load(line);
 			int ib = 0, idof = 0, ibdof = 0;
 			for (int i = 0; i < hd().Nb*6; ++i) {
-				double ma = fc.ma[h](ifr, ibdof) = f.GetDouble(1 + 2*i);	// Magnitude of exciting force
-				double ph = fc.ph[h](ifr, ibdof) = -f.GetDouble(1 + 2*i + 1);//	Phase of exciting force (-ph, since NEMOH's x-dir is flipped)
-				fc.re[h](ifr, ibdof) = ma*cos(ph);  // Real part of exciting force
-				fc.im[h](ifr, ibdof) = ma*sin(ph);  // Imaginary part of exciting force
+				double ma = fc.ma[h](ifr, ibdof) = f.GetDouble(1 + 2*i);	
+				double ph = fc.ph[h](ifr, ibdof) = -f.GetDouble(1 + 2*i + 1); //-Phase to follow Wamit
+				fc.re[h](ifr, ibdof) = ma*cos(ph); 
+				fc.im[h](ifr, ibdof) = ma*sin(ph); 
 				idof++;
 				ibdof++;
 				if (idof >= hd().dof[ib]) {

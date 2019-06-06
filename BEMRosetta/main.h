@@ -188,7 +188,7 @@ public:
 	void OnView();
 	void OnOpt();
 	
-	void WindowWamitAdditionalData(BEMData &md, HydroClass &data);
+	void WindowAdditionalData(BEMData &md, HydroClass &data);
 		
 	bool LoadSerializeJson() {
 		bool ret;

@@ -27,6 +27,27 @@ void Hydro::Initialize_Forces(Forces &f) {
 	}
 }
 
+void Hydro::GetFexFromFscFfk() {
+	for (int ih = 0; ih < Nh; ++ih) {
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			for (int i = 0; i < Nb*6; ++i) {
+				if (!IsNull(sc.ma[ih](ifr, i))) {
+					double scm = sc.ma[ih](ifr, i);
+					double scp = sc.ph[ih](ifr, i);
+					double fkm = fk.ma[ih](ifr, i);
+					double fkp = fk.ph[ih](ifr, i);
+					double exre = scm*cos(scp) + fkm*cos(fkp);
+					double exim = scm*sin(scp) + fkm*sin(fkp);
+					ex.re[ih](ifr, i) = exre;
+					ex.im[ih](ifr, i) = exim;
+					ex.ma[ih](ifr, i) = sqrt(exre*exre + exim*exim);
+					ex.ph[ih](ifr, i) = atan2(exre, exim);
+				}
+			}
+		}
+	}
+}
+
 void Hydro::Initialize_RAO() {
 	Initialize_Forces(rao);
 }
@@ -544,6 +565,14 @@ void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> Addition
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
+	} else if (ext == ".mat") {
+		Foamm &data = hydros.Create<Foamm>();
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+		AdditionalData(*this, data);
 	} else 
 		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
 	
