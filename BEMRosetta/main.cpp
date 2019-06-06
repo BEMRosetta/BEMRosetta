@@ -212,7 +212,8 @@ void Main::OnOpt() {
 	menuOpen.file.Type("Nemoh .cal file", "*.cal");	
 	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
 	menuOpen.file.Type("AQWA .AH1.LIS file", "*.ah1 *.lis");
-	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis");
+	menuOpen.file.Type("FOAMM .mat file", "*.mat");
+	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis .mat");
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
@@ -234,10 +235,10 @@ void Main::OnOpt() {
 	
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
-	case 0:	menuConvert.file = ForceExtSafe(~menuConvert.file, ".1"); 	
+	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
 			menuConvert.file.Type("Wamit .1.3.hst file", "*.1 *.3 *.hst");
 			break;
-	case 1:	menuConvert.file = ForceExtSafe(~menuConvert.file, ".dat"); 
+	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
 			menuConvert.file.Type("FAST HydroDyn file", "*.dat");
 			break;
 	default:menuConvert.file.Type("All converted files", "*.1 *.3 *.hst *.dat");
@@ -276,7 +277,7 @@ void Main::OnLoad() {
 	try {
 		WaitCursor cursor;
 		
-		md.Load(file, THISBACK(WindowWamitAdditionalData));
+		md.Load(file, THISBACK(WindowAdditionalData));
 	
 		//if (menuOpen.optLoadIn == 0) {
 		//	md.hydros.Remove(0, md.hydros.GetCount()-1);
@@ -313,12 +314,12 @@ void Main::OnLoad() {
 	}
 }
 
-void Main::WindowWamitAdditionalData(BEMData &md, HydroClass &data) {
+void Main::WindowAdditionalData(BEMData &md, HydroClass &data) {
 	if (!IsNull(data.hd().g) && !IsNull(data.hd().len) && !IsNull(data.hd().rho) 
 		&& !IsNull(data.hd().h))
 		return;
 		
-	WithWamitLoad<TopWindow> dialog;
+	WithAdditionalDataLoad<TopWindow> dialog;
 	CtrlLayoutOK(dialog, t_("Set pending data"));
 	if (IsNull(data.hd().g)) 
 		data.hd().g = md.g;
@@ -742,6 +743,13 @@ bool MainABForce::Load(Upp::Array<HydroClass> &hydro) {
 	return true;
 }
 
+String FormatDOF(int i, int j) {
+	if (i != j)
+		return Format("%s_%s", Hydro::StrDOF(i), Hydro::StrDOF(j));
+	else
+		return Hydro::StrDOF(i);
+}
+
 void MainPlot::Init(int i, int j_h, double h, DataToShow dataToShow) {
 	CtrlLayout(*this);
 	
@@ -751,10 +759,10 @@ void MainPlot::Init(int i, int j_h, double h, DataToShow dataToShow) {
 	scatter.ShowAllMenus();
 	String title, labelY, labelY2;
 	switch (dataToShow) {
-	case DATA_A:		title = Format(t_("Added mass A%s_%s"), Hydro::StrDOF(i), Hydro::StrDOF(j_h));		
+	case DATA_A:		title = Format(t_("Added mass %s"), FormatDOF(i, j_h));		
 						labelY = t_("Added mass");				
 						break;		
-	case DATA_B:		title = Format(t_("Radiation damping B%s_%s"), Hydro::StrDOF(i), Hydro::StrDOF(j_h));
+	case DATA_B:		title = Format(t_("Radiation damping %s"), FormatDOF(i, j_h));
 						labelY = t_("Radiation damping");		
 						break;
 	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrDOF(i), h);

@@ -18,6 +18,7 @@ file
 	BEMRosetta.cpp,
 	BEMRosetta.h,
 	nemoh.cpp,
+	foamm.cpp,
 	wamit.cpp,
 	fast.cpp,
 	aqwa.cpp,
