@@ -17,28 +17,6 @@ bool Aqwa::Load(String file, double) {
 				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
 				return false;
 			}
-		} else {
-			hd().Print("\n- " + x_(t_("AH1 file")));
-			Aqwa ah1;
-			ah1.hd().file = file;
-			if (!ah1.Load_AH1()) 
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
-			else {
-				hd().Print("\n" + Format(t_("Comparing LIS and AH1 files..."), file));
-				hd().Compare_rho(ah1.hd());
-				hd().Compare_g(ah1.hd());
-				hd().Compare_h(ah1.hd());
-				hd().Compare_w(ah1.hd());
-				hd().Compare_head(ah1.hd());
-				hd().Compare_Nb(ah1.hd());
-				hd().Compare_A(ah1.hd());
-				hd().Compare_B(ah1.hd());
-				hd().Compare_C(ah1.hd());
-				hd().Compare_cg(ah1.hd());
-				
-				hd().ex = pick(ah1.hd().ex);
-				hd().Print(t_("Comparison is OK"));
-			}
 		}
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
@@ -442,6 +420,8 @@ bool Aqwa::Load_LIS() {
 			}
 		}
 	}
+	hd().Initialize_Forces(hd().ex);
+	hd().GetFexFromFscFfk();
 		
 	return true;
 }

@@ -14,7 +14,7 @@ using namespace Eigen;
 
 class Hydro {
 public:
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, UNKNOWN};
+	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, UNKNOWN};
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
@@ -40,12 +40,15 @@ public:
 		case NEMOH:			return t_("Nemoh");
 		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
 		case AQWA:			return t_("AQWA");
-		case UNKNOWN:			return t_("Unknown");
+		case FOAMM:			return t_("FOAMM");
+		case UNKNOWN:		return t_("Unknown");
 		}
 		return t_("Unknown");
 	}
 	
 	inline bool IsAvailableDOF(int ib, int idof) {
+		if (dof[ib] <= idof)
+			return false;
 		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idof, (ib+1)*idof))) || 
 			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[0]((ib+1)*idof, (ib+1)*idof)));
 	}
@@ -103,6 +106,8 @@ public:
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f);
 	void Initialize_RAO();
+	void GetFexFromFscFfk();
+		
 	static int GetK_AB(int i, int j) {
 		while (i > 5)
 			i -= 6;
@@ -338,6 +343,19 @@ protected:
 	void Save_3(String fileName);
 	void Save_hst(String fileName);
 	void Save_4(String fileName);
+};
+
+class Foamm : public HydroClass {
+public:
+	Foamm(Hydro *hydro = 0) : HydroClass(hydro) {}
+	bool Load(String file);
+	void Save(String file);
+	virtual ~Foamm()	{}
+	
+protected:
+	bool Load_mat(String fileName);
+	
+	void Save_mat(String fileName);
 };
 
 class Fast : public Wamit {

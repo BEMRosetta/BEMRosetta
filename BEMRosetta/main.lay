@@ -5,14 +5,14 @@ END_LAYOUT
 
 LAYOUT(MenuOpen, 676, 48)
 	ITEM(Label, dv___0, SetLabel(t_("File:")).LeftPosZ(0, 40).TopPosZ(4, 19))
-	ITEM(EditFile, file, HSizePosZ(40, 148).TopPosZ(4, 19))
+	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(40, 148).TopPosZ(4, 19))
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(88, 56).TopPosZ(4, 20))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
 END_LAYOUT
 
 LAYOUT(MenuConvert, 632, 48)
 	ITEM(Label, dv___0, SetLabel(t_("Model:")).LeftPosZ(4, 40).TopPosZ(4, 19))
-	ITEM(EditFile, file, HSizePosZ(264, 64).TopPosZ(4, 19))
+	ITEM(EditFile, file, UseOpenFolder(true).UseDropping(true).HSizePosZ(264, 64).TopPosZ(4, 19))
 	ITEM(Button, butLoad, SetLabel(t_("Convert")).RightPosZ(4, 56).TopPosZ(4, 20))
 	ITEM(Switch, opt, SetLabel(t_("Wamit .1.3.hst\nFAST .dat\nBy extension")).LeftPosZ(268, 352).TopPosZ(28, 16))
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(44, 172).TopPosZ(4, 40))
@@ -33,7 +33,7 @@ END_LAYOUT
 
 LAYOUT(MenuView, 572, 48)
 	ITEM(Label, dv___0, SetLabel(t_("File:")).LeftPosZ(0, 40).TopPosZ(4, 19))
-	ITEM(EditFile, file, HSizePosZ(40, 308).TopPosZ(4, 19))
+	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(40, 308).TopPosZ(4, 19))
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(248, 56).TopPosZ(4, 20))
 	ITEM(Switch, optLoadIn, SetLabel(t_("Load\nLoad in parallel")).RightPosZ(92, 144).TopPosZ(8, 16))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).RightPosZ(4, 80).TopPosZ(4, 20))
@@ -81,7 +81,7 @@ LAYOUT(MainView, 400, 200)
 	ITEM(GLCanvas, gl, SetFrame(ThinInsetFrame()).HSizePosZ(0, 0).VSizePosZ(0, 0))
 END_LAYOUT
 
-LAYOUT(WamitLoad, 180, 144)
+LAYOUT(AdditionalDataLoad, 180, 144)
 	ITEM(Label, dv___0, SetLabel(t_("Depth [m]:")).LeftPosZ(12, 120).TopPosZ(80, 19))
 	ITEM(EditDouble, h, LeftPosZ(132, 40).TopPosZ(80, 19))
 	ITEM(Label, dv___2, SetLabel(t_("Water density [Kg/m3]:")).LeftPosZ(12, 120).TopPosZ(32, 19))
