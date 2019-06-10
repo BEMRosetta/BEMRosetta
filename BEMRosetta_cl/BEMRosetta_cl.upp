@@ -22,6 +22,7 @@ file
 	wamit.cpp,
 	fast.cpp,
 	aqwa.cpp,
+	ainf.h,
 	data.brc,
 	hydrodyn.dat,
 	license.txt,
