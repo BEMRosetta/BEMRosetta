@@ -18,7 +18,8 @@ file
 	arrange.lay,
 	license.txt,
 	main.rc,
-	bemrosetta.t;
+	bemrosetta.t,
+	srcimp.tpp;
 
 mainconfig
 	"" = "GUI";

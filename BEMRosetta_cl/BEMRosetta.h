@@ -11,6 +11,7 @@ using namespace Upp;
 
 using namespace Eigen;
 
+#include "ainf.h"
 
 class Hydro {
 public:
@@ -146,6 +147,9 @@ public:
 			return 1;
 	}
 	
+	Upp::Array<std::complex<double>> TFSResponse;
+	Upp::Array<std::complex<double>> Z;
+	
 	void GetBodyDOF();
 	
 	int GetIrregularHead();	
@@ -195,6 +199,7 @@ public:
 	bool IsLoadedFfk() 	{return fk.ma.GetCount() > 0;}
 	bool IsLoadedRAO() 	{return rao.ma.GetCount() > 0;}
 	bool IsLoadedForce(Forces &f)	{return f.ma.GetCount() > 0;}
+	bool IsLoadedStateSpace()		{return TFSResponse.GetCount() > 0;}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
