@@ -67,10 +67,10 @@ void Main::Init() {
 	
 	CtrlLayout(menuPlot);
 	menuPlot.butZoomToFit.WhenAction = [&] {GetSelPlot().scatter.ZoomToFit(true, true);};
-	menuPlot.autoFit.WhenAction 	 = [&] {GetSelTab().Load(md.hydros);};
-	menuPlot.opwT.WhenAction 	 	 = [&] {GetSelTab().Load(md.hydros);};
-	menuPlot.showPoints.WhenAction 	 = [&] {GetSelTab().Load(md.hydros);};
-	menuPlot.showPhase.WhenAction 	 = [&] {GetSelTab().Load(md.hydros);};
+	menuPlot.autoFit.WhenAction 	 = [&] {LoadSelTab(md.hydros);};
+	menuPlot.opwT.WhenAction 	 	 = [&] {LoadSelTab(md.hydros);};
+	menuPlot.showPoints.WhenAction 	 = [&] {LoadSelTab(md.hydros);};
+	menuPlot.showPhase.WhenAction 	 = [&] {LoadSelTab(md.hydros);};
 	
 	CtrlLayout(menuView);
 	menuView.file <<= THISBACK(OnView);
@@ -137,6 +137,9 @@ void Main::Init() {
 			plot = false;
 			menuTab.Set(menuView);	
 			mainTab.Set(mainView);	 
+		} else if (mainTab.IsAt(mainStateSpace)) {
+			mainStateSpace.Load(md.hydros);
+			menuPlot.showPhase.Enable(true);
 		} else {
 			plot = false;
 			menuPlot.showPhase.Enable(false);
@@ -173,7 +176,10 @@ void Main::Init() {
 	
 	mainRAO.Init(DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
-	
+
+	mainStateSpace.Init();
+	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
+		
 	mainView.Init();
 	mainTab.Add(mainView.SizePos(), t_("View"));
 		
@@ -186,6 +192,13 @@ void Main::Init() {
 	
 	if (firstTime)
 		menuTab.Set(menuAbout);
+}
+
+void Main::LoadSelTab(Upp::Array<HydroClass> &hydros) {
+	if (mainTab.Get() == mainTab.Find(mainStateSpace))
+		mainStateSpace.Load(hydros);
+	else 
+		GetSelTab().Load(hydros);
 }
 
 MainABForce &Main::GetSelTab() {
@@ -230,8 +243,10 @@ void Main::OnOpt() {
 		menuOpen.file.ActiveType(4);
 	else if (String(".ah1 .lis").Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(5);
-	else
+	else if (String(".mat").Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(6);
+	else
+		menuOpen.file.ActiveType(7);
 	
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
@@ -279,10 +294,6 @@ void Main::OnLoad() {
 		
 		md.Load(file, THISBACK(WindowAdditionalData));
 	
-		//if (menuOpen.optLoadIn == 0) {
-		//	md.hydros.Remove(0, md.hydros.GetCount()-1);
-		//	mainSummary.array.Reset();
-		//}
 		String strError;
 		if (!HydroClass::MatchCoeffStructure(md.hydros, strError)) {
 			md.hydros.SetCount(md.hydros.GetCount()-1);
@@ -309,6 +320,8 @@ void Main::OnLoad() {
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(md.hydros));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(md.hydros));
 		mainTab.GetItem(mainTab.Find(mainView)).Enable(true);
+		if (data.hd().IsLoadedStateSpace())
+			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
@@ -340,16 +353,25 @@ void Main::WindowAdditionalData(BEMData &md, HydroClass &data) {
 		data.hd().h = md.depth;
 	else
 		dialog.h.Disable();
-		
+	if (data.hd().h == -1)
+		dialog.h <<= "INFINITY";
+	else
+		dialog.h <<= FormatDouble(data.hd().h);
+	
 	CtrlRetriever rf;
 	rf
 		(dialog.g, data.hd().g)
 		(dialog.len, data.hd().len)
 		(dialog.rho, data.hd().rho)
-		(dialog.h, data.hd().h)
+		//(dialog.h, data.hd().h)
 	;
 	dialog.Execute();
 	rf.Retrieve();		
+	
+	if (~dialog.h == "INFINITY")
+		data.hd().h = -1;
+	else
+		data.hd().h = ScanDouble(dialog.h.GetData().ToString());
 }
 		
 void Main::OnConvert() {
@@ -871,6 +893,56 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 	}
 	if (ma().menuPlot.autoFit)
 		scatter.ZoomToFit(true, true);
+	return loaded;
+}
+
+void MainStateSpace::Init() {
+	CtrlLayout(*this);
+	
+	scatterZ.ShowAllMenus();
+	scatterZ.SetTitle(t_("Frequency response"));
+	scatterZ.SetDrawY2Reticle(true);
+}
+
+bool MainStateSpace::Load(Upp::Array<HydroClass> &hydro) {
+	scatterZ.RemoveAllSeries();
+	Z_source.SetCount(hydro.GetCount());
+	Z_source2.SetCount(hydro.GetCount());
+	TFS_source.SetCount(hydro.GetCount());
+	TFS_source2.SetCount(hydro.GetCount());
+	
+	int markW = ma().menuPlot.showPoints ? 10 : 0;
+	bool show_w = ma().menuPlot.opwT == 0;
+	if (show_w) 
+		scatterZ.SetLabelX(t_("w [rad/s]"));
+	else 
+		scatterZ.SetLabelX(t_("T [s]"));
+	
+	bool loaded = false;
+	for (int id = 0; id < hydro.GetCount(); ++id) {	
+		if (hydro[id].hd().IsLoadedStateSpace()) {
+			if (Z_source[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_MA, show_w)) {
+				loaded = true;
+				scatterZ.AddSeries(Z_source[id]).Legend(Format(t_("Z Magnitude %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
+				if (Z_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_PH, show_w)) {
+					loaded = true;
+					if (ma().menuPlot.showPhase)
+						scatterZ.AddSeries(Z_source2[id]).Legend(Format(t_("Z Phase %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").SetDataSecondaryY();
+				}
+			}
+			if (TFS_source[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_MA, show_w)) {
+				loaded = true;
+				scatterZ.AddSeries(TFS_source[id]).Legend(Format(t_("TFSResponse Magnitude %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
+				if (TFS_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_PH, show_w)) {
+					loaded = true;
+					if (ma().menuPlot.showPhase)
+						scatterZ.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSResponse Phase %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").SetDataSecondaryY();
+				}
+			}
+		}
+	}
+	if (ma().menuPlot.autoFit) 
+		scatterZ.ZoomToFit(true, true);
 	return loaded;
 }
 

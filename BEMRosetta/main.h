@@ -23,7 +23,18 @@ public:
 
 enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO};
 enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
-				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, PLOT_RAO_MA, PLOT_RAO_PH};
+				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
+				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH};
+
+template <class T>
+T magnitude(const std::complex<T> &val) {
+	return sqrt(pow2(val.real()) + pow2(val.imag()));
+}
+
+template <class T>
+T phase(const std::complex<T> &val) {
+	return atan2(val.imag(), val.real());
+}
     
 class HydroSource : public DataSource {
 public:
@@ -34,9 +45,9 @@ public:
 	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w) 	{
 		return Init(*data, i, j_h, dataToPlot, show_w);
 	}
-	bool Init(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w) {
+	bool Init(Hydro &data, int idof, int j_h, DataToPlot dataToPlot, bool show_w) {
 		this->data = &data;
-		this->i = data.dofOrder[i];
+		this->idof = data.dofOrder[idof];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
 			j_h = data.dofOrder[j_h];
 		this->j_h = j_h;
@@ -47,35 +58,42 @@ public:
 		return true;
 	}
 	virtual inline double y(int64 id) {
+		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return data->A[int(id)](i, j_h);
-		case PLOT_AINF:			return data->Awinf(i, j_h);
-		case PLOT_B:			return data->B[int(id)](i, j_h);
-		case PLOT_FORCE_SC_MA:	return data->sc.ma[j_h](int(id), i);
-		case PLOT_FORCE_SC_PH:	return data->sc.ph[j_h](int(id), i);
-		case PLOT_FORCE_FK_MA:	return data->fk.ma[j_h](int(id), i);
-		case PLOT_FORCE_FK_PH:	return data->fk.ph[j_h](int(id), i);
-		case PLOT_FORCE_EX_MA:	return data->ex.ma[j_h](int(id), i);
-		case PLOT_FORCE_EX_PH:	return data->ex.ph[j_h](int(id), i);
-		case PLOT_RAO_MA:		return data->rao.ma[j_h](int(id), i);
-		case PLOT_RAO_PH:		return data->rao.ph[j_h](int(id), i);
+		case PLOT_A:			return data->A[int(id)](idof, j_h);
+		case PLOT_AINF:			return data->Awinf(idof, j_h);
+		case PLOT_B:			return data->B[int(id)](idof, j_h);
+		case PLOT_FORCE_SC_MA:	return data->sc.ma[j_h](int(id), idof);
+		case PLOT_FORCE_SC_PH:	return data->sc.ph[j_h](int(id), idof);
+		case PLOT_FORCE_FK_MA:	return data->fk.ma[j_h](int(id), idof);
+		case PLOT_FORCE_FK_PH:	return data->fk.ph[j_h](int(id), idof);
+		case PLOT_FORCE_EX_MA:	return data->ex.ma[j_h](int(id), idof);
+		case PLOT_FORCE_EX_PH:	return data->ex.ph[j_h](int(id), idof);
+		case PLOT_RAO_MA:		return data->rao.ma[j_h](int(id), idof);
+		case PLOT_RAO_PH:		return data->rao.ph[j_h](int(id), idof);
+		case PLOT_Z_MA:			return magnitude(data->Z[int(id)]);
+		case PLOT_Z_PH:			return phase(data->Z[int(id)]);
+		case PLOT_TFS_MA:		return magnitude(data->TFSResponse[int(id)]);
+		case PLOT_TFS_PH:		return phase(data->TFSResponse[int(id)]);
 		default:				NEVER();	return Null;
 		}
 	}
 	virtual inline double x(int64 id) 	{
+		ASSERT(data != 0);
 		if (show_w)
 			return data->w[int(id)];
 		else
 			return data->T[int(id)];
 	}
-	virtual int64 GetCount()		  	{return data->Nf;}
+	virtual int64 GetCount()		  	{ASSERT(data != 0); return data->Nf;}
 	
 private:
 	Hydro *data;
-	int i, j_h;
+	int idof, j_h;
 	DataToPlot dataToPlot;
 	bool show_w;
 };
+
 
 class MenuOptions : public WithMenuOptions<StaticRect> {
 public:
@@ -172,6 +190,15 @@ private:
 	DataToShow dataToShow;
 };
 
+class MainStateSpace : public WithMainStateSpace<StaticRect> {
+public:
+	typedef MainStateSpace CLASSNAME;
+	void Init();
+	bool Load(Upp::Array<HydroClass> &hydro);
+	
+	Upp::Array<HydroSource> Z_source, Z_source2, TFS_source, TFS_source2;
+};
+
 typedef class MainABForce MainRAO;
 
 class Main : public WithMain<TopWindow> {
@@ -265,6 +292,7 @@ public:
 	MainRAO mainRAO;
 	MainView mainView;
 	MainOutput mainOutput;
+	MainStateSpace mainStateSpace;
 	
 	BEMData md;
 	Upp::Array<MeshClass> surfs;
@@ -272,6 +300,7 @@ public:
 private:
 	MainPlot &GetSelPlot();
 	MainABForce &GetSelTab();
+	void LoadSelTab(Upp::Array<HydroClass> &hydros);
 		
 	bool closed;
 };
