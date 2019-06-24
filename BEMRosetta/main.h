@@ -39,13 +39,13 @@ T phase(const std::complex<T> &val) {
 class HydroSource : public DataSource {
 public:
 	HydroSource() : data(0) {}
-	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w) {
-		Init(data, i, j_h, dataToPlot, show_w);
+	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool adim) {
+		Init(data, i, j_h, dataToPlot, show_w, adim);
 	}
-	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w) 	{
-		return Init(*data, i, j_h, dataToPlot, show_w);
+	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool adim) 	{
+		return Init(*data, i, j_h, dataToPlot, show_w, adim);
 	}
-	bool Init(Hydro &data, int idof, int j_h, DataToPlot dataToPlot, bool show_w) {
+	bool Init(Hydro &data, int idof, int j_h, DataToPlot dataToPlot, bool show_w, bool adim) {
 		this->data = &data;
 		this->idof = data.dofOrder[idof];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
@@ -53,23 +53,45 @@ public:
 		this->j_h = j_h;
 		this->dataToPlot = dataToPlot;
 		this->show_w = show_w;
-		if (IsNull(y(0)))
+		this->adim = adim;
+		if (IsNullData())
 			return false;
 		return true;
+	}
+	inline bool IsNullData() {
+		ASSERT(data != 0);
+		switch (dataToPlot) {
+		case PLOT_A:			return IsNull(data->A[0](idof, j_h));
+		case PLOT_AINF:			return IsNull(data->Awinf(idof, j_h));
+		case PLOT_B:			return IsNull(data->B[0](idof, j_h));
+		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[j_h](0, idof));
+		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[j_h](0, idof));
+		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[j_h](0, idof));
+		case PLOT_FORCE_FK_PH:	return IsNull(data->fk.ph[j_h](0, idof));
+		case PLOT_FORCE_EX_MA:	return IsNull(data->ex.ma[j_h](0, idof));
+		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[j_h](0, idof));
+		case PLOT_RAO_MA:		return IsNull(data->rao.ma[j_h](0, idof));
+		case PLOT_RAO_PH:		return IsNull(data->rao.ph[j_h](0, idof));
+		case PLOT_Z_MA:			return IsNull(magnitude(data->Z[0]));
+		case PLOT_Z_PH:			return IsNull(phase(data->Z[0]));
+		case PLOT_TFS_MA:		return IsNull(magnitude(data->TFSResponse[0]));
+		case PLOT_TFS_PH:		return IsNull(phase(data->TFSResponse[0]));
+		default:				NEVER();	return true;
+		}
 	}
 	virtual inline double y(int64 id) {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return data->A[int(id)](idof, j_h);
-		case PLOT_AINF:			return data->Awinf(idof, j_h);
-		case PLOT_B:			return data->B[int(id)](idof, j_h);
-		case PLOT_FORCE_SC_MA:	return data->sc.ma[j_h](int(id), idof);
+		case PLOT_A:			return data->A_(adim, int(id), idof, j_h);
+		case PLOT_AINF:			return data->Awinf_(adim, idof, j_h);
+		case PLOT_B:			return data->B_(adim, int(id), idof, j_h);
+		case PLOT_FORCE_SC_MA:	return data->F_ma_(adim, data->sc, j_h, int(id), idof);
 		case PLOT_FORCE_SC_PH:	return data->sc.ph[j_h](int(id), idof);
-		case PLOT_FORCE_FK_MA:	return data->fk.ma[j_h](int(id), idof);
+		case PLOT_FORCE_FK_MA:	return data->F_ma_(adim, data->fk, j_h, int(id), idof);
 		case PLOT_FORCE_FK_PH:	return data->fk.ph[j_h](int(id), idof);
-		case PLOT_FORCE_EX_MA:	return data->ex.ma[j_h](int(id), idof);
+		case PLOT_FORCE_EX_MA:	return data->F_ma_(adim, data->ex, j_h, int(id), idof);
 		case PLOT_FORCE_EX_PH:	return data->ex.ph[j_h](int(id), idof);
-		case PLOT_RAO_MA:		return data->rao.ma[j_h](int(id), idof);
+		case PLOT_RAO_MA:		return data->F_ma_(adim, data->rao, j_h, int(id), idof);
 		case PLOT_RAO_PH:		return data->rao.ph[j_h](int(id), idof);
 		case PLOT_Z_MA:			return magnitude(data->Z[int(id)]);
 		case PLOT_Z_PH:			return phase(data->Z[int(id)]);
@@ -91,21 +113,21 @@ private:
 	Hydro *data;
 	int idof, j_h;
 	DataToPlot dataToPlot;
-	bool show_w;
+	bool show_w, adim;
 };
 
 
 class MenuOptions : public WithMenuOptions<StaticRect> {
 public:
 	typedef MenuOptions CLASSNAME;
-	MenuOptions() : md(0) {}
-	void Init(BEMData &md);
+	MenuOptions() : bem(0) {}
+	void Init(BEMData &bem);
 	void Load();
 	void OnSave();
 	bool IsChanged();
 	
 private:
-	BEMData *md;
+	BEMData *bem;
 };
 
 class MenuAbout : public WithMenuAbout<StaticRect> {
@@ -215,7 +237,7 @@ public:
 	void OnView();
 	void OnOpt();
 	
-	void WindowAdditionalData(BEMData &md, HydroClass &data);
+	//void WindowAdditionalData(BEMData &bem, HydroClass &data);
 		
 	bool LoadSerializeJson() {
 		bool ret;
@@ -240,9 +262,6 @@ public:
 			}
 		}
 		
-		//if (!ret || IsNull(menuOpen.optLoadIn)) 
-		//	menuOpen.optLoadIn = 1;
-
 		if (!ret || IsNull(menuPlot.autoFit)) 
 			menuPlot.autoFit = true;
 		
@@ -255,9 +274,9 @@ public:
 		if (!ret || IsNull(menuPlot.showPhase)) 
 			menuPlot.showPhase = true;
 
-		if (!ret || IsNull(menuView.optLoadIn)) 
-			menuView.optLoadIn = 1;
-		
+		if (!ret || IsNull(menuPlot.showAdim)) 
+			menuPlot.showAdim = false;
+
 		if (!ret || IsNull(menuConvert.opt)) 
 			menuConvert.opt = 0;
 		
@@ -294,7 +313,7 @@ public:
 	MainOutput mainOutput;
 	MainStateSpace mainStateSpace;
 	
-	BEMData md;
+	BEMData bem;
 	Upp::Array<MeshClass> surfs;
 	
 private:

@@ -27,6 +27,8 @@ bool Fast::Load(String file, double g) {
 			if (!Wamit::Load(ForceExt(hydroFile, ".1"))) 
 				return false;
 		}
+		if (IsNull(hd().Nb))
+			return false;
 		
 		if (hd().Nb > 1)
 			throw Exc(Format(t_("FAST does not support more than one body in file '%s'"), file));	
@@ -34,8 +36,6 @@ bool Fast::Load(String file, double g) {
 			throw Exc(t_("No wave headings found in Wamit file"));
 		if (abs(hd().head[0]) != abs(hd().head[hd().head.GetCount()-1]))
 			throw Exc(Format(t_("FAST requires simetric wave headings. .3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.GetCount()-1])); 
-
-		hd().AfterLoad();
 	} catch (Exc e) {
 		hd().PrintError("\nError: " + e);
 		hd().lastError = e;
