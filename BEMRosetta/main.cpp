@@ -24,7 +24,7 @@ void Main::Init() {
 	ma(this);
 	
 	bool firstTime = false;
-	if (!md.LoadSerializeJson()) {
+	if (!bem.LoadSerializeJson()) {
 		firstTime = true;
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults are set");
 	}
@@ -38,9 +38,17 @@ void Main::Init() {
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
 	menuOpen.butLoad <<= THISBACK(OnLoad);
 	
+	//menuOpen.arrayModel.SetLineCy(EditField::GetStdHeight());
+	menuOpen.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
+	menuOpen.arrayModel.AddColumn("", 20);	
+	menuOpen.arrayModel.AddColumn("", 20);
+	
+	menuOpen.butRemove.Disable();	
 	menuOpen.butRemove.WhenAction = [&] {
-		md.hydros.Clear();
+		bem.hydros.Clear();
 		mainSummary.Clear();
+		menuOpen.arrayModel.Clear();
+		menuOpen.butRemove.Disable();
 		menuConvert.arrayModel.Clear();	
 		mainArrange.Clear();	mainTab.GetItem(mainTab.Find(mainArrange)).Disable();
 		mainA.Clear();			mainTab.GetItem(mainTab.Find(mainA)).Disable();
@@ -56,7 +64,7 @@ void Main::Init() {
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.butLoad <<= THISBACK(OnConvert);
 
-	menuConvert.arrayModel.SetLineCy(EditField::GetStdHeight());
+	//menuConvert.arrayModel.SetLineCy(EditField::GetStdHeight());
 	menuConvert.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuConvert.arrayModel.AddColumn("", 20);	
 	menuConvert.arrayModel.AddColumn("", 20);
@@ -67,10 +75,11 @@ void Main::Init() {
 	
 	CtrlLayout(menuPlot);
 	menuPlot.butZoomToFit.WhenAction = [&] {GetSelPlot().scatter.ZoomToFit(true, true);};
-	menuPlot.autoFit.WhenAction 	 = [&] {LoadSelTab(md.hydros);};
-	menuPlot.opwT.WhenAction 	 	 = [&] {LoadSelTab(md.hydros);};
-	menuPlot.showPoints.WhenAction 	 = [&] {LoadSelTab(md.hydros);};
-	menuPlot.showPhase.WhenAction 	 = [&] {LoadSelTab(md.hydros);};
+	menuPlot.autoFit.WhenAction 	 = [&] {LoadSelTab(bem.hydros);};
+	menuPlot.opwT.WhenAction 	 	 = [&] {LoadSelTab(bem.hydros);};
+	menuPlot.showPoints.WhenAction 	 = [&] {LoadSelTab(bem.hydros);};
+	menuPlot.showPhase.WhenAction 	 = [&] {LoadSelTab(bem.hydros);};
+	menuPlot.showAdim.WhenAction 	 = [&] {LoadSelTab(bem.hydros);};
 	
 	CtrlLayout(menuView);
 	menuView.file <<= THISBACK(OnView);
@@ -83,7 +92,7 @@ void Main::Init() {
 		surfs.Clear();
 	};
 	
-	menuOptions.Init(md);
+	menuOptions.Init(bem);
 	menuOptions.Load();
 	
 	menuAbout.Init();
@@ -91,16 +100,17 @@ void Main::Init() {
 	menuTab.Add(menuOpen.SizePos(), 	t_("Open"));
 	menuTab.Add(menuConvert.SizePos(), 	t_("Convert"));
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
-	menuTab.Add(menuView.SizePos(), 	t_("View"));
+	menuTab.Add(menuView.SizePos(), 	t_("Mesh"));
 	menuTab.Add(menuOptions.SizePos(), 	t_("Options"));
 	menuTab.Add(menuAbout.SizePos(), 	t_("About"));
 	
 	menuTab.WhenSet = [&] {
 		if (menuTab.IsAt(menuAbout)) 
 			mainTab.Hide();
-		else if (menuTab.IsAt(menuOptions))
+		else if (menuTab.IsAt(menuOptions)) {
 			menuOptions.Load();
-		else {
+			mainTab.Show();
+		} else {
 			if (menuTab.IsAt(menuView)) { 
 				mainTab.Set(mainView);
 				menuTab.Set(menuView);
@@ -110,35 +120,37 @@ void Main::Init() {
 		if (!menuTab.IsAt(menuOptions) && menuOptions.IsChanged()) {
 			if (PromptYesNo(t_("Options have changed&Do you want to save them?")))
 				menuOptions.OnSave();
+			else
+				menuOptions.Load();
 		}
 	};	
 	
 	mainTab.WhenSet = [&] {
 		bool plot = true;
 		if (mainTab.IsAt(mainA)) {
-			mainA.Load(md.hydros);
+			mainA.Load(bem.hydros);
 			menuPlot.showPhase.Enable(false);
 		} else if (mainTab.IsAt(mainB)) {
-			mainB.Load(md.hydros);
+			mainB.Load(bem.hydros);
 			menuPlot.showPhase.Enable(false);
 		} else if (mainTab.IsAt(mainForceSC)) {
-			mainForceSC.Load(md.hydros);
+			mainForceSC.Load(bem.hydros);
 			menuPlot.showPhase.Enable(true);
 		} else if (mainTab.IsAt(mainForceFK)) {
-			mainForceFK.Load(md.hydros);
+			mainForceFK.Load(bem.hydros);
 			menuPlot.showPhase.Enable(true);
 		} else if (mainTab.IsAt(mainForceEX)) {
-			mainForceEX.Load(md.hydros);
+			mainForceEX.Load(bem.hydros);
 			menuPlot.showPhase.Enable(true);
 		} else if (mainTab.IsAt(mainRAO)) {
-			mainRAO.Load(md.hydros);
+			mainRAO.Load(bem.hydros);
 			menuPlot.showPhase.Enable(true);
 		} else if (mainTab.IsAt(mainView)) { 
 			plot = false;
 			menuTab.Set(menuView);	
 			mainTab.Set(mainView);	 
 		} else if (mainTab.IsAt(mainStateSpace)) {
-			mainStateSpace.Load(md.hydros);
+			mainStateSpace.Load(bem.hydros);
 			menuPlot.showPhase.Enable(true);
 		} else {
 			plot = false;
@@ -219,14 +231,14 @@ static String ForceExtSafe(String fileName, String ext) {
 void Main::OnOpt() {
 	menuOpen.file.ClearTypes();
 	
-	menuOpen.file.Type("Wamit .1.3.4.hst file", "*.1 *.3 *.4 *.hst");
-	menuOpen.file.Type("Wamit .out file", "*.out");	
-	menuOpen.file.Type("FAST HydroDyn file", "*.dat");	
-	menuOpen.file.Type("Nemoh .cal file", "*.cal");	
-	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
-	menuOpen.file.Type("AQWA .AH1.LIS file", "*.ah1 *.lis");
-	menuOpen.file.Type("FOAMM .mat file", "*.mat");
-	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis .mat");
+//	menuOpen.file.Type("Wamit .1.3.4.hst file", "*.1 *.3 *.4 *.hst");
+//	menuOpen.file.Type("Wamit .out file", "*.out");	
+//	menuOpen.file.Type("FAST HydroDyn file", "*.dat");	
+//	menuOpen.file.Type("Nemoh .cal file", "*.cal");	
+//	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
+//	menuOpen.file.Type("AQWA .AH1.LIS file", "*.ah1 *.lis");
+//	menuOpen.file.Type("FOAMM .mat file", "*.mat");
+	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis *.mat");
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
@@ -290,35 +302,43 @@ void Main::OnLoad() {
 	String file = ~menuOpen.file;
 	
 	try {
-		WaitCursor cursor;
+		WaitCursor wait;
+		Progress progress(t_("Loading BEM files..."), 100); 
 		
-		md.Load(file, THISBACK(WindowAdditionalData));
+		bem.Load(file, [&](String str, int pos) {progress.SetText(str); progress.SetPos(pos);});
 	
 		String strError;
-		if (!HydroClass::MatchCoeffStructure(md.hydros, strError)) {
-			md.hydros.SetCount(md.hydros.GetCount()-1);
+		if (!HydroClass::MatchCoeffStructure(bem.hydros, strError)) {
+			int num = bem.hydros.GetCount()-1;
+			bem.hydros.SetCount(num);
+			//menuOpen.arrayModel.SetCount(num);
+			//menuConvert.arrayModel.SetCount(num);
 			Exclamation(Format(t_("Model '%s' does not match with the one previously loaded: %s"), DeQtf(file), strError));
+			return;
 		}
 		
-		int id = md.hydros.GetCount()-1;
-		HydroClass &data = md.hydros[id];
+		int id = bem.hydros.GetCount()-1;
+		HydroClass &data = bem.hydros[id];
 		
 		data.hd().Report();
 		mainSummary.Report(data.hd(), id);
 		if (data.hd().Nf < 0)
 			return;
 		
-		mainArrange.Load(md.hydros);
+		mainArrange.Load(bem.hydros);
+		
+		menuOpen.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
+		menuOpen.butRemove.Enable();
 		menuConvert.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
 		if (menuConvert.arrayModel.GetCursor() < 0)
 			menuConvert.arrayModel.SetCursor(0);
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
-		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(md.hydros));	
-		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(md.hydros));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(md.hydros));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(md.hydros));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(md.hydros));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(md.hydros));
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(bem.hydros));	
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(bem.hydros));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(bem.hydros));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(bem.hydros));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(bem.hydros));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(bem.hydros));
 		mainTab.GetItem(mainTab.Find(mainView)).Enable(true);
 		if (data.hd().IsLoadedStateSpace())
 			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
@@ -326,8 +346,8 @@ void Main::OnLoad() {
 		Exclamation(DeQtfLf(e));
 	}
 }
-
-void Main::WindowAdditionalData(BEMData &md, HydroClass &data) {
+/*
+void Main::WindowAdditionalData(BEMData &bem, HydroClass &data) {
 	if (!IsNull(data.hd().g) && !IsNull(data.hd().len) && !IsNull(data.hd().rho) 
 		&& !IsNull(data.hd().h))
 		return;
@@ -335,22 +355,22 @@ void Main::WindowAdditionalData(BEMData &md, HydroClass &data) {
 	WithAdditionalDataLoad<TopWindow> dialog;
 	CtrlLayoutOK(dialog, t_("Set pending data"));
 	if (IsNull(data.hd().g)) 
-		data.hd().g = md.g;
+		data.hd().g = bem.g;
 	else
 		dialog.g.Disable();
 	
 	if (IsNull(data.hd().len)) 
-		data.hd().len = md.length;
+		data.hd().len = bem.length;
 	else
 		dialog.len.Disable();
 	
 	if (IsNull(data.hd().rho)) 
-		data.hd().rho = md.rho;
+		data.hd().rho = bem.rho;
 	else
 		dialog.rho.Disable();
 	
 	if (IsNull(data.hd().h)) 
-		data.hd().h = md.depth;
+		data.hd().h = bem.depth;
 	else
 		dialog.h.Disable();
 	if (data.hd().h == -1)
@@ -373,7 +393,7 @@ void Main::WindowAdditionalData(BEMData &md, HydroClass &data) {
 	else
 		data.hd().h = ScanDouble(dialog.h.GetData().ToString());
 }
-		
+*/		
 void Main::OnConvert() {
 	try {
 		int id = menuConvert.arrayModel.GetCursor();
@@ -388,7 +408,7 @@ void Main::OnConvert() {
 		case 2:	type = Hydro::UNKNOWN;		break;
 		default: throw Exc(t_("Unknown type in OnConvert()"));
 		}
-		md.hydros[id].hd().SaveAs(~menuConvert.file, type);	
+		bem.hydros[id].hd().SaveAs(~menuConvert.file, type);	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
@@ -406,10 +426,10 @@ void Main::OnView() {
 	}
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".dat") {
-		Nemoh &data = surfs.Create<Nemoh>();
+		Nemoh &data = surfs.Create<Nemoh>(bem);
 		if (!data.LoadDatMesh(file)) {
 			surfs.SetCount(surfs.GetCount()-1);
-			Wamit &data = surfs.Create<Wamit>();
+			Wamit &data = surfs.Create<Wamit>(bem);
 			if (!data.LoadDatMesh(file)) {
 				Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
 				surfs.SetCount(surfs.GetCount()-1);
@@ -417,7 +437,7 @@ void Main::OnView() {
 			}		
 		} 
 	} else if (ext == ".gdf") {
-		Wamit &data = surfs.Create<Wamit>();
+		Wamit &data = surfs.Create<Wamit>(bem);
 		if (!data.LoadGdfMesh(file)) {
 			Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
 			surfs.SetCount(surfs.GetCount()-1);
@@ -439,7 +459,7 @@ Main::~Main() {
 
 void Main::Close(bool store) {
 	if (store) {
-		md.StoreSerializeJson();
+		bem.StoreSerializeJson();
 		StoreSerializeJson();
 	}
 	Thread::ShutdownThreads(); 
@@ -451,43 +471,52 @@ void Main::Close(bool store) {
 void Main::Jsonize(JsonIO &json) {
 	json
 		("menuOpen_file", menuOpen.file)
-		//("menuOpen_optLoadIn", menuOpen.optLoadIn)
 		("menuConvert_file", menuConvert.file)
 		("menuConvert_opt", menuConvert.opt)
 		("menuPlot_autoFit", menuPlot.autoFit)
 		("menuPlot_opwT", menuPlot.opwT)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showPhase", menuPlot.showPhase)
+		("menuPlot_showAdim", menuPlot.showAdim)
 		("menuView_file", menuView.file)
-		("menuView_optLoadIn", menuView.optLoadIn)
 	;
 }
 
-void MenuOptions::Init(BEMData &md) {
+void MenuOptions::Init(BEMData &bem) {
 	CtrlLayout(*this);
 	
-	this->md = &md;
+	this->bem = &bem;
 	butSave <<= THISBACK(OnSave);
 }
 
 void MenuOptions::Load() {
-	g <<= md->g;
-	rho <<= md->rho;
-	length <<= md->length;
-	depth <<= md->depth;
-	//thres <<= md->thres;
+	g <<= bem->g;
+	rho <<= bem->rho;
+	length <<= bem->length;
+	depth <<= bem->depth;
+	discardNegDOF <<= bem->discardNegDOF;
+	thres <<= bem->thres;
+	calcAwinf <<= bem->calcAwinf;
+	maxTimeA <<= bem->maxTimeA;
+	numValsA <<= bem->numValsA;	
 }
 
 void MenuOptions::OnSave() {
-	md->g = ~g;
-	md->rho = ~rho;
-	md->length = ~length;
-	md->depth = ~depth;
-	//md->thres = ~thres;
+	bem->g = ~g;
+	bem->rho = ~rho;
+	bem->length = ~length;
+	bem->depth = ~depth;
+	bem->discardNegDOF = ~discardNegDOF;
+	bem->thres = ~thres;
+	bem->calcAwinf = ~calcAwinf;
+	bem->maxTimeA = ~maxTimeA;
+	bem->numValsA = ~numValsA;	
 }
 
 bool MenuOptions::IsChanged() {
-	if ((md->g != ~g) || (md->rho != ~rho) || (md->length != ~length) || (md->depth != ~depth)/* || (md->thres != ~thres)*/)
+	if ((bem->g != ~g) || (bem->rho != ~rho) || (bem->length != ~length) || (bem->depth != ~depth) || 
+		(bem->discardNegDOF != ~discardNegDOF) || (bem->thres != ~thres) || 
+		(bem->calcAwinf != ~calcAwinf) || (bem->maxTimeA != ~maxTimeA) || (bem->numValsA != ~numValsA))
 		return true;
 	
 	return false;
@@ -519,13 +548,17 @@ void MainSummary::Report(Hydro &data, int id) {
 		array.AddColumn(Format("#%d %s", id+1, data.name));
 	int row = 0;
 	int col = id + 1;
+	
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, data.name);
 	array.Set(row, 0, t_("Soft"));				array.Set(row++, col, data.GetCodeStr());
-	array.Set(row, 0, t_("g [m/s2]"));			array.Set(row++, col, data.g);
-	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, data.rho);
+	String sg = IsNull(data.g) ? x_("unknown") : Format("%.3f", data.g);
+	array.Set(row, 0, t_("g [m/s2]"));			array.Set(row++, col, sg);
+	String srho = IsNull(data.rho) ? x_("unknown") : Format("%.3f", data.rho);
+	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, srho);
 	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++, col,data.h < 0 ? x_(t_("INFINITY")) : FormatDouble(data.h));
-	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, data.len);
+	String slen = IsNull(data.len) ? x_("unknown") : Format("%.1f", data.len);
+	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, slen);
 	
 	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl(data.Nf, 0)); 
 	if (!data.w.IsEmpty()) {
@@ -604,23 +637,23 @@ void MainSummary::Report(Hydro &data, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
 		if (data.Vo.size() > ib) 
-			array.Set(row++, col, data.Vo[ib]);
+			array.Set(row++, col, FormatDouble(data.Vo[ib], 3, FD_EXP));
 		else 
 			array.Set(row++, col, "-");
 		
 		if (data.cg.size() > 3*ib) {
-			array.Set(row, 0, sib + " " + t_("Cg(x) [m]"));	array.Set(row++, col, data.cg(0, ib));
-			array.Set(row, 0, sib + " " + t_("Cg(y) [m]"));	array.Set(row++, col, data.cg(1, ib));
-			array.Set(row, 0, sib + " " + t_("Cg(z) [m]"));	array.Set(row++, col, data.cg(2, ib));
+			array.Set(row, 0, sib + " " + t_("Cg(x) [m]"));	array.Set(row++, col, FormatDouble(data.cg(0, ib), 3, FD_EXP));
+			array.Set(row, 0, sib + " " + t_("Cg(y) [m]"));	array.Set(row++, col, FormatDouble(data.cg(1, ib), 3, FD_EXP));
+			array.Set(row, 0, sib + " " + t_("Cg(z) [m]"));	array.Set(row++, col, FormatDouble(data.cg(2, ib), 3, FD_EXP));
 		} else {
 			array.Set(row, 0, sib + " " + t_("Cg(x) [m]"));	array.Set(row++, col, "-");
 			array.Set(row, 0, sib + " " + t_("Cg(y) [m]"));	array.Set(row++, col, "-");
 			array.Set(row, 0, sib + " " + t_("Cg(z) [m]"));	array.Set(row++, col, "-");
 		}
 		if (data.cb.size() > 3*ib) {
-			array.Set(row, 0, sib + " " + t_("Cb(x) [m]"));	array.Set(row++, col, data.cb(0, ib));
-			array.Set(row, 0, sib + " " + t_("Cb(y) [m]"));	array.Set(row++, col, data.cb(1, ib));
-			array.Set(row, 0, sib + " " + t_("Cb(z) [m]"));	array.Set(row++, col, data.cb(2, ib));
+			array.Set(row, 0, sib + " " + t_("Cb(x) [m]"));	array.Set(row++, col, FormatDouble(data.cb(0, ib), 3, FD_EXP));
+			array.Set(row, 0, sib + " " + t_("Cb(y) [m]"));	array.Set(row++, col, FormatDouble(data.cb(1, ib), 3, FD_EXP));
+			array.Set(row, 0, sib + " " + t_("Cb(z) [m]"));	array.Set(row++, col, FormatDouble(data.cb(2, ib), 3, FD_EXP));
 		} else {
 			array.Set(row, 0, sib + " " + t_("Cb(x) [m]"));	array.Set(row++, col, "-");
 			array.Set(row, 0, sib + " " + t_("Cb(y) [m]"));	array.Set(row++, col, "-");
@@ -630,7 +663,7 @@ void MainSummary::Report(Hydro &data, int id) {
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
-						array.Set(row, 0, sib + " " + Format(t_("C(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, data.C[ib](i, j));		
+						array.Set(row, 0, sib + " " + Format(t_("C(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FormatDouble(data.C_dim(ib, i, j), 3, FD_EXP));		
 					}
 				}
 			}
@@ -819,6 +852,7 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 	ABF_source2.SetCount(hydro.GetCount());
 	Ainf_source.SetCount(hydro.GetCount());
 	
+	bool adim = ma().menuPlot.showAdim;
 	int markW = ma().menuPlot.showPoints ? 10 : 0;
 	bool show_w = ma().menuPlot.opwT == 0;
 	if (show_w)
@@ -827,66 +861,80 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 		scatter.SetLabelX(t_("T [s]"));
 	
 	bool loaded = false;
-	for (int id = 0; id < hydro.GetCount(); ++id) {	
+	for (int id = 0; id < hydro.GetCount(); ++id) {
+		Hydro &hy = hydro[id].hd();
+		String nameType = Format("%s(%s)", hy.name, hy.GetCodeStrAbr());
 		if (dataToShow == DATA_A) {
 			Upp::Color acolor = Null;
-			if (hydro[id].hd().IsLoadedA()) {
-				if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_A, show_w)) {
+			if (hy.IsLoadedA()) {
+				if (ABF_source[id].Init(hy, i, j_h, PLOT_A, show_w, adim)) {
 					loaded = true;
-					scatter.AddSeries(ABF_source[id]).Legend(Format(t_("A_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("Ns2/m");
+					scatter.AddSeries(ABF_source[id]).Legend(Format(t_("A_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+					if (!adim)
+						scatter.Units("Ns2/m");
 					double dummy;
 					scatter.GetStroke(scatter.GetCount()-1, dummy, acolor);
 				}
 			}
-			if (hydro[id].hd().IsLoadedAwinf()) {
-				if (Ainf_source[id].Init(hydro[id].hd(), i, j_h, PLOT_AINF, show_w)) {
+			if (hy.IsLoadedAwinf()) {
+				if (Ainf_source[id].Init(hy, i, j_h, PLOT_AINF, show_w, adim)) {
 					loaded = true;
-					scatter.AddSeries(Ainf_source[id]).Legend(Format(t_("Ainf_%s"), hydro[id].hd().name)).Dash(LINE_DOTTED).Stroke(2, acolor).NoMark().Units("Ns2/m");
+					scatter.AddSeries(Ainf_source[id]).Legend(Format(t_("Ainf_%s"), nameType)).Dash(LINE_DOTTED).Stroke(2, acolor).NoMark();
+					if (!adim)
+						scatter.Units("Ns2/m");
 				}
 			}
-		} else if (dataToShow == DATA_B && hydro[id].hd().IsLoadedB()) {
-			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_B, show_w)) {
+		} else if (dataToShow == DATA_B && hy.IsLoadedB()) {
+			if (ABF_source[id].Init(hy, i, j_h, PLOT_B, show_w, adim)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("B_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("Ns/m");
+				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("B_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+				if (!adim)
+					scatter.Units("Ns/m");
 			}
-		} else if (dataToShow == DATA_FORCE_SC && hydro[id].hd().IsLoadedFsc()) {
-			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_SC_MA, show_w)) {
+		} else if (dataToShow == DATA_FORCE_SC && hy.IsLoadedFsc()) {
+			if (ABF_source[id].Init(hy, i, j_h, PLOT_FORCE_SC_MA, show_w, adim)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fsc_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("N");
-				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_SC_PH, show_w)) {
+				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fsc_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+				if (!adim)
+					scatter.Units("N");
+				if (ABF_source2[id].Init(hy, i, j_h, PLOT_FORCE_SC_PH, show_w, adim)) {
 					loaded = true;
 					if (ma().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fsc_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fsc_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 				}
 			}
-		} else if (dataToShow == DATA_FORCE_FK && hydro[id].hd().IsLoadedFfk()) {
-			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_MA, show_w)) {
+		} else if (dataToShow == DATA_FORCE_FK && hy.IsLoadedFfk()) {
+			if (ABF_source[id].Init(hy, i, j_h, PLOT_FORCE_FK_MA, show_w, adim)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Ffk_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("N");
-				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_FK_PH, show_w)) {
+				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Ffk_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+				if (!adim)
+					scatter.Units("N");
+				if (ABF_source2[id].Init(hy, i, j_h, PLOT_FORCE_FK_PH, show_w, adim)) {
 					loaded = true;
 					if (ma().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Ffk_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Ffk_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 				}
 			}
-		} else if (dataToShow == DATA_FORCE_EX && hydro[id].hd().IsLoadedFex()) {
-			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_MA, show_w)) {
+		} else if (dataToShow == DATA_FORCE_EX && hy.IsLoadedFex()) {
+			if (ABF_source[id].Init(hy, i, j_h, PLOT_FORCE_EX_MA, show_w, adim)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fex_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("N");
-				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_FORCE_EX_PH, show_w)) {
+				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fex_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+				if (!adim)
+					scatter.Units("N");
+				if (ABF_source2[id].Init(hy, i, j_h, PLOT_FORCE_EX_PH, show_w, adim)) {
 					loaded = true;
 					if (ma().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fex_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fex_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 				}
 			}
-		} else if (dataToShow == DATA_RAO && hydro[id].hd().IsLoadedRAO()) {
-			if (ABF_source[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_MA, show_w)) {
+		} else if (dataToShow == DATA_RAO && hy.IsLoadedRAO()) {
+			if (ABF_source[id].Init(hy, i, j_h, PLOT_RAO_MA, show_w, adim)) {
 				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("RAO_ma_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-				if (ABF_source2[id].Init(hydro[id].hd(), i, j_h, PLOT_RAO_PH, show_w)) {
+				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("RAO_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
+				if (ABF_source2[id].Init(hy, i, j_h, PLOT_RAO_PH, show_w, adim)) {
 					loaded = true;
 					if (ma().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("RAO_ph_%s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
+						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("RAO_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
 				}
 			}
 		}
@@ -911,6 +959,7 @@ bool MainStateSpace::Load(Upp::Array<HydroClass> &hydro) {
 	TFS_source.SetCount(hydro.GetCount());
 	TFS_source2.SetCount(hydro.GetCount());
 	
+	bool adim = ma().menuPlot.showAdim;
 	int markW = ma().menuPlot.showPoints ? 10 : 0;
 	bool show_w = ma().menuPlot.opwT == 0;
 	if (show_w) 
@@ -921,19 +970,19 @@ bool MainStateSpace::Load(Upp::Array<HydroClass> &hydro) {
 	bool loaded = false;
 	for (int id = 0; id < hydro.GetCount(); ++id) {	
 		if (hydro[id].hd().IsLoadedStateSpace()) {
-			if (Z_source[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_MA, show_w)) {
+			if (Z_source[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_MA, show_w, adim)) {
 				loaded = true;
 				scatterZ.AddSeries(Z_source[id]).Legend(Format(t_("Z Magnitude %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
-				if (Z_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_PH, show_w)) {
+				if (Z_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_PH, show_w, adim)) {
 					loaded = true;
 					if (ma().menuPlot.showPhase)
 						scatterZ.AddSeries(Z_source2[id]).Legend(Format(t_("Z Phase %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").SetDataSecondaryY();
 				}
 			}
-			if (TFS_source[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_MA, show_w)) {
+			if (TFS_source[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_MA, show_w, adim)) {
 				loaded = true;
 				scatterZ.AddSeries(TFS_source[id]).Legend(Format(t_("TFSResponse Magnitude %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
-				if (TFS_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_PH, show_w)) {
+				if (TFS_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_PH, show_w, adim)) {
 					loaded = true;
 					if (ma().menuPlot.showPhase)
 						scatterZ.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSResponse Phase %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").SetDataSecondaryY();

@@ -54,20 +54,18 @@ void Hydro::Initialize_RAO() {
 
 void Hydro::Normalize() {
 	if (IsLoadedC()) {
-		for (auto &c : C) 
-			for (int i = 0; i < 6; ++i) 
-				for (int j = 0; j < 6; ++j) 
-					c(i, j) /= (g*rho*pow(len, GetK_C(i, j)));
+		for (int ib = 0; ib < Nb; ++ib) {
+			for (int idf = 0; idf < 6; ++idf) 
+				for (int jdf = 0; jdf < 6; ++jdf) 
+					C[ib](idf, jdf) = C_adim(ib, idf, jdf);
+		}
 	}
 	if (IsLoadedA() && IsLoadedB()) {
-		for (int f = 0; f < Nf; ++f) {
-			MatrixXd &a = A[f];
-			MatrixXd &b = B[f];
-			for (int i = 0; i < 6*Nb; ++i) {
-				for (int j = 0; j < 6*Nb; ++j) {	
-					int k = GetK_AB(i, j);
-					a(i, j) /= (rho*pow(len, k));
-					b(i, j) /= (rho*pow(len, k)*w[f]);
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			for (int idf = 0; idf < 6*Nb; ++idf) {
+				for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
+					A[ifr](idf, jdf) = A_adim(ifr, idf, jdf);
+					B[ifr](idf, jdf) = B_adim(ifr, idf, jdf);
 				}
 			}
 		}
@@ -75,12 +73,12 @@ void Hydro::Normalize() {
 	if (IsLoadedAwinf()) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Awinf(i, j) /= (rho*pow(len, GetK_AB(i, j)));
+				Awinf(i, j) = Awinf_adim(i, j);
 	}
 	if (IsLoadedAw0()) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) /= (rho*pow(len, GetK_AB(i, j)));
+				Aw0(i, j) = Aw0_adim(i, j);
 	}
 	if (IsLoadedFex())
     	Normalize_Forces(ex);
@@ -88,14 +86,13 @@ void Hydro::Normalize() {
 		Normalize_Forces(sc);
 	if (IsLoadedFfk())
 		Normalize_Forces(fk);
-	double A = 1;
 	if (IsLoadedRAO()) {
 		for (int h = 0; h < Nh; ++h) {
 			for (int ifr = 0; ifr < Nf; ++ifr) {
 				for (int i = 0; i < 6*Nb; ++i) {	 
-					rao.ma[h](ifr, i) /= A/pow(len, GetK_RAO(i));
-					rao.re[h](ifr, i) /= A/pow(len, GetK_RAO(i));
-					rao.im[h](ifr, i) /= A/pow(len, GetK_RAO(i));
+					rao.ma[h](ifr, i) = F_ma_adim(rao, h, ifr, i);
+					rao.re[h](ifr, i) = F_re_adim(rao, h, ifr, i);
+					rao.im[h](ifr, i) = F_im_adim(rao, h, ifr, i);
 				}
 			}
 		}
@@ -104,20 +101,18 @@ void Hydro::Normalize() {
 
 void Hydro::Dimensionalize() {
 	if (IsLoadedC()) {
-		for (auto &c : C) 
-			for (int i = 0; i < 6; ++i) 
-				for (int j = 0; j < 6; ++j) 
-					c(i, j) *= (g*rho*pow(len, GetK_C(i, j)));
+		for (int ib = 0; ib < Nb; ++ib) {
+			for (int idf = 0; idf < 6; ++idf) 
+				for (int jdf = 0; jdf < 6; ++jdf) 
+					C[ib](idf, jdf) = C_dim(ib, idf, jdf);
+		}
 	}
 	if (IsLoadedA() && IsLoadedB()) {
-		for (int f = 0; f < Nf; ++f) {
-			MatrixXd &a = A[f];
-			MatrixXd &b = B[f];
-			for (int i = 0; i < 6*Nb; ++i) {
-				for (int j = 0; j < 6*Nb; ++j) {	
-					int k = GetK_AB(i, j);
-					a(i, j) *= (rho*pow(len, k));
-					b(i, j) *= (rho*pow(len, k)*w[f]);
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			for (int idf = 0; idf < 6*Nb; ++idf) {
+				for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
+					A[ifr](idf, jdf) = A_dim(ifr, idf, jdf);
+					B[ifr](idf, jdf) = B_dim(ifr, idf, jdf);
 				}
 			}
 		}
@@ -125,12 +120,12 @@ void Hydro::Dimensionalize() {
 	if (IsLoadedAwinf()) {	
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Awinf(i, j) *= (rho*pow(len, GetK_AB(i, j)));
+				Awinf(i, j) = Awinf_dim(i, j);
 	}
 	if (IsLoadedAw0()) {	
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) *= (rho*pow(len, GetK_AB(i, j)));
+				Aw0(i, j) = Aw0_adim(i, j);
 	}
 	if (IsLoadedFex())
     	Dimensionalize_Forces(ex);
@@ -138,14 +133,13 @@ void Hydro::Dimensionalize() {
 		Dimensionalize_Forces(sc);
 	if (IsLoadedFfk())
 		Dimensionalize_Forces(fk);
-	double A = 1;
 	if (IsLoadedRAO()) {
 		for (int h = 0; h < Nh; ++h) {
 			for (int ifr = 0; ifr < Nf; ++ifr) {
 				for (int i = 0; i < 6*Nb; ++i) {	 
-					rao.ma[h](ifr, i) *= A/pow(len, GetK_RAO(i));
-					rao.re[h](ifr, i) *= A/pow(len, GetK_RAO(i));
-					rao.im[h](ifr, i) *= A/pow(len, GetK_RAO(i));
+					rao.ma[h](ifr, i) = F_ma_dim(rao, h, ifr, i);
+					rao.re[h](ifr, i) = F_re_dim(rao, h, ifr, i);
+					rao.im[h](ifr, i) = F_im_dim(rao, h, ifr, i);
 				}
 			}
 		}
@@ -155,10 +149,10 @@ void Hydro::Dimensionalize() {
 void Hydro::Normalize_Forces(Forces &f) {
 	for (int h = 0; h < Nh; ++h) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int i = 0; i < 6*Nb; ++i) {	 
-				f.ma[h](ifr, i) /= g*rho*pow(len, GetK_F(i));
-				f.re[h](ifr, i) /= g*rho*pow(len, GetK_F(i));
-				f.im[h](ifr, i) /= g*rho*pow(len, GetK_F(i));
+			for (int idf = 0; idf < 6*Nb; ++idf) {	 
+				f.ma[h](ifr, idf) = F_ma_dim(f, h, ifr, idf);
+				f.re[h](ifr, idf) = F_re_dim(f, h, ifr, idf);
+				f.im[h](ifr, idf) = F_im_dim(f, h, ifr, idf);
 			}
 		}
 	} 
@@ -167,10 +161,10 @@ void Hydro::Normalize_Forces(Forces &f) {
 void Hydro::Dimensionalize_Forces(Forces &f) {
 	for (int h = 0; h < Nh; ++h) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int i = 0; i < 6*Nb; ++i) {	 
-				f.ma[h](ifr, i) *= g*rho*pow(len, GetK_F(i));
-				f.re[h](ifr, i) *= g*rho*pow(len, GetK_F(i));
-				f.im[h](ifr, i) *= g*rho*pow(len, GetK_F(i));
+			for (int idf = 0; idf < 6*Nb; ++idf) {	 
+				f.ma[h](ifr, idf) = F_ma_dim(f, h, ifr, idf);
+				f.re[h](ifr, idf) = F_re_dim(f, h, ifr, idf);
+				f.im[h](ifr, idf) = F_im_dim(f, h, ifr, idf);
 			}
 		}
 	}
@@ -179,15 +173,27 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 void Hydro::RemoveThresDOF_A(double thres) {
 	if (!IsLoadedA())
 		return;
-	for (int idof = 0; idof < 6*Nb; ++idof) {
-		for (int jdof = 0; jdof < 6*Nb; ++jdof) {
-			double mx = 0;
+	for (int idf = 0; idf < 6*Nb; ++idf) {
+		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+			double avg = 0;
 			for (int ifr = 0; ifr < Nf; ifr++) 
-				mx = max(mx, abs(A[ifr](idof, jdof)));
-			if (mx < thres) {
+				avg += abs(A_adim(ifr, idf, jdf));
+			avg /= Nf;
+			if (avg < thres) {
 				for (int ifr = 0; ifr < Nf; ifr++) 
-					A[ifr](idof, jdof) = Null;	
+					A[ifr](idf, jdf) = Null;	
 			}
+		}
+	}
+}
+
+void Hydro::RemoveThresDOF_Awinf(double thres) {
+	if (!IsLoadedAwinf())
+		return;
+	for (int idf = 0; idf < 6*Nb; ++idf) {
+		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+			if (abs(Awinf_adim(idf, jdf)) < thres) 
+				Awinf(idf, jdf) = Null;	
 		}
 	}
 }
@@ -195,14 +201,15 @@ void Hydro::RemoveThresDOF_A(double thres) {
 void Hydro::RemoveThresDOF_B(double thres) {
 	if (!IsLoadedB())
 		return;
-	for (int idof = 0; idof < 6*Nb; ++idof) {
-		for (int jdof = 0; jdof < 6*Nb; ++jdof) {
-			double mx = 0;
+	for (int idf = 0; idf < 6*Nb; ++idf) {
+		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+			double avg = 0;
 			for (int ifr = 0; ifr < Nf; ifr++) 
-				mx = max(mx, abs(B[ifr](idof, jdof)));
-			if (mx < thres) {
+				avg += abs(B_adim(ifr, idf, jdf));
+			avg /= Nf;
+			if (avg < thres) {
 				for (int ifr = 0; ifr < Nf; ifr++) 
-					B[ifr](idof, jdof) = Null;	
+					B[ifr](idf, jdf) = Null;	
 			}
 		}
 	}
@@ -213,10 +220,11 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 		return;
 	for (int h = 0; h < Nh; ++h) {
 		for (int i = 0; i < 6*Nb; ++i) {	 
-			double mx = 0;
+			double avg = 0;
 			for (int ifr = 0; ifr < Nf; ++ifr) 
-				mx = max(mx, f.ma[h](ifr, i));
-			if (mx < thres) {
+				avg += F_ma_adim(f, h, ifr, i);
+			avg /= Nf;
+			if (avg < thres) {
 				for (int ifr = 0; ifr < Nf; ifr++) 
 					f.ma[h](ifr, i) = Null;	
 			}
@@ -267,13 +275,13 @@ void Hydro::Compare_head(Hydro &a) {
 
 void Hydro::Compare_A(Hydro &a) {
 	for (int ifr = 0; ifr < a.Nf; ifr++) {
-		for (int idof = 0; idof < 6*a.Nb; ++idof) {
-			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
-				double Aa = a.A[ifr](idof, jdof);
-				double Ab = A[ifr](idof, jdof);
+		for (int idf = 0; idf < 6*a.Nb; ++idf) {
+			for (int jdf = 0; jdf < 6*a.Nb; ++jdf) {
+				double Aa = a.A[ifr](idf, jdf);
+				double Ab = A[ifr](idf, jdf);
 				if (!IsNull(Aa) && !IsNull(Ab) && Aa != Ab)
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idof+1, jdof+1), 
+							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idf+1, jdf+1), 
 							Aa, Ab));
 			}
 		}
@@ -282,13 +290,13 @@ void Hydro::Compare_A(Hydro &a) {
 
 void Hydro::Compare_B(Hydro &a) {
 	for (int ifr = 0; ifr < a.Nf; ifr++) {
-		for (int idof = 0; idof < 6*a.Nb; ++idof) {
-			for (int jdof = 0; jdof < 6*a.Nb; ++jdof) {
-				double Ba = a.B[ifr](idof, jdof);
-				double Bb = B[ifr](idof, jdof);
+		for (int idf = 0; idf < 6*a.Nb; ++idf) {
+			for (int jdf = 0; jdf < 6*a.Nb; ++jdf) {
+				double Ba = a.B[ifr](idf, jdf);
+				double Bb = B[ifr](idf, jdf);
 				if (!IsNull(Ba) && !IsNull(Bb) && Ba != Bb)
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idof+1, jdof+1), 
+							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idf+1, jdf+1), 
 							Ba, Bb));
 			}
 		}
@@ -297,13 +305,13 @@ void Hydro::Compare_B(Hydro &a) {
 
 void Hydro::Compare_C(Hydro &a) {
 	for (int ib = 0; ib < a.Nb; ib++) {
-		for (int idof = 0; idof < 6; ++idof) {
-			for (int jdof = 0; jdof < 6; ++jdof) {
-				double Ca = a.C[ib](idof, jdof);
-				double Cb = C[ib](idof, jdof);
+		for (int idf = 0; idf < 6; ++idf) {
+			for (int jdf = 0; jdf < 6; ++jdf) {
+				double Ca = a.C[ib](idf, jdf);
+				double Cb = C[ib](idf, jdf);
 				if (!IsNull(Ca) && !IsNull(Cb) && abs((Ca-Cb)/Cb) > 0.0001 )
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idof+1, jdof+1), 
+							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
 							Ca, Cb));
 			}
 		}
@@ -348,10 +356,10 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
 	}
 	if (type == WAMIT_1_3) {
-		Wamit data(this);
+		Wamit data(*bem, this);
 		data.Save(file);	
 	} else if (type == FAST_WAMIT) {
-		Fast data(this);
+		Fast data(*bem, this);
 		data.Save(file);		
 	}
 	Nh = realNh;
@@ -360,14 +368,18 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 
 void Hydro::Report() {
 	Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
-	Print("\n" + Format(t_("g [m/s2]: %.3f, h [m]: %s, rho [kg/m3]: %.3f length scale [m]: %.1f"), g, h < 0 ? x_(t_("INFINITY")) : FormatDouble(h), rho, len));
+	String sg   = IsNull(g)   ? x_("unknown") : Format("%.3f", g);
+	String srho = IsNull(rho) ? x_("unknown") : Format("%.3f", rho);
+	String slen = IsNull(len) ? x_("unknown") : Format("%.1f", len);
+	Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s"), 
+								sg, h < 0 ? x_(t_("INFINITY")) : FormatDouble(h), srho, slen));
 	String freqs;
 	if (w.IsEmpty()) 
 		freqs = t_("NONE");
 	else if (w.GetCount() > 1) {
 		String strDeltaH;
 		if (GetIrregularFreq() < 0) 
-			strDeltaH = Format(t_("delta %.1f [rad/s]"), w[1] - w[0]);
+			strDeltaH = Format(t_("delta %s [rad/s]"), FormatDouble(w[1] - w[0], 5, FD_EXP));
 		else {
 			String strHead;
 			for (int i = 0; i < w.GetCount(); ++i) {
@@ -377,9 +389,10 @@ void Hydro::Report() {
 			}
 			strDeltaH = Format(t_("non constant delta (%s)"), strHead); 
 		}
-	 	freqs = Format(t_("%.1f to %.1f %s"), w[0], w[w.GetCount()-1], strDeltaH);	
+	 	freqs = Format(t_("%s to %s %s"), FormatDouble(w[0], 3, FD_EXP), 
+	 									  FormatDouble(w[w.GetCount()-1], 3, FD_EXP), strDeltaH);	
 	} else
-		freqs = Format(t_("%.1f [rad/s]"), w[0]);
+		freqs = Format(t_("%s [rad/s]"), FormatDouble(w[0], 3, FD_EXP));
 	
 	String heads;
 	if (head.IsEmpty())
@@ -451,18 +464,46 @@ bool HydroClass::MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strE
 void Hydro::GetBodyDOF() {
 	dof.Clear();	 dof.SetCount(Nb, 0);
 	for (int ib = 0; ib < Nb; ++ib)
-		for (int idof = 0; idof < 6; ++idof)
-			if (IsAvailableDOF(ib, idof))
+		for (int idf = 0; idf < 6; ++idf)
+			if (IsAvailableDOF(ib, idf))
 				dof[ib]++;
 }
 
-void Hydro::AfterLoad() {
+void Hydro::AfterLoad(Function <void(String, int)> Status) {
 	dofOrder.SetCount(6*Nb);
 	for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) {
 		//if (order >= 6)
 		//	order = 0;
 		dofOrder[i] = order;
 	}
+	if (!IsLoadedAw0())  
+		A0();
+	
+	if (!IsLoadedAwinf() && bem->calcAwinf) {
+		Status(t_("Obtaining Impulse Response Function"), 40);
+		K_IRF(bem->maxTimeA, bem->numValsA);
+		Status(t_("Obtaining Infinite-Frequency Added Mass (A_inf)"), 70);
+		Ainf();
+	}
+}
+
+int Hydro::GetW0() {
+	for (int i = 0; i < w.GetCount(); ++i) {	
+		if (w[i] < 0.0001)
+			return i;
+	}
+	return Null;
+}
+
+void Hydro::A0() {
+	int iw0 = GetW0();
+	if (IsNull(iw0)) 
+		return;
+	
+	Aw0.setConstant(Nb*6, Nb*6, Null);
+	for (int i = 0; i < Nb*6; ++i)
+        for (int j = 0; j < Nb*6; ++j) 
+			Aw0(i, j) = A[iw0](i, j);
 }
 
 String Hydro::C_units_base(int i, int j) {
@@ -484,10 +525,10 @@ String Hydro::C_units(int i, int j) {
 }
 
 int Hydro::GetIrregularHead() {
-	if (head.GetCount() <= 2)
+	if (Nh <= 2)
 		return -1;
 	double delta0 = head[1] - head[0];
-	for (int i = 1; i < head.GetCount() - 1; ++i) {
+	for (int i = 1; i < Nh - 1; ++i) {
 		double delta = head[i+1] - head[i];
 		if (abs((delta - delta0)/delta0) > 0.001)
 			return i;
@@ -496,10 +537,10 @@ int Hydro::GetIrregularHead() {
 }
 
 int Hydro::GetIrregularFreq() {
-	if (w.GetCount() <= 2)
+	if (Nf <= 2)
 		return -1;
 	double delta0 = w[1] - w[0];
-	for (int i = 1; i < w.GetCount() - 1; ++i) {
+	for (int i = 1; i < Nf - 1; ++i) {
 		double delta = w[i+1] - w[i];
 		if (abs((delta - delta0)/delta0) > 0.001)
 			return i;
@@ -507,84 +548,88 @@ int Hydro::GetIrregularFreq() {
 	return -1;
 }
 
+double Hydro::g_dim() 		{return bem->g;}					// Dimensionalize only with system data
+double Hydro::g_adim()		{return !IsNull(g) ? g : bem->g;}	// Adimensionalize with model data, if possible
+double Hydro::rho_dim() 	{return bem->rho;}		
+double Hydro::rho_adim()	{return !IsNull(rho) ? rho : bem->rho;}
+double Hydro::g_rho_dim() 	{return bem->rho*bem->g;}
+double Hydro::g_rho_adim()	{return g_adim()*rho_adim();}
 
-void BEMData::Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData) {
+void BEMData::Load(String file, Function <void(String, int pos)> Status) {
+	Status(t_("Loading files"), 10);
 	for (int i = 0; i < hydros.GetCount(); ++i) {
 		if (hydros[i].hd().file == file) 
 			throw Exc(Format(t_("Model '%s' already loaded"), file));
 	}
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".cal") {
-		Nemoh &data = hydros.Create<Nemoh>();
+		Nemoh &data = hydros.Create<Nemoh>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".inf") {
-		Nemoh &data = hydros.Create<Nemoh>();
+		Nemoh &data = hydros.Create<Nemoh>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".out") {
-		Wamit &data = hydros.Create<Wamit>();
+		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Null)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));
 		}
-		AdditionalData(*this, data);
-		
-		data.hd().Dimensionalize();
 	} else if (ext == ".dat") {
-		Fast &data = hydros.Create<Fast>();
+		Fast &data = hydros.Create<Fast>(*this);
 		if (!data.Load(file, Null)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));		
 		}
-		AdditionalData(*this, data);
-				
-		data.hd().Dimensionalize();
 	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
-		Wamit &data = hydros.Create<Wamit>();
+		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Null)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));		
 		}
-		AdditionalData(*this, data);
-
-		data.hd().Dimensionalize();		
 	} else if (ext == ".ah1" || ext == ".lis") {
-		Aqwa &data = hydros.Create<Aqwa>();
+		Aqwa &data = hydros.Create<Aqwa>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".mat") {
-		Foamm &data = hydros.Create<Foamm>();
+		Foamm &data = hydros.Create<Foamm>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
-		AdditionalData(*this, data);
 	} else 
 		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
 	
-	/*Hydro &justLoaded = hydros[hydros.GetCount()-1].hd();
-	justLoaded.RemoveThresDOF_A(thres);
-	justLoaded.RemoveThresDOF_B(thres);
-	justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
-	justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
-	justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
-	justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres);*/
+	Hydro &justLoaded = hydros[hydros.GetCount()-1].hd();
+	
+	justLoaded.AfterLoad(Status);
+	if (discardNegDOF) {
+		Status(t_("Discarding negligible DOF"), 90);
+		justLoaded.RemoveThresDOF_A(thres);
+		justLoaded.RemoveThresDOF_Awinf(thres);
+		justLoaded.RemoveThresDOF_B(thres);
+		justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
+		justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
+		justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
+		justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres/10.);
+	}
 }
 
+	
 int IsTabSpace(int c) {
 	if (c == '\t' || c == ' ' || c == '!')
 		return true;

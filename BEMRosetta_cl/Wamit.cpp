@@ -6,7 +6,11 @@ bool Wamit::Load(String file, double rho) {
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	
+	hd().g = Null;
 	hd().rho = rho;
+	hd().len = Null;
+	
+	hd().Nb = Null;
 	
 	try {
 		if (GetFileExt(file) == ".out") {
@@ -48,11 +52,12 @@ bool Wamit::Load(String file, double rho) {
 			hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 			hd().lastError = e;
 		}
+		if (IsNull(hd().Nb))
+			return false;
+		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
-	
-		hd().AfterLoad();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -98,6 +103,7 @@ bool Wamit::Load_out() {
 	hd().Nh = 0;
 	int pos;
 	int ibody = -1;
+	hd().dimen = false;
 	
 	FileInLine in(hd().file);
 	if (!in.IsOpen())
@@ -213,8 +219,9 @@ bool Wamit::Load_out() {
 				f.Load(line);
 				
 				ifr++;
-	            hd().T[ifr] = f.GetDouble(4);  			// Wave periods
-	            hd().w[ifr] = 2*M_PI/hd().T[ifr];  		// Wave frequencies
+	            hd().T[ifr] = f.GetDouble(4);  			
+	            hd().w[ifr] = fround(2*M_PI/hd().T[ifr], 8);
+	            hd().dataFromW = false;
 	            
 	            bool nextFreq = false;
 	            while (!in.IsEof() && !nextFreq) {
@@ -349,6 +356,9 @@ bool Wamit::Load_FK(String fileName) {
 }
 
 bool Wamit::Load_1(String fileName) {
+	hd().dimen = false;
+	hd().len = 1;
+	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -395,13 +405,12 @@ bool Wamit::Load_1(String fileName) {
 	if (hd().Nb == 0 || hd().Nf < 2)
 		throw Exc(Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
-	bool readW;
 	if (w[0] > w[1]) {
-		readW = false;
+		hd().dataFromW = false;
 		T = pick(w);
 		w.SetCount(hd().Nf);	
 	} else {
-		readW = true;
+		hd().dataFromW = true;
 		T.SetCount(hd().Nf);
 	}
 	
@@ -413,10 +422,10 @@ bool Wamit::Load_1(String fileName) {
 		hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		if (readW)
-			T[ifr] = 2*M_PI/w[ifr];
+		if (hd().dataFromW)
+			T[ifr] = fround(2*M_PI/w[ifr], 8);
 		else
-			w[ifr] = 2*M_PI/T[ifr];
+			w[ifr] = fround(2*M_PI/T[ifr], 8);
 		hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 	  	hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 	}
@@ -424,10 +433,10 @@ bool Wamit::Load_1(String fileName) {
 	if (hd().w.IsEmpty()) {
 		hd().w = pick(w);
 		hd().T = pick(T);
-	} else if (!Compare(hd().w, w))
-		throw(t_("Frequencies loaded are different than previous"));
-	else if (!Compare(hd().T, T))
-		throw(t_("Periods loaded are different than previous"));
+	} else if (!Compare(hd().w, w, 0.001))
+		throw Exc(Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+	else if (!Compare(hd().T, T, 0.001))
+		throw Exc(Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 				
 	in.Seek(fpos);
 	
@@ -438,16 +447,16 @@ bool Wamit::Load_1(String fileName) {
  		int j = f.GetInt(2) - 1;
  		double Aij = f.GetDouble(3);
  		
- 		if ((freq < 0 && readW) || (freq == 0 && !readW))
+ 		if ((freq < 0 && hd().dataFromW) || (freq == 0 && !hd().dataFromW))
 			hd().Awinf(i, j) = Aij;
 		else if (freq <= 0)
 			hd().Aw0(i, j) = Aij;
 		else {
 			int ifr;
-			if (readW)
-				ifr = FindIndex(hd().w, freq);
+			if (hd().dataFromW)
+				ifr = FindIndexRatio(hd().w, freq, 0.001);
 			else
-				ifr = FindIndex(hd().T, freq);
+				ifr = FindIndexRatio(hd().T, freq, 0.001);
 			if (ifr < 0)
 				throw Exc(Format("Unknown frequency %f", freq));
 		
@@ -459,6 +468,9 @@ bool Wamit::Load_1(String fileName) {
 }
  
 bool Wamit::Load_3(String fileName) {
+	hd().dimen = false;
+	hd().len = 1;
+	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -496,32 +508,31 @@ bool Wamit::Load_3(String fileName) {
 		throw Exc(Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
 			
-	bool readW;
 	if (w[0] > w[1]) {
-		readW = false;
+		hd().dataFromW = false;
 		T = pick(w);
 		w.SetCount(hd().Nf);	
 	} else {
-		readW = true;
+		hd().dataFromW = true;
 		T.SetCount(hd().Nf);
 	}
 	
 	hd().Initialize_Forces(hd().ex);
 	
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		if (readW)
-			T[ifr] = 2*M_PI/w[ifr];
+		if (hd().dataFromW)
+			T[ifr] = fround(2*M_PI/w[ifr], 8);
 		else
-			w[ifr] = 2*M_PI/T[ifr];
+			w[ifr] = fround(2*M_PI/T[ifr], 8);
 	}
 
 	if (hd().w.IsEmpty()) {
 		hd().w = pick(w);
 		hd().T = pick(T);
-	} else if (!Compare(hd().w, w))
-		throw(t_("Frequencies loaded are different than previous"));
-	else if (!Compare(hd().T, T))
-		throw(t_("Periods loaded are different than previous"));
+	} else if (!Compare(hd().w, w, 0.001))
+		throw Exc(Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+	else if (!Compare(hd().T, T, 0.001))
+		throw Exc(Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 	
 	in.Seek(fpos);
 	
@@ -529,14 +540,14 @@ bool Wamit::Load_3(String fileName) {
 		f.Load(in.GetLine());
 		double freq = f.GetDouble(0);
 		int ifr;
-		if (readW)
-		 	ifr = FindIndex(hd().w, freq);
+		if (hd().dataFromW)
+		 	ifr = FindIndexRatio(hd().w, freq, 0.001);
 		else
-			ifr = FindIndex(hd().T, freq);
+			ifr = FindIndexRatio(hd().T, freq, 0.001);
 		if (ifr < 0)
 			throw Exc(Format(t_("Unknown frequency %f"), freq));
 		double head = f.GetDouble(1);
-		int ih = FindIndex(hd().head, head);
+		int ih = FindIndexRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(Format(t_("Unknown heading %f"), head));
 			
@@ -552,6 +563,9 @@ bool Wamit::Load_3(String fileName) {
 }
 
 bool Wamit::Load_hst(String fileName) {
+	hd().dimen = false;
+	hd().len = 1;
+	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -585,6 +599,9 @@ bool Wamit::Load_hst(String fileName) {
 }
 
 bool Wamit::Load_4(String fileName) {
+	hd().dimen = false;
+	hd().len = 1;
+	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -637,32 +654,31 @@ bool Wamit::Load_4(String fileName) {
 	if (hd().Nb == 0 || hd().Nf < 2)
 		throw Exc(Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
-	bool readW;
 	if (w[0] > w[1]) {
-		readW = false;
+		hd().dataFromW = false;
 		T = pick(w);
 		w.SetCount(hd().Nf);	
 	} else {
-		readW = true;
+		hd().dataFromW = true;
 		T.SetCount(hd().Nf);
 	}
 	
 	hd().Initialize_RAO();
 	
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		if (readW)
-			T[ifr] = 2*M_PI/w[ifr];
+		if (hd().dataFromW)
+			T[ifr] = fround(2*M_PI/w[ifr], 8);
 		else
-			w[ifr] = 2*M_PI/T[ifr];
+			w[ifr] = fround(2*M_PI/T[ifr], 8);
 	}
 	
 	if (hd().w.IsEmpty()) {
 		hd().w = pick(w);
 		hd().T = pick(T);
-	} else if (!Compare(hd().w, w))
-		throw(t_("Frequencies loaded are different than previous"));
-	else if (!Compare(hd().T, T))
-		throw(t_("Periods loaded are different than previous"));
+	} else if (!Compare(hd().w, w, 0.001))
+		throw Exc(Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+	else if (!Compare(hd().T, T, 0.001))
+		throw Exc(Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 	
 	in.Seek(fpos);
 	
@@ -670,14 +686,14 @@ bool Wamit::Load_4(String fileName) {
 		f.Load(in.GetLine());
 		double freq = f.GetDouble(0);
 		int ifr;
-		if (readW)
-		 	ifr = FindIndex(hd().w, freq);
+		if (hd().dataFromW)
+		 	ifr = FindIndexRatio(hd().w, freq, 0.001);
 		else
-			ifr = FindIndex(hd().T, freq);
+			ifr = FindIndexRatio(hd().T, freq, 0.001);
 		if (ifr < 0)
 			throw Exc(Format(t_("Unknown frequency %f"), freq));
 		double head = f.GetDouble(1);
-		int ih = FindIndex(hd().head, head);
+		int ih = FindIndexRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(Format(t_("Unknown heading %f"), head));
 			
@@ -711,12 +727,34 @@ void Wamit::Save_1(String fileName) {
 					out << Format(" %s %5d %5d %s\n", FormatWam(0), i+1, j+1,
 													  FormatWam(hd().Awinf(i, j)/(hd().rho*pow(hd().len, Hydro::GetK_AB(i, j)))));
 	}
+	
+	if (hd().Nf < 2)
+		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
+		
+	Vector<double> *pdata;
+	int ifr0, ifrEnd, ifrDelta;
+	if (hd().dataFromW) 
+		pdata = &hd().w;
+	else
+		pdata = &hd().T;
+	Vector<double> &data = *pdata;
+	
+	if (((data[1] > data[0]) && hd().dataFromW) || ((data[1] < data[0]) && !hd().dataFromW)) {
+		ifr0 = 0;
+		ifrEnd = hd().Nf;
+		ifrDelta = 1;
+	} else {
+		ifr0 = hd().Nf - 1;
+		ifrEnd = -1;
+		ifrDelta = -1;
+	}
+	
 	if (hd().IsLoadedA() && hd().IsLoadedB()) {
-		for (int ifr = 0; ifr < hd().Nf; ++ifr)
+		for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 			for (int i = 0; i < hd().Nb*6; ++i)  
 				for (int j = 0; j < hd().Nb*6; ++j)
 					if (!IsNull(hd().A[ifr](i, j)) && !IsNull(hd().B[ifr](i, j))) 
-						out << Format(" %s %5d %5d %s %s\n", FormatWam(hd().T[ifr]), i+1, j+1,
+						out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
 										FormatWam(hd().A[ifr](i, j)/(hd().rho*pow(hd().len, Hydro::GetK_AB(i, j)))), 
 										FormatWam(hd().B[ifr](i, j)/(hd().rho*pow(hd().len, Hydro::GetK_AB(i, j))*hd().w[ifr])));
 	}
@@ -727,13 +765,34 @@ void Wamit::Save_3(String fileName) {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 
+	if (hd().Nf < 2)
+		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
+
+	Vector<double> *pdata;
+	int ifr0, ifrEnd, ifrDelta;
+	if (hd().dataFromW) 
+		pdata = &hd().w;
+	else
+		pdata = &hd().T;
+	Vector<double> &data = *pdata;
+	
+	if (((data[1] > data[0]) && hd().dataFromW) || ((data[1] < data[0]) && !hd().dataFromW)) {
+		ifr0 = 0;
+		ifrEnd = hd().Nf;
+		ifrDelta = 1;
+	} else {
+		ifr0 = hd().Nf - 1;
+		ifrEnd = -1;
+		ifrDelta = -1;
+	}
+	
 	if (hd().IsLoadedFex()) {
-		for (int ifr = 0; ifr < hd().Nf; ++ifr)
+		for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 			for (int ih = 0; ih < hd().Nh; ++ih)
 				for (int i = 0; i < hd().Nb*6; ++i)
 					if (!IsNull(hd().ex.ma[ih](ifr, i))) {
 						double k = hd().g*hd().rho*pow(hd().len, Hydro::GetK_F(i));
-						out << Format(" %s %s %5d %s %s %s %s\n", FormatWam(hd().T[ifr]), FormatWam(hd().head[ih]), i+1,
+						out << Format(" %s %s %5d %s %s %s %s\n", FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 										FormatWam(hd().ex.ma[ih](ifr, i)/k), FormatWam(hd().ex.ph[ih](ifr, i)),
 										FormatWam(hd().ex.re[ih](ifr, i)/k), FormatWam(hd().ex.im[ih](ifr, i)/k));
 					}
@@ -763,14 +822,35 @@ void Wamit::Save_4(String fileName) {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 	
+	if (hd().Nf < 2)
+		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
+		
+	Vector<double> *pdata;
+	int ifr0, ifrEnd, ifrDelta;
+	if (hd().dataFromW) 
+		pdata = &hd().w;
+	else
+		pdata = &hd().T;
+	Vector<double> &data = *pdata;
+	
+	if (((data[1] > data[0]) && hd().dataFromW) || ((data[1] < data[0]) && !hd().dataFromW)) {
+		ifr0 = 0;
+		ifrEnd = hd().Nf;
+		ifrDelta = 1;
+	} else {
+		ifr0 = hd().Nf - 1;
+		ifrEnd = -1;
+		ifrDelta = -1;
+	}
+	
 	double A = 1;
 	if (hd().IsLoadedRAO()) {
-		for (int ifr = 0; ifr < hd().Nf; ++ifr)
+		for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 			for (int ih = 0; ih < hd().Nh; ++ih)
 				for (int i = 0; i < hd().Nb*6; ++i)
 					if (!IsNull(hd().rao.ma[ih](ifr, i))) {
 						double k = A/pow(hd().len, Hydro::GetK_RAO(i));
-						out << Format(" %s %s %5d %s %s %s %s\n", FormatWam(hd().T[ifr]), FormatWam(hd().head[ih]), i+1,
+						out << Format(" %s %s %5d %s %s %s %s\n", FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 										FormatWam(hd().rao.ma[ih](ifr, i)/k), FormatWam(hd().rao.ph[ih](ifr, i)),
 										FormatWam(hd().rao.re[ih](ifr, i)/k), FormatWam(hd().rao.im[ih](ifr, i)/k));
 					}

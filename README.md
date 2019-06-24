@@ -1,7 +1,7 @@
 <!--
   Title: BEMRosetta
   Description: Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
-  Author: Iñaki Zabala
+  Authors: Iñaki Zabala, Markel Peñalba.
   -->
 
 # BEMRosetta
@@ -78,14 +78,14 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ## Acknowledgments
 
-M. Peñalba, J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
+J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
 ## License
 
-Copyright (c) 2019 Iñaki Zabala
+Copyright (c) 2019 Iñaki Zabala, Markel Peñalba.
 
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>

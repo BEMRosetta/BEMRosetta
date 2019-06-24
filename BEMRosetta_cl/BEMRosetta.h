@@ -11,7 +11,7 @@ using namespace Upp;
 
 using namespace Eigen;
 
-#include "ainf.h"
+class BEMData;
 
 class Hydro {
 public:
@@ -19,7 +19,7 @@ public:
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
-	Hydro() : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null)/*, thres(Null)*/ {}
+	Hydro(BEMData &bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), dataFromW(true), bem(&bem) {}
 	virtual ~Hydro() {}	
 
 	static void SetBuildInfo(String &str) {
@@ -47,11 +47,25 @@ public:
 		return t_("Unknown");
 	}
 	
-	inline bool IsAvailableDOF(int ib, int idof) {
-		if (dof[ib] <= idof)
+	String GetCodeStrAbr()	{
+		switch (code) {
+		case WAMIT: 		return t_("W.o");
+		case WAMIT_1_3: 	return t_("W.1");
+		case FAST_WAMIT: 	return t_("FST");
+		case NEMOH:			return t_("Nmh");
+		case SEAFEM_NEMOH:	return t_("SFM");
+		case AQWA:			return t_("AQW");
+		case FOAMM:			return t_("FMM");
+		case UNKNOWN:		return t_("¿?");
+		}
+		return t_("Unknown");
+	}
+		
+	inline bool IsAvailableDOF(int ib, int idf) {
+		if (dof[ib] <= idf)
 			return false;
-		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idof, (ib+1)*idof))) || 
-			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[0]((ib+1)*idof, (ib+1)*idof)));
+		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idf, (ib+1)*idf))) || 
+			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[0]((ib+1)*idf, (ib+1)*idf)));
 	}
 
 	String file;        	// BEM output file name
@@ -60,10 +74,10 @@ public:
     double h;           	// water depth
    	double rho;        		// density
    	double len;				// Length scale
+   	int dimen;				// false if data is adimensional
     int Nb;          		// number of bodies
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
- 	//double thres;			// Threshold to discard data if it is lower
  	
 	Upp::Array<MatrixXd> A;	// [Nf](6*Nb, 6*Nb)		Added mass
     MatrixXd Awinf;        	// (6*Nb, 6*Nb)        	Infinite frequency added mass
@@ -78,6 +92,9 @@ public:
     Vector<int> dof;      	// [Nb]             	Degrees of freedom for each body 
     Vector<int> dofOrder;	//						Order of DOF
     
+    Upp::Array<MatrixXd> Kirf;// [Nt](6*Nb, 6*Nb)    	Radiation impulse response function IRF
+    Vector<double> Tirf;	  // [Nt]					Time-window for the calculation of the IRF
+    	
     struct Forces {
     	Upp::Array<MatrixXd> ma, ph;   	// [Nh](Nf, 6*Nb) 	Magnitude and phase
     	Upp::Array<MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
@@ -93,6 +110,7 @@ public:
     
     Vector<double> T; 		// [Nf]    				Wave periods
     Vector<double> w;      	// [Nf]               	Wave frequencies
+    bool dataFromW;
     Vector<double> Vo;    	// [Nb]             	Displaced volume
     
     void Dimensionalize();
@@ -101,7 +119,7 @@ public:
     static String C_units(int i, int j);
     
 
-	void AfterLoad();
+	void AfterLoad(Function <void(String, int)> Status);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Initialize_Forces();
@@ -156,17 +174,52 @@ public:
 	int GetIrregularFreq();	
 	
 	String lastError;
+	
+	double g_dim();
+	double g_adim();
+	double rho_dim();
+	double rho_adim();
+	double g_rho_dim();
+	double g_rho_adim();
+	
+	double A_dim(int ifr, int idf, int jdf)  {return dimen  ? A[ifr](idf, jdf)*g_rho_dim()/g_rho_adim() : A[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_adim(int ifr, int idf, int jdf) {return !dimen ? A[ifr](idf, jdf) : A[ifr](idf, jdf)/(rho_adim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_(bool adim, int ifr, int idf, int jdf)	 {return adim ? A_adim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
+	double Aw0_dim(int idf, int jdf)   		 {return dimen  ? Aw0(idf, jdf)*g_rho_dim()/g_rho_adim()    : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Aw0_adim(int idf, int jdf)  		 {return !dimen ? Aw0(idf, jdf)    : Aw0(idf, jdf)  /(rho_adim()*pow(len, GetK_AB(idf, jdf)));}
+	double Aw0_(bool adim, int idf, int jdf) 	{return adim ? Aw0_adim(idf, jdf) : Aw0_dim(idf, jdf);}
+	double Awinf_dim(int idf, int jdf) 		 {return dimen  ? Awinf(idf, jdf)*g_rho_dim()/g_rho_adim()  : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Awinf_adim(int idf, int jdf)		 {return !dimen ? Awinf(idf, jdf)  : Awinf(idf, jdf)/(rho_adim()*pow(len, GetK_AB(idf, jdf)));}
+	double Awinf_(bool adim, int idf, int jdf) 	{return adim ? Awinf_adim(idf, jdf) : Awinf_dim(idf, jdf);}
+	
+	double B_dim(int ifr, int idf, int jdf)  {return dimen  ? B[ifr](idf, jdf)*g_rho_dim()/g_rho_adim() : B[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_adim(int ifr, int idf, int jdf) {return !dimen ? B[ifr](idf, jdf)*g_rho_adim()/g_rho_dim() : B[ifr](idf, jdf)/(rho_adim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_(bool adim, int ifr, int idf, int jdf)	 {return adim ? B_adim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
+	double C_dim(int ib, int idf, int jdf)   {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_adim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	double C_adim(int ib, int idf, int jdf)  {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_adim()*pow(len, GetK_C(idf, jdf)));}
+	double C_(bool adim, int ib, int idf, int jdf)	 {return adim ? C_adim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
+	double F_ma_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.ma[h](ifr, idf)*g_rho_dim()/g_rho_adim()  : f.ma[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_re_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.re[h](ifr, idf)*g_rho_dim()/g_rho_adim()  : f.re[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_im_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.im[h](ifr, idf)*g_rho_dim()/g_rho_adim()  : f.im[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_ma_adim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.ma[h](ifr, idf) : f.ma[h](ifr, idf)/(g_rho_adim()*pow(len, GetK_F(idf)));}
+	double F_re_adim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.re[h](ifr, idf) : f.re[h](ifr, idf)/(g_rho_adim()*pow(len, GetK_F(idf)));}
+	double F_im_adim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.im[h](ifr, idf) : f.im[h](ifr, idf)/(g_rho_adim()*pow(len, GetK_F(idf)));}
+	double F_ma_(bool adim, Forces &f, int h, int ifr, int idf)	 {return adim ? F_ma_adim(f, h, ifr, idf) : F_ma_dim(f, h, ifr, idf);}
+	double F_re_(bool adim, Forces &f, int h, int ifr, int idf)	 {return adim ? F_re_adim(f, h, ifr, idf) : F_re_dim(f, h, ifr, idf);}
+	double F_im_(bool adim, Forces &f, int h, int ifr, int idf)	 {return adim ? F_im_adim(f, h, ifr, idf) : F_im_dim(f, h, ifr, idf);}
+	
 private:
 	static const char *strDOF[6];
 	static const char *strDOFAbrev[6];
 	static String C_units_base(int i, int j);
+	BEMData *bem;
 	
 public:
 	static String StrDOF(int i) {
 		int ib = i/6 + 1;
-		int idof = i - (ib - 1)*6;
-		return Format("%d.%s", ib, strDOF[idof]);
+		int idf = i - (ib - 1)*6;
+		return Format("%d.%s", ib, strDOF[idf]);
 	}
 	
 	static int DOFStr(String &str) {
@@ -176,11 +229,11 @@ public:
 		return -1;
 	}
 	
-	static void DOFFromStr(String str, int &ib, int &idof) {
+	static void DOFFromStr(String str, int &ib, int &idf) {
 		int pos = str.Find(".");
 		ib = ScanInt(str.Left(pos))-1;
 		String sdof = str.Mid(pos+1);
-		idof = DOFStr(sdof);	
+		idf = DOFStr(sdof);	
 	}
 	
 	static String StrDOFAbrev(int i) {
@@ -202,6 +255,7 @@ public:
 	bool IsLoadedStateSpace()		{return TFSResponse.GetCount() > 0;}
 	
 	void RemoveThresDOF_A(double thres);
+	void RemoveThresDOF_Awinf(double thres);
 	void RemoveThresDOF_B(double thres);
 	void RemoveThresDOF_Force(Forces &f, double thres);
 	
@@ -219,16 +273,23 @@ public:
 	const Vector<int> &GetOrder()		{return dofOrder;}
 	void SetOrder(Vector<int> &order)	{dofOrder = pick(order);}
 	
+	int GetW0();
+	void A0();
+		
+	void K_IRF(double maxT = 120, int numT = 1000);
+	void Ainf();
+	
 	String GetLastError()	{return lastError;}
 };
 
 		
 class HydroData {
 public:
-	HydroData(Hydro *data = 0) {
+	HydroData() : data(0) {}
+	HydroData(BEMData &bem, Hydro *data = 0) {
 		if (!data) {
 			manages = true;
-			this->data = new Hydro();
+			this->data = new Hydro(bem);
 		} else {
 			manages = false;
 			this->data = data;
@@ -248,7 +309,7 @@ private:
 class HydroClass {
 public:
 	HydroClass()							{}
-	HydroClass(Hydro *hydro) : hd(hydro)	{}
+	HydroClass(BEMData &bem, Hydro *hydro) : hd(bem, hydro)	{}
 	virtual ~HydroClass()					{}
 	
 	HydroData hd;	
@@ -325,7 +386,7 @@ private:
 
 class Wamit : public HydroClass, public MeshClass {
 public:
-	Wamit(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf) {}
+	Wamit(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(surf) {}
 	bool Load(String file, double rho = 1000);
 	void Save(String file);
 	virtual ~Wamit()	{}
@@ -352,7 +413,7 @@ protected:
 
 class Foamm : public HydroClass {
 public:
-	Foamm(Hydro *hydro = 0) : HydroClass(hydro) {}
+	Foamm(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
 	void Save(String file);
 	virtual ~Foamm()	{}
@@ -365,7 +426,7 @@ protected:
 
 class Fast : public Wamit {
 public:
-	Fast(Hydro *hydro = 0, Surface *surf = 0) : Wamit(hydro, surf), WaveNDir(Null), WaveDirRange(Null) {}
+	Fast(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : Wamit(bem, hydro, surf), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, double g = 9.81);
 	void Save(String file);
 	virtual ~Fast()	{}
@@ -376,14 +437,13 @@ private:
 	void Save_dat(String fileName, bool force);	
 	
 	String hydroFolder;
-	bool readW;
 	int WaveNDir;
 	double WaveDirRange;
 };
 
 class Nemoh : public HydroClass, public MeshClass {
 public:
-	Nemoh(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf) {}
+	Nemoh(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(surf) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Nemoh()	{}
@@ -407,7 +467,7 @@ private:
 
 class Aqwa : public HydroClass, public MeshClass {
 public:
-	Aqwa(Hydro *hydro = 0, Surface *surf = 0) : HydroClass(hydro), MeshClass(surf) {}
+	Aqwa(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(surf) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Aqwa()	{}
@@ -417,8 +477,8 @@ private:
 	bool Load_LIS();
 };
 
-template <class T>
-void LinSpaced(Vector<T> &v, int n, T min, T max) {
+template <class Range, class T>
+void LinSpaced(Range &v, int n, T min, T max) {
 	ASSERT(n > 0);
 	v.SetCount(n);
 	if (n == 1)
@@ -518,9 +578,14 @@ String FormatWam(double d);
 class BEMData {
 public:
 	Upp::Array<HydroClass> hydros;
-	double depth, rho, g, length;//, thres;
+	double depth, rho, g, length;
+	int discardNegDOF;
+	double thres;
+	int calcAwinf;
+	double maxTimeA;
+	int numValsA;
 	
-	void Load(String file, Function <void(BEMData &, HydroClass&)> AdditionalData);
+	void Load(String file, Function <void(String, int pos)> Status);
 	
 	bool LoadSerializeJson() {
 		bool ret;
@@ -552,8 +617,17 @@ public:
 			rho = 1000;
 		if (!ret || IsNull(length)) 
 			length = 1;
-		//if (!ret || IsNull(thres)) 
-		//	thres = 2;
+		if (!ret || IsNull(discardNegDOF))
+			discardNegDOF = false;
+		if (!ret || IsNull(thres)) 
+			thres = 0.1;
+		if (!ret || IsNull(calcAwinf))
+			calcAwinf = true;
+		if (!ret || IsNull(maxTimeA))
+			maxTimeA = 120;
+		if (!ret || IsNull(numValsA))
+			numValsA = 1000;
+		
 		return true;
 	}
 	bool StoreSerializeJson() {
@@ -571,7 +645,11 @@ public:
 			("rho", rho)
 			("g", g)
 			("length", length)
-		//	("thres", thres)
+			("discardNegDOF", discardNegDOF)
+			("thres", thres)
+			("calcAwinf", calcAwinf)
+			("maxTimeA", maxTimeA)
+			("numValsA", numValsA)
 		;
 	}
 };

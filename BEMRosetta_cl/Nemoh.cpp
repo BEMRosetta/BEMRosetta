@@ -5,6 +5,9 @@ bool Nemoh::Load(String file, double) {
 	hd().name = GetFileTitle(GetFileFolder(file));
 	folder = GetFileFolder(file);
 	hd().len = 1;
+	hd().dimen = true;
+	hd().Nb = Null;
+	
 	String ext = GetFileExt(file);
 	if (ext == ".cal")
 		hd().code = Hydro::NEMOH;
@@ -60,7 +63,8 @@ bool Nemoh::Load(String file, double) {
 			if (!Load_IRF(AppendFileName(folder, AppendFileName("Results", "IRF.tec"))))
 				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
 		}
-		hd().AfterLoad();
+		if (IsNull(hd().Nb))
+			return false;
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -76,6 +80,8 @@ bool Nemoh::Load_Cal(String fileName) {
 		return false;
 	
 	hd().rho = hd().g = hd().h = Null;
+	
+	hd().dataFromW = true;
 	
 	String line;
 	FieldSplit f(in);
