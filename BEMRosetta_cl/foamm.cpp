@@ -6,6 +6,9 @@ bool Foamm::Load(String file) {
 	hd().code = Hydro::FOAMM;
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
+	hd().len = 1;
+	hd().dimen = true;
+	hd().Nb = Null;
 	
 	try {
 		if (GetFileExt(file) == ".mat") {
@@ -15,11 +18,12 @@ bool Foamm::Load(String file) {
 				return false;
 			}
 		}
+		if (IsNull(hd().Nb))
+			return false;
+		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 1;
-	
-		hd().AfterLoad();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -61,6 +65,7 @@ bool Foamm::Load_mat(String file) {
 	
 	hd().w.SetCount(hd().Nf);
 	hd().T.SetCount(hd().Nf);
+	hd().dataFromW = true;
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 		hd().w[ifr] = w[ifr];
 		hd().T[ifr] = 2*M_PI/w[ifr];

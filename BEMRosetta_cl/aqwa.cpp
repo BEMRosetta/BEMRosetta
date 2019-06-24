@@ -3,8 +3,10 @@
 bool Aqwa::Load(String file, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(GetFileFolder(file));
+	hd().dimen = true;
 	hd().len = 1;
 	hd().code = Hydro::AQWA;
+	hd().Nb = Null;
 	
 	try {
 		hd().Print("\n\n" + Format(t_("Loading '%s'"), file));
@@ -18,11 +20,12 @@ bool Aqwa::Load(String file, double) {
 				return false;
 			}
 		}
+		if (IsNull(hd().Nb))
+			return false;
+		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
-	
-		hd().AfterLoad();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -41,7 +44,6 @@ bool Aqwa::Load_AH1() {
 	hd().Nb = hd().Nh = hd().Nf = Null;
 	hd().head.Clear();
 	hd().w.Clear();
-	hd().T.Clear();	
 	hd().rho = hd().g = hd().h = Null;
 	
 	String line;
@@ -373,13 +375,13 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(in.GetLine());
 				double heading = f.GetDouble(2);
-				int idh = FindIndex(hd().head, heading);
+				int idh = FindIndexRatio(hd().head, heading, 0.001);
 				if (idh < 0)
 					throw Exc(Format(t_("[%d] Heading %f not found"), in.GetLineNumber(), heading));
 				int dd = 1;
 				for (int i = 0; i < hd().Nf; ++i) {
 					double freq = f.GetDouble(1);
-					int ifr = FindIndexDelta(hd().w, freq, 0.001);
+					int ifr = FindIndexRatio(hd().w, freq, 0.001);
 					if (ifr < 0)
 						throw Exc(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq));
 					for (int idof = 0; idof < 6; ++idof) {
@@ -396,7 +398,7 @@ bool Aqwa::Load_LIS() {
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			f.Load(line);
 			double freq = f.GetDouble(7);
-			int ifr = FindIndexDelta(hd().w, freq, 0.001);
+			int ifr = FindIndexRatio(hd().w, freq, 0.001);
 			if (ifr < 0)
 				throw Exc(t_(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq)));
 
