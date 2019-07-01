@@ -7,10 +7,10 @@
 # BEMRosetta
 **Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
 
-<img src="https://img.shields.io/github/license/izabala123/BEMRosetta.svg?style=flat" alt="Platforms">
+<img src="https://img.shields.io/github/license/izabala123/BEMRosetta.svg" alt="License">
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/platforms-windows_linux-blue.svg?style=plastic" alt="Platforms">
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/build-passed-success.svg?style=plastic" alt="Build status">
-<img src="https://img.shields.io/github/last-commit/izabala123/bemrosetta.svg?style=flat" alt="Last commit">
+<img src="https://img.shields.io/github/last-commit/izabala123/bemrosetta.svg" alt="Last commit">
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="45%" title="DeepCWind mesh in Windows">
