@@ -7,7 +7,7 @@ No install is required. Just copy BEMRosetta.exe and BEMRosetta_cl.exe anywhere 
 
 Standard POSIX distribution of BEMRosetta comes as a source tarball.
 
-Before compiling source code, you must install a few developpement packages. Many POSIX distributions provides developpement packages with the same names. Sometimes, development package names do not match. You will have to find the corresponding names for your distribution.
+Before compiling source code, you must install a few developpement packages. Many POSIX distributions provides developpement packages with the same names. However, sometimes development package names do not match. In this case, you will have to find the corresponding names for your distribution.
 
 
 ### Debian/apt-get based distributions
