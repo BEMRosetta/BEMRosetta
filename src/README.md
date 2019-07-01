@@ -29,10 +29,9 @@ su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox
 
 ### Compile source code
 
-First, uncompress source tarball bemrosetta_files.tar.gz and change dir to the new created directory.
+Change dir to the new created directory.
 
 ```
-tar zxvf bemrosetta_files.tar.gz
 cd bemrosetta_files
 ```
 
