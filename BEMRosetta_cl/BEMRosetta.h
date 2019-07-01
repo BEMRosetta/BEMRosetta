@@ -643,7 +643,7 @@ public:
 		if (!ret || IsNull(discardNegDOF))
 			discardNegDOF = false;
 		if (!ret || IsNull(thres)) 
-			thres = 0.1;
+			thres = 0.01;
 		if (!ret || IsNull(calcAwinf))
 			calcAwinf = true;
 		if (!ret || IsNull(maxTimeA))
