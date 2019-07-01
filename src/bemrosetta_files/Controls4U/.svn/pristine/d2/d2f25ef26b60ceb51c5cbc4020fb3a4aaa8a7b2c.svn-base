@@ -1,0 +1,41 @@
+description "Some additional controls\377B255,170,0";
+
+uses
+	CtrlLib,
+	Functions4U,
+	ClassFactory;
+
+uses(!NOPAINTER) Painter;
+
+file
+	Controls4U.cpp,
+	Controls4U.h,
+	PainterCanvas.cpp,
+	PainterCanvas.h,
+	Controls4U.usc,
+	Controls4U.lay,
+	Controls4U.iml,
+	Controls4U.t,
+	srcdoc.tpp,
+	src.tpp,
+	ActiveX readonly separator,
+	ActiveX.cpp,
+	ActiveX_base.h,
+	ActiveX.h,
+	IExplorerBrowser.cpp,
+	FirefoxBrowser.cpp,
+	VLCPlayer.cpp,
+	VLC readonly separator,
+	plugin\vlc\axvlc_idl.c,
+	plugin\vlc\axvlc_idl.h,
+	JBControls readonly separator,
+	SliderCtrlX.cpp,
+	SliderCtrlX.h,
+	SliderCtrlX.iml,
+	SliderCtrlX.usc,
+	StarIndicator.cpp,
+	StarIndicator.h,
+	StarIndicator.iml,
+	StarIndicator.usc,
+	Copying;
+
