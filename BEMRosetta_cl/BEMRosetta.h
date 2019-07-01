@@ -62,6 +62,8 @@ public:
 	}
 		
 	inline bool IsAvailableDOF(int ib, int idf) {
+		if (dof.IsEmpty())
+			return false;
 		if (dof[ib] <= idf)
 			return false;
 		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idf, (ib+1)*idf))) || 
@@ -255,7 +257,6 @@ public:
 	bool IsLoadedStateSpace()		{return TFSResponse.GetCount() > 0;}
 	
 	void RemoveThresDOF_A(double thres);
-	void RemoveThresDOF_Awinf(double thres);
 	void RemoveThresDOF_B(double thres);
 	void RemoveThresDOF_Force(Forces &f, double thres);
 	
@@ -319,7 +320,11 @@ public:
 
 class MeshData {
 public:
-	MeshData(Surface *data = 0) {
+	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, UNKNOWN};
+	
+	MeshData() : bem(0), data(0) {}
+	MeshData(BEMData &bem, Surface *data = 0) {
+		this->bem = &bem;
 		if (!data) {
 			manages = true;
 			this->data = new Surface();
@@ -333,16 +338,30 @@ public:
 		if (manages)
 			delete data;
 	}
+	String GetCodeStr()	{
+		switch (code) {
+		case WAMIT_GDF: 	return t_("Wamit.gdf");
+		case WAMIT_DAT: 	return t_("Wamit.dat");
+		case NEMOH_DAT: 	return t_("Nemoh.dat");
+		case UNKNOWN:		return t_("Unknown");
+		}
+		return t_("Unknown");
+	}
+	void SetCode(MESH_FMT code)	{this->code = code;}
 	
+	void SaveAs(String file, MESH_FMT type = UNKNOWN);
+		
 private:
+	BEMData *bem;
 	Surface *data;	
 	bool manages;
+	MESH_FMT code;
 };
 
 class MeshClass {
 public:
 	MeshClass()							{}
-	MeshClass(Surface *surf) : mh(surf)	{}
+	MeshClass(BEMData &bem, Surface *surf) : mh(bem, surf)	{}
 	virtual ~MeshClass()				{}
 	
 	MeshData mh;	
@@ -386,13 +405,14 @@ private:
 
 class Wamit : public HydroClass, public MeshClass {
 public:
-	Wamit(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(surf) {}
+	Wamit(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(bem, surf) {}
 	bool Load(String file, double rho = 1000);
 	void Save(String file);
 	virtual ~Wamit()	{}
 	
 	bool LoadGdfMesh(String file);
 	bool LoadDatMesh(String file);
+	void SaveGdfMesh(String fileName);
 	
 protected:
 	bool Load_out();							
@@ -443,7 +463,7 @@ private:
 
 class Nemoh : public HydroClass, public MeshClass {
 public:
-	Nemoh(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(surf) {}
+	Nemoh(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(bem, surf) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Nemoh()	{}
@@ -467,7 +487,7 @@ private:
 
 class Aqwa : public HydroClass, public MeshClass {
 public:
-	Aqwa(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(surf) {}
+	Aqwa(BEMData &bem, Hydro *hydro = 0, Surface *surf = 0) : HydroClass(bem, hydro), MeshClass(bem, surf) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Aqwa()	{}
@@ -578,6 +598,8 @@ String FormatWam(double d);
 class BEMData {
 public:
 	Upp::Array<HydroClass> hydros;
+	Upp::Array<MeshClass> surfs;
+	
 	double depth, rho, g, length;
 	int discardNegDOF;
 	double thres;
@@ -586,7 +608,8 @@ public:
 	int numValsA;
 	
 	void Load(String file, Function <void(String, int pos)> Status);
-	
+	void LoadMesh(String file, Function <void(String, int pos)> Status);
+		
 	bool LoadSerializeJson() {
 		bool ret;
 		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");

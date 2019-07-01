@@ -38,7 +38,6 @@ void Main::Init() {
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
 	menuOpen.butLoad <<= THISBACK(OnLoad);
 	
-	//menuOpen.arrayModel.SetLineCy(EditField::GetStdHeight());
 	menuOpen.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuOpen.arrayModel.AddColumn("", 20);	
 	menuOpen.arrayModel.AddColumn("", 20);
@@ -64,7 +63,6 @@ void Main::Init() {
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.butLoad <<= THISBACK(OnConvert);
 
-	//menuConvert.arrayModel.SetLineCy(EditField::GetStdHeight());
 	menuConvert.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuConvert.arrayModel.AddColumn("", 20);	
 	menuConvert.arrayModel.AddColumn("", 20);
@@ -81,16 +79,38 @@ void Main::Init() {
 	menuPlot.showPhase.WhenAction 	 = [&] {LoadSelTab(bem.hydros);};
 	menuPlot.showAdim.WhenAction 	 = [&] {LoadSelTab(bem.hydros);};
 	
-	CtrlLayout(menuView);
-	menuView.file <<= THISBACK(OnView);
-	menuView.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuView.butLoad <<= THISBACK(OnView);
+	CtrlLayout(menuMesh);
+	menuMesh.file <<= THISBACK(OnView);
+	menuMesh.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
+	menuMesh.butLoad <<= THISBACK(OnView);
 
-	menuView.butRemove.WhenAction = [&] {
+	menuMesh.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
+	menuMesh.arrayModel.AddColumn("", 20);	
+	menuMesh.arrayModel.AddColumn("", 20);
+	
+	menuMesh.butRemove.Disable();	
+	menuMesh.butRemove.WhenAction = [&] {
 		WaitCursor waitcursor;
 		
-		surfs.Clear();
+		menuMesh.arrayModel.Clear();
+		menuMesh.butRemove.Disable();
+		menuConvertMesh.arrayModel.Clear();
+		
+		bem.surfs.Clear();
 	};
+	
+	CtrlLayout(menuConvertMesh);
+	menuConvertMesh.file <<= THISBACK(OnConvertMesh);
+	menuConvertMesh.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
+	menuConvertMesh.butLoad <<= THISBACK(OnConvertMesh);
+
+	menuConvertMesh.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
+	menuConvertMesh.arrayModel.AddColumn("", 20);	
+	menuConvertMesh.arrayModel.AddColumn("", 20);
+	
+	menuConvertMesh.opt.WhenAction = [&] {OnOpt();};
+	
+	OnOpt();
 	
 	menuOptions.Init(bem);
 	menuOptions.Load();
@@ -100,7 +120,8 @@ void Main::Init() {
 	menuTab.Add(menuOpen.SizePos(), 	t_("Open"));
 	menuTab.Add(menuConvert.SizePos(), 	t_("Convert"));
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
-	menuTab.Add(menuView.SizePos(), 	t_("Mesh"));
+	menuTab.Add(menuMesh.SizePos(), 	t_("Mesh"));
+	menuTab.Add(menuConvertMesh.SizePos(), 	t_("Convert Mesh"));
 	menuTab.Add(menuOptions.SizePos(), 	t_("Options"));
 	menuTab.Add(menuAbout.SizePos(), 	t_("About"));
 	
@@ -111,9 +132,9 @@ void Main::Init() {
 			menuOptions.Load();
 			mainTab.Show();
 		} else {
-			if (menuTab.IsAt(menuView)) { 
+			if (menuTab.IsAt(menuMesh)) { 
 				mainTab.Set(mainView);
-				menuTab.Set(menuView);
+				menuTab.Set(menuMesh);
 			}
 			mainTab.Show();
 		}
@@ -147,7 +168,7 @@ void Main::Init() {
 			menuPlot.showPhase.Enable(true);
 		} else if (mainTab.IsAt(mainView)) { 
 			plot = false;
-			menuTab.Set(menuView);	
+			menuTab.Set(menuMesh);	
 			mainTab.Set(mainView);	 
 		} else if (mainTab.IsAt(mainStateSpace)) {
 			mainStateSpace.Load(bem.hydros);
@@ -161,8 +182,10 @@ void Main::Init() {
 		if (plot) {
 			plotIt.Text("Plot");
 			menuTab.Set(menuPlot);
-		} else
+		} else {
 			plotIt.Text("");
+			menuTab.Set(menuTab.Find(menuOpen));
+		}
 	};
 	
 	mainSummary.Init();
@@ -214,6 +237,7 @@ void Main::LoadSelTab(Upp::Array<HydroClass> &hydros) {
 }
 
 MainABForce &Main::GetSelTab() {
+	
 	return *(static_cast<MainABForce*>(mainTab.GetItem(mainTab.Get()).GetSlave()));
 }
 
@@ -231,34 +255,16 @@ static String ForceExtSafe(String fileName, String ext) {
 void Main::OnOpt() {
 	menuOpen.file.ClearTypes();
 	
-//	menuOpen.file.Type("Wamit .1.3.4.hst file", "*.1 *.3 *.4 *.hst");
-//	menuOpen.file.Type("Wamit .out file", "*.out");	
-//	menuOpen.file.Type("FAST HydroDyn file", "*.dat");	
-//	menuOpen.file.Type("Nemoh .cal file", "*.cal");	
-//	menuOpen.file.Type("SeaFEM .flavia.inf file", "*.inf");
-//	menuOpen.file.Type("AQWA .AH1.LIS file", "*.ah1 *.lis");
-//	menuOpen.file.Type("FOAMM .mat file", "*.mat");
-	menuOpen.file.Type("All supported BEM files", "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis *.mat");
+	const String bemFiles = "*.1 *.3 *.hst *.4 *.out *.dat *.cal *.inf *.ah1 *.lis *.mat";
+	menuOpen.file.Type("All supported BEM files", bemFiles);
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
 		extOpen = "-";
-	if (String(".1 .3 .4 .hst").Find(extOpen) >= 0)
+	if (bemFiles.Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(0);
-	else if (String(".out").Find(extOpen) >= 0)
-		menuOpen.file.ActiveType(1);
-	else if (String(".dat").Find(extOpen) >= 0)
-		menuOpen.file.ActiveType(2);
-	else if (String(".cal").Find(extOpen) >= 0)
-		menuOpen.file.ActiveType(3);
-	else if (String(".inf").Find(extOpen) >= 0)
-		menuOpen.file.ActiveType(4);
-	else if (String(".ah1 .lis").Find(extOpen) >= 0)
-		menuOpen.file.ActiveType(5);
-	else if (String(".mat").Find(extOpen) >= 0)
-		menuOpen.file.ActiveType(6);
 	else
-		menuOpen.file.ActiveType(7);
+		menuOpen.file.ActiveType(1);
 	
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
@@ -281,21 +287,34 @@ void Main::OnOpt() {
 	else
 		menuConvert.file.ActiveType(2);
 	
-	menuView.file.ClearTypes(); 
+	menuMesh.file.ClearTypes(); 
 
-	menuView.file.Type("Wamit .gdf file", "*.gdf");	
-	menuView.file.Type("Nemoh .dat and Wamit panel .dat file", "*.dat");
-	menuView.file.Type("All supported mesh files", "*.gdf *.dat");
-	menuView.file.AllFilesType();
-	String extView = ToLower(GetFileExt(menuView.file.GetData().ToString()));
+	const String meshFiles = "*.gdf *.dat";
+	menuMesh.file.Type("All supported mesh files", meshFiles);
+	menuMesh.file.AllFilesType();
+	String extView = ToLower(GetFileExt(menuMesh.file.GetData().ToString()));
 	if (extView.IsEmpty())
 		extView = "-";
-	if (String(".gdf").Find(extView) >= 0)
-		menuView.file.ActiveType(0);
-	else if (String(".dat").Find(extView) >= 0)
-		menuView.file.ActiveType(1);
+	if (meshFiles.Find(extView) >= 0)
+		menuMesh.file.ActiveType(0);
 	else
-		menuView.file.ActiveType(2);
+		menuMesh.file.ActiveType(1);
+	
+	menuConvertMesh.file.ClearTypes();
+	switch (menuConvertMesh.opt) {
+	case 0:	menuConvertMesh.file <<= ForceExtSafe(~menuConvertMesh.file, ".gdf"); 	
+			menuConvertMesh.file.Type("Wamit .gdf file", "*.gdf");
+			break;
+	default:menuConvertMesh.file.Type("All converted files", "*.gdf");
+			break;
+	}
+	String extConvmesh = ToLower(GetFileExt(menuConvertMesh.file.GetData().ToString()));
+	if (extConvmesh.IsEmpty())
+		extConvmesh = "-";
+	if (String(".gdf").Find(extConvmesh) >= 0)
+		menuConvertMesh.file.ActiveType(0);
+	else
+		menuConvertMesh.file.ActiveType(1);
 }
 
 void Main::OnLoad() {
@@ -415,41 +434,46 @@ void Main::OnConvert() {
 }
 
 void Main::OnView() {
-	WaitCursor waitcursor;
-	
-	String file = ~menuView.file;
-	for (int i = 0; i < surfs.GetCount(); ++i) {
-		if (surfs[i].mh().file == file) {
-			Exclamation(t_("Model already loaded"));
+	try {
+		WaitCursor waitcursor;
+		Progress progress(t_("Loading mesh file..."), 100); 
+		
+		String file = ~menuMesh.file;
+		bem.LoadMesh(file, [&](String str, int pos) {progress.SetText(str); progress.SetPos(pos);});
+		
+		mainView.CalcEnvelope();
+		mainView.ZoomToFit();
+		mainTab.Set(mainView);
+		
+		MeshClass &surf = bem.surfs[bem.surfs.GetCount() - 1];
+		
+		menuMesh.arrayModel.Add(surf.mh.GetCodeStr(), GetFileTitle(file));
+		menuMesh.butRemove.Enable();
+		menuConvertMesh.arrayModel.Add(surf.mh.GetCodeStr(), GetFileTitle(file));
+		if (menuConvertMesh.arrayModel.GetCursor() < 0)
+			menuConvertMesh.arrayModel.SetCursor(0);
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}
+}
+
+void Main::OnConvertMesh() {
+	try {
+		int id = menuConvertMesh.arrayModel.GetCursor();
+		if (id < 0) {
+			Exclamation(t_("Please select a model to export"));
 			return;
 		}
-	}
-	String ext = ToLower(GetFileExt(file));
-	if (ext == ".dat") {
-		Nemoh &data = surfs.Create<Nemoh>(bem);
-		if (!data.LoadDatMesh(file)) {
-			surfs.SetCount(surfs.GetCount()-1);
-			Wamit &data = surfs.Create<Wamit>(bem);
-			if (!data.LoadDatMesh(file)) {
-				Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
-				surfs.SetCount(surfs.GetCount()-1);
-				return;
-			}		
-		} 
-	} else if (ext == ".gdf") {
-		Wamit &data = surfs.Create<Wamit>(bem);
-		if (!data.LoadGdfMesh(file)) {
-			Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError())));	
-			surfs.SetCount(surfs.GetCount()-1);
-			return;
+		MeshData::MESH_FMT type;	
+		switch (menuConvertMesh.opt) {
+		case 0:	type = MeshData::WAMIT_GDF;	break;
+		case 2:	type = MeshData::UNKNOWN;	break;
+		default: throw Exc(t_("Unknown type in OnConvert()"));
 		}
-	} else {
-		Exclamation(DeQtfLf(Format(t_("Problem loading '%s'") + x_("\n%s"), file, t_("Unknown file format"))));	
-		return;
+		bem.surfs[id].mh.SaveAs(~menuConvertMesh.file, type);	
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
 	}
-	mainView.CalcEnvelope();
-	mainView.ZoomToFit();
-	mainTab.Set(mainView);
 }
 
 Main::~Main() {
@@ -478,7 +502,9 @@ void Main::Jsonize(JsonIO &json) {
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showPhase", menuPlot.showPhase)
 		("menuPlot_showAdim", menuPlot.showAdim)
-		("menuView_file", menuView.file)
+		("menuView_file", menuMesh.file)
+		("menuConvertMesh_file", menuConvertMesh.file)
+		("menuConvertMesh_opt", menuConvertMesh.opt)
 	;
 }
 
@@ -1017,14 +1043,14 @@ void MainView::OnPaint() {
 	double mx = max(max(maxX, maxY), maxZ)/4.;
 	gl.PaintAxis(mx, mx, mx);	
 	
-	for (int i = 0; i < ma().surfs.GetCount(); ++i)
-		gl.PaintSurface(ma().surfs[i].mh(), GetColor(i));
+	for (int i = 0; i < ma().bem.surfs.GetCount(); ++i)
+		gl.PaintSurface(ma().bem.surfs[i].mh(), GetColor(i));
 }
 
 void MainView::CalcEnvelope() {
 	env.Reset();
-	for (int i = 0; i < ma().surfs.GetCount(); ++i)
-		env.MixEnvelope(ma().surfs[i].mh().env);
+	for (int i = 0; i < ma().bem.surfs.GetCount(); ++i)
+		env.MixEnvelope(ma().bem.surfs[i].mh().env);
 	
 	maxX = env.maxX;
 	if (env.minX < 0)

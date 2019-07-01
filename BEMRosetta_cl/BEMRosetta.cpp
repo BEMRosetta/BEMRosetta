@@ -175,25 +175,24 @@ void Hydro::RemoveThresDOF_A(double thres) {
 		return;
 	for (int idf = 0; idf < 6*Nb; ++idf) {
 		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-			double avg = 0;
-			for (int ifr = 0; ifr < Nf; ifr++) 
-				avg += abs(A_adim(ifr, idf, jdf));
-			avg /= Nf;
-			if (avg < thres) {
-				for (int ifr = 0; ifr < Nf; ifr++) 
-					A[ifr](idf, jdf) = Null;	
+			double mx = -DBL_MAX, mn = DBL_MAX;
+			for (int ifr = 0; ifr < Nf; ifr++) {
+				double val = A_adim(ifr, idf, jdf);
+				mx = max(mx, val);
+				mn = min(mn, val);
 			}
-		}
-	}
-}
-
-void Hydro::RemoveThresDOF_Awinf(double thres) {
-	if (!IsLoadedAwinf())
-		return;
-	for (int idf = 0; idf < 6*Nb; ++idf) {
-		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-			if (abs(Awinf_adim(idf, jdf)) < thres) 
-				Awinf(idf, jdf) = Null;	
+			double delta = mx - mn;
+			if (!IsNull(mx) && !IsNull(mn)) {
+				double res = 0;
+				for (int ifr = 1; ifr < Nf; ifr++) 
+					res += abs(A_adim(ifr, idf, jdf) - A_adim(ifr-1, idf, jdf));
+				res /= delta*(Nf - 1);
+				if (res > thres) {
+					for (int ifr = 0; ifr < Nf; ifr++) 
+						A[ifr](idf, jdf) = Null;
+					Awinf(idf, jdf) = Null;		
+				}
+			}
 		}
 	}
 }
@@ -203,13 +202,22 @@ void Hydro::RemoveThresDOF_B(double thres) {
 		return;
 	for (int idf = 0; idf < 6*Nb; ++idf) {
 		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-			double avg = 0;
-			for (int ifr = 0; ifr < Nf; ifr++) 
-				avg += abs(B_adim(ifr, idf, jdf));
-			avg /= Nf;
-			if (avg < thres) {
-				for (int ifr = 0; ifr < Nf; ifr++) 
-					B[ifr](idf, jdf) = Null;	
+			double mx = -DBL_MAX, mn = DBL_MAX;
+			for (int ifr = 0; ifr < Nf; ifr++) {
+				double val = B_adim(ifr, idf, jdf);
+				mx = max(mx, val);
+				mn = min(mn, val);
+			}
+			double delta = mx - mn;
+			if (!IsNull(mx) && !IsNull(mn)) {
+				double res = 0;
+				for (int ifr = 1; ifr < Nf; ifr++) 
+					res += abs(B_adim(ifr, idf, jdf) - B_adim(ifr-1, idf, jdf));
+				res /= delta*(Nf - 1);
+				if (res > thres) {
+					for (int ifr = 0; ifr < Nf; ifr++) 
+						B[ifr](idf, jdf) = Null;
+				}
 			}
 		}
 	}
@@ -219,17 +227,26 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 	if (!IsLoadedForce(f))
 		return;
 	for (int h = 0; h < Nh; ++h) {
-		for (int i = 0; i < 6*Nb; ++i) {	 
-			double avg = 0;
-			for (int ifr = 0; ifr < Nf; ++ifr) 
-				avg += F_ma_adim(f, h, ifr, i);
-			avg /= Nf;
-			if (avg < thres) {
-				for (int ifr = 0; ifr < Nf; ifr++) 
-					f.ma[h](ifr, i) = Null;	
+		for (int i = 0; i < 6*Nb; ++i) {
+			double mx = -DBL_MAX, mn = DBL_MAX;
+			for (int ifr = 0; ifr < Nf; ifr++) {
+				double val = F_ma_adim(f, h, ifr, i);
+				mx = max(mx, val);
+				mn = min(mn, val);
+			}
+			double delta = mx - mn;
+			if (!IsNull(mx) && !IsNull(mn)) {
+				double res = 0;
+				for (int ifr = 1; ifr < Nf; ifr++) 
+					res += abs(F_ma_adim(f, h, ifr, i) - F_ma_adim(f, h, ifr-1, i));
+				res /= delta*(Nf - 1);
+				if (res > thres) {
+					for (int ifr = 0; ifr < Nf; ifr++) 
+						f.ma[h](ifr, i) = Null;
+				}
 			}
 		}
-	} 	
+	}
 }
 
 
@@ -480,6 +497,11 @@ void Hydro::AfterLoad(Function <void(String, int)> Status) {
 		A0();
 	
 	if (!IsLoadedAwinf() && bem->calcAwinf) {
+		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0)
+			throw Exc(t_("Incorrect time for Ainf calculation. Please review it in Options"));
+		if (IsNull(bem->numValsA) || bem->numValsA < 10)
+			throw Exc(t_("Incorrect number of time values for Ainf calculation. Please review it in Options"));
+
 		Status(t_("Obtaining Impulse Response Function"), 40);
 		K_IRF(bem->maxTimeA, bem->numValsA);
 		Status(t_("Obtaining Infinite-Frequency Added Mass (A_inf)"), 70);
@@ -620,13 +642,59 @@ void BEMData::Load(String file, Function <void(String, int pos)> Status) {
 	if (discardNegDOF) {
 		Status(t_("Discarding negligible DOF"), 90);
 		justLoaded.RemoveThresDOF_A(thres);
-		justLoaded.RemoveThresDOF_Awinf(thres);
 		justLoaded.RemoveThresDOF_B(thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres/10.);
 	}
+}
+
+void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
+	for (int i = 0; i < surfs.GetCount(); ++i) {
+		if (surfs[i].mh().file == file) {
+			throw Exc(t_("Model already loaded"));
+			return;
+		}
+	}
+	String ext = ToLower(GetFileExt(file));
+	if (ext == ".dat") {
+		Nemoh &data = surfs.Create<Nemoh>(*this);
+		if (!data.LoadDatMesh(file)) {
+			surfs.SetCount(surfs.GetCount()-1);
+			Wamit &data = surfs.Create<Wamit>(*this);
+			if (!data.LoadDatMesh(file)) {
+				throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError()));	
+				surfs.SetCount(surfs.GetCount()-1);
+				return;
+			}		
+		} 
+	} else if (ext == ".gdf") {
+		Wamit &data = surfs.Create<Wamit>(*this);
+		if (!data.LoadGdfMesh(file)) {
+			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError()));	
+			surfs.SetCount(surfs.GetCount()-1);
+			return;
+		}
+	} else {
+		throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, t_("Unknown file format")));	
+		return;
+	}
+}
+
+void MeshData::SaveAs(String file, MESH_FMT type) {
+	if (type == UNKNOWN) {
+		String ext = ToLower(GetFileExt(file));
+		
+		if (ext == ".gdf")
+			type = MeshData::WAMIT_GDF;
+		else
+			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
+	}
+	if (type == WAMIT_GDF) {
+		Wamit dat(*bem, 0, data);
+		dat.SaveGdfMesh(file);	
+	} 
 }
 
 	

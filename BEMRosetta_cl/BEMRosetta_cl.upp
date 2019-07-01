@@ -23,7 +23,7 @@ file
 	fast.cpp,
 	aqwa.cpp,
 	ainf.cpp,
-	data.cpp,
+	dataf.cpp,
 	data.brc,
 	hydrodyn.dat,
 	license.txt,
