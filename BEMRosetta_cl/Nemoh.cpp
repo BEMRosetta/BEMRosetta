@@ -8,7 +8,7 @@ bool Nemoh::Load(String file, double) {
 	hd().dimen = true;
 	hd().Nb = Null;
 	
-	String ext = GetFileExt(file);
+	String ext = GetFileExt(file); 
 	if (ext == ".cal")
 		hd().code = Hydro::NEMOH;
 	else
@@ -363,6 +363,7 @@ bool Nemoh::LoadDatMesh(String fileName) {
 		return false;
 	}
 	mh().file = fileName;
+	mh.SetCode(MeshData::NEMOH_DAT);
 	
 	String line;
 	FieldSplit f(in);	
@@ -397,13 +398,13 @@ bool Nemoh::LoadDatMesh(String fileName) {
 			if (id0 == 0)
 				break;
 			Panel &panel = mh().panels.Add();
-			panel.id0 = id0-1;
-			panel.id1 = f.GetInt(1)-1;	
-			panel.id2 = f.GetInt(2)-1;	
-			panel.id3 = f.GetInt(3)-1;	
+			panel.id[0] = id0-1;
+			panel.id[1] = f.GetInt(1)-1;	
+			panel.id[2] = f.GetInt(2)-1;	
+			panel.id[3] = f.GetInt(3)-1;	
 		}	
-		if (mh().Check())
-			throw Exc(t_("Wrong nodes found in Nemoh .dat mesh file"));
+		//if (mh().Check())
+		//	throw Exc(t_("Wrong nodes found in Nemoh .dat mesh file"));
 		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));

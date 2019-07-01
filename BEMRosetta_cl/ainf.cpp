@@ -23,7 +23,7 @@ void Hydro::K_IRF(double maxT, int numT) {
     for (int it = 0; it < numT; ++it) 
         for (int i = 0; i < Nb*6; ++i)
         	for (int j = 0; j < Nb*6; ++j) {
-        		if (!IsNull(B[0](i, j))) {
+        		if (!B.IsEmpty() && !IsNull(B[0](i, j))) {
         			for (int iw = 0; iw < Nf; ++iw)
         				y[iw] = B[iw](i, j)*cos(w[iw]*Tirf[it]);
         			double kirf = 0;
