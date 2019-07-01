@@ -1,0 +1,153 @@
+description "GUI core system\377B0,0,255";
+
+uses
+	Draw,
+	plugin\bmp,
+	RichText,
+	Painter;
+
+library(WIN32 !MSC8ARM) "advapi32 comdlg32 comctl32";
+
+library((LINUX | BSD) & !NOGTK & !RAINBOW & !GTK3 & GUI & !OSX) "gtk-x11-2.0  gdk-x11-2.0  atk-1.0  gdk_pixbuf-2.0  m  pangocairo-1.0  fontconfig  Xext  Xrender  Xinerama  Xi  Xrandr  Xcursor Xfixes pango-1.0  cairo  X11  gobject-2.0  gmodule-2.0  glib-2.0";
+
+library((LINUX | BSD) & GTK3) "gtk-3.0  gdk-3.0  atk-1.0  gdk_3.0  m  pangocairo-1.0  fontconfig  Xext  Xrender  Xinerama  Xi  Xrandr  Xcursor Xfixes pango-1.0  cairo  X11  gobject-2.0  gmodule-2.0  glib-2.0";
+
+library(WIN32 !MSC8ARM) "user32 gdi32";
+
+library(LINUX !RAINBOW GUI) "X11 Xrender Xinerama";
+
+library(LINUX  !RAINBOW) dl;
+
+library(LINUX !XLFD  !RAINBOW GUI) Xft;
+
+library(BSD !RAINBOW !OSX) "X11  Xau Xdmcp";
+
+library(BSD !XLFD  !RAINBOW !OSX) "Xft fontconfig Xrender freetype expat";
+
+library(LINUX !XLFD !SHARED  !RAINBOW GUI) "fontconfig Xrender freetype";
+
+library(FREEBSD | DRAGONFLY) xcb;
+
+library(POSIX !NOGTK !RAINBOW GUI !OSX) notify;
+
+library(DRAGONFLY) "Xext Xinerama";
+
+link(OSX !X11) "-framework Foundation -framework Cocoa -framework Carbon";
+
+file
+	Core readonly separator,
+	CtrlCore.h options(BUILDER_OPTION) PCH,
+	MKeys.h,
+	stdids.h,
+	SystemDraw.cpp,
+	Frame.cpp,
+	CtrlMt.cpp,
+	Ctrl.cpp,
+	CtrlChild.cpp,
+	CtrlPos.cpp,
+	CtrlDraw.cpp,
+	CtrlMouse.cpp,
+	CtrlKbd.cpp,
+	CtrlTimer.cpp,
+	CtrlClip.cpp,
+	LocalLoop.cpp,
+	CtrlCoreInit.cpp,
+	TopWindow.h,
+	TopWindow.cpp,
+	lay.h,
+	llay.h,
+	CtrlCore.iml,
+	CtrlCore.t,
+	CtrlCore.defs,
+	Win32 readonly separator,
+	Win32Gui.h,
+	Win32GuiA.h,
+	Win32Keys.h,
+	DrawWin32.cpp,
+	DrawOpWin32.cpp,
+	DrawTextWin32.cpp,
+	ImageWin32.cpp,
+	MetaFile.cpp,
+	UtilWin32.cpp,
+	MultiMon.dli,
+	Win32Ctrl.h,
+	Win32Ctrl.cpp,
+	Win32Wnd.cpp,
+	Win32Clip.cpp,
+	Win32DnD.cpp,
+	Win32Proc.cpp,
+	Win32Top.h,
+	TopWin32.cpp,
+	DHCtrl.cpp,
+	Win32Msg.i,
+	X11 readonly separator,
+	X11Gui.h,
+	X11GuiA.h,
+	X11Keys.h,
+	DrawX11.cpp,
+	DrawOpX11.cpp,
+	DrawTextX11.cpp,
+	ImageX11.cpp,
+	UtilX11.cpp,
+	X11Ctrl.h,
+	X11Ctrl.cpp,
+	X11Wnd.cpp,
+	X11Proc.cpp,
+	X11Clip.cpp,
+	X11DnD.cpp,
+	X11Top.h,
+	X11Top.cpp,
+	X11ImgClip.cpp,
+	X11App.cpp,
+	X11DHCtrl.cpp,
+	X11Event.i,
+	Gtk readonly separator,
+	Gtk.h,
+	GtkAfter.h,
+	GtkKeys.h,
+	GtkDrawOp.cpp,
+	GtkDrawText.cpp,
+	GtkDrawImage.cpp,
+	GdkImage.cpp,
+	GtkUtil.cpp,
+	GtkX11Util.cpp,
+	GtkCtrl.h,
+	GtkCtrl.cpp,
+	GtkCapture.cpp,
+	GtkWnd.cpp,
+	GtkCreate.cpp,
+	GtkEvent.cpp,
+	GtkTop.h,
+	GtkTop.cpp,
+	GtkClip.cpp,
+	GtkDnD.cpp,
+	GtkApp.cpp,
+	Cocoa readonly separator,
+	Coco.h,
+	CocoCode.h,
+	CocoAfter.h,
+	CocoKeys.h,
+	CocoMM.h,
+	CocoUtil.mm,
+	CocoDraw.mm,
+	CocoDrawOp.mm,
+	CocoImage.mm,
+	CocoDrawText.mm,
+	CocoCtrl.h,
+	CocoTop.h,
+	CocoApp.mm,
+	CocoCreate.mm,
+	CocoProc.mm,
+	CocoClip.mm,
+	CocoCtrl.cpp,
+	CocoWnd.cpp,
+	CocoTop.cpp,
+	CocoChSysInit.cpp,
+	"RTF support" readonly separator,
+	ParseRTF.cpp,
+	EncodeRTF.cpp,
+	Info readonly separator,
+	src.tpp,
+	srcdoc.tpp,
+	Copying;
+

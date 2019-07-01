@@ -1,0 +1,28 @@
+description "SlaveGui backend\377";
+
+uses
+	Painter,
+	CtrlLib,
+	PdfDraw;
+
+file
+	VirtualGui.h,
+	main.conf,
+	Local.h,
+	Keys.h,
+	After.h,
+	Image.cpp,
+	FB.iml,
+	Ctrl.h,
+	DrawDragRect.cpp,
+	Ctrl.cpp,
+	Wnd.cpp,
+	Event.cpp,
+	Top.h,
+	TopFrame.cpp,
+	Top.cpp,
+	Clip.cpp,
+	DnD.cpp,
+	ChSysInit.cpp,
+	src.tpp;
+
