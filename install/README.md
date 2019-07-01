@@ -29,21 +29,13 @@ su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox
 
 ### Compile source code
 
-First, uncompress source tarball and change dir to the new created directory.
+First, uncompress source tarball bemrosetta_files.tar.gz and change dir to the new created directory.
 
-Example: for GUI version bemrosetta_linux.tar.gz
 ```
-tar zxvf bemrosetta_linux.tar.gz
-cd bemrosetta_linux
-```
-
-Use 'make' to compile and generate BEMRosetta.out:
-```
-make
+tar zxvf bemrosetta_files.tar.gz
+cd bemrosetta_files
 ```
 
-Now you can start playing with BEMRosetta by invoking ./BEMRosetta/BEMRosetta.out
-You might want to put BEMRosetta elsewhere later, e.g. inside ~/bin/ for example.
+Open a terminal and run 'make_gui.sh' to compile and generate BEMRosetta, and 'make_cli.sh' to compile and generate BEMRosetta_cl:
 
-The same procedure can be followed to install command line version bemrosetta_cl_linux.tar.gz
-
+You might want to put BEMRosetta binaries elsewhere, e.g. inside ~/bin/ for example.
