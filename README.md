@@ -28,7 +28,7 @@ BEMRosetta runs on Windows and Linux, no install is necessary in Windows [(see I
 ### - Supported file formats
 
 * BEM coefficients
-  * Load
+  * Load-View
     * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
@@ -39,13 +39,16 @@ BEMRosetta runs on Windows and Linux, no install is necessary in Windows [(see I
     * [Wamit](https://www.wamit.com/): .1, .3, .hst, .4
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst
     * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
-* Mesh view
-  * [Wamit](https://www.wamit.com/): .gdf, pan.dat
-  * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
+* Mesh files
+  * Load-View
+    * [Wamit](https://www.wamit.com/): .gdf, pan.dat
+    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
+  * Save
+    * [Wamit](https://www.wamit.com/): .gdf
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
 
-A great effort has been made to have a good robustness in the handling of files
+The goal is to have a good robustness in the handling of files
 
 
 ### - Load the hydrodynamic coefficients for the same geometry from different software and compare the results
