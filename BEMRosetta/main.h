@@ -235,6 +235,7 @@ public:
 	void OnLoad();
 	void OnConvert();
 	void OnView();
+	void OnConvertMesh();
 	void OnOpt();
 	
 	//void WindowAdditionalData(BEMData &bem, HydroClass &data);
@@ -280,6 +281,9 @@ public:
 		if (!ret || IsNull(menuConvert.opt)) 
 			menuConvert.opt = 0;
 		
+		if (!ret || IsNull(menuConvertMesh.opt)) 
+			menuConvertMesh.opt = 0;
+		
 		if (!ret)
 			menuTab.Set(menuAbout);
 		
@@ -299,7 +303,9 @@ public:
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
-	WithMenuView<StaticRect> menuView;
+	WithMenuMesh<StaticRect> menuMesh;
+	WithMenuConvertMesh<StaticRect> menuConvertMesh;
+	
 	MenuOptions menuOptions;
 	MenuAbout menuAbout;
 	
@@ -314,7 +320,7 @@ public:
 	MainStateSpace mainStateSpace;
 	
 	BEMData bem;
-	Upp::Array<MeshClass> surfs;
+	//MeshData mesh;
 	
 private:
 	MainPlot &GetSelPlot();

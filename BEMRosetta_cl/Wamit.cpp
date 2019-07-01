@@ -866,6 +866,7 @@ bool Wamit::LoadDatMesh(String fileName) {
 		return false;
 	}
 	mh().file = fileName;
+	mh.SetCode(MeshData::WAMIT_DAT);
 	
 	String line;
 	FieldSplit f(in);	
@@ -914,10 +915,10 @@ bool Wamit::LoadDatMesh(String fileName) {
 				for (int i = 0; i < I-1; ++i) {
 					for (int j = 0; j < J-1; ++j) {
 						Panel &panel = mh().panels.Add();
-						panel.id0 = id0 + I*j     + i;
-						panel.id1 = id0 + I*j     + i+1;
-						panel.id2 = id0 + I*(j+1) + i;
-						panel.id3 = id0 + I*(j+1) + i+1;
+						panel.id[0] = id0 + I*j     + i;
+						panel.id[1] = id0 + I*j     + i+1;
+						panel.id[2] = id0 + I*(j+1) + i;
+						panel.id[3] = id0 + I*(j+1) + i+1;
 					}
 				}
 				in.GetLine();
@@ -941,10 +942,8 @@ bool Wamit::LoadDatMesh(String fileName) {
 				f.Load(line);
 				
 				Panel &panel = mh().panels.Add();
-				panel.id0 = f.GetInt(0) - 1;
-				panel.id1 = f.GetInt(1) - 1;
-				panel.id2 = f.GetInt(2) - 1;
-				panel.id3 = f.GetInt(3) - 1;
+				for (int i = 0; i < 4; ++i)
+					panel.id[i] = f.GetInt(i) - 1;
 			}
 		}
 		mh().GetLimits();
@@ -965,6 +964,7 @@ bool Wamit::LoadGdfMesh(String fileName) {
 		return false;
 	}
 	mh().file = fileName;
+	mh.SetCode(MeshData::WAMIT_GDF);
 	
 	String line;
 	FieldSplit f(in);	
@@ -1019,15 +1019,13 @@ bool Wamit::LoadGdfMesh(String fileName) {
 				}
 			}
 			Panel &panel = mh().panels.Add();
-			panel.id0 = ids[0];
-			panel.id1 = ids[1];
-			panel.id2 = ids[2];
-			panel.id3 = ids[3];
+			for (int i = 0; i < 4; ++i)
+				panel.id[i] = ids[i];
 		}
 		if (mh().panels.GetCount() != nPatches)
 			throw Exc(t_("Wrong number of patches in .gdf file"));
-		if (mh().Check())
-			throw Exc(t_("Wrong nodes found in Wamit .gdf mesh file"));
+		//if (mh().Check())
+		//	throw Exc(t_("Wrong nodes found in Wamit .gdf mesh file"));
 		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -1036,4 +1034,23 @@ bool Wamit::LoadGdfMesh(String fileName) {
 	}
 	
 	return true;
+}
+
+void Wamit::SaveGdfMesh(String fileName) {
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
+	
+	out << Format("BEMRosetta GDF mesh file export (%s)\n", Format("%", GetSysTime()));
+	out << Format("1 %f 	ULEN GRAV\n", hd().g_dim());
+	out << Format("%d  %d 	ISX  ISY\n", mh().y0z ? 1 : 0, mh().x0z ? 1 : 0);
+	out << Format("%d\n", mh().panels.GetCount());
+	for (int ip = 0; ip < mh().panels.GetCount(); ++ip) {
+		for (int i = 0; i < 4; ++i) {
+			int id = mh().panels[ip].id[i];
+			Point3D &p = mh().nodes[id];
+			out << "  " << p.x << " " << p.y << " " << p.z << "\n";
+		}
+	}
+	 
 }
