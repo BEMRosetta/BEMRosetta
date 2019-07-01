@@ -29,12 +29,18 @@ su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox
 
 ### Compile source code
 
-Change dir to the new created directory.
+Open a terminal and change dir to the new created directory.
 
 ```
 cd bemrosetta_files
 ```
 
-Open a terminal and run 'make_gui.sh' to compile and generate BEMRosetta, and 'make_cli.sh' to compile and generate BEMRosetta_cl:
+Run 'make_gui.sh' to compile and generate BEMRosetta, and 'make_cli.sh' to compile and generate BEMRosetta_cl:
+
+```
+make_gui.sh
+make_cli.sh
+
+```
 
 You might want to put BEMRosetta binaries elsewhere, e.g. inside ~/bin/ for example.
