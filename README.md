@@ -7,7 +7,7 @@
 # BEMRosetta
 **Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
 
-<img src="https://img.shields.io/github/license/izabala123/BEMRosetta.svg" alt="License">
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/platforms-windows_linux-blue.svg" alt="Platforms">
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/build-passed-success.svg" alt="Build status">
 <img src="https://img.shields.io/github/last-commit/izabala123/bemrosetta.svg" alt="Last commit">
