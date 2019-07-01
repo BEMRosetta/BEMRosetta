@@ -40,7 +40,6 @@ Run 'make_gui.sh' to compile and generate BEMRosetta, and 'make_cli.sh' to compi
 ```
 make_gui.sh
 make_cli.sh
-
 ```
 
 You might want to put BEMRosetta binaries elsewhere, e.g. inside ~/bin/ for example.
