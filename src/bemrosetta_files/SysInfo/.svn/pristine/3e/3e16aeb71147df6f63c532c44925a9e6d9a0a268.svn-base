@@ -1,0 +1,27 @@
+description "OS, hardware and Desktop handling functions\377B255,170,0";
+
+uses
+	Core,
+	Functions4U;
+
+library(WIN32) "ws2_32 psapi gdi32 vfw32 oleaut32 iphlpapi PowrProf netapi32 wbemuuid";
+
+library(POSIX | LINUX | FREEBSD) "Xtst X11";
+
+options(MSC) "/D PSAPI_VERSION=1";
+
+file
+	SysInfo.cpp,
+	SysInfo.h,
+	SysInfo_in.h,
+	os.cpp,
+	screengrab.cpp,
+	mousekey.cpp,
+	cpuspeed.cpp,
+	battery.cpp,
+	srcdoc.tpp,
+	srcimp.tpp,
+	src.tpp,
+	SysInfo.t,
+	Copying;
+
