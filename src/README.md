@@ -1,7 +1,7 @@
 # BEMRosetta Install
 
 ## Windows
-No install is required. Just copy BEMRosetta.exe and BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
+No install is required. Just copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
 
 ## Linux POSIX 
 
