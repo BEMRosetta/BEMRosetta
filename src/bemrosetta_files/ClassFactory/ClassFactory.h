@@ -3,7 +3,7 @@
 
 #include <Draw/Draw.h>
 
-NAMESPACE_UPP
+NAMESPACE_UPP  
 
 extern String CLASSFACTORY_UNKNOWN;
 
