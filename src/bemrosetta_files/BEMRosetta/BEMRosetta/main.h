@@ -39,13 +39,13 @@ T phase(const std::complex<T> &val) {
 class HydroSource : public DataSource {
 public:
 	HydroSource() : data(0) {}
-	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool adim) {
-		Init(data, i, j_h, dataToPlot, show_w, adim);
+	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool ndim) {
+		Init(data, i, j_h, dataToPlot, show_w, ndim);
 	}
-	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool adim) 	{
-		return Init(*data, i, j_h, dataToPlot, show_w, adim);
+	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool ndim) 	{
+		return Init(*data, i, j_h, dataToPlot, show_w, ndim);
 	}
-	bool Init(Hydro &data, int idof, int j_h, DataToPlot dataToPlot, bool show_w, bool adim) {
+	bool Init(Hydro &data, int idof, int j_h, DataToPlot dataToPlot, bool show_w, bool ndim) {
 		this->data = &data;
 		this->idof = data.dofOrder[idof];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
@@ -53,7 +53,7 @@ public:
 		this->j_h = j_h;
 		this->dataToPlot = dataToPlot;
 		this->show_w = show_w;
-		this->adim = adim;
+		this->ndim = ndim;
 		if (IsNullData())
 			return false;
 		return true;
@@ -82,16 +82,16 @@ public:
 	virtual inline double y(int64 id) {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return data->A_(adim, int(id), idof, j_h);
-		case PLOT_AINF:			return data->Awinf_(adim, idof, j_h);
-		case PLOT_B:			return data->B_(adim, int(id), idof, j_h);
-		case PLOT_FORCE_SC_MA:	return data->F_ma_(adim, data->sc, j_h, int(id), idof);
+		case PLOT_A:			return data->A_(ndim, int(id), idof, j_h);
+		case PLOT_AINF:			return data->Awinf_(ndim, idof, j_h);
+		case PLOT_B:			return data->B_(ndim, int(id), idof, j_h);
+		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, j_h, int(id), idof);
 		case PLOT_FORCE_SC_PH:	return data->sc.ph[j_h](int(id), idof);
-		case PLOT_FORCE_FK_MA:	return data->F_ma_(adim, data->fk, j_h, int(id), idof);
+		case PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, j_h, int(id), idof);
 		case PLOT_FORCE_FK_PH:	return data->fk.ph[j_h](int(id), idof);
-		case PLOT_FORCE_EX_MA:	return data->F_ma_(adim, data->ex, j_h, int(id), idof);
+		case PLOT_FORCE_EX_MA:	return data->F_ma_(ndim, data->ex, j_h, int(id), idof);
 		case PLOT_FORCE_EX_PH:	return data->ex.ph[j_h](int(id), idof);
-		case PLOT_RAO_MA:		return data->F_ma_(adim, data->rao, j_h, int(id), idof);
+		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, j_h, int(id), idof);
 		case PLOT_RAO_PH:		return data->rao.ph[j_h](int(id), idof);
 		case PLOT_Z_MA:			return magnitude(data->Z[int(id)]);
 		case PLOT_Z_PH:			return phase(data->Z[int(id)]);
@@ -113,7 +113,7 @@ private:
 	Hydro *data;
 	int idof, j_h;
 	DataToPlot dataToPlot;
-	bool show_w, adim;
+	bool show_w, ndim;
 };
 
 
@@ -275,8 +275,8 @@ public:
 		if (!ret || IsNull(menuPlot.showPhase)) 
 			menuPlot.showPhase = true;
 
-		if (!ret || IsNull(menuPlot.showAdim)) 
-			menuPlot.showAdim = false;
+		if (!ret || IsNull(menuPlot.showNdim)) 
+			menuPlot.showNdim = false;
 
 		if (!ret || IsNull(menuConvert.opt)) 
 			menuConvert.opt = 0;
@@ -320,7 +320,6 @@ public:
 	MainStateSpace mainStateSpace;
 	
 	BEMData bem;
-	//MeshData mesh;
 	
 private:
 	MainPlot &GetSelPlot();
