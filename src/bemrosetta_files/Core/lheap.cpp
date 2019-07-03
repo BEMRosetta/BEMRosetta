@@ -48,7 +48,10 @@ void *Heap::TryLAlloc(int i0, word wcount)
 		LBlkHeader *h = l->next;
 		if(h != l) {
 			ASSERT(h->GetSize() >= wcount);
-			RTIMING("MakeAlloc");
+			if(h->GetSize() == LPAGE) {
+				free_lpages--;
+				ASSERT(free_lpages >= 0);
+			}
 			lheap.MakeAlloc(h, wcount);
 			h->heap = this;
 			return (BlkPrefix *)h + 1;
@@ -97,6 +100,8 @@ void *Heap::LAlloc(size_t& size)
 	stat[wcount]++;
 #endif
 
+	LTIMING("LAlloc");
+
 	size = ((int)wcount * LUNIT) - sizeof(BlkPrefix);
 	int i0 = alloc_lclass[wcount];
 
@@ -109,7 +114,7 @@ void *Heap::LAlloc(size_t& size)
 
 	Mutex::Lock __(mutex);
 	aux.LargeFreeRemoteRaw();
-#if 1
+#if 1 // only adopt abandoned blocks that we need
 	ptr = aux.TryLAlloc(i0, wcount);
 	if(ptr) { // found in aux, we need to move large page from aux to this heap
 		LLOG("Found in aux");
@@ -154,9 +159,13 @@ void Heap::LFree(void *ptr)
 		LTIMING("Large Free");
 		LBlkHeader *fh = lheap.Free((LBlkHeader *)h);
 		if(fh->GetSize() == LPAGE) {
-			LTIMING("FreeLargePage");
-			fh->UnlinkFree();
-			FreeLargePage((DLink *)((byte *)fh - LOFFSET));
+			if(free_lpages >= max_free_lpages) {
+				LTIMING("FreeLargePage");
+				fh->UnlinkFree();
+				FreeLargePage((DLink *)((byte *)fh - LOFFSET));
+			}
+			else
+				free_lpages++;
 		}
 		return;
 	}
@@ -196,7 +205,7 @@ bool   Heap::TryRealloc(void *ptr, size_t& newsize)
 		if(newsize > LUNIT * LPAGE - sizeof(BlkPrefix))
 			return false;
 		word wcount = word(((newsize ? newsize : 1) + sizeof(BlkPrefix) + LUNIT - 1) >> 8);
-		size_t dummy;
+		size_t dummy = 0;
 		if(wcount == h->GetSize() || lheap.TryRealloc(h, wcount, dummy)) {
 			newsize = ((int)wcount * LUNIT) - sizeof(BlkPrefix);
 			LHITCOUNT("Large realloc true");

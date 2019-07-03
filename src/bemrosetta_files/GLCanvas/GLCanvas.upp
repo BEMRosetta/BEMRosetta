@@ -6,6 +6,7 @@ uses
 file
 	GLCanvas.cpp,
 	GLCanvas.h,
+	surface.cpp,
 	surface.h,
 	trackball.cpp,
 	trackball.h,

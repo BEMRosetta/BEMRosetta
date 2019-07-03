@@ -275,6 +275,7 @@ struct Heap : BlkHeap<HugeHeapDetail, 4096> {
 	// allocator options:
 	static word HPAGE; // size of master page, in 4KB units
 	static int  max_free_hpages; // maximum free master pages kept in reserve (if more, they are returned to the system)
+	static int  max_free_lpages; // maximum free large pages kept in reserve (if more, they are returned to huge system)
 	static int  max_free_spages; // maximum free small pages kept in reserve (but HugeAlloc also converts them)
 	static word sys_block_limit; // > this (in 4KB) blocks are managed directly by system
 
@@ -361,6 +362,7 @@ struct Heap : BlkHeap<HugeHeapDetail, 4096> {
 
 	LargeHeap lheap;
 	DLink     large[1]; // all large 64KB chunks that belong to this heap
+	int       free_lpages; // empty large pages (in reserve)
 	
 	void     *out[REMOTE_OUT_SZ / 8 + 1];
 	void    **out_ptr;
@@ -457,9 +459,6 @@ struct Heap : BlkHeap<HugeHeapDetail, 4096> {
 	void Shutdown();
 	static void AuxFinalCheck();
 
-#ifdef flagHEAPLOG
-	void  *AllocSz0(size_t& sz);
-#endif
 	void  *AllocSz(size_t& sz);
 	void   Free(void *ptr);
 	size_t GetBlockSize(void *ptr);

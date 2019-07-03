@@ -76,7 +76,7 @@ public:
     double h;           	// water depth
    	double rho;        		// density
    	double len;				// Length scale
-   	int dimen;				// false if data is adimensional
+   	int dimen;				// false if data is dimensionless
     int Nb;          		// number of bodies
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
@@ -178,38 +178,38 @@ public:
 	String lastError;
 	
 	double g_dim();
-	double g_adim();
+	double g_ndim();
 	double rho_dim();
-	double rho_adim();
+	double rho_ndim();
 	double g_rho_dim();
-	double g_rho_adim();
+	double g_rho_ndim();
 	
-	double A_dim(int ifr, int idf, int jdf)  {return dimen  ? A[ifr](idf, jdf)*g_rho_dim()/g_rho_adim() : A[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double A_adim(int ifr, int idf, int jdf) {return !dimen ? A[ifr](idf, jdf) : A[ifr](idf, jdf)/(rho_adim()*pow(len, GetK_AB(idf, jdf)));}
-	double A_(bool adim, int ifr, int idf, int jdf)	 {return adim ? A_adim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
-	double Aw0_dim(int idf, int jdf)   		 {return dimen  ? Aw0(idf, jdf)*g_rho_dim()/g_rho_adim()    : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Aw0_adim(int idf, int jdf)  		 {return !dimen ? Aw0(idf, jdf)    : Aw0(idf, jdf)  /(rho_adim()*pow(len, GetK_AB(idf, jdf)));}
-	double Aw0_(bool adim, int idf, int jdf) 	{return adim ? Aw0_adim(idf, jdf) : Aw0_dim(idf, jdf);}
-	double Awinf_dim(int idf, int jdf) 		 {return dimen  ? Awinf(idf, jdf)*g_rho_dim()/g_rho_adim()  : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Awinf_adim(int idf, int jdf)		 {return !dimen ? Awinf(idf, jdf)  : Awinf(idf, jdf)/(rho_adim()*pow(len, GetK_AB(idf, jdf)));}
-	double Awinf_(bool adim, int idf, int jdf) 	{return adim ? Awinf_adim(idf, jdf) : Awinf_dim(idf, jdf);}
+	double A_dim(int ifr, int idf, int jdf)  {return dimen  ? A[ifr](idf, jdf)*g_rho_dim()/g_rho_ndim() : A[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_ndim(int ifr, int idf, int jdf) {return !dimen ? A[ifr](idf, jdf) : A[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_(bool ndim, int ifr, int idf, int jdf)	 {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
+	double Aw0_dim(int idf, int jdf)   		 {return dimen  ? Aw0(idf, jdf)*g_rho_dim()/g_rho_ndim()    : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Aw0_ndim(int idf, int jdf)  		 {return !dimen ? Aw0(idf, jdf)    : Aw0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Aw0_(bool ndim, int idf, int jdf) 	{return ndim ? Aw0_ndim(idf, jdf) : Aw0_dim(idf, jdf);}
+	double Awinf_dim(int idf, int jdf) 		 {return dimen  ? Awinf(idf, jdf)*g_rho_dim()/g_rho_ndim()  : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Awinf_ndim(int idf, int jdf)		 {return !dimen ? Awinf(idf, jdf)  : Awinf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Awinf_(bool ndim, int idf, int jdf) 	{return ndim ? Awinf_ndim(idf, jdf) : Awinf_dim(idf, jdf);}
 	
-	double B_dim(int ifr, int idf, int jdf)  {return dimen  ? B[ifr](idf, jdf)*g_rho_dim()/g_rho_adim() : B[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	double B_adim(int ifr, int idf, int jdf) {return !dimen ? B[ifr](idf, jdf)*g_rho_adim()/g_rho_dim() : B[ifr](idf, jdf)/(rho_adim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	double B_(bool adim, int ifr, int idf, int jdf)	 {return adim ? B_adim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
-	double C_dim(int ib, int idf, int jdf)   {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_adim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
-	double C_adim(int ib, int idf, int jdf)  {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_adim()*pow(len, GetK_C(idf, jdf)));}
-	double C_(bool adim, int ib, int idf, int jdf)	 {return adim ? C_adim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
+	double B_dim(int ifr, int idf, int jdf)  {return dimen  ? B[ifr](idf, jdf)*g_rho_dim()/g_rho_ndim() : B[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_ndim(int ifr, int idf, int jdf) {return !dimen ? B[ifr](idf, jdf)*g_rho_ndim()/g_rho_dim() : B[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_(bool ndim, int ifr, int idf, int jdf)	 {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
+	double C_dim(int ib, int idf, int jdf)   {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	double C_ndim(int ib, int idf, int jdf)  {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
+	double C_(bool ndim, int ib, int idf, int jdf)	 {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
-	double F_ma_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.ma[h](ifr, idf)*g_rho_dim()/g_rho_adim()  : f.ma[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_re_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.re[h](ifr, idf)*g_rho_dim()/g_rho_adim()  : f.re[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_im_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.im[h](ifr, idf)*g_rho_dim()/g_rho_adim()  : f.im[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_ma_adim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.ma[h](ifr, idf) : f.ma[h](ifr, idf)/(g_rho_adim()*pow(len, GetK_F(idf)));}
-	double F_re_adim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.re[h](ifr, idf) : f.re[h](ifr, idf)/(g_rho_adim()*pow(len, GetK_F(idf)));}
-	double F_im_adim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.im[h](ifr, idf) : f.im[h](ifr, idf)/(g_rho_adim()*pow(len, GetK_F(idf)));}
-	double F_ma_(bool adim, Forces &f, int h, int ifr, int idf)	 {return adim ? F_ma_adim(f, h, ifr, idf) : F_ma_dim(f, h, ifr, idf);}
-	double F_re_(bool adim, Forces &f, int h, int ifr, int idf)	 {return adim ? F_re_adim(f, h, ifr, idf) : F_re_dim(f, h, ifr, idf);}
-	double F_im_(bool adim, Forces &f, int h, int ifr, int idf)	 {return adim ? F_im_adim(f, h, ifr, idf) : F_im_dim(f, h, ifr, idf);}
+	double F_ma_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.ma[h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_re_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.re[h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_im_dim(Forces &f, int h, int ifr, int idf)  {return dimen ? f.im[h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_ma_ndim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.ma[h](ifr, idf) : f.ma[h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double F_re_ndim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.re[h](ifr, idf) : f.re[h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double F_im_ndim(Forces &f, int h, int ifr, int idf) {return !dimen ? f.im[h](ifr, idf) : f.im[h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double F_ma_(bool ndim, Forces &f, int h, int ifr, int idf)	 {return ndim ? F_ma_ndim(f, h, ifr, idf) : F_ma_dim(f, h, ifr, idf);}
+	double F_re_(bool ndim, Forces &f, int h, int ifr, int idf)	 {return ndim ? F_re_ndim(f, h, ifr, idf) : F_re_dim(f, h, ifr, idf);}
+	double F_im_(bool ndim, Forces &f, int h, int ifr, int idf)	 {return ndim ? F_im_ndim(f, h, ifr, idf) : F_im_dim(f, h, ifr, idf);}
 	
 private:
 	static const char *strDOF[6];
