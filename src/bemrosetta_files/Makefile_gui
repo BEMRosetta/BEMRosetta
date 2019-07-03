@@ -17788,6 +17788,87 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	GLCanvas/trackball.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/GLCanvas.cpp -o $(OutDir_GLCanvas)GLCanvas.o
 
+$(OutDir_GLCanvas)surface.o: GLCanvas/surface.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	GLCanvas/surface.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/surface.cpp -o $(OutDir_GLCanvas)surface.o
+
 $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
 	Core/Algo.h \
 	Core/App.h \
@@ -17947,10 +18028,12 @@ $(OutDir_GLCanvas)trkball.o: GLCanvas/trkball.c \
 
 $(OutDir_GLCanvas)GLCanvas.a: \
 	$(OutDir_GLCanvas)GLCanvas.o \
+	$(OutDir_GLCanvas)surface.o \
 	$(OutDir_GLCanvas)trackball.o \
 	$(OutDir_GLCanvas)trkball.o
 	$(AR) $(OutDir_GLCanvas)GLCanvas.a \
 		$(OutDir_GLCanvas)GLCanvas.o \
+		$(OutDir_GLCanvas)surface.o \
 		$(OutDir_GLCanvas)trackball.o \
 		$(OutDir_GLCanvas)trkball.o
 

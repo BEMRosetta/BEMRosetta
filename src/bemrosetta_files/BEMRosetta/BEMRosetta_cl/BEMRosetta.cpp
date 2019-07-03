@@ -57,15 +57,15 @@ void Hydro::Normalize() {
 		for (int ib = 0; ib < Nb; ++ib) {
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int jdf = 0; jdf < 6; ++jdf) 
-					C[ib](idf, jdf) = C_adim(ib, idf, jdf);
+					C[ib](idf, jdf) = C_ndim(ib, idf, jdf);
 		}
 	}
 	if (IsLoadedA() && IsLoadedB()) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			for (int idf = 0; idf < 6*Nb; ++idf) {
 				for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
-					A[ifr](idf, jdf) = A_adim(ifr, idf, jdf);
-					B[ifr](idf, jdf) = B_adim(ifr, idf, jdf);
+					A[ifr](idf, jdf) = A_ndim(ifr, idf, jdf);
+					B[ifr](idf, jdf) = B_ndim(ifr, idf, jdf);
 				}
 			}
 		}
@@ -73,12 +73,12 @@ void Hydro::Normalize() {
 	if (IsLoadedAwinf()) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Awinf(i, j) = Awinf_adim(i, j);
+				Awinf(i, j) = Awinf_ndim(i, j);
 	}
 	if (IsLoadedAw0()) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) = Aw0_adim(i, j);
+				Aw0(i, j) = Aw0_ndim(i, j);
 	}
 	if (IsLoadedFex())
     	Normalize_Forces(ex);
@@ -90,9 +90,9 @@ void Hydro::Normalize() {
 		for (int h = 0; h < Nh; ++h) {
 			for (int ifr = 0; ifr < Nf; ++ifr) {
 				for (int i = 0; i < 6*Nb; ++i) {	 
-					rao.ma[h](ifr, i) = F_ma_adim(rao, h, ifr, i);
-					rao.re[h](ifr, i) = F_re_adim(rao, h, ifr, i);
-					rao.im[h](ifr, i) = F_im_adim(rao, h, ifr, i);
+					rao.ma[h](ifr, i) = F_ma_ndim(rao, h, ifr, i);
+					rao.re[h](ifr, i) = F_re_ndim(rao, h, ifr, i);
+					rao.im[h](ifr, i) = F_im_ndim(rao, h, ifr, i);
 				}
 			}
 		}
@@ -125,7 +125,7 @@ void Hydro::Dimensionalize() {
 	if (IsLoadedAw0()) {	
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) = Aw0_adim(i, j);
+				Aw0(i, j) = Aw0_ndim(i, j);
 	}
 	if (IsLoadedFex())
     	Dimensionalize_Forces(ex);
@@ -177,7 +177,7 @@ void Hydro::RemoveThresDOF_A(double thres) {
 		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
 			double mx = -DBL_MAX, mn = DBL_MAX;
 			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = A_adim(ifr, idf, jdf);
+				double val = A_ndim(ifr, idf, jdf);
 				mx = max(mx, val);
 				mn = min(mn, val);
 			}
@@ -185,7 +185,7 @@ void Hydro::RemoveThresDOF_A(double thres) {
 			if (!IsNull(mx) && !IsNull(mn)) {
 				double res = 0;
 				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(A_adim(ifr, idf, jdf) - A_adim(ifr-1, idf, jdf));
+					res += abs(A_ndim(ifr, idf, jdf) - A_ndim(ifr-1, idf, jdf));
 				res /= delta*(Nf - 1);
 				if (res > thres) {
 					for (int ifr = 0; ifr < Nf; ifr++) 
@@ -204,7 +204,7 @@ void Hydro::RemoveThresDOF_B(double thres) {
 		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
 			double mx = -DBL_MAX, mn = DBL_MAX;
 			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = B_adim(ifr, idf, jdf);
+				double val = B_ndim(ifr, idf, jdf);
 				mx = max(mx, val);
 				mn = min(mn, val);
 			}
@@ -212,7 +212,7 @@ void Hydro::RemoveThresDOF_B(double thres) {
 			if (!IsNull(mx) && !IsNull(mn)) {
 				double res = 0;
 				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(B_adim(ifr, idf, jdf) - B_adim(ifr-1, idf, jdf));
+					res += abs(B_ndim(ifr, idf, jdf) - B_ndim(ifr-1, idf, jdf));
 				res /= delta*(Nf - 1);
 				if (res > thres) {
 					for (int ifr = 0; ifr < Nf; ifr++) 
@@ -230,7 +230,7 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 		for (int i = 0; i < 6*Nb; ++i) {
 			double mx = -DBL_MAX, mn = DBL_MAX;
 			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = F_ma_adim(f, h, ifr, i);
+				double val = F_ma_ndim(f, h, ifr, i);
 				mx = max(mx, val);
 				mn = min(mn, val);
 			}
@@ -238,7 +238,7 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 			if (!IsNull(mx) && !IsNull(mn)) {
 				double res = 0;
 				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(F_ma_adim(f, h, ifr, i) - F_ma_adim(f, h, ifr-1, i));
+					res += abs(F_ma_ndim(f, h, ifr, i) - F_ma_ndim(f, h, ifr-1, i));
 				res /= delta*(Nf - 1);
 				if (res > thres) {
 					for (int ifr = 0; ifr < Nf; ifr++) 
@@ -571,11 +571,11 @@ int Hydro::GetIrregularFreq() {
 }
 
 double Hydro::g_dim() 		{return bem->g;}					// Dimensionalize only with system data
-double Hydro::g_adim()		{return !IsNull(g) ? g : bem->g;}	// Adimensionalize with model data, if possible
+double Hydro::g_ndim()		{return !IsNull(g) ? g : bem->g;}	// Nondimensionalize with model data, if possible
 double Hydro::rho_dim() 	{return bem->rho;}		
-double Hydro::rho_adim()	{return !IsNull(rho) ? rho : bem->rho;}
+double Hydro::rho_ndim()	{return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	{return bem->rho*bem->g;}
-double Hydro::g_rho_adim()	{return g_adim()*rho_adim();}
+double Hydro::g_rho_ndim()	{return g_ndim()*rho_ndim();}
 
 void BEMData::Load(String file, Function <void(String, int pos)> Status) {
 	Status(t_("Loading files"), 10);

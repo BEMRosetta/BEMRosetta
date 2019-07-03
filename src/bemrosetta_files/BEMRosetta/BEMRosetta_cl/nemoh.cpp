@@ -389,7 +389,7 @@ bool Nemoh::LoadDatMesh(String fileName) {
 			Point3D &node = mh().nodes.Add();
 			node.x = f.GetDouble(1);
 			node.y = f.GetDouble(2);
-			node.z = f.GetDouble(3);
+			node.z = f.GetDouble(3); 
 		}
 		while(!in.IsEof()) {
 			line = in.GetLine();	

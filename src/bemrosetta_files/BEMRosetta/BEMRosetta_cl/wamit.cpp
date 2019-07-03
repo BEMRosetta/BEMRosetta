@@ -1037,20 +1037,23 @@ bool Wamit::LoadGdfMesh(String fileName) {
 }
 
 void Wamit::SaveGdfMesh(String fileName) {
+	if (mh().panels.IsEmpty())
+		throw Exc(t_("Model is empty. No panels found"));	
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
 	
-	out << Format("BEMRosetta GDF mesh file export (%s)\n", Format("%", GetSysTime()));
-	out << Format("1 %f 	ULEN GRAV\n", hd().g_dim());
-	out << Format("%d  %d 	ISX  ISY\n", mh().y0z ? 1 : 0, mh().x0z ? 1 : 0);
-	out << Format("%d\n", mh().panels.GetCount());
+	out << "BEMRosetta GDF mesh file export\n";
+	out << Format("  %12d   %12f 	ULEN GRAV\n", 1, hd().g_dim());
+	out << Format("  %12d   %12d 	ISX  ISY\n", mh().y0z ? 1 : 0, mh().x0z ? 1 : 0);
+	out << Format("  %12d\n", mh().panels.GetCount());
 	for (int ip = 0; ip < mh().panels.GetCount(); ++ip) {
 		for (int i = 0; i < 4; ++i) {
 			int id = mh().panels[ip].id[i];
-			Point3D &p = mh().nodes[id];
-			out << "  " << p.x << " " << p.y << " " << p.z << "\n";
+			Point3D &p = mh().nodes[id]; 
+			out << Format("  % 014.7E   %0 14.7E   % 014.7E\n", p.x, p.y, p.z);
 		}
 	}
 	 
 }
+	

@@ -14,19 +14,6 @@ namespace Upp {
 // used as manager of huge memory blocks. 4KB and 64KB blocks are allocated from here too
 // also able to deal with bigger blocks, those are directly allocated / freed from system
 
-word Heap::HPAGE = 16 * 256; // 16MB default value
-word Heap::sys_block_limit = 16 * 256; // 16MB default value
-int  Heap::max_free_hpages = 1; // default value
-int  Heap::max_free_spages = 256; // default value (1MB)
-
-void MemorySetOptions(const MemoryOptions& opt)
-{
-	Heap::HPAGE = (word)clamp(opt.master_block / 4, 256, 65535);
-	Heap::sys_block_limit = (word)clamp((int)opt.sys_block_limit / 4, 16, (int)Heap::HPAGE);
-	Heap::max_free_hpages = opt.master_reserve;
-	Heap::max_free_spages = opt.small_reserve;
-}
-
 BlkHeader_<4096> HugeHeapDetail::freelist[20][1]; // only single global Huge heap...
 Heap::HugePage *Heap::huge_pages;
 
@@ -165,7 +152,7 @@ int Heap::HugeFree(void *ptr)
 	huge_4KB_count -= h->GetSize();
 	h = BlkHeap::Free(h);
 	int sz = h->GetSize();
-	if(h->IsFirst() && h->IsLast())
+	if(h->IsFirst() && h->IsLast()) {
 		if(free_hpages >= max_free_hpages) { // we have enough pages in the reserve, return to the system
 			LTIMING("Free Huge Page");
 			h->UnlinkFree();
@@ -184,6 +171,7 @@ int Heap::HugeFree(void *ptr)
 		}
 		else
 			free_hpages++;
+	}
 	return sz;
 }
 
