@@ -2,8 +2,8 @@
 #define _GLCanvas_GLCanvas_h_
 
 #include <GLCtrl/GLCtrl.h>
+#include <Surface/Surface.h>
 #include "trackball.h"
-#include "surface.h"
 
 class GLCanvas : public GLCtrl {
 public:

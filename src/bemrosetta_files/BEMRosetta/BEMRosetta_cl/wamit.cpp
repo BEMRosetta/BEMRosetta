@@ -946,6 +946,7 @@ bool Wamit::LoadDatMesh(String fileName) {
 					panel.id[i] = f.GetInt(i) - 1;
 			}
 		}
+		mh().Heal();
 		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -1026,6 +1027,7 @@ bool Wamit::LoadGdfMesh(String fileName) {
 			throw Exc(t_("Wrong number of patches in .gdf file"));
 		//if (mh().Check())
 		//	throw Exc(t_("Wrong nodes found in Wamit .gdf mesh file"));
+		mh().Heal();
 		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));

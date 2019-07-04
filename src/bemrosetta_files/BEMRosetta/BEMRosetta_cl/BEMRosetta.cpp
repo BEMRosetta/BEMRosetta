@@ -664,22 +664,20 @@ void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
 			surfs.SetCount(surfs.GetCount()-1);
 			Wamit &data = surfs.Create<Wamit>(*this);
 			if (!data.LoadDatMesh(file)) {
-				throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError()));	
+				String error = data.mh().GetLastError();
 				surfs.SetCount(surfs.GetCount()-1);
-				return;
+				throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));	
 			}		
 		} 
 	} else if (ext == ".gdf") {
 		Wamit &data = surfs.Create<Wamit>(*this);
 		if (!data.LoadGdfMesh(file)) {
-			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, data.mh().GetLastError()));	
+			String error = data.mh().GetLastError();
 			surfs.SetCount(surfs.GetCount()-1);
-			return;
+			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));	
 		}
-	} else {
+	} else 
 		throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, t_("Unknown file format")));	
-		return;
-	}
 }
 
 void MeshData::SaveAs(String file, MESH_FMT type) {

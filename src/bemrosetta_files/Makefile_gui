@@ -66,6 +66,8 @@ OutDir_plugin_matio = $(UPPOUT)plugin/matio/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_plugin_matio = $(Macro)
 OutDir_plugin_zstd = $(UPPOUT)plugin/zstd/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_plugin_zstd = $(Macro)
+OutDir_Surface = $(UPPOUT)Surface/GCC-Gcc-Gui-Linux-Posix-Shared/
+Macro_Surface = $(Macro)
 OutDir_GLCtrl = $(UPPOUT)GLCtrl/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_GLCtrl = $(Macro)
 OutDir_plugin_glew = $(UPPOUT)plugin/glew/GCC-Gcc-Gui-Linux-Posix-Shared/
@@ -113,6 +115,7 @@ prepare: \
 	$(OutDir_SysInfo) \
 	$(OutDir_plugin_matio) \
 	$(OutDir_plugin_zstd) \
+	$(OutDir_Surface) \
 	$(OutDir_GLCtrl) \
 	$(OutDir_plugin_glew)
 
@@ -153,6 +156,7 @@ $(OutFile): build_info  \
 	$(OutDir_SysInfo)SysInfo.a \
 	$(OutDir_plugin_matio)matio.a \
 	$(OutDir_plugin_zstd)zstd.a \
+	$(OutDir_Surface)Surface.a \
 	$(OutDir_GLCtrl)GLCtrl.a \
 	$(OutDir_plugin_glew)glew.a
 	$(LINKER) -o "$(OutFile)" -Wl,-s $(LIBPATH) -Wl,-O,2 $(LDFLAGS) -Wl,--start-group  \
@@ -192,6 +196,7 @@ $(OutFile): build_info  \
 			$(OutDir_SysInfo)SysInfo.a \
 			$(OutDir_plugin_matio)matio.a \
 			$(OutDir_plugin_zstd)zstd.a \
+			$(OutDir_Surface)Surface.a \
 			$(OutDir_GLCtrl)GLCtrl.a \
 			$(OutDir_plugin_glew)glew.a \
 			-lgtk-x11-2.0 \
@@ -846,8 +851,8 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
 	GLCanvas/GLCanvas.h \
-	GLCanvas/surface.h \
 	GLCanvas/trackball.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta)  BEMRosetta/BEMRosetta/main.cpp -o $(OutDir_BEMRosetta_BEMRosetta)main.o
 
@@ -1405,7 +1410,7 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta)  BEMRosetta/BEMRosetta/arrange.cpp -o $(OutDir_BEMRosetta_BEMRosetta)arrange.o
 
@@ -13634,7 +13639,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)main.o: BEMRosetta/BEMRosetta_cl/main.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/main.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)main.o
 
@@ -14128,7 +14133,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/BEMRosetta.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o
 
@@ -14622,7 +14627,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o: BEMRosetta/BEMRosetta_cl/nemoh.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/nemoh.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o
 
@@ -15116,10 +15121,10 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o: BEMRosetta/BEMRosetta_cl/foamm.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
 	plugin/matio/lib/matio.h \
 	plugin/matio/lib/matio_pubconf.h \
 	plugin/matio/matio.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/foamm.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o
 
@@ -15613,7 +15618,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o: BEMRosetta/BEMRosetta_cl/wamit.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/wamit.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o
 
@@ -16116,7 +16121,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o: BEMRosetta/BEMRosetta_cl/fast.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/fast.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o
 
@@ -16610,7 +16615,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o: BEMRosetta/BEMRosetta_cl/aqwa.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/aqwa.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o
 
@@ -17104,7 +17109,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o: BEMRosetta/BEMRosetta_cl/ainf.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/ainf.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o
 
@@ -17598,7 +17603,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o: BEMRosetta/BEMRosetta_cl/dataf.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/dataf.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o
 
@@ -17784,90 +17789,9 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
 	GLCanvas/GLCanvas.h \
-	GLCanvas/surface.h \
-	GLCanvas/trackball.h
+	GLCanvas/trackball.h \
+	Surface/Surface.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/GLCanvas.cpp -o $(OutDir_GLCanvas)GLCanvas.o
-
-$(OutDir_GLCanvas)surface.o: GLCanvas/surface.cpp \
-	Core/Algo.h \
-	Core/App.h \
-	Core/AString.hpp \
-	Core/Atomic.h \
-	Core/BiCont.h \
-	Core/Callback.h \
-	Core/CallbackN.i \
-	Core/CallbackNP.i \
-	Core/CallbackR.i \
-	Core/CharSet.h \
-	Core/CharSet.i \
-	Core/CoAlgo.h \
-	Core/Color.h \
-	Core/Complex.h \
-	Core/config.h \
-	Core/Convert.h \
-	Core/Core.h \
-	Core/CoSort.h \
-	Core/CoWork.h \
-	Core/Defs.h \
-	Core/Diag.h \
-	Core/FilterStream.h \
-	Core/FixedMap.h \
-	Core/Format.h \
-	Core/Function.h \
-	Core/Gtypes.h \
-	Core/Hash.h \
-	Core/Heap.h \
-	Core/Huge.h \
-	Core/i18n.h \
-	Core/Index.h \
-	Core/Index.hpp \
-	Core/Inet.h \
-	Core/InMap.hpp \
-	Core/InVector.h \
-	Core/InVector.hpp \
-	Core/JSON.h \
-	Core/Lang.h \
-	Core/Lang_s.h \
-	Core/LocalProcess.h \
-	Core/Map.h \
-	Core/Map.hpp \
-	Core/Mt.h \
-	Core/Obsolete.h \
-	Core/Ops.h \
-	Core/Other.h \
-	Core/Parser.h \
-	Core/Path.h \
-	Core/Profile.h \
-	Core/Ptr.h \
-	Core/Range.h \
-	Core/Sort.h \
-	Core/Sorted.h \
-	Core/SplitMerge.h \
-	Core/Stream.h \
-	Core/String.h \
-	Core/t_.h \
-	Core/TimeDate.h \
-	Core/Topic.h \
-	Core/Topt.h \
-	Core/Tuple.h \
-	Core/Utf.hpp \
-	Core/Util.h \
-	Core/Uuid.h \
-	Core/Value.h \
-	Core/Value.hpp \
-	Core/ValueUtil.h \
-	Core/ValueUtil.hpp \
-	Core/Vcont.h \
-	Core/Vcont.hpp \
-	Core/Win32Util.h \
-	Core/XML.h \
-	Core/Xmlize.h \
-	Core/Xmlize.hpp \
-	Core/z.h \
-	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h \
-	GLCanvas/surface.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/surface.cpp -o $(OutDir_GLCanvas)surface.o
 
 $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
 	Core/Algo.h \
@@ -18028,12 +17952,10 @@ $(OutDir_GLCanvas)trkball.o: GLCanvas/trkball.c \
 
 $(OutDir_GLCanvas)GLCanvas.a: \
 	$(OutDir_GLCanvas)GLCanvas.o \
-	$(OutDir_GLCanvas)surface.o \
 	$(OutDir_GLCanvas)trackball.o \
 	$(OutDir_GLCanvas)trkball.o
 	$(AR) $(OutDir_GLCanvas)GLCanvas.a \
 		$(OutDir_GLCanvas)GLCanvas.o \
-		$(OutDir_GLCanvas)surface.o \
 		$(OutDir_GLCanvas)trackball.o \
 		$(OutDir_GLCanvas)trkball.o
 
@@ -47423,6 +47345,95 @@ $(OutDir_plugin_zstd)zstd.a: \
 		$(OutDir_plugin_zstd)hist.o \
 		$(OutDir_plugin_zstd)pool.o \
 		$(OutDir_plugin_zstd)zstd_double_fast.o
+
+$(OutDir_Surface):
+	mkdir -p $(OutDir_Surface)
+
+$(OutDir_Surface)Surface.o: Surface/Surface.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	Surface/Surface.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Surface)  Surface/Surface.cpp -o $(OutDir_Surface)Surface.o
+
+$(OutDir_Surface)Surface.a: \
+	$(OutDir_Surface)Surface.o
+	$(AR) $(OutDir_Surface)Surface.a \
+		$(OutDir_Surface)Surface.o
 
 $(OutDir_GLCtrl):
 	mkdir -p $(OutDir_GLCtrl)
