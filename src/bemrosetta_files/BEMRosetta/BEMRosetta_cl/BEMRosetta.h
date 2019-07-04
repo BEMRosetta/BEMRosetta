@@ -3,7 +3,7 @@
 
 #include <Core/Core.h>
 #include <SysInfo/SysInfo.h>
-#include <GLCanvas/surface.h>
+#include <Surface/Surface.h>
 
 using namespace Upp;
 

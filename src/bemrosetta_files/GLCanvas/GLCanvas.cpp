@@ -1,6 +1,8 @@
-#include <GLCanvas/GLCanvas.h>
+#include <Core/Core.h>
 
 using namespace Upp;
+
+#include <GLCanvas/GLCanvas.h>
 
 
 GLCanvas::GLCanvas() {
@@ -145,11 +147,6 @@ void GLCanvas::PaintSurface(Surface &surf, const Color &linCol) {
 		PaintSurface0(surf, linCol, true, false);
 }
 
-template<class T>
-inline T Avg(T a, T b) 			{return T(a+b)/2;}
-template<class T>
-inline T Avg(T a, T b, T c)		{return T(a+b+c)/3;}
-
 void GLCanvas::PaintSurface0(Surface &surf, const Color &linCol, bool simX, bool simY) {
 	double xsig = simX ? -1 : 1;
 	double ysig = simY ? -1 : 1;
@@ -198,14 +195,4 @@ void GLCanvas::PaintSurface0(Surface &surf, const Color &linCol, bool simX, bool
 	}
 }
 
-Point3D GetCentroid(Point3D &a, Point3D &b) {
-	return Point3D(Avg(a.x, b.x), Avg(a.y, b.y), Avg(a.z, b.z));	
-}
 
-Point3D GetCentroid(Point3D &a, Point3D &b, Point3D &c) {
-	return Point3D(Avg(a.x, b.x,c.x), Avg(a.y, b.y, c.y), Avg(a.z, b.z, c.z));	
-}
-
-Vector3D GetNormal(Point3D &a, Point3D &b, Point3D &c) {
-	return Vector3D((a - b) % (b - c)).Normalize();
-}
