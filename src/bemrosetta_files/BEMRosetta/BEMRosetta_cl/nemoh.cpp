@@ -405,6 +405,7 @@ bool Nemoh::LoadDatMesh(String fileName) {
 		}	
 		//if (mh().Check())
 		//	throw Exc(t_("Wrong nodes found in Nemoh .dat mesh file"));
+		mh().Heal();
 		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));

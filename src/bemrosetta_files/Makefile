@@ -22,6 +22,8 @@ OutDir_plugin_matio = $(UPPOUT)plugin/matio/GCC-Gcc-Linux-Posix-Shared/
 Macro_plugin_matio = $(Macro)
 OutDir_plugin_zstd = $(UPPOUT)plugin/zstd/GCC-Gcc-Linux-Posix-Shared/
 Macro_plugin_zstd = $(Macro)
+OutDir_Surface = $(UPPOUT)Surface/GCC-Gcc-Linux-Posix-Shared/
+Macro_Surface = $(Macro)
 OutDir_Functions4U = $(UPPOUT)Functions4U/GCC-Gcc-Linux-Posix-Shared/
 Macro_Functions4U = $(Macro)
 OutDir_plugin_bz2 = $(UPPOUT)plugin/bz2/GCC-Gcc-Linux-Posix-Shared/
@@ -63,6 +65,7 @@ prepare: \
 	$(OutDir_SysInfo) \
 	$(OutDir_plugin_matio) \
 	$(OutDir_plugin_zstd) \
+	$(OutDir_Surface) \
 	$(OutDir_Functions4U) \
 	$(OutDir_plugin_bz2) \
 	$(OutDir_Draw) \
@@ -90,6 +93,7 @@ $(OutFile): build_info  \
 	$(OutDir_SysInfo)SysInfo.a \
 	$(OutDir_plugin_matio)matio.a \
 	$(OutDir_plugin_zstd)zstd.a \
+	$(OutDir_Surface)Surface.a \
 	$(OutDir_Functions4U)Functions4U.a \
 	$(OutDir_plugin_bz2)bz2.a \
 	$(OutDir_Draw)Draw.a \
@@ -122,6 +126,7 @@ $(OutFile): build_info  \
 			$(OutDir_SysInfo)SysInfo.a \
 			$(OutDir_plugin_matio)matio.a \
 			$(OutDir_plugin_zstd)zstd.a \
+			$(OutDir_Surface)Surface.a \
 			$(OutDir_Functions4U)Functions4U.a \
 			$(OutDir_plugin_bz2)bz2.a \
 			$(OutDir_Draw)Draw.a \
@@ -644,7 +649,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)main.o: BEMRosetta/BEMRosetta_cl/main.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/main.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)main.o
 
@@ -1138,7 +1143,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/BEMRosetta.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o
 
@@ -1632,7 +1637,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o: BEMRosetta/BEMRosetta_cl/nemoh.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/nemoh.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o
 
@@ -2126,10 +2131,10 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o: BEMRosetta/BEMRosetta_cl/foamm.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
 	plugin/matio/lib/matio.h \
 	plugin/matio/lib/matio_pubconf.h \
 	plugin/matio/matio.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/foamm.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o
 
@@ -2623,7 +2628,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o: BEMRosetta/BEMRosetta_cl/wamit.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/wamit.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o
 
@@ -3126,7 +3131,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o: BEMRosetta/BEMRosetta_cl/fast.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/fast.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o
 
@@ -3620,7 +3625,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o: BEMRosetta/BEMRosetta_cl/aqwa.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/aqwa.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o
 
@@ -4114,7 +4119,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o: BEMRosetta/BEMRosetta_cl/ainf.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/ainf.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o
 
@@ -4608,7 +4613,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o: BEMRosetta/BEMRosetta_cl/dataf.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
-	GLCanvas/surface.h \
+	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/dataf.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o
 
@@ -11436,6 +11441,95 @@ $(OutDir_plugin_zstd)zstd.a: \
 		$(OutDir_plugin_zstd)hist.o \
 		$(OutDir_plugin_zstd)pool.o \
 		$(OutDir_plugin_zstd)zstd_double_fast.o
+
+$(OutDir_Surface):
+	mkdir -p $(OutDir_Surface)
+
+$(OutDir_Surface)Surface.o: Surface/Surface.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	Surface/Surface.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Surface)  Surface/Surface.cpp -o $(OutDir_Surface)Surface.o
+
+$(OutDir_Surface)Surface.a: \
+	$(OutDir_Surface)Surface.o
+	$(AR) $(OutDir_Surface)Surface.a \
+		$(OutDir_Surface)Surface.o
 
 $(OutDir_Functions4U):
 	mkdir -p $(OutDir_Functions4U)
