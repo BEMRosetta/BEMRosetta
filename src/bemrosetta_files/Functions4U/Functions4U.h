@@ -672,10 +672,29 @@ void Shuffle(C &data, int randomSeed = Null) {
 	ShuffleDescending(data, generator);	
 }
 
+template <class T>
+bool Equal(const T& a, const T& b, const T& ratio) {
+	if (a == 0)
+		return b <= ratio;
+	if (b == 0)
+		return a <= ratio;
+	if(abs((a - b)/b) <= ratio) 
+		return true;
+	return false;
+}
+
 template <class Range, class V>
 void FindAdd(Range& r, const V& value, int from = 0) {
 	for(int i = from; i < r.GetCount(); i++)
 		if(r[i] == value) 
+			return;
+	r.Add(value);
+}
+
+template <class Range, class V>
+void FindAddRatio(Range& r, const V& value, const V& ratio, int from = 0) {
+	for(int i = from; i < r.GetCount(); i++)
+		if(Equal(r[i], value, ratio)) 
 			return;
 	r.Add(value);
 }
@@ -693,8 +712,7 @@ template <class Range, class V>
 int FindIndexRatio(const Range& r, const V& value, const V& ratio, int from = 0)
 {
 	for(int i = from; i < r.GetCount(); i++) {
-		V div = (value != 0) ? value : (r[i] != 0 ? r[i] : 1);
-		if(abs((r[i] - value)/div) <= ratio) 
+		if (Equal(r[i], value, ratio))
 			return i;
 	}
 	return -1;

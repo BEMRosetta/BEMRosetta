@@ -7,8 +7,10 @@ inline T avg(T a, T b) 			{return T(a+b)/2;}
 template<class T>
 inline T avg(T a, T b, T c)		{return T(a+b+c)/3;}
 
+const double EPS = 0.00001;
+ 
 template<class T>
-void Sort(T a, T b, T c, T d) {
+void Sort(T& a, T& b, T& c, T& d) {
 	if (a > b) 
 		Swap(a, b);
 	if (c > d) 
@@ -22,7 +24,7 @@ void Sort(T a, T b, T c, T d) {
 }
 
 template<class T>
-void Sort(T a, T b, T c) {
+void Sort(T& a, T& b, T& c) {
 	if (a > b) 
 		Swap(a, b);
 	if (a > c) 
@@ -55,8 +57,12 @@ public:
 	double x, y, z;
 
 	Point3D() {}
+	Point3D(const Nuller&) {x = Null;}
 	Point3D(const Point3D &p) : x(p.x), y(p.y), z(p.z) {}
 	Point3D(double x, double y, double z) : x(x), y(y), z(z) {}
+	
+	void Set(const Point3D &p) 				{this->x = p.x; this->y = p.y; this->z = p.z;}
+	void Set(double x, double y, double z) 	{this->x = x; this->y = y; this->z = z;}
 	
 	String ToString() const { return FormatDouble(x) + "," + FormatDouble(y) + "," + FormatDouble(z); }
 	
@@ -65,9 +71,11 @@ public:
 			return true;
 		return false;
 	}
-	Point3D operator%(const Point3D &p) {return Point3D(y*p.z - z*p.y, z*p.x - x*p.z, x*p.y - y*p.x);}
-	Point3D operator+(const Point3D &p) {return Point3D(x+p.x, y+p.y, z+p.z);}
-	Point3D operator-(const Point3D &p) {return Point3D(x-p.x, y-p.y, z-p.z);}
+	
+	friend Point3D operator%(const Point3D& a, const Point3D& b)  {return Point3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
+	friend Point3D operator+(const Point3D& a, const Point3D& b)  {return Point3D(a.x+b.x, a.y+b.y, a.z+b.z);}
+	friend Point3D operator-(const Point3D& a, const Point3D& b)  {return Point3D(a.x-b.x, a.y-b.y, a.z-b.z);}
+
 	double GetLength()	{return sqrt(x*x + y*y + z*z);}
 	Point3D &Normalize() {
 		double length = GetLength();
@@ -82,26 +90,55 @@ public:
 		return *this;
 	}
 	double Distance(const Point3D &p) 	{return sqrt(sqr(x-p.x) + sqr(y-p.y) + sqr(z-p.z));}
-	double Manhattan(const Point3D &p) 	{return (x-p.x) + (y-p.y) + (z-p.z);}
-	double Manhattan() 					{return x + y + z;}
+	double Manhattan(const Point3D &p) 	{return abs(x-p.x) + abs(y-p.y) + abs(z-p.z);}
+	double Manhattan() 					{return abs(x) + abs(y) + abs(z);}
+	
+	void SimX() {x = -x;}
+	void SimY() {y = -y;}
+	void SimZ() {z = -z;}
 };
 
 typedef Point3D Vector3D;
 
-class Line3D : public Moveable<Line3D> {
+class Segment3D : public Moveable<Segment3D> {
 public:
 	Point3D from, to;
 	
-	Line3D() {}
-	Line3D(const Point3D &from, const Point3D &to) : from(from), to(to) {}
-	Line3D(const Point3D &from, const Vector3D &normal, double length) : from(from) {
+	Segment3D() {}
+	Segment3D(const Nuller&) {SetNull();}
+	Segment3D(const Point3D &from, const Point3D &to) : from(from), to(to) {}
+	Segment3D(const Point3D &from, const Vector3D &normal, double length) : from(from) {
 		to = Point3D(from.x + length*normal.x, from.y + length*normal.y, from.z + length*normal.z);
 	}
+	void SetNull() {from = Null;}
+		
+	void Set(const Point3D &from, const Point3D &to) {
+		this->from.Set(from);
+		this->to.Set(to);
+	}
+	void Set(const Point3D &from, const Vector3D &normal, double length) {
+		this->from.Set(from);
+		to.Set(from.x + length*normal.x, from.y + length*normal.y, from.z + length*normal.z);
+	}
+	void SimX() {
+		from.SimX();
+		to.SimX();
+	}
+	void SimY() {
+		from.SimY();
+		to.SimY();
+	}
+	void SimZ() {
+		from.SimZ();
+		to.SimZ();
+	}	
 };
 
-Point3D GetCentroid(Point3D &A, Point3D &B);
-Point3D GetCentroid(Point3D &A, Point3D &B, Point3D &C);
-Vector3D GetNormal(Point3D &A, Point3D &B, Point3D &C);
+bool MinSegment(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4, Segment3D &ret, double &mua, double &mub);
+bool Cross(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4);
+Point3D GetCentroid(const Point3D &a, const Point3D &b);
+Point3D GetCentroid(const Point3D &a, const Point3D &b, const Point3D &c);
+Vector3D GetNormal(const Point3D &a, const Point3D &b, const Point3D &c);
 
 template <typename T>
 inline T const& maxNotNull(T const& a, T const& b) {
@@ -139,12 +176,17 @@ public:
 	Surface() : x0z(false), y0z(false) {}
 	Vector<Point3D> nodes;
 	Vector<Panel> panels;
+	Vector<Segment3D> normals;
+	
+	Vector<Segment3D> skewed;
+	
 	bool x0z, y0z;
 	String file;
 	VolumeEnvelope env;
 	
 	String Heal();
 	void GetLimits(); 
+	void GetNormals();
 	String GetLastError()	{return lastError;}
 	String lastError;
 	
@@ -153,7 +195,7 @@ private:
 	
 	int FixSkewed();
 	int RemoveDuplicatedPanels();
-	int RemoveDuplicatedPoints();
+	int RemoveDuplicatedPointsAndRenumber();
 };
 
 #endif

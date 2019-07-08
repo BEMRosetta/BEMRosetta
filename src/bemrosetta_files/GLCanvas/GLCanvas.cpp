@@ -115,7 +115,7 @@ void GLCanvas::PaintLine(const Point3D &p0, const Point3D &p1, const Color &colo
 	glEnd();
 }
 
-void GLCanvas::PaintLine(const Line3D &p, const Color &color) {
+void GLCanvas::PaintLine(const Segment3D &p, const Color &color) {
 	glBegin(GL_LINES);
 		glColor4d(color.GetR()/255., color.GetG()/255., color.GetB()/255., 1);
 		glVertex3d(p.from.x, p.from.y, p.from.z);
@@ -187,11 +187,24 @@ void GLCanvas::PaintSurface0(Surface &surf, const Color &linCol, bool simX, bool
 		PaintLine(p1, p2, linCol);
 		PaintLine(p2, p3, linCol);
 		PaintLine(p3, p0, linCol);
-		
-		Point3D from = GetCentroid(p0, p2);		
-		Point3D pnormal = GetNormal(p0, p1, p2);
-		Line3D normal(from, pnormal, 1);
+	}
+	for (int i = 0; i < surf.normals.GetCount(); ++i) {
+		Segment3D& normal = surf.normals[i];
+		if (simY) 
+			normal.SimY();
+		if (simX) 
+			normal.SimX();
+				
 		PaintLine(normal, Blue());
+	}
+	for (int i = 0; i < surf.skewed.GetCount(); ++i) {
+		Segment3D& sk = surf.skewed[i];
+		if (simY) 
+			sk.SimY();
+		if (simX) 
+			sk.SimX();
+				
+		PaintLine(sk, LtRed());
 	}
 }
 
