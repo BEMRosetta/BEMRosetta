@@ -79,7 +79,7 @@ CONSOLE_APP_MAIN {
 					if (!FileExists(file)) 
 						throw Exc(Format(t_("File '%s' not found"), file)); 
 					
-					md.Load(file, [&](String str, int pos) {Cout() << str;});
+					md.Load(file, [&](String str, int pos) {Cout() << str;}, Hydro::Print);
 					Cout() << "\n" << Format(t_("File '%s' loaded"), file);
 				} else if (command[i] == "-r" || command[i] == "--report") {
 					if (md.hydros.IsEmpty()) 

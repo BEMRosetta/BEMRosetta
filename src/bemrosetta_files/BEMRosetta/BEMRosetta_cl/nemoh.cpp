@@ -90,7 +90,7 @@ bool Nemoh::Load_Cal(String fileName) {
 		
 		if (line.Find("Fluid specific volume") >= 0) 
 			hd().rho = ScanDouble(line);
-		else if (line.Find("Gravity") >= 0) 
+		else if (line.Find("! Gravity") >= 0) 
 			hd().g = ScanDouble(line);
 		else if (line.Find("Water depth") >= 0) {
 			hd().h = ScanDouble(line);
@@ -140,6 +140,8 @@ bool Nemoh::Load_Inf(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	
+	double minimumDirectionAngle = 0;
+	
 	String line;
 	while(!in.IsEof()) {
 		line = in.GetLine();
@@ -174,7 +176,13 @@ bool Nemoh::Load_Inf(String fileName) {
 			hd().C[0](4, 4) = ScanDouble(line.Mid(pos));
 		else if ((pos = line.FindAfter("K [5][6] [Nm/rad]=")) >= 0) 
 			hd().C[0](4, 5) = hd().C[0](5, 4) = ScanDouble(line.Mid(pos));
+		else if ((pos = line.FindAfter("Minimum direction angle =")) >= 0)
+			minimumDirectionAngle = ScanDouble(line.Mid(pos))*180/M_PI;
 	}
+	
+	for (int ih = 0; ih < hd().head.GetCount(); ++ih)
+		hd().head[ih] -= minimumDirectionAngle;
+
 	return true;	
 }
 	
@@ -380,8 +388,10 @@ bool Nemoh::LoadDatMesh(String fileName) {
 		mh().nodes.Clear();
 		mh().panels.Clear();
 		
-		while(!in.IsEof()) {
-			line = in.GetLine();	
+		while(true) {
+			line = in.GetLine();
+			if (in.IsEof())
+				break;	
 			f.Load(line);
 			int id = f.GetInt(0);	
 			if (id == 0)
@@ -391,8 +401,10 @@ bool Nemoh::LoadDatMesh(String fileName) {
 			node.y = f.GetDouble(2);
 			node.z = f.GetDouble(3); 
 		}
-		while(!in.IsEof()) {
+		while(true) {
 			line = in.GetLine();	
+			if (in.IsEof())
+				break;
 			f.Load(line);
 			int id0 = f.GetInt(0);	
 			if (id0 == 0)
@@ -405,8 +417,6 @@ bool Nemoh::LoadDatMesh(String fileName) {
 		}	
 		//if (mh().Check())
 		//	throw Exc(t_("Wrong nodes found in Nemoh .dat mesh file"));
-		mh().Heal();
-		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		mh().lastError = e;

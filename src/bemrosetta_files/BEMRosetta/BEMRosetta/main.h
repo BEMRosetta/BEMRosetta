@@ -188,12 +188,13 @@ private:
 class MainPlot : public WithMainPlot<StaticRect> {
 public:
 	typedef MainPlot CLASSNAME;
-	void Init(int i, int j_h, double h, DataToShow dataToShow);
+	void Init(int idof, double jdof_ih, DataToShow dataToShow);
 	bool Load(Upp::Array<HydroClass> &hydro);
 	
 	Upp::Array<HydroSource> ABF_source, ABF_source2;
 	Upp::Array<HydroSource> Ainf_source;
-	int i, j_h;
+	int idof, jdof;
+	double heading;
 	DataToShow dataToShow;
 };
 
@@ -202,7 +203,7 @@ public:
 	typedef MainABForce CLASSNAME;
 	void Init(DataToShow dataToShow);
 	void Clear();
-	bool Load(Upp::Array<HydroClass> &hydro);
+	bool Load(BEMData &bem);
 	
 	Upp::Array<Upp::Array<MainPlot>> plots;
 
@@ -216,7 +217,7 @@ class MainStateSpace : public WithMainStateSpace<StaticRect> {
 public:
 	typedef MainStateSpace CLASSNAME;
 	void Init();
-	bool Load(Upp::Array<HydroClass> &hydro);
+	bool Load(BEMData &bem);
 	
 	Upp::Array<HydroSource> Z_source, Z_source2, TFS_source, TFS_source2;
 };
@@ -324,7 +325,7 @@ public:
 private:
 	MainPlot &GetSelPlot();
 	MainABForce &GetSelTab();
-	void LoadSelTab(Upp::Array<HydroClass> &hydros);
+	void LoadSelTab(BEMData &bem);
 		
 	bool closed;
 };

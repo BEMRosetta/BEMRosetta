@@ -1,9 +1,9 @@
 #define bmYEAR    19
 #define bmMONTH   7
-#define bmDAY     4
-#define bmHOUR    8
-#define bmMINUTE  34
-#define bmSECOND  53
-#define bmTIME    Time(19, 7, 4, 8, 34, 53)
+#define bmDAY     8
+#define bmHOUR    10
+#define bmMINUTE  27
+#define bmSECOND  40
+#define bmTIME    Time(19, 7, 8, 10, 27, 40)
 #define bmMACHINE "aupa-VB"
 #define bmUSER    "aupa"
