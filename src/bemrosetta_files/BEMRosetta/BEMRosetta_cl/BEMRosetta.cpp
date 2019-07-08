@@ -274,7 +274,7 @@ void Hydro::Compare_w(Hydro &a) {
 	if (a.Nf != Nf)	
 		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.Nf, Nf));
 	for (int i = 0; i < a.Nf; ++i) {
-		if (abs((a.w[i] - w[i])/w[i]) > 0.0001)
+		if (!Equal(a.w[i], w[i], 0.0001))
 			throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], w[i]));
 	}
@@ -326,7 +326,7 @@ void Hydro::Compare_C(Hydro &a) {
 			for (int jdf = 0; jdf < 6; ++jdf) {
 				double Ca = a.C[ib](idf, jdf);
 				double Cb = C[ib](idf, jdf);
-				if (!IsNull(Ca) && !IsNull(Cb) && abs((Ca-Cb)/Cb) > 0.0001 )
+				if (!IsNull(Ca) && !IsNull(Cb) && !Equal(Ca, Cb, 0.0001))
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
 							Ca, Cb));
@@ -450,7 +450,7 @@ void Hydro::Report() {
 		Print(str);
 	}
 }
-
+/*
 bool HydroClass::MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError) {
 	strError.Clear();
 	if (hydro.IsEmpty()) {
@@ -476,7 +476,7 @@ bool HydroClass::MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strE
 		}
 	}
 	return true;
-}
+}*/
 
 void Hydro::GetBodyDOF() {
 	dof.Clear();	 dof.SetCount(Nb, 0);
@@ -552,7 +552,7 @@ int Hydro::GetIrregularHead() {
 	double delta0 = head[1] - head[0];
 	for (int i = 1; i < Nh - 1; ++i) {
 		double delta = head[i+1] - head[i];
-		if (abs((delta - delta0)/delta0) > 0.001)
+		if (!Equal(delta, delta0, 0.001))
 			return i;
 	}
 	return -1;
@@ -564,7 +564,7 @@ int Hydro::GetIrregularFreq() {
 	double delta0 = w[1] - w[0];
 	for (int i = 1; i < Nf - 1; ++i) {
 		double delta = w[i+1] - w[i];
-		if (abs((delta - delta0)/delta0) > 0.001)
+		if (!Equal(delta, delta0, 0.001))
 			return i;
 	}
 	return -1;
@@ -577,7 +577,7 @@ double Hydro::rho_ndim()	{return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	{return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	{return g_ndim()*rho_ndim();}
 
-void BEMData::Load(String file, Function <void(String, int pos)> Status) {
+void BEMData::Load(String file, Function <void(String, int pos)> Status, Function <void(String)> Print) {
 	Status(t_("Loading files"), 10);
 	for (int i = 0; i < hydros.GetCount(); ++i) {
 		if (hydros[i].hd().file == file) 
@@ -646,11 +646,18 @@ void BEMData::Load(String file, Function <void(String, int pos)> Status) {
 		justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
-		justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres/10.);
+		justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres);
 	}
+	Nb = max(Nb, justLoaded.Nb);
+	for (int i = 0; i < justLoaded.head.GetCount(); ++i) 
+		FindAddRatio(head, justLoaded.head[i], 0.01);
+	Sort(head);
 }
 
-void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
+void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status, Function <void(String)> Print) {
+	Status(t_("Loading file"), 10);
+	Print("\n\n" + Format(t_("Loading mesh '%s'"), file));
+	
 	for (int i = 0; i < surfs.GetCount(); ++i) {
 		if (surfs[i].mh().file == file) {
 			throw Exc(t_("Model already loaded"));
@@ -678,6 +685,20 @@ void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
 		}
 	} else 
 		throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, t_("Unknown file format")));	
+	
+	Surface &justLoaded = surfs[surfs.GetCount()-1].mh();
+	Status(t_("Healing mesh"), 80);
+	String ret = justLoaded.Heal();
+	if (!ret.IsEmpty()) {
+		ret.Replace("\n", "\n- ");
+		Print(ret);
+	} else
+		Print(x_(". ") + t_("The mesh is in good condition"));
+	justLoaded.GetLimits();
+	Status(t_("Getting mesh normals"), 95);
+	justLoaded.GetNormals();
+	
+	Print(x_("\n") + Format(t_("Loaded %d panels and %d nodes"), justLoaded.panels.GetCount(), justLoaded.nodes.GetCount()));
 }
 
 void MeshData::SaveAs(String file, MESH_FMT type) {

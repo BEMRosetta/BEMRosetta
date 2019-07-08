@@ -200,6 +200,7 @@ void EditFileFolder::DoGo(bool add) {
 		if (histInd >= history.GetCount()-1)
 			butRight.Enable(false);
 	}
+	AddHistory();
 	WhenChange();
 	//WhenAction();
 	Accept();

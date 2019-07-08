@@ -5,4 +5,3 @@ set -e
 rm -f Makefile		
 cp ./Makefile_gui ./Makefile
 make
-cp ./BEMRosetta/BEMRosetta.out ../BEMRosetta

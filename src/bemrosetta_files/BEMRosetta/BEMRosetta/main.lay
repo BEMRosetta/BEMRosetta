@@ -48,12 +48,12 @@ LAYOUT(MenuConvertMesh, 748, 48)
 	ITEM(Switch, opt, SetLabel(t_("Wamit .gdf\nBy extension")).LeftPosZ(304, 324).TopPosZ(28, 16))
 	ITEM(Label, dv___2, SetLabel(t_("Format:")).LeftPosZ(260, 40).TopPosZ(28, 16))
 	ITEM(Label, dv___3, SetLabel(t_("File:")).LeftPosZ(260, 40).TopPosZ(4, 19))
-	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(304, 64).TopPosZ(4, 19))
+	ITEM(EditFile, file, UseOpenFolder(true).UseDropping(true).HSizePosZ(304, 64).TopPosZ(4, 19))
 	ITEM(Label, dv___5, SetLabel(t_("Models loaded:")).LeftPosZ(4, 76).TopPosZ(4, 20))
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(84, 168).TopPosZ(4, 44))
 END_LAYOUT
 
-LAYOUT(MenuOptions, 944, 48)
+LAYOUT(MenuOptions, 1068, 48)
 	ITEM(Button, butSave, SetLabel(t_("Save")).RightPosZ(4, 56).TopPosZ(4, 20))
 	ITEM(LabelBox, dv___1, SetLabel(t_("Physical parameters")).LeftPosZ(4, 512).TopPosZ(4, 40))
 	ITEM(Label, dv___2, SetLabel(t_("rho [Kg/m3]:")).LeftPosZ(260, 80).TopPosZ(20, 19))
@@ -73,6 +73,8 @@ LAYOUT(MenuOptions, 944, 48)
 	ITEM(EditDouble, thres, LeftPosZ(588, 44).TopPosZ(20, 19))
 	ITEM(Label, dv___17, SetLabel(t_("Max. time [s]:")).LeftPosZ(672, 68).TopPosZ(20, 19))
 	ITEM(EditDouble, maxTimeA, Min(0.1).NotNull(true).LeftPosZ(740, 32).TopPosZ(20, 19))
+	ITEM(LabelBox, dv___19, SetLabel(t_("Other")).LeftPosZ(876, 128).TopPosZ(4, 40))
+	ITEM(Option, onlyDiagonal, SetLabel(t_("Hide cross-coupling")).LeftPosZ(884, 116).TopPosZ(20, 16))
 END_LAYOUT
 
 LAYOUT(MenuAbout, 540, 288)
@@ -97,11 +99,11 @@ LAYOUT(MainABForce, 400, 200)
 END_LAYOUT
 
 LAYOUT(MainPlot, 412, 228)
-	ITEM(ScatterCtrl, scatter, SetPlotAreaLeftMargin(90).SetPlotAreaBottomMargin(50).SetTitleFont(SansSerifZ(12)).HSizePosZ(0, 0).VSizePosZ(0, 0))
+	ITEM(ScatterCtrl, scatter, SetPlotAreaLeftMargin(90).SetPlotAreaBottomMargin(50).SetTitleFont(SansSerifZ(12)).SetSaveSizeY(500).HSizePosZ(0, 0).VSizePosZ(0, 0))
 END_LAYOUT
 
 LAYOUT(MainStateSpace, 644, 420)
-	ITEM(ScatterCtrl, scatterZ, SetPlotAreaLeftMargin(90).SetPlotAreaRightMargin(80).SetPlotAreaBottomMargin(50).HSizePosZ(4, 4).VSizePosZ(4, 4))
+	ITEM(ScatterCtrl, scatterZ, SetPlotAreaLeftMargin(90).SetPlotAreaRightMargin(80).SetPlotAreaBottomMargin(50).SetSaveSizeY(500).HSizePosZ(4, 4).VSizePosZ(4, 4))
 END_LAYOUT
 
 LAYOUT(MainView, 400, 200)

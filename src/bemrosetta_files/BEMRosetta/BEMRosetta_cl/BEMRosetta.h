@@ -120,7 +120,14 @@ public:
     
     static String C_units(int i, int j);
     
-
+	int GetHeadId(double hd) {
+		for (int i = 0; i < head.GetCount(); ++i) {
+			if (Equal(head[i], hd, 0.01))
+				return i;
+		}
+		return -1;
+	}
+	
 	void AfterLoad(Function <void(String, int)> Status);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
@@ -224,6 +231,12 @@ public:
 		return Format("%d.%s", ib, strDOF[idf]);
 	}
 	
+	static String StrDOFAbrev(int i) {
+		int nb = i/6 + 1;
+		int ni = i - (nb - 1)*6;
+		return Format("%d%s", nb, strDOFAbrev[ni]);
+	}
+	
 	static int DOFStr(String &str) {
 		for (int i = 0; i < 6; ++i)
 			if (strDOF[i] == ToLower(str))
@@ -236,12 +249,6 @@ public:
 		ib = ScanInt(str.Left(pos))-1;
 		String sdof = str.Mid(pos+1);
 		idf = DOFStr(sdof);	
-	}
-	
-	static String StrDOFAbrev(int i) {
-		int nb = i/6 + 1;
-		int ni = i - (nb - 1)*6;
-		return Format("%d%s", nb, strDOFAbrev[ni]);
 	}
 	
 	bool IsLoadedA() 	{return A.GetCount() > 0;}
@@ -315,7 +322,7 @@ public:
 	
 	HydroData hd;	
 	
-	static bool MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError);
+	//static bool MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError);
 };
 
 class MeshData {
@@ -597,8 +604,13 @@ String FormatWam(double d);
 
 class BEMData {
 public:
+	BEMData() : Nb(0) {}
+	
 	Upp::Array<HydroClass> hydros;
 	Upp::Array<MeshClass> surfs;
+	
+	Vector<double> head;	// Common models data
+	int Nb;					//
 	
 	double depth, rho, g, length;
 	int discardNegDOF;
@@ -606,9 +618,10 @@ public:
 	int calcAwinf;
 	double maxTimeA;
 	int numValsA;
+	int onlyDiagonal;
 	
-	void Load(String file, Function <void(String, int pos)> Status);
-	void LoadMesh(String file, Function <void(String, int pos)> Status);
+	void Load(String file, Function <void(String, int pos)> Status, Function <void(String)> Print);
+	void LoadMesh(String file, Function <void(String, int pos)> Status, Function <void(String)> Print);
 		
 	bool LoadSerializeJson() {
 		bool ret;
@@ -650,6 +663,8 @@ public:
 			maxTimeA = 120;
 		if (!ret || IsNull(numValsA))
 			numValsA = 1000;
+		if (!ret || IsNull(onlyDiagonal))
+			onlyDiagonal = false;
 		
 		return true;
 	}
@@ -673,6 +688,7 @@ public:
 			("calcAwinf", calcAwinf)
 			("maxTimeA", maxTimeA)
 			("numValsA", numValsA)
+			("onlyDiagonal", onlyDiagonal)
 		;
 	}
 };
