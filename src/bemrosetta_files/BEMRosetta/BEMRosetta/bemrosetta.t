@@ -27,6 +27,10 @@ T_("Mesh")
 esES("")
 frFR("")
 
+T_("Convert Mesh")
+esES("")
+frFR("")
+
 T_("Options")
 esES("")
 frFR("")
@@ -83,11 +87,7 @@ T_("Output")
 esES("")
 frFR("")
 
-T_("Model '%s' does not match with the one previously loaded: %s")
-esES("")
-frFR("")
-
-T_("Set pending data")
+T_("Loading BEM files...")
 esES("")
 frFR("")
 
@@ -99,15 +99,7 @@ T_("Unknown type in OnConvert()")
 esES("")
 frFR("")
 
-T_("Model already loaded")
-esES("")
-frFR("")
-
-T_("Problem loading '%s'")
-esES("")
-frFR("")
-
-T_("Unknown file format")
+T_("Loading mesh file...")
 esES("")
 frFR("")
 
@@ -507,7 +499,7 @@ T_("Auto fit")
 esES("")
 frFR("")
 
-T_("Adimensional")
+T_("Dimensionless")
 esES("")
 frFR("")
 
@@ -531,7 +523,7 @@ T_("Show")
 esES("")
 frFR("")
 
-T_("Load\nLoad in parallel")
+T_("Wamit .gdf\nBy extension")
 esES("")
 frFR("")
 
@@ -555,7 +547,7 @@ T_("Gravity [m/s2]:")
 esES("")
 frFR("")
 
-T_("Threshold:")
+T_("Num. vals:")
 esES("")
 frFR("")
 
@@ -563,11 +555,31 @@ T_("Length scale [m]:")
 esES("")
 frFR("")
 
-T_("Discard negligible DOF")
+T_("Calc. A_inf if not in files")
 esES("")
 frFR("")
 
 T_("Test:")
+esES("")
+frFR("")
+
+T_("Threshold:")
+esES("")
+frFR("")
+
+T_("Discard negligible DOF")
+esES("")
+frFR("")
+
+T_("Max. time [s]:")
+esES("")
+frFR("")
+
+T_("Other")
+esES("")
+frFR("")
+
+T_("Hide cross-coupling")
 esES("")
 frFR("")
 
@@ -598,6 +610,34 @@ frFR("")
 
 
 // Obsolete
+
+T_("Model '%s' does not match with the one previously loaded: %s")
+esES("")
+frFR("")
+
+T_("Set pending data")
+esES("")
+frFR("")
+
+T_("Model already loaded")
+esES("")
+frFR("")
+
+T_("Problem loading '%s'")
+esES("")
+frFR("")
+
+T_("Unknown file format")
+esES("")
+frFR("")
+
+T_("Adimensional")
+esES("")
+frFR("")
+
+T_("Load\nLoad in parallel")
+esES("")
+frFR("")
 
 T_("Unknown file extension in '%s'")
 esES("")
@@ -664,5 +704,44 @@ esES("")
 frFR("")
 
 T_("Height [m]:")
+esES("")
+frFR("")
+
+
+// Surface.cpp
+
+T_("Found %d triangles")
+esES("")
+frFR("")
+
+T_("Removed %d 2 points quads")
+esES("")
+frFR("")
+
+T_("Removed %d 1 points quads")
+esES("")
+frFR("")
+
+T_("Fixed %d skewed panels")
+esES("")
+frFR("")
+
+T_("Removed %d duplicated points")
+esES("")
+frFR("")
+
+T_("Removed %d duplicated panels")
+esES("")
+frFR("")
+
+T_("%d segments, %d water level, %d water leak and %d multipanel")
+esES("")
+frFR("")
+
+T_("Failed to reorient panels to water side")
+esES("")
+frFR("")
+
+T_("%d panels not reoriented. Body contains separated surfaces")
 esES("")
 frFR("")

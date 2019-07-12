@@ -42,26 +42,27 @@ bool Nemoh::Load(String file, double) {
 			folderForces = AppendFileName(folder, "Nemoh_output");
 		} 
 		
-		hd().Print("\n- Radiation file 'RadiationCoefficients.tec'");
+		hd().Print(x_("\n- ") + t_("Radiation file 'RadiationCoefficients.tec'"));
 		if (!Load_Radiation(fileRad))
 			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
 		
-		hd().Print("\n- Excitation force file 'ExcitationForce.tec'");
+		hd().Print(x_("\n- ") + t_("Excitation force file 'ExcitationForce.tec'"));
 		if (!Load_Excitation(folderForces))
 			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
 		
-		if (!hd().dof.IsEmpty()) {
-			hd().Print(x_("\n- ") + t_("Diffraction force file 'DiffractionForce.tec'"));
-			if (!Load_Diffraction(folderForces))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
-			hd().Print(x_("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
-			if (!Load_FroudeKrylov(folderForces))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
-		}
+		hd().Print(x_("\n- ") + t_("Diffraction force file 'DiffractionForce.tec'"));
+		if (!Load_Diffraction(folderForces))
+			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+		hd().Print(x_("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
+		if (!Load_FroudeKrylov(folderForces))
+			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+		
 		if (hd().code == Hydro::NEMOH) {
-			hd().Print(x_("\n- ") + t_("IRF file(s) 'IRF.tec'"));
-			if (!Load_IRF(AppendFileName(folder, AppendFileName("Results", "IRF.tec"))))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+			if (!hd().dof.IsEmpty()) {
+				hd().Print(x_("\n- ") + t_("IRF file(s) 'IRF.tec'"));
+				if (!Load_IRF(AppendFileName(folder, AppendFileName("Results", "IRF.tec"))))
+					hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+			}
 		}
 		if (IsNull(hd().Nb))
 			return false;
@@ -246,8 +247,9 @@ bool Nemoh::Load_Radiation(String fileName) {
 		return false;
 	String line;
 	FieldSplit f(in);
-	hd().dof.Clear();	 hd().dof.SetCount(hd().Nb, 0);
 	in.GetLine();
+	Vector<int> dof;
+	dof.SetCount(hd().Nb, 0);
 	while(!in.IsEof()) {
 		line = in.GetLine();
 	    if (line.Find("Motion of body") >= 0)
@@ -255,8 +257,12 @@ bool Nemoh::Load_Radiation(String fileName) {
 	    f.Load(line);
 	    int ibody = f.GetInt(1) - 1;
 	    int ndof = f.GetInt(2);
-		hd().dof[ibody] = ndof;    
+		dof[ibody] = max(dof[ibody], ndof);    
 	}
+	if (hd().dof.IsEmpty())
+		hd().dof = pick(dof);
+	else if (!IsEqualRange(dof, hd().dof))
+		throw(Format(t_("DOF does not match in %s"), fileName));
 	hd().A.SetCount(hd().Nf);
 	hd().B.SetCount(hd().Nf);
 	for (int k = 0; k < hd().Nf; ++k) {
@@ -293,17 +299,28 @@ bool Nemoh::Load_FroudeKrylov(String folder) {
 }
 
 bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName, String textDelim) {
-	hd().Initialize_Forces(fc);
 	FileInLine in(AppendFileName(nfolder, AppendFileName("Results", fileName)));
 	if (!in.IsOpen())
 		return false;
 	String line;
 	FieldSplit f(in);
+	in.GetLine();
+	Vector<int> dof;
+	dof.SetCount(hd().Nb, 0);
 	while(!in.IsEof()) {
 		line = in.GetLine();
-		if (line.Find(textDelim) >= 0)
+	    if (line.Find(textDelim) >= 0)
 	        break;
+	    f.Load(line);
+	    int ibody = f.GetInt(1) - 1;
+	    int ndof = f.GetInt(2);
+		dof[ibody] = max(dof[ibody], ndof);    
 	}
+	if (hd().dof.IsEmpty())
+		hd().dof = pick(dof);
+	else if (!IsEqualRange(dof, hd().dof))
+		throw(Format(t_("DOF does not match in %s"), fileName));
+	hd().Initialize_Forces(fc);
 	for (int h = 0; h < hd().Nh; ++h) {
 		int ifr = 0;
 		while(!in.IsEof()) {
