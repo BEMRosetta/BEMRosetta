@@ -260,7 +260,7 @@ T_("NONE")
 esES("")
 frFR("")
 
-T_("delta %.1f [rad/s]")
+T_("delta %s [rad/s]")
 esES("")
 frFR("")
 
@@ -268,15 +268,19 @@ T_("non constant delta (%s)")
 esES("")
 frFR("")
 
-T_("%.1f to %.1f %s")
+T_("%s to %s %s")
 esES("")
 frFR("")
 
-T_("%.1f [rad/s]")
+T_("%s [rad/s]")
 esES("")
 frFR("")
 
 T_("delta %.1f [\302\272]")
+esES("")
+frFR("")
+
+T_("%.1f to %.1f %s")
 esES("")
 frFR("")
 
@@ -304,19 +308,24 @@ T_("vol [m3]")
 esES("")
 frFR("")
 
-T_("No data loaded")
+T_("Incorrect time for Ainf calculation. Please review it in Options")
 esES("")
 frFR("")
 
-T_("Different number of bodies")
+T_("Incorrect number of time values for Ainf calculation. Please review it "
+     "in Options")
 esES("")
 frFR("")
 
-T_("Different number of wave headings")
+T_("Obtaining Impulse Response Function")
 esES("")
 frFR("")
 
-T_("Wave headings do not match")
+T_("Obtaining Infinite-Frequency Added Mass (A_inf)")
+esES("")
+frFR("")
+
+T_("Loading files")
 esES("")
 frFR("")
 
@@ -333,6 +342,42 @@ esES("")
 frFR("")
 
 T_("Unknown file extension in '%s'")
+esES("")
+frFR("")
+
+T_("Discarding negligible DOF")
+esES("")
+frFR("")
+
+T_("Loading file")
+esES("")
+frFR("")
+
+T_("Loading mesh '%s'")
+esES("")
+frFR("")
+
+T_("Model already loaded")
+esES("")
+frFR("")
+
+T_("Unknown file format")
+esES("")
+frFR("")
+
+T_("Healing mesh")
+esES("")
+frFR("")
+
+T_("The mesh is in good condition")
+esES("")
+frFR("")
+
+T_("Getting mesh normals")
+esES("")
+frFR("")
+
+T_("Loaded %d panels and %d nodes")
 esES("")
 frFR("")
 
@@ -371,6 +416,50 @@ T_("Unknown")
 esES("")
 frFR("")
 
+T_("W.o")
+esES("")
+frFR("")
+
+T_("W.1")
+esES("")
+frFR("")
+
+T_("FST")
+esES("")
+frFR("")
+
+T_("Nmh")
+esES("")
+frFR("")
+
+T_("SFM")
+esES("")
+frFR("")
+
+T_("AQW")
+esES("")
+frFR("")
+
+T_("FMM")
+esES("")
+frFR("")
+
+T_("\302\277?")
+esES("")
+frFR("")
+
+T_("Wamit.gdf")
+esES("")
+frFR("")
+
+T_("Wamit.dat")
+esES("")
+frFR("")
+
+T_("Nemoh.dat")
+esES("")
+frFR("")
+
 T_("[%d] No data available")
 esES("")
 frFR("")
@@ -399,6 +488,14 @@ esES("")
 frFR("")
 
 T_("KH file(s) 'Mesh/KH*.dat'")
+esES("")
+frFR("")
+
+T_("Radiation file 'RadiationCoefficients.tec'")
+esES("")
+frFR("")
+
+T_("Excitation force file 'ExcitationForce.tec'")
 esES("")
 frFR("")
 
@@ -431,10 +528,6 @@ esES("")
 frFR("")
 
 T_("Format error in Nemoh .dat mesh file")
-esES("")
-frFR("")
-
-T_("Wrong nodes found in Nemoh .dat mesh file")
 esES("")
 frFR("")
 
@@ -536,11 +629,12 @@ T_("Number of frequencies loaded is different than previous (%d != %d)")
 esES("")
 frFR("")
 
-T_("Frequencies loaded are different than previous")
+T_("Frequencies loaded are different than previous\nPrevious: %s\nSeries: "
+     "  %s")
 esES("")
 frFR("")
 
-T_("Periods loaded are different than previous")
+T_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s")
 esES("")
 frFR("")
 
@@ -572,7 +666,7 @@ T_("No enough data to save (at least 2 frequencies)")
 esES("")
 frFR("")
 
-T_("'ZONE' field not found")
+T_("[%d] 'ZONE' field not found")
 esES("")
 frFR("")
 
@@ -584,7 +678,7 @@ T_("Wrong number of patches in .gdf file")
 esES("")
 frFR("")
 
-T_("Wrong nodes found in Wamit .gdf mesh file")
+T_("Model is empty. No panels found")
 esES("")
 frFR("")
 
@@ -733,6 +827,50 @@ frFR("")
 
 
 // Obsolete
+
+T_("delta %.1f [rad/s]")
+esES("")
+frFR("")
+
+T_("%.1f [rad/s]")
+esES("")
+frFR("")
+
+T_("No data loaded")
+esES("")
+frFR("")
+
+T_("Different number of bodies")
+esES("")
+frFR("")
+
+T_("Different number of wave headings")
+esES("")
+frFR("")
+
+T_("Wave headings do not match")
+esES("")
+frFR("")
+
+T_("Wrong nodes found in Nemoh .dat mesh file")
+esES("")
+frFR("")
+
+T_("Frequencies loaded are different than previous")
+esES("")
+frFR("")
+
+T_("Periods loaded are different than previous")
+esES("")
+frFR("")
+
+T_("'ZONE' field not found")
+esES("")
+frFR("")
+
+T_("Wrong nodes found in Wamit .gdf mesh file")
+esES("")
+frFR("")
 
 T_("Usage: bemrosetta_cl [option] infile outfolder")
 esES("")

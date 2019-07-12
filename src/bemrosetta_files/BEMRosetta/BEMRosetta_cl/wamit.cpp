@@ -947,8 +947,6 @@ bool Wamit::LoadDatMesh(String fileName) {
 					panel.id[i] = f.GetInt(i) - 1;
 			}
 		}
-		mh().Heal();
-		mh().GetLimits();
 	} catch (Exc e) {
 		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
 		mh().lastError = e;
