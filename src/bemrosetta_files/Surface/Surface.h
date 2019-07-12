@@ -33,25 +33,6 @@ void Sort(T& a, T& b, T& c) {
 		Swap(b, c);
 }
 	
-class Panel : public Moveable<Panel> {
-public:
-	int id[4];
-
-	bool operator==(const Panel &p) {
-		int id0 = id[0], id1 = id[1], id2 = id[2], id3 = id[3];
-		int pid0 = p.id[0], pid1 = p.id[1], pid2 = p.id[2], pid3 = p.id[3];
-		if (id0 + id1 + id2 + id3 != pid0 + pid1 + pid2 + pid3)
-			return false;
-		Sort(id0, id1, id2, id3);
-		Sort(pid0, pid1, pid2, pid3);
-		if (id0 == pid0 && id1 == pid1 && id2 == pid2 && id3 == pid3)
-			return true;
-		return false;
-	}
-	
-	String ToString() const { return FormatInt(id[0]) + "," + FormatInt(id[1]) + "," + FormatInt(id[2]) + "," + FormatInt(id[3]); }
-};
-
 class Point3D : public Moveable<Point3D> {
 public:
 	double x, y, z;
@@ -96,6 +77,12 @@ public:
 	void SimX() {x = -x;}
 	void SimY() {y = -y;}
 	void SimZ() {z = -z;}
+	
+	void Mirror(const Point3D &p0) {
+		x = 2*p0.x - x;
+		y = 2*p0.y - y;
+		z = 2*p0.z - z;
+	}
 };
 
 typedef Point3D Vector3D;
@@ -131,7 +118,16 @@ public:
 	void SimZ() {
 		from.SimZ();
 		to.SimZ();
-	}	
+	}
+	double Length() {return from.Distance(to);}
+	double Dx()		{return to.x - from.x;}
+	double Dy()		{return to.y - from.y;}	
+	double Dz()		{return to.z - from.z;}
+	
+	void Mirror(const Point3D &p0) {
+		from.Mirror(p0);
+		to.Mirror(p0);
+	}
 };
 
 bool MinSegment(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4, Segment3D &ret, double &mua, double &mub);
@@ -160,6 +156,40 @@ inline T const& minNotNull(T const& a, T const& b) {
     	return a < b ? a : b;
 }
 
+class Panel : public Moveable<Panel> {
+public:
+	int id[4];
+	Segment3D normal;
+
+	bool operator==(const Panel &p) const {
+		int id0 = id[0], id1 = id[1], id2 = id[2], id3 = id[3];
+		int pid0 = p.id[0], pid1 = p.id[1], pid2 = p.id[2], pid3 = p.id[3];
+		if (id0 + id1 + id2 + id3 != pid0 + pid1 + pid2 + pid3)
+			return false;
+		Sort(id0, id1, id2, id3);
+		Sort(pid0, pid1, pid2, pid3);
+		if (id0 == pid0 && id1 == pid1 && id2 == pid2 && id3 == pid3)
+			return true;
+		return false;
+	}
+	inline void Swap() {
+		if (IsTriangle())
+			::Swap(id[1], id[2]);
+		else
+			::Swap(id[1], id[3]);
+	}
+	inline bool IsTriangle() const	{return id[0] == id[3];}
+	inline int GetNumNodes() const	{return IsTriangle() ? 3 : 4;}
+	bool FirstNodeIs0(int in0, int in1) const;
+	
+	String ToString() const { return FormatInt(id[0]) + "," + FormatInt(id[1]) + "," + FormatInt(id[2]) + "," + FormatInt(id[3]); }
+};
+
+class Segment : public Moveable<Segment> {
+public:
+	int inode0, inode1;
+	Index<int> panels;
+};
 
 class VolumeEnvelope {
 public:
@@ -176,26 +206,34 @@ public:
 	Surface() : x0z(false), y0z(false) {}
 	Vector<Point3D> nodes;
 	Vector<Panel> panels;
-	Vector<Segment3D> normals;
 	
 	Vector<Segment3D> skewed;
+	Vector<Segment3D> segWaterlevel, segTo1panel, segTo3panel;
 	
 	bool x0z, y0z;
 	String file;
 	VolumeEnvelope env;
 	
-	String Heal();
+	String Heal(Function <void(String, int pos)> Status);
 	void GetLimits(); 
 	void GetNormals();
 	String GetLastError()	{return lastError;}
 	String lastError;
-	
+
 private:
 	inline bool CheckId(int id) {return id >= 0 && id < nodes.GetCount()-1;}
 	
+	void DetectTriBiP(int &numTri, int &numBi, int &numP);
 	int FixSkewed();
 	int RemoveDuplicatedPanels();
 	int RemoveDuplicatedPointsAndRenumber();
+	void AnalyseSegments(Vector<Segment> &segments, double zTolerance);
+	void AddSegment(Vector<Segment> &segments, int ip0, int ip1, int ipanel);
+	bool ReorientPanels(const Vector<Segment> &segments, int &numUnprocessed);
+	void ReorientPanel(int ip);
+	bool SameOrderPanel(int ip0, int ip1, int in0, int in1);
+	int PanelGetNumNodes(int ip) 	{return panels[ip].GetNumNodes();}
+	bool IsPanelTriangle(int ip) 	{return panels[ip].IsTriangle();}
 };
 
 #endif

@@ -123,7 +123,7 @@ void GLCanvas::PaintLine(const Segment3D &p, const Color &color) {
 	glEnd();
 }
 
-void GLCanvas::PaintQuad(Point3D &p0, Point3D &p1, Point3D &p2, Point3D &p3, const Color &color, double multx, double multy) {
+void GLCanvas::PaintQuad(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &color, double multx, double multy) {
 	glBegin(GL_QUADS);
 		glColor4d(color.GetR()/255., color.GetG()/255., color.GetB()/255., 1);
 		glVertex3d(p0.x*multx, p0.y*multy, p0.z);
@@ -139,7 +139,7 @@ void GLCanvas::PaintAxis(double x, double y, double z) {
 	PaintLine(0, 0, 0, 0, 0, z, LtBlue());
 }
 
-void GLCanvas::PaintSurface(Surface &surf, const Color &linCol) {
+void GLCanvas::PaintSurface(const Surface &surf, const Color &linCol) {
 	PaintSurface0(surf, linCol, false, false);
 	if (surf.x0z)
 		PaintSurface0(surf, linCol, false, true);
@@ -147,12 +147,24 @@ void GLCanvas::PaintSurface(Surface &surf, const Color &linCol) {
 		PaintSurface0(surf, linCol, true, false);
 }
 
-void GLCanvas::PaintSurface0(Surface &surf, const Color &linCol, bool simX, bool simY) {
+void GLCanvas::PaintSegments(const Vector<Segment3D>& segs, const Color &color, bool simX, bool simY) {
+	for (int i = 0; i < segs.GetCount(); ++i) {
+		Segment3D seg = segs[i];
+		if (simY) 
+			seg.SimY();
+		if (simX) 
+			seg.SimX();
+				
+		PaintLine(seg, color);
+	}
+}
+
+void GLCanvas::PaintSurface0(const Surface &surf, const Color &linCol, bool simX, bool simY) {
 	double xsig = simX ? -1 : 1;
 	double ysig = simY ? -1 : 1;
 	
 	for (int ip = 0; ip < surf.panels.GetCount(); ++ip) {
-		Panel &panel = surf.panels[ip];
+		const Panel &panel = surf.panels[ip];
 		Point3D p0 = surf.nodes[panel.id[0]];
 		Point3D p1 = surf.nodes[panel.id[1]];
 		Point3D p2 = surf.nodes[panel.id[2]];
@@ -166,46 +178,22 @@ void GLCanvas::PaintSurface0(Surface &surf, const Color &linCol, bool simX, bool
 		p3.x *= xsig;
 		p3.y *= ysig;
 	
-		//PaintQuad(p0, p1, p2, p3, linCol, xsig, ysig);
-		
-		/*glBegin(GL_QUADS);
-			glColor4d(1.0, 0.5, 0.0, 1);	
-			if (!sim) {
-				glVertex3d(p0.x, p0.y*ysig, p0.z);
-				glVertex3d(p1.x, p1.y*ysig, p1.z);
-				glVertex3d(p2.x, p2.y*ysig, p2.z);
-				glVertex3d(p3.x, p3.y*ysig, p3.z);
-			} else {
-				glVertex3d(p3.x, p3.y*ysig, p3.z);
-				glVertex3d(p2.x, p2.y*ysig, p2.z);
-				glVertex3d(p1.x, p1.y*ysig, p1.z);
-				glVertex3d(p0.x, p0.y*ysig, p0.z);
-			}
-		glEnd();*/	
-		
 		PaintLine(p0, p1, linCol);
 		PaintLine(p1, p2, linCol);
 		PaintLine(p2, p3, linCol);
 		PaintLine(p3, p0, linCol);
-	}
-	for (int i = 0; i < surf.normals.GetCount(); ++i) {
-		Segment3D& normal = surf.normals[i];
+		
+		Segment3D seg = panel.normal;
 		if (simY) 
-			normal.SimY();
+			seg.SimY();
 		if (simX) 
-			normal.SimX();
-				
-		PaintLine(normal, Blue());
+			seg.SimX();
+		PaintLine(seg, Blue());
 	}
-	for (int i = 0; i < surf.skewed.GetCount(); ++i) {
-		Segment3D& sk = surf.skewed[i];
-		if (simY) 
-			sk.SimY();
-		if (simX) 
-			sk.SimX();
-				
-		PaintLine(sk, LtRed());
-	}
+	PaintSegments(surf.skewed, LtRed(), simX, simY);
+	PaintSegments(surf.segTo1panel, LtRed(), simX, simY);
+	PaintSegments(surf.segWaterlevel, LtBlue(), simX, simY);
+	PaintSegments(surf.segTo3panel, Black(), simX, simY);
 }
 
 

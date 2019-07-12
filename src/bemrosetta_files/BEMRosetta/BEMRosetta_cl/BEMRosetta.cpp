@@ -687,16 +687,18 @@ void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status, Fun
 		throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, t_("Unknown file format")));	
 	
 	Surface &justLoaded = surfs[surfs.GetCount()-1].mh();
-	Status(t_("Healing mesh"), 80);
-	String ret = justLoaded.Heal();
-	if (!ret.IsEmpty()) {
-		ret.Replace("\n", "\n- ");
-		Print(ret);
+	
+	if (true) {
+		String ret = justLoaded.Heal(Status);
+		if (!ret.IsEmpty()) {
+			ret.Replace("\n", "\n- ");
+			Print(ret);
+		} else
+			Print(x_(". ") + t_("The mesh is in good condition"));
 	} else
-		Print(x_(". ") + t_("The mesh is in good condition"));
+		justLoaded.GetNormals();
+	
 	justLoaded.GetLimits();
-	Status(t_("Getting mesh normals"), 95);
-	justLoaded.GetNormals();
 	
 	Print(x_("\n") + Format(t_("Loaded %d panels and %d nodes"), justLoaded.panels.GetCount(), justLoaded.nodes.GetCount()));
 }

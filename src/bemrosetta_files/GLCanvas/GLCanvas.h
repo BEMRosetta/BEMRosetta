@@ -25,10 +25,11 @@ public:
 	void PaintLine(double x0, double y0, double z0, double x1, double y1, double z1, const Color &color);
 	void PaintLine(const Point3D &p0, const Point3D &p1, const Color &color);
 	void PaintLine(const Segment3D &p, const Color &color);
-	void PaintQuad(Point3D &p0, Point3D &p1, Point3D &p2, Point3D &p3, const Color &color, double multx, double multy);
+	void PaintQuad(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &color, double multx, double multy);
 	void PaintAxis(double x, double y, double z);	
-	void PaintSurface(Surface &surf, const Color &linCol = LtGreen());
-
+	void PaintSurface(const Surface &surf, const Color &linCol = LtGreen());
+	void PaintSegments(const Vector<Segment3D>& segs, const Color &color, bool simX, bool simY);
+		
 	void SetZoomFactor(double factor)	{trackBall.SetZoomFactor(factor);}
 		
 	Function <void()> WhenPaint;	
@@ -40,7 +41,7 @@ public:
 	}
 	
 private:
-	void PaintSurface0(Surface &surf, const Color &linCol, bool simX, bool simY);
+	void PaintSurface0(const Surface &surf, const Color &linCol, bool simX, bool simY);
 };
 
 #endif
