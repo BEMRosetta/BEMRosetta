@@ -81,10 +81,6 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="300" title="Mesh loading"></p>
 
 
-## Holidays
-
-Holidays?... Not here. We are preparing new features that we hope you will love them!
-
 ## Acknowledgments
 
 J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
