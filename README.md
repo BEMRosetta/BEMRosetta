@@ -25,9 +25,6 @@ In addition, BEMRosetta allows to view and visually compare the meshes from diff
 
 BEMRosetta runs on Windows and Linux, no install is necessary in Windows [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI and [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test). 
 
-You can also try the new features in [development](https://github.com/izabala123/BEMRosetta/blob/development/README.md).
-
-
 ## Features
 ### - Supported file formats
 
