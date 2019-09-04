@@ -1,6 +1,13 @@
 #ifndef _GLCanvas_surface_h_
 #define _GLCanvas_surface_h_
 
+#include <ScatterDraw/Unpedantic.h>
+
+#include <plugin/Eigen/Eigen.h>
+
+using namespace Eigen;
+
+#include <ScatterDraw/Pedantic.h>
 
 template<class T>
 inline T avg(T a, T b) 			{return T(a+b)/2;}
@@ -32,36 +39,56 @@ void Sort(T& a, T& b, T& c) {
 	if (b > c) 
 		Swap(b, c);
 }
+
+void GetTransform(Affine3d &aff, double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
 	
 class Point3D : public Moveable<Point3D> {
 public:
 	double x, y, z;
 
 	Point3D() {}
-	Point3D(const Nuller&) {x = Null;}
+	Point3D(const Nuller&) {SetNull();}
 	Point3D(const Point3D &p) : x(p.x), y(p.y), z(p.z) {}
-	Point3D(double x, double y, double z) : x(x), y(y), z(z) {}
+	Point3D(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
 	
-	void Set(const Point3D &p) 				{this->x = p.x; this->y = p.y; this->z = p.z;}
-	void Set(double x, double y, double z) 	{this->x = x; this->y = y; this->z = z;}
+	void SetNull() 				{x = Null; y = 0;}
+	bool IsNullInstance() const	{return IsNull(x);}
+	
+	Point3D(bool positive)	{x = Null; y = positive ? 1 : -1;}
+	bool IsPosInf()			{return IsNull(x) && y == 1;}
+	bool IsNegInf()			{return IsNull(x) && y == -1;}
+	
+	void Set(const Point3D &p) 					{x = p.x; y = p.y; z = p.z;}
+	void Set(double _x, double _y, double _z) 	{x = _x;  y = _y;  z = _z;}
 	
 	String ToString() const { return FormatDouble(x) + "," + FormatDouble(y) + "," + FormatDouble(z); }
 	
-	bool IsSimilar(const Point3D &p, double similThres) {
+	inline bool IsSimilar(const Point3D &p, double similThres) const {
 		if (abs(p.x - x) < similThres && abs(p.y - y) < similThres && abs(p.z - z) < similThres)
 			return true;
 		return false;
 	}
+	#pragma GCC diagnostic ignored "-Wattributes"
+	friend bool operator==(const Point3D& a, const Point3D& b) {return a.IsSimilar(b, 0.0001);}
+	#pragma GCC diagnostic warning "-Wattributes"
 	
-	friend Point3D operator%(const Point3D& a, const Point3D& b)  {return Point3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
-	friend Point3D operator+(const Point3D& a, const Point3D& b)  {return Point3D(a.x+b.x, a.y+b.y, a.z+b.z);}
-	friend Point3D operator-(const Point3D& a, const Point3D& b)  {return Point3D(a.x-b.x, a.y-b.y, a.z-b.z);}
+	void MoveTo(const Point3D &point, double x, double y, double z, double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
+	void MoveTo(const Point3D &point, double _x, double _y, double _z, const Affine3d &aff);
+		
+	double dot(const Point3D& a) const {return x*a.x + y*a.y + z*a.z;}
+	
+	// Cross product
+	friend Point3D operator%(const Point3D& a, const Point3D& b) {return Point3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
+	
+	friend Point3D operator+(const Point3D& a, const Point3D& b) {return Point3D(a.x+b.x, a.y+b.y, a.z+b.z);}
+	friend Point3D operator-(const Point3D& a, const Point3D& b) {return Point3D(a.x-b.x, a.y-b.y, a.z-b.z);}
+	friend Point3D operator*(const Point3D& a, double b) 		 {return Point3D(a.x*b, a.y*b, a.z*b);}
 
 	double GetLength()	{return sqrt(x*x + y*y + z*z);}
 	Point3D &Normalize() {
 		double length = GetLength();
 		
-		if (length == 0) 
+		if (length < 1e-10) 
 			x = y = z = 0;
 		else {
 		    x = x/length;
@@ -70,9 +97,9 @@ public:
 		}
 		return *this;
 	}
-	double Distance(const Point3D &p) 	{return sqrt(sqr(x-p.x) + sqr(y-p.y) + sqr(z-p.z));}
-	double Manhattan(const Point3D &p) 	{return abs(x-p.x) + abs(y-p.y) + abs(z-p.z);}
-	double Manhattan() 					{return abs(x) + abs(y) + abs(z);}
+	double Distance(const Point3D &p)  const {return sqrt(sqr(x-p.x) + sqr(y-p.y) + sqr(z-p.z));}
+	double Manhattan(const Point3D &p) const {return abs(x-p.x) + abs(y-p.y) + abs(z-p.z);}
+	double Manhattan() 				   const {return abs(x) + abs(y) + abs(z);}
 	
 	void SimX() {x = -x;}
 	void SimY() {y = -y;}
@@ -82,6 +109,11 @@ public:
 		x = 2*p0.x - x;
 		y = 2*p0.y - y;
 		z = 2*p0.z - z;
+	}
+	void Mirror() {
+		x = -x;
+		y = -y;
+		z = -z;
 	}
 };
 
@@ -93,18 +125,19 @@ public:
 	
 	Segment3D() {}
 	Segment3D(const Nuller&) {SetNull();}
-	Segment3D(const Point3D &from, const Point3D &to) : from(from), to(to) {}
-	Segment3D(const Point3D &from, const Vector3D &normal, double length) : from(from) {
+	Segment3D(const Point3D &_from, const Point3D &_to) : from(_from), to(_to) {}
+	Segment3D(const Point3D &_from, const Vector3D &normal, double length) : from(_from) {
 		to = Point3D(from.x + length*normal.x, from.y + length*normal.y, from.z + length*normal.z);
 	}
-	void SetNull() {from = Null;}
+	void SetNull() 				{from = Null;}
+	bool IsNullInstance() const	{return IsNull(from);}
 		
-	void Set(const Point3D &from, const Point3D &to) {
-		this->from.Set(from);
-		this->to.Set(to);
+	void Set(const Point3D &_from, const Point3D &_to) {
+		from.Set(_from);
+		to.Set(_to);
 	}
-	void Set(const Point3D &from, const Vector3D &normal, double length) {
-		this->from.Set(from);
+	void Set(const Point3D &_from, const Vector3D &normal, double length) {
+		from.Set(_from);
 		to.Set(from.x + length*normal.x, from.y + length*normal.y, from.z + length*normal.z);
 	}
 	void SimX() {
@@ -128,14 +161,24 @@ public:
 		from.Mirror(p0);
 		to.Mirror(p0);
 	}
+	
+	Vector3D Vector() {return Vector3D(to - from);}
+	
+	Point3D IntersectionPlaneX(double x);
+	Point3D IntersectionPlaneY(double y);
+	Point3D IntersectionPlaneZ(double z);
+	
+	Point3D Intersection(const Point3D &planePoint, const Vector3D &planeNormal);
 };
 
-bool MinSegment(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4, Segment3D &ret, double &mua, double &mub);
-bool Cross(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4);
+//bool MinSegment(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4, Segment3D &ret, double &mua, double &mub);
+//bool Cross(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4);
 Point3D GetCentroid(const Point3D &a, const Point3D &b);
 Point3D GetCentroid(const Point3D &a, const Point3D &b, const Point3D &c);
 Vector3D GetNormal(const Point3D &a, const Point3D &b, const Point3D &c);
 
+Point3D Intersection(const Vector3D &lineVector, const Point3D &linePoint, const Vector3D &planeNormal, const Point3D &planePoint);
+	
 template <typename T>
 inline T const& maxNotNull(T const& a, T const& b) {
 	if (IsNull(a))
@@ -159,8 +202,22 @@ inline T const& minNotNull(T const& a, T const& b) {
 class Panel : public Moveable<Panel> {
 public:
 	int id[4];
-	Segment3D normal;
+	Point3D centroid0, centroid1, centroidPaint;
+	Point3D normal0, normal1, normalPaint;
+	double surface0, surface1;
 
+	Panel() {}
+	Panel(const Panel &orig) {
+		memcpy(id, orig.id, sizeof(orig.id));
+		centroid0 = orig.centroid0;
+		centroid1 = orig.centroid1;
+		centroidPaint = orig.centroidPaint;
+		normal0 = orig.normal0;
+		normal1 = orig.normal1;
+		normalPaint = orig.normalPaint;
+		surface0 = orig.surface0;
+		surface1 = orig.surface1;
+	}
 	bool operator==(const Panel &p) const {
 		int id0 = id[0], id1 = id[1], id2 = id[2], id3 = id[3];
 		int pid0 = p.id[0], pid1 = p.id[1], pid2 = p.id[2], pid3 = p.id[3];
@@ -179,47 +236,98 @@ public:
 			::Swap(id[1], id[3]);
 	}
 	inline bool IsTriangle() const	{return id[0] == id[3];}
+	void RedirectTriangles();
+	void ShiftNodes(int shift);
 	inline int GetNumNodes() const	{return IsTriangle() ? 3 : 4;}
 	bool FirstNodeIs0(int in0, int in1) const;
+	static double GetSurface(const Point3D &p0, const Point3D &p1, const Point3D &p2);
 	
 	String ToString() const { return FormatInt(id[0]) + "," + FormatInt(id[1]) + "," + FormatInt(id[2]) + "," + FormatInt(id[3]); }
 };
 
-class Segment : public Moveable<Segment> {
+class Segment : public MoveableAndDeepCopyOption<Segment> {
 public:
+	Segment() {}
+	Segment(const Segment &orig, int) {
+		inode0 = orig.inode0;
+		inode1 = orig.inode1;
+		panels = clone(orig.panels);
+	}
 	int inode0, inode1;
-	Index<int> panels;
+	Upp::Index<int> panels;
 };
 
-class VolumeEnvelope {
+class VolumeEnvelope : MoveableAndDeepCopyOption<VolumeEnvelope> {
 public:
 	VolumeEnvelope() {Reset();}
-	void Reset() {maxX = minX = maxY = minY = maxZ = minZ = Null;}
+	void Reset() 	{maxX = minX = maxY = minY = maxZ = minZ = Null;}
+	VolumeEnvelope(const VolumeEnvelope &orig, int) {
+		maxX = orig.maxX;
+		minX = orig.minX;
+		maxY = orig.maxY;
+		minY = orig.minY;
+		maxZ = orig.maxZ;
+		minZ = orig.minZ;
+	}	
 	
 	void MixEnvelope(VolumeEnvelope &env);
+	double Max()	{return max(max(max(abs(maxX), abs(minX)), max(abs(maxY), abs(minY))), max(abs(maxZ), abs(minZ)));}
 	
 	double maxX, minX, maxY, minY, maxZ, minZ;
 };
 
-class Surface {
+class Surface : DeepCopyOption<Surface> {
 public:
-	Surface() : x0z(false), y0z(false) {}
+	Surface() {}
+	Surface(const Surface &surf, int);
+		
+	void Clear();
+	bool IsEmpty();
+	
+	Vector<Point3D> nodes0;
 	Vector<Point3D> nodes;
 	Vector<Panel> panels;
+	
+	int GetNumNodes() 	{return nodes0.GetCount();}
+	int GetNumPanels() 	{return panels.GetCount();}
+	
+	double x = 0, y = 0, z = 0;
+	double a_x = 0, a_y = 0, a_z = 0;
+	double c_x = 0, c_y = 0, c_z = 0;
 	
 	Vector<Segment3D> skewed;
 	Vector<Segment3D> segWaterlevel, segTo1panel, segTo3panel;
 	
-	bool x0z, y0z;
-	String file;
 	VolumeEnvelope env;
 	
 	String Heal(Function <void(String, int pos)> Status);
 	void GetLimits(); 
-	void GetNormals();
-	String GetLastError()	{return lastError;}
-	String lastError;
-
+	void GetPanelParams();
+	double GetWaterPlaneArea();
+	void GetSurface();
+	void GetVolume();
+	Point3D GetCenterOfBuoyancy();
+	void GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g, double zTolerance);
+	void Underwater(const Surface &orig);
+	
+	bool IsMoved(double _x, double _y, double _z, double _ax, double _ay, double _az) const;
+	void MoveTo(double x, double y, double z, double ax, double ay, double az, double _c_x, double _c_y, double _c_z);
+	void MoveTo();
+	
+	bool healing{false};
+	int numTriangles, numBiQuads, numMonoQuads;
+	Vector<Segment> segments;
+	int numDupPan, numDupP, numSkewed, numUnprocessed;
+	
+	double surface = -1, volume = -1;
+	double avgFacetSideLen;
+	
+	void DeployXSymmetry();
+	void DeployYSymmetry();
+	
+	void Fixed() 	{x = Null;}
+	bool IsFixed()	{return IsNull(x);}
+	
 private:
 	inline bool CheckId(int id) {return id >= 0 && id < nodes.GetCount()-1;}
 	
@@ -227,13 +335,14 @@ private:
 	int FixSkewed();
 	int RemoveDuplicatedPanels();
 	int RemoveDuplicatedPointsAndRenumber();
-	void AnalyseSegments(Vector<Segment> &segments, double zTolerance);
-	void AddSegment(Vector<Segment> &segments, int ip0, int ip1, int ipanel);
-	bool ReorientPanels(const Vector<Segment> &segments, int &numUnprocessed);
+	void AnalyseSegments(double zTolerance);
+	void AddSegment(int ip0, int ip1, int ipanel);
+	bool ReorientPanels();
 	void ReorientPanel(int ip);
 	bool SameOrderPanel(int ip0, int ip1, int in0, int in1);
 	int PanelGetNumNodes(int ip) 	{return panels[ip].GetNumNodes();}
 	bool IsPanelTriangle(int ip) 	{return panels[ip].IsTriangle();}
+	void GetPanelParams(Panel &panel);
 };
 
 #endif

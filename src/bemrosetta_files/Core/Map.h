@@ -176,7 +176,7 @@ public:
 	AMap(const AMap& s, int) : key(s.key, 0), value(s.value, 0) {}
 	AMap(Index<K>&& ndx, V&& val) : key(pick(ndx)), value(pick(val)) {}
 	AMap(Vector<K>&& ndx, V&& val) : key(pick(ndx)), value(pick(val)) {}
-	AMap(std::initializer_list<std::pair<K, T>> init) { for(const auto& i : init) Add(i.first, i.second); }
+	AMap(std::initializer_list<std::pair<K, T>> init) { for(const auto& i : init) Add(clone(i.first), clone(i.second)); }
 
 	typedef IteratorOf<V>           Iterator;
 	typedef ConstIteratorOf<V>      ConstIterator;
@@ -235,7 +235,8 @@ public:
 	VectorMap()                                                       {}
 	VectorMap(std::initializer_list<std::pair<K, T>> init) : B::AMap(init) {}
 
-	VectorMap& operator()(const K& k, const T& v)        { B::Add(k, v); return *this; }
+	template <class KK, class TT>
+	VectorMap& operator()(KK&& k, TT&& v)                { B::Add(std::forward<KK>(k), std::forward<TT>(v)); return *this; }
 
 	friend void    Swap(VectorMap& a, VectorMap& b)      { a.B::Swap(b); }
 
@@ -279,7 +280,8 @@ public:
 
 	ArrayMap(std::initializer_list<std::pair<K, T>> init) : B::AMap(init) {}
 
-	ArrayMap& operator()(const K& k, const T& v)         { Add(k, v); return *this; }
+	template <class KK, class TT>
+	ArrayMap& operator()(KK&& k, TT&& v)           { Add(std::forward<KK>(k), std::forward<TT>(v)); return *this; }
 
 	friend void    Swap(ArrayMap& a, ArrayMap& b)        { a.B::Swap(b); }
 

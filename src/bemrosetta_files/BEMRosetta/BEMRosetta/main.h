@@ -14,10 +14,10 @@ public:
 	double zoomlevel;
 };
 
-
+#include <ScatterDraw/Unpedantic.h>
 #define LAYOUTFILE <BEMRosetta/BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
-
+#include <ScatterDraw/Pedantic.h>
 
 #include "arrange.h"
 
@@ -35,25 +35,27 @@ template <class T>
 T phase(const std::complex<T> &val) {
 	return atan2(val.imag(), val.real());
 }
-    
+
+String ForceExtSafe(String fileName, String ext);
+   
 class HydroSource : public DataSource {
 public:
 	HydroSource() : data(0) {}
-	HydroSource(Hydro &data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool ndim) {
-		Init(data, i, j_h, dataToPlot, show_w, ndim);
+	HydroSource(Hydro &_data, int i, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
+		Init(_data, i, _j_h, _dataToPlot, _show_w, _ndim);
 	}
-	bool Init(Hydro *data, int i, int j_h, DataToPlot dataToPlot, bool show_w, bool ndim) 	{
-		return Init(*data, i, j_h, dataToPlot, show_w, ndim);
+	bool Init(Hydro *_data, int i, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) 	{
+		return Init(*_data, i, _j_h, _dataToPlot, _show_w, _ndim);
 	}
-	bool Init(Hydro &data, int idof, int j_h, DataToPlot dataToPlot, bool show_w, bool ndim) {
-		this->data = &data;
-		this->idof = data.dofOrder[idof];
+	bool Init(Hydro &_data, int _idof, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
+		data = &_data;
+		idof = _data.dofOrder[_idof];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
-			j_h = data.dofOrder[j_h];
-		this->j_h = j_h;
-		this->dataToPlot = dataToPlot;
-		this->show_w = show_w;
-		this->ndim = ndim;
+			_j_h = _data.dofOrder[_j_h];
+		j_h = _j_h;
+		dataToPlot = _dataToPlot;
+		show_w = _show_w;
+		ndim = _ndim;
 		if (IsNullData())
 			return false;
 		return true;
@@ -142,10 +144,13 @@ public:
 	typedef MainSummary CLASSNAME;
 	void Init();
 	void Clear();
-	void Report(Hydro &data, int id);
-	void OnArrayBar(Bar &menu); 
-	void ArrayCopy();
-	void ArraySelect();
+};
+
+class MainSummaryCoeff : public MainSummary {
+public:
+	typedef MainSummaryCoeff CLASSNAME;
+
+	void Report(const Hydro &data, int id);
 };
 
 class MainOutput : public WithMainOutput<StaticRect> {
@@ -170,20 +175,98 @@ class MainView : public WithMainView<StaticRect> {
 public:
 	typedef MainView CLASSNAME;
 	
-	MainView() : maxX(Null), maxY(Null), maxZ(Null) {}
-	void Init();
+	MainView() {}
+	void Init(const WithMenuPlotMesh<StaticRect> &menuPlot);
 	
 	void CalcEnvelope();
 		
 	VolumeEnvelope env;
-	double maxX, maxY, maxZ;
 	
-	void ZoomToFit();
+	void OnPaint();
+	
+	const WithMenuPlotMesh<StaticRect> &GetMenuPlot() {return *menuPlot;}
 	
 private:
-	void OnPaint();
+	const WithMenuPlotMesh<StaticRect> *menuPlot;
 };
 
+
+class MainViewDataEach : public StaticRect {
+public:
+	MainViewDataEach() {}
+	void Init(MeshData &_mesh);
+	void OnRefresh();
+	
+	TabCtrl tab;
+	Splitter orig, moved, movedUnder;
+	WithMainPlotList<StaticRect> arrayFacetsAll, arrayNodesOrig,
+								 arrayFacetsAll2, arrayNodesMoved,
+								 arrayFacetsUnder, arrayNodesUnder;
+	
+	class DataSourceFacets : public Convert {
+	public:
+		DataSourceFacets() : pmesh(0), col(0), all(true) {}
+		void Init(MeshData &_mesh, int _col, bool _all);
+		Value Format(const Value& q) const;
+		inline const MeshData &GetMesh()	{return *pmesh;}
+		
+	private:
+		MeshData *pmesh;
+		int col;
+		bool all;
+	};
+	class DataSourceNodes : public Convert {
+	public:
+		DataSourceNodes() : pmesh(0), xyz(0), origMovedUnder(0) {}
+		void Init(MeshData &_mesh, int _xyz, int _origMovedUnder);
+		Value Format(const Value& q) const;
+		
+	private:
+		MeshData *pmesh;
+		int xyz;
+		int origMovedUnder;
+	};
+	
+	Upp::Array<DataSourceFacets> dataSourceFacetsAll, dataSourceFacetsUnder;
+	Upp::Array<DataSourceNodes> dataSourceNodesOrig, dataSourceNodesMoved;
+};
+
+class MainViewData : public StaticRect {
+public:
+	typedef MainViewData CLASSNAME;
+	
+	void Init();
+	void OnAddedModel();
+	void OnRefresh();
+	void Clear();
+	
+private:
+	TabCtrl tab;
+	Upp::Array<MainViewDataEach> models;
+};
+
+class MainSummaryMesh : public MainSummary {
+public:
+	typedef MainSummaryCoeff CLASSNAME;
+
+	void Report(const MeshData &surf, int id);
+};
+
+class MainStiffness : public WithMainStiffness<StaticRect> {
+public:
+	typedef MainStiffness CLASSNAME;
+	
+	void Init();
+	void Clear();
+	void Load(Upp::Array<HydroClass> &hydros);
+	void Load(Upp::Array<MeshData> &surfs);
+	
+private:
+	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody);
+	void Add(String name, int icase, const MatrixXd &K);
+	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro);
+	
+};
 
 class MainPlot : public WithMainPlot<StaticRect> {
 public:
@@ -196,6 +279,11 @@ public:
 	int idof, jdof;
 	double heading;
 	DataToShow dataToShow;
+	
+	bool dim;
+	int markW;
+	bool show_w;
+	bool showPhase;		
 };
 
 class MainABForce : public WithMainABForce<StaticRect> {
@@ -224,112 +312,129 @@ public:
 
 typedef class MainABForce MainRAO;
 
-class Main : public WithMain<TopWindow> {
+class MainMesh : public WithMain<StaticRect> {
 public:
-	typedef Main CLASSNAME;
+	typedef MainMesh CLASSNAME;
 	
-	Main() : closed(false) {}
-	virtual ~Main();
 	void Init();
-	void Close(bool store = false);
+	void InitSerialize(bool ret);
 	
-	void OnLoad();
-	void OnConvert();
-	void OnView();
-	void OnConvertMesh();
+	void AfterLoad(String file);
+	bool OnView();
+	bool OnConvertMesh();
+	void OnUpdate(bool forceMoved);
+	void OnHealing();
+	void OnOpt();
+	void OnMenuConvertArraySel() ;
+	
+	void LoadSelTab(BEMData &bem);
+		
+	void Jsonize(JsonIO &json);
+		
+	WithMenuMesh<StaticRect> menuOpen;
+	WithMenuConvertMesh<StaticRect> menuConvert;
+	WithMenuPlotMesh<StaticRect> menuPlot;
+	WithMenuMeshStability<StaticRect> menuStability;
+	
+	MainView mainView;
+	MainSummaryMesh mainSummary;
+	MainStiffness mainStiffness;
+	MainViewData mainViewData;
+};
+
+class MainNemoh : public WithNemoh<StaticRect> {
+public:
+	typedef MainNemoh CLASSNAME;
+
+	void Init(const BEMData &bem);
+	void InitSerialize(bool ret);
+	
+	void Load(const BEMData &bem);
+	void Load(const NemohCal &data);
+	void Save(NemohCal &data);
+		
+	void Jsonize(JsonIO &json);
+	
+private:
+	bool OnLoad();
+	bool OnSave(const BEMData &bem);
+	void OnCursor();
+	void arrayOnCursor();
+	void arrayUpdateCursor();
+	void arrayClear();
+	void arrayOnAdd();
+	void arrayOnDuplicate();
+	void arrayOnRemove();
+	void InitArray();
+};
+
+class MainBEM : public WithMain<StaticRect> {
+public:
+	typedef MainBEM CLASSNAME;
+	
+	void Init();
+	void InitSerialize(bool ret);
+
+	bool OnLoad();
+	bool OnConvert();
 	void OnOpt();
 	
-	//void WindowAdditionalData(BEMData &bem, HydroClass &data);
-		
-	bool LoadSerializeJson() {
-		bool ret;
-		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
-		DirectoryCreate(folder);
-		if (!DirectoryExists(folder))
-			ret = false;
-		else {
-			String fileName = AppendFileName(folder, "config.cf");
-			if (!FileExists(fileName)) 
-				ret = false;
-			else {
-				String jsonText = LoadFile(fileName);
-				if (jsonText.IsEmpty())
-					ret = false;
-				else {
-					if (!LoadFromJson(*this, jsonText))
-						ret = false;
-					else
-						ret = true;
-				}
-			}
-		}
-		
-		if (!ret || IsNull(menuPlot.autoFit)) 
-			menuPlot.autoFit = true;
-		
-		if (!ret || IsNull(menuPlot.opwT)) 
-			menuPlot.opwT = 0;
-	
-		if (!ret || IsNull(menuPlot.showPoints)) 
-			menuPlot.showPoints = true;
-		
-		if (!ret || IsNull(menuPlot.showPhase)) 
-			menuPlot.showPhase = true;
-
-		if (!ret || IsNull(menuPlot.showNdim)) 
-			menuPlot.showNdim = false;
-
-		if (!ret || IsNull(menuConvert.opt)) 
-			menuConvert.opt = 0;
-		
-		if (!ret || IsNull(menuConvertMesh.opt)) 
-			menuConvertMesh.opt = 0;
-		
-		if (!ret)
-			menuTab.Set(menuAbout);
-		
-		return ret;
-	}
-	
-	bool StoreSerializeJson() {
-		String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
-		DirectoryCreate(folder);
-		if (!DirectoryExists(folder))
-			return 0;
-		String fileName = AppendFileName(folder, "config.cf");
-		return StoreAsJsonFile(*this, fileName, true);
-	}
 	void Jsonize(JsonIO &json);
 		
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
-	WithMenuMesh<StaticRect> menuMesh;
-	WithMenuConvertMesh<StaticRect> menuConvertMesh;
 	
-	MenuOptions menuOptions;
-	MenuAbout menuAbout;
-	
-	MainSummary mainSummary;
+	MainSummaryCoeff mainSummary;
 	MainArrange mainArrange;
 	MainABForce mainA;
 	MainABForce mainB;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
 	MainRAO mainRAO;
-	MainView mainView;
-	MainOutput mainOutput;
 	MainStateSpace mainStateSpace;
-	
-	BEMData bem;
-	
+	MainStiffness mainStiffness;
+		
 private:
 	MainPlot &GetSelPlot();
 	MainABForce &GetSelTab();
 	void LoadSelTab(BEMData &bem);
+};
+
+class Main : public TopWindow {
+public:
+	typedef Main CLASSNAME;
+	
+	Main() : closed(false) {}
+	virtual ~Main();
+	virtual void Close();
+	void CloseMain(bool store);
+
+	void Init();
+
+	void OptionsUpdated();
+
+	bool LoadSerializeJson();
+	bool StoreSerializeJson();
+	
+	void Jsonize(JsonIO &json);
+
+	BEMData bem;
 		
+private:
+	TabCtrl tab;
+	
+	MainMesh mainMesh;
+	MainNemoh mainNemoh;
+	MainBEM mainBEM;
+	MainOutput mainOutput;
+	
+	MenuOptions menuOptions;
+	MenuAbout menuAbout;
+	
 	bool closed;
 };
 
 Main &ma(Main *m = 0);
+MainBEM &mbm(MainBEM *m = 0);
 
 #endif

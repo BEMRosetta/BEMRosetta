@@ -9,15 +9,26 @@
 
 TrackBall::TrackBall() {
 	owner = NULL;
-	buttonRot = Ctrl::LEFT;
 	tracking = false;
-	zoomFactor = 10;
-	//trackball(curquat, 0, -.5, -1, 1);
-	curquat[0] = 0.15f;	curquat[1] = 0.35f;	curquat[2] = 0.85f;	curquat[3] = 0.35f;
+	zoomAngle = 10;
+	ViewXYZ(true, true, true);
 }
 
-void TrackBall::Init(Ctrl *ow) {
+void TrackBall::ViewXYZ(bool x, bool y, bool z) {
+	curquat[0] = curquat[1] = curquat[2] = curquat[3] = 0;
+	if (x && y && z) {
+		curquat[0] = 0.15;	curquat[1] = 0.35;	curquat[2] = 0.85;	curquat[3] = 0.35;
+	} else if (y && z) 
+		curquat[0] = curquat[1] = curquat[2] = curquat[3] = 0.5;
+	else if (x && z) 
+		curquat[1] = curquat[2] = sqrt(0.5);
+	else if (x && y)
+		curquat[2] = curquat[3] = sqrt(0.5);
+}
+
+void TrackBall::Init(Ctrl *ow, int _buttonRot) {
 	owner = ow;
+	buttonRot = _buttonRot;
 }
 
 void TrackBall::Matrix() {
@@ -32,11 +43,14 @@ void TrackBall::Reshape(int w, int h) {
 	height = h;
 }
 
-Image TrackBall::MouseEvent(int event, Point p, int zdelta, dword keyflags) {
-	if ((event & Ctrl::ACTION) == Ctrl::MOUSEWHEEL) {
-		zoomFactor = min<double>(180., zoomFactor * (1 - zdelta/1000.));
-		owner->Refresh();
-	} else if ((event & Ctrl::BUTTON) == buttonRot && (event & Ctrl::ACTION) == Ctrl::DOWN) {
+void TrackBall::Zoom(int zdelta) {
+	zoomAngle = min<double>(180., zoomAngle * (1 - zdelta/1000.));
+}
+
+Image TrackBall::MouseEvent(int event, Point p, int zdelta, dword ) {
+	if ((event & Ctrl::ACTION) == Ctrl::MOUSEWHEEL) 
+		Zoom(zdelta);
+	else if ((event & Ctrl::BUTTON) == buttonRot && (event & Ctrl::ACTION) == Ctrl::DOWN) {
 		tracking = true;
 		beginx = p.x;
 		beginy = p.y;
@@ -55,7 +69,6 @@ Image TrackBall::MouseEvent(int event, Point p, int zdelta, dword keyflags) {
 				beginx = p.x;
 				beginy = p.y;
 				add_quats(lastquat, curquat, curquat);
-				owner->Refresh();
 			}
 		}
 	}

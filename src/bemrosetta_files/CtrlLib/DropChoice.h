@@ -76,6 +76,8 @@ public:
 
 	DropList&     Add(const Value& key, const Value& value, bool enable = true);
 	DropList&     Add(const Value& value)         { return Add(value, value); }
+	DropList&     Add(std::initializer_list<std::pair<Value, Value>> init);
+
 	void          Remove(int i);
 	void          ClearList();
 	void          Clear();
@@ -230,7 +232,6 @@ public:
 	virtual void   GotFocus();
 	virtual void   LostFocus();
 
-
 protected:
 	DropChoice      select;
 	String          appends;
@@ -288,12 +289,12 @@ public:
 
 template <class T>
 WithDropChoice<T>::WithDropChoice() {
-	select.AddTo(*this);
 	select.WhenDrop = callback(this, &WithDropChoice::DoWhenDrop);
 	select.WhenSelect = callback(this, &WithDropChoice::DoWhenSelect);
 	appends = String::GetVoid();
 	withwheel = true;
 	SetStyle(StyleDefault());
+	select.AddTo(*this);
 }
 
 template <class T>

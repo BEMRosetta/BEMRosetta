@@ -9,14 +9,14 @@ bool Aqwa::Load(String file, double) {
 	hd().Nb = Null;
 	
 	try {
-		hd().Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
-		hd().Print("\n- " + x_(t_("LIS file")));
+		BEMData::Print("\n- " + x_(t_("LIS file")));
 		if (!Load_LIS()) {
-			hd().PrintWarning(x_(": **") + t_("Not found") + "**");
-			hd().Print("\n- " + x_(t_("AH1 file")));
+			BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
+			BEMData::Print("\n- " + x_(t_("AH1 file")));
 			if (!Load_AH1()) {
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 				return false;
 			}
 		}
@@ -27,7 +27,7 @@ bool Aqwa::Load(String file, double) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
@@ -216,7 +216,7 @@ bool Aqwa::Load_LIS() {
 	if (hd().Nb == 0)
 		throw Exc(t_("Number of bodies not found"));
 					
-	in.Seek(fpos);			
+	in.SeekPos(fpos);			
 				
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -428,6 +428,6 @@ bool Aqwa::Load_LIS() {
 	return true;
 }
 	
-void Aqwa::Save(String file) {
+void Aqwa::Save(String ) {
 	throw Exc("Option not implemented");
 }		

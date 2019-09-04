@@ -1,3 +1,5 @@
+#define FILESELVERSION 2
+
 Image GetDriveImage(char drive_style);
 Image GetFileIcon(const char *path, bool dir, bool force = false);
 
@@ -95,6 +97,7 @@ public:
 	                Color underline = Null, bool unixexe = false, bool hidden = false);
 	void        Set(int ii, const File& f);
 	void        SetIcon(int ii, const Image& icon);
+	void        Add(const File& f);
 	void        Add(const String& name, const Image& icon = Null,
 		            Font font = StdFont(), Color ink = SColorText(),
 	                bool isdir = false, int64 length = 0, Time time = Null, Color extink = Null,
@@ -315,6 +318,8 @@ public:
 	FileSel& ActiveType(int i);
 	FileSel& PreSelect(const String& path);
 	FileSel& DefaultExt(const char *ext)         { defext = ext; return *this; }
+	FileSel& Sort(int kind)						 { sortby.SetData(kind); return *this; }
+	FileSel& Columns(int n)						 { list.Columns(n); return *this; }
 	FileSel& Multi(bool b = true)                { multi = b; return *this; }
 	FileSel& ReadOnlyOption(bool b = true)       { rdonly = b; return *this; }
 	FileSel& MkDirOption(bool b = true)          { mkdir.Show(b); return *this; }
