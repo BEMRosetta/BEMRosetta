@@ -18,12 +18,12 @@ How to install them:
 
 if sudo is available and enabled on your distribution, copy/paste this in a terminal:
 ```
-sudo apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev  libxtst-dev
+sudo apt-get install g++ make libgtk2.0-dev libnotify-dev libbz2-dev  sox libgtkglext1-dev libxtst-dev
 ```
 
 if sudo is not available:
 ```
-su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev  libxtst-dev'
+su -c 'apt-get install g++ make libgtk2.0-dev libnotify-dev libbz2-dev sox libgtkglext1-dev libxtst-dev'
 ```
 
 
