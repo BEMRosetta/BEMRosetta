@@ -12,18 +12,18 @@ Before compiling source code, you must install a few developpement packages. Man
 
 ### Debian/apt-get based distributions
 
-Build requires: g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev
+Build requires: g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev  libxtst-dev
 
 How to install them:
 
 if sudo is available and enabled on your distribution, copy/paste this in a terminal:
 ```
-sudo apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev
+sudo apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev  libxtst-dev
 ```
 
 if sudo is not available:
 ```
-su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev'
+su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox  libgtkglext1-dev  libxtst-dev'
 ```
 
 
