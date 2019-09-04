@@ -393,6 +393,17 @@ public:
 };
 #endif
 
+class CtrlMapper {
+	bool toctrls = true;
+
+public:
+	template <class T>
+	CtrlMapper& operator()(Ctrl& ctrl, T& val) { if(toctrls) ctrl <<= val; else val = ~ctrl; return *this; }
+	
+	CtrlMapper& ToCtrls()                      { toctrls = true; return *this; }
+	CtrlMapper& ToValues()                     { toctrls = false; return *this; }
+};
+
 class CtrlRetriever {
 public:
 	struct Item {

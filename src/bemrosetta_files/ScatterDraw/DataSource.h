@@ -10,19 +10,19 @@ public:
 
 	DataSource() : isParam(false), isExplicit(false), key(111111) {}
 	virtual ~DataSource() 					{key = 0;}	
-	virtual double y(int64 id)				{/*NEVER();*/	return Null;}
-	virtual double x(int64 id)				{/*NEVER();*/	return Null;}
-	virtual double znx(int n, int64 id)		{/*NEVER();*/	return Null;}
-	virtual double zny(int n, int64 id)		{/*NEVER();*/	return Null;}
-	virtual double znFixed(int n, int64 id)	{/*NEVER();*/	return Null;}
-	virtual double y(double t)				{/*NEVER();*/	return Null;}
-	virtual double x(double t)				{/*NEVER();*/	return Null;}
-	virtual double f(double x)				{/*NEVER();*/	return Null;}
-	virtual double f(Vector<double> zn)		{/*NEVER();*/	return Null;}
-	virtual int64 GetCount()				{/*NEVER();*/	return Null;}
+	virtual double y(int64 )				{NEVER();	return Null;}
+	virtual double x(int64 )				{NEVER();	return Null;}
+	virtual double znx(int , int64 )		{NEVER();	return Null;}
+	virtual double zny(int , int64 )		{NEVER();	return Null;}
+	virtual double znFixed(int , int64 )	{NEVER();	return Null;}
+	virtual double y(double )				{NEVER();	return Null;}
+	virtual double x(double )				{NEVER();	return Null;}
+	virtual double f(double )				{NEVER();	return Null;}
+	virtual double f(Vector<double> )		{NEVER();	return Null;}
+	virtual int64 GetCount()				{NEVER();	return Null;}
 	bool IsEmpty()						{return GetCount() == 0;}
-	virtual int GetznxCount(int64 id)	{return 0;}
-	virtual int GetznyCount(int64 id)	{return 0;}
+	virtual int GetznxCount(int64 )		{return 0;}
+	virtual int GetznyCount(int64 )		{return 0;}
 	virtual int GetznFixedCount()		{return 0;}
 	bool IsParam()						{return isParam;}
 	bool IsExplicit()					{return isExplicit;}
@@ -126,18 +126,18 @@ private:
 
 public:
 	DataXRange() : data(0), count(1000) {}
-	DataXRange(DataSource &data, double xLow, double xHigh) {Init(data, xLow, xHigh);}
-	void Init(DataSource &data, double xLow, double xHigh) {
-		this->data = &data;
-		isExplicit = data.IsExplicit();
-		isParam = data.IsParam();
-		this->xLow = xLow;
-		this->xHigh = xHigh;
+	DataXRange(DataSource &_data, double _xLow, double _xHigh) {Init(_data, _xLow, _xHigh);}
+	void Init(DataSource &_data, double _xLow, double _xHigh) {
+		data = &_data;
+		isExplicit = _data.IsExplicit();
+		isParam = _data.IsParam();
+		xLow = _xLow;
+		xHigh = _xHigh;
 		count = 1000;
 	}
-	void SetCount(int count)	{this->count = count;}
-	void SetXLow(double xLow) 	{this->xLow = xLow;}
-	void SetXHigh(double xHigh) {this->xHigh = xHigh;}
+	void SetCount(int _count)	{count = _count;}
+	void SetXLow(double _xLow) 	{xLow = _xLow;}
+	void SetXHigh(double _xHigh){xHigh = _xHigh;}
 	bool Check(int64 id) {
 		double x = data->x(id);
 		if (!IsNull(xHigh) && xHigh < x)
@@ -188,11 +188,11 @@ private:
 
 public:
 	DataReverse() : data(0) {}
-	DataReverse(DataSource &data) {Init(data);}
-	void Init(DataSource *data) {Init(*data);}
-	void Init(DataSource &data) {
-		ASSERT(!data.IsExplicit() && !data.IsParam());
-		this->data = &data;
+	DataReverse(DataSource &_data) {Init(_data);}
+	void Init(DataSource *_data)   {Init(*_data);}
+	void Init(DataSource &_data) {
+		ASSERT(!_data.IsExplicit() && !_data.IsParam());
+		data = &_data;
 	}
 	virtual inline double y(int64 id) {return data->y(GetCount() - id - 1);}
 	virtual inline double x(int64 id) {return data->x(GetCount() - id - 1);}
@@ -205,10 +205,10 @@ private:
 
 public:
 	DataReverseX() : data(0) {}
-	DataReverseX(DataSource &data) {Init(data);}
-	void Init(DataSource &data) {
-		ASSERT(!data.IsExplicit() && !data.IsParam());
-		this->data = &data;
+	DataReverseX(DataSource &_data) {Init(_data);}
+	void Init(DataSource &_data) {
+		ASSERT(!_data.IsExplicit() && !_data.IsParam());
+		data = &_data;
 	}
 	virtual inline double y(int64 id) {return data->y(id);}
 	virtual inline double x(int64 id) {return data->x(GetCount() - id - 1);}
@@ -221,11 +221,11 @@ protected:
 
 public:
 	DataAppend() : data1(0), data2(0) {}
-	DataAppend(DataSource &data1, DataSource &data2) {Init(data1, data2);}
-	void Init(DataSource &data1, DataSource &data2) {
-		ASSERT(!data1.IsExplicit() && !data1.IsParam() && !data2.IsExplicit() && !data2.IsParam());
-		this->data1 = &data1;
-		this->data2 = &data2;
+	DataAppend(DataSource &_data1, DataSource &_data2) {Init(_data1, _data2);}
+	void Init(DataSource &_data1, DataSource &_data2) {
+		ASSERT(!_data1.IsExplicit() && !_data1.IsParam() && !_data2.IsExplicit() && !_data2.IsParam());
+		data1 = &_data1;
+		data2 = &_data2;
 	}
 	virtual inline double y(int64 id) {
 		int64 count1 = data1->GetCount();
@@ -245,12 +245,12 @@ public:
 class DataRange : public DataAppend {
 public:
 	DataRange() : DataAppend() {}
-	DataRange(DataSource &data1, DataSource &data2) {Init(data1, data2);}
-	void Init(DataSource &data1, DataSource &data2) {
-		ASSERT(!data1.IsExplicit() && !data1.IsParam() && !data2.IsExplicit() && !data2.IsParam());
-		this->data1 = &data1;
-		rev.Init(data2);
-		this->data2 = &rev;
+	DataRange(DataSource &_data1, DataSource &_data2) {Init(_data1, _data2);}
+	void Init(DataSource &_data1, DataSource &_data2) {
+		ASSERT(!_data1.IsExplicit() && !_data1.IsParam() && !_data2.IsExplicit() && !_data2.IsParam());
+		data1 = &_data1;
+		rev.Init(_data2);
+		data2 = &rev;
 	}
 private:
 	DataReverse rev;	
@@ -259,7 +259,7 @@ private:
 class DataStackedY {
 public:
 	DataStackedY() : is100(false) {}
-	void Set100(bool is100)	  	 {this->is100 = is100;}
+	void Set100(bool _is100)	  {is100 = _is100;}
 	DataStackedY &Add(DataSource &data) {
 		EachDataStackedY &each = eachData.Add();
 		each.Init(data, eachData.GetCount() -1, this);
@@ -287,12 +287,12 @@ public:
 	
 	class EachDataStackedY : public DataSource {
 	public:
-		EachDataStackedY() : data(0), index(-1), parent(0) {}
-		void Init(DataSource &data, int index, DataStackedY *parent) {
-			ASSERT(!data.IsExplicit() && !data.IsParam());
-			this->data = &data;
-			this->index = index;
-			this->parent = parent;
+		EachDataStackedY() {}
+		void Init(DataSource &_data, int _index, DataStackedY *_parent) {
+			ASSERT(!_data.IsExplicit() && !_data.IsParam());
+			this->data = &_data;
+			this->index = _index;
+			this->parent = _parent;
 		}
 		virtual inline double y(int64 id) {
 			return parent->GetY(index, id);	
@@ -307,9 +307,9 @@ public:
 			return data->GetCount();
 		}
 	private:
-		DataSource *data;
-		int index;
-		DataStackedY *parent;
+		DataSource *data = 0;
+		int index = -1;
+		DataStackedY *parent = 0;
 	};
 	
 	EachDataStackedY &Get(int id) {return eachData[id];}
@@ -326,9 +326,9 @@ private:
 	double x0, deltaX;
 	
 public:
-	CArray(double *yData, int numData, double x0, double deltaX) : yData(yData), numData(numData), x0(x0), deltaX(deltaX) {xData = NULL;}
-	CArray(double *yData, double *xData, int numData) : yData(yData), xData(xData), numData(numData) {zData = NULL; x0 = deltaX = 0;}
-	CArray(double *yData, double *xData, double *zData, int numData) : yData(yData), xData(xData), zData(zData), numData(numData) {x0 = deltaX = 0;}
+	CArray(double *_yData, int _numData, double _x0, double _deltaX) : yData(_yData), numData(_numData), x0(_x0), deltaX(_deltaX) {xData = NULL;}
+	CArray(double *_yData, double *_xData, int _numData) : yData(_yData), xData(_xData), numData(_numData) {zData = NULL; x0 = deltaX = 0;}
+	CArray(double *_yData, double *_xData, double *_zData, int _numData) : yData(_yData), xData(_xData), zData(_zData), numData(_numData) {x0 = deltaX = 0;}
 	virtual inline double y(int64 id) 	{return yData[ptrdiff_t(id)];}
 	virtual inline double x(int64 id) 	{return xData ? xData[ptrdiff_t(id)] : id*deltaX + x0;}
 	virtual double znFixed(int n, int64 id); 
@@ -344,11 +344,11 @@ private:
 
 public:
 	VectorY() : yData(0), x0(0), deltaX(0) {}
-	VectorY(Vector<Y> &yData, double x0, double deltaX) {Init(yData, x0, deltaX);}
-	void Init(Vector<Y> &yData, double x0, double deltaX) {
-		this->yData = &yData;
-		this->x0 = x0;
-		this->deltaX = deltaX;
+	VectorY(Vector<Y> &_yData, double _x0, double _deltaX) {Init(_yData, _x0, _deltaX);}
+	void Init(Vector<Y> &_yData, double _x0, double _deltaX) {
+		this->yData = &_yData;
+		this->x0 = _x0;
+		this->deltaX = _deltaX;
 	}	
 	virtual inline double y(int64 id)	{return (*yData)[int(id)];}
 	virtual inline double x(int64 id) 	{return id*deltaX + x0;}
@@ -361,16 +361,16 @@ public:
 template <class Y>
 class ArrayY : public DataSource {
 private:
-	Upp::Array<Y> *yData;
-	double x0, deltaX;
+	Upp::Array<Y> *yData = 0;
+	double x0 = 0, deltaX = 0;
 
 public:
-	ArrayY() : yData(0), x0(0), deltaX(0) {}
-	ArrayY(Upp::Array<Y> &yData, double x0, double deltaX) {Init(yData, x0, deltaX);}
-	void Init(Upp::Array<Y> &yData, double x0, double deltaX) {
-		this->yData = &yData;
-		this->x0 = x0;
-		this->deltaX = deltaX;
+	ArrayY() {}
+	ArrayY(Upp::Array<Y> &_yData, double _x0, double _deltaX) {Init(_yData, _x0, _deltaX);}
+	void Init(Upp::Array<Y> &_yData, double _x0, double _deltaX) {
+		this->yData = &_yData;
+		this->x0 = _x0;
+		this->deltaX = _deltaX;
 	}	
 	virtual inline double y(int64 id)	{return (*yData)[ptrdiff_t(id)];}
 	virtual inline double x(int64 id) 	{return id*deltaX + x0;}
@@ -383,45 +383,45 @@ public:
 template <class Y>
 class VectorVectorY : public DataSource {
 private:
-	Vector<Vector<Y> > *data;
-	bool useRows;
-	int idx, idy;
+	Vector<Vector<Y> > *data = 0;
+	bool useRows = true;
+	int idx = 0, idy = 1;
 	Vector<int> idsx, idsy, idsFixed;
-	int beginData;
-	int64 numData;
+	int beginData = 0;
+	int64 numData = Null;
 	
 public:
-	VectorVectorY() : data(0), useRows(true), idx(0), idy(1), beginData(0), numData(Null) {}
-	VectorVectorY(Vector<Vector<Y> > &data, int idx, int idy, 
-				  Vector<int> &idsx, Vector<int> &idsy, Vector<int> &idsFixed, 
-				  bool useRows = true, int beginData = 0, int numData = Null) {
-		Init(data, idx, idy, idsx, idsy, idsFixed, useRows, beginData, numData);
+	VectorVectorY() {}
+	VectorVectorY(Vector<Vector<Y> > &_data, int _idx, int _idy, 
+				  Vector<int> &_idsx, Vector<int> &_idsy, Vector<int> &_idsFixed, 
+				  bool _useRows = true, int _beginData = 0, int _numData = Null) {
+		Init(_data, _idx, _idy, _idsx, _idsy, _idsFixed, _useRows, _beginData, _numData);
 	}
-	void Init(Vector<Vector<Y> > &data, int idx, int idy, Vector<int> &idsx, Vector<int> &idsy, Vector<int> &idsFixed, 
-			  bool useRows = true, int beginData = 0, int numData = Null) {
-		this->data = &data;
-		this->useRows = useRows;
+	void Init(Vector<Vector<Y> > &_data, int _idx, int _idy, Vector<int> &_idsx, Vector<int> &_idsy, Vector<int> &_idsFixed, 
+			  bool _useRows = true, int _beginData = 0, int _numData = Null) {
+		this->data = &_data;
+		this->useRows = _useRows;
 		
-		this->idx = idx;
-		this->idy = idy;
-		this->idsx = clone(idsx);
-		this->idsy = clone(idsy);
-		this->idsFixed = clone(idsFixed);
-		this->beginData = beginData;
-		this->numData = numData;
+		this->idx = _idx;
+		this->idy = _idy;
+		this->idsx = clone(_idsx);
+		this->idsy = clone(_idsy);
+		this->idsFixed = clone(_idsFixed);
+		this->beginData = _beginData;
+		this->numData = _numData;
 		if (IsNull(numData)) {
 			if (!useRows) {
-				if (data.IsEmpty())
+				if (_data.IsEmpty())
 					this->numData = 0;
 				else	
 					this->numData = data[0].GetCount() - beginData;
 			} else
-				this->numData = data.GetCount() - beginData;
+				this->numData = _data.GetCount() - beginData;
 		}
 	}
-	void Init(Vector<Vector<Y> > &data, int idx, int idy, bool useRows = true, int beginData = 0, int numData = Null) {
+	void Init(Vector<Vector<Y> > &_data, int _idx, int _idy, bool _useRows = true, int _beginData = 0, int _numData = Null) {
 		static Vector<int> idsVoid;
-		Init(data, idx, idy, idsVoid, idsVoid, idsVoid, useRows, beginData, numData);
+		Init(_data, _idx, _idy, idsVoid, idsVoid, idsVoid, _useRows, _beginData, _numData);
 	}
 	virtual inline double y(int64 id) {
 		if (!IsNull(idy) && idy >= 0) {
@@ -462,7 +462,7 @@ private:
 	const Vector<double> *xData, *yData;
 
 public:
-	VectorDouble(const Vector<double> &yData, Vector<double> &xData) : xData(&xData), yData(&yData) {}
+	VectorDouble(const Vector<double> &_yData, Vector<double> &_xData) : xData(&_xData), yData(&_yData) {}
 	virtual inline double y(int64 id)	{return (*yData)[int(id)];}
 	virtual inline double x(int64 id) 	{return (*xData)[int(id)];}
 	virtual inline int64 GetCount()		{return min(xData->GetCount(), yData->GetCount());}
@@ -473,7 +473,7 @@ private:
 	const Upp::Array<double> *xData, *yData;
 
 public:
-	ArrayDouble(const Upp::Array<double> &yData, Upp::Array<double> &xData) : xData(&xData), yData(&yData) {}
+	ArrayDouble(const Upp::Array<double> &_yData, Upp::Array<double> &_xData) : xData(&_xData), yData(&_yData) {}
 	virtual inline double y(int64 id)	{return (*yData)[int(id)];}
 	virtual inline double x(int64 id) 	{return (*xData)[int(id)];}
 	virtual inline int64 GetCount()		{return min(xData->GetCount(), yData->GetCount());}
@@ -485,13 +485,13 @@ private:
 
 public:
 	VectorPointf() : data(0) {}
-	VectorPointf(const Vector<Pointf> &data){Init(&data);}
-	VectorPointf(Vector<Pointf> *data) 		{Init(data);}
-	void Init(const Vector<Pointf> *_data) 	{data = _data;}
-	void Init(const Vector<Pointf> &_data) 	{data = &_data;}
-	virtual inline double y(int64 id)		{return (*data)[int(id)].y;}
-	virtual inline double x(int64 id) 		{return (*data)[int(id)].x;}
-	virtual inline int64 GetCount()			{return data->GetCount();}
+	VectorPointf(const Vector<Pointf> &_data)	{Init(&_data);}
+	VectorPointf(Vector<Pointf> *_data) 		{Init(_data);}
+	void Init(const Vector<Pointf> *_data) 		{data = _data;}
+	void Init(const Vector<Pointf> &_data) 		{data = &_data;}
+	virtual inline double y(int64 id)			{return (*data)[int(id)].y;}
+	virtual inline double x(int64 id) 			{return (*data)[int(id)].x;}
+	virtual inline int64 GetCount()				{return data->GetCount();}
 };	
 
 class ArrayPointf : public DataSource {
@@ -499,7 +499,7 @@ private:
 	Upp::Array<Pointf> *data;
 
 public:
-	ArrayPointf(Upp::Array<Pointf> &data) : data(&data) {}
+	ArrayPointf(Upp::Array<Pointf> &_data) : data(&_data) {}
 	virtual inline double y(int64 id)	{return (*data)[int(id)].y;}
 	virtual inline double x(int64 id) 	{return (*data)[int(id)].x;}
 	virtual inline int64 GetCount()		{return data->GetCount();}
@@ -511,7 +511,7 @@ private:
 	VectorMap<X, Y> *data;
 
 public:
-	VectorMapXY(VectorMap<X, Y> &data) : data(&data) {}
+	VectorMapXY(VectorMap<X, Y> &_data) : data(&_data) {}
 	virtual inline double y(int64 id)	{return (*data)[int(id)];}
 	virtual inline double x(int64 id) 	{return (*data).GetKey(int(id));}
 	virtual inline int64 GetCount()		{return data->GetCount();}
@@ -523,7 +523,7 @@ private:
 	ArrayMap<X, Y> *data;
 
 public:
-	ArrayMapXY(ArrayMap<X, Y> &data) : data(&data) {}
+	ArrayMapXY(ArrayMap<X, Y> &_data) : data(&_data) {}
 	virtual inline double y(int64 id)	{return (*data)[int(id)];}
 	virtual inline double x(int64 id) 	{return (*data).GetKey(int(id));}
 	virtual inline int64 GetCount()		{return data->GetCount();}
@@ -535,7 +535,7 @@ protected:
 
 public:
 	FuncSource() {isExplicit = true;}
-	FuncSource(Function <double(double)> function) : function(function) {isExplicit = true;}
+	FuncSource(Function <double(double)> _function) : function(_function) {isExplicit = true;}
 	virtual inline double f(double x)	{return function(x);}
 };
 
@@ -544,7 +544,7 @@ private:
 	Event<double&, double> function;
 
 public:
-	FuncSourceV(Event<double&, double> function) : function(function) {isExplicit = true;}
+	FuncSourceV(Event<double&, double> _function) : function(_function) {isExplicit = true;}
 	virtual inline double f(double x)	{double y; function(y, x); return y;}
 };
 
@@ -557,8 +557,8 @@ private:
 	double minT, maxT;
 	
 public:
-	FuncSourcePara(Function <Pointf(double)> function, int np, double from, double to) : 
-							function(function), numPoints(np), minT(from), maxT(to) {
+	FuncSourcePara(Function <Pointf(double)> _function, int np, double from, double to) : 
+							function(_function), numPoints(np), minT(from), maxT(to) {
 		isParam = true; 
 		lastT = Null;
 	}
@@ -588,7 +588,7 @@ private:
 	PlotExplicFunc function;
 
 public:
-	PlotExplicFuncSource(PlotExplicFunc &function) : function(function) {isExplicit = true;}
+	PlotExplicFuncSource(PlotExplicFunc &_function) : function(_function) {isExplicit = true;}
 	virtual inline double f(double t)	{double y; function(y, t); return y;}
 };	
 
@@ -601,8 +601,8 @@ private:
 	double minT, maxT;
 
 public:
-	PlotParamFuncSource(PlotParamFunc function, int np, double from, double to) : 
-						function(function), numPoints(np), minT(from), maxT(to) {
+	PlotParamFuncSource(PlotParamFunc _function, int np, double from, double to) : 
+						function(_function), numPoints(np), minT(from), maxT(to) {
 		isParam = true; 
 		lastT = Null;
 	}
@@ -697,16 +697,16 @@ public:
 	TableData() : lendata(0), lenxAxis(0), lenyAxis(0), areas(false) {};
 
 	Interpolate Inter()				{return inter;}
-	void Inter(Interpolate inter)	{this->inter = inter;}
+	void Inter(Interpolate _inter)	{this->inter = _inter;}
 	
 	double z_area(Getdatafun getdataX, Getdatafun getdataY, Getdatafun getdata, 
 					double x, double y);
 	double z_point(Getdatafun getdataX, Getdatafun getdataY, Getdatafun getdata, 
 					double x, double y);
 
-	virtual inline double x(int d)				{/*NEVER();*/	return Null;}
-	virtual inline double y(int d)				{/*NEVER();*/	return Null;}
-	virtual inline double data(int d)			{/*NEVER();*/	return Null;}
+	virtual inline double x(int )		{NEVER();	return Null;}
+	virtual inline double y(int )		{NEVER();	return Null;}
+	virtual inline double data(int )	{NEVER();	return Null;}
 	
 	double z(double x, double y) {
 		return z(&TableData::x, &TableData::y, &TableData::data, x, y);
@@ -747,19 +747,19 @@ class TableDataVector : public TableData {
 public:
 	TableDataVector() : pdata(0), pxAxis(0), pyAxis(0) {}
 	TableDataVector(Vector<double> &data, Vector<double> &xAxis, Vector<double> &yAxis, 
-			Interpolate inter, bool areas) {Init(data, xAxis, yAxis, inter, areas);}
+			Interpolate _inter, bool _areas) {Init(data, xAxis, yAxis, _inter, _areas);}
 	void Init(Vector<double> &data, Vector<double> &xAxis, Vector<double> &yAxis, 
-					Interpolate inter, bool areas) {
-		ASSERT(areas ?  (data.GetCount() == (xAxis.GetCount() - 1)*(yAxis.GetCount() - 1)) : true);
-		ASSERT(!areas ? (data.GetCount() == xAxis.GetCount()*yAxis.GetCount()) : true);
+					Interpolate _inter, bool _areas) {
+		ASSERT(_areas ?  (data.GetCount() == (xAxis.GetCount() - 1)*(yAxis.GetCount() - 1)) : true);
+		ASSERT(!_areas ? (data.GetCount() == xAxis.GetCount()*yAxis.GetCount()) : true);
 		this->pdata = &data;
 		this->lendata = data.GetCount();
 		this->pxAxis = &xAxis;
 		this->lenxAxis = xAxis.GetCount();
 		this->pyAxis = &yAxis;
 		this->lenyAxis = yAxis.GetCount();
-		this->inter = inter;
-		this->areas = areas;
+		this->inter = _inter;
+		this->areas = _areas;
 	}
 	virtual inline double x(int id) 	{return (*pxAxis)[id];}
 	virtual inline double y(int id) 	{return (*pyAxis)[id];}
@@ -773,21 +773,21 @@ private:
 
 class TableDataCArray : public TableData {
 public:
-	TableDataCArray() : pdata(0), pxAxis(0), pyAxis(0)/*, lendata(-23), lenxAxis(0), lenyAxis(0)*/ {}
-	TableDataCArray(double *data, int lendata, double *xAxis, int lenxAxis, double *yAxis, int lenyAxis, 
-					Interpolate inter, bool areas) {Init(data, lendata, xAxis, lenxAxis, yAxis, lenyAxis, inter, areas);}
-	void Init(double *data, int lendata, double *xAxis, int lenxAxis, double *yAxis, int lenyAxis, 
-					Interpolate inter, bool areas) {
-		ASSERT(areas ?  (lendata == (lenxAxis - 1)*(lenyAxis - 1)) : true);
-		ASSERT(!areas ? (lendata == lenxAxis*lenyAxis) : true);
+	TableDataCArray() : pdata(0), pxAxis(0), pyAxis(0) {}
+	TableDataCArray(double *data, int _lendata, double *xAxis, int _lenxAxis, double *yAxis, int _lenyAxis, 
+					Interpolate _inter, bool _areas) {Init(data, _lendata, xAxis, _lenxAxis, yAxis, _lenyAxis, _inter, _areas);}
+	void Init(double *data, int _lendata, double *xAxis, int _lenxAxis, double *yAxis, int _lenyAxis, 
+					Interpolate _inter, bool _areas) {
+		ASSERT(_areas ?  (_lendata == (_lenxAxis - 1)*(_lenyAxis - 1)) : true);
+		ASSERT(!_areas ? (_lendata == _lenxAxis*_lenyAxis) : true);
 		this->pdata = data;
-		this->lendata = lendata;
+		this->lendata = _lendata;
 		this->pxAxis = xAxis;
-		this->lenxAxis = lenxAxis;
+		this->lenxAxis = _lenxAxis;
 		this->pyAxis = yAxis;
-		this->lenyAxis = lenyAxis;
-		this->inter = inter;
-		this->areas = areas;
+		this->lenyAxis = _lenyAxis;
+		this->inter = _inter;
+		this->areas = _areas;
 	}
 	virtual inline double x(int id) 	{return pxAxis[id];}
 	virtual inline double y(int id) 	{return pyAxis[id];}
@@ -806,8 +806,8 @@ private:
 class ExplicitData : public DataSourceSurf {
 public:
 	ExplicitData() {}
-	ExplicitData(Function<double (double x, double y)> funz, double minX, double maxX, double minY, double maxY) {
-		Init(funz, minX, maxX, minY, maxY);
+	ExplicitData(Function<double (double x, double y)> _funz, double _minX, double _maxX, double _minY, double _maxY) {
+		Init(_funz, _minX, _maxX, _minY, _maxY);
 	}
 	void Init(Function<double (double x, double y)> funz, double minX, double maxX, double minY, double maxY);
 		

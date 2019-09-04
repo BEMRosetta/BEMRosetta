@@ -48,7 +48,7 @@ struct NonLinearOptimizationFunctor {
 	
 	ptrdiff_t inputs() const {return ptrdiff_t(unknowns);}
 	ptrdiff_t values() const {return ptrdiff_t(datasetLen);}
-	virtual void operator() (const InputType& x, ValueType* v, JacobianType* j = 0) const {};
+	virtual void operator() (const InputType& , ValueType* , JacobianType*  = 0) const {};
 };
 
 template <class T>

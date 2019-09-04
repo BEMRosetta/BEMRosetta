@@ -361,23 +361,37 @@ T_("Model already loaded")
 esES("")
 frFR("")
 
-T_("Unknown file format")
-esES("")
-frFR("")
-
-T_("Healing mesh")
-esES("")
-frFR("")
-
 T_("The mesh is in good condition")
 esES("")
 frFR("")
 
-T_("Getting mesh normals")
+T_("Loaded %d panels and %d nodes")
 esES("")
 frFR("")
 
-T_("Loaded %d panels and %d nodes")
+
+// Mesh.cpp
+
+T_("Unknown file extension")
+esES("")
+frFR("")
+
+T_("Model is empty. No panels found")
+esES("")
+frFR("")
+
+
+// nemoh_mesh.cpp
+
+T_("Impossible to open file '%s'")
+esES("")
+frFR("")
+
+T_("Format error in Nemoh .dat mesh file")
+esES("")
+frFR("")
+
+T_("Impossible to open '%s'\n")
 esES("")
 frFR("")
 
@@ -523,11 +537,15 @@ T_("SeaFEM_Nemoh only allows one body, found %d")
 esES("")
 frFR("")
 
-T_("Impossible to open file '%s'")
+T_("DOF does not match in %s")
 esES("")
 frFR("")
 
-T_("Format error in Nemoh .dat mesh file")
+T_("[%d] Number of frequencies higher than the defined in Nemoh.cal file")
+esES("")
+frFR("")
+
+T_("[%d] Number of bodies higher than the defined in Nemoh.cal file")
 esES("")
 frFR("")
 
@@ -575,6 +593,29 @@ esES("")
 frFR("")
 
 T_("Vectors w and TFSResponse size does not match")
+esES("")
+frFR("")
+
+
+// wamit_mesh.cpp
+
+T_("[%d] 'ZONE' field not found")
+esES("")
+frFR("")
+
+T_("Wrong scale in .gdf file")
+esES("")
+frFR("")
+
+T_("Number of patches not found in .gdf file")
+esES("")
+frFR("")
+
+T_("Wrong number of patches in .gdf file")
+esES("")
+frFR("")
+
+T_("Impossible to open '%s'")
 esES("")
 frFR("")
 
@@ -658,27 +699,7 @@ T_("Number of headings loaded is different than previous (%d != %d)")
 esES("")
 frFR("")
 
-T_("Impossible to open '%s'")
-esES("")
-frFR("")
-
 T_("No enough data to save (at least 2 frequencies)")
-esES("")
-frFR("")
-
-T_("[%d] 'ZONE' field not found")
-esES("")
-frFR("")
-
-T_("Wrong scale in .gdf file")
-esES("")
-frFR("")
-
-T_("Wrong number of patches in .gdf file")
-esES("")
-frFR("")
-
-T_("Model is empty. No panels found")
 esES("")
 frFR("")
 
@@ -827,6 +848,18 @@ frFR("")
 
 
 // Obsolete
+
+T_("Unknown file format")
+esES("")
+frFR("")
+
+T_("Healing mesh")
+esES("")
+frFR("")
+
+T_("Getting mesh normals")
+esES("")
+frFR("")
 
 T_("delta %.1f [rad/s]")
 esES("")

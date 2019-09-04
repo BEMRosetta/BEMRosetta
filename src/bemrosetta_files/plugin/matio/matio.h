@@ -355,7 +355,7 @@ public:
 	}
 	
 	bool VarWrite(MatVar &var, bool compression = true) {
-		if (0 != Mat_VarWrite(mat, var.var, MAT_COMPRESSION_NONE))
+		if (0 != Mat_VarWrite(mat, var.var, compression ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB))
 			return false;
 		return true;
 	}
@@ -381,7 +381,7 @@ public:
 		matvar_t *var = Mat_VarCreate(name, class_type, data_type, numDim, dims, data, MAT_F_DONT_COPY_DATA);
 		if (var == NULL)
 			return false;
-		if (0 != Mat_VarWrite(mat, var, MAT_COMPRESSION_NONE))
+		if (0 != Mat_VarWrite(mat, var, compression ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB))
 			return false;
 		return true;
 	}

@@ -1,5 +1,5 @@
 #include "PieDraw.h"
-
+#include "DrawingFunctions.h"
 
 static void DrawPie(Draw& w, double c_x, double c_y, double r, int start, int alpha, int width = 0, 
 					Color fill = Null, Color outline = Black, uint64 pattern = 0, Color background = White) {
@@ -91,7 +91,7 @@ void PieDraw::PaintPie(Draw& w, int scale) {
 		FontTitle6 = titleFont;
 		FontTitle6.Height(scale*titleFont.GetHeight());
 		FontTitle6.Width(scale*titleFont.GetWidth());
-		textsize = GetTextSize(title, FontTitle6);
+		textsize = GetTextSizeSpace(title, FontTitle6);
 		if(titlePos == TOP) 
 			w.DrawText((scale*GetSize().cx - textsize.cx)/2, scale*titleGap, title, FontTitle6, titleColor);
 		else  
@@ -102,7 +102,7 @@ void PieDraw::PaintPie(Draw& w, int scale) {
 	if(vValues.IsEmpty())
 		return;
 	
-	int alfa0 = -900 + (int)pieAngle;
+	int alfa0 = -900 + static_cast<int>(pieAngle);
 	int a0 = 0;
 	double sum = 0;
 	for(int i = 0; i < vValues.GetCount(); i++)
@@ -137,7 +137,7 @@ void PieDraw::PaintPie(Draw& w, int scale) {
 		alfa0 += fround(3600.0*vValues[i]/sum);
 	}
 	if(showPercent) {
-		alfa0 = -900 + (int)pieAngle;
+		alfa0 = -900 + static_cast<int>(pieAngle);
 		for(int i = 0; i < vValues.GetCount(); i++) {
 			a0 = alfa0;                            		              
 			alfa0 += fround(3600.0*vValues[i]/sum);
@@ -145,13 +145,13 @@ void PieDraw::PaintPie(Draw& w, int scale) {
 			Upp::Font scaledFont;
 			scaledFont.Height(scale*StdFont().GetHeight());
 			scaledFont.Width(scale*StdFont().GetWidth());
-			Size sz = GetTextSize(percent, scaledFont);
+			Size szz = GetTextSizeSpace(percent, scaledFont);
 		
-			int px = int(circ_x + scale*circ_r*cos(M_PI*(alfa0+a0)/3600)/1.3 - sz.cx/2.);
-			int py = int(circ_y + scale*circ_r*sin(M_PI*(alfa0+a0)/3600)/1.3 - sz.cy/2.);
-			w.DrawRect(px,   py,   			 sz.cx, 	1, 		 percentBack);
-			w.DrawRect(px-1, py + 1, 		 sz.cx + 2, sz.cy-2, percentBack);
-			w.DrawRect(px,   py + sz.cy - 1, sz.cx, 	1, 		 percentBack);
+			int px = int(circ_x + scale*circ_r*cos(M_PI*(alfa0+a0)/3600)/1.3 - szz.cx/2.);
+			int py = int(circ_y + scale*circ_r*sin(M_PI*(alfa0+a0)/3600)/1.3 - szz.cy/2.);
+			w.DrawRect(px,   py,   			  szz.cx, 	  1, 		percentBack);
+			w.DrawRect(px-1, py + 1, 		  szz.cx + 2, szz.cy-2, percentBack);
+			w.DrawRect(px,   py + szz.cy - 1, szz.cx, 	  1, 		percentBack);
 			w.DrawText(px, py, percent, scaledFont);
 		}
 	}
@@ -164,7 +164,7 @@ void PieDraw::PaintPie(Draw& w, int scale) {
 		int legendWidth = 0;
 		int legendHeight = (1 + nr)*scaledFont.GetHeight();
 		for(int i = 0; i < nr; i++) 
-			legendWidth = max<int>(legendWidth, GetTextSize(vNames[i], scaledFont).cx);
+			legendWidth = max<int>(legendWidth, GetTextSizeSpace(vNames[i], scaledFont).cx);
 		legendWidth += fround(2.2*fh);
 		
 		double leg_x = -legendLeft + sz.cx - legendWidth;

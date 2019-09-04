@@ -11,23 +11,15 @@ T_("Configuration data is not loaded. Defaults are set")
 esES("")
 frFR("")
 
-T_("Open")
-esES("")
-frFR("")
-
-T_("Convert")
-esES("")
-frFR("")
-
-T_("Plot")
-esES("")
-frFR("")
-
 T_("Mesh")
 esES("")
 frFR("")
 
-T_("Convert Mesh")
+T_("BEM")
+esES("")
+frFR("")
+
+T_("Output")
 esES("")
 frFR("")
 
@@ -40,6 +32,37 @@ esES("")
 frFR("")
 
 T_("Options have changed&Do you want to save them?")
+esES("")
+frFR("")
+
+T_("Hydrodynamic coefficents viewer and converter")
+esES("")
+frFR("")
+
+T_("Unknown error")
+esES("")
+frFR("")
+
+T_("Internal error:")
+esES("")
+frFR("")
+
+T_("Program ended")
+esES("")
+frFR("")
+
+
+// mainBEM.cpp
+
+T_("Open")
+esES("")
+frFR("")
+
+T_("Convert")
+esES("")
+frFR("")
+
+T_("Plot")
 esES("")
 frFR("")
 
@@ -79,14 +102,6 @@ T_("State Space")
 esES("")
 frFR("")
 
-T_("View")
-esES("")
-frFR("")
-
-T_("Output")
-esES("")
-frFR("")
-
 T_("Loading BEM files...")
 esES("")
 frFR("")
@@ -96,10 +111,6 @@ esES("")
 frFR("")
 
 T_("Unknown type in OnConvert()")
-esES("")
-frFR("")
-
-T_("Loading mesh file...")
 esES("")
 frFR("")
 
@@ -444,19 +455,18 @@ T_("TFSResponse Phase %s")
 esES("")
 frFR("")
 
-T_("Hydrodynamic coefficents viewer and converter")
+
+// mainMesh.cpp
+
+T_("Convert Mesh")
 esES("")
 frFR("")
 
-T_("Unknown error")
+T_("View")
 esES("")
 frFR("")
 
-T_("Internal error:")
-esES("")
-frFR("")
-
-T_("Program ended")
+T_("Loading mesh file...")
 esES("")
 frFR("")
 
@@ -523,7 +533,7 @@ T_("Show")
 esES("")
 frFR("")
 
-T_("Wamit .gdf\nBy extension")
+T_("Wamit .gdf\nNemoh .dat\nBy extension")
 esES("")
 frFR("")
 
@@ -556,10 +566,6 @@ esES("")
 frFR("")
 
 T_("Calc. A_inf if not in files")
-esES("")
-frFR("")
-
-T_("Test:")
 esES("")
 frFR("")
 
@@ -610,6 +616,14 @@ frFR("")
 
 
 // Obsolete
+
+T_("Wamit .gdf\nBy extension")
+esES("")
+frFR("")
+
+T_("Test:")
+esES("")
+frFR("")
 
 T_("Model '%s' does not match with the one previously loaded: %s")
 esES("")
@@ -708,7 +722,7 @@ esES("")
 frFR("")
 
 
-// Surface.cpp
+// PACKAGE 'Surface' FILE 'Surface.cpp'
 
 T_("Found %d triangles")
 esES("")
@@ -743,5 +757,36 @@ esES("")
 frFR("")
 
 T_("%d panels not reoriented. Body contains separated surfaces")
+esES("")
+frFR("")
+
+
+// Surface.cpp
+
+T_("Detecting triangles and wrong panels")
+esES("")
+frFR("")
+
+T_("Removing duplicated panels (pass 1)")
+esES("")
+frFR("")
+
+T_("Fixing skewed panels")
+esES("")
+frFR("")
+
+T_("Removing duplicated points")
+esES("")
+frFR("")
+
+T_("Removing duplicated panels (pass 2)")
+esES("")
+frFR("")
+
+T_("Analysing water tightness")
+esES("")
+frFR("")
+
+T_("Reorienting panels water side")
 esES("")
 frFR("")

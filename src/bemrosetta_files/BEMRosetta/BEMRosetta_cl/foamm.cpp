@@ -12,9 +12,9 @@ bool Foamm::Load(String file) {
 	
 	try {
 		if (GetFileExt(file) == ".mat") {
-			hd().Print("\n\n" + Format(t_("Loading mat file '%s'"), file));
+			BEMData::Print("\n\n" + Format(t_("Loading mat file '%s'"), file));
 			if (!Load_mat(file)) {
-				hd().PrintWarning("\n" + Format(t_("File '%s' not found"), file));
+				BEMData::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
 				return false;
 			}
 		}
@@ -25,7 +25,7 @@ bool Foamm::Load(String file) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 1;
 	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
@@ -36,10 +36,10 @@ bool Foamm::Load(String file) {
 void Foamm::Save(String file) {
 	try {
 		String file1 = ForceExt(file, ".mat");
-		hd().Print("\n- " + Format(t_("FOAMM file '%s'"), GetFileName(file1)));
+		BEMData::Print("\n- " + Format(t_("FOAMM file '%s'"), GetFileName(file1)));
 		Save_mat(file1);
 	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 	}
 }
@@ -73,7 +73,7 @@ bool Foamm::Load_mat(String file) {
 	
 	MatMatrix<double> A = mat.VarReadMat<double>("A");	
 	if (A.GetCount() == 0)
-		hd().Print(x_("\n") + t_("Vector A not found"));
+		BEMData::Print(x_("\n") + t_("Vector A not found"));
 	else {
 		hd().A.SetCount(hd().Nf);
 		if (hd().Nf != A.GetCount())
@@ -86,7 +86,7 @@ bool Foamm::Load_mat(String file) {
 	
 	MatMatrix<double> B = mat.VarReadMat<double>("B");	
 	if (B.GetCount() == 0)
-		hd().Print(x_("\n") + t_("Vector B not found"));
+		BEMData::Print(x_("\n") + t_("Vector B not found"));
 	else {
 		hd().B.SetCount(hd().Nf);
 		if (hd().Nf != B.GetCount())
@@ -107,7 +107,7 @@ bool Foamm::Load_mat(String file) {
 
 	MatMatrix<std::complex<double>> Z = mat.VarReadMat<std::complex<double>>("Z");	
 	if (Z.GetCount() == 0)
-		hd().Print(x_("\n") + t_("Vector Z not found"));
+		BEMData::Print(x_("\n") + t_("Vector Z not found"));
 	else {
 		hd().Z.SetCount(hd().Nf);
 		if (hd().Nf != Z.GetCount())
@@ -118,7 +118,7 @@ bool Foamm::Load_mat(String file) {
 
 	MatMatrix<std::complex<double>> TFSResponse = mat.VarReadMat<std::complex<double>>("TFSResponse");	
 	if (TFSResponse.GetCount() == 0)
-		hd().Print(x_("\n") + t_("Vector TFSResponse not found"));
+		BEMData::Print(x_("\n") + t_("Vector TFSResponse not found"));
 	else {
 		hd().TFSResponse.SetCount(hd().Nf);
 		if (hd().Nf != TFSResponse.GetCount())
@@ -130,6 +130,6 @@ bool Foamm::Load_mat(String file) {
 	return true;
 }
 
-void Foamm::Save_mat(String file) {
-	
+void Foamm::Save_mat(String ) {
+	throw Exc("Option not implemented");
 }
