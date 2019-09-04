@@ -5,9 +5,10 @@
 
 using namespace Upp;
 
+#include <ScatterDraw/Unpedantic.h>
 #define LAYOUTFILE <BEMRosetta/BEMRosetta/arrange.lay>
 #include <CtrlCore/lay.h>
-
+#include <ScatterDraw/Pedantic.h>
 
 class ArrangeDOF : public WithArrange<StaticRect> {
 public:

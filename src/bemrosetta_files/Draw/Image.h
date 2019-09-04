@@ -118,6 +118,10 @@ public:
 	const RGBA *Begin() const           { return pixels; }
 	RGBA *End()                         { return pixels + GetLength(); }
 	const RGBA *End() const             { return pixels + GetLength(); }
+	RGBA *begin()                       { return pixels; }
+	const RGBA *begin() const           { return pixels; }
+	RGBA *end()                         { return pixels + GetLength(); }
+	const RGBA *end() const             { return pixels + GetLength(); }
 
 	void  Create(int cx, int cy);
 	void  Create(Size sz)               { Create(sz.cx, sz.cy); }
@@ -246,14 +250,6 @@ public:
 	
 	uint64       GetAuxData() const;
 
-	// IML support ("private"), deprecated - legacy .iml
-	struct Init {
-		const char *const *scans;
-		int16 scan_count;
-		char info[24];
-	};
-	explicit Image(const Init& init);
-	
 	// required by system image cache managemenent
 	
 	int GetRefCount() const         { return data ? (int)data->refcount : 0; }
@@ -298,7 +294,6 @@ class Iml {
 	};
 	Vector<Data> data[4]; // 0 normal, 1 HiDPI - HD, 2 DK - Dark, 3 HDK - HiDPI + dark
 	VectorMap<String, IImage> map;
-	const Image::Init *img_init;
 	const char **name;
 	dword global_flags = 0;
 	bool  premultiply;
@@ -315,15 +310,11 @@ public:
 	int    Find(const String& id) const      { return map.Find(id); }
 	void   Set(int i, const Image& img);
 
-#ifdef _DEBUG
-	int    GetBinSize() const;
-#endif
-
 	ImageIml GetRaw(int mode, int i); // tries to get image for mode, can return Null
 	ImageIml GetRaw(int mode, const String& id); // tries to get image for mode by id, can return Null
 
 // these methods serve for .iml import
-	Iml(const Image::Init *img_init, const char **name, int n);//Deprecated - legacy .iml
+	Iml(const char **name, int n);//Deprecated - legacy .iml
 	void AddData(const byte *data, int len, int count, int mode = 0);
 	void AddId(int mode1, const char *name);
 	void Premultiplied()                   { premultiply = false; }

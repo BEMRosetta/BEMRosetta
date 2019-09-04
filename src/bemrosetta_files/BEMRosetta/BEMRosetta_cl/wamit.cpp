@@ -14,42 +14,42 @@ bool Wamit::Load(String file, double rho) {
 	
 	try {
 		if (GetFileExt(file) == ".out") {
-			hd().Print("\n\n" + Format(t_("Loading out file '%s'"), file));
+			BEMData::Print("\n\n" + Format(t_("Loading out file '%s'"), file));
 			if (!Load_out()) {
-				hd().PrintWarning("\n" + Format(t_("File '%s' not found"), file));
+				BEMData::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
 				return false;
 			}
 			String fileSC = ForceExt(file, ".3sc");
-			hd().Print("\n- " + Format(t_("Scattering file '%s'"), GetFileName(fileSC)));
+			BEMData::Print("\n- " + Format(t_("Scattering file '%s'"), GetFileName(fileSC)));
 			if (!Load_Scattering(fileSC))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 			String fileFK = ForceExt(file, ".3fk");
-			hd().Print("\n- " + Format(t_("Froude-Krylov file '%s'"), GetFileName(fileFK)));
+			BEMData::Print("\n- " + Format(t_("Froude-Krylov file '%s'"), GetFileName(fileFK)));
 			if (!Load_FK(fileFK))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 		} else if (x_(".1.3.hst").Find(GetFileExt(file)) >= 0) {
 			String file1 = ForceExt(file, ".1");
-			hd().Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
+			BEMData::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
 			if (!Load_1(file1))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 			
 			String file3 = ForceExt(file, ".3");
-			hd().Print("\n- " + Format(t_("Diffraction exciting .3 file '%s'"), GetFileName(file3)));
+			BEMData::Print("\n- " + Format(t_("Diffraction exciting .3 file '%s'"), GetFileName(file3)));
 			if (!Load_3(file3))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 			
 			String fileHST = ForceExt(file, ".hst");
-			hd().Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
+			BEMData::Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
 			if (!Load_hst(fileHST))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 		}
 		String fileRAO = ForceExt(file, ".4");
-		hd().Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
+		BEMData::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
 		try {
 			if (!Load_4(fileRAO))
-				hd().PrintWarning(x_(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(x_(": **") + t_("Not found") + "**");
 		} catch(Exc e) {
-			hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+			BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 			hd().lastError = e;
 		}
 		if (IsNull(hd().Nb))
@@ -59,7 +59,7 @@ bool Wamit::Load(String file, double rho) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
@@ -71,27 +71,27 @@ void Wamit::Save(String file) {
 	try {
 		if (hd().IsLoadedA() && hd().IsLoadedB()) {
 			String file1 = ForceExt(file, ".1");
-			hd().Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(file1)));
+			BEMData::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(file1)));
 			Save_1(file1);
 		}
 		
 		if (hd().IsLoadedFex()) {
 			String file3 = ForceExt(file, ".3");
-			hd().Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(file3)));
+			BEMData::Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(file3)));
 			Save_3(file3);
 		}
 		if (hd().IsLoadedC()) {
 			String fileHST = ForceExt(file, ".hst");
-			hd().Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
+			BEMData::Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
 			Save_hst(fileHST);
 		}
 		if (hd().IsLoadedRAO()) {
 			String fileRAO = ForceExt(file, ".4");
-			hd().Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
+			BEMData::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
 			Save_4(fileRAO);
 		}
 	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 	}
 }
@@ -191,14 +191,14 @@ bool Wamit::Load_out() {
 			hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
 			
-			in.Seek(fpos);
+			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = infinite") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
 				hd().Aw0.setConstant(hd().Nb*6, hd().Nb*6, Null);
 				Load_A(in, hd().Aw0);
 			}
-			in.Seek(fpos);
+			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = zero") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
@@ -206,7 +206,7 @@ bool Wamit::Load_out() {
 				Load_A(in, hd().Awinf);
 			}
 			
-			in.Seek(fpos);
+			in.SeekPos(fpos);
 			
 			int ifr = -1;
 			while (!in.IsEof()) {
@@ -373,7 +373,7 @@ bool Wamit::Load_1(String fileName) {
 	Vector<double> T; 	
     Vector<double> w; 
     
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 	
 	int maxDof = 0;
 	bool thereIsAw0 = false, thereIsAwinf = false; 
@@ -429,6 +429,7 @@ bool Wamit::Load_1(String fileName) {
 		hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 	  	hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 	}
+	hd().names.SetCount(Nb);
 	
 	if (hd().w.IsEmpty()) {
 		hd().w = pick(w);
@@ -438,7 +439,7 @@ bool Wamit::Load_1(String fileName) {
 	else if (!Compare(hd().T, T, 0.001))
 		throw Exc(Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 				
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 	
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
@@ -463,7 +464,7 @@ bool Wamit::Load_1(String fileName) {
 		  	hd().A[ifr](i, j) = Aij;    
 		  	hd().B[ifr](i, j) = f.GetDouble(4);   	
 		}
-	}		
+	}
 	return true;	
 }
  
@@ -485,7 +486,7 @@ bool Wamit::Load_3(String fileName) {
 	Vector<double> T; 	
     Vector<double> w;
     
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 		
 	hd().head.Clear();
 	while (!in.IsEof()) {
@@ -534,7 +535,7 @@ bool Wamit::Load_3(String fileName) {
 	else if (!Compare(hd().T, T, 0.001))
 		throw Exc(Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 	
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 	
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
@@ -577,7 +578,7 @@ bool Wamit::Load_hst(String fileName) {
 	if (in.IsEof())
 		throw Exc(t_("Error in file format"));
 	
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 	
 	hd().C.SetCount(hd().Nb);
 	for(int ibody = 0; ibody < hd().Nb; ++ibody)
@@ -616,7 +617,7 @@ bool Wamit::Load_4(String fileName) {
 	Vector<double> T; 	
     Vector<double> w;
     
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 	
 	int maxDof = 0;
 	hd().head.Clear();
@@ -680,7 +681,7 @@ bool Wamit::Load_4(String fileName) {
 	else if (!Compare(hd().T, T, 0.001))
 		throw Exc(Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 	
-	in.Seek(fpos);
+	in.SeekPos(fpos);
 	
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
@@ -858,201 +859,3 @@ void Wamit::Save_4(String fileName) {
 }
 					
 
-bool Wamit::LoadDatMesh(String fileName) {
-	FileInLine in(fileName);
-	if (!in.IsOpen()) {
-		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
-		mh().lastError = Format(t_("Impossible to open file '%s'"), fileName);
-		return false;
-	}
-	mh().file = fileName;
-	mh.SetCode(MeshData::WAMIT_DAT);
-	
-	String line;
-	FieldSplit f(in);	
-	
-	try {
-		line = ToUpper(TrimBoth(in.GetLine()));
-		if (!line.StartsWith("ZONE"))
-			throw Exc(Format(t_("[%d] 'ZONE' field not found"), in.GetLineNumber()));
-
-		line.Replace("\"", "");
-		line.Replace(" ", "");
-		
-		int pos;
-		int T = Null;
-		pos = line.FindAfter("T=");
-		if (pos > 0) 
-			T = ScanInt(line.Mid(pos));
-		int I = Null;
-		pos = line.FindAfter("I=");
-		if (pos > 0) 
-			I = ScanInt(line.Mid(pos));
-		int J = Null;
-		pos = line.FindAfter("J=");
-		if (pos > 0) 
-			J = ScanInt(line.Mid(pos));
-		String F;
-		pos = line.FindAfter("F=");
-		if (pos > 0) 
-			F = line.Mid(pos);
-		
-		if (IsNull(T)) {
-			while(!in.IsEof()) {
-				int id0 = mh().nodes.GetCount();
-				for (int i = 0; i < I*J; ++i) {
-					line = in.GetLine();	
-					f.Load(line);
-					
-					double x = f.GetDouble(0);	
-					double y = f.GetDouble(1);	
-					double z = f.GetDouble(2);	
-						
-					Point3D &node = mh().nodes.Add();
-					node.x = x;
-					node.y = y;
-					node.z = z;
-				}
-				for (int i = 0; i < I-1; ++i) {
-					for (int j = 0; j < J-1; ++j) {
-						Panel &panel = mh().panels.Add();
-						panel.id[0] = id0 + I*j     + i;
-						panel.id[1] = id0 + I*j     + i+1;
-						panel.id[2] = id0 + I*(j+1) + i;
-						panel.id[3] = id0 + I*(j+1) + i+1;
-					}
-				}
-				in.GetLine();
-			}
-		} else {
-			for (int i = 0; i < I; ++i) {
-				line = in.GetLine();	
-				f.Load(line);
-				
-				double x = f.GetDouble(0);	
-				double y = f.GetDouble(1);	
-				double z = f.GetDouble(2);	
-					
-				Point3D &node = mh().nodes.Add();
-				node.x = x;
-				node.y = y;
-				node.z = z;
-			}
-			for (int i = 0; i < I/4; ++i) {
-				line = in.GetLine();	
-				f.Load(line);
-				
-				Panel &panel = mh().panels.Add();
-				for (int i = 0; i < 4; ++i)
-					panel.id[i] = f.GetInt(i) - 1;
-			}
-		}
-	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
-		mh().lastError = e;
-		return false;
-	}
-	
-	return true;
-}
-	
-bool Wamit::LoadGdfMesh(String fileName) {
-	FileInLine in(fileName);
-	if (!in.IsOpen()) {
-		hd().PrintError("\n" + Format(t_("Impossible to open file '%s'"), fileName));
-		mh().lastError = Format(t_("Impossible to open file '%s'"), fileName);
-		return false;
-	}
-	mh().file = fileName;
-	mh.SetCode(MeshData::WAMIT_GDF);
-	
-	String line;
-	FieldSplit f(in);	
-	
-	try {
-		in.GetLine();
-		line = in.GetLine();	
-		f.Load(line);
-		double scale = f.GetDouble(0);
-		if (scale < 1)
-			throw Exc(t_("Wrong scale in .gdf file"));
-					
-		line = in.GetLine();	
-		f.Load(line);
-		mh().y0z = f.GetInt(0) != 0;
-		mh().x0z = f.GetInt(1) != 0;
-		
-		line = in.GetLine();	
-		f.Load(line);
-		int nPatches = f.GetInt(0);
-		if (nPatches < 1)
-			throw Exc(t_("Wrong number of patches in .gdf file"));
-				
-		mh().nodes.Clear();
-		mh().panels.Clear();
-		
-		while(!in.IsEof()) {
-			int ids[4];
-			for (int i = 0; i < 4; ++i) {
-				line = in.GetLine();	
-				f.Load(line);
-				
-				double x = f.GetDouble(0)*scale;	
-				double y = f.GetDouble(1)*scale;	
-				double z = f.GetDouble(2)*scale;	
-				
-				bool found = false;
-				for (int in = 0; in < mh().nodes.GetCount(); ++in) {
-					Point3D &node = mh().nodes[in];
-					if (x == node.x && y == node.y && z == node.z) {
-						ids[i] = in;
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					Point3D &node = mh().nodes.Add();
-					node.x = x;
-					node.y = y;
-					node.z = z;
-					ids[i] = mh().nodes.GetCount() - 1;
-				}
-			}
-			Panel &panel = mh().panels.Add();
-			for (int i = 0; i < 4; ++i)
-				panel.id[i] = ids[i];
-		}
-		if (mh().panels.GetCount() != nPatches)
-			throw Exc(t_("Wrong number of patches in .gdf file"));
-		//if (mh().Check())
-		//	throw Exc(t_("Wrong nodes found in Wamit .gdf mesh file"));
-	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
-		mh().lastError = e;
-		return false;
-	}
-	
-	return true;
-}
-
-void Wamit::SaveGdfMesh(String fileName) {
-	if (mh().panels.IsEmpty())
-		throw Exc(t_("Model is empty. No panels found"));	
-	FileOut out(fileName);
-	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
-	
-	out << "BEMRosetta GDF mesh file export\n";
-	out << Format("  %12d   %12f 	ULEN GRAV\n", 1, hd().g_dim());
-	out << Format("  %12d   %12d 	ISX  ISY\n", mh().y0z ? 1 : 0, mh().x0z ? 1 : 0);
-	out << Format("  %12d\n", mh().panels.GetCount());
-	for (int ip = 0; ip < mh().panels.GetCount(); ++ip) {
-		for (int i = 0; i < 4; ++i) {
-			int id = mh().panels[ip].id[i];
-			Point3D &p = mh().nodes[id]; 
-			out << Format("  % 014.7E   %0 14.7E   % 014.7E\n", p.x, p.y, p.z);
-		}
-	}
-	 
-}
-	

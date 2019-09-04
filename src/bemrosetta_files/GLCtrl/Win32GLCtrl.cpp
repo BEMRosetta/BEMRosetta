@@ -28,7 +28,7 @@ void MakeWGLContext(int depthBits, int stencilBits, int samples)
 			if(pass == 0) {
 				s_pfd.nSize = sizeof(s_pfd);
 				s_pfd.nVersion = 1;
-				s_pfd.dwFlags = PFD_DRAW_TO_WINDOW|PFD_SUPPORT_OPENGL|PFD_GENERIC_ACCELERATED|PFD_GENERIC_FORMAT;
+				s_pfd.dwFlags = PFD_DRAW_TO_WINDOW|PFD_SUPPORT_OPENGL|PFD_GENERIC_ACCELERATED|PFD_GENERIC_FORMAT|PFD_DOUBLEBUFFER_DONTCARE;
 				s_pfd.iPixelType = PFD_TYPE_RGBA;
 				s_pfd.cColorBits = 32;
 				s_pfd.cAlphaBits = 8;
@@ -65,18 +65,24 @@ void MakeWGLContext(int depthBits, int stencilBits, int samples)
 			if(!SetPixelFormat(hDC, s_pixelFormatID, &s_pfd))
 				return;
 	
+			s_openGLContext = wglCreateContext(hDC);
+			
+			bool enhanced_mode=false;
+			
 			if(pass == 0) {
 				HGLRC hRC = wglCreateContext(hDC);
-				wglMakeCurrent(hDC, hRC);
+				wglMakeCurrent(hDC, s_openGLContext);
 				glewInit();
+			    
+			    if (glewIsSupported("GL_VERSION_2_1")) enhanced_mode=true;
+			        
 				wglMakeCurrent(NULL, NULL);
-			    wglDeleteContext(hRC);
 			}
-			else
-				s_openGLContext = wglCreateContext(hDC);
 
 		    ReleaseDC(hWND, hDC);
 		    DestroyWindow(hWND);
+		    
+			if(!enhanced_mode) break; // In basic mode, this is it.
 		}
 	}
 }
@@ -100,26 +106,44 @@ void GLCtrl::GLPane::State(int reason)
 	}
 }
 
+void GLCtrl::GLPane::ExecuteGL(HDC hDC, Event<> paint, bool swap_buffers)
+{
+	wglMakeCurrent(hDC, s_openGLContext);
+	paint();
+	if(swap_buffers)
+		SwapBuffers(hDC);
+	else
+		glFlush();
+	wglMakeCurrent(NULL, NULL);
+}
+
+void GLCtrl::GLPane::ExecuteGL(Event<> paint, bool swap_buffers)
+{
+	HWND hwnd = GetHWND();
+	GLCtrl::CreateContext();
+	HDC hDC = GetDC(hwnd);
+	ExecuteGL(hDC, paint, swap_buffers);
+	ReleaseDC(hwnd, hDC);
+}
+
 LRESULT GLCtrl::GLPane::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if(message == WM_PAINT && s_openGLContext) {
 		PAINTSTRUCT ps;
 		HWND hwnd = GetHWND();
 		BeginPaint(hwnd, &ps);
-		HDC hDC = ps.hdc;
-		wglMakeCurrent(hDC, s_openGLContext);
-		ctrl->DoGLPaint();
-		if(ctrl->doubleBuffering)
-			SwapBuffers(hDC);
-		else
-			glFlush();
-		wglMakeCurrent(NULL, NULL);
-		ReleaseDC(hwnd, hDC);
+		ExecuteGL(ps.hdc, [&] { ctrl->DoGLPaint(); }, ctrl->doubleBuffering);
+		ReleaseDC(hwnd, ps.hdc);
 		EndPaint(hwnd, &ps);
 		return 0;
 	}
 	
 	return DHCtrl::WindowProc(message, wParam, lParam);
+}
+
+void GLCtrl::ExecuteGL(Event<> paint, bool swap_buffers)
+{
+	pane.ExecuteGL(paint, swap_buffers);
 }
 
 #endif

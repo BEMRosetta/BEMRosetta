@@ -129,7 +129,7 @@ class Vector : public MoveableAndDeepCopyOption< Vector<T> > {
 
 public:
 	T&       Add()                           { if(items >= alloc) GrowF(); return *(::new(Rdd()) T); }
-	T&       Add(const T& x)                 { return items < alloc ? *(new(Rdd()) T(clone(x))) : GrowAdd(x); }
+	T&       Add(const T& x)                 { return items < alloc ? *(new(Rdd()) T(x)) : GrowAdd(x); }
 	T&       Add(T&& x)                      { return items < alloc ? *(::new(Rdd()) T(pick(x))) : GrowAdd(pick(x)); }
 	template <class... Args>
 	T&       Create(Args&&... args)          { if(items >= alloc) GrowF(); return *(::new(Rdd()) T(std::forward<Args>(args)...)); }
@@ -278,7 +278,7 @@ protected:
 
 public:
 	T&       Add()                           { T *q = new T; vector.Add(q); return *q; }
-	T&       Add(const T& x)                 { T *q = new T(clone(x)); vector.Add(q); return *q; }
+	T&       Add(const T& x)                 { T *q = new T(x); vector.Add(q); return *q; }
 	T&       Add(T&& x)                      { T *q = new T(pick(x)); vector.Add(q); return *q; }
 	T&       Add(T *newt)                    { vector.Add(newt); return *newt; }
 	template<class TT, class... Args>
@@ -344,6 +344,7 @@ public:
 	void     Swap(Array& b)             { Swap(vector, b.vector); }
 
 	Array& operator<<(const T& x)       { Add(x); return *this; }
+	Array& operator<<(T&& x)            { Add(pick(x)); return *this; }
 	Array& operator<<(T *newt)          { Add(newt); return *this; }
 
 	void     Serialize(Stream& s)       { StreamContainer(s, *this); }

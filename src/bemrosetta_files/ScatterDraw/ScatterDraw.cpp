@@ -1,8 +1,6 @@
 #include "ScatterDraw.h"
 
 ScatterDraw::ScatterDraw() {
-	mode = MD_ANTIALIASED;
-	size = Size(800, 400);
 	titleColor = SColorText();
 	graphColor = White();
 	titleFont = Roman(20);
@@ -18,23 +16,17 @@ ScatterDraw::ScatterDraw() {
 	gridColor = SColorDkShadow();
 	gridWidth = 0.5;
 	gridDash = LINE_DOTTED_FINE;
-	//gridColor2 = SColorDkShadow();
-	//gridWidth2 = 0.5;
-	//gridDash2 = LINE_DOTTED_FINER;
 	drawXReticle = drawYReticle = true;
 	drawY2Reticle = false;
 	reticleFont = GetStdFont();
 	reticleColor = Black;
 	drawVGrid = drawHGrid = showLegend = true;
-	//drawVGrid2 = drawHGrid2 = true;
-	//freqGrid2 = 5;
 	minXRange = maxXRange = minYRange = maxYRange = -1;
 	minXmin = minYmin = maxXmax = maxYmax = Null;
 	fastViewX = false;
 	sequentialXAll = false;
 	zoomStyleX = zoomStyleY = TO_CENTER;
 	SetMajorUnitsNum(5, 10);
-	//Color(graphColor);	
 	isPolar = false;
 	lastxRange = xRange;
 	lastyRange = yRange;
@@ -218,12 +210,14 @@ bool ScatterDraw::PointInBorder(Point &pt)
 	return !PointInPlot(pt);
 }
 
-bool ScatterDraw::PointInLegend(Point &pt) 
+bool ScatterDraw::PointInLegend(Point &) 
 {
 	return false;
 }
 
 void ScatterDraw::AdjustMinUnitX() {
+	if (SetGridLinesX)
+		return;
 	xMinUnit = xMinUnit0;
 	if (xMajorUnit > 0) {
 		if (xMinUnit < 0)
@@ -234,6 +228,8 @@ void ScatterDraw::AdjustMinUnitX() {
 }
 
 void ScatterDraw::AdjustMinUnitY() {
+	if (SetGridLinesY)
+		return;
 	yMinUnit = yMinUnit0;
 	if (yMajorUnit > 0) {
 		if (yMinUnit < 0)
@@ -244,6 +240,8 @@ void ScatterDraw::AdjustMinUnitY() {
 }
 
 void ScatterDraw::AdjustMinUnitY2() {
+	if (SetGridLinesY)
+		return;
 	yMinUnit2 = yMinUnit20;
 	if (yMajorUnit2 > 0) {
 		if (yMinUnit2 < 0)
@@ -759,7 +757,6 @@ Value ScatterDraw::GetStringY(int index, int64 idata) {
 	double ret = GetValueY(index, idata);
 	if (IsNull(ret))
 		return Null;
-	String sret;
 	if (cbModifFormatY) {
 		String sret;
 		cbModifFormatY(sret, int(idata), ret);
@@ -1005,31 +1002,7 @@ const String ScatterDraw::GetUnitsY(int index) {
 	ASSERT(IsValid(index));
 	return series[index].unitsY;
 }
-/*
-ScatterDraw& ScatterDraw::SetDataColor(int index, const Color& color) {
-	ASSERT(IsValid(index));
-	series[index].color = color;
-	Refresh();
-	return *this;
-}
 
-Color ScatterDraw::GetDataColor(int index) const {
-	ASSERT(IsValid(index));
-	return series[index].color;
-}
-
-ScatterDraw& ScatterDraw::SetDataThickness(int index, double thickness) {
-	ASSERT(IsValid(index));
-	series[index].thickness = thickness;
-	Refresh();
-	return *this;
-}
-
-double ScatterDraw::GetDataThickness(int index) const {
-	ASSERT(IsValid(index));
-	return series[index].thickness;
-}
-*/
 ScatterDraw& ScatterDraw::SetFillColor(int index, const Color& color) {
 	ASSERT(IsValid(index));
 	series[index].fillColor = color;
@@ -1170,7 +1143,7 @@ bool ScatterDraw::IsVisible(int index) {
 	return series[index].opacity > 0;
 }
 
-ScatterDraw &ScatterDraw::ShowAll(bool show) {
+ScatterDraw &ScatterDraw::ShowAll(bool ) {
 	for (int i = 0; i < series.GetCount(); ++i)
 		series[i].opacity = 1;
 	return *this;
@@ -1205,7 +1178,7 @@ void ScatterDraw::RemoveAllSeries() {
 Drawing ScatterDraw::GetDrawing() {
 	DrawingDraw ddw(size);
 	
-	SetDrawing(ddw, true);
+	SetDrawing<DrawingDraw>(ddw, true);
 	PlotTexts(ddw);
 
 	return ddw;

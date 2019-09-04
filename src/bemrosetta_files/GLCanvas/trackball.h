@@ -5,37 +5,40 @@
 
 using namespace Upp;
 
+#include <ScatterDraw/Pedantic.h>
+
 class TrackBall {
 public:
 	typedef TrackBall CLASSNAME;
 
 	TrackBall();
-	void Init(Ctrl *owner);
+	void Init(Ctrl *owner, int buttonRot);
 	
 	void Matrix(void);
 	void Reshape(int width, int height);
-	void SetZoomFactor(double factor)		{factor = zoomFactor;}
-	double GetZoomFactor()					{return zoomFactor;}
+	void SetZoomAngle(double angle)			{zoomAngle = angle;}
+	double GetZoomAngle()					{return zoomAngle;}
 	void SetButtonRot(int but = Ctrl::LEFT) {buttonRot = but; }
 	
-
 	virtual Image MouseEvent(int event, Point p, int zdelta, dword keyflags);
+	
+	void Zoom(int zdelta);
+	void ViewXYZ(bool x, bool y, bool z);
 	
 	double curquat[4];
 	
 private:
 	Ctrl *owner;
 
-//	double curquat[4];
 	double lastquat[4];
 	int beginx, beginy;
 	
 	int width, height;
 	
-	int buttonRot;
+	int buttonRot = Ctrl::LEFT;
 	bool tracking;
 	
-	double zoomFactor;
+	double zoomAngle;
 };
 
 #endif

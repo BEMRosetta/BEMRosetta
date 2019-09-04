@@ -1,9 +1,11 @@
 #include "BEMRosetta.h"
 #include "data.brc"
+#include <ScatterDraw/Unpedantic.h>
 #include <plugin/bz2/bz2.h>
 #include <plugin/lzma/lzma.h>
 #include <plugin/lz4/lz4.h>
 #include <plugin/zstd/zstd.h>
+#include <ScatterDraw/Pedantic.h>
 
 bool Fast::Load(String file, double g) {
 	hd().file = file;	
@@ -16,7 +18,7 @@ bool Fast::Load(String file, double g) {
 		if (GetFileExt(file) != ".dat") 
 			throw Exc("\n" + Format(t_("File '%s' is not of FAST type"), file));
 			
-		hd().Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
 		if (!Load_dat()) 
 			throw Exc("\n" + Format(t_("File '%s' not found"), file));
 
@@ -37,7 +39,7 @@ bool Fast::Load(String file, double g) {
 		if (abs(hd().head[0]) != abs(hd().head[hd().head.GetCount()-1]))
 			throw Exc(Format(t_("FAST requires simetric wave headings. .3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.GetCount()-1])); 
 	} catch (Exc e) {
-		hd().PrintError("\nError: " + e);
+		BEMData::PrintError("\nError: " + e);
 		hd().lastError = e;
 		return false;
 	}
@@ -93,7 +95,7 @@ void Fast::Save(String file) {
 	
 		Wamit::Save(hydroFile);
 	} catch (Exc e) {
-		hd().PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 	}
 }
