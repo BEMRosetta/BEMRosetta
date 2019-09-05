@@ -99,6 +99,11 @@ In a nutshell:
 
 Please remember that these options are in test. Please report any problems or proposals immediately. It will probably be answered the next day.
 
+<p align="center">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Mesh.png" width="45%" title="All mesh ans waterline">
+</p>
+
 ## Acknowledgments
 
 J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
