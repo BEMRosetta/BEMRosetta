@@ -12,7 +12,7 @@
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/build-passed-success.svg" alt="Build status">
 <img src="https://img.shields.io/github/last-commit/izabala123/bemrosetta.svg" alt="Last commit">
 
-***To celebrate the announcement that [EWTEC](https://ewtec.org/) 2023 will be held in [Bilbao](https://en.wikipedia.org/wiki/Bilbao), we have enabled interesting [experimental features](#experimental).***
+***To celebrate the announcement that [EWTEC 2023](http://jrl-ore.com/bilbao-will-host-ewtec-in-2023/) will be held in [Bilbao](https://en.wikipedia.org/wiki/Bilbao), we have enabled interesting [experimental features](#experimental).***
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="45%" title="DeepCWind mesh in Windows">
@@ -83,7 +83,7 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ## Experimental
 
-To celebrate the announcement that [EWTEC](https://ewtec.org/) 2023 will be held in [Bilbao](https://en.wikipedia.org/wiki/Bilbao), new features in test are now available. They can be enabled in tab "Options/Enable experimental features".
+To celebrate the announcement that [EWTEC 2023](http://jrl-ore.com/bilbao-will-host-ewtec-in-2023/) will be held in [Bilbao](https://en.wikipedia.org/wiki/Bilbao), new features in test are now available. They can be enabled in tab "Options/Enable experimental features".
 In a nutshell:
 
   * Mesh handling
