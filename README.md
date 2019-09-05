@@ -12,6 +12,8 @@
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/build-passed-success.svg" alt="Build status">
 <img src="https://img.shields.io/github/last-commit/izabala123/bemrosetta.svg" alt="Last commit">
 
+To celebrate the announcement that [EWTEC](https://ewtec.org/) 2023 will be held in Bilbao, we have enabled interesting [experimental features](#experimental).
+
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="45%" title="DeepCWind mesh in Windows">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind_linux.JPG" width="45%" title="DeepCWind mesh in Linux">
@@ -78,6 +80,10 @@ The goal is to have a good robustness in the handling of files
 Several meshes can be loaded in this basic viewer, allowing a visual comparison of geometries.
 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="300" title="Mesh loading"></p>
+
+## Experimental
+
+New features in test are now available. They can be enabled in tab Options/Enable experimental features.
 
 
 ## Acknowledgments
