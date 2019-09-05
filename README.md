@@ -23,7 +23,7 @@ Boundary Element Methods are extensively used to model hydrodynamic forces in of
 
 BEMRosetta allows to load the hydrodynamic coefficients from a format saving it in another. In addition it allows to compare the results obtained between programs, the results between similar geometries and the same geometry with different discretization levels.
 
-In addition, BEMRosetta allows to view and visually compare the meshes from different programs.
+Moreover, BEMRosetta allows to view and visually compare the meshes from different programs.
 
 BEMRosetta runs on Windows and Linux, no install is necessary in Windows [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI and [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test). 
 
