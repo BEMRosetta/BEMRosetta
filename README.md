@@ -97,7 +97,7 @@ In a nutshell:
   * BEM coefficients
     * Added hidrostatic stiffness matrix viewer
 
-Please remember that these options are in test. Please report any problems or proposals immediately. It will probably be answered the next day.
+Please remember that these options are in test. Please report any problem or proposal immediately. It will probably be answered the next day.
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
