@@ -83,7 +83,7 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ## Experimental
 
-New features in test are now available. They can be enabled in tab Options/Enable experimental features.
+New features in test are now available. They can be enabled in tab "Options/Enable experimental features".
 In a nutshell:
 
   * Mesh handling
