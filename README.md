@@ -93,7 +93,7 @@ In a nutshell:
     * Improved viewer including dropdown menu in viewer screen
     * Mesh healing option
   * Nemoh
-    * Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you edit it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
+    * Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
   * BEM coefficients
     * Added hydrostatic stiffness matrix viewer
 
@@ -108,7 +108,7 @@ Please remember that these options are in test. Please report any problem or pro
 
 J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
-Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
+Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
 ## License
