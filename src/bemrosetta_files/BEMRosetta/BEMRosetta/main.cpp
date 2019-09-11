@@ -307,9 +307,7 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
-void TestSTL();
-void TestImportSTL(const std::string & fileName);
-	
+
 GUI_APP_MAIN {
 	ConsoleOutput console;	
 	const Vector<String>& command = CommandLine();

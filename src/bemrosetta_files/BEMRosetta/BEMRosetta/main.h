@@ -194,7 +194,7 @@ private:
 class MainViewDataEach : public StaticRect {
 public:
 	MainViewDataEach() {}
-	void Init(MeshData &_mesh);
+	void Init(MeshData &_mesh, MainView &mainView);
 	void OnRefresh();
 	
 	TabCtrl tab;
@@ -236,7 +236,7 @@ public:
 	typedef MainViewData CLASSNAME;
 	
 	void Init();
-	void OnAddedModel();
+	void OnAddedModel(MainView &mainView);
 	void OnRefresh();
 	void Clear();
 	
@@ -320,7 +320,7 @@ public:
 	void InitSerialize(bool ret);
 	
 	void AfterLoad(String file);
-	bool OnView();
+	bool OnLoad();
 	bool OnConvertMesh();
 	void OnUpdate(bool forceMoved);
 	void OnHealing();
@@ -335,11 +335,16 @@ public:
 	WithMenuConvertMesh<StaticRect> menuConvert;
 	WithMenuPlotMesh<StaticRect> menuPlot;
 	WithMenuMeshStability<StaticRect> menuStability;
-	
+
+private:	
 	MainView mainView;
+	MainViewData mainViewData;
+	SplitterButton mainVAll;
 	MainSummaryMesh mainSummary;
 	MainStiffness mainStiffness;
-	MainViewData mainViewData;
+
+	virtual void DragAndDrop(Point p, PasteClip& d);
+	virtual bool Key(dword key, int count);
 };
 
 class MainNemoh : public WithNemoh<StaticRect> {
@@ -366,6 +371,9 @@ private:
 	void arrayOnDuplicate();
 	void arrayOnRemove();
 	void InitArray();
+	
+	virtual void DragAndDrop(Point p, PasteClip& d);
+	virtual bool Key(dword key, int count);
 };
 
 class MainBEM : public WithMain<StaticRect> {
@@ -398,6 +406,9 @@ private:
 	MainPlot &GetSelPlot();
 	MainABForce &GetSelTab();
 	void LoadSelTab(BEMData &bem);
+	
+	virtual void DragAndDrop(Point p, PasteClip& d);
+	virtual bool Key(dword key, int count);
 };
 
 class Main : public TopWindow {
