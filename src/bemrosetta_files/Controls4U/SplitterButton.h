@@ -26,6 +26,8 @@ public:
 		return *this;
 	}
 		
+	SplitterButton &SetButtonWidth(int width) {buttonWidth = width; return *this;}
+	
 private:
 	bool movingRight;		
 	int buttonWidth;

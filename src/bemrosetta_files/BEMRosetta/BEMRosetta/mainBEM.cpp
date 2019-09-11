@@ -296,6 +296,30 @@ void MainBEM::Jsonize(JsonIO &json) {
 	;
 }
 
+void MainBEM::DragAndDrop(Point p, PasteClip& d) {
+	if (IsDragAndDropSource())
+		return;
+	if (AcceptFiles(d)) {
+		Vector<String> files = GetFiles(d);
+		for (int i = 0; i < files.GetCount(); ++i) {
+			menuOpen.file <<= files[i];
+			OnLoad();
+		}
+	}
+}
+
+bool MainBEM::Key(dword key, int count) {
+	if (key == K_CTRL_V) {
+		Vector<String> files = GetFiles(Ctrl::Clipboard());
+		for (int i = 0; i < files.GetCount(); ++i) {
+			menuOpen.file <<= files[i];
+			OnLoad();
+		}
+		return true;
+	}
+	return false;
+}
+
 void MainSummary::Init() {
 	CtrlLayout(*this);
 	array.SetLineCy(EditField::GetStdHeight()).MultiSelect();

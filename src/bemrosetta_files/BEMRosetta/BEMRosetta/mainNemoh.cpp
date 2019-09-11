@@ -336,3 +336,27 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 	
 	return true;
 }
+
+void MainNemoh::DragAndDrop(Point p, PasteClip& d) {
+	if (IsDragAndDropSource())
+		return;
+	if (AcceptFiles(d)) {
+		Vector<String> files = GetFiles(d);
+		for (int i = 0; i < files.GetCount(); ++i) {
+			loadFrom <<= files[i];
+			OnLoad();
+		}
+	}
+}
+
+bool MainNemoh::Key(dword key, int count) {
+	if (key == K_CTRL_V) {
+		Vector<String> files = GetFiles(Ctrl::Clipboard());
+		for (int i = 0; i < files.GetCount(); ++i) {
+			loadFrom <<= files[i];
+			OnLoad();
+		}
+		return true;
+	}
+	return false;
+}

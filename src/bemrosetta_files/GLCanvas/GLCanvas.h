@@ -54,7 +54,7 @@ public:
 	void PaintLine(double x0, double y0, double z0, double x1, double y1, double z1, const Color &color);
 	void PaintLine(const Point3D &p0, const Point3D &p1, const Color &color);
 	void PaintLine(const Segment3D &p, const Color &color);
-	void PaintQuad(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &color, double multx, double multy);
+	void PaintQuad(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &color, double alpha = 1);
 	void PaintCuboid(const Point3D &p0, const Point3D &p1, const Color &color);	
 	void PaintSurface(const Surface &surf, const Color &linCol, bool showMesh, bool showNormals, bool showWaterLevel, bool showSkewed, bool showFissure, bool showMultiPan);
 	void PaintSegments(const Vector<Segment3D>& segs, const Color &color);

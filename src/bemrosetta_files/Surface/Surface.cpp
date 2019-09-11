@@ -112,6 +112,8 @@ void Surface::Clear() {
 	segTo3panel.Clear();
 	segments.Clear();
 	x = y = z = a_x = a_y = a_z = 0;
+	selPanels.Clear();
+	selNodes.Clear();
 }
 
 Surface::Surface(const Surface &orig, int) {
@@ -226,30 +228,30 @@ int Surface::RemoveDuplicatedPointsAndRenumber() {
 	
 	// Detect duplicate points in nodes
 	double similThres = 0.00001;
-	Upp::Index<int> similars, goods;
+	Upp::Index<int> duplic, goods;
 	for (int i = 0; i < nodes0.GetCount()-1; ++i) {
-		if (similars.Find(i) >= 0)
+		if (duplic.Find(i) >= 0)
 			continue;
 		for (int j = i+1; j < nodes0.GetCount(); ++j) {
 			if (nodes0[i].IsSimilar(nodes0[j], similThres)) {
-				similars.Add(j);
-				goods.Add(i);
+				duplic << j;
+				goods << i;
 				num++;
 			}
 		}
 	}
+	
 	// Replace duplicated points with good ones in panels
 	for (int i = 0; i < panels.GetCount(); ++i) {
-		int numP = PanelGetNumNodes(i);
-		for (int j = 0; j < numP; ++j) {
+		for (int j = 0; j < 4; ++j) {
 			int &id = panels[i].id[j];
-			int pos = similars.Find(id);
+			int pos = duplic.Find(id);
 			if (pos >= 0)
 				id = goods[pos];
 		}
 	}
 	
-	// Find duplicated and unused nodes
+	// Find unused nodes
 	Vector<int> newId;
 	newId.SetCount(nodes0.GetCount());
 	int avId = 0;
@@ -266,21 +268,23 @@ int Surface::RemoveDuplicatedPointsAndRenumber() {
 		}
 		if (!found)
 			newId[i] = Null;	// Remove unused nodes
-		else if (similars.Find(i) < 0) {
+		else if (duplic.Find(i) >= 0)
+			newId[i] = Null;	
+ 		else {	
 			newId[i] = avId;
 			avId++;
-		} else
-			newId[i] = Null;
+		} 
 	}
+	
 	// Remove duplicated nodes
 	for (int i = nodes0.GetCount()-1; i >= 0; --i) {
 		if (IsNull(newId[i]))
 			nodes0.Remove(i, 1);
 	}
+	
 	// Renumber panels
 	for (int i = 0; i < panels.GetCount(); ++i) {
-		int numP = PanelGetNumNodes(i);
-		for (int j = 0; j < numP; ++j) {
+		for (int j = 0; j < 4; ++j) {
 			int& id = panels[i].id[j];
 			id = newId[id];
 		}
@@ -289,6 +293,8 @@ int Surface::RemoveDuplicatedPointsAndRenumber() {
 }
 	
 void Surface::AddSegment(int inode0, int inode1, int ipanel) {
+	ASSERT(!IsNull(inode0));
+	ASSERT(!IsNull(inode1));
 	for (int i = 0; i < segments.GetCount(); ++i) {
 		if ((segments[i].inode0 == inode0 && segments[i].inode1 == inode1) ||
 			(segments[i].inode1 == inode0 && segments[i].inode0 == inode1)) {
@@ -306,13 +312,17 @@ void Surface::AnalyseSegments(double zTolerance) {
 	segments.Clear();
 	
 	for (int i = 0; i < panels.GetCount(); ++i) {
-		AddSegment(panels[i].id[0], panels[i].id[1], i);
-		AddSegment(panels[i].id[1], panels[i].id[2], i);
+		int id0 = panels[i].id[0];
+		int id1 = panels[i].id[1];
+		int id2 = panels[i].id[2];
+		int id3 = panels[i].id[3];
+		AddSegment(id0, id1, i);
+		AddSegment(id1, id2, i);
 		if (IsPanelTriangle(i)) 
-			AddSegment(panels[i].id[2], panels[i].id[0], i);
+			AddSegment(id2, id0, i);
 		else {
-			AddSegment(panels[i].id[2], panels[i].id[3], i);
-			AddSegment(panels[i].id[3], panels[i].id[0], i);
+			AddSegment(id2, id3, i);
+			AddSegment(id3, id0, i);
 		}
 	}
 	
@@ -328,13 +338,13 @@ void Surface::AnalyseSegments(double zTolerance) {
 		int num = segments[i].panels.GetCount();
 				
 		if (num == 1) {
-			if (nodes0[segments[i].inode0].z >= zTolerance && nodes0[segments[i].inode1].z >= zTolerance)
-				segWaterlevel << Segment3D(nodes0[segments[i].inode0], nodes0[segments[i].inode1]);
+			if (nodes0[inode0].z >= zTolerance && nodes0[inode1].z >= zTolerance)
+				segWaterlevel << Segment3D(nodes0[inode0], nodes0[inode1]);
 			else
-				segTo1panel << Segment3D(nodes0[segments[i].inode0], nodes0[segments[i].inode1]);
+				segTo1panel << Segment3D(nodes0[inode0], nodes0[inode1]);
 		}
 		if (num > 2)
-			segTo3panel << Segment3D(nodes0[segments[i].inode0], nodes0[segments[i].inode1]);
+			segTo3panel << Segment3D(nodes0[inode0], nodes0[inode1]);
 	}
 }
 
@@ -438,21 +448,25 @@ void Panel::RedirectTriangles() {
 }
 
 void Panel::ShiftNodes(int shift) {
+	int id_0 = id[0];
+	int id_1 = id[1];
+	int id_2 = id[2];
+	int id_3 = id[3];
 	if (shift == 1) {
-		id[1] = id[0];
-		id[2] = id[1];
-		id[3] = id[2];
-		id[0] = id[3];
+		id[1] = id_0;
+		id[2] = id_1;
+		id[3] = id_2;
+		id[0] = id_3;
 	} else if (shift == -1) { 
-		id[0] = id[1];
-		id[1] = id[2];
-		id[2] = id[3];
-		id[3] = id[0];
+		id[0] = id_1;
+		id[1] = id_2;
+		id[2] = id_3;
+		id[3] = id_0;
 	} else if (shift == -2) { 
-		id[0] = id[2];
-		id[1] = id[3];
-		id[2] = id[0];
-		id[3] = id[1];
+		id[0] = id_2;
+		id[1] = id_3;
+		id[2] = id_0;
+		id[3] = id_1;
 	} else
 		throw t_("ShiftNodes value not implemented");
 }
@@ -596,7 +610,7 @@ void Surface::GetVolume() {
 	double volx = 0, voly = 0, volz = 0;
 	
 	for (int ip = 0; ip < panels.GetCount(); ++ip) {
-		Panel &panel = panels[ip];
+		const Panel &panel = panels[ip];
 		
 		volx += panel.surface0*panel.normal0.x*panel.centroid0.x;
 		voly += panel.surface0*panel.normal0.y*panel.centroid0.y;
@@ -615,7 +629,7 @@ Point3D Surface::GetCenterOfBuoyancy() {
 	double xb = 0, yb = 0, zb = 0;
 	
 	for (int ip = 0; ip < panels.GetCount(); ++ip) {
-		Panel &panel = panels[ip];
+		const Panel &panel = panels[ip];
 		
 		xb += panel.surface0*panel.normal0.x*sqr(panel.centroid0.x);
 		yb += panel.surface0*panel.normal0.y*sqr(panel.centroid0.y);
@@ -646,7 +660,7 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 		mass = rho*volume;
 		
 	for (int ip = 0; ip < panels.GetCount(); ++ip) {
-		Panel &panel = panels[ip];
+		const Panel &panel = panels[ip];
 		const Point3D &p0 = nodes[panel.id[0]];
 		const Point3D &p1 = nodes[panel.id[1]];
 		const Point3D &p2 = nodes[panel.id[2]];
@@ -725,37 +739,40 @@ void Surface::Underwater(const Surface &orig) {
 			segWL.from = segWL.to = Null;
 			const int ids[] = {0, 1, 2, 3, 0};
 			for (int i = 0; i < 4; ++i) {
-				Point3D from(nodes[origPanelid[ids[i]]]);
-				Point3D to(nodes[origPanelid[ids[i+1]]]);
-				Segment3D seg(from, to);
-				if (abs(from.z - 0) <= 0.01 && abs(to.z - 0) <= 0.01) {
-					nodeFrom << origPanelid[ids[i]];
-					nodeTo << origPanelid[ids[i+1]];
-					segWL.from = from;
-					segWL.to = to;	
-				} else if (from.z <= 0 && to.z <= 0) {
-					nodeFrom << origPanelid[ids[i]];
-					nodeTo << origPanelid[ids[i+1]];
-				} else if (from.z >= 0 && to.z >= 0) 
+				if (origPanelid[ids[i]] == origPanelid[ids[i+1]])
 					;
 				else {
-					Point3D inter = seg.IntersectionPlaneZ(0);
-					if (from.z < 0) {
+					const Point3D &from = nodes[origPanelid[ids[i]]];
+					const Point3D &to   = nodes[origPanelid[ids[i+1]]];
+					Segment3D seg(from, to);
+					if (abs(from.z - 0) <= 0.01 && abs(to.z - 0) <= 0.01) {
 						nodeFrom << origPanelid[ids[i]];
-						nodes << inter;
-						nodeTo << nodes.GetCount() - 1;
-					} else {
 						nodeTo << origPanelid[ids[i+1]];
-						nodes << inter;
-						nodeFrom << nodes.GetCount() - 1;
+						segWL.from = from;
+						segWL.to = to;	
+					} else if (from.z <= 0 && to.z <= 0) {
+						nodeFrom << origPanelid[ids[i]];
+						nodeTo << origPanelid[ids[i+1]];
+					} else if (from.z >= 0 && to.z >= 0) 
+						;
+					else {
+						Point3D inter = seg.IntersectionPlaneZ(0);
+						if (from.z < 0) {
+							nodeFrom << origPanelid[ids[i]];
+							nodes << inter;
+							nodeTo << nodes.GetCount() - 1;
+						} else {
+							nodeTo << origPanelid[ids[i+1]];
+							nodes << inter;
+							nodeFrom << nodes.GetCount() - 1;
+						}
+						if (IsNull(segWL.from))
+							segWL.from = inter;
+						else if (IsNull(segWL.to))
+							segWL.to = inter;
 					}
-					if (IsNull(segWL.from))
-						segWL.from = inter;
-					else if (IsNull(segWL.to))
-						segWL.to = inter;
 				}
 			}
-			
 			if (!IsNull(segWL))
 				segWaterlevel << segWL;
 			
@@ -778,6 +795,7 @@ void Surface::Underwater(const Surface &orig) {
 				nodeFrom.Insert(pos, nFrom);		
 				nodeTo.Insert(pos, nTo);
 			}
+			
 			Panel panel;
 			if (nodeFrom.GetCount() == 3) {
 				panel.id[0] = nodeFrom[0];

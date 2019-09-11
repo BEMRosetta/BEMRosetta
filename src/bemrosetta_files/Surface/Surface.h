@@ -75,9 +75,10 @@ public:
 	void MoveTo(const Point3D &point, double x, double y, double z, double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
 	void MoveTo(const Point3D &point, double _x, double _y, double _z, const Affine3d &aff);
 		
+	// Dot product or scalar product
 	double dot(const Point3D& a) const {return x*a.x + y*a.y + z*a.z;}
 	
-	// Cross product
+	// Cross product or vector product
 	friend Point3D operator%(const Point3D& a, const Point3D& b) {return Point3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);}
 	
 	friend Point3D operator+(const Point3D& a, const Point3D& b) {return Point3D(a.x+b.x, a.y+b.y, a.z+b.z);}
@@ -272,6 +273,7 @@ public:
 	
 	void MixEnvelope(VolumeEnvelope &env);
 	double Max()	{return max(max(max(abs(maxX), abs(minX)), max(abs(maxY), abs(minY))), max(abs(maxZ), abs(minZ)));}
+	double LenRef()	{return max(max(maxX - minX, maxY - minY), maxZ - minZ);}
 	
 	double maxX, minX, maxY, minY, maxZ, minZ;
 };
@@ -328,6 +330,11 @@ public:
 	void Fixed() 	{x = Null;}
 	bool IsFixed()	{return IsNull(x);}
 	
+	Surface &SelPanels(Vector<int> &_selPanels) {selPanels = pick(_selPanels);	return *this;}
+	Surface &SelNodes(Vector<int> &_selNodes) 	{selNodes = pick(_selNodes);	return *this;}
+	const Vector<int> &GetSelPanels() const		{return selPanels;}
+	const Vector<int> &GetSelNodes() const		{return selNodes;}
+	
 private:
 	inline bool CheckId(int id) {return id >= 0 && id < nodes.GetCount()-1;}
 	
@@ -343,6 +350,8 @@ private:
 	int PanelGetNumNodes(int ip) 	{return panels[ip].GetNumNodes();}
 	bool IsPanelTriangle(int ip) 	{return panels[ip].IsTriangle();}
 	void GetPanelParams(Panel &panel);
+	
+	Vector<int> selPanels, selNodes;
 };
 
 #endif

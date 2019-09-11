@@ -32,6 +32,7 @@ String MeshData::Load(String fileName, double rho, double g) {
 		mesh.DeployYSymmetry();	
 	
 	cg = cg0 = Point3D(0, 0, 0);
+	mass = Null;
 	
 	mesh.nodes = clone(mesh.nodes0);
 	
@@ -81,7 +82,7 @@ String MeshData::Heal(Function <void(String, int pos)> Status) {
 	
 	return String();
 }
-		
+
 void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 	if (!onlyCG) {
 		mesh.GetPanelParams();
@@ -95,22 +96,25 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 		under.GetSurface();
 		under.GetVolume();
 		
+		if (IsNull(mass))
+			mass = under.volume*rho;
 		cb = under.GetCenterOfBuoyancy();
 	}
-	under.GetHydrostaticStiffness(c, cb, rho, cg, Null, g, 0);
+	under.GetHydrostaticStiffness(c, cb, rho, cg, mass, g, 0);
 }
 
-void MeshData::Report() {
+void MeshData::Report(double rho) {
 	BEMData::Print("\n\n" + Format(t_("Loaded mesh '%s'"), file));
 	
-	BEMData::Print(x_("\n") + Format(t_("Mesh limits (%f - %f, %f - %f, %f - %f)"), 
+	BEMData::Print(x_("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));
-	BEMData::Print(x_("\n") + Format(t_("Mesh water-plane area %f"), waterPlaneArea));
-	BEMData::Print(x_("\n") + Format(t_("Mesh surface %f"), mesh.surface));
-	BEMData::Print(x_("\n") + Format(t_("Mesh volume %f"), mesh.volume));
-	BEMData::Print(x_("\n") + Format(t_("Mesh underwater surface %f"), under.surface));
-	BEMData::Print(x_("\n") + Format(t_("Mesh underwater volume %f"), under.volume));
-	BEMData::Print(x_("\n") + Format(t_("Center of buoyancy (%f, %f, %f)"), cb.x, cb.y, cb.z));
+	BEMData::Print(x_("\n") + Format(t_("Water-plane area [m2] %f"), waterPlaneArea));
+	BEMData::Print(x_("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
+	BEMData::Print(x_("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
+	BEMData::Print(x_("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
+	BEMData::Print(x_("\n") + Format(t_("Underwater volume [m3] %f"), under.volume));
+	BEMData::Print(x_("\n") + Format(t_("Displacement [tm] %f"), under.volume*rho/1000));
+	BEMData::Print(x_("\n") + Format(t_("Center of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
 	
 	BEMData::Print(x_("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.GetCount(), mesh.nodes.GetCount()));
 }
