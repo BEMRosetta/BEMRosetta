@@ -16,9 +16,9 @@ void MainMesh::Init() {
 	OnOpt();
 	
 	CtrlLayout(menuOpen);
-	menuOpen.file.WhenChange = THISBACK(OnView);
+	menuOpen.file.WhenChange = THISBACK(OnLoad);
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuOpen.butLoad.WhenAction = [&] {OnView();};
+	menuOpen.butLoad.WhenAction = [&] {OnLoad();};
 
 	menuOpen.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuOpen.arrayModel.AddColumn("", 20);	
@@ -84,7 +84,10 @@ void MainMesh::Init() {
 	menuStability.cg_y.WhenEnter = THISBACK1(OnUpdate, false);
 	menuStability.cg_z <<= 0;
 	menuStability.cg_z.WhenEnter = THISBACK1(OnUpdate, false);
+	menuStability.mass <<= 0;
+	menuStability.mass.WhenEnter = THISBACK1(OnUpdate, false);
 	menuStability.butUpdateCg <<= THISBACK1(OnUpdate, false);
+	
 	menuStability.t_x <<= 0;
 	menuStability.t_x.WhenEnter = THISBACK1(OnUpdate, false);
 	menuStability.t_y <<= 0;
@@ -120,23 +123,23 @@ void MainMesh::Init() {
 	menuTab.Add(menuConvert.SizePos(), 	t_("Convert")).Disable();
 		
 	mainView.Init(menuPlot);
-	mainTab.Add(mainView.SizePos(), t_("View"));
+	mainViewData.Init();
+	mainVAll.Horz(mainView, mainViewData);
+	mainVAll.SetPositions(6000, 9970).SetInitialPositionId(1).SetButtonNumber(1);
+	mainTab.Add(mainVAll.SizePos(), t_("View"));
 	
 	mainSummary.Init();
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 
 	mainStiffness.Init();
 	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix"));
-	
-	mainViewData.Init();
-	mainTab.Add(mainViewData.SizePos(), t_("Data"));
-		
+			
 	mainTab.WhenSet = [&] {
 		bool plot = true, convertProcess = true;
 		if (ma().bem.surfs.IsEmpty()) {
 			plot = false;
 			convertProcess = false;
-		} else if (mainTab.IsAt(mainView)) 
+		} else if (mainTab.IsAt(mainVAll)) 
 			;
 		else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
@@ -176,6 +179,7 @@ void MainMesh::OnMenuConvertArraySel() {
 	menuStability.cg_x <<= data.cg.x;
 	menuStability.cg_y <<= data.cg.y;
 	menuStability.cg_z <<= data.cg.z;
+	menuStability.mass <<= data.mass;
 	menuStability.t_x  <<= data.mesh.x;
 	menuStability.t_y  <<= data.mesh.y;
 	menuStability.t_z  <<= data.mesh.z;
@@ -278,7 +282,7 @@ void MainMesh::AfterLoad(String file) {
 	int id = ma().bem.surfs.GetCount() - 1;
 	MeshData &surf = ma().bem.surfs[id];
 	
-	surf.Report();
+	surf.Report(ma().bem.rho);
 	mainSummary.Report(surf, id);		
 	
 	menuOpen.arrayModel.Add(surf.GetCodeStr(), GetFileTitle(file));
@@ -291,7 +295,7 @@ void MainMesh::AfterLoad(String file) {
 		menuStability.arrayModel.SetCursor(0);		
 }
 
-bool MainMesh::OnView() {
+bool MainMesh::OnLoad() {
 	String file = ~menuOpen.file;
 	
 	try {
@@ -306,7 +310,7 @@ bool MainMesh::OnView() {
 		mainView.gl.Enable();
 		mainView.gl.Refresh();
 		
-		mainViewData.OnAddedModel();
+		mainViewData.OnAddedModel(mainView);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -356,6 +360,7 @@ void MainMesh::OnUpdate(bool forceMoved) {
 		
 		MeshData &data = ma().bem.surfs[id];
 
+		data.mass = ~menuStability.mass;
 		data.cg0.Set(~menuStability.cg_x, ~menuStability.cg_y, ~menuStability.cg_z);
 		
 		double t_x, t_y, t_z, a_x, a_y, a_z, c_x, c_y, c_z;
@@ -462,6 +467,7 @@ void MainSummaryMesh::Report(const MeshData &data, int id) {
 	
 	array.Set(row, 0, t_("Immersed surface [m2]"));array.Set(row++, col, FormatDouble(data.under.surface, 3, FD_EXP));
 	array.Set(row, 0, t_("Immersed volume [m3]")); array.Set(row++, col, FormatDouble(data.under.volume, 3, FD_EXP));
+	array.Set(row, 0, t_("Displacement [tm]")); array.Set(row++, col, FormatDouble(data.under.volume*ma().bem.rho/1000, 3, FD_EXP));
 	array.Set(row, 0, t_("Cb(x) [m]"));			array.Set(row++, col, FormatDouble(data.cb.x, 3, FD_EXP));
 	array.Set(row, 0, t_("Cb(y) [m]"));			array.Set(row++, col, FormatDouble(data.cb.y, 3, FD_EXP));
 	array.Set(row, 0, t_("Cb(z) [m]"));			array.Set(row++, col, FormatDouble(data.cb.z, 3, FD_EXP));
@@ -529,31 +535,54 @@ static Color GetColor(int id) {
 
 void MainView::OnPaint() {
 	if (~GetMenuPlot().showAxis) 
-		gl.PaintAxis(0, 0, 0, env.Max()/4.);	
+		gl.PaintAxis(0, 0, 0, env.LenRef()/4.);	
 	
 	if (~GetMenuPlot().showLimits) 
 		gl.PaintCuboid(Point3D(env.maxX, env.maxY, env.maxZ), Point3D(env.minX, env.minY, env.minZ), Gray());
 	
 	for (int i = 0; i < ma().bem.surfs.GetCount(); ++i) {
+		double len = env.LenRef()/10;
 		bool showNormals = ~GetMenuPlot().showNormals && ~GetMenuPlot().showMesh;
 		bool showNormalsUnderwater = ~GetMenuPlot().showNormals && ~GetMenuPlot().showUnderwater;
 		if (~GetMenuPlot().showNormals && !~GetMenuPlot().showMesh && !~GetMenuPlot().showUnderwater)
 			showNormals = true;
-		gl.PaintSurface(ma().bem.surfs[i].mesh, GetColor(i), ~GetMenuPlot().showMesh, 	
+		
+		const MeshData &mesh = ma().bem.surfs[i];
+		gl.PaintSurface(mesh.mesh, GetColor(i), ~GetMenuPlot().showMesh, 	
 			showNormals, false, ~GetMenuPlot().showSkewed, 
 			~GetMenuPlot().showFissure, ~GetMenuPlot().showMultiPan);
-		gl.PaintSurface(ma().bem.surfs[i].under, GetColor(i), ~GetMenuPlot().showUnderwater, 
+		gl.PaintSurface(mesh.under, GetColor(i), ~GetMenuPlot().showUnderwater, 
 			showNormalsUnderwater, ~GetMenuPlot().showWaterLevel, false, 
 			false, false);
 		if (~GetMenuPlot().showCb) {
-			double len = env.Max()/20;
-			gl.PaintDoubleAxis(ma().bem.surfs[i].cb, len, LtBlue());
-			gl.PaintCube(ma().bem.surfs[i].cb, len/10, LtGray());
+			gl.PaintDoubleAxis(mesh.cb, len, LtBlue());
+			gl.PaintCube(mesh.cb, len/10, LtGray());
 		}
 		if (~GetMenuPlot().showCg) {
-			double len = env.Max()/20;
-			gl.PaintDoubleAxis(ma().bem.surfs[i].cg, len, Black());
-			gl.PaintCube(ma().bem.surfs[i].cg, len/10, LtGray());
+			gl.PaintDoubleAxis(mesh.cg, len, Black());
+			gl.PaintCube(mesh.cg, len/10, LtGray());
+		}
+		if (~GetMenuPlot().showMesh) {
+			const Vector<int> &nod = mesh.mesh.GetSelNodes();
+			for (int i = 0; i < nod.GetCount(); ++i)
+				gl.PaintCube(mesh.mesh.nodes[nod[i]], len/5, LtBlue());
+			const Vector<int> &pan = mesh.mesh.GetSelPanels();
+			const Vector<Point3D> &nodes = mesh.mesh.nodes;
+			for (int i = 0; i < pan.GetCount(); ++i) {
+				const Panel &panel = mesh.mesh.panels[pan[i]];
+				gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+			}
+		}
+		if (~GetMenuPlot().showUnderwater) {
+			const Vector<int> &nod = mesh.under.GetSelNodes();
+			for (int i = 0; i < nod.GetCount(); ++i)
+				gl.PaintCube(mesh.under.nodes[nod[i]], len/5, LtBlue());
+			const Vector<int> &pan = mesh.under.GetSelPanels();
+			const Vector<Point3D> &nodes = mesh.under.nodes;
+			for (int i = 0; i < pan.GetCount(); ++i) {
+				const Panel &panel = mesh.under.panels[pan[i]];
+				gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+			}
 		}
 	}
 }
@@ -564,15 +593,39 @@ void MainView::CalcEnvelope() {
 		env.MixEnvelope(ma().bem.surfs[i].mesh.env);
 }
 
+void MainMesh::DragAndDrop(Point p, PasteClip& d) {
+	if (IsDragAndDropSource())
+		return;
+	if (AcceptFiles(d)) {
+		Vector<String> files = GetFiles(d);
+		for (int i = 0; i < files.GetCount(); ++i) {
+			menuOpen.file <<= files[i];
+			OnLoad();
+		}
+	}
+}
+
+bool MainMesh::Key(dword key, int count) {
+	if (key == K_CTRL_V) {
+		Vector<String> files = GetFiles(Ctrl::Clipboard());
+		for (int i = 0; i < files.GetCount(); ++i) {
+			menuOpen.file <<= files[i];
+			OnLoad();
+		}
+		return true;
+	}
+	return false;
+}
+
 void MainViewData::Init() {
 	Add(tab.SizePos());	
 }
 
-void MainViewData::OnAddedModel() {
+void MainViewData::OnAddedModel(MainView &mainView) {
 	int id = ma().bem.surfs.GetCount()-1;
 	
 	MainViewDataEach &model = models.Add();
-	model.Init(ma().bem.surfs[id]);
+	model.Init(ma().bem.surfs[id], mainView);
 	tab.Add(model.SizePos(), GetFileTitle(ma().bem.surfs[id].file));
 }
 
@@ -594,16 +647,25 @@ void MainViewDataEach::DataSourceFacets::Init(MeshData &_mesh, int _col, bool _a
 
 Value MainViewDataEach::DataSourceFacets::Format(const Value& q) const {
 	ASSERT(pmesh);
-	if (all) {
-		if (col == 3 && pmesh->mesh.panels[q].IsTriangle())
-			return "-";
-		else
-			return pmesh->mesh.panels[q].id[col]+1;
-	} else {
-		if (col == 3 && pmesh->under.panels[q].IsTriangle())
-			return "-";
-		else
-			return pmesh->under.panels[q].id[col]+1;
+	int iq = q;
+	if (col < 0)
+		return iq + 1;
+	else {
+		if (all) {
+			if (iq >= pmesh->mesh.panels.GetCount())
+				return Null;
+			if (col == 3 && pmesh->mesh.panels[iq].IsTriangle())
+				return "-";
+			else
+				return pmesh->mesh.panels[iq].id[col]+1;
+		} else {
+			if (iq >= pmesh->under.panels.GetCount())
+				return Null;
+			if (col == 3 && pmesh->under.panels[iq].IsTriangle())
+				return "-";
+			else
+				return pmesh->under.panels[iq].id[col]+1;
+		}
 	}
 }
 
@@ -615,9 +677,17 @@ void MainViewDataEach::DataSourceNodes::Init(MeshData &_mesh, int _xyz, int _ori
 
 Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 	ASSERT(pmesh);
-	const Point3D &p = origMovedUnder == 0 ? pmesh->mesh.nodes0[q] : (origMovedUnder == 1 ? pmesh->mesh.nodes[q] : pmesh->under.nodes[q]);
+	int iq = q;
+	if (origMovedUnder == 0 && pmesh->mesh.nodes0.GetCount() <= iq)
+		return Null;
+	if (origMovedUnder == 1 && pmesh->mesh.nodes.GetCount() <= iq)
+		return Null;
+	if (origMovedUnder == 2 && pmesh->under.nodes.GetCount() <= iq)
+		return Null;
+	
+	const Point3D &p = origMovedUnder == 0 ? pmesh->mesh.nodes0[iq] : (origMovedUnder == 1 ? pmesh->mesh.nodes[iq] : pmesh->under.nodes[iq]);
 	if (xyz == -1)
-		return static_cast<int>(q) + 1;
+		return iq + 1;
 	else if (xyz == 0)
 		return p.x;
 	else if (xyz == 1)
@@ -626,7 +696,7 @@ Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 		return p.z;
 }
 
-void MainViewDataEach::Init(MeshData &_mesh) {
+void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 	CtrlLayout(arrayFacetsAll);
 	CtrlLayout(arrayFacetsAll2);
 	CtrlLayout(arrayFacetsUnder);
@@ -635,36 +705,63 @@ void MainViewDataEach::Init(MeshData &_mesh) {
 	CtrlLayout(arrayNodesUnder);
 	
 	arrayFacetsAll.title.SetText(t_("Facet nodes ids"));
-	arrayFacetsAll.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	arrayFacetsAll.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsAll.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsAll.array);};
-	dataSourceFacetsAll.SetCount(4);
+	dataSourceFacetsAll.SetCount(4+1);
+	dataSourceFacetsAll[0].Init(_mesh, -1, true);
+	arrayFacetsAll.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsAll[0]);
 	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsAll[c].Init(_mesh, c, true);
-		arrayFacetsAll.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c]);
+		dataSourceFacetsAll[c+1].Init(_mesh, c, true);
+		arrayFacetsAll.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
+	arrayFacetsAll.array.WhenSel = [&] {
+		Vector<int> selected = ArrayCtrlGetSelected(arrayFacetsAll.array);
+		_mesh.mesh.SelPanels(selected);	
+		arrayFacetsAll2.array.ClearSelection();	
+		arrayFacetsUnder.array.ClearSelection();
+		mainView.gl.Refresh();		
+	};
 	
 	arrayFacetsAll2.title.SetText(t_("Facet node ids"));
-	arrayFacetsAll2.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	arrayFacetsAll2.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsAll2.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsAll2.array);};
-	dataSourceFacetsAll.SetCount(4);
+	dataSourceFacetsAll.SetCount(5);
+	dataSourceFacetsAll[0].Init(_mesh, -1, true);
+	arrayFacetsAll2.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsAll[0]);
 	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsAll[c].Init(_mesh, c, true);
-		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c]);
+		dataSourceFacetsAll[c+1].Init(_mesh, c, true);
+		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
-	
+	arrayFacetsAll2.array.WhenSel = [&] {
+		Vector<int> selected = ArrayCtrlGetSelected(arrayFacetsAll2.array);
+		_mesh.mesh.SelPanels(selected);	
+		arrayFacetsAll.array.ClearSelection();	
+		arrayFacetsUnder.array.ClearSelection();	
+		mainView.gl.Refresh();		
+	};
+		
 	arrayFacetsUnder.title.SetText(t_("Facet nodes ids"));
-	arrayFacetsUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	arrayFacetsUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsUnder.array);};
-	dataSourceFacetsUnder.SetCount(4);
+	dataSourceFacetsUnder.SetCount(5);
+	dataSourceFacetsUnder[0].Init(_mesh, -1, true);
+	arrayFacetsUnder.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsUnder[0]);
 	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsUnder[c].Init(_mesh, c, false);
-		arrayFacetsUnder.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsUnder[c]);
+		dataSourceFacetsUnder[c+1].Init(_mesh, c, false);
+		arrayFacetsUnder.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsUnder[c+1]);
 	}
-
+	arrayFacetsUnder.array.WhenSel = [&] {
+		Vector<int> selected = ArrayCtrlGetSelected(arrayFacetsUnder.array);
+		_mesh.under.SelPanels(selected);
+		arrayFacetsAll.array.ClearSelection();	
+		arrayFacetsAll2.array.ClearSelection();	
+		mainView.gl.Refresh();		
+	};
+	
 	const char *xyz[] = {"x", "y", "z"};
 
 	arrayNodesOrig.title.SetText(t_("Original node coordinates"));
-	arrayNodesOrig.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	arrayNodesOrig.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesOrig.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesOrig.array);};
 	dataSourceNodesOrig.SetCount(4);
 	dataSourceNodesOrig[0].Init(_mesh, -1, 0);
@@ -673,9 +770,16 @@ void MainViewDataEach::Init(MeshData &_mesh) {
 		dataSourceNodesOrig[c+1].Init(_mesh, c, 0);
 		arrayNodesOrig.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesOrig[c+1]);
 	}
-	
+	arrayNodesOrig.array.WhenSel = [&] {
+		Vector<int> selected = ArrayCtrlGetSelected(arrayNodesOrig.array);
+		_mesh.mesh.SelNodes(selected);	
+		arrayNodesUnder.array.ClearSelection();
+		arrayNodesMoved.array.ClearSelection();
+		mainView.gl.Refresh();	
+	};
+		
 	arrayNodesMoved.title.SetText(t_("Moved node coordinates"));
-	arrayNodesMoved.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	arrayNodesMoved.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesMoved.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesMoved.array);};
 	dataSourceNodesMoved.SetCount(4);
 	dataSourceNodesMoved[0].Init(_mesh, -1, 1);
@@ -684,9 +788,16 @@ void MainViewDataEach::Init(MeshData &_mesh) {
 		dataSourceNodesMoved[c+1].Init(_mesh, c, 1);
 		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
-	
+	arrayNodesMoved.array.WhenSel = [&] {
+		Vector<int> selected = ArrayCtrlGetSelected(arrayNodesMoved.array);
+		_mesh.mesh.SelNodes(selected);
+		arrayNodesUnder.array.ClearSelection();
+		arrayNodesOrig.array.ClearSelection();	
+		mainView.gl.Refresh();	
+	};
+		
 	arrayNodesUnder.title.SetText(t_("Node coordinates"));
-	arrayNodesUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	arrayNodesUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesUnder.array);};
 	dataSourceNodesMoved.SetCount(4);
 	dataSourceNodesMoved[0].Init(_mesh, -1, 2);
@@ -695,6 +806,13 @@ void MainViewDataEach::Init(MeshData &_mesh) {
 		dataSourceNodesMoved[c+1].Init(_mesh, c, 2);
 		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
+	arrayNodesUnder.array.WhenSel = [&] {
+		Vector<int> selected = ArrayCtrlGetSelected(arrayNodesUnder.array);
+		_mesh.under.SelNodes(selected);	
+		arrayNodesMoved.array.ClearSelection();
+		arrayNodesOrig.array.ClearSelection();
+		mainView.gl.Refresh();	
+	};
 	
 	orig.Horz(arrayFacetsAll.SizePos(), arrayNodesOrig.SizePos());
 	moved.Horz(arrayFacetsAll2.SizePos(), arrayNodesMoved.SizePos());
@@ -713,29 +831,43 @@ void MainViewDataEach::OnRefresh() {
 	int num;
 	
 	num = mesh.mesh.panels.GetCount();
+	arrayFacetsAll.array.Clear();
+	arrayFacetsAll.array.ClearSelection();
 	arrayFacetsAll.array.SetVirtualCount(num);
 	arrayFacetsAll.array.Refresh();
 	arrayFacetsAll.numRows.SetText(FormatInt(num));
+	
+	arrayFacetsAll2.array.GoBegin();
+	arrayFacetsAll2.array.Clear();
+	arrayFacetsAll2.array.ClearSelection();
 	arrayFacetsAll2.array.SetVirtualCount(num);
 	arrayFacetsAll2.array.Refresh();
 	arrayFacetsAll2.numRows.SetText(FormatInt(num));
 		
 	num = mesh.under.panels.GetCount();
+	arrayFacetsUnder.array.Clear();
+	arrayFacetsUnder.array.ClearSelection();
 	arrayFacetsUnder.array.SetVirtualCount(num);
 	arrayFacetsUnder.array.Refresh();
 	arrayFacetsUnder.numRows.SetText(FormatInt(num));
 	
 	num = mesh.mesh.nodes0.GetCount();
+	arrayNodesOrig.array.Clear();
+	arrayNodesOrig.array.ClearSelection();
 	arrayNodesOrig.array.SetVirtualCount(num);
 	arrayNodesOrig.array.Refresh();
 	arrayNodesOrig.numRows.SetText(FormatInt(num));
 	
 	num = mesh.mesh.nodes.GetCount();
+	arrayNodesMoved.array.Clear();
+	arrayNodesMoved.array.ClearSelection();
 	arrayNodesMoved.array.SetVirtualCount(num);
 	arrayNodesMoved.array.Refresh();
 	arrayNodesMoved.numRows.SetText(FormatInt(num));
 	
 	num = mesh.under.nodes.GetCount();
+	arrayNodesUnder.array.Clear();
+	arrayNodesUnder.array.ClearSelection();
 	arrayNodesUnder.array.SetVirtualCount(num);
 	arrayNodesUnder.array.Refresh();
 	arrayNodesUnder.numRows.SetText(FormatInt(num));

@@ -356,11 +356,12 @@ public:
 	static void SaveStlTxt(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
 	static void SaveStlBin(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
 	
-	void Report();
+	void Report(double rho);
 	
 	double waterPlaneArea; 
 	Point3D cb;
 	Point3D cg, cg0;
+	double mass;
 	MatrixXd c;
 	
 	String file;

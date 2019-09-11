@@ -308,6 +308,7 @@ void  Ctrl::SetWndRect(const Rect& r)
 
 void Ctrl::SetRect(const Rect& r)
 {
+	LLOG("SetRect " << Name() << " rect: " << r << " (Ctrl::GetRect = " << GetRect() << ")");
 	SetRect(r.left, r.top, r.Width(), r.Height());
 }
 

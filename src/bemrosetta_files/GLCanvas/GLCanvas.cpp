@@ -260,7 +260,7 @@ void GLCanvas::OnPaint() {
 	
 	glPushMatrix();
 	glDisable(GL_BLEND);
-	SetUpLighting();
+	//SetUpLighting();
 	WhenPaint();
 	glPopMatrix();
 }
@@ -304,13 +304,13 @@ void GLCanvas::PaintArrow(const Point3D &p0, const Point3D &p1, const Color &col
 	PaintArrow(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z, color);
 }
 
-void GLCanvas::PaintQuad(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &color, double multx, double multy) {
+void GLCanvas::PaintQuad(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &color, double alpha) {
 	glBegin(GL_QUADS);
-		glColor4d(color.GetR()/255., color.GetG()/255., color.GetB()/255., 1);
-		glVertex3d(p0.x*multx, p0.y*multy, p0.z);
-		glVertex3d(p1.x*multx, p1.y*multy, p1.z);
-		glVertex3d(p2.x*multx, p2.y*multy, p2.z);
-		glVertex3d(p3.x*multx, p3.y*multy, p3.z);
+		glColor4d(color.GetR()/255., color.GetG()/255., color.GetB()/255., alpha);
+		glVertex3d(p0.x, p0.y, p0.z);
+		glVertex3d(p1.x, p1.y, p1.z);
+		glVertex3d(p2.x, p2.y, p2.z);
+		glVertex3d(p3.x, p3.y, p3.z);
 	glEnd();
 }
 

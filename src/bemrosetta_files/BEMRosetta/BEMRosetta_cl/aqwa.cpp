@@ -375,15 +375,15 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(in.GetLine());
 				double heading = f.GetDouble(2);
-				int idh = FindIndexRatio(hd().head, heading, 0.001);
+				int idh = FindIndexDelta(hd().head, heading, 0.001);
 				if (idh < 0)
-					throw Exc(Format(t_("[%d] Heading %f not found"), in.GetLineNumber(), heading));
+					throw Exc(Format(t_("[%d] Heading %f is unknown"), in.GetLineNumber(), heading));
 				int dd = 1;
 				for (int i = 0; i < hd().Nf; ++i) {
 					double freq = f.GetDouble(1);
-					int ifr = FindIndexRatio(hd().w, freq, 0.001);
+					int ifr = FindIndexDelta(hd().w, freq, 0.001);
 					if (ifr < 0)
-						throw Exc(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq));
+						throw Exc(Format(t_("[%d] Frequency %f is unknown"), in.GetLineNumber(), freq));
 					for (int idof = 0; idof < 6; ++idof) {
 						frc.ma[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2);
 						frc.ph[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2 + 1);
@@ -398,9 +398,9 @@ bool Aqwa::Load_LIS() {
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			f.Load(line);
 			double freq = f.GetDouble(7);
-			int ifr = FindIndexRatio(hd().w, freq, 0.001);
+			int ifr = FindIndexDelta(hd().w, freq, 0.001);
 			if (ifr < 0)
-				throw Exc(t_(Format(t_("[%d] Frequency %f not found"), in.GetLineNumber(), freq)));
+				throw Exc(t_(Format(t_("[%d] Frequency %f is unknown"), in.GetLineNumber(), freq)));
 
 			in.GetLine(2);
 			if (TrimBoth(in.GetLine()) == "ADDED  MASS") {

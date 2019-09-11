@@ -56,7 +56,7 @@ String MeshData::LoadStlTxt(String fileName, bool &isText) {
 					panel.id[2] = ids[2];
 					if (i == 3) 
 						panel.id[3] = ids[0];
-					else  
+					else if (i == 4)
 						panel.id[3] = ids[3];
 				} else if (label == "endfacet") 
 					break;

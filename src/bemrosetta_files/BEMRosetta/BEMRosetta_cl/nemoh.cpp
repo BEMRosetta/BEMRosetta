@@ -115,23 +115,23 @@ int NemohCal::GetNumArgs(const FieldSplit &f) {
 void NemohCal::LoadFreeSurface(const FileInLine &in, const FieldSplit &f) {
 	nFreeX = f.GetInt(0);	nFreeY = f.GetInt(1);	domainX = f.GetDouble(2);	domainY = f.GetDouble(3);
 	if (nFreeX < 0)
-		throw(Exc(Format(t_("[%d] Incorrect number of points in x direction %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect number of points in x direction %s"), in.GetLineNumber(), f.GetText(0)));
 	if (nFreeX > 0 && (nFreeY <= 0 || domainX < 0 || domainY < 0))
-		throw(Exc(Format(t_("[%d] Incorrect free surface elevation %s"), in.GetLineNumber(), f.GetText())));	
+		throw Exc(Format(t_("[%d] Incorrect free surface elevation %s"), in.GetLineNumber(), f.GetText()));	
 }
 
 
 void NemohCal::LoadKochin(const FileInLine &in, const FieldSplit &f) {
 	nKochin = f.GetInt(0);	minK = f.GetDouble(1);	maxK = f.GetDouble(2);
 	if (nKochin < 0)
-		throw(Exc(Format(t_("[%d] Incorrect number of Kochin function directions %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect number of Kochin function directions %s"), in.GetLineNumber(), f.GetText(0)));
 	if (nKochin > 0) {
 		if (minK < -360)
-			throw(Exc(Format(t_("[%d] Incorrect Kochin direction %s"), in.GetLineNumber(), f.GetText(1))));
+			throw Exc(Format(t_("[%d] Incorrect Kochin direction %s"), in.GetLineNumber(), f.GetText(1)));
 		if (maxK > 360)
-			throw(Exc(Format(t_("[%d] Incorrect Kochin direction %s"), in.GetLineNumber(), f.GetText(2))));
+			throw Exc(Format(t_("[%d] Incorrect Kochin direction %s"), in.GetLineNumber(), f.GetText(2)));
 		if (maxK <= minK)
-			throw(Exc(Format(t_("[%d] Minimum Kochin direction %s has to be lower than maximum direction %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2))));	
+			throw Exc(Format(t_("[%d] Minimum Kochin direction %s has to be lower than maximum direction %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	}
 }
 
@@ -146,18 +146,18 @@ bool NemohCal::Load(String fileName) {
 	in.GetLine();
 	f.Load(in.GetLine());	rho  = f.GetDouble(0);
 	if (rho < 0 || rho > 10000)
-		throw(Exc(Format(t_("[%d] Incorrect rho %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect rho %s"), in.GetLineNumber(), f.GetText(0)));
 	f.Load(in.GetLine());	g    = f.GetDouble(0);
 	if (g < 0 || g > 100)
-		throw(Exc(Format(t_("[%d] Incorrect g %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect g %s"), in.GetLineNumber(), f.GetText(0)));
 	f.Load(in.GetLine());	h    = f.GetDouble(0);
 	if (h < 0 || h > 100000)
-		throw(Exc(Format(t_("[%d] Incorrect depth %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect depth %s"), in.GetLineNumber(), f.GetText(0)));
 	f.Load(in.GetLine());	xeff = f.GetDouble(0);	yeff = f.GetDouble(1);
 	in.GetLine();
 	f.Load(in.GetLine());	int Nb = f.GetInt(0);
 	if (Nb < 1 || Nb > 100)
-		throw(Exc(Format(t_("[%d] Incorrect number of bodies %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect number of bodies %s"), in.GetLineNumber(), f.GetText(0)));
 	bodies.SetCount(Nb);
 	for (int ib = 0; ib < Nb; ++ib) {
 		NemohBody &body = bodies[ib];
@@ -176,12 +176,12 @@ bool NemohCal::Load(String fileName) {
 		}
 		
 		if (body.npoints < 1 || body.npoints > 100000000)
-			throw(Exc(Format(t_("[%d] Incorrect number of points %s"), in.GetLineNumber(), f.GetText(0))));
+			throw Exc(Format(t_("[%d] Incorrect number of points %s"), in.GetLineNumber(), f.GetText(0)));
 		if (body.npanels < 1 || body.npanels > 100000000)
-			throw(Exc(Format(t_("[%d] Incorrect number of panels %s"), in.GetLineNumber(), f.GetText(1))));	
+			throw Exc(Format(t_("[%d] Incorrect number of panels %s"), in.GetLineNumber(), f.GetText(1)));	
 		f.Load(in.GetLine());	int ndof = f.GetInt(0);
 		if (ndof < 0 || ndof > 6)
-			throw(Exc(Format(t_("[%d] Incorrect DOF %s in body %d"), in.GetLineNumber(), f.GetText(0), ib+1)));
+			throw Exc(Format(t_("[%d] Incorrect DOF %s in body %d"), in.GetLineNumber(), f.GetText(0), ib+1));
 		for (int idof = 0; idof < ndof; ++idof) {
 			f.Load(in.GetLine());
 			int type = f.GetInt(0);
@@ -209,7 +209,7 @@ bool NemohCal::Load(String fileName) {
 				else if (z)
 					body.yaw = true;
 			} else
-				throw(Exc(Format(t_("[%d] Incorrect DOF type %d set in body %d"), in.GetLineNumber(), f.GetText(0), ib+1)));
+				throw Exc(Format(t_("[%d] Incorrect DOF type %d set in body %d"), in.GetLineNumber(), f.GetText(0), ib+1));
 		}
 		f.Load(in.GetLine());	int nforces = f.GetInt(0);
 		in.GetLine(nforces);	// Discarded
@@ -219,29 +219,28 @@ bool NemohCal::Load(String fileName) {
 	in.GetLine();
 	f.Load(in.GetLine());	Nf = f.GetInt(0);	minF = f.GetDouble(1);	maxF = f.GetDouble(2);
 	if (Nf < 1 || Nf > 1000)
-		throw(Exc(Format(t_("[%d] Incorrect number of frequencies %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect number of frequencies %s"), in.GetLineNumber(), f.GetText(0)));
 	if (minF <= 0)
-		throw(Exc(Format(t_("[%d] Incorrect frequency %s"), in.GetLineNumber(), f.GetText(1))));
+		throw Exc(Format(t_("[%d] Incorrect frequency %s"), in.GetLineNumber(), f.GetText(1)));
 	if (maxF <= minF)
-		throw(Exc(Format(t_("[%d] Minimum frequency %s has to be lower than maximum frequency %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2))));	
+		throw Exc(Format(t_("[%d] Minimum frequency %s has to be lower than maximum frequency %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	
 	f.Load(in.GetLine());	Nh = f.GetInt(0);	minD = f.GetDouble(1);	maxD = f.GetDouble(2);
 	if (Nh < 1 || Nh > 1000)
-		throw(Exc(Format(t_("[%d] Incorrect number of directions %s"), in.GetLineNumber(), f.GetText(0))));
+		throw Exc(Format(t_("[%d] Incorrect number of directions %s"), in.GetLineNumber(), f.GetText(0)));
 	if (minD < -180)
-		throw(Exc(Format(t_("[%d] Incorrect direction %s"), in.GetLineNumber(), f.GetText(1))));
+		throw Exc(Format(t_("[%d] Incorrect direction %s"), in.GetLineNumber(), f.GetText(1)));
 	if (maxD > 180)
-		throw(Exc(Format(t_("[%d] Incorrect direction %s"), in.GetLineNumber(), f.GetText(2))));
+		throw Exc(Format(t_("[%d] Incorrect direction %s"), in.GetLineNumber(), f.GetText(2)));
 	if (maxD < minD)
-		throw(Exc(Format(t_("[%d] Minimum direction %s has to be lower than maximum direction %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2))));	
+		throw Exc(Format(t_("[%d] Minimum direction %s has to be lower than maximum direction %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	
 	in.GetLine();
 	f.Load(in.GetLine());	irf = f.GetInt(0) > 0;	irfStep = f.GetDouble(1);	irfDuration = f.GetDouble(2);
 	if (irfStep <= 0)
-		throw(Exc(Format(t_("[%d] Incorrect IRF step %s"), in.GetLineNumber(), f.GetText(1))));
+		throw Exc(Format(t_("[%d] Incorrect IRF step %s"), in.GetLineNumber(), f.GetText(1)));
 	if (irfDuration <= irfStep)
-		throw(Exc(Format(t_("[%d] IRF step %s has to be lower than duration %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2))));	
-
+		throw Exc(Format(t_("[%d] IRF step %s has to be lower than duration %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	f.Load(in.GetLine());	showPressure = f.GetInt(0) > 0;
 	
 	bool loadedFree = false, loadedKochin = false;
@@ -253,21 +252,21 @@ bool NemohCal::Load(String fileName) {
 		LoadKochin(in, f);
 		loadedKochin = true;
 	} else
-		throw(Exc(Format(t_("[%d] Unexpected data %s"), in.GetLineNumber(), f.GetText())));			
+		throw Exc(Format(t_("[%d] Unexpected data %s"), in.GetLineNumber(), f.GetText()));			
 	
 	f.Load(in.GetLine());	
 	if (GetNumArgs(f) == 4) {
 		if (!loadedFree)
 			LoadFreeSurface(in, f);
 		else
-			throw(Exc(Format(t_("[%d] Free surface data already loaded %s"), in.GetLineNumber(), f.GetText())));				
+			throw Exc(Format(t_("[%d] Free surface data already loaded %s"), in.GetLineNumber(), f.GetText()));				
 	} else if (GetNumArgs(f) == 3) {
 		if (!loadedKochin)
 			LoadKochin(in, f);
 		else
-			throw(Exc(Format(t_("[%d] Kochin data already loaded %s"), in.GetLineNumber(), f.GetText())));				
+			throw Exc(Format(t_("[%d] Kochin data already loaded %s"), in.GetLineNumber(), f.GetText()));				
 	} else if (GetNumArgs(f) > 0)
-		throw(Exc(Format(t_("[%d] Unexpected data %s"), in.GetLineNumber(), f.GetText())));			
+		throw Exc(Format(t_("[%d] Unexpected data %s"), in.GetLineNumber(), f.GetText()));			
 	else {
 		if (!loadedFree) {
 			nFreeX = nFreeY = 0;	
@@ -664,7 +663,7 @@ bool Nemoh::Load_Radiation(String fileName) {
 	if (hd().dof.IsEmpty())
 		hd().dof = pick(dof);
 	else if (!IsEqualRange(dof, hd().dof))
-		throw(Format(t_("DOF does not match in %s"), fileName));
+		throw Format(t_("DOF does not match in %s"), fileName);
 	hd().A.SetCount(hd().Nf);
 	hd().B.SetCount(hd().Nf);
 	for (int k = 0; k < hd().Nf; ++k) {
@@ -721,7 +720,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName, Stri
 	if (hd().dof.IsEmpty())
 		hd().dof = pick(dof);
 	else if (!IsEqualRange(dof, hd().dof))
-		throw(Format(t_("[%d] DOF does not match in %s"), in.GetLineNumber(), fileName));
+		throw Format(t_("[%d] DOF does not match in %s"), in.GetLineNumber(), fileName);
 	hd().Initialize_Forces(fc);
 	for (int h = 0; h < hd().Nh; ++h) {
 		int ifr = 0;

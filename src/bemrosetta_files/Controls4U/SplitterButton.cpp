@@ -25,6 +25,8 @@ SplitterButton::SplitterButton() {
 SplitterButton& SplitterButton::Horz(Ctrl &left, Ctrl &right) {
 	splitter.Horz(left, right);	
 	
+	SetPositions(0, 5000, 10000);
+	SetInitialPositionId(1);
 	SetArrows();
 	
 	return *this;
@@ -33,6 +35,8 @@ SplitterButton& SplitterButton::Horz(Ctrl &left, Ctrl &right) {
 SplitterButton& SplitterButton::Vert(Ctrl& top, Ctrl& bottom) {
 	splitter.Vert(top, bottom);
 	
+	SetPositions(0, 5000, 10000);
+	SetInitialPositionId(1);
 	SetArrows();
 	
 	return *this;
