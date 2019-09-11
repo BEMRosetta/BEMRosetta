@@ -23,7 +23,7 @@ Boundary Element Methods are extensively used to model hydrodynamic forces in of
 
 BEMRosetta allows to load the hydrodynamic coefficients from a format saving it in another. In addition it allows to compare the results obtained between programs, the results between similar geometries and the same geometry with different discretization levels.
 
-In addition, BEMRosetta allows to view and visually compare the meshes from different programs.
+Moreover, BEMRosetta allows to view and visually compare the meshes from different programs.
 
 BEMRosetta runs on Windows and Linux, no install is necessary in Windows [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI and [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test). 
 
@@ -89,21 +89,26 @@ In a nutshell:
   * Mesh handling
     * Load and save in binary and text [STL format](https://en.wikipedia.org/wiki/STL_(file_format))
     * Interactive mesh rotation and translation around user defined center
-    * Automatic free surface, center of buoyancy, hidrostatic stiffness matrix, and other parameters calculation
+    * Automatic free surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
     * Improved viewer including dropdown menu in viewer screen
     * Mesh healing option
   * Nemoh
-    * Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you edit it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
+    * Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
   * BEM coefficients
-    * Added hidrostatic stiffness matrix viewer
+    * Added hydrostatic stiffness matrix viewer
 
-Please remember that these options are in test. Please report any problems or proposals immediately. It will probably be answered the next day.
+Please remember that these options are in test. Please report any problem or proposal immediately. It will probably be answered the next day.
+
+<p align="center">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Mesh.png" width="45%" title="All mesh ans waterline">
+</p>
 
 ## Acknowledgments
 
 J. C. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez-Lara.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
-Based on the [U++ multiplatform library](https://www.ultimatepp.org/).
+Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
 ## License
