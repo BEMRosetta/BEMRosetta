@@ -19,16 +19,15 @@ bool Fast::Load(String file, double g) {
 			throw Exc("\n" + Format(t_("File '%s' is not of FAST type"), file));
 			
 		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
-		if (!Load_dat()) 
+		if (!Load_HydroDyn()) 
 			throw Exc("\n" + Format(t_("File '%s' not found"), file));
 
 		hydroFile = AppendFileName(GetFileFolder(file), AppendFileName(hydroFolder, hd().name));
 		hd().code = Hydro::FAST_WAMIT;
 		
-		if (!Wamit::Load(ForceExt(hydroFile, ".hst"))) {
-			if (!Wamit::Load(ForceExt(hydroFile, ".1"))) 
-				return false;
-		}
+		if (!Wamit::Load(ForceExt(hydroFile, ".hst"))) 
+			return false;
+		
 		if (IsNull(hd().Nb))
 			return false;
 		
@@ -47,7 +46,7 @@ bool Fast::Load(String file, double g) {
 	return true;
 }
 
-bool Fast::Load_dat() {
+bool Fast::Load_HydroDyn() {
 	FileInLine in(hd().file);
 	if (!in.IsOpen())
 		return false;
@@ -59,6 +58,8 @@ bool Fast::Load_dat() {
 	FieldSplit f(in);
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
+		if (f.GetCount() == 0)
+			break;
 		if (f.GetText(1) == "WtrDens") 
 			hd().rho = f.GetDouble(0);
 		else if (f.GetText(1) == "WtrDpth") 
@@ -89,7 +90,7 @@ void Fast::Save(String file) {
 	try {
 		String hydroFile;
 		file = ForceExt(file, ".dat");
-		Save_dat(file, true);
+		Save_HydroDyn(file, true);
 		hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
 		DirectoryCreate(AppendFileName(GetFileFolder(file), hydroFolder));
 	
@@ -100,7 +101,7 @@ void Fast::Save(String file) {
 	}
 }
 
-void Fast::Save_dat(String fileName, bool force) {
+void Fast::Save_HydroDyn(String fileName, bool force) {
 	String strFile;
 	
 	if (hydroFolder.IsEmpty())

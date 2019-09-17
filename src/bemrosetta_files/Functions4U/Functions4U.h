@@ -671,7 +671,12 @@ void Shuffle(C &data, int randomSeed = Null) {
 }
 
 template <class T>
-bool Equal(const T& a, const T& b, const T& ratio) {
+inline String TruncDecimals(T num, int decimals) {
+	return FormatDouble(num, decimals);
+}
+
+template <class T>
+bool EqualRatio(const T& a, const T& b, const T& ratio) {
 	if (a == 0)
 		return b <= ratio;
 	if (b == 0)
@@ -693,14 +698,13 @@ int FindAdd(Range& r, const V& value, int from = 0) {
 template <class Range, class V>
 void FindAddRatio(Range& r, const V& value, const V& ratio, int from = 0) {
 	for(int i = from; i < r.GetCount(); i++)
-		if(Equal(r[i], value, ratio)) 
+		if(EqualRatio(r[i], value, ratio)) 
 			return;
 	r.Add(value);
 }
 
 template <class Range, class V>
-int FindIndexDelta(const Range& r, const V& value, const V& delta, int from = 0)
-{
+int FindIndexDelta(const Range& r, const V& value, const V& delta, int from = 0) {
 	for(int i = from; i < r.GetCount(); i++) 
 		if(abs(r[i] - value) <= delta) 
 			return i;
@@ -708,10 +712,20 @@ int FindIndexDelta(const Range& r, const V& value, const V& delta, int from = 0)
 }
 
 template <class Range, class V>
-int FindIndexRatio(const Range& r, const V& value, const V& ratio, int from = 0)
-{
+int FindIndexDecimals(const Range& r, const V& value, int numDecimals, int from = 0) {
+	String svalue = TruncDecimals(value, numDecimals);
 	for(int i = from; i < r.GetCount(); i++) {
-		if (Equal(r[i], value, ratio))
+		String s = TruncDecimals(r[i], numDecimals);
+		if(s == svalue) 
+			return i;
+	}
+	return -1;
+}
+
+template <class Range, class V>
+int FindIndexRatio(const Range& r, const V& value, const V& ratio, int from = 0) {
+	for(int i = from; i < r.GetCount(); i++) {
+		if (EqualRatio(r[i], value, ratio))
 			return i;
 	}
 	return -1;

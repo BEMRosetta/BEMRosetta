@@ -18,6 +18,7 @@ public:
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, UNKNOWN};
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
+	void GetFOAMM(String file, Function <bool(String)> Running);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), dataFromW(true), bem(&_bem) {}
 	virtual ~Hydro() {}	
@@ -120,7 +121,7 @@ public:
     
 	int GetHeadId(double hd) {
 		for (int i = 0; i < head.GetCount(); ++i) {
-			if (Equal(head[i], hd, 0.01))
+			if (EqualRatio(head[i], hd, 0.01))
 				return i;
 		}
 		return -1;
@@ -174,6 +175,11 @@ public:
 	
 	Upp::Array<std::complex<double>> TFSResponse;
 	Upp::Array<std::complex<double>> Z;
+	MatrixXd A_ss;
+	VectorXd B_ss;
+	VectorXd C_ss;
+	VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
+	double ssMAE;
 	
 	void GetBodyDOF();
 	
@@ -350,7 +356,7 @@ public:
 		
 	void AfterLoad(double rho, double g, bool onlyCG);
 
-	void SaveAs(String fileName, MESH_FMT type, double g, bool meshAll, bool positionOriginal);
+	void SaveAs(String fileName, MESH_FMT type, double g, int meshType);
 	static void SaveDatNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, bool x0z);
 	static void SaveGdfWamit(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, double g, bool y0z, bool x0z);
 	static void SaveStlTxt(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
@@ -441,7 +447,7 @@ public:
 class Wamit : public HydroClass {
 public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
-	bool Load(String file, double rho = 1000);
+	bool Load(String file);
 	void Save(String file);
 	virtual ~Wamit()	{}
 	
@@ -487,9 +493,8 @@ public:
 	virtual ~Fast()	{}
 	
 private:
-	bool Load_dat();	
-	
-	void Save_dat(String fileName, bool force);	
+	bool Load_HydroDyn();	
+	void Save_HydroDyn(String fileName, bool force);	
 	
 	String hydroFolder;
 	int WaveNDir;
@@ -702,7 +707,8 @@ public:
 	int onlyDiagonal;
 	
 	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathGREN;
-	bool experimental;
+	bool experimental, experimentalFOAMM;
+	String foammPath;
 	
 	void Load(String file, Function <void(String, int pos)> Status);
 	void LoadMesh(String file, Function <void(String, int pos)> Status);
@@ -780,9 +786,12 @@ public:
 			("nemohPathPostprocessor", nemohPathPostprocessor)
 			("nemohPathGREN", nemohPathGREN)
 			("experimental", experimental)
+			("experimentalFOAMM", experimentalFOAMM)
+			("foammPath", foammPath)
 		;
 	}
 };
 
-	
+bool OUTB(int id, int total);
+
 #endif

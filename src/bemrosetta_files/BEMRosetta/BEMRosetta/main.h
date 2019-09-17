@@ -49,6 +49,8 @@ public:
 	}
 	bool Init(Hydro &_data, int _idof, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		data = &_data;
+		if (_idof >= _data.dofOrder.GetCount())
+			return false;
 		idof = _data.dofOrder[_idof];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
 			_j_h = _data.dofOrder[_j_h];
@@ -177,17 +179,16 @@ public:
 	
 	MainView() {}
 	void Init(const WithMenuPlotMesh<StaticRect> &menuPlot);
-	
 	void CalcEnvelope();
-		
+	void OnPaint();
+	const WithMenuPlotMesh<StaticRect> &GetMenuPlot() const {return *menuPlot;}
+	void SetPaintSelect(bool _paintSelect)					{paintSelect = _paintSelect;}
+	
 	VolumeEnvelope env;
 	
-	void OnPaint();
-	
-	const WithMenuPlotMesh<StaticRect> &GetMenuPlot() {return *menuPlot;}
-	
 private:
-	const WithMenuPlotMesh<StaticRect> *menuPlot;
+	const WithMenuPlotMesh<StaticRect> *menuPlot = 0;
+	bool paintSelect = true;
 };
 
 
@@ -301,13 +302,19 @@ private:
 	DataToShow dataToShow;
 };
 
-class MainStateSpace : public WithMainStateSpace<StaticRect> {
+class MainStateSpace : public StaticRect {
 public:
 	typedef MainStateSpace CLASSNAME;
 	void Init();
+	void Init(ArrayCtrl &array);
 	bool Load(BEMData &bem);
 	
+	Splitter splitter;
+	TabCtrl tab;
+	ScatterCtrl scatter;
+	
 	Upp::Array<HydroSource> Z_source, Z_source2, TFS_source, TFS_source2;
+	Upp::Array<ArrayCtrl> arrays;
 };
 
 typedef class MainABForce MainRAO;
@@ -386,12 +393,14 @@ public:
 	bool OnLoad();
 	bool OnConvert();
 	void OnOpt();
-	
+	bool OnFOAMM();
+		
 	void Jsonize(JsonIO &json);
 		
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
+	WithMenuStateSpace<StaticRect> menuFOAMM;
 	
 	MainSummaryCoeff mainSummary;
 	MainArrange mainArrange;
@@ -409,6 +418,7 @@ private:
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
+	bool cancelFOAMM;
 };
 
 class Main : public TopWindow {

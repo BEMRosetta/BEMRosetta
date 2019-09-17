@@ -1,5 +1,6 @@
 #include "BEMRosetta.h"
 
+#include <plugin/matio/matio.h>
 
 Function <void(String)> BEMData::Print 		  = [](String s) {Cout() << s;};
 Function <void(String)> BEMData::PrintWarning = [](String s) {Cout() << s;};
@@ -274,7 +275,7 @@ void Hydro::Compare_w(Hydro &a) {
 	if (a.Nf != Nf)	
 		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.Nf, Nf));
 	for (int i = 0; i < a.Nf; ++i) {
-		if (!Equal(a.w[i], w[i], 0.0001))
+		if (!EqualRatio(a.w[i], w[i], 0.0001))
 			throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], w[i]));
 	}
@@ -326,7 +327,7 @@ void Hydro::Compare_C(Hydro &a) {
 			for (int jdf = 0; jdf < 6; ++jdf) {
 				double Ca = a.C[ib](idf, jdf);
 				double Cb = C[ib](idf, jdf);
-				if (!IsNull(Ca) && !IsNull(Cb) && !Equal(Ca, Cb, 0.0001))
+				if (!IsNull(Ca) && !IsNull(Cb) && !EqualRatio(Ca, Cb, 0.0001))
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
 							Ca, Cb));
@@ -383,6 +384,97 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 	Nf = realNf;
 }
 
+void Hydro::GetFOAMM(String file, Function <bool(String)> Running) {
+	MatFile mat;
+	
+	if (!mat.OpenWrite("C:\\Desarrollo\\Aplicaciones\\BEMRosetta\\FOAMM_Win\\pru\\temp_file.mat")) 
+		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
+	
+	mat.VarDelete("Options");
+	
+	Vector<String> optionsVars;
+	optionsVars << "Mode" << "Method" << "FreqRangeChoice" << "FreqChoice";
+	MatVar options("Options", 1, 1, optionsVars);
+	
+	options.VarWriteStruct<double>("Mode", 0);
+	options.VarWriteStruct<double>("Method", 0);
+	options.VarWriteStruct("FreqRangeChoice", "G");
+	options.VarWriteStruct("FreqChoice", "G");
+	
+	Vector<String> optimVars;
+	optimVars << "InitCond" << "Tol" << "maxEval" << "maxIter" << "StepTol" << "ThresRel" << "ThresAbs";
+	MatVar optim("Optim", 1, 1, optimVars);
+	optim.VarWriteStruct<double>("InitCond", 50);
+	optim.VarWriteStruct<double>("Tol", 1E-5);
+	optim.VarWriteStruct<double>("maxEval", 1E3);
+	optim.VarWriteStruct<double>("maxIter", 200);
+	optim.VarWriteStruct<double>("StepTol", 1E-6);
+	optim.VarWriteStruct<double>("ThresRel", 0.03);
+	optim.VarWriteStruct<double>("ThresAbs", 0.1);
+	
+	options.VarWriteStruct("Optim", optim);
+	mat.VarWrite(options, true);
+	
+	mat.Close();
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	LocalProcess process;
+	if (!process.Start(bem->foammPath, NULL, "C:\\Desarrollo\\Aplicaciones\\BEMRosetta\\FOAMM_Win\\pru"))
+		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
+
+	String msg, reso, rese;
+	bool endProcess = false;
+	while (process.IsRunning()) {
+		if (!endProcess) {
+			msg.Clear();
+			if (process.Read2(reso, rese)) {
+				if (!reso.IsEmpty())
+					msg << reso;
+				if (!rese.IsEmpty()) {
+					if (!msg.IsEmpty())
+						msg << ";";
+					msg << rese;
+				}
+				/*if (!msg.IsEmpty()) {
+					process.Kill();
+					Running(msg);
+					return;
+				}*/
+			}
+			endProcess = Running(msg); 
+			if (endProcess)
+				process.Kill();
+		}
+		Sleep(200);
+	}
+	
+	if (!mat.OpenRead("C:\\Desarrollo\\Aplicaciones\\BEMRosetta\\FOAMM_Win\\pru\\temp_file.mat")) 
+		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
+	Cout() << "\nData saved" << "\n";
+	Cout() << "Version: " << mat.GetVersionName() << "\n";
+	for (int i = 0; i < mat.GetVarCount(); ++i) {
+		String name = mat.GetVarName(i);
+		MatVar var = mat.GetVar(name);
+		Cout() << name << " (" << var.GetTypeString() << ")";
+		for (int d = 0; d < var.GetDimCount(); ++d)
+			Cout() << "(" << var.GetDimCount(d) << ")";
+		Cout() << "\n";
+		if (var.GetType() == MAT_C_STRUCT) {
+			for (int s = 0; s < var.GetFieldCount(); ++s) {
+				Cout() << "\t" << var.GetFieldName(s) << "\n";
+			}
+		} 
+		
+	}
+}
+
 void Hydro::Report() {
 	BEMData::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
 	String sg   = IsNull(g)   ? x_("unknown") : Format("%.3f", g);
@@ -417,7 +509,7 @@ void Hydro::Report() {
 	else if (head.GetCount() > 1) {
 		String strDeltaH;
 		if (GetIrregularHead() < 0) 
-			strDeltaH = Format(t_("delta %.1f [º]"), head[1] - head[0]);
+			strDeltaH = Format(t_("delta %.1f [deg]"), head[1] - head[0]);
 		else {
 			String strHead;
 			for (int i = 0; i < head.GetCount(); ++i) {
@@ -429,7 +521,7 @@ void Hydro::Report() {
 		}
 	 	heads = Format(t_("%.1f to %.1f %s"), head[0], head[head.GetCount()-1], strDeltaH);	
 	} else
-		heads = Format(t_("%.1f [º]"), head[0]);
+		heads = Format(t_("%.1f [deg]"), head[0]);
 	
 	BEMData::Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
 	BEMData::Print("\n" + Format(t_("#headings: %d (%s)"), Nh, heads)); 
@@ -450,33 +542,6 @@ void Hydro::Report() {
 		BEMData::Print(str);
 	}
 }
-/*
-bool HydroClass::MatchCoeffStructure(Upp::Array<HydroClass> &hydro, String &strError) {
-	strError.Clear();
-	if (hydro.IsEmpty()) {
-		strError = t_("No data loaded");
-		return false;
-	}
-	int Nb = hydro[0].hd().Nb;
-	int Nh = hydro[0].hd().Nh;
-	for (int i = 1; i < hydro.GetCount(); ++i) {
-		if (hydro[i].hd().Nb != Nb) {
-			strError = t_("Different number of bodies");
-			return false;
-		} else if (hydro[i].hd().Nh != Nh) {
-			strError = t_("Different number of wave headings");
-			return false;
-		} else {
-			for (int ih = 0; ih < Nh; ++ih) {
-				if (hydro[i].hd().head[ih] != hydro[0].hd().head[ih]) {
-					strError = t_("Wave headings do not match");
-					return false;
-				}
-			}
-		}
-	}
-	return true;
-}*/
 
 void Hydro::GetBodyDOF() {
 	dof.Clear();	 dof.SetCount(Nb, 0);
@@ -488,11 +553,9 @@ void Hydro::GetBodyDOF() {
 
 void Hydro::AfterLoad(Function <void(String, int)> Status) {
 	dofOrder.SetCount(6*Nb);
-	for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) {
-		//if (order >= 6)
-		//	order = 0;
+	for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) 
 		dofOrder[i] = order;
-	}
+	
 	if (!IsLoadedAw0())  
 		A0();
 	
@@ -552,7 +615,7 @@ int Hydro::GetIrregularHead() const {
 	double delta0 = head[1] - head[0];
 	for (int i = 1; i < Nh - 1; ++i) {
 		double delta = head[i+1] - head[i];
-		if (!Equal(delta, delta0, 0.001))
+		if (!EqualRatio(delta, delta0, 0.001))
 			return i;
 	}
 	return -1;
@@ -564,7 +627,7 @@ int Hydro::GetIrregularFreq() const {
 	double delta0 = w[1] - w[0];
 	for (int i = 1; i < Nf - 1; ++i) {
 		double delta = w[i+1] - w[i];
-		if (!Equal(delta, delta0, 0.001))
+		if (!EqualRatio(delta, delta0, 0.001))
 			return i;
 	}
 	return -1;
@@ -600,21 +663,21 @@ void BEMData::Load(String file, Function <void(String, int pos)> Status) {
 		}
 	} else if (ext == ".out") {
 		Wamit &data = hydros.Create<Wamit>(*this);
-		if (!data.Load(file, Null)) {
+		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));
 		}
 	} else if (ext == ".dat") {
 		Fast &data = hydros.Create<Fast>(*this);
-		if (!data.Load(file, Null)) {
+		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
 		Wamit &data = hydros.Create<Wamit>(*this);
-		if (!data.Load(file, Null)) {
+		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'") + x_("\n%s"), file, error));		
@@ -865,4 +928,10 @@ void ConsoleMain(const Vector<String>& command, bool gui) {
 			Cerr() << x_("\n") + t_("or just call command line without arguments to open GUI window");
 	}
 	Cout() << "\n";
+}
+
+bool OUTB(int id, int total) {
+	if (id < 0	|| id >= total)
+		return true;
+	return false;
 }

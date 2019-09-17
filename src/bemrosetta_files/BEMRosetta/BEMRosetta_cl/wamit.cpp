@@ -1,17 +1,11 @@
 #include "BEMRosetta.h"
 
 
-bool Wamit::Load(String file, double rho) {
+bool Wamit::Load(String file) {
 	hd().code = Hydro::WAMIT;
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
-	
-	hd().g = Null;
-	hd().rho = rho;
-	hd().len = Null;
-	
-	hd().Nb = Null;
-	
+		
 	try {
 		if (GetFileExt(file) == ".out") {
 			BEMData::Print("\n\n" + Format(t_("Loading out file '%s'"), file));
@@ -141,16 +135,26 @@ bool Wamit::Load_out() {
 				hd().rho = f.GetDouble(5);			
 		} else if (line.Find("XBODY =") >= 0) {
 			ibody++;
+			if (ibody >= hd().Nb)
+				throw Exc(Format(t_("[%d] Found additional bodies over %d"), in.GetLineNumber(), hd().Nb));
+			if (hd().cg.rows() < 3 || hd().cg.cols() < hd().Nb)
+			 	throw Exc(Format(t_("[%d] cg matrix is not dimensioned"), in.GetLineNumber()));
 			hd().cg(0, ibody) = f.GetDouble(2);
 			hd().cg(1, ibody) = f.GetDouble(5);
 			hd().cg(2, ibody) = f.GetDouble(8);
-		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) 
+		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {
+			if (hd().Vo.GetCount() < hd().Nb)
+			 	throw Exc(Format(t_("[%d] Vo matrix is not dimensioned"), in.GetLineNumber()));		
 			hd().Vo[ibody] = ScanDouble(line.Mid(pos));
-		else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
+		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
+			if (hd().cb.rows() < 3 || hd().cg.cols() < hd().Nb)
+			 	throw Exc(Format(t_("[%d] cb matrix is not dimensioned"), in.GetLineNumber()));
 			hd().cb(0, ibody) = f.GetDouble(4) + hd().cg(0, ibody);
 			hd().cb(1, ibody) = f.GetDouble(5) + hd().cg(1, ibody);
 			hd().cb(2, ibody) = f.GetDouble(6) + hd().cg(2, ibody);
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
+			if (hd().C.GetCount() < hd().Nb)
+			 	throw Exc(Format(t_("[%d] C matrix is not dimensioned"), in.GetLineNumber()));
 			hd().C[ibody].setConstant(6, 6, 0);
 			f.LoadWamitJoinedFields(in.GetLine());
 			hd().C[ibody](2, 2) = f.GetDouble(1);
@@ -219,6 +223,9 @@ bool Wamit::Load_out() {
 				f.Load(line);
 				
 				ifr++;
+				if (OUTB(ifr, hd().Nf))
+					throw Exc(Format(t_("[%d] Found additional frequencies over %d"), in.GetLineNumber(), hd().Nf));
+				
 	            hd().T[ifr] = f.GetDouble(4);  			
 	            hd().w[ifr] = fround(2*M_PI/hd().T[ifr], 8);
 	            hd().dataFromW = false;
@@ -232,6 +239,10 @@ bool Wamit::Load_out() {
 							hd().B.SetCount(hd().Nf);
 						}
 						in.GetLine(2);
+						if (hd().A.GetCount() < hd().Nf)
+			 				throw Exc(Format(t_("[%d] A matrix is not dimensioned"), in.GetLineNumber()));
+						if (hd().B.GetCount() < hd().Nf)
+			 				throw Exc(Format(t_("[%d] B matrix is not dimensioned"), in.GetLineNumber()));
 						hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 		            	hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 		            
@@ -244,6 +255,8 @@ bool Wamit::Load_out() {
 							int j = f.GetInt(1) - 1;
 							double Aij = f.GetDouble(2);
 							double Bij = f.GetDouble(3);
+							if (OUTB(i, hd().Nb*6) || OUTB(j, hd().Nb*6))
+								throw Exc(Format(t_("[%d] Index (%d, %d) out of bounds"), in.GetLineNumber(), i, j));
 							hd().A[ifr](i, j) = Aij;
 							hd().B[ifr](i, j) = Bij;
 						}
@@ -257,7 +270,6 @@ bool Wamit::Load_out() {
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
 								in.GetLine(3); 
-								//int idof = 0;
 								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
 									f.Load(line);
 									double ma = f.GetDouble(1);
@@ -265,6 +277,8 @@ bool Wamit::Load_out() {
 									double re = ma*cos(ph);
 									double im = ma*sin(ph);
 									int i = abs(f.GetInt(0)) - 1;
+									if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
+										throw Exc(Format(t_("[%d] Index [%d](%d, %d) out of bounds"), in.GetLineNumber(), ih, ifr, i));
 									hd().ex.ma[ih](ifr, i) = ma;	
 									hd().ex.ph[ih](ifr, i) = ph;	
 									hd().ex.re[ih](ifr, i) = re;	
@@ -301,6 +315,8 @@ void Wamit::Load_A(FileInLine &in, MatrixXd &A) {
 		int i = f.GetInt(0) - 1;
 		int j = f.GetInt(1) - 1;
 		double Aij = f.GetDouble(2);
+		if (OUTB(i, A.rows()) || OUTB(j, A.cols()))
+			throw Exc(Format(t_("[%d] Index (%d, %d) out of bounds"), in.GetLineNumber(), i, j));
 		A(i, j) = Aij;
 	}
 }
@@ -320,6 +336,8 @@ bool Wamit::Load_Scattering(String fileName) {
         		f.Load(in.GetLine());
         		
         		int i = f.GetInt(2) - 1;
+        		if (OUTB(i, hd().Nb*6))
+        			throw Exc(Format(t_("[%d] Index (%d) out of bounds"), in.GetLineNumber(), i));
                 hd().sc.ma[ih](ifr, i) = f.GetDouble(3);
                 hd().sc.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
                 hd().sc.re[ih](ifr, i) = f.GetDouble(5);
@@ -345,6 +363,8 @@ bool Wamit::Load_FK(String fileName) {
                 f.Load(in.GetLine());
         		
         		int i = f.GetInt(2) - 1;
+        		if (OUTB(i, hd().Nb*6))
+        			throw Exc(Format(t_("[%d] Index (%d) out of bounds"), in.GetLineNumber(), i));
                 hd().fk.ma[ih](ifr, i) = f.GetDouble(3);
                 hd().fk.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
                 hd().fk.re[ih](ifr, i) = f.GetDouble(5);

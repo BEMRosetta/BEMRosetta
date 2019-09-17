@@ -65,10 +65,27 @@ void MainBEM::Init() {
 	menuPlot.showNdim.WhenAction 	 = [&] {LoadSelTab(ma().bem);};
 	
 	OnOpt();
+	
+	CtrlLayout(menuFOAMM);
+	menuFOAMM.file.WhenChange = THISBACK(OnFOAMM);
+	menuFOAMM.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
+	cancelFOAMM = false;
+	menuFOAMM.progress.Show(false);
+	menuFOAMM.butCancel.Show(false);
+	menuFOAMM.butLoad.WhenAction 	= [&] {OnFOAMM();};
+	menuFOAMM.butCancel.WhenAction 	= [&] {cancelFOAMM = true;};
+	
+	menuFOAMM.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
+	menuFOAMM.arrayModel.AddColumn("", 20);	
+	menuFOAMM.arrayModel.AddColumn("", 20);	
+	
+	OnOpt();
 		
 	menuTab.Add(menuOpen.SizePos(), 	t_("Open"));
 	menuTab.Add(menuConvert.SizePos(), 	t_("Convert"));
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
+	if (ma().bem.experimentalFOAMM) 
+		menuTab.Add(menuFOAMM.SizePos(), t_("State Space"));
 	
 	mainTab.WhenSet = [&] {
 		bool plot = true;
@@ -184,7 +201,6 @@ MainPlot &MainBEM::GetSelPlot() {
 
 void MainBEM::OnOpt() {
 	menuOpen.file.ClearTypes();
-	
 	const String bemFiles = ".1 .3 .hst .4 .out .dat .cal .inf .ah1 .lis .mat";
 	String bemFilesAst = clone(bemFiles);
 	bemFilesAst.Replace(".", "*.");
@@ -201,12 +217,12 @@ void MainBEM::OnOpt() {
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
 	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
-			menuConvert.file.Type("Wamit .1.3.hst file", "*.1 *.3 *.hst");
+			menuConvert.file.Type(t_("Wamit .1.3.hst file"), "*.1 *.3 *.hst");
 			break;
 	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
-			menuConvert.file.Type("FAST HydroDyn file", "*.dat");
+			menuConvert.file.Type(t_("FAST HydroDyn file"), "*.dat");
 			break;
-	default:menuConvert.file.Type("All converted files", "*.1 *.3 *.hst *.dat");
+	default:menuConvert.file.Type(t_("All converted files"), "*.1 *.3 *.hst *.dat");
 			break;
 	}
 	String extConv = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
@@ -218,6 +234,17 @@ void MainBEM::OnOpt() {
 		menuConvert.file.ActiveType(1);
 	else
 		menuConvert.file.ActiveType(2);
+	
+	menuFOAMM.file.ClearTypes();
+	menuFOAMM.file.Type(t_("Maynooth COER FOAMM file *.mat"), "*.mat");
+	menuFOAMM.file.AllFilesType();
+	String extFOAMM = ToLower(GetFileExt(menuFOAMM.file.GetData().ToString()));
+	if (extFOAMM.IsEmpty())
+		menuFOAMM.file.ActiveType(0);
+	else if (extFOAMM == ".mat")
+		menuFOAMM.file.ActiveType(0);
+	else
+		menuFOAMM.file.ActiveType(1);	
 }
 
 bool MainBEM::OnLoad() {
@@ -244,6 +271,9 @@ bool MainBEM::OnLoad() {
 		menuConvert.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
 		if (menuConvert.arrayModel.GetCursor() < 0)
 			menuConvert.arrayModel.SetCursor(0);
+		menuFOAMM.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
+		if (menuFOAMM.arrayModel.GetCursor() < 0)
+			menuFOAMM.arrayModel.SetCursor(0);
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
 		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(true);
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(ma().bem));	
@@ -278,6 +308,41 @@ bool MainBEM::OnConvert() {
 		ma().bem.hydros[id].hd().SaveAs(~menuConvert.file, type);	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
+		return false;
+	}
+	return true;
+}
+
+bool MainBEM::OnFOAMM() {
+	try {
+		int id = menuFOAMM.arrayModel.GetCursor();
+		if (id < 0) {
+			Exclamation(t_("Please select a model to get State Space"));
+			return false;
+		}
+		menuFOAMM.progress.Show(true);
+		menuFOAMM.butCancel.Show(true);
+		ma().bem.hydros[id].hd().GetFOAMM(~menuFOAMM.file, [&](String str) {
+				menuFOAMM.progress++; 
+				if (!str.IsEmpty()) {
+					//menuFOAMM.progress.Show(false);
+					//menuFOAMM.butCancel.Show(false);
+					str.Replace("\r", "");
+					str.Replace("\n\n", "\n");
+					Exclamation (DeQtfLf(str));
+					//return true;
+				}
+				ProcessEvents(); 
+				return cancelFOAMM;
+			});
+		menuFOAMM.progress.Show(false);
+		menuFOAMM.butCancel.Show(false);
+		cancelFOAMM = false;	
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+		menuFOAMM.progress.Show(false);
+		menuFOAMM.butCancel.Show(false);
+		cancelFOAMM = false;
 		return false;
 	}
 	return true;
@@ -728,55 +793,130 @@ bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
 	return loaded;
 }
 
+void MainStateSpace::Init(ArrayCtrl &array) {
+	array.Reset();
+	array.NoHeader().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	array.MultiSelect().SpanWideCells();
+	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
+}
+
 void MainStateSpace::Init() {
-	CtrlLayout(*this);
+	scatter.ShowAllMenus();
+	scatter.SetTitle(t_("Frequency response")).SetTitleFont(SansSerif(12));
+	scatter.SetPlotAreaLeftMargin(70);
 	
-	scatterZ.ShowAllMenus();
-	scatterZ.SetTitle(t_("Frequency response"));
-	scatterZ.SetDrawY2Reticle(true);
+	splitter.Horz(tab.SizePos(), scatter.SizePos());
+	Add(splitter.SizePos());
 }
 
 bool MainStateSpace::Load(BEMData &bem) {
-	Upp::Array<HydroClass> &hydro = bem.hydros;
-	scatterZ.RemoveAllSeries();
-	Z_source.SetCount(hydro.GetCount());
-	Z_source2.SetCount(hydro.GetCount());
-	TFS_source.SetCount(hydro.GetCount());
-	TFS_source2.SetCount(hydro.GetCount());
+	Upp::Array<HydroClass> &hydros = bem.hydros;
+	int hnum = hydros.GetCount();
+	
+	scatter.RemoveAllSeries();
+	Z_source.SetCount(hnum);
+	Z_source2.SetCount(hnum);
+	TFS_source.SetCount(hnum);
+	TFS_source2.SetCount(hnum);
 	
 	bool dim = !mbm().menuPlot.showNdim;
 	int markW = mbm().menuPlot.showPoints ? 10 : 0;
 	bool show_w = mbm().menuPlot.opwT == 0;
 	if (show_w) 
-		scatterZ.SetLabelX(t_("w [rad/s]"));
+		scatter.SetLabelX(t_("w [rad/s]"));
 	else 
-		scatterZ.SetLabelX(t_("T [s]"));
+		scatter.SetLabelX(t_("T [s]"));
+	
+	scatter.SetDrawY2Reticle(mbm().menuPlot.showPhase);
+	scatter.SetPlotAreaRightMargin(mbm().menuPlot.showPhase ? 50 : 20);
 	
 	bool loaded = false;
-	for (int id = 0; id < hydro.GetCount(); ++id) {	
-		if (hydro[id].hd().IsLoadedStateSpace()) {
-			if (Z_source[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_MA, show_w, !dim)) {
+	for (int id = 0; id < hydros.GetCount(); ++id) {
+		Hydro &hydro = hydros[id].hd();	
+		if (hydro.IsLoadedStateSpace()) {
+			if (Z_source[id].Init(hydro, 0, 0, PLOT_Z_MA, show_w, !dim)) {
 				loaded = true;
-				scatterZ.AddSeries(Z_source[id]).Legend(Format(t_("Z Magnitude %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
-				if (Z_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_Z_PH, show_w, !dim)) {
+				scatter.AddSeries(Z_source[id]).Legend(Format(t_("Z Magnitude %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
+				if (Z_source2[id].Init(hydro, 0, 0, PLOT_Z_PH, show_w, !dim)) {
 					loaded = true;
 					if (mbm().menuPlot.showPhase)
-						scatterZ.AddSeries(Z_source2[id]).Legend(Format(t_("Z Phase %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").SetDataSecondaryY();
+						scatter.AddSeries(Z_source2[id]).Legend(Format(t_("Z Phase %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY().Units("rad");
 				}
 			}
-			if (TFS_source[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_MA, show_w, !dim)) {
+			if (TFS_source[id].Init(hydro, 0, 0, PLOT_TFS_MA, show_w, !dim)) {
 				loaded = true;
-				scatterZ.AddSeries(TFS_source[id]).Legend(Format(t_("TFSResponse Magnitude %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
-				if (TFS_source2[id].Init(hydro[id].hd(), 0, 0, PLOT_TFS_PH, show_w, !dim)) {
+				scatter.AddSeries(TFS_source[id]).Legend(Format(t_("TFSResponse Magnitude %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
+				if (TFS_source2[id].Init(hydro, 0, 0, PLOT_TFS_PH, show_w, !dim)) {
 					loaded = true;
 					if (mbm().menuPlot.showPhase)
-						scatterZ.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSResponse Phase %s"), hydro[id].hd().name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").SetDataSecondaryY();
+						scatter.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSResponse Phase %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY().Units("rad");
 				}
 			}
 		}
 	}
 	if (mbm().menuPlot.autoFit) 
-		scatterZ.ZoomToFit(true, true);
+		scatter.ZoomToFit(true, true);
+	
+	tab.Reset();
+	arrays.Clear();
+	
+	for (int id = 0; id < hydros.GetCount(); ++id) {
+		Hydro &hydro = hydros[id].hd();
+		int row = 0;
+		if (hydro.A_ss.size() > 0 || hydro.B_ss.size() > 0 || hydro.C_ss.size() > 0) {
+			loaded = true;
+			ArrayCtrl &array = arrays.Add();
+			Init(array);
+			tab.Add(array.SizePos(), hydro.name);
+			if (hydro.A_ss.size() > 0) {
+				if (hydro.A_ss.cols() > array.GetColumnCount()) {
+					int ncols = static_cast<int>(hydro.A_ss.cols()) - array.GetColumnCount();
+					for (int i = 0; i < ncols; ++i)
+						array.AddColumn("", 80);
+				}
+				array.Set(row++, 0, AttrText(t_("A_ss")).Bold());
+				for (int r = 0; r < hydro.A_ss.rows(); ++r)	{		
+					for (int c = 0; c < hydro.A_ss.cols(); ++c)
+						array.Set(row + r, c, hydro.A_ss(r, c));
+				}
+				row += static_cast<int>(hydro.A_ss.rows());
+			}
+			if (hydro.B_ss.size() > 0) {
+				array.Set(row++, 0, AttrText(t_("B_ss")).Bold());
+				for (int r = 0; r < hydro.B_ss.size(); ++r)		
+					array.Set(row, r, hydro.B_ss(r));
+				row++;
+			}
+			if (hydro.C_ss.size() > 0) {
+				array.Set(row++, 0, AttrText(t_("C_ss")).Bold());
+				for (int c = 0; c < hydro.C_ss.size(); ++c)			
+					array.Set(row, c, hydro.C_ss(c));
+				row++;
+			}
+			if (hydro.ssFrequencies.size() > 0) {
+				array.Set(row++, 0, AttrText(t_("Frequencies")).Bold());
+				for (int c = 0; c < hydro.ssFrequencies.size(); ++c)			
+					array.Set(row, c, hydro.ssFrequencies[c]);
+				row++;
+			}
+			if (hydro.ssFreqRange.size() > 0) {
+				array.Set(row++, 0, AttrText(t_("FreqRange")).Bold());
+				for (int c = 0; c < hydro.ssFreqRange.size(); ++c)			
+					array.Set(row, c, hydro.ssFreqRange[c]);
+				row++;
+			}
+			if (hydro.ssFrequencies_index.size() > 0) {
+				array.Set(row++, 0, AttrText(t_("Frequencies_index")).Bold());
+				for (int c = 0; c < hydro.ssFrequencies_index.size(); ++c)			
+					array.Set(row, c, hydro.ssFrequencies_index[c]);
+				row++;
+			}						
+			if (!IsNull(hydro.ssMAE)) {
+				array.Set(row++, 0, AttrText(t_("MAE")).Bold());
+				array.Set(row++, 0, hydro.ssMAE);
+			}
+		}
+	}
 	return loaded;
 }
 

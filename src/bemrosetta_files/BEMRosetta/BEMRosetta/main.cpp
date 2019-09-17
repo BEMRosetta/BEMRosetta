@@ -176,6 +176,8 @@ void MenuOptions::Load() {
 	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
 	nemohPathGREN <<= bem->nemohPathGREN;
 	experimental <<= bem->experimental;
+	experimentalFOAMM <<= bem->experimentalFOAMM;
+	foammPath <<= bem->foammPath;
 }
 
 void MenuOptions::OnSave() {
@@ -194,6 +196,8 @@ void MenuOptions::OnSave() {
 	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
 	bem->nemohPathGREN = ~nemohPathGREN;
 	bem->experimental = ~experimental;	
+	bem->experimentalFOAMM = ~experimentalFOAMM;
+	bem->foammPath = ~foammPath;
 	
 	ma().OptionsUpdated();
 }
@@ -207,7 +211,9 @@ bool MenuOptions::IsChanged() {
 		(bem->nemohPathSolver != ~nemohPathSolver) ||
 		(bem->nemohPathPostprocessor != ~nemohPathPostprocessor) ||
 		(bem->nemohPathGREN != ~nemohPathGREN) ||
-		(bem->experimental != ~experimental)
+		(bem->experimental != ~experimental) ||
+		(bem->experimentalFOAMM != ~experimentalFOAMM) ||
+		(bem->foammPath != ~foammPath)
 	   )
 		return true;
 	
@@ -276,6 +282,9 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K) {
 void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro) {
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, bodyName, ibody);
+
+	if (hydro.C.IsEmpty())
+		return;
 
 	for (int r = 0; r < 6; ++r) {
 		for (int c = 0; c < 6; ++c)

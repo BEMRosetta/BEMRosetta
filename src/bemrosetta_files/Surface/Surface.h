@@ -305,6 +305,7 @@ public:
 	String Heal(Function <void(String, int pos)> Status);
 	void GetLimits(); 
 	void GetPanelParams();
+	String CheckErrors() const;
 	double GetWaterPlaneArea();
 	void GetSurface();
 	void GetVolume();
@@ -349,7 +350,7 @@ private:
 	bool SameOrderPanel(int ip0, int ip1, int in0, int in1);
 	int PanelGetNumNodes(int ip) 	{return panels[ip].GetNumNodes();}
 	bool IsPanelTriangle(int ip) 	{return panels[ip].IsTriangle();}
-	void GetPanelParams(Panel &panel);
+	void GetPanelParams(Panel &panel) const;
 	
 	Vector<int> selPanels, selNodes;
 };
