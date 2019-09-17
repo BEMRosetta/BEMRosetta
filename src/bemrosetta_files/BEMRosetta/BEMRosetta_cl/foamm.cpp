@@ -127,6 +127,64 @@ bool Foamm::Load_mat(String file) {
 			hd().TFSResponse[ifr] = TFSResponse[ifr];
 	}
 	
+	MatMatrix<double> A_ss = mat.VarReadMat<double>("A_ss");	
+	if (A_ss.GetCount() == 0)
+		BEMData::Print(x_("\n") + t_("Matrix A_ss not found"));
+	else {
+		hd().A_ss.setConstant(A_ss.GetRows(), A_ss.GetCols(), Null);
+		for (int r = 0; r < A_ss.GetRows(); ++r)
+			for (int c = 0; c < A_ss.GetCols(); ++c)
+				hd().A_ss(r, c) = A_ss(r, c);
+	}
+	
+	MatMatrix<double> B_ss = mat.VarReadMat<double>("B_ss");	
+	if (B_ss.GetCount() == 0)
+		BEMData::Print(x_("\n") + t_("Matrix B_ss not found"));
+	else {
+		hd().B_ss.setConstant(B_ss.GetRows(), Null);
+		for (int r = 0; r < B_ss.GetRows(); ++r)
+			hd().B_ss(r) = B_ss(r, 0);
+	}
+
+	MatMatrix<double> C_ss = mat.VarReadMat<double>("C_ss");	
+	if (C_ss.GetCount() == 0)
+		BEMData::Print(x_("\n") + t_("Matrix C_ss not found"));
+	else {
+		hd().C_ss.setConstant(C_ss.GetCols(), Null);
+		for (int c = 0; c < C_ss.GetCols(); ++c)
+			hd().C_ss(c) = C_ss(0, c);
+	}
+	
+	MatMatrix<double> ssFrequencies = mat.VarReadMat<double>("Frequencies");	
+	if (ssFrequencies.GetCols() == 0)
+		BEMData::Print(x_("\n") + t_("Matrix Frequencies not found"));
+	else {
+		hd().ssFrequencies.setConstant(ssFrequencies.GetCols(), Null);
+		for (int c = 0; c < ssFrequencies.GetCols(); ++c)
+			hd().ssFrequencies[c] = ssFrequencies(0, c);
+	}
+
+	MatMatrix<double> ssFreqRange = mat.VarReadMat<double>("FreqRange");	
+	if (ssFreqRange.GetCols() == 0)
+		BEMData::Print(x_("\n") + t_("Matrix FreqRange not found"));
+	else {
+		hd().ssFreqRange.setConstant(ssFreqRange.GetCols(), Null);
+		for (int c = 0; c < ssFreqRange.GetCols(); ++c)
+			hd().ssFreqRange[c] = ssFreqRange(0, c);
+	}
+	
+	MatMatrix<double> ssFrequencies_index = mat.VarReadMat<double>("Frequencies_index");	
+	if (ssFrequencies_index.GetCols() == 0)
+		BEMData::Print(x_("\n") + t_("Matrix Frequencies_index not found"));
+	else {
+		hd().ssFrequencies_index.setConstant(ssFrequencies_index.GetCols(), Null);
+		for (int c = 0; c < ssFrequencies_index.GetCols(); ++c)
+			hd().ssFrequencies_index[c] = ssFrequencies_index(0, c);
+	}
+
+	hd().ssMAE = mat.VarRead<double>("MAE");		
+	
+			
 	return true;
 }
 

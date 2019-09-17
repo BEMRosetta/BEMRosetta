@@ -100,7 +100,7 @@ public:
 	
 	const char *GetName()		{ASSERT(var != NULL); return var->name;}
 	
-	enum matio_types GetType() 	{ASSERT(var != NULL); return var->data_type;}
+	enum matio_classes GetType() 	{ASSERT(var != NULL); return var->class_type;}
 	
 	const char* GetTypeString();
 
@@ -190,6 +190,7 @@ public:
 	~MatFile();
 	
 	bool Create(String fileName, mat_ft version = MAT_FT_MAT5);
+	void Close();
 	
 	bool OpenRead(String fileName) 	{return Open(fileName, MAT_ACC_RDONLY);}
 	bool OpenWrite(String fileName) {return Open(fileName, MAT_ACC_RDWR);}

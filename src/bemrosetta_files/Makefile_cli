@@ -1155,6 +1155,9 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
+	plugin/matio/lib/matio.h \
+	plugin/matio/lib/matio_pubconf.h \
+	plugin/matio/matio.h \
 	Surface/Surface.h \
 	SysInfo/SysInfo.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/BEMRosetta.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o

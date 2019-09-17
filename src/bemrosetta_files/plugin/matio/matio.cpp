@@ -45,11 +45,15 @@ int MatVar::GetCount() {
 	return ret;
 }
 
-
-
 MatFile::~MatFile() {
-	if (mat != NULL)
+	Close();
+}
+
+void MatFile::Close() {
+	if (mat != NULL) {
 		Mat_Close(mat);
+		mat = NULL;
+	}
 }
 
 bool MatFile::Create(String fileName, mat_ft version) {

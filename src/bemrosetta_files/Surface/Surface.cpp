@@ -548,7 +548,7 @@ void Surface::GetLimits() {
 	}
 }
 
-void Surface::GetPanelParams(Panel &panel) {
+void Surface::GetPanelParams(Panel &panel) const {
 	panel.RedirectTriangles();
 	
 	const Point3D &p0 = nodes[panel.id[0]];
@@ -578,6 +578,17 @@ void Surface::GetPanelParams(Panel &panel) {
 	}
 }
 
+String Surface::CheckErrors() const {
+	for (int ip = 0; ip < panels.GetCount(); ++ip) {
+		const Panel &panel = panels[ip];
+		for (int i = 0; i < 4; ++i) {
+			if (panel.id[i] >= nodes0.GetCount())
+				return Format(t_("Node %d in panel %d [%d] does not exist"), panel.id[i]+1, ip+1, i+1);
+		}
+	}
+	return Null;
+}
+		
 void Surface::GetPanelParams() {
 	for (int ip = 0; ip < panels.GetCount(); ++ip) {
 		Panel &panel = panels[ip];

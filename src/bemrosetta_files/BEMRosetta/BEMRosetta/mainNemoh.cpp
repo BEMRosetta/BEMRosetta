@@ -191,20 +191,33 @@ void MainNemoh::Save(NemohCal &data) {
 	data.maxD = ~maxD;
 	
 	data.irf = ~irf;
-	data.irfStep = ~irfStep;
-	data.irfDuration = ~irfDuration;
+	if (~irf) {
+		data.irfStep = ~irfStep;
+		data.irfDuration = ~irfDuration;
+	} else
+		data.irfStep = data.irfDuration = 0;
 	
-	data.nKochin = ~nKochin;
-	data.minK = ~minK;
-	data.maxK = ~maxK;
+	if (~kochin) {
+		data.nKochin = ~nKochin;
+		data.minK = ~minK;
+		data.maxK = ~maxK;
+	} else {
+		data.nKochin = 0;
+		data.minK = data.maxK = 0;
+	}
 	
 	data.showPressure = ~showPressure;
 	
-	data.nFreeX = ~nFreeX;
-	data.domainX = ~domainX;
-	
-	data.nFreeY = ~nFreeY;
-	data.domainY = ~domainY;	
+	if (~freeSurface) {
+		data.nFreeX = ~nFreeX;
+		data.domainX = ~domainX;
+		
+		data.nFreeY = ~nFreeY;
+		data.domainY = ~domainY;	
+	} else {
+		data.nFreeX = data.nFreeY = 0;
+		data.domainX = data.domainY = 0;
+	}
 }
 
 void MainNemoh::arrayOnCursor() {

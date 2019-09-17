@@ -320,11 +320,13 @@ Vector<String> NemohCal::Check() {
 	if (maxD < minD)
 		ret << Format(t_("Minimum direction %s has to be lower than maximum direction %s"), FormatDoubleEmpty(minD), FormatDoubleEmpty(maxD));	
 	
-	if (irfStep <= 0)
-		ret << Format(t_("Incorrect IRF step %s"), FormatDoubleEmpty(irfStep));
-	if (irfDuration <= irfStep)
-		ret << Format(t_("IRF step %s has to be lower than duration %s"), FormatDoubleEmpty(irfStep), FormatDoubleEmpty(irfDuration));	
-
+	if (irf) {
+		if (irfStep <= 0)
+			ret << Format(t_("Incorrect IRF step %s"), FormatDoubleEmpty(irfStep));
+		if (irfDuration <= irfStep)
+			ret << Format(t_("IRF step %s has to be lower than duration %s"), FormatDoubleEmpty(irfStep), FormatDoubleEmpty(irfDuration));	
+	}
+	
 	if (nFreeX < 0)
 		ret << Format(t_("Incorrect number of points in x direction %s (0 for no free surface calculation)"), FormatIntEmpty(nFreeX));
 	if (nFreeX > 0) {
@@ -346,6 +348,7 @@ Vector<String> NemohCal::Check() {
 		if (maxK <= minK)
 			Format(t_("Minimum Kochin direction %s has to be lower than maximum direction %s"), FormatDoubleEmpty(minK), FormatDoubleEmpty(maxK));	
 	}	
+	
 	return ret;
 }
 
@@ -393,7 +396,8 @@ String NemohHeader(String str) {
 
 String NemohField(String str, int length) {
 	String ret = str;
-	ret << String(' ', length - ret.GetCount());
+	if (length > ret.GetCount())
+		ret << String(' ', length - ret.GetCount());
 	return ret;
 }
 
@@ -454,11 +458,11 @@ void NemohCal::SaveFolder(String folder, bool bin, const BEMData &bem) const {
 			throw Exc(Format(t_("Problem copying solver file '%s'"), bem.nemohPathSolver));		
 		postName = GetFileName(bem.nemohPathPostprocessor);
 		String destPostprocessor = AppendFileName(binResults, postName);
-		if (!FileCopy(bem.nemohPathSolver, destPostprocessor)) 
+		if (!FileCopy(bem.nemohPathPostprocessor, destPostprocessor)) 
 			throw Exc(Format(t_("Problem copying postprocessor file '%s'"), bem.nemohPathPostprocessor));		
 		if (!GetFileName(bem.nemohPathGREN).IsEmpty()) {
-			String destGREN = AppendFileName(binResults, GetFileName(bem.nemohPathGREN));
-			if (!FileCopy(bem.nemohPathSolver, destGREN)) 
+			String destGREN = AppendFileName(folder, GetFileName(bem.nemohPathGREN));
+			if (!FileCopy(bem.nemohPathGREN, destGREN)) 
 				throw Exc(Format(t_("Problem copying gren file '%s'"), bem.nemohPathGREN));
 		}
 	}
