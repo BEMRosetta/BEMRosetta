@@ -74,7 +74,8 @@ void MainMesh::Init() {
 	menuPlot.butYoZ.WhenAction  		= [&] {mainView.gl.View(false, true, true);};
 	menuPlot.butXoZ.WhenAction  		= [&] {mainView.gl.View(true, false, true);};
 	menuPlot.butFit.WhenAction			= [&] {mainView.gl.ZoomToFit();};
-		
+	menuPlot.showMeshData.WhenAction	= [&] {mainVAll.SetButton(0);};
+	
 	OnOpt();
 	
 	CtrlLayout(menuStability);
@@ -126,6 +127,7 @@ void MainMesh::Init() {
 	mainViewData.Init();
 	mainVAll.Horz(mainView, mainViewData);
 	mainVAll.SetPositions(6000, 9970).SetInitialPositionId(1).SetButtonNumber(1);
+	mainVAll.WhenAction = [&] {mainView.SetPaintSelect(mainVAll.GetPos() < 9950);};
 	mainTab.Add(mainVAll.SizePos(), t_("View"));
 	
 	mainSummary.Init();
@@ -218,8 +220,6 @@ void MainMesh::InitSerialize(bool ret) {
 		menuConvert.opt = 0;
 	if (!ret || IsNull(menuConvert.optMesh)) 
 		menuConvert.optMesh = 0;
-	if (!ret || IsNull(menuConvert.optPosition)) 
-		menuConvert.optPosition = 0;
 }
 
 void MainMesh::LoadSelTab(BEMData &bem) {
@@ -338,10 +338,7 @@ bool MainMesh::OnConvertMesh() {
 		WaitCursor waitcursor;
 		Progress progress(t_("Saving mesh file..."), 100); 
 		
-		bool meshAll = ~menuConvert.optMesh == 0;
-		bool positionOriginal = ~menuConvert.optPosition == 0;
-		
-		ma().bem.surfs[id].SaveAs(~menuConvert.file, type, ma().bem.g, meshAll, positionOriginal);	
+		ma().bem.surfs[id].SaveAs(~menuConvert.file, type, ma().bem.g, ~menuConvert.optMesh);	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -428,7 +425,6 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuConvert_file", menuConvert.file)
 		("menuConvert_opt", menuConvert.opt)
 		("menuConvert_optMesh", menuConvert.optMesh)
-		("menuConvert_optPosition", menuConvert.optPosition)
 		("menuPlot_showMesh", menuPlot.showMesh)		
 		("menuPlot_showNormals", menuPlot.showNormals)	
 		("menuPlot_showSkewed", menuPlot.showSkewed)	
@@ -562,26 +558,28 @@ void MainView::OnPaint() {
 			gl.PaintDoubleAxis(mesh.cg, len, Black());
 			gl.PaintCube(mesh.cg, len/10, LtGray());
 		}
-		if (~GetMenuPlot().showMesh) {
-			const Vector<int> &nod = mesh.mesh.GetSelNodes();
-			for (int i = 0; i < nod.GetCount(); ++i)
-				gl.PaintCube(mesh.mesh.nodes[nod[i]], len/5, LtBlue());
-			const Vector<int> &pan = mesh.mesh.GetSelPanels();
-			const Vector<Point3D> &nodes = mesh.mesh.nodes;
-			for (int i = 0; i < pan.GetCount(); ++i) {
-				const Panel &panel = mesh.mesh.panels[pan[i]];
-				gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+		if (paintSelect) {
+			if (~GetMenuPlot().showMesh) {
+				const Vector<int> &nod = mesh.mesh.GetSelNodes();
+				for (int i = 0; i < nod.GetCount(); ++i)
+					gl.PaintCube(mesh.mesh.nodes[nod[i]], len/5, LtBlue());
+				const Vector<int> &pan = mesh.mesh.GetSelPanels();
+				const Vector<Point3D> &nodes = mesh.mesh.nodes;
+				for (int i = 0; i < pan.GetCount(); ++i) {
+					const Panel &panel = mesh.mesh.panels[pan[i]];
+					gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+				}
 			}
-		}
-		if (~GetMenuPlot().showUnderwater) {
-			const Vector<int> &nod = mesh.under.GetSelNodes();
-			for (int i = 0; i < nod.GetCount(); ++i)
-				gl.PaintCube(mesh.under.nodes[nod[i]], len/5, LtBlue());
-			const Vector<int> &pan = mesh.under.GetSelPanels();
-			const Vector<Point3D> &nodes = mesh.under.nodes;
-			for (int i = 0; i < pan.GetCount(); ++i) {
-				const Panel &panel = mesh.under.panels[pan[i]];
-				gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+			if (~GetMenuPlot().showUnderwater) {
+				const Vector<int> &nod = mesh.under.GetSelNodes();
+				for (int i = 0; i < nod.GetCount(); ++i)
+					gl.PaintCube(mesh.under.nodes[nod[i]], len/5, LtBlue());
+				const Vector<int> &pan = mesh.under.GetSelPanels();
+				const Vector<Point3D> &nodes = mesh.under.nodes;
+				for (int i = 0; i < pan.GetCount(); ++i) {
+					const Panel &panel = mesh.under.panels[pan[i]];
+					gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+				}
 			}
 		}
 	}

@@ -26,6 +26,10 @@ String MeshData::Load(String fileName, double rho, double g) {
 	if (!ret.IsEmpty())
 		return ret;
 	
+	ret = mesh.CheckErrors();
+	if (!ret.IsEmpty())
+		return ret;
+		
 	if (y0z)
 		mesh.DeployXSymmetry();
 	if (x0z)
@@ -41,10 +45,15 @@ String MeshData::Load(String fileName, double rho, double g) {
 	return String();
 }
 
-void MeshData::SaveAs(String file, MESH_FMT type, double g, bool meshAll, bool positionOriginal) {
-	const Vector<Panel> &panels = meshAll ? mesh.panels : under.panels;
-	const Vector<Point3D> &nodes = positionOriginal ? mesh.nodes0 : under.nodes;
-	
+void MeshData::SaveAs(String file, MESH_FMT type, double g, int meshType) {
+	const Vector<Panel> &panels = meshType < 2 ? mesh.panels : under.panels;
+	const Vector<Point3D> &nodes = [&]()->const Vector<Point3D> & {
+		switch(meshType) {
+		case 0:		return mesh.nodes0;
+		case 1:		return mesh.nodes;
+		default:	return under.nodes;
+		}
+	}();
 	if (panels.IsEmpty())
 		throw Exc(t_("Model is empty. No panels found"));
 		

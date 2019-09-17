@@ -72,9 +72,7 @@ void MeshData::SaveDatNemoh(String fileName, const Vector<Panel> &panels, const 
 	
 	for (int i = 0; i < panels.GetCount(); ++i) {
 		const Panel &panel = panels[i];
-		out << Format("  %8d   %8d   %8d   %8d\n", 
-			static_cast<int>(panel.id[0]+1), static_cast<int>(panel.id[1]+1), 
-			static_cast<int>(panel.id[2]+1), static_cast<int>(panel.id[3]+1));
+		out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
 	}
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
