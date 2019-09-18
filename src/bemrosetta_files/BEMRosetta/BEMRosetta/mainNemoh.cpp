@@ -350,7 +350,7 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 	return true;
 }
 
-void MainNemoh::DragAndDrop(Point p, PasteClip& d) {
+void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
@@ -362,7 +362,7 @@ void MainNemoh::DragAndDrop(Point p, PasteClip& d) {
 	}
 }
 
-bool MainNemoh::Key(dword key, int count) {
+bool MainNemoh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
 		for (int i = 0; i < files.GetCount(); ++i) {
