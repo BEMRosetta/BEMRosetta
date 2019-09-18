@@ -540,7 +540,7 @@ bool Nemoh::Load_Inf(String fileName) {
 	hd().cb.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
-	hd().C[0].setConstant(6, 6, Null);   
+	hd().C[0].setConstant(6, 6, 0);   
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -625,13 +625,12 @@ bool Nemoh::Load_KH() {
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) {
 	    String fileKH;
-	    if (hd().Nb == 1) {
+	    if (hd().Nb == 1) 
 	        fileKH = AppendFileName(folder, AppendFileName("Mesh", "KH.dat"));
-	    } else {
+	    else 
 	        fileKH = AppendFileName(folder, AppendFileName("Mesh", Format("KH_%d.dat", ib)));
-	    }
 	    
-		hd().C[ib].setConstant(6, 6, Null);    
+		hd().C[ib].setConstant(6, 6, 0);    
 	    FileInLine in(fileKH);
 	    if (!in.IsOpen()) 
 	        return false;
