@@ -118,7 +118,7 @@ struct FileData : Moveable<FileData> {
 	String ToString() const { return Format("%s %0n", fileName, length); }
 
 	FileData(bool _isFolder, String _fileName, String _relFilename, int64 _length, 
-		struct Upp::Time _t, uint64 _id) : isFolder(_isFolder), fileName(_fileName), 
+		struct Upp::Time _t, int64 _id) : isFolder(_isFolder), fileName(_fileName), 
 		relFilename(_relFilename), length(_length), t(_t), id(_id) {}
 	FileData() {}
 };
@@ -671,7 +671,15 @@ void Shuffle(C &data, int randomSeed = Null) {
 }
 
 template <class T>
-inline String TruncDecimals(T num, int decimals) {
+inline T TruncDecimals(T num, int decimals) {
+	long double val = num*10*decimals;
+	long int ival = static_cast<long int>(val);
+	val = ival;
+	return static_cast<T>(val/(10*decimals));
+}
+
+template <class T>
+inline String RoundDecimals(T num, int decimals) {
 	return FormatDouble(num, decimals);
 }
 
@@ -712,14 +720,39 @@ int FindIndexDelta(const Range& r, const V& value, const V& delta, int from = 0)
 }
 
 template <class Range, class V>
-int FindIndexDecimals(const Range& r, const V& value, int numDecimals, int from = 0) {
-	String svalue = TruncDecimals(value, numDecimals);
+int FindIndexRoundDecimals(const Range& r, const V& value, int numDecimals, int from = 0) {
+	String svalue = RoundDecimals(value, numDecimals);
 	for(int i = from; i < r.GetCount(); i++) {
-		String s = TruncDecimals(r[i], numDecimals);
+		String s = RoundDecimals(r[i], numDecimals);
 		if(s == svalue) 
 			return i;
 	}
 	return -1;
+}
+
+template <class Range, class V>
+int FindIndexTruncDecimals(const Range& r, const V& value, int numDecimals, int from = 0) {
+	V svalue = TruncDecimals(value, numDecimals);
+	for(int i = from; i < r.GetCount(); i++) {
+		V s = TruncDecimals(r[i], numDecimals);
+		if(s == svalue) 
+			return i;
+	}
+	return -1;
+}
+
+template <class Range, class V>
+int FindIndexCloser(const Range& r, const V& value, int from = 0) {
+	int minId = -1;
+	V minDiff = FLT_MAX;
+	for(int i = from; i < r.GetCount(); i++) {
+		V diff = abs(value - r[i]);
+		if (diff < minDiff) {
+			minDiff = diff;	
+			minId = i;		
+		}
+	}
+	return minId;
 }
 
 template <class Range, class V>

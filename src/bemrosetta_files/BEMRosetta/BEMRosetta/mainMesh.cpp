@@ -561,23 +561,23 @@ void MainView::OnPaint() {
 		if (paintSelect) {
 			if (~GetMenuPlot().showMesh) {
 				const Vector<int> &nod = mesh.mesh.GetSelNodes();
-				for (int i = 0; i < nod.GetCount(); ++i)
-					gl.PaintCube(mesh.mesh.nodes[nod[i]], len/5, LtBlue());
+				for (int in = 0; in < nod.GetCount(); ++in)
+					gl.PaintCube(mesh.mesh.nodes[nod[in]], len/5, LtBlue());
 				const Vector<int> &pan = mesh.mesh.GetSelPanels();
 				const Vector<Point3D> &nodes = mesh.mesh.nodes;
-				for (int i = 0; i < pan.GetCount(); ++i) {
-					const Panel &panel = mesh.mesh.panels[pan[i]];
+				for (int ip = 0; ip < pan.GetCount(); ++ip) {
+					const Panel &panel = mesh.mesh.panels[pan[ip]];
 					gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 				}
 			}
 			if (~GetMenuPlot().showUnderwater) {
 				const Vector<int> &nod = mesh.under.GetSelNodes();
-				for (int i = 0; i < nod.GetCount(); ++i)
-					gl.PaintCube(mesh.under.nodes[nod[i]], len/5, LtBlue());
+				for (int in = 0; in < nod.GetCount(); ++in)
+					gl.PaintCube(mesh.under.nodes[nod[in]], len/5, LtBlue());
 				const Vector<int> &pan = mesh.under.GetSelPanels();
 				const Vector<Point3D> &nodes = mesh.under.nodes;
-				for (int i = 0; i < pan.GetCount(); ++i) {
-					const Panel &panel = mesh.under.panels[pan[i]];
+				for (int ip = 0; ip < pan.GetCount(); ++ip) {
+					const Panel &panel = mesh.under.panels[pan[ip]];
 					gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 				}
 			}

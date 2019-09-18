@@ -1,8 +1,10 @@
 #include "BEMRosetta.h"
 
+const char *textDOF[] = {"X", "Y", "Z", "RX", "RY", "RZ"};
+
 bool Aqwa::Load(String file, double) {
 	hd().file = file;
-	hd().name = GetFileTitle(GetFileFolder(file));
+	hd().name = GetFileTitle(file);
 	hd().dimen = true;
 	hd().len = 1;
 	hd().code = Hydro::AQWA;
@@ -64,10 +66,11 @@ bool Aqwa::Load_AH1() {
 	for (int i = 3; i < f.GetCount(); ++i)
 		hd().head << f.GetDouble(i);
 	
+	hd().names.SetCount(hd().Nb);
 	hd().cg.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, Null); 
+		hd().C[ib].setConstant(6, 6, 0); 
 	hd().A.SetCount(hd().Nf);
 	hd().B.SetCount(hd().Nf);
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
@@ -232,12 +235,13 @@ bool Aqwa::Load_LIS() {
 		}
 	}
 	
+	hd().names.SetCount(hd().Nb);
 	hd().Vo.SetCount(hd().Nb, Null);
 	hd().cg.setConstant(3, hd().Nb, Null);
 	hd().cb.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, Null);
+		hd().C[ib].setConstant(6, 6, 0);
 	
 	int idb;	
 	
@@ -375,14 +379,14 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(in.GetLine());
 				double heading = f.GetDouble(2);
-				int idh = FindIndexDelta(hd().head, heading, 0.001);
+				int idh = FindIndexCloser(hd().head, heading);
 				if (idh < 0)
 					throw Exc(Format(t_("[%d] Heading %f is unknown"), in.GetLineNumber(), heading));
 				int dd = 1;
-				for (int i = 0; i < hd().Nf; ++i) {
+				for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 					double freq = f.GetDouble(1);
-					int ifr = FindIndexDelta(hd().w, freq, 0.001);
-					if (ifr < 0)
+					int ifrr = FindIndexCloser(hd().w, freq);
+					if (ifrr < 0)
 						throw Exc(Format(t_("[%d] Frequency %f is unknown"), in.GetLineNumber(), freq));
 					for (int idof = 0; idof < 6; ++idof) {
 						frc.ma[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2);
@@ -398,10 +402,10 @@ bool Aqwa::Load_LIS() {
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			f.Load(line);
 			double freq = f.GetDouble(7);
-			int ifr = FindIndexDelta(hd().w, freq, 0.001);
+			int ifr = FindIndexCloser(hd().w, freq);
 			if (ifr < 0)
-				throw Exc(t_(Format(t_("[%d] Frequency %f is unknown"), in.GetLineNumber(), freq)));
-
+				throw Exc(Format(t_("[%d] Frequency %f is unknown"), in.GetLineNumber(), freq));
+			
 			in.GetLine(2);
 			if (TrimBoth(in.GetLine()) == "ADDED  MASS") {
 				in.GetLine(5);
@@ -409,6 +413,8 @@ bool Aqwa::Load_LIS() {
 				for (int idof = 0; idof < 6; ++idof) {
 					in.GetLine();
 					f.Load(in.GetLine());
+					if (f.GetText(0) != textDOF[idof])
+						throw Exc(Format(t_("[%d] Expected %s data, found '%s'"), in.GetLineNumber(), textDOF[idof], f.GetText())); 
 					for (int jdof = 0; jdof < 6; ++jdof) 
 						hd().A[ifr](6*idb + idof, 6*idb + jdof) = f.GetDouble(1 + jdof);
 				}
@@ -416,6 +422,8 @@ bool Aqwa::Load_LIS() {
 				for (int idof = 0; idof < 6; ++idof) {
 					in.GetLine();
 					f.Load(in.GetLine());
+					if (f.GetText(0) != textDOF[idof])
+						throw Exc(Format(t_("[%d] Expected %s data, found '%s'"), in.GetLineNumber(), textDOF[idof], f.GetText())); 
 					for (int jdof = 0; jdof < 6; ++jdof) 
 						hd().B[ifr](6*idb + idof, 6*idb + jdof) = f.GetDouble(1 + jdof);
 				}

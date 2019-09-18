@@ -792,6 +792,11 @@ public:
 	}
 };
 
-bool OUTB(int id, int total);
+template <class T>
+bool OUTB(int id, T total) {
+	if (id < 0	|| id >= static_cast<int>(total))
+		return true;
+	return false;
+}
 
 #endif
