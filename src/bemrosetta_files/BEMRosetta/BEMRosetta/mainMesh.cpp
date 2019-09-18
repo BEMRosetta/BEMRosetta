@@ -591,7 +591,7 @@ void MainView::CalcEnvelope() {
 		env.MixEnvelope(ma().bem.surfs[i].mesh.env);
 }
 
-void MainMesh::DragAndDrop(Point p, PasteClip& d) {
+void MainMesh::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
@@ -603,7 +603,7 @@ void MainMesh::DragAndDrop(Point p, PasteClip& d) {
 	}
 }
 
-bool MainMesh::Key(dword key, int count) {
+bool MainMesh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
 		for (int i = 0; i < files.GetCount(); ++i) {

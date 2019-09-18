@@ -49,13 +49,13 @@ public:
 	}
 	bool Init(Hydro &_data, int _idof, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		data = &_data;
+		dataToPlot = _dataToPlot;
 		if (_idof >= _data.dofOrder.GetCount())
 			return false;
 		idof = _data.dofOrder[_idof];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
 			_j_h = _data.dofOrder[_j_h];
 		j_h = _j_h;
-		dataToPlot = _dataToPlot;
 		show_w = _show_w;
 		ndim = _ndim;
 		if (IsNullData())
