@@ -78,6 +78,13 @@ void MainBEM::Init() {
 	menuFOAMM.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuFOAMM.arrayModel.AddColumn("", 20);	
 	menuFOAMM.arrayModel.AddColumn("", 20);	
+	menuFOAMM.arrayModel.WhenEnterRow = [&] {
+		int id = menuFOAMM.arrayModel.GetCursor();
+		if (id < 0)
+			return;
+		//menuFOAMM.dropBody.
+		//ma().bem.hydros[id].hd().Nb;
+	};
 	
 	OnOpt();
 		

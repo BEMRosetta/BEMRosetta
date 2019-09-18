@@ -35,13 +35,19 @@ LAYOUT(MenuPlot, 400, 48)
 END_LAYOUT
 
 LAYOUT(MenuStateSpace, 760, 48)
-	ITEM(ProgressIndicator, progress, RightPosZ(64, 68).TopPosZ(28, 16))
+	ITEM(ProgressIndicator, progress, RightPosZ(64, 84).TopPosZ(28, 20))
 	ITEM(Button, butCancel, SetLabel(t_("Cancel")).RightPosZ(4, 56).TopPosZ(28, 20))
 	ITEM(Button, butLoad, SetLabel(t_("Convert")).RightPosZ(4, 56).TopPosZ(4, 20))
-	ITEM(Label, dv___3, SetLabel(t_("File:")).LeftPosZ(260, 40).TopPosZ(4, 19))
+	ITEM(Label, dv___3, SetLabel(t_("Heading:")).LeftPosZ(380, 48).TopPosZ(28, 19))
 	ITEM(EditFile, file, UseOpenFolder(true).UseDropping(true).HSizePosZ(304, 64).TopPosZ(4, 19))
 	ITEM(Label, dv___5, SetLabel(t_("Models loaded:")).LeftPosZ(4, 76).TopPosZ(4, 20))
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(84, 168).TopPosZ(4, 44))
+	ITEM(DropList, dropHeading, LeftPosZ(428, 68).TopPosZ(28, 19))
+	ITEM(Label, dv___8, SetLabel(t_("DOF:")).LeftPosZ(504, 28).TopPosZ(28, 19))
+	ITEM(DropList, dropDOF, LeftPosZ(532, 56).TopPosZ(28, 19))
+	ITEM(Label, dv___10, SetLabel(t_("File:")).LeftPosZ(260, 40).TopPosZ(4, 19))
+	ITEM(Label, dv___11, SetLabel(t_("Body:")).LeftPosZ(272, 32).TopPosZ(28, 19))
+	ITEM(DropList, dropBody, LeftPosZ(304, 68).TopPosZ(28, 19))
 END_LAYOUT
 
 LAYOUT(MenuMesh, 560, 48)

@@ -929,9 +929,3 @@ void ConsoleMain(const Vector<String>& command, bool gui) {
 	}
 	Cout() << "\n";
 }
-
-bool OUTB(int id, int total) {
-	if (id < 0	|| id >= total)
-		return true;
-	return false;
-}

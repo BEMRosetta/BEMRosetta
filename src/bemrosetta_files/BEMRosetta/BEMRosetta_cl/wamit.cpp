@@ -68,7 +68,6 @@ void Wamit::Save(String file) {
 			BEMData::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(file1)));
 			Save_1(file1);
 		}
-		
 		if (hd().IsLoadedFex()) {
 			String file3 = ForceExt(file, ".3");
 			BEMData::Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(file3)));
