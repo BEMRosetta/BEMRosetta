@@ -70,7 +70,7 @@ bool Aqwa::Load_AH1() {
 	hd().cg.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0); 
+		hd().C[ib].setConstant(6, 6, Null); 
 	hd().A.SetCount(hd().Nf);
 	hd().B.SetCount(hd().Nf);
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
@@ -241,7 +241,7 @@ bool Aqwa::Load_LIS() {
 	hd().cb.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0);
+		hd().C[ib].setConstant(6, 6, Null);
 	
 	int idb;	
 	

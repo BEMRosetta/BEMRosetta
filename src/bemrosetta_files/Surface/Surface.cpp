@@ -670,7 +670,7 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 	if (IsNull(mass))
 		mass = rho*volume;
 		
-	for (int ip = 0; ip < panels.GetCount(); ++ip) {
+	for (int ip = 0; ip < panels.GetCount(); ++ip) {	// Wamit Manual, Chapter 3.1
 		const Panel &panel = panels[ip];
 		const Point3D &p0 = nodes[panel.id[0]];
 		const Point3D &p1 = nodes[panel.id[1]];
@@ -681,10 +681,10 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 			(panel.IsTriangle() || p3.z <= zTolerance)) {
 			double momentz0 = panel.normal0.z*panel.surface0;
 			double momentz1 = panel.normal1.z*panel.surface1;
-			double x0 = panel.centroid0.x - cg.x;
-			double y0 = panel.centroid0.y - cg.y;
-			double x1 = panel.centroid1.x - cg.x;
-			double y1 = panel.centroid1.y - cg.y;
+			double x0 = panel.centroid0.x;
+			double y0 = panel.centroid0.y;
+			double x1 = panel.centroid1.x;
+			double y1 = panel.centroid1.y;
 			c(2, 2) -= (momentz0 + momentz1);
             c(2, 3) -= (y0*momentz0 + y1*momentz1);
             c(2, 4) += (x0*momentz0 + x1*momentz1);
@@ -698,10 +698,10 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 	c(2, 3) = c(2, 3)*rho*g;
 	c(2, 4) = c(2, 4)*rho*g;
 	c(3, 4) = c(3, 4)*rho*g;
-	c(3, 3) = c(3, 3)*rho*g - rho*g*volume*cb.z + mass*g*cg.z;
-	c(4, 4) = c(4, 4)*rho*g - rho*g*volume*cb.z + mass*g*cg.z;
-	c(3, 5) = rho*g*volume*cb.x - mass*g*cg.x;
-	c(4, 5) = rho*g*volume*cb.y - mass*g*cg.y;
+	c(3, 3) = c(3, 3)*rho*g + volume*cb.z*rho*g - mass*g*cg.z;
+	c(4, 4) = c(4, 4)*rho*g + volume*cb.z*rho*g - mass*g*cg.z;
+	c(3, 5) = mass*g*cg.x - volume*cb.x*rho*g;
+	c(4, 5) = mass*g*cg.y - volume*cb.y*rho*g;
 	
 	c(3, 2) = c(2, 3);
 	c(4, 2) = c(2, 4);

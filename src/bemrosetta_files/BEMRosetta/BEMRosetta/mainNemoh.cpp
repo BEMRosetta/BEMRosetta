@@ -42,11 +42,61 @@ void MainNemoh::Init(const BEMData &bem) {
 	freeSurface.Transparent(false);
 	freeSurface.WhenAction = [&] {freeX.Enable(~freeSurface);	freeY.Enable(~freeSurface);};
 	freeSurface.WhenAction();
+	
+	opwT.Transparent(false);
+	opwT.WhenAction = THISBACK(OnOpwT);
+	OnOpwT();
+}
+
+void MainNemoh::OnOpwT() {
+	if (~opwT == 0) {
+		labMinw.SetText("Min w [rad/s]:");
+		labMaxw.SetText("Max w [rad/s]:");
+	} else {
+		labMinw.SetText("Min T [seg]:");
+		labMaxw.SetText("Max T [seg]:");
+	}
+	double dminF = ~minF;
+	double dmaxF = ~maxF;
+	if (!IsNull(dmaxF))
+		minF <<= 2*M_PI/dmaxF;
+	else
+		minF.Clear();
+	if (!IsNull(dminF))
+		maxF <<= 2*M_PI/dminF;
+	else
+		maxF.Clear();
 }
 
 void MainNemoh::InitSerialize(bool ret) {
 	if (!ret || IsNull(opIncludeBin)) 
-		opIncludeBin = true;	
+		opIncludeBin = true;
+	if (!ret || IsNull(numSplit)) 	
+		numSplit = 1;	
+	if (!ret || IsNull(~xeff))
+		xeff <<= 0;
+	if (!ret || IsNull(~yeff))
+		yeff <<= 0;
+	if (!ret || IsNull(~cx))
+		cx <<= 0;
+	if (!ret || IsNull(~cy))
+		cy <<= 0;
+	if (!ret || IsNull(~cz))
+		cz <<= 0;
+	if (!ret || IsNull(opwT))
+		opwT <<= 0;
+	if (!ret || IsNull(~Nf))
+		Nf <<= 100;
+	if (!ret || IsNull(~minF))
+		minF <<= opwT == 0 ? 2*M_PI/20 : 2;
+	if (!ret || IsNull(~maxF))
+		maxF <<= opwT == 0 ? 2*M_PI/2 : 20;
+	if (!ret || IsNull(~Nh))
+		Nh <<= 1;
+	if (!ret || IsNull(~minH))
+		minH <<= 0;
+	if (!ret || IsNull(~maxH))
+		maxH <<= 0;
 }
 
 void MainNemoh::Load(const BEMData &bem) {
@@ -56,12 +106,6 @@ void MainNemoh::Load(const BEMData &bem) {
 		rho <<= bem.rho;	
 	if (IsNull(~h))
 		h <<= bem.depth;
-	if (IsNull(~xeff))
-		xeff <<= 0;
-	if (IsNull(~yeff))
-		yeff <<= 0;
-	
-	
 }
 
 void MainNemoh::Jsonize(JsonIO &json) {
@@ -69,6 +113,19 @@ void MainNemoh::Jsonize(JsonIO &json) {
 		("loadFrom", loadFrom)
 		("saveTo", saveTo)
 		("opIncludeBin", opIncludeBin)
+		("opwT", opwT)
+		("numSplit", numSplit)
+		("xeff", xeff)
+		("yeff", yeff)
+		("cx", cx)
+		("cy", cy)
+		("cz", cz)
+		("Nf", Nf)
+		("minF", minF)
+		("maxF", maxF)
+		("Nh", Nf)
+		("minH", minH)
+		("maxH", maxH)
 	;
 }
 
@@ -124,11 +181,18 @@ void MainNemoh::Load(const NemohCal &data) {
 	array.SetCursor(0);
 		
 	Nf <<= data.Nf;
-	minF <<= data.minF;
-	maxF <<= data.maxF;
+	
+	if (~opwT == 0) {
+		minF <<= data.minF;
+		maxF <<= data.maxF;	
+	} else {
+		minF <<= 2*M_PI/data.maxF;
+		maxF <<= 2*M_PI/data.minF;	
+	}
+	
 	Nh <<= data.Nh;
-	minD <<= data.minD;
-	maxD <<= data.maxD;
+	minH <<= data.minH;
+	maxH <<= data.maxH;
 	
 	irf <<= data.irf;
 	irfStep <<= data.irfStep;
@@ -184,11 +248,17 @@ void MainNemoh::Save(NemohCal &data) {
 	}
 		
 	data.Nf = ~Nf;
-	data.minF = ~minF;
-	data.maxF = ~maxF;
+	if (~opwT == 0) {
+		data.minF = ~minF;
+		data.maxF = ~maxF;	
+	} else {
+		data.minF = !IsNull(~maxF) ? 2*M_PI/static_cast<double>(~maxF) : Null;
+		data.maxF = !IsNull(~minF) ? 2*M_PI/static_cast<double>(~minF) : Null;	
+	}
+	
 	data.Nh = ~Nh;
-	data.minD = ~minD;
-	data.maxD = ~maxD;
+	data.minH = ~minH;
+	data.maxH = ~maxH;
 	
 	data.irf = ~irf;
 	if (~irf) {
@@ -244,6 +314,9 @@ void MainNemoh::arrayUpdateCursor() {
 			InitArray();
 			array.Add();
 			id = 0;
+			cx <<= 0;
+			cy <<= 0;
+			cz <<= 0;
 		} else
 			id = array.GetCount()-1;
 	}	
@@ -276,8 +349,9 @@ void MainNemoh::arrayOnAdd() {
 	if (array.GetCount() == 0)
 		InitArray();
 	array.Add();
-	arrayClear();
 	array.SetCursor(array.GetCount()-1);	
+	arrayClear();
+	arrayUpdateCursor();
 }
 
 void MainNemoh::arrayOnDuplicate() {
@@ -341,7 +415,7 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 				return false;
 			RealizeDirectory(nemohFolder);
 		}
-		data.SaveFolder(nemohFolder, ~opIncludeBin, bem);
+		data.SaveFolder(nemohFolder, ~opIncludeBin, ~numSplit, bem);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;

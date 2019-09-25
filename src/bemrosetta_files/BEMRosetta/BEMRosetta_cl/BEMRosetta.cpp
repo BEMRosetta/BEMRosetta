@@ -384,13 +384,52 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 	Nf = realNf;
 }
 
-void Hydro::GetFOAMM(String file, Function <bool(String)> Running) {
+void Hydro::GetFOAMM(String file, int ibody, int idof, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
+	if (FileExists(file)) {
+		if (!FileDelete(file))
+			throw Exc(Format(t_("Problem deleting existing FOAMM file '%s'.\nIs it opened?"), file));			
+	}
+	
+	String folder = GetFileDirectory(file);
+	String temp_file = AppendFileName(folder, "temp_file.mat");
+	
 	MatFile mat;
 	
-	if (!mat.OpenWrite("C:\\Desarrollo\\Aplicaciones\\BEMRosetta\\FOAMM_Win\\pru\\temp_file.mat")) 
-		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
+	if (!mat.OpenCreate(temp_file, MAT_FT_MAT5)) 
+		throw Exc(Format(t_("Problem creating FOAMM file '%s'"), file));
+
+	int idf = ibody*6 + idof;
+
+	MatMatrix<double> matA(Nf, 1);
+	for (int ifr = 0; ifr < Nf; ++ifr)
+		matA(ifr, 0) = A_dim(ifr, idf, idf);
+ 	if (!mat.VarWrite("A", matA))
+ 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "A", file));
+
+ 	if (!mat.VarWrite<double>("Mu", Awinf_dim(idf, idf)))
+ 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Mu", file));
+ 		 	
+	MatMatrix<double> matB(Nf, 1);
+	for (int ifr = 0; ifr < Nf; ++ifr)
+		matB(ifr, 0) = B_dim(ifr, idf, idf);
+	if (!mat.VarWrite("B", matB))
+ 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "B", file));
 	
-	mat.VarDelete("Options");
+	MatMatrix<double> matw(1, Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr)
+		matw(0, ifr) = w[ifr];
+	if (!mat.VarWrite("w", matw))
+ 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "w", file));
+	
+	MatMatrix<double> matDof(1, 6);
+	for (int i = 0; i < 6; ++i) {
+		if (i == idof)
+			matDof(0, i) = 1;
+		else
+			matDof(0, i) = 0;
+	}
+	if (!mat.VarWrite("Dof", matDof))
+ 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));
 	
 	Vector<String> optionsVars;
 	optionsVars << "Mode" << "Method" << "FreqRangeChoice" << "FreqChoice";
@@ -413,28 +452,20 @@ void Hydro::GetFOAMM(String file, Function <bool(String)> Running) {
 	optim.VarWriteStruct<double>("ThresAbs", 0.1);
 	
 	options.VarWriteStruct("Optim", optim);
-	mat.VarWrite(options, true);
+	mat.VarWrite(options);
 	
 	mat.Close();
 	
-	
-	
-	
-	
-	
-	
-	
-	
 	LocalProcess process;
-	if (!process.Start(bem->foammPath, NULL, "C:\\Desarrollo\\Aplicaciones\\BEMRosetta\\FOAMM_Win\\pru"))
+	if (!process.Start(bem->foammPath, NULL, folder))
 		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
 
 	String msg, reso, rese;
 	bool endProcess = false;
 	while (process.IsRunning()) {
 		if (!endProcess) {
-			msg.Clear();
 			if (process.Read2(reso, rese)) {
+				msg.Clear();
 				if (!reso.IsEmpty())
 					msg << reso;
 				if (!rese.IsEmpty()) {
@@ -442,37 +473,20 @@ void Hydro::GetFOAMM(String file, Function <bool(String)> Running) {
 						msg << ";";
 					msg << rese;
 				}
-				/*if (!msg.IsEmpty()) {
-					process.Kill();
-					Running(msg);
-					return;
-				}*/
+				if (!msg.IsEmpty() && !msg.StartsWith("MAE:"))
+					FOAMMMessage(msg);
 			}
-			endProcess = Running(msg); 
+			endProcess = Status("", Null); 
 			if (endProcess)
 				process.Kill();
 		}
 		Sleep(200);
 	}
+	if (endProcess)
+		return;
 	
-	if (!mat.OpenRead("C:\\Desarrollo\\Aplicaciones\\BEMRosetta\\FOAMM_Win\\pru\\temp_file.mat")) 
-		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
-	Cout() << "\nData saved" << "\n";
-	Cout() << "Version: " << mat.GetVersionName() << "\n";
-	for (int i = 0; i < mat.GetVarCount(); ++i) {
-		String name = mat.GetVarName(i);
-		MatVar var = mat.GetVar(name);
-		Cout() << name << " (" << var.GetTypeString() << ")";
-		for (int d = 0; d < var.GetDimCount(); ++d)
-			Cout() << "(" << var.GetDimCount(d) << ")";
-		Cout() << "\n";
-		if (var.GetType() == MAT_C_STRUCT) {
-			for (int s = 0; s < var.GetFieldCount(); ++s) {
-				Cout() << "\t" << var.GetFieldName(s) << "\n";
-			}
-		} 
-		
-	}
+	if (!FileMove(temp_file, file))
+		throw Exc(Format(t_("Problem renaming '%s' to '%s'"), temp_file, file));
 }
 
 void Hydro::Report() {
@@ -551,7 +565,7 @@ void Hydro::GetBodyDOF() {
 				dof[ib]++;
 }
 
-void Hydro::AfterLoad(Function <void(String, int)> Status) {
+bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	dofOrder.SetCount(6*Nb);
 	for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) 
 		dofOrder[i] = order;
@@ -560,16 +574,26 @@ void Hydro::AfterLoad(Function <void(String, int)> Status) {
 		A0();
 	
 	if (!IsLoadedAwinf() && bem->calcAwinf) {
-		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0)
-			throw Exc(t_("Incorrect time for Ainf calculation. Please review it in Options"));
-		if (IsNull(bem->numValsA) || bem->numValsA < 10)
-			throw Exc(t_("Incorrect number of time values for Ainf calculation. Please review it in Options"));
-
-		Status(t_("Obtaining Impulse Response Function"), 40);
+		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0) {
+			lastError = t_("Incorrect time for Ainf calculation. Please review it in Options");
+			return false;
+		}
+		if (IsNull(bem->numValsA) || bem->numValsA < 10) {
+			lastError = t_("Incorrect number of time values for Ainf calculation. Please review it in Options");
+			return false;
+		}
+		if (!Status(t_("Obtaining Impulse Response Function"), 40)) {
+			lastError = t_("Cancelled by user");
+			return false;
+		}
 		K_IRF(bem->maxTimeA, bem->numValsA);
-		Status(t_("Obtaining Infinite-Frequency Added Mass (A_inf)"), 70);
+		if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A_inf)"), 70)) {
+			lastError = t_("Cancelled by user");
+			return false;
+		}
 		Ainf();
 	}
+	return true;
 }
 
 int Hydro::GetW0() {
@@ -640,7 +664,8 @@ double Hydro::rho_ndim()	const {return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	const {return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
 
-void BEMData::Load(String file, Function <void(String, int pos)> Status) {
+
+void BEMData::Load(String file, Function <bool(String, int)> Status) {
 	Status(t_("Loading files"), 10);
 	for (int i = 0; i < hydros.GetCount(); ++i) {
 		if (hydros[i].hd().file == file) 
@@ -699,11 +724,19 @@ void BEMData::Load(String file, Function <void(String, int pos)> Status) {
 	} else 
 		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
 	
-	Hydro &justLoaded = hydros[hydros.GetCount()-1].hd();
+	Hydro &justLoaded = hydros.Top().hd();
 	
-	justLoaded.AfterLoad(Status);
+	if (!justLoaded.AfterLoad(Status)) {
+		String error = justLoaded.GetLastError();
+		hydros.SetCount(hydros.GetCount()-1);
+		throw Exc(Format(t_("Problem processing '%s'\n%s"), file, error));	
+	}
+		
 	if (discardNegDOF) {
-		Status(t_("Discarding negligible DOF"), 90);
+		if (!Status(t_("Discarding negligible DOF"), 90)) {
+			hydros.SetCount(hydros.GetCount()-1);	
+			throw Exc(t_("Cancelled by user"));
+		}
 		justLoaded.RemoveThresDOF_A(thres);
 		justLoaded.RemoveThresDOF_B(thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
@@ -741,7 +774,7 @@ void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
 	}
 }
 
-void BEMData::HealingMesh(int id, Function <void(String, int pos)> Status) {
+void BEMData::HealingMesh(int id, Function <void(String, int)> Status) {
 	Status(Format(t_("Healing mesh '%s'"), surfs[id].file), 10);
 	Print(x_("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].file));
 	
@@ -843,7 +876,7 @@ void ConsoleMain(const Vector<String>& command, bool gui) {
 					if (!FileExists(file)) 
 						throw Exc(Format(t_("File '%s' not found"), file)); 
 					
-					md.Load(file, [&](String str, int ) {Cout() << str;});
+					md.Load(file, [&](String str, int ) {Cout() << str; return true;});
 					Cout() << "\n" << Format(t_("File '%s' loaded"), file);
 				} else if (command[i] == "-r" || command[i] == "--report") {
 					if (md.hydros.IsEmpty()) 

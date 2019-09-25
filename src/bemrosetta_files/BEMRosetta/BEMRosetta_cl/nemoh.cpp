@@ -96,7 +96,7 @@ bool Nemoh::Load_Cal(String fileName) {
 		hd().T[i] = 2*M_PI/hd().w[i];  
     }
 	hd().Nh = data.Nh;  						
-    LinSpaced(hd().head, hd().Nh, data.minD, data.maxD); 		
+    LinSpaced(hd().head, hd().Nh, data.minH, data.maxH); 		
 
 	hd().dataFromW = true;
 	
@@ -225,21 +225,21 @@ bool NemohCal::Load(String fileName) {
 	if (maxF <= minF)
 		throw Exc(Format(t_("[%d] Minimum frequency %s has to be lower than maximum frequency %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	
-	f.Load(in.GetLine());	Nh = f.GetInt(0);	minD = f.GetDouble(1);	maxD = f.GetDouble(2);
+	f.Load(in.GetLine());	Nh = f.GetInt(0);	minH = f.GetDouble(1);	maxH = f.GetDouble(2);
 	if (Nh < 1 || Nh > 1000)
-		throw Exc(Format(t_("[%d] Incorrect number of directions %s"), in.GetLineNumber(), f.GetText(0)));
-	if (minD < -180)
+		throw Exc(Format(t_("[%d] Incorrect number of headings %s"), in.GetLineNumber(), f.GetText(0)));
+	if (minH < -180)
 		throw Exc(Format(t_("[%d] Incorrect direction %s"), in.GetLineNumber(), f.GetText(1)));
-	if (maxD > 180)
+	if (maxH > 180)
 		throw Exc(Format(t_("[%d] Incorrect direction %s"), in.GetLineNumber(), f.GetText(2)));
-	if (maxD < minD)
+	if (maxH < minH)
 		throw Exc(Format(t_("[%d] Minimum direction %s has to be lower than maximum direction %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	
 	in.GetLine();
 	f.Load(in.GetLine());	irf = f.GetInt(0) > 0;	irfStep = f.GetDouble(1);	irfDuration = f.GetDouble(2);
-	if (irfStep <= 0)
+	if (irf && irfStep <= 0)
 		throw Exc(Format(t_("[%d] Incorrect IRF step %s"), in.GetLineNumber(), f.GetText(1)));
-	if (irfDuration <= irfStep)
+	if (irf && irfDuration <= irfStep)
 		throw Exc(Format(t_("[%d] IRF step %s has to be lower than duration %s"), in.GetLineNumber(), f.GetText(1), f.GetText(2)));	
 	f.Load(in.GetLine());	showPressure = f.GetInt(0) > 0;
 	
@@ -297,53 +297,53 @@ String FormatIntEmpty(int val) {
 Vector<String> NemohCal::Check() {
 	Vector<String> ret;
 	
-	if (rho < 0 || rho > 10000)
+	if (IsNull(rho) || rho < 0 || rho > 10000)
 		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(rho));
-	if (g < 0 || g > 100)
+	if (IsNull(g) || g < 0 || g > 100)
 		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(g));
-	if (h < 0 || h > 100000)
+	if (IsNull(h) || h < 0 || h > 100000)
 		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(h));
 
-	if (Nf < 1 || Nf > 1000)
+	if (IsNull(Nf) || Nf < 1 || Nf > 1000)
 		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(Nf));
-	if (minF <= 0)
-		ret << Format(t_("Incorrect frequency %s"), FormatDoubleEmpty(minF));
-	if (maxF <= minF)
+	if (IsNull(minF) || minF <= 0)
+		ret << Format(t_("Incorrect min frequency %s"), FormatDoubleEmpty(minF));
+	if (IsNull(maxF) || maxF <= minF)
 		ret << Format(t_("Minimum frequency %s has to be lower than maximum frequency %s"), FormatDoubleEmpty(minF), FormatDoubleEmpty(maxF));	
 	
-	if (Nh < 1 || Nh > 1000)
-		ret << Format(t_("Incorrect number of directions %s"), FormatIntEmpty(Nh));
-	if (minD < -180)
-		ret << Format(t_("Incorrect direction %s"), FormatDoubleEmpty(minD));
-	if (maxD > 180)
-		ret << Format(t_("Incorrect direction %s"), FormatDoubleEmpty(maxD));
-	if (maxD < minD)
-		ret << Format(t_("Minimum direction %s has to be lower than maximum direction %s"), FormatDoubleEmpty(minD), FormatDoubleEmpty(maxD));	
+	if (IsNull(Nh) || Nh < 1 || Nh > 1000)
+		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(Nh));
+	if (IsNull(minH) || minH < -180)
+		ret << Format(t_("Incorrect min heading %s"), FormatDoubleEmpty(minH));
+	if (IsNull(maxH) || maxH > 180)
+		ret << Format(t_("Incorrect max heading %s"), FormatDoubleEmpty(maxH));
+	if (maxH < minH)
+		ret << Format(t_("Minimum heading %s has to be lower than maximum heading %s"), FormatDoubleEmpty(minH), FormatDoubleEmpty(maxH));	
 	
 	if (irf) {
-		if (irfStep <= 0)
+		if (IsNull(irfStep) || irfStep <= 0)
 			ret << Format(t_("Incorrect IRF step %s"), FormatDoubleEmpty(irfStep));
-		if (irfDuration <= irfStep)
+		if (IsNull(irfDuration) || irfDuration <= irfStep)
 			ret << Format(t_("IRF step %s has to be lower than duration %s"), FormatDoubleEmpty(irfStep), FormatDoubleEmpty(irfDuration));	
 	}
 	
-	if (nFreeX < 0)
+	if (IsNull(nFreeX) || nFreeX < 0)
 		ret << Format(t_("Incorrect number of points in x direction %s (0 for no free surface calculation)"), FormatIntEmpty(nFreeX));
 	if (nFreeX > 0) {
-		if (nFreeY <= 0)
+		if (IsNull(nFreeY) || nFreeY <= 0)
 			ret << Format(t_("Incorrect number of points in x direction %s"), FormatIntEmpty(nFreeY));
-		if (domainX <= 0)
+		if (IsNull(domainX) || domainX <= 0)
 			ret << Format(t_("Incorrect free surface domain X %s"), FormatDoubleEmpty(domainX));
-		if (domainY <= 0)
+		if (IsNull(domainY) || domainY <= 0)
 			ret << Format(t_("Incorrect free surface domain Y %s"), FormatDoubleEmpty(domainY));
 	}
 	
-	if (nKochin < 0)
+	if (IsNull(nKochin) || nKochin < 0)
 		ret << Format(t_("Incorrect number of Kochin function directions %s"), FormatIntEmpty(nKochin));
 	if (nKochin > 0) {
-		if (minK < -180)
+		if (IsNull(minK) || minK < -180)
 			ret << Format(t_("Incorrect Kochin direction %s"), FormatDoubleEmpty(minK));
-		if (maxK < 180)
+		if (IsNull(maxK) || maxK < 180)
 			ret << Format(t_("Incorrect Kochin direction %s"),FormatDoubleEmpty(minK));
 		if (maxK <= minK)
 			Format(t_("Minimum Kochin direction %s has to be lower than maximum direction %s"), FormatDoubleEmpty(minK), FormatDoubleEmpty(maxK));	
@@ -360,17 +360,19 @@ void NemohCal::CreateId(String folder) const {
 	out << "1\n.";
 }
 
-void NemohCal::CreateBat(String folder, bool bin, String preName, String solvName, String postName) const {
-	String fileName = AppendFileName(folder, "Nemoh.bat");
+void NemohCal::CreateBat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const {
+	String fileName = AppendFileName(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
+	if (!IsNull(caseFolder))
+		out << "cd \"" << caseFolder << "\"\n";
 	String strBin;
 	if (bin)
-		strBin = "\"bin";
-	out << AppendFileName(strBin, preName) << "\"\n"
-		<< AppendFileName(strBin, solvName) << "\"\n"
-		<< AppendFileName(strBin, postName) << "\"";
+		strBin = "bin";
+	out << "\"" << AppendFileName(strBin, preName) << "\"\n"
+		<< "\"" << AppendFileName(strBin, solvName) << "\"\n"
+		<< "\"" << AppendFileName(strBin, postName) << "\"";
 }
 
 void NemohCal::CreateInput(String folder) const {
@@ -398,7 +400,7 @@ String NemohField(String str, int length) {
 	String ret = str;
 	if (length > ret.GetCount())
 		ret << String(' ', length - ret.GetCount());
-	return ret;
+	return ret + " ";
 }
 
 int NemohBody::GetNDOF() const {
@@ -418,116 +420,165 @@ int NemohBody::GetNDOF() const {
 	return ret;
 }
 
-void NemohCal::SaveFolder(String folder, bool bin, const BEMData &bem) const {
-	CreateId(folder);
-	CreateInput(folder);
-	String folderMesh = AppendFileName(folder, "mesh");
-	DeleteFolderDeep(folderMesh);
-	if (!DirectoryCreate(folderMesh)) 
-		throw Exc(Format(t_("Problem creating %s folder"), folderMesh));
-
-	for (int i = 0; i < bodies.GetCount(); ++i) {
-		String name = GetFileName(bodies[i].meshFile);
-		String dest = AppendFileName(folderMesh, name);
-		if (!FileCopy(bodies[i].meshFile, dest)) 
-			throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[i].meshFile));
+void NemohCal::SaveFolder(String folderBase, bool bin, int numCases, const BEMData &bem) const {
+	if (numCases < 1)
+		throw Exc(Format(t_("Number of Nemoh cases must be higher that 1 (%d)"), numCases));
+	
+	if (!DeleteFolderDeep(folderBase))
+		throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
+	
+	if (!DirectoryCreate(folderBase))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
+	
+	int _nf, deltaf;
+	double _minf, _maxf;
+	int ifr = 0;
+	Vector<double> freqs;
+	if (numCases > 1) { 
+		LinSpaced(freqs, Nf, minF, maxF);
+		deltaf = static_cast<int>(round(Nf/static_cast<double>(numCases)));
 	}
-	Save_Cal(folder);
-	
-	String folderResults = AppendFileName(folder, "results");
-	DeleteFolderDeep(folderResults);
-	if (!DirectoryCreate(folderResults)) 
-		throw Exc(Format(t_("Problem creating '%s' folder"), folderResults));
-	
-	String preName = "preprocessor.exe";
-	String solvName = "solver.exe";
-	String postName = "postprocessor.exe";
-	if (bin) {
-		String binResults = AppendFileName(folder, "bin");
-		DeleteFolderDeep(binResults);
-		if (!DirectoryCreate(binResults)) 
-			throw Exc(Format(t_("Problem creating '%s' folder"), binResults));
-		
-		preName = GetFileName(bem.nemohPathPreprocessor);
-		String destProprocessor = AppendFileName(binResults, preName);
-		if (!FileCopy(bem.nemohPathPreprocessor, destProprocessor)) 
-			throw Exc(Format(t_("Problem copying preprocessor file '%s'"), bem.nemohPathPreprocessor));		
-		solvName = GetFileName(bem.nemohPathSolver);
-		String destSolver = AppendFileName(binResults, solvName);
-		if (!FileCopy(bem.nemohPathSolver, destSolver)) 
-			throw Exc(Format(t_("Problem copying solver file '%s'"), bem.nemohPathSolver));		
-		postName = GetFileName(bem.nemohPathPostprocessor);
-		String destPostprocessor = AppendFileName(binResults, postName);
-		if (!FileCopy(bem.nemohPathPostprocessor, destPostprocessor)) 
-			throw Exc(Format(t_("Problem copying postprocessor file '%s'"), bem.nemohPathPostprocessor));		
-		if (!GetFileName(bem.nemohPathGREN).IsEmpty()) {
-			String destGREN = AppendFileName(folder, GetFileName(bem.nemohPathGREN));
-			if (!FileCopy(bem.nemohPathGREN, destGREN)) 
-				throw Exc(Format(t_("Problem copying gren file '%s'"), bem.nemohPathGREN));
+	String sumcases;
+	for (int i = 0; i < numCases; ++i) {
+		String folder;
+		if (numCases > 1) {
+			folder = AppendFileName(folderBase, Format("Part%d", i+1));
+			if (!DirectoryCreate(folder))
+				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
+			sumcases << " " << AppendFileName(folder, "Nemoh.cal");
+			_minf = freqs[ifr];
+			if (i < numCases-1) {
+				_maxf = freqs[ifr + deltaf - 1];
+				_nf = deltaf;
+				ifr += deltaf;
+			} else {
+				_maxf = freqs[Nf - 1];
+				_nf = Nf - ifr;
+			}
+		} else {
+			folder = folderBase;
+			_nf = Nf;
+			_minf = minF;
+			_maxf = maxF;
 		}
+		CreateId(folder);
+		CreateInput(folder);
+		String folderMesh = AppendFileName(folder, "mesh");
+		DeleteFolderDeep(folderMesh);
+		if (!DirectoryCreate(folderMesh)) 
+			throw Exc(Format(t_("Problem creating %s folder"), folderMesh));
+	
+		for (int i = 0; i < bodies.GetCount(); ++i) {
+			String name = GetFileName(bodies[i].meshFile);
+			String dest = AppendFileName(folderMesh, name);
+			if (!FileCopy(bodies[i].meshFile, dest)) 
+				throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[i].meshFile));
+		}
+		Save_Cal(folder, _nf, _minf, _maxf);
+		
+		String folderResults = AppendFileName(folder, "results");
+		DeleteFolderDeep(folderResults);
+		if (!DirectoryCreate(folderResults)) 
+			throw Exc(Format(t_("Problem creating '%s' folder"), folderResults));
+		
+		String preName  = "preprocessor.exe";
+		String solvName = "solver.exe";
+		String postName = "postprocessor.exe";
+		if (bin) {
+			String binResults = AppendFileName(folder, "bin");
+			DeleteFolderDeep(binResults);
+			if (!DirectoryCreate(binResults)) 
+				throw Exc(Format(t_("Problem creating '%s' folder"), binResults));
+			
+			preName = GetFileName(bem.nemohPathPreprocessor);
+			String destProprocessor = AppendFileName(binResults, preName);
+			if (!FileCopy(bem.nemohPathPreprocessor, destProprocessor)) 
+				throw Exc(Format(t_("Problem copying preprocessor file '%s'"), bem.nemohPathPreprocessor));		
+			solvName = GetFileName(bem.nemohPathSolver);
+			String destSolver = AppendFileName(binResults, solvName);
+			if (!FileCopy(bem.nemohPathSolver, destSolver)) 
+				throw Exc(Format(t_("Problem copying solver file '%s'"), bem.nemohPathSolver));		
+			postName = GetFileName(bem.nemohPathPostprocessor);
+			String destPostprocessor = AppendFileName(binResults, postName);
+			if (!FileCopy(bem.nemohPathPostprocessor, destPostprocessor)) 
+				throw Exc(Format(t_("Problem copying postprocessor file '%s'"), bem.nemohPathPostprocessor));		
+			if (!GetFileName(bem.nemohPathGREN).IsEmpty()) {
+				String destGREN = AppendFileName(folder, GetFileName(bem.nemohPathGREN));
+				if (!FileCopy(bem.nemohPathGREN, destGREN)) 
+					throw Exc(Format(t_("Problem copying gren file '%s'"), bem.nemohPathGREN));
+			}
+		}
+		if (numCases > 1) 
+			CreateBat(folderBase, Format("Nemoh%d.bat", i+1), Format("Part%d", i+1), bin, preName, solvName, postName);
+		else
+			CreateBat(folder, "Nemoh.bat", Null, bin, preName, solvName, postName);
 	}
-	CreateBat(folder, bin, preName, solvName, postName);
+	if (numCases > 1) {
+		sumcases = "BEMRosetta -coefficients -loadjoin" + sumcases;
+		SaveFile(AppendFileName(folderBase, "Nemoh.cal"), sumcases);
+	}
 }
 
-void NemohCal::Save_Cal(String folder) const {
+void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) const {
 	String fileName = AppendFileName(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
-		
+	
+	int cp = 28;	
 	out << NemohHeader("Environment - Created with BEMRosetta") << "\n";
-	out << NemohField(Format("%f", rho), 30) 		   << "! RHO             ! KG/M**3   ! Fluid specific volume" << "\n";
-	out << NemohField(Format("%f", g), 30)   		   << "! G               ! M/S**2    ! Gravity " << "\n";
-	out << NemohField(Format("%f", h), 30)   		   << "! DEPTH           ! M         ! Water depth" << "\n";
-	out << NemohField(Format("%f %f", xeff, yeff), 30) << "! XEFF YEFF       ! M         ! Wave measurement point" << "\n";
+	out << NemohField(Format("%f", rho), cp) 		   << "! RHO             ! KG/M**3   ! Fluid specific volume" << "\n";
+	out << NemohField(Format("%f", g), cp)   		   << "! G               ! M/S**2    ! Gravity " << "\n";
+	out << NemohField(Format("%f", h), cp)   		   << "! DEPTH           ! M         ! Water depth" << "\n";
+	out << NemohField(Format("%f %f", xeff, yeff), cp) << "! XEFF YEFF       ! M         ! Wave measurement point" << "\n";
 	
 	out << NemohHeader("Description of floating bodies") << "\n";
-	out << NemohField(Format("%d", bodies.GetCount()), 30) << "! Number of bodies" << "\n";
+	out << NemohField(Format("%d", bodies.GetCount()), cp) << "! Number of bodies" << "\n";
 	
 	for (int i = 0; i < bodies.GetCount(); ++i) {
 		const NemohBody &b = bodies[i];
 		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
 		String file = AppendFileName("mesh", GetFileName(b.meshFile));
 		
-		out << NemohField(Format("%s", file), 30) << "! Name of mesh file" << "\n";
-		out << NemohField(Format("%d %d", b.npoints, b.npanels), 30) << "! Number of points and number of panels" << "\n";	
-		out << NemohField(Format("%d", b.GetNDOF()), 30) << "! Number of degrees of freedom" << "\n";	
+		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
+		out << NemohField(Format("%d %d", b.npoints, b.npanels), cp) << "! Number of points and number of panels" << "\n";	
+		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of degrees of freedom" << "\n";	
 		if (b.surge)
-			out << NemohField("1 1. 0. 0. 0. 0. 0.", 30) << "! Surge" << "\n";	
+			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Surge" << "\n";	
 		if (b.sway)
-			out << NemohField("1 0. 1. 0. 0. 0. 0.", 30) << "! Sway" << "\n";	
+			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Sway" << "\n";	
 		if (b.heave)
-			out << NemohField("1 0. 0. 1. 0. 0. 0.", 30) << "! Heave" << "\n";	
+			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Heave" << "\n";	
 		if (b.roll)
-			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), 30) << "! Roll about a point" << "\n";	
+			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Roll about a point" << "\n";	
 		if (b.pitch)
-			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), 30) << "! Pitch about a point" << "\n";	
+			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Pitch about a point" << "\n";	
 		if (b.yaw)		
-			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.cx, b.cy, b.cz), 30) << "! Yaw about a point" << "\n";	
-		out << NemohField(Format("%d", b.GetNDOF()), 30) << "! Number of resulting generalised forces" << "\n";	
+			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Yaw about a point" << "\n";	
+		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of resulting generalised forces" << "\n";	
 		if (b.surge)
-			out << NemohField("1 1. 0. 0. 0. 0. 0.", 30) << "! Force in x direction" << "\n";	
+			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Force in x direction" << "\n";	
 		if (b.sway)
-			out << NemohField("1 0. 1. 0. 0. 0. 0.", 30) << "! Force in y direction" << "\n";	
+			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Force in y direction" << "\n";	
 		if (b.heave)
-			out << NemohField("1 0. 0. 1. 0. 0. 0.", 30) << "! Force in z direction" << "\n";	
+			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Force in z direction" << "\n";	
 		if (b.roll)
-			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), 30) << "! Moment force in x direction about a point" << "\n";	
+			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Moment force in x direction about a point" << "\n";	
 		if (b.pitch)
-			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), 30) << "! Moment force in y direction about a point" << "\n";	
+			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Moment force in y direction about a point" << "\n";	
 		if (b.yaw)		
-			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.cx, b.cy, b.cz), 30) << "! Moment force in z direction about a point" << "\n";	
-		out << NemohField("0", 30) << "! Number of lines of additional information" << "\n";
+			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Moment force in z direction about a point" << "\n";	
+		out << NemohField("0", cp) << "! Number of lines of additional information" << "\n";
 	}
 	out << NemohHeader("Load cases to be solved") << "\n";
-	out << NemohField(Format("%d %f %f", Nf, minF, maxF), 30) << "! Number of wave frequencies, Min, and Max (rad/s)" << "\n";
-	out << NemohField(Format("%d %f %f", Nh, minD, maxD), 30) << "! Number of wave directions, Min and Max (degrees)" << "\n";
+	out << NemohField(Format("%d %f %f", _nf, _minf, _maxf), cp) << "! Number of wave frequencies, Min, and Max (rad/s)" << "\n";
+	out << NemohField(Format("%d %f %f", Nh, minH, maxH), cp) << "! Number of wave directions, Min and Max (degrees)" << "\n";
 	
 	out << NemohHeader("Post processing") << "\n";
-	out << NemohField(Format("%4<d %.2f %.2f", irf ? 1 : 0, irfStep, irfDuration), 30) << "! IRF                    ! IRF calculation (0 for no calculation), time step and duration" << "\n";
-	out << NemohField(Format("%d", showPressure ? 1 : 0), 30) << "! Show pressure" << "\n";	
-	out << NemohField(Format("%4<d %.2f %.2f", nKochin, minK, maxK), 30) << "! Kochin function        ! Number of directions of calculation (0 for no calculations), Min and Max (degrees)" << "\n";
-	out << NemohField(Format("%4<d %4<d %.2f %.2f", nFreeX, nFreeY, domainX, domainY), 30) << "! Free surface elevation ! Number of points in x direction (0 for no calcutions) and y direction and dimensions of domain in x and y direction" << "\n";
+	out << NemohField(Format("%4<d %.2f %.2f", irf ? 1 : 0, irfStep, irfDuration), cp) << "! IRF                    ! IRF calculation (0 for no calculation), time step and duration" << "\n";
+	out << NemohField(Format("%d", showPressure ? 1 : 0), cp) << "! Show pressure" << "\n";	
+	out << NemohField(Format("%4<d %.2f %.2f", nKochin, minK, maxK), cp) << "! Kochin function        ! Number of directions of calculation (0 for no calculations), Min and Max (degrees)" << "\n";
+	out << NemohField(Format("%4<d %4<d %.2f %.2f", nFreeX, nFreeY, domainX, domainY), cp) << "! Free surface elevation ! Number of points in x direction (0 for no calcutions) and y direction and dimensions of domain in x and y direction" << "\n";
 	
 	out << "---";
 }
@@ -540,7 +591,7 @@ bool Nemoh::Load_Inf(String fileName) {
 	hd().cb.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
-	hd().C[0].setConstant(6, 6, 0);   
+	hd().C[0].setConstant(6, 6, Null);   
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -630,7 +681,7 @@ bool Nemoh::Load_KH() {
 	    else 
 	        fileKH = AppendFileName(folder, AppendFileName("Mesh", Format("KH_%d.dat", ib)));
 	    
-		hd().C[ib].setConstant(6, 6, 0);    
+		hd().C[ib].setConstant(6, 6, Null);    
 	    FileInLine in(fileKH);
 	    if (!in.IsOpen()) 
 	        return false;

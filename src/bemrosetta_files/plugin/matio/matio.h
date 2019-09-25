@@ -36,7 +36,8 @@ template<> void inline GetTypeCode<const char *> (enum matio_classes &class_type
 template <class T>
 class MatMatrix {
 public:
-	MatMatrix() : rows(0), cols(0) {}
+	MatMatrix() : rows(0), cols(0) 			{}
+	MatMatrix(int rows, int cols)  			{Alloc(rows, cols);}
 	MatMatrix(const Nuller&)               	{rows = cols = 0;}
 	bool IsNullInstance() const    			{return rows == 0 && cols == 0; }
 	
@@ -195,6 +196,14 @@ public:
 	bool OpenRead(String fileName) 	{return Open(fileName, MAT_ACC_RDONLY);}
 	bool OpenWrite(String fileName) {return Open(fileName, MAT_ACC_RDWR);}
 	bool IsOpen()					{return !!mat;}
+	bool OpenCreate(String fileName, enum mat_ft mat_file_ver) {
+		if (mat != NULL)
+			Mat_Close(mat);
+	
+		mat = Mat_CreateVer(fileName, "BEMRosetta", mat_file_ver);
+			    
+    	return !!mat;
+	}
 	
 	mat_ft GetVersion() {
 		ASSERT(mat != NULL);
@@ -394,7 +403,7 @@ public:
 	
 	template <class T>
 	bool VarWrite(String name, T data, bool compression = true) {
-		return VarWrite<T>(name, data, 1, Null, compression);
+		return VarWrite<T>(name, &data, 1, Null, compression);
 	}
 	
 	bool VarWrite(String name, String data, bool compression = true) {

@@ -31,7 +31,8 @@ void MainBEM::Init() {
 		mainSummary.Clear();
 		menuOpen.arrayModel.Clear();
 		menuOpen.butRemove.Disable();
-		menuConvert.arrayModel.Clear();	
+		menuConvert.arrayModel.Clear();
+		menuFOAMM.arrayModel.Clear();
 		
 		mainArrange.Clear();	mainTab.GetItem(mainTab.Find(mainArrange)).Disable();
 		mainStiffness.Clear();	mainTab.GetItem(mainTab.Find(mainStiffness)).Disable();
@@ -67,24 +68,16 @@ void MainBEM::Init() {
 	OnOpt();
 	
 	CtrlLayout(menuFOAMM);
-	menuFOAMM.file.WhenChange = THISBACK(OnFOAMM);
+	//menuFOAMM.file.WhenChange = THISBACK(OnFOAMM);
 	menuFOAMM.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	cancelFOAMM = false;
-	menuFOAMM.progress.Show(false);
-	menuFOAMM.butCancel.Show(false);
+	menuFOAMM.file.Type(t_("FOAMM .mat file"), "*.mat");
+	menuFOAMM.file.AllFilesType();
 	menuFOAMM.butLoad.WhenAction 	= [&] {OnFOAMM();};
-	menuFOAMM.butCancel.WhenAction 	= [&] {cancelFOAMM = true;};
 	
 	menuFOAMM.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuFOAMM.arrayModel.AddColumn("", 20);	
 	menuFOAMM.arrayModel.AddColumn("", 20);	
-	menuFOAMM.arrayModel.WhenEnterRow = [&] {
-		int id = menuFOAMM.arrayModel.GetCursor();
-		if (id < 0)
-			return;
-		//menuFOAMM.dropBody.
-		//ma().bem.hydros[id].hd().Nb;
-	};
+	menuFOAMM.arrayModel.WhenSel = [&] {WhenSelFOAMM();};
 	
 	OnOpt();
 		
@@ -211,7 +204,7 @@ void MainBEM::OnOpt() {
 	const String bemFiles = ".1 .3 .hst .4 .out .dat .cal .inf .ah1 .lis .mat";
 	String bemFilesAst = clone(bemFiles);
 	bemFilesAst.Replace(".", "*.");
-	menuOpen.file.Type(Format("All supported BEM files (%s)", bemFiles), bemFilesAst);
+	menuOpen.file.Type(Format(t_("All supported BEM files (%s)"), bemFiles), bemFilesAst);
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
@@ -256,12 +249,19 @@ void MainBEM::OnOpt() {
 
 bool MainBEM::OnLoad() {
 	String file = ~menuOpen.file;
-	
+	return OnLoadFile(file);
+}
+
+bool MainBEM::OnLoadFile(String file) {
 	try {
 		WaitCursor wait;
 		Progress progress(t_("Loading BEM files..."), 100); 
 		
-		ma().bem.Load(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);});
+		ma().bem.Load(file, [&](String str, int _pos) {
+			progress.SetText(str); 
+			progress.SetPos(_pos); 
+			return !progress.Canceled();
+		});
 		
 		int id = ma().bem.hydros.GetCount()-1;
 		HydroClass &data = ma().bem.hydros[id];
@@ -299,6 +299,8 @@ bool MainBEM::OnLoad() {
 }
 	
 bool MainBEM::OnConvert() {
+	String file = ~menuConvert.file;
+	
 	try {
 		int id = menuConvert.arrayModel.GetCursor();
 		if (id < 0) {
@@ -312,7 +314,7 @@ bool MainBEM::OnConvert() {
 		case 2:	type = Hydro::UNKNOWN;		break;
 		default: throw Exc(t_("Unknown type in OnConvert()"));
 		}
-		ma().bem.hydros[id].hd().SaveAs(~menuConvert.file, type);	
+		ma().bem.hydros[id].hd().SaveAs(file, type);	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -321,38 +323,77 @@ bool MainBEM::OnConvert() {
 }
 
 bool MainBEM::OnFOAMM() {
-	try {
-		int id = menuFOAMM.arrayModel.GetCursor();
-		if (id < 0) {
-			Exclamation(t_("Please select a model to get State Space"));
+	String file = ~menuFOAMM.file;
+	int id = menuFOAMM.arrayModel.GetCursor();
+	if (id < 0) {
+		Exclamation(t_("Please select a model to get State Space"));
+		return false;
+	}
+	if (FileExists(file)) {
+		if (!PromptOKCancel(Format(t_("File '%s' already exists.&Do you wish to overwrite it?"), DeQtf(~menuFOAMM.file))))
 			return false;
-		}
-		menuFOAMM.progress.Show(true);
-		menuFOAMM.butCancel.Show(true);
-		ma().bem.hydros[id].hd().GetFOAMM(~menuFOAMM.file, [&](String str) {
-				menuFOAMM.progress++; 
+	}
+		
+	try {
+		WaitCursor wait;
+		Progress progress(t_("COER FOAMM processing data...")); 
+		progress.Canceled();
+		
+		Hydro &hydro = ma().bem.hydros[id].hd();	
+		hydro.GetFOAMM(~menuFOAMM.file, ~menuFOAMM.dropBody, ~menuFOAMM.dropDOF, 
+			[&](String str, int pos)->bool {
+				if (!str.IsEmpty())
+					progress.SetText(str);	
+				if (IsNull(pos))
+					progress.pi++; 
+				else
+					progress.Set(pos, 100);
+				ProcessEvents(); 
+				return progress.Canceled();
+			}, 
+			[&](String str) {
 				if (!str.IsEmpty()) {
-					//menuFOAMM.progress.Show(false);
-					//menuFOAMM.butCancel.Show(false);
 					str.Replace("\r", "");
 					str.Replace("\n\n", "\n");
-					Exclamation (DeQtfLf(str));
-					//return true;
+					Exclamation(t_("FOAMM message:&") + DeQtfLf(str));
 				}
 				ProcessEvents(); 
-				return cancelFOAMM;
 			});
-		menuFOAMM.progress.Show(false);
-		menuFOAMM.butCancel.Show(false);
-		cancelFOAMM = false;	
+		
+		if (!OnLoadFile(~menuFOAMM.file))
+			return false;
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
-		menuFOAMM.progress.Show(false);
-		menuFOAMM.butCancel.Show(false);
-		cancelFOAMM = false;
 		return false;
 	}
 	return true;
+}
+
+void MainBEM::WhenSelFOAMM() {
+	int id = menuFOAMM.arrayModel.GetCursor();
+	if (id < 0)
+		return;
+	
+	ASSERT(id < ma().bem.hydros.GetCount());
+	
+	Hydro &hydro = ma().bem.hydros[id].hd();
+	
+	menuFOAMM.dropBody.Clear();
+	for (int i = 0; i < hydro.Nb; ++i) {
+		String name = hydro.names[i];
+		if (name.IsEmpty())
+			name = Format("%d", i+1);
+		else
+			name = Format("%d. %s", i+1, name);
+		menuFOAMM.dropBody.Add(i, name);
+	}
+	if (hydro.Nb > 0)
+		menuFOAMM.dropBody.SetIndex(0);
+	
+	menuFOAMM.dropDOF.Clear();	
+	for (int i = 0; i < 6; ++i) 
+		menuFOAMM.dropDOF.Add(i, Hydro::StrDOF_base(i));
+	menuFOAMM.dropDOF.SetIndex(0);
 }
 
 void MainBEM::Jsonize(JsonIO &json) {
@@ -365,10 +406,11 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showPhase", menuPlot.showPhase)
 		("menuPlot_showNdim", menuPlot.showNdim)
+		("menuFOAMM_file", menuFOAMM.file)
 	;
 }
 
-void MainBEM::DragAndDrop(Point p, PasteClip& d) {
+void MainBEM::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
@@ -380,7 +422,7 @@ void MainBEM::DragAndDrop(Point p, PasteClip& d) {
 	}
 }
 
-bool MainBEM::Key(dword key, int count) {
+bool MainBEM::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
 		for (int i = 0; i < files.GetCount(); ++i) {
@@ -615,9 +657,9 @@ bool MainABForce::Load(BEMData &bem) {
 						plots[i][j].Init(i, j, dataToShow);
 						if (plots[i][j].Load(hydro)) {
 							if (i != j)
-								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrDOFAbrev(i), Hydro::StrDOFAbrev(j)));
+								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrBDOFAbrev(i), Hydro::StrBDOFAbrev(j)));
 							else
-								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrDOF(i), ""));
+								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrBDOF(i), ""));
 						}
 					}
 				}
@@ -633,7 +675,7 @@ bool MainABForce::Load(BEMData &bem) {
 				for (int ih = 0; ih < Nh; ++ih) {
 					plots[ih][i].Init(i, bem.head[ih], dataToShow);
 					if (plots[ih][i].Load(hydro))
-						tab.Add(plots[ih][i].SizePos(), Format(format, Hydro::StrDOFAbrev(i), bem.head[ih]));
+						tab.Add(plots[ih][i].SizePos(), Format(format, Hydro::StrBDOFAbrev(i), bem.head[ih]));
 				}
 			}
 		}
@@ -650,13 +692,6 @@ bool MainABForce::Load(BEMData &bem) {
 	}
 }
 
-String FormatDOF(int i, int j) {
-	if (i != j)
-		return Format("%s_%s", Hydro::StrDOF(i), Hydro::StrDOF(j));
-	else
-		return Hydro::StrDOF(i);
-}
-
 void MainPlot::Init(int _idof, double jdof_ih, DataToShow _dataToShow) {
 	CtrlLayout(*this);
 	
@@ -667,25 +702,25 @@ void MainPlot::Init(int _idof, double jdof_ih, DataToShow _dataToShow) {
 	scatter.ShowAllMenus();
 	String title, labelY, labelY2;
 	switch (dataToShow) {
-	case DATA_A:		title = Format(t_("Added mass %s"), FormatDOF(idof, jdof));		
+	case DATA_A:		title = Format(t_("Added mass %s"), Hydro::StrBDOF(idof, jdof));		
 						labelY = t_("Added mass");				
 						break;		
-	case DATA_B:		title = Format(t_("Radiation damping %s"), FormatDOF(idof, jdof));
+	case DATA_B:		title = Format(t_("Radiation damping %s"), Hydro::StrBDOF(idof, jdof));
 						labelY = t_("Radiation damping");		
 						break;
-	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrDOF(idof), heading);
+	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
 						labelY = t_("Diffraction scattering force");
 						labelY2 = t_("Diffraction scattering force phase [º]");	
 						break;
-	case DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), Hydro::StrDOF(idof), heading);
+	case DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
 						labelY = t_("Froude-Krylov force");		
 						labelY2 = t_("Froude-Krylov force phase [º]");			
 						break;
-	case DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), Hydro::StrDOF(idof), heading);
+	case DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
 						labelY = t_("Excitation force");		
 						labelY2 = t_("Excitation force phase [º]");				
 						break;
-	case DATA_RAO:		title = Format(t_("Response Amplitude Operator %s heading %.1fº"), Hydro::StrDOF(idof), heading);
+	case DATA_RAO:		title = Format(t_("Response Amplitude Operator %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
 						labelY = t_("RAO []");		
 						labelY2 = t_("RAO phase [º]");							
 						break;
