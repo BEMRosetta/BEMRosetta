@@ -203,18 +203,39 @@ void MenuOptions::OnSave() {
 }
 
 bool MenuOptions::IsChanged() {
-	if ((bem->g != ~g) || (bem->rho != ~rho) || (bem->length != ~length) || (bem->depth != ~depth) || 
-		(bem->discardNegDOF != ~discardNegDOF) || (bem->thres != ~thres) || 
-		(bem->calcAwinf != ~calcAwinf) || (bem->maxTimeA != ~maxTimeA) || (bem->numValsA != ~numValsA) ||
-		(bem->onlyDiagonal != ~onlyDiagonal) || 
-		(bem->nemohPathPreprocessor != ~nemohPathPreprocessor) ||
-		(bem->nemohPathSolver != ~nemohPathSolver) ||
-		(bem->nemohPathPostprocessor != ~nemohPathPostprocessor) ||
-		(bem->nemohPathGREN != ~nemohPathGREN) ||
-		(bem->experimental != ~experimental) ||
-		(bem->experimentalFOAMM != ~experimentalFOAMM) ||
-		(bem->foammPath != ~foammPath)
-	   )
+	if (TruncDecimals(bem->g, 8) !=  TruncDecimals(static_cast<double>(~g), 8)) 
+		return true;
+	if (TruncDecimals(bem->rho, 8) !=  TruncDecimals(static_cast<double>(~rho), 8))
+		return true;
+	if (bem->length != ~length)
+		return true;
+	if (bem->depth != ~depth)
+		return true;
+	if (bem->discardNegDOF != ~discardNegDOF)
+		return true;
+	if (bem->thres != ~thres) 
+		return true;
+	if (bem->calcAwinf != ~calcAwinf)
+		return true;
+	if (bem->maxTimeA != ~maxTimeA)
+		return true;
+	if (bem->numValsA != ~numValsA)
+		return true;
+	if (bem->onlyDiagonal != ~onlyDiagonal)
+		return true;
+	if (bem->nemohPathPreprocessor != ~nemohPathPreprocessor)
+		return true;
+	if (bem->nemohPathSolver != ~nemohPathSolver)
+		return true;
+	if (bem->nemohPathPostprocessor != ~nemohPathPostprocessor)
+		return true;
+	if (bem->nemohPathGREN != ~nemohPathGREN)
+		return true;
+	if (bem->experimental != ~experimental)
+		return true;
+	if (bem->experimentalFOAMM != ~experimentalFOAMM)
+		return true;
+	if (bem->foammPath != ~foammPath)
 		return true;
 	
 	return false;

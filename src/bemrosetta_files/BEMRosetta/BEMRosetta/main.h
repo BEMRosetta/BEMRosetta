@@ -107,9 +107,9 @@ public:
 	virtual inline double x(int64 id) 	{
 		ASSERT(data != 0);
 		if (show_w)
-			return data->w[int(id)];
+			return data->w[static_cast<int>(id)];
 		else
-			return data->T[int(id)];
+			return data->T[static_cast<int>(id)];
 	}
 	virtual int64 GetCount()		  	{ASSERT(data != 0); return data->Nf;}
 	
@@ -194,15 +194,17 @@ private:
 
 class MainViewDataEach : public StaticRect {
 public:
+	typedef MainViewDataEach CLASSNAME;
+	
 	MainViewDataEach() {}
 	void Init(MeshData &_mesh, MainView &mainView);
 	void OnRefresh();
 	
 	TabCtrl tab;
-	Splitter orig, moved, movedUnder;
-	WithMainPlotList<StaticRect> arrayFacetsAll, arrayNodesOrig,
-								 arrayFacetsAll2, arrayNodesMoved,
+	Splitter moved, movedUnder;
+	WithMainPlotList<StaticRect> arrayFacetsAll2, arrayNodesMoved,
 								 arrayFacetsUnder, arrayNodesUnder;
+	StatusBar status;
 	
 	class DataSourceFacets : public Convert {
 	public:
@@ -229,7 +231,14 @@ public:
 	};
 	
 	Upp::Array<DataSourceFacets> dataSourceFacetsAll, dataSourceFacetsUnder;
-	Upp::Array<DataSourceNodes> dataSourceNodesOrig, dataSourceNodesMoved;
+	Upp::Array<DataSourceNodes> dataSourceNodesMoved;
+
+private:
+	void OnTimer();
+	TimeCallback timeCallback;
+	void UpdateStatus(bool under);
+	Vector<int> selectedPanels, selectedNodes;  
+	int lastSel = -1;
 };
 
 class MainViewData : public StaticRect {
@@ -364,6 +373,8 @@ public:
 	void Load(const BEMData &bem);
 	void Load(const NemohCal &data);
 	void Save(NemohCal &data);
+	
+	void OnOpwT();
 		
 	void Jsonize(JsonIO &json);
 	
@@ -391,9 +402,11 @@ public:
 	void InitSerialize(bool ret);
 
 	bool OnLoad();
+	bool OnLoadFile(String file);
 	bool OnConvert();
 	void OnOpt();
 	bool OnFOAMM();
+	void WhenSelFOAMM();
 		
 	void Jsonize(JsonIO &json);
 		
@@ -418,7 +431,6 @@ private:
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	bool cancelFOAMM;
 };
 
 class Main : public TopWindow {
@@ -440,11 +452,12 @@ public:
 	void Jsonize(JsonIO &json);
 
 	BEMData bem;
+	
+	MainMesh mainMesh;
 		
 private:
 	TabCtrl tab;
 	
-	MainMesh mainMesh;
 	MainNemoh mainNemoh;
 	MainBEM mainBEM;
 	MainOutput mainOutput;

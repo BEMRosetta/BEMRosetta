@@ -379,7 +379,20 @@ void MainMesh::OnUpdate(bool forceMoved) {
 		c_x = ~menuStability.c_x;
 		c_y = ~menuStability.c_y;
 		c_z = ~menuStability.c_z;
-				
+		
+		if (IsNull(t_x) || IsNull(t_y) || IsNull(t_z)) {
+			Exclamation(t_("Please fill translation data"));
+			return;
+		}
+		if (IsNull(a_x) || IsNull(a_y) || IsNull(a_z)) {
+			Exclamation(t_("Please fill rotation data"));
+			return;
+		}
+		if (IsNull(c_x) || IsNull(c_y) || IsNull(c_z)) {
+			Exclamation(t_("Please fill center of rotation data"));
+			return;
+		}
+		
 		data.cg.MoveTo(data.cg0, t_x, t_y, t_z, a_x, a_y, a_z, c_x, c_y, c_z);
 
 		bool isMoved = forceMoved || data.mesh.IsMoved(t_x, t_y, t_z, a_x, a_y, a_z);
@@ -694,31 +707,37 @@ Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 		return p.z;
 }
 
+void MainViewDataEach::UpdateStatus(bool under) {
+	bool show;
+	if (!under) {
+		show = ma().mainMesh.menuPlot.showMesh;
+		selectedPanels = ArrayCtrlGetSelected(arrayFacetsAll2.array);
+		selectedNodes = ArrayCtrlGetSelected(arrayNodesMoved.array);
+	} else {
+		show = ma().mainMesh.menuPlot.showUnderwater;
+		selectedPanels = ArrayCtrlGetSelected(arrayFacetsUnder.array);
+		selectedNodes = ArrayCtrlGetSelected(arrayNodesUnder.array);
+	}
+	int numPanels = selectedPanels.GetCount();
+	int numNodes  = selectedNodes.GetCount();
+	String strPanels = numPanels > 0 ? FormatInt(numPanels) : x_(t_("no"));
+	String strNodes  = numNodes > 0  ? FormatInt(numNodes)  : x_(t_("no"));
+	
+	if (numPanels + numNodes > 0) {
+		if (!show)
+			status.Set(Format(t_("%s is hidden in Plot menu so selection will not be shown"), 
+						under ? t_("Underwater mesh") : t_("Mesh")));
+		else
+			status.Set(Format(t_("Selected %s panels and %s nodes"), strPanels, strNodes));
+	} else
+		status.Set("");
+}
+
 void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
-	CtrlLayout(arrayFacetsAll);
 	CtrlLayout(arrayFacetsAll2);
 	CtrlLayout(arrayFacetsUnder);
-	CtrlLayout(arrayNodesOrig);
 	CtrlLayout(arrayNodesMoved);
 	CtrlLayout(arrayNodesUnder);
-	
-	arrayFacetsAll.title.SetText(t_("Facet nodes ids"));
-	arrayFacetsAll.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	arrayFacetsAll.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsAll.array);};
-	dataSourceFacetsAll.SetCount(4+1);
-	dataSourceFacetsAll[0].Init(_mesh, -1, true);
-	arrayFacetsAll.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsAll[0]);
-	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsAll[c+1].Init(_mesh, c, true);
-		arrayFacetsAll.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
-	}
-	arrayFacetsAll.array.WhenSel = [&] {
-		Vector<int> selected = ArrayCtrlGetSelected(arrayFacetsAll.array);
-		_mesh.mesh.SelPanels(selected);	
-		arrayFacetsAll2.array.ClearSelection();	
-		arrayFacetsUnder.array.ClearSelection();
-		mainView.gl.Refresh();		
-	};
 	
 	arrayFacetsAll2.title.SetText(t_("Facet node ids"));
 	arrayFacetsAll2.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
@@ -731,14 +750,14 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
 	arrayFacetsAll2.array.WhenSel = [&] {
-		Vector<int> selected = ArrayCtrlGetSelected(arrayFacetsAll2.array);
-		_mesh.mesh.SelPanels(selected);	
-		arrayFacetsAll.array.ClearSelection();	
+		UpdateStatus(false);
+		_mesh.mesh.SelPanels(selectedPanels);	
 		arrayFacetsUnder.array.ClearSelection();	
 		mainView.gl.Refresh();		
+		lastSel = 0;
 	};
 		
-	arrayFacetsUnder.title.SetText(t_("Facet nodes ids"));
+	arrayFacetsUnder.title.SetText(t_("Facet node ids"));
 	arrayFacetsUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsUnder.array);};
 	dataSourceFacetsUnder.SetCount(5);
@@ -749,34 +768,16 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		arrayFacetsUnder.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsUnder[c+1]);
 	}
 	arrayFacetsUnder.array.WhenSel = [&] {
-		Vector<int> selected = ArrayCtrlGetSelected(arrayFacetsUnder.array);
-		_mesh.under.SelPanels(selected);
-		arrayFacetsAll.array.ClearSelection();	
+		UpdateStatus(true);
+		_mesh.under.SelPanels(selectedPanels);
 		arrayFacetsAll2.array.ClearSelection();	
-		mainView.gl.Refresh();		
+		mainView.gl.Refresh();	
+		lastSel = 1;	
 	};
 	
 	const char *xyz[] = {"x", "y", "z"};
 
-	arrayNodesOrig.title.SetText(t_("Original node coordinates"));
-	arrayNodesOrig.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	arrayNodesOrig.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesOrig.array);};
-	dataSourceNodesOrig.SetCount(4);
-	dataSourceNodesOrig[0].Init(_mesh, -1, 0);
-	arrayNodesOrig.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesOrig[0]);
-	for (int c = 0; c < 3; ++c) {
-		dataSourceNodesOrig[c+1].Init(_mesh, c, 0);
-		arrayNodesOrig.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesOrig[c+1]);
-	}
-	arrayNodesOrig.array.WhenSel = [&] {
-		Vector<int> selected = ArrayCtrlGetSelected(arrayNodesOrig.array);
-		_mesh.mesh.SelNodes(selected);	
-		arrayNodesUnder.array.ClearSelection();
-		arrayNodesMoved.array.ClearSelection();
-		mainView.gl.Refresh();	
-	};
-		
-	arrayNodesMoved.title.SetText(t_("Moved node coordinates"));
+	arrayNodesMoved.title.SetText(t_("Node coordinates"));
 	arrayNodesMoved.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesMoved.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesMoved.array);};
 	dataSourceNodesMoved.SetCount(4);
@@ -787,11 +788,11 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
 	arrayNodesMoved.array.WhenSel = [&] {
-		Vector<int> selected = ArrayCtrlGetSelected(arrayNodesMoved.array);
-		_mesh.mesh.SelNodes(selected);
+		UpdateStatus(false);
+		_mesh.mesh.SelNodes(selectedNodes);
 		arrayNodesUnder.array.ClearSelection();
-		arrayNodesOrig.array.ClearSelection();	
 		mainView.gl.Refresh();	
+		lastSel = 2;
 	};
 		
 	arrayNodesUnder.title.SetText(t_("Node coordinates"));
@@ -805,23 +806,23 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
 	arrayNodesUnder.array.WhenSel = [&] {
-		Vector<int> selected = ArrayCtrlGetSelected(arrayNodesUnder.array);
-		_mesh.under.SelNodes(selected);	
+		UpdateStatus(true);
+		_mesh.under.SelNodes(selectedNodes);	
 		arrayNodesMoved.array.ClearSelection();
-		arrayNodesOrig.array.ClearSelection();
 		mainView.gl.Refresh();	
+		lastSel = 3;
 	};
 	
-	orig.Horz(arrayFacetsAll.SizePos(), arrayNodesOrig.SizePos());
 	moved.Horz(arrayFacetsAll2.SizePos(), arrayNodesMoved.SizePos());
 	movedUnder.Horz(arrayFacetsUnder.SizePos(), arrayNodesUnder.SizePos());	
 	  					 
-	tab.Add(orig.SizePos(), t_("Original"));
-	tab.Add(moved.SizePos(), t_("Moved"));
-	tab.Add(movedUnder.SizePos(), t_("Moved underwater"));
+	tab.Add(moved.SizePos(), t_("All mesh"));
+	tab.Add(movedUnder.SizePos(), t_("Only underwater"));
 	Add(tab.SizePos());	
+	AddFrame(status);
 	
 	OnRefresh();
+	timeCallback.Set(-1000, THISBACK(OnTimer));
 }
 
 void MainViewDataEach::OnRefresh() {
@@ -829,12 +830,6 @@ void MainViewDataEach::OnRefresh() {
 	int num;
 	
 	num = mesh.mesh.panels.GetCount();
-	arrayFacetsAll.array.Clear();
-	arrayFacetsAll.array.ClearSelection();
-	arrayFacetsAll.array.SetVirtualCount(num);
-	arrayFacetsAll.array.Refresh();
-	arrayFacetsAll.numRows.SetText(FormatInt(num));
-	
 	arrayFacetsAll2.array.GoBegin();
 	arrayFacetsAll2.array.Clear();
 	arrayFacetsAll2.array.ClearSelection();
@@ -848,13 +843,6 @@ void MainViewDataEach::OnRefresh() {
 	arrayFacetsUnder.array.SetVirtualCount(num);
 	arrayFacetsUnder.array.Refresh();
 	arrayFacetsUnder.numRows.SetText(FormatInt(num));
-	
-	num = mesh.mesh.nodes0.GetCount();
-	arrayNodesOrig.array.Clear();
-	arrayNodesOrig.array.ClearSelection();
-	arrayNodesOrig.array.SetVirtualCount(num);
-	arrayNodesOrig.array.Refresh();
-	arrayNodesOrig.numRows.SetText(FormatInt(num));
 	
 	num = mesh.mesh.nodes.GetCount();
 	arrayNodesMoved.array.Clear();
@@ -871,3 +859,11 @@ void MainViewDataEach::OnRefresh() {
 	arrayNodesUnder.numRows.SetText(FormatInt(num));
 }
 
+void MainViewDataEach::OnTimer() {
+	switch (lastSel) {
+	case 0:	arrayFacetsAll2.array.WhenSel();		break;
+	case 1:	arrayFacetsUnder.array.WhenSel();		break;
+	case 2:	arrayNodesMoved.array.WhenSel();		break;
+	case 3:	arrayNodesUnder.array.WhenSel();		break;
+	}
+}

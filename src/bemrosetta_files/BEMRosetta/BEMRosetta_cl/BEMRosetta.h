@@ -18,7 +18,7 @@ public:
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, UNKNOWN};
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
-	void GetFOAMM(String file, Function <bool(String)> Running);
+	void GetFOAMM(String file, int ibody, int idof, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), dataFromW(true), bem(&_bem) {}
 	virtual ~Hydro() {}	
@@ -127,7 +127,7 @@ public:
 		return -1;
 	}
 	
-	void AfterLoad(Function <void(String, int)> Status);
+	bool AfterLoad(Function <bool(String, int)> Status);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Initialize_Forces();
@@ -229,13 +229,27 @@ private:
 	BEMData *bem;
 	
 public:
-	static String StrDOF(int i) {
+	static String StrBDOF(int i) {
 		int ib = i/6 + 1;
 		int idf = i - (ib - 1)*6;
 		return Format("%d.%s", ib, strDOF[idf]);
 	}
-	
-	static String StrDOFAbrev(int i) {
+	static String StrBDOF(int i, int j) {
+		if (i != j) {
+			int ib = i/6 + 1;
+			int idf = i - (ib - 1)*6;
+			int jb = j/6 + 1;
+			int jdf = j - (jb - 1)*6;
+			return Format("%d.%s_%d.%s", ib, strDOF[idf], jb, strDOF[jdf]);
+		} else
+			return Hydro::StrBDOF(i);
+	}
+
+	static const char *StrDOF_base(int i) {
+		return strDOF[i];
+	}
+		
+	static String StrBDOFAbrev(int i) {
 		int nb = i/6 + 1;
 		int ni = i - (nb - 1)*6;
 		return Format("%d%s", nb, strDOFAbrev[ni]);
@@ -524,7 +538,7 @@ public:
 	int Nf = Null;
 	double minF, maxF;
 	int Nh = Null;
-	double minD, maxD;
+	double minH, maxH;
 	bool irf;
 	double irfStep, irfDuration;	
 	bool showPressure;
@@ -534,8 +548,8 @@ public:
 	double minK, maxK;
 	
 	bool Load(String fileName);
-	void Save_Cal(String folder) const;
-	void SaveFolder(String folder, bool bin, const BEMData &bem) const;
+	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
+	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem) const;
 	Vector<String> Check();
 	
 private:
@@ -544,7 +558,7 @@ private:
 	void LoadKochin(const FileInLine &in, const FieldSplit &f);
 
 	void CreateId(String folder) const;
-	void CreateBat(String folder, bool bin, String preName, String solvName, String postName) const;
+	void CreateBat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
 	void CreateInput(String folder) const;
 };
 
@@ -710,7 +724,7 @@ public:
 	bool experimental, experimentalFOAMM;
 	String foammPath;
 	
-	void Load(String file, Function <void(String, int pos)> Status);
+	void Load(String file, Function <bool(String, int pos)> Status);
 	void LoadMesh(String file, Function <void(String, int pos)> Status);
 	void HealingMesh(int id, Function <void(String, int pos)> Status);
 	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
