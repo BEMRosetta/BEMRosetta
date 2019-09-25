@@ -390,15 +390,15 @@ indowId])&]
 [s0; &]
 [ {{10000@1 [s0; [* Mouse and keyboard handling]]}}&]
 [s3; &]
-[s5;:Mouse`_GetPos`(long`&`,long`&`):%- [@(0.0.255) bool]_[* Mouse`_GetPos]([@(0.0.255) lon
-g]_`&[*@3 x], [@(0.0.255) long]_`&[*@3 y])&]
+[s5;:Mouse`_GetPos`(int`&`,int`&`):%- [@(0.0.255) bool]_[* Mouse`_GetPos]([@(0.0.255) int]_
+`&[*@3 x], [@(0.0.255) int]_`&[*@3 y])&]
 [s2; Gets the mouse position [%-*@3 x, y].in screen pixels where upper 
 left corner is (0, 0).&]
 [s2; Returns true if the operation has been done successfully.&]
 [s3; &]
 [s4; &]
-[s5;:Mouse`_SetPos`(long`,long`,int64`):%- [@(0.0.255) bool]_[* Mouse`_SetPos]([@(0.0.255) l
-ong]_[*@3 x], [@(0.0.255) long]_[*@3 y], [@(0.0.255) int64]_[*@3 windowId])&]
+[s5;:Mouse`_SetPos`(int`,int`,int64`):%- [@(0.0.255) bool]_[* Mouse`_SetPos]([@(0.0.255) in
+t]_[*@3 x], [@(0.0.255) int]_[*@3 y], [@(0.0.255) int64]_[*@3 windowId])&]
 [s2; Sets the mouse position to [%-*@3 x] [%-*@3 y] referenced to the 
 upper left vertex of window with window handle [%-*@3 windowId].&]
 [s2; Returns true if the operation has been done successfully.&]

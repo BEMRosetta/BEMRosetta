@@ -62,7 +62,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 		listOrig.Add(i+1, hydro.IsAvailableDOF(0, i));
 		
 	for (int i = 0; i < 6*hydro.Nb; ++i)
-		dofList.Add(InitCaps(hydro.StrDOF(i)));
+		dofList.Add(InitCaps(hydro.StrBDOF(i)));
 }
 
 bool ArrangeDOF::DnDInsert(int line, PasteClip& d) {
