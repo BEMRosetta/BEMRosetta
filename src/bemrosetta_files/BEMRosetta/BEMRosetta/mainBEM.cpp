@@ -2,13 +2,14 @@
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
+#include <RasterPlayer/RasterPlayer.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
 using namespace Upp;
 
 #include "main.h"
-
+#include "clip.brc"
 
 void MainBEM::Init() {
 	CtrlLayout(*this);
@@ -18,31 +19,18 @@ void MainBEM::Init() {
 	CtrlLayout(menuOpen);
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
-	menuOpen.butLoad.WhenAction = [&] {OnLoad();};
+	menuOpen.butLoad.WhenAction = [&] {menuOpen.file.DoGo();};
 	
-	menuOpen.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
+	menuOpen.arrayModel.NoHeader().NoVertGrid().AutoHideSb().MultiSelect();
 	menuOpen.arrayModel.AddColumn("", 20);	
 	menuOpen.arrayModel.AddColumn("", 20);
 	
 	menuOpen.butRemove.Disable();	
-	menuOpen.butRemove.WhenAction = [&] {
-		ma().bem.hydros.Clear();
-		
-		mainSummary.Clear();
-		menuOpen.arrayModel.Clear();
-		menuOpen.butRemove.Disable();
-		menuConvert.arrayModel.Clear();
-		menuFOAMM.arrayModel.Clear();
-		
-		mainArrange.Clear();	mainTab.GetItem(mainTab.Find(mainArrange)).Disable();
-		mainStiffness.Clear();	mainTab.GetItem(mainTab.Find(mainStiffness)).Disable();
-		mainA.Clear();			mainTab.GetItem(mainTab.Find(mainA)).Disable();
-		mainB.Clear();			mainTab.GetItem(mainTab.Find(mainB)).Disable();
-		mainForceSC.Clear();	mainTab.GetItem(mainTab.Find(mainForceSC)).Disable();
-		mainForceFK.Clear();	mainTab.GetItem(mainTab.Find(mainForceFK)).Disable();
-		mainForceEX.Clear();	mainTab.GetItem(mainTab.Find(mainForceEX)).Disable();
-		mainRAO.Clear();		mainTab.GetItem(mainTab.Find(mainRAO)).Disable();
-	};
+	menuOpen.butRemove.WhenAction = THISBACK(OnRemove);
+	menuOpen.butRemoveSelected.Disable();	
+	menuOpen.butRemoveSelected.WhenAction = THISBACK(OnRemoveSelected);
+	menuOpen.butJoin.Disable();	
+	menuOpen.butJoin.WhenAction = THISBACK(OnJoin);
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
@@ -67,30 +55,30 @@ void MainBEM::Init() {
 	
 	OnOpt();
 	
-	CtrlLayout(menuFOAMM);
-	//menuFOAMM.file.WhenChange = THISBACK(OnFOAMM);
-	menuFOAMM.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuFOAMM.file.Type(t_("FOAMM .mat file"), "*.mat");
-	menuFOAMM.file.AllFilesType();
-	menuFOAMM.butLoad.WhenAction 	= [&] {OnFOAMM();};
-	
-	menuFOAMM.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
-	menuFOAMM.arrayModel.AddColumn("", 20);	
-	menuFOAMM.arrayModel.AddColumn("", 20);	
-	menuFOAMM.arrayModel.WhenSel = [&] {WhenSelFOAMM();};
+	menuFOAMM.Init(*this, ma().bem);
 	
 	OnOpt();
 		
-	menuTab.Add(menuOpen.SizePos(), 	t_("Open"));
-	menuTab.Add(menuConvert.SizePos(), 	t_("Convert"));
+	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
+	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	if (ma().bem.experimentalFOAMM) 
-		menuTab.Add(menuFOAMM.SizePos(), t_("State Space"));
+		menuTab.Add(menuFOAMM.SizePos(), t_("State Space")).Disable();
 	
+	menuTab.WhenSet = [&] {
+		if (menuTab.IsAt(menuFOAMM)) {
+			mainTab.Hide();
+			TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
+			tabMenuPlot.Enable(true);
+			tabMenuPlot.Text(t_("Plot"));
+		} else
+		 	mainTab.Show();
+	};
+
 	mainTab.WhenSet = [&] {
-		bool plot = true;
+		bool plot = true, convertProcess = true;
 		if (ma().bem.hydros.IsEmpty())
-			plot = false;
+			plot = convertProcess = false;
 		else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
 			mainStiffness.Load(ma().bem.hydros);
@@ -115,20 +103,39 @@ void MainBEM::Init() {
 		} else if (mainTab.IsAt(mainStateSpace)) {
 			mainStateSpace.Load(ma().bem);
 			menuPlot.showPhase.Enable(true);
-		} else {
+		} else if (menuTab.IsAt(menuFOAMM)) 
+			menuPlot.showPhase.Enable(false);
+		else {
 			plot = false;
 			menuPlot.showPhase.Enable(false);
 		}
-		TabCtrl::Item& plotIt = menuTab.GetItem(menuTab.Find(menuPlot));
-		plotIt.Enable(plot);
+		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
+		tabMenuPlot.Enable(plot);
+		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
+		tabMenuConvert.Enable(convertProcess);
 		if (plot) {
-			plotIt.Text(t_("Plot"));
+			tabMenuPlot.Text(t_("Plot"));
 			menuTab.Set(menuPlot);
 		} else {
-			plotIt.Text("");
+			tabMenuPlot.Text("");
 			menuTab.Set(menuOpen);
+		}		
+		if (convertProcess) {
+			tabMenuConvert.Text(t_("Save as"));
+		} else {
+			tabMenuConvert.Text("");
+		}
+		
+		if (ma().bem.experimentalFOAMM) {
+			TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
+			tabMenuFOAMM.Enable(convertProcess);
+			if (convertProcess) 
+				tabMenuFOAMM.Text(t_("State Space"));
+			else 
+				tabMenuFOAMM.Text("");
 		}
 	};
+	mainTab.WhenSet();
 	
 	mainSummary.Init();
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
@@ -186,6 +193,8 @@ void MainBEM::LoadSelTab(BEMData &bem) {
 		mainStateSpace.Load(bem);
 	else if (mainTab.Get() == mainTab.Find(mainStiffness))
 		mainStiffness.Load(bem.hydros);
+	else if (mainTab.Get() == mainTab.Find(mainSummary) || mainTab.Get() == mainTab.Find(mainArrange))
+		;
 	else 
 		GetSelTab().Load(bem);
 }
@@ -201,15 +210,13 @@ MainPlot &MainBEM::GetSelPlot() {
 
 void MainBEM::OnOpt() {
 	menuOpen.file.ClearTypes();
-	const String bemFiles = ".1 .3 .hst .4 .out .dat .cal .inf .ah1 .lis .mat";
-	String bemFilesAst = clone(bemFiles);
-	bemFilesAst.Replace(".", "*.");
-	menuOpen.file.Type(Format(t_("All supported BEM files (%s)"), bemFiles), bemFilesAst);
+
+	menuOpen.file.Type(Format(t_("All supported BEM files (%s)"), ma().bem.bemFilesExt), ma().bem.bemFilesAst);
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
 		menuOpen.file.ActiveType(0);
-	else if (bemFiles.Find(extOpen) >= 0)
+	else if (ma().bem.bemFilesExt.Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(0);
 	else
 		menuOpen.file.ActiveType(1);
@@ -235,7 +242,7 @@ void MainBEM::OnOpt() {
 	else
 		menuConvert.file.ActiveType(2);
 	
-	menuFOAMM.file.ClearTypes();
+	/*menuFOAMM.file.ClearTypes();
 	menuFOAMM.file.Type(t_("Maynooth COER FOAMM file *.mat"), "*.mat");
 	menuFOAMM.file.AllFilesType();
 	String extFOAMM = ToLower(GetFileExt(menuFOAMM.file.GetData().ToString()));
@@ -244,7 +251,7 @@ void MainBEM::OnOpt() {
 	else if (extFOAMM == ".mat")
 		menuFOAMM.file.ActiveType(0);
 	else
-		menuFOAMM.file.ActiveType(1);	
+		menuFOAMM.file.ActiveType(1);*/	
 }
 
 bool MainBEM::OnLoad() {
@@ -262,7 +269,6 @@ bool MainBEM::OnLoadFile(String file) {
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
 		});
-		
 		int id = ma().bem.hydros.GetCount()-1;
 		HydroClass &data = ma().bem.hydros[id];
 		
@@ -275,6 +281,9 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		menuOpen.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
 		menuOpen.butRemove.Enable();
+		menuOpen.butRemoveSelected.Enable();
+		if (menuOpen.arrayModel.GetCount() > 1)
+			menuOpen.butJoin.Enable();
 		menuConvert.arrayModel.Add(data.hd().GetCodeStr(), data.hd().name);
 		if (menuConvert.arrayModel.GetCursor() < 0)
 			menuConvert.arrayModel.SetCursor(0);
@@ -291,13 +300,135 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(ma().bem));
 		if (data.hd().IsLoadedStateSpace())
 			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
+		
+		mainTab.WhenSet();
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
 	}
 	return true;
 }
+
+void MainBEM::OnRemove() {
+	ma().bem.hydros.Clear();
 	
+	mainSummary.Clear();
+	menuOpen.arrayModel.Clear();
+	menuOpen.butRemove.Disable();
+	menuOpen.butRemoveSelected.Disable();
+	menuOpen.butJoin.Disable();
+	menuConvert.arrayModel.Clear();
+	menuFOAMM.arrayModel.Clear();
+	
+	mainArrange.Clear();	mainTab.GetItem(mainTab.Find(mainArrange)).Disable();
+	mainStiffness.Clear();	mainTab.GetItem(mainTab.Find(mainStiffness)).Disable();
+	mainA.Clear();			mainTab.GetItem(mainTab.Find(mainA)).Disable();
+	mainB.Clear();			mainTab.GetItem(mainTab.Find(mainB)).Disable();
+	mainForceSC.Clear();	mainTab.GetItem(mainTab.Find(mainForceSC)).Disable();
+	mainForceFK.Clear();	mainTab.GetItem(mainTab.Find(mainForceFK)).Disable();
+	mainForceEX.Clear();	mainTab.GetItem(mainTab.Find(mainForceEX)).Disable();
+	mainRAO.Clear();		mainTab.GetItem(mainTab.Find(mainRAO)).Disable();
+	
+	mainTab.WhenSet();
+}
+
+void MainBEM::OnRemoveSelected() {
+	bool selected = false;
+	for (int r = menuOpen.arrayModel.GetCount()-1; r >= 0; --r) {
+		if (menuOpen.arrayModel.IsSelected(r)) {
+			ma().bem.hydros.Remove(r);
+			mainArrange.Remove(r);
+			menuOpen.arrayModel.Remove(r);
+			menuConvert.arrayModel.Remove(r);
+			menuFOAMM.arrayModel.Remove(r);
+			selected = true;
+		}
+	}
+	if (!selected) {
+		Exclamation(t_("No model selected"));
+		return;
+	}
+ 	mainSummary.Clear();
+	for (int i = 0; i < ma().bem.hydros.GetCount(); ++i)
+		mainSummary.Report(ma().bem.hydros[i].hd(), i);
+	
+	int numrow = menuOpen.arrayModel.GetCount();
+	menuOpen.butRemove.Enable(numrow > 0);
+	menuOpen.butRemoveSelected.Enable(numrow > 0);
+	menuOpen.butJoin.Enable(numrow > 1);
+	
+	mainArrange.Load(ma().bem.hydros);	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ma().bem.hydros.GetCount() > 0);	
+	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(true);
+	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(ma().bem));	
+	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(ma().bem));
+	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(ma().bem));
+	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(ma().bem));
+	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(ma().bem));
+	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(ma().bem));
+	mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(mainStateSpace.Load(ma().bem));
+	
+	mainTab.WhenSet();
+}
+
+void MainBEM::OnJoin() {
+	Vector<int> ids;
+	bool selected = false;
+	for (int r = menuOpen.arrayModel.GetCount()-1; r >= 0; --r) {
+		if (menuOpen.arrayModel.IsSelected(r)) {
+			ids << r;
+			selected = true;
+		}
+	}
+	if (!selected) {
+		Exclamation(t_("No model selected"));
+		return;
+	}
+	try {
+		WaitCursor wait;
+		Progress progress(t_("Joining selected BEM files..."), 100); 
+		
+		ma().bem.Join(ids, [&](String str, int _pos) {
+			progress.SetText(str); 
+			progress.SetPos(_pos); 
+			return !progress.Canceled();
+		});
+		
+		mainSummary.Clear();
+		mainArrange.Clear();
+		menuOpen.arrayModel.Clear();
+		menuConvert.arrayModel.Clear();
+		menuFOAMM.arrayModel.Clear();
+		for (int i = 0; i < ma().bem.hydros.GetCount(); ++i) {
+			const Hydro &data = ma().bem.hydros[i].hd();
+			mainSummary.Report(data, i);
+			mainArrange.Load(ma().bem.hydros);
+			menuOpen.arrayModel.Add(data.GetCodeStr(), data.name);
+			menuConvert.arrayModel.Add(data.GetCodeStr(), data.name);
+			menuFOAMM.arrayModel.Add(data.GetCodeStr(), data.name);
+		}
+		if (ma().bem.hydros.GetCount() > 0) {
+			menuOpen.arrayModel.SetCursor(0);
+			menuConvert.arrayModel.SetCursor(0);
+			menuFOAMM.arrayModel.SetCursor(0);
+		}
+		
+		mainArrange.Load(ma().bem.hydros);	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ma().bem.hydros.GetCount() > 0);		
+		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(true);
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(ma().bem));	
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(ma().bem));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(ma().bem));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(ma().bem));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(ma().bem));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(ma().bem));
+		mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(mainStateSpace.Load(ma().bem));
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}
+		
+	int numrow = menuOpen.arrayModel.GetCount();
+	menuOpen.butJoin.Enable(numrow > 1);
+}
+
 bool MainBEM::OnConvert() {
 	String file = ~menuConvert.file;
 	
@@ -322,80 +453,6 @@ bool MainBEM::OnConvert() {
 	return true;
 }
 
-bool MainBEM::OnFOAMM() {
-	String file = ~menuFOAMM.file;
-	int id = menuFOAMM.arrayModel.GetCursor();
-	if (id < 0) {
-		Exclamation(t_("Please select a model to get State Space"));
-		return false;
-	}
-	if (FileExists(file)) {
-		if (!PromptOKCancel(Format(t_("File '%s' already exists.&Do you wish to overwrite it?"), DeQtf(~menuFOAMM.file))))
-			return false;
-	}
-		
-	try {
-		WaitCursor wait;
-		Progress progress(t_("COER FOAMM processing data...")); 
-		progress.Canceled();
-		
-		Hydro &hydro = ma().bem.hydros[id].hd();	
-		hydro.GetFOAMM(~menuFOAMM.file, ~menuFOAMM.dropBody, ~menuFOAMM.dropDOF, 
-			[&](String str, int pos)->bool {
-				if (!str.IsEmpty())
-					progress.SetText(str);	
-				if (IsNull(pos))
-					progress.pi++; 
-				else
-					progress.Set(pos, 100);
-				ProcessEvents(); 
-				return progress.Canceled();
-			}, 
-			[&](String str) {
-				if (!str.IsEmpty()) {
-					str.Replace("\r", "");
-					str.Replace("\n\n", "\n");
-					Exclamation(t_("FOAMM message:&") + DeQtfLf(str));
-				}
-				ProcessEvents(); 
-			});
-		
-		if (!OnLoadFile(~menuFOAMM.file))
-			return false;
-	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
-		return false;
-	}
-	return true;
-}
-
-void MainBEM::WhenSelFOAMM() {
-	int id = menuFOAMM.arrayModel.GetCursor();
-	if (id < 0)
-		return;
-	
-	ASSERT(id < ma().bem.hydros.GetCount());
-	
-	Hydro &hydro = ma().bem.hydros[id].hd();
-	
-	menuFOAMM.dropBody.Clear();
-	for (int i = 0; i < hydro.Nb; ++i) {
-		String name = hydro.names[i];
-		if (name.IsEmpty())
-			name = Format("%d", i+1);
-		else
-			name = Format("%d. %s", i+1, name);
-		menuFOAMM.dropBody.Add(i, name);
-	}
-	if (hydro.Nb > 0)
-		menuFOAMM.dropBody.SetIndex(0);
-	
-	menuFOAMM.dropDOF.Clear();	
-	for (int i = 0; i < 6; ++i) 
-		menuFOAMM.dropDOF.Add(i, Hydro::StrDOF_base(i));
-	menuFOAMM.dropDOF.SetIndex(0);
-}
-
 void MainBEM::Jsonize(JsonIO &json) {
 	json
 		("menuOpen_file", menuOpen.file)
@@ -406,8 +463,26 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showPhase", menuPlot.showPhase)
 		("menuPlot_showNdim", menuPlot.showNdim)
-		("menuFOAMM_file", menuFOAMM.file)
+		//("menuFOAMM_file", menuFOAMM.file)
 	;
+}
+
+String MainBEM::BEMFile(String fileFolder) const {
+	if (DirectoryExists(fileFolder)) {
+		int bestipos = INT_MAX;
+		FindFile ff(AppendFileName(fileFolder, "*.*"));
+		while (ff) {
+			if (ff.IsFile()) {
+				int ipos = ma().bem.bemFilesExt.Find(GetFileExt(ff.GetName()));
+ 				if (ipos >= 0 && ipos < bestipos) {
+					fileFolder = ff.GetPath();
+					bestipos = ipos;	// It takes the file with most probable extension
+				}
+			}
+			ff.Next();
+		}
+	}
+	return fileFolder;
 }
 
 void MainBEM::DragAndDrop(Point , PasteClip& d) {
@@ -416,7 +491,8 @@ void MainBEM::DragAndDrop(Point , PasteClip& d) {
 	if (AcceptFiles(d)) {
 		Vector<String> files = GetFiles(d);
 		for (int i = 0; i < files.GetCount(); ++i) {
-			menuOpen.file <<= files[i];
+			String file = BEMFile(files[i]);
+			menuOpen.file <<= file;
 			OnLoad();
 		}
 	}
@@ -426,7 +502,8 @@ bool MainBEM::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
 		for (int i = 0; i < files.GetCount(); ++i) {
-			menuOpen.file <<= files[i];
+			String file = BEMFile(files[i]);
+			menuOpen.file <<= file;
 			OnLoad();
 		}
 		return true;
@@ -456,13 +533,10 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, data.name);
 	array.Set(row, 0, t_("Soft"));				array.Set(row++, col, data.GetCodeStr());
-	String sg = IsNull(data.g) ? x_("unknown") : Format("%.3f", data.g);
-	array.Set(row, 0, t_("g [m/s2]"));			array.Set(row++, col, sg);
-	String srho = IsNull(data.rho) ? x_("unknown") : Format("%.3f", data.rho);
-	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, srho);
-	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++, col,data.h < 0 ? x_(t_("INFINITY")) : FormatDouble(data.h));
-	String slen = IsNull(data.len) ? x_("unknown") : Format("%.1f", data.len);
-	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, slen);
+	array.Set(row, 0, t_("g [m/s2]"));			array.Set(row++, col, data.S_g());
+	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, data.S_rho());
+	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++,col, data.S_h());
+	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, data.S_len());
 	
 	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl(data.Nf, 0)); 
 	if (!data.w.IsEmpty()) {
@@ -518,7 +592,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("Ainf available"));	array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() 	   ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("C available"));		array.Set(row++, col, data.IsLoadedC() 	   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("K available"));		array.Set(row++, col, data.IsLoadedC() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fex available"));		array.Set(row++, col, data.IsLoadedFex()   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc()   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk()   ? t_("Yes") : t_("No"));
@@ -604,8 +678,7 @@ void MainArrange::Clear() {
 }
 
 void MainArrange::Load(Upp::Array<HydroClass> &hydro) {
-	tab.Reset();
-	arrangeDOF.Clear();
+	MainArrange::Clear();
 	for (int i = 0; i < hydro.GetCount(); ++i) {
 		ArrangeDOF &arr = arrangeDOF.Add();
 		arr.Init(hydro[i].hd());
@@ -613,353 +686,9 @@ void MainArrange::Load(Upp::Array<HydroClass> &hydro) {
 	}
 }
 
-void MainABForce::Init(DataToShow _dataToShow) {
-	CtrlLayout(*this);
-	
-	dataToShow = _dataToShow;
-	
-	selTab = 0;
-	isFilling = false;
-	tab.WhenSet = [&] {
-		if (!isFilling)
-			selTab = tab.Get();
-	};
-}
-
-void MainABForce::Clear() {
-	tab.Reset();
-	selTab = 0;
-}
-
-bool MainABForce::Load(BEMData &bem) {
-	try {
-		Upp::Array<HydroClass> &hydro = bem.hydros; 
-		if (hydro.IsEmpty())
-			return false;
-		isFilling = true;
-		tab.Reset();
-		String format;
-		switch (dataToShow) {
-		case DATA_A:		format = t_("A%s%s");		break;		
-		case DATA_B:		format = t_("B%s%s");		break;
-		case DATA_FORCE_SC:	format = t_("Fsc%s%.1fº");	break;
-		case DATA_FORCE_FK:	format = t_("Ffk%s%.1fº");	break;
-		case DATA_FORCE_EX:	format = t_("Fex%s%.1fº");	break;
-		case DATA_RAO:		format = t_("RAO%s%.1fº");	break;
-		}
-		int sdof = 6*bem.Nb;
-		if (dataToShow == DATA_A || dataToShow == DATA_B) {
-			plots.SetCount(sdof);
-			for (int i = 0; i < sdof; ++i) {
-				plots[i].SetCount(sdof);
-				for (int j = 0; j < sdof; ++j) {
-					if (!bem.onlyDiagonal || i == j) {
-						plots[i][j].Init(i, j, dataToShow);
-						if (plots[i][j].Load(hydro)) {
-							if (i != j)
-								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrBDOFAbrev(i), Hydro::StrBDOFAbrev(j)));
-							else
-								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrBDOF(i), ""));
-						}
-					}
-				}
-			}
-		} else {
-			int Nh = bem.head.GetCount();
-			if (Nh < 0)
-				return false;
-			plots.SetCount(Nh);
-			for (int ih = 0; ih < Nh; ++ih) 
-				plots[ih].SetCount(sdof);
-			for (int i = 0; i < sdof; ++i) {
-				for (int ih = 0; ih < Nh; ++ih) {
-					plots[ih][i].Init(i, bem.head[ih], dataToShow);
-					if (plots[ih][i].Load(hydro))
-						tab.Add(plots[ih][i].SizePos(), Format(format, Hydro::StrBDOFAbrev(i), bem.head[ih]));
-				}
-			}
-		}
-		
-		isFilling = false;
-		if (tab.GetCount() == 0)
-			return false;
-		else if (tab.GetCount() > selTab)	
-			tab.Set(selTab);
-		return true;
-	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
-		return false;
-	}
-}
-
-void MainPlot::Init(int _idof, double jdof_ih, DataToShow _dataToShow) {
-	CtrlLayout(*this);
-	
-	idof = _idof;
-	jdof = int(jdof_ih);
-	heading = jdof_ih;
-	dataToShow = _dataToShow;
-	scatter.ShowAllMenus();
-	String title, labelY, labelY2;
-	switch (dataToShow) {
-	case DATA_A:		title = Format(t_("Added mass %s"), Hydro::StrBDOF(idof, jdof));		
-						labelY = t_("Added mass");				
-						break;		
-	case DATA_B:		title = Format(t_("Radiation damping %s"), Hydro::StrBDOF(idof, jdof));
-						labelY = t_("Radiation damping");		
-						break;
-	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
-						labelY = t_("Diffraction scattering force");
-						labelY2 = t_("Diffraction scattering force phase [º]");	
-						break;
-	case DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
-						labelY = t_("Froude-Krylov force");		
-						labelY2 = t_("Froude-Krylov force phase [º]");			
-						break;
-	case DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
-						labelY = t_("Excitation force");		
-						labelY2 = t_("Excitation force phase [º]");				
-						break;
-	case DATA_RAO:		title = Format(t_("Response Amplitude Operator %s heading %.1fº"), Hydro::StrBDOF(idof), heading);
-						labelY = t_("RAO []");		
-						labelY2 = t_("RAO phase [º]");							
-						break;
-	}
-	scatter.SetTitle(title);
-	scatter.SetLabelY(labelY);
-	if (!labelY2.IsEmpty()) {
-		scatter.SetDrawY2Reticle(true);
-		scatter.SetPlotAreaRightMargin(80);
-		scatter.SetLabelY2(labelY2);
-	}
-}
-
-bool MainPlot::Load(Upp::Array<HydroClass> &hydro) {
-	scatter.RemoveAllSeries();
-	ABF_source.SetCount(hydro.GetCount());
-	ABF_source2.SetCount(hydro.GetCount());
-	Ainf_source.SetCount(hydro.GetCount());
-	
-	dim = !mbm().menuPlot.showNdim;
-	markW = mbm().menuPlot.showPoints ? 10 : 0;
-	show_w = mbm().menuPlot.opwT == 0;
-	if (show_w)
-		scatter.SetLabelX(t_("w [rad/s]"));
-	else
-		scatter.SetLabelX(t_("T [s]"));
-	
-	bool loaded = false;
-	for (int id = 0; id < hydro.GetCount(); ++id) {
-		Hydro &hy = hydro[id].hd();
-		int ih = -1;
-		if (dataToShow != DATA_A && dataToShow != DATA_B) 
-			ih = hy.GetHeadId(heading);
-		String nameType = Format("%s(%s)", hy.name, hy.GetCodeStrAbr());
-		if (dataToShow == DATA_A) {
-			Upp::Color acolor = Null;
-			if (hy.IsLoadedA()) {
-				if (ABF_source[id].Init(hy, idof, jdof, PLOT_A, show_w, !dim)) {
-					loaded = true;
-					scatter.AddSeries(ABF_source[id]).Legend(Format(t_("A_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-					if (dim)
-						scatter.Units("Ns2/m");
-					double dummy;
-					scatter.GetStroke(scatter.GetCount()-1, dummy, acolor);
-				}
-			}
-			if (hy.IsLoadedAwinf()) {
-				if (Ainf_source[id].Init(hy, idof, jdof, PLOT_AINF, show_w, !dim)) {
-					loaded = true;
-					scatter.AddSeries(Ainf_source[id]).Legend(Format(t_("Ainf_%s"), nameType)).Dash(LINE_DOTTED).Stroke(2, acolor).NoMark();
-					if (dim)
-						scatter.Units("Ns2/m");
-				}
-			}
-		} else if (dataToShow == DATA_B && hy.IsLoadedB()) {
-			if (ABF_source[id].Init(hy, idof, jdof, PLOT_B, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("B_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-				if (dim)
-					scatter.Units("Ns/m");
-			}
-		} else if (dataToShow == DATA_FORCE_SC && hy.IsLoadedFsc() && ih >= 0) {
-			if (ABF_source[id].Init(hy, idof, ih, PLOT_FORCE_SC_MA, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fsc_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-				if (dim)
-					scatter.Units("N");
-				if (ABF_source2[id].Init(hy, idof, ih, PLOT_FORCE_SC_PH, show_w, !dim)) {
-					loaded = true;
-					if (mbm().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fsc_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
-				}
-			}
-		} else if (dataToShow == DATA_FORCE_FK && hy.IsLoadedFfk() && ih >= 0) {
-			if (ABF_source[id].Init(hy, idof, ih, PLOT_FORCE_FK_MA, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Ffk_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-				if (dim)
-					scatter.Units("N");
-				if (ABF_source2[id].Init(hy, idof, ih, PLOT_FORCE_FK_PH, show_w, !dim)) {
-					loaded = true;
-					if (mbm().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Ffk_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
-				}
-			}
-		} else if (dataToShow == DATA_FORCE_EX && hy.IsLoadedFex() && ih >= 0) {
-			if (ABF_source[id].Init(hy, idof, ih, PLOT_FORCE_EX_MA, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("Fex_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-				if (dim)
-					scatter.Units("N");
-				if (ABF_source2[id].Init(hy, idof, ih, PLOT_FORCE_EX_PH, show_w, !dim)) {
-					loaded = true;
-					if (mbm().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("Fex_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
-				}
-			}
-		} else if (dataToShow == DATA_RAO && hy.IsLoadedRAO() && ih >= 0) {
-			if (ABF_source[id].Init(hy, idof, ih, PLOT_RAO_MA, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(ABF_source[id]).Legend(Format(t_("RAO_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();
-				if (ABF_source2[id].Init(hy, idof, ih, PLOT_RAO_PH, show_w, !dim)) {
-					loaded = true;
-					if (mbm().menuPlot.showPhase)
-						scatter.AddSeries(ABF_source2[id]).Legend(Format(t_("RAO_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY();
-				}
-			}
-		}
-	}
-	if (mbm().menuPlot.autoFit)
-		scatter.ZoomToFit(true, true);
-	return loaded;
-}
-
-void MainStateSpace::Init(ArrayCtrl &array) {
-	array.Reset();
-	array.NoHeader().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
-	array.MultiSelect().SpanWideCells();
-	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
-}
-
-void MainStateSpace::Init() {
-	scatter.ShowAllMenus();
-	scatter.SetTitle(t_("Frequency response")).SetTitleFont(SansSerif(12));
-	scatter.SetPlotAreaLeftMargin(70);
-	
-	splitter.Horz(tab.SizePos(), scatter.SizePos());
-	Add(splitter.SizePos());
-}
-
-bool MainStateSpace::Load(BEMData &bem) {
-	Upp::Array<HydroClass> &hydros = bem.hydros;
-	int hnum = hydros.GetCount();
-	
-	scatter.RemoveAllSeries();
-	Z_source.SetCount(hnum);
-	Z_source2.SetCount(hnum);
-	TFS_source.SetCount(hnum);
-	TFS_source2.SetCount(hnum);
-	
-	bool dim = !mbm().menuPlot.showNdim;
-	int markW = mbm().menuPlot.showPoints ? 10 : 0;
-	bool show_w = mbm().menuPlot.opwT == 0;
-	if (show_w) 
-		scatter.SetLabelX(t_("w [rad/s]"));
-	else 
-		scatter.SetLabelX(t_("T [s]"));
-	
-	scatter.SetDrawY2Reticle(mbm().menuPlot.showPhase);
-	scatter.SetPlotAreaRightMargin(mbm().menuPlot.showPhase ? 50 : 20);
-	
-	bool loaded = false;
-	for (int id = 0; id < hydros.GetCount(); ++id) {
-		Hydro &hydro = hydros[id].hd();	
-		if (hydro.IsLoadedStateSpace()) {
-			if (Z_source[id].Init(hydro, 0, 0, PLOT_Z_MA, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(Z_source[id]).Legend(Format(t_("Z Magnitude %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
-				if (Z_source2[id].Init(hydro, 0, 0, PLOT_Z_PH, show_w, !dim)) {
-					loaded = true;
-					if (mbm().menuPlot.showPhase)
-						scatter.AddSeries(Z_source2[id]).Legend(Format(t_("Z Phase %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY().Units("rad");
-				}
-			}
-			if (TFS_source[id].Init(hydro, 0, 0, PLOT_TFS_MA, show_w, !dim)) {
-				loaded = true;
-				scatter.AddSeries(TFS_source[id]).Legend(Format(t_("TFSResponse Magnitude %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("dB");
-				if (TFS_source2[id].Init(hydro, 0, 0, PLOT_TFS_PH, show_w, !dim)) {
-					loaded = true;
-					if (mbm().menuPlot.showPhase)
-						scatter.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSResponse Phase %s"), hydro.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetDataSecondaryY().Units("rad");
-				}
-			}
-		}
-	}
-	if (mbm().menuPlot.autoFit) 
-		scatter.ZoomToFit(true, true);
-	
-	tab.Reset();
-	arrays.Clear();
-	
-	for (int id = 0; id < hydros.GetCount(); ++id) {
-		Hydro &hydro = hydros[id].hd();
-		int row = 0;
-		if (hydro.A_ss.size() > 0 || hydro.B_ss.size() > 0 || hydro.C_ss.size() > 0) {
-			loaded = true;
-			ArrayCtrl &array = arrays.Add();
-			Init(array);
-			tab.Add(array.SizePos(), hydro.name);
-			if (hydro.A_ss.size() > 0) {
-				if (hydro.A_ss.cols() > array.GetColumnCount()) {
-					int ncols = static_cast<int>(hydro.A_ss.cols()) - array.GetColumnCount();
-					for (int i = 0; i < ncols; ++i)
-						array.AddColumn("", 80);
-				}
-				array.Set(row++, 0, AttrText(t_("A_ss")).Bold());
-				for (int r = 0; r < hydro.A_ss.rows(); ++r)	{		
-					for (int c = 0; c < hydro.A_ss.cols(); ++c)
-						array.Set(row + r, c, hydro.A_ss(r, c));
-				}
-				row += static_cast<int>(hydro.A_ss.rows());
-			}
-			if (hydro.B_ss.size() > 0) {
-				array.Set(row++, 0, AttrText(t_("B_ss")).Bold());
-				for (int r = 0; r < hydro.B_ss.size(); ++r)		
-					array.Set(row, r, hydro.B_ss(r));
-				row++;
-			}
-			if (hydro.C_ss.size() > 0) {
-				array.Set(row++, 0, AttrText(t_("C_ss")).Bold());
-				for (int c = 0; c < hydro.C_ss.size(); ++c)			
-					array.Set(row, c, hydro.C_ss(c));
-				row++;
-			}
-			if (hydro.ssFrequencies.size() > 0) {
-				array.Set(row++, 0, AttrText(t_("Frequencies")).Bold());
-				for (int c = 0; c < hydro.ssFrequencies.size(); ++c)			
-					array.Set(row, c, hydro.ssFrequencies[c]);
-				row++;
-			}
-			if (hydro.ssFreqRange.size() > 0) {
-				array.Set(row++, 0, AttrText(t_("FreqRange")).Bold());
-				for (int c = 0; c < hydro.ssFreqRange.size(); ++c)			
-					array.Set(row, c, hydro.ssFreqRange[c]);
-				row++;
-			}
-			if (hydro.ssFrequencies_index.size() > 0) {
-				array.Set(row++, 0, AttrText(t_("Frequencies_index")).Bold());
-				for (int c = 0; c < hydro.ssFrequencies_index.size(); ++c)			
-					array.Set(row, c, hydro.ssFrequencies_index[c]);
-				row++;
-			}						
-			if (!IsNull(hydro.ssMAE)) {
-				array.Set(row++, 0, AttrText(t_("MAE")).Bold());
-				array.Set(row++, 0, hydro.ssMAE);
-			}
-		}
-	}
-	return loaded;
+void MainArrange::Remove(int c) {
+	tab.Remove(c);
+	arrangeDOF.Remove(c);
 }
 
 MainBEM &mbm(MainBEM *m) {
@@ -967,4 +696,370 @@ MainBEM &mbm(MainBEM *m) {
 	if (m)
 		mp = m;
 	return *mp;
+}
+
+void MenuFOAMM::Init(MainBEM &mainBEM, BEMData &bem) {
+	CtrlLayout(*this);
+	
+	//menuFOAMM.file.WhenChange = THISBACK(OnFOAMM);
+	//menuFOAMM.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
+	//menuFOAMM.file.Type(t_("FOAMM .mat file"), "*.mat");
+	//menuFOAMM.file.AllFilesType();
+	butLoad.WhenAction 	= [&] {
+		if (OnFOAMM()) {
+			int id = mainBEM.mainTab.Find(mainBEM.mainStateSpace);
+			mainBEM.mainTab.GetItem(id).Enable(true);
+			int idPlot = mainBEM.menuTab.Find(mainBEM.menuPlot);
+			mainBEM.menuTab.GetItem(idPlot).Enable(true);
+			mainBEM.mainTab.Set(0);
+			mainBEM.mainTab.Set(id);
+		}
+	};
+	
+	arrayModel.NoHeader().NoVertGrid().AutoHideSb();
+	arrayModel.AddColumn("", 20);	
+	arrayModel.AddColumn("", 20);	
+	arrayModel.WhenSel = [&] {WhenSelArrayModel(bem);};
+	
+	arrayCases.SetLineCy(EditField::GetStdHeight());
+	arrayCases.AddColumn(t_("Selected"), 30).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});	
+	arrayCases.AddColumn(t_("Body"), 20);
+	arrayCases.AddColumn(t_("Row"), 20);	
+	arrayCases.AddColumn(t_("Column"), 20);
+	arrayCases.AddColumn(t_("From (rad/s)"), 40);
+	arrayCases.AddColumn(t_("To (rad/s)"), 40);
+	arrayCases.AddColumn(t_("Frequencies (rad/s)"), 60);
+	arrayCases.WhenSel = [&] {WhenSelArrayCases();};
+	
+	opChoose.WhenAction = THISBACK(WhenArrayCases);
+	fromFreq.WhenAction = THISBACK(WhenArrayCases);
+	fromFreq.SetRectangle(rectFrom, THISBACK(WhenFocus));
+	toFreq.WhenAction   = THISBACK(WhenArrayCases);
+	toFreq.SetRectangle(rectTo, THISBACK(WhenFocus));
+	
+	//arrayFreq.SetLineCy(EditField::GetStdHeight());
+	arrayFreq.NoHeader().AutoHideSb();
+	arrayFreq.AddColumn("");
+	arrayFreq.WhenSel = [&] {WhenSelArrayFreq();};
+	arrayFreq.SetRectangle(rectSelected, THISBACK(WhenFocus));
+	selFreq.WhenAction = THISBACK(WhenArrayFreq);
+	selFreq.SetRectangle(rectSelected, THISBACK(WhenFocus));
+	addFreq.WhenAction 	= [&] {
+			arrayFreq.Add(AsString(~selFreq));
+			arrayFreq.SetCursor(arrayFreq.GetCount()-1);
+			selFreq.SetFocus();
+			WhenArrayCases();
+		};
+	addFreq.SetRectangle(rectSelected, THISBACK(WhenFocus));
+	removeFreq.WhenAction = [&] {
+			int id = arrayFreq.GetCursor();
+			if (id < 0)
+				return;
+			arrayFreq.Remove(id);
+			selFreq.SetFocus();
+			WhenArrayCases();
+		};
+	removeFreq.SetRectangle(rectSelected, THISBACK(WhenFocus));
+	
+	plotsReal.Init();
+	plotsImag.Init();
+	splitter.Vert(plotsReal.SizePos(), plotsImag.SizePos());
+	
+	plotsReal.scatter.WhenPainter = THISBACK(OnPainter);
+	plotsReal.scatter.WhenLeftDown = THISBACK(OnLeftDown);
+	
+	foammWorking.LoadBuffer(String(animatedStar, animatedStar_length));
+	foammWorking.Hide();
+	status.Hide();
+	progress.Hide();
+	butCancel.Hide();
+	butCancel.WhenAction = [&] {isCancelled = true;};	
+}
+
+void MenuFOAMM::WhenFocus(StaticRectangle *rect) {
+	rectFrom.Hide();
+	rectTo.Hide();
+	rectSelected.Hide();
+	if (rect)
+		rect->Show();
+	rectActual = rect;
+}
+void MenuFOAMM::OnPainter(Painter &w) {
+	int plotW = plotsReal.scatter.GetPlotWidth(), plotH = plotsReal.scatter.GetPlotHeight();
+	
+	for (int i = 0; i < arrayFreq.GetCount(); ++i) {
+		double xFreq = plotsReal.scatter.GetPosX(ScanDouble(AsString(arrayFreq.Get(i, 0))));
+		DrawLineOpa(w, xFreq, 0, xFreq, plotH, 1, 1, 2, LtBlue(), "2 2");
+	}
+	if (!IsNull(fromFreq)) {
+		double xFrom = plotsReal.scatter.GetPosX(~fromFreq);
+		FillRectangleOpa(w, 0, 0, xFrom, plotH, 0.5, Null, LtBlue());
+	}
+	if (!IsNull(toFreq)) {
+		double xTo = plotsReal.scatter.GetPosX(~toFreq);
+		FillRectangleOpa(w, xTo, 0, plotW, plotH, 0.5, Null, LtBlue());
+	}
+}
+
+void MenuFOAMM::OnLeftDown(Point p) {
+	double freq = plotsReal.scatter.GetRealPosX(p.x);
+
+	if (rectActual == &rectFrom) {	
+		fromFreq <<= freq;
+		fromFreq.WhenAction();
+	} else if (rectActual == &rectTo) {	
+		toFreq <<= freq;
+		toFreq.WhenAction();
+	} else if (rectActual == &rectSelected) {	
+		selFreq <<= freq;
+		selFreq.WhenAction();
+	}
+}
+	
+void MenuFOAMM::WhenSelArrayModel(BEMData &bem) {
+	arrayCases.Clear();
+	
+	int id = arrayModel.GetCursor();
+	if (id < 0)
+		return;
+	
+	ASSERT(id < ma().bem.hydros.GetCount());
+	
+	const Hydro &hydro = ma().bem.hydros[id].hd();
+	
+	for (int ib = 0; ib < hydro.Nb; ++ib) {
+		for (int idof = 0; idof < 6; ++idof) {
+			for (int jdof = 0; jdof < 6; ++jdof) {
+				if (!bem.onlyDiagonal || idof == jdof) {
+					int idf = ib*6 + idof;
+					int jdf = ib*6 + jdof;
+	
+					if (hydro.IsLoadedA() && hydro.IsLoadedB() && !IsNull(hydro.A[0](idf, jdf)) && !IsNull(hydro.B[0](idf, jdf)))
+						 arrayCases.Add(false, ib+1, Hydro::StrDOFAbrev_base(idof), Hydro::StrDOFAbrev_base(jdof));
+				}
+			}
+		}
+	}
+	if (arrayCases.GetCount() > 0)
+		arrayCases.SetCursor(0);
+	
+	/*
+	menuFOAMM.dropBody.Clear();
+	for (int i = 0; i < hydro.Nb; ++i) {
+		String name = hydro.names[i];
+		if (name.IsEmpty())
+			name = Format("%d", i+1);
+		else
+			name = Format("%d. %s", i+1, name);
+		menuFOAMM.dropBody.Add(i, name);
+	}
+	if (hydro.Nb > 0)
+		menuFOAMM.dropBody.SetIndex(0);
+	
+	menuFOAMM.dropDOF1.Clear();	
+	for (int i = 0; i < 6; ++i) 
+		menuFOAMM.dropDOF1.Add(i, Hydro::StrDOF_base(i));
+	menuFOAMM.dropDOF1.SetIndex(0);
+	menuFOAMM.dropDOF2.Clear();	
+	for (int i = 0; i < 6; ++i) 
+		menuFOAMM.dropDOF2.Add(i, Hydro::StrDOF_base(i));
+	menuFOAMM.dropDOF2.SetIndex(0);
+*/
+}
+
+void MenuFOAMM::WhenSelArrayCases() {
+	try {
+		int row = arrayCases.GetCursor();
+		if (row < 0)
+			return;
+	
+		opChoose <<= arrayCases.Get(row, 0);
+		fromFreq <<= arrayCases.Get(row, 4);
+		toFreq   <<= arrayCases.Get(row, 5);
+	
+		String freqs = arrayCases.Get(row, 6);
+		Vector<String> afreqs = Split(freqs, ';');
+		arrayFreq.Clear();
+		for (int i = 0; i < afreqs.GetCount(); ++i)
+			arrayFreq.Add(afreqs[i]);	
+		if (!afreqs.IsEmpty())
+			arrayFreq.SetCursor(0);
+		else
+			selFreq.Clear();
+		
+		if (opChoose)
+			ma().Status(Check(~fromFreq, ~toFreq, ~freqs));
+		
+		int id = arrayModel.GetCursor();
+		if (id < 0)
+			return;
+		
+		const Hydro &hydro = ma().bem.hydros[id].hd();
+		
+		int ib = int(arrayCases.Get(row, 1)) - 1;
+		int idof = Hydro::DOFStrAbrev(arrayCases.Get(row, 2));
+		int jdof = Hydro::DOFStrAbrev(arrayCases.Get(row, 3));
+		
+		plotsReal.Init(idof + 6*ib, jdof + 6*ib, DATA_STS_MA);
+		plotsReal.Load(hydro);
+
+		plotsImag.Init(idof + 6*ib, jdof + 6*ib, DATA_STS_PH);
+		plotsImag.Load(hydro);
+
+
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+		return;
+	}
+}
+
+void MenuFOAMM::WhenArrayCases() {
+	int row = arrayCases.GetCursor();
+	if (row < 0)
+		return;
+	
+	arrayCases.Set(row, 0, ~opChoose);
+	arrayCases.Set(row, 4, ~fromFreq);
+	arrayCases.Set(row, 5, ~toFreq);
+	
+	String freqs;
+	for (int i = 0; i < arrayFreq.GetCount(); ++i) {
+		if (!freqs.IsEmpty())
+			freqs << ";";
+		freqs << arrayFreq.Get(i, 0);
+	}
+	arrayCases.Set(row, 6, freqs);
+	
+	if (~opChoose)
+		ma().Status(Check(~fromFreq, ~toFreq, ~freqs));
+	
+	plotsReal.scatter.Refresh();
+}
+
+void MenuFOAMM::WhenSelArrayFreq() {
+	int row = arrayFreq.GetCursor();
+	if (row < 0)
+		return;
+
+	selFreq <<= ScanDouble(AsString(arrayFreq.Get(row, 0)));
+}
+
+void MenuFOAMM::WhenArrayFreq() {
+	int row = arrayFreq.GetCursor();
+	if (row < 0)
+		return;
+	
+	arrayFreq.Set(row, 0, AsString(~selFreq));
+	WhenArrayCases();	
+}
+
+String MenuFOAMM::Check(double fromFreq, double toFreq, String freqs) {
+	if (IsNull(fromFreq))
+		return t_("From: frequency is empty");
+
+	if (IsNull(toFreq))
+		return t_("To: frequency is empty");
+
+	if (toFreq <= fromFreq) 
+		return t_("From: frequency has to be lower than To: frequency");
+			
+	Vector<String> afreqs = Split(freqs, ';');
+	if (afreqs.IsEmpty()) 
+		return t_("No frequency has been selected");
+	
+	Vector<double> unique;
+	for (int i = 0; i < afreqs.GetCount(); ++i) {
+		double freq = ScanDouble(afreqs[i]);
+		if (freq < fromFreq || freq > toFreq) 
+			return t_("Selected frequencies have to be between lower and higher limits");
+		FindAddRatio(unique, freq, 0.001);
+	}
+	if (unique.GetCount() != afreqs.GetCount()) 
+		return t_("Some selected frequencies are repeated");
+	
+	return String("");
+}
+
+bool MenuFOAMM::OnFOAMM() {
+	Vector<int> ibs, idofs, jdofs;
+	Vector<double> froms, tos;
+	Vector<Vector<double>> freqs;
+	String ret;
+	
+	try {
+		int id = arrayModel.GetCursor();
+		if (id < 0)
+			return false;
+		for (int row = 0; row < arrayCases.GetCount(); ++row) {
+			bool proc = arrayCases.Get(row, 0);
+			if (proc) {
+				int ib = int(arrayCases.Get(row, 1))-1;
+				ibs << ib;
+				String sidf = arrayCases.Get(row, 2);
+				idofs << Hydro::DOFStrAbrev(sidf);
+				String sjdf = arrayCases.Get(row, 3);
+				jdofs << Hydro::DOFStrAbrev(sjdf);
+				double from = arrayCases.Get(row, 4);
+				double to = arrayCases.Get(row, 5);
+				String strfreqs = arrayCases.Get(row, 6);
+				String err = Check(fromFreq, toFreq, strfreqs);
+				if (!err.IsEmpty()) {
+					Exclamation(Format(t_("Problem in body %d (%s, %s): %s"), ib+1, sidf, sjdf, err));
+					return false;		
+				}
+				froms << from;
+				tos << to;
+				Vector<double> &f = freqs.Add();
+				Vector<String> fs = Split(strfreqs, ';');
+				for (int i = 0; i < fs.GetCount(); ++i)
+					f << ScanDouble(fs[i]);
+			}
+		}
+		if (ibs.IsEmpty()) {
+			Exclamation(t_("No case has been selected"));
+			return false;			
+		}
+		foammWorking.Show();
+		foammWorking.Play();
+		status.Show();
+		progress.Show();
+		butCancel.Show();
+		butLoad.Disable();
+		WaitCursor wait;
+		isCancelled = false;
+		status.SetText(t_("Starts processing"));
+		Foamm &foamm = static_cast<Foamm&>(ma().bem.hydros[id]);
+		foamm.Get(ibs, idofs, jdofs, froms, tos, freqs,
+			[&](String str, int pos)->bool {
+				if (!str.IsEmpty())
+					status.SetText(str);	
+				if (IsNull(pos))
+					; 
+				else
+					progress.Set(pos, 100);
+				ProcessEvents(); 
+				return isCancelled;
+			}, 
+			[&](String str) {
+				if (!str.IsEmpty()) {
+					str.Replace("\r", "");
+					str.Replace("\n\n", "\n");
+					Exclamation(t_("FOAMM message:&") + DeQtfLf(str));
+				}
+				ProcessEvents(); 
+			});
+	} catch (Exc e) {
+		ret = DeQtfLf(e);
+	}
+	foammWorking.Hide();
+	foammWorking.Stop();
+	status.Hide();
+	progress.Hide();
+	butCancel.Hide();
+	if (!ret.IsEmpty()) {
+		Exclamation(ret);
+		return false;
+	}
+	butLoad.Enable();
+	return true;
 }

@@ -185,24 +185,30 @@ void EditFileFolder::SetData(const Value& data) {
 
 void EditFileFolder::DoGo(bool add) {
 	InitFs();
-	pfs->Set(GetData());			// Write Edit to FileSel
-	if (!IsRootFolder(GetData().ToString()))
+	String path = GetData(); 
+	pfs->Set(path);			// Write Edit to FileSel
+	if (!IsRootFolder(path))
 		butUp.Enable(true);
 	else
 		butUp.Enable(false);
 	if (add) {
 		histInd++;
 		history.SetCount(histInd);
-		history.Add(GetData());
+		history.Add(path);
 		if (histInd > 0)
 			butLeft.Enable(true);
 		if (histInd >= history.GetCount()-1)
 			butRight.Enable(false);
 	}
-	if (WhenChange()) {
-		AddHistory();
-		//WhenAction();
-		Accept();
+	if (WhenChange) {
+		if (isFile && !FileExists(path) && DirectoryExists(path)) {
+			DoBrowse();
+			return;
+		}
+		if (WhenChange()) {
+			AddHistory();
+			Accept();
+		}
 	}
 }
 
@@ -426,23 +432,37 @@ StaticImage& StaticImage::SetPopUpSize(Size sz) {
 
 void StaticImage::Paint(Draw& w) {
 	Size sz = GetSize();
-
-	w.DrawRect(sz, background);
-	if (!origImage) 
-		return;
 	if (sz.cx == 0 || sz.cy == 0) 
 		return;
-	Size imagesize = origImage.GetSize();	
+	
+	w.DrawRect(sz, background);
+	
+	Image image, imageGet, *imageView;
+	
+	if (!origImage) {
+		if (GetImage) {
+			imageGet = GetImage();
+			if (!imageGet)
+				return;
+		}
+	} 
+	imageView = origImage ? &origImage : &imageGet;
+	
+	if (angle != StaticImage::Angle_0) {
+		switch (angle) {
+		case Angle_90:	image = RotateClockwise(*imageView);
+						break;
+		case Angle_180:	image = Rotate180(*imageView);
+						break;
+		case Angle_270:	image = RotateAntiClockwise(*imageView);
+						break;
+		}
+		imageView = &image;
+	}
+	Size imagesize = imageView->GetSize();
 	if (imagesize.cx == 0 || imagesize.cy == 0) 
 		return;
 	
-	Image *imageView;
-	if (angle == StaticImage::Angle_0)
-		imageView = &origImage;
-	else {
-		imageView = &image;
-		imagesize = imageView->GetSize();
-	}
 	switch (fit) {
 	case StaticImage::BestFit:
 		w.DrawImage(FitInFrame(sz, imagesize), *imageView);
@@ -483,18 +503,8 @@ bool StaticImage::Set(Image _image) {
 }
 
 StaticImage& StaticImage::SetAngle(int _angle) {
-	angle = _angle; 
-	if (origImage) {
-		switch (angle) {
-		case Angle_90:	image = RotateClockwise(origImage);
-						break;
-		case Angle_180:	image = Rotate180(origImage);
-						break;
-		case Angle_270:	image = RotateAntiClockwise(origImage);
-						break;
-		}
-		Refresh(); 
-	}
+	angle = _angle; 	
+	Refresh();
 	return *this;
 }	
 	
@@ -533,12 +543,24 @@ StaticImage::StaticImage() {
 	szPopUp = Size(300, 300);
 }
 
+
+StaticImageSet::StaticImageSet() {
+	Transparent();
+//	NoWantFocus();
+
+	background = Null;
+	id = -1;
+}
+
 void StaticImageSet::Paint(Draw& w) {
 	Size sz = GetSize();
 
 	w.DrawRect(sz, background);
 	if (sz.cx == 0 || sz.cy == 0) 
 		return;
+	if (id < 0)
+		return;
+		
 	Size imagesize = images[id].GetSize();	
 	if (imagesize.cx == 0 || imagesize.cy == 0) 
 		return;
@@ -546,8 +568,7 @@ void StaticImageSet::Paint(Draw& w) {
 	w.DrawImage(FitInFrame(sz, imagesize), images[id]);
 }
 
-void  StaticImageSet::LeftDown(Point , dword )
-{
+void StaticImageSet::LeftDown(Point , dword) {
 	if(!IsEditable())
 		return;
 	SetWantFocus();
@@ -558,50 +579,34 @@ void  StaticImageSet::LeftDown(Point , dword )
 	Refresh();	
 }
 
-void  StaticImageSet::LeftRepeat(Point _pos, dword keyflags)
-{
+void StaticImageSet::LeftRepeat(Point _pos, dword keyflags) {
 	if(!HasCapture())
 		LeftDown(_pos, keyflags);
 }
 
-void  StaticImageSet::LeftUp(Point , dword )
-{
+void StaticImageSet::LeftUp(Point, dword) {
 	if (!HasCapture())
 		return;
 
 	Refresh();
 }
 
-void  StaticImageSet::MouseMove(Point , dword )
-{
+void StaticImageSet::MouseMove(Point , dword ) {
 	if(!HasCapture()) 
 		return;
 }
 	
-void StaticImageSet::GotFocus() 	{Refresh();}
-void StaticImageSet::LostFocus() 	{Refresh();}
-
-bool  StaticImageSet::Add(String fileName)
-{
+bool  StaticImageSet::Add(String fileName) {
 	return Add(StreamRaster::LoadFileAny(fileName));	
 }
 
-bool  StaticImageSet::Add(Image image)
-{
+bool  StaticImageSet::Add(Image image) {
 	if (IsNull(image))
 		return false;
 	images.Add(image);
 	return true;	
 }
 
-StaticImageSet::StaticImageSet() 
-{
-	Transparent();
-//	NoWantFocus();
-
-	background = Null;
-	id = 0;
-}
 
 void StaticRectangle::Paint(Draw& w) {
 	Size sz = GetSize();

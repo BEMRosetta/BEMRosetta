@@ -129,6 +129,7 @@ public:
 	Column&       Add();
 	const Column& operator[](int i) const                 { return col[i]; }
 	int           GetCount() const                        { return col.GetCount(); }
+	void		  Remove(int i)							  { col.Remove(i); }
 	void          Reset();
 
 	void          ShowTab(int i, bool show = true);

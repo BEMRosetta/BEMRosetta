@@ -134,12 +134,12 @@ public:
 	bool IsLoaded() {return var != 0;}
 	
 	
-	bool VarWriteStruct(String name, MatVar &val) {
-		return NULL != Mat_VarSetStructFieldByName(var, name, 0, val.var); 
+	void VarWriteStruct(String name, MatVar &val) {
+		Mat_VarSetStructFieldByName(var, name, 0, val.var); 
 	}
 	
 	template <class T>
-	bool VarWriteStruct(String name, void *data, int numRows, int numCols, int index) {
+	void VarWriteStruct(String name, void *data, int numRows, int numCols, int index) {
 		int numDim = 2;
 		if (IsNull(numCols)) 
 			numDim = 1;
@@ -154,25 +154,25 @@ public:
 		GetTypeCode<T>(class_type, data_type);
 		
 		matvar_t *variable = Mat_VarCreate(name, class_type, data_type, numDim, dims, data, 0);
-		return NULL != Mat_VarSetStructFieldByName(var, name, index, variable); 
+		Mat_VarSetStructFieldByName(var, name, index, variable); 
 	}
 
 	template <class T>
-	bool VarWriteStruct(String name, MatMatrix<T> &data, int index = 0) {
-		return VarWriteStruct<T>(name, data, data.GetRows(), data.GetCols(), index);
+	void VarWriteStruct(String name, MatMatrix<T> &data, int index = 0) {
+		VarWriteStruct<T>(name, data, data.GetRows(), data.GetCols(), index);
 	}
 	
-	bool VarWriteStruct(String name, String data, int index = 0) {
-		return VarWriteStruct<String>(name, (void *)data.Begin(), 1, data.GetCount(), index);
+	void VarWriteStruct(String name, String data, int index = 0) {
+		VarWriteStruct<String>(name, (void *)data.Begin(), 1, data.GetCount(), index);
 	}
 
-	bool VarWriteStruct(String name, const char *data, int index = 0) {
-		return VarWriteStruct<String>(name, (void *)data, 1, (int)strlen(data), index);
+	void VarWriteStruct(String name, const char *data, int index = 0) {
+		VarWriteStruct<String>(name, (void *)data, 1, (int)strlen(data), index);
 	}
 
 	template <class T>
-	bool VarWriteStruct(String name, T data, int index = 0) {
-		return VarWriteStruct<T>(name, &data, 1, Null, index);
+	void VarWriteStruct(String name, T data, int index = 0) {
+		VarWriteStruct<T>(name, &data, 1, Null, index);
 	}
 	
 private:

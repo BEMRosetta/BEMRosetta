@@ -119,6 +119,34 @@ T_("Conversion to type of file '%s' not supported")
 esES("")
 frFR("")
 
+T_("Joined files")
+esES("")
+frFR("")
+
+T_("Water depth does not match between '%s'(%d) and '%s'(%d)")
+esES("")
+frFR("")
+
+T_("No water depth found in models")
+esES("")
+frFR("")
+
+T_("Number of bodies does not match between '%s'(%d) and '%s'(%d)")
+esES("")
+frFR("")
+
+T_("No body found in models")
+esES("")
+frFR("")
+
+T_("No head found in models")
+esES("")
+frFR("")
+
+T_("No frequency found in models")
+esES("")
+frFR("")
+
 T_("%s file '%s'")
 esES("")
 frFR("")
@@ -151,7 +179,7 @@ T_("%s [rad/s]")
 esES("")
 frFR("")
 
-T_("delta %.1f [\302\272]")
+T_("delta %.1f [deg]")
 esES("")
 frFR("")
 
@@ -159,7 +187,7 @@ T_("%.1f to %.1f %s")
 esES("")
 frFR("")
 
-T_("%.1f [\302\272]")
+T_("%.1f [deg]")
 esES("")
 frFR("")
 
@@ -196,6 +224,10 @@ T_("Obtaining Impulse Response Function")
 esES("")
 frFR("")
 
+T_("Cancelled by user")
+esES("")
+frFR("")
+
 T_("Obtaining Infinite-Frequency Added Mass (A_inf)")
 esES("")
 frFR("")
@@ -220,11 +252,19 @@ T_("Unknown file extension in '%s'")
 esES("")
 frFR("")
 
+T_("Problem processing '%s'\n%s")
+esES("")
+frFR("")
+
 T_("Discarding negligible DOF")
 esES("")
 frFR("")
 
 T_("Model has more bodies (%d) than previously loaded (%d)")
+esES("")
+frFR("")
+
+T_("Problem joining models: '%s'\n%s")
 esES("")
 frFR("")
 
@@ -469,15 +509,15 @@ T_("Text.stl")
 esES("")
 frFR("")
 
-T_("[%d] No data available")
+T_("[line %d] No data available")
 esES("")
 frFR("")
 
-T_("[%d] Bad %s '%s' in field #%d, line\n'%s'")
+T_("[line %d] Bad %s '%s' in field #%d, line\n'%s'")
 esES("")
 frFR("")
 
-T_("[%d] Field #%d not found in line\n'%s'")
+T_("[line %d] Field #%d not found in line\n'%s'")
 esES("")
 frFR("")
 
@@ -496,31 +536,35 @@ T_("Unknown mesh file type")
 esES("")
 frFR("")
 
-T_("Mesh limits (%f - %f, %f - %f, %f - %f)")
+T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
 esES("")
 frFR("")
 
-T_("Mesh water-plane area %f")
+T_("Water-plane area [m2] %f")
 esES("")
 frFR("")
 
-T_("Mesh surface %f")
+T_("Surface [m2] %f")
 esES("")
 frFR("")
 
-T_("Mesh volume %f")
+T_("Volume [m3] %f")
 esES("")
 frFR("")
 
-T_("Mesh underwater surface %f")
+T_("Underwater surface [m2] %f")
 esES("")
 frFR("")
 
-T_("Mesh underwater volume %f")
+T_("Underwater volume [m3] %f")
 esES("")
 frFR("")
 
-T_("Center of buoyancy (%f, %f, %f)")
+T_("Displacement [tm] %f")
+esES("")
+frFR("")
+
+T_("Center of buoyancy [m] (%f, %f, %f)")
 esES("")
 frFR("")
 
@@ -546,7 +590,7 @@ frFR("")
 
 // wamit_mesh.cpp
 
-T_("[%d] 'ZONE' field not found")
+T_("[line %d] 'ZONE' field not found")
 esES("")
 frFR("")
 
@@ -569,27 +613,27 @@ frFR("")
 
 // stl.cpp
 
-T_("[%d] 'solid' field not found")
+T_("[line %d] 'solid' field not found")
 esES("")
 frFR("")
 
-T_("[%d] 'facet normal' field not found")
+T_("[line %d] 'facet normal' field not found")
 esES("")
 frFR("")
 
-T_("[%d] 'outer loop' field not found")
+T_("[line %d] 'outer loop' field not found")
 esES("")
 frFR("")
 
-T_("[%d] Too much vertex in facet")
+T_("[line %d] Too much vertex in facet")
 esES("")
 frFR("")
 
-T_("[%d] Too few vertex in facet")
+T_("[line %d] Too few vertex in facet")
 esES("")
 frFR("")
 
-T_("[%d] Label '%s' not handled in facet")
+T_("[line %d] Label '%s' not handled in facet")
 esES("")
 frFR("")
 
@@ -636,100 +680,102 @@ T_("IRF file(s) 'IRF.tec'")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of points in x direction %s")
+T_("[line %d] Incorrect number of points in x direction %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect free surface elevation %s")
+T_("[line %d] Incorrect free surface elevation %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of Kochin function directions %s")
+T_("[line %d] Incorrect number of Kochin function directions %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect Kochin direction %s")
+T_("[line %d] Incorrect Kochin direction %s")
 esES("")
 frFR("")
 
-T_("[%d] Minimum Kochin direction %s has to be lower than maximum direction "
+T_("[line %d] Minimum Kochin direction %s has to be lower than maximum direction "
      "%s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect rho %s")
+T_("[line %d] Incorrect rho %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect g %s")
+T_("[line %d] Incorrect g %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect depth %s")
+T_("[line %d] Incorrect depth %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of bodies %s")
+T_("[line %d] Incorrect number of bodies %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of points %s")
+T_("[line %d] Incorrect number of points %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of panels %s")
+T_("[line %d] Incorrect number of panels %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect DOF %s in body %d")
+T_("[line %d] Incorrect DOF %s in body %d")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect DOF type %d set in body %d")
+T_("[line %d] Incorrect DOF type %d set in body %d")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of frequencies %s")
+T_("[line %d] Incorrect number of frequencies %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect frequency %s")
+T_("[line %d] Incorrect frequency %s")
 esES("")
 frFR("")
 
-T_("[%d] Minimum frequency %s has to be lower than maximum frequency %s")
+T_("[line %d] Minimum frequency %s has to be lower than maximum frequency "
+     "%s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect number of directions %s")
+T_("[line %d] Incorrect number of headings %s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect direction %s")
+T_("[line %d] Incorrect direction %s")
 esES("")
 frFR("")
 
-T_("[%d] Minimum direction %s has to be lower than maximum direction %s")
+T_("[line %d] Minimum direction %s has to be lower than maximum direction "
+     "%s")
 esES("")
 frFR("")
 
-T_("[%d] Incorrect IRF step %s")
+T_("[line %d] Incorrect IRF step %s")
 esES("")
 frFR("")
 
-T_("[%d] IRF step %s has to be lower than duration %s")
+T_("[line %d] IRF step %s has to be lower than duration %s")
 esES("")
 frFR("")
 
-T_("[%d] Unexpected data %s")
+T_("[line %d] Unexpected data %s")
 esES("")
 frFR("")
 
-T_("[%d] Free surface data already loaded %s")
+T_("[line %d] Free surface data already loaded %s")
 esES("")
 frFR("")
 
-T_("[%d] Kochin data already loaded %s")
+T_("[line %d] Kochin data already loaded %s")
 esES("")
 frFR("")
 
@@ -753,7 +799,7 @@ T_("Incorrect number of frequencies %s")
 esES("")
 frFR("")
 
-T_("Incorrect frequency %s")
+T_("Incorrect min frequency %s")
 esES("")
 frFR("")
 
@@ -761,15 +807,19 @@ T_("Minimum frequency %s has to be lower than maximum frequency %s")
 esES("")
 frFR("")
 
-T_("Incorrect number of directions %s")
+T_("Incorrect number of headings %s")
 esES("")
 frFR("")
 
-T_("Incorrect direction %s")
+T_("Incorrect min heading %s")
 esES("")
 frFR("")
 
-T_("Minimum direction %s has to be lower than maximum direction %s")
+T_("Incorrect max heading %s")
+esES("")
+frFR("")
+
+T_("Minimum heading %s has to be lower than maximum heading %s")
 esES("")
 frFR("")
 
@@ -813,15 +863,23 @@ T_("Impossible to create '%s'")
 esES("")
 frFR("")
 
-T_("Problem creating %s folder")
+T_("Number of Nemoh cases must be higher than 1 (%d)")
 esES("")
 frFR("")
 
-T_("Problem copying mesh file '%s'")
+T_("Number of Nemoh cases must not be higher than number of frequencies (%d>%d)")
+esES("")
+frFR("")
+
+T_("Impossible to clean folder '%s'. Maybe it is in use")
 esES("")
 frFR("")
 
 T_("Problem creating '%s' folder")
+esES("")
+frFR("")
+
+T_("Problem copying mesh file '%s'")
 esES("")
 frFR("")
 
@@ -849,15 +907,15 @@ T_("DOF does not match in %s")
 esES("")
 frFR("")
 
-T_("[%d] DOF does not match in %s")
+T_("[line %d] DOF does not match in %s")
 esES("")
 frFR("")
 
-T_("[%d] Number of frequencies higher than the defined in Nemoh.cal file")
+T_("[line %d] Number of frequencies higher than the defined in Nemoh.cal file")
 esES("")
 frFR("")
 
-T_("[%d] Number of bodies higher than the defined in Nemoh.cal file")
+T_("[line %d] Number of bodies higher than the defined in Nemoh.cal file")
 esES("")
 frFR("")
 
@@ -865,10 +923,6 @@ frFR("")
 // foamm.cpp
 
 T_("Loading mat file '%s'")
-esES("")
-frFR("")
-
-T_("FOAMM file '%s'")
 esES("")
 frFR("")
 
@@ -905,6 +959,46 @@ esES("")
 frFR("")
 
 T_("Vectors w and TFSResponse size does not match")
+esES("")
+frFR("")
+
+T_("Matrix A_ss not found")
+esES("")
+frFR("")
+
+T_("Matrix B_ss not found")
+esES("")
+frFR("")
+
+T_("Matrix C_ss not found")
+esES("")
+frFR("")
+
+T_("Matrix Frequencies not found")
+esES("")
+frFR("")
+
+T_("Matrix FreqRange not found")
+esES("")
+frFR("")
+
+T_("Matrix Frequencies_index not found")
+esES("")
+frFR("")
+
+T_("Problem creating temporary FOAMM folder '%s'")
+esES("")
+frFR("")
+
+T_("Problem creating FOAMM file '%s'")
+esES("")
+frFR("")
+
+T_("Problem writing %s to file '%s'")
+esES("")
+frFR("")
+
+T_("Problem launching FOAMM from '%s'")
 esES("")
 frFR("")
 
@@ -1011,6 +1105,406 @@ T_("Diffraction exciting file '%s'")
 esES("")
 frFR("")
 
+T_("[line %d] Water depth has to be positive")
+esES("")
+frFR("")
+
+T_("[line %d] Found additional bodies over %d")
+esES("")
+frFR("")
+
+T_("[line %d] cg matrix is not dimensioned")
+esES("")
+frFR("")
+
+T_("[line %d] Vo matrix is not dimensioned")
+esES("")
+frFR("")
+
+T_("[line %d] cb matrix is not dimensioned")
+esES("")
+frFR("")
+
+T_("[line %d] C matrix is not dimensioned")
+esES("")
+frFR("")
+
+T_("[line %d] Wrong format in Wamit file '%s'")
+esES("")
+frFR("")
+
+T_("[line %d] Found additional frequencies over %d")
+esES("")
+frFR("")
+
+T_("[line %d] A matrix is not dimensioned")
+esES("")
+frFR("")
+
+T_("[line %d] B matrix is not dimensioned")
+esES("")
+frFR("")
+
+T_("[line %d] Index (%d, %d) out of bounds")
+esES("")
+frFR("")
+
+T_("[line %d] Index [%d](%d, %d) out of bounds")
+esES("")
+frFR("")
+
+T_("[line %d] Index (%d) out of bounds")
+esES("")
+frFR("")
+
+T_("[line %d] Number of bodies loaded is lower than previous (%d != %d)")
+esES("")
+frFR("")
+
+T_("[line %d] Number of frequencies loaded is different than previous (%d "
+     "!= %d)")
+esES("")
+frFR("")
+
+T_("[line %d] Frequencies loaded are different than previous\nPrevious: %s\n"
+     "Series:   %s")
+esES("")
+frFR("")
+
+T_("[line %d] Periods loaded are different than previous\nPrevious: %s\nSeries: "
+     "  %s")
+esES("")
+frFR("")
+
+T_("[line %d] DOF # does not match (%d, %d)")
+esES("")
+frFR("")
+
+T_("[line %d] A[w=inf] is not expected")
+esES("")
+frFR("")
+
+T_("[line %d] A[w=0] is not expected")
+esES("")
+frFR("")
+
+T_("[line %d] Frequency %f is unknown")
+esES("")
+frFR("")
+
+T_("Error in file format")
+esES("")
+frFR("")
+
+T_("[line %d] Number of headings is different than previous (%d != %d)")
+esES("")
+frFR("")
+
+T_("[line %d] Heading %f is unknown")
+esES("")
+frFR("")
+
+T_("[line %d] Number of headings loaded is different than previous (%d != "
+     "%d)")
+esES("")
+frFR("")
+
+T_("[%s] Periods loaded are different than previous\nPrevious: %s\nSeries: "
+     "  %s")
+esES("")
+frFR("")
+
+T_("No enough data to save (at least 2 frequencies)")
+esES("")
+frFR("")
+
+
+// aqwa.cpp
+
+T_("LIS file")
+esES("")
+frFR("")
+
+T_("AH1 file")
+esES("")
+frFR("")
+
+T_("[line %d] Number of headings do not match %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Number of frequencies do not match %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Unknown body found in COG %d (%d)")
+esES("")
+frFR("")
+
+T_("[line %d] Body # does not match in 'HYDSTIFFNESS' %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Body # does not match in '%s' %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Frequency # does not match in '%s' %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Body # does not match in 'FORCERAO' %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Heading # does not match in 'FORCERAO' %d<>%d")
+esES("")
+frFR("")
+
+T_("[line %d] Frequency # does not match in 'FORCERAO' %d<>%d")
+esES("")
+frFR("")
+
+T_("Number of bodies not found")
+esES("")
+frFR("")
+
+T_("[line %d] Wrong body %d")
+esES("")
+frFR("")
+
+T_("Number of frequencies not found")
+esES("")
+frFR("")
+
+T_("Number of headings not found")
+esES("")
+frFR("")
+
+T_("[line %d] Format error, '=' not found")
+esES("")
+frFR("")
+
+T_("[line %d] = not found")
+esES("")
+frFR("")
+
+T_("[line %d] Expected %s data, found '%s'")
+esES("")
+frFR("")
+
+
+// Obsolete
+
+T_("delta %.1f [\302\272]")
+esES("")
+frFR("")
+
+T_("%.1f [\302\272]")
+esES("")
+frFR("")
+
+T_("[%d] No data available")
+esES("")
+frFR("")
+
+T_("[%d] Bad %s '%s' in field #%d, line\n'%s'")
+esES("")
+frFR("")
+
+T_("[%d] Field #%d not found in line\n'%s'")
+esES("")
+frFR("")
+
+T_("Mesh limits (%f - %f, %f - %f, %f - %f)")
+esES("")
+frFR("")
+
+T_("Mesh water-plane area %f")
+esES("")
+frFR("")
+
+T_("Mesh surface %f")
+esES("")
+frFR("")
+
+T_("Mesh volume %f")
+esES("")
+frFR("")
+
+T_("Mesh underwater surface %f")
+esES("")
+frFR("")
+
+T_("Mesh underwater volume %f")
+esES("")
+frFR("")
+
+T_("Center of buoyancy (%f, %f, %f)")
+esES("")
+frFR("")
+
+T_("[%d] 'ZONE' field not found")
+esES("")
+frFR("")
+
+T_("[%d] 'solid' field not found")
+esES("")
+frFR("")
+
+T_("[%d] 'facet normal' field not found")
+esES("")
+frFR("")
+
+T_("[%d] 'outer loop' field not found")
+esES("")
+frFR("")
+
+T_("[%d] Too much vertex in facet")
+esES("")
+frFR("")
+
+T_("[%d] Too few vertex in facet")
+esES("")
+frFR("")
+
+T_("[%d] Label '%s' not handled in facet")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of points in x direction %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect free surface elevation %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of Kochin function directions %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect Kochin direction %s")
+esES("")
+frFR("")
+
+T_("[%d] Minimum Kochin direction %s has to be lower than maximum direction "
+     "%s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect rho %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect g %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect depth %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of bodies %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of points %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of panels %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect DOF %s in body %d")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect DOF type %d set in body %d")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of frequencies %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect frequency %s")
+esES("")
+frFR("")
+
+T_("[%d] Minimum frequency %s has to be lower than maximum frequency %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect number of directions %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect direction %s")
+esES("")
+frFR("")
+
+T_("[%d] Minimum direction %s has to be lower than maximum direction %s")
+esES("")
+frFR("")
+
+T_("[%d] Incorrect IRF step %s")
+esES("")
+frFR("")
+
+T_("[%d] IRF step %s has to be lower than duration %s")
+esES("")
+frFR("")
+
+T_("[%d] Unexpected data %s")
+esES("")
+frFR("")
+
+T_("[%d] Free surface data already loaded %s")
+esES("")
+frFR("")
+
+T_("[%d] Kochin data already loaded %s")
+esES("")
+frFR("")
+
+T_("Incorrect frequency %s")
+esES("")
+frFR("")
+
+T_("Incorrect number of directions %s")
+esES("")
+frFR("")
+
+T_("Incorrect direction %s")
+esES("")
+frFR("")
+
+T_("Minimum direction %s has to be lower than maximum direction %s")
+esES("")
+frFR("")
+
+T_("Problem creating %s folder")
+esES("")
+frFR("")
+
+T_("[%d] DOF does not match in %s")
+esES("")
+frFR("")
+
+T_("[%d] Number of frequencies higher than the defined in Nemoh.cal file")
+esES("")
+frFR("")
+
+T_("[%d] Number of bodies higher than the defined in Nemoh.cal file")
+esES("")
+frFR("")
+
+T_("FOAMM file '%s'")
+esES("")
+frFR("")
+
 T_("Water depth has to be positive")
 esES("")
 frFR("")
@@ -1036,10 +1530,6 @@ T_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s")
 esES("")
 frFR("")
 
-T_("Error in file format")
-esES("")
-frFR("")
-
 T_("Number of headings is different than previous (%d != %d)")
 esES("")
 frFR("")
@@ -1053,21 +1543,6 @@ esES("")
 frFR("")
 
 T_("Number of headings loaded is different than previous (%d != %d)")
-esES("")
-frFR("")
-
-T_("No enough data to save (at least 2 frequencies)")
-esES("")
-frFR("")
-
-
-// aqwa.cpp
-
-T_("LIS file")
-esES("")
-frFR("")
-
-T_("AH1 file")
 esES("")
 frFR("")
 
@@ -1107,19 +1582,7 @@ T_("[%d] Frequency # does not match in 'FORCERAO' %d<>%d")
 esES("")
 frFR("")
 
-T_("Number of bodies not found")
-esES("")
-frFR("")
-
 T_("[%d] Wrong body %d")
-esES("")
-frFR("")
-
-T_("Number of frequencies not found")
-esES("")
-frFR("")
-
-T_("Number of headings not found")
 esES("")
 frFR("")
 
@@ -1138,9 +1601,6 @@ frFR("")
 T_("[%d] Frequency %f not found")
 esES("")
 frFR("")
-
-
-// Obsolete
 
 T_("Loading file")
 esES("")

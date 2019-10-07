@@ -383,12 +383,12 @@ ScatterDraw &ScatterDraw::DoFitToData(bool horizontal, bool vertical, double fac
 	try {
 		if (horizontal) {
 			for (int j = 0; j < series.GetCount(); j++) {
-				if (series[j].opacity == 0 || series[j].PointsData()->IsExplicit())
+				if (series[j].opacity == 0 || series[j].Data().IsExplicit())
 					continue;
-				double mn = series[j].PointsData()->MinX();
+				double mn = series[j].Data().MinX();
 				if (!IsNull(mn))
 					minx = min(minx, mn);
-				double mx = series[j].PointsData()->MaxX();
+				double mx = series[j].Data().MaxX();
 				if (!IsNull(mx))
 					maxx = max(maxx, mx);
 			}
@@ -404,10 +404,10 @@ ScatterDraw &ScatterDraw::DoFitToData(bool horizontal, bool vertical, double fac
 		}
 		if (vertical) {
 			for (int j = 0; j < series.GetCount(); j++) {
-				if (series[j].opacity == 0 || series[j].PointsData()->IsExplicit())
+				if (series[j].opacity == 0 || series[j].Data().IsExplicit())
 					continue;
-				for (int64 i = 0; i < series[j].PointsData()->GetCount(); i++) {
-					double py = series[j].PointsData()->y(i);
+				for (int64 i = 0; i < series[j].Data().GetCount(); i++) {
+					double py = series[j].Data().y(i);
 					if (IsNull(py))
 						continue;
 					if (series[j].primaryY) {
@@ -640,8 +640,8 @@ ScatterDraw &ScatterDraw::AddSeries(DataSource &data) {
 	return *this;	
 }
 
-DataSource &ScatterDraw::GetSeries(int index) {
-	return series[index].GetDataSource();
+DataSource &ScatterDraw::GetDataSource(int index) {
+	return series[index].Data();
 }
 
 ScatterDraw &ScatterDraw::_AddSeries(DataSource *data) {
@@ -703,15 +703,15 @@ ScatterDraw &ScatterDraw::_InsertSeries(int index, DataSource *data) {
 
 int64 ScatterDraw::GetCount(int index) {
 	ASSERT(IsValid(index));
-	return series[index].PointsData()->GetCount();
+	return series[index].Data().GetCount();
 }
 
 void ScatterDraw::GetValues(int index, int64 idata, double &x, double &y) {
 	ASSERT(IsValid(index) && !IsNull(GetCount(index)));
-	ASSERT(idata >= 0 && idata < series[index].PointsData()->GetCount());
+	ASSERT(idata >= 0 && idata < series[index].Data().GetCount());
 	try {
-		x = series[index].PointsData()->x(idata);
-		y = series[index].PointsData()->y(idata);
+		x = series[index].Data().x(idata);
+		y = series[index].Data().y(idata);
 	} catch(ValueTypeError error) {
 		ASSERT_(true, error);
 		x = y = Null;
@@ -720,9 +720,9 @@ void ScatterDraw::GetValues(int index, int64 idata, double &x, double &y) {
 
 double ScatterDraw::GetValueX(int index, int64 idata) {
 	ASSERT(IsValid(index) && !IsNull(GetCount(index)));
-	ASSERT(idata >= 0 && idata < series[index].PointsData()->GetCount());
+	ASSERT(idata >= 0 && idata < series[index].Data().GetCount());
 	try {
-		return series[index].PointsData()->x(idata);
+		return series[index].Data().x(idata);
 	} catch(ValueTypeError error) {
 		ASSERT_(true, error);
 		return Null;
@@ -744,9 +744,9 @@ Value ScatterDraw::GetStringX(int index, int64 idata) {
 
 double ScatterDraw::GetValueY(int index, int64 idata) {
 	ASSERT(IsValid(index) && !IsNull(GetCount(index)));
-	ASSERT(idata >= 0 && idata < series[index].PointsData()->GetCount());
+	ASSERT(idata >= 0 && idata < series[index].Data().GetCount());
 	try {
-		return series[index].PointsData()->y(idata);
+		return series[index].Data().y(idata);
 	} catch(ValueTypeError error) {
 		ASSERT_(true, error);
 		return Null;

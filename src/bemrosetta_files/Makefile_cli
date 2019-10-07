@@ -12109,6 +12109,7 @@ $(OutDir_SysInfo)SysInfo.o: SysInfo/SysInfo.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
+	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
 	SysInfo/SysInfo.t \
 	SysInfo/SysInfo_in.h
@@ -12217,9 +12218,14 @@ $(OutDir_SysInfo)OS.o: SysInfo/OS.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
+	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
 	SysInfo/SysInfo_in.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/OS.cpp -o $(OutDir_SysInfo)OS.o
+
+$(OutDir_SysInfo)OSwin.o: SysInfo/OSwin.c \
+	SysInfo/OSwin.h
+	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/OSwin.c -o $(OutDir_SysInfo)OSwin.o
 
 $(OutDir_SysInfo)ScreenGrab.o: SysInfo/ScreenGrab.cpp \
 	Core/Algo.h \
@@ -12327,6 +12333,7 @@ $(OutDir_SysInfo)ScreenGrab.o: SysInfo/ScreenGrab.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
+	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
 	SysInfo/SysInfo_in.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/ScreenGrab.cpp -o $(OutDir_SysInfo)ScreenGrab.o
@@ -12434,6 +12441,7 @@ $(OutDir_SysInfo)MouseKey.o: SysInfo/MouseKey.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
+	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
 	SysInfo/SysInfo_in.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/MouseKey.cpp -o $(OutDir_SysInfo)MouseKey.o
@@ -12647,6 +12655,7 @@ $(OutDir_SysInfo)Battery.o: SysInfo/Battery.cpp \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h \
+	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
 	SysInfo/SysInfo_in.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/Battery.cpp -o $(OutDir_SysInfo)Battery.o
@@ -12654,6 +12663,7 @@ $(OutDir_SysInfo)Battery.o: SysInfo/Battery.cpp \
 $(OutDir_SysInfo)SysInfo.a: \
 	$(OutDir_SysInfo)SysInfo.o \
 	$(OutDir_SysInfo)OS.o \
+	$(OutDir_SysInfo)OSwin.o \
 	$(OutDir_SysInfo)ScreenGrab.o \
 	$(OutDir_SysInfo)MouseKey.o \
 	$(OutDir_SysInfo)CPUSpeed.o \
@@ -12661,6 +12671,7 @@ $(OutDir_SysInfo)SysInfo.a: \
 	$(AR) $(OutDir_SysInfo)SysInfo.a \
 		$(OutDir_SysInfo)SysInfo.o \
 		$(OutDir_SysInfo)OS.o \
+		$(OutDir_SysInfo)OSwin.o \
 		$(OutDir_SysInfo)ScreenGrab.o \
 		$(OutDir_SysInfo)MouseKey.o \
 		$(OutDir_SysInfo)CPUSpeed.o \

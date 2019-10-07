@@ -67,8 +67,7 @@ void DataSource::MaxList(Getdatafun getdataY, Getdatafun getdataX, Vector<int64>
 	}
 }
 
-Pointf DataSource::MaxSubDataImp(Getdatafun getdataY, Getdatafun getdataX, int64 maxId, int64 width)
-{
+Pointf DataSource::MaxSubDataImp(Getdatafun getdataY, Getdatafun getdataX, int64 maxId, int64 width) {
 	Vector<Pointf> p;
 	
 	int iw;

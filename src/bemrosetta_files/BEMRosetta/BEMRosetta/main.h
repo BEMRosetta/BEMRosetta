@@ -14,6 +14,43 @@ public:
 	double zoomlevel;
 };
 
+template <class T>
+class WithRectFocus : public T {
+public:
+	void SetRectangle(StaticRectangle &_rect, Function <void(StaticRectangle *)>_WhenFocus) {
+		rect = &_rect;
+		WhenFocus = _WhenFocus;
+		rect->Hide();
+	}
+	virtual void GotFocus() {
+		if (!rect)
+			return;
+		rect->Show();
+		if (WhenFocus)
+			WhenFocus(rect);
+	}/*
+	virtual void LostFocus() {
+		if (!rect)
+			return;
+		//rect->Hide();
+	}*/
+
+private:
+	StaticRectangle *rect = 0;
+	Function <void(StaticRectangle *)>WhenFocus;
+};
+
+template <class T>
+class WithLeftDown : public T {
+public:
+	virtual void LeftDown(Point p, dword d) {
+		ScatterCtrl::LeftDown(p, d);
+		if (WhenLeftDown)
+			WhenLeftDown(p);
+	}
+	Function <void(Point)>WhenLeftDown;
+};
+
 #include <ScatterDraw/Unpedantic.h>
 #define LAYOUTFILE <BEMRosetta/BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
@@ -21,10 +58,11 @@ public:
 
 #include "arrange.h"
 
-enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO};
+enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS_MA, DATA_STS_PH};
 enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
-				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH};
+				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH, 
+				 PLOT_STS_MA, PLOT_STS_PH};
 
 template <class T>
 T magnitude(const std::complex<T> &val) {
@@ -44,18 +82,18 @@ public:
 	HydroSource(Hydro &_data, int i, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		Init(_data, i, _j_h, _dataToPlot, _show_w, _ndim);
 	}
-	bool Init(Hydro *_data, int i, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) 	{
-		return Init(*_data, i, _j_h, _dataToPlot, _show_w, _ndim);
+	bool Init(Hydro *_data, int i, int _j_dof, DataToPlot _dataToPlot, bool _show_w, bool _ndim) 	{
+		return Init(*_data, i, _j_dof, _dataToPlot, _show_w, _ndim);
 	}
-	bool Init(Hydro &_data, int _idof, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
+	bool Init(const Hydro &_data, int _idof, int _j_dof, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		data = &_data;
 		dataToPlot = _dataToPlot;
 		if (_idof >= _data.dofOrder.GetCount())
 			return false;
 		idof = _data.dofOrder[_idof];
-		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B)
-			_j_h = _data.dofOrder[_j_h];
-		j_h = _j_h;
+		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B || dataToPlot == PLOT_STS_MA || dataToPlot == PLOT_STS_PH)
+			_j_dof = _data.dofOrder[_j_dof];
+		jdof = _j_dof;
 		show_w = _show_w;
 		ndim = _ndim;
 		if (IsNullData())
@@ -65,57 +103,66 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return IsNull(data->A[0](idof, j_h));
-		case PLOT_AINF:			return IsNull(data->Awinf(idof, j_h));
-		case PLOT_B:			return IsNull(data->B[0](idof, j_h));
-		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[j_h](0, idof));
-		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[j_h](0, idof));
-		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[j_h](0, idof));
-		case PLOT_FORCE_FK_PH:	return IsNull(data->fk.ph[j_h](0, idof));
-		case PLOT_FORCE_EX_MA:	return IsNull(data->ex.ma[j_h](0, idof));
-		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[j_h](0, idof));
-		case PLOT_RAO_MA:		return IsNull(data->rao.ma[j_h](0, idof));
-		case PLOT_RAO_PH:		return IsNull(data->rao.ph[j_h](0, idof));
-		case PLOT_Z_MA:			return IsNull(magnitude(data->Z[0]));
-		case PLOT_Z_PH:			return IsNull(phase(data->Z[0]));
-		case PLOT_TFS_MA:		return IsNull(magnitude(data->TFSResponse[0]));
-		case PLOT_TFS_PH:		return IsNull(phase(data->TFSResponse[0]));
+		case PLOT_A:			return IsNull(data->A[0](idof, jdof));
+		case PLOT_AINF:			return IsNull(data->Awinf(idof, jdof));
+		case PLOT_B:			return IsNull(data->B[0](idof, jdof));
+		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdof](0, idof));
+		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdof](0, idof));
+		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdof](0, idof));
+		case PLOT_FORCE_FK_PH:	return IsNull(data->fk.ph[jdof](0, idof));
+		case PLOT_FORCE_EX_MA:	return IsNull(data->ex.ma[jdof](0, idof));
+		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[jdof](0, idof));
+		case PLOT_RAO_MA:		return IsNull(data->rao.ma[jdof](0, idof));
+		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdof](0, idof));
+		case PLOT_Z_MA:			return data->sts[idof][jdof].Z.IsEmpty();
+		case PLOT_Z_PH:			return data->sts[idof][jdof].Z.IsEmpty();
+		case PLOT_TFS_MA:		return data->sts[idof][jdof].TFSResponse.IsEmpty();
+		case PLOT_TFS_PH:		return data->sts[idof][jdof].TFSResponse.IsEmpty();
+		case PLOT_STS_MA:		return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
+		case PLOT_STS_PH:		return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
 		default:				NEVER();	return true;
 		}
+	}
+	inline std::complex<double> GetZ(int64 id) const {
+		return std::complex<double>(data->B_(ndim, int(id), idof, jdof), 
+								 data->w[static_cast<int>(id)]*(data->A_(ndim, int(id), idof, jdof) -
+								 								data->Awinf_(ndim, idof, jdof)));
 	}
 	virtual inline double y(int64 id) {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return data->A_(ndim, int(id), idof, j_h);
-		case PLOT_AINF:			return data->Awinf_(ndim, idof, j_h);
-		case PLOT_B:			return data->B_(ndim, int(id), idof, j_h);
-		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, j_h, int(id), idof);
-		case PLOT_FORCE_SC_PH:	return data->sc.ph[j_h](int(id), idof);
-		case PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, j_h, int(id), idof);
-		case PLOT_FORCE_FK_PH:	return data->fk.ph[j_h](int(id), idof);
-		case PLOT_FORCE_EX_MA:	return data->F_ma_(ndim, data->ex, j_h, int(id), idof);
-		case PLOT_FORCE_EX_PH:	return data->ex.ph[j_h](int(id), idof);
-		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, j_h, int(id), idof);
-		case PLOT_RAO_PH:		return data->rao.ph[j_h](int(id), idof);
-		case PLOT_Z_MA:			return magnitude(data->Z[int(id)]);
-		case PLOT_Z_PH:			return phase(data->Z[int(id)]);
-		case PLOT_TFS_MA:		return magnitude(data->TFSResponse[int(id)]);
-		case PLOT_TFS_PH:		return phase(data->TFSResponse[int(id)]);
+		case PLOT_A:			return data->A_(ndim, int(id), idof, jdof);
+		case PLOT_AINF:			return data->Awinf_(ndim, idof, jdof);
+		case PLOT_B:			return data->B_(ndim, int(id), idof, jdof);
+		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, jdof, int(id), idof);
+		case PLOT_FORCE_SC_PH:	return data->sc.ph[jdof](int(id), idof);
+		case PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, jdof, int(id), idof);
+		case PLOT_FORCE_FK_PH:	return data->fk.ph[jdof](int(id), idof);
+		case PLOT_FORCE_EX_MA:	return data->F_ma_(ndim, data->ex, jdof, int(id), idof);
+		case PLOT_FORCE_EX_PH:	return data->ex.ph[jdof](int(id), idof);
+		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, jdof, int(id), idof);
+		case PLOT_RAO_PH:		return data->rao.ph[jdof](int(id), idof);
+		case PLOT_Z_MA:			return magnitude(data->sts[idof][jdof].Z[int(id)]);
+		case PLOT_Z_PH:			return phase(data->sts[idof][jdof].Z[int(id)]);
+		case PLOT_TFS_MA:		return magnitude(data->sts[idof][jdof].TFSResponse[int(id)]);
+		case PLOT_TFS_PH:		return phase(data->sts[idof][jdof].TFSResponse[int(id)]);
+		case PLOT_STS_MA:		return magnitude(GetZ(id));
+		case PLOT_STS_PH:		return phase(GetZ(id));
 		default:				NEVER();	return Null;
 		}
 	}
-	virtual inline double x(int64 id) 	{
+	virtual inline double x(int64 id) {
 		ASSERT(data != 0);
 		if (show_w)
 			return data->w[static_cast<int>(id)];
 		else
 			return data->T[static_cast<int>(id)];
 	}
-	virtual int64 GetCount()		  	{ASSERT(data != 0); return data->Nf;}
+	virtual int64 GetCount() const		  	{ASSERT(data != 0); return data->Nf;}
 	
 private:
-	Hydro *data;
-	int idof, j_h;
+	const Hydro *data;
+	int idof, jdof;
 	DataToPlot dataToPlot;
 	bool show_w, ndim;
 };
@@ -168,6 +215,7 @@ public:
 	void Init();
 	void Clear();
 	void Load(Upp::Array<HydroClass> &hydro);
+	void Remove(int c);
 	
 private:
 	Upp::Array<ArrangeDOF> arrangeDOF;
@@ -281,8 +329,12 @@ private:
 class MainPlot : public WithMainPlot<StaticRect> {
 public:
 	typedef MainPlot CLASSNAME;
+	
+	void Init();
 	void Init(int idof, double jdof_ih, DataToShow dataToShow);
-	bool Load(Upp::Array<HydroClass> &hydro);
+	bool Load(const Upp::Array<HydroClass> &hydro);
+	bool Load(const Hydro &hy);
+	void LoadEach(const Hydro &hy, int id, bool &loaded);
 	
 	Upp::Array<HydroSource> ABF_source, ABF_source2;
 	Upp::Array<HydroSource> Ainf_source;
@@ -293,12 +345,16 @@ public:
 	bool dim;
 	int markW;
 	bool show_w;
-	bool showPhase;		
+	bool showPhase;	
+
+private:
+	bool isInit = false;	
 };
 
 class MainABForce : public WithMainABForce<StaticRect> {
 public:
 	typedef MainABForce CLASSNAME;
+	
 	void Init(DataToShow dataToShow);
 	void Clear();
 	bool Load(BEMData &bem);
@@ -311,19 +367,42 @@ private:
 	DataToShow dataToShow;
 };
 
-class MainStateSpace : public StaticRect {
+class MainStateSpacePlot : public StaticRect {
 public:
-	typedef MainStateSpace CLASSNAME;
-	void Init();
-	void Init(ArrayCtrl &array);
-	bool Load(BEMData &bem);
+	typedef MainStateSpacePlot CLASSNAME;
+	
+	void Init(int _idof, int _jdof);
+	bool Load(Upp::Array<HydroClass> &hydro);
+	void InitArray(ArrayCtrl &array);
+	
+	Upp::Array<HydroSource> Z_source, Z_source2, TFS_source, TFS_source2;
+	int idof, jdof;
+	
+	bool dim;
+	int markW;
+	bool show_w;
+	bool showPhase;	
 	
 	Splitter splitter;
 	TabCtrl tab;
 	ScatterCtrl scatter;
-	
-	Upp::Array<HydroSource> Z_source, Z_source2, TFS_source, TFS_source2;
 	Upp::Array<ArrayCtrl> arrays;
+};
+
+class MainStateSpace : public WithMainStateSpace<StaticRect> {
+public:
+	typedef MainStateSpace CLASSNAME;
+	
+	void Init();
+	void Clear();
+	void Init(ArrayCtrl &array);
+	bool Load(BEMData &bem);
+	
+	Upp::Array<Upp::Array<MainStateSpacePlot>> plots;
+	
+private:
+	int selTab;
+	bool isFilling;
 };
 
 typedef class MainABForce MainRAO;
@@ -394,6 +473,32 @@ private:
 	virtual bool Key(dword key, int count);
 };
 
+class MainBEM ;
+
+class MenuFOAMM : public WithMenuStateSpace<StaticRect> {
+public:
+	typedef MenuFOAMM CLASSNAME;
+	
+	void Init(MainBEM &_mainBEM, BEMData &bem);
+	bool OnFOAMM();
+	void WhenSelArrayModel(BEMData &bem);
+	void WhenSelArrayCases();
+	void WhenSelArrayFreq();
+	void WhenArrayCases();
+	void WhenArrayFreq();
+	String Check(double fromFreq, double toFreq, String freqs);
+	
+	void WhenFocus(StaticRectangle *rect);
+	void OnPainter(Painter &w);
+	void OnLeftDown(Point p);
+	
+	MainPlot plotsReal, plotsImag;
+	
+private:
+	bool isCancelled;
+	StaticRectangle *rectActual = 0;
+};
+
 class MainBEM : public WithMain<StaticRect> {
 public:
 	typedef MainBEM CLASSNAME;
@@ -405,15 +510,16 @@ public:
 	bool OnLoadFile(String file);
 	bool OnConvert();
 	void OnOpt();
-	bool OnFOAMM();
-	void WhenSelFOAMM();
+	void OnRemove();
+	void OnRemoveSelected();
+	void OnJoin();
 		
 	void Jsonize(JsonIO &json);
 		
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
-	WithMenuStateSpace<StaticRect> menuFOAMM;
+	MenuFOAMM menuFOAMM;
 	
 	MainSummaryCoeff mainSummary;
 	MainArrange mainArrange;
@@ -431,6 +537,7 @@ private:
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
+	String BEMFile(String fileFolder) const;
 };
 
 class Main : public TopWindow {
@@ -454,7 +561,14 @@ public:
 	BEMData bem;
 	
 	MainMesh mainMesh;
-		
+	
+	void Status(String str = String())	{
+		if (!str.IsEmpty()) 
+			bar.Temporary(str, 2000);
+		else
+			bar.EndTemporary();
+	}
+	
 private:
 	TabCtrl tab;
 	
@@ -466,6 +580,8 @@ private:
 	MenuAbout menuAbout;
 	
 	bool closed;
+	
+	StatusBar bar;
 };
 
 Main &ma(Main *m = 0);

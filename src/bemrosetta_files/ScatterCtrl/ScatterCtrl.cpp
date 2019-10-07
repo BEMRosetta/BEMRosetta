@@ -257,8 +257,7 @@ void ScatterCtrl::TimerCallback() {
 	Refresh();
 }
 
-void ScatterCtrl::ProcessPopUp(const Point &pt)
-{
+void ScatterCtrl::ProcessPopUp(const Point &pt) {
 	double _x  = GetRealPosX(popLT.x);
 	double _y  = GetRealPosY(popLT.y);
 	double _y2 = GetRealPosY2(popLT.y);
