@@ -45,13 +45,22 @@ String MeshData::Load(String fileName, double rho, double g) {
 	return String();
 }
 
-void MeshData::SaveAs(String file, MESH_FMT type, double g, int meshType) {
-	const Vector<Panel> &panels = meshType < 2 ? mesh.panels : under.panels;
+void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType) {
+	Vector<Panel> panelsRw;
+	Vector<Point3D> nodesRw;
+	if (meshType == UNDERWATER) {		// Some healing before saving
+		panelsRw = clone(under.panels);
+		nodesRw = clone(under.nodes);
+		Surface::RemoveDuplicatedPanels(panelsRw);
+		Surface::RemoveDuplicatedPointsAndRenumber(panelsRw, nodesRw);
+		Surface::RemoveDuplicatedPanels(panelsRw);
+	}
+	const Vector<Panel> &panels = meshType != UNDERWATER ? mesh.panels : panelsRw;
 	const Vector<Point3D> &nodes = [&]()->const Vector<Point3D> & {
 		switch(meshType) {
 		case 0:		return mesh.nodes0;
 		case 1:		return mesh.nodes;
-		default:	return under.nodes;
+		default:	return nodesRw;
 		}
 	}();
 	if (panels.IsEmpty())
@@ -115,15 +124,15 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 void MeshData::Report(double rho) {
 	BEMData::Print("\n\n" + Format(t_("Loaded mesh '%s'"), file));
 	
-	BEMData::Print(x_("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
+	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));
-	BEMData::Print(x_("\n") + Format(t_("Water-plane area [m2] %f"), waterPlaneArea));
-	BEMData::Print(x_("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
-	BEMData::Print(x_("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
-	BEMData::Print(x_("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
-	BEMData::Print(x_("\n") + Format(t_("Underwater volume [m3] %f"), under.volume));
-	BEMData::Print(x_("\n") + Format(t_("Displacement [tm] %f"), under.volume*rho/1000));
-	BEMData::Print(x_("\n") + Format(t_("Center of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
+	BEMData::Print(S("\n") + Format(t_("Water-plane area [m2] %f"), waterPlaneArea));
+	BEMData::Print(S("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
+	BEMData::Print(S("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
+	BEMData::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
+	BEMData::Print(S("\n") + Format(t_("Underwater volume [m3] %f"), under.volume));
+	BEMData::Print(S("\n") + Format(t_("Displacement [tm] %f"), under.volume*rho/1000));
+	BEMData::Print(S("\n") + Format(t_("Center of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
 	
-	BEMData::Print(x_("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.GetCount(), mesh.nodes.GetCount()));
+	BEMData::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.GetCount(), mesh.nodes.GetCount()));
 }

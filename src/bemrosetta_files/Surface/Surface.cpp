@@ -209,31 +209,31 @@ void Surface::DetectTriBiP(int &numTri, int &numBi, int &numP) {
 	}
 }
 
-int Surface::RemoveDuplicatedPanels() {		
+int Surface::RemoveDuplicatedPanels(Vector<Panel> &_panels) {		
 	int num = 0;
-	for (int i = 0; i < panels.GetCount()-1; ++i) {
-		Panel &panel = panels[i];
-		for (int j = panels.GetCount()-1; j >= i+1; --j) {
-			if (panel == panels[j]) {
+	for (int i = 0; i < _panels.GetCount()-1; ++i) {
+		Panel &panel = _panels[i];
+		for (int j = _panels.GetCount()-1; j >= i+1; --j) {
+			if (panel == _panels[j]) {
 				num++;
-				panels.Remove(j, 1);
+				_panels.Remove(j, 1);
 			}
 		}
 	}
 	return num;
 }
 
-int Surface::RemoveDuplicatedPointsAndRenumber() {
+int Surface::RemoveDuplicatedPointsAndRenumber(Vector<Panel> &_panels, Vector<Point3D> &_nodes) {
 	int num = 0;
 	
 	// Detect duplicate points in nodes
 	double similThres = 0.00001;
 	Upp::Index<int> duplic, goods;
-	for (int i = 0; i < nodes0.GetCount()-1; ++i) {
+	for (int i = 0; i < _nodes.GetCount()-1; ++i) {
 		if (duplic.Find(i) >= 0)
 			continue;
-		for (int j = i+1; j < nodes0.GetCount(); ++j) {
-			if (nodes0[i].IsSimilar(nodes0[j], similThres)) {
+		for (int j = i+1; j < _nodes.GetCount(); ++j) {
+			if (_nodes[i].IsSimilar(_nodes[j], similThres)) {
 				duplic << j;
 				goods << i;
 				num++;
@@ -242,9 +242,9 @@ int Surface::RemoveDuplicatedPointsAndRenumber() {
 	}
 	
 	// Replace duplicated points with good ones in panels
-	for (int i = 0; i < panels.GetCount(); ++i) {
+	for (int i = 0; i < _panels.GetCount(); ++i) {
 		for (int j = 0; j < 4; ++j) {
-			int &id = panels[i].id[j];
+			int &id = _panels[i].id[j];
 			int pos = duplic.Find(id);
 			if (pos >= 0)
 				id = goods[pos];
@@ -253,14 +253,14 @@ int Surface::RemoveDuplicatedPointsAndRenumber() {
 	
 	// Find unused nodes
 	Vector<int> newId;
-	newId.SetCount(nodes0.GetCount());
+	newId.SetCount(_nodes.GetCount());
 	int avId = 0;
-	for (int i = 0; i < nodes0.GetCount(); ++i) {
+	for (int i = 0; i < _nodes.GetCount(); ++i) {
 		bool found = false;
-		for (int ip = 0; ip < panels.GetCount() && !found; ++ip) {
-			int numP = PanelGetNumNodes(ip);
+		for (int ip = 0; ip < _panels.GetCount() && !found; ++ip) {
+			int numP = PanelGetNumNodes(_panels, ip);
 			for (int j = 0; j < numP; ++j) {
-				if (panels[ip].id[j] == i) {
+				if (_panels[ip].id[j] == i) {
 					found = true;
 					break;
 				}
@@ -277,15 +277,15 @@ int Surface::RemoveDuplicatedPointsAndRenumber() {
 	}
 	
 	// Remove duplicated nodes
-	for (int i = nodes0.GetCount()-1; i >= 0; --i) {
+	for (int i = _nodes.GetCount()-1; i >= 0; --i) {
 		if (IsNull(newId[i]))
-			nodes0.Remove(i, 1);
+			_nodes.Remove(i, 1);
 	}
 	
 	// Renumber panels
-	for (int i = 0; i < panels.GetCount(); ++i) {
+	for (int i = 0; i < _panels.GetCount(); ++i) {
 		for (int j = 0; j < 4; ++j) {
-			int& id = panels[i].id[j];
+			int& id = _panels[i].id[j];
 			id = newId[id];
 		}
 	}
@@ -500,7 +500,7 @@ String Surface::Heal(Function <void(String, int pos)> Status) {
 		ret << "\n" << Format(t_("Removed %d 1 points quads"), numMonoQuads);
 	
 	Status(t_("Removing duplicated panels (pass 1)"), 55);
-	numDupPan = RemoveDuplicatedPanels();
+	numDupPan = RemoveDuplicatedPanels(panels);
 	
 	Status(t_("Fixing skewed panels"), 60);
 	numSkewed = FixSkewed();
@@ -508,12 +508,12 @@ String Surface::Heal(Function <void(String, int pos)> Status) {
 		ret << "\n" << Format(t_("Fixed %d skewed panels"), numSkewed);
 
 	Status(t_("Removing duplicated points"), 65);
-	numDupP = RemoveDuplicatedPointsAndRenumber();
+	numDupP = RemoveDuplicatedPointsAndRenumber(panels, nodes0);
 	if (numDupP > 0) 
 		ret << "\n" << Format(t_("Removed %d duplicated points"), numDupP);	
 
 	Status(t_("Removing duplicated panels (pass 2)"), 70);
-	numDupPan += RemoveDuplicatedPanels();	// Second time after duplicated points
+	numDupPan += RemoveDuplicatedPanels(panels);	// Second time after duplicated points
 	if (numDupPan > 0) 
 		ret << "\n" << Format(t_("Removed %d duplicated panels"), numDupPan);
 
@@ -694,7 +694,7 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 		}
 	}
 
-	c(2, 2) = c(2, 2)*rho*g;
+	c(2, 2) = c(2, 2)*rho*g;										//OK
 	c(2, 3) = c(2, 3)*rho*g;
 	c(2, 4) = c(2, 4)*rho*g;
 	c(3, 4) = c(3, 4)*rho*g;

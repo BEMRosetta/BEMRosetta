@@ -39,7 +39,6 @@ protected:
 	void InitFs();
 	
 	void DoLeft(), DoRight(), DoUp();
-	void DoBrowse();
 		
 public:
 	EditFileFolder() 								{Init();};
@@ -82,6 +81,7 @@ public:
 	virtual void SetData(const Value& data);
 	
 	void DoGo(bool add = true);
+	void DoBrowse();
 		
 	Function<bool ()> WhenChange;
 	
@@ -183,27 +183,9 @@ public:
 	enum ImageAngle {Angle_0, Angle_90, Angle_180, Angle_270};
 	enum ImageFit   {BestFit, FillFrame, NoScale, RepeatToFill};
 
-protected:
-	virtual void Paint(Draw& draw);
-	virtual void Layout();
-	virtual void RightDown(Point pos, dword keyflags);
-	virtual void LeftDown(Point pos, dword keyflags);
-	virtual void LeftDouble(Point pos, dword keyflags);
-	virtual void MouseEnter(Point pos, dword keyflags);
-	virtual void MouseLeave();
-	
-	String fileName;
-	Image image, origImage;
-	Color background;
-	int angle, fit;
-	bool useAsBackground;
-	ImagePopUp popup;
-	bool isPopUp;
-	Size szPopUp;
-
-public:
 	bool Set(String fileName);
 	bool Set(Image image);
+	Function<Image ()> GetImage;
 	void Clear()							{Set(Image());}
 	Image &Get()							{return origImage;}
 	void SetData(const Value& data)			{Set(data.ToString());}
@@ -223,6 +205,24 @@ public:
 	Callback WhenLeftDouble;
 	Callback WhenLeftDown;
 	Callback WhenRightDown;
+
+protected:
+	virtual void Paint(Draw& draw);
+	virtual void Layout();
+	virtual void RightDown(Point pos, dword keyflags);
+	virtual void LeftDown(Point pos, dword keyflags);
+	virtual void LeftDouble(Point pos, dword keyflags);
+	virtual void MouseEnter(Point pos, dword keyflags);
+	virtual void MouseLeave();
+	
+	String fileName;
+	Image origImage;
+	Color background;
+	int angle, fit;
+	bool useAsBackground;
+	ImagePopUp popup;
+	bool isPopUp;
+	Size szPopUp;
 };
 
 class StaticImageSet : public Ctrl {
@@ -234,8 +234,8 @@ protected:
 	virtual void LeftRepeat(Point pos, dword keyflags);
 	virtual void LeftUp(Point pos, dword keyflags);
 	virtual void MouseMove(Point pos, dword keyflags);
-	virtual void GotFocus();
-	virtual void LostFocus();
+	virtual void GotFocus() 				{Refresh();}
+	virtual void LostFocus() 				{Refresh();}
 	
 	Vector<Image> images;
 	Color background;
@@ -243,8 +243,9 @@ protected:
 	int id;
 
 public:
-	bool  Add(String fileName);
-	bool  Add(Image image);
+	bool Add(String fileName);
+	bool Add(Image image);
+	void Clear()							{images.Clear(); id = -1;}
 	Image &Get(int _id)						{return images[_id];}
 	Vector<Image> &GetImages()				{return images;}
 	void SetActive(int _id)					{id = _id; Refresh();}

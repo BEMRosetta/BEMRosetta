@@ -200,7 +200,7 @@ inline T const& minNotNull(T const& a, T const& b) {
     	return a < b ? a : b;
 }
 
-class Panel : public Moveable<Panel> {
+class Panel : public MoveableAndDeepCopyOption<Panel> {
 public:
 	int id[4];
 	Point3D centroid0, centroid1, centroidPaint;
@@ -208,7 +208,7 @@ public:
 	double surface0, surface1;
 
 	Panel() {}
-	Panel(const Panel &orig) {
+	Panel(const Panel &orig, int) {
 		memcpy(id, orig.id, sizeof(orig.id));
 		centroid0 = orig.centroid0;
 		centroid1 = orig.centroid1;
@@ -336,19 +336,20 @@ public:
 	const Vector<int> &GetSelPanels() const		{return selPanels;}
 	const Vector<int> &GetSelNodes() const		{return selNodes;}
 	
+	static int RemoveDuplicatedPanels(Vector<Panel> &_panels);
+	static int RemoveDuplicatedPointsAndRenumber(Vector<Panel> &_panels, Vector<Point3D> &_nodes);
+	
 private:
 	inline bool CheckId(int id) {return id >= 0 && id < nodes.GetCount()-1;}
 	
 	void DetectTriBiP(int &numTri, int &numBi, int &numP);
 	int FixSkewed();
-	int RemoveDuplicatedPanels();
-	int RemoveDuplicatedPointsAndRenumber();
 	void AnalyseSegments(double zTolerance);
 	void AddSegment(int ip0, int ip1, int ipanel);
 	bool ReorientPanels();
 	void ReorientPanel(int ip);
 	bool SameOrderPanel(int ip0, int ip1, int in0, int in1);
-	int PanelGetNumNodes(int ip) 	{return panels[ip].GetNumNodes();}
+	static int PanelGetNumNodes(const Vector<Panel> &_panels, int ip) {return _panels[ip].GetNumNodes();}
 	bool IsPanelTriangle(int ip) 	{return panels[ip].IsTriangle();}
 	void GetPanelParams(Panel &panel) const;
 	

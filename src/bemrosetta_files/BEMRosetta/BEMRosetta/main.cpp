@@ -12,6 +12,7 @@ using namespace Upp;
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
+#include <RasterPlayer/RasterPlayer.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -29,6 +30,8 @@ void Main::Init() {
 		firstTime = true;
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults are set");
 	}
+	if (!bem.ClearTempFiles()) 
+		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	if (!LoadSerializeJson()) {
 		firstTime = true;
 		Cout() << "\n" << t_("Configuration data is not loaded. Defaults are set");
@@ -69,6 +72,8 @@ void Main::Init() {
 	
 	if (firstTime)
 		tab.Set(menuAbout);
+	
+	AddFrame(bar);
 	
 	BEMData::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
 	BEMData::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
@@ -174,6 +179,7 @@ void MenuOptions::Load() {
 	nemohPathPreprocessor <<= bem->nemohPathPreprocessor;
 	nemohPathSolver <<= bem->nemohPathSolver;
 	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
+	nemohPathNew <<= bem->nemohPathNew;
 	nemohPathGREN <<= bem->nemohPathGREN;
 	experimental <<= bem->experimental;
 	experimentalFOAMM <<= bem->experimentalFOAMM;
@@ -194,6 +200,7 @@ void MenuOptions::OnSave() {
 	bem->nemohPathPreprocessor = ~nemohPathPreprocessor;
 	bem->nemohPathSolver = ~nemohPathSolver;
 	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
+	bem->nemohPathNew = ~nemohPathNew;
 	bem->nemohPathGREN = ~nemohPathGREN;
 	bem->experimental = ~experimental;	
 	bem->experimentalFOAMM = ~experimentalFOAMM;
@@ -229,6 +236,8 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->nemohPathPostprocessor != ~nemohPathPostprocessor)
 		return true;
+	if (bem->nemohPathNew != ~nemohPathNew)
+		return true;
 	if (bem->nemohPathGREN != ~nemohPathGREN)
 		return true;
 	if (bem->experimental != ~experimental)
@@ -244,8 +253,8 @@ bool MenuOptions::IsChanged() {
 void MenuAbout::Init() {
 	CtrlLayout(*this);
 	
-	String qtf = GetTopic(x_("BEMRosetta/BEMRosetta/main/About$en-us")); 
-	Hydro::SetBuildInfo(qtf);
+	String qtf = GetTopic(S("BEMRosetta/BEMRosetta/main/About$en-us")); 
+	SetBuildInfo(qtf);
 	info.SetQTF(qtf);
 }
 
@@ -337,8 +346,19 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
+void OnPanic(const char *title, const char *text) {
+	throw Exc(Format(t_("Error type 1 %s: %s"), title, text));	
+}
+
+void OnAssert(const char *text) {
+	throw Exc(Format(t_("Error type 2: %s"), text));	
+}
+
 
 GUI_APP_MAIN {
+	InstallPanicMessageBox(OnPanic);
+	//SetAssertFailedHook(OnAssert);
+	
 	ConsoleOutput console;	
 	const Vector<String>& command = CommandLine();
 	
@@ -370,12 +390,12 @@ GUI_APP_MAIN {
 		errorStr = t_("Unknown error");
 	}	
 	if (!errorStr.IsEmpty())
-		Exclamation(t_("Internal error:") + x_("&") + DeQtf(errorStr) + x_("&") + t_("Program ended"));
+		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }
-
 
 String ForceExtSafe(String fileName, String ext) {
 	if (fileName.IsEmpty())
 		return String();
 	return ForceExt(fileName, ext);
 }
+

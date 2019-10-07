@@ -7,6 +7,10 @@ T_("BEM configuration data is not loaded. Defaults are set")
 esES("")
 frFR("")
 
+T_("BEM temporary files folder cannot be created")
+esES("")
+frFR("")
+
 T_("Configuration data is not loaded. Defaults are set")
 esES("")
 frFR("")
@@ -60,13 +64,9 @@ esES("")
 frFR("")
 
 
-// mainBEM.cpp
+// mainMesh.cpp
 
-T_("Open")
-esES("")
-frFR("")
-
-T_("Convert")
+T_("Load")
 esES("")
 frFR("")
 
@@ -74,7 +74,313 @@ T_("Plot")
 esES("")
 frFR("")
 
+T_("Process")
+esES("")
+frFR("")
+
+T_("Save as")
+esES("")
+frFR("")
+
+T_("View")
+esES("")
+frFR("")
+
 T_("Summary")
+esES("")
+frFR("")
+
+T_("K Stiffness Matrix")
+esES("")
+frFR("")
+
+T_("Convert")
+esES("")
+frFR("")
+
+T_("Loading mesh file...")
+esES("")
+frFR("")
+
+T_("Please select a model to process")
+esES("")
+frFR("")
+
+T_("Unknown type in OnConvert()")
+esES("")
+frFR("")
+
+T_("Saving mesh file...")
+esES("")
+frFR("")
+
+T_("Please fill translation data")
+esES("")
+frFR("")
+
+T_("Please fill rotation data")
+esES("")
+frFR("")
+
+T_("Please fill center of rotation data")
+esES("")
+frFR("")
+
+T_("Healing mesh file...")
+esES("")
+frFR("")
+
+T_("File")
+esES("")
+frFR("")
+
+T_("Name")
+esES("")
+frFR("")
+
+T_("(healed)")
+esES("")
+frFR("")
+
+T_("Format")
+esES("")
+frFR("")
+
+T_("# Panels")
+esES("")
+frFR("")
+
+T_("# Nodes")
+esES("")
+frFR("")
+
+T_("Surface [m2]")
+esES("")
+frFR("")
+
+T_("Volume [m3]")
+esES("")
+frFR("")
+
+T_("Immersed surface [m2]")
+esES("")
+frFR("")
+
+T_("Immersed volume [m3]")
+esES("")
+frFR("")
+
+T_("Displacement [tm]")
+esES("")
+frFR("")
+
+T_("Cb(x) [m]")
+esES("")
+frFR("")
+
+T_("Cb(y) [m]")
+esES("")
+frFR("")
+
+T_("Cb(z) [m]")
+esES("")
+frFR("")
+
+T_("Water Plane Area [m2]")
+esES("")
+frFR("")
+
+T_("Min X [m]")
+esES("")
+frFR("")
+
+T_("Max X [m]")
+esES("")
+frFR("")
+
+T_("Min Y [m]")
+esES("")
+frFR("")
+
+T_("Max Y [m]")
+esES("")
+frFR("")
+
+T_("Min Z [m]")
+esES("")
+frFR("")
+
+T_("Max Z [m]")
+esES("")
+frFR("")
+
+T_("Stiffness Matrix")
+esES("")
+frFR("")
+
+T_("K(%d,%d) [%s]")
+esES("")
+frFR("")
+
+T_("Healing")
+esES("")
+frFR("")
+
+T_("Yes")
+esES("")
+frFR("")
+
+T_("No")
+esES("")
+frFR("")
+
+T_("# Segments")
+esES("")
+frFR("")
+
+T_("# Seg Water Plane")
+esES("")
+frFR("")
+
+T_("# Seg leak")
+esES("")
+frFR("")
+
+T_("# Seg 3 panels")
+esES("")
+frFR("")
+
+T_("# Panels off")
+esES("")
+frFR("")
+
+T_("# Triangles")
+esES("")
+frFR("")
+
+T_("# BiQuads")
+esES("")
+frFR("")
+
+T_("# MonoQuads")
+esES("")
+frFR("")
+
+T_("# Dup panels")
+esES("")
+frFR("")
+
+T_("# Dup nodes")
+esES("")
+frFR("")
+
+T_("# Skewed pan")
+esES("")
+frFR("")
+
+T_("no")
+esES("")
+frFR("")
+
+T_("%s is hidden in Plot menu so selection will not be shown")
+esES("")
+frFR("")
+
+T_("Underwater mesh")
+esES("")
+frFR("")
+
+T_("Selected %s panels and %s nodes")
+esES("")
+frFR("")
+
+T_("Facet node ids")
+esES("")
+frFR("")
+
+T_("#panel")
+esES("")
+frFR("")
+
+T_("#%d")
+esES("")
+frFR("")
+
+T_("Node coordinates")
+esES("")
+frFR("")
+
+T_("#node")
+esES("")
+frFR("")
+
+T_("%s")
+esES("")
+frFR("")
+
+T_("All mesh")
+esES("")
+frFR("")
+
+T_("Only underwater")
+esES("")
+frFR("")
+
+
+// mainNemoh.cpp
+
+T_("No body available to duplicate")
+esES("")
+frFR("")
+
+T_("Please select body to duplicate")
+esES("")
+frFR("")
+
+T_("No body available to remove")
+esES("")
+frFR("")
+
+T_("Please select body to remove")
+esES("")
+frFR("")
+
+T_("Errors found in Nemoh data:%s&Do you wish to continue?")
+esES("")
+frFR("")
+
+T_("Folder %s does not exist.&Do you wish to create it?")
+esES("")
+frFR("")
+
+
+// mainBEM.cpp
+
+T_("Selected")
+esES("")
+frFR("")
+
+T_("Row")
+esES("")
+frFR("")
+
+T_("Column")
+esES("")
+frFR("")
+
+T_("From [rad(s]")
+esES("")
+frFR("")
+
+T_("To [rad(s]")
+esES("")
+frFR("")
+
+T_("Frequencies [rad/s]")
+esES("")
+frFR("")
+
+T_("State Space")
 esES("")
 frFR("")
 
@@ -110,7 +416,19 @@ T_("RAO")
 esES("")
 frFR("")
 
-T_("State Space")
+T_("All supported BEM files (%s)")
+esES("")
+frFR("")
+
+T_("Wamit .1.3.hst file")
+esES("")
+frFR("")
+
+T_("FAST HydroDyn file")
+esES("")
+frFR("")
+
+T_("All converted files")
 esES("")
 frFR("")
 
@@ -118,19 +436,19 @@ T_("Loading BEM files...")
 esES("")
 frFR("")
 
+T_("No model selected")
+esES("")
+frFR("")
+
+T_("Joining selected BEM files...")
+esES("")
+frFR("")
+
 T_("Please select a model to export")
 esES("")
 frFR("")
 
-T_("Unknown type in OnConvert()")
-esES("")
-frFR("")
-
-T_("File")
-esES("")
-frFR("")
-
-T_("Name")
+T_("Please select a model to get State Space")
 esES("")
 frFR("")
 
@@ -198,14 +516,6 @@ T_("A0 available")
 esES("")
 frFR("")
 
-T_("Yes")
-esES("")
-frFR("")
-
-T_("No")
-esES("")
-frFR("")
-
 T_("Ainf available")
 esES("")
 frFR("")
@@ -218,7 +528,7 @@ T_("B available")
 esES("")
 frFR("")
 
-T_("C available")
+T_("K available")
 esES("")
 frFR("")
 
@@ -262,32 +572,19 @@ T_("Cg(z) [m]")
 esES("")
 frFR("")
 
-T_("Cb(x) [m]")
-esES("")
-frFR("")
-
-T_("Cb(y) [m]")
-esES("")
-frFR("")
-
-T_("Cb(z) [m]")
-esES("")
-frFR("")
-
-T_("K(%d,%d) [%s]")
-esES("")
-frFR("")
-
 T_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary "
      "Element Method solver formats")
 esES("")
 frFR("")
 
-T_("A%s%s")
+
+// mainBEM_abf.cpp
+
+T_("A%s")
 esES("")
 frFR("")
 
-T_("B%s%s")
+T_("B%s")
 esES("")
 frFR("")
 
@@ -423,7 +720,10 @@ T_("RAO_ph_%s")
 esES("")
 frFR("")
 
-T_("Frequency response")
+
+// mainBEM_sts.cpp
+
+T_("Frequency response %s")
 esES("")
 frFR("")
 
@@ -443,221 +743,31 @@ T_("TFSResponse Phase %s")
 esES("")
 frFR("")
 
-
-// mainMesh.cpp
-
-T_("Process")
+T_("A_ss")
 esES("")
 frFR("")
 
-T_("View")
+T_("B_ss")
 esES("")
 frFR("")
 
-T_("K Stiffness Matrix")
+T_("C_ss")
 esES("")
 frFR("")
 
-T_("Data")
+T_("Frequencies")
 esES("")
 frFR("")
 
-T_("Loading mesh file...")
+T_("FreqRange")
 esES("")
 frFR("")
 
-T_("Please select a model to process")
+T_("Frequencies_index")
 esES("")
 frFR("")
 
-T_("Saving mesh file...")
-esES("")
-frFR("")
-
-T_("Healing mesh file...")
-esES("")
-frFR("")
-
-T_("(healed)")
-esES("")
-frFR("")
-
-T_("Format")
-esES("")
-frFR("")
-
-T_("# Panels")
-esES("")
-frFR("")
-
-T_("# Nodes")
-esES("")
-frFR("")
-
-T_("Surface [m2]")
-esES("")
-frFR("")
-
-T_("Volume [m3]")
-esES("")
-frFR("")
-
-T_("Immersed surface [m2]")
-esES("")
-frFR("")
-
-T_("Immersed volume [m3]")
-esES("")
-frFR("")
-
-T_("Water Plane Area [m2]")
-esES("")
-frFR("")
-
-T_("Min X [m]")
-esES("")
-frFR("")
-
-T_("Max X [m]")
-esES("")
-frFR("")
-
-T_("Min Y [m]")
-esES("")
-frFR("")
-
-T_("Max Y [m]")
-esES("")
-frFR("")
-
-T_("Min Z [m]")
-esES("")
-frFR("")
-
-T_("Max Z [m]")
-esES("")
-frFR("")
-
-T_("Stiffness Matrix")
-esES("")
-frFR("")
-
-T_("Healing")
-esES("")
-frFR("")
-
-T_("# Segments")
-esES("")
-frFR("")
-
-T_("# Seg Water Plane")
-esES("")
-frFR("")
-
-T_("# Seg leak")
-esES("")
-frFR("")
-
-T_("# Seg 3 panels")
-esES("")
-frFR("")
-
-T_("# Panels off")
-esES("")
-frFR("")
-
-T_("# Triangles")
-esES("")
-frFR("")
-
-T_("# BiQuads")
-esES("")
-frFR("")
-
-T_("# MonoQuads")
-esES("")
-frFR("")
-
-T_("# Dup panels")
-esES("")
-frFR("")
-
-T_("# Dup nodes")
-esES("")
-frFR("")
-
-T_("# Skewed pan")
-esES("")
-frFR("")
-
-T_("Facet nodes ids")
-esES("")
-frFR("")
-
-T_("#%d")
-esES("")
-frFR("")
-
-T_("Facet node ids")
-esES("")
-frFR("")
-
-T_("Original node coordinates")
-esES("")
-frFR("")
-
-T_("#node")
-esES("")
-frFR("")
-
-T_("%s")
-esES("")
-frFR("")
-
-T_("Moved node coordinates")
-esES("")
-frFR("")
-
-T_("Node coordinates")
-esES("")
-frFR("")
-
-T_("Original")
-esES("")
-frFR("")
-
-T_("Moved")
-esES("")
-frFR("")
-
-T_("Moved underwater")
-esES("")
-frFR("")
-
-
-// mainNemoh.cpp
-
-T_("No body available to duplicate")
-esES("")
-frFR("")
-
-T_("Please select body to duplicate")
-esES("")
-frFR("")
-
-T_("No body available to remove")
-esES("")
-frFR("")
-
-T_("Please select body to remove")
-esES("")
-frFR("")
-
-T_("Errors found in Nemoh data:%s&Do you wish to continue?")
-esES("")
-frFR("")
-
-T_("Folder %s does not exist.&Do you wish to create it?")
+T_("MAE")
 esES("")
 frFR("")
 
@@ -668,7 +778,11 @@ T_("File:")
 esES("")
 frFR("")
 
-T_("Load")
+T_("Remove selected")
+esES("")
+frFR("")
+
+T_("Join selected")
 esES("")
 frFR("")
 
@@ -724,11 +838,31 @@ T_("Show")
 esES("")
 frFR("")
 
-T_("Original\nMoved")
+T_("Selected:")
 esES("")
 frFR("")
 
-T_("Position:")
+T_("To:")
+esES("")
+frFR("")
+
+T_("Cases available to process")
+esES("")
+frFR("")
+
+T_("Frequencies (rad/s)")
+esES("")
+frFR("")
+
+T_("From:")
+esES("")
+frFR("")
+
+T_("Choose")
+esES("")
+frFR("")
+
+T_("FOAMM is working")
 esES("")
 frFR("")
 
@@ -736,7 +870,7 @@ T_("Wamit .gdf\nNemoh .dat\nSTL binary\nSTL text\nBy extension")
 esES("")
 frFR("")
 
-T_("All\nUnderwater")
+T_("Original\nMoved\nUnderwater")
 esES("")
 frFR("")
 
@@ -808,11 +942,15 @@ T_("Cg")
 esES("")
 frFR("")
 
+T_("Show mesh data")
+esES("")
+frFR("")
+
 T_("Set Cg")
 esES("")
 frFR("")
 
-T_("Rotate angle from center")
+T_("Rotate")
 esES("")
 frFR("")
 
@@ -857,6 +995,10 @@ esES("")
 frFR("")
 
 T_("y [m]:")
+esES("")
+frFR("")
+
+T_("Mass [Kg]:")
 esES("")
 frFR("")
 
@@ -924,6 +1066,10 @@ T_("Path to exe")
 esES("")
 frFR("")
 
+T_("Maynooth COER FOAMM")
+esES("")
+frFR("")
+
 T_("Other")
 esES("")
 frFR("")
@@ -936,6 +1082,10 @@ T_("BEM Coefficients")
 esES("")
 frFR("")
 
+T_("New package:")
+esES("")
+frFR("")
+
 T_("Postprocessor:")
 esES("")
 frFR("")
@@ -944,11 +1094,19 @@ T_("Solver:")
 esES("")
 frFR("")
 
+T_("FOAMM.exe:")
+esES("")
+frFR("")
+
 T_("Preprocessor:")
 esES("")
 frFR("")
 
-T_("Enable experimental features (updated after restart)")
+T_("Enable experimental FOAMM features (available after restart)")
+esES("")
+frFR("")
+
+T_("Enable experimental features (available after restart)")
 esES("")
 frFR("")
 
@@ -966,11 +1124,79 @@ T_("Hydrostatic Stiffness Matrices")
 esES("")
 frFR("")
 
-T_("Yeff [m]:")
+T_("Wave frequencies")
+esES("")
+frFR("")
+
+T_("Include Nemoh binaries")
+esES("")
+frFR("")
+
+T_("Add")
+esES("")
+frFR("")
+
+T_("Duplicate")
+esES("")
+frFR("")
+
+T_("Remove")
+esES("")
+frFR("")
+
+T_("Surge")
+esES("")
+frFR("")
+
+T_("Sway")
+esES("")
+frFR("")
+
+T_("Heave")
+esES("")
+frFR("")
+
+T_("Roll")
+esES("")
+frFR("")
+
+T_("Pitch")
+esES("")
+frFR("")
+
+T_("Yaw")
+esES("")
+frFR("")
+
+T_("w rad/s\nT seg")
+esES("")
+frFR("")
+
+T_("IRF calculation")
+esES("")
+frFR("")
+
+T_("Kochin function")
+esES("")
+frFR("")
+
+T_("Show pressure")
+esES("")
+frFR("")
+
+T_("Free surface elevation")
+esES("")
+frFR("")
+
+T_("X direction")
 esES("")
 frFR("")
 
 T_("Y direction")
+esES("")
+frFR("")
+
+T_("Yeff [m]:")
 esES("")
 frFR("")
 
@@ -1002,11 +1228,7 @@ T_("Number:")
 esES("")
 frFR("")
 
-T_("X direction")
-esES("")
-frFR("")
-
-T_("Wave directions")
+T_("Wave directions/headings")
 esES("")
 frFR("")
 
@@ -1015,10 +1237,6 @@ esES("")
 frFR("")
 
 T_("Min [\302\272]:")
-esES("")
-frFR("")
-
-T_("Wave frequencies")
 esES("")
 frFR("")
 
@@ -1034,10 +1252,6 @@ T_("Load cases to solve")
 esES("")
 frFR("")
 
-T_("Show pressure")
-esES("")
-frFR("")
-
 T_("Duration [s]:")
 esES("")
 frFR("")
@@ -1046,40 +1260,12 @@ T_("Time step [s]:")
 esES("")
 frFR("")
 
-T_("IRF calculation")
-esES("")
-frFR("")
-
-T_("Kochin function")
-esES("")
-frFR("")
-
 T_("Rotations around                                                      "
      "                       ")
 esES("")
 frFR("")
 
-T_("Yaw")
-esES("")
-frFR("")
-
-T_("Pitch")
-esES("")
-frFR("")
-
-T_("Roll")
-esES("")
-frFR("")
-
-T_("Heave")
-esES("")
-frFR("")
-
-T_("Sway")
-esES("")
-frFR("")
-
-T_("Surge")
+T_("Split in cases:")
 esES("")
 frFR("")
 
@@ -1091,27 +1277,7 @@ T_("Load Nemoh.cal from:")
 esES("")
 frFR("")
 
-T_("Remove")
-esES("")
-frFR("")
-
-T_("Add")
-esES("")
-frFR("")
-
-T_("Duplicate")
-esES("")
-frFR("")
-
-T_("Include Nemoh binaries")
-esES("")
-frFR("")
-
 T_("Translations")
-esES("")
-frFR("")
-
-T_("Free surface elevation")
 esES("")
 frFR("")
 
@@ -1136,6 +1302,78 @@ frFR("")
 
 
 // Obsolete
+
+T_("Open")
+esES("")
+frFR("")
+
+T_("C available")
+esES("")
+frFR("")
+
+T_("A%s%s")
+esES("")
+frFR("")
+
+T_("B%s%s")
+esES("")
+frFR("")
+
+T_("Frequency response")
+esES("")
+frFR("")
+
+T_("Data")
+esES("")
+frFR("")
+
+T_("Facet nodes ids")
+esES("")
+frFR("")
+
+T_("Original node coordinates")
+esES("")
+frFR("")
+
+T_("Moved node coordinates")
+esES("")
+frFR("")
+
+T_("Original")
+esES("")
+frFR("")
+
+T_("Moved")
+esES("")
+frFR("")
+
+T_("Moved underwater")
+esES("")
+frFR("")
+
+T_("Original\nMoved")
+esES("")
+frFR("")
+
+T_("Position:")
+esES("")
+frFR("")
+
+T_("All\nUnderwater")
+esES("")
+frFR("")
+
+T_("Rotate angle from center")
+esES("")
+frFR("")
+
+T_("Enable experimental features (updated after restart)")
+esES("")
+frFR("")
+
+T_("Wave directions")
+esES("")
+frFR("")
 
 T_("BEM")
 esES("")
@@ -1451,5 +1689,12 @@ esES("")
 frFR("")
 
 T_("Error moving a fixed surface")
+esES("")
+frFR("")
+
+
+// Surface.cpp
+
+T_("Node %d in panel %d [%d] does not exist")
 esES("")
 frFR("")
