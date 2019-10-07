@@ -2,6 +2,7 @@
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
+#include <RasterPlayer/RasterPlayer.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -15,7 +16,7 @@ void MainNemoh::Init(const BEMData &bem) {
 	
 	loadFrom.WhenChange = THISBACK(OnLoad);
 	loadFrom.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
-	butLoad.WhenAction = [&] {OnLoad();};
+	butLoad.WhenAction = [&] {loadFrom.DoGo();};
 
 	saveTo.WhenChange  = [&] {return OnSave(bem);};
 	saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
@@ -130,13 +131,13 @@ void MainNemoh::Jsonize(JsonIO &json) {
 }
 
 bool MainNemoh::OnLoad() {
+	String file = ~loadFrom;
+	
 	try {
-		String nemohFile = ~loadFrom;
-		
 		NemohCal data;
 		
-		if (!data.Load(nemohFile)) {
-			Exclamation(Format("Problem loading %s file", DeQtf(nemohFile)));
+		if (!data.Load(file)) {
+			Exclamation(Format("Problem loading %s file", DeQtf(file)));
 			return false;
 		}
 		Load(data);	

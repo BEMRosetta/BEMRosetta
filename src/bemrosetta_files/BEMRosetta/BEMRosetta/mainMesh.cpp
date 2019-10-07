@@ -2,6 +2,7 @@
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
+#include <RasterPlayer/RasterPlayer.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -18,7 +19,7 @@ void MainMesh::Init() {
 	CtrlLayout(menuOpen);
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuOpen.butLoad.WhenAction = [&] {OnLoad();};
+	menuOpen.butLoad.WhenAction = [&] {menuOpen.file.DoGo();};
 
 	menuOpen.arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	menuOpen.arrayModel.AddColumn("", 20);	
@@ -118,10 +119,10 @@ void MainMesh::Init() {
 	
 	menuStability.arrayModel.WhenSel = THISBACK(OnMenuConvertArraySel);
 
-	menuTab.Add(menuOpen.SizePos(),    	t_("Open"));
+	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
 	menuTab.Add(menuStability.SizePos(),t_("Process")).Disable();
-	menuTab.Add(menuConvert.SizePos(), 	t_("Convert")).Disable();
+	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 		
 	mainView.Init(menuPlot);
 	mainViewData.Init();
@@ -138,10 +139,9 @@ void MainMesh::Init() {
 			
 	mainTab.WhenSet = [&] {
 		bool plot = true, convertProcess = true;
-		if (ma().bem.surfs.IsEmpty()) {
-			plot = false;
-			convertProcess = false;
-		} else if (mainTab.IsAt(mainVAll)) 
+		if (ma().bem.surfs.IsEmpty()) 
+			plot = convertProcess = false;
+		else if (mainTab.IsAt(mainVAll)) 
 			;
 		else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
@@ -297,7 +297,7 @@ void MainMesh::AfterLoad(String file) {
 
 bool MainMesh::OnLoad() {
 	String file = ~menuOpen.file;
-	
+		
 	try {
 		WaitCursor waitcursor;
 		Progress progress(t_("Loading mesh file..."), 100); 
@@ -338,7 +338,8 @@ bool MainMesh::OnConvertMesh() {
 		WaitCursor waitcursor;
 		Progress progress(t_("Saving mesh file..."), 100); 
 		
-		ma().bem.surfs[id].SaveAs(~menuConvert.file, type, ma().bem.g, ~menuConvert.optMesh);	
+		ma().bem.surfs[id].SaveAs(~menuConvert.file, type, ma().bem.g, 
+								static_cast<MeshData::MESH_TYPE>(int(~menuConvert.optMesh)));	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -465,7 +466,7 @@ void MainSummaryMesh::Report(const MeshData &data, int id) {
 	bool healing = data.mesh.healing;
 	
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
-	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (x_(" ") + t_("(healed)")) : ""));
+	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
 	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetCodeStr());	
 	
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.GetCount());
@@ -720,8 +721,8 @@ void MainViewDataEach::UpdateStatus(bool under) {
 	}
 	int numPanels = selectedPanels.GetCount();
 	int numNodes  = selectedNodes.GetCount();
-	String strPanels = numPanels > 0 ? FormatInt(numPanels) : x_(t_("no"));
-	String strNodes  = numNodes > 0  ? FormatInt(numNodes)  : x_(t_("no"));
+	String strPanels = numPanels > 0 ? FormatInt(numPanels) : S(t_("no"));
+	String strNodes  = numNodes > 0  ? FormatInt(numNodes)  : S(t_("no"));
 	
 	if (numPanels + numNodes > 0) {
 		if (!show)

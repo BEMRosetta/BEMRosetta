@@ -60,15 +60,15 @@ public:
 		ids << idY << idX;
 		Init(_data, ids, _useCols, _beginData, _numData);
 	}
-	virtual inline double y(int64 id)	{return useCols ? data->Get(beginData + int(id), ids[0]) : data->Get(ids[0], beginData + int(id));};
-	virtual inline double x(int64 id) {
+	virtual inline double y(int64 id) 	{return useCols ? data->Get(beginData + int(id), ids[0]) : data->Get(ids[0], beginData + int(id));};
+	virtual inline double x(int64 id)  {
 		if (IsNull(ids[1]))
 			return double(id);
 		else
 			return useCols ? data->Get(beginData + int(id), ids[1]) : data->Get(ids[1], beginData + int(id));
 	}
 	virtual inline double xn(int n, int64 id)	{return useCols ? data->Get(beginData + int(id), ids[n]) : data->Get(ids[n], beginData + int(id));}
-	virtual inline int64 GetCount()	{return numData;};
+	virtual inline int64 GetCount() const		{return numData;};
 };
 
 class GridCtrlSource : public DataSource {
@@ -112,7 +112,7 @@ public:
 		_ids << idY << idX;
 		Init(_data, _ids, _useCols, _beginData, _numData);
 	}	
-	double GetVal(int64 id, int idx) {
+	double GetVal(int64 id, int idx) const {
 		if (IsNull(ids[idx]))
 			return double(id);
 		else {
@@ -131,10 +131,10 @@ public:
 				return ScanDouble(val.ToString());
 		}	
 	}
-	virtual inline double y(int64 id) {return GetVal(id, 0);}
-	virtual inline double x(int64 id) {return GetVal(id, 1);}
+	virtual inline double y(int64 id)  {return GetVal(id, 0);}
+	virtual inline double x(int64 id)  {return GetVal(id, 1);}
 	virtual inline double xn(int n, int64 id)	{return useCols ? data->Get(beginData + int(id), ids[n]) : data->Get(ids[n], beginData + int(id));}
-	virtual inline int64 GetCount()	{return numData;};
+	virtual inline int64 GetCount() const		{return numData;};
 };
 
 class ScatterCtrl : public Ctrl, public ScatterDraw {

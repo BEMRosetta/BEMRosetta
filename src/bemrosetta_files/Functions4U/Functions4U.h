@@ -57,6 +57,7 @@ bool DirectoryMove(const char *dir, const char *newPlace);
 bool DeleteDeepWildcardsX(const char *path, bool filefolder, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteDeepWildcardsX(const char *pathwc, const char *namewc, bool filefolder, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteFolderDeepWildcardsX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
+bool DeleteFolderDeepWildcardsX(const char *path, const char *name, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteFileDeepWildcardsX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteFolderDeepX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
 bool RenameDeepWildcardsX(const char *path, const char *namewc, const char *newname, bool forfile, bool forfolder, EXT_FILE_FLAGS flags = NO_FLAG);
@@ -588,7 +589,19 @@ private:
 							} else 												\
 								return v
 
-
+template <class T>
+struct TempAssign {
+	TempAssign(T &_val, T set) {
+		old = _val;
+		_val = set;
+		val = &_val;
+	}
+	~TempAssign() {
+		*val = old;
+	}
+	
+	T *val, old;
+};
 
 template <class T>
 class ThreadSafe {
@@ -685,10 +698,15 @@ inline String RoundDecimals(T num, int decimals) {
 
 template <class T>
 bool EqualRatio(const T& a, const T& b, const T& ratio) {
-	if (a == 0)
-		return b <= ratio;
-	if (b == 0)
-		return a <= ratio;
+	if (a == 0) {
+		if (b == 0)
+			return true;
+	} else if (b == 0) {
+		if(abs((a - b)/a) <= ratio) 
+			return true;
+		else
+			return false;
+	}
 	if(abs((a - b)/b) <= ratio) 
 		return true;
 	return false;
@@ -986,6 +1004,6 @@ int LevenshteinDistance(const char *s, const char *t);
 int DamerauLevenshteinDistance(const char *s, const char *t, int alphabetLength = 256);
 int SentenceSimilitude(const char *s, const char *t);
 
-#define x_(y)	String(y)
+#define S(y)	String(y)
 
 #endif

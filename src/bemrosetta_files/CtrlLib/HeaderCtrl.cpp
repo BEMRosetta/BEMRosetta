@@ -841,7 +841,7 @@ void HeaderCtrl::FrameAdd(Ctrl& parent)
 
 void HeaderCtrl::FrameRemove()
 {
-	Remove();
+	Ctrl::Remove();
 	sb.Remove();
 }
 

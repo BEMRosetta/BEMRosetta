@@ -20,7 +20,7 @@ public:
 	virtual void  DragEnter();
 	virtual void  DragAndDrop(Point p, PasteClip& d);
 	virtual void  DragRepeat(Point p);
-	virtual void  DragLeave();
+	virtual void  DragLeave(); 
 
 public:
 	class Node
