@@ -120,6 +120,22 @@ double DataSource::Avg(Getdatafun getdata) {
 	return ret/count;
 }
 
+double DataSource::Closer(Getdatafun getdata, double dat) {
+	double minD = DBL_MAX, minDat;
+	for (int64 i = 0; i < GetCount(); ++i) {
+		double d = Membercall(getdata)(i);
+		if (!IsNull(d)) {
+			if (minD > abs(d - dat)) {
+				minD = abs(d - dat);
+				minDat = d;
+			}
+		}
+	}
+	if (minD == DBL_MAX)
+		return Null;
+	return minDat;
+}
+
 double DataSource::RMS(Getdatafun getdata) {
 	double ret = 0;
 	int count = 0;

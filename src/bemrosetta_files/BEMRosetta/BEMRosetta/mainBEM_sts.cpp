@@ -3,6 +3,7 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
+#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -167,16 +168,10 @@ bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
 					for (int c = 0; c < sts.ssFreqRange.size(); ++c)			
 						array.Set(row, c, sts.ssFreqRange[c]);
 					row++;
-				}
-				if (sts.ssFrequencies_index.size() > 0) {
-					array.Set(row++, 0, AttrText(t_("Frequencies_index")).Bold());
-					for (int c = 0; c < sts.ssFrequencies_index.size(); ++c)			
-						array.Set(row, c, sts.ssFrequencies_index[c]);
-					row++;
-				}						
+				}					
 				if (!IsNull(sts.ssMAE)) {
-					array.Set(row++, 0, AttrText(t_("MAE")).Bold());
-					array.Set(row++, 0, sts.ssMAE);
+					array.Set(row++, 0, AttrText(t_("MAPE [%]")).Bold());
+					array.Set(row++, 0, sts.ssMAE*100);
 				}
 			}
 		}

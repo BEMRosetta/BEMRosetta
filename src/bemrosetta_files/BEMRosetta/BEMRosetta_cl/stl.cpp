@@ -17,7 +17,7 @@ String MeshData::LoadStlTxt(String fileName, bool &isText) {
 		
 		line = ToLower(TrimBoth(in.GetLine()));
 		if (!line.StartsWith("solid"))
-			return Format(t_("[line %d] 'solid' field not found"), in.GetLineNumber());
+			return in.Str() + t_("'solid' field not found");
 		
 		isText = true;
 		
@@ -30,11 +30,11 @@ String MeshData::LoadStlTxt(String fileName, bool &isText) {
 				break;
 			
 			if (!line.StartsWith("facet normal"))
-				return Format(t_("[line %d] 'facet normal' field not found"), in.GetLineNumber());
+				return in.Str() + t_("'facet normal' field not found");
 
 			line = ToLower(TrimBoth(in.GetLine()));
 			if (!line.StartsWith("outer loop"))
-				return Format(t_("[line %d] 'outer loop' field not found"), in.GetLineNumber());			
+				return in.Str() + t_("'outer loop' field not found");			
 
 			int ids[5];
 			for (int i = 0; i < 5; ++i) {
@@ -43,13 +43,13 @@ String MeshData::LoadStlTxt(String fileName, bool &isText) {
 				
 				if (label == "vertex") {		
 					if (i == 4)
-						return Format(t_("[line %d] Too much vertex in facet"), in.GetLineNumber());			
+						return in.Str() + t_("Too much vertex in facet");			
 					Point3D node(f.GetDouble(1), f.GetDouble(2), f.GetDouble(3));
 					mesh.nodes0 << node;
 					ids[i] = mesh.nodes0.GetCount() - 1;
 				} else if (label == "endloop") {
 					if (i < 3)
-						return Format(t_("[line %d] Too few vertex in facet"), in.GetLineNumber());
+						return in.Str() + S("Too few vertex in facet");
 					Panel &panel = mesh.panels.Add();
 					panel.id[0] = ids[0];
 					panel.id[1] = ids[1];
@@ -61,7 +61,7 @@ String MeshData::LoadStlTxt(String fileName, bool &isText) {
 				} else if (label == "endfacet") 
 					break;
 				else
-					return Format(t_("[line %d] Label '%s' not handled in facet"), in.GetLineNumber(), label);	
+					return in.Str() + Format(t_("Label '%s' not handled in facet"), label);	
 			}
 	    }
 	} catch (Exc e) {

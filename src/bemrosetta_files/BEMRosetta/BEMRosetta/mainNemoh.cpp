@@ -3,6 +3,7 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
+#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -47,6 +48,10 @@ void MainNemoh::Init(const BEMData &bem) {
 	opwT.Transparent(false);
 	opwT.WhenAction = THISBACK(OnOpwT);
 	OnOpwT();
+	
+	dropSolver.Add(0, t_("Nemoh 115+"));
+	dropSolver.Add(1, t_("Nemoh"));
+	dropSolver.SetIndex(0);
 }
 
 void MainNemoh::OnOpwT() {
@@ -416,7 +421,11 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 				return false;
 			RealizeDirectory(nemohFolder);
 		}
-		data.SaveFolder(nemohFolder, ~opIncludeBin, ~numSplit, bem);
+		if (IsNull(~numSplit)) {
+			Exclamation(t_("Please enter number of parts to split the simulation (min. is 1)"));
+			return false;
+		}
+		data.SaveFolder(nemohFolder, ~opIncludeBin, ~numSplit, bem, dropSolver.GetData());
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
