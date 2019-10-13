@@ -7,6 +7,8 @@
 #define TFILE <ScatterCtrl/ScatterCtrl.t>
 #include <Core/t.h>
 
+Vector<ScatterCtrl *> ScatterCtrl::instances;	
+
 #ifdef PLATFORM_WIN32
 
 void ScatterCtrl::SaveAsMetafile(const char* file)
@@ -193,7 +195,6 @@ void ScatterCtrl::SaveControl() {
 }
 
 void ScatterCtrl::Paint0(Draw& w, const Size &sz) {
-	GuiLock __;
 	if (IsNull(highlight_0) && highlighting) {
 		highlighting = false;
 		KillTimeCallback();
@@ -233,6 +234,8 @@ void ScatterCtrl::Paint0(Draw& w, const Size &sz) {
 		
 			
 void ScatterCtrl::Paint(Draw& w) {
+	GuiLock __;
+	
 	if (rotate == Angle_0)
 		Paint0(w, GetSize());
 	else if (rotate == Angle_90) {
@@ -378,14 +381,6 @@ void ScatterCtrl::ProcessPopUp(const Point &pt) {
 	} else
 		popTextEnd.Hide();
 }
-
-/*void ScatterCtrl::ProcessClickSeries(const Point &pt)
-{
-	double posx = GetRealPosX(pt.x);
-	double posy = GetRealPosY(pt.y);
-	double dx = 2*GetPixelThickX();
-	double dy = 2*GetPixelThickY();
-}*/
 						
 void ScatterCtrl::DoMouseAction(bool down, Point pt, ScatterAction action, int wheel)
 {
@@ -521,6 +516,8 @@ bool ScatterCtrl::ProcessKey(int key)
 
 void ScatterCtrl::LabelPopUp(bool down, Point &pt) 
 {
+	GuiLock __;
+	
 	if (down) {
 		if(showInfo && PointInPlot(pt)) {
 			popTextBegin.AppearOnly(this);
@@ -624,7 +621,7 @@ bool ScatterCtrl::Key(dword key, int )
 		else if (key == K_CTRL_D)
 			DoShowData();
 		else if (key == K_CTRL_C)
-			SaveToClipboard(true);
+			SaveToClipboard(false);
 		else if (key == K_CTRL_S)
 			SaveToFile(Null);
 		else
@@ -721,6 +718,8 @@ void ScatterCtrl::MouseWheel(Point pt, int zdelta, dword keyFlags)
 
 void ScatterCtrl::MouseMove(Point pt, dword keyFlags)
 {
+	GuiLock __;
+	
 	MousePointRot(pt);
 	if (isScrolling) {
 		double factorX = 0, factorY = 0;
@@ -885,6 +884,7 @@ void ScatterCtrl::OnTypeImage(FileSel *_fs)
 void ScatterCtrl::SaveToFile(String fileName)
 {
 	GuiLock __;
+	
 	if (IsNull(fileName)) {
 		FileSel fs;
 		fs.Type(Format(t_("%s bitmap file"), "jpeg"), "*.jpg");
@@ -1066,5 +1066,7 @@ ScatterCtrl::ScatterCtrl() : popOffset(10, 12), mouseAction(NONE)
 	AddKeyBehavior(true,  false, false, K_UP,   	true, 	ScatterCtrl::SCROLL_UP);
 	AddKeyBehavior(true,  false, false, K_DOWN, 	true, 	ScatterCtrl::SCROLL_DOWN);
 	AddKeyBehavior(true,  false, false, K_F, 		true, 	ScatterCtrl::ZOOM_FIT);
+	
+	AddInstance(this);
 }
 

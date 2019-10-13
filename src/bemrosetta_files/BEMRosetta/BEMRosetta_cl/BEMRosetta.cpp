@@ -39,12 +39,8 @@ void Hydro::GetFexFromFscFfk() {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			for (int i = 0; i < Nb*6; ++i) {
 				if (!IsNull(sc.ma[ih](ifr, i))) {
-					double scm = sc.ma[ih](ifr, i);
-					double scp = sc.ph[ih](ifr, i);
-					double fkm = fk.ma[ih](ifr, i);
-					double fkp = fk.ph[ih](ifr, i);
-					double exre = scm*cos(scp) + fkm*cos(fkp);
-					double exim = scm*sin(scp) + fkm*sin(fkp);
+					double exre = sc.re[ih](ifr, i) + fk.re[ih](ifr, i);
+					double exim = sc.im[ih](ifr, i) + fk.im[ih](ifr, i);
 					ex.re[ih](ifr, i) = exre;
 					ex.im[ih](ifr, i) = exim;
 					ex.ma[ih](ifr, i) = sqrt(exre*exre + exim*exim);
@@ -738,7 +734,7 @@ void BEMData::Load(String file, Function <bool(String, int)> Status) {
 	Status(t_("Loading files"), 10);
 	for (int i = 0; i < hydros.GetCount(); ++i) {
 		if (hydros[i].hd().file == file) 
-			throw Exc(Format(t_("Model '%s' already loaded"), file));
+			throw Exc(Format(t_("Model '%s' is already loaded"), file));
 	}
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".cal") {
@@ -791,7 +787,7 @@ void BEMData::Load(String file, Function <bool(String, int)> Status) {
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else 
-		throw Exc(Format(t_("Unknown file extension in '%s'"), file));
+		throw Exc(Format(t_("Unknown BEM file extension in '%s'"), file));
 	
 	Hydro &justLoaded = hydros.Top().hd();
 int kk = justLoaded.Nh;	
@@ -847,8 +843,8 @@ void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
 	
 	for (int i = 0; i < surfs.GetCount(); ++i) {
 		if (surfs[i].file == file) {
-			BEMData::Print(S("\n") + t_("Model already loaded"));
-			throw Exc(t_("Model already loaded"));
+			BEMData::Print(S("\n") + t_("Model is already loaded"));
+			throw Exc(t_("Model is already loaded"));
 		}
 	}
 

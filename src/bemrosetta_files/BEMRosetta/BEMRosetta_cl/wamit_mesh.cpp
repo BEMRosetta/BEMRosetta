@@ -14,7 +14,7 @@ String MeshData::LoadDatWamit(String fileName) {
 		
 		line = ToUpper(TrimBoth(in.GetLine()));
 		if (!line.StartsWith("ZONE"))
-			return Format(t_("[line %d] 'ZONE' field not found"), in.GetLineNumber());
+			return in.Str() + t_("'ZONE' field not found");
 	
 		line.Replace("\"", "");
 		line.Replace(" ", "");

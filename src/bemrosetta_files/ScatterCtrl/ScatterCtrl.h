@@ -142,7 +142,7 @@ public:
 	typedef ScatterCtrl CLASSNAME;
 	
 	ScatterCtrl();
-	virtual ~ScatterCtrl() {};
+	virtual ~ScatterCtrl() {RemoveInstance(this);};
 	
 	enum ScatterAction {NO_ACTION = 0, SCROLL, ZOOM_H_ENL, ZOOM_H_RED, ZOOM_V_ENL, ZOOM_V_RED, SHOW_COORDINATES, CONTEXT_MENU, ZOOM_WINDOW, 
 					  SCROLL_LEFT, SCROLL_RIGHT, SCROLL_UP, SCROLL_DOWN, ZOOM_FIT};
@@ -336,6 +336,9 @@ public:
 	virtual bool Key(dword key, int count);
 	virtual void GotFocus();
 	virtual void LostFocus();
+	
+	static int GetInstancesCount()			{return instances.GetCount();}	
+	static ScatterCtrl &GetInstance(int i)	{return *(instances[i]);}	
 		
 private:
 	bool showInfo;
@@ -404,7 +407,13 @@ private:
 	
 	int rotate;
 	Point &MousePointRot(Point &pt);		
-	Point &MousePointUnrot(Point &pt);		
+	Point &MousePointUnrot(Point &pt);	
+	
+	static Vector<ScatterCtrl *> instances;	
+	static void AddInstance(ScatterCtrl *instance) {instances << instance;}
+	static void RemoveInstance(ScatterCtrl *instance) {
+		instances.RemoveIf([&](int i) {return instance == instances[i];});
+	}
 };
 
 template <class T>

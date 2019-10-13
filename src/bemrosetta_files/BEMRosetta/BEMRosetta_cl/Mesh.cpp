@@ -1,27 +1,27 @@
 #include "BEMRosetta.h"
 
 	
-String MeshData::Load(String fileName, double rho, double g) {
-	String ext = ToLower(GetFileExt(fileName));
+String MeshData::Load(String file, double rho, double g) {
+	String ext = ToLower(GetFileExt(file));
 	String ret;
 	bool y0z = false, x0z = false;
 	if (ext == ".dat") {
-		ret = LoadDatNemoh(fileName, x0z);
+		ret = LoadDatNemoh(file, x0z);
 		if (!ret.IsEmpty()) 
-			ret = LoadDatWamit(fileName);
+			ret = LoadDatWamit(file);
 		else
 			ret = String();
 	} else if (ext == ".gdf") 
-		ret = LoadGdfWamit(fileName, y0z, x0z); 
+		ret = LoadGdfWamit(file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
-		ret = LoadStlTxt(fileName, isText);
+		ret = LoadStlTxt(file, isText);
 		if (!ret.IsEmpty() && !isText) 
-			ret = LoadStlBin(fileName);
+			ret = LoadStlBin(file);
 		else
 			ret = String(); 
 	} else
-		return t_("Unknown file extension");	
+		throw Exc(Format(t_("Unknown MESH file extension in '%s'"), file));	
 	
 	if (!ret.IsEmpty())
 		return ret;

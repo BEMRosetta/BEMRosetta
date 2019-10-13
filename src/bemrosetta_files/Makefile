@@ -24,6 +24,8 @@ OutDir_GLCanvas = $(UPPOUT)GLCanvas/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_GLCanvas = $(Macro)
 OutDir_RasterPlayer = $(UPPOUT)RasterPlayer/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_RasterPlayer = $(Macro)
+OutDir_CtrlScroll = $(UPPOUT)CtrlScroll/GCC-Gcc-Gui-Linux-Posix-Shared/
+Macro_CtrlScroll = $(Macro)
 OutDir_CtrlCore = $(UPPOUT)CtrlCore/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_CtrlCore = $(Macro)
 OutDir_PdfDraw = $(UPPOUT)PdfDraw/GCC-Gcc-Gui-Linux-Posix-Shared/
@@ -96,6 +98,7 @@ prepare: \
 	$(OutDir_BEMRosetta_BEMRosetta_cl) \
 	$(OutDir_GLCanvas) \
 	$(OutDir_RasterPlayer) \
+	$(OutDir_CtrlScroll) \
 	$(OutDir_CtrlCore) \
 	$(OutDir_PdfDraw) \
 	$(OutDir_Draw) \
@@ -137,6 +140,7 @@ $(OutFile): build_info  \
 	$(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a \
 	$(OutDir_GLCanvas)GLCanvas.a \
 	$(OutDir_RasterPlayer)RasterPlayer.a \
+	$(OutDir_CtrlScroll)CtrlScroll.a \
 	$(OutDir_CtrlCore)CtrlCore.a \
 	$(OutDir_PdfDraw)PdfInit.o \
 	$(OutDir_PdfDraw)PdfDraw.a \
@@ -184,6 +188,7 @@ $(OutFile): build_info  \
 			$(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a \
 			$(OutDir_GLCanvas)GLCanvas.a \
 			$(OutDir_RasterPlayer)RasterPlayer.a \
+			$(OutDir_CtrlScroll)CtrlScroll.a \
 			$(OutDir_CtrlCore)CtrlCore.a \
 		$(OutDir_PdfDraw)PdfInit.o \
 			$(OutDir_PdfDraw)PdfDraw.a \
@@ -272,6 +277,7 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	BEMRosetta/BEMRosetta/main.tpp/all.i \
 	BEMRosetta/BEMRosetta/main.tpp/Mesh_en-us.tppi \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
+	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	config/ftheader.h \
 	ft2build.h \
@@ -882,6 +888,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
+	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	config/ftheader.h \
 	ft2build.h \
@@ -1489,6 +1496,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
+	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	config/ftheader.h \
 	ft2build.h \
@@ -2096,8 +2104,10 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/clip.brc \
 	BEMRosetta/BEMRosetta/main.h \
+	BEMRosetta/BEMRosetta/main.iml \
 	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
+	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	config/ftheader.h \
 	ft2build.h \
@@ -2229,7 +2239,9 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	Draw/FontInt.h \
 	Draw/Image.h \
 	Draw/ImageOp.h \
+	Draw/iml.h \
 	Draw/iml_header.h \
+	Draw/iml_source.h \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
@@ -2705,6 +2717,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
+	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	config/ftheader.h \
 	ft2build.h \
@@ -3312,6 +3325,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
+	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	config/ftheader.h \
 	ft2build.h \
@@ -23600,6 +23614,166 @@ $(OutDir_RasterPlayer)RasterPlayer.a: \
 	$(OutDir_RasterPlayer)RasterPlayer.o
 	$(AR) $(OutDir_RasterPlayer)RasterPlayer.a \
 		$(OutDir_RasterPlayer)RasterPlayer.o
+
+$(OutDir_CtrlScroll):
+	mkdir -p $(OutDir_CtrlScroll)
+
+$(OutDir_CtrlScroll)CtrlScroll.o: CtrlScroll/CtrlScroll.cpp \
+	CtrlScroll/CtrlScroll.h \
+	config/ftheader.h \
+	ft2build.h \
+	internal/internal.h \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	CtrlCore/Coco.h \
+	CtrlCore/CocoCode.h \
+	CtrlCore/CtrlCore.h \
+	CtrlCore/CtrlCore.iml \
+	CtrlCore/Gtk.h \
+	CtrlCore/lay.h \
+	CtrlCore/MKeys.h \
+	CtrlCore/stdids.h \
+	CtrlCore/TopWindow.h \
+	CtrlCore/Win32Gui.h \
+	CtrlCore/X11Gui.h \
+	CtrlLib/AKeys.h \
+	CtrlLib/ArrayCtrl.h \
+	CtrlLib/Bar.h \
+	CtrlLib/Ch.h \
+	CtrlLib/ClassicCtrls.iml \
+	CtrlLib/ColumnList.h \
+	CtrlLib/Ctrl.iml \
+	CtrlLib/Ctrl.lay \
+	CtrlLib/CtrlLib.h \
+	CtrlLib/Ctrls.iml \
+	CtrlLib/CtrlUtil.h \
+	CtrlLib/DateTimeCtrl.h \
+	CtrlLib/DisplayPopup.h \
+	CtrlLib/DlgColor.h \
+	CtrlLib/DropChoice.h \
+	CtrlLib/EditCtrl.h \
+	CtrlLib/FileSel.h \
+	CtrlLib/HeaderCtrl.h \
+	CtrlLib/LabelBase.h \
+	CtrlLib/Lang.h \
+	CtrlLib/MultiButton.h \
+	CtrlLib/Progress.h \
+	CtrlLib/PushCtrl.h \
+	CtrlLib/RichText.h \
+	CtrlLib/ScrollBar.h \
+	CtrlLib/SliderCtrl.h \
+	CtrlLib/Splitter.h \
+	CtrlLib/StaticCtrl.h \
+	CtrlLib/StatusBar.h \
+	CtrlLib/SuggestCtrl.h \
+	CtrlLib/TabCtrl.h \
+	CtrlLib/TextEdit.h \
+	CtrlLib/TreeCtrl.h \
+	Draw/Cham.h \
+	Draw/DDARasterizer.h \
+	Draw/Display.h \
+	Draw/Draw.h \
+	Draw/FontInt.h \
+	Draw/Image.h \
+	Draw/ImageOp.h \
+	Draw/iml_header.h \
+	Draw/Raster.h \
+	Draw/SDraw.h \
+	guiplatform.h \
+	plugin/png/png.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	RichText/Para.h \
+	RichText/RichText.h \
+	RichText/RichText.iml \
+	RichText/Table.h \
+	RichText/Text.h \
+	RichText/Txt.h \
+	Turtle/FB.iml \
+	Turtle/Keys.h \
+	Turtle/Turtle.h \
+	VirtualGui/FB.iml \
+	VirtualGui/Keys.h \
+	VirtualGui/VirtualGui.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlScroll)  CtrlScroll/CtrlScroll.cpp -o $(OutDir_CtrlScroll)CtrlScroll.o
+
+$(OutDir_CtrlScroll)CtrlScroll.a: \
+	$(OutDir_CtrlScroll)CtrlScroll.o
+	$(AR) $(OutDir_CtrlScroll)CtrlScroll.a \
+		$(OutDir_CtrlScroll)CtrlScroll.o
 
 $(OutDir_CtrlCore):
 	mkdir -p $(OutDir_CtrlCore)
