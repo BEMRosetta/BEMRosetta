@@ -3,6 +3,7 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
+#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -111,6 +112,7 @@ void MainMesh::Init() {
 	menuStability.moveType <<= 0;
 	menuStability.moveType.Transparent(false);
 	menuStability.butUpdatePos <<= THISBACK1(OnUpdate, false);
+	menuStability.butUpdateAng <<= THISBACK1(OnUpdate, false);
 	menuStability.butHealing <<= THISBACK(OnHealing);
 	
 	menuStability.arrayModel.NoHeader().NoVertGrid().AutoHideSb();

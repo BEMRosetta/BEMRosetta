@@ -4,12 +4,12 @@
 namespace Upp {
 
 
-class DataSource {
+class DataSource : public Pte<DataSource>  {
 public:
 	typedef double (DataSource::*Getdatafun)(int64 id);
 
 	DataSource() : isParam(false), isExplicit(false) {}
-	virtual ~DataSource() 						{magic = 321321;}	
+	virtual ~DataSource() 						{}	
 	virtual double y(int64 ) = 0;
 	virtual double x(int64 ) = 0;
 	virtual double znx(int , int64 ) 			{NEVER();	return Null;}
@@ -26,7 +26,6 @@ public:
 	virtual int GetznFixedCount() 				{return 0;}
 	bool IsParam() const						{return isParam;}
 	bool IsExplicit() const						{return isExplicit;}
-	bool IsDeleted()							{return magic != 123123;}
 
 	void SetDestructor(Function <void(void)> _OnDestructor) {OnDestructor = _OnDestructor;}
 
@@ -43,11 +42,13 @@ public:
 	virtual double IsSortedY()  			{return IsSorted(&DataSource::y);}		
 	virtual double IsSortedX()  			{return IsSorted(&DataSource::x);}	
 	
-	virtual double AvgY()  				{return Avg(&DataSource::y);}		
-	virtual double AvgX()  				{return Avg(&DataSource::x);}	
-	virtual double RMSY()  				{return RMS(&DataSource::y);}			
-	virtual double StdDevY(double avg = Null)  	{return StdDev(&DataSource::y, avg);}	
-	virtual double VarianceY(double avg = Null)  {return Variance(&DataSource::y, avg);}	
+	virtual double CloserY(double d)  		{return Closer(&DataSource::y, d);}		
+	virtual double CloserX(double d)  		{return Closer(&DataSource::x, d);}
+	virtual double AvgY()  					{return Avg(&DataSource::y);}		
+	virtual double AvgX()  					{return Avg(&DataSource::x);}	
+	virtual double RMSY()  					{return RMS(&DataSource::y);}			
+	virtual double StdDevY(double avg = Null)  		{return StdDev(&DataSource::y, avg);}	
+	virtual double VarianceY(double avg = Null)  	{return Variance(&DataSource::y, avg);}	
 	virtual Vector<int64> UpperEnvelopeY(double width)  	{return UpperEnvelope(&DataSource::y, &DataSource::x, width);}	
 	virtual Vector<int64> LowerEnvelopeY(double width)  	{return LowerEnvelope(&DataSource::y, &DataSource::x, width);}	
 	virtual Vector<Pointf> CumulativeY() 				{return Cumulative(&DataSource::y, &DataSource::x);}
@@ -87,6 +88,7 @@ public:
 	double Min(Getdatafun getdata, int64& id);
 	double Max(Getdatafun getdata, int64& id);
 	double Avg(Getdatafun getdata);
+	double Closer(Getdatafun getdata, double d);
 	double IsSorted(Getdatafun getdata);
 	double RMS(Getdatafun getdata);
 	double StdDev(Getdatafun getdata, double avg = Null);
@@ -123,7 +125,6 @@ protected:
 	
 private:
 	Function <void(void)> OnDestructor;
-	int magic = 123123;
 	Vector<int64> Envelope(Getdatafun getdataY, Getdatafun getdataX, double width, bool (*fun)(double a, double b));
 };
 

@@ -447,7 +447,7 @@ private:
 
 class FileInLine : public FileIn {
 public:
-	FileInLine(String data) : FileIn(data), line(0) {};
+	FileInLine(String _fileName) : FileIn(_fileName), line(0), fileName(_fileName) {};
 	String GetLine() {
 		line++;	
 		return FileIn::GetLine();
@@ -456,7 +456,8 @@ public:
 		for (int i = 0; i < num; ++i)
 			GetLine();
 	}
-	int GetLineNumber()	const {return line;}
+	int GetLineNumber()	const 	{return line;}
+	String Str() const 			{return Format(t_("[File: '%s', line: %d]:\n"), fileName, line);}
 	
 	struct Pos {
 		Pos() : byt(0), line(0) {}
@@ -478,6 +479,7 @@ public:
 	
 private:
 	int line;
+	String fileName;
 };
 
 class FileInData : public FileIn {
@@ -576,6 +578,7 @@ public:
 		cx(d.cx), cy(d.cy), cz(d.cz), npoints(d.npoints), npanels(d.npanels) {}
 	
 	String meshFile;
+	int ndof;
 	bool surge, sway, heave, roll, pitch, yaw;
 	double cx, cy, cz;	
 	int npoints, npanels;
@@ -602,7 +605,7 @@ public:
 	
 	bool Load(String fileName);
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
-	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem) const;
+	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem, int solver) const;
 	Vector<String> Check();
 	
 private:
@@ -613,6 +616,8 @@ private:
 	void CreateId(String folder) const;
 	void CreateBat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
 	void CreateInput(String folder) const;
+	
+	void SaveFolder0(String folder, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int solver) const;
 };
 
 class Nemoh : public HydroClass {
@@ -636,7 +641,7 @@ private:
 	bool Load_Excitation(String folder);
 	bool Load_Diffraction(String folder);
 	bool Load_FroudeKrylov(String folder);
-	bool Load_Forces(Hydro::Forces &f, String nfolder, String fileName, String textDelim);
+	bool Load_Forces(Hydro::Forces &f, String nfolder, String fileName);
 	bool Load_IRF(String fileName);
 };
 
@@ -708,7 +713,7 @@ public:
 	}
 	String GetText(int i) const {
 		if (fields.IsEmpty())
-			throw Exc(Format(t_("[line %d] No data available"), in->GetLineNumber()));
+			throw Exc(in->Str() + t_("No data available"));
 		if (IsNull(i))
 			i = fields.GetCount()-1;
 		CheckId(i);
@@ -716,24 +721,24 @@ public:
 	}
 	int GetInt(int i) const {
 		if (fields.IsEmpty())
-			throw Exc(Format(t_("[line %d] No data available"), in->GetLineNumber()));
+			throw Exc(in->Str() + t_("No data available"));
 		if (IsNull(i))
 			i = fields.GetCount()-1;
 		CheckId(i);
 		int res = ScanInt(fields[i]);
 		if (IsNull(res))
-			throw Exc(Format(t_("[line %d] Bad %s '%s' in field #%d, line\n'%s'"), in->GetLineNumber(), "integer", fields[i], i+1, line));
-		return res;
+			throw Exc(in->Str() + Format(t_("Bad %s '%s' in field #%d, line\n'%s'"), "integer", fields[i], i+1, line));
+		return res; 
 	}
 	double GetDouble(int i) const {
 		if (fields.IsEmpty())
-			throw Exc(Format(t_("[line %d] No data available"), in->GetLineNumber()));
+			throw Exc(in->Str() + t_("No data available"));
 		if (IsNull(i))
 			i = fields.GetCount()-1;
 		CheckId(i);
 		double res = ScanDouble(fields[i]);
 		if (IsNull(res))
-			throw Exc(Format(t_("[line %d] Bad %s '%s' in field #%d, line\n'%s'"), in->GetLineNumber(), "double", fields[i], i+1, line));
+			throw Exc(in->Str() + Format(t_("Bad %s '%s' in field #%d, line\n'%s'"), "double", fields[i], i+1, line));
 		return res;
 	}
 	int GetCount() const {
@@ -747,7 +752,7 @@ private:
 	
 	void CheckId(int i) const {
 		if (i >= fields.GetCount() || i < 0)
-			throw Exc(Format(t_("[line %d] Field #%d not found in line\n'%s'"), in->GetLineNumber(), i+1, line));
+			throw Exc(in->Str() + Format(t_("Field #%d not found in line\n'%s'"), i+1, line));
 	}
 };
 

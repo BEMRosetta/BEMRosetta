@@ -128,32 +128,32 @@ bool Wamit::Load_out() {
 			else {
 				hd().h = f.GetDouble(2);
 				if (hd().h < 0)
-					throw Exc(Format(t_("[line %d] Water depth has to be positive"), in.GetLineNumber()));
+					throw Exc(in.Str() + t_("Water depth has to be positive"));
 			}
 			if (line.Find("Water density:") >= 0) 
 				hd().rho = f.GetDouble(5);			
 		} else if (line.Find("XBODY =") >= 0) {
 			ibody++;
 			if (ibody >= hd().Nb)
-				throw Exc(Format(t_("[line %d] Found additional bodies over %d"), in.GetLineNumber(), hd().Nb));
+				throw Exc(in.Str() + Format(t_("Found additional bodies over %d"), hd().Nb));
 			if (hd().cg.rows() < 3 || hd().cg.cols() < hd().Nb)
-			 	throw Exc(Format(t_("[line %d] cg matrix is not dimensioned"), in.GetLineNumber()));
+			 	throw Exc(in.Str() + t_("cg matrix is not dimensioned"));
 			hd().cg(0, ibody) = f.GetDouble(2);
 			hd().cg(1, ibody) = f.GetDouble(5);
 			hd().cg(2, ibody) = f.GetDouble(8);
 		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {
 			if (hd().Vo.GetCount() < hd().Nb)
-			 	throw Exc(Format(t_("[line %d] Vo matrix is not dimensioned"), in.GetLineNumber()));		
+			 	throw Exc(in.Str() + t_("Vo matrix is not dimensioned"));		
 			hd().Vo[ibody] = ScanDouble(line.Mid(pos));
 		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
 			if (hd().cb.rows() < 3 || hd().cg.cols() < hd().Nb)
-			 	throw Exc(Format(t_("[line %d] cb matrix is not dimensioned"), in.GetLineNumber()));
+			 	throw Exc(in.Str() + t_("cb matrix is not dimensioned"));
 			hd().cb(0, ibody) = f.GetDouble(4) + hd().cg(0, ibody);
 			hd().cb(1, ibody) = f.GetDouble(5) + hd().cg(1, ibody);
 			hd().cb(2, ibody) = f.GetDouble(6) + hd().cg(2, ibody);
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
 			if (hd().C.GetCount() < hd().Nb)
-			 	throw Exc(Format(t_("[line %d] C matrix is not dimensioned"), in.GetLineNumber()));
+			 	throw Exc(in.Str() + t_("C matrix is not dimensioned"));
 			hd().C[ibody].setConstant(6, 6, Null);
 			f.LoadWamitJoinedFields(in.GetLine());
 			hd().C[ibody](2, 2) = f.GetDouble(1);
@@ -189,7 +189,7 @@ bool Wamit::Load_out() {
 				}
 			}
 			if (hd().Nb == 0 || hd().Nh == 0 || hd().Nf == 0)
-				throw Exc(Format(t_("[line %d] Wrong format in Wamit file '%s'"), in.GetLineNumber(), hd().file));
+				throw Exc(in.Str() + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 		
 			hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
@@ -223,7 +223,7 @@ bool Wamit::Load_out() {
 				
 				ifr++;
 				if (OUTB(ifr, hd().Nf))
-					throw Exc(Format(t_("[line %d] Found additional frequencies over %d"), in.GetLineNumber(), hd().Nf));
+					throw Exc(in.Str() + Format(t_("Found additional frequencies over %d"), hd().Nf));
 				
 	            hd().T[ifr] = f.GetDouble(4);  			
 	            hd().w[ifr] = fround(2*M_PI/hd().T[ifr], 8);
@@ -239,9 +239,9 @@ bool Wamit::Load_out() {
 						}
 						in.GetLine(2);
 						if (hd().A.GetCount() < hd().Nf)
-			 				throw Exc(Format(t_("[line %d] A matrix is not dimensioned"), in.GetLineNumber()));
+			 				throw Exc(in.Str() + t_("A matrix is not dimensioned"));
 						if (hd().B.GetCount() < hd().Nf)
-			 				throw Exc(Format(t_("[line %d] B matrix is not dimensioned"), in.GetLineNumber()));
+			 				throw Exc(in.Str() + t_("B matrix is not dimensioned"));
 						hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 		            	hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 		            
@@ -255,7 +255,7 @@ bool Wamit::Load_out() {
 							double Aij = f.GetDouble(2);
 							double Bij = f.GetDouble(3);
 							if (OUTB(i, hd().Nb*6) || OUTB(j, hd().Nb*6))
-								throw Exc(Format(t_("[line %d] Index (%d, %d) out of bounds"), in.GetLineNumber(), i, j));
+								throw Exc(in.Str() + Format(t_("Index (%d, %d) out of bounds"), i, j));
 							hd().A[ifr](i, j) = Aij;
 							hd().B[ifr](i, j) = Bij;
 						}
@@ -277,7 +277,7 @@ bool Wamit::Load_out() {
 									double im = ma*sin(ph);
 									int i = abs(f.GetInt(0)) - 1;
 									if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
-										throw Exc(Format(t_("[line %d] Index [%d](%d, %d) out of bounds"), in.GetLineNumber(), ih, ifr, i));
+										throw Exc(in.Str() + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
 									hd().ex.ma[ih](ifr, i) = ma;	
 									hd().ex.ph[ih](ifr, i) = ph;	
 									hd().ex.re[ih](ifr, i) = re;	
@@ -315,7 +315,7 @@ void Wamit::Load_A(FileInLine &in, MatrixXd &A) {
 		int j = f.GetInt(1) - 1;
 		double Aij = f.GetDouble(2);
 		if (OUTB(i, A.rows()) || OUTB(j, A.cols()))
-			throw Exc(Format(t_("[line %d] Index (%d, %d) out of bounds"), in.GetLineNumber(), i, j));
+			throw Exc(in.Str() + Format(t_("Index (%d, %d) out of bounds"), i, j));
 		A(i, j) = Aij;
 	}
 }
@@ -336,7 +336,7 @@ bool Wamit::Load_Scattering(String fileName) {
         		
         		int i = f.GetInt(2) - 1;
         		if (OUTB(i, hd().Nb*6))
-        			throw Exc(Format(t_("[line %d] Index (%d) out of bounds"), in.GetLineNumber(), i));
+        			throw Exc(in.Str() + Format(t_("Index (%d) out of bounds"), i));
                 hd().sc.ma[ih](ifr, i) = f.GetDouble(3);
                 hd().sc.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
                 hd().sc.re[ih](ifr, i) = f.GetDouble(5);
@@ -363,7 +363,7 @@ bool Wamit::Load_FK(String fileName) {
         		
         		int i = f.GetInt(2) - 1;
         		if (OUTB(i, hd().Nb*6))
-        			throw Exc(Format(t_("[line %d] Index (%d) out of bounds"), in.GetLineNumber(), i));
+        			throw Exc(in.Str() + Format(t_("Index (%d) out of bounds"), i));
                 hd().fk.ma[ih](ifr, i) = f.GetDouble(3);
                 hd().fk.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
                 hd().fk.re[ih](ifr, i) = f.GetDouble(5);
@@ -413,16 +413,16 @@ bool Wamit::Load_1(String fileName) {
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(Format(t_("[line %d] Number of bodies loaded is lower than previous (%d != %d)"), in.GetLineNumber(), hd().Nb, Nb));
+		throw Exc(in.Str() + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
 	hd().Nb = Nb;	
 	
 	int Nf = w.GetCount();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(Format(t_("[line %d] Number of frequencies loaded is different than previous (%d != %d)"), in.GetLineNumber(), hd().Nf, Nf));
+		throw Exc(in.Str() + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
 	if (hd().Nb == 0 || hd().Nf < 2)
-		throw Exc(Format(t_("[line %d] Wrong format in Wamit file '%s'"), in.GetLineNumber(), hd().file));
+		throw Exc(in.Str() + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	if (w[0] > w[1]) {
 		hd().dataFromW = false;
@@ -455,9 +455,9 @@ bool Wamit::Load_1(String fileName) {
 		hd().w = pick(w);
 		hd().T = pick(T);
 	} else if (!Compare(hd().w, w, 0.001))
-		throw Exc(Format(t_("[line %d] Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), in.GetLineNumber(), ToString(hd().w), ToString(w)));
+		throw Exc(in.Str() + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
 	else if (!Compare(hd().T, T, 0.001))
-		throw Exc(Format(t_("[line %d] Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), in.GetLineNumber(), ToString(hd().T), ToString(T)));
+		throw Exc(in.Str() + Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 				
 	in.SeekPos(fpos);
 	
@@ -467,17 +467,17 @@ bool Wamit::Load_1(String fileName) {
  		int i = f.GetInt(1) - 1;
  		int j = f.GetInt(2) - 1;
  		if (i >= Nb*6 || i < 0 || j >= Nb*6 || j < 0)
-			throw Exc(Format(t_("[line %d] DOF # does not match (%d, %d)"), in.GetLineNumber(), i+1, j+1));
+			throw Exc(in.Str() + Format(t_("DOF # does not match (%d, %d)"), i+1, j+1));
  		
  		double Aij = f.GetDouble(3);
  		
  		if ((freq < 0)) {// && hd().dataFromW) || (freq == 0 && !hd().dataFromW)) {
  			if (!thereIsAw0)
-				throw Exc(Format(t_("[line %d] A[w=inf] is not expected"), in.GetLineNumber()));
+				throw Exc(in.Str() + t_("A[w=inf] is not expected"));
 			hd().Aw0(i, j) = Aij;
 		} else if (freq == 0) {
 			if (!thereIsAwinf)
-				throw Exc(Format(t_("[line %d] A[w=0] is not expected"), in.GetLineNumber()));				
+				throw Exc(in.Str() + t_("A[w=0] is not expected"));				
 			hd().Awinf(i, j) = Aij;
 		} else {
 			int ifr;
@@ -486,7 +486,7 @@ bool Wamit::Load_1(String fileName) {
 			else
 				ifr = FindIndexRatio(hd().T, freq, 0.001);
 			if (ifr < 0)
-				throw Exc(Format(t_("[line %d] Frequency %f is unknown"), in.GetLineNumber(), freq));
+				throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
 		
 		  	hd().A[ifr](i, j) = Aij;    
 		  	hd().B[ifr](i, j) = f.GetDouble(4);   	
@@ -525,15 +525,15 @@ bool Wamit::Load_3(String fileName) {
 	}
 	
 	if (hd().head.GetCount() == 0)
-		throw Exc(Format(t_("[line %d] Wrong format in Wamit file '%s'"), in.GetLineNumber(), hd().file));
+		throw Exc(in.Str() + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	if (!IsNull(hd().Nh) && hd().Nh != hd().head.GetCount())
-		throw Exc(Format(t_("[line %d] Number of headings is different than previous (%d != %d)"), in.GetLineNumber(), hd().Nh, hd().head.GetCount()));
+		throw Exc(in.Str() + Format(t_("Number of headings is different than previous (%d != %d)"), hd().Nh, hd().head.GetCount()));
 	hd().Nh = hd().head.GetCount();
 	
 	int Nf = w.GetCount();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(Format(t_("[line %d] Number of frequencies loaded is different than previous (%d != %d)"), in.GetLineNumber(), hd().Nf, Nf));
+		throw Exc(in.Str() + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
 			
 	if (w[0] > w[1]) {
@@ -558,9 +558,9 @@ bool Wamit::Load_3(String fileName) {
 		hd().w = pick(w);
 		hd().T = pick(T);
 	} else if (!Compare(hd().w, w, 0.001))
-		throw Exc(Format(t_("[line %d] Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), in.GetLineNumber(), ToString(hd().w), ToString(w)));
+		throw Exc(in.Str() + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
 	else if (!Compare(hd().T, T, 0.001))
-		throw Exc(Format(t_("[line %d] Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), in.GetLineNumber(), ToString(hd().T), ToString(T)));
+		throw Exc(in.Str() + Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 	
 	in.SeekPos(fpos);
 	
@@ -573,11 +573,11 @@ bool Wamit::Load_3(String fileName) {
 		else
 			ifr = FindIndexRatio(hd().T, freq, 0.001);
 		if (ifr < 0)
-			throw Exc(Format(t_("[line %d] Frequency %f is unknown"), in.GetLineNumber(), freq));
+			throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
 		double head = f.GetDouble(1);
 		int ih = FindIndexRatio(hd().head, head, 0.001);
 		if (ih < 0)
-			throw Exc(Format(t_("[line %d] Heading %f is unknown"), in.GetLineNumber(), head));
+			throw Exc(in.Str() + Format(t_("Heading %f is unknown"), head));
 			
 		int i = f.GetInt(2) - 1;		
 		
@@ -663,24 +663,24 @@ bool Wamit::Load_4(String fileName) {
 	}
 
 	if (hd().head.GetCount() == 0)
-		throw Exc(Format(t_("[line %d] Wrong format in Wamit file '%s'"), in.GetLineNumber(), hd().file));
+		throw Exc(in.Str() + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	if (!IsNull(hd().Nh) && hd().Nh != hd().head.GetCount())
-		throw Exc(Format(t_("[line %d] Number of headings loaded is different than previous (%d != %d)"), in.GetLineNumber(), hd().Nh, hd().head.GetCount()));
+		throw Exc(in.Str() + Format(t_("Number of headings loaded is different than previous (%d != %d)"), hd().Nh, hd().head.GetCount()));
 	hd().Nh = hd().head.GetCount();
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(Format(t_("[line %d] Number of bodies loaded is lower than previous (%d != %d)"), in.GetLineNumber(), hd().Nb, Nb));
+		throw Exc(in.Str() + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
 	hd().Nb = Nb;
 	
 	int Nf = w.GetCount();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(Format(t_("[line %d] Number of frequencies loaded is different than previous (%d != %d)"), in.GetLineNumber(), hd().Nf, Nf));
+		throw Exc(in.Str() + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
 	if (hd().Nb == 0 || hd().Nf < 2)
-		throw Exc(Format(t_("[line %d] Wrong format in Wamit file '%s'"), in.GetLineNumber(), hd().file));
+		throw Exc(in.Str() + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	if (w[0] > w[1]) {
 		hd().dataFromW = false;
@@ -704,9 +704,9 @@ bool Wamit::Load_4(String fileName) {
 		hd().w = pick(w);
 		hd().T = pick(T);
 	} else if (!Compare(hd().w, w, 0.001))
-		throw Exc(Format(t_("[line %d] Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), in.GetLineNumber(), ToString(hd().w), ToString(w)));
+		throw Exc(in.Str() + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
 	else if (!Compare(hd().T, T, 0.001))
-		throw Exc(Format(t_("[%s] Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), in.GetLineNumber(), ToString(hd().T), ToString(T)));
+		throw Exc(Format(t_("[%s] Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
 	
 	in.SeekPos(fpos);
 	
@@ -719,11 +719,11 @@ bool Wamit::Load_4(String fileName) {
 		else
 			ifr = FindIndexRatio(hd().T, freq, 0.001);
 		if (ifr < 0)
-			throw Exc(Format(t_("[line %d] Frequency %f is unknown"), in.GetLineNumber(), freq));
+			throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
 		double head = f.GetDouble(1);
 		int ih = FindIndexRatio(hd().head, head, 0.001);
 		if (ih < 0)
-			throw Exc(Format(t_("[line %d] Heading %f is unknown"), in.GetLineNumber(), head));
+			throw Exc(in.Str() + Format(t_("Heading %f is unknown"), head));
 			
 		int i = f.GetInt(2) - 1;		
 		

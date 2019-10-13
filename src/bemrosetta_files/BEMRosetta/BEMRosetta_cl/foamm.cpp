@@ -164,15 +164,6 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 		for (int c = 0; c < ssFreqRange.GetCols(); ++c)
 			sts.ssFreqRange[c] = ssFreqRange(0, c);
 	}
-	
-	MatMatrix<double> ssFrequencies_index = mat.VarReadMat<double>("Frequencies_index");	
-	if (ssFrequencies_index.GetCols() == 0)
-		BEMData::Print(S("\n") + t_("Matrix Frequencies_index not found"));
-	else {
-		sts.ssFrequencies_index.setConstant(ssFrequencies_index.GetCols(), Null);
-		for (int c = 0; c < ssFrequencies_index.GetCols(); ++c)
-			sts.ssFrequencies_index[c] = ssFrequencies_index(0, c);
-	}
 
 	sts.ssMAE = mat.VarRead<double>("MAE");		
 			

@@ -15,29 +15,34 @@ public:
 };
 
 template <class T>
-class WithRectFocus : public T {
+class WithRectEnter : public T {
 public:
-	void SetRectangle(StaticRectangle &_rect, Function <void(StaticRectangle *)>_WhenFocus) {
+	void SetRectangle(StaticRectangle &_rect, Function <void(StaticRectangle *)>_WhenEnter) {
 		rect = &_rect;
-		WhenFocus = _WhenFocus;
+		WhenEnter = _WhenEnter;
 		rect->Hide();
 	}
-	virtual void GotFocus() {
+	virtual void MouseEnter(Point , dword) {
 		if (!rect)
 			return;
 		rect->Show();
-		if (WhenFocus)
-			WhenFocus(rect);
-	}/*
-	virtual void LostFocus() {
-		if (!rect)
-			return;
-		//rect->Hide();
-	}*/
+		if (WhenEnter)
+			WhenEnter(rect);
+	}
 
 private:
 	StaticRectangle *rect = 0;
-	Function <void(StaticRectangle *)>WhenFocus;
+	Function <void(StaticRectangle *)>WhenEnter;
+};
+
+template <class T>
+class WithFocus : public T {
+public:
+	virtual void GotFocus() {
+		if (WhenFocus)
+			WhenFocus();
+	}
+	Function <void()>WhenFocus;
 };
 
 template <class T>
@@ -49,6 +54,105 @@ public:
 			WhenLeftDown(p);
 	}
 	Function <void(Point)>WhenLeftDown;
+};
+
+class FreqSelector : public CtrlScroll {
+public:
+	typedef FreqSelector CLASSNAME;
+	
+	FreqSelector() {
+		pane.SetRect(0, 0, 40, 30);
+		AddPaneH(pane).SizePos();
+	}
+	
+	void Add(double str = Null) {
+		WithFocus<EditDouble> &edit = edits.Add();
+		edit.WhenAction = THISBACK(OnAction);
+		edit.WhenFocus = [&] {
+				foc = &edit;
+				for (int i = 0; i < edits.GetCount(); ++i) {
+					if (&edits[i] == &edit)
+						rects[i].Show();
+					else
+						rects[i].Hide();
+				}
+			};
+		edit <<= str;
+		StaticRectangle &rc = rects.Add();
+		rc.SetColor(LtBlue());
+		rc.SetWidth(4);
+		pane.Add(rc.LeftPosZ(pos*40, 40).TopPosZ(3, 19));
+		pane.Add(edit.LeftPosZ(pos*40, 40).TopPosZ(0, 19));
+		pos++;
+		pane.SetRect(0, 0, edit.GetRect().Width()*(pos+1), 30);
+		edit.SetFocus();
+		edit.WhenFocus();
+		Layout();
+	}
+	void Remove() {
+		if (edits.IsEmpty())
+			return;
+		int id;
+		if (edits.GetCount() == 1)
+			id = 0;
+		else {
+			id = GetCursorId();
+			if (id < 0)
+				return;
+		}
+		for (int i = id+1; i < edits.GetCount(); ++i) {
+			Rect rect = edits[i].GetRect();
+			rect.OffsetHorz(-rect.Width());
+			edits[i].SetRect(rect);
+			rects[i].SetRect(rect);
+		}
+		WithFocus<EditDouble> &edit = edits[id];
+		pos--;
+		pane.SetRect(0, 0, edit.GetRect().Width()*(pos+1), 30);
+		edit.Ctrl::Remove();
+		edits.Remove(id);
+		rects[id].Ctrl::Remove();
+		rects.Remove(id);	
+		Layout();
+	}
+	int GetCursorId() {
+		for (int i = 0; i < edits.GetCount(); ++i) {
+			if (edits[i].HasFocus() || &edits[i] == foc)
+				return i;
+		}
+		return -1;
+	}
+	int GetCount() 		{return edits.GetCount();}
+	double Get(int id)	{return edits[id];}
+	void Set(double val) {
+		int id = GetCursorId();
+		if (id < 0)
+			return;
+		edits[id] <<= val;
+	}
+	void Clear() {
+		for (int i = 0; i < edits.GetCount(); ++i) {
+			edits[i].Ctrl::Remove();
+			edits.Remove(i);
+			rects.Remove(i);
+		}
+		pane.SetRect(0, 0, 40, 30);	
+		foc = 0;
+	}
+	
+	Function<void()> WhenAction;
+	
+private:
+	StaticRect pane;
+	Upp::Array<WithFocus<EditDouble>> edits;
+	Upp::Array<StaticRectangle> rects;
+	int pos = 0;
+	
+	void OnAction() {
+		if (WhenAction)
+			WhenAction();
+	}
+	WithFocus<EditDouble> *foc = 0;
 };
 
 #include <ScatterDraw/Unpedantic.h>
@@ -483,7 +587,6 @@ public:
 	bool OnFOAMM();
 	void WhenSelArrayModel(BEMData &bem);
 	void WhenSelArrayCases();
-	void WhenSelArrayFreq();
 	void WhenArrayCases();
 	void WhenArrayFreq();
 	String Check(double fromFreq, double toFreq, String freqs);
@@ -497,6 +600,7 @@ public:
 private:
 	bool isCancelled;
 	StaticRectangle *rectActual = 0;
+	Upp::Array<Option> options;
 };
 
 class MainBEM : public WithMain<StaticRect> {
@@ -531,8 +635,9 @@ public:
 	MainStiffness mainStiffness;
 		
 private:
-	MainPlot &GetSelPlot();
-	MainABForce &GetSelTab();
+	ScatterCtrl &GetSelScatter();
+	MainABForce &GetSelABForce();
+	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEMData &bem);
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);

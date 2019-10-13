@@ -225,7 +225,7 @@ protected:
 	public:
 		typedef ScatterSeries CLASSNAME;
 		
-		ScatterSeries()	: owns(false), serializeData(false), pD(0) {dataS.Init(&data);}
+		ScatterSeries()	: owns(false), serializeData(false) {dataS.Init(&data);}
 		void SetDataSource(DataSource *pointsData, bool ownsData = true) {
 			DeletePD();
 			pD = pointsData; 
@@ -236,8 +236,8 @@ protected:
 			if (copy) 
 				CopyInternal();
 		}
-		DataSource &Data() const 				{return *pD;}
-		bool IsDeleted() const					{return pD->IsDeleted();}
+		DataSource &Data()		 				{return *(~pD);}
+		bool IsDeleted() const					{return ~pD == 0;}
 		virtual ~ScatterSeries()   				{DeletePD();}
 		void SerializeData(bool ser = true) 	{serializeData = ser;}
 		void SerializeFormat(bool ser = false) 	{serializeFormat = ser;}
@@ -268,7 +268,7 @@ protected:
 		}
 		
 	private:
-		DataSource *pD;
+		Ptr<DataSource> pD;
 		bool owns;
 		Vector<Pointf> data;
 		VectorPointf dataS;
