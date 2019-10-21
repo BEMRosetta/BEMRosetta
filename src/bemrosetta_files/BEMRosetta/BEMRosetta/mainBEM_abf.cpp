@@ -20,6 +20,7 @@ void MainABForce::Init(DataToShow _dataToShow) {
 	selTab = 0;
 	isFilling = false;
 	tab.WhenSet = [&] {
+		LOGTAB(tab);
 		if (!isFilling)
 			selTab = tab.Get();
 	};
@@ -96,7 +97,9 @@ void MainPlot::Init() {
 		CtrlLayout(*this);
 		isInit = true;
 	}
+	Clear();
 }
+
 void MainPlot::Init(int _idof, double jdof_ih, DataToShow _dataToShow) {
 	MainPlot::Init();
 	
@@ -147,7 +150,6 @@ void MainPlot::Init(int _idof, double jdof_ih, DataToShow _dataToShow) {
 }
 
 bool MainPlot::Load(const Upp::Array<HydroClass> &hydro) {
-	scatter.RemoveAllSeries();
 	ABF_source.SetCount(hydro.GetCount());
 	ABF_source2.SetCount(hydro.GetCount());
 	Ainf_source.SetCount(hydro.GetCount());
@@ -284,4 +286,11 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded) {
 			scatter.Units("rad");
 		}
 	}
+}
+
+void MainPlot::Clear() {
+	ABF_source.Clear();
+	ABF_source2.Clear();
+	Ainf_source.Clear();
+	scatter.RemoveAllSeries();
 }

@@ -29,38 +29,39 @@ public:
 
 	void SetDestructor(Function <void(void)> _OnDestructor) {OnDestructor = _OnDestructor;}
 
-	virtual double MinY(int64& id)  		{return Min(&DataSource::y, id);}
-	virtual double MinY()  					{int64 dummy;	return Min(&DataSource::y, dummy);}
-	virtual double MinX(int64& id)  		{return Min(&DataSource::x, id);}	
-	virtual double MinX()  					{int64 dummy;	return Min(&DataSource::x, dummy);}
+	double MinY(int64& id)  		{return Min(&DataSource::y, id);}
+	double MinY()  					{int64 dummy;	return Min(&DataSource::y, dummy);}
+	double MinX(int64& id)  		{return Min(&DataSource::x, id);}	
+	double MinX() 					{int64 dummy;	return Min(&DataSource::x, dummy);}
 
-	virtual double MaxY(int64& id)  		{return Max(&DataSource::y, id);}
-	virtual double MaxY()  					{int64 dummy;	return Max(&DataSource::y, dummy);}
-	virtual double MaxX(int64& id)  		{return Max(&DataSource::x, id);}	
-	virtual double MaxX()  					{int64 dummy;	return Max(&DataSource::x, dummy);}	
+	double MaxY(int64& id)  		{return Max(&DataSource::y, id);}
+	double MaxY()  					{int64 dummy;	return Max(&DataSource::y, dummy);}
+	double MaxX(int64& id)  		{return Max(&DataSource::x, id);}	
+	double MaxX() 					{int64 dummy;	return Max(&DataSource::x, dummy);}	
 	
-	virtual double IsSortedY()  			{return IsSorted(&DataSource::y);}		
-	virtual double IsSortedX()  			{return IsSorted(&DataSource::x);}	
+	double IsSortedY()  			{return IsSorted(&DataSource::y);}		
+	double IsSortedX()  			{return IsSorted(&DataSource::x);}	
 	
-	virtual double CloserY(double d)  		{return Closer(&DataSource::y, d);}		
-	virtual double CloserX(double d)  		{return Closer(&DataSource::x, d);}
-	virtual double AvgY()  					{return Avg(&DataSource::y);}		
-	virtual double AvgX()  					{return Avg(&DataSource::x);}	
-	virtual double RMSY()  					{return RMS(&DataSource::y);}			
-	virtual double StdDevY(double avg = Null)  		{return StdDev(&DataSource::y, avg);}	
-	virtual double VarianceY(double avg = Null)  	{return Variance(&DataSource::y, avg);}	
-	virtual Vector<int64> UpperEnvelopeY(double width)  	{return UpperEnvelope(&DataSource::y, &DataSource::x, width);}	
-	virtual Vector<int64> LowerEnvelopeY(double width)  	{return LowerEnvelope(&DataSource::y, &DataSource::x, width);}	
-	virtual Vector<Pointf> CumulativeY() 				{return Cumulative(&DataSource::y, &DataSource::x);}
-	virtual Vector<Pointf> CumulativeAverageY()  		{return CumulativeAverage(&DataSource::y, &DataSource::x);}
-	virtual Vector<Pointf> MovingAverageY(double width)  {return MovingAverage(&DataSource::y, &DataSource::x, width);}
-	virtual Vector<Pointf> SectorAverageY(double width)  {return SectorAverage(&DataSource::y, &DataSource::x, width);}	
-	virtual void MaxListY(Vector<int64> &id, double width) {MaxList(&DataSource::y, &DataSource::x, id, width);}
-	virtual Pointf MaxSubDataImpY(int64 maxId, int width) 	{return MaxSubDataImp(&DataSource::y, &DataSource::x, maxId, width);}
-	virtual void ZeroCrossingY(bool ascending, bool descending, Vector<double> &zeros, Vector<int64> &ids)  {
+	int64 Closest(double x,double y){return Closest(&DataSource::x, &DataSource::y, x, y);}	
+	int64 ClosestY(double d)  		{return Closest(&DataSource::y, d);}		
+	int64 ClosestX(double d)  		{return Closest(&DataSource::x, d);}
+	double AvgY()  					{return Avg(&DataSource::y);}		
+	double AvgX()  					{return Avg(&DataSource::x);}	
+	double RMSY()  					{return RMS(&DataSource::y);}			
+	double StdDevY(double avg = Null)  				{return StdDev(&DataSource::y, avg);}	
+	double VarianceY(double avg = Null)  			{return Variance(&DataSource::y, avg);}	
+	Vector<int64> UpperEnvelopeY(double width)  	{return UpperEnvelope(&DataSource::y, &DataSource::x, width);}	
+	Vector<int64> LowerEnvelopeY(double width)  	{return LowerEnvelope(&DataSource::y, &DataSource::x, width);}	
+	Vector<Pointf> CumulativeY() 					{return Cumulative(&DataSource::y, &DataSource::x);}
+	Vector<Pointf> CumulativeAverageY()  			{return CumulativeAverage(&DataSource::y, &DataSource::x);}
+	Vector<Pointf> MovingAverageY(double width)  	{return MovingAverage(&DataSource::y, &DataSource::x, width);}
+	Vector<Pointf> SectorAverageY(double width)  	{return SectorAverage(&DataSource::y, &DataSource::x, width);}	
+	void MaxListY(Vector<int64> &id, double width) 	{MaxList(&DataSource::y, &DataSource::x, id, width);}
+	Pointf MaxSubDataImpY(int64 maxId, int width) 	{return MaxSubDataImp(&DataSource::y, &DataSource::x, maxId, width);}
+	void ZeroCrossingY(bool ascending, bool descending, Vector<double> &zeros, Vector<int64> &ids)  {
 		return ZeroCrossing(&DataSource::y, &DataSource::x, ascending, descending, zeros, ids);}
-	virtual double IntegralY() 			{return Integral(&DataSource::y, &DataSource::x);}
-	virtual double IntegralY(double from, double to, double n) 	{return Integral(from, to, n);}
+	double IntegralY() 			{return Integral(&DataSource::y, &DataSource::x);}
+	double IntegralY(double from, double to, double n) 	{return Integral(from, to, n);}
 
 	enum FFT_WINDOW {NO_WINDOW = 0, HAMMING, COS};
 	enum FFT_TYPE   {T_FFT = 0, T_PHASE, T_PSD};
@@ -88,7 +89,8 @@ public:
 	double Min(Getdatafun getdata, int64& id);
 	double Max(Getdatafun getdata, int64& id);
 	double Avg(Getdatafun getdata);
-	double Closer(Getdatafun getdata, double d);
+	int64 Closest(Getdatafun getdata, double d);
+	int64 Closest(Getdatafun getdataX, Getdatafun getdataY, double x, double y);
 	double IsSorted(Getdatafun getdata);
 	double RMS(Getdatafun getdata);
 	double StdDev(Getdatafun getdata, double avg = Null);
