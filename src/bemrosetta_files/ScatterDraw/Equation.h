@@ -482,7 +482,7 @@ public:
 		val *= d.val;
 	}
 	void Div(const doubleUnit &d) {
-		if (d.val < 1e-100)
+		if (abs(d.val) < 1e-100)
 			throw Exc(t_("Division by zero"));
 		unit.Div(d.unit);
 		val /= d.val;

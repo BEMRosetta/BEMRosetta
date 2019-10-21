@@ -144,8 +144,9 @@ public:
 	ScatterCtrl();
 	virtual ~ScatterCtrl() {RemoveInstance(this);};
 	
-	enum ScatterAction {NO_ACTION = 0, SCROLL, ZOOM_H_ENL, ZOOM_H_RED, ZOOM_V_ENL, ZOOM_V_RED, SHOW_COORDINATES, CONTEXT_MENU, ZOOM_WINDOW, 
-					  SCROLL_LEFT, SCROLL_RIGHT, SCROLL_UP, SCROLL_DOWN, ZOOM_FIT};
+	enum ScatterAction {NO_ACTION = 0, SCROLL, ZOOM_H_ENL, ZOOM_H_RED, ZOOM_V_ENL, ZOOM_V_RED, 
+						SHOW_COORDINATES, CONTEXT_MENU, ZOOM_WINDOW, 
+					  	SCROLL_LEFT, SCROLL_RIGHT, SCROLL_UP, SCROLL_DOWN, ZOOM_FIT};
 	#define SHOW_INFO SHOW_COORDINATES
 	
 	struct MouseBehavior {
@@ -277,6 +278,11 @@ public:
 	void InsertSeries(int id, ArrayCtrl &data, bool useCols = true, int idX = 0, int idY = 1, int idZ = 2, int beginData = 0, int numData = Null);	
 	void InsertSeries(int id, GridCtrl &data, bool useCols = true, int idX = 0, int idY = 1, int idZ = 2, int beginData = 0, int numData = Null);	
 	
+	void RemoveAllSeries() {
+		GuiLock __;
+		ScatterDraw::RemoveAllSeries();
+	}
+		
 	ScatterCtrl& SetMaxRefreshTime(int _maxRefresh_ms) 	{maxRefresh_ms = _maxRefresh_ms; return *this;}
 	int GetMaxRefreshTime() 							{return maxRefresh_ms;}
 	
@@ -369,8 +375,7 @@ private:
 	
 	void Paint0(Draw& w, const Size &sz);
 	
-	void ProcessPopUp(const Point &pt);
-	//void ProcessClickSeries(const Point &pt);
+	void ProcessPopUp(Point &pt);
 	
 	void DoMouseAction(bool down, Point pt, ScatterAction action, int wheel);
 	void DoKeyAction(ScatterAction action);
@@ -386,6 +391,8 @@ private:
 	void DoShowData();
 	void DoProcessing();
 	
+	void Closest(double &x, double &y, double &y2);
+		
 	virtual Image CursorImage(Point p, dword keyflags);
 	
 	template <class T>

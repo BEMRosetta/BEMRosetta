@@ -260,13 +260,56 @@ void ScatterCtrl::TimerCallback() {
 	Refresh();
 }
 
-void ScatterCtrl::ProcessPopUp(const Point &pt) {
+void ScatterCtrl::Closest(double &x, double &y, double &y2) {
+	double minD = DBL_MAX;
+	double retx, rety, rety2;
+	
+	for (int i = 0; i < series.GetCount(); ++i) {
+		ScatterSeries &serie = series[i]; 
+		if (serie.IsDeleted() || serie.opacity == 0 || serie.Data().IsExplicit())
+			continue;	
+		DataSource &data = serie.Data();
+		double d;
+		int64 id;
+		if (serie.primaryY) {
+			id = data.Closest(x, y);
+			d = GetScatterDistance(x - data.x(id), y - data.y(id));
+		} else  {
+			id = data.Closest(x, y);
+			d = GetScatterDistance2(x - data.x(id), y - data.y(id));
+		}
+		if (minD > d) {
+			minD = d;
+			retx = data.x(id);	
+			if (serie.primaryY) {
+				rety = data.y(id);	
+				rety2 = GetRealPosY2(GetScatterPosY(data.y(id)));
+			} else {
+				rety2 = data.y(id);	
+				rety = GetRealPosY(GetScatterPosY2(data.y(id)));
+			}
+		}
+	}
+	if (minD == DBL_MAX)
+		x = y = y2 = Null;
+	else {
+		x = retx;
+		y = rety;
+		y2 = rety2;
+	}
+}
+
+void ScatterCtrl::ProcessPopUp(Point &pt) {
 	double _x  = GetRealPosX(popLT.x);
 	double _y  = GetRealPosY(popLT.y);
 	double _y2 = GetRealPosY2(popLT.y);
 	double x   = GetRealPosX(pt.x);
 	double y   = GetRealPosY(pt.y);
 	double y2  = GetRealPosY2(pt.y);
+	
+	if (IsNull(popLT))
+		popLT = pt;
+	popRB = pt;
 	
 	double dx  = fabs(x  - _x);
 	double dy  = fabs(y  - _y);
@@ -514,8 +557,7 @@ bool ScatterCtrl::ProcessKey(int key)
 	return processed;
 }
 
-void ScatterCtrl::LabelPopUp(bool down, Point &pt) 
-{
+void ScatterCtrl::LabelPopUp(bool down, Point &pt) {
 	GuiLock __;
 	
 	if (down) {
@@ -526,16 +568,6 @@ void ScatterCtrl::LabelPopUp(bool down, Point &pt)
 			popTextEnd.AppearOnly(this);
 			
 			isLabelPopUp = true;
-			if (IsNull(popLT))
-				popLT = pt;
-			popRB = pt;
-			/*Rect wa = GetWorkArea();
-			Rect rc = GetScreenRect();
-			if (wa.right - (rc.left + pt.x) < 200)
-				pt.x -= 200;
-			if (wa.bottom - (rc.top + pt.y) < 200)
-				pt.y -= 200;*/
-			//ProcessClickSeries(pt); TBD
 			ProcessPopUp(pt);		
 		} 
 	} else {
@@ -551,8 +583,7 @@ void ScatterCtrl::LabelPopUp(bool down, Point &pt)
 	}
 }
 
-void ScatterCtrl::ZoomWindow(bool down, Point &pt) 
-{
+void ScatterCtrl::ZoomWindow(bool down, Point &pt) {
 	if (down) {
 		if (PointInPlot(pt)) {
 			isZoomWindow = true;
@@ -561,7 +592,7 @@ void ScatterCtrl::ZoomWindow(bool down, Point &pt)
 			popRB = pt;
 		}
 	} else {
-		if(isZoomWindow) {
+		if (isZoomWindow) {
 			isLabelPopUp = isZoomWindow = false;
 			
 			if (popLT.x > popRB.x)
@@ -736,9 +767,6 @@ void ScatterCtrl::MouseMove(Point pt, dword keyFlags)
 	} 
 	if(isLabelPopUp) {
 		if (showInfo && PointInPlot(pt)) {
-			if (IsNull(popLT))
-				popLT = pt;
-			popRB = pt;
 			ProcessPopUp(pt);
 			popTextBegin.AppearOnlyOpen(this);
 			popTextHoriz.AppearOnlyOpen(this);

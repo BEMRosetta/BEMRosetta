@@ -237,6 +237,7 @@ protected:
 				CopyInternal();
 		}
 		DataSource &Data()		 				{return *(~pD);}
+		const DataSource &Data() const	 		{return *(~pD);}
 		bool IsDeleted() const					{return ~pD == 0;}
 		virtual ~ScatterSeries()   				{DeletePD();}
 		void SerializeData(bool ser = true) 	{serializeData = ser;}
@@ -527,8 +528,9 @@ public:
 	template <class X, class Y>
 	ScatterDraw &AddSeries(ArrayMap<X, Y> &data)	{return _AddSeries(new ArrayMapXY<X, Y>(data));}
 	
-	DataSource &GetDataSource(int index);
-		
+	DataSource &GetDataSource(int index) 	{ASSERT(IsValid(index));ASSERT(!series[index].IsDeleted());	return series[index].Data();}
+	bool IsDeletedDataSource(int index) 	{return series[index].IsDeleted();}	
+	
 	ScatterDraw &InsertSeries(int index, double *yData, int numData, double x0 = 0, double deltaX = 1);
 	ScatterDraw &InsertSeries(int index, double *xData, double *yData, int numData);
 	ScatterDraw &InsertSeries(int index, Vector<double> &xData, Vector<double> &yData);
@@ -646,7 +648,7 @@ public:
 	
 	ScatterDraw &ShowSeriesLegend(int index, bool show = false);
 	ScatterDraw &ShowSeriesLegend(bool show = false)	{return ShowSeriesLegend(series.GetCount() - 1, show);}
-	bool GetShowSeriesLegend(int index)					{return series[index].showLegend;}
+	bool GetShowSeriesLegend(int index)					{ASSERT(IsValid(index));ASSERT(!series[index].IsDeleted());return series[index].showLegend;}
 		
 	ScatterDraw &Opacity(double opacity = 1) {series[series.GetCount() - 1].opacity = opacity;	return *this;}
 	ScatterDraw &Legend(const String legend);
@@ -751,10 +753,16 @@ public:
 	double GetPosY2(double y)	{return plotH - plotH*(y - yMin2)/yRange2;}
 	double GetSizeY2(double cy) {return plotH*cy/yRange2;}
 	
-	double GetRealPosX(int x) 	{return xMin + (x - hPlotLeft*plotScaleX)*xRange/plotW;}
-	double GetRealPosY(int y)	{return yMin + yRange - (y - plotScaleY*vPlotTop - titleHeight)*yRange/plotH;}		
-	double GetRealPosY2(int y)	{return yMin2 + yRange2 - (y - plotScaleY*vPlotTop - titleHeight)*yRange2/plotH;}		
+	double GetRealPosX(double x) 	{return xMin + (x - hPlotLeft*plotScaleX)*xRange/plotW;}
+	double GetRealPosY(double y)	{return yMin + yRange - (y - plotScaleY*vPlotTop - titleHeight)*yRange/plotH;}		
+	double GetRealPosY2(double y)	{return yMin2 + yRange2 - (y - plotScaleY*vPlotTop - titleHeight)*yRange2/plotH;}		
 	
+	double GetScatterPosX(double x) {return (x - xMin)*plotW/xRange + hPlotLeft*plotScaleX;}
+	double GetScatterPosY(double y) {return (yMin + yRange - y)*plotH/yRange + plotScaleY*vPlotTop + titleHeight;}
+	double GetScatterPosY2(double y){return (yMin2 + yRange2 - y)*plotH/yRange2 + plotScaleY*vPlotTop + titleHeight;}
+	double GetScatterDistance(double dx, double dy)  {return sqrt(sqr(GetScatterPosX(dx)) + sqr(GetScatterPosY(dy)));}
+	double GetScatterDistance2(double dx, double dy) {return sqrt(sqr(GetScatterPosX(dx)) + sqr(GetScatterPosY2(dy)));}
+		
 	double GetPixelThickX()		{return xRange/plotW;}
 	double GetPixelThickY()		{return yRange/plotH;}
 	
@@ -810,7 +818,10 @@ public:
 		return AddLabelSeries(index, labels, dx, dy, font, align, color);
 	}
 	ScatterDraw& AddLabelSeries(int index, Vector<String> &labels, int dx = 0, int dy = 0, Font font = StdFont(), 
-					Alignment align = ALIGN_CENTER, Color color = Black()) {		
+					Alignment align = ALIGN_CENTER, Color color = Black()) {	
+		ASSERT(IsValid(index));
+		ASSERT(!series[index].IsDeleted());
+		
 		series[index].labels = &labels;
 		series[index].labelsDx = dx;
 		series[index].labelsDy = dy;
@@ -821,18 +832,30 @@ public:
 	}
 	
 	ScatterDraw& SetDataSource_Internal(bool copy = true) {
-		for (int i = 0; i < series.GetCount(); ++i)
-			series[i].SetDataSource_Internal(copy);
+		for (int i = 0; i < series.GetCount(); ++i) {
+			ScatterSeries &serie = series[i]; 
+			if (serie.IsDeleted())
+				continue;
+			serie.SetDataSource_Internal(copy);
+		}
 		return *this;
 	}
 	ScatterDraw& SerializeData(bool ser = true) {
-		for (int i = 0; i < series.GetCount(); ++i)
-			series[i].SerializeData(ser);
+		for (int i = 0; i < series.GetCount(); ++i) {
+			ScatterSeries &serie = series[i]; 
+			if (serie.IsDeleted())
+				continue;
+			serie.SerializeData(ser);
+		}
 		return *this;
 	}
 	ScatterDraw& SerializeFormat(bool ser = true) {
-		for (int i = 0; i < series.GetCount(); ++i)
-			series[i].SerializeFormat(ser);
+		for (int i = 0; i < series.GetCount(); ++i) {
+			ScatterSeries &serie = series[i]; 
+			if (serie.IsDeleted())
+				continue;
+			serie.SerializeFormat(ser);
+		}
 		serializeFormat = ser;
 		return *this;
 	}
@@ -1245,7 +1268,9 @@ bool ScatterDraw::PlotTexts(T& w, const bool boldX, bool boldY) {
 		String yLabelLegends, yLabelLegends2;
 		Upp::Index<String> xUnits, yUnits, yUnits2;
 		for (int i = 0; i < series.GetCount(); ++i) {
-			ScatterSeries &serie = series[i];
+			const ScatterSeries &serie = series[i]; 
+			if (serie.IsDeleted())
+				continue;
 			if (serie.primaryY) {
 				if (yLabel.IsEmpty()) {
 					if (!yLabelLegends.IsEmpty())

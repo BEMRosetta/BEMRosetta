@@ -779,12 +779,12 @@ public:
 	int onlyDiagonal;
 	
 	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathGREN;
-	bool experimental, experimentalFOAMM;
+	//bool experimental;
 	String foammPath;
 	
-	void Load(String file, Function <bool(String, int pos)> Status);
+	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
 	void Join(Vector<int> &ids, Function <bool(String, int)> Status);
-	void LoadMesh(String file, Function <void(String, int pos)> Status);
+	void LoadMesh(String file, Function <void(String, int pos)> Status, bool checkDuplicated);
 	void HealingMesh(int id, Function <void(String, int pos)> Status);
 	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
 			
@@ -813,8 +813,7 @@ public:
 			("nemohPathPostprocessor", nemohPathPostprocessor)
 			("nemohPathGREN", nemohPathGREN)
 			("nemohPathNew", nemohPathNew)
-			("experimental", experimental)
-			("experimentalFOAMM", experimentalFOAMM)
+			//("experimental", experimental)
 			("foammPath", foammPath)
 		;
 	}

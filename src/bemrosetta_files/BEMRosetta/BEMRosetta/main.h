@@ -38,10 +38,7 @@ private:
 template <class T>
 class WithFocus : public T {
 public:
-	virtual void GotFocus() {
-		if (WhenFocus)
-			WhenFocus();
-	}
+	virtual void GotFocus() {WhenFocus();}
 	Function <void()>WhenFocus;
 };
 
@@ -56,104 +53,85 @@ public:
 	Function <void(Point)>WhenLeftDown;
 };
 
-class FreqSelector : public CtrlScroll {
+class FreqSelector : public StaticRect {
 public:
 	typedef FreqSelector CLASSNAME;
 	
 	FreqSelector() {
-		pane.SetRect(0, 0, 40, 30);
-		AddPaneH(pane).SizePos();
+		add.SetLabel(t_("Add"));
+		add.WhenAction = [&] {AddField();};
+		Add(add.LeftPos(0, 30).TopPos(3, 19));
+	};
+	void Init(Function <void()>WhenAction, Function <void(StaticRectangle*)>WhenSetRectangle) {
+		OnAction = WhenAction;
+		OnSetRectangle = WhenSetRectangle;
 	}
 	
-	void Add(double str = Null) {
-		WithFocus<EditDouble> &edit = edits.Add();
-		edit.WhenAction = THISBACK(OnAction);
-		edit.WhenFocus = [&] {
-				foc = &edit;
-				for (int i = 0; i < edits.GetCount(); ++i) {
-					if (&edits[i] == &edit)
-						rects[i].Show();
-					else
-						rects[i].Hide();
-				}
-			};
-		edit <<= str;
-		StaticRectangle &rc = rects.Add();
-		rc.SetColor(LtBlue());
-		rc.SetWidth(4);
-		pane.Add(rc.LeftPosZ(pos*40, 40).TopPosZ(3, 19));
-		pane.Add(edit.LeftPosZ(pos*40, 40).TopPosZ(0, 19));
-		pos++;
-		pane.SetRect(0, 0, edit.GetRect().Width()*(pos+1), 30);
-		edit.SetFocus();
-		edit.WhenFocus();
+	void Clear() {
+		edits.Clear();
+		rects.Clear();
+		Rect rc = add.GetRect();
+		rc.right = rc.Width();
+		rc.left = 0;
+		add.SetRect(rc);
+		pos = 0;
 		Layout();
 	}
-	void Remove() {
-		if (edits.IsEmpty())
-			return;
-		int id;
-		if (edits.GetCount() == 1)
-			id = 0;
-		else {
-			id = GetCursorId();
-			if (id < 0)
-				return;
-		}
-		for (int i = id+1; i < edits.GetCount(); ++i) {
-			Rect rect = edits[i].GetRect();
-			rect.OffsetHorz(-rect.Width());
-			edits[i].SetRect(rect);
-			rects[i].SetRect(rect);
-		}
-		WithFocus<EditDouble> &edit = edits[id];
-		pos--;
-		pane.SetRect(0, 0, edit.GetRect().Width()*(pos+1), 30);
-		edit.Ctrl::Remove();
-		edits.Remove(id);
-		rects[id].Ctrl::Remove();
-		rects.Remove(id);	
-		Layout();
+	void HideCtrls() {
+		for (int i = 0; i < edits.GetCount(); ++i)
+			rects[i].Hide();	
 	}
-	int GetCursorId() {
-		for (int i = 0; i < edits.GetCount(); ++i) {
-			if (edits[i].HasFocus() || &edits[i] == foc)
+	int GetCount() 		{return edits.GetCount();}
+	double Get(int id) 	{return ~edits[id];}
+	
+	int IsRect(StaticRectangle *rect) {
+		for (int i = 0; i < rects.GetCount(); ++i) {
+			if (&rects[i] == rect)
 				return i;
 		}
 		return -1;
 	}
-	int GetCount() 		{return edits.GetCount();}
-	double Get(int id)	{return edits[id];}
-	void Set(double val) {
-		int id = GetCursorId();
-		if (id < 0)
-			return;
+	void Set(int id, double val) {
 		edits[id] <<= val;
-	}
-	void Clear() {
-		for (int i = 0; i < edits.GetCount(); ++i) {
-			edits[i].Ctrl::Remove();
-			edits.Remove(i);
-			rects.Remove(i);
-		}
-		pane.SetRect(0, 0, 40, 30);	
-		foc = 0;
-	}
+		edits[id].WhenAction();
+	} 
 	
-	Function<void()> WhenAction;
-	
+	//Function <void(StaticRectangle *rect)>WhenFocus;
+	void AddField(double val = Null) {
+		WithRectEnter<EditDouble> &edit = edits.Add();
+		StaticRectangle &rect = rects.Add();
+		edit.WhenAction = OnAction;
+		edit <<= val;
+		edit.SetRectangle(rect, [&](StaticRectangle *rect) {OnSetRectangle(rect);});
+		rect.SetColor(LtBlue());
+		rect.SetWidth(fThick);
+		Add(rect.LeftPos(pos*fWidth,   fWidth).TopPos(0, 25));
+		Add(edit.LeftPos(pos*fWidth + fThick, fWidth-2*fThick).TopPos(3, 19));
+		Rect rc = add.GetRect();
+		rc.right = (pos+1)*fWidth + rc.Width();
+		rc.left = (pos+1)*fWidth;
+		add.SetRect(rc);
+		edit.SetFocus();
+		pos++;
+		Layout();
+	}
+
 private:
-	StaticRect pane;
-	Upp::Array<WithFocus<EditDouble>> edits;
+	Upp::Array<WithRectEnter<EditDouble>> edits;
 	Upp::Array<StaticRectangle> rects;
+	Button add;
 	int pos = 0;
+	int fWidth = 40, fThick = 3;
 	
-	void OnAction() {
-		if (WhenAction)
-			WhenAction();
-	}
-	WithFocus<EditDouble> *foc = 0;
+	Function <void()>OnAction;
+	Function <void(StaticRectangle*)>OnSetRectangle;
 };
+
+
+String TabText(const TabCtrl &tab);
+
+#define LOGTAB(tab) LOG(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
+
 
 #include <ScatterDraw/Unpedantic.h>
 #define LAYOUTFILE <BEMRosetta/BEMRosetta/main.lay>
@@ -439,6 +417,7 @@ public:
 	bool Load(const Upp::Array<HydroClass> &hydro);
 	bool Load(const Hydro &hy);
 	void LoadEach(const Hydro &hy, int id, bool &loaded);
+	void Clear();
 	
 	Upp::Array<HydroSource> ABF_source, ABF_source2;
 	Upp::Array<HydroSource> Ainf_source;
@@ -590,12 +569,15 @@ public:
 	void WhenArrayCases();
 	void WhenArrayFreq();
 	String Check(double fromFreq, double toFreq, String freqs);
+	void Clear();
 	
 	void WhenFocus(StaticRectangle *rect);
 	void OnPainter(Painter &w);
 	void OnLeftDown(Point p);
 	
 	MainPlot plotsReal, plotsImag;
+	
+	FreqSelector selector;
 	
 private:
 	bool isCancelled;

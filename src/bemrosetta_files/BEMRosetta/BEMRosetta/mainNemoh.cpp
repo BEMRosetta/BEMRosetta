@@ -442,6 +442,7 @@ void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 		for (int i = 0; i < files.GetCount(); ++i) {
 			loadFrom <<= files[i];
 			OnLoad();
+			break;
 		}
 	}
 }
@@ -452,6 +453,7 @@ bool MainNemoh::Key(dword key, int ) {
 		for (int i = 0; i < files.GetCount(); ++i) {
 			loadFrom <<= files[i];
 			OnLoad();
+			break;
 		}
 		return true;
 	}

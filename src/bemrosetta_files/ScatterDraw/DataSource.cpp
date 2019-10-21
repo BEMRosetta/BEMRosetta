@@ -120,20 +120,40 @@ double DataSource::Avg(Getdatafun getdata) {
 	return ret/count;
 }
 
-double DataSource::Closer(Getdatafun getdata, double dat) {
-	double minD = DBL_MAX, minDat;
+int64 DataSource::Closest(Getdatafun getdata, double dat) {
+	double minD = DBL_MAX;
+	int64 minDat;
 	for (int64 i = 0; i < GetCount(); ++i) {
 		double d = Membercall(getdata)(i);
 		if (!IsNull(d)) {
 			if (minD > abs(d - dat)) {
 				minD = abs(d - dat);
-				minDat = d;
+				minDat = i;
 			}
 		}
 	}
 	if (minD == DBL_MAX)
 		return Null;
 	return minDat;
+}
+
+int64 DataSource::Closest(Getdatafun getdataX, Getdatafun getdataY, double x, double y) {
+	double minD = DBL_MAX;
+	int64 minDat;
+	for (int64 i = 0; i < GetCount(); ++i) {
+		double dx = Membercall(getdataX)(i);
+		double dy = Membercall(getdataY)(i);
+		if (!IsNull(dx) && !IsNull(dy)) {
+			double d = sqr(dx - x) + sqr(dy - y);
+			if (minD > d) {
+				minD = d;
+				minDat = i;
+			}
+		}
+	}
+	if (minD == DBL_MAX)
+		return Null;
+	return minDat;	
 }
 
 double DataSource::RMS(Getdatafun getdata) {
