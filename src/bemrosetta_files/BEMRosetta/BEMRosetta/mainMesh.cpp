@@ -140,6 +140,7 @@ void MainMesh::Init() {
 	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix"));
 			
 	mainTab.WhenSet = [&] {
+		LOGTAB(mainTab);
 		bool plot = true, convertProcess = true;
 		if (ma().bem.surfs.IsEmpty()) 
 			plot = convertProcess = false;
@@ -298,6 +299,8 @@ void MainMesh::AfterLoad(String file) {
 }
 
 bool MainMesh::OnLoad() {
+	GuiLock __;
+	
 	String file = ~menuOpen.file;
 		
 	try {
@@ -305,7 +308,14 @@ bool MainMesh::OnLoad() {
 		Progress progress(t_("Loading mesh file..."), 100); 
 		mainView.gl.Disable();
 		
-		ma().bem.LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);});
+		for (int i = 0; i < ma().bem.surfs.GetCount(); ++i) {
+			if (ma().bem.surfs[i].file == file) {
+				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
+					return false;
+				break;
+			}
+		}
+		ma().bem.LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);}, false);
 		
 		AfterLoad(file);
 		
@@ -612,9 +622,14 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 		return;
 	if (AcceptFiles(d)) {
 		Vector<String> files = GetFiles(d);
+		bool followWithErrors = false;
 		for (int i = 0; i < files.GetCount(); ++i) {
 			menuOpen.file <<= files[i];
-			OnLoad();
+			if (!OnLoad() && !followWithErrors) {
+				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
+					return;
+				followWithErrors = true;
+			}
 		}
 	}
 }
@@ -622,9 +637,14 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 bool MainMesh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
+		bool followWithErrors = false;
 		for (int i = 0; i < files.GetCount(); ++i) {
 			menuOpen.file <<= files[i];
-			OnLoad();
+			if (!OnLoad() && !followWithErrors) {
+				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
+					return true;
+				followWithErrors = true;
+			}
 		}
 		return true;
 	}

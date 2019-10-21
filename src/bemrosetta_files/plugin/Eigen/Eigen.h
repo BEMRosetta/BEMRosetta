@@ -7,10 +7,10 @@
 #define EIGEN_DENSEBASE_PLUGIN 	<plugin/Eigen/ToStringPlugin.h>
 #define EIGEN_TENSOR_PLUGIN		<plugin/Eigen/ToStringPlugin.h>
 
-#ifndef flagSSE2
- #define EIGEN_DONT_VECTORIZE
- #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
-#endif
+//#ifndef flagSSE2
+// #define EIGEN_DONT_VECTORIZE
+// #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
+//#endif
 
 #ifndef _DEBUG
 #define EIGEN_NO_DEBUG

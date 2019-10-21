@@ -730,11 +730,13 @@ BEMData::BEMData() {
 	bemFilesAst.Replace(".", "*.");
 }
 
-void BEMData::Load(String file, Function <bool(String, int)> Status) {
+void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
 	Status(t_("Loading files"), 10);
-	for (int i = 0; i < hydros.GetCount(); ++i) {
-		if (hydros[i].hd().file == file) 
-			throw Exc(Format(t_("Model '%s' is already loaded"), file));
+	if (checkDuplicated) {
+		for (int i = 0; i < hydros.GetCount(); ++i) {
+			if (hydros[i].hd().file == file) 
+				throw Exc(Format(t_("Model '%s' is already loaded"), file));
+		}
 	}
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".cal") {
@@ -838,16 +840,17 @@ void BEMData::Join(Vector<int> &ids, Function <bool(String, int)> Status) {
 		hydros.Remove(ids[i]);
 }
 
-void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status) {
+void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status, bool checkDuplicated) {
 	Status(Format(t_("Loaded mesh '%s'"), file), 10);
 	
-	for (int i = 0; i < surfs.GetCount(); ++i) {
-		if (surfs[i].file == file) {
-			BEMData::Print(S("\n") + t_("Model is already loaded"));
-			throw Exc(t_("Model is already loaded"));
+	if (checkDuplicated) {
+		for (int i = 0; i < surfs.GetCount(); ++i) {
+			if (surfs[i].file == file) {
+				BEMData::Print(S("\n") + t_("Model is already loaded"));
+				throw Exc(t_("Model is already loaded"));
+			}
 		}
 	}
-
 	MeshData &mesh = surfs.Add();
 	String error = mesh.Load(file, rho, g);
 	if (!error.IsEmpty()) {
@@ -1021,7 +1024,7 @@ void ConsoleMain(const Vector<String>& command, bool gui) {
 					if (!FileExists(file)) 
 						throw Exc(Format(t_("File '%s' not found"), file)); 
 					
-					md.Load(file, [&](String str, int ) {Cout() << str; return true;});
+					md.Load(file, [&](String str, int) {Cout() << str; return true;}, true);
 					Cout() << "\n" << Format(t_("File '%s' loaded"), file);
 				} else if (command[i] == "-r" || command[i] == "--report") {
 					if (md.hydros.IsEmpty()) 

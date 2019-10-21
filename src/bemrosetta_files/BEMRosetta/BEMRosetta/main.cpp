@@ -20,6 +20,7 @@ using namespace Upp;
 #include "main.h"
 
 void Main::Init() {
+	LOG("Init");
 	Title("BEMRosetta");
 	Sizeable().Zoomable().SetMinSize(Size(800, 600));
 	Icon(Img::Rosetta64());
@@ -31,24 +32,26 @@ void Main::Init() {
 		firstTime = true;
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults are set");
 	}
+	LOG("BEM configuration loaded");
+	
 	if (!bem.ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	if (!LoadSerializeJson()) {
 		firstTime = true;
 		Cout() << "\n" << t_("Configuration data is not loaded. Defaults are set");
 	}
+	LOG("Configuration loaded");
 	
-	mainMesh.Init();
-	mainNemoh.Init(bem);
-	mainBEM.Init();
-	mainOutput.Init();
-	menuOptions.Init(bem);
-	menuOptions.Load();
-	menuAbout.Init();
-	if (bem.experimental) {
-		tab.Add(mainMesh.SizePos(),   t_("Mesh"));
-		tab.Add(mainNemoh.SizePos(),  t_("Nemoh"));
-	}
+	mainMesh.Init();			LOG("Init Mesh");
+	mainNemoh.Init(bem);		LOG("Init Nemoh");
+	mainBEM.Init();				LOG("Init BEM");
+	mainOutput.Init();			LOG("Init Output");
+	menuOptions.Init(bem);		LOG("Init Options");
+	menuOptions.Load();			LOG("Init Options.Load");
+	menuAbout.Init();			LOG("Init About");
+	
+	tab.Add(mainMesh.SizePos(),   t_("Mesh"));
+	tab.Add(mainNemoh.SizePos(),  t_("Nemoh"));
 	tab.Add(mainBEM.SizePos(),    t_("Coefficients"));
 	tab.Add().Disable();
 	tab.Add(mainOutput.SizePos(), t_("Output"));
@@ -59,6 +62,7 @@ void Main::Init() {
 	Add(tab.SizePos());	
 		
 	tab.WhenSet = [&] {
+		LOGTAB(tab);
 		if (tab.IsAt(menuOptions)) 
 			menuOptions.Load();
 		else if (tab.IsAt(mainNemoh)) 
@@ -182,8 +186,7 @@ void MenuOptions::Load() {
 	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
 	nemohPathNew <<= bem->nemohPathNew;
 	nemohPathGREN <<= bem->nemohPathGREN;
-	experimental <<= bem->experimental;
-	experimentalFOAMM <<= bem->experimentalFOAMM;
+	//experimental <<= bem->experimental;
 	foammPath <<= bem->foammPath;
 }
 
@@ -203,8 +206,7 @@ void MenuOptions::OnSave() {
 	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
 	bem->nemohPathNew = ~nemohPathNew;
 	bem->nemohPathGREN = ~nemohPathGREN;
-	bem->experimental = ~experimental;	
-	bem->experimentalFOAMM = ~experimentalFOAMM;
+	//bem->experimental = ~experimental;	
 	bem->foammPath = ~foammPath;
 	
 	ma().OptionsUpdated();
@@ -241,10 +243,8 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->nemohPathGREN != ~nemohPathGREN)
 		return true;
-	if (bem->experimental != ~experimental)
-		return true;
-	if (bem->experimentalFOAMM != ~experimentalFOAMM)
-		return true;
+	//if (bem->experimental != ~experimental)
+	//	return true;
 	if (bem->foammPath != ~foammPath)
 		return true;
 	
@@ -400,3 +400,9 @@ String ForceExtSafe(String fileName, String ext) {
 	return ForceExt(fileName, ext);
 }
 
+String TabText(const TabCtrl &tab) {
+	int id = tab.Get();
+	if (id < 0)
+		return String();
+	return tab.GetItem(id).GetText();
+}

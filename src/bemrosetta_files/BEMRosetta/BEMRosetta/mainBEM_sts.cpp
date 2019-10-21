@@ -18,6 +18,7 @@ void MainStateSpace::Init() {
 	selTab = 0;
 	isFilling = false;
 	tab.WhenSet = [&] {
+		LOGTAB(tab);
 		if (!isFilling)
 			selTab = tab.Get();
 	};

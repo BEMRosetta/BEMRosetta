@@ -154,6 +154,8 @@ bool NemohCal::Load(String fileName) {
 	f.Load(in.GetLine());	h    = f.GetDouble(0);
 	if (h < 0 || h > 100000)
 		throw Exc(in.Str() + Format(t_("Incorrect depth %s"), f.GetText(0)));
+	else if (h == 0)
+		h = -1;
 	f.Load(in.GetLine());	xeff = f.GetDouble(0);	yeff = f.GetDouble(1);
 	in.GetLine();
 	f.Load(in.GetLine());	int Nb = f.GetInt(0);
@@ -299,13 +301,11 @@ String FormatIntEmpty(int val) {
 Vector<String> NemohCal::Check() {
 	Vector<String> ret;
 	
-	
-	
 	if (IsNull(rho) || rho < 0 || rho > 10000)
 		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(rho));
 	if (IsNull(g) || g < 0 || g > 100)
 		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(g));
-	if (IsNull(h) || h < 0 || h > 100000)
+	if (IsNull(h) || h < -1 || h > 100000)
 		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(h));
 
 	if (IsNull(Nf) || Nf < 1 || Nf > 1000)
@@ -551,7 +551,10 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 	out << NemohHeader("Environment - Created with BEMRosetta") << "\n";
 	out << NemohField(Format("%f", rho), cp) 		   << "! RHO             ! KG/M**3   ! Fluid specific volume" << "\n";
 	out << NemohField(Format("%f", g), cp)   		   << "! G               ! M/S**2    ! Gravity " << "\n";
-	out << NemohField(Format("%f", h), cp)   		   << "! DEPTH           ! M         ! Water depth" << "\n";
+	double seth = h;
+	if (h < 0)
+		seth = 0;
+	out << NemohField(Format("%f", seth), cp)   	   << "! DEPTH           ! M         ! Water depth" << "\n";
 	out << NemohField(Format("%f %f", xeff, yeff), cp) << "! XEFF YEFF       ! M         ! Wave measurement point" << "\n";
 	
 	out << NemohHeader("Description of floating bodies") << "\n";
