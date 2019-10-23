@@ -376,6 +376,8 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 			type = Hydro::WAMIT_1_3;
 		else if (ext == ".dat")
 			type = Hydro::FAST_WAMIT;	
+		else if (ext == ".bem")
+			type = Hydro::BEMROSETTA;
 		else
 			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
 	}
@@ -384,6 +386,9 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 		data.Save(file);	
 	} else if (type == FAST_WAMIT) {
 		Fast data(*bem, this);
+		data.Save(file);		
+	} else if (type == BEMROSETTA) {
+		HydroClass data(*bem, this);
 		data.Save(file);		
 	}
 	Nh = realNh;
@@ -724,7 +729,50 @@ double Hydro::rho_ndim()	const {return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	const {return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
 
-
+void Hydro::Jsonize(JsonIO &json) {
+	int icode;
+	if (json.IsStoring()) 
+		icode = code;
+	json
+		("file", file)
+		("name", name)
+		("g", g)
+		("h", h)
+		("rho", rho)
+		("len", len)
+		("dimen", dimen)
+		("Nb", Nb)
+		("Nf", Nf)
+		("Nh", Nh)
+		("A", A)
+		("Awinf", Awinf)
+		("Aw0", Aw0)
+		("B", B)
+		("head", head)
+		("names", names)
+		("C", C)
+		("cb", cb)
+		("cg", cg)
+		("code", icode)
+		("dof", dof)
+		("dofOrder", dofOrder)
+		("Kirf", Kirf)
+		("Tirf", Tirf)
+		("ex", ex)
+		("sc", sc)
+		("fk", fk)
+		("rao", rao)
+		("sts", sts)
+		("T", T)
+		("w", w)
+		("dataFromW", dataFromW)
+		("Vo", Vo)
+		("stsProcessor", stsProcessor)
+	;
+	if(json.IsLoading()) 
+		code = static_cast<Hydro::BEM_SOFT>(icode);
+}
+	
 BEMData::BEMData() {
 	String bemFilesAst = clone(bemFilesExt);
 	bemFilesAst.Replace(".", "*.");
@@ -783,6 +831,13 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 		}
 	} else if (ext == ".mat") {
 		Foamm &data = hydros.Create<Foamm>(*this);
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+	} else if (ext == ".bem") {
+		HydroClass &data = hydros.Create<HydroClass>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
@@ -956,6 +1011,29 @@ bool BEMData::StoreSerializeJson() {
 		return 0;
 	String fileName = AppendFileName(folder, "configdata.cf");
 	return StoreAsJsonFile(*this, fileName, true);
+}
+
+
+bool HydroClass::Load(String file) {
+	BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+	
+	if (!LoadFromJsonFile(hd(), file)) {
+		BEMData::PrintError("\n" + Format(t_("Error loading '%s'"), file));
+		hd().lastError = "\n" + Format(t_("Error loading '%s'"), file);
+		return false;
+	}
+	hd().file = file;
+	return true;
+}
+	
+bool HydroClass::Save(String file) {
+	BEMData::Print("\n\n" + Format(t_("Saving '%s'"), file));
+	if (!StoreAsJsonFile(hd(), file, true)) {
+		BEMData::PrintError("\n" + Format(t_("Error saving '%s'"), file));
+		hd().lastError = "\n" + Format(t_("Error saving '%s'"), file);
+		return false;
+	}
+	return true;
 }
 
 int IsTabSpace(int c) {

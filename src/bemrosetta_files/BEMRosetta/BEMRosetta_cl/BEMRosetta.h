@@ -13,10 +13,10 @@ class FieldSplit;
 
 void ConsoleMain(const Vector<String>& command, bool gui);
 void SetBuildInfo(String &str);
-	
+
 class Hydro {
 public:
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, UNKNOWN};
+	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
@@ -32,6 +32,7 @@ public:
 		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
 		case AQWA:			return t_("AQWA");
 		case FOAMM:			return t_("FOAMM");
+		case BEMROSETTA:	return t_("BEMRosetta");
 		case UNKNOWN:		return t_("Unknown");
 		}
 		return t_("Unknown");
@@ -46,6 +47,7 @@ public:
 		case SEAFEM_NEMOH:	return t_("SFM");
 		case AQWA:			return t_("AQW");
 		case FOAMM:			return t_("FMM");
+		case BEMROSETTA:	return t_("BMR");
 		case UNKNOWN:		return t_("¿?");
 		}
 		return t_("Unknown");
@@ -90,6 +92,14 @@ public:
     struct Forces {
     	Upp::Array<MatrixXd> ma, ph;   		// [Nh](Nf, 6*Nb) 	Magnitude and phase
     	Upp::Array<MatrixXd> re, im;		// [Nh](Nf, 6*Nb)	Real and imaginary components
+    	void Jsonize(JsonIO &json) {
+			json
+				("ma", ma)
+				("ph", ph)
+				("re", re)
+				("im", im)
+			;
+    	}
     };
     
     Forces ex; 								// Excitation
@@ -108,8 +118,22 @@ public:
 		VectorXd C_ss;
 		VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
 		double ssMAE;
+		void Jsonize(JsonIO &json) {
+			json
+				("TFSResponse", TFSResponse)
+				("Z", Z)
+				("A_ss", A_ss)
+				("B_ss", B_ss)
+				("C_ss", C_ss)
+				("ssFrequencies", ssFrequencies)
+				("ssFreqRange", ssFreqRange)
+				("ssFrequencies_index", ssFrequencies_index)
+				("ssMAE", ssMAE)
+			;
+    	}
     };
     Upp::Array<Upp::Array<StateSpace>> sts;	// (6*Nb, 6*Nb)		State space data
+    String stsProcessor;
     
     Vector<double> T; 						// [Nf]    			Wave periods
     Vector<double> w;     		 			// [Nf]             Wave frequencies
@@ -227,6 +251,8 @@ public:
 	double R_ma_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_ma_ndim(f, _h, ifr, idf) : R_ma_dim(f, _h, ifr, idf);}
 	double R_re_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_re_ndim(f, _h, ifr, idf) : R_re_dim(f, _h, ifr, idf);}
 	double R_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_im_ndim(f, _h, ifr, idf) : R_im_dim(f, _h, ifr, idf);}
+
+	void Jsonize(JsonIO &json);
 	
 private:
 	static const char *strDOF[6];
@@ -357,7 +383,6 @@ public:
 
 	String GetLastError()	{return lastError;}
 };
-
 		
 class HydroData {
 public:
@@ -388,6 +413,8 @@ public:
 	HydroClass()							{}
 	HydroClass(BEMData &bem, Hydro *hydro = 0) : hd(bem, hydro)	{}
 	virtual ~HydroClass()					{}
+	bool Load(String file);
+	bool Save(String file);
 	
 	HydroData hd;	
 };
@@ -564,6 +591,7 @@ public:
 private:
 	bool Load_HydroDyn();	
 	void Save_HydroDyn(String fileName, bool force);	
+	void Save_SS(String fileName);
 	
 	String hydroFolder;
 	int WaveNDir;

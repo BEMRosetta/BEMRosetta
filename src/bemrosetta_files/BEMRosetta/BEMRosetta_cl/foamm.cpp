@@ -44,6 +44,8 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 	if (!mat.OpenRead(file)) 
 		return false;
 	
+	hd().stsProcessor = "FOAMM by COER (http://www.eeng.nuim.ie/coer/)";
+	
 	if (loadCoeff) {
 		MatMatrix<double> w = mat.VarReadMat<double>("w");	
 		if (w.GetCount() == 0)
@@ -173,6 +175,8 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idofs, const Vector<int> &jdofs,
 		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
+	if (!FileExists(hd().GetBEMData().foammPath))
+		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ibs.GetCount(); ++i) {
 		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.GetCount()));
 		Get_Each(ibs[i], idofs[i], jdofs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);

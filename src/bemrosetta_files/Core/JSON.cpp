@@ -182,6 +182,9 @@ template<> void Jsonize(JsonIO& io, double& var)
 				return;
 			}
 		}
+		String str = AsString(v);
+		LOG("HELLO");
+		LOG(str);
 		throw JsonizeError("number expected");
 	}
 	else
