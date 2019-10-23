@@ -47,6 +47,14 @@ T_("#%d body. %s")
 esES("")
 frFR("")
 
+T_("Error type 1 %s: %s")
+esES("")
+frFR("")
+
+T_("Error type 2: %s")
+esES("")
+frFR("")
+
 T_("Hydrodynamic coefficents viewer and converter")
 esES("")
 frFR("")
@@ -99,6 +107,14 @@ esES("")
 frFR("")
 
 T_("Loading mesh file...")
+esES("")
+frFR("")
+
+T_("Model is already loaded")
+esES("")
+frFR("")
+
+T_("Do you wish to open it anyway?")
 esES("")
 frFR("")
 
@@ -278,6 +294,10 @@ T_("# Skewed pan")
 esES("")
 frFR("")
 
+T_("Do you wish to load the pending %d files?")
+esES("")
+frFR("")
+
 T_("no")
 esES("")
 frFR("")
@@ -329,6 +349,10 @@ frFR("")
 
 // mainNemoh.cpp
 
+T_("Nemoh 115+")
+esES("")
+frFR("")
+
 T_("No body available to duplicate")
 esES("")
 frFR("")
@@ -353,34 +377,18 @@ T_("Folder %s does not exist.&Do you wish to create it?")
 esES("")
 frFR("")
 
+T_("Please enter number of parts to split the simulation (min. is 1)")
+esES("")
+frFR("")
+
 
 // mainBEM.cpp
 
-T_("Selected")
+T_("FOAMM State Space")
 esES("")
 frFR("")
 
-T_("Row")
-esES("")
-frFR("")
-
-T_("Column")
-esES("")
-frFR("")
-
-T_("From [rad(s]")
-esES("")
-frFR("")
-
-T_("To [rad(s]")
-esES("")
-frFR("")
-
-T_("Frequencies [rad/s]")
-esES("")
-frFR("")
-
-T_("State Space")
+T_("FOAMM not found. Please set FOAMM path in Options")
 esES("")
 frFR("")
 
@@ -416,6 +424,46 @@ T_("RAO")
 esES("")
 frFR("")
 
+T_("Setup FOAMM")
+esES("")
+frFR("")
+
+T_("State Space")
+esES("")
+frFR("")
+
+T_("Object not found in GetSelABForce()")
+esES("")
+frFR("")
+
+T_("Unexpected type in GetSelABForce()")
+esES("")
+frFR("")
+
+T_("Object not found in GetSelStateSpace()")
+esES("")
+frFR("")
+
+T_("Unexpected type in GetSelStateSpace()")
+esES("")
+frFR("")
+
+T_("Object not found in GetSelScatter(1)")
+esES("")
+frFR("")
+
+T_("Unexpected type in GetSelScatter(1)")
+esES("")
+frFR("")
+
+T_("Object not found in GetSelScatter(2)")
+esES("")
+frFR("")
+
+T_("Unexpected type in GetSelScatter(2)")
+esES("")
+frFR("")
+
 T_("All supported BEM files (%s)")
 esES("")
 frFR("")
@@ -425,6 +473,10 @@ esES("")
 frFR("")
 
 T_("FAST HydroDyn file")
+esES("")
+frFR("")
+
+T_("BEMRosetta file")
 esES("")
 frFR("")
 
@@ -448,10 +500,6 @@ T_("Please select a model to export")
 esES("")
 frFR("")
 
-T_("Please select a model to get State Space")
-esES("")
-frFR("")
-
 T_("Soft")
 esES("")
 frFR("")
@@ -465,10 +513,6 @@ esES("")
 frFR("")
 
 T_("h (water depth) [m]")
-esES("")
-frFR("")
-
-T_("INFINITY")
 esES("")
 frFR("")
 
@@ -577,6 +621,74 @@ T_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary "
 esES("")
 frFR("")
 
+T_("     Sel")
+esES("")
+frFR("")
+
+T_("Body")
+esES("")
+frFR("")
+
+T_("Row")
+esES("")
+frFR("")
+
+T_("Column")
+esES("")
+frFR("")
+
+T_("From (rad/s)")
+esES("")
+frFR("")
+
+T_("To (rad/s)")
+esES("")
+frFR("")
+
+T_("Frequencies (rad/s)")
+esES("")
+frFR("")
+
+T_("From: frequency is empty")
+esES("")
+frFR("")
+
+T_("To: frequency is empty")
+esES("")
+frFR("")
+
+T_("From: frequency has to be lower than To: frequency")
+esES("")
+frFR("")
+
+T_("No frequency has been selected")
+esES("")
+frFR("")
+
+T_("Selected frequencies have to be between lower and higher limits")
+esES("")
+frFR("")
+
+T_("Some selected frequencies are repeated")
+esES("")
+frFR("")
+
+T_("Problem in body %d (%s, %s): %s")
+esES("")
+frFR("")
+
+T_("No case has been selected")
+esES("")
+frFR("")
+
+T_("Starts processing")
+esES("")
+frFR("")
+
+T_("FOAMM message:&")
+esES("")
+frFR("")
+
 
 // mainBEM_abf.cpp
 
@@ -668,6 +780,22 @@ T_("RAO phase [\302\272]")
 esES("")
 frFR("")
 
+T_("Z magnitude B(w)+jw(A(w)-Ainf) %s")
+esES("")
+frFR("")
+
+T_("Magnitude")
+esES("")
+frFR("")
+
+T_("Z phase B(w)+jw(A(w)-Ainf) %s")
+esES("")
+frFR("")
+
+T_("Phase")
+esES("")
+frFR("")
+
 T_("w [rad/s]")
 esES("")
 frFR("")
@@ -720,6 +848,14 @@ T_("RAO_ph_%s")
 esES("")
 frFR("")
 
+T_("Zmag_%s")
+esES("")
+frFR("")
+
+T_("Zph_%s")
+esES("")
+frFR("")
+
 
 // mainBEM_sts.cpp
 
@@ -763,11 +899,7 @@ T_("FreqRange")
 esES("")
 frFR("")
 
-T_("Frequencies_index")
-esES("")
-frFR("")
-
-T_("MAE")
+T_("MAPE [%]")
 esES("")
 frFR("")
 
@@ -794,7 +926,7 @@ T_("Models loaded:")
 esES("")
 frFR("")
 
-T_("Wamit .1.3.hst\nFAST .dat\nBy extension")
+T_("Wamit .1.3.hst\nFAST .dat.1.3.hst.ss\nBEMRosetta .bem\nBy extension")
 esES("")
 frFR("")
 
@@ -803,10 +935,6 @@ esES("")
 frFR("")
 
 T_("Zoom to Fit")
-esES("")
-frFR("")
-
-T_("Phase")
 esES("")
 frFR("")
 
@@ -838,31 +966,11 @@ T_("Show")
 esES("")
 frFR("")
 
-T_("Selected:")
+T_("Cancel")
 esES("")
 frFR("")
 
-T_("To:")
-esES("")
-frFR("")
-
-T_("Cases available to process")
-esES("")
-frFR("")
-
-T_("Frequencies (rad/s)")
-esES("")
-frFR("")
-
-T_("From:")
-esES("")
-frFR("")
-
-T_("Choose")
-esES("")
-frFR("")
-
-T_("FOAMM is working")
+T_("Identify")
 esES("")
 frFR("")
 
@@ -1062,11 +1170,7 @@ T_("General")
 esES("")
 frFR("")
 
-T_("Path to exe")
-esES("")
-frFR("")
-
-T_("Maynooth COER FOAMM")
+T_("Path to binary")
 esES("")
 frFR("")
 
@@ -1094,7 +1198,7 @@ T_("Solver:")
 esES("")
 frFR("")
 
-T_("FOAMM.exe:")
+T_("FOAMM:")
 esES("")
 frFR("")
 
@@ -1102,11 +1206,23 @@ T_("Preprocessor:")
 esES("")
 frFR("")
 
-T_("Enable experimental FOAMM features (available after restart)")
+T_("http://www.eeng.nuim.ie/coer/")
 esES("")
 frFR("")
 
-T_("Enable experimental features (available after restart)")
+T_("Maynooth COER FOAMM")
+esES("")
+frFR("")
+
+T_("https://github.com/izabala123/Nemoh")
+esES("")
+frFR("")
+
+T_("Get it here")
+esES("")
+frFR("")
+
+T_("http://www.eeng.nuim.ie/coer/downloads/")
 esES("")
 frFR("")
 
@@ -1116,11 +1232,35 @@ T_("Default dof order is 1. surge, 2. sway, 3. heave, 4. roll, 5. pitch, 6. "
 esES("")
 frFR("")
 
+T_("Frequency choice [rad/s]:")
+esES("")
+frFR("")
+
+T_("Rng. to [rad/s]:")
+esES("")
+frFR("")
+
+T_("Cases available to identify")
+esES("")
+frFR("")
+
+T_("Rng. from [rad/s]:")
+esES("")
+frFR("")
+
+T_("Set to all")
+esES("")
+frFR("")
+
 T_("Row count:")
 esES("")
 frFR("")
 
 T_("Hydrostatic Stiffness Matrices")
+esES("")
+frFR("")
+
+T_("Bodies")
 esES("")
 frFR("")
 
@@ -1212,10 +1352,6 @@ T_("Mesh file:")
 esES("")
 frFR("")
 
-T_("Bodies")
-esES("")
-frFR("")
-
 T_("Postprocessing")
 esES("")
 frFR("")
@@ -1265,6 +1401,10 @@ T_("Rotations around                                                      "
 esES("")
 frFR("")
 
+T_("Nemoh solver:")
+esES("")
+frFR("")
+
 T_("Split in cases:")
 esES("")
 frFR("")
@@ -1302,6 +1442,82 @@ frFR("")
 
 
 // Obsolete
+
+T_("Selected")
+esES("")
+frFR("")
+
+T_("From [rad(s]")
+esES("")
+frFR("")
+
+T_("To [rad(s]")
+esES("")
+frFR("")
+
+T_("Frequencies [rad/s]")
+esES("")
+frFR("")
+
+T_("Please select a model to get State Space")
+esES("")
+frFR("")
+
+T_("INFINITY")
+esES("")
+frFR("")
+
+T_("Frequencies_index")
+esES("")
+frFR("")
+
+T_("MAE")
+esES("")
+frFR("")
+
+T_("Wamit .1.3.hst\nFAST .dat\nBy extension")
+esES("")
+frFR("")
+
+T_("Selected:")
+esES("")
+frFR("")
+
+T_("To:")
+esES("")
+frFR("")
+
+T_("Cases available to process")
+esES("")
+frFR("")
+
+T_("From:")
+esES("")
+frFR("")
+
+T_("Choose")
+esES("")
+frFR("")
+
+T_("FOAMM is working")
+esES("")
+frFR("")
+
+T_("Path to exe")
+esES("")
+frFR("")
+
+T_("FOAMM.exe:")
+esES("")
+frFR("")
+
+T_("Enable experimental FOAMM features (available after restart)")
+esES("")
+frFR("")
+
+T_("Enable experimental features (available after restart)")
+esES("")
+frFR("")
 
 T_("Open")
 esES("")
@@ -1691,9 +1907,6 @@ frFR("")
 T_("Error moving a fixed surface")
 esES("")
 frFR("")
-
-
-// Surface.cpp
 
 T_("Node %d in panel %d [%d] does not exist")
 esES("")

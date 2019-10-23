@@ -88,13 +88,18 @@ bool Fast::Load_HydroDyn() {
 
 void Fast::Save(String file) {
 	try {
-		String hydroFile;
 		file = ForceExt(file, ".dat");
 		Save_HydroDyn(file, true);
-		hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
+		String hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
 		DirectoryCreate(AppendFileName(GetFileFolder(file), hydroFolder));
 	
 		Wamit::Save(hydroFile);
+		
+		if (hd().IsLoadedStateSpace()) {
+			String fileSts = ForceExt(hydroFile, ".ss");
+			BEMData::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
+			Save_SS(fileSts);
+		}
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -134,19 +139,19 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		in.Close();
 		
 		if (hd().Nb != 1)
-			throw Exc("Number of bodies different to 1 incompatible with FAST");
+			throw Exc(t_("Number of bodies different to 1 incompatible with FAST"));
 		if (IsNull(lVo))
-			throw Exc(Format("Volume (PtfmVol0) not found in FAST file '%s'", fileName));
+			throw Exc(Format(t_("Volume (PtfmVol0) not found in FAST file '%s'"), fileName));
 		if (IsNull(lrho))
-			throw Exc(Format("Density (WtrDens) not found in FAST file '%s'", fileName));
+			throw Exc(Format(t_("Density (WtrDens) not found in FAST file '%s'"), fileName));
 		if (IsNull(lh))
-			throw Exc(Format("Water depth (WtrDpth) not found in FAST file '%s'", fileName));
+			throw Exc(Format(t_("Water depth (WtrDpth) not found in FAST file '%s'"), fileName));
 		if (IsNull(llen))
-			throw Exc(Format("Length scale (WAMITULEN) not found in FAST file '%s'", fileName));
+			throw Exc(Format(t_("Length scale (WAMITULEN) not found in FAST file '%s'"), fileName));
 		if (IsNull(lWaveNDir))
-			throw Exc(Format("Number of wave directions (WaveNDir) not found in FAST file '%s'", fileName));
+			throw Exc(Format(t_("Number of wave directions (WaveNDir) not found in FAST file '%s'"), fileName));
 		if (IsNull(lWaveDirRange))
-			throw Exc(Format("Range of wave directions (WaveDirRange) not found in FAST file '%s'", fileName));
+			throw Exc(Format(t_("Range of wave directions (WaveDirRange) not found in FAST file '%s'"), fileName));
 		
 		strFile = LoadFile(fileName);
 		int poslf, pos;
@@ -235,4 +240,72 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		throw Exc(Format(t_("Imposible to save file '%s'"), hd().file));
 }
 
+// Just can save the first body			
+void Fast::Save_SS(String fileName) {
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+	
+	if (hd().Nb > 1)
+		BEMData::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
 
+	if (!hd().stsProcessor.IsEmpty())
+		out << Format(t_("BEMRosetta state space matrices obtained with %s"), hd().stsProcessor) << "\n";
+	else	
+		out << t_("BEMRosetta state space matrices") << "\n";
+	Eigen::Index nstates = 0;
+	Vector<Eigen::Index> nstatesdof;
+	for (int idof = 0; idof < 6; ++idof) {
+		Eigen::Index num = 0;
+		for (int jdof = 0; jdof < 6; ++jdof) {
+			const Hydro::StateSpace &sts = hd().sts[idof][jdof];
+			num += sts.A_ss.cols();
+		}
+		if (num > 0) 
+			out << "1  ";
+		else 
+			out << "0  ";
+		nstates += num;
+		nstatesdof << num;
+	}
+	out << "  %Enabled DoFs\n";
+	out << Format("%20<d", int(nstates)) << "%Radiation states\n";
+	for (int i = 0; i < nstatesdof.GetCount(); ++i)
+		out << Format("%3<d", int(nstatesdof[i]));
+	out << "  %Radiation states per DOFs\n";	
+
+	MatrixXd A, B, C;
+	A.setConstant(nstates, nstates, 0);
+	B.setConstant(nstates, 6, 0);
+	C.setConstant(6, nstates, 0);
+	int pos = 0;
+	for (int jdof = 0; jdof < 6; ++jdof) {
+		for (int idof = 0; idof < 6; ++idof) {
+			const Hydro::StateSpace &sts = hd().sts[idof][jdof];
+			if (sts.A_ss.size() > 0) {
+				for (int r = 0; r < sts.A_ss.rows(); ++r) 
+					for (int c = 0; c < sts.A_ss.cols(); ++c) {
+						A(pos + r, pos + c) = sts.A_ss(r, c);
+						B(pos + r, jdof) = sts.B_ss(r);
+						C(idof, pos + r) = sts.C_ss(r);
+					}
+				pos += int(sts.A_ss.rows());
+			}
+		}
+	}
+	for (int r = 0; r < A.rows(); ++r) {
+		for (int c = 0; c < A.cols(); ++c) 
+			out << Format("%e ", A(r, c));
+		out << "\n";
+	}
+	for (int r = 0; r < B.rows(); ++r) {
+		for (int c = 0; c < B.cols(); ++c) 
+			out << Format("%e ", B(r, c));
+		out << "\n";
+	}
+	for (int r = 0; r < C.rows(); ++r) {
+		for (int c = 0; c < C.cols(); ++c) 
+			out << Format("%e ", C(r, c));
+		out << "\n";
+	}
+}

@@ -43,25 +43,38 @@ public:
 };
 
 template <class T>
-class WithLeftDown : public T {
+class WithMouseHandler : public T {
 public:
 	virtual void LeftDown(Point p, dword d) {
 		ScatterCtrl::LeftDown(p, d);
-		if (WhenLeftDown)
-			WhenLeftDown(p);
+		WhenMouse(p);
+		clicked = true;
 	}
-	Function <void(Point)>WhenLeftDown;
+	virtual void MouseMove(Point p, dword d) {
+		ScatterCtrl::MouseMove(p, d);
+		if (clicked)
+			WhenMouse(p);
+		else
+			WhenMove(p);
+	}
+	virtual void LeftUp(Point p, dword d) {
+		ScatterCtrl::LeftUp(p, d);
+		WhenMouse(p);
+		clicked = false;
+	}
+	Function <void(Point)>WhenMouse;
+	Function <void(Point)>WhenMove;
+
+private:
+	bool clicked = false;	
 };
 
 class FreqSelector : public StaticRect {
 public:
 	typedef FreqSelector CLASSNAME;
 	
-	FreqSelector() {
-		add.SetLabel(t_("Add"));
-		add.WhenAction = [&] {AddField();};
-		Add(add.LeftPos(0, 30).TopPos(3, 19));
-	};
+	FreqSelector();
+	
 	void Init(Function <void()>WhenAction, Function <void(StaticRectangle*)>WhenSetRectangle) {
 		OnAction = WhenAction;
 		OnSetRectangle = WhenSetRectangle;
@@ -81,8 +94,9 @@ public:
 		for (int i = 0; i < edits.GetCount(); ++i)
 			rects[i].Hide();	
 	}
-	int GetCount() 		{return edits.GetCount();}
-	double Get(int id) 	{return ~edits[id];}
+	int GetCount() 			{return edits.GetCount();}
+	double Get(int id) 		{return ~edits[id];}
+	bool IsSelected(int id)	{return rects[id].IsVisible();}
 	
 	int IsRect(StaticRectangle *rect) {
 		for (int i = 0; i < rects.GetCount(); ++i) {
@@ -96,7 +110,6 @@ public:
 		edits[id].WhenAction();
 	} 
 	
-	//Function <void(StaticRectangle *rect)>WhenFocus;
 	void AddField(double val = Null) {
 		WithRectEnter<EditDouble> &edit = edits.Add();
 		StaticRectangle &rect = rects.Add();
@@ -114,6 +127,14 @@ public:
 		edit.SetFocus();
 		pos++;
 		Layout();
+	}
+	void CheckFocus(double freq) {
+		for (int i = 0; i < edits.GetCount(); ++i) {
+			if (abs(double(~edits[i]) - freq) < 0.000001) {
+				OnSetRectangle(&rects[i]);
+				break;
+			}
+		}
 	}
 
 private:
@@ -302,7 +323,7 @@ public:
 private:
 	Upp::Array<ArrangeDOF> arrangeDOF;
 };
-
+	
 class MainView : public WithMainView<StaticRect> {
 public:
 	typedef MainView CLASSNAME;
@@ -556,34 +577,54 @@ private:
 	virtual bool Key(dword key, int count);
 };
 
-class MainBEM ;
+
+class MainSetupFOAMM : public WithMainStateSpaceSetup<StaticRect> {
+public:
+	typedef MainSetupFOAMM CLASSNAME;
+	
+	void Init();
+	
+	void Load()				{WhenSelArrayCases();}
+	void WhenSelArrayModel(int id, BEMData &bem);
+	void WhenSelArrayCases();
+	void WhenArrayCases();
+	void WhenArrayFreq();
+	String Check(double fromFreq, double toFreq, String freqs);
+	
+	void WhenFocus(StaticRectangle *rect);
+	void OnPainter(Painter &w);
+	void OnLeftDown(Point p);
+	void OnMove(Point p);
+	
+	bool Get(Vector<int> &ibs, Vector<int> &idofs, Vector<int> &jdofs,
+		Vector<double> &froms, Vector<double> &tos, Vector<Vector<double>> &freqs); 
+	void Clear();
+	
+	MainPlot plotsReal, plotsImag;
+	
+	FreqSelector selector;
+
+private:
+	Upp::Array<Option> options;
+	StaticRectangle *rectActual = 0;
+	int id = -1;
+};
+
+class MainBEM;
 
 class MenuFOAMM : public WithMenuStateSpace<StaticRect> {
 public:
 	typedef MenuFOAMM CLASSNAME;
 	
-	void Init(MainBEM &_mainBEM, BEMData &bem);
-	bool OnFOAMM();
-	void WhenSelArrayModel(BEMData &bem);
-	void WhenSelArrayCases();
-	void WhenArrayCases();
-	void WhenArrayFreq();
-	String Check(double fromFreq, double toFreq, String freqs);
+	void Init(MainBEM &_mainBEM, BEMData &bem, MainSetupFOAMM &setup);
+	bool OnFOAMM(MainSetupFOAMM &setup);
+	
 	void Clear();
-	
-	void WhenFocus(StaticRectangle *rect);
-	void OnPainter(Painter &w);
-	void OnLeftDown(Point p);
-	
-	MainPlot plotsReal, plotsImag;
-	
-	FreqSelector selector;
-	
+
 private:
 	bool isCancelled;
-	StaticRectangle *rectActual = 0;
-	Upp::Array<Option> options;
 };
+
 
 class MainBEM : public WithMain<StaticRect> {
 public:
@@ -615,6 +656,7 @@ public:
 	MainRAO mainRAO;
 	MainStateSpace mainStateSpace;
 	MainStiffness mainStiffness;
+	MainSetupFOAMM mainSetupFOAMM;
 		
 private:
 	ScatterCtrl &GetSelScatter();
@@ -649,9 +691,9 @@ public:
 	
 	MainMesh mainMesh;
 	
-	void Status(String str = String())	{
+	void Status(String str = String(), int time = 2000)	{
 		if (!str.IsEmpty()) 
-			bar.Temporary(str, 2000);
+			bar.Temporary(str, time);
 		else
 			bar.EndTemporary();
 	}
