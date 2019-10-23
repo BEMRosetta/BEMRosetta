@@ -19,6 +19,12 @@ using namespace Upp;
 
 #include "main.h"
 
+FreqSelector::FreqSelector() {
+	add.SetImage(Img::add());
+	add.WhenAction = [&] {AddField();};
+	Add(add.LeftPos(0, 19).TopPos(3, 19));
+};
+	
 void Main::Init() {
 	LOG("Init");
 	Title("BEMRosetta");

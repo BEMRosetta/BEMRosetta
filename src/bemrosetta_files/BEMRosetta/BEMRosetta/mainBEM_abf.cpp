@@ -46,6 +46,8 @@ bool MainABForce::Load(BEMData &bem) {
 		case DATA_FORCE_FK:	format = t_("Ffk%s%.1fº");	break;
 		case DATA_FORCE_EX:	format = t_("Fex%s%.1fº");	break;
 		case DATA_RAO:		format = t_("RAO%s%.1fº");	break;
+		case DATA_STS_MA:	NEVER();
+		case DATA_STS_PH:	NEVER();
 		}
 		int sdof = 6*bem.Nb;
 		if (dataToShow == DATA_A || dataToShow == DATA_B) {

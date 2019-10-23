@@ -734,13 +734,13 @@ bool Nemoh::Load_Radiation(String fileName) {
 	    if (line.Find("Motion of body") >= 0 || line.StartsWith("dof_"))
 	        break;
 	    if (line != "...") {
-	        if (dof.IsEmpty())
-	            dof.SetCount(hd().Nb, 0);
-		    f.Load(line);
+			if (dof.IsEmpty())
+				dof.SetCount(hd().Nb, 0);
+			f.Load(line);
 		    int ibody = f.GetInt(1) - 1;
 		    int ndof = f.GetInt(2);
-		    while (ndof > 6)
-		        ndof -= 6;
+			while (ndof > 6)
+				ndof -= 6;
 			dof[ibody] = max(dof[ibody], ndof);    
 	    }
 	}
@@ -798,9 +798,9 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	    if (line.StartsWith("Zone") || line.StartsWith("angle"))
 	        break;
 	    if (line != "...") {
-	        if (dof.IsEmpty())
-	            dof.SetCount(hd().Nb, 0);
-		    f.Load(line);
+			if (dof.IsEmpty())
+				dof.SetCount(hd().Nb, 0);
+			f.Load(line);
 		    int ibody = f.GetInt(1) - 1;
 		    int ndof = f.GetInt(2);
 		  	while (ndof > 6)

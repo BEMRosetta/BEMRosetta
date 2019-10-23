@@ -737,6 +737,9 @@ bool Wamit::Load_4(String fileName) {
 }
 
 void Wamit::Save_1(String fileName) {
+	if (!(hd().IsLoadedA() && hd().IsLoadedB())) 
+		return;
+		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
@@ -779,18 +782,19 @@ void Wamit::Save_1(String fileName) {
 		ifrDelta = -1;
 	}
 	
-	if (hd().IsLoadedA() && hd().IsLoadedB()) {
-		for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
-			for (int i = 0; i < hd().Nb*6; ++i)  
-				for (int j = 0; j < hd().Nb*6; ++j)
-					if (!IsNull(hd().A[ifr](i, j)) && !IsNull(hd().B[ifr](i, j))) 
-						out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
-															 FormatWam(hd().A_ndim(ifr, i, j)), 
-															 FormatWam(hd().B_ndim(ifr, i, j)));
-	}
+	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
+		for (int i = 0; i < hd().Nb*6; ++i)  
+			for (int j = 0; j < hd().Nb*6; ++j)
+				if (!IsNull(hd().A[ifr](i, j)) && !IsNull(hd().B[ifr](i, j))) 
+					out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
+														 FormatWam(hd().A_ndim(ifr, i, j)), 
+														 FormatWam(hd().B_ndim(ifr, i, j)));
 }
 
 void Wamit::Save_3(String fileName) {
+	if (!hd().IsLoadedFex()) 
+		return;
+	
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
@@ -816,40 +820,42 @@ void Wamit::Save_3(String fileName) {
 		ifrDelta = -1;
 	}
 	
-	if (hd().IsLoadedFex()) {
-		for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
-			for (int ih = 0; ih < hd().Nh; ++ih)
-				for (int i = 0; i < hd().Nb*6; ++i)
-					if (!IsNull(hd().ex.ma[ih](ifr, i))) 
-						out << Format(" %s %s %5d %s %s %s %s\n", 
-										FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
-										FormatWam(hd().F_ma_ndim(hd().ex, ih, ifr, i)), 
-										FormatWam(hd().ex.ph[ih](ifr, i)),
-										FormatWam(hd().F_re_ndim(hd().ex, ih, ifr, i)), 
-										FormatWam(hd().F_im_ndim(hd().ex, ih, ifr, i)));
-	}
+	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
+		for (int ih = 0; ih < hd().Nh; ++ih)
+			for (int i = 0; i < hd().Nb*6; ++i)
+				if (!IsNull(hd().ex.ma[ih](ifr, i))) 
+					out << Format(" %s %s %5d %s %s %s %s\n", 
+									FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+									FormatWam(hd().F_ma_ndim(hd().ex, ih, ifr, i)), 
+									FormatWam(hd().ex.ph[ih](ifr, i)),
+									FormatWam(hd().F_re_ndim(hd().ex, ih, ifr, i)), 
+									FormatWam(hd().F_im_ndim(hd().ex, ih, ifr, i)));
 }
 
 void Wamit::Save_hst(String fileName) {
+	if (!hd().IsLoadedC()) 
+		return;
+		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 
-	if (hd().IsLoadedC()) {
-		for (int i = 0; i < 6*hd().Nb; ++i)  
-			for (int j = 0; j < 6*hd().Nb; ++j) {
-				int ib_i = i/6;
-				int ii = i - ib_i*6;
-				int ib_j = j/6;
-				int jj = j - ib_j*6;
-				if (!IsNull(hd().C[ib_i](ii, jj))) 
-					out << Format(" %5d %5d  %s\n", i+1, j+1, 
-									FormatWam(hd().C_ndim(ib_i, ii, jj)));
-			}
-	}
+	for (int i = 0; i < 6*hd().Nb; ++i)  
+		for (int j = 0; j < 6*hd().Nb; ++j) {
+			int ib_i = i/6;
+			int ii = i - ib_i*6;
+			int ib_j = j/6;
+			int jj = j - ib_j*6;
+			if (!IsNull(hd().C[ib_i](ii, jj))) 
+				out << Format(" %5d %5d  %s\n", i+1, j+1, 
+								FormatWam(hd().C_ndim(ib_i, ii, jj)));
+		}
 }
 
 void Wamit::Save_4(String fileName) {
+	if (!hd().IsLoadedRAO()) 
+		return;
+		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
@@ -875,19 +881,16 @@ void Wamit::Save_4(String fileName) {
 		ifrDelta = -1;
 	}
 	
-	//double A = 1;
-	if (hd().IsLoadedRAO()) {
-		for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
-			for (int ih = 0; ih < hd().Nh; ++ih)
-				for (int i = 0; i < hd().Nb*6; ++i)
-					if (!IsNull(hd().rao.ma[ih](ifr, i))) 
-						out << Format(" %s %s %5d %s %s %s %s\n", 
-										FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
-										FormatWam(hd().R_ma_ndim(hd().rao, ih, ifr, i)), 
-										FormatWam(hd().rao.ph[ih](ifr, i)),
-										FormatWam(hd().R_re_ndim(hd().rao, ih, ifr, i)), 
-										FormatWam(hd().R_im_ndim(hd().rao, ih, ifr, i)));
-	}
+	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
+		for (int ih = 0; ih < hd().Nh; ++ih)
+			for (int i = 0; i < hd().Nb*6; ++i)
+				if (!IsNull(hd().rao.ma[ih](ifr, i))) 
+					out << Format(" %s %s %5d %s %s %s %s\n", 
+									FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+									FormatWam(hd().R_ma_ndim(hd().rao, ih, ifr, i)), 
+									FormatWam(hd().rao.ph[ih](ifr, i)),
+									FormatWam(hd().R_re_ndim(hd().rao, ih, ifr, i)), 
+									FormatWam(hd().R_im_ndim(hd().rao, ih, ifr, i)));
 }
-					
+	
 
