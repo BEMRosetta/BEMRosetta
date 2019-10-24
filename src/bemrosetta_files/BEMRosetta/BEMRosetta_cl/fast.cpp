@@ -219,9 +219,25 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		strFile = strFile.Left(poslf+1) + Format("\"%s\" ", folder) + strFile.Mid(pos);
 	} else {
 		strFile = ZstdDecompress(hydroDyn, hydroDyn_length);
-		strFile.Replace("[WtrDens]", FormatDouble(hd().rho));
-		strFile.Replace("[WtrDpth]", FormatDouble(hd().h));
-		strFile.Replace("[WAMITULEN]", FormatDouble(hd().len));
+		
+		String srho;
+		if (IsNull(hd().rho))
+			srho = FormatDouble(hd().GetBEMData().rho);
+		else
+			srho = FormatDouble(hd().rho);
+		strFile.Replace("[WtrDens]", srho);
+		String sh;
+		if (IsNull(hd().h) || hd().h < 0)
+			sh = "INFINITE";
+		else
+			sh = FormatDouble(hd().h);
+		strFile.Replace("[WtrDpth]", sh);
+		String slen;
+		if (IsNull(hd().len))
+			slen = "1";
+		else
+			slen = FormatDouble(hd().len);
+		strFile.Replace("[WAMITULEN]", slen);
 		double hdVo0 = 0;
 		if (hd().Vo.GetCount() > 0) 				
 			hdVo0 = hd().Vo[0];
