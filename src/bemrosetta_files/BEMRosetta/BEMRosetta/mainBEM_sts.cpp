@@ -72,7 +72,7 @@ void MainStateSpacePlot::Init(int _idof, int _jdof) {
 	
 	scatter.ShowAllMenus();
 	scatter.SetTitle(Format(t_("Frequency response %s"), Hydro::StrBDOF(idof, jdof))).SetTitleFont(SansSerif(12));
-	scatter.SetPlotAreaLeftMargin(70);
+	scatter.SetPlotAreaLeftMargin(70).SetPlotAreaRightMargin(70);
 	
 	splitter.Horz(tab.SizePos(), scatter.SizePos());
 	Add(splitter.SizePos());

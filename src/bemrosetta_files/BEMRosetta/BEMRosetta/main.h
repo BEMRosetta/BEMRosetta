@@ -46,27 +46,39 @@ template <class T>
 class WithMouseHandler : public T {
 public:
 	virtual void LeftDown(Point p, dword d) {
-		ScatterCtrl::LeftDown(p, d);
-		WhenMouse(p);
+		//T::LeftDown(p, d);
 		clicked = true;
+		WhenMouse(p);
 	}
 	virtual void MouseMove(Point p, dword d) {
-		ScatterCtrl::MouseMove(p, d);
+		//T::MouseMove(p, d);
 		if (clicked)
 			WhenMouse(p);
 		else
 			WhenMove(p);
 	}
 	virtual void LeftUp(Point p, dword d) {
-		ScatterCtrl::LeftUp(p, d);
-		WhenMouse(p);
+		//T::LeftUp(p, d);
 		clicked = false;
 	}
+	virtual void MouseLeave() {
+		//T::MouseLeave(); 		
+		clicked = false;
+	}
+	virtual void GotFocus() {
+		//T::GotFocus();
+		clicked = false;
+	}
+	virtual void LostFocus() {
+		//T::LostFocus();
+		clicked = false;
+	}
+	
 	Function <void(Point)>WhenMouse;
-	Function <void(Point)>WhenMove;
+	Function <void(Point)>WhenMove;	
 
 private:
-	bool clicked = false;	
+	bool clicked = false;
 };
 
 class FreqSelector : public StaticRect {
@@ -167,15 +179,6 @@ enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH, 
 				 PLOT_STS_MA, PLOT_STS_PH};
 
-template <class T>
-T magnitude(const std::complex<T> &val) {
-	return sqrt(pow2(val.real()) + pow2(val.imag()));
-}
-
-template <class T>
-T phase(const std::complex<T> &val) {
-	return atan2(val.imag(), val.real());
-}
 
 String ForceExtSafe(String fileName, String ext);
    
@@ -226,7 +229,7 @@ public:
 		default:				NEVER();	return true;
 		}
 	}
-	inline std::complex<double> GetZ(int64 id) const {
+	inline std::complex<double>GetZ(int64 id) const {
 		return std::complex<double>(data->B_(ndim, int(id), idof, jdof), 
 								 data->w[static_cast<int>(id)]*(data->A_(ndim, int(id), idof, jdof) -
 								 								data->Awinf_(ndim, idof, jdof)));
@@ -245,12 +248,12 @@ public:
 		case PLOT_FORCE_EX_PH:	return data->ex.ph[jdof](int(id), idof);
 		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, jdof, int(id), idof);
 		case PLOT_RAO_PH:		return data->rao.ph[jdof](int(id), idof);
-		case PLOT_Z_MA:			return magnitude(data->sts[idof][jdof].Z[int(id)]);
-		case PLOT_Z_PH:			return phase(data->sts[idof][jdof].Z[int(id)]);
-		case PLOT_TFS_MA:		return magnitude(data->sts[idof][jdof].TFSResponse[int(id)]);
-		case PLOT_TFS_PH:		return phase(data->sts[idof][jdof].TFSResponse[int(id)]);
-		case PLOT_STS_MA:		return magnitude(GetZ(id));
-		case PLOT_STS_PH:		return phase(GetZ(id));
+		case PLOT_Z_MA:			return abs(data->sts[idof][jdof].Z[int(id)]);
+		case PLOT_Z_PH:			return arg(data->sts[idof][jdof].Z[int(id)]);
+		case PLOT_TFS_MA:		return abs(data->sts[idof][jdof].TFSResponse[int(id)]);
+		case PLOT_TFS_PH:		return arg(data->sts[idof][jdof].TFSResponse[int(id)]);
+		case PLOT_STS_MA:		return abs(GetZ(id));
+		case PLOT_STS_PH:		return arg(GetZ(id));
 		default:				NEVER();	return Null;
 		}
 	}
