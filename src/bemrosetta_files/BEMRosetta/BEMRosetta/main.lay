@@ -24,16 +24,15 @@ LAYOUT(MenuConvert, 748, 48)
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(84, 168).TopPosZ(4, 44))
 END_LAYOUT
 
-LAYOUT(MenuPlot, 400, 48)
+LAYOUT(MenuPlot, 332, 48)
 	ITEM(Button, butZoomToFit, SetLabel(t_("Zoom to Fit")).LeftPosZ(8, 100).TopPosZ(28, 16))
-	ITEM(Option, showPhase, SetLabel(t_("Phase")).LeftPosZ(128, 60).TopPosZ(28, 16))
 	ITEM(Option, autoFit, SetLabel(t_("Auto fit")).LeftPosZ(8, 68).TopPosZ(12, 16))
-	ITEM(Option, showNdim, SetLabel(t_("Dimensionless")).LeftPosZ(196, 88).TopPosZ(12, 16))
+	ITEM(Option, showNdim, SetLabel(t_("Dimensionless")).LeftPosZ(128, 88).TopPosZ(28, 16))
 	ITEM(Option, showPoints, SetLabel(t_("Points")).LeftPosZ(128, 60).TopPosZ(12, 16))
-	ITEM(Switch, opwT, SetLabel(t_("w [rad/s]\nT [s]")).LeftPosZ(300, 64).TopPosZ(16, 32))
-	ITEM(LabelBox, dv___6, SetLabel(t_("Plot fit")).LeftPosZ(4, 112).TopPosZ(0, 48))
-	ITEM(LabelBox, dv___7, SetLabel(t_("Horizontal axis")).LeftPosZ(292, 96).TopPosZ(0, 48))
-	ITEM(LabelBox, dv___8, SetLabel(t_("Show")).LeftPosZ(124, 164).TopPosZ(0, 48))
+	ITEM(Switch, opwT, SetLabel(t_("w [rad/s]\nT [s]")).LeftPosZ(240, 64).TopPosZ(16, 32))
+	ITEM(LabelBox, dv___5, SetLabel(t_("Plot fit")).LeftPosZ(4, 112).TopPosZ(0, 48))
+	ITEM(LabelBox, dv___6, SetLabel(t_("Horizontal axis")).LeftPosZ(232, 96).TopPosZ(0, 48))
+	ITEM(LabelBox, dv___7, SetLabel(t_("Show")).LeftPosZ(124, 100).TopPosZ(0, 48))
 END_LAYOUT
 
 LAYOUT(MenuStateSpace, 760, 48)
@@ -197,27 +196,23 @@ LAYOUT(MainABForce, 400, 200)
 END_LAYOUT
 
 LAYOUT(MainStateSpaceSetup, 784, 404)
+	ITEM(StaticRectangle, rectFrom, SetWidth(4).SetColor(Color(28, 85, 255)).LeftPosZ(377, 57).TopPosZ(20, 25))
 	ITEM(StaticRectangle, rectTo, SetWidth(4).SetColor(Color(28, 85, 255)).RightPosZ(23, 57).TopPosZ(20, 25))
 	ITEM(Label, labChoice, SetLabel(t_("Frequency choice [rad/s]:")).LeftPosZ(484, 132).TopPosZ(3, 20))
 	ITEM(Label, labTo, SetLabel(t_("Rng. to [rad/s]:")).RightPosZ(-4, 82).TopPosZ(3, 20))
-	ITEM(Splitter, splitter, HSizePosZ(376, 4).VSizePosZ(51, 5))
+	ITEM(StaticRect, rectPlots, HSizePosZ(376, 4).VSizePosZ(51, 5))
 	ITEM(ArrayCtrl, arrayCases, LeftPosZ(4, 364).VSizePosZ(23, 5))
-	ITEM(Label, dv___5, SetLabel(t_("Cases available to identify")).LeftPosZ(4, 196).TopPosZ(3, 20))
+	ITEM(Label, dv___6, SetLabel(t_("Cases available to identify")).LeftPosZ(4, 196).TopPosZ(3, 20))
 	ITEM(WithRectEnter<EditDouble>, toFreq, RightPosZ(26, 52).TopPosZ(23, 19))
 	ITEM(Label, labFrom, SetLabel(t_("Rng. from [rad/s]:")).LeftPosZ(380, 92).TopPosZ(3, 20))
 	ITEM(WithRectEnter<EditDouble>, fromFreq, LeftPosZ(380, 52).TopPosZ(23, 19))
 	ITEM(Button, setToAll, SetLabel(t_("Set to all")).LeftPosZ(288, 80).TopPosZ(3, 17))
 	ITEM(FreqSelector, selector, HSizePosZ(484, 120).TopPosZ(23, 24))
-	ITEM(StaticRectangle, rectFrom, SetWidth(4).SetColor(Color(28, 85, 255)).LeftPosZ(378, 57).TopPosZ(20, 25))
 	ITEM(Option, selectAll, LeftPosZ(10, 14).TopPosZ(25, 16))
 END_LAYOUT
 
 LAYOUT(MainStateSpace, 400, 200)
 	ITEM(TabCtrl, tab, HSizePosZ(0, 0).VSizePosZ(0, 0))
-END_LAYOUT
-
-LAYOUT(MainPlot, 412, 228)
-	ITEM(WithMouseHandler<ScatterCtrl>, scatter, SetTitleFont(StdFontZ(12)).SetPlotAreaLeftMargin(90).SetPlotAreaRightMargin(60).SetPlotAreaBottomMargin(40).HSizePosZ(0, 0).VSizePosZ(0, 0))
 END_LAYOUT
 
 LAYOUT(MainPlotList, 424, 308)
