@@ -348,7 +348,7 @@ public:
 		
 private:
 	bool showInfo;
-	PopUpInfo popTextBegin, popTextVert, popTextHoriz, popTextEnd;
+	PopUpText popTextBegin, popTextVert, popTextHoriz, popTextEnd;
 	String popTextX, popTextY, popTextY2, popTextZ;
 	Point popLT, popRB;
 	bool isZoomWindow;
@@ -427,23 +427,34 @@ template <class T>
 void ScatterCtrl::SetDrawing(T& w, const Size &sz, bool ctrl) {
 	ScatterDraw::SetSize(sz);
 	ScatterDraw::SetDrawing(w, ctrl);
-	if (!IsNull(popLT) && popLT != popRB) {
-		if (isZoomWindow) {
-			DrawLine(w, popLT.x, popLT.y, popLT.x, popRB.y, 1, SColorHighlight());
-			DrawLine(w, popRB.x, popLT.y, popRB.x, popRB.y, 1, SColorHighlight());
-			DrawLine(w, popLT.x, popLT.y, popRB.x, popLT.y, 1, SColorHighlight());
-			DrawLine(w, popLT.x, popRB.y, popRB.x, popRB.y, 1, SColorHighlight());
+	if (!IsNull(popLT)) {
+	 	if (popLT != popRB) {
+			if (isZoomWindow) {
+				DrawLine(w, popLT.x, popLT.y, popLT.x, popRB.y, 1, SColorHighlight());
+				DrawLine(w, popRB.x, popLT.y, popRB.x, popRB.y, 1, SColorHighlight());
+				DrawLine(w, popLT.x, popLT.y, popRB.x, popLT.y, 1, SColorHighlight());
+				DrawLine(w, popLT.x, popRB.y, popRB.x, popRB.y, 1, SColorHighlight());
 #ifdef PLATFORM_WIN32			
-			Ctrl::Refresh();	
+				Ctrl::Refresh();	
 #endif
-		} else {
-			DrawVArrow(w, popLT.x, popLT.y, popLT.x, popRB.y, 1, 4, 15, SColorHighlight());
-			DrawHArrow(w, popLT.x, popRB.y, popRB.x, popRB.y, 1, 4, 15, SColorHighlight());
+			} else {
+				DrawVArrow(w, popLT.x, popLT.y, popLT.x, popRB.y, 1, 4, 15, SColorHighlight());
+				DrawHArrow(w, popLT.x, popRB.y, popRB.x, popRB.y, 1, 4, 15, SColorHighlight());
+				popTextBegin.DoPaint(w);
+				popTextVert.DoPaint(w);
+				popTextHoriz.DoPaint(w);
+				popTextEnd.DoPaint(w);
 #ifdef PLATFORM_WIN32			
-			Ctrl::Refresh(min(popLT.x-4, popRB.x-4), min(popLT.y-4, popRB.y-4), 
-						  abs(popRB.x-popLT.x) + 9, abs(popRB.y-popLT.y) + 9);
+				Ctrl::Refresh(min(popLT.x-4, popRB.x-4), min(popLT.y-4, popRB.y-4), 
+							  abs(popRB.x-popLT.x) + 9, abs(popRB.y-popLT.y) + 9);
 #endif
-		}
+			}
+	 	} else {
+	 		popTextBegin.DoPaint(w);
+#ifdef PLATFORM_WIN32			
+				Ctrl::Refresh();	
+#endif 		
+	 	}
 	} 
 }
 

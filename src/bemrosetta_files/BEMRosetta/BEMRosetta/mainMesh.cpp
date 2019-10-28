@@ -625,7 +625,7 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 		bool followWithErrors = false;
 		for (int i = 0; i < files.GetCount(); ++i) {
 			menuOpen.file <<= files[i];
-			if (!OnLoad() && !followWithErrors) {
+			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
 				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
 					return;
 				followWithErrors = true;
@@ -640,7 +640,7 @@ bool MainMesh::Key(dword key, int ) {
 		bool followWithErrors = false;
 		for (int i = 0; i < files.GetCount(); ++i) {
 			menuOpen.file <<= files[i];
-			if (!OnLoad() && !followWithErrors) {
+			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
 				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
 					return true;
 				followWithErrors = true;

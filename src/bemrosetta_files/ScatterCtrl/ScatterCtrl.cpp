@@ -300,6 +300,8 @@ void ScatterCtrl::Closest(double &x, double &y, double &y2) {
 }
 
 void ScatterCtrl::ProcessPopUp(Point &pt) {
+	if (IsNull(popLT))
+		popLT = pt;
 	double _x  = GetRealPosX(popLT.x);
 	double _y  = GetRealPosY(popLT.y);
 	double _y2 = GetRealPosY2(popLT.y);
@@ -307,8 +309,6 @@ void ScatterCtrl::ProcessPopUp(Point &pt) {
 	double y   = GetRealPosY(pt.y);
 	double y2  = GetRealPosY2(pt.y);
 	
-	if (IsNull(popLT))
-		popLT = pt;
 	popRB = pt;
 	
 	double dx  = fabs(x  - _x);
@@ -401,13 +401,13 @@ void ScatterCtrl::ProcessPopUp(Point &pt) {
 	popTextBegin.SetText(_str);
 	Size sz = popTextBegin.GetSize();
 	Point p1(_popPoint.x - sz.cx, _popPoint.y - sz.cy);
-	popTextBegin.Move(this, MousePointUnrot(p1));	
+	popTextBegin.Move(p1);//(this, MousePointUnrot(p1));	
 	if (!strdx.IsEmpty()) {
 		popTextHoriz.Show();
 		popTextHoriz.SetText(strdx);
 		Size sz = popTextHoriz.GetSize();
 		Point p2(popPointdx.x - sz.cx/2, popPointdx.y - sz.cy/2);
-		popTextHoriz.Move(this, MousePointUnrot(p2));	
+		popTextHoriz.Move(p2);//(this, MousePointUnrot(p2));	
 	} else
 		popTextHoriz.Hide();
 	if (!strdy.IsEmpty()) {
@@ -415,12 +415,12 @@ void ScatterCtrl::ProcessPopUp(Point &pt) {
 		popTextVert.SetText(strdy);
 		Size sz = popTextVert.GetSize();
 		Point p3(popPointdy.x - sz.cx/2, popPointdy.y - sz.cy/2);
-		popTextVert.Move(this, MousePointUnrot(p3));	
+		popTextVert.Move(p3);//(this, MousePointUnrot(p3));	
 	} else
 		popTextVert.Hide();
 	if (!str.IsEmpty()) {
 		popTextEnd.Show();
-		popTextEnd.SetText(str).Move(this, MousePointUnrot(popPoint));
+		popTextEnd.SetText(str).Move(popPoint);//(this, MousePointUnrot(popPoint));
 	} else
 		popTextEnd.Hide();
 }
@@ -562,27 +562,28 @@ void ScatterCtrl::LabelPopUp(bool down, Point &pt) {
 	
 	if (down) {
 		if(showInfo && PointInPlot(pt)) {
-			popTextBegin.AppearOnly(this);
-			popTextVert.AppearOnly(this);
-			popTextHoriz.AppearOnly(this);
-			popTextEnd.AppearOnly(this);
+			popTextBegin.Show();//AppearOnly(this);
+			popTextVert.Show();//AppearOnly(this);
+			popTextHoriz.Show();//AppearOnly(this);
+			popTextEnd.Show();//AppearOnly(this);
 			
 			isLabelPopUp = true;
-			ProcessPopUp(pt);		
+			ProcessPopUp(pt);
+			Refresh();
 		} 
 	} else {
 		if(showInfo && isLabelPopUp) {
-			popTextBegin.Close();
-			popTextVert.Close();
-			popTextHoriz.Close(); 
-			popTextEnd.Close();
+			popTextBegin.Hide();//Close();
+			popTextVert.Hide();//Close();
+			popTextHoriz.Hide();//Close(); 
+			popTextEnd.Hide();//Close();
 			isLabelPopUp = isZoomWindow = false;
 			popLT = popRB = Null;
 			Refresh();
 		}		
 	}
 }
-
+			
 void ScatterCtrl::ZoomWindow(bool down, Point &pt) {
 	if (down) {
 		if (PointInPlot(pt)) {
@@ -768,10 +769,10 @@ void ScatterCtrl::MouseMove(Point pt, dword keyFlags)
 	if(isLabelPopUp) {
 		if (showInfo && PointInPlot(pt)) {
 			ProcessPopUp(pt);
-			popTextBegin.AppearOnlyOpen(this);
-			popTextHoriz.AppearOnlyOpen(this);
-			popTextVert.AppearOnlyOpen(this);
-			popTextEnd.AppearOnlyOpen(this);
+			popTextBegin.Show();//AppearOnlyOpen(this);
+			popTextHoriz.Show();//AppearOnlyOpen(this);
+			popTextVert.Show();//AppearOnlyOpen(this);
+			popTextEnd.Show();//AppearOnlyOpen(this);
 			Refresh();
 		}
 	} else if (isZoomWindow) {
@@ -797,10 +798,10 @@ void ScatterCtrl::MouseLeave()
 	Scrolling(false, p, true);
 	mouseAction = NONE;
 	if (isLabelPopUp || isZoomWindow) {
-		popTextBegin.Close();
-		popTextVert.Close();
-		popTextHoriz.Close(); 
-		popTextEnd.Close();		
+		popTextBegin.Hide();//Close();
+		popTextVert.Hide();//Close();
+		popTextHoriz.Hide();//Close(); 
+		popTextEnd.Hide();//Close();		
 		isLabelPopUp = isZoomWindow = false;
 		popLT = popRB = Null;
 		Refresh();
@@ -1043,10 +1044,10 @@ ScatterCtrl::ScatterCtrl() : popOffset(10, 12), mouseAction(NONE)
 	rotate = Angle_0;
 	//Color(graphColor);	
 	BackPaint();
-	popTextBegin.SetColor(SColorFace);  
-	popTextVert.SetColor(SColorFace);  
-	popTextHoriz.SetColor(SColorFace);  
-	popTextEnd.SetColor(SColorFace);  
+	popTextBegin.SetColor(SColorText).SetBackground(SColorFace);  
+	popTextVert.SetColor(SColorText).SetBackground(SColorFace);
+	popTextHoriz.SetColor(SColorText).SetBackground(SColorFace);
+	popTextEnd.SetColor(SColorText).SetBackground(SColorFace);
 
 	saveSize = Size(1000, 800);
 	jpgQuality = 90;
