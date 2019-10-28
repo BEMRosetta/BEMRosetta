@@ -136,15 +136,31 @@ void DrawRectLine(Draw& w, Rect &r, int lineWidth, const Color &color) {
 	w.DrawLine(r.left, r.bottom, r.left, r.top, lineWidth, color);
 }
 
-int GetEditWidth(const String str) {
-	Font font = StdFont();
-	
+int GetEditWidth(const String &_str, const Font font = StdFont()) {
+	WString str(_str);
 	int ret = 0;
 	for (int i = 0; i < str.GetCount(); ++i)
 		ret += font.GetWidth(str[i]);
 	return ret;
 }
 
+Size GetEditSize(const String &_str, const Font font = StdFont()) {
+	WString str(_str);
+	Size ret(0, 0);
+	int retx = 0, nlines = 1;
+	for (int i = 0; i < str.GetCount(); ++i) {
+		int c = str[i];
+		if (c == '\n') {
+			nlines++;
+			ret.cx = max(ret.cx, retx);
+			retx = 0;
+		} else
+			retx += font.GetWidth(c);
+	}	
+	ret.cx = max(ret.cx, retx);
+	ret.cy = nlines*font.GetHeight();
+	return ret;
+}
 
 bool ConsoleOutput::Init(bool forceWindow) {
 #ifdef PLATFORM_WIN32	

@@ -42,45 +42,6 @@ public:
 	Function <void()>WhenFocus;
 };
 
-template <class T>
-class WithMouseHandler : public T {
-public:
-	virtual void LeftDown(Point p, dword d) {
-		//T::LeftDown(p, d);
-		clicked = true;
-		WhenMouse(p);
-	}
-	virtual void MouseMove(Point p, dword d) {
-		//T::MouseMove(p, d);
-		if (clicked)
-			WhenMouse(p);
-		else
-			WhenMove(p);
-	}
-	virtual void LeftUp(Point p, dword d) {
-		//T::LeftUp(p, d);
-		clicked = false;
-	}
-	virtual void MouseLeave() {
-		//T::MouseLeave(); 		
-		clicked = false;
-	}
-	virtual void GotFocus() {
-		//T::GotFocus();
-		clicked = false;
-	}
-	virtual void LostFocus() {
-		//T::LostFocus();
-		clicked = false;
-	}
-	
-	Function <void(Point)>WhenMouse;
-	Function <void(Point)>WhenMove;	
-
-private:
-	bool clicked = false;
-};
-
 class FreqSelector : public StaticRect {
 public:
 	typedef FreqSelector CLASSNAME;
@@ -173,7 +134,7 @@ String TabText(const TabCtrl &tab);
 
 #include "arrange.h"
 
-enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS_MA, DATA_STS_PH};
+enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS};
 enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH, 
@@ -432,16 +393,17 @@ private:
 	
 };
 
-class MainPlot : public WithMainPlot<StaticRect> {
+class MainPlot : public StaticRect {
 public:
 	typedef MainPlot CLASSNAME;
 	
-	void Init();
+	void Init(bool vert);
 	void Init(int idof, double jdof_ih, DataToShow dataToShow);
 	bool Load(const Upp::Array<HydroClass> &hydro);
 	bool Load(const Hydro &hy);
 	void LoadEach(const Hydro &hy, int id, bool &loaded);
 	void Clear();
+	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
 	Upp::Array<HydroSource> ABF_source, ABF_source2;
 	Upp::Array<HydroSource> Ainf_source;
@@ -452,7 +414,10 @@ public:
 	bool dim;
 	int markW;
 	bool show_w;
-	bool showPhase;	
+	//bool showPhase;	
+	
+	ScatterCtrl scatt, scatP;
+	Splitter splitter;
 
 private:
 	bool isInit = false;	
@@ -490,9 +455,9 @@ public:
 	bool show_w;
 	bool showPhase;	
 	
-	Splitter splitter;
+	Splitter splitter, splitter2;
 	TabCtrl tab;
-	ScatterCtrl scatter;
+	ScatterCtrl scatt, scatP;
 	Upp::Array<ArrayCtrl> arrays;
 };
 
@@ -595,15 +560,15 @@ public:
 	String Check(double fromFreq, double toFreq, String freqs);
 	
 	void WhenFocus(StaticRectangle *rect);
-	void OnPainter(Painter &w);
-	void OnLeftDown(Point p);
-	void OnMove(Point p);
+	void OnPainter(Painter &w, ScatterCtrl *scat);
+	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
+	//void OnMove(Point p);
 	
 	bool Get(Vector<int> &ibs, Vector<int> &idofs, Vector<int> &jdofs,
 		Vector<double> &froms, Vector<double> &tos, Vector<Vector<double>> &freqs); 
 	void Clear();
 	
-	MainPlot plotsReal, plotsImag;
+	MainPlot plots;
 	
 	FreqSelector selector;
 
