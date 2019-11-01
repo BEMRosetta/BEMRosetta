@@ -98,17 +98,6 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 	
 	hd().InitializeSts();
 	Hydro::StateSpace &sts = hd().sts[idof][jdof];
-	
-	MatMatrix<std::complex<double>> Z = mat.VarReadMat<std::complex<double>>("Z");	
-	if (Z.GetCount() == 0)
-		BEMData::Print(S("\n") + t_("Vector Z not found"));
-	else {
-		sts.Z.SetCount(hd().Nf);
-		if (hd().Nf != Z.GetCount())
-			throw Exc(S("\n") + t_("Vectors w and Z size does not match"));
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-			sts.Z[ifr] = Z[ifr];
-	}
 
 	MatMatrix<std::complex<double>> TFSResponse = mat.VarReadMat<std::complex<double>>("TFSResponse");	
 	if (TFSResponse.GetCount() == 0)
@@ -167,7 +156,9 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 			sts.ssFreqRange[c] = ssFreqRange(0, c);
 	}
 
-	sts.ssMAE = mat.VarRead<double>("MAE");		
+	sts.ssMAE = mat.VarRead<double>("MAE");	
+	
+	hd().dimenSTS = true;	
 			
 	return true;
 }

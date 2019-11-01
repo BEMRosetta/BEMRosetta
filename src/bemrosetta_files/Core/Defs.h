@@ -20,7 +20,6 @@
 #endif
 
 bool    IsPanicMode();
-void	NotPanic();
 
 void    Panic(const char *msg);
 

@@ -851,6 +851,7 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -1459,6 +1460,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -2067,6 +2069,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -2680,6 +2683,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -3288,6 +3292,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -3896,6 +3901,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -4504,6 +4510,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -5075,6 +5082,7 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -5249,6 +5257,7 @@ $(OutDir_CtrlLib)LabelBase.o: CtrlLib/LabelBase.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -5400,6 +5409,7 @@ $(OutDir_CtrlLib)DisplayPopup.o: CtrlLib/DisplayPopup.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -5551,6 +5561,7 @@ $(OutDir_CtrlLib)Button.o: CtrlLib/Button.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -5702,6 +5713,7 @@ $(OutDir_CtrlLib)Switch.o: CtrlLib/Switch.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -5853,6 +5865,7 @@ $(OutDir_CtrlLib)EditField.o: CtrlLib/EditField.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6004,6 +6017,7 @@ $(OutDir_CtrlLib)Text.o: CtrlLib/Text.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6155,6 +6169,7 @@ $(OutDir_CtrlLib)LineEdit.o: CtrlLib/LineEdit.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6306,6 +6321,7 @@ $(OutDir_CtrlLib)DocEdit.o: CtrlLib/DocEdit.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6457,6 +6473,7 @@ $(OutDir_CtrlLib)ScrollBar.o: CtrlLib/ScrollBar.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6608,6 +6625,7 @@ $(OutDir_CtrlLib)HeaderCtrl.o: CtrlLib/HeaderCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6759,6 +6777,7 @@ $(OutDir_CtrlLib)ArrayCtrl.o: CtrlLib/ArrayCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -6910,6 +6929,7 @@ $(OutDir_CtrlLib)MultiButton.o: CtrlLib/MultiButton.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7061,6 +7081,7 @@ $(OutDir_CtrlLib)PopupTable.o: CtrlLib/PopupTable.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7212,6 +7233,7 @@ $(OutDir_CtrlLib)DropList.o: CtrlLib/DropList.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7363,6 +7385,7 @@ $(OutDir_CtrlLib)DropChoice.o: CtrlLib/DropChoice.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7514,6 +7537,7 @@ $(OutDir_CtrlLib)Static.o: CtrlLib/Static.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7665,6 +7689,7 @@ $(OutDir_CtrlLib)Splitter.o: CtrlLib/Splitter.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7816,6 +7841,7 @@ $(OutDir_CtrlLib)FrameSplitter.o: CtrlLib/FrameSplitter.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -7967,6 +7993,7 @@ $(OutDir_CtrlLib)SliderCtrl.o: CtrlLib/SliderCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -8118,6 +8145,7 @@ $(OutDir_CtrlLib)ColumnList.o: CtrlLib/ColumnList.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -8269,6 +8297,7 @@ $(OutDir_CtrlLib)Progress.o: CtrlLib/Progress.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -8420,6 +8449,7 @@ $(OutDir_CtrlLib)AKeys.o: CtrlLib/AKeys.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -8571,6 +8601,7 @@ $(OutDir_CtrlLib)RichTextView.o: CtrlLib/RichTextView.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -8722,6 +8753,7 @@ $(OutDir_CtrlLib)Prompt.o: CtrlLib/Prompt.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -8873,6 +8905,7 @@ $(OutDir_CtrlLib)Help.o: CtrlLib/Help.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9024,6 +9057,7 @@ $(OutDir_CtrlLib)DateTimeCtrl.o: CtrlLib/DateTimeCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9175,6 +9209,7 @@ $(OutDir_CtrlLib)SuggestCtrl.o: CtrlLib/SuggestCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9326,6 +9361,7 @@ $(OutDir_CtrlLib)Bar.o: CtrlLib/Bar.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9478,6 +9514,7 @@ $(OutDir_CtrlLib)MenuItem.o: CtrlLib/MenuItem.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9630,6 +9667,7 @@ $(OutDir_CtrlLib)MenuBar.o: CtrlLib/MenuBar.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9781,6 +9819,7 @@ $(OutDir_CtrlLib)ToolButton.o: CtrlLib/ToolButton.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -9932,6 +9971,7 @@ $(OutDir_CtrlLib)ToolBar.o: CtrlLib/ToolBar.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10083,6 +10123,7 @@ $(OutDir_CtrlLib)ToolTip.o: CtrlLib/ToolTip.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10234,6 +10275,7 @@ $(OutDir_CtrlLib)StatusBar.o: CtrlLib/StatusBar.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10385,6 +10427,7 @@ $(OutDir_CtrlLib)TabCtrl.o: CtrlLib/TabCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10536,6 +10579,7 @@ $(OutDir_CtrlLib)TreeCtrl.o: CtrlLib/TreeCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10687,6 +10731,7 @@ $(OutDir_CtrlLib)DropTree.o: CtrlLib/DropTree.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10838,6 +10883,7 @@ $(OutDir_CtrlLib)DlgColor.o: CtrlLib/DlgColor.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -10989,6 +11035,7 @@ $(OutDir_CtrlLib)ColorPopup.o: CtrlLib/ColorPopup.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -11140,6 +11187,7 @@ $(OutDir_CtrlLib)ColorPusher.o: CtrlLib/ColorPusher.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -11291,6 +11339,7 @@ $(OutDir_CtrlLib)FileList.o: CtrlLib/FileList.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -11442,6 +11491,7 @@ $(OutDir_CtrlLib)FileSel.o: CtrlLib/FileSel.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -11593,6 +11643,7 @@ $(OutDir_CtrlLib)FileSelUtil.o: CtrlLib/FileSelUtil.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -11746,6 +11797,7 @@ $(OutDir_CtrlLib)PrinterJob.o: CtrlLib/PrinterJob.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -11897,6 +11949,7 @@ $(OutDir_CtrlLib)Windows.o: CtrlLib/Windows.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12048,6 +12101,7 @@ $(OutDir_CtrlLib)Win32.o: CtrlLib/Win32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12199,6 +12253,7 @@ $(OutDir_CtrlLib)Gtk.o: CtrlLib/Gtk.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12350,6 +12405,7 @@ $(OutDir_CtrlLib)TrayIconWin32.o: CtrlLib/TrayIconWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12501,6 +12557,7 @@ $(OutDir_CtrlLib)TrayIconX11.o: CtrlLib/TrayIconX11.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12652,6 +12709,7 @@ $(OutDir_CtrlLib)TrayIconGtk.o: CtrlLib/TrayIconGtk.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12803,6 +12861,7 @@ $(OutDir_CtrlLib)Update.o: CtrlLib/Update.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -12955,6 +13014,7 @@ $(OutDir_CtrlLib)CtrlUtil.o: CtrlLib/CtrlUtil.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -13108,6 +13168,7 @@ $(OutDir_CtrlLib)CtrlLibInit.o: CtrlLib/CtrlLibInit.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -13259,6 +13320,7 @@ $(OutDir_CtrlLib)LNGCtrl.o: CtrlLib/LNGCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -13411,6 +13473,7 @@ $(OutDir_CtrlLib)Ch.o: CtrlLib/Ch.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -13564,6 +13627,7 @@ $(OutDir_CtrlLib)ChWin32.o: CtrlLib/ChWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -13716,6 +13780,7 @@ $(OutDir_CtrlLib)ChGtk0.o: CtrlLib/ChGtk0.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -13870,6 +13935,7 @@ $(OutDir_CtrlLib)ChGtk.o: CtrlLib/ChGtk.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -14023,6 +14089,7 @@ $(OutDir_CtrlLib)ChCoco.o: CtrlLib/ChCoco.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -14332,6 +14399,7 @@ $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -14449,6 +14517,7 @@ $(OutDir_ScatterCtrl)ScatterCtrlX.o: ScatterCtrl/ScatterCtrlX.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -14631,6 +14700,7 @@ $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -14812,6 +14882,7 @@ $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -14993,6 +15064,7 @@ $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -15145,6 +15217,7 @@ $(OutDir_ScatterCtrl)PopUpText.o: ScatterCtrl/PopUpText.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -15310,6 +15383,7 @@ $(OutDir_ScatterCtrl)PieCtrl.o: ScatterCtrl/PieCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -15494,6 +15568,7 @@ $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -15708,6 +15783,7 @@ $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -15885,6 +15961,7 @@ $(OutDir_Controls4U)ActiveX.o: Controls4U/ActiveX.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -16039,6 +16116,7 @@ $(OutDir_Controls4U)IExplorerBrowser.o: Controls4U/IExplorerBrowser.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -16193,6 +16271,7 @@ $(OutDir_Controls4U)FirefoxBrowser.o: Controls4U/FirefoxBrowser.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -16347,6 +16426,7 @@ $(OutDir_Controls4U)VLCPlayer.o: Controls4U/VLCPlayer.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -16506,6 +16586,7 @@ $(OutDir_Controls4U)SliderCtrlX.o: Controls4U/SliderCtrlX.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -16661,6 +16742,7 @@ $(OutDir_Controls4U)StarIndicator.o: Controls4U/StarIndicator.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -16814,6 +16896,7 @@ $(OutDir_Controls4U)SplitterButton.o: Controls4U/SplitterButton.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -17323,6 +17406,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)main.o: BEMRosetta/BEMRosetta_cl/main.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -17819,6 +17903,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -18318,6 +18403,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)Mesh.o: BEMRosetta/BEMRosetta_cl/Mesh.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -18814,6 +18900,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh_mesh.o: BEMRosetta/BEMRosetta_cl/nemoh_m
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -19310,6 +19397,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit_mesh.o: BEMRosetta/BEMRosetta_cl/wamit_m
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -19806,6 +19894,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)stl.o: BEMRosetta/BEMRosetta_cl/stl.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -20302,6 +20391,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o: BEMRosetta/BEMRosetta_cl/nemoh.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -20798,6 +20888,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o: BEMRosetta/BEMRosetta_cl/foamm.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -21306,6 +21397,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o: BEMRosetta/BEMRosetta_cl/fast.cpp \
 	plugin/zstd/zstd.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -21802,6 +21894,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o: BEMRosetta/BEMRosetta_cl/wamit.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -22298,6 +22391,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o: BEMRosetta/BEMRosetta_cl/aqwa.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -22794,6 +22888,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o: BEMRosetta/BEMRosetta_cl/ainf.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -23290,6 +23385,7 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o: BEMRosetta/BEMRosetta_cl/dataf.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -23889,6 +23985,7 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -24045,6 +24142,7 @@ $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -24215,6 +24313,7 @@ $(OutDir_RasterPlayer)RasterPlayer.o: RasterPlayer/RasterPlayer.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -24375,6 +24474,7 @@ $(OutDir_CtrlScroll)CtrlScroll.o: CtrlScroll/CtrlScroll.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -24500,6 +24600,7 @@ $(OutDir_CtrlCore)SystemDraw.o: CtrlCore/SystemDraw.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -24617,6 +24718,7 @@ $(OutDir_CtrlCore)Frame.o: CtrlCore/Frame.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -24734,6 +24836,7 @@ $(OutDir_CtrlCore)CtrlMt.o: CtrlCore/CtrlMt.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -24852,6 +24955,7 @@ $(OutDir_CtrlCore)Ctrl.o: CtrlCore/Ctrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -24969,6 +25073,7 @@ $(OutDir_CtrlCore)CtrlChild.o: CtrlCore/CtrlChild.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25086,6 +25191,7 @@ $(OutDir_CtrlCore)CtrlPos.o: CtrlCore/CtrlPos.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25203,6 +25309,7 @@ $(OutDir_CtrlCore)CtrlDraw.o: CtrlCore/CtrlDraw.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25320,6 +25427,7 @@ $(OutDir_CtrlCore)CtrlMouse.o: CtrlCore/CtrlMouse.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25437,6 +25545,7 @@ $(OutDir_CtrlCore)CtrlKbd.o: CtrlCore/CtrlKbd.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25554,6 +25663,7 @@ $(OutDir_CtrlCore)CtrlTimer.o: CtrlCore/CtrlTimer.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25671,6 +25781,7 @@ $(OutDir_CtrlCore)CtrlClip.o: CtrlCore/CtrlClip.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25788,6 +25899,7 @@ $(OutDir_CtrlCore)LocalLoop.o: CtrlCore/LocalLoop.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -25907,6 +26019,7 @@ $(OutDir_CtrlCore)CtrlCoreInit.o: CtrlCore/CtrlCoreInit.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26024,6 +26137,7 @@ $(OutDir_CtrlCore)TopWindow.o: CtrlCore/TopWindow.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26141,6 +26255,7 @@ $(OutDir_CtrlCore)DrawWin32.o: CtrlCore/DrawWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26258,6 +26373,7 @@ $(OutDir_CtrlCore)DrawOpWin32.o: CtrlCore/DrawOpWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26375,6 +26491,7 @@ $(OutDir_CtrlCore)DrawTextWin32.o: CtrlCore/DrawTextWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26492,6 +26609,7 @@ $(OutDir_CtrlCore)ImageWin32.o: CtrlCore/ImageWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26609,6 +26727,7 @@ $(OutDir_CtrlCore)MetaFile.o: CtrlCore/MetaFile.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26726,6 +26845,7 @@ $(OutDir_CtrlCore)UtilWin32.o: CtrlCore/UtilWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26843,6 +26963,7 @@ $(OutDir_CtrlCore)Win32Ctrl.o: CtrlCore/Win32Ctrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -26963,6 +27084,7 @@ $(OutDir_CtrlCore)Win32Wnd.o: CtrlCore/Win32Wnd.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27081,6 +27203,7 @@ $(OutDir_CtrlCore)Win32Clip.o: CtrlCore/Win32Clip.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27198,6 +27321,7 @@ $(OutDir_CtrlCore)Win32DnD.o: CtrlCore/Win32DnD.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27315,6 +27439,7 @@ $(OutDir_CtrlCore)Win32Proc.o: CtrlCore/Win32Proc.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27432,6 +27557,7 @@ $(OutDir_CtrlCore)TopWin32.o: CtrlCore/TopWin32.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27549,6 +27675,7 @@ $(OutDir_CtrlCore)DHCtrl.o: CtrlCore/DHCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27666,6 +27793,7 @@ $(OutDir_CtrlCore)DrawX11.o: CtrlCore/DrawX11.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27783,6 +27911,7 @@ $(OutDir_CtrlCore)DrawOpX11.o: CtrlCore/DrawOpX11.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -27900,6 +28029,7 @@ $(OutDir_CtrlCore)DrawTextX11.o: CtrlCore/DrawTextX11.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28017,6 +28147,7 @@ $(OutDir_CtrlCore)ImageX11.o: CtrlCore/ImageX11.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28134,6 +28265,7 @@ $(OutDir_CtrlCore)UtilX11.o: CtrlCore/UtilX11.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28251,6 +28383,7 @@ $(OutDir_CtrlCore)X11Ctrl.o: CtrlCore/X11Ctrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28369,6 +28502,7 @@ $(OutDir_CtrlCore)X11Wnd.o: CtrlCore/X11Wnd.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28486,6 +28620,7 @@ $(OutDir_CtrlCore)X11Proc.o: CtrlCore/X11Proc.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28603,6 +28738,7 @@ $(OutDir_CtrlCore)X11Clip.o: CtrlCore/X11Clip.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28720,6 +28856,7 @@ $(OutDir_CtrlCore)X11DnD.o: CtrlCore/X11DnD.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28837,6 +28974,7 @@ $(OutDir_CtrlCore)X11Top.o: CtrlCore/X11Top.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -28955,6 +29093,7 @@ $(OutDir_CtrlCore)X11ImgClip.o: CtrlCore/X11ImgClip.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29072,6 +29211,7 @@ $(OutDir_CtrlCore)X11App.o: CtrlCore/X11App.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29189,6 +29329,7 @@ $(OutDir_CtrlCore)X11DHCtrl.o: CtrlCore/X11DHCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29306,6 +29447,7 @@ $(OutDir_CtrlCore)GtkDrawOp.o: CtrlCore/GtkDrawOp.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29423,6 +29565,7 @@ $(OutDir_CtrlCore)GtkDrawText.o: CtrlCore/GtkDrawText.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29540,6 +29683,7 @@ $(OutDir_CtrlCore)GtkDrawImage.o: CtrlCore/GtkDrawImage.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29657,6 +29801,7 @@ $(OutDir_CtrlCore)GdkImage.o: CtrlCore/GdkImage.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29774,6 +29919,7 @@ $(OutDir_CtrlCore)GtkUtil.o: CtrlCore/GtkUtil.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -29891,6 +30037,7 @@ $(OutDir_CtrlCore)GtkX11Util.o: CtrlCore/GtkX11Util.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30008,6 +30155,7 @@ $(OutDir_CtrlCore)GtkCtrl.o: CtrlCore/GtkCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30125,6 +30273,7 @@ $(OutDir_CtrlCore)GtkCapture.o: CtrlCore/GtkCapture.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30242,6 +30391,7 @@ $(OutDir_CtrlCore)GtkWnd.o: CtrlCore/GtkWnd.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30359,6 +30509,7 @@ $(OutDir_CtrlCore)GtkCreate.o: CtrlCore/GtkCreate.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30476,6 +30627,7 @@ $(OutDir_CtrlCore)GtkEvent.o: CtrlCore/GtkEvent.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30593,6 +30745,7 @@ $(OutDir_CtrlCore)GtkTop.o: CtrlCore/GtkTop.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30711,6 +30864,7 @@ $(OutDir_CtrlCore)GtkClip.o: CtrlCore/GtkClip.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30828,6 +30982,7 @@ $(OutDir_CtrlCore)GtkDnD.o: CtrlCore/GtkDnD.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -30945,6 +31100,7 @@ $(OutDir_CtrlCore)GtkApp.o: CtrlCore/GtkApp.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31062,6 +31218,7 @@ $(OutDir_CtrlCore)CocoCtrl.o: CtrlCore/CocoCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31179,6 +31336,7 @@ $(OutDir_CtrlCore)CocoWnd.o: CtrlCore/CocoWnd.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31296,6 +31454,7 @@ $(OutDir_CtrlCore)CocoTop.o: CtrlCore/CocoTop.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31447,6 +31606,7 @@ $(OutDir_CtrlCore)CocoChSysInit.o: CtrlCore/CocoChSysInit.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31564,6 +31724,7 @@ $(OutDir_CtrlCore)ParseRTF.o: CtrlCore/ParseRTF.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31681,6 +31842,7 @@ $(OutDir_CtrlCore)EncodeRTF.o: CtrlCore/EncodeRTF.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -31904,7 +32066,8 @@ $(OutDir_PdfDraw)TTFStream.o: PdfDraw/TTFStream.cpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/TTFStream.cpp -o $(OutDir_PdfDraw)TTFStream.o
 
 $(OutDir_PdfDraw)TTFStruct.o: PdfDraw/TTFStruct.cpp \
@@ -31995,7 +32158,8 @@ $(OutDir_PdfDraw)TTFStruct.o: PdfDraw/TTFStruct.cpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/TTFStruct.cpp -o $(OutDir_PdfDraw)TTFStruct.o
 
 $(OutDir_PdfDraw)TTFReader.o: PdfDraw/TTFReader.cpp \
@@ -32086,7 +32250,8 @@ $(OutDir_PdfDraw)TTFReader.o: PdfDraw/TTFReader.cpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/TTFReader.cpp -o $(OutDir_PdfDraw)TTFReader.o
 
 $(OutDir_PdfDraw)TTFSubset.o: PdfDraw/TTFSubset.cpp \
@@ -32177,7 +32342,8 @@ $(OutDir_PdfDraw)TTFSubset.o: PdfDraw/TTFSubset.cpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/TTFSubset.cpp -o $(OutDir_PdfDraw)TTFSubset.o
 
 $(OutDir_PdfDraw)PdfDraw.o: PdfDraw/PdfDraw.cpp \
@@ -32269,7 +32435,8 @@ $(OutDir_PdfDraw)PdfDraw.o: PdfDraw/PdfDraw.cpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/PdfDraw.cpp -o $(OutDir_PdfDraw)PdfDraw.o
 
 $(OutDir_PdfDraw)PdfReport.o: PdfDraw/PdfReport.cpp \
@@ -32360,7 +32527,8 @@ $(OutDir_PdfDraw)PdfReport.o: PdfDraw/PdfReport.cpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/PdfReport.cpp -o $(OutDir_PdfDraw)PdfReport.o
 
 $(OutDir_PdfDraw)PdfInit.o: PdfDraw/PdfInit.icpp \
@@ -32451,7 +32619,8 @@ $(OutDir_PdfDraw)PdfInit.o: PdfDraw/PdfInit.icpp \
 	PdfDraw/PdfDraw.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
-	plugin/z/z.h
+	plugin/z/z.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_PdfDraw)  PdfDraw/PdfInit.icpp -o $(OutDir_PdfDraw)PdfInit.o
 
 $(OutDir_PdfDraw)PdfDraw.a: \
@@ -32558,7 +32727,8 @@ $(OutDir_Draw)Font.o: Draw/Font.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Font.cpp -o $(OutDir_Draw)Font.o
 
 $(OutDir_Draw)FontCR.o: Draw/FontCR.cpp \
@@ -32647,7 +32817,8 @@ $(OutDir_Draw)FontCR.o: Draw/FontCR.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/FontCR.cpp -o $(OutDir_Draw)FontCR.o
 
 $(OutDir_Draw)FontWin32.o: Draw/FontWin32.cpp \
@@ -32736,7 +32907,8 @@ $(OutDir_Draw)FontWin32.o: Draw/FontWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/FontWin32.cpp -o $(OutDir_Draw)FontWin32.o
 
 $(OutDir_Draw)FontFc.o: Draw/FontFc.cpp \
@@ -32828,7 +33000,8 @@ $(OutDir_Draw)FontFc.o: Draw/FontFc.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/FontFc.cpp -o $(OutDir_Draw)FontFc.o
 
 $(OutDir_Draw)Draw.o: Draw/Draw.cpp \
@@ -32917,7 +33090,8 @@ $(OutDir_Draw)Draw.o: Draw/Draw.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Draw.cpp -o $(OutDir_Draw)Draw.o
 
 $(OutDir_Draw)DrawText.o: Draw/DrawText.cpp \
@@ -33006,7 +33180,8 @@ $(OutDir_Draw)DrawText.o: Draw/DrawText.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/DrawText.cpp -o $(OutDir_Draw)DrawText.o
 
 $(OutDir_Draw)DrawData.o: Draw/DrawData.cpp \
@@ -33095,7 +33270,8 @@ $(OutDir_Draw)DrawData.o: Draw/DrawData.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/DrawData.cpp -o $(OutDir_Draw)DrawData.o
 
 $(OutDir_Draw)Drawing.o: Draw/Drawing.cpp \
@@ -33184,7 +33360,8 @@ $(OutDir_Draw)Drawing.o: Draw/Drawing.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Drawing.cpp -o $(OutDir_Draw)Drawing.o
 
 $(OutDir_Draw)ImageAnyDraw.o: Draw/ImageAnyDraw.cpp \
@@ -33273,7 +33450,8 @@ $(OutDir_Draw)ImageAnyDraw.o: Draw/ImageAnyDraw.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/ImageAnyDraw.cpp -o $(OutDir_Draw)ImageAnyDraw.o
 
 $(OutDir_Draw)DrawUtil.o: Draw/DrawUtil.cpp \
@@ -33362,7 +33540,8 @@ $(OutDir_Draw)DrawUtil.o: Draw/DrawUtil.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/DrawUtil.cpp -o $(OutDir_Draw)DrawUtil.o
 
 $(OutDir_Draw)DrawTextUtil.o: Draw/DrawTextUtil.cpp \
@@ -33451,7 +33630,8 @@ $(OutDir_Draw)DrawTextUtil.o: Draw/DrawTextUtil.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/DrawTextUtil.cpp -o $(OutDir_Draw)DrawTextUtil.o
 
 $(OutDir_Draw)Display.o: Draw/Display.cpp \
@@ -33544,7 +33724,8 @@ $(OutDir_Draw)Display.o: Draw/Display.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Display.cpp -o $(OutDir_Draw)Display.o
 
 $(OutDir_Draw)Image.o: Draw/Image.cpp \
@@ -33633,7 +33814,8 @@ $(OutDir_Draw)Image.o: Draw/Image.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Image.cpp -o $(OutDir_Draw)Image.o
 
 $(OutDir_Draw)ImageBlit.o: Draw/ImageBlit.cpp \
@@ -33722,7 +33904,8 @@ $(OutDir_Draw)ImageBlit.o: Draw/ImageBlit.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/ImageBlit.cpp -o $(OutDir_Draw)ImageBlit.o
 
 $(OutDir_Draw)RasterFormat.o: Draw/RasterFormat.cpp \
@@ -33811,7 +33994,8 @@ $(OutDir_Draw)RasterFormat.o: Draw/RasterFormat.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/RasterFormat.cpp -o $(OutDir_Draw)RasterFormat.o
 
 $(OutDir_Draw)RasterWrite.o: Draw/RasterWrite.cpp \
@@ -33900,7 +34084,8 @@ $(OutDir_Draw)RasterWrite.o: Draw/RasterWrite.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/RasterWrite.cpp -o $(OutDir_Draw)RasterWrite.o
 
 $(OutDir_Draw)Palette.o: Draw/Palette.cpp \
@@ -33989,7 +34174,8 @@ $(OutDir_Draw)Palette.o: Draw/Palette.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Palette.cpp -o $(OutDir_Draw)Palette.o
 
 $(OutDir_Draw)Raster.o: Draw/Raster.cpp \
@@ -34078,7 +34264,8 @@ $(OutDir_Draw)Raster.o: Draw/Raster.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Raster.cpp -o $(OutDir_Draw)Raster.o
 
 $(OutDir_Draw)RasterEncoder.o: Draw/RasterEncoder.cpp \
@@ -34167,7 +34354,8 @@ $(OutDir_Draw)RasterEncoder.o: Draw/RasterEncoder.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/RasterEncoder.cpp -o $(OutDir_Draw)RasterEncoder.o
 
 $(OutDir_Draw)ImageOp.o: Draw/ImageOp.cpp \
@@ -34256,7 +34444,8 @@ $(OutDir_Draw)ImageOp.o: Draw/ImageOp.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/ImageOp.cpp -o $(OutDir_Draw)ImageOp.o
 
 $(OutDir_Draw)ImageChOp.o: Draw/ImageChOp.cpp \
@@ -34345,7 +34534,8 @@ $(OutDir_Draw)ImageChOp.o: Draw/ImageChOp.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/ImageChOp.cpp -o $(OutDir_Draw)ImageChOp.o
 
 $(OutDir_Draw)ImageScale.o: Draw/ImageScale.cpp \
@@ -34434,7 +34624,8 @@ $(OutDir_Draw)ImageScale.o: Draw/ImageScale.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/ImageScale.cpp -o $(OutDir_Draw)ImageScale.o
 
 $(OutDir_Draw)BiCubic.o: Draw/BiCubic.cpp \
@@ -34523,7 +34714,8 @@ $(OutDir_Draw)BiCubic.o: Draw/BiCubic.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/BiCubic.cpp -o $(OutDir_Draw)BiCubic.o
 
 $(OutDir_Draw)RescaleFilter.o: Draw/RescaleFilter.cpp \
@@ -34612,7 +34804,8 @@ $(OutDir_Draw)RescaleFilter.o: Draw/RescaleFilter.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/RescaleFilter.cpp -o $(OutDir_Draw)RescaleFilter.o
 
 $(OutDir_Draw)MakeCache.o: Draw/MakeCache.cpp \
@@ -34701,7 +34894,8 @@ $(OutDir_Draw)MakeCache.o: Draw/MakeCache.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/MakeCache.cpp -o $(OutDir_Draw)MakeCache.o
 
 $(OutDir_Draw)DrawRasterData.o: Draw/DrawRasterData.cpp \
@@ -34790,7 +34984,8 @@ $(OutDir_Draw)DrawRasterData.o: Draw/DrawRasterData.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/DrawRasterData.cpp -o $(OutDir_Draw)DrawRasterData.o
 
 $(OutDir_Draw)Uhd.o: Draw/Uhd.cpp \
@@ -34879,7 +35074,8 @@ $(OutDir_Draw)Uhd.o: Draw/Uhd.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Uhd.cpp -o $(OutDir_Draw)Uhd.o
 
 $(OutDir_Draw)Iml.o: Draw/Iml.cpp \
@@ -34968,7 +35164,8 @@ $(OutDir_Draw)Iml.o: Draw/Iml.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Iml.cpp -o $(OutDir_Draw)Iml.o
 
 $(OutDir_Draw)DDARasterizer.o: Draw/DDARasterizer.cpp \
@@ -35057,7 +35254,8 @@ $(OutDir_Draw)DDARasterizer.o: Draw/DDARasterizer.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/DDARasterizer.cpp -o $(OutDir_Draw)DDARasterizer.o
 
 $(OutDir_Draw)SDrawClip.o: Draw/SDrawClip.cpp \
@@ -35146,7 +35344,8 @@ $(OutDir_Draw)SDrawClip.o: Draw/SDrawClip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SDrawClip.cpp -o $(OutDir_Draw)SDrawClip.o
 
 $(OutDir_Draw)SDrawPut.o: Draw/SDrawPut.cpp \
@@ -35235,7 +35434,8 @@ $(OutDir_Draw)SDrawPut.o: Draw/SDrawPut.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SDrawPut.cpp -o $(OutDir_Draw)SDrawPut.o
 
 $(OutDir_Draw)SDrawText.o: Draw/SDrawText.cpp \
@@ -35324,7 +35524,8 @@ $(OutDir_Draw)SDrawText.o: Draw/SDrawText.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SDrawText.cpp -o $(OutDir_Draw)SDrawText.o
 
 $(OutDir_Draw)SDraw.o: Draw/SDraw.cpp \
@@ -35413,7 +35614,8 @@ $(OutDir_Draw)SDraw.o: Draw/SDraw.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SDraw.cpp -o $(OutDir_Draw)SDraw.o
 
 $(OutDir_Draw)SImageDraw.o: Draw/SImageDraw.cpp \
@@ -35502,7 +35704,8 @@ $(OutDir_Draw)SImageDraw.o: Draw/SImageDraw.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SImageDraw.cpp -o $(OutDir_Draw)SImageDraw.o
 
 $(OutDir_Draw)Cham.o: Draw/Cham.cpp \
@@ -35592,7 +35795,8 @@ $(OutDir_Draw)Cham.o: Draw/Cham.cpp \
 	Draw/SDraw.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Cham.cpp -o $(OutDir_Draw)Cham.o
 
 $(OutDir_Draw)SSettings.o: Draw/SSettings.cpp \
@@ -35681,7 +35885,8 @@ $(OutDir_Draw)SSettings.o: Draw/SSettings.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SSettings.cpp -o $(OutDir_Draw)SSettings.o
 
 $(OutDir_Draw)Draw.a: \
@@ -35850,7 +36055,8 @@ $(OutDir_plugin_bmp)Bmp.o: plugin/bmp/Bmp.cpp \
 	plugin/bmp/bmp.h \
 	plugin/bmp/bmphdr.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_bmp)  plugin/bmp/Bmp.cpp -o $(OutDir_plugin_bmp)Bmp.o
 
 $(OutDir_plugin_bmp)BmpWrite.o: plugin/bmp/BmpWrite.cpp \
@@ -35941,7 +36147,8 @@ $(OutDir_plugin_bmp)BmpWrite.o: plugin/bmp/BmpWrite.cpp \
 	plugin/bmp/bmp.h \
 	plugin/bmp/bmphdr.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_bmp)  plugin/bmp/BmpWrite.cpp -o $(OutDir_plugin_bmp)BmpWrite.o
 
 $(OutDir_plugin_bmp)Icon.o: plugin/bmp/Icon.cpp \
@@ -36032,7 +36239,8 @@ $(OutDir_plugin_bmp)Icon.o: plugin/bmp/Icon.cpp \
 	plugin/bmp/bmp.h \
 	plugin/bmp/bmphdr.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_bmp)  plugin/bmp/Icon.cpp -o $(OutDir_plugin_bmp)Icon.o
 
 $(OutDir_plugin_bmp)BmpReg.o: plugin/bmp/BmpReg.icpp \
@@ -36122,7 +36330,8 @@ $(OutDir_plugin_bmp)BmpReg.o: plugin/bmp/BmpReg.icpp \
 	Draw/SDraw.h \
 	plugin/bmp/bmp.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_bmp)  plugin/bmp/BmpReg.icpp -o $(OutDir_plugin_bmp)BmpReg.o
 
 $(OutDir_plugin_bmp)bmp.a: \
@@ -36231,7 +36440,8 @@ $(OutDir_RichText)Object.o: RichText/Object.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/Object.cpp -o $(OutDir_RichText)Object.o
 
 $(OutDir_RichText)RichImage.o: RichText/RichImage.cpp \
@@ -36334,7 +36544,8 @@ $(OutDir_RichText)RichImage.o: RichText/RichImage.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/RichImage.cpp -o $(OutDir_RichText)RichImage.o
 
 $(OutDir_RichText)ParaData.o: RichText/ParaData.cpp \
@@ -36431,7 +36642,8 @@ $(OutDir_RichText)ParaData.o: RichText/ParaData.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/ParaData.cpp -o $(OutDir_RichText)ParaData.o
 
 $(OutDir_RichText)ParaType.o: RichText/ParaType.cpp \
@@ -36528,7 +36740,8 @@ $(OutDir_RichText)ParaType.o: RichText/ParaType.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/ParaType.cpp -o $(OutDir_RichText)ParaType.o
 
 $(OutDir_RichText)ParaPaint.o: RichText/ParaPaint.cpp \
@@ -36626,7 +36839,8 @@ $(OutDir_RichText)ParaPaint.o: RichText/ParaPaint.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/ParaPaint.cpp -o $(OutDir_RichText)ParaPaint.o
 
 $(OutDir_RichText)HeaderFooter.o: RichText/HeaderFooter.cpp \
@@ -36723,7 +36937,8 @@ $(OutDir_RichText)HeaderFooter.o: RichText/HeaderFooter.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/HeaderFooter.cpp -o $(OutDir_RichText)HeaderFooter.o
 
 $(OutDir_RichText)TxtData.o: RichText/TxtData.cpp \
@@ -36820,7 +37035,8 @@ $(OutDir_RichText)TxtData.o: RichText/TxtData.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TxtData.cpp -o $(OutDir_RichText)TxtData.o
 
 $(OutDir_RichText)TxtPaint.o: RichText/TxtPaint.cpp \
@@ -36917,7 +37133,8 @@ $(OutDir_RichText)TxtPaint.o: RichText/TxtPaint.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TxtPaint.cpp -o $(OutDir_RichText)TxtPaint.o
 
 $(OutDir_RichText)TxtOp.o: RichText/TxtOp.cpp \
@@ -37014,7 +37231,8 @@ $(OutDir_RichText)TxtOp.o: RichText/TxtOp.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TxtOp.cpp -o $(OutDir_RichText)TxtOp.o
 
 $(OutDir_RichText)Format.o: RichText/Format.cpp \
@@ -37111,7 +37329,8 @@ $(OutDir_RichText)Format.o: RichText/Format.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/Format.cpp -o $(OutDir_RichText)Format.o
 
 $(OutDir_RichText)TableCell.o: RichText/TableCell.cpp \
@@ -37208,7 +37427,8 @@ $(OutDir_RichText)TableCell.o: RichText/TableCell.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TableCell.cpp -o $(OutDir_RichText)TableCell.o
 
 $(OutDir_RichText)TableLayout.o: RichText/TableLayout.cpp \
@@ -37305,7 +37525,8 @@ $(OutDir_RichText)TableLayout.o: RichText/TableLayout.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TableLayout.cpp -o $(OutDir_RichText)TableLayout.o
 
 $(OutDir_RichText)TablePaint.o: RichText/TablePaint.cpp \
@@ -37402,7 +37623,8 @@ $(OutDir_RichText)TablePaint.o: RichText/TablePaint.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TablePaint.cpp -o $(OutDir_RichText)TablePaint.o
 
 $(OutDir_RichText)TableData.o: RichText/TableData.cpp \
@@ -37499,7 +37721,8 @@ $(OutDir_RichText)TableData.o: RichText/TableData.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TableData.cpp -o $(OutDir_RichText)TableData.o
 
 $(OutDir_RichText)TextPaint.o: RichText/TextPaint.cpp \
@@ -37596,7 +37819,8 @@ $(OutDir_RichText)TextPaint.o: RichText/TextPaint.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TextPaint.cpp -o $(OutDir_RichText)TextPaint.o
 
 $(OutDir_RichText)TextStyle.o: RichText/TextStyle.cpp \
@@ -37693,7 +37917,8 @@ $(OutDir_RichText)TextStyle.o: RichText/TextStyle.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TextStyle.cpp -o $(OutDir_RichText)TextStyle.o
 
 $(OutDir_RichText)TextData.o: RichText/TextData.cpp \
@@ -37790,7 +38015,8 @@ $(OutDir_RichText)TextData.o: RichText/TextData.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TextData.cpp -o $(OutDir_RichText)TextData.o
 
 $(OutDir_RichText)TextTable.o: RichText/TextTable.cpp \
@@ -37887,7 +38113,8 @@ $(OutDir_RichText)TextTable.o: RichText/TextTable.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/TextTable.cpp -o $(OutDir_RichText)TextTable.o
 
 $(OutDir_RichText)EncodeQtf.o: RichText/EncodeQtf.cpp \
@@ -37984,7 +38211,8 @@ $(OutDir_RichText)EncodeQtf.o: RichText/EncodeQtf.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/EncodeQtf.cpp -o $(OutDir_RichText)EncodeQtf.o
 
 $(OutDir_RichText)ParseQtf.o: RichText/ParseQtf.cpp \
@@ -38081,7 +38309,8 @@ $(OutDir_RichText)ParseQtf.o: RichText/ParseQtf.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/ParseQtf.cpp -o $(OutDir_RichText)ParseQtf.o
 
 $(OutDir_RichText)EncodeHTML.o: RichText/EncodeHTML.cpp \
@@ -38178,7 +38407,8 @@ $(OutDir_RichText)EncodeHTML.o: RichText/EncodeHTML.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/EncodeHTML.cpp -o $(OutDir_RichText)EncodeHTML.o
 
 $(OutDir_RichText)Util.o: RichText/Util.cpp \
@@ -38275,7 +38505,8 @@ $(OutDir_RichText)Util.o: RichText/Util.cpp \
 	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
-	RichText/Txt.h
+	RichText/Txt.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RichText)  RichText/Util.cpp -o $(OutDir_RichText)Util.o
 
 $(OutDir_RichText)RichText.a: \
@@ -38420,7 +38651,8 @@ $(OutDir_Painter)Painter.o: Painter/Painter.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Painter.cpp -o $(OutDir_Painter)Painter.o
 
 $(OutDir_Painter)SvgArc.o: Painter/SvgArc.cpp \
@@ -38515,7 +38747,8 @@ $(OutDir_Painter)SvgArc.o: Painter/SvgArc.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/SvgArc.cpp -o $(OutDir_Painter)SvgArc.o
 
 $(OutDir_Painter)PainterPath.o: Painter/PainterPath.cpp \
@@ -38610,7 +38843,8 @@ $(OutDir_Painter)PainterPath.o: Painter/PainterPath.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/PainterPath.cpp -o $(OutDir_Painter)PainterPath.o
 
 $(OutDir_Painter)DrawOp.o: Painter/DrawOp.cpp \
@@ -38705,7 +38939,8 @@ $(OutDir_Painter)DrawOp.o: Painter/DrawOp.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/DrawOp.cpp -o $(OutDir_Painter)DrawOp.o
 
 $(OutDir_Painter)Painting.o: Painter/Painting.cpp \
@@ -38800,7 +39035,8 @@ $(OutDir_Painter)Painting.o: Painter/Painting.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Painting.cpp -o $(OutDir_Painter)Painting.o
 
 $(OutDir_Painter)PaintPainting.o: Painter/PaintPainting.cpp \
@@ -38895,7 +39131,8 @@ $(OutDir_Painter)PaintPainting.o: Painter/PaintPainting.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/PaintPainting.cpp -o $(OutDir_Painter)PaintPainting.o
 
 $(OutDir_Painter)PainterInit.o: Painter/PainterInit.icpp \
@@ -38990,7 +39227,8 @@ $(OutDir_Painter)PainterInit.o: Painter/PainterInit.icpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/PainterInit.icpp -o $(OutDir_Painter)PainterInit.o
 
 $(OutDir_Painter)Xform2D.o: Painter/Xform2D.cpp \
@@ -39085,7 +39323,8 @@ $(OutDir_Painter)Xform2D.o: Painter/Xform2D.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Xform2D.cpp -o $(OutDir_Painter)Xform2D.o
 
 $(OutDir_Painter)Approximate.o: Painter/Approximate.cpp \
@@ -39180,7 +39419,8 @@ $(OutDir_Painter)Approximate.o: Painter/Approximate.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Approximate.cpp -o $(OutDir_Painter)Approximate.o
 
 $(OutDir_Painter)Stroker.o: Painter/Stroker.cpp \
@@ -39275,7 +39515,8 @@ $(OutDir_Painter)Stroker.o: Painter/Stroker.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Stroker.cpp -o $(OutDir_Painter)Stroker.o
 
 $(OutDir_Painter)Dasher.o: Painter/Dasher.cpp \
@@ -39370,7 +39611,8 @@ $(OutDir_Painter)Dasher.o: Painter/Dasher.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Dasher.cpp -o $(OutDir_Painter)Dasher.o
 
 $(OutDir_Painter)Transformer.o: Painter/Transformer.cpp \
@@ -39465,7 +39707,8 @@ $(OutDir_Painter)Transformer.o: Painter/Transformer.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Transformer.cpp -o $(OutDir_Painter)Transformer.o
 
 $(OutDir_Painter)Rasterizer.o: Painter/Rasterizer.cpp \
@@ -39560,7 +39803,8 @@ $(OutDir_Painter)Rasterizer.o: Painter/Rasterizer.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Rasterizer.cpp -o $(OutDir_Painter)Rasterizer.o
 
 $(OutDir_Painter)RasterizerClip.o: Painter/RasterizerClip.cpp \
@@ -39655,7 +39899,8 @@ $(OutDir_Painter)RasterizerClip.o: Painter/RasterizerClip.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/RasterizerClip.cpp -o $(OutDir_Painter)RasterizerClip.o
 
 $(OutDir_Painter)RenderChar.o: Painter/RenderChar.cpp \
@@ -39750,7 +39995,8 @@ $(OutDir_Painter)RenderChar.o: Painter/RenderChar.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/RenderChar.cpp -o $(OutDir_Painter)RenderChar.o
 
 $(OutDir_Painter)Fillers.o: Painter/Fillers.cpp \
@@ -39846,7 +40092,8 @@ $(OutDir_Painter)Fillers.o: Painter/Fillers.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Fillers.cpp -o $(OutDir_Painter)Fillers.o
 
 $(OutDir_Painter)Context.o: Painter/Context.cpp \
@@ -39941,7 +40188,8 @@ $(OutDir_Painter)Context.o: Painter/Context.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Context.cpp -o $(OutDir_Painter)Context.o
 
 $(OutDir_Painter)Path.o: Painter/Path.cpp \
@@ -40036,7 +40284,8 @@ $(OutDir_Painter)Path.o: Painter/Path.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Path.cpp -o $(OutDir_Painter)Path.o
 
 $(OutDir_Painter)Render.o: Painter/Render.cpp \
@@ -40132,7 +40381,8 @@ $(OutDir_Painter)Render.o: Painter/Render.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Render.cpp -o $(OutDir_Painter)Render.o
 
 $(OutDir_Painter)Image.o: Painter/Image.cpp \
@@ -40227,7 +40477,8 @@ $(OutDir_Painter)Image.o: Painter/Image.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Image.cpp -o $(OutDir_Painter)Image.o
 
 $(OutDir_Painter)Mask.o: Painter/Mask.cpp \
@@ -40322,7 +40573,8 @@ $(OutDir_Painter)Mask.o: Painter/Mask.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Mask.cpp -o $(OutDir_Painter)Mask.o
 
 $(OutDir_Painter)Gradient.o: Painter/Gradient.cpp \
@@ -40417,7 +40669,8 @@ $(OutDir_Painter)Gradient.o: Painter/Gradient.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/Gradient.cpp -o $(OutDir_Painter)Gradient.o
 
 $(OutDir_Painter)RadialGradient.o: Painter/RadialGradient.cpp \
@@ -40512,7 +40765,8 @@ $(OutDir_Painter)RadialGradient.o: Painter/RadialGradient.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/RadialGradient.cpp -o $(OutDir_Painter)RadialGradient.o
 
 $(OutDir_Painter)OnPath.o: Painter/OnPath.cpp \
@@ -40607,7 +40861,8 @@ $(OutDir_Painter)OnPath.o: Painter/OnPath.cpp \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/OnPath.cpp -o $(OutDir_Painter)OnPath.o
 
 $(OutDir_Painter)SvgUtil.o: Painter/SvgUtil.cpp \
@@ -40703,7 +40958,8 @@ $(OutDir_Painter)SvgUtil.o: Painter/SvgUtil.cpp \
 	Painter/Painting.h \
 	Painter/SvgInternal.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/SvgUtil.cpp -o $(OutDir_Painter)SvgUtil.o
 
 $(OutDir_Painter)SvgBounds.o: Painter/SvgBounds.cpp \
@@ -40799,7 +41055,8 @@ $(OutDir_Painter)SvgBounds.o: Painter/SvgBounds.cpp \
 	Painter/Painting.h \
 	Painter/SvgInternal.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/SvgBounds.cpp -o $(OutDir_Painter)SvgBounds.o
 
 $(OutDir_Painter)SvgStyle.o: Painter/SvgStyle.cpp \
@@ -40895,7 +41152,8 @@ $(OutDir_Painter)SvgStyle.o: Painter/SvgStyle.cpp \
 	Painter/Painting.h \
 	Painter/SvgInternal.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/SvgStyle.cpp -o $(OutDir_Painter)SvgStyle.o
 
 $(OutDir_Painter)SvgParser.o: Painter/SvgParser.cpp \
@@ -40991,7 +41249,8 @@ $(OutDir_Painter)SvgParser.o: Painter/SvgParser.cpp \
 	Painter/Painting.h \
 	Painter/SvgInternal.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Painter)  Painter/SvgParser.cpp -o $(OutDir_Painter)SvgParser.o
 
 $(OutDir_Painter)Painter.a: \
@@ -41131,7 +41390,8 @@ $(OutDir_Core)Cpu.o: Core/Cpu.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Cpu.cpp -o $(OutDir_Core)Cpu.o
 
 $(OutDir_Core)Mt.o: Core/Mt.cpp \
@@ -41211,7 +41471,8 @@ $(OutDir_Core)Mt.o: Core/Mt.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Mt.cpp -o $(OutDir_Core)Mt.o
 
 $(OutDir_Core)heaputil.o: Core/heaputil.cpp \
@@ -41292,7 +41553,8 @@ $(OutDir_Core)heaputil.o: Core/heaputil.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/heaputil.cpp -o $(OutDir_Core)heaputil.o
 
 $(OutDir_Core)hheap.o: Core/hheap.cpp \
@@ -41373,7 +41635,8 @@ $(OutDir_Core)hheap.o: Core/hheap.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/hheap.cpp -o $(OutDir_Core)hheap.o
 
 $(OutDir_Core)sheap.o: Core/sheap.cpp \
@@ -41454,7 +41717,8 @@ $(OutDir_Core)sheap.o: Core/sheap.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/sheap.cpp -o $(OutDir_Core)sheap.o
 
 $(OutDir_Core)lheap.o: Core/lheap.cpp \
@@ -41535,7 +41799,8 @@ $(OutDir_Core)lheap.o: Core/lheap.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/lheap.cpp -o $(OutDir_Core)lheap.o
 
 $(OutDir_Core)heap.o: Core/heap.cpp \
@@ -41616,7 +41881,8 @@ $(OutDir_Core)heap.o: Core/heap.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/heap.cpp -o $(OutDir_Core)heap.o
 
 $(OutDir_Core)heapdbg.o: Core/heapdbg.cpp \
@@ -41697,7 +41963,8 @@ $(OutDir_Core)heapdbg.o: Core/heapdbg.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/heapdbg.cpp -o $(OutDir_Core)heapdbg.o
 
 $(OutDir_Core)StringFind.o: Core/StringFind.cpp \
@@ -41777,7 +42044,8 @@ $(OutDir_Core)StringFind.o: Core/StringFind.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/StringFind.cpp -o $(OutDir_Core)StringFind.o
 
 $(OutDir_Core)String.o: Core/String.cpp \
@@ -41857,7 +42125,8 @@ $(OutDir_Core)String.o: Core/String.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/String.cpp -o $(OutDir_Core)String.o
 
 $(OutDir_Core)WString.o: Core/WString.cpp \
@@ -41937,7 +42206,8 @@ $(OutDir_Core)WString.o: Core/WString.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/WString.cpp -o $(OutDir_Core)WString.o
 
 $(OutDir_Core)StrUtil.o: Core/StrUtil.cpp \
@@ -42017,7 +42287,8 @@ $(OutDir_Core)StrUtil.o: Core/StrUtil.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/StrUtil.cpp -o $(OutDir_Core)StrUtil.o
 
 $(OutDir_Core)SplitMerge.o: Core/SplitMerge.cpp \
@@ -42097,7 +42368,8 @@ $(OutDir_Core)SplitMerge.o: Core/SplitMerge.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/SplitMerge.cpp -o $(OutDir_Core)SplitMerge.o
 
 $(OutDir_Core)Utf.o: Core/Utf.cpp \
@@ -42177,7 +42449,8 @@ $(OutDir_Core)Utf.o: Core/Utf.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Utf.cpp -o $(OutDir_Core)Utf.o
 
 $(OutDir_Core)UnicodeInfo.o: Core/UnicodeInfo.cpp \
@@ -42257,7 +42530,8 @@ $(OutDir_Core)UnicodeInfo.o: Core/UnicodeInfo.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/UnicodeInfo.cpp -o $(OutDir_Core)UnicodeInfo.o
 
 $(OutDir_Core)CharSet.o: Core/CharSet.cpp \
@@ -42337,7 +42611,8 @@ $(OutDir_Core)CharSet.o: Core/CharSet.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/CharSet.cpp -o $(OutDir_Core)CharSet.o
 
 $(OutDir_Core)Bom.o: Core/Bom.cpp \
@@ -42417,7 +42692,8 @@ $(OutDir_Core)Bom.o: Core/Bom.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Bom.cpp -o $(OutDir_Core)Bom.o
 
 $(OutDir_Core)Path.o: Core/Path.cpp \
@@ -42497,7 +42773,8 @@ $(OutDir_Core)Path.o: Core/Path.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Path.cpp -o $(OutDir_Core)Path.o
 
 $(OutDir_Core)NetNode.o: Core/NetNode.cpp \
@@ -42577,7 +42854,8 @@ $(OutDir_Core)NetNode.o: Core/NetNode.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/NetNode.cpp -o $(OutDir_Core)NetNode.o
 
 $(OutDir_Core)App.o: Core/App.cpp \
@@ -42657,7 +42935,8 @@ $(OutDir_Core)App.o: Core/App.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/App.cpp -o $(OutDir_Core)App.o
 
 $(OutDir_Core)Huge.o: Core/Huge.cpp \
@@ -42737,7 +43016,8 @@ $(OutDir_Core)Huge.o: Core/Huge.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Huge.cpp -o $(OutDir_Core)Huge.o
 
 $(OutDir_Core)Stream.o: Core/Stream.cpp \
@@ -42817,7 +43097,8 @@ $(OutDir_Core)Stream.o: Core/Stream.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Stream.cpp -o $(OutDir_Core)Stream.o
 
 $(OutDir_Core)BlockStream.o: Core/BlockStream.cpp \
@@ -42897,7 +43178,8 @@ $(OutDir_Core)BlockStream.o: Core/BlockStream.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/BlockStream.cpp -o $(OutDir_Core)BlockStream.o
 
 $(OutDir_Core)FileMapping.o: Core/FileMapping.cpp \
@@ -42977,7 +43259,8 @@ $(OutDir_Core)FileMapping.o: Core/FileMapping.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/FileMapping.cpp -o $(OutDir_Core)FileMapping.o
 
 $(OutDir_Core)FilterStream.o: Core/FilterStream.cpp \
@@ -43057,7 +43340,8 @@ $(OutDir_Core)FilterStream.o: Core/FilterStream.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/FilterStream.cpp -o $(OutDir_Core)FilterStream.o
 
 $(OutDir_Core)Log.o: Core/Log.cpp \
@@ -43137,7 +43421,8 @@ $(OutDir_Core)Log.o: Core/Log.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Log.cpp -o $(OutDir_Core)Log.o
 
 $(OutDir_Core)Debug.o: Core/Debug.cpp \
@@ -43217,7 +43502,8 @@ $(OutDir_Core)Debug.o: Core/Debug.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Debug.cpp -o $(OutDir_Core)Debug.o
 
 $(OutDir_Core)Ini.o: Core/Ini.cpp \
@@ -43297,7 +43583,8 @@ $(OutDir_Core)Ini.o: Core/Ini.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Ini.cpp -o $(OutDir_Core)Ini.o
 
 $(OutDir_Core)Util.o: Core/Util.cpp \
@@ -43377,7 +43664,8 @@ $(OutDir_Core)Util.o: Core/Util.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Util.cpp -o $(OutDir_Core)Util.o
 
 $(OutDir_Core)mathutil.o: Core/mathutil.cpp \
@@ -43457,7 +43745,8 @@ $(OutDir_Core)mathutil.o: Core/mathutil.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/mathutil.cpp -o $(OutDir_Core)mathutil.o
 
 $(OutDir_Core)Random.o: Core/Random.cpp \
@@ -43537,7 +43826,8 @@ $(OutDir_Core)Random.o: Core/Random.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Random.cpp -o $(OutDir_Core)Random.o
 
 $(OutDir_Core)Speller.o: Core/Speller.cpp \
@@ -43617,7 +43907,8 @@ $(OutDir_Core)Speller.o: Core/Speller.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Speller.cpp -o $(OutDir_Core)Speller.o
 
 $(OutDir_Core)LocalProcess.o: Core/LocalProcess.cpp \
@@ -43697,7 +43988,8 @@ $(OutDir_Core)LocalProcess.o: Core/LocalProcess.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/LocalProcess.cpp -o $(OutDir_Core)LocalProcess.o
 
 $(OutDir_Core)Vcont.o: Core/Vcont.cpp \
@@ -43777,7 +44069,8 @@ $(OutDir_Core)Vcont.o: Core/Vcont.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Vcont.cpp -o $(OutDir_Core)Vcont.o
 
 $(OutDir_Core)Index.o: Core/Index.cpp \
@@ -43857,7 +44150,8 @@ $(OutDir_Core)Index.o: Core/Index.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Index.cpp -o $(OutDir_Core)Index.o
 
 $(OutDir_Core)TimeDate.o: Core/TimeDate.cpp \
@@ -43937,7 +44231,8 @@ $(OutDir_Core)TimeDate.o: Core/TimeDate.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/TimeDate.cpp -o $(OutDir_Core)TimeDate.o
 
 $(OutDir_Core)Value.o: Core/Value.cpp \
@@ -44017,7 +44312,8 @@ $(OutDir_Core)Value.o: Core/Value.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Value.cpp -o $(OutDir_Core)Value.o
 
 $(OutDir_Core)ValueUtil.o: Core/ValueUtil.cpp \
@@ -44097,7 +44393,8 @@ $(OutDir_Core)ValueUtil.o: Core/ValueUtil.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/ValueUtil.cpp -o $(OutDir_Core)ValueUtil.o
 
 $(OutDir_Core)Format.o: Core/Format.cpp \
@@ -44177,7 +44474,8 @@ $(OutDir_Core)Format.o: Core/Format.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Format.cpp -o $(OutDir_Core)Format.o
 
 $(OutDir_Core)Convert.o: Core/Convert.cpp \
@@ -44257,7 +44555,8 @@ $(OutDir_Core)Convert.o: Core/Convert.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Convert.cpp -o $(OutDir_Core)Convert.o
 
 $(OutDir_Core)Color.o: Core/Color.cpp \
@@ -44337,7 +44636,8 @@ $(OutDir_Core)Color.o: Core/Color.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Color.cpp -o $(OutDir_Core)Color.o
 
 $(OutDir_Core)Gtypes.o: Core/Gtypes.cpp \
@@ -44417,7 +44717,8 @@ $(OutDir_Core)Gtypes.o: Core/Gtypes.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Gtypes.cpp -o $(OutDir_Core)Gtypes.o
 
 $(OutDir_Core)t.o: Core/t.cpp \
@@ -44499,7 +44800,8 @@ $(OutDir_Core)t.o: Core/t.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/t.cpp -o $(OutDir_Core)t.o
 
 $(OutDir_Core)Lang.o: Core/Lang.cpp \
@@ -44579,7 +44881,8 @@ $(OutDir_Core)Lang.o: Core/Lang.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Lang.cpp -o $(OutDir_Core)Lang.o
 
 $(OutDir_Core)LangInfo.o: Core/LangInfo.cpp \
@@ -44659,7 +44962,8 @@ $(OutDir_Core)LangInfo.o: Core/LangInfo.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/LangInfo.cpp -o $(OutDir_Core)LangInfo.o
 
 $(OutDir_Core)parser.o: Core/parser.cpp \
@@ -44739,7 +45043,8 @@ $(OutDir_Core)parser.o: Core/parser.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/parser.cpp -o $(OutDir_Core)parser.o
 
 $(OutDir_Core)XML.o: Core/XML.cpp \
@@ -44819,7 +45124,8 @@ $(OutDir_Core)XML.o: Core/XML.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/XML.cpp -o $(OutDir_Core)XML.o
 
 $(OutDir_Core)Xmlize.o: Core/Xmlize.cpp \
@@ -44899,7 +45205,8 @@ $(OutDir_Core)Xmlize.o: Core/Xmlize.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Xmlize.cpp -o $(OutDir_Core)Xmlize.o
 
 $(OutDir_Core)JSON.o: Core/JSON.cpp \
@@ -44979,7 +45286,8 @@ $(OutDir_Core)JSON.o: Core/JSON.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/JSON.cpp -o $(OutDir_Core)JSON.o
 
 $(OutDir_Core)Uuid.o: Core/Uuid.cpp \
@@ -45059,7 +45367,8 @@ $(OutDir_Core)Uuid.o: Core/Uuid.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Uuid.cpp -o $(OutDir_Core)Uuid.o
 
 $(OutDir_Core)Ptr.o: Core/Ptr.cpp \
@@ -45139,7 +45448,8 @@ $(OutDir_Core)Ptr.o: Core/Ptr.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Ptr.cpp -o $(OutDir_Core)Ptr.o
 
 $(OutDir_Core)z.o: Core/z.cpp \
@@ -45220,7 +45530,8 @@ $(OutDir_Core)z.o: Core/z.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/z.cpp -o $(OutDir_Core)z.o
 
 $(OutDir_Core)lz4.o: Core/lib/lz4.c \
@@ -45304,7 +45615,8 @@ $(OutDir_Core)Topic.o: Core/Topic.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Topic.cpp -o $(OutDir_Core)Topic.o
 
 $(OutDir_Core)CoWork.o: Core/CoWork.cpp \
@@ -45384,7 +45696,8 @@ $(OutDir_Core)CoWork.o: Core/CoWork.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/CoWork.cpp -o $(OutDir_Core)CoWork.o
 
 $(OutDir_Core)MD5.o: Core/MD5.cpp \
@@ -45464,7 +45777,8 @@ $(OutDir_Core)MD5.o: Core/MD5.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/MD5.cpp -o $(OutDir_Core)MD5.o
 
 $(OutDir_Core)SHA1.o: Core/SHA1.cpp \
@@ -45544,7 +45858,8 @@ $(OutDir_Core)SHA1.o: Core/SHA1.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/SHA1.cpp -o $(OutDir_Core)SHA1.o
 
 $(OutDir_Core)SHA256.o: Core/SHA256.cpp \
@@ -45624,7 +45939,8 @@ $(OutDir_Core)SHA256.o: Core/SHA256.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/SHA256.cpp -o $(OutDir_Core)SHA256.o
 
 $(OutDir_Core)xxhash.o: Core/lib/xxhash.c \
@@ -45709,7 +46025,8 @@ $(OutDir_Core)xxHsh.o: Core/xxHsh.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/xxHsh.cpp -o $(OutDir_Core)xxHsh.o
 
 $(OutDir_Core)InetUtil.o: Core/InetUtil.cpp \
@@ -45789,7 +46106,8 @@ $(OutDir_Core)InetUtil.o: Core/InetUtil.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/InetUtil.cpp -o $(OutDir_Core)InetUtil.o
 
 $(OutDir_Core)MIME.o: Core/MIME.cpp \
@@ -45869,7 +46187,8 @@ $(OutDir_Core)MIME.o: Core/MIME.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/MIME.cpp -o $(OutDir_Core)MIME.o
 
 $(OutDir_Core)Socket.o: Core/Socket.cpp \
@@ -45949,7 +46268,8 @@ $(OutDir_Core)Socket.o: Core/Socket.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Socket.cpp -o $(OutDir_Core)Socket.o
 
 $(OutDir_Core)Http.o: Core/Http.cpp \
@@ -46029,7 +46349,8 @@ $(OutDir_Core)Http.o: Core/Http.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Http.cpp -o $(OutDir_Core)Http.o
 
 $(OutDir_Core)WebSocket.o: Core/WebSocket.cpp \
@@ -46109,7 +46430,8 @@ $(OutDir_Core)WebSocket.o: Core/WebSocket.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/WebSocket.cpp -o $(OutDir_Core)WebSocket.o
 
 $(OutDir_Core)Dli.o: Core/Dli.cpp \
@@ -46189,7 +46511,8 @@ $(OutDir_Core)Dli.o: Core/Dli.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Dli.cpp -o $(OutDir_Core)Dli.o
 
 $(OutDir_Core)Win32Util.o: Core/Win32Util.cpp \
@@ -46269,7 +46592,8 @@ $(OutDir_Core)Win32Util.o: Core/Win32Util.cpp \
 	Core/Xmlize.hpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Core)  Core/Win32Util.cpp -o $(OutDir_Core)Win32Util.o
 
 $(OutDir_Core)Core.a: \
@@ -46525,7 +46849,8 @@ $(OutDir_plugin_png)pngupp.o: plugin/png/pngupp.cpp \
 	plugin/png/lib/pngconf.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_png)  plugin/png/pngupp.cpp -o $(OutDir_plugin_png)pngupp.o
 
 $(OutDir_plugin_png)pngreg.o: plugin/png/pngreg.icpp \
@@ -46615,7 +46940,8 @@ $(OutDir_plugin_png)pngreg.o: plugin/png/pngreg.icpp \
 	Draw/SDraw.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_png)  plugin/png/pngreg.icpp -o $(OutDir_plugin_png)pngreg.o
 
 $(OutDir_plugin_png)png.a: \
@@ -46721,7 +47047,8 @@ $(OutDir_plugin_jpg)jpgupp.o: plugin/jpg/jpgupp.cpp \
 	plugin/jpg/lib/jpegint.h \
 	plugin/jpg/lib/jpeglib.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_jpg)  plugin/jpg/jpgupp.cpp -o $(OutDir_plugin_jpg)jpgupp.o
 
 $(OutDir_plugin_jpg)jpgreg.o: plugin/jpg/jpgreg.icpp \
@@ -46811,7 +47138,8 @@ $(OutDir_plugin_jpg)jpgreg.o: plugin/jpg/jpgreg.icpp \
 	Draw/SDraw.h \
 	plugin/jpg/jpg.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_jpg)  plugin/jpg/jpgreg.icpp -o $(OutDir_plugin_jpg)jpgreg.o
 
 $(OutDir_plugin_jpg)jaricom.o: plugin/jpg/lib/jaricom.c \
@@ -47563,7 +47891,8 @@ $(OutDir_ScatterDraw)ScatterDraw.o: ScatterDraw/ScatterDraw.cpp \
 	ScatterDraw/MarkPlot.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/ScatterDraw.h \
-	ScatterDraw/SeriesPlot.h
+	ScatterDraw/SeriesPlot.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/ScatterDraw.cpp -o $(OutDir_ScatterDraw)ScatterDraw.o
 
 $(OutDir_ScatterDraw)DataSource.o: ScatterDraw/DataSource.cpp \
@@ -48053,7 +48382,8 @@ $(OutDir_ScatterDraw)DataSource.o: ScatterDraw/DataSource.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/ScatterDraw.h \
 	ScatterDraw/SeriesPlot.h \
-	ScatterDraw/Unpedantic.h
+	ScatterDraw/Unpedantic.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/DataSource.cpp -o $(OutDir_ScatterDraw)DataSource.o
 
 $(OutDir_ScatterDraw)Equation.o: ScatterDraw/Equation.cpp \
@@ -48543,7 +48873,8 @@ $(OutDir_ScatterDraw)Equation.o: ScatterDraw/Equation.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/ScatterDraw.h \
 	ScatterDraw/SeriesPlot.h \
-	ScatterDraw/Unpedantic.h
+	ScatterDraw/Unpedantic.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/Equation.cpp -o $(OutDir_ScatterDraw)Equation.o
 
 $(OutDir_ScatterDraw)DrawingFunctions.o: ScatterDraw/DrawingFunctions.cpp \
@@ -48645,7 +48976,8 @@ $(OutDir_ScatterDraw)DrawingFunctions.o: ScatterDraw/DrawingFunctions.cpp \
 	ScatterDraw/MarkPlot.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/ScatterDraw.h \
-	ScatterDraw/SeriesPlot.h
+	ScatterDraw/SeriesPlot.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/DrawingFunctions.cpp -o $(OutDir_ScatterDraw)DrawingFunctions.o
 
 $(OutDir_ScatterDraw)Legend.o: ScatterDraw/Legend.cpp \
@@ -48747,7 +49079,8 @@ $(OutDir_ScatterDraw)Legend.o: ScatterDraw/Legend.cpp \
 	ScatterDraw/MarkPlot.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/ScatterDraw.h \
-	ScatterDraw/SeriesPlot.h
+	ScatterDraw/SeriesPlot.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/Legend.cpp -o $(OutDir_ScatterDraw)Legend.o
 
 $(OutDir_ScatterDraw)Surf.o: ScatterDraw/Surf.cpp \
@@ -48849,7 +49182,8 @@ $(OutDir_ScatterDraw)Surf.o: ScatterDraw/Surf.cpp \
 	ScatterDraw/MarkPlot.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/ScatterDraw.h \
-	ScatterDraw/SeriesPlot.h
+	ScatterDraw/SeriesPlot.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/Surf.cpp -o $(OutDir_ScatterDraw)Surf.o
 
 $(OutDir_ScatterDraw)PieDraw.o: ScatterDraw/PieDraw.cpp \
@@ -48948,7 +49282,8 @@ $(OutDir_ScatterDraw)PieDraw.o: ScatterDraw/PieDraw.cpp \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Pedantic.h \
-	ScatterDraw/PieDraw.h
+	ScatterDraw/PieDraw.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterDraw)  ScatterDraw/PieDraw.cpp -o $(OutDir_ScatterDraw)PieDraw.o
 
 $(OutDir_ScatterDraw)ScatterDraw.a: \
@@ -49127,6 +49462,7 @@ $(OutDir_GridCtrl)GridCtrl.o: GridCtrl/GridCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -49282,6 +49618,7 @@ $(OutDir_GridCtrl)GridDisplay.o: GridCtrl/GridDisplay.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -49444,6 +49781,7 @@ $(OutDir_GridCtrl)GridBase.o: GridCtrl/GridBase.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -49603,6 +49941,7 @@ $(OutDir_GridCtrl)GridSort.o: GridCtrl/GridSort.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -49754,6 +50093,7 @@ $(OutDir_GridCtrl)GridUtils.o: GridCtrl/GridUtils.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -49877,6 +50217,7 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -49973,6 +50314,7 @@ $(OutDir_Functions4U)LocalProcess2.o: Functions4U/LocalProcess2.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	Functions4U/LocalProcess2.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/LocalProcess2.cpp -o $(OutDir_Functions4U)LocalProcess2.o
 
@@ -50134,6 +50476,7 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -50302,6 +50645,7 @@ $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -50401,6 +50745,7 @@ $(OutDir_Functions4U)StaticPlugin.o: Functions4U/StaticPlugin.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	Functions4U/StaticPlugin.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/StaticPlugin.cpp -o $(OutDir_Functions4U)StaticPlugin.o
 
@@ -50553,6 +50898,7 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h \
@@ -50662,6 +51008,7 @@ $(OutDir_Functions4U)SvgColors.o: Functions4U/SvgColors.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -50757,6 +51104,7 @@ $(OutDir_Functions4U)bsadditional.o: Functions4U/Bsdiff/bsadditional.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	Functions4U/bsdiff.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Bsdiff/bsadditional.cpp -o $(OutDir_Functions4U)bsadditional.o
 
@@ -50838,6 +51186,7 @@ $(OutDir_Functions4U)bsdiff.o: Functions4U/Bsdiff/bsdiff.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	Functions4U/bsdiff.h \
 	Functions4U/Bsdiff/bzlib.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Bsdiff/bsdiff.cpp -o $(OutDir_Functions4U)bsdiff.o
@@ -50920,6 +51269,7 @@ $(OutDir_Functions4U)bspatch.o: Functions4U/Bsdiff/bspatch.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	Functions4U/bsdiff.h \
 	Functions4U/Bsdiff/bzlib.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Bsdiff/bspatch.cpp -o $(OutDir_Functions4U)bspatch.o
@@ -51002,6 +51352,7 @@ $(OutDir_Functions4U)htmld.o: Functions4U/Html/htmld.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	Functions4U/Html/htmld.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Html/htmld.cpp -o $(OutDir_Functions4U)htmld.o
 
@@ -51123,7 +51474,8 @@ $(OutDir_plugin_bz2)bz2upp.o: plugin/bz2/bz2upp.cpp \
 	plugin/bz2/bz2.h \
 	plugin/bz2/lib/bzlib.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_bz2)  plugin/bz2/bz2upp.cpp -o $(OutDir_plugin_bz2)bz2upp.o
 
 $(OutDir_plugin_bz2)bzlib.o: plugin/bz2/bzlib.c \
@@ -51235,7 +51587,8 @@ $(OutDir_plugin_gif)gifupp.o: plugin/gif/gifupp.cpp \
 	Draw/SDraw.h \
 	plugin/gif/gif.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_gif)  plugin/gif/gifupp.cpp -o $(OutDir_plugin_gif)gifupp.o
 
 $(OutDir_plugin_gif)gif.o: plugin/gif/gif.icpp \
@@ -51325,7 +51678,8 @@ $(OutDir_plugin_gif)gif.o: plugin/gif/gif.icpp \
 	Draw/SDraw.h \
 	plugin/gif/gif.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_gif)  plugin/gif/gif.icpp -o $(OutDir_plugin_gif)gif.o
 
 $(OutDir_plugin_gif)gif.a: \
@@ -51430,7 +51784,8 @@ $(OutDir_plugin_tif)tifupp.o: plugin/tif/tifupp.cpp \
 	plugin/tif/lib/tiffvers.h \
 	plugin/tif/tif.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_tif)  plugin/tif/tifupp.cpp -o $(OutDir_plugin_tif)tifupp.o
 
 $(OutDir_plugin_tif)tifreg.o: plugin/tif/tifreg.icpp \
@@ -51527,7 +51882,8 @@ $(OutDir_plugin_tif)tifreg.o: plugin/tif/tifreg.icpp \
 	plugin/tif/lib/tiffvers.h \
 	plugin/tif/tif.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_tif)  plugin/tif/tifreg.icpp -o $(OutDir_plugin_tif)tifreg.o
 
 $(OutDir_plugin_tif)tif_aux.o: plugin/tif/lib/tif_aux.c \
@@ -52060,7 +52416,8 @@ $(OutDir_plugin_lz4)Compress.o: plugin/lz4/Compress.cpp \
 	Core/z.h \
 	plugin/lz4/lz4.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_lz4)  plugin/lz4/Compress.cpp -o $(OutDir_plugin_lz4)Compress.o
 
 $(OutDir_plugin_lz4)Decompress.o: plugin/lz4/Decompress.cpp \
@@ -52142,7 +52499,8 @@ $(OutDir_plugin_lz4)Decompress.o: plugin/lz4/Decompress.cpp \
 	Core/z.h \
 	plugin/lz4/lz4.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_lz4)  plugin/lz4/Decompress.cpp -o $(OutDir_plugin_lz4)Decompress.o
 
 $(OutDir_plugin_lz4)util.o: plugin/lz4/util.cpp \
@@ -52224,7 +52582,8 @@ $(OutDir_plugin_lz4)util.o: plugin/lz4/util.cpp \
 	Core/z.h \
 	plugin/lz4/lz4.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_lz4)  plugin/lz4/util.cpp -o $(OutDir_plugin_lz4)util.o
 
 $(OutDir_plugin_lz4)lz4.a: \
@@ -52326,7 +52685,8 @@ $(OutDir_ClassFactory)ClassFactory.o: ClassFactory/ClassFactory.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h
+	plugin/z/lib/zlib.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ClassFactory)  ClassFactory/ClassFactory.cpp -o $(OutDir_ClassFactory)ClassFactory.o
 
 $(OutDir_ClassFactory)ClassFactory.a: \
@@ -52426,6 +52786,7 @@ $(OutDir_SysInfo)SysInfo.o: SysInfo/SysInfo.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52535,6 +52896,7 @@ $(OutDir_SysInfo)OS.o: SysInfo/OS.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52650,6 +53012,7 @@ $(OutDir_SysInfo)ScreenGrab.o: SysInfo/ScreenGrab.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52758,6 +53121,7 @@ $(OutDir_SysInfo)MouseKey.o: SysInfo/MouseKey.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52866,6 +53230,7 @@ $(OutDir_SysInfo)CPUSpeed.o: SysInfo/CPUSpeed.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52972,6 +53337,7 @@ $(OutDir_SysInfo)Battery.o: SysInfo/Battery.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
+	uppconfig.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -53090,6 +53456,7 @@ $(OutDir_plugin_matio)matio.o: plugin/matio/matio.cpp \
 	Core/z.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
+	uppconfig.h \
 	plugin/matio/lib/matio.h \
 	plugin/matio/lib/matio_pubconf.h \
 	plugin/matio/lib/matioConfig.h \
@@ -53307,7 +53674,8 @@ $(OutDir_plugin_zstd)Compress.o: plugin/zstd/Compress.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	plugin/zstd/lib/zstd.h \
-	plugin/zstd/zstd.h
+	plugin/zstd/zstd.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_zstd)  plugin/zstd/Compress.cpp -o $(OutDir_plugin_zstd)Compress.o
 
 $(OutDir_plugin_zstd)Decompress.o: plugin/zstd/Decompress.cpp \
@@ -53389,7 +53757,8 @@ $(OutDir_plugin_zstd)Decompress.o: plugin/zstd/Decompress.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	plugin/zstd/lib/zstd.h \
-	plugin/zstd/zstd.h
+	plugin/zstd/zstd.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_zstd)  plugin/zstd/Decompress.cpp -o $(OutDir_plugin_zstd)Decompress.o
 
 $(OutDir_plugin_zstd)Util.o: plugin/zstd/Util.cpp \
@@ -53471,7 +53840,8 @@ $(OutDir_plugin_zstd)Util.o: plugin/zstd/Util.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	plugin/zstd/lib/zstd.h \
-	plugin/zstd/zstd.h
+	plugin/zstd/zstd.h \
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_plugin_zstd)  plugin/zstd/Util.cpp -o $(OutDir_plugin_zstd)Util.o
 
 $(OutDir_plugin_zstd)huf_decompress.o: plugin/zstd/lib/huf_decompress.c \
@@ -54274,6 +54644,7 @@ $(OutDir_Surface)Surface.o: Surface/Surface.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
+	uppconfig.h \
 	Surface/Surface.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Surface)  Surface/Surface.cpp -o $(OutDir_Surface)Surface.o
 
@@ -54400,6 +54771,7 @@ $(OutDir_GLCtrl)Win32GLCtrl.o: GLCtrl/Win32GLCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -54520,6 +54892,7 @@ $(OutDir_GLCtrl)X11GLCtrl.o: GLCtrl/X11GLCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -54640,6 +55013,7 @@ $(OutDir_GLCtrl)GtkGLCtrl.o: GLCtrl/GtkGLCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h
@@ -54760,6 +55134,7 @@ $(OutDir_GLCtrl)GLCtrl.o: GLCtrl/GLCtrl.cpp \
 	Turtle/FB.iml \
 	Turtle/Keys.h \
 	Turtle/Turtle.h \
+	uppconfig.h \
 	VirtualGui/FB.iml \
 	VirtualGui/Keys.h \
 	VirtualGui/VirtualGui.h

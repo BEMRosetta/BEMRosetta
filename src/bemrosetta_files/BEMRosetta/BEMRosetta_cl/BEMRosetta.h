@@ -112,7 +112,6 @@ public:
     
     struct StateSpace {
 	    Upp::Array<std::complex<double>> TFSResponse;
-		Upp::Array<std::complex<double>> Z;
 		MatrixXd A_ss;
 		VectorXd B_ss;
 		VectorXd C_ss;
@@ -121,7 +120,6 @@ public:
 		void Jsonize(JsonIO &json) {
 			json
 				("TFSResponse", TFSResponse)
-				("Z", Z)
 				("A_ss", A_ss)
 				("B_ss", B_ss)
 				("C_ss", C_ss)
@@ -133,6 +131,7 @@ public:
     	}
     };
     Upp::Array<Upp::Array<StateSpace>> sts;	// (6*Nb, 6*Nb)		State space data
+    int dimenSTS;							// false if data is dimensionless
     String stsProcessor;
     
     Vector<double> T; 						// [Nf]    			Wave periods
@@ -252,6 +251,33 @@ public:
 	double R_re_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_re_ndim(f, _h, ifr, idf) : R_re_dim(f, _h, ifr, idf);}
 	double R_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_im_ndim(f, _h, ifr, idf) : R_im_dim(f, _h, ifr, idf);}
 
+	inline std::complex<double>Z(bool ndim, int ifr, int idf, int jdf) const {
+		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Awinf_(ndim, idf, jdf)));
+	}
+	
+	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dimenSTS  ? sts[idf][jdf].TFSResponse[ifr]*g_rho_dim()/g_rho_ndim() : sts[idf][jdf].TFSResponse[ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFSResponse[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFSResponse[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	/*	
+	std::complex<double> TFS_dim(int ifr, int idf, int jdf) const {
+		double mag = std::abs(sts[idf][jdf].TFSResponse[ifr]);
+		double arg = std::arg(sts[idf][jdf].TFSResponse[ifr]);
+		if (dimenSTS)   
+			mag *= g_rho_dim()/g_rho_ndim();
+		else
+			mag *= (rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);
+		return std::complex<double>(mag*cos(arg), mag*sin(arg));
+	}
+	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) const {
+		double mag = std::abs(sts[idf][jdf].TFSResponse[ifr]);
+		double arg = std::arg(sts[idf][jdf].TFSResponse[ifr]);
+		if (!dimenSTS) 
+			mag *= g_rho_ndim()/g_rho_dim(); 
+		else 
+			mag /= (rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);
+		return std::complex<double>(mag*cos(arg), mag*sin(arg));
+	}*/
+	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
+	
 	void Jsonize(JsonIO &json);
 	
 private:

@@ -13,7 +13,7 @@ TreeCtrl::TreeCtrl()
 	nobg = false;
 	popupex = true;
 	mousemove = false;
-	accel = false; 
+	accel = false;
 	treesize = Size(0, 0);
 	multiroot = false;
 	chldlck = false;
