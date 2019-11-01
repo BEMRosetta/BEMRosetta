@@ -134,11 +134,11 @@ String TabText(const TabCtrl &tab);
 
 #include "arrange.h"
 
-enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS};
+enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
 enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH, 
-				 PLOT_STS_MA, PLOT_STS_PH};
+				 /*PLOT_STS_MA, PLOT_STS_PH*/};
 
 
 String ForceExtSafe(String fileName, String ext);
@@ -158,7 +158,7 @@ public:
 		if (_idof >= _data.dofOrder.GetCount())
 			return false;
 		idof = _data.dofOrder[_idof];
-		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B || dataToPlot == PLOT_STS_MA || dataToPlot == PLOT_STS_PH)
+		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH)
 			_j_dof = _data.dofOrder[_j_dof];
 		jdof = _j_dof;
 		show_w = _show_w;
@@ -181,19 +181,12 @@ public:
 		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[jdof](0, idof));
 		case PLOT_RAO_MA:		return IsNull(data->rao.ma[jdof](0, idof));
 		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdof](0, idof));
-		case PLOT_Z_MA:			return data->sts[idof][jdof].Z.IsEmpty();
-		case PLOT_Z_PH:			return data->sts[idof][jdof].Z.IsEmpty();
 		case PLOT_TFS_MA:		return data->sts[idof][jdof].TFSResponse.IsEmpty();
 		case PLOT_TFS_PH:		return data->sts[idof][jdof].TFSResponse.IsEmpty();
-		case PLOT_STS_MA:		return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
-		case PLOT_STS_PH:		return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
+		case PLOT_Z_MA:			return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
+		case PLOT_Z_PH:			return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
 		default:				NEVER();	return true;
 		}
-	}
-	inline std::complex<double>GetZ(int64 id) const {
-		return std::complex<double>(data->B_(ndim, int(id), idof, jdof), 
-								 data->w[static_cast<int>(id)]*(data->A_(ndim, int(id), idof, jdof) -
-								 								data->Awinf_(ndim, idof, jdof)));
 	}
 	virtual inline double y(int64 id) {
 		ASSERT(data != 0);
@@ -209,12 +202,10 @@ public:
 		case PLOT_FORCE_EX_PH:	return data->ex.ph[jdof](int(id), idof);
 		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, jdof, int(id), idof);
 		case PLOT_RAO_PH:		return data->rao.ph[jdof](int(id), idof);
-		case PLOT_Z_MA:			return abs(data->sts[idof][jdof].Z[int(id)]);
-		case PLOT_Z_PH:			return arg(data->sts[idof][jdof].Z[int(id)]);
-		case PLOT_TFS_MA:		return abs(data->sts[idof][jdof].TFSResponse[int(id)]);
-		case PLOT_TFS_PH:		return arg(data->sts[idof][jdof].TFSResponse[int(id)]);
-		case PLOT_STS_MA:		return abs(GetZ(id));
-		case PLOT_STS_PH:		return arg(GetZ(id));
+		case PLOT_TFS_MA:		return std::abs(data->TFS_(ndim, int(id), idof, jdof));
+		case PLOT_TFS_PH:		return std::arg(data->TFS_(ndim, int(id), idof, jdof));
+		case PLOT_Z_MA:			return std::abs(data->Z(ndim, int(id), idof, jdof));
+		case PLOT_Z_PH:			return std::arg(data->Z(ndim, int(id), idof, jdof));
 		default:				NEVER();	return Null;
 		}
 	}
@@ -405,8 +396,11 @@ public:
 	void Clear();
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
-	Upp::Array<HydroSource> ABF_source, ABF_source2;
+	Upp::Array<HydroSource> ABFZ_source, ABFZ_source2;
 	Upp::Array<HydroSource> Ainf_source;
+	
+	Upp::Array<HydroSource> TFS_source, TFS_source2;
+		
 	int idof, jdof;
 	double heading;
 	DataToShow dataToShow;
@@ -414,7 +408,6 @@ public:
 	bool dim;
 	int markW;
 	bool show_w;
-	//bool showPhase;	
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
@@ -447,17 +440,9 @@ public:
 	bool Load(Upp::Array<HydroClass> &hydro);
 	void InitArray(ArrayCtrl &array);
 	
-	Upp::Array<HydroSource> Z_source, Z_source2, TFS_source, TFS_source2;
-	int idof, jdof;
-	
-	bool dim;
-	int markW;
-	bool show_w;
-	bool showPhase;	
-	
-	Splitter splitter, splitter2;
+	MainPlot mainPlot;
+	Splitter splitterTab;
 	TabCtrl tab;
-	ScatterCtrl scatt, scatP;
 	Upp::Array<ArrayCtrl> arrays;
 };
 

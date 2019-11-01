@@ -1,7 +1,7 @@
 #ifndef CORE_CONFIG_H // sometimes we want just these fancy platform macros from this file...
 #define CORE_CONFIG_H
 
-//#include <uppconfig.h>
+#include <uppconfig.h>
 
 #ifdef MAIN_CONF
 #include <main.conf.h>

@@ -398,31 +398,69 @@ void ScatterCtrl::ProcessPopUp(Point &pt) {
 	const Point popPointdx(popLT.x + (pt.x - popLT.x)/2, pt.y);
 	Point popPoint = pt + popOffset;
 	
-	popTextBegin.SetText(_str);
-	Size sz = popTextBegin.GetSize();
+	Size sz;
+	if (pop) {
+		popInfoBegin.SetText(_str);
+		sz = popInfoBegin.GetSize();
+	} else {
+		popTextBegin.SetText(_str);
+		sz = popTextBegin.GetSize();
+	}
 	Point p1(_popPoint.x - sz.cx, _popPoint.y - sz.cy);
-	popTextBegin.Move(p1);//(this, MousePointUnrot(p1));	
+	if (pop)
+		popInfoBegin.Move(this, MousePointUnrot(p1));
+	else
+		popTextBegin.Move(p1);
 	if (!strdx.IsEmpty()) {
-		popTextHoriz.Show();
-		popTextHoriz.SetText(strdx);
-		Size sz = popTextHoriz.GetSize();
+		if (pop) {
+			popInfoHoriz.Show();
+			popInfoHoriz.SetText(strdx);
+			sz = popInfoHoriz.GetSize();
+		} else {
+			popTextHoriz.Show();
+			popTextHoriz.SetText(strdx);
+			sz = popTextHoriz.GetSize();
+		}
 		Point p2(popPointdx.x - sz.cx/2, popPointdx.y - sz.cy/2);
-		popTextHoriz.Move(p2);//(this, MousePointUnrot(p2));	
-	} else
+		if (pop)
+			popInfoHoriz.Move(this, MousePointUnrot(p2));
+		else
+			popTextHoriz.Move(p2);
+	} else {
+		popInfoHoriz.Hide();
 		popTextHoriz.Hide();
+	}
 	if (!strdy.IsEmpty()) {
-		popTextVert.Show();
-		popTextVert.SetText(strdy);
-		Size sz = popTextVert.GetSize();
+		if (pop) {
+			popInfoVert.Show();
+			popInfoVert.SetText(strdy);
+			sz = popInfoVert.GetSize();
+		} else {
+			popTextVert.Show();
+			popTextVert.SetText(strdy);
+			sz = popTextVert.GetSize();
+		}
 		Point p3(popPointdy.x - sz.cx/2, popPointdy.y - sz.cy/2);
-		popTextVert.Move(p3);//(this, MousePointUnrot(p3));	
-	} else
+		if (pop)
+			popInfoVert.Move(this, MousePointUnrot(p3));
+		else
+			popTextVert.Move(p3);
+	} else {
+		popInfoVert.Hide();
 		popTextVert.Hide();
+	}
 	if (!str.IsEmpty()) {
-		popTextEnd.Show();
-		popTextEnd.SetText(str).Move(popPoint);//(this, MousePointUnrot(popPoint));
-	} else
+		if (pop) {
+			popInfoEnd.Show();
+			popInfoEnd.SetText(str).Move(this, MousePointUnrot(popPoint));
+		} else {
+			popTextEnd.Show();
+			popTextEnd.SetText(str).Move(popPoint);
+		}
+	} else {
+		popInfoEnd.Hide();
 		popTextEnd.Hide();
+	}
 }
 						
 void ScatterCtrl::DoMouseAction(bool down, Point pt, ScatterAction action, int wheel)
@@ -562,21 +600,34 @@ void ScatterCtrl::LabelPopUp(bool down, Point &pt) {
 	
 	if (down) {
 		if(showInfo && PointInPlot(pt)) {
-			popTextBegin.Show();//AppearOnly(this);
-			popTextVert.Show();//AppearOnly(this);
-			popTextHoriz.Show();//AppearOnly(this);
-			popTextEnd.Show();//AppearOnly(this);
-			
+			if (pop) {
+				popInfoBegin.AppearOnly(this);
+				popInfoVert.AppearOnly(this);
+				popInfoHoriz.AppearOnly(this);
+				popInfoEnd.AppearOnly(this);				
+			} else {
+				popTextBegin.Show();
+				popTextVert.Show();
+				popTextHoriz.Show();
+				popTextEnd.Show();
+			}			
 			isLabelPopUp = true;
 			ProcessPopUp(pt);
 			Refresh();
 		} 
 	} else {
 		if(showInfo && isLabelPopUp) {
-			popTextBegin.Hide();//Close();
-			popTextVert.Hide();//Close();
-			popTextHoriz.Hide();//Close(); 
-			popTextEnd.Hide();//Close();
+			if (pop) {
+				popInfoBegin.Close();
+				popInfoVert.Close();
+				popInfoHoriz.Close(); 
+				popInfoEnd.Close();				
+			} else {
+				popTextBegin.Hide();
+				popTextVert.Hide();
+				popTextHoriz.Hide();
+				popTextEnd.Hide();
+			}
 			isLabelPopUp = isZoomWindow = false;
 			popLT = popRB = Null;
 			Refresh();
@@ -768,11 +819,18 @@ void ScatterCtrl::MouseMove(Point pt, dword keyFlags)
 	} 
 	if(isLabelPopUp) {
 		if (showInfo && PointInPlot(pt)) {
+			if (pop) {
+				popInfoBegin.AppearOnlyOpen(this);
+				popInfoHoriz.AppearOnlyOpen(this);
+				popInfoVert.AppearOnlyOpen(this);
+				popInfoEnd.AppearOnlyOpen(this);
+			} else {
+				popTextBegin.Show();
+				popTextHoriz.Show();
+				popTextVert.Show();
+				popTextEnd.Show();
+			}
 			ProcessPopUp(pt);
-			popTextBegin.Show();//AppearOnlyOpen(this);
-			popTextHoriz.Show();//AppearOnlyOpen(this);
-			popTextVert.Show();//AppearOnlyOpen(this);
-			popTextEnd.Show();//AppearOnlyOpen(this);
 			Refresh();
 		}
 	} else if (isZoomWindow) {
@@ -798,10 +856,17 @@ void ScatterCtrl::MouseLeave()
 	Scrolling(false, p, true);
 	mouseAction = NONE;
 	if (isLabelPopUp || isZoomWindow) {
-		popTextBegin.Hide();//Close();
-		popTextVert.Hide();//Close();
-		popTextHoriz.Hide();//Close(); 
-		popTextEnd.Hide();//Close();		
+		if (pop) {
+			popInfoBegin.Close();
+			popInfoVert.Close();
+			popInfoHoriz.Close(); 
+			popInfoEnd.Close();
+		} else {
+			popTextBegin.Hide();
+			popTextVert.Hide();
+			popTextHoriz.Hide();
+			popTextEnd.Hide();
+		}
 		isLabelPopUp = isZoomWindow = false;
 		popLT = popRB = Null;
 		Refresh();
@@ -1044,11 +1109,19 @@ ScatterCtrl::ScatterCtrl() : popOffset(10, 12), mouseAction(NONE)
 	rotate = Angle_0;
 	//Color(graphColor);	
 	BackPaint();
+	popInfoBegin.SetColor(SColorFace);  
+	popInfoVert.SetColor(SColorFace);  
+	popInfoHoriz.SetColor(SColorFace);  
+	popInfoEnd.SetColor(SColorFace); 
 	popTextBegin.SetColor(SColorText).SetBackground(SColorFace);  
 	popTextVert.SetColor(SColorText).SetBackground(SColorFace);
 	popTextHoriz.SetColor(SColorText).SetBackground(SColorFace);
 	popTextEnd.SetColor(SColorText).SetBackground(SColorFace);
-
+#ifdef PLATFORM_WIN32	
+	pop = true;
+#else
+	pop = false;
+#endif
 	saveSize = Size(1000, 800);
 	jpgQuality = 90;
 	
