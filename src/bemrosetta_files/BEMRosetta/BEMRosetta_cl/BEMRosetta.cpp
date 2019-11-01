@@ -768,6 +768,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("dataFromW", dataFromW)
 		("Vo", Vo)
 		("stsProcessor", stsProcessor)
+		("dimenSTS", dimenSTS)
 	;
 	if(json.IsLoading()) 
 		code = static_cast<Hydro::BEM_SOFT>(icode);

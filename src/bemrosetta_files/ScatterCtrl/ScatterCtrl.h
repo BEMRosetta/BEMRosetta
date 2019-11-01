@@ -345,12 +345,16 @@ public:
 	
 	static int GetInstancesCount()			{return instances.GetCount();}	
 	static ScatterCtrl &GetInstance(int i)	{return *(instances[i]);}	
-		
+	
+	void SetPopUp(bool _pop)				{pop = _pop;}
+	
 private:
 	bool showInfo;
+	PopUpInfo popInfoBegin, popInfoVert, popInfoHoriz, popInfoEnd;
 	PopUpText popTextBegin, popTextVert, popTextHoriz, popTextEnd;
 	String popTextX, popTextY, popTextY2, popTextZ;
 	Point popLT, popRB;
+	bool pop;
 	bool isZoomWindow;
 	const Point popOffset;
 	MouseAction mouseAction;
@@ -440,19 +444,22 @@ void ScatterCtrl::SetDrawing(T& w, const Size &sz, bool ctrl) {
 			} else {
 				DrawVArrow(w, popLT.x, popLT.y, popLT.x, popRB.y, 1, 4, 15, SColorHighlight());
 				DrawHArrow(w, popLT.x, popRB.y, popRB.x, popRB.y, 1, 4, 15, SColorHighlight());
-				popTextBegin.DoPaint(w);
-				popTextVert.DoPaint(w);
-				popTextHoriz.DoPaint(w);
-				popTextEnd.DoPaint(w);
+				if (!pop) {
+					popTextBegin.DoPaint(w);
+					popTextVert.DoPaint(w);
+					popTextHoriz.DoPaint(w);
+					popTextEnd.DoPaint(w);
+				}
 #ifdef PLATFORM_WIN32			
 				Ctrl::Refresh(min(popLT.x-4, popRB.x-4), min(popLT.y-4, popRB.y-4), 
 							  abs(popRB.x-popLT.x) + 9, abs(popRB.y-popLT.y) + 9);
 #endif
 			}
 	 	} else {
-	 		popTextBegin.DoPaint(w);
+	 		if (!pop)
+	 			popTextBegin.DoPaint(w);
 #ifdef PLATFORM_WIN32			
-				Ctrl::Refresh();	
+			Ctrl::Refresh();	
 #endif 		
 	 	}
 	} 

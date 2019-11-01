@@ -67,69 +67,22 @@ bool MainStateSpace::Load(BEMData &bem) {
 }
 
 void MainStateSpacePlot::Init(int _idof, int _jdof) {
-	idof = _idof;
-	jdof = _jdof;
+	mainPlot.Init(_idof, _jdof, DATA_STS2);
 	
-	scatt.ShowAllMenus();
-	scatt.SetTitle(Format(t_("Frequency response %s"), Hydro::StrBDOF(idof, jdof))).SetTitleFont(SansSerif(12));
-	scatt.SetPlotAreaLeftMargin(70).SetPlotAreaRightMargin(70);
-	scatP.ShowAllMenus();
-	scatP.SetTitle(Format(t_("Frequency response %s"), Hydro::StrBDOF(idof, jdof))).SetTitleFont(SansSerif(12));
-	scatP.SetPlotAreaLeftMargin(70).SetPlotAreaRightMargin(70);
-	splitter2.Horz(scatt.SizePos(), scatP.SizePos());
-	
-	splitter.Horz(tab.SizePos(), splitter2.SizePos());
-	Add(splitter.SizePos());
+	splitterTab.Horz(tab.SizePos(), mainPlot.SizePos());
+	Add(splitterTab.SizePos());
 }
 
 bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
-	scatt.RemoveAllSeries();
-	scatP.RemoveAllSeries();
-	Z_source.SetCount(hydro.GetCount());
-	Z_source2.SetCount(hydro.GetCount());
-	TFS_source.SetCount(hydro.GetCount());
-	TFS_source2.SetCount(hydro.GetCount());
-	
-	dim = !mbm().menuPlot.showNdim;
-	markW = mbm().menuPlot.showPoints ? 10 : 0;
-	show_w = mbm().menuPlot.opwT == 0;
-	if (show_w) {
-		scatt.SetLabelX(t_("w [rad/s]"));
-		scatP.SetLabelX(t_("w [rad/s]"));
-	} else {
-		scatt.SetLabelX(t_("T [s]"));
-		scatP.SetLabelX(t_("T [s]"));
-	}
-	bool loaded = false;
-	for (int id = 0; id < hydro.GetCount(); ++id) {
-		Hydro &hy = hydro[id].hd();	
-		if (hy.IsLoadedStateSpace()) {
-			if (Z_source[id].Init(hy, idof, jdof, PLOT_Z_MA, show_w, !dim)) {
-				loaded = true;
-				scatt.AddSeries(Z_source[id]).Legend(Format(t_("Z Magnitude %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();//.Units("dB");
-				if (Z_source2[id].Init(hy, idof, jdof, PLOT_Z_PH, show_w, !dim)) {
-					loaded = true;
-					scatP.AddSeries(Z_source2[id]).Legend(Format(t_("Z Phase %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad");
-				}
-			}
-			if (TFS_source[id].Init(hy, idof, jdof, PLOT_TFS_MA, show_w, !dim)) {
-				loaded = true;
-				scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFSResponse Magnitude %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>();//.Units("dB");
-				if (TFS_source2[id].Init(hy, idof, jdof, PLOT_TFS_PH, show_w, !dim)) {
-					loaded = true;
-					scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSResponse Phase %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad");
-				}
-			}
-		}
-	}
-	if (mbm().menuPlot.autoFit) { 
-		scatt.ZoomToFit(true, true);
-		scatP.ZoomToFit(true, true);
-	}
-	
+	if (!mainPlot.Load(hydro))
+		return false;
+
 	tab.Reset();
 	arrays.Clear();
 	
+	bool loaded = false;
+	int idof = mainPlot.idof;
+	int jdof = mainPlot.jdof;
 	for (int id = 0; id < hydro.GetCount(); ++id) {
 		Hydro &hy = hydro[id].hd();
 		if (hy.IsLoadedStateSpace()) {

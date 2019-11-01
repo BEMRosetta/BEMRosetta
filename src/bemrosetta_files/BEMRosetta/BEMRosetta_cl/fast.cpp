@@ -321,7 +321,7 @@ void Fast::Save_SS(String fileName) {
 	}
 	for (int r = 0; r < C.rows(); ++r) {
 		for (int c = 0; c < C.cols(); ++c) 
-			out << Format("%e ", C(r, c));
+			out << Format("%e ", -C(r, c));
 		out << "\n";
 	}
 }

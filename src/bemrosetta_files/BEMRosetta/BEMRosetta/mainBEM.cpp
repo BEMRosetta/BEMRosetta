@@ -239,7 +239,7 @@ ScatterCtrl &MainBEM::GetSelScatter() {
 		if (typeid(MainStateSpacePlot) != typeid(*ctrl))
 			throw Exc(t_("Unexpected type in GetSelScatter(1)"));		
 		MainStateSpacePlot *mainStateSpacePlot = static_cast<MainStateSpacePlot*>(ctrl);
-		return mainStateSpacePlot->scatt;
+		return mainStateSpacePlot->mainPlot.scatt;
 	} else {
 		TabCtrl &tab = GetSelABForce().tab;
 		Ctrl *ctrl = tab.GetItem(tab.Get()).GetSlave();
