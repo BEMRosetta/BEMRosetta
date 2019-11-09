@@ -32,20 +32,22 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
   * Load-View
     * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
-    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss.
+    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss
     * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
 	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .LIS, .AH1
 	* [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
   * Save
     * [Wamit](https://www.wamit.com/): .1, .3, .hst, .4
-    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss.
+    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss
     * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
 * Mesh files
   * Load-View
     * [Wamit](https://www.wamit.com/): .gdf, pan.dat
-    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat	
+    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat
+    * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
+    * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
 
@@ -54,22 +56,22 @@ The goal is to have a good robustness in the handling of files
 
 ### - Load the hydrodynamic coefficients for the same geometry from different software and compare the results
 
-- _Damping for the same geometry got from different solvers
+- Damping for the same geometry got from different solvers
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20B.jpg" width="300" title="Damping for the same geometry got from different solvers"></p>
 
-- _Excitation force for the same geometry got from different solvers_
+- Excitation force for the same geometry got from different solvers_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
 ### - Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
 ### - Load the hydrodynamic coefficients for different geometries to compare them
 
-- _Damping for different offshore wind floating platforms_
+- Damping for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20B.png" width="300" title="Damping for different offshore wind floating platforms"></p>
 
-- _Excitation force for different offshore wind floating platforms_
+- Excitation force for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
@@ -82,7 +84,6 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ### - Mesh handling
 
-- Load and save in binary and text [STL format](https://en.wikipedia.org/wiki/STL_(file_format))
 - Interactive mesh rotation and translation around user defined center
 - Automatic free surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
 - Improved viewer including dropdown menu in viewer screen
