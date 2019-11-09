@@ -85,7 +85,7 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 ### - Mesh handling
 
 - Interactive mesh rotation and translation around user defined center
-- Automatic free surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
+- Automatic free surface, underwater surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
 - Improved viewer including dropdown menu in viewer screen
 - Mesh healing option
     
@@ -96,6 +96,11 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 ### - BEM coefficients
 
 - Added hydrostatic stiffness matrix viewer
+
+### - Other
+
+All files, mesh, nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from filex explorer in WIndows and Linux.
+
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
