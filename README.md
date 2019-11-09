@@ -99,7 +99,7 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 ### - Other
 
-All files, mesh, nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from filex explorer in WIndows and Linux.
+All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from file explorer in Windows and Linux.
 
 
 <p align="center">
