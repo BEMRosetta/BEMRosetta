@@ -15,7 +15,7 @@
 void Hydro::K_IRF(double maxT, int numT) {
 	LinSpaced(Tirf, numT, 0., maxT);
     
-    Kirf.SetCount(numT); 			// Allocation of the impulse response matrix
+    Kirf.SetCount(numT); 			
 	for (int it = 0; it < numT; ++it) 
 		Kirf[it].setConstant(Nb*6, Nb*6, Null);
 	

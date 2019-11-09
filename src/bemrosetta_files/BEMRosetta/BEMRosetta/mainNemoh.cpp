@@ -49,6 +49,9 @@ void MainNemoh::Init(const BEMData &bem) {
 	opwT.WhenAction = THISBACK(OnOpwT);
 	OnOpwT();
 	
+	opSplit.WhenAction = [&] {numSplit.Enable(~opSplit);		labelSplit.Enable(~opSplit);};
+	opSplit.WhenAction();
+	
 	dropSolver.Add(0, t_("Nemoh 115+"));
 	dropSolver.Add(1, t_("Nemoh"));
 	dropSolver.SetIndex(0);
@@ -121,6 +124,7 @@ void MainNemoh::Jsonize(JsonIO &json) {
 		("opIncludeBin", opIncludeBin)
 		("opwT", opwT)
 		("numSplit", numSplit)
+		("opSplit", opSplit)
 		("xeff", xeff)
 		("yeff", yeff)
 		("cx", cx)
@@ -421,11 +425,11 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 				return false;
 			RealizeDirectory(nemohFolder);
 		}
-		if (IsNull(~numSplit)) {
+		if (~opSplit && IsNull(~numSplit)) {
 			Exclamation(t_("Please enter number of parts to split the simulation (min. is 1)"));
 			return false;
 		}
-		data.SaveFolder(nemohFolder, ~opIncludeBin, ~numSplit, bem, dropSolver.GetData());
+		data.SaveFolder(nemohFolder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, bem, dropSolver.GetData());
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;

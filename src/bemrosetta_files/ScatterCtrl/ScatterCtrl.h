@@ -142,7 +142,7 @@ public:
 	typedef ScatterCtrl CLASSNAME;
 	
 	ScatterCtrl();
-	virtual ~ScatterCtrl() {RemoveInstance(this);};
+	virtual ~ScatterCtrl() noexcept {RemoveInstance(this);};
 	
 	enum ScatterAction {NO_ACTION = 0, SCROLL, ZOOM_H_ENL, ZOOM_H_RED, ZOOM_V_ENL, ZOOM_V_RED, 
 						SHOW_COORDINATES, CONTEXT_MENU, ZOOM_WINDOW, 

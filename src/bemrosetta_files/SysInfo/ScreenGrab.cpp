@@ -164,7 +164,7 @@ private:
 
 public:
 	ScreenGrab(String fileName, double secsFrame = 1, bool viewMouse = true);
-	~ScreenGrab();
+	virtual ~ScreenGrab();
 	
 	bool IniGrabDesktop();
 	bool IniGrabWindow(uint64 handle);

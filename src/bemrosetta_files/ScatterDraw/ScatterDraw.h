@@ -60,7 +60,7 @@ class ScatterDraw {
 public:
 	typedef ScatterDraw CLASSNAME;
 	ScatterDraw();
-	virtual ~ScatterDraw() {}
+	virtual ~ScatterDraw() noexcept {}
 	
 	enum Formats {
 		EXP,
@@ -238,8 +238,14 @@ protected:
 		}
 		DataSource &Data()		 				{return *(~pD);}
 		const DataSource &Data() const	 		{return *(~pD);}
-		bool IsDeleted() const					{return ~pD == 0;}
-		virtual ~ScatterSeries()   				{DeletePD();}
+		bool IsDeleted() const {
+			bool isnullptr = ~pD == nullptr;
+			bool ismagic = (~pD)->IsMagic();
+			ASSERT(isnullptr == !ismagic);
+			ASSERT(!isnullptr == ismagic);
+			return ~pD == nullptr && !(~pD)->IsMagic();
+		}
+		virtual ~ScatterSeries() noexcept		{DeletePD();}
 		void SerializeData(bool ser = true) 	{serializeData = ser;}
 		void SerializeFormat(bool ser = false) 	{serializeFormat = ser;}
 		void Xmlize(XmlIO& xio) 				{XmlizeByJsonize(xio, *this);}
@@ -1597,14 +1603,11 @@ void ScatterDraw::Plot(T& w)
 					imin = 0;
 					imax = data.GetCount() - 1;
 				}
-				double dxpix = 0;
-				if (fastViewX) 
-					dxpix = (data.x(imax) - data.x(imin))/plotW;			
-				int npix = 1;
-				for (int64 i = imin; i <= imax; ) {
-					double xx, yy;
-					if (fastViewX && dxpix < 1) {	
-						yy = data.y(i);
+				if (fastViewX) {
+					double dxpix = (data.x(imax) - data.x(imin))/plotW;
+					int npix = 1;
+					for (int64 i = imin; i <= imax; ) {						
+						double yy = data.y(i);
 						if (IsNull(yy)) {
 							++i;
 							continue;
@@ -1619,7 +1622,7 @@ void ScatterDraw::Plot(T& w)
 							maxY = max(maxY, dd);
 							minY = min(minY, dd);
 						}
-						xx = data.x(i);
+						double xx = data.x(i);
 						if (IsNull(xx)) {
 							++i;
 							continue;
@@ -1638,9 +1641,11 @@ void ScatterDraw::Plot(T& w)
 						points << Point(ix, plotH - iMax);
 						if (iMax != iMin)
 							points << Point(ix, plotH - iMin);	
-					} else {
-						xx = data.x(i);
-						yy = data.y(i);
+					} 
+				} else {
+					for (int64 i = imin; i <= imax; ) {	
+						double xx = data.x(i);
+						double yy = data.y(i);
 						++i;
 						if (IsNull(xx) || IsNull(yy)) 
 							points << Null;

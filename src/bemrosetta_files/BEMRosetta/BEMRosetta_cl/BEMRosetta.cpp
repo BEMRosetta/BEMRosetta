@@ -1,4 +1,5 @@
 #include "BEMRosetta.h"
+#include <ScatterDraw/DataSource.h>
 
 #include <plugin/matio/matio.h>
 
@@ -669,15 +670,38 @@ int Hydro::GetW0() {
 	return Null;
 }
 
+void Hydro::Get3W0(int &id1, int &id2, int &id3) {
+	Vector<double> ww = clone(w);
+	
+	Sort(ww);
+	id1 = FindAdd(w, ww[0]); 	
+	id2 = FindAdd(w, ww[1]); 
+	id3 = FindAdd(w, ww[2]); 
+}
+
 void Hydro::A0() {
-	int iw0 = GetW0();
-	if (IsNull(iw0)) 
+	if (!IsLoadedA())
 		return;
 	
-	Aw0.setConstant(Nb*6, Nb*6, Null);
-	for (int i = 0; i < Nb*6; ++i)
-        for (int j = 0; j < Nb*6; ++j) 
-			Aw0(i, j) = A[iw0](i, j);
+	int iw0 = GetW0();
+	if (!IsNull(iw0)) {
+		Aw0.setConstant(Nb*6, Nb*6, Null);
+		for (int i = 0; i < Nb*6; ++i)
+	        for (int j = 0; j < Nb*6; ++j) 
+				Aw0(i, j) = A[iw0](i, j);
+	} else if (w.GetCount() < 3)
+		return;
+	else { 
+		int iw1, iw2, iw3;
+		Get3W0(iw1, iw2, iw3);
+		double wiw1 = w[iw1];
+		double wiw2 = w[iw2];
+		double wiw3 = w[iw3];
+		Aw0.setConstant(Nb*6, Nb*6, Null);
+		for (int i = 0; i < Nb*6; ++i)
+	        for (int j = 0; j < Nb*6; ++j) 
+				Aw0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[iw1](i, j), A[iw2](i, j), A[iw3](i, j));
+	}
 }
 
 String Hydro::C_units_base(int i, int j) {
@@ -729,6 +753,15 @@ double Hydro::rho_ndim()	const {return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	const {return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
 
+void Hydro::StateSpace::GetTFS(const Vector<double> &w) {
+	Eigen::Index sz = A_ss.rows();
+	TFS.SetCount(w.GetCount());
+	for (int ifr = 0; ifr < w.GetCount(); ++ifr) {
+		std::complex<double> wi = std::complex<double>(0, w[ifr]);
+		TFS[ifr] = C_ss.transpose()*(MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss;	// C_ss*inv(I*w*i-A_ss)*B_ss
+	}		
+}
+		
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
 	if (json.IsStoring()) 
@@ -1041,6 +1074,20 @@ int IsTabSpace(int c) {
 	if (c == '\t' || c == ' ' || c == '!')
 		return true;
 	return false;
+}
+
+Vector<int> NumSets(int num, int numsets) {
+	ASSERT(numsets > 0);
+	Vector<int> ret;
+	ret.SetCount(numsets);
+	
+	for (int i = 0; numsets > 0; ++i) {
+		int delta = int(num/numsets);
+		ret[i] = delta;
+		num -= delta;
+		numsets--;
+	}
+	return ret;
 }
 
 String FormatWam(double d) {

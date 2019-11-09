@@ -447,13 +447,14 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	if (!DirectoryExists(folderBase) && !DirectoryCreate(folderBase))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 	
-	int _nf, deltaf;
+	Vector<int> valsf;
+	int _nf;
 	double _minf, _maxf;
 	int ifr = 0;
 	Vector<double> freqs;
 	if (numCases > 1) { 
 		LinSpaced(freqs, Nf, minF, maxF);
-		deltaf = static_cast<int>(round(Nf/static_cast<double>(numCases)));
+		valsf = NumSets(Nf, numCases);
 	}
 	
 	String preName, solvName, postName;
@@ -488,7 +489,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	}
 		
 	String sumcases;
-	for (int i = 0; i < numCases; ++i) {
+	for (int i = 0; i < numCases && ifr < Nf-1; ++i) {
 		String folder;
 		if (numCases > 1) {
 			folder = AppendFileName(folderBase, Format("Nemoh_Part_%d", i+1));
@@ -496,14 +497,10 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 			sumcases << " " << AppendFileName(folder, "Nemoh.cal");
 			_minf = freqs[ifr];
-			if (i < numCases-1) {
-				_maxf = freqs[ifr + deltaf - 1];
-				_nf = deltaf;
-				ifr += deltaf;
-			} else {
-				_maxf = freqs[Nf - 1];
-				_nf = Nf - ifr;
-			}
+			int deltaf = valsf[i];
+			_maxf = freqs[ifr + deltaf - 1];
+			_nf = deltaf;
+			ifr += deltaf;
 		} else {
 			folder = folderBase;
 			_nf = Nf;
@@ -516,11 +513,11 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		if (!DirectoryCreate(folderMesh))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
-		for (int i = 0; i < bodies.GetCount(); ++i) {
-			String name = GetFileName(bodies[i].meshFile);
+		for (int ib = 0; ib < bodies.GetCount(); ++ib) {
+			String name = GetFileName(bodies[ib].meshFile);
 			String dest = AppendFileName(folderMesh, name);
-			if (!FileCopy(bodies[i].meshFile, dest)) 
-				throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[i].meshFile));
+			if (!FileCopy(bodies[ib].meshFile, dest)) 
+				throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[ib].meshFile));
 		}
 		Save_Cal(folder, _nf, _minf, _maxf);
 		
@@ -616,7 +613,7 @@ bool Nemoh::Load_Inf(String fileName) {
 	hd().cb.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
-	hd().C[0].setConstant(6, 6, Null);   
+	hd().C[0].setConstant(6, 6, 0);   
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -706,7 +703,7 @@ bool Nemoh::Load_KH() {
 		else 
 			fileKH = AppendFileName(folder, AppendFileName("Mesh", Format("KH_%d.dat", ib)));
 	    
-		hd().C[ib].setConstant(6, 6, Null);    
+		hd().C[ib].setConstant(6, 6, 0);    
 	    FileInLine in(fileKH);
 	    if (!in.IsOpen()) 
 	        return false;

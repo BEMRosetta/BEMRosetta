@@ -96,7 +96,7 @@ class ConsoleOutput {
 public:
 	ConsoleOutput() 				{Init();}
 	ConsoleOutput(bool forceWindow) {Init(forceWindow);}
-	~ConsoleOutput(); 
+	virtual ~ConsoleOutput(); 
 	
 	bool Init(bool forceWindow = false);
 
