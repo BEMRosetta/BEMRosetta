@@ -135,10 +135,9 @@ String TabText(const TabCtrl &tab);
 #include "arrange.h"
 
 enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
-enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
+enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
-				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH, 
-				 /*PLOT_STS_MA, PLOT_STS_PH*/};
+				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH};
 
 
 String ForceExtSafe(String fileName, String ext);
@@ -158,7 +157,7 @@ public:
 		if (_idof >= _data.dofOrder.GetCount())
 			return false;
 		idof = _data.dofOrder[_idof];
-		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH)
+		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH)
 			_j_dof = _data.dofOrder[_j_dof];
 		jdof = _j_dof;
 		show_w = _show_w;
@@ -172,6 +171,7 @@ public:
 		switch (dataToPlot) {
 		case PLOT_A:			return IsNull(data->A[0](idof, jdof));
 		case PLOT_AINF:			return IsNull(data->Awinf(idof, jdof));
+		case PLOT_A0:			return IsNull(data->Aw0(idof, jdof));
 		case PLOT_B:			return IsNull(data->B[0](idof, jdof));
 		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdof](0, idof));
 		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdof](0, idof));
@@ -181,8 +181,8 @@ public:
 		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[jdof](0, idof));
 		case PLOT_RAO_MA:		return IsNull(data->rao.ma[jdof](0, idof));
 		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdof](0, idof));
-		case PLOT_TFS_MA:		return data->sts[idof][jdof].TFSResponse.IsEmpty();
-		case PLOT_TFS_PH:		return data->sts[idof][jdof].TFSResponse.IsEmpty();
+		case PLOT_TFS_MA:		return data->sts[idof][jdof].TFS.IsEmpty();
+		case PLOT_TFS_PH:		return data->sts[idof][jdof].TFS.IsEmpty();
 		case PLOT_Z_MA:			return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
 		case PLOT_Z_PH:			return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
 		default:				NEVER();	return true;
@@ -193,6 +193,7 @@ public:
 		switch (dataToPlot) {
 		case PLOT_A:			return data->A_(ndim, int(id), idof, jdof);
 		case PLOT_AINF:			return data->Awinf_(ndim, idof, jdof);
+		case PLOT_A0:			return data->Aw0_(ndim, idof, jdof);
 		case PLOT_B:			return data->B_(ndim, int(id), idof, jdof);
 		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, jdof, int(id), idof);
 		case PLOT_FORCE_SC_PH:	return data->sc.ph[jdof](int(id), idof);
@@ -211,12 +212,29 @@ public:
 	}
 	virtual inline double x(int64 id) {
 		ASSERT(data != 0);
-		if (show_w)
+		
+		if ((dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0) && id == 1)
+			id = data->Nf - 1;
+		
+		if (show_w) {
+			if (dataToPlot == PLOT_A0)
+				return 0;
 			return data->w[static_cast<int>(id)];
-		else
+		} else {
+			if (dataToPlot == PLOT_AINF)
+				return 0;
 			return data->T[static_cast<int>(id)];
+		}
 	}
-	virtual int64 GetCount() const		  	{ASSERT(data != 0); return data->Nf;}
+	virtual int64 GetCount() const {
+		ASSERT(data != 0); 
+		
+		if (dataToPlot == PLOT_AINF)
+			return show_w  ? 2 : 1;		
+		if (dataToPlot == PLOT_A0)
+			return !show_w ? 2 : 1;
+		return data->Nf;
+	}
 	
 private:
 	const Hydro *data;
@@ -397,7 +415,7 @@ public:
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
 	Upp::Array<HydroSource> ABFZ_source, ABFZ_source2;
-	Upp::Array<HydroSource> Ainf_source;
+	Upp::Array<HydroSource> Ainf_source, A0_source;
 	
 	Upp::Array<HydroSource> TFS_source, TFS_source2;
 		
@@ -627,7 +645,7 @@ public:
 	typedef Main CLASSNAME;
 	
 	Main() : closed(false) {}
-	virtual ~Main();
+	virtual ~Main() noexcept;
 	virtual void Close();
 	void CloseMain(bool store);
 

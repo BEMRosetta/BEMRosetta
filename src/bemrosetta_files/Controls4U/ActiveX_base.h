@@ -96,7 +96,7 @@ public:
 class DHCtrlActiveX : public DHCtrl {
 public:
 	DHCtrlActiveX(CLSID, const String, bool status = true);
-	~DHCtrlActiveX(void);
+	virtual ~DHCtrlActiveX();
 	
 	bool Attach(HWND hwnd);
 	void *QueryInterface(const IID iid);

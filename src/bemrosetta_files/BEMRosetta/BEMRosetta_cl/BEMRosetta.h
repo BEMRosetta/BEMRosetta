@@ -21,7 +21,7 @@ public:
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), dataFromW(true), bem(&_bem) {}
-	virtual ~Hydro() {}	
+	virtual ~Hydro() noexcept {}	
 	
 	String GetCodeStr()	const {
 		switch (code) {
@@ -111,15 +111,18 @@ public:
    	RAO rao;
     
     struct StateSpace {
-	    Upp::Array<std::complex<double>> TFSResponse;
+	    Upp::Array<std::complex<double>> TFS;
 		MatrixXd A_ss;
 		VectorXd B_ss;
 		VectorXd C_ss;
 		VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
-		double ssMAE;
+		double ssMAE = Null;
+		
+		void GetTFS(const Vector<double> &w);
+		
 		void Jsonize(JsonIO &json) {
 			json
-				("TFSResponse", TFSResponse)
+				("TFSResponse", TFS)
 				("A_ss", A_ss)
 				("B_ss", B_ss)
 				("C_ss", C_ss)
@@ -252,30 +255,11 @@ public:
 	double R_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_im_ndim(f, _h, ifr, idf) : R_im_dim(f, _h, ifr, idf);}
 
 	inline std::complex<double>Z(bool ndim, int ifr, int idf, int jdf) const {
-		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Awinf_(ndim, idf, jdf)));
+		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Awinf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
 	}
 	
-	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dimenSTS  ? sts[idf][jdf].TFSResponse[ifr]*g_rho_dim()/g_rho_ndim() : sts[idf][jdf].TFSResponse[ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFSResponse[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFSResponse[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	/*	
-	std::complex<double> TFS_dim(int ifr, int idf, int jdf) const {
-		double mag = std::abs(sts[idf][jdf].TFSResponse[ifr]);
-		double arg = std::arg(sts[idf][jdf].TFSResponse[ifr]);
-		if (dimenSTS)   
-			mag *= g_rho_dim()/g_rho_ndim();
-		else
-			mag *= (rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);
-		return std::complex<double>(mag*cos(arg), mag*sin(arg));
-	}
-	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) const {
-		double mag = std::abs(sts[idf][jdf].TFSResponse[ifr]);
-		double arg = std::arg(sts[idf][jdf].TFSResponse[ifr]);
-		if (!dimenSTS) 
-			mag *= g_rho_ndim()/g_rho_dim(); 
-		else 
-			mag /= (rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);
-		return std::complex<double>(mag*cos(arg), mag*sin(arg));
-	}*/
+	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dimenSTS  ? sts[idf][jdf].TFS[ifr]*g_rho_dim()/g_rho_ndim() : sts[idf][jdf].TFS[ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
 	void Jsonize(JsonIO &json);
@@ -395,6 +379,7 @@ public:
 	void SetOrder(Vector<int> &order)	{dofOrder = pick(order);}
 	
 	int GetW0();
+	void Get3W0(int &id1, int &id2, int &id3);
 	void A0();
 		
 	void K_IRF(double maxT = 120, int numT = 1000);
@@ -424,7 +409,7 @@ public:
 	}
 	Hydro &operator()()				{return *data;}
 	const Hydro &operator()() const	{return *data;}
-	virtual ~HydroData() {
+	virtual ~HydroData() noexcept {
 		if (manages)
 			delete data;
 	}
@@ -438,7 +423,7 @@ class HydroClass {
 public:
 	HydroClass()							{}
 	HydroClass(BEMData &bem, Hydro *hydro = 0) : hd(bem, hydro)	{}
-	virtual ~HydroClass()					{}
+	virtual ~HydroClass() noexcept			{}
 	bool Load(String file);
 	bool Save(String file);
 	
@@ -570,7 +555,7 @@ public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
 	void Save(String file);
-	virtual ~Wamit()	{}
+	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
 	bool LoadDatMesh(String file);
@@ -601,7 +586,7 @@ public:
 	void Get(const Vector<int> &ibs, const Vector<int> &idofs, const Vector<int> &jdofs,
 		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	virtual ~Foamm()	{}
+	virtual ~Foamm() noexcept {}
 	
 protected:
 	bool Load_mat(String fileName, int ib, int jb, bool loadCoeff);
@@ -612,11 +597,12 @@ public:
 	Fast(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, double g = 9.81);
 	void Save(String file);
-	virtual ~Fast()	{}
+	virtual ~Fast() noexcept {}
 	
 private:
 	bool Load_HydroDyn();	
-	void Save_HydroDyn(String fileName, bool force);	
+	void Save_HydroDyn(String fileName, bool force);
+	bool Load_SS(String fileName);	
 	void Save_SS(String fileName);
 	
 	String hydroFolder;
@@ -679,7 +665,7 @@ public:
 	Nemoh(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
-	virtual ~Nemoh()	{}
+	virtual ~Nemoh() noexcept {}
 	
 	bool LoadDatMesh(String file);
 	void SaveDatMesh(String file); 
@@ -704,7 +690,7 @@ public:
 	Aqwa(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
-	virtual ~Aqwa()	{}
+	virtual ~Aqwa() noexcept {}
 	
 private:
 	bool Load_AH1();
@@ -722,6 +708,8 @@ void LinSpaced(Range &v, int n, T min, T max) {
 			v[i] = min + ((max - min)*i)/(n - 1);
 	}
 }
+
+Vector<int> NumSets(int num, int numsets);	
 
 int IsTabSpace(int c);
 
