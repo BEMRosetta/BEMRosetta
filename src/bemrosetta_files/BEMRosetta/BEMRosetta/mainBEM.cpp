@@ -778,7 +778,7 @@ void MainSetupFOAMM::Init() {
 	arrayCases.AddColumn(t_("From (rad/s)"), 40);
 	arrayCases.AddColumn(t_("To (rad/s)"), 40);
 	arrayCases.AddColumn(t_("Frequencies (rad/s)"), 60);
-	arrayCases.WhenSel = [&] {WhenSelArrayCases();};
+	arrayCases.WhenCursor = [&] {WhenSelArrayCases();};
 	
 	selectAll.WhenAction = [&] {
 			for (int i = 0; i < arrayCases.GetCount(); ++i)
@@ -830,7 +830,7 @@ void MenuFOAMM::Init(MainBEM &mainBEM, BEMData &bem, MainSetupFOAMM &setup) {
 	arrayModel.NoHeader().NoVertGrid().AutoHideSb();
 	arrayModel.AddColumn("", 20);	
 	arrayModel.AddColumn("", 20);	
-	arrayModel.WhenSel = [&] {	
+	arrayModel.WhenCursor = [&] {	
 		int id = arrayModel.GetCursor();
 		if (id < 0)
 			return;
@@ -904,22 +904,6 @@ void MainSetupFOAMM::OnMouse(Point p, dword, ScatterCtrl::MouseAction action, Sc
 			selector.Set(id, freq);
 	}
 }
-/*
-void MainSetupFOAMM::OnMove(Point p) {
-	double freq = plotsReal.scatter.GetRealPosX(p.x);
-	
-	if (!plotsReal.scatter.IsEmpty()) {
-		DataSource &data = plotsReal.scatter.GetDataSource(0);
-		freq = data.x(data.ClosestX(freq));
-	}
-	
-	if (!IsNull(fromFreq) && freq <= double(~fromFreq))
-		WhenFocus(&rectFrom);
-	else if (!IsNull(toFreq) && freq >= double(~toFreq))
-		WhenFocus(&rectTo);
-	else 
-		selector.CheckFocus(freq);		
-}*/
 
 void MainSetupFOAMM::WhenSelArrayModel(int _id, BEMData &bem) {
 	arrayCases.Clear();

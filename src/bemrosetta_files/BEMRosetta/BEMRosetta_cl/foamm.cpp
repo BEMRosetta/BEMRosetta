@@ -99,15 +99,15 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 	hd().InitializeSts();
 	Hydro::StateSpace &sts = hd().sts[idof][jdof];
 
-	MatMatrix<std::complex<double>> TFSResponse = mat.VarReadMat<std::complex<double>>("TFSResponse");	
-	if (TFSResponse.GetCount() == 0)
+	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	
+	if (TFS.GetCount() == 0)
 		BEMData::Print(S("\n") + t_("Vector TFSResponse not found"));
 	else {
-		sts.TFSResponse.SetCount(hd().Nf);
-		if (hd().Nf != TFSResponse.GetCount())
+		sts.TFS.SetCount(hd().Nf);
+		if (hd().Nf != TFS.GetCount())
 			throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-			sts.TFSResponse[ifr] = TFSResponse[ifr];
+			sts.TFS[ifr] = TFS[ifr];
 	}
 	
 	MatMatrix<double> A_ss = mat.VarReadMat<double>("A_ss");	

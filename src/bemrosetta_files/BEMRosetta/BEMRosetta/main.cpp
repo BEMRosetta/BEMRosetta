@@ -360,6 +360,7 @@ void OnPanic(const char *title, const char *text) {
 void OnAssert(const char *text) {
 	throw Exc(Format(t_("Error type 2: %s"), text));	
 }
+
 GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);
 	//SetAssertFailedHook(OnAssert);

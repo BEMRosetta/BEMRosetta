@@ -32,7 +32,7 @@ protected:
 	
 public:
 	StaticPlugin();
-	~StaticPlugin();
+	virtual ~StaticPlugin();
 	
 	void End();
 

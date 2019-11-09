@@ -520,7 +520,7 @@ Vector<String> GetDriveList();
 class Dl {
 public:
 	Dl();
-	~Dl();
+	virtual ~Dl();
 	bool Load(const String &fileDll);
 	void *GetFunction(const String &functionName);
 	
@@ -570,7 +570,7 @@ int SysX(const char *cmd, String& out, String& err, double timeOut = Null,
 class _NRFuse {
 public:
 	_NRFuse(bool *_inside) {inside = _inside; failed = true;}
-	~_NRFuse() 			   {if (!failed) *inside = false;}
+	virtual ~_NRFuse() 			   {if (!failed) *inside = false;}
 	bool failed;
 private:
 	bool *inside;
@@ -596,7 +596,7 @@ struct TempAssign {
 		_val = set;
 		val = &_val;
 	}
-	~TempAssign() {
+	virtual ~TempAssign() {
 		*val = old;
 	}
 	
@@ -892,7 +892,7 @@ class LocalProcessX
 typedef LocalProcessX CLASSNAME;
 public:
 	LocalProcessX() : status(STOP_OK), callbackOn(false) {}
-	~LocalProcessX() 				  {Stop();}
+	virtual ~LocalProcessX() 		{Stop();}
 	enum ProcessStatus {RUNNING = 1, STOP_OK = 0, STOP_TIMEOUT = -1, STOP_USER = -2, STOP_NORESPONSE = -3};
 	bool Start(const char *cmd, const char *envptr = 0, const char *dir = 0, double _refreshTime = -1, 
 		double _maxTimeWithoutOutput = -1, double _maxRunTime = -1, bool convertcharset = true) {

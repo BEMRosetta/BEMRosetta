@@ -5,27 +5,27 @@ namespace Upp {
 #ifdef GUI_WIN
 void AvoidPaintingCheck__();
 
-Image ProcessSHIcon(const SHFILEINFO& info)
+Image ProcessSHIcon(HICON hIcon)
 {
 	AvoidPaintingCheck__();
 	Color c = White();
 	Image m[2];
 	for(int i = 0; i < 2; i++) {
 		ICONINFO iconinfo;
-		if(!info.hIcon || !GetIconInfo(info.hIcon, &iconinfo))
+		if(!hIcon || !GetIconInfo(hIcon, &iconinfo))
 			return Image();
 		BITMAP bm;
 		::GetObject((HGDIOBJ)iconinfo.hbmMask, sizeof(BITMAP), (LPVOID)&bm);
 		Size sz(bm.bmWidth, bm.bmHeight);
 		ImageDraw iw(sz);
 		iw.DrawRect(sz, c);
-		::DrawIconEx(iw.GetHandle(), 0, 0, info.hIcon, 0, 0, 0, NULL, DI_NORMAL|DI_COMPAT);
+		::DrawIconEx(iw.GetHandle(), 0, 0, hIcon, 0, 0, 0, NULL, DI_NORMAL|DI_COMPAT);
 		::DeleteObject(iconinfo.hbmColor);
 		::DeleteObject(iconinfo.hbmMask);
 		c = Black();
 		m[i] = iw;
 	}
-	::DestroyIcon(info.hIcon);
+	::DestroyIcon(hIcon);
 	return RecreateAlpha(m[0], m[1]);
 }
 
@@ -45,7 +45,7 @@ struct FileIconMaker : ImageMaker {
 		SHGetFileInfo(ToSystemCharset(file), dir ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL,
 		              &info, sizeof(info),
 		              SHGFI_ICON|(large ? SHGFI_LARGEICON : SHGFI_SMALLICON)|(exe ? 0 : SHGFI_USEFILEATTRIBUTES));
-		return ProcessSHIcon(info);
+		return ProcessSHIcon(info.hIcon);
 	}
 };
 
@@ -66,13 +66,13 @@ Image GetFileIcon(const char *path, bool dir, bool force, bool large, bool quick
 		m.exe = true;
 	}
 	else
-	if(ext == ".exe")
+	if(findarg(ext, ".exe", ".lnk") >= 0)
 		m.exe = true;
 	else
-		m.file = "x." + ext;
+		m.file = "x" + ext;
 	if(quick) {
 		m.exe = false;
-		m.file = "x." + ext;
+		m.file = "x" + ext;
 	}
 	return MakeImage(m);
 }
@@ -536,8 +536,12 @@ bool Load(FileList& list, const String& dir, const char *patterns, bool dirs,
 				show = true;
 			if(!show && hiddenfiles && fi.is_file)
 				show = true;
-			if(fi.filename != "." && fi.filename != ".." != 0 &&
+			if(fi.filename != "." && fi.filename != ".." &&
+			#ifdef PLATFORM_WIN32
+			   (fi.is_directory || FileSel::IsLnkFile(fi.filename) || PatternMatchMulti(patterns, fi.filename)) &&
+			#else
 			   (fi.is_directory || PatternMatchMulti(patterns, fi.filename)) &&
+			#endif
 			   MatchSearch(fi.filename, search) && show) {
 				Image img;
 			#ifdef PLATFORM_POSIX
@@ -578,20 +582,21 @@ bool Load(FileList& list, const String& dir, const char *patterns, bool dirs,
 }
 
 #ifdef GUI_WIN
-static Mutex      sExeMutex;
-static char       sExePath[1025];
-static bool       sExeRunning;
-static SHFILEINFO sExeInfo;
+static Mutex       sExeMutex;
+static wchar       sExePath[1025];
+static bool        sExeRunning;
+static SHFILEINFOW sExeInfo;
 
 static auxthread_t auxthread__ sExeIconThread(void *)
 {
-	SHFILEINFO info;
-	char path[1025];
+	SHFILEINFOW info;
+	wchar path[1025];
+	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 	sExeMutex.Enter();
-	strncpy(path, sExePath, 1024);
+	wcscpy(path, sExePath);
 	sExeMutex.Leave();
 	AvoidPaintingCheck__();
-	SHGetFileInfo(sExePath, FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON|SHGFI_SMALLICON);
+	SHGetFileInfoW(path, FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON|SHGFI_SMALLICON);
 	sExeMutex.Enter();
 	memcpy(&sExeInfo, &info, sizeof(info));
 	sExeRunning = false;
@@ -608,13 +613,15 @@ void LazyExeFileIcons::Done(Image img)
 		return;
 	const FileList::File& f = list->Get(ii);
 	WhenIcon(false, f.name, img);
-	if(f.hidden)
-		img = Contrast(img, 200);
-	list->SetIcon(ii, img);
+	if(!IsNull(img)) {
+		if(f.hidden)
+			img = Contrast(img, 200);
+		list->SetIcon(ii, img);
+	}
 	pos++;
 }
 
-String LazyExeFileIcons::Path()
+WString LazyExeFileIcons::Path()
 {
 	if(pos >= ndx.GetCount())
 		return Null;
@@ -622,7 +629,7 @@ String LazyExeFileIcons::Path()
 	if(ii < 0 || ii >= list->GetCount())
 		return Null;
 	const FileList::File& f = list->Get(ii);
-	return ToSystemCharset(NormalizePath(AppendFileName(dir, f.name)));
+	return NormalizePath(AppendFileName(dir, f.name)).ToWString();
 }
 
 void LazyExeFileIcons::Do()
@@ -630,9 +637,9 @@ void LazyExeFileIcons::Do()
 	int start = msecs();
 	for(;;) {
 		for(;;) {
-			SHFILEINFO info;
+			SHFILEINFOW info;
 			bool done = false;
-			String path = Path();
+			WString path = Path();
 			if(IsNull(path))
 				return;
 			sExeMutex.Enter();
@@ -644,7 +651,7 @@ void LazyExeFileIcons::Do()
 				memset(&sExeInfo, 0, sizeof(sExeInfo));
 			}
 			sExeMutex.Leave();
-			Image img = ProcessSHIcon(info);
+			Image img = ProcessSHIcon(info.hIcon);
 			if(done)
 				Done(img);
 			if(!running)
@@ -656,11 +663,11 @@ void LazyExeFileIcons::Do()
 			}
 		}
 
-		String path = Path();
+		WString path = Path();
 		if(IsNull(path))
 			return;
 		sExeMutex.Enter();
-		strncpy(sExePath, ~path, 1024);
+		memcpy(sExePath, ~path, 2 * min(1024, path.GetCount() + 1));
 		sExeRunning = true;
 		StartAuxThread(sExeIconThread, NULL);
 		sExeMutex.Leave();
@@ -668,12 +675,12 @@ void LazyExeFileIcons::Do()
 }
 
 void LazyExeFileIcons::ReOrder()
-{ // gather .exe files; sort based on length so that small .exe get resolved first
+{ // gather .exe and .lnk files; sort based on length so that small .exe get resolved first
 	ndx.Clear();
 	Vector<int> len;
 	for(int i = 0; i < list->GetCount(); i++) {
 		const FileList::File& f = list->Get(i);
-		if(ToLower(GetFileExt(f.name)) == ".exe" && !f.isdir) {
+		if(findarg(ToLower(GetFileExt(f.name)), ".exe", ".lnk") >= 0 && !f.isdir) {
 			ndx.Add(i);
 			len.Add((int)min((int64)INT_MAX, f.length));
 		}
@@ -692,7 +699,8 @@ void LazyExeFileIcons::Start(FileList& list_, const String& dir_, Event<bool, co
 }
 #endif
 
-String FileSel::GetDir() {
+String FileSel::GetDir() const
+{
 	String s = ~dir;
 	if(s.IsEmpty()) return basedir;
 	if(basedir.IsEmpty()) return s;
@@ -985,6 +993,41 @@ void FileSel::AddName(Vector<String>& fn, String& f) {
 	f.Clear();
 }
 
+bool FileSel::IsLnkFile(const String& p)
+{
+	int l = p.GetLength() - 4;
+	return l >= 0 && p[l] == '.' && ToLower(p[l + 1]) == 'l' && ToLower(p[l + 2]) == 'n' && ToLower(p[l + 3]) == 'k';
+}
+
+String FileSel::ResolveLnk(const String& name) const
+{
+#ifdef PLATFORM_WIN32
+	if(IsLnkFile(name))
+		return GetSymLinkPath(AppendFileName(GetDir(), name));
+#endif
+	return Null;
+}
+
+String FileSel::ResolveLnkDir(const String& name) const
+{
+#ifdef PLATFORM_WIN32
+	String p = ResolveLnk(name);
+	if(p.GetCount() && DirectoryExists(p))
+		return p;
+#endif
+	return Null;
+}
+
+String FileSel::ResolveLnkFile(const String& name) const
+{
+#ifdef PLATFORM_WIN32
+	String p = ResolveLnk(name);
+	if(p.GetCount() && FileExists(p))
+		return p;
+#endif
+	return Null;
+}
+
 void FileSel::Finish() {
 	if(filesystem->IsWin32())
 		if(GetDir().IsEmpty()) {
@@ -1000,6 +1043,13 @@ void FileSel::Finish() {
 					const FileList::File& m = list[i];
 					if(m.isdir)
 						fn.Add(AppendFileName(p, m.name));
+				#ifdef PLATFORM_WIN32
+					else {
+						String p = ResolveLnkDir(m.name);
+						if(p.GetCount())
+							fn.Add(p);
+					}
+				#endif
 				}
 		}
 		else {
@@ -1008,6 +1058,13 @@ void FileSel::Finish() {
 				const FileList::File& m = list[list.GetCursor()];
 				if(m.isdir)
 					p = AppendFileName(p, m.name);
+			#ifdef PLATFORM_WIN32
+				else {
+					String pp = ResolveLnkDir(m.name);
+					if(p.GetCount())
+						p = pp;
+				}
+			#endif
 			}
 			fn.Add(p);
 		}
@@ -1087,6 +1144,7 @@ bool FileSel::OpenItem() {
 		}
 	#endif
 		const FileList::File& m = list.Get(list.GetCursor());
+		String path = AppendFileName(~dir, m.name);
 	#ifdef PLATFORM_WIN32
 		if(IsNull(dir) && m.name == t_("Network")) {
 			netnode = NetNode::EnumRoot();
@@ -1094,9 +1152,14 @@ bool FileSel::OpenItem() {
 			LoadNet();
 			return true;
 		}
+		String p = ResolveLnkDir(m.name);
+		if(p.GetCount()) {
+			SetDir(p);
+			return true;
+		}
 	#endif
 		if(m.isdir) {
-			SetDir(AppendFileName(~dir, m.name));
+			SetDir(path);
 			return true;
 		}
 	}
@@ -1911,6 +1974,10 @@ String FileSel::GetFile(int i) const {
 		if(!IsFullPath(p))
 			p = AppendFileName(dir.GetData(), p);
 	}
+#ifdef PLATFORM_WIN32
+	if(IsLnkFile(p))
+		p = Nvl(GetSymLinkPath(p), p);
+#endif
 	return p;
 }
 

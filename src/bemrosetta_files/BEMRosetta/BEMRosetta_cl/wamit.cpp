@@ -154,7 +154,7 @@ bool Wamit::Load_out() {
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
 			if (hd().C.GetCount() < hd().Nb)
 			 	throw Exc(in.Str() + t_("C matrix is not dimensioned"));
-			hd().C[ibody].setConstant(6, 6, Null);
+			hd().C[ibody].setConstant(6, 6, 0);
 			f.LoadWamitJoinedFields(in.GetLine());
 			hd().C[ibody](2, 2) = f.GetDouble(1);
 			hd().C[ibody](2, 3) = hd().C[ibody](3, 2) = f.GetDouble(2);
@@ -609,7 +609,7 @@ bool Wamit::Load_hst(String fileName) {
 	
 	hd().C.SetCount(hd().Nb);
 	for(int ibody = 0; ibody < hd().Nb; ++ibody)
-		hd().C[ibody].setConstant(6, 6, Null);
+		hd().C[ibody].setConstant(6, 6, 0);
 
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());	

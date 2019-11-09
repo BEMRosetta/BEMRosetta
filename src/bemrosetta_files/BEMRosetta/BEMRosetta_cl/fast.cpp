@@ -37,6 +37,13 @@ bool Fast::Load(String file, double g) {
 			throw Exc(t_("No wave headings found in Wamit file"));
 		if (abs(hd().head[0]) != abs(hd().head[hd().head.GetCount()-1]))
 			throw Exc(Format(t_("FAST requires simetric wave headings. .3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.GetCount()-1])); 
+	
+		String ssFile = ForceExt(hydroFile, ".ss");
+		if (FileExists(ssFile)) {
+			BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+			if (!Load_SS(ssFile)) 
+				throw Exc("\n" + Format(t_("File '%s' not found"), file));	
+		}
 	} catch (Exc e) {
 		BEMData::PrintError("\nError: " + e);
 		hd().lastError = e;
@@ -266,9 +273,9 @@ void Fast::Save_SS(String fileName) {
 		BEMData::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
 
 	if (!hd().stsProcessor.IsEmpty())
-		out << Format(t_("BEMRosetta state space matrices obtained with %s"), hd().stsProcessor) << "\n";
+		out << Format("BEMRosetta state space matrices obtained with %s", hd().stsProcessor) << "\n";
 	else	
-		out << t_("BEMRosetta state space matrices") << "\n";
+		out << "BEMRosetta state space matrices" << "\n";
 	Eigen::Index nstates = 0;
 	Vector<Eigen::Index> nstatesdof;
 	for (int idof = 0; idof < 6; ++idof) {
@@ -302,8 +309,8 @@ void Fast::Save_SS(String fileName) {
 				for (int r = 0; r < sts.A_ss.rows(); ++r) 
 					for (int c = 0; c < sts.A_ss.cols(); ++c) {
 						A(pos + r, pos + c) = sts.A_ss(r, c);
-						B(pos + r, jdof) = sts.B_ss(r);
-						C(idof, pos + r) = sts.C_ss(r);
+						B(pos + r, jdof)    = sts.B_ss(r);
+						C(idof, pos + r)    = sts.C_ss(r);
 					}
 				pos += int(sts.A_ss.rows());
 			}
@@ -324,4 +331,145 @@ void Fast::Save_SS(String fileName) {
 			out << Format("%e ", -C(r, c));
 		out << "\n";
 	}
+}
+
+static bool CheckRepeated(const Vector<Eigen::Index> &list) {
+	for (int i = 0; i < list.GetCount()-1; ++i) {
+		for (int j = i+1; j < list.GetCount(); ++j) {
+			if (list[i] == list[j])
+				return true;
+		}
+	}
+	return false;
+}
+
+static void SortBy(Vector<Eigen::Index> &list, int idf) {
+	Sort(list);
+	for (int i = 0; i < list.GetCount(); ++i) {
+		if (list[i] == idf) {
+			list.Remove(i);
+			return;
+		}
+	}
+}
+
+static bool FillDOF(const MatrixXd &C, int idf, int pos, int nstates, Vector<Eigen::Index> &listdof, Eigen::Index &nlistdof) {
+	for (int ndofdof = 1; ndofdof <= 6; ++ndofdof) {
+		if (nstates%ndofdof != 0)
+			continue;
+		int delta = nstates/ndofdof;
+		for (int kk = 0; kk < ndofdof; ++kk) {			// Horizontal, left -> right
+			int idofOK = -1;
+			for (int idff = 0; idff < 6; ++idff) {		// Vertical, top -> bottom
+				double sum = 0;
+				for (int i = 0; i < delta; ++i)			// Horizontal, left -> right
+					sum += C(idff, pos+kk*delta+i);
+				if (sum != 0) {
+					if (idofOK >= 0) {
+						idofOK = -1;
+						break;
+					}
+					idofOK = idff;
+				}
+			}
+			if (idofOK < 0)
+				break;
+			listdof << idofOK;
+			nlistdof = delta;
+		}
+		if (!listdof.IsEmpty()) {
+			if (!CheckRepeated(listdof)) {	
+				SortBy(listdof, idf);
+				return true;		
+			}
+		}
+		listdof.Clear();
+	}
+	return false;
+}			
+
+bool Fast::Load_SS(String fileName) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+
+	if (hd().Nb > 1)
+		BEMData::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
+	
+	String line; 
+	FieldSplit f(in);
+	
+	hd().stsProcessor = TrimBoth(in.GetLine());
+	hd().stsProcessor.Replace("BEMRosetta state space matrices obtained with ", "");
+	
+	hd().InitializeSts();
+	
+	in.GetLine();
+	
+	f.Load(in.GetLine());
+	int nstates = f.GetInt(0);
+	
+	Vector<Eigen::Index> nstatesdof;
+	f.Load(in.GetLine());
+	int numtot = 0;
+	for (int i = 0; i < 6; ++i) {
+		int num = f.GetInt(i);
+		nstatesdof << num;
+		numtot += num;
+	}
+	if (numtot != nstates)
+		throw Exc(Format(t_("Sum of states %d does no match total radiation states %d"), numtot, nstates));
+	
+	MatrixXd A, B, C;
+	A.setConstant(nstates, nstates, Null);
+	B.setConstant(nstates, 6, Null);
+	C.setConstant(6, nstates, Null);
+	
+	for (int r = 0; r < A.rows(); ++r) {
+		f.Load(in.GetLine());
+		for (int c = 0; c < A.cols(); ++c) 
+			A(r, c) = f.GetDouble(c);
+	}
+	for (int r = 0; r < B.rows(); ++r) {
+		f.Load(in.GetLine());
+		for (int c = 0; c < B.cols(); ++c) 
+			B(r, c) = f.GetDouble(c);
+	}
+	for (int r = 0; r < C.rows(); ++r) {
+		f.Load(in.GetLine());
+		for (int c = 0; c < C.cols(); ++c) 
+			C(r, c) = -f.GetDouble(c);
+	}	
+	Vector<Vector<Eigen::Index>> dofdof;
+	Vector<Eigen::Index> ndofdof;
+	dofdof.SetCount(nstatesdof.GetCount());
+	ndofdof.SetCount(nstatesdof.GetCount());
+	int pos0 = 0;
+	for (int idf = 0; idf < dofdof.GetCount(); ++idf) {
+		if (!FillDOF(C, idf, pos0, int(nstatesdof[idf]), dofdof[idf], ndofdof[idf]))
+			throw Exc(Format(t_("Unknown structure in C matrix (%d, %d, %d)"), idf, pos0, int(nstatesdof[idf])));
+		dofdof[idf].Insert(0, idf);
+		pos0 += int(nstatesdof[idf]);
+	}
+	Eigen::Index pos = 0;
+	for (int idf = 0; idf < dofdof.GetCount(); ++idf) {
+		for (int i = 0; i < dofdof[idf].GetCount(); ++i) {
+			int jdf = int(dofdof[idf][i]);
+			Hydro::StateSpace &sts = hd().sts[idf][jdf];
+			Eigen::Index num = ndofdof[idf];
+			sts.A_ss.setConstant(num, num, Null);
+			sts.B_ss.setConstant(num, Null);
+			sts.C_ss.setConstant(num, Null);
+			for (int r = 0; r < sts.A_ss.rows(); ++r) {
+				for (int c = 0; c < sts.A_ss.cols(); ++c) {
+					sts.A_ss(r, c) = A(pos + r, pos + c);
+					sts.B_ss(r)    = B(pos + r, jdf);
+					sts.C_ss(r)    = C(jdf, pos + r);
+				}		 
+			}
+			sts.GetTFS(hd().w);
+			pos += num;
+		}
+	}
+	return true;
 }

@@ -119,7 +119,7 @@ void MainMesh::Init() {
 	menuStability.arrayModel.AddColumn("", 20);	
 	menuStability.arrayModel.AddColumn("", 20); 
 	
-	menuStability.arrayModel.WhenSel = THISBACK(OnMenuConvertArraySel);
+	menuStability.arrayModel.WhenCursor = THISBACK(OnMenuConvertArraySel);
 
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
@@ -772,7 +772,7 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		dataSourceFacetsAll[c+1].Init(_mesh, c, true);
 		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
-	arrayFacetsAll2.array.WhenSel = [&] {
+	arrayFacetsAll2.array.WhenCursor = [&] {
 		UpdateStatus(false);
 		_mesh.mesh.SelPanels(selectedPanels);	
 		arrayFacetsUnder.array.ClearSelection();	
@@ -790,7 +790,7 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		dataSourceFacetsUnder[c+1].Init(_mesh, c, false);
 		arrayFacetsUnder.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsUnder[c+1]);
 	}
-	arrayFacetsUnder.array.WhenSel = [&] {
+	arrayFacetsUnder.array.WhenCursor = [&] {
 		UpdateStatus(true);
 		_mesh.under.SelPanels(selectedPanels);
 		arrayFacetsAll2.array.ClearSelection();	
@@ -810,7 +810,7 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		dataSourceNodesMoved[c+1].Init(_mesh, c, 1);
 		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
-	arrayNodesMoved.array.WhenSel = [&] {
+	arrayNodesMoved.array.WhenCursor = [&] {
 		UpdateStatus(false);
 		_mesh.mesh.SelNodes(selectedNodes);
 		arrayNodesUnder.array.ClearSelection();
@@ -828,7 +828,7 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 		dataSourceNodesMoved[c+1].Init(_mesh, c, 2);
 		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
-	arrayNodesUnder.array.WhenSel = [&] {
+	arrayNodesUnder.array.WhenCursor = [&] {
 		UpdateStatus(true);
 		_mesh.under.SelNodes(selectedNodes);	
 		arrayNodesMoved.array.ClearSelection();
@@ -884,9 +884,9 @@ void MainViewDataEach::OnRefresh() {
 
 void MainViewDataEach::OnTimer() {
 	switch (lastSel) {
-	case 0:	arrayFacetsAll2.array.WhenSel();		break;
-	case 1:	arrayFacetsUnder.array.WhenSel();		break;
-	case 2:	arrayNodesMoved.array.WhenSel();		break;
-	case 3:	arrayNodesUnder.array.WhenSel();		break;
+	case 0:	arrayFacetsAll2.array.WhenCursor();		break;
+	case 1:	arrayFacetsUnder.array.WhenCursor();	break;
+	case 2:	arrayNodesMoved.array.WhenCursor();		break;
+	case 3:	arrayNodesUnder.array.WhenCursor();		break;
 	}
 }
