@@ -80,16 +80,19 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/deepcwind.jpg" width="300" title="Mesh loading"></p>
 
 
-### Mesh handling
-    ## Load and save in binary and text [STL format](https://en.wikipedia.org/wiki/STL_(file_format))
-    ## Interactive mesh rotation and translation around user defined center
-    ## Automatic free surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
-    ## Improved viewer including dropdown menu in viewer screen
-    ## Mesh healing option
-### Nemoh
-    ## Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
-### BEM coefficients
-    ## Added hydrostatic stiffness matrix viewer
+### - Mesh handling
+
+    - _Load and save in binary and text [STL format](https://en.wikipedia.org/wiki/STL_(file_format))
+    - _Interactive mesh rotation and translation around user defined center
+    - _Automatic free surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
+    - _Improved viewer including dropdown menu in viewer screen
+    - _Mesh healing option
+    
+### - Nemoh
+    - _Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
+
+### - BEM coefficients
+    - _Added hydrostatic stiffness matrix viewer
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
