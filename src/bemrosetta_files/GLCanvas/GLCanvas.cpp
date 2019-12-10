@@ -1,7 +1,5 @@
 #include <Core/Core.h>
 
-using namespace Upp;
-
 #include <plugin/jpg/jpg.h>
 #include <PdfDraw/PdfDraw.h>
 
@@ -10,6 +8,8 @@ using namespace Upp;
 #include <Draw/iml.h>
 
 #include <GLCanvas/GLCanvas.h>
+
+namespace Upp {
 
 GLCanvas::GLCanvas() {
 	WhenGLPaint = THISBACK(OnPaint);
@@ -409,4 +409,4 @@ void GLCanvas::PaintSurface(const Surface &surf, const Color &linCol,
 		PaintSegments(surf.segTo3panel, Black());
 }
 
-
+}

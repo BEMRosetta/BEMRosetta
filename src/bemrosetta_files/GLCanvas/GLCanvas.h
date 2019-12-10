@@ -7,6 +7,8 @@
 #include <ScatterDraw/Pedantic.h>
 #include <Surface/Surface.h>
 
+namespace Upp {
+	
 class GLCanvas : public GLCtrl {
 public:
 	typedef GLCanvas CLASSNAME;
@@ -94,5 +96,7 @@ private:
 	void PaintMesh(const Point3D &p0, const Point3D &p1, const Point3D &p2, const Point3D &p3, const Color &linCol);
 	void OnTypeImage(FileSel *_fs);
 };
+
+}
 
 #endif

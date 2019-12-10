@@ -76,3 +76,23 @@ void MeshData::SaveDatNemoh(String fileName, const Vector<Panel> &panels, const 
 	}
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
+
+void MeshData::SavePreMeshNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes) {
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+	
+	out << nodes.GetCount() << "\n";
+	out << panels.GetCount() << "\n";
+	
+	for (int i = 0; i < nodes.GetCount(); ++i) {
+		const Point3D &node = nodes[i];
+		out << Format("%014.7E   %014.7E   % 014.7E\n", node.x, node.y, node.z);
+	}
+	
+	for (int i = 0; i < panels.GetCount(); ++i) {
+		const Panel &panel = panels[i];
+		out << Format("%8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
+	}
+}
+

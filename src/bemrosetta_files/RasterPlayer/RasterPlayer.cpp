@@ -1,7 +1,7 @@
 #include <CtrlLib/CtrlLib.h>
 #include <RasterPlayer/RasterPlayer.h>
 
-using namespace Upp;
+namespace Upp {
 
 Image GetRect_(const Image& orig, const Rect &r) {
 	if(r.IsEmpty())
@@ -205,4 +205,6 @@ void RasterPlayer::NextFrame() {
 	if (WhenShown)
 		WhenShown();
 	Refresh();
+}
+
 }

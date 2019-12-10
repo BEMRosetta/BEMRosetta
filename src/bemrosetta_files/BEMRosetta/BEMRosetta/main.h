@@ -151,15 +151,15 @@ public:
 	bool Init(Hydro *_data, int i, int _j_dof, DataToPlot _dataToPlot, bool _show_w, bool _ndim) 	{
 		return Init(*_data, i, _j_dof, _dataToPlot, _show_w, _ndim);
 	}
-	bool Init(const Hydro &_data, int _idof, int _j_dof, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
+	bool Init(const Hydro &_data, int _idf, int _j_dof, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		data = &_data;
 		dataToPlot = _dataToPlot;
-		if (_idof >= _data.dofOrder.GetCount())
+		if (_idf >= _data.dofOrder.GetCount())
 			return false;
-		idof = _data.dofOrder[_idof];
+		idf = _data.dofOrder[_idf];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH)
 			_j_dof = _data.dofOrder[_j_dof];
-		jdof = _j_dof;
+		jdf = _j_dof;
 		show_w = _show_w;
 		ndim = _ndim;
 		if (IsNullData())
@@ -169,44 +169,44 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return IsNull(data->A[0](idof, jdof));
-		case PLOT_AINF:			return IsNull(data->Awinf(idof, jdof));
-		case PLOT_A0:			return IsNull(data->Aw0(idof, jdof));
-		case PLOT_B:			return IsNull(data->B[0](idof, jdof));
-		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdof](0, idof));
-		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdof](0, idof));
-		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdof](0, idof));
-		case PLOT_FORCE_FK_PH:	return IsNull(data->fk.ph[jdof](0, idof));
-		case PLOT_FORCE_EX_MA:	return IsNull(data->ex.ma[jdof](0, idof));
-		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[jdof](0, idof));
-		case PLOT_RAO_MA:		return IsNull(data->rao.ma[jdof](0, idof));
-		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdof](0, idof));
-		case PLOT_TFS_MA:		return data->sts[idof][jdof].TFS.IsEmpty();
-		case PLOT_TFS_PH:		return data->sts[idof][jdof].TFS.IsEmpty();
-		case PLOT_Z_MA:			return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
-		case PLOT_Z_PH:			return IsNull(data->A[0](idof, jdof)) || IsNull(data->B[0](idof, jdof));
+		case PLOT_A:			return IsNull(data->A[0](idf, jdf));
+		case PLOT_AINF:			return IsNull(data->Awinf(idf, jdf));
+		case PLOT_A0:			return IsNull(data->Aw0(idf, jdf));
+		case PLOT_B:			return IsNull(data->B[0](idf, jdf));
+		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdf](0, idf));
+		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdf](0, idf));
+		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdf](0, idf));
+		case PLOT_FORCE_FK_PH:	return IsNull(data->fk.ph[jdf](0, idf));
+		case PLOT_FORCE_EX_MA:	return IsNull(data->ex.ma[jdf](0, idf));
+		case PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[jdf](0, idf));
+		case PLOT_RAO_MA:		return IsNull(data->rao.ma[jdf](0, idf));
+		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdf](0, idf));
+		case PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
+		case PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
+		case PLOT_Z_MA:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf));
+		case PLOT_Z_PH:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf));
 		default:				NEVER();	return true;
 		}
 	}
 	virtual inline double y(int64 id) {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return data->A_(ndim, int(id), idof, jdof);
-		case PLOT_AINF:			return data->Awinf_(ndim, idof, jdof);
-		case PLOT_A0:			return data->Aw0_(ndim, idof, jdof);
-		case PLOT_B:			return data->B_(ndim, int(id), idof, jdof);
-		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, jdof, int(id), idof);
-		case PLOT_FORCE_SC_PH:	return data->sc.ph[jdof](int(id), idof);
-		case PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, jdof, int(id), idof);
-		case PLOT_FORCE_FK_PH:	return data->fk.ph[jdof](int(id), idof);
-		case PLOT_FORCE_EX_MA:	return data->F_ma_(ndim, data->ex, jdof, int(id), idof);
-		case PLOT_FORCE_EX_PH:	return data->ex.ph[jdof](int(id), idof);
-		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, jdof, int(id), idof);
-		case PLOT_RAO_PH:		return data->rao.ph[jdof](int(id), idof);
-		case PLOT_TFS_MA:		return std::abs(data->TFS_(ndim, int(id), idof, jdof));
-		case PLOT_TFS_PH:		return std::arg(data->TFS_(ndim, int(id), idof, jdof));
-		case PLOT_Z_MA:			return std::abs(data->Z(ndim, int(id), idof, jdof));
-		case PLOT_Z_PH:			return std::arg(data->Z(ndim, int(id), idof, jdof));
+		case PLOT_A:			return data->A_(ndim, int(id), idf, jdf);
+		case PLOT_AINF:			return data->Awinf_(ndim, idf, jdf);
+		case PLOT_A0:			return data->Aw0_(ndim, idf, jdf);
+		case PLOT_B:			return data->B_(ndim, int(id), idf, jdf);
+		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, jdf, int(id), idf);
+		case PLOT_FORCE_SC_PH:	return data->sc.ph[jdf](int(id), idf);
+		case PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, jdf, int(id), idf);
+		case PLOT_FORCE_FK_PH:	return data->fk.ph[jdf](int(id), idf);
+		case PLOT_FORCE_EX_MA:	return data->F_ma_(ndim, data->ex, jdf, int(id), idf);
+		case PLOT_FORCE_EX_PH:	return data->ex.ph[jdf](int(id), idf);
+		case PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, jdf, int(id), idf);
+		case PLOT_RAO_PH:		return data->rao.ph[jdf](int(id), idf);
+		case PLOT_TFS_MA:		return std::abs(data->TFS_(ndim, int(id), idf, jdf));
+		case PLOT_TFS_PH:		return std::arg(data->TFS_(ndim, int(id), idf, jdf));
+		case PLOT_Z_MA:			return std::abs(data->Z(ndim, int(id), idf, jdf));
+		case PLOT_Z_PH:			return std::arg(data->Z(ndim, int(id), idf, jdf));
 		default:				NEVER();	return Null;
 		}
 	}
@@ -219,11 +219,11 @@ public:
 		if (show_w) {
 			if (dataToPlot == PLOT_A0)
 				return 0;
-			return data->w[static_cast<int>(id)];
+			return data->w[int(id)];
 		} else {
 			if (dataToPlot == PLOT_AINF)
 				return 0;
-			return data->T[static_cast<int>(id)];
+			return data->T[int(id)];
 		}
 	}
 	virtual int64 GetCount() const {
@@ -238,7 +238,7 @@ public:
 	
 private:
 	const Hydro *data;
-	int idof, jdof;
+	int idf, jdf;
 	DataToPlot dataToPlot;
 	bool show_w, ndim;
 };
@@ -302,7 +302,7 @@ public:
 	typedef MainView CLASSNAME;
 	
 	MainView() {}
-	void Init(const WithMenuPlotMesh<StaticRect> &menuPlot);
+	void Init(const WithMenuPlotMesh<StaticRect> &menuPlot, const ArrayCtrl &_array);
 	void CalcEnvelope();
 	void OnPaint();
 	const WithMenuPlotMesh<StaticRect> &GetMenuPlot() const {return *menuPlot;}
@@ -312,6 +312,7 @@ public:
 	
 private:
 	const WithMenuPlotMesh<StaticRect> *menuPlot = 0;
+	const ArrayCtrl *arrayModel = 0;
 	bool paintSelect = true;
 };
 
@@ -383,7 +384,7 @@ class MainSummaryMesh : public MainSummary {
 public:
 	typedef MainSummaryCoeff CLASSNAME;
 
-	void Report(const MeshData &surf, int id);
+	void Report(const Upp::Array<MeshData> &surfs, int id);
 };
 
 class MainStiffness : public WithMainStiffness<StaticRect> {
@@ -392,14 +393,13 @@ public:
 	
 	void Init();
 	void Clear();
-	void Load(Upp::Array<HydroClass> &hydros);
+	bool Load(Upp::Array<HydroClass> &hydros);
 	void Load(Upp::Array<MeshData> &surfs);
 	
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody);
-	void Add(String name, int icase, const MatrixXd &K);
+	void Add(String name, int icase, const MatrixXd &K, bool button);
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro);
-	
 };
 
 class MainPlot : public StaticRect {
@@ -407,7 +407,7 @@ public:
 	typedef MainPlot CLASSNAME;
 	
 	void Init(bool vert);
-	void Init(int idof, double jdof_ih, DataToShow dataToShow);
+	void Init(int idf, double jdf_ih, DataToShow dataToShow);
 	bool Load(const Upp::Array<HydroClass> &hydro);
 	bool Load(const Hydro &hy);
 	void LoadEach(const Hydro &hy, int id, bool &loaded);
@@ -419,7 +419,7 @@ public:
 	
 	Upp::Array<HydroSource> TFS_source, TFS_source2;
 		
-	int idof, jdof;
+	int idf, jdf;
 	double heading;
 	DataToShow dataToShow;
 	
@@ -434,7 +434,7 @@ private:
 	bool isInit = false;	
 };
 
-class MainABForce : public WithMainABForce<StaticRect> {
+class MainABForce : public StaticRect {
 public:
 	typedef MainABForce CLASSNAME;
 	
@@ -442,6 +442,7 @@ public:
 	void Clear();
 	bool Load(BEMData &bem);
 	
+	TabCtrl tab;
 	Upp::Array<Upp::Array<MainPlot>> plots;
 
 private:
@@ -454,7 +455,7 @@ class MainStateSpacePlot : public StaticRect {
 public:
 	typedef MainStateSpacePlot CLASSNAME;
 	
-	void Init(int _idof, int _jdof);
+	void Init(int _idf, int _jdf);
 	bool Load(Upp::Array<HydroClass> &hydro);
 	void InitArray(ArrayCtrl &array);
 	
@@ -491,9 +492,12 @@ public:
 	
 	void AfterLoad(String file);
 	bool OnLoad();
+	void OnRemove();
+	void OnRemoveSelected(bool all);
 	bool OnConvertMesh();
 	void OnUpdate(bool forceMoved);
 	void OnHealing();
+	void OnImage(int axis);
 	void OnOpt();
 	void OnMenuConvertArraySel() ;
 	
@@ -505,6 +509,9 @@ public:
 	WithMenuConvertMesh<StaticRect> menuConvert;
 	WithMenuPlotMesh<StaticRect> menuPlot;
 	WithMenuMeshStability<StaticRect> menuStability;
+	
+	bool GetShowMesh()	{return menuPlot.showMesh;}
+	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
 
 private:	
 	MainView mainView;
@@ -515,6 +522,24 @@ private:
 
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
+};
+
+class MainMeshW : public TopWindow {
+public:
+	typedef MainMeshW CLASSNAME;
+	
+	void Init(MainMesh &_mesh) {
+		LoadFromJson(mesh, StoreAsJson(_mesh));
+		mesh.Init();
+		Add(mesh.SizePos());
+		Title(t_("BEMRosetta Mesh Viewer")).Sizeable().Zoomable();
+	}
+	
+	virtual void Close() {
+        delete this;
+    }
+	
+	MainMesh mesh;
 };
 
 class MainNemoh : public WithNemoh<StaticRect> {
@@ -528,8 +553,6 @@ public:
 	void Load(const NemohCal &data);
 	void Save(NemohCal &data);
 	
-	void OnOpwT();
-		
 	void Jsonize(JsonIO &json);
 	
 private:
@@ -567,7 +590,7 @@ public:
 	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
 	//void OnMove(Point p);
 	
-	bool Get(Vector<int> &ibs, Vector<int> &idofs, Vector<int> &jdofs,
+	bool Get(Vector<int> &ibs, Vector<int> &idfs, Vector<int> &jdfs,
 		Vector<double> &froms, Vector<double> &tos, Vector<Vector<double>> &freqs); 
 	void Clear();
 	
@@ -596,7 +619,6 @@ private:
 	bool isCancelled;
 };
 
-
 class MainBEM : public WithMain<StaticRect> {
 public:
 	typedef MainBEM CLASSNAME;
@@ -609,8 +631,12 @@ public:
 	bool OnConvert();
 	void OnOpt();
 	void OnRemove();
-	void OnRemoveSelected();
+	void OnRemoveSelected(bool all);
 	void OnJoin();
+	void OnSymmetrize();
+	void OnA0();
+	void OnAinf();
+	void OnDescription();
 		
 	void Jsonize(JsonIO &json);
 		
@@ -640,6 +666,25 @@ private:
 	String BEMFile(String fileFolder) const;
 };
 
+class MainBEMW : public TopWindow {
+public:
+	typedef MainBEMW CLASSNAME;
+	
+	void Init(MainBEM &_bem) {
+		LoadFromJson(bem, StoreAsJson(_bem));
+		bem.Init();
+		Add(bem.SizePos());
+		Title(t_("BEMRosetta BEM Coefficients Processing")).Sizeable().Zoomable();
+	}
+	
+	virtual void Close() {
+        delete this;
+    }
+	
+	MainBEM bem;
+};
+
+
 class Main : public TopWindow {
 public:
 	typedef Main CLASSNAME;
@@ -660,17 +705,20 @@ public:
 
 	BEMData bem;
 	
-	MainMesh mainMesh;
-	
 	void Status(String str = String(), int time = 2000)	{
 		if (!str.IsEmpty()) 
 			bar.Temporary(str, time);
 		else
 			bar.EndTemporary();
+		ProcessEvents();
 	}
+	
+	MainMesh mainMesh;
 	
 private:
 	TabCtrl tab;
+	int lastTab;
+	Button tabWindow;
 	
 	MainNemoh mainNemoh;
 	MainBEM mainBEM;
@@ -684,6 +732,12 @@ private:
 	StatusBar bar;
 };
 
+ArrayCtrl &ArrayModel_Init(ArrayCtrl &array);
+int ArrayModel_IdMesh(const ArrayCtrl &array);
+int ArrayModel_IdMesh(const ArrayCtrl &array, int row);
+int ArrayModel_IdHydro(const ArrayCtrl &array);
+int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
+	
 Main &ma(Main *m = 0);
 MainBEM &mbm(MainBEM *m = 0);
 

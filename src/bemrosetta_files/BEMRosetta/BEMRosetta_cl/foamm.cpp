@@ -38,7 +38,7 @@ bool Foamm::Load(String file) {
 	return true;
 }
 
-bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
+bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	MatFile mat;
 	
 	if (!mat.OpenRead(file)) 
@@ -71,7 +71,7 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 				hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().A[ifr](idof, jdof) = A[ifr];
+				hd().A[ifr](idf, jdf) = A[ifr];
 		}
 		
 		MatMatrix<double> B = mat.VarReadMat<double>("B");	
@@ -84,7 +84,7 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 				hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);	
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().B[ifr](idof, jdof) = B[ifr];
+				hd().B[ifr](idf, jdf) = B[ifr];
 		}
 		
 		hd().names << "Body";
@@ -92,12 +92,12 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 		double Mu = mat.VarRead<double>("Mu");
 		if (!IsNull(Mu)) {
 			hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
-			hd().Awinf(idof, jdof) = Mu;
+			hd().Awinf(idf, jdf) = Mu;
 		}
 	}
 	
 	hd().InitializeSts();
-	Hydro::StateSpace &sts = hd().sts[idof][jdof];
+	Hydro::StateSpace &sts = hd().sts[idf][jdf];
 
 	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	
 	if (TFS.GetCount() == 0)
@@ -163,18 +163,18 @@ bool Foamm::Load_mat(String file, int idof, int jdof, bool loadCoeff) {
 	return true;
 }
 
-void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idofs, const Vector<int> &jdofs,
+void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<int> &jdfs,
 		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	if (!FileExists(hd().GetBEMData().foammPath))
 		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ibs.GetCount(); ++i) {
 		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.GetCount()));
-		Get_Each(ibs[i], idofs[i], jdofs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
+		Get_Each(ibs[i], idfs[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
 	}
 }
 
-void Foamm::Get_Each(int ibody, int idof, int jdof, double from, double to, const Vector<double> &freqs, 
+void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, const Vector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
 	String folder = AppendFileName(BEMData::GetTempFilesFolder(), Format(id));
@@ -187,8 +187,8 @@ void Foamm::Get_Each(int ibody, int idof, int jdof, double from, double to, cons
 	if (!mat.OpenCreate(file, MAT_FT_MAT5)) 
 		throw Exc(Format(t_("Problem creating FOAMM file '%s'"), file));
 
-	int idf = ibody*6 + idof;
-	int jdf = ibody*6 + jdof;
+	int idf = ibody*6 + _idf;
+	int jdf = ibody*6 + _jdf;
 
 	MatMatrix<double> matA(hd().Nf, 1);
 	for (int ifr = 0; ifr < hd().Nf; ++ifr)
@@ -213,7 +213,7 @@ void Foamm::Get_Each(int ibody, int idof, int jdof, double from, double to, cons
 	
 	/*MatMatrix<double> matDof(1, 6);
 	for (int i = 0; i < 6; ++i) {
-		if (i == idof)
+		if (i == idf)
 			matDof(0, i) = 1;
 		else
 			matDof(0, i) = 0;
@@ -286,7 +286,7 @@ void Foamm::Get_Each(int ibody, int idof, int jdof, double from, double to, cons
 		DeleteFolderDeep(folder);
 		throw Exc(t_("Process ended by user"));
 	}
-	Load_mat(file, idof, jdof, false);
+	Load_mat(file, idf, jdf, false);
 	DeleteFolderDeep(folder);
 }
 

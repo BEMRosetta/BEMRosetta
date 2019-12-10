@@ -172,7 +172,6 @@ void CParser::PassChar3(char c1, char c2, char c3) {
 }
 
 String CParser::ReadId() {
-	LTIMING("ReadId");
 	if(!IsId())
 		ThrowError("missing id");
 	String result;
@@ -510,7 +509,7 @@ void CParser::SkipTerm()
 	else
 	if(IsChar('\''))
 		ReadString('\'', false);
-	else		
+	else
 	if(*term) {
 		if(*term == '\n') {
 			line++;

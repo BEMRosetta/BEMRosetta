@@ -1,74 +1,14 @@
 #include "ScatterDraw.h"
 
+namespace Upp {
+	
 ScatterDraw::ScatterDraw() {
-	titleColor = SColorText();
-	graphColor = White();
-	titleFont = Roman(20);
-	labelsFont = GetStdFont();
-	labelsColor = SColorText();
-	plotAreaColor = White();
-	axisColor = SColorText();
-	axisWidth = 6;
-	hPlotLeft = hPlotRight = vPlotTop = vPlotBottom = 30;
-	xRange = yRange = yRange2 = 100.0;
-	xMin = yMin = yMin2 = xMinUnit = yMinUnit = yMinUnit2 = 0;
-	xMinUnit0 = yMinUnit0 = yMinUnit20 = 0;
-	gridColor = SColorDkShadow();
-	gridWidth = 0.5;
-	gridDash = LINE_DOTTED_FINE;
-	drawXReticle = drawYReticle = true;
-	drawY2Reticle = false;
-	reticleFont = GetStdFont();
-	reticleColor = Black;
-	drawVGrid = drawHGrid = showLegend = true;
-	minXRange = maxXRange = minYRange = maxYRange = -1;
-	minXmin = minYmin = maxXmax = maxYmax = Null;
-	fastViewX = false;
-	sequentialXAll = false;
-	zoomStyleX = zoomStyleY = TO_CENTER;
-	SetMajorUnitsNum(5, 10);
-	isPolar = false;
 	lastxRange = xRange;
 	lastyRange = yRange;
-	highlight_0 = Null;
-	labelsChanged = false;
-	legendAnchor = RIGHT_TOP;
-	legendPos = Point(5, 5);
-	legendNumCols = 1;
-	legendFillColor = White();
-	legendBorderColor = Black();
-	legendRowSpacing = 5;
-	legendFont = GetStdFont();
-	linkedMaster = 0;
-	plotW = plotH = Null;
-	stacked = false;
-	serializeFormat = true;
-	responsive = false;
-	responsivenessFactor = 1;
-	plotScaleX = 1;
-	plotScaleY = 1;
-	plotScaleAvg = 1;
-	surf = 0;
-	surfRainbow = BLUE_YELLOW_RED;
-	surfNumColor = 4;
-	continuousColor = true;
-	surfMinZ = surfMaxZ = Null;
-	surfUnitsPos = UNITS_TOP;
-	surfLegendPos = LEGEND_RIGHT;
-	
-	showRainbow = true;;
-	rainbowPos = Point(5, 5);
-	rainbowSize = Size(10, 50);
-	rainbowAnchor = RIGHT_BOTTOM;
-	rainbowBorderColor = Black;
-	rainbowPaletteFont = StdFont();
-	rainbowPaletteTextColor = Black;
-	
-	mouseHandlingX = mouseHandlingY = true;
 }
 
 void debug_h() {
-	;			// It does nothing. Just to set a breakpoint in templated functions
+	;			// It does nothing. It just serves to set a breakpoint in templated functions
 }
 
 ScatterDraw& ScatterDraw::SetColor(const Color& _color) {
@@ -169,7 +109,7 @@ ScatterDraw& ScatterDraw::SetAxisColor(const Color& axis_color) {
 	return *this;
 }
 
-ScatterDraw& ScatterDraw::SetAxisWidth(int axis_width) {
+ScatterDraw& ScatterDraw::SetAxisWidth(double axis_width) {
 	axisWidth = axis_width;
 	return *this;
 }
@@ -335,7 +275,6 @@ ScatterDraw &ScatterDraw::SetMajorUnitsNum(int nx, int ny) {
 }
 
 ScatterDraw &ScatterDraw::SetMinUnits(double ux, double uy) {
-	if (!IsNull(ux))
 	if (!IsNull(ux))
 		xMinUnit = xMinUnit0 = ux;
 	if (!IsNull(uy)) {	
@@ -538,9 +477,9 @@ String ScatterDraw::VariableFormat(double range, double d) {
 Color ScatterDraw::GetNewColor(int index, int version) {
 	Color old[20] = {LtBlue(), LtRed(), LtGreen(), Black(), LtGray(), Brown(), Blue(), Red(), Green(), Gray(), 
 					 LtBlue(), LtRed(), LtGreen(), Black(), LtGray(), Brown(), Blue(), Red(), Green(), Gray()};
-	// Colors from http://tools.medialab.sciences-po.fr/iwanthue/
+	// Colours from http://tools.medialab.sciences-po.fr/iwanthue/
 	Color nwc[20] = {Color(197,127,117), Color(115,214,74), Color(205,80,212), Color(124,193,215), Color(85,82,139),
-					 Color(63,72,41), Color(109,212,161), Color(207,72,48), Color(209,206,59), Color(194,134,55),
+					 Color(109,212,161), Color(207,72,48), Color(209,206,59), Color(194,134,55), Color(63,72,41), 
 					 Color(201,63,109), Color(193,192,158), Color(91,134,56), Color(105,48,38), Color(201,170,200),
 					 Color(86,117,119), Color(188,91,165), Color(124,120,216), Color(195,208,119), Color(79,46,75)};
 	if (index < 20) {
@@ -1150,7 +1089,7 @@ void ScatterDraw::SetDataSecondaryY(int index, bool secondary) {
 	
 	series[index].primaryY = !secondary;
 	if (secondary)
-		SetDrawY2Reticle(true);
+		SetDrawY2Reticle().SetDrawY2ReticleNumbers();
 	Refresh();
 }
 
@@ -1206,6 +1145,7 @@ void ScatterDraw::Show(int index, bool show) {
 	ASSERT(!series[index].IsDeleted());
 	
 	series[index].opacity = show ? 1 : 0;
+	labelsChanged = true;
 	Refresh();
 }
 
@@ -1607,4 +1547,7 @@ INITBLOCK {
 	DashStyle::Register("LINE_DOTTED_SEP", LINE_DOTTED_SEP);
 	DashStyle::Register("LINE_DASHED", LINE_DASHED);
 	DashStyle::Register("LINE_DASH_DOT", LINE_DASH_DOT);
+	DashStyle::Register("-    -", LINE_BEGIN_END);
+}
+
 }

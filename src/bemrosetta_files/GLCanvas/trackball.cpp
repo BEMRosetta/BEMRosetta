@@ -7,6 +7,8 @@
 #include <gl/glu.h>
 #endif
 
+namespace Upp {
+	
 TrackBall::TrackBall() {
 	owner = NULL;
 	tracking = false;
@@ -73,4 +75,6 @@ Image TrackBall::MouseEvent(int event, Point p, int zdelta, dword ) {
 		}
 	}
 	return Image::Hand();
+}
+
 }

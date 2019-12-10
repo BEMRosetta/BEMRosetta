@@ -1,5 +1,6 @@
 #include "ScatterCtrl.h"
 
+	
 #define IMAGECLASS ScatterImg
 #define IMAGEFILE <ScatterCtrl/ScatterCtrl.iml>
 #include <Draw/iml.h>
@@ -7,6 +8,9 @@
 #define TFILE <ScatterCtrl/ScatterCtrl.t>
 #include <Core/t.h>
 
+namespace Upp {	
+	
+	
 Vector<ScatterCtrl *> ScatterCtrl::instances;	
 
 #ifdef PLATFORM_WIN32
@@ -648,7 +652,7 @@ void ScatterCtrl::ZoomWindow(bool down, Point &pt) {
 			isLabelPopUp = isZoomWindow = false;
 			
 			if (popLT.x > popRB.x)
-				::Swap(popLT, popRB);
+				Upp::Swap(popLT, popRB);
 			double LTx, LTy, LTy2, RBx, RBy, RBy2;
 			LTx = (popLT.x - hPlotLeft)*xRange/(GetSize().cx - (hPlotLeft + hPlotRight)-1) + xMin;		
 			LTy = -(popLT.y - vPlotTop - titleHeight)*yRange/(GetSize().cy - (vPlotTop + vPlotBottom + titleHeight)+1) + yMin + yRange;		
@@ -1091,23 +1095,9 @@ inline Point &ScatterCtrl::MousePointUnrot(Point &pt) {
 	return pt;
 }
 
-ScatterCtrl::ScatterCtrl() : popOffset(10, 12), mouseAction(NONE)
-{
-	showInfo = isScrolling = isLabelPopUp = isZoomWindow = false;
+ScatterCtrl::ScatterCtrl() {
 	WantFocus();
-	popTextX = t_("x");
-	popTextY = t_("y");
-	popTextY2 = t_("y right");
-	popTextZ = t_("z");
-	popLT = popRB = Null;
-	showContextMenu = false;
-	showPropDlg = false;
-	showProcessDlg = false;
-	showButtons = false;
-	showLoadData = showSaveData = false;
-	defaultCSVseparator = ";";
-	rotate = Angle_0;
-	//Color(graphColor);	
+		
 	BackPaint();
 	popInfoBegin.SetColor(SColorFace);  
 	popInfoVert.SetColor(SColorFace);  
@@ -1122,12 +1112,7 @@ ScatterCtrl::ScatterCtrl() : popOffset(10, 12), mouseAction(NONE)
 #else
 	pop = false;
 #endif
-	saveSize = Size(1000, 800);
-	jpgQuality = 90;
 	
-	lastRefresh_ms = Null;
-	maxRefresh_ms = 500;
-	highlighting = false;
 	ShowInfo().ShowContextMenu().ShowPropertiesDlg();
 	
 	Add(processButton.RightPosZ(0, 15).TopPosZ(0, 15));
@@ -1172,3 +1157,4 @@ ScatterCtrl::ScatterCtrl() : popOffset(10, 12), mouseAction(NONE)
 	AddInstance(this);
 }
 
+}

@@ -1,11 +1,10 @@
 #include <Core/Core.h>
 
-using namespace Upp;
-
-#include <Surface/Surface.h>
 #include <plugin/Eigen/Eigen.h>
+#include <Surface/Surface.h>
 
-using namespace Eigen;
+
+namespace Upp {
 
 Point3D GetCentroid(const Point3D &a, const Point3D &b) {
 	return Point3D(avg(a.x, b.x), avg(a.y, b.y), avg(a.z, b.z));	
@@ -134,6 +133,9 @@ Surface::Surface(const Surface &orig, int) {
 	
 	surface = orig.surface;
 	volume = orig.volume;
+	volumex = orig.volumex;
+	volumey = orig.volumey;
+	volumez = orig.volumez;
 }
 
 bool Surface::IsEmpty() {
@@ -226,7 +228,7 @@ int Surface::RemoveDuplicatedPanels(Vector<Panel> &_panels) {
 int Surface::RemoveDuplicatedPointsAndRenumber(Vector<Panel> &_panels, Vector<Point3D> &_nodes) {
 	int num = 0;
 	
-	// Detect duplicate points in nodes
+	// Detect duplicated points in nodes
 	double similThres = 0.00001;
 	Upp::Index<int> duplic, goods;
 	for (int i = 0; i < _nodes.GetCount()-1; ++i) {
@@ -535,6 +537,20 @@ String Surface::Heal(Function <void(String, int pos)> Status) {
 	return ret;
 }
 
+void Surface::Image(int axis) {
+	for (int i = 0; i < nodes.GetCount(); ++i) {
+		Point3D &node = nodes[i];
+		if (axis == 0)
+			node.x = -node.x;
+		else if (axis == 1)
+			node.y = -node.y;
+		else
+			node.z = -node.z;
+	}
+	for (int i = 0; i < panels.GetCount(); ++i) 
+		ReorientPanel(i);
+}
+	
 void Surface::GetLimits() {
 	env.maxX = env.maxY = env.maxZ = -DBL_MAX; 
 	env.minX = env.minY = env.minZ = DBL_MAX;
@@ -609,31 +625,28 @@ double Surface::GetWaterPlaneArea() {
 	for (int ip = 0; ip < panels.GetCount(); ++ip) {
 		Panel &panel = panels[ip];
 		
-		area += -panel.surface0*panel.normal0.z;
-		
-		if (!panel.IsTriangle()) 
-			area += -panel.surface1*panel.normal1.z;
+		area += -(panel.surface0*panel.normal0.z + panel.surface1*panel.normal1.z);
 	}
 	return area;
 }
 
 void Surface::GetVolume() {
-	double volx = 0, voly = 0, volz = 0;
+	volumex = volumey = volumez = 0;
 	
 	for (int ip = 0; ip < panels.GetCount(); ++ip) {
 		const Panel &panel = panels[ip];
 		
-		volx += panel.surface0*panel.normal0.x*panel.centroid0.x;
-		voly += panel.surface0*panel.normal0.y*panel.centroid0.y;
-		volz += panel.surface0*panel.normal0.z*panel.centroid0.z;
+		volumex += panel.surface0*panel.normal0.x*panel.centroid0.x;
+		volumey += panel.surface0*panel.normal0.y*panel.centroid0.y;
+		volumez += panel.surface0*panel.normal0.z*panel.centroid0.z;
 		
 		if (!panel.IsTriangle()) {
-			volx += panel.surface1*panel.normal1.x*panel.centroid1.x;
-			voly += panel.surface1*panel.normal1.y*panel.centroid1.y;
-			volz += panel.surface1*panel.normal1.z*panel.centroid1.z;
+			volumex += panel.surface1*panel.normal1.x*panel.centroid1.x;
+			volumey += panel.surface1*panel.normal1.y*panel.centroid1.y;
+			volumez += panel.surface1*panel.normal1.z*panel.centroid1.z;
 		}
 	}
-	volume = avg(volx, voly, volz);
+	volume = avg(volumex, volumey, volumez);
 }
 	
 Point3D Surface::GetCenterOfBuoyancy() {
@@ -653,9 +666,9 @@ Point3D Surface::GetCenterOfBuoyancy() {
 		}
 	}
 	
-	xb /= 2*volume;
-	yb /= 2*volume;
-	zb /= 2*volume;
+	xb /= 2*volumex;
+	yb /= 2*volumey;
+	zb /= 2*volumez;
 	
 	return Point3D(xb, yb, zb);
 }
@@ -677,8 +690,8 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 		const Point3D &p2 = nodes[panel.id[2]];
 		const Point3D &p3 = nodes[panel.id[3]];
 		
-		if (p0.z <= zTolerance && p1.z <= zTolerance && p2.z <= zTolerance && 
-			(panel.IsTriangle() || p3.z <= zTolerance)) {
+		//if (p0.z <= zTolerance && p1.z <= zTolerance && p2.z <= zTolerance && 
+		//	(panel.IsTriangle() || p3.z <= zTolerance)) {
 			double momentz0 = panel.normal0.z*panel.surface0;
 			double momentz1 = panel.normal1.z*panel.surface1;
 			double x0 = panel.centroid0.x;
@@ -691,17 +704,23 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
             c(3, 3) -= (y0*y0*momentz0 + y1*y1*momentz1);
             c(3, 4) += (x0*y0*momentz0 + x1*y1*momentz1);
             c(4, 4) -= (x0*x0*momentz0 + x1*x1*momentz1);
-		}
+		//}
 	}
-
-	c(2, 2) = c(2, 2)*rho*g;										//OK
-	c(2, 3) = c(2, 3)*rho*g;
-	c(2, 4) = c(2, 4)*rho*g;
-	c(3, 4) = c(3, 4)*rho*g;
-	c(3, 3) = c(3, 3)*rho*g + volume*cb.z*rho*g - mass*g*cg.z;
-	c(4, 4) = c(4, 4)*rho*g + volume*cb.z*rho*g - mass*g*cg.z;
-	c(3, 5) = mass*g*cg.x - volume*cb.x*rho*g;
-	c(4, 5) = mass*g*cg.y - volume*cb.y*rho*g;
+	double rho_g = rho*g;
+	
+	c(2, 2) = c(2, 2)*rho_g;										
+	c(2, 3) = c(2, 3)*rho_g;
+	c(2, 4) = c(2, 4)*rho_g;
+	c(3, 4) = c(3, 4)*rho_g;
+	
+	double kk1 = c(3, 3)*rho_g;
+	double kk2 = volumez*cb.z*rho_g;
+	double kk3 = mass*g*cg.z;
+	c(3, 3) = c(3, 3)*rho_g + volumez*cb.z*rho_g - mass*g*cg.z;
+	
+	c(4, 4) = c(4, 4)*rho_g + volumez*cb.z*rho_g - mass*g*cg.z;
+	c(3, 5) = mass*g*cg.x - volumex*cb.x*rho_g;
+	c(4, 5) = mass*g*cg.y - volumey*cb.y*rho_g;
 	
 	c(3, 2) = c(2, 3);
 	c(4, 2) = c(2, 4);
@@ -913,4 +932,6 @@ void VolumeEnvelope::MixEnvelope(VolumeEnvelope &env) {
 	minY = minNotNull(env.minY, minY);
 	maxZ = maxNotNull(env.maxZ, maxZ);
 	minZ = minNotNull(env.minZ, minZ);
+}
+
 }
