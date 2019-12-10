@@ -20,7 +20,8 @@ public:
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
 	void Report();
-	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), dataFromW(true), bem(&_bem) {}
+	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
+							dataFromW(true), bem(&_bem) {id = idCount++;}
 	virtual ~Hydro() noexcept {}	
 	
 	String GetCodeStr()	const {
@@ -110,6 +111,8 @@ public:
    
    	RAO rao;
     
+    String description;
+
     struct StateSpace {
 	    Upp::Array<std::complex<double>> TFS;
 		MatrixXd A_ss;
@@ -147,6 +150,8 @@ public:
     
     static String C_units(int i, int j);
     
+    void SetC(int ib, const MatrixXd &K);
+    
 	int GetHeadId(double hd) const {
 		for (int i = 0; i < head.GetCount(); ++i) {
 			if (EqualRatio(head[i], hd, 0.01))
@@ -156,11 +161,13 @@ public:
 	}
 	
 	bool AfterLoad(Function <bool(String, int)> Status);
+	
+	void Initialize_Forces();
+	void Initialize_Forces(Forces &f, int _Nh = -1);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
-	void Initialize_Forces();
-	void Initialize_Forces(Forces &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
+	void Symmetrize_Forces();
 	void Initialize_RAO();
 	void GetFexFromFscFfk();
 	void InitializeSts();
@@ -217,19 +224,20 @@ public:
 	double g_rho_dim()  const;
 	double g_rho_ndim() const;
 	
-	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[ifr](idf, jdf)*g_rho_dim()/g_rho_ndim() : A[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[ifr](idf, jdf)*rho_dim()/rho_ndim() : A[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[ifr](idf, jdf) : A[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
-	double Aw0_dim(int idf, int jdf)   		 	const {return dimen  ? Aw0(idf, jdf)*g_rho_dim()/g_rho_ndim()    : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Aw0_dim(int idf, int jdf)   		 	const {return dimen  ? Aw0(idf, jdf)*rho_dim()/rho_ndim()    : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double Aw0_ndim(int idf, int jdf)  		 	const {return !dimen ? Aw0(idf, jdf)    : Aw0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Aw0_(bool ndim, int idf, int jdf) 	const {return ndim ? Aw0_ndim(idf, jdf) : Aw0_dim(idf, jdf);}
-	double Awinf_dim(int idf, int jdf) 		 	const {return dimen  ? Awinf(idf, jdf)*g_rho_dim()/g_rho_ndim()  : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Awinf_ndim(int idf, int jdf)		 	const {return !dimen ? Awinf(idf, jdf)  : Awinf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Awinf_dim(int idf, int jdf) 		 	const {return dimen  ? Awinf(idf, jdf)*rho_dim()/rho_ndim() : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Awinf_ndim(int idf, int jdf)		 	const {return !dimen ? Awinf(idf, jdf) : Awinf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Awinf_(bool ndim, int idf, int jdf) 	const {return ndim ? Awinf_ndim(idf, jdf) : Awinf_dim(idf, jdf);}
 	
-	double B_dim(int ifr, int idf, int jdf)  	   const {return dimen  ? B[ifr](idf, jdf)*g_rho_dim()/g_rho_ndim() : B[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	double B_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? B[ifr](idf, jdf)*g_rho_ndim()/g_rho_dim() : B[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_dim(int ifr, int idf, int jdf)  	   const {return dimen  ? B[ifr](idf, jdf)*rho_dim()/rho_ndim() : B[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? B[ifr](idf, jdf)*rho_ndim()/rho_dim() : B[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
+	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
@@ -262,6 +270,9 @@ public:
 	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
+	void SetId(int _id)			{id = _id;}
+	int GetId()	const			{return id;}
+	
 	void Jsonize(JsonIO &json);
 	
 private:
@@ -269,7 +280,12 @@ private:
 	static const char *strDOFAbrev[6];
 	static String C_units_base(int i, int j);
 	BEMData *bem;
-	
+		
+	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Vector<double> &newHead, double h, int ih, int idb);
+	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Vector<double> &newHead, int newNh);
+	int id;
+	static int idCount;
+	 
 public:
 	static String StrBDOF(int i) {
 		int ib = i/6 + 1;
@@ -348,17 +364,17 @@ public:
 	
 	const BEMData &GetBEMData() const {return *bem;}
 	
-	bool IsLoadedA() 	 const {return A.GetCount() > 0;}
+	bool IsLoadedA() 	 const {return !A.IsEmpty();}
 	bool IsLoadedAwinf() const {return Awinf.size() > 0;}
 	bool IsLoadedAw0()	 const {return Aw0.size() > 0;}
-	bool IsLoadedB() 	 const {return B.GetCount() > 0;}
-	bool IsLoadedC()	 const {return C.size() > 0;}
-	bool IsLoadedFex() 	 const {return ex.ma.GetCount() > 0;}
-	bool IsLoadedFsc() 	 const {return sc.ma.GetCount() > 0;}
-	bool IsLoadedFfk() 	 const {return fk.ma.GetCount() > 0;}
-	bool IsLoadedRAO() 	 const {return rao.ma.GetCount() > 0;}
-	bool IsLoadedForce(Forces &f) const {return f.ma.GetCount() > 0;}
-	bool IsLoadedStateSpace()	  const {return sts.GetCount() > 0;}
+	bool IsLoadedB() 	 const {return !B.IsEmpty();}
+	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && !IsNull(C[0](0, 0));}
+	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty();}
+	bool IsLoadedFsc() 	 const {return !sc.ma.IsEmpty();}
+	bool IsLoadedFfk() 	 const {return !fk.ma.IsEmpty();}
+	bool IsLoadedRAO() 	 const {return !rao.ma.IsEmpty();}
+	bool IsLoadedForce(const Forces &f) const {return !f.ma.IsEmpty();}
+	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -432,14 +448,17 @@ public:
 
 class MeshData {
 public:
-	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, STL_BIN, STL_TXT, UNKNOWN};
+	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, STL_BIN, STL_TXT, UNKNOWN};
 	enum MESH_TYPE {ORIGINAL, MOVED, UNDERWATER};
+	
+	MeshData() {id = idCount++;}
 	
 	String GetCodeStr()	const {
 		switch (code) {
 		case WAMIT_GDF: 	return t_("Wamit.gdf");
 		case WAMIT_DAT: 	return t_("Wamit.dat");
 		case NEMOH_DAT: 	return t_("Nemoh.dat");
+		case NEMOH_PRE:		return t_("Nemoh premesh.");
 		case STL_BIN: 		return t_("Binary.stl");
 		case STL_TXT: 		return t_("Text.stl");
 		case UNKNOWN:		return t_("Unknown");
@@ -448,6 +467,7 @@ public:
 	}
 	void SetCode(MESH_FMT _code){code = _code;}
 	MESH_FMT GetCode()			{return code;}
+	int GetId()	const			{return id;}
 
 	String Load(String fileName, double rho, double g);
 	String LoadDatNemoh(String fileName, bool &x0z);
@@ -457,11 +477,13 @@ public:
 	String LoadStlBin(String fileName);
 	
 	String Heal(Function <void(String, int pos)> Status);
+	void Image(int axis);
 		
 	void AfterLoad(double rho, double g, bool onlyCG);
 
 	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType);
 	static void SaveDatNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, bool x0z);
+	static void SavePreMeshNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
 	static void SaveGdfWamit(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, double g, bool y0z, bool x0z);
 	static void SaveStlTxt(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
 	static void SaveStlBin(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
@@ -472,7 +494,7 @@ public:
 	Point3D cb;
 	Point3D cg, cg0;
 	double mass;
-	MatrixXd c;
+	MatrixXd C;
 	
 	String file;
 	String header;
@@ -481,6 +503,8 @@ public:
 	
 private:
 	MESH_FMT code;
+	int id;
+	static int idCount;
 };
 
 class FileInLine : public FileIn {
@@ -527,7 +551,7 @@ public:
 	
 	void Read(void *data, int sz) {
 		size_t len = Get64(data, sz);
-		if (len != static_cast<size_t>(sz))
+		if (len != size_t(sz))
 			throw Exc(Format("Data not loaded in Read(%d)", sz));
 	}
 	
@@ -554,7 +578,7 @@ class Wamit : public HydroClass {
 public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Save(String file);
+	void Save(String file, bool force_T = false);
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
@@ -572,18 +596,18 @@ protected:
 	bool Load_hst(String fileName);
 	bool Load_4(String fileName);
 	
-	void Save_1(String fileName);
-	void Save_3(String fileName);
+	void Save_1(String fileName, bool force_T = false);
+	void Save_3(String fileName, bool force_T = false);
 	void Save_hst(String fileName);
-	void Save_4(String fileName);
+	void Save_4(String fileName, bool force_T = false);
 };
 
 class Foamm : public HydroClass {
 public:
 	Foamm(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Get_Each(int ibody, int idof, int jdof, double from, double to, const Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	void Get(const Vector<int> &ibs, const Vector<int> &idofs, const Vector<int> &jdofs,
+	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
+	void Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<int> &jdfs,
 		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	virtual ~Foamm() noexcept {}
@@ -807,9 +831,24 @@ public:
 	Upp::Array<HydroClass> hydros;
 	Upp::Array<MeshData> surfs;
 	
+	int GetHydroId(int id) {
+		for (int i = 0; i < hydros.GetCount(); ++i) {
+			if (hydros[i].hd().GetId() == id)
+				return i;
+		}
+		return Null;
+	}
+	int GetMeshId(int id) {	
+		for (int i = 0; i < surfs.GetCount(); ++i) {
+			if (surfs[i].GetId() == id)
+				return i;
+		}
+		return Null;
+	}
+		
 	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
-	Vector<double> head;	// Common models data
+	Vector<double> headAll;	// Common models data
 	int Nb = 0;				
 	
 	double depth, rho, g, length;
@@ -826,14 +865,19 @@ public:
 	
 	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
 	void Join(Vector<int> &ids, Function <bool(String, int)> Status);
+	void Symmetrize(int ids);
+	void A0(int ids);
+	void Ainf(int ids);
+	
 	void LoadMesh(String file, Function <void(String, int pos)> Status, bool checkDuplicated);
 	void HealingMesh(int id, Function <void(String, int pos)> Status);
+	void ImageMesh(int id, int axis);
 	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
 			
 	bool LoadSerializeJson();
 	bool StoreSerializeJson();
 	bool ClearTempFiles();
-	static String GetTempFilesFolder() {return AppendFileName(GetAppDataFolder(), "BEMRosetta", "Temp");}
+	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
 	const String bemFilesExt = ".1 .3 .hst .4 .out .cal .inf .ah1 .lis .mat .dat";
 	String bemFilesAst;
@@ -863,7 +907,7 @@ public:
 
 template <class T>
 bool OUTB(int id, T total) {
-	if (id < 0	|| id >= static_cast<int>(total))
+	if (id < 0	|| id >= int(total))
 		return true;
 	return false;
 }

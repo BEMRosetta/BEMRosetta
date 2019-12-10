@@ -45,36 +45,12 @@ void MainNemoh::Init(const BEMData &bem) {
 	freeSurface.WhenAction = [&] {freeX.Enable(~freeSurface);	freeY.Enable(~freeSurface);};
 	freeSurface.WhenAction();
 	
-	opwT.Transparent(false);
-	opwT.WhenAction = THISBACK(OnOpwT);
-	OnOpwT();
-	
 	opSplit.WhenAction = [&] {numSplit.Enable(~opSplit);		labelSplit.Enable(~opSplit);};
 	opSplit.WhenAction();
 	
 	dropSolver.Add(0, t_("Nemoh 115+"));
 	dropSolver.Add(1, t_("Nemoh"));
 	dropSolver.SetIndex(0);
-}
-
-void MainNemoh::OnOpwT() {
-	if (~opwT == 0) {
-		labMinw.SetText("Min w [rad/s]:");
-		labMaxw.SetText("Max w [rad/s]:");
-	} else {
-		labMinw.SetText("Min T [seg]:");
-		labMaxw.SetText("Max T [seg]:");
-	}
-	double dminF = ~minF;
-	double dmaxF = ~maxF;
-	if (!IsNull(dmaxF))
-		minF <<= 2*M_PI/dmaxF;
-	else
-		minF.Clear();
-	if (!IsNull(dminF))
-		maxF <<= 2*M_PI/dminF;
-	else
-		maxF.Clear();
 }
 
 void MainNemoh::InitSerialize(bool ret) {
@@ -92,14 +68,12 @@ void MainNemoh::InitSerialize(bool ret) {
 		cy <<= 0;
 	if (!ret || IsNull(~cz))
 		cz <<= 0;
-	if (!ret || IsNull(opwT))
-		opwT <<= 0;
 	if (!ret || IsNull(~Nf))
 		Nf <<= 100;
 	if (!ret || IsNull(~minF))
-		minF <<= opwT == 0 ? 2*M_PI/20 : 2;
+		minF <<= 0;
 	if (!ret || IsNull(~maxF))
-		maxF <<= opwT == 0 ? 2*M_PI/2 : 20;
+		maxF <<= 4;
 	if (!ret || IsNull(~Nh))
 		Nh <<= 1;
 	if (!ret || IsNull(~minH))
@@ -122,7 +96,6 @@ void MainNemoh::Jsonize(JsonIO &json) {
 		("loadFrom", loadFrom)
 		("saveTo", saveTo)
 		("opIncludeBin", opIncludeBin)
-		("opwT", opwT)
 		("numSplit", numSplit)
 		("opSplit", opSplit)
 		("xeff", xeff)
@@ -192,13 +165,8 @@ void MainNemoh::Load(const NemohCal &data) {
 		
 	Nf <<= data.Nf;
 	
-	if (~opwT == 0) {
-		minF <<= data.minF;
-		maxF <<= data.maxF;	
-	} else {
-		minF <<= 2*M_PI/data.maxF;
-		maxF <<= 2*M_PI/data.minF;	
-	}
+	minF <<= data.minF;
+	maxF <<= data.maxF;	
 	
 	Nh <<= data.Nh;
 	minH <<= data.minH;
@@ -258,13 +226,9 @@ void MainNemoh::Save(NemohCal &data) {
 	}
 		
 	data.Nf = ~Nf;
-	if (~opwT == 0) {
-		data.minF = ~minF;
-		data.maxF = ~maxF;	
-	} else {
-		data.minF = !IsNull(~maxF) ? 2*M_PI/static_cast<double>(~maxF) : Null;
-		data.maxF = !IsNull(~minF) ? 2*M_PI/static_cast<double>(~minF) : Null;	
-	}
+	
+	data.minF = ~minF;
+	data.maxF = ~maxF;	
 	
 	data.Nh = ~Nh;
 	data.minH = ~minH;
@@ -421,13 +385,21 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 				return false;
 		}
 		if (!DirectoryExists(nemohFolder)) {
-			if (!ErrorOKCancel(Format(t_("Folder %s does not exist.&Do you wish to create it?"), DeQtfLf(nemohFolder))))
+			if (!PromptYesNo(Format(t_("Folder %s does not exist.&Do you wish to create it?"), DeQtfLf(nemohFolder))))
 				return false;
 			RealizeDirectory(nemohFolder);
 		}
-		if (~opSplit && IsNull(~numSplit)) {
-			Exclamation(t_("Please enter number of parts to split the simulation (min. is 1)"));
-			return false;
+		if (~opSplit) {
+			if (IsNull(~numSplit)) {
+				Exclamation(t_("Please enter number of parts to split the simulation (min. is 1)"));
+				return false;
+			} else if (int(~numSplit) > data.Nf) {
+				if (PromptOKCancel(Format(t_("Number of Nemoh cases %d must not be higher than number of frequencies %d"), int(~numSplit), data.Nf)
+							   + S("&") + t_("Do you wish to fit the number of cases to the number of frequencies?"))) 
+					numSplit <<= data.Nf;
+				else
+					return false;
+			}
 		}
 		data.SaveFolder(nemohFolder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, bem, dropSolver.GetData());
 	} catch (Exc e) {

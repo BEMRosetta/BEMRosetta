@@ -31,9 +31,9 @@ void ArrangeDOF::Init(Hydro &hydro) {
 		if (DnDInsert(line, d)) {
 			Vector<int> order;
 			for (int i = 0; i < dofList.GetCount(); ++i) {
-				int ib, idof;
-				Hydro::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idof); 
-				order << idof + 6*ib;
+				int ib, idf;
+				Hydro::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idf); 
+				order << idf + 6*ib;
 			}
 			Vector<int> neworder;
 			for (int i = 0; i < order.GetCount(); ++i) {

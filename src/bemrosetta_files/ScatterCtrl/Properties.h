@@ -1,6 +1,8 @@
 #ifndef _ScatterCtrl_Properties_h_
 #define _ScatterCtrl_Properties_h_
 
+namespace Upp {
+	
 #define  LAYOUTFILE <ScatterCtrl/ScatterCtrl.lay>
 #include <CtrlCore/lay.h>
 
@@ -8,6 +10,7 @@
 #define IMAGEFILE <ScatterCtrl/ScatterCtrl.iml>
 #include <Draw/iml_header.h>
 
+	
 class FontSelect : public WithFontSelector<TopWindow> {
 typedef FontSelect CLASSNAME;
 public:
@@ -224,7 +227,6 @@ private:
 	GeneralTab general;
 };
 
-
 class ProcessingTab : public WithProcessingTab<StaticRect> {
 public:
 	typedef ProcessingTab CLASSNAME;
@@ -244,6 +246,7 @@ public:
 	void OnSet();
 	void OnUpdateSensitivity();
 	void OnFit();
+	void OnHist();
 		
 private:
 	ScatterCtrl* pscatter;
@@ -261,6 +264,9 @@ private:
 	WithProcessingTabBestFitLeft<StaticRect> tabBestFitLeft;
 	WithProcessingTabBestFitRight<StaticRect> tabBestFitRight;
 	Splitter splitterTabBestFit;
+	WithProcessingTabHistogramLeft<StaticRect> tabHistLeft;
+	WithProcessingTabHistogramRight<StaticRect> tabHistRight;
+	Splitter splitterTabHist;
 	
 	void ArrayCopy();
 	void ArraySelect();
@@ -271,7 +277,7 @@ private:
 	
 	bool avgFirst, linearFirst, cuadraticFirst, cubicFirst, sinusFirst, sinusTendFirst, splineFirst;
 	double r2Linear, r2Cuadratic, r2Cubic, r2Sinus, r2SinusTend;
-	bool tabFreqFirst, tabOpFirst, tabBestFitFirst;
+	bool tabFreqFirst, tabOpFirst, tabBestFitFirst, tabHistFirst;
 	
 	Vector<Pointf> fft;
 	AvgEquation average;
@@ -285,6 +291,8 @@ private:
 	DataXRange dataXRange;
 	bool exclamationOpened;
 	double newWidthMax, newWidthMin, newWidthMovAvg;
+	
+	Histogram histogram;
 };
 
 class ProcessingDlg : public TopWindow {
@@ -303,5 +311,7 @@ private:
 	
 	void UpdateFields();
 };
+
+}
 
 #endif

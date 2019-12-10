@@ -86,7 +86,59 @@ True             PtfmYF         - Platform yaw rotation force (flag) or DEFAULT
              0             0             0             0             0             0
              0             0             0             0             0             0
 ---------------------- AXIAL COEFFICIENTS --------------------------------------
-             1   NAxCoef        - Number of axial coefficients (-)
+             0   NAxCoef        - Number of axial coefficients (-)
 AxCoefID  AxCd     AxCa     AxCp
    (-)    (-)      (-)      (-)
-    1     0.00     0.00     1.00
+---------------------- MEMBER JOINTS -------------------------------------------
+            2   NJoints        - Number of joints (-)   [must be exactly 0 or at least 2]
+JointID   Jointxi     Jointyi     Jointzi  JointAxID   JointOvrlp   [JointOvrlp= 0: do nothing at joint, 1: eliminate overlaps by calculating super member]
+   (-)     (m)         (m)         (m)        (-)       (switch)
+   1        0           0           0          1			0		!Cyllinder1
+   2        0.001       0           0          2			0
+---------------------- MEMBER CROSS-SECTION PROPERTIES -------------------------
+             1   NPropSets      - Number of member property sets (-)
+PropSetID    PropD         PropThck
+   (-)        (m)            (m)        
+	1          0             0.0         
+---------------------- SIMPLE HYDRODYNAMIC COEFFICIENTS (model 1) --------------
+SimplCd    SimplCdMG    SimplCa    SimplCaMG    SimplCp    SimplCpMG   SimplAxCa  SimplAxCaMG  SimplAxCp   SimplAxCpMG
+(-)         (-)         (-)         (-)         (-)         (-)         (-)         (-)         (-)         (-)
+0.00        0.00        0.00        0.00        0.00        0.00        0.00        0.00        0.00        0.00
+---------------------- DEPTH-BASED HYDRODYNAMIC COEFFICIENTS (model 2) ---------
+             0   NCoefDpth       - Number of depth-dependent coefficients (-)
+Dpth      DpthCd   DpthCdMG   DpthCa   DpthCaMG       DpthCp   DpthCpMG   DpthAxCa   DpthAxCaMG       DpthAxCp   DpthAxCpMG
+(m)       (-)      (-)        (-)      (-)            (-)      (-)          (-)        (-)              (-)         (-)
+---------------------- MEMBER-BASED HYDRODYNAMIC COEFFICIENTS (model 3) --------
+            1   NCoefMembers       - Number of member-based coefficients (-)
+MemberID    MemberCd1     MemberCd2    MemberCdMG1   MemberCdMG2    MemberCa1     MemberCa2    MemberCaMG1   MemberCaMG2    MemberCp1     MemberCp2    MemberCpMG1   MemberCpMG2   MemberAxCa1   MemberAxCa2  MemberAxCaMG1 MemberAxCaMG2  MemberAxCp1  MemberAxCp2   MemberAxCpMG1   MemberAxCpMG2
+   (-)         (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)           (-)     
+	1          0.000         0.000         0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00          0.00
+-------------------- MEMBERS -------------------------------------------------
+            1   NMembers       - Number of members (-)
+MemberID  MJointID1  MJointID2  MPropSetID1  MPropSetID2  MDivSize   MCoefMod  PropPot   [MCoefMod=1: use simple coeff table, 2: use depth-based coeff table, 3: use member-based coeff table] [ PropPot/=0 if member is modeled with potential-flow theory]
+  (-)        (-)        (-)         (-)          (-)        (m)      (switch)   (flag)
+	1          1          2    		1			1			 0.001		3		FALSE	!Cyllinder1
+---------------------- FILLED MEMBERS ------------------------------------------
+             0   NFillGroups     - Number of filled member groups (-) [If FillDens = DEFAULT, then FillDens = WtrDens; FillFSLoc is related to MSL2SWL]
+FillNumM FillMList             FillFSLoc     FillDens
+(-)      (-)                   (m)           (kg/m^3)
+---------------------- MARINE GROWTH -------------------------------------------
+             0   NMGDepths      - Number of marine-growth depths specified (-)
+MGDpth     MGThck       MGDens
+(m)        (m)         (kg/m^3)
+---------------------- MEMBER OUTPUT LIST --------------------------------------
+             0   NMOutputs      - Number of member outputs (-) [must be < 10]
+MemberID   NOutLoc    NodeLocs [NOutLoc < 10; node locations are normalized distance from the start of the member, and must be >=0 and <= 1] [unused if NMOutputs=0]
+  (-)        (-)        (-)
+---------------------- JOINT OUTPUT LIST ---------------------------------------
+             0   NJOutputs      - Number of joint outputs [Must be < 10]
+   0           JOutLst        - List of JointIDs which are to be output (-)[unused if NJOutputs=0]
+---------------------- OUTPUT --------------------------------------------------
+True             HDSum          - Output a summary file [flag]
+False            OutAll         - Output all user-specified member and joint loads (only at each member end, not interior locations) [flag]
+             2   OutSwtch       - Output requested channels to: [1=Hydrodyn.out, 2=GlueCode.out, 3=both files]
+"ES11.4e2"       OutFmt         - Output format for numerical results (quoted string) [not checked for validity!]
+"A11"            OutSFmt        - Output format for header strings (quoted string) [not checked for validity!]
+---------------------- OUTPUT CHANNELS -----------------------------------------
+"Wave1Elev"               - Wave elevation at the platform reference point (0,  0)
+END of output channels and end of file. (the word "END" must appear in the first 3 columns of this line)

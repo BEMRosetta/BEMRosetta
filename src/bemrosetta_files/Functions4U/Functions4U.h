@@ -14,7 +14,7 @@
 #include "LocalProcess2.h"
 #include <random>
 
-using namespace Upp;
+namespace Upp {
 
 
 enum EXT_FILE_FLAGS {NO_FLAG = 0, 
@@ -36,7 +36,15 @@ int64 FindStringInFile(const char *file, const String text, int64 pos0 = 0);
 bool FileStrAppend(const char *file, const char *str);
 bool AppendFile(const char *filename, const char *str);
 
-String AppendFileName(const String& path1, const char *path2, const char *path3);
+template<typename T>
+String AppendFileNameX(T t) {
+    return t;
+}
+
+template<typename T, typename... Args>
+String AppendFileNameX(T t, Args... args) {
+    return AppendFileName(t, AppendFileNameX(args...));
+}
 	
 inline String Trim(const String& s)   {return TrimBoth(s);}
 //inline WString Trim(const WString& s) {return TrimLeft(TrimRight(s));}
@@ -54,11 +62,12 @@ String Tokenize2(const String &str, const String &token);
 bool DirectoryExistsX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG); 
 void DirectoryCopyX(const char *dir, const char *newPlace, bool replaceOnlyNew, String filesToExclude, String &erroList);
 bool DirectoryMove(const char *dir, const char *newPlace);
-bool DeleteDeepWildcardsX(const char *path, bool filefolder, EXT_FILE_FLAGS flags = NO_FLAG);
-bool DeleteDeepWildcardsX(const char *pathwc, const char *namewc, bool filefolder, EXT_FILE_FLAGS flags = NO_FLAG);
+bool DeleteDeepWildcardsX(const char *path, bool filefolder, EXT_FILE_FLAGS flags = NO_FLAG, bool deep = true);
+bool DeleteDeepWildcardsX(const char *pathwc, const char *namewc, bool filefolder, EXT_FILE_FLAGS flags = NO_FLAG, bool deep = true);
 bool DeleteFolderDeepWildcardsX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteFolderDeepWildcardsX(const char *path, const char *name, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteFileDeepWildcardsX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
+bool DeleteFileWildcardsX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
 bool DeleteFolderDeepX(const char *path, EXT_FILE_FLAGS flags = NO_FLAG);
 bool RenameDeepWildcardsX(const char *path, const char *namewc, const char *newname, bool forfile, bool forfolder, EXT_FILE_FLAGS flags = NO_FLAG);
 bool FolderIsEmpty(const char *path);
@@ -1004,9 +1013,8 @@ int LevenshteinDistance(const char *s, const char *t);
 int DamerauLevenshteinDistance(const char *s, const char *t, int alphabetLength = 256);
 int SentenceSimilitude(const char *s, const char *t);
 
-#define S(y)	String(y)
+#define S(y)	Upp::String(y)
 
-namespace Upp {
 	
 template<class T>
 void Jsonize(JsonIO& io, std::complex<T>& var) {

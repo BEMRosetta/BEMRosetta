@@ -186,7 +186,7 @@ bool NemohCal::Load(String fileName) {
 		body.ndof = f.GetInt(0);
 		if (body.ndof < 0 || body.ndof > 6)
 			throw Exc(in.Str() + Format(t_("Incorrect DOF number %s in body %d"), f.GetText(0), ib+1));
-		for (int idof = 0; idof < body.ndof; ++idof) {
+		for (int idf = 0; idf < body.ndof; ++idf) {
 			f.Load(in.GetLine());
 			int type = f.GetInt(0);
 			bool x = f.GetDouble(1) > 0;		
@@ -224,9 +224,9 @@ bool NemohCal::Load(String fileName) {
 	f.Load(in.GetLine());	Nf = f.GetInt(0);	minF = f.GetDouble(1);	maxF = f.GetDouble(2);
 	if (Nf < 1 || Nf > 1000)
 		throw Exc(in.Str() + Format(t_("Incorrect number of frequencies %s"), f.GetText(0)));
-	if (minF <= 0)
+	if (minF < 0)
 		throw Exc(in.Str() + Format(t_("Incorrect frequency %s"), f.GetText(1)));
-	if (maxF <= minF)
+	if (maxF < minF)
 		throw Exc(in.Str() + Format(t_("Minimum frequency %s has to be lower than maximum frequency %s"), f.GetText(1), f.GetText(2)));	
 	
 	f.Load(in.GetLine());	Nh = f.GetInt(0);	minH = f.GetDouble(1);	maxH = f.GetDouble(2);
@@ -310,9 +310,9 @@ Vector<String> NemohCal::Check() {
 
 	if (IsNull(Nf) || Nf < 1 || Nf > 1000)
 		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(Nf));
-	if (IsNull(minF) || minF <= 0)
+	if (IsNull(minF) || minF < 0)
 		ret << Format(t_("Incorrect min frequency %s"), FormatDoubleEmpty(minF));
-	if (IsNull(maxF) || maxF <= minF)
+	if (IsNull(maxF) || maxF < minF)
 		ret << Format(t_("Minimum frequency %s has to be lower than maximum frequency %s"), FormatDoubleEmpty(minF), FormatDoubleEmpty(maxF));	
 	
 	if (IsNull(Nh) || Nh < 1 || Nh > 1000)
@@ -438,7 +438,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		throw Exc(Format(t_("Number of Nemoh cases must be higher than 1 (%d)"), numCases));
 	
 	if (numCases > Nf)
-		throw Exc(Format(t_("Number of Nemoh cases must not be higher than number of frequencies (%d>%d)"), numCases, Nf));
+		throw Exc(Format(t_("Number of Nemoh cases %d must not be higher than number of frequencies %d"), numCases, Nf));
 	
 	if (deleteFolder) {
 		if (!DeleteFolderDeep(folderBase))
@@ -447,13 +447,19 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	if (!DirectoryExists(folderBase) && !DirectoryCreate(folderBase))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 	
+	#define MIN_F_NEMOH 0.01
+	
+	double fixminF = minF;
+	if (fixminF < MIN_F_NEMOH)
+		fixminF = MIN_F_NEMOH;
+	
 	Vector<int> valsf;
 	int _nf;
 	double _minf, _maxf;
 	int ifr = 0;
 	Vector<double> freqs;
 	if (numCases > 1) { 
-		LinSpaced(freqs, Nf, minF, maxF);
+		LinSpaced(freqs, Nf, fixminF, maxF);
 		valsf = NumSets(Nf, numCases);
 	}
 	
@@ -489,7 +495,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	}
 		
 	String sumcases;
-	for (int i = 0; i < numCases && ifr < Nf-1; ++i) {
+	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		if (numCases > 1) {
 			folder = AppendFileName(folderBase, Format("Nemoh_Part_%d", i+1));
@@ -504,7 +510,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		} else {
 			folder = folderBase;
 			_nf = Nf;
-			_minf = minF;
+			_minf = fixminF;
 			_maxf = maxF;
 		}
 		CreateId(folder);
@@ -613,7 +619,7 @@ bool Nemoh::Load_Inf(String fileName) {
 	hd().cb.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
-	hd().C[0].setConstant(6, 6, 0);   
+	hd().C[0].setConstant(6, 6, Null);   
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -703,7 +709,7 @@ bool Nemoh::Load_KH() {
 		else 
 			fileKH = AppendFileName(folder, AppendFileName("Mesh", Format("KH_%d.dat", ib)));
 	    
-		hd().C[ib].setConstant(6, 6, 0);    
+		hd().C[ib].setConstant(6, 6, Null);    
 	    FileInLine in(fileKH);
 	    if (!in.IsOpen()) 
 	        return false;
@@ -755,7 +761,7 @@ bool Nemoh::Load_Radiation(String fileName) {
 	}
 	int ibodydof = 0;
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
-		for (int idof = 0; idof < hd().dof[ibody]; ++idof) {
+		for (int idf = 0; idf < hd().dof[ibody]; ++idf) {
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) {	
 				f.Load(in.GetLine());
 				for (int df = 0; df < hd().dof[ibody]; ++df) {		
@@ -819,7 +825,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			if (line.StartsWith("Zone") || line.StartsWith("angle"))
 				break;
 			f.Load(line);
-			int ib = 0, idof = 0, ibdof = 0;
+			int ib = 0, idf = 0, ibdof = 0;
 			for (int i = 0; i < hd().Nb*6; ++i) {
 				if (ifr >= hd().Nf)
 					throw Exc(in.Str() + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
@@ -829,10 +835,10 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 				double ph = fc.ph[ih](ifr, ibdof) = -f.GetDouble(1 + 2*i + 1); //-Phase to follow Wamit
 				fc.re[ih](ifr, ibdof) = ma*cos(ph); 
 				fc.im[ih](ifr, ibdof) = ma*sin(ph); 
-				idof++;
+				idf++;
 				ibdof++;
-				if (idof >= hd().dof[ib]) {
-					idof = 0;
+				if (idf >= hd().dof[ib]) {
+					idf = 0;
 					ib++;
 					ibdof = 6*ib;
 					if (ib >= hd().Nb)
@@ -854,7 +860,7 @@ bool Nemoh::Load_IRF(String fileName) {
 	hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 	int ibodydof = 0;
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
-		for (int idof = 0; idof < hd().dof[ibody]; ++idof) {
+		for (int idf = 0; idf < hd().dof[ibody]; ++idf) {
 			while(!in.IsEof()) {
 				line = in.GetLine();	
 				if (line.Find("Zone t=") >= 0) 

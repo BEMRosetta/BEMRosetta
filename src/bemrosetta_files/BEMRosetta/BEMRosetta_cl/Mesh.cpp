@@ -1,5 +1,6 @@
 #include "BEMRosetta.h"
 
+int MeshData::idCount = 0;
 	
 String MeshData::Load(String file, double rho, double g) {
 	String ext = ToLower(GetFileExt(file));
@@ -73,6 +74,8 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType) 
 			type = MeshData::WAMIT_GDF;
 		else if (ext == ".dat")
 			type = MeshData::NEMOH_DAT;
+		else if (ext == ".")
+			type = MeshData::NEMOH_PRE;
 		else if (ext == ".stl")
 			type = MeshData::STL_TXT;
 		else
@@ -85,6 +88,8 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType) 
 		SaveGdfWamit(file, panels, nodes, g, y0z, x0z);	
 	else if (type == NEMOH_DAT) 
 		SaveDatNemoh(file, panels, nodes, x0z);
+	else if (type == NEMOH_PRE) 
+		SavePreMeshNemoh(file, panels, nodes);
 	else if (type == STL_BIN)		
 		SaveStlBin(file, panels, nodes);
 	else if (type == STL_TXT)		
@@ -118,7 +123,7 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 			mass = under.volume*rho;
 		cb = under.GetCenterOfBuoyancy();
 	}
-	under.GetHydrostaticStiffness(c, cb, rho, cg, mass, g, 0);
+	under.GetHydrostaticStiffness(C, cb, rho, cg, mass, g, 0);
 }
 
 void MeshData::Report(double rho) {

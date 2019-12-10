@@ -13,7 +13,7 @@ using namespace Upp;
 
 
 void MainABForce::Init(DataToShow _dataToShow) {
-	CtrlLayout(*this);
+	Add(tab.SizePos());
 	
 	dataToShow = _dataToShow;
 	
@@ -35,50 +35,50 @@ bool MainABForce::Load(BEMData &bem) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
 		tab.Reset();
-		Upp::Array<HydroClass> &hydro = bem.hydros; 
-		if (hydro.IsEmpty()) 
+		Upp::Array<HydroClass> &hydros = bem.hydros; 
+		if (hydros.IsEmpty()) 
 			return false;
 		String format;
 		switch (dataToShow) {
-		case DATA_A:		format = t_("A%s");			break;		
-		case DATA_B:		format = t_("B%s");			break;
-		case DATA_FORCE_SC:	format = t_("Fsc%s%.1fº");	break;
-		case DATA_FORCE_FK:	format = t_("Ffk%s%.1fº");	break;
-		case DATA_FORCE_EX:	format = t_("Fex%s%.1fº");	break;
-		case DATA_RAO:		format = t_("RAO%s%.1fº");	break;
+		case DATA_A:		format = t_("%s");		break;		
+		case DATA_B:		format = t_("%s");		break;
+		case DATA_FORCE_SC:	format = t_("%s%.1fº");	break;
+		case DATA_FORCE_FK:	format = t_("%s%.1fº");	break;
+		case DATA_FORCE_EX:	format = t_("%s%.1fº");	break;
+		case DATA_RAO:		format = t_("%s%.1fº");	break;
 		case DATA_STS:		NEVER();
 		case DATA_STS2:		NEVER();
 		}
 		int sdof = 6*bem.Nb;
 		if (dataToShow == DATA_A || dataToShow == DATA_B) {
 			plots.SetCount(sdof);
-			for (int i = 0; i < sdof; ++i) {
-				plots[i].SetCount(sdof);
-				for (int j = 0; j < sdof; ++j) {
-					if (!bem.onlyDiagonal || i == j) {
-						plots[i][j].Init(i, j, dataToShow);
-						if (plots[i][j].Load(hydro)) {
-							if (i != j)
-								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrBDOF(i, j)));
+			for (int idf = 0; idf < sdof; ++idf) {
+				plots[idf].SetCount(sdof);
+				for (int jdf = 0; jdf < sdof; ++jdf) {
+					if (!bem.onlyDiagonal || idf == jdf) {
+						plots[idf][jdf].Init(idf, jdf, dataToShow);
+						if (plots[idf][jdf].Load(hydros)) {
+							if (idf != jdf)
+								tab.Add(plots[idf][jdf].SizePos(), Format(format, Hydro::StrBDOF(idf, jdf)));
 							else
-								tab.Add(plots[i][j].SizePos(), Format(format, Hydro::StrBDOF(i)));
+								tab.Add(plots[idf][jdf].SizePos(), Format(format, Hydro::StrBDOF(idf)));
 						}
 					}
 				}
 			}
 		} else {
-			int Nh = bem.head.GetCount();
+			int Nh = bem.headAll.GetCount();
 			if (Nh < 0) 
 				return false;
 			
 			plots.SetCount(Nh);
 			for (int ih = 0; ih < Nh; ++ih) 
 				plots[ih].SetCount(sdof);
-			for (int i = 0; i < sdof; ++i) {
+			for (int idf = 0; idf < sdof; ++idf) {
 				for (int ih = 0; ih < Nh; ++ih) {
-					plots[ih][i].Init(i, bem.head[ih], dataToShow);
-					if (plots[ih][i].Load(hydro))
-						tab.Add(plots[ih][i].SizePos(), Format(format, Hydro::StrBDOFAbrev(i), bem.head[ih]));
+					plots[ih][idf].Init(idf, bem.headAll[ih], dataToShow);
+					if (plots[ih][idf].Load(hydros))
+						tab.Add(plots[ih][idf].SizePos(), Format(format, Hydro::StrBDOFAbrev(idf), bem.headAll[ih]));
 				}
 			}
 		}
