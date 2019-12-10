@@ -3,6 +3,7 @@
 
 #include "./lib/matio.h"
 
+namespace Upp {
 
 template<class T> void GetTypeCode 				(enum matio_classes &class_type, enum matio_types &data_type) {
 	NEVER_("Class unsupported");
@@ -484,6 +485,7 @@ MatMatrix<std::complex<double>> MatFile::VarReadMat(MatVar &var) {return VarRead
 template <> inline
 MatMatrix<std::complex<long double>> MatFile::VarReadMat(MatVar &var) {return VarReadMatComplex<long double>(var);}
 
+}
 	
 #endif
 

@@ -2,12 +2,10 @@
 #define _GLCanvas_surface_h_
 
 #include <ScatterDraw/Unpedantic.h>
-
 #include <plugin/Eigen/Eigen.h>
-
-using namespace Eigen;
-
 #include <ScatterDraw/Pedantic.h>
+
+namespace Upp {
 
 template<class T>
 inline T avg(T a, T b) 			{return T(a+b)/2;}
@@ -232,9 +230,9 @@ public:
 	}
 	inline void Swap() {
 		if (IsTriangle())
-			::Swap(id[1], id[2]);
+			Upp::Swap(id[1], id[2]);
 		else
-			::Swap(id[1], id[3]);
+			Upp::Swap(id[1], id[3]);
 	}
 	inline bool IsTriangle() const	{return id[0] == id[3];}
 	void RedirectTriangles();
@@ -303,6 +301,7 @@ public:
 	VolumeEnvelope env;
 	
 	String Heal(Function <void(String, int pos)> Status);
+	void Image(int axis);
 	void GetLimits(); 
 	void GetPanelParams();
 	String CheckErrors() const;
@@ -322,7 +321,7 @@ public:
 	Vector<Segment> segments;
 	int numDupPan, numDupP, numSkewed, numUnprocessed;
 	
-	double surface = -1, volume = -1;
+	double surface = -1, volume = -1, volumex = -1, volumey = -1, volumez = -1;
 	double avgFacetSideLen;
 	
 	void DeployXSymmetry();
@@ -355,5 +354,7 @@ private:
 	
 	Vector<int> selPanels, selNodes;
 };
+
+}
 
 #endif

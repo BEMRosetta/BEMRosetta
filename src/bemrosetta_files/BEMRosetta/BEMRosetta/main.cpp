@@ -40,6 +40,9 @@ void Main::Init() {
 	}
 	LOG("BEM configuration loaded");
 	
+	if (IsNull(lastTab))
+		lastTab = 0;
+	
 	if (!bem.ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	if (!LoadSerializeJson()) {
@@ -66,8 +69,27 @@ void Main::Init() {
 	tab.Add(menuAbout.SizePos(),  t_("About"));
 	
 	Add(tab.SizePos());	
-		
+	
+	tabWindow.SetImage(Img::application_double());
+	Add(tabWindow.RightPosZ(0, 20).TopPosZ(0, 20));
+	tabWindow.Hide();
+	
+	tabWindow.WhenAction = [&] {
+		if (tab.IsAt(mainMesh)) {
+			MainMeshW *mainMeshW = new MainMeshW();
+			mainMeshW->Init(mainMesh);
+			mainMeshW->OpenMain();
+		} else if (tab.IsAt(mainBEM)) {
+			MainBEMW *mainBEMW = new MainBEMW();
+			mainBEMW->Init(mainBEM);
+			mainBEMW->OpenMain();
+		}
+	};
+	
 	tab.WhenSet = [&] {
+		if (tab.Get() < 0)
+			return;
+		
 		LOGTAB(tab);
 		if (tab.IsAt(menuOptions)) 
 			menuOptions.Load();
@@ -79,10 +101,25 @@ void Main::Init() {
 			else
 				menuOptions.Load();
 		}
+		
+		if (tab.IsAt(mainMesh) || tab.IsAt(mainBEM)) {
+			tabWindow.Show(true);
+			lastTab = ~tab;
+		} else 	if (tab.IsAt(mainNemoh)) {
+			tabWindow.Show(false);
+			lastTab = ~tab;
+		} else {
+			tabWindow.Show(false);
+			lastTab = 0;
+		}
 	};	
 	
-	if (firstTime)
+	tab.Set(-1);
+	if (firstTime) {
+		lastTab = 0;
 		tab.Set(menuAbout);
+	} else
+		tab.Set(lastTab);
 	
 	AddFrame(bar);
 	
@@ -166,6 +203,7 @@ void Main::Jsonize(JsonIO &json) {
 		("mesh", mainMesh)
 		("nemoh", mainNemoh)
 		("bem", mainBEM)
+		("lastTab", lastTab)
 	;
 }
 
@@ -219,9 +257,9 @@ void MenuOptions::OnSave() {
 }
 
 bool MenuOptions::IsChanged() {
-	if (TruncDecimals(bem->g, 8) !=  TruncDecimals(static_cast<double>(~g), 8)) 
+	if (TruncDecimals(bem->g, 8) !=  TruncDecimals(double(~g), 8)) 
 		return true;
-	if (TruncDecimals(bem->rho, 8) !=  TruncDecimals(static_cast<double>(~rho), 8))
+	if (TruncDecimals(bem->rho, 8) !=  TruncDecimals(double(~rho), 8))
 		return true;
 	if (bem->length != ~length)
 		return true;
@@ -304,7 +342,7 @@ void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, Str
 		array.SetLineCy(i*9, 10);	
 }
 
-void MainStiffness::Add(String name, int icase, const MatrixXd &K) {
+void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button) {
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, "", 0);
 	
@@ -313,7 +351,36 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K) {
 	for (int r = 0; r < 6; ++r) {
 		for (int c = 0; c < 6; ++c)
 			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(K(r, c), 7, FD_EXP|FD_CAP_E|FD_REL)).Align(ALIGN_RIGHT));
-	}	
+	}
+	if (button && ma().bem.hydros.GetCount() > 0)
+		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy"))
+			 .WhenAction = [=] {
+				WithBEMList<TopWindow> w;
+				CtrlLayout(w);
+				w.Title(t_("Paste matrix in selected BEM file and body"));
+				w.array.SetLineCy(EditField::GetStdHeight());
+				w.array.AddColumn(t_("File"), 20);
+				w.array.AddColumn(t_("Body"), 10);
+				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
+				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
+				for (int f = 0; f < ma().bem.hydros.GetCount(); ++f) {
+					const Hydro &hy = ma().bem.hydros[f].hd();
+					for (int ib = 0; ib < hy.Nb; ++ib)
+						w.array.Add(hy.name, hy.names[ib].IsEmpty() ? AsString(ib+1) : hy.names[ib], f, ib);
+				}
+				bool cancel = true;
+				w.butSelect.WhenAction = [&] {cancel = false;	w.Close();};
+				w.butCancel.WhenAction = [&] {w.Close();}; 
+				w.Execute();
+				if (!cancel) {
+					int id = w.array.GetCursor();
+					if (id < 0)
+						return; 
+					int f = w.array.Get(id, 2);
+					int ib = w.array.Get(id, 3);
+					ma().bem.hydros[f].hd().SetC(ib, K);
+				}
+			 };
 }
 	
 void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro) {
@@ -329,7 +396,7 @@ void MainStiffness::Add(String name, int icase, String bodyName, int ibody, cons
 	}
 }
 
-void MainStiffness::Load(Upp::Array<HydroClass> &hydros) {
+bool MainStiffness::Load(Upp::Array<HydroClass> &hydros) {
 	Clear();
 	
 	for (int icase = 0; icase < hydros.GetCount(); ++icase) {
@@ -337,13 +404,14 @@ void MainStiffness::Load(Upp::Array<HydroClass> &hydros) {
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
 			Add(hydros[icase].hd().name, icase, hydros[icase].hd().names[ibody], ibody, hydro);
 	}
+	return true;
 }	
 
 void MainStiffness::Load(Upp::Array<MeshData> &surfs) {
 	Clear();
 
 	for (int icase = 0; icase < surfs.GetCount(); ++icase) 
-		Add(GetFileTitle(surfs[icase].file), icase, surfs[icase].c);
+		Add(GetFileTitle(surfs[icase].file), icase, surfs[icase].C, true);
 }
 			
 Main &ma(Main *m) {
@@ -411,3 +479,51 @@ String TabText(const TabCtrl &tab) {
 		return String();
 	return tab.GetItem(id).GetText();
 }
+
+ArrayCtrl &ArrayModel_Init(ArrayCtrl &array) {
+	array.NoHeader().NoVertGrid().AutoHideSb();
+	array.AddColumn("", 30);	
+	array.AddColumn("", 30);
+	array.AddColumn("", 20);
+	array.HeaderObject().HideTab(array.AddColumn().HeaderTab().GetIndex());
+	return array;
+}
+
+static int ArrayModel_Id(const ArrayCtrl &array) {
+	int id = array.GetCursor();
+	if (id < 0)
+		return -1;
+	return array.Get(id, 2);
+}
+
+static int ArrayModel_Id(const ArrayCtrl &array, int row) {
+	return array.Get(row, 2);
+}
+
+int ArrayModel_IdMesh(const ArrayCtrl &array) {
+	int id = ArrayModel_Id(array);
+	if (id < 0)
+		return -1;
+	return ma().bem.GetMeshId(id);
+}
+
+int ArrayModel_IdMesh(const ArrayCtrl &array, int row) {
+	int id = ArrayModel_Id(array, row);
+	if (id < 0)
+		return -1;
+	return ma().bem.GetMeshId(id);
+}
+
+int ArrayModel_IdHydro(const ArrayCtrl &array) {
+	int id = ArrayModel_Id(array);
+	if (id < 0)
+		return -1;
+	return ma().bem.GetHydroId(id);
+}
+
+int ArrayModel_IdHydro(const ArrayCtrl &array, int row) {
+	int id = ArrayModel_Id(array, row);
+	if (id < 0)
+		return -1;
+	return ma().bem.GetHydroId(id);
+}		

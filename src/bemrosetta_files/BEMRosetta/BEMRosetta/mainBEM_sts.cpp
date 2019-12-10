@@ -66,8 +66,8 @@ bool MainStateSpace::Load(BEMData &bem) {
 	}
 }
 
-void MainStateSpacePlot::Init(int _idof, int _jdof) {
-	mainPlot.Init(_idof, _jdof, DATA_STS2);
+void MainStateSpacePlot::Init(int _idf, int _jdf) {
+	mainPlot.Init(_idf, _jdf, DATA_STS2);
 	
 	splitterTab.Horz(tab.SizePos(), mainPlot.SizePos());
 	Add(splitterTab.SizePos());
@@ -81,12 +81,12 @@ bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
 	arrays.Clear();
 	
 	bool loaded = false;
-	int idof = mainPlot.idof;
-	int jdof = mainPlot.jdof;
+	int idf = mainPlot.idf;
+	int jdf = mainPlot.jdf;
 	for (int id = 0; id < hydro.GetCount(); ++id) {
 		Hydro &hy = hydro[id].hd();
 		if (hy.IsLoadedStateSpace()) {
-			Hydro::StateSpace &sts = hy.sts[idof][jdof];
+			Hydro::StateSpace &sts = hy.sts[idf][jdf];
 			int row = 0;
 			if (sts.A_ss.size() > 0 || sts.B_ss.size() > 0 || sts.C_ss.size() > 0) {
 				loaded = true;
@@ -95,7 +95,7 @@ bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
 				tab.Add(array.SizePos(), hy.name);
 				if (sts.A_ss.size() > 0) {
 					if (sts.A_ss.cols() > array.GetColumnCount()) {
-						int ncols = static_cast<int>(sts.A_ss.cols()) - array.GetColumnCount();
+						int ncols = int(sts.A_ss.cols()) - array.GetColumnCount();
 						for (int i = 0; i < ncols; ++i)
 							array.AddColumn("", 80);
 					}
@@ -104,7 +104,7 @@ bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
 						for (int c = 0; c < sts.A_ss.cols(); ++c)
 							array.Set(row + r, c, sts.A_ss(r, c));
 					}
-					row += static_cast<int>(sts.A_ss.rows());
+					row += int(sts.A_ss.rows());
 				}
 				if (sts.B_ss.size() > 0) {
 					array.Set(row++, 0, AttrText(t_("B_ss")).Bold());

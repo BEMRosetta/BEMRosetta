@@ -1,7 +1,8 @@
 #ifndef _hdIE_ActiveX_Support_h_
 #define _hdIE_ActiveX_Support_h_
 
-using namespace Upp;
+
+namespace Upp {
 
 bool BSTRSet(const String str, BSTR &bstr);
 String BSTRGet(BSTR &bstr);
@@ -119,5 +120,6 @@ private:
 	AXClientSite pClientSite;
 };
 
+}
 
 #endif

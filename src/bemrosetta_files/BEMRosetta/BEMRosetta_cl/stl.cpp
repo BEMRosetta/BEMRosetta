@@ -136,28 +136,28 @@ String MeshData::LoadStlBin(String fileName) {
     	
     	while (!in.IsEof()) {
 	    	Vector3D normal;
-	    	normal.x = static_cast<double>(in.Read<float>());
-	    	normal.y = static_cast<double>(in.Read<float>());
-	    	normal.z = static_cast<double>(in.Read<float>());
+	    	normal.x = double(in.Read<float>());
+	    	normal.y = double(in.Read<float>());
+	    	normal.z = double(in.Read<float>());
 	
 			Panel &panel = mesh.panels.Add();
 
 			Point3D &node0 = mesh.nodes0.Add();
-			node0.x = static_cast<double>(in.Read<float>());
-			node0.y = static_cast<double>(in.Read<float>());
-			node0.z = static_cast<double>(in.Read<float>());
+			node0.x = double(in.Read<float>());
+			node0.y = double(in.Read<float>());
+			node0.z = double(in.Read<float>());
 			panel.id[0] = mesh.nodes0.GetCount()-1;
 			
 			Point3D &node1 = mesh.nodes0.Add();
-			node1.x = static_cast<double>(in.Read<float>());
-			node1.y = static_cast<double>(in.Read<float>());
-			node1.z = static_cast<double>(in.Read<float>());
+			node1.x = double(in.Read<float>());
+			node1.y = double(in.Read<float>());
+			node1.z = double(in.Read<float>());
 			panel.id[1] = mesh.nodes0.GetCount()-1;
 			
 			Point3D &node2 = mesh.nodes0.Add();			
-			node2.x = static_cast<double>(in.Read<float>());
-			node2.y = static_cast<double>(in.Read<float>());
-			node2.z = static_cast<double>(in.Read<float>());
+			node2.x = double(in.Read<float>());
+			node2.y = double(in.Read<float>());
+			node2.z = double(in.Read<float>());
 			panel.id[2] = mesh.nodes0.GetCount()-1;
 			panel.id[3] = panel.id[0];		
 					
@@ -170,9 +170,9 @@ String MeshData::LoadStlBin(String fileName) {
 }
 
 static void STLFacetBinNodeOut(FileOutData &out, const Point3D &node) {
-	out.Write(static_cast<float>(node.x));
-	out.Write(static_cast<float>(node.y));
-	out.Write(static_cast<float>(node.z));	
+	out.Write(float(node.x));
+	out.Write(float(node.y));
+	out.Write(float(node.z));	
 }
 
 void MeshData::SaveStlBin(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes) {
@@ -184,27 +184,27 @@ void MeshData::SaveStlBin(String fileName, const Vector<Panel> &panels, const Ve
 	header << String(' ', 80 - header.GetCount());
 	out.Put64(header, 80);
 	
-	out.Write(static_cast<int32>(panels.GetCount()));
+	out.Write(int32(panels.GetCount()));
 	
 	for (int i = 0; i < panels.GetCount(); ++i) {
 		const Panel &panel = panels[i];
 		
-		out.Write(static_cast<float>(panel.normal0.x));
-		out.Write(static_cast<float>(panel.normal0.y));
-		out.Write(static_cast<float>(panel.normal0.z));
+		out.Write(float(panel.normal0.x));
+		out.Write(float(panel.normal0.y));
+		out.Write(float(panel.normal0.z));
 		STLFacetBinNodeOut(out, nodes[panel.id[0]]);
 		STLFacetBinNodeOut(out, nodes[panel.id[1]]);
 		STLFacetBinNodeOut(out, nodes[panel.id[2]]);
-		out.Write(static_cast<int16>(0));
+		out.Write(int16(0));
 		
 		if (!panel.IsTriangle()) {
-			out.Write(static_cast<float>(panel.normal1.x));
-			out.Write(static_cast<float>(panel.normal1.y));
-			out.Write(static_cast<float>(panel.normal1.z));
+			out.Write(float(panel.normal1.x));
+			out.Write(float(panel.normal1.y));
+			out.Write(float(panel.normal1.z));
 			STLFacetBinNodeOut(out, nodes[panel.id[2]]);
 			STLFacetBinNodeOut(out, nodes[panel.id[3]]);
 			STLFacetBinNodeOut(out, nodes[panel.id[0]]);	
-			out.Write(static_cast<int16>(0));
+			out.Write(int16(0));
 		}
 	}
 }

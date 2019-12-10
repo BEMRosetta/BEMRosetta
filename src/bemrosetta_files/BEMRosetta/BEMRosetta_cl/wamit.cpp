@@ -61,17 +61,17 @@ bool Wamit::Load(String file) {
 	return true;
 }
 
-void Wamit::Save(String file) {
+void Wamit::Save(String file, bool force_T) {
 	try {
 		if (hd().IsLoadedA() && hd().IsLoadedB()) {
 			String file1 = ForceExt(file, ".1");
 			BEMData::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(file1)));
-			Save_1(file1);
+			Save_1(file1, force_T);
 		}
 		if (hd().IsLoadedFex()) {
 			String file3 = ForceExt(file, ".3");
 			BEMData::Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(file3)));
-			Save_3(file3);
+			Save_3(file3, force_T);
 		}
 		if (hd().IsLoadedC()) {
 			String fileHST = ForceExt(file, ".hst");
@@ -81,7 +81,7 @@ void Wamit::Save(String file) {
 		if (hd().IsLoadedRAO()) {
 			String fileRAO = ForceExt(file, ".4");
 			BEMData::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
-			Save_4(fileRAO);
+			Save_4(fileRAO, force_T);
 		}
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -428,7 +428,6 @@ bool Wamit::Load_1(String fileName) {
 		hd().dataFromW = false;
 		T = pick(w);
 		w.SetCount(hd().Nf);	
-		//Swap(thereIsAw0, thereIsAwinf);
 	} else {
 		hd().dataFromW = true;
 		T.SetCount(hd().Nf);
@@ -471,7 +470,7 @@ bool Wamit::Load_1(String fileName) {
  		
  		double Aij = f.GetDouble(3);
  		
- 		if ((freq < 0)) {// && hd().dataFromW) || (freq == 0 && !hd().dataFromW)) {
+ 		if ((freq < 0)) {
  			if (!thereIsAw0)
 				throw Exc(in.Str() + t_("A[w=inf] is not expected"));
 			hd().Aw0(i, j) = Aij;
@@ -582,7 +581,7 @@ bool Wamit::Load_3(String fileName) {
 		int i = f.GetInt(2) - 1;		
 		
        	hd().ex.ma[ih](ifr, i) = f.GetDouble(3);
-     	hd().ex.ph[ih](ifr, i) = f.GetDouble(4);
+     	hd().ex.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
         hd().ex.re[ih](ifr, i) = f.GetDouble(5);
         hd().ex.im[ih](ifr, i) = f.GetDouble(6);
 	}
@@ -608,8 +607,8 @@ bool Wamit::Load_hst(String fileName) {
 	in.SeekPos(fpos);
 	
 	hd().C.SetCount(hd().Nb);
-	for(int ibody = 0; ibody < hd().Nb; ++ibody)
-		hd().C[ibody].setConstant(6, 6, 0);
+	for(int ib = 0; ib < hd().Nb; ++ib)
+		hd().C[ib].setConstant(6, 6, Null);
 
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());	
@@ -728,7 +727,7 @@ bool Wamit::Load_4(String fileName) {
 		int i = f.GetInt(2) - 1;		
 		
        	hd().rao.ma[ih](ifr, i) = f.GetDouble(3);
-     	hd().rao.ph[ih](ifr, i) = f.GetDouble(4);
+     	hd().rao.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
         hd().rao.re[ih](ifr, i) = f.GetDouble(5);
         hd().rao.im[ih](ifr, i) = f.GetDouble(6);
 	}
@@ -736,15 +735,13 @@ bool Wamit::Load_4(String fileName) {
 	return true;
 }
 
-void Wamit::Save_1(String fileName) {
+void Wamit::Save_1(String fileName, bool force_T) {
 	if (!(hd().IsLoadedA() && hd().IsLoadedB())) 
 		return;
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
-	
-	out << " WAMIT Numeric Output from BEMRosetta\n";
 	
 	if (hd().IsLoadedAw0()) {
 		for (int i = 0; i < hd().Nb*6; ++i)  
@@ -765,14 +762,17 @@ void Wamit::Save_1(String fileName) {
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 		
 	Vector<double> *pdata;
-	int ifr0, ifrEnd, ifrDelta;
-	if (hd().dataFromW) 
+	if (force_T)
+		pdata = &hd().T;
+	else if (hd().dataFromW) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
 	Vector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && hd().dataFromW) || ((data[1] < data[0]) && !hd().dataFromW)) {
+	int ifr0, ifrEnd, ifrDelta;
+	bool growing = data[1] > data[0];
+	if ((growing && (hd().dataFromW && !force_T)) || (!growing && !(hd().dataFromW && !force_T))) {
 		ifr0 = 0;
 		ifrEnd = hd().Nf;
 		ifrDelta = 1;
@@ -791,7 +791,7 @@ void Wamit::Save_1(String fileName) {
 														 FormatWam(hd().B_ndim(ifr, i, j)));
 }
 
-void Wamit::Save_3(String fileName) {
+void Wamit::Save_3(String fileName, bool force_T) {
 	if (!hd().IsLoadedFex()) 
 		return;
 	
@@ -804,13 +804,13 @@ void Wamit::Save_3(String fileName) {
 
 	Vector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
-	if (hd().dataFromW) 
+	if (hd().dataFromW && !force_T) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
 	Vector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && hd().dataFromW) || ((data[1] < data[0]) && !hd().dataFromW)) {
+	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
 		ifr0 = 0;
 		ifrEnd = hd().Nf;
 		ifrDelta = 1;
@@ -827,7 +827,7 @@ void Wamit::Save_3(String fileName) {
 					out << Format(" %s %s %5d %s %s %s %s\n", 
 									FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 									FormatWam(hd().F_ma_ndim(hd().ex, ih, ifr, i)), 
-									FormatWam(hd().ex.ph[ih](ifr, i)),
+									FormatWam(hd().ex.ph[ih](ifr, i)*180/M_PI),
 									FormatWam(hd().F_re_ndim(hd().ex, ih, ifr, i)), 
 									FormatWam(hd().F_im_ndim(hd().ex, ih, ifr, i)));
 }
@@ -852,7 +852,7 @@ void Wamit::Save_hst(String fileName) {
 		}
 }
 
-void Wamit::Save_4(String fileName) {
+void Wamit::Save_4(String fileName, bool force_w) {
 	if (!hd().IsLoadedRAO()) 
 		return;
 		
@@ -865,13 +865,13 @@ void Wamit::Save_4(String fileName) {
 		
 	Vector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
-	if (hd().dataFromW) 
+	if (hd().dataFromW || force_w) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
 	Vector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && hd().dataFromW) || ((data[1] < data[0]) && !hd().dataFromW)) {
+	if (((data[1] > data[0]) && (hd().dataFromW || force_w)) || ((data[1] < data[0]) && !(hd().dataFromW || force_w))) {
 		ifr0 = 0;
 		ifrEnd = hd().Nf;
 		ifrDelta = 1;
@@ -888,7 +888,7 @@ void Wamit::Save_4(String fileName) {
 					out << Format(" %s %s %5d %s %s %s %s\n", 
 									FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 									FormatWam(hd().R_ma_ndim(hd().rao, ih, ifr, i)), 
-									FormatWam(hd().rao.ph[ih](ifr, i)),
+									FormatWam(hd().rao.ph[ih](ifr, i)*180/M_PI),
 									FormatWam(hd().R_re_ndim(hd().rao, ih, ifr, i)), 
 									FormatWam(hd().R_im_ndim(hd().rao, ih, ifr, i)));
 }

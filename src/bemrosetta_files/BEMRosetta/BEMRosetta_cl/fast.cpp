@@ -100,7 +100,7 @@ void Fast::Save(String file) {
 		String hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
 		DirectoryCreate(AppendFileName(GetFileFolder(file), hydroFolder));
 	
-		Wamit::Save(hydroFile);
+		Wamit::Save(hydroFile, true);
 		
 		if (hd().IsLoadedStateSpace()) {
 			String fileSts = ForceExt(hydroFile, ".ss");
@@ -278,10 +278,10 @@ void Fast::Save_SS(String fileName) {
 		out << "BEMRosetta state space matrices" << "\n";
 	Eigen::Index nstates = 0;
 	Vector<Eigen::Index> nstatesdof;
-	for (int idof = 0; idof < 6; ++idof) {
+	for (int idf = 0; idf < 6; ++idf) {
 		Eigen::Index num = 0;
-		for (int jdof = 0; jdof < 6; ++jdof) {
-			const Hydro::StateSpace &sts = hd().sts[idof][jdof];
+		for (int jdf = 0; jdf < 6; ++jdf) {
+			const Hydro::StateSpace &sts = hd().sts[idf][jdf];
 			num += sts.A_ss.cols();
 		}
 		if (num > 0) 
@@ -302,15 +302,15 @@ void Fast::Save_SS(String fileName) {
 	B.setConstant(nstates, 6, 0);
 	C.setConstant(6, nstates, 0);
 	int pos = 0;
-	for (int jdof = 0; jdof < 6; ++jdof) {
-		for (int idof = 0; idof < 6; ++idof) {
-			const Hydro::StateSpace &sts = hd().sts[idof][jdof];
+	for (int jdf = 0; jdf < 6; ++jdf) {
+		for (int idf = 0; idf < 6; ++idf) {
+			const Hydro::StateSpace &sts = hd().sts[idf][jdf];
 			if (sts.A_ss.size() > 0) {
 				for (int r = 0; r < sts.A_ss.rows(); ++r) 
 					for (int c = 0; c < sts.A_ss.cols(); ++c) {
 						A(pos + r, pos + c) = sts.A_ss(r, c);
-						B(pos + r, jdof)    = sts.B_ss(r);
-						C(idof, pos + r)    = sts.C_ss(r);
+						B(pos + r, jdf)    = sts.B_ss(r);
+						C(idf, pos + r)    = sts.C_ss(r);
 					}
 				pos += int(sts.A_ss.rows());
 			}
@@ -359,22 +359,22 @@ static bool FillDOF(const MatrixXd &C, int idf, int pos, int nstates, Vector<Eig
 			continue;
 		int delta = nstates/ndofdof;
 		for (int kk = 0; kk < ndofdof; ++kk) {			// Horizontal, left -> right
-			int idofOK = -1;
+			int idfOK = -1;
 			for (int idff = 0; idff < 6; ++idff) {		// Vertical, top -> bottom
 				double sum = 0;
 				for (int i = 0; i < delta; ++i)			// Horizontal, left -> right
 					sum += C(idff, pos+kk*delta+i);
 				if (sum != 0) {
-					if (idofOK >= 0) {
-						idofOK = -1;
+					if (idfOK >= 0) {
+						idfOK = -1;
 						break;
 					}
-					idofOK = idff;
+					idfOK = idff;
 				}
 			}
-			if (idofOK < 0)
+			if (idfOK < 0)
 				break;
-			listdof << idofOK;
+			listdof << idfOK;
 			nlistdof = delta;
 		}
 		if (!listdof.IsEmpty()) {

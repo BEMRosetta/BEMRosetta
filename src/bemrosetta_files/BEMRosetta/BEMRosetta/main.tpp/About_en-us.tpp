@@ -11,7 +11,7 @@ Element Method solver formats.&]
 [s0;2 &]
 [s0; Acknowledgments&]
 [s0;2 &]
-[s0; [2 J. C. Portillo, J. C. C. Henriques, Y. Peña, M. J. Sanchez`-Lara.]&]
+[s0; [2 J. C. Portillo, J. C. C. Henriques, M. J. Sanchez`-Lara.]&]
 [s0; [2 Some file parsing strategies taken from ][^https`:`/`/wec`-sim`.github`.io`/bemio`/^2 t
 he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 

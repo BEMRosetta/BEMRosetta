@@ -70,7 +70,7 @@ bool Aqwa::Load_AH1() {
 	hd().cg.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0); 
+		hd().C[ib].setConstant(6, 6, Null); 
 	hd().A.SetCount(hd().Nf);
 	hd().B.SetCount(hd().Nf);
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
@@ -112,17 +112,17 @@ bool Aqwa::Load_AH1() {
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {
-	            for (int idof = 0; idof < 6; ++idof) {
+	            for (int idf = 0; idf < 6; ++idf) {
 	                f.Load(in.GetLine());
 	                int did = 0;
-	                if (idof == 0) {
+	                if (idf == 0) {
 	                    did = 1;
 	                    int itb = f.GetInt(0);
 	                    if (itb - 1 != ib)
 	                        throw Exc(in.Str() + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
 	                }
-	                for (int jdof = 0; jdof < 6; ++jdof) 
-	                    hd().C[ib](idof, jdof) = f.GetDouble(jdof + did);
+	                for (int jdf = 0; jdf < 6; ++jdf) 
+	                    hd().C[ib](idf, jdf) = f.GetDouble(jdf + did);
 	            }
 			}
 		} else if (line.StartsWith("ADDEDMASS") || line.StartsWith("DAMPING")) {
@@ -131,10 +131,10 @@ bool Aqwa::Load_AH1() {
 			for (int ib0 = 0; ib0 < hd().Nb; ++ib0) {
 				for (int ib1 = 0; ib1 < hd().Nb; ++ib1) {
 					for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			            for (int idof = 0; idof < 6; ++idof) {
+			            for (int idf = 0; idf < 6; ++idf) {
 			                f.Load(in.GetLine());
 			                int did = 0;
-			                if (idof == 0) {
+			                if (idf == 0) {
 			                    did = 3;
 			                    int itb0 = f.GetInt(0);
 			                    if (itb0 - 1 != ib0)
@@ -147,11 +147,11 @@ bool Aqwa::Load_AH1() {
 			                        throw Exc(in.Str() + Format(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
 			                } else
 			                    did = 0;
-			                for (int jdof = 0; jdof < 6; ++jdof) {
+			                for (int jdf = 0; jdf < 6; ++jdf) {
 			                    if (am)
-			                    	hd().A[ifr](6*ib0 + idof, 6*ib1 + jdof) = f.GetDouble(jdof + did);
+			                    	hd().A[ifr](6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
 			                    else
-			                        hd().B[ifr](6*ib0 + idof, 6*ib1 + jdof) = f.GetDouble(jdof + did);
+			                        hd().B[ifr](6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
 			                }
 			            }
 					}
@@ -162,7 +162,7 @@ bool Aqwa::Load_AH1() {
 	            for (int ih = 0; ih < hd().Nh; ++ih) {
 	                for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 	                    f.Load(in.GetLine());
-	                  	for (int idof = 0; idof < 6; ++idof) {
+	                  	for (int idf = 0; idf < 6; ++idf) {
 		                    int itb = f.GetInt(0);
 		                    if (itb - 1 != ib)
 		                        throw Exc(in.Str() + Format(t_("Body # does not match in 'FORCERAO' %d<>%d"), itb, ib+1));
@@ -172,14 +172,14 @@ bool Aqwa::Load_AH1() {
 		                    int itfr = f.GetInt(2);
 							if (itfr - 1 != ifr)
 								throw Exc(in.Str() + Format(t_("Frequency # does not match in 'FORCERAO' %d<>%d"), itfr, ifr+1));
-			                hd().ex.ma[ih](ifr, idof + 6*ib) = f.GetDouble(idof + 3);
+			                hd().ex.ma[ih](ifr, idf + 6*ib) = f.GetDouble(idf + 3);
 	                  	}
 	                  	f.Load(in.GetLine());
-	                  	for (int idof = 0; idof < 6; ++idof) 
-	                       	hd().ex.ph[ih](ifr, idof + 6*ib) = -f.GetDouble(idof)*M_PI/180;
-	                    for (int idof = 0; idof < 6; ++idof) {   	
-		                    hd().ex.re[ih](ifr, idof + 6*ib) = hd().ex.ma[ih](ifr, idof + 6*ib)*cos(hd().ex.ph[ih](ifr, idof*ib));
-		       				hd().ex.im[ih](ifr, idof + 6*ib) = hd().ex.ma[ih](ifr, idof + 6*ib)*sin(hd().ex.ph[ih](ifr, idof*ib));
+	                  	for (int idf = 0; idf < 6; ++idf) 
+	                       	hd().ex.ph[ih](ifr, idf + 6*ib) = -f.GetDouble(idf)*M_PI/180;
+	                    for (int idf = 0; idf < 6; ++idf) {   	
+		                    hd().ex.re[ih](ifr, idf + 6*ib) = hd().ex.ma[ih](ifr, idf + 6*ib)*cos(hd().ex.ph[ih](ifr, idf*ib));
+		       				hd().ex.im[ih](ifr, idf + 6*ib) = hd().ex.ma[ih](ifr, idf + 6*ib)*sin(hd().ex.ph[ih](ifr, idf*ib));
 	                    }
 	                }
 	            }
@@ -388,11 +388,11 @@ bool Aqwa::Load_LIS() {
 					int ifrr = FindIndexCloser(hd().w, freq);
 					if (ifrr < 0)
 						throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
-					for (int idof = 0; idof < 6; ++idof) {
-						frc.ma[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2);
-						frc.ph[idh](ifr, idof + 6*idb) = f.GetDouble(2 + dd + idof*2 + 1);
-						frc.re[idh](ifr, idof + 6*idb) = frc.ma[idh](ifr, idof + 6*idb)*cos(frc.ph[idh](ifr, idof + 6*idb));
-			       		frc.im[idh](ifr, idof + 6*idb) = frc.ma[idh](ifr, idof + 6*idb)*sin(frc.ph[idh](ifr, idof + 6*idb));
+					for (int idf = 0; idf < 6; ++idf) {
+						frc.ma[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2);
+						frc.ph[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2 + 1);
+						frc.re[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*cos(frc.ph[idh](ifr, idf + 6*idb));
+			       		frc.im[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*sin(frc.ph[idh](ifr, idf + 6*idb));
 					}
 					dd = 0;
 					line = in.GetLine();
@@ -410,22 +410,22 @@ bool Aqwa::Load_LIS() {
 			if (TrimBoth(in.GetLine()) == "ADDED  MASS") {
 				in.GetLine(5);
 			
-				for (int idof = 0; idof < 6; ++idof) {
+				for (int idf = 0; idf < 6; ++idf) {
 					in.GetLine();
 					f.Load(in.GetLine());
-					if (f.GetText(0) != textDOF[idof])
-						throw Exc(in.Str() + Format(t_("Expected %s data, found '%s'"), textDOF[idof], f.GetText())); 
-					for (int jdof = 0; jdof < 6; ++jdof) 
-						hd().A[ifr](6*idb + idof, 6*idb + jdof) = f.GetDouble(1 + jdof);
+					if (f.GetText(0) != textDOF[idf])
+						throw Exc(in.Str() + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
+					for (int jdf = 0; jdf < 6; ++jdf) 
+						hd().A[ifr](6*idb + idf, 6*idb + jdf) = f.GetDouble(1 + jdf);
 				}
 				in.GetLine(8);
-				for (int idof = 0; idof < 6; ++idof) {
+				for (int idf = 0; idf < 6; ++idf) {
 					in.GetLine();
 					f.Load(in.GetLine());
-					if (f.GetText(0) != textDOF[idof])
-						throw Exc(in.Str() + Format(t_("Expected %s data, found '%s'"), textDOF[idof], f.GetText())); 
-					for (int jdof = 0; jdof < 6; ++jdof) 
-						hd().B[ifr](6*idb + idof, 6*idb + jdof) = f.GetDouble(1 + jdof);
+					if (f.GetText(0) != textDOF[idf])
+						throw Exc(in.Str() + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
+					for (int jdf = 0; jdf < 6; ++jdf) 
+						hd().B[ifr](6*idb + idf, 6*idb + jdf) = f.GetDouble(1 + jdf);
 				}
 			}
 		}

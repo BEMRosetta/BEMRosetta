@@ -2,11 +2,10 @@
 #define _FTGL_Demo_TrackBall_h_
 
 #include <CtrlLib/CtrlLib.h>
-
-using namespace Upp;
-
 #include <ScatterDraw/Pedantic.h>
 
+namespace Upp {
+	
 class TrackBall {
 public:
 	typedef TrackBall CLASSNAME;
@@ -40,5 +39,7 @@ private:
 	
 	double zoomAngle;
 };
+
+}
 
 #endif

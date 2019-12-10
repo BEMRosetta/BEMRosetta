@@ -4,8 +4,8 @@
 #include <plugin/jpg/jpg.h>
 #include <plugin/bmp/bmp.h>
 
-using namespace Upp;
 
+namespace Upp {
 
 bool Window_SaveCapture(int64 windowId, String fileName, int left, int top, int width, int height)
 {
@@ -632,3 +632,4 @@ Image Snap_Window(int64 handle)
 	return Window_SaveCapture(handle);
 }
 
+}
