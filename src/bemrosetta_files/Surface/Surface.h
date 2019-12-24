@@ -38,7 +38,7 @@ void Sort(T& a, T& b, T& c) {
 		Swap(b, c);
 }
 
-void GetTransform(Affine3d &aff, double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
+void GetTransform(Eigen::Affine3d &aff, double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
 	
 class Point3D : public Moveable<Point3D> {
 public:
@@ -71,7 +71,7 @@ public:
 	#pragma GCC diagnostic warning "-Wattributes"
 	
 	void MoveTo(const Point3D &point, double x, double y, double z, double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
-	void MoveTo(const Point3D &point, double _x, double _y, double _z, const Affine3d &aff);
+	void MoveTo(const Point3D &point, double _x, double _y, double _z, const Eigen::Affine3d &aff);
 		
 	// Dot product or scalar product
 	double dot(const Point3D& a) const {return x*a.x + y*a.y + z*a.z;}
@@ -259,7 +259,7 @@ public:
 class VolumeEnvelope : MoveableAndDeepCopyOption<VolumeEnvelope> {
 public:
 	VolumeEnvelope() {Reset();}
-	void Reset() 	{maxX = minX = maxY = minY = maxZ = minZ = Null;}
+	void Reset() 	 {maxX = minX = maxY = minY = maxZ = minZ = Null;}
 	VolumeEnvelope(const VolumeEnvelope &orig, int) {
 		maxX = orig.maxX;
 		minX = orig.minX;
@@ -309,7 +309,7 @@ public:
 	void GetSurface();
 	void GetVolume();
 	Point3D GetCenterOfBuoyancy();
-	void GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g, double zTolerance);
+	void GetHydrostaticStiffness(Eigen::MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g, double zTolerance);
 	void Underwater(const Surface &orig);
 	
 	bool IsMoved(double _x, double _y, double _z, double _ax, double _ay, double _az) const;

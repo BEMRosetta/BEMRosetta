@@ -303,7 +303,7 @@ bool Wamit::Load_out() {
 }
 
 
-void Wamit::Load_A(FileInLine &in, MatrixXd &A) {
+void Wamit::Load_A(FileInLine &in, Eigen::MatrixXd &A) {
 	in.GetLine(6);
 	while (!in.IsEof()) {
 		String line = TrimBoth(in.GetLine());

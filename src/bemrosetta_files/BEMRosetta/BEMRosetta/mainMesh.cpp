@@ -36,17 +36,18 @@ void MainMesh::Init() {
 
 	ArrayModel_Init(menuConvert.arrayModel);
 	
+	menuConvert.arrayModel.WhenCursor = THISBACK(OnMenuConvertArraySel);
 	menuConvert.opt.WhenAction = [&] {OnOpt();};
 
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
-	menuPlot.showMesh.WhenAction 	    = [&] {LoadSelTab(ma().bem);};
-	menuPlot.showNormals.WhenAction     = [&] {LoadSelTab(ma().bem);};
-	menuPlot.showWaterLevel.WhenAction  = [&] {LoadSelTab(ma().bem);};
-	menuPlot.showSkewed.WhenAction      = [&] {LoadSelTab(ma().bem);};
-	menuPlot.showFissure.WhenAction     = [&] {LoadSelTab(ma().bem);};
-	menuPlot.showMultiPan.WhenAction    = [&] {LoadSelTab(ma().bem);};
+	menuPlot.showMesh.WhenAction 	    = [&] {LoadSelTab(Bem());};
+	menuPlot.showNormals.WhenAction     = [&] {LoadSelTab(Bem());};
+	menuPlot.showWaterLevel.WhenAction  = [&] {LoadSelTab(Bem());};
+	menuPlot.showSkewed.WhenAction      = [&] {LoadSelTab(Bem());};
+	menuPlot.showFissure.WhenAction     = [&] {LoadSelTab(Bem());};
+	menuPlot.showMultiPan.WhenAction    = [&] {LoadSelTab(Bem());};
 	menuPlot.showAxis.WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showLimits.WhenAction 		= [&] {mainView.gl.Refresh();};
 	menuPlot.showCb.WhenAction  		= [&] {mainView.gl.Refresh();};
@@ -59,53 +60,55 @@ void MainMesh::Init() {
 	menuPlot.butFit.WhenAction			= [&] {mainView.gl.ZoomToFit();};
 	menuPlot.showMeshData.WhenAction	= [&] {mainVAll.SetButton(0);};
 	
+	ArrayModel_Init(menuPlot.arrayModel, true);
+	
 	OnOpt();
 	
-	CtrlLayout(menuStability);
-	menuStability.cg_x <<= 0;
-	menuStability.cg_x.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.cg_y <<= 0;
-	menuStability.cg_y.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.cg_z <<= 0;
-	menuStability.cg_z.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.mass <<= 0;
-	menuStability.mass.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.butUpdateCg <<= THISBACK1(OnUpdate, false);
+	CtrlLayout(menuProcess);
+	menuProcess.cg_x <<= 0;
+	menuProcess.cg_x.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.cg_y <<= 0;
+	menuProcess.cg_y.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.cg_z <<= 0;
+	menuProcess.cg_z.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.mass <<= 0;
+	menuProcess.mass.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.butUpdateCg <<= THISBACK1(OnUpdate, false);
 	
-	menuStability.t_x <<= 0;
-	menuStability.t_x.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.t_y <<= 0;
-	menuStability.t_y.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.t_z <<= 0;
-	menuStability.t_z.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.a_x <<= 0;
-	menuStability.a_x.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.a_y <<= 0;
-	menuStability.a_y.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.a_z <<= 0;
-	menuStability.a_z.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.c_x <<= 0;
-	menuStability.c_x.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.c_y <<= 0;
-	menuStability.c_y.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.c_z <<= 0;
-	menuStability.c_z.WhenEnter = THISBACK1(OnUpdate, false);
-	menuStability.moveType <<= 0;
-	menuStability.moveType.Transparent(false);
-	menuStability.butUpdatePos <<= THISBACK1(OnUpdate, false);
-	menuStability.butUpdateAng <<= THISBACK1(OnUpdate, false);
-	menuStability.butHealing <<= THISBACK(OnHealing);
-	menuStability.butImageX <<= THISBACK1(OnImage, 0);
-	menuStability.butImageY <<= THISBACK1(OnImage, 1);
-	menuStability.butImageZ <<= THISBACK1(OnImage, 2);
+	menuProcess.t_x <<= 0;
+	menuProcess.t_x.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.t_y <<= 0;
+	menuProcess.t_y.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.t_z <<= 0;
+	menuProcess.t_z.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.a_x <<= 0;
+	menuProcess.a_x.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.a_y <<= 0;
+	menuProcess.a_y.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.a_z <<= 0;
+	menuProcess.a_z.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.c_x <<= 0;
+	menuProcess.c_x.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.c_y <<= 0;
+	menuProcess.c_y.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.c_z <<= 0;
+	menuProcess.c_z.WhenEnter = THISBACK1(OnUpdate, false);
+	menuProcess.moveType <<= 0;
+	menuProcess.moveType.Transparent(false);
+	menuProcess.butUpdatePos <<= THISBACK1(OnUpdate, false);
+	menuProcess.butUpdateAng <<= THISBACK1(OnUpdate, false);
+	menuProcess.butHealing <<= THISBACK(OnHealing);
+	menuProcess.butImageX <<= THISBACK1(OnImage, 0);
+	menuProcess.butImageY <<= THISBACK1(OnImage, 1);
+	menuProcess.butImageZ <<= THISBACK1(OnImage, 2);
 	
-	ArrayModel_Init(menuStability.arrayModel); 
+	ArrayModel_Init(menuProcess.arrayModel); 
 	
-	menuStability.arrayModel.WhenCursor = THISBACK(OnMenuConvertArraySel);
+	menuProcess.arrayModel.WhenCursor = THISBACK(OnMenuProcessArraySel);
 
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
-	menuTab.Add(menuStability.SizePos(),t_("Process")).Disable();
+	menuTab.Add(menuProcess.SizePos(),t_("Process")).Disable();
 	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 		
 	mainView.Init(menuPlot, menuOpen.arrayModel);
@@ -123,14 +126,15 @@ void MainMesh::Init() {
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
+		Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
 		bool plot = true, convertProcess = true;
-		if (ma().bem.surfs.IsEmpty()) 
+		if (Bem().surfs.IsEmpty()) 
 			plot = convertProcess = false;
 		else if (mainTab.IsAt(mainVAll)) 
 			;
 		else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
-			mainStiffness.Load(ma().bem.surfs);
+			mainStiffness.Load(Bem().surfs, ids);
 		} else 
 			plot = false;
 		
@@ -138,8 +142,8 @@ void MainMesh::Init() {
 		tabMenuPlot.Enable(plot);
 		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
 		tabMenuConvert.Enable(convertProcess);
-		TabCtrl::Item& tabMenuStability = menuTab.GetItem(menuTab.Find(menuStability));
-		tabMenuStability.Enable(convertProcess);
+		TabCtrl::Item& tabmenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
+		tabmenuProcess.Enable(convertProcess);
 		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
 			menuTab.Set(menuPlot);
@@ -149,37 +153,57 @@ void MainMesh::Init() {
 		}
 		if (convertProcess) {
 			tabMenuConvert.Text(t_("Convert"));
-			tabMenuStability.Text(t_("Process"));
+			tabmenuProcess.Text(t_("Process"));
 		} else {
 			tabMenuConvert.Text("");
-			tabMenuStability.Text("");
+			tabmenuProcess.Text("");
 		}
 	};
 	mainTab.WhenSet();
+	
+	menuTab.WhenSet = [&] {
+	LOGTAB(menuTab);
+		if (menuTab.IsAt(menuConvert)) 
+			menuConvert.arrayModel.WhenCursor();
+	};
+	menuTab.WhenSet();
 }
 
-void MainMesh::OnMenuConvertArraySel() {
-	int id = ArrayModel_IdMesh(menuStability.arrayModel);
+void MainMesh::OnMenuProcessArraySel() {
+	int id = ArrayModel_IdMesh(menuProcess.arrayModel);
 	if (id < 0)
 		return;
 	
-	MeshData &data = ma().bem.surfs[id];
-	menuStability.cg_x <<= data.cg.x;
-	menuStability.cg_y <<= data.cg.y;
-	menuStability.cg_z <<= data.cg.z;
-	menuStability.mass <<= data.mass;
-	menuStability.t_x  <<= data.mesh.x;
-	menuStability.t_y  <<= data.mesh.y;
-	menuStability.t_z  <<= data.mesh.z;
-	menuStability.a_x  <<= data.mesh.a_x;
-	menuStability.a_y  <<= data.mesh.a_y;
-	menuStability.a_z  <<= data.mesh.a_z;
-	menuStability.c_x  <<= data.mesh.c_x;
-	menuStability.c_y  <<= data.mesh.c_y;
-	menuStability.c_z  <<= data.mesh.c_z;
-	menuStability.moveType <<= 0;
+	MeshData &data = Bem().surfs[id];
+	menuProcess.cg_x <<= data.cg.x;
+	menuProcess.cg_y <<= data.cg.y;
+	menuProcess.cg_z <<= data.cg.z;
+	menuProcess.mass <<= data.mass;
+	menuProcess.t_x  <<= data.mesh.x;
+	menuProcess.t_y  <<= data.mesh.y;
+	menuProcess.t_z  <<= data.mesh.z;
+	menuProcess.a_x  <<= data.mesh.a_x;
+	menuProcess.a_y  <<= data.mesh.a_y;
+	menuProcess.a_z  <<= data.mesh.a_z;
+	menuProcess.c_x  <<= data.mesh.c_x;
+	menuProcess.c_y  <<= data.mesh.c_y;
+	menuProcess.c_z  <<= data.mesh.c_z;
+	menuProcess.moveType <<= 0;
 }
 
+void MainMesh::OnMenuConvertArraySel() {
+	int id = ArrayModel_IdMesh(menuConvert.arrayModel);
+	if (id < 0)
+		return;
+	
+	String file = ~menuConvert.file;
+	String folder = GetFileFolder(file);
+	String ext = GetFileExt(file);
+	String fileName = GetFileTitle(ArrayModel_GetFileName(menuConvert.arrayModel));
+	file = AppendFileName(folder, fileName + ext);
+	menuConvert.file <<= file;
+}
+	
 void MainMesh::InitSerialize(bool ret) {
 	if (!ret || IsNull(menuPlot.showMesh)) 
 		menuPlot.showMesh = true;	
@@ -209,8 +233,9 @@ void MainMesh::InitSerialize(bool ret) {
 }
 
 void MainMesh::LoadSelTab(BEMData &bem) {
+	const Vector<int> &ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
 	if (mainTab.Get() == mainTab.Find(mainStiffness))
-		mainStiffness.Load(bem.surfs);
+		mainStiffness.Load(bem.surfs, ids);
 	else 
 		mainView.gl.Refresh();
 }
@@ -263,27 +288,31 @@ void MainMesh::OnOpt() {
 }
 
 void MainMesh::AfterLoad(String file) {
-	int id = ma().bem.surfs.GetCount() - 1;
-	MeshData &surf = ma().bem.surfs[id];
+	int id = Bem().surfs.GetCount() - 1;
+	MeshData &surf = Bem().surfs[id];
 	
-	menuOpen.arrayModel.Add(surf.GetCodeStr(), GetFileTitle(file), surf.GetId());
+	ArrayModel_Add(menuOpen.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId());
 	
 	mainView.CalcEnvelope();
 	mainView.gl.ZoomToFit();
 	mainTab.Set(mainView);
 	mainTab.WhenSet();
 	
-	surf.Report(ma().bem.rho);
-	mainSummary.Report(ma().bem.surfs, id);		
+	surf.Report(Bem().rho);
+	mainSummary.Report(Bem().surfs, id);		
 	
 	menuOpen.butRemove.Enable();
 	menuOpen.butRemoveSelected.Enable();
-	menuConvert.arrayModel.Add(surf.GetCodeStr(), GetFileTitle(file), surf.GetId());
+	ArrayModel_Add(menuPlot.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId(),
+					optionsPlot, [&] {mainView.gl.Refresh();});
+	if (ArrayModel_IdMesh(menuPlot.arrayModel) < 0)
+		menuPlot.arrayModel.SetCursor(0);
+	ArrayModel_Add(menuConvert.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId());
 	if (ArrayModel_IdMesh(menuConvert.arrayModel) < 0)
 		menuConvert.arrayModel.SetCursor(0);
-	menuStability.arrayModel.Add(surf.GetCodeStr(), GetFileTitle(file), surf.GetId());
-	if (ArrayModel_IdMesh(menuStability.arrayModel) < 0)
-		menuStability.arrayModel.SetCursor(0);		
+	ArrayModel_Add(menuProcess.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId());
+	if (ArrayModel_IdMesh(menuProcess.arrayModel) < 0)
+		menuProcess.arrayModel.SetCursor(0);		
 }
 
 bool MainMesh::OnLoad() {
@@ -294,16 +323,18 @@ bool MainMesh::OnLoad() {
 	try {
 		WaitCursor waitcursor;
 		Progress progress(t_("Loading mesh file..."), 100); 
-		mainView.gl.Disable();
 		
-		for (int i = 0; i < ma().bem.surfs.GetCount(); ++i) {
-			if (ma().bem.surfs[i].file == file) {
+		Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
+		for (int i = 0; i < ids.GetCount(); ++i) {
+			if (Bem().surfs[ids[i]].fileName == file) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
 					return false;
 				break;
 			}
 		}
-		ma().bem.LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);}, false);
+		mainView.gl.Disable();
+		
+		Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);}, false);
 		
 		AfterLoad(file);
 		
@@ -340,7 +371,7 @@ bool MainMesh::OnConvertMesh() {
 		WaitCursor waitcursor;
 		Progress progress(t_("Saving mesh file..."), 100); 
 		
-		ma().bem.surfs[id].SaveAs(~menuConvert.file, type, ma().bem.g, 
+		Bem().surfs[id].SaveAs(~menuConvert.file, type, Bem().g, 
 								static_cast<MeshData::MESH_TYPE>(int(~menuConvert.optMesh)));	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -351,7 +382,8 @@ bool MainMesh::OnConvertMesh() {
 
 void MainMesh::OnUpdate(bool forceMoved) {
 	try {
-		int id = ArrayModel_IdMesh(menuStability.arrayModel);
+		Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
+		int id = ArrayModel_IdMesh(menuProcess.arrayModel);
 		if (id < 0) {
 			Exclamation(t_("Please select a model to process"));
 			return;
@@ -359,30 +391,30 @@ void MainMesh::OnUpdate(bool forceMoved) {
 		
 		WaitCursor wait;
 		
-		MeshData &data = ma().bem.surfs[id];
+		MeshData &data = Bem().surfs[id];
 
-		data.mass = ~menuStability.mass;
-		data.cg0.Set(~menuStability.cg_x, ~menuStability.cg_y, ~menuStability.cg_z);
+		data.mass = ~menuProcess.mass;
+		data.cg0.Set(~menuProcess.cg_x, ~menuProcess.cg_y, ~menuProcess.cg_z);
 		
 		double t_x, t_y, t_z, a_x, a_y, a_z, c_x, c_y, c_z;
-		if (~menuStability.moveType == 0) {
-			t_x = ~menuStability.t_x;
-			t_y = ~menuStability.t_y;
-			t_z = ~menuStability.t_z;
-			a_x = ~menuStability.a_x;
-			a_y = ~menuStability.a_y;
-			a_z = ~menuStability.a_z;
+		if (~menuProcess.moveType == 0) {
+			t_x = ~menuProcess.t_x;
+			t_y = ~menuProcess.t_y;
+			t_z = ~menuProcess.t_z;
+			a_x = ~menuProcess.a_x;
+			a_y = ~menuProcess.a_y;
+			a_z = ~menuProcess.a_z;
 		} else {
-			t_x = data.mesh.x   + double(~menuStability.t_x);
-			t_y = data.mesh.y   + double(~menuStability.t_y);
-			t_z = data.mesh.z   + double(~menuStability.t_z);
-			a_x = data.mesh.a_x + double(~menuStability.a_x);
-			a_y = data.mesh.a_y + double(~menuStability.a_y);
-			a_z = data.mesh.a_z + double(~menuStability.a_z);
+			t_x = data.mesh.x   + double(~menuProcess.t_x);
+			t_y = data.mesh.y   + double(~menuProcess.t_y);
+			t_z = data.mesh.z   + double(~menuProcess.t_z);
+			a_x = data.mesh.a_x + double(~menuProcess.a_x);
+			a_y = data.mesh.a_y + double(~menuProcess.a_y);
+			a_z = data.mesh.a_z + double(~menuProcess.a_z);
 		}
-		c_x = ~menuStability.c_x;
-		c_y = ~menuStability.c_y;
-		c_z = ~menuStability.c_z;
+		c_x = ~menuProcess.c_x;
+		c_y = ~menuProcess.c_y;
+		c_z = ~menuProcess.c_z;
 		
 		if (IsNull(t_x) || IsNull(t_y) || IsNull(t_z)) {
 			Exclamation(t_("Please fill translation data"));
@@ -404,11 +436,11 @@ void MainMesh::OnUpdate(bool forceMoved) {
 		if (isMoved)
 			data.mesh.MoveTo(t_x, t_y, t_z, a_x, a_y, a_z, c_x, c_y, c_z);
 	
-		data.AfterLoad(ma().bem.rho, ma().bem.g, !isMoved);
+		data.AfterLoad(Bem().rho, Bem().g, !isMoved);
 		
-	 	mainStiffness.Load(ma().bem.surfs);
+	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(ma().bem.surfs, id);
+		mainSummary.Report(Bem().surfs, id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -419,7 +451,7 @@ void MainMesh::OnUpdate(bool forceMoved) {
 
 void MainMesh::OnHealing() {
 	try {
-		int id = ArrayModel_IdMesh(menuStability.arrayModel);
+		int id = ArrayModel_IdMesh(menuProcess.arrayModel);
 		if (id < 0) {
 			Exclamation(t_("Please select a model to process"));
 			return;
@@ -429,7 +461,7 @@ void MainMesh::OnHealing() {
 		Progress progress(t_("Healing mesh file..."), 100); 
 		mainView.gl.Disable();
 		
-		ma().bem.HealingMesh(id, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);});
+		Bem().HealingMesh(id, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);});
 		
 		OnUpdate(true);
 		mainView.gl.Enable();
@@ -442,7 +474,8 @@ void MainMesh::OnImage(int axis) {
 	String saxis = (axis == 0) ? "X" : ((axis == 1) ? "Y" : "Z");
 
 	try {
-		int id = ArrayModel_IdMesh(menuStability.arrayModel);
+		Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
+		int id = ArrayModel_IdMesh(menuProcess.arrayModel);
 		if (id < 0) {
 			Exclamation(t_("Please select a model to process"));
 			return;
@@ -450,9 +483,9 @@ void MainMesh::OnImage(int axis) {
 		
 		WaitCursor waitcursor;
 		
-		MeshData &data = ma().bem.surfs[id];
+		MeshData &data = Bem().surfs[id];
 
-		data.mass = ~menuStability.mass;
+		data.mass = ~menuProcess.mass;
 		if (axis == 0)
 			data.cg0.x = -data.cg0.x;
 		else if (axis == 1)
@@ -464,11 +497,11 @@ void MainMesh::OnImage(int axis) {
 
 		data.mesh.Image(axis);
 	
-		data.AfterLoad(ma().bem.rho, ma().bem.g, false);
+		data.AfterLoad(Bem().rho, Bem().g, false);
 		
-	 	mainStiffness.Load(ma().bem.surfs);
+	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(ma().bem.surfs, id);
+		mainSummary.Report(Bem().surfs, id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -484,13 +517,15 @@ void MainMesh::OnRemove() {
 	menuOpen.arrayModel.Clear();
 	menuOpen.butRemove.Disable();
 	menuOpen.butRemoveSelected.Disable();
+	menuPlot.arrayModel.Clear();
+	optionsPlot.Clear();
 	menuConvert.arrayModel.Clear();
-	menuStability.arrayModel.Clear();
+	menuProcess.arrayModel.Clear();
 	
 	mainStiffness.Clear();
 	mainViewData.Clear();
 	
-	ma().bem.surfs.Clear();
+	Bem().surfs.Clear();
 	mainView.env.Reset();
 	
 	mainTab.WhenSet();
@@ -502,10 +537,11 @@ void MainMesh::OnRemoveSelected(bool all) {
 	for (int r = menuOpen.arrayModel.GetCount()-1; r >= 0; --r) {
 		if (all || menuOpen.arrayModel.IsSelected(r)) {
 			int id = ArrayModel_IdMesh(menuOpen.arrayModel, r);
-			ma().bem.surfs.Remove(id);
+			Bem().surfs.Remove(id);
 			menuOpen.arrayModel.Remove(r);
+			menuPlot.arrayModel.Remove(r);
 			menuConvert.arrayModel.Remove(r);
-			menuStability.arrayModel.Remove(r);
+			menuProcess.arrayModel.Remove(r);
 			selected = true;
 		}
 	}
@@ -514,19 +550,20 @@ void MainMesh::OnRemoveSelected(bool all) {
 		return;
 	}
  	mainSummary.Clear();
-	//for (int i = 0; i < ma().bem.surfs.GetCount(); ++i) 
+	//for (int i = 0; i < Bem().surfs.GetCount(); ++i) 
 	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
 		int id = ArrayModel_IdMesh(menuOpen.arrayModel, row);
-		mainSummary.Report(ma().bem.surfs, id);
+		mainSummary.Report(Bem().surfs, id);
 	}
-	mainStiffness.Load(ma().bem.surfs);
+	Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
+	mainStiffness.Load(Bem().surfs, ids);
 	mainViewData.Clear();//OnRefresh();
 	
 	int numrow = menuOpen.arrayModel.GetCount();
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numrow > 0);
 	
-	mainView.env.Reset();
+	mainView.CalcEnvelope();
 	
 	mainTab.WhenSet();
 	mainView.gl.Refresh();	
@@ -535,7 +572,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 void MainMesh::Jsonize(JsonIO &json) {
 	json
 		("menuOpen_file", menuOpen.file)
-		("menuConvert_file", menuConvert.file)
+		("menuConvert_file", menuConvert.file)	
 		("menuConvert_opt", menuConvert.opt)
 		("menuConvert_optMesh", menuConvert.optMesh)
 		("menuPlot_showMesh", menuPlot.showMesh)		
@@ -554,7 +591,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 
 void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	const MeshData &data = surfs[id];
-	String name = GetFileTitle(data.file);
+	String name = GetFileTitle(data.fileName);
 	
 	if (array.GetColumnCount() == 0)
 		array.AddColumn("Param");
@@ -565,7 +602,7 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	
 	bool healing = data.mesh.healing;
 	
-	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
+	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.fileName);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
 	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetCodeStr());	
 	
@@ -573,29 +610,36 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.GetCount());
 
 	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FormatDouble(data.mesh.surface, 3, FD_EXP));
-	array.Set(row, 0, t_("Volume [m3]"));		array.Set(row++, col, Format("x:%s y:%s z:%s", 
+	array.Set(row, 0, t_("Volume [m3]"));		array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
+														FormatDouble(data.mesh.volume,  1, FD_EXP),
 														FormatDouble(data.mesh.volumex, 1, FD_EXP),
 														FormatDouble(data.mesh.volumey, 1, FD_EXP),
 														FormatDouble(data.mesh.volumez, 1, FD_EXP)));
 	
 	array.Set(row, 0, t_("Immersed surface [m2]"));array.Set(row++, col, FormatDouble(data.under.surface, 3, FD_EXP));
-	array.Set(row, 0, t_("Immersed volume [m3]")); array.Set(row++, col, Format("x:%s y:%s z:%s", 
+	array.Set(row, 0, t_("Immersed volume [m3]")); array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
+														FormatDouble(data.under.volume,  1, FD_EXP),
 														FormatDouble(data.under.volumex, 1, FD_EXP),
 														FormatDouble(data.under.volumey, 1, FD_EXP),
 														FormatDouble(data.under.volumez, 1, FD_EXP)));
-	array.Set(row, 0, t_("Displacement [tm]")); array.Set(row++, col, FormatDouble(data.under.volume*ma().bem.rho/1000, 3, FD_EXP));
-	array.Set(row, 0, t_("Cb(x) [m]"));			array.Set(row++, col, FormatDouble(data.cb.x, 3, FD_EXP));
-	array.Set(row, 0, t_("Cb(y) [m]"));			array.Set(row++, col, FormatDouble(data.cb.y, 3, FD_EXP));
-	array.Set(row, 0, t_("Cb(z) [m]"));			array.Set(row++, col, FormatDouble(data.cb.z, 3, FD_EXP));
-	
+	array.Set(row, 0, t_("Displacement [tm]")); array.Set(row++, col, FormatDouble(data.under.volume*Bem().rho/1000, 3, FD_EXP));
+	array.Set(row, 0, t_("Cg [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
+														FormatDouble(data.cg.x, 3, FD_EXP),			
+														FormatDouble(data.cg.y, 3, FD_EXP),
+														FormatDouble(data.cg.z, 3, FD_EXP)));
+	array.Set(row, 0, t_("Cb [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
+														FormatDouble(data.cb.x, 3, FD_EXP),			
+														FormatDouble(data.cb.y, 3, FD_EXP),
+														FormatDouble(data.cb.z, 3, FD_EXP)));
 	array.Set(row, 0, t_("Water Plane Area [m2]"));	array.Set(row++, col, FormatDouble(data.waterPlaneArea, 3, FD_EXP));
 	
-	array.Set(row, 0, t_("Min X [m]"));			array.Set(row++, col, FormatDouble(data.mesh.env.minX, 3, FD_EXP));	
-	array.Set(row, 0, t_("Max X [m]"));			array.Set(row++, col, FormatDouble(data.mesh.env.maxX, 3, FD_EXP));
-	array.Set(row, 0, t_("Min Y [m]"));			array.Set(row++, col, FormatDouble(data.mesh.env.minY, 3, FD_EXP));
-	array.Set(row, 0, t_("Max Y [m]"));			array.Set(row++, col, FormatDouble(data.mesh.env.maxY, 3, FD_EXP));
-	array.Set(row, 0, t_("Min Z [m]"));			array.Set(row++, col, FormatDouble(data.mesh.env.minZ, 3, FD_EXP));
-	array.Set(row, 0, t_("Max Z [m]"));			array.Set(row++, col, FormatDouble(data.mesh.env.maxZ, 3, FD_EXP));
+	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
+														FormatDouble(data.mesh.env.minX, 3, FD_EXP),
+														FormatDouble(data.mesh.env.minY, 3, FD_EXP),
+														FormatDouble(data.mesh.env.minZ, 3, FD_EXP),
+														FormatDouble(data.mesh.env.maxX, 3, FD_EXP),
+														FormatDouble(data.mesh.env.maxY, 3, FD_EXP),
+														FormatDouble(data.mesh.env.maxZ, 3, FD_EXP)));
 
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (data.C.size() > 0) {
@@ -642,14 +686,6 @@ void MainView::Init(const WithMenuPlotMesh<StaticRect> &_menuPlot, const ArrayCt
 	gl.WhenPaint = THISBACK(OnPaint);	
 }
 	
-static Color GetColor(int id) {
-	static Color col[10] = {Color(93,185,86), Color(180,96,189), Color(176,177,67), Color(106,126,205),
-							Color(219,142,68), Color(79,186,172), Color(203,83,67), Color(83,133,68),
-							Color(199,89,128), Color(147,119,58)};
-	int mod = id % 10;
-	return col[mod];
-}
-
 void MainView::OnPaint() {
 	if (~GetMenuPlot().showAxis) 
 		gl.PaintAxis(0, 0, 0, env.LenRef()/4.);	
@@ -657,52 +693,54 @@ void MainView::OnPaint() {
 	if (~GetMenuPlot().showLimits) 
 		gl.PaintCuboid(Point3D(env.maxX, env.maxY, env.maxZ), Point3D(env.minX, env.minY, env.minZ), Gray());
 	
-	//for (int i = 0; i < ma().bem.surfs.GetCount(); ++i) {
 	for (int row = 0; row < arrayModel->GetCount(); ++row) {
-		int id = ArrayModel_IdMesh(*arrayModel, row);
-		
-		double len = env.LenRef()/10;
-		bool showNormals = ~GetMenuPlot().showNormals && ~GetMenuPlot().showMesh;
-		bool showNormalsUnderwater = ~GetMenuPlot().showNormals && ~GetMenuPlot().showUnderwater;
-		if (~GetMenuPlot().showNormals && !~GetMenuPlot().showMesh && !~GetMenuPlot().showUnderwater)
-			showNormals = true;
-		
-		const MeshData &mesh = ma().bem.surfs[id];
-		gl.PaintSurface(mesh.mesh, GetColor(row), ~GetMenuPlot().showMesh, 	
-			showNormals, false, ~GetMenuPlot().showSkewed, 
-			~GetMenuPlot().showFissure, ~GetMenuPlot().showMultiPan);
-		gl.PaintSurface(mesh.under, GetColor(row), ~GetMenuPlot().showUnderwater, 
-			showNormalsUnderwater, ~GetMenuPlot().showWaterLevel, false, 
-			false, false);
-		if (~GetMenuPlot().showCb) {
-			gl.PaintDoubleAxis(mesh.cb, len, LtBlue());
-			gl.PaintCube(mesh.cb, len/10, LtGray());
-		}
-		if (~GetMenuPlot().showCg) {
-			gl.PaintDoubleAxis(mesh.cg, len, Black());
-			gl.PaintCube(mesh.cg, len/10, LtGray());
-		}
-		if (paintSelect) {
-			if (~GetMenuPlot().showMesh) {
-				const Vector<int> &nod = mesh.mesh.GetSelNodes();
-				for (int in = 0; in < nod.GetCount(); ++in)
-					gl.PaintCube(mesh.mesh.nodes[nod[in]], len/5, LtBlue());
-				const Vector<int> &pan = mesh.mesh.GetSelPanels();
-				const Vector<Point3D> &nodes = mesh.mesh.nodes;
-				for (int ip = 0; ip < pan.GetCount(); ++ip) {
-					const Panel &panel = mesh.mesh.panels[pan[ip]];
-					gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
-				}
+		if (ArrayModel_IsVisible(GetMenuPlot().arrayModel, row)) {
+			int id = ArrayModel_IdMesh(*arrayModel, row);
+			
+			double len = env.LenRef()/10;
+			bool showNormals = ~GetMenuPlot().showNormals && ~GetMenuPlot().showMesh;
+			bool showNormalsUnderwater = ~GetMenuPlot().showNormals && ~GetMenuPlot().showUnderwater;
+			if (~GetMenuPlot().showNormals && !~GetMenuPlot().showMesh && !~GetMenuPlot().showUnderwater)
+				showNormals = true;
+			
+			const Upp::Color &color = ArrayModel_GetColor(GetMenuPlot().arrayModel, row);
+			const MeshData &mesh = Bem().surfs[id];
+			gl.PaintSurface(mesh.mesh, color, ~GetMenuPlot().showMesh, 	
+				showNormals, false, ~GetMenuPlot().showSkewed, 
+				~GetMenuPlot().showFissure, ~GetMenuPlot().showMultiPan);
+			gl.PaintSurface(mesh.under, color, ~GetMenuPlot().showUnderwater, 
+				showNormalsUnderwater, ~GetMenuPlot().showWaterLevel, false, 
+				false, false);
+			if (~GetMenuPlot().showCb) {
+				gl.PaintDoubleAxis(mesh.cb, len, LtBlue());
+				gl.PaintCube(mesh.cb, len/10, LtGray());
 			}
-			if (~GetMenuPlot().showUnderwater) {
-				const Vector<int> &nod = mesh.under.GetSelNodes();
-				for (int in = 0; in < nod.GetCount(); ++in)
-					gl.PaintCube(mesh.under.nodes[nod[in]], len/5, LtBlue());
-				const Vector<int> &pan = mesh.under.GetSelPanels();
-				const Vector<Point3D> &nodes = mesh.under.nodes;
-				for (int ip = 0; ip < pan.GetCount(); ++ip) {
-					const Panel &panel = mesh.under.panels[pan[ip]];
-					gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+			if (~GetMenuPlot().showCg) {
+				gl.PaintDoubleAxis(mesh.cg, len, Black());
+				gl.PaintCube(mesh.cg, len/10, LtGray());
+			}
+			if (paintSelect) {
+				if (~GetMenuPlot().showMesh) {
+					const Vector<int> &nod = mesh.mesh.GetSelNodes();
+					for (int in = 0; in < nod.GetCount(); ++in)
+						gl.PaintCube(mesh.mesh.nodes[nod[in]], len/5, LtBlue());
+					const Vector<int> &pan = mesh.mesh.GetSelPanels();
+					const Vector<Point3D> &nodes = mesh.mesh.nodes;
+					for (int ip = 0; ip < pan.GetCount(); ++ip) {
+						const Panel &panel = mesh.mesh.panels[pan[ip]];
+						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+					}
+				}
+				if (~GetMenuPlot().showUnderwater) {
+					const Vector<int> &nod = mesh.under.GetSelNodes();
+					for (int in = 0; in < nod.GetCount(); ++in)
+						gl.PaintCube(mesh.under.nodes[nod[in]], len/5, LtBlue());
+					const Vector<int> &pan = mesh.under.GetSelPanels();
+					const Vector<Point3D> &nodes = mesh.under.nodes;
+					for (int ip = 0; ip < pan.GetCount(); ++ip) {
+						const Panel &panel = mesh.under.panels[pan[ip]];
+						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
+					}
 				}
 			}
 		}
@@ -711,10 +749,10 @@ void MainView::OnPaint() {
 
 void MainView::CalcEnvelope() {
 	env.Reset();
-	//for (int i = 0; i < ma().bem.surfs.GetCount(); ++i)
+	//for (int i = 0; i < Bem().surfs.GetCount(); ++i)
 	for (int row = 0; row < arrayModel->GetCount(); ++row) {
 		int id = ArrayModel_IdMesh(*arrayModel, row);
-		env.MixEnvelope(ma().bem.surfs[id].mesh.env);
+		env.MixEnvelope(Bem().surfs[id].mesh.env);
 	}
 }
 
@@ -726,7 +764,7 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 		bool followWithErrors = false;
 		for (int i = 0; i < files.GetCount(); ++i) {
 			menuOpen.file <<= files[i];
-			ma().Status(Format(t_("Loading '%s'"), files[i]));
+			Status(Format(t_("Loading '%s'"), files[i]));
 			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
 				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
 					return;
@@ -743,7 +781,7 @@ bool MainMesh::Key(dword key, int ) {
 		bool followWithErrors = false;
 		for (int i = 0; i < files.GetCount(); ++i) {
 			menuOpen.file <<= files[i];
-			ma().Status(Format(t_("Loading '%s'"), files[i]));
+			Status(Format(t_("Loading '%s'"), files[i]));
 			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
 				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
 					return true;
@@ -761,11 +799,11 @@ void MainViewData::Init() {
 }
 
 void MainViewData::OnAddedModel(MainView &mainView) {
-	int id = ma().bem.surfs.GetCount()-1;
+	int id = Bem().surfs.GetCount()-1;
 	
 	MainViewDataEach &model = models.Add();
-	model.Init(ma().bem.surfs[id], mainView);
-	tab.Add(model.SizePos(), GetFileTitle(ma().bem.surfs[id].file));
+	model.Init(Bem().surfs[id], mainView);
+	tab.Add(model.SizePos(), GetFileTitle(Bem().surfs[id].fileName));
 }
 
 void MainViewData::OnRefresh() {
@@ -836,13 +874,15 @@ Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 }
 
 void MainViewDataEach::UpdateStatus(bool under) {
+	MainMesh &mainMesh = GetDefinedParent<MainMesh>(this);
+	
 	bool show;
 	if (!under) {
-		show = ma().mainMesh.GetShowMesh();
+		show = mainMesh.GetShowMesh();
 		selectedPanels = ArrayCtrlGetSelected(arrayFacetsAll2.array);
 		selectedNodes = ArrayCtrlGetSelected(arrayNodesMoved.array);
 	} else {
-		show = ma().mainMesh.GetShowUnderwater();
+		show = mainMesh.GetShowUnderwater();
 		selectedPanels = ArrayCtrlGetSelected(arrayFacetsUnder.array);
 		selectedNodes = ArrayCtrlGetSelected(arrayNodesUnder.array);
 	}

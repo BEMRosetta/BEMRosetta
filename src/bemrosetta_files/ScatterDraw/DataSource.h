@@ -83,8 +83,8 @@ public:
 		{GetSpectralMoments(&DataSource::y, &DataSource::x, frequency, m_1, m0, m1, m2);}
 		
 	Vector<double> SortDataY() 				{return SortData(&DataSource::y);}
-	Vector<double> PercentileY(double rate) 	{return Percentile(&DataSource::y, rate);}
-	double PercentileAvgY(double rate) 		{return PercentileAvg(&DataSource::y, rate);}
+	Vector<double> PercentileY(double rate) {return Percentile(&DataSource::y, rate);}
+	double PercentileValY(double rate) 		{return PercentileVal(&DataSource::y, rate);}
 	
 	double Min(Getdatafun getdata, int64& id);
 	double Max(Getdatafun getdata, int64& id);
@@ -120,7 +120,7 @@ public:
 	bool SameX(DataSource &data);
 	Vector<double> SortData(Getdatafun getdata);
 	Vector<double> Percentile(Getdatafun getdata, double rate);
-	double PercentileAvg(Getdatafun getdata, double rate);
+	double PercentileVal(Getdatafun getdata, double rate);
 	
 	bool IsMagic() 				{return magic == 1234321;}		// Temporal use, just for testing
 	

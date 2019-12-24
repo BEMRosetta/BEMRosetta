@@ -6,7 +6,7 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->file = fileName;
+	this->fileName = fileName;
 	SetCode(MeshData::NEMOH_DAT);
 	
 	try {
@@ -52,7 +52,7 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 			panel.id[3] = f.GetInt(3)-1;	
 		}	
 	} catch (Exc e) {
-		return e;
+		return t_("Parsing error: ") + e;
 	}
 	
 	return String();

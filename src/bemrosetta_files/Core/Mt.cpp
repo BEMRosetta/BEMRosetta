@@ -435,6 +435,11 @@ void Semaphore::Release(int n)
 	ReleaseSemaphore(handle, n, NULL);
 }
 
+bool Semaphore::Wait(int timeout_ms)
+{
+	return WaitForSingleObject(handle, timeout_ms) == WAIT_OBJECT_0;
+}
+
 void Semaphore::Wait()
 {
 	WaitForSingleObject(handle, INFINITE);
@@ -535,6 +540,30 @@ void ConditionVariable::Wait(Mutex& m)
 	}
 }
 
+bool ConditionVariable::Wait(Mutex& m, int timeout_ms)
+{
+	if(InitializeConditionVariable)
+		return SleepConditionVariableCS(cv, &m.section, timeout_ms);
+	else { // WindowsXP implementation
+		static thread_local byte buffer[sizeof(WaitingThread)]; // only one Wait per thread is possible
+		WaitingThread *w = new(buffer) WaitingThread;
+		{
+			Mutex::Lock __(mutex);
+			w->next = NULL;
+			if(head)
+				tail->next = w;
+			else
+				head = w;
+			tail = w;
+		}
+		m.Leave();
+		bool r = w->sem.Wait(timeout_ms);
+		m.Enter();
+		w->WaitingThread::~WaitingThread();
+		return r;
+	}
+}
+
 void ConditionVariable::Signal()
 {
 	if(InitializeConditionVariable)
@@ -609,6 +638,20 @@ RWMutex::~RWMutex()
 	pthread_rwlock_destroy(rwlock);
 }
 
+bool ConditionVariable::Wait(Mutex& m, int timeout_ms)
+{
+	struct timespec until;
+	clock_gettime(CLOCK_REALTIME, &until);
+	
+	until.tv_sec += timeout_ms / 1000;
+	timeout_ms %= 1000;
+	until.tv_nsec += timeout_ms * 1000000;
+	until.tv_sec += until.tv_nsec / 1000000000;
+	until.tv_nsec %= 1000000000;
+
+	return pthread_cond_timedwait(cv, m.mutex, &until) == 0;
+}
+
 #ifdef PLATFORM_OSX
 
 void Semaphore::Release()
@@ -619,6 +662,11 @@ void Semaphore::Release()
 void Semaphore::Wait()
 {
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+bool Semaphore::Wait(int timeout_ms)
+{
+	return dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, 1000000 * timeout_ms)) == 0;
 }
 
 Semaphore::Semaphore()
@@ -641,6 +689,20 @@ void Semaphore::Release()
 void Semaphore::Wait()
 {
 	sem_wait(&sem);
+}
+
+bool Semaphore::Wait(int timeout_ms)
+{
+	struct timespec until;
+	clock_gettime(CLOCK_REALTIME, &until);
+	
+	until.tv_sec += timeout_ms / 1000;
+	timeout_ms %= 1000;
+	until.tv_nsec += timeout_ms * 1000000;
+	until.tv_sec += until.tv_nsec / 1000000000;
+	until.tv_nsec %= 1000000000;
+	
+	return sem_timedwait(&sem,&until) != -1;
 }
 
 Semaphore::Semaphore()

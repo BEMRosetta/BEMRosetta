@@ -5,7 +5,7 @@ String MeshData::LoadDatWamit(String fileName) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->file = fileName;
+	this->fileName = fileName;
 	SetCode(MeshData::WAMIT_DAT);
 	
 	try {
@@ -88,7 +88,7 @@ String MeshData::LoadDatWamit(String fileName) {
 			}
 		}
 	} catch (Exc e) {
-		return e;
+		return t_("Parsing error: ") + e;
 	}
 	
 	return String();
@@ -99,7 +99,7 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->file = fileName;
+	this->fileName = fileName;
 	SetCode(MeshData::WAMIT_GDF);
 	
 	try {
@@ -160,7 +160,7 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 		if (mesh.panels.GetCount() != nPatches)
 			return t_("Wrong number of patches in .gdf file");
 	} catch (Exc e) {
-		return e;
+		return t_("Parsing error: ") + e;
 	}
 		
 	return String();
