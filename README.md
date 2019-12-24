@@ -6,9 +6,9 @@
 
 ## Christmas comes with colors
 
-Every item loaded comes with a single color that identifies it, in list, plots and 3d view... even in hydristatic stiffness matrices.
+Every item loaded comes with a single color that identifies it, in lists, plots and 3d views... even in hydrostatic stiffness matrices.
 
-<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/ColorList.png" width="100" title="Colored list"></p>
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/ColorList.png" width="500" title="Colored list"></p>
 
 # BEMRosetta
 **Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
