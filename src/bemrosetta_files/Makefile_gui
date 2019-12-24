@@ -52268,88 +52268,6 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	Functions4U/SvgColors.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Functions4U.cpp -o $(OutDir_Functions4U)Functions4U.o
 
-$(OutDir_Functions4U)LocalProcess2.o: Functions4U/LocalProcess2.cpp \
-	Core/Algo.h \
-	Core/App.h \
-	Core/AString.hpp \
-	Core/Atomic.h \
-	Core/BiCont.h \
-	Core/Callback.h \
-	Core/CallbackN.i \
-	Core/CallbackNP.i \
-	Core/CallbackR.i \
-	Core/CharSet.h \
-	Core/CharSet.i \
-	Core/CoAlgo.h \
-	Core/Color.h \
-	Core/Complex.h \
-	Core/config.h \
-	Core/Convert.h \
-	Core/Core.h \
-	Core/CoSort.h \
-	Core/CoWork.h \
-	Core/Defs.h \
-	Core/Diag.h \
-	Core/FilterStream.h \
-	Core/FixedMap.h \
-	Core/Format.h \
-	Core/Function.h \
-	Core/Gtypes.h \
-	Core/Hash.h \
-	Core/Heap.h \
-	Core/Huge.h \
-	Core/i18n.h \
-	Core/Index.h \
-	Core/Index.hpp \
-	Core/Inet.h \
-	Core/InMap.hpp \
-	Core/InVector.h \
-	Core/InVector.hpp \
-	Core/JSON.h \
-	Core/Lang.h \
-	Core/Lang_s.h \
-	Core/LocalProcess.h \
-	Core/Map.h \
-	Core/Map.hpp \
-	Core/Mt.h \
-	Core/Obsolete.h \
-	Core/Ops.h \
-	Core/Other.h \
-	Core/Parser.h \
-	Core/Path.h \
-	Core/Profile.h \
-	Core/Ptr.h \
-	Core/Range.h \
-	Core/Sort.h \
-	Core/Sorted.h \
-	Core/SplitMerge.h \
-	Core/Stream.h \
-	Core/String.h \
-	Core/t_.h \
-	Core/TimeDate.h \
-	Core/Topic.h \
-	Core/Topt.h \
-	Core/Tuple.h \
-	Core/Utf.hpp \
-	Core/Util.h \
-	Core/Uuid.h \
-	Core/Value.h \
-	Core/Value.hpp \
-	Core/ValueUtil.h \
-	Core/ValueUtil.hpp \
-	Core/Vcont.h \
-	Core/Vcont.hpp \
-	Core/Win32Util.h \
-	Core/XML.h \
-	Core/Xmlize.h \
-	Core/Xmlize.hpp \
-	Core/z.h \
-	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h \
-	uppconfig.h \
-	Functions4U/LocalProcess2.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/LocalProcess2.cpp -o $(OutDir_Functions4U)LocalProcess2.o
-
 $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	config/ftheader.h \
 	ft2build.h \
@@ -52529,6 +52447,88 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	Functions4U/StaticPlugin.h \
 	Functions4U/SvgColors.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Functions4U_Gui.cpp -o $(OutDir_Functions4U)Functions4U_Gui.o
+
+$(OutDir_Functions4U)LocalProcess2.o: Functions4U/LocalProcess2.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h \
+	Functions4U/LocalProcess2.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/LocalProcess2.cpp -o $(OutDir_Functions4U)LocalProcess2.o
 
 $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	config/ftheader.h \
@@ -53390,8 +53390,8 @@ $(OutDir_Functions4U)htmld.o: Functions4U/Html/htmld.cpp \
 
 $(OutDir_Functions4U)Functions4U.a: \
 	$(OutDir_Functions4U)Functions4U.o \
-	$(OutDir_Functions4U)LocalProcess2.o \
 	$(OutDir_Functions4U)Functions4U_Gui.o \
+	$(OutDir_Functions4U)LocalProcess2.o \
 	$(OutDir_Functions4U)QtfEquation.o \
 	$(OutDir_Functions4U)StaticPlugin.o \
 	$(OutDir_Functions4U)GatherTpp.o \
@@ -53402,8 +53402,8 @@ $(OutDir_Functions4U)Functions4U.a: \
 	$(OutDir_Functions4U)htmld.o
 	$(AR) $(OutDir_Functions4U)Functions4U.a \
 		$(OutDir_Functions4U)Functions4U.o \
-		$(OutDir_Functions4U)LocalProcess2.o \
 		$(OutDir_Functions4U)Functions4U_Gui.o \
+		$(OutDir_Functions4U)LocalProcess2.o \
 		$(OutDir_Functions4U)QtfEquation.o \
 		$(OutDir_Functions4U)StaticPlugin.o \
 		$(OutDir_Functions4U)GatherTpp.o \

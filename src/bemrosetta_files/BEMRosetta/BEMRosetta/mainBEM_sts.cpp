@@ -29,22 +29,24 @@ void MainStateSpace::Clear() {
 	selTab = 0;
 }
 
-bool MainStateSpace::Load(BEMData &bem) {
+bool MainStateSpace::Load(BEMData &bem, const Vector<int> &ids) {
 	try {
-		Upp::Array<HydroClass> &hydro = bem.hydros; 
-		if (hydro.IsEmpty())
+		Upp::Array<HydroClass> &hydros = bem.hydros; 
+		
+		if (ids.IsEmpty())
 			return false;
 		isFilling = true;
 		tab.Reset();
 		int sdof = 6*bem.Nb;
 		
+		const MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 		plots.SetCount(sdof);
 		for (int i = 0; i < sdof; ++i) {
 			plots[i].SetCount(sdof);
 			for (int j = 0; j < sdof; ++j) {
 				if (!bem.onlyDiagonal || i == j) {
 					plots[i][j].Init(i, j);
-					if (plots[i][j].Load(hydro)) {
+					if (plots[i][j].Load(hydros, ids, mbm)) {
 						if (i != j)
 							tab.Add(plots[i][j].SizePos(), Hydro::StrBDOF(i, j));
 						else
@@ -73,8 +75,8 @@ void MainStateSpacePlot::Init(int _idf, int _jdf) {
 	Add(splitterTab.SizePos());
 }
 
-bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
-	if (!mainPlot.Load(hydro))
+bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids, const MainBEM &mbm) {
+	if (!mainPlot.Load(hydros, mbm, ids))
 		return false;
 
 	tab.Reset();
@@ -83,8 +85,8 @@ bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydro) {
 	bool loaded = false;
 	int idf = mainPlot.idf;
 	int jdf = mainPlot.jdf;
-	for (int id = 0; id < hydro.GetCount(); ++id) {
-		Hydro &hy = hydro[id].hd();
+	for (int id = 0; id < ids.GetCount(); ++id) {
+		Hydro &hy = hydros[ids[id]].hd();
 		if (hy.IsLoadedStateSpace()) {
 			Hydro::StateSpace &sts = hy.sts[idf][jdf];
 			int row = 0;

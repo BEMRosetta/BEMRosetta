@@ -5,7 +5,7 @@
 #include <ScatterDraw/Pedantic.h>
 
 namespace Upp {
-
+using namespace Eigen;
 
 #define Membercall(fun)	(this->*fun)
 
@@ -500,7 +500,7 @@ Vector<Pointf> FFTSimple(VectorXd &data, double tSample, bool frequency, int typ
     Vector<Pointf> res;
     VectorXcd freqbuf;
     try {
-	    Eigen::FFT<double> fft;
+	    FFT<double> fft;
 	    fft.SetFlag(fft.HalfSpectrum);
 	    fft.fwd(freqbuf, data);
     } catch(...) {
@@ -750,22 +750,19 @@ Vector<double> DataSource::SortData(Getdatafun getdata) {
 }
 
 Vector<double> DataSource::Percentile(Getdatafun getdata, double rate) {
+	ASSERT(rate >= 0 && rate <= 1);
 	Vector<double> data = SortData(getdata);
-	int num = static_cast<int>(data.GetCount()*rate);
-	Vector<double> ret;
-	for (int i = 0; i < num; ++i) {
-		double val = data[i];
-		ret << data[i];	
-	}
-	return ret;
+	int num = int(data.GetCount()*rate) + 1;
+	if (num < data.GetCount())
+		data.Remove(num, data.GetCount()-num);
+	return data;
 }
 
-double DataSource::PercentileAvg(Getdatafun getdata, double rate) {
-	Vector<double> data = Percentile(getdata, rate);	
-	double ret = 0;
-	for (int i = 0; i < data.GetCount(); ++i)
-		ret += data[i];
-	return ret/data.GetCount();
+double DataSource::PercentileVal(Getdatafun getdata, double rate) {
+	ASSERT(rate >= 0 && rate <= 1);
+	Vector<double> data = SortData(getdata);
+	int num = int(data.GetCount()*rate);
+	return LinearInterpolate<double>(data.GetCount()*rate, num, num+1, data[num-1], data[num]);
 }
 
 void ExplicitData::Init(Function<double (double x, double y)> _funz, double _minX, double _maxX, double _minY, double _maxY) {

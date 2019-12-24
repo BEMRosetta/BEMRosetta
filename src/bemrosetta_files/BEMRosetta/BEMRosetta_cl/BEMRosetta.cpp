@@ -801,7 +801,7 @@ String Hydro::C_units(int i, int j) {
 	return ret;
 }
 
-void Hydro::SetC(int ib, const MatrixXd &K) {
+void Hydro::SetC(int ib, const Eigen::MatrixXd &K) {
 	if (C.IsEmpty())
 		C.SetCount(Nb);
 	if (C[ib].size() == 0)
@@ -850,7 +850,7 @@ void Hydro::StateSpace::GetTFS(const Vector<double> &w) {
 	TFS.SetCount(w.GetCount());
 	for (int ifr = 0; ifr < w.GetCount(); ++ifr) {
 		std::complex<double> wi = std::complex<double>(0, w[ifr]);
-		TFS[ifr] = C_ss.transpose()*(MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss;	// C_ss*inv(I*w*i-A_ss)*B_ss
+		TFS[ifr] = C_ss.transpose()*(Eigen::MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss;	// C_ss*inv(I*w*i-A_ss)*B_ss
 	}		
 }
 		
@@ -1038,29 +1038,29 @@ void BEMData::Ainf(int id) {
 	hydros[id].hd().Ainf();
 }
 
-void BEMData::LoadMesh(String file, Function <void(String, int pos)> Status, bool checkDuplicated) {
-	Status(Format(t_("Loaded mesh '%s'"), file), 10);
+void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status, bool checkDuplicated) {
+	Status(Format(t_("Loaded mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < surfs.GetCount(); ++i) {
-			if (surfs[i].file == file) {
+			if (surfs[i].fileName == fileName) {
 				BEMData::Print(S("\n") + t_("Model is already loaded"));
 				throw Exc(t_("Model is already loaded"));
 			}
 		}
 	}
 	MeshData &mesh = surfs.Add();
-	String error = mesh.Load(file, rho, g);
+	String error = mesh.Load(fileName, rho, g);
 	if (!error.IsEmpty()) {
-		BEMData::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), file, error));
+		BEMData::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		surfs.Remove(surfs.GetCount()-1);
-		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), file, error));
+		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 	}
 }
 
 void BEMData::HealingMesh(int id, Function <void(String, int)> Status) {
-	Status(Format(t_("Healing mesh '%s'"), surfs[id].file), 10);
-	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].file));
+	Status(Format(t_("Healing mesh '%s'"), surfs[id].fileName), 10);
+	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].fileName));
 	
 	String ret;
 	try {
@@ -1078,11 +1078,11 @@ void BEMData::HealingMesh(int id, Function <void(String, int)> Status) {
 }
 
 void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
-	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].file), 10);
+	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].fileName), 10);
 	
 	MeshData &mesh = surfs.Add();
 	MeshData &orig = surfs[id];
-	mesh.file = orig.file;
+	mesh.fileName = orig.fileName;
 	
 	String ret;
 	try {
