@@ -5,6 +5,7 @@
 
 
 namespace Upp {
+using namespace Eigen;
 
 Point3D GetCentroid(const Point3D &a, const Point3D &b) {
 	return Point3D(avg(a.x, b.x), avg(a.y, b.y), avg(a.z, b.z));	
@@ -229,7 +230,7 @@ int Surface::RemoveDuplicatedPointsAndRenumber(Vector<Panel> &_panels, Vector<Po
 	int num = 0;
 	
 	// Detect duplicated points in nodes
-	double similThres = 0.00001;
+	double similThres = 0.001;
 	Upp::Index<int> duplic, goods;
 	for (int i = 0; i < _nodes.GetCount()-1; ++i) {
 		if (duplic.Find(i) >= 0)
@@ -673,6 +674,7 @@ Point3D Surface::GetCenterOfBuoyancy() {
 	return Point3D(xb, yb, zb);
 }
 
+// Hydrostatic restoring is only expected from heave, roll and pitch
 void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho, 
 					const Point3D &cg, double mass, double g, double zTolerance) {
 	c.setConstant(6, 6, 0);
@@ -683,50 +685,46 @@ void Surface::GetHydrostaticStiffness(MatrixXd &c, const Point3D &cb, double rho
 	if (IsNull(mass))
 		mass = rho*volume;
 		
-	for (int ip = 0; ip < panels.GetCount(); ++ip) {	// Wamit Manual, Chapter 3.1
+	for (int ip = 0; ip < panels.GetCount(); ++ip) {	
 		const Panel &panel = panels[ip];
-		const Point3D &p0 = nodes[panel.id[0]];
-		const Point3D &p1 = nodes[panel.id[1]];
-		const Point3D &p2 = nodes[panel.id[2]];
-		const Point3D &p3 = nodes[panel.id[3]];
-		
-		//if (p0.z <= zTolerance && p1.z <= zTolerance && p2.z <= zTolerance && 
-		//	(panel.IsTriangle() || p3.z <= zTolerance)) {
-			double momentz0 = panel.normal0.z*panel.surface0;
-			double momentz1 = panel.normal1.z*panel.surface1;
-			double x0 = panel.centroid0.x;
-			double y0 = panel.centroid0.y;
-			double x1 = panel.centroid1.x;
-			double y1 = panel.centroid1.y;
-			c(2, 2) -= (momentz0 + momentz1);
-            c(2, 3) -= (y0*momentz0 + y1*momentz1);
-            c(2, 4) += (x0*momentz0 + x1*momentz1);
-            c(3, 3) -= (y0*y0*momentz0 + y1*y1*momentz1);
-            c(3, 4) += (x0*y0*momentz0 + x1*y1*momentz1);
-            c(4, 4) -= (x0*x0*momentz0 + x1*x1*momentz1);
-		//}
+
+		double momentz0 = panel.normal0.z*panel.surface0;
+		double momentz1 = panel.normal1.z*panel.surface1;
+		double x0 = panel.centroid0.x;
+		double y0 = panel.centroid0.y;
+		double x1 = panel.centroid1.x;
+		double y1 = panel.centroid1.y;
+		c(2, 2) -= (momentz0 + momentz1);
+        c(2, 3) -= (y0*momentz0 + y1*momentz1);
+        c(2, 4) += (x0*momentz0 + x1*momentz1);
+        c(3, 3) -= (y0*y0*momentz0 + y1*y1*momentz1);
+        c(3, 4) += (x0*y0*momentz0 + x1*y1*momentz1);
+        c(4, 4) -= (x0*x0*momentz0 + x1*x1*momentz1);
 	}
 	double rho_g = rho*g;
 	
-	c(2, 2) = c(2, 2)*rho_g;										
+	c(2, 2) = c(2, 2)*rho_g;									
 	c(2, 3) = c(2, 3)*rho_g;
 	c(2, 4) = c(2, 4)*rho_g;
 	c(3, 4) = c(3, 4)*rho_g;
 	
-	double kk1 = c(3, 3)*rho_g;
-	double kk2 = volumez*cb.z*rho_g;
-	double kk3 = mass*g*cg.z;
-	c(3, 3) = c(3, 3)*rho_g + volumez*cb.z*rho_g - mass*g*cg.z;
+	c(3, 3) = (c(3, 3) + volumez*cb.z)*rho_g - mass*g*cg.z;
+	c(4, 4) = (c(4, 4) + volumez*cb.z)*rho_g - mass*g*cg.z;
 	
-	c(4, 4) = c(4, 4)*rho_g + volumez*cb.z*rho_g - mass*g*cg.z;
-	c(3, 5) = mass*g*cg.x - volumex*cb.x*rho_g;
-	c(4, 5) = mass*g*cg.y - volumey*cb.y*rho_g;
+	if (abs(cb.x) > 0.001)
+		c(3, 5) -= rho_g*volume*cb.x;
+	if (abs(cg.x) > 0.001)
+		c(3, 5) += mass*g*cg.x;
 	
+	if (abs(cb.x) > 0.001)
+		c(4, 5) -= rho_g*volume*cb.y;
+	if (abs(cg.x) > 0.001)
+		c(4, 5) += mass*g*cg.y;
+			
 	c(3, 2) = c(2, 3);
 	c(4, 2) = c(2, 4);
-	c(4, 3) = c(3, 4); 
+	c(4, 3) = c(3, 4);
 }
-
 
 inline static void AddSegZero(Vector<Segment3D> &seg, const Point3D &p0, const Point3D &p1, 
 			const Point3D &p2, const Point3D &p3) {

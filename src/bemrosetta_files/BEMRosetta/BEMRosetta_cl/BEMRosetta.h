@@ -74,25 +74,25 @@ public:
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
  	
-	Upp::Array<MatrixXd> A;					// [Nf](6*Nb, 6*Nb)	Added mass
-    MatrixXd Awinf;        					// (6*Nb, 6*Nb) 	Infinite frequency added mass
-    MatrixXd Aw0;        					// (6*Nb, 6*Nb)  	Infinite period added mass
-    Upp::Array<MatrixXd> B; 				// [Nf](6*Nb, 6*Nb)	Radiation damping
+	Upp::Array<Eigen::MatrixXd> A;			// [Nf](6*Nb, 6*Nb)	Added mass
+    Eigen::MatrixXd Awinf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
+    Eigen::MatrixXd Aw0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
+    Upp::Array<Eigen::MatrixXd> B; 			// [Nf](6*Nb, 6*Nb)	Radiation damping
     Vector<double> head;					// [Nh]             Wave headings (deg)
     Vector<String> names;  					// {Nb}             Body names
-    Upp::Array<MatrixXd> C;				 	// [Nb](6, 6)		Hydrostatic restoring coefficients:
-    MatrixXd cb;          					// (3,Nb)           Centre of buoyancy
-    MatrixXd cg;          					// (3,Nb)     		Centre of gravity
+    Upp::Array<Eigen::MatrixXd> C;			// [Nb](6, 6)		Hydrostatic restoring coefficients:
+    Eigen::MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
+    Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     BEM_SOFT code;        					// BEM_SOFT			BEM code 
     Vector<int> dof;      					// [Nb]            	Degrees of freedom for each body 
     Vector<int> dofOrder;					//					Order of DOF
     
-    Upp::Array<MatrixXd> Kirf;				// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
+    Upp::Array<Eigen::MatrixXd> Kirf;		// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
     Vector<double> Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
     	
     struct Forces {
-    	Upp::Array<MatrixXd> ma, ph;   		// [Nh](Nf, 6*Nb) 	Magnitude and phase
-    	Upp::Array<MatrixXd> re, im;		// [Nh](Nf, 6*Nb)	Real and imaginary components
+    	Upp::Array<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
+    	Upp::Array<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
     	void Jsonize(JsonIO &json) {
 			json
 				("ma", ma)
@@ -115,10 +115,10 @@ public:
 
     struct StateSpace {
 	    Upp::Array<std::complex<double>> TFS;
-		MatrixXd A_ss;
-		VectorXd B_ss;
-		VectorXd C_ss;
-		VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
+		Eigen::MatrixXd A_ss;
+		Eigen::VectorXd B_ss;
+		Eigen::VectorXd C_ss;
+		Eigen::VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
 		double ssMAE = Null;
 		
 		void GetTFS(const Vector<double> &w);
@@ -150,7 +150,7 @@ public:
     
     static String C_units(int i, int j);
     
-    void SetC(int ib, const MatrixXd &K);
+    void SetC(int ib, const Eigen::MatrixXd &K);
     
 	int GetHeadId(double hd) const {
 		for (int i = 0; i < head.GetCount(); ++i) {
@@ -494,9 +494,9 @@ public:
 	Point3D cb;
 	Point3D cg, cg0;
 	double mass;
-	MatrixXd C;
+	Eigen::MatrixXd C;
 	
-	String file;
+	String fileName;
 	String header;
 	
 	Surface mesh, under;
@@ -587,7 +587,7 @@ public:
 	
 protected:
 	bool Load_out();							
-	void Load_A(FileInLine &in, MatrixXd &A);
+	void Load_A(FileInLine &in, Eigen::MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
 

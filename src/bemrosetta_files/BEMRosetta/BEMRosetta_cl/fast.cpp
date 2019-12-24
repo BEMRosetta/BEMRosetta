@@ -297,7 +297,7 @@ void Fast::Save_SS(String fileName) {
 		out << Format("%3<d", int(nstatesdof[i]));
 	out << "  %Radiation states per DOFs\n";	
 
-	MatrixXd A, B, C;
+	Eigen::MatrixXd A, B, C;
 	A.setConstant(nstates, nstates, 0);
 	B.setConstant(nstates, 6, 0);
 	C.setConstant(6, nstates, 0);
@@ -353,7 +353,7 @@ static void SortBy(Vector<Eigen::Index> &list, int idf) {
 	}
 }
 
-static bool FillDOF(const MatrixXd &C, int idf, int pos, int nstates, Vector<Eigen::Index> &listdof, Eigen::Index &nlistdof) {
+static bool FillDOF(const Eigen::MatrixXd &C, int idf, int pos, int nstates, Vector<Eigen::Index> &listdof, Eigen::Index &nlistdof) {
 	for (int ndofdof = 1; ndofdof <= 6; ++ndofdof) {
 		if (nstates%ndofdof != 0)
 			continue;
@@ -420,7 +420,7 @@ bool Fast::Load_SS(String fileName) {
 	if (numtot != nstates)
 		throw Exc(Format(t_("Sum of states %d does no match total radiation states %d"), numtot, nstates));
 	
-	MatrixXd A, B, C;
+	Eigen::MatrixXd A, B, C;
 	A.setConstant(nstates, nstates, Null);
 	B.setConstant(nstates, 6, Null);
 	C.setConstant(6, nstates, Null);

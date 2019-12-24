@@ -8,10 +8,8 @@ String MeshData::Load(String file, double rho, double g) {
 	bool y0z = false, x0z = false;
 	if (ext == ".dat") {
 		ret = LoadDatNemoh(file, x0z);
-		if (!ret.IsEmpty()) 
+		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
 			ret = LoadDatWamit(file);
-		else
-			ret = String();
 	} else if (ext == ".gdf") 
 		ret = LoadGdfWamit(file, y0z, x0z); 
 	else if (ext == ".stl") {
@@ -127,7 +125,7 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 }
 
 void MeshData::Report(double rho) {
-	BEMData::Print("\n\n" + Format(t_("Loaded mesh '%s'"), file));
+	BEMData::Print("\n\n" + Format(t_("Loaded mesh '%s'"), fileName));
 	
 	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));

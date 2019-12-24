@@ -290,7 +290,7 @@ public:
 	typedef MainArrange CLASSNAME;
 	void Init();
 	void Clear();
-	void Load(Upp::Array<HydroClass> &hydro);
+	void Load(Upp::Array<HydroClass> &hydro, const Vector<int> &ids);
 	void Remove(int c);
 	
 private:
@@ -393,14 +393,16 @@ public:
 	
 	void Init();
 	void Clear();
-	bool Load(Upp::Array<HydroClass> &hydros);
-	void Load(Upp::Array<MeshData> &surfs);
+	bool Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids);
+	void Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids);
 	
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody);
-	void Add(String name, int icase, const MatrixXd &K, bool button);
+	void Add(String name, int icase, const Eigen::MatrixXd &K, bool button);
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro);
 };
+
+class MainBEM;
 
 class MainPlot : public StaticRect {
 public:
@@ -408,9 +410,9 @@ public:
 	
 	void Init(bool vert);
 	void Init(int idf, double jdf_ih, DataToShow dataToShow);
-	bool Load(const Upp::Array<HydroClass> &hydro);
-	bool Load(const Hydro &hy);
-	void LoadEach(const Hydro &hy, int id, bool &loaded);
+	bool Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Vector<int> &ids);
+	bool Load(const Hydro &hy, const MainBEM &mbm);
+	void LoadEach(const Hydro &hy, int id, bool &loaded, int idc = -1);
 	void Clear();
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
@@ -440,7 +442,7 @@ public:
 	
 	void Init(DataToShow dataToShow);
 	void Clear();
-	bool Load(BEMData &bem);
+	bool Load(BEMData &bem, const Vector<int> &ids);
 	
 	TabCtrl tab;
 	Upp::Array<Upp::Array<MainPlot>> plots;
@@ -456,7 +458,7 @@ public:
 	typedef MainStateSpacePlot CLASSNAME;
 	
 	void Init(int _idf, int _jdf);
-	bool Load(Upp::Array<HydroClass> &hydro);
+	bool Load(Upp::Array<HydroClass> &hydro, const Vector<int> &ids, const MainBEM &mbm);
 	void InitArray(ArrayCtrl &array);
 	
 	MainPlot mainPlot;
@@ -472,7 +474,7 @@ public:
 	void Init();
 	void Clear();
 	void Init(ArrayCtrl &array);
-	bool Load(BEMData &bem);
+	bool Load(BEMData &bem, const Vector<int> &ids);
 	
 	Upp::Array<Upp::Array<MainStateSpacePlot>> plots;
 	
@@ -499,7 +501,8 @@ public:
 	void OnHealing();
 	void OnImage(int axis);
 	void OnOpt();
-	void OnMenuConvertArraySel() ;
+	void OnMenuProcessArraySel();
+	void OnMenuConvertArraySel();
 	
 	void LoadSelTab(BEMData &bem);
 		
@@ -508,7 +511,7 @@ public:
 	WithMenuMesh<StaticRect> menuOpen;
 	WithMenuConvertMesh<StaticRect> menuConvert;
 	WithMenuPlotMesh<StaticRect> menuPlot;
-	WithMenuMeshStability<StaticRect> menuStability;
+	WithMenuMeshStability<StaticRect> menuProcess;
 	
 	bool GetShowMesh()	{return menuPlot.showMesh;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
@@ -520,6 +523,8 @@ private:
 	MainSummaryMesh mainSummary;
 	MainStiffness mainStiffness;
 
+	Array<Option> optionsPlot;
+	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
 };
@@ -604,8 +609,6 @@ private:
 	int id = -1;
 };
 
-class MainBEM;
-
 class MenuFOAMM : public WithMenuStateSpace<StaticRect> {
 public:
 	typedef MenuFOAMM CLASSNAME;
@@ -637,6 +640,7 @@ public:
 	void OnA0();
 	void OnAinf();
 	void OnDescription();
+	void OnMenuConvertArraySel();
 		
 	void Jsonize(JsonIO &json);
 		
@@ -713,8 +717,6 @@ public:
 		ProcessEvents();
 	}
 	
-	MainMesh mainMesh;
-	
 private:
 	TabCtrl tab;
 	int lastTab;
@@ -723,6 +725,7 @@ private:
 	MainNemoh mainNemoh;
 	MainBEM mainBEM;
 	MainOutput mainOutput;
+	MainMesh mainMesh;
 	
 	MenuOptions menuOptions;
 	MenuAbout menuAbout;
@@ -732,13 +735,25 @@ private:
 	StatusBar bar;
 };
 
-ArrayCtrl &ArrayModel_Init(ArrayCtrl &array);
+ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool push = false);
+void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id);
+void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
+					Array<Option> &option, Function <void()>OnPush);
 int ArrayModel_IdMesh(const ArrayCtrl &array);
 int ArrayModel_IdMesh(const ArrayCtrl &array, int row);
 int ArrayModel_IdHydro(const ArrayCtrl &array);
 int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
-	
+Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
+Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids);
+bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);
+const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row);
+String ArrayModel_GetFileName(ArrayCtrl &array, int row = -1);
+		
 Main &ma(Main *m = 0);
-MainBEM &mbm(MainBEM *m = 0);
+BEMData &Bem();
+void Status(String str = String(), int time = 2000);
 
+const Color &GetColorId(int id);
+	
 #endif

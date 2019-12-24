@@ -19,6 +19,8 @@ using namespace Upp;
 
 #include "main.h"
 
+using namespace Eigen;
+
 FreqSelector::FreqSelector() {
 	add.SetImage(Img::add());
 	add.WhenAction = [&] {AddField();};
@@ -320,6 +322,7 @@ void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, Str
 	col0 = icase*8;
 	
 	array.Set(0, col0, AttrText(name).Bold());
+	array.Set(2, col0, AttrText(" ").Paper(GetColorId(icase)));
 	
 	while (array.GetColumnCount() < col0 + 7) {
 		if (icase > 0) {
@@ -352,7 +355,7 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button) 
 		for (int c = 0; c < 6; ++c)
 			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(K(r, c), 7, FD_EXP|FD_CAP_E|FD_REL)).Align(ALIGN_RIGHT));
 	}
-	if (button && ma().bem.hydros.GetCount() > 0)
+	if (button && Bem().hydros.GetCount() > 0)
 		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy"))
 			 .WhenAction = [=] {
 				WithBEMList<TopWindow> w;
@@ -363,8 +366,8 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button) 
 				w.array.AddColumn(t_("Body"), 10);
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
-				for (int f = 0; f < ma().bem.hydros.GetCount(); ++f) {
-					const Hydro &hy = ma().bem.hydros[f].hd();
+				for (int f = 0; f < Bem().hydros.GetCount(); ++f) {
+					const Hydro &hy = Bem().hydros[f].hd();
 					for (int ib = 0; ib < hy.Nb; ++ib)
 						w.array.Add(hy.name, hy.names[ib].IsEmpty() ? AsString(ib+1) : hy.names[ib], f, ib);
 				}
@@ -378,7 +381,7 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button) 
 						return; 
 					int f = w.array.Get(id, 2);
 					int ib = w.array.Get(id, 3);
-					ma().bem.hydros[f].hd().SetC(ib, K);
+					Bem().hydros[f].hd().SetC(ib, K);
 				}
 			 };
 }
@@ -396,22 +399,25 @@ void MainStiffness::Add(String name, int icase, String bodyName, int ibody, cons
 	}
 }
 
-bool MainStiffness::Load(Upp::Array<HydroClass> &hydros) {
+bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids) {
 	Clear();
 	
-	for (int icase = 0; icase < hydros.GetCount(); ++icase) {
+	for (int i = 0; i < ids.GetCount(); ++i) {
+		int icase = ids[i];
 		Hydro &hydro = hydros[icase].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
-			Add(hydros[icase].hd().name, icase, hydros[icase].hd().names[ibody], ibody, hydro);
+			Add(hydros[icase].hd().name, i, hydros[icase].hd().names[ibody], ibody, hydro);
 	}
 	return true;
 }	
 
-void MainStiffness::Load(Upp::Array<MeshData> &surfs) {
+void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids) {
 	Clear();
 
-	for (int icase = 0; icase < surfs.GetCount(); ++icase) 
-		Add(GetFileTitle(surfs[icase].file), icase, surfs[icase].C, true);
+	for (int i = 0; i < ids.GetCount(); ++i) {
+		int icase = ids[i];	
+		Add(GetFileTitle(surfs[icase].fileName), i, surfs[icase].C, true);
+	}
 }
 			
 Main &ma(Main *m) {
@@ -420,6 +426,9 @@ Main &ma(Main *m) {
 		mp = m;
 	return *mp;
 }
+
+BEMData &Bem() 						{return ma().bem;}
+void Status(String str, int time)	{ma().Status(str, time);}
 
 void OnPanic(const char *title, const char *text) {
 	throw Exc(Format(t_("Error type 1 %s: %s"), title, text));	
@@ -480,50 +489,128 @@ String TabText(const TabCtrl &tab) {
 	return tab.GetItem(id).GetText();
 }
 
-ArrayCtrl &ArrayModel_Init(ArrayCtrl &array) {
+const Color &GetColorId(int id) {
+	static Color col[10] = {Color(93,185,86), Color(180,96,189), Color(176,177,67), Color(106,126,205),
+							Color(219,142,68), Color(79,186,172), Color(203,83,67), Color(83,133,68),
+							Color(199,89,128), Color(147,119,58)};
+	int mod = id % 10;
+	return col[mod];
+}
+
+struct RectDisplay : public Display {
+	virtual void Paint(Draw& w, const Rect& r, const Value& q,
+	                   Color ink, Color paper, dword style) const {
+		w.DrawRect(r, q);
+	}
+};
+
+ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option) {
 	array.NoHeader().NoVertGrid().AutoHideSb();
+	array.HeaderObject().HideTab(array.AddColumn().HeaderTab().GetIndex());
+	array.AddColumn("", 5).SetDisplay(Single<RectDisplay>());
+	if (option)
+		array.AddColumn("", 10);
 	array.AddColumn("", 30);	
 	array.AddColumn("", 30);
-	array.AddColumn("", 20);
-	array.HeaderObject().HideTab(array.AddColumn().HeaderTab().GetIndex());
+	array.AddColumn("", 30);
+	array.HeaderTab(1).SetMargin(-2);
+	if (option)
+		array.HeaderTab(2).SetMargin(-2);
 	return array;
 }
 
+void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
+					Upp::Array<Option> &option, Function <void()>OnPush) {
+	array.Add(id, GetColorId(id), true, codeStr, title, fileName);
+	int row = array.GetCount()-1;
+	Option & opt = option.Add();
+	array.SetCtrl(row, 2, opt);
+	opt.WhenAction = OnPush;
+}
+
+void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id) {
+ 	array.Add(id, GetColorId(id), codeStr, title, fileName);
+}
+
 static int ArrayModel_Id(const ArrayCtrl &array) {
-	int id = array.GetCursor();
-	if (id < 0)
+	int row = array.GetCursor();
+	if (row < 0)
 		return -1;
-	return array.Get(id, 2);
+	return array.Get(row, 0);
 }
 
 static int ArrayModel_Id(const ArrayCtrl &array, int row) {
-	return array.Get(row, 2);
+	return array.Get(row, 0);
 }
 
 int ArrayModel_IdMesh(const ArrayCtrl &array) {
 	int id = ArrayModel_Id(array);
 	if (id < 0)
 		return -1;
-	return ma().bem.GetMeshId(id);
+	return Bem().GetMeshId(id);
 }
 
 int ArrayModel_IdMesh(const ArrayCtrl &array, int row) {
 	int id = ArrayModel_Id(array, row);
 	if (id < 0)
 		return -1;
-	return ma().bem.GetMeshId(id);
+	return Bem().GetMeshId(id);
 }
 
 int ArrayModel_IdHydro(const ArrayCtrl &array) {
 	int id = ArrayModel_Id(array);
 	if (id < 0)
 		return -1;
-	return ma().bem.GetHydroId(id);
+	return Bem().GetHydroId(id);
 }
 
 int ArrayModel_IdHydro(const ArrayCtrl &array, int row) {
 	int id = ArrayModel_Id(array, row);
 	if (id < 0)
 		return -1;
-	return ma().bem.GetHydroId(id);
-}		
+	return Bem().GetHydroId(id);
+}
+
+Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
+	Vector<int> ids;
+	for (int row = 0; row < array.GetCount(); ++row) 
+		ids << ArrayModel_IdHydro(array, row);		
+	return ids;
+}
+
+Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array) {		
+	Vector<int> ids;
+	for (int row = 0; row < array.GetCount(); ++row) 
+		ids << ArrayModel_IdMesh(array, row);		
+	return ids;
+}
+
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids) {		
+	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
+		int idrow = ArrayModel_IdHydro(array, row);
+		for (auto id : ids) {
+			if (idrow == id) {
+				array.Remove(row);
+				break;
+			}
+		}
+	}
+}
+
+bool ArrayModel_IsVisible(const ArrayCtrl &array, int row) {
+	return array.Get(row, 2);
+}
+
+const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row) {
+	return GetColorId(array.Get(row, 0));
+}
+
+String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
+	if (row < 0) 
+		row = array.GetCursor();
+	if (row < 0)
+		return String();
+	if (array.GetCtrl(row, 2))
+		return array.Get(row, 5);
+ 	return array.Get(row, 4);
+}
