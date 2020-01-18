@@ -83,7 +83,8 @@ It simmetrizes the available forces in all directions, averaging them when they 
 
 ### - FOAMM connection
 
-[Finite Order Approximation by Moment-Matching (FOAMM)](http://www.eeng.nuim.ie/coer/wp-content/uploads/2019/02/FOAMM-Manual.pdf) is an application developed by N. Faedo, Y. Peña-Sanchez and J. V. Ringwood in the [Maynooth University](https://www.maynoothuniversity.ie/)'s [Centre for Ocean Energy Research (COER)](http://www.eeng.nuim.ie/coer/), that implements the moment-matching based frequency-domain identification algorithm
+[Finite Order Approximation by Moment-Matching (FOAMM)](http://www.eeng.nuim.ie/coer/wp-content/uploads/2019/02/FOAMM-Manual.pdf) is an application developed by N. Faedo, Y. Peña-Sanchez and J. V. Ringwood in the [Maynooth University](https://www.maynoothuniversity.ie/)'s [Centre for Ocean Energy Research (COER)](http://www.eeng.nuim.ie/coer/), that implements the moment-matching based frequency-domain identification algorithm.
+
 BEMRosetta allows an interactive and seamless FOAMM connection to get state space coefficients.
 
 ### - Mesh loading, combining them for visual comparison 
