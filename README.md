@@ -81,6 +81,11 @@ It simmetrizes the available forces in all directions, averaging them when they 
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
 
+### - FOAMM connection
+
+[Finite Order Approximation by Moment-Matching (FOAMM)](http://www.eeng.nuim.ie/coer/wp-content/uploads/2019/02/FOAMM-Manual.pdf) is an application developed by N. Faedo, Y. Peña-Sanchez and J. V. Ringwood in the Maynooth University's Centre for Ocean Energy Research (COER), that implements the moment- matching based frequency-domain identification algorithm
+BEMRosetta allowa a interactive and seamless FOAMM connaction to get state space coefficients.
+
 ### - Mesh loading, combining them for visual comparison 
 
 Several meshes can be loaded in this basic viewer, allowing a visual comparison of geometries.
