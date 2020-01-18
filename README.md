@@ -4,12 +4,6 @@
   Authors: Iñaki Zabala, Markel Peñalba.
   -->
 
-## Christmas comes with colors
-
-Every item loaded comes with a single color that identifies it, in lists, plots and 3d views... even in hydrostatic stiffness matrices.
-
-<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/ColorList.png" width="500" title="Colored list"></p>
-
 # BEMRosetta
 **Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
 
@@ -30,12 +24,6 @@ BEMRosetta allows to load the hydrodynamic coefficients from a format saving it 
 Moreover, BEMRosetta allows to view and visually compare the meshes from different programs.
 
 BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI and [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test). 
-
-## New Features
-
-Coefficients/Load/Symmetrize: It spreads the available forces around X axis, averaging them when they are available on both sides. Some examples cases:
-* Only the forces on positive headings from 0 to 180º have been processed: Symmetrize duplicates them to the negative heading values from 0 to -180º
-* Both positive and negative headings forces have been processed: Symmetrize averages them
 
 ## Features
 ### - Supported file formats
@@ -66,7 +54,7 @@ Coefficients/Load/Symmetrize: It spreads the available forces around X axis, ave
 The goal is to have a good robustness in the handling of files
 
 
-### - Load the hydrodynamic coefficients for the same geometry from different software and compare the results
+### - Compare the hydrodynamic coefficients for the same geometry from different software
 
 - Damping for the same geometry got from different solvers
   
@@ -76,8 +64,14 @@ The goal is to have a good robustness in the handling of files
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
-### - Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
-### - Load the hydrodynamic coefficients for different geometries to compare them
+### - Forces handling
+
+It simmetrizes the available forces in all directions, averaging them when they are available on both possitive and negative headings. Some examples cases:
+* Only the forces on positive headings from 0 to 180º have been processed: Symmetrize duplicates them to the negative heading values from 0 to -180º
+* Both positive and negative headings forces have been processed: Symmetrize averages them
+
+### - Compare the hydrodynamic coefficients for the same geometry for different discretization levels
+### - Compare the hydrodynamic coefficients for different geometries
 
 - Damping for different offshore wind floating platforms_
   
