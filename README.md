@@ -99,20 +99,16 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 - Interactive mesh rotation and translation around user defined center
 - Automatic free surface, underwater surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
 - Improved viewer including dropdown menu in viewer screen
+- Hydrostatic stiffness matrix viewer
 - Mesh healing option
     
 ### - Nemoh
 
-- Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
-
-### - BEM coefficients
-
-- Added hydrostatic stiffness matrix viewer
+Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
 
 ### - Other
 
 All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from file explorer in Windows and Linux.
-
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
