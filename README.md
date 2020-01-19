@@ -117,7 +117,7 @@ All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and 
 
 ## Acknowledgments
 
-J. C. C. Portillo, J. C. C. Henriques, M. J. Sanchez-Lara.<br/>
+J. C. C. Portillo, J. C. C. Henriques, M. J. Sanchez-Lara, J. Galvan.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
