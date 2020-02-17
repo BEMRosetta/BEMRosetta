@@ -4,12 +4,6 @@
   Authors: Iñaki Zabala, Markel Peñalba.
   -->
 
-## Christmas comes with colors
-
-Every item loaded comes with a single color that identifies it, in lists, plots and 3d views... even in hydrostatic stiffness matrices.
-
-<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/ColorList.png" width="500" title="Colored list"></p>
-
 # BEMRosetta
 **Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
 
@@ -30,12 +24,6 @@ BEMRosetta allows to load the hydrodynamic coefficients from a format saving it 
 Moreover, BEMRosetta allows to view and visually compare the meshes from different programs.
 
 BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI and [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test). 
-
-## New Features
-
-Coefficients/Load/Symmetrize: It spreads the available forces around X axis, averaging them when they are available on both sides. Some examples cases:
-* Only the forces on positive headings from 0 to 180º have been processed: Symmetrize duplicates them to the negative heading values from 0 to -180º
-* Both positive and negative headings forces have been processed: Symmetrize averages them
 
 ## Features
 ### - Supported file formats
@@ -66,7 +54,7 @@ Coefficients/Load/Symmetrize: It spreads the available forces around X axis, ave
 The goal is to have a good robustness in the handling of files
 
 
-### - Load the hydrodynamic coefficients for the same geometry from different software and compare the results
+### - Compare the hydrodynamic coefficients for the same geometry from different software
 
 - Damping for the same geometry got from different solvers
   
@@ -76,8 +64,14 @@ The goal is to have a good robustness in the handling of files
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/2%20solvers%20exc.jpg" width="300" title="Excitation force for the same geometry got from different solvers"></p>
 
-### - Load the hydrodynamic coefficients for the same geometry for different discretization levels and compare the results
-### - Load the hydrodynamic coefficients for different geometries to compare them
+### - Forces handling
+
+It simmetrizes the available forces in all directions, averaging them when they are available on both possitive and negative headings. Some examples cases:
+* Only the forces on positive headings from 0 to 180º have been processed: Symmetrize duplicates them to the negative heading values from 0 to -180º
+* Both positive and negative headings forces have been processed: Symmetrize averages them
+
+### - Compare the hydrodynamic coefficients for the same geometry for different discretization levels
+### - Compare the hydrodynamic coefficients for different geometries
 
 - Damping for different offshore wind floating platforms_
   
@@ -86,6 +80,12 @@ The goal is to have a good robustness in the handling of files
 - Excitation force for different offshore wind floating platforms_
   
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/offshore%20wind%20platforms%20exc.jpg" width="300" title="Excitation force for different offshore wind floating platforms"></p>
+
+### - FOAMM connection
+
+[Finite Order Approximation by Moment-Matching (FOAMM)](http://www.eeng.nuim.ie/coer/wp-content/uploads/2019/02/FOAMM-Manual.pdf) is an application developed by N. Faedo, Y. Peña-Sanchez and J. V. Ringwood in the [Maynooth University](https://www.maynoothuniversity.ie/)'s [Centre for Ocean Energy Research (COER)](http://www.eeng.nuim.ie/coer/), that implements the moment-matching based frequency-domain identification algorithm.
+
+BEMRosetta allows an interactive and seamless FOAMM connection to get state space coefficients.
 
 ### - Mesh loading, combining them for visual comparison 
 
@@ -99,20 +99,16 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 - Interactive mesh rotation and translation around user defined center
 - Automatic free surface, underwater surface, center of buoyancy, hydrostatic stiffness matrix, and other parameters calculation
 - Improved viewer including dropdown menu in viewer screen
+- Hydrostatic stiffness matrix viewer
 - Mesh healing option
     
 ### - Nemoh
 
-- Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
-
-### - BEM coefficients
-
-- Added hydrostatic stiffness matrix viewer
+Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
 
 ### - Other
 
 All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from file explorer in Windows and Linux.
-
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
@@ -121,14 +117,14 @@ All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and 
 
 ## Acknowledgments
 
-J. C. C. Portillo, J. C. C. Henriques, M. J. Sanchez-Lara.<br/>
+J. C. C. Portillo, J. C. C. Henriques, M. J. Sanchez-Lara, J. Galvan.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 
 ## License
 
-Copyright (c) 2019 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez.
+Copyright © 2019-2020 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez.
 
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>
