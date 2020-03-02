@@ -1,5 +1,3 @@
-#ifdef _MULTITHREADED
-
 class CoWork : NoCopy {
 	struct MJob : Moveable<MJob>, Link<MJob, 2> {
 		Function<void ()> fn;
@@ -31,7 +29,7 @@ public:
 		Pool();
 		~Pool();
 
-	#ifdef COMPILER_MINGW
+	#ifdef MINGW_TLS_PATCH
 		static FastMingwTls<bool>   finlock;
 	#else
 		static thread_local bool    finlock;
@@ -45,7 +43,7 @@ public:
 
 	static Pool& GetPool();
 
-#ifdef COMPILER_MINGW
+#ifdef MINGW_TLS_PATCH
 	static FastMingwTls<int>      worker_index;
 	static FastMingwTls<CoWork *> current;
 #else
@@ -171,6 +169,7 @@ class AsyncWork {
 		template<class Function, class... Args>
 		void        Do(Function&& f, Args&&... args) { co.Do([=]() { ret = f(args...); }); }
 		const Ret2& Get()                            { return ret; }
+		Ret2        Pick()                           { return pick(ret); }
 	};
 
 	struct ImpVoid {
@@ -179,6 +178,7 @@ class AsyncWork {
 		template<class Function, class... Args>
 		void        Do(Function&& f, Args&&... args) { co.Do([=]() { f(args...); }); }
 		void        Get()                            {}
+		void        Pick()                           {}
 	};
 	
 	using ImpType = typename std::conditional<std::is_void<Ret>::value, ImpVoid, Imp<Ret>>::type;
@@ -194,6 +194,7 @@ public:
 	bool        IsFinished()                        { return imp && imp->co.IsFinished(); }
 	Ret         Get()                               { ASSERT(imp); imp->co.Finish(); return imp->Get(); }
 	Ret         operator~()                         { return Get(); }
+	Ret         Pick()                              { ASSERT(imp); imp->co.Finish(); return imp->Pick(); }
 	
 	AsyncWork& operator=(AsyncWork&&) = default;
 	AsyncWork(AsyncWork&&) = default;
@@ -220,21 +221,3 @@ Async(Function&& f, Args&&... args)
 	h.Do(f, args...);
 	return pick(h);
 }
-
-#else
-
-class CoWork : NoCopy {
-public:
-	void     Do(Event<>  cb)        { cb(); }
-	CoWork&  operator&(Event<>  cb) { cb(); return *this; }
-	void     Finish()               {}
-	bool     IsFinished()           { return true; }
-
-	static void FinLock()           {}
-
-	static bool IsWorker()          { return false; }
-	static void StartPool(int n)    {}
-	static void ShutdownPool()      {}
-};
-
-#endif

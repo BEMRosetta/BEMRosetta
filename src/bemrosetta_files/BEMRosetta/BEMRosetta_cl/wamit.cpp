@@ -608,7 +608,7 @@ bool Wamit::Load_hst(String fileName) {
 	
 	hd().C.SetCount(hd().Nb);
 	for(int ib = 0; ib < hd().Nb; ++ib)
-		hd().C[ib].setConstant(6, 6, Null);
+		hd().C[ib].setConstant(6, 6, 0);
 
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());	

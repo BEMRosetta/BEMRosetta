@@ -121,7 +121,7 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 			mass = under.volume*rho;
 		cb = under.GetCenterOfBuoyancy();
 	}
-	under.GetHydrostaticStiffness(C, cb, rho, cg, mass, g, 0);
+	under.GetHydrostaticStiffness(C, cb, rho, cg, mass, g);
 }
 
 void MeshData::Report(double rho) {

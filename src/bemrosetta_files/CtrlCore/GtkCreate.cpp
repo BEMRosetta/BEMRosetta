@@ -26,12 +26,11 @@ void Ctrl::Create(Ctrl *owner, bool popup)
 	w.id = top->id;
 	w.ctrl = this;
 	w.gtk = top->window;
-	w.gdk = top->window->window;
 
 	TopWindow *tw = dynamic_cast<TopWindow *>(this);
 	if(popup && !owner) {
 		gtk_window_set_decorated(gtk(), FALSE);
-		gtk_window_set_has_frame(gtk(), FALSE);
+		// gtk_window_set_has_frame(gtk(), FALSE);
 		gtk_window_set_type_hint(gtk(), GDK_WINDOW_TYPE_HINT_POPUP_MENU);
 	}
 	else
@@ -44,17 +43,22 @@ void Ctrl::Create(Ctrl *owner, bool popup)
 
 	gtk_widget_set_events(top->window, 0xffffffff);
 	g_signal_connect(top->window, "event", G_CALLBACK(GtkEvent), (gpointer)(uintptr_t)top->id);
+	g_signal_connect(top->window, "draw", G_CALLBACK(GtkDraw), (gpointer)(uintptr_t)top->id);
 
 	GdkWindowTypeHint hint = gtk_window_get_type_hint(gtk());
 	if(tw && findarg(hint, GDK_WINDOW_TYPE_HINT_NORMAL, GDK_WINDOW_TYPE_HINT_DIALOG, GDK_WINDOW_TYPE_HINT_UTILITY) >= 0)
 		tw->SyncSizeHints();
-	
+
 	Rect r = GetRect();
-	gtk_window_move(gtk(), r.left, r.top);
-	gtk_window_resize(gtk(), r.GetWidth(), r.GetHeight());
+
+	gtk_window_set_default_size (gtk(), LSC(r.GetWidth()), LSC(r.GetHeight()));
+
+	gtk_window_move(gtk(), LSC(r.left), LSC(r.top));
+	gtk_window_resize(gtk(), LSC(r.GetWidth()), LSC(r.GetHeight()));
 
 	gtk_widget_realize(top->window);
-
+	
+	w.gdk = gtk_widget_get_window(top->window);
 
 	if(owner && owner->top)
 		gtk_window_set_transient_for(gtk(), owner->gtk());
@@ -72,7 +76,7 @@ void Ctrl::Create(Ctrl *owner, bool popup)
 	FocusSync();
 	if(!popup)
 		SetWndFocus();
-	
+
 	SweepConfigure(true);
 	
 	DndInit();
@@ -81,9 +85,8 @@ void Ctrl::Create(Ctrl *owner, bool popup)
 
 	activeCtrl = this;
 
-	int mousex, mousey;
-	gdk_window_get_pointer(gdk(), &mousex, &mousey, NULL);
-	Point m(mousex, mousey);
+	GdkModifierType mod;
+	Point m = GetMouseInfo(gdk(), mod);
 	r = GetWndScreenRect().GetSize();
 	if(r.Contains(m))
 		DispatchMouse(MOUSEMOVE, m);
@@ -134,7 +137,7 @@ void Ctrl::GuiPlatformRemove()
 			i++;
 	for(int i = 0; i < activePopup.GetCount();)
 		if(activePopup[i] == this) {
-			if(this == grabpopup && gdk_pointer_is_grabbed())
+			if(this == grabpopup && MouseIsGrabbed())
 				StopGrabPopup();
 			activePopup.Remove(i);
 			StartGrabPopup();

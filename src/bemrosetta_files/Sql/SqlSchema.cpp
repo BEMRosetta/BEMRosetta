@@ -11,7 +11,9 @@ void SqlSchema::FlushColumn() {
 		String attr = Expand(attribute, i);
 		String cd = cn + attr;
 		if(firstcolumn) {
-			if (dialect == SQLITE3)
+			Schema() << Expand("create table @t (\n");
+			SchemaDrop() << Expand("drop table @t;\n");
+			if(dialect == SQLITE3)
 				Upgrade() << Expand("create table @t ( ") << cd << " )" << table_suffix << ";\n";
 			else
 				Upgrade() << Expand("create table @t (\n") << cd << "\n)" << table_suffix << ";\n\n";
@@ -64,8 +66,6 @@ void SqlSchema::Table(const char *name) {
 	FlushTable();
 	table = name;
 	table_suffix = Null;
-	Schema() << Expand("create table @t (\n");
-	SchemaDrop() << Expand("drop table @t;\n");
 	Attributes() << '\n';
 	AttributesDrop() << '\n';
 	firstcolumn = true;
@@ -83,6 +83,11 @@ void SqlSchema::Column(const char *_type, const char *name) {
 	type = _type;
 	column = prefix + name;
 	attribute.Clear();
+}
+
+void SqlSchema::SqlName(const char *name)
+{
+	(firstcolumn ? table : column) = prefix + name;
 }
 
 void SqlSchema::ColumnArray(const char *type, const char *name, int _items) {
@@ -214,4 +219,29 @@ void operator*(SqlSchema& schema, const SqlInsert& insert) {
 	                    << ";\n";
 }
 
+VectorMap<String, String>& sSqlRename()
+{
+	static VectorMap<String, String> x;
+	return x;
 }
+
+const char *RegSqlName__;
+
+void SqlRename__(const char *name)
+{
+	static auto& rename = sSqlRename();
+	if(RegSqlName__)
+		rename.Add(RegSqlName__, name);
+	RegSqlName__ = NULL;
+}
+
+const char *SqlResolveId__(const char *id)
+{
+	static auto& rename = sSqlRename();
+	int q;
+	if(rename.GetCount() && (q = rename.Find(id)) >= 0)
+		return rename[q];
+	return id; // cannot be conditional expression as we are returning const char * !
+}
+
+};

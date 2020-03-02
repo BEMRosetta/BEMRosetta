@@ -158,6 +158,14 @@ String AsJSON(const Value& v, const String& sep, bool pretty)
 	return "null";
 }
 
+void JsonIO::Set(const char *key, const Value& v)
+{
+	ASSERT(IsStoring());
+	if(!map)
+		map.Create();
+	map->Add(key, v);
+}
+
 String AsJSON(const Value& v, bool pretty)
 {
 	return AsJSON(v, String(), pretty);
@@ -257,7 +265,7 @@ template<> void Jsonize(JsonIO& io, int64& var)
 		}
 		if(IsNumber(v)) {
 			double d = v;
-			if(d >= INT64_MIN && d <= INT64_MAX) {
+			if(FitsInInt64(d)) {
 				var = (int64)d;
 				return;
 			}

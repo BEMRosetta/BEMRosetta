@@ -2,15 +2,13 @@
 
 namespace Upp {
 
-#ifdef _MULTITHREADED
-
 #define LLOG(x)       // RLOG(x)
 #define LDUMP(x)      // DDUMP(x)
 
 #define LTIMING(x)    // RTIMING(x)
 #define LHITCOUNT(x)  // RHITCOUNT(x)
 
-#ifdef COMPILER_MINGW
+#ifdef MINGW_TLS_PATCH
 FastMingwTls<bool>     CoWork::Pool::finlock;
 FastMingwTls<int>      CoWork::worker_index = -1;
 FastMingwTls<CoWork *> CoWork::current;
@@ -381,7 +379,5 @@ CoWork::~CoWork() noexcept(false)
 	Finish();
 	LLOG("~CoWork " << FormatIntHex(this));
 }
-
-#endif
 
 }

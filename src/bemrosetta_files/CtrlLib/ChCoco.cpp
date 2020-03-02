@@ -1,93 +1,52 @@
-#include "ChCoco.h"
+#include "CtrlLib.h"
+#include "ChCocoMM.h"
 
 #ifdef PLATFORM_COCOA
 
 namespace Upp {
-	
-Image Hot3(const Image& m)
-{
-	Size sz = m.GetSize();
-	return WithHotSpots(m, sz.cx / 3, sz.cy / 3, sz.cx - sz.cx / 3, sz.cy - sz.cy / 3);
-}
 
-Image Coco_ThemeImage(Color bg, int cx, int cy, int margin, int type,
-                      int value, int state, bool focus)
+Image CocoImg(Color bg, int type, int value, int state)
 {
-	Size isz(cx + 2 * margin, cy + 2 * margin);
+	Size isz(140, 140);
 	ImageDraw iw(DPI(isz));
-	iw.DrawRect(DPI(isz), bg);
-	Coco_ThemePaint(iw.GetCGHandle(), Rect(margin, margin, cx, cy), type, value, state, focus);
-	return Hot3(iw);
+	iw.DrawRect(0, 0, DPI(isz.cx), DPI(isz.cy), bg);
+	Coco_PaintCh(iw.GetCGHandle(), type, value, state);
+	return iw;
 }
 
-Image Coco_ThemeImage(int cx, int cy, int margin, int type, int value, int state, bool focus)
+Image CocoImg(int type, int value = 0, int state = 0)
 {
-	return Hot3(RecreateAlpha(Coco_ThemeImage(White(), cx, cy, margin, type, value, state, focus),
-	                          Coco_ThemeImage(Black(), cx, cy, margin, type, value, state, focus)));
-}
-
-Color AvgColor(const Image& m, const Rect& rr)
-{
-	int n = rr.GetWidth() * rr.GetHeight();
-	if(n <= 0)
-		return White();
-	int r = 0;
-	int g = 0;
-	int b = 0;
-	for(int y = rr.top; y < rr.bottom; y++)
-		for(int x = rr.left; x < rr.right; x++) {
-			RGBA c = m[y][x];
-			r += c.r;
-			g += c.g;
-			b += c.b;
-		}
-	return Color(r / n, g / n, b / n);
-}
-
-Color AvgColor(const Image& m, int margin = 0)
-{
-	return AvgColor(m, Rect(m.GetSize()).Deflated(margin));
-}
-
-void ClampedAutoCrop(Image *h, int count)
-{
-	AutoCrop(h, count);
-	for(int i = 0; i < count; i++)
-		ClampHotSpots(h[i]);
-}
-
-Image ClampedAutoCrop(const Image& m)
-{
-	Image h = m;
-	ClampedAutoCrop(&h, 1);
+	Image m[2];
+	for(int i = 0; i < 2; i++)
+		m[i] = CocoImg(i ? Black() : White(), type, value, state);
+	Image h = AutoCrop(RecreateAlpha(m[0], m[1]));
+	int q = h.GetSize().cy / 4;
+	SetHotSpots(h, Point(q, q));
 	return h;
+}
+
+Color CocoColor(int k, Color bg = SColorFace())
+{
+	return AvgColor(CocoImg(bg, COCO_NSCOLOR, k, 0));
 }
 
 void SOImages(int imli, int type, int value)
 {
 	Image h[4];
-	h[0] = Coco_ThemeImage(20, 20, 10, type, value, CTRL_NORMAL);
-	h[1] = Coco_ThemeImage(20, 20, 10, type, value, CTRL_HOT); // same as Normal
-	h[2] = Coco_ThemeImage(20, 20, 10, type, value, CTRL_PRESSED);
-	h[3] = Coco_ThemeImage(20, 20, 10, type, value, CTRL_DISABLED);
-	
-	ClampedAutoCrop(h, 4);
-	
+	h[0] = CocoImg(type, value, CTRL_NORMAL);
+	h[1] = CocoImg(type, value, CTRL_HOT); // same as Normal
+	h[2] = CocoImg(type, value, CTRL_PRESSED);
+	h[3] = CocoImg(type, value, CTRL_DISABLED);
 	for(int i = 0; i < 4; i++)
 		CtrlsImg::Set(imli++, Hot3(h[i]));
 }
 
 void CocoButton(Image *h, int type, int value)
 {
-	h[0] = Coco_ThemeImage(40, 32, 10, type, value, CTRL_NORMAL);
-	h[1] = Coco_ThemeImage(40, 32, 10, type, value, CTRL_HOT); // same as Normal
-	h[2] = Coco_ThemeImage(40, 32, 10, type, value, CTRL_PRESSED);
-	h[3] = Coco_ThemeImage(40, 32, 10, type, value, CTRL_DISABLED);
-
-	ClampedAutoCrop(h, 4);
-	
-	for(int i = 0; i < 4; i++)
-		h[i] = Hot3(h[i]);
+	h[0] = CocoImg(type, value, CTRL_NORMAL);
+	h[1] = CocoImg(type, value, CTRL_HOT); // same as Normal
+	h[2] = CocoImg(type, value, CTRL_PRESSED);
+	h[3] = CocoImg(type, value, CTRL_DISABLED);
 }
 
 void CocoButton(Button::Style& s, int type, int value)
@@ -106,57 +65,26 @@ void CocoButton(Button::Style& s, int type, int value)
 	s.pressoffset = Point(0, 0);
 }
 
-Color CocoBrush(int k)
-{
-	return AvgColor(Coco_ThemeImage(16, 16, 0, COCO_BRUSH, k));
-}
-
-Color CocoColor(int k, Color bg = SColorFace())
-{
-	return AvgColor(Coco_ThemeImage(bg, 16, 16, 0, COCO_NSCOLOR, k));
-}
-
-Color GetInkColor(const Image& m)
-{
-	int x = m.GetSize().cx / 2;
-	bool dark = !IsDark(SColorText());
-	int best = 1000;
-	Color bestc = SColorText();
-	for(int y = 0; y < m.GetHeight(); y++) {
-		Color c = m[y][x];
-		int g = Grayscale(c);
-		if(dark)
-			g = 255 - g;
-		if(g < best) {
-			best = g;
-			bestc = c;
-		}
-	}
-	return bestc;
-}
-
 void ChHostSkin()
 {
+	TIMING("ChHostSkin");
+
 	CtrlImg::Reset();
 	CtrlsImg::Reset();
 	ChReset();
 
 	GUI_GlobalStyle_Write(GUISTYLE_XP);
-
-	DUMP(Coco_Metric(0)); // kThemeMetricScrollBarWidth
-	DUMP(Coco_Metric(7)); // kThemeMetricFocusRectOutset
-	DUMP(Coco_Metric(19)); // kThemeMetricPushButtonHeight
-
-	int button_height = Coco_Metric(19); // kThemeMetricPushButtonHeight
+	GUI_PopUpEffect_Write(GUIEFFECT_NONE);
 
 	SwapOKCancel_Write(true);
-
-	SColorFace_Write(CocoColor(COCO_WINDOW, White())); // ThemeBrushDialogBackgroundActive
+	SColorFace_Write(CocoColor(COCO_WINDOW, White()));
 	SColorHighlight_Write(CocoColor(COCO_SELECTEDPAPER));
 	SColorHighlightText_Write(CocoColor(COCO_SELECTEDTEXT));
 	SColorText_Write(CocoColor(COCO_TEXT));
 	SColorPaper_Write(CocoColor(COCO_PAPER));
 	SColorDisabled_Write(CocoColor(COCO_DISABLED));
+
+	ColoredOverride(CtrlsImg::Iml(), CtrlsImg::Iml());
 
 	SOImages(CtrlsImg::I_S0, COCO_RADIOBUTTON, 0);
 	SOImages(CtrlsImg::I_S1, COCO_RADIOBUTTON, 1);
@@ -172,127 +100,102 @@ void ChHostSkin()
 	{
 		auto& s = ToolButton::StyleDefault().Write();
 		Image h[4];
-		CocoButton(h, COCO_ROUNDEDBUTTON, 0);
+		CocoButton(h, COCO_BEVELBUTTON, 0);
 		s.look[CTRL_NORMAL] = Image();
 		s.look[CTRL_HOT] = h[CTRL_HOT];
 		s.look[CTRL_PRESSED] = h[CTRL_PRESSED];
 		s.look[CTRL_DISABLED] = Image();
-		CocoButton(h, COCO_ROUNDEDBUTTON, 1);
+		CocoButton(h, COCO_BEVELBUTTON, 1);
 		s.look[CTRL_CHECKED] = h[CTRL_NORMAL];
 		s.look[CTRL_HOTCHECKED] = h[CTRL_HOT];
 	}
 
-//	ColoredOverride(CtrlsImg::Iml(), CtrlsImg::Iml()); return _DBG_;
-
-
-	{
-		Color menuink = CocoColor(COCO_SELECTEDMENUTEXT);
-		SColorMenu_Write(AvgColor(ClampedAutoCrop(Coco_ThemeImage(30, 20, 10, COCO_MENU, 0, CTRL_NORMAL))));
-		SColorMenuText_Write(SColorText());
-
-		MenuBar::Style& s = MenuBar::StyleDefault().Write();
-		s.pullshift.y = 0;
-		
-		SColorMenu_Write(SColorFace());
-		
-		s.topitem[1] = s.topitem[0] = SColorFace();
-		s.topitemtext[1] = SColorText();
-		Image m = ClampedAutoCrop(Coco_ThemeImage(50, 50, 10, COCO_MENUITEM, 0, CTRL_HOT));
-		Rect r = m.GetSize();
-		if(r.GetWidth() > 10 && r.GetHeight() > 10)
-			r.Deflate(5);
-		m = Crop(m, r);
-		s.item = s.topitem[2] = Hot3(m);
-		s.topitemtext[0] = SColorText();
-		s.itemtext = s.topitemtext[2] = menuink;
-		s.look = SColorFace();
-		s.opaquetest = false;
-	}
-	
 	{
 		ScrollBar::Style& s = ScrollBar::StyleDefault().Write();
-		s.arrowsize = 0; // no arrows
-		s.through = true;
-		int sz = Coco_Metric(0); // kThemeMetricScrollBarWidth
-		s.barsize = s.thumbwidth = DPI(sz);
-		s.thumbmin = 3 * s.barsize / 2;
+		s.arrowsize = 0;
+		Image track = CocoImg(COCO_SCROLLTRACK);
+		Image thumb = CocoImg(COCO_SCROLLTHUMB);
+
+		s.barsize = track.GetHeight();
+		s.thumbwidth = thumb.GetHeight();
+		s.thumbmin = 2 * s.barsize;
+
 		for(int status = CTRL_NORMAL; status <= CTRL_DISABLED; status++) {
-			s.vupper[status] = s.vlower[status] =
-				Hot3(Coco_ThemeImage(SColorFace(), sz, 40, 0, COCO_SCROLLTRACK, 0, status));
-			Image thumb = Coco_ThemeImage(sz, 50, 0, COCO_SCROLLTHUMB, 0, status);
-			Rect bounds = FindBounds(thumb);
-			thumb = Crop(thumb, Rect(0, bounds.top, thumb.GetWidth(), bounds.bottom));
-			thumb = AddMargins(thumb, 0, 1, 0, 1, RGBAZero());
-			s.vthumb[status] = Hot3(thumb);
-
-			s.hupper[status] = s.hlower[status] =
-				Hot3(Coco_ThemeImage(SColorFace(), 40, sz, 0, COCO_SCROLLTRACK, 1, status));
-			thumb = Coco_ThemeImage(50, sz, 0, COCO_SCROLLTHUMB, 1, status);
-			bounds = FindBounds(thumb);
-			thumb = Crop(thumb, Rect(bounds.left, 0, bounds.right, thumb.GetHeight()));
-			thumb = AddMargins(thumb, 1, 0, 1, 0 , RGBAZero());
-			s.hthumb[status] = Hot3(thumb);
+			s.hupper[status] = s.hlower[status] = WithHotSpot(track, CH_SCROLLBAR_IMAGE, 0);;
+			s.vupper[status] = s.vlower[status] = WithHotSpot(RotateAntiClockwise(track), CH_SCROLLBAR_IMAGE, 0);
+			Image m = thumb;
+			if(status == CTRL_HOT)
+				Over(m, m);
+			if(status == CTRL_PRESSED) {
+				Over(m, m);
+				Over(m, m);
+			}
+			s.hthumb[status] = WithHotSpot(m, CH_SCROLLBAR_IMAGE, 0);
+			s.vthumb[status] = WithHotSpot(RotateClockwise(m), CH_SCROLLBAR_IMAGE, 0);
 		}
 	}
 
-	ColoredOverride(CtrlsImg::Iml(), CtrlsImg::Iml());
-	
+	auto field = [](int type) {
+		Image m = CocoImg(SColorFace(), type, 0, 0);
+		Rect r = m.GetSize();
+		r.left = r.top = DPI(5);
+		r.right = min(r.left + DPI(10), r.right);
+		r.bottom = min(r.top + DPI(5), r.bottom);
+		return AvgColor(m, r);
+	};
 	{
-		
-		Color e = GetInkColor(Coco_ThemeImage(SColorFace(), 100, 50, 10, COCO_COMBOBOX));
-		CtrlsImg::Set(CtrlsImg::I_EFE,
-		    WithHotSpots(AddMargins(CreateImage(Size(1, 1), SColorPaper()), 1, 1, 1, 1, e),
-		                 1, 1, 0, 0));
-
-		CtrlsImg::Set(CtrlsImg::I_VE,
-		    WithHotSpots(AddMargins(CreateImage(Size(3, 3), SColorPaper()), 1, 1, 1, 1, e),
-		                 2, 2, 0, 0));
-
+		EditString::Style& s = EditString::StyleDefault().Write();
+		s.focus = s.paper = field(COCO_TEXTFIELD);
+	}
+	{
 		MultiButton::Style& s = MultiButton::StyleDefault().Write();
-//		s.trivialsep = true;
-//		s.edge[0] = Null;
-		s.clipedge = true;
-		s.border = s.trivialborder = 0;
-
-
-		for(int i = CTRL_NORMAL; i <= CTRL_DISABLED; i++) {
-			Image m = Coco_ThemeImage(150, button_height + 1, 0, COCO_BUTTON, 1, i); // TODO: ChWithOffset...
-			Size isz = m.GetSize();
-			int x3 = isz.cx / 3;
-			s.left[i] = Hot3(Crop(m, 0, 0, x3, isz.cy));
-			s.trivial[i] = s.look[i] = s.right[i] = Hot3(Crop(m, 2 * x3, 0, isz.cx - 2 * x3, isz.cy));
-			
-			Image mm = Crop(m, x3, 0, x3, isz.cy);
-			s.lmiddle[i] = Hot3(AddMargins(mm, 1, 0, 0, 0, SColorPaper()));
-			s.rmiddle[i] = Hot3(AddMargins(mm, 0, 0, 1, 0, SColorPaper()));
-			
-			s.monocolor[i] = s.fmonocolor[i] = Button::StyleOk().monocolor[i];
-			
-		}
+		s.paper = field(COCO_POPUPBUTTON);
 	}
-	{
-		SpinButtons::Style& sp = SpinButtons::StyleDefault().Write();
-		sp.dec = sp.inc = Button::StyleNormal();
-		
-		for(int i = CTRL_NORMAL; i <= CTRL_DISABLED; i++) {
-			Image m = ClampedAutoCrop(Coco_ThemeImage(50, button_height + 1, 0, COCO_BUTTON, 0, i));
-			Size isz = m.GetSize();
-			int cy = isz.cy / 2;
-			Color c = Button::StyleNormal().monocolor[i];
-			sp.inc.look[i] = ChLookWith(Hot3(Crop(m, 0, 0, isz.cx, cy)), CtrlImg::spinup(), c);
-			sp.dec.look[i] = ChLookWith(Hot3(Crop(m, 0, cy, isz.cx, isz.cy - cy)), CtrlImg::spindown(), c);
-		}
+	
+	{ // U++ menu should not be used MacOS apps, but adjust some values anyway
+		MenuBar::Style& s = MenuBar::StyleDefault().Write();
+		s.pullshift.y = 0;
+		s.popupbody = SColorFace();
+		SColorMenu_Write(SColorFace());
+		s.menutext = SColorText();
+		SColorMenuText_Write(s.menutext);
+		s.itemtext = SColorText();
+		s.item = SColorHighlight();
+		s.look = SColorFace();
+		Color dk = SColorText();
+		Color wh = SColorPaper();
+		if(IsDark(wh))
+			Swap(dk, wh);
+		s.topitemtext[0] = SColorText();
+		s.topitem[1] = s.topitem[0] = Null;
+		s.topitemtext[1] = SColorText();
+		s.topitem[0] = Null;
+		s.topitem[2] = SColorHighlight();
+		s.topitemtext[2] = SColorText();
+		CtrlImg::Set(CtrlImg::I_MenuCheck0, CtrlsImg::O0());
+		CtrlImg::Set(CtrlImg::I_MenuCheck1, CtrlsImg::O1());
+		CtrlImg::Set(CtrlImg::I_MenuRadio0, CtrlsImg::S0());
+		CtrlImg::Set(CtrlImg::I_MenuRadio1, CtrlsImg::S1());
 	}
 
-	auto nsimg = [](int ii) { return ClampedAutoCrop(Coco_ThemeImage(48, 48, 10, COCO_NSIMAGE, ii)); };
+	auto nsimg = [](int ii) { return CocoImg(COCO_NSIMAGE, ii); };
 	CtrlImg::Set(CtrlImg::I_information, nsimg(1));
 	CtrlImg::Set(CtrlImg::I_question, nsimg(0));
 	CtrlImg::Set(CtrlImg::I_exclamation, nsimg(0));
 	CtrlImg::Set(CtrlImg::I_error, nsimg(0));
 	
-//	DDUMP(Coco_ThemeColor(1));
-
-//	Coco_ThemeColor(1));
+	Image button100x100[8];
+	Color text[8];
+	
+	for(int i = 0; i < 8; i++) {
+		ImageDraw iw(100, 100);
+		const Button::Style& s = i < 4 ? Button::StyleNormal() : Button::StyleOk();
+		ChPaint(iw, 0, 0, 100, 100, s.look[i & 3]);
+		button100x100[i] = iw;
+		text[i] = s.monocolor[i & 3];
+	}
+	
+	ChSynthetic(button100x100, text, true);
 }
 
 };

@@ -11,7 +11,8 @@ Element Method solver formats.&]
 [s0;2 &]
 [s0; Acknowledgments&]
 [s0;2 &]
-[s0; [2 J. C. Portillo, J. C. C. Henriques, M. J. Sanchez`-Lara.]&]
+[s0; [2 J. C. Portillo, J. C. C. Henriques, M. J. Sanchez`-Lara, J. 
+Galvan.]&]
 [s0; [2 Some file parsing strategies taken from ][^https`:`/`/wec`-sim`.github`.io`/bemio`/^2 t
 he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 
@@ -20,7 +21,8 @@ library][2 .]&]
 [s0;2 &]
 [s0; License&]
 [s0;2 &]
-[s0; [2 Copyright © 2019 Iñaki Zabala, Markel Peñalba, Yerai Peña`-Sanchez]&]
+[s0; [2 Copyright © 2019`-2020 Iñaki Zabala, Markel Peñalba, Yerai 
+Peña`-Sanchez]&]
 [s0;2 &]
 [s0; [2 BEMRosetta is free software: you can redistribute it and/or 
 modify it under the terms of the GNU General Public License as 

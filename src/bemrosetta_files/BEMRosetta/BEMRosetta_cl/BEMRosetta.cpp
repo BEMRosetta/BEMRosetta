@@ -497,7 +497,7 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 	head.Clear();
 	for (int ihy = 0; ihy < hydrosp.GetCount(); ++ihy) {
 		const Hydro &hydro = *hydrosp[ihy];
-		if (hydro.IsLoadedFex()) {
+		if (hydro.IsLoadedFex() || hydro.IsLoadedFsc() || hydro.IsLoadedFfk()) {
 			for (int ih = 0; ih < hydro.head.GetCount(); ih++) {
 				double head_v = hydro.head[ih];
 				FindAddRatio(head, head_v, 0.001);
@@ -505,11 +505,10 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 		}
 	}
 	Nh = head.GetCount();
-	if (IsNull(Nh))
+	if (Nh == 0)
 		throw Exc(t_("No head found in models"));
 	
 	w.Clear();
-	T.Clear();
 	for (int ihy = 0; ihy < hydrosp.GetCount(); ++ihy) {
 		const Hydro &hydro = *hydrosp[ihy];
 		if (hydro.IsLoadedA() && hydro.IsLoadedB()) {
@@ -521,10 +520,11 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 	}
 	Sort(w);
 	Nf = w.GetCount();
+	T.Clear();
 	for (int i = 0; i < Nf; ++i)
 		T << 2*M_PI/w[i];
 	
-	if (IsNull(Nf))
+	if (Nf == 0)
 		throw Exc(t_("No frequency found in models"));
 	
 	names.SetCount(Nb);
@@ -996,15 +996,18 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 	if (hydros.GetCount() == 1)
 		Nb = justLoaded.Nb;
 	else {
-		if (justLoaded.Nb > Nb)
-			throw Exc(Format(t_("Model has more bodies (%d) than previously loaded (%d)"), justLoaded.Nb, Nb));
+		if (justLoaded.Nb > Nb) {
+			int justLoaded_Nb = justLoaded.Nb;
+			hydros.SetCount(hydros.GetCount()-1);
+			throw Exc(Format(t_("Model has more bodies (%d) than previously loaded (%d)"), justLoaded_Nb, Nb));
+		}
 	}
 	for (int i = 0; i < justLoaded.head.GetCount(); ++i) 
 		FindAddRatio(headAll, justLoaded.head[i], 0.01);
 	Sort(headAll);
 }
 
-void BEMData::Join(Vector<int> &ids, Function <bool(String, int)> Status) {
+HydroClass &BEMData::Join(Vector<int> &ids, Function <bool(String, int)> Status) {
 	Vector<Hydro *>hydrosp;
 	
 	hydrosp.SetCount(ids.GetCount());
@@ -1020,6 +1023,7 @@ void BEMData::Join(Vector<int> &ids, Function <bool(String, int)> Status) {
 	Sort(ids, StdLess<int>());
 	for (int i = ids.GetCount()-1; i >= 0; --i)
 		hydros.Remove(ids[i]);
+	return data;
 }
 
 void BEMData::Symmetrize(int id) {
@@ -1035,6 +1039,7 @@ void BEMData::A0(int id) {
 }
 
 void BEMData::Ainf(int id) {
+	hydros[id].hd().K_IRF(maxTimeA, numValsA);
 	hydros[id].hd().Ainf();
 }
 

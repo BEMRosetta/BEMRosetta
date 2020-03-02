@@ -210,12 +210,14 @@ const ColorF *WhiteBorder()
 	return data;
 }
 
+#define SColorEdge Black // for now
+
 const ColorF *DefButtonBorder()
 {
 	static ColorF data[] = {
 		(ColorF)3,
-		&SColorText, &SColorText, &SColorText, &SColorText,
-		&SColorLight, &SColorLight, &SColorText, &SColorText,
+		&SColorEdge, &SColorEdge, &SColorEdge, &SColorEdge,
+		&SColorLight, &SColorLight, &SColorEdge, &SColorEdge,
 		&SColorLtFace, &SColorLtFace, &SColorShadow, &SColorShadow,
 	};
 	return data;
@@ -225,7 +227,7 @@ const ColorF *ButtonBorder()
 {
 	static ColorF data[] = {
 		(ColorF)2,
-		&SColorLight, &SColorLight, &SColorText, &SColorText,
+		&SColorLight, &SColorLight, &SColorEdge, &SColorEdge,
 		&SColorLtFace, &SColorLtFace, &SColorShadow, &SColorShadow,
 	};
 	return data;
@@ -235,7 +237,7 @@ const ColorF *EdgeButtonBorder()
 {
 	static ColorF data[] = {
 		(ColorF)2,
-		&SColorLtFace, &SColorLtFace, &SColorText, &SColorText,
+		&SColorLtFace, &SColorLtFace, &SColorEdge, &SColorEdge,
 		&SColorLight, &SColorLight, &SColorShadow, &SColorShadow,
 	};
 	return data;
@@ -245,8 +247,8 @@ const ColorF *ButtonPushBorder()
 {
 	static ColorF data[] = {
 		(ColorF)2,
-		&SColorText, &SColorText, &SColorText, &SColorText,
-		&SColorShadow, &SColorShadow, &SColorText, &SColorText
+		&SColorEdge, &SColorEdge, &SColorEdge, &SColorEdge,
+		&SColorShadow, &SColorShadow, &SColorEdge, &SColorEdge
 	};
 	return data;
 }
@@ -256,7 +258,7 @@ const ColorF *InsetBorder()
 	static ColorF data[] = {
 		(ColorF)2,
 		&SColorShadow, &SColorShadow, &SColorLight, &SColorLight,
-		&SColorText, &SColorText, &SColorFace, &SColorFace
+		&SColorEdge, &SColorEdge, &SColorFace, &SColorFace
 	};
 	return data;
 }
@@ -265,7 +267,7 @@ const ColorF *OutsetBorder()
 {
 	static ColorF data[] = {
 		(ColorF)2,
-		&SColorFace, &SColorFace, &SColorText, &SColorText,
+		&SColorFace, &SColorFace, &SColorEdge, &SColorEdge,
 		&SColorLight, &SColorLight, &SColorShadow, &SColorShadow,
 	};
 	return data;
@@ -329,31 +331,6 @@ void DrawRect(Draw& w, const Rect& rect, const Image& img, bool ralgn)
 	DrawRect(w, rect.left, rect.top, rect.Width(), rect.Height(), img, ralgn);
 }
 
-#if defined(flagWINGL) || defined(flagLINUXGL)
-void DrawTiles(Draw& w, int x, int y, int cx, int cy, const Image& img, const Size& isz, const Rect& src) {
-	w.Clip(x, y, cx, cy);
-	Size sz = isz;
-	for(int a = x; a < x + cx; a += sz.cx)
-		for(int b = y; b < y + cy; b += sz.cy)
-			w.DrawImage(a, b, isz.cx, isz.cy, img, src);
-	w.End();
-}
-
-void DrawTiles(Draw& w, const Rect& rect, const Image& img,  const Size& isz, const Rect& src)
-{
-	DrawTiles(w, rect.left, rect.top, rect.GetWidth(), rect.GetHeight(), img, isz, src);
-}
-
-void DrawTiles(Draw& w, int x, int y, int cx, int cy, const Image& img)
-{
-	DrawTiles(w, x, y, cx, cy, img, img.GetSize(), img.GetSize());
-}
-
-void DrawTiles(Draw& w, const Rect& rect, const Image& img)
-{
-	DrawTiles(w, rect, img, img.GetSize(), img.GetSize());
-}
-#else
 void DrawTiles(Draw& w, int x, int y, int cx, int cy, const Image& img) {
 	w.Clip(x, y, cx, cy);
 	Size sz = img.GetSize();
@@ -367,7 +344,6 @@ void DrawTiles(Draw& w, const Rect& rect, const Image& img)
 {
 	DrawTiles(w, rect.left, rect.top, rect.GetWidth(), rect.GetHeight(), img);
 }
-#endif
 
 void DrawHighlightImage(Draw& w, int x, int y, const Image& img, bool highlight,
                         bool enabled, Color maskcolor)

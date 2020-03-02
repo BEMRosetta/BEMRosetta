@@ -159,7 +159,13 @@
 #define CONFIG(x, d)
 #endif
 
+#ifndef SQL_NAME
+#define SQL_NAME(x)
+#endif
+
 #include MODEL
+
+#undef SQL_NAME
 
 #undef __NIL
 

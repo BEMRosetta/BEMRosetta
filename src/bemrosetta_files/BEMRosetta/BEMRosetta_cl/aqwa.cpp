@@ -112,6 +112,7 @@ bool Aqwa::Load_AH1() {
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {
+				hd().C[ib].setConstant(6, 6, 0);
 	            for (int idf = 0; idf < 6; ++idf) {
 	                f.Load(in.GetLine());
 	                int did = 0;
@@ -321,12 +322,19 @@ bool Aqwa::Load_LIS() {
 		line = TrimBoth(in.GetLine());
 		
 		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
-			idb = ScanInt(line.Mid(pos)) - 1; 
-			if (idb >= hd().Nb)
-				throw Exc(in.Str() + Format(t_("Wrong body %d"), idb));
-		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0) {
+			idb = ScanInt(line.Mid(pos));
+			if (!IsNull(idb)) {
+				idb -= 1; 
+				if (idb >= hd().Nb)
+					throw Exc(in.Str() + Format(t_("Wrong body %d"), idb));
+			}
+		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
+				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {
+			hd().C[idb].setConstant(6, 6, 0);
 			in.GetLine(3);
 			line = in.GetLine();
+			if (Trim(line).StartsWith("Z"))
+				line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + t_("Format error, '=' not found"));
@@ -334,6 +342,8 @@ bool Aqwa::Load_LIS() {
 	       	hd().C[idb](2, 2) = f.GetDouble(0);
 	       	hd().C[idb](2, 3) = f.GetDouble(1);
 	       	hd().C[idb](2, 4) = f.GetDouble(2);
+	       	if (f.GetCount() > 3)
+	       		hd().C[idb](2, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
@@ -342,6 +352,8 @@ bool Aqwa::Load_LIS() {
 	       	hd().C[idb](3, 2) = f.GetDouble(0);
 			hd().C[idb](3, 3) = f.GetDouble(1);
 			hd().C[idb](3, 4) = f.GetDouble(2);
+			if (f.GetCount() > 3)
+	       		hd().C[idb](3, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
@@ -350,6 +362,8 @@ bool Aqwa::Load_LIS() {
 	       	hd().C[idb](4, 2) = f.GetDouble(0);
 			hd().C[idb](4, 3) = f.GetDouble(1);
 			hd().C[idb](4, 4) = f.GetDouble(2);
+			if (f.GetCount() > 3)
+	       		hd().C[idb](4, 5) = f.GetDouble(3);	
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
