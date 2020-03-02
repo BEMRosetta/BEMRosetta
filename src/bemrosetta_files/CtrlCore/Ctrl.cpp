@@ -308,11 +308,7 @@ void Ctrl::Enable(bool aenable) {
 	GuiLock __;
 	if(enabled != aenable) {
 		enabled = aenable;
-// 01/12/2007 - mdelfede
-// added support for windowed controls
-//		if(!parent) WndEnable(enabled);
 		if(top) WndEnable(enabled);
-// 01/12/2007 - END
 		if(!enabled && parent && HasFocusDeep())
 			IterateFocusForward(this, GetTopCtrl());
 		RefreshFrame();
@@ -338,6 +334,7 @@ Ctrl& Ctrl::SetEditable(bool aeditable) {
 
 void Ctrl::SetModify()
 {
+	GuiLock __;
 	modify = true;
 }
 
@@ -345,14 +342,27 @@ void Ctrl::ClearModify()
 {
 	GuiLock __;
 	modify = false;
+}
+
+void Ctrl::ClearModifyDeep()
+{
+	GuiLock __;
+	ClearModify();
 	for(Ctrl *q = firstchild; q; q = q->next)
 		q->ClearModify();
 }
 
+
 bool Ctrl::IsModified() const
 {
 	GuiLock __;
-	if(IsModifySet()) return true;
+	return modify;
+}
+
+bool Ctrl::IsModifiedDeep() const
+{
+	GuiLock __;
+	if(IsModified()) return true;
 	for(Ctrl *q = firstchild; q; q = q->next)
 		if(q->IsModified()) return true;
 	return false;
@@ -796,30 +806,28 @@ void Ctrl::GetZoomRatio(Size& m, Size& d)
 int  Ctrl::HorzLayoutZoom(int cx)
 {
 	Csizeinit();
-	return Csize.cx * cx / Dsize.cx;
+	return cx > -16000 ? Csize.cx * cx / Dsize.cx : cx;
 }
 
 double  Ctrl::HorzLayoutZoomf(double cx)
 {
 	Csizeinit();
-	return Csize.cx * cx / Dsize.cx;
+	return cx > -16000 ? Csize.cx * cx / Dsize.cx : cx;
 }
 
 int  Ctrl::VertLayoutZoom(int cy)
 {
 	Csizeinit();
-	return Csize.cy * cy / Dsize.cy;
+	return cy > -16000 ? Csize.cy * cy / Dsize.cy : cy;
 }
 
 Size Ctrl::LayoutZoom(int cx, int cy)
 {
-	Csizeinit();
-	return Size(Csize.cx * cx / Dsize.cx, Csize.cy * cy / Dsize.cy);
+	return Size(HorzLayoutZoom(cx), VertLayoutZoom(cy));
 }
 
 Size Ctrl::LayoutZoom(Size sz)
 {
-	Csizeinit();
 	return LayoutZoom(sz.cx, sz.cy);
 }
 
@@ -843,7 +851,7 @@ bool Ctrl::IsUHDEnabled()
 	return ApplicationUHDEnabled;
 }
 
-bool ApplicationDarkThemeEnabled;
+bool ApplicationDarkThemeEnabled = true;
 
 void Ctrl::SetDarkThemeEnabled(bool set)
 {
@@ -991,6 +999,7 @@ void Ctrl::ReSkin()
 		return;
 	lock++;
 	ChReset();
+	Csize.cx = Dsize.cx = IsNoLayoutZoom;
 	if(s_chdefault)
 		(*s_chdefault)();
 	if(skin)

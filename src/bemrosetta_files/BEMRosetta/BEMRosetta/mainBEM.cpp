@@ -421,7 +421,16 @@ void MainBEM::OnRemoveSelected(bool all) {
 			menuFOAMM.arrayModel.Remove(row);
 			selected = true;
 		}
-	}
+	}	// Only one available => directly selected
+	if (!selected && menuOpen.arrayModel.GetCount() == 1) {	
+		int id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
+		Bem().hydros.Remove(id);
+		mainArrange.Remove(0);
+		menuOpen.arrayModel.Remove(0);
+		menuConvert.arrayModel.Remove(0);
+		menuFOAMM.arrayModel.Remove(0);
+		selected = true;
+	}		
 	if (!selected) {
 		Exclamation(t_("No model selected"));
 		return;
@@ -458,10 +467,11 @@ void MainBEM::OnRemoveSelected(bool all) {
 }
 
 void MainBEM::OnJoin() {
-	Vector<int> idsjoin;
+	Vector<int> idsjoin, rowsJoin;
 	bool selected = false;
 	for (int row = menuOpen.arrayModel.GetCount()-1; row >= 0; --row) {
 		if (menuOpen.arrayModel.IsSelected(row)) {
+			rowsJoin << row;
 			int id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
 			idsjoin << id;
 			selected = true;
@@ -475,7 +485,7 @@ void MainBEM::OnJoin() {
 		WaitCursor wait;
 		Progress progress(t_("Joining selected BEM files..."), 100); 
 		
-		Bem().Join(idsjoin, [&](String str, int _pos) {
+		HydroClass &data = Bem().Join(idsjoin, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
@@ -484,9 +494,12 @@ void MainBEM::OnJoin() {
 		mainSummary.Clear();
 		mainArrange.Clear();
 		
-		ArrayModel_IdsHydroDel(menuOpen.arrayModel, idsjoin);
-		ArrayModel_IdsHydroDel(menuConvert.arrayModel, idsjoin);
-		ArrayModel_IdsHydroDel(menuFOAMM.arrayModel, idsjoin);
+		ArrayModel_Add(menuOpen.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		ArrayModel_Add(menuConvert.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		ArrayModel_Add(menuFOAMM.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		ArrayModel_RowsHydroDel(menuOpen.arrayModel, rowsJoin);
+		ArrayModel_RowsHydroDel(menuConvert.arrayModel, rowsJoin);
+		ArrayModel_RowsHydroDel(menuFOAMM.arrayModel, rowsJoin);
 	
 		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
 	
@@ -531,7 +544,9 @@ void MainBEM::OnSymmetrize() {
 			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
 			break;
 		}
-	}
+	}	// Only one available => directly selected
+	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
+		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
 		return;
@@ -563,7 +578,9 @@ void MainBEM::OnA0() {
 			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
 			break;
 		}
-	}
+	}	// Only one available => directly selected
+	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
+		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
 		return;
@@ -593,7 +610,9 @@ void MainBEM::OnAinf() {
 			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
 			break;
 		}
-	}
+	}	// Only one available => directly selected
+	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
+		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
 		return;
@@ -623,7 +642,9 @@ void MainBEM::OnDescription() {
 			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
 			break;
 		}
-	}
+	}	// Only one available => directly selected
+	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
+		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
 		return;
@@ -850,13 +871,13 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
-		if (data.Vo.size() > ib) 
+		if (data.Vo.size() > ib && !IsNull(data.Vo[ib])) 
 			array.Set(row++, col, FormatDouble(data.Vo[ib], 3, FD_EXP));
 		else 
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
-		if (data.cg.size() > 3*ib) 
+		if (data.cg.size() > 3*ib && !IsNull(data.cg(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
 									FormatDouble(data.cg(0, ib), 3, FD_EXP),
 									FormatDouble(data.cg(1, ib), 3, FD_EXP),
@@ -865,7 +886,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
-		if (data.cg.size() > 3*ib) 
+		if (data.cb.size() > 3*ib && !IsNull(data.cb(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
 									FormatDouble(data.cb(0, ib), 3, FD_EXP),
 									FormatDouble(data.cb(1, ib), 3, FD_EXP),
@@ -873,7 +894,10 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		else
 			array.Set(row++, col, "-");
 		
-		if (data.C.GetCount() > ib) {
+		array.Set(row, 0, sib + " " + t_("Water plane area [m2]"));
+		if (data.C.GetCount() > ib && data.C[ib].size() > 0) {
+			double wPlaneArea = data.C_ndim(ib, 2, 2);
+			array.Set(row++, col, FormatDouble(wPlaneArea, 3, FD_EXP));		
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
@@ -882,6 +906,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 				}
 			}
 		} else {
+			array.Set(row++, col, "-");		
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {

@@ -56,9 +56,11 @@ LAYOUT(MenuMesh, 560, 48)
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(4, 56).TopPosZ(4, 20))
 	ITEM(Button, butRemove, SetLabel(t_("Remove All")).LeftPosZ(256, 76).TopPosZ(28, 20))
 	ITEM(Label, dv___3, SetLabel(t_("File:")).LeftPosZ(260, 40).TopPosZ(4, 19))
+	ITEM(Button, butSplit, SetLabel(t_("Split")).LeftPosZ(440, 40).TopPosZ(28, 20))
 	ITEM(Button, butRemoveSelected, SetLabel(t_("Remove")).LeftPosZ(336, 56).TopPosZ(28, 20))
-	ITEM(Label, dv___5, SetLabel(t_("Models:")).LeftPosZ(4, 44).TopPosZ(4, 20))
+	ITEM(Label, dv___6, SetLabel(t_("Models:")).LeftPosZ(4, 44).TopPosZ(4, 20))
 	ITEM(ArrayCtrl, arrayModel, LeftPosZ(48, 204).TopPosZ(4, 44))
+	ITEM(Button, butJoin, SetLabel(t_("Join")).LeftPosZ(396, 40).TopPosZ(28, 20))
 END_LAYOUT
 
 LAYOUT(MenuConvertMesh, 912, 48)

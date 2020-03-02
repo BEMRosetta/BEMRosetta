@@ -25,6 +25,9 @@ CH_STYLE(MultiButton, Style, StyleDefault)
 	usetrivial = false;
 	overpaint = loff = roff = 0;
 	error = Blend(LtRed(), Red());
+	paper = SColorPaper();
+	coloredge = Null;
+	clipedge = false;
 }
 
 CH_STYLE(MultiButton, Style, StyleFrame)
@@ -282,16 +285,16 @@ int MultiButton::ChState(int i)
 	if(i == MAIN && frm && style->activeedge) {
 		int q = 0;
 		if(p)
-			q = !p->IsEnabled() || !IsEnabled() || IsReadOnly() || i >= 0 && !button[i].enabled ? CTRL_DISABLED
+			q = !p->IsEnabled() || !IsEnabled() || p->IsReadOnly() || i >= 0 && !button[i].enabled ? CTRL_DISABLED
 			    : p->HasFocus() || push ? CTRL_PRESSED
 			    : p->HasMouse() || hl >= 0 ? CTRL_HOT
 			    : CTRL_NORMAL;
 		return q;
 	}
-	if(IsTrivial() && !frm)
-		i = 0;
 	if(!IsShowEnabled() || IsReadOnly() || frm && p && p->IsReadOnly() || i >= 0 && !button[i].enabled)
 		return CTRL_DISABLED;
+	if(IsTrivial() && !frm)
+		i = 0;
 	return hl == i ? push ? CTRL_PRESSED
 	                      : CTRL_HOT
 	               : CTRL_NORMAL;
@@ -355,6 +358,30 @@ Rect MultiButton::Paint0(Draw& w, bool getcr)
 	int border, lx, rx;
 	bool frm = Metrics(border, lx, rx);
 	int mst = ChState(MAIN);
+
+	Color fpaper = Null;
+	Color text = SColorLabel;
+	bool hotpressed = false;
+	if(!nobg && !ComplexFrame() && frm) {
+		if(mst == CTRL_HOT && !IsTrivial()) {
+			fpaper = Blend(SColorHighlight, SColorPaper, 235);
+			hotpressed = true;
+		}
+		else
+		if(mst == CTRL_PRESSED && !IsTrivial()) {
+			fpaper = Blend(SColorHighlight, SColorFace, 235);
+			hotpressed = true;
+		}
+		else
+		if(HasFocus()) {
+			fpaper = SColorHighlight();
+			text = SColorHighlightText();
+			hotpressed = true;
+		}
+		else
+			fpaper = IsEnabled() && IsEditable() ? style->paper : SColorFace();
+	}
+
 	if(frm && !nobg && !getcr) {
 		if(style->clipedge) {
 			int l, r;
@@ -362,6 +389,15 @@ Rect MultiButton::Paint0(Draw& w, bool getcr)
 			w.Clip(l, 0, r - l, sz.cy);
 		}
 		ChPaint(w, sz, style->edge[style->activeedge ? mst : 0]);
+		Color p = paper;
+		if(frm && style->activeedge && HasFocus())
+			p = SColorHighlight();
+		if(hotpressed && (WhenPush || WhenClick))
+			p = Nvl(fpaper, paper);
+		if(IsEnabled() && IsEditable())
+			p = Nvl(p, style->paper);
+		if(!IsNull(p) && !IsNull(style->coloredge))
+			ChPaint(w, sz, style->coloredge, p);
 		if(style->clipedge)
 			w.End();
 	}
@@ -440,12 +476,11 @@ Rect MultiButton::Paint0(Draw& w, bool getcr)
 	cr = GetSize();
 	cr.left = lx;
 	cr.right = rx;
-	Color text = SColorLabel();
 	Color paper = Null;
 	if(!nobg) {
 		if(ComplexFrame()) {
 			r = cr;
-			paper = HasFocus() ? SColorHighlight() : SColorPaper();
+			paper = HasFocus() ? SColorHighlight() : style->paper;
 			if(HasFocus())
 				text = SColorHighlightText();
 			w.DrawRect(r, paper);
@@ -454,20 +489,7 @@ Rect MultiButton::Paint0(Draw& w, bool getcr)
 		if(frm) {
 			Rect m = GetMargin();
 			r = Rect(max(lx, m.left), m.top, min(rx, sz.cx - m.right), sz.cy - m.bottom);
-			Color paper;
-			if(mst == CTRL_HOT && !IsTrivial())
-				paper = Blend(SColorHighlight, SColorPaper, 235);
-			else
-			if(mst == CTRL_PRESSED && !IsTrivial())
-				paper = Blend(SColorHighlight, SColorFace, 235);
-			else
-			if(HasFocus()) {
-				paper = SColorHighlight();
-				text = SColorHighlightText();
-			}
-			else
-				paper = IsEnabled() && IsEditable() ? SColorPaper() : SColorFace();
-			w.DrawRect(r, paper);
+			w.DrawRect(r, fpaper);
 			cr = r;
 		}
 		else {
@@ -529,7 +551,7 @@ void MultiButton::SyncInfo()
 			int cm = DPI(2);
 			r.left -= cm;
 			r.right += cm;
-			info.Set(this, r, value, display, SColorText, SColorPaper, 0, DPI(2));
+			info.Set(this, r, value, display, SColorText, style->paper, 0, DPI(2));
 			return;
 		}
 	}

@@ -1,6 +1,6 @@
 
 UPPOUT = _out/
-CINC   = -I./ -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/freetype2 -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include/gtk-2.0 -I/usr/X11R6/include/glib-2.0 -I/usr/X11R6/lib/glib-2.0/include -I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include/cairo -I/usr/X11R6/include/pango-1.0 -I/usr/X11R6/include/atk-1.0 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/gtk-2.0/include -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/harfbuzz -I/usr/include/freetype2/freetype
+CINC   = -I./ `pkg-config --cflags freetype2` `pkg-config --cflags x11` `pkg-config --cflags fontconfig` `pkg-config --cflags xcb` `pkg-config --cflags expat` `pkg-config --cflags libpng` -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/freetype2 -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include/gtk-2.0 -I/usr/X11R6/include/glib-2.0 -I/usr/X11R6/lib/glib-2.0/include -I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include/cairo -I/usr/X11R6/include/pango-1.0 -I/usr/X11R6/include/atk-1.0 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/gtk-2.0/include -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/harfbuzz -I/usr/include/freetype2/freetype
 Macro  =  -DflagSHARED -DflagGCC -DflagPOSIX -DflagLINUX
 CXX = c++
 LINKER = $(CXX)
@@ -151,18 +151,19 @@ $(OutFile): build_info  \
 			$(OutDir_plugin_lz4)lz4.a \
 		$(OutDir_PdfDraw)PdfInit.o \
 			$(OutDir_PdfDraw)PdfDraw.a \
+			`pkg-config --libs freetype2` \
+			`pkg-config --libs x11` \
+			`pkg-config --libs fontconfig` \
+			`pkg-config --libs xcb` \
+			`pkg-config --libs expat` \
+			`pkg-config --libs libpng` \
 			-lpthread \
 			-ldl \
 			-lrt \
 			-lz \
 			-lX11 \
 			-lXtst \
-			-lbz2 \
-			-ldl \
-			-lfreetype \
-			-lfontconfig \
-			-lexpat \
-			-lpng -Wl,--end-group
+			-lbz2 -Wl,--end-group
 
 $(OutDir_BEMRosetta_BEMRosetta_cl):
 	mkdir -p $(OutDir_BEMRosetta_BEMRosetta_cl)
@@ -531,7 +532,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)main.o: BEMRosetta/BEMRosetta_cl/main.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -1028,7 +1028,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -1529,7 +1528,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)Mesh.o: BEMRosetta/BEMRosetta_cl/Mesh.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -2026,7 +2024,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh_mesh.o: BEMRosetta/BEMRosetta_cl/nemoh_m
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -2523,7 +2520,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit_mesh.o: BEMRosetta/BEMRosetta_cl/wamit_m
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -3020,7 +3016,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)stl.o: BEMRosetta/BEMRosetta_cl/stl.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -3517,7 +3512,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o: BEMRosetta/BEMRosetta_cl/nemoh.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -4014,7 +4008,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o: BEMRosetta/BEMRosetta_cl/foamm.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -4514,7 +4507,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o: BEMRosetta/BEMRosetta_cl/wamit.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -5016,7 +5008,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o: BEMRosetta/BEMRosetta_cl/fast.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -5517,7 +5508,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o: BEMRosetta/BEMRosetta_cl/aqwa.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -6014,7 +6004,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o: BEMRosetta/BEMRosetta_cl/ainf.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -6511,7 +6500,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o: BEMRosetta/BEMRosetta_cl/dataf.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -10076,7 +10064,6 @@ $(OutDir_Core)t.o: Core/t.cpp \
 	Core/config.h \
 	Core/Convert.h \
 	Core/Core.h \
-	Core/Core.t \
 	Core/CoSort.h \
 	Core/CoWork.h \
 	Core/Defs.h \
@@ -12191,7 +12178,6 @@ $(OutDir_SysInfo)SysInfo.o: SysInfo/SysInfo.cpp \
 	Functions4U/SvgColors.h \
 	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
-	SysInfo/SysInfo.t \
 	SysInfo/SysInfo_in.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/SysInfo.cpp -o $(OutDir_SysInfo)SysInfo.o
 
@@ -13918,7 +13904,6 @@ $(OutDir_Surface)Surface.o: Surface/Surface.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -14144,7 +14129,6 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	Web/util.h \
 	Web/Web.h \
 	Functions4U/Functions4U.h \
-	Functions4U/Functions4U.t \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
@@ -14152,9 +14136,6 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Functions4U.cpp -o $(OutDir_Functions4U)Functions4U.o
 
 $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14230,27 +14211,16 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -14285,6 +14255,12 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/bmp/bmp.h \
 	plugin/gif/gif.h \
 	plugin/jpg/jpg.h \
@@ -14301,18 +14277,11 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -14414,9 +14383,6 @@ $(OutDir_Functions4U)LocalProcess2.o: Functions4U/LocalProcess2.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/LocalProcess2.cpp -o $(OutDir_Functions4U)LocalProcess2.o
 
 $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14492,27 +14458,16 @@ $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -14547,23 +14502,22 @@ $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -14665,9 +14619,6 @@ $(OutDir_Functions4U)StaticPlugin.o: Functions4U/StaticPlugin.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/StaticPlugin.cpp -o $(OutDir_Functions4U)StaticPlugin.o
 
 $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14743,27 +14694,16 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -14798,6 +14738,12 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	PdfDraw/PdfDraw.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
@@ -14805,18 +14751,11 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -15677,7 +15616,6 @@ $(OutDir_Draw)FontWin32.o: Draw/FontWin32.cpp \
 $(OutDir_Draw)FontFc.o: Draw/FontFc.cpp \
 	config/ftheader.h \
 	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -16477,7 +16415,6 @@ $(OutDir_Draw)Display.o: Draw/Display.cpp \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
 	Draw/Draw.h \
-	Draw/DrawImg.iml \
 	Draw/FontInt.h \
 	Draw/Image.h \
 	Draw/ImageOp.h \
@@ -18562,7 +18499,7 @@ $(OutDir_Draw)Cham.o: Draw/Cham.cpp \
 	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Cham.cpp -o $(OutDir_Draw)Cham.o
 
-$(OutDir_Draw)SSettings.o: Draw/SSettings.cpp \
+$(OutDir_Draw)SColors.o: Draw/SColors.cpp \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -18650,7 +18587,7 @@ $(OutDir_Draw)SSettings.o: Draw/SSettings.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	uppconfig.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SSettings.cpp -o $(OutDir_Draw)SSettings.o
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SColors.cpp -o $(OutDir_Draw)SColors.o
 
 $(OutDir_Draw)Draw.a: \
 	$(OutDir_Draw)Font.o \
@@ -18688,7 +18625,7 @@ $(OutDir_Draw)Draw.a: \
 	$(OutDir_Draw)SDraw.o \
 	$(OutDir_Draw)SImageDraw.o \
 	$(OutDir_Draw)Cham.o \
-	$(OutDir_Draw)SSettings.o
+	$(OutDir_Draw)SColors.o
 	$(AR) $(OutDir_Draw)Draw.a \
 		$(OutDir_Draw)Font.o \
 		$(OutDir_Draw)FontCR.o \
@@ -18725,7 +18662,7 @@ $(OutDir_Draw)Draw.a: \
 		$(OutDir_Draw)SDraw.o \
 		$(OutDir_Draw)SImageDraw.o \
 		$(OutDir_Draw)Cham.o \
-		$(OutDir_Draw)SSettings.o
+		$(OutDir_Draw)SColors.o
 
 $(OutDir_plugin_jpg):
 	mkdir -p $(OutDir_plugin_jpg)
@@ -20305,9 +20242,14 @@ $(OutDir_plugin_tif)tif_fax3.o: plugin/tif/lib/tif_fax3.c \
 	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_plugin_tif)  plugin/tif/lib/tif_fax3.c -o $(OutDir_plugin_tif)tif_fax3.o
 
 $(OutDir_plugin_tif)tif_fax3sm.o: plugin/tif/lib/tif_fax3sm.c \
+	plugin/tif/lib/tif_config.h \
+	plugin/tif/lib/tif_dir.h \
 	plugin/tif/lib/tif_fax3.h \
 	plugin/tif/lib/tiff.h \
-	plugin/tif/lib/tiffconf.h
+	plugin/tif/lib/tiffconf.h \
+	plugin/tif/lib/tiffio.h \
+	plugin/tif/lib/tiffiop.h \
+	plugin/tif/lib/tiffvers.h
 	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_plugin_tif)  plugin/tif/lib/tif_fax3sm.c -o $(OutDir_plugin_tif)tif_fax3sm.o
 
 $(OutDir_plugin_tif)tif_flush.o: plugin/tif/lib/tif_flush.c \

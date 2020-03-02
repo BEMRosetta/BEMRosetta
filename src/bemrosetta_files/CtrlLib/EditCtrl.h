@@ -36,24 +36,6 @@ void ViewEdge_Write(Value);
 CtrlFrame& EditFieldFrame();
 CtrlFrame& ViewFrame();
 
-class ActiveEdgeFrame : public CtrlFrame {
-public:
-	virtual void FrameLayout(Rect& r);
-	virtual void FramePaint(Draw& w, const Rect& r);
-	virtual void FrameAddSize(Size& sz);
-
-private:
-	const Value *edge;
-	const Ctrl  *ctrl;
-	bool  mousein;
-
-public:
-	void Set(const Ctrl *ctrl, const Value *edge, bool active);
-	void Mouse(bool in) { mousein = in; }
-
-	ActiveEdgeFrame() { edge = NULL; mousein = false; }
-};
-
 class EditField : public Ctrl, private TextArrayOps {
 public:
 	virtual void  Layout();
@@ -80,6 +62,7 @@ public:
 	virtual Value GetData() const;
 	virtual void  CancelMode();
 	virtual String GetSelectionData(const String& fmt) const;
+	virtual void   State(int);
 
 public:
 	struct Style : ChStyle<Style> {
@@ -90,7 +73,8 @@ public:
 		Color text, textdisabled;
 		Color selected, selectedtext;
 		Color selected0, selectedtext0; // If does not have focus...
-		Value edge[4];
+		Value edge[4]; // border (for various active edge states)
+		Value coloredge; // border mask for adding color, e.g. round borders with red Error
 		bool  activeedge;
 		int   vfm;
 	};
@@ -147,7 +131,7 @@ protected:
 
 	bool    FrameIsEdge();
 	void    SetEdge(int i);
-	void    SyncEdge();
+	void    RefreshAll();
 	int     LowChar(int c) const { return 0x25af /*c + 0x2400*/; }
 	int     GetCharWidth(int c) const { return font[c < 32 ? LowChar(c) : c]; }
 	int     GetTextCx(const wchar *text, int n, bool password, Font fnt) const;
@@ -163,6 +147,7 @@ protected:
 	int     GetTy() const;
 	void    StdPasteFilter(WString&);
 	void    SelSource();
+	Color   GetPaper();
 
 protected:
 	virtual void  HighlightText(Vector<Highlight>& hl);
@@ -174,6 +159,7 @@ public:
 	Event<>                   WhenEnter;
 	Event<WString&>           WhenPasteFilter;
 	Event<Vector<Highlight>&> WhenHighlight;
+	Event<Color>              WhenPaper; // needed to improve visuals of DropChoice
 
 	static const Style& StyleDefault();
 	EditField&  SetStyle(const Style& s);
@@ -223,7 +209,7 @@ public:
 	void    Clear();
 	void    Reset();
 	
-	void    Error(bool error = true)         { if(errorbg != error) { errorbg = error; Refresh(); } }
+	void    Error(bool error = true)         { if(errorbg != error) { errorbg = error; RefreshAll(); } }
 	
 	EditField& Password(bool pwd = true)     { password = pwd; Finish(); return *this; }
 	bool       IsPassword() const            { return password; }

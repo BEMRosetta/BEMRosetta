@@ -317,12 +317,12 @@ void MainStiffness::Clear() {
 	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
 }
 
-void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, String bodyName, int ibody) {
+void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, String bodyName, int ibody, int idc) {
 	row0 = ibody*9 + 1;
 	col0 = icase*8;
 	
 	array.Set(0, col0, AttrText(name).Bold());
-	array.Set(2, col0, AttrText(" ").Paper(GetColorId(icase)));
+	array.Set(2, col0, AttrText(" ").Paper(GetColorId(idc)));
 	
 	while (array.GetColumnCount() < col0 + 7) {
 		if (icase > 0) {
@@ -345,9 +345,9 @@ void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, Str
 		array.SetLineCy(i*9, 10);	
 }
 
-void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button) {
+void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button, int idc) {
 	int row0, col0;
-	AddPrepare(row0, col0, name, icase, "", 0);
+	AddPrepare(row0, col0, name, icase, "", 0, idc);
 	
 	if (K.size() == 0)
 		return;
@@ -386,11 +386,11 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button) 
 			 };
 }
 	
-void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro) {
+void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
 	int row0, col0;
-	AddPrepare(row0, col0, name, icase, bodyName, ibody);
+	AddPrepare(row0, col0, name, icase, bodyName, ibody, idc);
 
-	if (hydro.C.IsEmpty())
+	if (hydro.C.IsEmpty() || hydro.C[ibody].size() == 0)
 		return;
 
 	for (int r = 0; r < 6; ++r) {
@@ -406,7 +406,7 @@ bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids)
 		int icase = ids[i];
 		Hydro &hydro = hydros[icase].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
-			Add(hydros[icase].hd().name, i, hydros[icase].hd().names[ibody], ibody, hydro);
+			Add(hydros[icase].hd().name, i, hydros[icase].hd().names[ibody], ibody, hydro, hydro.GetId());
 	}
 	return true;
 }	
@@ -416,7 +416,7 @@ void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids) {
 
 	for (int i = 0; i < ids.GetCount(); ++i) {
 		int icase = ids[i];	
-		Add(GetFileTitle(surfs[icase].fileName), i, surfs[icase].C, true);
+		Add(GetFileTitle(surfs[icase].fileName), i, surfs[icase].C, true, surfs[icase].GetId());
 	}
 }
 			
@@ -424,10 +424,12 @@ Main &ma(Main *m) {
 	static Main *mp = 0;
 	if (m)
 		mp = m;
+	if (!mp)
+		throw Exc(t_("Main is not initialized"));	
 	return *mp;
 }
 
-BEMData &Bem() 						{return ma().bem;}
+BEMData &Bem()						{return ma().bem;}
 void Status(String str, int time)	{ma().Status(str, time);}
 
 void OnPanic(const char *title, const char *text) {
@@ -438,11 +440,13 @@ void OnAssert(const char *text) {
 	throw Exc(Format(t_("Error type 2: %s"), text));	
 }
 
+
 GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);
 	//SetAssertFailedHook(OnAssert);
 	
-	ConsoleOutput console;	
+	ConsoleOutput console;
+	
 	const Vector<String>& command = CommandLine();
 	
 	if (!command.IsEmpty()) {
@@ -532,14 +536,14 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
  	array.Add(id, GetColorId(id), codeStr, title, fileName);
 }
 
-static int ArrayModel_Id(const ArrayCtrl &array) {
+int ArrayModel_Id(const ArrayCtrl &array) {
 	int row = array.GetCursor();
 	if (row < 0)
 		return -1;
 	return array.Get(row, 0);
 }
 
-static int ArrayModel_Id(const ArrayCtrl &array, int row) {
+int ArrayModel_Id(const ArrayCtrl &array, int row) {
 	return array.Get(row, 0);
 }
 
@@ -590,6 +594,17 @@ void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids) {
 		int idrow = ArrayModel_IdHydro(array, row);
 		for (auto id : ids) {
 			if (idrow == id) {
+				array.Remove(row);
+				break;
+			}
+		}
+	}
+}
+
+void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Vector<int> &rows) {		
+	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
+		for (auto rw : rows) {
+			if (row == rw) {
 				array.Remove(row);
 				break;
 			}

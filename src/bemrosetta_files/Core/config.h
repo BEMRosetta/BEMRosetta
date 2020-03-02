@@ -15,6 +15,11 @@
 
 	#define COMPILER_GCC 1
 	
+	#ifdef __clang__
+	#define COMPILER_CLANG 1
+	#endif
+	
+	
 	#if defined(__WIN32) || defined(_WIN32) || defined(WIN32)
 		#define COMPILER_MINGW 1
 		#define PLATFORM_WIN32 1
@@ -46,7 +51,7 @@
 			#define PLATFORM_MACOS 1
 			#define PLATFORM_OSX 1
 			#ifndef flagUSEMALLOC
-				#define flagUSEMALLOC // TODO: investigate why is this necessary...
+				#define STD_NEWDELETE
 			#endif
 		#else
 			// zvzv mod
@@ -161,6 +166,7 @@
 
 #ifdef  flagCLR
 #define flagUSEMALLOC
+#define STD_NEWDELETE
 #endif
 
 #if __cplusplus >= 201100

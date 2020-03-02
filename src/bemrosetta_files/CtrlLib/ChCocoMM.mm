@@ -7,46 +7,12 @@
 #include <CtrlCore/CocoMM.h>
 #include "ChCocoMM.h"
 
-void Coco_ThemePaint(void *cgcontext, const Upp::Rect& r, int type, int value, int state, bool focus)
+void Coco_PaintCh(void *cgcontext, int type, int value, int state)
 {
 	auto cg = (CGContextRef) cgcontext	;
 	if(Upp::IsUHDMode())
 		CGContextScaleCTM(cg, 2, 2);
-	CGRect cr = CGRectMake(r.left, r.top, r.Width(), r.Height());
-	int st = Upp::decode(state,
-	                     Upp::CTRL_PRESSED, kThemeStatePressed,
-	                     Upp::CTRL_DISABLED, kThemeStateInactive,
-	                     kThemeStateActive);
-
-	if(type == COCO_BACKGROUND) {
-		HIThemeBackgroundDrawInfo bgi;
-		bgi.version = 0;
-		bgi.kind = value;
-		bgi.state = st;
-		HIThemeDrawBackground(&cr, &bgi, cg, kHIThemeOrientationNormal);
-	}
-	else
-	if(type == COCO_MENUITEM) {
-		HIThemeMenuItemDrawInfo mdi;
-		mdi.version = 0;
-		mdi.itemType = kThemeMenuItemPlain|kThemeMenuItemPopUpBackground;
-		if(state == Upp::CTRL_DISABLED)
-			mdi.state = kThemeMenuDisabled;
-		else {
-			mdi.state = kThemeMenuActive;
-            if(state != Upp::CTRL_NORMAL)
-                mdi.state |= kThemeMenuSelected;
-		}
-		HIThemeDrawMenuItem(&cr, &cr, &mdi, cg, kHIThemeOrientationNormal, &cr);
-	}
-	else
-	if(type == COCO_MENU) {
-        HIThemeMenuDrawInfo mni;
-		mni.version = 0;
-		mni.menuType = kThemeMenuTypePopUp;
-		HIThemeDrawMenuBackground(&cr, &mni, cg, kHIThemeOrientationNormal);
-	}
-	else
+	CGRect cr = CGRectMake(0, 0, 140, 140);
 	if(type == COCO_NSCOLOR) {
 		CGContextSaveGState(cg);
 		CGContextSetFillColorWithColor(cg, Upp::decode(value,
@@ -62,32 +28,6 @@ void Coco_ThemePaint(void *cgcontext, const Upp::Rect& r, int type, int value, i
 		CGContextRestoreGState(cg);
 	}
 	else
-	if(type == COCO_BRUSH) {
-		CGContextSaveGState(cg);
-		HIThemeSetFill((ThemeBrush)value, NULL, cg, kHIThemeOrientationNormal);
-		CGContextFillRect(cg, cr);
-		CGContextRestoreGState(cg);
-	}
-	else
-	if(type == COCO_SCROLLTHUMB || type == COCO_SCROLLTRACK) {
-		HIThemeTrackDrawInfo tdi;
-		memset(&tdi, 0, sizeof(tdi));
-		tdi.kind = kThemeScrollBarMedium;
-	    tdi.bounds = cr;
-		tdi.min = 0;
-		tdi.max = 1;
-		tdi.value = 0;
-		tdi.attributes = kThemeTrackNoScrollBarArrows|
-		                 (type == COCO_SCROLLTHUMB ? kThemeTrackHideTrack|kThemeTrackShowThumb : 0)|
-		                 (value * kThemeTrackHorizontal);
-		tdi.enableState = state == Upp::CTRL_DISABLED ? kThemeTrackDisabled : kThemeTrackActive;
-        tdi.trackInfo.scrollbar.viewsize = 200;
-        if(type == COCO_SCROLLTHUMB && state == Upp::CTRL_HOT || state == Upp::CTRL_PRESSED)
-	        tdi.trackInfo.scrollbar.pressState |= kThemeThumbPressed;
-
-        HIThemeDrawTrack(&tdi, &cr, cg, kHIThemeOrientationNormal);
-	}
-	else
 	if(type == COCO_NSIMAGE) {
 		NSImage *img = [NSImage imageNamed:(value ? NSImageNameInfo : NSImageNameCaution)];
 	    NSGraphicsContext *gc = [NSGraphicsContext graphicsContextWithCGContext:cg flipped:YES];
@@ -97,31 +37,54 @@ void Coco_ThemePaint(void *cgcontext, const Upp::Rect& r, int type, int value, i
 		[NSGraphicsContext setCurrentContext:cgc];
 	}
 	else {
-		HIThemeButtonDrawInfo bdi;
-		memset(&bdi, 0, sizeof(bdi));
-	    bdi.value = Upp::decode(value, 0, kThemeButtonOff, 1, kThemeButtonOn, kThemeButtonMixed);
-	    bdi.state = st;
-	    bdi.kind = Upp::decode(type, COCO_CHECKBOX, (int)kThemeCheckBox,
-	                                 COCO_RADIOBUTTON, (int)kThemeSmallRadioButton,
-	                                 COCO_BEVELBUTTON, (int)kThemeBevelButtonMedium,
-	                                 COCO_ROUNDEDBUTTON, (int)kThemeRoundedBevelButton,
-	                                 COCO_COMBOBOX, (int)kThemeComboBox,
-	                                 (int)kThemePushButtonNormal);
-	#ifdef _DEBUG
-		if(type < 0)
-			bdi.kind = -type;
-	#endif
-	    bdi.adornment = focus ? kThemeAdornmentFocus : kThemeAdornmentNone;
+	    CGContextSaveGState(cg);
+	    [NSGraphicsContext saveGraphicsState];
+	    [NSGraphicsContext setCurrentContext:
+			[NSGraphicsContext graphicsContextWithCGContext:cg flipped:YES]];
 	
-		HIThemeDrawButton(&cr, &bdi, cg, kHIThemeOrientationNormal, 0);
+	    const CGRect dirtyRect = CGRectMake(20, 20, 100, 100);
+	
+		if(Upp::findarg(type, COCO_SCROLLTHUMB, COCO_SCROLLTRACK) >= 0) {
+			NSScroller *scroller = [[NSScroller alloc] initWithFrame:NSMakeRect(0, 0, 200, 20)];
+		    scroller.floatValue = 0;
+		    scroller.knobProportion = 1;
+			scroller.knobStyle = NSScrollerKnobStyleDefault;
+			scroller.scrollerStyle = NSScrollerStyleLegacy;
+			scroller.frame = cr;
+			if(type == COCO_SCROLLTHUMB)
+				[scroller drawKnob];
+			else
+				[scroller drawKnobSlotInRect:dirtyRect highlight:YES];
+			[scroller release];
+		}
+		else
+		if(type == COCO_TEXTFIELD) {
+			NSTextField *tf = [[NSTextField alloc] init];
+			tf.enabled = YES;
+			tf.editable = YES;
+			tf.bezeled = YES;
+			tf.frame = CGRectMake(0, 0, 140, 40);
+			[tf drawRect:dirtyRect];
+			[tf release];
+		}
+		else {
+			NSButton *bc = type == COCO_POPUPBUTTON ? [[NSPopUpButton alloc] init] : [[NSButton alloc] init];
+			bc.allowsMixedState = type == COCO_CHECKBOX;
+			bc.title = @"";
+			bc.controlSize = type == COCO_RADIOBUTTON ? NSControlSizeSmall : NSControlSizeRegular;
+			bc.frame = cr;
+			bc.buttonType = Upp::decode(type, COCO_CHECKBOX, NSButtonTypeSwitch, COCO_RADIOBUTTON, NSButtonTypeRadio, NSButtonTypePushOnPushOff);
+			bc.bezelStyle = type == COCO_BUTTON ? NSBezelStyleRounded : NSBezelStyleRegularSquare;
+			bc.state = Upp::decode(value, 0, NSControlStateValueOff, 1, NSControlStateValueOn, NSControlStateValueMixed);
+	        [bc highlight: state == Upp::CTRL_PRESSED];
+			bc.enabled = state != Upp::CTRL_DISABLED;
+			[bc drawRect:dirtyRect];
+			[bc release];
+		}
+	
+	    [NSGraphicsContext restoreGraphicsState];
+	    CGContextRestoreGState(cg);
 	}
-}
-
-int   Coco_Metric(int k)
-{
-	SInt32 m;
-	GetThemeMetric(k, &m);
-	return m;
 }
 
 #endif

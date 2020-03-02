@@ -139,10 +139,12 @@ public:
 		Button::Style inc;
 		Button::Style dec;
 		int           width;
+		int           over;
+		bool          onsides;
 	};
 
 private:
-	bool         visible, onsides;
+	bool         visible;
 	const Style *style;
 
 public:
@@ -150,14 +152,15 @@ public:
 	Button dec;
 
 	void         Show(bool s = true);
-	bool         IsVisible() const                { return visible; }
+	bool         IsVisible() const          { return visible; }
 
 	static const Style& StyleDefault();
+	static const Style& StyleOnSides();
 
 	SpinButtons& SetStyle(const Style& s);
 	
-	SpinButtons& OnSides(bool b = true)           { onsides = b; inc.RefreshParentLayout(); return *this; }
-	bool         IsOnSides() const                { return onsides; }
+	SpinButtons& OnSides(bool b = true)     { return SetStyle(b ? StyleOnSides() : StyleDefault()); }
+	bool         IsOnSides() const          { return style->onsides; }
 
 	SpinButtons();
 	virtual ~SpinButtons();
@@ -374,7 +377,14 @@ private:
 	Color          nullink;
 	Font           nullfont;
 	
+	ActiveEdgeFrame edge;
+	
+	void  RefreshAll();
+	Color GetPaper();
+	
 protected:
+	virtual void   RefreshPush();
+	virtual void   RefreshFocus();
 	virtual void   PerformAction();
 	virtual void   DoAction();
 

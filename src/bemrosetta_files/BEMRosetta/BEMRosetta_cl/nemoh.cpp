@@ -1,5 +1,6 @@
 #include "BEMRosetta.h"
 
+
 bool Nemoh::Load(String file, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(GetFileFolder(file));
@@ -521,6 +522,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	
 		for (int ib = 0; ib < bodies.GetCount(); ++ib) {
 			String name = GetFileName(bodies[ib].meshFile);
+			name = RemoveAccents(name);
 			String dest = AppendFileName(folderMesh, name);
 			if (!FileCopy(bodies[ib].meshFile, dest)) 
 				throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[ib].meshFile));
@@ -566,7 +568,7 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 	for (int i = 0; i < bodies.GetCount(); ++i) {
 		const NemohBody &b = bodies[i];
 		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
-		String file = AppendFileName("mesh", GetFileName(b.meshFile));
+		String file = AppendFileName("mesh", RemoveAccents(GetFileName(b.meshFile)));
 		
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", b.npoints, b.npanels), cp) << "! Number of points and number of panels" << "\n";	
@@ -614,16 +616,16 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 bool Nemoh::Load_Inf(String fileName) {
 	if (hd().Nb != 1)
 		throw Exc(Format(t_("SeaFEM_Nemoh only allows one body, found %d"), hd().Nb));
-		
+
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+				
 	hd().cg.setConstant(3, 1, Null);
 	hd().cb.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
 	hd().C[0].setConstant(6, 6, Null);   
-	
-	FileInLine in(fileName);
-	if (!in.IsOpen())
-		return false;
 	
 	double minimumDirectionAngle = 0;
 	
@@ -709,10 +711,11 @@ bool Nemoh::Load_KH() {
 		else 
 			fileKH = AppendFileName(folder, AppendFileName("Mesh", Format("KH_%d.dat", ib)));
 	    
-		hd().C[ib].setConstant(6, 6, Null);    
 	    FileInLine in(fileKH);
 	    if (!in.IsOpen()) 
 	        return false;
+
+		hd().C[ib].setConstant(6, 6, 0);    
 	    
 	    FieldSplit f(in);
 		for (int i = 0; i < 6 && !in.IsEof(); ++i) {

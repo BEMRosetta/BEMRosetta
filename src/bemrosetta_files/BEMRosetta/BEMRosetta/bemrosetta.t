@@ -47,6 +47,26 @@ T_("#%d body. %s")
 esES("")
 frFR("")
 
+T_("Copy")
+esES("Copiar")
+frFR("")
+
+T_("Paste matrix in selected BEM file and body")
+esES("")
+frFR("")
+
+T_("File")
+esES("")
+frFR("")
+
+T_("Body")
+esES("")
+frFR("")
+
+T_("Main is not initialized")
+esES("")
+frFR("")
+
 T_("Error type 1 %s: %s")
 esES("")
 frFR("")
@@ -72,7 +92,30 @@ esES("")
 frFR("")
 
 
+// main.h
+
+T_("BEMRosetta Mesh Viewer")
+esES("")
+frFR("")
+
+T_("BEMRosetta BEM Coefficients Processing")
+esES("")
+frFR("")
+
+
 // mainMesh.cpp
+
+T_("Loads mesh file")
+esES("")
+frFR("")
+
+T_("Removes all loaded files")
+esES("")
+frFR("")
+
+T_("Removes selected files")
+esES("")
+frFR("")
 
 T_("Load")
 esES("")
@@ -146,7 +189,7 @@ T_("Healing mesh file...")
 esES("")
 frFR("")
 
-T_("File")
+T_("No model selected")
 esES("")
 frFR("")
 
@@ -178,6 +221,10 @@ T_("Volume [m3]")
 esES("")
 frFR("")
 
+T_("%s (%s, %s, %s)")
+esES("")
+frFR("")
+
 T_("Immersed surface [m2]")
 esES("")
 frFR("")
@@ -190,15 +237,15 @@ T_("Displacement [tm]")
 esES("")
 frFR("")
 
-T_("Cb(x) [m]")
+T_("Cg [m]")
 esES("")
 frFR("")
 
-T_("Cb(y) [m]")
+T_("%s, %s, %s")
 esES("")
 frFR("")
 
-T_("Cb(z) [m]")
+T_("Cb [m]")
 esES("")
 frFR("")
 
@@ -206,27 +253,11 @@ T_("Water Plane Area [m2]")
 esES("")
 frFR("")
 
-T_("Min X [m]")
+T_("Dimensions [m]")
 esES("")
 frFR("")
 
-T_("Max X [m]")
-esES("")
-frFR("")
-
-T_("Min Y [m]")
-esES("")
-frFR("")
-
-T_("Max Y [m]")
-esES("")
-frFR("")
-
-T_("Min Z [m]")
-esES("")
-frFR("")
-
-T_("Max Z [m]")
+T_("From (%s, %s, %s) to (%s, %s, %s)")
 esES("")
 frFR("")
 
@@ -291,6 +322,10 @@ esES("")
 frFR("")
 
 T_("# Skewed pan")
+esES("")
+frFR("")
+
+T_("Loading '%s'")
 esES("")
 frFR("")
 
@@ -378,6 +413,15 @@ esES("")
 frFR("")
 
 T_("Please enter number of parts to split the simulation (min. is 1)")
+esES("")
+frFR("")
+
+T_("Number of Nemoh cases %d must not be higher than number of frequencies "
+     "%d")
+esES("")
+frFR("")
+
+T_("Do you wish to fit the number of cases to the number of frequencies?")
 esES("")
 frFR("")
 
@@ -488,15 +532,27 @@ T_("Loading BEM files...")
 esES("")
 frFR("")
 
-T_("No model selected")
-esES("")
-frFR("")
-
 T_("Joining selected BEM files...")
 esES("")
 frFR("")
 
+T_("Symmetrizing forces and RAOs in selected BEM file...")
+esES("")
+frFR("")
+
+T_("Calculating A0 in selected BEM file...")
+esES("")
+frFR("")
+
+T_("Enter model description")
+esES("")
+frFR("")
+
 T_("Please select a model to export")
+esES("")
+frFR("")
+
+T_("Description")
 esES("")
 frFR("")
 
@@ -604,28 +660,12 @@ T_("Vsub [m3]")
 esES("")
 frFR("")
 
-T_("Cg(x) [m]")
-esES("")
-frFR("")
-
-T_("Cg(y) [m]")
-esES("")
-frFR("")
-
-T_("Cg(z) [m]")
-esES("")
-frFR("")
-
 T_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary "
      "Element Method solver formats")
 esES("")
 frFR("")
 
 T_("     Sel")
-esES("")
-frFR("")
-
-T_("Body")
 esES("")
 frFR("")
 
@@ -692,29 +732,39 @@ frFR("")
 
 // mainBEM_abf.cpp
 
-T_("A%s")
+T_("%s%.1f\302\272")
 esES("")
 frFR("")
 
-T_("B%s")
+
+// mainBEM_sts.cpp
+
+T_("A_ss")
 esES("")
 frFR("")
 
-T_("Fsc%s%.1f\302\272")
+T_("B_ss")
 esES("")
 frFR("")
 
-T_("Ffk%s%.1f\302\272")
+T_("C_ss")
 esES("")
 frFR("")
 
-T_("Fex%s%.1f\302\272")
+T_("Frequencies")
 esES("")
 frFR("")
 
-T_("RAO%s%.1f\302\272")
+T_("FreqRange")
 esES("")
 frFR("")
+
+T_("MAPE [%]")
+esES("")
+frFR("")
+
+
+// mainPlot.cpp
 
 T_("Added mass %s")
 esES("")
@@ -740,7 +790,7 @@ T_("Diffraction scattering force")
 esES("")
 frFR("")
 
-T_("Diffraction scattering force phase [\302\272]")
+T_("Diffraction scattering force phase [rad]")
 esES("")
 frFR("")
 
@@ -752,7 +802,7 @@ T_("Froude-Krylov force")
 esES("")
 frFR("")
 
-T_("Froude-Krylov force phase [\302\272]")
+T_("Froude-Krylov force phase [rad]")
 esES("")
 frFR("")
 
@@ -764,7 +814,7 @@ T_("Excitation force")
 esES("")
 frFR("")
 
-T_("Excitation force phase [\302\272]")
+T_("Excitation force phase [rad]")
 esES("")
 frFR("")
 
@@ -776,11 +826,11 @@ T_("RAO []")
 esES("")
 frFR("")
 
-T_("RAO phase [\302\272]")
+T_("RAO phase [rad]")
 esES("")
 frFR("")
 
-T_("Z magnitude B(w)+jw(A(w)-Ainf) %s")
+T_("Magnitude Z = B(w)+jw(A(w)-Ainf) %s")
 esES("")
 frFR("")
 
@@ -788,11 +838,19 @@ T_("Magnitude")
 esES("")
 frFR("")
 
-T_("Z phase B(w)+jw(A(w)-Ainf) %s")
+T_("Phase Z = B(w)+jw(A(w)-Ainf) %s")
 esES("")
 frFR("")
 
 T_("Phase")
+esES("")
+frFR("")
+
+T_("Magnitude response %s")
+esES("")
+frFR("")
+
+T_("Frequency response %s")
 esES("")
 frFR("")
 
@@ -808,7 +866,15 @@ T_("A_%s")
 esES("")
 frFR("")
 
+T_("Ns2/m")
+esES("")
+frFR("")
+
 T_("Ainf_%s")
+esES("")
+frFR("")
+
+T_("A0_%s")
 esES("")
 frFR("")
 
@@ -816,11 +882,23 @@ T_("B_%s")
 esES("")
 frFR("")
 
+T_("Ns/m")
+esES("")
+frFR("")
+
 T_("Fsc_ma_%s")
 esES("")
 frFR("")
 
+T_("N")
+esES("")
+frFR("")
+
 T_("Fsc_ph_%s")
+esES("")
+frFR("")
+
+T_("rad")
 esES("")
 frFR("")
 
@@ -856,50 +934,19 @@ T_("Zph_%s")
 esES("")
 frFR("")
 
-
-// mainBEM_sts.cpp
-
-T_("Frequency response %s")
+T_("Zmag %s")
 esES("")
 frFR("")
 
-T_("Z Magnitude %s")
+T_("Zph %s")
 esES("")
 frFR("")
 
-T_("Z Phase %s")
+T_("TFSmag %s")
 esES("")
 frFR("")
 
-T_("TFSResponse Magnitude %s")
-esES("")
-frFR("")
-
-T_("TFSResponse Phase %s")
-esES("")
-frFR("")
-
-T_("A_ss")
-esES("")
-frFR("")
-
-T_("B_ss")
-esES("")
-frFR("")
-
-T_("C_ss")
-esES("")
-frFR("")
-
-T_("Frequencies")
-esES("")
-frFR("")
-
-T_("FreqRange")
-esES("")
-frFR("")
-
-T_("MAPE [%]")
+T_("TFSph %s")
 esES("")
 frFR("")
 
@@ -910,11 +957,45 @@ T_("File:")
 esES("")
 frFR("")
 
-T_("Remove selected")
+T_("Remove")
 esES("")
 frFR("")
 
-T_("Join selected")
+T_("A0")
+esES("")
+frFR("")
+
+T_("Recalculates A0 based on closest data")
+esES("")
+frFR("")
+
+T_("Sets the model description")
+esES("")
+frFR("")
+
+T_("Ainf")
+esES("")
+frFR("")
+
+T_("Recalculates Ainf based on IRF calculation using the Ogilvie's formula")
+esES("")
+frFR("")
+
+T_("Symmetrize")
+esES("")
+frFR("")
+
+T_("Spreads the available forces around X axis, averaging them when they are "
+     "available on both sides")
+esES("")
+frFR("")
+
+T_("Join")
+esES("")
+frFR("")
+
+T_("Joins selected files, mixing available values for A, B, forces, and hydrodynamic "
+     "stiffness matrix")
 esES("")
 frFR("")
 
@@ -922,7 +1003,11 @@ T_("Remove All")
 esES("")
 frFR("")
 
-T_("Models loaded:")
+T_("Models:")
+esES("")
+frFR("")
+
+T_("Loads BEM file")
 esES("")
 frFR("")
 
@@ -935,6 +1020,10 @@ esES("")
 frFR("")
 
 T_("Zoom to Fit")
+esES("")
+frFR("")
+
+T_("From Y=0")
 esES("")
 frFR("")
 
@@ -974,7 +1063,7 @@ T_("Identify")
 esES("")
 frFR("")
 
-T_("Wamit .gdf\nNemoh .dat\nSTL binary\nSTL text\nBy extension")
+T_("Wamit .gdf\nNemoh .dat\nNemoh premesh\nSTL binary\nSTL text\nBy extension")
 esES("")
 frFR("")
 
@@ -1054,7 +1143,15 @@ T_("Show mesh data")
 esES("")
 frFR("")
 
+T_("\vTranslate")
+esES("")
+frFR("")
+
 T_("Set Cg")
+esES("")
+frFR("")
+
+T_("Update")
 esES("")
 frFR("")
 
@@ -1062,11 +1159,7 @@ T_("Rotate")
 esES("")
 frFR("")
 
-T_("\vTranslate")
-esES("")
-frFR("")
-
-T_("Update")
+T_("\vImage")
 esES("")
 frFR("")
 
@@ -1115,6 +1208,10 @@ esES("")
 frFR("")
 
 T_("x [m]:")
+esES("")
+frFR("")
+
+T_("\vTranslate/Rotate")
 esES("")
 frFR("")
 
@@ -1260,6 +1357,14 @@ T_("Hydrostatic Stiffness Matrices")
 esES("")
 frFR("")
 
+T_("BEM files list")
+esES("")
+frFR("")
+
+T_("Paste")
+esES("Pegar")
+frFR("")
+
 T_("Bodies")
 esES("")
 frFR("")
@@ -1272,15 +1377,15 @@ T_("Include Nemoh binaries")
 esES("")
 frFR("")
 
+T_("Split")
+esES("")
+frFR("")
+
 T_("Add")
 esES("")
 frFR("")
 
 T_("Duplicate")
-esES("")
-frFR("")
-
-T_("Remove")
 esES("")
 frFR("")
 
@@ -1305,10 +1410,6 @@ esES("")
 frFR("")
 
 T_("Yaw")
-esES("")
-frFR("")
-
-T_("w rad/s\nT seg")
 esES("")
 frFR("")
 
@@ -1405,7 +1506,7 @@ T_("Nemoh solver:")
 esES("")
 frFR("")
 
-T_("Split in cases:")
+T_("Num. cases.:")
 esES("")
 frFR("")
 
@@ -1429,6 +1530,14 @@ T_("Ok")
 esES("")
 frFR("")
 
+T_("Description:")
+esES("")
+frFR("")
+
+T_("OK")
+esES("")
+frFR("")
+
 
 // arrange.lay
 
@@ -1442,6 +1551,142 @@ frFR("")
 
 
 // Obsolete
+
+T_("Cb(x) [m]")
+esES("")
+frFR("")
+
+T_("Cb(y) [m]")
+esES("")
+frFR("")
+
+T_("Cb(z) [m]")
+esES("")
+frFR("")
+
+T_("Min X [m]")
+esES("")
+frFR("")
+
+T_("Max X [m]")
+esES("")
+frFR("")
+
+T_("Min Y [m]")
+esES("")
+frFR("")
+
+T_("Max Y [m]")
+esES("")
+frFR("")
+
+T_("Min Z [m]")
+esES("")
+frFR("")
+
+T_("Max Z [m]")
+esES("")
+frFR("")
+
+T_("Cg(x) [m]")
+esES("")
+frFR("")
+
+T_("Cg(y) [m]")
+esES("")
+frFR("")
+
+T_("Cg(z) [m]")
+esES("")
+frFR("")
+
+T_("A%s")
+esES("")
+frFR("")
+
+T_("B%s")
+esES("")
+frFR("")
+
+T_("Fsc%s%.1f\302\272")
+esES("")
+frFR("")
+
+T_("Ffk%s%.1f\302\272")
+esES("")
+frFR("")
+
+T_("Fex%s%.1f\302\272")
+esES("")
+frFR("")
+
+T_("RAO%s%.1f\302\272")
+esES("")
+frFR("")
+
+T_("Diffraction scattering force phase [\302\272]")
+esES("")
+frFR("")
+
+T_("Froude-Krylov force phase [\302\272]")
+esES("")
+frFR("")
+
+T_("Excitation force phase [\302\272]")
+esES("")
+frFR("")
+
+T_("RAO phase [\302\272]")
+esES("")
+frFR("")
+
+T_("Z magnitude B(w)+jw(A(w)-Ainf) %s")
+esES("")
+frFR("")
+
+T_("Z phase B(w)+jw(A(w)-Ainf) %s")
+esES("")
+frFR("")
+
+T_("Z Magnitude %s")
+esES("")
+frFR("")
+
+T_("Z Phase %s")
+esES("")
+frFR("")
+
+T_("TFSResponse Magnitude %s")
+esES("")
+frFR("")
+
+T_("TFSResponse Phase %s")
+esES("")
+frFR("")
+
+T_("Remove selected")
+esES("")
+frFR("")
+
+T_("Join selected")
+esES("")
+frFR("")
+
+T_("Models loaded:")
+esES("")
+frFR("")
+
+T_("Wamit .gdf\nNemoh .dat\nSTL binary\nSTL text\nBy extension")
+esES("")
+frFR("")
+
+T_("w rad/s\nT seg")
+esES("")
+frFR("")
+
+T_("Split in cases:")
+esES("")
+frFR("")
 
 T_("Selected")
 esES("")
@@ -1615,10 +1860,6 @@ T_("Selected %d rows")
 esES("")
 frFR("")
 
-T_("Copy")
-esES("Copiar")
-frFR("")
-
 T_("Copy selected rows to clipboard")
 esES("")
 frFR("")
@@ -1739,12 +1980,12 @@ T_("Height [m]:")
 esES("")
 frFR("")
 
-
-// PACKAGE 'Surface' FILE 'Surface.cpp'
-
 T_("Found %d triangles")
 esES("")
 frFR("")
+
+
+// PACKAGE 'Surface' FILE 'Surface.cpp'
 
 T_("Removed %d 2 points quads")
 esES("")
@@ -1909,5 +2150,12 @@ esES("")
 frFR("")
 
 T_("Node %d in panel %d [%d] does not exist")
+esES("")
+frFR("")
+
+
+// Surface.cpp
+
+T_("Fixed %d triangles")
 esES("")
 frFR("")

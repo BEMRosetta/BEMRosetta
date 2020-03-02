@@ -81,7 +81,7 @@ Image GetFileIcon(const char *path, bool dir, bool force, bool large, bool quick
 
 #endif
 
-#if defined(PLATFORM_X11) && !defined(flagNOGTK)
+#if defined(GUI_GTK)
 
 Image GtkThemeIcon(const char *name, int sz);
 
@@ -92,7 +92,7 @@ Image GnomeImage(const char *s, bool large = false)
 
 Image SystemImage(const char *s, bool large = false)
 {
-	return GtkThemeIcon(s, large);
+	return GtkThemeIcon(s, DPI(large ? 48 : 16));
 }
 
 struct ExtToMime {
@@ -813,6 +813,7 @@ void FileSel::SearchLoad()
 #endif
 	String emask = GetMask();
 	if(!UPP::Load(list, d, emask, mode == SELECTDIR, WhenIcon, *filesystem, ~search, ~hidden, ~hiddenfiles, true)) {
+		loaded = false;
 		Exclamation(t_("[A3* Unable to read the directory !]&&") + DeQtf((String)~dir) + "&&" +
 		            GetErrorMessage(GetLastError()));
 		if(!basedir.IsEmpty() && String(~dir).IsEmpty()) {
@@ -862,8 +863,6 @@ void FileSel::SearchLoad()
 #endif
 	StartLI();
 }
-
-#ifdef _MULTITHREADED
 
 StaticMutex FileSel::li_mutex;
 void      (*FileSel::li_current)(const String& path, Image& result);
@@ -960,8 +959,6 @@ void FileSel::StartLI()
 		ScheduleLI();
 	}
 }
-
-#endif
 
 String TrimDot(String f) {
 	int i = f.Find('.');

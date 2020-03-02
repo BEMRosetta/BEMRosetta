@@ -10,7 +10,8 @@ enum_property Frame {
 	"TopSeparatorFrame()",
 	"BottomSeparatorFrame()",
 	"LeftSeparatorFrame()",
-	"RightSeparatorFrame()"
+	"RightSeparatorFrame()",
+	"default"
 };
 
 enum_property Align {
@@ -43,12 +44,18 @@ fn DrawBorder(w, &r, ...)
 
 fn DrawButtonFrame(w, &r)
 {
-	DrawBorder(w, r, :SWhite, :SBlack, :SWhiteGray, :SGray);
+	DrawBorder(w, r, :Gray, :Gray, :Gray, :Gray);
 }
 
 fn DrawEdgeButtonFrame(w, &r)
 {
-	DrawBorder(w, r, :SWhiteGray, :SBlack, :SWhite, :SGray);
+	DrawBorder(w, r, :SWhite, :SWhite, :Gray, :Gray);
+}
+
+fn DrawButton(w, r)
+{
+	w.DrawRect(r, :SWhiteGray);
+	DrawButtonFrame(w, r);
 }
 
 fn DrawEdgeButton(w, &r)
@@ -59,7 +66,7 @@ fn DrawEdgeButton(w, &r)
 
 fn DrawInsetFrame(w, &r)
 {
-	DrawBorder(w, r, :SGray, :SWhite, :SBlack, :SLtGray);
+	DrawButtonFrame(w, r);
 }
 
 fn DrawCtrlFrame(w, &r, frame)
@@ -68,30 +75,31 @@ fn DrawCtrlFrame(w, &r, frame)
 	height = r.bottom - r.top;
 	switch(frame) {
 	case "FieldFrame()":
-	case "InsetFrame()": DrawInsetFrame(w, r); break;
-	case "OutsetFrame()": DrawBorder(w, r, :SLtGray, :SBlack, :SWhite, :SGray); break;
+	case "default":  DrawBorder(w, r, :SGray, :SGray, :SGray, :SGray); break;
+	case "InsetFrame()": DrawBorder(w, r, :Gray, :White, :Black, :LtGray); break;
+	case "OutsetFrame()": DrawBorder(w, r, :LtGray, :Black, :White, :Gray); break;
 	case "ButtonFrame()": DrawButtonFrame(w, r); break;
-	case "ThinInsetFrame()": DrawBorder(w, r, :SGray, :SWhite); break;
-	case "ThinOutsetFrame()": DrawBorder(w, r, :SWhite, :SGray); break;
+	case "ThinInsetFrame()": DrawBorder(w, r, :Gray, :White); break;
+	case "ThinOutsetFrame()": DrawBorder(w, r, :White, :Gray); break;
 	case "BlackFrame()": DrawBorder(w, r, :SBlack, :SBlack); break;
 	case "TopSeparatorFrame()":
-		w.DrawRect(r.left, r.top, width, 1, :SGray);
-		w.DrawRect(r.left, r.top + 1, width, 1, :SWhite);
+		w.DrawRect(r.left, r.top, width, 1, :Gray);
+		w.DrawRect(r.left, r.top + 1, width, 1, :White);
 		r.top += 2;
 		break;
 	case "BottomSeparatorFrame()":
-		w.DrawRect(r.left, r.bottom - 2, width, 1, :SGray);
-		w.DrawRect(r.left, r.bottom - 1, width, 1, :SWhite);
+		w.DrawRect(r.left, r.bottom - 2, width, 1, :Gray);
+		w.DrawRect(r.left, r.bottom - 1, width, 1, :White);
 		r.bottom -= 2;
 		break;
 	case "LeftSeparatorFrame()":
-		w.DrawRect(r.left, r.top, 1, height, :SGray);
-		w.DrawRect(r.left + 1, r.top, 1, height, :SWhite);
+		w.DrawRect(r.left, r.top, 1, height, :Gray);
+		w.DrawRect(r.left + 1, r.top, 1, height, :White);
 		r.left += 2;
 		break;
 	case "RightSeparatorFrame()":
-		w.DrawRect(r.right - 2, r.top, 1, height, :SGray);
-		w.DrawRect(r.right - 1, r.top, 1, height, :SWhite);
+		w.DrawRect(r.right - 2, r.top, 1, height, :Gray);
+		w.DrawRect(r.right - 1, r.top, 1, height, :White);
 		r.right -= 2;
 		break;
 	}
@@ -116,16 +124,42 @@ fn min(a, b)
 	return a < b ? a : b;
 }
 
+fn abs(a)
+{
+	return a < 0 ? -a : a;
+}
+
+fn DrawVertArrowFromTip(w, tipx, tipy, dir, l, color)
+{
+	for(i = 0; i < l; i++) {
+		w.DrawRect(tipx - i, tipy, 2 * i + 1, 1, color);
+		tipy += dir;
+	}
+}
+
+fn DrawVertArrow(ww, r, size, dir)
+{
+	w = r.right - r.left;
+	h = r.bottom - r.top;
+	
+	y = r.top + (h - size) / 2;
+	DrawVertArrowFromTip(ww, r.left + w / 2, dir > 0 ? y : y + size, dir, size, :SBlack);
+}
+
 fn DrawSpinButtons(w, r)
 {
 	h = r.bottom - r.top;
 	h2 = int(h / 2);
 	h7 = int(7 * h / 10);
 	x = r.right - h7;
-	DrawEdgeButton(w, RectC(x, r.top, h7, h2));
-	w.DrawImage((h7 - 5) / 2 + x, (h2 - 3) / 2 + r.top, "CtrlsImg::SpU");
-	DrawEdgeButton(w, RectC(x, r.top + h2, h7, h - h2));
-	w.DrawImage((h7 - 5) / 2 + x, (h - h2 - 3) / 2 + r.top + h2, "CtrlsImg::SpD");
+	ah = int(h / 6);
+	ax = x + h7 / 2;
+	rr = RectC(x, r.top, h7, h2);
+	DrawEdgeButton(w, rr);
+	DrawVertArrow(w, rr, h / 6, 1);
+	rr = RectC(x, r.top + h2, h7, h - h2);
+	DrawEdgeButton(w, rr);
+	DrawVertArrow(w, rr, h / 6, -1);
 }
 
 fn XMinSize()
@@ -275,24 +309,17 @@ ctrl LabelBox {
 		if(2 * GetSmartTextSize("X").cy > sz.cy) {
 			d = sz.cy / 2;
 			w.DrawSmartText(d, (sz.cy - ts.cy) / 2, .SetLabel, .SetFont, .SetInk, sz.cx);
-			w.DrawRect(1, d, d - 1, 1, :SGray);
-			w.DrawRect(1, d + 1, d - 1, 1, :SWhite);
+			w.DrawRect(1, d, d - 1, 1, :Gray);
+			w.DrawRect(1, d + 1, d - 1, 1, :Gray);
+			w.DrawRect(d + ts.cx, d, sz.cx - ts.cx - d - 2, 1, :Gray);
+			w.DrawRect(d + ts.cx, d + 1, sz.cx - ts.cx - d - 2, 1, :Gray);
 		}
 		else {
-			w.DrawSmartText(d, 0, .SetLabel, .SetFont, .SetInk, sz.cx);
-			w.DrawRect(0, d + 2, 1, sz.cy - d - 4, :SGray);
-			w.DrawRect(1, d + 2, 1, sz.cy - d - 4, :SWhite);
-			w.DrawRect(sz.cx - 2, d, 1, sz.cy - d - 2, :SGray);
-			w.DrawRect(sz.cx - 1, d, 1, sz.cy - d - 2, :SWhite);
-			w.DrawRect(0, sz.cy - 2, sz.cx - 1, 1, :SGray);
-			w.DrawRect(0, sz.cy - 1, sz.cx - 1, 1, :SWhite);
-			w.DrawRect(sz.cx - 1, sz.cy - 2, 1, 2, :SWhite);
-			w.DrawRect(1, d, d - 1, 1, :SGray);
-			w.DrawRect(1, d + 1, d - 1, 1, :SWhite);
-			w.DrawRect(0, d, 1, 2, :SGray);
+			d = ts.cy / 2;
+			DrawButtonFrame(w, RectC(0, d, sz.cx, sz.cy - d));
+			w.DrawRect(8, 0, ts.cx + 4, ts.cy, :SLtGray);
+			w.DrawSmartText(10, 0, .SetLabel, .SetFont);
 		}
-		w.DrawRect(d + ts.cx, d, sz.cx - ts.cx - d - 2, 1, :SGray);
-		w.DrawRect(d + ts.cx, d + 1, sz.cx - ts.cx - d - 2, 1, :SWhite);
 	}
 }
 
@@ -302,7 +329,7 @@ ctrl DataPusher {
 	GetStdSize() { return Size(64, 24); }
 
 	>Base;
-	Frame SetFrame = InsetFrame();
+	Frame SetFrame = default;
 	bool  SetEditable = true @1;
 	Text  Tip;
 
@@ -313,6 +340,39 @@ ctrl DataPusher {
 	}
 };
 
+ctrl ColorPusher {
+	group "Push";
+
+	GetStdSize() { return Size(64, 24); }
+
+	>Base;
+	Frame SetFrame = default;
+	bool  SetEditable = true @1;
+	Text  Tip;
+	bool  NotNull = false;
+	bool  WithVoid = false;
+	bool  SColors = false;
+	bool  WithText = false;
+	bool  WithHex = false;
+	bool  Track = false;
+	bool  NoRampWheel = false;
+	Text  NullText;
+	Text  VoidText;
+
+	Paint(w) {
+		r = GetRect();
+		DrawCtrlFrame(w, r, .SetFrame);
+		w.DrawRect(r, :SWhite);
+		DeflateRect(r);
+		w.DrawRect(r, :LtBlue);
+		DrawFrame(w, r, :SBlack, :SBlack);
+		if(.WithText || .WithHex) {
+			text = .WithText ? "LtBlue" : "#0000FF";
+			w.DrawText(r.left + 6, (r.top + r.bottom - GetSmartTextSize(text, StdFont()).cy) / 2,
+			           text, StdFont(), :White);
+		}
+	}
+};
 
 ctrl Button {
 	group "Push";
@@ -323,7 +383,7 @@ ctrl Button {
 	Text   SetLabel ? "Button label";
 	Font   SetFont = StdFont();
 	Frame  SetFrame @1;
-	Text  Tip;
+	Text   Tip;
 
 	Paint(w) {
 		r = GetRect();
@@ -331,7 +391,7 @@ ctrl Button {
 		DrawButtonFrame(w, r);
 		sz = Size(r.right - r.left, r.bottom - r.top);
 		n = int(sz.cy / 8);
-		w.DrawRect(r.left, r.top, sz.cx, sz.cy, :SLtGray);
+		w.DrawRect(r.left, r.top, sz.cx, sz.cy, :SWhiteGray);
 		textsize = GetSmartTextSize(.SetLabel, .SetFont);
 		py = (sz.cy - textsize.cy) / 2;
 		if(count(.SetLabel) && (.SetLabel)[0] == 1)
@@ -339,6 +399,53 @@ ctrl Button {
 		else {
 			px = (sz.cx - textsize.cx) / 2;
 			w.DrawSmartText(px + r.left, py + r.top, .SetLabel, .SetFont, :SBlack, sz.cx);
+		}
+	}
+}
+
+fn DrawCircle(w, xx, yy, c, color)
+{
+	if(c > 15) {
+		w.DrawRect(xx + 5, yy, c - 10, c, color);
+		w.DrawRect(xx, yy + 5, c, c - 10, color);
+		w.DrawRect(xx + 3, yy + 1, c - 6, c - 2, color);
+		w.DrawRect(xx + 1, yy + 3, c - 2, c - 6, color);
+		w.DrawRect(xx + 2, yy + 2, c - 4, c - 4, color);
+	}
+	else {
+		w.DrawRect(xx + 2, yy, c - 4, c, color);
+		w.DrawRect(xx, yy + 2, c, c - 4, color);
+		w.DrawRect(xx + 1, yy + 1, c - 2, c - 2, color);
+	}
+}
+
+fn OptionSize()
+{
+	return GetTextSize("X", StdFont()).cy < 24 ? 11 : 24;
+}
+
+fn DrawOption(w, x, y, kind)
+{
+	osz = OptionSize();
+	if(kind == 2) {
+		DrawCircle(w, x, y, osz, :Gray);
+		if(osz > 15)
+			DrawCircle(w, x + 2, y + 2, osz - 4, :SWhite);
+		else
+			DrawCircle(w, x + 1, y + 1, osz - 2, :SWhite);
+	}
+	else {
+		r = RectC(x, y, osz, osz);
+		w.DrawRect(r, :SWhite);
+		if(osz > 15) {
+			DrawButtonFrame(w, r);
+			if(kind == 1)
+				w.DrawRect(x + 4, y + osz / 2 - 1, osz - 8, 2, :SBlack);
+		}
+		else {
+			DrawBorder(w, r, :Gray, :Gray);
+			if(kind == 1)
+				w.DrawRect(x + 3, y + osz / 2 - 1, osz - 6, 2, :SBlack);
 		}
 	}
 }
@@ -373,34 +480,21 @@ ctrl Option {
 
 	Paint(w) {
 		sz = ViewSize(w);
-		img = .SwitchImage ? "ClassicCtrlsImg::S0"
-		                   : .ThreeState ? "ClassicCtrlsImg::O2"
-		                                 : "ClassicCtrlsImg::O0";
-		imagesize = GetImageSize(img);
+		kind = .SwitchImage ? 2 : .ThreeState ? 1 : 0;
+		osz = OptionSize();
 		textsize = GetSmartTextSize(.SetLabel, .SetFont);
 		
 		if(.Box || .AutoBox) {
-			w.DrawImage(10, (textsize.cy - imagesize.cy) / 2, img);
-			w.DrawSmartText(imagesize.cx + 14, 0, .SetLabel, .SetFont);
-
 			d = textsize.cy / 2;
-			w.DrawRect(0, d + 2, 1, sz.cy - d - 4, :SGray);
-			w.DrawRect(1, d + 2, 1, sz.cy - d - 4, :SWhite);
-			w.DrawRect(sz.cx - 2, d, 1, sz.cy - d - 2, :SGray);
-			w.DrawRect(sz.cx - 1, d, 1, sz.cy - d - 2, :SWhite);
-			w.DrawRect(0, sz.cy - 2, sz.cx - 1, 1, :SGray);
-			w.DrawRect(0, sz.cy - 1, sz.cx - 1, 1, :SWhite);
-			w.DrawRect(sz.cx - 1, sz.cy - 2, 1, 2, :SWhite);
-			w.DrawRect(1, d, d - 1, 1, :SGray);
-			w.DrawRect(1, d + 1, d - 1, 1, :SWhite);
-			w.DrawRect(0, d, 1, 2, :SGray);
-			x = textsize.cx + imagesize.cx + 8;
-			w.DrawRect(d + x, d, sz.cx - d - x, 1, :SGray);
-			w.DrawRect(d + x, d + 1, sz.cx - d - x, 1, :SWhite);
+			DrawButtonFrame(w, RectC(0, d, sz.cx, sz.cy - d));
+			d = (textsize.cy - osz) / 2;
+			w.DrawRect(8, 0, osz + textsize.cx + 8, textsize.cy, :SLtGray);
+			DrawOption(w, 10, d, kind);
+			w.DrawSmartText(osz + 14, 0, .SetLabel, .SetFont);
 		}
 		else {
-			w.DrawImage(0, (sz.cy - imagesize.cy) / 2, img);
-			w.DrawSmartText(imagesize.cx + 4, (sz.cy - textsize.cy) / 2, .SetLabel, .SetFont);
+			DrawOption(w, 0, (sz.cy - osz) / 2, kind);
+			w.DrawSmartText(osz + 4, (sz.cy - textsize.cy) / 2, .SetLabel, .SetFont);
 		}
 	}
 }
@@ -438,21 +532,20 @@ ctrl Switch {
 		cs[] = ln;
 		tcy = GetTextSize("W", .SetFont).cy;
 		linecy = max(16, tcy + 2);
-		imagesize = GetImageSize("ClassicCtrlsImg::S0");
+		osz = OptionSize();
 		y = 0;
 		x = 0;
 		setlabel = .SetLabel;
 		for(i = 0; i < count(cs); i++) {
 			textsize = GetSmartTextSize(cs[i], .SetFont);
 			if(linecy * count(cs) > sz.cy) {
-				w.DrawImage(x, (sz.cy - imagesize.cy) / 2, "ClassicCtrlsImg::S0");
-				w.DrawSmartText(x + imagesize.cx + 4, (sz.cy - tcy) / 2, cs[i], .SetFont);
-				x += imagesize.cx + 4 + textsize.cx + max(imagesize.cy, tcy) / 2;
+				DrawOption(w, x, (sz.cy - osz) / 2, 2);
+				w.DrawSmartText(x + osz + 4, (sz.cy - tcy) / 2, cs[i], .SetFont);
+				x += osz + 4 + textsize.cx + max(osz, tcy) / 2;
 			}
 			else {
-				w.DrawImage(x, y, "ClassicCtrlsImg::S0");
-				w.DrawSmartText(x + imagesize.cx + 4, y + (imagesize.cy - tcy) / 2,
-				                cs[i], .SetFont);
+				DrawOption(w, x, y, 2);
+				w.DrawSmartText(x + osz + 4, y + (osz - tcy) / 2, cs[i], .SetFont);
 				y += linecy;
 			}
 		}
@@ -469,7 +562,7 @@ ctrl EditField {
 	int   MaxChars @2;
 	bool  AlignRight @1;
 	bool  SetEditable = true @4 ? "Editable";
-	Frame SetFrame = InsetFrame() @5;
+	Frame SetFrame = default @5;
 	Text  Tip @6;
 	bool  WantFocus = true @7;
 
@@ -497,7 +590,7 @@ ctrl DocEdit {
 	GetStdSize() { sz = GetMinSize(); sz.cx *= 8; return sz; }
 
 	Font  SetFont = StdFont();
-	Frame SetFrame = InsetFrame();
+	Frame SetFrame = default;
 	bool  SetEditable = true @1 ? "Editable";
 	bool  WantFocus = true;
 	Text  Tip;
@@ -530,7 +623,7 @@ ctrl LineEdit {
 //	int   MaxChars @2;
 //	bool  AlignRight @1;
 	bool  SetEditable = true @4 ? "Editable";
-	Frame SetFrame = InsetFrame() @5;
+	Frame SetFrame = default @5;
 	Text  Tip @6;
 	bool  WantFocus = true @7;
 
@@ -733,13 +826,55 @@ ctrl EditTimeSpin {
 	}
 }
 
+fn DrawArrowButton(w, rr, dir)
+{
+	DrawEdgeButton(w, rr);
+	DrawVertArrow(w, rr, OptionSize() / 3, dir);
+}
+
+fn DrawHArrowButton(w, rr, dir)
+{
+	DrawEdgeButton(w, rr);
+	DrawHorzArrow(w, rr, dir);
+}
+
+fn DrawDropButton(w, rr)
+{
+	DrawArrowButton(w, rr, -1);
+}
+
+fn PaintVScrollBar(w, r)
+{
+	wd = r.right - r.left;
+	up = r;
+	r.top = (up.bottom = up.top + wd);
+	down = r;
+	r.bottom = (down.top = down.bottom - wd);
+	DrawArrowButton(w, up, 1);
+	DrawArrowButton(w, down, -1);
+	w.DrawRect(r, :SWhiteGray);
+}
+
+fn PaintHScrollBar(w, r)
+{
+	hg = r.bottom - r.top;
+	left = r;
+	r.left = (left.right = left.left + hg);
+	right = r;
+	r.right = (right.left = right.right - hg);
+	DrawHArrowButton(w, left, 1);
+	DrawHArrowButton(w, right, -1);
+	w.DrawRect(r, :SWhiteGray);
+}
+
+
 ctrl DropList {
 	group "Input fields";
 
 	GetMinSize() { sz = XMinSize(); sz.cy += 6; return sz; }
 	GetStdSize() { sz = GetMinSize(); sz.cx *= 8; return sz; }
 
-	Frame SetFrame = InsetFrame();
+	Frame SetFrame = default;
 	bool  SetEditable = true @2 ? "Editable";
 	bool  WantFocus = true;
 	bool  DisplayAll = false;
@@ -753,8 +888,7 @@ ctrl DropList {
 		DrawCtrlFrame(w, r, .SetFrame);
 		w.DrawRect(r, :SWhite);
 		n = r.bottom - r.top;
-		DrawEdgeButton(w, RectC(r.right - n, r.top, n, n));
-		w.DrawImage((n - 7) / 2 + r.right - n, (n - 6) / 2 + r.top, "ClassicCtrlsImg::DA");
+		DrawDropButton(w, RectC(r.right - n, r.top, n, n));
 		w.DrawText(3, (GetSize().cy - GetTextSize("", Arial(10)).cy) / 2,
 			(.SetEditable ? "" : "R/O ") + "DropList", Arial(10), :SMagenta);
 	}
@@ -766,7 +900,7 @@ ctrl DropTree {
 	GetMinSize() { sz = XMinSize(); sz.cy += 6; return sz; }
 	GetStdSize() { sz = GetMinSize(); sz.cx *= 8; return sz; }
 
-	Frame SetFrame = InsetFrame();
+	Frame SetFrame = default;
 	bool  SetEditable = true @2 ? "Editable";
 	bool  WantFocus = true;
 	bool  DisplayAll = false;
@@ -781,8 +915,7 @@ ctrl DropTree {
 		DrawCtrlFrame(w, r, .SetFrame);
 		w.DrawRect(r, :SWhite);
 		n = r.bottom - r.top;
-		DrawEdgeButton(w, RectC(r.right - n, r.top, n, n));
-		w.DrawImage((n - 7) / 2 + r.right - n, (n - 6) / 2 + r.top, "ClassicCtrlsImg::DA");
+		DrawDropButton(w, RectC(r.right - n, r.top, n, n));
 		w.DrawText(3, (GetSize().cy - GetTextSize("", Arial(10)).cy) / 2,
 			(.SetEditable ? "" : "R/O ") + "DropTree", Arial(10), :SMagenta);
 	}
@@ -799,51 +932,22 @@ template WithDropChoice {
 		r = GetRect();
 		DrawCtrlFrame(w, r, .SetFrame);
 		n = r.bottom - r.top;
-		DrawEdgeButton(w, RectC(r.right - n, r.top, n, n));
-		w.DrawImage((n - 7) / 2 + r.right - n, (n - 6) / 2 + r.top, "ClassicCtrlsImg::DA");
+		DrawDropButton(w, RectC(r.right - n, r.top, n, n));
 	}
 };
 
-fn TabItemSize(text, font)
+
+fn PaintTab(w, x, y, text, color)
 {
-	SIDEGAP = 12;
-	VERTGAP = 4;
-	ts = GetTextSize(text, font.Bold());
-	return Size(ts.cx + 2 * SIDEGAP, (ts.cy < 16 ? 16 : ts.cy) + 2 * VERTGAP);
-}
-
-fn PaintTabItemFrame(w, rc)
-{
-	size = Size(rc.right - rc.left, rc.bottom - rc.top);
-	w.DrawRect(rc.left, rc.top, 1, size.cy - 1, :SLtGray);
-	w.DrawRect(rc.left + 1, rc.top + 2, 1, size.cy - 2, :SWhite);
-	w.DrawRect(rc.left + 2, rc.top + 1, 1, 1, :SWhite);
-	w.DrawRect(rc.left + 2, rc.top + 2, 1, size.cy - 2, :SLtGray);
-	w.DrawRect(rc.left + 3, rc.top, size.cx - 5, 1, :SWhite);
-	w.DrawRect(rc.left + 3, rc.top + 1, size.cx - 5, size.cy - 1, :SLtGray);
-	w.DrawRect(rc.right - 2, rc.top, 1, size.cy, :SBlack);
-	w.DrawRect(rc.right - 1, rc.top + 2, 1, size.cy - 2, :SBlack);
-}
-
-fn PaintTabItem(w, rc, text, font, active)
-{
-	if(active)
-		font = font.Bold();
-	else {
-		w.DrawRect(rc.left, rc.bottom - 1, rc.right - rc.left, 1, :SWhite);
-		w.DrawRect(rc.left, rc.bottom - 2, rc.right - rc.left, 1, :SLtGray);
-		rc.left += 2;
-		rc.top += 2;
-		rc.right -= 2;
-		rc.bottom -= 2;
-	}
-
-	PaintTabItemFrame(w, rc);
-
-	rc.top += (active ? 0 : 2);
-	SIDEGAP = 12;
-	sz = GetTextSize(text, font);
-	w.DrawText(rc.left + SIDEGAP, rc.top + ((rc.bottom - rc.top - sz.cy) >> 1), text, font);
+	tsz = GetSmartTextSize(text, StdFont());
+	h = 4 * tsz.cy / 3;
+	sz = Size(tsz.cx + tsz.cy, h);
+	r = RectC(x, y, sz.cx, sz.cy);
+	w.DrawRect(r, color);
+	DrawButtonFrame(w, r);
+	w.DrawSmartText(x + tsz.cy / 2, y + 4, text, StdFont(), :SBlack, sz.cx);
+	sz.cx -= 4;
+	return sz;
 }
 
 ctrl TabCtrl {
@@ -856,35 +960,23 @@ ctrl TabCtrl {
 //	Qtf  SetInfo @1 ? "Info of control" ;
 
 	Paint(w) {
-		text1 = "Tab1";
-		text2 = "Tab2";
-		text3 = "Tab3";
-		size1 = TabItemSize(text1, StdFont());
-		size2 = TabItemSize(text2, StdFont());
-		size3 = TabItemSize(text3, StdFont());
 		r = GetRect();
-		r1 = r;
-		INITGAP = -1;
-		r1.right = (r1.left += INITGAP) + size1.cx;
-		r1.bottom = r1.top + size1.cy;
-		CELLSEP = -4;
-		r2 = r1;
-		r2.right = (r2.left = r2.right + CELLSEP) + size2.cx;
-		r3 = r2;
-		r3.right = (r3.left = r3.right + CELLSEP) + size3.cx;
-		PaintTabItem(w, r3, text3, StdFont(), 0);
-		PaintTabItem(w, r2, text2, StdFont(), 0);
-		PaintTabItem(w, r1, text1, StdFont(), 1);
-		w.DrawRect(r.left, r1.bottom, 1, r.bottom - r1.bottom, :SWhite);
-		w.DrawRect(r3.right, r1.bottom - 1, r.right - r3.right, 1, :SWhite);
-		w.DrawRect(r.right - 1, r1.bottom, 1, r.bottom - r1.bottom, :SGray);
-		w.DrawRect(r.left, r.bottom - 1, r.right - r.left, 1, :SGray);
+		x0 = x = r.left;
+		y = r.top;
+		tsz = PaintTab(w, x, y, "Tab 1", :SWhiteGray);
+		x += tsz.cx;
+		x += PaintTab(w, x, y + 3, "Tab 2", :SLtGray).cx;
+		x += PaintTab(w, x, y + 3, "Tab 3", :SLtGray).cx;
+		r.top += tsz.cy;
+		DrawButton(w, r);
+		PaintTab(w, x0, y, "Tab 1", :SWhiteGray);
+		w.DrawRect(2, r.top - 2, tsz.cx, 4, :SWhiteGray);
 	}
 };
 
 fn PaintHeaderTab(w, r, text)
 {
-	DrawButtonFrame(w, r);
+	DrawEdgeButtonFrame(w, r);
 	w.DrawText(r.left + 2, (r.top + r.bottom - GetTextSize(text).cy) >> 1, text, StdFont());
 }
 
@@ -894,47 +986,17 @@ fn PaintHeaderTabs(w, ...)
 		PaintHeaderTab(w, argv[i], argv[i + 1]);
 }
 
-fn PaintCenterImage(w, x, y, img)
-{
-	sz = GetImageSize(img);
-	w.DrawImage(x - sz.cx / 2, y - sz.cy / 2, img);
-}
-
 fn PaintCenterText(w, x, y, text, fnt, color)
 {
 	sz = GetTextSize(text, fnt);
 	w.DrawText(x - sz.cx / 2, y - sz.cy / 2, text, fnt, color);
 }
 
-fn PaintRcCenterImage(w, r, img)
-{
-	PaintCenterImage(w, (r.left + r.right) >> 1, (r.top + r.bottom) >> 1, img);
-}
-
-fn PaintVScrollBar(w, r)
-{
-	wd = r.right - r.left;
-	up = r;
-	r.top = (up.bottom = up.top + wd);
-	down = r;
-	r.bottom = (down.top = down.bottom - wd);
-	DrawButtonFrame(w, up);
-	PaintRcCenterImage(w, up, "ClassicCtrlsImg::UA");
-	DrawButtonFrame(w, down);
-	PaintRcCenterImage(w, down, "ClassicCtrlsImg::DA");
-	w.DrawRect(r, :SWhiteGray);
-//	ht = r.bottom - r.top;
-//	r.top += ht / 4;
-//	r.bottom = r.top + ht / 3;
-//	DrawButtonFrame(w, r);
-//	w.DrawRect(r, :SLtGray);
-}
-
 ctrl ArrayCtrl {
 	group "Complex";
 
 	GetStdSize() { return Size(150, 100); }
-	Frame SetFrame = InsetFrame() @1;
+	Frame SetFrame = default @1;
 	bool AutoHideSb = false;
 	bool Header = true;
 	bool Inserting = false;
@@ -959,9 +1021,9 @@ ctrl ArrayCtrl {
 	}
 
 	PaintArray(w, r) {
-		col1 = "Column 1";
-		col2 = "Column 2";
-		col3 = "Column 3";
+		col1 = "A";
+		col2 = "B";
+		col3 = "C";
 		fontcy = GetTextSize(col1).cy;
 		DrawCtrlFrame(w, r, .SetFrame);
 		if(!.AutoHideSb) {
@@ -998,7 +1060,63 @@ ctrl ArrayCtrl {
 			if(.VertGrid)
 				w.DrawRect(r.left + i * third - 1, celltop, 1, cellht, :SLtGray);
 		}
-		w.DrawRect(r.left, cellbot, wd, r.bottom - cellbot, :SGray);
+		w.DrawRect(r.left, cellbot, wd, r.bottom - cellbot, :SWhite.r < 50 ? Color(90, 90, 90) : Color(160, 160, 160));
+		w.DrawText(3, r.bottom - fontcy, "ArrayCtrl", Arial(10), :SMagenta);
+	}
+};
+
+fn DrawTreeItem(w, x, y, text, kind)
+{
+	osz = OptionSize();
+	textsize = GetTextSize(text);
+	if(kind)
+		DrawOption(w, x, y + (textsize.cy - osz) / 2, 1);
+	w.DrawText(x + osz + 2, y, text, StdFont(), :SBlack);
+}
+
+ctrl TreeCtrl {
+	group "Complex";
+
+	GetStdSize() { return Size(150, 100); }
+	Frame SetFrame = default @1;
+
+//	Qtf  SetInfo @1 ? "Info of control" ;
+
+	Paint(w) {
+		r = GetRect();
+		w.DrawRect(r, :SWhite);
+		fontcy = GetTextSize("X").cy;
+		DrawCtrlFrame(w, r, .SetFrame);
+		rsb = r;
+		r.right = rsb.left = rsb.right - fontcy - 4;
+		PaintVScrollBar(w, rsb);
+		w.DrawText(3, r.bottom - fontcy, "TreeCtrl", Arial(10), :SMagenta);
+		DeflateRect(r);
+		DeflateRect(r);
+		DrawTreeItem(w, r.left + 2 + 0 * fontcy, r.top + 2 + 0 * fontcy, "Root", 1);
+		DrawTreeItem(w, r.left + 2 + 1 * fontcy, r.top + 2 + 1 * fontcy, "Node 1", 0);
+		DrawTreeItem(w, r.left + 2 + 1 * fontcy, r.top + 2 + 2 * fontcy, "Node 2", 1);
+		DrawTreeItem(w, r.left + 2 + 2 * fontcy, r.top + 2 + 3 * fontcy, "Node 3", 0);
+	}
+};
+
+ctrl ColumnList {
+	group "Complex";
+
+	GetStdSize() { return Size(150, 100); }
+	Frame SetFrame = default @1;
+
+//	Qtf  SetInfo @1 ? "Info of control" ;
+
+	Paint(w) {
+		r = GetRect();
+		w.DrawRect(r, :SWhite);
+		fontcy = GetTextSize("X").cy;
+		DrawCtrlFrame(w, r, .SetFrame);
+		rsb = r;
+		r.right = rsb.left = rsb.right - fontcy - 4;
+		PaintVScrollBar(w, rsb);
+		w.DrawText(3, 3, "ColumnList", Arial(10), :SMagenta);
 	}
 };
 
@@ -1008,7 +1126,7 @@ ctrl RichTextView {
 	GetMinSize() { sz = XMinSize(); sz.cy += 6; return sz; }
 	GetStdSize() { sz = GetMinSize(); sz.cx *= 8; return sz; }
 
-	Frame SetFrame = InsetFrame() @1;
+	Frame SetFrame = default @1;
 	Color Background = :SWhite;
 	bool  VCenter = false;
 	bool  NoSb = false;
@@ -1055,7 +1173,7 @@ ctrl DropDate {
 	bool  SwapMonthYear = false;
 	bool  OneButton = false;
 	bool  NotNull = false;
-	Frame SetFrame = InsetFrame();
+	Frame SetFrame = default;
 	bool  SetEditable = true @2 ? "Editable";
 	bool  WantFocus = true;
 	Text  Tip;
@@ -1065,8 +1183,7 @@ ctrl DropDate {
 		DrawCtrlFrame(w, r, .SetFrame);
 		w.DrawRect(r, :SWhite);
 		n = r.bottom - r.top;
-		DrawEdgeButton(w, RectC(r.right - n, r.top, n, n));
-		w.DrawImage((n - 7) / 2 + r.right - n, (n - 6) / 2 + r.top, "ClassicCtrlsImg::DA");
+		DrawDropButton(w, RectC(r.right - n, r.top, n, n));
 		w.DrawText(3, (GetSize().cy - GetTextSize("", Arial(10)).cy) / 2,
 			(.SetEditable ? "" : "R/O ") + (.NotNull ? "!" : "") + "01/05/2007", Arial(10), :SMagenta);
 	}
@@ -1084,7 +1201,7 @@ ctrl DropTime {
 	bool  DayEnd = false;
 	bool  TimeAlways = false;
 	bool  NotNull = false;
-	Frame SetFrame = InsetFrame();
+	Frame SetFrame = default;
 	bool  SetEditable = true @2 ? "Editable";
 	bool  WantFocus = true;
 	Text  Tip;
@@ -1094,20 +1211,29 @@ ctrl DropTime {
 		DrawCtrlFrame(w, r, .SetFrame);
 		w.DrawRect(r, :SWhite);
 		n = r.bottom - r.top;
-		DrawEdgeButton(w, RectC(r.right - n, r.top, n, n));
-		w.DrawImage((n - 7) / 2 + r.right - n, (n - 6) / 2 + r.top, "ClassicCtrlsImg::DA");
+		DrawDropButton(w, RectC(r.right - n, r.top, n, n));
 		w.DrawText(3, (GetSize().cy - GetTextSize("", Arial(10)).cy) / 2,
 			(.SetEditable ? "" : "R/O ") + (.NotNull ? "!" : "") + "01/05/2007 10:34:58", Arial(10), :SMagenta);
 	}
 }
 
-fn PaintButton(w, r, img)
+fn DrawHorzArrowFromTip(w, tipx, tipy, dir, l, color)
 {
-	col = Color(153, 204, 255);
-	w.DrawRect(r, :SWhite);
-	DeflateRect(r);
-	w.DrawRect(r, col);
-	PaintRcCenterImage(w, r, img);
+	for(i = 0; i < l; i++) {
+		w.DrawRect(tipx, tipy - i, 1, 2 * i + 1, color);
+		tipx += dir;
+	}
+}
+
+fn DrawHorzArrow(ww, r, dir)
+{
+	size = OptionSize() / 3;
+
+	w = r.right - r.left;
+	h = r.bottom - r.top;
+	
+	x = r.left + (h - size) / 2;
+	DrawHorzArrowFromTip(ww, dir > 0 ? x : x + size, r.top + h / 2, dir, size, :SBlack);
 }
 
 ctrl Clock {
@@ -1139,7 +1265,7 @@ ctrl Clock {
 		b = r.bottom;
 		hs = 20;
 		r.bottom = hs;
-		w.DrawImageColor(r, "CtrlImg:Bg", :SColorHighlight, 120);
+		w.DrawRect(r, :SLtBlue);
 		r.top = r.bottom;
 		r.bottom = b;
 		w.DrawRect(r, :SWhite);
@@ -1169,7 +1295,7 @@ ctrl Clock {
 		{
 			x = cmx + (0.8 * sin(i * 3.1415 / 6.0) * cf);
 			y = cmy - (0.8 * cos(i * 3.1415 / 6.0) * cf);
-			PaintCenterText(w, x, y, to_string(i), .fnt, :Black);
+			PaintCenterText(w, x, y, to_string(i), .fnt, :SBlack);
 		}
 
 		hour = 10;
@@ -1182,21 +1308,16 @@ ctrl Clock {
 		PaintPtr(w, cmx, cmy, tm / 60, 0.75, 2, :SBlack, cf);
 
 		r = Rect(ro.left + 3, ro.top + 2, ro.left + 3 + 16, ro.top + 18);
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::LA");
 		left = r.left;
 		r.left += 15 + 25;
 		r.right += 15 + 25;
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::RA");
-		PaintCenterText(w, (r.right + left) / 2, (r.top + r.bottom) / 2, to_string(hour), .fnt, :White);
+		PaintCenterText(w, (r.right + left) / 2, (r.top + r.bottom) / 2, to_string(hour), .fnt, :SWhite);
 
 		r = Rect(ro.right - 3 - 16, ro.top + 2, ro.right - 3, ro.top + 18);
-		//PaintButton(w, r, "ClassicCtrlsImg::RA");
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::RA");
 		right = r.right;
 		r.left -= 15 + 25;
 		r.right -= 15 + 25;
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::LA");
-		PaintCenterText(w, (right + r.left) / 2, (r.top + r.bottom) / 2, to_string(minute), .fnt, :White);
+		PaintCenterText(w, (right + r.left) / 2, (r.top + r.bottom) / 2, to_string(minute), .fnt, :SWhite);
 
 		DrawCtrlFrame(w, ro, .SetFrame);
 	}
@@ -1224,7 +1345,7 @@ ctrl Calendar {
 		b = r.bottom;
 		hs = 20;
 		r.bottom = hs;
-		w.DrawImageColor(r, "CtrlImg:Bg", :SColorHighlight, 120);
+		w.DrawRect(r, :SLtBlue);
 		r.top = r.bottom;
 		r.bottom = b;
 		w.DrawRect(r, :SWhite);
@@ -1256,7 +1377,7 @@ ctrl Calendar {
 				if(d == 19)
 				{
 					w.DrawRect(r.left + sw + i * sw + 0, r.top + sh + j * sh + 0, sw, sh, :SBlack);
-					w.DrawRect(r.left + sw + i * sw + 1, r.top + sh + j * sh + 1, sw - 2, sh - 2, Color(255, 254, 220));
+					w.DrawRect(r.left + sw + i * sw + 1, r.top + sh + j * sh + 1, sw - 2, sh - 2, :SYellow);
 					fnt = f.Bold(1);
 				}
 				day = to_string(d);
@@ -1277,19 +1398,15 @@ ctrl Calendar {
 		w.DrawText((r.right - ts.cx) / 2, r.bottom - 3 - ts.cy, today, f.Bold(), :SBlue);
 
 		r = Rect(ro.left + 3, ro.top + 2, ro.left + 3 + 16, ro.top + 18);
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::LA");
 		left = r.left;
 		r.left += 15 + 65;
 		r.right += 15 + 65;
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::RA");
 		PaintCenterText(w, (left + r.right) / 2, (r.top + r.bottom) / 2, "January", f.Bold(), :SWhite);
 
 		r = Rect(ro.right - 3 - 16, ro.top + 2, ro.right - 3, ro.top + 18);
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::RA");
 		right = r.right;
 		r.left -= 15 + 40;
 		r.right -= 15 + 40;
-		PaintRcCenterImage(w, r, "ClassicCtrlsImg::LA");
 		PaintCenterText(w, (r.left + right) / 2, (r.top + r.bottom) / 2, "2007", f.Bold(), :SWhite);
 
 		DrawCtrlFrame(w, ro, .SetFrame);
@@ -1313,15 +1430,17 @@ ctrl SliderCtrl {
 
 		halfX = int(r.left + r.right) >> 1;
 		halfY = int(r.top + r.bottom) >> 1;
+		
+		osz = 3 * OptionSize() / 2;
+		osz2 = int(osz / 2);
+		osz4 = int(osz / 4);
 
 		if (sz.cx < sz.cy) {
 			DrawInsetFrame(w, Rect(halfX - 2, r.top + 2, halfX + 2, r.bottom - 2));
-			imgSz = GetImageSize("CtrlImg::vthumb");
-			w.DrawImage(halfX - (imgSz.cx >> 1), halfY - (imgSz.cy >> 1), "CtrlImg::vthumb");
+			DrawButton(w, RectC(halfX - osz2, halfY - osz4, osz, osz2));
 		} else {
 			DrawInsetFrame(w, Rect(r.left + 2, halfY - 2, r.right - 2, halfY + 2));
-			imgSz = GetImageSize("CtrlImg::hthumb");
-			w.DrawImage(halfX - (imgSz.cx >> 1), halfY - (imgSz.cy >> 1), "CtrlImg::hthumb");
+			DrawButton(w, RectC(halfX - osz4, halfY - osz2, osz2, osz));
 		}
 	}
 }

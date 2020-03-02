@@ -395,11 +395,11 @@ void DrawFocus(Draw& w, int x, int y, int cx, int cy, Color c) {
 	w.Clipoff(x, y, cx, cy);
 	for(int a = 0; a < cx; a += CtrlImg::focus_h().GetWidth()) {
 		w.DrawImage(a, 0, CtrlImg::focus_h(), c);
-		w.DrawImage(a, cy - 1, CtrlImg::focus_h(), c);
+		w.DrawImage(a, cy - DPI(1), CtrlImg::focus_h(), c);
 	}
 	for(int a = 0; a < cy; a += CtrlImg::focus_v().GetHeight()) {
 		w.DrawImage(0, a, CtrlImg::focus_v(), c);
-		w.DrawImage(cx - 1, a, CtrlImg::focus_v(), c);
+		w.DrawImage(cx - DPI(1), a, CtrlImg::focus_v(), c);
 	}
 	w.End();
 }
@@ -449,6 +449,51 @@ Point GetDragScroll(Ctrl *ctrl, Point p, Size max)
 Point GetDragScroll(Ctrl *ctrl, Point p, int max)
 {
 	return GetDragScroll(ctrl, p, Size(max, max));
+}
+
+Rect LookMargins(const Rect& r, const Value& ch)
+{
+	Rect m = ChMargins(ch);
+	int fcy = GetStdFontCy();
+	if(m.top + m.bottom + fcy > r.GetHeight())
+		m.top = m.bottom = max((r.GetHeight() - fcy) / 2, 0);
+	return m;
+}
+
+void ActiveEdgeFrame::FrameLayout(Rect& r)
+{
+	Rect m = LookMargins(r, edge[0]);
+	r.left += m.left;
+	r.right -= m.right;
+	r.top += m.top;
+	r.bottom -= m.bottom;
+}
+
+void ActiveEdgeFrame::FramePaint(Draw& w, const Rect& r)
+{
+	int i = 0;
+	if(ctrl) {
+		i = !ctrl->IsEnabled() || ctrl->IsReadOnly() ? CTRL_DISABLED
+		    : button ? push : ctrl->HasFocus() ? CTRL_PRESSED
+		    : mousein ? CTRL_HOT
+		    : CTRL_NORMAL;
+	}
+	ChPaintEdge(w, r, edge[i]);
+	if(!IsNull(coloredge))
+		ChPaintEdge(w, r, coloredge, color);
+}
+
+void ActiveEdgeFrame::FrameAddSize(Size& sz)
+{
+	Rect m = ChMargins(edge[0]);
+	sz.cx += m.left + m.right;
+	sz.cy += m.top + m.bottom;
+}
+
+void ActiveEdgeFrame::Set(const Ctrl *ctrl_, const Value *edge_, bool active)
+{
+	ctrl = active ? ctrl_ : NULL;
+	edge = edge_;
 }
 
 }

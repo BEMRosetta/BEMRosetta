@@ -157,8 +157,11 @@ public:
 		if (_idf >= _data.dofOrder.GetCount())
 			return false;
 		idf = _data.dofOrder[_idf];
-		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH)
+		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH) {
+			if (_j_dof >= _data.dofOrder.GetCount())
+				return false;
 			_j_dof = _data.dofOrder[_j_dof];
+		}
 		jdf = _j_dof;
 		show_w = _show_w;
 		ndim = _ndim;
@@ -183,8 +186,8 @@ public:
 		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdf](0, idf));
 		case PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
 		case PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
-		case PLOT_Z_MA:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf));
-		case PLOT_Z_PH:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf));
+		case PLOT_Z_MA:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf)) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
+		case PLOT_Z_PH:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf)) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
 		default:				NEVER();	return true;
 		}
 	}
@@ -397,9 +400,9 @@ public:
 	void Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids);
 	
 private:
-	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody);
-	void Add(String name, int icase, const Eigen::MatrixXd &K, bool button);
-	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro);
+	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc);
+	void Add(String name, int icase, const Eigen::MatrixXd &K, bool button, int idc);
+	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc);
 };
 
 class MainBEM;
@@ -421,7 +424,7 @@ public:
 	
 	Upp::Array<HydroSource> TFS_source, TFS_source2;
 		
-	int idf, jdf;
+	int plot_idf, plot_jdf;
 	double heading;
 	DataToShow dataToShow;
 	
@@ -513,7 +516,7 @@ public:
 	WithMenuPlotMesh<StaticRect> menuPlot;
 	WithMenuMeshStability<StaticRect> menuProcess;
 	
-	bool GetShowMesh()	{return menuPlot.showMesh;}
+	bool GetShowMesh()			{return menuPlot.showMesh;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
 
 private:	
@@ -523,7 +526,7 @@ private:
 	MainSummaryMesh mainSummary;
 	MainStiffness mainStiffness;
 
-	Array<Option> optionsPlot;
+	Upp::Array<Option> optionsPlot;
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
@@ -738,7 +741,9 @@ private:
 ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool push = false);
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id);
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
-					Array<Option> &option, Function <void()>OnPush);
+					Upp::Array<Option> &option, Function <void()>OnPush);
+int ArrayModel_Id(const ArrayCtrl &array);
+int ArrayModel_Id(const ArrayCtrl &array, int row);
 int ArrayModel_IdMesh(const ArrayCtrl &array);
 int ArrayModel_IdMesh(const ArrayCtrl &array, int row);
 int ArrayModel_IdHydro(const ArrayCtrl &array);
@@ -746,6 +751,7 @@ int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
 Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
 Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
 void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids);
+void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Vector<int> &ids);
 bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);
 const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row);
 String ArrayModel_GetFileName(ArrayCtrl &array, int row = -1);

@@ -19,13 +19,20 @@ Ctrl *Ctrl::GetDragAndDropSource()
 	return dnd_source;
 }
 
+cairo_surface_t *CreateCairoSurface(const Image& img);
+
 void Ctrl::GtkDragBegin(GtkWidget *widget, GdkDragContext *context, gpointer user_data)
 {
 	if(IsNull(dnd_icon))
-    	gtk_drag_set_icon_default(context);
+		gtk_drag_set_icon_default(context);
 	else {
-		ImageGdk m(dnd_icon);
-		gtk_drag_set_icon_pixbuf(context, m, 0, 0);
+		cairo_surface_t *surface = CreateCairoSurface(dnd_icon);
+	#if GTK_CHECK_VERSION(3, 10, 0)
+		cairo_surface_set_device_scale(surface, SCL(1), SCL(1));
+	#endif
+		cairo_surface_set_device_offset(surface, DPI(8), DPI(8));
+		gtk_drag_set_icon_surface(context, surface);
+		cairo_surface_destroy(surface);
 	}
 	LLOG("GtkDragBegin");
 }
@@ -56,12 +63,8 @@ void Ctrl::GtkDragEnd(GtkWidget *widget, GdkDragContext *context, gpointer user_
 {
 	LLOG("GtkDragEnd");
 	dnd_result = DND_NONE;
-#if GTK_CHECK_VERSION(2,22,0) // No drag&drop support before 2.22, sorry...
 	GdkDragAction a = gdk_drag_context_get_selected_action(context);
 	dnd_result = a == GDK_ACTION_MOVE ? DND_MOVE : a == GDK_ACTION_COPY ? DND_COPY : DND_NONE;
-#else
-	dnd_result = DND_NONE;
-#endif
 	dnd_source = NULL;
 }
                                                        
@@ -77,12 +80,7 @@ Image MakeDragImage(const Image& arrow, Image sample);
 
 Image MakeDragImage(const Image& arrow, const Image& arrow98, Image sample)
 {
-#ifdef PLATFORM_WIN32
-	if(IsWin2K())
-		return MakeDragImage(arrow, sample);
-	else
-#endif
-		return arrow98;
+	return arrow98;
 }
 
 int Ctrl::DoDragAndDrop(const char *fmts, const Image& sample, dword actions,
@@ -114,20 +112,26 @@ int Ctrl::DoDragAndDrop(const char *fmts, const Image& sample, dword actions,
 		dnd_icon = Null;
 	else {
 		Size sz = sample.GetSize();
-		if(sz.cx > 128)
-			sz.cx = 128;
-		if(sz.cy > 128)
-			sz.cy = 128;
+		int maxsize = DPI(128);
+		if(sz.cx > maxsize)
+			sz.cx = maxsize;
+		if(sz.cy > maxsize)
+			sz.cy = maxsize;
 		sz += 2;
 		ImageDraw iw(sz);
 		iw.DrawRect(sz, White());
 		DrawFrame(iw, sz, Black());
 		iw.DrawImage(1, 1, sz.cx, sz.cy, sample);
-		ImageBuffer b(128, 128);
 		dnd_icon = iw;
 	}
+#if GTK_CHECK_VERSION(3, 10, 0)
+	gtk_drag_begin_with_coordinates(w->top->window, list, GdkDragAction(gdk_actions),
+	                                GetMouseLeft() ? 1 : GetMouseMiddle() ? 2 : 3,
+	                                CurrentEvent.event, -1, -1);
+#else
 	gtk_drag_begin(w->top->window, list, GdkDragAction(gdk_actions),
 	               GetMouseLeft() ? 1 : GetMouseMiddle() ? 2 : 3, CurrentEvent.event);
+#endif
 	while(dnd_source && GetTopCtrls().GetCount())
 		ProcessEvents();
 	dnd_source_data = NULL;
@@ -188,7 +192,6 @@ void Ctrl::DndTargets(GdkDragContext *context)
 	}
 	dnd_targets.Clear();
 	dnd_text_target.Clear();
-#if GTK_CHECK_VERSION(2,22,0) // No drag&drop support before 2.22, sorry...
 	for(GList *list = gdk_drag_context_list_targets(context); list; list = g_list_next (list)) {
 		String g = gdk_atom_name((GdkAtom)list->data);
 		if(text_targets.Find(g) >= 0) {
@@ -211,7 +214,6 @@ void Ctrl::DndTargets(GdkDragContext *context)
 		else
 			dnd_targets.Add(g);
 	}
-#endif
 }
 
 void Ctrl::GtkDragDataReceived(GtkWidget *widget, GdkDragContext *context,
@@ -277,17 +279,14 @@ PasteClip Ctrl::GtkDnd(GtkWidget *widget, GdkDragContext *context, gint x, gint 
 	clip.paste = paste;
 	clip.accepted = false;
 	clip.allowed = DND_MOVE|DND_COPY;
-	gint dummy;
 	GdkModifierType mod;
-	gdk_window_get_pointer(gdk_get_default_root_window(), &dummy, &dummy, &mod);
+	GetMouseInfo(gdk_get_default_root_window(), mod);
 	clip.action = mod & GDK_CONTROL_MASK ? DND_COPY : DND_MOVE;
 	Ctrl *w = DragWnd(user_data);
 	if(w) {
-		gint mx, my;
-		GdkModifierType mod;
-		gdk_window_get_pointer(gdk_get_default_root_window(), &mx, &my, &mod);
+		GetMouseInfo(gdk_get_default_root_window(), mod);
 		CurrentState = mod;
-		CurrentMousePos = Point(x, y) + w->GetScreenRect().TopLeft();
+		CurrentMousePos = Point(SCL(x), SCL(y)) + w->GetScreenRect().TopLeft();
 		w->DnD(CurrentMousePos, clip);
 	}
 	gdk_drag_status(context, clip.IsAccepted() ? clip.GetAction() == DND_MOVE ? GDK_ACTION_MOVE

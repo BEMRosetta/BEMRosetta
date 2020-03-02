@@ -1,3 +1,6 @@
+#ifndef _CtrlLib_ChCocoMM_h_
+#define _CtrlLib_ChCocoMM_h_
+
 #ifndef _CtrlLib_ChMacMM_h_
 #define _CtrlLib_ChMacMM_h_
 
@@ -6,16 +9,12 @@ enum ChCocoControlTypes {
 	COCO_CHECKBOX,
 	COCO_RADIOBUTTON,
 	COCO_BEVELBUTTON,
-	COCO_ROUNDEDBUTTON,
-	COCO_COMBOBOX,
+	COCO_POPUPBUTTON,
 	COCO_SCROLLTHUMB,
 	COCO_SCROLLTRACK,
-	COCO_BRUSH,
 	COCO_NSCOLOR,
-	COCO_MENU,
-	COCO_MENUITEM,
-	COCO_BACKGROUND,
 	COCO_NSIMAGE,
+	COCO_TEXTFIELD,
 };
 
 enum ChCocoNSColor {
@@ -27,10 +26,9 @@ enum ChCocoNSColor {
 	COCO_WINDOW,
 	COCO_SELECTEDMENUTEXT,
 };
-	
-void Coco_ThemePaint(void *cgcontext, const Upp::Rect& where, int type,
-                     int value, int status, bool focus);
 
-int  Coco_Metric(int k);
+void Coco_PaintCh(void *cgcontext, int type, int value, int state);
+
+#endif
 
 #endif

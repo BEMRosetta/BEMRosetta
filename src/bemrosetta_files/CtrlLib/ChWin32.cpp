@@ -156,18 +156,6 @@ int XpMargin(const XpElement& e)
 	return q;
 }
 
-int XpIsOpaque(const XpElement& e)
-{
-	int q = xp_opaque.Find(e);
-	if(q >= 0)
-		return xp_opaque[q];
-	Image m1 = XpImage(e.widget, e.part, e.state, Black, Size(30, 30));
-	Image m2 = XpImage(e.widget, e.part, e.state, White, Size(30, 30));
-	q = m1 == m2;
-	xp_opaque.Add(e, q);
-	return q;
-}
-
 Color XpColor(int widget, int part, int state, int type)
 {
 	COLORREF cref = 0;
@@ -245,7 +233,7 @@ struct Win32ImageMaker : ImageMaker {
 	}
 };
 
-Value XpLookFn(Draw& w, const Rect& rect, const Value& v, int op)
+Value XpLookFn(Draw& w, const Rect& rect, const Value& v, int op, Color)
 {
 	if(IsTypeRaw<XpElement>(v)) {
 		const XpElement& e = ValueTo<XpElement>(v);
@@ -263,8 +251,6 @@ Value XpLookFn(Draw& w, const Rect& rect, const Value& v, int op)
 			}
 			q = XpMargin(e);
 			return Rect(q, q, q, q);
-		case LOOK_ISOPAQUE:
-			return XpIsOpaque(e);
 		}
 		if(op == LOOK_PAINT || op == LOOK_PAINTEDGE) {
 			LTIMING("XpPaint");
@@ -354,12 +340,10 @@ String XpThemeInfo(LPCWSTR pszPropertyName)
 
 void ChHostSkin()
 {
-	ChSysInit();
 	if(XpWidget(XP_BUTTON)) {
 		LLOG("XP theme !");
+		ChSysInit();
 		GUI_GlobalStyle_Write(GUISTYLE_XP);
-		ColoredOverride(CtrlsImg::Iml(), CtrlsImg::Iml());
-		CtrlsImg::Reset();
 		EditFieldIsThin_Write(1);
 
 		bool vista_aero = IsWinVista() && XpThemeInfo(L"ThemeName") == "Aero";
@@ -447,6 +431,11 @@ void ChHostSkin()
 			s.width = FrameButtonWidth();
 		}
 		{
+			SpinButtons::Style& s = SpinButtons::StyleOnSides().Write();
+			Win32Look(s.inc.look, 4, XP_SCROLLBAR, SBP_ARROWBTN, ABS_UPNORMAL);
+			Win32Look(s.dec.look, 4, XP_SCROLLBAR, SBP_ARROWBTN, ABS_DOWNNORMAL);
+		}
+		{
 			MultiButton::Style& s = MultiButton::StyleDefault().Write();
 			s.usetrivial = true;
 			if(vista_aero) {
@@ -519,6 +508,10 @@ void ChHostSkin()
 				s.separator.l2 = SColorLight();
 			}
 			Win32Look(s.arealook, XP_REBAR, 0, 1);
+			CtrlImg::Set(CtrlImg::I_MenuCheck0, CtrlsImg::O0());
+			CtrlImg::Set(CtrlImg::I_MenuCheck1, CtrlsImg::O1());
+			CtrlImg::Set(CtrlImg::I_MenuRadio0, CtrlsImg::S0());
+			CtrlImg::Set(CtrlImg::I_MenuRadio1, CtrlsImg::S1());
 		}
 
 /*		CtrlImg::Set("hthumb", XpImage(XP_TRACKBAR, TKP_THUMB, TUS_NORMAL, Null, Size(10, 20)));
@@ -564,7 +557,7 @@ void ChHostSkin()
 			double gf;
 			m = Unglyph(m, c, gf);
 			if(i == 0 && (gf > 150 || vista_aero))
-				CtrlsImg::Set(CtrlsImg::I_DA, ClassicCtrlsImg::DA());
+				CtrlsImg::Set(CtrlsImg::I_DA, CtrlsImg::kDA());
 			Button::StyleEdge().Write().look[i] = m;
 			if(cbs)
 				Button::StyleLeftEdge().Write().look[i] = m;
@@ -647,11 +640,6 @@ bool IsSystemThemeDark()
 
 void ChSysInit()
 {
-	CtrlImg::Reset();
-	CtrlsImg::Reset();
-	ChReset();
-	XpClear();
-
 	if(Ctrl::IsUHDEnabled()) {
 		HRESULT (STDAPICALLTYPE *SetProcessDpiAwareness)(int);
 		DllFn(SetProcessDpiAwareness, "Shcore.dll", "SetProcessDpiAwareness");
@@ -665,8 +653,15 @@ void ChSysInit()
 		}
 	}
 
-	if(Ctrl::IsDarkThemeEnabled() && IsSystemThemeDark() && !IsDark(Color::FromCR(GetSysColor(COLOR_WINDOW))))
-		sEmulateDarkTheme = true;
+	sEmulateDarkTheme = Ctrl::IsDarkThemeEnabled() && IsSystemThemeDark() && !IsDark(Color::FromCR(GetSysColor(COLOR_WINDOW)));
+
+	CtrlImg::Reset();
+	CtrlsImg::Reset();
+	ChReset();
+	XpClear();
+
+	for(sysColor *s = sSysColor; s < sSysColor + __countof(sSysColor); s++) // this also resets all imls via SColorPaper_Write!!!
+		(*s->set)(sAdjust(Color::FromCR(GetSysColor(s->syscolor))));
 
 	NONCLIENTMETRICS ncm;
 #if (WINVER >= 0x0600 && !defined(__MINGW32_VERSION))
@@ -708,9 +703,6 @@ void ChSysInit()
 
 	FrameButtonWidth_Write(GetSystemMetrics(SM_CYHSCROLL));
 	ScrollBarArrowSize_Write(GetSystemMetrics(SM_CXHSCROLL));
-	
-	for(sysColor *s = sSysColor; s < sSysColor + __countof(sSysColor); s++)
-		(*s->set)(sAdjust(Color::FromCR(GetSysColor(s->syscolor))));
 
 	dword x = GetSysColor(COLOR_GRAYTEXT);
 	SColorDisabled_Write(sAdjust(x ? Color::FromCR(x) : Color::FromCR(GetSysColor(COLOR_3DSHADOW))));

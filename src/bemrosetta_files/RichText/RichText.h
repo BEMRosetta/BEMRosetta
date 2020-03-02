@@ -17,7 +17,7 @@ struct RichPara;
 class  RichTable;
 class  RichTxt;
 
-inline Color VoidColor() { return Color(223, 0); } // Used for mixed/no change in Get/SetCellFormat
+inline Color VoidColor() { return Color::Special(223); } // Used for mixed/no change in Get/SetCellFormat
 
 struct Zoom {
 	int m, d;
@@ -495,7 +495,8 @@ class HtmlObjectSaver
 public:
 	virtual ~HtmlObjectSaver() {}
 	
-	virtual String GetHtml(const RichObject& object) = 0;
+	virtual String GetHtml(const RichObject& object)                     { return Null; }
+	virtual String GetHtml(const RichObject& object, const String& link) { return GetHtml(object); }
 };
 
 String EncodeHtml(const RichText& text, Index<String>& css,

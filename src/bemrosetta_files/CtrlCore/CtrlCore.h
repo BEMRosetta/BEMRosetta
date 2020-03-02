@@ -2,6 +2,7 @@
 #define CTRLCORE_H
 
 #include <RichText/RichText.h>
+#include <Painter/Painter.h>
 
 #ifdef  flagNOGTK
 #undef  flagGTK
@@ -51,7 +52,6 @@ namespace Upp {
 
 INITIALIZE(CtrlCore)
 
-#ifdef _MULTITHREADED
 void EnterGuiMutex();
 bool TryEnterGuiMutex();
 void LeaveGuiMutex();
@@ -61,15 +61,6 @@ void EnterGuiMutex(int n);
 
 bool ThreadHasGuiLock();
 int  GetGuiLockLevel();
-#else
-inline void EnterGuiMutex() {}
-inline void LeaveGuiMutex() {}
-inline bool TryEnterGuiMutex() { return true; }
-
-inline int  LeaveGuiMutexAll() { return 0; }
-inline void EnterGuiMutex(int) {}
-inline bool ThreadHasGuiLock() { return true; }
-#endif
 
 struct GuiLock {
 	GuiLock()  { EnterGuiMutex(); }
@@ -1120,8 +1111,9 @@ public:
 	bool    IsEditable() const                 { return editable; }
 	bool    IsReadOnly() const                 { return !editable; }
 
-	void    ResetModify()                      { modify = false; }
-	bool    IsModifySet() const                { return modify; }
+	void    ClearModifyDeep();
+	bool    IsModifiedDeep() const;
+	bool    IsModifySet() const                { return modify; } // deprecated
 
 	void    UpdateRefresh();
 	void    Update();
@@ -1219,7 +1211,7 @@ public:
 	static Ctrl *GetDragAndDropTarget();
 	bool   IsDragAndDropSource()    { return this == GetDragAndDropSource(); }
 	bool   IsDragAndDropTarget()    { return this == GetDragAndDropTarget(); }
-	static Size  StdSampleSize()    { return Size(126, 106); }
+	static Size  StdSampleSize()    { return Size(DPI(126), DPI(106)); }
 
 public:
 	static void SetSkin(void (*skin)());
@@ -1284,10 +1276,8 @@ public:
 
 	static void Call(Function<void ()> cb);
 
-#ifdef _MULTITHREADED
 	static bool IsShutdownThreads()                     { return Thread::IsShutdownThreads(); }
 	static void ShutdownThreads();
-#endif
 	
 	static int64 GetEventId()                           { return eventid; }
 

@@ -28,6 +28,10 @@ void MainMesh::Init() {
 	menuOpen.butRemove.WhenAction = THISBACK(OnRemove);
 	menuOpen.butRemoveSelected.Tip(t_("Removes selected files")).Disable();	
 	menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
+	menuOpen.butJoin.Tip(t_("Join selected meshes")).Disable();	
+	//menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
+	menuOpen.butSplit.Tip(t_("Split mesh in parts")).Disable();	
+	//menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);
@@ -122,7 +126,7 @@ void MainMesh::Init() {
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 
 	mainStiffness.Init();
-	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix (EXPERIMENTAL!!)"));
+	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix"));
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
@@ -544,7 +548,16 @@ void MainMesh::OnRemoveSelected(bool all) {
 			menuProcess.arrayModel.Remove(r);
 			selected = true;
 		}
-	}
+	}	// Only one available => directly selected
+	if (!selected && menuOpen.arrayModel.GetCount() == 1) {
+		int id = ArrayModel_IdMesh(menuOpen.arrayModel, 0);
+		Bem().surfs.Remove(id);
+		menuOpen.arrayModel.Remove(0);
+		menuPlot.arrayModel.Remove(0);
+		menuConvert.arrayModel.Remove(0);
+		menuProcess.arrayModel.Remove(0);
+		selected = true;		
+	}	
 	if (!selected) {
 		Exclamation(t_("No model selected"));
 		return;
@@ -723,7 +736,7 @@ void MainView::OnPaint() {
 				if (~GetMenuPlot().showMesh) {
 					const Vector<int> &nod = mesh.mesh.GetSelNodes();
 					for (int in = 0; in < nod.GetCount(); ++in)
-						gl.PaintCube(mesh.mesh.nodes[nod[in]], len/5, LtBlue());
+						gl.PaintCube(mesh.mesh.nodes[nod[in]], len/20, LtBlue());
 					const Vector<int> &pan = mesh.mesh.GetSelPanels();
 					const Vector<Point3D> &nodes = mesh.mesh.nodes;
 					for (int ip = 0; ip < pan.GetCount(); ++ip) {
@@ -734,7 +747,7 @@ void MainView::OnPaint() {
 				if (~GetMenuPlot().showUnderwater) {
 					const Vector<int> &nod = mesh.under.GetSelNodes();
 					for (int in = 0; in < nod.GetCount(); ++in)
-						gl.PaintCube(mesh.under.nodes[nod[in]], len/5, LtBlue());
+						gl.PaintCube(mesh.under.nodes[nod[in]], len/20, LtBlue());
 					const Vector<int> &pan = mesh.under.GetSelPanels();
 					const Vector<Point3D> &nodes = mesh.under.nodes;
 					for (int ip = 0; ip < pan.GetCount(); ++ip) {
