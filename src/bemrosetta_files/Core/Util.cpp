@@ -197,11 +197,15 @@ int64 usecs(int64 prev)
 	return std::chrono::duration_cast<std::chrono::microseconds>(p2.time_since_epoch()).count() - prev;
 }
 
+int msecs(int from) { return GetTickCount() - (dword)from; }
+
+/* // it looks like there might be a problem with std::chrono in llvm-mingw, reverting to original implementation for now
 int msecs(int prev)
 {
 	auto p2 = std::chrono::steady_clock::now();
 	return (int)std::chrono::duration_cast<std::chrono::milliseconds>(p2.time_since_epoch()).count() - prev;
 }
+*/
 
 void TimeStop::Reset()
 {
@@ -758,7 +762,7 @@ AbortExc::AbortExc() :
 
 String GetErrorMessage(DWORD dwError) {
 	char h[2048];
-	sprintf(h, "%08x", dwError);
+	sprintf(h, "%08x", (int)dwError);
 #ifdef PLATFORM_WINCE //TODO
 	return h;
 #else
@@ -837,10 +841,16 @@ static void LinuxBeep(const char *name)
 
 #endif
 
+#ifdef PLATFORM_COCOA
+void CocoBeep();
+#endif
+
 void BeepInformation()
 {
 #ifdef PLATFORM_WIN32
 	MessageBeep(MB_ICONINFORMATION);
+#elif defined(PLATFORM_COCOA)
+	CocoBeep();
 #else
 	LinuxBeep("information");
 #endif
@@ -850,6 +860,8 @@ void BeepExclamation()
 {
 #ifdef PLATFORM_WIN32
 	MessageBeep(MB_ICONEXCLAMATION);
+#elif defined(PLATFORM_COCOA)
+	CocoBeep();
 #else
 	LinuxBeep("warning");
 #endif
@@ -859,6 +871,8 @@ void BeepError()
 {
 #ifdef PLATFORM_WIN32
 	MessageBeep(MB_ICONERROR);
+#elif defined(PLATFORM_COCOA)
+	CocoBeep();
 #else
 	LinuxBeep("error");
 #endif
@@ -868,6 +882,8 @@ void BeepQuestion()
 {
 #ifdef PLATFORM_WIN32
 	MessageBeep(MB_ICONQUESTION);
+#elif defined(PLATFORM_COCOA)
+	CocoBeep();
 #else
 	LinuxBeep("question");
 #endif

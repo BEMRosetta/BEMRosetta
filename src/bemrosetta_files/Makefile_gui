@@ -1,6 +1,6 @@
 
 UPPOUT = _out/
-CINC   = -I./ -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/freetype2 -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include/gtk-2.0 -I/usr/X11R6/include/glib-2.0 -I/usr/X11R6/lib/glib-2.0/include -I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include/cairo -I/usr/X11R6/include/pango-1.0 -I/usr/X11R6/include/atk-1.0 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/gtk-2.0/include -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/harfbuzz -I/usr/include/freetype2/freetype
+CINC   = -I./ `pkg-config --cflags freetype2` `pkg-config --cflags x11` `pkg-config --cflags xinerama` `pkg-config --cflags xrender` `pkg-config --cflags xft` `pkg-config --cflags xdmcp` `pkg-config --cflags fontconfig` `pkg-config --cflags xcb` `pkg-config --cflags xext` `pkg-config --cflags gtk+-3.0` `pkg-config --cflags libnotify` `pkg-config --cflags expat` `pkg-config --cflags libpng` `pkg-config --cflags gl` `pkg-config --cflags glu` -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/freetype2 -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include/gtk-2.0 -I/usr/X11R6/include/glib-2.0 -I/usr/X11R6/lib/glib-2.0/include -I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include/cairo -I/usr/X11R6/include/pango-1.0 -I/usr/X11R6/include/atk-1.0 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/gtk-2.0/include -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/harfbuzz -I/usr/include/freetype2/freetype
 Macro  =  -DflagGUI -DflagSHARED -DflagGCC -DflagPOSIX -DflagLINUX
 CXX = c++
 LINKER = $(CXX)
@@ -223,67 +223,38 @@ $(OutFile): build_info  \
 			$(OutDir_Surface)Surface.a \
 			$(OutDir_GLCtrl)GLCtrl.a \
 			$(OutDir_plugin_glew)glew.a \
-			-lgtk-x11-2.0 \
-			-lgdk-x11-2.0 \
-			-latk-1.0 \
-			-lgdk_pixbuf-2.0 \
-			-lm \
-			-lpangocairo-1.0 \
-			-lfontconfig \
-			-lXext \
-			-lXrender \
-			-lXinerama \
-			-lXi \
-			-lXrandr \
-			-lXcursor \
-			-lXfixes \
-			-lpango-1.0 \
-			-lcairo \
-			-lX11 \
-			-lgobject-2.0 \
-			-lgmodule-2.0 \
-			-lglib-2.0 \
-			-lX11 \
-			-lXrender \
-			-lXinerama \
-			-ldl \
-			-lXft \
-			-lnotify \
-			-ldl \
-			-lfreetype \
-			-lfontconfig \
-			-lexpat \
+			`pkg-config --libs freetype2` \
+			`pkg-config --libs x11` \
+			`pkg-config --libs xinerama` \
+			`pkg-config --libs xrender` \
+			`pkg-config --libs xft` \
+			`pkg-config --libs xdmcp` \
+			`pkg-config --libs fontconfig` \
+			`pkg-config --libs xcb` \
+			`pkg-config --libs xext` \
+			`pkg-config --libs gtk+-3.0` \
+			`pkg-config --libs libnotify` \
+			`pkg-config --libs expat` \
+			`pkg-config --libs libpng` \
+			`pkg-config --libs gl` \
+			`pkg-config --libs glu` \
 			-lpthread \
 			-ldl \
 			-lrt \
 			-lz \
-			-lpng \
 			-lbz2 \
 			-lX11 \
-			-lXtst \
-			-lGL \
-			-lGLU \
-			-lgdkglext-x11-1.0 \
-			-lgtkglext-x11-1.0 -Wl,--end-group
+			-lXtst -Wl,--end-group
 
 $(OutDir_BEMRosetta_BEMRosetta):
 	mkdir -p $(OutDir_BEMRosetta_BEMRosetta)
 
 $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.iml \
-	BEMRosetta/BEMRosetta/main.lay \
-	BEMRosetta/BEMRosetta/main.tpp/About_en-us.tppi \
-	BEMRosetta/BEMRosetta/main.tpp/all.i \
-	BEMRosetta/BEMRosetta/main.tpp/Mesh_en-us.tppi \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -361,27 +332,16 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -419,7 +379,6 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -708,7 +667,6 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -827,15 +785,12 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -849,13 +804,7 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -888,15 +837,10 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 
 $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -973,27 +917,16 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -1029,7 +962,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -1318,7 +1250,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -1437,15 +1368,12 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -1459,13 +1387,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -1498,15 +1420,10 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 
 $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -1583,27 +1500,16 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -1639,7 +1545,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -1928,7 +1833,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -2047,15 +1951,12 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -2069,13 +1970,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -2109,17 +2004,11 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	BEMRosetta/BEMRosetta/ajax-loader.gif \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/clip.brc \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.iml \
-	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -2196,27 +2085,16 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -2254,7 +2132,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -2543,7 +2420,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -2662,15 +2538,12 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -2684,13 +2557,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -2723,15 +2590,10 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 
 $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -2808,27 +2670,16 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -2864,7 +2715,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -3153,7 +3003,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -3272,15 +3121,12 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -3294,13 +3140,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -3333,15 +3173,10 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 
 $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -3418,27 +3253,16 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -3474,7 +3298,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -3763,7 +3586,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -3882,15 +3704,12 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -3904,13 +3723,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -3943,15 +3756,10 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 
 $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta/main.h \
-	BEMRosetta/BEMRosetta/main.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
 	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -4028,27 +3836,16 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -4084,7 +3881,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -4373,7 +4169,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -4492,15 +4287,12 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -4514,13 +4306,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -4553,11 +4339,7 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 
 $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
-	BEMRosetta/BEMRosetta/arrange.lay \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -4633,27 +4415,16 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -4688,6 +4459,12 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/Eigen/Eigen.h \
 	plugin/Eigen/Eigen/Cholesky \
 	plugin/Eigen/Eigen/Core \
@@ -4966,7 +4743,6 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -5080,19 +4856,12 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -5119,9 +4888,6 @@ $(OutDir_CtrlLib):
 	mkdir -p $(OutDir_CtrlLib)
 
 $(OutDir_CtrlLib)LabelBase.o: CtrlLib/LabelBase.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -5197,27 +4963,16 @@ $(OutDir_CtrlLib)LabelBase.o: CtrlLib/LabelBase.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -5252,28 +5007,24 @@ $(OutDir_CtrlLib)LabelBase.o: CtrlLib/LabelBase.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/LabelBase.cpp -o $(OutDir_CtrlLib)LabelBase.o
 
 $(OutDir_CtrlLib)DisplayPopup.o: CtrlLib/DisplayPopup.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -5349,27 +5100,16 @@ $(OutDir_CtrlLib)DisplayPopup.o: CtrlLib/DisplayPopup.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -5404,28 +5144,24 @@ $(OutDir_CtrlLib)DisplayPopup.o: CtrlLib/DisplayPopup.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DisplayPopup.cpp -o $(OutDir_CtrlLib)DisplayPopup.o
 
 $(OutDir_CtrlLib)Button.o: CtrlLib/Button.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -5501,27 +5237,16 @@ $(OutDir_CtrlLib)Button.o: CtrlLib/Button.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -5556,28 +5281,24 @@ $(OutDir_CtrlLib)Button.o: CtrlLib/Button.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Button.cpp -o $(OutDir_CtrlLib)Button.o
 
 $(OutDir_CtrlLib)Switch.o: CtrlLib/Switch.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -5653,27 +5374,16 @@ $(OutDir_CtrlLib)Switch.o: CtrlLib/Switch.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -5708,28 +5418,24 @@ $(OutDir_CtrlLib)Switch.o: CtrlLib/Switch.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Switch.cpp -o $(OutDir_CtrlLib)Switch.o
 
 $(OutDir_CtrlLib)EditField.o: CtrlLib/EditField.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -5805,27 +5511,16 @@ $(OutDir_CtrlLib)EditField.o: CtrlLib/EditField.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -5860,28 +5555,24 @@ $(OutDir_CtrlLib)EditField.o: CtrlLib/EditField.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/EditField.cpp -o $(OutDir_CtrlLib)EditField.o
 
 $(OutDir_CtrlLib)Text.o: CtrlLib/Text.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -5957,27 +5648,16 @@ $(OutDir_CtrlLib)Text.o: CtrlLib/Text.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6012,28 +5692,24 @@ $(OutDir_CtrlLib)Text.o: CtrlLib/Text.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Text.cpp -o $(OutDir_CtrlLib)Text.o
 
 $(OutDir_CtrlLib)LineEdit.o: CtrlLib/LineEdit.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -6109,27 +5785,16 @@ $(OutDir_CtrlLib)LineEdit.o: CtrlLib/LineEdit.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6164,28 +5829,24 @@ $(OutDir_CtrlLib)LineEdit.o: CtrlLib/LineEdit.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/LineEdit.cpp -o $(OutDir_CtrlLib)LineEdit.o
 
 $(OutDir_CtrlLib)DocEdit.o: CtrlLib/DocEdit.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -6261,27 +5922,16 @@ $(OutDir_CtrlLib)DocEdit.o: CtrlLib/DocEdit.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6316,28 +5966,24 @@ $(OutDir_CtrlLib)DocEdit.o: CtrlLib/DocEdit.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DocEdit.cpp -o $(OutDir_CtrlLib)DocEdit.o
 
 $(OutDir_CtrlLib)ScrollBar.o: CtrlLib/ScrollBar.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -6413,27 +6059,16 @@ $(OutDir_CtrlLib)ScrollBar.o: CtrlLib/ScrollBar.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6468,28 +6103,24 @@ $(OutDir_CtrlLib)ScrollBar.o: CtrlLib/ScrollBar.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ScrollBar.cpp -o $(OutDir_CtrlLib)ScrollBar.o
 
 $(OutDir_CtrlLib)HeaderCtrl.o: CtrlLib/HeaderCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -6565,27 +6196,16 @@ $(OutDir_CtrlLib)HeaderCtrl.o: CtrlLib/HeaderCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6620,28 +6240,24 @@ $(OutDir_CtrlLib)HeaderCtrl.o: CtrlLib/HeaderCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/HeaderCtrl.cpp -o $(OutDir_CtrlLib)HeaderCtrl.o
 
 $(OutDir_CtrlLib)ArrayCtrl.o: CtrlLib/ArrayCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -6717,27 +6333,16 @@ $(OutDir_CtrlLib)ArrayCtrl.o: CtrlLib/ArrayCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6772,28 +6377,24 @@ $(OutDir_CtrlLib)ArrayCtrl.o: CtrlLib/ArrayCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ArrayCtrl.cpp -o $(OutDir_CtrlLib)ArrayCtrl.o
 
 $(OutDir_CtrlLib)MultiButton.o: CtrlLib/MultiButton.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -6869,27 +6470,16 @@ $(OutDir_CtrlLib)MultiButton.o: CtrlLib/MultiButton.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -6924,28 +6514,24 @@ $(OutDir_CtrlLib)MultiButton.o: CtrlLib/MultiButton.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/MultiButton.cpp -o $(OutDir_CtrlLib)MultiButton.o
 
 $(OutDir_CtrlLib)PopupTable.o: CtrlLib/PopupTable.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7021,27 +6607,16 @@ $(OutDir_CtrlLib)PopupTable.o: CtrlLib/PopupTable.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7076,28 +6651,24 @@ $(OutDir_CtrlLib)PopupTable.o: CtrlLib/PopupTable.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/PopupTable.cpp -o $(OutDir_CtrlLib)PopupTable.o
 
 $(OutDir_CtrlLib)DropList.o: CtrlLib/DropList.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7173,27 +6744,16 @@ $(OutDir_CtrlLib)DropList.o: CtrlLib/DropList.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7228,28 +6788,24 @@ $(OutDir_CtrlLib)DropList.o: CtrlLib/DropList.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DropList.cpp -o $(OutDir_CtrlLib)DropList.o
 
 $(OutDir_CtrlLib)DropChoice.o: CtrlLib/DropChoice.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7325,27 +6881,16 @@ $(OutDir_CtrlLib)DropChoice.o: CtrlLib/DropChoice.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7380,28 +6925,24 @@ $(OutDir_CtrlLib)DropChoice.o: CtrlLib/DropChoice.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DropChoice.cpp -o $(OutDir_CtrlLib)DropChoice.o
 
 $(OutDir_CtrlLib)Static.o: CtrlLib/Static.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7477,27 +7018,16 @@ $(OutDir_CtrlLib)Static.o: CtrlLib/Static.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7532,28 +7062,24 @@ $(OutDir_CtrlLib)Static.o: CtrlLib/Static.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Static.cpp -o $(OutDir_CtrlLib)Static.o
 
 $(OutDir_CtrlLib)Splitter.o: CtrlLib/Splitter.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7629,27 +7155,16 @@ $(OutDir_CtrlLib)Splitter.o: CtrlLib/Splitter.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7684,28 +7199,24 @@ $(OutDir_CtrlLib)Splitter.o: CtrlLib/Splitter.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Splitter.cpp -o $(OutDir_CtrlLib)Splitter.o
 
 $(OutDir_CtrlLib)FrameSplitter.o: CtrlLib/FrameSplitter.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7781,27 +7292,16 @@ $(OutDir_CtrlLib)FrameSplitter.o: CtrlLib/FrameSplitter.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7836,28 +7336,24 @@ $(OutDir_CtrlLib)FrameSplitter.o: CtrlLib/FrameSplitter.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/FrameSplitter.cpp -o $(OutDir_CtrlLib)FrameSplitter.o
 
 $(OutDir_CtrlLib)SliderCtrl.o: CtrlLib/SliderCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -7933,27 +7429,16 @@ $(OutDir_CtrlLib)SliderCtrl.o: CtrlLib/SliderCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -7988,28 +7473,24 @@ $(OutDir_CtrlLib)SliderCtrl.o: CtrlLib/SliderCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/SliderCtrl.cpp -o $(OutDir_CtrlLib)SliderCtrl.o
 
 $(OutDir_CtrlLib)ColumnList.o: CtrlLib/ColumnList.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8085,27 +7566,16 @@ $(OutDir_CtrlLib)ColumnList.o: CtrlLib/ColumnList.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -8140,28 +7610,24 @@ $(OutDir_CtrlLib)ColumnList.o: CtrlLib/ColumnList.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ColumnList.cpp -o $(OutDir_CtrlLib)ColumnList.o
 
 $(OutDir_CtrlLib)Progress.o: CtrlLib/Progress.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8237,27 +7703,16 @@ $(OutDir_CtrlLib)Progress.o: CtrlLib/Progress.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -8292,28 +7747,24 @@ $(OutDir_CtrlLib)Progress.o: CtrlLib/Progress.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Progress.cpp -o $(OutDir_CtrlLib)Progress.o
 
 $(OutDir_CtrlLib)AKeys.o: CtrlLib/AKeys.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8389,27 +7840,16 @@ $(OutDir_CtrlLib)AKeys.o: CtrlLib/AKeys.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -8444,28 +7884,24 @@ $(OutDir_CtrlLib)AKeys.o: CtrlLib/AKeys.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/AKeys.cpp -o $(OutDir_CtrlLib)AKeys.o
 
 $(OutDir_CtrlLib)RichTextView.o: CtrlLib/RichTextView.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8541,27 +7977,16 @@ $(OutDir_CtrlLib)RichTextView.o: CtrlLib/RichTextView.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -8596,28 +8021,24 @@ $(OutDir_CtrlLib)RichTextView.o: CtrlLib/RichTextView.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/RichTextView.cpp -o $(OutDir_CtrlLib)RichTextView.o
 
 $(OutDir_CtrlLib)Prompt.o: CtrlLib/Prompt.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8693,27 +8114,16 @@ $(OutDir_CtrlLib)Prompt.o: CtrlLib/Prompt.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -8748,28 +8158,24 @@ $(OutDir_CtrlLib)Prompt.o: CtrlLib/Prompt.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Prompt.cpp -o $(OutDir_CtrlLib)Prompt.o
 
 $(OutDir_CtrlLib)Help.o: CtrlLib/Help.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8845,27 +8251,16 @@ $(OutDir_CtrlLib)Help.o: CtrlLib/Help.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -8900,28 +8295,24 @@ $(OutDir_CtrlLib)Help.o: CtrlLib/Help.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Help.cpp -o $(OutDir_CtrlLib)Help.o
 
 $(OutDir_CtrlLib)DateTimeCtrl.o: CtrlLib/DateTimeCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -8997,27 +8388,16 @@ $(OutDir_CtrlLib)DateTimeCtrl.o: CtrlLib/DateTimeCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9052,28 +8432,24 @@ $(OutDir_CtrlLib)DateTimeCtrl.o: CtrlLib/DateTimeCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DateTimeCtrl.cpp -o $(OutDir_CtrlLib)DateTimeCtrl.o
 
 $(OutDir_CtrlLib)SuggestCtrl.o: CtrlLib/SuggestCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -9149,27 +8525,16 @@ $(OutDir_CtrlLib)SuggestCtrl.o: CtrlLib/SuggestCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9204,28 +8569,24 @@ $(OutDir_CtrlLib)SuggestCtrl.o: CtrlLib/SuggestCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/SuggestCtrl.cpp -o $(OutDir_CtrlLib)SuggestCtrl.o
 
 $(OutDir_CtrlLib)Bar.o: CtrlLib/Bar.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -9301,27 +8662,16 @@ $(OutDir_CtrlLib)Bar.o: CtrlLib/Bar.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9356,28 +8706,24 @@ $(OutDir_CtrlLib)Bar.o: CtrlLib/Bar.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Bar.cpp -o $(OutDir_CtrlLib)Bar.o
 
 $(OutDir_CtrlLib)MenuItem.o: CtrlLib/MenuItem.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -9453,27 +8799,16 @@ $(OutDir_CtrlLib)MenuItem.o: CtrlLib/MenuItem.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9509,28 +8844,24 @@ $(OutDir_CtrlLib)MenuItem.o: CtrlLib/MenuItem.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/MenuItem.cpp -o $(OutDir_CtrlLib)MenuItem.o
 
 $(OutDir_CtrlLib)MenuBar.o: CtrlLib/MenuBar.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -9606,27 +8937,16 @@ $(OutDir_CtrlLib)MenuBar.o: CtrlLib/MenuBar.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9662,28 +8982,24 @@ $(OutDir_CtrlLib)MenuBar.o: CtrlLib/MenuBar.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/MenuBar.cpp -o $(OutDir_CtrlLib)MenuBar.o
 
 $(OutDir_CtrlLib)ToolButton.o: CtrlLib/ToolButton.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -9759,27 +9075,16 @@ $(OutDir_CtrlLib)ToolButton.o: CtrlLib/ToolButton.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9814,28 +9119,24 @@ $(OutDir_CtrlLib)ToolButton.o: CtrlLib/ToolButton.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ToolButton.cpp -o $(OutDir_CtrlLib)ToolButton.o
 
 $(OutDir_CtrlLib)ToolBar.o: CtrlLib/ToolBar.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -9911,27 +9212,16 @@ $(OutDir_CtrlLib)ToolBar.o: CtrlLib/ToolBar.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -9966,28 +9256,24 @@ $(OutDir_CtrlLib)ToolBar.o: CtrlLib/ToolBar.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ToolBar.cpp -o $(OutDir_CtrlLib)ToolBar.o
 
 $(OutDir_CtrlLib)ToolTip.o: CtrlLib/ToolTip.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10063,27 +9349,16 @@ $(OutDir_CtrlLib)ToolTip.o: CtrlLib/ToolTip.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -10118,28 +9393,24 @@ $(OutDir_CtrlLib)ToolTip.o: CtrlLib/ToolTip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ToolTip.cpp -o $(OutDir_CtrlLib)ToolTip.o
 
 $(OutDir_CtrlLib)StatusBar.o: CtrlLib/StatusBar.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10215,27 +9486,16 @@ $(OutDir_CtrlLib)StatusBar.o: CtrlLib/StatusBar.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -10270,28 +9530,24 @@ $(OutDir_CtrlLib)StatusBar.o: CtrlLib/StatusBar.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/StatusBar.cpp -o $(OutDir_CtrlLib)StatusBar.o
 
 $(OutDir_CtrlLib)TabCtrl.o: CtrlLib/TabCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10367,27 +9623,16 @@ $(OutDir_CtrlLib)TabCtrl.o: CtrlLib/TabCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -10422,28 +9667,24 @@ $(OutDir_CtrlLib)TabCtrl.o: CtrlLib/TabCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/TabCtrl.cpp -o $(OutDir_CtrlLib)TabCtrl.o
 
 $(OutDir_CtrlLib)TreeCtrl.o: CtrlLib/TreeCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10519,27 +9760,16 @@ $(OutDir_CtrlLib)TreeCtrl.o: CtrlLib/TreeCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -10574,28 +9804,24 @@ $(OutDir_CtrlLib)TreeCtrl.o: CtrlLib/TreeCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/TreeCtrl.cpp -o $(OutDir_CtrlLib)TreeCtrl.o
 
 $(OutDir_CtrlLib)DropTree.o: CtrlLib/DropTree.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10671,27 +9897,16 @@ $(OutDir_CtrlLib)DropTree.o: CtrlLib/DropTree.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -10726,28 +9941,24 @@ $(OutDir_CtrlLib)DropTree.o: CtrlLib/DropTree.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DropTree.cpp -o $(OutDir_CtrlLib)DropTree.o
 
 $(OutDir_CtrlLib)DlgColor.o: CtrlLib/DlgColor.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10823,27 +10034,16 @@ $(OutDir_CtrlLib)DlgColor.o: CtrlLib/DlgColor.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -10878,28 +10078,24 @@ $(OutDir_CtrlLib)DlgColor.o: CtrlLib/DlgColor.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/DlgColor.cpp -o $(OutDir_CtrlLib)DlgColor.o
 
 $(OutDir_CtrlLib)ColorPopup.o: CtrlLib/ColorPopup.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -10975,27 +10171,16 @@ $(OutDir_CtrlLib)ColorPopup.o: CtrlLib/ColorPopup.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11030,28 +10215,24 @@ $(OutDir_CtrlLib)ColorPopup.o: CtrlLib/ColorPopup.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ColorPopup.cpp -o $(OutDir_CtrlLib)ColorPopup.o
 
 $(OutDir_CtrlLib)ColorPusher.o: CtrlLib/ColorPusher.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -11127,27 +10308,16 @@ $(OutDir_CtrlLib)ColorPusher.o: CtrlLib/ColorPusher.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11182,28 +10352,24 @@ $(OutDir_CtrlLib)ColorPusher.o: CtrlLib/ColorPusher.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ColorPusher.cpp -o $(OutDir_CtrlLib)ColorPusher.o
 
 $(OutDir_CtrlLib)FileList.o: CtrlLib/FileList.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -11279,27 +10445,16 @@ $(OutDir_CtrlLib)FileList.o: CtrlLib/FileList.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11334,28 +10489,24 @@ $(OutDir_CtrlLib)FileList.o: CtrlLib/FileList.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/FileList.cpp -o $(OutDir_CtrlLib)FileList.o
 
 $(OutDir_CtrlLib)FileSel.o: CtrlLib/FileSel.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -11431,27 +10582,16 @@ $(OutDir_CtrlLib)FileSel.o: CtrlLib/FileSel.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11486,28 +10626,24 @@ $(OutDir_CtrlLib)FileSel.o: CtrlLib/FileSel.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/FileSel.cpp -o $(OutDir_CtrlLib)FileSel.o
 
 $(OutDir_CtrlLib)FileSelUtil.o: CtrlLib/FileSelUtil.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -11583,27 +10719,16 @@ $(OutDir_CtrlLib)FileSelUtil.o: CtrlLib/FileSelUtil.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11638,28 +10763,24 @@ $(OutDir_CtrlLib)FileSelUtil.o: CtrlLib/FileSelUtil.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/FileSelUtil.cpp -o $(OutDir_CtrlLib)FileSelUtil.o
 
 $(OutDir_CtrlLib)PrinterJob.o: CtrlLib/PrinterJob.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -11735,27 +10856,16 @@ $(OutDir_CtrlLib)PrinterJob.o: CtrlLib/PrinterJob.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11790,6 +10900,12 @@ $(OutDir_CtrlLib)PrinterJob.o: CtrlLib/PrinterJob.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	PdfDraw/PdfDraw.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
@@ -11797,23 +10913,13 @@ $(OutDir_CtrlLib)PrinterJob.o: CtrlLib/PrinterJob.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/PrinterJob.cpp -o $(OutDir_CtrlLib)PrinterJob.o
 
 $(OutDir_CtrlLib)Windows.o: CtrlLib/Windows.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -11889,27 +10995,16 @@ $(OutDir_CtrlLib)Windows.o: CtrlLib/Windows.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -11944,28 +11039,24 @@ $(OutDir_CtrlLib)Windows.o: CtrlLib/Windows.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Windows.cpp -o $(OutDir_CtrlLib)Windows.o
 
 $(OutDir_CtrlLib)Win32.o: CtrlLib/Win32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12041,27 +11132,16 @@ $(OutDir_CtrlLib)Win32.o: CtrlLib/Win32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -12096,28 +11176,24 @@ $(OutDir_CtrlLib)Win32.o: CtrlLib/Win32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Win32.cpp -o $(OutDir_CtrlLib)Win32.o
 
 $(OutDir_CtrlLib)Gtk.o: CtrlLib/Gtk.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12193,27 +11269,16 @@ $(OutDir_CtrlLib)Gtk.o: CtrlLib/Gtk.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -12248,28 +11313,24 @@ $(OutDir_CtrlLib)Gtk.o: CtrlLib/Gtk.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Gtk.cpp -o $(OutDir_CtrlLib)Gtk.o
 
 $(OutDir_CtrlLib)TrayIconWin32.o: CtrlLib/TrayIconWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12345,27 +11406,16 @@ $(OutDir_CtrlLib)TrayIconWin32.o: CtrlLib/TrayIconWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -12400,28 +11450,24 @@ $(OutDir_CtrlLib)TrayIconWin32.o: CtrlLib/TrayIconWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/TrayIconWin32.cpp -o $(OutDir_CtrlLib)TrayIconWin32.o
 
 $(OutDir_CtrlLib)TrayIconX11.o: CtrlLib/TrayIconX11.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12497,27 +11543,16 @@ $(OutDir_CtrlLib)TrayIconX11.o: CtrlLib/TrayIconX11.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -12552,28 +11587,24 @@ $(OutDir_CtrlLib)TrayIconX11.o: CtrlLib/TrayIconX11.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/TrayIconX11.cpp -o $(OutDir_CtrlLib)TrayIconX11.o
 
 $(OutDir_CtrlLib)TrayIconGtk.o: CtrlLib/TrayIconGtk.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12649,27 +11680,16 @@ $(OutDir_CtrlLib)TrayIconGtk.o: CtrlLib/TrayIconGtk.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -12704,28 +11724,24 @@ $(OutDir_CtrlLib)TrayIconGtk.o: CtrlLib/TrayIconGtk.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/TrayIconGtk.cpp -o $(OutDir_CtrlLib)TrayIconGtk.o
 
 $(OutDir_CtrlLib)Update.o: CtrlLib/Update.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12801,27 +11817,16 @@ $(OutDir_CtrlLib)Update.o: CtrlLib/Update.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -12856,28 +11861,24 @@ $(OutDir_CtrlLib)Update.o: CtrlLib/Update.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Update.cpp -o $(OutDir_CtrlLib)Update.o
 
 $(OutDir_CtrlLib)CtrlUtil.o: CtrlLib/CtrlUtil.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -12953,27 +11954,16 @@ $(OutDir_CtrlLib)CtrlUtil.o: CtrlLib/CtrlUtil.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -13009,28 +11999,24 @@ $(OutDir_CtrlLib)CtrlUtil.o: CtrlLib/CtrlUtil.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/CtrlUtil.cpp -o $(OutDir_CtrlLib)CtrlUtil.o
 
 $(OutDir_CtrlLib)CtrlLibInit.o: CtrlLib/CtrlLibInit.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -13107,28 +12093,16 @@ $(OutDir_CtrlLib)CtrlLibInit.o: CtrlLib/CtrlLibInit.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/CtrlLib.t \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -13163,28 +12137,24 @@ $(OutDir_CtrlLib)CtrlLibInit.o: CtrlLib/CtrlLibInit.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/CtrlLibInit.cpp -o $(OutDir_CtrlLib)CtrlLibInit.o
 
 $(OutDir_CtrlLib)LNGCtrl.o: CtrlLib/LNGCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -13260,27 +12230,16 @@ $(OutDir_CtrlLib)LNGCtrl.o: CtrlLib/LNGCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -13315,28 +12274,24 @@ $(OutDir_CtrlLib)LNGCtrl.o: CtrlLib/LNGCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/LNGCtrl.cpp -o $(OutDir_CtrlLib)LNGCtrl.o
 
 $(OutDir_CtrlLib)Ch.o: CtrlLib/Ch.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -13412,27 +12367,16 @@ $(OutDir_CtrlLib)Ch.o: CtrlLib/Ch.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -13468,28 +12412,24 @@ $(OutDir_CtrlLib)Ch.o: CtrlLib/Ch.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/Ch.cpp -o $(OutDir_CtrlLib)Ch.o
 
 $(OutDir_CtrlLib)ChWin32.o: CtrlLib/ChWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -13566,27 +12506,16 @@ $(OutDir_CtrlLib)ChWin32.o: CtrlLib/ChWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -13622,28 +12551,24 @@ $(OutDir_CtrlLib)ChWin32.o: CtrlLib/ChWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ChWin32.cpp -o $(OutDir_CtrlLib)ChWin32.o
 
-$(OutDir_CtrlLib)ChGtk0.o: CtrlLib/ChGtk0.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
+$(OutDir_CtrlLib)ChGtk3.o: CtrlLib/ChGtk3.cpp \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -13719,28 +12644,16 @@ $(OutDir_CtrlLib)ChGtk0.o: CtrlLib/ChGtk0.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ChGtk.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -13775,183 +12688,24 @@ $(OutDir_CtrlLib)ChGtk0.o: CtrlLib/ChGtk0.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ChGtk0.cpp -o $(OutDir_CtrlLib)ChGtk0.o
-
-$(OutDir_CtrlLib)ChGtk.o: CtrlLib/ChGtk.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
-	Core/Algo.h \
-	Core/App.h \
-	Core/AString.hpp \
-	Core/Atomic.h \
-	Core/BiCont.h \
-	Core/Callback.h \
-	Core/CallbackN.i \
-	Core/CallbackNP.i \
-	Core/CallbackR.i \
-	Core/CharSet.h \
-	Core/CharSet.i \
-	Core/CoAlgo.h \
-	Core/Color.h \
-	Core/Complex.h \
-	Core/config.h \
-	Core/Convert.h \
-	Core/Core.h \
-	Core/CoSort.h \
-	Core/CoWork.h \
-	Core/Defs.h \
-	Core/Diag.h \
-	Core/FilterStream.h \
-	Core/FixedMap.h \
-	Core/Format.h \
-	Core/Function.h \
-	Core/Gtypes.h \
-	Core/Hash.h \
-	Core/Heap.h \
-	Core/Huge.h \
-	Core/i18n.h \
-	Core/Index.h \
-	Core/Index.hpp \
-	Core/Inet.h \
-	Core/InMap.hpp \
-	Core/InVector.h \
-	Core/InVector.hpp \
-	Core/JSON.h \
-	Core/Lang.h \
-	Core/Lang_s.h \
-	Core/LocalProcess.h \
-	Core/Map.h \
-	Core/Map.hpp \
-	Core/Mt.h \
-	Core/Obsolete.h \
-	Core/Ops.h \
-	Core/Other.h \
-	Core/Parser.h \
-	Core/Path.h \
-	Core/Profile.h \
-	Core/Ptr.h \
-	Core/Range.h \
-	Core/Sort.h \
-	Core/Sorted.h \
-	Core/SplitMerge.h \
-	Core/Stream.h \
-	Core/String.h \
-	Core/t_.h \
-	Core/TimeDate.h \
-	Core/Topic.h \
-	Core/Topt.h \
-	Core/Tuple.h \
-	Core/Utf.hpp \
-	Core/Util.h \
-	Core/Uuid.h \
-	Core/Value.h \
-	Core/Value.hpp \
-	Core/ValueUtil.h \
-	Core/ValueUtil.hpp \
-	Core/Vcont.h \
-	Core/Vcont.hpp \
-	Core/Win32Util.h \
-	Core/XML.h \
-	Core/Xmlize.h \
-	Core/Xmlize.hpp \
-	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
-	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
-	CtrlCore/lay.h \
-	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
-	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
-	CtrlLib/AKeys.h \
-	CtrlLib/AmbientCtrls.iml \
-	CtrlLib/ArrayCtrl.h \
-	CtrlLib/Bar.h \
-	CtrlLib/Ch.h \
-	CtrlLib/ChGtk.h \
-	CtrlLib/ClassicCtrls.iml \
-	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
-	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
-	CtrlLib/CtrlUtil.h \
-	CtrlLib/DateTimeCtrl.h \
-	CtrlLib/DisplayPopup.h \
-	CtrlLib/DlgColor.h \
-	CtrlLib/DropChoice.h \
-	CtrlLib/EditCtrl.h \
-	CtrlLib/FileSel.h \
-	CtrlLib/HeaderCtrl.h \
-	CtrlLib/LabelBase.h \
-	CtrlLib/Lang.h \
-	CtrlLib/MultiButton.h \
-	CtrlLib/Progress.h \
-	CtrlLib/PushCtrl.h \
-	CtrlLib/RichText.h \
-	CtrlLib/ScrollBar.h \
-	CtrlLib/SliderCtrl.h \
-	CtrlLib/Splitter.h \
-	CtrlLib/StaticCtrl.h \
-	CtrlLib/StatusBar.h \
-	CtrlLib/SuggestCtrl.h \
-	CtrlLib/TabCtrl.h \
-	CtrlLib/TextEdit.h \
-	CtrlLib/TreeCtrl.h \
-	Draw/Cham.h \
-	Draw/DDARasterizer.h \
-	Draw/Display.h \
-	Draw/Draw.h \
-	Draw/FontInt.h \
-	Draw/Image.h \
-	Draw/ImageOp.h \
-	Draw/iml_header.h \
-	Draw/iml_source.h \
-	Draw/Raster.h \
-	Draw/SDraw.h \
-	guiplatform.h \
-	plugin/png/png.h \
-	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h \
-	RichText/Para.h \
-	RichText/RichText.h \
-	RichText/RichText.iml \
-	RichText/Table.h \
-	RichText/Text.h \
-	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ChGtk.cpp -o $(OutDir_CtrlLib)ChGtk.o
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ChGtk3.cpp -o $(OutDir_CtrlLib)ChGtk3.o
 
 $(OutDir_CtrlLib)ChCoco.o: CtrlLib/ChCoco.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14027,29 +12781,17 @@ $(OutDir_CtrlLib)ChCoco.o: CtrlLib/ChCoco.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ChCoco.h \
 	CtrlLib/ChCocoMM.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -14084,22 +12826,21 @@ $(OutDir_CtrlLib)ChCoco.o: CtrlLib/ChCoco.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlLib)  CtrlLib/ChCoco.cpp -o $(OutDir_CtrlLib)ChCoco.o
 
 $(OutDir_CtrlLib)CtrlLib.a: \
@@ -14159,8 +12900,7 @@ $(OutDir_CtrlLib)CtrlLib.a: \
 	$(OutDir_CtrlLib)LNGCtrl.o \
 	$(OutDir_CtrlLib)Ch.o \
 	$(OutDir_CtrlLib)ChWin32.o \
-	$(OutDir_CtrlLib)ChGtk0.o \
-	$(OutDir_CtrlLib)ChGtk.o \
+	$(OutDir_CtrlLib)ChGtk3.o \
 	$(OutDir_CtrlLib)ChCoco.o
 	$(AR) $(OutDir_CtrlLib)CtrlLib.a \
 		$(OutDir_CtrlLib)LabelBase.o \
@@ -14219,17 +12959,13 @@ $(OutDir_CtrlLib)CtrlLib.a: \
 		$(OutDir_CtrlLib)LNGCtrl.o \
 		$(OutDir_CtrlLib)Ch.o \
 		$(OutDir_CtrlLib)ChWin32.o \
-		$(OutDir_CtrlLib)ChGtk0.o \
-		$(OutDir_CtrlLib)ChGtk.o \
+		$(OutDir_CtrlLib)ChGtk3.o \
 		$(OutDir_CtrlLib)ChCoco.o
 
 $(OutDir_ScatterCtrl):
 	mkdir -p $(OutDir_ScatterCtrl)
 
 $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14306,27 +13042,16 @@ $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -14363,7 +13088,6 @@ $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -14652,7 +13376,6 @@ $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -14768,16 +13491,12 @@ $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
-	ScatterCtrl/ScatterCtrl.t \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -14791,19 +13510,10 @@ $(OutDir_ScatterCtrl)ScatterCtrl.o: ScatterCtrl/ScatterCtrl.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/ScatterCtrl.cpp -o $(OutDir_ScatterCtrl)ScatterCtrl.o
 
 $(OutDir_ScatterCtrl)ScatterCtrlX.o: ScatterCtrl/ScatterCtrlX.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14879,16 +13589,9 @@ $(OutDir_ScatterCtrl)ScatterCtrlX.o: ScatterCtrl/ScatterCtrlX.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -14900,28 +13603,24 @@ $(OutDir_ScatterCtrl)ScatterCtrlX.o: ScatterCtrl/ScatterCtrlX.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/ScatterCtrlX.cpp -o $(OutDir_ScatterCtrl)ScatterCtrlX.o
 
 $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -14997,27 +13696,16 @@ $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -15053,7 +13741,6 @@ $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -15342,7 +14029,6 @@ $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -15458,15 +14144,12 @@ $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -15480,19 +14163,10 @@ $(OutDir_ScatterCtrl)Properties.o: ScatterCtrl/Properties.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/Properties.cpp -o $(OutDir_ScatterCtrl)Properties.o
 
 $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -15568,27 +14242,16 @@ $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -15623,7 +14286,6 @@ $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -15912,7 +14574,6 @@ $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -16028,15 +14689,12 @@ $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -16050,19 +14708,10 @@ $(OutDir_ScatterCtrl)Processing.o: ScatterCtrl/Processing.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/Processing.cpp -o $(OutDir_ScatterCtrl)Processing.o
 
 $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -16138,27 +14787,16 @@ $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -16193,7 +14831,6 @@ $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
@@ -16482,7 +15119,6 @@ $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -16598,15 +15234,12 @@ $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
 	ScatterCtrl/Properties.h \
 	ScatterCtrl/ScatterCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
-	ScatterCtrl/ScatterCtrl.lay \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/DrawingFunctions.h \
 	ScatterDraw/Equation.h \
@@ -16620,19 +15253,10 @@ $(OutDir_ScatterCtrl)Data.o: ScatterCtrl/Data.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/Data.cpp -o $(OutDir_ScatterCtrl)Data.o
 
 $(OutDir_ScatterCtrl)PopUpText.o: ScatterCtrl/PopUpText.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -16708,27 +15332,16 @@ $(OutDir_ScatterCtrl)PopUpText.o: ScatterCtrl/PopUpText.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -16763,29 +15376,25 @@ $(OutDir_ScatterCtrl)PopUpText.o: ScatterCtrl/PopUpText.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PopUpText.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/PopUpText.cpp -o $(OutDir_ScatterCtrl)PopUpText.o
 
 $(OutDir_ScatterCtrl)PieCtrl.o: ScatterCtrl/PieCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -16861,27 +15470,16 @@ $(OutDir_ScatterCtrl)PieCtrl.o: ScatterCtrl/PieCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -16924,28 +15522,406 @@ $(OutDir_ScatterCtrl)PieCtrl.o: ScatterCtrl/PieCtrl.cpp \
 	Painter/Painter.h \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
+	plugin/Eigen/Eigen.h \
+	plugin/Eigen/Eigen/Cholesky \
+	plugin/Eigen/Eigen/Core \
+	plugin/Eigen/Eigen/Dense \
+	plugin/Eigen/Eigen/Eigen \
+	plugin/Eigen/Eigen/Eigenvalues \
+	plugin/Eigen/Eigen/Geometry \
+	plugin/Eigen/Eigen/Householder \
+	plugin/Eigen/Eigen/IterativeLinearSolvers \
+	plugin/Eigen/Eigen/Jacobi \
+	plugin/Eigen/Eigen/LU \
+	plugin/Eigen/Eigen/OrderingMethods \
+	plugin/Eigen/Eigen/QR \
+	plugin/Eigen/Eigen/Sparse \
+	plugin/Eigen/Eigen/SparseCholesky \
+	plugin/Eigen/Eigen/SparseCore \
+	plugin/Eigen/Eigen/SparseLU \
+	plugin/Eigen/Eigen/SparseQR \
+	plugin/Eigen/Eigen/src/Cholesky/LDLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Half.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMathHalf.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/ConjHelper.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/Settings.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/Array.h \
+	plugin/Eigen/Eigen/src/Core/ArrayBase.h \
+	plugin/Eigen/Eigen/src/Core/ArrayWrapper.h \
+	plugin/Eigen/Eigen/src/Core/Assign.h \
+	plugin/Eigen/Eigen/src/Core/Assign_MKL.h \
+	plugin/Eigen/Eigen/src/Core/AssignEvaluator.h \
+	plugin/Eigen/Eigen/src/Core/BandMatrix.h \
+	plugin/Eigen/Eigen/src/Core/Block.h \
+	plugin/Eigen/Eigen/src/Core/BooleanRedux.h \
+	plugin/Eigen/Eigen/src/Core/CommaInitializer.h \
+	plugin/Eigen/Eigen/src/Core/ConditionEstimator.h \
+	plugin/Eigen/Eigen/src/Core/CoreEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/CoreIterators.h \
+	plugin/Eigen/Eigen/src/Core/CwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseNullaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseTernaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryView.h \
+	plugin/Eigen/Eigen/src/Core/DenseBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseCoeffsBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseStorage.h \
+	plugin/Eigen/Eigen/src/Core/Diagonal.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalMatrix.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalProduct.h \
+	plugin/Eigen/Eigen/src/Core/Dot.h \
+	plugin/Eigen/Eigen/src/Core/EigenBase.h \
+	plugin/Eigen/Eigen/src/Core/functors/AssignmentFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/BinaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/NullaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/StlFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/TernaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/UnaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/Fuzzy.h \
+	plugin/Eigen/Eigen/src/Core/GeneralProduct.h \
+	plugin/Eigen/Eigen/src/Core/GenericPacketMath.h \
+	plugin/Eigen/Eigen/src/Core/GlobalFunctions.h \
+	plugin/Eigen/Eigen/src/Core/Inverse.h \
+	plugin/Eigen/Eigen/src/Core/IO.h \
+	plugin/Eigen/Eigen/src/Core/Map.h \
+	plugin/Eigen/Eigen/src/Core/MapBase.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctionsImpl.h \
+	plugin/Eigen/Eigen/src/Core/Matrix.h \
+	plugin/Eigen/Eigen/src/Core/MatrixBase.h \
+	plugin/Eigen/Eigen/src/Core/NestByValue.h \
+	plugin/Eigen/Eigen/src/Core/NoAlias.h \
+	plugin/Eigen/Eigen/src/Core/NumTraits.h \
+	plugin/Eigen/Eigen/src/Core/PermutationMatrix.h \
+	plugin/Eigen/Eigen/src/Core/PlainObjectBase.h \
+	plugin/Eigen/Eigen/src/Core/Product.h \
+	plugin/Eigen/Eigen/src/Core/ProductEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/Parallelizer.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointProduct.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointRank2Update.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverVector.h \
+	plugin/Eigen/Eigen/src/Core/Random.h \
+	plugin/Eigen/Eigen/src/Core/Redux.h \
+	plugin/Eigen/Eigen/src/Core/Ref.h \
+	plugin/Eigen/Eigen/src/Core/Replicate.h \
+	plugin/Eigen/Eigen/src/Core/ReturnByValue.h \
+	plugin/Eigen/Eigen/src/Core/Reverse.h \
+	plugin/Eigen/Eigen/src/Core/Select.h \
+	plugin/Eigen/Eigen/src/Core/SelfAdjointView.h \
+	plugin/Eigen/Eigen/src/Core/SelfCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/Solve.h \
+	plugin/Eigen/Eigen/src/Core/SolverBase.h \
+	plugin/Eigen/Eigen/src/Core/SolveTriangular.h \
+	plugin/Eigen/Eigen/src/Core/StableNorm.h \
+	plugin/Eigen/Eigen/src/Core/Stride.h \
+	plugin/Eigen/Eigen/src/Core/Swap.h \
+	plugin/Eigen/Eigen/src/Core/Transpose.h \
+	plugin/Eigen/Eigen/src/Core/Transpositions.h \
+	plugin/Eigen/Eigen/src/Core/TriangularMatrix.h \
+	plugin/Eigen/Eigen/src/Core/util/BlasUtil.h \
+	plugin/Eigen/Eigen/src/Core/util/Constants.h \
+	plugin/Eigen/Eigen/src/Core/util/DisableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/ForwardDeclarations.h \
+	plugin/Eigen/Eigen/src/Core/util/Macros.h \
+	plugin/Eigen/Eigen/src/Core/util/Memory.h \
+	plugin/Eigen/Eigen/src/Core/util/Meta.h \
+	plugin/Eigen/Eigen/src/Core/util/MKL_support.h \
+	plugin/Eigen/Eigen/src/Core/util/NonMPL2.h \
+	plugin/Eigen/Eigen/src/Core/util/ReenableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/StaticAssert.h \
+	plugin/Eigen/Eigen/src/Core/util/XprHelper.h \
+	plugin/Eigen/Eigen/src/Core/VectorBlock.h \
+	plugin/Eigen/Eigen/src/Core/VectorwiseOp.h \
+	plugin/Eigen/Eigen/src/Core/Visitor.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/EigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealQZ.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/Tridiagonalization.h \
+	plugin/Eigen/Eigen/src/Geometry/AlignedBox.h \
+	plugin/Eigen/Eigen/src/Geometry/AngleAxis.h \
+	plugin/Eigen/Eigen/src/Geometry/arch/Geometry_SSE.h \
+	plugin/Eigen/Eigen/src/Geometry/EulerAngles.h \
+	plugin/Eigen/Eigen/src/Geometry/Homogeneous.h \
+	plugin/Eigen/Eigen/src/Geometry/Hyperplane.h \
+	plugin/Eigen/Eigen/src/Geometry/OrthoMethods.h \
+	plugin/Eigen/Eigen/src/Geometry/ParametrizedLine.h \
+	plugin/Eigen/Eigen/src/Geometry/Quaternion.h \
+	plugin/Eigen/Eigen/src/Geometry/Rotation2D.h \
+	plugin/Eigen/Eigen/src/Geometry/RotationBase.h \
+	plugin/Eigen/Eigen/src/Geometry/Scaling.h \
+	plugin/Eigen/Eigen/src/Geometry/Transform.h \
+	plugin/Eigen/Eigen/src/Geometry/Translation.h \
+	plugin/Eigen/Eigen/src/Geometry/Umeyama.h \
+	plugin/Eigen/Eigen/src/Householder/BlockHouseholder.h \
+	plugin/Eigen/Eigen/src/Householder/Householder.h \
+	plugin/Eigen/Eigen/src/Householder/HouseholderSequence.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BasicPreconditioners.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BiCGSTAB.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/ConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteCholesky.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteLUT.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IterativeSolverBase.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/SolveWithGuess.h \
+	plugin/Eigen/Eigen/src/Jacobi/Jacobi.h \
+	plugin/Eigen/Eigen/src/LU/arch/Inverse_SSE.h \
+	plugin/Eigen/Eigen/src/LU/Determinant.h \
+	plugin/Eigen/Eigen/src/LU/FullPivLU.h \
+	plugin/Eigen/Eigen/src/LU/InverseImpl.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h \
+	plugin/Eigen/Eigen/src/misc/blas.h \
+	plugin/Eigen/Eigen/src/misc/Image.h \
+	plugin/Eigen/Eigen/src/misc/Kernel.h \
+	plugin/Eigen/Eigen/src/misc/lapacke.h \
+	plugin/Eigen/Eigen/src/misc/lapacke_mangling.h \
+	plugin/Eigen/Eigen/src/misc/RealSvd2x2.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Amd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Eigen_Colamd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Ordering.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/BlockMethods.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+	plugin/Eigen/Eigen/src/QR/FullPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky_impl.h \
+	plugin/Eigen/Eigen/src/SparseCore/AmbiVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/CompressedStorage.h \
+	plugin/Eigen/Eigen/src/SparseCore/ConservativeSparseSparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/MappedSparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseAssign.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseBlock.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseColEtree.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCompressedBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDenseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDiagonalProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDot.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseFuzzy.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMap.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrixBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparsePermutation.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRedux.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRef.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSelfAdjointView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSolverBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSparseProductWithPruning.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTranspose.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTriangularView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseUtil.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseView.h \
+	plugin/Eigen/Eigen/src/SparseCore/TriangularSolver.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_copy_to_ucol.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_gemm_kernel.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_heap_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_kernel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Memory.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pivotL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pruneL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Structs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_SupernodalMatrix.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Utils.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLUImpl.h \
+	plugin/Eigen/Eigen/src/SparseQR/SparseQR.h \
+	plugin/Eigen/Eigen/src/SVD/BDCSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
+	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
+	plugin/Eigen/Eigen/SVD \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclConvertToDeviceExpression.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExprConstructor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractAccessor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclLeafCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclPlaceHolderExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclRun.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclTuple.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/EventCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/NonBlockingThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/RunQueue.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/SimpleThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadEnvironment.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadLocal.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadPoolInterface.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadYield.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateCXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/Tensor \
+	plugin/Eigen/unsupported/Eigen/CXX11/ThreadPool \
+	plugin/Eigen/unsupported/Eigen/FFT \
+	plugin/Eigen/unsupported/Eigen/NonLinearOptimization \
+	plugin/Eigen/unsupported/Eigen/NumericalDiff \
+	plugin/Eigen/unsupported/Eigen/SpecialFunctions \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_fftw_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_kissfft_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/chkder.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/covar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/dogleg.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/lmpar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1updt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h \
+	plugin/Eigen/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h \
 	plugin/jpg/jpg.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterCtrl/PieCtrl.h \
-	ScatterCtrl/ScatterCtrl.iml \
 	ScatterDraw/DataSource.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/PieDraw.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_ScatterCtrl)  ScatterCtrl/PieCtrl.cpp -o $(OutDir_ScatterCtrl)PieCtrl.o
 
 $(OutDir_ScatterCtrl)ScatterCtrl.a: \
@@ -16970,9 +15946,6 @@ $(OutDir_Controls4U):
 
 $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -17051,27 +16024,16 @@ $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -17119,18 +16081,11 @@ $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -17144,36 +16099,10 @@ $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
-	Controls4U/Controls4U.iml \
-	Controls4U/Controls4U.t \
 	Controls4U/PainterCanvas.h \
 	Controls4U/plugin/vlc/axvlc_idl.h \
 	Controls4U/SliderCtrlX.h \
 	Controls4U/SplitterButton.h \
-	Controls4U/src.tpp/About_en-us.tppi \
-	Controls4U/src.tpp/AboutUpp_en-us.tppi \
-	Controls4U/src.tpp/all.i \
-	Controls4U/src.tpp/Controls4U_en-us.tppi \
-	Controls4U/src.tpp/EditFile_en-us.tppi \
-	Controls4U/src.tpp/EditFileFolder_en-us.tppi \
-	Controls4U/src.tpp/EditFolder_en-us.tppi \
-	Controls4U/src.tpp/FirefoxBrowser_en-us.tppi \
-	Controls4U/src.tpp/InternetExplorerBrowser_en-us.tppi \
-	Controls4U/src.tpp/Knob_en-us.tppi \
-	Controls4U/src.tpp/Meter_en-us.tppi \
-	Controls4U/src.tpp/SliderCtrlX_en-us.tppi \
-	Controls4U/src.tpp/SliderCtrlX_fr-fr.tppi \
-	Controls4U/src.tpp/SplitterButton_en-us.tppi \
-	Controls4U/src.tpp/StarIndicator_en-us.tppi \
-	Controls4U/src.tpp/StarIndicator_fr-fr.tppi \
-	Controls4U/src.tpp/StaticArrow_en-us.tppi \
-	Controls4U/src.tpp/StaticClock_en-us.tppi \
-	Controls4U/src.tpp/StaticEllipse_en-us.tppi \
-	Controls4U/src.tpp/StaticFrame_en-us.tppi \
-	Controls4U/src.tpp/StaticImage_en-us.tppi \
-	Controls4U/src.tpp/StaticLine_en-us.tppi \
-	Controls4U/src.tpp/StaticRectangle_en-us.tppi \
-	Controls4U/src.tpp/VLCPlayer_en-us.tppi \
 	Controls4U/StarIndicator.h \
 	Functions4U/Functions4U.h \
 	Functions4U/Functions4U_Gui.h \
@@ -17185,9 +16114,6 @@ $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 
 $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	ClassFactory/ClassFactory.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
 	Core/App.h \
@@ -17265,27 +16191,16 @@ $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -17334,18 +16249,11 @@ $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -17359,8 +16267,6 @@ $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
-	Controls4U/Controls4U.iml \
-	Controls4U/Controls4U.t \
 	Controls4U/PainterCanvas.h \
 	Controls4U/plugin/vlc/axvlc_idl.h \
 	Controls4U/SliderCtrlX.h \
@@ -17375,9 +16281,6 @@ $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/PainterCanvas.cpp -o $(OutDir_Controls4U)PainterCanvas.o
 
 $(OutDir_Controls4U)ActiveX.o: Controls4U/ActiveX.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -17453,27 +16356,16 @@ $(OutDir_Controls4U)ActiveX.o: Controls4U/ActiveX.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -17508,31 +16400,27 @@ $(OutDir_Controls4U)ActiveX.o: Controls4U/ActiveX.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/plugin/vlc/axvlc_idl.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/ActiveX.cpp -o $(OutDir_Controls4U)ActiveX.o
 
 $(OutDir_Controls4U)IExplorerBrowser.o: Controls4U/IExplorerBrowser.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -17608,27 +16496,16 @@ $(OutDir_Controls4U)IExplorerBrowser.o: Controls4U/IExplorerBrowser.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -17663,31 +16540,27 @@ $(OutDir_Controls4U)IExplorerBrowser.o: Controls4U/IExplorerBrowser.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/plugin/vlc/axvlc_idl.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/IExplorerBrowser.cpp -o $(OutDir_Controls4U)IExplorerBrowser.o
 
 $(OutDir_Controls4U)FirefoxBrowser.o: Controls4U/FirefoxBrowser.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -17763,27 +16636,16 @@ $(OutDir_Controls4U)FirefoxBrowser.o: Controls4U/FirefoxBrowser.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -17818,31 +16680,27 @@ $(OutDir_Controls4U)FirefoxBrowser.o: Controls4U/FirefoxBrowser.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/plugin/vlc/axvlc_idl.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/FirefoxBrowser.cpp -o $(OutDir_Controls4U)FirefoxBrowser.o
 
 $(OutDir_Controls4U)VLCPlayer.o: Controls4U/VLCPlayer.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -17918,27 +16776,16 @@ $(OutDir_Controls4U)VLCPlayer.o: Controls4U/VLCPlayer.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -17973,22 +16820,21 @@ $(OutDir_Controls4U)VLCPlayer.o: Controls4U/VLCPlayer.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/plugin/vlc/axvlc_idl.h
@@ -17998,9 +16844,6 @@ $(OutDir_Controls4U)axvlc_idl.o: Controls4U/plugin/vlc/axvlc_idl.c
 	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/plugin/vlc/axvlc_idl.c -o $(OutDir_Controls4U)axvlc_idl.o
 
 $(OutDir_Controls4U)SliderCtrlX.o: Controls4U/SliderCtrlX.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -18076,27 +16919,16 @@ $(OutDir_Controls4U)SliderCtrlX.o: Controls4U/SliderCtrlX.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -18133,30 +16965,25 @@ $(OutDir_Controls4U)SliderCtrlX.o: Controls4U/SliderCtrlX.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
-	Controls4U/SliderCtrlX.h \
-	Controls4U/SliderCtrlX.iml
+	Controls4U/SliderCtrlX.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/SliderCtrlX.cpp -o $(OutDir_Controls4U)SliderCtrlX.o
 
 $(OutDir_Controls4U)StarIndicator.o: Controls4U/StarIndicator.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -18232,27 +17059,16 @@ $(OutDir_Controls4U)StarIndicator.o: Controls4U/StarIndicator.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -18289,30 +17105,25 @@ $(OutDir_Controls4U)StarIndicator.o: Controls4U/StarIndicator.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
-	Controls4U/StarIndicator.h \
-	Controls4U/StarIndicator.iml
+	Controls4U/StarIndicator.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/StarIndicator.cpp -o $(OutDir_Controls4U)StarIndicator.o
 
 $(OutDir_Controls4U)SplitterButton.o: Controls4U/SplitterButton.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -18388,27 +17199,16 @@ $(OutDir_Controls4U)SplitterButton.o: Controls4U/SplitterButton.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -18443,22 +17243,21 @@ $(OutDir_Controls4U)SplitterButton.o: Controls4U/SplitterButton.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Controls4U/SplitterButton.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Controls4U)  Controls4U/SplitterButton.cpp -o $(OutDir_Controls4U)SplitterButton.o
 
@@ -18852,7 +17651,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)main.o: BEMRosetta/BEMRosetta_cl/main.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -19349,7 +18147,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -19850,7 +18647,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)Mesh.o: BEMRosetta/BEMRosetta_cl/Mesh.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -20347,7 +19143,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh_mesh.o: BEMRosetta/BEMRosetta_cl/nemoh_m
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -20844,7 +19639,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit_mesh.o: BEMRosetta/BEMRosetta_cl/wamit_m
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -21341,7 +20135,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)stl.o: BEMRosetta/BEMRosetta_cl/stl.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -21838,7 +20631,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o: BEMRosetta/BEMRosetta_cl/nemoh.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -22335,7 +21127,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o: BEMRosetta/BEMRosetta_cl/foamm.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -22835,7 +21626,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o: BEMRosetta/BEMRosetta_cl/wamit.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -23337,7 +22127,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o: BEMRosetta/BEMRosetta_cl/fast.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -23838,7 +22627,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o: BEMRosetta/BEMRosetta_cl/aqwa.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -24335,7 +23123,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o: BEMRosetta/BEMRosetta_cl/ainf.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -24832,7 +23619,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)dataf.o: BEMRosetta/BEMRosetta_cl/dataf.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -25003,9 +23789,6 @@ $(OutDir_GLCanvas):
 	mkdir -p $(OutDir_GLCanvas)
 
 $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -25081,27 +23864,16 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -25139,6 +23911,12 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	PdfDraw/PdfDraw.h \
 	plugin/Eigen/Eigen.h \
 	plugin/Eigen/Eigen/Cholesky \
@@ -25418,7 +24196,6 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -25536,29 +24313,18 @@ $(OutDir_GLCanvas)GLCanvas.o: GLCanvas/GLCanvas.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	GLCanvas/GLCanvas.h \
-	GLCanvas/GLCanvas.iml \
 	GLCanvas/trackball.h \
 	Surface/Surface.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/GLCanvas.cpp -o $(OutDir_GLCanvas)GLCanvas.o
 
 $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -25634,27 +24400,16 @@ $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -25689,23 +24444,22 @@ $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	GLCanvas/TrackBall.h \
 	GLCanvas/trkball.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/trackball.cpp -o $(OutDir_GLCanvas)trackball.o
@@ -25727,9 +24481,6 @@ $(OutDir_RasterPlayer):
 	mkdir -p $(OutDir_RasterPlayer)
 
 $(OutDir_RasterPlayer)RasterPlayer.o: RasterPlayer/RasterPlayer.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -25805,27 +24556,16 @@ $(OutDir_RasterPlayer)RasterPlayer.o: RasterPlayer/RasterPlayer.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -25860,23 +24600,22 @@ $(OutDir_RasterPlayer)RasterPlayer.o: RasterPlayer/RasterPlayer.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RasterPlayer/RasterPlayer.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_RasterPlayer)  RasterPlayer/RasterPlayer.cpp -o $(OutDir_RasterPlayer)RasterPlayer.o
 
 $(OutDir_RasterPlayer)RasterPlayer.a: \
@@ -25889,9 +24628,6 @@ $(OutDir_CtrlScroll):
 
 $(OutDir_CtrlScroll)CtrlScroll.o: CtrlScroll/CtrlScroll.cpp \
 	CtrlScroll/CtrlScroll.h \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -25967,27 +24703,16 @@ $(OutDir_CtrlScroll)CtrlScroll.o: CtrlScroll/CtrlScroll.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -26022,22 +24747,21 @@ $(OutDir_CtrlScroll)CtrlScroll.o: CtrlScroll/CtrlScroll.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlScroll)  CtrlScroll/CtrlScroll.cpp -o $(OutDir_CtrlScroll)CtrlScroll.o
 
 $(OutDir_CtrlScroll)CtrlScroll.a: \
@@ -26049,9 +24773,6 @@ $(OutDir_CtrlCore):
 	mkdir -p $(OutDir_CtrlCore)
 
 $(OutDir_CtrlCore)SystemDraw.o: CtrlCore/SystemDraw.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26127,16 +24848,9 @@ $(OutDir_CtrlCore)SystemDraw.o: CtrlCore/SystemDraw.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26148,28 +24862,24 @@ $(OutDir_CtrlCore)SystemDraw.o: CtrlCore/SystemDraw.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/SystemDraw.cpp -o $(OutDir_CtrlCore)SystemDraw.o
 
 $(OutDir_CtrlCore)Frame.o: CtrlCore/Frame.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26245,16 +24955,9 @@ $(OutDir_CtrlCore)Frame.o: CtrlCore/Frame.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26266,28 +24969,24 @@ $(OutDir_CtrlCore)Frame.o: CtrlCore/Frame.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Frame.cpp -o $(OutDir_CtrlCore)Frame.o
 
 $(OutDir_CtrlCore)CtrlMt.o: CtrlCore/CtrlMt.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26363,16 +25062,9 @@ $(OutDir_CtrlCore)CtrlMt.o: CtrlCore/CtrlMt.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26384,28 +25076,24 @@ $(OutDir_CtrlCore)CtrlMt.o: CtrlCore/CtrlMt.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlMt.cpp -o $(OutDir_CtrlCore)CtrlMt.o
 
 $(OutDir_CtrlCore)Ctrl.o: CtrlCore/Ctrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26481,16 +25169,9 @@ $(OutDir_CtrlCore)Ctrl.o: CtrlCore/Ctrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26503,28 +25184,24 @@ $(OutDir_CtrlCore)Ctrl.o: CtrlCore/Ctrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Ctrl.cpp -o $(OutDir_CtrlCore)Ctrl.o
 
 $(OutDir_CtrlCore)CtrlChild.o: CtrlCore/CtrlChild.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26600,16 +25277,9 @@ $(OutDir_CtrlCore)CtrlChild.o: CtrlCore/CtrlChild.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26621,28 +25291,24 @@ $(OutDir_CtrlCore)CtrlChild.o: CtrlCore/CtrlChild.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlChild.cpp -o $(OutDir_CtrlCore)CtrlChild.o
 
 $(OutDir_CtrlCore)CtrlPos.o: CtrlCore/CtrlPos.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26718,16 +25384,9 @@ $(OutDir_CtrlCore)CtrlPos.o: CtrlCore/CtrlPos.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26739,28 +25398,24 @@ $(OutDir_CtrlCore)CtrlPos.o: CtrlCore/CtrlPos.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlPos.cpp -o $(OutDir_CtrlCore)CtrlPos.o
 
 $(OutDir_CtrlCore)CtrlDraw.o: CtrlCore/CtrlDraw.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26836,16 +25491,9 @@ $(OutDir_CtrlCore)CtrlDraw.o: CtrlCore/CtrlDraw.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26857,28 +25505,24 @@ $(OutDir_CtrlCore)CtrlDraw.o: CtrlCore/CtrlDraw.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlDraw.cpp -o $(OutDir_CtrlCore)CtrlDraw.o
 
 $(OutDir_CtrlCore)CtrlMouse.o: CtrlCore/CtrlMouse.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -26954,16 +25598,9 @@ $(OutDir_CtrlCore)CtrlMouse.o: CtrlCore/CtrlMouse.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -26975,28 +25612,24 @@ $(OutDir_CtrlCore)CtrlMouse.o: CtrlCore/CtrlMouse.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlMouse.cpp -o $(OutDir_CtrlCore)CtrlMouse.o
 
 $(OutDir_CtrlCore)CtrlKbd.o: CtrlCore/CtrlKbd.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27072,16 +25705,9 @@ $(OutDir_CtrlCore)CtrlKbd.o: CtrlCore/CtrlKbd.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27093,28 +25719,24 @@ $(OutDir_CtrlCore)CtrlKbd.o: CtrlCore/CtrlKbd.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlKbd.cpp -o $(OutDir_CtrlCore)CtrlKbd.o
 
 $(OutDir_CtrlCore)CtrlTimer.o: CtrlCore/CtrlTimer.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27190,16 +25812,9 @@ $(OutDir_CtrlCore)CtrlTimer.o: CtrlCore/CtrlTimer.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27211,28 +25826,24 @@ $(OutDir_CtrlCore)CtrlTimer.o: CtrlCore/CtrlTimer.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlTimer.cpp -o $(OutDir_CtrlCore)CtrlTimer.o
 
 $(OutDir_CtrlCore)CtrlClip.o: CtrlCore/CtrlClip.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27308,16 +25919,9 @@ $(OutDir_CtrlCore)CtrlClip.o: CtrlCore/CtrlClip.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27329,28 +25933,24 @@ $(OutDir_CtrlCore)CtrlClip.o: CtrlCore/CtrlClip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlClip.cpp -o $(OutDir_CtrlCore)CtrlClip.o
 
 $(OutDir_CtrlCore)LocalLoop.o: CtrlCore/LocalLoop.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27426,16 +26026,9 @@ $(OutDir_CtrlCore)LocalLoop.o: CtrlCore/LocalLoop.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27447,28 +26040,24 @@ $(OutDir_CtrlCore)LocalLoop.o: CtrlCore/LocalLoop.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/LocalLoop.cpp -o $(OutDir_CtrlCore)LocalLoop.o
 
 $(OutDir_CtrlCore)CtrlCoreInit.o: CtrlCore/CtrlCoreInit.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27545,17 +26134,9 @@ $(OutDir_CtrlCore)CtrlCoreInit.o: CtrlCore/CtrlCoreInit.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/CtrlCore.t \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27567,28 +26148,24 @@ $(OutDir_CtrlCore)CtrlCoreInit.o: CtrlCore/CtrlCoreInit.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CtrlCoreInit.cpp -o $(OutDir_CtrlCore)CtrlCoreInit.o
 
 $(OutDir_CtrlCore)TopWindow.o: CtrlCore/TopWindow.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27664,16 +26241,9 @@ $(OutDir_CtrlCore)TopWindow.o: CtrlCore/TopWindow.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27685,28 +26255,24 @@ $(OutDir_CtrlCore)TopWindow.o: CtrlCore/TopWindow.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/TopWindow.cpp -o $(OutDir_CtrlCore)TopWindow.o
 
 $(OutDir_CtrlCore)DrawWin32.o: CtrlCore/DrawWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27782,16 +26348,9 @@ $(OutDir_CtrlCore)DrawWin32.o: CtrlCore/DrawWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27803,28 +26362,24 @@ $(OutDir_CtrlCore)DrawWin32.o: CtrlCore/DrawWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DrawWin32.cpp -o $(OutDir_CtrlCore)DrawWin32.o
 
 $(OutDir_CtrlCore)DrawOpWin32.o: CtrlCore/DrawOpWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -27900,16 +26455,9 @@ $(OutDir_CtrlCore)DrawOpWin32.o: CtrlCore/DrawOpWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -27921,28 +26469,24 @@ $(OutDir_CtrlCore)DrawOpWin32.o: CtrlCore/DrawOpWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DrawOpWin32.cpp -o $(OutDir_CtrlCore)DrawOpWin32.o
 
 $(OutDir_CtrlCore)DrawTextWin32.o: CtrlCore/DrawTextWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28018,16 +26562,9 @@ $(OutDir_CtrlCore)DrawTextWin32.o: CtrlCore/DrawTextWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28039,28 +26576,24 @@ $(OutDir_CtrlCore)DrawTextWin32.o: CtrlCore/DrawTextWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DrawTextWin32.cpp -o $(OutDir_CtrlCore)DrawTextWin32.o
 
 $(OutDir_CtrlCore)ImageWin32.o: CtrlCore/ImageWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28136,16 +26669,9 @@ $(OutDir_CtrlCore)ImageWin32.o: CtrlCore/ImageWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28157,28 +26683,24 @@ $(OutDir_CtrlCore)ImageWin32.o: CtrlCore/ImageWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/ImageWin32.cpp -o $(OutDir_CtrlCore)ImageWin32.o
 
 $(OutDir_CtrlCore)MetaFile.o: CtrlCore/MetaFile.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28254,16 +26776,9 @@ $(OutDir_CtrlCore)MetaFile.o: CtrlCore/MetaFile.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28275,28 +26790,24 @@ $(OutDir_CtrlCore)MetaFile.o: CtrlCore/MetaFile.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/MetaFile.cpp -o $(OutDir_CtrlCore)MetaFile.o
 
 $(OutDir_CtrlCore)UtilWin32.o: CtrlCore/UtilWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28372,16 +26883,9 @@ $(OutDir_CtrlCore)UtilWin32.o: CtrlCore/UtilWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28393,28 +26897,24 @@ $(OutDir_CtrlCore)UtilWin32.o: CtrlCore/UtilWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/UtilWin32.cpp -o $(OutDir_CtrlCore)UtilWin32.o
 
 $(OutDir_CtrlCore)Win32Ctrl.o: CtrlCore/Win32Ctrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28490,16 +26990,9 @@ $(OutDir_CtrlCore)Win32Ctrl.o: CtrlCore/Win32Ctrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28511,28 +27004,24 @@ $(OutDir_CtrlCore)Win32Ctrl.o: CtrlCore/Win32Ctrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Win32Ctrl.cpp -o $(OutDir_CtrlCore)Win32Ctrl.o
 
 $(OutDir_CtrlCore)Win32Wnd.o: CtrlCore/Win32Wnd.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28609,18 +27098,10 @@ $(OutDir_CtrlCore)Win32Wnd.o: CtrlCore/Win32Wnd.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/MultiMon.dli \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
 	CtrlCore/Win32Msg.i \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28632,28 +27113,24 @@ $(OutDir_CtrlCore)Win32Wnd.o: CtrlCore/Win32Wnd.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Win32Wnd.cpp -o $(OutDir_CtrlCore)Win32Wnd.o
 
 $(OutDir_CtrlCore)Win32Clip.o: CtrlCore/Win32Clip.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28729,16 +27206,9 @@ $(OutDir_CtrlCore)Win32Clip.o: CtrlCore/Win32Clip.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28750,29 +27220,25 @@ $(OutDir_CtrlCore)Win32Clip.o: CtrlCore/Win32Clip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/bmp/bmp.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Win32Clip.cpp -o $(OutDir_CtrlCore)Win32Clip.o
 
 $(OutDir_CtrlCore)Win32DnD.o: CtrlCore/Win32DnD.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28848,16 +27314,9 @@ $(OutDir_CtrlCore)Win32DnD.o: CtrlCore/Win32DnD.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28869,28 +27328,24 @@ $(OutDir_CtrlCore)Win32DnD.o: CtrlCore/Win32DnD.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Win32DnD.cpp -o $(OutDir_CtrlCore)Win32DnD.o
 
 $(OutDir_CtrlCore)Win32Proc.o: CtrlCore/Win32Proc.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -28966,16 +27421,9 @@ $(OutDir_CtrlCore)Win32Proc.o: CtrlCore/Win32Proc.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -28987,28 +27435,24 @@ $(OutDir_CtrlCore)Win32Proc.o: CtrlCore/Win32Proc.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/Win32Proc.cpp -o $(OutDir_CtrlCore)Win32Proc.o
 
 $(OutDir_CtrlCore)TopWin32.o: CtrlCore/TopWin32.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29084,16 +27528,9 @@ $(OutDir_CtrlCore)TopWin32.o: CtrlCore/TopWin32.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29105,28 +27542,24 @@ $(OutDir_CtrlCore)TopWin32.o: CtrlCore/TopWin32.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/TopWin32.cpp -o $(OutDir_CtrlCore)TopWin32.o
 
 $(OutDir_CtrlCore)DHCtrl.o: CtrlCore/DHCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29202,16 +27635,9 @@ $(OutDir_CtrlCore)DHCtrl.o: CtrlCore/DHCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29223,28 +27649,24 @@ $(OutDir_CtrlCore)DHCtrl.o: CtrlCore/DHCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DHCtrl.cpp -o $(OutDir_CtrlCore)DHCtrl.o
 
 $(OutDir_CtrlCore)DrawX11.o: CtrlCore/DrawX11.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29320,16 +27742,9 @@ $(OutDir_CtrlCore)DrawX11.o: CtrlCore/DrawX11.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29341,28 +27756,24 @@ $(OutDir_CtrlCore)DrawX11.o: CtrlCore/DrawX11.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DrawX11.cpp -o $(OutDir_CtrlCore)DrawX11.o
 
 $(OutDir_CtrlCore)DrawOpX11.o: CtrlCore/DrawOpX11.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29438,16 +27849,9 @@ $(OutDir_CtrlCore)DrawOpX11.o: CtrlCore/DrawOpX11.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29459,28 +27863,24 @@ $(OutDir_CtrlCore)DrawOpX11.o: CtrlCore/DrawOpX11.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DrawOpX11.cpp -o $(OutDir_CtrlCore)DrawOpX11.o
 
 $(OutDir_CtrlCore)DrawTextX11.o: CtrlCore/DrawTextX11.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29556,16 +27956,9 @@ $(OutDir_CtrlCore)DrawTextX11.o: CtrlCore/DrawTextX11.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29577,28 +27970,24 @@ $(OutDir_CtrlCore)DrawTextX11.o: CtrlCore/DrawTextX11.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/DrawTextX11.cpp -o $(OutDir_CtrlCore)DrawTextX11.o
 
 $(OutDir_CtrlCore)ImageX11.o: CtrlCore/ImageX11.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29674,16 +28063,9 @@ $(OutDir_CtrlCore)ImageX11.o: CtrlCore/ImageX11.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29695,28 +28077,24 @@ $(OutDir_CtrlCore)ImageX11.o: CtrlCore/ImageX11.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/ImageX11.cpp -o $(OutDir_CtrlCore)ImageX11.o
 
 $(OutDir_CtrlCore)UtilX11.o: CtrlCore/UtilX11.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29792,16 +28170,9 @@ $(OutDir_CtrlCore)UtilX11.o: CtrlCore/UtilX11.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29813,28 +28184,24 @@ $(OutDir_CtrlCore)UtilX11.o: CtrlCore/UtilX11.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/UtilX11.cpp -o $(OutDir_CtrlCore)UtilX11.o
 
 $(OutDir_CtrlCore)X11Ctrl.o: CtrlCore/X11Ctrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -29910,16 +28277,9 @@ $(OutDir_CtrlCore)X11Ctrl.o: CtrlCore/X11Ctrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -29931,28 +28291,24 @@ $(OutDir_CtrlCore)X11Ctrl.o: CtrlCore/X11Ctrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11Ctrl.cpp -o $(OutDir_CtrlCore)X11Ctrl.o
 
 $(OutDir_CtrlCore)X11Wnd.o: CtrlCore/X11Wnd.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30028,17 +28384,10 @@ $(OutDir_CtrlCore)X11Wnd.o: CtrlCore/X11Wnd.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
 	CtrlCore/X11Event.i \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30050,28 +28399,24 @@ $(OutDir_CtrlCore)X11Wnd.o: CtrlCore/X11Wnd.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11Wnd.cpp -o $(OutDir_CtrlCore)X11Wnd.o
 
 $(OutDir_CtrlCore)X11Proc.o: CtrlCore/X11Proc.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30147,16 +28492,9 @@ $(OutDir_CtrlCore)X11Proc.o: CtrlCore/X11Proc.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30168,28 +28506,24 @@ $(OutDir_CtrlCore)X11Proc.o: CtrlCore/X11Proc.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11Proc.cpp -o $(OutDir_CtrlCore)X11Proc.o
 
 $(OutDir_CtrlCore)X11Clip.o: CtrlCore/X11Clip.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30265,16 +28599,9 @@ $(OutDir_CtrlCore)X11Clip.o: CtrlCore/X11Clip.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30286,28 +28613,24 @@ $(OutDir_CtrlCore)X11Clip.o: CtrlCore/X11Clip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11Clip.cpp -o $(OutDir_CtrlCore)X11Clip.o
 
 $(OutDir_CtrlCore)X11DnD.o: CtrlCore/X11DnD.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30383,16 +28706,9 @@ $(OutDir_CtrlCore)X11DnD.o: CtrlCore/X11DnD.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30404,28 +28720,24 @@ $(OutDir_CtrlCore)X11DnD.o: CtrlCore/X11DnD.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11DnD.cpp -o $(OutDir_CtrlCore)X11DnD.o
 
 $(OutDir_CtrlCore)X11Top.o: CtrlCore/X11Top.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30501,16 +28813,9 @@ $(OutDir_CtrlCore)X11Top.o: CtrlCore/X11Top.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30522,28 +28827,24 @@ $(OutDir_CtrlCore)X11Top.o: CtrlCore/X11Top.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11Top.cpp -o $(OutDir_CtrlCore)X11Top.o
 
 $(OutDir_CtrlCore)X11ImgClip.o: CtrlCore/X11ImgClip.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30619,16 +28920,9 @@ $(OutDir_CtrlCore)X11ImgClip.o: CtrlCore/X11ImgClip.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30640,29 +28934,25 @@ $(OutDir_CtrlCore)X11ImgClip.o: CtrlCore/X11ImgClip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/bmp/bmp.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11ImgClip.cpp -o $(OutDir_CtrlCore)X11ImgClip.o
 
 $(OutDir_CtrlCore)X11App.o: CtrlCore/X11App.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30738,16 +29028,9 @@ $(OutDir_CtrlCore)X11App.o: CtrlCore/X11App.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30759,28 +29042,24 @@ $(OutDir_CtrlCore)X11App.o: CtrlCore/X11App.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11App.cpp -o $(OutDir_CtrlCore)X11App.o
 
 $(OutDir_CtrlCore)X11DHCtrl.o: CtrlCore/X11DHCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30856,16 +29135,9 @@ $(OutDir_CtrlCore)X11DHCtrl.o: CtrlCore/X11DHCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30877,28 +29149,24 @@ $(OutDir_CtrlCore)X11DHCtrl.o: CtrlCore/X11DHCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/X11DHCtrl.cpp -o $(OutDir_CtrlCore)X11DHCtrl.o
 
 $(OutDir_CtrlCore)GtkDrawOp.o: CtrlCore/GtkDrawOp.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -30974,16 +29242,9 @@ $(OutDir_CtrlCore)GtkDrawOp.o: CtrlCore/GtkDrawOp.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -30995,28 +29256,26 @@ $(OutDir_CtrlCore)GtkDrawOp.o: CtrlCore/GtkDrawOp.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkDrawOp.cpp -o $(OutDir_CtrlCore)GtkDrawOp.o
 
 $(OutDir_CtrlCore)GtkDrawText.o: CtrlCore/GtkDrawText.cpp \
 	config/ftheader.h \
 	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31092,16 +29351,9 @@ $(OutDir_CtrlCore)GtkDrawText.o: CtrlCore/GtkDrawText.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31113,28 +29365,24 @@ $(OutDir_CtrlCore)GtkDrawText.o: CtrlCore/GtkDrawText.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkDrawText.cpp -o $(OutDir_CtrlCore)GtkDrawText.o
 
 $(OutDir_CtrlCore)GtkDrawImage.o: CtrlCore/GtkDrawImage.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31210,16 +29458,9 @@ $(OutDir_CtrlCore)GtkDrawImage.o: CtrlCore/GtkDrawImage.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31231,28 +29472,24 @@ $(OutDir_CtrlCore)GtkDrawImage.o: CtrlCore/GtkDrawImage.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkDrawImage.cpp -o $(OutDir_CtrlCore)GtkDrawImage.o
 
 $(OutDir_CtrlCore)GdkImage.o: CtrlCore/GdkImage.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31328,16 +29565,9 @@ $(OutDir_CtrlCore)GdkImage.o: CtrlCore/GdkImage.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31349,28 +29579,24 @@ $(OutDir_CtrlCore)GdkImage.o: CtrlCore/GdkImage.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GdkImage.cpp -o $(OutDir_CtrlCore)GdkImage.o
 
 $(OutDir_CtrlCore)GtkUtil.o: CtrlCore/GtkUtil.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31446,16 +29672,9 @@ $(OutDir_CtrlCore)GtkUtil.o: CtrlCore/GtkUtil.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31467,28 +29686,24 @@ $(OutDir_CtrlCore)GtkUtil.o: CtrlCore/GtkUtil.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkUtil.cpp -o $(OutDir_CtrlCore)GtkUtil.o
 
 $(OutDir_CtrlCore)GtkX11Util.o: CtrlCore/GtkX11Util.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31564,16 +29779,9 @@ $(OutDir_CtrlCore)GtkX11Util.o: CtrlCore/GtkX11Util.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31585,28 +29793,24 @@ $(OutDir_CtrlCore)GtkX11Util.o: CtrlCore/GtkX11Util.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkX11Util.cpp -o $(OutDir_CtrlCore)GtkX11Util.o
 
 $(OutDir_CtrlCore)GtkCtrl.o: CtrlCore/GtkCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31682,16 +29886,9 @@ $(OutDir_CtrlCore)GtkCtrl.o: CtrlCore/GtkCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31703,28 +29900,24 @@ $(OutDir_CtrlCore)GtkCtrl.o: CtrlCore/GtkCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkCtrl.cpp -o $(OutDir_CtrlCore)GtkCtrl.o
 
 $(OutDir_CtrlCore)GtkCapture.o: CtrlCore/GtkCapture.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31800,16 +29993,9 @@ $(OutDir_CtrlCore)GtkCapture.o: CtrlCore/GtkCapture.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31821,28 +30007,24 @@ $(OutDir_CtrlCore)GtkCapture.o: CtrlCore/GtkCapture.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkCapture.cpp -o $(OutDir_CtrlCore)GtkCapture.o
 
 $(OutDir_CtrlCore)GtkWnd.o: CtrlCore/GtkWnd.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -31918,16 +30100,9 @@ $(OutDir_CtrlCore)GtkWnd.o: CtrlCore/GtkWnd.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -31939,28 +30114,24 @@ $(OutDir_CtrlCore)GtkWnd.o: CtrlCore/GtkWnd.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkWnd.cpp -o $(OutDir_CtrlCore)GtkWnd.o
 
 $(OutDir_CtrlCore)GtkCreate.o: CtrlCore/GtkCreate.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32036,16 +30207,9 @@ $(OutDir_CtrlCore)GtkCreate.o: CtrlCore/GtkCreate.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32057,28 +30221,24 @@ $(OutDir_CtrlCore)GtkCreate.o: CtrlCore/GtkCreate.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkCreate.cpp -o $(OutDir_CtrlCore)GtkCreate.o
 
 $(OutDir_CtrlCore)GtkEvent.o: CtrlCore/GtkEvent.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32154,16 +30314,9 @@ $(OutDir_CtrlCore)GtkEvent.o: CtrlCore/GtkEvent.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32175,28 +30328,24 @@ $(OutDir_CtrlCore)GtkEvent.o: CtrlCore/GtkEvent.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkEvent.cpp -o $(OutDir_CtrlCore)GtkEvent.o
 
 $(OutDir_CtrlCore)GtkTop.o: CtrlCore/GtkTop.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32272,16 +30421,9 @@ $(OutDir_CtrlCore)GtkTop.o: CtrlCore/GtkTop.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32293,28 +30435,24 @@ $(OutDir_CtrlCore)GtkTop.o: CtrlCore/GtkTop.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkTop.cpp -o $(OutDir_CtrlCore)GtkTop.o
 
 $(OutDir_CtrlCore)GtkClip.o: CtrlCore/GtkClip.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32390,16 +30528,9 @@ $(OutDir_CtrlCore)GtkClip.o: CtrlCore/GtkClip.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32411,29 +30542,25 @@ $(OutDir_CtrlCore)GtkClip.o: CtrlCore/GtkClip.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/bmp/bmp.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkClip.cpp -o $(OutDir_CtrlCore)GtkClip.o
 
 $(OutDir_CtrlCore)GtkDnD.o: CtrlCore/GtkDnD.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32509,16 +30636,9 @@ $(OutDir_CtrlCore)GtkDnD.o: CtrlCore/GtkDnD.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32530,28 +30650,24 @@ $(OutDir_CtrlCore)GtkDnD.o: CtrlCore/GtkDnD.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkDnD.cpp -o $(OutDir_CtrlCore)GtkDnD.o
 
 $(OutDir_CtrlCore)GtkApp.o: CtrlCore/GtkApp.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32627,16 +30743,9 @@ $(OutDir_CtrlCore)GtkApp.o: CtrlCore/GtkApp.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32648,28 +30757,24 @@ $(OutDir_CtrlCore)GtkApp.o: CtrlCore/GtkApp.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkApp.cpp -o $(OutDir_CtrlCore)GtkApp.o
 
 $(OutDir_CtrlCore)CocoCtrl.o: CtrlCore/CocoCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32745,16 +30850,9 @@ $(OutDir_CtrlCore)CocoCtrl.o: CtrlCore/CocoCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32766,28 +30864,24 @@ $(OutDir_CtrlCore)CocoCtrl.o: CtrlCore/CocoCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CocoCtrl.cpp -o $(OutDir_CtrlCore)CocoCtrl.o
 
 $(OutDir_CtrlCore)CocoWnd.o: CtrlCore/CocoWnd.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32863,16 +30957,9 @@ $(OutDir_CtrlCore)CocoWnd.o: CtrlCore/CocoWnd.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -32884,28 +30971,24 @@ $(OutDir_CtrlCore)CocoWnd.o: CtrlCore/CocoWnd.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CocoWnd.cpp -o $(OutDir_CtrlCore)CocoWnd.o
 
 $(OutDir_CtrlCore)CocoTop.o: CtrlCore/CocoTop.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32981,16 +31064,9 @@ $(OutDir_CtrlCore)CocoTop.o: CtrlCore/CocoTop.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -33002,28 +31078,24 @@ $(OutDir_CtrlCore)CocoTop.o: CtrlCore/CocoTop.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CocoTop.cpp -o $(OutDir_CtrlCore)CocoTop.o
 
 $(OutDir_CtrlCore)CocoChSysInit.o: CtrlCore/CocoChSysInit.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -33099,27 +31171,16 @@ $(OutDir_CtrlCore)CocoChSysInit.o: CtrlCore/CocoChSysInit.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -33154,28 +31215,24 @@ $(OutDir_CtrlCore)CocoChSysInit.o: CtrlCore/CocoChSysInit.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/CocoChSysInit.cpp -o $(OutDir_CtrlCore)CocoChSysInit.o
 
 $(OutDir_CtrlCore)ParseRTF.o: CtrlCore/ParseRTF.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -33251,16 +31308,9 @@ $(OutDir_CtrlCore)ParseRTF.o: CtrlCore/ParseRTF.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -33272,28 +31322,24 @@ $(OutDir_CtrlCore)ParseRTF.o: CtrlCore/ParseRTF.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/ParseRTF.cpp -o $(OutDir_CtrlCore)ParseRTF.o
 
 $(OutDir_CtrlCore)EncodeRTF.o: CtrlCore/EncodeRTF.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -33369,16 +31415,9 @@ $(OutDir_CtrlCore)EncodeRTF.o: CtrlCore/EncodeRTF.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -33390,22 +31429,21 @@ $(OutDir_CtrlCore)EncodeRTF.o: CtrlCore/EncodeRTF.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/EncodeRTF.cpp -o $(OutDir_CtrlCore)EncodeRTF.o
 
 $(OutDir_CtrlCore)CtrlCore.a: \
@@ -34474,7 +32512,6 @@ $(OutDir_Draw)FontWin32.o: Draw/FontWin32.cpp \
 $(OutDir_Draw)FontFc.o: Draw/FontFc.cpp \
 	config/ftheader.h \
 	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -35274,7 +33311,6 @@ $(OutDir_Draw)Display.o: Draw/Display.cpp \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
 	Draw/Draw.h \
-	Draw/DrawImg.iml \
 	Draw/FontInt.h \
 	Draw/Image.h \
 	Draw/ImageOp.h \
@@ -37359,7 +35395,7 @@ $(OutDir_Draw)Cham.o: Draw/Cham.cpp \
 	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/Cham.cpp -o $(OutDir_Draw)Cham.o
 
-$(OutDir_Draw)SSettings.o: Draw/SSettings.cpp \
+$(OutDir_Draw)SColors.o: Draw/SColors.cpp \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -37447,7 +35483,7 @@ $(OutDir_Draw)SSettings.o: Draw/SSettings.cpp \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	uppconfig.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SSettings.cpp -o $(OutDir_Draw)SSettings.o
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/SColors.cpp -o $(OutDir_Draw)SColors.o
 
 $(OutDir_Draw)Draw.a: \
 	$(OutDir_Draw)Font.o \
@@ -37485,7 +35521,7 @@ $(OutDir_Draw)Draw.a: \
 	$(OutDir_Draw)SDraw.o \
 	$(OutDir_Draw)SImageDraw.o \
 	$(OutDir_Draw)Cham.o \
-	$(OutDir_Draw)SSettings.o
+	$(OutDir_Draw)SColors.o
 	$(AR) $(OutDir_Draw)Draw.a \
 		$(OutDir_Draw)Font.o \
 		$(OutDir_Draw)FontCR.o \
@@ -37522,7 +35558,7 @@ $(OutDir_Draw)Draw.a: \
 		$(OutDir_Draw)SDraw.o \
 		$(OutDir_Draw)SImageDraw.o \
 		$(OutDir_Draw)Cham.o \
-		$(OutDir_Draw)SSettings.o
+		$(OutDir_Draw)SColors.o
 
 $(OutDir_plugin_bmp):
 	mkdir -p $(OutDir_plugin_bmp)
@@ -37997,7 +36033,6 @@ $(OutDir_RichText)Object.o: RichText/Object.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38101,7 +36136,6 @@ $(OutDir_RichText)RichImage.o: RichText/RichImage.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38199,7 +36233,6 @@ $(OutDir_RichText)ParaData.o: RichText/ParaData.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38297,7 +36330,6 @@ $(OutDir_RichText)ParaType.o: RichText/ParaType.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38396,7 +36428,6 @@ $(OutDir_RichText)ParaPaint.o: RichText/ParaPaint.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38494,7 +36525,6 @@ $(OutDir_RichText)HeaderFooter.o: RichText/HeaderFooter.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38592,7 +36622,6 @@ $(OutDir_RichText)TxtData.o: RichText/TxtData.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38690,7 +36719,6 @@ $(OutDir_RichText)TxtPaint.o: RichText/TxtPaint.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38788,7 +36816,6 @@ $(OutDir_RichText)TxtOp.o: RichText/TxtOp.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38886,7 +36913,6 @@ $(OutDir_RichText)Format.o: RichText/Format.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -38984,7 +37010,6 @@ $(OutDir_RichText)TableCell.o: RichText/TableCell.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39082,7 +37107,6 @@ $(OutDir_RichText)TableLayout.o: RichText/TableLayout.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39180,7 +37204,6 @@ $(OutDir_RichText)TablePaint.o: RichText/TablePaint.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39278,7 +37301,6 @@ $(OutDir_RichText)TableData.o: RichText/TableData.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39376,7 +37398,6 @@ $(OutDir_RichText)TextPaint.o: RichText/TextPaint.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39474,7 +37495,6 @@ $(OutDir_RichText)TextStyle.o: RichText/TextStyle.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39572,7 +37592,6 @@ $(OutDir_RichText)TextData.o: RichText/TextData.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39670,7 +37689,6 @@ $(OutDir_RichText)TextTable.o: RichText/TextTable.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39768,7 +37786,6 @@ $(OutDir_RichText)EncodeQtf.o: RichText/EncodeQtf.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39866,7 +37883,6 @@ $(OutDir_RichText)ParseQtf.o: RichText/ParseQtf.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -39964,7 +37980,6 @@ $(OutDir_RichText)EncodeHTML.o: RichText/EncodeHTML.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -40062,7 +38077,6 @@ $(OutDir_RichText)Util.o: RichText/Util.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -46299,7 +44313,6 @@ $(OutDir_Core)t.o: Core/t.cpp \
 	Core/config.h \
 	Core/Convert.h \
 	Core/Core.h \
-	Core/Core.t \
 	Core/CoSort.h \
 	Core/CoWork.h \
 	Core/Defs.h \
@@ -49443,6 +47456,392 @@ $(OutDir_ScatterDraw)ScatterDraw.o: ScatterDraw/ScatterDraw.cpp \
 	Painter/Painter.h \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
+	plugin/Eigen/Eigen.h \
+	plugin/Eigen/Eigen/Cholesky \
+	plugin/Eigen/Eigen/Core \
+	plugin/Eigen/Eigen/Dense \
+	plugin/Eigen/Eigen/Eigen \
+	plugin/Eigen/Eigen/Eigenvalues \
+	plugin/Eigen/Eigen/Geometry \
+	plugin/Eigen/Eigen/Householder \
+	plugin/Eigen/Eigen/IterativeLinearSolvers \
+	plugin/Eigen/Eigen/Jacobi \
+	plugin/Eigen/Eigen/LU \
+	plugin/Eigen/Eigen/OrderingMethods \
+	plugin/Eigen/Eigen/QR \
+	plugin/Eigen/Eigen/Sparse \
+	plugin/Eigen/Eigen/SparseCholesky \
+	plugin/Eigen/Eigen/SparseCore \
+	plugin/Eigen/Eigen/SparseLU \
+	plugin/Eigen/Eigen/SparseQR \
+	plugin/Eigen/Eigen/src/Cholesky/LDLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Half.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMathHalf.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/ConjHelper.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/Settings.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/Array.h \
+	plugin/Eigen/Eigen/src/Core/ArrayBase.h \
+	plugin/Eigen/Eigen/src/Core/ArrayWrapper.h \
+	plugin/Eigen/Eigen/src/Core/Assign.h \
+	plugin/Eigen/Eigen/src/Core/Assign_MKL.h \
+	plugin/Eigen/Eigen/src/Core/AssignEvaluator.h \
+	plugin/Eigen/Eigen/src/Core/BandMatrix.h \
+	plugin/Eigen/Eigen/src/Core/Block.h \
+	plugin/Eigen/Eigen/src/Core/BooleanRedux.h \
+	plugin/Eigen/Eigen/src/Core/CommaInitializer.h \
+	plugin/Eigen/Eigen/src/Core/ConditionEstimator.h \
+	plugin/Eigen/Eigen/src/Core/CoreEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/CoreIterators.h \
+	plugin/Eigen/Eigen/src/Core/CwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseNullaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseTernaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryView.h \
+	plugin/Eigen/Eigen/src/Core/DenseBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseCoeffsBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseStorage.h \
+	plugin/Eigen/Eigen/src/Core/Diagonal.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalMatrix.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalProduct.h \
+	plugin/Eigen/Eigen/src/Core/Dot.h \
+	plugin/Eigen/Eigen/src/Core/EigenBase.h \
+	plugin/Eigen/Eigen/src/Core/functors/AssignmentFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/BinaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/NullaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/StlFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/TernaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/UnaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/Fuzzy.h \
+	plugin/Eigen/Eigen/src/Core/GeneralProduct.h \
+	plugin/Eigen/Eigen/src/Core/GenericPacketMath.h \
+	plugin/Eigen/Eigen/src/Core/GlobalFunctions.h \
+	plugin/Eigen/Eigen/src/Core/Inverse.h \
+	plugin/Eigen/Eigen/src/Core/IO.h \
+	plugin/Eigen/Eigen/src/Core/Map.h \
+	plugin/Eigen/Eigen/src/Core/MapBase.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctionsImpl.h \
+	plugin/Eigen/Eigen/src/Core/Matrix.h \
+	plugin/Eigen/Eigen/src/Core/MatrixBase.h \
+	plugin/Eigen/Eigen/src/Core/NestByValue.h \
+	plugin/Eigen/Eigen/src/Core/NoAlias.h \
+	plugin/Eigen/Eigen/src/Core/NumTraits.h \
+	plugin/Eigen/Eigen/src/Core/PermutationMatrix.h \
+	plugin/Eigen/Eigen/src/Core/PlainObjectBase.h \
+	plugin/Eigen/Eigen/src/Core/Product.h \
+	plugin/Eigen/Eigen/src/Core/ProductEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/Parallelizer.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointProduct.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointRank2Update.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverVector.h \
+	plugin/Eigen/Eigen/src/Core/Random.h \
+	plugin/Eigen/Eigen/src/Core/Redux.h \
+	plugin/Eigen/Eigen/src/Core/Ref.h \
+	plugin/Eigen/Eigen/src/Core/Replicate.h \
+	plugin/Eigen/Eigen/src/Core/ReturnByValue.h \
+	plugin/Eigen/Eigen/src/Core/Reverse.h \
+	plugin/Eigen/Eigen/src/Core/Select.h \
+	plugin/Eigen/Eigen/src/Core/SelfAdjointView.h \
+	plugin/Eigen/Eigen/src/Core/SelfCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/Solve.h \
+	plugin/Eigen/Eigen/src/Core/SolverBase.h \
+	plugin/Eigen/Eigen/src/Core/SolveTriangular.h \
+	plugin/Eigen/Eigen/src/Core/StableNorm.h \
+	plugin/Eigen/Eigen/src/Core/Stride.h \
+	plugin/Eigen/Eigen/src/Core/Swap.h \
+	plugin/Eigen/Eigen/src/Core/Transpose.h \
+	plugin/Eigen/Eigen/src/Core/Transpositions.h \
+	plugin/Eigen/Eigen/src/Core/TriangularMatrix.h \
+	plugin/Eigen/Eigen/src/Core/util/BlasUtil.h \
+	plugin/Eigen/Eigen/src/Core/util/Constants.h \
+	plugin/Eigen/Eigen/src/Core/util/DisableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/ForwardDeclarations.h \
+	plugin/Eigen/Eigen/src/Core/util/Macros.h \
+	plugin/Eigen/Eigen/src/Core/util/Memory.h \
+	plugin/Eigen/Eigen/src/Core/util/Meta.h \
+	plugin/Eigen/Eigen/src/Core/util/MKL_support.h \
+	plugin/Eigen/Eigen/src/Core/util/NonMPL2.h \
+	plugin/Eigen/Eigen/src/Core/util/ReenableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/StaticAssert.h \
+	plugin/Eigen/Eigen/src/Core/util/XprHelper.h \
+	plugin/Eigen/Eigen/src/Core/VectorBlock.h \
+	plugin/Eigen/Eigen/src/Core/VectorwiseOp.h \
+	plugin/Eigen/Eigen/src/Core/Visitor.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/EigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealQZ.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/Tridiagonalization.h \
+	plugin/Eigen/Eigen/src/Geometry/AlignedBox.h \
+	plugin/Eigen/Eigen/src/Geometry/AngleAxis.h \
+	plugin/Eigen/Eigen/src/Geometry/arch/Geometry_SSE.h \
+	plugin/Eigen/Eigen/src/Geometry/EulerAngles.h \
+	plugin/Eigen/Eigen/src/Geometry/Homogeneous.h \
+	plugin/Eigen/Eigen/src/Geometry/Hyperplane.h \
+	plugin/Eigen/Eigen/src/Geometry/OrthoMethods.h \
+	plugin/Eigen/Eigen/src/Geometry/ParametrizedLine.h \
+	plugin/Eigen/Eigen/src/Geometry/Quaternion.h \
+	plugin/Eigen/Eigen/src/Geometry/Rotation2D.h \
+	plugin/Eigen/Eigen/src/Geometry/RotationBase.h \
+	plugin/Eigen/Eigen/src/Geometry/Scaling.h \
+	plugin/Eigen/Eigen/src/Geometry/Transform.h \
+	plugin/Eigen/Eigen/src/Geometry/Translation.h \
+	plugin/Eigen/Eigen/src/Geometry/Umeyama.h \
+	plugin/Eigen/Eigen/src/Householder/BlockHouseholder.h \
+	plugin/Eigen/Eigen/src/Householder/Householder.h \
+	plugin/Eigen/Eigen/src/Householder/HouseholderSequence.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BasicPreconditioners.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BiCGSTAB.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/ConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteCholesky.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteLUT.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IterativeSolverBase.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/SolveWithGuess.h \
+	plugin/Eigen/Eigen/src/Jacobi/Jacobi.h \
+	plugin/Eigen/Eigen/src/LU/arch/Inverse_SSE.h \
+	plugin/Eigen/Eigen/src/LU/Determinant.h \
+	plugin/Eigen/Eigen/src/LU/FullPivLU.h \
+	plugin/Eigen/Eigen/src/LU/InverseImpl.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h \
+	plugin/Eigen/Eigen/src/misc/blas.h \
+	plugin/Eigen/Eigen/src/misc/Image.h \
+	plugin/Eigen/Eigen/src/misc/Kernel.h \
+	plugin/Eigen/Eigen/src/misc/lapacke.h \
+	plugin/Eigen/Eigen/src/misc/lapacke_mangling.h \
+	plugin/Eigen/Eigen/src/misc/RealSvd2x2.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Amd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Eigen_Colamd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Ordering.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/BlockMethods.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+	plugin/Eigen/Eigen/src/QR/FullPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky_impl.h \
+	plugin/Eigen/Eigen/src/SparseCore/AmbiVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/CompressedStorage.h \
+	plugin/Eigen/Eigen/src/SparseCore/ConservativeSparseSparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/MappedSparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseAssign.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseBlock.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseColEtree.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCompressedBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDenseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDiagonalProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDot.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseFuzzy.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMap.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrixBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparsePermutation.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRedux.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRef.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSelfAdjointView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSolverBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSparseProductWithPruning.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTranspose.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTriangularView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseUtil.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseView.h \
+	plugin/Eigen/Eigen/src/SparseCore/TriangularSolver.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_copy_to_ucol.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_gemm_kernel.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_heap_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_kernel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Memory.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pivotL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pruneL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Structs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_SupernodalMatrix.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Utils.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLUImpl.h \
+	plugin/Eigen/Eigen/src/SparseQR/SparseQR.h \
+	plugin/Eigen/Eigen/src/SVD/BDCSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
+	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
+	plugin/Eigen/Eigen/SVD \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclConvertToDeviceExpression.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExprConstructor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractAccessor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclLeafCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclPlaceHolderExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclRun.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclTuple.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/EventCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/NonBlockingThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/RunQueue.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/SimpleThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadEnvironment.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadLocal.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadPoolInterface.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadYield.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateCXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/Tensor \
+	plugin/Eigen/unsupported/Eigen/CXX11/ThreadPool \
+	plugin/Eigen/unsupported/Eigen/FFT \
+	plugin/Eigen/unsupported/Eigen/NonLinearOptimization \
+	plugin/Eigen/unsupported/Eigen/NumericalDiff \
+	plugin/Eigen/unsupported/Eigen/SpecialFunctions \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_fftw_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_kissfft_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/chkder.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/covar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/dogleg.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/lmpar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1updt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h \
+	plugin/Eigen/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/DataSource.h \
@@ -49824,7 +48223,6 @@ $(OutDir_ScatterDraw)DataSource.o: ScatterDraw/DataSource.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -50315,7 +48713,6 @@ $(OutDir_ScatterDraw)Equation.o: ScatterDraw/Equation.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -50528,6 +48925,392 @@ $(OutDir_ScatterDraw)DrawingFunctions.o: ScatterDraw/DrawingFunctions.cpp \
 	Painter/Painter.h \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
+	plugin/Eigen/Eigen.h \
+	plugin/Eigen/Eigen/Cholesky \
+	plugin/Eigen/Eigen/Core \
+	plugin/Eigen/Eigen/Dense \
+	plugin/Eigen/Eigen/Eigen \
+	plugin/Eigen/Eigen/Eigenvalues \
+	plugin/Eigen/Eigen/Geometry \
+	plugin/Eigen/Eigen/Householder \
+	plugin/Eigen/Eigen/IterativeLinearSolvers \
+	plugin/Eigen/Eigen/Jacobi \
+	plugin/Eigen/Eigen/LU \
+	plugin/Eigen/Eigen/OrderingMethods \
+	plugin/Eigen/Eigen/QR \
+	plugin/Eigen/Eigen/Sparse \
+	plugin/Eigen/Eigen/SparseCholesky \
+	plugin/Eigen/Eigen/SparseCore \
+	plugin/Eigen/Eigen/SparseLU \
+	plugin/Eigen/Eigen/SparseQR \
+	plugin/Eigen/Eigen/src/Cholesky/LDLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Half.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMathHalf.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/ConjHelper.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/Settings.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/Array.h \
+	plugin/Eigen/Eigen/src/Core/ArrayBase.h \
+	plugin/Eigen/Eigen/src/Core/ArrayWrapper.h \
+	plugin/Eigen/Eigen/src/Core/Assign.h \
+	plugin/Eigen/Eigen/src/Core/Assign_MKL.h \
+	plugin/Eigen/Eigen/src/Core/AssignEvaluator.h \
+	plugin/Eigen/Eigen/src/Core/BandMatrix.h \
+	plugin/Eigen/Eigen/src/Core/Block.h \
+	plugin/Eigen/Eigen/src/Core/BooleanRedux.h \
+	plugin/Eigen/Eigen/src/Core/CommaInitializer.h \
+	plugin/Eigen/Eigen/src/Core/ConditionEstimator.h \
+	plugin/Eigen/Eigen/src/Core/CoreEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/CoreIterators.h \
+	plugin/Eigen/Eigen/src/Core/CwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseNullaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseTernaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryView.h \
+	plugin/Eigen/Eigen/src/Core/DenseBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseCoeffsBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseStorage.h \
+	plugin/Eigen/Eigen/src/Core/Diagonal.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalMatrix.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalProduct.h \
+	plugin/Eigen/Eigen/src/Core/Dot.h \
+	plugin/Eigen/Eigen/src/Core/EigenBase.h \
+	plugin/Eigen/Eigen/src/Core/functors/AssignmentFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/BinaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/NullaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/StlFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/TernaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/UnaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/Fuzzy.h \
+	plugin/Eigen/Eigen/src/Core/GeneralProduct.h \
+	plugin/Eigen/Eigen/src/Core/GenericPacketMath.h \
+	plugin/Eigen/Eigen/src/Core/GlobalFunctions.h \
+	plugin/Eigen/Eigen/src/Core/Inverse.h \
+	plugin/Eigen/Eigen/src/Core/IO.h \
+	plugin/Eigen/Eigen/src/Core/Map.h \
+	plugin/Eigen/Eigen/src/Core/MapBase.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctionsImpl.h \
+	plugin/Eigen/Eigen/src/Core/Matrix.h \
+	plugin/Eigen/Eigen/src/Core/MatrixBase.h \
+	plugin/Eigen/Eigen/src/Core/NestByValue.h \
+	plugin/Eigen/Eigen/src/Core/NoAlias.h \
+	plugin/Eigen/Eigen/src/Core/NumTraits.h \
+	plugin/Eigen/Eigen/src/Core/PermutationMatrix.h \
+	plugin/Eigen/Eigen/src/Core/PlainObjectBase.h \
+	plugin/Eigen/Eigen/src/Core/Product.h \
+	plugin/Eigen/Eigen/src/Core/ProductEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/Parallelizer.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointProduct.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointRank2Update.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverVector.h \
+	plugin/Eigen/Eigen/src/Core/Random.h \
+	plugin/Eigen/Eigen/src/Core/Redux.h \
+	plugin/Eigen/Eigen/src/Core/Ref.h \
+	plugin/Eigen/Eigen/src/Core/Replicate.h \
+	plugin/Eigen/Eigen/src/Core/ReturnByValue.h \
+	plugin/Eigen/Eigen/src/Core/Reverse.h \
+	plugin/Eigen/Eigen/src/Core/Select.h \
+	plugin/Eigen/Eigen/src/Core/SelfAdjointView.h \
+	plugin/Eigen/Eigen/src/Core/SelfCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/Solve.h \
+	plugin/Eigen/Eigen/src/Core/SolverBase.h \
+	plugin/Eigen/Eigen/src/Core/SolveTriangular.h \
+	plugin/Eigen/Eigen/src/Core/StableNorm.h \
+	plugin/Eigen/Eigen/src/Core/Stride.h \
+	plugin/Eigen/Eigen/src/Core/Swap.h \
+	plugin/Eigen/Eigen/src/Core/Transpose.h \
+	plugin/Eigen/Eigen/src/Core/Transpositions.h \
+	plugin/Eigen/Eigen/src/Core/TriangularMatrix.h \
+	plugin/Eigen/Eigen/src/Core/util/BlasUtil.h \
+	plugin/Eigen/Eigen/src/Core/util/Constants.h \
+	plugin/Eigen/Eigen/src/Core/util/DisableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/ForwardDeclarations.h \
+	plugin/Eigen/Eigen/src/Core/util/Macros.h \
+	plugin/Eigen/Eigen/src/Core/util/Memory.h \
+	plugin/Eigen/Eigen/src/Core/util/Meta.h \
+	plugin/Eigen/Eigen/src/Core/util/MKL_support.h \
+	plugin/Eigen/Eigen/src/Core/util/NonMPL2.h \
+	plugin/Eigen/Eigen/src/Core/util/ReenableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/StaticAssert.h \
+	plugin/Eigen/Eigen/src/Core/util/XprHelper.h \
+	plugin/Eigen/Eigen/src/Core/VectorBlock.h \
+	plugin/Eigen/Eigen/src/Core/VectorwiseOp.h \
+	plugin/Eigen/Eigen/src/Core/Visitor.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/EigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealQZ.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/Tridiagonalization.h \
+	plugin/Eigen/Eigen/src/Geometry/AlignedBox.h \
+	plugin/Eigen/Eigen/src/Geometry/AngleAxis.h \
+	plugin/Eigen/Eigen/src/Geometry/arch/Geometry_SSE.h \
+	plugin/Eigen/Eigen/src/Geometry/EulerAngles.h \
+	plugin/Eigen/Eigen/src/Geometry/Homogeneous.h \
+	plugin/Eigen/Eigen/src/Geometry/Hyperplane.h \
+	plugin/Eigen/Eigen/src/Geometry/OrthoMethods.h \
+	plugin/Eigen/Eigen/src/Geometry/ParametrizedLine.h \
+	plugin/Eigen/Eigen/src/Geometry/Quaternion.h \
+	plugin/Eigen/Eigen/src/Geometry/Rotation2D.h \
+	plugin/Eigen/Eigen/src/Geometry/RotationBase.h \
+	plugin/Eigen/Eigen/src/Geometry/Scaling.h \
+	plugin/Eigen/Eigen/src/Geometry/Transform.h \
+	plugin/Eigen/Eigen/src/Geometry/Translation.h \
+	plugin/Eigen/Eigen/src/Geometry/Umeyama.h \
+	plugin/Eigen/Eigen/src/Householder/BlockHouseholder.h \
+	plugin/Eigen/Eigen/src/Householder/Householder.h \
+	plugin/Eigen/Eigen/src/Householder/HouseholderSequence.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BasicPreconditioners.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BiCGSTAB.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/ConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteCholesky.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteLUT.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IterativeSolverBase.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/SolveWithGuess.h \
+	plugin/Eigen/Eigen/src/Jacobi/Jacobi.h \
+	plugin/Eigen/Eigen/src/LU/arch/Inverse_SSE.h \
+	plugin/Eigen/Eigen/src/LU/Determinant.h \
+	plugin/Eigen/Eigen/src/LU/FullPivLU.h \
+	plugin/Eigen/Eigen/src/LU/InverseImpl.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h \
+	plugin/Eigen/Eigen/src/misc/blas.h \
+	plugin/Eigen/Eigen/src/misc/Image.h \
+	plugin/Eigen/Eigen/src/misc/Kernel.h \
+	plugin/Eigen/Eigen/src/misc/lapacke.h \
+	plugin/Eigen/Eigen/src/misc/lapacke_mangling.h \
+	plugin/Eigen/Eigen/src/misc/RealSvd2x2.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Amd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Eigen_Colamd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Ordering.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/BlockMethods.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+	plugin/Eigen/Eigen/src/QR/FullPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky_impl.h \
+	plugin/Eigen/Eigen/src/SparseCore/AmbiVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/CompressedStorage.h \
+	plugin/Eigen/Eigen/src/SparseCore/ConservativeSparseSparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/MappedSparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseAssign.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseBlock.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseColEtree.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCompressedBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDenseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDiagonalProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDot.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseFuzzy.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMap.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrixBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparsePermutation.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRedux.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRef.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSelfAdjointView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSolverBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSparseProductWithPruning.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTranspose.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTriangularView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseUtil.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseView.h \
+	plugin/Eigen/Eigen/src/SparseCore/TriangularSolver.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_copy_to_ucol.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_gemm_kernel.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_heap_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_kernel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Memory.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pivotL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pruneL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Structs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_SupernodalMatrix.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Utils.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLUImpl.h \
+	plugin/Eigen/Eigen/src/SparseQR/SparseQR.h \
+	plugin/Eigen/Eigen/src/SVD/BDCSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
+	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
+	plugin/Eigen/Eigen/SVD \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclConvertToDeviceExpression.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExprConstructor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractAccessor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclLeafCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclPlaceHolderExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclRun.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclTuple.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/EventCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/NonBlockingThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/RunQueue.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/SimpleThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadEnvironment.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadLocal.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadPoolInterface.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadYield.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateCXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/Tensor \
+	plugin/Eigen/unsupported/Eigen/CXX11/ThreadPool \
+	plugin/Eigen/unsupported/Eigen/FFT \
+	plugin/Eigen/unsupported/Eigen/NonLinearOptimization \
+	plugin/Eigen/unsupported/Eigen/NumericalDiff \
+	plugin/Eigen/unsupported/Eigen/SpecialFunctions \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_fftw_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_kissfft_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/chkder.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/covar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/dogleg.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/lmpar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1updt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h \
+	plugin/Eigen/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/DataSource.h \
@@ -50894,7 +49677,6 @@ $(OutDir_ScatterDraw)Histogram.o: ScatterDraw/Histogram.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -51101,6 +49883,392 @@ $(OutDir_ScatterDraw)Legend.o: ScatterDraw/Legend.cpp \
 	Painter/Painter.h \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
+	plugin/Eigen/Eigen.h \
+	plugin/Eigen/Eigen/Cholesky \
+	plugin/Eigen/Eigen/Core \
+	plugin/Eigen/Eigen/Dense \
+	plugin/Eigen/Eigen/Eigen \
+	plugin/Eigen/Eigen/Eigenvalues \
+	plugin/Eigen/Eigen/Geometry \
+	plugin/Eigen/Eigen/Householder \
+	plugin/Eigen/Eigen/IterativeLinearSolvers \
+	plugin/Eigen/Eigen/Jacobi \
+	plugin/Eigen/Eigen/LU \
+	plugin/Eigen/Eigen/OrderingMethods \
+	plugin/Eigen/Eigen/QR \
+	plugin/Eigen/Eigen/Sparse \
+	plugin/Eigen/Eigen/SparseCholesky \
+	plugin/Eigen/Eigen/SparseCore \
+	plugin/Eigen/Eigen/SparseLU \
+	plugin/Eigen/Eigen/SparseQR \
+	plugin/Eigen/Eigen/src/Cholesky/LDLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Half.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMathHalf.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/ConjHelper.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/Settings.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/Array.h \
+	plugin/Eigen/Eigen/src/Core/ArrayBase.h \
+	plugin/Eigen/Eigen/src/Core/ArrayWrapper.h \
+	plugin/Eigen/Eigen/src/Core/Assign.h \
+	plugin/Eigen/Eigen/src/Core/Assign_MKL.h \
+	plugin/Eigen/Eigen/src/Core/AssignEvaluator.h \
+	plugin/Eigen/Eigen/src/Core/BandMatrix.h \
+	plugin/Eigen/Eigen/src/Core/Block.h \
+	plugin/Eigen/Eigen/src/Core/BooleanRedux.h \
+	plugin/Eigen/Eigen/src/Core/CommaInitializer.h \
+	plugin/Eigen/Eigen/src/Core/ConditionEstimator.h \
+	plugin/Eigen/Eigen/src/Core/CoreEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/CoreIterators.h \
+	plugin/Eigen/Eigen/src/Core/CwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseNullaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseTernaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryView.h \
+	plugin/Eigen/Eigen/src/Core/DenseBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseCoeffsBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseStorage.h \
+	plugin/Eigen/Eigen/src/Core/Diagonal.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalMatrix.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalProduct.h \
+	plugin/Eigen/Eigen/src/Core/Dot.h \
+	plugin/Eigen/Eigen/src/Core/EigenBase.h \
+	plugin/Eigen/Eigen/src/Core/functors/AssignmentFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/BinaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/NullaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/StlFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/TernaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/UnaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/Fuzzy.h \
+	plugin/Eigen/Eigen/src/Core/GeneralProduct.h \
+	plugin/Eigen/Eigen/src/Core/GenericPacketMath.h \
+	plugin/Eigen/Eigen/src/Core/GlobalFunctions.h \
+	plugin/Eigen/Eigen/src/Core/Inverse.h \
+	plugin/Eigen/Eigen/src/Core/IO.h \
+	plugin/Eigen/Eigen/src/Core/Map.h \
+	plugin/Eigen/Eigen/src/Core/MapBase.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctionsImpl.h \
+	plugin/Eigen/Eigen/src/Core/Matrix.h \
+	plugin/Eigen/Eigen/src/Core/MatrixBase.h \
+	plugin/Eigen/Eigen/src/Core/NestByValue.h \
+	plugin/Eigen/Eigen/src/Core/NoAlias.h \
+	plugin/Eigen/Eigen/src/Core/NumTraits.h \
+	plugin/Eigen/Eigen/src/Core/PermutationMatrix.h \
+	plugin/Eigen/Eigen/src/Core/PlainObjectBase.h \
+	plugin/Eigen/Eigen/src/Core/Product.h \
+	plugin/Eigen/Eigen/src/Core/ProductEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/Parallelizer.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointProduct.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointRank2Update.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverVector.h \
+	plugin/Eigen/Eigen/src/Core/Random.h \
+	plugin/Eigen/Eigen/src/Core/Redux.h \
+	plugin/Eigen/Eigen/src/Core/Ref.h \
+	plugin/Eigen/Eigen/src/Core/Replicate.h \
+	plugin/Eigen/Eigen/src/Core/ReturnByValue.h \
+	plugin/Eigen/Eigen/src/Core/Reverse.h \
+	plugin/Eigen/Eigen/src/Core/Select.h \
+	plugin/Eigen/Eigen/src/Core/SelfAdjointView.h \
+	plugin/Eigen/Eigen/src/Core/SelfCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/Solve.h \
+	plugin/Eigen/Eigen/src/Core/SolverBase.h \
+	plugin/Eigen/Eigen/src/Core/SolveTriangular.h \
+	plugin/Eigen/Eigen/src/Core/StableNorm.h \
+	plugin/Eigen/Eigen/src/Core/Stride.h \
+	plugin/Eigen/Eigen/src/Core/Swap.h \
+	plugin/Eigen/Eigen/src/Core/Transpose.h \
+	plugin/Eigen/Eigen/src/Core/Transpositions.h \
+	plugin/Eigen/Eigen/src/Core/TriangularMatrix.h \
+	plugin/Eigen/Eigen/src/Core/util/BlasUtil.h \
+	plugin/Eigen/Eigen/src/Core/util/Constants.h \
+	plugin/Eigen/Eigen/src/Core/util/DisableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/ForwardDeclarations.h \
+	plugin/Eigen/Eigen/src/Core/util/Macros.h \
+	plugin/Eigen/Eigen/src/Core/util/Memory.h \
+	plugin/Eigen/Eigen/src/Core/util/Meta.h \
+	plugin/Eigen/Eigen/src/Core/util/MKL_support.h \
+	plugin/Eigen/Eigen/src/Core/util/NonMPL2.h \
+	plugin/Eigen/Eigen/src/Core/util/ReenableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/StaticAssert.h \
+	plugin/Eigen/Eigen/src/Core/util/XprHelper.h \
+	plugin/Eigen/Eigen/src/Core/VectorBlock.h \
+	plugin/Eigen/Eigen/src/Core/VectorwiseOp.h \
+	plugin/Eigen/Eigen/src/Core/Visitor.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/EigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealQZ.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/Tridiagonalization.h \
+	plugin/Eigen/Eigen/src/Geometry/AlignedBox.h \
+	plugin/Eigen/Eigen/src/Geometry/AngleAxis.h \
+	plugin/Eigen/Eigen/src/Geometry/arch/Geometry_SSE.h \
+	plugin/Eigen/Eigen/src/Geometry/EulerAngles.h \
+	plugin/Eigen/Eigen/src/Geometry/Homogeneous.h \
+	plugin/Eigen/Eigen/src/Geometry/Hyperplane.h \
+	plugin/Eigen/Eigen/src/Geometry/OrthoMethods.h \
+	plugin/Eigen/Eigen/src/Geometry/ParametrizedLine.h \
+	plugin/Eigen/Eigen/src/Geometry/Quaternion.h \
+	plugin/Eigen/Eigen/src/Geometry/Rotation2D.h \
+	plugin/Eigen/Eigen/src/Geometry/RotationBase.h \
+	plugin/Eigen/Eigen/src/Geometry/Scaling.h \
+	plugin/Eigen/Eigen/src/Geometry/Transform.h \
+	plugin/Eigen/Eigen/src/Geometry/Translation.h \
+	plugin/Eigen/Eigen/src/Geometry/Umeyama.h \
+	plugin/Eigen/Eigen/src/Householder/BlockHouseholder.h \
+	plugin/Eigen/Eigen/src/Householder/Householder.h \
+	plugin/Eigen/Eigen/src/Householder/HouseholderSequence.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BasicPreconditioners.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BiCGSTAB.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/ConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteCholesky.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteLUT.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IterativeSolverBase.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/SolveWithGuess.h \
+	plugin/Eigen/Eigen/src/Jacobi/Jacobi.h \
+	plugin/Eigen/Eigen/src/LU/arch/Inverse_SSE.h \
+	plugin/Eigen/Eigen/src/LU/Determinant.h \
+	plugin/Eigen/Eigen/src/LU/FullPivLU.h \
+	plugin/Eigen/Eigen/src/LU/InverseImpl.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h \
+	plugin/Eigen/Eigen/src/misc/blas.h \
+	plugin/Eigen/Eigen/src/misc/Image.h \
+	plugin/Eigen/Eigen/src/misc/Kernel.h \
+	plugin/Eigen/Eigen/src/misc/lapacke.h \
+	plugin/Eigen/Eigen/src/misc/lapacke_mangling.h \
+	plugin/Eigen/Eigen/src/misc/RealSvd2x2.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Amd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Eigen_Colamd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Ordering.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/BlockMethods.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+	plugin/Eigen/Eigen/src/QR/FullPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky_impl.h \
+	plugin/Eigen/Eigen/src/SparseCore/AmbiVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/CompressedStorage.h \
+	plugin/Eigen/Eigen/src/SparseCore/ConservativeSparseSparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/MappedSparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseAssign.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseBlock.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseColEtree.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCompressedBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDenseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDiagonalProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDot.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseFuzzy.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMap.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrixBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparsePermutation.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRedux.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRef.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSelfAdjointView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSolverBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSparseProductWithPruning.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTranspose.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTriangularView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseUtil.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseView.h \
+	plugin/Eigen/Eigen/src/SparseCore/TriangularSolver.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_copy_to_ucol.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_gemm_kernel.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_heap_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_kernel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Memory.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pivotL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pruneL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Structs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_SupernodalMatrix.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Utils.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLUImpl.h \
+	plugin/Eigen/Eigen/src/SparseQR/SparseQR.h \
+	plugin/Eigen/Eigen/src/SVD/BDCSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
+	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
+	plugin/Eigen/Eigen/SVD \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclConvertToDeviceExpression.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExprConstructor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractAccessor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclLeafCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclPlaceHolderExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclRun.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclTuple.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/EventCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/NonBlockingThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/RunQueue.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/SimpleThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadEnvironment.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadLocal.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadPoolInterface.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadYield.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateCXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/Tensor \
+	plugin/Eigen/unsupported/Eigen/CXX11/ThreadPool \
+	plugin/Eigen/unsupported/Eigen/FFT \
+	plugin/Eigen/unsupported/Eigen/NonLinearOptimization \
+	plugin/Eigen/unsupported/Eigen/NumericalDiff \
+	plugin/Eigen/unsupported/Eigen/SpecialFunctions \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_fftw_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_kissfft_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/chkder.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/covar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/dogleg.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/lmpar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1updt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h \
+	plugin/Eigen/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/DataSource.h \
@@ -51204,6 +50372,392 @@ $(OutDir_ScatterDraw)Surf.o: ScatterDraw/Surf.cpp \
 	Painter/Painter.h \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
+	plugin/Eigen/Eigen.h \
+	plugin/Eigen/Eigen/Cholesky \
+	plugin/Eigen/Eigen/Core \
+	plugin/Eigen/Eigen/Dense \
+	plugin/Eigen/Eigen/Eigen \
+	plugin/Eigen/Eigen/Eigenvalues \
+	plugin/Eigen/Eigen/Geometry \
+	plugin/Eigen/Eigen/Householder \
+	plugin/Eigen/Eigen/IterativeLinearSolvers \
+	plugin/Eigen/Eigen/Jacobi \
+	plugin/Eigen/Eigen/LU \
+	plugin/Eigen/Eigen/OrderingMethods \
+	plugin/Eigen/Eigen/QR \
+	plugin/Eigen/Eigen/Sparse \
+	plugin/Eigen/Eigen/SparseCholesky \
+	plugin/Eigen/Eigen/SparseCore \
+	plugin/Eigen/Eigen/SparseLU \
+	plugin/Eigen/Eigen/SparseQR \
+	plugin/Eigen/Eigen/src/Cholesky/LDLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Half.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMathHalf.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/ConjHelper.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/Settings.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/Array.h \
+	plugin/Eigen/Eigen/src/Core/ArrayBase.h \
+	plugin/Eigen/Eigen/src/Core/ArrayWrapper.h \
+	plugin/Eigen/Eigen/src/Core/Assign.h \
+	plugin/Eigen/Eigen/src/Core/Assign_MKL.h \
+	plugin/Eigen/Eigen/src/Core/AssignEvaluator.h \
+	plugin/Eigen/Eigen/src/Core/BandMatrix.h \
+	plugin/Eigen/Eigen/src/Core/Block.h \
+	plugin/Eigen/Eigen/src/Core/BooleanRedux.h \
+	plugin/Eigen/Eigen/src/Core/CommaInitializer.h \
+	plugin/Eigen/Eigen/src/Core/ConditionEstimator.h \
+	plugin/Eigen/Eigen/src/Core/CoreEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/CoreIterators.h \
+	plugin/Eigen/Eigen/src/Core/CwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseNullaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseTernaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryView.h \
+	plugin/Eigen/Eigen/src/Core/DenseBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseCoeffsBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseStorage.h \
+	plugin/Eigen/Eigen/src/Core/Diagonal.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalMatrix.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalProduct.h \
+	plugin/Eigen/Eigen/src/Core/Dot.h \
+	plugin/Eigen/Eigen/src/Core/EigenBase.h \
+	plugin/Eigen/Eigen/src/Core/functors/AssignmentFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/BinaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/NullaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/StlFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/TernaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/UnaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/Fuzzy.h \
+	plugin/Eigen/Eigen/src/Core/GeneralProduct.h \
+	plugin/Eigen/Eigen/src/Core/GenericPacketMath.h \
+	plugin/Eigen/Eigen/src/Core/GlobalFunctions.h \
+	plugin/Eigen/Eigen/src/Core/Inverse.h \
+	plugin/Eigen/Eigen/src/Core/IO.h \
+	plugin/Eigen/Eigen/src/Core/Map.h \
+	plugin/Eigen/Eigen/src/Core/MapBase.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctionsImpl.h \
+	plugin/Eigen/Eigen/src/Core/Matrix.h \
+	plugin/Eigen/Eigen/src/Core/MatrixBase.h \
+	plugin/Eigen/Eigen/src/Core/NestByValue.h \
+	plugin/Eigen/Eigen/src/Core/NoAlias.h \
+	plugin/Eigen/Eigen/src/Core/NumTraits.h \
+	plugin/Eigen/Eigen/src/Core/PermutationMatrix.h \
+	plugin/Eigen/Eigen/src/Core/PlainObjectBase.h \
+	plugin/Eigen/Eigen/src/Core/Product.h \
+	plugin/Eigen/Eigen/src/Core/ProductEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/Parallelizer.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointProduct.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointRank2Update.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverVector.h \
+	plugin/Eigen/Eigen/src/Core/Random.h \
+	plugin/Eigen/Eigen/src/Core/Redux.h \
+	plugin/Eigen/Eigen/src/Core/Ref.h \
+	plugin/Eigen/Eigen/src/Core/Replicate.h \
+	plugin/Eigen/Eigen/src/Core/ReturnByValue.h \
+	plugin/Eigen/Eigen/src/Core/Reverse.h \
+	plugin/Eigen/Eigen/src/Core/Select.h \
+	plugin/Eigen/Eigen/src/Core/SelfAdjointView.h \
+	plugin/Eigen/Eigen/src/Core/SelfCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/Solve.h \
+	plugin/Eigen/Eigen/src/Core/SolverBase.h \
+	plugin/Eigen/Eigen/src/Core/SolveTriangular.h \
+	plugin/Eigen/Eigen/src/Core/StableNorm.h \
+	plugin/Eigen/Eigen/src/Core/Stride.h \
+	plugin/Eigen/Eigen/src/Core/Swap.h \
+	plugin/Eigen/Eigen/src/Core/Transpose.h \
+	plugin/Eigen/Eigen/src/Core/Transpositions.h \
+	plugin/Eigen/Eigen/src/Core/TriangularMatrix.h \
+	plugin/Eigen/Eigen/src/Core/util/BlasUtil.h \
+	plugin/Eigen/Eigen/src/Core/util/Constants.h \
+	plugin/Eigen/Eigen/src/Core/util/DisableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/ForwardDeclarations.h \
+	plugin/Eigen/Eigen/src/Core/util/Macros.h \
+	plugin/Eigen/Eigen/src/Core/util/Memory.h \
+	plugin/Eigen/Eigen/src/Core/util/Meta.h \
+	plugin/Eigen/Eigen/src/Core/util/MKL_support.h \
+	plugin/Eigen/Eigen/src/Core/util/NonMPL2.h \
+	plugin/Eigen/Eigen/src/Core/util/ReenableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/StaticAssert.h \
+	plugin/Eigen/Eigen/src/Core/util/XprHelper.h \
+	plugin/Eigen/Eigen/src/Core/VectorBlock.h \
+	plugin/Eigen/Eigen/src/Core/VectorwiseOp.h \
+	plugin/Eigen/Eigen/src/Core/Visitor.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/EigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealQZ.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/Tridiagonalization.h \
+	plugin/Eigen/Eigen/src/Geometry/AlignedBox.h \
+	plugin/Eigen/Eigen/src/Geometry/AngleAxis.h \
+	plugin/Eigen/Eigen/src/Geometry/arch/Geometry_SSE.h \
+	plugin/Eigen/Eigen/src/Geometry/EulerAngles.h \
+	plugin/Eigen/Eigen/src/Geometry/Homogeneous.h \
+	plugin/Eigen/Eigen/src/Geometry/Hyperplane.h \
+	plugin/Eigen/Eigen/src/Geometry/OrthoMethods.h \
+	plugin/Eigen/Eigen/src/Geometry/ParametrizedLine.h \
+	plugin/Eigen/Eigen/src/Geometry/Quaternion.h \
+	plugin/Eigen/Eigen/src/Geometry/Rotation2D.h \
+	plugin/Eigen/Eigen/src/Geometry/RotationBase.h \
+	plugin/Eigen/Eigen/src/Geometry/Scaling.h \
+	plugin/Eigen/Eigen/src/Geometry/Transform.h \
+	plugin/Eigen/Eigen/src/Geometry/Translation.h \
+	plugin/Eigen/Eigen/src/Geometry/Umeyama.h \
+	plugin/Eigen/Eigen/src/Householder/BlockHouseholder.h \
+	plugin/Eigen/Eigen/src/Householder/Householder.h \
+	plugin/Eigen/Eigen/src/Householder/HouseholderSequence.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BasicPreconditioners.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BiCGSTAB.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/ConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteCholesky.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteLUT.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IterativeSolverBase.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/SolveWithGuess.h \
+	plugin/Eigen/Eigen/src/Jacobi/Jacobi.h \
+	plugin/Eigen/Eigen/src/LU/arch/Inverse_SSE.h \
+	plugin/Eigen/Eigen/src/LU/Determinant.h \
+	plugin/Eigen/Eigen/src/LU/FullPivLU.h \
+	plugin/Eigen/Eigen/src/LU/InverseImpl.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h \
+	plugin/Eigen/Eigen/src/misc/blas.h \
+	plugin/Eigen/Eigen/src/misc/Image.h \
+	plugin/Eigen/Eigen/src/misc/Kernel.h \
+	plugin/Eigen/Eigen/src/misc/lapacke.h \
+	plugin/Eigen/Eigen/src/misc/lapacke_mangling.h \
+	plugin/Eigen/Eigen/src/misc/RealSvd2x2.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Amd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Eigen_Colamd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Ordering.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/BlockMethods.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+	plugin/Eigen/Eigen/src/QR/FullPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky_impl.h \
+	plugin/Eigen/Eigen/src/SparseCore/AmbiVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/CompressedStorage.h \
+	plugin/Eigen/Eigen/src/SparseCore/ConservativeSparseSparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/MappedSparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseAssign.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseBlock.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseColEtree.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCompressedBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDenseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDiagonalProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDot.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseFuzzy.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMap.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrixBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparsePermutation.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRedux.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRef.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSelfAdjointView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSolverBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSparseProductWithPruning.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTranspose.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTriangularView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseUtil.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseView.h \
+	plugin/Eigen/Eigen/src/SparseCore/TriangularSolver.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_copy_to_ucol.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_gemm_kernel.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_heap_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_kernel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Memory.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pivotL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pruneL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Structs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_SupernodalMatrix.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Utils.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLUImpl.h \
+	plugin/Eigen/Eigen/src/SparseQR/SparseQR.h \
+	plugin/Eigen/Eigen/src/SVD/BDCSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
+	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
+	plugin/Eigen/Eigen/SVD \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclConvertToDeviceExpression.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExprConstructor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractAccessor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclLeafCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclPlaceHolderExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclRun.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclTuple.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/EventCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/NonBlockingThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/RunQueue.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/SimpleThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadEnvironment.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadLocal.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadPoolInterface.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadYield.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateCXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/Tensor \
+	plugin/Eigen/unsupported/Eigen/CXX11/ThreadPool \
+	plugin/Eigen/unsupported/Eigen/FFT \
+	plugin/Eigen/unsupported/Eigen/NonLinearOptimization \
+	plugin/Eigen/unsupported/Eigen/NumericalDiff \
+	plugin/Eigen/unsupported/Eigen/SpecialFunctions \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_fftw_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_kissfft_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/chkder.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/covar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/dogleg.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/lmpar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1updt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h \
+	plugin/Eigen/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/DataSource.h \
@@ -51307,6 +50861,392 @@ $(OutDir_ScatterDraw)PieDraw.o: ScatterDraw/PieDraw.cpp \
 	Painter/Painter.h \
 	Painter/Painter.hpp \
 	Painter/Painting.h \
+	plugin/Eigen/Eigen.h \
+	plugin/Eigen/Eigen/Cholesky \
+	plugin/Eigen/Eigen/Core \
+	plugin/Eigen/Eigen/Dense \
+	plugin/Eigen/Eigen/Eigen \
+	plugin/Eigen/Eigen/Eigenvalues \
+	plugin/Eigen/Eigen/Geometry \
+	plugin/Eigen/Eigen/Householder \
+	plugin/Eigen/Eigen/IterativeLinearSolvers \
+	plugin/Eigen/Eigen/Jacobi \
+	plugin/Eigen/Eigen/LU \
+	plugin/Eigen/Eigen/OrderingMethods \
+	plugin/Eigen/Eigen/QR \
+	plugin/Eigen/Eigen/Sparse \
+	plugin/Eigen/Eigen/SparseCholesky \
+	plugin/Eigen/Eigen/SparseCore \
+	plugin/Eigen/Eigen/SparseLU \
+	plugin/Eigen/Eigen/SparseQR \
+	plugin/Eigen/Eigen/src/Cholesky/LDLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT.h \
+	plugin/Eigen/Eigen/src/Cholesky/LLT_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AltiVec/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/AVX512/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/Half.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/PacketMathHalf.h \
+	plugin/Eigen/Eigen/src/Core/arch/CUDA/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/ConjHelper.h \
+	plugin/Eigen/Eigen/src/Core/arch/Default/Settings.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/NEON/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/arch/SSE/TypeCasting.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/Complex.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/arch/ZVector/PacketMath.h \
+	plugin/Eigen/Eigen/src/Core/Array.h \
+	plugin/Eigen/Eigen/src/Core/ArrayBase.h \
+	plugin/Eigen/Eigen/src/Core/ArrayWrapper.h \
+	plugin/Eigen/Eigen/src/Core/Assign.h \
+	plugin/Eigen/Eigen/src/Core/Assign_MKL.h \
+	plugin/Eigen/Eigen/src/Core/AssignEvaluator.h \
+	plugin/Eigen/Eigen/src/Core/BandMatrix.h \
+	plugin/Eigen/Eigen/src/Core/Block.h \
+	plugin/Eigen/Eigen/src/Core/BooleanRedux.h \
+	plugin/Eigen/Eigen/src/Core/CommaInitializer.h \
+	plugin/Eigen/Eigen/src/Core/ConditionEstimator.h \
+	plugin/Eigen/Eigen/src/Core/CoreEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/CoreIterators.h \
+	plugin/Eigen/Eigen/src/Core/CwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseNullaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseTernaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/Core/CwiseUnaryView.h \
+	plugin/Eigen/Eigen/src/Core/DenseBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseCoeffsBase.h \
+	plugin/Eigen/Eigen/src/Core/DenseStorage.h \
+	plugin/Eigen/Eigen/src/Core/Diagonal.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalMatrix.h \
+	plugin/Eigen/Eigen/src/Core/DiagonalProduct.h \
+	plugin/Eigen/Eigen/src/Core/Dot.h \
+	plugin/Eigen/Eigen/src/Core/EigenBase.h \
+	plugin/Eigen/Eigen/src/Core/functors/AssignmentFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/BinaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/NullaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/StlFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/TernaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/functors/UnaryFunctors.h \
+	plugin/Eigen/Eigen/src/Core/Fuzzy.h \
+	plugin/Eigen/Eigen/src/Core/GeneralProduct.h \
+	plugin/Eigen/Eigen/src/Core/GenericPacketMath.h \
+	plugin/Eigen/Eigen/src/Core/GlobalFunctions.h \
+	plugin/Eigen/Eigen/src/Core/Inverse.h \
+	plugin/Eigen/Eigen/src/Core/IO.h \
+	plugin/Eigen/Eigen/src/Core/Map.h \
+	plugin/Eigen/Eigen/src/Core/MapBase.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctions.h \
+	plugin/Eigen/Eigen/src/Core/MathFunctionsImpl.h \
+	plugin/Eigen/Eigen/src/Core/Matrix.h \
+	plugin/Eigen/Eigen/src/Core/MatrixBase.h \
+	plugin/Eigen/Eigen/src/Core/NestByValue.h \
+	plugin/Eigen/Eigen/src/Core/NoAlias.h \
+	plugin/Eigen/Eigen/src/Core/NumTraits.h \
+	plugin/Eigen/Eigen/src/Core/PermutationMatrix.h \
+	plugin/Eigen/Eigen/src/Core/PlainObjectBase.h \
+	plugin/Eigen/Eigen/src/Core/Product.h \
+	plugin/Eigen/Eigen/src/Core/ProductEvaluators.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/GeneralMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/Parallelizer.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointProduct.h \
+	plugin/Eigen/Eigen/src/Core/products/SelfadjointRank2Update.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularMatrixVector_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverMatrix_BLAS.h \
+	plugin/Eigen/Eigen/src/Core/products/TriangularSolverVector.h \
+	plugin/Eigen/Eigen/src/Core/Random.h \
+	plugin/Eigen/Eigen/src/Core/Redux.h \
+	plugin/Eigen/Eigen/src/Core/Ref.h \
+	plugin/Eigen/Eigen/src/Core/Replicate.h \
+	plugin/Eigen/Eigen/src/Core/ReturnByValue.h \
+	plugin/Eigen/Eigen/src/Core/Reverse.h \
+	plugin/Eigen/Eigen/src/Core/Select.h \
+	plugin/Eigen/Eigen/src/Core/SelfAdjointView.h \
+	plugin/Eigen/Eigen/src/Core/SelfCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/Core/Solve.h \
+	plugin/Eigen/Eigen/src/Core/SolverBase.h \
+	plugin/Eigen/Eigen/src/Core/SolveTriangular.h \
+	plugin/Eigen/Eigen/src/Core/StableNorm.h \
+	plugin/Eigen/Eigen/src/Core/Stride.h \
+	plugin/Eigen/Eigen/src/Core/Swap.h \
+	plugin/Eigen/Eigen/src/Core/Transpose.h \
+	plugin/Eigen/Eigen/src/Core/Transpositions.h \
+	plugin/Eigen/Eigen/src/Core/TriangularMatrix.h \
+	plugin/Eigen/Eigen/src/Core/util/BlasUtil.h \
+	plugin/Eigen/Eigen/src/Core/util/Constants.h \
+	plugin/Eigen/Eigen/src/Core/util/DisableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/ForwardDeclarations.h \
+	plugin/Eigen/Eigen/src/Core/util/Macros.h \
+	plugin/Eigen/Eigen/src/Core/util/Memory.h \
+	plugin/Eigen/Eigen/src/Core/util/Meta.h \
+	plugin/Eigen/Eigen/src/Core/util/MKL_support.h \
+	plugin/Eigen/Eigen/src/Core/util/NonMPL2.h \
+	plugin/Eigen/Eigen/src/Core/util/ReenableStupidWarnings.h \
+	plugin/Eigen/Eigen/src/Core/util/StaticAssert.h \
+	plugin/Eigen/Eigen/src/Core/util/XprHelper.h \
+	plugin/Eigen/Eigen/src/Core/VectorBlock.h \
+	plugin/Eigen/Eigen/src/Core/VectorwiseOp.h \
+	plugin/Eigen/Eigen/src/Core/Visitor.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/ComplexSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/EigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/HessenbergDecomposition.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealQZ.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/RealSchur_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h \
+	plugin/Eigen/Eigen/src/Eigenvalues/Tridiagonalization.h \
+	plugin/Eigen/Eigen/src/Geometry/AlignedBox.h \
+	plugin/Eigen/Eigen/src/Geometry/AngleAxis.h \
+	plugin/Eigen/Eigen/src/Geometry/arch/Geometry_SSE.h \
+	plugin/Eigen/Eigen/src/Geometry/EulerAngles.h \
+	plugin/Eigen/Eigen/src/Geometry/Homogeneous.h \
+	plugin/Eigen/Eigen/src/Geometry/Hyperplane.h \
+	plugin/Eigen/Eigen/src/Geometry/OrthoMethods.h \
+	plugin/Eigen/Eigen/src/Geometry/ParametrizedLine.h \
+	plugin/Eigen/Eigen/src/Geometry/Quaternion.h \
+	plugin/Eigen/Eigen/src/Geometry/Rotation2D.h \
+	plugin/Eigen/Eigen/src/Geometry/RotationBase.h \
+	plugin/Eigen/Eigen/src/Geometry/Scaling.h \
+	plugin/Eigen/Eigen/src/Geometry/Transform.h \
+	plugin/Eigen/Eigen/src/Geometry/Translation.h \
+	plugin/Eigen/Eigen/src/Geometry/Umeyama.h \
+	plugin/Eigen/Eigen/src/Householder/BlockHouseholder.h \
+	plugin/Eigen/Eigen/src/Householder/Householder.h \
+	plugin/Eigen/Eigen/src/Householder/HouseholderSequence.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BasicPreconditioners.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/BiCGSTAB.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/ConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteCholesky.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IncompleteLUT.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/IterativeSolverBase.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/LeastSquareConjugateGradient.h \
+	plugin/Eigen/Eigen/src/IterativeLinearSolvers/SolveWithGuess.h \
+	plugin/Eigen/Eigen/src/Jacobi/Jacobi.h \
+	plugin/Eigen/Eigen/src/LU/arch/Inverse_SSE.h \
+	plugin/Eigen/Eigen/src/LU/Determinant.h \
+	plugin/Eigen/Eigen/src/LU/FullPivLU.h \
+	plugin/Eigen/Eigen/src/LU/InverseImpl.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU.h \
+	plugin/Eigen/Eigen/src/LU/PartialPivLU_LAPACKE.h \
+	plugin/Eigen/Eigen/src/misc/blas.h \
+	plugin/Eigen/Eigen/src/misc/Image.h \
+	plugin/Eigen/Eigen/src/misc/Kernel.h \
+	plugin/Eigen/Eigen/src/misc/lapacke.h \
+	plugin/Eigen/Eigen/src/misc/lapacke_mangling.h \
+	plugin/Eigen/Eigen/src/misc/RealSvd2x2.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Amd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Eigen_Colamd.h \
+	plugin/Eigen/Eigen/src/OrderingMethods/Ordering.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/ArrayCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/BlockMethods.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/CommonCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseBinaryOps.h \
+	plugin/Eigen/Eigen/src/plugins/MatrixCwiseUnaryOps.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+	plugin/Eigen/Eigen/src/QR/FullPivHouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR.h \
+	plugin/Eigen/Eigen/src/QR/HouseholderQR_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky.h \
+	plugin/Eigen/Eigen/src/SparseCholesky/SimplicialCholesky_impl.h \
+	plugin/Eigen/Eigen/src/SparseCore/AmbiVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/CompressedStorage.h \
+	plugin/Eigen/Eigen/src/SparseCore/ConservativeSparseSparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/MappedSparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseAssign.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseBlock.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseColEtree.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCompressedBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseBinaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseCwiseUnaryOp.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDenseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDiagonalProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseDot.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseFuzzy.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMap.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrix.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseMatrixBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparsePermutation.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseProduct.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRedux.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseRef.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSelfAdjointView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSolverBase.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseSparseProductWithPruning.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTranspose.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseTriangularView.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseUtil.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseVector.h \
+	plugin/Eigen/Eigen/src/SparseCore/SparseView.h \
+	plugin/Eigen/Eigen/src/SparseCore/TriangularSolver.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_column_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_copy_to_ucol.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_gemm_kernel.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_heap_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_kernel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Memory.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_bmod.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_panel_dfs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pivotL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_pruneL.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_relax_snode.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Structs.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_SupernodalMatrix.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLU_Utils.h \
+	plugin/Eigen/Eigen/src/SparseLU/SparseLUImpl.h \
+	plugin/Eigen/Eigen/src/SparseQR/SparseQR.h \
+	plugin/Eigen/Eigen/src/SVD/BDCSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD.h \
+	plugin/Eigen/Eigen/src/SVD/JacobiSVD_LAPACKE.h \
+	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
+	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
+	plugin/Eigen/Eigen/SVD \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBase.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorBroadcasting.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorChipping.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConcatenation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContraction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionBlocking.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionMapper.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorContractionThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConversion.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorConvolution.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorCustomOp.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDevice.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceDefault.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensionList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorDimensions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvalTo.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorEvaluator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExecutor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFFT.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFixedSize.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForcedEval.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorForwardDeclarations.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGenerator.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorGlobalFunctions.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorImagePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIndexList.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInflation.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorInitializer.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIntDiv.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorIO.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorLayoutSwap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMacros.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMap.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMeta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorMorphing.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPadding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorPatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRandom.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReduction.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionCuda.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReductionSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorRef.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorReverse.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorScan.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorShuffling.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStorage.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorStriding.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSycl.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclConvertToDeviceExpression.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExprConstructor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractAccessor.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclExtractFunctors.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclLeafCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclPlaceHolderExpr.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclRun.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorSyclTuple.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorTraits.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorUInt128.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorVolumePatch.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/EventCount.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/NonBlockingThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/RunQueue.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/SimpleThreadPool.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadEnvironment.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadLocal.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadPoolInterface.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/ThreadPool/ThreadYield.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/CXX11Workarounds.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateArray.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/EmulateCXX11Meta.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/src/util/MaxSizeVector.h \
+	plugin/Eigen/unsupported/Eigen/CXX11/Tensor \
+	plugin/Eigen/unsupported/Eigen/CXX11/ThreadPool \
+	plugin/Eigen/unsupported/Eigen/FFT \
+	plugin/Eigen/unsupported/Eigen/NonLinearOptimization \
+	plugin/Eigen/unsupported/Eigen/NumericalDiff \
+	plugin/Eigen/unsupported/Eigen/SpecialFunctions \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_fftw_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/FFT/ei_kissfft_impl.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/chkder.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/covar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/dogleg.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/lmpar.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/r1updt.h \
+	plugin/Eigen/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h \
+	plugin/Eigen/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/arch/CUDA/CudaSpecialFunctions.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsArrayAPI.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsFunctors.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsHalf.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsImpl.h \
+	plugin/Eigen/unsupported/Eigen/src/SpecialFunctions/SpecialFunctionsPacketMath.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/DataSource.h \
@@ -51339,9 +51279,6 @@ $(OutDir_GridCtrl):
 	mkdir -p $(OutDir_GridCtrl)
 
 $(OutDir_GridCtrl)GridCtrl.o: GridCtrl/GridCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -51418,27 +51355,16 @@ $(OutDir_GridCtrl)GridCtrl.o: GridCtrl/GridCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -51473,17 +51399,20 @@ $(OutDir_GridCtrl)GridCtrl.o: GridCtrl/GridCtrl.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
-	GridCtrl/GridCtrl.t \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -51491,19 +51420,10 @@ $(OutDir_GridCtrl)GridCtrl.o: GridCtrl/GridCtrl.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GridCtrl)  GridCtrl/GridCtrl.cpp -o $(OutDir_GridCtrl)GridCtrl.o
 
 $(OutDir_GridCtrl)GridDisplay.o: GridCtrl/GridDisplay.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -51579,27 +51499,16 @@ $(OutDir_GridCtrl)GridDisplay.o: GridCtrl/GridDisplay.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -51634,35 +51543,30 @@ $(OutDir_GridCtrl)GridDisplay.o: GridCtrl/GridDisplay.cpp \
 	Draw/iml_source.h \
 	Draw/Raster.h \
 	Draw/SDraw.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GridCtrl)  GridCtrl/GridDisplay.cpp -o $(OutDir_GridCtrl)GridDisplay.o
 
 $(OutDir_GridCtrl)GridText.o: GridCtrl/GridText.cpp
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GridCtrl)  GridCtrl/GridText.cpp -o $(OutDir_GridCtrl)GridText.o
 
 $(OutDir_GridCtrl)GridBase.o: GridCtrl/GridBase.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -51738,27 +51642,16 @@ $(OutDir_GridCtrl)GridBase.o: GridCtrl/GridBase.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -51793,16 +51686,20 @@ $(OutDir_GridCtrl)GridBase.o: GridCtrl/GridBase.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -51810,19 +51707,10 @@ $(OutDir_GridCtrl)GridBase.o: GridCtrl/GridBase.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GridCtrl)  GridCtrl/GridBase.cpp -o $(OutDir_GridCtrl)GridBase.o
 
 $(OutDir_GridCtrl)GridSort.o: GridCtrl/GridSort.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -51898,27 +51786,16 @@ $(OutDir_GridCtrl)GridSort.o: GridCtrl/GridSort.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -51953,16 +51830,20 @@ $(OutDir_GridCtrl)GridSort.o: GridCtrl/GridSort.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GridCtrl/GridCtrl.h \
-	GridCtrl/GridCtrl.iml \
 	GridCtrl/GridDisplay.h \
 	GridCtrl/GridUtils.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
@@ -51970,19 +51851,10 @@ $(OutDir_GridCtrl)GridSort.o: GridCtrl/GridSort.cpp \
 	Sql/Sqlexp.h \
 	Sql/Sqls.h \
 	Sql/SqlSchema.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GridCtrl)  GridCtrl/GridSort.cpp -o $(OutDir_GridCtrl)GridSort.o
 
 $(OutDir_GridCtrl)GridUtils.o: GridCtrl/GridUtils.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -52058,27 +51930,16 @@ $(OutDir_GridCtrl)GridUtils.o: GridCtrl/GridUtils.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -52113,22 +51974,21 @@ $(OutDir_GridCtrl)GridUtils.o: GridCtrl/GridUtils.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GridCtrl)  GridCtrl/GridUtils.cpp -o $(OutDir_GridCtrl)GridUtils.o
 
 $(OutDir_GridCtrl)GridCtrl.a: \
@@ -52261,7 +52121,6 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	Web/util.h \
 	Web/Web.h \
 	Functions4U/Functions4U.h \
-	Functions4U/Functions4U.t \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
 	Functions4U/StaticPlugin.h \
@@ -52269,9 +52128,6 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/Functions4U.cpp -o $(OutDir_Functions4U)Functions4U.o
 
 $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -52347,27 +52203,16 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -52402,6 +52247,12 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/bmp/bmp.h \
 	plugin/gif/gif.h \
 	plugin/jpg/jpg.h \
@@ -52418,18 +52269,11 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52531,9 +52375,6 @@ $(OutDir_Functions4U)LocalProcess2.o: Functions4U/LocalProcess2.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/LocalProcess2.cpp -o $(OutDir_Functions4U)LocalProcess2.o
 
 $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -52609,27 +52450,16 @@ $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -52664,23 +52494,22 @@ $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -52782,9 +52611,6 @@ $(OutDir_Functions4U)StaticPlugin.o: Functions4U/StaticPlugin.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Functions4U)  Functions4U/StaticPlugin.cpp -o $(OutDir_Functions4U)StaticPlugin.o
 
 $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -52860,27 +52686,16 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/lay.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	CtrlLib/AKeys.h \
 	CtrlLib/ArrayCtrl.h \
 	CtrlLib/Bar.h \
 	CtrlLib/Ch.h \
-	CtrlLib/ClassicCtrls.iml \
 	CtrlLib/ColumnList.h \
-	CtrlLib/Ctrl.iml \
-	CtrlLib/Ctrl.lay \
 	CtrlLib/CtrlLib.h \
-	CtrlLib/Ctrls.iml \
 	CtrlLib/CtrlUtil.h \
 	CtrlLib/DateTimeCtrl.h \
 	CtrlLib/DisplayPopup.h \
@@ -52915,6 +52730,12 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	PdfDraw/PdfDraw.h \
 	plugin/png/png.h \
 	plugin/z/lib/zconf.h \
@@ -52922,18 +52743,11 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	plugin/z/z.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
 	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h \
 	Web/auth.h \
 	Web/html.h \
 	Web/httpcli.h \
@@ -54051,9 +53865,14 @@ $(OutDir_plugin_tif)tif_fax3.o: plugin/tif/lib/tif_fax3.c \
 	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_plugin_tif)  plugin/tif/lib/tif_fax3.c -o $(OutDir_plugin_tif)tif_fax3.o
 
 $(OutDir_plugin_tif)tif_fax3sm.o: plugin/tif/lib/tif_fax3sm.c \
+	plugin/tif/lib/tif_config.h \
+	plugin/tif/lib/tif_dir.h \
 	plugin/tif/lib/tif_fax3.h \
 	plugin/tif/lib/tiff.h \
-	plugin/tif/lib/tiffconf.h
+	plugin/tif/lib/tiffconf.h \
+	plugin/tif/lib/tiffio.h \
+	plugin/tif/lib/tiffiop.h \
+	plugin/tif/lib/tiffvers.h
 	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_plugin_tif)  plugin/tif/lib/tif_fax3sm.c -o $(OutDir_plugin_tif)tif_fax3sm.o
 
 $(OutDir_plugin_tif)tif_flush.o: plugin/tif/lib/tif_flush.c \
@@ -54836,7 +54655,6 @@ $(OutDir_SysInfo)SysInfo.o: SysInfo/SysInfo.cpp \
 	Functions4U/SvgColors.h \
 	SysInfo/OSwin.h \
 	SysInfo/SysInfo.h \
-	SysInfo/SysInfo.t \
 	SysInfo/SysInfo_in.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_SysInfo)  SysInfo/SysInfo.cpp -o $(OutDir_SysInfo)SysInfo.o
 
@@ -56563,7 +56381,6 @@ $(OutDir_Surface)Surface.o: Surface/Surface.cpp \
 	plugin/Eigen/Eigen/src/SVD/SVDBase.h \
 	plugin/Eigen/Eigen/src/SVD/UpperBidiagonalization.h \
 	plugin/Eigen/Eigen/SVD \
-	plugin/Eigen/ToStringPlugin.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/Tensor.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorArgMax.h \
 	plugin/Eigen/unsupported/Eigen/CXX11/src/Tensor/TensorAssign.h \
@@ -56689,9 +56506,6 @@ $(OutDir_GLCtrl):
 	mkdir -p $(OutDir_GLCtrl)
 
 $(OutDir_GLCtrl)Win32GLCtrl.o: GLCtrl/Win32GLCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -56767,16 +56581,9 @@ $(OutDir_GLCtrl)Win32GLCtrl.o: GLCtrl/Win32GLCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -56789,6 +56596,12 @@ $(OutDir_GLCtrl)Win32GLCtrl.o: GLCtrl/Win32GLCtrl.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/glew/glew.h \
 	plugin/glew/wglew.h \
 	plugin/png/png.h \
@@ -56796,23 +56609,13 @@ $(OutDir_GLCtrl)Win32GLCtrl.o: GLCtrl/Win32GLCtrl.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCtrl)  GLCtrl/Win32GLCtrl.cpp -o $(OutDir_GLCtrl)Win32GLCtrl.o
 
-$(OutDir_GLCtrl)X11GLCtrl.o: GLCtrl/X11GLCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
+$(OutDir_GLCtrl)XGLCtrl.o: GLCtrl/XGLCtrl.cpp \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -56888,16 +56691,9 @@ $(OutDir_GLCtrl)X11GLCtrl.o: GLCtrl/X11GLCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -56910,6 +56706,12 @@ $(OutDir_GLCtrl)X11GLCtrl.o: GLCtrl/X11GLCtrl.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/glew/glew.h \
 	plugin/glew/wglew.h \
 	plugin/png/png.h \
@@ -56917,144 +56719,13 @@ $(OutDir_GLCtrl)X11GLCtrl.o: GLCtrl/X11GLCtrl.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCtrl)  GLCtrl/X11GLCtrl.cpp -o $(OutDir_GLCtrl)X11GLCtrl.o
-
-$(OutDir_GLCtrl)GtkGLCtrl.o: GLCtrl/GtkGLCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
-	Core/Algo.h \
-	Core/App.h \
-	Core/AString.hpp \
-	Core/Atomic.h \
-	Core/BiCont.h \
-	Core/Callback.h \
-	Core/CallbackN.i \
-	Core/CallbackNP.i \
-	Core/CallbackR.i \
-	Core/CharSet.h \
-	Core/CharSet.i \
-	Core/CoAlgo.h \
-	Core/Color.h \
-	Core/Complex.h \
-	Core/config.h \
-	Core/Convert.h \
-	Core/Core.h \
-	Core/CoSort.h \
-	Core/CoWork.h \
-	Core/Defs.h \
-	Core/Diag.h \
-	Core/FilterStream.h \
-	Core/FixedMap.h \
-	Core/Format.h \
-	Core/Function.h \
-	Core/Gtypes.h \
-	Core/Hash.h \
-	Core/Heap.h \
-	Core/Huge.h \
-	Core/i18n.h \
-	Core/Index.h \
-	Core/Index.hpp \
-	Core/Inet.h \
-	Core/InMap.hpp \
-	Core/InVector.h \
-	Core/InVector.hpp \
-	Core/JSON.h \
-	Core/Lang.h \
-	Core/Lang_s.h \
-	Core/LocalProcess.h \
-	Core/Map.h \
-	Core/Map.hpp \
-	Core/Mt.h \
-	Core/Obsolete.h \
-	Core/Ops.h \
-	Core/Other.h \
-	Core/Parser.h \
-	Core/Path.h \
-	Core/Profile.h \
-	Core/Ptr.h \
-	Core/Range.h \
-	Core/Sort.h \
-	Core/Sorted.h \
-	Core/SplitMerge.h \
-	Core/Stream.h \
-	Core/String.h \
-	Core/t_.h \
-	Core/TimeDate.h \
-	Core/Topic.h \
-	Core/Topt.h \
-	Core/Tuple.h \
-	Core/Utf.hpp \
-	Core/Util.h \
-	Core/Uuid.h \
-	Core/Value.h \
-	Core/Value.hpp \
-	Core/ValueUtil.h \
-	Core/ValueUtil.hpp \
-	Core/Vcont.h \
-	Core/Vcont.hpp \
-	Core/Win32Util.h \
-	Core/XML.h \
-	Core/Xmlize.h \
-	Core/Xmlize.hpp \
-	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
-	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
-	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
-	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
-	Draw/Cham.h \
-	Draw/DDARasterizer.h \
-	Draw/Display.h \
-	Draw/Draw.h \
-	Draw/FontInt.h \
-	Draw/Image.h \
-	Draw/ImageOp.h \
-	Draw/iml_header.h \
-	Draw/Raster.h \
-	Draw/SDraw.h \
-	GLCtrl/GLCtrl.h \
-	guiplatform.h \
-	plugin/glew/glew.h \
-	plugin/glew/wglew.h \
-	plugin/png/png.h \
-	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h \
-	RichText/Para.h \
-	RichText/RichText.h \
-	RichText/RichText.iml \
-	RichText/Table.h \
-	RichText/Text.h \
-	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCtrl)  GLCtrl/GtkGLCtrl.cpp -o $(OutDir_GLCtrl)GtkGLCtrl.o
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCtrl)  GLCtrl/XGLCtrl.cpp -o $(OutDir_GLCtrl)XGLCtrl.o
 
 $(OutDir_GLCtrl)GLCtrl.o: GLCtrl/GLCtrl.cpp \
-	config/ftheader.h \
-	ft2build.h \
-	internal/internal.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -57130,16 +56801,9 @@ $(OutDir_GLCtrl)GLCtrl.o: GLCtrl/GLCtrl.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
-	CtrlCore/Coco.h \
-	CtrlCore/CocoCode.h \
 	CtrlCore/CtrlCore.h \
-	CtrlCore/CtrlCore.iml \
-	CtrlCore/Gtk.h \
 	CtrlCore/MKeys.h \
-	CtrlCore/stdids.h \
 	CtrlCore/TopWindow.h \
-	CtrlCore/Win32Gui.h \
-	CtrlCore/X11Gui.h \
 	Draw/Cham.h \
 	Draw/DDARasterizer.h \
 	Draw/Display.h \
@@ -57152,6 +56816,12 @@ $(OutDir_GLCtrl)GLCtrl.o: GLCtrl/GLCtrl.cpp \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
 	guiplatform.h \
+	Painter/BufferPainter.h \
+	Painter/Interpolator.hpp \
+	Painter/LinearPath.h \
+	Painter/Painter.h \
+	Painter/Painter.hpp \
+	Painter/Painting.h \
 	plugin/glew/glew.h \
 	plugin/glew/wglew.h \
 	plugin/png/png.h \
@@ -57159,28 +56829,19 @@ $(OutDir_GLCtrl)GLCtrl.o: GLCtrl/GLCtrl.cpp \
 	plugin/z/lib/zlib.h \
 	RichText/Para.h \
 	RichText/RichText.h \
-	RichText/RichText.iml \
 	RichText/Table.h \
 	RichText/Text.h \
 	RichText/Txt.h \
-	Turtle/FB.iml \
-	Turtle/Keys.h \
-	Turtle/Turtle.h \
-	uppconfig.h \
-	VirtualGui/FB.iml \
-	VirtualGui/Keys.h \
-	VirtualGui/VirtualGui.h
+	uppconfig.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCtrl)  GLCtrl/GLCtrl.cpp -o $(OutDir_GLCtrl)GLCtrl.o
 
 $(OutDir_GLCtrl)GLCtrl.a: \
 	$(OutDir_GLCtrl)Win32GLCtrl.o \
-	$(OutDir_GLCtrl)X11GLCtrl.o \
-	$(OutDir_GLCtrl)GtkGLCtrl.o \
+	$(OutDir_GLCtrl)XGLCtrl.o \
 	$(OutDir_GLCtrl)GLCtrl.o
 	$(AR) $(OutDir_GLCtrl)GLCtrl.a \
 		$(OutDir_GLCtrl)Win32GLCtrl.o \
-		$(OutDir_GLCtrl)X11GLCtrl.o \
-		$(OutDir_GLCtrl)GtkGLCtrl.o \
+		$(OutDir_GLCtrl)XGLCtrl.o \
 		$(OutDir_GLCtrl)GLCtrl.o
 
 $(OutDir_plugin_glew):

@@ -1,5 +1,13 @@
 #include "Core.h"
 
+#ifdef PLATFORM_OSX
+#include <sys/time.h>
+#endif
+
+#ifdef CPU_X86
+#include <xmmintrin.h>
+#endif
+
 namespace Upp {
 
 #define LLOG(x)  // DLOG(x)
@@ -437,12 +445,7 @@ void Semaphore::Release(int n)
 
 bool Semaphore::Wait(int timeout_ms)
 {
-	return WaitForSingleObject(handle, timeout_ms) == WAIT_OBJECT_0;
-}
-
-void Semaphore::Wait()
-{
-	WaitForSingleObject(handle, INFINITE);
+	return WaitForSingleObject(handle, timeout_ms < 0 ? INFINITE : timeout_ms) == WAIT_OBJECT_0;
 }
 
 Semaphore::Semaphore()
@@ -517,33 +520,10 @@ VOID (WINAPI *ConditionVariable::WakeConditionVariable)(PCONDITION_VARIABLE Cond
 VOID (WINAPI *ConditionVariable::WakeAllConditionVariable)(PCONDITION_VARIABLE ConditionVariable);
 BOOL (WINAPI *ConditionVariable::SleepConditionVariableCS)(PCONDITION_VARIABLE ConditionVariable, PCRITICAL_SECTION CriticalSection, DWORD dwMilliseconds);
 
-void ConditionVariable::Wait(Mutex& m)
-{
-	if(InitializeConditionVariable)
-		SleepConditionVariableCS(cv, &m.section, INFINITE);
-	else { // WindowsXP implementation
-		static thread_local byte buffer[sizeof(WaitingThread)]; // only one Wait per thread is possible
-		WaitingThread *w = new(buffer) WaitingThread;
-		{
-			Mutex::Lock __(mutex);
-			w->next = NULL;
-			if(head)
-				tail->next = w;
-			else
-				head = w;
-			tail = w;
-		}
-		m.Leave();
-		w->sem.Wait();
-		m.Enter();
-		w->WaitingThread::~WaitingThread();
-	}
-}
-
 bool ConditionVariable::Wait(Mutex& m, int timeout_ms)
 {
 	if(InitializeConditionVariable)
-		return SleepConditionVariableCS(cv, &m.section, timeout_ms);
+		return SleepConditionVariableCS(cv, &m.section, timeout_ms < 0 ? INFINITE : timeout_ms);
 	else { // WindowsXP implementation
 		static thread_local byte buffer[sizeof(WaitingThread)]; // only one Wait per thread is possible
 		WaitingThread *w = new(buffer) WaitingThread;
@@ -640,7 +620,11 @@ RWMutex::~RWMutex()
 
 bool ConditionVariable::Wait(Mutex& m, int timeout_ms)
 {
-	struct timespec until;
+	if(timeout_ms < 0) {
+		pthread_cond_wait(cv, m.mutex);
+		return true;
+	}
+	::timespec until;
 	clock_gettime(CLOCK_REALTIME, &until);
 	
 	until.tv_sec += timeout_ms / 1000;
@@ -659,14 +643,10 @@ void Semaphore::Release()
 	dispatch_semaphore_signal(sem);
 }
 
-void Semaphore::Wait()
-{
-	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-}
-
 bool Semaphore::Wait(int timeout_ms)
 {
-	return dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, 1000000 * timeout_ms)) == 0;
+	return dispatch_semaphore_wait(sem, timeout_ms < 0 ? DISPATCH_TIME_FOREVER
+	                                    : dispatch_time(DISPATCH_TIME_NOW, 1000000 * timeout_ms)) == 0;
 }
 
 Semaphore::Semaphore()
@@ -686,13 +666,12 @@ void Semaphore::Release()
 	sem_post(&sem);
 }
 
-void Semaphore::Wait()
-{
-	sem_wait(&sem);
-}
-
 bool Semaphore::Wait(int timeout_ms)
 {
+	if(timeout_ms < 0) {
+		sem_wait(&sem);
+		return true;
+	}
 	struct timespec until;
 	clock_gettime(CLOCK_REALTIME, &until);
 	
@@ -746,10 +725,6 @@ LazyUpdate::LazyUpdate()
 {
 	dirty = true;
 }
-
-#ifdef CPU_X86
-#include <xmmintrin.h>
-#endif
 
 void SpinLock::Wait()
 {

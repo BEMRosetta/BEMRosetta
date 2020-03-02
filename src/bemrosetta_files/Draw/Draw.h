@@ -365,8 +365,8 @@ void SColorShadow_Write(Color c);
 void SColorLtFace_Write(Color c);
 void SColorDkShadow_Write(Color c);
 
-inline Color InvertColor() { return Color(255, 0); } // Special color that with DrawRect actually inverts the rectangle
-inline Color DefaultInk() { return Color(254, 0); } // SColorText on screen, Black on other outputs
+inline Color InvertColor() { return Color::Special(255); } // Special color that with DrawRect actually inverts the rectangle
+inline Color DefaultInk() { return Color::Special(254); } // SColorText on screen, Black on other outputs
 
 extern bool dark_theme__;
 
@@ -888,10 +888,6 @@ void AddRefreshRect(Vector<Rect>& invalid, const Rect& _r);
 void DrawRect(Draw& w, const Rect& rect, const Image& img, bool ralgn = false); //??? TODO
 void DrawRect(Draw& w, int x, int y, int cx, int cy, const Image& img, bool ra = false);
 
-#if defined(flagWINGL) || defined(flagLINUXGL)
-void DrawTiles(Draw& w, int x, int y, int cx, int cy, const Image& img, const Size& isz, const Rect& src);
-void DrawTiles(Draw& w, const Rect& rect, const Image& img, const Size& isz, const Rect& src);
-#endif
 void DrawTiles(Draw& w, int x, int y, int cx, int cy, const Image& img);
 void DrawTiles(Draw& w, const Rect& rect, const Image& img);
 

@@ -276,7 +276,7 @@ T_("Healing mesh '%s'")
 esES("")
 frFR("")
 
-T_("Problem loading '%s': %s")
+T_("Problem healing '%s': %s")
 esES("")
 frFR("")
 
@@ -285,6 +285,10 @@ esES("")
 frFR("")
 
 T_("Getting underwater mesh '%s'")
+esES("")
+frFR("")
+
+T_("Problem loading '%s': %s")
 esES("")
 frFR("")
 
@@ -525,6 +529,10 @@ T_("Nemoh.dat")
 esES("")
 frFR("")
 
+T_("Nemoh premesh.")
+esES("")
+frFR("")
+
 T_("Binary.stl")
 esES("")
 frFR("")
@@ -551,6 +559,10 @@ frFR("")
 
 
 // Mesh.cpp
+
+T_("Parsing error: ")
+esES("")
+frFR("")
 
 T_("Unknown MESH file extension in '%s'")
 esES("")
@@ -836,7 +848,8 @@ T_("Number of Nemoh cases must be higher than 1 (%d)")
 esES("")
 frFR("")
 
-T_("Number of Nemoh cases must not be higher than number of frequencies (%d>%d)")
+T_("Number of Nemoh cases %d must not be higher than number of frequencies "
+     "%d")
 esES("")
 frFR("")
 
@@ -915,14 +928,6 @@ T_("Vectors w and B size does not match")
 esES("")
 frFR("")
 
-T_("Vector Z not found")
-esES("")
-frFR("")
-
-T_("Vectors w and Z size does not match")
-esES("")
-frFR("")
-
 T_("Vector TFSResponse not found")
 esES("")
 frFR("")
@@ -976,114 +981,6 @@ esES("")
 frFR("")
 
 T_("Process ended by user")
-esES("")
-frFR("")
-
-
-// fast.cpp
-
-T_("File '%s' is not of FAST type")
-esES("")
-frFR("")
-
-T_("FAST does not support more than one body in file '%s'")
-esES("")
-frFR("")
-
-T_("No wave headings found in Wamit file")
-esES("")
-frFR("")
-
-T_("FAST requires simetric wave headings. .3 file headings found from %f to "
-     "%f")
-esES("")
-frFR("")
-
-T_("Wrong format in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("State Space file '%s'")
-esES("")
-frFR("")
-
-T_("Number of bodies different to 1 incompatible with FAST")
-esES("")
-frFR("")
-
-T_("Volume (PtfmVol0) not found in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("Density (WtrDens) not found in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("Water depth (WtrDpth) not found in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("Length scale (WAMITULEN) not found in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("Number of wave directions (WaveNDir) not found in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("Range of wave directions (WaveDirRange) not found in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("Different %s (%f != %f) in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("volume")
-esES("")
-frFR("")
-
-T_("density")
-esES("")
-frFR("")
-
-T_("water depth")
-esES("")
-frFR("")
-
-T_("length scale")
-esES("")
-frFR("")
-
-T_("Different %s (%d != %d) in FAST file '%s'")
-esES("")
-frFR("")
-
-T_("number of wave headings")
-esES("")
-frFR("")
-
-T_("headings range")
-esES("")
-frFR("")
-
-T_("Bad format parsing FAST file '%s' for %s")
-esES("")
-frFR("")
-
-T_("Imposible to save file '%s'")
-esES("")
-frFR("")
-
-T_(".ss format only allows to save one body. Only first body is saved")
-esES("")
-frFR("")
-
-T_("BEMRosetta state space matrices obtained with %s")
-esES("")
-frFR("")
-
-T_("BEMRosetta state space matrices")
 esES("")
 frFR("")
 
@@ -1237,6 +1134,118 @@ esES("")
 frFR("")
 
 
+// fast.cpp
+
+T_("File '%s' is not of FAST type")
+esES("")
+frFR("")
+
+T_("FAST does not support more than one body in file '%s'")
+esES("")
+frFR("")
+
+T_("No wave headings found in Wamit file")
+esES("")
+frFR("")
+
+T_("FAST requires simetric wave headings. .3 file headings found from %f to "
+     "%f")
+esES("")
+frFR("")
+
+T_("Wrong format in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("State Space file '%s'")
+esES("")
+frFR("")
+
+T_("Number of bodies different to 1 incompatible with FAST")
+esES("")
+frFR("")
+
+T_("Volume (PtfmVol0) not found in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("Density (WtrDens) not found in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("Water depth (WtrDpth) not found in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("Length scale (WAMITULEN) not found in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("Number of wave directions (WaveNDir) not found in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("Range of wave directions (WaveDirRange) not found in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("Different %s (%f != %f) in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("volume")
+esES("")
+frFR("")
+
+T_("density")
+esES("")
+frFR("")
+
+T_("water depth")
+esES("")
+frFR("")
+
+T_("length scale")
+esES("")
+frFR("")
+
+T_("Different %s (%d != %d) in FAST file '%s'")
+esES("")
+frFR("")
+
+T_("number of wave headings")
+esES("")
+frFR("")
+
+T_("headings range")
+esES("")
+frFR("")
+
+T_("Bad format parsing FAST file '%s' for %s")
+esES("")
+frFR("")
+
+T_("Imposible to save file '%s'")
+esES("")
+frFR("")
+
+T_(".ss format only allows to save one body. Only first body is saved")
+esES("")
+frFR("")
+
+T_(".ss format only allows to save one body. Only first body is retrieved")
+esES("")
+frFR("")
+
+T_("Sum of states %d does no match total radiation states %d")
+esES("")
+frFR("")
+
+T_("Unknown structure in C matrix (%d, %d, %d)")
+esES("")
+frFR("")
+
+
 // aqwa.cpp
 
 T_("LIS file")
@@ -1313,6 +1322,26 @@ frFR("")
 
 
 // Obsolete
+
+T_("Number of Nemoh cases must not be higher than number of frequencies (%d>%d)")
+esES("")
+frFR("")
+
+T_("Vector Z not found")
+esES("")
+frFR("")
+
+T_("Vectors w and Z size does not match")
+esES("")
+frFR("")
+
+T_("BEMRosetta state space matrices obtained with %s")
+esES("")
+frFR("")
+
+T_("BEMRosetta state space matrices")
+esES("")
+frFR("")
 
 T_("Model '%s' already loaded")
 esES("")

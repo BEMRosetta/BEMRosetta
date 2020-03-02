@@ -34,49 +34,49 @@ void MainPlot::Init(bool vert) {
 void MainPlot::Init(int _idf, double jdf_ih, DataToShow _dataToShow) {
 	MainPlot::Init(true);
 	
-	idf = _idf;
-	jdf = int(jdf_ih);
+	plot_idf = _idf;
+	plot_jdf = int(jdf_ih);
 	heading = jdf_ih;
 	dataToShow = _dataToShow;
 	
 	String title, title2, labelY, labelY2;
 	switch (dataToShow) {
-	case DATA_A:		title = Format(t_("Added mass %s"), Hydro::StrBDOF(idf, jdf));		
+	case DATA_A:		title = Format(t_("Added mass %s"), Hydro::StrBDOF(plot_idf, plot_jdf));		
 						labelY = t_("Added mass");
 						splitter.SetPos(10000, 0);				
 						break;		
-	case DATA_B:		title = Format(t_("Radiation damping %s"), Hydro::StrBDOF(idf, jdf));
+	case DATA_B:		title = Format(t_("Radiation damping %s"), Hydro::StrBDOF(plot_idf, plot_jdf));
 						labelY = t_("Radiation damping");
 						splitter.SetPos(10000, 0);	
 						break;
-	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrBDOF(idf), heading);
+	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrBDOF(plot_idf), heading);
 						labelY = t_("Diffraction scattering force");
 						labelY2 = t_("Diffraction scattering force phase [rad]");
 						splitter.SetPos(5000, 0);	
 						break;
-	case DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), Hydro::StrBDOF(idf), heading);
+	case DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), Hydro::StrBDOF(plot_idf), heading);
 						labelY = t_("Froude-Krylov force");		
 						labelY2 = t_("Froude-Krylov force phase [rad]");
 						splitter.SetPos(5000, 0);			
 						break;
-	case DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), Hydro::StrBDOF(idf), heading);
+	case DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), Hydro::StrBDOF(plot_idf), heading);
 						labelY = t_("Excitation force");		
 						labelY2 = t_("Excitation force phase [rad]");
 						splitter.SetPos(5000, 0);				
 						break;
-	case DATA_RAO:		title = Format(t_("Response Amplitude Operator %s heading %.1fº"), Hydro::StrBDOF(idf), heading);
+	case DATA_RAO:		title = Format(t_("Response Amplitude Operator %s heading %.1fº"), Hydro::StrBDOF(plot_idf), heading);
 						labelY = t_("RAO []");		
 						labelY2 = t_("RAO phase [rad]");
 						splitter.SetPos(5000, 0);							
 						break;
-	case DATA_STS:		title = Format(t_("Magnitude Z = B(w)+jw(A(w)-Ainf) %s"), Hydro::StrBDOFFull(idf, jdf));		
+	case DATA_STS:		title = Format(t_("Magnitude Z = B(w)+jw(A(w)-Ainf) %s"), Hydro::StrBDOFFull(plot_idf, plot_jdf));		
 						labelY = t_("Magnitude");				
-						title2 = Format(t_("Phase Z = B(w)+jw(A(w)-Ainf) %s"), Hydro::StrBDOFFull(idf, jdf));		
+						title2 = Format(t_("Phase Z = B(w)+jw(A(w)-Ainf) %s"), Hydro::StrBDOFFull(plot_idf, plot_jdf));		
 						labelY2 = t_("Phase");
 						splitter.SetPos(5000, 0);				
 						break;
-	case DATA_STS2:		title = Format(t_("Magnitude response %s"), Hydro::StrBDOF(idf, jdf));
-						title2 = Format(t_("Frequency response %s"), Hydro::StrBDOF(idf, jdf));
+	case DATA_STS2:		title = Format(t_("Magnitude response %s"), Hydro::StrBDOF(plot_idf, plot_jdf));
+						title2 = Format(t_("Frequency response %s"), Hydro::StrBDOF(plot_idf, plot_jdf));
 						splitter.SetPos(5000, 0);
 	}
 	scatt.SetTitle(title);
@@ -108,7 +108,7 @@ bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, con
 	bool loaded = false;
 	for (int id = 0; id < ids.GetCount(); ++id) {
 		const Hydro &hy = hydro[ids[id]].hd();
-		LoadEach(hy, id, loaded);
+		LoadEach(hy, id, loaded, hy.GetId());
 	}
 	if (mbm.menuPlot.autoFit) {
 		scatt.ZoomToFit(true, true);
@@ -137,12 +137,12 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mbm) {
 	if (show_w) {
 		scatt.SetLabelX(t_("w [rad/s]"));
 		scatP.SetLabelX(t_("w [rad/s]"));
-	}else {
+	} else {
 		scatt.SetLabelX(t_("T [s]"));
 		scatP.SetLabelX(t_("T [s]"));
 	}
 	bool loaded = false;
-	int idc = ArrayModel_IdHydro(mbm.menuFOAMM.arrayModel);
+	int idc = ArrayModel_Id(mbm.menuFOAMM.arrayModel);
 	LoadEach(hy, 0, loaded, idc);
 	
 	if (mbm.menuPlot.autoFit) {
@@ -167,110 +167,138 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		idc = id;
 	const Upp::Color &color = GetColorId(idc);
 	if (dataToShow == DATA_A) {
-		Upp::Color acolor = Null;
 		if (hy.IsLoadedA()) {
-			if (ABFZ_source[id].Init(hy, idf, jdf, PLOT_A, show_w, !dim)) {
+			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_A, show_w, !dim)) {
 				loaded = true;
-				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
+				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim)
 					scatt.Units(t_("Ns2/m"));
-				double dummy;
-				scatt.GetStroke(scatt.GetCount()-1, dummy, acolor);
 			}
 		}
 		if (hy.IsLoadedAwinf()) {
-			if (Ainf_source[id].Init(hy, idf, jdf, PLOT_AINF, show_w, !dim)) {
+			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, PLOT_AINF, show_w, !dim)) {
 				loaded = true;
-				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("Ainf_%s"), nameType)).Dash(LINE_DOTTED).SetMarkColor(acolor).MarkStyle<SquareMarkPlot>().Stroke(2, color);
-				scatt.Stroke(show_w ? 2 : 0, acolor).SetMarkWidth(show_w ? 0 : 8);
+				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("Ainf_%s"), nameType)).
+						MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_DOTTED);
+				scatt.Stroke(show_w ? 2 : 0, color).SetMarkWidth(show_w ? 0 : 8);
 				if (dim)
 					scatt.Units(t_("Ns2/m"));
 			}
 		}
 		if (hy.IsLoadedAw0()) {
-			if (A0_source[id].Init(hy, idf, jdf, PLOT_A0, show_w, !dim)) {
+			if (A0_source[id].Init(hy, plot_idf, plot_jdf, PLOT_A0, show_w, !dim)) {
 				loaded = true;
-				scatt.AddSeries(A0_source[id]).Legend(Format(t_("A0_%s"), nameType)).Dash(LINE_DOTTED).SetMarkColor(acolor).MarkStyle<SquareMarkPlot>().Stroke(2, color);
-				scatt.Stroke(!show_w ? 2 : 0, acolor).SetMarkWidth(!show_w ? 0 : 8);
+				scatt.AddSeries(A0_source[id]).Legend(Format(t_("A0_%s"), nameType)).
+						SetMarkWidth(!show_w ? 0 : 8).SetMarkColor(color).MarkStyle<SquareMarkPlot>().
+						Stroke(2, color).Dash(LINE_DOTTED);
 				if (dim)
 					scatt.Units(t_("Ns2/m"));
 			}
 		}
 	} else if (dataToShow == DATA_B && hy.IsLoadedB()) {
-		if (ABFZ_source[id].Init(hy, idf, jdf, PLOT_B, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_B, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(t_("Ns/m"));
 		}
 	} else if (dataToShow == DATA_FORCE_SC && hy.IsLoadedFsc() && ih >= 0) {
-		if (ABFZ_source[id].Init(hy, idf, ih, PLOT_FORCE_SC_MA, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, ih, PLOT_FORCE_SC_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fsc_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fsc_ma_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(t_("N"));
-			if (ABFZ_source2[id].Init(hy, idf, ih, PLOT_FORCE_SC_PH, show_w, !dim)) {
+			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_FORCE_SC_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fsc_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(2, color);
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fsc_ph_%s"), nameType)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
 	} else if (dataToShow == DATA_FORCE_FK && hy.IsLoadedFfk() && ih >= 0) {
-		if (ABFZ_source[id].Init(hy, idf, ih, PLOT_FORCE_FK_MA, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, ih, PLOT_FORCE_FK_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Ffk_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Ffk_ma_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(t_("N"));
-			if (ABFZ_source2[id].Init(hy, idf, ih, PLOT_FORCE_FK_PH, show_w, !dim)) {
+			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_FORCE_FK_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Ffk_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(2, color);
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Ffk_ph_%s"), nameType)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
 	} else if (dataToShow == DATA_FORCE_EX && hy.IsLoadedFex() && ih >= 0) {
-		if (ABFZ_source[id].Init(hy, idf, ih, PLOT_FORCE_EX_MA, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, ih, PLOT_FORCE_EX_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fex_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fex_ma_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(t_("N"));
-			if (ABFZ_source2[id].Init(hy, idf, ih, PLOT_FORCE_EX_PH, show_w, !dim)) {
+			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_FORCE_EX_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fex_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(2, color);
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fex_ph_%s"), nameType)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
 	} else if (dataToShow == DATA_RAO && hy.IsLoadedRAO() && ih >= 0) {
-		if (ABFZ_source[id].Init(hy, idf, ih, PLOT_RAO_MA, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, ih, PLOT_RAO_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("RAO_ma_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
-			if (ABFZ_source2[id].Init(hy, idf, ih, PLOT_RAO_PH, show_w, !dim)) {
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("RAO_ma_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
+			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_RAO_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("RAO_ph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(2, color);
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("RAO_ph_%s"), nameType)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
 	} else if (dataToShow == DATA_STS && hy.IsLoadedA() && hy.IsLoadedB()) {
-		if (ABFZ_source[id].Init(hy, idf, jdf, PLOT_Z_MA, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_Z_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Zmag_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Zmag_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(t_("Ns/m"));
-			if (ABFZ_source2[id].Init(hy, idf, jdf, PLOT_Z_PH, show_w, !dim)) {
+			if (ABFZ_source2[id].Init(hy, plot_idf, plot_jdf, PLOT_Z_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Zph_%s"), nameType)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(2, color);
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Zph_%s"), nameType)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
 	} else if (dataToShow == DATA_STS2 && hy.IsLoadedStateSpace()) {
-		if (ABFZ_source[id].Init(hy, idf, jdf, PLOT_Z_MA, show_w, !dim)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_Z_MA, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Zmag %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);//.Units("dB");
-			if (ABFZ_source2[id].Init(hy, idf, jdf, PLOT_Z_PH, show_w, !dim)) {
+			if (ABFZ_source2[id].Init(hy, plot_idf, plot_jdf, PLOT_Z_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Zph %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(2, color);
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Zph %s"), hy.name)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
-		if (TFS_source[id].Init(hy, idf, jdf, PLOT_TFS_MA, show_w, !dim)) {
+		if (TFS_source[id].Init(hy, plot_idf, plot_jdf, PLOT_TFS_MA, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFSmag %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(4, color).Dash(LINE_DASH_DOT);//.Units("dB");
-			if (TFS_source2[id].Init(hy, idf, jdf, PLOT_TFS_PH, show_w, !dim)) {
+			if (TFS_source2[id].Init(hy, plot_idf, plot_jdf, PLOT_TFS_PH, show_w, !dim)) {
 				loaded = true;
-				scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSph %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Units("rad").Stroke(4, color).Dash(LINE_DASH_DOT);
+				scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSph %s"), hy.name)).Units(t_("rad")).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
 	}

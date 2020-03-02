@@ -67,15 +67,6 @@ int64 TextArrayOps::GetPrevWord(int64 cursor)
 	return c;
 }
 
-Rect LookMargins(const Rect& r, const Value& ch)
-{
-	Rect m = ChMargins(ch);
-	int fcy = GetStdFontCy();
-	if(m.top + m.bottom + fcy > r.GetHeight())
-		m.top = m.bottom = max((r.GetHeight() - fcy) / 2, 0);
-	return m;
-}
-
 void LookFrame::FrameLayout(Rect& r)
 {
 	Rect m = LookMargins(r, Get());
@@ -97,40 +88,6 @@ void LookFrame::FrameAddSize(Size& sz)
 	sz.cy += m.top + m.bottom;
 }
 
-void ActiveEdgeFrame::FrameLayout(Rect& r)
-{
-	Rect m = LookMargins(r, edge[0]);
-	r.left += m.left;
-	r.right -= m.right;
-	r.top += m.top;
-	r.bottom -= m.bottom;
-}
-
-void ActiveEdgeFrame::FramePaint(Draw& w, const Rect& r)
-{
-	int i = 0;
-	if(ctrl) {
-		i = !ctrl->IsEnabled() ? CTRL_DISABLED
-		    : ctrl->HasFocus() ? CTRL_PRESSED
-		    : mousein ? CTRL_HOT
-		    : CTRL_NORMAL;
-	}
-	ChPaintEdge(w, r, edge[i]);
-}
-
-void ActiveEdgeFrame::FrameAddSize(Size& sz)
-{
-	Rect m = ChMargins(edge[0]);
-	sz.cx += m.left + m.right;
-	sz.cy += m.top + m.bottom;
-}
-
-void ActiveEdgeFrame::Set(const Ctrl *ctrl_, const Value *edge_, bool active)
-{
-	ctrl = active ? ctrl_ : NULL;
-	edge = edge_;
-}
-
 CH_STYLE(EditField, Style, StyleDefault)
 {
 	paper = SColorPaper();
@@ -147,6 +104,7 @@ CH_STYLE(EditField, Style, StyleDefault)
 		edge[i] = CtrlsImg::EFE();
 	activeedge = false;
 	vfm = 2;
+	coloredge = Null;
 }
 
 bool EditField::FrameIsEdge()
@@ -154,22 +112,24 @@ bool EditField::FrameIsEdge()
 	return &GetFrame() == &edge;
 }
 
-void EditField::SyncEdge()
+void EditField::RefreshAll()
 {
-	if(FrameIsEdge() && style->activeedge)
-		RefreshFrame();
+	Color paper = GetPaper();
+	edge.SetColor(style->coloredge, paper);
+	WhenPaper(paper);
+	RefreshFrame();
 }
 
 void EditField::MouseEnter(Point p, dword keyflags)
 {
 	edge.Mouse(true);
-	SyncEdge();
+	RefreshAll();
 }
 
 void EditField::MouseLeave()
 {
 	edge.Mouse(false);
-	SyncEdge();
+	RefreshAll();
 }
 
 EditField& EditField::SetStyle(const Style& s)
@@ -177,7 +137,7 @@ EditField& EditField::SetStyle(const Style& s)
 	style = &s;
 	edge.Set(this, style->edge, style->activeedge);
 	RefreshLayout();
-	RefreshFrame();
+	RefreshAll();
 	return *this;
 }
 
@@ -302,16 +262,29 @@ void EditField::Paints(Draw& w, int& x, int fcy, const wchar *&txt,
 	x += cx;
 }
 
+void EditField::State(int)
+{
+	RefreshAll();
+}
+
+Color EditField::GetPaper()
+{
+	bool enabled = IsShowEnabled();
+	Color paper = enabled && !IsReadOnly() ? (HasFocus() ? style->focus : style->paper)
+	                                       : style->disabled;
+	if(nobg)
+		paper = Null;
+	if(enabled && (convert && convert->Scan(text).IsError() || errorbg))
+		paper = style->invalid;
+	return paper;
+}
+
 void EditField::Paint(Draw& w)
 {
 	Size sz = GetSize();
 	bool enabled = IsShowEnabled();
-	Color paper = enabled && !IsReadOnly() ? (HasFocus() ? style->focus : style->paper) : style->disabled;
-	if(nobg)
-		paper = Null;
+	Color paper = GetPaper();
 	Color ink = enabled ? Nvl(textcolor, style->text) : style->textdisabled;
-	if(enabled && (convert && convert->Scan(text).IsError() || errorbg))
-		paper = style->invalid;
 	int fcy = font.GetCy();
 	int yy = GetTy();
 	if(!no_internal_margin) {
@@ -426,17 +399,17 @@ void EditField::Finish(bool refresh)
 	sz.cx -= 2;
 	if(sz.cx <= 0) return;
 	int x = GetCaret(cursor);
-	int wx = x + font.GetRightSpace('o');
+	int wx = x + max(font.GetRightSpace('o'), font.GetCy() / 5); // sometimes RightSpace is not implemented (0)
 	if(wx > sz.cx + sc - 1) {
 		sc = wx - sz.cx + 1;
-		Refresh();
+		RefreshAll();
 	}
 	if(x < sc) {
 		sc = x;
-		Refresh();
+		RefreshAll();
 	}
 	if(refresh)
-		Refresh();
+		RefreshAll();
 	SyncCaret();
 }
 
@@ -470,7 +443,7 @@ void EditField::GotFocus()
 	}
 	SelSource();
 	Finish();
-	SyncEdge();
+	RefreshAll();
 }
 
 void EditField::LostFocus()
@@ -487,8 +460,7 @@ void EditField::LostFocus()
 		anchor = -1;
 		cursor = sc = 0;
 	}
-	Refresh();
-	SyncEdge();
+	RefreshAll();
 }
 
 void EditField::LeftDown(Point p, dword flags)

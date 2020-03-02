@@ -151,10 +151,10 @@ public:
 		from.SimZ();
 		to.SimZ();
 	}
-	double Length() {return from.Distance(to);}
-	double Dx()		{return to.x - from.x;}
-	double Dy()		{return to.y - from.y;}	
-	double Dz()		{return to.z - from.z;}
+	double Length() const {return from.Distance(to);}
+	double Dx()	const 	  {return to.x - from.x;}
+	double Dy()	const 	  {return to.y - from.y;}	
+	double Dz()	const 	  {return to.z - from.z;}
 	
 	void Mirror(const Point3D &p0) {
 		from.Mirror(p0);
@@ -168,6 +168,10 @@ public:
 	Point3D IntersectionPlaneZ(double z);
 	
 	Point3D Intersection(const Point3D &planePoint, const Vector3D &planeNormal);
+	
+	bool PointIn(const Point3D &p) const;
+	bool SegmentIn(const Segment3D &in, double in_len) const;
+	bool SegmentIn(const Segment3D &in) const;
 };
 
 //bool MinSegment(const Point3D& p1, const Point3D& p2, const Point3D& p3, const Point3D& p4, Segment3D &ret, double &mua, double &mub);
@@ -177,7 +181,12 @@ Point3D GetCentroid(const Point3D &a, const Point3D &b, const Point3D &c);
 Vector3D GetNormal(const Point3D &a, const Point3D &b, const Point3D &c);
 
 Point3D Intersection(const Vector3D &lineVector, const Point3D &linePoint, const Vector3D &planeNormal, const Point3D &planePoint);
-	
+
+bool PointInSegment(const Point3D &p, const Segment3D &seg);
+bool SegmentInSegment(const Segment3D &in, double in_len, const Segment3D &seg);
+bool SegmentInSegment(const Segment3D &in, const Segment3D &seg);
+
+
 template <typename T>
 inline T const& maxNotNull(T const& a, T const& b) {
 	if (IsNull(a))
@@ -309,9 +318,12 @@ public:
 	void GetSurface();
 	void GetVolume();
 	Point3D GetCenterOfBuoyancy();
-	void GetHydrostaticStiffness(Eigen::MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g, double zTolerance);
+	void GetHydrostaticStiffness(Eigen::MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g);
 	void Underwater(const Surface &orig);
 	
+	void TriangleToQuad(int ip);
+	void TriangleToQuad(Panel &pan);
+		
 	bool IsMoved(double _x, double _y, double _z, double _ax, double _ay, double _az) const;
 	void MoveTo(double x, double y, double z, double ax, double ay, double az, double _c_x, double _c_y, double _c_z);
 	void MoveTo();
@@ -335,14 +347,25 @@ public:
 	const Vector<int> &GetSelPanels() const		{return selPanels;}
 	const Vector<int> &GetSelNodes() const		{return selNodes;}
 	
+	void AddNode(Point3D &p);
+	int FindNode(Point3D &p);
+	
 	static int RemoveDuplicatedPanels(Vector<Panel> &_panels);
+	static int RemoveTinyPanels(Vector<Panel> &_panels);
 	static int RemoveDuplicatedPointsAndRenumber(Vector<Panel> &_panels, Vector<Point3D> &_nodes);
+
+protected:
+	struct PanelPoints {
+		Point3D data[4];
+	};
+	void SetPanelPoints(Array<PanelPoints> &pans);
 	
 private:
 	inline bool CheckId(int id) {return id >= 0 && id < nodes.GetCount()-1;}
 	
 	void DetectTriBiP(int &numTri, int &numBi, int &numP);
 	int FixSkewed();
+	int SegmentInSegments(int iseg) const;
 	void AnalyseSegments(double zTolerance);
 	void AddSegment(int ip0, int ip1, int ipanel);
 	bool ReorientPanels();
@@ -353,6 +376,16 @@ private:
 	void GetPanelParams(Panel &panel) const;
 	
 	Vector<int> selPanels, selNodes;
+};
+
+class FlatPanel : public Surface {
+public:
+	void Set(double lenX, double lenY, double panelWidth);
+};
+
+class Revolution : public Surface {
+public:
+	void Set(Vector<Pointf> &points, double panelWidth);
 };
 
 }

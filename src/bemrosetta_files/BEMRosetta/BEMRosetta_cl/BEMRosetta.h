@@ -16,6 +16,7 @@ void SetBuildInfo(String &str);
 
 class Hydro {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
@@ -836,14 +837,14 @@ public:
 			if (hydros[i].hd().GetId() == id)
 				return i;
 		}
-		return Null;
+		return -1;
 	}
 	int GetMeshId(int id) {	
 		for (int i = 0; i < surfs.GetCount(); ++i) {
 			if (surfs[i].GetId() == id)
 				return i;
 		}
-		return Null;
+		return -1;
 	}
 		
 	static Function <void(String)> Print, PrintWarning, PrintError;	
@@ -864,7 +865,7 @@ public:
 	String foammPath;
 	
 	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
-	void Join(Vector<int> &ids, Function <bool(String, int)> Status);
+	HydroClass &Join(Vector<int> &ids, Function <bool(String, int)> Status);
 	void Symmetrize(int ids);
 	void A0(int ids);
 	void Ainf(int ids);
