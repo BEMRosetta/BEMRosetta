@@ -801,14 +801,14 @@ String Hydro::C_units(int i, int j) {
 	return ret;
 }
 
-void Hydro::SetC(int ib, const Eigen::MatrixXd &K) {
+void Hydro::SetC(int ib, const Eigen::MatrixXd &K) {		// K is supposed to be dimensionalized
 	if (C.IsEmpty())
 		C.SetCount(Nb);
 	if (C[ib].size() == 0)
 		C[ib].setConstant(6, 6, Null); 
 	for (int idf = 0; idf < 6; ++idf) {
 		for (int jdf = 0; jdf < 6; ++jdf) {
-			double k = dimen ? 1 : g_rho_ndim()*pow(len, GetK_C(idf, jdf));
+			double k = dimen ? g_rho_dim()/g_rho_ndim() : g_rho_ndim()*pow(len, GetK_C(idf, jdf));
 	      	C[ib](idf, jdf) = K(idf, jdf)/k;
 		}
 	}
@@ -850,7 +850,7 @@ void Hydro::StateSpace::GetTFS(const Vector<double> &w) {
 	TFS.SetCount(w.GetCount());
 	for (int ifr = 0; ifr < w.GetCount(); ++ifr) {
 		std::complex<double> wi = std::complex<double>(0, w[ifr]);
-		TFS[ifr] = C_ss.transpose()*(Eigen::MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss;	// C_ss*inv(I*w*i-A_ss)*B_ss
+		TFS[ifr] = (C_ss.transpose()*(Eigen::MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
 	}		
 }
 		

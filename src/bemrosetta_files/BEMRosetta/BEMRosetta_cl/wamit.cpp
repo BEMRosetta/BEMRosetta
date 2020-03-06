@@ -852,6 +852,20 @@ void Wamit::Save_hst(String fileName) {
 		}
 }
 
+// K is supposed to be dimensionalized
+void Wamit::Save_hst_static(Eigen::MatrixXd C, String fileName, double rho, double g) {
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+
+	for (int i = 0; i < 6; ++i)  
+		for (int j = 0; j < 6; ++j) {
+			if (!IsNull(C(i, j))) 
+				out << Format(" %5d %5d  %s\n", i+1, j+1, 
+								FormatWam(C(i, j)/rho/g));
+		}
+}
+
 void Wamit::Save_4(String fileName, bool force_w) {
 	if (!hd().IsLoadedRAO()) 
 		return;

@@ -403,7 +403,7 @@ ctrl Button {
 	}
 }
 
-fn DrawCircle(w, xx, yy, c, color)
+fn DrawCircle3(w, xx, yy, c, color)
 {
 	if(c > 15) {
 		w.DrawRect(xx + 5, yy, c - 10, c, color);
@@ -428,11 +428,11 @@ fn DrawOption(w, x, y, kind)
 {
 	osz = OptionSize();
 	if(kind == 2) {
-		DrawCircle(w, x, y, osz, :Gray);
+		DrawCircle3(w, x, y, osz, :Gray);
 		if(osz > 15)
-			DrawCircle(w, x + 2, y + 2, osz - 4, :SWhite);
+			DrawCircle3(w, x + 2, y + 2, osz - 4, :SWhite);
 		else
-			DrawCircle(w, x + 1, y + 1, osz - 2, :SWhite);
+			DrawCircle3(w, x + 1, y + 1, osz - 2, :SWhite);
 	}
 	else {
 		r = RectC(x, y, osz, osz);

@@ -450,7 +450,7 @@ public:
 class MeshData {
 public:
 	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, STL_BIN, STL_TXT, UNKNOWN};
-	enum MESH_TYPE {ORIGINAL, MOVED, UNDERWATER};
+	enum MESH_TYPE {MOVED, UNDERWATER};
 	
 	MeshData() {id = idCount++;}
 	
@@ -488,6 +488,8 @@ public:
 	static void SaveGdfWamit(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, double g, bool y0z, bool x0z);
 	static void SaveStlTxt(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
 	static void SaveStlBin(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
+	
+	void SaveHST(String fileName, double rho, double g) const; 
 	
 	void Report(double rho);
 	
@@ -585,6 +587,8 @@ public:
 	bool LoadGdfMesh(String file);
 	bool LoadDatMesh(String file);
 	void SaveGdfMesh(String fileName);
+	
+	static void Save_hst_static(Eigen::MatrixXd C, String fileName, double rho, double g);
 	
 protected:
 	bool Load_out();							

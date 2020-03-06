@@ -1002,7 +1002,7 @@ private:
 	ProcessStatus status;
 	double maxTimeWithoutOutput, maxRunTime;
 	double refreshTime;
-	double lastPerform, lastPause;
+	//double lastPerform, lastPause;
 	bool callbackOn;
 #ifdef CTRLLIB_H	
 	TimeCallback timeCallback;
