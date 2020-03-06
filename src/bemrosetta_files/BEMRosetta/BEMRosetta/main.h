@@ -401,7 +401,7 @@ public:
 	
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc);
-	void Add(String name, int icase, const Eigen::MatrixXd &K, bool button, int idc);
+	void Add(const MeshData &mesh, int icase, bool button);
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc);
 };
 
@@ -703,7 +703,7 @@ public:
 
 	void Init();
 
-	void OptionsUpdated();
+	void OptionsUpdated(double rho, double g);
 
 	bool LoadSerializeJson();
 	bool StoreSerializeJson();
@@ -723,7 +723,9 @@ public:
 private:
 	TabCtrl tab;
 	int lastTab;
-	Button tabWindow;
+	Button butWindow;
+	Label labrho, labg;
+	EditDouble editrho, editg;
 	
 	MainNemoh mainNemoh;
 	MainBEM mainBEM;
