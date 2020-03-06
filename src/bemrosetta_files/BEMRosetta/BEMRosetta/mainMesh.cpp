@@ -232,8 +232,8 @@ void MainMesh::InitSerialize(bool ret) {
 			
 	if (!ret || IsNull(menuConvert.opt)) 
 		menuConvert.opt = 0;
-	if (!ret || IsNull(menuConvert.optMesh)) 
-		menuConvert.optMesh = 0;
+	if (!ret || IsNull(menuConvert.optMeshType)) 
+		menuConvert.optMeshType = 0;
 }
 
 void MainMesh::LoadSelTab(BEMData &bem) {
@@ -376,7 +376,7 @@ bool MainMesh::OnConvertMesh() {
 		Progress progress(t_("Saving mesh file..."), 100); 
 		
 		Bem().surfs[id].SaveAs(~menuConvert.file, type, Bem().g, 
-								static_cast<MeshData::MESH_TYPE>(int(~menuConvert.optMesh)));	
+								static_cast<MeshData::MESH_TYPE>(int(~menuConvert.optMeshType)));	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -587,7 +587,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuOpen_file", menuOpen.file)
 		("menuConvert_file", menuConvert.file)	
 		("menuConvert_opt", menuConvert.opt)
-		("menuConvert_optMesh", menuConvert.optMesh)
+		("menuConvert_optMesh", menuConvert.optMeshType)
 		("menuPlot_showMesh", menuPlot.showMesh)		
 		("menuPlot_showNormals", menuPlot.showNormals)	
 		("menuPlot_showSkewed", menuPlot.showSkewed)	

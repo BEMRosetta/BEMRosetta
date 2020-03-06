@@ -57,8 +57,9 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType) 
 	const Vector<Panel> &panels = meshType != UNDERWATER ? mesh.panels : panelsRw;
 	const Vector<Point3D> &nodes = [&]()->const Vector<Point3D> & {
 		switch(meshType) {
-		case 0:		return mesh.nodes0;
-		case 1:		return mesh.nodes;
+		//case 0:		return mesh.nodes0;
+		//case 1:		return mesh.nodes;
+		case 0:		return mesh.nodes;
 		default:	return nodesRw;
 		}
 	}();
@@ -138,4 +139,8 @@ void MeshData::Report(double rho) {
 	BEMData::Print(S("\n") + Format(t_("Center of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
 	
 	BEMData::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.GetCount(), mesh.nodes.GetCount()));
+}
+
+void MeshData::SaveHST(String fileName, double rho, double g) const {
+	Wamit::Save_hst_static(C, fileName, rho, g);
 }

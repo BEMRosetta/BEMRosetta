@@ -71,12 +71,20 @@ void Main::Init() {
 	tab.Add(menuAbout.SizePos(),  t_("About"));
 	
 	Add(tab.SizePos());	
+
+	Add(labrho.SetLabel(t_("rho [Kg/m3]:")).RightPosZ(58, 80).TopPosZ(0, 19));
+	Add(editrho.SetReadOnly().RightPosZ(28, 40).TopPosZ(1, 19));
+	editrho <<= bem.rho;
 	
-	tabWindow.SetImage(Img::application_double());
-	Add(tabWindow.RightPosZ(0, 20).TopPosZ(0, 20));
-	tabWindow.Hide();
+	Add(labg.SetLabel(t_("Gravity [m/s2]:")).RightPosZ(182, 80).TopPosZ(0, 19));
+	Add(editg.SetReadOnly().RightPosZ(148, 40).TopPosZ(1, 19));
+	editg <<= bem.g;
 	
-	tabWindow.WhenAction = [&] {
+	butWindow.SetImage(Img::application_double());
+	Add(butWindow.RightPosZ(0, 20).TopPosZ(0, 20));
+	butWindow.Hide();
+	
+	butWindow.WhenAction = [&] {
 		if (tab.IsAt(mainMesh)) {
 			MainMeshW *mainMeshW = new MainMeshW();
 			mainMeshW->Init(mainMesh);
@@ -105,15 +113,19 @@ void Main::Init() {
 		}
 		
 		if (tab.IsAt(mainMesh) || tab.IsAt(mainBEM)) {
-			tabWindow.Show(true);
+			butWindow.Show(true);
 			lastTab = ~tab;
 		} else 	if (tab.IsAt(mainNemoh)) {
-			tabWindow.Show(false);
+			butWindow.Show(false);
 			lastTab = ~tab;
 		} else {
-			tabWindow.Show(false);
+			butWindow.Show(false);
 			lastTab = 0;
 		}
+		if (tab.IsAt(mainMesh)) 
+			mainMesh.mainTab.WhenSet();
+		else if (tab.IsAt(mainBEM)) 
+			mainBEM.mainTab.WhenSet();
 	};	
 	
 	tab.Set(-1);
@@ -130,9 +142,12 @@ void Main::Init() {
 	BEMData::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput);};
 }
 
-void Main::OptionsUpdated() {
+void Main::OptionsUpdated(double rho, double g) {
 	mainBEM.OnOpt();
 	mainMesh.OnOpt();
+	
+	editg <<= g;
+	editrho <<= rho;
 }
 
 bool Main::LoadSerializeJson() {
@@ -177,7 +192,7 @@ bool Main::StoreSerializeJson() {
 	return StoreAsJsonFile(*this, fileName, true);
 }
 
-Main::~Main() {
+Main::~Main() noexcept {
 	if (!closed)
 		CloseMain(false);
 }
@@ -255,7 +270,7 @@ void MenuOptions::OnSave() {
 	//bem->experimental = ~experimental;	
 	bem->foammPath = ~foammPath;
 	
-	ma().OptionsUpdated();
+	ma().OptionsUpdated(rho, g);
 }
 
 bool MenuOptions::IsChanged() {
@@ -345,7 +360,11 @@ void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, Str
 		array.SetLineCy(i*9, 10);	
 }
 
-void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button, int idc) {
+void MainStiffness::Add(const MeshData &mesh, int icase, bool button) {
+	String name = mesh.fileName;
+	const MatrixXd &K = mesh.C;
+	int idc = mesh.GetId();
+	
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, "", 0, idc);
 	
@@ -355,12 +374,21 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button, 
 		for (int c = 0; c < 6; ++c)
 			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(K(r, c), 7, FD_EXP|FD_CAP_E|FD_REL)).Align(ALIGN_RIGHT));
 	}
-	if (button && Bem().hydros.GetCount() > 0)
-		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy"))
-			 .WhenAction = [=] {
+	if (button) {
+		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Save to Wamit .hst stiffness matrix format"))
+			.WhenAction = [&] {
+				FileSel fs;
+				fs.Type(t_("Wamit stiffness matrix format"), "*.hst");
+				if (fs.ExecuteSaveAs(t_("Save to Wamit .hst stiffness matrix format"))) 
+					mesh.SaveHST(~fs, Bem().rho, Bem().g);
+			};
+	}
+	if (button && Bem().hydros.GetCount() > 0) {
+		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy")).Tip(t_("Copy matrix and paste it in selected BEM Coefficients file and body"))
+			.WhenAction = [=] {
 				WithBEMList<TopWindow> w;
 				CtrlLayout(w);
-				w.Title(t_("Paste matrix in selected BEM file and body"));
+				w.Title(t_("Copy matrix and paste it in selected BEM Coefficients file and body"));
 				w.array.SetLineCy(EditField::GetStdHeight());
 				w.array.AddColumn(t_("File"), 20);
 				w.array.AddColumn(t_("Body"), 10);
@@ -384,6 +412,7 @@ void MainStiffness::Add(String name, int icase, const MatrixXd &K, bool button, 
 					Bem().hydros[f].hd().SetC(ib, K);
 				}
 			 };
+	}
 }
 	
 void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
@@ -403,10 +432,10 @@ bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids)
 	Clear();
 	
 	for (int i = 0; i < ids.GetCount(); ++i) {
-		int icase = ids[i];
-		Hydro &hydro = hydros[icase].hd();
+		int isurf = ids[i];
+		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
-			Add(hydros[icase].hd().name, i, hydros[icase].hd().names[ibody], ibody, hydro, hydro.GetId());
+			Add(hydros[isurf].hd().name, i, hydros[isurf].hd().names[ibody], ibody, hydro, hydro.GetId());
 	}
 	return true;
 }	
@@ -415,8 +444,8 @@ void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids) {
 	Clear();
 
 	for (int i = 0; i < ids.GetCount(); ++i) {
-		int icase = ids[i];	
-		Add(GetFileTitle(surfs[icase].fileName), i, surfs[icase].C, true, surfs[icase].GetId());
+		int isurf = ids[i];	
+		Add(surfs[isurf], i, true);
 	}
 }
 			
