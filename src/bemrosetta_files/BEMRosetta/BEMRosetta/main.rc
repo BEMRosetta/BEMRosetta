@@ -1,7 +1,7 @@
 #include "resource.h"
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ESN)
-LANGUAGE LANG_SPANISH, SUBLANG_SPANISH_MODERN
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 #pragma code_page(1252)
 
 APP                    ICON                    "BEMRosetta.ico"

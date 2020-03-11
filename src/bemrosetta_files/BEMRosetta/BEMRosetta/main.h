@@ -495,10 +495,13 @@ public:
 	void Init();
 	void InitSerialize(bool ret);
 	
-	void AfterLoad(String file);
+	void AfterAdd(String file);
+	void After();
 	bool OnLoad();
 	void OnRemove();
 	void OnRemoveSelected(bool all);
+	void OnJoin();
+	void OnSplit();
 	bool OnConvertMesh();
 	void OnUpdate(bool forceMoved);
 	void OnHealing();
@@ -506,6 +509,9 @@ public:
 	void OnOpt();
 	void OnMenuProcessArraySel();
 	void OnMenuConvertArraySel();
+	
+	void AddRow(const MeshData &surf, String title, String fileName);
+	void RemoveRow(int row);
 	
 	void LoadSelTab(BEMData &bem);
 		
