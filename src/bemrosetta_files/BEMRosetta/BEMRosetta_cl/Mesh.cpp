@@ -105,6 +105,12 @@ String MeshData::Heal(Function <void(String, int pos)> Status) {
 	return String();
 }
 
+void MeshData::Join(const Surface &orig, double rho, double g) {
+	mesh.Join(orig);
+	
+	AfterLoad(rho, g, false);
+}
+	
 void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 	if (!onlyCG) {
 		mesh.GetPanelParams();
