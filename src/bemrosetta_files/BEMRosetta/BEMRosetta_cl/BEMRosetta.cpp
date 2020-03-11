@@ -1058,7 +1058,7 @@ void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status,
 	String error = mesh.Load(fileName, rho, g);
 	if (!error.IsEmpty()) {
 		BEMData::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
-		surfs.Remove(surfs.GetCount()-1);
+		RemoveMesh(surfs.GetCount()-1);
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 	}
 }
@@ -1089,7 +1089,6 @@ void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
 	MeshData &orig = surfs[id];
 	mesh.fileName = orig.fileName;
 	
-	String ret;
 	try {
 		mesh.mesh.Underwater(orig.mesh);
 	} catch (Exc e) {
@@ -1099,6 +1098,54 @@ void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
 	}
 }
 
+void BEMData::RemoveMesh(int id) {
+	surfs.Remove(id);
+}
+
+void BEMData::JoinMesh(int idDest, int idOrig) {
+	const MeshData &orig = surfs[idOrig];
+	MeshData &dest = surfs[idDest];
+	dest.fileName << "/" << orig.fileName;
+	
+	try {
+		dest.Join(orig.mesh, rho, g);
+		RemoveMesh(idOrig);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.GetCount()-1);
+		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
+		throw e;
+	}
+}
+
+Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Status) {
+	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
+	MeshData &orig = surfs[id];
+	
+	Vector<int>	ret;
+	try {
+		Vector<Vector<int>> sets = orig.mesh.GetPanelSets(Status);
+		if (sets.GetCount() == 1)
+			return ret;
+		for (int i = 0; i < sets.GetCount(); ++i) {		
+			MeshData &surf = surfs.Add();
+			ret << surfs.GetCount()-1-1;		// One more as id is later removed
+			for (int ii = 0; ii < sets[i].GetCount(); ++ii) 
+				surf.mesh.panels << clone(orig.mesh.panels[sets[i][ii]]);	
+			
+			surf.mesh.nodes = clone(orig.mesh.nodes);
+			surf.mesh.nodes0 = clone(orig.mesh.nodes0);
+			surf.SetCode(orig.GetCode());
+			surf.AfterLoad(rho, g, false);
+		}
+		RemoveMesh(id);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.GetCount() - ret.GetCount());
+		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
+		throw e;
+	}
+	return ret;
+}
+	
 bool BEMData::LoadSerializeJson() {
 	bool ret;
 	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");

@@ -455,12 +455,8 @@ void Surface::AnalyseSegments(double zTolerance) {
 	}
 }
 
-bool Surface::ReorientPanels() {
-	numUnprocessed = -1;
-	
-	// Get the lowest panel with normal non horizontal
-	int iLowSeg = Null;
-	int iLowPanel;
+bool Surface::GetLowest(int &iLowSeg, int &iLowPanel) {	// Get the lowest panel with normal non horizontal
+	iLowSeg = iLowPanel = Null;
 	double zLowSeg = DBL_MAX;
 	for (int i = 0; i < segments.GetCount(); ++i) {
 		const Segment &seg = segments[i];
@@ -477,7 +473,14 @@ bool Surface::ReorientPanels() {
 			}
 		}
 	}
-	if (IsNull(iLowSeg))
+	return !IsNull(iLowSeg);
+}
+	
+bool Surface::ReorientPanels() {
+	numUnprocessed = -1;
+	
+	int iLowSeg, iLowPanel;
+	if (!GetLowest(iLowSeg, iLowPanel))
 		return false;
 	
 	// Reorient lowest panel downwards to be the seed
@@ -513,6 +516,49 @@ bool Surface::ReorientPanels() {
 	numUnprocessed = panels.GetCount() - panelProcessed.GetCount();
 
 	return true;
+}
+
+Vector<Vector<int>> Surface::GetPanelSets(Function <void(String, int pos)> Status) {
+	Vector<Vector<int>> ret;
+	
+	double zTolerance = -0.1;
+	AnalyseSegments(zTolerance);	
+	
+	Index<int> allPanels;
+	for (int i = 0; i < panels.GetCount(); ++i)
+		allPanels << i;
+	
+	while (allPanels.GetCount() > 0) {
+		Vector<int> panelStack;
+		Upp::Index<int> panelProcessed;
+	
+		panelStack << allPanels[0];
+		while (!panelStack.IsEmpty()) {
+			int id = panelStack.GetCount() - 1;
+			int ipp = panelStack[id];
+			panelStack.Remove(id, 1);
+			int iall = allPanels.Find(ipp);
+			if (iall < 0)
+				continue;
+			allPanels.Remove(iall);
+			panelProcessed << ipp;
+			
+			for (int is = 0; is < segments.GetCount(); ++is) {
+				const Upp::Index<int> &segPanels = segments[is].panels;
+				if (segPanels.Find(ipp) >= 0) {
+					for (int i = 0; i < segPanels.GetCount(); ++i) {
+						int ipadyac = segPanels[i];
+						if (ipadyac != ipp && panelProcessed.Find(ipadyac) < 0) 
+							panelStack << ipadyac;
+					}
+				}
+			}
+		}
+		ret << panelProcessed.PickKeys();
+		panelProcessed.Clear();
+		Status(Format(t_("Split mesh #%d"), ret.GetCount()), 0);
+	}
+	return ret;
 }
 
 void Surface::ReorientPanel(int ip) {
@@ -960,6 +1006,30 @@ void Surface::Underwater(const Surface &orig) {
 	nodes = clone(nodes0);
 }
 
+void Surface::Join(const Surface &orig) {
+	x = y = z = a_x = a_y = a_z = 0;
+	
+	int num = nodes.GetCount();
+	int numOrig = orig.nodes.GetCount();
+	nodes.SetCount(num + numOrig);
+	for (int i = 0; i < numOrig; ++i)
+		nodes[num+i] = orig.nodes[i];
+	
+	int numPan = panels.GetCount();
+	int numPanOrig = orig.panels.GetCount();
+	panels.SetCount(numPan + numPanOrig);
+	for (int i = 0; i < numPanOrig; ++i) {
+		Panel &pan = panels[numPan+i];
+		const Panel &panOrig = orig.panels[i];
+		
+		for (int ii = 0; ii < 4; ++ii)
+			pan.id[ii] = panOrig.id[ii] + num;
+		
+		GetPanelParams(pan);
+	}
+	nodes0 = clone(nodes);
+}
+	
 bool Surface::IsMoved(double _x, double _y, double _z, double _a_x, double _a_y, double _a_z) const {
 	return x != _x || y != _y || z != _z || a_x != _a_x || a_y != _a_y || a_z != _a_z;
 }

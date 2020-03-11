@@ -478,6 +478,7 @@ public:
 	String LoadStlBin(String fileName);
 	
 	String Heal(Function <void(String, int pos)> Status);
+	void Join(const Surface &orig, double rho, double g);
 	void Image(int axis);
 		
 	void AfterLoad(double rho, double g, bool onlyCG);
@@ -878,6 +879,9 @@ public:
 	void HealingMesh(int id, Function <void(String, int pos)> Status);
 	void ImageMesh(int id, int axis);
 	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
+	void RemoveMesh(int id);
+	void JoinMesh(int idDest, int idOrig);
+	Vector<int> SplitMesh(int id, Function <void(String, int pos)> Status);
 			
 	bool LoadSerializeJson();
 	bool StoreSerializeJson();

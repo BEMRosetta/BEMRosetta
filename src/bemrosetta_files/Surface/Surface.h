@@ -320,6 +320,8 @@ public:
 	Point3D GetCenterOfBuoyancy();
 	void GetHydrostaticStiffness(Eigen::MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g);
 	void Underwater(const Surface &orig);
+	void Join(const Surface &orig);
+	Vector<Vector<int>> GetPanelSets(Function <void(String, int pos)> Status);
 	
 	void TriangleToQuad(int ip);
 	void TriangleToQuad(Panel &pan);
@@ -370,6 +372,7 @@ private:
 	void AddSegment(int ip0, int ip1, int ipanel);
 	bool ReorientPanels();
 	void ReorientPanel(int ip);
+	bool GetLowest(int &iLowSeg, int &iLowPanel);
 	bool SameOrderPanel(int ip0, int ip1, int in0, int in1);
 	static int PanelGetNumNodes(const Vector<Panel> &_panels, int ip) {return _panels[ip].GetNumNodes();}
 	bool IsPanelTriangle(int ip) 	{return panels[ip].IsTriangle();}

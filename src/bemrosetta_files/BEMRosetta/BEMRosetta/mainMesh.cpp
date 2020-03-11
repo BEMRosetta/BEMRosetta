@@ -29,9 +29,9 @@ void MainMesh::Init() {
 	menuOpen.butRemoveSelected.Tip(t_("Removes selected files")).Disable();	
 	menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
 	menuOpen.butJoin.Tip(t_("Join selected meshes")).Disable();	
-	//menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
+	menuOpen.butJoin.WhenAction = THISBACK(OnJoin);
 	menuOpen.butSplit.Tip(t_("Split mesh in parts")).Disable();	
-	//menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
+	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);
@@ -291,32 +291,22 @@ void MainMesh::OnOpt() {
 		menuConvert.file.ActiveType(2);
 }
 
-void MainMesh::AfterLoad(String file) {
+void MainMesh::AfterAdd(String file) {
 	int id = Bem().surfs.GetCount() - 1;
 	MeshData &surf = Bem().surfs[id];
-	
-	ArrayModel_Add(menuOpen.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId());
-	
-	mainView.CalcEnvelope();
-	mainView.gl.ZoomToFit();
+		
 	mainTab.Set(mainView);
-	mainTab.WhenSet();
 	
 	surf.Report(Bem().rho);
-	mainSummary.Report(Bem().surfs, id);		
 	
-	menuOpen.butRemove.Enable();
-	menuOpen.butRemoveSelected.Enable();
-	ArrayModel_Add(menuPlot.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId(),
-					optionsPlot, [&] {mainView.gl.Refresh();});
-	if (ArrayModel_IdMesh(menuPlot.arrayModel) < 0)
-		menuPlot.arrayModel.SetCursor(0);
-	ArrayModel_Add(menuConvert.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId());
-	if (ArrayModel_IdMesh(menuConvert.arrayModel) < 0)
-		menuConvert.arrayModel.SetCursor(0);
-	ArrayModel_Add(menuProcess.arrayModel, surf.GetCodeStr(), GetFileTitle(file), surf.fileName, surf.GetId());
-	if (ArrayModel_IdMesh(menuProcess.arrayModel) < 0)
-		menuProcess.arrayModel.SetCursor(0);		
+	AddRow(surf, GetFileTitle(file), surf.fileName);
+
+	mainView.CalcEnvelope();
+	
+	mainView.gl.Enable();
+	mainView.gl.ZoomToFit();
+	
+	After();		
 }
 
 bool MainMesh::OnLoad() {
@@ -340,13 +330,11 @@ bool MainMesh::OnLoad() {
 		
 		Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);}, false);
 		
-		AfterLoad(file);
-		
-		mainView.gl.Enable();
-		mainView.gl.Refresh();
+		AfterAdd(file);
 		
 		mainViewData.OnAddedModel(mainView);
 	} catch (Exc e) {
+		mainView.gl.Enable();
 		Exclamation(DeQtfLf(e));
 		return false;
 	}
@@ -521,6 +509,8 @@ void MainMesh::OnRemove() {
 	menuOpen.arrayModel.Clear();
 	menuOpen.butRemove.Disable();
 	menuOpen.butRemoveSelected.Disable();
+	menuOpen.butJoin.Disable();
+	menuOpen.butSplit.Disable();
 	menuPlot.arrayModel.Clear();
 	optionsPlot.Clear();
 	menuConvert.arrayModel.Clear();
@@ -541,7 +531,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 	for (int r = menuOpen.arrayModel.GetCount()-1; r >= 0; --r) {
 		if (all || menuOpen.arrayModel.IsSelected(r)) {
 			int id = ArrayModel_IdMesh(menuOpen.arrayModel, r);
-			Bem().surfs.Remove(id);
+			Bem().RemoveMesh(id);
 			menuOpen.arrayModel.Remove(r);
 			menuPlot.arrayModel.Remove(r);
 			menuConvert.arrayModel.Remove(r);
@@ -551,7 +541,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 	}	// Only one available => directly selected
 	if (!selected && menuOpen.arrayModel.GetCount() == 1) {
 		int id = ArrayModel_IdMesh(menuOpen.arrayModel, 0);
-		Bem().surfs.Remove(id);
+		Bem().RemoveMesh(id);
 		menuOpen.arrayModel.Remove(0);
 		menuPlot.arrayModel.Remove(0);
 		menuConvert.arrayModel.Remove(0);
@@ -562,26 +552,141 @@ void MainMesh::OnRemoveSelected(bool all) {
 		Exclamation(t_("No model selected"));
 		return;
 	}
- 	mainSummary.Clear();
-	//for (int i = 0; i < Bem().surfs.GetCount(); ++i) 
-	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
-		int id = ArrayModel_IdMesh(menuOpen.arrayModel, row);
-		mainSummary.Report(Bem().surfs, id);
-	}
+
 	Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
 	mainStiffness.Load(Bem().surfs, ids);
-	mainViewData.Clear();//OnRefresh();
+	mainViewData.Clear();
 	
+	After();
+}
+
+void MainMesh::OnJoin() {	
+	bool selected = false;
+	int idDest = Null;
+	for (int r = menuOpen.arrayModel.GetCount()-1; r >= 0; --r) {
+		if (menuOpen.arrayModel.IsSelected(r)) {
+			int id = ArrayModel_IdMesh(menuOpen.arrayModel, r);
+			if (IsNull(idDest))
+				idDest = id;
+			else {
+				Bem().JoinMesh(idDest, id);
+				RemoveRow(r);
+				selected = true;
+			}
+		}
+	}	
+	if (!selected) {
+		Exclamation(t_("No model joined"));
+		return;
+	}
+
+	Vector<int> ids = ArrayModel_IdsMesh(menuOpen.arrayModel);
+	mainStiffness.Load(Bem().surfs, ids);
+	mainViewData.Clear();
+	
+	After();
+}
+
+void MainMesh::AddRow(const MeshData &surf, String title, String fileName) {
+	ArrayModel_Add(menuOpen.arrayModel, surf.GetCodeStr(), title, fileName, surf.GetId());
+	ArrayModel_Add(menuPlot.arrayModel, surf.GetCodeStr(), title, fileName, surf.GetId(),
+					optionsPlot, [&] {mainView.gl.Refresh();});
+	ArrayModel_Add(menuConvert.arrayModel, surf.GetCodeStr(), title, fileName, surf.GetId());
+	ArrayModel_Add(menuProcess.arrayModel, surf.GetCodeStr(), title, fileName, surf.GetId());
+}
+		
+void MainMesh::RemoveRow(int row) {
+	menuOpen.arrayModel.Remove(row);
+	menuPlot.arrayModel.Remove(row);
+	menuConvert.arrayModel.Remove(row);
+	menuProcess.arrayModel.Remove(row);
+}	
+	
+void MainMesh::OnSplit() {
+	GuiLock __;
+	
+	String file = ~menuOpen.file;
+		
+	try {
+		WaitCursor waitcursor;
+		Progress progress(t_("Splitting mesh file..."), 100); 
+		
+		Vector<int> idsmesh;
+		String fileName;
+		int row = -1;
+		for (row = menuOpen.arrayModel.GetCount()-1; row >= 0; --row) {
+			if (menuOpen.arrayModel.IsSelected(row)) 
+				break;
+		}	// Only one available => directly selected
+		if (row < 0 && menuOpen.arrayModel.GetCount() == 1) 
+			row = 0;
+	
+		if (row < 0) {
+			Exclamation(t_("No model selected"));
+			return;
+		}
+		if (idsmesh.GetCount() == 1) {
+			Exclamation(t_("The mesh is monolithic so it cannot be automatically split"));
+			return;
+		}
+		int id = ArrayModel_IdMesh(menuOpen.arrayModel, row);
+		fileName = Bem().surfs[id].fileName;
+		idsmesh = Bem().SplitMesh(id, [&](String str, int _pos) {
+			progress.SetText(str); 
+			progress.SetPos(_pos); 
+			progress.Refresh();
+		});	
+		
+		RemoveRow(row);
+		
+		for (int i = 0; i < idsmesh.GetCount(); ++i) {
+			int id = idsmesh[i];
+			MeshData &surf = Bem().surfs[id];
+			
+			mainTab.Set(mainView);
+			
+			surf.Report(Bem().rho);
+	
+			surf.fileName = fileName;
+			String title = GetFileTitle(fileName) + S("-") + FormatInt(i+1);		
+			AddRow(surf, title, fileName);
+		}
+				
+		After();
+	} catch (Exc e) {
+		mainView.gl.Enable();
+		Exclamation(DeQtfLf(e));
+	}
+}
+
+void MainMesh::After() {
 	int numrow = menuOpen.arrayModel.GetCount();
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numrow > 0);
-	
-	mainView.CalcEnvelope();
-	
-	mainTab.WhenSet();
-	mainView.gl.Refresh();	
-}
+	menuOpen.butJoin.Enable(numrow > 1);
+	menuOpen.butSplit.Enable(numrow > 0);
+	mainView.CalcEnvelope();	
 
+	if (ArrayModel_IdMesh(menuPlot.arrayModel) < 0)
+		menuPlot.arrayModel.SetCursor(0);
+	if (ArrayModel_IdMesh(menuConvert.arrayModel) < 0)
+		menuConvert.arrayModel.SetCursor(0);
+	if (ArrayModel_IdMesh(menuProcess.arrayModel) < 0)
+		menuProcess.arrayModel.SetCursor(0);
+	
+	mainSummary.Clear();
+	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
+		int id = ArrayModel_IdMesh(menuOpen.arrayModel, row);
+		mainSummary.Report(Bem().surfs, id);
+	}		
+
+	mainTab.WhenSet();
+	
+	mainView.gl.Enable();
+	mainView.gl.Refresh();
+}
+	
+	
 void MainMesh::Jsonize(JsonIO &json) {
 	json
 		("menuOpen_file", menuOpen.file)
@@ -709,6 +814,8 @@ void MainView::OnPaint() {
 	for (int row = 0; row < arrayModel->GetCount(); ++row) {
 		if (ArrayModel_IsVisible(GetMenuPlot().arrayModel, row)) {
 			int id = ArrayModel_IdMesh(*arrayModel, row);
+			if (id < 0)
+				throw Exc("Unexpected problem in OnPaint()");
 			
 			double len = env.LenRef()/10;
 			bool showNormals = ~GetMenuPlot().showNormals && ~GetMenuPlot().showMesh;
@@ -765,6 +872,8 @@ void MainView::CalcEnvelope() {
 	//for (int i = 0; i < Bem().surfs.GetCount(); ++i)
 	for (int row = 0; row < arrayModel->GetCount(); ++row) {
 		int id = ArrayModel_IdMesh(*arrayModel, row);
+		if (id < 0)
+			throw Exc("Unexpected problem in CalcEnvelope()");
 		env.MixEnvelope(Bem().surfs[id].mesh.env);
 	}
 }
