@@ -19,11 +19,11 @@ void MainNemoh::Init(const BEMData &bem) {
 	loadFrom.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
 	butLoad.WhenAction = [&] {loadFrom.DoGo();};
 
-	saveTo.WhenChange  = [&] {return OnSave(bem);};
+	//saveTo.WhenChange  = [&] {return OnSave(bem);};
 	saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
 	butSave.WhenAction = [&] {OnSave(bem);};
 	
-	array.WhenCursor = THISBACK(arrayOnCursor);
+	array.WhenSel = THISBACK(arrayOnCursor);
 	
 	butAdd <<= THISBACK(arrayOnAdd);
 	butDuplicate <<= THISBACK(arrayOnDuplicate);
@@ -388,6 +388,9 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 			if (!PromptYesNo(Format(t_("Folder %s does not exist.&Do you wish to create it?"), DeQtfLf(nemohFolder))))
 				return false;
 			RealizeDirectory(nemohFolder);
+		} else {
+			if (!PromptYesNo(Format(t_("Folder %s contents will be deleted.&Do you wish to continue?"), DeQtfLf(nemohFolder))))
+				return false;
 		}
 		if (~opSplit) {
 			if (IsNull(~numSplit)) {

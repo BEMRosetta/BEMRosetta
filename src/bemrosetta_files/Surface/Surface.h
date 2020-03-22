@@ -309,13 +309,15 @@ public:
 	
 	VolumeEnvelope env;
 	
-	String Heal(Function <void(String, int pos)> Status);
+	String Heal(bool basic, Function <void(String, int pos)> Status = Null);
+	void Orient();
 	void Image(int axis);
 	void GetLimits(); 
 	void GetPanelParams();
 	String CheckErrors() const;
 	double GetWaterPlaneArea();
 	void GetSurface();
+	void GetSegments();
 	void GetVolume();
 	Point3D GetCenterOfBuoyancy();
 	void GetHydrostaticStiffness(Eigen::MatrixXd &c, const Point3D &cb, double rho, const Point3D &cg, double mass, double g);
@@ -352,6 +354,10 @@ public:
 	void AddNode(Point3D &p);
 	int FindNode(Point3D &p);
 	
+	void AddFlatPanel(double lenX, double lenY, double panelWidth);
+	void AddRevolution(Vector<Pointf> &points, double panelWidth);
+	void AddPolygonalPanel(Vector<Pointf> &bound, double panelWidth);
+	
 	static int RemoveDuplicatedPanels(Vector<Panel> &_panels);
 	static int RemoveTinyPanels(Vector<Panel> &_panels);
 	static int RemoveDuplicatedPointsAndRenumber(Vector<Panel> &_panels, Vector<Point3D> &_nodes);
@@ -364,13 +370,14 @@ protected:
 	
 private:
 	inline bool CheckId(int id) {return id >= 0 && id < nodes.GetCount()-1;}
+	bool side = true;
 	
 	void DetectTriBiP(int &numTri, int &numBi, int &numP);
 	int FixSkewed();
 	int SegmentInSegments(int iseg) const;
 	void AnalyseSegments(double zTolerance);
 	void AddSegment(int ip0, int ip1, int ipanel);
-	bool ReorientPanels();
+	bool ReorientPanels0(bool side);
 	void ReorientPanel(int ip);
 	bool GetLowest(int &iLowSeg, int &iLowPanel);
 	bool SameOrderPanel(int ip0, int ip1, int in0, int in1);
@@ -379,16 +386,6 @@ private:
 	void GetPanelParams(Panel &panel) const;
 	
 	Vector<int> selPanels, selNodes;
-};
-
-class FlatPanel : public Surface {
-public:
-	void Set(double lenX, double lenY, double panelWidth);
-};
-
-class Revolution : public Surface {
-public:
-	void Set(Vector<Pointf> &points, double panelWidth);
 };
 
 }

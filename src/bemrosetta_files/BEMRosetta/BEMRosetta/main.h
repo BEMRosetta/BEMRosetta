@@ -299,23 +299,25 @@ public:
 private:
 	Upp::Array<ArrangeDOF> arrangeDOF;
 };
+
+class MainMesh;
 	
 class MainView : public WithMainView<StaticRect> {
 public:
 	typedef MainView CLASSNAME;
 	
 	MainView() {}
-	void Init(const WithMenuPlotMesh<StaticRect> &menuPlot, const ArrayCtrl &_array);
+	void Init();
 	void CalcEnvelope();
 	void OnPaint();
-	const WithMenuPlotMesh<StaticRect> &GetMenuPlot() const {return *menuPlot;}
+	const WithMenuMeshPlot<StaticRect> &GetMenuPlot() const;
+	const MainMesh &GetMain() const 						{return *main;}			
 	void SetPaintSelect(bool _paintSelect)					{paintSelect = _paintSelect;}
 	
 	VolumeEnvelope env;
 	
 private:
-	const WithMenuPlotMesh<StaticRect> *menuPlot = 0;
-	const ArrayCtrl *arrayModel = 0;
+	const MainMesh *main = nullptr;
 	bool paintSelect = true;
 };
 
@@ -377,6 +379,7 @@ public:
 	void OnAddedModel(MainView &mainView);
 	void OnRefresh();
 	void Clear();
+	void ReLoad(MainView &mainView);
 	
 private:
 	TabCtrl tab;
@@ -504,13 +507,19 @@ public:
 	void OnSplit();
 	bool OnConvertMesh();
 	void OnUpdate(bool forceMoved);
-	void OnHealing();
+	void OnHealing(bool basic);
+	void OnOrientSurface();
 	void OnImage(int axis);
 	void OnOpt();
+	void OnArraySel();
 	void OnMenuProcessArraySel();
 	void OnMenuConvertArraySel();
-	
-	void AddRow(const MeshData &surf, String title, String fileName);
+	void OnAddPanel();
+	void OnAddRevolution();
+	void OnAddPolygonalPanel();
+	void UpdateButtons();
+			
+	void AddRow(const MeshData &surf);
 	void RemoveRow(int row);
 	
 	void LoadSelTab(BEMData &bem);
@@ -518,9 +527,10 @@ public:
 	void Jsonize(JsonIO &json);
 		
 	WithMenuMesh<StaticRect> menuOpen;
-	WithMenuConvertMesh<StaticRect> menuConvert;
-	WithMenuPlotMesh<StaticRect> menuPlot;
-	WithMenuMeshStability<StaticRect> menuProcess;
+	WithMenuMeshConvert<StaticRect> menuConvert;
+	WithMenuMeshPlot<StaticRect> menuPlot;
+	WithMenuMeshProcess<StaticRect> menuProcess;
+	WithMenuMeshEdit<StaticRect> menuEdit;
 	
 	bool GetShowMesh()			{return menuPlot.showMesh;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
@@ -622,13 +632,15 @@ class MenuFOAMM : public WithMenuStateSpace<StaticRect> {
 public:
 	typedef MenuFOAMM CLASSNAME;
 	
-	void Init(MainBEM &_mainBEM, BEMData &bem, MainSetupFOAMM &setup);
-	bool OnFOAMM(MainSetupFOAMM &setup);
+	void Init(MainBEM &_mainBEM, MainSetupFOAMM &_setup);
+	bool OnFOAMM();
+	void OnCursor();
 	
 	void Clear();
 
 private:
 	bool isCancelled;
+	MainSetupFOAMM *setup = nullptr;
 };
 
 class MainBEM : public WithMain<StaticRect> {
@@ -650,6 +662,8 @@ public:
 	void OnAinf();
 	void OnDescription();
 	void OnMenuConvertArraySel();
+	void OnMenuListLoaded();
+	void UpdateButtons();
 		
 	void Jsonize(JsonIO &json);
 		

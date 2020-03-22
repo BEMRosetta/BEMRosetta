@@ -6,7 +6,6 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
 	SetCode(MeshData::NEMOH_DAT);
 	
 	try {

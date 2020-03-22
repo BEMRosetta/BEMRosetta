@@ -184,10 +184,12 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
 				int ifr = FindIndexCloser(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {	 
-					to.ma[ih](ifr, idf) = hydro.F_ma_ndim(from, ihhy, ifrhy, idf);
-					to.ph[ih](ifr, idf) = from.ph[ihhy](ifrhy, idf); 
-					to.re[ih](ifr, idf) = hydro.F_re_ndim(from, ihhy, ifrhy, idf);
-					to.im[ih](ifr, idf) = hydro.F_im_ndim(from, ihhy, ifrhy, idf);
+					if (!IsNull(from.ma[ihhy](ifrhy, idf))) {
+						to.ma[ih](ifr, idf) = hydro.F_ma_ndim(from, ihhy, ifrhy, idf);
+						to.ph[ih](ifr, idf) = from.ph[ihhy](ifrhy, idf); 
+						to.re[ih](ifr, idf) = hydro.F_re_ndim(from, ihhy, ifrhy, idf);
+						to.im[ih](ifr, idf) = hydro.F_im_ndim(from, ihhy, ifrhy, idf);
+					}
 				}
 			}
 		} 
@@ -582,8 +584,10 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 				int ifr = FindIndexCloser(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {
 					for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
-						A[ifr](idf, jdf) = hydro.A_ndim(ifrhy, idf, jdf);
-						B[ifr](idf, jdf) = hydro.B_ndim(ifrhy, idf, jdf);
+						if (!IsNull(hydro.A[ifrhy](idf, jdf)))
+							A[ifr](idf, jdf) = hydro.A_ndim(ifrhy, idf, jdf);
+						if (!IsNull(hydro.B[ifrhy](idf, jdf)))
+							B[ifr](idf, jdf) = hydro.B_ndim(ifrhy, idf, jdf);
 					}
 				}
 			}
@@ -598,10 +602,12 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
 					int ifr = FindIndexCloser(w, hydro.w[ifrhy]);
 					for (int idf = 0; idf < 6*Nb; ++idf) {	 
-						rao.ma[ih](ifr, idf) = hydro.R_ma_ndim(rao, ihhy, ifrhy, idf);
-						rao.ph[ih](ifr, idf) = rao.ph[ihhy](ifrhy, idf); 
-						rao.re[ih](ifr, idf) = hydro.R_re_ndim(rao, ihhy, ifrhy, idf);
-						rao.im[ih](ifr, idf) = hydro.R_im_ndim(rao, ihhy, ifrhy, idf);
+						if (!IsNull(rao.ma[ihhy](ifrhy, idf))) {
+							rao.ma[ih](ifr, idf) = hydro.R_ma_ndim(rao, ihhy, ifrhy, idf);
+							rao.ph[ih](ifr, idf) = rao.ph[ihhy](ifrhy, idf); 
+							rao.re[ih](ifr, idf) = hydro.R_re_ndim(rao, ihhy, ifrhy, idf);
+							rao.im[ih](ifr, idf) = hydro.R_im_ndim(rao, ihhy, ifrhy, idf);
+						}
 					}
 				}
 			}
@@ -933,21 +939,21 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
-			throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), file, error));
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));
 		}
 	} else if (ext == ".dat") {
 		Fast &data = hydros.Create<Fast>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
-			throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), file, error));		
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
-			throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), file, error));		
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".ah1" || ext == ".lis") {
 		Aqwa &data = hydros.Create<Aqwa>(*this);
@@ -1063,13 +1069,13 @@ void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status,
 	}
 }
 
-void BEMData::HealingMesh(int id, Function <void(String, int)> Status) {
+void BEMData::HealingMesh(int id, bool basic, Function <void(String, int)> Status) {
 	Status(Format(t_("Healing mesh '%s'"), surfs[id].fileName), 10);
 	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].fileName));
 	
 	String ret;
 	try {
-		ret = surfs[id].Heal(Status);
+		ret = surfs[id].Heal(basic, Status);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount()-1);
 		Print("\n" + Format(t_("Problem healing '%s': %s") + S("\n%s"), e));
@@ -1080,6 +1086,19 @@ void BEMData::HealingMesh(int id, Function <void(String, int)> Status) {
 		Print(ret);
 	} else
 		Print(S(". ") + t_("The mesh is in good condition"));
+}
+
+void BEMData::OrientSurface(int id, Function <void(String, int)> Status) {
+	Status(Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName), 10);
+	Print(S("\n\n") + Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName));
+	
+	try {
+		surfs[id].Orient();
+	} catch (Exc e) {
+		surfs.SetCount(surfs.GetCount()-1);
+		Print("\n" + Format(t_("Problem orienting surface '%s': %s") + S("\n%s"), e));
+		throw e;
+	}
 }
 
 void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
@@ -1145,7 +1164,50 @@ Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Status) 
 	}
 	return ret;
 }
-	
+
+void BEMData::AddFlatPanel(double x, double y, double z, double size, double panWidth, double panHeight) {
+	try {
+		MeshData &surf = surfs.Add();
+
+		surf.SetCode(MeshData::EDIT);
+		surf.mesh.AddFlatPanel(panWidth, panHeight, size); 
+		surf.mesh.MoveTo(x, y, z, 0, 0, 0, 0, 0, 0);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.GetCount() - 1);
+		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
+		throw e;
+	}	
+}
+
+void BEMData::AddRevolution(double x, double y, double z, double size, Vector<Pointf> &vals) {
+	try {
+		MeshData &surf = surfs.Add();
+
+		surf.SetCode(MeshData::EDIT);
+		surf.mesh.AddRevolution(vals, size); 
+		surf.mesh.MoveTo(x, y, z, 0, 0, 0, 0, 0, 0);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.GetCount() - 1);
+		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		throw e;
+	}	
+}
+
+void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Vector<Pointf> &vals) {
+	try {
+		MeshData &surf = surfs.Add();
+
+		surf.SetCode(MeshData::EDIT);
+		surf.mesh.AddPolygonalPanel(vals, size); 
+		surf.mesh.MoveTo(x, y, z, 0, 0, 0, 0, 0, 0);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.GetCount() - 1);
+		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		throw e;
+	}	
+}
+
+			
 bool BEMData::LoadSerializeJson() {
 	bool ret;
 	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
