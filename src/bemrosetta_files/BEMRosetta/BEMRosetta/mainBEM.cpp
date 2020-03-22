@@ -24,7 +24,8 @@ void MainBEM::Init() {
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
 	menuOpen.butLoad.WhenAction = [&] {menuOpen.file.DoGo();};
 	
-	ArrayModel_Init(menuOpen.arrayModel).MultiSelect();
+	ArrayModel_Init(listLoaded).MultiSelect();
+	listLoaded.WhenSelection = THISBACK(OnMenuListLoaded);
 	
 	menuOpen.butRemove.Disable();	
 	menuOpen.butRemove <<= THISBACK(OnRemove);
@@ -46,9 +47,9 @@ void MainBEM::Init() {
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.butLoad.WhenAction = [&] {OnConvert();};
 
-	ArrayModel_Init(menuConvert.arrayModel);
+	//ArrayModel_Init(menuConvert.arrayModel);
 	
-	menuConvert.arrayModel.WhenCursor = THISBACK(OnMenuConvertArraySel);
+	//menuConvert.arrayModel.WhenCursor = THISBACK(OnMenuConvertArraySel);
 	menuConvert.opt.WhenAction = [&] {OnOpt();};
 	
 	OnOpt();
@@ -66,7 +67,7 @@ void MainBEM::Init() {
 	
 	OnOpt();
 	
-	menuFOAMM.Init(*this, Bem(), mainSetupFOAMM);
+	menuFOAMM.Init(*this, mainSetupFOAMM);
 	
 	OnOpt();
 		
@@ -94,7 +95,7 @@ void MainBEM::Init() {
 
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
-		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		bool plot = true, convertProcess = true, ismenuFOAMM = false;
 		menuPlot.opwT.Enable();
 		if (ids.IsEmpty())
@@ -155,7 +156,7 @@ void MainBEM::Init() {
 	menuTab.WhenSet = [&] {
 	LOGTAB(menuTab);
 		if (menuTab.IsAt(menuConvert)) 
-			menuConvert.arrayModel.WhenCursor();
+			listLoaded.WhenSelection();
 	};
 	
 	mainSummary.Init();
@@ -192,15 +193,21 @@ void MainBEM::Init() {
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
 }
 
+void MainBEM::OnMenuListLoaded() {
+	OnMenuConvertArraySel();
+	menuFOAMM.OnCursor();
+	UpdateButtons();
+}
+	
 void MainBEM::OnMenuConvertArraySel() {
-	int id = ArrayModel_IdHydro(menuConvert.arrayModel);
+	int id = ArrayModel_IdHydro(listLoaded);
 	if (id < 0)
 		return;
 	
 	String file = ~menuConvert.file;
 	String folder = GetFileFolder(file);
 	String ext = GetFileExt(file);
-	String fileName = GetFileTitle(ArrayModel_GetFileName(menuConvert.arrayModel));
+	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
 	file = AppendFileName(folder, fileName + ext);
 	menuConvert.file <<= file;
 }
@@ -226,7 +233,7 @@ void MainBEM::InitSerialize(bool ret) {
 }
 
 void MainBEM::LoadSelTab(BEMData &bem) {
-	Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+	Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	int id = mainTab.Get();
 	if (id == mainTab.Find(mainStateSpace))
 		mainStateSpace.Load(bem, ids);
@@ -365,24 +372,18 @@ bool MainBEM::OnLoadFile(String file) {
 		if (data.hd().Nf < 0)
 			return false;
 		
-		ArrayModel_Add(menuOpen.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		int numrow = menuOpen.arrayModel.GetCount();
-		menuOpen.butRemove.Enable(numrow > 0);
-		menuOpen.butRemoveSelected.Enable(numrow > 0);
-		menuOpen.butJoin.Enable(numrow > 1);
-		menuOpen.butSymmetrize.Enable(numrow == 1);
-		menuOpen.butA0.Enable(numrow == 1);
-		menuOpen.butAinf.Enable(numrow == 1);
-		menuOpen.butDescription.Enable(numrow == 1);
+		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		
-		ArrayModel_Add(menuConvert.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		if (ArrayModel_IdHydro(menuConvert.arrayModel) < 0)
-			menuConvert.arrayModel.SetCursor(0);
+		UpdateButtons();
+		
+		/*ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		if (ArrayModel_IdHydro(listLoaded) < 0)
+			listLoaded.SetCursor(0);
 		ArrayModel_Add(menuFOAMM.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		if (ArrayModel_IdHydro(menuFOAMM.arrayModel) < 0)
-			menuFOAMM.arrayModel.SetCursor(0);
+			menuFOAMM.arrayModel.SetCursor(0);*/
 
-		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
@@ -411,24 +412,24 @@ void MainBEM::OnRemove() {
 
 void MainBEM::OnRemoveSelected(bool all) {
 	bool selected = false;
-	for (int row = menuOpen.arrayModel.GetCount()-1; row >= 0; --row) {
-		if (all || menuOpen.arrayModel.IsSelected(row)) {
-			int id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
+	for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
+		if (all || listLoaded.IsSelected(row)) {
+			int id = ArrayModel_IdHydro(listLoaded, row);
 			Bem().hydros.Remove(id);
 			mainArrange.Remove(row);
-			menuOpen.arrayModel.Remove(row);
-			menuConvert.arrayModel.Remove(row);
-			menuFOAMM.arrayModel.Remove(row);
+			listLoaded.Remove(row);
+			//menuConvert.arrayModel.Remove(row);
+			//menuFOAMM.arrayModel.Remove(row);
 			selected = true;
 		}
 	}	// Only one available => directly selected
-	if (!selected && menuOpen.arrayModel.GetCount() == 1) {	
-		int id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
+	if (!selected && listLoaded.GetCount() == 1) {	
+		int id = ArrayModel_IdHydro(listLoaded, 0);
 		Bem().hydros.Remove(id);
 		mainArrange.Remove(0);
-		menuOpen.arrayModel.Remove(0);
-		menuConvert.arrayModel.Remove(0);
-		menuFOAMM.arrayModel.Remove(0);
+		listLoaded.Remove(0);
+		//menuConvert.arrayModel.Remove(0);
+		//menuFOAMM.arrayModel.Remove(0);
 		selected = true;
 	}		
 	if (!selected) {
@@ -439,16 +440,9 @@ void MainBEM::OnRemoveSelected(bool all) {
 	for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 		mainSummary.Report(Bem().hydros[i].hd(), i);
 	
-	int numrow = menuOpen.arrayModel.GetCount();
-	menuOpen.butRemove.Enable(numrow > 0);
-	menuOpen.butRemoveSelected.Enable(numrow > 0);
-	menuOpen.butJoin.Enable(numrow > 1);
-	menuOpen.butSymmetrize.Enable(numrow == 1);
-	menuOpen.butA0.Enable(numrow == 1);
-	menuOpen.butAinf.Enable(numrow == 1);
-	menuOpen.butDescription.Enable(numrow == 1);
+	UpdateButtons();
 	
-	Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+	Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
 	mainArrange.Load(Bem().hydros, ids);	
 	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.GetCount() > 0);	
@@ -466,19 +460,34 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.WhenSet();
 }
 
+void MainBEM::UpdateButtons() {
+	int numrow = listLoaded.GetCount();
+	int numsel = ArrayCtrlSelectedGetCount(listLoaded);
+	menuOpen.butRemove.Enable(numrow > 0);
+	menuOpen.butRemoveSelected.Enable(numsel > 0);
+	menuOpen.butJoin.Enable(numsel > 1);
+	menuOpen.butSymmetrize.Enable(numsel == 1);
+	menuOpen.butA0.Enable(numsel == 1);
+	menuOpen.butAinf.Enable(numsel == 1);
+	menuOpen.butDescription.Enable(numsel == 1);
+	menuConvert.butLoad.Enable(numsel == 1);
+}
+
 void MainBEM::OnJoin() {
 	Vector<int> idsjoin, rowsJoin;
-	bool selected = false;
-	for (int row = menuOpen.arrayModel.GetCount()-1; row >= 0; --row) {
-		if (menuOpen.arrayModel.IsSelected(row)) {
+	for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
+		if (listLoaded.IsSelected(row)) {
 			rowsJoin << row;
-			int id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
+			int id = ArrayModel_IdHydro(listLoaded, row);
 			idsjoin << id;
-			selected = true;
 		}
 	}
-	if (!selected) {
+	if (idsjoin.IsEmpty()) {
 		Exclamation(t_("No model selected"));
+		return;
+	}
+	if (idsjoin.GetCount() == 1) {
+		Exclamation(t_("Please select more than one model"));
 		return;
 	}
 	try {
@@ -494,14 +503,14 @@ void MainBEM::OnJoin() {
 		mainSummary.Clear();
 		mainArrange.Clear();
 		
-		ArrayModel_Add(menuOpen.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		ArrayModel_Add(menuConvert.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		ArrayModel_Add(menuFOAMM.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		ArrayModel_RowsHydroDel(menuOpen.arrayModel, rowsJoin);
-		ArrayModel_RowsHydroDel(menuConvert.arrayModel, rowsJoin);
-		ArrayModel_RowsHydroDel(menuFOAMM.arrayModel, rowsJoin);
+		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		//ArrayModel_Add(menuConvert.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		//ArrayModel_Add(menuFOAMM.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+		ArrayModel_RowsHydroDel(listLoaded, rowsJoin);
+		//ArrayModel_RowsHydroDel(menuConvert.arrayModel, rowsJoin);
+		//ArrayModel_RowsHydroDel(menuFOAMM.arrayModel, rowsJoin);
 	
-		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+		Vector<int> ids = ArrayModel_IdsHydro(listLoaded	);
 	
 		for (int id = 0; id < Bem().hydros.GetCount(); ++id) {
 			const Hydro &data = Bem().hydros[id].hd();
@@ -509,11 +518,11 @@ void MainBEM::OnJoin() {
 			mainArrange.Load(Bem().hydros, ids);
 		}
 			
-		if (Bem().hydros.GetCount() > 0) {
-			menuOpen.arrayModel.SetCursor(0);
-			menuConvert.arrayModel.SetCursor(0);
-			menuFOAMM.arrayModel.SetCursor(0);
-		}
+		if (Bem().hydros.GetCount() > 0) //{
+			listLoaded.SetCursor(0);
+			//menuConvert.arrayModel.SetCursor(0);
+			//menuFOAMM.arrayModel.SetCursor(0);
+		//}
 
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.GetCount() > 0);		
@@ -529,26 +538,25 @@ void MainBEM::OnJoin() {
 		Exclamation(DeQtfLf(e));
 	}
 		
-	int numrow = menuOpen.arrayModel.GetCount();
-	menuOpen.butJoin.Enable(numrow > 1);
-	menuOpen.butSymmetrize.Enable(numrow == 1);
-	menuOpen.butA0.Enable(numrow == 1);
-	menuOpen.butAinf.Enable(numrow == 1);
-	menuOpen.butDescription.Enable(numrow == 1);
+	UpdateButtons();
 }
 
 void MainBEM::OnSymmetrize() {
 	int id = -1;
-	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
-		if (menuOpen.arrayModel.IsSelected(row)) {
-			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
+	for (int row = 0; row < listLoaded.GetCount(); ++row) {
+		if (listLoaded.IsSelected(row)) {
+			id = ArrayModel_IdHydro(listLoaded, row);
 			break;
 		}
 	}	// Only one available => directly selected
-	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
-		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
+	if (id < 0 && listLoaded.GetCount() == 1)
+		id = ArrayModel_IdHydro(listLoaded, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
+		return;
+	}
+	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
+		Exclamation(t_("Please select just one model"));
 		return;
 	}
 	try {
@@ -561,7 +569,7 @@ void MainBEM::OnSymmetrize() {
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
@@ -573,16 +581,20 @@ void MainBEM::OnSymmetrize() {
 
 void MainBEM::OnA0() {
 	int id = -1;
-	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
-		if (menuOpen.arrayModel.IsSelected(row)) {
-			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
+	for (int row = 0; row < listLoaded.GetCount(); ++row) {
+		if (listLoaded.IsSelected(row)) {
+			id = ArrayModel_IdHydro(listLoaded, row);
 			break;
 		}
 	}	// Only one available => directly selected
-	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
-		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
+	if (id < 0 && listLoaded.GetCount() == 1)
+		id = ArrayModel_IdHydro(listLoaded, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
+		return;
+	}
+	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
+		Exclamation(t_("Please select just one model"));
 		return;
 	}
 	try {
@@ -595,7 +607,7 @@ void MainBEM::OnA0() {
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	} catch (Exc e) {
@@ -605,16 +617,20 @@ void MainBEM::OnA0() {
 
 void MainBEM::OnAinf() {
 	int id = -1;
-	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
-		if (menuOpen.arrayModel.IsSelected(row)) {
-			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
+	for (int row = 0; row < listLoaded.GetCount(); ++row) {
+		if (listLoaded.IsSelected(row)) {
+			id = ArrayModel_IdHydro(listLoaded, row);
 			break;
 		}
 	}	// Only one available => directly selected
-	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
-		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
+	if (id < 0 && listLoaded.GetCount() == 1)
+		id = ArrayModel_IdHydro(listLoaded, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
+		return;
+	}
+	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
+		Exclamation(t_("Please select just one model"));
 		return;
 	}
 	try {
@@ -627,7 +643,7 @@ void MainBEM::OnAinf() {
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Vector<int> ids = ArrayModel_IdsHydro(menuOpen.arrayModel);
+		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	} catch (Exc e) {
@@ -637,19 +653,22 @@ void MainBEM::OnAinf() {
 
 void MainBEM::OnDescription() {
 	int id = -1;
-	for (int row = 0; row < menuOpen.arrayModel.GetCount(); ++row) {
-		if (menuOpen.arrayModel.IsSelected(row)) {
-			id = ArrayModel_IdHydro(menuOpen.arrayModel, row);
+	for (int row = 0; row < listLoaded.GetCount(); ++row) {
+		if (listLoaded.IsSelected(row)) {
+			id = ArrayModel_IdHydro(listLoaded, row);
 			break;
 		}
 	}	// Only one available => directly selected
-	if (id < 0 && menuOpen.arrayModel.GetCount() == 1)
-		id = ArrayModel_IdHydro(menuOpen.arrayModel, 0);
+	if (id < 0 && listLoaded.GetCount() == 1)
+		id = ArrayModel_IdHydro(listLoaded, 0);
 	if (id < 0) {
 		Exclamation(t_("No model selected"));
 		return;
 	}
-	
+	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
+		Exclamation(t_("Please select just one model"));
+		return;
+	}
 	WithDescription<TopWindow> w;
 	CtrlLayout(w);
 	w.Title(t_("Enter model description"));
@@ -671,9 +690,13 @@ bool MainBEM::OnConvert() {
 	try {
 		WaitCursor wait;
 		
-		int id = ArrayModel_IdHydro(menuConvert.arrayModel);
+		int id = ArrayModel_IdHydro(listLoaded);
 		if (id < 0) {
 			Exclamation(t_("Please select a model to export"));
+			return false;
+		}
+		if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
+			Exclamation(t_("Please select just one model"));
 			return false;
 		}
 		
@@ -872,7 +895,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
 		if (data.Vo.size() > ib && !IsNull(data.Vo[ib])) 
-			array.Set(row++, col, FormatDouble(data.Vo[ib], 3, FD_EXP));
+			array.Set(row++, col, FormatDouble(data.Vo[ib], 6, FD_EXP));
 		else 
 			array.Set(row++, col, "-");
 		
@@ -888,20 +911,20 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
 		if (data.cb.size() > 3*ib && !IsNull(data.cb(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FormatDouble(data.cb(0, ib), 3, FD_EXP),
-									FormatDouble(data.cb(1, ib), 3, FD_EXP),
-									FormatDouble(data.cb(2, ib), 3, FD_EXP)));
+									FormatDouble(data.cb(0, ib), 4, FD_EXP),
+									FormatDouble(data.cb(1, ib), 4, FD_EXP),
+									FormatDouble(data.cb(2, ib), 4, FD_EXP)));
 		else
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Water plane area [m2]"));
 		if (data.C.GetCount() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_ndim(ib, 2, 2);
-			array.Set(row++, col, FormatDouble(wPlaneArea, 3, FD_EXP));		
+			array.Set(row++, col, FormatDouble(wPlaneArea, 6, FD_EXP));		
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
-						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FormatDouble(data.C_dim(ib, i, j), 3, FD_EXP));		
+						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FormatDouble(data.C_dim(ib, i, j), 6, FD_EXP));		
 					}
 				}
 			}
@@ -964,7 +987,7 @@ void MainSetupFOAMM::Init() {
 	arrayCases.AddColumn(t_("From (rad/s)"), 40);
 	arrayCases.AddColumn(t_("To (rad/s)"), 40);
 	arrayCases.AddColumn(t_("Frequencies (rad/s)"), 60);
-	arrayCases.WhenCursor = [&] {WhenSelArrayCases();};
+	arrayCases.WhenSelection = [&] {WhenSelArrayCases();};
 	
 	selectAll.WhenAction = [&] {
 			for (int i = 0; i < arrayCases.GetCount(); ++i)
@@ -999,11 +1022,22 @@ void MainSetupFOAMM::Init() {
 	plots.scatP.WhenMouseClick = THISBACK1(OnMouse, &plots.scatP);
 }
 
-void MenuFOAMM::Init(MainBEM &mainBEM, BEMData &bem, MainSetupFOAMM &setup) {
+void MenuFOAMM::OnCursor() {
+	MainBEM &mainBEM = GetDefinedParent<MainBEM>(this);
+	int id = ArrayModel_IdHydro(mainBEM.listLoaded);
+	if (id < 0)
+		return;
+	if (ArrayCtrlSelectedGetCount(mainBEM.listLoaded) > 1)
+		return;
+	setup->WhenSelArrayModel(id, Bem());	
+}
+
+void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 	CtrlLayout(*this);
+	setup = &_setup;
 	
 	butLoad.WhenAction 	= [&] {
-		if (OnFOAMM(setup)) {
+		if (OnFOAMM()) {
 			int id = mainBEM.mainTab.Find(mainBEM.mainStateSpace);
 			mainBEM.mainTab.GetItem(id).Enable(true);
 			int idPlot = mainBEM.menuTab.Find(mainBEM.menuPlot);
@@ -1013,13 +1047,13 @@ void MenuFOAMM::Init(MainBEM &mainBEM, BEMData &bem, MainSetupFOAMM &setup) {
 		}
 	};
 	
-	ArrayModel_Init(arrayModel);	
-	arrayModel.WhenCursor = [&] {	
-		int id = ArrayModel_IdHydro(arrayModel);
+	//ArrayModel_Init(listLoaded);	
+	/*arrayModel.WhenCursor = [&] {	
+		int id = ArrayModel_IdHydro(mainBEM.listLoaded);
 		if (id < 0)
 			return;
 		setup.WhenSelArrayModel(id, bem);
-	};
+	};*/
 	
 	foammLogo.Set(Img2::FOAMM());
 	foammWorking.LoadBuffer(String(animatedStar, animatedStar_length));
@@ -1257,21 +1291,25 @@ void MainSetupFOAMM::Clear() {
 }
 
 void MenuFOAMM::Clear() {
-	arrayModel.Clear();
+//	arrayModel.Clear();
 }
 		
-bool MenuFOAMM::OnFOAMM(MainSetupFOAMM &setup) {
+bool MenuFOAMM::OnFOAMM() {
 	Vector<int> ibs, idfs, jdfs;
 	Vector<double> froms, tos;
 	Vector<Vector<double>> freqs;
 	String ret;
 	
 	try {
-		int id = ArrayModel_IdHydro(arrayModel);
+		MainBEM &mainBEM = GetDefinedParent<MainBEM>(this);
+		
+		int id = ArrayModel_IdHydro(mainBEM.listLoaded);
 		if (id < 0)
 			return false;
+		if (ArrayCtrlSelectedGetCount(mainBEM.listLoaded))
+			return false;
 		
-		if (!setup.Get(ibs, idfs, jdfs, froms, tos, freqs))
+		if (!setup->Get(ibs, idfs, jdfs, froms, tos, freqs))
 			return false;
 		
 		foammWorking.Show();

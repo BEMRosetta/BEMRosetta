@@ -784,6 +784,7 @@ public:
 	bool GetMouseHandlingY()	{return mouseHandlingY;}
 	
 	ScatterDraw& AddSurf(DataSourceSurf &surf);
+	ScatterDraw& RemoveSurf()					{surf = nullptr;	return *this;}
 	ScatterDraw& SetSurfMinZ(double val)		{surfMinZ = val;	return *this;}
 	double GetSurfMinZ() const					{return surfMinZ;}
 	ScatterDraw& SetSurfMaxZ(double val)		{surfMaxZ = val;	return *this;}

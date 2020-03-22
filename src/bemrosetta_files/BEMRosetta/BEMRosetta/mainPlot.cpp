@@ -123,7 +123,7 @@ bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, con
 	return loaded;
 }
 
-bool MainPlot::Load(const Hydro &hy, const MainBEM &mbm) {
+bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 	scatt.RemoveAllSeries();
 	scatP.RemoveAllSeries();
 	ABFZ_source.SetCount(1);
@@ -131,9 +131,9 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mbm) {
 	Ainf_source.SetCount(1);
 	A0_source.SetCount(1);
 	
-	dim = !mbm.menuPlot.showNdim;
-	markW = mbm.menuPlot.showPoints ? 10 : 0;
-	show_w = mbm.menuPlot.opwT == 0;
+	dim = !mainBem.menuPlot.showNdim;
+	markW = mainBem.menuPlot.showPoints ? 10 : 0;
+	show_w = mainBem.menuPlot.opwT == 0;
 	if (show_w) {
 		scatt.SetLabelX(t_("w [rad/s]"));
 		scatP.SetLabelX(t_("w [rad/s]"));
@@ -142,12 +142,12 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mbm) {
 		scatP.SetLabelX(t_("T [s]"));
 	}
 	bool loaded = false;
-	int idc = ArrayModel_Id(mbm.menuFOAMM.arrayModel);
+	int idc = ArrayModel_Id(mainBem.listLoaded);
 	LoadEach(hy, 0, loaded, idc);
 	
-	if (mbm.menuPlot.autoFit) {
+	if (mainBem.menuPlot.autoFit) {
 		scatt.ZoomToFit(true, true);
-		if (mbm.menuPlot.fromY0) {
+		if (mainBem.menuPlot.fromY0) {
 			double ymax = scatt.GetYMin() + scatt.GetYRange();
 			scatt.SetXYMin(Null, 0).SetRange(Null, ymax);
 		}

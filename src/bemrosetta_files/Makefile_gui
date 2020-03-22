@@ -72,6 +72,8 @@ OutDir_plugin_zstd = $(UPPOUT)plugin/zstd/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_plugin_zstd = $(Macro)
 OutDir_Surface = $(UPPOUT)Surface/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_Surface = $(Macro)
+OutDir_Geom = $(UPPOUT)Geom/GCC-Gcc-Gui-Linux-Posix-Shared/
+Macro_Geom = $(Macro)
 OutDir_GLCtrl = $(UPPOUT)GLCtrl/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_GLCtrl = $(Macro)
 OutDir_plugin_glew = $(UPPOUT)plugin/glew/GCC-Gcc-Gui-Linux-Posix-Shared/
@@ -122,6 +124,7 @@ prepare: \
 	$(OutDir_plugin_matio) \
 	$(OutDir_plugin_zstd) \
 	$(OutDir_Surface) \
+	$(OutDir_Geom) \
 	$(OutDir_GLCtrl) \
 	$(OutDir_plugin_glew)
 
@@ -172,6 +175,7 @@ $(OutFile): build_info  \
 	$(OutDir_plugin_matio)matio.a \
 	$(OutDir_plugin_zstd)zstd.a \
 	$(OutDir_Surface)Surface.a \
+	$(OutDir_Geom)Geom.a \
 	$(OutDir_GLCtrl)GLCtrl.a \
 	$(OutDir_plugin_glew)glew.a
 	$(LINKER) -o "$(OutFile)" -Wl,-s $(LIBPATH) -Wl,-O,2 $(LDFLAGS) -Wl,--start-group  \
@@ -221,6 +225,7 @@ $(OutFile): build_info  \
 			$(OutDir_plugin_matio)matio.a \
 			$(OutDir_plugin_zstd)zstd.a \
 			$(OutDir_Surface)Surface.a \
+			$(OutDir_Geom)Geom.a \
 			$(OutDir_GLCtrl)GLCtrl.a \
 			$(OutDir_plugin_glew)glew.a \
 			`pkg-config --libs freetype2` \
@@ -56103,6 +56108,20 @@ $(OutDir_Surface)Surface.o: Surface/Surface.cpp \
 	Core/Xmlize.h \
 	Core/Xmlize.hpp \
 	Core/z.h \
+	Draw/Cham.h \
+	Draw/DDARasterizer.h \
+	Draw/Display.h \
+	Draw/Draw.h \
+	Draw/FontInt.h \
+	Draw/Image.h \
+	Draw/ImageOp.h \
+	Draw/Raster.h \
+	Draw/SDraw.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
 	plugin/Eigen/Eigen.h \
 	plugin/Eigen/Eigen/Cholesky \
 	plugin/Eigen/Eigen/Core \
@@ -56494,6 +56513,21 @@ $(OutDir_Surface)Surface.o: Surface/Surface.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
+	Web/auth.h \
+	Web/html.h \
+	Web/httpcli.h \
+	Web/httpsrv.h \
+	Web/ScgiServer.h \
+	Web/smtp.h \
+	Web/socket.h \
+	Web/sproc.h \
+	Web/util.h \
+	Web/Web.h \
+	Functions4U/Functions4U.h \
+	Functions4U/GatherTpp.h \
+	Functions4U/LocalProcess2.h \
+	Functions4U/StaticPlugin.h \
+	Functions4U/SvgColors.h \
 	Surface/Surface.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Surface)  Surface/Surface.cpp -o $(OutDir_Surface)Surface.o
 
@@ -56501,6 +56535,540 @@ $(OutDir_Surface)Surface.a: \
 	$(OutDir_Surface)Surface.o
 	$(AR) $(OutDir_Surface)Surface.a \
 		$(OutDir_Surface)Surface.o
+
+$(OutDir_Geom):
+	mkdir -p $(OutDir_Geom)
+
+$(OutDir_Geom)fp3.o: Geom/fp3.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Geom)  Geom/fp3.cpp -o $(OutDir_Geom)fp3.o
+
+$(OutDir_Geom)geometry.o: Geom/geometry.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Geom)  Geom/geometry.cpp -o $(OutDir_Geom)geometry.o
+
+$(OutDir_Geom)polyalg.o: Geom/polyalg.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Geom)  Geom/polyalg.cpp -o $(OutDir_Geom)polyalg.o
+
+$(OutDir_Geom)vecalg.o: Geom/vecalg.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Geom)  Geom/vecalg.cpp -o $(OutDir_Geom)vecalg.o
+
+$(OutDir_Geom)linsolv.o: Geom/linsolv.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Geom)  Geom/linsolv.cpp -o $(OutDir_Geom)linsolv.o
+
+$(OutDir_Geom)delaunay.o: Geom/delaunay.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	Geom/delaunay.h \
+	Geom/fp3.h \
+	Geom/Geom.h \
+	Geom/geometry.h \
+	Geom/linsolv.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Geom)  Geom/delaunay.cpp -o $(OutDir_Geom)delaunay.o
+
+$(OutDir_Geom)Geom.a: \
+	$(OutDir_Geom)fp3.o \
+	$(OutDir_Geom)geometry.o \
+	$(OutDir_Geom)polyalg.o \
+	$(OutDir_Geom)vecalg.o \
+	$(OutDir_Geom)linsolv.o \
+	$(OutDir_Geom)delaunay.o
+	$(AR) $(OutDir_Geom)Geom.a \
+		$(OutDir_Geom)fp3.o \
+		$(OutDir_Geom)geometry.o \
+		$(OutDir_Geom)polyalg.o \
+		$(OutDir_Geom)vecalg.o \
+		$(OutDir_Geom)linsolv.o \
+		$(OutDir_Geom)delaunay.o
 
 $(OutDir_GLCtrl):
 	mkdir -p $(OutDir_GLCtrl)

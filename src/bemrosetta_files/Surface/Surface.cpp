@@ -2,7 +2,8 @@
 
 #include <plugin/Eigen/Eigen.h>
 #include <Surface/Surface.h>
-
+#include <Geom/Geom.h>
+#include <Functions4U/Functions4U.h>
 
 namespace Upp {
 using namespace Eigen;
@@ -302,7 +303,7 @@ int Surface::RemoveTinyPanels(Vector<Panel> &_panels) {
 	avgsurface /= _panels.GetCount();
 	double tiny = avgsurface/1000000;
 			
-	for (int i = _panels.GetCount(); i >= 0; --i) {
+	for (int i = _panels.GetCount()-1; i >= 0; --i) {
 		double surface = _panels[i].surface0 + _panels[i].surface1;
 		if (surface < tiny) {
 			num++;
@@ -414,7 +415,7 @@ int Surface::SegmentInSegments(int iseg) const {
 	return -1;
 }
 
-void Surface::AnalyseSegments(double zTolerance) {
+void Surface::GetSegments() {
 	segments.Clear();
 	
 	for (int i = 0; i < panels.GetCount(); ++i) {
@@ -431,6 +432,10 @@ void Surface::AnalyseSegments(double zTolerance) {
 			AddSegment(id3, id0, i);
 		}
 	}
+}
+	
+void Surface::AnalyseSegments(double zTolerance) {
+	GetSegments();
 	
 	for (int i = 0; i < segments.GetCount(); ++i) {
 		int inode0 = segments[i].inode0;
@@ -476,7 +481,7 @@ bool Surface::GetLowest(int &iLowSeg, int &iLowPanel) {	// Get the lowest panel 
 	return !IsNull(iLowSeg);
 }
 	
-bool Surface::ReorientPanels() {
+bool Surface::ReorientPanels0(bool _side) {
 	numUnprocessed = -1;
 	
 	int iLowSeg, iLowPanel;
@@ -485,7 +490,7 @@ bool Surface::ReorientPanels() {
 	
 	// Reorient lowest panel downwards to be the seed
 	int ip = segments[iLowSeg].panels[iLowPanel];
-	if (panels[ip].normal0.z > 0)
+	if (_side && panels[ip].normal0.z > 0 || !_side && panels[ip].normal0.z < 0)
 		ReorientPanel(ip);
 	
 	Vector<int> panelStack;
@@ -640,57 +645,77 @@ bool Surface::SameOrderPanel(int ip0, int ip1, int in0, int in1) {
 	return first0in0 != first1in0;
 }
 
-String Surface::Heal(Function <void(String, int pos)> Status) {
+String Surface::Heal(bool basic, Function <void(String, int pos)> Status) {
 	String ret;
 	
-	Status(t_("Detecting triangles and wrong panels"), 40);
-	DetectTriBiP(numTriangles, numBiQuads, numMonoQuads);
-	if (numTriangles > 0)
-		ret << "\n" << Format(t_("Fixed %d triangles"), numTriangles);
-	if (numBiQuads > 0)
-		ret << "\n" << Format(t_("Removed %d 2 points quads"), numBiQuads);
-	if (numMonoQuads > 0)
-		ret << "\n" << Format(t_("Removed %d 1 points quads"), numMonoQuads);
+	if (basic) {
+		Status(t_("Removing duplicated panels (pass 1)"), 25);
+		numDupPan = RemoveDuplicatedPanels(panels);
+		
+		Status(t_("Removing duplicated points"), 50);
+		numDupP = RemoveDuplicatedPointsAndRenumber(panels, nodes0);
+		if (numDupP > 0) 
+			ret << "\n" << Format(t_("Removed %d duplicated points"), numDupP);	
 	
-	Status(t_("Removing tiny panels"), 45);
-	numDupPan = RemoveTinyPanels(panels);
+		Status(t_("Removing duplicated panels (pass 2)"), 75);
+		numDupPan += RemoveDuplicatedPanels(panels);	// Second time after duplicated points
+		if (numDupPan > 0) 
+			ret << "\n" << Format(t_("Removed %d duplicated panels"), numDupPan);
+	} else {	
+		Status(t_("Detecting triangles and wrong panels"), 40);
+		DetectTriBiP(numTriangles, numBiQuads, numMonoQuads);
+		if (numTriangles > 0)
+			ret << "\n" << Format(t_("Fixed %d triangles"), numTriangles);
+		if (numBiQuads > 0)
+			ret << "\n" << Format(t_("Removed %d 2 points quads"), numBiQuads);
+		if (numMonoQuads > 0)
+			ret << "\n" << Format(t_("Removed %d 1 points quads"), numMonoQuads);
+		
+		Status(t_("Removing tiny panels"), 45);
+		RemoveTinyPanels(panels);
+		
+		Status(t_("Removing duplicated panels (pass 1)"), 55);
+		numDupPan = RemoveDuplicatedPanels(panels);
+		
+		Status(t_("Fixing skewed panels"), 60);
+		numSkewed = FixSkewed();
+		if (numSkewed > 0) 
+			ret << "\n" << Format(t_("Fixed %d skewed panels"), numSkewed);
 	
-	Status(t_("Removing duplicated panels (pass 1)"), 55);
-	numDupPan = RemoveDuplicatedPanels(panels);
+		Status(t_("Removing duplicated points"), 65);
+		numDupP = RemoveDuplicatedPointsAndRenumber(panels, nodes0);
+		if (numDupP > 0) 
+			ret << "\n" << Format(t_("Removed %d duplicated points"), numDupP);	
 	
-	Status(t_("Fixing skewed panels"), 60);
-	numSkewed = FixSkewed();
-	if (numSkewed > 0) 
-		ret << "\n" << Format(t_("Fixed %d skewed panels"), numSkewed);
-
-	Status(t_("Removing duplicated points"), 65);
-	numDupP = RemoveDuplicatedPointsAndRenumber(panels, nodes0);
-	if (numDupP > 0) 
-		ret << "\n" << Format(t_("Removed %d duplicated points"), numDupP);	
-
-	Status(t_("Removing duplicated panels (pass 2)"), 70);
-	numDupPan += RemoveDuplicatedPanels(panels);	// Second time after duplicated points
-	if (numDupPan > 0) 
-		ret << "\n" << Format(t_("Removed %d duplicated panels"), numDupPan);
-
-	Status(t_("Analysing water tightness"), 75);
-	double zTolerance = -0.1;
-	AnalyseSegments(zTolerance);
-	ret << "\n" << Format(t_("%d segments, %d water level, %d water leak and %d multipanel"), 
-								segments.GetCount(), segWaterlevel.GetCount(), 
-								segTo1panel.GetCount(), segTo3panel.GetCount());
+		Status(t_("Removing duplicated panels (pass 2)"), 70);
+		numDupPan += RemoveDuplicatedPanels(panels);	// Second time after duplicated points
+		if (numDupPan > 0) 
+			ret << "\n" << Format(t_("Removed %d duplicated panels"), numDupPan);
 	
-	Status(t_("Reorienting panels water side"), 80);
-	if (!ReorientPanels())
-		ret << "\n" << t_("Failed to reorient panels to water side");
-	else if (numUnprocessed > 0)
-		ret << "\n" << Format(t_("%d panels not reoriented. Body contains separated surfaces"), numUnprocessed);
-	
-	healing = true;
-	
+		Status(t_("Analysing water tightness"), 75);
+		double zTolerance = -0.1;
+		AnalyseSegments(zTolerance);
+		ret << "\n" << Format(t_("%d segments, %d water level, %d water leak and %d multipanel"), 
+									segments.GetCount(), segWaterlevel.GetCount(), 
+									segTo1panel.GetCount(), segTo3panel.GetCount());
+		
+		Status(t_("Reorienting panels water side"), 80);
+		if (!ReorientPanels0(true))
+			ret << "\n" << t_("Failed to reorient panels to water side");
+		else if (numUnprocessed > 0)
+			ret << "\n" << Format(t_("%d panels not reoriented. Body contains separated surfaces"), numUnprocessed);
+		
+		healing = true;
+	}
 	return ret;
 }
 
+void Surface::Orient() {
+	GetSegments();
+	ReorientPanels0(side);
+	side = !side;
+}		
+		
 void Surface::Image(int axis) {
 	for (int i = 0; i < nodes.GetCount(); ++i) {
 		Point3D &node = nodes[i];
@@ -1027,6 +1052,11 @@ void Surface::Join(const Surface &orig) {
 		
 		GetPanelParams(pan);
 	}
+	
+	Surface::RemoveDuplicatedPanels(panels);
+	Surface::RemoveDuplicatedPointsAndRenumber(panels, nodes);
+	Surface::RemoveDuplicatedPanels(panels);
+	
 	nodes0 = clone(nodes);
 }
 	
@@ -1128,7 +1158,7 @@ int Surface::FindNode(Point3D &p) {
 }
 
 	
-void FlatPanel::Set(double lenX, double lenY, double panelWidth) {
+void Surface::AddFlatPanel(double lenX, double lenY, double panelWidth) {
 	int numX = int(round(lenX/panelWidth));
 	ASSERT(numX > 0);
 	double widthX = lenX/numX;	
@@ -1145,23 +1175,15 @@ void FlatPanel::Set(double lenX, double lenY, double panelWidth) {
 			pans[n].data[0].x = widthX*i;		pans[n].data[0].y = widthY*j;		pans[n].data[0].z = 0; 
 			pans[n].data[1].x = widthX*(i+1);	pans[n].data[1].y = widthY*j;		pans[n].data[1].z = 0;
 			pans[n].data[2].x = widthX*(i+1);	pans[n].data[2].y = widthY*(j+1);	pans[n].data[2].z = 0;
-			pans[n].data[3].x = widthX;			pans[n].data[3].y = widthY*(j+1);	pans[n].data[3].z = 0;
+			pans[n].data[3].x = widthX*i;		pans[n].data[3].y = widthY*(j+1);	pans[n].data[3].z = 0;
 			n++;
 		}
 	}
 	SetPanelPoints(pans);
 }
 
-void Revolution::Set(Vector<Pointf> &points, double panelWidth) {
+void Surface::AddRevolution(Vector<Pointf> &points, double panelWidth) {
 	ASSERT(points.GetCount() >= 2);
-	
-	double maxx = 0;
-	for (Pointf &p : points)
-		maxx = max(maxx, p.x);
-	
-	int numSlices = int(round(2*M_PI*maxx/panelWidth));
-	ASSERT(numSlices >= 3);
-	double angle = 2*M_PI/numSlices;
 	
 	for (int i = points.GetCount()-2; i >= 0; --i) {
 		double len = sqrt(sqr(points[i].x-points[i+1].x) + sqr(points[i].y-points[i+1].y)); 
@@ -1171,37 +1193,90 @@ void Revolution::Set(Vector<Pointf> &points, double panelWidth) {
 			double lenx = points[i+1].x - points[i].x;
 			double y0 = points[i].y;
 			double leny = points[i+1].y - points[i].y;
-			for (int in = 1; in < num-1; ++in) {
+			for (int in = num-1; in >= 1; --in) {
 				Pointf p(x0 + lenx*in/num, y0 + leny*in/num);
 				points.Insert(i+1, p);
 			}
 		}
 	}
+
+	double maxx = 0;
+	for (Pointf &p : points)
+		maxx = max(maxx, p.x);
 	
+	int numSlices = int(round(2*M_PI*maxx/panelWidth));
+	if (Odd(numSlices))
+		numSlices++;
+	ASSERT(numSlices >= 3);
+	double angle = 2*M_PI/numSlices;
+		
 	Array<PanelPoints> pans;
-	pans.SetCount((numSlices-1)*(points.GetCount()-1));
+	pans.SetCount(numSlices*(points.GetCount()-1));
 	int n = 0;
 	for (int i = 0; i < points.GetCount()-1; ++i) {
-		for (int j = 0; j < numSlices-1; ++j) {
-			pans[n].data[0].x = points[i].x*cos((2*M_PI*j)/numSlices);	
-			pans[n].data[0].y = points[i].x*sin((2*M_PI*j)/numSlices);
-			pans[n].data[0].z = points[i].y;
-			
-			pans[n].data[1].x = points[i].x*cos((2*M_PI*(j+1))/numSlices);	
-			pans[n].data[1].y = points[i].x*sin((2*M_PI*(j+1))/numSlices);
-			pans[n].data[1].z = points[i].y;
+		if (points[i].x == 0) {
+			for (int j = 0; j < numSlices; j += 2) {
+				pans[n].data[0].x = 0;	
+				pans[n].data[0].y = 0;
+				pans[n].data[0].z = points[i].y;
 
-			pans[n].data[2].x = points[i+1].x*cos((2*M_PI*(j+1))/numSlices);	
-			pans[n].data[2].y = points[i+1].x*sin((2*M_PI*(j+1))/numSlices);
-			pans[n].data[2].z = points[i+1].y;
+				pans[n].data[1].x = points[i+1].x*cos((2*M_PI*j)/numSlices);	
+				pans[n].data[1].y = points[i+1].x*sin((2*M_PI*j)/numSlices);
+				pans[n].data[1].z = points[i+1].y;
+	
+				pans[n].data[2].x = points[i+1].x*cos((2*M_PI*(j+1))/numSlices);	
+				pans[n].data[2].y = points[i+1].x*sin((2*M_PI*(j+1))/numSlices);
+				pans[n].data[2].z = points[i+1].y;
+											
+				pans[n].data[3].x = points[i+1].x*cos((2*M_PI*(j+2))/numSlices);	
+				pans[n].data[3].y = points[i+1].x*sin((2*M_PI*(j+2))/numSlices);
+				pans[n].data[3].z = points[i+1].y;
+				
+				n++;
+			}
+		} else if (points[i+1].x == 0) {
+			for (int j = 0; j < numSlices; j += 2) {
+				pans[n].data[0].x = points[i].x*cos((2*M_PI*j)/numSlices);	
+				pans[n].data[0].y = points[i].x*sin((2*M_PI*j)/numSlices);
+				pans[n].data[0].z = points[i].y;
+	
+				pans[n].data[1].x = points[i].x*cos((2*M_PI*(j+1))/numSlices);	
+				pans[n].data[1].y = points[i].x*sin((2*M_PI*(j+1))/numSlices);
+				pans[n].data[1].z = points[i].y;
+											
+				pans[n].data[2].x = points[i].x*cos((2*M_PI*(j+2))/numSlices);	
+				pans[n].data[2].y = points[i].x*sin((2*M_PI*(j+2))/numSlices);
+				pans[n].data[2].z = points[i].y;
 
-			pans[n].data[3].x = points[i+1].x*cos((2*M_PI*j)/numSlices);	
-			pans[n].data[3].y = points[i+1].x*sin((2*M_PI*j)/numSlices);
-			pans[n].data[3].z = points[i+1].y;
-			
-			n++;
+				pans[n].data[3].x = 0;	
+				pans[n].data[3].y = 0;
+				pans[n].data[3].z = points[i+1].y;
+								
+				n++;
+			}
+		} else {
+			for (int j = 0; j < numSlices; ++j) {
+				pans[n].data[0].x = points[i].x*cos((2*M_PI*j)/numSlices);	
+				pans[n].data[0].y = points[i].x*sin((2*M_PI*j)/numSlices);
+				pans[n].data[0].z = points[i].y;
+				
+				pans[n].data[1].x = points[i].x*cos((2*M_PI*(j+1))/numSlices);	
+				pans[n].data[1].y = points[i].x*sin((2*M_PI*(j+1))/numSlices);
+				pans[n].data[1].z = points[i].y;
+	
+				pans[n].data[2].x = points[i+1].x*cos((2*M_PI*(j+1))/numSlices);	
+				pans[n].data[2].y = points[i+1].x*sin((2*M_PI*(j+1))/numSlices);
+				pans[n].data[2].z = points[i+1].y;
+	
+				pans[n].data[3].x = points[i+1].x*cos((2*M_PI*j)/numSlices);	
+				pans[n].data[3].y = points[i+1].x*sin((2*M_PI*j)/numSlices);
+				pans[n].data[3].z = points[i+1].y;
+				
+				n++;
+			}
 		}
 	}
+	pans.SetCount(n);
 	SetPanelPoints(pans);
 }
 
@@ -1213,6 +1288,8 @@ void Surface::SetPanelPoints(Array<PanelPoints> &pans) {
 			AddNode(p);
 		}
 	}
+	nodes0 = clone(nodes);
+	
 	for (int i = 0; i < pans.GetCount(); ++i) {
 		PanelPoints &pan = pans[i];
 		Panel &panel = panels.Add();
@@ -1223,5 +1300,91 @@ void Surface::SetPanelPoints(Array<PanelPoints> &pans) {
 		}
 	}
 }
+
+void Surface::AddPolygonalPanel(Vector<Pointf> &bound, double panelWidth) {
+	ASSERT(bound.GetCount() >= 2);
 	
+	bound << bound[0];
+	
+	for (int i = bound.GetCount()-2; i >= 0; --i) {
+		double len = sqrt(sqr(bound[i].x-bound[i+1].x) + sqr(bound[i].y-bound[i+1].y)); 
+		int num = int(round(len/panelWidth));
+		if (num > 1) {
+			double x0 = bound[i].x;
+			double lenx = bound[i+1].x - bound[i].x;
+			double y0 = bound[i].y;
+			double leny = bound[i+1].y - bound[i].y;
+			for (int in = num-1; in >= 1; --in) {
+				Pointf p(x0 + lenx*in/num, y0 + leny*in/num);
+				bound.Insert(i+1, p);
+			}
+		}
+	}
+	bound.Remove(bound.GetCount()-1);
+	
+	double avgx = 0, avgy = 0;
+	for (Pointf &p : bound) {
+		avgx += p.x;
+		avgy += p.y;
+	}
+	Pointf avgp(avgx/bound.GetCount(), avgy/bound.GetCount());
+
+	Upp::Array<Pointf> delp;
+	delp.SetCount(bound.GetCount());
+	for (int i = 0; i < bound.GetCount(); ++i) 
+		delp[i] = bound[i]; 
+	delp << avgp;
+	
+	Delaunay del;
+	
+	while (true) {
+		del.Build(delp);
+		double avglen = 0, maxlen = 0;
+		int maxid, maxid3, num = 0;
+		for (int i = 0; i < del.GetCount(); ++i) {
+			const Delaunay::Triangle &tri = del[i];
+			if (tri[0] < 0 || tri[1] < 0 || tri[2] < 0)  
+				continue;
+
+			double len;
+			len = sqrt(sqr(delp[tri[0]].x - delp[tri[1]].x) + sqr(delp[tri[0]].y - delp[tri[1]].y));
+			avglen += len;	num++;
+			if (maxlen < len) {
+				maxlen = len;	maxid = i;	maxid3 = 0;
+			}
+			len = sqrt(sqr(delp[tri[1]].x - delp[tri[2]].x) + sqr(delp[tri[1]].y - delp[tri[2]].y));
+			avglen += len;	num++;
+			if (maxlen < len) {
+				maxlen = len;	maxid = i;	maxid3 = 1;
+			}			
+			len = sqrt(sqr(delp[tri[2]].x - delp[tri[0]].x) + sqr(delp[tri[2]].y - delp[tri[0]].y));
+			avglen += len;	num++;
+			if (maxlen < len) {
+				maxlen = len;	maxid = i;	maxid3 = 2;
+			}
+		}
+		avglen /= num;
+		if (avglen < panelWidth) 
+			break;
+		
+		int maxid33 = maxid3 == 2 ? 0 : maxid3+1;
+		
+		delp << Pointf(Avg(delp[del[maxid][maxid3]].x, delp[del[maxid][maxid33]].x), Avg(delp[del[maxid][maxid3]].y, delp[del[maxid][maxid33]].y));	
+	}
+	
+	Array<PanelPoints> pans;
+	for (int i = 0; i < del.GetCount(); ++i) {
+		const Delaunay::Triangle &tri = del[i];
+		if (tri[0] < 0 || tri[1] < 0 || tri[2] < 0)  
+			continue;
+
+		PanelPoints &pan = pans.Add();
+		pan.data[0].x = delp[tri[0]].x;		pan.data[0].y = delp[tri[0]].y;		pan.data[0].z = 0;
+		pan.data[1].x = delp[tri[1]].x;		pan.data[1].y = delp[tri[1]].y;		pan.data[1].z = 0;
+		pan.data[2].x = delp[tri[2]].x;		pan.data[2].y = delp[tri[2]].y;		pan.data[2].z = 0;
+		pan.data[3].x = delp[tri[2]].x;		pan.data[3].y = delp[tri[2]].y;		pan.data[3].z = 0;
+	}
+	SetPanelPoints(pans);
+}
+
 }

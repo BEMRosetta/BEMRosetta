@@ -28,7 +28,10 @@ String MeshData::Load(String file, double rho, double g) {
 	ret = mesh.CheckErrors();
 	if (!ret.IsEmpty())
 		return ret;
-		
+	
+	fileName = file;
+	name = InitCaps(GetFileTitle(file));
+	
 	if (y0z)
 		mesh.DeployXSymmetry();
 	if (x0z)
@@ -37,6 +40,10 @@ String MeshData::Load(String file, double rho, double g) {
 	cg = cg0 = Point3D(0, 0, 0);
 	mass = Null;
 	
+	Surface::RemoveDuplicatedPanels(mesh.panels);
+	Surface::RemoveDuplicatedPointsAndRenumber(mesh.panels, mesh.nodes0);
+	Surface::RemoveDuplicatedPanels(mesh.panels);
+		
 	mesh.nodes = clone(mesh.nodes0);
 	
 	AfterLoad(rho, g, false);
@@ -97,12 +104,16 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType) 
 		throw Exc(t_("Unknown mesh file type"));
 }
 
-String MeshData::Heal(Function <void(String, int pos)> Status) {
-	String ret = mesh.Heal(Status);
+String MeshData::Heal(bool basic, Function <void(String, int pos)> Status) {
+	String ret = mesh.Heal(basic, Status);
 	if (!ret.IsEmpty())
 		return ret;
 	
 	return String();
+}
+
+void MeshData::Orient() {
+	mesh.Orient();
 }
 
 void MeshData::Join(const Surface &orig, double rho, double g) {
