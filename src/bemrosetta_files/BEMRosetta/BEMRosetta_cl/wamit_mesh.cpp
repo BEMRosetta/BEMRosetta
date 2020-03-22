@@ -99,7 +99,6 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
 	SetCode(MeshData::WAMIT_GDF);
 	
 	try {

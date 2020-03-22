@@ -722,6 +722,14 @@ bool EqualRatio(const T& a, const T& b, const T& ratio) {
 }
 
 template <class Range, class V>
+int Find(Range& r, const V& value, int from = 0) {
+	for(int i = from; i < r.GetCount(); i++)
+		if(r[i] == value) 
+			return i;
+	return -1;
+}
+
+template <class Range, class V>
 int FindAdd(Range& r, const V& value, int from = 0) {
 	for(int i = from; i < r.GetCount(); i++)
 		if(r[i] == value) 

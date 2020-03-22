@@ -449,7 +449,7 @@ public:
 
 class MeshData {
 public:
-	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, STL_BIN, STL_TXT, UNKNOWN};
+	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, STL_BIN, STL_TXT, EDIT, UNKNOWN};
 	enum MESH_TYPE {MOVED, UNDERWATER};
 	
 	MeshData() {id = idCount++;}
@@ -462,6 +462,7 @@ public:
 		case NEMOH_PRE:		return t_("Nemoh premesh.");
 		case STL_BIN: 		return t_("Binary.stl");
 		case STL_TXT: 		return t_("Text.stl");
+		case EDIT: 			return t_("Edit");
 		case UNKNOWN:		return t_("Unknown");
 		}
 		return t_("Unknown");
@@ -477,7 +478,8 @@ public:
 	String LoadStlTxt(String fileName, bool &isText);
 	String LoadStlBin(String fileName);
 	
-	String Heal(Function <void(String, int pos)> Status);
+	String Heal(bool basic, Function <void(String, int pos)> Status);
+	void Orient();
 	void Join(const Surface &orig, double rho, double g);
 	void Image(int axis);
 		
@@ -500,6 +502,7 @@ public:
 	double mass;
 	Eigen::MatrixXd C;
 	
+	String name;
 	String fileName;
 	String header;
 	
@@ -876,13 +879,18 @@ public:
 	void Ainf(int ids);
 	
 	void LoadMesh(String file, Function <void(String, int pos)> Status, bool checkDuplicated);
-	void HealingMesh(int id, Function <void(String, int pos)> Status);
+	void HealingMesh(int id, bool basic, Function <void(String, int pos)> Status);
+	void OrientSurface(int id, Function <void(String, int)> Status);
 	void ImageMesh(int id, int axis);
 	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
 	void RemoveMesh(int id);
 	void JoinMesh(int idDest, int idOrig);
 	Vector<int> SplitMesh(int id, Function <void(String, int pos)> Status);
-			
+	
+	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
+	void AddRevolution(double x, double y, double z, double size, Vector<Pointf> &vals);
+	void AddPolygonalPanel(double x, double y, double z, double size, Vector<Pointf> &vals);
+	
 	bool LoadSerializeJson();
 	bool StoreSerializeJson();
 	bool ClearTempFiles();

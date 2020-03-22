@@ -474,7 +474,7 @@ GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);
 	//SetAssertFailedHook(OnAssert);
 	
-	ConsoleOutput console;
+	ConsoleOutput con;
 	
 	const Vector<String>& command = CommandLine();
 	

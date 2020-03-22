@@ -9,7 +9,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	
 	listOrig.SetLineCy(EditField::GetStdHeight()).HideSb();
 	
-	listOrig.WhenCursor = [this] {
+	listOrig.WhenSel = [this] {
 		if (!selecting) {
 			selecting = true;
 			dofList.SetCursor(listOrig.GetCursor());
@@ -47,7 +47,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 		if(dofList.DoDragAndDrop(InternalClip(dofList, "array")) == DND_MOVE)
 			dofList.RemoveSelection();
 	};
-	dofList.WhenCursor = [this] {
+	dofList.WhenSel = [this] {
 		if (!selecting) {
 			selecting = true;
 			listOrig.SetCursor(dofList.GetCursor());

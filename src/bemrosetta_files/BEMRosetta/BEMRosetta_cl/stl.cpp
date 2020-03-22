@@ -8,7 +8,6 @@ String MeshData::LoadStlTxt(String fileName, bool &isText) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
 	SetCode(MeshData::STL_TXT);
 	
 	try {
@@ -121,7 +120,6 @@ String MeshData::LoadStlBin(String fileName) {
 	if (!in.IsOpen())
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
 	SetCode(MeshData::STL_BIN);
 	
 	try {	

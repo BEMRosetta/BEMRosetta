@@ -441,7 +441,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	if (numCases > Nf)
 		throw Exc(Format(t_("Number of Nemoh cases %d must not be higher than number of frequencies %d"), numCases, Nf));
 	
-	if (deleteFolder) {
+	if (deleteFolder) {		// If called from GUI, user has been warned
 		if (!DeleteFolderDeep(folderBase))
 			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
 	}
@@ -798,26 +798,28 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	String line;
 	FieldSplit f(in);
 	in.GetLine();
-	Vector<int> dof;
+	Vector<Vector<int>> dof;
+	dof.SetCount(hd().Nb);
+	Vector<int> ddof;
+	ddof.SetCount(hd().Nb, 0);
 	while(!in.IsEof()) {
 		line = in.GetLine();
 	    if (line.StartsWith("Zone") || line.StartsWith("angle"))
 	        break;
 	    if (line != "...") {
-			if (dof.IsEmpty())
-				dof.SetCount(hd().Nb, 0);
-			f.Load(line);
+	        f.Load(line);
 		    int ibody = f.GetInt(1) - 1;
 		    int ndof = f.GetInt(2);
 		  	while (ndof > 6)
 				ndof -= 6;
-			dof[ibody] = max(dof[ibody], ndof);    
+			dof[ibody] << ndof-1;    
+			ddof[ibody] = max(ddof[ibody], ndof);
 	    }
 	}
-	if (!dof.IsEmpty()) {
+	if (!ddof.IsEmpty()) {
 		if (hd().dof.IsEmpty())
-			hd().dof = pick(dof);
-		else if (!IsEqualRange(dof, hd().dof))
+			hd().dof = pick(ddof);
+		else if (!IsEqualRange(ddof, hd().dof))
 			throw Exc(in.Str() + Format(t_("DOF does not match in '%s"), fileName));
 	}
 	hd().Initialize_Forces(fc);
@@ -828,24 +830,19 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			if (line.StartsWith("Zone") || line.StartsWith("angle"))
 				break;
 			f.Load(line);
-			int ib = 0, idf = 0, ibdof = 0;
-			for (int i = 0; i < hd().Nb*6; ++i) {
-				if (ifr >= hd().Nf)
-					throw Exc(in.Str() + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
-				if (ib >= hd().Nb)
-					throw Exc(in.Str() + t_("Number of bodies higher than the defined in Nemoh.cal file"));		
-				double ma = fc.ma[ih](ifr, ibdof) = f.GetDouble(1 + 2*i);	
-				double ph = fc.ph[ih](ifr, ibdof) = -f.GetDouble(1 + 2*i + 1); //-Phase to follow Wamit
-				fc.re[ih](ifr, ibdof) = ma*cos(ph); 
-				fc.im[ih](ifr, ibdof) = ma*sin(ph); 
-				idf++;
-				ibdof++;
-				if (idf >= hd().dof[ib]) {
-					idf = 0;
-					ib++;
-					ibdof = 6*ib;
+			int il = 0;
+			for (int ib = 0; ib < hd().Nb; ++ib) {
+				for (int j = 0; j < dof[ib].GetCount(); ++j) {
+					int ibdof = dof[ib][j];
+					if (ifr >= hd().Nf)
+						throw Exc(in.Str() + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
 					if (ib >= hd().Nb)
-						break;
+						throw Exc(in.Str() + t_("Number of bodies higher than the defined in Nemoh.cal file"));		
+					double ma = fc.ma[ih](ifr, ibdof) = f.GetDouble(1 + 2*il);	
+					double ph = fc.ph[ih](ifr, ibdof) = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
+					fc.re[ih](ifr, ibdof) = ma*cos(ph); 
+					fc.im[ih](ifr, ibdof) = ma*sin(ph);
+					il++; 
 				}
 			}
 			ifr++;
