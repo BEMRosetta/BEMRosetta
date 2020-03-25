@@ -283,7 +283,9 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	} else if (dataToShow == DATA_STS2 && hy.IsLoadedStateSpace()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_Z_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Zmag %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(2, color);//.Units("dB");
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Zmag %s"), hy.name)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color);//.Units("dB");
 			if (ABFZ_source2[id].Init(hy, plot_idf, plot_jdf, PLOT_Z_PH, show_w, !dim)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Zph %s"), hy.name)).Units(t_("rad")).
@@ -293,12 +295,15 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		}
 		if (TFS_source[id].Init(hy, plot_idf, plot_jdf, PLOT_TFS_MA, show_w, !dim)) {
 			loaded = true;
-			scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFSmag %s"), hy.name)).SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().Stroke(4, color).Dash(LINE_DASH_DOT);//.Units("dB");
+			const Upp::Color &bcolor = LtRed();
+			scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFSmag %s"), hy.name)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(bcolor).
+						Stroke(4, bcolor).Dash(LINE_DASH_DOT);//.Units("dB");
 			if (TFS_source2[id].Init(hy, plot_idf, plot_jdf, PLOT_TFS_PH, show_w, !dim)) {
 				loaded = true;
 				scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFSph %s"), hy.name)).Units(t_("rad")).
-						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
-						Stroke(2, color).Dash(LINE_SOLID);
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(bcolor).
+						Stroke(2, bcolor).Dash(LINE_SOLID);
 			}
 		}
 	}

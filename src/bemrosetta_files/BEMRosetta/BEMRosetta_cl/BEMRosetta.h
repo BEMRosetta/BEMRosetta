@@ -141,6 +141,28 @@ public:
     int dimenSTS;							// false if data is dimensionless
     String stsProcessor;
     
+    struct QTF {
+        int ib;
+        int ih1, ih2;
+        int ifr1, ifr2;
+        int idof;
+        double fma, fph;
+ 
+		void Jsonize(JsonIO &json) {
+			json
+				("ib", ib)
+				("ih1", ih1)
+				("ih2", ih2)
+				("ifr1", ifr1)
+				("ifr2", ifr2)
+				("idof", idof)
+				("fma", fma)
+				("fph", fph)
+			;
+    	}
+    };
+    Upp::Array<QTF> qtf;
+
     Vector<double> T; 						// [Nf]    			Wave periods
     Vector<double> w;     		 			// [Nf]             Wave frequencies
     bool dataFromW;
@@ -728,6 +750,7 @@ public:
 private:
 	bool Load_AH1();
 	bool Load_LIS();
+	bool Load_QTF();
 };
 
 template <class Range, class T>

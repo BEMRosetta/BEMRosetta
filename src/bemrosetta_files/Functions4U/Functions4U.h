@@ -739,11 +739,17 @@ int FindAdd(Range& r, const V& value, int from = 0) {
 }
 
 template <class Range, class V>
-void FindAddRatio(Range& r, const V& value, const V& ratio, int from = 0) {
+bool FindRatio(Range& r, const V& value, const V& ratio, int from = 0) {
 	for(int i = from; i < r.GetCount(); i++)
 		if(EqualRatio(r[i], value, ratio)) 
-			return;
-	r.Add(value);
+			return true;
+	return false;
+}
+
+template <class Range, class V>
+void FindAddRatio(Range& r, const V& value, const V& ratio, int from = 0) {
+	if (!FindRatio(r, value, ratio, from)) 
+		r.Add(value);
 }
 
 template <class Range, class V>
