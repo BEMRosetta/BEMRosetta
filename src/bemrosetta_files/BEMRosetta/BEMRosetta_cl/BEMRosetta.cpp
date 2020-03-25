@@ -27,7 +27,7 @@ void Hydro::GetFexFromFscFfk() {
 					ex.re[ih](ifr, i) = exre;
 					ex.im[ih](ifr, i) = exim;
 					ex.ma[ih](ifr, i) = sqrt(exre*exre + exim*exim);
-					ex.ph[ih](ifr, i) = atan2(exre, exim);
+					ex.ph[ih](ifr, i) = atan2(exim, exre);
 				}
 			}
 		}

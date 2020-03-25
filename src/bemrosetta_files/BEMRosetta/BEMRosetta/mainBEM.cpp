@@ -90,9 +90,11 @@ void MainBEM::Init() {
 			mainTab.Set(0);
 		
 		if (menuTab.IsAt(menuFOAMM)) 
-			mainTab.Set(mainSetupFOAMM); 
+			mainTab.Set(mainSetupFOAMM);
+		else if (menuTab.IsAt(menuConvert)) 
+			listLoaded.WhenSelection(); 
 	};
-
+	
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
 		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
@@ -152,12 +154,6 @@ void MainBEM::Init() {
 			menuTab.Set(menuPlot);
 	};
 	mainTab.WhenSet();
-	
-	menuTab.WhenSet = [&] {
-	LOGTAB(menuTab);
-		if (menuTab.IsAt(menuConvert)) 
-			listLoaded.WhenSelection();
-	};
 	
 	mainSummary.Init();
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
@@ -326,17 +322,6 @@ void MainBEM::OnOpt() {
 		menuConvert.file.ActiveType(1);
 	else
 		menuConvert.file.ActiveType(2);
-	
-	/*menuFOAMM.file.ClearTypes();
-	menuFOAMM.file.Type(t_("Maynooth COER FOAMM file *.mat"), "*.mat");
-	menuFOAMM.file.AllFilesType();
-	String extFOAMM = ToLower(GetFileExt(menuFOAMM.file.GetData().ToString()));
-	if (extFOAMM.IsEmpty())
-		menuFOAMM.file.ActiveType(0);
-	else if (extFOAMM == ".mat")
-		menuFOAMM.file.ActiveType(0);
-	else
-		menuFOAMM.file.ActiveType(1);*/	
 }
 
 bool MainBEM::OnLoad() {
@@ -375,13 +360,6 @@ bool MainBEM::OnLoadFile(String file) {
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		
 		UpdateButtons();
-		
-		/*ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		if (ArrayModel_IdHydro(listLoaded) < 0)
-			listLoaded.SetCursor(0);
-		ArrayModel_Add(menuFOAMM.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		if (ArrayModel_IdHydro(menuFOAMM.arrayModel) < 0)
-			menuFOAMM.arrayModel.SetCursor(0);*/
 
 		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
@@ -418,8 +396,6 @@ void MainBEM::OnRemoveSelected(bool all) {
 			Bem().hydros.Remove(id);
 			mainArrange.Remove(row);
 			listLoaded.Remove(row);
-			//menuConvert.arrayModel.Remove(row);
-			//menuFOAMM.arrayModel.Remove(row);
 			selected = true;
 		}
 	}	// Only one available => directly selected
@@ -428,8 +404,6 @@ void MainBEM::OnRemoveSelected(bool all) {
 		Bem().hydros.Remove(id);
 		mainArrange.Remove(0);
 		listLoaded.Remove(0);
-		//menuConvert.arrayModel.Remove(0);
-		//menuFOAMM.arrayModel.Remove(0);
 		selected = true;
 	}		
 	if (!selected) {
@@ -454,8 +428,6 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
-	//if (data.hd().IsLoadedStateSpace())
-	//	mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(mainStateSpace.Load(Bem(), ids));
 	
 	mainTab.WhenSet();
 }
@@ -504,11 +476,7 @@ void MainBEM::OnJoin() {
 		mainArrange.Clear();
 		
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		//ArrayModel_Add(menuConvert.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-		//ArrayModel_Add(menuFOAMM.arrayModel, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		ArrayModel_RowsHydroDel(listLoaded, rowsJoin);
-		//ArrayModel_RowsHydroDel(menuConvert.arrayModel, rowsJoin);
-		//ArrayModel_RowsHydroDel(menuFOAMM.arrayModel, rowsJoin);
 	
 		Vector<int> ids = ArrayModel_IdsHydro(listLoaded	);
 	
@@ -518,11 +486,8 @@ void MainBEM::OnJoin() {
 			mainArrange.Load(Bem().hydros, ids);
 		}
 			
-		if (Bem().hydros.GetCount() > 0) //{
+		if (Bem().hydros.GetCount() > 0) 
 			listLoaded.SetCursor(0);
-			//menuConvert.arrayModel.SetCursor(0);
-			//menuFOAMM.arrayModel.SetCursor(0);
-		//}
 
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.GetCount() > 0);		
@@ -726,7 +691,6 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_opwT", menuPlot.opwT)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showNdim", menuPlot.showNdim)
-		//("menuFOAMM_file", menuFOAMM.file)
 	;
 }
 
@@ -1047,14 +1011,6 @@ void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 		}
 	};
 	
-	//ArrayModel_Init(listLoaded);	
-	/*arrayModel.WhenCursor = [&] {	
-		int id = ArrayModel_IdHydro(mainBEM.listLoaded);
-		if (id < 0)
-			return;
-		setup.WhenSelArrayModel(id, bem);
-	};*/
-	
 	foammLogo.Set(Img2::FOAMM());
 	foammWorking.LoadBuffer(String(animatedStar, animatedStar_length));
 	foammWorking.Hide();
@@ -1306,7 +1262,7 @@ bool MenuFOAMM::OnFOAMM() {
 		int id = ArrayModel_IdHydro(mainBEM.listLoaded);
 		if (id < 0)
 			return false;
-		if (ArrayCtrlSelectedGetCount(mainBEM.listLoaded))
+		if (mainBEM.listLoaded.GetCount() != 1 && ArrayCtrlSelectedGetCount(mainBEM.listLoaded) != 1)
 			return false;
 		
 		if (!setup->Get(ibs, idfs, jdfs, froms, tos, freqs))

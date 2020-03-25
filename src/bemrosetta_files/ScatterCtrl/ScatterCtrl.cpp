@@ -1115,19 +1115,26 @@ ScatterCtrl::ScatterCtrl() {
 	
 	ShowInfo().ShowContextMenu().ShowPropertiesDlg();
 	
-	Add(processButton.RightPosZ(0, 15).TopPosZ(0, 15));
+	int posx = 0;
+	int buttonHeight = 18;
+	int buttonWidthProcess = 100;
+	Add(processButton.RightPosZ(posx, buttonWidthProcess).TopPosZ(0, buttonHeight));
 	processButton.Show(false);
-	processButton.SetImage(ScatterImg::chart_curve_edit()).Tip(t_("Data processing dialog"));
+	processButton.SetImage(ScatterImg::chart_curve_edit()).SetLabel(t_("Data analysis")).Tip(t_("Data processing dialog"));
 	processButton.WhenAction = THISBACK(DoProcessing);
 	
-	Add(dataButton.RightPosZ(15, 15).TopPosZ(0, 15));
+	posx += buttonWidthProcess;
+	int buttonWidthData = 80;
+	Add(dataButton.RightPosZ(posx, buttonWidthData).TopPosZ(0, buttonHeight));
 	dataButton.Show(false);
-	dataButton.SetImage(ScatterImg::Database()).Tip(t_("Raw data table"));
+	dataButton.SetImage(ScatterImg::Database()).SetLabel(t_("View data")).Tip(t_("Show raw data table"));
 	dataButton.WhenAction = THISBACK(DoShowData);
 	
-	Add(propertiesButton.RightPosZ(30, 15).TopPosZ(0, 15));
+	posx += buttonWidthData;
+	int buttonWidthProperties = 80;
+	Add(propertiesButton.RightPosZ(posx, buttonWidthProperties).TopPosZ(0, buttonHeight));
 	propertiesButton.Show(false);
-	propertiesButton.SetImage(ScatterImg::Gear()).Tip(t_("Plot properties dialog"));
+	propertiesButton.SetImage(ScatterImg::Gear()).SetLabel(t_("Properties")).Tip(t_("Plot properties dialog"));
 	propertiesButton.WhenAction = THISBACK1(DoShowEditDlg, 0);
 	
 	AddMouseBehavior(false, false, false, true , false, 0, false, ScatterCtrl::SHOW_COORDINATES); 

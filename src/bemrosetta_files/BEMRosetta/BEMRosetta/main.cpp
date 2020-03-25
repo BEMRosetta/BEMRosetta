@@ -72,16 +72,16 @@ void Main::Init() {
 	
 	Add(tab.SizePos());	
 
-	Add(labrho.SetLabel(t_("rho [Kg/m3]:")).RightPosZ(58, 80).TopPosZ(0, 19));
-	Add(editrho.SetReadOnly().RightPosZ(28, 40).TopPosZ(1, 19));
+	Add(labrho.SetLabel(t_("rho [Kg/m3]:")).RightPosZ(128, 80).TopPosZ(0, 19));
+	Add(editrho.SetReadOnly().RightPosZ(98, 40).TopPosZ(1, 19));
 	editrho <<= bem.rho;
 	
-	Add(labg.SetLabel(t_("Gravity [m/s2]:")).RightPosZ(182, 80).TopPosZ(0, 19));
-	Add(editg.SetReadOnly().RightPosZ(148, 40).TopPosZ(1, 19));
+	Add(labg.SetLabel(t_("Gravity [m/s2]:")).RightPosZ(252, 80).TopPosZ(0, 19));
+	Add(editg.SetReadOnly().RightPosZ(218, 40).TopPosZ(1, 19));
 	editg <<= bem.g;
 	
-	butWindow.SetImage(Img::application_double());
-	Add(butWindow.RightPosZ(0, 20).TopPosZ(0, 20));
+	butWindow.SetImage(Img::application_double()).SetLabel(t_("New window")).Tip(t_("Open new window"));
+	Add(butWindow.RightPosZ(2, 90).TopPosZ(0, 20));
 	butWindow.Hide();
 	
 	butWindow.WhenAction = [&] {

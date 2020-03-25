@@ -25,6 +25,10 @@ bool Aqwa::Load(String file, double) {
 		if (IsNull(hd().Nb))
 			return false;
 		
+		BEMData::Print("\n- " + S(t_("QTF file")));
+		if (!Load_QTF()) 
+			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
@@ -210,7 +214,7 @@ bool Aqwa::Load_LIS() {
 	
 	hd().Nb = 0;
 	while(!in.IsEof()) {
-		line = TrimBoth(in.GetLine());
+		line = Trim(in.GetLine());
 		
 		if ((pos = line.FindAfter("F O R   S T R U C T U R E")) >= 0) {
 			int ib = ScanInt(line.Mid(pos)); 
@@ -404,7 +408,7 @@ bool Aqwa::Load_LIS() {
 						throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
 						frc.ma[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2);
-						frc.ph[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2 + 1);
+						frc.ph[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180;
 						frc.re[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*cos(frc.ph[idh](ifr, idf + 6*idb));
 			       		frc.im[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*sin(frc.ph[idh](ifr, idf + 6*idb));
 					}
@@ -449,7 +453,69 @@ bool Aqwa::Load_LIS() {
 		
 	return true;
 }
+
+bool Aqwa::Load_QTF() {
+	String fileName = ForceExt(hd().file, ".QTF");
+	FileInLine in(fileName);
+	if (!in.IsOpen()) {
+		fileName = AppendFileNameX(GetFileFolder(fileName), "analysis.qtf"); 
+		in.Open(fileName);
+		if (!in.IsOpen()) 
+			return false;
+	}
 	
+	String line; 
+	FieldSplit f(in);
+	
+	in.GetLine();	// AQWA version
+	f.Load(in.GetLine());
+	int ib = f.GetInt(0);
+	if (ib >= hd().Nb)
+		throw Exc(Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
+	int Nh = f.GetInt(1);
+	if (Nh != hd().Nh)
+		throw Exc(Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
+	int Nf = f.GetInt(2);
+	if (Nf != hd().Nf)
+		throw Exc(Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
+	
+	int col = 3;
+	int ih = 0;
+	while (!in.IsEof()) {		// Check headings
+		while (col < f.GetCount() && ih < hd().Nh) {
+			double head = f.GetDouble(col++);
+			if (!FindRatio(hd().head, head, 0.001))	
+				throw Exc(Format(t_("%f heading not found"), head));
+			ih++;
+		}
+		if (ih >= hd().Nh)
+			break;
+		f.Load(in.GetLine());
+		col = 0;
+	}
+	f.Load(in.GetLine());
+	col = 0;
+	int ifr = 0;
+	while (!in.IsEof()) {		// Check headings
+		while (col < f.GetCount() && ifr < hd().Nf) {
+			double w = f.GetDouble(col++);
+			if (!FindRatio(hd().w, w, 0.001))	
+				throw Exc(Format(t_("%f frequency not found"), w));
+			ifr++;
+		}
+		if (ifr >= hd().Nf)
+			break;
+		f.Load(in.GetLine());
+		col = 0;
+	}			
+				
+
+
+
+
+	return true;
+}
+
 void Aqwa::Save(String ) {
 	throw Exc("Option not implemented");
 }		

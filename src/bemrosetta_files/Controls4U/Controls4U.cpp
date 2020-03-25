@@ -200,16 +200,19 @@ void EditFileFolder::DoGo(bool add) {
 		if (histInd >= history.GetCount()-1)
 			butRight.Enable(false);
 	}
-	if (WhenChange) {
+	if (WhenChange || WhenAction) {
 		if (isFile && !FileExists(path) && DirectoryExists(path)) {
 			DoBrowse();
 			return;
 		}
+	}
+	if (WhenChange) {
 		if (WhenChange()) {
 			AddHistory();
 			Accept();
 		}
-	}
+	} else
+		WhenAction();
 }
 
 void EditFileFolder::DoLeft() {
@@ -252,9 +255,10 @@ EditFile::EditFile() {
 		else if (!DirectoryExists(folder))
 			Exclamation(Upp::Format(t_("Folder '%s' does not exist"), DeQtf(folder)));
 		else {
-			if (folder.StartsWith("\\"))
-				system("explorer " + folder);
-			else
+			if (folder.StartsWith("\\")) {
+				if (0 == system("explorer " + folder))
+					Exclamation((t_("Impossible to open file browser")));
+			} else
 				LaunchWebBrowser(folder);
 		}
 	};
