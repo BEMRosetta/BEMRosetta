@@ -1,11 +1,7 @@
 #include "TrackBall.h"
 #include "trkball.h"
 
-#ifdef PLATFORM_POSIX
-#include <GL/glut.h>
-#elif defined(WIN32)
-#include <gl/glu.h>
-#endif
+#include <GL/glu.h>
 
 namespace Upp {
 	

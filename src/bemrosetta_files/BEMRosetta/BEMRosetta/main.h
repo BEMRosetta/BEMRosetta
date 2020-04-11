@@ -250,11 +250,18 @@ private:
 class MenuOptions : public WithMenuOptions<StaticRect> {
 public:
 	typedef MenuOptions CLASSNAME;
+	
 	MenuOptions() : bem(0) {}
 	void Init(BEMData &bem);
 	void Load();
 	void OnSave();
 	bool IsChanged();
+	void Jsonize(JsonIO &json) {
+		json
+			("tabsShown", tabsShown);
+	}
+	
+	Vector<bool> tabsShown;
 	
 private:
 	BEMData *bem;
@@ -628,6 +635,21 @@ private:
 	int id = -1;
 };
 
+class MainQTF : public WithMainQTF<StaticRect> {
+public:
+	typedef MainQTF CLASSNAME;
+	
+	void Init();	
+	bool Load();
+	bool Loaded(const Vector<int> &ids);
+	
+	enum Mag {MAGNITUDE, PHASE, REAL, IMAGINARY};
+	enum Show {FSUM, FDIFFERENCE};
+	
+private:
+	int idHydro = -1;
+};
+
 class MenuFOAMM : public WithMenuStateSpace<StaticRect> {
 public:
 	typedef MenuFOAMM CLASSNAME;
@@ -664,6 +686,7 @@ public:
 	void OnMenuConvertArraySel();
 	void OnMenuListLoaded();
 	void UpdateButtons();
+	void ShowMenuPlotItems();
 		
 	void Jsonize(JsonIO &json);
 		
@@ -681,13 +704,15 @@ public:
 	MainStateSpace mainStateSpace;
 	MainStiffness mainStiffness;
 	MainSetupFOAMM mainSetupFOAMM;
+	MainQTF mainQTF;
 		
 private:
 	ScatterCtrl &GetSelScatter();
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEMData &bem);
-	
+	int GetOneSelected();
+		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
 	String BEMFile(String fileFolder) const;
@@ -748,11 +773,13 @@ private:
 	EditDouble editrho, editg;
 	
 	MainNemoh mainNemoh;
+	CtrlScroll mainNemohScroll;
 	MainBEM mainBEM;
 	MainOutput mainOutput;
 	MainMesh mainMesh;
 	
 	MenuOptions menuOptions;
+	CtrlScroll menuOptionsScroll;
 	MenuAbout menuAbout;
 	
 	bool closed;

@@ -418,6 +418,12 @@ void StaticImage::MouseLeave() {
 		popup.Close();
 }
 
+Image StaticImage::CursorImage(Point, dword) {
+	if (!hyperlink.IsEmpty()) 
+		return Image::Hand();
+	return Image::Arrow();
+}
+
 void StaticImage::Layout() {
    	if (useAsBackground) {
   		//Ctrl *q = GetFirstChild(); 
@@ -522,6 +528,9 @@ void  StaticImage::RightDown(Point , dword ) {
 void  StaticImage::LeftDown(Point , dword ) {
 	if(!IsEditable())
 		return;
+	
+	if (!hyperlink.IsEmpty())
+		LaunchWebBrowser(hyperlink);
 
 	WhenLeftDown();
 }

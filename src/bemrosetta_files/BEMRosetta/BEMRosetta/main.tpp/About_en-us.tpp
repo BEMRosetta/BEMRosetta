@@ -17,6 +17,9 @@ Galvan, A. Otter.]&]
 he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 
 library][2 .]&]
+[s0; [2 We would like to thank École Centrale de Nantes, CNRS, and 
+the other NEMOH developers for making NEMOH freely available 
+under the Apache 2.0 license.]&]
 [s0;2 &]
 [s0;2 &]
 [s0; License&]
