@@ -23,17 +23,32 @@ namespace Upp {
 
 static StaticMutex sHlock;
 
-String& sHomeDir() {
-	static String s;
-	return s;
-}
+static char sHomeDir[_MAX_PATH + 1];
 
 void    SetHomeDirectory(const char *dir)
 {
 	INTERLOCKED_(sHlock) {
-		sHomeDir() = dir;
+		strcpy(sHomeDir, dir);
 	}
 }
+
+String  GetHomeDirectory() {
+	String r;
+	INTERLOCKED_(sHlock) {
+		if(!*sHomeDir)
+			strcpy(sHomeDir,
+			#ifdef PLATFORM_WIN32
+				GetEnv("HOMEDRIVE") + GetEnv("HOMEPATH")
+			#else
+				Nvl(GetEnv("HOME"), "/root")
+			#endif
+			);
+		r = sHomeDir;
+	}
+	return r;
+}
+
+
 
 #ifdef PLATFORM_WIN32
 
@@ -45,17 +60,6 @@ String GetEnv(const char *id)
 String GetExeFilePath()
 {
 	return GetModuleFileName();
-}
-
-String  GetHomeDirectory() {
-	String r;
-	INTERLOCKED_(sHlock) {
-		String& s = sHomeDir();
-		if(s.IsEmpty())
-			s = GetEnv("HOMEDRIVE") + GetEnv("HOMEPATH");
-		r = s;
-	}
-	return r;
 }
 
 #endif
@@ -96,24 +100,24 @@ const char *procexepath_() {
 
 String GetExeFilePath()
 {
-	static String exepath;
+	static char exepath[_MAX_PATH + 1];
 	ONCELOCK {
 		const char *exe = procexepath_();
 		if(*exe)
-			exepath = exe;
+			strcpy(exepath, exe);
 		else {
 			String x = Argv0__;
 			if(IsFullPath(x) && FileExists(x))
-				exepath = x;
+				strcpy(exepath, x);
 			else {
-				exepath = GetHomeDirFile("upp");
+				strcpy(exepath, GetHomeDirFile("upp"));
 				Vector<String> p = Split(FromSystemCharset(Environment().Get("PATH")), ':');
 				if(x.Find('/') >= 0)
 					p.Add(GetCurrentDirectory());
 				for(int i = 0; i < p.GetCount(); i++) {
 					String ep = NormalizePath(AppendFileName(p[i], x));
 					if(FileExists(ep))
-						exepath = ep;
+						strcpy(exepath, ep);
 				}
 			}
 		}
@@ -138,6 +142,34 @@ String GetExeTitle()
 	return GetFileTitle(GetExeFilePath());
 }
 
+void SyncLogPath__();
+
+static char sAppName[256];
+
+String GetAppName()
+{
+	return Nvl(String(sAppName), GetExeTitle());
+}
+
+void SetAppName(const String& name)
+{
+	strcpy(sAppName, name);
+	SyncLogPath__();
+}
+
+static char sConfigGroup[256] = "u++";
+
+void SetConfigGroup(const char *group)
+{
+	strcpy(sConfigGroup, group);
+	SyncLogPath__();
+}
+
+String GetConfigGroup()
+{
+	return sConfigGroup;
+}
+
 String GetTempDirectory()
 {
 	return GetTempPath();
@@ -148,49 +180,93 @@ String TempFile(const char *filename)
 	return AppendFileName(GetTempDirectory(), filename);
 }
 
-#ifdef PLATFORM_POSIX
-
-String  GetHomeDirectory() {
-	String r;
-	INTERLOCKED_(sHlock) {
-		String& s = sHomeDir();
-		if(s.IsEmpty())
-			s = Nvl(GetEnv("HOME"), "/root");
-		r = s;
-	}
-	return r;
-}
-
-#endif//PLATFORM_POSIX
-
 String  GetHomeDirFile(const char *fp) {
 	return AppendFileName(GetHomeDirectory(), fp);
 }
 
 static bool sHomecfg;
 
-void    UseHomeDirectoryConfig(bool b)
+void UseHomeDirectoryConfig(bool b)
 {
 	sHomecfg = b;
 }
 
+static char sConfigFolder[_MAX_PATH + 1];
+
+void SetConfigDirectory(const String& s)
+{
+	strcpy(sConfigFolder, s);
+	SyncLogPath__();
+}
+
+void CopyFolder(const char *dst, const char *src)
+{
+	RealizeDirectory(dst);
+	FindFile ff(String(src) + "/*.*");
+	while(ff) {
+		String s = AppendFileName(src, ff.GetName());
+		String d = AppendFileName(dst, ff.GetName());
+		if(ff.IsFile()) {
+			FileIn in(s);
+			FileOut out(d);
+			CopyStream(out, in);
+		}
+		else
+		if(ff.IsFolder() && *ff.GetName() != '.')
+			CopyFolder(s, d);
+		ff.Next();
+	}
+}
+
 String  ConfigFile(const char *file) {
+	if(*sConfigFolder)
+		return AppendFileName(sConfigFolder, file);
 #if defined(PLATFORM_WIN32)
 	if(sHomecfg) {
-		String p = GetHomeDirFile(GetExeTitle());
+		String p = GetHomeDirFile(GetAppName());
 		ONCELOCK
 			RealizeDirectory(p);
 		return AppendFileName(p, file);
 	}
 	return GetExeDirFile(file);
 #elif defined(PLATFORM_POSIX)
-	String p = GetHomeDirFile(".upp/" + GetExeTitle());
-	ONCELOCK
-		RealizeDirectory(p);
-	return AppendFileName(p, file);
+	static char cfgd[_MAX_PATH + 1];
+	static bool sandboxed = true;
+	ONCELOCK {
+		String cfgdir;
+		String h = GetExeFolder();
+		if(!sHomecfg)
+			while(h.GetCount() > 1 && DirectoryExists(h)) {
+				String pp = AppendFileName(h, ".config");
+				FindFile ff(pp);
+				if(ff && ff.IsFolder() && ff.CanWrite()) {
+					cfgdir = pp;
+					break;
+				}
+				h = GetFileFolder(h);
+			}
+		if(IsNull(cfgdir)) {
+			sandboxed = false;
+			cfgdir = GetEnv("XDG_CONFIG_HOME");
+		}
+		if(IsNull(cfgdir) || !DirectoryExists(cfgdir))
+			cfgdir = GetHomeDirFile(".config");
+		if(*sConfigGroup)
+			cfgdir = AppendFileName(cfgdir, GetConfigGroup());
+		strcpy(cfgd, cfgdir);
+	}
+	String pp = AppendFileName(cfgd, GetAppName());
+	bool exists = DirectoryExists(pp);
+	RealizeDirectory(pp);
+	if(!exists && !sandboxed) { // migrate config files from the old path
+		String old = GetHomeDirFile(".upp/" + GetExeTitle());
+		if(DirectoryExists(old))
+			CopyFolder(pp, old);
+	}
+	return AppendFileName(pp, file);
 #else
-#error ConfigFile not implemented for this platform, comment this line to get input string back
-	return file;
+	NEVER();
+	return GetExeDirFile(file);
 #endif//PLATFORM
 }
 
@@ -200,7 +276,7 @@ String GetConfigFolder()
 }
 
 String  ConfigFile() {
-	return ConfigFile(GetExeTitle() + ".cfg");
+	return ConfigFile(GetAppName() + ".cfg");
 }
 
 Vector<WString>& coreCmdLine__()

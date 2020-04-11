@@ -3,11 +3,14 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
-#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
 using namespace Upp;
+
+#define IMAGECLASS ImgNemoh
+#define IMAGEFILE <BEMRosetta/BEMRosetta/main.iml>
+#include <Draw/iml.h>
 
 #include "main.h"
 
@@ -51,6 +54,9 @@ void MainNemoh::Init(const BEMData &bem) {
 	dropSolver.Add(0, t_("Nemoh 115+"));
 	dropSolver.Add(1, t_("Nemoh"));
 	dropSolver.SetIndex(0);
+	
+	ecnLogo.Set(ImgNemoh::ECN());
+	ecnLogo.SetHyperlink("https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp");
 }
 
 void MainNemoh::InitSerialize(bool ret) {

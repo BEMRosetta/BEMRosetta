@@ -142,11 +142,24 @@ public:
     String stsProcessor;
     
     struct QTF {
-        int ib;
+        QTF() {
+            fre.SetCount(6, Null);
+            fim.SetCount(6, Null);
+            fma.SetCount(6, Null);
+            fph.SetCount(6, Null);
+        }
+        void Set(int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2) {
+            ib = _ib;
+            ih1 = _ih1;
+            ih2 = _ih2;
+            ifr1 = _ifr1;
+            ifr2 = _ifr2;
+        }
+        
+        int ib = -1;
         int ih1, ih2;
         int ifr1, ifr2;
-        int idof;
-        double fma, fph;
+        Vector<double> fre, fim, fma, fph;
  
 		void Jsonize(JsonIO &json) {
 			json
@@ -155,13 +168,16 @@ public:
 				("ih2", ih2)
 				("ifr1", ifr1)
 				("ifr2", ifr2)
-				("idof", idof)
+				("fre", fre)
+				("fim", fim)
 				("fma", fma)
 				("fph", fph)
 			;
     	}
     };
-    Upp::Array<QTF> qtf;
+    Upp::Array<QTF> qtfsum, qtfdif;
+    
+    int GetQTFId(int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2) const;
 
     Vector<double> T; 						// [Nf]    			Wave periods
     Vector<double> w;     		 			// [Nf]             Wave frequencies
@@ -285,6 +301,10 @@ public:
 	double R_re_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_re_ndim(f, _h, ifr, idf) : R_re_dim(f, _h, ifr, idf);}
 	double R_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_im_ndim(f, _h, ifr, idf) : R_im_dim(f, _h, ifr, idf);}
 
+	double F_dim(double f, int idf)  	   const {return dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_ndim(double f, int idf) 	   const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double F_(bool ndim, double f, int idf) const {return ndim ? F_ndim(f, idf) : F_dim(f, idf);}
+
 	inline std::complex<double>Z(bool ndim, int ifr, int idf, int jdf) const {
 		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Awinf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
 	}
@@ -398,6 +418,7 @@ public:
 	bool IsLoadedRAO() 	 const {return !rao.ma.IsEmpty();}
 	bool IsLoadedForce(const Forces &f) const {return !f.ma.IsEmpty();}
 	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
+	bool IsLoadedQTF() 	 const {return !qtfsum.IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -626,11 +647,13 @@ protected:
 	bool Load_3(String fileName);
 	bool Load_hst(String fileName);
 	bool Load_4(String fileName);
+	bool Load_12(String fileName, bool isSum);
 	
 	void Save_1(String fileName, bool force_T = false);
 	void Save_3(String fileName, bool force_T = false);
 	void Save_hst(String fileName);
 	void Save_4(String fileName, bool force_T = false);
+	void Save_12(String fileName, bool isSum);
 };
 
 class Foamm : public HydroClass {
@@ -892,7 +915,7 @@ public:
 	int onlyDiagonal;
 	
 	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathGREN;
-	//bool experimental;
+	bool experimental;
 	String foammPath;
 	
 	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);

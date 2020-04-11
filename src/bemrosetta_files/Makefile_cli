@@ -1,13 +1,13 @@
 
 UPPOUT = _out/
-CINC   = -I./ `pkg-config --cflags freetype2` `pkg-config --cflags x11` `pkg-config --cflags fontconfig` `pkg-config --cflags xcb` `pkg-config --cflags expat` `pkg-config --cflags libpng` -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/freetype2 -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include/gtk-2.0 -I/usr/X11R6/include/glib-2.0 -I/usr/X11R6/lib/glib-2.0/include -I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include/cairo -I/usr/X11R6/include/pango-1.0 -I/usr/X11R6/include/atk-1.0 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/gtk-2.0/include -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/harfbuzz -I/usr/include/freetype2/freetype
+CINC   = -I./ `pkg-config --cflags freetype2` `pkg-config --cflags x11` `pkg-config --cflags fontconfig` `pkg-config --cflags xcb` `pkg-config --cflags expat` `pkg-config --cflags libpng`
 Macro  =  -DflagSHARED -DflagGCC -DflagPOSIX -DflagLINUX
 CXX = c++
 LINKER = $(CXX)
 CFLAGS = -O3 -ffunction-sections -fdata-sections 
 CXXFLAGS = -O3 -ffunction-sections -fdata-sections  -std=c++14
 LDFLAGS = -Wl,--gc-sections $(LINKOPTIONS)
-LIBPATH = -L"/usr/X11R6/lib" -L"/usr/lib"
+LIBPATH =
 AR = ar -sr
 
 OutDir_BEMRosetta_BEMRosetta_cl = $(UPPOUT)BEMRosetta/BEMRosetta_cl/GCC-Gcc-Linux-Main-Posix-Shared/
@@ -15648,8 +15648,6 @@ $(OutDir_Draw)FontWin32.o: Draw/FontWin32.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/FontWin32.cpp -o $(OutDir_Draw)FontWin32.o
 
 $(OutDir_Draw)FontFc.o: Draw/FontFc.cpp \
-	config/ftheader.h \
-	ft2build.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \

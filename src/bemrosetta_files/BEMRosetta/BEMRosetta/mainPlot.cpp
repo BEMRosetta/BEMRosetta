@@ -3,7 +3,6 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
-#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 

@@ -180,9 +180,9 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 	if (hydro.IsLoadedForce(from)) {
 		for (int ihhy = 0; ihhy < hydro.Nh; ++ihhy) {
-			int ih = FindIndexCloser(head, hydro.head[ihhy]);
+			int ih = FindClosest(head, hydro.head[ihhy]);
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
-				int ifr = FindIndexCloser(w, hydro.w[ifrhy]);
+				int ifr = FindClosest(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {	 
 					if (!IsNull(from.ma[ihhy](ifrhy, idf))) {
 						to.ma[ih](ifr, idf) = hydro.F_ma_ndim(from, ihhy, ifrhy, idf);
@@ -197,7 +197,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 }
 
 void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Vector<double> &newHead, double h, int ih, int idb) {
-	int nih  = FindIndexCloser(newHead, h);
+	int nih  = FindClosest(newHead, h);
 	bool avg  = !IsNull(newf.re[nih](0, idb));
 	for (int ifr = 0; ifr < Nf; ++ifr) {
 		if (avg) {
@@ -581,7 +581,7 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 		
 		if (hydro.IsLoadedA() && hydro.IsLoadedB()) {
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
-				int ifr = FindIndexCloser(w, hydro.w[ifrhy]);
+				int ifr = FindClosest(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {
 					for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
 						if (!IsNull(hydro.A[ifrhy](idf, jdf)))
@@ -598,9 +598,9 @@ void Hydro::Join(const Vector<Hydro *> &hydrosp) {
 		
 		if (hydro.IsLoadedRAO()) {
 			for (int ihhy = 0; ihhy < Nh; ++ihhy) {
-				int ih = FindIndexCloser(head, hydro.head[ihhy]);
+				int ih = FindClosest(head, hydro.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
-					int ifr = FindIndexCloser(w, hydro.w[ifrhy]);
+					int ifr = FindClosest(w, hydro.w[ifrhy]);
 					for (int idf = 0; idf < 6*Nb; ++idf) {	 
 						if (!IsNull(rao.ma[ihhy](ifrhy, idf))) {
 							rao.ma[ih](ifr, idf) = hydro.R_ma_ndim(rao, ihhy, ifrhy, idf);
@@ -784,8 +784,12 @@ void Hydro::A0() {
 			return;
 		Aw0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
-	        for (int j = 0; j < Nb*6; ++j) 
-				Aw0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[iw1](i, j), A[iw2](i, j), A[iw3](i, j));
+	        for (int j = 0; j < Nb*6; ++j) {
+	            if (IsNull(A[iw1](i, j)) || IsNull(A[iw1](i, j)) || IsNull(A[iw1](i, j)))
+	                Aw0(i, j) = Null;
+	            else
+					Aw0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[iw1](i, j), A[iw2](i, j), A[iw3](i, j));
+	        }
 	}
 }
 
@@ -859,6 +863,15 @@ void Hydro::StateSpace::GetTFS(const Vector<double> &w) {
 		TFS[ifr] = (C_ss.transpose()*(Eigen::MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
 	}		
 }
+
+int Hydro::GetQTFId(int ib, int ih1, int ih2, int ifr1, int ifr2) const {
+	for (int i = 0; i < qtfdif.GetCount(); ++i) {
+		const QTF &qtf = qtfdif[i];
+		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2)
+			return i;
+	}
+	return -1;
+}
 		
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
@@ -901,6 +914,8 @@ void Hydro::Jsonize(JsonIO &json) {
 		("stsProcessor", stsProcessor)
 		("dimenSTS", dimenSTS)
 		("description", description)
+		("qtfsum", qtfsum)
+		("qtfdif", qtfdif)
 	;
 	if(json.IsLoading()) 
 		code = static_cast<Hydro::BEM_SOFT>(icode);
@@ -909,6 +924,7 @@ void Hydro::Jsonize(JsonIO &json) {
 BEMData::BEMData() {
 	String bemFilesAst = clone(bemFilesExt);
 	bemFilesAst.Replace(".", "*.");
+	experimental = ToLower(GetExeTitle()).Find("experimental") >= 0 || GetUserName() == "0203853";
 }
 
 void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
@@ -948,14 +964,14 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
-	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4") {
+	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.GetCount()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
-	} else if (ext == ".ah1" || ext == ".lis") {
+	} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") {
 		Aqwa &data = hydros.Create<Aqwa>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
