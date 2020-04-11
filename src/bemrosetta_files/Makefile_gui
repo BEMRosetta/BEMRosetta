@@ -1,13 +1,13 @@
 
 UPPOUT = _out/
-CINC   = -I./ `pkg-config --cflags freetype2` `pkg-config --cflags x11` `pkg-config --cflags xinerama` `pkg-config --cflags xrender` `pkg-config --cflags xft` `pkg-config --cflags xdmcp` `pkg-config --cflags fontconfig` `pkg-config --cflags xcb` `pkg-config --cflags xext` `pkg-config --cflags gtk+-3.0` `pkg-config --cflags libnotify` `pkg-config --cflags expat` `pkg-config --cflags libpng` `pkg-config --cflags gl` `pkg-config --cflags glu` -I/usr/include/gtk-2.0 -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/freetype2 -I/usr/include/gtk-2.0 -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include -I/usr/lib/gtk-2.0/include -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2 -I/usr/X11R6/include/gtk-2.0 -I/usr/X11R6/include/glib-2.0 -I/usr/X11R6/lib/glib-2.0/include -I/usr/X11R6/lib/gtk-2.0/include -I/usr/X11R6/include/cairo -I/usr/X11R6/include/pango-1.0 -I/usr/X11R6/include/atk-1.0 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/gtkglext-1.0 -I/usr/lib/gtkglext-1.0/include -I/usr/lib/i386-linux-gnu/glib-2.0/include -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/lib/i386-linux-gnu/gtk-2.0/include -I/usr/lib/x86_64-linux-gnu/gtk-2.0/include -I/usr/include/harfbuzz -I/usr/include/freetype2/freetype
+CINC   = -I./ `pkg-config --cflags freetype2` `pkg-config --cflags x11` `pkg-config --cflags xinerama` `pkg-config --cflags xrender` `pkg-config --cflags xft` `pkg-config --cflags xdmcp` `pkg-config --cflags fontconfig` `pkg-config --cflags xcb` `pkg-config --cflags xext` `pkg-config --cflags gtk+-3.0` `pkg-config --cflags libnotify` `pkg-config --cflags expat` `pkg-config --cflags libpng` `pkg-config --cflags gl` `pkg-config --cflags glu`
 Macro  =  -DflagGUI -DflagSHARED -DflagGCC -DflagPOSIX -DflagLINUX
 CXX = c++
 LINKER = $(CXX)
 CFLAGS = -O3 -ffunction-sections -fdata-sections 
 CXXFLAGS = -O3 -ffunction-sections -fdata-sections  -std=c++14
 LDFLAGS = -Wl,--gc-sections $(LINKOPTIONS)
-LIBPATH = -L"/usr/X11R6/lib" -L"/usr/lib"
+LIBPATH =
 AR = ar -sr
 
 OutDir_BEMRosetta_BEMRosetta = $(UPPOUT)BEMRosetta/BEMRosetta/GCC-Gcc-Gui-Linux-Main-Posix-Shared/
@@ -24,8 +24,6 @@ OutDir_GLCanvas = $(UPPOUT)GLCanvas/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_GLCanvas = $(Macro)
 OutDir_RasterPlayer = $(UPPOUT)RasterPlayer/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_RasterPlayer = $(Macro)
-OutDir_CtrlScroll = $(UPPOUT)CtrlScroll/GCC-Gcc-Gui-Linux-Posix-Shared/
-Macro_CtrlScroll = $(Macro)
 OutDir_CtrlCore = $(UPPOUT)CtrlCore/GCC-Gcc-Gui-Linux-Posix-Shared/
 Macro_CtrlCore = $(Macro)
 OutDir_PdfDraw = $(UPPOUT)PdfDraw/GCC-Gcc-Gui-Linux-Posix-Shared/
@@ -100,7 +98,6 @@ prepare: \
 	$(OutDir_BEMRosetta_BEMRosetta_cl) \
 	$(OutDir_GLCanvas) \
 	$(OutDir_RasterPlayer) \
-	$(OutDir_CtrlScroll) \
 	$(OutDir_CtrlCore) \
 	$(OutDir_PdfDraw) \
 	$(OutDir_Draw) \
@@ -144,7 +141,6 @@ $(OutFile): build_info  \
 	$(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a \
 	$(OutDir_GLCanvas)GLCanvas.a \
 	$(OutDir_RasterPlayer)RasterPlayer.a \
-	$(OutDir_CtrlScroll)CtrlScroll.a \
 	$(OutDir_CtrlCore)CtrlCore.a \
 	$(OutDir_PdfDraw)PdfInit.o \
 	$(OutDir_PdfDraw)PdfDraw.a \
@@ -194,7 +190,6 @@ $(OutFile): build_info  \
 			$(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a \
 			$(OutDir_GLCanvas)GLCanvas.a \
 			$(OutDir_RasterPlayer)RasterPlayer.a \
-			$(OutDir_CtrlScroll)CtrlScroll.a \
 			$(OutDir_CtrlCore)CtrlCore.a \
 		$(OutDir_PdfDraw)PdfInit.o \
 			$(OutDir_PdfDraw)PdfDraw.a \
@@ -258,7 +253,6 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -844,7 +838,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -1427,7 +1420,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	BEMRosetta/BEMRosetta/arrange.h \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -1545,7 +1537,9 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	Draw/FontInt.h \
 	Draw/Image.h \
 	Draw/ImageOp.h \
+	Draw/iml.h \
 	Draw/iml_header.h \
+	Draw/iml_source.h \
 	Draw/Raster.h \
 	Draw/SDraw.h \
 	GLCtrl/GLCtrl.h \
@@ -2012,7 +2006,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	BEMRosetta/BEMRosetta/clip.brc \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -2597,7 +2590,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	BEMRosetta/BEMRosetta/arrange.h \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -3180,7 +3172,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	BEMRosetta/BEMRosetta/arrange.h \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -3763,7 +3754,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	BEMRosetta/BEMRosetta/arrange.h \
 	BEMRosetta/BEMRosetta/main.h \
 	BEMRosetta/BEMRosetta_cl/BEMRosetta.h \
-	CtrlScroll/CtrlScroll.h \
 	ClassFactory/ClassFactory.h \
 	PolyXML/PolyXML.h \
 	Core/Algo.h \
@@ -24628,152 +24618,6 @@ $(OutDir_RasterPlayer)RasterPlayer.a: \
 	$(AR) $(OutDir_RasterPlayer)RasterPlayer.a \
 		$(OutDir_RasterPlayer)RasterPlayer.o
 
-$(OutDir_CtrlScroll):
-	mkdir -p $(OutDir_CtrlScroll)
-
-$(OutDir_CtrlScroll)CtrlScroll.o: CtrlScroll/CtrlScroll.cpp \
-	CtrlScroll/CtrlScroll.h \
-	Core/Algo.h \
-	Core/App.h \
-	Core/AString.hpp \
-	Core/Atomic.h \
-	Core/BiCont.h \
-	Core/Callback.h \
-	Core/CallbackN.i \
-	Core/CallbackNP.i \
-	Core/CallbackR.i \
-	Core/CharSet.h \
-	Core/CharSet.i \
-	Core/CoAlgo.h \
-	Core/Color.h \
-	Core/Complex.h \
-	Core/config.h \
-	Core/Convert.h \
-	Core/Core.h \
-	Core/CoSort.h \
-	Core/CoWork.h \
-	Core/Defs.h \
-	Core/Diag.h \
-	Core/FilterStream.h \
-	Core/FixedMap.h \
-	Core/Format.h \
-	Core/Function.h \
-	Core/Gtypes.h \
-	Core/Hash.h \
-	Core/Heap.h \
-	Core/Huge.h \
-	Core/i18n.h \
-	Core/Index.h \
-	Core/Index.hpp \
-	Core/Inet.h \
-	Core/InMap.hpp \
-	Core/InVector.h \
-	Core/InVector.hpp \
-	Core/JSON.h \
-	Core/Lang.h \
-	Core/Lang_s.h \
-	Core/LocalProcess.h \
-	Core/Map.h \
-	Core/Map.hpp \
-	Core/Mt.h \
-	Core/Obsolete.h \
-	Core/Ops.h \
-	Core/Other.h \
-	Core/Parser.h \
-	Core/Path.h \
-	Core/Profile.h \
-	Core/Ptr.h \
-	Core/Range.h \
-	Core/Sort.h \
-	Core/Sorted.h \
-	Core/SplitMerge.h \
-	Core/Stream.h \
-	Core/String.h \
-	Core/t_.h \
-	Core/TimeDate.h \
-	Core/Topic.h \
-	Core/Topt.h \
-	Core/Tuple.h \
-	Core/Utf.hpp \
-	Core/Util.h \
-	Core/Uuid.h \
-	Core/Value.h \
-	Core/Value.hpp \
-	Core/ValueUtil.h \
-	Core/ValueUtil.hpp \
-	Core/Vcont.h \
-	Core/Vcont.hpp \
-	Core/Win32Util.h \
-	Core/XML.h \
-	Core/Xmlize.h \
-	Core/Xmlize.hpp \
-	Core/z.h \
-	CtrlCore/CtrlCore.h \
-	CtrlCore/lay.h \
-	CtrlCore/MKeys.h \
-	CtrlCore/TopWindow.h \
-	CtrlLib/AKeys.h \
-	CtrlLib/ArrayCtrl.h \
-	CtrlLib/Bar.h \
-	CtrlLib/Ch.h \
-	CtrlLib/ColumnList.h \
-	CtrlLib/CtrlLib.h \
-	CtrlLib/CtrlUtil.h \
-	CtrlLib/DateTimeCtrl.h \
-	CtrlLib/DisplayPopup.h \
-	CtrlLib/DlgColor.h \
-	CtrlLib/DropChoice.h \
-	CtrlLib/EditCtrl.h \
-	CtrlLib/FileSel.h \
-	CtrlLib/HeaderCtrl.h \
-	CtrlLib/LabelBase.h \
-	CtrlLib/Lang.h \
-	CtrlLib/MultiButton.h \
-	CtrlLib/Progress.h \
-	CtrlLib/PushCtrl.h \
-	CtrlLib/RichText.h \
-	CtrlLib/ScrollBar.h \
-	CtrlLib/SliderCtrl.h \
-	CtrlLib/Splitter.h \
-	CtrlLib/StaticCtrl.h \
-	CtrlLib/StatusBar.h \
-	CtrlLib/SuggestCtrl.h \
-	CtrlLib/TabCtrl.h \
-	CtrlLib/TextEdit.h \
-	CtrlLib/TreeCtrl.h \
-	Draw/Cham.h \
-	Draw/DDARasterizer.h \
-	Draw/Display.h \
-	Draw/Draw.h \
-	Draw/FontInt.h \
-	Draw/Image.h \
-	Draw/ImageOp.h \
-	Draw/iml_header.h \
-	Draw/Raster.h \
-	Draw/SDraw.h \
-	guiplatform.h \
-	Painter/BufferPainter.h \
-	Painter/Interpolator.hpp \
-	Painter/LinearPath.h \
-	Painter/Painter.h \
-	Painter/Painter.hpp \
-	Painter/Painting.h \
-	plugin/png/png.h \
-	plugin/z/lib/zconf.h \
-	plugin/z/lib/zlib.h \
-	RichText/Para.h \
-	RichText/RichText.h \
-	RichText/Table.h \
-	RichText/Text.h \
-	RichText/Txt.h \
-	uppconfig.h
-	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlScroll)  CtrlScroll/CtrlScroll.cpp -o $(OutDir_CtrlScroll)CtrlScroll.o
-
-$(OutDir_CtrlScroll)CtrlScroll.a: \
-	$(OutDir_CtrlScroll)CtrlScroll.o
-	$(AR) $(OutDir_CtrlScroll)CtrlScroll.a \
-		$(OutDir_CtrlScroll)CtrlScroll.o
-
 $(OutDir_CtrlCore):
 	mkdir -p $(OutDir_CtrlCore)
 
@@ -29279,8 +29123,6 @@ $(OutDir_CtrlCore)GtkDrawOp.o: CtrlCore/GtkDrawOp.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_CtrlCore)  CtrlCore/GtkDrawOp.cpp -o $(OutDir_CtrlCore)GtkDrawOp.o
 
 $(OutDir_CtrlCore)GtkDrawText.o: CtrlCore/GtkDrawText.cpp \
-	config/ftheader.h \
-	ft2build.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \
@@ -32515,8 +32357,6 @@ $(OutDir_Draw)FontWin32.o: Draw/FontWin32.cpp \
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_Draw)  Draw/FontWin32.cpp -o $(OutDir_Draw)FontWin32.o
 
 $(OutDir_Draw)FontFc.o: Draw/FontFc.cpp \
-	config/ftheader.h \
-	ft2build.h \
 	Core/Algo.h \
 	Core/App.h \
 	Core/AString.hpp \

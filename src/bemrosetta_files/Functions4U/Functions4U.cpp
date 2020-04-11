@@ -1539,6 +1539,8 @@ String GetUpperFolder(const String &folderName) {
 	if (IsRootFolder(folderName))
 		return folderName;
 	int len = folderName.GetCount();
+	if (len == 0)
+		return String();
 	if (folderName[len-1] == DIR_SEP)
 		len--;
 	int pos = folderName.ReverseFind(DIR_SEP, len-1);

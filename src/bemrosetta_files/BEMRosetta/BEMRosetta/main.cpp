@@ -13,7 +13,6 @@ using namespace Upp;
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
-#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -53,20 +52,26 @@ void Main::Init() {
 	}
 	LOG("Configuration loaded");
 	
-	mainMesh.Init();			LOG("Init Mesh");
-	mainNemoh.Init(bem);		LOG("Init Nemoh");
-	mainBEM.Init();				LOG("Init BEM");
+	if (menuOptions.tabsShown[0])
+		mainMesh.Init();			LOG("Init Mesh");
+	if (menuOptions.tabsShown[1])
+		mainNemoh.Init(bem);		LOG("Init Nemoh");
+	if (menuOptions.tabsShown[2])
+		mainBEM.Init();				LOG("Init BEM");
 	mainOutput.Init();			LOG("Init Output");
 	menuOptions.Init(bem);		LOG("Init Options");
 	menuOptions.Load();			LOG("Init Options.Load");
 	menuAbout.Init();			LOG("Init About");
 	
-	tab.Add(mainMesh.SizePos(),   t_("Mesh"));
-	tab.Add(mainNemoh.SizePos(),  t_("Nemoh"));
-	tab.Add(mainBEM.SizePos(),    t_("Coefficients"));
+	if (menuOptions.tabsShown[0])
+		tab.Add(mainMesh.SizePos(),   t_("Mesh Handling"));
+	if (menuOptions.tabsShown[1])
+		tab.Add(mainNemohScroll.AddPaneV(mainNemoh).SizePos(),  t_("Nemoh"));
+	if (menuOptions.tabsShown[2])
+		tab.Add(mainBEM.SizePos(),    t_("Hydrodynamic Coefficients"));
 	tab.Add().Disable();
 	tab.Add(mainOutput.SizePos(), t_("Output"));
-	tab.Add(menuOptions.SizePos(),t_("Options"));
+	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(),t_("Options"));
 	tab.Add().Disable();
 	tab.Add(menuAbout.SizePos(),  t_("About"));
 	
@@ -220,6 +225,7 @@ void Main::Jsonize(JsonIO &json) {
 		("mesh", mainMesh)
 		("nemoh", mainNemoh)
 		("bem", mainBEM)
+		("menuOptions", menuOptions)
 		("lastTab", lastTab)
 	;
 }
@@ -229,6 +235,14 @@ void MenuOptions::Init(BEMData &_bem) {
 	
 	bem = &_bem;
 	butSave <<= THISBACK(OnSave);
+	butSave2 <<= THISBACK(OnSave);
+	
+	int row = 0;
+	arrayShown.AddColumn("");
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("Mesh Handling"));
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("Nemoh"));
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("Hydrodymamic Coefficients"));
+	//arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("OpenFAST Reader"));	
 }
 
 void MenuOptions::Load() {
@@ -249,6 +263,11 @@ void MenuOptions::Load() {
 	nemohPathGREN <<= bem->nemohPathGREN;
 	//experimental <<= bem->experimental;
 	foammPath <<= bem->foammPath;
+	
+	if (tabsShown.IsEmpty())
+		tabsShown.SetCount(arrayShown.GetCount(), true);
+	for (int r = 0; r < min(arrayShown.GetCount(), tabsShown.GetCount()); ++r)
+		arrayShown.GetCtrl(r, 0)->SetData(tabsShown[r]);
 }
 
 void MenuOptions::OnSave() {
@@ -270,13 +289,17 @@ void MenuOptions::OnSave() {
 	//bem->experimental = ~experimental;	
 	bem->foammPath = ~foammPath;
 	
+	tabsShown.Clear();
+	for (int r = 0; r < arrayShown.GetCount(); ++r)
+		tabsShown << arrayShown.GetCtrl(r, 0)->GetData();
+	
 	ma().OptionsUpdated(rho, g);
 }
 
 bool MenuOptions::IsChanged() {
-	if (TruncDecimals(bem->g, 8) !=  TruncDecimals(double(~g), 8)) 
+	if (FormatDouble(bem->g, 8) !=  FormatDouble(double(~g), 8)) 
 		return true;
-	if (TruncDecimals(bem->rho, 8) !=  TruncDecimals(double(~rho), 8))
+	if (FormatDouble(bem->rho, 8) !=  FormatDouble(double(~rho), 8))
 		return true;
 	if (bem->length != ~length)
 		return true;
@@ -308,6 +331,13 @@ bool MenuOptions::IsChanged() {
 	//	return true;
 	if (bem->foammPath != ~foammPath)
 		return true;
+	
+	if (arrayShown.GetCount() != tabsShown.GetCount())
+		return true;
+	
+	for (int r = 0; r < arrayShown.GetCount(); ++r)
+		if (tabsShown[r] != arrayShown.GetCtrl(r, 0)->GetData())
+			return true;
 	
 	return false;
 }
@@ -487,13 +517,14 @@ GUI_APP_MAIN {
 	Ctrl::GlobalBackPaint();
 	
 	String errorStr;
+	Main *main = new Main();
 	try {
-		Main main;
+		main->Init();
+		main->OpenMain();
 		
-		main.Init();
-		main.Run();
+		Ctrl::EventLoop(main);
 		
-		main.Close();
+		main->Close();		
 	} catch (Exc e) {
 		errorStr = e;
 	} catch(const char *cad) {
@@ -505,6 +536,8 @@ GUI_APP_MAIN {
 	} catch(...) {
 		errorStr = t_("Unknown error");
 	}	
+	delete(main);
+
 	if (!errorStr.IsEmpty())
 		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }

@@ -801,12 +801,13 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	Vector<Vector<int>> dof;
 	dof.SetCount(hd().Nb);
 	Vector<int> ddof;
-	ddof.SetCount(hd().Nb, 0);
 	while(!in.IsEof()) {
 		line = in.GetLine();
 	    if (line.StartsWith("Zone") || line.StartsWith("angle"))
 	        break;
 	    if (line != "...") {
+	        if (ddof.IsEmpty())
+				ddof.SetCount(hd().Nb, 0);
 	        f.Load(line);
 		    int ibody = f.GetInt(1) - 1;
 		    int ndof = f.GetInt(2);
@@ -821,6 +822,12 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			hd().dof = pick(ddof);
 		else if (!IsEqualRange(ddof, hd().dof))
 			throw Exc(in.Str() + Format(t_("DOF does not match in '%s"), fileName));
+	} else {
+		for (int ib = 0; ib < hd().Nb; ++ib) {
+			dof[ib].SetCount(hd().dof[ib]);
+			for (int j = 0; j < dof[ib].GetCount(); ++j) 
+				dof[ib][j] = j;
+		}
 	}
 	hd().Initialize_Forces(fc);
 	for (int ih = 0; ih < hd().Nh; ++ih) {

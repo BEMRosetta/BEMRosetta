@@ -3,7 +3,6 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
-#include <CtrlScroll/CtrlScroll.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -93,13 +92,15 @@ void MainBEM::Init() {
 			mainTab.Set(mainSetupFOAMM);
 		else if (menuTab.IsAt(menuConvert)) 
 			listLoaded.WhenSelection(); 
+		
+		ShowMenuPlotItems();
 	};
 	
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
 		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		bool plot = true, convertProcess = true, ismenuFOAMM = false;
-		menuPlot.opwT.Enable();
+
 		if (ids.IsEmpty())
 			plot = convertProcess = false;
 		else if (mainTab.IsAt(mainStiffness)) {
@@ -121,10 +122,13 @@ void MainBEM::Init() {
 			mainStateSpace.Load(Bem(), ids);
 			ismenuFOAMM = true;
 		} else if (mainTab.IsAt(mainSetupFOAMM)) {
-			menuPlot.opwT.Disable();
 			menuTab.Set(menuFOAMM);
 			ismenuFOAMM = true;
-		} else if (menuTab.IsAt(menuFOAMM)) 
+			if (mainSetupFOAMM.arrayCases.GetCount() == 0 && ids.GetCount() == 1) 
+				listLoaded.SetCursor(0);
+		} else if (mainTab.IsAt(mainQTF))
+			mainQTF.Load();
+		else if (menuTab.IsAt(menuFOAMM)) 
 			;
 		else 
 			plot = false;
@@ -152,6 +156,8 @@ void MainBEM::Init() {
 		
 		if (!ismenuFOAMM && plot && (menuTab.IsAt(menuFOAMM) || menuTab.IsAt(mainSetupFOAMM))) 
 			menuTab.Set(menuPlot);
+		
+		ShowMenuPlotItems();
 	};
 	mainTab.WhenSet();
 	
@@ -187,11 +193,33 @@ void MainBEM::Init() {
 
 	mainStateSpace.Init();
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
+
+	if (Bem().experimental) {
+		mainQTF.Init();
+		mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
+	}
+}
+
+void MainBEM::ShowMenuPlotItems() {
+	menuPlot.showNdim.Enable();
+
+	bool show = true, showwT = true;
+	if (mainTab.IsAt(mainSetupFOAMM)) 
+		showwT = false;
+	else if (mainTab.IsAt(mainQTF))
+		show = false;
+	
+	menuPlot.opwT.Enable(showwT);
+	menuPlot.butZoomToFit.Enable(show);
+	menuPlot.autoFit.Enable(show);
+	menuPlot.fromY0.Enable(show);
+	menuPlot.showPoints.Enable(show);
 }
 
 void MainBEM::OnMenuListLoaded() {
 	OnMenuConvertArraySel();
 	menuFOAMM.OnCursor();
+	mainQTF.Load();
 	UpdateButtons();
 }
 	
@@ -239,6 +267,8 @@ void MainBEM::LoadSelTab(BEMData &bem) {
 		;
 	else if (id == mainTab.Find(mainSetupFOAMM))
 		mainSetupFOAMM.Load();
+	else if (id == mainTab.Find(mainQTF))
+		mainQTF.Load();
 	else 
 		GetSelABForce().Load(bem, ids);
 }
@@ -332,16 +362,17 @@ bool MainBEM::OnLoad() {
 bool MainBEM::OnLoadFile(String file) {
 	GuiLock __;
 	try {
-		WaitCursor wait;
 		Progress progress(t_("Loading BEM files..."), 100); 
 		
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i) {
-			if (Bem().hydros[i].hd().file == file) {
+			if (ForceExt(Bem().hydros[i].hd().file, ".") == ForceExt(file, ".")) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
 					return false;
 				break;
 			}
 		}
+		
+		WaitCursor wait;
 		
 		Bem().Load(file, [&](String str, int _pos) {
 			progress.SetText(str); 
@@ -373,6 +404,8 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
+		if (Bem().experimental)
+			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Loaded(ids));
 		if (data.hd().IsLoadedStateSpace())
 			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
 		
@@ -427,6 +460,8 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+	if (Bem().experimental)
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Loaded(ids));
 	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	
 	mainTab.WhenSet();
@@ -438,11 +473,11 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
-	menuOpen.butSymmetrize.Enable(numsel == 1);
-	menuOpen.butA0.Enable(numsel == 1);
-	menuOpen.butAinf.Enable(numsel == 1);
-	menuOpen.butDescription.Enable(numsel == 1);
-	menuConvert.butLoad.Enable(numsel == 1);
+	menuOpen.butSymmetrize.Enable(numsel == 1 || numrow == 1);
+	menuOpen.butA0.Enable(numsel == 1 || numrow == 1);
+	menuOpen.butAinf.Enable(numsel == 1 || numrow == 1);
+	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
+	menuConvert.butLoad.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainBEM::OnJoin() {
@@ -498,6 +533,8 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		if (Bem().experimental)
+			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Loaded(ids));
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -507,25 +544,13 @@ void MainBEM::OnJoin() {
 }
 
 void MainBEM::OnSymmetrize() {
-	int id = -1;
-	for (int row = 0; row < listLoaded.GetCount(); ++row) {
-		if (listLoaded.IsSelected(row)) {
-			id = ArrayModel_IdHydro(listLoaded, row);
-			break;
-		}
-	}	// Only one available => directly selected
-	if (id < 0 && listLoaded.GetCount() == 1)
-		id = ArrayModel_IdHydro(listLoaded, 0);
-	if (id < 0) {
-		Exclamation(t_("No model selected"));
-		return;
-	}
-	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
-		Exclamation(t_("Please select just one model"));
-		return;
-	}
 	try {
+		int id = GetOneSelected();
+		if (id < 0) 
+			return;
+
 		WaitCursor wait;
+
 		Progress progress(t_("Symmetrizing forces and RAOs in selected BEM file..."), 100); 
 		
 		Bem().Symmetrize(id);
@@ -545,25 +570,13 @@ void MainBEM::OnSymmetrize() {
 }
 
 void MainBEM::OnA0() {
-	int id = -1;
-	for (int row = 0; row < listLoaded.GetCount(); ++row) {
-		if (listLoaded.IsSelected(row)) {
-			id = ArrayModel_IdHydro(listLoaded, row);
-			break;
-		}
-	}	// Only one available => directly selected
-	if (id < 0 && listLoaded.GetCount() == 1)
-		id = ArrayModel_IdHydro(listLoaded, 0);
-	if (id < 0) {
-		Exclamation(t_("No model selected"));
-		return;
-	}
-	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
-		Exclamation(t_("Please select just one model"));
-		return;
-	}
 	try {
+		int id = GetOneSelected();
+		if (id < 0) 
+			return;
+
 		WaitCursor wait;
+
 		Progress progress(t_("Calculating A0 in selected BEM file..."), 100); 
 		
 		Bem().A0(id);
@@ -581,25 +594,13 @@ void MainBEM::OnA0() {
 }
 
 void MainBEM::OnAinf() {
-	int id = -1;
-	for (int row = 0; row < listLoaded.GetCount(); ++row) {
-		if (listLoaded.IsSelected(row)) {
-			id = ArrayModel_IdHydro(listLoaded, row);
-			break;
-		}
-	}	// Only one available => directly selected
-	if (id < 0 && listLoaded.GetCount() == 1)
-		id = ArrayModel_IdHydro(listLoaded, 0);
-	if (id < 0) {
-		Exclamation(t_("No model selected"));
-		return;
-	}
-	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
-		Exclamation(t_("Please select just one model"));
-		return;
-	}
 	try {
+		int id = GetOneSelected();
+		if (id < 0) 
+			return;
+
 		WaitCursor wait;
+
 		Progress progress(t_("Calculating A0 in selected BEM file..."), 100); 
 		
 		Bem().Ainf(id);
@@ -617,31 +618,20 @@ void MainBEM::OnAinf() {
 }
 
 void MainBEM::OnDescription() {
-	int id = -1;
-	for (int row = 0; row < listLoaded.GetCount(); ++row) {
-		if (listLoaded.IsSelected(row)) {
-			id = ArrayModel_IdHydro(listLoaded, row);
-			break;
-		}
-	}	// Only one available => directly selected
-	if (id < 0 && listLoaded.GetCount() == 1)
-		id = ArrayModel_IdHydro(listLoaded, 0);
-	if (id < 0) {
-		Exclamation(t_("No model selected"));
+	int id = GetOneSelected();
+	if (id < 0) 
 		return;
-	}
-	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
-		Exclamation(t_("Please select just one model"));
-		return;
-	}
+
 	WithDescription<TopWindow> w;
 	CtrlLayout(w);
-	w.Title(t_("Enter model description"));
+	w.Title(t_("Enter model name and description"));
 	w.butOK.WhenAction = [&] {w.Close();};
+	w.name <<= Bem().hydros[id].hd().name;
 	w.description <<= Bem().hydros[id].hd().description;
 	
 	w.Execute();
 	
+	Bem().hydros[id].hd().name = ~w.name;
 	Bem().hydros[id].hd().description = ~w.description;
 	
 	mainSummary.Clear();
@@ -653,17 +643,11 @@ bool MainBEM::OnConvert() {
 	String file = ~menuConvert.file;
 	
 	try {
+		int id = GetOneSelected();
+		if (id < 0) 
+			return false;
+
 		WaitCursor wait;
-		
-		int id = ArrayModel_IdHydro(listLoaded);
-		if (id < 0) {
-			Exclamation(t_("Please select a model to export"));
-			return false;
-		}
-		if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
-			Exclamation(t_("Please select just one model"));
-			return false;
-		}
 		
 		Hydro::BEM_SOFT type;	
 		switch (menuConvert.opt) {
@@ -679,6 +663,27 @@ bool MainBEM::OnConvert() {
 		return false;
 	}
 	return true;
+}
+
+int MainBEM::GetOneSelected() {
+	int id = -1;
+	for (int row = 0; row < listLoaded.GetCount(); ++row) {
+		if (listLoaded.IsSelected(row)) {
+			id = ArrayModel_IdHydro(listLoaded, row);
+			break;
+		}
+	}	// Only one available => directly selected
+	if (id < 0 && listLoaded.GetCount() == 1)
+		id = ArrayModel_IdHydro(listLoaded, 0);
+	if (id < 0) {
+		Exclamation(t_("No model selected"));
+		return -1;
+	}
+	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
+		Exclamation(t_("Please select just one model"));
+		return -1;
+	}
+	return id;
 }
 
 void MainBEM::Jsonize(JsonIO &json) {
@@ -1012,6 +1017,7 @@ void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 	};
 	
 	foammLogo.Set(Img2::FOAMM());
+	foammLogo.SetHyperlink("http://www.eeng.nuim.ie/coer/downloads/");
 	foammWorking.LoadBuffer(String(animatedStar, animatedStar_length));
 	foammWorking.Hide();
 	status.Hide();
@@ -1312,5 +1318,132 @@ bool MenuFOAMM::OnFOAMM() {
 	}
 	return true;
 }
-
 	
+void MainQTF::Init() {
+	CtrlLayout(*this);
+	
+	listCases.Reset();
+	listCases.SetLineCy(EditField::GetStdHeight());
+	listCases.AddColumn(t_("# Body"), 15);
+	listCases.AddColumn(t_("Heading 1"), 20);
+	listCases.AddColumn(t_("Heading 2"), 20);
+	
+	opShow.Clear();
+	opShow.Add(MAGNITUDE, t_("Magnitude")).Add(PHASE, t_("Phase")).Add(REAL, t_("Real")).Add(IMAGINARY, t_("Imaginary"));
+	opShow.SetIndex(0);
+
+	opDOF.Clear();
+	for (int i = 0; i < 6; ++i)
+		opDOF.Add(i, InitCaps(Hydro::StrDOF_base(i)));
+	opDOF.SetIndex(0);
+	
+	opQTF.Clear();
+	opQTF.Add(FSUM, t_("Sum")).Add(FDIFFERENCE, t_("Difference"));
+	opQTF.SetIndex(0);
+	
+	opShow.WhenAction = [&] {listCases.WhenSel();};
+	opDOF.WhenAction  = [&] {listCases.WhenSel();};
+	opQTF.WhenAction  = [&] {listCases.WhenSel();};
+	
+	listCases.WhenSel = [&] {
+		if (idHydro < 0)
+			return;
+		
+		int id = listCases.GetCursor();
+		if (id < 0)
+			return;
+
+		try {
+			MainBEM &mbm = GetDefinedParent<MainBEM>(this);
+			
+			bool ndim = mbm.menuPlot.showNdim;
+			bool show_w = mbm.menuPlot.opwT == 0;
+		
+			const Hydro &hd = Bem().hydros[idHydro].hd();
+			
+			int ib = int(listCases.Get(id, 0))-1;
+			int ih1 = hd.GetHeadId(listCases.Get(id, 1));
+			int ih2 = hd.GetHeadId(listCases.Get(id, 2));
+			int idof = opDOF.GetIndex();
+			
+			listQTF.Reset();
+			listQTF.SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+			listQTF.MultiSelect();
+			listQTF.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, listQTF);};
+	
+			listQTF.AddColumn(show_w ? t_("w [rad]") : t_("T [s]"), 60);
+			for (int c = 0; c < hd.Nf; ++c)
+				listQTF.AddColumn(FormatDouble(show_w ? hd.w[c] : hd.T[c], 4), 90);
+			for (int r = 0; r < hd.Nf; ++r)
+				listQTF.Add(FormatDouble(show_w ? hd.w[r] : hd.T[r], 4));
+			
+			const Upp::Array<Hydro::QTF> &qtf = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
+			
+			for (int ifr1 = 0; ifr1 < hd.Nf; ++ifr1) {
+				for (int ifr2 = 0; ifr2 < hd.Nf; ++ifr2) {
+					int idq = hd.GetQTFId(ib, ih1, ih2, ifr1, ifr2);
+					if (idq < 0)
+						throw Exc(t_("Unexpected problem in Init()"));
+					
+					String str;
+					if (opShow.GetData() == MAGNITUDE)
+						str = FormatDouble(hd.F_(ndim, qtf[idq].fma[idof], idof), 6, FD_CAP_E);
+					if (opShow.GetData() == PHASE)
+						str = FormatDouble(qtf[idq].fph[idof], 6, FD_CAP_E);
+					if (opShow.GetData() == REAL)
+						str = FormatDouble(hd.F_(ndim, qtf[idq].fre[idof], idof), 6, FD_CAP_E);
+					if (opShow.GetData() == IMAGINARY)
+						str = FormatDouble(hd.F_(ndim, qtf[idq].fim[idof], idof), 6, FD_CAP_E);
+					listQTF.Set(ifr2, 1+ifr1, str);
+				}
+			}
+		} catch (Exc e) {
+			Exclamation(DeQtfLf(e));
+		}
+	};
+}
+
+bool MainQTF::Loaded(const Vector<int> &ids) {
+	for (int i = 0; i < Bem().hydros.GetCount(); ++i)
+		if (!Bem().hydros[i].hd().qtfdif.IsEmpty())
+			return true;
+	return false;
+}
+	
+bool MainQTF::Load() {
+	listCases.Clear();
+	listQTF.Reset();
+	
+	try {
+		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
+		
+		idHydro = -1;
+		for (int row = 0; row < mbm.listLoaded.GetCount(); ++row) {
+			if (mbm.listLoaded.IsSelected(row)) {
+				idHydro = ArrayModel_IdHydro(mbm.listLoaded, row);
+				break;
+			}
+		}	// Only one available => directly selected
+		if (idHydro < 0 && mbm.listLoaded.GetCount() == 1)
+			idHydro = ArrayModel_IdHydro(mbm.listLoaded, 0);
+		if (idHydro < 0) 
+			return false;
+		
+		if (ArrayCtrlSelectedGetCount(mbm.listLoaded) > 1) 
+			return false;
+		
+		const Hydro &hd = Bem().hydros[idHydro].hd();
+		
+		for (int ib = 0; ib < hd.Nb; ++ib) 
+			for (int ih1 = 0; ih1 < hd.Nh; ++ih1) 
+				for (int ih2 = 0; ih2 < hd.Nh; ++ih2) {
+					if (hd.GetQTFId(ib, ih1, ih2, 0, 0) >= 0) 
+						listCases.Add(ib + 1, hd.head[ih1], hd.head[ih2]);
+				}
+		if (listCases.GetCount() > 0)
+			listCases.SetCursor(0);
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}				
+	return true;		
+}

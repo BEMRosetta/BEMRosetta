@@ -397,13 +397,13 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(in.GetLine());
 				double heading = f.GetDouble(2);
-				int idh = FindIndexCloser(hd().head, heading);
+				int idh = FindClosest(hd().head, heading);
 				if (idh < 0)
 					throw Exc(in.Str() + Format(t_("Heading %f is unknown"), heading));
 				int dd = 1;
 				for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 					double freq = f.GetDouble(1);
-					int ifrr = FindIndexCloser(hd().w, freq);
+					int ifrr = FindClosest(hd().w, freq);
 					if (ifrr < 0)
 						throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
@@ -420,7 +420,7 @@ bool Aqwa::Load_LIS() {
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			f.Load(line);
 			double freq = f.GetDouble(7);
-			int ifr = FindIndexCloser(hd().w, freq);
+			int ifr = FindClosest(hd().w, freq);
 			if (ifr < 0)
 				throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
 			
@@ -467,52 +467,103 @@ bool Aqwa::Load_QTF() {
 	String line; 
 	FieldSplit f(in);
 	
-	in.GetLine();	// AQWA version
-	f.Load(in.GetLine());
-	int ib = f.GetInt(0);
-	if (ib >= hd().Nb)
-		throw Exc(Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
-	int Nh = f.GetInt(1);
-	if (Nh != hd().Nh)
-		throw Exc(Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
-	int Nf = f.GetInt(2);
-	if (Nf != hd().Nf)
-		throw Exc(Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
+	in.GetLine();	// AQWA version	
 	
-	int col = 3;
-	int ih = 0;
-	while (!in.IsEof()) {		// Check headings
-		while (col < f.GetCount() && ih < hd().Nh) {
-			double head = f.GetDouble(col++);
-			if (!FindRatio(hd().head, head, 0.001))	
-				throw Exc(Format(t_("%f heading not found"), head));
-			ih++;
+	hd().qtfsum.Clear();
+	hd().qtfdif.Clear();
+	
+	int nrows = hd().Nh*hd().Nf*hd().Nf;
+	hd().qtfdif.Reserve(hd().Nb*nrows);
+	hd().qtfsum.Reserve(hd().Nb*nrows);
+	
+	while (!in.IsEof()) {
+		f.Load(in.GetLine());
+		int ib = f.GetInt(0);
+		if (ib > hd().Nb)
+			throw Exc(in.Str() + Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
+		int Nh = f.GetInt(1);
+		if (Nh != hd().Nh)
+			throw Exc(in.Str() + Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
+		int Nf = f.GetInt(2);
+		if (Nf != hd().Nf)
+			throw Exc(in.Str() + Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
+		
+		int col = 3;
+		int ih = 0;
+		while (!in.IsEof()) {		// Check headings
+			while (col < f.GetCount() && ih < hd().Nh) {
+				double head = f.GetDouble(col++);
+				if (FindRatio(hd().head, head, 0.001) < 0)	
+					throw Exc(in.Str() + Format(t_("%f heading not found"), head));
+				ih++;
+			}
+			if (ih >= hd().Nh)
+				break;
+			f.Load(in.GetLine());
+			col = 0;
 		}
-		if (ih >= hd().Nh)
-			break;
 		f.Load(in.GetLine());
 		col = 0;
+		int ifr = 0;
+		while (!in.IsEof()) {		// Check frequencies
+			while (col < f.GetCount() && ifr < hd().Nf) {
+				double w = f.GetDouble(col++);
+				if (FindRatio(hd().w, w, 0.001) < 0)	
+					throw Exc(in.Str() + Format(t_("%f frequency not found"), w));
+				ifr++;
+			}
+			if (ifr >= hd().Nf)
+				break;
+			f.Load(in.GetLine());
+			col = 0;
+		}
+		for (int i = 0; i < nrows; ++i) {
+			f.Load(in.GetLine());
+			int ib = f.GetInt(0)-1;
+			if (ib >= hd().Nb)
+				throw Exc(in.Str() + Format(t_("Body id %d higher than number of bodies"), ib+1, hd().Nb));
+			int ih = f.GetInt(1)-1;
+			if (ih >= hd().Nh)
+				throw Exc(in.Str() + Format(t_("Heading id %d higher than number of headings"), ih+1, hd().Nh));
+			int ifr1 = f.GetInt(2)-1;
+			if (ifr1 >= hd().Nf)
+				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, hd().Nf));
+			int ifr2 = f.GetInt(3)-1;
+			if (ifr2 >= hd().Nf)
+				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, hd().Nf));
+							
+			Hydro::QTF &qtfdif = hd().qtfdif.Add();
+			qtfdif.Set(ib, ih, ih, ifr1, ifr2);
+	        
+	        for (int idof = 0; idof < 6; ++idof) 
+	        	qtfdif.fre[idof] = f.GetDouble(4 + idof);
+	        	
+	        f.Load(in.GetLine());
+	        for (int idof = 0; idof < 6; ++idof)
+	        	qtfdif.fim[idof] = f.GetDouble(idof);
+		
+			for (int idof = 0; idof < 6; ++idof) {
+				qtfdif.fma[idof] = sqrt(sqr(qtfdif.fre[idof]) + sqr(qtfdif.fim[idof])); 
+				qtfdif.fph[idof] = atan2(qtfdif.fim[idof], qtfdif.fre[idof]);
+			}
+	
+			Hydro::QTF &qtfsum = hd().qtfsum.Add();
+			qtfsum.Set(ib, ih, ih, ifr1, ifr2);
+					
+			f.Load(in.GetLine());
+			for (int idof = 0; idof < 6; ++idof) 
+	        	qtfsum.fre[idof] = f.GetDouble(idof);
+	        	
+	        f.Load(in.GetLine());
+	        for (int idof = 0; idof < 6; ++idof)
+	        	qtfsum.fim[idof] = f.GetDouble(idof);
+		
+			for (int idof = 0; idof < 6; ++idof) {
+				qtfsum.fma[idof] = sqrt(sqr(qtfsum.fre[idof]) + sqr(qtfsum.fim[idof])); 
+				qtfsum.fph[idof] = atan2(qtfsum.fim[idof], qtfsum.fre[idof]);
+			}
+		}
 	}
-	f.Load(in.GetLine());
-	col = 0;
-	int ifr = 0;
-	while (!in.IsEof()) {		// Check headings
-		while (col < f.GetCount() && ifr < hd().Nf) {
-			double w = f.GetDouble(col++);
-			if (!FindRatio(hd().w, w, 0.001))	
-				throw Exc(Format(t_("%f frequency not found"), w));
-			ifr++;
-		}
-		if (ifr >= hd().Nf)
-			break;
-		f.Load(in.GetLine());
-		col = 0;
-	}			
-				
-
-
-
-
 	return true;
 }
 
