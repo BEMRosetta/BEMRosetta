@@ -698,8 +698,14 @@ bool EqualRatio(const T& a, const T& b, const T& ratio, const T& zero = 0) {
 	if (abs(a) <= zero) {
 		if (abs(b) <= zero)
 			return true;
+		else {
+			if(abs((zero - b)/b) <= ratio) 
+				return true;
+			else
+				return false;
+		}
 	} else if (abs(b) <= zero) {
-		if(abs((a - b)/a) <= ratio) 
+		if(abs((a - zero)/a) <= ratio) 
 			return true;
 		else
 			return false;

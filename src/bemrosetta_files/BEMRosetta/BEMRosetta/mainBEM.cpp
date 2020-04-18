@@ -3,6 +3,7 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
+#include <TabBar/TabBar.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -44,7 +45,7 @@ void MainBEM::Init() {
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuConvert.butLoad.WhenAction = [&] {OnConvert();};
+	menuConvert.butLoad.WhenAction = [&] {menuConvert.file.DoGo();};
 
 	//ArrayModel_Init(menuConvert.arrayModel);
 	
@@ -403,9 +404,9 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
+		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(data.hd().IsLoadedB());
 		if (Bem().experimental)
-			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Loaded(ids));
+			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		if (data.hd().IsLoadedStateSpace())
 			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
 		
@@ -461,7 +462,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 	if (Bem().experimental)
-		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Loaded(ids));
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	
 	mainTab.WhenSet();
@@ -534,7 +535,7 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 		if (Bem().experimental)
-			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Loaded(ids));
+			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -717,24 +718,28 @@ String MainBEM::BEMFile(String fileFolder) const {
 	return fileFolder;
 }
 
+void MainBEM::LoadDragDrop(const Vector<String> &files) {
+	bool followWithErrors = false;
+	for (int i = 0; i < files.GetCount(); ++i) {
+		String file = BEMFile(files[i]);
+		menuOpen.file <<= file;
+		Status(Format(t_("Loading '%s'"), file));
+		if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
+				return;
+			followWithErrors = true;
+		}
+		ProcessEvents();
+	}
+}
+
 void MainBEM::DragAndDrop(Point , PasteClip& d) {
 	GuiLock __;
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
 		Vector<String> files = GetFiles(d);
-		bool followWithErrors = false;
-		for (int i = 0; i < files.GetCount(); ++i) {
-			String file = BEMFile(files[i]);
-			menuOpen.file <<= file;
-			Status(Format(t_("Loading '%s'"), file));	
-			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
-				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
-					return;
-				followWithErrors = true;
-			}
-			ProcessEvents();
-		}
+		LoadDragDrop(files);
 	}
 }
 
@@ -742,18 +747,7 @@ bool MainBEM::Key(dword key, int ) {
 	GuiLock __;
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
-		bool followWithErrors = false;
-		for (int i = 0; i < files.GetCount(); ++i) {
-			String file = BEMFile(files[i]);
-			menuOpen.file <<= file;
-			Status(Format(t_("Loading '%s'"), file));
-			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
-				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
-					return true;
-				followWithErrors = true;
-			}
-			ProcessEvents();
-		}
+		LoadDragDrop(files);
 		return true;
 	}
 	return false;
@@ -1362,9 +1356,10 @@ void MainQTF::Init() {
 			const Hydro &hd = Bem().hydros[idHydro].hd();
 			
 			int ib = int(listCases.Get(id, 0))-1;
-			int ih1 = hd.GetHeadId(listCases.Get(id, 1));
-			int ih2 = hd.GetHeadId(listCases.Get(id, 2));
+			int ih1 = hd.GetQTFHeadId(listCases.Get(id, 1));
+			int ih2 = hd.GetQTFHeadId(listCases.Get(id, 2));
 			int idof = opDOF.GetIndex();
+			int qtfNf = hd.qtfw.GetCount();
 			
 			listQTF.Reset();
 			listQTF.SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
@@ -1372,42 +1367,36 @@ void MainQTF::Init() {
 			listQTF.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, listQTF);};
 	
 			listQTF.AddColumn(show_w ? t_("w [rad]") : t_("T [s]"), 60);
-			for (int c = 0; c < hd.Nf; ++c)
-				listQTF.AddColumn(FormatDouble(show_w ? hd.w[c] : hd.T[c], 4), 90);
-			for (int r = 0; r < hd.Nf; ++r)
-				listQTF.Add(FormatDouble(show_w ? hd.w[r] : hd.T[r], 4));
+			for (int c = 0; c < qtfNf; ++c)
+				listQTF.AddColumn(FormatDouble(show_w ? hd.qtfw[c] : hd.qtfT[c], 5), 90);
+			for (int r = 0; r < qtfNf; ++r)
+				listQTF.Add(FormatDouble(show_w ? hd.qtfw[r] : hd.qtfT[r], 5));
 			
-			const Upp::Array<Hydro::QTF> &qtf = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
+			const Upp::Array<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
 			
-			for (int ifr1 = 0; ifr1 < hd.Nf; ++ifr1) {
-				for (int ifr2 = 0; ifr2 < hd.Nf; ++ifr2) {
-					int idq = hd.GetQTFId(ib, ih1, ih2, ifr1, ifr2);
+			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
+				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
+					int idq = hd.GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
 					if (idq < 0)
-						throw Exc(t_("Unexpected problem in Init()"));
-					
-					String str;
-					if (opShow.GetData() == MAGNITUDE)
-						str = FormatDouble(hd.F_(ndim, qtf[idq].fma[idof], idof), 6, FD_CAP_E);
-					if (opShow.GetData() == PHASE)
-						str = FormatDouble(qtf[idq].fph[idof], 6, FD_CAP_E);
-					if (opShow.GetData() == REAL)
-						str = FormatDouble(hd.F_(ndim, qtf[idq].fre[idof], idof), 6, FD_CAP_E);
-					if (opShow.GetData() == IMAGINARY)
-						str = FormatDouble(hd.F_(ndim, qtf[idq].fim[idof], idof), 6, FD_CAP_E);
-					listQTF.Set(ifr2, 1+ifr1, str);
+						listQTF.Set(ifr2, 1+ifr1, "-");
+					else {
+						String str;
+						if (opShow.GetData() == MAGNITUDE)
+							str = FormatDouble(hd.F_(ndim, qtfList[idq].fma[idof], idof), 6, FD_CAP_E);
+						if (opShow.GetData() == PHASE)
+							str = FormatDouble(qtfList[idq].fph[idof], 6, FD_CAP_E);
+						if (opShow.GetData() == REAL)
+							str = FormatDouble(hd.F_(ndim, qtfList[idq].fre[idof], idof), 6, FD_CAP_E);
+						if (opShow.GetData() == IMAGINARY)
+							str = FormatDouble(hd.F_(ndim, qtfList[idq].fim[idof], idof), 6, FD_CAP_E);
+						listQTF.Set(ifr2, 1+ifr1, str);
+					}
 				}
 			}
 		} catch (Exc e) {
 			Exclamation(DeQtfLf(e));
 		}
 	};
-}
-
-bool MainQTF::Loaded(const Vector<int> &ids) {
-	for (int i = 0; i < Bem().hydros.GetCount(); ++i)
-		if (!Bem().hydros[i].hd().qtfdif.IsEmpty())
-			return true;
-	return false;
 }
 	
 bool MainQTF::Load() {
@@ -1434,12 +1423,12 @@ bool MainQTF::Load() {
 		
 		const Hydro &hd = Bem().hydros[idHydro].hd();
 		
-		for (int ib = 0; ib < hd.Nb; ++ib) 
-			for (int ih1 = 0; ih1 < hd.Nh; ++ih1) 
-				for (int ih2 = 0; ih2 < hd.Nh; ++ih2) {
-					if (hd.GetQTFId(ib, ih1, ih2, 0, 0) >= 0) 
-						listCases.Add(ib + 1, hd.head[ih1], hd.head[ih2]);
-				}
+		Vector<int> ibL, ih1L, ih2L;
+		Hydro::GetQTFList(hd.qtfsum, ibL, ih1L, ih2L);
+
+		for (int i = 0; i < ibL.GetCount(); ++i) 
+			listCases.Add(ibL[i]+1, hd.qtfhead[ih1L[i]], hd.qtfhead[ih2L[i]]);
+
 		if (listCases.GetCount() > 0)
 			listCases.SetCursor(0);
 	} catch (Exc e) {

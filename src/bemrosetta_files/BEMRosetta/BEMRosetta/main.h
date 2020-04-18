@@ -1,6 +1,9 @@
 #ifndef _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
+#include <BEMRosetta/BEMRosetta_cl/FastOut.h>
+#include "FastScatter.h"
+
 class RichTextView2 : public RichTextView {
 public:
 	RichTextView2() {
@@ -117,8 +120,8 @@ private:
 	int pos = 0;
 	int fWidth = 40, fThick = 3;
 	
-	Function <void()>OnAction;
-	Function <void(StaticRectangle*)>OnSetRectangle;
+	Function <void()> OnAction;
+	Function <void(StaticRectangle*)> OnSetRectangle;
 };
 
 
@@ -258,10 +261,14 @@ public:
 	bool IsChanged();
 	void Jsonize(JsonIO &json) {
 		json
-			("tabsShown", tabsShown);
+			("showTabMesh", showTabMesh)
+			("showTabNemoh", showTabNemoh)
+			("showTabCoeff", showTabCoeff);
 	}
 	
-	Vector<bool> tabsShown;
+	void InitSerialize(bool ret);
+	
+	int showTabMesh, showTabNemoh, showTabCoeff;
 	
 private:
 	BEMData *bem;
@@ -553,6 +560,7 @@ private:
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
+	void LoadDragDrop(const Vector<String> &files);
 };
 
 class MainMeshW : public TopWindow {
@@ -641,7 +649,7 @@ public:
 	
 	void Init();	
 	bool Load();
-	bool Loaded(const Vector<int> &ids);
+	//bool Loaded(const Vector<int> &ids);
 	
 	enum Mag {MAGNITUDE, PHASE, REAL, IMAGINARY};
 	enum Show {FSUM, FDIFFERENCE};
@@ -715,6 +723,7 @@ private:
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
+	void LoadDragDrop(const Vector<String> &files);
 	String BEMFile(String fileFolder) const;
 };
 
@@ -765,6 +774,9 @@ public:
 		ProcessEvents();
 	}
 	
+	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_FAST};
+	Vector<String> tabTexts;
+	
 private:
 	TabCtrl tab;
 	int lastTab;
@@ -777,6 +789,7 @@ private:
 	MainBEM mainBEM;
 	MainOutput mainOutput;
 	MainMesh mainMesh;
+	FastScatterTabs mainFAST;
 	
 	MenuOptions menuOptions;
 	CtrlScroll menuOptionsScroll;

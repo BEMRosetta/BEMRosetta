@@ -1,5 +1,9 @@
 #include "Core.h"
 
+#ifdef PLATFORM_MACOS
+#include <mach-o/dyld.h>
+#endif
+
 #ifdef PLATFORM_WIN32
 #define Ptr Ptr_
 #define byte byte_
@@ -83,17 +87,28 @@ extern char Argv0__[];
 const char *procexepath_() {
 	static char h[_MAX_PATH + 1];
 	ONCELOCK {
-		char link[100];
-#ifdef PLATFORM_BSD
+		char link[1024];
+#ifdef PLATFORM_MACOS
+		uint32_t sz = 1024;
+		if(_NSGetExecutablePath(link, &sz))
+			*link = 0;
+#elif defined(PLATFORM_BSD)
 		sprintf(link, "/proc/%d/file", getpid());
 #else
 		sprintf(link, "/proc/%d/exe", getpid());
 #endif
-		int ret = readlink(link, h, _MAX_PATH);
-		if(ret > 0 && ret < _MAX_PATH)
-			h[ret] = '\0';
-		else
-			*h = '\0';
+		FindFile ff(link);
+		if(ff) {
+			if(ff.IsSymLink()) {
+				int ret = readlink(link, h, _MAX_PATH);
+				if(ret > 0 && ret < _MAX_PATH)
+					h[ret] = '\0';
+				else
+					*h = '\0';
+			}
+			else
+				strcpy(h, link);
+		}
 	}
 	return h;
 }
@@ -141,6 +156,14 @@ String GetExeTitle()
 {
 	return GetFileTitle(GetExeFilePath());
 }
+
+#ifdef PLATFORM_COCOA
+String GetAppFolder()
+{
+	String p = GetExeFolder();
+	return p.TrimEnd("/Contents/MacOS") && GetFileExt(p) == ".app" ? p : String();
+}
+#endif
 
 void SyncLogPath__();
 
