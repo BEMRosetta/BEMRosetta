@@ -864,13 +864,50 @@ void Hydro::StateSpace::GetTFS(const Vector<double> &w) {
 	}		
 }
 
-int Hydro::GetQTFId(int ib, int ih1, int ih2, int ifr1, int ifr2) const {
-	for (int i = 0; i < qtfdif.GetCount(); ++i) {
-		const QTF &qtf = qtfdif[i];
+int Hydro::GetHeadId(double hd) const {
+	for (int i = 0; i < head.GetCount(); ++i) {
+		if (EqualRatio(head[i], hd, 0.01))
+			return i;
+	}
+	return -1;
+}
+	
+int Hydro::GetQTFHeadId(double hd) const {
+	for (int i = 0; i < qtfhead.GetCount(); ++i) {
+		if (EqualRatio(qtfhead[i], hd, 0.01))
+			return i;
+	}
+	return -1;
+}
+	
+int Hydro::GetQTFId(const Upp::Array<Hydro::QTF> &qtfList, int ib, int ih1, int ih2, int ifr1, int ifr2) {
+	for (int i = 0; i < qtfList.GetCount(); ++i) {
+		const QTF &qtf = qtfList[i];
 		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2)
 			return i;
 	}
 	return -1;
+}
+
+void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Vector<int> &ibL, Vector<int> &ih1L, Vector<int> &ih2L) {
+	ibL.Clear();
+	ih1L.Clear();
+	ih2L.Clear();
+	for (int i = 0; i < qtfList.GetCount(); ++i) {
+		const QTF &qtf = qtfList[i];
+		bool found = false;
+		for (int j = 0; j < ibL.GetCount(); ++j) {
+			if (qtf.ib == ibL[j] && qtf.ih1 == ih1L[j] && qtf.ih2 == ih2L[j]) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			ibL << qtf.ib;
+			ih1L << qtf.ih1;
+			ih2L << qtf.ih2;	
+		}
+	}
 }
 		
 void Hydro::Jsonize(JsonIO &json) {

@@ -19,16 +19,20 @@ bool Aqwa::Load(String file, double) {
 			BEMData::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
-				return false;
+				hd().Nh = hd().Nf = 0;
+			//	throw Exc(t_("No .AH1 or .LIS file found"));
 			}
 		}
-		if (IsNull(hd().Nb))
-			return false;
+		//if (IsNull(hd().Nb))
+		//	return false;
 		
 		BEMData::Print("\n- " + S(t_("QTF file")));
 		if (!Load_QTF()) 
 			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
-			
+		
+		if (IsNull(hd().Nb))
+			return false;
+	
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
@@ -479,25 +483,31 @@ bool Aqwa::Load_QTF() {
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		int ib = f.GetInt(0);
-		if (ib > hd().Nb)
+		if (IsNull(hd().Nb)) {
+			hd().Nb = ib;
+			if (hd().names.IsEmpty())
+				hd().names.SetCount(hd().Nb);
+		}
+		else if (ib > hd().Nb)
 			throw Exc(in.Str() + Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
 		int Nh = f.GetInt(1);
-		if (Nh != hd().Nh)
-			throw Exc(in.Str() + Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
+		//if (Nh != hd().Nh)
+		//	throw Exc(in.Str() + Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
 		int Nf = f.GetInt(2);
-		if (Nf != hd().Nf)
-			throw Exc(in.Str() + Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
+		//if (Nf != hd().Nf)
+		//	throw Exc(in.Str() + Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
 		
 		int col = 3;
 		int ih = 0;
 		while (!in.IsEof()) {		// Check headings
-			while (col < f.GetCount() && ih < hd().Nh) {
+			while (col < f.GetCount() && ih < Nh) {
 				double head = f.GetDouble(col++);
-				if (FindRatio(hd().head, head, 0.001) < 0)	
-					throw Exc(in.Str() + Format(t_("%f heading not found"), head));
+				FindAddRatio(hd().qtfhead, head, 0.001);
+				//if (FindRatio(hd().head, head, 0.001) < 0)	
+				//	throw Exc(in.Str() + Format(t_("%f heading not found"), head));
 				ih++;
 			}
-			if (ih >= hd().Nh)
+			if (ih >= Nh)
 				break;
 			f.Load(in.GetLine());
 			col = 0;
@@ -506,31 +516,37 @@ bool Aqwa::Load_QTF() {
 		col = 0;
 		int ifr = 0;
 		while (!in.IsEof()) {		// Check frequencies
-			while (col < f.GetCount() && ifr < hd().Nf) {
+			while (col < f.GetCount() && ifr < Nf) {
 				double w = f.GetDouble(col++);
-				if (FindRatio(hd().w, w, 0.001) < 0)	
-					throw Exc(in.Str() + Format(t_("%f frequency not found"), w));
+				FindAddRatio(hd().qtfw, w, 0.001);
+				//if (FindRatio(hd().w, w, 0.001) < 0)	
+				//	throw Exc(in.Str() + Format(t_("%f frequency not found"), w));
 				ifr++;
 			}
-			if (ifr >= hd().Nf)
+			if (ifr >= Nf)
 				break;
 			f.Load(in.GetLine());
 			col = 0;
 		}
+		hd().qtfT.Clear();
+		for (int ifr = 0; ifr < hd().qtfw.GetCount(); ++ifr)
+			hd().qtfT << 2*M_PI/hd().qtfw[ifr];
+		
+		nrows = Nh*Nf*Nf;
 		for (int i = 0; i < nrows; ++i) {
 			f.Load(in.GetLine());
 			int ib = f.GetInt(0)-1;
 			if (ib >= hd().Nb)
 				throw Exc(in.Str() + Format(t_("Body id %d higher than number of bodies"), ib+1, hd().Nb));
 			int ih = f.GetInt(1)-1;
-			if (ih >= hd().Nh)
-				throw Exc(in.Str() + Format(t_("Heading id %d higher than number of headings"), ih+1, hd().Nh));
+			if (ih >= Nh)
+				throw Exc(in.Str() + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
 			int ifr1 = f.GetInt(2)-1;
-			if (ifr1 >= hd().Nf)
-				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, hd().Nf));
+			if (ifr1 >= Nf)
+				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
 			int ifr2 = f.GetInt(3)-1;
-			if (ifr2 >= hd().Nf)
-				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, hd().Nf));
+			if (ifr2 >= Nf)
+				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, Nf));
 							
 			Hydro::QTF &qtfdif = hd().qtfdif.Add();
 			qtfdif.Set(ib, ih, ih, ifr1, ifr2);

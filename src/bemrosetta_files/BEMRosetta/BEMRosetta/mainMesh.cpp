@@ -3,6 +3,7 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
+#include <TabBar/TabBar.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
@@ -38,7 +39,7 @@ void MainMesh::Init() {
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuConvert.butLoad.WhenAction = [&] {OnConvertMesh();};
+	menuConvert.butLoad.WhenAction = [&] {menuConvert.file.DoGo();};
 
 	//ArrayModel_Init(menuConvert.arrayModel);
 	
@@ -1148,39 +1149,33 @@ void MainView::CalcEnvelope() {
 	}
 }
 
+void MainMesh::LoadDragDrop(const Vector<String> &files) {
+	bool followWithErrors = false;
+	for (int i = 0; i < files.GetCount(); ++i) {
+		menuOpen.file <<= files[i];
+		Status(Format(t_("Loading '%s'"), files[i]));
+		if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
+				return;
+			followWithErrors = true;
+		}
+		ProcessEvents();
+	}
+}
+	
 void MainMesh::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
 		Vector<String> files = GetFiles(d);
-		bool followWithErrors = false;
-		for (int i = 0; i < files.GetCount(); ++i) {
-			menuOpen.file <<= files[i];
-			Status(Format(t_("Loading '%s'"), files[i]));
-			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
-				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
-					return;
-				followWithErrors = true;
-			}
-			ProcessEvents();
-		}
+		LoadDragDrop(files);
 	}
 }
 
 bool MainMesh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Vector<String> files = GetFiles(Ctrl::Clipboard());
-		bool followWithErrors = false;
-		for (int i = 0; i < files.GetCount(); ++i) {
-			menuOpen.file <<= files[i];
-			Status(Format(t_("Loading '%s'"), files[i]));
-			if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
-				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
-					return true;
-				followWithErrors = true;
-			}
-			ProcessEvents();
-		}
+		LoadDragDrop(files);
 		return true;
 	}
 	return false;

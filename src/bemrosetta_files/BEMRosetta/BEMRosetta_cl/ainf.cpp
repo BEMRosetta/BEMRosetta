@@ -35,6 +35,8 @@ void Hydro::K_IRF(double maxT, int numT) {
 }
 	
 void Hydro::Ainf() {
+	if (Nf == 0)
+		return;
 	Awinf.setConstant(Nb*6, Nb*6, Null);
 	int numT = Tirf.GetCount();
 	double dt = Tirf[1] - Tirf[0];
