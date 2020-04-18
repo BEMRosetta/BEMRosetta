@@ -67,8 +67,6 @@ void CocoButton(Button::Style& s, int type, int value)
 
 void ChHostSkin()
 {
-	TIMING("ChHostSkin");
-
 	CtrlImg::Reset();
 	CtrlsImg::Reset();
 	ChReset();
@@ -86,7 +84,7 @@ void ChHostSkin()
 	SColorText_Write(CocoColor(COCO_TEXT));
 	SColorDisabled_Write(CocoColor(COCO_DISABLED));
 
-	ColoredOverride(CtrlsImg::Iml(), CtrlsImg::Iml());
+	ChBaseSkin();
 
 	SOImages(CtrlsImg::I_S0, COCO_RADIOBUTTON, 0);
 	SOImages(CtrlsImg::I_S1, COCO_RADIOBUTTON, 1);

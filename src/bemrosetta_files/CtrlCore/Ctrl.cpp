@@ -864,7 +864,6 @@ bool Ctrl::IsDarkThemeEnabled()
 	return ApplicationDarkThemeEnabled;
 }
 
-
 Font StdFontZ(int height)   { return FontZ(Font::STDFONT, height); }
 Font SansSerifZ(int height) { return FontZ(Font::SANSSERIF, height); }
 Font SerifZ(int height)     { return FontZ(Font::SERIF, height); }
@@ -973,15 +972,11 @@ INITBLOCK {
 	whenSetStdFont = &Ctrl::ReSkin;
 }
 
-void (*s_chdefault)();
-
 void (*Ctrl::skin)();
 
-void CtrlSetDefaultSkin(void (*fn1)(), void (*fn2)())
+void CtrlSetDefaultSkin(void (*_skin)())
 {
-	GuiLock __;
-	s_chdefault = fn1;
-	Ctrl::skin = fn2;
+	Ctrl::skin = _skin;
 }
 
 void Ctrl::SetSkin(void (*_skin)())
@@ -999,9 +994,8 @@ void Ctrl::ReSkin()
 		return;
 	lock++;
 	ChReset();
+	Iml::ResetAll();
 	Csize.cx = Dsize.cx = IsNoLayoutZoom;
-	if(s_chdefault)
-		(*s_chdefault)();
 	if(skin)
 		(*skin)();
 	Csize.cx = Dsize.cx = IsNoLayoutZoom;
@@ -1086,5 +1080,17 @@ int    Ctrl::GetExitCode() const
 	GuiLock __;
 	return exitcode;
 }
+
+#ifdef HAS_TopFrameDraw
+
+ViewDraw::ViewDraw(Ctrl *ctrl, const Rect& r)
+:	TopFrameDraw(ctrl, (ctrl->GetScreenView() & (r + ctrl->GetScreenView().TopLeft()))
+                       - ctrl->GetTopCtrl()->GetScreenRect().TopLeft())
+{
+	Point p = r.TopLeft();
+	Offset(min(p.x, 0), min(p.y, 0));
+}
+
+#endif
 
 }

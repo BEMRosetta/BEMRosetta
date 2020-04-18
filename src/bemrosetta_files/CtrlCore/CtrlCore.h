@@ -673,8 +673,9 @@ private:
 	friend void  InitRichTextZoom();
 	friend void  AvoidPaintingCheck__();
 	friend dword GetKeyStateSafe(dword what);
-	friend void  CtrlSetDefaultSkin(void (*fn1)(), void (*fn2)());
+	friend void  CtrlSetDefaultSkin(void (*_skin)());
 	friend class DHCtrl;
+	friend class TopFrameDraw;
 	friend class ViewDraw;
 	friend class TopWindow;
 	friend class TrayIcon;
@@ -1664,6 +1665,17 @@ T *Ctrl::GetAscendant() const
 			return a;
 	return NULL;
 }
+
+#ifdef HAS_TopFrameDraw
+
+class ViewDraw : public TopFrameDraw {
+public:
+	ViewDraw(Ctrl *ctrl, const Rect& r);
+	ViewDraw(Ctrl *ctrl) : ViewDraw(ctrl, ctrl->GetSize()) {}
+	ViewDraw(Ctrl *ctrl, int x, int y, int cx, int cy) : ViewDraw(ctrl, RectC(x, y, cx, cy)) {}
+};
+
+#endif
 
 }
 

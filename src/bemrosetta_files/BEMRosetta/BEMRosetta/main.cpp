@@ -13,10 +13,12 @@ using namespace Upp;
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
+#include <TabBar/TabBar.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
 #include "main.h"
+
 
 using namespace Eigen;
 
@@ -34,6 +36,8 @@ void Main::Init() {
 	LargeIcon(Img::Rosetta256());
 	ma(this);
 
+	tabTexts << t_("Mesh Handling") << t_("Nemoh") << t_("Hydrodynamic Coefficients") << t_("FAST Viewer");
+		
 	bool firstTime = false;
 	if (!bem.LoadSerializeJson()) {
 		firstTime = true;
@@ -52,27 +56,31 @@ void Main::Init() {
 	}
 	LOG("Configuration loaded");
 	
-	if (menuOptions.tabsShown[0])
+	if (menuOptions.showTabMesh) {
 		mainMesh.Init();			LOG("Init Mesh");
-	if (menuOptions.tabsShown[1])
+		tab.Add(mainMesh.SizePos(), tabTexts[TAB_MESH]);
+	}
+	if (menuOptions.showTabNemoh) {
 		mainNemoh.Init(bem);		LOG("Init Nemoh");
-	if (menuOptions.tabsShown[2])
+		tab.Add(mainNemohScroll.AddPaneV(mainNemoh).SizePos(), tabTexts[TAB_NEMOH]);
+	}
+	if (menuOptions.showTabCoeff) {
 		mainBEM.Init();				LOG("Init BEM");
+		tab.Add(mainBEM.SizePos(),  tabTexts[TAB_COEFF]);
+	}
+	if (Bem().experimental) {
+		mainFAST.Init();			LOG("Init FAST");
+		tab.Add(mainFAST.SizePos(), tabTexts[TAB_FAST]);
+	}
+	
+	tab.Add().Disable();
 	mainOutput.Init();			LOG("Init Output");
+	tab.Add(mainOutput.SizePos(), t_("Output"));	
 	menuOptions.Init(bem);		LOG("Init Options");
 	menuOptions.Load();			LOG("Init Options.Load");
-	menuAbout.Init();			LOG("Init About");
-	
-	if (menuOptions.tabsShown[0])
-		tab.Add(mainMesh.SizePos(),   t_("Mesh Handling"));
-	if (menuOptions.tabsShown[1])
-		tab.Add(mainNemohScroll.AddPaneV(mainNemoh).SizePos(),  t_("Nemoh"));
-	if (menuOptions.tabsShown[2])
-		tab.Add(mainBEM.SizePos(),    t_("Hydrodynamic Coefficients"));
-	tab.Add().Disable();
-	tab.Add(mainOutput.SizePos(), t_("Output"));
 	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(),t_("Options"));
 	tab.Add().Disable();
+	menuAbout.Init();			LOG("Init About");
 	tab.Add(menuAbout.SizePos(),  t_("About"));
 	
 	Add(tab.SizePos());	
@@ -101,10 +109,13 @@ void Main::Init() {
 		}
 	};
 	
+	if (firstTime) {
+		lastTab = 0;
+		tab.Set(menuAbout);
+	} else 
+		tab.Set(lastTab);
+	
 	tab.WhenSet = [&] {
-		if (tab.Get() < 0)
-			return;
-		
 		LOGTAB(tab);
 		if (tab.IsAt(menuOptions)) 
 			menuOptions.Load();
@@ -132,13 +143,6 @@ void Main::Init() {
 		else if (tab.IsAt(mainBEM)) 
 			mainBEM.mainTab.WhenSet();
 	};	
-	
-	tab.Set(-1);
-	if (firstTime) {
-		lastTab = 0;
-		tab.Set(menuAbout);
-	} else
-		tab.Set(lastTab);
 	
 	AddFrame(bar);
 	
@@ -181,6 +185,7 @@ bool Main::LoadSerializeJson() {
 	mainMesh.InitSerialize(ret);
 	mainNemoh.InitSerialize(ret);
 	mainBEM.InitSerialize(ret);
+	menuOptions.InitSerialize(ret);
 	
 	if (!ret)
 		tab.Set(menuAbout);
@@ -234,15 +239,23 @@ void MenuOptions::Init(BEMData &_bem) {
 	CtrlLayout(*this);
 	
 	bem = &_bem;
-	butSave <<= THISBACK(OnSave);
+	butSave  <<= THISBACK(OnSave);
 	butSave2 <<= THISBACK(OnSave);
 	
-	int row = 0;
 	arrayShown.AddColumn("");
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("Mesh Handling"));
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("Nemoh"));
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("Hydrodymamic Coefficients"));
-	//arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(t_("OpenFAST Reader"));	
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_NEMOH, 0, false).SetLabel(ma().tabTexts[Main::TAB_NEMOH]);
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_COEFF, 0, false).SetLabel(ma().tabTexts[Main::TAB_COEFF]);
+	//arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);	
+}
+
+void MenuOptions::InitSerialize(bool ret) {
+	if (!ret || IsNull(showTabMesh)) 
+		showTabMesh = true;
+	if (!ret || IsNull(showTabNemoh)) 
+		showTabNemoh = true;
+	if (!ret || IsNull(showTabCoeff)) 
+		showTabCoeff = true;
 }
 
 void MenuOptions::Load() {
@@ -261,13 +274,11 @@ void MenuOptions::Load() {
 	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
 	nemohPathNew <<= bem->nemohPathNew;
 	nemohPathGREN <<= bem->nemohPathGREN;
-	//experimental <<= bem->experimental;
 	foammPath <<= bem->foammPath;
 	
-	if (tabsShown.IsEmpty())
-		tabsShown.SetCount(arrayShown.GetCount(), true);
-	for (int r = 0; r < min(arrayShown.GetCount(), tabsShown.GetCount()); ++r)
-		arrayShown.GetCtrl(r, 0)->SetData(tabsShown[r]);
+	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
+	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
+	arrayShown.GetCtrl(Main::TAB_COEFF, 0)->SetData(showTabCoeff);
 }
 
 void MenuOptions::OnSave() {
@@ -286,12 +297,11 @@ void MenuOptions::OnSave() {
 	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
 	bem->nemohPathNew = ~nemohPathNew;
 	bem->nemohPathGREN = ~nemohPathGREN;
-	//bem->experimental = ~experimental;	
 	bem->foammPath = ~foammPath;
 	
-	tabsShown.Clear();
-	for (int r = 0; r < arrayShown.GetCount(); ++r)
-		tabsShown << arrayShown.GetCtrl(r, 0)->GetData();
+	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
+	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
+	showTabCoeff = arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData();		
 	
 	ma().OptionsUpdated(rho, g);
 }
@@ -327,18 +337,16 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->nemohPathGREN != ~nemohPathGREN)
 		return true;
-	//if (bem->experimental != ~experimental)
-	//	return true;
 	if (bem->foammPath != ~foammPath)
 		return true;
 	
-	if (arrayShown.GetCount() != tabsShown.GetCount())
+	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())
 		return true;
-	
-	for (int r = 0; r < arrayShown.GetCount(); ++r)
-		if (tabsShown[r] != arrayShown.GetCtrl(r, 0)->GetData())
-			return true;
-	
+	if (showTabNemoh != arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData())
+		return true;
+	if (showTabCoeff != arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData())
+		return true;
+
 	return false;
 }
 
@@ -465,7 +473,7 @@ bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids)
 		int isurf = ids[i];
 		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
-			Add(hydros[isurf].hd().name, i, hydros[isurf].hd().names[ibody], ibody, hydro, hydro.GetId());
+			Add(hydro.name, i, hydro.names[ibody], ibody, hydro, hydro.GetId());
 	}
 	return true;
 }	
@@ -513,7 +521,7 @@ GUI_APP_MAIN {
 		return;
 	}
 	
-	Ctrl::SetAppName(t_("Hydrodynamic coefficents viewer and converter"));
+	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
 	Ctrl::GlobalBackPaint();
 	
 	String errorStr;

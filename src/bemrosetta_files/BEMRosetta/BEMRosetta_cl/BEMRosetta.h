@@ -90,7 +90,9 @@ public:
     
     Upp::Array<Eigen::MatrixXd> Kirf;		// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
     Vector<double> Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
-    	
+    
+    int GetHeadId(double hd) const;
+	
     struct Forces {
     	Upp::Array<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
     	Upp::Array<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
@@ -176,9 +178,13 @@ public:
     	}
     };
     Upp::Array<QTF> qtfsum, qtfdif;
+    Vector<double> qtfw, qtfT, qtfhead;
+    bool qtfdataFromW;
     
-    int GetQTFId(int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2) const;
-
+    int GetQTFHeadId(double hd) const;
+    static int GetQTFId(const Upp::Array<Hydro::QTF> &qtfList, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
+	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Vector<int> &ibL, Vector<int> &ih1L, Vector<int> &ih2L);
+							
     Vector<double> T; 						// [Nf]    			Wave periods
     Vector<double> w;     		 			// [Nf]             Wave frequencies
     bool dataFromW;
@@ -190,14 +196,6 @@ public:
     static String C_units(int i, int j);
     
     void SetC(int ib, const Eigen::MatrixXd &K);
-    
-	int GetHeadId(double hd) const {
-		for (int i = 0; i < head.GetCount(); ++i) {
-			if (EqualRatio(head[i], hd, 0.01))
-				return i;
-		}
-		return -1;
-	}
 	
 	bool AfterLoad(Function <bool(String, int)> Status);
 	
@@ -653,7 +651,7 @@ protected:
 	void Save_3(String fileName, bool force_T = false);
 	void Save_hst(String fileName);
 	void Save_4(String fileName, bool force_T = false);
-	void Save_12(String fileName, bool isSum);
+	void Save_12(String fileName, bool isSum, bool force_T = false, bool force_Deg = true);
 };
 
 class Foamm : public HydroClass {
