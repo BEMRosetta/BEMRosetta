@@ -59,11 +59,10 @@ void EditFileFolder::Init() {
 	butUp <<= THISBACK(DoUp);
 	butUp.Tip(t_("Directory up"));
 	butUp.Enable(false);
-	//EditString::AddFrame(butGo);
 	butGo.SetImage(CtrlImg::SmallRight()); 
 	butGo <<= THISBACK1(DoGo, true);
-	butFolder.Tip(t_("Open folder"));
-	butFolder.Width(10);
+	butFolder.Width(10).Tip(t_("Open folder"));
+	InsertFrame(1, butFolder);
 	isFile = isLoad = true;
 	histInd = -1;
 	pfs = 0;
@@ -83,10 +82,7 @@ EditFileFolder::~EditFileFolder() {
 }
 
 EditFileFolder &EditFileFolder::UseOpenFolder(bool use) {
-	if (use) 
-		InsertFrame(0, butFolder);
-	else
-		RemoveFrame(butFolder);
+	butFolder.Show(use);
 	return *this;
 }
 	
@@ -245,7 +241,7 @@ void EditFileFolder::DoUp() {
 EditFile::EditFile() {
 	isFile = true;		
 	title = t_("Select file");	
-	EditFileFolder();
+	Init();
 	butBrowseRight.Tip(t_("Browse file"));
 	butFolder.WhenAction = [&] {
 		String fileName = GetData();
@@ -267,7 +263,7 @@ EditFile::EditFile() {
 EditFolder::EditFolder() {
 	isFile = false;	
 	title = t_("Select folder");	
-	EditFileFolder();
+	Init();
 	butBrowseRight.Tip(t_("Browse folder"));
 	butFolder.WhenAction = [&] {
 		String folder = GetData();

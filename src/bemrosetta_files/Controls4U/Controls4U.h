@@ -42,7 +42,7 @@ protected:
 	void DoLeft(), DoRight(), DoUp();
 		
 public:
-	EditFileFolder() 								{Init();};
+	EditFileFolder() 								{};
 	virtual ~EditFileFolder();
 	
 	void Init();
