@@ -125,7 +125,8 @@ T &GetDefinedParent(Ctrl *ths) {
 			return *main;
 	}
 	NEVER_(t_("Parent does not found in GetDefinedParent()"));
-	return *main;
+	throw Exc(t_("Parent does not found in GetDefinedParent()"));
+	//return *main;
 }
 
 }

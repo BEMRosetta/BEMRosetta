@@ -1084,7 +1084,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 		
 	Vector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
-	if (hd().dataFromW || !force_T) 
+	if (hd().dataFromW && !force_T) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
@@ -1137,7 +1137,7 @@ void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg) {
 	
 	Vector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
-	if (hd().qtfdataFromW || !force_T) 
+	if (hd().qtfdataFromW && !force_T) 
 		pdata = &hd().qtfw;
 	else
 		pdata = &hd().qtfT;
@@ -1155,10 +1155,14 @@ void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg) {
 	
 	static int idf12[] = {1, 3, 5, 2, 4, 6};
 	
-	for (int ifr1 = ifr0; ifr1 < ifrEnd; ifr1 += ifrDelta) 
-		for (int ifr2 = ifr0; ifr2 < ifrEnd; ifr2 += ifrDelta) 
-			for (int ih1 = 0; ih1 < Nh; ++ih1) 
-				for (int ih2 = 0; ih2 < Nh; ++ih2) 
+	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) 
+		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) 
+			for (int ih1 = 0; ih1 < Nh; ++ih1) {
+				if (hd().qtfhead[ih1] != 0)
+					continue;
+				for (int ih2 = 0; ih2 < Nh; ++ih2) {
+					if (hd().qtfhead[ih2] != 0)
+						continue;	 
 					for (int ib = 0; ib < hd().Nb; ++ib) {
 						int id = hd().GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
 						if (id >= 0) {
@@ -1178,4 +1182,6 @@ void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg) {
 							}
 						}
 					}
+				}
+			}
 }

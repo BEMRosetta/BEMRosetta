@@ -294,7 +294,7 @@ void ScatterCtrl::Paint0(Draw& w, const Size &sz) {
 			w.DrawLine(0, sz.cy+delta, sz.cx, sz.cy+delta, 2, LtGray());
 		}
 	}
-	lastRefresh_ms = t.Elapsed();
+	lastRefresh_ms = int(t.Elapsed());
 }
 		
 			
@@ -997,14 +997,14 @@ void ScatterCtrl::ContextMenu(Bar& bar)
 	{
 		bar.Add(t_("Properties"), ScatterImg::Gear(), THISBACK1(DoShowEditDlg, 0)).Key(K_CTRL_P)
 									.Help(t_("Plot properties dialog"));
-		bar.Add(t_("Data"), ScatterImg::Database(), THISBACK(DoShowData)).Key(K_CTRL_D)
+		bar.Add(t_("View Data"), ScatterImg::Database(), THISBACK(DoShowData)).Key(K_CTRL_D)
 									.Help(t_("Raw data table"));
 	}
 #ifndef _DEBUG
 	if (showProcessDlg)
 #endif
 	{
-		bar.Add(t_("Process"), ScatterImg::chart_curve_edit(), THISBACK(DoProcessing)).Key(K_SHIFT_P)
+		bar.Add(t_("Data Analysis"), ScatterImg::chart_curve_edit(), THISBACK(DoProcessing)).Key(K_SHIFT_P)
 									.Help(t_("Data processing dialog"));
 	}
 #ifndef _DEBUG
@@ -1181,14 +1181,14 @@ ScatterCtrl::ScatterCtrl() {
 	int buttonWidthProcess = 100;
 	Add(processButton.RightPosZ(posx, buttonWidthProcess).TopPosZ(0, buttonHeight));
 	processButton.Show(false);
-	processButton.SetImage(ScatterImg::chart_curve_edit()).SetLabel(t_("Data analysis")).Tip(t_("Data processing dialog"));
+	processButton.SetImage(ScatterImg::chart_curve_edit()).SetLabel(t_("Data Analysis")).Tip(t_("Data processing dialog"));
 	processButton.WhenAction = THISBACK(DoProcessing);
 	
 	posx += buttonWidthProcess;
 	int buttonWidthData = 80;
 	Add(dataButton.RightPosZ(posx, buttonWidthData).TopPosZ(0, buttonHeight));
 	dataButton.Show(false);
-	dataButton.SetImage(ScatterImg::Database()).SetLabel(t_("View data")).Tip(t_("Show raw data table"));
+	dataButton.SetImage(ScatterImg::Database()).SetLabel(t_("View Data")).Tip(t_("Show raw data table"));
 	dataButton.WhenAction = THISBACK(DoShowData);
 	
 	posx += buttonWidthData;

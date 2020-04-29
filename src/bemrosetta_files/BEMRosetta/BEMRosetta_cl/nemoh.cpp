@@ -2,20 +2,43 @@
 
 
 bool Nemoh::Load(String file, double) {
-	hd().file = file;
-	hd().name = GetFileTitle(GetFileFolder(file));
-	folder = GetFileFolder(file);
-	hd().len = 1;
-	hd().dimen = true;
-	hd().Nb = Null;
-
-	String ext = GetFileExt(file); 
-	if (ext == ".cal")
-		hd().code = Hydro::NEMOH;
-	else
-		hd().code = Hydro::SEAFEM_NEMOH;
-	
 	try {
+		String ext = GetFileExt(file); 
+
+		if (ext == ".tec") {
+			String folder = GetFileFolder(file);
+			String folderTitle = GetFileName(folder);
+			if (ToLower(folderTitle) != "results") 
+				throw Exc(Format(t_(".tec file '%s' should have to be in 'results' folder"), file));
+			bool found = false;
+			String upperFolder = GetUpperFolder(folder);
+			FindFile ff(AppendFileName(upperFolder, "*.*"));
+			while (ff) {
+				if (ff.IsFile()) {
+					if (ToLower(ff.GetName()) == "nemoh.cal") {
+						file = ff.GetPath();
+						found = true;
+						break;
+					}
+				}
+				ff.Next();
+			}
+			if (!found)
+				throw Exc(Format(t_("nemoh.cal file not found in '%s' folder"), upperFolder));
+		}
+	
+		if (ext == ".cal" || ext == ".tec")
+			hd().code = Hydro::NEMOH;
+		else
+			hd().code = Hydro::SEAFEM_NEMOH;
+	
+		hd().file = file;
+		hd().name = GetFileTitle(GetFileFolder(file));
+		folder = GetFileFolder(file);
+		hd().len = 1;
+		hd().dimen = true;
+		hd().Nb = Null;
+	
 		String fileCal;
 		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
 		if (hd().code == Hydro::NEMOH) 
@@ -23,7 +46,7 @@ bool Nemoh::Load(String file, double) {
 		else 
 			fileCal = AppendFileName(folder, "Nemoh_output/Nemoh.cal");
 		if (!Load_Cal(fileCal)) 
-			throw Exc("\n" + Format(t_("File '%s' not found"), fileCal));
+			throw Exc(Format(t_("File '%s' not found"), fileCal));
 		
 		String fileRad, folderForces;
 		if (hd().code == Hydro::NEMOH) {
@@ -37,7 +60,7 @@ bool Nemoh::Load(String file, double) {
 			folderForces = folder;
 		} else {
 			if (!Load_Inf(file)) 
-				throw Exc("\n" + Format(t_("File '%s' not found"), file));
+				throw Exc(Format(t_("File '%s' not found"), file));
 
 			fileRad = AppendFileName(folder, AppendFileName("Nemoh_output/Results", "RadiationCoefficients.tec"));
 			folderForces = AppendFileName(folder, "Nemoh_output");

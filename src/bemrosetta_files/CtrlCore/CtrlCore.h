@@ -1481,10 +1481,6 @@ enum {
 	DRAWDRAGRECT_SOLID, DRAWDRAGRECT_NORMAL, DRAWDRAGRECT_DASHED
 };
 
-void DrawDragRect(Ctrl& q, const Rect& rect1, const Rect& rect2, const Rect& clip, int n,
-                  Color color, int type, int animation);
-void FinishDragRect(Ctrl& q);
-
 bool PointLoop(Ctrl& ctrl, const Vector<Image>& ani, int ani_ms);
 bool PointLoop(Ctrl& ctrl, const Image& img);
 
@@ -1494,14 +1490,16 @@ public:
 	virtual void  RightUp(Point, dword);
 	virtual void  MouseMove(Point p, dword);
 	virtual Image CursorImage(Point, dword);
+	virtual void  Paint(Draw& w);
 
 public:
 	struct Rounder {
 		virtual Rect Round(const Rect& r) = 0;
-		virtual ~Rounder() {}
 	};
 
 protected:
+	Image           master_image;
+
 	Rect            rect;
 	int             tx, ty;
 	Rect            maxrect;
@@ -1522,7 +1520,7 @@ protected:
 
 	Rect            Round(const Rect& r);
 
-	virtual void    DrawRect(Rect r1, Rect r2);
+	virtual void    DrawRect(Draw& w, Rect r1);
 
 public:
 	Event<Rect>  sync;
@@ -1550,7 +1548,6 @@ public:
 	int  TrackVertLine(int x0, int y0, int cy, int line);
 
 	RectTracker(Ctrl& master);
-	virtual ~RectTracker();
 };
 
 class WaitCursor {

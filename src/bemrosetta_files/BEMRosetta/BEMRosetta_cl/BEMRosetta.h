@@ -940,7 +940,7 @@ public:
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
-	const String bemFilesExt = ".1 .3 .hst .4 .out .cal .inf .ah1 .lis .mat .dat";
+	const String bemFilesExt = ".1 .3 .hst .4 .12s .12d .out .cal .tec .inf .ah1 .lis .qtf .mat .dat";
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {
@@ -960,7 +960,6 @@ public:
 			("nemohPathPostprocessor", nemohPathPostprocessor)
 			("nemohPathGREN", nemohPathGREN)
 			("nemohPathNew", nemohPathNew)
-			//("experimental", experimental)
 			("foammPath", foammPath)
 		;
 	}

@@ -959,9 +959,9 @@ void Hydro::Jsonize(JsonIO &json) {
 }
 	
 BEMData::BEMData() {
-	String bemFilesAst = clone(bemFilesExt);
+	bemFilesAst = clone(bemFilesExt);
 	bemFilesAst.Replace(".", "*.");
-	experimental = ToLower(GetExeTitle()).Find("experimental") >= 0 || GetUserName() == "0203853";
+	experimental = ToLower(GetExeTitle()).Find("experimental") >= 0;
 }
 
 void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
@@ -973,7 +973,7 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 		}
 	}
 	String ext = ToLower(GetFileExt(file));
-	if (ext == ".cal") {
+	if (ext == ".cal" || ext == ".tec") {
 		Nemoh &data = hydros.Create<Nemoh>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
