@@ -11,7 +11,6 @@ using namespace Upp;
 
 #include "main.h"
 
-
 void MainStateSpace::Init() {
 	CtrlLayout(*this);
 	

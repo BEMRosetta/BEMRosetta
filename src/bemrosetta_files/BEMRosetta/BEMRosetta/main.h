@@ -17,25 +17,118 @@ public:
 	double zoomlevel;
 };
 
+class BorderFrameDyn : public CtrlFrame {
+public:
+	void Init(int _thickness, Color _color) {
+		thickness = _thickness;
+		color = _color;
+	}
+	virtual void FrameLayout(Rect& r) {
+		Size sz = r.GetSize();
+		int n = thickness;
+		if(sz.cx >= 2 * n && sz.cy >= 2 * n)
+			r.Deflate(n);
+	}
+	virtual void FrameAddSize(Size& sz) {};//{sz += 2 * thickness;}
+	virtual void FramePaint(Draw& draw, const Rect& r) {
+		if (!show)
+			return;
+		Size sz = r.GetSize();
+		if(sz.cx >= 2 * thickness && sz.cy >= 2 * thickness)
+			DrawBorder(draw, r.left-1, r.top, r.Width()+2, r.Height(), color);
+	}
+	void Show(bool _show) 	{show = _show;}
+	bool IsShown()			{return show;}
+	
+protected:
+	bool show = false;
+	int thickness;
+	Color color;
+
+	void DrawBorder(Draw& w, int x, int y, int cx, int cy, Color c) {
+		int n = thickness;
+		while(n--) {
+			if(cx <= 0 || cy <= 0)
+				break;
+			DrawFrame(w, x, y, cx, cy, c, c, c, c);
+			x += 1;
+			y += 1;
+			cx -= 2;
+			cy -= 2;
+		}
+	}
+};
+
+class RectEnter {
+public:
+	void ShowFrame(bool show = true) {
+		frame.Show(show);
+		ctrl->RefreshFrame();
+	}
+	bool IsShown() {return frame.IsShown();}
+	
+	BorderFrameDyn frame;
+	Function <void(RectEnter &)>WhenEnter;
+	Ctrl *ctrl;
+};
+
 template <class T>
 class WithRectEnter : public T {
 public:
-	void SetRectangle(StaticRectangle &_rect, Function <void(StaticRectangle *)>_WhenEnter) {
-		rect = &_rect;
-		WhenEnter = _WhenEnter;
-		rect->Hide();
+	WithRectEnter() {
+		rectEnter.frame.Init(3, LtBlue()); 
+		T::AddFrame(rectEnter.frame);
+		rectEnter.ctrl = this;
 	}
-	virtual void MouseEnter(Point , dword) {
-		if (!rect)
-			return;
-		rect->Show();
-		if (WhenEnter)
-			WhenEnter(rect);
+	virtual void MouseEnter(Point, dword) {
+		rectEnter.frame.Show(true);
+		T::RefreshFrame();
+		if (rectEnter.WhenEnter) 
+			rectEnter.WhenEnter(rectEnter);
 	}
+	bool IsShownFrame()			{return rectEnter.frame.IsShown();}
+	RectEnter &GetRectEnter()	{return rectEnter;}
+	
+private:
+	RectEnter rectEnter;
+};
+
+class RectEnterSet {
+public:
+	typedef RectEnterSet CLASSNAME;
+	
+	void Add(RectEnter &ctrl) {
+		ctrls << &ctrl;
+		ctrl.WhenEnter = [&](RectEnter &ctrl) {OnEnter(ctrl);};
+	}
+	void Remove(RectEnter &ctrl) {
+		int id = Find(ctrl);
+		if (id >= 0)
+			ctrls.Remove(id);
+	}
+	void Set(RectEnter &ctrl) {
+		int id = Find(ctrl);
+		if (id >= 0)
+			ctrls[id]->ShowFrame();
+	}
+	void OnEnter(RectEnter &ctrl) {
+		for (int i = 0; i < ctrls.GetCount(); ++i) { 
+			if (&ctrl != ctrls[i]) 
+				ctrls[i]->ShowFrame(false);
+		}
+		WhenEnter();
+	}
+	Function <void()>WhenEnter;
 
 private:
-	StaticRectangle *rect = 0;
-	Function <void(StaticRectangle *)>WhenEnter;
+	Vector<RectEnter *> ctrls;
+	
+	int Find(RectEnter &ctrl) {
+		for (int i = 0; i < ctrls.GetCount(); ++i) 
+			if (&ctrl == ctrls[i])
+				return i;
+		return -1; 
+	}
 };
 
 template <class T>
@@ -51,14 +144,14 @@ public:
 	
 	FreqSelector();
 	
-	void Init(Function <void()>WhenAction, Function <void(StaticRectangle*)>WhenSetRectangle) {
+	void Init(Function <void()>WhenAction, RectEnterSet &_frameSet) {
 		OnAction = WhenAction;
-		OnSetRectangle = WhenSetRectangle;
+		frameSet = &_frameSet;
 	}
-	
 	void Clear() {
+		for (int i = 0; i < edits.GetCount(); ++i)
+			frameSet->Remove(edits[i].GetRectEnter());
 		edits.Clear();
-		rects.Clear();
 		Rect rc = add.GetRect();
 		rc.right = rc.Width();
 		rc.left = 0;
@@ -66,21 +159,17 @@ public:
 		pos = 0;
 		Layout();
 	}
-	void HideCtrls() {
-		for (int i = 0; i < edits.GetCount(); ++i)
-			rects[i].Hide();	
-	}
 	int GetCount() 			{return edits.GetCount();}
 	double Get(int id) 		{return ~edits[id];}
-	bool IsSelected(int id)	{return rects[id].IsVisible();}
+	bool IsSelected(int id)	{return edits[id].IsShownFrame();}
 	
-	int IsRect(StaticRectangle *rect) {
-		for (int i = 0; i < rects.GetCount(); ++i) {
-			if (&rects[i] == rect)
+	int GetSelected() {
+		for (int i = 0; i < edits.GetCount(); ++i)
+			if(IsSelected(i))
 				return i;
-		}
 		return -1;
 	}
+		
 	void Set(int id, double val) {
 		edits[id] <<= val;
 		edits[id].WhenAction();
@@ -88,14 +177,10 @@ public:
 	
 	void AddField(double val = Null) {
 		WithRectEnter<EditDouble> &edit = edits.Add();
-		StaticRectangle &rect = rects.Add();
 		edit.WhenAction = OnAction;
 		edit <<= val;
-		edit.SetRectangle(rect, [&](StaticRectangle *rect) {OnSetRectangle(rect);});
-		rect.SetColor(LtBlue());
-		rect.SetWidth(fThick);
-		Add(rect.LeftPos(pos*fWidth,   fWidth).TopPos(0, 25));
-		Add(edit.LeftPos(pos*fWidth + fThick, fWidth-2*fThick).TopPos(3, 19));
+		frameSet->Add(edit.GetRectEnter());
+		Add(edit.LeftPos(pos*fWidth + fThick, fWidth-2*fThick).TopPos(3, 21));
 		Rect rc = add.GetRect();
 		rc.right = (pos+1)*fWidth + rc.Width();
 		rc.left = (pos+1)*fWidth;
@@ -107,7 +192,7 @@ public:
 	void CheckFocus(double freq) {
 		for (int i = 0; i < edits.GetCount(); ++i) {
 			if (abs(double(~edits[i]) - freq) < 0.000001) {
-				OnSetRectangle(&rects[i]);
+				frameSet->OnEnter(edits[i].GetRectEnter());
 				break;
 			}
 		}
@@ -115,13 +200,12 @@ public:
 
 private:
 	Upp::Array<WithRectEnter<EditDouble>> edits;
-	Upp::Array<StaticRectangle> rects;
 	Button add;
 	int pos = 0;
 	int fWidth = 40, fThick = 3;
 	
 	Function <void()> OnAction;
-	Function <void(StaticRectangle*)> OnSetRectangle;
+	RectEnterSet *frameSet = 0;
 };
 
 
@@ -624,7 +708,7 @@ public:
 	void WhenArrayFreq();
 	String Check(double fromFreq, double toFreq, String freqs);
 	
-	void WhenFocus(StaticRectangle *rect);
+	void WhenFocus();
 	void OnPainter(Painter &w, ScatterCtrl *scat);
 	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
 	//void OnMove(Point p);
@@ -639,8 +723,8 @@ public:
 
 private:
 	Upp::Array<Option> options;
-	StaticRectangle *rectActual = 0;
 	int id = -1;
+	RectEnterSet frameSet;
 };
 
 class MainQTF : public WithMainQTF<StaticRect> {
@@ -692,7 +776,7 @@ public:
 	void OnAinf();
 	void OnDescription();
 	void OnMenuConvertArraySel();
-	void OnMenuListLoaded();
+	void OnSelListLoaded();
 	void UpdateButtons();
 	void ShowMenuPlotItems();
 		

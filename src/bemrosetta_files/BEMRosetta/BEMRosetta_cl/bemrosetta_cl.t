@@ -240,10 +240,6 @@ T_("Problem loading '%s'\n%s")
 esES("")
 frFR("")
 
-T_("Problem loading '%s'")
-esES("")
-frFR("")
-
 T_("Unknown BEM file extension in '%s'")
 esES("")
 frFR("")
@@ -272,6 +268,10 @@ T_("Model is already loaded")
 esES("")
 frFR("")
 
+T_("Problem loading '%s'")
+esES("")
+frFR("")
+
 T_("Healing mesh '%s'")
 esES("")
 frFR("")
@@ -284,11 +284,31 @@ T_("The mesh is in good condition")
 esES("")
 frFR("")
 
+T_("Orienting surface mesh '%s'")
+esES("")
+frFR("")
+
+T_("Problem orienting surface '%s': %s")
+esES("")
+frFR("")
+
 T_("Getting underwater mesh '%s'")
 esES("")
 frFR("")
 
 T_("Problem loading '%s': %s")
+esES("")
+frFR("")
+
+T_("Splitting mesh '%s'")
+esES("")
+frFR("")
+
+T_("Problem adding flat panel: %s")
+esES("")
+frFR("")
+
+T_("Problem adding revolution surface: %s")
 esES("")
 frFR("")
 
@@ -538,6 +558,10 @@ esES("")
 frFR("")
 
 T_("Text.stl")
+esES("")
+frFR("")
+
+T_("Edit")
 esES("")
 frFR("")
 
@@ -902,89 +926,6 @@ esES("")
 frFR("")
 
 
-// foamm.cpp
-
-T_("Loading mat file '%s'")
-esES("")
-frFR("")
-
-T_("Vector w not found")
-esES("")
-frFR("")
-
-T_("Vector A not found")
-esES("")
-frFR("")
-
-T_("Vectors w and A size does not match")
-esES("")
-frFR("")
-
-T_("Vector B not found")
-esES("")
-frFR("")
-
-T_("Vectors w and B size does not match")
-esES("")
-frFR("")
-
-T_("Vector TFSResponse not found")
-esES("")
-frFR("")
-
-T_("Vectors w and TFSResponse size does not match")
-esES("")
-frFR("")
-
-T_("Matrix A_ss not found")
-esES("")
-frFR("")
-
-T_("Matrix B_ss not found")
-esES("")
-frFR("")
-
-T_("Matrix C_ss not found")
-esES("")
-frFR("")
-
-T_("Matrix Frequencies not found")
-esES("")
-frFR("")
-
-T_("Matrix FreqRange not found")
-esES("")
-frFR("")
-
-T_("FOAMM not found. Please set FOAMM path in Options")
-esES("")
-frFR("")
-
-T_("Processing case %d")
-esES("")
-frFR("")
-
-T_("Problem creating temporary FOAMM folder '%s'")
-esES("")
-frFR("")
-
-T_("Problem creating FOAMM file '%s'")
-esES("")
-frFR("")
-
-T_("Problem writing %s to file '%s'")
-esES("")
-frFR("")
-
-T_("Problem launching FOAMM from '%s'")
-esES("")
-frFR("")
-
-T_("Process ended by user")
-esES("")
-frFR("")
-
-
 // wamit.cpp
 
 T_("Loading out file '%s'")
@@ -1015,11 +956,23 @@ T_("RAO file '%s'")
 esES("")
 frFR("")
 
+T_("Second order sum coefficients .12s file '%s'")
+esES("")
+frFR("")
+
+T_("Second order mean drift coefficients .12d file '%s'")
+esES("")
+frFR("")
+
 T_("Hydrodynamic coefficients A and B file '%s'")
 esES("")
 frFR("")
 
 T_("Diffraction exciting file '%s'")
+esES("")
+frFR("")
+
+T_("QTF file '%s'")
 esES("")
 frFR("")
 
@@ -1129,7 +1082,134 @@ T_("[%s] Periods loaded are different than previous\nPrevious: %s\nSeries: "
 esES("")
 frFR("")
 
+T_("Wrong format in Wamit file '%s'. No headings found")
+esES("")
+frFR("")
+
+T_("Heading %f not found in previous %s")
+esES("")
+frFR("")
+
+T_("Frequency 1 %f not found")
+esES("")
+frFR("")
+
+T_("Period 1 %f not found")
+esES("")
+frFR("")
+
+T_("Frequency 2 %f not found")
+esES("")
+frFR("")
+
+T_("Period 2 %f not found")
+esES("")
+frFR("")
+
+T_("Heading 1 %f not found")
+esES("")
+frFR("")
+
+T_("Heading 2 %f not found")
+esES("")
+frFR("")
+
+T_("Wrong DOF id %d")
+esES("")
+frFR("")
+
+T_("Real force %f does not match with magnitude %f and phase %f (%f)")
+esES("")
+frFR("")
+
+T_("Imaginary force %f does not match with magnitude %f and phase %f (%f)")
+esES("")
+frFR("")
+
 T_("No enough data to save (at least 2 frequencies)")
+esES("")
+frFR("")
+
+
+// foamm.cpp
+
+T_("Loading mat file '%s'")
+esES("")
+frFR("")
+
+T_("Vector w not found")
+esES("")
+frFR("")
+
+T_("Vector A not found")
+esES("")
+frFR("")
+
+T_("Vectors w and A size does not match")
+esES("")
+frFR("")
+
+T_("Vector B not found")
+esES("")
+frFR("")
+
+T_("Vectors w and B size does not match")
+esES("")
+frFR("")
+
+T_("Vector TFSResponse not found")
+esES("")
+frFR("")
+
+T_("Vectors w and TFSResponse size does not match")
+esES("")
+frFR("")
+
+T_("Matrix A_ss not found")
+esES("")
+frFR("")
+
+T_("Matrix B_ss not found")
+esES("")
+frFR("")
+
+T_("Matrix C_ss not found")
+esES("")
+frFR("")
+
+T_("Matrix Frequencies not found")
+esES("")
+frFR("")
+
+T_("Matrix FreqRange not found")
+esES("")
+frFR("")
+
+T_("FOAMM not found. Please set FOAMM path in Options")
+esES("")
+frFR("")
+
+T_("Processing case %d")
+esES("")
+frFR("")
+
+T_("Problem creating temporary FOAMM folder '%s'")
+esES("")
+frFR("")
+
+T_("Problem creating FOAMM file '%s'")
+esES("")
+frFR("")
+
+T_("Problem writing %s to file '%s'")
+esES("")
+frFR("")
+
+T_("Problem launching FOAMM from '%s'")
+esES("")
+frFR("")
+
+T_("Process ended by user")
 esES("")
 frFR("")
 
@@ -1256,6 +1336,10 @@ T_("AH1 file")
 esES("")
 frFR("")
 
+T_("QTF file")
+esES("")
+frFR("")
+
 T_("Number of headings do not match %d<>%d")
 esES("")
 frFR("")
@@ -1317,6 +1401,22 @@ esES("")
 frFR("")
 
 T_("Expected %s data, found '%s'")
+esES("")
+frFR("")
+
+T_("#%d body found when max are %d")
+esES("")
+frFR("")
+
+T_("Body id %d higher than number of bodies")
+esES("")
+frFR("")
+
+T_("Heading id %d higher than number of headings")
+esES("")
+frFR("")
+
+T_("Frequency id %d higher than number of frequencies")
 esES("")
 frFR("")
 

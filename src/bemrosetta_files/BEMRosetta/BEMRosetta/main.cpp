@@ -30,11 +30,12 @@ FreqSelector::FreqSelector() {
 	
 void Main::Init() {
 	LOG("Init");
-	Title("BEMRosetta");
 	Sizeable().Zoomable().SetMinSize(Size(800, 600));
 	Icon(Img::Rosetta64());
 	LargeIcon(Img::Rosetta256());
 	ma(this);
+	
+	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	tabTexts << t_("Mesh Handling") << t_("Nemoh") << t_("Hydrodynamic Coefficients") << t_("FAST Viewer");
 		
@@ -68,10 +69,9 @@ void Main::Init() {
 		mainBEM.Init();				LOG("Init BEM");
 		tab.Add(mainBEM.SizePos(),  tabTexts[TAB_COEFF]);
 	}
-	if (Bem().experimental) {
-		mainFAST.Init();			LOG("Init FAST");
+	mainFAST.Init();			LOG("Init FAST");
+	if (Bem().experimental) 
 		tab.Add(mainFAST.SizePos(), tabTexts[TAB_FAST]);
-	}
 	
 	tab.Add().Disable();
 	mainOutput.Init();			LOG("Init Output");

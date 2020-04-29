@@ -25,7 +25,7 @@ void MainBEM::Init() {
 	menuOpen.butLoad.WhenAction = [&] {menuOpen.file.DoGo();};
 	
 	ArrayModel_Init(listLoaded).MultiSelect();
-	listLoaded.WhenSelection = THISBACK(OnMenuListLoaded);
+	listLoaded.WhenSel = THISBACK(OnSelListLoaded);
 	
 	menuOpen.butRemove.Disable();	
 	menuOpen.butRemove <<= THISBACK(OnRemove);
@@ -92,7 +92,7 @@ void MainBEM::Init() {
 		if (menuTab.IsAt(menuFOAMM)) 
 			mainTab.Set(mainSetupFOAMM);
 		else if (menuTab.IsAt(menuConvert)) 
-			listLoaded.WhenSelection(); 
+			listLoaded.WhenSel(); 
 		
 		ShowMenuPlotItems();
 	};
@@ -195,10 +195,8 @@ void MainBEM::Init() {
 	mainStateSpace.Init();
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
 
-	if (Bem().experimental) {
-		mainQTF.Init();
-		mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
-	}
+	mainQTF.Init();
+	mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
 }
 
 void MainBEM::ShowMenuPlotItems() {
@@ -217,10 +215,10 @@ void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showPoints.Enable(show);
 }
 
-void MainBEM::OnMenuListLoaded() {
+void MainBEM::OnSelListLoaded() {
 	OnMenuConvertArraySel();
 	menuFOAMM.OnCursor();
-	mainQTF.Load();
+	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	UpdateButtons();
 }
 	
@@ -333,7 +331,7 @@ void MainBEM::OnOpt() {
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
 	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
-			menuConvert.file.Type(t_("Wamit .1.3.hst file"), "*.1 *.3 *.hst");
+			menuConvert.file.Type(t_("Wamit .1.3.4.hst.12s.12d file"), "*.1 *.3 *.hst *.4 *.12s *.12d");
 			break;
 	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
 			menuConvert.file.Type(t_("FAST HydroDyn file"), "*.dat");
@@ -341,13 +339,13 @@ void MainBEM::OnOpt() {
 	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".bem"); 
 			menuConvert.file.Type(t_("BEMRosetta file"), "*.bem");
 			break;
-	default:menuConvert.file.Type(t_("All converted files"), "*.1 *.3 *.hst *.dat *.bem");
+	default:menuConvert.file.Type(t_("All converted files"), "*.1 *.3 *.hst *.4 *.12s *.12d *.dat *.bem");
 			break;
 	}
 	String extConv = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
 	if (extConv.IsEmpty())
 		extConv = "-";
-	if (String(".1 .3 .hst").Find(extConv) >= 0)
+	if (String(".1 .3 .hst .4 .12s .12d").Find(extConv) >= 0)
 		menuConvert.file.ActiveType(0);
 	else if (String(".dat").Find(extConv) >= 0)
 		menuConvert.file.ActiveType(1);
@@ -405,8 +403,7 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(data.hd().IsLoadedB());
-		if (Bem().experimental)
-			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		if (data.hd().IsLoadedStateSpace())
 			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
 		
@@ -461,8 +458,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
-	if (Bem().experimental)
-		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	
 	mainTab.WhenSet();
@@ -534,8 +530,7 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
-		if (Bem().experimental)
-			mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -950,7 +945,7 @@ void MainSetupFOAMM::Init() {
 	arrayCases.AddColumn(t_("From (rad/s)"), 40);
 	arrayCases.AddColumn(t_("To (rad/s)"), 40);
 	arrayCases.AddColumn(t_("Frequencies (rad/s)"), 60);
-	arrayCases.WhenSelection = [&] {WhenSelArrayCases();};
+	arrayCases.WhenSel = [&] {WhenSelArrayCases();};
 	
 	selectAll.WhenAction = [&] {
 			for (int i = 0; i < arrayCases.GetCount(); ++i)
@@ -970,11 +965,13 @@ void MainSetupFOAMM::Init() {
 		};
 	
 	fromFreq.WhenAction = THISBACK(WhenArrayCases);
-	fromFreq.SetRectangle(rectFrom, THISBACK(WhenFocus));
+	frameSet.Add(fromFreq.GetRectEnter());
 	toFreq.WhenAction   = THISBACK(WhenArrayCases);
-	toFreq.SetRectangle(rectTo, THISBACK(WhenFocus));
-	selector.Init(THISBACK(WhenArrayCases), THISBACK(WhenFocus));
-
+	frameSet.Add(toFreq.GetRectEnter());
+	selector.Init(THISBACK(WhenArrayCases), frameSet);
+	frameSet.WhenEnter = THISBACK(WhenFocus);
+	frameSet.Set(fromFreq.GetRectEnter());
+	
 	rectPlots.Add(plots.SizePos());	
 	
 	plots.Init(true);
@@ -1020,13 +1017,8 @@ void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 	butCancel.WhenAction = [&] {isCancelled = true;};
 }
 
-void MainSetupFOAMM::WhenFocus(StaticRectangle *rect) {
-	rectFrom.Hide();
-	rectTo.Hide();
-	selector.HideCtrls();
-	if (rect)
-		rect->Show();
-	rectActual = rect;
+void MainSetupFOAMM::WhenFocus() {
+
 	plots.RefreshScatter();
 }
 
@@ -1066,14 +1058,14 @@ void MainSetupFOAMM::OnMouse(Point p, dword, ScatterCtrl::MouseAction action, Sc
 		freq = data.x(data.ClosestX(freq));
 	}
 	
-	if (rectActual == &rectFrom) {	
+	if (fromFreq.IsShownFrame()) {	
 		fromFreq <<= freq;
 		fromFreq.WhenAction();
-	} else if (rectActual == &rectTo) {	
+	} else if (toFreq.IsShownFrame()) {	
 		toFreq <<= freq;
 		toFreq.WhenAction();
 	} else {
-		int id = selector.IsRect(rectActual);
+		int id = selector.GetSelected();
 		if (id >= 0) 
 			selector.Set(id, freq);
 	}
@@ -1374,22 +1366,53 @@ void MainQTF::Init() {
 			
 			const Upp::Array<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
 			
+			double mn = DBL_MAX, mx = DBL_MIN;
+			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
+				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
+					int idq = hd.GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
+					if (idq < 0)
+						continue;
+					double val;
+					switch(int(opShow.GetData())) {
+					case MAGNITUDE:
+						val = hd.F_(ndim, qtfList[idq].fma[idof], idof);	break;
+					case REAL:
+						val = hd.F_(ndim, qtfList[idq].fre[idof], idof);	break;
+					case IMAGINARY:
+						val = hd.F_(ndim, qtfList[idq].fim[idof], idof);	break;
+					}
+					mn = min(mn, val);
+					mx = max(mx, val);
+				}
+			}
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
 					int idq = hd.GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
 					if (idq < 0)
 						listQTF.Set(ifr2, 1+ifr1, "-");
 					else {
-						String str;
-						if (opShow.GetData() == MAGNITUDE)
-							str = FormatDouble(hd.F_(ndim, qtfList[idq].fma[idof], idof), 6, FD_CAP_E);
-						if (opShow.GetData() == PHASE)
-							str = FormatDouble(qtfList[idq].fph[idof], 6, FD_CAP_E);
-						if (opShow.GetData() == REAL)
-							str = FormatDouble(hd.F_(ndim, qtfList[idq].fre[idof], idof), 6, FD_CAP_E);
-						if (opShow.GetData() == IMAGINARY)
-							str = FormatDouble(hd.F_(ndim, qtfList[idq].fim[idof], idof), 6, FD_CAP_E);
-						listQTF.Set(ifr2, 1+ifr1, str);
+						if (PHASE == opShow.GetData()) 
+							listQTF.Set(ifr2, 1+ifr1, FormatDouble(qtfList[idq].fph[idof], 6, FD_CAP_E));
+						else {
+							double val;
+							switch(int(opShow.GetData())) {
+							case MAGNITUDE:
+								val = hd.F_(ndim, qtfList[idq].fma[idof], idof);	break;
+							case REAL:
+								val = hd.F_(ndim, qtfList[idq].fre[idof], idof);	break;
+							case IMAGINARY:
+								val = hd.F_(ndim, qtfList[idq].fim[idof], idof);	break;
+							}
+							
+							::Color backColor = GetRainbowColor((val - mn)/(mx - mn), BLUE_YELLOW_RED, 0);
+							::Color color = Black();
+							if (Grayscale(backColor) < 150)
+								color = White();
+							
+							String str = FormatDouble(val, 6, FD_CAP_E);
+							
+							listQTF.Set(ifr2, 1+ifr1, AttrText(str).Center().Ink(color).Paper(backColor));
+						}
 					}
 				}
 			}
@@ -1426,6 +1449,9 @@ bool MainQTF::Load() {
 		Vector<int> ibL, ih1L, ih2L;
 		Hydro::GetQTFList(hd.qtfsum, ibL, ih1L, ih2L);
 
+		if (hd.qtfsum.IsEmpty() && hd.qtfdif.IsEmpty())
+			return false;
+		
 		for (int i = 0; i < ibL.GetCount(); ++i) 
 			listCases.Add(ibL[i]+1, hd.qtfhead[ih1L[i]], hd.qtfhead[ih2L[i]]);
 
