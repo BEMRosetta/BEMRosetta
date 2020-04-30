@@ -73,7 +73,7 @@ bool Wamit::Load(String file) {
 	return true;
 }
 
-void Wamit::Save(String file, bool force_T) {
+void Wamit::Save(String file, bool force_T, int qtfHeading) {
 	try {
 		if (hd().IsLoadedA() && hd().IsLoadedB()) {
 			String file1 = ForceExt(file, ".1");
@@ -98,10 +98,10 @@ void Wamit::Save(String file, bool force_T) {
 		if (hd().IsLoadedQTF()) {
 			String fileQTFs = ForceExt(file, ".12s");
 			BEMData::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileQTFs)));
-			Save_12(fileQTFs, true, force_T, true);
+			Save_12(fileQTFs, true, force_T, true, qtfHeading);
 			String fileQTFd = ForceExt(file, ".12d");
 			BEMData::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileQTFd)));
-			Save_12(fileQTFd, false, force_T, true);
+			Save_12(fileQTFd, false, force_T, true, qtfHeading);
 		}
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -1112,7 +1112,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 									FormatWam(hd().R_im_ndim(hd().rao, ih, ifr, i)));
 }
 	
-void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg) {
+void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg, int qtfHeading) {
 	if (!hd().IsLoadedQTF()) 
 		return;
 	
@@ -1158,22 +1158,29 @@ void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg) {
 	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) 
 		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) 
 			for (int ih1 = 0; ih1 < Nh; ++ih1) {
-				if (hd().qtfhead[ih1] != 0)
+				if (!IsNull(qtfHeading) && ih1 != qtfHeading)
 					continue;
 				for (int ih2 = 0; ih2 < Nh; ++ih2) {
-					if (hd().qtfhead[ih2] != 0)
+					if (!IsNull(qtfHeading) && ih1 != qtfHeading)
 						continue;	 
 					for (int ib = 0; ib < hd().Nb; ++ib) {
 						int id = hd().GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
 						if (id >= 0) {
+							double qtfhead1, qtfhead2;
+							if (!IsNull(qtfHeading)) 
+								qtfhead1 = qtfhead2 = 0;		// Just 0º
+							else {
+								qtfhead1 = hd().qtfhead[ih1];
+								qtfhead2 = hd().qtfhead[ih2];
+							}							
 							for (int _idf = 0; _idf < 6; ++_idf) {
 								int idf = idf12[_idf]-1;
 								Hydro::QTF &qtf = qtfList[id];
 								out << Format("   %s   %s   %s   %s   %2d   %s   %s   %s   %s\n", 
 										FormatWam(data[ifr1]),
 										FormatWam(data[ifr2]), 
-										FormatWam(hd().qtfhead[ih1]),
-										FormatWam(hd().qtfhead[ih2]),
+										FormatWam(qtfhead1),
+										FormatWam(qtfhead2),
 										ib*6 + idf + 1,
 										FormatWam(hd().F_ndim(qtf.fma[idf], idf)), 
 										FormatWam(!force_Deg ? qtf.fph[idf] : ToDeg(qtf.fph[idf])),

@@ -1,4 +1,4 @@
-#include "TrackBall.h"
+#include "trackball.h"
 #include "trkball.h"
 
 #include <GL/glu.h>

@@ -816,16 +816,6 @@ $(OutDir_BEMRosetta_BEMRosetta)main.o: BEMRosetta/BEMRosetta/main.cpp \
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -1403,16 +1393,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainMesh.o: BEMRosetta/BEMRosetta/mainMesh.cpp \
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -1992,16 +1972,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainNemoh.o: BEMRosetta/BEMRosetta/mainNemoh.cpp 
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -2583,16 +2553,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM.o: BEMRosetta/BEMRosetta/mainBEM.cpp \
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -3170,16 +3130,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_abf.o: BEMRosetta/BEMRosetta/mainBEM_abf.
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -3757,16 +3707,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainBEM_sts.o: BEMRosetta/BEMRosetta/mainBEM_sts.
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -4344,16 +4284,6 @@ $(OutDir_BEMRosetta_BEMRosetta)mainPlot.o: BEMRosetta/BEMRosetta/mainPlot.cpp \
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -4899,16 +4829,6 @@ $(OutDir_BEMRosetta_BEMRosetta)arrange.o: BEMRosetta/BEMRosetta/arrange.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -5474,16 +5394,6 @@ $(OutDir_BEMRosetta_BEMRosetta)FastScatter.o: BEMRosetta/BEMRosetta/FastScatter.
 	TabBar/TabBar.h \
 	TabBar/TabBarCtrl.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -16702,16 +16612,6 @@ $(OutDir_Controls4U)Controls4U.o: Controls4U/Controls4U.cpp \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -16870,16 +16770,6 @@ $(OutDir_Controls4U)PainterCanvas.o: Controls4U/PainterCanvas.cpp \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Controls4U/ActiveX.h \
 	Controls4U/ActiveX_base.h \
 	Controls4U/Controls4U.h \
@@ -18380,16 +18270,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)main.o: BEMRosetta/BEMRosetta_cl/main.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -18877,16 +18757,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o: BEMRosetta/BEMRosetta_cl/BEMRose
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -19376,16 +19246,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)Mesh.o: BEMRosetta/BEMRosetta_cl/Mesh.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -19872,16 +19732,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh_mesh.o: BEMRosetta/BEMRosetta_cl/nemoh_m
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -20368,16 +20218,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit_mesh.o: BEMRosetta/BEMRosetta_cl/wamit_m
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -20864,16 +20704,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)stl.o: BEMRosetta/BEMRosetta_cl/stl.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -21360,16 +21190,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)nemoh.o: BEMRosetta/BEMRosetta_cl/nemoh.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -21856,16 +21676,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)wamit.o: BEMRosetta/BEMRosetta_cl/wamit.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -22352,16 +22162,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)foamm.o: BEMRosetta/BEMRosetta_cl/foamm.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -22860,16 +22660,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)fast.o: BEMRosetta/BEMRosetta_cl/fast.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -23356,16 +23146,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o: BEMRosetta/BEMRosetta_cl/aqwa.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -23852,16 +23632,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o: BEMRosetta/BEMRosetta_cl/ainf.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -24349,16 +24119,6 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)FastOut.o: BEMRosetta/BEMRosetta_cl/FastOut.cp
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -24370,6 +24130,173 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)FastOut.o: BEMRosetta/BEMRosetta_cl/FastOut.cp
 
 $(OutDir_BEMRosetta_BEMRosetta_cl)data.o: BEMRosetta/BEMRosetta_cl/data.brcc
 	$(CXX) -c -x c $(CFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/data.brcc -o $(OutDir_BEMRosetta_BEMRosetta_cl)data.o
+
+$(OutDir_BEMRosetta_BEMRosetta_cl)owcmain.o: BEMRosetta/BEMRosetta_cl/Solver/owcmain.cpp \
+	BEMRosetta/BEMRosetta_cl/Solver/FL12_BUOY_data.h \
+	BEMRosetta/BEMRosetta_cl/Solver/FL12_MATRIX.h \
+	BEMRosetta/BEMRosetta_cl/Solver/fowc.h \
+	BEMRosetta/BEMRosetta_cl/Solver/integrator.h \
+	BEMRosetta/BEMRosetta_cl/Solver/utils.h \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/Solver/owcmain.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)owcmain.o
+
+$(OutDir_BEMRosetta_BEMRosetta_cl)convolution.o: BEMRosetta/BEMRosetta_cl/Solver/convolution.cpp \
+	Core/Algo.h \
+	Core/App.h \
+	Core/AString.hpp \
+	Core/Atomic.h \
+	Core/BiCont.h \
+	Core/Callback.h \
+	Core/CallbackN.i \
+	Core/CallbackNP.i \
+	Core/CallbackR.i \
+	Core/CharSet.h \
+	Core/CharSet.i \
+	Core/CoAlgo.h \
+	Core/Color.h \
+	Core/Complex.h \
+	Core/config.h \
+	Core/Convert.h \
+	Core/Core.h \
+	Core/CoSort.h \
+	Core/CoWork.h \
+	Core/Defs.h \
+	Core/Diag.h \
+	Core/FilterStream.h \
+	Core/FixedMap.h \
+	Core/Format.h \
+	Core/Function.h \
+	Core/Gtypes.h \
+	Core/Hash.h \
+	Core/Heap.h \
+	Core/Huge.h \
+	Core/i18n.h \
+	Core/Index.h \
+	Core/Index.hpp \
+	Core/Inet.h \
+	Core/InMap.hpp \
+	Core/InVector.h \
+	Core/InVector.hpp \
+	Core/JSON.h \
+	Core/Lang.h \
+	Core/Lang_s.h \
+	Core/LocalProcess.h \
+	Core/Map.h \
+	Core/Map.hpp \
+	Core/Mt.h \
+	Core/Obsolete.h \
+	Core/Ops.h \
+	Core/Other.h \
+	Core/Parser.h \
+	Core/Path.h \
+	Core/Profile.h \
+	Core/Ptr.h \
+	Core/Range.h \
+	Core/Sort.h \
+	Core/Sorted.h \
+	Core/SplitMerge.h \
+	Core/Stream.h \
+	Core/String.h \
+	Core/t_.h \
+	Core/TimeDate.h \
+	Core/Topic.h \
+	Core/Topt.h \
+	Core/Tuple.h \
+	Core/Utf.hpp \
+	Core/Util.h \
+	Core/Uuid.h \
+	Core/Value.h \
+	Core/Value.hpp \
+	Core/ValueUtil.h \
+	Core/ValueUtil.hpp \
+	Core/Vcont.h \
+	Core/Vcont.hpp \
+	Core/Win32Util.h \
+	Core/XML.h \
+	Core/Xmlize.h \
+	Core/Xmlize.hpp \
+	Core/z.h \
+	plugin/z/lib/zconf.h \
+	plugin/z/lib/zlib.h \
+	uppconfig.h
+	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_BEMRosetta_BEMRosetta_cl)  BEMRosetta/BEMRosetta_cl/Solver/convolution.cpp -o $(OutDir_BEMRosetta_BEMRosetta_cl)convolution.o
 
 $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a: \
 	$(OutDir_BEMRosetta_BEMRosetta_cl)main.o \
@@ -24385,7 +24312,9 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a: \
 	$(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o \
 	$(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o \
 	$(OutDir_BEMRosetta_BEMRosetta_cl)FastOut.o \
-	$(OutDir_BEMRosetta_BEMRosetta_cl)data.o
+	$(OutDir_BEMRosetta_BEMRosetta_cl)data.o \
+	$(OutDir_BEMRosetta_BEMRosetta_cl)owcmain.o \
+	$(OutDir_BEMRosetta_BEMRosetta_cl)convolution.o
 	$(AR) $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a \
 		$(OutDir_BEMRosetta_BEMRosetta_cl)main.o \
 		$(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta.o \
@@ -24400,7 +24329,9 @@ $(OutDir_BEMRosetta_BEMRosetta_cl)BEMRosetta_cl.a: \
 		$(OutDir_BEMRosetta_BEMRosetta_cl)aqwa.o \
 		$(OutDir_BEMRosetta_BEMRosetta_cl)ainf.o \
 		$(OutDir_BEMRosetta_BEMRosetta_cl)FastOut.o \
-		$(OutDir_BEMRosetta_BEMRosetta_cl)data.o
+		$(OutDir_BEMRosetta_BEMRosetta_cl)data.o \
+		$(OutDir_BEMRosetta_BEMRosetta_cl)owcmain.o \
+		$(OutDir_BEMRosetta_BEMRosetta_cl)convolution.o
 
 $(OutDir_GLCanvas):
 	mkdir -p $(OutDir_GLCanvas)
@@ -25077,7 +25008,7 @@ $(OutDir_GLCanvas)trackball.o: GLCanvas/trackball.cpp \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	GLCanvas/TrackBall.h \
+	GLCanvas/trackball.h \
 	GLCanvas/trkball.h
 	$(CXX) -c -x c++ $(CXXFLAGS) $(CINC) $(Macro_GLCanvas)  GLCanvas/trackball.cpp -o $(OutDir_GLCanvas)trackball.o
 
@@ -53011,16 +52942,6 @@ $(OutDir_Functions4U)Functions4U.o: Functions4U/Functions4U.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -53175,16 +53096,6 @@ $(OutDir_Functions4U)Functions4U_Gui.o: Functions4U/Functions4U_Gui.cpp \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/Functions4U_Gui.h \
 	Functions4U/GatherTpp.h \
@@ -53411,16 +53322,6 @@ $(OutDir_Functions4U)QtfEquation.o: Functions4U/QtfEquation.cpp \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/Functions4U_Gui.h \
 	Functions4U/GatherTpp.h \
@@ -53649,16 +53550,6 @@ $(OutDir_Functions4U)GatherTpp.o: Functions4U/GatherTpp.cpp \
 	RichText/Txt.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/Html/htmld.h \
@@ -53756,16 +53647,6 @@ $(OutDir_Functions4U)SvgColors.o: Functions4U/SvgColors.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -55539,16 +55420,6 @@ $(OutDir_SysInfo)SysInfo.o: SysInfo/SysInfo.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -55648,16 +55519,6 @@ $(OutDir_SysInfo)OS.o: SysInfo/OS.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -55764,16 +55625,6 @@ $(OutDir_SysInfo)ScreenGrab.o: SysInfo/ScreenGrab.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -55873,16 +55724,6 @@ $(OutDir_SysInfo)MouseKey.o: SysInfo/MouseKey.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -55982,16 +55823,6 @@ $(OutDir_SysInfo)CPUSpeed.o: SysInfo/CPUSpeed.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -56089,16 +55920,6 @@ $(OutDir_SysInfo)Battery.o: SysInfo/Battery.cpp \
 	plugin/z/lib/zlib.h \
 	ScatterDraw/Pedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \
@@ -57409,16 +57230,6 @@ $(OutDir_Surface)Surface.o: Surface/Surface.cpp \
 	ScatterDraw/Pedantic.h \
 	ScatterDraw/Unpedantic.h \
 	uppconfig.h \
-	Web/auth.h \
-	Web/html.h \
-	Web/httpcli.h \
-	Web/httpsrv.h \
-	Web/ScgiServer.h \
-	Web/smtp.h \
-	Web/socket.h \
-	Web/sproc.h \
-	Web/util.h \
-	Web/Web.h \
 	Functions4U/Functions4U.h \
 	Functions4U/GatherTpp.h \
 	Functions4U/LocalProcess2.h \

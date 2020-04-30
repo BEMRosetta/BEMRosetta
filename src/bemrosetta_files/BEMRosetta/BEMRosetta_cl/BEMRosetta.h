@@ -19,7 +19,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
-	void SaveAs(String file, BEM_SOFT type = UNKNOWN);
+	void SaveAs(String file, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(true), bem(&_bem) {id = idCount++;}
@@ -626,7 +626,7 @@ class Wamit : public HydroClass {
 public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Save(String file, bool force_T = false);
+	void Save(String file, bool force_T = false, int qtfHeading = Null);
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
@@ -651,7 +651,7 @@ protected:
 	void Save_3(String fileName, bool force_T = false);
 	void Save_hst(String fileName);
 	void Save_4(String fileName, bool force_T = false);
-	void Save_12(String fileName, bool isSum, bool force_T = false, bool force_Deg = true);
+	void Save_12(String fileName, bool isSum, bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
 };
 
 class Foamm : public HydroClass {
@@ -672,7 +672,7 @@ class Fast : public Wamit {
 public:
 	Fast(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, double g = 9.81);
-	void Save(String file);
+	void Save(String file, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
 	
 private:

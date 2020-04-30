@@ -93,14 +93,19 @@ bool Fast::Load_HydroDyn() {
 }
 
 
-void Fast::Save(String file) {
+void Fast::Save(String file, int qtfHeading) {
 	try {
 		file = ForceExt(file, ".dat");
-		Save_HydroDyn(file, true);
+		
+		if (hd().IsLoadedA() && hd().IsLoadedB()) 
+			Save_HydroDyn(file, true);
+		else
+			BEMData::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
+			
 		String hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
 		DirectoryCreate(AppendFileName(GetFileFolder(file), hydroFolder));
 	
-		Wamit::Save(hydroFile, true);
+		Wamit::Save(hydroFile, true, qtfHeading);
 		
 		if (hd().IsLoadedStateSpace()) {
 			String fileSts = ForceExt(hydroFile, ".ss");
@@ -119,6 +124,9 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 	if (hydroFolder.IsEmpty())
 		hydroFolder = "HydroData";
 	
+	if (hd().Nb != 1)
+		throw Exc(t_("Number of bodies different to 1 incompatible with FAST"));
+		
 	if (FileExists(fileName)) {
 		double lVo = Null, lrho = Null, lh = Null, llen = Null, lWaveDirRange = Null;
 		int lWaveNDir = Null;
@@ -145,8 +153,6 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		}
 		in.Close();
 		
-		if (hd().Nb != 1)
-			throw Exc(t_("Number of bodies different to 1 incompatible with FAST"));
 		if (IsNull(lVo))
 			throw Exc(Format(t_("Volume (PtfmVol0) not found in FAST file '%s'"), fileName));
 		if (IsNull(lrho))

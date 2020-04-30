@@ -804,6 +804,7 @@ private:
 	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEMData &bem);
 	int GetOneSelected();
+	int AskQtfHeading(const Hydro &hydro);
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
