@@ -635,6 +635,47 @@ void MainBEM::OnDescription() {
 		mainSummary.Report(Bem().hydros[i].hd(), i);
 }
 
+int MainBEM::AskQtfHeading(const Hydro &hydro) {
+	int numH = hydro.qtfhead.GetCount();
+	if (numH <= 1)
+		return Null;
+	
+	WithSaveQTF<TopWindow> dialog;
+	CtrlLayout(dialog);
+	
+	dialog.Title(t_("Please choose the QTF heading to save"));
+	
+	dialog.swHeadings <<= 0;
+	dialog.dropHeadings.Enable(false);
+	
+	int id0 = Null;
+	for (int i = 0; i < numH; ++i) {
+		dialog.dropHeadings.Add(hydro.qtfhead[i]);
+		if (abs(hydro.qtfhead[i]) < 0.001)
+			id0 = i;
+	}
+	if (!IsNull(id0))
+		dialog.dropHeadings.SetIndex(id0);
+	else
+		dialog.dropHeadings.SetIndex(0);
+	
+	dialog.swHeadings.WhenAction = [&] {
+		dialog.dropHeadings.Enable(dialog.swHeadings == 1);
+	};
+	
+	bool cancel = true;
+	dialog.ok.WhenAction 		= [&] {cancel = false;	dialog.Close();};
+	dialog.cancel.WhenAction 	= [&] {dialog.Close();}; 
+	dialog.Execute();
+	if (cancel) 
+		throw Exc(t_("Cancelled by user"));
+	
+	if (dialog.swHeadings == 0)
+		return Null;
+	else
+		return dialog.dropHeadings.GetIndex();
+}
+
 bool MainBEM::OnConvert() {
 	String file = ~menuConvert.file;
 	
@@ -642,18 +683,27 @@ bool MainBEM::OnConvert() {
 		int id = GetOneSelected();
 		if (id < 0) 
 			return false;
-
-		WaitCursor wait;
+		
+		int qtfHeading = Null;
 		
 		Hydro::BEM_SOFT type;	
 		switch (menuConvert.opt) {
-		case 0:	type = Hydro::WAMIT_1_3;	break;
-		case 1:	type = Hydro::FAST_WAMIT;	break;
-		case 2:	type = Hydro::BEMROSETTA;	break;
-		case 3:	type = Hydro::UNKNOWN;		break;
-		default: throw Exc(t_("Unknown type in OnConvert()"));
+		case 0:	type = Hydro::WAMIT_1_3;	
+				qtfHeading = AskQtfHeading(Bem().hydros[id].hd());
+				break;
+		case 1:	type = Hydro::FAST_WAMIT;	
+				qtfHeading = AskQtfHeading(Bem().hydros[id].hd());	
+				break;
+		case 2:	type = Hydro::BEMROSETTA;	
+				break;
+		case 3:	type = Hydro::UNKNOWN;		
+				break;
+		default:throw Exc(t_("Unknown type in OnConvert()"));
 		}
-		Bem().hydros[id].hd().SaveAs(file, type);	
+		
+		WaitCursor wait;
+		
+		Bem().hydros[id].hd().SaveAs(file, type, qtfHeading);	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -1404,7 +1454,7 @@ void MainQTF::Init() {
 								val = hd.F_(ndim, qtfList[idq].fim[idof], idof);	break;
 							}
 							
-							::Color backColor = GetRainbowColor((val - mn)/(mx - mn), BLUE_YELLOW_RED, 0);
+							::Color backColor = GetRainbowColor((val - mn)/(mx - mn), White(), LtBlue(), 0);
 							::Color color = Black();
 							if (Grayscale(backColor) < 150)
 								color = White();

@@ -109,12 +109,6 @@ void Main::Init() {
 		}
 	};
 	
-	if (firstTime) {
-		lastTab = 0;
-		tab.Set(menuAbout);
-	} else 
-		tab.Set(lastTab);
-	
 	tab.WhenSet = [&] {
 		LOGTAB(tab);
 		if (tab.IsAt(menuOptions)) 
@@ -128,7 +122,14 @@ void Main::Init() {
 				menuOptions.Load();
 		}
 		
-		if (tab.IsAt(mainMesh) || tab.IsAt(mainBEM)) {
+		if (tab.IsAt(mainMesh)) {
+#ifdef PLATFORM_POSIX
+			butWindow.Show(false);
+#else
+			butWindow.Show(true);
+#endif
+			lastTab = ~tab;
+		} else if (tab.IsAt(mainBEM)) {
 			butWindow.Show(true);
 			lastTab = ~tab;
 		} else 	if (tab.IsAt(mainNemoh)) {
@@ -143,6 +144,14 @@ void Main::Init() {
 		else if (tab.IsAt(mainBEM)) 
 			mainBEM.mainTab.WhenSet();
 	};	
+	
+	if (firstTime) {
+		lastTab = 0;
+		tab.Set(menuAbout);
+	} else 
+		tab.Set(lastTab);
+	
+	tab.WhenSet();
 	
 	AddFrame(bar);
 	
