@@ -435,14 +435,14 @@ void Hydro::Compare_cg(Hydro &a) {
 	}
 }
 
-void Hydro::SaveAs(String file, BEM_SOFT type) {
+void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
 	int realNh = Nh;
 	int realNf = Nf;
 	
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(file));
 		
-		if (ext == ".1" || ext == ".3" || ext == ".hst")
+		if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
 			type = Hydro::WAMIT_1_3;
 		else if (ext == ".dat")
 			type = Hydro::FAST_WAMIT;	
@@ -453,10 +453,10 @@ void Hydro::SaveAs(String file, BEM_SOFT type) {
 	}
 	if (type == WAMIT_1_3) {
 		Wamit data(*bem, this);
-		data.Save(file, true);	
+		data.Save(file, true, qtfHeading);	
 	} else if (type == FAST_WAMIT) {
 		Fast data(*bem, this);
-		data.Save(file);		
+		data.Save(file, qtfHeading);		
 	} else if (type == BEMROSETTA) {
 		HydroClass data(*bem, this);
 		data.Save(file);		
