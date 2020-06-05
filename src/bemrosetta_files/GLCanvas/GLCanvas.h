@@ -1,10 +1,8 @@
 #ifndef _GLCanvas_GLCanvas_h_
 #define _GLCanvas_GLCanvas_h_
 
-#include <ScatterDraw/Unpedantic.h>
 #include <GLCtrl/GLCtrl.h>
 #include "trackball.h"
-#include <ScatterDraw/Pedantic.h>
 #include <Surface/Surface.h>
 
 namespace Upp {

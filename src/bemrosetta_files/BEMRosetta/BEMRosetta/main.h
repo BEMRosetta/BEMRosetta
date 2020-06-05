@@ -214,10 +214,8 @@ String TabText(const TabCtrl &tab);
 #define LOGTAB(tab) LOG(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
 
 
-#include <ScatterDraw/Unpedantic.h>
 #define LAYOUTFILE <BEMRosetta/BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
-#include <ScatterDraw/Pedantic.h>
 
 #include "arrange.h"
 
