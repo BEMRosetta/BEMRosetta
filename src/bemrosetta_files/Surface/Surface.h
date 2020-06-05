@@ -1,9 +1,7 @@
 #ifndef _GLCanvas_surface_h_
 #define _GLCanvas_surface_h_
 
-#include <ScatterDraw/Unpedantic.h>
 #include <plugin/Eigen/Eigen.h>
-#include <ScatterDraw/Pedantic.h>
 
 namespace Upp {
 

@@ -1,11 +1,9 @@
 #include "BEMRosetta.h"
 #include "data.brc"
-#include <ScatterDraw/Unpedantic.h>
 #include <plugin/bz2/bz2.h>
 #include <plugin/lzma/lzma.h>
 #include <plugin/lz4/lz4.h>
 #include <plugin/zstd/zstd.h>
-#include <ScatterDraw/Pedantic.h>
 
 bool Fast::Load(String file, double g) {
 	hd().file = file;	
