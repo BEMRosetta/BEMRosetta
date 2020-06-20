@@ -106,6 +106,14 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
 
+### - Bonus
+
+BEMRosetta now includes an OpenFAST .out/.outb file reader, designed to be very easy to use.
+It includes an online mode for updating the plot while the simulation is in progress.
+Files may be opened by drag and drop, and parameters are filtered by name or units.
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/FAST_Reader.png" width="800" title="OpenFAST .out/.outb reader"></p>
+
 ### - Other
 
 All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from file explorer in Windows and Linux.
