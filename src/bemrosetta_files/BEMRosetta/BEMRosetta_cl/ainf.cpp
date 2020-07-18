@@ -12,6 +12,22 @@
 
 #include "BEMRosetta.h"
 
+
+double Hydro::GetK_IRF_MaxT() {
+	if (w.GetCount() < 2)
+		return -1;
+	double delta = 0;
+	int num = 0;
+	for (int iw = 1; iw < w.GetCount(); ++iw)
+		if (w[iw] != w[iw-1]) {
+			delta += w[iw] - w[iw-1];
+			num++;
+		}
+	delta = delta/num;
+		
+	return M_PI/delta;		// (2*M_PI/delta)/2;
+}
+
 void Hydro::K_IRF(double maxT, int numT) {
 	LinSpaced(Tirf, numT, 0., maxT);
     
@@ -19,20 +35,22 @@ void Hydro::K_IRF(double maxT, int numT) {
 	for (int it = 0; it < numT; ++it) 
 		Kirf[it].setConstant(Nb*6, Nb*6, Null);
 	
+	if (B.IsEmpty())
+		return;
+	
 	Buffer<double> y(Nf);
     for (int it = 0; it < numT; ++it) 
         for (int i = 0; i < Nb*6; ++i)
-        	for (int j = 0; j < Nb*6; ++j) {
-        		if (!B.IsEmpty() && !IsNull(B[0](i, j))) {
-        			for (int iw = 0; iw < Nf; ++iw)
-        				y[iw] = B[iw](i, j)*cos(w[iw]*Tirf[it]);
-        			double kirf = 0;
-        			for (int iw = 1; iw < Nf; ++iw)
-            			kirf += Avg(y[iw-1], y[iw])*(w[iw] - w[iw-1]);
-        			Kirf[it](i, j) = kirf*2/M_PI;
-        		}
-    		}
-}
+        	for (int j = 0; j < Nb*6; ++j) 
+				if (!IsNull(B[0](i, j))) {
+	    			for (int iw = 0; iw < Nf; ++iw)
+	    				y[iw] = B[iw](i, j)*cos(w[iw]*Tirf[it]);
+	    			double kirf = 0;
+	    			for (int iw = 1; iw < Nf; ++iw)
+	        			kirf += Avg(y[iw-1], y[iw])*(w[iw] - w[iw-1]);
+	    			Kirf[it](i, j) = kirf*2/M_PI;
+    			}
+}  
 	
 void Hydro::Ainf() {
 	if (Nf == 0)

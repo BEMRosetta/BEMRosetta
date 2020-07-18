@@ -2,7 +2,7 @@
 
 int MeshData::idCount = 0;
 	
-String MeshData::Load(String file, double rho, double g) {
+String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	bool y0z = false, x0z = false;
@@ -14,11 +14,12 @@ String MeshData::Load(String file, double rho, double g) {
 		ret = LoadGdfWamit(file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
-		ret = LoadStlTxt(file, isText);
-		if (!ret.IsEmpty() && !isText) 
-			ret = LoadStlBin(file);
-		else
-			ret = String(); 
+		try {
+			LoadStl(file, mesh, isText, header);
+		} catch(Exc e) {
+			return e;
+		}
+		SetCode(isText ? MeshData::STL_TXT : MeshData::STL_BIN);
 	} else
 		throw Exc(Format(t_("Unknown MESH file extension in '%s'"), file));	
 	
@@ -37,69 +38,69 @@ String MeshData::Load(String file, double rho, double g) {
 	if (x0z)
 		mesh.DeployYSymmetry();	
 	
-	cg = cg0 = Point3D(0, 0, 0);
-	mass = Null;
-	
-	Surface::RemoveDuplicatedPanels(mesh.panels);
-	Surface::RemoveDuplicatedPointsAndRenumber(mesh.panels, mesh.nodes0);
-	Surface::RemoveDuplicatedPanels(mesh.panels);
-		
-	mesh.nodes = clone(mesh.nodes0);
+	if (cleanPanels) {
+		Surface::RemoveDuplicatedPanels(mesh.panels);
+		Surface::RemoveDuplicatedPointsAndRenumber(mesh.panels, mesh.nodes);
+		Surface::RemoveDuplicatedPanels(mesh.panels);
+	}
 	
 	AfterLoad(rho, g, false);
 	
 	return String();
 }
 
-void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType) {
-	Vector<Panel> panelsRw;
-	Vector<Point3D> nodesRw;
-	if (meshType == UNDERWATER) {		// Some healing before saving
-		panelsRw = clone(under.panels);
-		nodesRw = clone(under.nodes);
-		Surface::RemoveDuplicatedPanels(panelsRw);
-		Surface::RemoveDuplicatedPointsAndRenumber(panelsRw, nodesRw);
-		Surface::RemoveDuplicatedPanels(panelsRw);
+void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+	Surface surf;
+	if (meshType == UNDERWATER) 
+		surf = clone(under);
+	else
+		surf = clone(mesh);
+	
+	if (symX && type == WAMIT_GDF) {
+		Surface nsurf;
+		nsurf.CutX(surf);
+		surf = pick(nsurf);
 	}
-	const Vector<Panel> &panels = meshType != UNDERWATER ? mesh.panels : panelsRw;
-	const Vector<Point3D> &nodes = [&]()->const Vector<Point3D> & {
-		switch(meshType) {
-		//case 0:		return mesh.nodes0;
-		//case 1:		return mesh.nodes;
-		case 0:		return mesh.nodes;
-		default:	return nodesRw;
-		}
-	}();
-	if (panels.IsEmpty())
+	if (symY) {
+		Surface nsurf;
+		nsurf.CutY(surf);
+		surf = pick(nsurf);
+	}
+	if (meshType == UNDERWATER || symX || symY) {// Some healing before saving
+		Surface::RemoveDuplicatedPanels(surf.panels);
+		Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes);
+		Surface::RemoveDuplicatedPanels(surf.panels);
+		Surface::DetectTriBiP(surf.panels);
+	}
+	
+	if (surf.panels.IsEmpty())
 		throw Exc(t_("Model is empty. No panels found"));
 		
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(file));
 		
 		if (ext == ".gdf")
-			type = MeshData::WAMIT_GDF;
+			type = WAMIT_GDF;
 		else if (ext == ".dat")
-			type = MeshData::NEMOH_DAT;
+			type = NEMOH_DAT;
 		else if (ext == ".")
-			type = MeshData::NEMOH_PRE;
+			type = NEMOH_PRE;
 		else if (ext == ".stl")
-			type = MeshData::STL_TXT;
+			type = STL_TXT;
 		else
 			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
 	}
 	
-	bool y0z = false, x0z = false;	// Pending
-	
 	if (type == WAMIT_GDF) 
-		SaveGdfWamit(file, panels, nodes, g, y0z, x0z);	
+		SaveGdfWamit(file, surf, g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		SaveDatNemoh(file, panels, nodes, x0z);
+		SaveDatNemoh(file, surf, symY);
 	else if (type == NEMOH_PRE) 
-		SavePreMeshNemoh(file, panels, nodes);
+		SavePreMeshNemoh(file, surf);
 	else if (type == STL_BIN)		
-		SaveStlBin(file, panels, nodes);
+		SaveStlBin(file, surf);
 	else if (type == STL_TXT)		
-		SaveStlTxt(file, panels, nodes);
+		SaveStlTxt(file, surf);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
@@ -129,7 +130,7 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 		mesh.GetSurface();
 		mesh.GetVolume();
 		
-		under.Underwater(mesh);
+		under.CutZ(mesh, -1);
 		under.GetPanelParams();
 		waterPlaneArea = under.GetWaterPlaneArea();
 		under.GetSurface();
@@ -156,6 +157,14 @@ void MeshData::Report(double rho) {
 	BEMData::Print(S("\n") + Format(t_("Center of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
 	
 	BEMData::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.GetCount(), mesh.nodes.GetCount()));
+}
+
+bool MeshData::IsSymmetricX() {
+	return abs(cb.x)/abs(mesh.env.maxX - mesh.env.minX) < 0.001;
+}
+
+bool MeshData::IsSymmetricY() {
+	return abs(cb.y)/abs(mesh.env.maxY - mesh.env.minY) < 0.001;
 }
 
 void MeshData::SaveHST(String fileName, double rho, double g) const {

@@ -1,0 +1,46 @@
+description "Hydrodynamic coefficients converter command line utility\377";
+
+noblitz;
+
+uses
+	Core,
+	plugin\Eigen,
+	SysInfo,
+	plugin/matio,
+	plugin/zstd,
+	Surface,
+	STEM4U;
+
+options(MSC) /bigobj;
+
+options(MSC) -D_SCL_SECURE_NO_WARNINGS;
+
+file
+	main.cpp,
+	BEMRosetta.cpp,
+	BEMRosetta.h,
+	Mesh.cpp,
+	nemoh_mesh.cpp,
+	wamit_mesh.cpp,
+	nemoh.cpp,
+	wamit.cpp,
+	foamm.cpp,
+	fast.cpp,
+	aqwa.cpp,
+	ainf.cpp,
+	FastOut.cpp,
+	FastOut.h,
+	data.brc,
+	hydrodyn.dat,
+	license.txt,
+	bemrosetta_cl.t,
+	main_cl.rc,
+	Solver readonly separator,
+	Solver\functions.cpp,
+	Solver\functions.h,
+	Solver\mooring.cpp;
+
+mainconfig
+	"" = "";
+
+ spellcheck_comments "EN-GB"

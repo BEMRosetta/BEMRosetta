@@ -53,7 +53,7 @@ bool FastOut::Load(String fileName) {
 	lastFile = actualFile;
 	lastTime = actualTime;
 	
-	bool ret;
+	bool ret = false;
 	if (type == FT_OUT)
 		ret = LoadOut(strOut);
 	else if (type == FT_OUTB)
@@ -122,30 +122,30 @@ bool FastOut::LoadOutb(String fileName) {
 
 	enum FileFmt {WithTime = 1, WithoutTime, ChanLen};
 
-	FileInData file(fileName);
+	FileInBinary file(fileName);
 	if (!file.IsOpen())
 		return false;
 
-	int16 FileID = file.Read<int16>();
-	int32 NumOutChans = file.Read<int32>();  	// The number of output channels, INT(4)
-    int32 NT = file.Read<int32>();				// The number of time steps, INT(4)
+	int16 FileID = file.ReadB<int16,2>();
+	int32 NumOutChans = file.ReadB<int32,4>();  // The number of output channels, INT(4)
+    int32 NT = file.ReadB<int32,4>();			// The number of time steps, INT(4)
 
 	double TimeScl, TimeOff, TimeOut1, TimeIncr;
     if (FileID == FileFmt::WithTime) {
-        TimeScl = file.Read<double>(); 			// The time slopes for scaling, REAL(8)
-        TimeOff = file.Read<double>();   		// The time offsets for scaling, REAL(8)
+        TimeScl = file.ReadB<double,8>(); 		// The time slopes for scaling, REAL(8)
+        TimeOff = file.ReadB<double,8>();   	// The time offsets for scaling, REAL(8)
     } else {
-        TimeOut1 = file.Read<double>();  		// The first time in the time series, REAL(8)
-        TimeIncr = file.Read<double>();  		// The time increment, REAL(8)
+        TimeOut1 = file.ReadB<double,8>();  	// The first time in the time series, REAL(8)
+        TimeIncr = file.ReadB<double,8>();  	// The time increment, REAL(8)
     }
 
 	Buffer<float> ColScl(NumOutChans), ColOff(NumOutChans);
-    file.Read(ColScl, 4*NumOutChans);			// The channel slopes for scaling, REAL(4)
-    file.Read(ColOff, 4*NumOutChans); 			// The channel offsets for scaling, REAL(4)
+    file.ReadB(ColScl, 4*NumOutChans);			// The channel slopes for scaling, REAL(4)
+    file.ReadB(ColOff, 4*NumOutChans); 			// The channel offsets for scaling, REAL(4)
 
-	int32 LenDesc = file.Read<int32>();			// The number of characters in the description string, INT(4)
+	int32 LenDesc = file.ReadB<int32,4>();		// The number of characters in the description string, INT(4)
     StringBuffer DescStrB(LenDesc);
-    file.Read(DescStrB, LenDesc);  				// DescStr converted to ASCII
+    file.ReadB(DescStrB, LenDesc);  			// DescStr converted to ASCII
     String DescStr = DescStrB;
     
     if (FileID == FileFmt::ChanLen) {
@@ -157,7 +157,7 @@ bool FastOut::LoadOutb(String fileName) {
 	parameters[0] = "Time";
 	Buffer<char> name(LenName);
     for (int iChan = 0; iChan < NumOutChans+1; ++iChan) { 
-        file.Read(name, LenName); 				// ChanName converted to numeric ASCII
+        file.ReadB(name, LenName); 				// ChanName converted to numeric ASCII
         parameters[iChan] = TrimBoth(String(name, LenName));
     }
     
@@ -165,7 +165,7 @@ bool FastOut::LoadOutb(String fileName) {
 	units[0] = "s";
 	Buffer<char> unit(LenUnit);
     for (int iChan = 0; iChan < NumOutChans+1; ++iChan) { 
-        file.Read(unit, LenUnit); 				// ChanName converted to numeric ASCII
+        file.ReadB(unit, LenUnit); 				// ChanName converted to numeric ASCII
         units[iChan] = Replace(Replace(TrimBoth(String(unit, LenUnit)), "(", ""), ")", "");
     }  
     
@@ -177,11 +177,11 @@ bool FastOut::LoadOutb(String fileName) {
     Buffer<int32> bufferTime;
     if (FileID == FileFmt::WithTime) {
         bufferTime.Alloc(NT);
-        file.Read(bufferTime, 4*NT); 			// read the time data
+        file.ReadB(bufferTime, 4*NT); 			// read the time data
     }
     
     Buffer<int16> bufferData(nPts);
-    file.Read(bufferData, 2*nPts); 				// read the channel data
+    file.ReadB(bufferData, 2*nPts); 				// read the channel data
     int ip = 0;
     for (int idt = 0; idt < NT; ++idt) 
     	for (int i = 1; i < NumOutChans+1; ++i) {
@@ -262,28 +262,58 @@ int FastOut::GetIdTime(double time) {
 	return Null;
 }
 
-Vector<String> FastOut::GetParameterList(String filter) {
-	Index<String> list;
+SortedIndex<String> FastOut::GetParameterList(String filter) {
+	SortedIndex<String> list;
 	
-	filter = "*" + ToLower(filter) + "*";
-	for (int i = 0; i < GetColumnCount(); ++i) {
-		String str = ToLower(GetParameter(i));
-		if (PatternMatch(filter, str))
+	if (filter.IsEmpty()) {
+		for (int i = 0; i < GetColumnCount(); ++i) 
 			list.FindAdd(GetParameter(i));
+	} else {
+		filter = "*" + ToLower(filter) + "*";
+		for (int i = 0; i < GetColumnCount(); ++i) {
+			String str = ToLower(GetParameter(i));
+			if (PatternMatch(filter, str))
+				list.FindAdd(GetParameter(i));
+		}
 	}
-	SortIndex(list);
-	return list.PickKeys();
+	//SortIndex(list);
+	return list;//.PickKeys();
 }
 
-Vector<String> FastOut::GetUnitList(String filter) {
-	Index<String> list;
+SortedIndex<String> FastOut::GetUnitList(String filter) {
+	SortedIndex<String> list;
 	
-	filter = "*" + ToLower(filter) + '*';
-	for (int i = 0; i < GetColumnCount(); ++i) {
-		String str = ToLower(GetUnit(i));
-		if (PatternMatch(filter, str))
+	if (filter.IsEmpty()) {
+		for (int i = 0; i < GetColumnCount(); ++i) 
 			list.FindAdd(GetUnit(i));
+	} else {
+		filter = "*" + ToLower(filter) + '*';
+		for (int i = 0; i < GetColumnCount(); ++i) {
+			String str = ToLower(GetUnit(i));
+			if (PatternMatch(filter, str))
+				list.FindAdd(GetUnit(i));
+		}
 	}
-	SortIndex(list);
-	return list.PickKeys();
+	//SortIndex(list);
+	return list;//.PickKeys();
+}
+
+SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filterUnits) {
+	SortedVectorMap<String, String> list;
+	
+	if (filterParam.IsEmpty() && filterUnits.IsEmpty()) {
+		for (int i = 0; i < GetColumnCount(); ++i) 
+			list.Add(GetParameter(i), GetUnit(i));
+	} else {
+		filterParam = "*" + ToLower(filterParam) + '*';
+		filterUnits = "*" + ToLower(filterUnits) + '*';
+		for (int i = 0; i < GetColumnCount(); ++i) {
+			String strParams = ToLower(GetParameter(i));
+			String strUnits = ToLower(GetUnit(i));
+			if (PatternMatch(filterParam, strParams) && 
+				PatternMatch(filterUnits, strUnits))
+				list.Add(GetParameter(i), GetUnit(i));
+		}
+	}
+	return list;
 }

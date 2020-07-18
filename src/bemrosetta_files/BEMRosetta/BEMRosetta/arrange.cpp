@@ -29,13 +29,13 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	
 	dofList.WhenDropInsert = [&](int line, PasteClip& d) { 
 		if (DnDInsert(line, d)) {
-			Vector<int> order;
+			Upp::Vector<int> order;
 			for (int i = 0; i < dofList.GetCount(); ++i) {
 				int ib, idf;
 				Hydro::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idf); 
 				order << idf + 6*ib;
 			}
-			Vector<int> neworder;
+			Upp::Vector<int> neworder;
 			for (int i = 0; i < order.GetCount(); ++i) {
 				int id = FindIndex(order, i);
 				neworder << id;

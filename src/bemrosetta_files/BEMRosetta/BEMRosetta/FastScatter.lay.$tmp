@@ -4,7 +4,7 @@ LAYOUT(FastScatter, 572, 256)
 	ITEM(Label, dv___2, SetLabel(t_("File:")).LeftPosZ(8, 32).TopPosZ(4, 19))
 	ITEM(Splitter, splitter, HSizePosZ(4, 4).VSizePosZ(28, 4))
 	ITEM(WithClick<RasterPlayer>, player, RightPosZ(4, 20).TopPosZ(4, 20))
-	ITEM(EditString, updateTime, RightPosZ(28, 36).TopPosZ(4, 19))
+	ITEM(EditString, updateTime, Tip(t_("Interval to update data from file")).RightPosZ(28, 36).TopPosZ(4, 19))
 	ITEM(Button, butLoad, SetLabel(t_("Load")).RightPosZ(180, 40).TopPosZ(4, 20))
 END_LAYOUT
 

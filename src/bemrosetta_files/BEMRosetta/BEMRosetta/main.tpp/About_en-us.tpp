@@ -1,7 +1,7 @@
 topic "This is a test";
 [ $$0,0#00000000000000000000000000000000:Default]
 [{_}%EN-US 
-[s0; [*+117 BEMRosetta]&]
+[s0; [*^https`:`/`/github`.com`/izabala123`/BEMRosetta^+117 BEMRosetta]&]
 [s0;2 &]
 [s0; Hydrodynamic coefficients viewer and converter for Boundary 
 Element Method solver formats.&]
@@ -18,8 +18,8 @@ he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 
 library][2 .]&]
 [s0; [2 We would like to thank École Centrale de Nantes, CNRS, and 
-the other NEMOH developers for making NEMOH freely available 
-under the Apache 2.0 license.]&]
+the NEMOH developers for making it freely available under the 
+Apache 2.0 license.]&]
 [s0;2 &]
 [s0;2 &]
 [s0; License&]
