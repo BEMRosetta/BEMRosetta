@@ -2,141 +2,9 @@
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
 #include <BEMRosetta/BEMRosetta_cl/FastOut.h>
+#include "auxiliar.h"
 #include "FastScatter.h"
 
-class RichTextView2 : public RichTextView {
-public:
-	RichTextView2() {
-		zoomlevel = 5;
-		Background(Color(245, 245, 245));
-	}
-	virtual void Layout() {
-		RichTextView::Layout();
-		PageWidth(int(zoomlevel*GetSize().cx));
-	}
-	double zoomlevel;
-};
-
-class BorderFrameDyn : public CtrlFrame {
-public:
-	void Init(int _thickness, Color _color) {
-		thickness = _thickness;
-		color = _color;
-	}
-	virtual void FrameLayout(Rect& r) {
-		Size sz = r.GetSize();
-		int n = thickness;
-		if(sz.cx >= 2 * n && sz.cy >= 2 * n)
-			r.Deflate(n);
-	}
-	virtual void FrameAddSize(Size& sz) {};//{sz += 2 * thickness;}
-	virtual void FramePaint(Draw& draw, const Rect& r) {
-		if (!show)
-			return;
-		Size sz = r.GetSize();
-		if(sz.cx >= 2 * thickness && sz.cy >= 2 * thickness)
-			DrawBorder(draw, r.left-1, r.top, r.Width()+2, r.Height(), color);
-	}
-	void Show(bool _show) 	{show = _show;}
-	bool IsShown()			{return show;}
-	
-protected:
-	bool show = false;
-	int thickness;
-	Color color;
-
-	void DrawBorder(Draw& w, int x, int y, int cx, int cy, Color c) {
-		int n = thickness;
-		while(n--) {
-			if(cx <= 0 || cy <= 0)
-				break;
-			DrawFrame(w, x, y, cx, cy, c, c, c, c);
-			x += 1;
-			y += 1;
-			cx -= 2;
-			cy -= 2;
-		}
-	}
-};
-
-class RectEnter {
-public:
-	void ShowFrame(bool show = true) {
-		frame.Show(show);
-		ctrl->RefreshFrame();
-	}
-	bool IsShown() {return frame.IsShown();}
-	
-	BorderFrameDyn frame;
-	Function <void(RectEnter &)>WhenEnter;
-	Ctrl *ctrl;
-};
-
-template <class T>
-class WithRectEnter : public T {
-public:
-	WithRectEnter() {
-		rectEnter.frame.Init(3, LtBlue()); 
-		T::AddFrame(rectEnter.frame);
-		rectEnter.ctrl = this;
-	}
-	virtual void MouseEnter(Point, dword) {
-		rectEnter.frame.Show(true);
-		T::RefreshFrame();
-		if (rectEnter.WhenEnter) 
-			rectEnter.WhenEnter(rectEnter);
-	}
-	bool IsShownFrame()			{return rectEnter.frame.IsShown();}
-	RectEnter &GetRectEnter()	{return rectEnter;}
-	
-private:
-	RectEnter rectEnter;
-};
-
-class RectEnterSet {
-public:
-	typedef RectEnterSet CLASSNAME;
-	
-	void Add(RectEnter &ctrl) {
-		ctrls << &ctrl;
-		ctrl.WhenEnter = [&](RectEnter &ctrl) {OnEnter(ctrl);};
-	}
-	void Remove(RectEnter &ctrl) {
-		int id = Find(ctrl);
-		if (id >= 0)
-			ctrls.Remove(id);
-	}
-	void Set(RectEnter &ctrl) {
-		int id = Find(ctrl);
-		if (id >= 0)
-			ctrls[id]->ShowFrame();
-	}
-	void OnEnter(RectEnter &ctrl) {
-		for (int i = 0; i < ctrls.GetCount(); ++i) { 
-			if (&ctrl != ctrls[i]) 
-				ctrls[i]->ShowFrame(false);
-		}
-		WhenEnter();
-	}
-	Function <void()>WhenEnter;
-
-private:
-	Vector<RectEnter *> ctrls;
-	
-	int Find(RectEnter &ctrl) {
-		for (int i = 0; i < ctrls.GetCount(); ++i) 
-			if (&ctrl == ctrls[i])
-				return i;
-		return -1; 
-	}
-};
-
-template <class T>
-class WithFocus : public T {
-public:
-	virtual void GotFocus() {WhenFocus();}
-	Function <void()>WhenFocus;
-};
 
 class FreqSelector : public StaticRect {
 public:
@@ -219,8 +87,8 @@ String TabText(const TabCtrl &tab);
 
 #include "arrange.h"
 
-enum DataToShow {DATA_A, DATA_B, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
-enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
+enum DataToShow {DATA_A, DATA_B, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
+enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH};
 
@@ -242,7 +110,9 @@ public:
 		if (_idf >= _data.dofOrder.GetCount())
 			return false;
 		idf = _data.dofOrder[_idf];
-		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || dataToPlot == PLOT_B || dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH) {
+		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || 
+			dataToPlot == PLOT_B || dataToPlot == PLOT_K || 
+			dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH) {
 			if (_j_dof >= _data.dofOrder.GetCount())
 				return false;
 			_j_dof = _data.dofOrder[_j_dof];
@@ -261,6 +131,7 @@ public:
 		case PLOT_AINF:			return IsNull(data->Awinf(idf, jdf));
 		case PLOT_A0:			return IsNull(data->Aw0(idf, jdf));
 		case PLOT_B:			return IsNull(data->B[0](idf, jdf));
+		case PLOT_K:			return data->Kirf.size() == 0 || IsNull(data->Kirf[0](idf, jdf));
 		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdf](0, idf));
 		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdf](0, idf));
 		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdf](0, idf));
@@ -283,6 +154,7 @@ public:
 		case PLOT_AINF:			return data->Awinf_(ndim, idf, jdf);
 		case PLOT_A0:			return data->Aw0_(ndim, idf, jdf);
 		case PLOT_B:			return data->B_(ndim, int(id), idf, jdf);
+		case PLOT_K:			return data->Kirf_(ndim, int(id), idf, jdf);
 		case PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, jdf, int(id), idf);
 		case PLOT_FORCE_SC_PH:	return data->sc.ph[jdf](int(id), idf);
 		case PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, jdf, int(id), idf);
@@ -304,6 +176,9 @@ public:
 		if ((dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0) && id == 1)
 			id = data->Nf - 1;
 		
+		if (dataToPlot == PLOT_K)
+			return data->Tirf[int(id)];
+		
 		if (show_w) {
 			if (dataToPlot == PLOT_A0)
 				return 0;
@@ -321,6 +196,8 @@ public:
 			return show_w  ? 2 : 1;		
 		if (dataToPlot == PLOT_A0)
 			return !show_w ? 2 : 1;
+		if (dataToPlot == PLOT_K)
+			return data->Tirf.GetCount();
 		return data->Nf;
 	}
 	
@@ -342,15 +219,18 @@ public:
 	void OnSave();
 	bool IsChanged();
 	void Jsonize(JsonIO &json) {
+		if (json.IsLoading())
+			showTabMesh = showTabNemoh = showTabCoeff = showTabFAST = Null;
 		json
 			("showTabMesh", showTabMesh)
 			("showTabNemoh", showTabNemoh)
-			("showTabCoeff", showTabCoeff);
+			("showTabCoeff", showTabCoeff)
+			("showTabFAST", showTabFAST);
 	}
 	
-	void InitSerialize(bool ret);
+	void InitSerialize(bool ret, bool &openOptions);
 	
-	int showTabMesh, showTabNemoh, showTabCoeff;
+	int showTabMesh, showTabNemoh, showTabCoeff, showTabFAST;
 	
 private:
 	BEMData *bem;
@@ -389,7 +269,7 @@ public:
 	typedef MainArrange CLASSNAME;
 	void Init();
 	void Clear();
-	void Load(Upp::Array<HydroClass> &hydro, const Vector<int> &ids);
+	void Load(Upp::Array<HydroClass> &hydro, const Upp::Vector<int> &ids);
 	void Remove(int c);
 	
 private:
@@ -463,7 +343,7 @@ private:
 	void OnTimer();
 	TimeCallback timeCallback;
 	void UpdateStatus(bool under);
-	Vector<int> selectedPanels, selectedNodes;  
+	Upp::Vector<int> selectedPanels, selectedNodes;  
 	int lastSel = -1;
 };
 
@@ -495,8 +375,8 @@ public:
 	
 	void Init();
 	void Clear();
-	bool Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids);
-	void Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids);
+	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids);
+	void Load(Upp::Array<MeshData> &surfs, const Upp::Vector<int> &ids);
 	
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc);
@@ -512,7 +392,7 @@ public:
 	
 	void Init(bool vert);
 	void Init(int idf, double jdf_ih, DataToShow dataToShow);
-	bool Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Vector<int> &ids);
+	bool Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Upp::Vector<int> &ids);
 	bool Load(const Hydro &hy, const MainBEM &mbm);
 	void LoadEach(const Hydro &hy, int id, bool &loaded, int idc = -1);
 	void Clear();
@@ -544,7 +424,7 @@ public:
 	
 	void Init(DataToShow dataToShow);
 	void Clear();
-	bool Load(BEMData &bem, const Vector<int> &ids);
+	bool Load(BEMData &bem, const Upp::Vector<int> &ids);
 	
 	TabCtrl tab;
 	Upp::Array<Upp::Array<MainPlot>> plots;
@@ -560,7 +440,7 @@ public:
 	typedef MainStateSpacePlot CLASSNAME;
 	
 	void Init(int _idf, int _jdf);
-	bool Load(Upp::Array<HydroClass> &hydro, const Vector<int> &ids, const MainBEM &mbm);
+	bool Load(Upp::Array<HydroClass> &hydro, const Upp::Vector<int> &ids, const MainBEM &mbm);
 	void InitArray(ArrayCtrl &array);
 	
 	MainPlot mainPlot;
@@ -576,7 +456,7 @@ public:
 	void Init();
 	void Clear();
 	void Init(ArrayCtrl &array);
-	bool Load(BEMData &bem, const Vector<int> &ids);
+	bool Load(BEMData &bem, const Upp::Vector<int> &ids);
 	
 	Upp::Array<Upp::Array<MainStateSpacePlot>> plots;
 	
@@ -594,6 +474,8 @@ public:
 	void Init();
 	void InitSerialize(bool ret);
 	
+	enum Action {NONE, MOVE, ROTATE};
+	
 	void AfterAdd(String file);
 	void After();
 	bool OnLoad();
@@ -602,7 +484,7 @@ public:
 	void OnJoin();
 	void OnSplit();
 	bool OnConvertMesh();
-	void OnUpdate(bool forceMoved);
+	void OnUpdate(Action action);
 	void OnHealing(bool basic);
 	void OnOrientSurface();
 	void OnImage(int axis);
@@ -642,23 +524,17 @@ private:
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	void LoadDragDrop(const Vector<String> &files);
+	void LoadDragDrop(const Upp::Vector<String> &files);
+	
+	Button::Style styleRed, styleGreen, styleBlue;
 };
 
 class MainMeshW : public TopWindow {
 public:
 	typedef MainMeshW CLASSNAME;
 	
-	void Init(MainMesh &_mesh) {
-		LoadFromJson(mesh, StoreAsJson(_mesh));
-		mesh.Init();
-		Add(mesh.SizePos());
-		Title(t_("BEMRosetta Mesh Viewer")).Sizeable().Zoomable();
-	}
-	
-	virtual void Close() {
-        delete this;
-    }
+	void Init(MainMesh &_mesh, const Image &icon, const Image &largeIcon);
+	virtual void Close() 		{delete this;}
 	
 	MainMesh mesh;
 };
@@ -672,7 +548,7 @@ public:
 	
 	void Load(const BEMData &bem);
 	void Load(const NemohCal &data);
-	void Save(NemohCal &data);
+	bool Save(NemohCal &data);
 	
 	void Jsonize(JsonIO &json);
 	
@@ -681,7 +557,7 @@ private:
 	bool OnSave(const BEMData &bem);
 	void OnCursor();
 	void arrayOnCursor();
-	void arrayUpdateCursor();
+	bool ArrayUpdateCursor();
 	void arrayClear();
 	void arrayOnAdd();
 	void arrayOnDuplicate();
@@ -711,8 +587,8 @@ public:
 	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
 	//void OnMove(Point p);
 	
-	bool Get(Vector<int> &ibs, Vector<int> &idfs, Vector<int> &jdfs,
-		Vector<double> &froms, Vector<double> &tos, Vector<Vector<double>> &freqs); 
+	bool Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vector<int> &jdfs,
+		Upp::Vector<double> &froms, Upp::Vector<double> &tos, Upp::Vector<Upp::Vector<double>> &freqs); 
 	void Clear();
 	
 	MainPlot plots;
@@ -771,7 +647,7 @@ public:
 	void OnJoin();
 	void OnSymmetrize();
 	void OnA0();
-	void OnAinf();
+	void OnKirfAinf();
 	void OnDescription();
 	void OnMenuConvertArraySel();
 	void OnSelListLoaded();
@@ -789,6 +665,7 @@ public:
 	MainArrange mainArrange;
 	MainABForce mainA;
 	MainABForce mainB;
+	MainABForce mainK;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
 	MainRAO mainRAO;
 	MainStateSpace mainStateSpace;
@@ -801,12 +678,12 @@ private:
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEMData &bem);
-	int GetOneSelected();
+	int GetIdOneSelected();
 	int AskQtfHeading(const Hydro &hydro);
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	void LoadDragDrop(const Vector<String> &files);
+	void LoadDragDrop(const Upp::Vector<String> &files);
 	String BEMFile(String fileFolder) const;
 };
 
@@ -814,16 +691,8 @@ class MainBEMW : public TopWindow {
 public:
 	typedef MainBEMW CLASSNAME;
 	
-	void Init(MainBEM &_bem) {
-		LoadFromJson(bem, StoreAsJson(_bem));
-		bem.Init();
-		Add(bem.SizePos());
-		Title(t_("BEMRosetta BEM Coefficients Processing")).Sizeable().Zoomable();
-	}
-	
-	virtual void Close() {
-        delete this;
-    }
+	void Init(MainBEM &_bem, const Image &icon, const Image &largeIcon);
+	virtual void Close() 		{delete this;}
 	
 	MainBEM bem;
 };
@@ -842,7 +711,7 @@ public:
 
 	void OptionsUpdated(double rho, double g);
 
-	bool LoadSerializeJson();
+	bool LoadSerializeJson(bool &firstTime, bool &openOptions);
 	bool StoreSerializeJson();
 	
 	void Jsonize(JsonIO &json);
@@ -858,7 +727,7 @@ public:
 	}
 	
 	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_FAST};
-	Vector<String> tabTexts;
+	Upp::Vector<String> tabTexts;
 	
 private:
 	TabCtrl tab;
@@ -893,13 +762,16 @@ int ArrayModel_IdMesh(const ArrayCtrl &array);
 int ArrayModel_IdMesh(const ArrayCtrl &array, int row);
 int ArrayModel_IdHydro(const ArrayCtrl &array);
 int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
-Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
-Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
-void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids);
-void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Vector<int> &ids);
+Upp::Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
+Upp::Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids);
+void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids);
 bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);
+bool ArrayModel_IsSelected(const ArrayCtrl &array, int row);
 const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row);
 String ArrayModel_GetFileName(ArrayCtrl &array, int row = -1);
+
+void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName);
 		
 Main &ma(Main *m = 0);
 BEMData &Bem();

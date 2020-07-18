@@ -49,6 +49,10 @@ void MainPlot::Init(int _idf, double jdf_ih, DataToShow _dataToShow) {
 						labelY = t_("Radiation damping");
 						splitter.SetPos(10000, 0);	
 						break;
+	case DATA_K:		title = Format(t_("Kirf Impulse Response Function %s"), Hydro::StrBDOF(plot_idf, plot_jdf));
+						labelY = t_("Kirf Impulse Response Function");
+						splitter.SetPos(10000, 0);	
+						break;
 	case DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), Hydro::StrBDOF(plot_idf), heading);
 						labelY = t_("Diffraction scattering force");
 						labelY2 = t_("Diffraction scattering force phase [rad]");
@@ -85,7 +89,7 @@ void MainPlot::Init(int _idf, double jdf_ih, DataToShow _dataToShow) {
 	scatP.SetLabelY(labelY2);
 }
 
-bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Vector<int> &ids) {
+bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Upp::Vector<int> &ids) {
 	scatt.RemoveAllSeries();
 	scatP.RemoveAllSeries();
 	ABFZ_source.SetCount(ids.GetCount());
@@ -98,7 +102,7 @@ bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, con
 	dim = !mbm.menuPlot.showNdim;
 	markW = mbm.menuPlot.showPoints ? 10 : 0;
 	show_w = mbm.menuPlot.opwT == 0;
-	if (show_w) {
+	if (show_w && dataToShow != DATA_K) {
 		scatt.SetLabelX(t_("w [rad/s]"));
 		scatP.SetLabelX(t_("w [rad/s]"));
 	} else {
@@ -134,7 +138,7 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 	dim = !mainBem.menuPlot.showNdim;
 	markW = mainBem.menuPlot.showPoints ? 10 : 0;
 	show_w = mainBem.menuPlot.opwT == 0;
-	if (show_w) {
+	if (show_w && dataToShow != DATA_K) {
 		scatt.SetLabelX(t_("w [rad/s]"));
 		scatP.SetLabelX(t_("w [rad/s]"));
 	} else {
@@ -207,6 +211,15 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(t_("Ns/m"));
 		}
+	} else if (dataToShow == DATA_K && hy.IsLoadedB()) {
+		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_K, show_w, !dim)) {
+			loaded = true;
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("K_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
+			if (dim)
+				scatt.Units(t_("N/m"));
+		}
 	} else if (dataToShow == DATA_FORCE_SC && hy.IsLoadedFsc() && ih >= 0) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, PLOT_FORCE_SC_MA, show_w, !dim)) {
 			loaded = true;
@@ -214,7 +227,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
-				scatt.Units(t_("N"));
+				scatt.Units(t_("N/m"));
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_FORCE_SC_PH, show_w, !dim)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fsc_ph_%s"), nameType)).Units(t_("rad")).
@@ -229,7 +242,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
-				scatt.Units(t_("N"));
+				scatt.Units(t_("N/m"));
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_FORCE_FK_PH, show_w, !dim)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Ffk_ph_%s"), nameType)).Units(t_("rad")).
@@ -244,7 +257,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
-				scatt.Units(t_("N"));
+				scatt.Units(t_("N/m"));
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, PLOT_FORCE_EX_PH, show_w, !dim)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fex_ph_%s"), nameType)).Units(t_("rad")).

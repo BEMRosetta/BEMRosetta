@@ -16,6 +16,7 @@ using namespace Upp;
 #include <TabBar/TabBar.h>
 
 #include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
+#include <BEMRosetta/BEMRosetta_cl/BEMRosetta.h>
 
 #include "main.h"
 
@@ -27,7 +28,11 @@ FreqSelector::FreqSelector() {
 	add.WhenAction = [&] {AddField();};
 	Add(add.LeftPos(0, 19).TopPos(3, 19));
 };
-	
+
+static String GetBEMRosettaDataFolder() {
+	return AppendFileName(GetAppDataFolder(), "BEMRosetta");
+}
+
 void Main::Init() {
 	LOG("Init");
 	Sizeable().Zoomable().SetMinSize(Size(800, 600));
@@ -37,13 +42,12 @@ void Main::Init() {
 	
 	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
-	tabTexts << t_("Mesh Handling") << t_("Nemoh") << t_("Hydrodynamic Coefficients") << t_("FAST Viewer");
+	tabTexts << t_("Mesh Handling") << t_("Nemoh") << t_("Hydrodynamic Coefficients") << t_("FAST .out Reader");
 		
-	bool firstTime = false;
-	if (!bem.LoadSerializeJson()) {
-		firstTime = true;
+	bool firstTime = false, openOptions = false;
+	if (!bem.LoadSerializeJson(firstTime)) 
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults are set");
-	}
+	
 	LOG("BEM configuration loaded");
 	
 	if (IsNull(lastTab))
@@ -51,10 +55,10 @@ void Main::Init() {
 	
 	if (!bem.ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
-	if (!LoadSerializeJson()) {
-		firstTime = true;
+	
+	if (!LoadSerializeJson(firstTime, openOptions)) 
 		Cout() << "\n" << t_("Configuration data is not loaded. Defaults are set");
-	}
+	
 	LOG("Configuration loaded");
 	
 	if (menuOptions.showTabMesh) {
@@ -69,9 +73,11 @@ void Main::Init() {
 		mainBEM.Init();				LOG("Init BEM");
 		tab.Add(mainBEM.SizePos(),  tabTexts[TAB_COEFF]);
 	}
-	mainFAST.Init();			LOG("Init FAST");
-	if (Bem().experimental) 
+	if (menuOptions.showTabFAST) {
+		tab.Add().Disable();
+		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
 		tab.Add(mainFAST.SizePos(), tabTexts[TAB_FAST]);
+	}
 	
 	tab.Add().Disable();
 	mainOutput.Init();			LOG("Init Output");
@@ -85,37 +91,41 @@ void Main::Init() {
 	
 	Add(tab.SizePos());	
 
-	Add(labrho.SetLabel(t_("rho [Kg/m3]:")).RightPosZ(128, 80).TopPosZ(0, 19));
-	Add(editrho.SetReadOnly().RightPosZ(98, 40).TopPosZ(1, 19));
+	Add(labrho.SetLabel(t_("rho [Kg/m3]:")).RightPosZ(128, 80).TopPosZ(1, 22));
+	Add(editrho.SetReadOnly().RightPosZ(98, 40).TopPosZ(2, 20));
 	editrho <<= bem.rho;
 	
-	Add(labg.SetLabel(t_("Gravity [m/s2]:")).RightPosZ(252, 80).TopPosZ(0, 19));
-	Add(editg.SetReadOnly().RightPosZ(218, 40).TopPosZ(1, 19));
+	Add(labg.SetLabel(t_("Gravity [m/s2]:")).RightPosZ(252, 80).TopPosZ(1, 22));
+	Add(editg.SetReadOnly().RightPosZ(218, 40).TopPosZ(2, 20));
 	editg <<= bem.g;
 	
 	butWindow.SetImage(Img::application_double()).SetLabel(t_("New window")).Tip(t_("Open new window"));
-	Add(butWindow.RightPosZ(2, 90).TopPosZ(0, 20));
+	Add(butWindow.RightPosZ(2, 90).TopPosZ(0, 22));
 	butWindow.Hide();
 	
 	butWindow.WhenAction = [&] {
 		if (tab.IsAt(mainMesh)) {
 			MainMeshW *mainMeshW = new MainMeshW();
-			mainMeshW->Init(mainMesh);
+			mainMeshW->Init(mainMesh, Img::Rosetta64(), Img::Rosetta256());
 			mainMeshW->OpenMain();
 		} else if (tab.IsAt(mainBEM)) {
 			MainBEMW *mainBEMW = new MainBEMW();
-			mainBEMW->Init(mainBEM);
+			mainBEMW->Init(mainBEM, Img::Rosetta64(), Img::Rosetta256());
 			mainBEMW->OpenMain();
+		} else if (tab.IsAt(mainFAST)) {
+			MainFASTW *mainFASTW = new MainFASTW();
+			mainFASTW->Init(GetBEMRosettaDataFolder(), Img::Rosetta64(), Img::Rosetta256(), bar);
+			mainFASTW->OpenMain();
 		}
 	};
 	
 	tab.WhenSet = [&] {
 		LOGTAB(tab);
-		if (tab.IsAt(menuOptions)) 
+		if (tab.IsAt(menuOptionsScroll)) 
 			menuOptions.Load();
-		else if (tab.IsAt(mainNemoh)) 
+		else if (tab.IsAt(mainNemohScroll)) 
 			mainNemoh.Load(bem);
-		if (!tab.IsAt(menuOptions) && menuOptions.IsChanged()) {
+		if (!tab.IsAt(menuOptionsScroll) && menuOptions.IsChanged()) {
 			if (PromptYesNo(t_("Options have changed&Do you want to save them?")))
 				menuOptions.OnSave();
 			else
@@ -132,8 +142,11 @@ void Main::Init() {
 		} else if (tab.IsAt(mainBEM)) {
 			butWindow.Show(true);
 			lastTab = ~tab;
-		} else 	if (tab.IsAt(mainNemoh)) {
+		} else 	if (tab.IsAt(mainNemohScroll)) {
 			butWindow.Show(false);
+			lastTab = ~tab;
+		} else 	if (tab.IsAt(mainFAST)) {
+			butWindow.Show(true);
 			lastTab = ~tab;
 		} else {
 			butWindow.Show(false);
@@ -148,7 +161,9 @@ void Main::Init() {
 	if (firstTime) {
 		lastTab = 0;
 		tab.Set(menuAbout);
-	} else 
+	} else if (openOptions)
+		tab.Set(menuOptionsScroll);
+	else 
 		tab.Set(lastTab);
 	
 	tab.WhenSet();
@@ -168,9 +183,9 @@ void Main::OptionsUpdated(double rho, double g) {
 	editrho <<= rho;
 }
 
-bool Main::LoadSerializeJson() {
+bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	bool ret;
-	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
+	String folder = GetBEMRosettaDataFolder();
 	DirectoryCreate(folder);
 	if (!DirectoryExists(folder))
 		ret = false;
@@ -194,16 +209,18 @@ bool Main::LoadSerializeJson() {
 	mainMesh.InitSerialize(ret);
 	mainNemoh.InitSerialize(ret);
 	mainBEM.InitSerialize(ret);
-	menuOptions.InitSerialize(ret);
+	menuOptions.InitSerialize(ret, openOptions);
 	
 	if (!ret)
 		tab.Set(menuAbout);
+	
+	firstTime = !ret;
 	
 	return ret;
 }
 
 bool Main::StoreSerializeJson() {
-	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
+	String folder = GetBEMRosettaDataFolder();
 	DirectoryCreate(folder);
 	if (!DirectoryExists(folder))
 		return 0;
@@ -255,16 +272,22 @@ void MenuOptions::Init(BEMData &_bem) {
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_NEMOH, 0, false).SetLabel(ma().tabTexts[Main::TAB_NEMOH]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_COEFF, 0, false).SetLabel(ma().tabTexts[Main::TAB_COEFF]);
-	//arrayShown.Add();	arrayShown.CreateCtrl<Option>(row++, 0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);	
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_FAST,  0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);
 }
 
-void MenuOptions::InitSerialize(bool ret) {
+void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
 	if (!ret || IsNull(showTabMesh)) 
 		showTabMesh = true;
 	if (!ret || IsNull(showTabNemoh)) 
 		showTabNemoh = true;
 	if (!ret || IsNull(showTabCoeff)) 
 		showTabCoeff = true;
+	if (!ret || IsNull(showTabFAST)) 
+		showTabFAST = true;
+	if (!showTabMesh && !showTabNemoh && !showTabCoeff && !showTabFAST) {
+		openOptions = true;
+		Exclamation(t_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs shown']"));
+	}
 }
 
 void MenuOptions::Load() {
@@ -288,6 +311,7 @@ void MenuOptions::Load() {
 	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
 	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
 	arrayShown.GetCtrl(Main::TAB_COEFF, 0)->SetData(showTabCoeff);
+	arrayShown.GetCtrl(Main::TAB_FAST,  0)->SetData(showTabFAST);
 }
 
 void MenuOptions::OnSave() {
@@ -311,6 +335,7 @@ void MenuOptions::OnSave() {
 	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
 	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
 	showTabCoeff = arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData();		
+	showTabFAST  = arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData();
 	
 	ma().OptionsUpdated(rho, g);
 }
@@ -354,6 +379,8 @@ bool MenuOptions::IsChanged() {
 	if (showTabNemoh != arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData())
 		return true;
 	if (showTabCoeff != arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData())
+		return true;
+	if (showTabFAST  != arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData())
 		return true;
 
 	return false;
@@ -475,7 +502,7 @@ void MainStiffness::Add(String name, int icase, String bodyName, int ibody, cons
 	}
 }
 
-bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids) {
+bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
 	Clear();
 	
 	for (int i = 0; i < ids.GetCount(); ++i) {
@@ -487,7 +514,7 @@ bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids)
 	return true;
 }	
 
-void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Vector<int> &ids) {
+void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Upp::Vector<int> &ids) {
 	Clear();
 
 	for (int i = 0; i < ids.GetCount(); ++i) {
@@ -516,14 +543,20 @@ void OnAssert(const char *text) {
 	throw Exc(Format(t_("Error type 2: %s"), text));	
 }
 
+void TestConvolution();
+void Amarre();
 
 GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);
 	//SetAssertFailedHook(OnAssert);
 	
-	ConsoleOutput con;
+	//ConsoleOutput con(true);
 	
-	const Vector<String>& command = CommandLine();
+	//Amarre();
+	//TestConvolution();
+	//return;
+	
+	const Upp::Vector<String>& command = CommandLine();
 	
 	if (!command.IsEmpty()) {
 		ConsoleMain(command, true);
@@ -615,6 +648,21 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
  	array.Add(id, GetColorId(id), codeStr, title, fileName);
 }
 
+void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName) {
+	for (int row = 0; row < array.GetCount(); ++row) {
+		if (array.Get(row, 0) == id) {
+			if (!IsNull(codeStr))
+				array.Set(row, 2, codeStr);
+			if (!IsNull(title))
+				array.Set(row, 3, title);
+			if (!IsNull(fileName))
+				array.Set(row, 4, fileName);
+			return;
+		}
+	}
+	throw Exc(t_("Id not found in ArrayModel_Change()"));
+}
+
 int ArrayModel_Id(const ArrayCtrl &array) {
 	int row = array.GetCursor();
 	if (row < 0)
@@ -627,9 +675,14 @@ int ArrayModel_Id(const ArrayCtrl &array, int row) {
 }
 
 int ArrayModel_IdMesh(const ArrayCtrl &array) {
-	int id = ArrayModel_Id(array);
-	if (id < 0)
-		return -1;
+	int id;
+	if (array.GetCount() == 1)
+		id = ArrayModel_Id(array, 0);
+	else {
+		id = ArrayModel_Id(array);
+		if (id < 0)
+			return -1;
+	}
 	return Bem().GetMeshId(id);
 }
 
@@ -654,21 +707,21 @@ int ArrayModel_IdHydro(const ArrayCtrl &array, int row) {
 	return Bem().GetHydroId(id);
 }
 
-Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
-	Vector<int> ids;
+Upp::Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
+	Upp::Vector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) 
 		ids << ArrayModel_IdHydro(array, row);		
 	return ids;
 }
 
-Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array) {		
-	Vector<int> ids;
+Upp::Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array) {		
+	Upp::Vector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) 
 		ids << ArrayModel_IdMesh(array, row);		
 	return ids;
 }
 
-void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids) {		
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids) {		
 	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
 		int idrow = ArrayModel_IdHydro(array, row);
 		for (auto id : ids) {
@@ -680,7 +733,7 @@ void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Vector<int> &ids) {
 	}
 }
 
-void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Vector<int> &rows) {		
+void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &rows) {		
 	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
 		for (auto rw : rows) {
 			if (row == rw) {
@@ -693,6 +746,10 @@ void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Vector<int> &rows) {
 
 bool ArrayModel_IsVisible(const ArrayCtrl &array, int row) {
 	return array.Get(row, 2);
+}
+
+bool ArrayModel_IsSelected(const ArrayCtrl &array, int row) {
+	return array.IsSelected(row);
 }
 
 const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row) {

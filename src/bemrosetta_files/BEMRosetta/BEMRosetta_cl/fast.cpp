@@ -61,6 +61,7 @@ bool Fast::Load_HydroDyn() {
 	hd().rho = hd().h = hd().len = WaveDirRange = Null;
 	
 	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		if (f.GetCount() == 0)
@@ -134,6 +135,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			return;
 	
 		FieldSplit f(in);
+		f.IsSeparator = IsTabSpace;
 		while (!in.IsEof()) {
 			f.Load(in.GetLine());
 			if (f.GetText(1) == "WtrDens") 
@@ -402,6 +404,7 @@ bool Fast::Load_SS(String fileName) {
 	
 	String line; 
 	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
 	
 	hd().stsProcessor = TrimBoth(in.GetLine());
 	hd().stsProcessor.Replace("BEMRosetta state space matrices obtained with ", "");

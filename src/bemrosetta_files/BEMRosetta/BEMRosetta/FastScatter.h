@@ -15,21 +15,34 @@ class FastScatter : public WithFastScatter<StaticRect> {
 public:
 	typedef FastScatter CLASSNAME;
 	
-	void Init();
-		
+	void Init(Function <void(String)> OnFile, StatusBar &statusBar);
+	void Clear();
+	
+	WithSearchColumn<StaticRect> leftSearch, rightSearch;
+	
+	void LoadParams();
+	void SaveParams();
+	
 private:
 	bool OnLoad();
-	void OnFilter();
+	void OnFilter(bool show);
 	void ShowSelected();
-		
+	bool AddParameter(String param, ArrayCtrl *parray);
+	void WhenArrayLeftDouble(ArrayCtrl *parray);
+	
+	void OnDropInsert(int line, PasteClip& d, ArrayCtrl &array);
+	void OnDrop(PasteClip& d, ArrayCtrl &array);
+	void OnDrag(ArrayCtrl &array, bool remove);
+	
 	void OnTimer();
 	TimeCallback timer;
+	TimeStop timeStop;
 	
-	StatusBar statusBar;
+	StatusBar *statusBar = nullptr;
 	
 	FastOut datafast;
 	
-	/*class DataSource : public Convert {
+	class DataSource : public Convert {
 	public:
 		DataSource() : datafast(0), col(0) {}
 		void Init(FastOut &datafast, int col)	{this->datafast = &datafast;	this->col = col;};	
@@ -38,32 +51,72 @@ private:
 		FastOut *datafast;
 		int col;
 	};
-	Upp::Array<DataSource> dataSource;*/
+	Upp::Array<DataSource> dataSource;
 	
 	WithFastScatterLeft<StaticRect> left;
 	WithFastScatterRight<StaticRect> right;
-	WithSearchColumn<StaticRect> leftSearch, rightSearch;
+	
+	RectEnterSet frameSet;
+	
+	Function <void(String)> WhenFile;
+	
+	struct Params {
+		Vector<String> left, right;
+		void Jsonize(JsonIO &json) {
+			json
+				("left", left)
+				("right", right)
+			;
+		}
+		void Get(const ArrayCtrl &aleft, const ArrayCtrl &aright);
+		void Set(ArrayCtrl &aleft, ArrayCtrl &aright) const;
+	};
 };
 	
 class FastScatterTabs : public StaticRect {
 public:
 	typedef FastScatterTabs CLASSNAME;
 
-	void Init();
+	virtual ~FastScatterTabs();
+	void Init(String appDataFolder, StatusBar &statusBar);
 	void OnTab();
 	void AddTab(String filename);
 	void OnCloseTab(Value key);
+	
+	void Jsonize(JsonIO &json) {
+		json
+			("history", history)
+		;
+	}
 	
 private:
 	TabBar tabBar;
 	Upp::Array<FastScatter> tabScatters;
 	Upp::Index<int> tabKeys;
+	Vector<String> fileNames;
 	int tabCounter = 0;
+	
+	Index<String> history;
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	bool LoadDragDrop(const Vector<String> &files);
+	bool LoadDragDrop(const Upp::Vector<String> &files);
+	
+	void AddHistory(String filename);
+		
+	TabBar::Style styleTab;
+	
+	StatusBar *statusBar = nullptr;
 };
 
+class MainFASTW : public TopWindow {
+public:
+	typedef MainFASTW CLASSNAME;
+	
+	void Init(String appDataFolder, const Image &icon, const Image &largeIcon, StatusBar &statusBar);
+	virtual void Close() 	{delete this;}
+	
+	FastScatterTabs fast;
+};
 
 #endif

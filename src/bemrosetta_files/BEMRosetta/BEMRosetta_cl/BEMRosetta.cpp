@@ -196,7 +196,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 	}
 }
 
-void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Vector<double> &newHead, double h, int ih, int idb) {
+void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, double h, int ih, int idb) {
 	int nih  = FindClosest(newHead, h);
 	bool avg  = !IsNull(newf.re[nih](0, idb));
 	for (int ifr = 0; ifr < Nf; ++ifr) {
@@ -214,7 +214,7 @@ void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Vector<
 	}
 }
 
-void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Vector<double> &newHead, int newNh) {
+void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh) {
 	Initialize_Forces(newf, newNh);
 	
 	for (int idb = 0; idb < 6*Nb; ++idb) {
@@ -229,7 +229,7 @@ void Hydro::Symmetrize_Forces() {
 	if (!IsLoadedFex() && !IsLoadedFsc() && !IsLoadedFfk() && !IsLoadedRAO())
 		return;
 	
-	Vector<double> newHead;
+	Upp::Vector<double> newHead;
 	for (int ih = 0; ih < Nh; ++ih) {
 		FindAddRatio(newHead, head[ih], 0.001);
 		FindAddRatio(newHead, -head[ih], 0.001);
@@ -461,12 +461,21 @@ void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
 		HydroClass data(*bem, this);
 		data.Save(file);		
 	}
+	code = type;
 	Nh = realNh;
 	Nf = realNf;
 }
 
-void Hydro::Join(const Vector<Hydro *> &hydrosp) {
+void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 	name = t_("Joined files");
+	for (int ihy = 0; ihy < hydrosp.GetCount(); ++ihy) {
+		const Hydro &hydro = *hydrosp[ihy];
+		if (hydro.name.Find("Nemoh_Part") >= 0) {
+			name = GetFileTitle(GetFileFolder(GetFileFolder(hydro.file)));
+			break;
+		}
+	}
+	
 	dimen = false;
 	g = bem->g;
 	rho = bem->rho;
@@ -659,7 +668,7 @@ void Hydro::Report() {
 					strHead << ", ";
 				strHead << w[i];
 			}
-			strDeltaH = Format(t_("non constant delta (%s)"), strHead); 
+			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
 		}
 	 	freqs = Format(t_("%s to %s %s"), FormatDouble(w[0], 3, FD_EXP), 
 	 									  FormatDouble(w[w.GetCount()-1], 3, FD_EXP), strDeltaH);	
@@ -680,7 +689,7 @@ void Hydro::Report() {
 					strHead << ", ";
 				strHead << head[i];
 			}
-			strDeltaH = Format(t_("non constant delta (%s)"), strHead); 
+			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
 		}
 	 	heads = Format(t_("%.1f to %.1f %s"), head[0], head[head.GetCount()-1], strDeltaH);	
 	} else
@@ -735,7 +744,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			lastError = t_("Cancelled by user");
 			return false;
 		}
-		K_IRF(bem->maxTimeA, bem->numValsA);
+		K_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A_inf)"), 70)) {
 			lastError = t_("Cancelled by user");
 			return false;
@@ -754,7 +763,7 @@ int Hydro::GetW0() {
 }
 
 void Hydro::Get3W0(int &id1, int &id2, int &id3) {
-	Vector<double> ww = clone(w);
+	Upp::Vector<double> ww = clone(w);
 	
 	Sort(ww);
 	id1 = FindAdd(w, ww[0]); 	
@@ -855,7 +864,7 @@ double Hydro::rho_ndim()	const {return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	const {return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
 
-void Hydro::StateSpace::GetTFS(const Vector<double> &w) {
+void Hydro::StateSpace::GetTFS(const Upp::Vector<double> &w) {
 	Eigen::Index sz = A_ss.rows();
 	TFS.SetCount(w.GetCount());
 	for (int ifr = 0; ifr < w.GetCount(); ++ifr) {
@@ -889,7 +898,7 @@ int Hydro::GetQTFId(const Upp::Array<Hydro::QTF> &qtfList, int ib, int ih1, int 
 	return -1;
 }
 
-void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Vector<int> &ibL, Vector<int> &ih1L, Vector<int> &ih2L) {
+void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Upp::Vector<int> &ibL, Upp::Vector<int> &ih1L, Upp::Vector<int> &ih2L) {
 	ibL.Clear();
 	ih1L.Clear();
 	ih2L.Clear();
@@ -1066,8 +1075,8 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 	Sort(headAll);
 }
 
-HydroClass &BEMData::Join(Vector<int> &ids, Function <bool(String, int)> Status) {
-	Vector<Hydro *>hydrosp;
+HydroClass &BEMData::Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status) {
+	Upp::Vector<Hydro *>hydrosp;
 	
 	hydrosp.SetCount(ids.GetCount());
 	for (int i = 0; i < ids.GetCount(); ++i) 
@@ -1097,12 +1106,12 @@ void BEMData::A0(int id) {
 	hydros[id].hd().A0();
 }
 
-void BEMData::Ainf(int id) {
-	hydros[id].hd().K_IRF(maxTimeA, numValsA);
+void BEMData::Ainf(int id, double maxT) {
+	hydros[id].hd().K_IRF(maxT, numValsA);
 	hydros[id].hd().Ainf();
 }
 
-void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status, bool checkDuplicated) {
+void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loaded mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
@@ -1114,7 +1123,7 @@ void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status,
 		}
 	}
 	MeshData &mesh = surfs.Add();
-	String error = mesh.Load(fileName, rho, g);
+	String error = mesh.Load(fileName, rho, g, cleanPanels);
 	if (!error.IsEmpty()) {
 		BEMData::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		RemoveMesh(surfs.GetCount()-1);
@@ -1162,7 +1171,7 @@ void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
 	mesh.fileName = orig.fileName;
 	
 	try {
-		mesh.mesh.Underwater(orig.mesh);
+		mesh.mesh.CutZ(orig.mesh, -1);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount()-1);
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
@@ -1189,13 +1198,13 @@ void BEMData::JoinMesh(int idDest, int idOrig) {
 	}
 }
 
-Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Status) {
+Upp::Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Status) {
 	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
 	MeshData &orig = surfs[id];
 	
-	Vector<int>	ret;
+	Upp::Vector<int> ret;
 	try {
-		Vector<Vector<int>> sets = orig.mesh.GetPanelSets(Status);
+		Upp::Vector<Upp::Vector<int>> sets = orig.mesh.GetPanelSets(Status);
 		if (sets.GetCount() == 1)
 			return ret;
 		for (int i = 0; i < sets.GetCount(); ++i) {		
@@ -1205,7 +1214,6 @@ Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Status) 
 				surf.mesh.panels << clone(orig.mesh.panels[sets[i][ii]]);	
 			
 			surf.mesh.nodes = clone(orig.mesh.nodes);
-			surf.mesh.nodes0 = clone(orig.mesh.nodes0);
 			surf.SetCode(orig.GetCode());
 			surf.AfterLoad(rho, g, false);
 		}
@@ -1224,7 +1232,7 @@ void BEMData::AddFlatPanel(double x, double y, double z, double size, double pan
 
 		surf.SetCode(MeshData::EDIT);
 		surf.mesh.AddFlatPanel(panWidth, panHeight, size); 
-		surf.mesh.MoveTo(x, y, z, 0, 0, 0, 0, 0, 0);
+		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - 1);
 		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
@@ -1232,13 +1240,13 @@ void BEMData::AddFlatPanel(double x, double y, double z, double size, double pan
 	}	
 }
 
-void BEMData::AddRevolution(double x, double y, double z, double size, Vector<Pointf> &vals) {
+void BEMData::AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
 	try {
 		MeshData &surf = surfs.Add();
 
 		surf.SetCode(MeshData::EDIT);
 		surf.mesh.AddRevolution(vals, size); 
-		surf.mesh.MoveTo(x, y, z, 0, 0, 0, 0, 0, 0);
+		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
@@ -1246,13 +1254,13 @@ void BEMData::AddRevolution(double x, double y, double z, double size, Vector<Po
 	}	
 }
 
-void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Vector<Pointf> &vals) {
+void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
 	try {
 		MeshData &surf = surfs.Add();
 
 		surf.SetCode(MeshData::EDIT);
 		surf.mesh.AddPolygonalPanel(vals, size); 
-		surf.mesh.MoveTo(x, y, z, 0, 0, 0, 0, 0, 0);
+		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
@@ -1261,7 +1269,7 @@ void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Vecto
 }
 
 			
-bool BEMData::LoadSerializeJson() {
+bool BEMData::LoadSerializeJson(bool &firstTime) {
 	bool ret;
 	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
 	DirectoryCreate(folder);
@@ -1303,7 +1311,8 @@ bool BEMData::LoadSerializeJson() {
 		numValsA = 1000;
 	if (!ret || IsNull(onlyDiagonal))
 		onlyDiagonal = false;
-				
+	
+	firstTime = !ret;
 	return true;
 }
 
@@ -1352,9 +1361,9 @@ int IsTabSpace(int c) {
 	return false;
 }
 
-Vector<int> NumSets(int num, int numsets) {
+Upp::Vector<int> NumSets(int num, int numsets) {
 	ASSERT(numsets > 0);
-	Vector<int> ret;
+	Upp::Vector<int> ret;
 	ret.SetCount(numsets);
 	
 	for (int i = 0; numsets > 0; ++i) {
@@ -1393,19 +1402,20 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("- can be repeated as desired");
 }
 
-void CheckNumArgs(const Vector<String>& command, int i, String param) {
+void CheckNumArgs(const Upp::Vector<String>& command, int i, String param) {
 	if (i >= command.GetCount())	
 		throw Exc(Format(t_("Missing parameters when reading '%s'"), param));
 }
 
-void ConsoleMain(const Vector<String>& command, bool gui) {	
+void ConsoleMain(const Upp::Vector<String>& command, bool gui) {	
 	String str = t_("BEMRosetta Copyright (c) 2019 Iñaki Zabala\nHydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
 	SetBuildInfo(str);
 	Cout() << str;
 	
 	BEMData md;
 	
-	if (!md.LoadSerializeJson())
+	bool firstTime = false;
+	if (!md.LoadSerializeJson(firstTime))
 		Cout() << "\n" << t_("BEM configuration data are not loaded. Defaults are set");
 	
 	String errorStr;

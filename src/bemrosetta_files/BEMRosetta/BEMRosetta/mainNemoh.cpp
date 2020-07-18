@@ -33,17 +33,17 @@ void MainNemoh::Init(const BEMData &bem) {
 	butDuplicate <<= THISBACK(arrayOnDuplicate);
 	butRemove <<= THISBACK(arrayOnRemove);
 	
-	meshFile.WhenAction = THISBACK(arrayUpdateCursor);
-	meshFile.WhenChange = [&] {arrayUpdateCursor(); return true;};
-	surge.WhenAction = THISBACK(arrayUpdateCursor);
-	sway.WhenAction = THISBACK(arrayUpdateCursor);
-	heave.WhenAction = THISBACK(arrayUpdateCursor);
-	roll.WhenAction = THISBACK(arrayUpdateCursor);
-	pitch.WhenAction = THISBACK(arrayUpdateCursor);
-	yaw.WhenAction = THISBACK(arrayUpdateCursor);
-	cx.WhenAction = THISBACK(arrayUpdateCursor);
-	cy.WhenAction = THISBACK(arrayUpdateCursor);
-	cz.WhenAction = THISBACK(arrayUpdateCursor);
+	meshFile.WhenAction = [&] {ArrayUpdateCursor();};
+	meshFile.WhenChange = [&] {return ArrayUpdateCursor();};
+	surge.WhenAction 	= [&] {ArrayUpdateCursor();};
+	sway.WhenAction 	= [&] {ArrayUpdateCursor();};
+	heave.WhenAction 	= [&] {ArrayUpdateCursor();};
+	roll.WhenAction 	= [&] {ArrayUpdateCursor();};
+	pitch.WhenAction 	= [&] {ArrayUpdateCursor();};
+	yaw.WhenAction 		= [&] {ArrayUpdateCursor();};
+	cx.WhenAction 		= [&] {ArrayUpdateCursor();};
+	cy.WhenAction 		= [&] {ArrayUpdateCursor();};
+	cz.WhenAction 		= [&] {ArrayUpdateCursor();};
 	
 	freeSurface.Transparent(false);
 	freeSurface.WhenAction = [&] {freeX.Enable(~freeSurface);	freeY.Enable(~freeSurface);};
@@ -99,6 +99,21 @@ void MainNemoh::Load(const BEMData &bem) {
 }
 
 void MainNemoh::Jsonize(JsonIO &json) {
+	if (json.IsLoading()) {
+		opIncludeBin = Null;
+		numSplit = Null;	
+		xeff <<= Null;
+		yeff <<= Null;
+		cx <<= Null;
+		cy <<= Null;
+		cz <<= Null;
+		Nf <<= Null;
+		minF <<= Null;
+		maxF <<= Null;
+		Nh <<= Null;
+		minH <<= Null;
+		maxH <<= Null;
+	}
 	json
 		("loadFrom", loadFrom)
 		("saveTo", saveTo)
@@ -200,7 +215,7 @@ void MainNemoh::Load(const NemohCal &data) {
 	domainY <<= data.domainY;
 }
 
-void MainNemoh::Save(NemohCal &data) {
+bool MainNemoh::Save(NemohCal &data) {
 	data.g = ~g;
 	data.rho = ~rho;
 	data.h = ~h;
@@ -211,14 +226,16 @@ void MainNemoh::Save(NemohCal &data) {
 	for (int i = 0; i < data.bodies.GetCount(); ++i) {
 		NemohBody &b = data.bodies[i];
 		b.meshFile = array.Get(i, 0);
-		b.npoints = array.Get(i, 1);
-		b.npanels = array.Get(i, 2);
 		if (FileExists(b.meshFile)) {
 			MeshData dat;
 			bool x0z;
-			if (dat.LoadDatNemoh(b.meshFile, x0z).IsEmpty()) {
+			String ret = dat.LoadDatNemoh(b.meshFile, x0z);
+			if (ret.IsEmpty()) {
 				b.npoints = dat.mesh.GetNumNodes();
 				b.npanels = dat.mesh.GetNumPanels();
+			} else {
+				Exclamation(DeQtf(ret));
+				return false;
 			}
 		}		
 		b.surge = array.Get(i, 3);
@@ -269,6 +286,7 @@ void MainNemoh::Save(NemohCal &data) {
 		data.nFreeX = data.nFreeY = 0;
 		data.domainX = data.domainY = 0;
 	}
+	return true;
 }
 
 void MainNemoh::arrayOnCursor() {
@@ -288,7 +306,7 @@ void MainNemoh::arrayOnCursor() {
 	cz <<= array.Get(id, 11);
 }
 
-void MainNemoh::arrayUpdateCursor() {
+bool MainNemoh::ArrayUpdateCursor() {
 	int id = array.GetCursor();
 	if (id < 0) {
 		if (array.GetCount() == 0) {
@@ -301,6 +319,21 @@ void MainNemoh::arrayUpdateCursor() {
 		} else
 			id = array.GetCount()-1;
 	}	
+	
+	String ret;
+	MeshData dat;
+	bool x0z;
+	if (~meshFile != array.Get(id, 0)) 
+		ret = dat.LoadDatNemoh(~meshFile, x0z);
+	
+	if (ret.IsEmpty()) {
+		array.Set(id, 1, dat.mesh.GetNumNodes());
+		array.Set(id, 2, dat.mesh.GetNumPanels());
+	} else {
+		Exclamation(DeQtf(ret));
+		return false;		
+	}
+		
 	array.Set(id, 0, ~meshFile);
 	array.Set(id, 3, ~surge);
 	array.Set(id, 4, ~sway);
@@ -311,6 +344,8 @@ void MainNemoh::arrayUpdateCursor() {
 	array.Set(id, 9, ~cx);
 	array.Set(id, 10, ~cy);
 	array.Set(id, 11, ~cz);
+
+	return true;
 }
 
 void MainNemoh::arrayClear() {
@@ -332,7 +367,7 @@ void MainNemoh::arrayOnAdd() {
 	array.Add();
 	array.SetCursor(array.GetCount()-1);	
 	arrayClear();
-	arrayUpdateCursor();
+	ArrayUpdateCursor();
 }
 
 void MainNemoh::arrayOnDuplicate() {
@@ -370,7 +405,7 @@ void MainNemoh::arrayOnRemove() {
 		id = array.GetCount()-1;
 		if (id < 0) {
 			arrayClear();
-			arrayUpdateCursor();
+			ArrayUpdateCursor();
 			return;
 		}
 	} 
@@ -382,8 +417,9 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 		String nemohFolder = ~saveTo;
 		
 		NemohCal data;
-		Save(data);	
-		Vector<String> res = data.Check();
+		if (!Save(data))
+			return false;
+		Upp::Vector<String> res = data.Check();
 		if (!res.IsEmpty()) {
 			String str;
 			for (int i = 0; i < res.GetCount(); ++i)
@@ -424,7 +460,7 @@ void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
-		Vector<String> files = GetFiles(d);
+		Upp::Vector<String> files = GetFiles(d);
 		for (int i = 0; i < files.GetCount(); ++i) {
 			loadFrom <<= files[i];
 			OnLoad();
@@ -435,7 +471,7 @@ void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 
 bool MainNemoh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
-		Vector<String> files = GetFiles(Ctrl::Clipboard());
+		Upp::Vector<String> files = GetFiles(Ctrl::Clipboard());
 		for (int i = 0; i < files.GetCount(); ++i) {
 			loadFrom <<= files[i];
 			OnLoad();
