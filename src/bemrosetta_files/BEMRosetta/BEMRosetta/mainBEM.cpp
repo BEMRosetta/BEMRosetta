@@ -37,8 +37,8 @@ void MainBEM::Init() {
 	menuOpen.butSymmetrize <<= THISBACK(OnSymmetrize);
 	menuOpen.butA0.Disable();	
 	menuOpen.butA0 <<= THISBACK(OnA0);
-	menuOpen.butAinf.Disable();	
-	menuOpen.butAinf <<= THISBACK(OnAinf);
+	menuOpen.butKirfAinf.Disable();	
+	menuOpen.butKirfAinf <<= THISBACK(OnKirfAinf);
 	menuOpen.butDescription.Disable();
 	menuOpen.butDescription <<= THISBACK(OnDescription);
 	
@@ -99,7 +99,7 @@ void MainBEM::Init() {
 	
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
-		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		bool plot = true, convertProcess = true, ismenuFOAMM = false;
 
 		if (ids.IsEmpty())
@@ -111,6 +111,8 @@ void MainBEM::Init() {
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
 			mainB.Load(Bem(), ids);
+		else if (mainTab.IsAt(mainK))
+			mainK.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainForceSC))
 			mainForceSC.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainForceFK))
@@ -177,6 +179,9 @@ void MainBEM::Init() {
 	mainB.Init(DATA_B);
 	mainTab.Add(mainB.SizePos(), t_("B")).Disable();
 
+	mainK.Init(DATA_K);
+	mainTab.Add(mainK.SizePos(), t_("Kirf")).Disable();
+	
 	mainForceEX.Init(DATA_FORCE_EX);
 	mainTab.Add(mainForceEX.SizePos(), t_("Fex")).Disable();
 	
@@ -204,6 +209,8 @@ void MainBEM::ShowMenuPlotItems() {
 
 	bool show = true, showwT = true;
 	if (mainTab.IsAt(mainSetupFOAMM)) 
+		showwT = false;
+	else if (mainTab.IsAt(mainK)) 
 		showwT = false;
 	else if (mainTab.IsAt(mainQTF))
 		show = false;
@@ -256,7 +263,7 @@ void MainBEM::InitSerialize(bool ret) {
 }
 
 void MainBEM::LoadSelTab(BEMData &bem) {
-	Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+	Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	int id = mainTab.Get();
 	if (id == mainTab.Find(mainStateSpace))
 		mainStateSpace.Load(bem, ids);
@@ -391,13 +398,14 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		UpdateButtons();
 
-		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
 		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -447,13 +455,14 @@ void MainBEM::OnRemoveSelected(bool all) {
 	
 	UpdateButtons();
 	
-	Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+	Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
 	mainArrange.Load(Bem().hydros, ids);	
 	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.GetCount() > 0);	
 	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -472,13 +481,13 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butSymmetrize.Enable(numsel == 1 || numrow == 1);
 	menuOpen.butA0.Enable(numsel == 1 || numrow == 1);
-	menuOpen.butAinf.Enable(numsel == 1 || numrow == 1);
+	menuOpen.butKirfAinf.Enable(numsel == 1 || numrow == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
 	menuConvert.butLoad.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainBEM::OnJoin() {
-	Vector<int> idsjoin, rowsJoin;
+	Upp::Vector<int> idsjoin, rowsJoin;
 	for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
 		if (listLoaded.IsSelected(row)) {
 			rowsJoin << row;
@@ -510,7 +519,7 @@ void MainBEM::OnJoin() {
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		ArrayModel_RowsHydroDel(listLoaded, rowsJoin);
 	
-		Vector<int> ids = ArrayModel_IdsHydro(listLoaded	);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded	);
 	
 		for (int id = 0; id < Bem().hydros.GetCount(); ++id) {
 			const Hydro &data = Bem().hydros[id].hd();
@@ -526,6 +535,7 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -541,7 +551,7 @@ void MainBEM::OnJoin() {
 
 void MainBEM::OnSymmetrize() {
 	try {
-		int id = GetOneSelected();
+		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 
@@ -555,7 +565,7 @@ void MainBEM::OnSymmetrize() {
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
@@ -567,7 +577,7 @@ void MainBEM::OnSymmetrize() {
 
 void MainBEM::OnA0() {
 	try {
-		int id = GetOneSelected();
+		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 
@@ -581,7 +591,7 @@ void MainBEM::OnA0() {
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	} catch (Exc e) {
@@ -589,32 +599,40 @@ void MainBEM::OnA0() {
 	}
 }
 
-void MainBEM::OnAinf() {
+void MainBEM::OnKirfAinf() {
 	try {
-		int id = GetOneSelected();
+		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 
+		Progress progress(t_("Calculating IRF and Ainf in selected BEM file..."), 100); 
+		
+		double maxT = Bem().hydros[id].hd().GetK_IRF_MaxT();
+		if (maxT < 0)
+			maxT = Bem().maxTimeA;
+		else if (Bem().maxTimeA > maxT)
+			if (!PromptYesNo(Format(t_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
+				maxT = Bem().maxTimeA;
+
 		WaitCursor wait;
 
-		Progress progress(t_("Calculating A0 in selected BEM file..."), 100); 
-		
-		Bem().Ainf(id);
+		Bem().Ainf(id, maxT);
 		
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
 }
 
 void MainBEM::OnDescription() {
-	int id = GetOneSelected();
+	int id = GetIdOneSelected();
 	if (id < 0) 
 		return;
 
@@ -630,6 +648,8 @@ void MainBEM::OnDescription() {
 	Bem().hydros[id].hd().name = ~w.name;
 	Bem().hydros[id].hd().description = ~w.description;
 	
+	ArrayModel_Change(listLoaded, Bem().GetHydroId(id), Null, ~w.name, Null);
+	
 	mainSummary.Clear();
 	for (int i = 0; i < Bem().hydros.GetCount(); ++i)
 		mainSummary.Report(Bem().hydros[i].hd(), i);
@@ -643,7 +663,7 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 	WithSaveQTF<TopWindow> dialog;
 	CtrlLayout(dialog);
 	
-	dialog.Title(t_("Please choose the QTF heading to save"));
+	dialog.Title(t_("Please choose the QTF headings to save"));
 	
 	dialog.swHeadings <<= 0;
 	dialog.dropHeadings.Enable(false);
@@ -680,7 +700,7 @@ bool MainBEM::OnConvert() {
 	String file = ~menuConvert.file;
 	
 	try {
-		int id = GetOneSelected();
+		int id = GetIdOneSelected();
 		if (id < 0) 
 			return false;
 		
@@ -703,7 +723,7 @@ bool MainBEM::OnConvert() {
 		
 		WaitCursor wait;
 		
-		Bem().hydros[id].hd().SaveAs(file, type, qtfHeading);	
+		Bem().hydros[id].hd().SaveAs(file, type, qtfHeading);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -711,7 +731,7 @@ bool MainBEM::OnConvert() {
 	return true;
 }
 
-int MainBEM::GetOneSelected() {
+int MainBEM::GetIdOneSelected() {
 	int id = -1;
 	for (int row = 0; row < listLoaded.GetCount(); ++row) {
 		if (listLoaded.IsSelected(row)) {
@@ -733,6 +753,14 @@ int MainBEM::GetOneSelected() {
 }
 
 void MainBEM::Jsonize(JsonIO &json) {
+	if (json.IsLoading()) {
+		menuPlot.autoFit = Null;
+		menuPlot.fromY0 = Null;
+		menuPlot.opwT = Null;
+		menuPlot.showPoints = Null;
+		menuPlot.showNdim = Null;
+		menuConvert.opt = Null;
+	}
 	json
 		("menuOpen_file", menuOpen.file)
 		("menuConvert_file", menuConvert.file)
@@ -763,7 +791,7 @@ String MainBEM::BEMFile(String fileFolder) const {
 	return fileFolder;
 }
 
-void MainBEM::LoadDragDrop(const Vector<String> &files) {
+void MainBEM::LoadDragDrop(const Upp::Vector<String> &files) {
 	bool followWithErrors = false;
 	for (int i = 0; i < files.GetCount(); ++i) {
 		String file = BEMFile(files[i]);
@@ -783,7 +811,7 @@ void MainBEM::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
-		Vector<String> files = GetFiles(d);
+		Upp::Vector<String> files = GetFiles(d);
 		LoadDragDrop(files);
 	}
 }
@@ -791,7 +819,7 @@ void MainBEM::DragAndDrop(Point , PasteClip& d) {
 bool MainBEM::Key(dword key, int ) {
 	GuiLock __;
 	if (key == K_CTRL_V) {
-		Vector<String> files = GetFiles(Ctrl::Clipboard());
+		Upp::Vector<String> files = GetFiles(Ctrl::Clipboard());
 		LoadDragDrop(files);
 		return true;
 	}
@@ -969,7 +997,7 @@ void MainArrange::Clear() {
 	arrangeDOF.Clear();
 }
 
-void MainArrange::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids) {
+void MainArrange::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
 	MainArrange::Clear();
 	for (int i = 0; i < ids.GetCount(); ++i) {
 		int icase = ids[i];
@@ -1068,7 +1096,6 @@ void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 }
 
 void MainSetupFOAMM::WhenFocus() {
-
 	plots.RefreshScatter();
 }
 
@@ -1165,7 +1192,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		selector.Clear();
 			
 		String freqs = arrayCases.Get(row, 6);
-		Vector<String> afreqs = Split(freqs, ';');
+		Upp::Vector<String> afreqs = Split(freqs, ';');
 		for (int i = 0; i < afreqs.GetCount(); ++i)
 			selector.AddField(ScanDouble(afreqs[i]));
 		
@@ -1195,7 +1222,7 @@ void MainSetupFOAMM::WhenArrayCases() {
 	arrayCases.Set(row, 4, ~fromFreq);
 	arrayCases.Set(row, 5, ~toFreq);
 
-	Vector<double> freqs;
+	Upp::Vector<double> freqs;
 	for (int i = 0; i < selector.GetCount(); ++i) {
 		double freq = selector.Get(i);
 		if (!IsNull(freq)) {
@@ -1233,11 +1260,11 @@ String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
 	if (toFreq <= fromFreq) 
 		return t_("From: frequency has to be lower than To: frequency");
 			
-	Vector<String> afreqs = Split(freqs, ';');
+	Upp::Vector<String> afreqs = Split(freqs, ';');
 	if (afreqs.IsEmpty()) 
 		return t_("No frequency has been selected");
 	
-	Vector<double> unique;
+	Upp::Vector<double> unique;
 	for (int i = 0; i < afreqs.GetCount(); ++i) {
 		double freq = ScanDouble(afreqs[i]);
 		if (freq < fromFreq || freq > toFreq) 
@@ -1250,8 +1277,8 @@ String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
 	return String("");
 }
 
-bool MainSetupFOAMM::Get(Vector<int> &ibs, Vector<int> &idfs, Vector<int> &jdfs,
-		Vector<double> &froms, Vector<double> &tos, Vector<Vector<double>> &freqs) {
+bool MainSetupFOAMM::Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vector<int> &jdfs,
+		Upp::Vector<double> &froms, Upp::Vector<double> &tos, Upp::Vector<Upp::Vector<double>> &freqs) {
 	for (int row = 0; row < arrayCases.GetCount(); ++row) {
 		bool proc = arrayCases.Get(row, 0);
 		if (proc) {
@@ -1271,8 +1298,8 @@ bool MainSetupFOAMM::Get(Vector<int> &ibs, Vector<int> &idfs, Vector<int> &jdfs,
 			}
 			froms << from;
 			tos << to;
-			Vector<double> &f = freqs.Add();
-			Vector<String> fs = Split(strfreqs, ';');
+			Upp::Vector<double> &f = freqs.Add();
+			Upp::Vector<String> fs = Split(strfreqs, ';');
 			for (int i = 0; i < fs.GetCount(); ++i)
 				f << ScanDouble(fs[i]);
 		}
@@ -1293,9 +1320,9 @@ void MenuFOAMM::Clear() {
 }
 		
 bool MenuFOAMM::OnFOAMM() {
-	Vector<int> ibs, idfs, jdfs;
-	Vector<double> froms, tos;
-	Vector<Vector<double>> freqs;
+	Upp::Vector<int> ibs, idfs, jdfs;
+	Upp::Vector<double> froms, tos;
+	Upp::Vector<Upp::Vector<double>> freqs;
 	String ret;
 	
 	try {
@@ -1496,7 +1523,7 @@ bool MainQTF::Load() {
 		
 		const Hydro &hd = Bem().hydros[idHydro].hd();
 		
-		Vector<int> ibL, ih1L, ih2L;
+		Upp::Vector<int> ibL, ih1L, ih2L;
 		Hydro::GetQTFList(hd.qtfsum, ibL, ih1L, ih2L);
 
 		if (hd.qtfsum.IsEmpty() && hd.qtfdif.IsEmpty())
@@ -1511,4 +1538,11 @@ bool MainQTF::Load() {
 		Exclamation(DeQtfLf(e));
 	}				
 	return true;		
+}
+
+void MainBEMW::Init(MainBEM &_bem, const Image &icon, const Image &largeIcon) {
+	LoadFromJson(bem, StoreAsJson(_bem));
+	bem.Init();
+	Add(bem.SizePos());
+	Title(t_("BEMRosetta BEM Coefficients Processing")).Sizeable().Zoomable().Icon(icon, largeIcon);
 }

@@ -10,15 +10,16 @@ public:
 	void Clear();
 	int GetCol(String param);
 	int FindCol(String param);
-	Vector<int> FindColMatch(String param);
+	Upp::Vector<int> FindColMatch(String param);
 	
 	const String &GetParameter(int id) const	{return parameters[id];}
 	const String &GetUnit(int id) const			{return units[id];}
 	int GetColumnCount() const					{return parameters.GetCount();}
 	
-	Vector<String> GetParameterList(String filter);
-	Vector<String> GetUnitList(String filter);
-	
+	SortedIndex<String> GetParameterList(String filter = ""); 
+	SortedIndex<String> GetUnitList(String filter = "");
+	SortedVectorMap<String, String> GetList(String filterParam = "", String filterUnits = "");
+		
 	double GetVal(double time, int col);
 	inline double GetVal(int idtime, int col) 	{return dataOut[col][idtime];}
 	int GetIdTime(double time);
@@ -61,8 +62,8 @@ public:
 		c.calc = &calc;
 	}
 
-	Vector<String> parameters, units;
-	Vector<Vector <double> > dataOut;
+	Upp::Vector<String> parameters, units;
+	Upp::Vector<Upp::Vector <double> > dataOut;
 	Upp::Array<CalcParams> calcParams;
 
 private:

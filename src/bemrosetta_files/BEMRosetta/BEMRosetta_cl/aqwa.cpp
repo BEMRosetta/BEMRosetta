@@ -58,6 +58,7 @@ bool Aqwa::Load_AH1() {
 	
 	String line;
 	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		
@@ -70,7 +71,7 @@ bool Aqwa::Load_AH1() {
 	hd().Nf = f.GetInt(2);
 	
 	if (hd().Nh != f.GetCount() - 3)
-		throw Exc(in.Str() + Format(t_("Number of headings do not match %d<>%d"), hd().Nh, f.GetCount() - 3));
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), hd().Nh, f.GetCount() - 3));
 	for (int i = 3; i < f.GetCount(); ++i)
 		hd().head << f.GetDouble(i);
 	
@@ -98,7 +99,7 @@ bool Aqwa::Load_AH1() {
 		}
 	}	
 	if (hd().Nf != hd().w.GetCount())
-		throw Exc(in.Str() + Format(t_("Number of frequencies do not match %d<>%d"), hd().Nf, hd().w.GetCount()));
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies do not match %d<>%d"), hd().Nf, hd().w.GetCount()));
 
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -112,7 +113,7 @@ bool Aqwa::Load_AH1() {
 				f.Load(in.GetLine());
 				int ib = f.GetInt(0) - 1;
 				if (ib < 0 || ib >= hd().Nb)
-					throw Exc(in.Str() + Format(t_("Unknown body found in COG %d (%d)"), ib+1, hd().Nb));
+					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COG %d (%d)"), ib+1, hd().Nb));
 				
 				hd().cg(0, ib) = f.GetDouble(1);
 				hd().cg(1, ib) = f.GetDouble(2);
@@ -128,7 +129,7 @@ bool Aqwa::Load_AH1() {
 	                    did = 1;
 	                    int itb = f.GetInt(0);
 	                    if (itb - 1 != ib)
-	                        throw Exc(in.Str() + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
+	                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
 	                }
 	                for (int jdf = 0; jdf < 6; ++jdf) 
 	                    hd().C[ib](idf, jdf) = f.GetDouble(jdf + did);
@@ -147,13 +148,13 @@ bool Aqwa::Load_AH1() {
 			                    did = 3;
 			                    int itb0 = f.GetInt(0);
 			                    if (itb0 - 1 != ib0)
-			                        throw Exc(in.Str() + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb0, ib0+1));
+			                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb0, ib0+1));
 			                    int itb1 = f.GetInt(1);
 			                    if (itb1 - 1 != ib1)
-			                        throw Exc(in.Str() + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb1, ib1+1));
+			                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb1, ib1+1));
 			                    int itfr = f.GetInt(2);
 			                    if (itfr - 1 != ifr)
-			                        throw Exc(in.Str() + Format(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
+			                        throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
 			                } else
 			                    did = 0;
 			                for (int jdf = 0; jdf < 6; ++jdf) {
@@ -174,13 +175,13 @@ bool Aqwa::Load_AH1() {
 	                  	for (int idf = 0; idf < 6; ++idf) {
 		                    int itb = f.GetInt(0);
 		                    if (itb - 1 != ib)
-		                        throw Exc(in.Str() + Format(t_("Body # does not match in 'FORCERAO' %d<>%d"), itb, ib+1));
+		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'FORCERAO' %d<>%d"), itb, ib+1));
 		                    int ith = f.GetInt(1);
 		                    if (ith - 1 != ih)
-		                        throw Exc(in.Str() + Format(t_("Heading # does not match in 'FORCERAO' %d<>%d"), ith, ih+1));
+		                        throw Exc(in.Str() + "\n"  + Format(t_("Heading # does not match in 'FORCERAO' %d<>%d"), ith, ih+1));
 		                    int itfr = f.GetInt(2);
 							if (itfr - 1 != ifr)
-								throw Exc(in.Str() + Format(t_("Frequency # does not match in 'FORCERAO' %d<>%d"), itfr, ifr+1));
+								throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in 'FORCERAO' %d<>%d"), itfr, ifr+1));
 			                hd().ex.ma[ih](ifr, idf + 6*ib) = f.GetDouble(idf + 3);
 	                  	}
 	                  	f.Load(in.GetLine());
@@ -212,6 +213,7 @@ bool Aqwa::Load_LIS() {
 	
 	String line; 
 	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
 	int pos;
 	
 	FileInLine::Pos fpos = in.GetPos();
@@ -260,7 +262,7 @@ bool Aqwa::Load_LIS() {
 		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
 			idb = ScanInt(line.Mid(pos)) - 1; 
 			if (idb >= hd().Nb)
-				throw Exc(in.Str() + Format(t_("Wrong body %d"), idb));
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), idb));
 		} else if (line.StartsWith("CENTRE OF GRAVITY")) {
 			f.Load(line);
 			hd().cg(0, idb) = f.GetDouble(3);
@@ -334,7 +336,7 @@ bool Aqwa::Load_LIS() {
 			if (!IsNull(idb)) {
 				idb -= 1; 
 				if (idb >= hd().Nb)
-					throw Exc(in.Str() + Format(t_("Wrong body %d"), idb));
+					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), idb));
 			}
 		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
 				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {
@@ -345,7 +347,7 @@ bool Aqwa::Load_LIS() {
 				line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
-				throw Exc(in.Str() + t_("Format error, '=' not found"));
+				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
 	       	hd().C[idb](2, 2) = f.GetDouble(0);
 	       	hd().C[idb](2, 3) = f.GetDouble(1);
@@ -355,7 +357,7 @@ bool Aqwa::Load_LIS() {
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
-				throw Exc(in.Str() + t_("Format error, '=' not found"));
+				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
 	       	hd().C[idb](3, 2) = f.GetDouble(0);
 			hd().C[idb](3, 3) = f.GetDouble(1);
@@ -365,7 +367,7 @@ bool Aqwa::Load_LIS() {
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
-				throw Exc(in.Str() + t_("Format error, '=' not found"));
+				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
 	       	hd().C[idb](4, 2) = f.GetDouble(0);
 			hd().C[idb](4, 3) = f.GetDouble(1);
@@ -375,7 +377,7 @@ bool Aqwa::Load_LIS() {
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
-				throw Exc(in.Str() + t_("= not found"));
+				throw Exc(in.Str() + "\n"  + t_("= not found"));
 			hd().Vo[idb] = ScanDouble(line.Mid(pos));
 		} else if (line.StartsWith("POSITION OF THE CENTRE OF BUOYANCY")) {
 			f.Load(line);
@@ -390,7 +392,7 @@ bool Aqwa::Load_LIS() {
 				pfrc = &hd().fk;
 			else if (line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().sc;
-			else if (line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+			else //if (line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().rao;
 			Hydro::Forces &frc = *pfrc; 
 			
@@ -403,13 +405,13 @@ bool Aqwa::Load_LIS() {
 				double heading = f.GetDouble(2);
 				int idh = FindClosest(hd().head, heading);
 				if (idh < 0)
-					throw Exc(in.Str() + Format(t_("Heading %f is unknown"), heading));
+					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
 				int dd = 1;
 				for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 					double freq = f.GetDouble(1);
 					int ifrr = FindClosest(hd().w, freq);
 					if (ifrr < 0)
-						throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
+						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
 						frc.ma[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2);
 						frc.ph[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180;
@@ -426,7 +428,7 @@ bool Aqwa::Load_LIS() {
 			double freq = f.GetDouble(7);
 			int ifr = FindClosest(hd().w, freq);
 			if (ifr < 0)
-				throw Exc(in.Str() + Format(t_("Frequency %f is unknown"), freq));
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 			
 			in.GetLine(2);
 			if (TrimBoth(in.GetLine()) == "ADDED  MASS") {
@@ -436,7 +438,7 @@ bool Aqwa::Load_LIS() {
 					in.GetLine();
 					f.Load(in.GetLine());
 					if (f.GetText(0) != textDOF[idf])
-						throw Exc(in.Str() + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
+						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
 						hd().A[ifr](6*idb + idf, 6*idb + jdf) = f.GetDouble(1 + jdf);
 				}
@@ -445,7 +447,7 @@ bool Aqwa::Load_LIS() {
 					in.GetLine();
 					f.Load(in.GetLine());
 					if (f.GetText(0) != textDOF[idf])
-						throw Exc(in.Str() + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
+						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
 						hd().B[ifr](6*idb + idf, 6*idb + jdf) = f.GetDouble(1 + jdf);
 				}
@@ -470,6 +472,7 @@ bool Aqwa::Load_QTF() {
 	
 	String line; 
 	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
 	
 	in.GetLine();	// AQWA version	
 	
@@ -489,13 +492,13 @@ bool Aqwa::Load_QTF() {
 				hd().names.SetCount(hd().Nb);
 		}
 		else if (ib > hd().Nb)
-			throw Exc(in.Str() + Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
+			throw Exc(in.Str() + "\n"  + Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
 		int Nh = f.GetInt(1);
 		//if (Nh != hd().Nh)
-		//	throw Exc(in.Str() + Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
+		//	throw Exc(in.Str() + "\n"  + Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
 		int Nf = f.GetInt(2);
 		//if (Nf != hd().Nf)
-		//	throw Exc(in.Str() + Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
+		//	throw Exc(in.Str() + "\n"  + Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
 		
 		int col = 3;
 		int ih = 0;
@@ -504,7 +507,7 @@ bool Aqwa::Load_QTF() {
 				double head = f.GetDouble(col++);
 				FindAddRatio(hd().qtfhead, head, 0.001);
 				//if (FindRatio(hd().head, head, 0.001) < 0)	
-				//	throw Exc(in.Str() + Format(t_("%f heading not found"), head));
+				//	throw Exc(in.Str() + "\n"  + Format(t_("%f heading not found"), head));
 				ih++;
 			}
 			if (ih >= Nh)
@@ -520,7 +523,7 @@ bool Aqwa::Load_QTF() {
 				double w = f.GetDouble(col++);
 				FindAddRatio(hd().qtfw, w, 0.001);
 				//if (FindRatio(hd().w, w, 0.001) < 0)	
-				//	throw Exc(in.Str() + Format(t_("%f frequency not found"), w));
+				//	throw Exc(in.Str() + "\n"  + Format(t_("%f frequency not found"), w));
 				ifr++;
 			}
 			if (ifr >= Nf)
@@ -537,16 +540,16 @@ bool Aqwa::Load_QTF() {
 			f.Load(in.GetLine());
 			int ib = f.GetInt(0)-1;
 			if (ib >= hd().Nb)
-				throw Exc(in.Str() + Format(t_("Body id %d higher than number of bodies"), ib+1, hd().Nb));
+				throw Exc(in.Str() + "\n"  + Format(t_("Body id %d higher than number of bodies"), ib+1, hd().Nb));
 			int ih = f.GetInt(1)-1;
 			if (ih >= Nh)
-				throw Exc(in.Str() + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
+				throw Exc(in.Str() + "\n"  + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
 			int ifr1 = f.GetInt(2)-1;
 			if (ifr1 >= Nf)
-				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
 			int ifr2 = f.GetInt(3)-1;
 			if (ifr2 >= Nf)
-				throw Exc(in.Str() + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, Nf));
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, Nf));
 							
 			Hydro::QTF &qtfdif = hd().qtfdif.Add();
 			qtfdif.Set(ib, ih, ih, ifr1, ifr2);

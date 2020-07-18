@@ -10,11 +10,12 @@ String MeshData::LoadDatWamit(String fileName) {
 	
 	try {
 		String line;
-		FieldSplit f(in);	
+		FieldSplit f(in);
+		f.IsSeparator = IsTabSpace;
 		
 		line = ToUpper(TrimBoth(in.GetLine()));
 		if (!line.StartsWith("ZONE"))
-			return in.Str() + t_("'ZONE' field not found");
+			return in.Str() + "\n"  + t_("'ZONE' field not found");
 	
 		line.Replace("\"", "");
 		line.Replace(" ", "");
@@ -39,7 +40,7 @@ String MeshData::LoadDatWamit(String fileName) {
 		
 		if (IsNull(T)) {
 			while(!in.IsEof()) {
-				int id0 = mesh.nodes0.GetCount();
+				int id0 = mesh.nodes.GetCount();
 				for (int i = 0; i < I*J; ++i) {
 					line = in.GetLine();	
 					f.Load(line);
@@ -48,7 +49,7 @@ String MeshData::LoadDatWamit(String fileName) {
 					double y = f.GetDouble(1);	
 					double z = f.GetDouble(2);	
 						
-					Point3D &node = mesh.nodes0.Add();
+					Point3D &node = mesh.nodes.Add();
 					node.x = x;
 					node.y = y;
 					node.z = z;
@@ -73,7 +74,7 @@ String MeshData::LoadDatWamit(String fileName) {
 				double y = f.GetDouble(1);	
 				double z = f.GetDouble(2);	
 					
-				Point3D &node = mesh.nodes0.Add();
+				Point3D &node = mesh.nodes.Add();
 				node.x = x;
 				node.y = y;
 				node.z = z;
@@ -104,6 +105,7 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 	try {
 		String line;
 		FieldSplit f(in);	
+		f.IsSeparator = IsTabSpace;
 		
 		in.GetLine();
 		line = in.GetLine();	
@@ -136,8 +138,8 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 				double z = f.GetDouble(2)*scale;	
 				
 				bool found = false;
-				for (int iin = 0; iin < mesh.nodes0.GetCount(); ++iin) {
-					Point3D &node = mesh.nodes0[iin];
+				for (int iin = 0; iin < mesh.nodes.GetCount(); ++iin) {
+					Point3D &node = mesh.nodes[iin];
 					if (x == node.x && y == node.y && z == node.z) {
 						ids[i] = iin;
 						found = true;
@@ -145,11 +147,11 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 					}
 				}
 				if (!found) {
-					Point3D &node = mesh.nodes0.Add();
+					Point3D &node = mesh.nodes.Add();
 					node.x = x;
 					node.y = y;
 					node.z = z;
-					ids[i] = mesh.nodes0.GetCount() - 1;
+					ids[i] = mesh.nodes.GetCount() - 1;
 				}
 			}
 			Panel &panel = mesh.panels.Add();
@@ -165,10 +167,13 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 	return String();
 }
 
-void MeshData::SaveGdfWamit(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, double g, bool y0z, bool x0z) {
+void MeshData::SaveGdfWamit(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
+	
+	const Vector<Panel> &panels = surf.panels;
+	const Vector<Point3D> &nodes = surf.nodes;
 	
 	out << "BEMRosetta GDF mesh file export\n";
 	out << Format("  %12d   %12f 	ULEN GRAV\n", 1, g);

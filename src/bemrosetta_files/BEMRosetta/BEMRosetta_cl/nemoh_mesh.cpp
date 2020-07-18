@@ -11,6 +11,7 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	try {
 		String line;
 		FieldSplit f(in);	
+		f.IsSeparator = IsTabSpace;
 			
 		line = in.GetLine();	
 		f.Load(line);
@@ -31,7 +32,7 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 			int id = f.GetInt(0);	
 			if (id == 0)
 				break;
-			Point3D &node = mesh.nodes0.Add();
+			Point3D &node = mesh.nodes.Add();
 			node.x = f.GetDouble(1);
 			node.y = f.GetDouble(2);
 			node.z = f.GetDouble(3); 
@@ -57,10 +58,13 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	return String();
 }
 
-void MeshData::SaveDatNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, bool x0z) {
+void MeshData::SaveDatNemoh(String fileName, const Surface &surf, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+	
+	const Vector<Panel> &panels = surf.panels;
+	const Vector<Point3D> &nodes = surf.nodes;
 	
 	out << "    2   " << (x0z ? "1" : "0") << "\n";
 	for (int i = 0; i < nodes.GetCount(); ++i) {
@@ -76,10 +80,13 @@ void MeshData::SaveDatNemoh(String fileName, const Vector<Panel> &panels, const 
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
 
-void MeshData::SavePreMeshNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes) {
+void MeshData::SavePreMeshNemoh(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+	
+	const Vector<Panel> &panels = surf.panels;
+	const Vector<Point3D> &nodes = surf.nodes;
 	
 	out << nodes.GetCount() << "\n";
 	out << panels.GetCount() << "\n";

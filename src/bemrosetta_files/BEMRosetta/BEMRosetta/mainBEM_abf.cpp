@@ -31,7 +31,7 @@ void MainABForce::Clear() {
 	selTab = 0;
 }
 
-bool MainABForce::Load(BEMData &bem, const Vector<int> &ids) {
+bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
@@ -42,17 +42,18 @@ bool MainABForce::Load(BEMData &bem, const Vector<int> &ids) {
 			return false;
 		String format;
 		switch (dataToShow) {
-		case DATA_A:		format = t_("%s");		break;		
-		case DATA_B:		format = t_("%s");		break;
-		case DATA_FORCE_SC:	format = t_("%s%.1fº");	break;
-		case DATA_FORCE_FK:	format = t_("%s%.1fº");	break;
-		case DATA_FORCE_EX:	format = t_("%s%.1fº");	break;
+		case DATA_A:			
+		case DATA_B:
+		case DATA_K:		format = t_("%s");		break;
+		case DATA_FORCE_SC:	
+		case DATA_FORCE_FK:	
+		case DATA_FORCE_EX:	
 		case DATA_RAO:		format = t_("%s%.1fº");	break;
 		case DATA_STS:		NEVER();
 		case DATA_STS2:		NEVER();
 		}
 		int sdof = 6*bem.Nb;
-		if (dataToShow == DATA_A || dataToShow == DATA_B) {
+		if (dataToShow == DATA_A || dataToShow == DATA_B || dataToShow == DATA_K) {
 			plots.SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {
 				plots[idf].SetCount(sdof);

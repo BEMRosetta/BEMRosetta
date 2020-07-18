@@ -9,9 +9,8 @@ using namespace Upp;
 
 
 class BEMData;
-class FieldSplit;
 
-void ConsoleMain(const Vector<String>& command, bool gui);
+void ConsoleMain(const Upp::Vector<String>& command, bool gui);
 void SetBuildInfo(String &str);
 
 class Hydro {
@@ -79,17 +78,17 @@ public:
     Eigen::MatrixXd Awinf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     Eigen::MatrixXd Aw0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
     Upp::Array<Eigen::MatrixXd> B; 			// [Nf](6*Nb, 6*Nb)	Radiation damping
-    Vector<double> head;					// [Nh]             Wave headings (deg)
-    Vector<String> names;  					// {Nb}             Body names
+    Upp::Vector<double> head;				// [Nh]             Wave headings (deg)
+    Upp::Vector<String> names;  			// {Nb}             Body names
     Upp::Array<Eigen::MatrixXd> C;			// [Nb](6, 6)		Hydrostatic restoring coefficients:
     Eigen::MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     BEM_SOFT code;        					// BEM_SOFT			BEM code 
-    Vector<int> dof;      					// [Nb]            	Degrees of freedom for each body 
-    Vector<int> dofOrder;					//					Order of DOF
+    Upp::Vector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
+    Upp::Vector<int> dofOrder;				//					Order of DOF
     
     Upp::Array<Eigen::MatrixXd> Kirf;		// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
-    Vector<double> Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
+    Upp::Vector<double> Tirf;	  			// [Nt]				Time-window for the calculation of the IRF
     
     int GetHeadId(double hd) const;
 	
@@ -124,7 +123,7 @@ public:
 		Eigen::VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
 		double ssMAE = Null;
 		
-		void GetTFS(const Vector<double> &w);
+		void GetTFS(const Upp::Vector<double> &w);
 		
 		void Jsonize(JsonIO &json) {
 			json
@@ -161,7 +160,7 @@ public:
         int ib = -1;
         int ih1, ih2;
         int ifr1, ifr2;
-        Vector<double> fre, fim, fma, fph;
+        Upp::Vector<double> fre, fim, fma, fph;
  
 		void Jsonize(JsonIO &json) {
 			json
@@ -178,17 +177,17 @@ public:
     	}
     };
     Upp::Array<QTF> qtfsum, qtfdif;
-    Vector<double> qtfw, qtfT, qtfhead;
+    Upp::Vector<double> qtfw, qtfT, qtfhead;
     bool qtfdataFromW;
     
     int GetQTFHeadId(double hd) const;
     static int GetQTFId(const Upp::Array<Hydro::QTF> &qtfList, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
-	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Vector<int> &ibL, Vector<int> &ih1L, Vector<int> &ih2L);
+	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Upp::Vector<int> &ibL, Upp::Vector<int> &ih1L, Upp::Vector<int> &ih2L);
 							
-    Vector<double> T; 						// [Nf]    			Wave periods
-    Vector<double> w;     		 			// [Nf]             Wave frequencies
+    Upp::Vector<double> T;					// [Nf]    			Wave periods
+    Upp::Vector<double> w;		 			// [Nf]             Wave frequencies
     bool dataFromW;
-    Vector<double> Vo;   		 			// [Nb]             Displaced volume
+    Upp::Vector<double> Vo;   				// [Nb]             Displaced volume
     		
     void Dimensionalize();
     void Normalize();
@@ -275,6 +274,10 @@ public:
 	double B_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? B[ifr](idf, jdf)*rho_ndim()/rho_dim() : B[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
 	
+	double Kirf_dim(int ifr, int idf, int jdf)  	   const {return dimen ? Kirf[ifr](idf, jdf)*g_rho_dim()/g_rho_ndim()  : Kirf[ifr](idf, jdf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double Kirf_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? Kirf[ifr](idf, jdf) : Kirf[ifr](idf, jdf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double Kirf_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? Kirf_ndim(ifr, idf, jdf) : Kirf_dim(ifr, idf, jdf);}
+	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
@@ -322,8 +325,8 @@ private:
 	static String C_units_base(int i, int j);
 	BEMData *bem;
 		
-	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Vector<double> &newHead, double h, int ih, int idb);
-	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Vector<double> &newHead, int newNh);
+	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, double h, int ih, int idb);
+	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh);
 	int id;
 	static int idCount;
 	 
@@ -434,16 +437,17 @@ public:
 	void Compare_cg(Hydro &a);
 	
 	//const Vector<int> &GetOrder()		{return dofOrder;}
-	void SetOrder(Vector<int> &order)	{dofOrder = pick(order);}
+	void SetOrder(Upp::Vector<int> &order)	{dofOrder = pick(order);}
 	
 	int GetW0();
 	void Get3W0(int &id1, int &id2, int &id3);
 	void A0();
 		
 	void K_IRF(double maxT = 120, int numT = 1000);
+	double GetK_IRF_MaxT();
 	void Ainf();
 	
-	void Join(const Vector<Hydro *> &hydrosp);
+	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
 	String S_g()	const {return IsNull(g)   ? S("unknown") : Format("%.3f", g);}
 	String S_h()	const {return IsNull(h)   ? S("unknown") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
@@ -493,7 +497,10 @@ public:
 	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, STL_BIN, STL_TXT, EDIT, UNKNOWN};
 	enum MESH_TYPE {MOVED, UNDERWATER};
 	
-	MeshData() {id = idCount++;}
+	MeshData() {
+		id = idCount++;
+		cg = Point3D(0, 0, 0);
+	}
 	
 	String GetCodeStr()	const {
 		switch (code) {
@@ -512,12 +519,10 @@ public:
 	MESH_FMT GetCode()			{return code;}
 	int GetId()	const			{return id;}
 
-	String Load(String fileName, double rho, double g);
+	String Load(String fileName, double rho, double g, bool cleanPanels);
 	String LoadDatNemoh(String fileName, bool &x0z);
 	String LoadDatWamit(String fileName);
 	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
-	String LoadStlTxt(String fileName, bool &isText);
-	String LoadStlBin(String fileName);
 	
 	String Heal(bool basic, Function <void(String, int pos)> Status);
 	void Orient();
@@ -526,21 +531,22 @@ public:
 		
 	void AfterLoad(double rho, double g, bool onlyCG);
 
-	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType);
-	static void SaveDatNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, bool x0z);
-	static void SavePreMeshNemoh(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
-	static void SaveGdfWamit(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes, double g, bool y0z, bool x0z);
-	static void SaveStlTxt(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
-	static void SaveStlBin(String fileName, const Vector<Panel> &panels, const Vector<Point3D> &nodes);
+	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY);
+	static void SaveDatNemoh(String fileName, const Surface &surf, bool x0z);
+	static void SavePreMeshNemoh(String fileName, const Surface &surf);
+	static void SaveGdfWamit(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
 	
 	void SaveHST(String fileName, double rho, double g) const; 
 	
 	void Report(double rho);
 	
+	bool IsSymmetricX();
+	bool IsSymmetricY();
+	
 	double waterPlaneArea; 
 	Point3D cb;
-	Point3D cg, cg0;
-	double mass;
+	Point3D cg;
+	double mass = Null;
 	Eigen::MatrixXd C;
 	
 	String name;
@@ -553,73 +559,6 @@ private:
 	MESH_FMT code;
 	int id;
 	static int idCount;
-};
-
-class FileInLine : public FileIn {
-public:
-	FileInLine(String _fileName) : FileIn(_fileName), line(0), fileName(_fileName) {};
-	String GetLine() {
-		line++;	
-		return FileIn::GetLine();
-	}
-	void GetLine(int num) {
-		for (int i = 0; i < num; ++i)
-			GetLine();
-	}
-	int GetLineNumber()	const 	{return line;}
-	String Str() const 			{return Format(t_("[File: '%s', line: %d]:\n"), fileName, line);}
-	
-	struct Pos {
-		Pos() : byt(0), line(0) {}
-		int64 byt;
-		int line;
-	};
-	
-	Pos GetPos() {
-		Pos ret;
-		ret.byt = FileIn::GetPos();
-		ret.line = line;
-		return ret;
-	}
-	
-	void SeekPos(Pos &_pos) {
-		FileIn::Seek(_pos.byt);
-		line = _pos.line;
-	}
-	
-private:
-	int line;
-	String fileName;
-};
-
-class FileInData : public FileIn {
-public:
-	FileInData(const char *fn) : FileIn(fn)	{}
-	FileInData()                          	{}
-	
-	void Read(void *data, int sz) {
-		size_t len = Get64(data, sz);
-		if (len != size_t(sz))
-			throw Exc(Format("Data not loaded in Read(%d)", sz));
-	}
-	
-	template <class T>
-	T Read() {
-		T data;
-		Read(&data, sizeof(T));
-		return data;
-	}
-};
-
-class FileOutData : public FileOut {
-public:
-	FileOutData(const char *fn) : FileOut(fn)	{}
-	FileOutData()                          		{}
-	
-	template <class T>
-	void Write(T data) {
-		Put64(&data, sizeof(T));
-	}
 };
 
 class Wamit : public HydroClass {
@@ -658,9 +597,9 @@ class Foamm : public HydroClass {
 public:
 	Foamm(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	void Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<int> &jdfs,
-		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
+	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Upp::Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
+	void Get(const Upp::Vector<int> &ibs, const Upp::Vector<int> &idfs, const Upp::Vector<int> &jdfs,
+		const Upp::Vector<double> &froms, const Upp::Vector<double> &tos, const Upp::Vector<Upp::Vector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	virtual ~Foamm() noexcept {}
 	
@@ -706,7 +645,7 @@ class NemohCal {
 public:	
 	double rho = Null, g = Null, h = Null;
 	double xeff, yeff;
-	Vector<NemohBody> bodies;
+	Upp::Vector<NemohBody> bodies;
 	int Nf = Null;
 	double minF, maxF;
 	int Nh = Null;
@@ -722,7 +661,7 @@ public:
 	bool Load(String fileName);
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
 	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem, int solver) const;
-	Vector<String> Check();
+	Upp::Vector<String> Check();
 	
 private:
 	static int GetNumArgs(const FieldSplit &f);
@@ -786,26 +725,19 @@ void LinSpaced(Range &v, int n, T min, T max) {
 	}
 }
 
-Vector<int> NumSets(int num, int numsets);	
+Upp::Vector<int> NumSets(int num, int numsets);	
 
 int IsTabSpace(int c);
 
-class FieldSplit {
+
+class FieldSplitWamit: public FieldSplit {
 public:
-	const int FIRST = 0;
-	const int LAST = Null;
+	FieldSplitWamit(FileInLine &_in) : FieldSplit(_in) {}
 	
-	FieldSplit(FileInLine &_in) {in = &_in;}
-	
-	FieldSplit& Load(String _line) {
-		line = _line;
-		fields = Split(line, IsTabSpace, true);
-		return *this;
-	}
 	void LoadWamitJoinedFields(String _line) {		// Trick for "glued" fields in Wamit
 		line = _line;
 		fields.Clear();
-		Vector<String> prefields = Split(line, IsTabSpace, true);
+		Upp::Vector<String> prefields = Split(line, IsTabSpace, true);
 		for (int id = 0; id < prefields.GetCount(); ++id) {
 			String s = prefields[id];
 			String ns;
@@ -826,52 +758,6 @@ public:
 			}
 			fields << ns;
 		}
-	}
-	String GetText() const {
-		return line;
-	}
-	String GetText(int i) const {
-		if (fields.IsEmpty())
-			throw Exc(in->Str() + t_("No data available"));
-		if (IsNull(i))
-			i = fields.GetCount()-1;
-		CheckId(i);
-		return fields[i];
-	}
-	int GetInt(int i) const {
-		if (fields.IsEmpty())
-			throw Exc(in->Str() + t_("No data available"));
-		if (IsNull(i))
-			i = fields.GetCount()-1;
-		CheckId(i);
-		int res = ScanInt(fields[i]);
-		if (IsNull(res))
-			throw Exc(in->Str() + Format(t_("Bad %s '%s' in field #%d, line\n'%s'"), "integer", fields[i], i+1, line));
-		return res; 
-	}
-	double GetDouble(int i) const {
-		if (fields.IsEmpty())
-			throw Exc(in->Str() + t_("No data available"));
-		if (IsNull(i))
-			i = fields.GetCount()-1;
-		CheckId(i);
-		double res = ScanDouble(fields[i]);
-		if (IsNull(res))
-			throw Exc(in->Str() + Format(t_("Bad %s '%s' in field #%d, line\n'%s'"), "double", fields[i], i+1, line));
-		return res;
-	}
-	int GetCount() const {
-		return fields.GetCount();
-	}
-	
-private:
-	String line;
-	Vector<String> fields;
-	FileInLine *in;
-	
-	void CheckId(int i) const {
-		if (i >= fields.GetCount() || i < 0)
-			throw Exc(in->Str() + Format(t_("Field #%d not found in line\n'%s'"), i+1, line));
 	}
 };
 
@@ -901,7 +787,7 @@ public:
 		
 	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
-	Vector<double> headAll;	// Common models data
+	Upp::Vector<double> headAll;	// Common models data
 	int Nb = 0;				
 	
 	double depth, rho, g, length;
@@ -917,30 +803,30 @@ public:
 	String foammPath;
 	
 	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
-	HydroClass &Join(Vector<int> &ids, Function <bool(String, int)> Status);
+	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
 	void Symmetrize(int ids);
 	void A0(int ids);
-	void Ainf(int ids);
+	void Ainf(int ids, double maxT);
 	
-	void LoadMesh(String file, Function <void(String, int pos)> Status, bool checkDuplicated);
+	void LoadMesh(String file, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <void(String, int pos)> Status);
 	void OrientSurface(int id, Function <void(String, int)> Status);
 	void ImageMesh(int id, int axis);
 	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
 	void RemoveMesh(int id);
 	void JoinMesh(int idDest, int idOrig);
-	Vector<int> SplitMesh(int id, Function <void(String, int pos)> Status);
+	Upp::Vector<int> SplitMesh(int id, Function <void(String, int pos)> Status);
 	
 	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
-	void AddRevolution(double x, double y, double z, double size, Vector<Pointf> &vals);
-	void AddPolygonalPanel(double x, double y, double z, double size, Vector<Pointf> &vals);
+	void AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
+	void AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
 	
-	bool LoadSerializeJson();
+	bool LoadSerializeJson(bool &firstTime);
 	bool StoreSerializeJson();
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
-	const String bemFilesExt = ".1 .3 .hst .4 .12s .12d .out .cal .tec .inf .ah1 .lis .qtf .mat .dat";
+	const String bemFilesExt = ".1 .3 .hst .4 .12s .12d .out .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {

@@ -28,7 +28,7 @@ void MainStateSpace::Clear() {
 	selTab = 0;
 }
 
-bool MainStateSpace::Load(BEMData &bem, const Vector<int> &ids) {
+bool MainStateSpace::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 	try {
 		Upp::Array<HydroClass> &hydros = bem.hydros; 
 		
@@ -74,7 +74,7 @@ void MainStateSpacePlot::Init(int _idf, int _jdf) {
 	Add(splitterTab.SizePos());
 }
 
-bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydros, const Vector<int> &ids, const MainBEM &mbm) {
+bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids, const MainBEM &mbm) {
 	if (!mainPlot.Load(hydros, mbm, ids))
 		return false;
 
