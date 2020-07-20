@@ -160,11 +160,11 @@ void MeshData::Report(double rho) {
 }
 
 bool MeshData::IsSymmetricX() {
-	return abs(cb.x)/abs(mesh.env.maxX - mesh.env.minX) < 0.001;
+	return abs(cb.x)/abs(mesh.env.maxX - mesh.env.minX) < 0.001 && abs(mesh.env.maxX + mesh.env.minX) < 0.001;
 }
 
 bool MeshData::IsSymmetricY() {
-	return abs(cb.y)/abs(mesh.env.maxY - mesh.env.minY) < 0.001;
+	return abs(cb.y)/abs(mesh.env.maxY - mesh.env.minY) < 0.001 && abs(mesh.env.maxY + mesh.env.minY) < 0.001;
 }
 
 void MeshData::SaveHST(String fileName, double rho, double g) const {

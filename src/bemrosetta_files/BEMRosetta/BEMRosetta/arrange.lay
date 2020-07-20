@@ -1,7 +1,7 @@
 LAYOUT(Arrange, 236, 200)
 	ITEM(ArrayCtrl, listOrig, LeftPosZ(0, 124).VSizePosZ(24, 0))
 	ITEM(ArrayCtrl, dofList, LeftPosZ(124, 112).VSizePosZ(24, 0))
-	ITEM(Label, dv___2, SetLabel(t_("Show left DOF as...")).LeftPosZ(124, 112).TopPosZ(4, 19))
+	ITEM(Label, dv___2, SetLabel(t_("Shows left DOF as...")).LeftPosZ(124, 112).TopPosZ(4, 19))
 	ITEM(Label, dv___3, SetLabel(t_("Each DOF as loaded")).LeftPosZ(4, 116).TopPosZ(4, 19))
 END_LAYOUT
 
