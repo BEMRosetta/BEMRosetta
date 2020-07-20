@@ -37,10 +37,11 @@ void MainMesh::Init() {
 	menuOpen.butRemove.WhenAction = THISBACK(OnRemove);
 	menuOpen.butRemoveSelected.Tip(t_("Removes selected files")).Disable();	
 	menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
-	menuOpen.butJoin.Tip(t_("Join selected meshes")).Disable();	
+	menuOpen.butJoin.Tip(t_("Joins selected meshes")).Disable();	
 	menuOpen.butJoin.WhenAction = THISBACK(OnJoin);
-	menuOpen.butSplit.Tip(t_("Split mesh in parts (if parts are not joined together)")).Disable();	
+	menuOpen.butSplit.Tip(t_("Splits mesh in parts (if parts are not joined together)")).Disable();	
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
+	menuOpen.opClean.Tip(t_("Cleans duplicated panels when loading (it may be slow!)"));
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);

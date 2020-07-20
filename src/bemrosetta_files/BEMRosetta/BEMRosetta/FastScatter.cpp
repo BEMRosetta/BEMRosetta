@@ -70,9 +70,9 @@ void FastScatter::Init(Function <void(String)> OnFile, StatusBar &_statusBar) {
 	frameSet.Set(leftSearch.array.GetRectEnter());
 	
 	right.filterParam.WhenAction = THISBACK1(OnFilter, true);
-	right.filterParam.Tip(t_("Filter parameters to display. * are allowed"));
+	right.filterParam.Tip(t_("Filters parameters to display. * are allowed"));
 	right.filterUnits.WhenAction = THISBACK1(OnFilter, true);
-	right.filterUnits.Tip(t_("Filter parameters to be displayed according to their units. * are allowed"));
+	right.filterUnits.Tip(t_("Filters parameters to be displayed according to their units. * are allowed"));
 	right.arrayParam.AddColumn(t_("Filtered fields"), 80);
 	right.arrayParam.AddColumn(t_("Units"), 20);
 	right.arrayParam.SetLineCy(EditField::GetStdHeight()).MultiSelect()

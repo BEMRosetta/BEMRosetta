@@ -46,10 +46,6 @@ void MainBEM::Init() {
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.butLoad.WhenAction = [&] {menuConvert.file.DoGo();};
-
-	//ArrayModel_Init(menuConvert.arrayModel);
-	
-	//menuConvert.arrayModel.WhenCursor = THISBACK(OnMenuConvertArraySel);
 	menuConvert.opt.WhenAction = [&] {OnOpt();};
 	
 	OnOpt();
@@ -613,6 +609,8 @@ void MainBEM::OnKirfAinf() {
 		else if (Bem().maxTimeA > maxT)
 			if (!PromptYesNo(Format(t_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
 				maxT = Bem().maxTimeA;
+		else
+			maxT = Bem().maxTimeA;
 
 		WaitCursor wait;
 
