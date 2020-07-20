@@ -449,7 +449,7 @@ void MainStiffness::Add(const MeshData &mesh, int icase, bool button) {
 			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(K(r, c), 7, FD_EXP|FD_CAP_E|FD_REL)).Align(ALIGN_RIGHT));
 	}
 	if (button) {
-		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Save to Wamit .hst stiffness matrix format"))
+		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Saves to Wamit .hst stiffness matrix format"))
 			.WhenAction = [&] {
 				FileSel fs;
 				fs.Type(t_("Wamit stiffness matrix format"), "*.hst");
@@ -458,11 +458,11 @@ void MainStiffness::Add(const MeshData &mesh, int icase, bool button) {
 			};
 	}
 	if (button && Bem().hydros.GetCount() > 0) {
-		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy")).Tip(t_("Copy matrix and paste it in selected BEM Coefficients file and body"))
+		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy")).Tip(t_("Copies matrix and paste it in selected BEM Coefficients file and body"))
 			.WhenAction = [=] {
 				WithBEMList<TopWindow> w;
 				CtrlLayout(w);
-				w.Title(t_("Copy matrix and paste it in selected BEM Coefficients file and body"));
+				w.Title(t_("Copies matrix and paste it in selected BEM Coefficients file and body"));
 				w.array.SetLineCy(EditField::GetStdHeight());
 				w.array.AddColumn(t_("File"), 20);
 				w.array.AddColumn(t_("Body"), 10);
@@ -642,10 +642,12 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
 	Option & opt = option.Add();
 	array.SetCtrl(row, 2, opt);
 	opt.WhenAction = OnPush;
+	array.SetCursor(array.GetCount());
 }
 
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id) {
  	array.Add(id, GetColorId(id), codeStr, title, fileName);
+ 	array.SetCursor(array.GetCount());
 }
 
 void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName) {
