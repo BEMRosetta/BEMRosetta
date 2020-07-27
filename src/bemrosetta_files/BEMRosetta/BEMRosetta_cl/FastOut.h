@@ -4,7 +4,9 @@
 
 class FastOut {
 public:
-	bool Load(String fileName);
+	static Vector<String> GetFilesToLoad(String path);
+	static String GetFileToLoad(String fileName);
+	bool Load0(String fileName);
 	bool Save(String fileName);
 	
 	void Clear();

@@ -13,51 +13,90 @@ static int IsTabSpaceRet(int c) {
 		return true; 
 	return false;
 } 
- 
-bool FastOut::Load(String fileName) {
-	if (TrimBoth(fileName).IsEmpty())
-		return false;
+
+Vector<String> FastOut::GetFilesToLoad(String path) {
+	Vector<String> ret;
 	
+	if (TrimBoth(path).IsEmpty())
+		return ret;
+	
+	if (!DirectoryExists(path)) {
+		if (FileExists(path))
+			ret << GetFileToLoad(path);
+		return ret;
+	} 
+	FindFile ff(AppendFileName(path, "*.out*"));
+	int64 sz = -1;
+	String fileName;
+	while (ff) {
+		if (ff.IsFile()) { 
+			String name = GetFileToLoad(ff.GetPath());
+			if (!IsNull(name)) {
+				if (GetFileExt(name) == ".outb") {
+					ret << name;
+					return ret;
+				}
+				int64 nsz = GetFileLength(name);
+				if (nsz > sz) {
+					sz = nsz;
+					fileName = name;
+				}
+			}
+		}
+		ff.Next();
+	}
+	if (!fileName.IsEmpty()) {
+		ret << fileName;
+		return ret;
+	}
+	ff.Search(AppendFileName(path, "*.*"));
+	while (ff) {
+		if (ff.IsFolder())
+			ret.Append(GetFilesToLoad(ff.GetPath()));
+		ff.Next();
+	}
+	return ret;
+}
+
+String FastOut::GetFileToLoad(String fileName) {
+	if (TrimBoth(fileName).IsEmpty())
+		return Null;
+		
 	String strOut = ForceExt(fileName, ".out");
 	String strOutB = ForceExt(fileName, ".outb");
 
 	bool exOut = FileExists(strOut);
 	bool exOutB = FileExists(strOutB);
 
-	enum FAST_TYPE {FT_OUT, FT_OUTB};	
-	FAST_TYPE type;
-	String actualFile;
-	if (exOut && !exOutB) {
-		type = FT_OUT;
-		actualFile = strOut;
-	} else if (!exOut && exOutB) {
-		type = FT_OUTB;
-		actualFile = strOutB;
-	} else if (exOut && exOutB) {
+	if (exOut && !exOutB) 
+		return strOut;
+	else if (!exOut && exOutB) 
+		return strOutB;
+	else if (exOut && exOutB) {
 		Time tOut = FileGetTime(strOut);
 		Time tOutB = FileGetTime(strOutB);
-		if (abs(tOut - tOutB) < 5 || tOutB > tOut) {
-			type = FT_OUTB;
-			actualFile = strOutB;
-		} else { 
-			type = FT_OUT;
-			actualFile = strOut;
-		}
-	} else
-		return false;
-	
-	Time actualTime = FileGetTime(actualFile);
-	if (lastFile == actualFile && actualTime - lastTime < 5) // Only loads if file is 5 sec older
+		if (abs(tOut - tOutB) < 5 || tOutB > tOut) 
+			return strOutB;
+		else 
+			return strOut;
+	}
+	return Null;
+}
+
+bool FastOut::Load0(String fileName) {	
+	Time actualTime = FileGetTime(fileName);
+	if (lastFile == fileName && actualTime - lastTime < 5) // Only loads if file is 5 sec older
 		return true;
 	 
-	lastFile = actualFile;
+	lastFile = fileName;
 	lastTime = actualTime;
 	
+	String ext = GetFileExt(fileName);
 	bool ret = false;
-	if (type == FT_OUT)
-		ret = LoadOut(strOut);
-	else if (type == FT_OUTB)
-		ret = LoadOutb(strOutB);
+	if (ext == ".out")
+		ret = LoadOut(fileName);
+	else if (ext == ".outb")
+		ret = LoadOutb(fileName);
 			
 	if (ret)
 		AfterLoad();
