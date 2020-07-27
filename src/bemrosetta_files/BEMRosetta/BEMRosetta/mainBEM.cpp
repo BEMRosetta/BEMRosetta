@@ -606,10 +606,10 @@ void MainBEM::OnKirfAinf() {
 		double maxT = Bem().hydros[id].hd().GetK_IRF_MaxT();
 		if (maxT < 0)
 			maxT = Bem().maxTimeA;
-		else if (Bem().maxTimeA > maxT)
+		else if (Bem().maxTimeA > maxT) {
 			if (!PromptYesNo(Format(t_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
 				maxT = Bem().maxTimeA;
-		else
+		} else
 			maxT = Bem().maxTimeA;
 
 		WaitCursor wait;
