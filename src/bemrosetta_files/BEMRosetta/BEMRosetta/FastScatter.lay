@@ -13,12 +13,16 @@ LAYOUT(FastScatterLeft, 400, 200)
 END_LAYOUT
 
 LAYOUT(FastScatterRight, 296, 376)
-	ITEM(Splitter, splitterSearch, HSizePosZ(4, 4).TopPosZ(4, 116))
+	ITEM(Splitter, splitterSearch, HSizePosZ(4, 4).TopPosZ(16, 104))
+	ITEM(Button, butPaste, SetLabel(t_("Paste")).LeftPosZ(108, 40).TopPosZ(0, 15))
 	ITEM(WithDropChoice<EditString>, filterUnits, RightPosZ(4, 52).TopPosZ(124, 19))
-	ITEM(Label, dv___2, SetLabel(t_("Filter:")).LeftPosZ(12, 32).TopPosZ(124, 19))
-	ITEM(Label, dv___3, SetLabel(t_("Units:")).RightPosZ(48, 40).TopPosZ(124, 19))
+	ITEM(Label, dv___3, SetLabel(t_("Filter:")).LeftPosZ(12, 32).TopPosZ(124, 19))
+	ITEM(Label, dv___4, SetLabel(t_("Units:")).RightPosZ(48, 40).TopPosZ(124, 19))
 	ITEM(EditString, filterParam, HSizePosZ(44, 100).TopPosZ(124, 19))
 	ITEM(ArrayCtrl, arrayParam, AutoHideSb(true).HSizePosZ(4, 4).VSizePosZ(148, 4))
+	ITEM(Button, butCopyTabs, SetLabel(t_("Set sel. on tabs")).RightPosZ(0, 88).TopPosZ(0, 15))
+	ITEM(Button, butCopy, SetLabel(t_("Copy")).LeftPosZ(64, 40).TopPosZ(0, 15))
+	ITEM(Label, dv___9, SetLabel(t_("Clipboard:")).LeftPosZ(0, 56).TopPosZ(0, 16))
 END_LAYOUT
 
 LAYOUT(SearchColumn, 148, 228)

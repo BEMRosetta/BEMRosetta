@@ -15,7 +15,7 @@ class FastScatter : public WithFastScatter<StaticRect> {
 public:
 	typedef FastScatter CLASSNAME;
 	
-	void Init(Function <void(String)> OnFile, StatusBar &statusBar);
+	void Init(Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
 	void Clear();
 	
 	WithSearchColumn<StaticRect> leftSearch, rightSearch;
@@ -23,8 +23,10 @@ public:
 	void LoadParams();
 	void SaveParams();
 	
+	void SelPaste(String str = "");
+	
 private:
-	bool OnLoad();
+	bool OnLoad(bool justUpdate = false);
 	void OnFilter(bool show);
 	void ShowSelected();
 	bool AddParameter(String param, ArrayCtrl *parray);
@@ -33,6 +35,10 @@ private:
 	void OnDropInsert(int line, PasteClip& d, ArrayCtrl &array);
 	void OnDrop(PasteClip& d, ArrayCtrl &array);
 	void OnDrag(ArrayCtrl &array, bool remove);
+	
+	String SelectedStr();
+	void SelCopy();
+	void SelCopyTabs();
 	
 	void OnTimer();
 	TimeCallback timer;
@@ -59,6 +65,7 @@ private:
 	RectEnterSet frameSet;
 	
 	Function <void(String)> WhenFile;
+	Function <void(String)> WhenCopyTabs;
 	
 	struct Params {
 		Vector<String> left, right;

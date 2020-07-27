@@ -16,8 +16,9 @@ using namespace Upp;
 
 #include "clip.brc"
 
-void FastScatter::Init(Function <void(String)> OnFile, StatusBar &_statusBar) {
+void FastScatter::Init(Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &_statusBar) {
 	WhenFile = OnFile;
+	WhenCopyTabs = OnCopyTabs;
 	statusBar = &_statusBar;
 	CtrlLayout(*this);
 	
@@ -30,7 +31,7 @@ void FastScatter::Init(Function <void(String)> OnFile, StatusBar &_statusBar) {
 	CtrlLayout(rightSearch);
 	right.splitterSearch.Horz(leftSearch.SizePos(), rightSearch.SizePos());
 	
-	file.WhenChange = THISBACK(OnLoad);
+	file.WhenChange = THISBACK1(OnLoad, false);
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")).WhenAction = [&] {file.DoGo();};
@@ -61,7 +62,9 @@ void FastScatter::Init(Function <void(String)> OnFile, StatusBar &_statusBar) {
 	rightSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK(ShowSelected);
 	
 	leftSearch.array.AddColumn("");
+	leftSearch.array.NoVertGrid();
 	rightSearch.array.AddColumn("");
+	rightSearch.array.NoVertGrid();
 	rightSearch.label.SetLabel(t_("Right axis"));
 	
 	frameSet.Add(leftSearch.array.GetRectEnter(), 1);
@@ -73,12 +76,19 @@ void FastScatter::Init(Function <void(String)> OnFile, StatusBar &_statusBar) {
 	right.filterParam.Tip(t_("Filters parameters to display. * are allowed"));
 	right.filterUnits.WhenAction = THISBACK1(OnFilter, true);
 	right.filterUnits.Tip(t_("Filters parameters to be displayed according to their units. * are allowed"));
-	right.arrayParam.AddColumn(t_("Filtered fields"), 80);
+	right.arrayParam.AddColumn(t_("Fields"), 80);
 	right.arrayParam.AddColumn(t_("Units"), 20);
 	right.arrayParam.SetLineCy(EditField::GetStdHeight()).MultiSelect()
 		 .Tip(t_("Double click to choose parameters to display"));
 	right.arrayParam.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &right.arrayParam);
 	right.arrayParam.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &right.arrayParam);
+	
+	right.butCopy 		<<= THISBACK(SelCopy);
+	right.butCopy.Tip(t_("Copy selected parameters to clipboard"));
+	right.butPaste 		<<= THISBACK1(SelPaste, "");
+	right.butPaste.Tip(t_("Paste selected parameters from clipboard"));
+	right.butCopyTabs 	<<= THISBACK(SelCopyTabs);
+	right.butCopyTabs.Tip(t_("Copy selected parameters on the other tabs"));
 	
 	right.arrayParam.WhenDropInsert= [&] (int line, PasteClip& d) {OnDropInsert(line, d, right.arrayParam); };
 	right.arrayParam.WhenDrop 		= [&] (PasteClip& d) {OnDrop(d, right.arrayParam);};
@@ -106,6 +116,56 @@ void FastScatter::Init(Function <void(String)> OnFile, StatusBar &_statusBar) {
 	};
 }
 
+String FastScatter::SelectedStr() {
+	String strLeft;
+	for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {
+		String param = Trim(leftSearch.array.Get(rw, 0));
+		if (!param.IsEmpty()) {
+			if (!strLeft.IsEmpty())
+				strLeft << ",";
+			strLeft << param;
+		}
+	}
+	String strRight;
+	for (int rw = 0; rw < rightSearch.array.GetCount(); ++rw) {
+		String param = Trim(rightSearch.array.Get(rw, 0));
+		if (!param.IsEmpty()) {
+			if (!strRight.IsEmpty())
+				strRight << ",";
+			strRight << param;
+		}
+	}
+	return strLeft + ";" + strRight;
+}
+
+void FastScatter::SelCopy() {
+	WriteClipboardText(SelectedStr());
+}
+
+void FastScatter::SelPaste(String str) {
+	if (str.IsEmpty())
+		str = ReadClipboardText();
+	Vector<String> params = Split(str, ";");
+	params.SetCount(2);
+	Vector<String> left = Split(params[0], ",");
+	leftSearch.array.Clear();
+	for (int rw = 0; rw < left.GetCount(); ++rw) {
+		if (!IsNull(datafast.FindCol(left[rw])))
+			leftSearch.array.Set(rw, 0, left[rw]);
+	}
+	Vector<String> right = Split(params[1], ",");
+	rightSearch.array.Clear();
+	for (int rw = 0; rw < right.GetCount(); ++rw) {
+		if (!IsNull(datafast.FindCol(right[rw])))
+			rightSearch.array.Set(rw, 0, right[rw]);
+	}
+	ShowSelected();	
+}
+
+void FastScatter::SelCopyTabs() {
+	WhenCopyTabs(SelectedStr());
+}
+	
 void FastScatter::OnTimer() {
 	if (!player.IsRunning())
 		return;
@@ -115,7 +175,7 @@ void FastScatter::OnTimer() {
 		return;
 	timeStop.Reset();
 	
-	OnLoad();
+	OnLoad(true);
 }
 
 bool ArrayExists(const ArrayCtrl &a, String val) {
@@ -228,28 +288,39 @@ void FastScatter::Clear() {
 	OnFilter(true);
 }
 
-bool FastScatter::OnLoad() {
+bool FastScatter::OnLoad(bool justUpdate) {
 	try {
 		WaitCursor waitcursor;
+
+		if (!justUpdate)
+			statusBar->Temporary(t_("Loading file"));
+		else
+			statusBar->Temporary(t_("Updating data"));
+		Ctrl::ProcessEvents();
 		
-		if (!datafast.Load(~file)) {
-			statusBar->Temporary(Format("File '%s' not found", ~file));
+		left.scatter.Disable();
+		
+		String fileName = FastOut::GetFileToLoad(~file);
+		if (!datafast.Load0(fileName)) {
+			statusBar->Temporary(Format("File '%s' not found", fileName));
 			return false;
 		}
 		
-		statusBar->Temporary(t_("Loading file"));
-		
-		left.scatter.RemoveAllSeries();
-
 		dataSource.SetCount(datafast.parameters.GetCount());
-		for (int c = 0; c < dataSource.GetCount(); ++c) 
-			dataSource[c].Init(datafast, c);
+		if (!justUpdate) {
+			for (int c = 0; c < dataSource.GetCount(); ++c) 
+				dataSource[c].Init(datafast, c);
 		
-		LoadParams();
-		OnFilter(false);
-		ShowSelected();
+			LoadParams();
+			OnFilter(false);
+			ShowSelected();
 		
-		WhenFile(~file);
+			WhenFile(fileName);
+		} else 
+			ShowSelected();
+		
+		left.scatter.Enable();
+		
 	} catch (Exc e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
 		return false;
@@ -258,6 +329,8 @@ bool FastScatter::OnLoad() {
 }
 
 void FastScatter::ShowSelected() {
+	WaitCursor wait;
+	
 	left.scatter.SetLabelX(t_("Time"));
 	left.scatter.RemoveAllSeries();
 	Upp::Vector<int> idsx, idsy, idsFixed;
@@ -288,6 +361,8 @@ void FastScatter::ShowSelected() {
 	left.scatter.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
 	left.scatter.SetSequentialXAll().SetFastViewX();
 	left.scatter.ZoomToFit(true, true);	
+	
+	SaveParams();
 }
 
 Value FastScatter::DataSource::Format(const Value& q) const {
@@ -295,7 +370,6 @@ Value FastScatter::DataSource::Format(const Value& q) const {
 	return datafast->dataOut[col][q];
 }
 
-// GetAppDataFolder(), "BEMRosetta"
 void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
 	statusBar = &_statusBar;
 	String folder = AppendFileNameX(appDataFolder, "FASTScatter");
@@ -354,9 +428,14 @@ void FastScatterTabs::AddTab(String filename) {
 		sct = &tabScatters.Add();
 		int pos = max(tabBar.GetCount()-1, 0);
 		sct->Init([=] (String filename) {
-			String title = GetFileTitle(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
-			tabBar.SetValue(key, title);
-		}, *statusBar);
+				String title = GetFileTitle(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
+				tabBar.SetValue(key, title);
+			}, [&] (String clipboard) {
+				for (int i = 0; i < tabKeys.GetCount(); ++i) {
+					if (tabKeys[i] != key) 
+						tabScatters[i].SelPaste(clipboard);
+				}
+			}, *statusBar);
 		tabBar.InsertKey(pos, key, title);
 		Add(sct->SizePos());
 		fileNames << filename;
@@ -364,7 +443,8 @@ void FastScatterTabs::AddTab(String filename) {
 	AddHistory(filename);
 	if (int(key) > -1 && filename != t_("New Tab")) {
 		sct->file <<= filename;
-		sct->file.WhenChange();
+		if (!sct->file.WhenChange())
+			OnCloseTab(key); 
 	}
 }
 
@@ -428,9 +508,13 @@ bool FastScatterTabs::Key(dword key, int) {
 bool FastScatterTabs::LoadDragDrop(const Upp::Vector<String> &files) {
 	if (files.GetCount() == 0)
 		return false;
-		
-	for (int i = 0; i < files.GetCount(); ++i) 
-		AddTab(files[i]);
+	
+	Vector<String> fis;
+	for (int i = 0; i < files.GetCount(); ++i)
+		fis.Append(FastOut::GetFilesToLoad(files[i]));
+	
+	for (int i = 0; i < fis.GetCount(); ++i) 
+		AddTab(fis[i]);
 
 	return true;
 }
