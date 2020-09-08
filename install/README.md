@@ -1,9 +1,24 @@
 # BEMRosetta Install
 
-## Windows
-No install is required. Just copy BEMRosetta.exe and BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
+## Binaries
 
-## Linux POSIX 
+### Windows
+Just copy bin/BEMRosetta.exe or bin/BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
+
+## Compiling
+
+BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language.
+It is simple to install it all. Uninstalling it is just a matter of deleting the install folder.
+
+You can download it from the [U++ nightly builds](https://www.ultimatepp.org/www$uppweb$download$en-us.html), choosing the latest U++ for Windows (with CLANG) or for Linux/BSD/Solaris.
+
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Download.png" width="600" title="U++ download"></p>
+
+### Windows
+
+In Windows,U++ binaries are precompiled and U++ comes with all dependencies needed, including CLANG compiler. Simply unpack the archive and start theide.exe.
+
+### Linux POSIX 
 
 Standard POSIX distribution of BEMRosetta comes as a source tarball.
 
