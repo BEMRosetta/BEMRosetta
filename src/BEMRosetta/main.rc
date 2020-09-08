@@ -1,0 +1,64 @@
+#include "resource.h"
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ESN)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+
+APP                    ICON                    "BEMRosetta.ico"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,1,0,10
+ PRODUCTVERSION 0,0,0,0
+ FILEFLAGSMASK 0x0L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0c0a04b0"
+        BEGIN
+            VALUE "Comments", "BEMRosetta"
+            VALUE "CompanyName", "BEMRosetta"
+            VALUE "FileDescription", "Hydrodynamic coefficients viewer and converter for Boundary Element Method solvers"
+            VALUE "FileVersion", "00.01.00.0010"
+            VALUE "InternalName", "BEMRosetta"
+            VALUE "LegalCopyright", "(C) 2019, BEMRosetta, All rights reserved"
+            VALUE "OriginalFilename", "BEMRosetta.exe"
+            VALUE "ProductName", "BEMRosetta"
+            VALUE "ProductVersion", "00.01.00.0010"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc0a, 1200
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    
+
+#endif    
