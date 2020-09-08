@@ -1,5 +1,8 @@
 # BEMRosetta command line utility test
 
+| It has been a long time since any features were added to the command line application. If you want it to be improved, please pull your requests |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- |
+
 BEMRosetta_cl includes the features of BEMRosetta that do not need a graphical user interface.
 
 This simple demo just loads a Nemoh model (-i --input option), prints some data about the model (-r --report option), and exports it to Wamit format and to FAST format (-c --convert option). The command is:
