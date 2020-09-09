@@ -7,7 +7,7 @@ Just copy bin/BEMRosetta.exe or bin/BEMRosetta_cl.exe anywhere in your computer 
 
 ## Compiling
 
-BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language. U++ makes C++ so simple and efficient that it appeals even to python users.
+BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language. U++ makes C++ so simple and efficient that it appeals even to scripting language programmers.
 
 U++ is simple to install. Uninstalling it is just a matter of deleting the install folder. You can download it from the [U++ nightly builds](https://www.ultimatepp.org/www$uppweb$download$en-us.html), choosing the latest U++ for Windows (with CLANG) or for Linux/BSD/Solaris. You can find a repository in [Github](https://github.com/ultimatepp/ultimatepp) too.
 
@@ -41,4 +41,4 @@ In Linux, U++ has to be compiled so that the dependencies of the target distribu
 umk bazaar BEMRosetta    CLANG -r +GUI,SHARED ~/bemrosetta.exe
 umk bazaar BEMRosetta_cl CLANG -r +SHARED     ~/bemrosetta_cl.exe
 ```
-Put BEMRosetta binaries where you want them, e.g. inside ~/bin/ . No install is required.
+Put BEMRosetta binaries where you want them, e.g. inside ~/bin . No install is required.
