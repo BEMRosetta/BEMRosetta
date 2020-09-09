@@ -33,7 +33,7 @@ In Linux, U++ has to be compiled so that the dependencies of the target distribu
 * Unpack the archive
 * Open a terminal and cd to the upp folder
 * Run the ./install script. It should detect your Linux distro and suggest the command to install the required dependencies. It will also install them, or else you can copy the command to another terminal and run it yourself.
-<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Install.png" width="600" title="U++ download"></p>
+<p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Install.png" width="600" title="U++ install"></p>
 * Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
 * Compile BEMRosetta with umk.exe. umk (U++ make) is a command line utility to build U++ programs:
 ```
