@@ -15,7 +15,7 @@ U++ is simple to install. Uninstalling it is just a matter of deleting the insta
 
 ### Windows
 
-In Windows, U++ binaries are precompiled and U++ comes with all dependencies needed, including CLANG compiler. Simply:
+In Windows, U++ binaries are precompiled and U++ comes with all dependencies needed, including [CLANG](https://clang.llvm.org/) compiler. Simply:
 * Unpack the archive
 * Start theide.exe to finish the install
 * Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
