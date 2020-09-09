@@ -36,6 +36,7 @@ In Linux, U++ has to be compiled so that the dependencies of the target distribu
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Install.png" width="600" title="U++ install"></p>
 * Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
 * Compile BEMRosetta with umk.exe. umk (U++ make) is a command line utility to build U++ programs:
+
 ```
 umk bazaar BEMRosetta    CLANG -r +GUI,SHARED ~/bemrosetta.exe
 umk bazaar BEMRosetta_cl CLANG -r +SHARED     ~/bemrosetta_cl.exe
