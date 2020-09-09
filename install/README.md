@@ -3,20 +3,28 @@
 ## Binaries
 
 ### Windows
-Just copy bin/BEMRosetta.exe or bin/BEMRosetta_cl.exe anywhere and dodge Windows warnings. 
+Just copy bin/BEMRosetta.exe or bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
 
 ## Compiling
 
-BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language.
-It is simple to install it all. Uninstalling it is just a matter of deleting the install folder.
+BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language. U++ makes C++ so simple and efficient that it appeals even to python users.
 
-You can download it from the [U++ nightly builds](https://www.ultimatepp.org/www$uppweb$download$en-us.html), choosing the latest U++ for Windows (with CLANG) or for Linux/BSD/Solaris.
+U++ is simple to install. Uninstalling it is just a matter of deleting the install folder. You can download it from the [U++ nightly builds](https://www.ultimatepp.org/www$uppweb$download$en-us.html), choosing the latest U++ for Windows (with CLANG) or for Linux/BSD/Solaris. You can find a repository in [Github](https://github.com/ultimatepp/ultimatepp) too.
 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Download.png" width="600" title="U++ download"></p>
 
 ### Windows
 
-In Windows,U++ binaries are precompiled and U++ comes with all dependencies needed, including CLANG compiler. Simply unpack the archive and start theide.exe.
+In Windows, U++ binaries are precompiled and U++ comes with all dependencies needed, including CLANG compiler. Simply:
+* Unpack the archive
+* Start theide.exe to finish the install
+* Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
+* Open a terminal, cd to upp folder, and compile BEMRosetta:
+```
+umk BEMRosetta BEMRosetta    CLANGX64 -r +GUI .\BEMRosetta.exe
+umk BEMRosetta BEMRosetta_cl CLANGX64 -r      .\BEMRosetta_cl.exe
+```
+Put BEMRosetta binaries where you want them. No install required.
 
 ### Linux POSIX 
 
