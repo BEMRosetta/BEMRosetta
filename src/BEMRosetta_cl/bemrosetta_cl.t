@@ -203,7 +203,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("non constant delta (%s)")
+T_("Non constant delta (%s)")
 esES("")
 euES("")
 frFR("")
@@ -814,44 +814,6 @@ euES("")
 frFR("")
 
 T_("Impossible to open '%s'")
-esES("")
-euES("")
-frFR("")
-
-
-// stl.cpp
-
-T_("'solid' field not found")
-esES("")
-euES("")
-frFR("")
-
-T_("'facet normal' field not found")
-esES("")
-euES("")
-frFR("")
-
-T_("'outer loop' field not found")
-esES("")
-euES("")
-frFR("")
-
-T_("Too much vertex in facet")
-esES("")
-euES("")
-frFR("")
-
-T_("Too few vertex in facet")
-esES("")
-euES("")
-frFR("")
-
-T_("Label '%s' not handled in facet")
-esES("")
-euES("")
-frFR("")
-
-T_("Binary stl must not begin with 'solid' text")
 esES("")
 euES("")
 frFR("")
@@ -1767,6 +1729,46 @@ frFR("")
 
 
 // Obsolete
+
+T_("non constant delta (%s)")
+esES("")
+euES("")
+frFR("")
+
+T_("'solid' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("'facet normal' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("'outer loop' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Too much vertex in facet")
+esES("")
+euES("")
+frFR("")
+
+T_("Too few vertex in facet")
+esES("")
+euES("")
+frFR("")
+
+T_("Label '%s' not handled in facet")
+esES("")
+euES("")
+frFR("")
+
+T_("Binary stl must not begin with 'solid' text")
+esES("")
+euES("")
+frFR("")
 
 T_("[File: '%s', line: %d]:\n")
 esES("")

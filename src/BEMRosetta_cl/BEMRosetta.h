@@ -85,7 +85,7 @@ public:
     Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     BEM_SOFT code;        					// BEM_SOFT			BEM code 
     Upp::Vector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
-    Upp::Vector<int> dofOrder;				//					Order of DOF
+    Upp::Vector<int> dofOrder;				// [6*Nb]			DOF order
     
     Upp::Array<Eigen::MatrixXd> Kirf;		// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
     Upp::Vector<double> Tirf;	  			// [Nt]				Time-window for the calculation of the IRF
@@ -436,7 +436,7 @@ public:
 	void Compare_C(Hydro &a);
 	void Compare_cg(Hydro &a);
 	
-	//const Vector<int> &GetOrder()		{return dofOrder;}
+	const Vector<int> &GetOrder() const		{return dofOrder;}
 	void SetOrder(Upp::Vector<int> &order)	{dofOrder = pick(order);}
 	
 	int GetW0();

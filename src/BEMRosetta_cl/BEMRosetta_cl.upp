@@ -16,6 +16,7 @@ options(MSC) /bigobj;
 options(MSC) -D_SCL_SECURE_NO_WARNINGS;
 
 file
+	Copying,
 	main.cpp,
 	BEMRosetta.cpp,
 	BEMRosetta.h,
@@ -35,10 +36,9 @@ file
 	license.txt,
 	bemrosetta_cl.t,
 	main_cl.rc,
-	Solver readonly separator,
-	Solver\functions.cpp,
-	Solver\functions.h,
-	Solver\mooring.cpp;
+	functions.cpp,
+	functions.h,
+	mooring.cpp;
 
 mainconfig
 	"" = "";
