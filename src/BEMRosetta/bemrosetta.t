@@ -18,7 +18,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("FAST Reader")
+T_("FAST .out Reader")
 esES("")
 euES("")
 frFR("")
@@ -78,7 +78,8 @@ esES("")
 euES("")
 frFR("")
 
-T_("No tab shown. To show them go to 'Options/General/Tabs shown'")
+T_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs "
+     "shown']")
 esES("")
 euES("")
 frFR("")
@@ -93,7 +94,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Save to Wamit .hst stiffness matrix format")
+T_("Saves to Wamit .hst stiffness matrix format")
 esES("")
 euES("")
 frFR("")
@@ -103,12 +104,17 @@ esES("")
 euES("")
 frFR("")
 
+T_("Save to Wamit .hst stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
 T_("Copy")
 esES("Copiar")
 euES("")
 frFR("")
 
-T_("Copy matrix and paste it in selected BEM Coefficients file and body")
+T_("Copies matrix and paste it in selected BEM Coefficients file and body")
 esES("")
 euES("")
 frFR("")
@@ -158,15 +164,7 @@ esES("")
 euES("")
 frFR("")
 
-
-// main.h
-
-T_("BEMRosetta Mesh Viewer")
-esES("")
-euES("")
-frFR("")
-
-T_("BEMRosetta BEM Coefficients Processing")
+T_("Id not found in ArrayModel_Change()")
 esES("")
 euES("")
 frFR("")
@@ -175,6 +173,16 @@ frFR("")
 // mainMesh.cpp
 
 T_("Loads mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Deselect all")
+esES("")
+euES("")
+frFR("")
+
+T_("Deselect all table rows")
 esES("")
 euES("")
 frFR("")
@@ -189,12 +197,17 @@ esES("")
 euES("")
 frFR("")
 
-T_("Join selected meshes")
+T_("Joins selected meshes")
 esES("")
 euES("")
 frFR("")
 
-T_("Split mesh in parts")
+T_("Splits mesh in parts (if parts are not joined together)")
+esES("")
+euES("")
+frFR("")
+
+T_("Cleans duplicated panels when loading (it may be slow!)")
 esES("")
 euES("")
 frFR("")
@@ -239,11 +252,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Convert")
-esES("")
-euES("")
-frFR("")
-
 T_("Loading mesh file...")
 esES("")
 euES("")
@@ -275,6 +283,11 @@ euES("")
 frFR("")
 
 T_("Saving mesh file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Please fill CG data")
 esES("")
 euES("")
 frFR("")
@@ -609,6 +622,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("BEMRosetta Mesh Viewer")
+esES("")
+euES("")
+frFR("")
+
 
 // mainNemoh.cpp
 
@@ -697,6 +715,11 @@ euES("")
 frFR("")
 
 T_("B")
+esES("")
+euES("")
+frFR("")
+
+T_("Kirf")
 esES("")
 euES("")
 frFR("")
@@ -822,6 +845,17 @@ euES("")
 frFR("")
 
 T_("Calculating A0 in selected BEM file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating IRF and Ainf in selected BEM file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). "
+     "Do you wish to used advised time?")
 esES("")
 euES("")
 frFR("")
@@ -1122,6 +1156,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("BEMRosetta BEM Coefficients Processing")
+esES("")
+euES("")
+frFR("")
+
 
 // mainBEM_abf.cpp
 
@@ -1182,6 +1221,16 @@ euES("")
 frFR("")
 
 T_("Radiation damping")
+esES("")
+euES("")
+frFR("")
+
+T_("Kirf Impulse Response Function %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Kirf Impulse Response Function")
 esES("")
 euES("")
 frFR("")
@@ -1301,12 +1350,17 @@ esES("")
 euES("")
 frFR("")
 
-T_("Fsc_ma_%s")
+T_("K_%s")
 esES("")
 euES("")
 frFR("")
 
-T_("N")
+T_("N/m")
+esES("")
+euES("")
+frFR("")
+
+T_("Fsc_ma_%s")
 esES("")
 euES("")
 frFR("")
@@ -1414,7 +1468,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Ainf")
+T_("Kirf + Ainf")
 esES("")
 euES("")
 frFR("")
@@ -1452,6 +1506,11 @@ euES("")
 frFR("")
 
 T_("Loads BEM file")
+esES("")
+euES("")
+frFR("")
+
+T_("Convert")
 esES("")
 euES("")
 frFR("")
@@ -1526,6 +1585,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Clean duplicated")
+esES("")
+euES("")
+frFR("")
+
 T_("Wamit .gdf\nNemoh .dat\nNemoh premesh\nSTL binary\nSTL text\nBy extension")
 esES("")
 euES("")
@@ -1536,7 +1600,22 @@ esES("")
 euES("")
 frFR("")
 
+T_("Symmetry:")
+esES("")
+euES("")
+frFR("")
+
 T_("Mesh:")
+esES("")
+euES("")
+frFR("")
+
+T_("y")
+esES("")
+euES("")
+frFR("")
+
+T_("x")
 esES("")
 euES("")
 frFR("")
@@ -1641,11 +1720,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Absolute\nRelative")
-esES("")
-euES("")
-frFR("")
-
 T_("Translate")
 esES("")
 euES("")
@@ -1706,12 +1780,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("\vTranslate/Rotate")
-esES("")
-euES("")
-frFR("")
-
-T_("Full Healing")
+T_("Basic Healing")
 esES("")
 euES("")
 frFR("")
@@ -1721,12 +1790,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Mesh processing")
+T_("Full Healing")
 esES("")
 euES("")
 frFR("")
 
-T_("Basic Healing")
+T_("Mesh processing")
 esES("")
 euES("")
 frFR("")
@@ -2195,9 +2264,22 @@ euES("")
 frFR("")
 
 
+// arrange.cpp
+
+T_("DOF")
+esES("")
+euES("")
+frFR("")
+
+T_("Available")
+esES("")
+euES("")
+frFR("")
+
+
 // arrange.lay
 
-T_("Show left DOF as...")
+T_("Shows left DOF as...")
 esES("")
 euES("")
 frFR("")
@@ -2210,6 +2292,11 @@ frFR("")
 
 // FastScatter.cpp
 
+T_("Enter file path to show, or drop it from file explorer")
+esES("")
+euES("")
+frFR("")
+
 T_("Loads FAST out/outb file")
 esES("")
 euES("")
@@ -2220,12 +2307,32 @@ esES("")
 euES("")
 frFR("")
 
+T_("Hover mouse to add new parameters to left axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Hover mouse to add new parameters to right axis")
+esES("")
+euES("")
+frFR("")
+
 T_("Right axis")
 esES("")
 euES("")
 frFR("")
 
-T_("Filtered fields")
+T_("Filters parameters to display. * are allowed")
+esES("")
+euES("")
+frFR("")
+
+T_("Filters parameters to be displayed according to their units. * are allowed")
+esES("")
+euES("")
+frFR("")
+
+T_("Fields")
 esES("")
 euES("")
 frFR("")
@@ -2235,7 +2342,42 @@ esES("")
 euES("")
 frFR("")
 
+T_("Double click to choose parameters to display")
+esES("")
+euES("")
+frFR("")
+
+T_("Copy selected parameters to clipboard")
+esES("")
+euES("")
+frFR("")
+
+T_("Paste selected parameters from clipboard")
+esES("")
+euES("")
+frFR("")
+
+T_("Copy selected parameters on the other tabs")
+esES("")
+euES("")
+frFR("")
+
+T_("Click to update periodically plot from file")
+esES("")
+euES("")
+frFR("")
+
+T_("Interval to update data from file")
+esES("")
+euES("")
+frFR("")
+
 T_("Loading file")
+esES("")
+euES("")
+frFR("")
+
+T_("Updating data")
 esES("")
 euES("")
 frFR("")
@@ -2250,7 +2392,22 @@ esES("")
 euES("")
 frFR("")
 
-T_("Empty")
+T_("Click '+' to add new file in additional tab")
+esES("")
+euES("")
+frFR("")
+
+T_("New Tab")
+esES("")
+euES("")
+frFR("")
+
+T_("You are about to open %d files")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMRosetta FAST .out Reader")
 esES("")
 euES("")
 frFR("")
@@ -2258,7 +2415,7 @@ frFR("")
 
 // FastScatter.lay
 
-T_("Update interval:")
+T_("Update interval [s]:")
 esES("")
 euES("")
 frFR("")
@@ -2273,6 +2430,16 @@ esES("")
 euES("")
 frFR("")
 
+T_("Set on all tabs")
+esES("")
+euES("")
+frFR("")
+
+T_("Selection:")
+esES("")
+euES("")
+frFR("")
+
 T_("Left axis")
 esES("")
 euES("")
@@ -2280,6 +2447,71 @@ frFR("")
 
 
 // Obsolete
+
+T_("FAST Reader")
+esES("")
+euES("")
+frFR("")
+
+T_("No tab shown. To show them go to 'Options/General/Tabs shown'")
+esES("")
+euES("")
+frFR("")
+
+T_("Copy matrix and paste it in selected BEM Coefficients file and body")
+esES("")
+euES("")
+frFR("")
+
+T_("Join selected meshes")
+esES("")
+euES("")
+frFR("")
+
+T_("Split mesh in parts")
+esES("")
+euES("")
+frFR("")
+
+T_("N")
+esES("")
+euES("")
+frFR("")
+
+T_("Ainf")
+esES("")
+euES("")
+frFR("")
+
+T_("Absolute\nRelative")
+esES("")
+euES("")
+frFR("")
+
+T_("\vTranslate/Rotate")
+esES("")
+euES("")
+frFR("")
+
+T_("Show left DOF as...")
+esES("")
+euES("")
+frFR("")
+
+T_("Filtered fields")
+esES("")
+euES("")
+frFR("")
+
+T_("Empty")
+esES("")
+euES("")
+frFR("")
+
+T_("Update interval:")
+esES("")
+euES("")
+frFR("")
 
 T_("FAST Viewer")
 esES("")
@@ -3090,10 +3322,16 @@ esES("")
 euES("")
 frFR("")
 
+
+// Obsolete
+
 T_("Error moving a fixed surface")
 esES("")
 euES("")
 frFR("")
+
+
+// PACKAGE 'Surface' FILE 'Surface.cpp'
 
 T_("Node %d in panel %d [%d] does not exist")
 esES("")
@@ -3116,15 +3354,12 @@ euES("")
 frFR("")
 
 
-// PACKAGE 'ScatterDraw' FILE 'ScatterDraw.cpp'
+// Obsolete
 
 T_("No mark")
 esES("")
 euES("")
 frFR("")
-
-
-// PACKAGE 'ScatterDraw' FILE 'Equation.cpp'
 
 T_("Error in %s(%f)")
 esES("")
@@ -3150,9 +3385,6 @@ T_("Error: %s")
 esES("")
 euES("")
 frFR("")
-
-
-// PACKAGE 'ScatterDraw' FILE 'Equation.h'
 
 T_("Average")
 esES("")
@@ -3257,13 +3489,16 @@ esES("")
 euES("")
 frFR("")
 
+
+// Obsolete
+
 T_("Panel width too small")
 esES("")
 euES("")
 frFR("")
 
 
-// PACKAGE 'STEM4U' FILE 'sundials.cpp'
+// PACKAGE 'STEM4U' FILE 'Sundials.cpp'
 
 T_("SUNDIALS_ERROR: %s() failed - returned NULL pointer")
 esES("")
@@ -3291,6 +3526,70 @@ euES("")
 frFR("")
 
 T_("Obtained NaN in value %d")
+esES("")
+euES("")
+frFR("")
+
+
+// GLCanvas.cpp
+
+T_("No model is loaded")
+esES("")
+euES("")
+frFR("")
+
+
+// Surface.cpp
+
+T_("Panel width too large")
+esES("")
+euES("")
+frFR("")
+
+
+// stl.cpp
+
+T_("Impossible to open file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("'solid' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("'facet normal' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("'outer loop' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Too much vertex in facet")
+esES("")
+euES("")
+frFR("")
+
+T_("Too few vertex in facet")
+esES("")
+euES("")
+frFR("")
+
+T_("Label '%s' not handled in facet")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to open '%s'\n")
+esES("")
+euES("")
+frFR("")
+
+T_("Binary stl must not begin with 'solid' text")
 esES("")
 euES("")
 frFR("")

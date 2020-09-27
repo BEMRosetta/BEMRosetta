@@ -23,7 +23,6 @@ void MainNemoh::Init(const BEMData &bem) {
 	loadFrom.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
 	butLoad.WhenAction = [&] {loadFrom.DoGo();};
 
-	//saveTo.WhenChange  = [&] {return OnSave(bem);};
 	saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
 	butSave.WhenAction = [&] {OnSave(bem);};
 	

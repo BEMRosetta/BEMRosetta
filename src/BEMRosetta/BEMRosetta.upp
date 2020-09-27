@@ -25,7 +25,7 @@ file
 	arrange.cpp,
 	arrange.h,
 	arrange.lay,
-	license.txt,
+	Copying,
 	bemrosetta.t,
 	clip.brc,
 	ajax-loader.gif,
