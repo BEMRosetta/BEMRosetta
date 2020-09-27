@@ -45,7 +45,8 @@ void MainBEM::Init() {
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuConvert.butLoad.WhenAction = [&] {menuConvert.file.DoGo();};
+	menuConvert.file.SelLoad(false);
+	menuConvert.butConvert.WhenAction = [&] {menuConvert.file.DoGo();};
 	menuConvert.opt.WhenAction = [&] {OnOpt();};
 	
 	OnOpt();
@@ -125,6 +126,7 @@ void MainBEM::Init() {
 			ismenuFOAMM = true;
 			if (mainSetupFOAMM.arrayCases.GetCount() == 0 && ids.GetCount() == 1) 
 				listLoaded.SetCursor(0);
+			menuFOAMM.OnCursor();
 		} else if (mainTab.IsAt(mainQTF))
 			mainQTF.Load();
 		else if (menuTab.IsAt(menuFOAMM)) 
@@ -479,7 +481,7 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butA0.Enable(numsel == 1 || numrow == 1);
 	menuOpen.butKirfAinf.Enable(numsel == 1 || numrow == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
-	menuConvert.butLoad.Enable(numsel == 1 || numrow == 1);
+	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainBEM::OnJoin() {
@@ -1160,8 +1162,8 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEMData &bem) {
 		for (int idf = 0; idf < 6; ++idf) {
 			for (int jdf = 0; jdf < 6; ++jdf) {
 				if (!bem.onlyDiagonal || idf == jdf) {
-					int _idf = ib*6 + idf;
-					int _jdf = ib*6 + jdf;
+					int _idf = hydro.GetOrder()[ib*6 + idf];
+					int _jdf = hydro.GetOrder()[ib*6 + jdf];
 	
 					if (hydro.IsLoadedA() && hydro.IsLoadedB() && !IsNull(hydro.A[0](_idf, _jdf)) && !IsNull(hydro.B[0](_idf, _jdf))) {
 						arrayCases.Add(false, ib+1, Hydro::StrDOF_base(idf), Hydro::StrDOF_base(jdf));

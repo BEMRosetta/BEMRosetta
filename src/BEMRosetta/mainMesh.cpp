@@ -46,7 +46,8 @@ void MainMesh::Init() {
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuConvert.butLoad.WhenAction = [&] {menuConvert.file.DoGo();};
+	menuConvert.file.SelLoad(false);
+	menuConvert.butConvert.WhenAction = [&] {menuConvert.file.DoGo();};
 
 	menuConvert.opt.WhenAction = [&] {OnOpt();};
 
@@ -928,7 +929,7 @@ void MainMesh::UpdateButtons() {
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butSplit.Enable(numsel == 1 || numrow == 1);
-	menuConvert.butLoad.Enable(numsel == 1 || numrow == 1);
+	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
 	
 	menuProcess.butUpdateCg.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butUpdatePos.Enable(numsel == 1 || numrow == 1);

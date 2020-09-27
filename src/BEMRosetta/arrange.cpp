@@ -18,9 +18,8 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	};
 	listOrig.WhenScroll = [this] {dofList.ScrollTo(listOrig.GetScroll());};
 	
-	listOrig.AddColumn("DOF", 40);
-	listOrig.AddColumn("Available", 60).With(
-		[](One<Ctrl>& x) {
+	listOrig.AddColumn(t_("DOF"), 40);
+	listOrig.AddColumn(t_("Available"), 60).With([](One<Ctrl>& x) {
 			x.Create<Option>().NoWantFocus().SetReadOnly();
 		}
 	);
@@ -56,13 +55,15 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	};
 	dofList.WhenScroll = [this] {listOrig.ScrollTo(dofList.GetScroll());};
 
-	dofList.AddColumn("Arrange DOF");
+	dofList.AddColumn(t_("Arrange DOF"));
 	
 	for (int i = 0; i < 6*hydro.Nb; ++i) 
 		listOrig.Add(i+1, hydro.IsAvailableDOF(0, i));
 		
-	for (int i = 0; i < 6*hydro.Nb; ++i)
-		dofList.Add(InitCaps(hydro.StrBDOF(i)));
+	for (int i = 0; i < 6*hydro.Nb; ++i) {
+		int id = Find(hydro.GetOrder(), i);
+		dofList.Add(InitCaps(hydro.StrBDOF(id)));
+	}
 }
 
 bool ArrangeDOF::DnDInsert(int line, PasteClip& d) {

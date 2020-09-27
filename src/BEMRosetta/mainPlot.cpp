@@ -92,12 +92,12 @@ void MainPlot::Init(int _idf, double jdf_ih, DataToShow _dataToShow) {
 bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Upp::Vector<int> &ids) {
 	scatt.RemoveAllSeries();
 	scatP.RemoveAllSeries();
-	ABFZ_source.SetCount(ids.GetCount());
-	ABFZ_source2.SetCount(ids.GetCount());
-	Ainf_source.SetCount(ids.GetCount());
-	A0_source.SetCount(ids.GetCount());
-	TFS_source.SetCount(ids.GetCount());
-	TFS_source2.SetCount(ids.GetCount());
+	ABFZ_source.SetCount(ids.size());
+	ABFZ_source2.SetCount(ids.size());
+	Ainf_source.SetCount(ids.size());
+	A0_source.SetCount(ids.size());
+	TFS_source.SetCount(ids.size());
+	TFS_source2.SetCount(ids.size());
 		
 	dim = !mbm.menuPlot.showNdim;
 	markW = mbm.menuPlot.showPoints ? 10 : 0;

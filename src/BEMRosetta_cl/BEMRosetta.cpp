@@ -724,9 +724,11 @@ void Hydro::GetBodyDOF() {
 }
 
 bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
-	dofOrder.SetCount(6*Nb);
-	for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) 
-		dofOrder[i] = order;
+	if (dofOrder.IsEmpty()) {
+		dofOrder.SetCount(6*Nb);
+		for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) 
+			dofOrder[i] = order;
+	}
 	
 	if (!IsLoadedAw0())  
 		A0();
