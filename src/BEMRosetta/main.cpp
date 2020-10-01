@@ -542,8 +542,6 @@ void OnAssert(const char *text) {
 	throw Exc(Format(t_("Error type 2: %s"), text));	
 }
 
-void TestConvolution();
-void Amarre();
 
 GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);

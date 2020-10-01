@@ -16,6 +16,7 @@ file
 	mainMesh.cpp,
 	mainNemoh.cpp,
 	mainBEM.cpp,
+	mainFOAMM.cpp,
 	mainBEM_abf.cpp,
 	mainBEM_sts.cpp,
 	mainPlot.cpp,

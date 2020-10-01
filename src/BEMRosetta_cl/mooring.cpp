@@ -4,20 +4,22 @@
 #include <STEM4U/Sundials.h>
 
 using namespace Upp;
-using namespace Eigen;
+//using namespace Eigen;
 
 
-bool FuerzaAmarre(double lmb_seco, double dens, double bl, double LTOT, double XTOT, double ha, double hb, double Fbuque, double &Fx, double &Fya, double &Fyb, bool &roto, double *x = 0, double *y = 0, int numData = 0) {
-	double g = 9.81;       	// m/s2. Aceleración de la gravedad.
-	double dagua = 1020;	// Kg/m3
-	// lmb 		kg/m. Peso sumergido por metro lineal de cadena (=(6.85/7.85)*lmb_seco)
-	// dens 	kg/m3. Densidad de la cadena.
-	// bl		N. Carga de rotura (Break Load) del amarre. 
-	double lmb = lmb_seco*(dens - dagua)/dens;
-	// LTOT 	m. Longitud total de cadena.
+bool MooringForce(double lmbDry, double moorDens, double breakLoad, double moorLength, 
+				  double xFairAnchor, double ha, double hb, double Fvessel, 
+				  double &Fx, double &Fya, double &Fyb, bool &broken, 
+				  Vector<double> &x, Vector<double> &y) {
+	double g = 9.81;       		// m/s2. 
+	double waterDens = 1020;	// Kg/m3
+	// moorDens kg/m3. Densidad de la cadena.
+	// breakLoad  N. Carga de rotura (Break Load) del amarre. 
+	double lmb = lmbDry*(moorDens - waterDens)/moorDens;	// lmb 	kg/m. Mooring submerged weight (=(6.85/7.85)*lmb_seco)
+	// moorLength m. Longitud total de cadena.
 	// ha 		m. Altura desde el fondo del ancla/muerto.
 	// hb 		m. Altura desde el fondo del buque
-	// XTOT 	m. Distancia horizontal entre el ancla/muerto y el buque.
+	// xFairAnchor 	m. Distancia horizontal entre el ancla/muerto y el buque.
 	// Reacciones sobre el buque
 	// Fx 		N. Fuerza horizontal sobre el buque
 	// Fy 		N. Fuerza vertical descendente sobre el buque
@@ -26,35 +28,32 @@ bool FuerzaAmarre(double lmb_seco, double dens, double bl, double LTOT, double X
   	udata[0] = 1;	
 	SolveNonLinearEquationsSun(udata, 1, [&](const double y[], double residuals[])->bool {
 		double Blimit = y[0];
-		residuals[0] =  sqrt(ha*(ha + 2*Blimit)) + sqrt(hb*(hb + 2*Blimit)) - LTOT; 
+		residuals[0] =  sqrt(ha*(ha + 2*Blimit)) + sqrt(hb*(hb + 2*Blimit)) - moorLength; 
 		return true;
 	});
 	double Blimit = udata[0];
 
     double Xcata_limit = Blimit * acosh(ha/Blimit + 1);
     double Xcatb_limit = Blimit * acosh(hb/Blimit + 1);
-    double XTOT_limit = Xcata_limit + Xcatb_limit;
+    double xFairAnchor_limit = Xcata_limit + Xcatb_limit;
 	
-	for (int i = 0; i < numData; ++i) 
-    	x[i] = y[i] = 0;
-	
-	if (XTOT < LTOT - ha - hb) {				
+	if (xFairAnchor < moorLength - ha - hb) {				
 		printf("\nCaso AA");
 		
         Fx = 0;
         Fya = lmb*g*ha;
         Fyb = lmb*g*hb;
-        //double LTOT_res = LTOT;   
+        //double moorLength_res = moorLength;   
         //double h_res = hb - ha;
-	} else if (XTOT == LTOT - ha - hb) {		
+	} else if (xFairAnchor == moorLength - ha - hb) {		
 		printf("\nCaso BB");
 		
         Fx = 0;
         Fya = lmb*g*ha;
         Fyb = lmb*g*hb;
-        //double LTOT_res = LTOT;   
+        //double moorLength_res = moorLength;   
         //double h_res = hb - ha;
-    } else if (XTOT < XTOT_limit) {
+    } else if (xFairAnchor < xFairAnchor_limit) {
         printf("\nCaso CC");
 		int neq = 1;
 	
@@ -65,41 +64,39 @@ bool FuerzaAmarre(double lmb_seco, double dens, double bl, double LTOT, double X
 	  	udata[0] = Blimit/2.;	
 		SolveNonLinearEquationsSun(udata, neq, [&](const double y[], double residuals[])->bool {
 			double B = y[0];
-			residuals[0] = XTOT - B*acosh(ha/B + 1) - B*acosh(hb/B + 1) + sqrt(ha*(ha + 2*B)) + sqrt(hb*(hb + 2*B)) - LTOT; 
+			residuals[0] = xFairAnchor - B*acosh(ha/B + 1) - B*acosh(hb/B + 1) + sqrt(ha*(ha + 2*B)) + sqrt(hb*(hb + 2*B)) - moorLength; 
 			return true;
 		}, consdata);		
 		double B = udata[0];
 
-        double LTOT_res = XTOT - B*acosh(ha/B + 1) - B*acosh(hb/B + 1) + sqrt(ha*(ha + 2*B)) + sqrt(hb*(hb + 2*B));
+        double moorLength_res = xFairAnchor - B*acosh(ha/B + 1) - B*acosh(hb/B + 1) + sqrt(ha*(ha + 2*B)) + sqrt(hb*(hb + 2*B));
         double Xcata = B*acosh(ha/B + 1);
         double Xcatb = B*acosh(hb/B + 1);
         double h_res = B*(cosh(Xcatb/B) - 1) - B*(cosh(Xcata/B) - 1);
-		if (abs(LTOT_res - LTOT) > 0.0001 || abs(h_res - (hb - ha)) > 0.0001) {
-			printf("\nError en calculo. LTOT_res: %f, LTOT: %f, h_res: %f, ha: %f", LTOT_res, LTOT, h_res, ha);
+		if (abs(moorLength_res - moorLength) > 0.0001 || abs(h_res - (hb - ha)) > 0.0001) {
+			printf("\nError en calculo. moorLength_res: %f, moorLength: %f, h_res: %f, ha: %f", moorLength_res, moorLength, h_res, ha);
 			return false;
 		}
         Fx = lmb*g*B;          	// N. Fuerza horizontal sobre el buque
         Fya = Fx*sinh(Xcata/B); // N. Fuerza vertical descendente sobre el ancla
         Fyb = Fx*sinh(Xcatb/B); // N. Fuerza vertical descendente sobre el buque
         // DIBUJOS Ejes con origen en el ancla/muerto
-       	if (numData != 0) {
-            double delta = XTOT/(numData - 1);
-            for (int i = 0; i < numData; ++i) {
-                x[i] = i*delta;
-                if (x[i] < Xcata)
-	        		y[i] = B*(cosh((Xcata - x[i])/B) - 1) - ha;
-                else if (x[i] > (XTOT - Xcatb))
-                    y[i] = B*(cosh((max(0., x[i] - (XTOT - Xcatb)))/B) - 1) - ha;
-                else
-                    y[i] = 0;
-	        }
+        double delta = xFairAnchor/(x.size() - 1);
+        for (int i = 0; i < x.size(); ++i) {
+            x[i] = i*delta;
+            if (x[i] < Xcata)
+        		y[i] = B*(cosh((Xcata - x[i])/B) - 1) - ha;
+            else if (x[i] > (xFairAnchor - Xcatb))
+                y[i] = B*(cosh((max(0., x[i] - (xFairAnchor - Xcatb)))/B) - 1) - ha;
+            else
+                y[i] = 0;
         }
-    } else if (XTOT < sqrt(pow2(LTOT) - pow2(hb - ha))) {
+    } else if (xFairAnchor < sqrt(pow2(moorLength) - pow2(hb - ha))) {
         printf("\nCaso DD");
 		int neq = 2;
         double h = hb - ha;
-        double Lcat = LTOT;
-        double Xcat = XTOT;
+        double Lcat = moorLength;
+        double Xcat = xFairAnchor;
 
 	  	Buffer<double> udata(neq);
 	  	Buffer<int> consdata(2);
@@ -108,7 +105,7 @@ bool FuerzaAmarre(double lmb_seco, double dens, double bl, double LTOT, double X
 	  	
 	  	double x1_0, B1_0, x1, B;
 	  	bool done = false;
-	  	for (x1_0 = 0; x1_0 < abs(XTOT) && !done; x1_0 += abs(XTOT)/4) {
+	  	for (x1_0 = 0; x1_0 < abs(xFairAnchor) && !done; x1_0 += abs(xFairAnchor)/4) {
 	  		for (B1_0 = fabs(Blimit); B1_0 < 10*B1_0 && !done; B1_0 += 5*fabs(Blimit)/4) {		
 		  		udata[0] = B1_0;	
 		  		udata[1] = x1_0;
@@ -141,31 +138,29 @@ bool FuerzaAmarre(double lmb_seco, double dens, double bl, double LTOT, double X
         Fx = lmb*g*fabs(B);           			// N. Fuerza horizontal sobre el buque
         Fya = -Fx*sinh(x1/B);  			
         Fyb = Fx*sinh((x1 + Xcat)/B);  	
-        //double LTOT_res = Lcat_res;
+        //double moorLength_res = Lcat_res;
         // DIBUJOS Ejes con origen en el ancla/muerto
-        if (numData != 0) {
-            double delta = Xcat/(numData - 1);
-            for (int i = 0; i < numData; ++i) {
-                x[i] = i*delta;
-	        	y[i] = B*(cosh((x[i] + x1)/B) - 1) - B*(cosh(x1/B) - 1);
-	        }
+        double delta = Xcat/(x.size() - 1);
+        for (int i = 0; i < x.size(); ++i) {
+            x[i] = i*delta;
+        	y[i] = B*(cosh((x[i] + x1)/B) - 1) - B*(cosh(x1/B) - 1);
         }
-    } else if (XTOT == sqrt(pow2(LTOT) - pow2(hb - ha))) {
+    } else if (xFairAnchor == sqrt(pow2(moorLength) - pow2(hb - ha))) {
         printf("\nCaso EE");
            
         double h = hb - ha;
-        Fx = Fbuque;        // N. Fuerza horizontal sobre el buque
-        Fya = -Fx*h/XTOT;	// N. Fuerza vertical descendente sobre el ancla
+        Fx = Fvessel;        // N. Fuerza horizontal sobre el buque
+        Fya = -Fx*h/xFairAnchor;	// N. Fuerza vertical descendente sobre el ancla
         Fyb = -Fya;  		// N. Fuerza vertical descendente sobre el buque
 
         //double h_res = h;    
-        //double LTOT_res = LTOT;
+        //double moorLength_res = moorLength;
     } else {
-		printf("\nCadena rota por exceso de longitud!");
+		printf("\nMooring broken");
 		return false;
     }
 
-	roto = max(sqrt(pow2(Fx) + pow2(Fya)), sqrt(pow2(Fx) + pow2(Fyb))) >= bl ;
+	broken = max(sqrt(pow2(Fx) + pow2(Fya)), sqrt(pow2(Fx) + pow2(Fyb))) >= breakLoad ;
 	return true;
 }
 
@@ -180,14 +175,14 @@ void Ensayo_IHC() {
 	double dens = 7850;		// Kg/m3
 	double bl = 3965000;	// N Carga de rotura Grado R3S
 	double Fbuque = 0;
-	double x[NUMDATA], y[NUMDATA];
+	Vector<double> x(NUMDATA), y(NUMDATA);
 	
 	double ha = 0;
 	double hb = 1.17;
 	double LTOT = 4.167;
 	double XTOT = 3.617;	// 3.8
 	
-	if (FuerzaAmarre(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y, NUMDATA))  {
+	if (MooringForce(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y))  {
 		double Fa = sqrt(pow2(Fx) + pow2(Fya));
 		double Fb = sqrt(pow2(Fx) + pow2(Fyb));
 		printf("\tXTOT=%.3f, Fx=%.2f\nFya=%.2f, Fa=%.2f, ang_a=%.1f grad\nFyb=%.2f, Fb=%.2f, ang_b=%.1f grad\n(%.0f%%)", 
@@ -214,14 +209,14 @@ void Ensayo_Nautilus() {
 	double dens = 7850;		// Kg/m3
 	double bl = 1.49E9;		// N Carga de rotura Grado R3S
 	double Fbuque = 0;
-	double x[NUMDATA], y[NUMDATA];
+	Vector<double> x(NUMDATA), y(NUMDATA);
 	
 	double ha = 0;
 	double hb = 45.5+8.4;
 	double LTOT = 480;
 	double XTOT = sqrt(2*sqr(356.37-28.5)) + 11.25;	
 		
-	if (FuerzaAmarre(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y, NUMDATA))  {
+	if (MooringForce(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y))  {
 		double Fa = sqrt(pow2(Fx) + pow2(Fya));
 		double Fb = sqrt(pow2(Fx) + pow2(Fyb));
 		printf("\nFx=%.2f\nFya=%.2f, Fa=%.2f, ang_a=%.1f grad\nFyb=%.2f, Fb=%.2f, ang_b=%.1f", 
@@ -238,7 +233,7 @@ void Ensayo_Nautilus() {
 	
 }
 
-void Amarre() {
+void Mooring() {
 	Ensayo_Nautilus();
 	//Ensayo_IHC();
 	return;
@@ -251,27 +246,16 @@ void Amarre() {
 	double dens = 7850;		// Kg/m3
 	double bl = 3965000;	// N Carga de rotura Grado R3S
 	double Fbuque = 0;
-	double x[NUMDATA], y[NUMDATA];
+	Vector<double> x(NUMDATA), y(NUMDATA);
 	
 	double ha = 0;
 	double hb = 2.245;
 	double LTOT = 3;
-	//double XTOT = 1.708;
 	lmb_seco = 0.16;
 	
-	/*if (FuerzaAmarre(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y, NUMDATA))  {
-		printf("\tXTOT=%.3f, Fx=%.2f, Fya=%.2f, Fyb=%.2f (%.0f%%)", XTOT, Fx, Fya, Fyb, 100*max(sqrt(pow2(Fx) + pow2(Fya)), sqrt(pow2(Fx) + pow2(Fyb)))/bl);
-		printf("\nX\t\t;Y");
-		for (int i = 0; i < NUMDATA; ++i) 
-			printf("\n%f\t;%f", x[i], y[i]);
-	}*/
 	for (double XTOT = 1; XTOT < 2; XTOT += 0.01) {
-		if (FuerzaAmarre(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y, NUMDATA))  {
+		if (MooringForce(lmb_seco, dens, bl, LTOT, XTOT, ha, hb, Fbuque, Fx, Fya, Fyb, roto, x, y))  
 			printf("\tXTOT=%.2f, Fx=%.2f, Fya=%.2f, Fyb=%.2f (%.0f%%)", XTOT, Fx, Fya, Fyb, 100*max(sqrt(pow2(Fx) + pow2(Fya)), sqrt(pow2(Fx) + pow2(Fyb)))/bl);
-//			printf("\nX\t\t;Y");
-//			for (int i = 0; i < NUMDATA; ++i) 
-//				printf("\n%f\t;%f", x[i], y[i]);
-		}
 	}
 	printf("\nPulsa una tecla para finalizar");
 	getchar();
