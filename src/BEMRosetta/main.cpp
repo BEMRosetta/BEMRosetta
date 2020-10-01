@@ -388,7 +388,7 @@ bool MenuOptions::IsChanged() {
 void MenuAbout::Init() {
 	CtrlLayout(*this);
 	
-	String qtf = GetTopic(S("BEMRosetta/BEMRosetta/main/About$en-us")); 
+	String qtf = GetTopic(S("BEMRosetta/main/About$en-us")); 
 	SetBuildInfo(qtf);
 	info.SetQTF(qtf);
 }
