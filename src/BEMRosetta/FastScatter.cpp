@@ -420,7 +420,13 @@ void FastScatterTabs::AddTab(String filename) {
 		sct->Init([=] (String filename) {
 				String title = GetFileTitle(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
 				tabBar.SetValue(key, title);
-			}, [&] (String clipboard) {
+			}, [=] (String clipboard) {
+				if (tabBar.GetCount() == 0)
+				return; 
+				int id = tabBar.GetCursor();
+				if (id < 0)
+					return;
+				Value key = tabBar.GetKey(id);
 				for (int i = 0; i < tabKeys.GetCount(); ++i) {
 					if (tabKeys[i] != key) 
 						tabScatters[i].SelPaste(clipboard);
