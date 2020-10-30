@@ -112,10 +112,7 @@ double Fradiation(const VectorXd &vel, const VectorXd &irf, Eigen::Index iiter, 
 	VectorXd vvel = vel.segment(iiter-num, num);
 	VectorXd iirf = irf.head(num).reverse();
 	VectorXd cont = vvel.array()*iirf.array();
-	//VectorXd cont = vel.segment(numV-num, num).array()*irf.head(num).reverse().array();
 	
-	double ret = Integral(cont, dt, SIMPSON_1_3);
-
-	return ret;
+	return Integral(cont, dt, SIMPSON_1_3);
 }	
 

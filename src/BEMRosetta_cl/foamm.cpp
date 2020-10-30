@@ -283,14 +283,14 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 		Sleep(200);
 	}
 	if (endProcess) {
-		DeleteFolderDeep(folder);
+		DeleteFolderDeep(folder);	Sleep(100);
 		throw Exc(t_("Process ended by user"));
 	}
 	if (process.GetExitCode() != 0) {
-		DeleteFolderDeep(folder);
+		DeleteFolderDeep(folder);	Sleep(100);
 		throw Exc(t_("FOAMM ended with error"));
 	}
 	Load_mat(file, idf, jdf, false);
-	DeleteFolderDeep(folder);
+	DeleteFolderDeep(folder);		Sleep(100);
 }
 
