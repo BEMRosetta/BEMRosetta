@@ -466,8 +466,9 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		throw Exc(Format(t_("Number of Nemoh cases %d must not be higher than number of frequencies %d"), numCases, Nf));
 	
 	if (deleteFolder) {		// If called from GUI, user has been warned
-		if (!DeleteFolderDeep(folderBase))
+		if (!DeleteFolderDeepX(folderBase))
 			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
+		Sleep(100);
 	}
 	if (!DirectoryExists(folderBase) && !DirectoryCreate(folderBase))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
@@ -547,6 +548,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		for (int ib = 0; ib < bodies.GetCount(); ++ib) {
 			String name = GetFileName(bodies[ib].meshFile);
 			name = RemoveAccents(name);
+			name.Replace(" ", "_");
 			String dest = AppendFileName(folderMesh, name);
 			if (!FileCopy(bodies[ib].meshFile, dest)) 
 				throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[ib].meshFile));
@@ -592,7 +594,10 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 	for (int i = 0; i < bodies.GetCount(); ++i) {
 		const NemohBody &b = bodies[i];
 		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
-		String file = AppendFileName("mesh", RemoveAccents(GetFileName(b.meshFile)));
+		String name = GetFileName(b.meshFile);
+		name = RemoveAccents(name);
+		name.Replace(" ", "_");
+		String file = AppendFileName("mesh", name);
 		
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", b.npoints, b.npanels), cp) << "! Number of points and number of panels" << "\n";	
