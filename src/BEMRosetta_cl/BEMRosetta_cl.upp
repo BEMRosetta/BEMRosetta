@@ -16,7 +16,6 @@ options(MSC) /bigobj;
 options(MSC) -D_SCL_SECURE_NO_WARNINGS;
 
 file
-	Copying,
 	main.cpp,
 	BEMRosetta.cpp,
 	BEMRosetta.h,
@@ -38,7 +37,8 @@ file
 	main_cl.rc,
 	functions.cpp,
 	functions.h,
-	mooring.cpp;
+	mooring.cpp,
+	Copying;
 
 mainconfig
 	"" = "";

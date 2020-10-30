@@ -319,20 +319,19 @@ bool MainNemoh::ArrayUpdateCursor() {
 			id = array.GetCount()-1;
 	}	
 	
-	String ret;
 	MeshData dat;
 	bool x0z;
-	if (~meshFile != array.Get(id, 0)) 
-		ret = dat.LoadDatNemoh(~meshFile, x0z);
+	if (~meshFile != array.Get(id, 0)) {
+		String ret = dat.LoadDatNemoh(~meshFile, x0z);
 	
-	if (ret.IsEmpty()) {
-		array.Set(id, 1, dat.mesh.GetNumNodes());
-		array.Set(id, 2, dat.mesh.GetNumPanels());
-	} else {
-		Exclamation(DeQtf(ret));
-		return false;		
+		if (ret.IsEmpty()) {
+			array.Set(id, 1, dat.mesh.GetNumNodes());
+			array.Set(id, 2, dat.mesh.GetNumPanels());
+		} else {
+			Exclamation(DeQtf(ret));
+			return false;		
+		}
 	}
-		
 	array.Set(id, 0, ~meshFile);
 	array.Set(id, 3, ~surge);
 	array.Set(id, 4, ~sway);
@@ -344,6 +343,8 @@ bool MainNemoh::ArrayUpdateCursor() {
 	array.Set(id, 10, ~cy);
 	array.Set(id, 11, ~cz);
 
+	array.Update();
+	
 	return true;
 }
 

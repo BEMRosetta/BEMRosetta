@@ -1320,7 +1320,7 @@ bool BEMData::LoadSerializeJson(bool &firstTime) {
 
 bool BEMData::ClearTempFiles() {
 	String folder = GetTempFilesFolder();
-	DeleteFolderDeepWildcardsX(folder, "*.*");
+	DeleteFolderDeepWildcardsX(folder, "*.*");	Sleep(100);
 	DirectoryCreate(folder);
 	return DirectoryExists(folder);
 }
