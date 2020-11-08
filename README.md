@@ -37,7 +37,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
 	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .LIS, .AH1, .QTF
 	* [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
   * Save
-    * [Wamit](https://www.wamit.com/): .1, .3, .hst, .4, .12s, .12d
+    * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .12s, .12d
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss, .12s, .12d
     * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
 * Mesh files
