@@ -17,7 +17,7 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 		try {
 			LoadStl(file, mesh, isText, header);
 		} catch(Exc e) {
-			return e;
+			return std::move(e);
 		}
 		SetCode(isText ? MeshData::STL_TXT : MeshData::STL_BIN);
 	} else

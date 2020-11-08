@@ -250,7 +250,7 @@ void FastScatter::WhenArrayLeftDouble(ArrayCtrl *parray) {
 }
  
 void FastScatter::OnFilter(bool show) {
-	SortedVectorMap<String, String> list = datafast.GetList(~right.filterParam, ~right.filterUnits);
+	SortedVectorMap<String, String> list = datafast.GetList(Trim(~right.filterParam), Trim(~right.filterUnits));
 	if (list.GetCount() == 1) {
 		if (AddParameter(list.GetKey(0), nullptr)) {
 			right.filterParam.Clear();

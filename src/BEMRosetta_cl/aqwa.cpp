@@ -349,27 +349,27 @@ bool Aqwa::Load_LIS() {
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-	       	hd().C[idb](2, 2) = f.GetDouble(0);
-	       	hd().C[idb](2, 3) = f.GetDouble(1);
-	       	hd().C[idb](2, 4) = f.GetDouble(2);
-	       	if (f.GetCount() > 3)
-	       		hd().C[idb](2, 5) = f.GetDouble(3);	
+			hd().C[idb](2, 2) = f.GetDouble(0);
+			hd().C[idb](2, 3) = f.GetDouble(1);
+			hd().C[idb](2, 4) = f.GetDouble(2);
+			if (f.GetCount() > 3)
+				hd().C[idb](2, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-	       	hd().C[idb](3, 2) = f.GetDouble(0);
+			hd().C[idb](3, 2) = f.GetDouble(0);
 			hd().C[idb](3, 3) = f.GetDouble(1);
 			hd().C[idb](3, 4) = f.GetDouble(2);
 			if (f.GetCount() > 3)
-	       		hd().C[idb](3, 5) = f.GetDouble(3);	
+				hd().C[idb](3, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-	       	hd().C[idb](4, 2) = f.GetDouble(0);
+			hd().C[idb](4, 2) = f.GetDouble(0);
 			hd().C[idb](4, 3) = f.GetDouble(1);
 			hd().C[idb](4, 4) = f.GetDouble(2);
 			if (f.GetCount() > 3)
@@ -554,12 +554,12 @@ bool Aqwa::Load_QTF() {
 			Hydro::QTF &qtfdif = hd().qtfdif.Add();
 			qtfdif.Set(ib, ih, ih, ifr1, ifr2);
 	        
-	        for (int idof = 0; idof < 6; ++idof) 
-	        	qtfdif.fre[idof] = f.GetDouble(4 + idof);
-	        	
+			for (int idof = 0; idof < 6; ++idof) 
+				qtfdif.fre[idof] = f.GetDouble(4 + idof);
+				
 	        f.Load(in.GetLine());
 	        for (int idof = 0; idof < 6; ++idof)
-	        	qtfdif.fim[idof] = f.GetDouble(idof);
+				qtfdif.fim[idof] = f.GetDouble(idof);
 		
 			for (int idof = 0; idof < 6; ++idof) {
 				qtfdif.fma[idof] = sqrt(sqr(qtfdif.fre[idof]) + sqr(qtfdif.fim[idof])); 
@@ -571,11 +571,11 @@ bool Aqwa::Load_QTF() {
 					
 			f.Load(in.GetLine());
 			for (int idof = 0; idof < 6; ++idof) 
-	        	qtfsum.fre[idof] = f.GetDouble(idof);
-	        	
+				qtfsum.fre[idof] = f.GetDouble(idof);
+				
 	        f.Load(in.GetLine());
 	        for (int idof = 0; idof < 6; ++idof)
-	        	qtfsum.fim[idof] = f.GetDouble(idof);
+				qtfsum.fim[idof] = f.GetDouble(idof);
 		
 			for (int idof = 0; idof < 6; ++idof) {
 				qtfsum.fma[idof] = sqrt(sqr(qtfsum.fre[idof]) + sqr(qtfsum.fim[idof])); 
