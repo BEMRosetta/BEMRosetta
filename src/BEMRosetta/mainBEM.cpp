@@ -331,16 +331,19 @@ void MainBEM::OnOpt() {
 	
 	menuConvert.file.ClearTypes();
 	switch (menuConvert.opt) {
-	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
+	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".out"); 	
+			menuConvert.file.Type(t_("Wamit .out file"), "*.out");
+			break;	
+	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
 			menuConvert.file.Type(t_("Wamit .1.3.4.hst.12s.12d file"), "*.1 *.3 *.hst *.4 *.12s *.12d");
 			break;
-	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
+	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
 			menuConvert.file.Type(t_("FAST HydroDyn file"), "*.dat");
 			break;
-	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".bem"); 
+	case 3:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".bem"); 
 			menuConvert.file.Type(t_("BEMRosetta file"), "*.bem");
 			break;
-	default:menuConvert.file.Type(t_("All converted files"), "*.1 *.3 *.hst *.4 *.12s *.12d *.dat *.bem");
+	default:menuConvert.file.Type(t_("All converted files"), "*.1 *.3 *.hst *.4 *.12s *.12d *.dat *.bem *.out");
 			break;
 	}
 	String extConv = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
@@ -704,15 +707,17 @@ bool MainBEM::OnConvert() {
 		
 		Hydro::BEM_SOFT type;	
 		switch (menuConvert.opt) {
-		case 0:	type = Hydro::WAMIT_1_3;	
+		case 0:	type = Hydro::WAMIT;	
+				break;
+		case 1:	type = Hydro::WAMIT_1_3;	
 				qtfHeading = AskQtfHeading(Bem().hydros[id].hd());
 				break;
-		case 1:	type = Hydro::FAST_WAMIT;	
+		case 2:	type = Hydro::FAST_WAMIT;	
 				qtfHeading = AskQtfHeading(Bem().hydros[id].hd());	
 				break;
-		case 2:	type = Hydro::BEMROSETTA;	
+		case 3:	type = Hydro::BEMROSETTA;	
 				break;
-		case 3:	type = Hydro::UNKNOWN;		
+		case 4:	type = Hydro::UNKNOWN;		
 				break;
 		default:throw Exc(t_("Unknown type in OnConvert()"));
 		}

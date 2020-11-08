@@ -125,6 +125,8 @@ bool Wamit::Load_out() {
 	FieldSplitWamit f(in);
 	f.IsSeparator = IsTabSpace;
 	
+	double xbody = 0, ybody = 0, zbody = 0;
+	
 	hd().names.Clear();
 	while(!in.IsEof()) {
 		line = in.GetLine();
@@ -157,21 +159,25 @@ bool Wamit::Load_out() {
 			ibody++;
 			if (ibody >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Found additional bodies over %d"), hd().Nb));
-			if (hd().cg.rows() < 3 || hd().cg.cols() < hd().Nb)
-			 	throw Exc(in.Str() + "\n"  + t_("cg matrix is not dimensioned"));
-			hd().cg(0, ibody) = f.GetDouble(2);
-			hd().cg(1, ibody) = f.GetDouble(5);
-			hd().cg(2, ibody) = f.GetDouble(8);
+			xbody = f.GetDouble(2);
+			ybody = f.GetDouble(5);
+			zbody = f.GetDouble(8);
 		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {
 			if (hd().Vo.GetCount() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("Vo matrix is not dimensioned"));		
 			hd().Vo[ibody] = ScanDouble(line.Mid(pos));
+		} else if (line.Find("Center of Gravity  (Xg,Yg,Zg):") >= 0) {
+			if (hd().cg.rows() < 3 || hd().cg.cols() < hd().Nb)
+			 	throw Exc(in.Str() + "\n"  + t_("cg matrix is not dimensioned"));
+			hd().cg(0, ibody) = f.GetDouble(4) + xbody;
+			hd().cg(1, ibody) = f.GetDouble(5) + ybody;
+			hd().cg(2, ibody) = f.GetDouble(6) + zbody;
 		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
-			if (hd().cb.rows() < 3 || hd().cg.cols() < hd().Nb)
+			if (hd().cb.rows() < 3 || hd().cb.cols() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("cb matrix is not dimensioned"));
-			hd().cb(0, ibody) = f.GetDouble(4) + hd().cg(0, ibody);
-			hd().cb(1, ibody) = f.GetDouble(5) + hd().cg(1, ibody);
-			hd().cb(2, ibody) = f.GetDouble(6) + hd().cg(2, ibody);
+			hd().cb(0, ibody) = f.GetDouble(4) + xbody;
+			hd().cb(1, ibody) = f.GetDouble(5) + ybody;
+			hd().cb(2, ibody) = f.GetDouble(6) + zbody;
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
 			if (hd().C.GetCount() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("C matrix is not dimensioned"));
@@ -293,7 +299,7 @@ bool Wamit::Load_out() {
 								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
 									f.Load(line);
 									double ma = f.GetDouble(1);
-									double ph = f.GetDouble(2)*M_PI/180;
+									double ph = ToRad(f.GetDouble(2));
 									double re = ma*cos(ph);
 									double im = ma*sin(ph);
 									int i = abs(f.GetInt(0)) - 1;
@@ -323,6 +329,97 @@ bool Wamit::Load_out() {
 	return true;
 }
 
+void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod) {
+	out << 	" ************************************************************************\n\n"
+			" Wave period = " << wavePeriod << "\n"
+			" ------------------------------------------------------------------------\n\n\n"
+			"    ADDED-MASS COEFFICIENTS\n"
+			"     I     J         A(I,J)\n\n";
+	for (int r = 0; r < hd().Nb*6; ++r) 
+		for (int c = 0; c < hd().Nb*6; ++c) 
+			if (!IsNull(base(r, c))) 
+				out << Format("%6>d%6>d %E\n", r+1, c+1, fun(r, c));
+	out << "\n\n";
+}
+
+void Wamit::Save_AB(FileOut &out, int ifr) {
+	out <<	"    ADDED-MASS AND DAMPING COEFFICIENTS\n"
+			"     I     J         A(I,J)         B(I,J)\n\n";
+	for (int r = 0; r < hd().Nb*6; ++r) 
+		for (int c = 0; c < hd().Nb*6; ++c) 
+			if (!IsNull(hd().A[ifr](r, c)) && !IsNull(hd().B[ifr](r, c)))
+				out << Format("%6>d%6>d %E %E\n", r+1, c+1, hd().A_ndim(ifr, r, c), hd().B_ndim(ifr, r, c));
+	out << "\n\n\n\n";
+}
+
+void Wamit::Save_Forces(FileOut &out, int ifr) {
+	out <<	"    DIFFRACTION EXCITING FORCES AND MOMENTS\n\n";
+	for (int ih = 0; ih < hd().Nh; ++ih) {
+		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
+			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
+		for (int i = 0; i < hd().ex.ma[ih].cols(); ++i)
+			if (!IsNull(hd().ex.ma[ih](ifr, i))) 
+				out << Format(" %7>d   %E   %f\n", i+1, hd().F_ma_ndim(hd().ex, ih, ifr, i), ToDeg(hd().ex.ph[ih](ifr, i)));
+		out << "\n\n\n\n";
+	}
+}
+
+void Wamit::Save_out(String file) {
+	FileOut out(file);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'"), file));
+
+	try {
+		out << Format(" %s\n\n", String('-', 72))
+		    <<        "                   BEMRosetta generated .out format\n\n"
+		    << Format(" %s\n\n", String('-', 72));
+		
+ 		out << " Gravity:     " << hd().g
+ 		    << "                Length scale:        " << hd().len << "\n"
+ 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDouble(hd().h)) << "\n\n\n";       
+ 		
+		out << " BODY PARAMETERS:\n\n";
+		
+		for (int ibody = 0; ibody < hd().Nb; ++ibody) {
+			if (hd().Nb > 1)
+				out << " Body number: N= " << ibody+1 << "   ";
+			out << " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n"
+				<< " Volumes (VOLX,VOLY,VOLZ): " << hd().Vo[ibody] << " " << hd().Vo[ibody] << " " << hd().Vo[ibody] << "\n"
+				<< " Center of Buoyancy (Xb,Yb,Zb): " << hd().cb(0, ibody) << " " 
+					<< hd().cb(1, ibody) << " " << hd().cb(2, ibody) << "\n"
+				<< " Hydrostatic and gravitational restoring coefficients:\n" 
+				<< " C(3,3),C(3,4),C(3,5): " << hd().C[ibody](2, 2) << " " << hd().C[ibody](2, 3) << " " << hd().C[ibody](2, 4) << "\n"
+				<< " C(4,4),C(4,5),C(4,6): " << hd().C[ibody](3, 3) << " " << hd().C[ibody](3, 4) << " " << hd().C[ibody](3, 5) << "\n"
+				<< "        C(5,5),C(5,6):        " << hd().C[ibody](4, 4) << " " << hd().C[ibody](4, 5) << "\n"
+				<< " Center of Gravity  (Xg,Yg,Zg): " << hd().cg(0, ibody) << " " 
+					<< hd().cg(1, ibody) << " " << hd().cg(2, ibody) << "\n"
+				   " Radii of gyration:     0.000000     0.000000     0.000000\n"
+      			   "                        0.000000     0.000000     0.000000\n"
+                   "                        0.000000     0.000000     0.000000\n\n";
+		}
+		out << " ------------------------------------------------------------------------\n"
+        	<< "                    Output from  WAMIT\n"
+			<< " ------------------------------------------------------------------------\n\n";
+		
+		if (hd().IsLoadedAw0())
+			Save_A(out, [&](int idf, int jdf)->double {return hd().Aw0_ndim(idf, jdf);},   hd().Aw0,   "infinite");
+		if (hd().IsLoadedAwinf())
+			Save_A(out, [&](int idf, int jdf)->double {return hd().Awinf_ndim(idf, jdf);}, hd().Awinf, "zero");
+		
+		for (int ifr = 0; ifr < hd().T.size(); ++ifr) {
+			out << 	" ************************************************************************\n\n"
+					" Wave period (sec) = " << hd().T[ifr] << "\n"
+					" ------------------------------------------------------------------------\n\n\n";
+			if (hd().IsLoadedA() && hd().IsLoadedB()) 
+				Save_AB(out, ifr);
+			if (hd().IsLoadedFex())
+				Save_Forces(out, ifr);
+		}
+	} catch (Exc e) {
+		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = e;
+	}
+}
 
 void Wamit::Load_A(FileInLine &in, Eigen::MatrixXd &A) {
 	in.GetLine(6);
@@ -912,10 +1009,10 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 		if (!EqualRatio(hd().qtfhead[ih2], h2, 0.01, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading 2 %f not found"), h2));
 
-	    int idof = f.GetInt(4)-1;
-	    if (idof < 0 || idof > hd().Nb*6 -1)
-	        throw Exc(in.Str() + "\n"  + Format(t_("Wrong DOF id %d"), idof+1));
-	        		
+		int idof = f.GetInt(4)-1;
+		if (idof < 0 || idof > hd().Nb*6 -1)
+			throw Exc(in.Str() + "\n"  + Format(t_("Wrong DOF id %d"), idof+1));
+	    
 		int ib = int(idof/6);
 		idof = idof - ib*6;
 		

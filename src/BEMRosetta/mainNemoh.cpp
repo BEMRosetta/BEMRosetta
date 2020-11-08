@@ -31,6 +31,9 @@ void MainNemoh::Init(const BEMData &bem) {
 	butAdd <<= THISBACK(arrayOnAdd);
 	butDuplicate <<= THISBACK(arrayOnDuplicate);
 	butRemove <<= THISBACK(arrayOnRemove);
+	butAllDOF.WhenAction= [&] {surge <<= true; 	sway <<= true; 	heave <<= true; 
+							   roll <<= true; 	pitch <<= true; yaw <<= true;
+							   ArrayUpdateCursor();};
 	
 	meshFile.WhenAction = [&] {ArrayUpdateCursor();};
 	meshFile.WhenChange = [&] {return ArrayUpdateCursor();};

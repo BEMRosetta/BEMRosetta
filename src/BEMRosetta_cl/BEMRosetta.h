@@ -566,6 +566,7 @@ public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
 	void Save(String file, bool force_T = false, int qtfHeading = Null);
+	void Save_out(String file);
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
@@ -591,6 +592,10 @@ protected:
 	void Save_hst(String fileName);
 	void Save_4(String fileName, bool force_T = false);
 	void Save_12(String fileName, bool isSum, bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
+
+	void Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod);
+	void Save_AB(FileOut &out, int ifr);
+	void Save_Forces(FileOut &out, int ifr);
 };
 
 class Foamm : public HydroClass {

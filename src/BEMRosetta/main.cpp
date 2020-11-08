@@ -704,8 +704,11 @@ int ArrayModel_IdHydro(const ArrayCtrl &array, int row) {
 
 Upp::Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
 	Upp::Vector<int> ids;
-	for (int row = 0; row < array.GetCount(); ++row) 
-		ids << ArrayModel_IdHydro(array, row);		
+	for (int row = 0; row < array.GetCount(); ++row) {
+		int id = ArrayModel_IdHydro(array, row);		
+		if (id >= 0)
+			ids << id;
+	}
 	return ids;
 }
 
