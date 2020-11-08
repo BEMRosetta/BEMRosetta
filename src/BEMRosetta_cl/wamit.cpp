@@ -372,18 +372,41 @@ void Wamit::Save_out(String file) {
 	try {
 		out << Format(" %s\n\n", String('-', 72))
 		    <<        "                   BEMRosetta generated .out format\n\n"
-		    << Format(" %s\n\n", String('-', 72));
-		
- 		out << " Gravity:     " << hd().g
+		    << Format(" %s\n\n\n", String('-', 72))
+			<< " Low-order panel method  (ILOWHI=0)\n\n";
+		if (hd().Nb == 1)
+			out << " Input from Geometric Data File:         unknown.gdf\n"
+				<< " Unknown gdf file source\n\n";
+		else {
+			out << " Input from Geometric Data Files:\n";
+			for (int ib = 0; ib < hd().Nb; ++ib)
+				out << Format("                               N=  %d     unknown%d.gdf\n"
+							  " Unknown gdf file source\n\n", ib+1, ib);
+		}
+		out	<< " Input from Potential Control File:      unknown.pot\n"
+			<< " unknown.pot -- file type .gdf, ILOWHI=0, IRR=1\n\n\n"
+			<< " POTEN run date and starting time:        01-Jan-2000  --  00:00:00\n"
+			<< "   Period       Time           RAD      DIFF  (max iterations)\n"
+			<< "   -1.0000    00:00:00          -1\n"                                      
+    		<< "    0.0000    00:00:00          -1\n\n"    
+ 			<< " Gravity:     " << hd().g
  		    << "                Length scale:        " << hd().len << "\n"
- 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDouble(hd().h)) << "\n\n\n";       
+ 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDouble(hd().h)) << "\n"
+ 			<< " Logarithmic singularity index:              ILOG =     1\n"
+ 			<< " Source formulation index:                   ISOR =     0\n"
+ 			<< " Diffraction/scattering formulation index: ISCATT =     0\n"
+ 			<< " Number of blocks used in linear system:   ISOLVE =     1\n"
+ 			<< " Number of unknowns in linear system:        NEQN =  111\n\n";      
  		
 		out << " BODY PARAMETERS:\n\n";
 		
 		for (int ibody = 0; ibody < hd().Nb; ++ibody) {
 			if (hd().Nb > 1)
 				out << " Body number: N= " << ibody+1 << "   ";
-			out << " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n"
+			out	<< " Total panels:  1111    Waterline panels:   11      Symmetries: none\n" 
+				<< " Irregular frequency index: IRR =1\n" 
+				<< " Free surface panels:     111\n\n"
+				<< " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n"
 				<< " Volumes (VOLX,VOLY,VOLZ): " << hd().Vo[ibody] << " " << hd().Vo[ibody] << " " << hd().Vo[ibody] << "\n"
 				<< " Center of Buoyancy (Xb,Yb,Zb): " << hd().cb(0, ibody) << " " 
 					<< hd().cb(1, ibody) << " " << hd().cb(2, ibody) << "\n"
