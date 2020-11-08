@@ -311,15 +311,45 @@ bool Wamit::Load_out() {
 									hd().ex.im[ih](ifr, i) = im;	
 								}
 								ih++;
-							} else if (line.Find("RESPONSE AMPLITUDE OPERATORS") >= 0 ||
-									   line.Find("SURGE, SWAY & YAW DRIFT FORCES") >= 0 ||
-									   line.Find("SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES") >= 0 ||
-									   line.Find("HYDRODYNAMIC PRESSURE IN FLUID DOMAIN") >= 0 ||
-									   line.Find("*************************************") >= 0) {
-								nextFreq = true;
-								break;
+								if (ih >= hd().Nh)
+									break;
+							}
+						} 
+					} else if (line.Find("RESPONSE AMPLITUDE OPERATORS") >= 0) {
+						if (hd().rao.ma.IsEmpty()) 
+							hd().Initialize_Forces(hd().rao);
+						
+						int ih = 0;
+						while (!in.IsEof()) {		
+							line = in.GetLine();
+							if (line.Find("Wave Heading (deg) :") >= 0) {
+								in.GetLine(3); 
+								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
+									f.Load(line);
+									double ma = f.GetDouble(1);
+									double ph = ToRad(f.GetDouble(2));
+									double re = ma*cos(ph);
+									double im = ma*sin(ph);
+									int i = abs(f.GetInt(0)) - 1;
+									if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
+										throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
+									hd().rao.ma[ih](ifr, i) = ma;	
+									hd().rao.ph[ih](ifr, i) = ph;	
+									hd().rao.re[ih](ifr, i) = re;	
+									hd().rao.im[ih](ifr, i) = im;	
+								}
+								ih++;
+								if (ih >= hd().Nh)
+									break;
 							}
 						}
+					} else if (line.Find("SURGE, SWAY & YAW DRIFT FORCES") >= 0 ||
+							   line.Find("SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES") >= 0 ||
+							   line.Find("VELOCITY VECTOR IN FLUID DOMAIN") >= 0 ||
+							   line.Find("HYDRODYNAMIC PRESSURE IN FLUID DOMAIN") >= 0 ||
+							   line.Find("*************************************") >= 0) {
+						nextFreq = true;
+						break;
 					}
 				}
 			}
@@ -360,6 +390,18 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 		for (int i = 0; i < hd().ex.ma[ih].cols(); ++i)
 			if (!IsNull(hd().ex.ma[ih](ifr, i))) 
 				out << Format(" %7>d   %E   %f\n", i+1, hd().F_ma_ndim(hd().ex, ih, ifr, i), ToDeg(hd().ex.ph[ih](ifr, i)));
+		out << "\n\n\n\n";
+	}
+}
+
+void Wamit::Save_RAO(FileOut &out, int ifr) {
+	out <<	"    RESPONSE AMPLITUDE OPERATORS\n\n";
+	for (int ih = 0; ih < hd().Nh; ++ih) {
+		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
+			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
+		for (int i = 0; i < hd().rao.ma[ih].cols(); ++i)
+			if (!IsNull(hd().rao.ma[ih](ifr, i))) 
+				out << Format(" %7>d   %E   %f\n", i+1, hd().F_ma_ndim(hd().rao, ih, ifr, i), ToDeg(hd().rao.ph[ih](ifr, i)));
 		out << "\n\n\n\n";
 	}
 }
@@ -437,6 +479,8 @@ void Wamit::Save_out(String file) {
 				Save_AB(out, ifr);
 			if (hd().IsLoadedFex())
 				Save_Forces(out, ifr);
+			if (hd().IsLoadedRAO())
+				Save_RAO(out, ifr);
 		}
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));

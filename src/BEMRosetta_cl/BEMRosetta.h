@@ -596,6 +596,7 @@ protected:
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod);
 	void Save_AB(FileOut &out, int ifr);
 	void Save_Forces(FileOut &out, int ifr);
+	void Save_RAO(FileOut &out, int ifr);
 };
 
 class Foamm : public HydroClass {
