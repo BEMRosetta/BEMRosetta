@@ -451,7 +451,10 @@ void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
 		else
 			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
 	}
-	if (type == WAMIT_1_3) {
+	if (type == WAMIT) {
+		Wamit data(*bem, this);
+		data.Save_out(file);			
+	} else if (type == WAMIT_1_3) {
 		Wamit data(*bem, this);
 		data.Save(file, true, qtfHeading);	
 	} else if (type == FAST_WAMIT) {
@@ -1143,7 +1146,7 @@ void BEMData::HealingMesh(int id, bool basic, Function <void(String, int)> Statu
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount()-1);
 		Print("\n" + Format(t_("Problem healing '%s': %s") + S("\n%s"), e));
-		throw e;
+		throw std::move(e);
 	}
 	if (!ret.IsEmpty()) {
 		ret.Replace("\n", "\n- ");
@@ -1161,7 +1164,7 @@ void BEMData::OrientSurface(int id, Function <void(String, int)> Status) {
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount()-1);
 		Print("\n" + Format(t_("Problem orienting surface '%s': %s") + S("\n%s"), e));
-		throw e;
+		throw std::move(e);
 	}
 }
 
@@ -1177,7 +1180,7 @@ void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount()-1);
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
-		throw e;
+		throw std::move(e);
 	}
 }
 
@@ -1196,7 +1199,7 @@ void BEMData::JoinMesh(int idDest, int idOrig) {
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount()-1);
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
-		throw e;
+		throw std::move(e);
 	}
 }
 
@@ -1223,7 +1226,7 @@ Upp::Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Sta
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - ret.GetCount());
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
-		throw e;
+		throw std::move(e);
 	}
 	return ret;
 }
@@ -1238,7 +1241,7 @@ void BEMData::AddFlatPanel(double x, double y, double z, double size, double pan
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - 1);
 		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
-		throw e;
+		throw std::move(e);
 	}	
 }
 
@@ -1252,7 +1255,7 @@ void BEMData::AddRevolution(double x, double y, double z, double size, Upp::Vect
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
-		throw e;
+		throw std::move(e);
 	}	
 }
 
@@ -1266,7 +1269,7 @@ void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::
 	} catch (Exc e) {
 		surfs.SetCount(surfs.GetCount() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
-		throw e;
+		throw std::move(e);
 	}	
 }
 
