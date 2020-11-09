@@ -156,88 +156,86 @@ bool FastOut::LoadOut(String fileName) {
 bool FastOut::LoadOutb(String fileName) {
 	Clear();
 	
-	int LenName = 10;  							// number of characters per channel name
-	int LenUnit = LenName;  					// number of characters per unit name
-
-	enum FileFmt {WithTime = 1, WithoutTime, ChanLen};
+	enum FileType {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
 
 	FileInBinary file(fileName);
 	if (!file.IsOpen())
 		return false;
 
+	int ChanLen2 = 10;
 	int16 FileID = file.ReadB<int16,2>();
-	int32 NumOutChans = file.ReadB<int32,4>();  // The number of output channels, INT(4)
-    int32 NT = file.ReadB<int32,4>();			// The number of time steps, INT(4)
+	if (FileID == FileType::ChanLen_In) 
+		ChanLen2 = file.ReadB<int16,2>();
+
+	int32 NumChans = file.ReadB<int32,4>();
+    int32 NumRecs = file.ReadB<int32,4>();
 
 	double TimeScl, TimeOff, TimeOut1, TimeIncr;
-    if (FileID == FileFmt::WithTime) {
-        TimeScl = file.ReadB<double,8>(); 		// The time slopes for scaling, REAL(8)
-        TimeOff = file.ReadB<double,8>();   	// The time offsets for scaling, REAL(8)
+    if (FileID == FileType::WithTime) {
+        TimeScl = file.ReadB<double,8>(); 
+        TimeOff = file.ReadB<double,8>();
     } else {
-        TimeOut1 = file.ReadB<double,8>();  	// The first time in the time series, REAL(8)
-        TimeIncr = file.ReadB<double,8>();  	// The time increment, REAL(8)
+        TimeOut1 = file.ReadB<double,8>();
+        TimeIncr = file.ReadB<double,8>();  
     }
 
-	Buffer<float> ColScl(NumOutChans), ColOff(NumOutChans);
-    file.ReadB(ColScl, 4*NumOutChans);			// The channel slopes for scaling, REAL(4)
-    file.ReadB(ColOff, 4*NumOutChans); 			// The channel offsets for scaling, REAL(4)
+	Buffer<float> ColScl(NumChans), ColOff(NumChans);
+    file.ReadB(ColScl, 4*NumChans);	
+    file.ReadB(ColOff, 4*NumChans);
 
-	int32 LenDesc = file.ReadB<int32,4>();		// The number of characters in the description string, INT(4)
+	int32 LenDesc = file.ReadB<int32,4>();
     StringBuffer DescStrB(LenDesc);
-    file.ReadB(DescStrB, LenDesc);  			// DescStr converted to ASCII
+    file.ReadB(DescStrB, LenDesc);
     String DescStr = DescStrB;
     
-    if (FileID == FileFmt::ChanLen) {
-        LenName = 15;
-        LenUnit = LenName;
-    }
+    if (FileID == FileType::NoCompressWithoutTime) 
+        ChanLen2 = 15;
 
-	parameters.SetCount(NumOutChans+1);     	// initialize the ChanName cell array
+	parameters.SetCount(NumChans+1); 
 	parameters[0] = "Time";
-	Buffer<char> name(LenName);
-    for (int iChan = 0; iChan < NumOutChans+1; ++iChan) { 
-        file.ReadB(name, LenName); 				// ChanName converted to numeric ASCII
-        parameters[iChan] = TrimBoth(String(name, LenName));
+	Buffer<char> name(ChanLen2);
+    for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
+        file.ReadB(name, ChanLen2); 	
+        parameters[iChan] = TrimBoth(String(name, ChanLen2));
     }
     
-	units.SetCount(NumOutChans+1);          	// initialize the ChanName cell array
+	units.SetCount(NumChans+1);          		
 	units[0] = "s";
-	Buffer<char> unit(LenUnit);
-    for (int iChan = 0; iChan < NumOutChans+1; ++iChan) { 
-        file.ReadB(unit, LenUnit); 				// ChanName converted to numeric ASCII
-        units[iChan] = Replace(Replace(TrimBoth(String(unit, LenUnit)), "(", ""), ")", "");
+	Buffer<char> unit(ChanLen2);
+    for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
+        file.ReadB(unit, ChanLen2); 			
+        units[iChan] = Replace(Replace(TrimBoth(String(unit, ChanLen2)), "(", ""), ")", "");
     }  
     
-    int nPts = NT*NumOutChans;           		// number of data points in the file   
-    dataOut.SetCount(NumOutChans+1+calcParams.GetCount());
+    int nPts = NumRecs*NumChans;           		   
+    dataOut.SetCount(NumChans+1+calcParams.GetCount());
     for (int i = 0; i < dataOut.GetCount(); ++i)
-        dataOut[i].SetCount(NT);
+        dataOut[i].SetCount(NumRecs);
     
     Buffer<int32> bufferTime;
-    if (FileID == FileFmt::WithTime) {
-        bufferTime.Alloc(NT);
-        file.ReadB(bufferTime, 4*NT); 			// read the time data
+    if (FileID == FileType::WithTime) {
+        bufferTime.Alloc(NumRecs);
+        file.ReadB(bufferTime, 4*NumRecs); 
     }
     
     Buffer<int16> bufferData(nPts);
-    file.ReadB(bufferData, 2*nPts); 				// read the channel data
+    file.ReadB(bufferData, 2*nPts); 	
     int ip = 0;
-    for (int idt = 0; idt < NT; ++idt) 
-    	for (int i = 1; i < NumOutChans+1; ++i) {
+    for (int idt = 0; idt < NumRecs; ++idt) 
+    	for (int i = 1; i < NumChans+1; ++i) {
 	    	double off = ColOff[i-1];
 	    	double scl = ColScl[i-1];
 	        dataOut[i][idt] = (bufferData[ip] - off)/scl;
 	        ip++;
 	}    
     
-    if (FileID == FileFmt::WithTime) {
-        for (int idt = 0; idt < NT; ++idt)
+    if (FileID == FileType::WithTime) {
+        for (int idt = 0; idt < NumRecs; ++idt)
             dataOut[0][idt] = ( bufferTime[idt] - TimeOff)/ TimeScl;
     } else {
-        for (int idt = 0; idt < NT; ++idt)
+        for (int idt = 0; idt < NumRecs; ++idt)
             dataOut[0][idt] = TimeOut1 + TimeIncr*idt;
     }
-
 	return true;
 }
 
