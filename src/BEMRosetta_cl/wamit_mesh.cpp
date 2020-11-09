@@ -129,10 +129,15 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 		
 		while(!in.IsEof()) {
 			int ids[4];
+			bool npand = false;
 			for (int i = 0; i < 4; ++i) {
 				line = in.GetLine();	
 				f.Load(line);
 				
+				if (f.GetText(1) == "NPAND") { // Dipoles loaded as normal panels
+					npand = true;
+					break;
+				}
 				double x = f.GetDouble(0)*scale;	
 				double y = f.GetDouble(1)*scale;	
 				double z = f.GetDouble(2)*scale;	
@@ -154,12 +159,14 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 					ids[i] = mesh.nodes.GetCount() - 1;
 				}
 			}
-			Panel &panel = mesh.panels.Add();
-			for (int i = 0; i < 4; ++i)
-				panel.id[i] = ids[i];
+			if (!npand) {
+				Panel &panel = mesh.panels.Add();
+				for (int i = 0; i < 4; ++i)
+					panel.id[i] = ids[i];
+			}
 		}
-		if (mesh.panels.GetCount() != nPatches)
-			return t_("Wrong number of patches in .gdf file");
+		//if (mesh.panels.GetCount() != nPatches)
+		//	return t_("Wrong number of patches in .gdf file");
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
 	}

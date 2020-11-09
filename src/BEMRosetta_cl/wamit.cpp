@@ -428,10 +428,15 @@ void Wamit::Save_out(String file) {
 		out	<< " Input from Potential Control File:      unknown.pot\n"
 			<< " unknown.pot -- file type .gdf, ILOWHI=0, IRR=1\n\n\n"
 			<< " POTEN run date and starting time:        01-Jan-2000  --  00:00:00\n"
-			<< "   Period       Time           RAD      DIFF  (max iterations)\n"
-			<< "   -1.0000    00:00:00          -1\n"                                      
-    		<< "    0.0000    00:00:00          -1\n\n"    
- 			<< " Gravity:     " << hd().g
+			<< "   Period       Time           RAD      DIFF  (max iterations)\n";
+		if (hd().IsLoadedAw0())
+			out << "   -1.0000    00:00:00          -1\n";
+		if (hd().IsLoadedAwinf())
+    		out << "    0.0000    00:00:00          -1\n";
+		for (int it = 0; it < hd().T.size(); ++it)
+			out << " " << Format("%9.4f", hd().T[it]) << "    00:00:00          -1      -1\n";
+		out << "\n"
+ 		   	<< " Gravity:     " << hd().g
  		    << "                Length scale:        " << hd().len << "\n"
  			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDouble(hd().h)) << "\n"
  			<< " Logarithmic singularity index:              ILOG =     1\n"
@@ -449,16 +454,20 @@ void Wamit::Save_out(String file) {
 				<< " Irregular frequency index: IRR =1\n" 
 				<< " Free surface panels:     111\n\n"
 				<< " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n"
-				<< " Volumes (VOLX,VOLY,VOLZ): " << hd().Vo[ibody] << " " << hd().Vo[ibody] << " " << hd().Vo[ibody] << "\n"
-				<< " Center of Buoyancy (Xb,Yb,Zb): " << hd().cb(0, ibody) << " " 
-					<< hd().cb(1, ibody) << " " << hd().cb(2, ibody) << "\n"
+				<< Format(" Volumes (VOLX,VOLY,VOLZ):      %s %s %s\n", 
+						FormatWam(hd().Vo[ibody]), FormatWam(hd().Vo[ibody]), FormatWam(hd().Vo[ibody]))
+				<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
+						FormatWam(hd().cb(0, ibody)), FormatWam(hd().cb(1, ibody)), FormatWam(hd().cb(2, ibody)))
 				<< " Hydrostatic and gravitational restoring coefficients:\n" 
-				<< " C(3,3),C(3,4),C(3,5): " << hd().C[ibody](2, 2) << " " << hd().C[ibody](2, 3) << " " << hd().C[ibody](2, 4) << "\n"
-				<< " C(4,4),C(4,5),C(4,6): " << hd().C[ibody](3, 3) << " " << hd().C[ibody](3, 4) << " " << hd().C[ibody](3, 5) << "\n"
-				<< "        C(5,5),C(5,6):        " << hd().C[ibody](4, 4) << " " << hd().C[ibody](4, 5) << "\n"
-				<< " Center of Gravity  (Xg,Yg,Zg): " << hd().cg(0, ibody) << " " 
-					<< hd().cg(1, ibody) << " " << hd().cg(2, ibody) << "\n"
-				   " Radii of gyration:     0.000000     0.000000     0.000000\n"
+				<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
+						FormatWam(hd().C[ibody](2, 2)), FormatWam(hd().C[ibody](2, 3)), FormatWam(hd().C[ibody](2, 4)))
+				<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
+						FormatWam(hd().C[ibody](3, 3)), FormatWam(hd().C[ibody](3, 4)), FormatWam(hd().C[ibody](3, 5)))
+				<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
+						FormatWam(hd().C[ibody](4, 4)), FormatWam(hd().C[ibody](4, 5)))
+				<< Format(" Center of Gravity  (Xg,Yg,Zg): %s %s %s\n", 
+						FormatWam(hd().cg(0, ibody)), FormatWam(hd().cg(1, ibody)), FormatWam(hd().cg(2, ibody)))
+				<< " Radii of gyration:     0.000000     0.000000     0.000000\n"
       			   "                        0.000000     0.000000     0.000000\n"
                    "                        0.000000     0.000000     0.000000\n\n";
 		}
