@@ -481,6 +481,8 @@ void FastScatterTabs::OnTab() {
 
 void FastScatterTabs::OnCloseTab(Value key) {
 	int idKey = tabKeys.Find(key);
+	if (idKey < 0)
+		return;
 	FastScatter &sct = tabScatters[idKey];
 	sct.SaveParams();
 	tabKeys.Remove(idKey);	
