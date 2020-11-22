@@ -24,7 +24,7 @@ using namespace Eigen;
 
 FreqSelector::FreqSelector() {
 	add.SetImage(Img::add());
-	add.WhenAction = [&] {AddField();};
+	add << [&] {AddField();};
 	Add(add.LeftPos(0, 19).TopPos(3, 19));
 };
 
@@ -102,7 +102,7 @@ void Main::Init() {
 	Add(butWindow.RightPosZ(2, 90).TopPosZ(0, 22));
 	butWindow.Hide();
 	
-	butWindow.WhenAction = [&] {
+	butWindow << [&] {
 		if (tab.IsAt(mainMesh)) {
 			MainMeshW *mainMeshW = new MainMeshW();
 			mainMeshW->Init(mainMesh, Img::Rosetta64(), Img::Rosetta256());
@@ -292,7 +292,7 @@ void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
 void MenuOptions::Load() {
 	g <<= bem->g;
 	rho <<= bem->rho;
-	length <<= bem->length;
+	len <<= bem->len;
 	depth <<= bem->depth;
 	discardNegDOF <<= bem->discardNegDOF;
 	thres <<= bem->thres;
@@ -316,7 +316,7 @@ void MenuOptions::Load() {
 void MenuOptions::OnSave() {
 	bem->g = ~g;
 	bem->rho = ~rho;
-	bem->length = ~length;
+	bem->len = ~len;
 	bem->depth = ~depth;
 	bem->discardNegDOF = ~discardNegDOF;
 	bem->thres = ~thres;
@@ -344,7 +344,7 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (FormatDouble(bem->rho, 8) !=  FormatDouble(double(~rho), 8))
 		return true;
-	if (bem->length != ~length)
+	if (bem->len != ~len)
 		return true;
 	if (bem->depth != ~depth)
 		return true;
@@ -449,16 +449,16 @@ void MainStiffness::Add(const MeshData &mesh, int icase, bool button) {
 	}
 	if (button) {
 		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Saves to Wamit .hst stiffness matrix format"))
-			.WhenAction = [&] {
+			<< [&] {
 				FileSel fs;
 				fs.Type(t_("Wamit stiffness matrix format"), "*.hst");
 				if (fs.ExecuteSaveAs(t_("Save to Wamit .hst stiffness matrix format"))) 
 					mesh.SaveHST(~fs, Bem().rho, Bem().g);
 			};
 	}
-	if (button && Bem().hydros.GetCount() > 0) {
+	if (button && Bem().hydros.size() > 0) {
 		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy")).Tip(t_("Copies matrix and paste it in selected BEM Coefficients file and body"))
-			.WhenAction = [=] {
+			<< [=] {
 				WithBEMList<TopWindow> w;
 				CtrlLayout(w);
 				w.Title(t_("Copies matrix and paste it in selected BEM Coefficients file and body"));
@@ -467,14 +467,14 @@ void MainStiffness::Add(const MeshData &mesh, int icase, bool button) {
 				w.array.AddColumn(t_("Body"), 10);
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
-				for (int f = 0; f < Bem().hydros.GetCount(); ++f) {
+				for (int f = 0; f < Bem().hydros.size(); ++f) {
 					const Hydro &hy = Bem().hydros[f].hd();
 					for (int ib = 0; ib < hy.Nb; ++ib)
 						w.array.Add(hy.name, hy.names[ib].IsEmpty() ? AsString(ib+1) : hy.names[ib], f, ib);
 				}
 				bool cancel = true;
-				w.butSelect.WhenAction = [&] {cancel = false;	w.Close();};
-				w.butCancel.WhenAction = [&] {w.Close();}; 
+				w.butSelect << [&] {cancel = false;	w.Close();};
+				w.butCancel << [&] {w.Close();}; 
 				w.Execute();
 				if (!cancel) {
 					int id = w.array.GetCursor();
@@ -504,7 +504,7 @@ void MainStiffness::Add(String name, int icase, String bodyName, int ibody, cons
 bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
 	Clear();
 	
-	for (int i = 0; i < ids.GetCount(); ++i) {
+	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];
 		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
@@ -516,7 +516,7 @@ bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> 
 void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Upp::Vector<int> &ids) {
 	Clear();
 
-	for (int i = 0; i < ids.GetCount(); ++i) {
+	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];	
 		Add(surfs[isurf], i, true);
 	}
@@ -634,7 +634,7 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
 	int row = array.GetCount()-1;
 	Option & opt = option.Add();
 	array.SetCtrl(row, 2, opt);
-	opt.WhenAction = OnPush;
+	opt << OnPush;
 	array.SetCursor(array.GetCount());
 }
 

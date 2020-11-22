@@ -33,8 +33,8 @@ bool Fast::Load(String file, double g) {
 			throw Exc(Format(t_("FAST does not support more than one body in file '%s'"), file));	
 		if (hd().head.IsEmpty())
 			throw Exc(t_("No wave headings found in Wamit file"));
-		if (abs(hd().head[0]) != abs(hd().head[hd().head.GetCount()-1]))
-			throw Exc(Format(t_("FAST requires simetric wave headings. .3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.GetCount()-1])); 
+		if (abs(hd().head[0]) != abs(hd().head[hd().head.size()-1]))
+			throw Exc(Format(t_("FAST requires simetric wave headings. .3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.size()-1])); 
 	
 		String ssFile = ForceExt(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
@@ -64,7 +64,7 @@ bool Fast::Load_HydroDyn() {
 	f.IsSeparator = IsTabSpace;
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
-		if (f.GetCount() == 0)
+		if (f.size() == 0)
 			break;
 		if (f.GetText(1) == "WtrDens") 
 			hd().rho = f.GetDouble(0);
@@ -203,7 +203,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			if (pos < 0 || poslf < 0)
 				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "PtfmVol0"));
 			double hdVo0 = 0;
-			if (hd().Vo.GetCount() > 0) 				
+			if (hd().Vo.size() > 0) 				
 				hdVo0 = hd().Vo[0];
 			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hdVo0) + strFile.Mid(pos);
 			pos   = strFile.Find("WaveNDir");
@@ -252,7 +252,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			slen = FormatDouble(hd().len);
 		strFile.Replace("[WAMITULEN]", slen);
 		double hdVo0 = 0;
-		if (hd().Vo.GetCount() > 0) 				
+		if (hd().Vo.size() > 0) 				
 			hdVo0 = hd().Vo[0];
 		strFile.Replace("[PtfmVol0]", FormatDouble(hdVo0));
 		if (IsNull(WaveNDir))
@@ -299,7 +299,7 @@ void Fast::Save_SS(String fileName) {
 	}
 	out << "  %Enabled DoFs\n";
 	out << Format("%20<d", int(nstates)) << "%Radiation states\n";
-	for (int i = 0; i < nstatesdof.GetCount(); ++i)
+	for (int i = 0; i < nstatesdof.size(); ++i)
 		out << Format("%3<d", int(nstatesdof[i]));
 	out << "  %Radiation states per DOFs\n";	
 
@@ -340,8 +340,8 @@ void Fast::Save_SS(String fileName) {
 }
 
 static bool CheckRepeated(const Vector<Eigen::Index> &list) {
-	for (int i = 0; i < list.GetCount()-1; ++i) {
-		for (int j = i+1; j < list.GetCount(); ++j) {
+	for (int i = 0; i < list.size()-1; ++i) {
+		for (int j = i+1; j < list.size(); ++j) {
 			if (list[i] == list[j])
 				return true;
 		}
@@ -351,7 +351,7 @@ static bool CheckRepeated(const Vector<Eigen::Index> &list) {
 
 static void SortBy(Vector<Eigen::Index> &list, int idf) {
 	Sort(list);
-	for (int i = 0; i < list.GetCount(); ++i) {
+	for (int i = 0; i < list.size(); ++i) {
 		if (list[i] == idf) {
 			list.Remove(i);
 			return;
@@ -449,18 +449,18 @@ bool Fast::Load_SS(String fileName) {
 	}	
 	Vector<Vector<Eigen::Index>> dofdof;
 	Vector<Eigen::Index> ndofdof;
-	dofdof.SetCount(nstatesdof.GetCount());
-	ndofdof.SetCount(nstatesdof.GetCount());
+	dofdof.SetCount(nstatesdof.size());
+	ndofdof.SetCount(nstatesdof.size());
 	int pos0 = 0;
-	for (int idf = 0; idf < dofdof.GetCount(); ++idf) {
+	for (int idf = 0; idf < dofdof.size(); ++idf) {
 		if (!FillDOF(C, idf, pos0, int(nstatesdof[idf]), dofdof[idf], ndofdof[idf]))
 			throw Exc(Format(t_("Unknown structure in C matrix (%d, %d, %d)"), idf, pos0, int(nstatesdof[idf])));
 		dofdof[idf].Insert(0, idf);
 		pos0 += int(nstatesdof[idf]);
 	}
 	Eigen::Index pos = 0;
-	for (int idf = 0; idf < dofdof.GetCount(); ++idf) {
-		for (int i = 0; i < dofdof[idf].GetCount(); ++i) {
+	for (int idf = 0; idf < dofdof.size(); ++idf) {
+		for (int i = 0; i < dofdof[idf].size(); ++i) {
 			int jdf = int(dofdof[idf][i]);
 			Hydro::StateSpace &sts = hd().sts[idf][jdf];
 			Eigen::Index num = ndofdof[idf];

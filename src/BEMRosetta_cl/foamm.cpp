@@ -48,10 +48,10 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 	if (loadCoeff) {
 		MatMatrix<double> w = mat.VarReadMat<double>("w");	
-		if (w.GetCount() == 0)
+		if (w.size() == 0)
 			throw Exc(S("\n") + t_("Vector w not found"));
 			
-		hd().Nf = w.GetCount();
+		hd().Nf = w.size();
 		
 		hd().w.SetCount(hd().Nf);
 		hd().T.SetCount(hd().Nf);
@@ -62,29 +62,25 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		}
 		
 		MatMatrix<double> A = mat.VarReadMat<double>("A");	
-		if (A.GetCount() == 0)
+		if (A.size() == 0)
 			BEMData::Print(S("\n") + t_("Vector A not found"));
 		else {
-			hd().A.SetCount(hd().Nf);
-			if (hd().Nf != A.GetCount())
+			if (hd().Nf != A.size())
 				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
+			hd().A[idf][jdf].setConstant(hd().Nf);	
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
-			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().A[ifr](idf, jdf) = A[ifr];
+				hd().A[idf][jdf][ifr] = A[ifr];
 		}
-		
+	
 		MatMatrix<double> B = mat.VarReadMat<double>("B");	
-		if (B.GetCount() == 0)
+		if (B.size() == 0)
 			BEMData::Print(S("\n") + t_("Vector B not found"));
 		else {
-			hd().B.SetCount(hd().Nf);
-			if (hd().Nf != B.GetCount())
-				throw Exc(S("\n") + t_("Vectors w and B size does not match"));
+			if (hd().Nf != B.size())
+				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
+			hd().B[idf][jdf].setConstant(hd().Nf);	
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);	
-			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().B[ifr](idf, jdf) = B[ifr];
+				hd().B[idf][jdf][ifr] = B[ifr];
 		}
 		
 		hd().names << "Body";
@@ -100,18 +96,18 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	Hydro::StateSpace &sts = hd().sts[idf][jdf];
 
 	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	
-	if (TFS.GetCount() == 0)
+	if (TFS.size() == 0)
 		BEMData::Print(S("\n") + t_("Vector TFSResponse not found"));
 	else {
 		sts.TFS.SetCount(hd().Nf);
-		if (hd().Nf != TFS.GetCount())
+		if (hd().Nf != TFS.size())
 			throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 			sts.TFS[ifr] = TFS[ifr];
 	}
 	
 	MatMatrix<double> A_ss = mat.VarReadMat<double>("A_ss");	
-	if (A_ss.GetCount() == 0)
+	if (A_ss.size() == 0)
 		BEMData::Print(S("\n") + t_("Matrix A_ss not found"));
 	else {
 		sts.A_ss.setConstant(A_ss.GetRows(), A_ss.GetCols(), Null);
@@ -121,7 +117,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	}
 	
 	MatMatrix<double> B_ss = mat.VarReadMat<double>("B_ss");	
-	if (B_ss.GetCount() == 0)
+	if (B_ss.size() == 0)
 		BEMData::Print(S("\n") + t_("Matrix B_ss not found"));
 	else {
 		sts.B_ss.setConstant(B_ss.GetRows(), Null);
@@ -130,7 +126,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	}
 
 	MatMatrix<double> C_ss = mat.VarReadMat<double>("C_ss");	
-	if (C_ss.GetCount() == 0)
+	if (C_ss.size() == 0)
 		BEMData::Print(S("\n") + t_("Matrix C_ss not found"));
 	else {
 		sts.C_ss.setConstant(C_ss.GetCols(), Null);
@@ -168,8 +164,8 @@ void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<in
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	if (!FileExists(hd().GetBEMData().foammPath))
 		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
-	for (int i = 0; i < ibs.GetCount(); ++i) {
-		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.GetCount()));
+	for (int i = 0; i < ibs.size(); ++i) {
+		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.size()));
 		Get_Each(ibs[i], idfs[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
 	}
 }
@@ -235,8 +231,8 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	freqRangeChoice(0, 1) = to;
 	options.VarWriteStruct<double>("FreqRangeChoice", freqRangeChoice);
 
-	MatMatrix<double> freqChoice(1, freqs.GetCount());
-	for (int i = 0; i < freqs.GetCount(); ++i) 
+	MatMatrix<double> freqChoice(1, freqs.size());
+	for (int i = 0; i < freqs.size(); ++i) 
 		freqChoice(0, i) = freqs[i];
 	options.VarWriteStruct<double>("FreqChoice", freqChoice);
 	

@@ -35,7 +35,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 				order << idf + 6*ib;
 			}
 			Upp::Vector<int> neworder;
-			for (int i = 0; i < order.GetCount(); ++i) {
+			for (int i = 0; i < order.size(); ++i) {
 				int id = FindIndex(order, i);
 				neworder << id;
 			}

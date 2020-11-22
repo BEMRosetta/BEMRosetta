@@ -21,7 +21,7 @@ public:
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
-							dataFromW(true), bem(&_bem) {id = idCount++;}
+							dataFromW(Null), bem(&_bem) {id = idCount++;}
 	virtual ~Hydro() noexcept {}	
 	
 	String GetCodeStr()	const {
@@ -60,7 +60,7 @@ public:
 		if (dof[ib] <= idf)
 			return false;
 		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idf, (ib+1)*idf))) || 
-			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[0]((ib+1)*idf, (ib+1)*idf)));
+			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[(ib+1)*idf][(ib+1)*idf][0]));
 	}
 
 	String file;        	// BEM output file name
@@ -74,21 +74,25 @@ public:
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
  	
-	Upp::Array<Eigen::MatrixXd> A;			// [Nf](6*Nb, 6*Nb)	Added mass
+	//Upp::Array<Eigen::MatrixXd> A;			// [Nf](6*Nb, 6*Nb)	Added mass
+	Upp::Array<Upp::Array<Eigen::VectorXd>> A;	// [6*Nb][6*Nb][Nf]	Added mass
     Eigen::MatrixXd Awinf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     Eigen::MatrixXd Aw0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
-    Upp::Array<Eigen::MatrixXd> B; 			// [Nf](6*Nb, 6*Nb)	Radiation damping
+    //Upp::Array<Eigen::MatrixXd> B; 			// [Nf](6*Nb, 6*Nb)	Radiation damping
+    Upp::Array<Upp::Array<Eigen::VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     Upp::Vector<double> head;				// [Nh]             Wave headings (deg)
     Upp::Vector<String> names;  			// {Nb}             Body names
     Upp::Array<Eigen::MatrixXd> C;			// [Nb](6, 6)		Hydrostatic restoring coefficients:
+    Upp::Array<Eigen::MatrixXd> M;			// [Nb](6, 6)		Mass and inertia matrix
     Eigen::MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     BEM_SOFT code;        					// BEM_SOFT			BEM code 
     Upp::Vector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
     Upp::Vector<int> dofOrder;				// [6*Nb]			DOF order
     
-    Upp::Array<Eigen::MatrixXd> Kirf;		// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
-    Upp::Vector<double> Tirf;	  			// [Nt]				Time-window for the calculation of the IRF
+    //Upp::Array<Eigen::MatrixXd> Kirf;		// [Nt](6*Nb, 6*Nb)	Radiation impulse response function IRF
+    Upp::Array<Upp::Array<Eigen::VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
+    Eigen::VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
     
     int GetHeadId(double hd) const;
 	
@@ -260,22 +264,29 @@ public:
 	double g_rho_dim()  const;
 	double g_rho_ndim() const;
 	
-	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[ifr](idf, jdf)*rho_dim()/rho_ndim() : A[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[ifr](idf, jdf) : A[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	Eigen::VectorXd Get_w() 					const {return Eigen::Map<const Eigen::VectorXd>(w, w.size());}
+	Eigen::VectorXd Get_T() 					const {return Eigen::Map<const Eigen::VectorXd>(T, T.size());}
+	
+	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[idf][jdf][ifr]*rho_dim()/rho_ndim() : A[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	Eigen::VectorXd A_dim(int idf, int jdf) 	const {return dimen  ? A[idf][jdf]*(rho_dim()/rho_ndim()) : A[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : A[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	Eigen::VectorXd A_ndim(int idf, int jdf)	const {return !dimen ? A[idf][jdf]*(rho_ndim()/rho_dim()) : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
-	double Aw0_dim(int idf, int jdf)   		 	const {return dimen  ? Aw0(idf, jdf)*rho_dim()/rho_ndim()    : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Aw0_dim(int idf, int jdf)   		 	const {return dimen  ? Aw0(idf, jdf)*rho_dim()/rho_ndim() : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double Aw0_ndim(int idf, int jdf)  		 	const {return !dimen ? Aw0(idf, jdf)    : Aw0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Aw0_(bool ndim, int idf, int jdf) 	const {return ndim ? Aw0_ndim(idf, jdf) : Aw0_dim(idf, jdf);}
 	double Awinf_dim(int idf, int jdf) 		 	const {return dimen  ? Awinf(idf, jdf)*rho_dim()/rho_ndim() : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double Awinf_ndim(int idf, int jdf)		 	const {return !dimen ? Awinf(idf, jdf) : Awinf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Awinf_(bool ndim, int idf, int jdf) 	const {return ndim ? Awinf_ndim(idf, jdf) : Awinf_dim(idf, jdf);}
 	
-	double B_dim(int ifr, int idf, int jdf)  	   const {return dimen  ? B[ifr](idf, jdf)*rho_dim()/rho_ndim() : B[ifr](idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	double B_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? B[ifr](idf, jdf)*rho_ndim()/rho_dim() : B[ifr](idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_dim(int ifr, int idf, int jdf)  	   const {return dimen  ? B[idf][jdf][ifr]*rho_dim()/rho_ndim() : B[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	Eigen::VectorXd B_dim(int idf, int jdf)  	   const;
+	double B_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? B[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : B[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	Eigen::VectorXd B_ndim(int idf, int jdf) 	   const;
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
 	
-	double Kirf_dim(int ifr, int idf, int jdf)  	   const {return dimen ? Kirf[ifr](idf, jdf)*g_rho_dim()/g_rho_ndim()  : Kirf[ifr](idf, jdf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double Kirf_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? Kirf[ifr](idf, jdf) : Kirf[ifr](idf, jdf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double Kirf_dim(int ifr, int idf, int jdf)  	   const {return dimen ? Kirf[idf][jdf][ifr]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][ifr]*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double Kirf_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? Kirf[idf][jdf][ifr] : Kirf[idf][jdf][ifr]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double Kirf_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? Kirf_ndim(ifr, idf, jdf) : Kirf_dim(ifr, idf, jdf);}
 	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
@@ -330,6 +341,9 @@ private:
 	int id;
 	static int idCount;
 	 
+	static void GetOldAB(const Upp::Array<Eigen::MatrixXd> &oldAB, Upp::Array<Upp::Array<Eigen::VectorXd>> &AB);
+	static void SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::Array<Eigen::VectorXd>> &AB);
+	
 public:
 	static String StrBDOF(int i) {
 		int ib = i/6 + 1;
@@ -576,6 +590,13 @@ public:
 	static void Save_hst_static(Eigen::MatrixXd C, String fileName, double rho, double g);
 	
 protected:
+	void ProcessFirstColumn(Vector<double> &w, Vector<double> &T);
+	
+	bool Load_cfg(String fileName);
+	int iperout = Null;
+	bool Load_pot(String fileName);
+	bool Load_gdf(String fileName);
+	
 	bool Load_out();							
 	void Load_A(FileInLine &in, Eigen::MatrixXd &A);
 	bool Load_Scattering(String fileName);
@@ -719,15 +740,16 @@ private:
 	bool Load_QTF();
 };
 
-template <class Range, class T>
-void LinSpaced(Range &v, int n, T min, T max) {
+template <class Range>
+void LinSpaced(Range &v, int n, typename Range::value_type min, typename Range::value_type max) {
 	ASSERT(n > 0);
 	v.SetCount(n);
 	if (n == 1)
 		v[0] = min;
 	else {
+		typename Range::value_type d = (max - min)/(n - 1);
 		for (int i = 0; i < n; ++i)
-			v[i] = min + ((max - min)*i)/(n - 1);
+			v[i] = min + d*i;
 	}
 }
 
@@ -744,7 +766,7 @@ public:
 		line = _line;
 		fields.Clear();
 		Upp::Vector<String> prefields = Split(line, IsTabSpace, true);
-		for (int id = 0; id < prefields.GetCount(); ++id) {
+		for (int id = 0; id < prefields.size(); ++id) {
 			String s = prefields[id];
 			String ns;
 			for (int i = 0; i < s.GetCount(); ++i) {	
@@ -777,14 +799,14 @@ public:
 	Upp::Array<MeshData> surfs;
 	
 	int GetHydroId(int id) {
-		for (int i = 0; i < hydros.GetCount(); ++i) {
+		for (int i = 0; i < hydros.size(); ++i) {
 			if (hydros[i].hd().GetId() == id)
 				return i;
 		}
 		return -1;
 	}
 	int GetMeshId(int id) {	
-		for (int i = 0; i < surfs.GetCount(); ++i) {
+		for (int i = 0; i < surfs.size(); ++i) {
 			if (surfs[i].GetId() == id)
 				return i;
 		}
@@ -796,7 +818,7 @@ public:
 	Upp::Vector<double> headAll;	// Common models data
 	int Nb = 0;				
 	
-	double depth, rho, g, length;
+	double depth, rho, g, len;
 	int discardNegDOF;
 	double thres;
 	int calcAwinf;
@@ -840,7 +862,7 @@ public:
 			("depth", depth)
 			("rho", rho)
 			("g", g)
-			("length", length)
+			("length", len)
 			("discardNegDOF", discardNegDOF)
 			("thres", thres)
 			("calcAwinf", calcAwinf)

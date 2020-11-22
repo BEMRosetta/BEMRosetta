@@ -111,7 +111,7 @@ public:
 			ctrls[id]->ShowFrame();
 	}
 	void OnEnter(RectEnter &ctrl) {
-		for (int i = 0; i < ctrls.GetCount(); ++i) { 
+		for (int i = 0; i < ctrls.size(); ++i) { 
 			if (&ctrl != ctrls[i]) 
 				ctrls[i]->ShowFrame(false);
 		}
@@ -123,7 +123,7 @@ private:
 	Upp::Vector<RectEnter *> ctrls;
 	
 	int Find(RectEnter &ctrl) {
-		for (int i = 0; i < ctrls.GetCount(); ++i) 
+		for (int i = 0; i < ctrls.size(); ++i) 
 			if (&ctrl == ctrls[i])
 				return i;
 		return -1; 

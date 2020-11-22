@@ -181,7 +181,7 @@ void MainNemoh::Load(const NemohCal &data) {
 	
 	InitArray();
 	
-	for (int i = 0; i < data.bodies.GetCount(); ++i) {
+	for (int i = 0; i < data.bodies.size(); ++i) {
 		const NemohBody &b = data.bodies[i];
 		array.Add(b.meshFile, b.npoints, b.npanels, b.surge, b.sway, b.heave, b.roll, b.pitch, b.yaw, b.cx, b.cy, b.cz);
 	}
@@ -225,7 +225,7 @@ bool MainNemoh::Save(NemohCal &data) {
 	data.yeff = ~yeff;
 	
 	data.bodies.SetCount(array.GetCount());
-	for (int i = 0; i < data.bodies.GetCount(); ++i) {
+	for (int i = 0; i < data.bodies.size(); ++i) {
 		NemohBody &b = data.bodies[i];
 		b.meshFile = array.Get(i, 0);
 		if (FileExists(b.meshFile)) {
@@ -425,7 +425,7 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 		Upp::Vector<String> res = data.Check();
 		if (!res.IsEmpty()) {
 			String str;
-			for (int i = 0; i < res.GetCount(); ++i)
+			for (int i = 0; i < res.size(); ++i)
 			 	str << "\n- " << res[i];
 			if (!ErrorOKCancel(Format(t_("Errors found in Nemoh data:%s&Do you wish to continue?"), DeQtfLf(str))))
 				return false;
@@ -464,7 +464,7 @@ void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 		return;
 	if (AcceptFiles(d)) {
 		Upp::Vector<String> files = GetFiles(d);
-		for (int i = 0; i < files.GetCount(); ++i) {
+		for (int i = 0; i < files.size(); ++i) {
 			loadFrom <<= files[i];
 			OnLoad();
 			break;
@@ -475,7 +475,7 @@ void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 bool MainNemoh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Upp::Vector<String> files = GetFiles(Ctrl::Clipboard());
-		for (int i = 0; i < files.GetCount(); ++i) {
+		for (int i = 0; i < files.size(); ++i) {
 			loadFrom <<= files[i];
 			OnLoad();
 			break;

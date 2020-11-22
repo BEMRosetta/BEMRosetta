@@ -11,14 +11,16 @@
 // Fluid-Mechanics Research Group, Mondragon University
 
 #include "BEMRosetta.h"
+#include <STEM4U/Integral.h>
 
+using namespace Eigen;
 
 double Hydro::GetK_IRF_MaxT() {
-	if (w.GetCount() < 2)
+	if (w.size() < 2)
 		return -1;
 	double delta = 0;
 	int num = 0;
-	for (int iw = 1; iw < w.GetCount(); ++iw)
+	for (int iw = 1; iw < w.size(); ++iw)
 		if (w[iw] != w[iw-1]) {
 			delta += w[iw] - w[iw-1];
 			num++;
@@ -29,34 +31,36 @@ double Hydro::GetK_IRF_MaxT() {
 }
 
 void Hydro::K_IRF(double maxT, int numT) {
-	LinSpaced(Tirf, numT, 0., maxT);
+    Tirf = VectorXd::LinSpaced(numT, 0, maxT);
     
-    Kirf.SetCount(numT); 			
-	for (int it = 0; it < numT; ++it) 
-		Kirf[it].setConstant(Nb*6, Nb*6, Null);
+    Kirf.SetCount(Nb*6); 			
+    for (int i = 0; i < Nb*6; ++i) {
+    	Kirf[i].SetCount(Nb*6); 			 
+   		for (int j = 0; j < Nb*6; ++j)
+			Kirf[i][j].setConstant(numT, Null);
+    }
 	
 	if (B.IsEmpty())
 		return;
 	
-	Buffer<double> y(Nf);
-    for (int it = 0; it < numT; ++it) 
-        for (int i = 0; i < Nb*6; ++i)
-        	for (int j = 0; j < Nb*6; ++j) 
-				if (!IsNull(B[0](i, j))) {
-	    			for (int iw = 0; iw < Nf; ++iw)
-	    				y[iw] = B[iw](i, j)*cos(w[iw]*Tirf[it]);
-	    			double kirf = 0;
-	    			for (int iw = 1; iw < Nf; ++iw)
-	        			kirf += Avg(y[iw-1], y[iw])*(w[iw] - w[iw-1]);
-	    			Kirf[it](i, j) = kirf*2/M_PI;
-    			}
+	Vector<double> y(Nf);
+  	for (int i = 0; i < Nb*6; ++i)
+    	for (int j = 0; j < Nb*6; ++j) 
+			if (!IsNull(B[i][j][0])) 
+				for (int it = 0; it < numT; ++it) {
+					const VectorXd &b = B[i][j];
+					VectorXd &kirf = Kirf[i][j];
+					for (int iw = 0; iw < Nf; ++iw)
+						y[iw] = b(iw)*cos(w[iw]*Tirf(it));
+					kirf(it) = Integral(w, y, SIMPSON_1_3)*2/M_PI;
+				}
 }  
 	
 void Hydro::Ainf() {
 	if (Nf == 0)
 		return;
 	Awinf.setConstant(Nb*6, Nb*6, Null);
-	int numT = Tirf.GetCount();
+	int numT = int(Tirf.size());
 	double dt = Tirf[1] - Tirf[0];
 	
 	Buffer<double> y(numT);
@@ -66,11 +70,11 @@ void Hydro::Ainf() {
 		    bool isnull = false;
 		    for (int iw = 0; iw < Nf; ++iw) {
 		        for (int it = 0; it < numT; ++it) {
-		            if (IsNull(Kirf[it](i, j))) {
+		            if (IsNull(Kirf[i][j][it])) {
 		                isnull = true;
 		                break;
 		            }
-		            y[it] = Kirf[it](i, j)*sin(w[iw]*Tirf[it]);
+		            y[it] = Kirf[i][j][it]*sin(w[iw]*Tirf[it]);
 		        }
 		        if (isnull)
 		            break;
@@ -78,7 +82,7 @@ void Hydro::Ainf() {
 		        for (int it = 1; it < numT; ++it) 
 		            kint += Avg(y[it-1], y[it])*dt;
 		        // Ogilvie's formula
-		        awinf += A[iw](i, j) + kint/w[iw];
+		        awinf += A[i][j][iw] + kint/w[iw];
 			}
 			if (isnull)
 				Awinf(i, j) = Null;

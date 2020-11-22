@@ -40,7 +40,7 @@ String MeshData::LoadDatWamit(String fileName) {
 		
 		if (IsNull(T)) {
 			while(!in.IsEof()) {
-				int id0 = mesh.nodes.GetCount();
+				int id0 = mesh.nodes.size();
 				for (int i = 0; i < I*J; ++i) {
 					line = in.GetLine();	
 					f.Load(line);
@@ -110,9 +110,9 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 		in.GetLine();
 		line = in.GetLine();	
 		f.Load(line);
-		double scale = f.GetDouble(0);
-		if (scale < 1)
-			return t_("Wrong scale in .gdf file");
+		double len = f.GetDouble(0);
+		if (len < 1)
+			return t_("Wrong length scale in .gdf file");
 					
 		line = in.GetLine();	
 		f.Load(line);
@@ -138,12 +138,12 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 					npand = true;
 					break;
 				}
-				double x = f.GetDouble(0)*scale;	
-				double y = f.GetDouble(1)*scale;	
-				double z = f.GetDouble(2)*scale;	
+				double x = f.GetDouble(0)*len;	
+				double y = f.GetDouble(1)*len;	
+				double z = f.GetDouble(2)*len;	
 				
 				bool found = false;
-				for (int iin = 0; iin < mesh.nodes.GetCount(); ++iin) {
+				for (int iin = 0; iin < mesh.nodes.size(); ++iin) {
 					Point3D &node = mesh.nodes[iin];
 					if (x == node.x && y == node.y && z == node.z) {
 						ids[i] = iin;
@@ -156,7 +156,7 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 					node.x = x;
 					node.y = y;
 					node.z = z;
-					ids[i] = mesh.nodes.GetCount() - 1;
+					ids[i] = mesh.nodes.size() - 1;
 				}
 			}
 			if (!npand) {
@@ -165,7 +165,7 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 					panel.id[i] = ids[i];
 			}
 		}
-		//if (mesh.panels.GetCount() != nPatches)
+		//if (mesh.panels.size() != nPatches)
 		//	return t_("Wrong number of patches in .gdf file");
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
@@ -185,8 +185,8 @@ void MeshData::SaveGdfWamit(String fileName, const Surface &surf, double g, bool
 	out << "BEMRosetta GDF mesh file export\n";
 	out << Format("  %12d   %12f 	ULEN GRAV\n", 1, g);
 	out << Format("  %12d   %12d 	ISX  ISY\n", y0z ? 1 : 0, x0z ? 1 : 0);
-	out << Format("  %12d\n", panels.GetCount());
-	for (int ip = 0; ip < panels.GetCount(); ++ip) {
+	out << Format("  %12d\n", panels.size());
+	for (int ip = 0; ip < panels.size(); ++ip) {
 		for (int i = 0; i < 4; ++i) {
 			int id = panels[ip].id[i];
 			const Point3D &p = nodes[id]; 
