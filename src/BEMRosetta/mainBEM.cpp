@@ -18,7 +18,7 @@ void MainBEM::Init() {
 	CtrlLayout(menuOpen);
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
-	menuOpen.butLoad.WhenAction = [&] {menuOpen.file.DoGo();};
+	menuOpen.butLoad << [&] {menuOpen.file.DoGo();};
 	
 	ArrayModel_Init(listLoaded).MultiSelect();
 	listLoaded.WhenSel = THISBACK(OnSelListLoaded);
@@ -42,21 +42,21 @@ void MainBEM::Init() {
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.file.SelLoad(false);
-	menuConvert.butConvert.WhenAction = [&] {menuConvert.file.DoGo();};
-	menuConvert.opt.WhenAction = [&] {OnOpt();};
+	menuConvert.butConvert << [&] {menuConvert.file.DoGo();};
+	menuConvert.opt 	   << [&] {OnOpt();};
 	
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
-	menuPlot.butZoomToFit.WhenAction = [&] {GetSelScatter().ZoomToFit(true, true);};
-	menuPlot.autoFit.WhenAction 	 = [&] {
+	menuPlot.butZoomToFit << [&] {GetSelScatter().ZoomToFit(true, true);};
+	menuPlot.autoFit	  << [&] {
 		LoadSelTab(Bem());
 		menuPlot.fromY0.Enable(~menuPlot.autoFit);
 	};
-	menuPlot.fromY0.WhenAction 	 	 = [&] {LoadSelTab(Bem());};
-	menuPlot.opwT.WhenAction 	 	 = [&] {LoadSelTab(Bem());};
-	menuPlot.showPoints.WhenAction 	 = [&] {LoadSelTab(Bem());};
-	menuPlot.showNdim.WhenAction 	 = [&] {LoadSelTab(Bem());};
+	menuPlot.fromY0 	<< [&] {LoadSelTab(Bem());};
+	menuPlot.opwT 		<< [&] {LoadSelTab(Bem());};
+	menuPlot.showPoints << [&] {LoadSelTab(Bem());};
+	menuPlot.showNdim 	<< [&] {LoadSelTab(Bem());};
 	
 	OnOpt();
 	
@@ -120,7 +120,7 @@ void MainBEM::Init() {
 		} else if (mainTab.IsAt(mainSetupFOAMM)) {
 			menuTab.Set(menuFOAMM);
 			ismenuFOAMM = true;
-			if (mainSetupFOAMM.arrayCases.GetCount() == 0 && ids.GetCount() == 1) 
+			if (mainSetupFOAMM.arrayCases.GetCount() == 0 && ids.size() == 1) 
 				listLoaded.SetCursor(0);
 			menuFOAMM.OnCursor();
 		} else if (mainTab.IsAt(mainQTF))
@@ -367,7 +367,7 @@ bool MainBEM::OnLoadFile(String file) {
 	try {
 		Progress progress(t_("Loading BEM files..."), 100); 
 		
-		for (int i = 0; i < Bem().hydros.GetCount(); ++i) {
+		for (int i = 0; i < Bem().hydros.size(); ++i) {
 			if (ForceExt(Bem().hydros[i].hd().file, ".") == ForceExt(file, ".")) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
 					return false;
@@ -383,7 +383,7 @@ bool MainBEM::OnLoadFile(String file) {
 			return !progress.Canceled();
 		}, false);
 		
-		int id = Bem().hydros.GetCount()-1;
+		int id = Bem().hydros.size()-1;
 		HydroClass &data = Bem().hydros[id];
 		
 		data.hd().Report();
@@ -447,7 +447,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 		return;
 	}
  	mainSummary.Clear();
-	for (int i = 0; i < Bem().hydros.GetCount(); ++i)
+	for (int i = 0; i < Bem().hydros.size(); ++i)
 		mainSummary.Report(Bem().hydros[i].hd(), i);
 	
 	UpdateButtons();
@@ -455,7 +455,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
 	mainArrange.Load(Bem().hydros, ids);	
-	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.GetCount() > 0);	
+	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);	
 	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
@@ -496,7 +496,7 @@ void MainBEM::OnJoin() {
 		Exclamation(t_("No model selected"));
 		return;
 	}
-	if (idsjoin.GetCount() == 1) {
+	if (idsjoin.size() == 1) {
 		Exclamation(t_("Please select more than one model"));
 		return;
 	}
@@ -518,17 +518,17 @@ void MainBEM::OnJoin() {
 	
 		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded	);
 	
-		for (int id = 0; id < Bem().hydros.GetCount(); ++id) {
+		for (int id = 0; id < Bem().hydros.size(); ++id) {
 			const Hydro &data = Bem().hydros[id].hd();
 			mainSummary.Report(data, id);
 			mainArrange.Load(Bem().hydros, ids);
 		}
 			
-		if (Bem().hydros.GetCount() > 0) 
+		if (Bem().hydros.size() > 0) 
 			listLoaded.SetCursor(0);
 
 		mainArrange.Load(Bem().hydros, ids);	
-		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.GetCount() > 0);		
+		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
@@ -559,7 +559,7 @@ void MainBEM::OnSymmetrize() {
 		Bem().Symmetrize(id);
 		
 		mainSummary.Clear();
-		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
+		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
 		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
@@ -585,7 +585,7 @@ void MainBEM::OnA0() {
 		Bem().A0(id);
 		
 		mainSummary.Clear();
-		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
+		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
 		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
@@ -608,7 +608,7 @@ void MainBEM::OnKirfAinf() {
 		if (maxT < 0)
 			maxT = Bem().maxTimeA;
 		else if (Bem().maxTimeA > maxT) {
-			if (!PromptYesNo(Format(t_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
+			if (!PromptYesNo(Format(t_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
 				maxT = Bem().maxTimeA;
 		} else
 			maxT = Bem().maxTimeA;
@@ -618,7 +618,7 @@ void MainBEM::OnKirfAinf() {
 		Bem().Ainf(id, maxT);
 		
 		mainSummary.Clear();
-		for (int i = 0; i < Bem().hydros.GetCount(); ++i)
+		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
 		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
@@ -638,8 +638,8 @@ void MainBEM::OnDescription() {
 	WithDescription<TopWindow> w;
 	CtrlLayout(w);
 	w.Title(t_("Enter model name and description"));
-	w.butOK.WhenAction = [&] {w.Close();};
-	w.name <<= Bem().hydros[id].hd().name;
+	w.butOK 	  << [&] {w.Close();};
+	w.name  	  <<= Bem().hydros[id].hd().name;
 	w.description <<= Bem().hydros[id].hd().description;
 	
 	w.Execute();
@@ -650,12 +650,12 @@ void MainBEM::OnDescription() {
 	ArrayModel_Change(listLoaded, Bem().GetHydroId(id), Null, ~w.name, Null);
 	
 	mainSummary.Clear();
-	for (int i = 0; i < Bem().hydros.GetCount(); ++i)
+	for (int i = 0; i < Bem().hydros.size(); ++i)
 		mainSummary.Report(Bem().hydros[i].hd(), i);
 }
 
 int MainBEM::AskQtfHeading(const Hydro &hydro) {
-	int numH = hydro.qtfhead.GetCount();
+	int numH = hydro.qtfhead.size();
 	if (numH <= 1)
 		return Null;
 	
@@ -678,13 +678,13 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 	else
 		dialog.dropHeadings.SetIndex(0);
 	
-	dialog.swHeadings.WhenAction = [&] {
+	dialog.swHeadings << [&] {
 		dialog.dropHeadings.Enable(dialog.swHeadings == 1);
 	};
 	
 	bool cancel = true;
-	dialog.ok.WhenAction 		= [&] {cancel = false;	dialog.Close();};
-	dialog.cancel.WhenAction 	= [&] {dialog.Close();}; 
+	dialog.ok		<< [&] {cancel = false;	dialog.Close();};
+	dialog.cancel	<< [&] {dialog.Close();}; 
 	dialog.Execute();
 	if (cancel) 
 		throw Exc(t_("Cancelled by user"));
@@ -794,12 +794,12 @@ String MainBEM::BEMFile(String fileFolder) const {
 
 void MainBEM::LoadDragDrop(const Upp::Vector<String> &files) {
 	bool followWithErrors = false;
-	for (int i = 0; i < files.GetCount(); ++i) {
+	for (int i = 0; i < files.size(); ++i) {
 		String file = BEMFile(files[i]);
 		menuOpen.file <<= file;
 		Status(Format(t_("Loading '%s'"), file));
-		if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
+		if (!OnLoad() && !followWithErrors && files.size() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.size() - i - 1)))
 				return;
 			followWithErrors = true;
 		}
@@ -861,13 +861,13 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	} else {
 		array.Set(row, 0, t_("freq_0 [rad/s]"));	array.Set(row++, col, "-");
 	}
-	if (data.w.GetCount() > 1) {
-		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, data.w[data.w.GetCount()-1]);
+	if (data.w.size() > 1) {
+		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, data.w[data.w.size()-1]);
 		if (data.GetIrregularFreq() < 0) { 
 			array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, data.w[1] - data.w[0]);
 		} else {
 			String strHead;
-			for (int i = 0; i < data.w.GetCount(); ++i) {
+			for (int i = 0; i < data.w.size(); ++i) {
 				if (i > 0)
 					strHead << ", ";
 				strHead << data.w[i];
@@ -886,13 +886,13 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	} else {
 		array.Set(row, 0, t_("head_0 [º]"));	array.Set(row++, col, "-");
 	}
-	if (data.head.GetCount() > 1) {
-		array.Set(row, 0, t_("head_end [º]"));	array.Set(row++, col, data.head[data.head.GetCount()-1]);
+	if (data.head.size() > 1) {
+		array.Set(row, 0, t_("head_end [º]"));	array.Set(row++, col, data.head[data.head.size()-1]);
 		if (data.GetIrregularHead() < 0) { 
 			array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, data.head[1] - data.head[0]);
 		} else {
 			String strHead;
-			for (int i = 0; i < data.head.GetCount(); ++i) {
+			for (int i = 0; i < data.head.size(); ++i) {
 				if (i > 0)
 					strHead << ", ";
 				strHead << data.head[i];
@@ -918,14 +918,14 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, data.Nb);
 	for (int ib = 0; ib < data.Nb; ++ib) {
 		String sib = Format("#%d", ib+1);
-		if (data.names.GetCount() > ib) {
+		if (data.names.size() > ib) {
 			sib += " " + data.names[ib];
 			array.Set(row, 0, sib + " " + t_("Name"));		array.Set(row++, col, data.names[ib]);
 		} else {
 			array.Set(row, 0, sib + " " + t_("Name"));		array.Set(row++, col, "-");
 		}
 		array.Set(row, 0, sib + " " + t_("#dof"));
-		if (data.dof.GetCount() > ib) 
+		if (data.dof.size() > ib) 
 			array.Set(row++, col, data.dof[ib]);
 		else 
 			array.Set(row++, col, "-");
@@ -955,7 +955,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Water plane area [m2]"));
-		if (data.C.GetCount() > ib && data.C[ib].size() > 0) {
+		if (data.C.size() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_ndim(ib, 2, 2);
 			array.Set(row++, col, FormatDouble(wPlaneArea, 6, FD_EXP));		
 			for (int i = 0; i < 6; ++i) {
@@ -1000,7 +1000,7 @@ void MainArrange::Clear() {
 
 void MainArrange::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
 	MainArrange::Clear();
-	for (int i = 0; i < ids.GetCount(); ++i) {
+	for (int i = 0; i < ids.size(); ++i) {
 		int icase = ids[i];
 		ArrangeDOF &arr = arrangeDOF.Add();
 		arr.Init(hydros[icase].hd());
@@ -1036,9 +1036,9 @@ void MainQTF::Init() {
 	opQTF.Add(FSUM, t_("Sum")).Add(FDIFFERENCE, t_("Difference"));
 	opQTF.SetIndex(0);
 	
-	opShow.WhenAction = [&] {listCases.WhenSel();};
-	opDOF.WhenAction  = [&] {listCases.WhenSel();};
-	opQTF.WhenAction  = [&] {listCases.WhenSel();};
+	opShow << [&] {listCases.WhenSel();};
+	opDOF  << [&] {listCases.WhenSel();};
+	opQTF  << [&] {listCases.WhenSel();};
 	
 	listCases.WhenSel = [&] {
 		if (idHydro < 0)
@@ -1060,7 +1060,7 @@ void MainQTF::Init() {
 			int ih1 = hd.GetQTFHeadId(listCases.Get(id, 1));
 			int ih2 = hd.GetQTFHeadId(listCases.Get(id, 2));
 			int idof = opDOF.GetIndex();
-			int qtfNf = hd.qtfw.GetCount();
+			int qtfNf = hd.qtfw.size();
 			
 			listQTF.Reset();
 			listQTF.SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
@@ -1161,7 +1161,7 @@ bool MainQTF::Load() {
 		if (hd.qtfsum.IsEmpty() && hd.qtfdif.IsEmpty())
 			return false;
 		
-		for (int i = 0; i < ibL.GetCount(); ++i) 
+		for (int i = 0; i < ibL.size(); ++i) 
 			listCases.Add(ibL[i]+1, hd.qtfhead[ih1L[i]], hd.qtfhead[ih2L[i]]);
 
 		if (listCases.GetCount() > 0)

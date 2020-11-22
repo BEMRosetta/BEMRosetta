@@ -332,7 +332,7 @@ void MainMesh::OnOpt() {
 }
 
 void MainMesh::AfterAdd(String file) {
-	int id = Bem().surfs.GetCount() - 1;
+	int id = Bem().surfs.size() - 1;
 	MeshData &surf = Bem().surfs[id];
 		
 	mainTab.Set(mainView);
@@ -358,7 +358,7 @@ bool MainMesh::OnLoad() {
 		Progress progress(t_("Loading mesh file..."), 100); 
 		
 		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
-		for (int i = 0; i < ids.GetCount(); ++i) {
+		for (int i = 0; i < ids.size(); ++i) {
 			if (Bem().surfs[ids[i]].fileName == file) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
 					return false;
@@ -529,7 +529,7 @@ void MainMesh::OnAddPanel() {
 		Bem().AddFlatPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
 							 ~menuEdit.panWidthX, ~menuEdit.panWidthY);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.GetCount()-1];
+		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
 		surf.name = t_("Panel");
 		surf.fileName =  "";
 		
@@ -562,7 +562,7 @@ void MainMesh::OnAddRevolution() {
 			return;
 		}
 	}
-	if (vals.GetCount() < 2) {
+	if (vals.size() < 2) {
 		Exclamation(t_("Unsufficient value number in list"));
 		return;
 	}
@@ -572,7 +572,7 @@ void MainMesh::OnAddRevolution() {
 	try {
 		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.GetCount()-1];
+		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
 		surf.name = t_("Revolution");
 		surf.fileName =  "";
 		
@@ -605,7 +605,7 @@ void MainMesh::OnAddPolygonalPanel() {
 			return;
 		}
 	}
-	if (vals.GetCount() < 3) {
+	if (vals.size() < 3) {
 		Exclamation(t_("Unsufficient value number in list"));
 		return;
 	}
@@ -615,7 +615,7 @@ void MainMesh::OnAddPolygonalPanel() {
 	try {
 		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.GetCount()-1];
+		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
 		surf.name = t_("Polynomial");
 		surf.fileName =  "";
 		
@@ -885,7 +885,7 @@ void MainMesh::OnSplit() {
 		if (row < 0 && listLoaded.GetCount() == 1) 
 			row = 0;
 	
-		if (idsmesh.GetCount() == 1) {
+		if (idsmesh.size() == 1) {
 			Exclamation(t_("The mesh is monolithic so it cannot be automatically split"));
 			return;
 		}
@@ -900,7 +900,7 @@ void MainMesh::OnSplit() {
 		
 		RemoveRow(row);
 		
-		for (int i = 0; i < idsmesh.GetCount(); ++i) {
+		for (int i = 0; i < idsmesh.size(); ++i) {
 			int id = idsmesh[i];
 			MeshData &surf = Bem().surfs[id];
 			
@@ -1010,8 +1010,8 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
 	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetCodeStr());	
 	
-	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.GetCount());
-	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.GetCount());
+	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
+	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());
 
 	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FormatDouble(data.mesh.surface, 6, FD_EXP));
 	array.Set(row, 0, t_("Volume [m3]"));		array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
@@ -1066,10 +1066,10 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	
 	array.Set(row, 0, t_("Healing"));			array.Set(row++, col, healing ? t_("Yes") : t_("No"));
 
-	array.Set(row, 0, t_("# Segments"));		array.Set(row++, col, !healing ? Null : data.mesh.segments.GetCount());
-	array.Set(row, 0, t_("# Seg Water Plane"));	array.Set(row++, col, !healing ? Null : data.mesh.segWaterlevel.GetCount());
-	array.Set(row, 0, t_("# Seg leak"));		array.Set(row++, col, !healing ? Null : data.mesh.segTo1panel.GetCount());
-	array.Set(row, 0, t_("# Seg 3 panels"));	array.Set(row++, col, !healing ? Null : data.mesh.segTo3panel.GetCount());
+	array.Set(row, 0, t_("# Segments"));		array.Set(row++, col, !healing ? Null : data.mesh.segments.size());
+	array.Set(row, 0, t_("# Seg Water Plane"));	array.Set(row++, col, !healing ? Null : data.mesh.segWaterlevel.size());
+	array.Set(row, 0, t_("# Seg leak"));		array.Set(row++, col, !healing ? Null : data.mesh.segTo1panel.size());
+	array.Set(row, 0, t_("# Seg 3 panels"));	array.Set(row++, col, !healing ? Null : data.mesh.segTo3panel.size());
 
 	array.Set(row, 0, t_("# Panels off"));		array.Set(row++, col, !healing ? Null : data.mesh.numUnprocessed);
 
@@ -1137,22 +1137,22 @@ void MainView::OnPaint() {
 			if (paintSelect) {
 				if (~GetMenuPlot().showMesh) {
 					const Upp::Vector<int> &nod = mesh.mesh.GetSelNodes();
-					for (int in = 0; in < nod.GetCount(); ++in)
+					for (int in = 0; in < nod.size(); ++in)
 						gl.PaintCube(mesh.mesh.nodes[nod[in]], len/20, LtBlue());
 					const Upp::Vector<int> &pan = mesh.mesh.GetSelPanels();
 					const Upp::Vector<Point3D> &nodes = mesh.mesh.nodes;
-					for (int ip = 0; ip < pan.GetCount(); ++ip) {
+					for (int ip = 0; ip < pan.size(); ++ip) {
 						const Panel &panel = mesh.mesh.panels[pan[ip]];
 						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 					}
 				}
 				if (~GetMenuPlot().showUnderwater) {
 					const Upp::Vector<int> &nod = mesh.under.GetSelNodes();
-					for (int in = 0; in < nod.GetCount(); ++in)
+					for (int in = 0; in < nod.size(); ++in)
 						gl.PaintCube(mesh.under.nodes[nod[in]], len/20, LtBlue());
 					const Upp::Vector<int> &pan = mesh.under.GetSelPanels();
 					const Upp::Vector<Point3D> &nodes = mesh.under.nodes;
-					for (int ip = 0; ip < pan.GetCount(); ++ip) {
+					for (int ip = 0; ip < pan.size(); ++ip) {
 						const Panel &panel = mesh.under.panels[pan[ip]];
 						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 					}
@@ -1183,7 +1183,7 @@ const WithMenuMeshPlot<StaticRect> &MainView::GetMenuPlot() const {
 
 void MainView::CalcEnvelope() {
 	env.Reset();
-	//for (int i = 0; i < Bem().surfs.GetCount(); ++i)
+	//for (int i = 0; i < Bem().surfs.size(); ++i)
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {
 		int id = ArrayModel_IdMesh(GetMain().listLoaded, row);
 		if (id < 0)
@@ -1194,11 +1194,11 @@ void MainView::CalcEnvelope() {
 
 void MainMesh::LoadDragDrop(const Upp::Vector<String> &files) {
 	bool followWithErrors = false;
-	for (int i = 0; i < files.GetCount(); ++i) {
+	for (int i = 0; i < files.size(); ++i) {
 		menuOpen.file <<= files[i];
 		Status(Format(t_("Loading '%s'"), files[i]));
-		if (!OnLoad() && !followWithErrors && files.GetCount() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.GetCount() - i - 1)))
+		if (!OnLoad() && !followWithErrors && files.size() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.size() - i - 1)))
 				return;
 			followWithErrors = true;
 		}
@@ -1229,7 +1229,7 @@ void MainViewData::Init() {
 }
 
 void MainViewData::OnAddedModel(MainView &mainView) {
-	int id = Bem().surfs.GetCount()-1;
+	int id = Bem().surfs.size()-1;
 	
 	MainViewDataEach &model = models.Add();
 	model.Init(Bem().surfs[id], mainView);
@@ -1237,7 +1237,7 @@ void MainViewData::OnAddedModel(MainView &mainView) {
 }
 
 void MainViewData::OnRefresh() {
-	for (int i = 0; i < models.GetCount(); ++i)
+	for (int i = 0; i < models.size(); ++i)
 		models[i].OnRefresh();
 }
 
@@ -1249,7 +1249,7 @@ void MainViewData::Clear() {
 void MainViewData::ReLoad(MainView &mainView) {
 	Clear();
 	
-	for (int i = 0; i < Bem().surfs.GetCount(); ++i)  {
+	for (int i = 0; i < Bem().surfs.size(); ++i)  {
 		MainViewDataEach &model = models.Add();
 		model.Init(Bem().surfs[i], mainView);
 		tab.Add(model.SizePos(), Bem().surfs[i].name);		
@@ -1269,14 +1269,14 @@ Value MainViewDataEach::DataSourceFacets::Format(const Value& q) const {
 		return iq + 1;
 	else {
 		if (all) {
-			if (iq >= pmesh->mesh.panels.GetCount())
+			if (iq >= pmesh->mesh.panels.size())
 				return Null;
 			if (col == 3 && pmesh->mesh.panels[iq].IsTriangle())
 				return "-";
 			else
 				return pmesh->mesh.panels[iq].id[col]+1;
 		} else {
-			if (iq >= pmesh->under.panels.GetCount())
+			if (iq >= pmesh->under.panels.size())
 				return Null;
 			if (col == 3 && pmesh->under.panels[iq].IsTriangle())
 				return "-";
@@ -1295,9 +1295,9 @@ void MainViewDataEach::DataSourceNodes::Init(MeshData &_mesh, int _xyz, int _ori
 Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 	ASSERT(pmesh);
 	int iq = q;
-	if (origMovedUnder == 0 && pmesh->mesh.nodes.GetCount() <= iq)
+	if (origMovedUnder == 0 && pmesh->mesh.nodes.size() <= iq)
 		return Null;
-	if (origMovedUnder == 1 && pmesh->under.nodes.GetCount() <= iq)
+	if (origMovedUnder == 1 && pmesh->under.nodes.size() <= iq)
 		return Null;
 	
 	const Point3D &p = origMovedUnder == 0 ? pmesh->mesh.nodes[iq] : pmesh->under.nodes[iq];
@@ -1324,8 +1324,8 @@ void MainViewDataEach::UpdateStatus(bool under) {
 		selectedPanels = ArrayCtrlSelectedGet(arrayFacetsUnder.array);
 		selectedNodes = ArrayCtrlSelectedGet(arrayNodesUnder.array);
 	}
-	int numPanels = selectedPanels.GetCount();
-	int numNodes  = selectedNodes.GetCount();
+	int numPanels = selectedPanels.size();
+	int numNodes  = selectedNodes.size();
 	String strPanels = numPanels > 0 ? FormatInt(numPanels) : S(t_("no"));
 	String strNodes  = numNodes > 0  ? FormatInt(numNodes)  : S(t_("no"));
 	
@@ -1435,7 +1435,7 @@ void MainViewDataEach::OnRefresh() {
 	const MeshData &mesh = dataSourceFacetsAll[0].GetMesh();
 	int num;
 	
-	num = mesh.mesh.panels.GetCount();
+	num = mesh.mesh.panels.size();
 	arrayFacetsAll2.array.GoBegin();
 	arrayFacetsAll2.array.Clear();
 	arrayFacetsAll2.array.ClearSelection();
@@ -1443,21 +1443,21 @@ void MainViewDataEach::OnRefresh() {
 	arrayFacetsAll2.array.Refresh();
 	arrayFacetsAll2.numRows.SetText(FormatInt(num));
 		
-	num = mesh.under.panels.GetCount();
+	num = mesh.under.panels.size();
 	arrayFacetsUnder.array.Clear();
 	arrayFacetsUnder.array.ClearSelection();
 	arrayFacetsUnder.array.SetVirtualCount(num);
 	arrayFacetsUnder.array.Refresh();
 	arrayFacetsUnder.numRows.SetText(FormatInt(num));
 	
-	num = mesh.mesh.nodes.GetCount();
+	num = mesh.mesh.nodes.size();
 	arrayNodesMoved.array.Clear();
 	arrayNodesMoved.array.ClearSelection();
 	arrayNodesMoved.array.SetVirtualCount(num);
 	arrayNodesMoved.array.Refresh();
 	arrayNodesMoved.numRows.SetText(FormatInt(num));
 	
-	num = mesh.under.nodes.	GetCount();
+	num = mesh.under.nodes.	size();
 	arrayNodesUnder.array.Clear();
 	arrayNodesUnder.array.ClearSelection();
 	arrayNodesUnder.array.SetVirtualCount(num);

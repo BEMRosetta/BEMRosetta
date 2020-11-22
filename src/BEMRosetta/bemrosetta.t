@@ -804,6 +804,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Wamit .out file")
+esES("")
+euES("")
+frFR("")
+
 T_("Wamit .1.3.4.hst.12s.12d file")
 esES("")
 euES("")
@@ -1021,86 +1026,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("     Sel")
-esES("")
-euES("")
-frFR("")
-
-T_("Row")
-esES("")
-euES("")
-frFR("")
-
-T_("Column")
-esES("")
-euES("")
-frFR("")
-
-T_("From (rad/s)")
-esES("")
-euES("")
-frFR("")
-
-T_("To (rad/s)")
-esES("")
-euES("")
-frFR("")
-
-T_("Frequencies (rad/s)")
-esES("")
-euES("")
-frFR("")
-
-T_("From: frequency is empty")
-esES("")
-euES("")
-frFR("")
-
-T_("To: frequency is empty")
-esES("")
-euES("")
-frFR("")
-
-T_("From: frequency has to be lower than To: frequency")
-esES("")
-euES("")
-frFR("")
-
-T_("No frequency has been selected")
-esES("")
-euES("")
-frFR("")
-
-T_("Selected frequencies have to be between lower and higher limits")
-esES("")
-euES("")
-frFR("")
-
-T_("Some selected frequencies are repeated")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem in body %d (%s, %s): %s")
-esES("")
-euES("")
-frFR("")
-
-T_("No case has been selected")
-esES("")
-euES("")
-frFR("")
-
-T_("Starts processing")
-esES("")
-euES("")
-frFR("")
-
-T_("FOAMM message:&")
-esES("")
-euES("")
-frFR("")
-
 T_("# Body")
 esES("")
 euES("")
@@ -1198,6 +1123,89 @@ euES("")
 frFR("")
 
 T_("MAPE [%]")
+esES("")
+euES("")
+frFR("")
+
+
+// mainFOAMM.cpp
+
+T_("     Sel")
+esES("")
+euES("")
+frFR("")
+
+T_("Row")
+esES("")
+euES("")
+frFR("")
+
+T_("Column")
+esES("")
+euES("")
+frFR("")
+
+T_("From (rad/s)")
+esES("")
+euES("")
+frFR("")
+
+T_("To (rad/s)")
+esES("")
+euES("")
+frFR("")
+
+T_("Frequencies (rad/s)")
+esES("")
+euES("")
+frFR("")
+
+T_("From: frequency is empty")
+esES("")
+euES("")
+frFR("")
+
+T_("To: frequency is empty")
+esES("")
+euES("")
+frFR("")
+
+T_("From: frequency has to be lower than To: frequency")
+esES("")
+euES("")
+frFR("")
+
+T_("No frequency has been selected")
+esES("")
+euES("")
+frFR("")
+
+T_("Selected frequencies have to be between lower and higher limits")
+esES("")
+euES("")
+frFR("")
+
+T_("Some selected frequencies are repeated")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem in body %d (%s, %s): %s")
+esES("")
+euES("")
+frFR("")
+
+T_("No case has been selected")
+esES("")
+euES("")
+frFR("")
+
+T_("Starts processing")
+esES("")
+euES("")
+frFR("")
+
+T_("FOAMM message:&")
 esES("")
 euES("")
 frFR("")
@@ -1515,7 +1523,8 @@ esES("")
 euES("")
 frFR("")
 
-T_("Wamit .1.3.hst.ss.12\nFAST .dat.1.3.hst.ss.12\nBEMRosetta .bem\nBy extension")
+T_("Wamit .out\nWamit .1.3.hst.ss.12\nFAST .dat.1.3.hst.ss.12\nBEMRosetta "
+     ".bem\nBy extension")
 esES("")
 euES("")
 frFR("")
@@ -1900,7 +1909,17 @@ esES("")
 euES("")
 frFR("")
 
-T_("New package:")
+T_("https://github.com/izabala123/Nemoh")
+esES("")
+euES("")
+frFR("")
+
+T_("Version 115:")
+esES("")
+euES("")
+frFR("")
+
+T_("https://box.lheea.ec-nantes.fr/index.php/s/6MybIloTDqWSFDL")
 esES("")
 euES("")
 frFR("")
@@ -1931,21 +1950,6 @@ euES("")
 frFR("")
 
 T_("Maynooth COER FOAMM")
-esES("")
-euES("")
-frFR("")
-
-T_("https://github.com/izabala123/Nemoh")
-esES("")
-euES("")
-frFR("")
-
-T_("Get it here")
-esES("")
-euES("")
-frFR("")
-
-T_("http://www.eeng.nuim.ie/coer/downloads/")
 esES("")
 euES("")
 frFR("")
@@ -2162,8 +2166,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Rotations around                                                      "
-     "                       ")
+T_("Rotations around")
 esES("")
 euES("")
 frFR("")
@@ -2189,6 +2192,11 @@ euES("")
 frFR("")
 
 T_("Translations")
+esES("")
+euES("")
+frFR("")
+
+T_("All DOF")
 esES("")
 euES("")
 frFR("")
@@ -2447,6 +2455,32 @@ frFR("")
 
 
 // Obsolete
+
+T_("Wamit .1.3.hst.ss.12\nFAST .dat.1.3.hst.ss.12\nBEMRosetta .bem\nBy extension")
+esES("")
+euES("")
+frFR("")
+
+T_("New package:")
+esES("")
+euES("")
+frFR("")
+
+T_("Get it here")
+esES("")
+euES("")
+frFR("")
+
+T_("http://www.eeng.nuim.ie/coer/downloads/")
+esES("")
+euES("")
+frFR("")
+
+T_("Rotations around                                                      "
+     "                       ")
+esES("")
+euES("")
+frFR("")
 
 T_("FAST Reader")
 esES("")
@@ -3531,7 +3565,7 @@ euES("")
 frFR("")
 
 
-// GLCanvas.cpp
+// PACKAGE 'GLCanvas' FILE 'GLCanvas.cpp'
 
 T_("No model is loaded")
 esES("")
@@ -3539,7 +3573,7 @@ euES("")
 frFR("")
 
 
-// Surface.cpp
+// PACKAGE 'Surface' FILE 'Surface.cpp'
 
 T_("Panel width too large")
 esES("")
@@ -3547,7 +3581,7 @@ euES("")
 frFR("")
 
 
-// stl.cpp
+// PACKAGE 'Surface' FILE 'stl.cpp'
 
 T_("Impossible to open file '%s'")
 esES("")

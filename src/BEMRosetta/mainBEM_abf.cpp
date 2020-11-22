@@ -70,7 +70,7 @@ bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 				}
 			}
 		} else {
-			int Nh = bem.headAll.GetCount();
+			int Nh = bem.headAll.size();
 			if (Nh < 0) 
 				return false;
 			

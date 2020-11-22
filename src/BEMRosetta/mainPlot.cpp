@@ -110,7 +110,7 @@ bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, con
 		scatP.SetLabelX(t_("T [s]"));
 	}
 	bool loaded = false;
-	for (int id = 0; id < ids.GetCount(); ++id) {
+	for (int id = 0; id < ids.size(); ++id) {
 		const Hydro &hy = hydro[ids[id]].hd();
 		LoadEach(hy, id, loaded, hy.GetId());
 	}

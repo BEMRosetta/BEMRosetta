@@ -55,6 +55,7 @@ bool Aqwa::Load_AH1() {
 	hd().head.Clear();
 	hd().w.Clear();
 	hd().rho = hd().g = hd().h = Null;
+	hd().dataFromW = true;
 	
 	String line;
 	FieldSplit f(in);
@@ -70,9 +71,9 @@ bool Aqwa::Load_AH1() {
 	hd().Nh = f.GetInt(1);
 	hd().Nf = f.GetInt(2);
 	
-	if (hd().Nh != f.GetCount() - 3)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), hd().Nh, f.GetCount() - 3));
-	for (int i = 3; i < f.GetCount(); ++i)
+	if (hd().Nh != f.size() - 3)
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), hd().Nh, f.size() - 3));
+	for (int i = 3; i < f.size(); ++i)
 		hd().head << f.GetDouble(i);
 	
 	hd().names.SetCount(hd().Nb);
@@ -80,26 +81,30 @@ bool Aqwa::Load_AH1() {
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, Null); 
-	hd().A.SetCount(hd().Nf);
-	hd().B.SetCount(hd().Nf);
-	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
-		hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
+	hd().A.SetCount(6*hd().Nb);
+	hd().B.SetCount(6*hd().Nb);
+	for (int i = 0; i < 6*hd().Nb; ++i) {
+		hd().A[i].SetCount(6*hd().Nb);
+		hd().B[i].SetCount(6*hd().Nb);
+		for (int j = 0; j < 6*hd().Nb; ++j) {
+			hd().A[i][j].setConstant(hd().Nf, Null);	
+			hd().B[i][j].setConstant(hd().Nf, Null);	
+		}
 	}
 	hd().Initialize_Forces(hd().ex);
 	
-	while(!in.IsEof() && hd().w.GetCount() < hd().Nf) {
+	while(!in.IsEof() && hd().w.size() < hd().Nf) {
 		line = TrimBoth(in.GetLine());
 		f.Load(line);
 		
-		for (int i = 0; i < f.GetCount(); ++i) {
+		for (int i = 0; i < f.size(); ++i) {
 			double w = f.GetDouble(i);
 			hd().w << w;
 			hd().T << 2*M_PI/w;
 		}
 	}	
-	if (hd().Nf != hd().w.GetCount())
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies do not match %d<>%d"), hd().Nf, hd().w.GetCount()));
+	if (hd().Nf != hd().w.size())
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies do not match %d<>%d"), hd().Nf, hd().w.size()));
 
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -159,9 +164,9 @@ bool Aqwa::Load_AH1() {
 			                    did = 0;
 			                for (int jdf = 0; jdf < 6; ++jdf) {
 			                    if (am)
-			                    	hd().A[ifr](6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
+			                    	hd().A[6*ib0 + idf][6*ib1 + jdf][ifr] = f.GetDouble(jdf + did);
 			                    else
-			                        hd().B[ifr](6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
+			                        hd().B[6*ib0 + idf][6*ib1 + jdf][ifr] = f.GetDouble(jdf + did);
 			                }
 			            }
 					}
@@ -210,6 +215,7 @@ bool Aqwa::Load_LIS() {
 	hd().w.Clear();
 	hd().T.Clear();
 	hd().rho = hd().g = hd().h = Null;
+	hd().dataFromW = true;
 	
 	String line; 
 	FieldSplit f(in);
@@ -283,7 +289,7 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(line);
 				double w;
-				if (hd().w.GetCount() == 0 || newparagraph) {
+				if (hd().w.size() == 0 || newparagraph) {
 					w = f.GetDouble(2);
 					newparagraph = false;
 				} else
@@ -291,7 +297,7 @@ bool Aqwa::Load_LIS() {
 				hd().w << w;
 				hd().T << 2*M_PI/w;
 			}
-			hd().Nf = hd().w.GetCount();
+			hd().Nf = hd().w.size();
 		} else if (IsNull(hd().Nh) && line.Find("DIRECTIONS") >= 0) {
 			int idini = (line.Find("STRUCTURE") >= 0) ? 1 : 0;
 			while (!in.IsEof()) {
@@ -304,11 +310,11 @@ bool Aqwa::Load_LIS() {
 				if (TrimBoth(line).StartsWith("--------"))
 					break;
 				f.Load(line);
-				for (int i = idini; i < f.GetCount(); ++i)
+				for (int i = idini; i < f.size(); ++i)
 					hd().head << f.GetDouble(i);
 				idini = 0;
 			}
-			hd().Nh = hd().head.GetCount();
+			hd().Nh = hd().head.size();
 			break;
 		}
 	}
@@ -317,11 +323,15 @@ bool Aqwa::Load_LIS() {
 	if (IsNull(hd().Nh))
 		throw Exc(t_("Number of headings not found"));
 					
-	hd().A.SetCount(hd().Nf);
-	hd().B.SetCount(hd().Nf);
-	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
-		hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
+	hd().A.SetCount(6*hd().Nb);
+	hd().B.SetCount(6*hd().Nb);
+	for (int i = 0; i < 6*hd().Nb; ++i) {
+		hd().A[i].SetCount(6*hd().Nb);
+		hd().B[i].SetCount(6*hd().Nb);
+		for (int j = 0; j < 6*hd().Nb; ++j) {
+			hd().A[i][j].setConstant(hd().Nf, Null);	
+			hd().B[i][j].setConstant(hd().Nf, Null);	
+		}
 	}
 	
 	hd().Initialize_Forces(hd().fk);
@@ -352,7 +362,7 @@ bool Aqwa::Load_LIS() {
 			hd().C[idb](2, 2) = f.GetDouble(0);
 			hd().C[idb](2, 3) = f.GetDouble(1);
 			hd().C[idb](2, 4) = f.GetDouble(2);
-			if (f.GetCount() > 3)
+			if (f.size() > 3)
 				hd().C[idb](2, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
@@ -362,7 +372,7 @@ bool Aqwa::Load_LIS() {
 			hd().C[idb](3, 2) = f.GetDouble(0);
 			hd().C[idb](3, 3) = f.GetDouble(1);
 			hd().C[idb](3, 4) = f.GetDouble(2);
-			if (f.GetCount() > 3)
+			if (f.size() > 3)
 				hd().C[idb](3, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
@@ -372,7 +382,7 @@ bool Aqwa::Load_LIS() {
 			hd().C[idb](4, 2) = f.GetDouble(0);
 			hd().C[idb](4, 3) = f.GetDouble(1);
 			hd().C[idb](4, 4) = f.GetDouble(2);
-			if (f.GetCount() > 3)
+			if (f.size() > 3)
 	       		hd().C[idb](4, 5) = f.GetDouble(3);	
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
@@ -440,7 +450,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().A[ifr](6*idb + idf, 6*idb + jdf) = f.GetDouble(1 + jdf);
+						hd().A[6*idb + idf][6*idb + jdf][ifr] = f.GetDouble(1 + jdf);
 				}
 				in.GetLine(8);
 				for (int idf = 0; idf < 6; ++idf) {
@@ -449,7 +459,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().B[ifr](6*idb + idf, 6*idb + jdf) = f.GetDouble(1 + jdf);
+						hd().B[6*idb + idf][6*idb + jdf][ifr] = f.GetDouble(1 + jdf);
 				}
 			}
 		}
@@ -503,7 +513,7 @@ bool Aqwa::Load_QTF() {
 		int col = 3;
 		int ih = 0;
 		while (!in.IsEof()) {		// Check headings
-			while (col < f.GetCount() && ih < Nh) {
+			while (col < f.size() && ih < Nh) {
 				double head = f.GetDouble(col++);
 				FindAddRatio(hd().qtfhead, head, 0.001);
 				//if (FindRatio(hd().head, head, 0.001) < 0)	
@@ -519,7 +529,7 @@ bool Aqwa::Load_QTF() {
 		col = 0;
 		int ifr = 0;
 		while (!in.IsEof()) {		// Check frequencies
-			while (col < f.GetCount() && ifr < Nf) {
+			while (col < f.size() && ifr < Nf) {
 				double w = f.GetDouble(col++);
 				FindAddRatio(hd().qtfw, w, 0.001);
 				//if (FindRatio(hd().w, w, 0.001) < 0)	
@@ -532,7 +542,7 @@ bool Aqwa::Load_QTF() {
 			col = 0;
 		}
 		hd().qtfT.Clear();
-		for (int ifr = 0; ifr < hd().qtfw.GetCount(); ++ifr)
+		for (int ifr = 0; ifr < hd().qtfw.size(); ++ifr)
 			hd().qtfT << 2*M_PI/hd().qtfw[ifr];
 		
 		nrows = Nh*Nf*Nf;

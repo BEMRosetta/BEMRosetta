@@ -17,7 +17,7 @@ public:
 		frameSet = &_frameSet;
 	}
 	void Clear() {
-		for (int i = 0; i < edits.GetCount(); ++i)
+		for (int i = 0; i < edits.size(); ++i)
 			frameSet->Remove(edits[i].GetRectEnter());
 		edits.Clear();
 		Rect rc = add.GetRect();
@@ -27,12 +27,12 @@ public:
 		pos = 0;
 		Layout();
 	}
-	int GetCount() 			{return edits.GetCount();}
+	int size() 			{return edits.size();}
 	double Get(int id) 		{return ~edits[id];}
 	bool IsSelected(int id)	{return edits[id].IsShownFrame();}
 	
 	int GetSelected() {
-		for (int i = 0; i < edits.GetCount(); ++i)
+		for (int i = 0; i < edits.size(); ++i)
 			if(IsSelected(i))
 				return i;
 		return -1;
@@ -58,7 +58,7 @@ public:
 		Layout();
 	}
 	void CheckFocus(double freq) {
-		for (int i = 0; i < edits.GetCount(); ++i) {
+		for (int i = 0; i < edits.size(); ++i) {
 			if (abs(double(~edits[i]) - freq) < 0.000001) {
 				frameSet->OnEnter(edits[i].GetRectEnter());
 				break;
@@ -107,13 +107,13 @@ public:
 	bool Init(const Hydro &_data, int _idf, int _j_dof, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		data = &_data;
 		dataToPlot = _dataToPlot;
-		if (_idf >= _data.dofOrder.GetCount())
+		if (_idf >= _data.dofOrder.size())
 			return false;
 		idf = _data.dofOrder[_idf];
 		if (dataToPlot == PLOT_A || dataToPlot == PLOT_AINF || dataToPlot == PLOT_A0 || 
 			dataToPlot == PLOT_B || dataToPlot == PLOT_K || 
 			dataToPlot == PLOT_Z_MA || dataToPlot == PLOT_Z_PH) {
-			if (_j_dof >= _data.dofOrder.GetCount())
+			if (_j_dof >= _data.dofOrder.size())
 				return false;
 			_j_dof = _data.dofOrder[_j_dof];
 		}
@@ -127,11 +127,11 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case PLOT_A:			return IsNull(data->A[0](idf, jdf));
+		case PLOT_A:			return IsNull(data->A[idf][jdf][0]);
 		case PLOT_AINF:			return IsNull(data->Awinf(idf, jdf));
 		case PLOT_A0:			return IsNull(data->Aw0(idf, jdf));
-		case PLOT_B:			return IsNull(data->B[0](idf, jdf));
-		case PLOT_K:			return data->Kirf.size() == 0 || IsNull(data->Kirf[0](idf, jdf));
+		case PLOT_B:			return IsNull(data->B[idf][jdf][0]);
+		case PLOT_K:			return data->Kirf.size() == 0 || IsNull(data->Kirf[idf][jdf][0]);
 		case PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdf](0, idf));
 		case PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdf](0, idf));
 		case PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdf](0, idf));
@@ -142,8 +142,8 @@ public:
 		case PLOT_RAO_PH:		return IsNull(data->rao.ph[jdf](0, idf));
 		case PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
 		case PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
-		case PLOT_Z_MA:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf)) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
-		case PLOT_Z_PH:			return IsNull(data->A[0](idf, idf)) || IsNull(data->B[0](idf, jdf)) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
+		case PLOT_Z_MA:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
+		case PLOT_Z_PH:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
 		default:				NEVER();	return true;
 		}
 	}
@@ -197,7 +197,7 @@ public:
 		if (dataToPlot == PLOT_A0)
 			return !show_w ? 2 : 1;
 		if (dataToPlot == PLOT_K)
-			return data->Tirf.GetCount();
+			return data->Tirf.size();
 		return data->Nf;
 	}
 	

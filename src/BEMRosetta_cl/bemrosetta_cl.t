@@ -572,6 +572,74 @@ euES("")
 frFR("")
 
 
+// Mesh.cpp
+
+T_("Parsing error: ")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown MESH file extension in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Model is empty. No panels found")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown mesh file type")
+esES("")
+euES("")
+frFR("")
+
+T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
+esES("")
+euES("")
+frFR("")
+
+T_("Water-plane area [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume [m3] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater surface [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater volume [m3] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Displacement [tm] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Center of buoyancy [m] (%f, %f, %f)")
+esES("")
+euES("")
+frFR("")
+
+T_("Loaded %d panels and %d nodes")
+esES("")
+euES("")
+frFR("")
+
+
 // BEMRosetta.h
 
 T_("Wamit")
@@ -705,74 +773,6 @@ euES("")
 frFR("")
 
 
-// Mesh.cpp
-
-T_("Parsing error: ")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown MESH file extension in '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Model is empty. No panels found")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown mesh file type")
-esES("")
-euES("")
-frFR("")
-
-T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
-esES("")
-euES("")
-frFR("")
-
-T_("Water-plane area [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Surface [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Volume [m3] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater surface [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater volume [m3] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Displacement [tm] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Center of buoyancy [m] (%f, %f, %f)")
-esES("")
-euES("")
-frFR("")
-
-T_("Loaded %d panels and %d nodes")
-esES("")
-euES("")
-frFR("")
-
-
 // nemoh_mesh.cpp
 
 T_("Impossible to open file '%s'")
@@ -804,11 +804,6 @@ euES("")
 frFR("")
 
 T_("Number of patches not found in .gdf file")
-esES("")
-euES("")
-frFR("")
-
-T_("Wrong number of patches in .gdf file")
 esES("")
 euES("")
 frFR("")
@@ -1180,12 +1175,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("cg matrix is not dimensioned")
+T_("Vo matrix is not dimensioned")
 esES("")
 euES("")
 frFR("")
 
-T_("Vo matrix is not dimensioned")
+T_("cg matrix is not dimensioned")
 esES("")
 euES("")
 frFR("")
@@ -1465,6 +1460,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("FOAMM ended with error")
+esES("")
+euES("")
+frFR("")
+
 
 // fast.cpp
 
@@ -1729,6 +1729,11 @@ frFR("")
 
 
 // Obsolete
+
+T_("Wrong number of patches in .gdf file")
+esES("")
+euES("")
+frFR("")
 
 T_("non constant delta (%s)")
 esES("")
