@@ -67,13 +67,13 @@ void MeshData::SaveDatNemoh(String fileName, const Surface &surf, bool x0z) {
 	const Vector<Point3D> &nodes = surf.nodes;
 	
 	out << "    2   " << (x0z ? "1" : "0") << "\n";
-	for (int i = 0; i < nodes.GetCount(); ++i) {
+	for (int i = 0; i < nodes.size(); ++i) {
 		const Point3D &node = nodes[i];
 		out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", i+1, node.x, node.y, node.z);
 	}
 	out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", 0, 0, 0, 0);
 	
-	for (int i = 0; i < panels.GetCount(); ++i) {
+	for (int i = 0; i < panels.size(); ++i) {
 		const Panel &panel = panels[i];
 		out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
 	}
@@ -88,15 +88,15 @@ void MeshData::SavePreMeshNemoh(String fileName, const Surface &surf) {
 	const Vector<Panel> &panels = surf.panels;
 	const Vector<Point3D> &nodes = surf.nodes;
 	
-	out << nodes.GetCount() << "\n";
-	out << panels.GetCount() << "\n";
+	out << nodes.size() << "\n";
+	out << panels.size() << "\n";
 	
-	for (int i = 0; i < nodes.GetCount(); ++i) {
+	for (int i = 0; i < nodes.size(); ++i) {
 		const Point3D &node = nodes[i];
 		out << Format("%014.7E   %014.7E   % 014.7E\n", node.x, node.y, node.z);
 	}
 	
-	for (int i = 0; i < panels.GetCount(); ++i) {
+	for (int i = 0; i < panels.size(); ++i) {
 		const Panel &panel = panels[i];
 		out << Format("%8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
 	}

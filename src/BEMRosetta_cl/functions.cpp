@@ -21,7 +21,7 @@ static void GetKirfTirf(VectorXd &Kirf, VectorXd &Tirf, const VectorXd &w, const
     for (int it = 0; it < numT; ++it) {
 		for (int iw = 0; iw < Nf; ++iw)
 			y(iw) = B(iw)*cos(w(iw)*Tirf(it));
-		Kirf(it) = Integral<VectorXd, double>(y, w)*2/M_PI;
+		Kirf(it) = Integral(w, y, SIMPSON_1_3)*2/M_PI;
 	}
 }
 
@@ -90,7 +90,7 @@ void GetAinf_Kirf(double &Ainf, VectorXd &Kirf, double w0, double dw, const Vect
 }
 
 
-double Fradiation2(double t, const VectorXd &vel, const VectorXd &irf, double dt) {
+/*double Fradiation2(double t, const VectorXd &vel, const VectorXd &irf, double dt) {
 	Eigen::Index numV = int(t/dt);
 	if (numV < 2)
 		return 0;
@@ -98,7 +98,7 @@ double Fradiation2(double t, const VectorXd &vel, const VectorXd &irf, double dt
 	for (Eigen::Index i = numV-2, idtau = 0; i >= 0 && idtau < irf.size()-1; --i, ++idtau) 
 		ret += Avg(irf(idtau), irf(idtau+1))*Avg(vel(i), vel(i+1))*dt;
 	return ret;
-}	
+}*/	
 
 double Fradiation(const VectorXd &vel, const VectorXd &irf, Eigen::Index iiter, double dt, Eigen::Index velSize) {
 	if (irf.size() == 0)

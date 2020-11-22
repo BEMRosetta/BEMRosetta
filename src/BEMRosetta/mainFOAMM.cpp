@@ -30,11 +30,11 @@ void MainSetupFOAMM::Init() {
 	arrayCases.AddColumn(t_("Frequencies (rad/s)"), 60);
 	arrayCases.WhenSel = [&] {WhenSelArrayCases();};
 	
-	selectAll.WhenAction = [&] {
+	selectAll << [&] {
 			for (int i = 0; i < arrayCases.GetCount(); ++i)
 				arrayCases.Set(i, 0, ~selectAll);
 		};
-	setToAll.WhenAction = [&] {
+	setToAll  << [&] {
 			int id = arrayCases.GetCursor();
 			if (id < 0)
 				return;
@@ -97,7 +97,7 @@ void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 	status.Hide();
 	progress.Hide();
 	butCancel.Hide();
-	butCancel.WhenAction = [&] {isCancelled = true;};
+	butCancel << [&] {isCancelled = true;};
 }
 
 void MainSetupFOAMM::WhenFocus() {
@@ -108,7 +108,7 @@ void MainSetupFOAMM::OnPainter(Painter &w, ScatterCtrl *pscat) {
 	ScatterCtrl &scat = *pscat;
 	int plotW = scat.GetPlotWidth(), plotH = scat.GetPlotHeight();
 	
-	for (int i = 0; i < selector.GetCount(); ++i) {
+	for (int i = 0; i < selector.size(); ++i) {
 		if (!IsNull(selector.Get(i))) {
 			double xFreq = scat.GetPosX(selector.Get(i));
 			if (selector.IsSelected(i))
@@ -159,7 +159,7 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEMData &bem) {
 	
 	id = _id;
 	
-	ASSERT(id < Bem().hydros.GetCount());
+	ASSERT(id < Bem().hydros.size());
 	
 	const Hydro &hydro = Bem().hydros[id].hd();
 	
@@ -170,7 +170,8 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEMData &bem) {
 					int _idf = hydro.GetOrder()[ib*6 + idf];
 					int _jdf = hydro.GetOrder()[ib*6 + jdf];
 	
-					if (hydro.IsLoadedA() && hydro.IsLoadedB() && !IsNull(hydro.A[0](_idf, _jdf)) && !IsNull(hydro.B[0](_idf, _jdf))) {
+					if (hydro.IsLoadedA() && hydro.IsLoadedB() && 
+						!IsNull(hydro.A[_idf][_jdf][0]) && !IsNull(hydro.B[_idf][_jdf][0])) {
 						arrayCases.Add(false, ib+1, Hydro::StrDOF_base(idf), Hydro::StrDOF_base(jdf));
 						int row = arrayCases.GetCount()-1;
 						arrayCases.SetCtrl(row, 0, options.Add());
@@ -198,7 +199,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 			
 		String freqs = arrayCases.Get(row, 6);
 		Upp::Vector<String> afreqs = Split(freqs, ';');
-		for (int i = 0; i < afreqs.GetCount(); ++i)
+		for (int i = 0; i < afreqs.size(); ++i)
 			selector.AddField(ScanDouble(afreqs[i]));
 		
 		if (opChoose)
@@ -228,7 +229,7 @@ void MainSetupFOAMM::WhenArrayCases() {
 	arrayCases.Set(row, 5, ~toFreq);
 
 	Upp::Vector<double> freqs;
-	for (int i = 0; i < selector.GetCount(); ++i) {
+	for (int i = 0; i < selector.size(); ++i) {
 		double freq = selector.Get(i);
 		if (!IsNull(freq)) {
 			if (!plots.scatt.IsEmpty()) { 
@@ -242,7 +243,7 @@ void MainSetupFOAMM::WhenArrayCases() {
 	Sort(freqs);
 	
 	String sfreqs;
-	for (int i = 0; i < freqs.GetCount(); ++i) {
+	for (int i = 0; i < freqs.size(); ++i) {
 		if (!sfreqs.IsEmpty())
 			sfreqs << ";";
 		sfreqs << freqs[i];
@@ -270,13 +271,13 @@ String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
 		return t_("No frequency has been selected");
 	
 	Upp::Vector<double> unique;
-	for (int i = 0; i < afreqs.GetCount(); ++i) {
+	for (int i = 0; i < afreqs.size(); ++i) {
 		double freq = ScanDouble(afreqs[i]);
 		if (freq < fromFreq || freq > toFreq) 
 			return t_("Selected frequencies have to be between lower and higher limits");
 		FindAddRatio(unique, freq, 0.001);
 	}
-	if (unique.GetCount() != afreqs.GetCount()) 
+	if (unique.size() != afreqs.size()) 
 		return t_("Some selected frequencies are repeated");
 	
 	return String("");
@@ -305,7 +306,7 @@ bool MainSetupFOAMM::Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vec
 			tos << to;
 			Upp::Vector<double> &f = freqs.Add();
 			Upp::Vector<String> fs = Split(strfreqs, ';');
-			for (int i = 0; i < fs.GetCount(); ++i)
+			for (int i = 0; i < fs.size(); ++i)
 				f << ScanDouble(fs[i]);
 		}
 	}

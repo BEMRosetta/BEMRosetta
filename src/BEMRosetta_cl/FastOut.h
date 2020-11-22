@@ -6,7 +6,7 @@ class FastOut {
 public:
 	static Vector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
-	bool Load0(String fileName);
+	int Load(String fileName);
 	bool Save(String fileName);
 	
 	void Clear();
@@ -16,7 +16,7 @@ public:
 	
 	const String &GetParameter(int id) const	{return parameters[id];}
 	const String &GetUnit(int id) const			{return units[id];}
-	int GetColumnCount() const					{return parameters.GetCount();}
+	int GetColumnCount() const					{return parameters.size();}
 	
 	SortedIndex<String> GetParameterList(String filter = ""); 
 	SortedIndex<String> GetUnitList(String filter = "");
@@ -25,8 +25,8 @@ public:
 	double GetVal(double time, int col);
 	inline double GetVal(int idtime, int col) 	{return dataOut[col][idtime];}
 	int GetIdTime(double time);
-	double GetDuration()	{return dataOut[0][GetCount()-1];}
-	int GetCount()			{return dataOut[0].GetCount();}			
+	double GetDuration()	{return dataOut[0][size()-1];}
+	int size()			{return dataOut[0].size();}			
 	bool IsEmpty()			{return dataOut.IsEmpty();}	
 	
 	int ColFairlead(int i) 	{return GetCol(Format("T[%d]", i-1));}

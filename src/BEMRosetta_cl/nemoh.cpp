@@ -108,7 +108,7 @@ bool Nemoh::Load_Cal(String fileName) {
 	hd().h = data.h;
 	if (hd().h == 0)
 		hd().h = -1;
-	hd().Nb = data.bodies.GetCount();
+	hd().Nb = data.bodies.size();
 	for (int i = 0; i < hd().Nb; ++i) 	
 		hd().names << GetFileTitle(data.bodies[i].meshFile);
 	hd().dof.SetCount(hd().Nb, 0);
@@ -129,12 +129,12 @@ bool Nemoh::Load_Cal(String fileName) {
 }
 
 int NemohCal::GetNumArgs(const FieldSplit &f) {
-	for (int i = 0; i < f.GetCount(); ++i) {
+	for (int i = 0; i < f.size(); ++i) {
 		double num = ScanDouble(f.GetText(i));
 		if (IsNull(num))
 			return i;
 	}
-	return f.GetCount();
+	return f.size();
 }
 	
 void NemohCal::LoadFreeSurface(const FileInLine &in, const FieldSplit &f) {
@@ -545,7 +545,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		if (!DirectoryCreate(folderMesh))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
-		for (int ib = 0; ib < bodies.GetCount(); ++ib) {
+		for (int ib = 0; ib < bodies.size(); ++ib) {
 			String name = GetFileName(bodies[ib].meshFile);
 			name = RemoveAccents(name);
 			name.Replace(" ", "_");
@@ -589,9 +589,9 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 	out << NemohField(Format("%f %f", xeff, yeff), cp) << "! XEFF YEFF       ! M         ! Wave measurement point" << "\n";
 	
 	out << NemohHeader("Description of floating bodies") << "\n";
-	out << NemohField(Format("%d", bodies.GetCount()), cp) << "! Number of bodies" << "\n";
+	out << NemohField(Format("%d", bodies.size()), cp) << "! Number of bodies" << "\n";
 	
-	for (int i = 0; i < bodies.GetCount(); ++i) {
+	for (int i = 0; i < bodies.size(); ++i) {
 		const NemohBody &b = bodies[i];
 		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
 		String name = GetFileName(b.meshFile);
@@ -696,7 +696,7 @@ bool Nemoh::Load_Inf(String fileName) {
 			minimumDirectionAngle = ScanDouble(line.Mid(pos))*180/M_PI;
 	}
 	
-	for (int ih = 0; ih < hd().head.GetCount(); ++ih)
+	for (int ih = 0; ih < hd().head.size(); ++ih)
 		hd().head[ih] -= minimumDirectionAngle;
 
 	return true;	
@@ -742,10 +742,10 @@ bool Nemoh::Load_KH() {
 			fileKH = AppendFileName(folder, AppendFileName("Mesh", Format("KH_%d.dat", ib)));
 	    
 	    FileInLine in(fileKH);
-	    if (!in.IsOpen()) 
+		if (!in.IsOpen()) 
 	        return false;
 
-		hd().C[ib].setConstant(6, 6, 0);    
+		hd().C[ib].setConstant(6, 6, 0);
 	    
 	    FieldSplit f(in);
 	    f.IsSeparator = IsTabSpace;
@@ -788,11 +788,15 @@ bool Nemoh::Load_Radiation(String fileName) {
 		else if (!IsEqualRange(dof, hd().dof)) 
 			throw Exc(in.Str() + "\n"  + Format(t_("DOF does not match in '%s'"), fileName));
 	}
-	hd().A.SetCount(hd().Nf);
-	hd().B.SetCount(hd().Nf);
-	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		hd().A[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
-		hd().B[ifr].setConstant(hd().Nb*6, hd().Nb*6, Null);
+	hd().A.SetCount(6*hd().Nb);
+	hd().B.SetCount(6*hd().Nb);
+	for (int i = 0; i < 6*hd().Nb; ++i) {
+		hd().A[i].SetCount(6*hd().Nb);
+		hd().B[i].SetCount(6*hd().Nb);
+		for (int j = 0; j < 6*hd().Nb; ++j) {
+			hd().A[i][j].setConstant(hd().Nf, Null);	
+			hd().B[i][j].setConstant(hd().Nf, Null);	
+		}
 	}
 	int ibodydof = 0;
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
@@ -800,8 +804,8 @@ bool Nemoh::Load_Radiation(String fileName) {
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) {	
 				f.Load(in.GetLine());
 				for (int df = 0; df < hd().dof[ibody]; ++df) {		
-					hd().A[ifr](ibodydof, df) = f.GetDouble(1 + 2*df);
-	        		hd().B[ifr](ibodydof, df) = f.GetDouble(2 + 2*df);
+					hd().A[ibodydof][df][ifr] = f.GetDouble(1 + 2*df);
+	        		hd().B[ibodydof][df][ifr] = f.GetDouble(2 + 2*df);
 				}
 	        }
 	        ++ibodydof;
@@ -858,7 +862,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	} else {
 		for (int ib = 0; ib < hd().Nb; ++ib) {
 			dof[ib].SetCount(hd().dof[ib]);
-			for (int j = 0; j < dof[ib].GetCount(); ++j) 
+			for (int j = 0; j < dof[ib].size(); ++j) 
 				dof[ib][j] = j;
 		}
 	}
@@ -872,7 +876,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			f.Load(line);
 			int il = 0;
 			for (int ib = 0; ib < hd().Nb; ++ib) {
-				for (int j = 0; j < dof[ib].GetCount(); ++j) {
+				for (int j = 0; j < dof[ib].size(); ++j) {
 					int ibdof = dof[ib][j];
 					if (ifr >= hd().Nf)
 						throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		

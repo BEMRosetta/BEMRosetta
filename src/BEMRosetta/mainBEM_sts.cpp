@@ -84,7 +84,7 @@ bool MainStateSpacePlot::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<
 	bool loaded = false;
 	int idf = mainPlot.plot_idf;
 	int jdf = mainPlot.plot_jdf;
-	for (int id = 0; id < ids.GetCount(); ++id) {
+	for (int id = 0; id < ids.size(); ++id) {
 		Hydro &hy = hydros[ids[id]].hd();
 		if (hy.IsLoadedStateSpace()) {
 			Hydro::StateSpace &sts = hy.sts[idf][jdf];

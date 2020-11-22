@@ -83,7 +83,7 @@ String FastOut::GetFileToLoad(String fileName) {
 	return Null;
 }
 
-bool FastOut::Load0(String fileName) {	
+int FastOut::Load(String fileName) {	
 	Time actualTime = FileGetTime(fileName);
 	if (lastFile == fileName && actualTime - lastTime < 5) // Only loads if file is 5 sec older
 		return true;
@@ -120,29 +120,29 @@ bool FastOut::LoadOut(String fileName) {
 		
 		if (!begin) {
 			if (!fields.IsEmpty() && fields[0] == "Time") {
-				for (int c = 0; c < fields.GetCount(); ++c) 
+				for (int c = 0; c < fields.size(); ++c) 
 					parameters << fields[c];
 				pos = npos;
 				npos = raw.FindAfter("\n", pos);
 				line = raw.Mid(pos, npos-pos);
 				Vector<String> fields = Split(line, IsTabSpaceRet, true);
-				for (int c = 0; c < fields.GetCount(); ++c) 
+				for (int c = 0; c < fields.size(); ++c) 
 					units << Replace(Replace(fields[c], "(", ""), ")", "");
 				begin = true;
-				if (parameters.GetCount() != units.GetCount()) 
+				if (parameters.size() != units.size()) 
 					throw Exc("Number of parameters and units do not match");
 
-				numCol = parameters.GetCount();
-				dataOut.SetCount(numCol+calcParams.GetCount());
+				numCol = parameters.size();
+				dataOut.SetCount(numCol+calcParams.size());
 			}
 		} else {
 			row++;
 			if (fields.IsEmpty())
 				return true;
-			if (fields.GetCount() != numCol) 
-				throw Exc(Format("Number of values (%d) and parameters (%d) do not match in row %d", fields.GetCount(), numCol, row));
+			if (fields.size() != numCol) 
+				throw Exc(Format("Number of values (%d) and parameters (%d) do not match in row %d", fields.size(), numCol, row));
 
-			for (int c = 0; c < fields.GetCount(); ++c) 
+			for (int c = 0; c < fields.size(); ++c) 
 				dataOut[c] << ScanDouble(fields[c]);
 		}
 		pos = npos;
@@ -189,13 +189,13 @@ bool FastOut::LoadOutb(String fileName) {
     String DescStr = DescStrB;
     
     if (FileID == FileType::NoCompressWithoutTime) 
-        ChanLen2 = 15;
+		ChanLen2 = 15;
 
 	parameters.SetCount(NumChans+1); 
 	parameters[0] = "Time";
 	Buffer<char> name(ChanLen2);
-    for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
-        file.ReadB(name, ChanLen2); 	
+	for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
+		file.ReadB(name, ChanLen2); 	
         parameters[iChan] = TrimBoth(String(name, ChanLen2));
     }
     
@@ -208,8 +208,8 @@ bool FastOut::LoadOutb(String fileName) {
     }  
     
     int nPts = NumRecs*NumChans;           		   
-    dataOut.SetCount(NumChans+1+calcParams.GetCount());
-    for (int i = 0; i < dataOut.GetCount(); ++i)
+    dataOut.SetCount(NumChans+1+calcParams.size());
+    for (int i = 0; i < dataOut.size(); ++i)
         dataOut[i].SetCount(NumRecs);
     
     Buffer<int32> bufferTime;
@@ -243,9 +243,9 @@ void FastOut::AfterLoad() {
 	for (CalcParams &c : calcParams) {
 		parameters << c.name;
 		units << c.units;
-		int id = parameters.GetCount()-1;
+		int id = parameters.size()-1;
 		c.calc->Init();
-		for (int idt = 0; idt < dataOut[id].GetCount(); ++idt)
+		for (int idt = 0; idt < dataOut[id].size(); ++idt)
 			dataOut[id][idt] = c.calc->Calc(idt);
 	}
 }
@@ -258,7 +258,7 @@ void FastOut::Clear() {
 
 int FastOut::FindCol(String param) {
 	param = ToLower(param);
-	for (int c = 0; c < parameters.GetCount(); ++c) {
+	for (int c = 0; c < parameters.size(); ++c) {
 		if (ToLower(parameters[c]) == param)
 			return c;
 	}
@@ -268,7 +268,7 @@ int FastOut::FindCol(String param) {
 Vector<int> FastOut::FindColMatch(String param) {
 	param = ToLower(param);
 	Vector<int> ret;
-	for (int c = 0; c < parameters.GetCount(); ++c) {
+	for (int c = 0; c < parameters.size(); ++c) {
 		if (PatternMatch(param, ToLower(parameters[c])))
 			ret << c;
 	}
@@ -292,7 +292,7 @@ double FastOut::GetVal(double time, int col) {
 int FastOut::GetIdTime(double time) {
 	if (time < 0)
 		return Null;	
-	for (int r = 0; r < dataOut[0].GetCount(); ++r) {
+	for (int r = 0; r < dataOut[0].size(); ++r) {
 		if (dataOut[0][r] >= time)
 			return r;
 	}
