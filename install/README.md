@@ -22,8 +22,8 @@ In Windows, U++ binaries are precompiled and U++ comes with all dependencies nee
 * Open a terminal, cd to the upp folder
 * Compile BEMRosetta with umk.exe. umk (U++ make) is a command line utility to build U++ programs:
 ```
-umk bazaar BEMRosetta    CLANGX64 -r +GUI .\BEMRosetta.exe
-umk bazaar BEMRosetta_cl CLANGX64 -r      .\BEMRosetta_cl.exe
+umk examples-bazaar BEMRosetta    CLANGX64 -r +GUI .\BEMRosetta.exe
+umk examples-bazaar BEMRosetta_cl CLANGX64 -r      .\BEMRosetta_cl.exe
 ```
 Put BEMRosetta binaries where you want them. No install required.
 
@@ -38,7 +38,7 @@ In Linux, U++ has to be compiled so that the dependencies of the target distribu
 * Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
 * Compile BEMRosetta with umk.exe. umk (U++ make) is a command line utility to build U++ programs:
 ```
-umk bazaar BEMRosetta    CLANG -r +GUI,SHARED ~/bemrosetta.exe
-umk bazaar BEMRosetta_cl CLANG -r +SHARED     ~/bemrosetta_cl.exe
+umk examples-bazaar BEMRosetta    CLANG -r +GUI,SHARED ~/bemrosetta.exe
+umk examples-bazaar BEMRosetta_cl CLANG -r +SHARED     ~/bemrosetta_cl.exe
 ```
 Put BEMRosetta binaries where you want them, e.g. inside ~/bin . No install is required.
