@@ -12,8 +12,7 @@ bool Nemoh::Load(String file, double) {
 				throw Exc(Format(t_(".tec file '%s' should have to be in 'results' folder"), file));
 			bool found = false;
 			String upperFolder = GetUpperFolder(folder);
-			FindFile ff(AppendFileName(upperFolder, "*.*"));
-			while (ff) {
+			for(const auto& ff : FindFile(AppendFileName(upperFolder, "*.*"))) {
 				if (ff.IsFile()) {
 					if (ToLower(ff.GetName()) == "nemoh.cal") {
 						file = ff.GetPath();
@@ -21,7 +20,6 @@ bool Nemoh::Load(String file, double) {
 						break;
 					}
 				}
-				ff.Next();
 			}
 			if (!found)
 				throw Exc(Format(t_("nemoh.cal file not found in '%s' folder"), upperFolder));
