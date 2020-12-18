@@ -6,7 +6,7 @@
 using namespace Eigen;
 
 
-static void GetKirfTirf(VectorXd &Kirf, VectorXd &Tirf, const VectorXd &w, const VectorXd &B, double dt, double &maxT) {
+void GetKirfTirf(VectorXd &Kirf, VectorXd &Tirf, const VectorXd &w, const VectorXd &B, double dt, double &maxT) {
 	ASSERT(B.size() >= 2);
 	
     maxT = min(maxT, M_PI/(w[1] - w[0]));
@@ -25,7 +25,7 @@ static void GetKirfTirf(VectorXd &Kirf, VectorXd &Tirf, const VectorXd &w, const
 	}
 }
 
-static void GetKirfTirf(VectorXd &Kirf, VectorXd &Tirf, double w0, double dw, const VectorXd &B, double dt, double &maxT) {
+void GetKirfTirf(VectorXd &Kirf, VectorXd &Tirf, double w0, double dw, const VectorXd &B, double dt, double &maxT) {
 	ASSERT(B.size() >= 2);
 	
 	maxT = min(maxT, M_PI/dw);
