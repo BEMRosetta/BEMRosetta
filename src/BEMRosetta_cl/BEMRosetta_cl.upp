@@ -37,10 +37,13 @@ file
 	main_cl.rc,
 	functions.cpp,
 	functions.h,
-	mooring.cpp,
+	export.h,
+	export.brc,
 	Copying;
 
 mainconfig
-	"" = "";
+	"" = "",
+	"" = "DLL",
+	"" = "TEST_DLL";
 
  spellcheck_comments "EN-GB"

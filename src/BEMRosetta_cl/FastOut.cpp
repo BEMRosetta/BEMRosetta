@@ -14,6 +14,15 @@ static int IsTabSpaceRet(int c) {
 	return false;
 } 
 
+FastOut::FastOut() {
+	ptfmtilt.Init0(this);
+	AddParam("PtfmTilt", "deg", ptfmtilt);
+	ptfmshift.Init0(this);
+	AddParam("PtfmShift", "deg", ptfmshift);
+	yawaccel.Init0(this);
+	AddParam("YawBrTAp", "m/s^2", yawaccel);	
+}
+
 Vector<String> FastOut::GetFilesToLoad(String path) {
 	Vector<String> ret;
 	
@@ -25,10 +34,9 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 			ret << GetFileToLoad(path);
 		return ret;
 	} 
-	FindFile ff(AppendFileName(path, "*.out*"));
 	int64 sz = -1;
 	String fileName;
-	while (ff) {
+	for(const auto& ff : FindFile(AppendFileName(path, "*.out*"))) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name)) {
@@ -43,18 +51,15 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 				}
 			}
 		}
-		ff.Next();
 	}
 	if (!fileName.IsEmpty()) {
 		ret << fileName;
 		return ret;
 	}
-	ff.Search(AppendFileName(path, "*.*"));
-	while (ff) {
+	for(const auto& ff : FindFile(AppendFileName(path, "*.*"))) 
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
-		ff.Next();
-	}
+
 	return ret;
 }
 
@@ -256,7 +261,7 @@ void FastOut::Clear() {
 	dataOut.Clear();
 }
 
-int FastOut::FindCol(String param) {
+int FastOut::FindCol(String param) const {
 	param = ToLower(param);
 	for (int c = 0; c < parameters.size(); ++c) {
 		if (ToLower(parameters[c]) == param)
@@ -265,7 +270,7 @@ int FastOut::FindCol(String param) {
 	return Null;
 }
 
-Vector<int> FastOut::FindColMatch(String param) {
+Vector<int> FastOut::FindParameterMatch(String param) const {
 	param = ToLower(param);
 	Vector<int> ret;
 	for (int c = 0; c < parameters.size(); ++c) {
@@ -275,21 +280,21 @@ Vector<int> FastOut::FindColMatch(String param) {
 	return ret;
 }
 
-int FastOut::GetCol(String param) {
+int FastOut::GetCol(String param) const {
 	int ret = FindCol(param);
 	if (IsNull(ret))
 		throw Exc(Format("Parameter '%s' not found", param));	
 	return ret;
 }
 
-double FastOut::GetVal(double time, int col) {
+double FastOut::GetVal(double time, int col) const {
 	int idtime = GetIdTime(time);
 	if (IsNull(idtime))
 		return Null;
 	return GetVal(idtime, col);
 }
 
-int FastOut::GetIdTime(double time) {
+int FastOut::GetIdTime(double time) const {
 	if (time < 0)
 		return Null;	
 	for (int r = 0; r < dataOut[0].size(); ++r) {
@@ -303,11 +308,11 @@ SortedIndex<String> FastOut::GetParameterList(String filter) {
 	SortedIndex<String> list;
 	
 	if (filter.IsEmpty()) {
-		for (int i = 0; i < GetColumnCount(); ++i) 
+		for (int i = 0; i < GetParameterCount(); ++i) 
 			list.FindAdd(GetParameter(i));
 	} else {
 		filter = "*" + ToLower(filter) + "*";
-		for (int i = 0; i < GetColumnCount(); ++i) {
+		for (int i = 0; i < GetParameterCount(); ++i) {
 			String str = ToLower(GetParameter(i));
 			if (PatternMatch(filter, str))
 				list.FindAdd(GetParameter(i));
@@ -321,11 +326,11 @@ SortedIndex<String> FastOut::GetUnitList(String filter) {
 	SortedIndex<String> list;
 	
 	if (filter.IsEmpty()) {
-		for (int i = 0; i < GetColumnCount(); ++i) 
+		for (int i = 0; i < GetParameterCount(); ++i) 
 			list.FindAdd(GetUnit(i));
 	} else {
 		filter = "*" + ToLower(filter) + '*';
-		for (int i = 0; i < GetColumnCount(); ++i) {
+		for (int i = 0; i < GetParameterCount(); ++i) {
 			String str = ToLower(GetUnit(i));
 			if (PatternMatch(filter, str))
 				list.FindAdd(GetUnit(i));
@@ -339,12 +344,12 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 	SortedVectorMap<String, String> list;
 	
 	if (filterParam.IsEmpty() && filterUnits.IsEmpty()) {
-		for (int i = 0; i < GetColumnCount(); ++i) 
+		for (int i = 0; i < GetParameterCount(); ++i) 
 			list.Add(GetParameter(i), GetUnit(i));
 	} else {
 		filterParam = "*" + ToLower(filterParam) + '*';
 		filterUnits = "*" + ToLower(filterUnits) + '*';
-		for (int i = 0; i < GetColumnCount(); ++i) {
+		for (int i = 0; i < GetParameterCount(); ++i) {
 			String strParams = ToLower(GetParameter(i));
 			String strUnits = ToLower(GetUnit(i));
 			if (PatternMatch(filterParam, strParams) && 

@@ -740,18 +740,6 @@ private:
 	bool Load_QTF();
 };
 
-template <class Range>
-void LinSpaced(Range &v, int n, typename Range::value_type min, typename Range::value_type max) {
-	ASSERT(n > 0);
-	v.SetCount(n);
-	if (n == 1)
-		v[0] = min;
-	else {
-		typename Range::value_type d = (max - min)/(n - 1);
-		for (int i = 0; i < n; ++i)
-			v[i] = min + d*i;
-	}
-}
 
 Upp::Vector<int> NumSets(int num, int numsets);	
 

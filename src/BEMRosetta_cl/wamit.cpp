@@ -40,22 +40,22 @@ bool Wamit::Load(String file) {
 			String file1 = ForceExt(file, ".1");
 			BEMData::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
 			if (!Load_1(file1))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
 			
 			String file3 = ForceExt(file, ".3");
 			BEMData::Print("\n- " + Format(t_("Diffraction exciting .3 file '%s'"), GetFileName(file3)));
 			if (!Load_3(file3))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
 			
 			String fileHST = ForceExt(file, ".hst");
 			BEMData::Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
 			if (!Load_hst(fileHST))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
 		
 			String fileRAO = ForceExt(file, ".4");
 			BEMData::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
 			if (!Load_4(fileRAO))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
 
 			if (IsNull(hd().Nh))
 				hd().Nh = 0;
@@ -720,7 +720,7 @@ bool Wamit::Load_1(String fileName) {
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())
-		throw Exc("Error in file format");
+		return false;
 	
 	Vector<double> w, T; 	
     
@@ -835,7 +835,7 @@ bool Wamit::Load_3(String fileName) {
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())
-		throw Exc(t_("Error in file format"));
+		return false;
 	
 	Vector<double> w, T; 	
     
@@ -931,7 +931,7 @@ bool Wamit::Load_hst(String fileName) {
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
 	if (in.IsEof())
-		throw Exc(t_("Error in file format"));
+		return false;
 	
 	in.SeekPos(fpos);
 	
@@ -968,8 +968,8 @@ bool Wamit::Load_4(String fileName) {
  	FileInLine::Pos fpos;
  	while (IsNull(ScanDouble(in.GetLine())) && !in.IsEof())
  		fpos = in.GetPos();
-	if (in.IsEof())
-		throw Exc("Error in file format");
+	if (in.IsEof()) 
+		return false;
 	
 	Vector<double> w, T; 	
     
