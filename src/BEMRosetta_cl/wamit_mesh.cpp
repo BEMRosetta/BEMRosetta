@@ -164,6 +164,8 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 				for (int i = 0; i < 4; ++i)
 					panel.id[i] = ids[i];
 			}
+			if (mesh.panels.size() == nPatches)
+				break;
 		}
 		//if (mesh.panels.size() != nPatches)
 		//	return t_("Wrong number of patches in .gdf file");

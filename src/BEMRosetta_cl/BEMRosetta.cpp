@@ -934,7 +934,8 @@ Eigen::VectorXd Hydro::B_dim(int idf, int jdf) const {
 		return B[idf][jdf]*(rho_dim()/rho_ndim());
 	else {
 		Eigen::VectorXd ret = B[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));
-		return ret.cwiseProduct(Eigen::Map<Eigen::VectorXd>((double *)w.begin(), w.size()));
+		Eigen::VectorXd ww = Eigen::Map<Eigen::VectorXd>((double *)w.begin(), w.size());
+		return ret.array()*ww.array();
 	}
 }
 
@@ -943,7 +944,8 @@ Eigen::VectorXd Hydro::B_ndim(int idf, int jdf) const {
 		return B[idf][jdf]*(rho_ndim()/rho_dim());
 	else {
 		Eigen::VectorXd ret = B[idf][jdf]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));
-		return ret.cwiseProduct(Eigen::Map<Eigen::VectorXd>((double *)w.begin(), w.size()).inverse());
+		Eigen::VectorXd ww = Eigen::Map<Eigen::VectorXd>((double *)w.begin(), w.size());
+		return ret.array()/ww.array();
 	}
 }
 
