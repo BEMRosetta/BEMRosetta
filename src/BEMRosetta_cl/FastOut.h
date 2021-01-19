@@ -2,6 +2,8 @@
 #define _BEMRosetta_BEMRosetta_cl_FastOut_h_
 
 
+bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt);
+	
 class FastOut {
 public:
 	FastOut();
@@ -41,6 +43,8 @@ public:
 	int size() const			{return dataOut[0].size();}			
 	bool IsEmpty() const		{return dataOut.IsEmpty();}	
 	
+	String GetLastFile()		{return lastFile;}
+	
 	int ColFairlead(int i) const{return GetCol(Format("T[%d]", i-1));}
 		
 	int GetNumFairlead() const {
@@ -59,14 +63,16 @@ public:
 		void Init0(FastOut *_dataFast) {dataFast = _dataFast;}
 		virtual void Init() = 0;
 		virtual double Calc(int idt) = 0;
+		bool IsEnabled()	{return enabled;}
 		
 	protected:
 		FastOut *dataFast = 0;
+		bool enabled = true;
 	};
 	
 	struct CalcParams {
 		String name, units;
-		CalcParam *calc;
+		CalcParam *calc = nullptr;
 	};
 	
 	void AddParam(String name, String units, CalcParam &calc) {
@@ -92,8 +98,10 @@ private:
 	
 	struct TiltParam : CalcParam {
 		virtual void Init() {
-			idroll = dataFast->GetCol("PtfmRoll");
-			idpitch = dataFast->GetCol("PtfmPitch");
+			idroll = dataFast->FindCol("PtfmRoll");
+			idpitch = dataFast->FindCol("PtfmPitch");
+			if (IsNull(idroll) || IsNull(idpitch))
+				enabled = false;
 		}
 		virtual double Calc(int idtime) {
 			double roll = dataFast->GetVal(idtime, idroll);
@@ -106,8 +114,10 @@ private:
 
 	struct ShiftParam : CalcParam {
 		virtual void Init() {
-			idsurge = dataFast->GetCol("PtfmSurge");
-			idsway = dataFast->GetCol("PtfmSway");
+			idsurge = dataFast->FindCol("PtfmSurge");
+			idsway = dataFast->FindCol("PtfmSway");
+			if (IsNull(idsurge) || IsNull(idsway))
+				enabled = false;
 		}
 		virtual double Calc(int idtime) {
 			double surge = dataFast->GetVal(idtime, idsurge);
@@ -120,41 +130,216 @@ private:
 
 	struct HeaveCBParam : CalcParam {
 		virtual void Init() {
-			idheave = dataFast->GetCol("PtfmHeave");
-			idpitch = dataFast->GetCol("PtfmPitch");
-			idroll = dataFast->GetCol("PtfmRoll");
-			idyaw = dataFast->GetCol("PtfmYaw");
+			idheave = dataFast->FindCol("PtfmHeave");
+			idpitch = dataFast->FindCol("PtfmPitch");
+			idroll = dataFast->FindCol("PtfmRoll");
+			idyaw = dataFast->FindCol("PtfmYaw");	
+			if (IsNull(idroll) || IsNull(idpitch) || IsNull(idheave) || IsNull(idyaw)) 
+				enabled = false;
+			else {
+				String folder = GetFileFolder(dataFast->GetLastFile());
+				if (!FindHydrodyn(folder, ptfmCOBxt, ptfmCOByt)) 
+					ptfmCOBxt = ptfmCOByt = Null;
+			}
 		}
 		virtual double Calc(int idtime) {
 			double heave = dataFast->GetVal(idtime, idheave);
+			if (IsNull(ptfmCOBxt))
+				return heave;
+	
 			double pitch = dataFast->GetVal(idtime, idpitch);
 			double roll = dataFast->GetVal(idtime, idroll);
 			double yaw = dataFast->GetVal(idtime, idyaw);
 			
-			return Null;//FALTA
-			
-			
+			pitch = ToRad(pitch);
+			roll = ToRad(roll);
+			yaw = ToRad(yaw);
+
+			return heave - sin(pitch)*ptfmCOBxt + cos(pitch)*sin(roll)*ptfmCOByt;
 		}	
-		int idheave = Null, idpitch = Null, idroll = Null, idyaw = Null;	
+		int idheave = Null, idpitch = Null, idroll = Null, idyaw = Null;
+		double ptfmCOBxt = Null, ptfmCOByt = Null;	
 	} ptfmHeaveCB; 
 	
-		
-	struct YawAccelParam : CalcParam {
+	struct TwrBsShearParam : CalcParam {
 		virtual void Init() {
-			idax = dataFast->GetCol("YawBrTAxp");
-			iday = dataFast->GetCol("YawBrTAyp");
-			idaz = dataFast->GetCol("YawBrTAzp");
+			idx = dataFast->FindCol("TwrBsFxt");
+			idy = dataFast->FindCol("TwrBsFyt");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
 		}
 		virtual double Calc(int idtime) {
-			double ax = dataFast->GetVal(idtime, idax);
-			double ay = dataFast->GetVal(idtime, iday);
-			double az = dataFast->GetVal(idtime, idaz);
+			double fx = dataFast->GetVal(idtime, idx);
+			double fy = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(fx*fx + fy*fy);
+		}	
+		int idx = Null, idy = Null;	
+	} twrBsShear;
+	
+	struct TwrBsBendParam : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("TwrBsMxt");
+			idy = dataFast->FindCol("TwrBsMyt");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double mx = dataFast->GetVal(idtime, idx);
+			double my = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(mx*mx + my*my);
+		}	
+		int idx = Null, idy = Null;	
+	} twrBsBend;	
+
+	struct YawBrShearParam : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("YawBrFxn");
+			idy = dataFast->FindCol("YawBrFyn");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double fx = dataFast->GetVal(idtime, idx);
+			double fy = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(fx*fx + fy*fy);
+		}	
+		int idx = Null, idy = Null;	
+	} yawBrShear;
+
+	struct YawBrBendParam : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("YawBrMxn");
+			idy = dataFast->FindCol("YawBrMyn");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double mx = dataFast->GetVal(idtime, idx);
+			double my = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(mx*mx + my*my);
+		}	
+		int idx = Null, idy = Null;	
+	} yawBrBend;
+
+	struct RootShear1Param : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("RootFxc1");
+			idy = dataFast->FindCol("RootFyc1");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double fx = dataFast->GetVal(idtime, idx);
+			double fy = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(fx*fx + fy*fy);
+		}	
+		int idx = Null, idy = Null;	
+	} rootShear1;
+
+	struct RootBend1Param : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("RootMxc1");
+			idy = dataFast->FindCol("RootMyc1");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double mx = dataFast->GetVal(idtime, idx);
+			double my = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(mx*mx + my*my);
+		}	
+		int idx = Null, idy = Null;	
+	} rootBend1;
+
+	struct RootShear2Param : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("RootFxc2");
+			idy = dataFast->FindCol("RootFyc2");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double fx = dataFast->GetVal(idtime, idx);
+			double fy = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(fx*fx + fy*fy);
+		}	
+		int idx = Null, idy = Null;	
+	} rootShear2;
+
+	struct RootBend2Param : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("RootMxc2");
+			idy = dataFast->FindCol("RootMyc2");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double mx = dataFast->GetVal(idtime, idx);
+			double my = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(mx*mx + my*my);
+		}	
+		int idx = Null, idy = Null;	
+	} rootBend2;
+	
+	struct RootShear3Param : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("RootFxc3");
+			idy = dataFast->FindCol("RootFyc3");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double fx = dataFast->GetVal(idtime, idx);
+			double fy = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(fx*fx + fy*fy);
+		}	
+		int idx = Null, idy = Null;	
+	} rootShear3;
+
+	struct RootBend3Param : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("RootMxc3");
+			idy = dataFast->FindCol("RootMyc3");
+			if (IsNull(idx) || IsNull(idy))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double mx = dataFast->GetVal(idtime, idx);
+			double my = dataFast->GetVal(idtime, idy);
+			
+			return sqrt(mx*mx + my*my);
+		}	
+		int idx = Null, idy = Null;	
+	} rootBend3;
+	
+	struct NcIMUTAParam : CalcParam {
+		virtual void Init() {
+			idx = dataFast->FindCol("NcIMUTAxs");
+			idy = dataFast->FindCol("NcIMUTAys");
+			idz = dataFast->FindCol("NcIMUTAzs");
+			if (IsNull(idx) || IsNull(idy) || IsNull(idz))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double ax = dataFast->GetVal(idtime, idx);
+			double ay = dataFast->GetVal(idtime, idy);
+			double az = dataFast->GetVal(idtime, idz);
 			
 			return sqrt(ax*ax + ay*ay + az*az);
 		}	
-		int idax = Null, iday = Null, idaz = Null;	
-	} yawaccel;
+		int idx = Null, idy = Null, idz = Null;	
+	} ncIMUTA;
+		
 };
 
-
+	
 #endif
