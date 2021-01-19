@@ -1452,6 +1452,32 @@ String FormatWam(double d) {
 	return (d >= 0 ? " " : "-") + Format("%12E", abs(d));
 }
 
+void FieldSplitWamit::LoadWamitJoinedFields(String _line) {	
+	line = _line;
+	fields.Clear();
+	Upp::Vector<String> prefields = Split(line, IsTabSpace, true);
+	for (int id = 0; id < prefields.size(); ++id) {
+		String s = prefields[id];
+		String ns;
+		for (int i = 0; i < s.GetCount(); ++i) {	
+			int c = s[i];
+			if (c == '-') {
+				if (i == 0)
+					ns.Cat(c);
+				else if (s[i-1] == 'E')
+					ns.Cat(c);
+				else {
+					fields << ns;
+					ns.Clear();
+					ns.Cat(c);
+				}
+			} else
+				ns.Cat(c);
+		}
+		fields << ns;
+	}
+}
+	
 void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("Usage: bemrosetta_cl [options] [-i infile]... [-e outfile]");
 	Cout() << "\n";

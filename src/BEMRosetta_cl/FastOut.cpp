@@ -19,8 +19,30 @@ FastOut::FastOut() {
 	AddParam("PtfmTilt", "deg", ptfmtilt);
 	ptfmshift.Init0(this);
 	AddParam("PtfmShift", "deg", ptfmshift);
-	yawaccel.Init0(this);
-	AddParam("YawBrTAp", "m/s^2", yawaccel);	
+	ptfmHeaveCB.Init0(this);
+	AddParam("PtfmHeaveCB", "deg", ptfmHeaveCB);
+	twrBsShear.Init0(this);
+	AddParam("TwrBsShear", "kN", twrBsShear);
+	twrBsBend.Init0(this);
+	AddParam("TwrBsBend", "kN-m", twrBsBend);
+	yawBrShear.Init0(this);
+	AddParam("YawBrShear", "kN", yawBrShear);
+	yawBrBend.Init0(this);
+	AddParam("YawBrBend", "kN-m", yawBrBend);	
+	rootShear1.Init0(this);
+	AddParam("RootShear1", "kN", rootShear1);
+	rootShear2.Init0(this);
+	AddParam("RootShear2", "kN", rootShear2);
+	rootShear3.Init0(this);
+	AddParam("RootShear3", "kN", rootShear3);
+	rootBend1.Init0(this);
+	AddParam("RootBend1", "kN-m", rootBend1);
+	rootBend2.Init0(this);
+	AddParam("RootBend2", "kN-m", rootBend2);
+	rootBend3.Init0(this);
+	AddParam("RootBend3", "kN-m", rootBend3);	
+	ncIMUTA.Init0(this);
+	AddParam("NcIMUTA", "m/s^2", ncIMUTA);
 }
 
 Vector<String> FastOut::GetFilesToLoad(String path) {
@@ -36,7 +58,7 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 	} 
 	int64 sz = -1;
 	String fileName;
-	for(const auto& ff : FindFile(AppendFileName(path, "*.out*"))) {
+	for(FindFile ff(AppendFileName(path, "*.out*")); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name)) {
@@ -56,7 +78,7 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 		ret << fileName;
 		return ret;
 	}
-	for(const auto& ff : FindFile(AppendFileName(path, "*.*"))) 
+	for(FindFile ff(AppendFileName(path, "*.*")); ff; ff++) 
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
 
@@ -246,12 +268,16 @@ bool FastOut::LoadOutb(String fileName) {
 
 void FastOut::AfterLoad() {
 	for (CalcParams &c : calcParams) {
-		parameters << c.name;
-		units << c.units;
-		int id = parameters.size()-1;
+		if (!c.calc)
+			throw Exc("Unexpected error in AfterLoad()");
 		c.calc->Init();
-		for (int idt = 0; idt < dataOut[id].size(); ++idt)
-			dataOut[id][idt] = c.calc->Calc(idt);
+		if (c.calc->IsEnabled()) {
+			parameters << c.name;
+			units << c.units;
+			int id = parameters.size()-1;
+			for (int idt = 0; idt < dataOut[id].size(); ++idt)
+				dataOut[id][idt] = c.calc->Calc(idt);
+		}
 	}
 }
 
@@ -358,4 +384,22 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 		}
 	}
 	return list;
+}
+
+bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
+	for (FindFile ff(AppendFileName(path, "*.dat")); ff; ++ff) {
+		if (ff.IsFile()) { 
+			String str = LoadFile(ff.GetPath());
+			String strx = GetFASTVar(str, "PtfmCOBxt", "");
+			if (!IsNull(strx)) {
+				ptfmCOBxt = ScanDouble(strx);
+				ptfmCOByt = ScanDouble(GetFASTVar(str, "PtfmCOByt", ""));
+				return true;	
+			}
+		} else if (ff.IsFolder()) { 
+			if (FindHydrodyn(ff.GetPath(), ptfmCOBxt, ptfmCOByt))
+				return true;
+		}
+	}
+	return false;
 }

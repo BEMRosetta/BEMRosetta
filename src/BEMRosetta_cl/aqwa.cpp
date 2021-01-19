@@ -1,4 +1,5 @@
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
 
 const char *textDOF[] = {"X", "Y", "Z", "RX", "RY", "RZ"};
 

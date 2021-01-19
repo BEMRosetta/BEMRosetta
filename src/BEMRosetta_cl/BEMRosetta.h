@@ -743,38 +743,12 @@ private:
 
 Upp::Vector<int> NumSets(int num, int numsets);	
 
-int IsTabSpace(int c);
-
 
 class FieldSplitWamit: public FieldSplit {
 public:
 	FieldSplitWamit(FileInLine &_in) : FieldSplit(_in) {}
 	
-	void LoadWamitJoinedFields(String _line) {		// Trick for "glued" fields in Wamit
-		line = _line;
-		fields.Clear();
-		Upp::Vector<String> prefields = Split(line, IsTabSpace, true);
-		for (int id = 0; id < prefields.size(); ++id) {
-			String s = prefields[id];
-			String ns;
-			for (int i = 0; i < s.GetCount(); ++i) {	
-				int c = s[i];
-				if (c == '-') {
-					if (i == 0)
-						ns.Cat(c);
-					else if (s[i-1] == 'E')
-						ns.Cat(c);
-					else {
-						fields << ns;
-						ns.Clear();
-						ns.Cat(c);
-					}
-				} else
-					ns.Cat(c);
-			}
-			fields << ns;
-		}
-	}
+	void LoadWamitJoinedFields(String _line);// Trick for "glued" fields in Wamit
 };
 
 String FormatWam(double d);
@@ -874,4 +848,7 @@ bool OUTB(int id, T total) {
 	return false;
 }
 
+String GetFASTVar(const String &strFile, String varName, String paragraph = "");
+void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
+	
 #endif
