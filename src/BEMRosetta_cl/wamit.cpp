@@ -1,4 +1,5 @@
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
 
 
 bool Wamit::Load(String file) {

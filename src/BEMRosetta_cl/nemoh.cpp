@@ -1,4 +1,5 @@
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
 
 
 bool Nemoh::Load(String file, double) {
@@ -12,7 +13,7 @@ bool Nemoh::Load(String file, double) {
 				throw Exc(Format(t_(".tec file '%s' should have to be in 'results' folder"), file));
 			bool found = false;
 			String upperFolder = GetUpperFolder(folder);
-			for(const auto& ff : FindFile(AppendFileName(upperFolder, "*.*"))) {
+			for(FindFile ff(AppendFileName(upperFolder, "*.*")); ff; ++ff) {
 				if (ff.IsFile()) {
 					if (ToLower(ff.GetName()) == "nemoh.cal") {
 						file = ff.GetPath();

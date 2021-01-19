@@ -450,13 +450,17 @@ void FastScatterTabs::AddTab(String filename) {
 }
 
 void FastScatterTabs::AddHistory(String filename) {
-	if (filename != t_("New Tab"))
-		history.FindAdd(filename);
+	if (filename != t_("New Tab")) {
+		int id = history.Find(filename);
+		if (id >= 0)
+			history.Remove(id);
+		history.Insert(0, filename);
+	}
 	for (int it = 0; it < tabBar.GetCount(); ++it) {
 		const Value &key = tabBar.GetKey(it);
 		if (int(key) > -1) {
 			tabScatters[it].file.ClearHistory();
-			for (int i = 0; i < history.size(); ++i)
+			for (int i = history.size()-1; i >= 0; --i)
 				tabScatters[it].file.AddHistory(history[i]);
 		}
 	}

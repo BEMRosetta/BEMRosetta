@@ -1,4 +1,6 @@
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
+
 
 String MeshData::LoadDatWamit(String fileName) {
 	FileInLine in(fileName);

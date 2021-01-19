@@ -1,5 +1,5 @@
+#include "BEMRosetta_int.h"
 #include "BEMRosetta.h"
-
 
 String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	FileInLine in(fileName);

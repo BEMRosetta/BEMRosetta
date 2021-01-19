@@ -18,28 +18,28 @@ options(MSC) -D_SCL_SECURE_NO_WARNINGS;
 file
 	main.cpp,
 	BEMRosetta.cpp,
-	Mesh.cpp,
 	BEMRosetta.h,
+	Mesh.cpp,
 	nemoh_mesh.cpp,
 	wamit_mesh.cpp,
 	nemoh.cpp,
 	wamit.cpp,
 	foamm.cpp,
 	fast.cpp,
+	hydrodyn.dat,
 	aqwa.cpp,
 	ainf.cpp,
 	FastOut.cpp,
 	FastOut.h,
 	data.brc,
-	hydrodyn.dat,
-	license.txt,
 	bemrosetta_cl.t,
 	main_cl.rc,
 	functions.cpp,
 	functions.h,
 	export.h,
 	export.brc,
-	Copying;
+	Copying,
+	license.txt;
 
 mainconfig
 	"" = "",
