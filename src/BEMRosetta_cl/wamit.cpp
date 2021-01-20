@@ -747,7 +747,9 @@ bool Wamit::Load_1(String fileName) {
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
-	hd().Nb = Nb;	
+	hd().Nb = Nb;
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);	
 	
 	int Nf = w.size();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
@@ -935,6 +937,24 @@ bool Wamit::Load_hst(String fileName) {
 		return false;
 	
 	in.SeekPos(fpos);
+	
+	int maxDof = 0;	
+	while (!in.IsEof()) {
+		f.Load(in.GetLine());
+
+		int dof = f.GetInt(0);
+		if (dof > maxDof)
+			maxDof = dof-1;
+	}
+	
+	in.SeekPos(fpos);
+	
+	int Nb = 1 + int(maxDof/6);
+	if (!IsNull(hd().Nb) && hd().Nb < Nb)
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+	hd().Nb = Nb;
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
 	
 	hd().C.SetCount(hd().Nb);
 	for(int ib = 0; ib < hd().Nb; ++ib)

@@ -28,10 +28,10 @@ double *DLL_FAST_GetData(const char *param, int *num)
 double DLL_FAST_GetAvg(const char *param) 
 
 // Open a .dat or .fst FAST file to read or save parameters
-int FAST_LoadFile(const char *file) 
+int DLL_FAST_LoadFile(const char *file) 
 // Saves the .dat or .fst FAST file opened with FAST_LoadFile()
-int FAST_SaveFile() 
+int DLL_FAST_SaveFile() 
 // Sets the value of a var after paragraph. If paragraph is "", the value is set every time var appears in the file
-int FAST_SetVar(const char *name, const char *paragraph, const char *value) 
+int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) 
 // Reads the value of a var after paragraph. If paragraph is "", it is read the first time var appears in the file
-const char *FAST_GetVar(const char *name, const char *paragraph)
+const char *DLL_FAST_GetVar(const char *name, const char *paragraph)

@@ -18,9 +18,9 @@ FastOut::FastOut() {
 	ptfmtilt.Init0(this);
 	AddParam("PtfmTilt", "deg", ptfmtilt);
 	ptfmshift.Init0(this);
-	AddParam("PtfmShift", "deg", ptfmshift);
+	AddParam("PtfmShift", "m", ptfmshift);
 	ptfmHeaveCB.Init0(this);
-	AddParam("PtfmHeaveCB", "deg", ptfmHeaveCB);
+	AddParam("PtfmHeaveCB", "m", ptfmHeaveCB);
 	twrBsShear.Init0(this);
 	AddParam("TwrBsShear", "kN", twrBsShear);
 	twrBsBend.Init0(this);

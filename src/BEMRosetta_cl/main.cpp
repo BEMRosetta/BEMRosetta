@@ -215,13 +215,13 @@ int DLL_IsNull(double val) noexcept {return IsNull(val);}
 static String fastFileStr;
 static String fastFileName;
 
-int FAST_LoadFile(const char *file) noexcept {
+int DLL_FAST_LoadFile(const char *file) noexcept {
 	fastFileStr = LoadFile(file);
 	fastFileName = file;
 	return !fastFileStr.IsEmpty();
 }
 
-int FAST_SaveFile() noexcept {
+int DLL_FAST_SaveFile() noexcept {
 	bool ret;
 	try {
 		ret = SaveFile(fastFileName, fastFileStr);
@@ -234,7 +234,7 @@ int FAST_SaveFile() noexcept {
 	return ret;	
 }
 
-int FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept {
+int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept {
 	try {
 		SetFASTVar(fastFileStr, name, value, paragraph);
 	} catch (Exc e) {
@@ -246,7 +246,7 @@ int FAST_SetVar(const char *name, const char *paragraph, const char *value) noex
 	return true;
 }
 
-const char *FAST_GetVar(const char *name, const char *paragraph) noexcept {
+const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 	static String ret;
 
 	try {
