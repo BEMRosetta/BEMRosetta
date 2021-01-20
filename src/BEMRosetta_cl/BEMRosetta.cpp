@@ -1449,6 +1449,8 @@ Upp::Vector<int> NumSets(int num, int numsets) {
 }
 
 String FormatWam(double d) {
+	if (IsNull(d))
+		return "0.0";
 	return (d >= 0 ? " " : "-") + Format("%12E", abs(d));
 }
 

@@ -28,12 +28,12 @@ extern "C" {
 	__declspec(dllexport) double DLL_FAST_GetAvg(const char *param) noexcept;
 	
 	// Open a .dat or .fst FAST file to read or save parameters
-	__declspec(dllexport) int FAST_LoadFile(const char *file) noexcept;
+	__declspec(dllexport) int DLL_FAST_LoadFile(const char *file) noexcept;
 	// Saves the .dat or .fst FAST file opened with FAST_LoadFile()
-	__declspec(dllexport) int FAST_SaveFile() noexcept;
+	__declspec(dllexport) int DLL_FAST_SaveFile() noexcept;
 	// Sets the value of a var after paragraph. If paragraph is "", the value is set every time var appears in the file
-	__declspec(dllexport) int FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept;
+	__declspec(dllexport) int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept;
 	// Reads the value of a var after paragraph. If paragraph is "", it is read the first time var appears in the file
-	__declspec(dllexport) const char *FAST_GetVar(const char *name, const char *paragraph) noexcept;
+	__declspec(dllexport) const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept;
 	
 };
