@@ -25,9 +25,9 @@ public:
 	SortedIndex<String> GetUnitList(String filter = "");
 	SortedVectorMap<String, String> GetList(String filterParam = "", String filterUnits = "");
 		
-	double GetVal(double time, int col) const;
-	inline double GetVal(int idtime, int col) const	{return dataOut[col][idtime];}
-	inline const Vector<double> &GetVal(int col)	{return dataOut[col];}
+	double GetVal(double time, int idparam) const;
+	inline double GetVal(int idtime, int idparam) const	{return dataOut[idparam][idtime];}
+	inline const Vector<double> &GetVal(int idparam)	{return dataOut[idparam];}
 	inline const Vector<double> &GetVal(String param) {
 		static Vector<double> bad;
 		Vector<int> ids = FindParameterMatch(param);

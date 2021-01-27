@@ -27,12 +27,13 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, int, 		   DLL_FAST_Load, (const char *));
 		DLLFunction(dll, const char *, DLL_FAST_GetParameterName, (int));
 		DLLFunction(dll, const char *, DLL_FAST_GetUnitName, (int));
+		DLLFunction(dll, int, 		   DLL_FAST_GetParameterId, (const char *name));
 		DLLFunction(dll, int, 		   DLL_FAST_GetParameterCount, ());
 		DLLFunction(dll, int, 		   DLL_FAST_GetLen, ());		
 		DLLFunction(dll, double,	   DLL_FAST_GetTimeInit, ());
 		DLLFunction(dll, double,	   DLL_FAST_GetTimeEnd, ());
-		DLLFunction(dll, double *, 	   DLL_FAST_GetDataId, (int, int *));		
-		DLLFunction(dll, double *, 	   DLL_FAST_GetData, (const char *, int *));
+		DLLFunction(dll, double, 	   DLL_FAST_GetTime, (int idtime));		
+		DLLFunction(dll, double, 	   DLL_FAST_GetData, (int idtime, int idparam));
 		DLLFunction(dll, double, 	   DLL_FAST_GetAvg, (const char *));
 
 		Cout() << "\nVersion: " << DLL_Version();
@@ -40,7 +41,7 @@ CONSOLE_APP_MAIN
 		String strList = DLL_strListFunctions();
 		Cout() << strList;
 		
-		strList = "// DLL function list\n\n" + strList;
+		strList = "// DLL functions list\n\n" + strList;
 		SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList);
 		
 		Cout() << "\n\nLoading FAST .out file";
@@ -54,11 +55,52 @@ CONSOLE_APP_MAIN
 		
 		Cout() << "\nSimulation begins at " << DLL_FAST_GetTimeInit() << " and ends at " << DLL_FAST_GetTimeEnd();
 		
-		int num;
-		double *data = DLL_FAST_GetData("ptfmheave", &num);
-		Cout() << "\nptfmheave has " << num << " data. ptfmheave[0] = " << data[0];
+		int idptfmheave = DLL_FAST_GetParameterId("ptfmheave");
+		double avg = 0;
+		for (int i = 0; i < DLL_FAST_GetLen(); ++i)
+			avg += DLL_FAST_GetData(i, idptfmheave);
+		Cout() << "\nptfmheave_avg = " << avg/DLL_FAST_GetLen();
 		Cout() << "\nptfmheave_avg = " << DLL_FAST_GetAvg("ptfmheave");
 	
+	
+		DLLFunction(dll, int, 	   		DLL_FAST_LoadFile, (const char *file));
+		DLLFunction(dll, int, 	   		DLL_FAST_SaveFile, (const char *file));
+		DLLFunction(dll, int, 	   		DLL_FAST_SetVar, (const char *name, const char *paragraph, const char *value));
+		DLLFunction(dll, const char *, 	DLL_FAST_GetVar, (const char *name, const char *paragraph));				
+	
+		Cout() << "\n\nLoading InflowWind .dat file";
+		String datfile = AppendFileNameX(bemFolder, "examples/fast.out/InflowWind.dat");
+		if (!DLL_FAST_LoadFile(datfile))
+			throw Exc(Format("Impossible to open file %s", outfile));	
+	
+		String str;
+		str = DLL_FAST_GetVar("WindVziList", "");				
+		Cout() << "\nWindVziList: " << str;
+		VERIFY(str == "119");
+		str = DLL_FAST_GetVar("nx", "");				
+		Cout() << "\nnx: " << str;
+		VERIFY(str == "64");
+		str = DLL_FAST_GetVar("Filename", "");				
+		Cout() << "\nFilename: " << str;
+		VERIFY(str == "\"unifWind.hh\"");
+		str = DLL_FAST_GetVar("Filename", "================== Parameters for Uniform wind file");				
+		Cout() << "\nFilename: " << str;
+		VERIFY(str == "\"unifWind.hh\"");
+		str = DLL_FAST_GetVar("Filename", "================== Parameters for Binary TurbSim");				
+		Cout() << "\nFilename: " << str;
+		VERIFY(str == "\"TurbSim.bts\"");
+		DLL_FAST_SetVar("nx", "", "23");				
+		str = DLL_FAST_GetVar("nx", "");				
+		Cout() << "\nNew nx: " << str;
+		VERIFY(str == "23");
+		DLL_FAST_SetVar("Filename", "================== Parameters for Binary TurbSim", "\"New file\"");				
+		str = DLL_FAST_GetVar("Filename", "================== Parameters for Binary TurbSim");				
+		Cout() << "\nNew Filename: " << str;
+		VERIFY(str == "\"New file\"");
+		
+#ifdef flagDEBUG	
+		DLL_FAST_SaveFile(AppendFileNameX(GetDesktopFolder(), "test.dat"));
+#endif
 	} catch (Exc err) {
 		Cout() << "\n" << Format(t_("Problem found: %s"), err);
 		SetExitCode(-1);
@@ -137,7 +179,20 @@ const char *DLL_FAST_GetUnitName(int id) noexcept {
 		return ret = "Error";
 	}
 }
-	
+
+int DLL_FAST_GetParameterId(const char *name) noexcept {
+	try {
+		Vector<int> p = DLL_Fastout().FindParameterMatch(name);
+		if (p.IsEmpty())
+			return -1;
+		else
+			return p[0];
+	} catch (...) {
+		Cout() << "Unknown error in DLL_FAST_GetParameterCount()";
+		return Null;
+	}
+}
+
 int DLL_FAST_GetParameterCount() noexcept {
 	try {
 		return DLL_Fastout().GetParameterCount();
@@ -174,30 +229,29 @@ double DLL_FAST_GetTimeEnd() noexcept {
 	}
 }
 
-double *DLL_FAST_GetDataId(int id, int *num) noexcept {
-	static Vector<double> data;
-	try {
-		data = clone(DLL_Fastout().GetVal(id));
-		*num = data.size();
-	} catch (...) {
-		data.Clear();
-		*num = 0;
-		Cout() << "Unknown error in DLL_FAST_GetDataId()";
-	}	
-	return data;	
+double DLL_FAST_GetTime(int idtime) noexcept {
+	return DLL_FAST_GetData(idtime, 0);
 }
 
-double *DLL_FAST_GetData(const char *param, int *num) noexcept {
-	static Vector<double> data;
-	try {
-		data = clone(DLL_Fastout().GetVal(param));
-		*num = data.size();
-	} catch (...) {
-		data.Clear();
-		*num = 0;
-		Cout() << "Unknown error in DLL_FAST_GetData()";
+double DLL_FAST_GetData(int idtime, int idparam) noexcept {
+	if (idtime < 0) {
+		Cout() << "DLL_FAST_GetData() idtime < 0";
+		return Null;
 	}
-	return data;
+	if (idtime >= DLL_Fastout().size()) {
+		Cout() << "DLL_FAST_GetData() idtime >= time";
+		return Null;
+	}
+	if (idparam < 0) {
+		Cout() << "DLL_FAST_GetData() idparam < 0";
+		return Null;
+	}
+	if (idparam >= DLL_Fastout().GetParameterCount()) {
+		Cout() << "DLL_FAST_GetData() idparam >= num_params";
+		return Null;
+	}
+		
+	return DLL_Fastout().GetVal(idtime, idparam);
 }
 
 double DLL_FAST_GetAvg(const char *param) noexcept {
@@ -221,10 +275,14 @@ int DLL_FAST_LoadFile(const char *file) noexcept {
 	return !fastFileStr.IsEmpty();
 }
 
-int DLL_FAST_SaveFile() noexcept {
+int DLL_FAST_SaveFile(const char *file) noexcept {
 	bool ret;
 	try {
+		String sfile(file);
+		if (!sfile.IsEmpty()) 
+			fastFileName = sfile;
 		ret = SaveFile(fastFileName, fastFileStr);
+		
 	} catch (Exc e) {
 		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
 		Cout() << "\n" << "Error: " << e;

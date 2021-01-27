@@ -777,6 +777,5 @@ Main &ma(Main *m = 0);
 BEMData &Bem();
 void Status(String str = String(), int time = 2000);
 
-const Color &GetColorId(int id);
 	
 #endif

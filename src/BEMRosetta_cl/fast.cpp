@@ -486,9 +486,9 @@ bool Fast::Load_SS(String fileName) {
 bool GetFASTVarLine(const String &strFile, String varName, String paragraph, int &posIni, int &pos, int pos0 = 0) {
 	pos = pos0;
 	if (!paragraph.IsEmpty()) {
-		pos = strFile.FindAfter(paragraph);
+		pos = strFile.FindAfter(paragraph, pos);
 		if (pos < 0) 
-			throw Exc(Format("Paragraph %s not found", paragraph));
+			return false;
 	}
 	while (true) {
 		pos = strFile.Find(varName, pos);
