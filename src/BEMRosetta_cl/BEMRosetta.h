@@ -57,8 +57,8 @@ public:
 	inline bool IsAvailableDOF(int ib, int idf) {
 		if (dof.IsEmpty())
 			return false;
-		if (dof[ib] <= idf)
-			return false;
+		//if (dof[ib] <= idf)
+		//	return false;
 		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idf, (ib+1)*idf))) || 
 			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[(ib+1)*idf][(ib+1)*idf][0]));
 	}

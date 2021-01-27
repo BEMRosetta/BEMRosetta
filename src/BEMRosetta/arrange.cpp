@@ -1,6 +1,6 @@
 #include <BEMRosetta_cl/BEMRosetta.h>
 #include "arrange.h"
-
+#include "auxiliar.h"
 
 void ArrangeDOF::Init(Hydro &hydro) {
 	CtrlLayout(*this);
@@ -19,7 +19,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	listOrig.WhenScroll = [this] {dofList.ScrollTo(listOrig.GetScroll());};
 	
 	listOrig.AddColumn(t_("DOF"), 40);
-	listOrig.AddColumn(t_("Available"), 60).With([](One<Ctrl>& x) {
+	listOrig.AddColumn(t_("Available"), 40).With([](One<Ctrl>& x) {
 			x.Create<Option>().NoWantFocus().SetReadOnly();
 		}
 	);
@@ -32,14 +32,14 @@ void ArrangeDOF::Init(Hydro &hydro) {
 			for (int i = 0; i < dofList.GetCount(); ++i) {
 				int ib, idf;
 				Hydro::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idf); 
-				order << idf + 6*ib;
+				order << (idf + 6*ib);
 			}
-			Upp::Vector<int> neworder;
+			/*Upp::Vector<int> neworder;
 			for (int i = 0; i < order.size(); ++i) {
 				int id = FindIndex(order, i);
 				neworder << id;
-			}
-			hydro.SetOrder(neworder);
+			}*/
+			hydro.SetOrder(order);
 		}
 	};
 	dofList.WhenDrag = [=] { 
@@ -58,12 +58,13 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	dofList.AddColumn(t_("Arrange DOF"));
 	
 	for (int i = 0; i < 6*hydro.Nb; ++i) 
-		listOrig.Add(i+1, hydro.IsAvailableDOF(0, i));
+		listOrig.Add(InitCaps(hydro.StrBDOF(i)), hydro.IsAvailableDOF(0, i));
 		
 	for (int i = 0; i < 6*hydro.Nb; ++i) {
 		int id = Find(hydro.GetOrder(), i);
 		dofList.Add(InitCaps(hydro.StrBDOF(id)));
 	}
+	colorMark.Color(GetColorId(hydro.GetId()));
 }
 
 bool ArrangeDOF::DnDInsert(int line, PasteClip& d) {

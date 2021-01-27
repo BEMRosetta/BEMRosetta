@@ -216,7 +216,7 @@ END_LAYOUT
 
 LAYOUT(MainArrange, 588, 200)
 	ITEM(Upp::TabCtrl, tab, HSizePosZ(0, 0).VSizePosZ(32, 0))
-	ITEM(Upp::Label, dv___1, SetLabel(t_("Default dof order is 1. surge, 2. sway, 3. heave, 4. roll, 5. pitch, 6. yaw.\nIf this is not the case in some file, just drag and drop right column dofs arranging them properly for comparison.")).HSizePosZ(4, 4).TopPosZ(0, 32))
+	ITEM(Upp::Label, dv___1, SetLabel(t_("Default DOF order is 1. surge, 2. sway, 3. heave, 4. roll, 5. pitch, 6. yaw.\nIf this is not the case in some file, just drag and drop right column DOFs arranging them properly.")).HSizePosZ(4, 4).TopPosZ(0, 32))
 END_LAYOUT
 
 LAYOUT(MainOutput, 400, 200)

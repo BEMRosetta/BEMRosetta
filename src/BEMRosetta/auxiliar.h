@@ -137,4 +137,6 @@ public:
 	Function <void()>WhenFocus;
 };
 
+const Color &GetColorId(int id);
+
 #endif
