@@ -1,6 +1,6 @@
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
-
+#include <STEM4U/Utility.h>
 
 bool Nemoh::Load(String file, double) {
 	try {

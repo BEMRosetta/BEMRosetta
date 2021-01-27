@@ -1138,9 +1138,10 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 		Nb = justLoaded.Nb;
 	else {
 		if (justLoaded.Nb > Nb) {
-			int justLoaded_Nb = justLoaded.Nb;
-			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Model has more bodies (%d) than previously loaded (%d)"), justLoaded_Nb, Nb));
+			//int justLoaded_Nb = justLoaded.Nb;	Error removed for now
+			//hydros.SetCount(hydros.size()-1);
+			//throw Exc(Format(t_("Model has more bodies (%d) than previously loaded (%d)"), justLoaded_Nb, Nb));
+			Nb = justLoaded.Nb;
 		}
 	}
 	for (int i = 0; i < justLoaded.head.size(); ++i) 
