@@ -1,11 +1,13 @@
-#include "BEMRosetta_int.h"
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
+
 
 String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
+	this->fileName = fileName;
 	SetCode(MeshData::NEMOH_DAT);
 	
 	try {
@@ -16,8 +18,8 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 		line = in.GetLine();	
 		f.Load(line);
 	
-		if (f.GetInt(0) != 2)
-			return t_("Format error in Nemoh .dat mesh file");
+		if (!f.IsInt(0) || f.GetInt(0) != 2)
+			return t_("Format error in Nemoh .dat mesh file");	// To detect Nemoh format
 		
 		if (f.GetInt(1) == 1)
 			x0z = true;
