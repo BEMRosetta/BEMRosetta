@@ -508,7 +508,7 @@ public:
 
 class MeshData {
 public:
-	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, STL_BIN, STL_TXT, EDIT, UNKNOWN};
+	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, AQWA_DAT, STL_BIN, STL_TXT, EDIT, UNKNOWN};
 	enum MESH_TYPE {MOVED, UNDERWATER};
 	
 	MeshData() {
@@ -522,6 +522,7 @@ public:
 		case WAMIT_DAT: 	return t_("Wamit.dat");
 		case NEMOH_DAT: 	return t_("Nemoh.dat");
 		case NEMOH_PRE:		return t_("Nemoh premesh.");
+		case AQWA_DAT: 		return t_("AQWA.dat");
 		case STL_BIN: 		return t_("Binary.stl");
 		case STL_TXT: 		return t_("Text.stl");
 		case EDIT: 			return t_("Edit");
@@ -537,6 +538,7 @@ public:
 	String LoadDatNemoh(String fileName, bool &x0z);
 	String LoadDatWamit(String fileName);
 	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
+	String LoadDatAQWA(String fileName);
 	
 	String Heal(bool basic, Function <void(String, int pos)> Status);
 	void Orient();

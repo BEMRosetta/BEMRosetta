@@ -8,8 +8,11 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 	bool y0z = false, x0z = false;
 	if (ext == ".dat") {
 		ret = LoadDatNemoh(file, x0z);
-		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
+		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 			ret = LoadDatWamit(file);
+			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
+				ret = LoadDatAQWA(file);
+		}
 	} else if (ext == ".gdf") 
 		ret = LoadGdfWamit(file, y0z, x0z); 
 	else if (ext == ".stl") {
