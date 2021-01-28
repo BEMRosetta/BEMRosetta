@@ -34,7 +34,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss, .12s, .12d
     * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
-	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .LIS, .AH1, .QTF
+	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
 	* [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
   * Save
     * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .12s, .12d
@@ -44,6 +44,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
   * Load-View
     * [Wamit](https://www.wamit.com/): .gdf, pan.dat
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat
+    * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
@@ -132,7 +133,7 @@ Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 ## License
 
-Copyright © 2019-2020 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez.
+Copyright © 2019-2020 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez, Thomas Kelly.
 
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>
