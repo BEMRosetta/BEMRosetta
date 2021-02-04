@@ -508,7 +508,7 @@ public:
 
 class MeshData {
 public:
-	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, AQWA_DAT, STL_BIN, STL_TXT, EDIT, UNKNOWN};
+	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, AQWA_DAT, HAMS_PNL, STL_BIN, STL_TXT, EDIT, UNKNOWN};
 	enum MESH_TYPE {MOVED, UNDERWATER};
 	
 	MeshData() {
@@ -523,6 +523,7 @@ public:
 		case NEMOH_DAT: 	return t_("Nemoh.dat");
 		case NEMOH_PRE:		return t_("Nemoh premesh.");
 		case AQWA_DAT: 		return t_("AQWA.dat");
+		case HAMS_PNL: 		return t_("HAMS.pnl");
 		case STL_BIN: 		return t_("Binary.stl");
 		case STL_TXT: 		return t_("Text.stl");
 		case EDIT: 			return t_("Edit");
@@ -539,6 +540,7 @@ public:
 	String LoadDatWamit(String fileName);
 	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
 	String LoadDatAQWA(String fileName);
+	String LoadPnlHAMS(String fileName, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, Function <void(String, int pos)> Status);
 	void Orient();
@@ -551,6 +553,7 @@ public:
 	static void SaveDatNemoh(String fileName, const Surface &surf, bool x0z);
 	static void SavePreMeshNemoh(String fileName, const Surface &surf);
 	static void SaveGdfWamit(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
+	static void SavePnlHAMS(String fileName, const Surface &surf, bool y0z, bool x0z);
 	
 	void SaveHST(String fileName, double rho, double g) const; 
 	
@@ -812,6 +815,7 @@ public:
 	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
 	void AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
 	void AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
+	void AddWaterSurface(int id, char c);
 	
 	bool LoadSerializeJson(bool &firstTime);
 	bool StoreSerializeJson();

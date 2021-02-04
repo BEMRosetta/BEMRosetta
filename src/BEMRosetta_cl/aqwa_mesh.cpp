@@ -54,10 +54,11 @@ String MeshData::LoadDatAQWA(String fileName) {
 		while(!in.IsEof()) {
 			line = in.GetLine();
 			
-			if (line.GetCount() > 5 && line[5] == '1') {
+			if (line.GetCount() > 10 && line[5] == '1') {
 				String code = line.Mid(6, 4);
 				bool diff = true;//line.Mid(11, 4) == "DIFF";
-				if (diff && code == "QPPL") {
+				
+				if (code == "QPPL" || code == "TPPL") {
 					Panel &panel = mesh.panels.Add();
 					int id;
 					id = ScanInt(line.Mid(24, 5));
@@ -72,26 +73,16 @@ String MeshData::LoadDatAQWA(String fileName) {
 					if ((id = ids.Find(id)) < 0)
 						throw Exc(in.Str() + "\n"  + t_("id 3 not found"));
 					panel.id[2] = id;
-					id = ScanInt(line.Mid(45, 5));
-					if ((id = ids.Find(id)) < 0)
-						throw Exc(in.Str() + "\n"  + t_("id 4 not found"));
-					panel.id[3] = id;
-				} else if (diff && code == "TPPL") {
-					Panel &panel = mesh.panels.Add();
-					int id;
-					id = ScanInt(line.Mid(24, 5));
-					if ((id = ids.Find(id)) < 0)
-						throw Exc(in.Str() + "\n"  + t_("id 1 not found"));
-					panel.id[0] = id;
-					id = ScanInt(line.Mid(31, 5));
-					if ((id = ids.Find(id)) < 0)
-						throw Exc(in.Str() + "\n"  + t_("id 2 not found"));
-					panel.id[1] = id;
-					id = ScanInt(line.Mid(38, 5));
-					if ((id = ids.Find(id)) < 0)
-						throw Exc(in.Str() + "\n"  + t_("id 3 not found"));
-					panel.id[2] = id;
-					panel.id[3] = panel.id[0];
+					
+					if (diff) {
+						if (code == "QPPL") {
+							id = ScanInt(line.Mid(45, 5));
+							if ((id = ids.Find(id)) < 0)
+								throw Exc(in.Str() + "\n"  + t_("id 4 not found"));
+							panel.id[3] = id;
+						} else if (code == "TPPL") 
+							panel.id[3] = panel.id[0];
+					}
 				}
 			} else if (line.StartsWith(" END")) {
 				done = true;

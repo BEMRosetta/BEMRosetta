@@ -1333,7 +1333,7 @@ void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::
 		MeshData &surf = surfs.Add();
 
 		surf.SetCode(MeshData::EDIT);
-		surf.mesh.AddPolygonalPanel(vals, size); 
+		surf.mesh.AddPolygonalPanel(vals, size, true); 
 		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
@@ -1342,6 +1342,19 @@ void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::
 	}	
 }
 
+void BEMData::AddWaterSurface(int id, char c) {
+	try {
+		MeshData &surf = surfs.Add();
+
+		surf.SetCode(MeshData::EDIT);
+		surf.mesh.AddWaterSurface(surfs[id].mesh, surfs[id].under, c); 
+		//surf.mesh.Translate(0, 0, 0);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.size() - 1);
+		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		throw std::move(e);
+	}	
+}
 			
 bool BEMData::LoadSerializeJson(bool &firstTime) {
 	bool ret;
