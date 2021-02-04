@@ -15,6 +15,8 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 		}
 	} else if (ext == ".gdf") 
 		ret = LoadGdfWamit(file, y0z, x0z); 
+	else if (ext == ".pnl") 
+		ret = LoadPnlHAMS(file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
 		try {
@@ -59,12 +61,12 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	else
 		surf = clone(mesh);
 	
-	if (symX && type == WAMIT_GDF) {
+	if (symX && (type == WAMIT_GDF || type == HAMS_PNL)) {
 		Surface nsurf;
 		nsurf.CutX(surf);
 		surf = pick(nsurf);
 	}
-	if (symY) {
+	if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == HAMS_PNL)) {
 		Surface nsurf;
 		nsurf.CutY(surf);
 		surf = pick(nsurf);
@@ -88,6 +90,8 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 			type = NEMOH_DAT;
 		else if (ext == ".")
 			type = NEMOH_PRE;
+		else if (ext == ".pnl")
+			type = HAMS_PNL;
 		else if (ext == ".stl")
 			type = STL_TXT;
 		else
@@ -100,6 +104,8 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 		SaveDatNemoh(file, surf, symY);
 	else if (type == NEMOH_PRE) 
 		SavePreMeshNemoh(file, surf);
+	else if (type == HAMS_PNL)		
+		SavePnlHAMS(file, surf, symX, symY);
 	else if (type == STL_BIN)		
 		SaveStlBin(file, surf);
 	else if (type == STL_TXT)		

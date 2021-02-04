@@ -121,6 +121,10 @@ void MainMesh::Init() {
 	menuProcess.butFullHealing <<= THISBACK1(OnHealing, false);
 	menuProcess.butOrientSurface <<= THISBACK(OnOrientSurface);
 	
+	menuProcess.butWaterFill 	<<= THISBACK1(OnAddWaterSurface, 'f');
+	menuProcess.butWaterExtract <<= THISBACK1(OnAddWaterSurface, 'e');
+	menuProcess.butWaterNon		<<= THISBACK1(OnAddWaterSurface, 'r');
+		
 	CtrlLayout(menuEdit);
 	menuEdit.edit_x <<= 0;
 	menuEdit.edit_y <<= 0;
@@ -147,7 +151,7 @@ void MainMesh::Init() {
 	menuEdit.polynomialList.SetLineCy(int(EditField::GetStdHeight()*2/3));
 	menuEdit.polynomialList.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, menuEdit.polynomialList, true, true);};
 	
-	menuEdit.butPolynomial <<= THISBACK(OnAddPolygonalPanel);
+	menuEdit.butPolynomial    <<= THISBACK(OnAddPolygonalPanel);
 		
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
@@ -157,8 +161,8 @@ void MainMesh::Init() {
 		
 	mainViewData.Init();
 	mainVAll.Horz(mainView, mainViewData);
-	mainVAll.SetPositions(6000, 9970).SetInitialPositionId(1).SetButtonNumber(1);
-	mainVAll.WhenAction = [&] {mainView.SetPaintSelect(mainVAll.GetPos() < 9950);};
+	mainVAll.SetPositions(6000, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
+	mainVAll.WhenAction = [&] {mainView.SetPaintSelect(mainVAll.GetPos() < 9900);};
 	mainTab.Add(mainVAll.SizePos(), t_("View"));
 	mainView.Init();
 	
@@ -287,7 +291,7 @@ void MainMesh::LoadSelTab(BEMData &bem) {
 void MainMesh::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
-	const String meshFiles = ".gdf .dat .stl";
+	const String meshFiles = ".gdf .dat .stl .pnl";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	menuOpen.file.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
@@ -311,13 +315,16 @@ void MainMesh::OnOpt() {
 	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, "."); 	
 			menuConvert.file.Type("Nemoh pre mesh file", "*.");
 			break;
-	case 3:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
-			menuConvert.file.Type("STL binary .stl file", "*.stl");
+	case 3:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".pnl"); 	
+			menuConvert.file.Type("HAMS .pnl file", "*.pnl");
 			break;
 	case 4:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
+			menuConvert.file.Type("STL binary .stl file", "*.stl");
+			break;
+	case 5:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
 			menuConvert.file.Type("STL text .stl file", "*.stl");
 			break;
-	default:menuConvert.file.Type("All converted files", "*.gdf *.dat *.stl");
+	default:menuConvert.file.Type("All converted files", "*.gdf *.dat *.pnl *.stl");
 			break;
 	}
 	String extConvmesh = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
@@ -327,8 +334,10 @@ void MainMesh::OnOpt() {
 		menuConvert.file.ActiveType(0);
 	else if (String(".dat").Find(extConvmesh) >= 0)
 		menuConvert.file.ActiveType(1);
-	else if (String(".stl").Find(extConvmesh) >= 0)
+	else if (String(".pnl").Find(extConvmesh) >= 0)
 		menuConvert.file.ActiveType(2);
+	else if (String(".stl").Find(extConvmesh) >= 0)
+		menuConvert.file.ActiveType(3);
 }
 
 void MainMesh::AfterAdd(String file) {
@@ -407,9 +416,10 @@ bool MainMesh::OnConvertMesh() {
 		case 0:	type = MeshData::WAMIT_GDF;	break;
 		case 1:	type = MeshData::NEMOH_DAT;	break;
 		case 2:	type = MeshData::NEMOH_PRE;	break;
-		case 3:	type = MeshData::STL_BIN;	break;
-		case 4:	type = MeshData::STL_TXT;	break;
-		case 5:	type = MeshData::UNKNOWN;	break;
+		case 3:	type = MeshData::HAMS_PNL;	break;
+		case 4:	type = MeshData::STL_BIN;	break;
+		case 5:	type = MeshData::STL_TXT;	break;
+		case 6:	type = MeshData::UNKNOWN;	break;
 		default: throw Exc(t_("Unknown type in OnConvert()"));
 		}
 		
@@ -630,7 +640,53 @@ void MainMesh::OnAddPolygonalPanel() {
 	}
 	mainView.gl.Enable();
 }
+
+void MainMesh::OnAddWaterSurface(char c) {
+	GuiLock __;
+
+	try {
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			Exclamation(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdMesh(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdMesh(listLoaded);
+			if (id < 0) {
+				Exclamation(t_("Please select a model to process"));
+				return;
+			}
+		}
+			
+		WaitCursor waitcursor;
+		mainView.gl.Disable();
 	
+		Bem().AddWaterSurface(id, c);
+		
+		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
+		if (c == 'r')
+			surf.name = t_("Water surface removed");
+		else if (c == 'f')
+			surf.name = t_("Water surface");
+		else if (c == 'e')
+			surf.name = t_("Water surface extracted");
+		surf.fileName =  "";
+		
+		surf.AfterLoad(Bem().rho, Bem().g, false);
+		
+		surf.Report(Bem().rho);
+		AddRow(surf);
+		After();
+		mainViewData.OnAddedModel(mainView);
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}
+	mainView.gl.Enable();
+}
+
 void MainMesh::OnHealing(bool basic) {
 	GuiLock __;
 	

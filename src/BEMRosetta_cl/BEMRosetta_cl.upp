@@ -20,6 +20,7 @@ file
 	BEMRosetta.cpp,
 	BEMRosetta.h,
 	Mesh.cpp,
+	hams_mesh.cpp,
 	aqwa_mesh.cpp,
 	nemoh_mesh.cpp,
 	wamit_mesh.cpp,

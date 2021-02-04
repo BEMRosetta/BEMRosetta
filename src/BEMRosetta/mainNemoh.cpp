@@ -147,7 +147,7 @@ bool MainNemoh::OnLoad() {
 			return false;
 		}
 		Load(data);	
-	} catch (Exc e) {
+	} catch (const Exc &e) {
 		Exclamation(DeQtfLf(e));
 		return false;
 	}
@@ -458,7 +458,7 @@ bool MainNemoh::OnSave(const BEMData &bem) {
 	
 	return true;
 }
-
+/*
 void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
@@ -470,8 +470,8 @@ void MainNemoh::DragAndDrop(Point , PasteClip& d) {
 			break;
 		}
 	}
-}
-
+}*/
+/*
 bool MainNemoh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
 		Upp::Vector<String> files = GetFiles(Ctrl::Clipboard());
@@ -484,3 +484,4 @@ bool MainNemoh::Key(dword key, int ) {
 	}
 	return false;
 }
+*/

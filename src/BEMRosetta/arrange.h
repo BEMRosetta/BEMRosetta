@@ -14,7 +14,7 @@ public:
 
 private:		
 	bool DnDInsert(int line, PasteClip& d);
-	bool selecting;
+	bool selecting = false;
 };
 	
 	

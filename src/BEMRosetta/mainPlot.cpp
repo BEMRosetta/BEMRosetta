@@ -19,10 +19,14 @@ void MainPlot::Init(bool vert) {
 		scatP.SetPlotAreaLeftMargin(90).SetPlotAreaRightMargin(70).SetPlotAreaBottomMargin(50)
 			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 		scatt.LinkedWith(scatP);
+		
+		compare.Init(scatt);
+		splitCompare.Horz(scatt.SizePos(), compare.SizePos());
+		splitCompare.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(15);
 		if (vert)
-			splitter.Vert(scatt.SizePos(), scatP.SizePos());
+			splitter.Vert(splitCompare.SizePos(), scatP.SizePos());
 		else
-			splitter.Horz(scatt.SizePos(), scatP.SizePos());
+			splitter.Horz(splitCompare.SizePos(), scatP.SizePos());
 		Add(splitter.SizePos());
 		scatt.ShowAllMenus();
 		scatP.ShowAllMenus();
@@ -38,6 +42,8 @@ void MainPlot::Init(int _idf, double jdf_ih, DataToShow _dataToShow) {
 	plot_jdf = int(jdf_ih);
 	heading = jdf_ih;
 	dataToShow = _dataToShow;
+	
+	compare.Init(dataToShow);
 	
 	String title, title2, labelY, labelY2;
 	switch (dataToShow) {
@@ -124,6 +130,7 @@ bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, con
 		scatP.SetXYMin(Null, -M_PI).SetRange(Null, 2*M_PI).SetMajorUnits(Null, 1);
 		scatP.SetMinUnits(Null, M_PI-3);
 	}
+	compare.Load();
 	return loaded;
 }
 

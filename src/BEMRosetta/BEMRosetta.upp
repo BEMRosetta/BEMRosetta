@@ -19,6 +19,7 @@ file
 	mainBEM_abf.cpp,
 	mainBEM_sts.cpp,
 	mainFOAMM.cpp,
+	compare.cpp,
 	mainPlot.cpp,
 	main.tpp,
 	main.iml,
