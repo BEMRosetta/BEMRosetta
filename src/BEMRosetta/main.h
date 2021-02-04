@@ -93,11 +93,23 @@ enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_K, PLOT_FORCE_SC_MA, P
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH};
 
 
+class CompareParameters : public WithCompareParameters<StaticRect> {
+public:
+	void Init(ScatterCtrl& scatter);
+	void Init(DataToShow data);
+	void Load();
+	
+private:
+	ScatterCtrl *pscatter = nullptr;
+	DataToShow dataToShow;
+};
+
+
 String ForceExtSafe(String fileName, String ext);
    
 class HydroSource : public DataSource {
 public:
-	HydroSource() : data(0) {}
+	HydroSource() {}
 	HydroSource(Hydro &_data, int i, int _j_h, DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		Init(_data, i, _j_h, _dataToPlot, _show_w, _ndim);
 	}
@@ -202,10 +214,10 @@ public:
 	}
 	
 private:
-	const Hydro *data;
-	int idf, jdf;
+	const Hydro *data = nullptr;
+	int idf = -1, jdf = -1;
 	DataToPlot dataToPlot;
-	bool show_w, ndim;
+	bool show_w = false, ndim = 0;
 };
 
 
@@ -213,7 +225,7 @@ class MenuOptions : public WithMenuOptions<StaticRect> {
 public:
 	typedef MenuOptions CLASSNAME;
 	
-	MenuOptions() : bem(0) {}
+	MenuOptions() {}
 	void Init(BEMData &bem);
 	void Load();
 	void OnSave();
@@ -230,10 +242,10 @@ public:
 	
 	void InitSerialize(bool ret, bool &openOptions);
 	
-	int showTabMesh, showTabNemoh, showTabCoeff, showTabFAST;
+	int showTabMesh = Null, showTabNemoh = Null, showTabCoeff = Null, showTabFAST = Null;
 	
 private:
-	BEMData *bem;
+	BEMData *bem = nullptr;
 };
 
 class MenuAbout : public WithMenuAbout<StaticRect> {
@@ -413,6 +425,8 @@ public:
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
+	CompareParameters compare;
+	SplitterButton splitCompare;
 
 private:
 	bool isInit = false;	
@@ -495,6 +509,7 @@ public:
 	void OnAddPanel();
 	void OnAddRevolution();
 	void OnAddPolygonalPanel();
+	void OnAddWaterSurface(char c);
 	void UpdateButtons();
 			
 	void AddRow(const MeshData &surf);
@@ -564,8 +579,8 @@ private:
 	void arrayOnRemove();
 	void InitArray();
 	
-	virtual void DragAndDrop(Point p, PasteClip& d);
-	virtual bool Key(dword key, int count);
+	//virtual void DragAndDrop(Point p, PasteClip& d);
+	//virtual bool Key(dword key, int count);
 };
 
 

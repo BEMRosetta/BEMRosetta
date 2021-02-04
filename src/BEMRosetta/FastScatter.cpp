@@ -313,7 +313,7 @@ bool FastScatter::OnLoad(bool justUpdate) {
 		} else 
 			ShowSelected();
 		
-	} catch (Exc e) {
+	} catch (const Exc &e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
 		left.scatter.Enable();
 		return false;
@@ -327,7 +327,7 @@ void FastScatter::ShowSelected() {
 	WaitCursor wait;
 	
 	left.scatter.SetLabelX(t_("Time"));
-	left.scatter.RemoveAllSeries();
+	left.scatter.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
 	Upp::Vector<int> idsx, idsy, idsFixed;
 	for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {
 		String param = Trim(leftSearch.array.Get(rw, 0));
@@ -354,7 +354,6 @@ void FastScatter::ShowSelected() {
 	if (!rightEmpty)
 		left.scatter.SetPlotAreaRightMargin(70);
 	left.scatter.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
-	left.scatter.SetSequentialXAll().SetFastViewX();
 	left.scatter.ZoomToFit(true, true);	
 	
 	SaveParams();
