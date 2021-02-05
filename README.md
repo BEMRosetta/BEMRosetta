@@ -45,9 +45,11 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Wamit](https://www.wamit.com/): .gdf, pan.dat
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
+    * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
+    * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl (hull and waterplane)
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
