@@ -92,6 +92,7 @@ void MainMesh::Init() {
 	menuProcess.mass <<= 0;
 	menuProcess.mass.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateCg  <<= THISBACK1(OnUpdate, NONE);
+	menuProcess.butUpdateCg.Tip(t_("Sets the center of gravity and mass"));
 	
 	menuProcess.t_x <<= 0;
 	menuProcess.t_x.WhenEnter = THISBACK1(OnUpdate, ROTATE);
@@ -112,18 +113,29 @@ void MainMesh::Init() {
 	menuProcess.c_z <<= 0;
 	menuProcess.c_z.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuProcess.butUpdatePos <<= THISBACK1(OnUpdate, MOVE);
+	menuProcess.butUpdatePos.Tip(t_("Translates the mesh"));
 	menuProcess.butUpdateAng <<= THISBACK1(OnUpdate, ROTATE);
+	menuProcess.butUpdateAng.Tip(t_("Rotates the mesh"));
 	menuProcess.butImageX <<= THISBACK1(OnImage, 0);
+	menuProcess.butImageX.Tip(t_("Mirrors the mesh in X axis"));
 	menuProcess.butImageY <<= THISBACK1(OnImage, 1);
+	menuProcess.butImageY.Tip(t_("Mirrors the mesh in Y axis"));
 	menuProcess.butImageZ <<= THISBACK1(OnImage, 2);
+	menuProcess.butImageZ.Tip(t_("Mirrors the mesh in Z axis"));
 	
-	menuProcess.butBasicHealing <<= THISBACK1(OnHealing, true);
+	menuProcess.butSimplify <<= THISBACK1(OnHealing, true);
+	menuProcess.butSimplify.Tip(t_("Simplify mesh removing duplicated elements"));
 	menuProcess.butFullHealing <<= THISBACK1(OnHealing, false);
+	menuProcess.butFullHealing.Tip(t_("Tries to fix problems in mesh"));
 	menuProcess.butOrientSurface <<= THISBACK(OnOrientSurface);
+	menuProcess.butOrientSurface.Tip(t_("Orient all face normals to one side. Set show normals to see the results"));
 	
 	menuProcess.butWaterFill 	<<= THISBACK1(OnAddWaterSurface, 'f');
+	menuProcess.butWaterFill.Tip(t_("Generates waterplane mesh based on how the hull crosses the waterplane"));
 	menuProcess.butWaterExtract <<= THISBACK1(OnAddWaterSurface, 'e');
+	menuProcess.butWaterExtract.Tip(t_("Gets waterplane mesh"));
 	menuProcess.butWaterNon		<<= THISBACK1(OnAddWaterSurface, 'r');
+	menuProcess.butWaterNon.Tip(t_("Gets hull mesh without waterplane"));
 		
 	CtrlLayout(menuEdit);
 	menuEdit.edit_x <<= 0;
@@ -993,9 +1005,12 @@ void MainMesh::UpdateButtons() {
 	menuProcess.butImageX.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butImageY.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butImageZ.Enable(numsel == 1 || numrow == 1);
-	menuProcess.butBasicHealing.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butSimplify.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butFullHealing.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butOrientSurface.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butWaterFill.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butWaterExtract.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butWaterNon.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainMesh::After() {
