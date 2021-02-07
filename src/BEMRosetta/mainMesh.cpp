@@ -47,30 +47,30 @@ void MainMesh::Init() {
 	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);
 	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	menuConvert.file.SelLoad(false);
-	menuConvert.butConvert.WhenAction = [&] {menuConvert.file.DoGo();};
+	menuConvert.butConvert.Tip(t_("Saves mesh file")).WhenAction = [&] {menuConvert.file.DoGo();};
 
 	menuConvert.opt.WhenAction = [&] {OnOpt();};
 
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
-	menuPlot.showMesh.WhenAction 	    = [&] {LoadSelTab(Bem());};
-	menuPlot.showNormals.WhenAction     = [&] {LoadSelTab(Bem());};
-	menuPlot.showWaterLevel.WhenAction  = [&] {LoadSelTab(Bem());};
-	menuPlot.showSkewed.WhenAction      = [&] {LoadSelTab(Bem());};
-	menuPlot.showFissure.WhenAction     = [&] {LoadSelTab(Bem());};
-	menuPlot.showMultiPan.WhenAction    = [&] {LoadSelTab(Bem());};
-	menuPlot.showAxis.WhenAction  		= [&] {mainView.gl.Refresh();};
-	menuPlot.showLimits.WhenAction 		= [&] {mainView.gl.Refresh();};
-	menuPlot.showCb.WhenAction  		= [&] {mainView.gl.Refresh();};
-	menuPlot.showCg.WhenAction  		= [&] {mainView.gl.Refresh();};
-	menuPlot.showUnderwater.WhenAction  = [&] {mainView.gl.Refresh();};
-	menuPlot.butXYZ.WhenAction  		= [&] {mainView.gl.View(true, true, true);};
-	menuPlot.butXoY.WhenAction  		= [&] {mainView.gl.View(true, true, false);};	
-	menuPlot.butYoZ.WhenAction  		= [&] {mainView.gl.View(false, true, true);};
-	menuPlot.butXoZ.WhenAction  		= [&] {mainView.gl.View(true, false, true);};
-	menuPlot.butFit.WhenAction			= [&] {mainView.gl.ZoomToFit();};
-	menuPlot.showMeshData.WhenAction	= [&] {mainVAll.SetButton(0);};
+	menuPlot.showMesh.Tip(t_("Shows all the loaded mesh")).WhenAction 	    	= [&] {LoadSelTab(Bem());};
+	menuPlot.showNormals.Tip(t_("Shows panel normals as arrows")).WhenAction 	= [&] {LoadSelTab(Bem());};
+	menuPlot.showWaterLevel.Tip(t_("Shows the cut of the mesh with the water line")).WhenAction  = [&] {LoadSelTab(Bem());};
+	menuPlot.showSkewed.Tip(t_("Shows skewed panels")).WhenAction      			= [&] {LoadSelTab(Bem());};
+	menuPlot.showFissure.Tip(t_("Shows fissures in the hull")).WhenAction     	= [&] {LoadSelTab(Bem());};
+	menuPlot.showMultiPan.Tip(t_("Shows wrong panels")).WhenAction    			= [&] {LoadSelTab(Bem());};
+	menuPlot.showAxis.Tip(t_("Shows system axis")).WhenAction  					= [&] {mainView.gl.Refresh();};
+	menuPlot.showLimits.Tip(t_("Shows boundaris of the geometry")).WhenAction 	= [&] {mainView.gl.Refresh();};
+	menuPlot.showCb.Tip(t_("Shows the center of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
+	menuPlot.showCg.Tip(t_("Shows the center of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
+	menuPlot.showUnderwater.Tip(t_("Shows nderwater mesh")).WhenAction  		= [&] {mainView.gl.Refresh();};
+	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.gl.View(true, true, true);};
+	menuPlot.butXoY.Tip(t_("Orients the camera through Z axis")).WhenAction  	= [&] {mainView.gl.View(true, true, false);};	
+	menuPlot.butYoZ.Tip(t_("Orients the camera through X axis")).WhenAction  	= [&] {mainView.gl.View(false, true, true);};
+	menuPlot.butXoZ.Tip(t_("Orients the camera through Y axis")).WhenAction  	= [&] {mainView.gl.View(true, false, true);};
+	menuPlot.butFit.Tip(t_("Zooms the camera to fit the bodies")).WhenAction	= [&] {mainView.gl.ZoomToFit();};
+	menuPlot.showMeshData.Tip(t_("Shows a list of panels and nodes")).WhenAction= [&] {mainVAll.SetButton(0);};
 	
 	styleRed = styleGreen = styleBlue = Button::StyleNormal();
 	styleRed.textcolor[0] = styleRed.textcolor[1] = styleRed.textcolor[2] = LtRed();
@@ -174,7 +174,7 @@ void MainMesh::Init() {
 	mainViewData.Init();
 	mainVAll.Horz(mainView, mainViewData);
 	mainVAll.SetPositions(6000, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
-	mainVAll.WhenAction = [&] {mainView.SetPaintSelect(mainVAll.GetPos() < 9900);};
+	mainVAll.Tip(t_("")).WhenAction = [&] {mainView.SetPaintSelect(mainVAll.GetPos() < 9900);};
 	mainTab.Add(mainVAll.SizePos(), t_("View"));
 	mainView.Init();
 	
@@ -1230,9 +1230,9 @@ void MainView::OnPaint() {
 				}
 			}
 			if (ArrayModel_IsSelected(GetMain().listLoaded, row)) { 
-				double minX = mesh.mesh.env.minX; double maxX = mesh.mesh.env.maxX;
-				double minY = mesh.mesh.env.minY; double maxY = mesh.mesh.env.maxY;
-				double minZ = mesh.mesh.env.minZ; double maxZ = mesh.mesh.env.maxZ;
+				double minX = mesh.mesh.env.minX*.99; double maxX = mesh.mesh.env.maxX*1.01;
+				double minY = mesh.mesh.env.minY*.99; double maxY = mesh.mesh.env.maxY*1.01;
+				double minZ = mesh.mesh.env.minZ*.99; double maxZ = mesh.mesh.env.maxZ*1.01;
 				
 				gl.PaintCuboid(Point3D(maxX, maxY, maxZ), Point3D(minX, minY, minZ), color);
 				gl.PaintCube(Point3D(maxX, maxY, minZ), len/10, color);
