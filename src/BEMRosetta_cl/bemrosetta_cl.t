@@ -1,6 +1,14 @@
 #ifdef _MSC_VER
 #pragma setlocale("C")
 #endif
+// main.cpp
+
+T_("Problem found: %s")
+esES("")
+euES("")
+frFR("")
+
+
 // BEMRosetta.cpp
 
 T_("surge")
@@ -314,11 +322,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Model has more bodies (%d) than previously loaded (%d)")
-esES("")
-euES("")
-frFR("")
-
 T_("Problem joining models: '%s'\n%s")
 esES("")
 euES("")
@@ -572,74 +575,6 @@ euES("")
 frFR("")
 
 
-// Mesh.cpp
-
-T_("Parsing error: ")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown MESH file extension in '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Model is empty. No panels found")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown mesh file type")
-esES("")
-euES("")
-frFR("")
-
-T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
-esES("")
-euES("")
-frFR("")
-
-T_("Water-plane area [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Surface [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Volume [m3] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater surface [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater volume [m3] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Displacement [tm] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Center of buoyancy [m] (%f, %f, %f)")
-esES("")
-euES("")
-frFR("")
-
-T_("Loaded %d panels and %d nodes")
-esES("")
-euES("")
-frFR("")
-
-
 // BEMRosetta.h
 
 T_("Wamit")
@@ -757,6 +692,16 @@ esES("")
 euES("")
 frFR("")
 
+T_("AQWA.dat")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS.pnl")
+esES("")
+euES("")
+frFR("")
+
 T_("Binary.stl")
 esES("")
 euES("")
@@ -773,12 +718,170 @@ euES("")
 frFR("")
 
 
-// nemoh_mesh.cpp
+// Mesh.cpp
+
+T_("Parsing error: ")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown MESH file extension in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Model is empty. No panels found")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown mesh file type")
+esES("")
+euES("")
+frFR("")
+
+T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
+esES("")
+euES("")
+frFR("")
+
+T_("Water-plane area [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume [m3] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater surface [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater volume [m3] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Displacement [tm] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Center of buoyancy [m] (%f, %f, %f)")
+esES("")
+euES("")
+frFR("")
+
+T_("Loaded %d panels and %d nodes")
+esES("")
+euES("")
+frFR("")
+
+
+// hams_mesh.cpp
 
 T_("Impossible to open file '%s'")
 esES("")
 euES("")
 frFR("")
+
+T_("Format error in HAMS .pnl mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Number of Panels, Nodes, X-Symmetry "
+     "and Y-Symmetry not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Start Definition of Node Coordinates "
+     "not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Points list End not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Start Definition of Node Relations "
+     "not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 1 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 2 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 3 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 4 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .pnl mesh file. Panels list End not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to open '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh contains both waterplane and hull panels. Please separate them before "
+     "saving.")
+esES("")
+euES("")
+frFR("")
+
+
+// aqwa_mesh.cpp
+
+T_("Format error in AQWA .dat mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in AQWA .dat mesh file. DECK 1 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in AQWA .dat mesh file. Points list END not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in AQWA .dat mesh file. Panels list END not found")
+esES("")
+euES("")
+frFR("")
+
+
+// nemoh_mesh.cpp
 
 T_("Format error in Nemoh .dat mesh file")
 esES("")
@@ -798,17 +901,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Wrong scale in .gdf file")
+T_("Wrong length scale in .gdf file")
 esES("")
 euES("")
 frFR("")
 
 T_("Number of patches not found in .gdf file")
-esES("")
-euES("")
-frFR("")
-
-T_("Impossible to open '%s'")
 esES("")
 euES("")
 frFR("")
@@ -1120,7 +1218,27 @@ esES("")
 euES("")
 frFR("")
 
+T_("Configuration file .cfg file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Configuration file .pot file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh file .gdf file '%s'")
+esES("")
+euES("")
+frFR("")
+
 T_("Hydrodynamic coefficients A and B .1 file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Not found or empty")
 esES("")
 euES("")
 frFR("")
@@ -1205,16 +1323,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("A matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
-T_("B matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
 T_("Index (%d, %d) out of bounds")
 esES("")
 euES("")
@@ -1226,6 +1334,16 @@ euES("")
 frFR("")
 
 T_("Index (%d) out of bounds")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to convert finite-depth wave number into frequency")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit .1 file with finite water depth wavenumber requires .pot file")
 esES("")
 euES("")
 frFR("")
@@ -1271,7 +1389,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Error in file format")
+T_("Period %f is unknown")
 esES("")
 euES("")
 frFR("")
@@ -1381,11 +1499,6 @@ euES("")
 frFR("")
 
 T_("Vector B not found")
-esES("")
-euES("")
-frFR("")
-
-T_("Vectors w and B size does not match")
 esES("")
 euES("")
 frFR("")
@@ -1729,6 +1842,36 @@ frFR("")
 
 
 // Obsolete
+
+T_("Model has more bodies (%d) than previously loaded (%d)")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong scale in .gdf file")
+esES("")
+euES("")
+frFR("")
+
+T_("A matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("B matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("Error in file format")
+esES("")
+euES("")
+frFR("")
+
+T_("Vectors w and B size does not match")
+esES("")
+euES("")
+frFR("")
 
 T_("Wrong number of patches in .gdf file")
 esES("")

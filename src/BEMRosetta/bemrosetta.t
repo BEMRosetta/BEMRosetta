@@ -212,6 +212,66 @@ esES("")
 euES("")
 frFR("")
 
+T_("Sets the center of gravity and mass")
+esES("")
+euES("")
+frFR("")
+
+T_("Translates the mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Rotates the mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Mirrors the mesh in X axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Mirrors the mesh in Y axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Mirrors the mesh in Z axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Simplify mesh removing duplicated elements")
+esES("")
+euES("")
+frFR("")
+
+T_("Tries to fix problems in mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Orient all face normals to one side. Set show normals to see the results")
+esES("")
+euES("")
+frFR("")
+
+T_("Generates waterplane mesh based on how the hull crosses the waterplane")
+esES("")
+euES("")
+frFR("")
+
+T_("Gets waterplane mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Gets hull mesh without waterplane")
+esES("")
+euES("")
+frFR("")
+
 T_("Load")
 esES("")
 euES("")
@@ -343,6 +403,21 @@ euES("")
 frFR("")
 
 T_("Polynomial")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface removed")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface extracted")
 esES("")
 euES("")
 frFR("")
@@ -859,7 +934,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). "
+T_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). "
      "Do you wish to used advised time?")
 esES("")
 euES("")
@@ -1206,6 +1281,24 @@ euES("")
 frFR("")
 
 T_("FOAMM message:&")
+esES("")
+euES("")
+frFR("")
+
+
+// compare.cpp
+
+T_("RMS")
+esES("")
+euES("")
+frFR("")
+
+T_("Ainf")
+esES("")
+euES("")
+frFR("")
+
+T_("No parameters to compare")
 esES("")
 euES("")
 frFR("")
@@ -1599,7 +1692,8 @@ esES("")
 euES("")
 frFR("")
 
-T_("Wamit .gdf\nNemoh .dat\nNemoh premesh\nSTL binary\nSTL text\nBy extension")
+T_("Wamit .gdf\nNemoh .dat\nNemoh premesh\nHAMS pnl\nSTL binary\nSTL text\n"
+     "By extension")
 esES("")
 euES("")
 frFR("")
@@ -1724,7 +1818,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("\vImage")
+T_("\vWaterplane")
 esES("")
 euES("")
 frFR("")
@@ -1735,6 +1829,21 @@ euES("")
 frFR("")
 
 T_("Rotate")
+esES("")
+euES("")
+frFR("")
+
+T_("FIll Waterp.")
+esES("")
+euES("")
+frFR("")
+
+T_("Get Hull")
+esES("")
+euES("")
+frFR("")
+
+T_("Get Waterp.")
 esES("")
 euES("")
 frFR("")
@@ -1789,22 +1898,22 @@ esES("")
 euES("")
 frFR("")
 
-T_("Basic Healing")
+T_("Simplify")
 esES("")
 euES("")
 frFR("")
 
-T_("Orient surface")
-esES("")
-euES("")
-frFR("")
-
-T_("Full Healing")
+T_("Orient facets")
 esES("")
 euES("")
 frFR("")
 
 T_("Mesh processing")
+esES("")
+euES("")
+frFR("")
+
+T_("\vMirror")
 esES("")
 euES("")
 frFR("")
@@ -1954,9 +2063,9 @@ esES("")
 euES("")
 frFR("")
 
-T_("Default dof order is 1. surge, 2. sway, 3. heave, 4. roll, 5. pitch, 6. "
+T_("Default DOF order is 1. surge, 2. sway, 3. heave, 4. roll, 5. pitch, 6. "
      "yaw.\nIf this is not the case in some file, just drag and drop right column "
-     "dofs arranging them properly for comparison.")
+     "DOFs arranging them properly.")
 esES("")
 euES("")
 frFR("")
@@ -2092,6 +2201,11 @@ euES("")
 frFR("")
 
 T_("Yeff [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Depth [m] (-1 for infinite):")
 esES("")
 euES("")
 frFR("")
@@ -2271,6 +2385,16 @@ esES("")
 euES("")
 frFR("")
 
+T_("Parameters to compare series")
+esES("")
+euES("")
+frFR("")
+
+T_("Absolute\nRelative")
+esES("")
+euES("")
+frFR("")
+
 
 // arrange.cpp
 
@@ -2287,12 +2411,12 @@ frFR("")
 
 // arrange.lay
 
-T_("Shows left DOF as...")
+T_("Rearrange DOF by drag && drop")
 esES("")
 euES("")
 frFR("")
 
-T_("Each DOF as loaded")
+T_("Original DOF order")
 esES("")
 euES("")
 frFR("")
@@ -2390,6 +2514,16 @@ esES("")
 euES("")
 frFR("")
 
+T_("File '%s' not found")
+esES("")
+euES("")
+frFR("")
+
+T_("File '%s' temporarily blocked by OpenFAST")
+esES("")
+euES("")
+frFR("")
+
 T_("Time")
 esES("")
 euES("")
@@ -2456,6 +2590,54 @@ frFR("")
 
 // Obsolete
 
+T_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). "
+     "Do you wish to used advised time?")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit .gdf\nNemoh .dat\nNemoh premesh\nSTL binary\nSTL text\nBy extension")
+esES("")
+euES("")
+frFR("")
+
+T_("\vImage")
+esES("")
+euES("")
+frFR("")
+
+T_("Basic Healing")
+esES("")
+euES("")
+frFR("")
+
+T_("Orient surface")
+esES("")
+euES("")
+frFR("")
+
+T_("Full Healing")
+esES("")
+euES("")
+frFR("")
+
+T_("Default dof order is 1. surge, 2. sway, 3. heave, 4. roll, 5. pitch, 6. "
+     "yaw.\nIf this is not the case in some file, just drag and drop right column "
+     "dofs arranging them properly for comparison.")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows left DOF as...")
+esES("")
+euES("")
+frFR("")
+
+T_("Each DOF as loaded")
+esES("")
+euES("")
+frFR("")
+
 T_("Wamit .1.3.hst.ss.12\nFAST .dat.1.3.hst.ss.12\nBEMRosetta .bem\nBy extension")
 esES("")
 euES("")
@@ -2508,16 +2690,6 @@ euES("")
 frFR("")
 
 T_("N")
-esES("")
-euES("")
-frFR("")
-
-T_("Ainf")
-esES("")
-euES("")
-frFR("")
-
-T_("Absolute\nRelative")
 esES("")
 euES("")
 frFR("")
@@ -3624,6 +3796,32 @@ euES("")
 frFR("")
 
 T_("Binary stl must not begin with 'solid' text")
+esES("")
+euES("")
+frFR("")
+
+
+// PACKAGE 'Surface' FILE 'Surface.cpp'
+
+T_("There is no water piercing in this mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("There is no submerged mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("There is no mesh in and above the water surface")
+esES("")
+euES("")
+frFR("")
+
+
+// PACKAGE 'STEM4U' FILE 'LocalFitting.h'
+
+T_("LocalFitting: Impossible to get coefficients")
 esES("")
 euES("")
 frFR("")
