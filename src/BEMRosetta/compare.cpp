@@ -23,7 +23,7 @@ void CompareParameters::Init(ScatterCtrl& scatter) {
 
 void CompareParameters::Init(DataToShow dataToShow) {
 	list.Reset();
-	list.SetLineCy(EditField::GetStdHeight());
+	list.SetLineCy(EditField::GetStdHeight()).MultiSelect();
 	list.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, list);};
 	
 	this->dataToShow = dataToShow;
