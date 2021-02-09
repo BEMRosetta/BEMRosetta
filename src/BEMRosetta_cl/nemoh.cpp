@@ -169,17 +169,27 @@ bool NemohCal::Load(String fileName) {
 	f.IsSeparator = IsTabSpace;
 	
 	in.GetLine();
-	f.Load(in.GetLine());	rho  = f.GetDouble(0);
+	f.Load(in.GetLine());	
+	rho = f.GetDouble(0);
 	if (rho < 0 || rho > 10000)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect rho %s"), f.GetText(0)));
-	f.Load(in.GetLine());	g    = f.GetDouble(0);
+	
+	f.Load(in.GetLine());	
+	g = f.GetDouble(0);
 	if (g < 0 || g > 100)
 		throw Exc(in.Str() + "\n" + Format(t_("Incorrect g %s"), f.GetText(0)));
-	f.Load(in.GetLine());	h    = f.GetDouble(0);
-	if (h < 0 || h > 100000)
-		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect depth %s"), f.GetText(0)));
-	else if (h == 0)
+	
+	f.Load(in.GetLine());	
+	String sh = ToLower(f.GetText(0));
+	if (sh == "inf")
 		h = -1;
+	else {
+		h = ScanDouble(sh);
+		if (h < 0 || h > 100000)
+			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect depth %s"), f.GetText(0)));
+		else if (h == 0)
+			h = -1;
+	}
 	f.Load(in.GetLine());	xeff = f.GetDouble(0);	yeff = f.GetDouble(1);
 	in.GetLine();
 	f.Load(in.GetLine());	int Nb = f.GetInt(0);
