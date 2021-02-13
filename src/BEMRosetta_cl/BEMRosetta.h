@@ -59,8 +59,21 @@ public:
 			return false;
 		//if (dof[ib] <= idf)
 		//	return false;
-		return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idf, (ib+1)*idf))) || 
-			   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[(ib+1)*idf][(ib+1)*idf][0]));
+		
+		int i = ib*6+idf;
+		
+		if (Awinf.size() > 0)
+			if (!IsNull(Awinf(i, i)))
+				return true;
+		
+		if (!A.IsEmpty())
+			if (A[i][i].size() > 0)
+				if (!IsNull(A[i][i][0]))
+					return true;
+		
+		return false;			   
+		//return (Awinf.size() > 0 && !IsNull(Awinf((ib+1)*idf, (ib+1)*idf))) || 
+		//	   (!A.IsEmpty() && A[0].size() > 0 && !IsNull(A[(ib+1)*idf][(ib+1)*idf][0]));
 	}
 
 	String file;        	// BEM output file name

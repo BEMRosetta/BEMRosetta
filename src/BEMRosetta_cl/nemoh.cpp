@@ -807,19 +807,20 @@ bool Nemoh::Load_Radiation(String fileName) {
 			hd().B[i][j].setConstant(hd().Nf, Null);	
 		}
 	}
-	int ibodydof = 0;
+	int ibodydof = 0, ibodydof2 = 0;
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
 		for (int idf = 0; idf < hd().dof[ibody]; ++idf) {
 			for (int ifr = 0; ifr < hd().Nf; ++ifr) {	
 				f.Load(in.GetLine());
 				for (int df = 0; df < hd().dof[ibody]; ++df) {		
-					hd().A[ibodydof][df][ifr] = f.GetDouble(1 + 2*df);
-	        		hd().B[ibodydof][df][ifr] = f.GetDouble(2 + 2*df);
+					hd().A[ibodydof][ibodydof2 + df][ifr] = f.GetDouble(1 + 2*df);
+	        		hd().B[ibodydof][ibodydof2 + df][ifr] = f.GetDouble(2 + 2*df);
 				}
 	        }
 	        ++ibodydof;
 	        in.GetLine();
 	    }
+	    ibodydof2 += hd().dof[ibody]; 
 	}
 	return true;
 }
