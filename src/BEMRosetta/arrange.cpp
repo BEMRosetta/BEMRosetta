@@ -57,9 +57,10 @@ void ArrangeDOF::Init(Hydro &hydro) {
 
 	dofList.AddColumn(t_("Arrange DOF"));
 	
-	for (int i = 0; i < 6*hydro.Nb; ++i) 
-		listOrig.Add(InitCaps(hydro.StrBDOF(i)), hydro.IsAvailableDOF(0, i));
-		
+	for (int ib = 0; ib < hydro.Nb; ++ib) {
+		for (int idf = 0; idf < 6; ++idf) 
+			listOrig.Add(InitCaps(hydro.StrBDOF(ib*6+idf)), hydro.IsAvailableDOF(ib, idf));
+	}
 	for (int i = 0; i < 6*hydro.Nb; ++i) {
 		int id = Find(hydro.GetOrder(), i);
 		dofList.Add(InitCaps(hydro.StrBDOF(id)));
