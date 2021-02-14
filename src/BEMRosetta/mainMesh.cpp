@@ -253,12 +253,12 @@ void MainMesh::OnMenuConvertArraySel() {
 	
 	String file = ~menuConvert.file;
 	String folder = GetFileFolder(file);
-	String ext = GetFileExt(file);
-	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
-	file = AppendFileName(folder, fileName + ext);
+	String ext = ToLower(GetFileExt(file));
+	//String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
+	//file = AppendFileName(folder, fileName + ext);
 	
 	menuConvert.file <<= file;
-	menuConvert.symX <<= Bem().surfs[id].IsSymmetricX();
+	menuConvert.symX <<= (ext == ".gdf" && Bem().surfs[id].IsSymmetricX());
 	menuConvert.symY <<= Bem().surfs[id].IsSymmetricY();
 	
 	UpdateButtons();
@@ -317,9 +317,11 @@ void MainMesh::OnOpt() {
 		menuOpen.file.ActiveType(1);
 	
 	menuConvert.file.ClearTypes();
+	menuConvert.symX.Disable();
 	switch (menuConvert.opt) {
 	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".gdf"); 	
 			menuConvert.file.Type("Wamit .gdf file", "*.gdf");
+			menuConvert.symX.Enable();
 			break;
 	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 	
 			menuConvert.file.Type("Nemoh .dat file", "*.dat");
