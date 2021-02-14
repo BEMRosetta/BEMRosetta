@@ -61,7 +61,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	else
 		surf = clone(mesh);
 	
-	if (symX && (type == WAMIT_GDF || type == HAMS_PNL)) {
+	if (symX && (type == WAMIT_GDF)) {
 		Surface nsurf;
 		nsurf.CutX(surf);
 		surf = pick(nsurf);
@@ -105,7 +105,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	else if (type == NEMOH_PRE) 
 		SavePreMeshNemoh(file, surf);
 	else if (type == HAMS_PNL)		
-		SavePnlHAMS(file, surf, symX, symY);
+		SavePnlHAMS(file, surf, false, symY);	// Only one symmetry really available
 	else if (type == STL_BIN)		
 		SaveStlBin(file, surf);
 	else if (type == STL_TXT)		
