@@ -139,6 +139,10 @@ void MeshData::SavePnlHAMS(String fileName, const Surface &surf, bool y0z, bool 
 	if (type == 'x')
 		throw Exc(t_("Mesh contains both waterplane and hull panels. Please separate them before saving."));
 	
+	if (y0z && x0z)
+		throw Exc(t_("HAMS only allows one symmetry at a time, either X or Y."));
+	
+	
 	const Vector<Panel> &panels = surf.panels;
 	const Vector<Point3D> &nodes = surf.nodes;
 	
@@ -147,29 +151,30 @@ void MeshData::SavePnlHAMS(String fileName, const Surface &surf, bool y0z, bool 
 	else
 		out << "    --------------Hull Mesh File---------------";
 	
-	out	<< "\n\n    # Number of Panels, Nodes, X-Symmetry and Y-Symmetry\n";
-	out << Format("         %d         %d           %d           %d\n\n", panels.size(), nodes.size(), 
+	out	<< "\n \n    # Number of Panels, Nodes, X-Symmetry and Y-Symmetry\n";
+	out << Format("       %5d       %5d       %5d       %5d\n \n", panels.size(), nodes.size(), 
 																	y0z ? 1 : 0, x0z ? 1 : 0);
-	out << "    #Start Definition of Node Coordinates     ! node_number   x   y   z\n";
+	out << "    # Start Definition of Node Coordinates     ! node_number   x   y   z\n";
 	for (int in = 0; in < nodes.size(); ++in) {
 		const Point3D &p = nodes[in]; 
-		out << Format("    %d         % .6f         % .6f          % .6f\n", in+1, p.x, p.y, p.z);
+		out << Format("%5d         % .6f         % .6f          % .6f\n", in+1, p.x, p.y, p.z);
 	}
-	out << "   #End Definition of Node Coordinates\n\n";
-	out << "   #Start Definition of Node Relations   ! panel_number number_of_vertices   Vertex1_ID   Vertex2_ID   Vertex3_ID   (Vertex4_ID)\n";
+	out << "    # End Definition of Node Coordinates\n \n";
+	out << "  # Start Definition of Node Relations   ! panel_number  number_of_vertices   Vertex1_ID   Vertex2_ID   Vertex3_ID   (Vertex4_ID\n";
 	
 	for (int ip = 0; ip < panels.size(); ++ip) {
 		const Panel &pan = panels[ip];
 		int num = pan.GetNumNodes();
-		out << Format("    %d    %d         %d         %d         %d", ip+1, num, 
+
+		out << Format("%5d    %5d         %5d         %5d         %5d", ip+1, num, 
 						pan.id[0]+1, pan.id[1]+1, pan.id[2]+1);
 		if (num == 4)
-			out << Format("         %d", pan.id[3]+1);
+			out << Format("         %5d", pan.id[3]+1);
 		out << "\n";
 	}	 
-	out << "   #End Definition of Node Relations\n\n";
+	out << "    # End Definition of Node Relations\n \n";
 	if (type == 'y')
-		out << "    --------------End Waterplane Mesh File---------------";
+		out << "    --------------End Waterplane Mesh File---------------\n";
 	else
-		out << "    --------------End Hull Mesh File---------------";
+		out << "    --------------End Hull Mesh File---------------\n";
 }
