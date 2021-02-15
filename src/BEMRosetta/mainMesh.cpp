@@ -331,6 +331,7 @@ void MainMesh::OnOpt() {
 			break;
 	case 3:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".pnl"); 	
 			menuConvert.file.Type("HAMS .pnl file", "*.pnl");
+			menuConvert.symX.Enable();
 			break;
 	case 4:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
 			menuConvert.file.Type("STL binary .stl file", "*.stl");

@@ -61,7 +61,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	else
 		surf = clone(mesh);
 	
-	if (symX && (type == WAMIT_GDF)) {
+	if (symX && (type == WAMIT_GDF || type == HAMS_PNL)) {
 		Surface nsurf;
 		nsurf.CutX(surf);
 		surf = pick(nsurf);
