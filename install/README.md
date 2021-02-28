@@ -18,6 +18,7 @@ U++ is simple to install. Uninstalling it is just a matter of deleting the insta
 In Windows, U++ binaries are precompiled and U++ comes with all dependencies needed, including [CLANG](https://clang.llvm.org/) compiler. Simply:
 * Unpack the archive
 * Start theide.exe to finish the install
+* Copy [Anboto libraries](https://github.com/anboto/Anboto) into upp folder
 * Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
 * Open a terminal, cd to the upp folder
 * Compile BEMRosetta with umk.exe. umk (U++ make) is a command line utility to build U++ programs:
@@ -35,6 +36,7 @@ In Linux, U++ has to be compiled so that the dependencies of the target distribu
 * Run the ./install script. It should detect your Linux distro and suggest the command to install the required dependencies. It will also install them, or else you can copy the command to another terminal and run it yourself.
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Install.png" width="600" title="U++ install"></p>
 
+* Copy [Anboto libraries](https://github.com/anboto/Anboto) into upp folder
 * Copy src/BEMRosetta and src/BEMRosetta_cl folders to upp/bazaar folder
 * Compile BEMRosetta with umk.exe. umk (U++ make) is a command line utility to build U++ programs:
 ```
