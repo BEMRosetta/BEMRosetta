@@ -36,8 +36,8 @@ String MeshData::LoadPnlHAMS(String fileName, bool &y0z, bool &x0z) {
 			throw Exc(t_("Format error in HAMS .dat mesh file. Number of Panels, Nodes, X-Symmetry and Y-Symmetry not found"));
 		
 		f.Load(in.GetLine());
-		int numPanels = f.GetInt(0);
-		int numNodes = f.GetInt(1);
+		//int numPanels = f.GetInt(0);
+		//int numNodes = f.GetInt(1);
 		y0z = f.GetInt(2) == 1;
 		x0z = f.GetInt(3) == 1;
 		

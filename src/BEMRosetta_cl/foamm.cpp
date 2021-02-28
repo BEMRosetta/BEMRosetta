@@ -1,6 +1,6 @@
 #include "BEMRosetta.h"
 
-#include <plugin/matio/matio.h>
+#include <Matio/matio.h>
 
 bool Foamm::Load(String file) {
 	hd().code = Hydro::FOAMM;

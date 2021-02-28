@@ -64,6 +64,7 @@ void MainMesh::Init() {
 	menuPlot.showLimits.Tip(t_("Shows boundaris of the geometry")).WhenAction 	= [&] {mainView.gl.Refresh();};
 	menuPlot.showCb.Tip(t_("Shows the center of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showCg.Tip(t_("Shows the center of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
+	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.gl.Refresh();};	
 	menuPlot.showUnderwater.Tip(t_("Shows nderwater mesh")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.gl.View(true, true, true);};
 	menuPlot.butXoY.Tip(t_("Orients the camera through Z axis")).WhenAction  	= [&] {mainView.gl.View(true, true, false);};	
@@ -285,7 +286,9 @@ void MainMesh::InitSerialize(bool ret) {
 		menuPlot.showCg = true;
 	if (!ret || IsNull(menuPlot.showCb)) 
 		menuPlot.showCb = true;
-			
+	if (!ret || IsNull(menuPlot.showSel)) 
+		menuPlot.showSel = true;	
+		
 	if (!ret || IsNull(menuConvert.opt)) 
 		menuConvert.opt = 0;
 	if (!ret || IsNull(menuConvert.optMeshType)) 
@@ -1045,6 +1048,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		menuPlot.showLimits = Null;
 		menuPlot.showCg = Null;
 		menuPlot.showCb = Null;
+		menuPlot.showSel = Null;
 		menuConvert.opt = Null;
 		menuConvert.optMeshType = Null;
 	}
@@ -1062,6 +1066,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuPlot_showLimits", menuPlot.showLimits)
 		("menuPlot_showCg", menuPlot.showCg)
 		("menuPlot_showCb", menuPlot.showCb)
+		("menuPlot_showSel", menuPlot.showSel)
 		("menuPlot_showUnderwater", menuPlot.showUnderwater)
 		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)	
 	;
@@ -1232,7 +1237,7 @@ void MainView::OnPaint() {
 					}
 				}
 			}
-			if (ArrayModel_IsSelected(GetMain().listLoaded, row)) { 
+			if (~GetMenuPlot().showSel && ArrayModel_IsSelected(GetMain().listLoaded, row)) { 
 				double minX = mesh.mesh.env.minX*.99; double maxX = mesh.mesh.env.maxX*1.01;
 				double minY = mesh.mesh.env.minY*.99; double maxY = mesh.mesh.env.maxY*1.01;
 				double minZ = mesh.mesh.env.minZ*.99; double maxZ = mesh.mesh.env.maxZ*1.01;
