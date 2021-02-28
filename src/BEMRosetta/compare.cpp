@@ -84,7 +84,7 @@ void CompareParameters::Load() {
     if (dataToShow == DATA_A) {
         col++;
         Vector<double> ainf;
-        int row = 0;
+        //int row = 0;
 		for(int i = 0; i < scatter.GetCount(); i++) {
 			String leg = scatter.GetLegend(i);
 			if (leg.StartsWith("Ainf")) 

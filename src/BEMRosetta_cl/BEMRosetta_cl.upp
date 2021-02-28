@@ -1,15 +1,12 @@
 description "Hydrodynamic coefficients converter command line utility\377";
 
-noblitz;
-
 uses
 	Core,
-	plugin\Eigen,
 	SysInfo,
-	plugin/matio,
 	plugin/zstd,
 	Surface,
-	STEM4U;
+	STEM4U,
+	Matio;
 
 options(MSC) /bigobj;
 
@@ -40,8 +37,7 @@ file
 	functions.h,
 	export.h,
 	export.brc,
-	Copying,
-	license.txt;
+	Copying;
 
 mainconfig
 	"" = "",
