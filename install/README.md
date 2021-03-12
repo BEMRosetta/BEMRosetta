@@ -59,12 +59,12 @@ In Linux, U++ has to be compiled so that the dependencies of the target distribu
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Install.png" width="600" title="U++ install"></p>
 &nbsp;&nbsp;&nbsp;&nbsp;In case of any problem the normal dependencies to install are g++, make, libgtk2.0-dev, libnotify-dev, libbz2-dev, sox, libgtkglext1-dev. To install them:
 
-&nbsp;&nbsp;&nbsp;&nbsp;if sudo is available and enabled on your distribution, copy/paste this in a terminal:
+  * if sudo is available and enabled on your distribution, copy/paste this in a terminal:
 ```
 sudo apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox libgtkglext1-dev
 ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;if sudo is not available:
+  * if sudo is not available:
 ```
 su -c 'apt-get install  g++  make  libgtk2.0-dev  libnotify-dev  libbz2-dev  sox libgtkglext1-dev'
 ```
