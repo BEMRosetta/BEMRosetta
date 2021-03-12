@@ -1,8 +1,0 @@
-LAYOUT(Arrange, 328, 216)
-	ITEM(Upp::ArrayCtrl, listOrig, LeftPosZ(0, 164).VSizePosZ(24, 0))
-	ITEM(Upp::ArrayCtrl, dofList, LeftPosZ(164, 164).VSizePosZ(24, 0))
-	ITEM(Upp::Label, dv___2, SetLabel(t_("Rearrange DOF by drag && drop")).LeftPosZ(164, 164).TopPosZ(4, 19))
-	ITEM(Upp::Label, dv___3, SetLabel(t_("Original DOF order")).LeftPosZ(16, 124).TopPosZ(4, 19))
-	ITEM(Upp::StaticRect, colorMark, LeftPosZ(0, 12).TopPosZ(4, 16))
-END_LAYOUT
-
