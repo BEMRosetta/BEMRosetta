@@ -9,7 +9,12 @@ No install is required. Just copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe a
 
 BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language. U++ makes C++ so simple and efficient that it appeals even to scripting language programmers.
 
-U++ is simple to install. Uninstalling it is just a matter of deleting the install folder. You can download it from the [U++ nightly builds](https://www.ultimatepp.org/www$uppweb$download$en-us.html), choosing the latest U++ for Windows (with CLANG) or for Linux/BSD/Solaris. You can find a repository in [Github](https://github.com/ultimatepp/ultimatepp) too.
+U++ is simple to install. Uninstalling it is just a matter of deleting the install folder. 
+1. Download it from the [U++ nightly builds](https://www.ultimatepp.org/www$uppweb$download$en-us.html), choosing the latest U++ for Windows (with CLANG) or for Linux/BSD/Solaris. It includes some additional tools and precompiled binaries.
+2. Download or clone it in the same folder from [Github](https://github.com/ultimatepp/ultimatepp) frequently to get the most updated sources.
+3. Install [Anboto libraries](https://github.com/anboto/Anboto) in the same folder as U++. A normal structure could be:
+  * U++ParentFolder/upp
+  * U++ParentFolder/Anboto
 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Download.png" width="600" title="U++ download"></p>
 
