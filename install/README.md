@@ -53,7 +53,6 @@ Put BEMRosetta binaries where you want them. No install is required.
 ### Linux POSIX 
 
 In Linux, U++ has to be compiled so that the dependencies of the target distribution are complied. However the process is quick and mostly automated for majority of popular Linux flavors. Simply:
-* Unpack the archive
 * Open a terminal and cd to the upp folder
 * Run the ./install script. It should detect your Linux distro and suggest the command to install the required dependencies. It will also install them, or else you can copy the command to another terminal and run it yourself.
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Install.png" width="600" title="U++ install"></p>
