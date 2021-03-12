@@ -5,7 +5,7 @@ class RichTextView2 : public RichTextView {
 public:
 	RichTextView2() {
 		zoomlevel = 5;
-		Background(Color(245, 245, 245));
+		//Background(AdjustIfDark(Color(245, 245, 245)));
 	}
 	virtual void Layout() {
 		RichTextView::Layout();

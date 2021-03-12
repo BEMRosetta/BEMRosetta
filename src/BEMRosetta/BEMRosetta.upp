@@ -7,8 +7,7 @@ uses
 	GLCanvas,
 	RasterPlayer,
 	TabBar,
-	BEMRosetta_cl,
-	plugin/gmock;
+	BEMRosetta_cl;
 
 file
 	main.cpp,

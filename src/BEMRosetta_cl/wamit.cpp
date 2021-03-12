@@ -77,9 +77,9 @@ bool Wamit::Load(String file) {
 		if (IsNull(hd().Nb))
 			return false;
 		
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
-		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 6;
+		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 6);
+		//for (int i = 0; i < hd().Nb; ++i)
+		//	hd().dof[i] = 6;
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
@@ -218,19 +218,19 @@ bool Wamit::Load_out() {
 				line = in.GetLine();
 				if (line.Find("Wave period (sec)") >= 0) {
 					++hd().Nf;
-					if (hd().Nh > 0 && !foundNh)
+					if (hd().head.size() > 0 && !foundNh)
 						foundNh = true;
 				} else if (!foundNh) {
-					if (hd().Nh > 0 && (line.Find("*********************") >= 0 ||
+					if (hd().head.size() > 0 && (line.Find("*********************") >= 0 ||
 								   line.Find("FORCES AND MOMENTS") >= 0)) 
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						hd().head << f.GetDouble(4);
-						++hd().Nh;
+						FindAddDelta(hd().head, f.GetDouble(4), 0.001);
 					}
 				}
 			}
+			hd().Nh = hd().head.size();
 			if (hd().Nb == 0 || hd().Nh == 0 || hd().Nf == 0)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 		
@@ -280,7 +280,7 @@ bool Wamit::Load_out() {
 					throw Exc(in.Str() + "\n" + Format(t_("Found additional frequencies over %d"), hd().Nf));
 				
 	            hd().T[ifr] = f.GetDouble(4);  			
-	            hd().w[ifr] = fround(2*M_PI/hd().T[ifr], 8);
+	            hd().w[ifr] = 2*M_PI/hd().T[ifr];//fround(2*M_PI/hd().T[ifr], 8);
 	            hd().dataFromW = false;
 	            
 	            bool nextFreq = false;
@@ -431,7 +431,7 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 	}
 }
 
-void Wamit::Save_out(String file) {
+void Wamit::Save_out(String file, double g, double rho) {
 	FileOut out(file);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), file));
@@ -461,9 +461,10 @@ void Wamit::Save_out(String file) {
 		for (int it = 0; it < hd().T.size(); ++it)
 			out << " " << Format("%9.4f", hd().T[it]) << "    00:00:00          -1      -1\n";
 		out << "\n"
- 		   	<< " Gravity:     " << hd().g
+ 		   	<< " Gravity:     " << (IsNull(hd().g) ? g : hd().g)
  		    << "                Length scale:        " << hd().len << "\n"
- 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDouble(hd().h)) << "\n"
+ 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDouble(hd().h)) << "    "
+ 			<< " Water density:      " << (IsNull(hd().rho) ? rho : hd().rho) << "\n"
  			<< " Logarithmic singularity index:              ILOG =     1\n"
  			<< " Source formulation index:                   ISOR =     0\n"
  			<< " Diffraction/scattering formulation index: ISCATT =     0\n"
@@ -475,24 +476,37 @@ void Wamit::Save_out(String file) {
 		for (int ibody = 0; ibody < hd().Nb; ++ibody) {
 			if (hd().Nb > 1)
 				out << " Body number: N= " << ibody+1 << "   ";
-			out	<< " Total panels:  1111    Waterline panels:   11      Symmetries: none\n" 
-				<< " Irregular frequency index: IRR =1\n" 
-				<< " Free surface panels:     111\n\n"
-				<< " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n"
-				<< Format(" Volumes (VOLX,VOLY,VOLZ):      %s %s %s\n", 
-						FormatWam(hd().Vo[ibody]), FormatWam(hd().Vo[ibody]), FormatWam(hd().Vo[ibody]))
-				<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
-						FormatWam(hd().cb(0, ibody)), FormatWam(hd().cb(1, ibody)), FormatWam(hd().cb(2, ibody)))
-				<< " Hydrostatic and gravitational restoring coefficients:\n" 
-				<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
-						FormatWam(hd().C[ibody](2, 2)), FormatWam(hd().C[ibody](2, 3)), FormatWam(hd().C[ibody](2, 4)))
-				<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
-						FormatWam(hd().C[ibody](3, 3)), FormatWam(hd().C[ibody](3, 4)), FormatWam(hd().C[ibody](3, 5)))
-				<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
-						FormatWam(hd().C[ibody](4, 4)), FormatWam(hd().C[ibody](4, 5)))
-				<< Format(" Center of Gravity  (Xg,Yg,Zg): %s %s %s\n", 
-						FormatWam(hd().cg(0, ibody)), FormatWam(hd().cg(1, ibody)), FormatWam(hd().cg(2, ibody)))
-				<< " Radii of gyration:     0.000000     0.000000     0.000000\n"
+			out	<< " Total panels:  1111    Waterline panels:   11      Symmetries: none\n";
+			out	<< " Irregular frequency index: IRR =1\n"; 
+			out	<< " Free surface panels:     111\n\n";
+			out	<< " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n";
+			double Vo = hd().Vo.size() > ibody ? hd().Vo[ibody] : 0;
+			out	<< Format(" Volumes (VOLX,VOLY,VOLZ):      %s %s %s\n", 
+						FormatWam(Vo), FormatWam(Vo), FormatWam(Vo));
+			double cbx = 0, cby = 0, cbz = 0;
+			if (hd().cb.size() > 0) {
+				cbx = hd().cb(0, ibody);
+				cby = hd().cb(1, ibody);
+				cbz = hd().cb(2, ibody);
+			}
+			out	<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
+						FormatWam(cbx), FormatWam(cby), FormatWam(cbz));
+			out	<< " Hydrostatic and gravitational restoring coefficients:\n"; 
+			out	<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
+						FormatWam(hd().C[ibody](2, 2)), FormatWam(hd().C[ibody](2, 3)), FormatWam(hd().C[ibody](2, 4)));
+			out	<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
+						FormatWam(hd().C[ibody](3, 3)), FormatWam(hd().C[ibody](3, 4)), FormatWam(hd().C[ibody](3, 5)));
+			out	<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
+						FormatWam(hd().C[ibody](4, 4)), FormatWam(hd().C[ibody](4, 5)));
+			double cgx = 0, cgy = 0, cgz = 0;
+			if (hd().cb.size() > 0) {
+				cgx = hd().cg(0, ibody);
+				cgy = hd().cg(1, ibody);
+				cgz = hd().cg(2, ibody);
+			}
+			out	<< Format(" Center of Gravity  (Xg,Yg,Zg): %s %s %s\n", 
+						FormatWam(cgx), FormatWam(cgy), FormatWam(cgz));
+			out	<< " Radii of gyration:     0.000000     0.000000     0.000000\n"
       			   "                        0.000000     0.000000     0.000000\n"
                    "                        0.000000     0.000000     0.000000\n\n";
 		}
@@ -507,7 +521,7 @@ void Wamit::Save_out(String file) {
 		
 		for (int ifr = 0; ifr < hd().T.size(); ++ifr) {
 			out << 	" ************************************************************************\n\n"
-					" Wave period (sec) = " << hd().T[ifr] << "\n"
+					" Wave period (sec) = " << FormatWam(hd().T[ifr]) << "\n"
 					" ------------------------------------------------------------------------\n\n\n";
 			if (hd().IsLoadedA() && hd().IsLoadedB()) 
 				Save_AB(out, ifr);
@@ -701,9 +715,9 @@ void Wamit::ProcessFirstColumn(Vector<double> &w, Vector<double> &T) {
 	}
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 		if (hd().dataFromW)
-			T[ifr] = fround(2*M_PI/w[ifr], 8);
+			T[ifr] = 2*M_PI/w[ifr];//fround(2*M_PI/w[ifr], 8);
 		else
-			w[ifr] = fround(2*M_PI/T[ifr], 8);
+			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
 	}
 }
 
@@ -1160,9 +1174,9 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 	
 	for (int ifr = 0; ifr < Nf; ++ifr) {
 		if (hd().qtfdataFromW)
-			T[ifr] = fround(2*M_PI/w[ifr], 8);
+			T[ifr] = 2*M_PI/w[ifr];//fround(2*M_PI/w[ifr], 8);
 		else
-			w[ifr] = fround(2*M_PI/T[ifr], 8);
+			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
 	}
 	
 	if (hd().qtfw.IsEmpty()) {
