@@ -3,7 +3,7 @@
 ## Binaries
 
 ### Windows
-Just copy bin/BEMRosetta.exe or bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
+No install is required. Just copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
 
 ## Compiling
 
