@@ -13,6 +13,8 @@ class BEMData;
 void ConsoleMain(const Upp::Vector<String>& command, bool gui);
 void SetBuildInfo(String &str);
 
+enum {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
+
 class Hydro {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -598,7 +600,7 @@ public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
 	void Save(String file, bool force_T = false, int qtfHeading = Null);
-	void Save_out(String file);
+	void Save_out(String file, double g, double rho);
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
@@ -672,14 +674,13 @@ private:
 
 class NemohBody : public Moveable<NemohBody> {
 public:
-	NemohBody() {surge = sway = heave = roll = pitch = yaw = false;}
-	NemohBody(const NemohBody &d) : meshFile(d.meshFile), 
-		surge(d.surge), sway(d.sway), heave(d.heave), roll(d.roll), pitch(d.pitch), yaw(d.yaw),
-		cx(d.cx), cy(d.cy), cz(d.cz), npoints(d.npoints), npanels(d.npanels) {}
+	NemohBody() {dof.SetCount(6, false);}
+	NemohBody(const NemohBody &d) : meshFile(d.meshFile), dof(clone(d.dof)), 
+			cx(d.cx), cy(d.cy), cz(d.cz), npoints(d.npoints), npanels(d.npanels) {}
 	
 	String meshFile;
 	int ndof;
-	bool surge, sway, heave, roll, pitch, yaw;
+	Vector<bool> dof;
 	double cx, cy, cz;	
 	int npoints, npanels;
 	
@@ -702,6 +703,8 @@ public:
 	double domainX, domainY;
 	int nKochin;
 	double minK, maxK;
+	
+	bool IsDof(int ib, int idf) {return bodies[ib].dof[idf];}
 	
 	bool Load(String fileName);
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
@@ -732,6 +735,7 @@ public:
 	
 private:
 	String folder;
+	NemohCal datacal;
 	
 	bool Load_Cal(String fileName);
 	bool Load_Inf(String fileName);

@@ -453,7 +453,7 @@ void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
 	}
 	if (type == WAMIT) {
 		Wamit data(*bem, this);
-		data.Save_out(file);			
+		data.Save_out(file, bem->g, bem->rho);			
 	} else if (type == WAMIT_1_3) {
 		Wamit data(*bem, this);
 		data.Save(file, true, qtfHeading);	

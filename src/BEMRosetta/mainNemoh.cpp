@@ -183,7 +183,8 @@ void MainNemoh::Load(const NemohCal &data) {
 	
 	for (int i = 0; i < data.bodies.size(); ++i) {
 		const NemohBody &b = data.bodies[i];
-		array.Add(b.meshFile, b.npoints, b.npanels, b.surge, b.sway, b.heave, b.roll, b.pitch, b.yaw, b.cx, b.cy, b.cz);
+		array.Add(b.meshFile, b.npoints, b.npanels, b.dof[SURGE], b.dof[SWAY], b.dof[HEAVE], 
+					b.dof[ROLL], b.dof[PITCH], b.dof[YAW], b.cx, b.cy, b.cz);
 	}
 	array.SetCursor(0);
 		
@@ -240,12 +241,12 @@ bool MainNemoh::Save(NemohCal &data) {
 				return false;
 			}
 		}		
-		b.surge = array.Get(i, 3);
-		b.sway = array.Get(i, 4);
-		b.heave = array.Get(i, 5);
-		b.roll = array.Get(i, 6);
-		b.pitch = array.Get(i, 7);
-		b.yaw = array.Get(i, 8);
+		b.dof[SURGE] = array.Get(i, 3);
+		b.dof[SWAY]  = array.Get(i, 4);
+		b.dof[HEAVE] = array.Get(i, 5);
+		b.dof[ROLL]  = array.Get(i, 6);
+		b.dof[PITCH] = array.Get(i, 7);
+		b.dof[YAW]   = array.Get(i, 8);
 		b.cx = array.Get(i, 9);
 		b.cy = array.Get(i, 10);
 		b.cz = array.Get(i, 11);
