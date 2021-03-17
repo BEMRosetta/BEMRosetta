@@ -20,7 +20,7 @@ file
 	mainBEM_sts.cpp,
 	mainFOAMM.cpp,
 	compare.cpp,
-	mainPlot.cpp,
+	mainPlot.cpp charset "UTF-8-BOM",
 	main.tpp,
 	main.iml,
 	main.lay,
