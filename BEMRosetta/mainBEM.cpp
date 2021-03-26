@@ -777,7 +777,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 String MainBEM::BEMFile(String fileFolder) const {
 	if (DirectoryExists(fileFolder)) {
 		int bestipos = INT_MAX;
-		for(FindFile ff(AppendFileName(fileFolder, "*.*")); ff; ff++) {
+		for (FindFile ff(AppendFileName(fileFolder, "*.*")); ff; ff++) {
 			if (ff.IsFile()) {
 				int ipos = Bem().bemFilesExt.Find(GetFileExt(ff.GetName()));
  				if (ipos >= 0 && ipos < bestipos) {
