@@ -58,7 +58,7 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 	} 
 	int64 sz = -1;
 	String fileName;
-	for(FindFile ff(AppendFileName(path, "*.out*")); ff; ff++) {
+	for (FindFile ff(AppendFileName(path, "*.out*")); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name)) {
@@ -78,7 +78,7 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 		ret << fileName;
 		return ret;
 	}
-	for(FindFile ff(AppendFileName(path, "*.*")); ff; ff++) 
+	for (FindFile ff(AppendFileName(path, "*.*")); ff; ff++) 
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
 
