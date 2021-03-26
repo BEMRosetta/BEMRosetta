@@ -13,7 +13,7 @@ bool Nemoh::Load(String file, double) {
 				throw Exc(Format(t_(".tec file '%s' should have to be in 'results' folder"), file));
 			bool found = false;
 			String upperFolder = GetUpperFolder(folder);
-			for(FindFile ff(AppendFileName(upperFolder, "*.*")); ff; ++ff) {
+			for (FindFile ff(AppendFileName(upperFolder, "*.*")); ff; ++ff) {
 				if (ff.IsFile()) {
 					if (ToLower(ff.GetName()) == "nemoh.cal") {
 						file = ff.GetPath();
@@ -122,6 +122,11 @@ bool Nemoh::Load_Cal(String fileName) {
 
 	hd().dataFromW = true;
 	
+	if (datacal.irf) {
+		hd().Tirf.resize(int(datacal.irfDuration/datacal.irfStep));
+		for (int i = 0; i < hd().Tirf.size(); ++i) 
+			hd().Tirf[i] = i*datacal.irfStep;
+	}
 	return true;
 }
 
@@ -763,28 +768,11 @@ bool Nemoh::Load_Radiation(String fileName) {
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
 	in.GetLine();
-	//Vector<int> dof;
 	while(!in.IsEof()) {
 		line = in.GetLine();
 	    if (line.Find("Motion of body") >= 0 || line.Find("dof_") >= 0)
 	        break;
-	  /*  if (line != "...") {
-			if (dof.IsEmpty())
-				dof.SetCount(hd().Nb, 0);
-			f.Load(line);
-		    int ibody = f.GetInt(1) - 1;
-		    int ndof = f.GetInt(2);
-			while (ndof > 6)
-				ndof -= 6;
-			dof[ibody] = max(dof[ibody], ndof);    
-	    }*/
-	}/*
-	if (!dof.IsEmpty()) {
-		if (hd().dof.IsEmpty())
-			hd().dof = pick(dof);
-		else if (!IsEqualRange(dof, hd().dof)) 
-			throw Exc(in.Str() + "\n"  + Format(t_("DOF does not match in '%s'"), fileName));
-	}*/
+	}
 	hd().A.SetCount(6*hd().Nb);
 	hd().B.SetCount(6*hd().Nb);
 	for (int i = 0; i < 6*hd().Nb; ++i) {
@@ -796,18 +784,22 @@ bool Nemoh::Load_Radiation(String fileName) {
 		}
 	}
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
-		for (int idf = 0; idf < 6; ++idf) {
-			if (datacal.IsDof(ibody, idf)) {
+		for (int idof = 0; idof < 6; ++idof) {
+			if (datacal.IsDof(ibody, idof)) {
 				for (int ifr = 0; ifr < hd().Nf; ++ifr) {	
 					f.Load(in.GetLine());
-					for (int df = 0; df < 6; ++df) {		
-						hd().A[ibody*6 + idf][ibody*6 + df][ifr] = f.GetDouble(1 + 2*df);
-		        		hd().B[ibody*6 + idf][ibody*6 + df][ifr] = f.GetDouble(2 + 2*df);
+					int col = 1;
+					for (int idof2 = 0; idof2 < 6; ++idof2) {			
+						if (datacal.IsDof(ibody, idof2)) {
+							hd().A[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
+		        			hd().B[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
+			        	}
 					}
-		        }
-		        in.GetLine();
-			}
-	    }
+				}
+		    	if (idof < 6)
+		    		in.GetLine();
+	    	}
+		}
 	}
 	return true;
 }
@@ -834,35 +826,11 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	in.GetLine();
 	Vector<Vector<int>> dof;
 	dof.SetCount(hd().Nb);
-	//Vector<int> ddof;
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		if (line.StartsWith("Zone") || line.StartsWith("angle"))
 	        break;
-	    /*if (line != "...") {
-	        if (ddof.IsEmpty())
-				ddof.SetCount(hd().Nb, 0);
-	        f.Load(line);
-		    int ibody = f.GetInt(1) - 1;
-		    int ndof = f.GetInt(2);
-		  	while (ndof > 6)
-				ndof -= 6;
-			dof[ibody] << ndof-1;    
-			ddof[ibody] = max(ddof[ibody], ndof);
-	    }*/
 	}
-/*	if (!ddof.IsEmpty()) {
-		if (hd().dof.IsEmpty())
-			hd().dof = pick(ddof);
-		else if (!IsEqualRange(ddof, hd().dof))
-			throw Exc(in.Str() + "\n"  + Format(t_("DOF does not match in '%s"), fileName));
-	} else {
-		for (int ib = 0; ib < hd().Nb; ++ib) {
-			dof[ib].SetCount(hd().dof[ib]);
-			for (int j = 0; j < dof[ib].size(); ++j) 
-				dof[ib][j] = j;
-		}
-	}*/
 	hd().Initialize_Forces(fc);
 	for (int ih = 0; ih < hd().Nh; ++ih) {
 		int ifr = 0;
@@ -902,19 +870,32 @@ bool Nemoh::Load_IRF(String fileName) {
 	f.IsSeparator = IsTabSpace;
 	hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 	int ibodydof = 0;
-	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
-		for (int idf = 0; idf < hd().dof[ibody]; ++idf) {
-			while(!in.IsEof()) {
-				line = in.GetLine();	
-				if (line.Find("Zone t=") >= 0) 
-					break;
+	hd().Kirf.SetCount(hd().Nb*6); 	// Initialize Kirf		
+    for (int i = 0; i < hd().Nb*6; ++i) {
+    	hd().Kirf[i].SetCount(hd().Nb*6); 			 
+   		for (int j = 0; j < hd().Nb*6; ++j)
+			hd().Kirf[i][j].setConstant(hd().Tirf.size(), Null);
+    }
+    while(!in.IsEof()) {
+		line = in.GetLine();	
+		if (line.Find("Zone t=") >= 0) 
+			break;
+	}
+	for (int ib = 0; ib < hd().Nb; ++ib) {
+		for (int ibdof = 0; ibdof < 6; ++ibdof) {
+			if (datacal.IsDof(ib, ibdof)) {
+				for (int iNt = 0; iNt < hd().Tirf.size(); ++iNt) {
+					f.Load(in.GetLine());
+					int col = 1;
+					for (int idf = 0; idf < 6; ++idf) {
+						if (datacal.IsDof(ib, idf)) {
+							hd().Awinf(ibdof, idf) = f.GetDouble(col++);
+							hd().Kirf[ib*6+ibdof][ib*6+idf][iNt] = f.GetDouble(col++);
+						}
+					}
+				}
+				in.GetLine();
 			}
-			line = in.GetLine();	
-			f.Load(line);
-			for (int df = 0; df < hd().dof[ibody]; ++df) 
-				hd().Awinf(ibodydof, df) = f.GetDouble(1 + 2*df);
-			
-			++ibodydof;
 		}
 	}
 	return true;
