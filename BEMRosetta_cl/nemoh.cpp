@@ -213,7 +213,8 @@ bool NemohCal::Load(String fileName) {
 				body.npoints = dat.mesh.GetNumNodes();
 				body.npanels = dat.mesh.GetNumPanels();
 			}
-		}
+		} else
+			throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 		
 		if (body.npoints < 1 || body.npoints > 100000000)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of points %s"), f.GetText(0)));
@@ -501,20 +502,20 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			solvName = GetFileName(bem.nemohPathNew);
 			String destNew = AppendFileName(binResults, solvName);
 			if (!FileCopy(bem.nemohPathNew, destNew)) 
-				throw Exc(Format(t_("Problem copying preprocessor file '%s'"), bem.nemohPathNew));					
+				throw Exc(Format(t_("Problem copying preprocessor file from '%s'"), bem.nemohPathNew));					
 		} else if (solver == 1) {
 			preName = GetFileName(bem.nemohPathPreprocessor);
 			String destProprocessor = AppendFileName(binResults, preName);
 			if (!FileCopy(bem.nemohPathPreprocessor, destProprocessor)) 
-				throw Exc(Format(t_("Problem copying preprocessor file '%s'"), bem.nemohPathPreprocessor));		
+				throw Exc(Format(t_("Problem copying preprocessor file from '%s'"), bem.nemohPathPreprocessor));		
 			solvName = GetFileName(bem.nemohPathSolver);
 			String destSolver = AppendFileName(binResults, solvName);
 			if (!FileCopy(bem.nemohPathSolver, destSolver)) 
-				throw Exc(Format(t_("Problem copying solver file '%s'"), bem.nemohPathSolver));		
+				throw Exc(Format(t_("Problem copying solver file from '%s'"), bem.nemohPathSolver));		
 			postName = GetFileName(bem.nemohPathPostprocessor);
 			String destPostprocessor = AppendFileName(binResults, postName);
 			if (!FileCopy(bem.nemohPathPostprocessor, destPostprocessor)) 
-				throw Exc(Format(t_("Problem copying postprocessor file '%s'"), bem.nemohPathPostprocessor));		
+				throw Exc(Format(t_("Problem copying postprocessor file from '%s'"), bem.nemohPathPostprocessor));		
 		}
 	} else {
 		preName = "preprocessor.exe";
@@ -553,7 +554,7 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			name.Replace(" ", "_");
 			String dest = AppendFileName(folderMesh, name);
 			if (!FileCopy(bodies[ib].meshFile, dest)) 
-				throw Exc(Format(t_("Problem copying mesh file '%s'"), bodies[ib].meshFile));
+				throw Exc(Format(t_("Problem copying mesh file from '%s'"), bodies[ib].meshFile));
 		}
 		Save_Cal(folder, _nf, _minf, _maxf);
 		
@@ -869,7 +870,7 @@ bool Nemoh::Load_IRF(String fileName) {
 	FieldSplit f(in);	
 	f.IsSeparator = IsTabSpace;
 	hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
-	int ibodydof = 0;
+	//int ibodydof = 0;
 	hd().Kirf.SetCount(hd().Nb*6); 	// Initialize Kirf		
     for (int i = 0; i < hd().Nb*6; ++i) {
     	hd().Kirf[i].SetCount(hd().Nb*6); 			 
