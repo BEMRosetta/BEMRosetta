@@ -340,21 +340,21 @@ void MenuOptions::OnSave() {
 }
 
 bool MenuOptions::IsChanged() {
-	if (FormatDouble(bem->g, 8) !=  FormatDouble(double(~g), 8)) 
+	if (!EqualDecimals(bem->g, ~g, 8)) 
 		return true;
-	if (FormatDouble(bem->rho, 8) !=  FormatDouble(double(~rho), 8))
+	if (!EqualDecimals(bem->rho, ~rho, 8))
 		return true;
-	if (bem->len != ~len)
+	if (!EqualDecimals(bem->len, ~len, 8))
 		return true;
-	if (bem->depth != ~depth)
+	if (!EqualDecimals(bem->depth, ~depth, 8))
 		return true;
 	if (bem->discardNegDOF != ~discardNegDOF)
 		return true;
-	if (bem->thres != ~thres) 
+	if (!EqualDecimals(bem->thres, ~thres, 8)) 
 		return true;
 	if (bem->calcAwinf != ~calcAwinf)
 		return true;
-	if (bem->maxTimeA != ~maxTimeA)
+	if (!EqualDecimals(bem->maxTimeA, ~maxTimeA, 8))
 		return true;
 	if (bem->numValsA != ~numValsA)
 		return true;
