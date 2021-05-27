@@ -1359,8 +1359,7 @@ void BEMData::AddWaterSurface(int id, char c) {
 bool BEMData::LoadSerializeJson(bool &firstTime) {
 	bool ret;
 	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		ret = false;
 	else {
 		String fileName = AppendFileName(folder, "configdata.cf");
@@ -1406,14 +1405,12 @@ bool BEMData::LoadSerializeJson(bool &firstTime) {
 bool BEMData::ClearTempFiles() {
 	String folder = GetTempFilesFolder();
 	DeleteFolderDeepWildcardsX(folder, "*.*");	Sleep(100);
-	DirectoryCreate(folder);
-	return DirectoryExists(folder);
+	return DirectoryCreateX(folder);
 }
 	
 bool BEMData::StoreSerializeJson() {
 	String folder = AppendFileName(GetAppDataFolder(), "BEMRosetta");
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		return 0;
 	String fileName = AppendFileName(folder, "configdata.cf");
 	return StoreAsJsonFile(*this, fileName, true);

@@ -13,15 +13,15 @@ double Fradiation(const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, Eigen:
 struct ParamDampedSin {
 	double z0,
 		   zDecay, 
-		   ainf,					// Added mass at infinite frequency 
+		   ainf,			// Added mass at infinite frequency 
 		   b, 
 		   gamma, 
-		   w_d, 					// Damped natural frequency
-		   w02,					// Undamped natural frequency 
-		   eta, 					// Non-dimensional damping (fraction of the critical damping)
+		   w_d, 			// Damped natural frequency
+		   w02,				// Undamped natural frequency 
+		   eta, 			// Non-dimensional damping (fraction of the critical damping)
 		   phi, 
 		   t0;
-	bool gett0;
+	bool gett0, getz0;
 	
 	ParamDampedSin() {Clear();}
 	
@@ -29,7 +29,7 @@ struct ParamDampedSin {
 		z0 = 0;
 		zDecay = ainf = gamma = w_d = 0.1;
 		b = w02 = eta = phi = Upp::Null;
-		gett0 = false;
+		gett0 = getz0 = false;
 		t0 = 0;
 	}
 };

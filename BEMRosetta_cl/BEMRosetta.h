@@ -551,6 +551,9 @@ public:
 	int GetId()	const			{return id;}
 
 	String Load(String fileName, double rho, double g, bool cleanPanels);
+	String Load(String fileName, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
+	String Load(String fileName, bool &y0z, bool &x0z);
+	String Load(String fileName);
 	String LoadDatNemoh(String fileName, bool &x0z);
 	String LoadDatWamit(String fileName);
 	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
@@ -672,30 +675,66 @@ private:
 	double WaveDirRange;
 };
 
-class NemohBody : public Moveable<NemohBody> {
+class BemBody : public Moveable<BemBody> {
 public:
-	NemohBody() {dof.SetCount(6, false);}
-	NemohBody(const NemohBody &d) : meshFile(d.meshFile), dof(clone(d.dof)), 
+	BemBody();
+	BemBody(const BemBody &d) : meshFile(d.meshFile), dof(clone(d.dof)), 
 			cx(d.cx), cy(d.cy), cz(d.cz), npoints(d.npoints), npanels(d.npanels) {}
 	
-	String meshFile;
+	String meshFile, lidFile;
 	int ndof;
 	Vector<bool> dof;
 	double cx, cy, cz;	
+	
 	int npoints, npanels;
+	
+	Eigen::Vector3d cg;
+	Eigen::MatrixXd mass, linearDamping, quadraticDamping, hydrostaticRestoring, externalRestoring;
 	
 	int GetNDOF() const;
 };
 
-class NemohCal {
-public:	
-	double rho = Null, g = Null, h = Null;
-	double xeff, yeff;
-	Upp::Vector<NemohBody> bodies;
+
+class BemCal {
+public:
+	void BeforeSave(String folderBase, int numCases, bool deleteFolder) const;
+	bool IsDof(int ib, int idf) {return bodies[ib].dof[idf];}
+	Upp::Vector<String> Check(bool oneBody);
+	
+	double h = Null;
+	
+	Upp::Vector<BemBody> bodies;
+
 	int Nf = Null;
 	double minF, maxF;
 	int Nh = Null;
 	double minH, maxH;
+	
+	enum Solver {NEMOH, NEMOHv115, CAPYTAINE, HAMS};
+};
+
+class HamsCal : public BemCal {
+public:
+	void SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem) const;
+	bool Load(String fileName);
+	
+   	Upp::Vector<String> Check();
+   	
+private:
+	void SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const;
+	static void OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat);
+	
+	void Save_Hydrostatic(String folderInput) const;
+	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
+							int numThreads) const;
+	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName) const;
+};
+
+class NemohCal : public BemCal {
+public:	
+	double rho = Null, g = Null;
+	double xeff, yeff;
+	
 	bool irf;
 	double irfStep, irfDuration;	
 	bool showPressure;
@@ -704,11 +743,10 @@ public:
 	int nKochin;
 	double minK, maxK;
 	
-	bool IsDof(int ib, int idf) {return bodies[ib].dof[idf];}
-	
 	bool Load(String fileName);
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
-	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem, int solver) const;
+	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem, 
+					int solver) const;
 	Upp::Vector<String> Check();
 	
 private:
@@ -716,11 +754,12 @@ private:
 	void LoadFreeSurface(const FileInLine &in, const FieldSplit &f);
 	void LoadKochin(const FileInLine &in, const FieldSplit &f);
 
-	void CreateId(String folder) const;
-	void CreateBat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
-	void CreateInput(String folder) const;
+	void Save_Id(String folder) const;
+	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
+	void Save_Input(String folder) const;
 	
-	void SaveFolder0(String folder, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int solver) const;
+	void SaveFolder0(String folder, bool bin, int numCases, const BEMData &bem, 
+					bool deleteFolder, int solver) const;
 };
 
 class Nemoh : public HydroClass {
@@ -813,6 +852,7 @@ public:
 	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathGREN;
 	bool experimental;
 	String foammPath;
+	String hamsPath;
 	
 	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
 	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
@@ -860,6 +900,7 @@ public:
 			("nemohPathGREN", nemohPathGREN)
 			("nemohPathNew", nemohPathNew)
 			("foammPath", foammPath)
+			("hamsPath", hamsPath)
 		;
 	}
 };
@@ -873,5 +914,44 @@ bool OUTB(int id, T total) {
 
 String GetFASTVar(const String &strFile, String varName, String paragraph = "");
 void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
+	
+	
+class Mooring : public DeepCopyOption<Mooring> {
+public:
+	Mooring() {}
+	Mooring(const Mooring &mooring, int) {
+		lineTypes = clone(mooring.lineTypes);
+		lineProperties = clone(mooring.lineProperties);
+		connections = clone(mooring.connections);
+	}
+	
+	bool Load(String file);
+	bool Save(String file);
+	String Test();
+	void Jsonize(JsonIO &json);
+	
+	struct LineType : Moveable<LineType> {
+		String name;
+		double mass, diameter;
+		void Jsonize(JsonIO &json);
+	};
+	Vector<LineType> lineTypes;
+	
+	struct LineProperty : Moveable<LineProperty> {
+		String name, nameType;
+		double length;
+		String from, to;
+		void Jsonize(JsonIO &json);
+	};
+	Vector<LineProperty> lineProperties;	
+
+	struct Connection : Moveable<Connection> {
+		String name;
+		bool vessel;
+		double x, y, z;
+		void Jsonize(JsonIO &json);
+	};
+	Vector<Connection> connections;	
+};
 	
 #endif

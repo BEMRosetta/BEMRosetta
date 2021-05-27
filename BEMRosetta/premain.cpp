@@ -1,5 +1,6 @@
 #include <BEMRosetta_cl/BEMRosetta.h>
-#include "arrange.h"
+#include <GridCtrl/GridCtrl.h>
+#include "premain.h"
 #include "auxiliar.h"
 
 void ArrangeDOF::Init(Hydro &hydro) {

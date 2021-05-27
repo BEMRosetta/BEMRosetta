@@ -5,7 +5,7 @@
 
 using namespace Upp;
 
-#define LAYOUTFILE <BEMRosetta/arrange.lay>
+#define LAYOUTFILE <BEMRosetta/premain.lay>
 #include <CtrlCore/lay.h>
 
 class ArrangeDOF : public WithArrange<StaticRect> {
@@ -16,6 +16,7 @@ private:
 	bool DnDInsert(int line, PasteClip& d);
 	bool selecting = false;
 };
-	
-	
+
+
+
 #endif

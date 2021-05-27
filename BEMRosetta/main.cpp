@@ -41,7 +41,8 @@ void Main::Init() {
 	
 	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
-	tabTexts << t_("Mesh Handling") << t_("Nemoh") << t_("Hydrodynamic Coefficients") << t_("FAST .out Reader");
+	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
+			 << t_("Mooring") << t_("FAST .out Reader");
 		
 	bool firstTime = false, openOptions = false;
 	if (!bem.LoadSerializeJson(firstTime)) 
@@ -65,15 +66,22 @@ void Main::Init() {
 		tab.Add(mainMesh.SizePos(), tabTexts[TAB_MESH]);
 	}
 	if (menuOptions.showTabNemoh) {
-		mainNemoh.Init(bem);		LOG("Init Nemoh");
-		tab.Add(mainNemohScroll.AddPaneV(mainNemoh).SizePos(), tabTexts[TAB_NEMOH]);
+		mainSolver.Init(bem);		LOG("Init Nemoh");
+		//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
+		tab.Add(mainSolver.SizePos(), tabTexts[TAB_NEMOH]);
 	}
 	if (menuOptions.showTabCoeff) {
 		mainBEM.Init();				LOG("Init BEM");
 		tab.Add(mainBEM.SizePos(),  tabTexts[TAB_COEFF]);
 	}
-	if (menuOptions.showTabFAST) {
+	if (menuOptions.showTabMoor) {
 		tab.Add().Disable();
+		mainMoor.Init();	LOG("Init Moor");
+		//tab.Add(mainMoor.SizePos(), tabTexts[TAB_MOOR]);////////////////////////
+	}
+	if (menuOptions.showTabFAST) {
+		if (!menuOptions.showTabMoor)	
+			tab.Add().Disable();
 		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
 		tab.Add(mainFAST.SizePos(), tabTexts[TAB_FAST]);
 	}
@@ -122,8 +130,8 @@ void Main::Init() {
 		LOGTAB(tab);
 		if (tab.IsAt(menuOptionsScroll)) 
 			menuOptions.Load();
-		else if (tab.IsAt(mainNemohScroll)) 
-			mainNemoh.Load(bem);
+		else if (tab.IsAt(mainSolver))			// mainNemohScroll)) 
+			mainSolver.Load(bem);
 		if (!tab.IsAt(menuOptionsScroll) && menuOptions.IsChanged()) {
 			if (PromptYesNo(t_("Options have changed&Do you want to save them?")))
 				menuOptions.OnSave();
@@ -141,7 +149,10 @@ void Main::Init() {
 		} else if (tab.IsAt(mainBEM)) {
 			butWindow.Show(true);
 			lastTab = ~tab;
-		} else 	if (tab.IsAt(mainNemohScroll)) {
+		} else 	if (tab.IsAt(mainSolver)) {		//	mainNemohScroll)) {
+			butWindow.Show(false);
+			lastTab = ~tab;
+		} else 	if (tab.IsAt(mainMoor)) {
 			butWindow.Show(false);
 			lastTab = ~tab;
 		} else 	if (tab.IsAt(mainFAST)) {
@@ -185,8 +196,7 @@ void Main::OptionsUpdated(double rho, double g) {
 bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	bool ret;
 	String folder = GetBEMRosettaDataFolder();
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		ret = false;
 	else {
 		String fileName = AppendFileName(folder, "config.cf");
@@ -206,7 +216,7 @@ bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	}
 	
 	mainMesh.InitSerialize(ret);
-	mainNemoh.InitSerialize(ret);
+	mainSolver.InitSerialize(ret);
 	mainBEM.InitSerialize(ret);
 	menuOptions.InitSerialize(ret, openOptions);
 	
@@ -220,8 +230,7 @@ bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 
 bool Main::StoreSerializeJson() {
 	String folder = GetBEMRosettaDataFolder();
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		return 0;
 	String fileName = AppendFileName(folder, "config.cf");
 	return StoreAsJsonFile(*this, fileName, true);
@@ -253,8 +262,9 @@ void Main::CloseMain(bool store) {
 void Main::Jsonize(JsonIO &json) {
 	json
 		("mesh", mainMesh)
-		("nemoh", mainNemoh)
+		("nemoh", mainSolver)
 		("bem", mainBEM)
+		("mooring", mainMoor)
 		("menuOptions", menuOptions)
 		("lastTab", lastTab)
 	;
@@ -271,6 +281,7 @@ void MenuOptions::Init(BEMData &_bem) {
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_NEMOH, 0, false).SetLabel(ma().tabTexts[Main::TAB_NEMOH]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_COEFF, 0, false).SetLabel(ma().tabTexts[Main::TAB_COEFF]);
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MOOR,  0, false).SetLabel(ma().tabTexts[Main::TAB_MOOR]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_FAST,  0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);
 }
 
@@ -281,9 +292,11 @@ void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
 		showTabNemoh = true;
 	if (!ret || IsNull(showTabCoeff)) 
 		showTabCoeff = true;
+	if (!ret || IsNull(showTabMoor)) 
+		showTabMoor = true;
 	if (!ret || IsNull(showTabFAST)) 
 		showTabFAST = true;
-	if (!showTabMesh && !showTabNemoh && !showTabCoeff && !showTabFAST) {
+	if (!showTabMesh && !showTabNemoh && !showTabCoeff && !showTabFAST && !showTabMoor) {
 		openOptions = true;
 		Exclamation(t_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs shown']"));
 	}
@@ -306,10 +319,12 @@ void MenuOptions::Load() {
 	nemohPathNew <<= bem->nemohPathNew;
 	nemohPathGREN <<= bem->nemohPathGREN;
 	foammPath <<= bem->foammPath;
+	hamsPath <<= bem->hamsPath;
 	
 	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
 	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
 	arrayShown.GetCtrl(Main::TAB_COEFF, 0)->SetData(showTabCoeff);
+	arrayShown.GetCtrl(Main::TAB_MOOR,  0)->SetData(showTabMoor);
 	arrayShown.GetCtrl(Main::TAB_FAST,  0)->SetData(showTabFAST);
 }
 
@@ -330,10 +345,12 @@ void MenuOptions::OnSave() {
 	bem->nemohPathNew = ~nemohPathNew;
 	bem->nemohPathGREN = ~nemohPathGREN;
 	bem->foammPath = ~foammPath;
+	bem->hamsPath = ~hamsPath;
 	
 	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
 	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
-	showTabCoeff = arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData();		
+	showTabCoeff = arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData();
+	showTabMoor  = arrayShown.GetCtrl(Main::TAB_MOOR,  0)->GetData();
 	showTabFAST  = arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData();
 	
 	ma().OptionsUpdated(rho, g);
@@ -372,12 +389,16 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->foammPath != ~foammPath)
 		return true;
+	if (bem->hamsPath != ~hamsPath)
+		return true;
 	
 	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())
 		return true;
 	if (showTabNemoh != arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData())
 		return true;
 	if (showTabCoeff != arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData())
+		return true;
+	if (showTabMoor  != arrayShown.GetCtrl(Main::TAB_MOOR,  0)->GetData())
 		return true;
 	if (showTabFAST  != arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData())
 		return true;

@@ -200,7 +200,7 @@ bool NemohCal::Load(String fileName) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of bodies %s"), f.GetText(0)));
 	bodies.SetCount(Nb);
 	for (int ib = 0; ib < Nb; ++ib) {
-		NemohBody &body = bodies[ib];
+		BemBody &body = bodies[ib];
 		in.GetLine();
 		f.Load(in.GetLine());	body.meshFile = f.GetText(0);
 		f.Load(in.GetLine());	body.npoints = f.GetInt(0);		body.npanels = f.GetInt(1);
@@ -336,13 +336,9 @@ String FormatIntEmpty(int val) {
 		return FormatInt(val);
 }
 
-Vector<String> NemohCal::Check() {
+Vector<String> BemCal::Check(bool oneBody) {
 	Vector<String> ret;
 	
-	if (IsNull(rho) || rho < 0 || rho > 10000)
-		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(rho));
-	if (IsNull(g) || g < 0 || g > 100)
-		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(g));
 	if (IsNull(h) || h < -1 || h > 100000)
 		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(h));
 
@@ -361,7 +357,25 @@ Vector<String> NemohCal::Check() {
 		ret << Format(t_("Incorrect max heading %s"), FormatDoubleEmpty(maxH));
 	if (maxH < minH)
 		ret << Format(t_("Minimum heading %s has to be lower than maximum heading %s"), FormatDoubleEmpty(minH), FormatDoubleEmpty(maxH));	
+
+	if(bodies.size() < 1)
+		ret << t_("The case has to include at least one body");
+	if (oneBody && bodies.size() > 1)
+		ret << t_("This solver just processes one body");
 	
+	return ret;
+}
+	
+Vector<String> NemohCal::Check() {
+	Vector<String> ret;
+	
+	ret.Append(BemCal::Check(false));
+	
+	if (IsNull(rho) || rho < 0 || rho > 10000)
+		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(rho));
+	if (IsNull(g) || g < 0 || g > 100)
+		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(g));
+
 	if (irf) {
 		if (IsNull(irfStep) || irfStep <= 0)
 			ret << Format(t_("Incorrect IRF step %s"), FormatDoubleEmpty(irfStep));
@@ -394,7 +408,7 @@ Vector<String> NemohCal::Check() {
 	return ret;
 }
 
-void NemohCal::CreateId(String folder) const {
+void NemohCal::Save_Id(String folder) const {
 	String fileName = AppendFileName(folder, "ID.dat");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -402,7 +416,7 @@ void NemohCal::CreateId(String folder) const {
 	out << "1\n.";
 }
 
-void NemohCal::CreateBat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const {
+void NemohCal::Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const {
 	String fileName = AppendFileName(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -412,15 +426,18 @@ void NemohCal::CreateBat(String folder, String batname, String caseFolder, bool 
 	String strBin;
 	if (bin)
 		strBin = AppendFileName(caseFolder.IsEmpty() ? "." : "..", "bin");
-	if (preName.IsEmpty())
-		out << "\"" << AppendFileName(strBin, solvName) << "\" -all\n";
-	else
+	if (preName.IsEmpty()) {
+		if (solvName == "capytaine")
+			out << "\"" << solvName << "\"\n";
+		else
+			out << "\"" << AppendFileName(strBin, solvName) << "\" -all\n";
+	} else
 		out << "\"" << AppendFileName(strBin, preName) << "\"\n"
 			<< "\"" << AppendFileName(strBin, solvName) << "\"\n"
 			<< "\"" << AppendFileName(strBin, postName) << "\"";
 }
 
-void NemohCal::CreateInput(String folder) const {
+void NemohCal::Save_Input(String folder) const {
 	String fileName = AppendFileName(folder, "Input.txt");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -448,11 +465,37 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-int NemohBody::GetNDOF() const {
+BemBody::BemBody() {
+	dof.SetCount(6, false);	
+	cg = Eigen::Vector3d::Zero();
+	mass.setConstant(6, 6, 0);
+	linearDamping.setConstant(6, 6, 0);
+	quadraticDamping.setConstant(6, 6, 0);
+	hydrostaticRestoring.setConstant(6, 6, 0);
+	externalRestoring.setConstant(6, 6, 0);
+}
+	
+int BemBody::GetNDOF() const {
 	int ret = 0;
 	for (auto &d : dof)
 		ret += d;
 	return ret;
+}
+
+void BemCal::BeforeSave(String folderBase, int numCases, bool deleteFolder) const {
+	if (numCases < 1)
+		throw Exc(Format(t_("Number cases must be higher than 1 (%d)"), numCases));
+	
+	if (numCases > Nf)
+		throw Exc(Format(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, Nf));
+	
+	if (deleteFolder) {		// If called from GUI, user has been warned
+		if (!DeleteFileDeepWildcardsX(folderBase))
+			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
+		Sleep(100);
+	}
+	if (!DirectoryCreateX(folderBase))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 }
 
 void NemohCal::SaveFolder(String folderBase, bool bin, int numCases, const BEMData &bem, int solver) const {
@@ -461,20 +504,9 @@ void NemohCal::SaveFolder(String folderBase, bool bin, int numCases, const BEMDa
 		SaveFolder0(folderBase, bin, numCases, bem, false, solver);
 }
 
-void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int solver) const {
-	if (numCases < 1)
-		throw Exc(Format(t_("Number of Nemoh cases must be higher than 1 (%d)"), numCases));
-	
-	if (numCases > Nf)
-		throw Exc(Format(t_("Number of Nemoh cases %d must not be higher than number of frequencies %d"), numCases, Nf));
-	
-	if (deleteFolder) {		// If called from GUI, user has been warned
-		if (!DeleteFolderDeepX(folderBase))
-			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
-		Sleep(100);
-	}
-	if (!DirectoryExists(folderBase) && !DirectoryCreate(folderBase))
-		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
+void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, 
+							bool deleteFolder, int solver) const {
+	BeforeSave(folderBase, numCases, deleteFolder);
 	
 	#define MIN_F_NEMOH 0.01
 	
@@ -492,18 +524,21 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		valsf = NumSets(Nf, numCases);
 	}
 	
-	String preName, solvName, postName;
-	if (bin) {
+	String preName, solvName, postName, batName = "Nemoh";
+	if (solver == BemCal::CAPYTAINE) {
+		solvName = "capytaine";
+		batName = "Capytaine_bat";
+	} else if (bin) {
 		String binResults = AppendFileName(folderBase, "bin");
-		if (!DirectoryExists(binResults) && !DirectoryCreate(binResults))
+		if (!DirectoryCreateX(binResults))
 			throw Exc(Format(t_("Problem creating '%s' folder"), binResults));
 		
-		if (solver == 0) {
+		if (solver == BemCal::NEMOHv115) {
 			solvName = GetFileName(bem.nemohPathNew);
 			String destNew = AppendFileName(binResults, solvName);
 			if (!FileCopy(bem.nemohPathNew, destNew)) 
 				throw Exc(Format(t_("Problem copying preprocessor file from '%s'"), bem.nemohPathNew));					
-		} else if (solver == 1) {
+		} else if (solver == BemCal::NEMOH) {
 			preName = GetFileName(bem.nemohPathPreprocessor);
 			String destProprocessor = AppendFileName(binResults, preName);
 			if (!FileCopy(bem.nemohPathPreprocessor, destProprocessor)) 
@@ -516,21 +551,27 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			String destPostprocessor = AppendFileName(binResults, postName);
 			if (!FileCopy(bem.nemohPathPostprocessor, destPostprocessor)) 
 				throw Exc(Format(t_("Problem copying postprocessor file from '%s'"), bem.nemohPathPostprocessor));		
-		}
+		} else if (solver == BemCal::CAPYTAINE) 
+			solvName = "capytaine";
+
 	} else {
-		preName = "preprocessor.exe";
-		solvName = "solver.exe";
-		postName = "postprocessor.exe";
+		if (solver == BemCal::NEMOHv115) 
+			solvName = "nemoh";
+		else {
+			preName = "preprocessor";
+			solvName = "solver";
+			postName = "postprocessor";
+		}
 	}
 		
-	String sumcases;
+	//String sumcases;
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		if (numCases > 1) {
-			folder = AppendFileName(folderBase, Format("Nemoh_Part_%d", i+1));
-			if (!DirectoryCreate(folder))
+			folder = AppendFileName(folderBase, Format("%s_Part_%d", batName, i+1));
+			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
-			sumcases << " " << AppendFileName(folder, "Nemoh.cal");
+			//sumcases << " " << AppendFileName(folder, "Nemoh.cal");
 			_minf = freqs[ifr];
 			int deltaf = valsf[i];
 			_maxf = freqs[ifr + deltaf - 1];
@@ -542,10 +583,10 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			_minf = fixminF;
 			_maxf = maxF;
 		}
-		CreateId(folder);
-		CreateInput(folder);
+		Save_Id(folder);
+		Save_Input(folder);
 		String folderMesh = AppendFileName(folder, "mesh");
-		if (!DirectoryCreate(folderMesh))
+		if (!DirectoryCreateX(folderMesh))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
 		for (int ib = 0; ib < bodies.size(); ++ib) {
@@ -553,13 +594,21 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			name = RemoveAccents(name);
 			name.Replace(" ", "_");
 			String dest = AppendFileName(folderMesh, name);
-			if (!FileCopy(bodies[ib].meshFile, dest)) 
-				throw Exc(Format(t_("Problem copying mesh file from '%s'"), bodies[ib].meshFile));
+			if (GetFileExt(name) == ".dat") {
+				if (!FileCopy(bodies[ib].meshFile, dest)) 
+					throw Exc(Format(t_("Problem copying mesh file from '%s'"), bodies[ib].meshFile));
+			} else {
+				MeshData mesh;
+				String err = mesh.Load(bodies[ib].meshFile);
+				if (!err.IsEmpty())
+					throw Exc(err);
+				mesh.SaveDatNemoh(dest, mesh.mesh, false);
+			}
 		}
 		Save_Cal(folder, _nf, _minf, _maxf);
 		
 		String folderResults = AppendFileName(folder, "results");
-		if (!DirectoryCreate(folderResults))
+		if (!DirectoryCreateX(folderResults))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderResults));
 		
 		if (bin && !GetFileName(bem.nemohPathGREN).IsEmpty()) {
@@ -569,12 +618,12 @@ void NemohCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		}
 		
 		if (numCases > 1) 
-			CreateBat(folderBase, Format("Nemoh_Part_%d.bat", i+1), Format("Nemoh_Part_%d", i+1), bin, preName, solvName, postName);
+			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), Format("%s_Part_%d", batName, i+1), bin, preName, solvName, postName);
 		else
-			CreateBat(folder, "Nemoh.bat", Null, bin, preName, solvName, postName);
+			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, solvName, postName);
 	}
 }
-
+	
 void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) const {
 	String fileName = AppendFileName(folder, "Nemoh.cal");
 	FileOut out(fileName);
@@ -595,7 +644,7 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 	out << NemohField(Format("%d", bodies.size()), cp) << "! Number of bodies" << "\n";
 	
 	for (int i = 0; i < bodies.size(); ++i) {
-		const NemohBody &b = bodies[i];
+		const BemBody &b = bodies[i];
 		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
 		String name = GetFileName(b.meshFile);
 		name = RemoveAccents(name);
