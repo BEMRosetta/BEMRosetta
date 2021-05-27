@@ -139,4 +139,7 @@ public:
 
 const Color &GetColorId(int id);
 
+void GridCtrlToMatrixXd(Eigen::MatrixXd &mat, const GridCtrl &grid);
+void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat);
+	
 #endif

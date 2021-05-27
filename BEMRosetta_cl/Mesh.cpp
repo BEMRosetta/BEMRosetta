@@ -1,11 +1,25 @@
 #include "BEMRosetta.h"
 
 int MeshData::idCount = 0;
-	
+
+String MeshData::Load(String file) {
+	bool y0z, x0z;
+	return Load(file, Null, Null, false, y0z, x0z);	
+}
+
+String MeshData::Load(String file, bool &y0z, bool &x0z) {
+	return Load(file, Null, Null, false, y0z, x0z);	
+}
+
 String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
+	bool y0z, x0z;
+	return Load(file, rho, g, cleanPanels, y0z, x0z);
+}
+	
+String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
-	bool y0z = false, x0z = false;
+	y0z = x0z = false;
 	if (ext == ".dat") {
 		ret = LoadDatNemoh(file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
@@ -49,7 +63,8 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 		Surface::RemoveDuplicatedPanels(mesh.panels);
 	}
 	
-	AfterLoad(rho, g, false);
+	if (!IsNull(rho))
+		AfterLoad(rho, g, false);
 	
 	return String();
 }
