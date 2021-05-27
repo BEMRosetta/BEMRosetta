@@ -367,8 +367,7 @@ Value FastScatter::DataSource::Format(const Value& q) const {
 void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
 	statusBar = &_statusBar;
 	String folder = AppendFileNameX(appDataFolder, "FASTScatter");
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		return;
 		
 	LoadFromJsonFile(*this, AppendFileName(folder, "FASTScatter.json"));
@@ -561,8 +560,7 @@ void FastScatter::LoadParams() {
 	String strname = SHA1StringS(GetFileName(~file)).Left(12);
 	
 	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		return;
 	
 	String fileName;
@@ -589,8 +587,7 @@ void FastScatter::SaveParams() {
 	String strname = SHA1StringS(GetFileName(~file)).Left(12);
 	
 	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
-	DirectoryCreate(folder);
-	if (!DirectoryExists(folder))
+	if (!DirectoryCreateX(folder))
 		return;
 	
 	String fileName = AppendFileName(folder, strpath + "_" + strname + ".json");

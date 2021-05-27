@@ -138,24 +138,26 @@ double FitToDampedSin(const VectorXd &y, double dt, double mass, double Kh, doub
 	double z0 = y.mean();
 	double zDecay = y[0] - z0;
 	
-	int numCoeff = 4 + par.gett0;
+	int numCoeff = 3 + par.gett0 + par.getz0;
 	VectorXd coeff(numCoeff); 
 	int idc = 0;
-	coeff[idc++] = z0;
 	coeff[idc++] = zDecay;
 	coeff[idc++] = par.gamma;
 	coeff[idc++] = w0;
+	if (par.getz0)
+		coeff[idc++] = par.z0;
 	if (par.gett0)
 		coeff[idc++] = par.t0;
 	
 	if (!NonLinearOptimization(coeff, num, [&](const VectorXd &coeff, VectorXd &residual)->int {
 		for(int i = 0; i < num; i++) {
 			double x = i*dt;
-			double z0 	  = coeff[0];
-			double zDecay = coeff[1];
-			double gamma  = coeff[2];
-			double w_d 	  = abs(coeff[3]);	
-			double t0 	  = par.gett0 ? coeff[4] : par.t0;
+			int idc = 0;
+			double zDecay = coeff[idc++];
+			double gamma  = coeff[idc++];
+			double w_d 	  = abs(coeff[idc++]);	
+			double z0 	  = par.getz0 ? coeff[idc++] : par.z0;
+			double t0 	  = par.gett0 ? coeff[idc++] : par.t0;
 			double w02 	  = sqrt(sqr(w_d) + sqr(gamma));
 			double ainf   = Kh/sqr(w02) - mass; 
 			double b 	  = 2*(mass + ainf)*gamma;
@@ -166,12 +168,14 @@ double FitToDampedSin(const VectorXd &y, double dt, double mass, double Kh, doub
 	}))
 		throw Exc("Problem fitting damped sinusoidal");					
 	
-	par.z0 		= coeff[0];
-	par.zDecay	= coeff[1];
-	par.gamma   = coeff[2];
-	par.w_d     = abs(coeff[3]);					// Damped natural frequency
+	idc = 0;
+	par.zDecay	= coeff[idc++];
+	par.gamma   = coeff[idc++];
+	par.w_d     = abs(coeff[idc++]);				// Damped natural frequency
+	if (par.getz0)
+		par.z0	= coeff[idc++];
 	if (par.gett0)
-		par.t0	= coeff[4];
+		par.t0	= coeff[idc++];
 	par.w02 = sqrt(sqr(par.w_d) + sqr(par.gamma));	// Undamped natural frequency
 	par.eta = par.gamma/w0;							// Non-dimensional damping (fraction of the critical damping)
 	par.ainf = Kh/sqr(par.w02) - mass;            	// Added mass at infinite frequency

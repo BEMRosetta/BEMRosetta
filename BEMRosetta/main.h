@@ -81,11 +81,12 @@ String TabText(const TabCtrl &tab);
 
 #define LOGTAB(tab) LOG(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
 
+#include "premain.h"
 
 #define LAYOUTFILE <BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
 
-#include "arrange.h"
+
 
 enum DataToShow {DATA_A, DATA_B, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
 enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
@@ -232,17 +233,19 @@ public:
 	bool IsChanged();
 	void Jsonize(JsonIO &json) {
 		if (json.IsLoading())
-			showTabMesh = showTabNemoh = showTabCoeff = showTabFAST = Null;
+			showTabMesh = showTabNemoh = showTabCoeff = showTabMoor = showTabFAST = Null;
 		json
 			("showTabMesh", showTabMesh)
 			("showTabNemoh", showTabNemoh)
 			("showTabCoeff", showTabCoeff)
+			("showTabMoor", showTabMoor)
 			("showTabFAST", showTabFAST);
 	}
 	
 	void InitSerialize(bool ret, bool &openOptions);
 	
-	int showTabMesh = Null, showTabNemoh = Null, showTabCoeff = Null, showTabFAST = Null;
+	int showTabMesh = Null, showTabNemoh = Null, showTabMoor = Null, 
+		showTabCoeff = Null, showTabFAST = Null;
 	
 private:
 	BEMData *bem = nullptr;
@@ -554,18 +557,29 @@ public:
 	MainMesh mesh;
 };
 
-class MainNemoh : public WithNemoh<StaticRect> {
+class MainSolver : public WithMainSolver<StaticRect> {
 public:
-	typedef MainNemoh CLASSNAME;
+	typedef MainSolver CLASSNAME;
 
 	void Init(const BEMData &bem);
 	void InitSerialize(bool ret);
 	
 	void Load(const BEMData &bem);
 	void Load(const NemohCal &data);
+	void Load(const HamsCal &data);
+	
+	bool Save(BemCal &data, bool isNemoh);
 	bool Save(NemohCal &data);
+	bool Save(HamsCal &data);
 	
 	void Jsonize(JsonIO &json);
+	
+	WithMainSolver_Bodies<StaticRect> bodies;
+	WithMainSolver_Nemoh<StaticRect> nemoh;
+	WithMainSolver_HAMS<StaticRect> hams;
+	
+	CtrlScroll nemohScroll;
+	CtrlScroll hamsScroll;
 	
 private:
 	bool OnLoad();
@@ -577,12 +591,158 @@ private:
 	void arrayOnAdd();
 	void arrayOnDuplicate();
 	void arrayOnRemove();
-	void InitArray();
+	void InitArray(bool isNemoh);
 	
-	//virtual void DragAndDrop(Point p, PasteClip& d);
-	//virtual bool Key(dword key, int count);
+	void InitGrid(GridCtrl &grid, EditDouble edit[]);
+	void LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat);
+	
+	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6];
+	int dropSolverVal = 0;
 };
 
+class ArrayFields {
+public:
+	virtual void Init(Mooring &mooring) = 0;
+	virtual void Load() = 0;
+	virtual void Save() = 0;
+
+private:
+	virtual void InitArray() = 0;	
+	virtual bool ArrayUpdateCursor() = 0;
+	virtual void ArrayOnCursor() = 0;
+	virtual void ArrayClear() = 0;
+	
+protected:	
+	ArrayCtrl *parray = nullptr;
+	Mooring *pmooring = nullptr;
+
+	void ArrayOnAdd() {
+		ArrayCtrl &array = *parray;
+		if (array.GetCount() == 0)
+			InitArray();
+		array.Add();
+		array.SetCursor(array.GetCount()-1);	
+		ArrayClear();
+		ArrayUpdateCursor();
+	}	
+	void ArrayOnDuplicate() {
+		ArrayCtrl &array = *parray;
+		if (array.GetCount() == 0) {
+			Exclamation(t_("No row available to duplicate"));
+			return;
+		}
+		int id = array.GetCursor();
+		if (id < 0) {
+			Exclamation(t_("Please select the row to duplicate"));
+			return;
+		}
+		int nr = id + 1;
+		array.Insert(nr);
+		for (int c = 0; c < array.GetColumnCount(); ++c)
+			array.Set(nr, c, array.Get(id, c));
+		array.Disable();
+		array.SetCursor(nr);
+		array.Enable();
+		ArrayOnCursor();
+	}
+	
+	void ArrayOnRemove() {
+		ArrayCtrl &array = *parray;
+		if (array.GetCount() == 0) {
+			Exclamation(t_("No row available to remove"));
+			return;
+		}
+		int id = array.GetCursor();
+		if (id < 0) {
+			Exclamation(t_("Please select the row to remove"));
+			return;
+		}
+		array.Remove(id);
+		if (id >= array.GetCount()) {
+			id = array.GetCount()-1;
+			if (id < 0) {
+				ArrayClear();
+				ArrayUpdateCursor();
+				return;
+			}
+		} 
+		array.SetCursor(id);
+	}
+
+};
+
+	
+class MainMoor_LinesTypes : public WithMainMoor_LinesTypes<StaticRect>, public ArrayFields {
+public:
+	typedef MainMoor_LinesTypes CLASSNAME;
+	
+	virtual void Init(Mooring &mooring);
+	virtual void Load();
+	virtual void Save();
+	
+private:
+	virtual void InitArray();	
+	virtual bool ArrayUpdateCursor();
+	virtual void ArrayOnCursor();
+	virtual void ArrayClear();
+};
+
+class MainMoor_LineProperties : public WithMainMoor_LineProperties<StaticRect>, public ArrayFields  {
+public:
+	typedef MainMoor_LineProperties CLASSNAME;
+	
+	virtual void Init(Mooring &mooring);
+	virtual void Load();
+	void LoadDrop();
+	virtual void Save();
+	
+private:
+	virtual void InitArray();	
+	virtual bool ArrayUpdateCursor();
+	virtual void ArrayOnCursor();
+	virtual void ArrayClear();
+};
+
+class MainMoor_Connections : public WithMainMoor_Connections<StaticRect>, public ArrayFields  {
+public:
+	typedef MainMoor_Connections CLASSNAME;
+	
+	virtual void Init(Mooring &mooring);
+	virtual void Load();
+	virtual void Save();
+	
+private:
+	virtual void InitArray();	
+	virtual bool ArrayUpdateCursor();
+	virtual void ArrayOnCursor();
+	virtual void ArrayClear();
+};
+
+class MainMoor : public WithMainMoor<StaticRect> {
+public:
+	typedef MainMoor CLASSNAME;
+
+	void Init();
+	
+	MainMoor_LinesTypes lineTypes;
+	MainMoor_LineProperties lineProperties;
+	MainMoor_Connections lineConnections;
+	
+	void Jsonize(JsonIO &json) {
+		if (json.IsLoading())
+			file <<= "";
+		json
+			("file", file)
+		;
+	}
+	
+private:
+	Mooring mooring;
+	
+	bool OnLoad();
+	bool OnSave();
+	void OnUpdate();
+};
 
 class MainSetupFOAMM : public WithMainStateSpaceSetup<StaticRect> {
 public:
@@ -741,7 +901,7 @@ public:
 		ProcessEvents();
 	}
 	
-	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_FAST};
+	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_MOOR, TAB_FAST};
 	Upp::Vector<String> tabTexts;
 	
 private:
@@ -751,12 +911,13 @@ private:
 	Label labrho, labg;
 	EditDouble editrho, editg;
 	
-	MainNemoh mainNemoh;
-	CtrlScroll mainNemohScroll;
+	MainSolver mainSolver;
+	//CtrlScroll mainNemohScroll;
 	MainBEM mainBEM;
 	MainOutput mainOutput;
 	MainMesh mainMesh;
 	FastScatterTabs mainFAST;
+	MainMoor mainMoor;
 	
 	MenuOptions menuOptions;
 	CtrlScroll menuOptionsScroll;

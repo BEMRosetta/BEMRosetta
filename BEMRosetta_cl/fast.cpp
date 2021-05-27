@@ -103,7 +103,7 @@ void Fast::Save(String file, int qtfHeading) {
 			BEMData::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
 			
 		String hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
-		DirectoryCreate(AppendFileName(GetFileFolder(file), hydroFolder));
+		DirectoryCreateX(AppendFileName(GetFileFolder(file), hydroFolder));
 	
 		Wamit::Save(hydroFile, true, qtfHeading);
 		

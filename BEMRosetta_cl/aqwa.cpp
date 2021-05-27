@@ -395,11 +395,11 @@ bool Aqwa::Load_LIS() {
 			hd().cb(0, idb) = f.GetDouble(8);	
 			hd().cb(1, idb) = f.Load(in.GetLine()).GetDouble(2);
 			hd().cb(2, idb) = f.Load(in.GetLine()).GetDouble(2);
-		} else if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
-				   line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
-				   line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
+		} else if (line.StartsWith("FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith(  "DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith(             "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
 			Hydro::Forces *pfrc;
-			if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+			if (line.StartsWith("FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().fk;
 			else if (line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().sc;

@@ -174,7 +174,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
 	String folder = AppendFileName(BEMData::GetTempFilesFolder(), Format(id));
-	if (!DirectoryCreate(folder))
+	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
 	String file = AppendFileName(folder, "temp_file.mat");
 	
