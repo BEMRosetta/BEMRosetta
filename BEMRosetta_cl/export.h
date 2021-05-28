@@ -5,7 +5,9 @@ extern "C" {
 	__declspec(dllexport) void DLL_ListFunctions() noexcept;
 	// Returns the list of all available functions
 	__declspec(dllexport) const char *DLL_strListFunctions() noexcept;		
-
+	// Returns the Python declaration of all available functions
+	__declspec(dllexport) const char *DLL_strPythonDeclaration() noexcept;	
+	
 	// Loads a FAST .out or .outb file
 	__declspec(dllexport) int DLL_FAST_Load(const char *filename) noexcept;		
 	// Returns the parameter name of index id

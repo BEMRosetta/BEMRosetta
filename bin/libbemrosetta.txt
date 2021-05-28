@@ -1,4 +1,4 @@
-// DLL functions list
+// BEMRosetta DLL functions list
 
 // Returns dll time and date
 const char *DLL_Version()
@@ -6,6 +6,9 @@ const char *DLL_Version()
 void DLL_ListFunctions() 
 // Returns the list of all available functions
 const char *DLL_strListFunctions() 
+// Returns the Python declaration of all available functions
+const char *DLL_strPythonDeclaration() 
+
 // Loads a FAST .out or .outb file
 int DLL_FAST_Load(const char *filename) 
 // Returns the parameter name of index id

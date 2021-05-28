@@ -24,6 +24,7 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, const char *, DLL_Version, ());
 		DLLFunction(dll, void, 		   DLL_ListFunctions, ());
 		DLLFunction(dll, const char *, DLL_strListFunctions, ());
+		DLLFunction(dll, const char *, DLL_strPythonDeclaration, ());
 		DLLFunction(dll, int, 		   DLL_FAST_Load, (const char *));
 		DLLFunction(dll, const char *, DLL_FAST_GetParameterName, (int));
 		DLLFunction(dll, const char *, DLL_FAST_GetUnitName, (int));
@@ -37,12 +38,16 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, double, 	   DLL_FAST_GetAvg, (const char *));
 
 		Cout() << "\nVersion: " << DLL_Version();
-		Cout() << "\nDLL functions list:\n";
+		Cout() << "\n\nDLL functions list:\n";
 		String strList = DLL_strListFunctions();
 		Cout() << strList;
-		
-		strList = "// DLL functions list\n\n" + strList;
+		strList = "// BEMRosetta DLL functions list\n\n" + strList;
 		SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList);
+		
+		Cout() << "\n\nPython declarations:\n";
+		String strPy = DLL_strPythonDeclaration();
+		Cout() << strPy;
+		SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy);		
 		
 		Cout() << "\n\nLoading FAST .out file";
 		String outfile = AppendFileNameX(bemFolder, "examples/fast.out/demo.outb");
@@ -143,6 +148,63 @@ const char *DLL_strListFunctions() noexcept {
 	str.Replace("noexcept", "");
 	str.Replace("  ", "");
 	str.Replace("\t", "");
+	
+	return str = Trim(str);	
+}
+
+const char *DLL_strPythonDeclaration() noexcept {
+	static String str;
+	const Vector<String> ctypes = {"int",   "double", 	"const char *", "bool"}; 
+	const Vector<String> ptypes = {"c_int", "c_double", "c_char_p", "c_bool"}; 
+		
+	String dec = DLL_strListFunctions();
+	
+	str << "# LIBRARY DECLARATION\n"
+		   "libc = ctypes.CDLL(dll)\n\n";
+		   
+	String strIn  = "# INPUT TYPES\n";
+	String strOut = "# OUTPUT TYPES\n";
+	
+	Vector<String> lines = Split(dec, "\n");
+	for (const auto &line : lines) {
+		int pospar = line.Find("(");
+		String function;
+		
+		for (int i = 0; i < ctypes.size(); ++i) {
+			const auto &type = ctypes[i];
+			if (line.StartsWith(type)) {
+				function = Trim(line.Mid(type.GetCount(), pospar - type.GetCount()));
+				strOut << "libc." << function << ".restype = ctypes." << ptypes[i] << "\n";
+				break;
+			} 
+		}
+		if (function.IsEmpty() && line.StartsWith("void")) 
+			function = Trim(line.Mid(String("void").GetCount(), pospar - String("void").GetCount()));
+		
+		if (!function.IsEmpty()) {
+			int posparout = line.Find(")");
+			String strargs = line.Mid(pospar+1, posparout - pospar-1);
+			Vector<String> args = Split(strargs, ",");
+			if (!args.IsEmpty()) {
+				String pargs;
+				
+				for (int i = 0; i < args.size(); ++i) {
+					for (int j = 0; j < ctypes.size(); ++j) {
+						const auto &type = ctypes[j];
+						if (Trim(args[i]).StartsWith(type)) {
+							if (!pargs.IsEmpty())
+								pargs << ", ";	
+							pargs << "ctypes." << ptypes[j];
+							break;
+						}
+					}
+				}
+				if (!pargs.IsEmpty())
+					strIn << "libc." << function << ".argtypes = [" << pargs << "]\n";
+			}
+		}
+	}
+	str << strIn << "\n" << strOut << "\n";
 	
 	return str = Trim(str);	
 }

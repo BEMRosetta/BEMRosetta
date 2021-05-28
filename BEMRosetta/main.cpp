@@ -538,8 +538,9 @@ void MainStiffness::Load(Upp::Array<MeshData> &surfs, const Upp::Vector<int> &id
 	Clear();
 
 	for (int i = 0; i < ids.size(); ++i) {
-		int isurf = ids[i];	
-		Add(surfs[isurf], i, true);
+		int isurf = ids[i];
+		if (isurf >= 0)	
+			Add(surfs[isurf], i, true);
 	}
 }
 			
