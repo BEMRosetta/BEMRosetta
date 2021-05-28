@@ -335,6 +335,7 @@ bool Aqwa::Load_LIS() {
 		}
 	}
 	
+	hd().Initialize_Forces(hd().ex);
 	hd().Initialize_Forces(hd().fk);
 	hd().Initialize_Forces(hd().sc);
 	hd().Initialize_RAO();
@@ -395,11 +396,14 @@ bool Aqwa::Load_LIS() {
 			hd().cb(0, idb) = f.GetDouble(8);	
 			hd().cb(1, idb) = f.Load(in.GetLine()).GetDouble(2);
 			hd().cb(2, idb) = f.Load(in.GetLine()).GetDouble(2);
-		} else if (line.StartsWith("FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
-				   line.StartsWith(  "DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
-				   line.StartsWith(             "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
+		} else if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith(				 "FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith(  			   "DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
+				   line.StartsWith(             			  "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) {
 			Hydro::Forces *pfrc;
-			if (line.StartsWith("FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+			if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY"))
+				pfrc = &hd().ex;
+			else if (line.StartsWith("FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().fk;
 			else if (line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().sc;
@@ -425,7 +429,7 @@ bool Aqwa::Load_LIS() {
 						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
 						frc.ma[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2);
-						frc.ph[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180;
+						frc.ph[idh](ifr, idf + 6*idb) = -f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180; // Negative to follow Wamit
 						frc.re[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*cos(frc.ph[idh](ifr, idf + 6*idb));
 			       		frc.im[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*sin(frc.ph[idh](ifr, idf + 6*idb));
 					}
@@ -465,8 +469,8 @@ bool Aqwa::Load_LIS() {
 			}
 		}
 	}
-	hd().Initialize_Forces(hd().ex);
-	hd().GetFexFromFscFfk();
+	//hd().Initialize_Forces(hd().ex);
+	//hd().GetFexFromFscFfk();
 		
 	return true;
 }
