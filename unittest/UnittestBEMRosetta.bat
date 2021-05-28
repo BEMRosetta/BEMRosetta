@@ -22,3 +22,5 @@ copy .\.test\libbemrosetta.dll ..\bin
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 copy .\.test\libbemrosetta.txt ..\bin
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+copy .\.test\libbemrosetta.py ..\bin
+@IF %ERRORLEVEL% NEQ 0 EXIT /B 1

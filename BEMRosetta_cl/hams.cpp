@@ -7,9 +7,35 @@ Vector<String> HamsCal::Check() {
 	Vector<String> ret;
 	
 	ret.Append(BemCal::Check(true));
-
-
-
+	
+	if (bodies.size() != 1)
+		ret << t_("HAMS just allows one body");
+	else {
+		bool y0zmesh, x0zmesh;
+		{
+			MeshData data;
+			String err = data.LoadPnlHAMS(bodies[0].meshFile, y0zmesh, x0zmesh);
+			if (!err.IsEmpty()) {
+				ret << err;
+				return ret;
+			}
+		}
+		if (!bodies[0].lidFile.IsEmpty()) {
+			bool y0zlid, x0zlid;
+			{
+				MeshData data;
+				String err = data.LoadPnlHAMS(bodies[0].lidFile, y0zlid, x0zlid);
+				if (!err.IsEmpty()) {
+					ret << err;
+					return ret;
+				}
+			}
+			if (y0zmesh != y0zlid)
+				ret << t_("The symmetry of the X-axis (y0z) in the hull and the lid has to match");	
+			if (x0zmesh != x0zlid)
+				ret << t_("The symmetry of the Y-axis (x0z) in the hull and the lid has to match");
+		}
+	}
 	return ret;
 }
 

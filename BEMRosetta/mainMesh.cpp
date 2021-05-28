@@ -134,9 +134,9 @@ void MainMesh::Init() {
 	menuProcess.butWaterFill 	<<= THISBACK1(OnAddWaterSurface, 'f');
 	menuProcess.butWaterFill.Tip(t_("Generates waterplane mesh based on how the hull crosses the waterplane"));
 	menuProcess.butWaterExtract <<= THISBACK1(OnAddWaterSurface, 'e');
-	menuProcess.butWaterExtract.Tip(t_("Gets waterplane mesh"));
+	menuProcess.butWaterExtract.Tip(t_("Extracts waterplane from a mesh tah already includes it"));
 	menuProcess.butWaterNon		<<= THISBACK1(OnAddWaterSurface, 'r');
-	menuProcess.butWaterNon.Tip(t_("Gets hull mesh without waterplane"));
+	menuProcess.butWaterNon.Tip(t_("Extracts underwater (wet) hull from a mesh"));
 		
 	CtrlLayout(menuEdit);
 	menuEdit.edit_x <<= 0;
@@ -1100,7 +1100,7 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 														FormatDouble(data.mesh.volumez, 6, FD_EXP)));
 	
 	array.Set(row, 0, t_("Immersed surface [m2]"));array.Set(row++, col, FormatDouble(data.under.surface, 6, FD_EXP));
-	array.Set(row, 0, t_("Immersed volume [m3]")); array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Immersed volume [m3] Vavg(Vx,Vy,Vz)")); array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
 														FormatDouble(data.under.volume,  6, FD_EXP),
 														FormatDouble(data.under.volumex, 6, FD_EXP),
 														FormatDouble(data.under.volumey, 6, FD_EXP),
