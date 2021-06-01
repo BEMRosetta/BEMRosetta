@@ -386,6 +386,15 @@ bool Aqwa::Load_LIS() {
 			hd().C[idb](4, 4) = f.GetDouble(2);
 			if (f.size() > 3)
 	       		hd().C[idb](4, 5) = f.GetDouble(3);	
+		} else if (line.Find("STIFFNESS MATRIX") >= 0 && IsNull(hd().C[idb](0,0))) {	// 2nd option to get stiffness matrix
+			hd().C[idb].setConstant(6, 6, 0);
+			in.GetLine(6);
+			for (int r = 0; r < 6; ++r) {
+				f.Load(in.GetLine());
+				for (int c = 0; c < 6; ++c) 
+					hd().C[idb](r, c) = f.GetDouble(c + 1);
+				in.GetLine();
+			}
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
