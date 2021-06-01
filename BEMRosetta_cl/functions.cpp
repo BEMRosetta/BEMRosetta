@@ -177,7 +177,7 @@ double FitToDampedSin(const VectorXd &y, double dt, double mass, double Kh, doub
 	if (par.gett0)
 		par.t0	= coeff[idc++];
 	par.w02 = sqrt(sqr(par.w_d) + sqr(par.gamma));	// Undamped natural frequency
-	par.eta = par.gamma/w0;							// Non-dimensional damping (fraction of the critical damping)
+	par.eta = par.gamma/w0;							// Damping ratio (fraction of the critical damping)
 	par.ainf = Kh/sqr(par.w02) - mass;            	// Added mass at infinite frequency
 	par.b = 2*(mass + par.ainf)*par.gamma;	
 	par.phi = -atan2(par.b, 2*(mass + par.ainf)*par.w02);

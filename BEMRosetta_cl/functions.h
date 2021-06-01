@@ -18,7 +18,7 @@ struct ParamDampedSin {
 		   gamma, 
 		   w_d, 			// Damped natural frequency
 		   w02,				// Undamped natural frequency 
-		   eta, 			// Non-dimensional damping (fraction of the critical damping)
+		   eta, 			// Damping ratio (fraction of the critical damping)
 		   phi, 
 		   t0;
 	bool gett0, getz0;
