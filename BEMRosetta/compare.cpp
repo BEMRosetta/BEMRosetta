@@ -31,7 +31,7 @@ void CompareParameters::Init(DataToShow dataToShow) {
 	if (dataToShow == DATA_A) {
 		list.AddColumn(t_("Name"), 40);
 		list.AddColumn(t_("RMS"), 10);
-		list.AddColumn(t_("Ainf"), 10);
+		list.AddColumn(t_("A∞"), 10);
 	} else if (dataToShow == DATA_B) {
 		list.AddColumn(t_("Name"), 40);
 		list.AddColumn(t_("RMS"), 10);
@@ -48,7 +48,7 @@ void CompareParameters::Load() {
 	Vector<double> rms;
 	for(int i = 0; i < scatter.GetCount(); i++) {
 		String leg = scatter.GetLegend(i);
-		if (leg.StartsWith("Ainf") || leg.StartsWith("A0"))
+		if (leg.StartsWith("A∞") || leg.StartsWith("A0"))
 			continue;
 		list.Add(leg);
 		DataSource &data = scatter.GetDataSource(i);
@@ -66,7 +66,7 @@ void CompareParameters::Load() {
     Vector<Vector<double>> data;
     for(int i = 0; i < scatter.GetCount(); i++) {
 		String leg = scatter.GetLegend(i);
-		if (leg.StartsWith("Ainf") || leg.StartsWith("A0"))
+		if (leg.StartsWith("A∞") || leg.StartsWith("A0"))
 			continue;
 		Vector<double> &d = data.Add();
 		
@@ -87,7 +87,7 @@ void CompareParameters::Load() {
         //int row = 0;
 		for(int i = 0; i < scatter.GetCount(); i++) {
 			String leg = scatter.GetLegend(i);
-			if (leg.StartsWith("Ainf")) 
+			if (leg.StartsWith("A∞")) 
 				ainf << scatter.GetDataSource(i).y(int64(0));
 		}
 		if (swRelative == 1) {

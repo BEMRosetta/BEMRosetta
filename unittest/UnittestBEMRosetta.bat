@@ -16,6 +16,8 @@ umk BEMRosetta BEMRosetta_cl %1 -r +TEST_DLL	.\.test\testdll_bemrosetta.exe
 
 copy .\.test\BEMRosetta.exe ..\bin
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+copy .\.test\BEMRosetta.exe ..\other\test\BEMRosetta_experimental.exe
+@IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 copy .\.test\BEMRosetta_cl.exe ..\bin
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 copy .\.test\libbemrosetta.dll ..\bin

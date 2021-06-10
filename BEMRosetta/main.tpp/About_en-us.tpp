@@ -1,4 +1,4 @@
-topic "This is a test";
+topic "About";
 [ $$0,0#00000000000000000000000000000000:Default]
 [{_}%EN-US 
 [s0; [*^https`:`/`/github`.com`/izabala123`/BEMRosetta^+117 BEMRosetta]&]
@@ -24,7 +24,7 @@ Apache 2.0 license.]&]
 [s0;2 &]
 [s0; License&]
 [s0;2 &]
-[s0; [2 Copyright © 2019`-2020 Iñaki Zabala, Markel Peñalba, Yerai 
+[s0; [2 Copyright © 2019`-2021 Iñaki Zabala, Markel Peñalba, Yerai 
 Peña`-Sanchez, Thomas Kelly.]&]
 [s0;2 &]
 [s0; [2 BEMRosetta is free software: you can redistribute it and/or 

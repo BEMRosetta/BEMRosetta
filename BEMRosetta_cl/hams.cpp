@@ -40,21 +40,153 @@ Vector<String> HamsCal::Check() {
 }
 
 bool HamsCal::Load(String fileName) {
-
-/*
-	HamsCal data;
-	bodies.xcm <<= data.cg[0];	
-	bodies.ycm <<= data.cg[1];
-	bodies.zcm <<= data.cg[2];
-	LoadMatrix(bodies.mass, data.mass, editMass);
-	LoadMatrix(bodies.linearDamping, data.linearDamping, editLinear);
-	LoadMatrix(bodies.quadraticDamping, data.quadraticDamping, editQuadratic);	
-	LoadMatrix(bodies.hydrostaticRestoring, data.hydrostaticRestoring, editInternal);
-	LoadMatrix(bodies.externalRestoring, data.externalRestoring, editExternal);
-	*/
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+		
+	String line;
+	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
 	
-	////////////////////////////////////////////////////////
-	return false;
+	int input_frequency_type = 0, output_frequency_type = 0;
+	
+	while (!f.IsEof()) {
+		f.LoadLine();
+		
+		if (f.GetText().Find("End HAMS Control file") >= 0)
+			break;
+		if (f.size() < 2)
+			continue;
+		String var = Trim(f.GetText(0));
+		if (var.StartsWith("#"))
+			continue;
+		if (var == "Waterdepth")
+			h = f.GetDouble(1);
+		else if (var == "Input_frequency_type") {
+			input_frequency_type = f.GetInt(1); 
+			if (input_frequency_type != 3 && input_frequency_type != 4)
+				throw Exc("HAMS loader just allows loading input_frequency_type = 3 wave frequency or 4 wave period");
+		} else if (var == "Output_frequency_type") {
+			output_frequency_type = f.GetInt(1);
+			if (output_frequency_type != 3 && output_frequency_type != 4)
+				throw Exc("HAMS loader just allows loading output_frequency_type = 3 wave frequency or 4 wave period");
+		} else if (var == "Number_of_frequencies") {
+			Nf = f.GetInt(1);
+			if (Nf < 0) {
+				Nf = -Nf;
+				f.LoadLine();
+				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_frequency_Wmin")
+					throw Exc("Minimum_frequency_Wmin not found");
+				minF = f.GetDouble(1);
+				f.LoadLine();
+				if (f.size() < 2 || Trim(f.GetText(0)) != "Frequency_step")
+					throw Exc("Frequency_step not found");
+				maxF = minF + f.GetDouble(1)*Nf;
+			} else {
+				f.LoadLine();
+				if (f.size() < 2)
+					throw Exc("Frequencies or periods not found");
+				Vector<double> data;
+				double delta;
+				for (int i = 0; i < f.size(); ++i) {
+					if (input_frequency_type == 3)
+						data << f.GetDouble(i);
+					else
+						data.At(0, 2*M_PI/f.GetDouble(i));
+					if (i == 1)
+						delta = data[i] - data[i-1];
+					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 3))
+						throw Exc("HAMS loader just allows equidistant frequencies");
+				}
+				minF = data[0];
+				maxF = data[data.size()-1];
+			}
+		} else if (var == "Number_of_headings") {
+			Nh = f.GetInt(1);
+			if (Nh < 0) {
+				Nh = -Nh;
+				f.LoadLine();
+				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_heading")
+					throw Exc("Minimum_heading not found");
+				minH = f.GetDouble(1);
+				f.LoadLine();
+				if (f.size() < 2 || Trim(f.GetText(0)) != "Heading_step")
+					throw Exc("Heading_step not found");
+				maxH = minH + f.GetDouble(1)*Nh;
+			} else {
+				f.LoadLine();
+				if (f.size() < 2)
+					throw Exc("Headings not found");
+				Vector<double> data;
+				double delta;
+				for (int i = 0; i < f.size(); ++i) {
+					data << f.GetDouble(i);
+					if (i == 1)
+						delta = data[i] - data[i-1];
+					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 3))
+						throw Exc("HAMS loader just allows equidistant headings");
+				}
+				minH = data[0];
+				maxH = data[data.size()-1];
+			}
+		} else if (var == "Reference_body_center") {
+			if (f.size() < 4)
+				throw Exc("Lack of data in Reference_body_center");
+			bodies.SetCount(1);
+			BemBody &body = bodies[0];
+			body.c0[0] = f.GetDouble(1);
+			body.c0[1] = f.GetDouble(2);
+			body.c0[2] = f.GetDouble(3);
+			String meshFile = AppendFileName(GetFileFolder(fileName), "HullMesh.pnl");
+			if (FileExists(meshFile))
+				body.meshFile = meshFile;
+			String lidFile = AppendFileName(GetFileFolder(fileName), "WaterplaneMesh.pnl");
+			if (FileExists(lidFile))
+				body.lidFile = lidFile;
+		}
+	}
+	return LoadHydrostatic(AppendFileName(GetFileFolder(fileName), "Hydrostatic.in"));
+}
+
+bool HamsCal::LoadHydrostatic(String fileName) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	bodies.SetCount(1);
+	BemBody &body = bodies[0];
+	
+	String line;
+	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	while (!f.IsEof()) {
+		f.LoadLine();
+		
+		if (f.size() < 1)
+			continue;	
+		
+		String line = Trim(f.GetText());
+	
+		if (line == "Center of Gravity:") {
+			f.LoadLine();
+			if (f.size() < 3)
+				throw Exc("Center of Gravity data is not complete");
+			body.cg[0] = f.GetDouble(0);
+			body.cg[1] = f.GetDouble(1);
+			body.cg[2] = f.GetDouble(2);
+		} else if (line == "Body Mass Matrix:") 
+			InMatrix(f, body.mass);
+		else if (line == "External Linear Damping Matrix:") 
+			InMatrix(f, body.linearDamping);
+		else if (line == "External Quadratic Damping Matrix:") 
+			InMatrix(f, body.quadraticDamping);	
+		else if (line == "Hydrostatic Restoring Matrix:") 
+			InMatrix(f, body.hydrostaticRestoring);	
+		else if (line == "External Restoring Matrix:") 
+			InMatrix(f, body.externalRestoring);	
+	}
+	return true;
 }
 
 void HamsCal::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem) const {
@@ -180,6 +312,14 @@ void HamsCal::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat)
 		out << "\n";
 		for (int x = 0; x < 6; ++x)
 			out << Format("   %0.5E", mat(x, y));
+	}
+}
+
+void HamsCal::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
+	for (int y = 0; y < 6; ++y) {
+		f.LoadLine();
+		for (int x = 0; x < 6; ++x)
+			mat(x, y) = f.GetDouble(x);
 	}
 }
 	

@@ -236,15 +236,16 @@ public:
 			showTabMesh = showTabNemoh = showTabCoeff = showTabMoor = showTabFAST = Null;
 		json
 			("showTabMesh", showTabMesh)
-			("showTabNemoh", showTabNemoh)
-			("showTabCoeff", showTabCoeff)
+			("showTabNemoh",showTabNemoh)
+			("showTabCoeff",showTabCoeff)
 			("showTabMoor", showTabMoor)
+			("showTabDecay",showTabDecay)
 			("showTabFAST", showTabFAST);
 	}
 	
 	void InitSerialize(bool ret, bool &openOptions);
 	
-	int showTabMesh = Null, showTabNemoh = Null, showTabMoor = Null, 
+	int showTabMesh = Null, showTabNemoh = Null, showTabMoor = Null, showTabDecay = Null,
 		showTabCoeff = Null, showTabFAST = Null;
 	
 private:
@@ -565,6 +566,7 @@ public:
 	void InitSerialize(bool ret);
 	
 	void Load(const BEMData &bem);
+	void Load(const BemCal &data);
 	void Load(const NemohCal &data);
 	void Load(const HamsCal &data);
 	
@@ -602,7 +604,7 @@ private:
 
 class ArrayFields {
 public:
-	virtual void Init(Mooring &mooring) = 0;
+	//void Init(Mooring &mooring) = 0;
 	virtual void Load() = 0;
 	virtual void Save() = 0;
 
@@ -614,7 +616,6 @@ private:
 	
 protected:	
 	ArrayCtrl *parray = nullptr;
-	Mooring *pmooring = nullptr;
 
 	void ArrayOnAdd() {
 		ArrayCtrl &array = *parray;
@@ -676,11 +677,13 @@ class MainMoor_LinesTypes : public WithMainMoor_LinesTypes<StaticRect>, public A
 public:
 	typedef MainMoor_LinesTypes CLASSNAME;
 	
-	virtual void Init(Mooring &mooring);
+	void Init(Mooring &mooring);
 	virtual void Load();
 	virtual void Save();
 	
 private:
+	Mooring *pmooring = nullptr;
+	
 	virtual void InitArray();	
 	virtual bool ArrayUpdateCursor();
 	virtual void ArrayOnCursor();
@@ -691,12 +694,14 @@ class MainMoor_LineProperties : public WithMainMoor_LineProperties<StaticRect>, 
 public:
 	typedef MainMoor_LineProperties CLASSNAME;
 	
-	virtual void Init(Mooring &mooring);
+	void Init(Mooring &mooring);
 	virtual void Load();
 	void LoadDrop();
 	virtual void Save();
 	
 private:
+	Mooring *pmooring = nullptr;
+	
 	virtual void InitArray();	
 	virtual bool ArrayUpdateCursor();
 	virtual void ArrayOnCursor();
@@ -707,11 +712,13 @@ class MainMoor_Connections : public WithMainMoor_Connections<StaticRect>, public
 public:
 	typedef MainMoor_Connections CLASSNAME;
 	
-	virtual void Init(Mooring &mooring);
+	void Init(Mooring &mooring);
 	virtual void Load();
 	virtual void Save();
 	
 private:
+	Mooring *pmooring = nullptr;
+	
 	virtual void InitArray();	
 	virtual bool ArrayUpdateCursor();
 	virtual void ArrayOnCursor();
@@ -738,6 +745,43 @@ public:
 	
 private:
 	Mooring mooring;
+	
+	bool OnLoad();
+	bool OnSave();
+	void OnUpdate();
+};
+
+class MainDecay_Files : public WithMainDecay_Files<StaticRect>, public ArrayFields {
+public:
+	typedef MainDecay_Files CLASSNAME;
+	
+	virtual void Init();
+	virtual void Load();
+	virtual void Save();
+	
+private:
+	virtual void InitArray();	
+	virtual bool ArrayUpdateCursor();
+	virtual void ArrayOnCursor();
+	virtual void ArrayClear();
+};
+
+class MainDecay : public WithMainDecay<StaticRect> {
+public:
+	typedef MainDecay CLASSNAME;
+
+	void Init();
+	
+	void Jsonize(JsonIO &json) {
+		if (json.IsLoading())
+			file <<= "";
+		json
+			("file", file)
+		;
+	}
+	
+private:
+	MainDecay_Files files;
 	
 	bool OnLoad();
 	bool OnSave();
@@ -901,7 +945,7 @@ public:
 		ProcessEvents();
 	}
 	
-	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_MOOR, TAB_FAST};
+	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_MOOR, TAB_DECAY, TAB_FAST};
 	Upp::Vector<String> tabTexts;
 	
 private:
@@ -912,12 +956,12 @@ private:
 	EditDouble editrho, editg;
 	
 	MainSolver mainSolver;
-	//CtrlScroll mainNemohScroll;
 	MainBEM mainBEM;
 	MainOutput mainOutput;
 	MainMesh mainMesh;
 	FastScatterTabs mainFAST;
 	MainMoor mainMoor;
+	MainDecay mainDecay;
 	
 	MenuOptions menuOptions;
 	CtrlScroll menuOptionsScroll;
