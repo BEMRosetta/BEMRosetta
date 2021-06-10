@@ -72,6 +72,8 @@ void MainMesh::Init() {
 	menuPlot.butXoZ.Tip(t_("Orients the camera through Y axis")).WhenAction  	= [&] {mainView.gl.View(true, false, true);};
 	menuPlot.butFit.Tip(t_("Zooms the camera to fit the bodies")).WhenAction	= [&] {mainView.gl.ZoomToFit();};
 	menuPlot.showMeshData.Tip(t_("Shows a list of panels and nodes")).WhenAction= [&] {mainVAll.SetButton(0);};
+	menuPlot.backColor.Tip(t_("Sets the background color")).WhenAction      	= [&] {LoadSelTab(Bem());};
+	menuPlot.lineThickness.Tip(t_("Sets the thickness of the mesh wireframe")).WhenAction = [&] {LoadSelTab(Bem());};
 	
 	styleRed = styleGreen = styleBlue = Button::StyleNormal();
 	styleRed.textcolor[0] = styleRed.textcolor[1] = styleRed.textcolor[2] = LtRed();
@@ -134,7 +136,7 @@ void MainMesh::Init() {
 	menuProcess.butWaterFill 	<<= THISBACK1(OnAddWaterSurface, 'f');
 	menuProcess.butWaterFill.Tip(t_("Generates waterplane mesh based on how the hull crosses the waterplane"));
 	menuProcess.butWaterExtract <<= THISBACK1(OnAddWaterSurface, 'e');
-	menuProcess.butWaterExtract.Tip(t_("Extracts waterplane from a mesh tah already includes it"));
+	menuProcess.butWaterExtract.Tip(t_("Extracts waterplane from a mesh that already includes it"));
 	menuProcess.butWaterNon		<<= THISBACK1(OnAddWaterSurface, 'r');
 	menuProcess.butWaterNon.Tip(t_("Extracts underwater (wet) hull from a mesh"));
 		
@@ -288,7 +290,11 @@ void MainMesh::InitSerialize(bool ret) {
 		menuPlot.showCb = true;
 	if (!ret || IsNull(menuPlot.showSel)) 
 		menuPlot.showSel = true;	
-		
+	if (!ret || IsNull(menuPlot.lineThickness)) 
+		menuPlot.lineThickness <<= 1;
+	if (!ret || IsNull(menuPlot.backColor)) 
+		menuPlot.backColor <<= White();
+				
 	if (!ret || IsNull(menuConvert.opt)) 
 		menuConvert.opt = 0;
 	if (!ret || IsNull(menuConvert.optMeshType)) 
@@ -1068,7 +1074,9 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuPlot_showCb", menuPlot.showCb)
 		("menuPlot_showSel", menuPlot.showSel)
 		("menuPlot_showUnderwater", menuPlot.showUnderwater)
-		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)	
+		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)
+		("menuPlot_backColor", menuPlot.backColor)
+		("menuPlot_lineThickness", menuPlot.lineThickness)	
 	;
 }
 
@@ -1105,7 +1113,7 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 														FormatDouble(data.under.volumex, 6, FD_EXP),
 														FormatDouble(data.under.volumey, 6, FD_EXP),
 														FormatDouble(data.under.volumez, 6, FD_EXP)));
-	array.Set(row, 0, t_("Displacement [Kg]")); array.Set(row++, col, FormatDouble(data.under.volume*Bem().rho, 9, FD_EXP));
+	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FormatDouble(data.under.volume*Bem().rho, 9, FD_EXP));
 	array.Set(row, 0, t_("Cg [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FormatDouble(data.cg.x, 3, FD_EXP),			
 														FormatDouble(data.cg.y, 3, FD_EXP),
@@ -1169,6 +1177,9 @@ void MainView::Init() {
 }
 	
 void MainView::OnPaint() {
+	gl.SetLineThickness(~GetMenuPlot().lineThickness);
+	gl.SetBackgroundColor(~GetMenuPlot().backColor);
+	
 	if (~GetMenuPlot().showAxis) 
 		gl.PaintAxis(0, 0, 0, env.LenRef()/4.);	
 	
