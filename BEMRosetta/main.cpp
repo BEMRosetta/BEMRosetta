@@ -42,7 +42,7 @@ void Main::Init() {
 	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
-			 << t_("Mooring") << t_("FAST .out Reader");
+			 << t_("Mooring") << t_("Decay") << t_("FAST .out Reader");
 		
 	bool firstTime = false, openOptions = false;
 	if (!bem.LoadSerializeJson(firstTime)) 
@@ -77,10 +77,18 @@ void Main::Init() {
 	if (menuOptions.showTabMoor) {
 		tab.Add().Disable();
 		mainMoor.Init();	LOG("Init Moor");
-		//tab.Add(mainMoor.SizePos(), tabTexts[TAB_MOOR]);////////////////////////
+		if (Bem().experimental)
+			tab.Add(mainMoor.SizePos(), tabTexts[TAB_MOOR]);
+	}
+	if (menuOptions.showTabDecay) {
+		if (!menuOptions.showTabMoor)
+			tab.Add().Disable();
+		mainDecay.Init();	LOG("Init Decay");
+		if (Bem().experimental)
+			tab.Add(mainDecay.SizePos(), tabTexts[TAB_DECAY]);
 	}
 	if (menuOptions.showTabFAST) {
-		if (!menuOptions.showTabMoor)	
+		if (!menuOptions.showTabMoor && !menuOptions.showTabDecay)	
 			tab.Add().Disable();
 		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
 		tab.Add(mainFAST.SizePos(), tabTexts[TAB_FAST]);
@@ -98,7 +106,7 @@ void Main::Init() {
 	
 	Add(tab.SizePos());	
 
-	Add(labrho.SetLabel(t_("rho [Kg/m3]:")).RightPosZ(128, 80).TopPosZ(1, 22));
+	Add(labrho.SetLabel(t_("rho [kg/m3]:")).RightPosZ(128, 80).TopPosZ(1, 22));
 	Add(editrho.SetReadOnly().RightPosZ(98, 40).TopPosZ(2, 20));
 	editrho <<= bem.rho;
 	
@@ -155,7 +163,10 @@ void Main::Init() {
 		} else 	if (tab.IsAt(mainMoor)) {
 			butWindow.Show(false);
 			lastTab = ~tab;
-		} else 	if (tab.IsAt(mainFAST)) {
+		} else 	if (tab.IsAt(mainDecay)) {
+			butWindow.Show(false);
+			lastTab = ~tab;
+		} else if (tab.IsAt(mainFAST)) {
 			butWindow.Show(true);
 			lastTab = ~tab;
 		} else {
@@ -181,8 +192,8 @@ void Main::Init() {
 	AddFrame(bar);
 	
 	BEMData::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
-	BEMData::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
-	BEMData::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput);};
+	BEMData::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); Status(s);};
+	BEMData::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput); Status(s);};
 }
 
 void Main::OptionsUpdated(double rho, double g) {
@@ -265,6 +276,7 @@ void Main::Jsonize(JsonIO &json) {
 		("nemoh", mainSolver)
 		("bem", mainBEM)
 		("mooring", mainMoor)
+		("decay", mainDecay)
 		("menuOptions", menuOptions)
 		("lastTab", lastTab)
 	;
@@ -281,7 +293,8 @@ void MenuOptions::Init(BEMData &_bem) {
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_NEMOH, 0, false).SetLabel(ma().tabTexts[Main::TAB_NEMOH]);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_COEFF, 0, false).SetLabel(ma().tabTexts[Main::TAB_COEFF]);
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MOOR,  0, false).SetLabel(ma().tabTexts[Main::TAB_MOOR]);
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MOOR,  0, false).SetLabel(ma().tabTexts[Main::TAB_MOOR]).Show(Bem().experimental);
+	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_DECAY, 0, false).SetLabel(ma().tabTexts[Main::TAB_DECAY]).Show(Bem().experimental);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_FAST,  0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);
 }
 
@@ -294,9 +307,11 @@ void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
 		showTabCoeff = true;
 	if (!ret || IsNull(showTabMoor)) 
 		showTabMoor = true;
+	if (!ret || IsNull(showTabDecay)) 
+		showTabDecay = true;
 	if (!ret || IsNull(showTabFAST)) 
 		showTabFAST = true;
-	if (!showTabMesh && !showTabNemoh && !showTabCoeff && !showTabFAST && !showTabMoor) {
+	if (!showTabMesh && !showTabNemoh && !showTabCoeff && !showTabFAST && !showTabMoor && !showTabDecay) {
 		openOptions = true;
 		Exclamation(t_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs shown']"));
 	}
@@ -325,6 +340,7 @@ void MenuOptions::Load() {
 	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
 	arrayShown.GetCtrl(Main::TAB_COEFF, 0)->SetData(showTabCoeff);
 	arrayShown.GetCtrl(Main::TAB_MOOR,  0)->SetData(showTabMoor);
+	arrayShown.GetCtrl(Main::TAB_DECAY, 0)->SetData(showTabDecay);
 	arrayShown.GetCtrl(Main::TAB_FAST,  0)->SetData(showTabFAST);
 }
 
@@ -351,6 +367,7 @@ void MenuOptions::OnSave() {
 	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
 	showTabCoeff = arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData();
 	showTabMoor  = arrayShown.GetCtrl(Main::TAB_MOOR,  0)->GetData();
+	showTabDecay = arrayShown.GetCtrl(Main::TAB_DECAY, 0)->GetData();
 	showTabFAST  = arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData();
 	
 	ma().OptionsUpdated(rho, g);
@@ -399,6 +416,8 @@ bool MenuOptions::IsChanged() {
 	if (showTabCoeff != arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData())
 		return true;
 	if (showTabMoor  != arrayShown.GetCtrl(Main::TAB_MOOR,  0)->GetData())
+		return true;
+	if (showTabDecay != arrayShown.GetCtrl(Main::TAB_DECAY, 0)->GetData())
 		return true;
 	if (showTabFAST  != arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData())
 		return true;

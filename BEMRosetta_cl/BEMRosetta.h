@@ -678,13 +678,16 @@ private:
 class BemBody : public Moveable<BemBody> {
 public:
 	BemBody();
-	BemBody(const BemBody &d) : meshFile(d.meshFile), dof(clone(d.dof)), 
-			cx(d.cx), cy(d.cy), cz(d.cz), npoints(d.npoints), npanels(d.npanels) {}
+	BemBody(const BemBody &d) : meshFile(d.meshFile), dof(clone(d.dof)), c0(clone(d.c0)), 
+			cg(clone(d.cg)), mass(clone(d.mass)), 
+			linearDamping(clone(d.linearDamping)), quadraticDamping(clone(d.quadraticDamping)), 
+			hydrostaticRestoring(clone(d.hydrostaticRestoring)), externalRestoring(clone(d.externalRestoring)), 
+			npoints(d.npoints), npanels(d.npanels) {}
 	
 	String meshFile, lidFile;
 	int ndof;
 	Vector<bool> dof;
-	double cx, cy, cz;	
+	Eigen::Vector3d c0;	
 	
 	int npoints, npanels;
 	
@@ -697,6 +700,8 @@ public:
 
 class BemCal {
 public:
+	BemCal() {bodies.SetCount(1);}
+		
 	void BeforeSave(String folderBase, int numCases, bool deleteFolder) const;
 	bool IsDof(int ib, int idf) {return bodies[ib].dof[idf];}
 	Upp::Vector<String> Check(bool oneBody);
@@ -717,13 +722,15 @@ class HamsCal : public BemCal {
 public:
 	void SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem) const;
 	bool Load(String fileName);
-	
+	bool LoadHydrostatic(String fileName);
+		
    	Upp::Vector<String> Check();
    	
 private:
 	void SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const;
 	static void OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat);
-	
+	static void InMatrix(FieldSplit &f, Eigen::MatrixXd &mat);
+		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 							int numThreads) const;

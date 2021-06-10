@@ -241,9 +241,9 @@ bool NemohCal::Load(String fileName) {
 				else if (z)
 					body.dof[HEAVE] = true;
 			} else if (type == 2) {
-				body.cx = cx;
-				body.cy = cy;
-				body.cz = cz;
+				body.c0[0] = cx;
+				body.c0[1] = cy;
+				body.c0[2] = cz;
 				if (x) 
 					body.dof[ROLL] = true;
 				else if (y)
@@ -661,11 +661,11 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 		if (b.dof[HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Heave" << "\n";	
 		if (b.dof[ROLL])
-			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Roll about a point" << "\n";	
+			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Roll about a point" << "\n";	
 		if (b.dof[PITCH])
-			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Pitch about a point" << "\n";	
+			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Pitch about a point" << "\n";	
 		if (b.dof[YAW])		
-			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Yaw about a point" << "\n";	
+			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Yaw about a point" << "\n";	
 		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of resulting generalised forces" << "\n";	
 		if (b.dof[SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Force in x direction" << "\n";	
@@ -674,11 +674,11 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 		if (b.dof[HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Force in z direction" << "\n";	
 		if (b.dof[ROLL])
-			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Moment force in x direction about a point" << "\n";	
+			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in x direction about a point" << "\n";	
 		if (b.dof[PITCH])
-			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Moment force in y direction about a point" << "\n";	
+			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in y direction about a point" << "\n";	
 		if (b.dof[YAW])		
-			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.cx, b.cy, b.cz), cp) << "! Moment force in z direction about a point" << "\n";	
+			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in z direction about a point" << "\n";	
 		out << NemohField("0", cp) << "! Number of lines of additional information" << "\n";
 	}
 	out << NemohHeader("Load cases to be solved") << "\n";

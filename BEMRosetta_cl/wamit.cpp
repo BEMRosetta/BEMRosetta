@@ -744,7 +744,12 @@ bool Wamit::Load_1(String fileName) {
 	int maxDof = 0;
 	bool thereIsAw0 = false, thereIsAwinf = false; 
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.LoadLine();
+		if (IsNull(f.GetDouble_nothrow(3))) {
+			BEMData::PrintWarning(S("\nWarning: ") + t_("Wrong data found before file end"));
+			break;
+		}
+		
 		double freq = f.GetDouble(0);
 		if (freq < 0)
 			thereIsAw0 = true;
@@ -806,7 +811,10 @@ bool Wamit::Load_1(String fileName) {
 	in.SeekPos(fpos);
 	
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.LoadLine();
+		if (IsNull(f.GetDouble_nothrow(3)))
+			break;
+				
 		double freq = f.GetDouble(0);
  		int i = f.GetInt(1) - 1;
  		int j = f.GetInt(2) - 1;
@@ -861,7 +869,12 @@ bool Wamit::Load_3(String fileName) {
 	int maxDof = 0;	
 	hd().head.Clear();
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.LoadLine();
+		if (IsNull(f.GetDouble_nothrow(3))) {
+			BEMData::PrintWarning(S("\nWarning: ") + t_("Wrong data found before file end"));
+			break;
+		}
+		
 		double freq = f.GetDouble(0);
 		double head = f.GetDouble(1);
 		FindAdd(w, freq);
@@ -908,7 +921,10 @@ bool Wamit::Load_3(String fileName) {
 	hd().Initialize_Forces(hd().ex);
 	
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.LoadLine();
+		if (IsNull(f.GetDouble_nothrow(3)))
+			break;
+		
 		double freq = f.GetDouble(0);
 		int ifr = FindRatio(sourcew, freq, 0.001);
 		if (ifr < 0) {
@@ -1013,7 +1029,12 @@ bool Wamit::Load_4(String fileName) {
 	int maxDof = 0;
 	hd().head.Clear();
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.LoadLine();
+		if (IsNull(f.GetDouble_nothrow(3))) {
+			BEMData::PrintWarning(S("\nWarning: ") + t_("Wrong data found before file end"));
+			break;
+		}
+		
 		double freq = f.GetDouble(0);
 		FindAdd(w, freq);
 		
@@ -1068,7 +1089,10 @@ bool Wamit::Load_4(String fileName) {
 	hd().Initialize_RAO();
 		
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.LoadLine();
+		if (IsNull(f.GetDouble_nothrow(3))) 
+			break;
+		
 		double freq = f.GetDouble(0);
 		int ifr = FindRatio(sourcew, freq, 0.001);
 		if (ifr < 0) {

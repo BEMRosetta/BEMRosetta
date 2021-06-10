@@ -300,33 +300,18 @@ void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 		for (int x = 0; x < 6; ++x)
 			grid.Set(y, x, mat(x, y));
 }
-	
-void MainSolver::Load(const HamsCal &data) {
 
-
-
-
-
-
-
-}
-	
-void MainSolver::Load(const NemohCal &data) {
-	nemoh.g <<= data.g;
-	nemoh.rho <<= data.rho;
+void MainSolver::Load(const BemCal &data) {
 	opInfinite <<= (data.h < 0);
 	height.Enable(data.h > 0);
 	height <<= (data.h > 0 ? data.h : Null);
-	
-	nemoh.xeff <<= data.xeff;
-	nemoh.yeff <<= data.yeff;
 	
 	InitArray(true);
 	
 	for (int i = 0; i < data.bodies.size(); ++i) {
 		const BemBody &b = data.bodies[i];
 		bodies.array.Add(b.meshFile, b.lidFile, b.npoints, b.npanels, b.dof[SURGE], b.dof[SWAY], b.dof[HEAVE], 
-					b.dof[ROLL], b.dof[PITCH], b.dof[YAW], b.cx, b.cy, b.cz);
+					b.dof[ROLL], b.dof[PITCH], b.dof[YAW], b.c0[0], b.c0[1], b.c0[2]);
 	}
 	bodies.array.SetCursor(0);
 	dropSolver.WhenAction();
@@ -339,6 +324,31 @@ void MainSolver::Load(const NemohCal &data) {
 	Nh <<= data.Nh;
 	minH <<= data.minH;
 	maxH <<= data.maxH;
+}
+	
+void MainSolver::Load(const HamsCal &data) {
+	Load(static_cast<const BemCal &>(data));
+
+	const BemBody &b = data.bodies[0];
+	
+	bodies.xcm = b.cg[0];
+	bodies.ycm = b.cg[1];
+	bodies.zcm = b.cg[2];
+	MatrixXdToGridCtrl(bodies.mass, b.mass);
+	MatrixXdToGridCtrl(bodies.linearDamping, b.linearDamping);
+	MatrixXdToGridCtrl(bodies.quadraticDamping, b.quadraticDamping);
+	MatrixXdToGridCtrl(bodies.hydrostaticRestoring, b.hydrostaticRestoring);
+	MatrixXdToGridCtrl(bodies.externalRestoring, b.externalRestoring);
+}
+	
+void MainSolver::Load(const NemohCal &data) {
+	Load(static_cast<const BemCal &>(data));
+	
+	nemoh.g <<= data.g;
+	nemoh.rho <<= data.rho;
+	
+	nemoh.xeff <<= data.xeff;
+	nemoh.yeff <<= data.yeff;
 	
 	nemoh.boxIrf <<= data.irf;
 	nemoh.irfStep <<= data.irfStep;
@@ -393,9 +403,9 @@ bool MainSolver::Save(BemCal &data, bool isNemoh) {
 		b.dof[ROLL]  = bodies.array.Get(i, 7);
 		b.dof[PITCH] = bodies.array.Get(i, 8);
 		b.dof[YAW]   = bodies.array.Get(i, 9);
-		b.cx 		 = bodies.array.Get(i, 10);
-		b.cy 		 = bodies.array.Get(i, 11);
-		b.cz 		 = bodies.array.Get(i, 12);
+		b.c0[0] 	 = bodies.array.Get(i, 10);
+		b.c0[1] 	 = bodies.array.Get(i, 11);
+		b.c0[2] 	 = bodies.array.Get(i, 12);
 	}
 		
 	data.Nf = ~Nf;
@@ -411,7 +421,7 @@ bool MainSolver::Save(BemCal &data, bool isNemoh) {
 }
 
 bool MainSolver::Save(HamsCal &data) {
-	Save(static_cast<BemCal&>(data), false);
+	Save(static_cast<BemCal &>(data), false);
 	
 	BemBody &b = data.bodies[0];
 	
@@ -428,7 +438,7 @@ bool MainSolver::Save(HamsCal &data) {
 }
 
 bool MainSolver::Save(NemohCal &data) {
-	Save(static_cast<BemCal&>(data), true);
+	Save(static_cast<BemCal &>(data), true);
 	
 	data.g = ~nemoh.g;
 	data.rho = ~nemoh.rho;

@@ -602,7 +602,7 @@ void MainBEM::OnKirfAinf() {
 		if (id < 0) 
 			return;
 
-		Progress progress(t_("Calculating IRF and Ainf in selected BEM file..."), 100); 
+		Progress progress(t_("Calculating IRF and A∞ in selected BEM file..."), 100); 
 		
 		double maxT = Bem().hydros[id].hd().GetK_IRF_MaxT();
 		if (maxT < 0)
@@ -904,7 +904,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	}
 	
 	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, data.IsLoadedAw0()   ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Ainf available"));	array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("A∞ available"));	array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("K available"));		array.Set(row++, col, data.IsLoadedC() 	   ? t_("Yes") : t_("No"));

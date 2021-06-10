@@ -743,11 +743,11 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	
 	if (!IsLoadedAwinf() && bem->calcAwinf) {
 		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0) {
-			lastError = t_("Incorrect time for Ainf calculation. Please review it in Options");
+			lastError = t_("Incorrect time for A∞ calculation. Please review it in Options");
 			return false;
 		}
 		if (IsNull(bem->numValsA) || bem->numValsA < 10) {
-			lastError = t_("Incorrect number of time values for Ainf calculation. Please review it in Options");
+			lastError = t_("Incorrect number of time values for A∞ calculation. Please review it in Options");
 			return false;
 		}
 		if (!Status(t_("Obtaining Impulse Response Function"), 40)) {
@@ -755,7 +755,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			return false;
 		}
 		K_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
-		if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A_inf)"), 70)) {
+		if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A∞)"), 70)) {
 			lastError = t_("Cancelled by user");
 			return false;
 		}
