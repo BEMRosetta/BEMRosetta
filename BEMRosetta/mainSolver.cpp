@@ -82,8 +82,8 @@ void MainSolver::Init(const BEMData &bem) {
 	};
 	nemoh.freeSurface.WhenAction();
 	
-	HamsCal hams;
-	Load(hams);	
+	//HamsCal hams;
+	//Load(hams);	
 	
 	dropSolver.Add(BemCal::NEMOH, t_("Nemoh"));
 	dropSolver.Add(BemCal::NEMOHv115, t_("Nemoh 115+"));
@@ -225,6 +225,7 @@ void MainSolver::Jsonize(JsonIO &json) {
 		("maxH", maxH)
 		("dropSolver", dropSolverVal)
 		("height", height)
+		("opInfinite", opInfinite)
 	;
 }
 
