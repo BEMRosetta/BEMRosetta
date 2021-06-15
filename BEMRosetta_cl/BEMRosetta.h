@@ -91,6 +91,7 @@ public:
  	
 	//Upp::Array<Eigen::MatrixXd> A;			// [Nf](6*Nb, 6*Nb)	Added mass
 	Upp::Array<Upp::Array<Eigen::VectorXd>> A;	// [6*Nb][6*Nb][Nf]	Added mass
+	Upp::Array<Upp::Array<Eigen::VectorXd>> Ainfw;
     Eigen::MatrixXd Awinf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     Eigen::MatrixXd Aw0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
     //Upp::Array<Eigen::MatrixXd> B; 			// [Nf](6*Nb, 6*Nb)	Radiation damping
@@ -438,6 +439,7 @@ public:
 	const BEMData &GetBEMData() const {return *bem;}
 	
 	bool IsLoadedA() 	 const {return !A.IsEmpty();}
+	bool IsLoadedAINFW() const {return !Ainfw.IsEmpty();}
 	bool IsLoadedAwinf() const {return Awinf.size() > 0;}
 	bool IsLoadedAw0()	 const {return Aw0.size() > 0;}
 	bool IsLoadedB() 	 const {return !B.IsEmpty();}

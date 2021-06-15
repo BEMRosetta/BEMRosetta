@@ -13,7 +13,7 @@ using namespace Upp;
 
 
 
-void CompareParameters::Init(ScatterCtrl& scatter) {
+void CompareParameters::Init(ScatterDraw& scatter) {
 	CtrlLayout(*this);
 	
 	pscatter = &scatter;
@@ -40,7 +40,7 @@ void CompareParameters::Init(DataToShow dataToShow) {
 }
 
 void CompareParameters::Load() {
-	ScatterCtrl &scatter = *pscatter;
+	ScatterDraw &scatter = *pscatter;
 	
 	list.Clear();
 	int col = 1;
@@ -98,7 +98,6 @@ void CompareParameters::Load() {
 		for(int row = 0; row < ainf.size(); row++) 
 			list.Set(row, col, FormatDouble(ainf[row], 2));	
     }
-	scatter.SetModify();
-	scatter.Refresh();
+
 }
 

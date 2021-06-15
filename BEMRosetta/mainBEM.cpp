@@ -173,6 +173,9 @@ void MainBEM::Init() {
 	mainB.Init(DATA_B);
 	mainTab.Add(mainB.SizePos(), t_("B")).Disable();
 
+	mainAinfw.Init(DATA_AINFW);
+	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
+	
 	mainK.Init(DATA_K);
 	mainTab.Add(mainK.SizePos(), t_("Kirf")).Disable();
 	
