@@ -234,7 +234,15 @@ bool MainSolver::OnLoad() {
 	
 	try {
 		String fileNemoh = AppendFileNameX(folder, "Nemoh.cal");
+		if (!FileExists(fileNemoh))
+			fileNemoh = folder;
 		String fileHams = AppendFileNameX(folder, "Input", "ControlFile.in");
+		if (!FileExists(fileHams)) {
+			fileHams = AppendFileNameX(folder, "ControlFile.in");
+			if (!FileExists(fileHams)) 
+				fileHams = folder;
+		}
+				
 		if (FileExists(fileNemoh)) {
 			NemohCal data;			
 			if (!data.Load(fileNemoh)) {
@@ -302,7 +310,7 @@ void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 			grid.Set(y, x, mat(x, y));
 }
 
-void MainSolver::Load(const BemCal &data) {
+void MainSolver::Load(const BemCal &data, bool isNemoh) {
 	opInfinite <<= (data.h < 0);
 	height.Enable(data.h > 0);
 	height <<= (data.h > 0 ? data.h : Null);
@@ -325,10 +333,15 @@ void MainSolver::Load(const BemCal &data) {
 	Nh <<= data.Nh;
 	minH <<= data.minH;
 	maxH <<= data.maxH;
+	
+	if (isNemoh) 
+		dropSolver <<= BemCal::NEMOHv115;
+	else
+		dropSolver <<= BemCal::HAMS;
 }
 	
 void MainSolver::Load(const HamsCal &data) {
-	Load(static_cast<const BemCal &>(data));
+	Load(static_cast<const BemCal &>(data), false);
 
 	const BemBody &b = data.bodies[0];
 	
@@ -343,7 +356,7 @@ void MainSolver::Load(const HamsCal &data) {
 }
 	
 void MainSolver::Load(const NemohCal &data) {
-	Load(static_cast<const BemCal &>(data));
+	Load(static_cast<const BemCal &>(data), true);
 	
 	nemoh.g <<= data.g;
 	nemoh.rho <<= data.rho;
@@ -497,51 +510,57 @@ void MainSolver::arrayOnCursor() {
 }
 
 bool MainSolver::ArrayUpdateCursor() {
-	bool isNemoh = ~dropSolver != BemCal::HAMS;
+	try {
+		bool isNemoh = ~dropSolver != BemCal::HAMS;
+		
+		int id = bodies.array.GetCursor();
+		if (id < 0) {
+			if (bodies.array.GetCount() == 0) {
+				InitArray(isNemoh);
+				bodies.array.Add();
+				id = 0;
+				bodies.cx <<= 0;
+				bodies.cy <<= 0;
+				bodies.cz <<= 0;
+			} else
+				id = bodies.array.GetCount()-1;
+		}	
+		
+		if (isNemoh && ~bodies.meshFile != bodies.array.Get(id, 0)) {
+			MeshData dat;
+			bool y0z, x0z;
+			String ret = dat.Load(~bodies.meshFile, y0z, x0z);
+			int factor = (y0z ? 2 : 1)*(x0z ? 2 : 1);
+			if (ret.IsEmpty()) {
+				bodies.array.Set(id, 2, dat.mesh.GetNumNodes()/factor);
+				bodies.array.Set(id, 3, dat.mesh.GetNumPanels()/factor);
+			} /*else {
+				Exclamation(DeQtf(ret));
+				return false;		
+			}*/
+		} else {
+			bodies.array.Set(id, 2, "-");
+			bodies.array.Set(id, 3, "-");
+		}
+		bodies.array.Set(id, 0, ~bodies.meshFile);
+		bodies.array.Set(id, 1, ~bodies.lidFile);
+		
+		bodies.array.Set(id, 4, ~bodies.surge);
+		bodies.array.Set(id, 5, ~bodies.sway);
+		bodies.array.Set(id, 6, ~bodies.heave);
+		bodies.array.Set(id, 7, ~bodies.roll);
+		bodies.array.Set(id, 8, ~bodies.pitch);
+		bodies.array.Set(id, 9, ~bodies.yaw);
+		bodies.array.Set(id, 10,~bodies.cx);
+		bodies.array.Set(id, 11,~bodies.cy);
+		bodies.array.Set(id, 12,~bodies.cz);
 	
-	int id = bodies.array.GetCursor();
-	if (id < 0) {
-		if (bodies.array.GetCount() == 0) {
-			InitArray(isNemoh);
-			bodies.array.Add();
-			id = 0;
-			bodies.cx <<= 0;
-			bodies.cy <<= 0;
-			bodies.cz <<= 0;
-		} else
-			id = bodies.array.GetCount()-1;
-	}	
-	
-	if (isNemoh && ~bodies.meshFile != bodies.array.Get(id, 0)) {
-		MeshData dat;
-		bool y0z, x0z;
-		String ret = dat.Load(~bodies.meshFile, y0z, x0z);
-		int factor = (y0z ? 2 : 1)*(x0z ? 2 : 1);
-		if (ret.IsEmpty()) {
-			bodies.array.Set(id, 2, dat.mesh.GetNumNodes()/factor);
-			bodies.array.Set(id, 3, dat.mesh.GetNumPanels()/factor);
-		} /*else {
-			Exclamation(DeQtf(ret));
-			return false;		
-		}*/
-	} else {
-		bodies.array.Set(id, 2, "-");
-		bodies.array.Set(id, 3, "-");
+		bodies.array.Update();
+		
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+		return false;
 	}
-	bodies.array.Set(id, 0, ~bodies.meshFile);
-	bodies.array.Set(id, 1, ~bodies.lidFile);
-	
-	bodies.array.Set(id, 4, ~bodies.surge);
-	bodies.array.Set(id, 5, ~bodies.sway);
-	bodies.array.Set(id, 6, ~bodies.heave);
-	bodies.array.Set(id, 7, ~bodies.roll);
-	bodies.array.Set(id, 8, ~bodies.pitch);
-	bodies.array.Set(id, 9, ~bodies.yaw);
-	bodies.array.Set(id, 10,~bodies.cx);
-	bodies.array.Set(id, 11,~bodies.cy);
-	bodies.array.Set(id, 12,~bodies.cz);
-
-	bodies.array.Update();
 	
 	return true;
 }

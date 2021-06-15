@@ -56,21 +56,10 @@ void GetKirf(VectorXd &Kirf, double w0, double dw, const VectorXd &B, double dt,
 	GetKirfTirf(Kirf, Tirf, w0, dw, B, dt, maxT);
 }
 
-void GetAinf_Kirf(double &Ainf, VectorXd &Kirf, const VectorXd &w, const VectorXd &A, const VectorXd &B, double dt, double maxT) {
+double GetAinf_Kirf(VectorXd &Kirf, const VectorXd &w, const VectorXd &A, const VectorXd &B, double dt, double maxT) {
 	VectorXd Tirf;
 	GetKirfTirf(Kirf, Tirf, w, B, dt, maxT);
-
-    int numT = int(maxT/dt);
-	Eigen::Index Nf = B.size();
-	
-	VectorXd y(numT);
-    Ainf = 0;
-    for (int iw = 0; iw < Nf; ++iw) {
-        for (int it = 0; it < numT; ++it) 
-        	y(it) = Kirf(it)*sin(w(iw)*Tirf(it));
-        Ainf += A(iw) + Integral(y, dt, IntegralType::SIMPSON_1_3)/w(iw);	// Ogilvie's formula
-	}
-	Ainf = Ainf/Nf;
+	return GetAinf(Kirf, Tirf, w, A, dt, maxT);
 }
 
 void GetAinf_Kirf(double &Ainf, VectorXd &Kirf, double w0, double dw, const VectorXd &A, const VectorXd &B, double dt, double maxT) {
@@ -89,6 +78,20 @@ void GetAinf_Kirf(double &Ainf, VectorXd &Kirf, double w0, double dw, const Vect
         Ainf += A(iw) + Integral(y, dt, IntegralType::SIMPSON_1_3)/w;	// Ogilvie's formula
 	}
 	Ainf = Ainf/Nf;
+}
+
+double GetAinf(const VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const VectorXd &A, double dt, double maxT) {
+    int numT = int(maxT/dt);
+	Eigen::Index Nf = A.size();
+	
+	VectorXd y(numT);
+    double Ainf = 0;
+    for (int iw = 0; iw < Nf; ++iw) {
+        for (int it = 0; it < numT; ++it) 
+        	y(it) = Kirf(it)*sin(w(iw)*Tirf(it));
+        Ainf += A(iw) + Integral(y, dt, IntegralType::SIMPSON_1_3)/w(iw);	// Ogilvie's formula
+	}
+	return Ainf/Nf;
 }
 
 
