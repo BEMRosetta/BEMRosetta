@@ -5,6 +5,7 @@ void GetKirfTirf(Eigen::VectorXd &Kirf, Eigen::VectorXd &Tirf, const Eigen::Vect
 void GetKirfTirf(Eigen::VectorXd &Kirf, Eigen::VectorXd &Tirf, double w0, double dw, 	 const Eigen::VectorXd &B, double dt, double &maxT);	
 void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &B, double dt, double maxT = 30);
 void GetAinf_Kirf(double &Ainf, Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, double dt, double maxT = 30);
+double GetAinf(const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, double dt, double maxT = 30);
 void GetKirf(Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &B, double dt, double maxT = 30);
 void GetAinf_Kirf(double &Ainf, Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &A, const Eigen::VectorXd &B, double dt, double maxT = 30);
 //double Fradiation2(double t, const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, double dt);

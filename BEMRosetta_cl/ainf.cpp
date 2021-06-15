@@ -12,6 +12,7 @@
 
 #include "BEMRosetta.h"
 #include <STEM4U/Integral.h>
+#include "functions.h"
 
 using namespace Eigen;
 
@@ -55,38 +56,15 @@ void Hydro::K_IRF(double maxT, int numT) {
 					kirf(it) = Integral(w, y, SIMPSON_1_3)*2/M_PI;
 				}
 }  
+
 	
 void Hydro::Ainf() {
-	if (Nf == 0)
-		return;
-	Awinf.setConstant(Nb*6, Nb*6, Null);
+	if (Nf == 0 || A.size() < Nb*6)
+		return;	Awinf.setConstant(Nb*6, Nb*6, Null);
 	int numT = int(Tirf.size());
 	double dt = Tirf[1] - Tirf[0];
 	
-	Buffer<double> y(numT);
     for (int i = 0; i < Nb*6; ++i)
-        for (int j = 0; j < Nb*6; ++j) {
-		    double awinf = 0;
-		    bool isnull = false;
-		    for (int iw = 0; iw < Nf; ++iw) {
-		        for (int it = 0; it < numT; ++it) {
-		            if (IsNull(Kirf[i][j][it])) {
-		                isnull = true;
-		                break;
-		            }
-		            y[it] = Kirf[i][j][it]*sin(w[iw]*Tirf[it]);
-		        }
-		        if (isnull)
-		            break;
-				double kint = 0;
-		        for (int it = 1; it < numT; ++it) 
-		            kint += Avg(y[it-1], y[it])*dt;
-		        // Ogilvie's formula
-		        awinf += A[i][j][iw] + kint/w[iw];
-			}
-			if (isnull)
-				Awinf(i, j) = Null;
-			else
-		    	Awinf(i, j) = awinf/Nf;
-        }
+        for (int j = 0; j < Nb*6; ++j)
+		    Awinf(i, j) = GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j], dt, Tirf[Tirf.size()-1]);
 }

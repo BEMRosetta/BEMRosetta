@@ -88,20 +88,20 @@ String TabText(const TabCtrl &tab);
 
 
 
-enum DataToShow {DATA_A, DATA_B, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
-enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
+enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
+enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_TFS_MA, PLOT_TFS_PH};
 
 
 class CompareParameters : public WithCompareParameters<StaticRect> {
 public:
-	void Init(ScatterCtrl& scatter);
+	void Init(ScatterDraw& scatter);
 	void Init(DataToShow data);
 	void Load();
 	
 private:
-	ScatterCtrl *pscatter = nullptr;
+	ScatterDraw *pscatter = nullptr;
 	DataToShow dataToShow;
 };
 
@@ -415,8 +415,7 @@ public:
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
 	Upp::Array<HydroSource> ABFZ_source, ABFZ_source2;
-	Upp::Array<HydroSource> Ainf_source, A0_source;
-	
+	Upp::Array<HydroSource> Ainf_source, A0_source;	
 	Upp::Array<HydroSource> TFS_source, TFS_source2;
 		
 	int plot_idf, plot_jdf;
@@ -566,7 +565,7 @@ public:
 	void InitSerialize(bool ret);
 	
 	void Load(const BEMData &bem);
-	void Load(const BemCal &data);
+	void Load(const BemCal &data, bool isNemoh);
 	void Load(const NemohCal &data);
 	void Load(const HamsCal &data);
 	
@@ -884,6 +883,7 @@ public:
 	MainArrange mainArrange;
 	MainABForce mainA;
 	MainABForce mainB;
+	MainABForce mainAinfw;
 	MainABForce mainK;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
 	MainRAO mainRAO;

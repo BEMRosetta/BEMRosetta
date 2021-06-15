@@ -55,6 +55,10 @@ void MainPlot::Init(int _idf, double jdf_ih, DataToShow _dataToShow) {
 						labelY = t_("Radiation damping");
 						splitter.SetPos(10000, 0);	
 						break;
+	case DATA_AINFW:	title = Format(t_("Added mass at infinity %s"), Hydro::StrBDOF(plot_idf, plot_jdf));		
+						labelY = t_("Added mass at infinity");
+						splitter.SetPos(10000, 0);				
+						break;
 	case DATA_K:		title = Format(t_("Kirf Impulse Response Function %s"), Hydro::StrBDOF(plot_idf, plot_jdf));
 						labelY = t_("Kirf Impulse Response Function");
 						splitter.SetPos(10000, 0);	
@@ -131,6 +135,7 @@ bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, con
 		scatP.SetMinUnits(Null, M_PI-3);
 	}
 	compare.Load();
+	
 	return loaded;
 }
 
@@ -171,7 +176,7 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 
 void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	int ih = -1;
-	if (dataToShow != DATA_A && dataToShow != DATA_B) 
+	if (dataToShow != DATA_A && dataToShow != DATA_B && dataToShow != DATA_AINFW) 
 		ih = hy.GetHeadId(heading);
 	String nameType = Format("%s(%s)", hy.name, hy.GetCodeStrAbr());
 	if (idc < 0)
@@ -192,6 +197,38 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, PLOT_AINF, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("Ainf_%s"), nameType)).
+						MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_DOTTED);
+				scatt.Stroke(show_w ? 2 : 0, color).SetMarkWidth(show_w ? 0 : 8);
+				if (dim)
+					scatt.Units(t_("Ns2/m"));
+			}
+		}
+		if (hy.IsLoadedAw0()) {
+			if (A0_source[id].Init(hy, plot_idf, plot_jdf, PLOT_A0, show_w, !dim)) {
+				loaded = true;
+				scatt.AddSeries(A0_source[id]).Legend(Format(t_("A0_%s"), nameType)).
+						SetMarkWidth(!show_w ? 0 : 8).SetMarkColor(color).MarkStyle<SquareMarkPlot>().
+						Stroke(2, color).Dash(LINE_DOTTED);
+				if (dim)
+					scatt.Units(t_("Ns2/m"));
+			}
+		}
+	} else if (dataToShow == DATA_AINFW) {
+		if (hy.IsLoadedAINFW()) {
+			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, PLOT_AINFW, show_w, !dim)) {
+				loaded = true;
+				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A∞(ω)_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
+				if (dim)
+					scatt.Units(t_("Ns2/m"));
+			}
+		}
+		if (hy.IsLoadedAwinf()) {
+			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, PLOT_AINF, show_w, !dim)) {
+				loaded = true;
+				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("A∞_%s"), nameType)).
 						MarkStyle<SquareMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_DOTTED);
 				scatt.Stroke(show_w ? 2 : 0, color).SetMarkWidth(show_w ? 0 : 8);

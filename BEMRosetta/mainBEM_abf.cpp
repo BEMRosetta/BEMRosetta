@@ -44,6 +44,7 @@ bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 		switch (dataToShow) {
 		case DATA_A:			
 		case DATA_B:
+		case DATA_AINFW:
 		case DATA_K:		format = t_("%s");		break;
 		case DATA_FORCE_SC:	
 		case DATA_FORCE_FK:	
@@ -53,7 +54,7 @@ bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 		case DATA_STS2:		NEVER();
 		}
 		int sdof = 6*bem.Nb;
-		if (dataToShow == DATA_A || dataToShow == DATA_B || dataToShow == DATA_K) {
+		if (dataToShow == DATA_A || dataToShow == DATA_B || dataToShow == DATA_AINFW || dataToShow == DATA_K) {
 			plots.SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {
 				plots[idf].SetCount(sdof);
