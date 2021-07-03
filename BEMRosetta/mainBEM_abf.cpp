@@ -12,7 +12,7 @@ using namespace Upp;
 #include "main.h"
 
 
-void MainABForce::Init(DataToShow _dataToShow) {
+void MainABForce::Init(Hydro::DataToShow _dataToShow) {
 	Add(tab.SizePos());
 	
 	dataToShow = _dataToShow;
@@ -42,19 +42,20 @@ bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 			return false;
 		String format;
 		switch (dataToShow) {
-		case DATA_A:			
-		case DATA_B:
-		case DATA_AINFW:
-		case DATA_K:		format = t_("%s");		break;
-		case DATA_FORCE_SC:	
-		case DATA_FORCE_FK:	
-		case DATA_FORCE_EX:	
-		case DATA_RAO:		format = t_("%s%.1fº");	break;
-		case DATA_STS:		NEVER();
-		case DATA_STS2:		NEVER();
+		case Hydro::DATA_A:			
+		case Hydro::DATA_B:
+		case Hydro::DATA_AINFW:
+		case Hydro::DATA_K:			format = t_("%s");		break;
+		case Hydro::DATA_FORCE_SC:	
+		case Hydro::DATA_FORCE_FK:	
+		case Hydro::DATA_FORCE_EX:	
+		case Hydro::DATA_RAO:		format = t_("%s%.1fº");	break;
+		case Hydro::DATA_STS:		NEVER();
+		case Hydro::DATA_STS2:		NEVER();
 		}
 		int sdof = 6*bem.Nb;
-		if (dataToShow == DATA_A || dataToShow == DATA_B || dataToShow == DATA_AINFW || dataToShow == DATA_K) {
+		if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_AINFW || 
+			dataToShow == Hydro::DATA_K) {
 			plots.SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {
 				plots[idf].SetCount(sdof);

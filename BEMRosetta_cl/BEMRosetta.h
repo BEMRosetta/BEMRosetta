@@ -13,13 +13,14 @@ class BEMData;
 void ConsoleMain(const Upp::Vector<String>& command, bool gui);
 void SetBuildInfo(String &str);
 
-enum {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
 class Hydro {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
+	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
+
 	void SaveAs(String file, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
@@ -29,7 +30,7 @@ public:
 	String GetCodeStr()	const {
 		switch (code) {
 		case WAMIT: 		return t_("Wamit");
-		case WAMIT_1_3: 	return t_("Wamit.1.3");
+		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
 		case FAST_WAMIT: 	return t_("FAST-Wamit");
 		case NEMOH:			return t_("Nemoh");
 		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
@@ -223,7 +224,7 @@ public:
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
-	void Symmetrize_Forces();
+	void Symmetrize_Forces(bool xAxis);
 	void Initialize_RAO();
 	void GetFexFromFscFfk();
 	void InitializeSts();
@@ -305,6 +306,10 @@ public:
 	double Kirf_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? Kirf[idf][jdf][ifr] : Kirf[idf][jdf][ifr]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double Kirf_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? Kirf_ndim(ifr, idf, jdf) : Kirf_dim(ifr, idf, jdf);}
 	
+	double Ainfw_dim(int ifr, int idf, int jdf) 		const {return dimen  ? Ainfw[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainfw[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainfw_ndim(int ifr, int idf, int jdf) 		const {return !dimen ? Ainfw[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : Ainfw[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainfw_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? Ainfw_ndim(ifr, idf, jdf) : Ainfw_dim(ifr, idf, jdf);}
+	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
@@ -347,13 +352,14 @@ public:
 	void Jsonize(JsonIO &json);
 	
 private:
-	static const char *strDOF[6];
-	static const char *strDOFAbrev[6];
+	static const char *strDOF[];
+	static const char *strDOFAbrev[];
+	static const char *strDataToPlot[];
 	static String C_units_base(int i, int j);
 	BEMData *bem;
 		
 	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, double h, int ih, int idb);
-	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh);
+	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh, bool xAxis);
 	int id;
 	static int idCount;
 	 
@@ -408,7 +414,7 @@ public:
 	static const char *StrDOFAbrev_base(int i) {
 		return strDOFAbrev[i];
 	}
-		
+			
 	static String StrBDOFAbrev(int i) {
 		int nb = i/6 + 1;
 		int ni = i - (nb - 1)*6;
@@ -436,6 +442,16 @@ public:
 		return -1;
 	}
 	
+	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
+	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
+				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
+				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_KR_MA, PLOT_KR_PH, 
+				 PLOT_TFS_MA, PLOT_TFS_PH};
+				 
+	static const char *StrDataToPlot(DataToPlot dataToPlot) {
+		return strDataToPlot[dataToPlot];
+	}
+	
 	const BEMData &GetBEMData() const {return *bem;}
 	
 	bool IsLoadedA() 	 const {return !A.IsEmpty();}
@@ -451,6 +467,7 @@ public:
 	bool IsLoadedForce(const Forces &f) const {return !f.ma.IsEmpty();}
 	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
 	bool IsLoadedQTF() 	 const {return !qtfsum.IsEmpty();}
+	bool IsLoadedKirf()	 const {return !Kirf.IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -472,11 +489,12 @@ public:
 	
 	int GetW0();
 	void Get3W0(int &id1, int &id2, int &id3);
-	void A0();
+	void GetA0();
 		
-	void K_IRF(double maxT = 120, int numT = 1000);
+	void GetK_IRF(double maxT = 120, int numT = 1000);
 	double GetK_IRF_MaxT();
-	void Ainf();
+	void GetAinf();
+	void GetAinfw();
 	
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
@@ -865,9 +883,11 @@ public:
 	
 	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
 	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
-	void Symmetrize(int ids);
-	void A0(int ids);
-	void Ainf(int ids, double maxT);
+	void Symmetrize(int id, bool xAxis);
+	void A0(int id);
+	void Kirf(int id, double maxT);
+	void Ainf(int id);
+	void Ainfw(int id);
 	
 	void LoadMesh(String file, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <void(String, int pos)> Status);
@@ -888,7 +908,7 @@ public:
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
-	const String bemFilesExt = ".1 .3 .hst .4 .12s .12d .out .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
+	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {

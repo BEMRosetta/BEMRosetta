@@ -1,7 +1,11 @@
 #include "BEMRosetta.h"
 #include <ScatterDraw/DataSource.h>
+#include <ScatterDraw/Equation.h>
+#include "functions.h"
 
 #include <plugin/matio/matio.h>
+
+using namespace Upp;
 
 Function <void(String)> BEMData::Print 		  = [](String s) {Cout() << s;};
 Function <void(String)> BEMData::PrintWarning = [](String s) {Cout() << s;};
@@ -9,6 +13,11 @@ Function <void(String)> BEMData::PrintError   = [](String s) {Cout() << s;};
 
 const char *Hydro::strDOF[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *Hydro::strDOFAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
+const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(ω)"), t_("A∞(ω)"), t_("Kirf"),
+				t_("Fsc_ma"), t_("Fsc_ph"), t_("Ffk_ma"), t_("Ffk_ph"), t_("Fex_ma"), t_("Fex_ph"),
+				t_("RAO_ma"), t_("RAO_ph"), t_("Z_ma"), t_("Z_ph"), t_("Kr_ma"), t_("Kr_ph"), 
+				t_("TFS_ma"), t_("TFS_ph")};
+
 int Hydro::idCount = 0;	
 
 void Hydro::InitializeSts() {
@@ -214,25 +223,37 @@ void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Ve
 	}
 }
 
-void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh) {
+static double MirrorHead(double head, bool xAxis) {
+	if (xAxis)
+		return FixHeading(-head);
+	else {
+		head = FixHeading(head);
+		head -= 90;
+		head = FixHeading(-head);
+		head += 90;
+		return head;		
+	}
+}
+
+void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh, bool xAxis) {
 	Initialize_Forces(newf, newNh);
 	
 	for (int idb = 0; idb < 6*Nb; ++idb) {
 		for (int ih = 0; ih < Nh; ++ih) {
 			Symmetrize_Forces_Each0(f, newf, newHead, head[ih], ih, idb);
-			Symmetrize_Forces_Each0(f, newf, newHead, -head[ih], ih, idb);
+			Symmetrize_Forces_Each0(f, newf, newHead, MirrorHead(head[ih], xAxis), ih, idb);
 		}
 	}
 }
 
-void Hydro::Symmetrize_Forces() {
+void Hydro::Symmetrize_Forces(bool xAxis) {
 	if (!IsLoadedFex() && !IsLoadedFsc() && !IsLoadedFfk() && !IsLoadedRAO())
 		return;
 	
 	Upp::Vector<double> newHead;
 	for (int ih = 0; ih < Nh; ++ih) {
 		FindAddRatio(newHead, head[ih], 0.001);
-		FindAddRatio(newHead, -head[ih], 0.001);
+		FindAddRatio(newHead, MirrorHead(head[ih], xAxis), 0.001);
 	}
 	Sort(newHead);
 	int newNh = newHead.size();
@@ -241,19 +262,19 @@ void Hydro::Symmetrize_Forces() {
 	RAO newrao;
 	
 	if (IsLoadedFex()) {
-		Symmetrize_ForcesEach(ex, newex, newHead, newNh);
+		Symmetrize_ForcesEach(ex, newex, newHead, newNh, xAxis);
 		ex = pick(newex);
 	}
 	if (IsLoadedFsc()) {
-		Symmetrize_ForcesEach(sc, newsc, newHead, newNh);
+		Symmetrize_ForcesEach(sc, newsc, newHead, newNh, xAxis);
 		sc = pick(newsc);
 	}
 	if (IsLoadedFfk()) {
-		Symmetrize_ForcesEach(fk, newfk, newHead, newNh);
+		Symmetrize_ForcesEach(fk, newfk, newHead, newNh, xAxis);
 		fk = pick(newfk);
 	}
 	if (IsLoadedRAO()) {
-		Symmetrize_ForcesEach(rao, newrao, newHead, newNh);
+		Symmetrize_ForcesEach(rao, newrao, newHead, newNh, xAxis);
 		rao = pick(newrao);
 	}
 	head = pick(newHead);
@@ -442,7 +463,7 @@ void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(file));
 		
-		if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
+		if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
 			type = Hydro::WAMIT_1_3;
 		else if (ext == ".dat")
 			type = Hydro::FAST_WAMIT;	
@@ -739,9 +760,9 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	}
 	
 	if (!IsLoadedAw0())  
-		A0();
+		GetA0();
 	
-	if (!IsLoadedAwinf() && bem->calcAwinf) {
+	if ((!IsLoadedAwinf() || !IsLoadedKirf()) && bem->calcAwinf) {
 		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0) {
 			lastError = t_("Incorrect time for A∞ calculation. Please review it in Options");
 			return false;
@@ -750,16 +771,20 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			lastError = t_("Incorrect number of time values for A∞ calculation. Please review it in Options");
 			return false;
 		}
-		if (!Status(t_("Obtaining Impulse Response Function"), 40)) {
-			lastError = t_("Cancelled by user");
-			return false;
+		if (!IsLoadedKirf()) {
+			if (!Status(t_("Obtaining Impulse Response Function"), 40)) {
+				lastError = t_("Cancelled by user");
+				return false;
+			}
+			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		}
-		K_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
-		if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A∞)"), 70)) {
-			lastError = t_("Cancelled by user");
-			return false;
+		if (!IsLoadedAwinf()) {
+			if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A∞)"), 70)) {
+				lastError = t_("Cancelled by user");
+				return false;
+			}
+			GetAinf();
 		}
-		Ainf();
 	}
 	return true;
 }
@@ -781,7 +806,7 @@ void Hydro::Get3W0(int &id1, int &id2, int &id3) {
 	id3 = FindAdd(w, ww[2]); 
 }
 
-void Hydro::A0() {
+void Hydro::GetA0() {
 	if (!IsLoadedA())
 		return;
 	
@@ -1037,6 +1062,8 @@ void Hydro::Jsonize(JsonIO &json) {
 		GetOldAB(oldA, A);
 		GetOldAB(oldB, B);
 		GetOldAB(oldKirf, Kirf);
+		for (auto &h : head)
+			h = FixHeading(h);
 	}
 }
 	
@@ -1083,7 +1110,7 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
-	} else if (ext == ".1" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
+	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
@@ -1168,8 +1195,8 @@ HydroClass &BEMData::Join(Upp::Vector<int> &ids, Function <bool(String, int)> St
 	return data;
 }
 
-void BEMData::Symmetrize(int id) {
-	hydros[id].hd().Symmetrize_Forces();
+void BEMData::Symmetrize(int id, bool xAxis) {
+	hydros[id].hd().Symmetrize_Forces(xAxis);
 	
 	for (int i = 0; i < hydros[id].hd().head.size(); ++i) 
 		FindAddRatio(headAll, hydros[id].hd().head[i], 0.01);
@@ -1177,12 +1204,19 @@ void BEMData::Symmetrize(int id) {
 }
 
 void BEMData::A0(int id) {
-	hydros[id].hd().A0();
+	hydros[id].hd().GetA0();
 }
 
-void BEMData::Ainf(int id, double maxT) {
-	hydros[id].hd().K_IRF(maxT, numValsA);
-	hydros[id].hd().Ainf();
+void BEMData::Kirf(int id, double maxT) {
+	hydros[id].hd().GetK_IRF(maxT, numValsA);
+}
+
+void BEMData::Ainf(int id) {
+	hydros[id].hd().GetAinf();
+}
+
+void BEMData::Ainfw(int id) {
+	hydros[id].hd().GetAinfw();
 }
 
 void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {

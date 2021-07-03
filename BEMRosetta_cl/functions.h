@@ -1,12 +1,20 @@
 #ifndef _BEMRosetta_BEMRosetta_cl_functions_h_
 #define _BEMRosetta_BEMRosetta_cl_functions_h_
 
-void GetKirfTirf(Eigen::VectorXd &Kirf, Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, const Eigen::VectorXd &B, double dt, double &maxT);
-void GetKirfTirf(Eigen::VectorXd &Kirf, Eigen::VectorXd &Tirf, double w0, double dw, 	 const Eigen::VectorXd &B, double dt, double &maxT);	
-void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &B, double dt, double maxT = 30);
+#include <ScatterDraw/ScatterDraw.h>
+
+double GetKirfMaxT(const Eigen::VectorXd &w);
+void GetTirf(Eigen::VectorXd &Tirf, double dt, double maxT);
+	
+void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, const Eigen::VectorXd &B, double dt, double maxT);
+void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, double w0, double dw, 	 const Eigen::VectorXd &B, double dt, double maxT);	
 void GetAinf_Kirf(double &Ainf, Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, double dt, double maxT = 30);
-double GetAinf(const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, double dt, double maxT = 30);
-void GetKirf(Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &B, double dt, double maxT = 30);
+
+void GetAinfw(Eigen::VectorXd &Ainfw, const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
+			const Eigen::VectorXd &A, double dt, double maxT);
+double GetAinf(const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
+			const Eigen::VectorXd &A, double dt, double maxT = 30);
+//void GetKirf(Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &B, double dt, double maxT = 30);
 void GetAinf_Kirf(double &Ainf, Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &A, const Eigen::VectorXd &B, double dt, double maxT = 30);
 //double Fradiation2(double t, const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, double dt);
 double Fradiation(const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, Eigen::Index iiter, double dt, Eigen::Index velSize = -1);
@@ -43,7 +51,7 @@ struct ParamDecay {
 	Eigen::VectorXd Bspl, wspl;	// Processed ready to get Kirf
 	Eigen::VectorXd B, wB;		// Real data, if available
 	Eigen::VectorXd Kirf;
-	Upp::SplineEquation splineB;
+	SplineEquation splineB;
 	
 	bool getb, getb2, getav;
 	
@@ -72,5 +80,7 @@ void DampedSin(double x, double z0, double zDecay, double mass, double ainf, dou
 void FitToDecay(const Eigen::VectorXd &z, const Eigen::VectorXd &dz, const Eigen::VectorXd &d2z, 
 			double dt, double mass, double Kh, double g, ParamDecay &param);
 void Decay(double mass, double ainf, double av, double Kh, double b, double b2, double dt, double zDecay, double maxT, Eigen::VectorXd &z);
-			
+
+double FixHeading(double head);
+		
 #endif

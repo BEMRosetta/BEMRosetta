@@ -235,21 +235,21 @@ bool NemohCal::Load(String fileName) {
 			double cz = f.GetDouble(6);
 			if (type == 1) {
 				if (x) 
-					body.dof[SURGE] = true;
+					body.dof[Hydro::SURGE] = true;
 				else if (y)
-					body.dof[SWAY] = true;
+					body.dof[Hydro::SWAY] = true;
 				else if (z)
-					body.dof[HEAVE] = true;
+					body.dof[Hydro::HEAVE] = true;
 			} else if (type == 2) {
 				body.c0[0] = cx;
 				body.c0[1] = cy;
 				body.c0[2] = cz;
 				if (x) 
-					body.dof[ROLL] = true;
+					body.dof[Hydro::ROLL] = true;
 				else if (y)
-					body.dof[PITCH] = true;
+					body.dof[Hydro::PITCH] = true;
 				else if (z)
-					body.dof[YAW] = true;
+					body.dof[Hydro::YAW] = true;
 			} else
 				throw Exc(in.Str() + "\n"  + Format(t_("Incorrect DOF type %d set in body %d"), f.GetText(0), ib+1));
 		}
@@ -654,30 +654,30 @@ void NemohCal::Save_Cal(String folder, int _nf, double _minf, double _maxf) cons
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", b.npoints, b.npanels), cp) << "! Number of points and number of panels" << "\n";	
 		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of degrees of freedom" << "\n";	
-		if (b.dof[SURGE])
+		if (b.dof[Hydro::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Surge" << "\n";	
-		if (b.dof[SWAY])
+		if (b.dof[Hydro::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Sway" << "\n";	
-		if (b.dof[HEAVE])
+		if (b.dof[Hydro::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Heave" << "\n";	
-		if (b.dof[ROLL])
+		if (b.dof[Hydro::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Roll about a point" << "\n";	
-		if (b.dof[PITCH])
+		if (b.dof[Hydro::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Pitch about a point" << "\n";	
-		if (b.dof[YAW])		
+		if (b.dof[Hydro::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Yaw about a point" << "\n";	
 		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of resulting generalised forces" << "\n";	
-		if (b.dof[SURGE])
+		if (b.dof[Hydro::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Force in x direction" << "\n";	
-		if (b.dof[SWAY])
+		if (b.dof[Hydro::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Force in y direction" << "\n";	
-		if (b.dof[HEAVE])
+		if (b.dof[Hydro::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Force in z direction" << "\n";	
-		if (b.dof[ROLL])
+		if (b.dof[Hydro::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in x direction about a point" << "\n";	
-		if (b.dof[PITCH])
+		if (b.dof[Hydro::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in y direction about a point" << "\n";	
-		if (b.dof[YAW])		
+		if (b.dof[Hydro::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in z direction about a point" << "\n";	
 		out << NemohField("0", cp) << "! Number of lines of additional information" << "\n";
 	}

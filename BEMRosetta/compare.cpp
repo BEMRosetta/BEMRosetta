@@ -21,18 +21,18 @@ void CompareParameters::Init(ScatterDraw& scatter) {
 	swRelative.WhenAction = [=]() {Load();};
 }
 
-void CompareParameters::Init(DataToShow dataToShow) {
+void CompareParameters::Init(Hydro::DataToShow dataToShow) {
 	list.Reset();
 	list.SetLineCy(EditField::GetStdHeight()).MultiSelect();
 	list.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, list);};
 	
 	this->dataToShow = dataToShow;
 	
-	if (dataToShow == DATA_A) {
+	if (dataToShow == Hydro::DATA_A) {
 		list.AddColumn(t_("Name"), 40);
 		list.AddColumn(t_("RMS"), 10);
 		list.AddColumn(t_("A∞"), 10);
-	} else if (dataToShow == DATA_B) {
+	} else if (dataToShow == Hydro::DATA_B) {
 		list.AddColumn(t_("Name"), 40);
 		list.AddColumn(t_("RMS"), 10);
 	} else
@@ -81,7 +81,7 @@ void CompareParameters::Load() {
     
     
  
-    if (dataToShow == DATA_A) {
+    if (dataToShow == Hydro::DATA_A) {
         col++;
         Vector<double> ainf;
         //int row = 0;

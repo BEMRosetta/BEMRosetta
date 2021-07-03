@@ -165,7 +165,7 @@ bool FastOut::LoadOut(String fileName) {
 		} else {
 			row++;
 			if (fields.IsEmpty())
-				return true;
+				break;
 			if (fields.size() != numCol) 
 				throw Exc(Format("Number of values (%d) and parameters (%d) do not match in row %d", fields.size(), numCol, row));
 
@@ -174,6 +174,11 @@ bool FastOut::LoadOut(String fileName) {
 		}
 		pos = npos;
 	}
+	if (dataOut.size() > 0) {		// Size for calc. fields
+		for (int i = numCol; i < dataOut.size(); ++i)
+        	dataOut[i].SetCount(dataOut[0].size());
+	}
+	
 	if (dataOut.IsEmpty()) 
 		throw Exc(Format("Problem reading '%s'", fileName)); 
 
