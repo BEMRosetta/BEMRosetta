@@ -1,5 +1,6 @@
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
+#include "functions.h"
 
 
 bool Wamit::Load(String file) {
@@ -8,7 +9,8 @@ bool Wamit::Load(String file) {
 	hd().name = GetFileTitle(file);
 		
 	try {
-		if (GetFileExt(file) == ".out") {
+		String ext = GetFileExt(file);
+		if (ext == ".out") {
 			BEMData::Print("\n\n" + Format(t_("Loading out file '%s'"), file));
 			if (!Load_out()) {
 				BEMData::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
@@ -22,7 +24,7 @@ bool Wamit::Load(String file) {
 			BEMData::Print("\n- " + Format(t_("Froude-Krylov file '%s'"), GetFileName(fileFK)));
 			if (!Load_FK(fileFK))
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
-		} else if (S(".1.3.hst.4.12d.12s").Find(GetFileExt(file)) >= 0) {
+		} else if (S(".1.2.3.hst.4.12d.12s").Find(ext) >= 0) {
 			String filecfg = ForceExt(file, ".cfg");
 			BEMData::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
 			if (!Load_cfg(filecfg))
@@ -43,9 +45,18 @@ bool Wamit::Load(String file) {
 			if (!Load_1(file1))
 				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
 			
-			String file3 = ForceExt(file, ".3");
-			BEMData::Print("\n- " + Format(t_("Diffraction exciting .3 file '%s'"), GetFileName(file3)));
-			if (!Load_3(file3))
+			String file2 = ForceExt(file, ".2"),
+				   file3 = ForceExt(file, ".3");
+				   
+			if (ext == ".2")
+				;
+			else {
+				file = file3;
+				if (!FileExists(file3) && FileExists(file2))
+					file = file2;
+			}
+			BEMData::Print("\n- " + Format(t_("Diffraction exciting %s file '%s'"), GetFileExt(file), GetFileName(file)));
+			if (!Load_3(file))
 				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
 			
 			String fileHST = ForceExt(file, ".hst");
@@ -124,7 +135,6 @@ void Wamit::Save(String file, bool force_T, int qtfHeading) {
 		hd().lastError = e;
 	}
 }
-
 
 bool Wamit::Load_out() {
 	hd().Nb = 0;
@@ -226,7 +236,7 @@ bool Wamit::Load_out() {
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						FindAddDelta(hd().head, f.GetDouble(4), 0.001);
+						FindAddDelta(hd().head, FixHeading(f.GetDouble(4)), 0.001);
 					}
 				}
 			}
@@ -845,7 +855,7 @@ bool Wamit::Load_1(String fileName) {
 	}
 	return true;	
 }
- 
+
 bool Wamit::Load_3(String fileName) {
 	hd().dimen = false;
 	hd().len = 1;
@@ -876,7 +886,7 @@ bool Wamit::Load_3(String fileName) {
 		}
 		
 		double freq = f.GetDouble(0);
-		double head = f.GetDouble(1);
+		double head = FixHeading(f.GetDouble(1));
 		FindAdd(w, freq);
 		FindAdd(hd().head, head);
 		
@@ -933,7 +943,7 @@ bool Wamit::Load_3(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}
-		double head = f.GetDouble(1);
+		double head = FixHeading(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1042,7 +1052,7 @@ bool Wamit::Load_4(String fileName) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 		
-		double head = f.GetDouble(1);
+		double head = FixHeading(f.GetDouble(1));
 		
 		FindAdd(hd().head, head);
 	}
@@ -1101,7 +1111,7 @@ bool Wamit::Load_4(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
-		double head = f.GetDouble(1);
+		double head = FixHeading(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));

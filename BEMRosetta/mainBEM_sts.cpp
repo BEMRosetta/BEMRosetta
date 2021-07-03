@@ -68,7 +68,7 @@ bool MainStateSpace::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 }
 
 void MainStateSpacePlot::Init(int _idf, int _jdf) {
-	mainPlot.Init(_idf, _jdf, DATA_STS2);
+	mainPlot.Init(_idf, _jdf, Hydro::DATA_STS2);
 	
 	splitterTab.Horz(tab.SizePos(), mainPlot.SizePos());
 	Add(splitterTab.SizePos());

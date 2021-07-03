@@ -29,12 +29,20 @@ void MainBEM::Init() {
 	menuOpen.butRemoveSelected <<= THISBACK1(OnRemoveSelected, false);
 	menuOpen.butJoin.Disable();	
 	menuOpen.butJoin <<= THISBACK(OnJoin);
-	menuOpen.butSymmetrize.Disable();	
-	menuOpen.butSymmetrize <<= THISBACK(OnSymmetrize);
+	menuOpen.labelSym.Disable();
+	menuOpen.butSymX.Disable();	
+	menuOpen.butSymX <<= THISBACK1(OnSymmetrize, true);
+	menuOpen.butSymY.Disable();
+	menuOpen.butSymY <<= THISBACK1(OnSymmetrize, false);
 	menuOpen.butA0.Disable();	
-	menuOpen.butA0 <<= THISBACK(OnA0);
-	menuOpen.butKirfAinf.Disable();	
-	menuOpen.butKirfAinf <<= THISBACK(OnKirfAinf);
+	menuOpen.butA0 <<= THISBACK1(OnKirfAinf, Hydro::PLOT_A0);
+	menuOpen.butAinf.Disable();	
+	menuOpen.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
+	menuOpen.butAinfw.Show(Bem().experimental);
+	menuOpen.butAinfw.Disable();	
+	menuOpen.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
+	menuOpen.butKirf.Disable();	
+	menuOpen.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
 	menuOpen.butDescription.Disable();
 	menuOpen.butDescription <<= THISBACK(OnDescription);
 	
@@ -106,6 +114,8 @@ void MainBEM::Init() {
 			mainB.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainK))
 			mainK.Load(Bem(), ids);
+		else if (mainTab.IsAt(mainAinfw))
+			mainAinfw.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainForceSC))
 			mainForceSC.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainForceFK))
@@ -167,28 +177,30 @@ void MainBEM::Init() {
 	mainStiffness.Init();
 	mainTab.Add(mainStiffness.SizePos(), t_("K")).Disable();
 	
-	mainA.Init(DATA_A);
+	mainA.Init(Hydro::DATA_A);
 	mainTab.Add(mainA.SizePos(), t_("A")).Disable();
 	
-	mainB.Init(DATA_B);
+	mainB.Init(Hydro::DATA_B);
 	mainTab.Add(mainB.SizePos(), t_("B")).Disable();
 
-	mainAinfw.Init(DATA_AINFW);
-	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
+	if (Bem().experimental) {
+		mainAinfw.Init(Hydro::DATA_AINFW);
+		mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
+	}
 	
-	mainK.Init(DATA_K);
+	mainK.Init(Hydro::DATA_K);
 	mainTab.Add(mainK.SizePos(), t_("Kirf")).Disable();
 	
-	mainForceEX.Init(DATA_FORCE_EX);
+	mainForceEX.Init(Hydro::DATA_FORCE_EX);
 	mainTab.Add(mainForceEX.SizePos(), t_("Fex")).Disable();
 	
-	mainForceSC.Init(DATA_FORCE_SC);
+	mainForceSC.Init(Hydro::DATA_FORCE_SC);
 	mainTab.Add(mainForceSC.SizePos(), t_("Fsc")).Disable();
 	
-	mainForceFK.Init(DATA_FORCE_FK);
+	mainForceFK.Init(Hydro::DATA_FORCE_FK);
 	mainTab.Add(mainForceFK.SizePos(), t_("Ffk")).Disable();
 	
-	mainRAO.Init(DATA_RAO);
+	mainRAO.Init(Hydro::DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
 
 	mainSetupFOAMM.Init();
@@ -338,7 +350,7 @@ void MainBEM::OnOpt() {
 			menuConvert.file.Type(t_("Wamit .out file"), "*.out");
 			break;	
 	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
-			menuConvert.file.Type(t_("Wamit .1.3.4.hst.12s.12d file"), "*.1 *.3 *.hst *.4 *.12s *.12d");
+			menuConvert.file.Type(t_("Wamit .1.2.3.4.hst.12s.12d file"), "*.1 *.3 *.hst *.4 *.12s *.12d");
 			break;
 	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
 			menuConvert.file.Type(t_("FAST HydroDyn file"), "*.dat");
@@ -352,7 +364,7 @@ void MainBEM::OnOpt() {
 	String extConv = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
 	if (extConv.IsEmpty())
 		extConv = "-";
-	if (String(".1 .3 .hst .4 .12s .12d").Find(extConv) >= 0)
+	if (String(".1 .2 .3 .hst .4 .12s .12d").Find(extConv) >= 0)
 		menuConvert.file.ActiveType(0);
 	else if (String(".dat").Find(extConv) >= 0)
 		menuConvert.file.ActiveType(1);
@@ -406,6 +418,8 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		if (Bem().experimental)
+			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -463,6 +477,8 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+	if (Bem().experimental)
+		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -479,11 +495,15 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
-	menuOpen.butSymmetrize.Enable(numsel == 1 || numrow == 1);
-	menuOpen.butA0.Enable(numsel == 1 || numrow == 1);
-	menuOpen.butKirfAinf.Enable(numsel == 1 || numrow == 1);
+	menuOpen.labelSym.Enable   	  (numsel == 1 || numrow == 1);
+	menuOpen.butSymX.Enable		  (numsel == 1 || numrow == 1);
+	menuOpen.butSymY.Enable		  (numsel == 1 || numrow == 1);
+	menuOpen.butKirf.Enable		  (numsel == 1 || numrow == 1);
+	menuOpen.butA0.Enable  		  (numsel == 1 || numrow == 1);
+	menuOpen.butAinf.Enable		  (numsel == 1 || numrow == 1);
+	menuOpen.butAinfw.Enable	  (numsel == 1 || numrow == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
-	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
+	menuConvert.butConvert.Enable (numsel == 1 || numrow == 1);
 }
 
 void MainBEM::OnJoin() {
@@ -536,6 +556,8 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		if (Bem().experimental)
+			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -549,7 +571,7 @@ void MainBEM::OnJoin() {
 	UpdateButtons();
 }
 
-void MainBEM::OnSymmetrize() {
+void MainBEM::OnSymmetrize(bool xAxis) {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -559,7 +581,7 @@ void MainBEM::OnSymmetrize() {
 
 		Progress progress(t_("Symmetrizing forces and RAOs in selected BEM file..."), 100); 
 		
-		Bem().Symmetrize(id);
+		Bem().Symmetrize(id, xAxis);
 		
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -575,50 +597,46 @@ void MainBEM::OnSymmetrize() {
 	}
 }
 
-void MainBEM::OnA0() {
+void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
-
-		WaitCursor wait;
-
-		Progress progress(t_("Calculating A0 in selected BEM file..."), 100); 
+			
+		Progress progress(Format(t_("Calculating %s in selected BEM file..."), Hydro::StrDataToPlot(param)), 100); 
 		
-		Bem().A0(id);
+		double maxT = Null;
 		
-		mainSummary.Clear();
-		for (int i = 0; i < Bem().hydros.size(); ++i)
-			mainSummary.Report(Bem().hydros[i].hd(), i);
-		
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
-		
-		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
-	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
-	}
-}
-
-void MainBEM::OnKirfAinf() {
-	try {
-		int id = GetIdOneSelected();
-		if (id < 0) 
-			return;
-
-		Progress progress(t_("Calculating IRF and A∞ in selected BEM file..."), 100); 
-		
-		double maxT = Bem().hydros[id].hd().GetK_IRF_MaxT();
-		if (maxT < 0)
-			maxT = Bem().maxTimeA;
-		else if (Bem().maxTimeA > maxT) {
-			if (!PromptYesNo(Format(t_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
+		if (param == Hydro::PLOT_K || 
+		   ((param == Hydro::PLOT_AINF || param == Hydro::PLOT_AINFW) 
+		   	 && !Bem().hydros[id].hd().IsLoadedKirf())) {
+		 	maxT = Bem().hydros[id].hd().GetK_IRF_MaxT();
+			if (maxT < 0)
 				maxT = Bem().maxTimeA;
-		} else
-			maxT = Bem().maxTimeA;
-
+			else if (Bem().maxTimeA > maxT) {
+				if (!PromptYesNo(Format(t_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
+					maxT = Bem().maxTimeA;
+			} else
+				maxT = Bem().maxTimeA;
+		}
+		   
 		WaitCursor wait;
 
-		Bem().Ainf(id, maxT);
+		if (param == Hydro::PLOT_A0)
+			Bem().A0(id);
+		else if (param == Hydro::PLOT_K)
+			Bem().Kirf(id, maxT);
+		else if (param == Hydro::PLOT_AINF) {
+			if (!Bem().hydros[id].hd().IsLoadedKirf())
+				Bem().Kirf(id, maxT);
+			Bem().Ainf(id);
+		} else if (param == Hydro::PLOT_AINFW) {
+			if (!Bem().hydros[id].hd().IsLoadedKirf())
+				Bem().Kirf(id, maxT);
+			if (!Bem().hydros[id].hd().IsLoadedAwinf())
+				Bem().Ainf(id);
+			Bem().Ainfw(id);
+		}
 		
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -628,6 +646,8 @@ void MainBEM::OnKirfAinf() {
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		if (Bem().experimental)
+			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
