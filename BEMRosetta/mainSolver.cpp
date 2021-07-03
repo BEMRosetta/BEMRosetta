@@ -319,8 +319,10 @@ void MainSolver::Load(const BemCal &data, bool isNemoh) {
 	
 	for (int i = 0; i < data.bodies.size(); ++i) {
 		const BemBody &b = data.bodies[i];
-		bodies.array.Add(b.meshFile, b.lidFile, b.npoints, b.npanels, b.dof[SURGE], b.dof[SWAY], b.dof[HEAVE], 
-					b.dof[ROLL], b.dof[PITCH], b.dof[YAW], b.c0[0], b.c0[1], b.c0[2]);
+		bodies.array.Add(b.meshFile, b.lidFile, b.npoints, b.npanels, 
+					b.dof[Hydro::SURGE], b.dof[Hydro::SWAY], b.dof[Hydro::HEAVE], 
+					b.dof[Hydro::ROLL], b.dof[Hydro::PITCH], b.dof[Hydro::YAW], 
+					b.c0[0], b.c0[1], b.c0[2]);
 	}
 	bodies.array.SetCursor(0);
 	dropSolver.WhenAction();
@@ -411,12 +413,12 @@ bool MainSolver::Save(BemCal &data, bool isNemoh) {
 		}
 		b.lidFile = bodies.array.Get(i, 1);
 
-		b.dof[SURGE] = bodies.array.Get(i, 4);
-		b.dof[SWAY]  = bodies.array.Get(i, 5);
-		b.dof[HEAVE] = bodies.array.Get(i, 6);
-		b.dof[ROLL]  = bodies.array.Get(i, 7);
-		b.dof[PITCH] = bodies.array.Get(i, 8);
-		b.dof[YAW]   = bodies.array.Get(i, 9);
+		b.dof[Hydro::SURGE] = bodies.array.Get(i, 4);
+		b.dof[Hydro::SWAY]  = bodies.array.Get(i, 5);
+		b.dof[Hydro::HEAVE] = bodies.array.Get(i, 6);
+		b.dof[Hydro::ROLL]  = bodies.array.Get(i, 7);
+		b.dof[Hydro::PITCH] = bodies.array.Get(i, 8);
+		b.dof[Hydro::YAW]   = bodies.array.Get(i, 9);
 		b.c0[0] 	 = bodies.array.Get(i, 10);
 		b.c0[1] 	 = bodies.array.Get(i, 11);
 		b.c0[2] 	 = bodies.array.Get(i, 12);

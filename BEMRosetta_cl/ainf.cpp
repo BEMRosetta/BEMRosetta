@@ -1,15 +1,3 @@
-//// Infinite added-mass (Ainf) calculator
-//
-//   This function calculates the impulse response function and added-mass radiation coefficient 
-//	 at the infinite-frequency (Ainf) using the Ogilvie's formula [A], which is 
-//   necessary for time-domain simulations of semi-submerged or totally submerged bodies.
-//   
-//   	    [A] Ogilvie, F. T. Recent Progress Towards the Understanding and Prediction of Ship
-//   		5th Symposium on Naval Hydrodynamics, vol. 112, Washington DC, USA, 1964.
-//
-// Markel Penalba
-// Fluid-Mechanics Research Group, Mondragon University
-
 #include "BEMRosetta.h"
 #include <STEM4U/Integral.h>
 #include "functions.h"
@@ -31,40 +19,55 @@ double Hydro::GetK_IRF_MaxT() {
 	return M_PI/delta;		// (2*M_PI/delta)/2;
 }
 
-void Hydro::K_IRF(double maxT, int numT) {
-    Tirf = VectorXd::LinSpaced(numT, 0, maxT);
-    
+void Hydro::GetK_IRF(double maxT, int numT) {
+	if (Nf == 0 || B.IsEmpty())
+		return;
+	
     Kirf.SetCount(Nb*6); 			
     for (int i = 0; i < Nb*6; ++i) {
     	Kirf[i].SetCount(Nb*6); 			 
    		for (int j = 0; j < Nb*6; ++j)
 			Kirf[i][j].setConstant(numT, Null);
     }
+		
+	double dt = maxT/numT;
 	
-	if (B.IsEmpty())
-		return;
+	GetTirf(Tirf, dt, maxT);
 	
 	Vector<double> y(Nf);
   	for (int i = 0; i < Nb*6; ++i)
     	for (int j = 0; j < Nb*6; ++j) 
-			if (!IsNull(B[i][j][0])) 
-				for (int it = 0; it < numT; ++it) {
-					const VectorXd &b = B[i][j];
-					VectorXd &kirf = Kirf[i][j];
-					for (int iw = 0; iw < Nf; ++iw)
-						y[iw] = b(iw)*cos(w[iw]*Tirf(it));
-					kirf(it) = Integral(w, y, SIMPSON_1_3)*2/M_PI;
-				}
+			if (!IsNull(B[i][j][0]))
+				GetKirf(Kirf[i][j], Tirf, Get_w(), B[i][j], dt, maxT); 
 }  
 
+void Hydro::GetAinf() {
+	if (Nf == 0 || A.size() < Nb*6 || !IsLoadedKirf())
+		return;	
 	
-void Hydro::Ainf() {
-	if (Nf == 0 || A.size() < Nb*6)
-		return;	Awinf.setConstant(Nb*6, Nb*6, Null);
+	Awinf.setConstant(Nb*6, Nb*6, Null);
 	int numT = int(Tirf.size());
 	double dt = Tirf[1] - Tirf[0];
 	
     for (int i = 0; i < Nb*6; ++i)
         for (int j = 0; j < Nb*6; ++j)
-		    Awinf(i, j) = GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j], dt, Tirf[Tirf.size()-1]);
+		    Awinf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j], dt, Tirf[Tirf.size()-1]);
+}
+
+void Hydro::GetAinfw() {
+	if (Nf == 0 || A.size() < Nb*6 || !IsLoadedKirf())
+		return;	
+	
+	Ainfw.SetCount(Nb*6); 			
+    for (int i = 0; i < Nb*6; ++i) {
+    	Ainfw[i].SetCount(Nb*6); 			 
+   		for (int j = 0; j < Nb*6; ++j)
+			Ainfw[i][j].setConstant(Nf, Null);
+    }
+    
+	double dt = Tirf[1] - Tirf[0];
+	
+    for (int i = 0; i < Nb*6; ++i)
+        for (int j = 0; j < Nb*6; ++j)
+		    ::GetAinfw(Ainfw[i][j], Kirf[i][j], Tirf, Get_w(), A[i][j], dt, Tirf[Tirf.size()-1]);
 }

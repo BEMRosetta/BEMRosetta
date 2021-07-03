@@ -149,11 +149,11 @@ private:
 	
 			double pitch = dataFast->GetVal(idtime, idpitch);
 			double roll = dataFast->GetVal(idtime, idroll);
-			double yaw = dataFast->GetVal(idtime, idyaw);
+			//double yaw = dataFast->GetVal(idtime, idyaw);
 			
 			pitch = ToRad(pitch);
 			roll = ToRad(roll);
-			yaw = ToRad(yaw);
+			//yaw = ToRad(yaw);
 
 			return heave - sin(pitch)*ptfmCOBxt + cos(pitch)*sin(roll)*ptfmCOByt;
 		}	

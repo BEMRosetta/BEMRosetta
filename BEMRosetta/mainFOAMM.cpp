@@ -211,7 +211,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		int idf = Hydro::DOFStr(arrayCases.Get(row, 2));
 		int jdf = Hydro::DOFStr(arrayCases.Get(row, 3));
 		
-		plots.Init(idf + 6*ib, jdf + 6*ib, DATA_STS);
+		plots.Init(idf + 6*ib, jdf + 6*ib, Hydro::DATA_STS);
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 		plots.Load(hydro, mbm);
 	} catch (Exc e) {
