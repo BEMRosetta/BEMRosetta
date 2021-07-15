@@ -492,7 +492,8 @@ public:
 	void GetA0();
 		
 	void GetK_IRF(double maxT = 120, int numT = 1000);
-	double GetK_IRF_MaxT();
+	double GetK_IRF_MaxT() const;
+	static double GetK_IRF_MaxT(const Vector<double> &w);
 	void GetAinf();
 	void GetAinfw();
 	
@@ -871,7 +872,7 @@ public:
 	double depth, rho, g, len;
 	int discardNegDOF;
 	double thres;
-	int calcAwinf;
+	int calcAwinf, calcAwinfw;
 	double maxTimeA;
 	int numValsA;
 	int onlyDiagonal;
@@ -920,6 +921,7 @@ public:
 			("discardNegDOF", discardNegDOF)
 			("thres", thres)
 			("calcAwinf", calcAwinf)
+			("calcAwinfw", calcAwinfw)
 			("maxTimeA", maxTimeA)
 			("numValsA", numValsA)
 			("onlyDiagonal", onlyDiagonal)

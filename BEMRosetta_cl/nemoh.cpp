@@ -214,7 +214,8 @@ bool NemohCal::Load(String fileName) {
 				body.npanels = dat.mesh.GetNumPanels();
 			}
 		} else
-			throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
+			BEMData::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
+			//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 		
 		if (body.npoints < 1 || body.npoints > 100000000)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of points %s"), f.GetText(0)));

@@ -675,6 +675,7 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 	}*/
 	
 	bem->calcAwinf = true;
+	bem->calcAwinfw = true;
 	
 	// sts has to be recalculated	
 }
@@ -786,6 +787,14 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			GetAinf();
 		}
 	}
+	if (bem->calcAwinfw) {
+		if (!IsLoadedKirf())
+			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
+		if (!IsLoadedAwinf())
+			GetAinf();
+		GetAinfw();
+	}
+	
 	return true;
 }
 
@@ -1425,6 +1434,8 @@ bool BEMData::LoadSerializeJson(bool &firstTime) {
 		thres = 0.01;
 	if (!ret || IsNull(calcAwinf))
 		calcAwinf = true;
+	if (!ret || IsNull(calcAwinfw))
+		calcAwinfw = true;
 	if (!ret || IsNull(maxTimeA))
 		maxTimeA = 120;
 	if (!ret || IsNull(numValsA))
