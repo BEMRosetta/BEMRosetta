@@ -4,18 +4,19 @@
 #include <ScatterDraw/ScatterDraw.h>
 
 double GetKirfMaxT(const Eigen::VectorXd &w);
-void GetTirf(Eigen::VectorXd &Tirf, double dt, double maxT);
+void GetTirf(Eigen::VectorXd &Tirf, int numT, double maxT);
 	
-void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, const Eigen::VectorXd &B, double dt, double maxT);
-void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, double w0, double dw, 	 const Eigen::VectorXd &B, double dt, double maxT);	
-void GetAinf_Kirf(double &Ainf, Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, double dt, double maxT = 30);
+void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, const Eigen::VectorXd &B);
+void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, double w0, double dw, 	 const Eigen::VectorXd &B);	
+double GetAinf_Kirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT);
+double GetAinf_Kirf(Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT);
 
 void GetAinfw(Eigen::VectorXd &Ainfw, const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
-			const Eigen::VectorXd &A, double dt, double maxT);
+			const Eigen::VectorXd &A);
 double GetAinf(const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
-			const Eigen::VectorXd &A, double dt, double maxT = 30);
-//void GetKirf(Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &B, double dt, double maxT = 30);
-void GetAinf_Kirf(double &Ainf, Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &A, const Eigen::VectorXd &B, double dt, double maxT = 30);
+			const Eigen::VectorXd &A);
+void GetA(Eigen::VectorXd &A, const Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, double ainf, double dt);
+
 //double Fradiation2(double t, const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, double dt);
 double Fradiation(const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, Eigen::Index iiter, double dt, Eigen::Index velSize = -1);
 

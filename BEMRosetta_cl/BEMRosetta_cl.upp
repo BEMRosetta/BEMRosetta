@@ -35,6 +35,8 @@ file
 	data.brc,
 	bemrosetta_cl.t,
 	main_cl.rc,
+	heal.cpp,
+	heal.h,
 	functions.cpp,
 	functions.h,
 	export.h,

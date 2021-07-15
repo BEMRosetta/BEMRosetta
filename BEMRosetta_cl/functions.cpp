@@ -12,13 +12,11 @@ double GetKirfMaxT(const VectorXd &w) {
     return M_PI/((w[w.size()-1] - w[0])/(w.size()-1));
 }
 
-void GetTirf(VectorXd &Tirf, double dt, double maxT) {
-    int numT = int(maxT/dt);
-    
+void GetTirf(VectorXd &Tirf, int numT, double maxT) {
     Tirf = VectorXd::LinSpaced(numT, 0, maxT);
 }
 	
-void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const VectorXd &B, double dt, double maxT) {
+void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const VectorXd &B) {
 	ASSERT(B.size() >= 2);
 	
 	VectorXd w2, B2;
@@ -39,7 +37,7 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const Vect
 	}
 }
 
-void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, double w0, double dw, const VectorXd &B, double dt, double maxT) {
+void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, double w0, double dw, const VectorXd &B) {
 	ASSERT(B.size() >= 2);
 	
     size_t Nf = B.size(),
@@ -54,47 +52,39 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, double w0, double dw, const V
 		Kirf(it) = Integral(y, dw, IntegralType::SIMPSON_1_3)*2/M_PI;
 	}
 }
-/*
-void GetKirf(VectorXd &Kirf, const VectorXd &w, const VectorXd &B, double dt, double maxT) {
+
+
+double GetAinf_Kirf(VectorXd &Kirf, const VectorXd &w, const VectorXd &A, const VectorXd &B, int numT, double maxT) {
 	VectorXd Tirf;
-	GetKirfTirf(Kirf, Tirf, w, B, dt, maxT);
+	GetTirf(Tirf, numT, maxT);
+	GetKirf(Kirf, Tirf, w, B);
+	return GetAinf(Kirf, Tirf, w, A);
 }
 
-void GetKirf(VectorXd &Kirf, double w0, double dw, const VectorXd &B, double dt, double maxT) {
-	VectorXd Tirf;
-	GetKirfTirf(Kirf, Tirf, w0, dw, B, dt, maxT);
-}*/
-
-double GetAinf_Kirf(VectorXd &Kirf, const VectorXd &w, const VectorXd &A, const VectorXd &B, double dt, double maxT) {
-	VectorXd Tirf;
-	GetTirf(Tirf, dt, maxT);
-	GetKirf(Kirf, Tirf, w, B, dt, maxT);
-	return GetAinf(Kirf, Tirf, w, A, dt, maxT);
-}
-
-void GetAinf_Kirf(double &Ainf, VectorXd &Kirf, double w0, double dw, const VectorXd &A, const VectorXd &B, double dt, double maxT) {
+double GetAinf_Kirf(VectorXd &Kirf, double w0, double dw, const VectorXd &A, const VectorXd &B, int numT, double maxT) {
     VectorXd Tirf;
-    GetTirf(Tirf, dt, maxT);
-    GetKirf(Kirf, Tirf, w0, dw, B, dt, maxT);
+    GetTirf(Tirf, numT, maxT);
+    GetKirf(Kirf, Tirf, w0, dw, B);
     
-    int numT = int(maxT/dt);
 	Eigen::Index Nf = B.size();
+	double dt = Tirf[1];
 	
 	VectorXd y(numT);
-    Ainf = 0;
+    double Ainf = 0;
     for (int iw = 0; iw < Nf; ++iw) {
         double w = w0 + iw*dw;
         for (int it = 0; it < numT; ++it) 
         	y(it) = Kirf(it)*sin(w*Tirf(it));
         Ainf += A(iw) + Integral(y, dt, IntegralType::SIMPSON_1_3)/w;	// Ogilvie's formula
 	}
-	Ainf = Ainf/Nf;
+	return  Ainf/Nf;
 }
 
 
 void GetAinfw(VectorXd &Ainfw, const VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, 
-				const VectorXd &A, double dt, double maxT) {
-    int numT = int(maxT/dt);
+				const VectorXd &A) {
+    int numT = int(Kirf.size());
+    double dt = Tirf[1];
 	Eigen::Index Nf = A.size();
 	Resize(Ainfw, Nf);
 	
@@ -108,13 +98,26 @@ void GetAinfw(VectorXd &Ainfw, const VectorXd &Kirf, const VectorXd &Tirf, const
 
     
 double GetAinf(const VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, 
-				const VectorXd &A, double dt, double maxT) {
+				const VectorXd &A) {
     VectorXd Ainfw;
     
-    GetAinfw(Ainfw, Kirf, Tirf, w, A, dt, maxT);
+    GetAinfw(Ainfw, Kirf, Tirf, w, A);
     return Ainfw.mean();
 }
 
+void GetA(VectorXd &A, const VectorXd &Kirf, const VectorXd &w, double ainf, double dt) {
+	int numT = int(Kirf.size());
+	int numF = int(w.size());
+
+	Resize(A, numF);
+
+	VectorXd y(numT);
+    for (int iw = 0; iw < numF; ++iw) {
+        for (int it = 0; it < numT; ++it)
+        	y(it) = Kirf(it)*sin(w(iw)*dt*it);
+        A(iw) = ainf - Integral(y, dt, IntegralType::SIMPSON_1_3)/w(iw);	
+	}
+}
 
 /*double Fradiation2(double t, const VectorXd &vel, const VectorXd &irf, double dt) {
 	Eigen::Index numV = int(t/dt);
@@ -274,8 +277,9 @@ void FitToDecay(const VectorXd &z, const VectorXd &dz, const VectorXd &d2z,
 			
 			VectorXd Tirf;
 			double maxT = GetKirfMaxT(par.wspl);
-			GetTirf(Tirf, dt, maxT);
-			GetKirf(par.Kirf, Tirf, par.wspl, par.Bspl, dt, maxT);
+			int numT = 1000;
+			GetTirf(Tirf, numT, maxT);
+			GetKirf(par.Kirf, Tirf, par.wspl, par.Bspl);
 		}
 		for(Eigen::Index i = 0; i < z.size(); i++) {
 			double Frad = Fradiation(dz, par.Kirf, i, dt);
