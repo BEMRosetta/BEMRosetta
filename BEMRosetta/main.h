@@ -869,6 +869,7 @@ public:
 	void Jsonize(JsonIO &json);
 		
 	WithMenuOpen<StaticRect> menuOpen;
+	WithMenuProcess<StaticRect> menuProcess;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
 	MenuFOAMM menuFOAMM;

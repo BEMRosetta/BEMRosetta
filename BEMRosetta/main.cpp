@@ -325,6 +325,7 @@ void MenuOptions::Load() {
 	discardNegDOF <<= bem->discardNegDOF;
 	thres <<= bem->thres;
 	calcAwinf <<= bem->calcAwinf;
+	calcAwinfw <<= bem->calcAwinfw;
 	maxTimeA <<= bem->maxTimeA;
 	numValsA <<= bem->numValsA;	
 	onlyDiagonal <<= bem->onlyDiagonal;
@@ -352,6 +353,7 @@ void MenuOptions::OnSave() {
 	bem->discardNegDOF = ~discardNegDOF;
 	bem->thres = ~thres;
 	bem->calcAwinf = ~calcAwinf;
+	bem->calcAwinfw = ~calcAwinfw;
 	bem->maxTimeA = ~maxTimeA;
 	bem->numValsA = ~numValsA;	
 	bem->onlyDiagonal = ~onlyDiagonal;
@@ -387,6 +389,8 @@ bool MenuOptions::IsChanged() {
 	if (!EqualDecimals(bem->thres, ~thres, 8)) 
 		return true;
 	if (bem->calcAwinf != ~calcAwinf)
+		return true;
+	if (bem->calcAwinfw != ~calcAwinfw)
 		return true;
 	if (!EqualDecimals(bem->maxTimeA, ~maxTimeA, 8))
 		return true;

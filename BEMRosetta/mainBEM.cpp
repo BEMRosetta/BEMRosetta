@@ -29,22 +29,24 @@ void MainBEM::Init() {
 	menuOpen.butRemoveSelected <<= THISBACK1(OnRemoveSelected, false);
 	menuOpen.butJoin.Disable();	
 	menuOpen.butJoin <<= THISBACK(OnJoin);
-	menuOpen.labelSym.Disable();
-	menuOpen.butSymX.Disable();	
-	menuOpen.butSymX <<= THISBACK1(OnSymmetrize, true);
-	menuOpen.butSymY.Disable();
-	menuOpen.butSymY <<= THISBACK1(OnSymmetrize, false);
-	menuOpen.butA0.Disable();	
-	menuOpen.butA0 <<= THISBACK1(OnKirfAinf, Hydro::PLOT_A0);
-	menuOpen.butAinf.Disable();	
-	menuOpen.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
-	menuOpen.butAinfw.Show(Bem().experimental);
-	menuOpen.butAinfw.Disable();	
-	menuOpen.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
-	menuOpen.butKirf.Disable();	
-	menuOpen.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
 	menuOpen.butDescription.Disable();
 	menuOpen.butDescription <<= THISBACK(OnDescription);
+	
+	CtrlLayout(menuProcess);
+	menuProcess.butSymX.Disable();	
+	menuProcess.butSymX <<= THISBACK1(OnSymmetrize, true);
+	menuProcess.butSymY.Disable();
+	menuProcess.butSymY <<= THISBACK1(OnSymmetrize, false);
+	menuProcess.butA0.Disable();	
+	menuProcess.butA0 <<= THISBACK1(OnKirfAinf, Hydro::PLOT_A0);
+	menuProcess.butAinf.Disable();	
+	menuProcess.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
+	menuProcess.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
+	menuProcess.butKirf.Disable();	
+	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
+	menuProcess.labelIrregular.Show(Bem().experimental);
+	menuProcess.butAinfw.Show(Bem().experimental);
+	menuProcess.butAinfw.Disable();	
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
@@ -73,6 +75,7 @@ void MainBEM::Init() {
 	OnOpt();
 		
 	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
+	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
 	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
@@ -142,6 +145,8 @@ void MainBEM::Init() {
 		
 		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
 		tabMenuPlot.Enable(plot);
+		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
+		tabMenuProcess.Enable(convertProcess);
 		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
 		tabMenuConvert.Enable(convertProcess);
 		if (plot) 
@@ -149,11 +154,13 @@ void MainBEM::Init() {
 		else 
 			tabMenuPlot.Text("");
 
-		if (convertProcess) 
+		if (convertProcess) {
+			tabMenuProcess.Text(t_("Process"));
 			tabMenuConvert.Text(t_("Save as"));
-		else 
+		} else {
+			tabMenuProcess.Text("");
 			tabMenuConvert.Text("");
-		
+		}
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
 		tabMenuFOAMM.Enable(convertProcess);
 		if (convertProcess) 
@@ -495,15 +502,14 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
-	menuOpen.labelSym.Enable   	  (numsel == 1 || numrow == 1);
-	menuOpen.butSymX.Enable		  (numsel == 1 || numrow == 1);
-	menuOpen.butSymY.Enable		  (numsel == 1 || numrow == 1);
-	menuOpen.butKirf.Enable		  (numsel == 1 || numrow == 1);
-	menuOpen.butA0.Enable  		  (numsel == 1 || numrow == 1);
-	menuOpen.butAinf.Enable		  (numsel == 1 || numrow == 1);
-	menuOpen.butAinfw.Enable	  (numsel == 1 || numrow == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
-	menuConvert.butConvert.Enable (numsel == 1 || numrow == 1);
+	menuProcess.butSymX.Enable	(numsel == 1 || numrow == 1);
+	menuProcess.butSymY.Enable	(numsel == 1 || numrow == 1);
+	menuProcess.butKirf.Enable	(numsel == 1 || numrow == 1);
+	menuProcess.butA0.Enable  	(numsel == 1 || numrow == 1);
+	menuProcess.butAinf.Enable	(numsel == 1 || numrow == 1);
+	menuProcess.butAinfw.Enable	(numsel == 1 || numrow == 1);
+	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainBEM::OnJoin() {

@@ -4,7 +4,7 @@
 
 using namespace Eigen;
 
-double Hydro::GetK_IRF_MaxT() {
+double Hydro::GetK_IRF_MaxT(const Vector<double> &w) {
 	if (w.size() < 2)
 		return -1;
 	double delta = 0;
@@ -19,6 +19,10 @@ double Hydro::GetK_IRF_MaxT() {
 	return M_PI/delta;		// (2*M_PI/delta)/2;
 }
 
+double Hydro::GetK_IRF_MaxT() const {
+	return GetK_IRF_MaxT(w);
+}
+
 void Hydro::GetK_IRF(double maxT, int numT) {
 	if (Nf == 0 || B.IsEmpty())
 		return;
@@ -30,15 +34,13 @@ void Hydro::GetK_IRF(double maxT, int numT) {
 			Kirf[i][j].setConstant(numT, Null);
     }
 		
-	double dt = maxT/numT;
-	
-	GetTirf(Tirf, dt, maxT);
+	GetTirf(Tirf, numT, maxT);
 	
 	Vector<double> y(Nf);
   	for (int i = 0; i < Nb*6; ++i)
     	for (int j = 0; j < Nb*6; ++j) 
 			if (!IsNull(B[i][j][0]))
-				GetKirf(Kirf[i][j], Tirf, Get_w(), B[i][j], dt, maxT); 
+				GetKirf(Kirf[i][j], Tirf, Get_w(), B[i][j]); 
 }  
 
 void Hydro::GetAinf() {
@@ -47,11 +49,10 @@ void Hydro::GetAinf() {
 	
 	Awinf.setConstant(Nb*6, Nb*6, Null);
 	int numT = int(Tirf.size());
-	double dt = Tirf[1] - Tirf[0];
 	
     for (int i = 0; i < Nb*6; ++i)
         for (int j = 0; j < Nb*6; ++j)
-		    Awinf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j], dt, Tirf[Tirf.size()-1]);
+		    Awinf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j]);
 }
 
 void Hydro::GetAinfw() {
@@ -65,9 +66,7 @@ void Hydro::GetAinfw() {
 			Ainfw[i][j].setConstant(Nf, Null);
     }
     
-	double dt = Tirf[1] - Tirf[0];
-	
     for (int i = 0; i < Nb*6; ++i)
         for (int j = 0; j < Nb*6; ++j)
-		    ::GetAinfw(Ainfw[i][j], Kirf[i][j], Tirf, Get_w(), A[i][j], dt, Tirf[Tirf.size()-1]);
+		    ::GetAinfw(Ainfw[i][j], Kirf[i][j], Tirf, Get_w(), A[i][j]);
 }
