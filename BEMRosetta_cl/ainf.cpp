@@ -143,8 +143,7 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
     		}
         }
     }
-    rao.Reset();
-	rho = bem->rho;
+    rao.Reset();	// Previous RAO is now invalid
 }
 
 void Heal();
