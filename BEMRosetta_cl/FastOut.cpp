@@ -16,33 +16,33 @@ static int IsTabSpaceRet(int c) {
 
 FastOut::FastOut() {
 	ptfmtilt.Init0(this);
-	AddParam("PtfmTilt", "deg", ptfmtilt);
+	AddParam("+PtfmTilt", "deg", ptfmtilt);
 	ptfmshift.Init0(this);
-	AddParam("PtfmShift", "m", ptfmshift);
+	AddParam("+PtfmShift", "m", ptfmshift);
 	ptfmHeaveCB.Init0(this);
-	AddParam("PtfmHeaveCB", "m", ptfmHeaveCB);
+	AddParam("+PtfmHeaveCB", "m", ptfmHeaveCB);
 	twrBsShear.Init0(this);
-	AddParam("TwrBsShear", "kN", twrBsShear);
+	AddParam("+TwrBsShear", "kN", twrBsShear);
 	twrBsBend.Init0(this);
-	AddParam("TwrBsBend", "kN-m", twrBsBend);
+	AddParam("+TwrBsBend", "kN-m", twrBsBend);
 	yawBrShear.Init0(this);
-	AddParam("YawBrShear", "kN", yawBrShear);
+	AddParam("+YawBrShear", "kN", yawBrShear);
 	yawBrBend.Init0(this);
-	AddParam("YawBrBend", "kN-m", yawBrBend);	
+	AddParam("+YawBrBend", "kN-m", yawBrBend);	
 	rootShear1.Init0(this);
-	AddParam("RootShear1", "kN", rootShear1);
+	AddParam("+RootShear1", "kN", rootShear1);
 	rootShear2.Init0(this);
-	AddParam("RootShear2", "kN", rootShear2);
+	AddParam("+RootShear2", "kN", rootShear2);
 	rootShear3.Init0(this);
-	AddParam("RootShear3", "kN", rootShear3);
+	AddParam("+RootShear3", "kN", rootShear3);
 	rootBend1.Init0(this);
-	AddParam("RootBend1", "kN-m", rootBend1);
+	AddParam("+RootBend1", "kN-m", rootBend1);
 	rootBend2.Init0(this);
-	AddParam("RootBend2", "kN-m", rootBend2);
+	AddParam("+RootBend2", "kN-m", rootBend2);
 	rootBend3.Init0(this);
-	AddParam("RootBend3", "kN-m", rootBend3);	
+	AddParam("+RootBend3", "kN-m", rootBend3);	
 	ncIMUTA.Init0(this);
-	AddParam("NcIMUTA", "m/s^2", ncIMUTA);
+	AddParam("+NcIMUTA", "m/s^2", ncIMUTA);
 }
 
 Vector<String> FastOut::GetFilesToLoad(String path) {

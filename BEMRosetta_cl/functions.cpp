@@ -38,19 +38,8 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const Vect
 }
 
 void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, double w0, double dw, const VectorXd &B) {
-	ASSERT(B.size() >= 2);
-	
-    size_t Nf = B.size(),
-    	   numT = Tirf.size();
-    
-    Kirf.resize(numT);
-	
-	VectorXd y(Nf);
-    for (int it = 0; it < numT; ++it) {
-		for (int iw = 0; iw < Nf; ++iw)
-			y(iw) = B(iw)*cos((w0 + iw*dw)*Tirf(it));
-		Kirf(it) = Integral(y, dw, IntegralType::SIMPSON_1_3)*2/M_PI;
-	}
+	VectorXd w2 = VectorXd::LinSpaced(B.size(), w0, w0 + dw*B.size());
+	GetKirf(Kirf, Tirf, w2, B);
 }
 
 

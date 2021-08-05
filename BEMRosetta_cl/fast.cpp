@@ -93,7 +93,7 @@ bool Fast::Load_HydroDyn() {
 }
 
 
-void Fast::Save(String file, int qtfHeading) {
+void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
 	try {
 		file = ForceExt(file, ".dat");
 		
@@ -105,7 +105,7 @@ void Fast::Save(String file, int qtfHeading) {
 		String hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
 		DirectoryCreateX(AppendFileName(GetFileFolder(file), hydroFolder));
 	
-		Wamit::Save(hydroFile, true, qtfHeading);
+		Wamit::Save(hydroFile, Status, true, qtfHeading);
 		
 		if (hd().IsLoadedStateSpace()) {
 			String fileSts = ForceExt(hydroFile, ".ss");

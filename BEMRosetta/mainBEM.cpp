@@ -21,8 +21,13 @@ void MainBEM::Init() {
 	menuOpen.butLoad << [&] {menuOpen.file.DoGo();};
 	
 	ArrayModel_Init(listLoaded).MultiSelect();
-	listLoaded.WhenSel = THISBACK(OnSelListLoaded);
-	
+	listLoaded.WhenSel = [&] {
+		OnMenuConvertArraySel();
+		menuFOAMM.OnCursor();
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+		UpdateButtons();
+	};
+
 	menuOpen.butRemove.Disable();	
 	menuOpen.butRemove <<= THISBACK(OnRemove);
 	menuOpen.butRemoveSelected.Disable();	
@@ -42,11 +47,17 @@ void MainBEM::Init() {
 	menuProcess.butAinf.Disable();	
 	menuProcess.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
 	menuProcess.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
+	menuProcess.butOgilvie <<= THISBACK(OnOgilvie);
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
 	menuProcess.labelIrregular.Show(Bem().experimental);
 	menuProcess.butAinfw.Show(Bem().experimental);
 	menuProcess.butAinfw.Disable();	
+	menuProcess.butOgilvie.Show(Bem().experimental);
+	menuProcess.butOgilvie.Disable();
+	menuProcess.opZremoval.Show(Bem().experimental);
+	menuProcess.opThinremoval.Show(Bem().experimental);
+	menuProcess.opDecayingTail.Show(Bem().experimental);
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
@@ -87,7 +98,7 @@ void MainBEM::Init() {
 			setupfoamm = true;
 			if (!FileExists(Bem().foammPath))
 				Status(t_("FOAMM not found. Please set FOAMM path in Options"), 10000);	
-		} else if (menuTab.IsAt(menuPlot)) 
+		} else if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuOpen) || menuTab.IsAt(menuProcess)) 
 			setupfoamm = true;
 		
 		if (!setupfoamm) 
@@ -149,11 +160,14 @@ void MainBEM::Init() {
 		tabMenuProcess.Enable(convertProcess);
 		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
 		tabMenuConvert.Enable(convertProcess);
-		if (plot) 
+		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
-		else 
+			tabMenuProcess.Text(t_("Process"));
+		} else {
 			tabMenuPlot.Text("");
-
+			tabMenuProcess.Text("");
+		}
+		
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));
 			tabMenuConvert.Text(t_("Save as"));
@@ -189,11 +203,6 @@ void MainBEM::Init() {
 	
 	mainB.Init(Hydro::DATA_B);
 	mainTab.Add(mainB.SizePos(), t_("B")).Disable();
-
-	if (Bem().experimental) {
-		mainAinfw.Init(Hydro::DATA_AINFW);
-		mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
-	}
 	
 	mainK.Init(Hydro::DATA_K);
 	mainTab.Add(mainK.SizePos(), t_("Kirf")).Disable();
@@ -210,6 +219,11 @@ void MainBEM::Init() {
 	mainRAO.Init(Hydro::DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
 
+	if (Bem().experimental) {
+		mainAinfw.Init(Hydro::DATA_AINFW);
+		mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
+	}
+	
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("Setup FOAMM")).Disable();
 
@@ -237,13 +251,6 @@ void MainBEM::ShowMenuPlotItems() {
 	menuPlot.fromY0.Enable(show);
 	menuPlot.showPoints.Enable(show);
 }
-
-void MainBEM::OnSelListLoaded() {
-	OnMenuConvertArraySel();
-	menuFOAMM.OnCursor();
-	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
-	UpdateButtons();
-}
 	
 void MainBEM::OnMenuConvertArraySel() {
 	int id = ArrayModel_IdHydro(listLoaded);
@@ -252,8 +259,10 @@ void MainBEM::OnMenuConvertArraySel() {
 	
 	String file = ~menuConvert.file;
 	String folder = GetFileFolder(file);
-	String ext = GetFileExt(file);
+	String ext = ToLower(GetFileExt(file));
 	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
+	if (fileName.IsEmpty())
+		fileName = ArrayModel_GetTitle(listLoaded);
 	file = AppendFileName(folder, fileName + ext);
 	menuConvert.file <<= file;
 }
@@ -509,6 +518,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butA0.Enable  	(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.Enable	(numsel == 1 || numrow == 1);
 	menuProcess.butAinfw.Enable	(numsel == 1 || numrow == 1);
+	menuProcess.butOgilvie.Enable(numsel == 1 || numrow == 1);
 	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
 }
 
@@ -659,6 +669,36 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 	}
 }
 
+void MainBEM::OnOgilvie() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+			
+		Progress progress(t_("Calculating Ogilvie compliance in selected BEM file..."), 100); 
+		
+		WaitCursor wait;
+		
+		double maxT = Null;
+		
+		Bem().OgilvieCompliance(id, ~menuProcess.opZremoval, ~menuProcess.opThinremoval, ~menuProcess.opDecayingTail);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		if (Bem().experimental)
+			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
 void MainBEM::OnDescription() {
 	int id = GetIdOneSelected();
 	if (id < 0) 
@@ -751,9 +791,14 @@ bool MainBEM::OnConvert() {
 		default:throw Exc(t_("Unknown type in OnConvert()"));
 		}
 		
-		WaitCursor wait;
+		Progress progress(t_("Saving BEM files..."), 100); 
 		
-		Bem().hydros[id].hd().SaveAs(file, type, qtfHeading);
+		Bem().hydros[id].hd().SaveAs(file, [&](String str, int _pos) {
+			if (!IsEmpty(str))
+				progress.SetText(str); 
+			if (_pos >= 0)
+				progress.SetPos(_pos); 
+			return !progress.Canceled();}, type, qtfHeading);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
@@ -800,6 +845,9 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_opwT", menuPlot.opwT)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showNdim", menuPlot.showNdim)
+		("menuProcess_opZremoval", menuProcess.opZremoval)
+		("menuProcess_opThinremoval", menuProcess.opThinremoval)
+		("menuProcess_opDecayingTail", menuProcess.opDecayingTail)
 	;
 }
 
@@ -808,10 +856,21 @@ String MainBEM::BEMFile(String fileFolder) const {
 		int bestipos = INT_MAX;
 		for (FindFile ff(AppendFileName(fileFolder, "*.*")); ff; ff++) {
 			if (ff.IsFile()) {
-				int ipos = Bem().bemFilesExt.Find(GetFileExt(ff.GetName()));
+				String name = ToLower(ff.GetName());
+				if (GetFileExt(name) == ".bem")
+					return ff.GetPath();
+				if (name == "nemoh.cal")
+					return ff.GetPath();
+				int ipos = Bem().bemFilesExt.Find(GetFileExt(name));
  				if (ipos >= 0 && ipos < bestipos) {
 					fileFolder = ff.GetPath();
 					bestipos = ipos;	// It takes the file with most probable extension
+				}
+			} else if (ff.IsFolder()) {
+				if (ff.GetName() == "Output") {
+					String hamsFolder = AppendFileNameX(fileFolder, "Output", "Wamit_format");
+					if (DirectoryExists(hamsFolder))
+						return BEMFile(hamsFolder);
 				}
 			}
 		}

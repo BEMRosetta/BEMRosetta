@@ -3,13 +3,17 @@
 #include <ScatterDraw/Equation.h>
 #include "functions.h"
 
-#include <plugin/matio/matio.h>
+#include <plugin/matio/lib/matio.h>
 
 using namespace Upp;
 
 Function <void(String)> BEMData::Print 		  = [](String s) {Cout() << s;};
 Function <void(String)> BEMData::PrintWarning = [](String s) {Cout() << s;};
 Function <void(String)> BEMData::PrintError   = [](String s) {Cout() << s;};
+Function <bool(String, int)> Status 		  = [](String s, int d) {
+	Cout() << s << "(" << d << ")";
+	return true;
+};
 
 const char *Hydro::strDOF[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *Hydro::strDOFAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
@@ -456,7 +460,7 @@ void Hydro::Compare_cg(Hydro &a) {
 	}
 }
 
-void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
+void Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type, int qtfHeading) {
 	int realNh = Nh;
 	int realNf = Nf;
 	
@@ -477,10 +481,10 @@ void Hydro::SaveAs(String file, BEM_SOFT type, int qtfHeading) {
 		data.Save_out(file, bem->g, bem->rho);			
 	} else if (type == WAMIT_1_3) {
 		Wamit data(*bem, this);
-		data.Save(file, true, qtfHeading);	
+		data.Save(file, Status, true, qtfHeading);	
 	} else if (type == FAST_WAMIT) {
 		Fast data(*bem, this);
-		data.Save(file, qtfHeading);		
+		data.Save(file, Status, qtfHeading);		
 	} else if (type == BEMROSETTA) {
 		HydroClass data(*bem, this);
 		data.Save(file);		
@@ -773,15 +777,15 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			return false;
 		}
 		if (!IsLoadedKirf()) {
-			if (!Status(t_("Obtaining Impulse Response Function"), 40)) {
-				lastError = t_("Cancelled by user");
+			if (!Status(t_("Obtaining the Impulse Response Function"), 40)) {
+				lastError = t_("Cancelled by the user");
 				return false;
 			}
 			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		}
 		if (!IsLoadedAwinf()) {
-			if (!Status(t_("Obtaining Infinite-Frequency Added Mass (A∞)"), 70)) {
-				lastError = t_("Cancelled by user");
+			if (!Status(t_("Obtaining the infinite-frequency added mass (A∞)"), 70)) {
+				lastError = t_("Cancelled by the user");
 				return false;
 			}
 			GetAinf();
@@ -792,6 +796,10 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		if (!IsLoadedAwinf())
 			GetAinf();
+		if (!Status(t_("Obtaining the frequency-dependent infinite-frequency added mass (A∞(ω))"), 90)) {
+			lastError = t_("Cancelled by the user");
+			return false;
+		}
 		GetAinfw();
 	}
 	
@@ -1015,8 +1023,28 @@ void Hydro::SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::A
 				oldAB[idf](i, j) = AB[i][j][idf];
 	}
 }
-	
-			
+
+void Hydro::C_dim() {
+	if (C.IsEmpty())
+		return;
+	for (int ib = 0; ib < Nb; ++ib) 
+		for (int idf = 0; idf < 6*Nb; ++idf) 	
+			for (int jdf = 0; jdf < 6*Nb; ++jdf) 
+				C[ib](idf, jdf) = C_dim(ib, idf, jdf);
+}
+
+void Hydro::F_dim(Forces &f) {
+	if (f.ma.IsEmpty())
+		return;
+	for (int ih = 0; ih < Nh; ++ih) 	
+		for (int ifr = 0; ifr < Nf; ++ifr)
+			for (int idf = 0; idf < 6*Nb; ++idf) {
+				f.ma[ih](ifr, idf) = F_ma_dim(f, ih, ifr, idf);
+				f.re[ih](ifr, idf) = F_re_dim(f, ih, ifr, idf);
+				f.im[ih](ifr, idf) = F_im_dim(f, ih, ifr, idf);
+			}
+}
+
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
 	Upp::Array<Eigen::MatrixXd> oldA, oldB, oldKirf;
@@ -1158,7 +1186,7 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 		throw Exc(Format(t_("Problem processing '%s'\n%s"), file, error));	
 	}
 	
-	if (discardNegDOF) {
+	/*if (discardNegDOF) {
 		if (!Status(t_("Discarding negligible DOF"), 90)) {
 			hydros.SetCount(hydros.size()-1);	
 			throw Exc(t_("Cancelled by user"));
@@ -1169,7 +1197,7 @@ void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkD
 		justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
 		justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres);
-	}
+	}*/
 	if (hydros.size() == 1)
 		Nb = justLoaded.Nb;
 	else {
@@ -1226,6 +1254,10 @@ void BEMData::Ainf(int id) {
 
 void BEMData::Ainfw(int id) {
 	hydros[id].hd().GetAinfw();
+}
+
+void BEMData::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail) {
+	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail);
 }
 
 void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
@@ -1391,7 +1423,19 @@ void BEMData::AddWaterSurface(int id, char c) {
 
 		surf.SetCode(MeshData::EDIT);
 		surf.mesh.AddWaterSurface(surfs[id].mesh, surfs[id].under, c); 
-		//surf.mesh.Translate(0, 0, 0);
+		
+		if (c == 'r')
+			surf.name = t_("Water surface removed");
+		else if (c == 'f')
+			surf.name = t_("Water surface");
+		else if (c == 'e')
+			surf.name = t_("Water surface extracted");
+		surf.name = surfs[id].name + " " + surf.name;
+		surf.fileName =  "";
+		
+		surf.AfterLoad(rho, g, false);
+		
+		surf.Report(rho);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
@@ -1428,10 +1472,10 @@ bool BEMData::LoadSerializeJson(bool &firstTime) {
 		rho = 1000;
 	if (!ret || IsNull(len)) 
 		len = 1;
-	if (!ret || IsNull(discardNegDOF))
-		discardNegDOF = false;
-	if (!ret || IsNull(thres)) 
-		thres = 0.01;
+	//if (!ret || IsNull(discardNegDOF))
+	//	discardNegDOF = false;
+	//if (!ret || IsNull(thres)) 
+	//	thres = 0.01;
 	if (!ret || IsNull(calcAwinf))
 		calcAwinf = true;
 	if (!ret || IsNull(calcAwinfw))
@@ -1611,7 +1655,7 @@ void ConsoleMain(const Upp::Vector<String>& command, bool gui) {
 					
 					String file = command[i];
 					
-					md.hydros[0].hd().SaveAs(file);
+					md.hydros[0].hd().SaveAs(file, Status);
 					Cout() << "\n" << Format(t_("File '%s' converted"), file);
 				} else if (command[i] == "-p" || command[i] == "--params") {
 					i++;

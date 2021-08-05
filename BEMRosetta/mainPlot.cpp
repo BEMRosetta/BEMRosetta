@@ -14,15 +14,17 @@ using namespace Upp;
 
 void MainPlot::Init(bool vert) {
 	if (!isInit) {
-		scatt.SetPlotAreaLeftMargin(90).SetPlotAreaRightMargin(70).SetPlotAreaBottomMargin(50)
+		int len = StdFont().GetHeight();
+		
+		scatt.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
 			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-		scatP.SetPlotAreaLeftMargin(90).SetPlotAreaRightMargin(70).SetPlotAreaBottomMargin(50)
+		scatP.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
 			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 		scatt.LinkedWith(scatP);
 		
 		compare.Init(scatt);
 		splitCompare.Horz(scatt.SizePos(), compare.SizePos());
-		splitCompare.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(15);
+		splitCompare.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
 		if (vert)
 			splitter.Vert(splitCompare.SizePos(), scatP.SizePos());
 		else
