@@ -133,12 +133,12 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:				return IsNull(data->A[idf][jdf][0]);
+		case Hydro::PLOT_A:				return data->A.	   size() == 0 || data->A	 [idf][jdf].size() == 0 || IsNull(data->A	 [idf][jdf][0]);
 		case Hydro::PLOT_AINF:			return IsNull(data->Awinf(idf, jdf));
 		case Hydro::PLOT_A0:			return IsNull(data->Aw0(idf, jdf));
-		case Hydro::PLOT_B:				return IsNull(data->B[idf][jdf][0]);
-		case Hydro::PLOT_K:				return data->Kirf.size() == 0  || IsNull(data->Kirf[idf][jdf][0]);
-		case Hydro::PLOT_AINFW:			return data->Ainfw.size() == 0 || IsNull(data->Ainfw[idf][jdf][0]);		
+		case Hydro::PLOT_B:				return data->B.	   size() == 0 || data->B	 [idf][jdf].size() == 0 || IsNull(data->B	 [idf][jdf][0]);
+		case Hydro::PLOT_K:				return data->Kirf. size() == 0 || data->Kirf [idf][jdf].size() == 0 || IsNull(data->Kirf [idf][jdf][0]);
+		case Hydro::PLOT_AINFW:			return data->Ainfw.size() == 0 || data->Ainfw[idf][jdf].size() == 0 || IsNull(data->Ainfw[idf][jdf][0]);		
 		case Hydro::PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdf](0, idf));
 		case Hydro::PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdf](0, idf));
 		case Hydro::PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdf](0, idf));
@@ -860,6 +860,7 @@ public:
 	void OnJoin();
 	void OnSymmetrize(bool xAxis);
 	void OnKirfAinf(Hydro::DataToPlot param);
+	void OnOgilvie();
 	void OnDescription();
 	void OnMenuConvertArraySel();
 	void OnSelListLoaded();
@@ -985,6 +986,7 @@ bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);
 bool ArrayModel_IsSelected(const ArrayCtrl &array, int row);
 const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row);
 String ArrayModel_GetFileName(ArrayCtrl &array, int row = -1);
+String ArrayModel_GetTitle(ArrayCtrl &array, int row = -1);
 
 void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName);
 		

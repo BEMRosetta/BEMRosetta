@@ -1,6 +1,5 @@
-#include <CtrlLib/CtrlLib.h>
+#include <Core/Core.h>
 #include <Functions4U/Functions4U.h>
-#include <ScatterCtrl/ScatterCtrl.h>
 #include <STEM4U/Integral.h>
 #include <STEM4U/Sundials.h>
 #include <STEM4U/Butterworth.h>
@@ -15,11 +14,11 @@ using namespace Eigen;
 #include <BEMRosetta_cl/heal.h>
 
 
-String HealBEM::filterType = "butterworth";
+String HealBEM::filterType = "full";
 
 // Gets the x and y limits of the area of interest of B(w). The obtained rectangle will serve
 // as a reference for all the algorithms to be implemented later
-void HealBEM::AreaOfInterest(
+bool HealBEM::AreaOfInterest(
 	double percMin, 
 	double percMax, 
 	double &aoix0, 		// Value x from which the AOI begins
@@ -47,15 +46,20 @@ void HealBEM::AreaOfInterest(
 			break;
 		}
 	}
+	if (IsNull(idaoix0))
+		return false;
+	
 	///////////////////////////////////////////////////////
-	// REPLACE THIS ALGR. WITH STRONG FILTER instead of these averages
+	// REPLACE THIS ALGORITHM WITH STRONG FILTER instead of these averages
 	///////////////////////////////////////////////////////
 	
 	// Second pass to calculate idaoixMx by somewhat reducing the effect of the mini-peaks on the right-hand side.
 	double maxB = B.maxCoeff();						// Preliminary (unfiltered) max
 	int iddeltax = int(w.size()/20);				// Divide x (w) in 20 sections
 	for (int i = idaoixMx; i >= idaoix0; i -= iddeltax) {				// From initial idaoixMx guess
-		double avg = B.segment(max(0, i-iddeltax/2), iddeltax).mean();	// Section avg
+		int idfrom = max(0, i-iddeltax/2);
+		int iddeltaxx = min(iddeltax, int(B.size()) - idfrom - 1);
+		double avg = B.segment(idfrom, iddeltaxx).mean();	// Section avg
 		if (avg > maxB*0.05) {											// If section avg is relevant (> 5% Max)
 			idaoixMx = i;												// it may be the max relevant x
 			break;														
@@ -72,6 +76,8 @@ void HealBEM::AreaOfInterest(
 	Filtfilt(B, num, den, fB);
 	
 	aoidy = fB.maxCoeff(&idaoiyMx);	// Index of the maximum
+	
+	return true;
 }
 
 // From the peak to the right, it detects the window were the slope is higher than maxDer 
@@ -177,6 +183,12 @@ void HealBEM::CubicFromEnds(double x0, double y0, double p0, double x1, double y
 
 // Some scrimtape maintaining coordinates and slope of patch ends
 void HealBEM::ScrimTape(VectorXd &x, VectorXd &y, int from, int to) {
+	if (from <= 0)
+		from = 1;
+	if (to >= x.size()-1)
+		to = int(x.size())-2;
+	if (from >= to)
+		return;
 	double p0 = (y[from]-y[from-1])/(x[from]-x[from-1]);
 	double p1 = (y[to+1]-y[to])/(x[to+1]-x[to]);
 	double a, b, c, d;
@@ -189,14 +201,36 @@ void HealBEM::ScrimTape(VectorXd &x, VectorXd &y, int from, int to) {
 }
 				   
 
-void HealBEM::Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, double maxT, int numT) {
-	this->w = w;
-	this->B = B;
-	this->A = A;
-	this->numT = numT;
-	this->maxT = maxT;
+bool IsNull(const VectorXd &data) {
+	if (data.size() == 0)
+		return true;
+	
+	for (int i = 0; i < data.size(); ++i)
+		if (!IsNum(data[i]))
+			return true;
+	return false;
 }
 
+bool HealBEM::Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, int numT, double maxT) {
+	if (IsNull(A) || IsNull(B))
+		return false;
+	this->w = clone(w);
+	this->B = clone(B);
+	this->A = clone(A);
+	this->numT = numT;
+	this->maxT = maxT;
+	return true;
+}
+
+void HealBEM::Reset(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 
+		VectorXd &Tirf, VectorXd &Kirf) {
+	A.resize(0);
+	Ainfw.resize(0);
+	ainf = 0;
+	B.resize(0);
+	Kirf.resize(0);
+}
+	
 void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 
 		VectorXd &Tirf, VectorXd &Kirf) {
 	Tirf = this->Tirf;
@@ -204,13 +238,13 @@ void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf
 	ainf = this->fainf;
 	
 	for (int iw = 0; iw < w.size(); ++iw) {
-		A(iw)  = LinearInterpolate(w[iw], this->w, this->A);
+		A(iw)  = LinearInterpolate(w[iw], this->w, this->fA);
 		Ainfw(iw) = LinearInterpolate(w[iw], this->w, this->fAinf);
-		B(iw)  = LinearInterpolate(w[iw], this->w, this->B);
+		B(iw)  = LinearInterpolate(w[iw], this->w, this->fB);
 	}	
 }
 	
-void HealBEM::Heal() {
+void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail) {
 	// Removes NaN, Inf, duplicated (or nearly) w, sorts by w 
 	CleanNANDupXSort(w, A, B, w, A, B);
 	double srate = GetSampleRate(w, 4, .8);	// Gets the most probable sample rate, or the average if the most probable probability is lower than 0.8
@@ -220,7 +254,8 @@ void HealBEM::Heal() {
 	// Filtered process, with irregular frequencies removal. 
 	
 	// 1. AreaOfInterest
-	AreaOfInterest(0.01, 0.98, aoix0, aoidx, aoidy, idaoix0, idaoixMx, idaoiyMx);
+	if (!AreaOfInterest(0.01, 0.98, aoix0, aoidx, aoidy, idaoix0, idaoixMx, idaoiyMx))
+		return;
 
 
 	// Removes spikes	
@@ -243,13 +278,13 @@ void HealBEM::Heal() {
 		CleanCondition(nw, nB, nw, nB, [&](int id) {return nB[id] > 0;});	// Removed negatives
 		
 		LocalFitting(nw, nB, w, fB, 2, aoidx*0.25, false);		// Local fitting, quadratic
-	} else if (filterType == "spine_removal") {// The complex way
+	} else if (filterType == "full") {// The complex way
 		
 		Vector<bool>idToRemove;						// Signals with false if a value of B should be removed
 				
 		Resize(idToRemove, int(B.size()), true);	// Initialisation, resets points to be cleaned
 	
-		if (false) {		// Removes sign of Zorro. Basic algorithm, but functional
+		if (zremoval) {		// Removes sign of Zorro. Basic algorithm, but functional
 			Vector<int64> allupperPk, alllowerPk;
 			FindPeaks(B, allupperPk, alllowerPk);		// Finds all lower and upper peaks, even the tiniest
 			
@@ -293,7 +328,7 @@ void HealBEM::Heal() {
 		}
 		// Removes spines
 
-		if (false) {	// This option can be avoided
+		if (thinremoval) {	// This option can be avoided
 			double maxDer = 6*abs(aoidy/aoidx); // Max slope. Less sharp spine detection to get and remove bear claws
 			
 			Vector<int64> upperPk, lowerPk;
@@ -410,7 +445,7 @@ void HealBEM::Heal() {
 				ScrimTape(w, fB, toScratch[i]-3, toScratch[i]+3);		// End of the repaired scratch
 			}
 	 
-	 		if (true) {		// Decaying right tail
+	 		if (decayingTail && aoidx > 0) {		// Decaying right tail
 	 			int fromid, toid;
 	 			double fromw = aoix0 + 1*aoidx;		// Begin and 
 	 			double tow   = aoix0 + 1.5*aoidx;	// end of decaying. After end, B is zero
@@ -422,6 +457,9 @@ void HealBEM::Heal() {
 		 				;
 		 			for (int i = fromid; i < w.size() && w[toid = i] < tow; ++i) 		// id of tow
 		 				;	
+		 			
+		 			if (fromid == toid)
+		 				break;
 		 			
 		 			VectorXd fitw =  w.segment(fromid, toid-fromid+1);		// Gets the fragment of original B to be fit
 		 			VectorXd fitB = fB.segment(fromid, toid-fromid+1);
@@ -459,12 +497,17 @@ void HealBEM::Heal() {
 		GetKirf(fKirf, Tirf, w, fB);
 		GetAinfw(fAinf, fKirf, Tirf, w, A);
 		
-		VectorXd tmp = fAinf.segment(fromA, toA-fromA);
-		fainf = tmp.mean();		// New clean Ainf
-		
-		double dt = maxT/(numT-1);
-		// New fA obtained from ainf and fB
-		GetA(fA, fKirf, w, fainf, dt);
+		if (toA > fromA) {
+			VectorXd tmp = fAinf.segment(fromA, toA-fromA);
+			fainf = tmp.mean();		// New clean Ainf
+			
+			double dt = maxT/(numT-1);
+			// New fA obtained from ainf and fB
+			GetA(fA, fKirf, w, fainf, dt);
+			
+			fAinf = VectorXd::Constant(w.size(), fainf);
+		} else 
+			fA = A;
 	}
 }
 

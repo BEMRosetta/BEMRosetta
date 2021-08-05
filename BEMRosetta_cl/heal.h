@@ -3,16 +3,18 @@
 
 class HealBEM {
 public:
-	void Heal();
-	void Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, double maxT, int num);
-	void Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 
-				VectorXd &Tirf, VectorXd &Kinf);
+	void Heal(bool zremoval, bool thinremoval, bool decayingTail);
+	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT);
+	void Save(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
+				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);
+	void Reset(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
+				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);
 			   				
-	VectorXd w, A, B;
-	VectorXd fB, fA, fAinf, fAinfw;
+	Eigen::VectorXd w, A, B;
+	Eigen::VectorXd fB, fA, fAinf;
 	double fainf;
 	static String filterType;
-	VectorXd Tirf, fKirf;
+	Eigen::VectorXd Tirf, fKirf;
 	String title;
 	String sdof;
 
@@ -31,7 +33,7 @@ public:
 		idaoiyMx;			// Index of the max value in y
 		
 private:
-	void AreaOfInterest(double percMin, 
+	bool AreaOfInterest(double percMin, 
 						double percMax, 
 						double &aoix0, 		// Value x from which the AOI begins
 						double &aoidx, 		// AOI width 
@@ -46,7 +48,7 @@ private:
 	
 	static void CubicFromEnds(double x0, double y0, double p0, double x1, double y1, double p1,
 				   			double &a, double &b, double &c, double &d);
-	static void ScrimTape(VectorXd &x, VectorXd &y, int from, int to);
+	static void ScrimTape(Eigen::VectorXd &x, Eigen::VectorXd &y, int from, int to);
 };
 
 

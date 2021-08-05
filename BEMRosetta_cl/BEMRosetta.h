@@ -17,11 +17,11 @@ void SetBuildInfo(String &str);
 class Hydro {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
+	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, WAMIT_HAMS, WAMIT_WADAM, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
 	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
-	void SaveAs(String file, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
+	void SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
@@ -31,6 +31,8 @@ public:
 		switch (code) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
+		case WAMIT_HAMS: 	return t_("Wamit.HAMS");
+		case WAMIT_WADAM: 	return t_("Wamit.WADAM");
 		case FAST_WAMIT: 	return t_("FAST-Wamit");
 		case NEMOH:			return t_("Nemoh");
 		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
@@ -44,8 +46,10 @@ public:
 	
 	String GetCodeStrAbr() const {
 		switch (code) {
-		case WAMIT: 		return t_("W.o");
-		case WAMIT_1_3: 	return t_("W.1");
+		case WAMIT: 		return t_("Wm.o");
+		case WAMIT_1_3: 	return t_("Wm.1");
+		case WAMIT_HAMS: 	return t_("HAM");
+		case WAMIT_WADAM: 	return t_("WDM");
 		case FAST_WAMIT: 	return t_("FST");
 		case NEMOH:			return t_("Nmh");
 		case SEAFEM_NEMOH:	return t_("SFM");
@@ -124,6 +128,7 @@ public:
 				("im", im)
 			;
     	}
+    	void Reset() {ma.Clear(); ph.Clear(); re.Clear(); im.Clear();}
     };
     
     Forces ex; 								// Excitation
@@ -284,17 +289,18 @@ public:
 	Eigen::VectorXd Get_w() 					const {return Eigen::Map<const Eigen::VectorXd>(w, w.size());}
 	Eigen::VectorXd Get_T() 					const {return Eigen::Map<const Eigen::VectorXd>(T, T.size());}
 	
-	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[idf][jdf][ifr]*rho_dim()/rho_ndim() : A[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	Eigen::VectorXd A_dim(int idf, int jdf) 	const {return dimen  ? A[idf][jdf]*(rho_dim()/rho_ndim()) : A[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[idf][jdf][ifr]*rho_dim()/rho_ndim()  : A[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	Eigen::VectorXd A_dim(int idf, int jdf) 	const {return dimen  ? A[idf][jdf]    *(rho_dim()/rho_ndim()) : A[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : A[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	Eigen::VectorXd A_ndim(int idf, int jdf)	const {return !dimen ? A[idf][jdf]*(rho_ndim()/rho_dim()) : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
+	
 	double Aw0_dim(int idf, int jdf)   		 	const {return dimen  ? Aw0(idf, jdf)*rho_dim()/rho_ndim() : Aw0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double Aw0_ndim(int idf, int jdf)  		 	const {return !dimen ? Aw0(idf, jdf)    : Aw0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	double Aw0_(bool ndim, int idf, int jdf) 	const {return ndim ? Aw0_ndim(idf, jdf) : Aw0_dim(idf, jdf);}
+	double Aw0_(bool ndim, int idf, int jdf) 	const {return ndim   ? Aw0_ndim(idf, jdf) : Aw0_dim(idf, jdf);}
 	double Awinf_dim(int idf, int jdf) 		 	const {return dimen  ? Awinf(idf, jdf)*rho_dim()/rho_ndim() : Awinf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double Awinf_ndim(int idf, int jdf)		 	const {return !dimen ? Awinf(idf, jdf) : Awinf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	double Awinf_(bool ndim, int idf, int jdf) 	const {return ndim ? Awinf_ndim(idf, jdf) : Awinf_dim(idf, jdf);}
+	double Awinf_(bool ndim, int idf, int jdf) 	const {return ndim   ? Awinf_ndim(idf, jdf) : Awinf_dim(idf, jdf);}
 	
 	double B_dim(int ifr, int idf, int jdf)  	   const {return dimen  ? B[idf][jdf][ifr]*rho_dim()/rho_ndim() : B[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	Eigen::VectorXd B_dim(int idf, int jdf)  	   const;
@@ -302,21 +308,24 @@ public:
 	Eigen::VectorXd B_ndim(int idf, int jdf) 	   const;
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
 	
-	double Kirf_dim(int ifr, int idf, int jdf)  	   const {return dimen ? Kirf[idf][jdf][ifr]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][ifr]*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double Kirf_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? Kirf[idf][jdf][ifr] : Kirf[idf][jdf][ifr]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	double Kirf_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? Kirf_ndim(ifr, idf, jdf) : Kirf_dim(ifr, idf, jdf);}
+	double Kirf_dim(int it, int idf, int jdf)  	   	  const {return dimen ? Kirf[idf][jdf][it]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][it]*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double Kirf_ndim(int it, int idf, int jdf) 	   	  const {return !dimen ? Kirf[idf][jdf][it] : Kirf[idf][jdf][it]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	Eigen::VectorXd Kirf_ndim(int idf, int jdf) 	  const {return !dimen ? Kirf[idf][jdf]     : Kirf[idf][jdf]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
 	double Ainfw_dim(int ifr, int idf, int jdf) 		const {return dimen  ? Ainfw[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainfw[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double Ainfw_ndim(int ifr, int idf, int jdf) 		const {return !dimen ? Ainfw[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : Ainfw[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Ainfw_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? Ainfw_ndim(ifr, idf, jdf) : Ainfw_dim(ifr, idf, jdf);}
 	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	void C_dim();	
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
 	double F_ma_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double F_re_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double F_im_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.im[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	void F_dim(Forces &f);
 	double F_ma_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.ma[_h](ifr, idf) : f.ma[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double F_re_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.re[_h](ifr, idf) : f.re[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double F_im_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.im[_h](ifr, idf) : f.im[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
@@ -496,6 +505,7 @@ public:
 	static double GetK_IRF_MaxT(const Vector<double> &w);
 	void GetAinf();
 	void GetAinfw();
+	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail);
 	
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
@@ -601,7 +611,7 @@ public:
 	bool IsSymmetricX();
 	bool IsSymmetricY();
 	
-	double waterPlaneArea; 
+	double xProjectionPos, xProjectionNeg, yProjectionPos, yProjectionNeg, zProjectionPos, zProjectionNeg; 
 	Point3D cb;
 	Point3D cg;
 	double mass = Null;
@@ -623,7 +633,7 @@ class Wamit : public HydroClass {
 public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Save(String file, bool force_T = false, int qtfHeading = Null);
+	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
 	void Save_out(String file, double g, double rho);
 	virtual ~Wamit() noexcept {}
 	
@@ -656,7 +666,8 @@ protected:
 	void Save_3(String fileName, bool force_T = false);
 	void Save_hst(String fileName);
 	void Save_4(String fileName, bool force_T = false);
-	void Save_12(String fileName, bool isSum, bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
+	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
+				bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
 
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod);
 	void Save_AB(FileOut &out, int ifr);
@@ -682,7 +693,7 @@ class Fast : public Wamit {
 public:
 	Fast(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, double g = 9.81);
-	void Save(String file, int qtfHeading = Null);
+	void Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
 	
 private:
@@ -870,8 +881,8 @@ public:
 	int Nb = 0;				
 	
 	double depth, rho, g, len;
-	int discardNegDOF;
-	double thres;
+	//int discardNegDOF;
+	//double thres;
 	int calcAwinf, calcAwinfw;
 	double maxTimeA;
 	int numValsA;
@@ -889,6 +900,7 @@ public:
 	void Kirf(int id, double maxT);
 	void Ainf(int id);
 	void Ainfw(int id);
+	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail);
 	
 	void LoadMesh(String file, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <void(String, int pos)> Status);
@@ -918,8 +930,8 @@ public:
 			("rho", rho)
 			("g", g)
 			("length", len)
-			("discardNegDOF", discardNegDOF)
-			("thres", thres)
+			//("discardNegDOF", discardNegDOF)
+			//("thres", thres)
 			("calcAwinf", calcAwinf)
 			("calcAwinfw", calcAwinfw)
 			("maxTimeA", maxTimeA)

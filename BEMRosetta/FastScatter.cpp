@@ -349,10 +349,11 @@ void FastScatter::ShowSelected() {
 				left.scatter.AddSeries(datafast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(datafast.units[col], t_("sec")).SetDataSecondaryY().Stroke(1);	
 		}
 	}
-	left.scatter.SetPlotAreaLeftMargin(70);
+	left.scatter.SetPlotAreaLeftMargin(8*StdFont().GetHeight());
+	left.scatter.SetPlotAreaBottomMargin(4*StdFont().GetHeight());
 	bool rightEmpty = rightSearch.array.GetCount() == 0;
 	if (!rightEmpty)
-		left.scatter.SetPlotAreaRightMargin(70);
+		left.scatter.SetPlotAreaRightMargin(8*StdFont().GetHeight());
 	left.scatter.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
 	left.scatter.ZoomToFit(true, true);	
 	
@@ -423,6 +424,7 @@ void FastScatterTabs::AddTab(String filename) {
 		sct->Init([=] (String filename) {
 				String title = GetFileTitle(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
 				tabBar.SetValue(key, title);
+				AddHistory(filename);
 			}, [=] (String clipboard) {
 				if (tabBar.GetCount() == 0)
 				return; 

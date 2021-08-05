@@ -322,8 +322,8 @@ void MenuOptions::Load() {
 	rho <<= bem->rho;
 	len <<= bem->len;
 	depth <<= bem->depth;
-	discardNegDOF <<= bem->discardNegDOF;
-	thres <<= bem->thres;
+	//discardNegDOF <<= bem->discardNegDOF;
+	//thres <<= bem->thres;
 	calcAwinf <<= bem->calcAwinf;
 	calcAwinfw <<= bem->calcAwinfw;
 	maxTimeA <<= bem->maxTimeA;
@@ -350,8 +350,8 @@ void MenuOptions::OnSave() {
 	bem->rho = ~rho;
 	bem->len = ~len;
 	bem->depth = ~depth;
-	bem->discardNegDOF = ~discardNegDOF;
-	bem->thres = ~thres;
+	//bem->discardNegDOF = ~discardNegDOF;
+	//bem->thres = ~thres;
 	bem->calcAwinf = ~calcAwinf;
 	bem->calcAwinfw = ~calcAwinfw;
 	bem->maxTimeA = ~maxTimeA;
@@ -384,10 +384,10 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (!EqualDecimals(bem->depth, ~depth, 8))
 		return true;
-	if (bem->discardNegDOF != ~discardNegDOF)
-		return true;
-	if (!EqualDecimals(bem->thres, ~thres, 8)) 
-		return true;
+	//if (bem->discardNegDOF != ~discardNegDOF)
+	//	return true;
+	//if (!EqualDecimals(bem->thres, ~thres, 8)) 
+	//	return true;
 	if (bem->calcAwinf != ~calcAwinf)
 		return true;
 	if (bem->calcAwinfw != ~calcAwinfw)
@@ -804,7 +804,13 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 		row = array.GetCursor();
 	if (row < 0)
 		return String();
-	if (array.GetCtrl(row, 2))
-		return array.Get(row, 5);
+	return array.Get(row, 5);
+}
+
+String ArrayModel_GetTitle(ArrayCtrl &array, int row) {
+	if (row < 0) 
+		row = array.GetCursor();
+	if (row < 0)
+		return String();
  	return array.Get(row, 4);
 }
