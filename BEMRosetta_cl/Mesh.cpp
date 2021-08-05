@@ -156,7 +156,12 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 		
 		under.CutZ(mesh, -1);
 		under.GetPanelParams();
-		waterPlaneArea = under.GetWaterPlaneArea();
+		xProjectionPos = under.GetSurfaceXProjection(true, false);
+		xProjectionNeg = under.GetSurfaceXProjection(false, true);
+		yProjectionPos = under.GetSurfaceYProjection(true, false);
+		yProjectionNeg = under.GetSurfaceYProjection(false, true);
+		zProjectionPos = under.GetSurfaceZProjection(true, false);
+		zProjectionNeg = under.GetSurfaceZProjection(false, true);
 		under.GetSurface();
 		under.GetVolume();
 		
@@ -172,7 +177,9 @@ void MeshData::Report(double rho) {
 	
 	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));
-	BEMData::Print(S("\n") + Format(t_("Water-plane area [m2] %f"), waterPlaneArea));
+	BEMData::Print(S("\n") + Format(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -zProjectionPos, zProjectionNeg, zProjectionPos + zProjectionNeg));
+	BEMData::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -xProjectionPos, xProjectionNeg, xProjectionPos + xProjectionNeg));
+	BEMData::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -yProjectionPos, yProjectionNeg, yProjectionPos + yProjectionNeg));
 	BEMData::Print(S("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
 	BEMData::Print(S("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
 	BEMData::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));

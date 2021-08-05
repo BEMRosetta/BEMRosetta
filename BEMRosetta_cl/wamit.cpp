@@ -4,13 +4,13 @@
 
 
 bool Wamit::Load(String file) {
-	hd().code = Hydro::WAMIT;
-	hd().file = file;	
 	hd().name = GetFileTitle(file);
-		
+	hd().file = file;	
+	
 	try {
 		String ext = GetFileExt(file);
 		if (ext == ".out") {
+			hd().code = Hydro::WAMIT;
 			BEMData::Print("\n\n" + Format(t_("Loading out file '%s'"), file));
 			if (!Load_out()) {
 				BEMData::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
@@ -25,6 +25,14 @@ bool Wamit::Load(String file) {
 			if (!Load_FK(fileFK))
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
 		} else if (S(".1.2.3.hst.4.12d.12s").Find(ext) >= 0) {
+			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
+				hd().code = Hydro::WAMIT_HAMS;
+			else if (hd().name == "WAMIT_5S")
+				hd().code = Hydro::WAMIT_WADAM;
+			else
+				hd().code = Hydro::WAMIT_1_3;
+
+	
 			String filecfg = ForceExt(file, ".cfg");
 			BEMData::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
 			if (!Load_cfg(filecfg))
@@ -100,7 +108,7 @@ bool Wamit::Load(String file) {
 	return true;
 }
 
-void Wamit::Save(String file, bool force_T, int qtfHeading) {
+void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) {
 	try {
 		if (hd().IsLoadedA() && hd().IsLoadedB()) {
 			String file1 = ForceExt(file, ".1");
@@ -125,10 +133,10 @@ void Wamit::Save(String file, bool force_T, int qtfHeading) {
 		if (hd().IsLoadedQTF()) {
 			String fileQTFs = ForceExt(file, ".12s");
 			BEMData::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileQTFs)));
-			Save_12(fileQTFs, true, force_T, true, qtfHeading);
+			Save_12(fileQTFs, true, Status, force_T, true, qtfHeading);
 			String fileQTFd = ForceExt(file, ".12d");
 			BEMData::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileQTFd)));
-			Save_12(fileQTFd, false, force_T, true, qtfHeading);
+			Save_12(fileQTFd, false, Status, force_T, true, qtfHeading);
 		}
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -1466,14 +1474,13 @@ void Wamit::Save_4(String fileName, bool force_T) {
 									FormatWam(hd().R_im_ndim(hd().rao, ih, ifr, i)));
 }
 	
-void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg, int qtfHeading) {
+void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
+					bool force_T, bool force_Deg, int qtfHeading) {
 	if (!hd().IsLoadedQTF()) 
 		return;
 	
-	if (isSum)
-		fileName = ForceExt(fileName, ".12s");
-	else
-		fileName = ForceExt(fileName, ".12d");
+	String ext = isSum ? ".12s" : ".12d";
+	fileName = ForceExt(fileName, ext);
 	
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -1509,8 +1516,13 @@ void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg, i
 	
 	static int idf12[] = {1, 3, 5, 2, 4, 6};
 	
-	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) 
-		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) 
+	int num = hd().qtfw.size();
+	int it = 0;
+	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) {
+		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) {
+			if (!Status(Format("%s %d/%d", ext, it, num*num), 100*it/(num*num)))
+				throw Exc(t_("Stop by user"));
+			it++;
 			for (int ih1 = 0; ih1 < Nh; ++ih1) {
 				if (!IsNull(qtfHeading) && ih1 != qtfHeading)
 					continue;
@@ -1545,4 +1557,6 @@ void Wamit::Save_12(String fileName, bool isSum, bool force_T, bool force_Deg, i
 					}
 				}
 			}
+		}
+	}
 }

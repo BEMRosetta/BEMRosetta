@@ -448,8 +448,11 @@ bool Aqwa::Load_LIS() {
 				}
 			}
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
+			int ieq = line.FindAfter("="); ieq = line.FindAfter("=", ieq);
 			f.Load(line);
-			double freq = f.GetDouble(7);
+			double freq = ScanDouble(line.Mid(ieq));
+			if (IsNull(freq))
+				throw Exc(in.Str() + "\n"  + t_("Problem loading frequency"));
 			int ifr = FindClosest(hd().w, freq);
 			if (ifr < 0)
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));

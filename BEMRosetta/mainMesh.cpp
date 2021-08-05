@@ -257,10 +257,12 @@ void MainMesh::OnMenuConvertArraySel() {
 	String file = ~menuConvert.file;
 	String folder = GetFileFolder(file);
 	String ext = ToLower(GetFileExt(file));
-	//String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
-	//file = AppendFileName(folder, fileName + ext);
-	
+	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
+	if (fileName.IsEmpty())
+		fileName = ArrayModel_GetTitle(listLoaded);
+	file = AppendFileName(folder, fileName + ext);
 	menuConvert.file <<= file;
+
 	menuConvert.symX <<= (ext == ".gdf" && Bem().surfs[id].IsSymmetricX());
 	menuConvert.symY <<= Bem().surfs[id].IsSymmetricY();
 	
@@ -691,17 +693,6 @@ void MainMesh::OnAddWaterSurface(char c) {
 		Bem().AddWaterSurface(id, c);
 		
 		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
-		if (c == 'r')
-			surf.name = t_("Water surface removed");
-		else if (c == 'f')
-			surf.name = t_("Water surface");
-		else if (c == 'e')
-			surf.name = t_("Water surface extracted");
-		surf.fileName =  "";
-		
-		surf.AfterLoad(Bem().rho, Bem().g, false);
-		
-		surf.Report(Bem().rho);
 		AddRow(surf);
 		After();
 		mainViewData.OnAddedModel(mainView);
@@ -1122,7 +1113,24 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 														FormatDouble(data.cb.x, 3, FD_EXP),			
 														FormatDouble(data.cb.y, 3, FD_EXP),
 														FormatDouble(data.cb.z, 3, FD_EXP)));
-	array.Set(row, 0, t_("Water Plane Area [m2]"));	array.Set(row++, col, FormatDouble(data.waterPlaneArea, 6, FD_EXP));
+	
+	array.Set(row, 0, t_("Surface projection Z-axis (Water Plane Area) [m2]"));	
+												array.Set(row++, col, Format(t_("%s - %s = %s"),
+														FormatDouble(-data.zProjectionPos, 6, FD_EXP),
+														FormatDouble(data.zProjectionNeg, 6, FD_EXP),
+														FormatDouble(data.zProjectionPos+data.zProjectionNeg, 6, FD_EXP)));
+		
+	array.Set(row, 0, t_("Surface projection X-axis [m2]"));	
+												array.Set(row++, col, Format(t_("%s - %s = %s"),
+														FormatDouble(-data.xProjectionPos, 6, FD_EXP),
+														FormatDouble(data.xProjectionNeg, 6, FD_EXP),
+														FormatDouble(data.xProjectionPos+data.xProjectionNeg, 6, FD_EXP)));
+	
+	array.Set(row, 0, t_("Surface projection Y-axis [m2]"));	
+												array.Set(row++, col, Format(t_("%s - %s = %s"),
+														FormatDouble(-data.yProjectionPos, 6, FD_EXP),
+														FormatDouble(data.yProjectionNeg, 6, FD_EXP),
+														FormatDouble(data.yProjectionPos+data.yProjectionNeg, 6, FD_EXP)));
 	
 	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
 														FormatDouble(data.mesh.env.minX, 3, FD_EXP),
