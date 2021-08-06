@@ -16,6 +16,7 @@ file
 	main.cpp,
 	BEMRosetta.cpp,
 	BEMRosetta.h,
+	CommandLine.cpp,
 	Mesh.cpp,
 	hams_mesh.cpp,
 	aqwa_mesh.cpp,

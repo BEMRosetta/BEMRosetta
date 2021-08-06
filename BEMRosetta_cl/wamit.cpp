@@ -108,7 +108,7 @@ bool Wamit::Load(String file) {
 	return true;
 }
 
-void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) {
+bool Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) {
 	try {
 		if (hd().IsLoadedA() && hd().IsLoadedB()) {
 			String file1 = ForceExt(file, ".1");
@@ -141,7 +141,9 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
+		return false;
 	}
+	return true;
 }
 
 bool Wamit::Load_out() {
@@ -449,12 +451,12 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 	}
 }
 
-void Wamit::Save_out(String file, double g, double rho) {
-	FileOut out(file);
-	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), file));
-
+bool Wamit::Save_out(String file, double g, double rho) {
 	try {
+		FileOut out(file);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to open '%s'"), file));
+
 		out << Format(" %s\n\n", String('-', 72))
 		    <<        "                   BEMRosetta generated .out format\n\n"
 		    << Format(" %s\n\n\n", String('-', 72))
@@ -551,7 +553,9 @@ void Wamit::Save_out(String file, double g, double rho) {
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
+		return false;
 	}
+	return true;
 }
 
 void Wamit::Load_A(FileInLine &in, Eigen::MatrixXd &A) {
