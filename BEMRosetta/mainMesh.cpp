@@ -404,7 +404,7 @@ bool MainMesh::OnLoad() {
 		
 		WaitCursor waitcursor;
 
-		Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);}, ~menuOpen.opClean, false);
+		Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();}, ~menuOpen.opClean, false);
 		
 		AfterAdd(file);
 		
@@ -726,7 +726,7 @@ void MainMesh::OnHealing(bool basic) {
 		Progress progress(t_("Healing mesh file..."), 100); 
 		mainView.gl.Disable();
 		
-		Bem().HealingMesh(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);});
+		Bem().HealingMesh(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
 		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false);
 		
@@ -767,7 +767,7 @@ void MainMesh::OnOrientSurface() {
 		Progress progress(t_("Orienting mesh surface..."), 100); 
 		mainView.gl.Disable();
 		
-		Bem().OrientSurface(id, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos);});
+		Bem().OrientSurface(id, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
 		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false);
 		
@@ -967,6 +967,7 @@ void MainMesh::OnSplit() {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			progress.Refresh();
+			return true;
 		});	
 		
 		RemoveRow(row);

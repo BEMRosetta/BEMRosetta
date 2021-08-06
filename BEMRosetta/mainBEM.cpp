@@ -408,7 +408,7 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		WaitCursor wait;
 		
-		Bem().Load(file, [&](String str, int _pos) {
+		Bem().LoadBEM(file, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();

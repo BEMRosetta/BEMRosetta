@@ -332,7 +332,12 @@ const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 CONSOLE_APP_MAIN {
 	const Vector<String>& command = CommandLine();
 	
-	ConsoleMain(command, false);
+	ConsoleMain(command, false, PrintStatus);
+	
+#ifdef flagDEBUG
+	Cout() << "\nPress enter to end";
+	ReadStdIn();
+#endif
 }
 
 #endif
