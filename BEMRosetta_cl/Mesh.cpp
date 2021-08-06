@@ -76,6 +76,23 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	else
 		surf = clone(mesh);
 	
+	if (type == UNKNOWN) {
+		String ext = ToLower(GetFileExt(file));
+		
+		if (ext == ".gdf")
+			type = WAMIT_GDF;
+		else if (ext == ".dat")
+			type = NEMOH_DAT;
+		else if (ext == ".")
+			type = NEMOH_PRE;
+		else if (ext == ".pnl")
+			type = HAMS_PNL;
+		else if (ext == ".stl")
+			type = STL_TXT;
+		else
+			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
+	}
+	
 	if (symX && (type == WAMIT_GDF || type == HAMS_PNL)) {
 		Surface nsurf;
 		nsurf.CutX(surf);
@@ -96,23 +113,6 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	if (surf.panels.IsEmpty())
 		throw Exc(t_("Model is empty. No panels found"));
 		
-	if (type == UNKNOWN) {
-		String ext = ToLower(GetFileExt(file));
-		
-		if (ext == ".gdf")
-			type = WAMIT_GDF;
-		else if (ext == ".dat")
-			type = NEMOH_DAT;
-		else if (ext == ".")
-			type = NEMOH_PRE;
-		else if (ext == ".pnl")
-			type = HAMS_PNL;
-		else if (ext == ".stl")
-			type = STL_TXT;
-		else
-			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
-	}
-	
 	if (type == WAMIT_GDF) 
 		SaveGdfWamit(file, surf, g, symX, symY);	
 	else if (type == NEMOH_DAT) 
@@ -129,7 +129,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 		throw Exc(t_("Unknown mesh file type"));
 }
 
-String MeshData::Heal(bool basic, Function <void(String, int pos)> Status) {
+String MeshData::Heal(bool basic, Function <bool(String, int pos)> Status) {
 	String ret = mesh.Heal(basic, Status);
 	if (!ret.IsEmpty())
 		return ret;
@@ -173,7 +173,7 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 }
 
 void MeshData::Report(double rho) {
-	BEMData::Print("\n\n" + Format(t_("Loaded mesh '%s'"), fileName));
+	BEMData::Print("\n\n" + Format(t_("Mesh file '%s'"), fileName));
 	
 	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));

@@ -93,7 +93,7 @@ bool Fast::Load_HydroDyn() {
 }
 
 
-void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
+bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
 	try {
 		file = ForceExt(file, ".dat");
 		
@@ -115,7 +115,9 @@ void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 	} catch (Exc e) {
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
+		return false;
 	}
+	return true;
 }
 
 void Fast::Save_HydroDyn(String fileName, bool force) {

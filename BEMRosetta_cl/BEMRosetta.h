@@ -10,9 +10,10 @@ using namespace Upp;
 
 class BEMData;
 
-void ConsoleMain(const Upp::Vector<String>& command, bool gui);
+void ConsoleMain(const Upp::Vector<String>& command, bool gui, Function <bool(String, int pos)> Status);
 void SetBuildInfo(String &str);
 
+bool PrintStatus(String s, int d);
 
 class Hydro {
 public:
@@ -21,7 +22,7 @@ public:
 	
 	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
-	void SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
+	bool SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report();
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
@@ -555,7 +556,7 @@ public:
 class MeshData {
 public:
 	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, AQWA_DAT, HAMS_PNL, STL_BIN, STL_TXT, EDIT, UNKNOWN};
-	enum MESH_TYPE {MOVED, UNDERWATER};
+	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
 	MeshData() {
 		id = idCount++;
@@ -591,7 +592,7 @@ public:
 	String LoadDatAQWA(String fileName);
 	String LoadPnlHAMS(String fileName, bool &y0z, bool &x0z);
 	
-	String Heal(bool basic, Function <void(String, int pos)> Status);
+	String Heal(bool basic, Function <bool(String, int pos)> Status);
 	void Orient();
 	void Join(const Surface &orig, double rho, double g);
 	void Image(int axis);
@@ -633,8 +634,8 @@ class Wamit : public HydroClass {
 public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
-	void Save_out(String file, double g, double rho);
+	bool Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
+	bool Save_out(String file, double g, double rho);
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
@@ -693,7 +694,7 @@ class Fast : public Wamit {
 public:
 	Fast(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, double g = 9.81);
-	void Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
+	bool Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
 	
 private:
@@ -881,8 +882,7 @@ public:
 	int Nb = 0;				
 	
 	double depth, rho, g, len;
-	//int discardNegDOF;
-	//double thres;
+	
 	int calcAwinf, calcAwinfw;
 	double maxTimeA;
 	int numValsA;
@@ -893,7 +893,7 @@ public:
 	String foammPath;
 	String hamsPath;
 	
-	void Load(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
+	void LoadBEM(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
 	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
 	void Symmetrize(int id, bool xAxis);
 	void A0(int id);
@@ -902,14 +902,14 @@ public:
 	void Ainfw(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail);
 	
-	void LoadMesh(String file, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
-	void HealingMesh(int id, bool basic, Function <void(String, int pos)> Status);
-	void OrientSurface(int id, Function <void(String, int)> Status);
+	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
+	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
+	void OrientSurface(int id, Function <bool(String, int)> Status);
 	void ImageMesh(int id, int axis);
-	void UnderwaterMesh(int id, Function <void(String, int pos)> Status);
+	void UnderwaterMesh(int id, Function <bool(String, int pos)> Status);
 	void RemoveMesh(int id);
 	void JoinMesh(int idDest, int idOrig);
-	Upp::Vector<int> SplitMesh(int id, Function <void(String, int pos)> Status);
+	Upp::Vector<int> SplitMesh(int id, Function <bool(String, int pos)> Status);
 	
 	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
 	void AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);

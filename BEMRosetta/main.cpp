@@ -597,7 +597,7 @@ GUI_APP_MAIN {
 	if (!command.IsEmpty()) {
 		ConsoleOutput con(true);
 		
-		ConsoleMain(command, true);
+		ConsoleMain(command, true, PrintStatus);
 		return;
 	}
 	
@@ -664,6 +664,8 @@ ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option) {
 	array.AddColumn("", 5).SetDisplay(Single<RectDisplay>());
 	if (option)
 		array.AddColumn("", 10);
+	else
+		array.AddColumn("", 0);
 	array.AddColumn("", 30);	
 	array.AddColumn("", 30);
 	array.AddColumn("", 30);
@@ -684,7 +686,7 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
 }
 
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id) {
- 	array.Add(id, GetColorId(id), codeStr, title, fileName);
+ 	array.Add(id, GetColorId(id), Null, codeStr, title, fileName);
  	array.SetCursor(array.GetCount());
 }
 
@@ -692,11 +694,11 @@ void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, S
 	for (int row = 0; row < array.GetCount(); ++row) {
 		if (array.Get(row, 0) == id) {
 			if (!IsNull(codeStr))
-				array.Set(row, 2, codeStr);
+				array.Set(row, 3, codeStr);
 			if (!IsNull(title))
-				array.Set(row, 3, title);
+				array.Set(row, 4, title);
 			if (!IsNull(fileName))
-				array.Set(row, 4, fileName);
+				array.Set(row, 5, fileName);
 			return;
 		}
 	}
@@ -799,18 +801,18 @@ const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row) {
 	return GetColorId(array.Get(row, 0));
 }
 
-String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
-	if (row < 0) 
-		row = array.GetCursor();
-	if (row < 0)
-		return String();
-	return array.Get(row, 5);
-}
-
 String ArrayModel_GetTitle(ArrayCtrl &array, int row) {
 	if (row < 0) 
 		row = array.GetCursor();
 	if (row < 0)
 		return String();
  	return array.Get(row, 4);
+}
+
+String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
+	if (row < 0) 
+		row = array.GetCursor();
+	if (row < 0)
+		return String();
+	return array.Get(row, 5);
 }

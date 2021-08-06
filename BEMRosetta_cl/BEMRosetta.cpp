@@ -10,10 +10,6 @@ using namespace Upp;
 Function <void(String)> BEMData::Print 		  = [](String s) {Cout() << s;};
 Function <void(String)> BEMData::PrintWarning = [](String s) {Cout() << s;};
 Function <void(String)> BEMData::PrintError   = [](String s) {Cout() << s;};
-Function <bool(String, int)> Status 		  = [](String s, int d) {
-	Cout() << s << "(" << d << ")";
-	return true;
-};
 
 const char *Hydro::strDOF[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *Hydro::strDOFAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
@@ -23,6 +19,11 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(�
 				t_("TFS_ma"), t_("TFS_ph")};
 
 int Hydro::idCount = 0;	
+
+bool PrintStatus(String s, int d) {
+	Cout() << "\n" << RemoveAccents(s) << " (" << d << ")";
+	return true;
+};
 
 void Hydro::InitializeSts() {
 	sts.SetCount(6*Nb);
@@ -460,7 +461,7 @@ void Hydro::Compare_cg(Hydro &a) {
 	}
 }
 
-void Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type, int qtfHeading) {
+bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type, int qtfHeading) {
 	int realNh = Nh;
 	int realNf = Nf;
 	
@@ -476,22 +477,25 @@ void Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT ty
 		else
 			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
 	}
+	bool ret = false;
 	if (type == WAMIT) {
 		Wamit data(*bem, this);
-		data.Save_out(file, bem->g, bem->rho);			
+		ret = data.Save_out(file, bem->g, bem->rho);			
 	} else if (type == WAMIT_1_3) {
 		Wamit data(*bem, this);
-		data.Save(file, Status, true, qtfHeading);	
+		ret = data.Save(file, Status, true, qtfHeading);	
 	} else if (type == FAST_WAMIT) {
 		Fast data(*bem, this);
-		data.Save(file, Status, qtfHeading);		
+		ret = data.Save(file, Status, qtfHeading);		
 	} else if (type == BEMROSETTA) {
 		HydroClass data(*bem, this);
-		data.Save(file);		
+		ret = data.Save(file);		
 	}
 	code = type;
 	Nh = realNh;
 	Nf = realNf;
+	
+	return ret;
 }
 
 void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
@@ -1110,7 +1114,7 @@ BEMData::BEMData() {
 	experimental = ToLower(GetExeTitle()).Find("experimental") >= 0;
 }
 
-void BEMData::Load(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
+void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
 	Status(t_("Loading files"), 10);
 	if (checkDuplicated) {
 		for (int i = 0; i < hydros.size(); ++i) {
@@ -1260,8 +1264,8 @@ void BEMData::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool de
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail);
 }
 
-void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
-	Status(Format(t_("Loaded mesh '%s'"), fileName), 10);
+void BEMData::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
+	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < surfs.size(); ++i) {
@@ -1280,7 +1284,7 @@ void BEMData::LoadMesh(String fileName, Function <void(String, int pos)> Status,
 	}
 }
 
-void BEMData::HealingMesh(int id, bool basic, Function <void(String, int)> Status) {
+void BEMData::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
 	Status(Format(t_("Healing mesh '%s'"), surfs[id].fileName), 10);
 	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].fileName));
 	
@@ -1299,7 +1303,7 @@ void BEMData::HealingMesh(int id, bool basic, Function <void(String, int)> Statu
 		Print(S(". ") + t_("The mesh is in good condition"));
 }
 
-void BEMData::OrientSurface(int id, Function <void(String, int)> Status) {
+void BEMData::OrientSurface(int id, Function <bool(String, int)> Status) {
 	Status(Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName), 10);
 	Print(S("\n\n") + Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName));
 	
@@ -1312,7 +1316,7 @@ void BEMData::OrientSurface(int id, Function <void(String, int)> Status) {
 	}
 }
 
-void BEMData::UnderwaterMesh(int id, Function <void(String, int pos)> Status) {
+void BEMData::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].fileName), 10);
 	
 	MeshData &mesh = surfs.Add();
@@ -1347,7 +1351,7 @@ void BEMData::JoinMesh(int idDest, int idOrig) {
 	}
 }
 
-Upp::Vector<int> BEMData::SplitMesh(int id, Function <void(String, int pos)> Status) {
+Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
 	MeshData &orig = surfs[id];
 	
@@ -1580,155 +1584,3 @@ void FieldSplitWamit::LoadWamitJoinedFields(String _line) {
 	}
 }
 	
-void ShowHelp(BEMData &md) {
-	Cout() << "\n" << t_("Usage: bemrosetta_cl [options] [-i infile]... [-e outfile]");
-	Cout() << "\n";
-	Cout() << "\n" << t_("Options:");
-	Cout() << "\n" << t_("-h  --help     -- print options");
-	Cout() << "\n" << t_("-p  --params   -- set physical parameters:");
-	Cout() << "\n" << t_("                 parameter description   units  default value");
-	Cout() << "\n" << t_("                    g      gravity       [m/s2]    ") << md.g;
-	Cout() << "\n" << t_("                    length length scale  []        ") << md.len;
-	Cout() << "\n" << t_("                    rho    water density [Kg/m3]   ") << md.rho;
-	Cout() << "\n" << t_("                    depth  water depth   [m]       ") << md.depth;
-	//Cout() << "\n" << t_("                    thres  threshold to discard DOF") << md.thres;
-	Cout() << "\n" << t_("-i  --input    -- load model");
-	Cout() << "\n" << t_("-e  --export   -- export from input file to output file");
-	Cout() << "\n" << t_("-c  --compare  -- compare input files");
-	Cout() << "\n" << t_("-r  --report   -- output last loaded model data");
-	Cout() << "\n" << t_("-cl --clear    -- clear loaded model");
-	Cout() << "\n";
-	Cout() << "\n" << t_("Actions");
-	Cout() << "\n" << t_("- are done in sequence: if a physical parameter is changed after export, saved files will not include the change");
-	Cout() << "\n" << t_("- can be repeated as desired");
-}
-
-void CheckNumArgs(const Upp::Vector<String>& command, int i, String param) {
-	if (i >= command.size())	
-		throw Exc(Format(t_("Missing parameters when reading '%s'"), param));
-}
-
-void ConsoleMain(const Upp::Vector<String>& command, bool gui) {	
-	String str = t_("BEMRosetta Copyright (c) 2019 Iñaki Zabala\nHydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
-	SetBuildInfo(str);
-	Cout() << str;
-	
-	BEMData md;
-	
-	bool firstTime = false;
-	if (!md.LoadSerializeJson(firstTime))
-		Cout() << "\n" << t_("BEM configuration data are not loaded. Defaults are set");
-	
-	String errorStr;
-	try {
-		if (command.IsEmpty()) {
-			Cout() << "\n" << t_("Command argument list is empty");
-			ShowHelp(md);
-		} else {
-			for (int i = 0; i < command.size(); i++) {
-				if (command[i] == "-h" || command[i] == "--help") {
-					ShowHelp(md);
-					break;
-				} else if (command[i] == "-i" || command[i] == "--input") {
-					i++;
-					CheckNumArgs(command, i, "--input");
-					
-					String file = command[i];
-					if (!FileExists(file)) 
-						throw Exc(Format(t_("File '%s' not found"), file)); 
-					
-					md.Load(file, [&](String str, int) {Cout() << str; return true;}, true);
-					Cout() << "\n" << Format(t_("File '%s' loaded"), file);
-				} else if (command[i] == "-r" || command[i] == "--report") {
-					if (md.hydros.IsEmpty()) 
-						throw Exc(t_("No file loaded"));
-					int lastId = md.hydros.size() - 1;
-					md.hydros[lastId].hd().Report();
-				} else if (command[i] == "-cl" || command[i] == "--clear") {
-					md.hydros.Clear();
-					Cout() << "\n" << t_("Series cleared");
-				} else if (command[i] == "-c" || command[i] == "--convert") {
-					if (md.hydros.IsEmpty()) 
-						throw Exc(t_("No file loaded"));
-					i++;
-					CheckNumArgs(command, i, "--convert");
-					
-					String file = command[i];
-					
-					md.hydros[0].hd().SaveAs(file, Status);
-					Cout() << "\n" << Format(t_("File '%s' converted"), file);
-				} else if (command[i] == "-p" || command[i] == "--params") {
-					i++;
-					CheckNumArgs(command, i, "--params");
-					
-					while (i < command.size()) {
-						if (command[i] == "g") {
-							i++;
-							CheckNumArgs(command, i, "-p g");
-							double g = ScanDouble(command[i]);
-							if (IsNull(g))
-								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-							md.g = g;
-						} else if (command[i] == "length") {
-							i++;
-							CheckNumArgs(command, i, "-p length");
-							double len = ScanDouble(command[i]);
-							if (IsNull(len))
-								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-							md.len = len;
-						} else if (command[i] == "rho") {
-							i++;
-							CheckNumArgs(command, i, "-p rho");
-							double rho = ScanDouble(command[i]);
-							if (IsNull(rho))
-								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-							md.rho = rho;
-						} else if (command[i] == "depth") {
-							i++;
-							CheckNumArgs(command, i, "-p depth");
-							double depth = ScanDouble(command[i]);
-							if (IsNull(depth))
-								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-							md.depth = depth;
-						} /*else if (command[i] == "thres") {
-							i++;
-							CheckNumArgs(command, i, "-p thres");
-							double thres = ScanDouble(command[i]);
-							if (IsNull(thres))
-								throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-							md.thres = thres;
-						} */else 
-							throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-					}
-				} else 
-					throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
-			}
-		}
-	} catch (Exc e) {
-		errorStr = e;
-	} catch(const char *cad) {
-		errorStr = cad;
-	} catch(const std::string &e) {
-		errorStr = e.c_str();	
-	} catch (const std::exception &e) {
-		errorStr = e.what();
-	} catch(...) {
-		errorStr = t_("Unknown error");
-	}	
-	if (!errorStr.IsEmpty()) {
-		Cerr() << Format("\n%s: %s", t_("Error"), errorStr);
-		Cerr() << S("\n\n") + t_("In case of doubt try option -h or --help");
-		if (gui)
-			Cerr() << S("\n") + t_("or just call command line without arguments to open GUI window");
-	}
-	Cout() << "\n";
-}
-
-void SetBuildInfo(String &str) {
-	String name, mode;
-	Time date;
-	int version, bits;
-	GetCompilerInfo(name, version, date, mode, bits);
-	str.Replace("BUILDINFO", Format("%4d%02d%02d%02d, %s, %d bits", 
-				date.year, date.month, date.day, date.hour, mode, bits)); 
-}
