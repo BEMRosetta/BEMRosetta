@@ -133,12 +133,12 @@ void MainMesh::Init() {
 	menuProcess.butOrientSurface <<= THISBACK(OnOrientSurface);
 	menuProcess.butOrientSurface.Tip(t_("Orient all face normals to one side. Set show normals to see the results"));
 	
-	menuProcess.butWaterFill 	<<= THISBACK1(OnAddWaterSurface, 'f');
+	menuProcess.butWaterFill  <<= THISBACK1(OnAddWaterSurface, 'f');
 	menuProcess.butWaterFill.Tip(t_("Generates waterplane mesh based on how the hull crosses the waterplane"));
-	menuProcess.butWaterExtract <<= THISBACK1(OnAddWaterSurface, 'e');
-	menuProcess.butWaterExtract.Tip(t_("Extracts waterplane from a mesh that already includes it"));
-	menuProcess.butWaterNon		<<= THISBACK1(OnAddWaterSurface, 'r');
-	menuProcess.butWaterNon.Tip(t_("Extracts underwater (wet) hull from a mesh"));
+	menuProcess.butWaterPlane <<= THISBACK1(OnAddWaterSurface, 'e');
+	menuProcess.butWaterPlane.Tip(t_("Extracts waterplane from a mesh that already includes it"));
+	menuProcess.butHull		  <<= THISBACK1(OnAddWaterSurface, 'r');
+	menuProcess.butHull.Tip(t_("Extracts underwater (wet) hull from a mesh"));
 		
 	CtrlLayout(menuEdit);
 	menuEdit.edit_x <<= 0;
@@ -1013,8 +1013,8 @@ void MainMesh::UpdateButtons() {
 	menuProcess.butFullHealing.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butOrientSurface.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butWaterFill.Enable(numsel == 1 || numrow == 1);
-	menuProcess.butWaterExtract.Enable(numsel == 1 || numrow == 1);
-	menuProcess.butWaterNon.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butWaterPlane.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butHull.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainMesh::After() {

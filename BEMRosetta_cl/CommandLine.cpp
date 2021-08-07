@@ -60,18 +60,22 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("                        depth     water depth   [m]     ") << md.depth;
 
 	Cout() << "\n" << t_("-bem                  | The next commands are for BEM data");
-	Cout() << "\n" << t_("-i  -input <file>     | load model");
-	Cout() << "\n" << t_("-c  -convert <file>   | export actual model to output file");
-	Cout() << "\n" << t_("-setid <id>           | set the id of the default BEM model");
-	Cout() << "\n" << t_("-r  -report           | output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear            | clear loaded model");
+	Cout() << "\n" << t_("-i  -input <file>     | Load model");
+	Cout() << "\n" << t_("-c  -convert <file>   | Export actual model to output file");
+	Cout() << "\n" << t_("-setid <id>           | Set the id of the default BEM model");
+	Cout() << "\n" << t_("-r  -report           | Output last loaded model data");
+	Cout() << "\n" << t_("-cl -clear            | Clear loaded model");
 	
 	Cout() << "\n" << t_("-mesh                 | The next commands are for mesh data");
-	Cout() << "\n" << t_("-i  -input <file>     | load model");
-	Cout() << "\n" << t_("-c  -convert <file>   | export actual model to output file");
-	Cout() << "\n" << t_("-setid <id>           | set the id of the default mesh model");
-	Cout() << "\n" << t_("-r  -report           | output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear            | clear loaded model");
+	Cout() << "\n" << t_("-i  -input <file>     | Load model");
+	Cout() << "\n" << t_("-c  -convert <file>   | Export actual model to output file");
+	
+	Cout() << "\n" << t_("-getwaterplane        | Extract in new model the waterplane mesh (lid)");
+	Cout() << "\n" << t_("-gethull              | Extract in new model the mes underwater hull");
+	
+	Cout() << "\n" << t_("-setid <id>           | Set the id of the default mesh model");
+	Cout() << "\n" << t_("-r  -report           | Output last loaded model data");
+	Cout() << "\n" << t_("-cl -clear            | Clear loaded model");
 	
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -229,7 +233,7 @@ void ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							i++;
 							CheckIfAvailableArg(command, i, "-setid");
 
-							int meshid = ScanInt(command[i]);
+							meshid = ScanInt(command[i]);
 							if (IsNull(meshid) || meshid < 0 || meshid > md.surfs.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[i]));
 						} else if (param == "-c" || param == "-convert") {
@@ -242,7 +246,7 @@ void ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							
 							bool symX = false, symY = false;
 							
-							if (command.size() >= i && !command[i+1].StartsWith("-")) {
+							if (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
 								String sym = ToLower(command[i]);
 								if (sym == "symx")
@@ -256,7 +260,13 @@ void ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							}
 							md.surfs[meshid].SaveAs(file, MeshData::UNKNOWN, md.g, MeshData::ALL, symX, symY);
 							Cout() << "\n" << Format(t_("File '%s' converted"), file);
-						}
+						}  else if (param == "-getwaterplane") {
+							md.AddWaterSurface(meshid, 'e');
+							meshid = md.surfs.size() - 1;
+						} else if (param == "-gethull") {
+							md.AddWaterSurface(meshid, 'r');
+							meshid = md.surfs.size() - 1;
+						} 
 					}
 				}
 			}
