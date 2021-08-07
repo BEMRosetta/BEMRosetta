@@ -1439,7 +1439,7 @@ void BEMData::AddWaterSurface(int id, char c) {
 		
 		surf.AfterLoad(rho, g, false);
 		
-		surf.Report(rho);
+		//surf.Report(rho);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
