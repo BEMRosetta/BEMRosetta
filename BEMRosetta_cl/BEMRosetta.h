@@ -206,10 +206,19 @@ public:
     Upp::Array<QTF> qtfsum, qtfdif;
     Upp::Vector<double> qtfw, qtfT, qtfhead;
     bool qtfdataFromW;
+    struct QTFCases {
+    	Upp::Vector<int> ib, ih1, ih2;
+    	void Clear() {
+    		ib.Clear();
+    		ih1.Clear();
+    		ih2.Clear();
+    	}
+    } qtfCases;
     
     int GetQTFHeadId(double hd) const;
-    static int GetQTFId(const Upp::Array<Hydro::QTF> &qtfList, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
-	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Upp::Vector<int> &ibL, Upp::Vector<int> &ih1L, Upp::Vector<int> &ih2L);
+    static bool GetQTFId(int &lastid, const Upp::Array<Hydro::QTF> &qtfList, 
+    			const QTFCases &qtfCases, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
+	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases);
 							
     Upp::Vector<double> T;					// [Nf]    			Wave periods
     Upp::Vector<double> w;		 			// [Nf]             Wave frequencies
@@ -510,10 +519,10 @@ public:
 	
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
-	String S_g()	const {return IsNull(g)   ? S("unknown") : Format("%.3f", g);}
-	String S_h()	const {return IsNull(h)   ? S("unknown") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
-	String S_rho() 	const {return IsNull(rho) ? S("unknown") : Format("%.3f", rho);}
-	String S_len() 	const {return IsNull(len) ? S("unknown") : Format("%.1f", len);}
+	String S_g()	const {return IsNull(g)   ? S("-") : Format("%.3f", g);}
+	String S_h()	const {return IsNull(h)   ? S("-") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
+	String S_rho() 	const {return IsNull(rho) ? S("-") : Format("%.3f", rho);}
+	String S_len() 	const {return IsNull(len) ? S("-") : Format("%.1f", len);}
 
 	String GetLastError()	{return lastError;}
 };
@@ -748,7 +757,23 @@ public:
 	int Nh = Null;
 	double minH, maxH;
 	
-	enum Solver {NEMOH, NEMOHv115, CAPYTAINE, HAMS};
+	double rho = Null, g = Null;
+	double xeff, yeff;
+	
+	bool irf;
+	double irfStep, irfDuration;	
+	bool showPressure;
+	int nFreeX, nFreeY;
+	double domainX, domainY;
+	int nKochin;
+	double minK, maxK;
+	
+	enum Solver {NEMOH, NEMOHv115, CAPYTAINE, HAMS, AQWA};
+};
+
+class AQWACal : public BemCal {
+public:
+	bool Load(String fileName);	
 };
 
 class HamsCal : public BemCal {
@@ -772,17 +797,6 @@ private:
 
 class NemohCal : public BemCal {
 public:	
-	double rho = Null, g = Null;
-	double xeff, yeff;
-	
-	bool irf;
-	double irfStep, irfDuration;	
-	bool showPressure;
-	int nFreeX, nFreeY;
-	double domainX, domainY;
-	int nKochin;
-	double minK, maxK;
-	
 	bool Load(String fileName);
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
 	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem, 
@@ -996,5 +1010,9 @@ public:
 	};
 	Vector<Connection> connections;	
 };
+	
+String FormatDoubleEmpty(double val);
+String FormatIntEmpty(int val);
+	
 	
 #endif

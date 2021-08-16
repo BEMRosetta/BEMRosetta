@@ -49,33 +49,33 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("Usage: bemrosetta_cl [options]");
 	Cout() << "\n";
 	Cout() << "\n" << t_("Options:");
-	Cout() << "\n" << t_("-h  -help             | print options");
-	Cout() << "\n" << t_("-paramfile <file> | Params in a file");
+	Cout() << "\n" << t_("-h  -help             # Print options");
+	Cout() << "\n" << t_("-paramfile <file>     # Params in a file. New lines are like separators and # indicates a comment");
 	
-	Cout() << "\n" << t_("-p  -params           | set physical parameters:");
-	Cout() << "\n" << t_("                        parameter description   units   default value");
-	Cout() << "\n" << t_("                        g         gravity       [m/s2]  ") << md.g;
-	Cout() << "\n" << t_("                        length    length scale  []      ") << md.len;
-	Cout() << "\n" << t_("                        rho       water density [kg/m3] ") << md.rho;
-	Cout() << "\n" << t_("                        depth     water depth   [m]     ") << md.depth;
+	Cout() << "\n" << t_("-p  -params           # Set physical parameters:");
+	Cout() << "\n" << t_("                      #   parameter description   units   default value");
+	Cout() << "\n" << t_("                      #   g         gravity       [m/s2]  ") << md.g;
+	Cout() << "\n" << t_("                      #   length    length scale  []      ") << md.len;
+	Cout() << "\n" << t_("                      #   rho       water density [kg/m3] ") << md.rho;
+	Cout() << "\n" << t_("                      #   depth     water depth   [m]     ") << md.depth;
 
-	Cout() << "\n" << t_("-bem                  | The next commands are for BEM data");
-	Cout() << "\n" << t_("-i  -input <file>     | Load model");
-	Cout() << "\n" << t_("-c  -convert <file>   | Export actual model to output file");
-	Cout() << "\n" << t_("-setid <id>           | Set the id of the default BEM model");
-	Cout() << "\n" << t_("-r  -report           | Output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear            | Clear loaded model");
+	Cout() << "\n" << t_("-bem                  # The next commands are for BEM data");
+	Cout() << "\n" << t_("-i  -input <file>     # Load model");
+	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
+	Cout() << "\n" << t_("-setid <id>           # Set the id of the default BEM model");
+	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
+	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	
-	Cout() << "\n" << t_("-mesh                 | The next commands are for mesh data");
-	Cout() << "\n" << t_("-i  -input <file>     | Load model");
-	Cout() << "\n" << t_("-c  -convert <file>   | Export actual model to output file");
+	Cout() << "\n" << t_("-mesh                 # The next commands are for mesh data");
+	Cout() << "\n" << t_("-i  -input <file>     # Load model");
+	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
 	
-	Cout() << "\n" << t_("-getwaterplane        | Extract in new model the waterplane mesh (lid)");
-	Cout() << "\n" << t_("-gethull              | Extract in new model the mes underwater hull");
+	Cout() << "\n" << t_("-getwaterplane        # Extract in new model the waterplane mesh (lid)");
+	Cout() << "\n" << t_("-gethull              # Extract in new model the mes underwater hull");
 	
-	Cout() << "\n" << t_("-setid <id>           | Set the id of the default mesh model");
-	Cout() << "\n" << t_("-r  -report           | Output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear            | Clear loaded model");
+	Cout() << "\n" << t_("-setid <id>           # Set the id of the default mesh model");
+	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
+	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");

@@ -26,8 +26,21 @@ void MainSolver::Init(const BEMData &bem) {
 	tab.Add(nemohScroll.AddPaneV(nemoh).SizePos(), "Nemoh");
 	//tab.Add(hamsScroll.AddPaneV(hams).SizePos(),   "HAMS");
 	
+	const String bemFiles = ".cal .in .dat";
+	String bemFilesAst = clone(bemFiles);
+	bemFilesAst.Replace(".", "*.");
+	loadFrom.Type(Format("All supported bem files (%s)", bemFiles), bemFilesAst);
+	loadFrom.AllFilesType();
+	String extView = ToLower(GetFileExt(loadFrom.GetData().ToString()));
+	if (extView.IsEmpty())
+		loadFrom.ActiveType(0);
+	else if (bemFiles.Find(extView) >= 0)
+		loadFrom.ActiveType(0);
+	else
+		loadFrom.ActiveType(1);
+	
 	loadFrom.WhenChange = THISBACK(OnLoad);
-	loadFrom.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
+	loadFrom.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10).UseDropping();
 	butLoad.WhenAction = [&] {loadFrom.DoGo();};
 
 	saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
@@ -230,42 +243,36 @@ void MainSolver::Jsonize(JsonIO &json) {
 }
 
 bool MainSolver::OnLoad() {
-	String folder = ~loadFrom;
+	String file = ~loadFrom;
 	
 	try {
-		String fileNemoh = AppendFileNameX(folder, "Nemoh.cal");
-		if (!FileExists(fileNemoh))
-			fileNemoh = folder;
-		String fileHams = AppendFileNameX(folder, "Input", "ControlFile.in");
-		if (!FileExists(fileHams)) {
-			fileHams = AppendFileNameX(folder, "ControlFile.in");
-			if (!FileExists(fileHams)) 
-				fileHams = folder;
-		}
-				
-		if (FileExists(fileNemoh)) {
-			NemohCal data;			
-			if (!data.Load(fileNemoh)) {
-				Exclamation(Format("Problem loading %s file", DeQtf(fileNemoh)));
-				return false;
-			}
-			Load(data);	
-		} else if (FileExists(fileHams)) {
-			HamsCal data;
-			if (!data.Load(fileHams)) {
-				Exclamation(Format("Problem loading %s file", DeQtf(fileHams)));
-				return false;
-			}
-			Load(data);	
-		}
+		Load(file);
 		dropSolver.WhenAction();
-		
 	} catch (const Exc &e) {
 		Exclamation(DeQtfLf(e));
 		return false;
 	}
+	return true;		
+}		
 	
-	return true;
+void MainSolver::Load(String file) {	
+	if (ToLower(GetFileName(file)) == "nemoh.cal") {
+		NemohCal data;			
+		if (!data.Load(file)) 
+			throw Exc(Format("Problem loading %s file", DeQtf(file)));
+		Load(data);
+	} else if (ToLower(GetFileName(file)) == "controlfile.in") {
+		HamsCal data;
+		if (!data.Load(file)) 
+			throw Exc(Format("Problem loading %s file", DeQtf(file)));
+		Load(data);	
+	} else if (ToLower(GetFileExt(file)) == ".dat") {
+		AQWACal data;
+		if (!data.Load(file)) 
+			throw Exc(Format("Problem loading %s file", DeQtf(file)));
+		Load(data);
+	} else
+		throw Exc(t_("Unknown BEM input format"));			
 }
 
 void MainSolver::InitArray(bool isNemoh) {
@@ -355,6 +362,13 @@ void MainSolver::Load(const HamsCal &data) {
 	MatrixXdToGridCtrl(bodies.quadraticDamping, b.quadraticDamping);
 	MatrixXdToGridCtrl(bodies.hydrostaticRestoring, b.hydrostaticRestoring);
 	MatrixXdToGridCtrl(bodies.externalRestoring, b.externalRestoring);
+}
+
+void MainSolver::Load(const AQWACal &data) {
+	Load(static_cast<const BemCal &>(data), true);
+	
+	nemoh.g <<= data.g;
+	nemoh.rho <<= data.rho;
 }
 	
 void MainSolver::Load(const NemohCal &data) {

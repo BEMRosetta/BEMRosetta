@@ -559,10 +559,12 @@ public:
 	void Init(const BEMData &bem);
 	void InitSerialize(bool ret);
 	
+	void Load(String file);
 	void Load(const BEMData &bem);
 	void Load(const BemCal &data, bool isNemoh);
 	void Load(const NemohCal &data);
 	void Load(const HamsCal &data);
+	void Load(const AQWACal &data);
 	
 	bool Save(BemCal &data, bool isNemoh);
 	bool Save(NemohCal &data);
@@ -820,7 +822,6 @@ public:
 	
 	void Init();	
 	bool Load();
-	//bool Loaded(const Vector<int> &ids);
 	
 	enum Mag {MAGNITUDE, PHASE, REAL, IMAGINARY};
 	enum Show {FSUM, FDIFFERENCE};

@@ -1,7 +1,7 @@
 topic "About";
 [ $$0,0#00000000000000000000000000000000:Default]
 [{_}%EN-US 
-[s0; [*^https`:`/`/github`.com`/izabala123`/BEMRosetta^+117 BEMRosetta]&]
+[s0; [*^https`:`/`/anboto`.github`.io^+117 BEMRosetta]&]
 [s0;2 &]
 [s0; Hydrodynamic coefficients viewer and converter for Boundary 
 Element Method solver formats.&]
