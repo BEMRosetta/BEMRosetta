@@ -323,50 +323,6 @@ bool NemohCal::Load(String fileName) {
 	return true;
 }
 
-String FormatDoubleEmpty(double val) {
-	if (IsNull(val))
-		return t_("'empty'");
-	else
-		return FormatDouble(val);
-}
-
-String FormatIntEmpty(int val) {
-	if (IsNull(val))
-		return t_("'empty'");
-	else
-		return FormatInt(val);
-}
-
-Vector<String> BemCal::Check(bool oneBody) {
-	Vector<String> ret;
-	
-	if (IsNull(h) || h < -1 || h > 100000)
-		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(h));
-
-	if (IsNull(Nf) || Nf < 1 || Nf > 1000)
-		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(Nf));
-	if (IsNull(minF) || minF < 0)
-		ret << Format(t_("Incorrect min frequency %s"), FormatDoubleEmpty(minF));
-	if (IsNull(maxF) || maxF < minF)
-		ret << Format(t_("Minimum frequency %s has to be lower than maximum frequency %s"), FormatDoubleEmpty(minF), FormatDoubleEmpty(maxF));	
-	
-	if (IsNull(Nh) || Nh < 1 || Nh > 1000)
-		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(Nh));
-	if (IsNull(minH) || minH < -180)
-		ret << Format(t_("Incorrect min heading %s"), FormatDoubleEmpty(minH));
-	if (IsNull(maxH) || maxH > 180)
-		ret << Format(t_("Incorrect max heading %s"), FormatDoubleEmpty(maxH));
-	if (maxH < minH)
-		ret << Format(t_("Minimum heading %s has to be lower than maximum heading %s"), FormatDoubleEmpty(minH), FormatDoubleEmpty(maxH));	
-
-	if(bodies.size() < 1)
-		ret << t_("The case has to include at least one body");
-	if (oneBody && bodies.size() > 1)
-		ret << t_("This solver just processes one body");
-	
-	return ret;
-}
-	
 Vector<String> NemohCal::Check() {
 	Vector<String> ret;
 	
@@ -464,39 +420,6 @@ String NemohField(String str, int length) {
 	if (length > ret.GetCount())
 		ret << String(' ', length - ret.GetCount());
 	return ret + " ";
-}
-
-BemBody::BemBody() {
-	dof.SetCount(6, false);	
-	cg = Eigen::Vector3d::Zero();
-	mass.setConstant(6, 6, 0);
-	linearDamping.setConstant(6, 6, 0);
-	quadraticDamping.setConstant(6, 6, 0);
-	hydrostaticRestoring.setConstant(6, 6, 0);
-	externalRestoring.setConstant(6, 6, 0);
-}
-	
-int BemBody::GetNDOF() const {
-	int ret = 0;
-	for (auto &d : dof)
-		ret += d;
-	return ret;
-}
-
-void BemCal::BeforeSave(String folderBase, int numCases, bool deleteFolder) const {
-	if (numCases < 1)
-		throw Exc(Format(t_("Number cases must be higher than 1 (%d)"), numCases));
-	
-	if (numCases > Nf)
-		throw Exc(Format(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, Nf));
-	
-	if (deleteFolder) {		// If called from GUI, user has been warned
-		if (!DeleteFileDeepWildcardsX(folderBase))
-			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
-		Sleep(100);
-	}
-	if (!DirectoryCreateX(folderBase))
-		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 }
 
 void NemohCal::SaveFolder(String folderBase, bool bin, int numCases, const BEMData &bem, int solver) const {

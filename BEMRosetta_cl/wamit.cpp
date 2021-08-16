@@ -854,7 +854,10 @@ bool Wamit::Load_1(String fileName) {
 				throw Exc(in.Str() + "\n"  + t_("A[w=0] is not expected"));				
 			hd().Awinf(i, j) = Aij;
 		} else {
-			int ifr = FindRatio(sourcew, freq, 0.001);
+			if (freq == 19.98)
+				int kk = 1;
+			
+			int ifr = FindRatio(sourcew, freq, 0.0001);
 			if (ifr < 0) {
 				if (hd().dataFromW)
 					throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
@@ -948,7 +951,7 @@ bool Wamit::Load_3(String fileName) {
 			break;
 		
 		double freq = f.GetDouble(0);
-		int ifr = FindRatio(sourcew, freq, 0.001);
+		int ifr = FindRatio(sourcew, freq, 0.0001);
 		if (ifr < 0) {
 			if (hd().dataFromW)
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
@@ -956,7 +959,7 @@ bool Wamit::Load_3(String fileName) {
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}
 		double head = FixHeading(f.GetDouble(1));
-		int ih = FindRatio(hd().head, head, 0.001);
+		int ih = FindRatio(hd().head, head, 0.0001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 			
@@ -1116,7 +1119,7 @@ bool Wamit::Load_4(String fileName) {
 			break;
 		
 		double freq = f.GetDouble(0);
-		int ifr = FindRatio(sourcew, freq, 0.001);
+		int ifr = FindRatio(sourcew, freq, 0.0001);
 		if (ifr < 0) {
 			if (hd().dataFromW)
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
@@ -1124,7 +1127,7 @@ bool Wamit::Load_4(String fileName) {
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
 		double head = FixHeading(f.GetDouble(1));
-		int ih = FindRatio(hd().head, head, 0.001);
+		int ih = FindRatio(hd().head, head, 0.0001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 			
@@ -1277,8 +1280,8 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 		idof = idof - ib*6;
 		
 		Hydro::QTF *pqtf;
-		int id = hd().GetQTFId(qtfList, ib, ih1, ih2, iwT1, iwT2);
-		if (id >= 0)
+		int id = 0;
+		if (hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, iwT1, iwT2))
 			pqtf = &qtfList[id];
 		else {
 			pqtf = &qtfList.Add();
@@ -1303,6 +1306,8 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force %f does not match with magnitude %f and phase %f (%f)"), 
 										qtf.fim[idof], qtf.fma[idof], ph, fim));
 	}
+	hd().GetQTFList(qtfList, hd().qtfCases);
+	
 	return true;
 }
 
@@ -1527,6 +1532,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 			if (!Status(Format("%s %d/%d", ext, it, num*num), 100*it/(num*num)))
 				throw Exc(t_("Stop by user"));
 			it++;
+			int id = 0;
 			for (int ih1 = 0; ih1 < Nh; ++ih1) {
 				if (!IsNull(qtfHeading) && ih1 != qtfHeading)
 					continue;
@@ -1534,8 +1540,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 					if (!IsNull(qtfHeading) && ih1 != qtfHeading)
 						continue;	 
 					for (int ib = 0; ib < hd().Nb; ++ib) {
-						int id = hd().GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
-						if (id >= 0) {
+						if (hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2)) {
 							double qtfhead1, qtfhead2;
 							if (!IsNull(qtfHeading)) 
 								qtfhead1 = qtfhead2 = 0;		// Just 0º
@@ -1555,7 +1560,8 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 										FormatWam(hd().F_ndim(qtf.fma[idf], idf)), 
 										FormatWam(!force_Deg ? qtf.fph[idf] : ToDeg(qtf.fph[idf])),
 										FormatWam(hd().F_ndim(qtf.fre[idf], idf)), 
-										FormatWam(hd().F_ndim(qtf.fim[idf], idf)));
+										FormatWam(hd().F_ndim(qtf.fim[idf], idf))
+								);
 							}
 						}
 					}
