@@ -1135,6 +1135,8 @@ void MainQTF::Init() {
 			return;
 
 		try {
+			WaitCursor wait;
+			
 			MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 			
 			bool ndim = mbm.menuPlot.showNdim;
@@ -1164,8 +1166,8 @@ void MainQTF::Init() {
 			double mn = DBL_MAX, mx = DBL_MIN;
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
-					int idq = hd.GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
-					if (idq < 0)
+					int idq = 0;
+					if (!hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2))
 						continue;
 					double val;
 					switch(int(opShow.GetData())) {
@@ -1182,8 +1184,8 @@ void MainQTF::Init() {
 			}
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
-					int idq = hd.GetQTFId(qtfList, ib, ih1, ih2, ifr1, ifr2);
-					if (idq < 0)
+					int idq = 0;
+					if (!hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2))
 						listQTF.Set(ifr2, 1+ifr1, "-");
 					else {
 						if (PHASE == opShow.GetData()) 
@@ -1241,14 +1243,11 @@ bool MainQTF::Load() {
 		
 		const Hydro &hd = Bem().hydros[idHydro].hd();
 		
-		Upp::Vector<int> ibL, ih1L, ih2L;
-		Hydro::GetQTFList(hd.qtfsum, ibL, ih1L, ih2L);
-
 		if (hd.qtfsum.IsEmpty() && hd.qtfdif.IsEmpty())
 			return false;
 		
-		for (int i = 0; i < ibL.size(); ++i) 
-			listCases.Add(ibL[i]+1, hd.qtfhead[ih1L[i]], hd.qtfhead[ih2L[i]]);
+		for (int i = 0; i < hd.qtfCases.ib.size(); ++i) 
+			listCases.Add(hd.qtfCases.ib[i]+1, hd.qtfhead[hd.qtfCases.ih1[i]], hd.qtfhead[hd.qtfCases.ih2[i]]);
 
 		if (listCases.GetCount() > 0)
 			listCases.SetCursor(0);

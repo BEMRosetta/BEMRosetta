@@ -505,6 +505,7 @@ bool Aqwa::Load_QTF() {
 	
 	hd().qtfsum.Clear();
 	hd().qtfdif.Clear();
+	hd().qtfCases.Clear();
 	
 	int nrows = hd().Nh*hd().Nf*hd().Nf;
 	hd().qtfdif.Reserve(hd().Nb*nrows);
@@ -610,9 +611,68 @@ bool Aqwa::Load_QTF() {
 			}
 		}
 	}
+	hd().GetQTFList(hd().qtfsum, hd().qtfCases);
+	
 	return true;
 }
 
 void Aqwa::Save(String ) {
 	throw Exc("Option not implemented");
 }		
+
+bool AQWACal::Load(String fileName) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+		
+	String line;
+	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	Vector<double> hrtz, head;
+	
+	while (!in.IsEof()) {
+		f.Load(in.GetLine());
+		
+		if (f.size() == 2) {
+			if (f.GetText(0) == "DPTH")
+				h = f.GetDouble(1);
+			else if (f.GetText(0) == "DENS")
+				rho = f.GetDouble(1);
+			else if (f.GetText(0) == "ACCG")
+				g = f.GetDouble(1);	
+		}
+		
+		if (f.size() == 4) {
+			if (f.GetText(0) == "1HRTZ")
+				hrtz << f.GetDouble(3);
+			else if (f.GetText(0) == "1DIRN")
+				head << f.GetDouble(3);
+		}
+	}
+	Nf = hrtz.size();
+	if (Nf <= 0)
+		throw Exc("Number of frequencies should have to be higher than zero");
+	Nh = head.size();
+	if (Nh <= 0)
+		throw Exc("Number of headings should have to be higher than zero");
+	
+	minF = hrtz[0]*2*M_PI;
+	maxF = hrtz[hrtz.size()-1]*2*M_PI;
+	
+	minH = head[0];
+	maxH = head[head.size()-1];
+	
+	bodies.SetCount(1);
+	BemBody &body = bodies[0];
+	
+	body.meshFile = fileName;
+	body.ndof = 6;
+	Resize(body.dof, 6, true);
+	body.c0[0] = 0;
+	body.c0[1] = 0;
+	body.c0[2] = 0;
+	body.npoints = body.npanels = 0;
+	
+	return true;
+}

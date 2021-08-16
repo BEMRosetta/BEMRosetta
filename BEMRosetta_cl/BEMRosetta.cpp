@@ -945,32 +945,44 @@ int Hydro::GetQTFHeadId(double hd) const {
 	return -1;
 }
 	
-int Hydro::GetQTFId(const Upp::Array<Hydro::QTF> &qtfList, int ib, int ih1, int ih2, int ifr1, int ifr2) {
-	for (int i = 0; i < qtfList.size(); ++i) {
-		const QTF &qtf = qtfList[i];
-		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2)
-			return i;
+bool Hydro::GetQTFId(int &lastid, const Upp::Array<Hydro::QTF> &qtfList, 
+			const QTFCases &qtfCases, int ib, int ih1, int ih2, int ifr1, int ifr2) {
+	if (qtfCases.ib.size() > 0) {
+		bool found = false;
+		for (int i = 0; i < qtfCases.ib.size(); ++i) {
+			if (qtfCases.ib[i] == ib && qtfCases.ih1[i] == ih1 && qtfCases.ih2[i] == ih2) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			return false;
 	}
-	return -1;
+	for (int i = lastid; i < qtfList.size(); ++i) {
+		const QTF &qtf = qtfList[i];
+		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2) {
+			lastid = i;
+			return true;
+		}
+	}
+	return false;
 }
 
-void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, Upp::Vector<int> &ibL, Upp::Vector<int> &ih1L, Upp::Vector<int> &ih2L) {
-	ibL.Clear();
-	ih1L.Clear();
-	ih2L.Clear();
+void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases) {
+	qtfCases.Clear();
 	for (int i = 0; i < qtfList.size(); ++i) {
 		const QTF &qtf = qtfList[i];
 		bool found = false;
-		for (int j = 0; j < ibL.size(); ++j) {
-			if (qtf.ib == ibL[j] && qtf.ih1 == ih1L[j] && qtf.ih2 == ih2L[j]) {
+		for (int j = 0; j < qtfCases.ib.size(); ++j) {
+			if (qtf.ib == qtfCases.ib[j] && qtf.ih1 == qtfCases.ih1[j] && qtf.ih2 == qtfCases.ih2[j]) {
 				found = true;
 				break;
 			}
 		}
 		if (!found) {
-			ibL << qtf.ib;
-			ih1L << qtf.ih1;
-			ih2L << qtf.ih2;	
+			qtfCases.ib << qtf.ib;
+			qtfCases.ih1 << qtf.ih1;
+			qtfCases.ih2 << qtf.ih2;	
 		}
 	}
 }
@@ -1584,3 +1596,79 @@ void FieldSplitWamit::LoadWamitJoinedFields(String _line) {
 	}
 }
 	
+BemBody::BemBody() {
+	dof.SetCount(6, false);	
+	cg = Eigen::Vector3d::Zero();
+	mass.setConstant(6, 6, 0);
+	linearDamping.setConstant(6, 6, 0);
+	quadraticDamping.setConstant(6, 6, 0);
+	hydrostaticRestoring.setConstant(6, 6, 0);
+	externalRestoring.setConstant(6, 6, 0);
+}
+	
+int BemBody::GetNDOF() const {
+	int ret = 0;
+	for (auto &d : dof)
+		ret += d;
+	return ret;
+}
+
+void BemCal::BeforeSave(String folderBase, int numCases, bool deleteFolder) const {
+	if (numCases < 1)
+		throw Exc(Format(t_("Number cases must be higher than 1 (%d)"), numCases));
+	
+	if (numCases > Nf)
+		throw Exc(Format(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, Nf));
+	
+	if (deleteFolder) {		// If called from GUI, user has been warned
+		if (!DeleteFileDeepWildcardsX(folderBase))
+			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
+		Sleep(100);
+	}
+	if (!DirectoryCreateX(folderBase))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
+}
+
+Vector<String> BemCal::Check(bool oneBody) {
+	Vector<String> ret;
+	
+	if (IsNull(h) || h < -1 || h > 100000)
+		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(h));
+
+	if (IsNull(Nf) || Nf < 1 || Nf > 1000)
+		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(Nf));
+	if (IsNull(minF) || minF < 0)
+		ret << Format(t_("Incorrect min frequency %s"), FormatDoubleEmpty(minF));
+	if (IsNull(maxF) || maxF < minF)
+		ret << Format(t_("Minimum frequency %s has to be lower than maximum frequency %s"), FormatDoubleEmpty(minF), FormatDoubleEmpty(maxF));	
+	
+	if (IsNull(Nh) || Nh < 1 || Nh > 1000)
+		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(Nh));
+	if (IsNull(minH) || minH < -180)
+		ret << Format(t_("Incorrect min heading %s"), FormatDoubleEmpty(minH));
+	if (IsNull(maxH) || maxH > 180)
+		ret << Format(t_("Incorrect max heading %s"), FormatDoubleEmpty(maxH));
+	if (maxH < minH)
+		ret << Format(t_("Minimum heading %s has to be lower than maximum heading %s"), FormatDoubleEmpty(minH), FormatDoubleEmpty(maxH));	
+
+	if(bodies.size() < 1)
+		ret << t_("The case has to include at least one body");
+	if (oneBody && bodies.size() > 1)
+		ret << t_("This solver just processes one body");
+	
+	return ret;
+}
+
+String FormatDoubleEmpty(double val) {
+	if (IsNull(val))
+		return t_("'empty'");
+	else
+		return FormatDouble(val);
+}
+
+String FormatIntEmpty(int val) {
+	if (IsNull(val))
+		return t_("'empty'");
+	else
+		return FormatInt(val);
+}
