@@ -425,7 +425,10 @@ bool Aqwa::Load_LIS() {
 			while(!in.IsEof()) {
 				if (line[0] == '1')
 					break;
-				f.Load(in.GetLine());
+				
+				static const Vector<int> separatorsh = {8,16,26,36,44,54,62,72,80,90,98,108,116,126};
+				f.Load(in.GetLine(), separatorsh);
+
 				double heading = f.GetDouble(2);
 				int idh = FindClosest(hd().head, heading);
 				if (idh < 0)
@@ -444,7 +447,8 @@ bool Aqwa::Load_LIS() {
 					}
 					dd = 0;
 					line = in.GetLine();
-					f.Load(line);
+					static const Vector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};
+					f.Load(line, separators);
 				}
 			}
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {

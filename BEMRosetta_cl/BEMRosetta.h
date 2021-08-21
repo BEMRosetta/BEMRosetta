@@ -368,6 +368,8 @@ public:
 	void SetId(int _id)			{id = _id;}
 	int GetId()	const			{return id;}
 	
+	void CheckNaN();
+		
 	void Jsonize(JsonIO &json);
 	
 private:
@@ -526,7 +528,9 @@ public:
 
 	String GetLastError()	{return lastError;}
 };
-		
+
+bool IsNum(const Hydro::Forces &f);
+			
 class HydroData {
 public:
 	HydroData() : data(0) {}
@@ -564,6 +568,8 @@ public:
 
 class MeshData {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	
 	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, AQWA_DAT, HAMS_PNL, STL_BIN, STL_TXT, EDIT, UNKNOWN};
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
