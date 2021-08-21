@@ -807,6 +807,13 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		GetAinfw();
 	}
 	
+	/*try {
+		CheckNaN();
+	} catch (Exc e) {
+		lastError = e;
+		return false;
+	}*/
+	
 	return true;
 }
 
@@ -1059,6 +1066,45 @@ void Hydro::F_dim(Forces &f) {
 				f.re[ih](ifr, idf) = F_re_dim(f, ih, ifr, idf);
 				f.im[ih](ifr, idf) = F_im_dim(f, ih, ifr, idf);
 			}
+}
+
+void Hydro::CheckNaN() {
+	if (!IsNum(A))
+		throw Exc("Error loading A. NaN found");
+	if (!IsNum(Ainfw))
+		throw Exc("Error loading Ainfw. NaN found");
+	if (!IsNum(Awinf))
+		throw Exc("Error loading Awinf. NaN found");
+	if (!IsNum(Aw0))
+		throw Exc("Error loading Aw0. NaN found");
+	if (!IsNum(B))
+		throw Exc("Error loading B. NaN found");
+	if (!IsNum(head))
+		throw Exc("Error loading head. NaN found");
+	if (!IsNum(M))
+		throw Exc("Error loading M. NaN found");
+	if (!IsNum(C))
+		throw Exc("Error loading C. NaN found");
+	if (!IsNum(cb))
+		throw Exc("Error loading cb. NaN found");
+	if (!IsNum(cg))
+		throw Exc("Error loading cg. NaN found");
+	if (!IsNum(dof))
+		throw Exc("Error loading dof. NaN found");
+	if (!IsNum(dofOrder))
+		throw Exc("Error loading dofOrder. NaN found");
+	if (!IsNum(Kirf))
+		throw Exc("Error loading Kirf. NaN found");
+	if (!IsNum(Tirf))
+		throw Exc("Error loading Tirf. NaN found");
+	if (!IsNum(ex))
+		throw Exc("Error loading ex. NaN found");
+	if (!IsNum(sc))
+		throw Exc("Error loading sc. NaN found");
+	if (!IsNum(fk))
+		throw Exc("Error loading fk. NaN found");
+	if (!IsNum(rao))
+		throw Exc("Error loading rao. NaN found");	
 }
 
 void Hydro::Jsonize(JsonIO &json) {
@@ -1672,3 +1718,8 @@ String FormatIntEmpty(int val) {
 	else
 		return FormatInt(val);
 }
+
+bool IsNum(const Hydro::Forces &f) {
+	return IsNum(f.ma) && IsNum(f.ph) && IsNum(f.re) && IsNum(f.im);
+}
+

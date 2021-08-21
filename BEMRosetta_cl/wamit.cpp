@@ -857,7 +857,7 @@ bool Wamit::Load_1(String fileName) {
 			if (freq == 19.98)
 				int kk = 1;
 			
-			int ifr = FindRatio(sourcew, freq, 0.0001);
+			int ifr = FindRatio(sourcew, freq, 0.001);
 			if (ifr < 0) {
 				if (hd().dataFromW)
 					throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
@@ -951,7 +951,7 @@ bool Wamit::Load_3(String fileName) {
 			break;
 		
 		double freq = f.GetDouble(0);
-		int ifr = FindRatio(sourcew, freq, 0.0001);
+		int ifr = FindRatio(sourcew, freq, 0.001);
 		if (ifr < 0) {
 			if (hd().dataFromW)
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
@@ -959,7 +959,7 @@ bool Wamit::Load_3(String fileName) {
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}
 		double head = FixHeading(f.GetDouble(1));
-		int ih = FindRatio(hd().head, head, 0.0001);
+		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 			
@@ -1119,7 +1119,7 @@ bool Wamit::Load_4(String fileName) {
 			break;
 		
 		double freq = f.GetDouble(0);
-		int ifr = FindRatio(sourcew, freq, 0.0001);
+		int ifr = FindRatio(sourcew, freq, 0.001);
 		if (ifr < 0) {
 			if (hd().dataFromW)
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
@@ -1127,7 +1127,7 @@ bool Wamit::Load_4(String fileName) {
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
 		double head = FixHeading(f.GetDouble(1));
-		int ih = FindRatio(hd().head, head, 0.0001);
+		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 			
@@ -1200,7 +1200,7 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 		for(int i = 0; i < head.size(); i++) {
 			bool found = false;
 			for(int j = 0; j < hd().qtfhead.size(); j++) {
-				if (EqualRatio(head[i], hd().qtfhead[j], 0.001, 0.0001)) {
+				if (EqualRatio(head[i], hd().qtfhead[j], 0.001, 0.001)) {
 					found = true;
 					break;
 				}
