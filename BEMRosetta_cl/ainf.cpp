@@ -65,16 +65,20 @@ void Hydro::GetAinf() {
 		    Awinf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j]);
 }
 
-void Hydro::GetAinfw() {
-	if (Nf == 0 || A.size() < Nb*6 || !IsLoadedKirf())
-		return;	
-	
+void Hydro::InitAinfw() {
 	Ainfw.SetCount(Nb*6); 			
     for (int i = 0; i < Nb*6; ++i) {
     	Ainfw[i].SetCount(Nb*6); 			 
    		for (int j = 0; j < Nb*6; ++j)
 			Ainfw[i][j].setConstant(Nf, Null);
     }
+}
+
+void Hydro::GetAinfw() {
+	if (Nf == 0 || A.size() < Nb*6 || !IsLoadedKirf())
+		return;	
+	
+	InitAinfw();
     
     for (int idf = 0; idf < Nb*6; ++idf)
         for (int jdf = 0; jdf < Nb*6; ++jdf) {

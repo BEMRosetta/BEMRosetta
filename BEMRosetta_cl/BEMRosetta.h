@@ -517,6 +517,7 @@ public:
 	static double GetK_IRF_MaxT(const Vector<double> &w);
 	void GetAinf();
 	void GetAinfw();
+	void InitAinfw();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail);
 	
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
