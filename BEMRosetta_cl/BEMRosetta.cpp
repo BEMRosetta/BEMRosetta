@@ -806,6 +806,10 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		}
 		GetAinfw();
 	}
+	if (Ainfw.size() == 0)
+		InitAinfw();
+	if (Awinf.size() == 0)
+		Awinf.setConstant(Nb*6, Nb*6, Null);
 	
 	/*try {
 		CheckNaN();
