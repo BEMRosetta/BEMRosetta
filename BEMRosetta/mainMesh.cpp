@@ -1291,13 +1291,13 @@ void MainView::CalcEnvelope() {
 	}
 }
 
-void MainMesh::LoadDragDrop(const Upp::Vector<String> &files) {
+void MainMesh::LoadDragDrop() {
 	bool followWithErrors = false;
-	for (int i = 0; i < files.size(); ++i) {
-		menuOpen.file <<= files[i];
-		Status(Format(t_("Loading '%s'"), files[i]));
-		if (!OnLoad() && !followWithErrors && files.size() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.size() - i - 1)))
+	for (int i = 0; i < filesToDrop.size(); ++i) {
+		menuOpen.file <<= filesToDrop[i];
+		Status(Format(t_("Loading '%s'"), filesToDrop[i]));
+		if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1)))
 				return;
 			followWithErrors = true;
 		}
@@ -1309,15 +1309,15 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
-		Upp::Vector<String> files = GetFiles(d);
-		LoadDragDrop(files);
+		filesToDrop = GetFiles(d);
+		timerDrop.Set(0, [=] {LoadDragDrop();});
 	}
 }
 
 bool MainMesh::Key(dword key, int ) {
 	if (key == K_CTRL_V) {
-		Upp::Vector<String> files = GetFiles(Ctrl::Clipboard());
-		LoadDragDrop(files);
+		filesToDrop = GetFiles(Ctrl::Clipboard());
+		timerDrop.Set(0, [=] {LoadDragDrop();});
 		return true;
 	}
 	return false;
