@@ -878,19 +878,22 @@ String MainBEM::BEMFile(String fileFolder) const {
 	return fileFolder;
 }
 
-void MainBEM::LoadDragDrop(const Upp::Vector<String> &files) {
+void MainBEM::LoadDragDrop() {
+	GuiLock __;
+	
 	bool followWithErrors = false;
-	for (int i = 0; i < files.size(); ++i) {
-		String file = BEMFile(files[i]);
+	for (int i = 0; i < filesToDrop.size(); ++i) {
+		String file = BEMFile(filesToDrop[i]);
 		menuOpen.file <<= file;
 		Status(Format(t_("Loading '%s'"), file));
-		if (!OnLoad() && !followWithErrors && files.size() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), files.size() - i - 1)))
+		if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1)))
 				return;
 			followWithErrors = true;
 		}
 		ProcessEvents();
 	}
+	timerDrop.Kill();
 }
 
 void MainBEM::DragAndDrop(Point , PasteClip& d) {
@@ -898,16 +901,16 @@ void MainBEM::DragAndDrop(Point , PasteClip& d) {
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
-		Upp::Vector<String> files = GetFiles(d);
-		LoadDragDrop(files);
+		filesToDrop = GetFiles(d); 
+		timerDrop.Set(0, [=] {LoadDragDrop();});
 	}
 }
 
 bool MainBEM::Key(dword key, int ) {
 	GuiLock __;
 	if (key == K_CTRL_V) {
-		Upp::Vector<String> files = GetFiles(Ctrl::Clipboard());
-		LoadDragDrop(files);
+		filesToDrop = GetFiles(Ctrl::Clipboard());
+		timerDrop.Set(0, [=] {LoadDragDrop();});
 		return true;
 	}
 	return false;
