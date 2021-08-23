@@ -133,12 +133,12 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:				return data->A.	   size() == 0 || data->A	 [idf][jdf].size() == 0 || IsNull(data->A	 [idf][jdf][0]);
-		case Hydro::PLOT_AINF:			return IsNull(data->Awinf(idf, jdf));
-		case Hydro::PLOT_A0:			return IsNull(data->Aw0(idf, jdf));
-		case Hydro::PLOT_B:				return data->B.	   size() == 0 || data->B	 [idf][jdf].size() == 0 || IsNull(data->B	 [idf][jdf][0]);
-		case Hydro::PLOT_K:				return data->Kirf. size() == 0 || data->Kirf [idf][jdf].size() == 0 || IsNull(data->Kirf [idf][jdf][0]);
-		case Hydro::PLOT_AINFW:			return data->Ainfw.size() == 0 || data->Ainfw[idf][jdf].size() == 0 || IsNull(data->Ainfw[idf][jdf][0]);		
+		case Hydro::PLOT_A:				return data->A.	   size() <= idf || data->A	   [idf].size() <= jdf || IsNull(data->A	[idf][jdf][0]);
+		case Hydro::PLOT_AINF:			return data->Awinf.rows() <= idf || data->Awinf.cols() <= jdf || IsNull(data->Awinf(idf, jdf));
+		case Hydro::PLOT_A0:			return data->Aw0  .rows() <= idf || data->Aw0  .cols() <= jdf || IsNull(data->Aw0  (idf, jdf));
+		case Hydro::PLOT_B:				return data->B.	   size() <= idf || data->B	   [idf].size() <= jdf || IsNull(data->B	[idf][jdf][0]);
+		case Hydro::PLOT_K:				return data->Kirf. size() <= idf || data->Kirf [idf].size() <= jdf || IsNull(data->Kirf [idf][jdf][0]);
+		case Hydro::PLOT_AINFW:			return data->Ainfw.size() <= idf || data->Ainfw[idf].size() <= jdf || IsNull(data->Ainfw[idf][jdf][0]);		
 		case Hydro::PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdf](0, idf));
 		case Hydro::PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdf](0, idf));
 		case Hydro::PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdf](0, idf));
@@ -149,8 +149,8 @@ public:
 		case Hydro::PLOT_RAO_PH:		return IsNull(data->rao.ph[jdf](0, idf));
 		case Hydro::PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
-		case Hydro::PLOT_Z_MA:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
-		case Hydro::PLOT_Z_PH:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Awinf.size() == 0 || IsNull(data->Awinf(idf, jdf));
+		case Hydro::PLOT_Z_MA:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Awinf.rows() <= idf || data->Awinf.cols() <= jdf || IsNull(data->Awinf(idf, jdf));
+		case Hydro::PLOT_Z_PH:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Awinf.rows() <= idf || data->Awinf.cols() <= jdf || IsNull(data->Awinf(idf, jdf));
 		default:				NEVER();	return true;
 		}
 	}
@@ -537,9 +537,12 @@ private:
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	void LoadDragDrop(const Upp::Vector<String> &files);
+	void LoadDragDrop();
 	
 	Button::Style styleRed, styleGreen, styleBlue;
+	
+	TimeCallback timerDrop;
+	Upp::Vector<String> filesToDrop;
 };
 
 class MainMeshW : public TopWindow {
@@ -899,8 +902,11 @@ private:
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	void LoadDragDrop(const Upp::Vector<String> &files);
+	void LoadDragDrop();
 	String BEMFile(String fileFolder) const;
+	
+	TimeCallback timerDrop;
+	Upp::Vector<String> filesToDrop;
 };
 
 class MainBEMW : public TopWindow {
