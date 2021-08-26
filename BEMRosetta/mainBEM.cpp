@@ -792,6 +792,7 @@ bool MainBEM::OnConvert() {
 		}
 		
 		Progress progress(t_("Saving BEM files..."), 100); 
+		progress.Granularity(1000);
 		
 		Bem().hydros[id].hd().SaveAs(file, [&](String str, int _pos) {
 			if (!IsEmpty(str))

@@ -23,7 +23,7 @@ public:
 	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
 	bool SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
-	void Report();
+	void Report() const;
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
 	virtual ~Hydro() noexcept {}	
@@ -571,28 +571,36 @@ class MeshData {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOH_PRE, AQWA_DAT, HAMS_PNL, STL_BIN, STL_TXT, EDIT, UNKNOWN};
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   false,		true,	   false, false};       
+	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
 	MeshData() {
 		id = idCount++;
-		cg = Point3D(0, 0, 0);
+		cg  = Point3D(0, 0, 0);
+		cg0 = Point3D(0, 0, 0);
 	}
-	
-	String GetCodeStr()	const {
-		switch (code) {
-		case WAMIT_GDF: 	return t_("Wamit.gdf");
-		case WAMIT_DAT: 	return t_("Wamit.dat");
-		case NEMOH_DAT: 	return t_("Nemoh.dat");
-		case NEMOH_PRE:		return t_("Nemoh premesh.");
-		case AQWA_DAT: 		return t_("AQWA.dat");
-		case HAMS_PNL: 		return t_("HAMS.pnl");
-		case STL_BIN: 		return t_("Binary.stl");
-		case STL_TXT: 		return t_("Text.stl");
-		case EDIT: 			return t_("Edit");
-		case UNKNOWN:		return t_("Unknown");
-		}
-		return t_("Unknown");
+	const char *GetCodeMeshStr() const {
+		return meshStr[code];
+	}
+	static const char *GetCodeMeshStr(MESH_FMT c) {
+		if (c < 0 || c >= UNKNOWN)
+			return "Unknown";
+		return meshStr[c];
+	}
+	static MESH_FMT GetCodeMeshStr(String fmt) {
+		fmt = ToLower(Trim(fmt));
+		for (int i = 0; i < sizeof(meshStr)/sizeof(char *); ++i)
+			if (fmt == ToLower(meshStr[i]))
+				return static_cast<MESH_FMT>(i);
+		return UNKNOWN;
+	}
+	static bool MeshCanSave(MESH_FMT c) {
+		if (c < 0 || c >= UNKNOWN)
+			return false;
+		return meshCanSave[c];
 	}
 	void SetCode(MESH_FMT _code){code = _code;}
 	MESH_FMT GetCode()			{return code;}
@@ -608,12 +616,13 @@ public:
 	String LoadDatAQWA(String fileName);
 	String LoadPnlHAMS(String fileName, bool &y0z, bool &x0z);
 	
-	String Heal(bool basic, Function <bool(String, int pos)> Status);
+	String Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status);
 	void Orient();
 	void Join(const Surface &orig, double rho, double g);
 	void Image(int axis);
 		
-	void AfterLoad(double rho, double g, bool onlyCG);
+	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime);
+	void Reset(double rho, double g);
 
 	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY);
 	static void SaveDatNemoh(String fileName, const Surface &surf, bool x0z);
@@ -623,14 +632,14 @@ public:
 	
 	void SaveHST(String fileName, double rho, double g) const; 
 	
-	void Report(double rho);
+	void Report(double rho) const;
 	
 	bool IsSymmetricX();
 	bool IsSymmetricY();
 	
 	double xProjectionPos, xProjectionNeg, yProjectionPos, yProjectionNeg, zProjectionPos, zProjectionNeg; 
 	Point3D cb;
-	Point3D cg;
+	Point3D cg, cg0;
 	double mass = Null;
 	Eigen::MatrixXd C;
 	
@@ -638,7 +647,7 @@ public:
 	String fileName;
 	String header;
 	
-	Surface mesh, under;
+	Surface mesh, under, mesh0;
 	
 private:
 	MESH_FMT code;

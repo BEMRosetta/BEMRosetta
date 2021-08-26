@@ -86,6 +86,10 @@ void MainMesh::Init() {
 	OnOpt();
 	
 	CtrlLayout(menuProcess);
+	
+	menuProcess.butReset <<= THISBACK(OnReset);
+	menuProcess.butReset.Tip(t_("Translates the mesh"));	
+	
 	menuProcess.cg_x <<= 0;
 	menuProcess.cg_x.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.cg_y <<= 0;
@@ -462,6 +466,41 @@ bool MainMesh::OnConvertMesh() {
 	return true;
 }
 
+void MainMesh::OnReset() {
+	GuiLock __;
+	
+	try {
+		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			Exclamation(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdMesh(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdMesh(listLoaded);
+			if (id < 0) {
+				Exclamation(t_("Please select a model to process"));
+				return;
+			}
+		}
+				
+		MeshData &data = Bem().surfs[id];
+		data.Reset(Bem().rho, Bem().g);
+
+	 	mainStiffness.Load(Bem().surfs, ids);
+		mainView.CalcEnvelope();
+		mainSummary.Report(Bem().surfs, id);
+		
+		mainView.gl.Refresh();
+		mainViewData.OnRefresh();
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}
+}
+
 void MainMesh::OnUpdate(Action action) {
 	GuiLock __;
 	
@@ -530,7 +569,7 @@ void MainMesh::OnUpdate(Action action) {
 			data.cg.Set(cg_x, cg_y, cg_z);
 		}
 		
-		data.AfterLoad(Bem().rho, Bem().g, action == NONE);
+		data.AfterLoad(Bem().rho, Bem().g, action == NONE, false);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -569,7 +608,7 @@ void MainMesh::OnAddPanel() {
 		surf.name = t_("Panel");
 		surf.fileName =  "";
 		
-		surf.AfterLoad(Bem().rho, Bem().g, false);
+		surf.AfterLoad(Bem().rho, Bem().g, false, true);
 		
 		surf.Report(Bem().rho);
 		AddRow(surf);
@@ -612,7 +651,7 @@ void MainMesh::OnAddRevolution() {
 		surf.name = t_("Revolution");
 		surf.fileName =  "";
 		
-		surf.AfterLoad(Bem().rho, Bem().g, false);
+		surf.AfterLoad(Bem().rho, Bem().g, false, true);
 		
 		surf.Report(Bem().rho);
 		AddRow(surf);
@@ -655,7 +694,7 @@ void MainMesh::OnAddPolygonalPanel() {
 		surf.name = t_("Polynomial");
 		surf.fileName =  "";
 		
-		surf.AfterLoad(Bem().rho, Bem().g, false);
+		surf.AfterLoad(Bem().rho, Bem().g, false, true);
 		
 		surf.Report(Bem().rho);
 		AddRow(surf);
@@ -728,8 +767,6 @@ void MainMesh::OnHealing(bool basic) {
 		
 		Bem().HealingMesh(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false);
-		
 		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -769,7 +806,7 @@ void MainMesh::OnOrientSurface() {
 		
 		Bem().OrientSurface(id, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false);
+		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false, false);
 		
 		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
@@ -811,7 +848,7 @@ void MainMesh::OnImage(int axis) {
 		
 		data.mesh.Image(axis);
 	
-		data.AfterLoad(Bem().rho, Bem().g, false);
+		data.AfterLoad(Bem().rho, Bem().g, false, false);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -920,7 +957,7 @@ void MainMesh::OnJoin() {
 }
 
 void MainMesh::AddRow(const MeshData &surf) {
-	ArrayModel_Add(listLoaded, surf.GetCodeStr(), surf.name, surf.fileName, surf.GetId(),
+	ArrayModel_Add(listLoaded, surf.GetCodeMeshStr(), surf.name, surf.fileName, surf.GetId(),
 					optionsPlot, [&] {mainView.gl.Refresh();});
 }
 		
@@ -1015,6 +1052,7 @@ void MainMesh::UpdateButtons() {
 	menuProcess.butWaterFill.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butWaterPlane.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butHull.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butReset.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainMesh::After() {
@@ -1087,7 +1125,7 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.fileName);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
-	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetCodeStr());	
+	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetCodeMeshStr());	
 	
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());

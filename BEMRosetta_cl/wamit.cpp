@@ -1529,7 +1529,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	int it = 0;
 	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) {
 		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) {
-			if (!Status(Format("%s %d/%d", ext, it, num*num), 100*it/(num*num)))
+			if (!Status(Format("Saving %s %d/%d", ext, it, num*num), 100*it/(num*num)))
 				throw Exc(t_("Stop by user"));
 			it++;
 			int id = 0;
