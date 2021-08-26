@@ -492,6 +492,7 @@ public:
 	void After();
 	bool OnLoad();
 	void OnRemove();
+	void OnReset();
 	void OnRemoveSelected(bool all);
 	void OnJoin();
 	void OnSplit();

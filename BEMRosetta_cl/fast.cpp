@@ -498,7 +498,7 @@ bool GetFASTVarLine(const String &strFile, String varName, String paragraph, int
 			return false;
 		
 		// Var name is surrounded by spaces
-		if (!IsSpace(strFile[pos-1]) || !IsSpace(strFile[pos + varName.GetCount() + 1])) {
+		if (!IsSpace(strFile[pos-1]) || !IsSpace(strFile[pos + varName.GetCount()])) {
 			pos += varName.GetCount();
 			continue;
 		}
