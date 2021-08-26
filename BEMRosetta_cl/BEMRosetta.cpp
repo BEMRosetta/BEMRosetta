@@ -688,7 +688,7 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 	// sts has to be recalculated	
 }
 
-void Hydro::Report() {
+void Hydro::Report() const {
 	BEMData::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
 	BEMData::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s"), 
 								S_g(), S_h(), S_rho(), S_len()));
@@ -1352,7 +1352,7 @@ void BEMData::HealingMesh(int id, bool basic, Function <bool(String, int)> Statu
 	
 	String ret;
 	try {
-		ret = surfs[id].Heal(basic, Status);
+		ret = surfs[id].Heal(basic, rho, g, Status);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
 		Print("\n" + Format(t_("Problem healing '%s': %s") + S("\n%s"), e));
@@ -1430,7 +1430,7 @@ Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Sta
 			
 			surf.mesh.nodes = clone(orig.mesh.nodes);
 			surf.SetCode(orig.GetCode());
-			surf.AfterLoad(rho, g, false);
+			surf.AfterLoad(rho, g, false, true);
 		}
 		RemoveMesh(id);
 	} catch (Exc e) {
@@ -1499,7 +1499,7 @@ void BEMData::AddWaterSurface(int id, char c) {
 		surf.name = surfs[id].name + " " + surf.name;
 		surf.fileName =  "";
 		
-		surf.AfterLoad(rho, g, false);
+		surf.AfterLoad(rho, g, false, false);
 		
 		//surf.Report(rho);
 	} catch (Exc e) {

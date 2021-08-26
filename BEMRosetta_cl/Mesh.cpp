@@ -64,7 +64,7 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool 
 	}
 	
 	if (!IsNull(rho))
-		AfterLoad(rho, g, false);
+		AfterLoad(rho, g, false, true);
 	
 	return String();
 }
@@ -129,10 +129,12 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 		throw Exc(t_("Unknown mesh file type"));
 }
 
-String MeshData::Heal(bool basic, Function <bool(String, int pos)> Status) {
+String MeshData::Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status) {
 	String ret = mesh.Heal(basic, Status);
 	if (!ret.IsEmpty())
 		return ret;
+	
+	AfterLoad(rho, g, false, false);
 	
 	return String();
 }
@@ -144,10 +146,16 @@ void MeshData::Orient() {
 void MeshData::Join(const Surface &orig, double rho, double g) {
 	mesh.Join(orig);
 	
-	AfterLoad(rho, g, false);
+	AfterLoad(rho, g, false, true);
+}
+
+void MeshData::Reset(double rho, double g) {
+	mesh = clone(mesh0);
+	cg = clone(cg0);
+	AfterLoad(rho, g, false, false);
 }
 	
-void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
+void MeshData::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 	if (!onlyCG) {
 		mesh.GetPanelParams();
 		mesh.GetLimits();
@@ -169,10 +177,14 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG) {
 			mass = under.volume*rho;
 		cb = under.GetCenterOfBuoyancy();
 	}
+	if (isFirstTime) {
+		mesh0 = clone(mesh);
+		cg0 = clone(cg);
+	}
 	under.GetHydrostaticStiffness(C, cb, rho, cg, mass, g);
 }
 
-void MeshData::Report(double rho) {
+void MeshData::Report(double rho) const {
 	BEMData::Print("\n\n" + Format(t_("Mesh file '%s'"), fileName));
 	
 	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
