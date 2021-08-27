@@ -10,7 +10,7 @@ using namespace Upp;
 
 class BEMData;
 
-void ConsoleMain(const Upp::Vector<String>& command, bool gui, Function <bool(String, int pos)> Status);
+bool ConsoleMain(const Upp::Vector<String>& command, bool gui, Function <bool(String, int pos)> Status);
 void SetBuildInfo(String &str);
 
 bool PrintStatus(String s, int d);
