@@ -20,8 +20,8 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(�
 
 int Hydro::idCount = 0;	
 
-bool PrintStatus(String s, int d) {
-	Cout() << "\n" << RemoveAccents(s) << " (" << d << ")";
+bool PrintStatus(String s, int) {
+	Cout() << "\n" << RemoveAccents(s);
 	return true;
 };
 

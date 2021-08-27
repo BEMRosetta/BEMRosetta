@@ -332,7 +332,8 @@ const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 CONSOLE_APP_MAIN {
 	const Vector<String>& command = CommandLine();
 	
-	ConsoleMain(command, false, PrintStatus);
+	if (!ConsoleMain(command, false, PrintStatus))
+		SetExitCode(1);
 	
 #ifdef flagDEBUG
 	Cout() << "\nPress enter to end";
