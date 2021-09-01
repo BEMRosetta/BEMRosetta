@@ -489,7 +489,7 @@ void MainStiffness::Add(const MeshData &mesh, int icase, bool button) {
 		return;
 	for (int r = 0; r < 6; ++r) {
 		for (int c = 0; c < 6; ++c)
-			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(K(r, c), 7, FD_EXP|FD_CAP_E|FD_REL)).Align(ALIGN_RIGHT));
+			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(K(r, c), 7, FD_EXP|FD_CAP_E)).Align(ALIGN_RIGHT));
 	}
 	if (button) {
 		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Saves to Wamit .hst stiffness matrix format"))
@@ -541,7 +541,7 @@ void MainStiffness::Add(String name, int icase, String bodyName, int ibody, cons
 
 	for (int r = 0; r < 6; ++r) {
 		for (int c = 0; c < 6; ++c)
-			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(hydro.C_dim(ibody, r, c), 7, FD_EXP|FD_CAP_E|FD_REL)).Align(ALIGN_RIGHT));
+			array.Set(row0 + r + 2, col0 + c + 1, AttrText(FormatDouble(hydro.C_dim(ibody, r, c), 7, FD_EXP|FD_CAP_E)).Align(ALIGN_RIGHT));
 	}
 }
 

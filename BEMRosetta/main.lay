@@ -544,7 +544,7 @@ LAYOUT(MainQTF, 620, 236)
 END_LAYOUT
 
 LAYOUT(SaveQTF, 308, 124)
-	ITEM(Upp::Switch, swHeadings, SetLabel(t_("All headings\nSelected heading saved as 0º")).LeftPosZ(12, 164).TopPosZ(28, 36))
+	ITEM(Upp::Switch, swHeadings, SetLabel(t_("All headings\nAll headings (crossed filled with zero)\nSelected heading saved as 0º")).LeftPosZ(12, 164).TopPosZ(28, 36))
 	ITEM(Upp::DropList, dropHeadings, HSizePosZ(184, 8).TopPosZ(36, 19))
 	ITEM(Upp::Button, cancel, SetLabel(t_("Cancel")).RightPosZ(72, 56).BottomPosZ(5, 19))
 	ITEM(Upp::Button, ok, SetLabel(t_("Save")).RightPosZ(4, 56).BottomPosZ(5, 19))

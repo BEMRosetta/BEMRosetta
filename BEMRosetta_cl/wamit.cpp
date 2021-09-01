@@ -1534,15 +1534,15 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 			it++;
 			int id = 0;
 			for (int ih1 = 0; ih1 < Nh; ++ih1) {
-				if (!IsNull(qtfHeading) && ih1 != qtfHeading)
+				if (qtfHeading >= 0 && ih1 != qtfHeading)
 					continue;
 				for (int ih2 = 0; ih2 < Nh; ++ih2) {
-					if (!IsNull(qtfHeading) && ih1 != qtfHeading)
+					if (qtfHeading >= 0 && ih1 != qtfHeading)
 						continue;	 
 					for (int ib = 0; ib < hd().Nb; ++ib) {
 						if (hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2)) {
 							double qtfhead1, qtfhead2;
-							if (!IsNull(qtfHeading)) 
+							if (qtfHeading >= 0) 
 								qtfhead1 = qtfhead2 = 0;		// Just 0º
 							else {
 								qtfhead1 = hd().qtfhead[ih1];
