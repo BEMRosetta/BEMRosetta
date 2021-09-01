@@ -329,7 +329,14 @@ const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 
 #if !defined(flagTEST_DLL) && !defined(flagDLL)
 
+void TestFast();
+
 CONSOLE_APP_MAIN {
+	if (ToLower(GetExeTitle()) == "testfast") {
+		TestFast();
+		return;
+	}
+	
 	const Vector<String>& command = CommandLine();
 	
 	if (!ConsoleMain(command, false, PrintStatus))

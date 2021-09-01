@@ -27,6 +27,7 @@ file
 	wamit.cpp,
 	foamm.cpp,
 	fast.cpp,
+	fastUtils.cpp,
 	hydrodyn.dat,
 	aqwa.cpp,
 	ainf.cpp,
