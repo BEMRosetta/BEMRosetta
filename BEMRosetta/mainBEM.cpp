@@ -50,14 +50,14 @@ void MainBEM::Init() {
 	menuProcess.butOgilvie <<= THISBACK(OnOgilvie);
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
-	menuProcess.labelIrregular.Show(Bem().experimental);
-	menuProcess.butAinfw.Show(Bem().experimental);
+	// menuProcess.labelIrregular.Show(Bem().experimental);
+	// menuProcess.butAinfw.Show(Bem().experimental);
 	menuProcess.butAinfw.Disable();	
-	menuProcess.butOgilvie.Show(Bem().experimental);
+	// menuProcess.butOgilvie.Show(Bem().experimental);
 	menuProcess.butOgilvie.Disable();
-	menuProcess.opZremoval.Show(Bem().experimental);
-	menuProcess.opThinremoval.Show(Bem().experimental);
-	menuProcess.opDecayingTail.Show(Bem().experimental);
+	// menuProcess.opZremoval.Show(Bem().experimental);
+	// menuProcess.opThinremoval.Show(Bem().experimental);
+	// menuProcess.opDecayingTail.Show(Bem().experimental);
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
@@ -219,10 +219,10 @@ void MainBEM::Init() {
 	mainRAO.Init(Hydro::DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
 
-	if (Bem().experimental) {
+	// if (Bem().experimental) {
 		mainAinfw.Init(Hydro::DATA_AINFW);
 		mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
-	}
+	// }
 	
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("Setup FOAMM")).Disable();
@@ -434,7 +434,7 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
-		if (Bem().experimental)
+		// if (Bem().experimental)
 			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
@@ -493,7 +493,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
-	if (Bem().experimental)
+	// if (Bem().experimental)
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
@@ -572,7 +572,7 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
-		if (Bem().experimental)
+		// if (Bem().experimental)
 			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
@@ -662,7 +662,7 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
-		if (Bem().experimental)
+		// if (Bem().experimental)
 			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -692,7 +692,7 @@ void MainBEM::OnOgilvie() {
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
-		if (Bem().experimental)
+		// if (Bem().experimental)
 			mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -748,7 +748,7 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 		dialog.dropHeadings.SetIndex(0);
 	
 	dialog.swHeadings << [&] {
-		dialog.dropHeadings.Enable(dialog.swHeadings == 1);
+		dialog.dropHeadings.Enable(dialog.swHeadings == 2);
 	};
 	
 	bool cancel = true;
@@ -759,7 +759,9 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 		throw Exc(t_("Cancelled by user"));
 	
 	if (dialog.swHeadings == 0)
-		return Null;
+		return -1;
+	else if (dialog.swHeadings == 1)
+		return -2;
 	else
 		return dialog.dropHeadings.GetIndex();
 }
