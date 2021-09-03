@@ -1130,54 +1130,54 @@ void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());
 
-	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FormatDouble(data.mesh.surface, 6, FD_EXP));
+	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FormatDoubleSize(data.mesh.surface, 8, false));
 	array.Set(row, 0, t_("Volume [m3]"));		array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
-														FormatDouble(data.mesh.volume,  6, FD_EXP),
-														FormatDouble(data.mesh.volumex, 6, FD_EXP),
-														FormatDouble(data.mesh.volumey, 6, FD_EXP),
-														FormatDouble(data.mesh.volumez, 6, FD_EXP)));
+														FormatDoubleSize(data.mesh.volume,  10, false),
+														FormatDoubleSize(data.mesh.volumex, 10, false),
+														FormatDoubleSize(data.mesh.volumey, 10, false),
+														FormatDoubleSize(data.mesh.volumez, 10, false)));
 	
-	array.Set(row, 0, t_("Immersed surface [m2]"));array.Set(row++, col, FormatDouble(data.under.surface, 6, FD_EXP));
+	array.Set(row, 0, t_("Immersed surface [m2]"));array.Set(row++, col, FormatDoubleSize(data.under.surface, 10, false));
 	array.Set(row, 0, t_("Immersed volume [m3] Vavg(Vx,Vy,Vz)")); array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
-														FormatDouble(data.under.volume,  6, FD_EXP),
-														FormatDouble(data.under.volumex, 6, FD_EXP),
-														FormatDouble(data.under.volumey, 6, FD_EXP),
-														FormatDouble(data.under.volumez, 6, FD_EXP)));
-	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FormatDouble(data.under.volume*Bem().rho, 9, FD_EXP));
+														FormatDoubleSize(data.under.volume,  10, false),
+														FormatDoubleSize(data.under.volumex, 10, false),
+														FormatDoubleSize(data.under.volumey, 10, false),
+														FormatDoubleSize(data.under.volumez, 10, false)));
+	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FormatDoubleSize(data.under.volume*Bem().rho, 10, false));
 	array.Set(row, 0, t_("Cg [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FormatDouble(data.cg.x, 3, FD_EXP),			
-														FormatDouble(data.cg.y, 3, FD_EXP),
-														FormatDouble(data.cg.z, 3, FD_EXP)));
+														FormatDoubleSize(data.cg.x, 10, false),			
+														FormatDoubleSize(data.cg.y, 10, false),
+														FormatDoubleSize(data.cg.z, 10, false)));
 	array.Set(row, 0, t_("Cb [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FormatDouble(data.cb.x, 3, FD_EXP),			
-														FormatDouble(data.cb.y, 3, FD_EXP),
-														FormatDouble(data.cb.z, 3, FD_EXP)));
+														FormatDoubleSize(data.cb.x, 10, false),			
+														FormatDoubleSize(data.cb.y, 10, false),
+														FormatDoubleSize(data.cb.z, 10, false)));
 	
 	array.Set(row, 0, t_("Surface projection Z-axis (Water Plane Area) [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FormatDouble(-data.zProjectionPos, 6, FD_EXP),
-														FormatDouble(data.zProjectionNeg, 6, FD_EXP),
-														FormatDouble(data.zProjectionPos+data.zProjectionNeg, 6, FD_EXP)));
+														FormatDoubleSize(-data.zProjectionPos, 10, false),
+														FormatDoubleSize(data.zProjectionNeg,  10, false),
+														FormatDoubleSize(data.zProjectionPos+data.zProjectionNeg, 10, false)));
 		
 	array.Set(row, 0, t_("Surface projection X-axis [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FormatDouble(-data.xProjectionPos, 6, FD_EXP),
-														FormatDouble(data.xProjectionNeg, 6, FD_EXP),
-														FormatDouble(data.xProjectionPos+data.xProjectionNeg, 6, FD_EXP)));
+														FormatDoubleSize(-data.xProjectionPos, 10, false),
+														FormatDoubleSize(data.xProjectionNeg,  10, false),
+														FormatDoubleSize(data.xProjectionPos+data.xProjectionNeg, 10, false)));
 	
 	array.Set(row, 0, t_("Surface projection Y-axis [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FormatDouble(-data.yProjectionPos, 6, FD_EXP),
-														FormatDouble(data.yProjectionNeg, 6, FD_EXP),
-														FormatDouble(data.yProjectionPos+data.yProjectionNeg, 6, FD_EXP)));
+														FormatDoubleSize(-data.yProjectionPos, 10, false),
+														FormatDoubleSize(data.yProjectionNeg,  10, false),
+														FormatDoubleSize(data.yProjectionPos+data.yProjectionNeg, 10, false)));
 	
 	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
-														FormatDouble(data.mesh.env.minX, 3, FD_EXP),
-														FormatDouble(data.mesh.env.minY, 3, FD_EXP),
-														FormatDouble(data.mesh.env.minZ, 3, FD_EXP),
-														FormatDouble(data.mesh.env.maxX, 3, FD_EXP),
-														FormatDouble(data.mesh.env.maxY, 3, FD_EXP),
-														FormatDouble(data.mesh.env.maxZ, 3, FD_EXP)));
+														FormatDoubleSize(data.mesh.env.minX, 10, false),
+														FormatDoubleSize(data.mesh.env.minY, 10, false),
+														FormatDoubleSize(data.mesh.env.minZ, 10, false),
+														FormatDoubleSize(data.mesh.env.maxX, 10, false),
+														FormatDoubleSize(data.mesh.env.maxY, 10, false),
+														FormatDoubleSize(data.mesh.env.maxZ, 10, false)));
 
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (data.C.size() > 0) {

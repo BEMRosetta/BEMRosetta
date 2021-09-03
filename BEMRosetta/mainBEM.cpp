@@ -1024,36 +1024,36 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
 		if (data.Vo.size() > ib && !IsNull(data.Vo[ib])) 
-			array.Set(row++, col, FormatDouble(data.Vo[ib], 6, FD_EXP));
+			array.Set(row++, col, FormatDoubleSize(data.Vo[ib], 10, false));
 		else 
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
 		if (data.cg.size() > 3*ib && !IsNull(data.cg(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FormatDouble(data.cg(0, ib), 3, FD_EXP),
-									FormatDouble(data.cg(1, ib), 3, FD_EXP),
-									FormatDouble(data.cg(2, ib), 3, FD_EXP)));
+									FormatDoubleSize(data.cg(0, ib), 10, false),
+									FormatDoubleSize(data.cg(1, ib), 10, false),
+									FormatDoubleSize(data.cg(2, ib), 10, false)));
 		else
 			array.Set(row++, col, "-");
 
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
 		if (data.cb.size() > 3*ib && !IsNull(data.cb(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FormatDouble(data.cb(0, ib), 4, FD_EXP),
-									FormatDouble(data.cb(1, ib), 4, FD_EXP),
-									FormatDouble(data.cb(2, ib), 4, FD_EXP)));
+									FormatDoubleSize(data.cb(0, ib), 10, false),
+									FormatDoubleSize(data.cb(1, ib), 10, false),
+									FormatDoubleSize(data.cb(2, ib), 10, false)));
 		else
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Water plane area [m2]"));
 		if (data.C.size() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_ndim(ib, 2, 2);
-			array.Set(row++, col, FormatDouble(wPlaneArea, 6, FD_EXP));		
+			array.Set(row++, col, FormatDoubleSize(wPlaneArea, 10, false));		
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
-						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FormatDouble(data.C_dim(ib, i, j), 6, FD_EXP));		
+						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FormatDoubleSize(data.C_dim(ib, i, j), 10, false));		
 					}
 				}
 			}
@@ -1163,9 +1163,9 @@ void MainQTF::Init() {
 	
 			listQTF.AddColumn(show_w ? t_("w [rad]") : t_("T [s]"), 60);
 			for (int c = 0; c < qtfNf; ++c)
-				listQTF.AddColumn(FormatDouble(show_w ? hd.qtfw[c] : hd.qtfT[c], 5), 90);
+				listQTF.AddColumn(FormatDoubleSize(show_w ? hd.qtfw[c] : hd.qtfT[c], 8), 90);
 			for (int r = 0; r < qtfNf; ++r)
-				listQTF.Add(FormatDouble(show_w ? hd.qtfw[r] : hd.qtfT[r], 5));
+				listQTF.Add(FormatDoubleSize(show_w ? hd.qtfw[r] : hd.qtfT[r], 8));
 			
 			const Upp::Array<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
 			
@@ -1195,7 +1195,7 @@ void MainQTF::Init() {
 						listQTF.Set(ifr2, 1+ifr1, "-");
 					else {
 						if (PHASE == opShow.GetData()) 
-							listQTF.Set(ifr2, 1+ifr1, FormatDouble(qtfList[idq].fph[idof], 6, FD_CAP_E));
+							listQTF.Set(ifr2, 1+ifr1, FormatDoubleSize(qtfList[idq].fph[idof], 10, false));
 						else {
 							double val;
 							switch(int(opShow.GetData())) {
@@ -1212,7 +1212,7 @@ void MainQTF::Init() {
 							if (Grayscale(backColor) < 150)
 								color = White();
 							
-							String str = FormatDouble(val, 6, FD_CAP_E);
+							String str = FormatDoubleSize(val, 10, false);
 							
 							listQTF.Set(ifr2, 1+ifr1, AttrText(str).Center().Ink(color).Paper(backColor));
 						}

@@ -698,7 +698,7 @@ void Hydro::Report() const {
 	else if (w.size() > 1) {
 		String strDeltaH;
 		if (GetIrregularFreq() < 0) 
-			strDeltaH = Format(t_("delta %s [rad/s]"), FormatDouble(w[1] - w[0], 5, FD_EXP));
+			strDeltaH = Format(t_("delta %s [rad/s]"), FormatDoubleSize(w[1] - w[0], 8, false));
 		else {
 			String strHead;
 			for (int i = 0; i < w.size(); ++i) {
@@ -708,10 +708,10 @@ void Hydro::Report() const {
 			}
 			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
 		}
-	 	freqs = Format(t_("%s to %s %s"), FormatDouble(w[0], 3, FD_EXP), 
-	 									  FormatDouble(w[w.size()-1], 3, FD_EXP), strDeltaH);	
+	 	freqs = Format(t_("%s to %s %s"), FormatDoubleSize(w[0], 8, false), 
+	 									  FormatDoubleSize(w[w.size()-1], 8, false), strDeltaH);	
 	} else
-		freqs = Format(t_("%s [rad/s]"), FormatDouble(w[0], 3, FD_EXP));
+		freqs = Format(t_("%s [rad/s]"), FormatDoubleSize(w[0], 8, false));
 	
 	String heads;
 	if (head.IsEmpty())
@@ -743,7 +743,7 @@ void Hydro::Report() const {
 		if (dof.size() > ib)
 			str += S(" ") + t_("dof") + ": " + FormatInt(dof[ib]);
 		if (Vo.size() > ib && !IsNull(Vo[ib]))
-			str += S(" ") + t_("vol [m3]") + ": " + FormatDouble(Vo[ib]);
+			str += S(" ") + t_("vol [m3]") + ": " + FormatDoubleSize(Vo[ib], 8, false);
 		if (cg.size() > 3*ib && !IsNull(cg(0, ib)))
 			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", cg(0, ib), cg(1, ib), cg(2, ib));
 		if (cb.size() > 3*ib && !IsNull(cb(0, ib)))
@@ -1713,7 +1713,7 @@ String FormatDoubleEmpty(double val) {
 	if (IsNull(val))
 		return t_("'empty'");
 	else
-		return FormatDouble(val);
+		return FormatDoubleSize(val, 10, false);
 }
 
 String FormatIntEmpty(int val) {

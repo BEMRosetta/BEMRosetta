@@ -60,7 +60,7 @@ void CompareParameters::Load() {
 		rms[0] = 1;
 	}
 	for(int row = 0; row < rms.size(); row++) 
-		list.Set(row, col, FormatDouble(rms[row], 2));	
+		list.Set(row, col, FormatDoubleSize(rms[row], 10, false));	
     
     //col++;
     Vector<Vector<double>> data;
@@ -96,7 +96,7 @@ void CompareParameters::Load() {
 			ainf[0] = 1;
 		}
 		for(int row = 0; row < ainf.size(); row++) 
-			list.Set(row, col, FormatDouble(ainf[row], 2));	
+			list.Set(row, col, FormatDoubleSize(ainf[row], 10, false));	
     }
 
 }

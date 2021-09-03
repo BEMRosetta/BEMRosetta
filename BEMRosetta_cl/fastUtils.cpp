@@ -89,15 +89,15 @@ private:
 			
 			int delta = posEnd-posIni-1;
 			
-			fileText = fileText.Left(posIni) + S(" ") + FormatDoubleSize(val, delta) + fileText.Mid(posEnd);
+			fileText = fileText.Left(posIni) + S(" ") + FormatDoubleSize(val, delta, true) + fileText.Mid(posEnd);
 		}
 		
 		void SetString(String var, String val) {
 			val = S("\"") + val + S("\"");
 			SetString0(var, val);
 		}
-		void SetDouble(String var, double val, int numDec = 4) {
-			SetString0(var, FormatDouble(val, 4, FD_CAP_E));
+		void SetDouble(String var, double val) {
+			SetString0(var, FormatE(val, 4));
 		}
 		void SetBool(String var, bool val) {
 			SetString0(var, val ? "True" : "False");
