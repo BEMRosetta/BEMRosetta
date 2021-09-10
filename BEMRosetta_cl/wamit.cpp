@@ -3,7 +3,7 @@
 #include "functions.h"
 
 
-bool Wamit::Load(String file) {
+bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 	hd().name = GetFileTitle(file);
 	hd().file = file;	
 	
@@ -84,12 +84,12 @@ bool Wamit::Load(String file) {
 
 			String file12s = ForceExt(file, ".12s");
 			BEMData::Print("\n- " + Format(t_("Second order sum coefficients .12s file '%s'"), GetFileName(file12s)));
-			if (!Load_12(file12s, true))
+			if (!Load_12(file12s, true, Status))
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
 			
 			String file12d = ForceExt(file, ".12d");
 			BEMData::Print("\n- " + Format(t_("Second order mean drift coefficients .12d file '%s'"), GetFileName(file12d)));
-			if (!Load_12(file12d, false))
+			if (!Load_12(file12d, false, Status))
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
 		}
 		
@@ -1142,10 +1142,14 @@ bool Wamit::Load_4(String fileName) {
 	return true;
 }
 
-bool Wamit::Load_12(String fileName, bool isSum) {
+bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> Status) {
 	hd().dimen = false;
 	if (IsNull(hd().len))
 		hd().len = 1;
+	
+	String ext = isSum ? ".12s" : ".12d";
+	
+	Status(Format("Loading %s base data", ext), -1);
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1238,7 +1242,10 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 	
 	in.SeekPos(fpos);
 	
+	int total = pow2(hd().qtfw.size())*pow2(hd().qtfhead.size());
+	int it = 0;
 	while (!in.IsEof()) {
+		it++;
 		f.Load(in.GetLine());
 	
 		double wT1 = f.GetDouble(0);
@@ -1305,6 +1312,8 @@ bool Wamit::Load_12(String fileName, bool isSum) {
 		if (abs(fim - qtf.fim[idof]) > 0.1)  
 			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force %f does not match with magnitude %f and phase %f (%f)"), 
 										qtf.fim[idof], qtf.fma[idof], ph, fim));
+		if (!Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
+			throw Exc(t_("Stop by user"));
 	}
 	hd().GetQTFList(qtfList, hd().qtfCases);
 	
