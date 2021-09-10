@@ -463,7 +463,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									Cout() << "\n";
 									if (echo)
 										Cout() << t_("UnderwaterVolume:") << " "; 
-									lastPrint = Format("%f %f %f", data.under.volumex, data.mesh.volumey, data.mesh.volumez);
+									lastPrint = Format("%f %f %f", data.under.volumex, data.under.volumey, data.under.volumez);
 									Cout() << lastPrint;
 								} else if (param == "surface") {
 									Cout() << "\n";
