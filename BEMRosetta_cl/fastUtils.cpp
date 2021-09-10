@@ -153,26 +153,6 @@ public:
 	File fast, elastodyn, hydrodyn;
 };
 
-void TestFast() {
-	FASTFiles data;
-	
-	data.Load("C:\\Users\\0203853\\Desktop\\Master 1350\\_fst.fst");
-	
-	double HubMass = data.elastodyn.GetDouble("HubMass");
-	double HubIner = data.elastodyn.GetDouble("HubIner");
-	
-	double dat = data.hydrodyn.GetMatrix("AddBLin", 3, 1);
-	data.hydrodyn.SetMatrix("AddBLin", 4, 0, 2.5423423324324345);
-	data.hydrodyn.SetMatrix("AddBLin", 4, 1, 23445.5345);
-	data.hydrodyn.SetMatrix("AddBLin", 4, 2, 23445454.5345);
-	data.hydrodyn.SetMatrix("AddBLin", 4, 3, 2344545445.5345);
-	data.hydrodyn.SetMatrix("AddBLin", 4, 4, 2344545445.53434543545);
-	data.hydrodyn.SetMatrix("AddBLin", 4, 5, 2344545445332);
-	
-	data.Save();
-}
-
-
 bool GetFASTVarLine(const String &strFile, String varName, String paragraph, int &posIni, int &pos, int pos0 = 0) {
 	pos = pos0;
 	if (!paragraph.IsEmpty()) {

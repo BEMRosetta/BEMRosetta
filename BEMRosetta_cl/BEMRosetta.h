@@ -658,7 +658,7 @@ private:
 class Wamit : public HydroClass {
 public:
 	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
-	bool Load(String file);
+	bool Load(String file, Function <bool(String, int)> Status);
 	bool Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
 	bool Save_out(String file, double g, double rho);
 	virtual ~Wamit() noexcept {}
@@ -686,7 +686,7 @@ protected:
 	bool Load_3(String fileName);
 	bool Load_hst(String fileName);
 	bool Load_4(String fileName);
-	bool Load_12(String fileName, bool isSum);
+	bool Load_12(String fileName, bool isSum, Function <bool(String, int)> Status);
 	
 	void Save_1(String fileName, bool force_T = false);
 	void Save_3(String fileName, bool force_T = false);
@@ -718,7 +718,7 @@ protected:
 class Fast : public Wamit {
 public:
 	Fast(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
-	bool Load(String file, double g = 9.81);
+	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
 	bool Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
 	
