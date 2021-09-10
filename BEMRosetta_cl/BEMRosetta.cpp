@@ -1201,21 +1201,21 @@ void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool che
 		}
 	} else if (ext == ".out") {
 		Wamit &data = hydros.Create<Wamit>(*this);
-		if (!data.Load(file)) {
+		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));
 		}
 	} else if (ext == ".dat") {
 		Fast &data = hydros.Create<Fast>(*this);
-		if (!data.Load(file)) {
+		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
 		Wamit &data = hydros.Create<Wamit>(*this);
-		if (!data.Load(file)) {
+		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		

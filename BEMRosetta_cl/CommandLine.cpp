@@ -54,9 +54,9 @@ void ShowHelp(BEMData &md) {
 	
 	Cout() << "\n" << t_("-general              # The next commands are for any data (default)");
 	Cout() << "\n" << t_("-paramfile <file>     # Params in a file. New lines are like separators and # indicates a comment");
-	Cout() << "\n" << t_("-p  -params <param> <value>   # Set physical parameters:");
-	Cout() << "\n" << t_("               g         		# gravity       [m/s2]  ") << md.g;
-	Cout() << "\n" << t_("               rho            # water density [kg/m3] ") << md.rho;
+	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
+	Cout() << "\n" << t_("               g         	# gravity       [m/s2]  ") << md.g;
+	Cout() << "\n" << t_("               rho        # water density [kg/m3] ") << md.rho;
 	Cout() << "\n" << t_("-echo off/on          # Show text messages");
 	Cout() << "\n" << t_("-isEqual \"<value>\"  # Stops if last print is not equal to \"<value>\"");
 	
@@ -65,9 +65,14 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("-i  -input <file>     # Load model");
 	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
 	Cout() << "\n" << t_("-setid <id>           # Set the id of the default BEM model");
-	Cout() << "\n" << t_("-p  -params <param> <value>   # Set physical parameters:");
-	Cout() << "\n" << t_("               length         # length scale  []      ") << md.len;
-	Cout() << "\n" << t_("               depth          # water depth   [m]     ") << md.depth;	
+	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
+	Cout() << "\n" << t_("               length     # length scale  []      ") << md.len;
+	Cout() << "\n" << t_("               depth      # water depth   [m]     ") << md.depth;
+	Cout() << "\n" << t_("-p  -print <params>   # Prints model data in a row");
+	Cout() << "\n" << t_("        <params> nb                  # Number of bodies  []");
+	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
+	Cout() << "\n" << t_("                 nh                  # Number of headings    []");
+	Cout() << "\n" << t_("                 ainf <dof1> <dof2>  # Ainf(6*Nb, 6*Nb)  [Kg]");
 	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
 	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	Cout() << "\n";
@@ -81,9 +86,9 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("               Nemoh.dat    # - Save in Nemoh .dat format");
 	Cout() << "\n" << t_("               HAMS.pnl     # - Save in HAMS  .pnl format");
 	Cout() << "\n" << t_("               STL.Text     # - Save in STL   text format");
-	Cout() << "\n" << t_("-t   -translate x y z              # Translate x, y, z [m]");
-	Cout() << "\n" << t_("-rot -rotate    ax ay az cx cy cz  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
-	Cout() << "\n" << t_("-cg             x y z       # Sets cg: x, y, z [m]");
+	Cout() << "\n" << t_("-t   -translate <x> <y> <z>              # Translate x, y, z [m]");
+	Cout() << "\n" << t_("-rot -rotate    <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
+	Cout() << "\n" << t_("-cg             <x> <y> <z>       # Sets cg: x, y, z [m]");
 	
 	Cout() << "\n" << t_("-getwaterplane        # Extract in new model the waterplane mesh (lid)");
 	Cout() << "\n" << t_("-gethull              # Extract in new model the mesh underwater hull");
@@ -98,11 +103,13 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("                 underwatersurface # [m2]");
 	Cout() << "\n" << t_("                 cb                # cbx cby cbz [m]");
 	Cout() << "\n" << t_("                 hydrostiffness");
-	Cout() << "\n" << t_("                        K(3,3) [N/m]");
-	Cout() << "\n" << t_("                        K(3,4) K(3,5) K(4,3) [N/rad]");
-	Cout() << "\n" << t_("                        K(4,4) K(4,5) K(4,6) [Nm/rad]");
-	Cout() << "\n" << t_("                        K(5,3) [N/rad]");
-	Cout() << "\n" << t_("                        K(5,4) K(5,5) K(5,6) K(6,4) K(6,5) K(6,6) [Nm/rad]");
+	Cout() << "\n" << t_("                 >returns K(3,3) [N/m]");
+	Cout() << "\n" << t_("                          K(3,4) K(3,5) K(4,3) [N/rad]");
+	Cout() << "\n" << t_("                          K(4,4) K(4,5) K(4,6) [Nm/rad]");
+	Cout() << "\n" << t_("                          K(5,3) [N/rad]");
+	Cout() << "\n" << t_("                          K(5,4) K(5,5) K(5,6) K(6,4) K(6,5) K(6,6) [Nm/rad]");
+	Cout() << "\n" << t_("                 inertia <cx> <cy> <cz>   # Inertia tensor around cx, cy, cz [m]");
+	Cout() << "\n" << t_("                 >returns Ixx Ixy Ixz Iyx Iyy Iyz Izx Izy Izz [m2]");
 
 	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	
@@ -174,7 +181,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 								throw Exc(Format("-paramfile file '%s' not found", paramfile));
 							SetCurrentDirectory(GetFileFolder(paramfile));
 							command.Insert(i+1 , pick(GetCommandLineParams(strfile)));
-						} else if (param == "-p" || param == "-params") {
+						} else if (param == "-params") {
 							CheckIfAvailableArg(command, i+1, "-params");
 							
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
@@ -200,13 +207,21 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							}
 						} else if (param == "-echo") {
 							CheckIfAvailableArg(command, ++i, "-echo");
+							static Function <void(String)> OldPrint, OldWarning;
 							
 							String onoff = ToLower(command[i]);
-							if (onoff == "on")
+							if (onoff == "on") {
 								echo = true;
-							else if (onoff == "off")
+								if (OldPrint)
+									BEMData::Print = OldPrint;
+									BEMData::PrintWarning = OldWarning;
+							} else if (onoff == "off") {
 								echo = false;
-							else
+								OldPrint = BEMData::Print;
+								BEMData::Print.Clear();
+								OldWarning = BEMData::PrintWarning;
+								BEMData::PrintWarning.Clear();
+							} else
 								throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 						} else
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
@@ -254,7 +269,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 								if (echo)
 									Cout() << "\n" << Format(t_("Model id %d saved as '%s'"), bemid, file);
 							}
-						} else if (param == "-p" || param == "-params") {
+						} else if (param == "-params") {
 							CheckIfAvailableArg(command, i+1, "-params");
 							
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
@@ -277,6 +292,40 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 										Cout() << "\n" << Format(t_("depth is %f"), depth);	
 								} else 
 									throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
+							}
+						} else if (param == "-p" || param == "-print") {
+							Hydro &data = md.hydros[bemid].hd();
+							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
+								i++;
+								String param = ToLower(command[i]);
+								if (param == "nb") {
+									if (echo)
+										Cout() << t_("Nb:") << " "; 
+									lastPrint = FormatInt(data.Nb);
+									Cout() << lastPrint;
+								} else if (param == "nh") {
+									if (echo)
+										Cout() << t_("Nh:") << " "; 
+									lastPrint = FormatInt(data.Nh);
+									Cout() << lastPrint;
+								} else if (param == "nf") {
+									if (echo)
+										Cout() << t_("Nf:") << " "; 
+									lastPrint = FormatInt(data.Nf);
+									Cout() << lastPrint;
+								} else if (param == "ainf") {
+									CheckIfAvailableArg(command, ++i, "Ainf #1 dof");
+									int idf = ScanInt(command[i]);
+									CheckIfAvailableArg(command, ++i, "Ainf #2 dof");									
+									int jdf = ScanInt(command[i]);
+									if (idf < 1 || jdf < 1 || idf > 6*data.Nb || jdf > 6*data.Nb)
+										throw Exc(Format(t_("Wrong dof in '%s'"), command[i]));
+									Cout() << "\n";
+									if (echo)
+										Cout() << Format(t_("Ainf(%d,%d):"), idf, jdf) << " "; 
+									lastPrint = Format("%f", data.Awinf_dim(idf-1, jdf-1));
+									Cout() << lastPrint;
+								}
 							}
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
@@ -445,6 +494,24 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 												lastPrint << data.C(i, j) << " ";
 										}
 									}
+									Cout() << lastPrint;
+								} else if (param == "inertia") {
+									Cout() << "\n";
+									if (echo)
+										Cout() << t_("Inertia:") << " ";
+									lastPrint.Clear();
+									Eigen::Matrix3d inertia;
+									Point3D center;
+									CheckIfAvailableArg(command, ++i, "Inertia cx");
+									center.x = ScanDouble(command[i]);
+									CheckIfAvailableArg(command, ++i, "Inertia cy");
+									center.y = ScanDouble(command[i]);
+									CheckIfAvailableArg(command, ++i, "Inertia cz");
+									center.z = ScanDouble(command[i]);
+									data.mesh.GetInertia(inertia, center);
+									for (int i = 0; i < 3; ++i) 
+										for (int j = 0; j < 3; ++j) 
+											lastPrint << inertia(i, j) << " ";
 									Cout() << lastPrint;
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));

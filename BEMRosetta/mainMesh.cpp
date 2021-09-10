@@ -1227,10 +1227,10 @@ void MainView::OnPaint() {
 	gl.SetLineThickness(~GetMenuPlot().lineThickness);
 	gl.SetBackgroundColor(~GetMenuPlot().backColor);
 	
-	if (~GetMenuPlot().showAxis) 
+	if (~GetMenuPlot().showAxis && Bem().surfs.size() > 0) 
 		gl.PaintAxis(0, 0, 0, env.LenRef()/4.);	
 	
-	if (~GetMenuPlot().showLimits) 
+	if (~GetMenuPlot().showLimits && Bem().surfs.size() > 0) 
 		gl.PaintCuboid(Point3D(env.maxX, env.maxY, env.maxZ), Point3D(env.minX, env.minY, env.minZ), Gray());
 	
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {

@@ -6,7 +6,8 @@ uses
 	plugin/zstd,
 	Surface,
 	STEM4U,
-	Matio;
+	Matio,
+	CrashHandler;
 
 options(MSC) /bigobj;
 

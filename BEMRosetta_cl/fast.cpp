@@ -6,7 +6,7 @@
 #include <plugin/lz4/lz4.h>
 #include <plugin/zstd/zstd.h>
 
-bool Fast::Load(String file, double g) {
+bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	
@@ -24,7 +24,7 @@ bool Fast::Load(String file, double g) {
 		hydroFile = AppendFileName(GetFileFolder(file), AppendFileName(hydroFolder, hd().name));
 		hd().code = Hydro::FAST_WAMIT;
 		
-		if (!Wamit::Load(ForceExt(hydroFile, ".hst"))) 
+		if (!Wamit::Load(ForceExt(hydroFile, ".hst"), Status)) 
 			return false;
 		
 		if (IsNull(hd().Nb))
