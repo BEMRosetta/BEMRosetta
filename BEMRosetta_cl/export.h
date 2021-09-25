@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 extern "C" {
 	// Returns dll time and date
 	__declspec(dllexport) const char *DLL_Version() noexcept; 		

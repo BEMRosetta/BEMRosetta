@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
@@ -563,16 +564,10 @@ public:
 	void Init(const BEMData &bem);
 	void InitSerialize(bool ret);
 	
-	void Load(String file);
+	void Load(String file, const BEMData &bem);
 	void Load(const BEMData &bem);
-	void Load(const BemCal &data, bool isNemoh);
-	void Load(const NemohCal &data);
-	void Load(const HamsCal &data);
-	void Load(const AQWACal &data);
 	
-	bool Save(BemCal &data, bool isNemoh);
-	bool Save(NemohCal &data);
-	bool Save(HamsCal &data);
+	bool Save(BEMCase &data, bool isNemoh);
 	
 	void Jsonize(JsonIO &json);
 	
@@ -581,10 +576,10 @@ public:
 	WithMainSolver_HAMS<StaticRect> hams;
 	
 	CtrlScroll nemohScroll;
-	CtrlScroll hamsScroll;
+	//CtrlScroll hamsScroll;
 	
 private:
-	bool OnLoad();
+	bool OnLoad(const BEMData &bem);
 	bool OnSave(const BEMData &bem);
 	void OnCursor();
 	void arrayOnCursor();

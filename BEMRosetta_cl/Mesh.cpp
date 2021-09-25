@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 
 int MeshData::idCount = 0;
-
+/*
 String MeshData::Load(String file) {
 	bool y0z, x0z;
 	return Load(file, Null, Null, false, y0z, x0z);	
@@ -9,7 +10,7 @@ String MeshData::Load(String file) {
 
 String MeshData::Load(String file, bool &y0z, bool &x0z) {
 	return Load(file, Null, Null, false, y0z, x0z);	
-}
+}*/
 
 String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 	bool y0z, x0z;
@@ -40,7 +41,7 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool 
 		}
 		SetCode(isText ? MeshData::STL_TXT : MeshData::STL_BIN);
 	} else
-		throw Exc(Format(t_("Unknown MESH file extension in '%s'"), file));	
+		ret = Format(t_("Unknown mesh file format '%s'"), file);	
 	
 	if (!ret.IsEmpty())
 		return ret;
@@ -69,7 +70,8 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool 
 	return String();
 }
 
-void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, 
+						int &nNodes, int &nPanels) {
 	Surface surf;
 	if (meshType == UNDERWATER) 
 		surf = clone(under);
@@ -112,7 +114,10 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	
 	if (surf.panels.IsEmpty())
 		throw Exc(t_("Model is empty. No panels found"));
-		
+	
+	nNodes = surf.nodes.size();
+	nPanels = surf.panels.size();
+	
 	if (type == WAMIT_GDF) 
 		SaveGdfWamit(file, surf, g, symX, symY);	
 	else if (type == NEMOH_DAT) 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
@@ -21,7 +22,7 @@ String MeshData::LoadPnlHAMS(String fileName, bool &y0z, bool &x0z) {
 		line = in.GetLine();	
 		
 		if (line.Find("Mesh File") < 0)
-			return t_("Format error in HAMS .pnl mesh file");	// To detect HAMS format
+			return t_("File is not in HAMS .pnl format");	// To detect HAMS format
 
 		bool done = false;
 		while(!in.IsEof()) {
