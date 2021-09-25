@@ -47,8 +47,8 @@ file
 	Copying;
 
 mainconfig
-	"" = "",
-	"" = "DLL",
-	"" = "TEST_DLL";
+	"" = "BEMR_CL",
+	"" = "BEMR_DLL",
+	"" = "BEMR_TEST_DLL";
 
  spellcheck_comments "EN-GB"

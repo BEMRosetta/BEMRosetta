@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
@@ -36,12 +37,19 @@ String MeshData::LoadDatAQWA(String fileName) {
 		while(!in.IsEof()) {
 			line = in.GetLine();
 			
-			if (line.GetCount() > 5 && line[5] == '1') {
-				ids << ScanInt(line.Mid(6, 5));
-				Point3D &node = mesh.nodes.Add();
-				node.x = ScanDouble(line.Mid(20, 10));
-				node.y = ScanDouble(line.Mid(30, 10));
-				node.z = ScanDouble(line.Mid(40, 10));
+			if (line.GetCount() > 5 && line[5] == '1') {		// First body?
+				int id = ScanInt(line.Mid(6, 5));
+				if (id == 98000) {
+					cg.x = ScanDouble(line.Mid(20, 10));
+					cg.y = ScanDouble(line.Mid(30, 10));
+					cg.z = ScanDouble(line.Mid(40, 10));
+				} else {
+					ids << id;
+					Point3D &node = mesh.nodes.Add();
+					node.x = ScanDouble(line.Mid(20, 10));
+					node.y = ScanDouble(line.Mid(30, 10));
+					node.z = ScanDouble(line.Mid(40, 10));
+				}
 			} else if (line.StartsWith(" END")) {
 				done = true;
 				break;

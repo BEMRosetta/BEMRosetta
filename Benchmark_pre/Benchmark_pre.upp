@@ -1,0 +1,10 @@
+uses
+	Core,
+	BEMRosetta_cl;
+
+file
+	Benchmark_pre.cpp;
+
+mainconfig
+	"" = "";
+

@@ -1,49 +1,26 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <STEM4U/Utility.h>
 
 
-Vector<String> HamsCal::Check() {
+Vector<String> HamsCase::Check() const {
 	Vector<String> ret;
-	
-	ret.Append(BemCal::Check(true));
 	
 	if (bodies.size() != 1)
 		ret << t_("HAMS just allows one body");
-	else {
-		bool y0zmesh, x0zmesh;
-		{
-			MeshData data;
-			String err = data.LoadPnlHAMS(bodies[0].meshFile, y0zmesh, x0zmesh);
-			if (!err.IsEmpty()) {
-				ret << err;
-				return ret;
-			}
-		}
-		if (!bodies[0].lidFile.IsEmpty()) {
-			bool y0zlid, x0zlid;
-			{
-				MeshData data;
-				String err = data.LoadPnlHAMS(bodies[0].lidFile, y0zlid, x0zlid);
-				if (!err.IsEmpty()) {
-					ret << err;
-					return ret;
-				}
-			}
-			if (y0zmesh != y0zlid)
-				ret << t_("The symmetry of the X-axis (y0z) in the hull and the lid has to match");	
-			if (x0zmesh != x0zlid)
-				ret << t_("The symmetry of the Y-axis (x0z) in the hull and the lid has to match");
-		}
-	}
+
 	return ret;
 }
 
-bool HamsCal::Load(String fileName) {
+bool HamsCase::Load(String fileName) {
+	fileName = AppendFileName(GetFileFolder(fileName), "ControlFile.in");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-		
+	
+	solver = HAMS;
+	
 	String line;
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
@@ -115,10 +92,10 @@ bool HamsCal::Load(String fileName) {
 				maxH = minH + f.GetDouble(1)*Nh;
 			} else {
 				f.LoadLine();
-				if (f.size() < 2)
+				if (f.size() < 1)
 					throw Exc("Headings not found");
 				Vector<double> data;
-				double delta;
+				double delta = 0;
 				for (int i = 0; i < f.size(); ++i) {
 					data << f.GetDouble(i);
 					if (i == 1)
@@ -133,7 +110,7 @@ bool HamsCal::Load(String fileName) {
 			if (f.size() < 4)
 				throw Exc("Lack of data in Reference_body_center");
 			bodies.SetCount(1);
-			BemBody &body = bodies[0];
+			BEMBody &body = bodies[0];
 			body.c0[0] = f.GetDouble(1);
 			body.c0[1] = f.GetDouble(2);
 			body.c0[2] = f.GetDouble(3);
@@ -148,13 +125,13 @@ bool HamsCal::Load(String fileName) {
 	return LoadHydrostatic(AppendFileName(GetFileFolder(fileName), "Hydrostatic.in"));
 }
 
-bool HamsCal::LoadHydrostatic(String fileName) {
+bool HamsCase::LoadHydrostatic(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
 	bodies.SetCount(1);
-	BemBody &body = bodies[0];
+	BEMBody &body = bodies[0];
 	
 	String line;
 	FieldSplit f(in);
@@ -189,13 +166,13 @@ bool HamsCal::LoadHydrostatic(String fileName) {
 	return true;
 }
 
-void HamsCal::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem) const {
+void HamsCase::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem, int) const {
 	SaveFolder0(folderBase, bin, 1, bem, true, numThreads);
 	if (numCases > 1)
 		SaveFolder0(folderBase, bin, numCases, bem, false, numThreads);
 }
 
-void HamsCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const {
+void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const {
 	BeforeSave(folderBase, numCases, deleteFolder);
 	
 	#define MIN_F_HAMS 0.01
@@ -216,11 +193,12 @@ void HamsCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMDa
 	
 	String solvName = "HAMS_x64.exe";
 	if (bin) {
-		String source = AppendFileName(bem.hamsPath, solvName);
+		String source = bem.hamsPath;
+		solvName = GetFileName(source);
 		String destNew = AppendFileName(folderBase, solvName);
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams exe file from '%s'"), bem.hamsPath));
-		source = AppendFileName(bem.hamsPath, "libiomp5md.dll");		
+		source = AppendFileName(GetFileFolder(bem.hamsPath), "libiomp5md.dll");		
 		destNew = AppendFileName(folderBase, "libiomp5md.dll");		
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams dll file from '%s'"), source));					
@@ -252,32 +230,28 @@ void HamsCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMDa
 		Save_ControlFile(folderInput, _nf, _minf, _maxf, numThreads);
 		Save_Hydrostatic(folderInput);
 	
+		bool y0zmesh, x0zmesh;
+		MeshData mesh;
 		int ib = 0;		// Just one file
 		{
+			String err = mesh.Load(bodies[ib].meshFile, rho, g, false, y0zmesh, x0zmesh);
+			if (!err.IsEmpty())
+				throw Exc(err);
+			
+			if (y0zmesh == true && x0zmesh == true) 
+				y0zmesh = false;
+
 			String dest = AppendFileName(folderInput, "HullMesh.pnl");
-			if (GetFileExt(bodies[ib].meshFile) == ".pnl") {
-				if (!FileCopy(bodies[ib].meshFile, dest)) 
-					throw Exc(Format(t_("Problem copying mesh file from '%s'"), bodies[ib].meshFile));
-			} else {
-				MeshData mesh;
-				String err = mesh.Load(bodies[ib].meshFile);
-				if (!err.IsEmpty())
-					throw Exc(err);
-				mesh.SavePnlHAMS(dest, mesh.mesh, false, false);
-			}
+			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
 		}
+		bool y0zlid, x0zlid;	// Hull symmetries rules over lid ones
 		if (!bodies[ib].lidFile.IsEmpty()) {
+			String err = mesh.Load(bodies[ib].lidFile, rho, g, false, y0zlid, x0zlid);
+			if (!err.IsEmpty())
+				throw Exc(err);
+			
 			String dest = AppendFileName(folderInput, "WaterplaneMesh.pnl");
-			if (GetFileExt(bodies[ib].lidFile) == ".pnl") {
-				if (!FileCopy(bodies[ib].lidFile, dest)) 
-					throw Exc(Format(t_("Problem copying lid file from '%s'"), bodies[ib].lidFile));
-			} else {
-				MeshData mesh;
-				String err = mesh.Load(bodies[ib].lidFile);
-				if (!err.IsEmpty())
-					throw Exc(err);
-				mesh.SavePnlHAMS(dest, mesh.mesh, false, false);
-			}
+			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
 		}
 		String folderOutput = AppendFileName(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -290,13 +264,13 @@ void HamsCal::SaveFolder0(String folderBase, bool bin, int numCases, const BEMDa
 			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileName(folderOutput, "Wamit_format")));
 		
 		if (numCases > 1) 
-			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, solvName);
+			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, AppendFileName("..", solvName));
 		else
 			Save_Bat(folder, "HAMS.bat", Null, bin, solvName);
 	}
 }
 
-void HamsCal::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName) const {
+void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName) const {
 	String fileName = AppendFileName(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -306,7 +280,7 @@ void HamsCal::Save_Bat(String folder, String batname, String caseFolder, bool bi
 	out << "\"" << solvName << "\"\n";
 }
 
-void HamsCal::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
+void HamsCase::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
 	out << "\n " << header << ":";
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
@@ -315,7 +289,7 @@ void HamsCal::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat)
 	}
 }
 
-void HamsCal::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
+void HamsCase::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y) {
 		f.LoadLine();
 		for (int x = 0; x < 6; ++x)
@@ -323,7 +297,7 @@ void HamsCal::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
 	}
 }
 	
-void HamsCal::Save_Hydrostatic(String folderInput) const {
+void HamsCase::Save_Hydrostatic(String folderInput) const {
 	String fileName = AppendFileName(folderInput, "Hydrostatic.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -333,7 +307,7 @@ void HamsCal::Save_Hydrostatic(String folderInput) const {
 	if (bodies.IsEmpty())
 		throw Exc(t_("No bodies found"));
 	
-	const BemBody &b = bodies[0];
+	const BEMBody &b = bodies[0];
 	out << Format("\n %0.15E %0.15E %0.15E", b.cg[0], b.cg[1], b.cg[2]);
 
 	OutMatrix(out, "Body Mass Matrix", b.mass);
@@ -343,7 +317,7 @@ void HamsCal::Save_Hydrostatic(String folderInput) const {
 	OutMatrix(out, "External Restoring Matrix", b.externalRestoring);
 }
 
-void HamsCal::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
+void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 					int numThreads) const {
 	String fileName = AppendFileName(folderInput, "ControlFile.in");
 	FileOut out(fileName);
@@ -355,6 +329,7 @@ void HamsCal::Save_ControlFile(String folderInput, int _nf, double _minf, double
 	out << "\n   Waterdepth  " << Format("%.4f", h) << "D0";
 	out << "\n"
 		   "\n   #Start Definition of Wave Frequencies"
+		   "\n    0_inf_frequency_limits      1"
 		   "\n    Input_frequency_type        3"
 		   "\n    Output_frequency_type       3";
 	out << "\n    Number_of_frequencies      " << _nf;
@@ -374,7 +349,8 @@ void HamsCal::Save_ControlFile(String folderInput, int _nf, double _minf, double
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
-	out << "\n    Reference_body_center   0.000   0.000   0.000"
+	out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
+								bodies[0].c0[0], bodies[0].c0[1], bodies[0].c0[2]) << 
 		   "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";
 	bool remove_irr_freq = !bodies[0].lidFile.IsEmpty();

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include <STEM4U/Sundials.h>
 #include <STEM4U/Integral.h>

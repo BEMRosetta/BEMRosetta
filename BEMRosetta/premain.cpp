@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include <BEMRosetta_cl/BEMRosetta.h>
 #include <GridCtrl/GridCtrl.h>
 #include "premain.h"

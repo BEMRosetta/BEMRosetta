@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef _BEM_Rosetta_BEM_Rosetta_h_
 #define _BEM_Rosetta_BEM_Rosetta_h_
 
@@ -95,12 +96,11 @@ public:
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
  	
-	//Upp::Array<Eigen::MatrixXd> A;			// [Nf](6*Nb, 6*Nb)	Added mass
 	Upp::Array<Upp::Array<Eigen::VectorXd>> A;	// [6*Nb][6*Nb][Nf]	Added mass
 	Upp::Array<Upp::Array<Eigen::VectorXd>> Ainfw;
     Eigen::MatrixXd Awinf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     Eigen::MatrixXd Aw0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
-    //Upp::Array<Eigen::MatrixXd> B; 			// [Nf](6*Nb, 6*Nb)	Radiation damping
+
     Upp::Array<Upp::Array<Eigen::VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     Upp::Vector<double> head;				// [Nh]             Wave headings (deg)
     Upp::Vector<String> names;  			// {Nb}             Body names
@@ -216,7 +216,7 @@ public:
     } qtfCases;
     
     int GetQTFHeadId(double hd) const;
-    static bool GetQTFId(int &lastid, const Upp::Array<Hydro::QTF> &qtfList, 
+    static int GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList, 
     			const QTFCases &qtfCases, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
 	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases);
 							
@@ -608,13 +608,6 @@ public:
 
 	String Load(String fileName, double rho, double g, bool cleanPanels);
 	String Load(String fileName, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
-	String Load(String fileName, bool &y0z, bool &x0z);
-	String Load(String fileName);
-	String LoadDatNemoh(String fileName, bool &x0z);
-	String LoadDatWamit(String fileName);
-	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
-	String LoadDatAQWA(String fileName);
-	String LoadPnlHAMS(String fileName, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status);
 	void Orient();
@@ -624,7 +617,11 @@ public:
 	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime);
 	void Reset(double rho, double g);
 
-	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY);
+	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels);
+	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+		int nNodes, nPanels;
+		SaveAs(fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+	}
 	static void SaveDatNemoh(String fileName, const Surface &surf, bool x0z);
 	static void SavePreMeshNemoh(String fileName, const Surface &surf);
 	static void SaveGdfWamit(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
@@ -653,6 +650,12 @@ private:
 	MESH_FMT code;
 	int id;
 	static int idCount;
+	
+	String LoadDatNemoh(String fileName, bool &x0z);
+	String LoadDatWamit(String fileName);
+	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
+	String LoadDatAQWA(String fileName);
+	String LoadPnlHAMS(String fileName, bool &y0z, bool &x0z);
 };
 
 class Wamit : public HydroClass {
@@ -733,22 +736,19 @@ private:
 	double WaveDirRange;
 };
 
-class BemBody : public Moveable<BemBody> {
+class BEMBody : public MoveableAndDeepCopyOption<BEMBody> {
 public:
-	BemBody();
-	BemBody(const BemBody &d) : meshFile(d.meshFile), dof(clone(d.dof)), c0(clone(d.c0)), 
+	BEMBody();
+	BEMBody(const BEMBody &d, int) : meshFile(d.meshFile), dof(clone(d.dof)), c0(clone(d.c0)), 
 			cg(clone(d.cg)), mass(clone(d.mass)), 
 			linearDamping(clone(d.linearDamping)), quadraticDamping(clone(d.quadraticDamping)), 
 			hydrostaticRestoring(clone(d.hydrostaticRestoring)), externalRestoring(clone(d.externalRestoring)), 
-			npoints(d.npoints), npanels(d.npanels) {}
+			ndof(d.ndof) {}
 	
 	String meshFile, lidFile;
 	int ndof;
 	Vector<bool> dof;
 	Eigen::Vector3d c0;	
-	
-	int npoints, npanels;
-	
 	Eigen::Vector3d cg;
 	Eigen::MatrixXd mass, linearDamping, quadraticDamping, hydrostaticRestoring, externalRestoring;
 	
@@ -756,50 +756,73 @@ public:
 };
 
 
-class BemCal {
+class BEMCase {
 public:
-	BemCal() {bodies.SetCount(1);}
+	BEMCase() {bodies.SetCount(1);}
+	BEMCase(const BEMCase &bcase) : bodies(clone(bcase.bodies)), h(bcase.h),
+		Nf(bcase.Nf), minF(bcase.minF), maxF(bcase.maxF), Nh(bcase.Nh),
+		minH(bcase.minH), maxH(bcase.maxH), rho(bcase.rho), g(bcase.g),
+		xeff(bcase.xeff), yeff(bcase.yeff), irf(bcase.irf), 
+		irfStep(bcase.irfStep), irfDuration(bcase.irfDuration),
+		showPressure(bcase.showPressure), 
+		nFreeX(bcase.nFreeX), nFreeY(bcase.nFreeY), 
+		domainX(bcase.domainX), domainY(bcase.domainY),
+		nKochin(bcase.nKochin), minK(bcase.minK), maxK(bcase.maxK), solver(bcase.solver) {} 
 		
+	void Load(String file, const BEMData &bem);
+	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const;
+	Vector<String> Check(int solver) const;
+	
 	void BeforeSave(String folderBase, int numCases, bool deleteFolder) const;
+	
 	bool IsDof(int ib, int idf) {return bodies[ib].dof[idf];}
-	Upp::Vector<String> Check(bool oneBody);
+	bool IsNemoh() {return solver <= CAPYTAINE;}
 	
 	double h = Null;
 	
-	Upp::Vector<BemBody> bodies;
+	Upp::Vector<BEMBody> bodies;
 
 	int Nf = Null;
-	double minF, maxF;
+	double minF = Null, maxF = Null;
 	int Nh = Null;
-	double minH, maxH;
+	double minH = Null, maxH = Null;
 	
 	double rho = Null, g = Null;
-	double xeff, yeff;
+	double xeff = 0, yeff = 0;
 	
-	bool irf;
-	double irfStep, irfDuration;	
-	bool showPressure;
-	int nFreeX, nFreeY;
-	double domainX, domainY;
-	int nKochin;
-	double minK, maxK;
+	bool irf = false;
+	double irfStep = 0.1, irfDuration = 100;	
+	bool showPressure = false;
+	int nFreeX = 0, nFreeY = 0;
+	double domainX = 0, domainY = 0;
+	int nKochin = 0;
+	double minK = 0, maxK = 0;
 	
-	enum Solver {NEMOH, NEMOHv115, CAPYTAINE, HAMS, AQWA};
+	enum Solver 			   		 			  {NEMOH, NEMOHv115, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;
+	static const char *solverStr[];
+	static constexpr const bool solverCanSave[] = {true,  true, 	 true, 		true, false};
+	
+	virtual ~BEMCase() noexcept {}
 };
 
-class AQWACal : public BemCal {
+class AQWACase : public BEMCase {
 public:
-	bool Load(String fileName);	
-};
-
-class HamsCal : public BemCal {
-public:
-	void SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem) const;
 	bool Load(String fileName);
+	Upp::Vector<String> Check() const;	
+	
+	virtual ~AQWACase() noexcept {}
+};
+
+class HamsCase : public BEMCase {
+public:
+	bool Load(String fileName);
+	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const;
+	Upp::Vector<String> Check() const;
+	
 	bool LoadHydrostatic(String fileName);
-		
-   	Upp::Vector<String> Check();
-   	
+	
+	virtual ~HamsCase() noexcept {}
+	
 private:
 	void SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const;
 	static void OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat);
@@ -811,13 +834,15 @@ private:
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName) const;
 };
 
-class NemohCal : public BemCal {
+class NemohCase : public BEMCase {
 public:	
 	bool Load(String fileName);
-	void Save_Cal(String folder, int _nf, double _minf, double _maxf) const;
-	void SaveFolder(String folder, bool bin, int numCases, const BEMData &bem, 
-					int solver) const;
-	Upp::Vector<String> Check();
+	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const;
+	Upp::Vector<String> Check() const;
+	
+	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels) const;
+	
+	virtual ~NemohCase() noexcept {}
 	
 private:
 	static int GetNumArgs(const FieldSplit &f);
@@ -826,6 +851,8 @@ private:
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
+	void Save_Mesh_cal(String folder, int ib, String meshFile, MeshData &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const;
+	void Save_Mesh_bat(String folder, String caseFolder, const Vector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases, const BEMData &bem, 
@@ -844,7 +871,7 @@ public:
 	
 private:
 	String folder;
-	NemohCal datacal;
+	BEMCase dcase;
 	
 	bool Load_Cal(String fileName);
 	bool Load_Inf(String fileName);
@@ -918,12 +945,12 @@ public:
 	int numValsA;
 	int onlyDiagonal;
 	
-	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathGREN;
+	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathMesh, nemohPathGREN;
 	bool experimental;
 	String foammPath;
 	String hamsPath;
 	
-	void LoadBEM(String file, Function <bool(String, int pos)> Status, bool checkDuplicated);
+	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
 	void Symmetrize(int id, bool xAxis);
 	void A0(int id);
@@ -970,6 +997,7 @@ public:
 			("nemohPathPreprocessor", nemohPathPreprocessor)
 			("nemohPathSolver", nemohPathSolver)
 			("nemohPathPostprocessor", nemohPathPostprocessor)
+			("nemohPathMesh", nemohPathMesh)
 			("nemohPathGREN", nemohPathGREN)
 			("nemohPathNew", nemohPathNew)
 			("foammPath", foammPath)

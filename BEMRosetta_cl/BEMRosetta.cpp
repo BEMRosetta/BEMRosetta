@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
@@ -17,6 +18,8 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(�
 				t_("Fsc_ma"), t_("Fsc_ph"), t_("Ffk_ma"), t_("Ffk_ph"), t_("Fex_ma"), t_("Fex_ph"),
 				t_("RAO_ma"), t_("RAO_ph"), t_("Z_ma"), t_("Z_ph"), t_("Kr_ma"), t_("Kr_ph"), 
 				t_("TFS_ma"), t_("TFS_ph")};
+
+const char *BEMCase::solverStr[] = {t_("Nemoh"), t_("Nemoh v115"), t_("Capytaine"), t_("HAMS"), t_("AQWA")};
 
 int Hydro::idCount = 0;	
 
@@ -781,14 +784,14 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			return false;
 		}
 		if (!IsLoadedKirf()) {
-			if (!Status(t_("Obtaining the Impulse Response Function"), 40)) {
+			if (Status && !Status(t_("Obtaining the Impulse Response Function"), 40)) {
 				lastError = t_("Cancelled by the user");
 				return false;
 			}
 			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		}
 		if (!IsLoadedAwinf()) {
-			if (!Status(t_("Obtaining the infinite-frequency added mass (A∞)"), 70)) {
+			if (Status && !Status(t_("Obtaining the infinite-frequency added mass (A∞)"), 70)) {
 				lastError = t_("Cancelled by the user");
 				return false;
 			}
@@ -800,7 +803,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		if (!IsLoadedAwinf())
 			GetAinf();
-		if (!Status(t_("Obtaining the frequency-dependent infinite-frequency added mass (A∞(ω))"), 90)) {
+		if (Status && !Status(t_("Obtaining the frequency-dependent infinite-frequency added mass (A∞(ω))"), 90)) {
 			lastError = t_("Cancelled by the user");
 			return false;
 		}
@@ -956,7 +959,7 @@ int Hydro::GetQTFHeadId(double hd) const {
 	return -1;
 }
 	
-bool Hydro::GetQTFId(int &lastid, const Upp::Array<Hydro::QTF> &qtfList, 
+int Hydro::GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList, 
 			const QTFCases &qtfCases, int ib, int ih1, int ih2, int ifr1, int ifr2) {
 	if (qtfCases.ib.size() > 0) {
 		bool found = false;
@@ -967,16 +970,14 @@ bool Hydro::GetQTFId(int &lastid, const Upp::Array<Hydro::QTF> &qtfList,
 			}
 		}
 		if (!found)
-			return false;
+			return -1;
 	}
 	for (int i = lastid; i < qtfList.size(); ++i) {
 		const QTF &qtf = qtfList[i];
-		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2) {
-			lastid = i;
-			return true;
-		}
+		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2) 
+			return i;
 	}
-	return false;
+	return -1;
 }
 
 void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases) {
@@ -1247,13 +1248,13 @@ void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool che
 	Hydro &justLoaded = hydros.Top().hd();
 
 	if (!justLoaded.AfterLoad(Status)) {
-		String error = justLoaded.GetLastError();
+		String error = RemoveAccents(justLoaded.GetLastError());
 		hydros.SetCount(hydros.size()-1);
 		throw Exc(Format(t_("Problem processing '%s'\n%s"), file, error));	
 	}
 	
 	/*if (discardNegDOF) {
-		if (!Status(t_("Discarding negligible DOF"), 90)) {
+		if (Status && !Status(t_("Discarding negligible DOF"), 90)) {
 			hydros.SetCount(hydros.size()-1);	
 			throw Exc(t_("Cancelled by user"));
 		}
@@ -1646,9 +1647,10 @@ void FieldSplitWamit::LoadWamitJoinedFields(String _line) {
 	}
 }
 	
-BemBody::BemBody() {
+BEMBody::BEMBody() {
 	dof.SetCount(6, false);	
 	cg = Eigen::Vector3d::Zero();
+	c0 = Eigen::Vector3d::Zero();
 	mass.setConstant(6, 6, 0);
 	linearDamping.setConstant(6, 6, 0);
 	quadraticDamping.setConstant(6, 6, 0);
@@ -1656,14 +1658,46 @@ BemBody::BemBody() {
 	externalRestoring.setConstant(6, 6, 0);
 }
 	
-int BemBody::GetNDOF() const {
+int BEMBody::GetNDOF() const {
 	int ret = 0;
 	for (auto &d : dof)
 		ret += d;
 	return ret;
 }
 
-void BemCal::BeforeSave(String folderBase, int numCases, bool deleteFolder) const {
+void BEMCase::Load(String file, const BEMData &bem) {
+	if (ToLower(GetFileName(file)) == "nemoh.cal") {
+		if (!static_cast<NemohCase&>(*this).Load(file)) 
+			throw Exc(Format(t_("Problem loading '%s' file"), file));
+	} else if (ToLower(GetFileExt(file)) == ".in") {
+		if (!static_cast<HamsCase&>(*this).Load(file)) 
+			throw Exc(Format(t_("Problem loading '%s' file"), file));
+	} else if (ToLower(GetFileExt(file)) == ".dat") {
+		if (!static_cast<AQWACase&>(*this).Load(file)) 
+			throw Exc(Format(t_("Problem loading '%s' file"), file));
+	} else
+		throw Exc(t_("Unknown BEM input format"));
+	
+	if (IsNull(rho))
+		rho = bem.rho;
+	if (IsNull(g))
+		g = bem.g;	
+}
+
+void BEMCase::SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const {
+	if (solver <= CAPYTAINE)
+		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
+	else if (solver == HAMS)
+		static_cast<const HamsCase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
+	else if (solver == NEMOH)
+		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, Null, bem, solver);
+	else if (solver == NEMOHv115)
+		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, Null, bem, solver);
+	else
+		static_cast<const AQWACase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
+}
+
+void BEMCase::BeforeSave(String folderBase, int numCases, bool deleteFolder) const {
 	if (numCases < 1)
 		throw Exc(Format(t_("Number cases must be higher than 1 (%d)"), numCases));
 	
@@ -1679,8 +1713,16 @@ void BemCal::BeforeSave(String folderBase, int numCases, bool deleteFolder) cons
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 }
 
-Vector<String> BemCal::Check(bool oneBody) {
+Vector<String> BEMCase::Check(int solver) const {
 	Vector<String> ret;
+	
+	bool isNemoh = solver != BEMCase::HAMS;
+	bool oneBody = solver == BEMCase::HAMS;
+	
+	if (isNemoh) 
+		ret.Append(static_cast<const NemohCase &>(*this).Check());
+	else if (solver == BEMCase::HAMS)
+		ret.Append(static_cast<const HamsCase &>(*this).Check());
 	
 	if (IsNull(h) || h < -1 || h > 100000)
 		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(h));

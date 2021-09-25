@@ -33,7 +33,6 @@ file
 	premain.cpp,
 	premain.h,
 	premain.lay,
-	Copying,
 	bemrosetta.t,
 	clip.brc,
 	ajax-loader.gif,
@@ -43,7 +42,8 @@ file
 	FastScatter.cpp,
 	FastScatter.h,
 	FastScatter.iml,
-	FastScatter.lay;
+	FastScatter.lay,
+	Copying;
 
 mainconfig
 	"" = "GUI";

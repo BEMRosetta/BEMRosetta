@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -39,7 +40,7 @@ void MainSolver::Init(const BEMData &bem) {
 	else
 		loadFrom.ActiveType(1);
 	
-	loadFrom.WhenChange = THISBACK(OnLoad);
+	loadFrom.WhenChange = [&] {return OnLoad(bem);};
 	loadFrom.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10).UseDropping();
 	butLoad.WhenAction = [&] {loadFrom.DoGo();};
 
@@ -95,16 +96,13 @@ void MainSolver::Init(const BEMData &bem) {
 	};
 	nemoh.freeSurface.WhenAction();
 	
-	//HamsCal hams;
-	//Load(hams);	
-	
-	dropSolver.Add(BemCal::NEMOH, t_("Nemoh"));
-	dropSolver.Add(BemCal::NEMOHv115, t_("Nemoh 115+"));
-	dropSolver.Add(BemCal::CAPYTAINE, t_("Capytaine"));
-	dropSolver.Add(BemCal::HAMS, t_("HAMS"));
+	for (int i = 0; i < BEMCase::NUMSOLVERS; ++i)
+		if (BEMCase::solverCanSave[i])
+			dropSolver.Add(i, BEMCase::solverStr[i]);		
+			
 	dropSolver.SetIndex(dropSolverVal);
 	dropSolver.WhenAction = [&] {
-		bool isNemoh = ~dropSolver != BemCal::HAMS;
+		bool isNemoh = ~dropSolver != BEMCase::HAMS;
 		if (isNemoh)
 			tab.Set(nemohScroll);
 		//else
@@ -113,7 +111,7 @@ void MainSolver::Init(const BEMData &bem) {
 		numThreads.Enable(!isNemoh);
 		labnumThreads.Enable(!isNemoh);
 		nemohScroll.Enable(isNemoh);
-		opIncludeBin.Enable(~dropSolver != BemCal::CAPYTAINE);
+		opIncludeBin.Enable(~dropSolver != BEMCase::CAPYTAINE);
 		
 		bodies.array.HeaderObject().ShowTab(1, !isNemoh);
 		bodies.array.HeaderObject().ShowTab(2, isNemoh);
@@ -122,8 +120,6 @@ void MainSolver::Init(const BEMData &bem) {
 		bodies.array.HeaderObject().ShowTab(5, isNemoh);
 		bodies.array.HeaderObject().ShowTab(6, isNemoh);
 		bodies.array.HeaderObject().ShowTab(7, isNemoh);
-		bodies.array.HeaderObject().ShowTab(8, isNemoh);
-		bodies.array.HeaderObject().ShowTab(9, isNemoh);
 		
 		bodies.lidFile.Enable(!isNemoh);
 		bodies.butAllDOF.Enable(isNemoh);
@@ -187,18 +183,6 @@ void MainSolver::InitSerialize(bool ret) {
 		opInfinite <<= true;
 	}
 }
-
-void MainSolver::Load(const BEMData &bem) {
-	if (IsNull(~nemoh.g))
-		nemoh.g <<= bem.g;
-	if (IsNull(~nemoh.rho))
-		nemoh.rho <<= bem.rho;	
-	if (IsNull(~height)) {
-		opInfinite <<= (bem.depth < 0);
-		height.Enable(bem.depth > 0);
-		height <<= (bem.depth > 0 ? bem.depth : Null);
-	}
-}
 	
 void MainSolver::Jsonize(JsonIO &json) {
 	if (json.IsLoading()) {
@@ -242,11 +226,11 @@ void MainSolver::Jsonize(JsonIO &json) {
 	;
 }
 
-bool MainSolver::OnLoad() {
+bool MainSolver::OnLoad(const BEMData &bem) {
 	String file = ~loadFrom;
 	
 	try {
-		Load(file);
+		Load(file, bem);
 		dropSolver.WhenAction();
 	} catch (const Exc &e) {
 		Exclamation(DeQtfLf(e));
@@ -254,70 +238,25 @@ bool MainSolver::OnLoad() {
 	}
 	return true;		
 }		
+
+void MainSolver::Load(const BEMData &bem) {
+	if (IsNull(~nemoh.g))
+		nemoh.g <<= bem.g;
+	if (IsNull(~nemoh.rho))
+		nemoh.rho <<= bem.rho;	
+	if (IsNull(~height)) {
+		opInfinite <<= (bem.depth < 0);
+		height.Enable(bem.depth > 0);
+		height <<= (bem.depth > 0 ? bem.depth : Null);
+	}
+}
 	
-void MainSolver::Load(String file) {	
-	if (ToLower(GetFileName(file)) == "nemoh.cal") {
-		NemohCal data;			
-		if (!data.Load(file)) 
-			throw Exc(Format("Problem loading %s file", DeQtf(file)));
-		Load(data);
-	} else if (ToLower(GetFileName(file)) == "controlfile.in") {
-		HamsCal data;
-		if (!data.Load(file)) 
-			throw Exc(Format("Problem loading %s file", DeQtf(file)));
-		Load(data);	
-	} else if (ToLower(GetFileExt(file)) == ".dat") {
-		AQWACal data;
-		if (!data.Load(file)) 
-			throw Exc(Format("Problem loading %s file", DeQtf(file)));
-		Load(data);
-	} else
-		throw Exc(t_("Unknown BEM input format"));			
-}
-
-void MainSolver::InitArray(bool isNemoh) {
-	bodies.array.Reset();
-	bodies.array.SetLineCy(EditField::GetStdHeight());
-	bodies.array.AddColumn("Mesh file", 40);
-	bodies.array.AddColumn("Lid file", 40);
-	bodies.array.AddColumn("#points", 10);
-	bodies.array.AddColumn("#panels", 10);
-	bodies.array.AddColumn("Surge", 10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
-	bodies.array.AddColumn("Sway",  10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
-	bodies.array.AddColumn("Heave", 10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
-	bodies.array.AddColumn("Roll",  10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
-	bodies.array.AddColumn("Pitch", 10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
-	bodies.array.AddColumn("Yaw",   10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
-	bodies.array.AddColumn("RotX",  10);
-	bodies.array.AddColumn("RotY",  10);
-	bodies.array.AddColumn("RotZ",  10);
+void MainSolver::Load(String file, const BEMData &bem) {
+	BEMCase data;
 	
-	dropSolver.WhenAction();
-
-	InitGrid(bodies.mass, editMass);
-	InitGrid(bodies.linearDamping, editLinear);
-	InitGrid(bodies.quadraticDamping, editQuadratic);	
-	InitGrid(bodies.hydrostaticRestoring, editInternal);
-	InitGrid(bodies.externalRestoring, editExternal);
-}
-
-void MainSolver::InitGrid(GridCtrl &grid, EditDouble edit[]) {
-	grid.Reset();
-	grid.Absolute().Editing().Clipboard();
-	for (int i = 1; i <= 6; ++i)
-		grid.AddColumn(FormatInt(i)).Edit(edit[i-1]);
-	for (int y = 0; y < 6; ++y)
-		for (int x = 0; x < 6; ++x)
-			grid.Set(y, x, 0.);
-}
-
-void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
-	for (int y = 0; y < 6; ++y)
-		for (int x = 0; x < 6; ++x)
-			grid.Set(y, x, mat(x, y));
-}
-
-void MainSolver::Load(const BemCal &data, bool isNemoh) {
+	data.Load(file, bem);
+	bool isNemoh = data.IsNemoh();
+	
 	opInfinite <<= (data.h < 0);
 	height.Enable(data.h > 0);
 	height <<= (data.h > 0 ? data.h : Null);
@@ -325,8 +264,8 @@ void MainSolver::Load(const BemCal &data, bool isNemoh) {
 	InitArray(true);
 	
 	for (int i = 0; i < data.bodies.size(); ++i) {
-		const BemBody &b = data.bodies[i];
-		bodies.array.Add(b.meshFile, b.lidFile, b.npoints, b.npanels, 
+		const BEMBody &b = data.bodies[i];
+		bodies.array.Add(b.meshFile, b.lidFile,  
 					b.dof[Hydro::SURGE], b.dof[Hydro::SWAY], b.dof[Hydro::HEAVE], 
 					b.dof[Hydro::ROLL], b.dof[Hydro::PITCH], b.dof[Hydro::YAW], 
 					b.c0[0], b.c0[1], b.c0[2]);
@@ -344,15 +283,11 @@ void MainSolver::Load(const BemCal &data, bool isNemoh) {
 	maxH <<= data.maxH;
 	
 	if (isNemoh) 
-		dropSolver <<= BemCal::NEMOHv115;
-	else
-		dropSolver <<= BemCal::HAMS;
-}
+		dropSolver <<= BEMCase::NEMOHv115;
+	else if (data.solver == BEMCase::HAMS)
+		dropSolver <<= BEMCase::HAMS;
 	
-void MainSolver::Load(const HamsCal &data) {
-	Load(static_cast<const BemCal &>(data), false);
-
-	const BemBody &b = data.bodies[0];
+	const BEMBody &b = data.bodies[0];
 	
 	bodies.xcm = b.cg[0];
 	bodies.ycm = b.cg[1];
@@ -362,17 +297,6 @@ void MainSolver::Load(const HamsCal &data) {
 	MatrixXdToGridCtrl(bodies.quadraticDamping, b.quadraticDamping);
 	MatrixXdToGridCtrl(bodies.hydrostaticRestoring, b.hydrostaticRestoring);
 	MatrixXdToGridCtrl(bodies.externalRestoring, b.externalRestoring);
-}
-
-void MainSolver::Load(const AQWACal &data) {
-	Load(static_cast<const BemCal &>(data), true);
-	
-	nemoh.g <<= data.g;
-	nemoh.rho <<= data.rho;
-}
-	
-void MainSolver::Load(const NemohCal &data) {
-	Load(static_cast<const BemCal &>(data), true);
 	
 	nemoh.g <<= data.g;
 	nemoh.rho <<= data.rho;
@@ -402,7 +326,47 @@ void MainSolver::Load(const NemohCal &data) {
 	nemoh.domainY <<= data.domainY;
 }
 
-bool MainSolver::Save(BemCal &data, bool isNemoh) {
+void MainSolver::InitArray(bool isNemoh) {
+	bodies.array.Reset();
+	bodies.array.SetLineCy(EditField::GetStdHeight());
+	bodies.array.AddColumn("Mesh file", 40);
+	bodies.array.AddColumn("Lid file", 40);
+	bodies.array.AddColumn("Surge", 10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
+	bodies.array.AddColumn("Sway",  10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
+	bodies.array.AddColumn("Heave", 10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
+	bodies.array.AddColumn("Roll",  10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
+	bodies.array.AddColumn("Pitch", 10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
+	bodies.array.AddColumn("Yaw",   10).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
+	bodies.array.AddColumn("RotX",  10);
+	bodies.array.AddColumn("RotY",  10);
+	bodies.array.AddColumn("RotZ",  10);
+	
+	dropSolver.WhenAction();
+
+	InitGrid(bodies.mass, editMass);
+	InitGrid(bodies.linearDamping, editLinear);
+	InitGrid(bodies.quadraticDamping, editQuadratic);	
+	InitGrid(bodies.hydrostaticRestoring, editInternal);
+	InitGrid(bodies.externalRestoring, editExternal);
+}
+
+void MainSolver::InitGrid(GridCtrl &grid, EditDouble edit[]) {
+	grid.Reset();
+	grid.Absolute().Editing().Clipboard();
+	for (int i = 0; i < 6; ++i)
+		grid.AddColumn(InitCaps(Hydro::StrDOF_base(i))).Edit(edit[i]);
+	for (int y = 0; y < 6; ++y)
+		for (int x = 0; x < 6; ++x)
+			grid.Set(y, x, 0.);
+}
+
+void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
+	for (int y = 0; y < 6; ++y)
+		for (int x = 0; x < 6; ++x)
+			grid.Set(y, x, mat(x, y));
+}
+
+bool MainSolver::Save(BEMCase &data, bool isNemoh) {
 	if (!opInfinite)
 		data.h = ~height;
 	else
@@ -410,65 +374,39 @@ bool MainSolver::Save(BemCal &data, bool isNemoh) {
 	
 	data.bodies.SetCount(bodies.array.GetCount());
 	for (int i = 0; i < data.bodies.size(); ++i) {
-		BemBody &b = data.bodies[i];
+		BEMBody &b = data.bodies[i];
 		b.meshFile = bodies.array.Get(i, 0);
-		if (isNemoh) {
-			if (FileExists(b.meshFile)) {
-				MeshData dat;
-				bool y0z, x0z;
-				String ret = dat.Load(b.meshFile, y0z, x0z);
-				int factor = (y0z ? 2 : 1)*(x0z ? 2 : 1);
-				if (ret.IsEmpty()) {
-					b.npoints = dat.mesh.GetNumNodes()/factor;
-					b.npanels = dat.mesh.GetNumPanels()/factor;
-				} else 
-					return false;
-			}
-		}
 		b.lidFile = bodies.array.Get(i, 1);
 
-		b.dof[Hydro::SURGE] = bodies.array.Get(i, 4);
-		b.dof[Hydro::SWAY]  = bodies.array.Get(i, 5);
-		b.dof[Hydro::HEAVE] = bodies.array.Get(i, 6);
-		b.dof[Hydro::ROLL]  = bodies.array.Get(i, 7);
-		b.dof[Hydro::PITCH] = bodies.array.Get(i, 8);
-		b.dof[Hydro::YAW]   = bodies.array.Get(i, 9);
-		b.c0[0] 	 = bodies.array.Get(i, 10);
-		b.c0[1] 	 = bodies.array.Get(i, 11);
-		b.c0[2] 	 = bodies.array.Get(i, 12);
+		b.dof[Hydro::SURGE] = bodies.array.Get(i, 2);
+		b.dof[Hydro::SWAY]  = bodies.array.Get(i, 3);
+		b.dof[Hydro::HEAVE] = bodies.array.Get(i, 4);
+		b.dof[Hydro::ROLL]  = bodies.array.Get(i, 5);
+		b.dof[Hydro::PITCH] = bodies.array.Get(i, 6);
+		b.dof[Hydro::YAW]   = bodies.array.Get(i, 7);
+		b.c0[0] 	 		= bodies.array.Get(i, 8);
+		b.c0[1] 	 		= bodies.array.Get(i, 9);
+		b.c0[2] 	 		= bodies.array.Get(i, 10);
+		
+		if (i == 0) {
+			b.cg[0] = bodies.cx;
+			b.cg[1] = bodies.cy;
+			b.cg[2] = bodies.cz;
+			GridCtrlToMatrixXd(b.mass, bodies.mass);
+			GridCtrlToMatrixXd(b.linearDamping, bodies.linearDamping);
+			GridCtrlToMatrixXd(b.quadraticDamping, bodies.quadraticDamping);
+			GridCtrlToMatrixXd(b.hydrostaticRestoring, bodies.hydrostaticRestoring);
+			GridCtrlToMatrixXd(b.externalRestoring, bodies.externalRestoring);
+		}
 	}
 		
 	data.Nf = ~Nf;
-	
 	data.minF = ~minF;
 	data.maxF = ~maxF;	
 	
 	data.Nh = ~Nh;
 	data.minH = ~minH;
 	data.maxH = ~maxH;
-	
-	return true;
-}
-
-bool MainSolver::Save(HamsCal &data) {
-	Save(static_cast<BemCal &>(data), false);
-	
-	BemBody &b = data.bodies[0];
-	
-	b.cg[0] = bodies.cx;
-	b.cg[1] = bodies.cy;
-	b.cg[2] = bodies.cz;
-	GridCtrlToMatrixXd(b.mass, bodies.mass);
-	GridCtrlToMatrixXd(b.linearDamping, bodies.linearDamping);
-	GridCtrlToMatrixXd(b.quadraticDamping, bodies.quadraticDamping);
-	GridCtrlToMatrixXd(b.hydrostaticRestoring, bodies.hydrostaticRestoring);
-	GridCtrlToMatrixXd(b.externalRestoring, bodies.externalRestoring);
-	
-	return true;
-}
-
-bool MainSolver::Save(NemohCal &data) {
-	Save(static_cast<BemCal &>(data), true);
 	
 	data.g = ~nemoh.g;
 	data.rho = ~nemoh.rho;
@@ -504,6 +442,7 @@ bool MainSolver::Save(NemohCal &data) {
 		data.nFreeX = data.nFreeY = 0;
 		data.domainX = data.domainY = 0;
 	}
+	
 	return true;
 }
 
@@ -514,20 +453,20 @@ void MainSolver::arrayOnCursor() {
 	
 	bodies.meshFile <<= bodies.array.Get(id, 0);
 	bodies.lidFile  <<= bodies.array.Get(id, 1);
-	bodies.surge 	<<= bodies.array.Get(id, 4);
-	bodies.sway 	<<= bodies.array.Get(id, 5);
-	bodies.heave 	<<= bodies.array.Get(id, 6);
-	bodies.roll 	<<= bodies.array.Get(id, 7);
-	bodies.pitch 	<<= bodies.array.Get(id, 8);
-	bodies.yaw 	 	<<= bodies.array.Get(id, 9);
-	bodies.cx 		<<= bodies.array.Get(id, 10);
-	bodies.cy 		<<= bodies.array.Get(id, 11);
-	bodies.cz 		<<= bodies.array.Get(id, 12);
+	bodies.surge 	<<= bodies.array.Get(id, 2);
+	bodies.sway 	<<= bodies.array.Get(id, 3);
+	bodies.heave 	<<= bodies.array.Get(id, 4);
+	bodies.roll 	<<= bodies.array.Get(id, 5);
+	bodies.pitch 	<<= bodies.array.Get(id, 6);
+	bodies.yaw 	 	<<= bodies.array.Get(id, 7);
+	bodies.cx 		<<= bodies.array.Get(id, 8);
+	bodies.cy 		<<= bodies.array.Get(id, 9);
+	bodies.cz 		<<= bodies.array.Get(id, 10);
 }
 
 bool MainSolver::ArrayUpdateCursor() {
 	try {
-		bool isNemoh = ~dropSolver != BemCal::HAMS;
+		bool isNemoh = ~dropSolver != BEMCase::HAMS;
 		
 		int id = bodies.array.GetCursor();
 		if (id < 0) {
@@ -542,34 +481,18 @@ bool MainSolver::ArrayUpdateCursor() {
 				id = bodies.array.GetCount()-1;
 		}	
 		
-		if (isNemoh && ~bodies.meshFile != bodies.array.Get(id, 0)) {
-			MeshData dat;
-			bool y0z, x0z;
-			String ret = dat.Load(~bodies.meshFile, y0z, x0z);
-			int factor = (y0z ? 2 : 1)*(x0z ? 2 : 1);
-			if (ret.IsEmpty()) {
-				bodies.array.Set(id, 2, dat.mesh.GetNumNodes()/factor);
-				bodies.array.Set(id, 3, dat.mesh.GetNumPanels()/factor);
-			} /*else {
-				Exclamation(DeQtf(ret));
-				return false;		
-			}*/
-		} else {
-			bodies.array.Set(id, 2, "-");
-			bodies.array.Set(id, 3, "-");
-		}
 		bodies.array.Set(id, 0, ~bodies.meshFile);
 		bodies.array.Set(id, 1, ~bodies.lidFile);
 		
-		bodies.array.Set(id, 4, ~bodies.surge);
-		bodies.array.Set(id, 5, ~bodies.sway);
-		bodies.array.Set(id, 6, ~bodies.heave);
-		bodies.array.Set(id, 7, ~bodies.roll);
-		bodies.array.Set(id, 8, ~bodies.pitch);
-		bodies.array.Set(id, 9, ~bodies.yaw);
-		bodies.array.Set(id, 10,~bodies.cx);
-		bodies.array.Set(id, 11,~bodies.cy);
-		bodies.array.Set(id, 12,~bodies.cz);
+		bodies.array.Set(id, 2, ~bodies.surge);
+		bodies.array.Set(id, 3, ~bodies.sway);
+		bodies.array.Set(id, 4, ~bodies.heave);
+		bodies.array.Set(id, 5, ~bodies.roll);
+		bodies.array.Set(id, 6, ~bodies.pitch);
+		bodies.array.Set(id, 7, ~bodies.yaw);
+		bodies.array.Set(id, 8,~bodies.cx);
+		bodies.array.Set(id, 9,~bodies.cy);
+		bodies.array.Set(id, 10,~bodies.cz);
 	
 		bodies.array.Update();
 		
@@ -597,7 +520,7 @@ void MainSolver::arrayClear() {
 
 void MainSolver::arrayOnAdd() {
 	if (bodies.array.GetCount() == 0) {
-		bool isNemoh = ~dropSolver != BemCal::HAMS;
+		bool isNemoh = ~dropSolver != BEMCase::HAMS;
 		InitArray(isNemoh);
 	}
 	bodies.array.Add();
@@ -653,35 +576,23 @@ bool MainSolver::OnSave(const BEMData &bem) {
 	try {
 		String folder = ~saveTo;
 		
-		bool isNemoh = ~dropSolver != BemCal::HAMS;
+		bool isNemoh = ~dropSolver != BEMCase::HAMS;
 		
-		NemohCal dataNemoh;
-		HamsCal dataHams;
+		BEMCase data;
 		
-		auto lambda = [&]() -> BemCal & {
-			if (isNemoh)
-				return dataNemoh;
-			else
-				return dataHams;
-		};
-		BemCal &data = lambda();
+		if (!Save(data, isNemoh))
+			return false;
 		
-		Upp::Vector<String> errors;
-		
-		if (isNemoh) {
-			if (!Save(dataNemoh))
-				return false;
-			errors = dataNemoh.Check();
-		} else {
-			if (!Save(dataHams))
-				return false;
-			errors = dataHams.Check();
-		}
+		Upp::Vector<String> errors = data.Check(~dropSolver);
 		
 		if (!errors.IsEmpty()) {
 			String str;
-			for (int i = 0; i < errors.size(); ++i)
-			 	str << "\n- " << errors[i];
+			if (errors.size() == 1)
+				str << "\n " << errors[0];
+			else {
+				for (int i = 0; i < errors.size(); ++i)
+				 	str << "\n- " << errors[i];
+			}
 			if (!ErrorOKCancel(Format(t_("Errors found in data:%s&Do you wish to continue?"), DeQtfLf(str))))
 				return false;
 		}
@@ -705,10 +616,13 @@ bool MainSolver::OnSave(const BEMData &bem) {
 					return false;
 			}
 		}
+		
+		WaitCursor waitcursor;
+		
 		if (isNemoh) 
-			dataNemoh.SaveFolder(folder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, bem, ~dropSolver);
+			data.SaveFolder(folder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, Null		 , bem, ~dropSolver);
 		else
-			dataHams.SaveFolder(folder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, ~numThreads, bem);
+			data.SaveFolder(folder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, ~numThreads, bem, ~dropSolver);
 
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));

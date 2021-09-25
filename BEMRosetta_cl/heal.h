@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef _BEMRosetta_cl_heal_h_
 #define _BEMRosetta_cl_heal_h_
 
