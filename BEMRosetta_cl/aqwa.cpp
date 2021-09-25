@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
@@ -624,14 +625,24 @@ void Aqwa::Save(String ) {
 	throw Exc("Option not implemented");
 }		
 
-bool AQWACal::Load(String fileName) {
+bool AQWACase::Load(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-		
+	
+	solver = AQWA;
+	
 	String line;
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
+	
+	bodies.SetCount(1);
+	BEMBody &body = bodies[0];
+	
+	body.meshFile = fileName;
+	body.ndof = 6;
+	Resize(body.dof, 6, true);
+	
 	
 	Vector<double> hrtz, head;
 	
@@ -650,8 +661,13 @@ bool AQWACal::Load(String fileName) {
 		if (f.size() == 4) {
 			if (f.GetText(0) == "1HRTZ")
 				hrtz << f.GetDouble(3);
-			else if (f.GetText(0) == "1DIRN")
+			else if (f.GetText(0) == "1DIRN") 
 				head << f.GetDouble(3);
+			else if (f.GetInt_nothrow(0) == 198000) {
+				body.c0[0] = body.cg[0] = f.GetDouble(1);
+				body.c0[1] = body.cg[1] = f.GetDouble(2);
+				body.c0[2] = body.cg[2] = f.GetDouble(3);
+			}
 		}
 	}
 	Nf = hrtz.size();
@@ -661,22 +677,11 @@ bool AQWACal::Load(String fileName) {
 	if (Nh <= 0)
 		throw Exc("Number of headings should have to be higher than zero");
 	
-	minF = hrtz[0]*2*M_PI;
-	maxF = hrtz[hrtz.size()-1]*2*M_PI;
+	minF = fround(hrtz[0]*2*M_PI, 5);				// 5 decimals is enough to filter conversion
+	maxF = fround(hrtz[hrtz.size()-1]*2*M_PI, 5);
 	
 	minH = head[0];
 	maxH = head[head.size()-1];
-	
-	bodies.SetCount(1);
-	BemBody &body = bodies[0];
-	
-	body.meshFile = fileName;
-	body.ndof = 6;
-	Resize(body.dof, 6, true);
-	body.c0[0] = 0;
-	body.c0[1] = 0;
-	body.c0[2] = 0;
-	body.npoints = body.npanels = 0;
 	
 	return true;
 }

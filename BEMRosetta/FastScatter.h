@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef _BEMRosetta_BEMRosetta_FastScatter_h_
 #define _BEMRosetta_BEMRosetta_FastScatter_h_
 

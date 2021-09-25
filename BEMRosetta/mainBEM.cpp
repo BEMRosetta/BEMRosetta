@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -1173,7 +1174,7 @@ void MainQTF::Init() {
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
 					int idq = 0;
-					if (!hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2))
+					if ((idq = hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2)) < 0)
 						continue;
 					double val;
 					switch(int(opShow.GetData())) {
@@ -1191,7 +1192,7 @@ void MainQTF::Init() {
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
 					int idq = 0;
-					if (!hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2))
+					if ((idq = hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2)) < 0)
 						listQTF.Set(ifr2, 1+ifr1, "-");
 					else {
 						if (PHASE == opShow.GetData()) 

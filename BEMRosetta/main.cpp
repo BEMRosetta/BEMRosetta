@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include <CtrlLib/CtrlLib.h>
 
 using namespace Upp;
@@ -333,6 +334,7 @@ void MenuOptions::Load() {
 	nemohPathSolver <<= bem->nemohPathSolver;
 	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
 	nemohPathNew <<= bem->nemohPathNew;
+	nemohPathMesh <<= bem->nemohPathMesh;
 	nemohPathGREN <<= bem->nemohPathGREN;
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
@@ -361,6 +363,7 @@ void MenuOptions::OnSave() {
 	bem->nemohPathSolver = ~nemohPathSolver;
 	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
 	bem->nemohPathNew = ~nemohPathNew;
+	bem->nemohPathMesh = ~nemohPathMesh;
 	bem->nemohPathGREN = ~nemohPathGREN;
 	bem->foammPath = ~foammPath;
 	bem->hamsPath = ~hamsPath;
@@ -405,6 +408,8 @@ bool MenuOptions::IsChanged() {
 	if (bem->nemohPathPostprocessor != ~nemohPathPostprocessor)
 		return true;
 	if (bem->nemohPathNew != ~nemohPathNew)
+		return true;
+	if (bem->nemohPathMesh != ~nemohPathMesh)
 		return true;
 	if (bem->nemohPathGREN != ~nemohPathGREN)
 		return true;

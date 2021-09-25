@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #if !defined(flagGUI)
 
 #include "BEMRosetta.h"
 
 #ifdef PLATFORM_WIN32
 
-#if defined(flagTEST_DLL)
+#if defined(flagBEMR_TEST_DLL)
 
 CONSOLE_APP_MAIN
 {
@@ -327,7 +328,7 @@ const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 #endif
 
 
-#if !defined(flagTEST_DLL) && !defined(flagDLL)
+#if defined(flagBEMR_CL)
 
 void TestFast();
 

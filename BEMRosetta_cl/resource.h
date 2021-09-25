@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
 // Used by Main.rc
 //
 #define SW_HIDE                         0

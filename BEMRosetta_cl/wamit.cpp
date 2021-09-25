@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include "functions.h"
@@ -1288,7 +1289,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		
 		Hydro::QTF *pqtf;
 		int id = 0;
-		if (hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, iwT1, iwT2))
+		if ((id = hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, iwT1, iwT2)) >= 0)
 			pqtf = &qtfList[id];
 		else {
 			pqtf = &qtfList.Add();
@@ -1312,7 +1313,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		if (abs(fim - qtf.fim[idof]) > 0.1)  
 			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force %f does not match with magnitude %f and phase %f (%f)"), 
 										qtf.fim[idof], qtf.fma[idof], ph, fim));
-		if (!Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
+		if (Status && !Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
 			throw Exc(t_("Stop by user"));
 	}
 	hd().GetQTFList(qtfList, hd().qtfCases);
@@ -1538,7 +1539,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	int it = 0;
 	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) {
 		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) {
-			if (!Status(Format("Saving %s %d/%d", ext, it, num*num), 100*it/(num*num)))
+			if (Status && !Status(Format("Saving %s %d/%d", ext, it, num*num), 100*it/(num*num)))
 				throw Exc(t_("Stop by user"));
 			it++;
 			int id = 0;
@@ -1549,7 +1550,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 					if (qtfHeading >= 0 && ih1 != qtfHeading)
 						continue;	 
 					for (int ib = 0; ib < hd().Nb; ++ib) {
-						if (hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2)) {
+						if ((id = hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2)) >= 0) {
 							double qtfhead1, qtfhead2;
 							if (qtfHeading >= 0) 
 								qtfhead1 = qtfhead2 = 0;		// Just 0º
