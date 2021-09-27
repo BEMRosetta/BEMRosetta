@@ -2,15 +2,7 @@
 #include "BEMRosetta.h"
 
 int MeshData::idCount = 0;
-/*
-String MeshData::Load(String file) {
-	bool y0z, x0z;
-	return Load(file, Null, Null, false, y0z, x0z);	
-}
 
-String MeshData::Load(String file, bool &y0z, bool &x0z) {
-	return Load(file, Null, Null, false, y0z, x0z);	
-}*/
 
 String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
 	bool y0z, x0z;
@@ -125,7 +117,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	else if (type == NEMOH_PRE) 
 		SavePreMeshNemoh(file, surf);
 	else if (type == HAMS_PNL)		
-		SavePnlHAMS(file, surf, false, symY);	// Only one symmetry really available
+		SavePnlHAMS(file, surf, symX, symY);	// Only one symmetry really available
 	else if (type == STL_BIN)		
 		SaveStlBin(file, surf);
 	else if (type == STL_TXT)		
