@@ -480,7 +480,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									center.y = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Inertia cz");
 									center.z = ScanDouble(command[i]);
-									data.mesh.GetInertia(inertia, center);
+									data.mesh.GetInertia(inertia, center, true);
 									for (int i = 0; i < 3; ++i) 
 										for (int j = 0; j < 3; ++j) 
 											lastPrint << inertia(i, j) << " ";
