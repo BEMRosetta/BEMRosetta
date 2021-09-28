@@ -999,10 +999,11 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	}
 	
 	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, data.IsLoadedAw0()   ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("A∞ available"));	array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("A∞ available"));		array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("K available"));		array.Set(row++, col, data.IsLoadedC() 	   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Inertia available"));	array.Set(row++, col, data.IsLoadedM() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fex available"));		array.Set(row++, col, data.IsLoadedFex()   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc()   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk()   ? t_("Yes") : t_("No"));
@@ -1065,6 +1066,25 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
 						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, "-");		
 					}
+				}
+			}
+		}
+		array.Set(row, 0, sib + " " + t_("Mass [kg]"));
+		if (data.M.size() > ib && data.M[ib].size() > 0) {
+			double mass = data.M[ib](0, 0); 
+			array.Set(row++, col, FormatDoubleSize(mass, 10, false));	
+			for (int i = 3; i < 6; ++i) {
+				for (int j = 3; j < 6; ++j) {
+					array.Set(row, 0, sib + " " + Format(t_("Inertia(%d,%d) [kg/m2]"), i+1-3, j+1-3));	
+					array.Set(row++, col, FormatDoubleSize(data.M[ib](i, j), 10, false));		
+				}
+			}
+		} else {
+			array.Set(row++, col, "-");	
+			for (int i = 3; i < 6; ++i) {
+				for (int j = 3; j < 6; ++j) {
+					array.Set(row, 0, sib + " " + Format(t_("Inertia(%d,%d) [kg/m2]"), i+1-3, j+1-3));	
+					array.Set(row++, col, "-");		
 				}
 			}
 		}

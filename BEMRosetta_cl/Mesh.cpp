@@ -92,7 +92,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 		nsurf.CutX(surf);
 		surf = pick(nsurf);
 	}
-	if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == HAMS_PNL)) {
+	if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || type == HAMS_PNL)) {
 		Surface nsurf;
 		nsurf.CutY(surf);
 		surf = pick(nsurf);

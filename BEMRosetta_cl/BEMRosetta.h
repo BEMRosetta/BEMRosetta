@@ -116,6 +116,8 @@ public:
     Upp::Array<Upp::Array<Eigen::VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
     Eigen::VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
     
+    double GetMass(int ib) {return M[ib](0, 0);}
+    
     int GetHeadId(double hd) const;
 	
     struct Forces {
@@ -481,6 +483,7 @@ public:
 	bool IsLoadedAw0()	 const {return Aw0.size() > 0;}
 	bool IsLoadedB() 	 const {return !B.IsEmpty();}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && !IsNull(C[0](0, 0));}
+	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && !IsNull(M[0](0, 0));}
 	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty();}
 	bool IsLoadedFsc() 	 const {return !sc.ma.IsEmpty();}
 	bool IsLoadedFfk() 	 const {return !fk.ma.IsEmpty();}
