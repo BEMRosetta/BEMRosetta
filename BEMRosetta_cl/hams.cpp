@@ -285,7 +285,7 @@ void HamsCase::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
 		for (int x = 0; x < 6; ++x)
-			out << Format("   %0.5E", mat(x, y));
+			out << "   " << FormatDoubleSize(mat(x, y), 11, true);
 	}
 }
 
@@ -308,7 +308,9 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 		throw Exc(t_("No bodies found"));
 	
 	const BEMBody &b = bodies[0];
-	out << Format("\n %0.15E %0.15E %0.15E", b.cg[0], b.cg[1], b.cg[2]);
+	out << Format("\n%s %s %s", FormatDoubleSize(b.cg[0], 15, true), 
+								FormatDoubleSize(b.cg[1], 15, true), 
+								FormatDoubleSize(b.cg[2], 15, true));
 
 	OutMatrix(out, "Body Mass Matrix", b.mass);
 	OutMatrix(out, "External Linear Damping Matrix", b.linearDamping);

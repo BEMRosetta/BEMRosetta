@@ -260,22 +260,55 @@ bool Aqwa::Load_LIS() {
 	hd().cb.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, Null);
+		hd().C[ib].setConstant(6, 6, 0);
+	hd().M.SetCount(hd().Nb);
+	for (int ib = 0; ib < hd().Nb; ++ib) 
+		hd().M[ib].setConstant(6, 6, 0);
 	
-	int idb;	
+	int ib;	
 	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		
 		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
-			idb = ScanInt(line.Mid(pos)) - 1; 
-			if (idb >= hd().Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), idb));
+			ib = ScanInt(line.Mid(pos)) - 1; 
+			if (ib >= hd().Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+		} else if (line.StartsWith("PMAS")) {
+			f.Load(line);
+			double mass = f.GetDouble(2);
+			hd().M[ib](0, 0) = hd().M[ib](1, 1) = hd().M[ib](2, 2) = mass;
 		} else if (line.StartsWith("CENTRE OF GRAVITY")) {
 			f.Load(line);
-			hd().cg(0, idb) = f.GetDouble(3);
-			hd().cg(1, idb) = f.GetDouble(4);
-			hd().cg(2, idb) = f.GetDouble(5);
+			hd().cg(0, ib) = f.GetDouble(3);
+			hd().cg(1, ib) = f.GetDouble(4);
+			hd().cg(2, ib) = f.GetDouble(5);
+		} else if (line.StartsWith("INERTIA MATRIX")) {
+			Eigen::MatrixXd &inertia = hd().M[ib];
+			f.Load(line);
+			inertia(3, 3) = f.GetDouble(2);
+			inertia(3, 4) = f.GetDouble(3);
+			inertia(3, 5) = f.GetDouble(4);
+			in.GetLine();
+			f.Load(TrimBoth(in.GetLine()));
+			inertia(4, 3) = f.GetDouble(0);
+			inertia(4, 4) = f.GetDouble(1);
+			inertia(4, 5) = f.GetDouble(2);
+			in.GetLine();
+			f.Load(TrimBoth(in.GetLine()));
+			inertia(5, 3) = f.GetDouble(0);
+			inertia(5, 4) = f.GetDouble(1);
+			inertia(5, 5) = f.GetDouble(2);
+			double mass = inertia(0, 0);
+			double cx = mass*hd().cg(0, ib);
+			double cy = mass*hd().cg(1, ib);
+			double cz = mass*hd().cg(2, ib);
+			inertia(1, 5) = inertia(5, 1) =  cx;
+			inertia(2, 4) = inertia(4, 2) = -cx;
+			inertia(0, 5) = inertia(5, 0) = -cy;
+			inertia(2, 3) = inertia(3, 2) =  cy;
+			inertia(0, 4) = inertia(4, 0) =  cz;
+			inertia(1, 3) = inertia(3, 1) = -cz;
 		} else if (IsNull(hd().Nf) && line.Find("W A V E   F R E Q U E N C I E S / P E R I O D S   A N D   D I R E C T I O N S") >= 0) {
 			in.GetLine(5);
 			hd().Nf = 0;
@@ -345,15 +378,15 @@ bool Aqwa::Load_LIS() {
 		line = TrimBoth(in.GetLine());
 		
 		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
-			idb = ScanInt(line.Mid(pos));
-			if (!IsNull(idb)) {
-				idb -= 1; 
-				if (idb >= hd().Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), idb));
+			ib = ScanInt(line.Mid(pos));
+			if (!IsNull(ib)) {
+				ib -= 1; 
+				if (ib >= hd().Nb)
+					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			}
 		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
 				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {
-			hd().C[idb].setConstant(6, 6, 0);
+			//hd().C[ib].setConstant(6, 6, 0);
 			in.GetLine(3);
 			line = in.GetLine();
 			if (Trim(line).StartsWith("Z"))
@@ -362,50 +395,50 @@ bool Aqwa::Load_LIS() {
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-			hd().C[idb](2, 2) = f.GetDouble(0);
-			hd().C[idb](2, 3) = f.GetDouble(1);
-			hd().C[idb](2, 4) = f.GetDouble(2);
+			hd().C[ib](2, 2) = f.GetDouble(0);
+			hd().C[ib](2, 3) = f.GetDouble(1);
+			hd().C[ib](2, 4) = f.GetDouble(2);
 			if (f.size() > 3)
-				hd().C[idb](2, 5) = f.GetDouble(3);	
+				hd().C[ib](2, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-			hd().C[idb](3, 2) = f.GetDouble(0);
-			hd().C[idb](3, 3) = f.GetDouble(1);
-			hd().C[idb](3, 4) = f.GetDouble(2);
+			hd().C[ib](3, 2) = f.GetDouble(0);
+			hd().C[ib](3, 3) = f.GetDouble(1);
+			hd().C[ib](3, 4) = f.GetDouble(2);
 			if (f.size() > 3)
-				hd().C[idb](3, 5) = f.GetDouble(3);	
+				hd().C[ib](3, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-			hd().C[idb](4, 2) = f.GetDouble(0);
-			hd().C[idb](4, 3) = f.GetDouble(1);
-			hd().C[idb](4, 4) = f.GetDouble(2);
+			hd().C[ib](4, 2) = f.GetDouble(0);
+			hd().C[ib](4, 3) = f.GetDouble(1);
+			hd().C[ib](4, 4) = f.GetDouble(2);
 			if (f.size() > 3)
-	       		hd().C[idb](4, 5) = f.GetDouble(3);	
-		} else if (line.Find("STIFFNESS MATRIX") >= 0 && IsNull(hd().C[idb](0,0))) {	// 2nd option to get stiffness matrix
-			hd().C[idb].setConstant(6, 6, 0);
+	       		hd().C[ib](4, 5) = f.GetDouble(3);	
+		} else if (line.Find("STIFFNESS MATRIX") >= 0 && IsNull(hd().C[ib](0,0))) {	// 2nd option to get stiffness matrix
+			hd().C[ib].setConstant(6, 6, 0);
 			in.GetLine(6);
 			for (int r = 0; r < 6; ++r) {
 				f.Load(in.GetLine());
 				for (int c = 0; c < 6; ++c) 
-					hd().C[idb](r, c) = f.GetDouble(c + 1);
+					hd().C[ib](r, c) = f.GetDouble(c + 1);
 				in.GetLine();
 			}
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("= not found"));
-			hd().Vo[idb] = ScanDouble(line.Mid(pos));
+			hd().Vo[ib] = ScanDouble(line.Mid(pos));
 		} else if (line.StartsWith("POSITION OF THE CENTRE OF BUOYANCY")) {
 			f.Load(line);
-			hd().cb(0, idb) = f.GetDouble(8);	
-			hd().cb(1, idb) = f.Load(in.GetLine()).GetDouble(2);
-			hd().cb(2, idb) = f.Load(in.GetLine()).GetDouble(2);
+			hd().cb(0, ib) = f.GetDouble(8);	
+			hd().cb(1, ib) = f.Load(in.GetLine()).GetDouble(2);
+			hd().cb(2, ib) = f.Load(in.GetLine()).GetDouble(2);
 		} else if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
 				   line.StartsWith(				 "FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
 				   line.StartsWith(  			   "DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
@@ -441,10 +474,10 @@ bool Aqwa::Load_LIS() {
 					if (ifrr < 0)
 						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
-						frc.ma[idh](ifr, idf + 6*idb) = f.GetDouble(2 + dd + idf*2);
-						frc.ph[idh](ifr, idf + 6*idb) = -f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180; // Negative to follow Wamit
-						frc.re[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*cos(frc.ph[idh](ifr, idf + 6*idb));
-			       		frc.im[idh](ifr, idf + 6*idb) = frc.ma[idh](ifr, idf + 6*idb)*sin(frc.ph[idh](ifr, idf + 6*idb));
+						frc.ma[idh](ifr, idf + 6*ib) = f.GetDouble(2 + dd + idf*2);
+						frc.ph[idh](ifr, idf + 6*ib) = -f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180; // Negative to follow Wamit
+						frc.re[idh](ifr, idf + 6*ib) = frc.ma[idh](ifr, idf + 6*ib)*cos(frc.ph[idh](ifr, idf + 6*ib));
+			       		frc.im[idh](ifr, idf + 6*ib) = frc.ma[idh](ifr, idf + 6*ib)*sin(frc.ph[idh](ifr, idf + 6*ib));
 					}
 					dd = 0;
 					line = in.GetLine();
@@ -472,7 +505,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().A[6*idb + idf][6*idb + jdf][ifr] = f.GetDouble(1 + jdf);
+						hd().A[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf);
 				}
 				in.GetLine(8);
 				for (int idf = 0; idf < 6; ++idf) {
@@ -481,7 +514,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().B[6*idb + idf][6*idb + jdf][ifr] = f.GetDouble(1 + jdf);
+						hd().B[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf);
 				}
 			}
 		}
