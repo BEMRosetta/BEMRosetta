@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
@@ -1202,6 +1203,13 @@ void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool che
 		}
 	} else if (ext == ".out") {
 		Wamit &data = hydros.Create<Wamit>(*this);
+		if (!data.Load(file, Status)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.size()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));
+		}
+	} else if (ext == ".in") {
+		HAMS &data = hydros.Create<HAMS>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);

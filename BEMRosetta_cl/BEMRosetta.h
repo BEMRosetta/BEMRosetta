@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #ifndef _BEM_Rosetta_BEM_Rosetta_h_
 #define _BEM_Rosetta_BEM_Rosetta_h_
 
@@ -19,7 +20,7 @@ bool PrintStatus(String s, int d);
 class Hydro {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, WAMIT_HAMS, WAMIT_WADAM, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
+	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, HAMS_WAMIT, WADAM_WAMIT, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
 	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
@@ -33,11 +34,11 @@ public:
 		switch (code) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
-		case WAMIT_HAMS: 	return t_("Wamit.HAMS");
-		case WAMIT_WADAM: 	return t_("Wamit.WADAM");
-		case FAST_WAMIT: 	return t_("FAST-Wamit");
+		case HAMS_WAMIT: 	return t_("HAMS.Wamit");
+		case WADAM_WAMIT: 	return t_("Wadam.Wamit");
+		case FAST_WAMIT: 	return t_("Wamit.FAST");
 		case NEMOH:			return t_("Nemoh");
-		case SEAFEM_NEMOH:	return t_("SeaFEM-Nemoh");
+		case SEAFEM_NEMOH:	return t_("SeaFEM.Nemoh");
 		case AQWA:			return t_("AQWA");
 		case FOAMM:			return t_("FOAMM");
 		case BEMROSETTA:	return t_("BEMRosetta");
@@ -50,8 +51,8 @@ public:
 		switch (code) {
 		case WAMIT: 		return t_("Wm.o");
 		case WAMIT_1_3: 	return t_("Wm.1");
-		case WAMIT_HAMS: 	return t_("HAM");
-		case WAMIT_WADAM: 	return t_("WDM");
+		case HAMS_WAMIT: 	return t_("HAM");
+		case WADAM_WAMIT: 	return t_("WDM");
 		case FAST_WAMIT: 	return t_("FST");
 		case NEMOH:			return t_("Nmh");
 		case SEAFEM_NEMOH:	return t_("SFM");
@@ -707,18 +708,14 @@ protected:
 	void Save_RAO(FileOut &out, int ifr);
 };
 
-class Foamm : public HydroClass {
+class HAMS : public Wamit {
 public:
-	Foamm(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
-	bool Load(String file);
-	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Upp::Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	void Get(const Upp::Vector<int> &ibs, const Upp::Vector<int> &idfs, const Upp::Vector<int> &jdfs,
-		const Upp::Vector<double> &froms, const Upp::Vector<double> &tos, const Upp::Vector<Upp::Vector<double>> &freqs, 
-		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	virtual ~Foamm() noexcept {}
+	HAMS(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro) {}
+	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
+	virtual ~HAMS() noexcept {}
 	
-protected:
-	bool Load_mat(String fileName, int ib, int jb, bool loadCoeff);
+	bool Load_Settings(String settingsFile, double rhog);
+	bool Load_HydrostaticMesh(String fileName, double rhog);
 };
 
 class Fast : public Wamit {
@@ -737,6 +734,20 @@ private:
 	String hydroFolder;
 	int WaveNDir;
 	double WaveDirRange;
+};
+
+class Foamm : public HydroClass {
+public:
+	Foamm(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	bool Load(String file);
+	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Upp::Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
+	void Get(const Upp::Vector<int> &ibs, const Upp::Vector<int> &idfs, const Upp::Vector<int> &jdfs,
+		const Upp::Vector<double> &froms, const Upp::Vector<double> &tos, const Upp::Vector<Upp::Vector<double>> &freqs, 
+		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
+	virtual ~Foamm() noexcept {}
+	
+protected:
+	bool Load_mat(String fileName, int ib, int jb, bool loadCoeff);
 };
 
 class BEMBody : public MoveableAndDeepCopyOption<BEMBody> {
@@ -834,7 +845,8 @@ private:
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 							int numThreads) const;
-	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName) const;
+	void Save_Settings(String folderInput) const;
+	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
 };
 
 class NemohCase : public BEMCase {
@@ -951,7 +963,7 @@ public:
 	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathMesh, nemohPathGREN;
 	bool experimental;
 	String foammPath;
-	String hamsPath;
+	String hamsPath, hamsMeshPath;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
@@ -981,7 +993,7 @@ public:
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
-	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
+	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {
@@ -1005,6 +1017,7 @@ public:
 			("nemohPathNew", nemohPathNew)
 			("foammPath", foammPath)
 			("hamsPath", hamsPath)
+			("hamsMeshPath", hamsMeshPath)
 		;
 	}
 };
