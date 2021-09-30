@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//{{NO_DEPENDENCIES}}
-// Used by Main.rc
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
+
 //
 #define SW_HIDE                         0
 #define HIDE_WINDOW                     0

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include "functions.h"
@@ -27,13 +28,12 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
 		} else if (S(".1.2.3.hst.4.12d.12s").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
-				hd().code = Hydro::WAMIT_HAMS;
+				hd().code = Hydro::HAMS_WAMIT;
 			else if (hd().name == "WAMIT_5S")
-				hd().code = Hydro::WAMIT_WADAM;
+				hd().code = Hydro::WADAM_WAMIT;
 			else
 				hd().code = Hydro::WAMIT_1_3;
 
-	
 			String filecfg = ForceExt(file, ".cfg");
 			BEMData::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
 			if (!Load_cfg(filecfg))

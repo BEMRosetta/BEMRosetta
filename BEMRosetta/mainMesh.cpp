@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -101,6 +102,9 @@ void MainMesh::Init() {
 	menuProcess.mass.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateCg  <<= THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateCg.Tip(t_("Sets the center of gravity and mass"));
+	
+	menuProcess.butUpdateMass  <<= THISBACK(OnUpdateMass);
+	menuProcess.butUpdateMass.Tip(t_("Sets mass from inmersed volume"));
 	
 	menuProcess.t_x <<= 0;
 	menuProcess.t_x.WhenEnter = THISBACK1(OnUpdate, ROTATE);
@@ -500,6 +504,36 @@ void MainMesh::OnReset() {
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
+}
+
+void MainMesh::OnUpdateMass() {
+	GuiLock __;
+	
+	try {
+		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			Exclamation(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdMesh(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdMesh(listLoaded);
+			if (id < 0) {
+				Exclamation(t_("Please select a model to process"));
+				return;
+			}
+		}
+		
+		MeshData &data = Bem().surfs[id];
+		
+		menuProcess.mass <<= data.under.volume*Bem().rho*Bem().g;
+		
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
 }
 
 void MainMesh::OnUpdate(Action action) {

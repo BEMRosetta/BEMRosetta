@@ -1,8 +1,112 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <STEM4U/Utility.h>
 
+
+bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
+	hd().file = file;	
+	hd().name = GetFileTitle(file);
+	
+	hd().g = g;
+	
+	try {
+		if (GetFileExt(file) != ".in") 
+			throw Exc("\n" + Format(t_("File '%s' is not of HAMS type"), file));
+			
+		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+
+		hd().code = Hydro::HAMS_WAMIT;
+		
+		String baseFolder = GetFileFolder(GetFileFolder(file));
+		String wamitFile = AppendFileNameX(baseFolder, "Output", "Wamit_format", "Buoy.1");
+		
+		if (!Wamit::Load(wamitFile, Status)) 
+			return false;
+		
+		if (IsNull(hd().Nb))
+			return false;
+		
+		double rhog = hd().g_rho_dim();
+		String settingsFile = AppendFileName(baseFolder, "Settings.ctrl");
+		if (FileExists(settingsFile) && !Load_Settings(settingsFile, rhog))
+			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
+			
+		String hydrostaticFile = AppendFileName(baseFolder, "Hydrostatic.in");
+		if (FileExists(hydrostaticFile)) {
+			bool iszero = true;
+			if (hd().IsLoadedC()) {
+				for (int i = 0; i < hd().C[0].size(); ++i) {
+					if (abs(hd().C[0].array()(i)) > 1E-8) {
+						iszero = false;
+						break;
+					}
+				}
+			}
+			if (iszero && !Load_HydrostaticMesh(hydrostaticFile, rhog))
+				throw Exc("\n" + Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile));
+		}
+		
+	} catch (Exc e) {
+		BEMData::PrintError("\nError: " + e);
+		hd().lastError = e;
+		return false;
+	}
+	
+	return true;
+}
+
+bool HAMS::Load_Settings(String fileName, double rhog) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	f.Load(in.GetLine());
+	double rho = f.GetDouble(0);
+	f.Load(in.GetLine());
+	double g = f.GetDouble(0);
+	
+	rhog = rho*g;
+	
+	return true;
+}
+
+// Load Hydrostatic.in obtained from WAMIT_MeshTran.exe
+bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
+ 
+	hd().Nb = 1;
+	
+	hd().cg.setConstant(3, hd().Nb, Null);
+	
+	hd().C.SetCount(hd().Nb);
+	for (int ib = 0; ib < hd().Nb; ++ib)
+		hd().C[ib].setConstant(6, 6, 0);
+
+	in.GetLine();	
+	f.Load(in.GetLine());	
+	hd().cg(0, 0) = f.GetDouble(0);
+	hd().cg(1, 0) = f.GetDouble(1);
+	hd().cg(2, 0) = f.GetDouble(2);
+		
+	in.GetLine(8);
+	for (int r = 0; r < 6; ++r) {
+		f.Load(in.GetLine());	
+		for (int c = 0; c < 6; ++c) 
+			hd().C[0](r, c) = f.GetDouble(c)/rhog;
+	}
+	return true;
+}
+	
 
 Vector<String> HamsCase::Check() const {
 	Vector<String> ret;
@@ -203,6 +307,14 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams dll file from '%s'"), source));					
 	} 
+	String meshName = "WAMIT_MeshTran.exe";
+	if (bin) {
+		String source = bem.hamsMeshPath;
+		meshName = GetFileName(source);
+		String destNew = AppendFileName(folderBase, meshName);
+		if (!FileCopy(source, destNew)) 
+			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), bem.hamsMeshPath));				
+	} 
 		
 	//String sumcases;
 	for (int i = 0; i < numCases; ++i) {
@@ -253,6 +365,9 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			String dest = AppendFileName(folderInput, "WaterplaneMesh.pnl");
 			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
 		}
+		
+		Save_Settings(folder);
+		
 		String folderOutput = AppendFileName(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderOutput));
@@ -264,19 +379,21 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileName(folderOutput, "Wamit_format")));
 		
 		if (numCases > 1) 
-			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, AppendFileName("..", solvName));
+			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, AppendFileName("..", solvName), AppendFileName("..", meshName));
 		else
-			Save_Bat(folder, "HAMS.bat", Null, bin, solvName);
+			Save_Bat(folder, "HAMS.bat", Null, bin, solvName, meshName);
 	}
 }
 
-void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName) const {
+void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const {
 	String fileName = AppendFileName(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
+	
+	out << "\"" << meshName << "\"\n";
 	out << "\"" << solvName << "\"\n";
 }
 
@@ -319,6 +436,37 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 	OutMatrix(out, "External Restoring Matrix", b.externalRestoring);
 }
 
+
+void HamsCase::Save_Settings(String folderInput) const {
+	String fileName = AppendFileName(folderInput, "Settings.ctrl");
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
+	
+	MeshData data;
+	String res = data.Load(AppendFileNameX(folderInput, "Input", "HullMesh.pnl"), rho, g, false);
+	if (!res.IsEmpty())
+			throw Exc(res);
+	
+	MeshData lid;
+	lid.mesh.AddWaterSurface(data.mesh, data.under, 'f'); 
+	lid.AfterLoad(rho, g, false, false);
+	
+	data.Join(lid.mesh, rho, g);
+	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), MeshData::WAMIT_GDF, g, MeshData::ALL, true, true);	
+	
+	out << rho << "\n";
+	out << g << "\n";
+	out << ".\\Input\\mesh.gdf" << "\n";
+	out << bodies[0].c0[0] << "   " << bodies[0].c0[1] << "   " << bodies[0].c0[2] << "\n";
+	out << "\n"
+		<< "The format is as below:\n"
+		<< "gravity acceleration\n"
+		<< "sea water density\n"
+		<< "mesh file name (gdf format)\n"
+		<< "Center of rotation";
+}
+
 void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 					int numThreads) const {
 	String fileName = AppendFileName(folderInput, "ControlFile.in");
@@ -328,7 +476,10 @@ void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, doubl
 	
 	out << "   --------------HAMS Control file---------------"
 		   "\n";
-	out << "\n   Waterdepth  " << Format("%.4f", h) << "D0";
+	double depth = h;
+	if (depth >= 400)
+		depth = -1;
+	out << "\n   Waterdepth  " << Format("%.4f", depth) << "D0";
 	out << "\n"
 		   "\n   #Start Definition of Wave Frequencies"
 		   "\n    0_inf_frequency_limits      1"

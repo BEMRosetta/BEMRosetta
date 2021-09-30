@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #ifndef _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
@@ -499,6 +500,7 @@ public:
 	void OnSplit();
 	bool OnConvertMesh();
 	void OnUpdate(Action action);
+	void OnUpdateMass();
 	void OnHealing(bool basic);
 	void OnOrientSurface();
 	void OnImage(int axis);
