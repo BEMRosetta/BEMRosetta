@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 extern "C" {
 	// Returns dll time and date
 	__declspec(dllexport) const char *DLL_Version() noexcept; 		

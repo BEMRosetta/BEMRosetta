@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2021, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 
 using namespace Upp;
@@ -338,6 +339,7 @@ void MenuOptions::Load() {
 	nemohPathGREN <<= bem->nemohPathGREN;
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
+	hamsMeshPath <<= bem->hamsMeshPath;
 	
 	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
 	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
@@ -367,6 +369,7 @@ void MenuOptions::OnSave() {
 	bem->nemohPathGREN = ~nemohPathGREN;
 	bem->foammPath = ~foammPath;
 	bem->hamsPath = ~hamsPath;
+	bem->hamsMeshPath = ~hamsMeshPath;
 	
 	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
 	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
@@ -416,6 +419,8 @@ bool MenuOptions::IsChanged() {
 	if (bem->foammPath != ~foammPath)
 		return true;
 	if (bem->hamsPath != ~hamsPath)
+		return true;
+	if (bem->hamsMeshPath != ~hamsMeshPath)
 		return true;
 	
 	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())
