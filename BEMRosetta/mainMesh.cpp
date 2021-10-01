@@ -529,8 +529,10 @@ void MainMesh::OnUpdateMass() {
 		
 		MeshData &data = Bem().surfs[id];
 		
-		menuProcess.mass <<= data.under.volume*Bem().rho*Bem().g;
-		
+		menuProcess.mass <<= data.under.volume*Bem().rho;
+
+		OnUpdate(NONE);
+				
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	

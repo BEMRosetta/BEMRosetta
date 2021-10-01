@@ -114,7 +114,7 @@ END_LAYOUT
 
 LAYOUT(MenuMeshProcess, 904, 48)
 	ITEM(Upp::LabelBox, dv___0, LeftPosZ(212, 92).TopPosZ(8, 40))
-	ITEM(Upp::LabelBox, dv___1, LeftPosZ(68, 92).TopPosZ(0, 48))
+	ITEM(Upp::LabelBox, dv___1, LeftPosZ(68, 92).TopPosZ(8, 40))
 	ITEM(Upp::EditDouble, mass, SetFont(StdFontZ(9)).LeftPosZ(8, 48).TopPosZ(28, 15))
 	ITEM(Upp::EditDouble, cg_x, SetFont(StdFontZ(8)).LeftPosZ(72, 28).TopPosZ(28, 15))
 	ITEM(Upp::EditDouble, cg_y, SetFont(StdFontZ(8)).LeftPosZ(100, 28).TopPosZ(28, 15))
