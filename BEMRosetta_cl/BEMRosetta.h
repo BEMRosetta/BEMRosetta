@@ -639,8 +639,8 @@ public:
 	bool IsSymmetricY();
 	
 	double xProjectionPos, xProjectionNeg, yProjectionPos, yProjectionNeg, zProjectionPos, zProjectionNeg; 
-	Point3D cb;
-	Point3D cg, cg0;
+	Point3D cb = Null;
+	Point3D cg = Null, cg0;
 	double mass = Null;
 	Eigen::MatrixXd C;
 	
