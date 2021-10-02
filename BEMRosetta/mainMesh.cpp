@@ -199,13 +199,14 @@ void MainMesh::Init() {
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
 		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
-		bool plot = true, convertProcess = true;
+		bool plot = true, process = false, convertProcess = true;
 		if (Bem().surfs.IsEmpty()) 
 			plot = convertProcess = false;
 		else if (mainTab.IsAt(mainVAll)) 
 			;
 		else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
+			process = true;
 			mainStiffness.Load(Bem().surfs, ids);
 		} else 
 			plot = false;
@@ -221,7 +222,10 @@ void MainMesh::Init() {
 			menuTab.Set(menuPlot);
 		} else {
 			tabMenuPlot.Text("");
-			menuTab.Set(menuOpen);
+			if (process)
+				menuTab.Set(menuProcess);
+			else
+				menuTab.Set(menuOpen);
 		}
 		if (convertProcess) {
 			tabMenuConvert.Text(t_("Save as"));
