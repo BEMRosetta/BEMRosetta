@@ -12,8 +12,8 @@ public:
 		String path = GetFileFolder(file);
 		
 		fast.fileName = file;
-		elastodyn.fileName = AppendFileName(path, fast.GetString("EDFile"));
-		hydrodyn.fileName = AppendFileName(path, fast.GetString("HydroFile"));
+		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
+		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
 	}
 	void Save() {
 		fast.Save();

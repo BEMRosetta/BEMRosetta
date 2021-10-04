@@ -29,11 +29,11 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 			return false;
 		
 		double rhog = hd().g_rho_dim();
-		String settingsFile = AppendFileName(baseFolder, "Settings.ctrl");
+		String settingsFile = AppendFileNameX(baseFolder, "Settings.ctrl");
 		if (FileExists(settingsFile) && !Load_Settings(settingsFile, rhog))
 			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
 			
-		String hydrostaticFile = AppendFileName(baseFolder, "Hydrostatic.in");
+		String hydrostaticFile = AppendFileNameX(baseFolder, "Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
 			if (hd().IsLoadedC()) {
@@ -118,7 +118,7 @@ Vector<String> HamsCase::Check() const {
 }
 
 bool HamsCase::Load(String fileName) {
-	fileName = AppendFileName(GetFileFolder(fileName), "ControlFile.in");
+	fileName = AppendFileNameX(GetFileFolder(fileName), "ControlFile.in");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -218,15 +218,15 @@ bool HamsCase::Load(String fileName) {
 			body.c0[0] = f.GetDouble(1);
 			body.c0[1] = f.GetDouble(2);
 			body.c0[2] = f.GetDouble(3);
-			String meshFile = AppendFileName(GetFileFolder(fileName), "HullMesh.pnl");
+			String meshFile = AppendFileNameX(GetFileFolder(fileName), "HullMesh.pnl");
 			if (FileExists(meshFile))
 				body.meshFile = meshFile;
-			String lidFile = AppendFileName(GetFileFolder(fileName), "WaterplaneMesh.pnl");
+			String lidFile = AppendFileNameX(GetFileFolder(fileName), "WaterplaneMesh.pnl");
 			if (FileExists(lidFile))
 				body.lidFile = lidFile;
 		}
 	}
-	return LoadHydrostatic(AppendFileName(GetFileFolder(fileName), "Hydrostatic.in"));
+	return LoadHydrostatic(AppendFileNameX(GetFileFolder(fileName), "Hydrostatic.in"));
 }
 
 bool HamsCase::LoadHydrostatic(String fileName) {
@@ -299,11 +299,11 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	if (bin) {
 		String source = bem.hamsPath;
 		solvName = GetFileName(source);
-		String destNew = AppendFileName(folderBase, solvName);
+		String destNew = AppendFileNameX(folderBase, solvName);
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams exe file from '%s'"), bem.hamsPath));
-		source = AppendFileName(GetFileFolder(bem.hamsPath), "libiomp5md.dll");		
-		destNew = AppendFileName(folderBase, "libiomp5md.dll");		
+		source = AppendFileNameX(GetFileFolder(bem.hamsPath), "libiomp5md.dll");		
+		destNew = AppendFileNameX(folderBase, "libiomp5md.dll");		
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams dll file from '%s'"), source));					
 	} 
@@ -311,7 +311,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	if (bin) {
 		String source = bem.hamsMeshPath;
 		meshName = GetFileName(source);
-		String destNew = AppendFileName(folderBase, meshName);
+		String destNew = AppendFileNameX(folderBase, meshName);
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), bem.hamsMeshPath));				
 	} 
@@ -320,10 +320,10 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		if (numCases > 1) {
-			folder = AppendFileName(folderBase, Format("HAMS_Part_%d", i+1));
+			folder = AppendFileNameX(folderBase, Format("HAMS_Part_%d", i+1));
 			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
-			//sumcases << " " << AppendFileName(folder, "Nemoh.cal");
+			//sumcases << " " << AppendFileNameX(folder, "Nemoh.cal");
 			_minf = freqs[ifr];
 			int deltaf = valsf[i];
 			_maxf = freqs[ifr + deltaf - 1];
@@ -335,7 +335,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			_minf = fixminF;
 			_maxf = maxF;
 		}
-		String folderInput = AppendFileName(folder, "Input");
+		String folderInput = AppendFileNameX(folder, "Input");
 		if (!DirectoryCreateX(folderInput))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderInput));
 		
@@ -353,7 +353,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			if (y0zmesh == true && x0zmesh == true) 
 				y0zmesh = false;
 
-			String dest = AppendFileName(folderInput, "HullMesh.pnl");
+			String dest = AppendFileNameX(folderInput, "HullMesh.pnl");
 			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
 		}
 		bool y0zlid, x0zlid;	// Hull symmetries rules over lid ones
@@ -362,31 +362,31 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
-			String dest = AppendFileName(folderInput, "WaterplaneMesh.pnl");
+			String dest = AppendFileNameX(folderInput, "WaterplaneMesh.pnl");
 			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
 		}
 		
 		Save_Settings(folder);
 		
-		String folderOutput = AppendFileName(folder, "Output");
+		String folderOutput = AppendFileNameX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderOutput));
-		if (!DirectoryCreateX(AppendFileName(folderOutput, "Hams_format")))
-			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileName(folderOutput, "Hams_format")));
-		if (!DirectoryCreateX(AppendFileName(folderOutput, "Hydrostar_format")))
-			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileName(folderOutput, "Hydrostar_format")));
-		if (!DirectoryCreateX(AppendFileName(folderOutput, "Wamit_format")))
-			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileName(folderOutput, "Wamit_format")));
+		if (!DirectoryCreateX(AppendFileNameX(folderOutput, "Hams_format")))
+			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileNameX(folderOutput, "Hams_format")));
+		if (!DirectoryCreateX(AppendFileNameX(folderOutput, "Hydrostar_format")))
+			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileNameX(folderOutput, "Hydrostar_format")));
+		if (!DirectoryCreateX(AppendFileNameX(folderOutput, "Wamit_format")))
+			throw Exc(Format(t_("Problem creating '%s' folder"), AppendFileNameX(folderOutput, "Wamit_format")));
 		
 		if (numCases > 1) 
-			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, AppendFileName("..", solvName), AppendFileName("..", meshName));
+			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, AppendFileNameX("..", solvName), AppendFileNameX("..", meshName));
 		else
 			Save_Bat(folder, "HAMS.bat", Null, bin, solvName, meshName);
 	}
 }
 
 void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const {
-	String fileName = AppendFileName(folder, batname);
+	String fileName = AppendFileNameX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
@@ -415,7 +415,7 @@ void HamsCase::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
 }
 	
 void HamsCase::Save_Hydrostatic(String folderInput) const {
-	String fileName = AppendFileName(folderInput, "Hydrostatic.in");
+	String fileName = AppendFileNameX(folderInput, "Hydrostatic.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
@@ -438,7 +438,7 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 
 
 void HamsCase::Save_Settings(String folderInput) const {
-	String fileName = AppendFileName(folderInput, "Settings.ctrl");
+	String fileName = AppendFileNameX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
@@ -469,7 +469,7 @@ void HamsCase::Save_Settings(String folderInput) const {
 
 void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 					int numThreads) const {
-	String fileName = AppendFileName(folderInput, "ControlFile.in");
+	String fileName = AppendFileNameX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));	

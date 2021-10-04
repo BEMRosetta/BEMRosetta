@@ -265,7 +265,7 @@ void MainBEM::OnMenuConvertArraySel() {
 	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
 	if (fileName.IsEmpty())
 		fileName = ArrayModel_GetTitle(listLoaded);
-	file = AppendFileName(folder, fileName + ext);
+	file = AppendFileNameX(folder, fileName + ext);
 	menuConvert.file <<= file;
 }
 
@@ -859,7 +859,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 String MainBEM::BEMFile(String fileFolder) const {
 	if (DirectoryExists(fileFolder)) {
 		int bestipos = INT_MAX;
-		for (FindFile ff(AppendFileName(fileFolder, "*.*")); ff; ff++) {
+		for (FindFile ff(AppendFileNameX(fileFolder, "*.*")); ff; ff++) {
 			if (ff.IsFile()) {
 				String name = ToLower(ff.GetName());
 				if (GetFileExt(name) == ".bem")

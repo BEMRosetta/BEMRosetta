@@ -60,7 +60,7 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 	} 
 	int64 sz = -1;
 	String fileName;
-	for (FindFile ff(AppendFileName(path, "*.out*")); ff; ff++) {
+	for (FindFile ff(AppendFileNameX(path, "*.out*")); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name)) {
@@ -80,7 +80,7 @@ Vector<String> FastOut::GetFilesToLoad(String path) {
 		ret << fileName;
 		return ret;
 	}
-	for (FindFile ff(AppendFileName(path, "*.*")); ff; ff++) 
+	for (FindFile ff(AppendFileNameX(path, "*.*")); ff; ff++) 
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
 
@@ -394,7 +394,7 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 }
 
 bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
-	for (FindFile ff(AppendFileName(path, "*.dat")); ff; ++ff) {
+	for (FindFile ff(AppendFileNameX(path, "*.dat")); ff; ++ff) {
 		if (ff.IsFile()) { 
 			String str = LoadFile(ff.GetPath());
 			String strx = GetFASTVar(str, "PtfmCOBxt", "");

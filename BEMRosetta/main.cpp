@@ -31,7 +31,7 @@ FreqSelector::FreqSelector() {
 };
 
 static String GetBEMRosettaDataFolder() {
-	return AppendFileName(GetAppDataFolder(), "BEMRosetta");
+	return AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
 }
 
 void Main::Init() {
@@ -212,7 +212,7 @@ bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	if (!DirectoryCreateX(folder))
 		ret = false;
 	else {
-		String fileName = AppendFileName(folder, "config.cf");
+		String fileName = AppendFileNameX(folder, "config.cf");
 		if (!FileExists(fileName)) 
 			ret = false;
 		else {
@@ -245,7 +245,7 @@ bool Main::StoreSerializeJson() {
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
 		return 0;
-	String fileName = AppendFileName(folder, "config.cf");
+	String fileName = AppendFileNameX(folder, "config.cf");
 	return StoreAsJsonFile(*this, fileName, true);
 }
 
