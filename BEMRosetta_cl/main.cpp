@@ -20,7 +20,7 @@ CONSOLE_APP_MAIN
 		String bemFolder = command[1];
 		 
 		Dl dll;		
-		if (!dll.Load(AppendFileName(binFolder, "libbemrosetta.dll")))
+		if (!dll.Load(AppendFileNameX(binFolder, "libbemrosetta.dll")))
 			throw Exc("Dll not found");
 
 		DLLFunction(dll, const char *, DLL_Version, ());

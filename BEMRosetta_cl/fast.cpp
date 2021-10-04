@@ -23,7 +23,7 @@ bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 		if (!Load_HydroDyn()) 
 			throw Exc("\n" + Format(t_("File '%s' not found"), file));
 
-		hydroFile = AppendFileName(GetFileFolder(file), AppendFileName(hydroFolder, hd().name));
+		hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
 		hd().code = Hydro::FAST_WAMIT;
 		
 		if (!Wamit::Load(ForceExt(hydroFile, ".hst"), Status)) 
@@ -104,8 +104,8 @@ bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 		else
 			BEMData::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
 			
-		String hydroFile = AppendFileName(AppendFileName(GetFileFolder(file), hydroFolder), hd().name);
-		DirectoryCreateX(AppendFileName(GetFileFolder(file), hydroFolder));
+		String hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
+		DirectoryCreateX(AppendFileNameX(GetFileFolder(file), hydroFolder));
 	
 		Wamit::Save(hydroFile, Status, true, qtfHeading);
 		
@@ -233,7 +233,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		if (pos < 0 || poslf < 0)
 			throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "PotFile"));
 		
-		String folder = AppendFileName(hydroFolder, hd().name);
+		String folder = AppendFileNameX(hydroFolder, hd().name);
 		strFile = strFile.Left(poslf+1) + Format("\"%s\" ", folder) + strFile.Mid(pos);
 	} else {
 		strFile = ZstdDecompress(hydroDyn, hydroDyn_length);
@@ -268,7 +268,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			strFile.Replace("[WaveDirRange]", FormatDoubleSize((hd().head[hd().Nh-1] - hd().head[0])/2, 10));
 		else
 			strFile.Replace("[WaveDirRange]", FormatDoubleSize(WaveDirRange, 10));
-		strFile.Replace("[PotFile]", Format("\"%s\"", AppendFileName(hydroFolder, hd().name)));
+		strFile.Replace("[PotFile]", Format("\"%s\"", AppendFileNameX(hydroFolder, hd().name)));
 	}
 	if (!SaveFile(fileName, strFile))
 		throw Exc(Format(t_("Imposible to save file '%s'"), hd().file));

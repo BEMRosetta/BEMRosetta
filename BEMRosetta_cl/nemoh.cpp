@@ -15,7 +15,7 @@ bool Nemoh::Load(String file, double) {
 				throw Exc(Format(t_(".tec file '%s' should have to be in 'results' folder"), file));
 			bool found = false;
 			String upperFolder = GetUpperFolder(folder);
-			for (FindFile ff(AppendFileName(upperFolder, "*.*")); ff; ++ff) {
+			for (FindFile ff(AppendFileNameX(upperFolder, "*.*")); ff; ++ff) {
 				if (ff.IsFile()) {
 					if (ToLower(ff.GetName()) == "nemoh.cal") {
 						file = ff.GetPath();
@@ -45,7 +45,7 @@ bool Nemoh::Load(String file, double) {
 		if (hd().code == Hydro::NEMOH) 
 			fileCal = file;
 		else 
-			fileCal = AppendFileName(folder, "Nemoh_output/Nemoh.cal");
+			fileCal = AppendFileNameX(folder, "Nemoh_output/Nemoh.cal");
 		if (!Load_Cal(fileCal)) 
 			throw Exc(Format(t_("File '%s' not found"), fileCal));
 		
@@ -57,14 +57,14 @@ bool Nemoh::Load(String file, double) {
 			BEMData::Print(S("\n- ") + t_("KH file(s) 'Mesh/KH*.dat'"));
 			if (!Load_KH())
 				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
-			fileRad = AppendFileName(folder, AppendFileName("Results", "RadiationCoefficients.tec"));
+			fileRad = AppendFileNameX(folder, AppendFileNameX("Results", "RadiationCoefficients.tec"));
 			folderForces = folder;
 		} else {
 			if (!Load_Inf(file)) 
 				throw Exc(Format(t_("File '%s' not found"), file));
 
-			fileRad = AppendFileName(folder, AppendFileName("Nemoh_output/Results", "RadiationCoefficients.tec"));
-			folderForces = AppendFileName(folder, "Nemoh_output");
+			fileRad = AppendFileNameX(folder, "Nemoh_output/Results", "RadiationCoefficients.tec");
+			folderForces = AppendFileNameX(folder, "Nemoh_output");
 		} 
 		BEMData::Print(S("\n- ") + t_("Radiation file 'RadiationCoefficients.tec'"));
 		if (!Load_Radiation(fileRad))
@@ -84,7 +84,7 @@ bool Nemoh::Load(String file, double) {
 		if (hd().code == Hydro::NEMOH) {
 			if (!hd().dof.IsEmpty()) {
 				BEMData::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
-				if (!Load_IRF(AppendFileName(folder, AppendFileName("Results", "IRF.tec"))))
+				if (!Load_IRF(AppendFileNameX(folder, "Results", "IRF.tec")))
 					BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
 			}
 		}
@@ -211,7 +211,7 @@ bool NemohCase::Load(String fileName) {
 		in.GetLine();
 		f.Load(in.GetLine());	body.meshFile = f.GetText(0);
 		f.Load(in.GetLine());	npoints = f.GetInt(0);		npanels = f.GetInt(1);
-		String file = AppendFileName(GetFileFolder(fileName), body.meshFile);
+		String file = AppendFileNameX(GetFileFolder(fileName), body.meshFile);
 		if (!FileExists(file)) 
 			BEMData::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 			//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
@@ -363,7 +363,7 @@ Vector<String> NemohCase::Check() const {
 }
 
 void NemohCase::Save_Id(String folder) const {
-	String fileName = AppendFileName(folder, "ID.dat");
+	String fileName = AppendFileNameX(folder, "ID.dat");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
@@ -371,29 +371,29 @@ void NemohCase::Save_Id(String folder) const {
 }
 
 void NemohCase::Save_Mesh_bat(String folder, String caseFolder, const Vector<String> &meshes, String meshName, bool bin) const {
-	String fileName = AppendFileName(folder, "Mesh_cal.bat");
+	String fileName = AppendFileNameX(folder, "Mesh_cal.bat");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 
 	String strBin;
 	if (bin)
-		strBin = AppendFileName(caseFolder.IsEmpty() ? "." : "..", "bin");
+		strBin = AppendFileNameX(caseFolder.IsEmpty() ? "." : "..", "bin");
 	
 	if (meshes.size() == 1) {
 		out << "copy Mesh_0.cal Mesh.cal\n";
-		out << "\"" << AppendFileName(strBin, meshName) << "\"";
+		out << "\"" << AppendFileNameX(strBin, meshName) << "\"";
 	} else {
 		for (int i = 0; i < meshes.size(); ++i) {
 			out << Format("copy Mesh_%d.cal Mesh.cal\n", i);
-			out << "\"" << AppendFileName(strBin, meshName) << "\"\n";
+			out << "\"" << AppendFileNameX(strBin, meshName) << "\"\n";
 			out << Format("ren mesh\\KH.dat KH_%d.dat\n", i);
 		}
 	}
 }
 
 void NemohCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const {
-	String fileName = AppendFileName(folder, batname);
+	String fileName = AppendFileNameX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
@@ -402,21 +402,21 @@ void NemohCase::Save_Bat(String folder, String batname, String caseFolder, bool 
 		out << "cd \"" << caseFolder << "\"\n";
 	String strBin;
 	if (bin)
-		strBin = AppendFileName(caseFolder.IsEmpty() ? "." : "..", "bin");
+		strBin = AppendFileNameX(caseFolder.IsEmpty() ? "." : "..", "bin");
 	out << "call Mesh_cal.bat\n";
 	if (preName.IsEmpty()) {
 		if (solvName == "capytaine")
 			out << "\"" << solvName << "\"\n";
 		else
-			out << "\"" << AppendFileName(strBin, solvName) << "\" -all\n";
+			out << "\"" << AppendFileNameX(strBin, solvName) << "\" -all\n";
 	} else
-		out << "\"" << AppendFileName(strBin, preName) << "\"\n"
-			<< "\"" << AppendFileName(strBin, solvName) << "\"\n"
-			<< "\"" << AppendFileName(strBin, postName) << "\"";
+		out << "\"" << AppendFileNameX(strBin, preName) << "\"\n"
+			<< "\"" << AppendFileNameX(strBin, solvName) << "\"\n"
+			<< "\"" << AppendFileNameX(strBin, postName) << "\"";
 }
 
 void NemohCase::Save_Input(String folder) const {
-	String fileName = AppendFileName(folder, "Input.txt");
+	String fileName = AppendFileNameX(folder, "Input.txt");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
@@ -469,12 +469,12 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 		valsf = NumSets(Nf, numCases);
 	}
 	
-	String binResults = AppendFileName(folderBase, "bin");
+	String binResults = AppendFileNameX(folderBase, "bin");
 	if (!DirectoryCreateX(binResults))
 		throw Exc(Format(t_("Problem creating '%s' folder"), binResults));
 		
 	String meshName = GetFileName(bem.nemohPathMesh);
-	String destMesh = AppendFileName(binResults, meshName);
+	String destMesh = AppendFileNameX(binResults, meshName);
 	if (!FileCopy(bem.nemohPathMesh, destMesh)) 
 		throw Exc(Format(t_("Problem copying mesh binary from '%s'"), bem.nemohPathMesh));
 	
@@ -485,20 +485,20 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 	} else if (bin) {
 		if (solver == BEMCase::NEMOHv115) {
 			solvName = GetFileName(bem.nemohPathNew);
-			String destNew = AppendFileName(binResults, solvName);
+			String destNew = AppendFileNameX(binResults, solvName);
 			if (!FileCopy(bem.nemohPathNew, destNew)) 
 				throw Exc(Format(t_("Problem copying solver binary from '%s'"), bem.nemohPathNew));	
 		} else if (solver == BEMCase::NEMOH) {
 			preName = GetFileName(bem.nemohPathPreprocessor);
-			String destProprocessor = AppendFileName(binResults, preName);
+			String destProprocessor = AppendFileNameX(binResults, preName);
 			if (!FileCopy(bem.nemohPathPreprocessor, destProprocessor)) 
 				throw Exc(Format(t_("Problem copying preprocessor binary from '%s'"), bem.nemohPathPreprocessor));		
 			solvName = GetFileName(bem.nemohPathSolver);
-			String destSolver = AppendFileName(binResults, solvName);
+			String destSolver = AppendFileNameX(binResults, solvName);
 			if (!FileCopy(bem.nemohPathSolver, destSolver)) 
 				throw Exc(Format(t_("Problem copying solver binary from '%s'"), bem.nemohPathSolver));		
 			postName = GetFileName(bem.nemohPathPostprocessor);
-			String destPostprocessor = AppendFileName(binResults, postName);
+			String destPostprocessor = AppendFileNameX(binResults, postName);
 			if (!FileCopy(bem.nemohPathPostprocessor, destPostprocessor)) 
 				throw Exc(Format(t_("Problem copying postprocessor binary from '%s'"), bem.nemohPathPostprocessor));		
 		} else if (solver == BEMCase::CAPYTAINE) 
@@ -518,10 +518,10 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		if (numCases > 1) {
-			folder = AppendFileName(folderBase, Format("%s_Part_%d", batName, i+1));
+			folder = AppendFileNameX(folderBase, Format("%s_Part_%d", batName, i+1));
 			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
-			//sumcases << " " << AppendFileName(folder, "Nemoh.cal");
+			//sumcases << " " << AppendFileNameX(folder, "Nemoh.cal");
 			_minf = freqs[ifr];
 			int deltaf = valsf[i];
 			_maxf = freqs[ifr + deltaf - 1];
@@ -535,7 +535,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 		}
 		Save_Id(folder);
 		Save_Input(folder);
-		String folderMesh = AppendFileName(folder, "mesh");
+		String folderMesh = AppendFileNameX(folder, "mesh");
 		if (!DirectoryCreateX(folderMesh))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
@@ -545,7 +545,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			String name = GetFileName(bodies[ib].meshFile);
 			name = RemoveAccents(name);
 			name.Replace(" ", "_");
-			String dest = AppendFileName(folderMesh, name);
+			String dest = AppendFileNameX(folderMesh, name);
 			
 			bool y0z, x0z;
 			MeshData mesh;
@@ -560,12 +560,12 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 		}
 		Save_Cal(folder, _nf, _minf, _maxf, nodes, panels);
 				
-		String folderResults = AppendFileName(folder, "results");
+		String folderResults = AppendFileNameX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderResults));
 		
 		if (bin && !GetFileName(bem.nemohPathGREN).IsEmpty()) {
-			String destGREN = AppendFileName(folder, GetFileName(bem.nemohPathGREN));
+			String destGREN = AppendFileNameX(folder, GetFileName(bem.nemohPathGREN));
 			if (!FileCopy(bem.nemohPathGREN, destGREN)) 
 				throw Exc(Format(t_("Problem copying gren file '%s'"), bem.nemohPathGREN));
 		}
@@ -588,7 +588,7 @@ void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, MeshData &
 	mesh.SaveAs(AppendFileNameX(folder, "Mesh", title), 
 				MeshData::NEMOH_PRE, g, MeshData::UNDERWATER, false, x0z);
 	
-	String fileName = AppendFileName(folder, Format("Mesh_%d.cal", ib));
+	String fileName = AppendFileNameX(folder, Format("Mesh_%d.cal", ib));
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
@@ -608,7 +608,7 @@ void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, MeshData &
 }
 	
 void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels) const {
-	String fileName = AppendFileName(folder, "Nemoh.cal");
+	String fileName = AppendFileNameX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
@@ -632,7 +632,7 @@ void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, con
 		String name = GetFileName(b.meshFile);
 		name = RemoveAccents(name);
 		name.Replace(" ", "_");
-		String file = AppendFileName("mesh", name);
+		String file = AppendFileNameX("mesh", name);
 		
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", nodes[i], panels[i]), cp) << "! Number of points and number of panels" << "\n";	

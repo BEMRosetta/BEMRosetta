@@ -373,7 +373,7 @@ void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
 	if (!DirectoryCreateX(folder))
 		return;
 		
-	LoadFromJsonFile(*this, AppendFileName(folder, "FASTScatter.json"));
+	LoadFromJsonFile(*this, AppendFileNameX(folder, "FASTScatter.json"));
 	
 	tabBar.Crosses(true).ContextMenu(true);
 	tabBar.SetTop();
@@ -568,11 +568,11 @@ void FastScatter::LoadParams() {
 		return;
 	
 	String fileName;
-	FindFile ffpath(AppendFileName(folder, strpath + "_*.json"));
+	FindFile ffpath(AppendFileNameX(folder, strpath + "_*.json"));
 	if (ffpath) 
 		fileName = ffpath.GetPath();
 	else {
-		FindFile ffname(AppendFileName(folder,  "*_" + strname + ".json"));
+		FindFile ffname(AppendFileNameX(folder,  "*_" + strname + ".json"));
 		if (ffname) 
 			fileName = ffname.GetPath();
 	}
@@ -594,7 +594,7 @@ void FastScatter::SaveParams() {
 	if (!DirectoryCreateX(folder))
 		return;
 	
-	String fileName = AppendFileName(folder, strpath + "_" + strname + ".json");
+	String fileName = AppendFileNameX(folder, strpath + "_" + strname + ".json");
 
 	Params params;
 	params.Get(leftSearch.array, rightSearch.array);
