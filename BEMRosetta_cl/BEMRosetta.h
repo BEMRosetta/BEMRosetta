@@ -966,7 +966,7 @@ public:
 	String hamsPath, hamsMeshPath;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
-	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status);
+	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status = Null);
 	void Symmetrize(int id, bool xAxis);
 	void A0(int id);
 	void Kirf(int id, double maxT);
