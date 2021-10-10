@@ -1346,7 +1346,7 @@ void BEMData::LoadMesh(String fileName, Function <bool(String, int pos)> Status,
 			}
 		}
 	}
-	MeshData &mesh = surfs.Add();
+	Mesh &mesh = surfs.Add();
 	String error = mesh.Load(fileName, rho, g, cleanPanels);
 	if (!error.IsEmpty()) {
 		BEMData::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
@@ -1390,8 +1390,8 @@ void BEMData::OrientSurface(int id, Function <bool(String, int)> Status) {
 void BEMData::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].fileName), 10);
 	
-	MeshData &mesh = surfs.Add();
-	MeshData &orig = surfs[id];
+	Mesh &mesh = surfs.Add();
+	Mesh &orig = surfs[id];
 	mesh.fileName = orig.fileName;
 	
 	try {
@@ -1408,8 +1408,8 @@ void BEMData::RemoveMesh(int id) {
 }
 
 void BEMData::JoinMesh(int idDest, int idOrig) {
-	const MeshData &orig = surfs[idOrig];
-	MeshData &dest = surfs[idDest];
+	const Mesh &orig = surfs[idOrig];
+	Mesh &dest = surfs[idDest];
 	dest.fileName << "/" << orig.fileName;
 	
 	try {
@@ -1424,7 +1424,7 @@ void BEMData::JoinMesh(int idDest, int idOrig) {
 
 Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
-	MeshData &orig = surfs[id];
+	Mesh &orig = surfs[id];
 	
 	Upp::Vector<int> ret;
 	try {
@@ -1432,7 +1432,7 @@ Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Sta
 		if (sets.size() == 1)
 			return ret;
 		for (int i = 0; i < sets.size(); ++i) {		
-			MeshData &surf = surfs.Add();
+			Mesh &surf = surfs.Add();
 			ret << surfs.size()-1-1;		// One more as id is later removed
 			for (int ii = 0; ii < sets[i].size(); ++ii) 
 				surf.mesh.panels << clone(orig.mesh.panels[sets[i][ii]]);	
@@ -1452,9 +1452,9 @@ Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Sta
 
 void BEMData::AddFlatPanel(double x, double y, double z, double size, double panWidth, double panHeight) {
 	try {
-		MeshData &surf = surfs.Add();
+		Mesh &surf = surfs.Add();
 
-		surf.SetCode(MeshData::EDIT);
+		surf.SetCode(Mesh::EDIT);
 		surf.mesh.AddFlatPanel(panWidth, panHeight, size); 
 		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
@@ -1466,9 +1466,9 @@ void BEMData::AddFlatPanel(double x, double y, double z, double size, double pan
 
 void BEMData::AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
 	try {
-		MeshData &surf = surfs.Add();
+		Mesh &surf = surfs.Add();
 
-		surf.SetCode(MeshData::EDIT);
+		surf.SetCode(Mesh::EDIT);
 		surf.mesh.AddRevolution(vals, size); 
 		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
@@ -1480,9 +1480,9 @@ void BEMData::AddRevolution(double x, double y, double z, double size, Upp::Vect
 
 void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
 	try {
-		MeshData &surf = surfs.Add();
+		Mesh &surf = surfs.Add();
 
-		surf.SetCode(MeshData::EDIT);
+		surf.SetCode(Mesh::EDIT);
 		surf.mesh.AddPolygonalPanel(vals, size, true); 
 		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
@@ -1494,9 +1494,9 @@ void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::
 
 void BEMData::AddWaterSurface(int id, char c) {
 	try {
-		MeshData &surf = surfs.Add();
+		Mesh &surf = surfs.Add();
 
-		surf.SetCode(MeshData::EDIT);
+		surf.SetCode(Mesh::EDIT);
 		surf.mesh.AddWaterSurface(surfs[id].mesh, surfs[id].under, c); 
 		
 		if (c == 'r')
@@ -1518,7 +1518,7 @@ void BEMData::AddWaterSurface(int id, char c) {
 	}	
 }
 			
-bool BEMData::LoadSerializeJson(bool &firstTime) {
+bool BEMData::LoadSerializeJson() {
 	bool ret;
 	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
 	if (!DirectoryCreateX(folder))
@@ -1562,8 +1562,7 @@ bool BEMData::LoadSerializeJson(bool &firstTime) {
 	if (!ret || IsNull(onlyDiagonal))
 		onlyDiagonal = false;
 	
-	firstTime = !ret;
-	return true;
+	return !ret;
 }
 
 bool BEMData::ClearTempFiles() {

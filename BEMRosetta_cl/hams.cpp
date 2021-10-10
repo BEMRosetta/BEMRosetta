@@ -343,7 +343,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 		Save_Hydrostatic(folderInput);
 	
 		bool y0zmesh, x0zmesh;
-		MeshData mesh;
+		Mesh mesh;
 		int ib = 0;		// Just one file
 		{
 			String err = mesh.Load(bodies[ib].meshFile, rho, g, false, y0zmesh, x0zmesh);
@@ -354,7 +354,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 				y0zmesh = false;
 
 			String dest = AppendFileNameX(folderInput, "HullMesh.pnl");
-			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
+			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
 		}
 		bool y0zlid, x0zlid;	// Hull symmetries rules over lid ones
 		if (!bodies[ib].lidFile.IsEmpty()) {
@@ -363,7 +363,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 				throw Exc(err);
 			
 			String dest = AppendFileNameX(folderInput, "WaterplaneMesh.pnl");
-			mesh.SaveAs(dest, MeshData::HAMS_PNL, g, MeshData::UNDERWATER, y0zmesh, x0zmesh);
+			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
 		}
 		
 		Save_Settings(folder);
@@ -443,17 +443,17 @@ void HamsCase::Save_Settings(String folderInput) const {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
-	MeshData data;
+	Mesh data;
 	String res = data.Load(AppendFileNameX(folderInput, "Input", "HullMesh.pnl"), rho, g, false);
 	if (!res.IsEmpty())
 			throw Exc(res);
 	
-	MeshData lid;
+	Mesh lid;
 	lid.mesh.AddWaterSurface(data.mesh, data.under, 'f'); 
 	lid.AfterLoad(rho, g, false, false);
 	
 	data.Join(lid.mesh, rho, g);
-	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), MeshData::WAMIT_GDF, g, MeshData::ALL, true, true);	
+	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, true, true);	
 	
 	out << rho << "\n";
 	out << g << "\n";

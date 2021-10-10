@@ -4,13 +4,13 @@
 #include "BEMRosetta_int.h"
 
 
-String MeshData::LoadDatWamit(String fileName) {
+String WamitMesh::LoadDat(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
 	this->fileName = fileName;
-	SetCode(MeshData::WAMIT_DAT);
+	SetCode(Mesh::WAMIT_DAT);
 	
 	try {
 		String line;
@@ -99,12 +99,12 @@ String MeshData::LoadDatWamit(String fileName) {
 	return String();
 }
 	
-String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
+String WamitMesh::LoadGdf(String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	SetCode(MeshData::WAMIT_GDF);
+	SetCode(Mesh::WAMIT_GDF);
 	
 	try {
 		String line;
@@ -180,7 +180,7 @@ String MeshData::LoadGdfWamit(String fileName, bool &y0z, bool &x0z) {
 	return String();
 }
 
-void MeshData::SaveGdfWamit(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
+void WamitMesh::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
@@ -199,5 +199,9 @@ void MeshData::SaveGdfWamit(String fileName, const Surface &surf, double g, bool
 			out << Format("  % 014.7E   %0 14.7E   % 014.7E\n", p.x, p.y, p.z);
 		}
 	}	 
+}
+
+void WamitMesh::SaveHST(String fileName, double rho, double g) const {
+	Wamit::Save_hst_static(C, fileName, rho, g);
 }
 	

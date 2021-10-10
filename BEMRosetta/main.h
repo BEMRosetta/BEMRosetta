@@ -316,7 +316,7 @@ public:
 	typedef MainViewDataEach CLASSNAME;
 	
 	MainViewDataEach() {}
-	void Init(MeshData &_mesh, MainView &mainView);
+	void Init(Mesh &_mesh, MainView &mainView);
 	void OnRefresh();
 	
 	TabCtrl tab;
@@ -328,23 +328,23 @@ public:
 	class DataSourceFacets : public Convert {
 	public:
 		DataSourceFacets() : pmesh(0), col(0), all(true) {}
-		void Init(MeshData &_mesh, int _col, bool _all);
+		void Init(Mesh &_mesh, int _col, bool _all);
 		Value Format(const Value& q) const;
-		inline const MeshData &GetMesh()	{return *pmesh;}
+		inline const Mesh &GetMesh()	{return *pmesh;}
 		
 	private:
-		MeshData *pmesh;
+		Mesh *pmesh;
 		int col;
 		bool all;
 	};
 	class DataSourceNodes : public Convert {
 	public:
 		DataSourceNodes() : pmesh(0), xyz(0), origMovedUnder(0) {}
-		void Init(MeshData &_mesh, int _xyz, int _origMovedUnder);
+		void Init(Mesh &_mesh, int _xyz, int _origMovedUnder);
 		Value Format(const Value& q) const;
 		
 	private:
-		MeshData *pmesh;
+		Mesh *pmesh;
 		int xyz;
 		int origMovedUnder;
 	};
@@ -379,7 +379,7 @@ class MainSummaryMesh : public MainSummary {
 public:
 	typedef MainSummaryCoeff CLASSNAME;
 
-	void Report(const Upp::Array<MeshData> &surfs, int id);
+	void Report(const Upp::Array<Mesh> &surfs, int id);
 };
 
 class MainStiffness : public WithMainStiffness<StaticRect> {
@@ -389,12 +389,27 @@ public:
 	void Init();
 	void Clear();
 	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids);
-	void Load(Upp::Array<MeshData> &surfs, const Upp::Vector<int> &ids);
+	void Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids);
+	
+	void Jsonize(JsonIO &json) {
+		if (json.IsLoading()) {
+			opEmptyZero <<= false;
+			numDecimals <<= 3;
+		}
+		json
+			("opEmptyZero", opEmptyZero)
+			("numDecimals",numDecimals)
+		;
+	}
 	
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc);
-	void Add(const MeshData &mesh, int icase, bool button);
+	void Add(const Mesh &mesh, int icase, bool button);
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc);
+	void PrintData();
+		
+	Upp::Array<Eigen::MatrixXd> data;
+	Upp::Array<int> row0s, col0s;
 };
 
 class MainBEM;
@@ -514,7 +529,7 @@ public:
 	void OnAddWaterSurface(char c);
 	void UpdateButtons();
 			
-	void AddRow(const MeshData &surf);
+	void AddRow(const Mesh &surf);
 	void RemoveRow(int row);
 	
 	void LoadSelTab(BEMData &bem);

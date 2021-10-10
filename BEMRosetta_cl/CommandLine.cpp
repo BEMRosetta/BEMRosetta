@@ -134,11 +134,11 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 	
 	SetCurrentDirectory(GetExeFilePath());
 	
-	BEMData md;
+	BEMData bem;
 	
-	bool firstTime;
-	if (!md.LoadSerializeJson(firstTime))
-		Cout() << "\n" << t_("BEM configuration data has not been loaded. Default values are set");
+	bool firstTime = bem.LoadSerializeJson();
+	if (firstTime)
+		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
 	
 	bool echo = true;
 	String lastPrint;
@@ -146,7 +146,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 	try {
 		if (command.IsEmpty()) {
 			Cout() << "\n" << t_("Command argument list is empty");
-			ShowHelp(md);
+			ShowHelp(bem);
 		} else {
 			String nextcommands = "general";
 			int bemid = -1, meshid = -1;
@@ -159,7 +159,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 				else if (param == "-mesh") 
 					nextcommands = "mesh";
 				else if (param == "-h" || param == "-help") {
-					ShowHelp(md);
+					ShowHelp(bem);
 					break;
 				} else if (param == "-isequal") {
 					CheckIfAvailableArg(command, ++i, "-isequal");
@@ -190,14 +190,14 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									double g = ScanDouble(command[i]);
 									if (IsNull(g))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-									md.g = g;
+									bem.g = g;
 									BEMData::Print("\n" + Format(t_("Gravity is %f"), g));	
 								} else if (command[i] == "rho") {
 									CheckIfAvailableArg(command, ++i, "-p rho");
 									double rho = ScanDouble(command[i]);
 									if (IsNull(rho))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-									md.rho = rho;
+									bem.rho = rho;
 									BEMData::Print("\n" + Format(t_("Density is %f"), rho));	
 								} else 
 									throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
@@ -230,36 +230,36 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							md.LoadBEM(file, echo ? Status : NoPrint, false);
-							bemid = md.hydros.size() - 1;
+							bem.LoadBEM(file, echo ? Status : NoPrint, false);
+							bemid = bem.hydros.size() - 1;
 							BEMData::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
-							if (md.hydros.IsEmpty()) 
+							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("Report: No file loaded"));
-							md.hydros[bemid].hd().Report();
+							bem.hydros[bemid].hd().Report();
 						} else if (param == "-cl" || param == "-clear") {
-							md.hydros.Clear();
+							bem.hydros.Clear();
 							bemid = -1;
 							BEMData::Print("\n" + S(t_("BEM data cleared")));	
 						} else if (param == "-setid") {
-							if (md.hydros.IsEmpty()) 
+							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							
 							CheckIfAvailableArg(command, ++i, "-setid");
 
 							int bemid = ScanInt(command[i]);
-							if (IsNull(bemid) || bemid < 0 || bemid > md.hydros.size()-1)
+							if (IsNull(bemid) || bemid < 0 || bemid > bem.hydros.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[i]));
 							BEMData::Print("\n" + Format(t_("BEM active model id is %d"), bemid));	
 						} else if (param == "-c" || param == "-convert") {
-							if (md.hydros.IsEmpty()) 
+							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
 							String file = command[i];
 							
-							if (md.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint)) {
+							if (bem.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint)) {
 								BEMData::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
 							}
 						} else if (param == "-params") {
@@ -272,20 +272,20 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									double len = ScanDouble(command[i]);
 									if (IsNull(len))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-									md.len = len;
+									bem.len = len;
 									BEMData::Print("\n" + Format(t_("length is %f"), len));	
 								} else if (command[i] == "depth") {
 									CheckIfAvailableArg(command, ++i, "-p depth");
 									double depth = ScanDouble(command[i]);
 									if (IsNull(depth))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
-									md.depth = depth;
+									bem.depth = depth;
 									BEMData::Print("\n" + Format(t_("depth is %f"), depth));	
 								} else 
 									throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
 							}
 						} else if (param == "-p" || param == "-print") {
-							Hydro &data = md.hydros[bemid].hd();
+							Hydro &data = bem.hydros[bemid].hd();
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
 								String param = ToLower(command[i]);
@@ -327,35 +327,35 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							md.LoadMesh(file, echo ? Status : NoPrint, false, false);
-							meshid = md.surfs.size() - 1;
+							bem.LoadMesh(file, echo ? Status : NoPrint, false, false);
+							meshid = bem.surfs.size() - 1;
 							BEMData::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
-							if (md.surfs.IsEmpty()) 
+							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("Report: No file loaded"));
-							md.surfs[meshid].Report(md.rho);
+							bem.surfs[meshid].Report(bem.rho);
 						} else if (param == "-cl" || param == "-clear") {
-							md.surfs.Clear();
+							bem.surfs.Clear();
 							meshid = -1;
 							BEMData::Print("\n" + S(t_("Mesh data cleared")));	
 						} else if (param == "-setid") {
-							if (md.surfs.IsEmpty()) 
+							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++i, "-setid");
 
 							meshid = ScanInt(command[i]);
-							if (IsNull(meshid) || meshid < 0 || meshid > md.surfs.size()-1)
+							if (IsNull(meshid) || meshid < 0 || meshid > bem.surfs.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[i]));
 							BEMData::Print("\n" + Format(t_("Mesh active model id is %d"), bemid));	
 						} else if (param == "-c" || param == "-convert") {
-							if (md.surfs.IsEmpty()) 
+							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
 							String file = command[i];
 							
 							bool symX = false, symY = false;
-							MeshData::MESH_FMT meshFmt = MeshData::UNKNOWN;
+							Mesh::MESH_FMT meshFmt = Mesh::UNKNOWN;
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
 								String param = ToLower(command[i]);
@@ -365,14 +365,14 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									symY = true;
 								else if (param == "symxy")
 									symX = symY = true;
-								else if (MeshData::GetCodeMeshStr(param) != MeshData::UNKNOWN) {
-									meshFmt = MeshData::GetCodeMeshStr(param);
-									if (!MeshData::MeshCanSave(meshFmt))
+								else if (Mesh::GetCodeMeshStr(param) != Mesh::UNKNOWN) {
+									meshFmt = Mesh::GetCodeMeshStr(param);
+									if (!Mesh::MeshCanSave(meshFmt))
 										throw Exc(Format(t_("Saving format '%s' is not implemented"), param));									
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 							}
-							md.surfs[meshid].SaveAs(file, meshFmt, md.g, MeshData::ALL, symX, symY);
+							bem.surfs[meshid].SaveAs(file, meshFmt, bem.g, Mesh::ALL, symX, symY);
 							BEMData::Print("\n" + Format(t_("Model id %d saved as '%s'"), meshid, file));
 						} else if (param == "-t" || param == "-translate") {
 							CheckIfAvailableArg(command, ++i, "x");
@@ -381,10 +381,10 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							double y = ScanDouble(command[i]);
 							CheckIfAvailableArg(command, ++i, "z");
 							double z = ScanDouble(command[i]);
-							MeshData &data = md.surfs[meshid];
+							Mesh &data = bem.surfs[meshid];
 							data.mesh.Translate(x, y, z);
 							data.cg.Translate(x, y, z);
-							data.AfterLoad(md.rho, md.g, false, false);	
+							data.AfterLoad(bem.rho, bem.g, false, false);	
 							BEMData::Print("\n" + Format(t_("Mesh id %d translated %f, %f, %f"), meshid, x, y, z)); 
 						} else if (param == "-rot" || param == "-rotate") {
 							CheckIfAvailableArg(command, ++i, "ax");
@@ -399,10 +399,10 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							double cy = ScanDouble(command[i]);
 							CheckIfAvailableArg(command, ++i, "cz");
 							double cz = ScanDouble(command[i]);
-							MeshData &data = md.surfs[meshid];
+							Mesh &data = bem.surfs[meshid];
 							data.mesh.Rotate(ax, ay, az, cx, cy, cz);	
 							data.cg.Rotate(ax, ay, az, cx, cy, cz);
-							data.AfterLoad(md.rho, md.g, false, false);	
+							data.AfterLoad(bem.rho, bem.g, false, false);	
 							BEMData::Print("\n" + Format(t_("Mesh id %d rotated angles %f, %f, %f around center %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
 						} else if (param == "-cg") {
 							CheckIfAvailableArg(command, ++i, "cgx");
@@ -411,25 +411,25 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							double y = ScanDouble(command[i]);
 							CheckIfAvailableArg(command, ++i, "cgz");
 							double z = ScanDouble(command[i]);
-							MeshData &data = md.surfs[meshid];
+							Mesh &data = bem.surfs[meshid];
 							data.cg.x = x;
 							data.cg.y = y;
 							data.cg.z = z;
-							data.AfterLoad(md.rho, md.g, true, false);
+							data.AfterLoad(bem.rho, bem.g, true, false);
 							BEMData::Print("\n" + Format(t_("CG is %f, %f, %f"), x, y, z));
 						} else if (param == "-reset") {	
-							md.surfs[meshid].Reset(md.rho, md.g);
+							bem.surfs[meshid].Reset(bem.rho, bem.g);
 							BEMData::Print("\n" + Format(t_("Mesh id %d position is reset"), meshid));
 						} else if (param == "-getwaterplane") {
-							md.AddWaterSurface(meshid, 'e');
-							meshid = md.surfs.size() - 1;
+							bem.AddWaterSurface(meshid, 'e');
+							meshid = bem.surfs.size() - 1;
 							BEMData::Print("\n" + Format(t_("Mesh id %d water plane is got"), meshid));
 						} else if (param == "-gethull") {
-							md.AddWaterSurface(meshid, 'r');
-							meshid = md.surfs.size() - 1;
+							bem.AddWaterSurface(meshid, 'r');
+							meshid = bem.surfs.size() - 1;
 							BEMData::Print("\n" + Format(t_("Mesh id %d hull is got"), meshid));
 						} else if (param == "-p" || param == "-print") {
-							MeshData &data = md.surfs[meshid];
+							Mesh &data = bem.surfs[meshid];
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
 								String param = ToLower(command[i]);

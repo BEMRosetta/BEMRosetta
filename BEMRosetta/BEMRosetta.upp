@@ -13,6 +13,7 @@ file
 	main.cpp,
 	main.h,
 	auxiliar.h,
+	mainStiffness.cpp,
 	mainMesh.cpp,
 	mainSolver.cpp,
 	mainDecay.cpp,
