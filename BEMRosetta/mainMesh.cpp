@@ -250,7 +250,7 @@ void MainMesh::OnMenuProcessArraySel() {
 	if (id < 0)
 		return;
 	
-	MeshData &data = Bem().surfs[id];
+	Mesh &data = Bem().surfs[id];
 	menuProcess.cg_x <<= data.cg.x;
 	menuProcess.cg_y <<= data.cg.y;
 	menuProcess.cg_z <<= data.cg.z;
@@ -381,7 +381,7 @@ void MainMesh::OnOpt() {
 
 void MainMesh::AfterAdd(String file) {
 	int id = Bem().surfs.size() - 1;
-	MeshData &surf = Bem().surfs[id];
+	Mesh &surf = Bem().surfs[id];
 		
 	mainTab.Set(mainView);
 	
@@ -450,15 +450,15 @@ bool MainMesh::OnConvertMesh() {
 			}
 		}
 		
-		MeshData::MESH_FMT type;	
+		Mesh::MESH_FMT type;	
 		switch (menuConvert.opt) {
-		case 0:	type = MeshData::WAMIT_GDF;	break;
-		case 1:	type = MeshData::NEMOH_DAT;	break;
-		case 2:	type = MeshData::NEMOH_PRE;	break;
-		case 3:	type = MeshData::HAMS_PNL;	break;
-		case 4:	type = MeshData::STL_BIN;	break;
-		case 5:	type = MeshData::STL_TXT;	break;
-		case 6:	type = MeshData::UNKNOWN;	break;
+		case 0:	type = Mesh::WAMIT_GDF;	break;
+		case 1:	type = Mesh::NEMOH_DAT;	break;
+		case 2:	type = Mesh::NEMOH_PRE;	break;
+		case 3:	type = Mesh::HAMS_PNL;	break;
+		case 4:	type = Mesh::STL_BIN;	break;
+		case 5:	type = Mesh::STL_TXT;	break;
+		case 6:	type = Mesh::UNKNOWN;	break;
 		default: throw Exc(t_("Unknown type in OnConvert()"));
 		}
 		
@@ -466,7 +466,7 @@ bool MainMesh::OnConvertMesh() {
 		Progress progress(t_("Saving mesh file..."), 100); 
 		
 		Bem().surfs[id].SaveAs(~menuConvert.file, type, Bem().g, 
-							   static_cast<MeshData::MESH_TYPE>(int(~menuConvert.optMeshType)),
+							   static_cast<Mesh::MESH_TYPE>(int(~menuConvert.optMeshType)),
 							   ~menuConvert.symX, ~menuConvert.symY);	
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -496,7 +496,7 @@ void MainMesh::OnReset() {
 			}
 		}
 				
-		MeshData &data = Bem().surfs[id];
+		Mesh &data = Bem().surfs[id];
 		data.Reset(Bem().rho, Bem().g);
 
 	 	mainStiffness.Load(Bem().surfs, ids);
@@ -531,7 +531,7 @@ void MainMesh::OnUpdateMass() {
 			}
 		}
 		
-		MeshData &data = Bem().surfs[id];
+		Mesh &data = Bem().surfs[id];
 		
 		menuProcess.mass <<= data.under.volume*Bem().rho;
 
@@ -563,7 +563,7 @@ void MainMesh::OnUpdate(Action action) {
 			}
 		}
 				
-		MeshData &data = Bem().surfs[id];
+		Mesh &data = Bem().surfs[id];
 
 		double mass = ~menuProcess.mass;
 		double cg_x = ~menuProcess.cg_x;
@@ -645,7 +645,7 @@ void MainMesh::OnAddPanel() {
 		Bem().AddFlatPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
 							 ~menuEdit.panWidthX, ~menuEdit.panWidthY);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
+		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
 		surf.name = t_("Panel");
 		surf.fileName =  "";
 		
@@ -688,7 +688,7 @@ void MainMesh::OnAddRevolution() {
 	try {
 		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
+		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
 		surf.name = t_("Revolution");
 		surf.fileName =  "";
 		
@@ -731,7 +731,7 @@ void MainMesh::OnAddPolygonalPanel() {
 	try {
 		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
+		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
 		surf.name = t_("Polynomial");
 		surf.fileName =  "";
 		
@@ -772,7 +772,7 @@ void MainMesh::OnAddWaterSurface(char c) {
 	
 		Bem().AddWaterSurface(id, c);
 		
-		MeshData &surf = Bem().surfs[Bem().surfs.size()-1];
+		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
 		AddRow(surf);
 		After();
 		mainViewData.OnAddedModel(mainView);
@@ -877,7 +877,7 @@ void MainMesh::OnImage(int axis) {
 		
 		WaitCursor waitcursor;
 		
-		MeshData &data = Bem().surfs[id];
+		Mesh &data = Bem().surfs[id];
 
 		data.mass = ~menuProcess.mass;
 		if (axis == 0)
@@ -997,7 +997,7 @@ void MainMesh::OnJoin() {
 	}
 }
 
-void MainMesh::AddRow(const MeshData &surf) {
+void MainMesh::AddRow(const Mesh &surf) {
 	ArrayModel_Add(listLoaded, surf.GetCodeMeshStr(), surf.name, surf.fileName, surf.GetId(),
 					optionsPlot, [&] {mainView.gl.Refresh();});
 }
@@ -1052,7 +1052,7 @@ void MainMesh::OnSplit() {
 		
 		for (int i = 0; i < idsmesh.size(); ++i) {
 			int id = idsmesh[i];
-			MeshData &surf = Bem().surfs[id];
+			Mesh &surf = Bem().surfs[id];
 			
 			mainTab.Set(mainView);
 			
@@ -1148,11 +1148,12 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)
 		("menuPlot_backColor", menuPlot.backColor)
 		("menuPlot_lineThickness", menuPlot.lineThickness)	
+		("mainStiffness", mainStiffness)
 	;
 }
 
-void MainSummaryMesh::Report(const Upp::Array<MeshData> &surfs, int id) {
-	const MeshData &data = surfs[id];
+void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
+	const Mesh &data = surfs[id];
 	String name = data.name;
 	
 	if (array.GetColumnCount() == 0)
@@ -1287,7 +1288,7 @@ void MainView::OnPaint() {
 				showNormals = true;
 			
 			const Upp::Color &color = ArrayModel_GetColor(GetMain().listLoaded, row);
-			const MeshData &mesh = Bem().surfs[id];
+			const Mesh &mesh = Bem().surfs[id];
 			
 			gl.PaintSurface(mesh.mesh, color, ~GetMenuPlot().showMesh, 	
 				showNormals);
@@ -1434,7 +1435,7 @@ void MainViewData::ReLoad(MainView &mainView) {
 	}
 }
 
-void MainViewDataEach::DataSourceFacets::Init(MeshData &_mesh, int _col, bool _all) {
+void MainViewDataEach::DataSourceFacets::Init(Mesh &_mesh, int _col, bool _all) {
 	pmesh = &_mesh;	
 	col = _col; 
 	all = _all;
@@ -1464,7 +1465,7 @@ Value MainViewDataEach::DataSourceFacets::Format(const Value& q) const {
 	}
 }
 
-void MainViewDataEach::DataSourceNodes::Init(MeshData &_mesh, int _xyz, int _origMovedUnder) {
+void MainViewDataEach::DataSourceNodes::Init(Mesh &_mesh, int _xyz, int _origMovedUnder) {
 	pmesh = &_mesh;	
 	xyz = _xyz;
 	origMovedUnder = _origMovedUnder;
@@ -1517,7 +1518,7 @@ void MainViewDataEach::UpdateStatus(bool under) {
 		status.Set("");
 }
 
-void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
+void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	CtrlLayout(arrayFacetsAll2);
 	CtrlLayout(arrayFacetsUnder);
 	CtrlLayout(arrayNodesMoved);
@@ -1610,7 +1611,7 @@ void MainViewDataEach::Init(MeshData &_mesh, MainView &mainView) {
 }
 
 void MainViewDataEach::OnRefresh() {
-	const MeshData &mesh = dataSourceFacetsAll[0].GetMesh();
+	const Mesh &mesh = dataSourceFacetsAll[0].GetMesh();
 	int num;
 	
 	num = mesh.mesh.panels.size();

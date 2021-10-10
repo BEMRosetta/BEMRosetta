@@ -548,12 +548,12 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			String dest = AppendFileNameX(folderMesh, name);
 			
 			bool y0z, x0z;
-			MeshData mesh;
+			Mesh mesh;
 			String err = mesh.Load(bodies[ib].meshFile, rho, g, false, y0z, x0z);
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
-			mesh.SaveAs(dest, MeshData::NEMOH_DAT, g, MeshData::UNDERWATER, false, x0z, nodes[ib], panels[ib]);
+			mesh.SaveAs(dest, Mesh::NEMOH_DAT, g, Mesh::UNDERWATER, false, x0z, nodes[ib], panels[ib]);
 			
 			Save_Mesh_cal(folder, ib, bodies[ib].meshFile, mesh, panels[ib], x0z, bodies[ib].cg, rho, g);
 			meshes[ib] = GetFileTitle(bodies[ib].meshFile);
@@ -581,12 +581,12 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 	}
 }
 
-void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, MeshData &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const {
+void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const {
 	String title = ForceExt(GetFileTitle(meshFile), ".pmsh");
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
 	mesh.SaveAs(AppendFileNameX(folder, "Mesh", title), 
-				MeshData::NEMOH_PRE, g, MeshData::UNDERWATER, false, x0z);
+				Mesh::NEMOH_PRE, g, Mesh::UNDERWATER, false, x0z);
 	
 	String fileName = AppendFileNameX(folder, Format("Mesh_%d.cal", ib));
 	FileOut out(fileName);

@@ -571,7 +571,7 @@ public:
 	HydroData hd;	
 };
 
-class MeshData {
+class Mesh {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
@@ -581,7 +581,7 @@ public:
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
-	MeshData() {
+	Mesh() {
 		id = idCount++;
 		cg  = Point3D(0, 0, 0);
 		cg0 = Point3D(0, 0, 0);
@@ -626,12 +626,6 @@ public:
 		int nNodes, nPanels;
 		SaveAs(fileName, type, g, meshType, symX, symY, nNodes, nPanels);
 	}
-	static void SaveDatNemoh(String fileName, const Surface &surf, bool x0z);
-	static void SavePreMeshNemoh(String fileName, const Surface &surf);
-	static void SaveGdfWamit(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
-	static void SavePnlHAMS(String fileName, const Surface &surf, bool y0z, bool x0z);
-	
-	void SaveHST(String fileName, double rho, double g) const; 
 	
 	void Report(double rho) const;
 	
@@ -654,13 +648,43 @@ private:
 	MESH_FMT code;
 	int id;
 	static int idCount;
-	
-	String LoadDatNemoh(String fileName, bool &x0z);
-	String LoadDatWamit(String fileName);
-	String LoadGdfWamit(String fileName, bool &y0z, bool &x0z);
-	String LoadDatAQWA(String fileName);
-	String LoadPnlHAMS(String fileName, bool &y0z, bool &x0z);
 };
+
+
+class NemohMesh : public Mesh {
+public:
+	String LoadDat(String fileName, bool &x0z);
+	static void SaveDat(String fileName, const Surface &surf, bool x0z);
+	static void SavePreMesh(String fileName, const Surface &surf);
+	
+	virtual ~NemohMesh() noexcept {}
+};
+
+class HAMSMesh : public Mesh {
+public:
+	String LoadPnl(String filefCaseName, bool &y0z, bool &x0z);
+	static void SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z);
+	
+	virtual ~HAMSMesh() noexcept {}
+};
+
+class WamitMesh : public Mesh {
+public:
+	String LoadDat(String fileName);
+	String LoadGdf(String fileName, bool &y0z, bool &x0z);
+	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
+	void SaveHST(String fileName, double rho, double g) const; 
+
+	virtual ~WamitMesh() noexcept {}
+};
+
+class AQWAMesh : public Mesh {
+public:
+	String LoadDat(String fileName);
+	
+	virtual ~AQWAMesh() noexcept {}
+};
+
 
 class Wamit : public HydroClass {
 public:
@@ -772,6 +796,8 @@ public:
 
 class BEMCase {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	
 	BEMCase() {bodies.SetCount(1);}
 	BEMCase(const BEMCase &bcase) : bodies(clone(bcase.bodies)), h(bcase.h),
 		Nf(bcase.Nf), minF(bcase.minF), maxF(bcase.maxF), Nh(bcase.Nh),
@@ -866,7 +892,7 @@ private:
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
-	void Save_Mesh_cal(String folder, int ib, String meshFile, MeshData &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const;
+	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const;
 	void Save_Mesh_bat(String folder, String caseFolder, const Vector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder) const;
 	
@@ -931,7 +957,7 @@ public:
 	BEMData();
 	
 	Upp::Array<HydroClass> hydros;
-	Upp::Array<MeshData> surfs;
+	Upp::Array<Mesh> surfs;
 	
 	int GetHydroId(int id) {
 		for (int i = 0; i < hydros.size(); ++i) {
@@ -988,7 +1014,7 @@ public:
 	void AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
 	void AddWaterSurface(int id, char c);
 	
-	bool LoadSerializeJson(bool &firstTime);
+	bool LoadSerializeJson();
 	bool StoreSerializeJson();
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
@@ -1029,10 +1055,7 @@ bool OUTB(int id, T total) {
 	return false;
 }
 
-String GetFASTVar(const String &strFile, String varName, String paragraph = "");
-void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
-	
-	
+
 class Mooring : public DeepCopyOption<Mooring> {
 public:
 	Mooring() {}
@@ -1073,6 +1096,169 @@ public:
 	
 String FormatDoubleEmpty(double val);
 String FormatIntEmpty(int val);
+
+
+String GetFASTVar(const String &strFile, String varName, String paragraph = "");
+void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
+
+
+class FASTFiles {
+public:
+	void Load(String file) {
+		String path = GetFileFolder(file);
+		
+		fast.fileName = file;
+		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
+		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
+	}
+	void Save() {
+		fast.Save();
+		elastodyn.Save();
+		hydrodyn.Save();
+	}
 	
+private:
+	class File {
+	public:
+		String fileName;
+		String fileText;
+		bool isChanged;
+		
+		void Save() const {
+			if (!isChanged)
+				return;
+			if (!SaveFile(fileName, fileText))
+				throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
+		}
+		
+		String GetString(String var) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			String res;
+			Vector<String> vars = Split(var, "/");
+			if (vars.size() == 2)
+				res = GetFASTVar(fileText, vars[1], vars[0]);
+			else if (vars.size() == 1)		
+				res = GetFASTVar(fileText, vars[0]);
+			else
+				throw Exc(Format(t_("Wrong variable '%s' in GetString"), var));
+			
+			if (res[0] == '\"')		// Remove quotes
+				res = res.Mid(1);
+			if (res[res.GetCount()-1] == '\"')
+				res = res.Left(res.GetCount()-1);
+			return res;
+		}
+		double GetDouble(String var) {
+			double ddata = ScanDouble(GetString(var));
+			if (IsNull(ddata))
+				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
+			return ddata;
+		}
+		double GetInt(String var) {
+			int ddata = ScanInt(GetString(var));
+			if (IsNull(ddata))
+				throw Exc(Format(t_("Wrong variable '%s' in GetInt"), var));
+			return ddata;
+		}
+		bool GetBool(String var) {
+			String data = ToLower(GetString(var));
+			if (data == "true")
+				return true;
+			if (data == "false")
+				return true;
+			int idata = ScanInt(data);
+			if (idata == 1)
+				return true;
+			if (idata == 0)
+				return false;
+			throw Exc(Format(t_("Wrong variable '%s' in GetBool"), var));
+		}
+		double GetMatrix(String var, int row, int col) {
+			int posIni, posEnd;
+			GetMatrixIds(var, row, col, posIni, posEnd);
+			
+			String data = fileText.Mid(posIni, posEnd-posIni);
+			double ddata = ScanDouble(data);
+			if (IsNull(ddata))
+				throw Exc(Format(t_("Problem reading variable '%s' in GetMatrix %d, %d"), var, row, col));
+			return ddata;
+		}
+		void SetMatrix(String var, int row, int col, double val) {
+			int posIni, posEnd;
+			GetMatrixIds(var, row, col, posIni, posEnd);
+			
+			int delta = posEnd-posIni-1;
+			
+			fileText = fileText.Left(posIni) + S(" ") + FormatDoubleSize(val, delta, true) + fileText.Mid(posEnd);
+		}
+		
+		void SetString(String var, String val) {
+			val = S("\"") + val + S("\"");
+			SetString0(var, val);
+		}
+		void SetInt(String var, int val) {
+			SetString0(var, FormatInt(val));
+		}
+		void SetDouble(String var, double val) {
+			SetString0(var, FormatDoubleSize(val, 10));
+		}
+		void SetBool(String var, bool val) {
+			SetString0(var, val ? "True" : "False");
+		}
+		
+	private:
+		void SetString0(String var, String val) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			Vector<String> vars = Split(var, "/");
+			if (vars.size() == 2) {
+				isChanged = true;
+				return SetFASTVar(fileText, vars[1], val, vars[0]);
+			} else if (vars.size() == 1) {
+				isChanged = true;	
+				return SetFASTVar(fileText, vars[0], val);
+			} else
+				throw Exc(Format(t_("Wrong variable '%s' in SetString"), var));
+		}
+		void GetMatrixIds(String var, int row, int col, int &posIni, int &posEnd) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			int id;
+			if ((id = fileText.Find(var)) < 0)
+				throw Exc(Format(t_("Wrong variable '%s' in GetMatrixIds"), var));
+			if ((id = fileText.ReverseFindAfter("\n", id)) < 0)
+				throw Exc(Format(t_("Problem reading variable '%s' in GetMatrixIds"), var));
+			
+			for (int i = 0; i < row; ++i) {
+				if ((id = fileText.FindAfter("\n", id)) < 0)
+					throw Exc(Format(t_("Problem reading variable '%s' row %d in GetMatrixIds"), var, row));
+			}
+			for (int ic = 0; ic <= col; ++ic) {
+				posIni = id;
+				while (id < fileText.GetCount() && IsSpace(fileText[id]))
+					id++;
+				while (id < fileText.GetCount() && !IsSpace(fileText[id]))
+					id++;
+				posEnd = id;
+			}
+			if (id == fileText.GetCount())
+				throw Exc(Format(t_("Problem reading variable '%s' col %d in GetMatrixIds"), var, col));				
+		}
+	};
+
+public:
+	File fast, elastodyn, hydrodyn;
+};
+
 	
 #endif

@@ -4,13 +4,13 @@
 #include "BEMRosetta_int.h"
 
 
-String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
+String NemohMesh::LoadDat(String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
 	this->fileName = fileName;
-	SetCode(MeshData::NEMOH_DAT);
+	SetCode(Mesh::NEMOH_DAT);
 	
 	try {
 		String line;
@@ -62,7 +62,7 @@ String MeshData::LoadDatNemoh(String fileName, bool &x0z) {
 	return String();
 }
 
-void MeshData::SaveDatNemoh(String fileName, const Surface &surf, bool x0z) {
+void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
@@ -84,7 +84,7 @@ void MeshData::SaveDatNemoh(String fileName, const Surface &surf, bool x0z) {
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
 
-void MeshData::SavePreMeshNemoh(String fileName, const Surface &surf) {
+void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
