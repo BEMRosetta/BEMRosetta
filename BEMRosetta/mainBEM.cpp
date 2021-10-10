@@ -853,6 +853,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opZremoval", menuProcess.opZremoval)
 		("menuProcess_opThinremoval", menuProcess.opThinremoval)
 		("menuProcess_opDecayingTail", menuProcess.opDecayingTail)
+		("mainStiffness", mainStiffness)
 	;
 }
 

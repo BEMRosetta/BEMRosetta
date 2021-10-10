@@ -4,13 +4,13 @@
 #include "BEMRosetta_int.h"
 
 
-String MeshData::LoadPnlHAMS(String fileName, bool &y0z, bool &x0z) {
+String HAMSMesh::LoadPnl(String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
 	this->fileName = fileName;
-	SetCode(MeshData::HAMS_PNL);
+	SetCode(Mesh::HAMS_PNL);
 	
 	mesh.Clear();
 	
@@ -132,7 +132,7 @@ String MeshData::LoadPnlHAMS(String fileName, bool &y0z, bool &x0z) {
 	return String();
 }
 
-void MeshData::SavePnlHAMS(String fileName, const Surface &surf, bool y0z, bool x0z) {
+void HAMSMesh::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	

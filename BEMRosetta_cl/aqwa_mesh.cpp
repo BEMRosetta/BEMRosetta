@@ -4,13 +4,13 @@
 #include "BEMRosetta_int.h"
 
 
-String MeshData::LoadDatAQWA(String fileName) {
+String AQWAMesh::LoadDat(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
 	this->fileName = fileName;
-	SetCode(MeshData::AQWA_DAT);
+	SetCode(Mesh::AQWA_DAT);
 	
 	mesh.Clear();
 	

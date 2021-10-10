@@ -2,29 +2,29 @@
 // Copyright 2020 - 2021, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
-int MeshData::idCount = 0;
+int Mesh::idCount = 0;
 
 
-String MeshData::Load(String file, double rho, double g, bool cleanPanels) {
+String Mesh::Load(String file, double rho, double g, bool cleanPanels) {
 	bool y0z, x0z;
 	return Load(file, rho, g, cleanPanels, y0z, x0z);
 }
 	
-String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
+String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
 	if (ext == ".dat") {
-		ret = LoadDatNemoh(file, x0z);
+		ret = static_cast<NemohMesh&>(*this).LoadDat(file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-			ret = LoadDatWamit(file);
+			ret = static_cast<WamitMesh &>(*this).LoadDat(file);
 			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
-				ret = LoadDatAQWA(file);
+				ret = static_cast<AQWAMesh &>(*this).LoadDat(file);
 		}
 	} else if (ext == ".gdf") 
-		ret = LoadGdfWamit(file, y0z, x0z); 
+		ret = static_cast<WamitMesh &>(*this).LoadGdf(file, y0z, x0z); 
 	else if (ext == ".pnl") 
-		ret = LoadPnlHAMS(file, y0z, x0z); 
+		ret = static_cast<HAMSMesh&>(*this).LoadPnl(file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
 		try {
@@ -32,7 +32,7 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool 
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		SetCode(isText ? MeshData::STL_TXT : MeshData::STL_BIN);
+		SetCode(isText ? Mesh::STL_TXT : Mesh::STL_BIN);
 	} else
 		ret = Format(t_("Unknown mesh file format '%s'"), file);	
 	
@@ -63,7 +63,7 @@ String MeshData::Load(String file, double rho, double g, bool cleanPanels, bool 
 	return String();
 }
 
-void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, 
+void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, 
 						int &nNodes, int &nPanels) {
 	Surface surf;
 	if (meshType == UNDERWATER) 
@@ -112,13 +112,13 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 	nPanels = surf.panels.size();
 	
 	if (type == WAMIT_GDF) 
-		SaveGdfWamit(file, surf, g, symX, symY);	
+		static_cast<const WamitMesh &>(*this).SaveGdf(file, surf, g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		SaveDatNemoh(file, surf, symY);
+		static_cast<NemohMesh&>(*this).SaveDat(file, surf, symY);
 	else if (type == NEMOH_PRE) 
-		SavePreMeshNemoh(file, surf);
+		static_cast<NemohMesh&>(*this).SavePreMesh(file, surf);
 	else if (type == HAMS_PNL)		
-		SavePnlHAMS(file, surf, symX, symY);	// Only one symmetry really available
+		static_cast<HAMSMesh&>(*this).SavePnl(file, surf, symX, symY);	// Only one symmetry really available
 	else if (type == STL_BIN)		
 		SaveStlBin(file, surf);
 	else if (type == STL_TXT)		
@@ -127,7 +127,7 @@ void MeshData::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, 
 		throw Exc(t_("Unknown mesh file type"));
 }
 
-String MeshData::Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status) {
+String Mesh::Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status) {
 	String ret = mesh.Heal(basic, Status);
 	if (!ret.IsEmpty())
 		return ret;
@@ -137,23 +137,23 @@ String MeshData::Heal(bool basic, double rho, double g, Function <bool(String, i
 	return String();
 }
 
-void MeshData::Orient() {
+void Mesh::Orient() {
 	mesh.Orient();
 }
 
-void MeshData::Join(const Surface &orig, double rho, double g) {
+void Mesh::Join(const Surface &orig, double rho, double g) {
 	mesh.Join(orig);
 	
 	AfterLoad(rho, g, false, true);
 }
 
-void MeshData::Reset(double rho, double g) {
+void Mesh::Reset(double rho, double g) {
 	mesh = clone(mesh0);
 	cg = clone(cg0);
 	AfterLoad(rho, g, false, false);
 }
 	
-void MeshData::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
+void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 	if (!onlyCG) {
 		mesh.GetPanelParams();
 		mesh.GetLimits();
@@ -182,7 +182,7 @@ void MeshData::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 	under.GetHydrostaticStiffness(C, cb, rho, cg, mass, g);
 }
 
-void MeshData::Report(double rho) const {
+void Mesh::Report(double rho) const {
 	BEMData::Print("\n\n" + Format(t_("Mesh file '%s'"), fileName));
 	
 	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
@@ -200,14 +200,10 @@ void MeshData::Report(double rho) const {
 	BEMData::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.size(), mesh.nodes.size()));
 }
 
-bool MeshData::IsSymmetricX() {
+bool Mesh::IsSymmetricX() {
 	return abs(cb.x)/abs(mesh.env.maxX - mesh.env.minX) < 0.001 && abs(mesh.env.maxX + mesh.env.minX) < 0.001;
 }
 
-bool MeshData::IsSymmetricY() {
+bool Mesh::IsSymmetricY() {
 	return abs(cb.y)/abs(mesh.env.maxY - mesh.env.minY) < 0.001 && abs(mesh.env.maxY + mesh.env.minY) < 0.001;
-}
-
-void MeshData::SaveHST(String fileName, double rho, double g) const {
-	Wamit::Save_hst_static(C, fileName, rho, g);
 }
