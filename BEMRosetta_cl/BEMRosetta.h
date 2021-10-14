@@ -109,6 +109,7 @@ public:
     Upp::Array<Eigen::MatrixXd> M;			// [Nb](6, 6)		Mass and inertia matrix
     Eigen::MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
+    Eigen::MatrixXd c0;          			// (3,Nb)     		Centre of rotation
     BEM_SOFT code;        					// BEM_SOFT			BEM code 
     Upp::Vector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
     Upp::Vector<int> dofOrder;				// [6*Nb]			DOF order
@@ -585,6 +586,7 @@ public:
 		id = idCount++;
 		cg  = Point3D(0, 0, 0);
 		cg0 = Point3D(0, 0, 0);
+		c0  = Point3D(0, 0, 0);
 	}
 	const char *GetCodeMeshStr() const {
 		return meshStr[code];
@@ -634,7 +636,7 @@ public:
 	
 	double xProjectionPos, xProjectionNeg, yProjectionPos, yProjectionNeg, zProjectionPos, zProjectionNeg; 
 	Point3D cb = Null;
-	Point3D cg = Null, cg0;
+	Point3D cg, cg0, c0;
 	double mass = Null;
 	Eigen::MatrixXd C;
 	

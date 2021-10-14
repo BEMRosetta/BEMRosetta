@@ -44,6 +44,7 @@ String AQWAMesh::LoadDat(String fileName) {
 					cg.x = ScanDouble(line.Mid(20, 10));
 					cg.y = ScanDouble(line.Mid(30, 10));
 					cg.z = ScanDouble(line.Mid(40, 10));
+					c0 = clone(cg);		// In AQWA, it's the same
 				} else {
 					ids << id;
 					Point3D &node = mesh.nodes.Add();

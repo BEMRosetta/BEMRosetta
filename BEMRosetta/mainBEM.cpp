@@ -1050,6 +1050,15 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		else
 			array.Set(row++, col, "-");
 		
+		array.Set(row, 0, sib + " " + t_("C0 [m]"));
+		if (data.cg.size() > 3*ib && !IsNull(data.c0(0, ib))) 
+			array.Set(row++, col, Format(t_("%s, %s, %s"),
+									FormatDoubleSize(data.c0(0, ib), 10, false),
+									FormatDoubleSize(data.c0(1, ib), 10, false),
+									FormatDoubleSize(data.c0(2, ib), 10, false)));
+		else
+			array.Set(row++, col, "-");
+		
 		array.Set(row, 0, sib + " " + t_("Water plane area [m2]"));
 		if (data.C.size() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_ndim(ib, 2, 2);

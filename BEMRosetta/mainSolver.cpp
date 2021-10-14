@@ -390,9 +390,9 @@ bool MainSolver::Save(BEMCase &data, bool isNemoh) {
 		b.c0[2] 	 		= bodies.array.Get(i, 10);
 		
 		if (i == 0) {
-			b.cg[0] = bodies.cx;
-			b.cg[1] = bodies.cy;
-			b.cg[2] = bodies.cz;
+			b.cg[0] = bodies.xcm;
+			b.cg[1] = bodies.ycm;
+			b.cg[2] = bodies.zcm;
 			GridCtrlToMatrixXd(b.mass, bodies.mass);
 			GridCtrlToMatrixXd(b.linearDamping, bodies.linearDamping);
 			GridCtrlToMatrixXd(b.quadraticDamping, bodies.quadraticDamping);

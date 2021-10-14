@@ -64,8 +64,8 @@ void MainMesh::Init() {
 	menuPlot.showMultiPan.Tip(t_("Shows wrong panels")).WhenAction    			= [&] {LoadSelTab(Bem());};
 	menuPlot.showAxis.Tip(t_("Shows system axis")).WhenAction  					= [&] {mainView.gl.Refresh();};
 	menuPlot.showLimits.Tip(t_("Shows boundaris of the geometry")).WhenAction 	= [&] {mainView.gl.Refresh();};
-	menuPlot.showCb.Tip(t_("Shows the center of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
-	menuPlot.showCg.Tip(t_("Shows the center of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
+	menuPlot.showCb.Tip(t_("Shows the centre of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
+	menuPlot.showCg.Tip(t_("Shows the centre of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
 	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.gl.Refresh();};	
 	menuPlot.showUnderwater.Tip(t_("Shows nderwater mesh")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.gl.View(true, true, true);};
@@ -92,16 +92,36 @@ void MainMesh::Init() {
 	menuProcess.butReset <<= THISBACK(OnReset);
 	menuProcess.butReset.Tip(t_("Translates the mesh"));	
 	
-	menuProcess.cg_x <<= 0;
-	menuProcess.cg_x.WhenEnter = THISBACK1(OnUpdate, NONE);
-	menuProcess.cg_y <<= 0;
-	menuProcess.cg_y.WhenEnter = THISBACK1(OnUpdate, NONE);
-	menuProcess.cg_z <<= 0;
-	menuProcess.cg_z.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.x_g <<= 0;
+	menuProcess.x_g.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.y_g <<= 0;
+	menuProcess.y_g.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.z_g <<= 0;
+	menuProcess.z_g.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.x_0 <<= 0;
+	menuProcess.x_0.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.y_0 <<= 0;
+	menuProcess.y_0.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.z_0 <<= 0;
+	menuProcess.z_0.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.mass <<= 0;
 	menuProcess.mass.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateCg  <<= THISBACK1(OnUpdate, NONE);
-	menuProcess.butUpdateCg.Tip(t_("Sets the center of gravity and mass"));
+	menuProcess.butUpdateCg.Tip(t_("Sets the mass and centres of gravity and rotation"));
+	menuProcess.butCgtoC0.WhenAction = [&] {
+		menuProcess.x_0 <<= ~menuProcess.x_g;
+		menuProcess.y_0 <<= ~menuProcess.y_g;
+		menuProcess.z_0 <<= ~menuProcess.z_g;
+		OnUpdate(NONE);
+	};
+	menuProcess.butCgtoC0.Tip(t_("Sets the centre of rotation with the centre of gravity"));
+	menuProcess.butC0toCg.WhenAction = [&] {
+		menuProcess.x_g <<= ~menuProcess.x_0;
+		menuProcess.y_g <<= ~menuProcess.y_0;
+		menuProcess.z_g <<= ~menuProcess.z_0;
+		OnUpdate(NONE);
+	};
+	menuProcess.butC0toCg.Tip(t_("Sets the centre of gravity with the centre of rotation"));
 	
 	menuProcess.butUpdateMass  <<= THISBACK(OnUpdateMass);
 	menuProcess.butUpdateMass.Tip(t_("Sets mass from inmersed volume"));
@@ -251,9 +271,12 @@ void MainMesh::OnMenuProcessArraySel() {
 		return;
 	
 	Mesh &data = Bem().surfs[id];
-	menuProcess.cg_x <<= data.cg.x;
-	menuProcess.cg_y <<= data.cg.y;
-	menuProcess.cg_z <<= data.cg.z;
+	menuProcess.x_g <<= data.cg.x;
+	menuProcess.y_g <<= data.cg.y;
+	menuProcess.z_g <<= data.cg.z;
+	menuProcess.x_0 <<= data.c0.x;
+	menuProcess.y_0 <<= data.c0.y;
+	menuProcess.z_0 <<= data.c0.z;
 	menuProcess.mass <<= data.mass;
 }
 
@@ -394,7 +417,8 @@ void MainMesh::AfterAdd(String file) {
 	mainView.gl.Enable();
 	mainView.gl.ZoomToFit();
 	
-	After();		
+	After();	
+	OnArraySel();	
 }
 
 bool MainMesh::OnLoad() {
@@ -566,9 +590,12 @@ void MainMesh::OnUpdate(Action action) {
 		Mesh &data = Bem().surfs[id];
 
 		double mass = ~menuProcess.mass;
-		double cg_x = ~menuProcess.cg_x;
-		double cg_y = ~menuProcess.cg_y;
-		double cg_z = ~menuProcess.cg_z;
+		double x_g = ~menuProcess.x_g;
+		double y_g = ~menuProcess.y_g;
+		double z_g = ~menuProcess.z_g;
+		double x_0 = ~menuProcess.x_0;
+		double y_0 = ~menuProcess.y_0;
+		double z_0 = ~menuProcess.z_0;
 		double t_x = ~menuProcess.t_x;
 		double t_y = ~menuProcess.t_y;
 		double t_z = ~menuProcess.t_z;
@@ -579,8 +606,12 @@ void MainMesh::OnUpdate(Action action) {
 		double c_y = ~menuProcess.c_y;
 		double c_z = ~menuProcess.c_z;
 
-		if (action == NONE && (IsNull(mass) || IsNull(cg_x) || IsNull(cg_y) || IsNull(cg_z))) {
+		if (action == NONE && (IsNull(mass) || IsNull(x_g) || IsNull(y_g) || IsNull(z_g))) {
 			Exclamation(t_("Please fill CG data"));
+			return;
+		}
+		if (action == NONE && (IsNull(mass) || IsNull(x_0) || IsNull(y_0) || IsNull(z_0))) {
+			Exclamation(t_("Please fill centre of rotation data"));
 			return;
 		}
 				
@@ -593,7 +624,7 @@ void MainMesh::OnUpdate(Action action) {
 			return;
 		}
 		if (action == ROTATE && (IsNull(c_x) || IsNull(c_y) || IsNull(c_z))) {
-			Exclamation(t_("Please fill center of rotation data"));
+			Exclamation(t_("Please fill centre of rotation data"));
 			return;
 		}
 		
@@ -607,7 +638,8 @@ void MainMesh::OnUpdate(Action action) {
 			data.mesh.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
 		} else if (action == NONE) {
 			data.mass = mass;
-			data.cg.Set(cg_x, cg_y, cg_z);
+			data.cg.Set(x_g, y_g, z_g);
+			data.c0.Set(x_0, y_0, z_0);
 		}
 		
 		data.AfterLoad(Bem().rho, Bem().g, action == NONE, false);
@@ -1194,7 +1226,11 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 														FormatDoubleSize(data.cb.x, 10, false),			
 														FormatDoubleSize(data.cb.y, 10, false),
 														FormatDoubleSize(data.cb.z, 10, false)));
-	
+	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
+														FormatDoubleSize(data.c0.x, 10, false),			
+														FormatDoubleSize(data.c0.y, 10, false),
+														FormatDoubleSize(data.c0.z, 10, false)));
+														
 	array.Set(row, 0, t_("Surface projection Z-axis (Water Plane Area) [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
 														FormatDoubleSize(-data.zProjectionPos, 10, false),
