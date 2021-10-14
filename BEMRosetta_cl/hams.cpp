@@ -72,6 +72,20 @@ bool HAMS::Load_Settings(String fileName, double rhog) {
 	
 	rhog = rho*g;
 	
+	hd().Nb = 1;
+	
+	hd().c0.setConstant(3, hd().Nb, Null);
+	f.Load(in.GetLine());	
+	hd().c0(0, 0) = f.GetDouble(0);
+	hd().c0(1, 0) = f.GetDouble(1);
+	hd().c0(2, 0) = f.GetDouble(2);
+	
+	hd().cg.setConstant(3, hd().Nb, Null);
+	f.Load(in.GetLine());	
+	hd().cg(0, 0) = f.GetDouble(0);
+	hd().cg(1, 0) = f.GetDouble(1);
+	hd().cg(2, 0) = f.GetDouble(2);	
+	
 	return true;
 }
 
@@ -86,7 +100,7 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
  
 	hd().Nb = 1;
 	
-	hd().cg.setConstant(3, hd().Nb, Null);
+	hd().c0.setConstant(3, hd().Nb, Null);
 	
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib)
@@ -94,9 +108,9 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
 
 	in.GetLine();	
 	f.Load(in.GetLine());	
-	hd().cg(0, 0) = f.GetDouble(0);
-	hd().cg(1, 0) = f.GetDouble(1);
-	hd().cg(2, 0) = f.GetDouble(2);
+	hd().c0(0, 0) = f.GetDouble(0);
+	hd().c0(1, 0) = f.GetDouble(1);
+	hd().c0(2, 0) = f.GetDouble(2);
 		
 	in.GetLine(8);
 	for (int r = 0; r < 6; ++r) {
@@ -249,10 +263,10 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 		
 		String line = Trim(f.GetText());
 	
-		if (line == "Center of Gravity:") {
+		if (line == "Centre of Gravity:") {
 			f.LoadLine();
 			if (f.size() < 3)
-				throw Exc("Center of Gravity data is not complete");
+				throw Exc("Centre of Gravity data is not complete");
 			body.cg[0] = f.GetDouble(0);
 			body.cg[1] = f.GetDouble(1);
 			body.cg[2] = f.GetDouble(2);
@@ -419,7 +433,7 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
-	out << " Center of Gravity:";
+	out << " Centre of Gravity:";
 	
 	if (bodies.IsEmpty())
 		throw Exc(t_("No bodies found"));
@@ -464,7 +478,7 @@ void HamsCase::Save_Settings(String folderInput) const {
 		<< "gravity acceleration\n"
 		<< "sea water density\n"
 		<< "mesh file name (gdf format)\n"
-		<< "Center of rotation";
+		<< "Centre of rotation";
 }
 
 void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
@@ -502,7 +516,7 @@ void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, doubl
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
-	out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
+	out << "\n    Reference_body_centre " << Format("%11.3f %11.3f %11.3f", 
 								bodies[0].c0[0], bodies[0].c0[1], bodies[0].c0[2]) << 
 		   "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";

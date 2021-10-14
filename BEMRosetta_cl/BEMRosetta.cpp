@@ -577,6 +577,7 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 	names.SetCount(Nb);
 	dof.SetCount(Nb);
 	cg.setConstant(3, Nb, Null);
+	c0.setConstant(3, Nb, Null);
 	cb.setConstant(3, Nb, Null);
 	Vo.SetCount(Nb, Null);
 	
@@ -616,6 +617,8 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 					cg(i, ib) = hydro.cg(i, ib);
 				if (!IsNull(hydro.cb(i, ib)))
 					cb(i, ib) = hydro.cb(i, ib);
+				if (!IsNull(hydro.c0(i, ib)))
+					c0(i, ib) = hydro.c0(i, ib);
 			}
 			dof[ib] = hydro.dof[ib];
 		}
@@ -752,6 +755,8 @@ void Hydro::Report() const {
 			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", cg(0, ib), cg(1, ib), cg(2, ib));
 		if (cb.size() > 3*ib && !IsNull(cb(0, ib)))
 			str += " " + Format("Cb(%.3f, %.3f, %.3f)[m]", cb(0, ib), cb(1, ib), cb(2, ib));
+		if (c0.size() > 3*ib && !IsNull(c0(0, ib)))
+			str += " " + Format("C0(%.3f, %.3f, %.3f)[m]", c0(0, ib), c0(1, ib), c0(2, ib));
 		
 		BEMData::Print(str);
 	}
@@ -1095,6 +1100,8 @@ void Hydro::CheckNaN() {
 		throw Exc("Error loading cb. NaN found");
 	if (!IsNum(cg))
 		throw Exc("Error loading cg. NaN found");
+	if (!IsNum(c0))
+		throw Exc("Error loading c0. NaN found");
 	if (!IsNum(dof))
 		throw Exc("Error loading dof. NaN found");
 	if (!IsNum(dofOrder))
@@ -1142,6 +1149,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("C", C)
 		("cb", cb)
 		("cg", cg)
+		("c0", c0)
 		("code", icode)
 		("dof", dof)
 		("dofOrder", dofOrder)

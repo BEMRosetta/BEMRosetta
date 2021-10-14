@@ -81,6 +81,7 @@ bool Aqwa::Load_AH1() {
 	
 	hd().names.SetCount(hd().Nb);
 	hd().cg.setConstant(3, hd().Nb, Null);
+	hd().c0.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, Null); 
@@ -126,6 +127,7 @@ bool Aqwa::Load_AH1() {
 				hd().cg(0, ib) = f.GetDouble(1);
 				hd().cg(1, ib) = f.GetDouble(2);
 				hd().cg(2, ib) = f.GetDouble(3);
+				hd().c0 = clone(hd().cg);
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {
@@ -258,6 +260,7 @@ bool Aqwa::Load_LIS() {
 	hd().names.SetCount(hd().Nb);
 	hd().Vo.SetCount(hd().Nb, Null);
 	hd().cg.setConstant(3, hd().Nb, Null);
+	hd().c0.setConstant(3, hd().Nb, Null);
 	hd().cb.setConstant(3, hd().Nb, Null);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
@@ -284,6 +287,7 @@ bool Aqwa::Load_LIS() {
 			hd().cg(0, ib) = f.GetDouble(3);
 			hd().cg(1, ib) = f.GetDouble(4);
 			hd().cg(2, ib) = f.GetDouble(5);
+			hd().c0 = clone(hd().cg);
 		} else if (line.StartsWith("INERTIA MATRIX")) {
 			Eigen::MatrixXd &inertia = hd().M[ib];
 			f.Load(line);
@@ -698,9 +702,10 @@ bool AQWACase::Load(String fileName) {
 			else if (f.GetText(0) == "1DIRN") 
 				head << f.GetDouble(3);
 			else if (f.GetInt_nothrow(0) == 198000) {
-				body.c0[0] = body.cg[0] = f.GetDouble(1);
-				body.c0[1] = body.cg[1] = f.GetDouble(2);
-				body.c0[2] = body.cg[2] = f.GetDouble(3);
+				body.cg[0] = f.GetDouble(1);
+				body.cg[1] = f.GetDouble(2);
+				body.cg[2] = f.GetDouble(3);
+				body.c0 = clone(body.cg);
 			}
 		}
 	}
