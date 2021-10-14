@@ -88,7 +88,8 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("               STL.Text     # - Save in STL   text format");
 	Cout() << "\n" << t_("-t   -translate <x> <y> <z>              # Translate x, y, z [m]");
 	Cout() << "\n" << t_("-rot -rotate    <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
-	Cout() << "\n" << t_("-cg             <x> <y> <z>       # Sets cg: x, y, z [m]");
+	Cout() << "\n" << t_("-cg             <x> <y> <z>       # Sets cg: x, y, z [m] cg is the centre of gravity");
+	Cout() << "\n" << t_("-c0             <x> <y> <z>       # Sets c0: x, y, z [m] c0 is the centre of rotation");
 	
 	Cout() << "\n" << t_("-getwaterplane        # Extract in new model the waterplane mesh (lid)");
 	Cout() << "\n" << t_("-gethull              # Extract in new model the mesh underwater hull");
@@ -403,7 +404,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							data.mesh.Rotate(ax, ay, az, cx, cy, cz);	
 							data.cg.Rotate(ax, ay, az, cx, cy, cz);
 							data.AfterLoad(bem.rho, bem.g, false, false);	
-							BEMData::Print("\n" + Format(t_("Mesh id %d rotated angles %f, %f, %f around center %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
+							BEMData::Print("\n" + Format(t_("Mesh id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
 						} else if (param == "-cg") {
 							CheckIfAvailableArg(command, ++i, "cgx");
 							double x = ScanDouble(command[i]);
@@ -415,6 +416,19 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							data.cg.x = x;
 							data.cg.y = y;
 							data.cg.z = z;
+							data.AfterLoad(bem.rho, bem.g, true, false);
+							BEMData::Print("\n" + Format(t_("CG is %f, %f, %f"), x, y, z));
+						} else if (param == "-c0") {
+							CheckIfAvailableArg(command, ++i, "c0x");
+							double x = ScanDouble(command[i]);
+							CheckIfAvailableArg(command, ++i, "c0y");
+							double y = ScanDouble(command[i]);
+							CheckIfAvailableArg(command, ++i, "c0z");
+							double z = ScanDouble(command[i]);
+							Mesh &data = bem.surfs[meshid];
+							data.c0.x = x;
+							data.c0.y = y;
+							data.c0.z = z;
 							data.AfterLoad(bem.rho, bem.g, true, false);
 							BEMData::Print("\n" + Format(t_("CG is %f, %f, %f"), x, y, z));
 						} else if (param == "-reset") {	
@@ -474,14 +488,14 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									BEMData::Print(t_("Inertia:") + S(" "));
 									lastPrint.Clear();
 									Eigen::Matrix3d inertia;
-									Point3D center;
+									Point3D centre;
 									CheckIfAvailableArg(command, ++i, "Inertia cx");
-									center.x = ScanDouble(command[i]);
+									centre.x = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Inertia cy");
-									center.y = ScanDouble(command[i]);
+									centre.y = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Inertia cz");
-									center.z = ScanDouble(command[i]);
-									data.mesh.GetInertia(inertia, center, true);
+									centre.z = ScanDouble(command[i]);
+									data.mesh.GetInertia(inertia, centre, true);
 									for (int i = 0; i < 3; ++i) 
 										for (int j = 0; j < 3; ++j) 
 											lastPrint << inertia(i, j) << " ";

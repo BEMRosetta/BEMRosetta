@@ -179,7 +179,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		mesh0 = clone(mesh);
 		cg0 = clone(cg);
 	}
-	under.GetHydrostaticStiffness(C, cb, rho, cg, mass, g);
+	under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, mass);
 }
 
 void Mesh::Report(double rho) const {
@@ -195,7 +195,7 @@ void Mesh::Report(double rho) const {
 	BEMData::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
 	BEMData::Print(S("\n") + Format(t_("Underwater volume [m3] %f"), under.volume));
 	BEMData::Print(S("\n") + Format(t_("Displacement [tm] %f"), under.volume*rho/1000));
-	BEMData::Print(S("\n") + Format(t_("Center of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
+	BEMData::Print(S("\n") + Format(t_("Centre of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
 	
 	BEMData::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.size(), mesh.nodes.size()));
 }
