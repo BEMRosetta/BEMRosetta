@@ -1058,12 +1058,23 @@ void Hydro::SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::A
 	}
 }
 
+Eigen::MatrixXd Hydro::C_dim(int ib) const {
+	Eigen::MatrixXd ret;
+	if (C.IsEmpty())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = C_dim(ib, idf, jdf);
+	return ret;
+}
+
 void Hydro::C_dim() {
 	if (C.IsEmpty())
 		return;
 	for (int ib = 0; ib < Nb; ++ib) 
-		for (int idf = 0; idf < 6*Nb; ++idf) 	
-			for (int jdf = 0; jdf < 6*Nb; ++jdf) 
+		for (int idf = 0; idf < 6; ++idf) 	
+			for (int jdf = 0; jdf < 6; ++jdf) 
 				C[ib](idf, jdf) = C_dim(ib, idf, jdf);
 }
 
