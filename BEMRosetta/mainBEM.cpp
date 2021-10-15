@@ -1051,7 +1051,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("C0 [m]"));
-		if (data.cg.size() > 3*ib && !IsNull(data.c0(0, ib))) 
+		if (data.c0.size() > 3*ib && !IsNull(data.c0(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
 									FormatDoubleSize(data.c0(0, ib), 10, false),
 									FormatDoubleSize(data.c0(1, ib), 10, false),

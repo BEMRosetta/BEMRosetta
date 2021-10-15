@@ -177,6 +177,7 @@ bool Wamit::Load_out() {
 		} else if (line.Find("POTEN run date and starting time:") >= 0) {
 			hd().cg.setConstant(3, hd().Nb, Null);
 			hd().cb.setConstant(3, hd().Nb, Null);
+			hd().c0.setConstant(3, hd().Nb, Null);
 			hd().Vo.SetCount(hd().Nb, Null);
 			hd().C.SetCount(hd().Nb);
 		} else if (line.Find("Gravity:") >= 0) {
@@ -196,9 +197,11 @@ bool Wamit::Load_out() {
 			ibody++;
 			if (ibody >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Found additional bodies over %d"), hd().Nb));
-			xbody = f.GetDouble(2);
-			ybody = f.GetDouble(5);
-			zbody = f.GetDouble(8);
+			if (hd().c0.rows() < 3 || hd().c0.cols() < hd().Nb)
+			 	throw Exc(in.Str() + "\n"  + t_("c0 matrix is not dimensioned"));
+			hd().c0(0, ibody) = f.GetDouble(2);
+			hd().c0(1, ibody) = f.GetDouble(5);
+			hd().c0(2, ibody) = f.GetDouble(8);
 		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {
 			if (hd().Vo.size() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("Vo matrix is not dimensioned"));		
@@ -206,15 +209,15 @@ bool Wamit::Load_out() {
 		} else if (line.Find("Center of Gravity  (Xg,Yg,Zg):") >= 0) {
 			if (hd().cg.rows() < 3 || hd().cg.cols() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("cg matrix is not dimensioned"));
-			hd().cg(0, ibody) = f.GetDouble(4) + xbody;
-			hd().cg(1, ibody) = f.GetDouble(5) + ybody;
-			hd().cg(2, ibody) = f.GetDouble(6) + zbody;
+			hd().cg(0, ibody) = f.GetDouble(4);
+			hd().cg(1, ibody) = f.GetDouble(5);
+			hd().cg(2, ibody) = f.GetDouble(6);
 		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
 			if (hd().cb.rows() < 3 || hd().cb.cols() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("cb matrix is not dimensioned"));
-			hd().cb(0, ibody) = f.GetDouble(4) + xbody;
-			hd().cb(1, ibody) = f.GetDouble(5) + ybody;
-			hd().cb(2, ibody) = f.GetDouble(6) + zbody;
+			hd().cb(0, ibody) = f.GetDouble(4);
+			hd().cb(1, ibody) = f.GetDouble(5);
+			hd().cb(2, ibody) = f.GetDouble(6);
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
 			if (hd().C.size() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("C matrix is not dimensioned"));
