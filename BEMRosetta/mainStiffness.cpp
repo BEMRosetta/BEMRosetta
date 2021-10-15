@@ -139,7 +139,7 @@ void MainStiffness::Add(const Mesh &mesh, int icase, bool button) {
 }
 	
 void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
-	data << clone(hydro.C[ibody]);
+	data << hydro.C_dim(ibody);
 	
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, bodyName, ibody, idc);
