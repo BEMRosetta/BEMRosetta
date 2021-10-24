@@ -98,22 +98,22 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("-reset                # Restore the mesh to the initial situation");
 	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
 	Cout() << "\n" << t_("-p  -print <params>   # Prints model data in a row");
-	Cout() << "\n" << t_("        <params> volume            # volx voly volx [m3]");
-	Cout() << "\n" << t_("                 underwatervolume  # volx voly volx [m3]");
-	Cout() << "\n" << t_("                 surface           # [m2]");
-	Cout() << "\n" << t_("                 underwatersurface # [m2]");
-	Cout() << "\n" << t_("                 cb                # cbx cby cbz [m]");
-	Cout() << "\n" << t_("                 hydrostiffness    # Hydrostatic stiffness around rotation centre");
-	Cout() << "\n" << t_("                 >returns K(3,3) [N/m]");
-	Cout() << "\n" << t_("                          K(3,4) K(3,5) K(4,3) [N/rad]");
-	Cout() << "\n" << t_("                          K(4,4) K(4,5) K(4,6) [Nm/rad]");
-	Cout() << "\n" << t_("                          K(5,3) [N/rad]");
-	Cout() << "\n" << t_("                          K(5,4) K(5,5) K(5,6) K(6,4) K(6,5) K(6,6) [Nm/rad]");
-	Cout() << "\n" << t_("                 hydrostatic_force        # Hydrostatic force around rotation centre");
-	Cout() << "\n" << t_("                 >returns Fx, Fy, Fz [N]");
-	Cout() << "\n" << t_("                          Mx(roll), My(pitch), Mz(yaw) [N·m]");
-	Cout() << "\n" << t_("                 inertia <cx> <cy> <cz>   # Inertia tensor around cx, cy, cz [m]");
-	Cout() << "\n" << t_("                 >returns Ixx Ixy Ixz Iyx Iyy Iyz Izx Izy Izz [m2]");
+	Cout() << "\n" << t_("     <params> volume            # volx voly volx [m3]");
+	Cout() << "\n" << t_("              underwatervolume  # volx voly volx [m3]");
+	Cout() << "\n" << t_("              surface           # [m2]");
+	Cout() << "\n" << t_("              underwatersurface # [m2]");
+	Cout() << "\n" << t_("              cb                # cbx cby cbz [m]");
+	Cout() << "\n" << t_("              hydrostiffness    # Hydrostatic stiffness around the rotation centre");
+	Cout() << "\n" << t_("                                # returns K(3,3) [N/m]");
+	Cout() << "\n" << t_("                                #         K(3,4) K(3,5) K(4,3) [N/rad]");
+	Cout() << "\n" << t_("                                #         K(4,4) K(4,5) K(4,6) [Nm/rad]");
+	Cout() << "\n" << t_("                                #         K(5,3) [N/rad]");
+	Cout() << "\n" << t_("                                #         K(5,4) K(5,5) K(5,6) K(6,4) K(6,5) K(6,6) [Nm/rad]");
+	Cout() << "\n" << t_("              hydrostatic_force # Hydrostatic force around the rotation centre");
+	Cout() << "\n" << t_("                                # returns Fx, Fy, Fz [N]");
+	Cout() << "\n" << t_("                                #         Mx(roll), My(pitch), Mz(yaw) [N·m]");
+	Cout() << "\n" << t_("              inertia <cx> <cy> <cz> # Inertia tensor around cx, cy, cz [m]");
+	Cout() << "\n" << t_("                                # returns Ixx Ixy Ixz Iyx Iyy Iyz Izx Izy Izz [m2]");
 
 	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	
