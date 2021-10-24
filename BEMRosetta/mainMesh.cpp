@@ -31,6 +31,8 @@ void MainMesh::Init() {
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
 		listLoaded.StdBar(menu);
+		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), Null, [&]{
+			LaunchWebBrowser(GetFileFolder(ArrayModel_GetFileName(listLoaded)));}).Help(t_("Opens file explorer in the file folder"));
 		menu.Add(listLoaded.GetCount() > 0, t_("Deselect all"), Null, [&]{listLoaded.ClearSelection();})
 			.Help(t_("Deselect all table rows"));
 	};
@@ -1256,6 +1258,17 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 														FormatDoubleSize(data.mesh.env.maxX, 10, false),
 														FormatDoubleSize(data.mesh.env.maxY, 10, false),
 														FormatDoubleSize(data.mesh.env.maxZ, 10, false)));
+
+	Eigen::VectorXd f;
+	data.under.GetHydrostaticForce(f, data.c0, Bem().rho, Bem().g);	
+	array.Set(row, 0, t_("Hydrostatic forces [N]"));   array.Set(row++, col, Format(t_("%s, %s, %s"),
+														FormatDoubleSize(f[0], 10, false),
+														FormatDoubleSize(f[1], 10, false),
+														FormatDoubleSize(f[2], 10, false)));
+	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));array.Set(row++, col, Format(t_("%s, %s, %s"),
+														FormatDoubleSize(f[3], 10, false),
+														FormatDoubleSize(f[4], 10, false),
+														FormatDoubleSize(f[5], 10, false)));													
 
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (data.C.size() > 0) {

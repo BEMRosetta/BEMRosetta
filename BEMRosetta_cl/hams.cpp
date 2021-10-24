@@ -224,7 +224,7 @@ bool HamsCase::Load(String fileName) {
 				minH = data[0];
 				maxH = data[data.size()-1];
 			}
-		} else if (var == "Reference_body_center") {
+		} else if (var == "Reference_body_centre") {
 			if (f.size() < 4)
 				throw Exc("Lack of data in Reference_body_center");
 			bodies.SetCount(1);
@@ -473,12 +473,14 @@ void HamsCase::Save_Settings(String folderInput) const {
 	out << g << "\n";
 	out << ".\\Input\\mesh.gdf" << "\n";
 	out << bodies[0].c0[0] << "   " << bodies[0].c0[1] << "   " << bodies[0].c0[2] << "\n";
+	out << bodies[0].cg[0] << "   " << bodies[0].cg[1] << "   " << bodies[0].cg[2] << "\n";
 	out << "\n"
 		<< "The format is as below:\n"
 		<< "gravity acceleration\n"
 		<< "sea water density\n"
 		<< "mesh file name (gdf format)\n"
-		<< "Centre of rotation";
+		<< "Centre of rotation\n"
+		<< "Centre of gravity";
 }
 
 void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,

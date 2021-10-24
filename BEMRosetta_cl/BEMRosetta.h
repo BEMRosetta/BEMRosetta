@@ -659,6 +659,7 @@ public:
 	String LoadDat(String fileName, bool &x0z);
 	static void SaveDat(String fileName, const Surface &surf, bool x0z);
 	static void SavePreMesh(String fileName, const Surface &surf);
+	void SaveKH(String fileName) const; 
 	
 	virtual ~NemohMesh() noexcept {}
 };
@@ -701,7 +702,7 @@ public:
 	bool LoadDatMesh(String file);
 	void SaveGdfMesh(String fileName);
 	
-	static void Save_hst_static(Eigen::MatrixXd C, String fileName, double rho, double g);
+	static void Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rho, double g);
 	
 protected:
 	void ProcessFirstColumn(Vector<double> &w, Vector<double> &T);
@@ -913,6 +914,9 @@ public:
 	bool LoadDatMesh(String file);
 	void SaveDatMesh(String file); 
 	
+	bool Save_KH(String folder) const;
+	static bool Save_KH_static(const Eigen::MatrixXd &C, String fileKH);
+	
 private:
 	String folder;
 	BEMCase dcase;
@@ -989,7 +993,7 @@ public:
 	int numValsA;
 	int onlyDiagonal;
 	
-	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathMesh, nemohPathGREN;
+	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathGREN;
 	bool experimental;
 	String foammPath;
 	String hamsPath, hamsMeshPath;
@@ -1041,7 +1045,6 @@ public:
 			("nemohPathPreprocessor", nemohPathPreprocessor)
 			("nemohPathSolver", nemohPathSolver)
 			("nemohPathPostprocessor", nemohPathPostprocessor)
-			("nemohPathMesh", nemohPathMesh)
 			("nemohPathGREN", nemohPathGREN)
 			("nemohPathNew", nemohPathNew)
 			("foammPath", foammPath)
