@@ -86,7 +86,7 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("               Nemoh.dat    # - Save in Nemoh .dat format");
 	Cout() << "\n" << t_("               HAMS.pnl     # - Save in HAMS  .pnl format");
 	Cout() << "\n" << t_("               STL.Text     # - Save in STL   text format");
-	Cout() << "\n" << t_("-t   -translate <x> <y> <z>              # Translate x, y, z [m]");
+	Cout() << "\n" << t_("-t   -translate <x> <y> <z>       # Translate x, y, z [m]");
 	Cout() << "\n" << t_("-rot -rotate    <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
 	Cout() << "\n" << t_("-cg             <x> <y> <z>       # Sets cg: x, y, z [m] cg is the centre of gravity");
 	Cout() << "\n" << t_("-c0             <x> <y> <z>       # Sets c0: x, y, z [m] c0 is the centre of rotation");
@@ -103,12 +103,15 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("                 surface           # [m2]");
 	Cout() << "\n" << t_("                 underwatersurface # [m2]");
 	Cout() << "\n" << t_("                 cb                # cbx cby cbz [m]");
-	Cout() << "\n" << t_("                 hydrostiffness");
+	Cout() << "\n" << t_("                 hydrostiffness    # Hydrostatic stiffness around rotation centre");
 	Cout() << "\n" << t_("                 >returns K(3,3) [N/m]");
 	Cout() << "\n" << t_("                          K(3,4) K(3,5) K(4,3) [N/rad]");
 	Cout() << "\n" << t_("                          K(4,4) K(4,5) K(4,6) [Nm/rad]");
 	Cout() << "\n" << t_("                          K(5,3) [N/rad]");
 	Cout() << "\n" << t_("                          K(5,4) K(5,5) K(5,6) K(6,4) K(6,5) K(6,6) [Nm/rad]");
+	Cout() << "\n" << t_("                 hydrostatic_force        # Hydrostatic force around rotation centre");
+	Cout() << "\n" << t_("                 >returns Fx, Fy, Fz [N]");
+	Cout() << "\n" << t_("                          Mx(roll), My(pitch), Mz(yaw) [N·m]");
 	Cout() << "\n" << t_("                 inertia <cx> <cy> <cz>   # Inertia tensor around cx, cy, cz [m]");
 	Cout() << "\n" << t_("                 >returns Ixx Ixy Ixz Iyx Iyy Iyz Izx Izy Izz [m2]");
 
@@ -137,7 +140,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 	
 	BEMData bem;
 	
-	bool firstTime = bem.LoadSerializeJson();
+	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime)
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
 	
@@ -482,6 +485,15 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 												lastPrint << data.C(i, j) << " ";
 										}
 									}
+									Cout() << lastPrint;
+								} else if (param == "hydrostatic_force") {
+									Cout() << "\n";
+									BEMData::Print(t_("HydrostaticForce:") + S(" "));
+									lastPrint.Clear();
+									Eigen::VectorXd f;
+									data.under.GetHydrostaticForce(f, data.c0, bem.rho, bem.g);
+									for (int i = 0; i < 6; ++i) 				
+										lastPrint << f(i) << " ";
 									Cout() << lastPrint;
 								} else if (param == "inertia") {
 									Cout() << "\n";

@@ -29,6 +29,13 @@ void MainBEM::Init() {
 		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		UpdateButtons();
 	};
+	listLoaded.WhenBar = [&](Bar &menu) {
+		listLoaded.StdBar(menu);
+		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), Null, [&]{
+			LaunchWebBrowser(GetFileFolder(ArrayModel_GetFileName(listLoaded)));}).Help(t_("Opens file explorer in the file folder"));
+		menu.Add(listLoaded.GetCount() > 0, t_("Deselect all"), Null, [&]{listLoaded.ClearSelection();})
+			.Help(t_("Deselect all table rows"));
+	};
 
 	menuOpen.butRemove.Disable();	
 	menuOpen.butRemove <<= THISBACK(OnRemove);
@@ -925,7 +932,7 @@ bool MainBEM::Key(dword key, int ) {
 void MainSummary::Init() {
 	CtrlLayout(*this);
 	array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
-	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
+	array.WhenBar = [&](Bar &menu) {	ArrayCtrlWhenBar(menu, array);};
 }
 
 void MainSummary::Clear() {

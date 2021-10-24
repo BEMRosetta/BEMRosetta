@@ -1581,7 +1581,7 @@ bool BEMData::LoadSerializeJson() {
 	if (!ret || IsNull(onlyDiagonal))
 		onlyDiagonal = false;
 	
-	return !ret;
+	return ret;
 }
 
 bool BEMData::ClearTempFiles() {

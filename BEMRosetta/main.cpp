@@ -46,7 +46,7 @@ void Main::Init() {
 	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
 			 << t_("Mooring") << t_("Decay") << t_("FAST .out Reader");
 		
-	bool firstTime = bem.LoadSerializeJson();
+	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime) 
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
 	
@@ -195,7 +195,7 @@ void Main::Init() {
 	AddFrame(bar);
 	
 	BEMData::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
-	BEMData::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); Status(s);};
+	BEMData::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
 	BEMData::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput); Status(s);};
 }
 
@@ -336,7 +336,6 @@ void MenuOptions::Load() {
 	nemohPathSolver <<= bem->nemohPathSolver;
 	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
 	nemohPathNew <<= bem->nemohPathNew;
-	nemohPathMesh <<= bem->nemohPathMesh;
 	nemohPathGREN <<= bem->nemohPathGREN;
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
@@ -366,7 +365,6 @@ void MenuOptions::OnSave() {
 	bem->nemohPathSolver = ~nemohPathSolver;
 	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
 	bem->nemohPathNew = ~nemohPathNew;
-	bem->nemohPathMesh = ~nemohPathMesh;
 	bem->nemohPathGREN = ~nemohPathGREN;
 	bem->foammPath = ~foammPath;
 	bem->hamsPath = ~hamsPath;
@@ -412,8 +410,6 @@ bool MenuOptions::IsChanged() {
 	if (bem->nemohPathPostprocessor != ~nemohPathPostprocessor)
 		return true;
 	if (bem->nemohPathNew != ~nemohPathNew)
-		return true;
-	if (bem->nemohPathMesh != ~nemohPathMesh)
 		return true;
 	if (bem->nemohPathGREN != ~nemohPathGREN)
 		return true;

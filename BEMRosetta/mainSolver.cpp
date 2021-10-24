@@ -54,12 +54,17 @@ void MainSolver::Init(const BEMData &bem) {
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);
 	bodies.butRemove <<= THISBACK(arrayOnRemove);
 	bodies.butAllDOF.WhenAction = [&] {
-		bodies.surge <<= true; 	
-		bodies.sway <<= true; 	
-		bodies.heave <<= true; 
-		bodies.roll <<= true; 	
-		bodies.pitch <<= true; 
-		bodies.yaw <<= true;
+		bool set = bodies.butAllDOF.GetLabel() == t_("All DOF");
+		if (set)
+			bodies.butAllDOF.SetLabel(t_("No DOF"));
+		else
+			bodies.butAllDOF.SetLabel(t_("All DOF"));
+		bodies.surge <<= set; 	
+		bodies.sway  <<= set; 	
+		bodies.heave <<= set; 
+		bodies.roll  <<= set; 	
+		bodies.pitch <<= set; 
+		bodies.yaw   <<= set;
 		ArrayUpdateCursor();
 	};
 	
@@ -89,6 +94,17 @@ void MainSolver::Init(const BEMData &bem) {
 	bodies.cx.WhenAction 		= [&] {ArrayUpdateCursor();};
 	bodies.cy.WhenAction 		= [&] {ArrayUpdateCursor();};
 	bodies.cz.WhenAction 		= [&] {ArrayUpdateCursor();};
+	
+	bodies.butC0toCg.WhenAction = [&] {
+		bodies.xcm <<= ~bodies.cx;
+		bodies.ycm <<= ~bodies.cy;
+		bodies.zcm <<= ~bodies.cz;
+	};
+	bodies.butCgtoC0.WhenAction = [&] {
+		bodies.cx <<= ~bodies.xcm;
+		bodies.cy <<= ~bodies.ycm;
+		bodies.cz <<= ~bodies.zcm;
+	};
 	
 	nemoh.freeSurface.Transparent(false);
 	nemoh.freeSurface.WhenAction = [&] {
@@ -130,9 +146,10 @@ void MainSolver::Init(const BEMData &bem) {
 		bodies.roll.Enable(isNemoh);
 		bodies.pitch.Enable(isNemoh);
 		bodies.yaw.Enable(isNemoh);
-		bodies.xcm.Enable(!isNemoh);
-		bodies.ycm.Enable(!isNemoh);
-		bodies.zcm.Enable(!isNemoh);
+		
+		//bodies.xcm.Enable(!isNemoh);
+		//bodies.ycm.Enable(!isNemoh);
+		//bodies.zcm.Enable(!isNemoh);
 		bodies.mass.Enable(!isNemoh);
 		bodies.linearDamping.Enable(!isNemoh);
 		bodies.quadraticDamping.Enable(!isNemoh);
@@ -475,9 +492,7 @@ bool MainSolver::ArrayUpdateCursor() {
 				InitArray(isNemoh);
 				bodies.array.Add();
 				id = 0;
-				bodies.cx <<= 0;
-				bodies.cy <<= 0;
-				bodies.cz <<= 0;
+				arrayClear();
 			} else
 				id = bodies.array.GetCount()-1;
 		}	
@@ -491,8 +506,8 @@ bool MainSolver::ArrayUpdateCursor() {
 		bodies.array.Set(id, 5, ~bodies.roll);
 		bodies.array.Set(id, 6, ~bodies.pitch);
 		bodies.array.Set(id, 7, ~bodies.yaw);
-		bodies.array.Set(id, 8,~bodies.cx);
-		bodies.array.Set(id, 9,~bodies.cy);
+		bodies.array.Set(id, 8, ~bodies.cx);
+		bodies.array.Set(id, 9, ~bodies.cy);
 		bodies.array.Set(id, 10,~bodies.cz);
 	
 		bodies.array.Update();
@@ -508,12 +523,12 @@ bool MainSolver::ArrayUpdateCursor() {
 void MainSolver::arrayClear() {
 	bodies.meshFile <<= "";
 	bodies.lidFile  <<= "";
-	bodies.surge 	<<= false;
-	bodies.sway 	<<= false;
-	bodies.heave 	<<= false;
-	bodies.roll 	<<= false;
-	bodies.pitch 	<<= false;
-	bodies.yaw 	 	<<= false;
+	bodies.surge 	<<= true;
+	bodies.sway 	<<= true;
+	bodies.heave 	<<= true;
+	bodies.roll 	<<= true;
+	bodies.pitch 	<<= true;
+	bodies.yaw 	 	<<= true;
 	bodies.cx 		<<= 0;
 	bodies.cy 		<<= 0;
 	bodies.cz 		<<= 0;

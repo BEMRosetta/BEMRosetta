@@ -1442,7 +1442,7 @@ void Wamit::Save_hst(String fileName) {
 }
 
 // K is supposed to be dimensionalized
-void Wamit::Save_hst_static(Eigen::MatrixXd C, String fileName, double rho, double g) {
+void Wamit::Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rho, double g) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
