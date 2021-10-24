@@ -102,8 +102,16 @@ void MainStiffness::Add(const Mesh &mesh, int icase, bool button) {
 			<< [&] {
 				FileSel fs;
 				fs.Type(t_("Wamit stiffness matrix format"), "*.hst");
-				if (fs.ExecuteSaveAs(t_("Save to Wamit .hst stiffness matrix format"))) 
-					static_cast<const WamitMesh &>(mesh).SaveHST(~fs, Bem().rho, Bem().g);
+				fs.Type(t_("Nemoh stiffness matrix format"), "KH.dat");
+				if (fs.ExecuteSaveAs(t_("Save to stiffness matrix format"))) {
+					String ext = GetFileExt(~fs);
+					if (ext == ".hst")
+						static_cast<const WamitMesh &>(mesh).SaveHST(~fs, Bem().rho, Bem().g);
+					else if (ext == ".dat")
+						static_cast<const NemohMesh &>(mesh).SaveKH(~fs);
+					else
+						throw Exc(t_("Unknown file format"));
+				}
 			};
 	}
 	if (button && Bem().hydros.size() > 0) {

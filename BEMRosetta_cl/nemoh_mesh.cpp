@@ -106,3 +106,8 @@ void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
 	}
 }
 
+void NemohMesh::SaveKH(String fileName) const {
+	Nemoh::Save_KH_static(C, fileName);
+}
+
+

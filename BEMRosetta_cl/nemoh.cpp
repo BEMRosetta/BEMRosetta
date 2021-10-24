@@ -403,7 +403,7 @@ void NemohCase::Save_Bat(String folder, String batname, String caseFolder, bool 
 	String strBin;
 	if (bin)
 		strBin = AppendFileNameX(caseFolder.IsEmpty() ? "." : "..", "bin");
-	out << "call Mesh_cal.bat\n";
+	//out << "call Mesh_cal.bat\n";
 	if (preName.IsEmpty()) {
 		if (solvName == "capytaine")
 			out << "\"" << solvName << "\"\n";
@@ -473,10 +473,10 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 	if (!DirectoryCreateX(binResults))
 		throw Exc(Format(t_("Problem creating '%s' folder"), binResults));
 		
-	String meshName = GetFileName(bem.nemohPathMesh);
-	String destMesh = AppendFileNameX(binResults, meshName);
-	if (!FileCopy(bem.nemohPathMesh, destMesh)) 
-		throw Exc(Format(t_("Problem copying mesh binary from '%s'"), bem.nemohPathMesh));
+	//String meshName = GetFileName(bem.nemohPathMesh);
+	//String destMesh = AppendFileNameX(binResults, meshName);
+	//if (!FileCopy(bem.nemohPathMesh, destMesh)) 
+	//	throw Exc(Format(t_("Problem copying mesh binary from '%s'"), bem.nemohPathMesh));
 	
 	String preName, solvName, postName, batName = "Nemoh";
 	if (solver == BEMCase::CAPYTAINE) {
@@ -553,10 +553,19 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
+			mesh.c0 = clone(bodies[ib].c0);
+			mesh.cg = clone(bodies[ib].cg);
+			mesh.AfterLoad(rho, g, true, false);
 			mesh.SaveAs(dest, Mesh::NEMOH_DAT, g, Mesh::UNDERWATER, false, x0z, nodes[ib], panels[ib]);
 			
-			Save_Mesh_cal(folder, ib, bodies[ib].meshFile, mesh, panels[ib], x0z, bodies[ib].cg, rho, g);
-			meshes[ib] = GetFileTitle(bodies[ib].meshFile);
+			String khName;
+			if (bodies.size() == 1)
+				khName = "KH.dat";
+			else
+				khName = Format("KH_%d.dat", i);
+			static_cast<NemohMesh&>(mesh).SaveKH(AppendFileNameX(folderMesh, khName));
+			//Save_Mesh_cal(folder, ib, bodies[ib].meshFile, mesh, panels[ib], x0z, bodies[ib].cg, rho, g);
+			//meshes[ib] = GetFileTitle(bodies[ib].meshFile);
 		}
 		Save_Cal(folder, _nf, _minf, _maxf, nodes, panels);
 				
@@ -572,10 +581,10 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 		
 		if (numCases > 1) {
 			String caseFolder = Format("%s_Part_%d", batName, i+1);
-			Save_Mesh_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
+			//Save_Mesh_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
 			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, solvName, postName);
 		} else {
-			Save_Mesh_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
+			//Save_Mesh_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
 			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, solvName, postName);
 		}
 	}
@@ -789,6 +798,33 @@ bool Nemoh::Load_KH() {
 			for (int ifr = 0; ifr < 6; ++ifr)
 				hd().C[ib](i, ifr) = f.GetDouble(ifr);
 		}
+	}
+	return true;
+}
+
+bool Nemoh::Save_KH(String folder) const {
+	for (int ib = 0; ib < hd().Nb; ++ib) {
+	    String fileKH;
+		if (hd().Nb == 1) 
+			fileKH = AppendFileNameX(folder, "Mesh", "KH.dat");
+		else 
+			fileKH = AppendFileNameX(folder, "Mesh", Format("KH_%d.dat", ib));
+	    
+	    if (!Save_KH_static(hd().C[ib], fileKH))
+	        return false;
+	}
+	return true;
+}
+
+bool Nemoh::Save_KH_static(const Eigen::MatrixXd &C, String fileKH) {
+    FileOut out(fileKH);
+	if (!out.IsOpen()) 
+        return false;
+
+	for (int i = 0; i < 6; ++i) {
+		for (int ifr = 0; ifr < 6; ++ifr)
+			out << "  " << FormatE(C(i, ifr), 13);
+		out << "\n";
 	}
 	return true;
 }
