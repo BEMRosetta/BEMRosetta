@@ -68,6 +68,7 @@ void MainMesh::Init() {
 	menuPlot.showLimits.Tip(t_("Shows boundaris of the geometry")).WhenAction 	= [&] {mainView.gl.Refresh();};
 	menuPlot.showCb.Tip(t_("Shows the centre of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showCg.Tip(t_("Shows the centre of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
+	menuPlot.showCr.Tip(t_("Shows the centre of rotation")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.gl.Refresh();};	
 	menuPlot.showUnderwater.Tip(t_("Shows nderwater mesh")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.gl.View(true, true, true);};
@@ -328,6 +329,8 @@ void MainMesh::InitSerialize(bool ret) {
 		menuPlot.showCg = true;
 	if (!ret || IsNull(menuPlot.showCb)) 
 		menuPlot.showCb = true;
+	if (!ret || IsNull(menuPlot.showCr)) 
+		menuPlot.showCr = true;
 	if (!ret || IsNull(menuPlot.showSel)) 
 		menuPlot.showSel = true;	
 	if (!ret || IsNull(menuPlot.lineThickness)) 
@@ -1159,6 +1162,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		menuPlot.showLimits = Null;
 		menuPlot.showCg = Null;
 		menuPlot.showCb = Null;
+		menuPlot.showCr = Null;
 		menuPlot.showSel = Null;
 		menuConvert.opt = Null;
 		menuConvert.optMeshType = Null;
@@ -1177,6 +1181,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuPlot_showLimits", menuPlot.showLimits)
 		("menuPlot_showCg", menuPlot.showCg)
 		("menuPlot_showCb", menuPlot.showCb)
+		("menuPlot_showCr", menuPlot.showCr)
 		("menuPlot_showSel", menuPlot.showSel)
 		("menuPlot_showUnderwater", menuPlot.showUnderwater)
 		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)
@@ -1356,11 +1361,15 @@ void MainView::OnPaint() {
 			
 			if (~GetMenuPlot().showCb) {
 				gl.PaintDoubleAxis(mesh.cb, len, LtBlue());
-				gl.PaintCube(mesh.cb, len/10, LtGray());
+				gl.PaintCube(mesh.cb, len/10, LtBlue());
 			}
 			if (~GetMenuPlot().showCg) {
 				gl.PaintDoubleAxis(mesh.cg, len, Black());
-				gl.PaintCube(mesh.cg, len/10, LtGray());
+				gl.PaintCube(mesh.cg, len/10, Black());
+			}
+			if (~GetMenuPlot().showCr) {
+				gl.PaintDoubleAxis(mesh.c0, len, Cyan());
+				gl.PaintCube(mesh.c0, len/10, Gray());
 			}
 			if (paintSelect) {
 				if (~GetMenuPlot().showMesh) {
