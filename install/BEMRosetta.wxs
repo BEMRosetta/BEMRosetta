@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?define ProductVersion = "0.0.1"?>
-<?define ProductUpgradeCode = "12345678-1234-1234-1234-111111111111"?>
+<?define ProductUpgradeCode = "02830cdb-3033-4c91-a1a5-7f40fbca0cf7"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
    <Product Id="*" UpgradeCode="$(var.ProductUpgradeCode)" 
             Name="BEMRosetta" Version="$(var.ProductVersion)" Manufacturer="BEMRosetta author and contributors" Language="2057">
@@ -16,7 +16,7 @@
       <Directory Id="TARGETDIR" Name="SourceDir">
          <Directory Id="ProgramFiles64Folder">
             <Directory Id="INSTALLDIR" Name="BEMRosetta">
-               <Component Id="ApplicationFiles" Guid="12345678-1234-1234-1234-222222222222">
+               <Component Id="ApplicationFiles" Guid="85e7f37f-2e81-4331-9d27-5c1c18cd5003">
                   <File Id="ApplicationFile1" Source="../bin/BEMRosetta.exe"/>
 				  <File Id="ApplicationFile2" Source="../bin/BEMRosetta_cl.exe"/>
                </Component>
@@ -25,7 +25,7 @@
 
          <Directory Id="ProgramMenuFolder">
             <Directory Id="ProgramMenuSubfolder" Name="BEMRosetta">
-               <Component Id="ApplicationShortcuts" Guid="12345678-1234-1234-1234-333333333333">
+               <Component Id="ApplicationShortcuts" Guid="c3cfdd50-fb15-4ec0-b0a0-2fa5ce5ea772">
                   <Shortcut Id="ApplicationShortcut1" Name="BEMRosetta" Description="Hydrodynamic coefficients viewer and converter for BEM solvers" 
                             Target="[INSTALLDIR]BEMRosetta.exe" WorkingDirectory="INSTALLDIR"/>
                   <RegistryValue Root="HKCU" Key="Software\Anboto\BEMRosetta" 
