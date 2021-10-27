@@ -3,42 +3,42 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2021, the BEMRosetta author and contributors
 // Returns dll time and date
-const char *DLL_Version()
+const char *DLL_Version() 
 // Lists all available functions
-void DLL_ListFunctions() 
+void DLL_ListFunctions()
 // Returns the list of all available functions
-const char *DLL_strListFunctions() 
+const char *DLL_strListFunctions()
 // Returns the Python declaration of all available functions
-const char *DLL_strPythonDeclaration() 
+const char *DLL_strPythonDeclaration()
 
 // Loads a FAST .out or .outb file
-int DLL_FAST_Load(const char *filename) 
+int DLL_FAST_Load(const char *filename)
 // Returns the parameter name of index id
-const char *DLL_FAST_GetParameterName(int id) 
+const char *DLL_FAST_GetParameterName(int id)
 // Returns the parameter units of index id
-const char *DLL_FAST_GetUnitName(int id) 
+const char *DLL_FAST_GetUnitName(int id)
 // Returns the index id of parameter name
-int DLL_FAST_GetParameterId(const char *name) 
+int DLL_FAST_GetParameterId(const char *name)
 // Returns the number of parameters
-int DLL_FAST_GetParameterCount() 
+int DLL_FAST_GetParameterCount()
 // Returns the number of registers per parameter
-int DLL_FAST_GetLen() 
+int DLL_FAST_GetLen()
 // Returns the initial time in seconds
-double DLL_FAST_GetTimeInit() 
+double DLL_FAST_GetTimeInit()
 // Returns the end time in seconds
-double DLL_FAST_GetTimeEnd() 
+double DLL_FAST_GetTimeEnd()
 // Returns the idtime_th time (idtime goes from 0 to DLL_FAST_GetLen())
-double DLL_FAST_GetTime(int idtime) 
+double DLL_FAST_GetTime(int idtime)
 // Returns the idtime_th value of parameter idparam (idtime goes from 0 to DLL_FAST_GetLen())
-double DLL_FAST_GetData(int idtime, int idparam) 
+double DLL_FAST_GetData(int idtime, int idparam)
 // Returns the average value for parameter param
-double DLL_FAST_GetAvg(const char *param) 
+double DLL_FAST_GetAvg(const char *param)
 
 // Open a .dat or .fst FAST file to read or save parameters
-int DLL_FAST_LoadFile(const char *file) 
+int DLL_FAST_LoadFile(const char *file)
 // Saves the .dat or .fst FAST file opened with FAST_LoadFile() (if file is ""), or to the file indicated in file
-int DLL_FAST_SaveFile(const char *file) 
+int DLL_FAST_SaveFile(const char *file)
 // Sets the value of a var after paragraph. If paragraph is "", the value is set every time var appears in the file
-int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) 
+int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value)
 // Reads the value of a var after paragraph. If paragraph is "", it is read the first time var appears in the file
-const char *DLL_FAST_GetVar(const char *name, const char *paragraph) 
+const char *DLL_FAST_GetVar(const char *name, const char *paragraph)
