@@ -141,12 +141,6 @@ void MainMesh::Init() {
 	menuProcess.a_y.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuProcess.a_z <<= 0;
 	menuProcess.a_z.WhenEnter = THISBACK1(OnUpdate, ROTATE);
-	menuProcess.c_x <<= 0;
-	menuProcess.c_x.WhenEnter = THISBACK1(OnUpdate, ROTATE);
-	menuProcess.c_y <<= 0;
-	menuProcess.c_y.WhenEnter = THISBACK1(OnUpdate, ROTATE);
-	menuProcess.c_z <<= 0;
-	menuProcess.c_z.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuProcess.butUpdatePos <<= THISBACK1(OnUpdate, MOVE);
 	menuProcess.butUpdatePos.Tip(t_("Translates the mesh"));
 	menuProcess.butUpdateAng <<= THISBACK1(OnUpdate, ROTATE);
@@ -607,9 +601,6 @@ void MainMesh::OnUpdate(Action action) {
 		double a_x = ~menuProcess.a_x;
 		double a_y = ~menuProcess.a_y;
 		double a_z = ~menuProcess.a_z;
-		double c_x = ~menuProcess.c_x;
-		double c_y = ~menuProcess.c_y;
-		double c_z = ~menuProcess.c_z;
 
 		if (action == NONE && (IsNull(mass) || IsNull(x_g) || IsNull(y_g) || IsNull(z_g))) {
 			Exclamation(t_("Please fill CG data"));
@@ -628,10 +619,6 @@ void MainMesh::OnUpdate(Action action) {
 			Exclamation(t_("Please fill rotation data"));
 			return;
 		}
-		if (action == ROTATE && (IsNull(c_x) || IsNull(c_y) || IsNull(c_z))) {
-			Exclamation(t_("Please fill centre of rotation data"));
-			return;
-		}
 		
 		WaitCursor wait;
 
@@ -639,8 +626,8 @@ void MainMesh::OnUpdate(Action action) {
 			data.cg.Translate(t_x, t_y, t_z);
 			data.mesh.Translate(t_x, t_y, t_z);
 		} else if (action == ROTATE) {
-			data.cg.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
-			data.mesh.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
+			data.cg.Rotate(a_x, a_y, a_z, x_0, y_0, z_0);
+			data.mesh.Rotate(a_x, a_y, a_z, x_0, y_0, z_0);
 		} else if (action == NONE) {
 			data.mass = mass;
 			data.cg.Set(x_g, y_g, z_g);
@@ -1365,11 +1352,11 @@ void MainView::OnPaint() {
 			}
 			if (~GetMenuPlot().showCg) {
 				gl.PaintDoubleAxis(mesh.cg, len, Black());
-				gl.PaintCube(mesh.cg, len/10, Black());
+				gl.PaintCube(mesh.cg, len/5, Black());
 			}
 			if (~GetMenuPlot().showCr) {
-				gl.PaintDoubleAxis(mesh.c0, len, Cyan());
-				gl.PaintCube(mesh.c0, len/10, Gray());
+				gl.PaintDoubleAxis(mesh.c0, len*10, Cyan());
+				gl.PaintCube(mesh.c0, len/20, Gray());
 			}
 			if (paintSelect) {
 				if (~GetMenuPlot().showMesh) {

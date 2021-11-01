@@ -604,5 +604,5 @@ void FastScatter::SaveParams() {
 void MainFASTW::Init(String appDataFolder, const Image &icon, const Image &largeIcon, StatusBar &statusBar) {
 	fast.Init(appDataFolder, statusBar);
 	Add(fast.SizePos());
-	Title(t_("BEMRosetta FAST .out Reader")).Sizeable().Zoomable().Icon(icon, largeIcon);
+	Title(t_("BEMRosetta FAST .out+b Reader")).Sizeable().Zoomable().Icon(icon, largeIcon);
 }
