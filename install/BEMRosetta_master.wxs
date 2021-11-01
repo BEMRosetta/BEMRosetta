@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?define ProductVersion = "0.0.$VERSION$"?>
+<?define ProductUpgradeCode = "02830cdb-3033-4c91-a1a5-7f40fbca0cf7"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+   <Product Id="*" UpgradeCode="$(var.ProductUpgradeCode)" 
+            Name="BEMRosetta" Version="$(var.ProductVersion)" Manufacturer="BEMRosetta author and contributors" Language="2057">
+      <Package InstallerVersion="200" Compressed="yes" Comments="Windows Installer Package"/>
+      <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
+      <Upgrade Id="$(var.ProductUpgradeCode)">
+         <UpgradeVersion Minimum="$(var.ProductVersion)" OnlyDetect="yes" Property="NEWERVERSIONDETECTED"/>
+         <UpgradeVersion Minimum="0.0.0" Maximum="$(var.ProductVersion)" IncludeMinimum="yes" IncludeMaximum="no" 
+                         Property="OLDERVERSIONBEINGUPGRADED"/>	  
+      </Upgrade>
+      <Condition Message="A newer version of this software is already installed.">NOT NEWERVERSIONDETECTED</Condition>
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+         <Directory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLDIR" Name="BEMRosetta">
+               <Component Id="ApplicationFiles" Guid="85e7f37f-2e81-4331-9d27-5c1c18cd5003">
+                  <File Id="ApplicationFile1" Source="../bin/BEMRosetta.exe"/>
+				  <File Id="ApplicationFile2" Source="../bin/BEMRosetta_cl.exe"/>
+               </Component>
+            </Directory>
+         </Directory>
+
+         <Directory Id="ProgramMenuFolder">
+            <Directory Id="ProgramMenuSubfolder" Name="BEMRosetta">
+               <Component Id="ApplicationShortcuts" Guid="c3cfdd50-fb15-4ec0-b0a0-2fa5ce5ea772">
+                  <Shortcut Id="ApplicationShortcut1" Name="BEMRosetta" Description="Hydrodynamic coefficients viewer and converter for BEM solvers" 
+                            Target="[INSTALLDIR]BEMRosetta.exe" WorkingDirectory="INSTALLDIR"/>
+                  <RegistryValue Root="HKCU" Key="Software\Anboto\BEMRosetta" 
+                            Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+                  <RemoveFolder Id="ProgramMenuSubfolder" On="uninstall"/>
+               </Component>
+            </Directory>
+         </Directory>
+      </Directory>
+
+      <InstallExecuteSequence>
+         <RemoveExistingProducts After="InstallValidate"/>
+      </InstallExecuteSequence>
+
+      <Feature Id="DefaultFeature" Level="1">
+         <ComponentRef Id="ApplicationFiles"/>
+         <ComponentRef Id="ApplicationShortcuts"/>		 
+      </Feature>
+   </Product>
+</Wix>
