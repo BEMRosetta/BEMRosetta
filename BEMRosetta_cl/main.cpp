@@ -17,6 +17,10 @@ CONSOLE_APP_MAIN
 			throw Exc("Please include in command line binary and BEMRosetta folders");
 		
 		String binFolder = command[0];
+		String installFolder = AppendFileNameX(binFolder, "..", "..", "install");
+		
+		Cout() << "\n\n\n----------------\n" << installFolder;
+		
 		String bemFolder = command[1];
 		 
 		Dl dll;		
@@ -44,13 +48,33 @@ CONSOLE_APP_MAIN
 		String strList = DLL_strListFunctions();
 		Cout() << strList;
 		strList = "// BEMRosetta DLL functions list\n\n" + strList;
-		SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList);
+		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList))
+			throw Exc(t_("Impossible to save DLL functions list file"));
 		
 		Cout() << "\n\nPython declarations:\n";
 		String strPy = DLL_strPythonDeclaration();
 		Cout() << strPy;
-		SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy);		
-		
+		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy))
+			throw Exc(t_("Impossible to save Python declarations file"));
+
+#if defined(COMPILER_MSC)
+		String wxs = LoadFile(AppendFileNameX(installFolder, "BEMRosetta_master.wxs"));
+		if (wxs.IsEmpty())
+			throw Exc(t_("Installer definition file not found"));
+		String strver = LoadFile(AppendFileNameX(installFolder, "build.txt"));
+		if (strver.IsEmpty())
+			throw Exc(t_("Version file not found"));
+		int ver = ScanInt(strver);
+		if (IsNull(ver) || ver < 1)
+			throw Exc(t_("Wrong version found"));
+		ver++;
+		if (!SaveFile(AppendFileNameX(installFolder, "build.txt"), FormatInt(ver)))
+			throw Exc(t_("Impossible to save version file"));
+		wxs.Replace("$VERSION$", FormatInt(ver));
+		if (!SaveFile(AppendFileNameX(installFolder, "BEMRosetta.wxs"), wxs))
+			throw Exc(t_("Impossible to save installer file"));
+#endif
+			
 		Cout() << "\n\nLoading FAST .out file";
 		String outfile = AppendFileNameX(bemFolder, "examples/fast.out/demo.outb");
 		if (!DLL_FAST_Load(outfile))

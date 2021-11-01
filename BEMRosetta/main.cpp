@@ -44,7 +44,7 @@ void Main::Init() {
 	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
-			 << t_("Mooring") << t_("Decay") << t_("FAST .out Reader");
+			 << t_("Mooring") << t_("Decay") << t_("FAST .out+b Reader");
 		
 	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime) 
