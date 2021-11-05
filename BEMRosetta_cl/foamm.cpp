@@ -89,8 +89,8 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		
 		double Mu = mat.VarRead<double>("Mu");
 		if (!IsNull(Mu)) {
-			hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
-			hd().Awinf(idf, jdf) = Mu;
+			hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
+			hd().Ainf(idf, jdf) = Mu;
 		}
 	}
 	
@@ -194,7 +194,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
  	if (!mat.VarWrite("A", matA))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "A", file));
 
- 	if (!mat.VarWrite<double>("Mu", hd().Awinf_dim(idf, jdf)))
+ 	if (!mat.VarWrite<double>("Mu", hd().Ainf_dim(idf, jdf)))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Mu", file));
  		 	
 	MatMatrix<double> matB(hd().Nf, 1);

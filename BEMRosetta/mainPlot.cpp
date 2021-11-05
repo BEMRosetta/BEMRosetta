@@ -197,7 +197,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(t_("Ns2/m"));
 			}
 		}
-		if (hy.IsLoadedAwinf()) {
+		if (hy.IsLoadedAinf()) {
 			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINF, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("A∞_%s"), nameType)).
@@ -208,7 +208,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(t_("Ns2/m"));
 			}
 		}
-		if (hy.IsLoadedAw0()) {
+		if (hy.IsLoadedA0()) {
 			if (A0_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_A0, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(A0_source[id]).Legend(Format(t_("A0_%s"), nameType)).
@@ -219,7 +219,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			}
 		}
 	} else if (dataToShow == Hydro::DATA_AINFW) {
-		if (hy.IsLoadedAINFW()) {
+		if (hy.IsLoadedAinf_w()) {
 			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINFW, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A∞(ω)_%s"), nameType)).
@@ -229,7 +229,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(t_("Ns2/m"));
 			}
 		}
-		if (hy.IsLoadedAwinf()) {
+		if (hy.IsLoadedAinf()) {
 			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINF, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("A∞_%s"), nameType)).

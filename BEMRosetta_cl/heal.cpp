@@ -497,7 +497,7 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail) {
 		// filtered?
 		GetTirf(Tirf, numT, maxT);
 		GetKirf(fKirf, Tirf, w, fB);
-		GetAinfw(fAinf, fKirf, Tirf, w, A);
+		GetAinf_w(fAinf, fKirf, Tirf, w, A);
 		
 		if (toA > fromA) {
 			VectorXd tmp = fAinf.segment(fromA, toA-fromA);

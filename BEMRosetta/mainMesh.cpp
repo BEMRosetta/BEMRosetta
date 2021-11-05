@@ -27,6 +27,7 @@ void MainMesh::Init() {
 	ArrayModel_Init(listLoaded, true).MultiSelect();
 	listLoaded.WhenSel = [&] {
 		OnMenuConvertArraySel();
+		OnMenuProcessArraySel();
 		LoadSelTab(Bem());
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
@@ -281,7 +282,7 @@ void MainMesh::OnArraySel() {
 	OnMenuConvertArraySel();
 	OnMenuProcessArraySel();
 }
-
+	
 void MainMesh::OnMenuConvertArraySel() {
 	int id = ArrayModel_IdMesh(listLoaded);
 	if (id < 0)

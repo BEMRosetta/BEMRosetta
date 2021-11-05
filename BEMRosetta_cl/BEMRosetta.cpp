@@ -74,15 +74,15 @@ void Hydro::Normalize() {
 			}
 		}
 	}
-	if (IsLoadedAwinf()) {
+	if (IsLoadedAinf()) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Awinf(i, j) = Awinf_ndim(i, j);
+				Ainf(i, j) = Ainf_ndim(i, j);
 	}
-	if (IsLoadedAw0()) {
+	if (IsLoadedA0()) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) = Aw0_ndim(i, j);
+				A0(i, j) = A0_ndim(i, j);
 	}
 	if (IsLoadedFex())
     	Normalize_Forces(ex);
@@ -121,15 +121,15 @@ void Hydro::Dimensionalize() {
 			}
 		}
 	}
-	if (IsLoadedAwinf()) {	
+	if (IsLoadedAinf()) {	
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Awinf(i, j) = Awinf_dim(i, j);
+				Ainf(i, j) = Ainf_dim(i, j);
 	}
-	if (IsLoadedAw0()) {	
+	if (IsLoadedA0()) {	
 		for (int i = 0; i < 6*Nb; ++i) 
 			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) = Aw0_ndim(i, j);
+				A0(i, j) = A0_ndim(i, j);
 	}
 	if (IsLoadedFex())
     	Dimensionalize_Forces(ex);
@@ -310,7 +310,7 @@ void Hydro::RemoveThresDOF_A(double thres) {
 				if (res > thres) {
 					for (int ifr = 0; ifr < Nf; ifr++) 
 						A[idf][jdf][ifr] = Null;
-					Awinf(idf, jdf) = Null;		
+					Ainf(idf, jdf) = Null;		
 				}
 			}
 		}
@@ -689,8 +689,8 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 				Aw0(i, j) = hydrosp[ihminw]->Aw0_ndim(i, j);	
 	}*/
 	
-	bem->calcAwinf = true;
-	bem->calcAwinfw = true;
+	bem->calcAinf = true;
+	bem->calcAinf_w = true;
 	
 	// sts has to be recalculated	
 }
@@ -777,10 +777,10 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			dofOrder[i] = order;
 	}
 	
-	if (!IsLoadedAw0())  
+	if (!IsLoadedA0())  
 		GetA0();
 	
-	if ((!IsLoadedAwinf() || !IsLoadedKirf()) && bem->calcAwinf) {
+	if ((!IsLoadedAinf() || !IsLoadedKirf()) && bem->calcAinf) {
 		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0) {
 			lastError = t_("Incorrect time for A∞ calculation. Please review it in Options");
 			return false;
@@ -796,7 +796,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			}
 			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
 		}
-		if (!IsLoadedAwinf()) {
+		if (!IsLoadedAinf()) {
 			if (Status && !Status(t_("Obtaining the infinite-frequency added mass (A∞)"), 70)) {
 				lastError = t_("Cancelled by the user");
 				return false;
@@ -804,21 +804,21 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			GetAinf();
 		}
 	}
-	if (bem->calcAwinfw) {
+	if (bem->calcAinf_w) {
 		if (!IsLoadedKirf())
 			GetK_IRF(min(bem->maxTimeA, GetK_IRF_MaxT()), bem->numValsA);
-		if (!IsLoadedAwinf())
+		if (!IsLoadedAinf())
 			GetAinf();
 		if (Status && !Status(t_("Obtaining the frequency-dependent infinite-frequency added mass (A∞(ω))"), 90)) {
 			lastError = t_("Cancelled by the user");
 			return false;
 		}
-		GetAinfw();
+		GetAinf_w();
 	}
-	if (Ainfw.size() == 0)
-		InitAinfw();
-	if (Awinf.size() == 0)
-		Awinf.setConstant(Nb*6, Nb*6, Null);
+	if (Ainf_w.size() == 0)
+		InitAinf_w();
+	if (Ainf.size() == 0)
+		Ainf.setConstant(Nb*6, Nb*6, Null);
 	
 	/*try {
 		CheckNaN();
@@ -853,10 +853,10 @@ void Hydro::GetA0() {
 	
 	int iw0 = GetW0();
 	if (!IsNull(iw0)) {
-		Aw0.setConstant(Nb*6, Nb*6, Null);
+		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
 	        for (int j = 0; j < Nb*6; ++j) 
-				Aw0(i, j) = A[i][j][iw0];
+				A0(i, j) = A[i][j][iw0];
 	} else if (w.size() < 3)
 		return;
 	else { 
@@ -867,13 +867,13 @@ void Hydro::GetA0() {
 		double wiw3 = w[iw3];
 		if (wiw1 > 1. && wiw1 > 3*(wiw2 - wiw1))	// Too high to guess A[0]
 			return;
-		Aw0.setConstant(Nb*6, Nb*6, Null);
+		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
 	        for (int j = 0; j < Nb*6; ++j) {
 	            if (IsNull(A[i][j][iw1]) || IsNull(A[i][j][iw2]) || IsNull(A[i][j][iw3]))
-	                Aw0(i, j) = Null;
+	                A0(i, j) = Null;
 	            else
-					Aw0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
+					A0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
 	        }
 	}
 }
@@ -1093,12 +1093,12 @@ void Hydro::F_dim(Forces &f) {
 void Hydro::CheckNaN() {
 	if (!IsNum(A))
 		throw Exc("Error loading A. NaN found");
-	if (!IsNum(Ainfw))
+	if (!IsNum(Ainf_w))
 		throw Exc("Error loading Ainfw. NaN found");
-	if (!IsNum(Awinf))
+	if (!IsNum(Ainf))
 		throw Exc("Error loading Awinf. NaN found");
-	if (!IsNum(Aw0))
-		throw Exc("Error loading Aw0. NaN found");
+	if (!IsNum(A0))
+		throw Exc("Error loading A_0. NaN found");
 	if (!IsNum(B))
 		throw Exc("Error loading B. NaN found");
 	if (!IsNum(head))
@@ -1152,8 +1152,8 @@ void Hydro::Jsonize(JsonIO &json) {
 		("Nf", Nf)
 		("Nh", Nh)
 		("A", oldA)
-		("Awinf", Awinf)
-		("Aw0", Aw0)
+		("Awinf", Ainf)
+		("Aw0", A0)
 		("B", oldB)
 		("head", head)
 		("names", names)
@@ -1346,8 +1346,8 @@ void BEMData::Ainf(int id) {
 	hydros[id].hd().GetAinf();
 }
 
-void BEMData::Ainfw(int id) {
-	hydros[id].hd().GetAinfw();
+void BEMData::Ainf_w(int id) {
+	hydros[id].hd().GetAinf_w();
 }
 
 void BEMData::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail) {
@@ -1570,10 +1570,10 @@ bool BEMData::LoadSerializeJson() {
 	//	discardNegDOF = false;
 	//if (!ret || IsNull(thres)) 
 	//	thres = 0.01;
-	if (!ret || IsNull(calcAwinf))
-		calcAwinf = true;
-	if (!ret || IsNull(calcAwinfw))
-		calcAwinfw = true;
+	if (!ret || IsNull(calcAinf))
+		calcAinf = true;
+	if (!ret || IsNull(calcAinf_w))
+		calcAinf_w = true;
 	if (!ret || IsNull(maxTimeA))
 		maxTimeA = 120;
 	if (!ret || IsNull(numValsA))

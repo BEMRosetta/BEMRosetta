@@ -242,8 +242,8 @@ LAYOUT(MenuOptions, 800, 576)
 	ITEM(Upp::HyperlinkLabel, dv___44, SetHyperlink(t_("https://github.com/YingyiLiu/HAMS/tree/master/MeshConverter")).SetText(t_("MeshTran:")).LeftPosZ(16, 80).TopPosZ(440, 19))
 	ITEM(Upp::EditFile, hamsPath, HSizePosZ(92, 12).TopPosZ(420, 19))
 	ITEM(Upp::HyperlinkLabel, dv___46, SetHyperlink(t_("https://github.com/YingyiLiu/HAMS/tree/master/Bin")).SetText(t_("HAMS_x64:")).LeftPosZ(16, 80).TopPosZ(420, 19))
-	ITEM(Upp::Option, calcAwinf, SetLabel(t_("Calculate if not available")).LeftPosZ(184, 140).TopPosZ(196, 16))
-	ITEM(Upp::Option, calcAwinfw, SetLabel(t_("Calculate A∞(ω)")).LeftPosZ(332, 100).TopPosZ(196, 16))
+	ITEM(Upp::Option, calcAinf, SetLabel(t_("Calculate if not available")).LeftPosZ(184, 140).TopPosZ(196, 16))
+	ITEM(Upp::Option, calcAinf_w, SetLabel(t_("Calculate A∞(ω)")).LeftPosZ(332, 100).TopPosZ(196, 16))
 END_LAYOUT
 
 LAYOUT(MenuAbout, 540, 288)
@@ -548,15 +548,15 @@ LAYOUT(Description, 504, 52)
 	ITEM(Upp::Button, butOK, SetLabel(t_("OK")).RightPosZ(4, 36).TopPosZ(4, 20))
 END_LAYOUT
 
-LAYOUT(MainQTF, 620, 236)
+LAYOUT(MainQTF, 796, 396)
 	ITEM(Upp::ArrayCtrl, listQTF, HSizePosZ(192, 4).VSizePosZ(24, 4))
 	ITEM(Upp::ArrayCtrl, listCases, LeftPosZ(4, 184).VSizePosZ(4, 4))
-	ITEM(Upp::Label, dv___2, SetLabel(t_("Show:")).RightPosZ(296, 40).TopPosZ(0, 19))
-	ITEM(Upp::DropList, opShow, RightPosZ(220, 80).TopPosZ(0, 19))
-	ITEM(Upp::Label, dv___4, SetLabel(t_("QTF:")).RightPosZ(168, 40).TopPosZ(0, 19))
-	ITEM(Upp::DropList, opQTF, RightPosZ(104, 76).TopPosZ(0, 19))
-	ITEM(Upp::Label, dv___6, SetLabel(t_("DOF:")).RightPosZ(52, 40).TopPosZ(0, 19))
-	ITEM(Upp::DropList, opDOF, RightPosZ(4, 60).TopPosZ(0, 19))
+	ITEM(Upp::Label, dv___2, SetLabel(t_("Show:")).LeftPosZ(196, 40).TopPosZ(0, 19))
+	ITEM(Upp::DropList, opShow, LeftPosZ(232, 80).TopPosZ(0, 19))
+	ITEM(Upp::Label, dv___4, SetLabel(t_("QTF:")).LeftPosZ(324, 40).TopPosZ(0, 19))
+	ITEM(Upp::DropList, opQTF, LeftPosZ(352, 76).TopPosZ(0, 19))
+	ITEM(Upp::Label, dv___6, SetLabel(t_("DOF:")).LeftPosZ(440, 40).TopPosZ(0, 19))
+	ITEM(Upp::DropList, opDOF, LeftPosZ(468, 60).TopPosZ(0, 19))
 END_LAYOUT
 
 LAYOUT(SaveQTF, 308, 124)
