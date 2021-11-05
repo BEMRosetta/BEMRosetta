@@ -658,9 +658,9 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 		} else if (param == Hydro::PLOT_AINFW) {
 			if (!Bem().hydros[id].hd().IsLoadedKirf())
 				Bem().Kirf(id, maxT);
-			if (!Bem().hydros[id].hd().IsLoadedAwinf())
+			if (!Bem().hydros[id].hd().IsLoadedAinf())
 				Bem().Ainf(id);
-			Bem().Ainfw(id);
+			Bem().Ainf_w(id);
 		}
 		
 		mainSummary.Clear();
@@ -951,7 +951,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, data.name);
 	array.Set(row, 0, t_("Description"));		array.Set(row++, col, data.description);
-	array.Set(row, 0, t_("Soft"));				array.Set(row++, col, data.GetCodeStr());
+	array.Set(row, 0, t_("Software"));			array.Set(row++, col, data.GetCodeStr());
 	array.Set(row, 0, t_("g [m/s2]"));			array.Set(row++, col, data.S_g());
 	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, data.S_rho());
 	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++,col, data.S_h());
@@ -1007,8 +1007,8 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, "-");
 	}
 	
-	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, data.IsLoadedAw0()   ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("A∞ available"));		array.Set(row++, col, data.IsLoadedAwinf() ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, data.IsLoadedA0()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("A∞ available"));		array.Set(row++, col, data.IsLoadedAinf() ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() 	   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("K available"));		array.Set(row++, col, data.IsLoadedC() 	   ? t_("Yes") : t_("No"));

@@ -696,6 +696,7 @@ bool Nemoh::Load_Inf(String fileName) {
 				
 	hd().cg.setConstant(3, 1, Null);
 	hd().cb.setConstant(3, 1, Null);
+	hd().c0.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
 	hd().C[0].setConstant(6, 6, Null);   
@@ -749,6 +750,7 @@ bool Nemoh::Load_Inf(String fileName) {
 bool Nemoh::Load_Hydrostatics() {
 	hd().cg.setConstant(3, hd().Nb, Null);
 	hd().cb.setConstant(3, hd().Nb, Null);
+	hd().c0.setConstant(3, hd().Nb, Null);
 	hd().Vo.SetCount(hd().Nb, Null);
 	String line;
 	
@@ -914,8 +916,6 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 					if (dcase.IsDof(ib, ibdof)) {
 						if (ifr >= hd().Nf)
 							throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
-						//if (ib >= hd().Nb)
-						//	throw Exc(in.Str() + "\n"  + t_("Number of bodies higher than the defined in Nemoh.cal file"));		
 						double ma = fc.ma[ih](ifr, ib*6+ibdof) = f.GetDouble(1 + 2*il);	
 						double ph = fc.ph[ih](ifr, ib*6+ibdof) = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
 						fc.re[ih](ifr, ibdof) = ma*cos(ph); 
@@ -937,7 +937,7 @@ bool Nemoh::Load_IRF(String fileName) {
 	String line;
 	FieldSplit f(in);	
 	f.IsSeparator = IsTabSpace;
-	hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
+	hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 	//int ibodydof = 0;
 	hd().Kirf.SetCount(hd().Nb*6); 	// Initialize Kirf		
     for (int i = 0; i < hd().Nb*6; ++i) {
@@ -958,7 +958,7 @@ bool Nemoh::Load_IRF(String fileName) {
 					int col = 1;
 					for (int idf = 0; idf < 6; ++idf) {
 						if (dcase.IsDof(ib, idf)) {
-							hd().Awinf(ibdof, idf) = f.GetDouble(col++);
+							hd().Ainf(ibdof, idf) = f.GetDouble(col++);
 							hd().Kirf[ib*6+ibdof][ib*6+idf][iNt] = f.GetDouble(col++);
 						}
 					}

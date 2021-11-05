@@ -317,7 +317,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 										throw Exc(Format(t_("Wrong dof in '%s'"), command[i]));
 									Cout() << "\n";
 									BEMData::Print(Format(t_("Ainf(%d,%d):"), idf, jdf) + " "); 
-									lastPrint = Format("%f", data.Awinf_dim(idf-1, jdf-1));
+									lastPrint = Format("%f", data.Ainf_dim(idf-1, jdf-1));
 									Cout() << lastPrint;
 								}
 							}
