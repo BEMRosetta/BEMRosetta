@@ -1246,7 +1246,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	
 	in.SeekPos(fpos);
 	
-	int total = pow2(hd().qtfw.size())*pow2(hd().qtfhead.size());
+	int total = Nb*6*pow2(hd().qtfw.size())*pow2(hd().qtfhead.size());
 	int it = 0;
 	while (!in.IsEof()) {
 		it++;
@@ -1553,7 +1553,8 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 					if (qtfHeading >= 0 && ih1 != qtfHeading)
 						continue;	 
 					for (int ib = 0; ib < hd().Nb; ++ib) {
-						if ((id = hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2)) >= 0) {
+						id = hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2);
+						if (id >= 0 || qtfHeading == -2) {
 							double qtfhead1, qtfhead2;
 							if (qtfHeading >= 0) 
 								qtfhead1 = qtfhead2 = 0;		// Just 0º
@@ -1563,18 +1564,25 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 							}							
 							for (int _idf = 0; _idf < 6; ++_idf) {
 								int idf = idf12[_idf]-1;
-								Hydro::QTF &qtf = qtfList[id];
-								out << Format("   %s   %s   %s   %s   %2d   %s   %s   %s   %s\n", 
+								out << Format("   %s   %s   %s   %s   %2d", 
 										FormatWam(data[ifr1]),
 										FormatWam(data[ifr2]), 
 										FormatWam(qtfhead1),
 										FormatWam(qtfhead2),
-										ib*6 + idf + 1,
-										FormatWam(hd().F_ndim(qtf.fma[idf], idf)), 
-										FormatWam(!force_Deg ? qtf.fph[idf] : ToDeg(qtf.fph[idf])),
-										FormatWam(hd().F_ndim(qtf.fre[idf], idf)), 
-										FormatWam(hd().F_ndim(qtf.fim[idf], idf))
-								);
+										ib*6 + idf + 1);
+								if (qtfHeading >= 0 || id >= 0) {
+									Hydro::QTF &qtf = qtfList[id];
+									out << Format("   %s   %s   %s   %s\n",		
+											FormatWam(hd().F_ndim(qtf.fma[idf], idf)), 
+											FormatWam(!force_Deg ? qtf.fph[idf] : ToDeg(qtf.fph[idf])),
+											FormatWam(hd().F_ndim(qtf.fre[idf], idf)), 
+											FormatWam(hd().F_ndim(qtf.fim[idf], idf)));
+								} else // qtfHeading == -2
+									out << Format("   %s   %s   %s   %s\n",		
+											FormatWam(0), 
+											FormatWam(0),
+											FormatWam(0), 
+											FormatWam(0));
 							}
 						}
 					}
