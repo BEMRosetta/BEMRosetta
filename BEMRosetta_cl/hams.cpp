@@ -380,7 +380,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMD
 			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
 		}
 		
-		Save_Settings(folder);
+		Save_Settings(folder, !bodies[ib].lidFile.IsEmpty());
 		
 		String folderOutput = AppendFileNameX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -451,7 +451,7 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 }
 
 
-void HamsCase::Save_Settings(String folderInput) const {
+void HamsCase::Save_Settings(String folderInput, bool thereIsLid) const {
 	String fileName = AppendFileNameX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -460,14 +460,16 @@ void HamsCase::Save_Settings(String folderInput) const {
 	Mesh data;
 	String res = data.Load(AppendFileNameX(folderInput, "Input", "HullMesh.pnl"), rho, g, false);
 	if (!res.IsEmpty())
-			throw Exc(res);
+		throw Exc(res);
 	
-	Mesh lid;
-	lid.mesh.AddWaterSurface(data.mesh, data.under, 'f'); 
-	lid.AfterLoad(rho, g, false, false);
-	
-	data.Join(lid.mesh, rho, g);
-	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, true, true);	
+	if (thereIsLid) {
+		Mesh lid;
+		lid.mesh.AddWaterSurface(data.mesh, data.under, 'f'); 
+		lid.AfterLoad(rho, g, false, false);
+		
+		data.Join(lid.mesh, rho, g);
+	}
+	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
 	
 	out << rho << "\n";
 	out << g << "\n";

@@ -276,15 +276,15 @@ bool Wamit::Load_out() {
 			while (in.GetLine().Find("Wave period = infinite") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				hd().Aw0.setConstant(hd().Nb*6, hd().Nb*6, Null);
-				Load_A(in, hd().Aw0);
+				hd().A0.setConstant(hd().Nb*6, hd().Nb*6, Null);
+				Load_A(in, hd().A0);
 			}
 			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = zero") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
-				Load_A(in, hd().Awinf);
+				hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
+				Load_A(in, hd().Ainf);
 			}
 			
 			in.SeekPos(fpos);
@@ -478,9 +478,9 @@ bool Wamit::Save_out(String file, double g, double rho) {
 			<< " unknown.pot -- file type .gdf, ILOWHI=0, IRR=1\n\n\n"
 			<< " POTEN run date and starting time:        01-Jan-2000  --  00:00:00\n"
 			<< "   Period       Time           RAD      DIFF  (max iterations)\n";
-		if (hd().IsLoadedAw0())
+		if (hd().IsLoadedA0())
 			out << "   -1.0000    00:00:00          -1\n";
-		if (hd().IsLoadedAwinf())
+		if (hd().IsLoadedAinf())
     		out << "    0.0000    00:00:00          -1\n";
 		for (int it = 0; it < hd().T.size(); ++it)
 			out << " " << Format("%9.4f", hd().T[it]) << "    00:00:00          -1      -1\n";
@@ -538,10 +538,10 @@ bool Wamit::Save_out(String file, double g, double rho) {
         	<< "                    Output from  WAMIT\n"
 			<< " ------------------------------------------------------------------------\n\n";
 		
-		if (hd().IsLoadedAw0())
-			Save_A(out, [&](int idf, int jdf)->double {return hd().Aw0_ndim(idf, jdf);},   hd().Aw0,   "infinite");
-		if (hd().IsLoadedAwinf())
-			Save_A(out, [&](int idf, int jdf)->double {return hd().Awinf_ndim(idf, jdf);}, hd().Awinf, "zero");
+		if (hd().IsLoadedA0())
+			Save_A(out, [&](int idf, int jdf)->double {return hd().A0_ndim(idf, jdf);},   hd().A0,   "infinite");
+		if (hd().IsLoadedAinf())
+			Save_A(out, [&](int idf, int jdf)->double {return hd().Ainf_ndim(idf, jdf);}, hd().Ainf, "zero");
 		
 		for (int ifr = 0; ifr < hd().T.size(); ++ifr) {
 			out << 	" ************************************************************************\n\n"
@@ -768,7 +768,7 @@ bool Wamit::Load_1(String fileName) {
 	in.SeekPos(fpos);
 	
 	int maxDof = 0;
-	bool thereIsAw0 = false, thereIsAwinf = false; 
+	bool thereIsA0 = false, thereIsAinf = false; 
 	while (!in.IsEof()) {
 		f.LoadLine();
 		if (IsNull(f.GetDouble_nothrow(3))) {
@@ -778,9 +778,9 @@ bool Wamit::Load_1(String fileName) {
 		
 		double freq = f.GetDouble(0);
 		if (freq < 0)
-			thereIsAw0 = true;
+			thereIsA0 = true;
 		else if (freq == 0)
-			thereIsAwinf = true;
+			thereIsAinf = true;
 		else
 			FindAdd(w, freq);
 		
@@ -808,10 +808,10 @@ bool Wamit::Load_1(String fileName) {
 	
 	ProcessFirstColumn(w, T);
 	
-	if (thereIsAw0)
-		hd().Aw0.setConstant(hd().Nb*6, hd().Nb*6, Null);
-	if (thereIsAwinf)
-		hd().Awinf.setConstant(hd().Nb*6, hd().Nb*6, Null);
+	if (thereIsA0)
+		hd().A0.setConstant(hd().Nb*6, hd().Nb*6, Null);
+	if (thereIsAinf)
+		hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 
 	hd().A.SetCount(6*hd().Nb);
 	hd().B.SetCount(6*hd().Nb);
@@ -850,13 +850,13 @@ bool Wamit::Load_1(String fileName) {
  		double Aij = f.GetDouble(3);
  		
  		if ((freq < 0)) {
- 			if (!thereIsAw0)
+ 			if (!thereIsA0)
 				throw Exc(in.Str() + "\n"  + t_("A[w=inf] is not expected"));
-			hd().Aw0(i, j) = Aij;
+			hd().A0(i, j) = Aij;
 		} else if (freq == 0) {
-			if (!thereIsAwinf)
+			if (!thereIsAinf)
 				throw Exc(in.Str() + "\n"  + t_("A[w=0] is not expected"));				
-			hd().Awinf(i, j) = Aij;
+			hd().Ainf(i, j) = Aij;
 		} else {
 			if (freq == 19.98)
 				int kk = 1;
@@ -1332,19 +1332,19 @@ void Wamit::Save_1(String fileName, bool force_T) {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 	
-	if (hd().IsLoadedAw0()) {
+	if (hd().IsLoadedA0()) {
 		for (int i = 0; i < hd().Nb*6; ++i)  
 			for (int j = 0; j < hd().Nb*6; ++j)
-				if (!IsNull(hd().Aw0(i, j))) 
+				if (!IsNull(hd().A0(i, j))) 
 					out << Format(" %s %5d %5d %s\n", FormatWam(-1), i+1, j+1,
-													  FormatWam(hd().Aw0_ndim(i, j)));
+													  FormatWam(hd().A0_ndim(i, j)));
 	}
-	if (hd().IsLoadedAwinf()) {
+	if (hd().IsLoadedAinf()) {
 		for (int i = 0; i < hd().Nb*6; ++i)  
 			for (int j = 0; j < hd().Nb*6; ++j)
-				if (!IsNull(hd().Awinf(i, j))) 
+				if (!IsNull(hd().Ainf(i, j))) 
 					out << Format(" %s %5d %5d %s\n", FormatWam(0), i+1, j+1,
-													  FormatWam(hd().Awinf_ndim(i, j)));
+													  FormatWam(hd().Ainf_ndim(i, j)));
 	}
 	
 	if (hd().Nf < 2)

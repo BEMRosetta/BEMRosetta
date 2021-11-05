@@ -13,7 +13,7 @@ void GetKirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, double w0, doub
 double GetAinf_Kirf(Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT);
 double GetAinf_Kirf(Eigen::VectorXd &Kirf, double w0, double dw, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT);
 
-void GetAinfw(Eigen::VectorXd &Ainfw, const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
+void GetAinf_w(Eigen::VectorXd &Ainf_w, const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
 			const Eigen::VectorXd &A);
 double GetAinf(const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
 			const Eigen::VectorXd &A);
