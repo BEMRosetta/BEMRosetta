@@ -978,6 +978,8 @@ int Hydro::GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList,
 		if (!found)
 			return -1;
 	}
+	if (lastid < 0)
+		lastid = 0;
 	for (int i = lastid; i < qtfList.size(); ++i) {
 		const QTF &qtf = qtfList[i];
 		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2) 

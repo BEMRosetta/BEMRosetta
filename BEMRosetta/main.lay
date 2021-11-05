@@ -559,14 +559,14 @@ LAYOUT(MainQTF, 796, 396)
 	ITEM(Upp::DropList, opDOF, LeftPosZ(468, 60).TopPosZ(0, 19))
 END_LAYOUT
 
-LAYOUT(SaveQTF, 308, 124)
-	ITEM(Upp::Switch, swHeadings, SetLabel(t_("All headings\nAll headings (crossed filled with zero)\nSelected heading saved as 0º")).LeftPosZ(12, 164).TopPosZ(28, 36))
-	ITEM(Upp::DropList, dropHeadings, HSizePosZ(184, 8).TopPosZ(36, 19))
+LAYOUT(SaveQTF, 300, 132)
+	ITEM(Upp::Switch, swHeadings, SetLabel(t_("All headings\nAll headings (crossed filled with zero)\nSelected heading saved as 0º")).LeftPosZ(12, 216).TopPosZ(28, 44))
+	ITEM(Upp::DropList, dropHeadings, HSizePosZ(236, 4).TopPosZ(52, 19))
 	ITEM(Upp::Button, cancel, SetLabel(t_("Cancel")).RightPosZ(72, 56).BottomPosZ(5, 19))
 	ITEM(Upp::Button, ok, SetLabel(t_("Save")).RightPosZ(4, 56).BottomPosZ(5, 19))
-	ITEM(Upp::HyperlinkLabel, dv___4, SetHyperlink(t_("https://github.com/OpenFAST/openfast/issues/9")).SetText(t_("- OpenFAST Issue")).LeftPosZ(20, 108).TopPosZ(100, 19))
-	ITEM(Upp::HyperlinkLabel, dv___5, SetHyperlink(t_("https://wind.nrel.gov/forum/wind/viewtopic.php?f=4&t=2444&p=14134&hilit=full+qtf+with+multiple+directions#p14134")).SetText(t_("- OpenFAST Forum")).LeftPosZ(20, 108).TopPosZ(84, 19))
-	ITEM(Upp::Label, dv___6, SetLabel(t_("Why this option?:")).LeftPosZ(12, 100).TopPosZ(68, 19))
+	ITEM(Upp::HyperlinkLabel, dv___4, SetHyperlink(t_("https://github.com/OpenFAST/openfast/issues/9")).SetText(t_("- OpenFAST Issue")).LeftPosZ(20, 108).TopPosZ(108, 19))
+	ITEM(Upp::HyperlinkLabel, dv___5, SetHyperlink(t_("https://wind.nrel.gov/forum/wind/viewtopic.php?f=4&t=2444&p=14134&hilit=full+qtf+with+multiple+directions#p14134")).SetText(t_("- OpenFAST Forum")).LeftPosZ(20, 108).TopPosZ(92, 19))
+	ITEM(Upp::Label, dv___6, SetLabel(t_("Why this option?:")).LeftPosZ(12, 100).TopPosZ(76, 19))
 	ITEM(Upp::Label, dv___7, SetLabel(t_("Please choose the QTF headings to save")).SetFont(StdFont().Bold()).LeftPosZ(8, 232).TopPosZ(4, 19))
 END_LAYOUT
 
