@@ -17,13 +17,15 @@ void SetBuildInfo(String &str);
 
 bool PrintStatus(String s, int d);
 
-class Hydro {
+class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, HAMS_WAMIT, WADAM_WAMIT, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
 	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
+	void Copy(const Hydro &hyd);
+	Hydro(const Hydro &hyd, int) {Copy(hyd);}
 	bool SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report() const;
 	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
@@ -117,7 +119,12 @@ public:
     
     int GetHeadId(double hd) const;
 	
-    struct Forces {
+    struct Forces : public DeepCopyOption<Forces> {
+        Forces() {}
+        Forces(const Forces &f, int) {
+            ma = clone(f.ma);		ph = clone(f.ph);
+            re = clone(f.re);		im = clone(f.im);
+        }
     	Upp::Array<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
     	Upp::Array<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
     	void Jsonize(JsonIO &json) {
@@ -141,7 +148,18 @@ public:
     
     String description;
 
-    struct StateSpace {
+    struct StateSpace : public DeepCopyOption<StateSpace> {
+        StateSpace() {}
+        StateSpace(const StateSpace &s, int) {
+        	TFS = clone(s.TFS);
+			A_ss = clone(s.A_ss);
+			B_ss = clone(s.B_ss);
+			C_ss = clone(s.C_ss);
+			ssFrequencies = clone(s.ssFrequencies);
+			ssFreqRange = clone(s.ssFreqRange);
+			ssFrequencies_index = clone(s.ssFrequencies_index);
+			ssMAE = s.ssMAE;
+        }
 	    Upp::Array<std::complex<double>> TFS;
 		Eigen::MatrixXd A_ss;
 		Eigen::VectorXd B_ss;
@@ -168,12 +186,19 @@ public:
     int dimenSTS;							// false if data is dimensionless
     String stsProcessor;
     
-    struct QTF {
+    struct QTF : public DeepCopyOption<QTF> {
         QTF() {
             fre.SetCount(6, Null);
             fim.SetCount(6, Null);
             fma.SetCount(6, Null);
             fph.SetCount(6, Null);
+        }
+        QTF(const QTF &q, int) {
+        	ib = q.ib;
+        	ih1 = q.ih1;	ih2 = q.ih2;
+        	ifr1 = q.ifr1;	ifr2 = q.ifr2;
+        	fre = clone(q.fre);		fim = clone(q.fim);
+        	fma = clone(q.fma); 	fph = clone(q.fph);
         }
         void Set(int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2) {
             ib = _ib;
@@ -205,8 +230,16 @@ public:
     Upp::Array<QTF> qtfsum, qtfdif;
     Upp::Vector<double> qtfw, qtfT, qtfhead;
     bool qtfdataFromW;
-    struct QTFCases {
+    
+    struct QTFCases : public DeepCopyOption<QTFCases>  {
     	Upp::Vector<int> ib, ih1, ih2;
+    	
+    	QTFCases() {}
+    	QTFCases(const QTFCases &q, int) {
+    		ib = clone(q.ib);
+    		ih1 = clone(q.ih1);
+    		ih2 = clone(q.ih2);
+    	}
     	void Clear() {
     		ib.Clear();
     		ih1.Clear();
@@ -737,7 +770,7 @@ public:
 	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
 	virtual ~HAMS() noexcept {}
 	
-	bool Load_Settings(String settingsFile, double rhog);
+	bool Load_Settings(String settingsFile);
 	bool Load_HydrostaticMesh(String fileName, double rhog);
 };
 
@@ -958,6 +991,8 @@ class BEMData {
 public:
 	BEMData();
 	
+	HydroClass &Duplicate(int id);
+		
 	Upp::Array<HydroClass> hydros;
 	Upp::Array<Mesh> surfs;
 	

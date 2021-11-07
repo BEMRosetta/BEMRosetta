@@ -580,7 +580,7 @@ void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, S
 			return;
 		}
 	}
-	throw Exc(t_("Id not found in ArrayModel_Change()"));
+	throw Exc(Format(t_("Id %d not found in ArrayModel_Change()"), id));
 }
 
 int ArrayModel_Id(const ArrayCtrl &array) {

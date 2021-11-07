@@ -255,6 +255,69 @@ void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vect
 	}
 }
 
+void Hydro::Copy(const Hydro &hyd) {
+	file = hyd.file;
+	name = hyd.name;
+	g = hyd.g;
+    h = hyd.h;
+    rho = hyd.rho;
+    len = hyd.len;
+    dimen = hyd.dimen;
+    Nb = hyd.Nb;
+    Nf = hyd.Nf;
+    Nh = hyd.Nh;
+
+    A = clone(hyd.A);
+	Ainf_w = clone(hyd.Ainf_w);
+    Ainf = clone(hyd.Ainf);
+    A0 = clone(hyd.A0);
+
+    B = clone(hyd.B);
+    
+    head = clone(hyd.head);
+    names = clone(hyd.names);
+    C = clone(hyd.C);
+    M = clone(hyd.M);
+    cb = clone(hyd.cb);
+    cg = clone(hyd.cg);
+    c0 = clone(hyd.c0);
+    code = hyd.code;     
+    dof = clone(hyd.dof); 
+    dofOrder = clone(hyd.dofOrder);
+    
+    Kirf = clone(hyd.Kirf);
+    Tirf = clone(hyd.Tirf);
+    
+    ex = clone(hyd.ex);
+    sc = clone(hyd.sc);
+    fk = clone(hyd.fk);
+    rao = clone(hyd.rao);
+    
+    description = hyd.description;
+
+    sts = clone(hyd.sts);
+    dimenSTS = hyd.dimenSTS;
+    stsProcessor = hyd.stsProcessor;
+    
+    qtfsum = clone(hyd.qtfsum);
+    qtfdif = clone(hyd.qtfdif);
+    qtfw = clone(hyd.qtfw);
+    qtfT = clone(hyd.qtfT);
+    qtfhead = clone(hyd.qtfhead);
+    qtfdataFromW = hyd.qtfdataFromW;
+    
+    qtfCases = clone(hyd.qtfCases);
+    
+    T = clone(hyd.T);
+    w = clone(hyd.w);
+    dataFromW = hyd.dataFromW;
+    Vo = clone(hyd.Vo); 
+    
+    bem = hyd.bem;
+		
+	//id = hyd.id;
+}
+
 void Hydro::Symmetrize_Forces(bool xAxis) {
 	if (!IsLoadedFex() && !IsLoadedFsc() && !IsLoadedFfk() && !IsLoadedRAO())
 		return;
@@ -927,7 +990,7 @@ int Hydro::GetIrregularFreq() const {
 	double delta0 = w[1] - w[0];
 	for (int i = 1; i < Nf - 1; ++i) {
 		double delta = w[i+1] - w[i];
-		if (!EqualRatio(delta, delta0, 0.001))
+		if (!EqualRatio(delta, delta0, delta0/10))
 			return i;
 	}
 	return -1;
@@ -1325,6 +1388,13 @@ HydroClass &BEMData::Join(Upp::Vector<int> &ids, Function <bool(String, int)> St
 	Sort(ids, StdLess<int>());
 	for (int i = ids.size()-1; i >= 0; --i)
 		hydros.Remove(ids[i]);
+	return data;
+}
+
+HydroClass &BEMData::Duplicate(int id) {
+	HydroClass &data = hydros.Create<HydroClass>(*this);
+	data.hd().Copy(hydros[id].hd());
+	
 	return data;
 }
 

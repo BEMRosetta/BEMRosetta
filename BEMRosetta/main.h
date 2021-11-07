@@ -880,6 +880,7 @@ public:
 	void OnRemoveSelected(bool all);
 	void OnJoin();
 	void OnSymmetrize(bool xAxis);
+	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnOgilvie();
 	void OnDescription();
