@@ -30,7 +30,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 		
 		double rhog = hd().g_rho_dim();
 		String settingsFile = AppendFileNameX(baseFolder, "Settings.ctrl");
-		if (FileExists(settingsFile) && !Load_Settings(settingsFile, rhog))
+		if (FileExists(settingsFile) && !Load_Settings(settingsFile))
 			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
 			
 		String hydrostaticFile = AppendFileNameX(baseFolder, "Hydrostatic.in");
@@ -57,7 +57,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 	return true;
 }
 
-bool HAMS::Load_Settings(String fileName, double rhog) {
+bool HAMS::Load_Settings(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -66,13 +66,11 @@ bool HAMS::Load_Settings(String fileName, double rhog) {
 	f.IsSeparator = IsTabSpace;
 	
 	f.Load(in.GetLine());
-	double rho = f.GetDouble(0);
+	hd().rho = f.GetDouble(0);
 	f.Load(in.GetLine());
-	double g = f.GetDouble(0);
+	hd().g = f.GetDouble(0);
 	
-	rhog = rho*g;
-	
-	hd().Nb = 1;
+	in.GetLine();
 	
 	hd().c0.setConstant(3, hd().Nb, Null);
 	f.Load(in.GetLine());	
