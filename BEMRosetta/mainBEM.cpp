@@ -43,6 +43,8 @@ void MainBEM::Init() {
 	menuOpen.butRemoveSelected <<= THISBACK1(OnRemoveSelected, false);
 	menuOpen.butJoin.Disable();	
 	menuOpen.butJoin <<= THISBACK(OnJoin);
+	menuOpen.butDuplicate.Disable();	
+	menuOpen.butDuplicate <<= THISBACK(OnDuplicate);
 	menuOpen.butDescription.Disable();
 	menuOpen.butDescription <<= THISBACK(OnDescription);
 	
@@ -509,7 +511,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
-	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
+	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(ids.size() > 0);
 	
 	mainTab.WhenSet();
 }
@@ -520,6 +522,7 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
+	menuOpen.butDuplicate.Enable(numsel == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butSymX.Enable	(numsel == 1 || numrow == 1);
 	menuProcess.butSymY.Enable	(numsel == 1 || numrow == 1);
@@ -564,7 +567,7 @@ void MainBEM::OnJoin() {
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		ArrayModel_RowsHydroDel(listLoaded, rowsJoin);
 	
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded	);
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
 		for (int id = 0; id < Bem().hydros.size(); ++id) {
 			const Hydro &data = Bem().hydros[id].hd();
@@ -594,6 +597,31 @@ void MainBEM::OnJoin() {
 	}
 		
 	UpdateButtons();
+}
+
+void MainBEM::OnDuplicate() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+
+		HydroClass &data = Bem().Duplicate(id);
+		
+		mainSummary.Clear();
+		
+		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+	
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}
 }
 
 void MainBEM::OnSymmetrize(bool xAxis) {

@@ -177,7 +177,7 @@ bool Wamit::Load_out() {
 		} else if (line.Find("POTEN run date and starting time:") >= 0) {
 			hd().cg.setConstant(3, hd().Nb, Null);
 			hd().cb.setConstant(3, hd().Nb, Null);
-			hd().c0.setConstant(3, hd().Nb, Null);
+			hd().c0.setConstant(3, hd().Nb, 0);
 			hd().Vo.SetCount(hd().Nb, Null);
 			hd().C.SetCount(hd().Nb);
 		} else if (line.Find("Gravity:") >= 0) {
@@ -872,6 +872,8 @@ bool Wamit::Load_1(String fileName) {
 		  	hd().B[i][j][ifr] = f.GetDouble(4);   	
 		}
 	}
+	hd().c0.setConstant(3, hd().Nb, 0);
+	
 	return true;	
 }
 
@@ -974,6 +976,8 @@ bool Wamit::Load_3(String fileName) {
         hd().ex.re[ih](ifr, i) = f.GetDouble(5);
         hd().ex.im[ih](ifr, i) = f.GetDouble(6);
 	}
+	
+	hd().c0.setConstant(3, hd().Nb, 0);
 		
 	return true;
 }
@@ -1142,7 +1146,8 @@ bool Wamit::Load_4(String fileName) {
         hd().rao.re[ih](ifr, i) = f.GetDouble(5);
         hd().rao.im[ih](ifr, i) = f.GetDouble(6);
 	}
-		
+	hd().c0.setConstant(3, hd().Nb, 0);
+	
 	return true;
 }
 
