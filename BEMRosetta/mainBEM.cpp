@@ -57,18 +57,14 @@ void MainBEM::Init() {
 	menuProcess.butA0 <<= THISBACK1(OnKirfAinf, Hydro::PLOT_A0);
 	menuProcess.butAinf.Disable();	
 	menuProcess.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
-	menuProcess.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
-	menuProcess.butOgilvie <<= THISBACK(OnOgilvie);
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
-	// menuProcess.labelIrregular.Show(Bem().experimental);
-	// menuProcess.butAinfw.Show(Bem().experimental);
-	menuProcess.butAinfw.Disable();	
-	// menuProcess.butOgilvie.Show(Bem().experimental);
-	menuProcess.butOgilvie.Disable();
-	// menuProcess.opZremoval.Show(Bem().experimental);
-	// menuProcess.opThinremoval.Show(Bem().experimental);
-	// menuProcess.opDecayingTail.Show(Bem().experimental);
+	
+	CtrlLayout(menuAdvanced);
+	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
+	menuAdvanced.butOgilvie <<= THISBACK(OnOgilvie);
+	menuAdvanced.butAinfw.Disable();	
+	menuAdvanced.butOgilvie.Disable();
 	
 	CtrlLayout(menuConvert);
 	menuConvert.file.WhenChange = THISBACK(OnConvert);
@@ -98,6 +94,7 @@ void MainBEM::Init() {
 		
 	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
+	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
 	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
@@ -109,7 +106,8 @@ void MainBEM::Init() {
 			setupfoamm = true;
 			if (!FileExists(Bem().foammPath))
 				Status(t_("FOAMM not found. Please set FOAMM path in Options"), 10000);	
-		} else if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuOpen) || menuTab.IsAt(menuProcess)) 
+		} else if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuOpen) || 
+				   menuTab.IsAt(menuProcess) || menuTab.IsAt(menuAdvanced)) 
 			setupfoamm = true;
 		
 		if (!setupfoamm) 
@@ -169,22 +167,28 @@ void MainBEM::Init() {
 		tabMenuPlot.Enable(plot);
 		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
 		tabMenuProcess.Enable(convertProcess);
+		TabCtrl::Item& tabMenuAdvanced = menuTab.GetItem(menuTab.Find(menuAdvanced));
+		tabMenuAdvanced.Enable(convertProcess);
 		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
 		tabMenuConvert.Enable(convertProcess);
 		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
 			tabMenuProcess.Text(t_("Process"));
+			tabMenuAdvanced.Text(t_("Advanced"));
 		} else {
 			tabMenuPlot.Text("");
 			tabMenuProcess.Text("");
+			tabMenuAdvanced.Text("");
 		}
 		
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));
+			tabMenuAdvanced.Text(t_("Advanced"));
 			tabMenuConvert.Text(t_("Save as"));
 		} else {
 			tabMenuProcess.Text("");
 			tabMenuConvert.Text("");
+			tabMenuAdvanced.Text("");
 		}
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
 		tabMenuFOAMM.Enable(convertProcess);
@@ -230,10 +234,8 @@ void MainBEM::Init() {
 	mainRAO.Init(Hydro::DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
 
-	// if (Bem().experimental) {
-		mainAinfw.Init(Hydro::DATA_AINFW);
-		mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
-	// }
+	mainAinfw.Init(Hydro::DATA_AINFW);
+	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
 	
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("Setup FOAMM")).Disable();
@@ -529,8 +531,8 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butKirf.Enable	(numsel == 1 || numrow == 1);
 	menuProcess.butA0.Enable  	(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.Enable	(numsel == 1 || numrow == 1);
-	menuProcess.butAinfw.Enable	(numsel == 1 || numrow == 1);
-	menuProcess.butOgilvie.Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.butAinfw.Enable  (numsel == 1 || numrow == 1);
+	menuAdvanced.butOgilvie.Enable(numsel == 1 || numrow == 1);
 	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
 }
 
@@ -718,7 +720,7 @@ void MainBEM::OnOgilvie() {
 		
 		double maxT = Null;
 		
-		Bem().OgilvieCompliance(id, ~menuProcess.opZremoval, ~menuProcess.opThinremoval, ~menuProcess.opDecayingTail);
+		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -885,9 +887,9 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_opwT", menuPlot.opwT)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showNdim", menuPlot.showNdim)
-		("menuProcess_opZremoval", menuProcess.opZremoval)
-		("menuProcess_opThinremoval", menuProcess.opThinremoval)
-		("menuProcess_opDecayingTail", menuProcess.opDecayingTail)
+		("menuProcess_opZremoval", menuAdvanced.opZremoval)
+		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
+		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
 		("mainStiffness", mainStiffness)
 	;
 }
@@ -1228,7 +1230,7 @@ void MainQTF::Init() {
 			listQTF.MultiSelect();
 			listQTF.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, listQTF);};
 	
-			listQTF.AddColumn(show_w ? t_("w [rad]") : t_("T [s]"), 60);
+			listQTF.AddColumn(show_w ? t_("ω [rad/s]") : t_("T [s]"), 60);
 			for (int c = 0; c < qtfNf; ++c)
 				listQTF.AddColumn(FormatDoubleSize(show_w ? hd.qtfw[c] : hd.qtfT[c], 8), 90);
 			for (int r = 0; r < qtfNf; ++r)

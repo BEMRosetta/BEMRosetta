@@ -565,11 +565,7 @@ bool Aqwa::Load_QTF() {
 		else if (ib > hd().Nb)
 			throw Exc(in.Str() + "\n"  + Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
 		int Nh = f.GetInt(1);
-		//if (Nh != hd().Nh)
-		//	throw Exc(in.Str() + "\n"  + Format(t_("%d headings found when num are %d"), Nh, hd().Nh));
 		int Nf = f.GetInt(2);
-		//if (Nf != hd().Nf)
-		//	throw Exc(in.Str() + "\n"  + Format(t_("%d frequencies found when num are %d"), Nf, hd().Nf));
 		
 		int col = 3;
 		int ih = 0;
@@ -577,8 +573,6 @@ bool Aqwa::Load_QTF() {
 			while (col < f.size() && ih < Nh) {
 				double head = f.GetDouble(col++);
 				FindAddRatio(hd().qtfhead, head, 0.001);
-				//if (FindRatio(hd().head, head, 0.001) < 0)	
-				//	throw Exc(in.Str() + "\n"  + Format(t_("%f heading not found"), head));
 				ih++;
 			}
 			if (ih >= Nh)
@@ -593,8 +587,6 @@ bool Aqwa::Load_QTF() {
 			while (col < f.size() && ifr < Nf) {
 				double w = f.GetDouble(col++);
 				FindAddRatio(hd().qtfw, w, 0.001);
-				//if (FindRatio(hd().w, w, 0.001) < 0)	
-				//	throw Exc(in.Str() + "\n"  + Format(t_("%f frequency not found"), w));
 				ifr++;
 			}
 			if (ifr >= Nf)
@@ -646,7 +638,7 @@ bool Aqwa::Load_QTF() {
 				
 	        f.Load(in.GetLine());
 	        for (int idof = 0; idof < 6; ++idof)
-				qtfsum.fim[idof] = f.GetDouble(idof);
+				qtfsum.fim[idof] = -f.GetDouble(idof);		// Negative to follow Wamit. Just to the sum term
 		
 			for (int idof = 0; idof < 6; ++idof) {
 				qtfsum.fma[idof] = sqrt(sqr(qtfsum.fre[idof]) + sqr(qtfsum.fim[idof])); 
