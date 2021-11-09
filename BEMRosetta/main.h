@@ -526,6 +526,7 @@ public:
 	void OnOpt();
 	void OnArraySel();
 	void OnMenuProcessArraySel();
+	void OnMenuAdvancedArraySel();
 	void OnMenuConvertArraySel();
 	void OnAddPanel();
 	void OnAddRevolution();
@@ -893,6 +894,7 @@ public:
 		
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuProcess<StaticRect> menuProcess;
+	WithMenuAdvanced<StaticRect> menuAdvanced;
 	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
 	MenuFOAMM menuFOAMM;

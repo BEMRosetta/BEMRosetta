@@ -28,6 +28,7 @@ void MainMesh::Init() {
 	listLoaded.WhenSel = [&] {
 		OnMenuConvertArraySel();
 		OnMenuProcessArraySel();
+		OnMenuAdvancedArraySel();
 		LoadSelTab(Bem());
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
@@ -278,9 +279,19 @@ void MainMesh::OnMenuProcessArraySel() {
 	menuProcess.mass <<= data.mass;
 }
 
+void MainMesh::OnMenuAdvancedArraySel() {
+	int id = ArrayModel_IdMesh(listLoaded);
+	if (id < 0)
+		return;
+	
+	Mesh &data = Bem().surfs[id];
+	
+}
+
 void MainMesh::OnArraySel() {
 	OnMenuConvertArraySel();
 	OnMenuProcessArraySel();
+	OnMenuAdvancedArraySel();
 }
 	
 void MainMesh::OnMenuConvertArraySel() {
