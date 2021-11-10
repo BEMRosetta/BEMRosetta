@@ -341,6 +341,7 @@ public:
 	double A0_ndim(int idf, int jdf)  		 	const {return !dimen ? A0(idf, jdf)      : A0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0(idf, jdf);}
 	double Ainf_dim(int idf, int jdf) 		 	const {return dimen  ? Ainf(idf, jdf)*rho_dim()/rho_ndim() : Ainf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	Eigen::MatrixXd Ainf_dim(int ib) const;
 	double Ainf_ndim(int idf, int jdf)		 	const {return !dimen ? Ainf(idf, jdf) : Ainf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Ainf_(bool ndim, int idf, int jdf) 	const {return ndim   ? Ainf_ndim(idf, jdf) : Ainf_dim(idf, jdf);}
 	
@@ -1027,6 +1028,7 @@ public:
 	bool experimental;
 	String foammPath;
 	String hamsPath, hamsMeshPath;
+	int volWarning, volError;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status = Null);
@@ -1060,6 +1062,10 @@ public:
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {
+		if (json.IsLoading()) {
+			volWarning = 1;
+			volError = 10;
+		}
 		json
 			("depth", depth)
 			("rho", rho)
@@ -1080,6 +1086,8 @@ public:
 			("foammPath", foammPath)
 			("hamsPath", hamsPath)
 			("hamsMeshPath", hamsMeshPath)
+			("volWarning", volWarning)
+			("volError", volError)
 		;
 	}
 };

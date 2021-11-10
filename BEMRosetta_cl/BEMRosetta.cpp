@@ -1123,6 +1123,15 @@ void Hydro::SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::A
 	}
 }
 
+Eigen::MatrixXd Hydro::Ainf_dim(int ib) const {
+	Eigen::MatrixXd ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = Ainf_dim(idf + 6*ib, jdf + 6*ib);	// It doesn't return added mass between bodies...
+	return ret;
+}
+
 Eigen::MatrixXd Hydro::C_dim(int ib) const {
 	Eigen::MatrixXd ret;
 	if (C.IsEmpty())
