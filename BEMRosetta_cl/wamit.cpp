@@ -1339,17 +1339,15 @@ void Wamit::Save_1(String fileName, bool force_T) {
 	
 	if (hd().IsLoadedA0()) {
 		for (int i = 0; i < hd().Nb*6; ++i)  
-			for (int j = 0; j < hd().Nb*6; ++j)
-				if (!IsNull(hd().A0(i, j))) 
-					out << Format(" %s %5d %5d %s\n", FormatWam(-1), i+1, j+1,
-													  FormatWam(hd().A0_ndim(i, j)));
+			for (int j = 0; j < hd().Nb*6; ++j) 
+				out << Format(" %s %5d %5d %s\n", FormatWam(-1), i+1, j+1,
+								FormatWam(Nvl2(hd().A0(i, j), hd().A0_ndim(i, j), 0.)));
 	}
 	if (hd().IsLoadedAinf()) {
 		for (int i = 0; i < hd().Nb*6; ++i)  
 			for (int j = 0; j < hd().Nb*6; ++j)
-				if (!IsNull(hd().Ainf(i, j))) 
-					out << Format(" %s %5d %5d %s\n", FormatWam(0), i+1, j+1,
-													  FormatWam(hd().Ainf_ndim(i, j)));
+				out << Format(" %s %5d %5d %s\n", FormatWam(0), i+1, j+1,
+								FormatWam(Nvl2(hd().Ainf(i, j), hd().Ainf_ndim(i, j), 0.)));
 	}
 	
 	if (hd().Nf < 2)
@@ -1379,10 +1377,9 @@ void Wamit::Save_1(String fileName, bool force_T) {
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int i = 0; i < hd().Nb*6; ++i)  
 			for (int j = 0; j < hd().Nb*6; ++j)
-				if (!IsNull(hd().A[i][j][ifr]) && !IsNull(hd().B[i][j][ifr])) 
-					out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
-														 FormatWam(hd().A_ndim(ifr, i, j)), 
-														 FormatWam(hd().B_ndim(ifr, i, j)));
+				out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
+							 FormatWam(Nvl2(hd().A[i][j][ifr], hd().A_ndim(ifr, i, j), 0.)), 
+							 FormatWam(Nvl2(hd().B[i][j][ifr], hd().B_ndim(ifr, i, j), 0.)));
 }
 
 void Wamit::Save_3(String fileName, bool force_T) {
@@ -1417,13 +1414,12 @@ void Wamit::Save_3(String fileName, bool force_T) {
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < hd().Nh; ++ih)
 			for (int i = 0; i < hd().Nb*6; ++i)
-				if (!IsNull(hd().ex.ma[ih](ifr, i))) 
-					out << Format(" %s %s %5d %s %s %s %s\n", 
-									FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
-									FormatWam(hd().F_ma_ndim(hd().ex, ih, ifr, i)), 
-									FormatWam(hd().ex.ph[ih](ifr, i)*180/M_PI),
-									FormatWam(hd().F_re_ndim(hd().ex, ih, ifr, i)), 
-									FormatWam(hd().F_im_ndim(hd().ex, ih, ifr, i)));
+				out << Format(" %s %s %5d %s %s %s %s\n", 
+						FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+			FormatWam(Nvl2(hd().ex.ma[ih](ifr, i), hd().F_ma_ndim(hd().ex, ih, ifr, i), 0.)), 
+			FormatWam(Nvl2(hd().ex.ph[ih](ifr, i), hd().ex.ph[ih](ifr, i)*180/M_PI, 0.)),
+			FormatWam(Nvl2(hd().ex.re[ih](ifr, i), hd().F_re_ndim(hd().ex, ih, ifr, i), 0.)), 
+			FormatWam(Nvl2(hd().ex.im[ih](ifr, i), hd().F_im_ndim(hd().ex, ih, ifr, i), 0.)));
 }
 
 void Wamit::Save_hst(String fileName) {
@@ -1440,9 +1436,8 @@ void Wamit::Save_hst(String fileName) {
 			int ii = i - ib_i*6;
 			int ib_j = j/6;
 			int jj = j - ib_j*6;
-			if (!IsNull(hd().C[ib_i](ii, jj))) 
-				out << Format(" %5d %5d  %s\n", i+1, j+1, 
-								FormatWam(hd().C_ndim(ib_i, ii, jj)));
+			out << Format(" %5d %5d  %s\n", i+1, j+1, 
+					FormatWam(Nvl2(hd().C[ib_i](ii, jj), hd().C_ndim(ib_i, ii, jj), 0.)));
 		}
 }
 
@@ -1453,11 +1448,9 @@ void Wamit::Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rh
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 
 	for (int i = 0; i < 6; ++i)  
-		for (int j = 0; j < 6; ++j) {
-			if (!IsNull(C(i, j))) 
-				out << Format(" %5d %5d  %s\n", i+1, j+1, 
-								FormatWam(C(i, j)/rho/g));
-		}
+		for (int j = 0; j < 6; ++j) 
+			out << Format(" %5d %5d  %s\n", i+1, j+1, 
+					FormatWam(Nvl2(C(i, j), C(i, j)/rho/g, 0.)));
 }
 
 void Wamit::Save_4(String fileName, bool force_T) {
@@ -1492,13 +1485,12 @@ void Wamit::Save_4(String fileName, bool force_T) {
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < hd().Nh; ++ih)
 			for (int i = 0; i < hd().Nb*6; ++i)
-				if (!IsNull(hd().rao.ma[ih](ifr, i))) 
-					out << Format(" %s %s %5d %s %s %s %s\n", 
-									FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
-									FormatWam(hd().R_ma_ndim(hd().rao, ih, ifr, i)), 
-									FormatWam(hd().rao.ph[ih](ifr, i)*180/M_PI),
-									FormatWam(hd().R_re_ndim(hd().rao, ih, ifr, i)), 
-									FormatWam(hd().R_im_ndim(hd().rao, ih, ifr, i)));
+				out << Format(" %s %s %5d %s %s %s %s\n", 
+					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+					FormatWam(Nvl2(hd().rao.ma[ih](ifr, i), hd().R_ma_ndim(hd().rao, ih, ifr, i), 0.)), 
+					FormatWam(Nvl2(hd().rao.ph[ih](ifr, i), hd().rao.ph[ih](ifr, i)*180/M_PI, 0.)),
+					FormatWam(Nvl2(hd().rao.re[ih](ifr, i), hd().R_re_ndim(hd().rao, ih, ifr, i), 0.)), 
+					FormatWam(Nvl2(hd().rao.im[ih](ifr, i), hd().R_im_ndim(hd().rao, ih, ifr, i), 0.)));
 }
 	
 void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
@@ -1517,7 +1509,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	int Nh = hd().qtfhead.size(); 
 	
 	if (Nf < 2)
-		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
+		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 			
 	Upp::Array<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
 		

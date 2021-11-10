@@ -386,24 +386,37 @@ public:
 	void Report(const Upp::Array<Mesh> &surfs, int id);
 };
 
-class MainStiffness : public WithMainStiffness<StaticRect> {
+class MainMatrixKA : public WithMainMatrixKA<StaticRect> {
 public:
-	typedef MainStiffness CLASSNAME;
+	typedef MainMatrixKA CLASSNAME;
 	
-	void Init();
+	void Init(bool isK);
+	void OnOp(int id);
 	void Clear();
 	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids);
 	void Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids);
 	
 	void Jsonize(JsonIO &json) {
+		bool opdigits = ~opDigits;
 		if (json.IsLoading()) {
 			opEmptyZero <<= false;
-			numDecimals <<= 3;
-		}
+			numDigits <<= 6;
+			numDecimals <<= 0;
+			opdigits = true;
+			expRatio <<= 5;
+		} else
+			opdigits = ~opDigits;
 		json
 			("opEmptyZero", opEmptyZero)
-			("numDecimals",numDecimals)
+			("numDigits", numDigits)
+			("numDecimals", numDecimals)
+			("expRatio", expRatio)
+			("opDigits", opdigits)
 		;
+		if (json.IsLoading()) {
+			opDigits <<= opdigits;
+			opDecimals <<= !opdigits;
+		}
 	}
 	
 private:
@@ -414,6 +427,8 @@ private:
 		
 	Upp::Array<Eigen::MatrixXd> data;
 	Upp::Array<int> row0s, col0s;
+	
+	bool isK;
 };
 
 class MainBEM;
@@ -555,7 +570,7 @@ private:
 	MainViewData mainViewData;
 	SplitterButton mainVAll;
 	MainSummaryMesh mainSummary;
-	MainStiffness mainStiffness;
+	MainMatrixKA mainStiffness;
 
 	Upp::Array<Option> optionsPlot;
 	
@@ -908,7 +923,8 @@ public:
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
 	MainRAO mainRAO;
 	MainStateSpace mainStateSpace;
-	MainStiffness mainStiffness;
+	MainMatrixKA mainMatrixK;
+	MainMatrixKA mainMatrixA;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;
 		

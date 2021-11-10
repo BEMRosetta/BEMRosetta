@@ -65,7 +65,7 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("-i  -input <file>     # Load model");
 	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
 	Cout() << "\n" << t_("-setid <id>           # Set the id of the default BEM model");
-	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
+	Cout() << "\n" << t_("-params <param> <value>   # Set parameters:");
 	Cout() << "\n" << t_("               length     # length scale  []      ") << md.len;
 	Cout() << "\n" << t_("               depth      # water depth   [m]     ") << md.depth;
 	Cout() << "\n" << t_("-p  -print <params>   # Prints model data in a row");
@@ -90,6 +90,7 @@ void ShowHelp(BEMData &md) {
 	Cout() << "\n" << t_("-rot -rotate    <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
 	Cout() << "\n" << t_("-cg             <x> <y> <z>       # Sets cg: x, y, z [m] cg is the centre of gravity");
 	Cout() << "\n" << t_("-c0             <x> <y> <z>       # Sets c0: x, y, z [m] c0 is the centre of rotation");
+	Cout() << "\n" << t_("-mass           <value>     # Sets the body mass [kg]");
 	
 	Cout() << "\n" << t_("-getwaterplane        # Extract in new model the waterplane mesh (lid)");
 	Cout() << "\n" << t_("-gethull              # Extract in new model the mesh underwater hull");
@@ -434,6 +435,13 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							data.c0.z = z;
 							data.AfterLoad(bem.rho, bem.g, true, false);
 							BEMData::Print("\n" + Format(t_("CG is %f, %f, %f"), x, y, z));
+						} else if (param == "-mass") { 
+							CheckIfAvailableArg(command, ++i, "mass");
+							double mass = ScanDouble(command[i]);
+							Mesh &data = bem.surfs[meshid];
+							data.mass = mass;
+							data.AfterLoad(bem.rho, bem.g, true, false);
+							BEMData::Print("\n" + Format(t_("Mass is %f"), mass));
 						} else if (param == "-reset") {	
 							bem.surfs[meshid].Reset(bem.rho, bem.g);
 							BEMData::Print("\n" + Format(t_("Mesh id %d position is reset"), meshid));
@@ -485,6 +493,12 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 												lastPrint << data.C(i, j) << " ";
 										}
 									}
+									Upp::Color backColorUnder;
+									int idColor = data.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
+									if (idColor == -1)
+										lastPrint << ". " << t_("Mesh warning_ Maybe incomplete");
+									else if (idColor == -2)
+										lastPrint << ". " << t_("Mesh error: Probably incomplete");
 									Cout() << lastPrint;
 								} else if (param == "hydrostatic_force") {
 									Cout() << "\n";
@@ -494,6 +508,12 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									data.under.GetHydrostaticForce(f, data.c0, bem.rho, bem.g);
 									for (int i = 0; i < 6; ++i) 				
 										lastPrint << f(i) << " ";
+									Upp::Color backColorUnder;
+									int idColor = data.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
+									if (idColor == -1)
+										lastPrint << ". " << t_("Mesh warning: Maybe incomplete");
+									else if (idColor == -2)
+										lastPrint << ". " << t_("Mesh error: Probably incomplete");
 									Cout() << lastPrint;
 								} else if (param == "inertia") {
 									Cout() << "\n";

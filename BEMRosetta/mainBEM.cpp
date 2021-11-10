@@ -93,10 +93,10 @@ void MainBEM::Init() {
 	OnOpt();
 		
 	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
+	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
 	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
 	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
-	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
 	
 	menuTab.WhenSet = [&] {
@@ -128,9 +128,12 @@ void MainBEM::Init() {
 
 		if (ids.IsEmpty())
 			plot = convertProcess = false;
-		else if (mainTab.IsAt(mainStiffness)) {
+		else if (mainTab.IsAt(mainMatrixK)) {
 			plot = false;
-			mainStiffness.Load(Bem().hydros, ids);
+			mainMatrixK.Load(Bem().hydros, ids);
+		} else if (mainTab.IsAt(mainMatrixA)) {
+			plot = false;
+			mainMatrixK.Load(Bem().hydros, ids);
 		} else if (mainTab.IsAt(mainA))
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
@@ -210,9 +213,9 @@ void MainBEM::Init() {
 	mainArrange.Init();
 	mainTab.Add(mainArrange.SizePos(), t_("Arrange DOF")).Disable();
 	
-	mainStiffness.Init();
-	mainTab.Add(mainStiffness.SizePos(), t_("K")).Disable();
-	
+	mainMatrixK.Init(true);
+	mainTab.Add(mainMatrixK.SizePos(), t_("K")).Disable();
+		
 	mainA.Init(Hydro::DATA_A);
 	mainTab.Add(mainA.SizePos(), t_("A")).Disable();
 	
@@ -234,6 +237,9 @@ void MainBEM::Init() {
 	mainRAO.Init(Hydro::DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
 
+	mainMatrixA.Init(false);
+	mainTab.Add(mainMatrixA.SizePos(), t_("A∞")).Disable();
+	
 	mainAinfw.Init(Hydro::DATA_AINFW);
 	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
 	
@@ -305,8 +311,10 @@ void MainBEM::LoadSelTab(BEMData &bem) {
 	int id = mainTab.Get();
 	if (id == mainTab.Find(mainStateSpace))
 		mainStateSpace.Load(bem, ids);
-	else if (id == mainTab.Find(mainStiffness))
-		mainStiffness.Load(bem.hydros, ids);
+	else if (id == mainTab.Find(mainMatrixK))
+		mainMatrixK.Load(bem.hydros, ids);
+	else if (id == mainTab.Find(mainMatrixA))
+		mainMatrixA.Load(bem.hydros, ids);
 	else if (id == mainTab.Find(mainSummary) || id == mainTab.Find(mainArrange))
 		;
 	else if (id == mainTab.Find(mainSetupFOAMM))
@@ -443,7 +451,8 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
-		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -502,7 +511,8 @@ void MainBEM::OnRemoveSelected(bool all) {
 	
 	mainArrange.Load(Bem().hydros, ids);	
 	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);	
-	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
+	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
+	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -582,7 +592,8 @@ void MainBEM::OnJoin() {
 
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
-		mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -890,7 +901,8 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
 		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
-		("mainStiffness", mainStiffness)
+		("mainStiffness", mainMatrixK)
+		("mainMatrixA", mainMatrixA)
 	;
 }
 
