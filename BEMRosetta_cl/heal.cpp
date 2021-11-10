@@ -486,6 +486,12 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail) {
 	 		}
 		}
 
+		// Just in case tests
+		// Clean last negatives and outliers
+		for (int i = 0; i < B.size(); ++i)
+			if (fB[i] < 0 || fB[i] > 1e20) 		// Bad problem with filter
+				fB[i] = 0;
+			
 		// Interval to get Ainf
 		int fromA;
 		for (int i = 0; i < w.size() && w[fromA = i] < 0.1*aoidx; ++i) 	// From 0.1*aoidx
@@ -493,8 +499,7 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail) {
 		int toA = idaoiyMx;												// To the max value idaoiyMx
 		
 		
-		// IRF and Ainf obtained from filtered B fB. A used directly (should it be softly
-		// filtered?
+		// IRF and Ainf obtained from filtered B fB. A used directly (should it be softly filtered?
 		GetTirf(Tirf, numT, maxT);
 		GetKirf(fKirf, Tirf, w, fB);
 		GetAinf_w(fAinf, fKirf, Tirf, w, A);

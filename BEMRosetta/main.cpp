@@ -340,6 +340,8 @@ void MenuOptions::Load() {
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
 	hamsMeshPath <<= bem->hamsMeshPath;
+	volWarning <<= bem->volWarning;
+	volError <<= bem->volError;
 	
 	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
 	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
@@ -369,6 +371,8 @@ void MenuOptions::OnSave() {
 	bem->foammPath = ~foammPath;
 	bem->hamsPath = ~hamsPath;
 	bem->hamsMeshPath = ~hamsMeshPath;
+	bem->volWarning = ~volWarning;
+	bem->volError = ~volError;
 	
 	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
 	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
@@ -418,6 +422,10 @@ bool MenuOptions::IsChanged() {
 	if (bem->hamsPath != ~hamsPath)
 		return true;
 	if (bem->hamsMeshPath != ~hamsMeshPath)
+		return true;
+	if (bem->volWarning != ~volWarning)
+		return true;
+	if (bem->volError != ~volError)
 		return true;
 	
 	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())

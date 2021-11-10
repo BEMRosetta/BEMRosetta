@@ -212,7 +212,7 @@ void MainMesh::Init() {
 	mainSummary.Init();
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 
-	mainStiffness.Init();
+	mainStiffness.Init(true);
 	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix"));
 			
 	mainTab.WhenSet = [&] {
@@ -1200,7 +1200,22 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 		array.AddColumn(Format("#%d %s", id+1, name));
 	int row = 0;
 	int col = id + 1;
+
+	int idColor;
+	Upp::Color backColorMesh;
+	idColor = data.mesh.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
+	if (idColor == -2)
+		backColorMesh = Upp::Color(255, 165, 158);	// Light red
+	else if (idColor == -1)
+		backColorMesh = Upp::Color(255, 255, 150);	// Light yellow
 	
+	Upp::Color backColorUnder;
+	idColor = data.under.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
+	if (idColor == -2)
+		backColorUnder = Upp::Color(255, 165, 158);
+	else if (idColor == -1)
+		backColorUnder = Upp::Color(255, 255, 150);
+									
 	bool healing = data.mesh.healing;
 	
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.fileName);
@@ -1211,18 +1226,18 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());
 
 	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FormatDoubleSize(data.mesh.surface, 8, false));
-	array.Set(row, 0, t_("Volume [m3]"));		array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Volume [m3] Vavg(Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
 														FormatDoubleSize(data.mesh.volume,  10, false),
 														FormatDoubleSize(data.mesh.volumex, 10, false),
 														FormatDoubleSize(data.mesh.volumey, 10, false),
-														FormatDoubleSize(data.mesh.volumez, 10, false)));
+														FormatDoubleSize(data.mesh.volumez, 10, false))).Paper(backColorMesh));
 	
 	array.Set(row, 0, t_("Immersed surface [m2]"));array.Set(row++, col, FormatDoubleSize(data.under.surface, 10, false));
-	array.Set(row, 0, t_("Immersed volume [m3] Vavg(Vx,Vy,Vz)")); array.Set(row++, col, Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Immersed volume [m3] Vavg(Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
 														FormatDoubleSize(data.under.volume,  10, false),
 														FormatDoubleSize(data.under.volumex, 10, false),
 														FormatDoubleSize(data.under.volumey, 10, false),
-														FormatDoubleSize(data.under.volumez, 10, false)));
+														FormatDoubleSize(data.under.volumez, 10, false))).Paper(backColorUnder));
 	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FormatDoubleSize(data.under.volume*Bem().rho, 10, false));
 	array.Set(row, 0, t_("Cg [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FormatDoubleSize(data.cg.x, 10, false),			
@@ -1265,14 +1280,14 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 
 	Eigen::VectorXd f;
 	data.under.GetHydrostaticForce(f, data.c0, Bem().rho, Bem().g);	
-	array.Set(row, 0, t_("Hydrostatic forces [N]"));   array.Set(row++, col, Format(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("Hydrostatic forces [N]"));   array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FormatDoubleSize(f[0], 10, false),
 														FormatDoubleSize(f[1], 10, false),
-														FormatDoubleSize(f[2], 10, false)));
-	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));array.Set(row++, col, Format(t_("%s, %s, %s"),
+														FormatDoubleSize(f[2], 10, false))).Paper(backColorUnder));
+	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FormatDoubleSize(f[3], 10, false),
 														FormatDoubleSize(f[4], 10, false),
-														FormatDoubleSize(f[5], 10, false)));													
+														FormatDoubleSize(f[5], 10, false))).Paper(backColorUnder));							
 
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (data.C.size() > 0) {

@@ -17,14 +17,39 @@ using namespace Eigen;
 
 
 
-void MainStiffness::Init() {
+void MainMatrixKA::Init(bool isK) {
 	CtrlLayout(*this);
 	
+	this->isK = isK;
+	
+	if (isK)
+		label.SetText(t_("Hydrostatic Stiffness Matrices (dimensional)"));
+	else
+		label.SetText(t_("Added Mass at infinite frequency (dimensional)"));
+		
+	numDigits <<= THISBACK(PrintData);
 	numDecimals <<= THISBACK(PrintData);
 	opEmptyZero <<= THISBACK(PrintData);
+	expRatio <<= THISBACK(PrintData);
+	
+	opDecimals <<= THISBACK1(OnOp, 0);
+	opDigits <<= THISBACK1(OnOp, 1);
+	OnOp(~opDigits ? 0 : 1);
 }
 
-void MainStiffness::Clear() {
+void MainMatrixKA::OnOp(int id) {
+	if (id == 0) 
+		opDigits <<= 1;
+	else 
+		opDecimals <<= 1;
+	
+	numDigits.Enable(id == 1);
+	numDecimals.Enable(id == 0);
+	
+	PrintData();
+}
+	
+void MainMatrixKA::Clear() {
 	array.Reset();
 	array.NoHeader().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
 	array.MultiSelect().SpanWideCells();
@@ -35,7 +60,7 @@ void MainStiffness::Clear() {
 	col0s.Clear();
 }
 
-void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, String bodyName, int ibody, int idc) {
+void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, String bodyName, int ibody, int idc) {
 	row0s << (row0 = ibody*9 + 1);
 	col0s << (col0 = icase*8);
 	
@@ -49,8 +74,8 @@ void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, Str
 			array.HeaderObject().Tab(icol).SetMargin(0);
 		}
 		array.AddColumn("", 20);
-		for (int i = 0; i < 2; ++i)
-			array.AddColumn("", 20);	
+		for (int i = 0; i < 2; ++i) 
+			array.AddColumn("", isK ? 20 : 70);	
 		for (int i = 0; i < 4; ++i)
 			array.AddColumn("", 70);
 	}
@@ -63,27 +88,37 @@ void MainStiffness::AddPrepare(int &row0, int &col0, String name, int icase, Str
 		array.SetLineCy(i*9, 10);	
 }
 
-void MainStiffness::PrintData() {
+void MainMatrixKA::PrintData() {
+	expRatio.Enable(~opEmptyZero);
+	double ratio = 1/pow(10., double(~expRatio));
+	
+	if (IsNull(numDigits) || numDigits < 5 || numDigits > 14)
+		numDigits <<= 5;
 	if (IsNull(numDecimals) || numDecimals < 0 || numDecimals > 14)
 		numDecimals <<= 0;
 	for (int i = 0; i < data.size(); ++i) {
 		int row0 = row0s[i];
 		int col0 = col0s[i];
+		double mx = data[i].maxCoeff();
 		if (data[i].size() != 0) {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					double val = data[i](r, c);
-					String data = FormatF(val, numDecimals);
-					if (ScanDouble(data) == 0)
-						data = opEmptyZero ? "" : "0";
-					array.Set(row0 + r + 2, col0 + c + 1, AttrText(data).Align(ALIGN_RIGHT));
+					String sdata;
+					if (~opEmptyZero && abs(val/mx) < ratio)
+						sdata = "";
+					else if (bool(~opDigits) == 0)
+						sdata = FormatDoubleSize(val, numDigits);
+					else
+						sdata = FormatF(val, numDecimals);
+					array.Set(row0 + r + 2, col0 + c + 1, AttrText(sdata).Align(ALIGN_RIGHT));
 				}
 			}
 		}
 	}
 }
 
-void MainStiffness::Add(const Mesh &mesh, int icase, bool button) {
+void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	String name = mesh.fileName;
 	
 	const MatrixXd &K = mesh.C;
@@ -146,17 +181,20 @@ void MainStiffness::Add(const Mesh &mesh, int icase, bool button) {
 	}
 }
 	
-void MainStiffness::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
-	data << hydro.C_dim(ibody);
+void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
+	if (isK)
+		data << hydro.C_dim(ibody);
+	else
+		data << hydro.Ainf_dim(ibody);
 	
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, bodyName, ibody, idc);
 
-	if (hydro.C.IsEmpty() || hydro.C[ibody].size() == 0)
-		return;
+	//if (hydro.C.IsEmpty() || hydro.C[ibody].size() == 0)
+	//	return;
 }
 
-bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
+bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
 	Clear();
 	
 	for (int i = 0; i < ids.size(); ++i) {
@@ -169,7 +207,7 @@ bool MainStiffness::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> 
 	return true;
 }	
 
-void MainStiffness::Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids) {
+void MainMatrixKA::Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids) {
 	Clear();
 
 	for (int i = 0; i < ids.size(); ++i) {
