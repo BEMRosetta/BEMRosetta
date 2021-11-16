@@ -216,11 +216,11 @@ public:
  
 		void Jsonize(JsonIO &json) {
 			json
-				("ib", ib)
+				("ib",  ib)
 				("ih1", ih1)
 				("ih2", ih2)
-				("ifr1", ifr1)
-				("ifr2", ifr2)
+				("ifr1",ifr1)
+				("ifr2",ifr2)
 				("fre", fre)
 				("fim", fim)
 				("fma", fma)
