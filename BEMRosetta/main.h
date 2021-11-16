@@ -899,8 +899,10 @@ public:
 	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnOgilvie();
+	void OnUpdateCrot();
 	void OnDescription();
 	void OnMenuConvertArraySel();
+	void OnMenuAdvancedArraySel();
 	void OnSelListLoaded();
 	void UpdateButtons();
 	void ShowMenuPlotItems();

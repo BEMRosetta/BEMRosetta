@@ -149,9 +149,189 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
     		}
         }
     }
-    rao.Reset();	// Previous RAO is now invalid
+    rao.Clear();	// Previous RAO is now invalid
 }
 
+void Hydro::GetTranslationTo(double xto, double yto, double zto) {
+	double xg = xto - c0(0);
+	double yg = yto - c0(1);
+	double zg = zto - c0(2);
+	
+	auto CalcAB = [&](auto &A) {
+        auto An = clone(A);
+	
+		for (int ib = 0; ib < Nb; ++ib) {
+			int ib6 = ib*6;
+			for (int jb = 0; jb < Nb; ++jb) {
+				int jb6 = jb*6;
+				
+				for (int iif = 0; iif < Nf; ++iif) {
+					An[ib6 + 0][jb6 + 3][iif] += - yg*A[ib6 + 0][jb6 + 2][iif] + zg*A[ib6 + 0][jb6 + 1][iif];
+					An[ib6 + 1][jb6 + 3][iif] += - yg*A[ib6 + 1][jb6 + 2][iif] + zg*A[ib6 + 1][jb6 + 1][iif];
+					An[ib6 + 2][jb6 + 3][iif] += - yg*A[ib6 + 2][jb6 + 2][iif] + zg*A[ib6 + 2][jb6 + 1][iif];
+
+					An[ib6 + 0][jb6 + 4][iif] += - zg*A[ib6 + 0][jb6 + 0][iif] + xg*A[ib6 + 0][jb6 + 2][iif];
+					An[ib6 + 1][jb6 + 4][iif] += - zg*A[ib6 + 1][jb6 + 0][iif] + xg*A[ib6 + 1][jb6 + 2][iif];
+					An[ib6 + 2][jb6 + 4][iif] += - zg*A[ib6 + 2][jb6 + 0][iif] + xg*A[ib6 + 2][jb6 + 2][iif];
+
+					An[ib6 + 0][jb6 + 5][iif] += - xg*A[ib6 + 0][jb6 + 5][iif] + yg*A[ib6 + 0][jb6 + 5][iif];
+					An[ib6 + 1][jb6 + 5][iif] += - xg*A[ib6 + 1][jb6 + 5][iif] + yg*A[ib6 + 1][jb6 + 5][iif];
+					An[ib6 + 2][jb6 + 5][iif] += - xg*A[ib6 + 2][jb6 + 5][iif] + yg*A[ib6 + 2][jb6 + 5][iif];
+
+					An[ib6 + 3][jb6 + 0][iif] += - yg*A[ib6 + 2][jb6 + 0][iif] + zg*A[ib6 + 1][jb6 + 0][iif];	
+					An[ib6 + 3][jb6 + 1][iif] += - yg*A[ib6 + 2][jb6 + 1][iif] + zg*A[ib6 + 1][jb6 + 1][iif];
+					An[ib6 + 3][jb6 + 2][iif] += - yg*A[ib6 + 2][jb6 + 2][iif] + zg*A[ib6 + 1][jb6 + 2][iif];
+
+					An[ib6 + 4][jb6 + 0][iif] += - zg*A[ib6 + 0][jb6 + 0][iif] + xg*A[ib6 + 2][jb6 + 0][iif];	
+					An[ib6 + 4][jb6 + 1][iif] += - zg*A[ib6 + 0][jb6 + 1][iif] + xg*A[ib6 + 2][jb6 + 1][iif];
+					An[ib6 + 4][jb6 + 2][iif] += - zg*A[ib6 + 0][jb6 + 2][iif] + xg*A[ib6 + 2][jb6 + 2][iif];
+
+					An[ib6 + 5][jb6 + 0][iif] += - xg*A[ib6 + 1][jb6 + 0][iif] + yg*A[ib6 + 0][jb6 + 0][iif];	
+					An[ib6 + 5][jb6 + 1][iif] += - xg*A[ib6 + 1][jb6 + 1][iif] + yg*A[ib6 + 0][jb6 + 1][iif];
+					An[ib6 + 5][jb6 + 2][iif] += - xg*A[ib6 + 1][jb6 + 2][iif] + yg*A[ib6 + 0][jb6 + 2][iif];
+
+					An[ib6 + 3][jb6 + 3][iif] += -    2*yg*A[ib6 + 2][jb6 + 3][iif] +  2*zg*A[ib6 + 1][jb6 + 3][iif]
+												 +   yg*yg*A[ib6 + 2][jb6 + 2][iif] + zg*zg*A[ib6 + 1][jb6 + 1][iif]
+												 - 2*yg*zg*A[ib6 + 1][jb6 + 2][iif];   
+
+		    		An[ib6 + 4][jb6 + 4][iif] += -    2*zg*A[ib6 + 0][jb6 + 4][iif] +  2*xg*A[ib6 + 2][jb6 + 4][iif]
+												 +   zg*zg*A[ib6 + 0][jb6 + 0][iif] + xg*xg*A[ib6 + 2][jb6 + 2][iif]
+												 - 2*zg*xg*A[ib6 + 0][jb6 + 2][iif];
+
+					An[ib6 + 5][jb6 + 5][iif] += -    2*xg*A[ib6 + 1][jb6 + 5][iif] +  2*yg*A[ib6 + 0][jb6 + 5][iif]
+												 +   xg*xg*A[ib6 + 1][jb6 + 1][iif] + yg*yg*A[ib6 + 0][jb6 + 0][iif]
+												 - 2*xg*yg*A[ib6 + 0][jb6 + 1][iif];
+				}
+				An[ib6 + 3][jb6 + 0] = clone(A[ib6 + 0][jb6 + 3]);
+				An[ib6 + 3][jb6 + 1] = clone(A[ib6 + 1][jb6 + 3]);
+				An[ib6 + 3][jb6 + 2] = clone(A[ib6 + 2][jb6 + 3]);
+
+				An[ib6 + 4][jb6 + 0] = clone(A[ib6 + 0][jb6 + 4]);
+				An[ib6 + 4][jb6 + 1] = clone(A[ib6 + 1][jb6 + 4]);
+				An[ib6 + 4][jb6 + 2] = clone(A[ib6 + 2][jb6 + 4]);
+			}
+		}
+		A = pick(An);
+    };
+	
+	if (IsLoadedA())
+		CalcAB(A);
+	if (IsLoadedAinf_w())
+		CalcAB(Ainf_w);
+	if (IsLoadedB())
+		CalcAB(B);
+    
+    auto CalcA = [&](auto &A) {
+        auto An = clone(A);
+	
+		for (int ib = 0; ib < Nb; ++ib) {
+			int ib6 = ib*6;
+			for (int jb = 0; jb < Nb; ++jb) {
+				int jb6 = jb*6;
+				
+				An(ib6 + 0, jb6 + 3) += - yg*A(ib6 + 0, jb6 + 2) + zg*A(ib6 + 0, jb6 + 1);
+				An(ib6 + 1, jb6 + 3) += - yg*A(ib6 + 1, jb6 + 2) + zg*A(ib6 + 1, jb6 + 1);
+				An(ib6 + 2, jb6 + 3) += - yg*A(ib6 + 2, jb6 + 2) + zg*A(ib6 + 2, jb6 + 1);
+	
+				An(ib6 + 0, jb6 + 4) += - zg*A(ib6 + 0, jb6 + 0) + xg*A(ib6 + 0, jb6 + 2);
+				An(ib6 + 1, jb6 + 4) += - zg*A(ib6 + 1, jb6 + 0) + xg*A(ib6 + 1, jb6 + 2);
+				An(ib6 + 2, jb6 + 4) += - zg*A(ib6 + 2, jb6 + 0) + xg*A(ib6 + 2, jb6 + 2);
+	
+				An(ib6 + 0, jb6 + 5) += - xg*A(ib6 + 0, jb6 + 5) + yg*A(ib6 + 0, jb6 + 5);
+				An(ib6 + 1, jb6 + 5) += - xg*A(ib6 + 1, jb6 + 5) + yg*A(ib6 + 1, jb6 + 5);
+				An(ib6 + 2, jb6 + 5) += - xg*A(ib6 + 2, jb6 + 5) + yg*A(ib6 + 2, jb6 + 5);
+	
+				An(ib6 + 3, jb6 + 0) += - yg*A(ib6 + 2, jb6 + 0) + zg*A(ib6 + 1, jb6 + 0);	
+				An(ib6 + 3, jb6 + 1) += - yg*A(ib6 + 2, jb6 + 1) + zg*A(ib6 + 1, jb6 + 1);
+				An(ib6 + 3, jb6 + 2) += - yg*A(ib6 + 2, jb6 + 2) + zg*A(ib6 + 1, jb6 + 2);
+	
+				An(ib6 + 4, jb6 + 0) += - zg*A(ib6 + 0, jb6 + 0) + xg*A(ib6 + 2, jb6 + 0);	
+				An(ib6 + 4, jb6 + 1) += - zg*A(ib6 + 0, jb6 + 1) + xg*A(ib6 + 2, jb6 + 1);
+				An(ib6 + 4, jb6 + 2) += - zg*A(ib6 + 0, jb6 + 2) + xg*A(ib6 + 2, jb6 + 2);
+	
+				An(ib6 + 5, jb6 + 0) += - xg*A(ib6 + 1, jb6 + 0) + yg*A(ib6 + 0, jb6 + 0);	
+				An(ib6 + 5, jb6 + 1) += - xg*A(ib6 + 1, jb6 + 1) + yg*A(ib6 + 0, jb6 + 1);
+				An(ib6 + 5, jb6 + 2) += - xg*A(ib6 + 1, jb6 + 2) + yg*A(ib6 + 0, jb6 + 2);
+	
+				An(ib6 + 3, jb6 + 3) += -    2*yg*A(ib6 + 2, jb6 + 3) +  2*zg*A(ib6 + 1, jb6 + 3)
+									 	+   yg*yg*A(ib6 + 2, jb6 + 2) + zg*zg*A(ib6 + 1, jb6 + 1)
+										- 2*yg*zg*A(ib6 + 1, jb6 + 2);   
+	
+	    		An(ib6 + 4, jb6 + 4) += -    2*zg*A(ib6 + 0, jb6 + 4) +  2*xg*A(ib6 + 2, jb6 + 4)
+										+   zg*zg*A(ib6 + 0, jb6 + 0) + xg*xg*A(ib6 + 2, jb6 + 2)
+										- 2*zg*xg*A(ib6 + 0, jb6 + 2);
+	
+				An(ib6 + 5, jb6 + 5) += -    2*xg*A(ib6 + 1, jb6 + 5) +  2*yg*A(ib6 + 0, jb6 + 5)
+										+   xg*xg*A(ib6 + 1, jb6 + 1) + yg*yg*A(ib6 + 0, jb6 + 0)
+										- 2*xg*yg*A(ib6 + 0, jb6 + 1);
+			
+				An(ib6 + 3, jb6 + 0) = A(ib6 + 0, jb6 + 3);
+				An(ib6 + 3, jb6 + 1) = A(ib6 + 1, jb6 + 3);
+				An(ib6 + 3, jb6 + 2) = A(ib6 + 2, jb6 + 3);
+
+				An(ib6 + 4, jb6 + 0) = A(ib6 + 0, jb6 + 4);
+				An(ib6 + 4, jb6 + 1) = A(ib6 + 1, jb6 + 4);
+				An(ib6 + 4, jb6 + 2) = A(ib6 + 2, jb6 + 4);
+			}
+		}
+		A = pick(An);
+    };
+    
+    if (IsLoadedA0())
+		CalcA(A0);
+    if (IsLoadedAinf())
+		CalcA(Ainf);
+	    
+    auto CalcF = [&](auto &ex) {
+    	auto exnre = clone(ex.re);
+    	auto exnim = clone(ex.im);
+    	
+	    for (int ih = 0; ih < Nh; ++ih) {
+	    	for (int ib = 0; ib < Nb; ++ib) {
+	    		int ib6 = ib*6;
+				for (int ifr = 0; ifr < Nf; ++ifr) {
+					exnre[ih](ifr, 3 + ib6) += -yg*ex.re[ih](ifr, 2 + ib6) + zg*ex.re[ih](ifr, 1 + ib6);
+					exnim[ih](ifr, 3 + ib6) += -yg*ex.im[ih](ifr, 2 + ib6) + zg*ex.im[ih](ifr, 1 + ib6);
+	    			exnre[ih](ifr, 4 + ib6) += -zg*ex.re[ih](ifr, 0 + ib6) + xg*ex.re[ih](ifr, 2 + ib6);
+	    			exnim[ih](ifr, 4 + ib6) += -zg*ex.im[ih](ifr, 0 + ib6) + xg*ex.im[ih](ifr, 2 + ib6);
+	    			exnre[ih](ifr, 5 + ib6) += -xg*ex.re[ih](ifr, 1 + ib6) + yg*ex.re[ih](ifr, 0 + ib6);
+					exnim[ih](ifr, 5 + ib6) += -xg*ex.im[ih](ifr, 1 + ib6) + yg*ex.im[ih](ifr, 0 + ib6);
+				}
+	    	}
+	    }
+		ex.re = pick(exnre);
+		ex.im = pick(exnim);
+		GetMaPh(ex);
+    };
+    
+    if (IsLoadedFex())
+    	CalcF(ex);
+	if (IsLoadedFsc())
+		CalcF(sc);
+	if (IsLoadedFfk())
+		CalcF(fk);
+	
+	c0(0) = xto;
+	c0(1) = yto;
+	c0(2) = zto;
+	
+	// Some previous data are now invalid
+	Kirf.Clear();
+	rao.Clear();	
+	C.Clear();
+	qtfsum.Clear();
+	qtfdif.Clear();
+	qtfw.Clear();
+	qtfT.Clear();
+	qtfhead.Clear();
+	
+	if (!AfterLoad()) {
+		String error = GetLastError();
+		throw Exc(Format(t_("Problem translating model: '%s'\n%s"), error));	
+	}
+}
+
+	
 void Heal();
 void Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, double maxT, int num);
 void Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 
