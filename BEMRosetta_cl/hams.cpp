@@ -98,7 +98,7 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
  
 	hd().Nb = 1;
 	
-	hd().c0.setConstant(3, hd().Nb, Null);
+	hd().cg.setConstant(3, hd().Nb, Null);
 	
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib)
@@ -106,9 +106,9 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
 
 	in.GetLine();	
 	f.Load(in.GetLine());	
-	hd().c0(0, 0) = f.GetDouble(0);
-	hd().c0(1, 0) = f.GetDouble(1);
-	hd().c0(2, 0) = f.GetDouble(2);
+	hd().cg(0, 0) = f.GetDouble(0);
+	hd().cg(1, 0) = f.GetDouble(1);
+	hd().cg(2, 0) = f.GetDouble(2);
 		
 	in.GetLine(8);
 	for (int r = 0; r < 6; ++r) {

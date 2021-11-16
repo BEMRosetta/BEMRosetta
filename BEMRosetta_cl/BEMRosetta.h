@@ -127,6 +127,7 @@ public:
         }
     	Upp::Array<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
     	Upp::Array<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
+    
     	void Jsonize(JsonIO &json) {
 			json
 				("ma", ma)
@@ -135,7 +136,7 @@ public:
 				("im", im)
 			;
     	}
-    	void Reset() {ma.Clear(); ph.Clear(); re.Clear(); im.Clear();}
+    	void Clear() {ma.Clear(); ph.Clear(); re.Clear(); im.Clear();}
     };
     
     Forces ex; 								// Excitation
@@ -226,6 +227,12 @@ public:
 				("fph", fph)
 			;
     	}
+    	void Clear() {
+    		fre.Clear();
+    		fim.Clear();
+    		fma.Clear();
+    		fph.Clear();
+    	}
     };
     Upp::Array<QTF> qtfsum, qtfdif;
     Upp::Vector<double> qtfw, qtfT, qtfhead;
@@ -264,10 +271,11 @@ public:
     
     void SetC(int ib, const Eigen::MatrixXd &K);
 	
-	bool AfterLoad(Function <bool(String, int)> Status);
+	bool AfterLoad(Function <bool(String, int)> Status = Null);
 	
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f, int _Nh = -1);
+	void GetMaPh(Forces &f);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
@@ -554,7 +562,8 @@ public:
 	void GetAinf_w();
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail);
-	
+	void GetTranslationTo(double xto, double yto, double zto);
+		
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
 	String S_g()	const {return IsNull(g)   ? S("-") : Format("%.3f", g);}
@@ -1038,6 +1047,7 @@ public:
 	void Ainf(int id);
 	void Ainf_w(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail);
+	void TranslationTo(int id, double xto, double yto, double zto);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);

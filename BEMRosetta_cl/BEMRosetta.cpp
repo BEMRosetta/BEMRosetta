@@ -171,6 +171,17 @@ void Hydro::Initialize_Forces(Forces &f, int _Nh) {
 	}
 }
 
+void Hydro::GetMaPh(Forces &f) {
+	for (int ih = 0; ih < Nh; ++ih) {
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			for (int idf = 0; idf < 6*Nb; ++idf) {	 
+				f.ma[ih](ifr, idf) = sqrt(sqr(f.re[ih](ifr, idf)) + sqr(f.im[ih](ifr, idf)));
+				f.ph[ih](ifr, idf) = atan2(f.im[ih](ifr, idf), f.re[ih](ifr, idf));
+			}
+		}
+	} 
+}
+    	
 void Hydro::Normalize_Forces(Forces &f) {
 	for (int ih = 0; ih < Nh; ++ih) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
@@ -1434,6 +1445,11 @@ void BEMData::Ainf_w(int id) {
 void BEMData::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail) {
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail);
 }
+
+void BEMData::TranslationTo(int id, double xto, double yto, double zto) {
+	hydros[id].hd().GetTranslationTo(xto, yto, zto);
+}
+
 
 void BEMData::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
