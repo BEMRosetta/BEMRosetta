@@ -310,6 +310,33 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		CalcF(sc);
 	if (IsLoadedFfk())
 		CalcF(fk);
+
+
+    auto CalcQTF = [&](auto &qtf) {
+	    for (int i = 0; i < qtf.size(); ++i) {
+	        QTF &q = qtf[i];
+			q.fre[3] += -yg*q.fre[2] + zg*q.fre[1];
+			q.fim[3] += -yg*q.fim[2] + zg*q.fim[1];
+			q.fma[3] = sqrt(sqr(q.fre[3]) + sqr(q.fim[3]));
+			q.fph[3] = atan2(q.fim[3], q.fre[3]);
+			
+			q.fre[4] += -yg*q.fre[0] + zg*q.fre[2];
+			q.fim[4] += -yg*q.fim[0] + zg*q.fim[2];
+			q.fma[4] = sqrt(sqr(q.fre[4]) + sqr(q.fim[4]));
+			q.fph[4] = atan2(q.fim[4], q.fre[4]);
+			
+			q.fre[5] += -yg*q.fre[1] + zg*q.fre[0];
+			q.fim[5] += -yg*q.fim[1] + zg*q.fim[0];
+			q.fma[5] = sqrt(sqr(q.fre[5]) + sqr(q.fim[5]));
+			q.fph[5] = atan2(q.fim[5], q.fre[5]);
+	    }
+    };
+
+	if (IsLoadedQTF()) {
+		CalcQTF(qtfsum);		
+		CalcQTF(qtfdif);
+	}
+
 	
 	c0(0) = xto;
 	c0(1) = yto;
@@ -319,11 +346,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	Kirf.Clear();
 	rao.Clear();	
 	C.Clear();
-	qtfsum.Clear();
-	qtfdif.Clear();
-	qtfw.Clear();
-	qtfT.Clear();
-	qtfhead.Clear();
+	
 	
 	if (!AfterLoad()) {
 		String error = GetLastError();
