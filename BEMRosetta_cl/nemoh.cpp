@@ -129,6 +129,10 @@ bool Nemoh::Load_Cal(String fileName) {
 		for (int i = 0; i < hd().Tirf.size(); ++i) 
 			hd().Tirf[i] = i*dcase.irfStep;
 	}
+	
+	if (hd().Nb > 0) 
+		hd().c0 = clone(dcase.bodies[0].c0);
+		
 	return true;
 }
 
@@ -696,7 +700,7 @@ bool Nemoh::Load_Inf(String fileName) {
 				
 	hd().cg.setConstant(3, 1, Null);
 	hd().cb.setConstant(3, 1, Null);
-	hd().c0.setConstant(3, 1, Null);
+	//hd().c0.setConstant(3, 1, Null);
 	hd().Vo.SetCount(1, Null);
 	hd().C.SetCount(1);
 	hd().C[0].setConstant(6, 6, Null);   
@@ -750,7 +754,7 @@ bool Nemoh::Load_Inf(String fileName) {
 bool Nemoh::Load_Hydrostatics() {
 	hd().cg.setConstant(3, hd().Nb, Null);
 	hd().cb.setConstant(3, hd().Nb, Null);
-	hd().c0.setConstant(3, hd().Nb, Null);
+	//hd().c0.setConstant(3, hd().Nb, Null);
 	hd().Vo.SetCount(hd().Nb, Null);
 	String line;
 	

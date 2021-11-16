@@ -391,7 +391,6 @@ bool Aqwa::Load_LIS() {
 			}
 		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
 				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {
-			//hd().C[ib].setConstant(6, 6, 0);
 			in.GetLine(3);
 			line = in.GetLine();
 			if (Trim(line).StartsWith("Z"))
@@ -522,10 +521,55 @@ bool Aqwa::Load_LIS() {
 						hd().B[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf);
 				}
 			}
+		} else if (line.Find("H Y D R O D Y N A M I C   P A R A M E T E R S   A T   L O W   &   H I G H") >= 0) {
+			int ib = -1;
+			double freq = -1;
+			while(!in.IsEof() && !(line[0] == '1')) {
+				line = in.GetLine();
+				int id = line.FindAfter("F O R   S T R U C T U R E");
+				if (id >= 0) {
+					ib = ScanInt(line.Mid(id)) - 1;
+					for (int ii = 0; ii < 2; ++ii) {
+						while(!in.IsEof() && !(line[0] == '1')) {
+							line = in.GetLine();
+							int idr = line.FindAfter("WAVE FREQUENCY");
+							if (idr >= 0) {
+								freq = ScanDouble(line.Mid(idr + 3));
+								if (freq < 0.1 && hd().A0.size() == 0)
+									hd().A0.resize(6*hd().Nb, 6*hd().Nb);
+								else if (freq > 90 && hd().Ainf.size() == 0)
+									hd().Ainf.resize(6*hd().Nb, 6*hd().Nb);
+								break;
+							}
+						}
+						while(!in.IsEof() && !(line[0] == '1')) {
+							line = in.GetLine();
+							if (line.Find("ADDED MASS") >= 0) {
+								while(!in.IsEof() && !(line[0] == '1')) {
+									f.LoadLine();
+									if (f.size() == 7 && f.GetText(0) == "X") {
+										for (int idf = 0; idf < 6; ++idf) {
+											for (int jdf = 0; jdf < 6; ++jdf) {
+												if (freq < 0.1)
+													hd().A0(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
+												else if (freq > 90)
+													hd().Ainf(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
+											}
+											f.LoadLine(); 
+											f.LoadLine();
+										}
+										break;
+									}
+								}
+								freq = -1;
+								break;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
-	//hd().Initialize_Forces(hd().ex);
-	//hd().GetFexFromFscFfk();
 		
 	return true;
 }
