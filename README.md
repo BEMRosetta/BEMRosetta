@@ -1,7 +1,7 @@
 <!--
   Title: BEMRosetta
   Description: Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.
-  Authors: Iñaki Zabala, Markel Peñalba.
+  Authors: Iñaki Zabala.
   -->
 
 # BEMRosetta
@@ -31,25 +31,37 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
 * BEM coefficients
   * Load-View
     * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst, .12s, .12d
-    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
+    * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in
+    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss, .12s, .12d
     * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
 	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
 	* [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
   * Save
     * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .12s, .12d
+    * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in and all the folder structure.
     * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss, .12s, .12d
-    * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/)    
+    * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/) 
+
+* Case files
+    * Load-View
+      * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in
+      * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
+      * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal and all the folder structure.
+    * Save
+      * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in and all the folder structure.
+      * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal and all the folder structure.
+      
 * Mesh files
   * Load-View
     * [Wamit](https://www.wamit.com/): .gdf, pan.dat
-    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974): .dat
-    * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
     * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl
+    * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974) and [Capytaine](https://github.com/mancellin/capytaine): .dat
+    * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
-    * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl (hull and waterplane)
+    * [HAMS](https://github.com/YingyiLiu/HAMS): HullMesh.pnl, WaterplaneMesh.pnl
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
@@ -105,9 +117,9 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 - Hydrostatic stiffness matrix viewer
 - Mesh healing option
     
-### - Nemoh
+### - Case launcher, Nemoh & HAMS
 
-Added Nemoh launcher. It can load an existing Nemoh.cal file, lets you editing it, and creates the set of files to launch Nemoh from a .bat file (it replaces the classic MATLAB launcher)
+Added Nemoh and [HAMS](https://github.com/YingyiLiu/HAMS) launcher. It can loadexisting files from HAMS, Nemoh or ANSYS AQWA, it lets you editing it, and creates the set of files to launch Nemoh and HAMS from a .bat file (it replaces the classic Nemoh MATLAB launcher)
 
 ### - Bonus
 
@@ -119,7 +131,7 @@ Files may be opened by drag and drop, and parameters are filtered by name or uni
 
 ### - Other
 
-All files, mesh, Nemoh or BEM files, can be loaded by Drag and Drop or Copy and Paste from file explorer in Windows and Linux.
+All files, mesh, case or BEM files, can be loaded by Drag and Drop or Copy and Paste from file explorer in Windows and Linux.
 
 <p align="center">
   <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/Underwater.png" width="45%" title="Underwater mesh and waterline">
@@ -135,7 +147,7 @@ Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 ## License
 
-Copyright © 2019-2020 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez, Thomas Kelly.
+Copyright © 2019-2021 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez, Thomas Kelly.
 
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>
