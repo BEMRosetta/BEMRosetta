@@ -21,11 +21,11 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			String fileSC = ForceExt(file, ".3sc");
 			BEMData::Print("\n- " + Format(t_("Scattering file '%s'"), GetFileName(fileSC)));
 			if (!Load_Scattering(fileSC))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** 3sc ") + t_("Not found") + "**");
 			String fileFK = ForceExt(file, ".3fk");
 			BEMData::Print("\n- " + Format(t_("Froude-Krylov file '%s'"), GetFileName(fileFK)));
 			if (!Load_FK(fileFK))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** 3fk ") + t_("Not found") + "**");
 		} else if (S(".1.2.3.hst.4.12d.12s").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
 				hd().code = Hydro::HAMS_WAMIT;
@@ -37,22 +37,22 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			String filecfg = ForceExt(file, ".cfg");
 			BEMData::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
 			if (!Load_cfg(filecfg))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** cfg ") + t_("Not found") + "**");
 
 			String filepot = ForceExt(file, ".pot");
 			BEMData::Print("\n- " + Format(t_("Configuration file .pot file '%s'"), GetFileName(filepot)));
 			if (!Load_pot(filepot))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** pot ") + t_("Not found") + "**");
 				
 			String filegdf = ForceExt(file, ".gdf");
 			BEMData::Print("\n- " + Format(t_("Mesh file .gdf file '%s'"), GetFileName(filegdf)));
 			if (!Load_gdf(filegdf))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** gdf ") + t_("Not found") + "**");
 							
 			String file1 = ForceExt(file, ".1");
 			BEMData::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
 			if (!Load_1(file1))
-				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
+				BEMData::PrintWarning(S(": ** .1 ") + t_("Not found or empty") + "**");
 			
 			String file2 = ForceExt(file, ".2"),
 				   file3 = ForceExt(file, ".3");
@@ -66,17 +66,17 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			}
 			BEMData::Print("\n- " + Format(t_("Diffraction exciting %s file '%s'"), GetFileExt(file), GetFileName(file)));
 			if (!Load_3(file))
-				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
+				BEMData::PrintWarning(S(": ** .3 ") + t_("Not found or empty") + "**");
 			
 			String fileHST = ForceExt(file, ".hst");
 			BEMData::Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
 			if (!Load_hst(fileHST))
-				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
+				BEMData::PrintWarning(S(": ** .hst ") + t_("Not found or empty") + "**");
 		
 			String fileRAO = ForceExt(file, ".4");
 			BEMData::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
 			if (!Load_4(fileRAO))
-				BEMData::PrintWarning(S(": **") + t_("Not found or empty") + "**");
+				BEMData::Print(S(": ** .4 ") + t_("Not found or empty") + "**");
 
 			if (IsNull(hd().Nh))
 				hd().Nh = 0;
@@ -86,12 +86,12 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			String file12s = ForceExt(file, ".12s");
 			BEMData::Print("\n- " + Format(t_("Second order sum coefficients .12s file '%s'"), GetFileName(file12s)));
 			if (!Load_12(file12s, true, Status))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** .12s ") + t_("Not found") + "**");
 			
 			String file12d = ForceExt(file, ".12d");
 			BEMData::Print("\n- " + Format(t_("Second order mean drift coefficients .12d file '%s'"), GetFileName(file12d)));
 			if (!Load_12(file12d, false, Status))
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::Print(S(": ** .12d ") + t_("Not found") + "**");
 		}
 		
 		if (IsNull(hd().Nb))
@@ -101,11 +101,12 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		//for (int i = 0; i < hd().Nb; ++i)
 		//	hd().dof[i] = 6;
 	} catch (Exc e) {
+		Status("", -1);
 		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
-	
+	Status("", -1);
 	return true;
 }
 
