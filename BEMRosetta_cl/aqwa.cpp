@@ -18,10 +18,10 @@ bool Aqwa::Load(String file, double) {
 
 		BEMData::Print("\n- " + S(t_("LIS file")));
 		if (!Load_LIS()) {
-			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			BEMData::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
 			BEMData::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
 				hd().Nh = hd().Nf = 0;
 			//	throw Exc(t_("No .AH1 or .LIS file found"));
 			}
@@ -31,7 +31,7 @@ bool Aqwa::Load(String file, double) {
 		
 		BEMData::Print("\n- " + S(t_("QTF file")));
 		if (!Load_QTF()) 
-			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			BEMData::Print(S(": ** QTF file ") + t_("Not found") + "**");
 		
 		if (IsNull(hd().Nb))
 			return false;

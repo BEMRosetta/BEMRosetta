@@ -11,6 +11,8 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 	
 	hd().g = g;
 	
+	String baseFolder = GetFileFolder(GetFileFolder(file));
+	
 	try {
 		if (GetFileExt(file) != ".in") 
 			throw Exc("\n" + Format(t_("File '%s' is not of HAMS type"), file));
@@ -19,7 +21,6 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 
 		hd().code = Hydro::HAMS_WAMIT;
 		
-		String baseFolder = GetFileFolder(GetFileFolder(file));
 		String wamitFile = AppendFileNameX(baseFolder, "Output", "Wamit_format", "Buoy.1");
 		
 		if (!Wamit::Load(wamitFile, Status)) 
@@ -27,7 +28,13 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 		
 		if (IsNull(hd().Nb))
 			return false;
-		
+
+	} catch (Exc e) {
+		BEMData::PrintError("\nError: " + e);
+		hd().lastError = e;
+		return false;
+	}
+	try {		
 		double rhog = hd().g_rho_dim();
 		String settingsFile = AppendFileNameX(baseFolder, "Settings.ctrl");
 		if (FileExists(settingsFile) && !Load_Settings(settingsFile))
@@ -49,9 +56,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 		}
 		
 	} catch (Exc e) {
-		BEMData::PrintError("\nError: " + e);
-		hd().lastError = e;
-		return false;
+		BEMData::PrintWarning("\nWarning: " + e);
 	}
 	
 	return true;
@@ -66,9 +71,9 @@ bool HAMS::Load_Settings(String fileName) {
 	f.IsSeparator = IsTabSpace;
 	
 	f.Load(in.GetLine());
-	hd().rho = f.GetDouble(0);
-	f.Load(in.GetLine());
 	hd().g = f.GetDouble(0);
+	f.Load(in.GetLine());
+	hd().rho = f.GetDouble(0);
 	
 	in.GetLine();
 	
@@ -469,8 +474,8 @@ void HamsCase::Save_Settings(String folderInput, bool thereIsLid) const {
 	}
 	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
 	
-	out << rho << "\n";
 	out << g << "\n";
+	out << rho << "\n";
 	out << ".\\Input\\mesh.gdf" << "\n";
 	out << bodies[0].c0[0] << "   " << bodies[0].c0[1] << "   " << bodies[0].c0[2] << "\n";
 	out << bodies[0].cg[0] << "   " << bodies[0].cg[1] << "   " << bodies[0].cg[2] << "\n";

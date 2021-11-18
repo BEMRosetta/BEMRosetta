@@ -53,10 +53,10 @@ bool Nemoh::Load(String file, double) {
 		if (hd().code == Hydro::NEMOH) {
 			BEMData::Print(S("\n- ") + t_("Hydrostatics file(s) 'Mesh/Hydrostatics*.dat'"));
 			if (!Load_Hydrostatics())
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": ** Mesh/Hydrostatics*.dat ") + t_("Not found") + "**");
 			BEMData::Print(S("\n- ") + t_("KH file(s) 'Mesh/KH*.dat'"));
 			if (!Load_KH())
-				BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+				BEMData::PrintWarning(S(": ** Mesh/KH ") + t_("Not found") + "**");
 			fileRad = AppendFileNameX(folder, AppendFileNameX("Results", "RadiationCoefficients.tec"));
 			folderForces = folder;
 		} else {
@@ -68,24 +68,24 @@ bool Nemoh::Load(String file, double) {
 		} 
 		BEMData::Print(S("\n- ") + t_("Radiation file 'RadiationCoefficients.tec'"));
 		if (!Load_Radiation(fileRad))
-			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			BEMData::PrintWarning(S(": ** RadiationCoefficients.tec ") + t_("Not found") + "**");
 
 		BEMData::Print(S("\n- ") + t_("Excitation force file 'ExcitationForce.tec'"));
 		if (!Load_Excitation(folderForces))
-			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			BEMData::PrintWarning(S(": ** ExcitationForce.tec ") + t_("Not found") + "**");
 		
 		BEMData::Print(S("\n- ") + t_("Diffraction force file 'DiffractionForce.tec'"));
 		if (!Load_Diffraction(folderForces))
-			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			BEMData::PrintWarning(S(": ** DiffractionForce.tec ") + t_("Not found") + "**");
 		BEMData::Print(S("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
 		if (!Load_FroudeKrylov(folderForces))
-			BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+			BEMData::PrintWarning(S(": ** FKForce.tec ") + t_("Not found") + "**");
 		
 		if (hd().code == Hydro::NEMOH) {
 			if (!hd().dof.IsEmpty()) {
 				BEMData::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
 				if (!Load_IRF(AppendFileNameX(folder, "Results", "IRF.tec")))
-					BEMData::PrintWarning(S(": **") + t_("Not found") + "**");
+					BEMData::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
 			}
 		}
 		if (IsNull(hd().Nb))
