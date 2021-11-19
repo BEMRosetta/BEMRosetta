@@ -135,7 +135,10 @@ void MainBEM::Init() {
 			mainMatrixK.Load(Bem().hydros, ids);
 		} else if (mainTab.IsAt(mainMatrixA)) {
 			plot = false;
-			mainMatrixK.Load(Bem().hydros, ids);
+			mainMatrixA.Load(Bem().hydros, ids);
+		} else if (mainTab.IsAt(mainMatrixDlin)) {
+			plot = false;
+			mainMatrixDlin.Load(Bem().hydros, ids);
 		} else if (mainTab.IsAt(mainA))
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
@@ -215,7 +218,7 @@ void MainBEM::Init() {
 	mainArrange.Init();
 	mainTab.Add(mainArrange.SizePos(), t_("Arrange DOF")).Disable();
 	
-	mainMatrixK.Init(true);
+	mainMatrixK.Init(Hydro::MAT_K);
 	mainTab.Add(mainMatrixK.SizePos(), t_("K")).Disable();
 		
 	mainA.Init(Hydro::DATA_A);
@@ -239,12 +242,15 @@ void MainBEM::Init() {
 	mainRAO.Init(Hydro::DATA_RAO);
 	mainTab.Add(mainRAO.SizePos(), t_("RAO")).Disable();
 
-	mainMatrixA.Init(false);
+	mainMatrixA.Init(Hydro::MAT_A);
 	mainTab.Add(mainMatrixA.SizePos(), t_("A∞")).Disable();
 	
 	mainAinfw.Init(Hydro::DATA_AINFW);
 	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
-	
+
+	mainMatrixDlin.Init(Hydro::MAT_DAMP_LIN);
+	mainTab.Add(mainMatrixDlin.SizePos(), t_("Lin. Damp.")).Disable();
+		
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("Setup FOAMM")).Disable();
 
@@ -328,6 +334,8 @@ void MainBEM::LoadSelTab(BEMData &bem) {
 		mainMatrixK.Load(bem.hydros, ids);
 	else if (id == mainTab.Find(mainMatrixA))
 		mainMatrixA.Load(bem.hydros, ids);
+	else if (id == mainTab.Find(mainMatrixDlin))
+		mainMatrixDlin.Load(bem.hydros, ids);
 	else if (id == mainTab.Find(mainSummary) || id == mainTab.Find(mainArrange))
 		;
 	else if (id == mainTab.Find(mainSetupFOAMM))
@@ -466,6 +474,7 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
 		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -525,6 +534,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);	
 	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
 	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
+	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -606,6 +616,7 @@ void MainBEM::OnJoin() {
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -776,6 +787,7 @@ void MainBEM::OnUpdateCrot() {
 		
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -943,6 +955,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
 		("mainStiffness", mainMatrixK)
 		("mainMatrixA", mainMatrixA)
+		("mainMatrixDlin", mainMatrixDlin)
 	;
 }
 
@@ -1099,6 +1112,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc()   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk()   ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("RAO available"));		array.Set(row++, col, data.IsLoadedRAO()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Linear damping available"));		array.Set(row++, col, data.IsLoadedDlin()   ? t_("Yes") : t_("No"));
 	
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, data.Nb);
 	for (int ib = 0; ib < data.Nb; ++ib) {

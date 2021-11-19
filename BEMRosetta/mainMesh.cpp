@@ -212,7 +212,7 @@ void MainMesh::Init() {
 	mainSummary.Init();
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 
-	mainStiffness.Init(true);
+	mainStiffness.Init(Hydro::MAT_K);
 	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix"));
 			
 	mainTab.WhenSet = [&] {

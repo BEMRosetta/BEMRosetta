@@ -390,7 +390,7 @@ class MainMatrixKA : public WithMainMatrixKA<StaticRect> {
 public:
 	typedef MainMatrixKA CLASSNAME;
 	
-	void Init(bool isK);
+	void Init(Hydro::DataMatrix what);
 	void OnOp(int id);
 	void Clear();
 	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids);
@@ -428,7 +428,7 @@ private:
 	Upp::Array<Eigen::MatrixXd> data;
 	Upp::Array<int> row0s, col0s;
 	
-	bool isK;
+	Hydro::DataMatrix what;
 };
 
 class MainBEM;
@@ -927,6 +927,7 @@ public:
 	MainStateSpace mainStateSpace;
 	MainMatrixKA mainMatrixK;
 	MainMatrixKA mainMatrixA;
+	MainMatrixKA mainMatrixDlin;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;
 		
