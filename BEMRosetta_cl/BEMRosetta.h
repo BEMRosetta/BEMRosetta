@@ -100,6 +100,8 @@ public:
     Eigen::MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     Eigen::MatrixXd A0;        				// (6*Nb, 6*Nb)  	Infinite period added mass
 
+	Eigen::MatrixXd Dlin;      				// (6*Nb, 6*Nb) 	Additional linear damping
+
     Upp::Array<Upp::Array<Eigen::VectorXd>> B; 		// [6*Nb][6*Nb][Nf]	Radiation damping
     Upp::Vector<double> head;				// [Nh]             Wave headings (deg)
     Upp::Vector<String> names;  			// {Nb}             Body names
@@ -374,6 +376,8 @@ public:
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
+	Eigen::MatrixXd Dlin_dim(int ib) const;
+	
 	double F_ma_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double F_re_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double F_im_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.im[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
@@ -510,6 +514,7 @@ public:
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
 				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_KR_MA, PLOT_KR_PH, 
 				 PLOT_TFS_MA, PLOT_TFS_PH};
+	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
 		return strDataToPlot[dataToPlot];
@@ -520,14 +525,15 @@ public:
 	bool IsLoadedA() 	 const {return !A.IsEmpty();}
 	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty();}
 	bool IsLoadedAinf()  const {return Ainf.size() > 0;}
+	bool IsLoadedDlin()  const {return Dlin.size() > 0;}
 	bool IsLoadedA0()	 const {return A0.size() > 0;}
 	bool IsLoadedB() 	 const {return !B.IsEmpty();}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && !IsNull(C[0](0, 0));}
 	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && !IsNull(M[0](0, 0));}
-	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty();}
-	bool IsLoadedFsc() 	 const {return !sc.ma.IsEmpty();}
-	bool IsLoadedFfk() 	 const {return !fk.ma.IsEmpty();}
-	bool IsLoadedRAO() 	 const {return !rao.ma.IsEmpty();}
+	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty()  && ex.ma[0].size() > 0;}
+	bool IsLoadedFsc() 	 const {return !sc.ma.IsEmpty()  && sc.ma[0].size() > 0;}
+	bool IsLoadedFfk() 	 const {return !fk.ma.IsEmpty()  && fk.ma[0].size() > 0;}
+	bool IsLoadedRAO() 	 const {return !rao.ma.IsEmpty() && rao.ma[0].size() > 0;}
 	bool IsLoadedForce(const Forces &f) const {return !f.ma.IsEmpty();}
 	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
 	bool IsLoadedQTF() 	 const {return !qtfsum.IsEmpty();}
@@ -792,7 +798,7 @@ public:
 	virtual ~Fast() noexcept {}
 	
 private:
-	bool Load_HydroDyn();	
+	bool Load_HydroDyn(String fileName);	
 	void Save_HydroDyn(String fileName, bool force);
 	bool Load_SS(String fileName);	
 	void Save_SS(String fileName);
@@ -1231,7 +1237,12 @@ private:
 				return false;
 			throw Exc(Format(t_("Wrong variable '%s' in GetBool"), var));
 		}
-		double GetMatrix(String var, int row, int col) {
+		double GetMatrixVal(String var, int row, int col) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
 			int posIni, posEnd;
 			GetMatrixIds(var, row, col, posIni, posEnd);
 			
@@ -1241,7 +1252,16 @@ private:
 				throw Exc(Format(t_("Problem reading variable '%s' in GetMatrix %d, %d"), var, row, col));
 			return ddata;
 		}
-		void SetMatrix(String var, int row, int col, double val) {
+		Eigen::MatrixXd GetMatrix(String var, int rows, int cols) {
+			Eigen::MatrixXd ret(rows, cols);
+			
+			for (int r = 0; r < rows; ++r)
+				for (int c = 0; c < rows; ++c)
+					ret(r, c) = GetMatrixVal(var, r, c);
+					
+			return ret;
+		}
+		void SetMatrixVal(String var, int row, int col, double val) {
 			int posIni, posEnd;
 			GetMatrixIds(var, row, col, posIni, posEnd);
 			

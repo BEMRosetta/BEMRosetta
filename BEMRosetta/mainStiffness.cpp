@@ -17,16 +17,18 @@ using namespace Eigen;
 
 
 
-void MainMatrixKA::Init(bool isK) {
+void MainMatrixKA::Init(Hydro::DataMatrix what) {
 	CtrlLayout(*this);
 	
-	this->isK = isK;
+	this->what = what;
 	
-	if (isK)
+	if (what == Hydro::MAT_K)
 		label.SetText(t_("Hydrostatic Stiffness Matrices (dimensional)"));
-	else
-		label.SetText(t_("Added Mass at infinite frequency (dimensional)"));
-		
+	else if (what == Hydro::MAT_A)
+		label.SetText(t_("Added Mass at infinite frequency (kg)"));
+	else if (what == Hydro::MAT_DAMP_LIN)
+		label.SetText(t_("Additional linear damping (N/(m/s), N/(rad/s), N-m/(m/s), N-m/(rad/s))"));
+	
 	numDigits <<= THISBACK(PrintData);
 	numDecimals <<= THISBACK(PrintData);
 	opEmptyZero <<= THISBACK(PrintData);
@@ -75,7 +77,7 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 		}
 		array.AddColumn("", 20);
 		for (int i = 0; i < 2; ++i) 
-			array.AddColumn("", isK ? 20 : 70);	
+			array.AddColumn("", what == Hydro::MAT_K ? 20 : 70);	
 		for (int i = 0; i < 4; ++i)
 			array.AddColumn("", 70);
 	}
@@ -99,8 +101,8 @@ void MainMatrixKA::PrintData() {
 	for (int i = 0; i < data.size(); ++i) {
 		int row0 = row0s[i];
 		int col0 = col0s[i];
-		double mx = data[i].maxCoeff();
 		if (data[i].size() != 0) {
+			double mx = data[i].maxCoeff();
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					double val = data[i](r, c);
@@ -182,10 +184,14 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 }
 	
 void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
-	if (isK)
+	if (what == Hydro::MAT_K)
 		data << hydro.C_dim(ibody);
-	else
+	else if (what == Hydro::MAT_A)
 		data << hydro.Ainf_dim(ibody);
+	else if (what == Hydro::MAT_DAMP_LIN)
+		data << hydro.Dlin_dim(ibody);
+	else
+		NEVER();
 	
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, bodyName, ibody, idc);
@@ -197,12 +203,18 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
 	Clear();
 	
+	bool loaded = false;
 	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];
 		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
 			Add(hydro.name, i, hydro.names[ibody], ibody, hydro, hydro.GetId());
+		if (data[i].size() > 0) 
+			loaded = true;
 	}
+	if (!loaded)	
+		return false;
+	
 	PrintData();
 	return true;
 }	
