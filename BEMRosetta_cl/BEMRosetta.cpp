@@ -282,7 +282,9 @@ void Hydro::Copy(const Hydro &hyd) {
 	Ainf_w = clone(hyd.Ainf_w);
     Ainf = clone(hyd.Ainf);
     A0 = clone(hyd.A0);
-
+	
+	Dlin = clone(Dlin);
+	
     B = clone(hyd.B);
     
     head = clone(hyd.head);
@@ -697,7 +699,7 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 			dof[ib] = hydro.dof[ib];
 		}
 		
-		if (hydro.IsLoadedC()) {
+		if (IsLoadedC() && hydro.IsLoadedC()) {
 			for (int ib = 0; ib < Nb; ++ib) {
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int jdf = 0; jdf < 6; ++jdf) 
@@ -706,7 +708,7 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 		}
 		///////////////////////////////////////////////////////////////////
 		
-		if (hydro.IsLoadedA() && hydro.IsLoadedB()) {
+		if (IsLoadedA() && IsLoadedB() && hydro.IsLoadedA() && hydro.IsLoadedB()) {
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
 				int ifr = FindClosest(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {
@@ -723,7 +725,7 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 		Add_Forces(sc, hydro, hydro.sc);
 		Add_Forces(fk, hydro, hydro.fk);
 		
-		if (hydro.IsLoadedRAO()) {
+		if (IsLoadedRAO() && hydro.IsLoadedRAO()) {
 			for (int ihhy = 0; ihhy < Nh; ++ihhy) {
 				int ih = FindClosest(head, hydro.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
@@ -1136,6 +1138,8 @@ void Hydro::SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::A
 
 Eigen::MatrixXd Hydro::Ainf_dim(int ib) const {
 	Eigen::MatrixXd ret;
+	if (!IsLoadedAinf())
+		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
@@ -1151,6 +1155,17 @@ Eigen::MatrixXd Hydro::C_dim(int ib) const {
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
 			ret(idf, jdf) = C_dim(ib, idf, jdf);
+	return ret;
+}
+
+Eigen::MatrixXd Hydro::Dlin_dim(int ib) const {
+	Eigen::MatrixXd ret;
+	if (!IsLoadedDlin())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = Dlin(ib*6 + idf, ib*6 + jdf);
 	return ret;
 }
 
@@ -1265,6 +1280,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("description", description)
 		("qtfsum", qtfsum)
 		("qtfdif", qtfdif)
+		("Dlin", Dlin)
 	;
 	if(json.IsLoading()) {
 		code = static_cast<Hydro::BEM_SOFT>(icode);
@@ -1319,7 +1335,7 @@ void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool che
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));
 		}
-	} else if (ext == ".dat") {
+	} else if (ext == ".dat" || ext == ".fst") {
 		Fast &data = hydros.Create<Fast>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();

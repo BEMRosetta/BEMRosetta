@@ -281,7 +281,9 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		CalcA(A0);
     if (IsLoadedAinf())
 		CalcA(Ainf);
-	    
+	if (IsLoadedDlin())
+		CalcA(Dlin);
+		    
     auto CalcF = [&](auto &ex) {
     	auto exnre = clone(ex.re);
     	auto exnim = clone(ex.im);

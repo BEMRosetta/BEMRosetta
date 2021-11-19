@@ -15,15 +15,21 @@ bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 	hd().g = g;
 	
 	try {
-		String hydroFile;
-		if (GetFileExt(file) != ".dat") 
+		FASTFiles fast;
+		
+		if (ToLower(GetFileExt(file)) == ".fst")
+			fast.Load(file);
+		else if (ToLower(GetFileExt(file)) == ".dat")
+			fast.hydrodyn.fileName = file;
+		else
 			throw Exc("\n" + Format(t_("File '%s' is not of FAST type"), file));
 			
 		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
-		if (!Load_HydroDyn()) 
+		
+		if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
 			throw Exc("\n" + Format(t_("File '%s' not found"), file));
 
-		hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
+		String hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
 		hd().code = Hydro::FAST_WAMIT;
 		
 		if (!Wamit::Load(ForceExt(hydroFile, ".hst"), Status)) 
@@ -32,12 +38,14 @@ bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 		if (IsNull(hd().Nb))
 			return false;
 		
+		hd().Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
+		
 		if (hd().Nb > 1)
 			throw Exc(Format(t_("FAST does not support more than one body in file '%s'"), file));	
 		if (hd().head.IsEmpty())
 			throw Exc(t_("No wave headings found in Wamit file"));
-		if (abs(hd().head[0]) != abs(hd().head[hd().head.size()-1]))
-			throw Exc(Format(t_("FAST requires simetric wave headings. .2.3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.size()-1])); 
+		//if (abs(hd().head[0]) != abs(hd().head[hd().head.size()-1]))
+		//	throw Exc(Format(t_("FAST requires simetric wave headings. .2.3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.size()-1])); 
 	
 		String ssFile = ForceExt(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
@@ -54,8 +62,8 @@ bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 	return true;
 }
 
-bool Fast::Load_HydroDyn() {
-	FileInLine in(hd().file);
+bool Fast::Load_HydroDyn(String fileName) {
+	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 
@@ -67,7 +75,7 @@ bool Fast::Load_HydroDyn() {
 	f.IsSeparator = IsTabSpace;
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
-		if (f.size() == 0)
+		if (f.size() < 2)
 			break;
 		if (f.GetText(1) == "WtrDens") 
 			hd().rho = f.GetDouble(0);
@@ -89,7 +97,7 @@ bool Fast::Load_HydroDyn() {
 		}
 	}
 	if (IsNull(hd().rho) || IsNull(hd().h) || IsNull(hd().len))
-		throw Exc(Format(t_("Wrong format in FAST file '%s'"), hd().file));
+		throw Exc(Format(t_("Wrong format in FAST file '%s'"), fileName));
 	
 	return true;
 }
