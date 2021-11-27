@@ -17,7 +17,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 		if (GetFileExt(file) != ".in") 
 			throw Exc("\n" + Format(t_("File '%s' is not of HAMS type"), file));
 			
-		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		hd().code = Hydro::HAMS_WAMIT;
 		
@@ -30,7 +30,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 			return false;
 
 	} catch (Exc e) {
-		BEMData::PrintError("\nError: " + e);
+		BEM::PrintError("\nError: " + e);
 		hd().lastError = e;
 		return false;
 	}
@@ -56,7 +56,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 		}
 		
 	} catch (Exc e) {
-		BEMData::PrintWarning("\nWarning: " + e);
+		BEM::PrintWarning("\nWarning: " + e);
 	}
 	
 	return true;
@@ -287,13 +287,13 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 	return true;
 }
 
-void HamsCase::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEMData &bem, int) const {
+void HamsCase::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEM &bem, int) const {
 	SaveFolder0(folderBase, bin, 1, bem, true, numThreads);
 	if (numCases > 1)
 		SaveFolder0(folderBase, bin, numCases, bem, false, numThreads);
 }
 
-void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const {
+void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, bool deleteFolder, int numThreads) const {
 	BeforeSave(folderBase, numCases, deleteFolder);
 	
 	#define MIN_F_HAMS 0.01

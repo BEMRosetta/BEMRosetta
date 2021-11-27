@@ -34,7 +34,7 @@ void ArrangeDOF::Init(Hydro &hydro) {
 			Upp::Vector<int> order;
 			for (int i = 0; i < dofList.GetCount(); ++i) {
 				int ib, idf;
-				Hydro::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idf); 
+				BEM::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idf); 
 				order << (idf + 6*ib);
 			}
 			/*Upp::Vector<int> neworder;
@@ -62,11 +62,11 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	
 	for (int ib = 0; ib < hydro.Nb; ++ib) {
 		for (int idf = 0; idf < 6; ++idf) 
-			listOrig.Add(InitCaps(hydro.StrBDOF(ib*6+idf)), hydro.IsAvailableDOF(ib, idf));
+			listOrig.Add(InitCaps(BEM::StrBDOF(ib*6+idf, false)), hydro.IsAvailableDOF(ib, idf));
 	}
 	for (int i = 0; i < 6*hydro.Nb; ++i) {
 		int id = Find(hydro.GetOrder(), i);
-		dofList.Add(InitCaps(hydro.StrBDOF(id)));
+		dofList.Add(InitCaps(BEM::StrBDOF(id, false)));
 	}
 	colorMark.Color(GetColorId(hydro.GetId()));
 }

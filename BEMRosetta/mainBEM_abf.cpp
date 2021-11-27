@@ -33,7 +33,7 @@ void MainABForce::Clear() {
 	selTab = 0;
 }
 
-bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
+bool MainABForce::Load(BEM &bem, const Upp::Vector<int> &ids) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
@@ -66,9 +66,9 @@ bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 						plots[idf][jdf].Init(idf, jdf, dataToShow);
 						if (plots[idf][jdf].Load(hydros, mbm, ids)) {
 							if (idf != jdf)
-								tab.Add(plots[idf][jdf].SizePos(), Format(format, Hydro::StrBDOF(idf, jdf)));
+								tab.Add(plots[idf][jdf].SizePos(), Format(format, BEM::StrBDOF2(idf, jdf, false)));
 							else
-								tab.Add(plots[idf][jdf].SizePos(), Format(format, Hydro::StrBDOF(idf)));
+								tab.Add(plots[idf][jdf].SizePos(), Format(format, BEM::StrBDOF(idf, false)));
 						}
 					}
 				}
@@ -85,7 +85,7 @@ bool MainABForce::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 				for (int ih = 0; ih < Nh; ++ih) {
 					plots[ih][idf].Init(idf, bem.headAll[ih], dataToShow);
 					if (plots[ih][idf].Load(hydros, mbm, ids))
-						tab.Add(plots[ih][idf].SizePos(), Format(format, Hydro::StrBDOFAbrev(idf), bem.headAll[ih]));
+						tab.Add(plots[ih][idf].SizePos(), Format(format, BEM::StrBDOF(idf, false), bem.headAll[ih]));
 				}
 			}
 		}

@@ -9,17 +9,23 @@
 
 using namespace Upp;
 
-Function <void(String)> BEMData::Print 		  = [](String s) {Cout() << s;};
-Function <void(String)> BEMData::PrintWarning = [](String s) {Cout() << s;};
-Function <void(String)> BEMData::PrintError   = [](String s) {Cout() << s;};
+Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
+Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << s;};
+Function <void(String)> BEM::PrintError   = [](String s) {Cout() << s;};
 
-const char *Hydro::strDOF[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
-const char *Hydro::strDOFAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
+const char *BEM::strDOFtext[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
+const char *BEM::strDOFtextAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
+const char *BEM::strDOFnum[] 	 = {t_("1"), t_("2"), t_("3"), t_("4"), t_("5"), t_("6")};
+const char *BEM::strDOFxyz[] 	 = {t_("x"), t_("y"), t_("z"), t_("rx"), t_("ry"), t_("rz")};
+
 const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(ω)"), t_("A∞(ω)"), t_("Kirf"),
 				t_("Fsc_ma"), t_("Fsc_ph"), t_("Ffk_ma"), t_("Ffk_ph"), t_("Fex_ma"), t_("Fex_ph"),
 				t_("RAO_ma"), t_("RAO_ph"), t_("Z_ma"), t_("Z_ph"), t_("Kr_ma"), t_("Kr_ph"), 
 				t_("TFS_ma"), t_("TFS_ph")};
 
+const char *BEM::strDOFType[] 	 = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
+BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
+	
 const char *BEMCase::solverStr[] = {t_("Nemoh"), t_("Nemoh v115"), t_("Capytaine"), t_("HAMS"), t_("AQWA")};
 
 int Hydro::idCount = 0;	
@@ -772,8 +778,8 @@ void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
 }
 
 void Hydro::Report() const {
-	BEMData::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
-	BEMData::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s"), 
+	BEM::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
+	BEM::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s"), 
 								S_g(), S_h(), S_rho(), S_len()));
 	String freqs;
 	if (w.IsEmpty()) 
@@ -816,9 +822,9 @@ void Hydro::Report() const {
 	} else
 		heads = Format(t_("%.1f [deg]"), head[0]);
 	
-	BEMData::Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
-	BEMData::Print("\n" + Format(t_("#headings: %d (%s)"), Nh, heads)); 
-	BEMData::Print("\n" + Format(t_("#bodies: %d"), Nb));
+	BEM::Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
+	BEM::Print("\n" + Format(t_("#headings: %d (%s)"), Nh, heads)); 
+	BEM::Print("\n" + Format(t_("#bodies: %d"), Nb));
 	for (int ib = 0; ib < Nb; ++ib) {
 		String str = Format("\n%d.", ib+1);
 		if (names.size() > ib)
@@ -834,7 +840,7 @@ void Hydro::Report() const {
 		if (c0.size() > 3*ib && !IsNull(c0(0, ib)))
 			str += " " + Format("C0(%.3f, %.3f, %.3f)[m]", c0(0, ib), c0(1, ib), c0(2, ib));
 		
-		BEMData::Print(str);
+		BEM::Print(str);
 	}
 }
 
@@ -1136,25 +1142,25 @@ void Hydro::SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::A
 	}
 }
 
-Eigen::MatrixXd Hydro::Ainf_dim(int ib) const {
+Eigen::MatrixXd Hydro::Ainf_(int ib, bool ndim) const {
 	Eigen::MatrixXd ret;
 	if (!IsLoadedAinf())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = Ainf_dim(idf + 6*ib, jdf + 6*ib);	// It doesn't return added mass between bodies...
+			ret(idf, jdf) = Ainf_(ndim, idf + 6*ib, jdf + 6*ib);	// It doesn't return added mass between bodies...
 	return ret;
 }
 
-Eigen::MatrixXd Hydro::C_dim(int ib) const {
+Eigen::MatrixXd Hydro::C_(int ib, bool ndim) const {
 	Eigen::MatrixXd ret;
 	if (C.IsEmpty())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = C_dim(ib, idf, jdf);
+			ret(idf, jdf) = C_(ndim, ib, idf, jdf);
 	return ret;
 }
 
@@ -1292,13 +1298,13 @@ void Hydro::Jsonize(JsonIO &json) {
 	}
 }
 	
-BEMData::BEMData() {
+BEM::BEM() {
 	bemFilesAst = clone(bemFilesExt);
 	bemFilesAst.Replace(".", "*.");
 	experimental = ToLower(GetExeTitle()).Find("experimental") >= 0;
 }
 
-void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
+void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDuplicated) {
 	Status(t_("Loading files"), 10);
 	if (checkDuplicated) {
 		for (int i = 0; i < hydros.size(); ++i) {
@@ -1408,7 +1414,7 @@ void BEMData::LoadBEM(String file, Function <bool(String, int)> Status, bool che
 	Sort(headAll);
 }
 
-HydroClass &BEMData::Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status) {
+HydroClass &BEM::Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status) {
 	Upp::Vector<Hydro *>hydrosp;
 	
 	hydrosp.SetCount(ids.size());
@@ -1427,14 +1433,14 @@ HydroClass &BEMData::Join(Upp::Vector<int> &ids, Function <bool(String, int)> St
 	return data;
 }
 
-HydroClass &BEMData::Duplicate(int id) {
+HydroClass &BEM::Duplicate(int id) {
 	HydroClass &data = hydros.Create<HydroClass>(*this);
 	data.hd().Copy(hydros[id].hd());
 	
 	return data;
 }
 
-void BEMData::Symmetrize(int id, bool xAxis) {
+void BEM::Symmetrize(int id, bool xAxis) {
 	hydros[id].hd().Symmetrize_Forces(xAxis);
 	
 	for (int i = 0; i < hydros[id].hd().head.size(); ++i) 
@@ -1442,38 +1448,38 @@ void BEMData::Symmetrize(int id, bool xAxis) {
 	Sort(headAll);
 }
 
-void BEMData::A0(int id) {
+void BEM::A0(int id) {
 	hydros[id].hd().GetA0();
 }
 
-void BEMData::Kirf(int id, double maxT) {
+void BEM::Kirf(int id, double maxT) {
 	hydros[id].hd().GetK_IRF(maxT, numValsA);
 }
 
-void BEMData::Ainf(int id) {
+void BEM::Ainf(int id) {
 	hydros[id].hd().GetAinf();
 }
 
-void BEMData::Ainf_w(int id) {
+void BEM::Ainf_w(int id) {
 	hydros[id].hd().GetAinf_w();
 }
 
-void BEMData::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail) {
+void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail) {
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail);
 }
 
-void BEMData::TranslationTo(int id, double xto, double yto, double zto) {
+void BEM::TranslationTo(int id, double xto, double yto, double zto) {
 	hydros[id].hd().GetTranslationTo(xto, yto, zto);
 }
 
 
-void BEMData::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
+void BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < surfs.size(); ++i) {
 			if (surfs[i].fileName == fileName) {
-				BEMData::Print(S("\n") + t_("Model is already loaded"));
+				BEM::Print(S("\n") + t_("Model is already loaded"));
 				throw Exc(t_("Model is already loaded"));
 			}
 		}
@@ -1481,13 +1487,13 @@ void BEMData::LoadMesh(String fileName, Function <bool(String, int pos)> Status,
 	Mesh &mesh = surfs.Add();
 	String error = mesh.Load(fileName, rho, g, cleanPanels);
 	if (!error.IsEmpty()) {
-		BEMData::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
+		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		RemoveMesh(surfs.size()-1);
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 	}
 }
 
-void BEMData::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
+void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
 	Status(Format(t_("Healing mesh '%s'"), surfs[id].fileName), 10);
 	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].fileName));
 	
@@ -1506,7 +1512,7 @@ void BEMData::HealingMesh(int id, bool basic, Function <bool(String, int)> Statu
 		Print(S(". ") + t_("The mesh is in good condition"));
 }
 
-void BEMData::OrientSurface(int id, Function <bool(String, int)> Status) {
+void BEM::OrientSurface(int id, Function <bool(String, int)> Status) {
 	Status(Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName), 10);
 	Print(S("\n\n") + Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName));
 	
@@ -1519,7 +1525,7 @@ void BEMData::OrientSurface(int id, Function <bool(String, int)> Status) {
 	}
 }
 
-void BEMData::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
+void BEM::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].fileName), 10);
 	
 	Mesh &mesh = surfs.Add();
@@ -1535,11 +1541,11 @@ void BEMData::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
 	}
 }
 
-void BEMData::RemoveMesh(int id) {
+void BEM::RemoveMesh(int id) {
 	surfs.Remove(id);
 }
 
-void BEMData::JoinMesh(int idDest, int idOrig) {
+void BEM::JoinMesh(int idDest, int idOrig) {
 	const Mesh &orig = surfs[idOrig];
 	Mesh &dest = surfs[idDest];
 	dest.fileName << "/" << orig.fileName;
@@ -1554,7 +1560,7 @@ void BEMData::JoinMesh(int idDest, int idOrig) {
 	}
 }
 
-Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Status) {
+Upp::Vector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
 	Mesh &orig = surfs[id];
 	
@@ -1582,7 +1588,7 @@ Upp::Vector<int> BEMData::SplitMesh(int id, Function <bool(String, int pos)> Sta
 	return ret;
 }
 
-void BEMData::AddFlatPanel(double x, double y, double z, double size, double panWidth, double panHeight) {
+void BEM::AddFlatPanel(double x, double y, double z, double size, double panWidth, double panHeight) {
 	try {
 		Mesh &surf = surfs.Add();
 
@@ -1596,7 +1602,7 @@ void BEMData::AddFlatPanel(double x, double y, double z, double size, double pan
 	}	
 }
 
-void BEMData::AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
+void BEM::AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
 	try {
 		Mesh &surf = surfs.Add();
 
@@ -1610,7 +1616,7 @@ void BEMData::AddRevolution(double x, double y, double z, double size, Upp::Vect
 	}	
 }
 
-void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
+void BEM::AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
 	try {
 		Mesh &surf = surfs.Add();
 
@@ -1624,7 +1630,7 @@ void BEMData::AddPolygonalPanel(double x, double y, double z, double size, Upp::
 	}	
 }
 
-void BEMData::AddWaterSurface(int id, char c) {
+void BEM::AddWaterSurface(int id, char c) {
 	try {
 		Mesh &surf = surfs.Add();
 
@@ -1650,7 +1656,7 @@ void BEMData::AddWaterSurface(int id, char c) {
 	}	
 }
 			
-bool BEMData::LoadSerializeJson() {
+bool BEM::LoadSerializeJson() {
 	bool ret;
 	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
 	if (!DirectoryCreateX(folder))
@@ -1697,13 +1703,13 @@ bool BEMData::LoadSerializeJson() {
 	return ret;
 }
 
-bool BEMData::ClearTempFiles() {
+bool BEM::ClearTempFiles() {
 	String folder = GetTempFilesFolder();
 	DeleteFolderDeepWildcardsX(folder, "*.*");	Sleep(100);
 	return DirectoryCreateX(folder);
 }
 	
-bool BEMData::StoreSerializeJson() {
+bool BEM::StoreSerializeJson() {
 	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
 	if (!DirectoryCreateX(folder))
 		return 0;
@@ -1713,10 +1719,10 @@ bool BEMData::StoreSerializeJson() {
 
 
 bool HydroClass::Load(String file) {
-	BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+	BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 	
 	if (!LoadFromJsonFile(hd(), file)) {
-		BEMData::PrintError("\n" + Format(t_("Error loading '%s'"), file));
+		BEM::PrintError("\n" + Format(t_("Error loading '%s'"), file));
 		hd().lastError = "\n" + Format(t_("Error loading '%s'"), file);
 		return false;
 	}
@@ -1725,9 +1731,9 @@ bool HydroClass::Load(String file) {
 }
 	
 bool HydroClass::Save(String file) {
-	BEMData::Print("\n\n" + Format(t_("Saving '%s'"), file));
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
 	if (!StoreAsJsonFile(hd(), file, true)) {
-		BEMData::PrintError("\n" + Format(t_("Error saving '%s'"), file));
+		BEM::PrintError("\n" + Format(t_("Error saving '%s'"), file));
 		hd().lastError = "\n" + Format(t_("Error saving '%s'"), file);
 		return false;
 	}
@@ -1804,7 +1810,7 @@ int BEMBody::GetNDOF() const {
 	return ret;
 }
 
-void BEMCase::Load(String file, const BEMData &bem) {
+void BEMCase::Load(String file, const BEM &bem) {
 	if (ToLower(GetFileName(file)) == "nemoh.cal") {
 		if (!static_cast<NemohCase&>(*this).Load(file)) 
 			throw Exc(Format(t_("Problem loading '%s' file"), file));
@@ -1823,7 +1829,7 @@ void BEMCase::Load(String file, const BEMData &bem) {
 		g = bem.g;	
 }
 
-void BEMCase::SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const {
+void BEMCase::SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const {
 	if (solver <= CAPYTAINE)
 		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
 	else if (solver == HAMS)

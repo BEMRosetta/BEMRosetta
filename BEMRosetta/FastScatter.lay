@@ -27,6 +27,6 @@ END_LAYOUT
 
 LAYOUT(SearchColumn, 148, 228)
 	ITEM(Upp::Label, label, SetLabel(t_("Left axis")).LeftPosZ(8, 76).TopPosZ(4, 19))
-	ITEM(WithRectEnter<ArrayCtrl>, array, AutoHideSb(true).HSizePosZ(0, 0).VSizePosZ(24, 4))
+	ITEM(UnderlineCtrl<ArrayCtrl>, array, AutoHideSb(true).HSizePosZ(0, 0).VSizePosZ(24, 4))
 END_LAYOUT
 

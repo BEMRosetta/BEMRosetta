@@ -58,11 +58,11 @@ void Mooring::Connection::Jsonize(JsonIO &json) {
 bool Mooring::Load(String file) {
 	try {
 		if (!LoadFromJsonFile(*this, ~file)) {
-			BEMData::PrintError(Format("Problem loading %s file", file));
+			BEM::PrintError(Format("Problem loading %s file", file));
 			return false;
 		}
 	} catch (const Exc &e) {
-		BEMData::PrintError(e);
+		BEM::PrintError(e);
 		return false;
 	}	
 	return true;
@@ -71,11 +71,11 @@ bool Mooring::Load(String file) {
 bool Mooring::Save(String file) {
 	try {
 		if (!StoreAsJsonFile(*this, file, true)) {
-			BEMData::PrintError(Format("Problem loading %s file", file));
+			BEM::PrintError(Format("Problem loading %s file", file));
 			return false;
 		}
 	} catch (const Exc &e) {
-		BEMData::PrintError(e);
+		BEM::PrintError(e);
 		return false;
 	}
 	

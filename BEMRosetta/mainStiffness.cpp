@@ -22,13 +22,6 @@ void MainMatrixKA::Init(Hydro::DataMatrix what) {
 	
 	this->what = what;
 	
-	if (what == Hydro::MAT_K)
-		label.SetText(t_("Hydrostatic Stiffness Matrices (dimensional)"));
-	else if (what == Hydro::MAT_A)
-		label.SetText(t_("Added Mass at infinite frequency (kg)"));
-	else if (what == Hydro::MAT_DAMP_LIN)
-		label.SetText(t_("Additional linear damping (N/(m/s), N/(rad/s), N-m/(m/s), N-m/(rad/s))"));
-	
 	numDigits <<= THISBACK(PrintData);
 	numDecimals <<= THISBACK(PrintData);
 	opEmptyZero <<= THISBACK(PrintData);
@@ -69,22 +62,24 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 	array.Set(0, col0, AttrText(name).Bold());
 	array.Set(2, col0, AttrText(" ").Paper(GetColorId(idc)));
 	
+	int len = StdFont().Bold().GetAveWidth()*(BEM::StrDOF_len() + 2);
+	
 	while (array.GetColumnCount() < col0 + 7) {
 		if (icase > 0) {
-			array.AddColumn("", 10);
+			array.AddColumn("", max(10, len));
 			int icol = array.GetColumnCount() - 1;
 			array.HeaderObject().Tab(icol).SetMargin(0);
 		}
-		array.AddColumn("", 20);
+		array.AddColumn("", max(20, len));
 		for (int i = 0; i < 2; ++i) 
-			array.AddColumn("", what == Hydro::MAT_K ? 20 : 70);	
-		for (int i = 0; i < 4; ++i)
-			array.AddColumn("", 70);
+			array.AddColumn("", what == Hydro::MAT_K ? max(20, len) : max(70, len));	
+		for (int i = 2; i < 6; ++i)
+			array.AddColumn("", max(70, len));
 	}
 	array.Set(row0, col0, AttrText(Format(t_("#%d body. %s"), ibody + 1, bodyName)).Bold());
 	for (int i = 0; i < 6; ++i) {
-		array.Set(row0 + 1, 	col0 + i + 1, AttrText(FormatInt(i + 1)).Bold().Align(ALIGN_CENTER));
-		array.Set(row0 + i + 2, col0, 	  	  AttrText(FormatInt(i + 1)).Bold().Align(ALIGN_CENTER));
+		array.Set(row0 + 1, 	col0 + i + 1, AttrText(BEM::StrDOF(i)).Bold().Align(ALIGN_CENTER));
+		array.Set(row0 + i + 2, col0, 	  	  AttrText(BEM::StrDOF(i)).Bold().Align(ALIGN_CENTER));
 	}
 	for (int i = 1; i <= ibody; ++i) 
 		array.SetLineCy(i*9, 10);	
@@ -183,16 +178,21 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	}
 }
 	
-void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc) {
-	if (what == Hydro::MAT_K)
-		data << hydro.C_dim(ibody);
-	else if (what == Hydro::MAT_A)
-		data << hydro.Ainf_dim(ibody);
-	else if (what == Hydro::MAT_DAMP_LIN)
+void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim) {
+	if (what == Hydro::MAT_K) {
+		data << hydro.C_(ibody, ndim);
+		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
+						ndim ? t_("nondimensional") : t_("dimensional")));
+	} else if (what == Hydro::MAT_A) {
+		data << hydro.Ainf_(ibody, ndim);
+		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
+						ndim ? t_("nondimensional") : t_("kg")));
+	} else if (what == Hydro::MAT_DAMP_LIN) {
 		data << hydro.Dlin_dim(ibody);
-	else
+		label.SetText(t_("Additional linear damping (N/(m/s), N/(rad/s), N-m/(m/s), N-m/(rad/s))"));
+	} else
 		NEVER();
-	
+
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, bodyName, ibody, idc);
 
@@ -200,7 +200,7 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 	//	return;
 }
 
-bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
+bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids, bool ndim) {
 	Clear();
 	
 	bool loaded = false;
@@ -208,7 +208,7 @@ bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &
 		int isurf = ids[i];
 		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
-			Add(hydro.name, i, hydro.names[ibody], ibody, hydro, hydro.GetId());
+			Add(hydro.name, i, hydro.names[ibody], ibody, hydro, hydro.GetId(), ndim);
 		if (data[i].size() > 0) 
 			loaded = true;
 	}
