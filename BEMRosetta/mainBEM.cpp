@@ -130,15 +130,13 @@ void MainBEM::Init() {
 
 		if (ids.IsEmpty())
 			plot = convertProcess = false;
-		else if (mainTab.IsAt(mainMatrixK)) {
+		else if (mainTab.IsAt(mainMatrixK)) 
+			mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim);
+		else if (mainTab.IsAt(mainMatrixA))
+			mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim);
+		else if (mainTab.IsAt(mainMatrixDlin)) {
 			plot = false;
-			mainMatrixK.Load(Bem().hydros, ids);
-		} else if (mainTab.IsAt(mainMatrixA)) {
-			plot = false;
-			mainMatrixA.Load(Bem().hydros, ids);
-		} else if (mainTab.IsAt(mainMatrixDlin)) {
-			plot = false;
-			mainMatrixDlin.Load(Bem().hydros, ids);
+			mainMatrixDlin.Load(Bem().hydros, ids, false);
 		} else if (mainTab.IsAt(mainA))
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
@@ -325,17 +323,17 @@ void MainBEM::InitSerialize(bool ret) {
 		menuConvert.opt = 0;
 }
 
-void MainBEM::LoadSelTab(BEMData &bem) {
+void MainBEM::LoadSelTab(BEM &bem) {
 	Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	int id = mainTab.Get();
 	if (id == mainTab.Find(mainStateSpace))
 		mainStateSpace.Load(bem, ids);
 	else if (id == mainTab.Find(mainMatrixK))
-		mainMatrixK.Load(bem.hydros, ids);
+		mainMatrixK.Load(bem.hydros, ids, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixA))
-		mainMatrixA.Load(bem.hydros, ids);
+		mainMatrixA.Load(bem.hydros, ids, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixDlin))
-		mainMatrixDlin.Load(bem.hydros, ids);
+		mainMatrixDlin.Load(bem.hydros, ids, false);
 	else if (id == mainTab.Find(mainSummary) || id == mainTab.Find(mainArrange))
 		;
 	else if (id == mainTab.Find(mainSetupFOAMM))
@@ -472,9 +470,9 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
-		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
-		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
-		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -532,9 +530,9 @@ void MainBEM::OnRemoveSelected(bool all) {
 	
 	mainArrange.Load(Bem().hydros, ids);	
 	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);	
-	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
-	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
-	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
+	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -614,9 +612,9 @@ void MainBEM::OnJoin() {
 
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
-		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids));
-		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
-		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -643,14 +641,19 @@ void MainBEM::OnDuplicate() {
 		HydroClass &data = Bem().Duplicate(id);
 		
 		mainSummary.Clear();
+		mainArrange.Clear();
 		
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
-	
-		for (int i = 0; i < Bem().hydros.size(); ++i)
-			mainSummary.Report(Bem().hydros[i].hd(), i);
-		
+
 		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+			
+		for (int i = 0; i < Bem().hydros.size(); ++i) {
+			const Hydro &data = Bem().hydros[id].hd();
+			mainSummary.Report(data, id);
+			mainArrange.Load(Bem().hydros, ids);
+		}
 		
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
@@ -786,8 +789,8 @@ void MainBEM::OnUpdateCrot() {
 		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
-		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids));
-		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids));
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -1256,7 +1259,7 @@ void MainQTF::Init() {
 
 	opDOF.Clear();
 	for (int i = 0; i < 6; ++i)
-		opDOF.Add(i, InitCaps(Hydro::StrDOF_base(i)));
+		opDOF.Add(i, InitCaps(BEM::StrDOF(i)));
 	opDOF.SetIndex(0);
 	
 	opQTF.Clear();

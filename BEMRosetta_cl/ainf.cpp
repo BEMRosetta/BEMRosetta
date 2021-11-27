@@ -174,9 +174,9 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 					An[ib6 + 1][jb6 + 4][iif] += - zg*A[ib6 + 1][jb6 + 0][iif] + xg*A[ib6 + 1][jb6 + 2][iif];
 					An[ib6 + 2][jb6 + 4][iif] += - zg*A[ib6 + 2][jb6 + 0][iif] + xg*A[ib6 + 2][jb6 + 2][iif];
 
-					An[ib6 + 0][jb6 + 5][iif] += - xg*A[ib6 + 0][jb6 + 5][iif] + yg*A[ib6 + 0][jb6 + 5][iif];
-					An[ib6 + 1][jb6 + 5][iif] += - xg*A[ib6 + 1][jb6 + 5][iif] + yg*A[ib6 + 1][jb6 + 5][iif];
-					An[ib6 + 2][jb6 + 5][iif] += - xg*A[ib6 + 2][jb6 + 5][iif] + yg*A[ib6 + 2][jb6 + 5][iif];
+					An[ib6 + 0][jb6 + 5][iif] += - xg*A[ib6 + 0][jb6 + 1][iif] + yg*A[ib6 + 0][jb6 + 0][iif];
+					An[ib6 + 1][jb6 + 5][iif] += - xg*A[ib6 + 1][jb6 + 1][iif] + yg*A[ib6 + 1][jb6 + 0][iif];
+					An[ib6 + 2][jb6 + 5][iif] += - xg*A[ib6 + 2][jb6 + 1][iif] + yg*A[ib6 + 2][jb6 + 0][iif];
 
 					An[ib6 + 3][jb6 + 0][iif] += - yg*A[ib6 + 2][jb6 + 0][iif] + zg*A[ib6 + 1][jb6 + 0][iif];	
 					An[ib6 + 3][jb6 + 1][iif] += - yg*A[ib6 + 2][jb6 + 1][iif] + zg*A[ib6 + 1][jb6 + 1][iif];
@@ -237,9 +237,9 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				An(ib6 + 1, jb6 + 4) += - zg*A(ib6 + 1, jb6 + 0) + xg*A(ib6 + 1, jb6 + 2);
 				An(ib6 + 2, jb6 + 4) += - zg*A(ib6 + 2, jb6 + 0) + xg*A(ib6 + 2, jb6 + 2);
 	
-				An(ib6 + 0, jb6 + 5) += - xg*A(ib6 + 0, jb6 + 5) + yg*A(ib6 + 0, jb6 + 5);
-				An(ib6 + 1, jb6 + 5) += - xg*A(ib6 + 1, jb6 + 5) + yg*A(ib6 + 1, jb6 + 5);
-				An(ib6 + 2, jb6 + 5) += - xg*A(ib6 + 2, jb6 + 5) + yg*A(ib6 + 2, jb6 + 5);
+				An(ib6 + 0, jb6 + 5) += - xg*A(ib6 + 0, jb6 + 1) + yg*A(ib6 + 0, jb6 + 0);
+				An(ib6 + 1, jb6 + 5) += - xg*A(ib6 + 1, jb6 + 1) + yg*A(ib6 + 1, jb6 + 0);
+				An(ib6 + 2, jb6 + 5) += - xg*A(ib6 + 2, jb6 + 1) + yg*A(ib6 + 2, jb6 + 0);
 	
 				An(ib6 + 3, jb6 + 0) += - yg*A(ib6 + 2, jb6 + 0) + zg*A(ib6 + 1, jb6 + 0);	
 				An(ib6 + 3, jb6 + 1) += - yg*A(ib6 + 2, jb6 + 1) + zg*A(ib6 + 1, jb6 + 1);
@@ -252,7 +252,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				An(ib6 + 5, jb6 + 0) += - xg*A(ib6 + 1, jb6 + 0) + yg*A(ib6 + 0, jb6 + 0);	
 				An(ib6 + 5, jb6 + 1) += - xg*A(ib6 + 1, jb6 + 1) + yg*A(ib6 + 0, jb6 + 1);
 				An(ib6 + 5, jb6 + 2) += - xg*A(ib6 + 1, jb6 + 2) + yg*A(ib6 + 0, jb6 + 2);
-	
+				
 				An(ib6 + 3, jb6 + 3) += -    2*yg*A(ib6 + 2, jb6 + 3) +  2*zg*A(ib6 + 1, jb6 + 3)
 									 	+   yg*yg*A(ib6 + 2, jb6 + 2) + zg*zg*A(ib6 + 1, jb6 + 1)
 										- 2*yg*zg*A(ib6 + 1, jb6 + 2);   
@@ -264,14 +264,6 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				An(ib6 + 5, jb6 + 5) += -    2*xg*A(ib6 + 1, jb6 + 5) +  2*yg*A(ib6 + 0, jb6 + 5)
 										+   xg*xg*A(ib6 + 1, jb6 + 1) + yg*yg*A(ib6 + 0, jb6 + 0)
 										- 2*xg*yg*A(ib6 + 0, jb6 + 1);
-			
-				An(ib6 + 3, jb6 + 0) = A(ib6 + 0, jb6 + 3);
-				An(ib6 + 3, jb6 + 1) = A(ib6 + 1, jb6 + 3);
-				An(ib6 + 3, jb6 + 2) = A(ib6 + 2, jb6 + 3);
-
-				An(ib6 + 4, jb6 + 0) = A(ib6 + 0, jb6 + 4);
-				An(ib6 + 4, jb6 + 1) = A(ib6 + 1, jb6 + 4);
-				An(ib6 + 4, jb6 + 2) = A(ib6 + 2, jb6 + 4);
 			}
 		}
 		A = pick(An);

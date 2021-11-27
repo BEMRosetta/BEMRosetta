@@ -53,8 +53,8 @@ void FastScatter::Init(Function <void(String)> OnFile, Function <void(String)> O
 	rightSearch.array.WhenDropInsert= [&] (int line, PasteClip& d) {OnDropInsert(line, d, rightSearch.array); };
 	rightSearch.array.WhenDrag 		= [&] {OnDrag(rightSearch.array, true);};
 	
-	leftSearch.array.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &leftSearch.array);
-	leftSearch.array.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &leftSearch.array);
+	leftSearch.array.WhenLeftDouble  = THISBACK1(WhenArrayLeftDouble, &leftSearch.array);
+	leftSearch.array.WhenEnterKey    = THISBACK1(WhenArrayLeftDouble, &leftSearch.array);
 	rightSearch.array.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &rightSearch.array);	
 	rightSearch.array.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &rightSearch.array);	
 	

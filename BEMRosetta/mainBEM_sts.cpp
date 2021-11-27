@@ -30,7 +30,7 @@ void MainStateSpace::Clear() {
 	selTab = 0;
 }
 
-bool MainStateSpace::Load(BEMData &bem, const Upp::Vector<int> &ids) {
+bool MainStateSpace::Load(BEM &bem, const Upp::Vector<int> &ids) {
 	try {
 		Upp::Array<HydroClass> &hydros = bem.hydros; 
 		
@@ -49,9 +49,9 @@ bool MainStateSpace::Load(BEMData &bem, const Upp::Vector<int> &ids) {
 					plots[i][j].Init(i, j);
 					if (plots[i][j].Load(hydros, ids, mbm)) {
 						if (i != j)
-							tab.Add(plots[i][j].SizePos(), Hydro::StrBDOF(i, j));
+							tab.Add(plots[i][j].SizePos(), BEM::StrBDOF2(i, j, false));
 						else
-							tab.Add(plots[i][j].SizePos(), Hydro::StrBDOF(i));
+							tab.Add(plots[i][j].SizePos(), BEM::StrBDOF(i, false));
 					}
 				}
 			}

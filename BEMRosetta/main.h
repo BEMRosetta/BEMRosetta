@@ -8,14 +8,15 @@
 #include "FastScatter.h"
 
 
+
 class FreqSelector : public StaticRect {
 public:
 	typedef FreqSelector CLASSNAME;
 	
 	FreqSelector();
 	
-	void Init(Function <void()>WhenAction, RectEnterSet &_frameSet) {
-		OnAction = WhenAction;
+	void Init(Function <void()>_WhenAction, RectEnterSet &_frameSet) {
+		OnAction = _WhenAction;
 		frameSet = &_frameSet;
 	}
 	void Clear() {
@@ -46,7 +47,7 @@ public:
 	} 
 	
 	void AddField(double val = Null) {
-		WithRectEnter<EditDouble> &edit = edits.Add();
+		UnderlineCtrl<EditDouble> &edit = edits.Add();
 		edit.WhenAction = OnAction;
 		edit <<= val;
 		frameSet->Add(edit.GetRectEnter());
@@ -69,7 +70,7 @@ public:
 	}
 
 private:
-	Upp::Array<WithRectEnter<EditDouble>> edits;
+	Upp::Array<UnderlineCtrl<EditDouble>> edits;
 	Button add;
 	int pos = 0;
 	int fWidth = 40, fThick = 3;
@@ -228,7 +229,7 @@ public:
 	typedef MenuOptions CLASSNAME;
 	
 	MenuOptions() {}
-	void Init(BEMData &bem);
+	void Init(BEM &bem);
 	void Load();
 	void OnSave();
 	bool IsChanged();
@@ -250,7 +251,7 @@ public:
 		showTabCoeff = Null, showTabFAST = Null;
 	
 private:
-	BEMData *bem = nullptr;
+	BEM *bem = nullptr;
 };
 
 class MenuAbout : public WithMenuAbout<StaticRect> {
@@ -393,7 +394,7 @@ public:
 	void Init(Hydro::DataMatrix what);
 	void OnOp(int id);
 	void Clear();
-	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids);
+	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids, bool ndim);
 	void Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids);
 	
 	void Jsonize(JsonIO &json) {
@@ -422,7 +423,7 @@ public:
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc);
 	void Add(const Mesh &mesh, int icase, bool button);
-	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc);
+	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim);
 	void PrintData();
 		
 	Upp::Array<Eigen::MatrixXd> data;
@@ -472,7 +473,7 @@ public:
 	
 	void Init(Hydro::DataToShow dataToShow);
 	void Clear();
-	bool Load(BEMData &bem, const Upp::Vector<int> &ids);
+	bool Load(BEM &bem, const Upp::Vector<int> &ids);
 	
 	TabCtrl tab;
 	Upp::Array<Upp::Array<MainPlot>> plots;
@@ -504,7 +505,7 @@ public:
 	void Init();
 	void Clear();
 	void Init(ArrayCtrl &array);
-	bool Load(BEMData &bem, const Upp::Vector<int> &ids);
+	bool Load(BEM &bem, const Upp::Vector<int> &ids);
 	
 	Upp::Array<Upp::Array<MainStateSpacePlot>> plots;
 	
@@ -515,7 +516,7 @@ private:
 
 typedef class MainABForce MainRAO;
 
-class MainMesh : public WithMain<StaticRect> {
+class MainMesh : public WithMainBEMMesh<StaticRect> {
 public:
 	typedef MainMesh CLASSNAME;
 	
@@ -552,7 +553,7 @@ public:
 	void AddRow(const Mesh &surf);
 	void RemoveRow(int row);
 	
-	void LoadSelTab(BEMData &bem);
+	void LoadSelTab(BEM &bem);
 		
 	void Jsonize(JsonIO &json);
 		
@@ -598,11 +599,11 @@ class MainSolver : public WithMainSolver<StaticRect> {
 public:
 	typedef MainSolver CLASSNAME;
 
-	void Init(const BEMData &bem);
+	void Init(const BEM &bem);
 	void InitSerialize(bool ret);
 	
-	void Load(String file, const BEMData &bem);
-	void Load(const BEMData &bem);
+	void Load(String file, const BEM &bem);
+	void Load(const BEM &bem);
 	
 	bool Save(BEMCase &data, bool isNemoh);
 	
@@ -616,8 +617,8 @@ public:
 	//CtrlScroll hamsScroll;
 	
 private:
-	bool OnLoad(const BEMData &bem);
-	bool OnSave(const BEMData &bem);
+	bool OnLoad(const BEM &bem);
+	bool OnSave(const BEM &bem);
 	void OnCursor();
 	void arrayOnCursor();
 	bool ArrayUpdateCursor();
@@ -827,7 +828,7 @@ public:
 	void Init();
 	
 	void Load()				{WhenSelArrayCases();}
-	void WhenSelArrayModel(int id, BEMData &bem);
+	void WhenSelArrayModel(int id, BEM &bem);
 	void WhenSelArrayCases();
 	void WhenArrayCases();
 	void WhenArrayFreq();
@@ -881,7 +882,7 @@ private:
 	MainSetupFOAMM *setup = nullptr;
 };
 
-class MainBEM : public WithMain<StaticRect> {
+class MainBEM : public WithMainBEMMesh<StaticRect> {
 public:
 	typedef MainBEM CLASSNAME;
 	
@@ -935,7 +936,7 @@ private:
 	ScatterCtrl &GetSelScatter();
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
-	void LoadSelTab(BEMData &bem);
+	void LoadSelTab(BEM &bem);
 	int GetIdOneSelected();
 	int AskQtfHeading(const Hydro &hydro);
 		
@@ -959,7 +960,7 @@ public:
 };
 
 
-class Main : public TopWindow {
+class Main : public WithMain<TopWindow> {
 public:
 	typedef Main CLASSNAME;
 	
@@ -970,14 +971,14 @@ public:
 
 	void Init();
 
-	void OptionsUpdated(double rho, double g);
+	void OptionsUpdated(double rho, double g, int dofType);
 
 	bool LoadSerializeJson(bool &firstTime, bool &openOptions);
 	bool StoreSerializeJson();
 	
 	void Jsonize(JsonIO &json);
 
-	BEMData bem;
+	BEM bem;
 	
 	void Status(String str = String(), int time = 2000)	{
 		if (!str.IsEmpty()) 
@@ -991,11 +992,7 @@ public:
 	Upp::Vector<String> tabTexts;
 	
 private:
-	TabCtrl tab;
 	int lastTab;
-	Button butWindow;
-	Label labrho, labg;
-	EditDouble editrho, editg;
 	
 	MainSolver mainSolver;
 	MainBEM mainBEM;
@@ -1037,7 +1034,7 @@ String ArrayModel_GetTitle(ArrayCtrl &array, int row = -1);
 void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName);
 		
 Main &ma(Main *m = 0);
-BEMData &Bem();
+BEM &Bem();
 void Status(String str = String(), int time = 2000);
 
 	

@@ -183,21 +183,21 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 }
 
 void Mesh::Report(double rho) const {
-	BEMData::Print("\n\n" + Format(t_("Mesh file '%s'"), fileName));
+	BEM::Print("\n\n" + Format(t_("Mesh file '%s'"), fileName));
 	
-	BEMData::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
+	BEM::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));
-	BEMData::Print(S("\n") + Format(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -zProjectionPos, zProjectionNeg, zProjectionPos + zProjectionNeg));
-	BEMData::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -xProjectionPos, xProjectionNeg, xProjectionPos + xProjectionNeg));
-	BEMData::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -yProjectionPos, yProjectionNeg, yProjectionPos + yProjectionNeg));
-	BEMData::Print(S("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
-	BEMData::Print(S("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
-	BEMData::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
-	BEMData::Print(S("\n") + Format(t_("Underwater volume [m3] %f"), under.volume));
-	BEMData::Print(S("\n") + Format(t_("Displacement [tm] %f"), under.volume*rho/1000));
-	BEMData::Print(S("\n") + Format(t_("Centre of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
+	BEM::Print(S("\n") + Format(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -zProjectionPos, zProjectionNeg, zProjectionPos + zProjectionNeg));
+	BEM::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -xProjectionPos, xProjectionNeg, xProjectionPos + xProjectionNeg));
+	BEM::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -yProjectionPos, yProjectionNeg, yProjectionPos + yProjectionNeg));
+	BEM::Print(S("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
+	BEM::Print(S("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
+	BEM::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
+	BEM::Print(S("\n") + Format(t_("Underwater volume [m3] %f"), under.volume));
+	BEM::Print(S("\n") + Format(t_("Displacement [tm] %f"), under.volume*rho/1000));
+	BEM::Print(S("\n") + Format(t_("Centre of buoyancy [m] (%f, %f, %f)"), cb.x, cb.y, cb.z));
 	
-	BEMData::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.size(), mesh.nodes.size()));
+	BEM::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), mesh.panels.size(), mesh.nodes.size()));
 }
 
 bool Mesh::IsSymmetricX() {

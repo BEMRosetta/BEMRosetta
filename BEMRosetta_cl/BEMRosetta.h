@@ -10,7 +10,7 @@
 using namespace Upp;
 
 
-class BEMData;
+class BEM;
 
 bool ConsoleMain(const Upp::Vector<String>& command, bool gui, Function <bool(String, int pos)> Status);
 void SetBuildInfo(String &str);
@@ -22,13 +22,11 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, HAMS_WAMIT, WADAM_WAMIT, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
-	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
-
 	void Copy(const Hydro &hyd);
 	Hydro(const Hydro &hyd, int) {Copy(hyd);}
 	bool SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
 	void Report() const;
-	Hydro(BEMData &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
+	Hydro(BEM &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
 	virtual ~Hydro() noexcept {}	
 	
@@ -351,7 +349,7 @@ public:
 	double A0_ndim(int idf, int jdf)  		 	const {return !dimen ? A0(idf, jdf)      : A0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0(idf, jdf);}
 	double Ainf_dim(int idf, int jdf) 		 	const {return dimen  ? Ainf(idf, jdf)*rho_dim()/rho_ndim() : Ainf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	Eigen::MatrixXd Ainf_dim(int ib) const;
+	Eigen::MatrixXd Ainf_(int ib, bool ndim) const;
 	double Ainf_ndim(int idf, int jdf)		 	const {return !dimen ? Ainf(idf, jdf) : Ainf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Ainf_(bool ndim, int idf, int jdf) 	const {return ndim   ? Ainf_ndim(idf, jdf) : Ainf_dim(idf, jdf);}
 	
@@ -371,7 +369,7 @@ public:
 	double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
-	Eigen::MatrixXd C_dim(int ib) const;
+	Eigen::MatrixXd C_(int ib, bool ndim) const;
 	void C_dim();	
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
@@ -419,11 +417,9 @@ public:
 	void Jsonize(JsonIO &json);
 	
 private:
-	static const char *strDOF[];
-	static const char *strDOFAbrev[];
 	static const char *strDataToPlot[];
 	static String C_units_base(int i, int j);
-	BEMData *bem;
+	BEM *bem;
 		
 	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, double h, int ih, int idb);
 	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh, bool xAxis);
@@ -434,81 +430,6 @@ private:
 	static void SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::Array<Eigen::VectorXd>> &AB);
 	
 public:
-	static String StrBDOF(int i) {
-		int ib = i/6 + 1;
-		int idf = i - (ib - 1)*6;
-		return Format("%d.%s", ib, strDOF[idf]);
-	}
-	
-	static String StrBDOFFull(int i) {
-		int ib = i/6 + 1;
-		int idf = i - (ib - 1)*6;
-		return Format("Body #%d. DoF: %s", ib, strDOF[idf]);
-	}
-	
-	static String StrBDOF(int i, int j) {
-		if (i != j) {
-			int ib = i/6 + 1;
-			int idf = i - (ib - 1)*6;
-			int jb = j/6 + 1;
-			int jdf = j - (jb - 1)*6;
-			if (ib != jb)
-				return Format("%d.%s_%d.%s", ib, strDOF[idf], jb, strDOF[jdf]);
-			else
-				return Format("%d.%s_%s", ib, strDOFAbrev[idf], strDOFAbrev[jdf]);
-		} else
-			return StrBDOF(i);
-	}
-
-	static String StrBDOFFull(int i, int j) {
-		if (i != j) {
-			int ib = i/6 + 1;
-			int idf = i - (ib - 1)*6;
-			int jb = j/6 + 1;
-			int jdf = j - (jb - 1)*6;
-			if (ib != jb)
-				return Format("Body #%d, DoF: %s. Body #%d, DoF: %s", ib, strDOF[idf], jb, strDOF[jdf]);
-			else
-				return Format("Body #%d. DoF: %s, DoF: %s", ib, strDOF[idf], strDOF[jdf]);
-		} else
-			return StrBDOF(i);
-	}
-		
-	static const char *StrDOF_base(int i) {
-		return strDOF[i];
-	}
-	
-	static const char *StrDOFAbrev_base(int i) {
-		return strDOFAbrev[i];
-	}
-			
-	static String StrBDOFAbrev(int i) {
-		int nb = i/6 + 1;
-		int ni = i - (nb - 1)*6;
-		return Format("%d%s", nb, strDOFAbrev[ni]);
-	}
-	
-	static int DOFStr(const String &str) {
-		for (int i = 0; i < 6; ++i)
-			if (strDOF[i] == ToLower(str))
-				return i;
-		return -1;
-	}
-	
-	static void DOFFromStr(const String str, int &ib, int &idf) {
-		int pos = str.Find(".");
-		ib = ScanInt(str.Left(pos))-1;
-		String sdof = str.Mid(pos+1);
-		idf = DOFStr(sdof);	
-	}
-	
-	static int DOFStrAbrev(const String &str) {
-		for (int i = 0; i < 6; ++i)
-			if (strDOFAbrev[i] == ToLower(str))
-				return i;
-		return -1;
-	}
-	
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
 	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
 				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
@@ -520,7 +441,7 @@ public:
 		return strDataToPlot[dataToPlot];
 	}
 	
-	const BEMData &GetBEMData() const {return *bem;}
+	const BEM &GetBEM() const {return *bem;}
 	
 	bool IsLoadedA() 	 const {return !A.IsEmpty();}
 	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty();}
@@ -585,7 +506,7 @@ bool IsNum(const Hydro::Forces &f);
 class HydroData {
 public:
 	HydroData() : data(0) {}
-	HydroData(BEMData &bem, Hydro *_data = 0) {
+	HydroData(BEM &bem, Hydro *_data = 0) {
 		if (!_data) {
 			manages = true;
 			data = new Hydro(bem);
@@ -609,7 +530,7 @@ private:
 class HydroClass {
 public:
 	HydroClass()							{}
-	HydroClass(BEMData &bem, Hydro *hydro = 0) : hd(bem, hydro)	{}
+	HydroClass(BEM &bem, Hydro *hydro = 0) : hd(bem, hydro)	{}
 	virtual ~HydroClass() noexcept			{}
 	bool Load(String file);
 	bool Save(String file);
@@ -736,7 +657,7 @@ public:
 
 class Wamit : public HydroClass {
 public:
-	Wamit(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Wamit(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, Function <bool(String, int)> Status);
 	bool Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
 	bool Save_out(String file, double g, double rho);
@@ -782,7 +703,7 @@ protected:
 
 class HAMS : public Wamit {
 public:
-	HAMS(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro) {}
+	HAMS(BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro) {}
 	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
 	virtual ~HAMS() noexcept {}
 	
@@ -792,7 +713,7 @@ public:
 
 class Fast : public Wamit {
 public:
-	Fast(BEMData &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
+	Fast(BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
 	bool Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
@@ -810,7 +731,7 @@ private:
 
 class Foamm : public HydroClass {
 public:
-	Foamm(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Foamm(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
 	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Upp::Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	void Get(const Upp::Vector<int> &ibs, const Upp::Vector<int> &idfs, const Upp::Vector<int> &jdfs,
@@ -857,8 +778,8 @@ public:
 		domainX(bcase.domainX), domainY(bcase.domainY),
 		nKochin(bcase.nKochin), minK(bcase.minK), maxK(bcase.maxK), solver(bcase.solver) {} 
 		
-	void Load(String file, const BEMData &bem);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const;
+	void Load(String file, const BEM &bem);
+	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
 	Vector<String> Check(int solver) const;
 	
 	void BeforeSave(String folderBase, int numCases, bool deleteFolder) const;
@@ -904,7 +825,7 @@ public:
 class HamsCase : public BEMCase {
 public:
 	bool Load(String fileName);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const;
+	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
 	Upp::Vector<String> Check() const;
 	
 	bool LoadHydrostatic(String fileName);
@@ -912,7 +833,7 @@ public:
 	virtual ~HamsCase() noexcept {}
 	
 private:
-	void SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, bool deleteFolder, int numThreads) const;
+	void SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, bool deleteFolder, int numThreads) const;
 	static void OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat);
 	static void InMatrix(FieldSplit &f, Eigen::MatrixXd &mat);
 		
@@ -926,7 +847,7 @@ private:
 class NemohCase : public BEMCase {
 public:	
 	bool Load(String fileName);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEMData &bem, int solver) const;
+	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
 	Upp::Vector<String> Check() const;
 	
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels) const;
@@ -944,13 +865,13 @@ private:
 	void Save_Mesh_bat(String folder, String caseFolder, const Vector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder) const;
 	
-	void SaveFolder0(String folder, bool bin, int numCases, const BEMData &bem, 
+	void SaveFolder0(String folder, bool bin, int numCases, const BEM &bem, 
 					bool deleteFolder, int solver) const;
 };
 
 class Nemoh : public HydroClass {
 public:
-	Nemoh(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Nemoh(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Nemoh() noexcept {}
@@ -979,7 +900,7 @@ private:
 
 class Aqwa : public HydroClass {
 public:
-	Aqwa(BEMData &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Aqwa(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Aqwa() noexcept {}
@@ -1003,9 +924,9 @@ public:
 
 String FormatWam(double d);
 
-class BEMData {
+class BEM {
 public:
-	BEMData();
+	BEM();
 	
 	HydroClass &Duplicate(int id);
 		
@@ -1033,6 +954,10 @@ public:
 	int Nb = 0;				
 	
 	double depth, rho, g, len;
+	
+	enum DOFType {DOF123, DOFSurgeSway, DOFxyz};
+	static DOFType dofType;
+	static const char *strDOFType[];
 	
 	int calcAinf, calcAinf_w;
 	double maxTimeA;
@@ -1078,9 +1003,13 @@ public:
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {
+		int idofType;
 		if (json.IsLoading()) {
 			volWarning = 1;
 			volError = 10;
+			idofType = 0;
+		} else {
+			idofType = dofType;
 		}
 		json
 			("depth", depth)
@@ -1104,8 +1033,123 @@ public:
 			("hamsMeshPath", hamsMeshPath)
 			("volWarning", volWarning)
 			("volError", volError)
+			("dofType", idofType)
 		;
+		if (json.IsLoading()) {
+			dofType = BEM::DOFType(idofType);
+		}
 	}
+
+	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
+
+	static String StrBDOF(int i, bool abrev) {
+		int ib = i/6 + 1;
+		int idf = i - (ib - 1)*6;
+		return Format("%d%s%s", ib, abrev ? "" : ".", StrDOF(idf, abrev));
+	}
+	
+	static String StrBDOF2(int i, int j, bool abrev) {
+		if (i != j) {
+			int ib = i/6 + 1;
+			int idf = i - (ib - 1)*6;
+			int jb = j/6 + 1;
+			int jdf = j - (jb - 1)*6;
+			if (ib != jb)
+				return Format("%d%s%s_%d.%s", ib, abrev ? "" : ".", StrDOF(idf, abrev), jb, StrDOF(jdf, abrev));
+			else
+				return Format("%d%s%s_%s", ib, abrev ? "" : ".", StrDOF(idf, abrev), StrDOF(jdf, abrev));
+		} else
+			return StrBDOF(i, abrev);
+	}
+		
+	static String StrBDOFFull(int i) {
+		int ib = i/6 + 1;
+		int idf = i - (ib - 1)*6;
+		return Format("Body #%d. DoF: %s", ib, StrDOF(idf));
+	}
+
+	static String StrBDOFFull(int i, int j) {
+		if (i != j) {
+			int ib = i/6 + 1;
+			int idf = i - (ib - 1)*6;
+			int jb = j/6 + 1;
+			int jdf = j - (jb - 1)*6;
+			if (ib != jb)
+				return Format("Body #%d, DoF: %s. Body #%d, DoF: %s", ib, StrDOF(idf), jb, StrDOF(jdf));
+			else
+				return Format("Body #%d. DoF: %s, DoF: %s", ib, StrDOF(idf), StrDOF(jdf));
+		} else
+			return StrBDOF(i, false);
+	}
+		
+	static int StrDOF_len() {
+		auto MaxLen = [&] (const char *str[]) {
+			int mx = 0;
+			for (int i = 0; i < 6; ++i) {
+				if (strlen(str[i]) > mx)
+					mx = int(strlen(str[i]));
+			}
+			return mx;
+		};
+		if (dofType == DOF123)
+			return MaxLen(strDOFnum);
+		else if (dofType == DOFSurgeSway)
+			return MaxLen(strDOFtext);
+		else
+			return MaxLen(strDOFxyz);	
+	}
+
+	static const char *StrDOF(int i) {
+		if (dofType == DOF123)
+			return strDOFnum[i];
+		else if (dofType == DOFSurgeSway)
+			return strDOFtext[i];
+		else
+			return strDOFxyz[i];
+	}
+			
+	static const char *StrDOFAbrev(int i) {
+		if (dofType == DOF123)
+			return strDOFnum[i];
+		else if (dofType == DOFSurgeSway)
+			return strDOFtextAbrev[i];
+		else
+			return strDOFxyz[i];
+	}
+	
+	static const char *StrDOF(int i, bool abrev) {
+		if (abrev)
+			return StrDOFAbrev(i);
+		else
+			return StrDOF(i);
+	}
+	
+	static int DOFStr(const String &str) {
+		for (int i = 0; i < 6; ++i)
+			if (StrDOF(i) == ToLower(str))
+				return i;
+		return -1;
+	}
+	
+	static void DOFFromStr(const String str, int &ib, int &idf) {
+		int pos = str.Find(".");
+		ib = ScanInt(str.Left(pos))-1;
+		String sdof = str.Mid(pos+1);
+		idf = DOFStr(sdof);	
+	}
+	
+	static int DOFStrAbrev(const String &str) {
+		for (int i = 0; i < 6; ++i)
+			if (StrDOF(i) == ToLower(str))
+				return i;
+		return -1;
+	}
+
+private:
+	static const char *strDOFtext[];
+	static const char *strDOFnum[];
+	static const char *strDOFxyz[];
+	static const char *strDOFtextAbrev[];
 };
 
 template <class T>

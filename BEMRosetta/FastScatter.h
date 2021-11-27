@@ -53,7 +53,7 @@ private:
 	class DataSource : public Convert {
 	public:
 		DataSource() : datafast(0), col(0) {}
-		void Init(FastOut &datafast, int col)	{this->datafast = &datafast;	this->col = col;};	
+		void Init(FastOut &_datafast, int _col)	{datafast = &_datafast;	col = _col;};	
 		Value Format(const Value& q) const;
 	private:
 		FastOut *datafast;

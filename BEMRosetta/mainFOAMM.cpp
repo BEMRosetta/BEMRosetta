@@ -155,7 +155,7 @@ void MainSetupFOAMM::OnMouse(Point p, dword, ScatterCtrl::MouseAction action, Sc
 	}
 }
 
-void MainSetupFOAMM::WhenSelArrayModel(int _id, BEMData &bem) {
+void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 	arrayCases.Clear();
 	options.Clear();
 	
@@ -174,7 +174,7 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEMData &bem) {
 	
 					if (hydro.IsLoadedA() && hydro.IsLoadedB() && 
 						!IsNull(hydro.A[_idf][_jdf][0]) && !IsNull(hydro.B[_idf][_jdf][0])) {
-						arrayCases.Add(false, ib+1, Hydro::StrDOF_base(idf), Hydro::StrDOF_base(jdf));
+						arrayCases.Add(false, ib+1, BEM::StrDOF(idf), BEM::StrDOF(jdf));
 						int row = arrayCases.GetCount()-1;
 						arrayCases.SetCtrl(row, 0, options.Add());
 						options.Top() << [=] {options[row].SetFocus();};
@@ -210,8 +210,8 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		const Hydro &hydro = Bem().hydros[id].hd();
 		
 		int ib = int(arrayCases.Get(row, 1)) - 1;
-		int idf = Hydro::DOFStr(arrayCases.Get(row, 2));
-		int jdf = Hydro::DOFStr(arrayCases.Get(row, 3));
+		int idf = BEM::DOFStr(arrayCases.Get(row, 2));
+		int jdf = BEM::DOFStr(arrayCases.Get(row, 3));
 		
 		plots.Init(idf + 6*ib, jdf + 6*ib, Hydro::DATA_STS);
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
@@ -293,9 +293,9 @@ bool MainSetupFOAMM::Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vec
 			int ib = int(arrayCases.Get(row, 1))-1;
 			ibs << ib;
 			String sidf = arrayCases.Get(row, 2);
-			idfs << Hydro::DOFStr(sidf);
+			idfs << BEM::DOFStr(sidf);
 			String sjdf = arrayCases.Get(row, 3);
-			jdfs << Hydro::DOFStr(sjdf);
+			jdfs << BEM::DOFStr(sjdf);
 			double from = arrayCases.Get(row, 4);
 			double to = arrayCases.Get(row, 5);
 			String strfreqs = arrayCases.Get(row, 6);

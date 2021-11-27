@@ -24,7 +24,7 @@ bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 		else
 			throw Exc("\n" + Format(t_("File '%s' is not of FAST type"), file));
 			
-		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 		
 		if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
 			throw Exc("\n" + Format(t_("File '%s' not found"), file));
@@ -49,12 +49,12 @@ bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
 	
 		String ssFile = ForceExt(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
-			BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+			BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 			if (!Load_SS(ssFile)) 
 				throw Exc("\n" + Format(t_("File '%s' not found"), file));	
 		}
 	} catch (Exc e) {
-		BEMData::PrintError("\nError: " + e);
+		BEM::PrintError("\nError: " + e);
 		hd().lastError = e;
 		return false;
 	}
@@ -110,7 +110,7 @@ bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 		if (hd().IsLoadedA() && hd().IsLoadedB()) 
 			Save_HydroDyn(file, true);
 		else
-			BEMData::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
+			BEM::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
 			
 		String hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
 		DirectoryCreateX(AppendFileNameX(GetFileFolder(file), hydroFolder));
@@ -119,11 +119,11 @@ bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 		
 		if (hd().IsLoadedStateSpace()) {
 			String fileSts = ForceExt(hydroFile, ".ss");
-			BEMData::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
+			BEM::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
 			Save_SS(fileSts);
 		}
 	} catch (Exc e) {
-		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
@@ -248,7 +248,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		
 		String srho;
 		if (IsNull(hd().rho))
-			srho = FormatDoubleSize(hd().GetBEMData().rho, 10, false);
+			srho = FormatDoubleSize(hd().GetBEM().rho, 10, false);
 		else
 			srho = FormatDoubleSize(hd().rho, 10, false);
 		strFile.Replace("[WtrDens]", srho);
@@ -289,7 +289,7 @@ void Fast::Save_SS(String fileName) {
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 	
 	if (hd().Nb > 1)
-		BEMData::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
+		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
 
 	if (!hd().stsProcessor.IsEmpty())
 		out << Format("BEMRosetta state space matrices obtained with %s", hd().stsProcessor) << "\n";
@@ -413,7 +413,7 @@ bool Fast::Load_SS(String fileName) {
 		return false;
 
 	if (hd().Nb > 1)
-		BEMData::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
+		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
 	
 	String line; 
 	FieldSplit f(in);

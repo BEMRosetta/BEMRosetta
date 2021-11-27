@@ -19,9 +19,9 @@ bool Foamm::Load(String file) {
 	
 	try {
 		if (GetFileExt(file) == ".mat") {
-			BEMData::Print("\n\n" + Format(t_("Loading mat file '%s'"), file));
+			BEM::Print("\n\n" + Format(t_("Loading mat file '%s'"), file));
 			if (!Load_mat(file, 0, 0, true)) {
-				BEMData::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
+				BEM::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
 				return false;
 			}
 		}
@@ -32,7 +32,7 @@ bool Foamm::Load(String file) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 1;
 	} catch (Exc e) {
-		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
@@ -65,7 +65,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		
 		MatMatrix<double> A = mat.VarReadMat<double>("A");	
 		if (A.size() == 0)
-			BEMData::Print(S("\n") + t_("Vector A not found"));
+			BEM::Print(S("\n") + t_("Vector A not found"));
 		else {
 			if (hd().Nf != A.size())
 				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
@@ -76,7 +76,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 		MatMatrix<double> B = mat.VarReadMat<double>("B");	
 		if (B.size() == 0)
-			BEMData::Print(S("\n") + t_("Vector B not found"));
+			BEM::Print(S("\n") + t_("Vector B not found"));
 		else {
 			if (hd().Nf != B.size())
 				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
@@ -99,7 +99,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 
 	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	
 	if (TFS.size() == 0)
-		BEMData::Print(S("\n") + t_("Vector TFSResponse not found"));
+		BEM::Print(S("\n") + t_("Vector TFSResponse not found"));
 	else {
 		sts.TFS.SetCount(hd().Nf);
 		if (hd().Nf != TFS.size())
@@ -110,7 +110,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 	MatMatrix<double> A_ss = mat.VarReadMat<double>("A_ss");	
 	if (A_ss.size() == 0)
-		BEMData::Print(S("\n") + t_("Matrix A_ss not found"));
+		BEM::Print(S("\n") + t_("Matrix A_ss not found"));
 	else {
 		sts.A_ss.setConstant(A_ss.GetRows(), A_ss.GetCols(), Null);
 		for (int r = 0; r < A_ss.GetRows(); ++r)
@@ -120,7 +120,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 	MatMatrix<double> B_ss = mat.VarReadMat<double>("B_ss");	
 	if (B_ss.size() == 0)
-		BEMData::Print(S("\n") + t_("Matrix B_ss not found"));
+		BEM::Print(S("\n") + t_("Matrix B_ss not found"));
 	else {
 		sts.B_ss.setConstant(B_ss.GetRows(), Null);
 		for (int r = 0; r < B_ss.GetRows(); ++r)
@@ -129,7 +129,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 
 	MatMatrix<double> C_ss = mat.VarReadMat<double>("C_ss");	
 	if (C_ss.size() == 0)
-		BEMData::Print(S("\n") + t_("Matrix C_ss not found"));
+		BEM::Print(S("\n") + t_("Matrix C_ss not found"));
 	else {
 		sts.C_ss.setConstant(C_ss.GetCols(), Null);
 		for (int c = 0; c < C_ss.GetCols(); ++c)
@@ -138,7 +138,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 	MatMatrix<double> ssFrequencies = mat.VarReadMat<double>("Frequencies");	
 	if (ssFrequencies.GetCols() == 0)
-		BEMData::Print(S("\n") + t_("Matrix Frequencies not found"));
+		BEM::Print(S("\n") + t_("Matrix Frequencies not found"));
 	else {
 		sts.ssFrequencies.setConstant(ssFrequencies.GetCols(), Null);
 		for (int c = 0; c < ssFrequencies.GetCols(); ++c)
@@ -147,7 +147,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 
 	MatMatrix<double> ssFreqRange = mat.VarReadMat<double>("FreqRange");	
 	if (ssFreqRange.GetCols() == 0)
-		BEMData::Print(S("\n") + t_("Matrix FreqRange not found"));
+		BEM::Print(S("\n") + t_("Matrix FreqRange not found"));
 	else {
 		sts.ssFreqRange.setConstant(ssFreqRange.GetCols(), Null);
 		for (int c = 0; c < ssFreqRange.GetCols(); ++c)
@@ -164,7 +164,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<int> &jdfs,
 		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
-	if (!FileExists(hd().GetBEMData().foammPath))
+	if (!FileExists(hd().GetBEM().foammPath))
 		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ibs.size(); ++i) {
 		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.size()));
@@ -175,7 +175,7 @@ void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<in
 void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, const Vector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
-	String folder = AppendFileNameX(BEMData::GetTempFilesFolder(), Format(id));
+	String folder = AppendFileNameX(BEM::GetTempFilesFolder(), Format(id));
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
 	String file = AppendFileNameX(folder, "temp_file.mat");
@@ -255,7 +255,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	mat.Close();
 	
 	LocalProcess process;
-	if (!process.Start(hd().GetBEMData().foammPath, NULL, folder))
+	if (!process.Start(hd().GetBEM().foammPath, NULL, folder))
 		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
 
 	String msg, reso, rese;
