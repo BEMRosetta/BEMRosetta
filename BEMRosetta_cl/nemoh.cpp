@@ -41,7 +41,7 @@ bool Nemoh::Load(String file, double) {
 		hd().Nb = Null;
 	
 		String fileCal;
-		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 		if (hd().code == Hydro::NEMOH) 
 			fileCal = file;
 		else 
@@ -51,12 +51,12 @@ bool Nemoh::Load(String file, double) {
 		
 		String fileRad, folderForces;
 		if (hd().code == Hydro::NEMOH) {
-			BEMData::Print(S("\n- ") + t_("Hydrostatics file(s) 'Mesh/Hydrostatics*.dat'"));
+			BEM::Print(S("\n- ") + t_("Hydrostatics file(s) 'Mesh/Hydrostatics*.dat'"));
 			if (!Load_Hydrostatics())
-				BEMData::PrintWarning(S(": ** Mesh/Hydrostatics*.dat ") + t_("Not found") + "**");
-			BEMData::Print(S("\n- ") + t_("KH file(s) 'Mesh/KH*.dat'"));
+				BEM::PrintWarning(S(": ** Mesh/Hydrostatics*.dat ") + t_("Not found") + "**");
+			BEM::Print(S("\n- ") + t_("KH file(s) 'Mesh/KH*.dat'"));
 			if (!Load_KH())
-				BEMData::PrintWarning(S(": ** Mesh/KH ") + t_("Not found") + "**");
+				BEM::PrintWarning(S(": ** Mesh/KH ") + t_("Not found") + "**");
 			fileRad = AppendFileNameX(folder, AppendFileNameX("Results", "RadiationCoefficients.tec"));
 			folderForces = folder;
 		} else {
@@ -66,32 +66,32 @@ bool Nemoh::Load(String file, double) {
 			fileRad = AppendFileNameX(folder, "Nemoh_output/Results", "RadiationCoefficients.tec");
 			folderForces = AppendFileNameX(folder, "Nemoh_output");
 		} 
-		BEMData::Print(S("\n- ") + t_("Radiation file 'RadiationCoefficients.tec'"));
+		BEM::Print(S("\n- ") + t_("Radiation file 'RadiationCoefficients.tec'"));
 		if (!Load_Radiation(fileRad))
-			BEMData::PrintWarning(S(": ** RadiationCoefficients.tec ") + t_("Not found") + "**");
+			BEM::PrintWarning(S(": ** RadiationCoefficients.tec ") + t_("Not found") + "**");
 
-		BEMData::Print(S("\n- ") + t_("Excitation force file 'ExcitationForce.tec'"));
+		BEM::Print(S("\n- ") + t_("Excitation force file 'ExcitationForce.tec'"));
 		if (!Load_Excitation(folderForces))
-			BEMData::PrintWarning(S(": ** ExcitationForce.tec ") + t_("Not found") + "**");
+			BEM::PrintWarning(S(": ** ExcitationForce.tec ") + t_("Not found") + "**");
 		
-		BEMData::Print(S("\n- ") + t_("Diffraction force file 'DiffractionForce.tec'"));
+		BEM::Print(S("\n- ") + t_("Diffraction force file 'DiffractionForce.tec'"));
 		if (!Load_Diffraction(folderForces))
-			BEMData::PrintWarning(S(": ** DiffractionForce.tec ") + t_("Not found") + "**");
-		BEMData::Print(S("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
+			BEM::PrintWarning(S(": ** DiffractionForce.tec ") + t_("Not found") + "**");
+		BEM::Print(S("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
 		if (!Load_FroudeKrylov(folderForces))
-			BEMData::PrintWarning(S(": ** FKForce.tec ") + t_("Not found") + "**");
+			BEM::PrintWarning(S(": ** FKForce.tec ") + t_("Not found") + "**");
 		
 		if (hd().code == Hydro::NEMOH) {
 			if (!hd().dof.IsEmpty()) {
-				BEMData::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
+				BEM::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
 				if (!Load_IRF(AppendFileNameX(folder, "Results", "IRF.tec")))
-					BEMData::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
+					BEM::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
 			}
 		}
 		if (IsNull(hd().Nb))
 			return false;
 	} catch (Exc e) {
-		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}
@@ -217,7 +217,7 @@ bool NemohCase::Load(String fileName) {
 		f.Load(in.GetLine());	npoints = f.GetInt(0);		npanels = f.GetInt(1);
 		String file = AppendFileNameX(GetFileFolder(fileName), body.meshFile);
 		if (!FileExists(file)) 
-			BEMData::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
+			BEM::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 			//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 		
 		if (npoints < 1 || npoints > 100000000)
@@ -239,21 +239,21 @@ bool NemohCase::Load(String fileName) {
 			double cz = f.GetDouble(6);
 			if (type == 1) {
 				if (x) 
-					body.dof[Hydro::SURGE] = true;
+					body.dof[BEM::SURGE] = true;
 				else if (y)
-					body.dof[Hydro::SWAY] = true;
+					body.dof[BEM::SWAY] = true;
 				else if (z)
-					body.dof[Hydro::HEAVE] = true;
+					body.dof[BEM::HEAVE] = true;
 			} else if (type == 2) {
 				body.c0[0] = cx;
 				body.c0[1] = cy;
 				body.c0[2] = cz;
 				if (x) 
-					body.dof[Hydro::ROLL] = true;
+					body.dof[BEM::ROLL] = true;
 				else if (y)
-					body.dof[Hydro::PITCH] = true;
+					body.dof[BEM::PITCH] = true;
 				else if (z)
-					body.dof[Hydro::YAW] = true;
+					body.dof[BEM::YAW] = true;
 			} else
 				throw Exc(in.Str() + "\n"  + Format(t_("Incorrect DOF type %d set in body %d"), f.GetText(0), ib+1));
 		}
@@ -447,13 +447,13 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-void NemohCase::SaveFolder(String folderBase, bool bin, int numCases, int, const BEMData &bem, int solver) const {
+void NemohCase::SaveFolder(String folderBase, bool bin, int numCases, int, const BEM &bem, int solver) const {
 	SaveFolder0(folderBase, bin, 1, bem, true, solver);
 	if (numCases > 1)
 		SaveFolder0(folderBase, bin, numCases, bem, false, solver);
 }
 
-void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEMData &bem, 
+void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, 
 							bool deleteFolder, int solver) const {
 	BeforeSave(folderBase, numCases, deleteFolder);
 	
@@ -650,30 +650,30 @@ void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, con
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", nodes[i], panels[i]), cp) << "! Number of points and number of panels" << "\n";	
 		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of degrees of freedom" << "\n";	
-		if (b.dof[Hydro::SURGE])
+		if (b.dof[BEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Surge" << "\n";	
-		if (b.dof[Hydro::SWAY])
+		if (b.dof[BEM::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Sway" << "\n";	
-		if (b.dof[Hydro::HEAVE])
+		if (b.dof[BEM::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Heave" << "\n";	
-		if (b.dof[Hydro::ROLL])
+		if (b.dof[BEM::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Roll about a point" << "\n";	
-		if (b.dof[Hydro::PITCH])
+		if (b.dof[BEM::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Pitch about a point" << "\n";	
-		if (b.dof[Hydro::YAW])		
+		if (b.dof[BEM::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Yaw about a point" << "\n";	
 		out << NemohField(Format("%d", b.GetNDOF()), cp) << "! Number of resulting generalised forces" << "\n";	
-		if (b.dof[Hydro::SURGE])
+		if (b.dof[BEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Force in x direction" << "\n";	
-		if (b.dof[Hydro::SWAY])
+		if (b.dof[BEM::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Force in y direction" << "\n";	
-		if (b.dof[Hydro::HEAVE])
+		if (b.dof[BEM::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Force in z direction" << "\n";	
-		if (b.dof[Hydro::ROLL])
+		if (b.dof[BEM::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in x direction about a point" << "\n";	
-		if (b.dof[Hydro::PITCH])
+		if (b.dof[BEM::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in y direction about a point" << "\n";	
-		if (b.dof[Hydro::YAW])		
+		if (b.dof[BEM::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.c0[0], b.c0[1], b.c0[2]), cp) << "! Moment force in z direction about a point" << "\n";	
 		out << NemohField("0", cp) << "! Number of lines of additional information" << "\n";
 	}

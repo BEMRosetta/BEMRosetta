@@ -40,6 +40,7 @@ void Main::Init() {
 	Icon(Img::Rosetta64());
 	LargeIcon(Img::Rosetta256());
 	ma(this);
+	CtrlLayout(*this);
 	
 	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
@@ -105,20 +106,21 @@ void Main::Init() {
 	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(),t_("Options"));
 	tab.Add().Disable();
 	menuAbout.Init();			LOG("Init About");
-	tab.Add(menuAbout.SizePos(),  t_("About"));
+	tab.Add(menuAbout.SizePos(), t_("About"));
 	
-	Add(tab.SizePos());	
-
-	Add(labrho.SetLabel(t_("rho [kg/m3]:")).RightPosZ(128, 80).TopPosZ(1, 22));
-	Add(editrho.SetReadOnly().RightPosZ(98, 40).TopPosZ(2, 20));
+	editrho.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.rho.SetFocus(); menuOptions.rho.Underline(1);};
+	editrho.SetReadOnly();
 	editrho <<= bem.rho;
 	
-	Add(labg.SetLabel(t_("Gravity [m/s2]:")).RightPosZ(252, 80).TopPosZ(1, 22));
-	Add(editg.SetReadOnly().RightPosZ(218, 40).TopPosZ(2, 20));
+	editg.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.g.SetFocus(); menuOptions.g.Underline(1);};
+	editg.SetReadOnly();
 	editg <<= bem.g;
 	
+	editdofType.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.dofType.SetFocus(); menuOptions.dofType.Underline(1);};
+	editdofType.SetReadOnly();
+	editdofType <<= BEM::strDOFType[bem.dofType];
+	
 	butWindow.SetImage(Img::application_double()).SetLabel(t_("New window")).Tip(t_("Open new window"));
-	Add(butWindow.RightPosZ(2, 90).TopPosZ(0, 22));
 	butWindow.Hide();
 	
 	butWindow << [&] {
@@ -194,17 +196,18 @@ void Main::Init() {
 	
 	AddFrame(bar);
 	
-	BEMData::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
-	BEMData::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
-	BEMData::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput); Status(s);};
+	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
+	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
+	BEM::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput); Status(s);};
 }
 
-void Main::OptionsUpdated(double rho, double g) {
+void Main::OptionsUpdated(double rho, double g, int dofType) {
 	mainBEM.OnOpt();
 	mainMesh.OnOpt();
 	
 	editg <<= g;
 	editrho <<= rho;
+	editdofType <<= BEM::strDOFType[dofType];
 }
 
 bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
@@ -285,12 +288,14 @@ void Main::Jsonize(JsonIO &json) {
 	;
 }
 
-void MenuOptions::Init(BEMData &_bem) {
+void MenuOptions::Init(BEM &_bem) {
 	CtrlLayout(*this);
 	
 	bem = &_bem;
 	butSave  <<= THISBACK(OnSave);
 	butSave2 <<= THISBACK(OnSave);
+	
+	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = false;
 	
 	arrayShown.AddColumn("");
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
@@ -299,6 +304,9 @@ void MenuOptions::Init(BEMData &_bem) {
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MOOR,  0, false).SetLabel(ma().tabTexts[Main::TAB_MOOR]).Show(Bem().experimental);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_DECAY, 0, false).SetLabel(ma().tabTexts[Main::TAB_DECAY]).Show(Bem().experimental);
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_FAST,  0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);
+	
+	for (int i = 0; BEM::strDOFType[i][0] != '\0'; ++i)
+		dofType.Add(BEM::strDOFType[i]);
 }
 
 void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
@@ -349,6 +357,8 @@ void MenuOptions::Load() {
 	arrayShown.GetCtrl(Main::TAB_MOOR,  0)->SetData(showTabMoor);
 	arrayShown.GetCtrl(Main::TAB_DECAY, 0)->SetData(showTabDecay);
 	arrayShown.GetCtrl(Main::TAB_FAST,  0)->SetData(showTabFAST);
+	
+	dofType.SetIndex(bem->dofType);
 }
 
 void MenuOptions::OnSave() {
@@ -381,7 +391,9 @@ void MenuOptions::OnSave() {
 	showTabDecay = arrayShown.GetCtrl(Main::TAB_DECAY, 0)->GetData();
 	showTabFAST  = arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData();
 	
-	ma().OptionsUpdated(rho, g);
+	bem->dofType = BEM::DOFType(dofType.GetIndex());
+	
+	ma().OptionsUpdated(rho, g, bem->dofType);
 }
 
 bool MenuOptions::IsChanged() {
@@ -427,6 +439,8 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->volError != ~volError)
 		return true;
+	if (bem->dofType != dofType.GetIndex())
+		return true;
 	
 	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())
 		return true;
@@ -462,7 +476,7 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
-BEMData &Bem()						{return ma().bem;}
+BEM &Bem()							{return ma().bem;}
 void Status(String str, int time)	{ma().Status(str, time);}
 
 void OnPanic(const char *title, const char *text) {
@@ -539,7 +553,7 @@ const Color &GetColorId(int id) {
 
 struct RectDisplay : public Display {
 	virtual void Paint(Draw& w, const Rect& r, const Value& q,
-	                   Color ink, Color paper, dword style) const {
+	                   Color , Color , dword ) const {
 		w.DrawRect(r, q);
 	}
 };

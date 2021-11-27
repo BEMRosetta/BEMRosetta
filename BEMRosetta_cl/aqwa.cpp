@@ -14,14 +14,14 @@ bool Aqwa::Load(String file, double) {
 	hd().Nb = Null;
 	
 	try {
-		BEMData::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
-		BEMData::Print("\n- " + S(t_("LIS file")));
+		BEM::Print("\n- " + S(t_("LIS file")));
 		if (!Load_LIS()) {
-			BEMData::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
-			BEMData::Print("\n- " + S(t_("AH1 file")));
+			BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
+			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
-				BEMData::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
+				BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
 				hd().Nh = hd().Nf = 0;
 			//	throw Exc(t_("No .AH1 or .LIS file found"));
 			}
@@ -29,9 +29,9 @@ bool Aqwa::Load(String file, double) {
 		//if (IsNull(hd().Nb))
 		//	return false;
 		
-		BEMData::Print("\n- " + S(t_("QTF file")));
+		BEM::Print("\n- " + S(t_("QTF file")));
 		if (!Load_QTF()) 
-			BEMData::Print(S(": ** QTF file ") + t_("Not found") + "**");
+			BEM::Print(S(": ** QTF file ") + t_("Not found") + "**");
 		
 		if (IsNull(hd().Nb))
 			return false;
@@ -40,7 +40,7 @@ bool Aqwa::Load(String file, double) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
-		BEMData::PrintError(Format("\n%s: %s", t_("Error"), e));
+		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;
 		return false;
 	}

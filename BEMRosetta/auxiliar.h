@@ -60,7 +60,7 @@ protected:
 
 class RectEnter {
 public:
-	void Init(int width, Color color) {
+	void Init(int width = 2, Color color = LtBlue()) {
 		frame.Init(width, color); 
 	}
 	void ShowFrame(bool show = true) {
@@ -75,22 +75,31 @@ public:
 };
 
 template <class T>
-class WithRectEnter : public T {
+class UnderlineCtrl : public T {
 public:
-	WithRectEnter() {
+	UnderlineCtrl() {
 		T::AddFrame(rectEnter.frame);
 		rectEnter.ctrl = this;
+		rectEnter.Init();
+	}
+	void Underline(double sec) {
+		rectEnter.ShowFrame(true);
+		timer.Set(-int(sec*1000), [&] {rectEnter.ShowFrame(false); timer.Kill();});
 	}
 	virtual void MouseEnter(Point, dword) {
-		rectEnter.ShowFrame(true);
-		if (rectEnter.WhenEnter) 
+		if (isMouseEnter) {
+			rectEnter.ShowFrame(true);
 			rectEnter.WhenEnter(rectEnter);
+		}
 	}
 	bool IsShownFrame()			{return rectEnter.frame.IsShown();}
 	RectEnter &GetRectEnter()	{return rectEnter;}
 	
+	bool isMouseEnter = true;
+	
 private:
 	RectEnter rectEnter;
+	TimeCallback timer;
 };
 
 class RectEnterSet {
@@ -132,12 +141,6 @@ private:
 	}
 };
 
-template <class T>
-class WithFocus : public T {
-public:
-	virtual void GotFocus() {WhenFocus();}
-	Function <void()>WhenFocus;
-};
 
 const Color &GetColorId(int id);
 

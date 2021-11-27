@@ -350,7 +350,7 @@ void MainMesh::InitSerialize(bool ret) {
 		menuConvert.optMeshType = 0;
 }
 
-void MainMesh::LoadSelTab(BEMData &bem) {
+void MainMesh::LoadSelTab(BEM &bem) {
 	const Upp::Vector<int> &ids = ArrayModel_IdsMesh(listLoaded);
 	if (mainTab.Get() == mainTab.Find(mainStiffness))
 		mainStiffness.Load(bem.surfs, ids);

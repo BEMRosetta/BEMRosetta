@@ -18,7 +18,7 @@ using namespace Upp;
 #include "main.h"
 
 
-void MainSolver::Init(const BEMData &bem) {
+void MainSolver::Init(const BEM &bem) {
 	CtrlLayout(bodies);
 	bodiesScroll.AddPaneV(bodies).SizePos();
 	CtrlLayout(nemoh);
@@ -244,7 +244,7 @@ void MainSolver::Jsonize(JsonIO &json) {
 	;
 }
 
-bool MainSolver::OnLoad(const BEMData &bem) {
+bool MainSolver::OnLoad(const BEM &bem) {
 	String file = ~loadFrom;
 	
 	try {
@@ -257,7 +257,7 @@ bool MainSolver::OnLoad(const BEMData &bem) {
 	return true;		
 }		
 
-void MainSolver::Load(const BEMData &bem) {
+void MainSolver::Load(const BEM &bem) {
 	if (IsNull(~nemoh.g))
 		nemoh.g <<= bem.g;
 	if (IsNull(~nemoh.rho))
@@ -269,7 +269,7 @@ void MainSolver::Load(const BEMData &bem) {
 	}
 }
 	
-void MainSolver::Load(String file, const BEMData &bem) {
+void MainSolver::Load(String file, const BEM &bem) {
 	BEMCase data;
 	
 	data.Load(file, bem);
@@ -284,8 +284,8 @@ void MainSolver::Load(String file, const BEMData &bem) {
 	for (int i = 0; i < data.bodies.size(); ++i) {
 		const BEMBody &b = data.bodies[i];
 		bodies.array.Add(b.meshFile, b.lidFile,  
-					b.dof[Hydro::SURGE], b.dof[Hydro::SWAY], b.dof[Hydro::HEAVE], 
-					b.dof[Hydro::ROLL], b.dof[Hydro::PITCH], b.dof[Hydro::YAW], 
+					b.dof[BEM::SURGE], b.dof[BEM::SWAY], b.dof[BEM::HEAVE], 
+					b.dof[BEM::ROLL], b.dof[BEM::PITCH], b.dof[BEM::YAW], 
 					b.c0[0], b.c0[1], b.c0[2]);
 	}
 	bodies.array.SetCursor(0);
@@ -372,7 +372,7 @@ void MainSolver::InitGrid(GridCtrl &grid, EditDouble edit[]) {
 	grid.Reset();
 	grid.Absolute().Editing().Clipboard();
 	for (int i = 0; i < 6; ++i)
-		grid.AddColumn(InitCaps(Hydro::StrDOF_base(i))).Edit(edit[i]);
+		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(edit[i]);
 	for (int y = 0; y < 6; ++y)
 		for (int x = 0; x < 6; ++x)
 			grid.Set(y, x, 0.);
@@ -396,12 +396,12 @@ bool MainSolver::Save(BEMCase &data, bool isNemoh) {
 		b.meshFile = bodies.array.Get(i, 0);
 		b.lidFile = bodies.array.Get(i, 1);
 
-		b.dof[Hydro::SURGE] = bodies.array.Get(i, 2);
-		b.dof[Hydro::SWAY]  = bodies.array.Get(i, 3);
-		b.dof[Hydro::HEAVE] = bodies.array.Get(i, 4);
-		b.dof[Hydro::ROLL]  = bodies.array.Get(i, 5);
-		b.dof[Hydro::PITCH] = bodies.array.Get(i, 6);
-		b.dof[Hydro::YAW]   = bodies.array.Get(i, 7);
+		b.dof[BEM::SURGE] = bodies.array.Get(i, 2);
+		b.dof[BEM::SWAY]  = bodies.array.Get(i, 3);
+		b.dof[BEM::HEAVE] = bodies.array.Get(i, 4);
+		b.dof[BEM::ROLL]  = bodies.array.Get(i, 5);
+		b.dof[BEM::PITCH] = bodies.array.Get(i, 6);
+		b.dof[BEM::YAW]   = bodies.array.Get(i, 7);
 		b.c0[0] 	 		= bodies.array.Get(i, 8);
 		b.c0[1] 	 		= bodies.array.Get(i, 9);
 		b.c0[2] 	 		= bodies.array.Get(i, 10);
@@ -588,7 +588,7 @@ void MainSolver::arrayOnRemove() {
 	bodies.array.SetCursor(id);
 }
 
-bool MainSolver::OnSave(const BEMData &bem) {
+bool MainSolver::OnSave(const BEM &bem) {
 	try {
 		String folder = ~saveTo;
 		
