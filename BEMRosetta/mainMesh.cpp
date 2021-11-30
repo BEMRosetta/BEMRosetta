@@ -646,6 +646,10 @@ void MainMesh::OnUpdate(Action action) {
 			data.c0.Set(x_0, y_0, z_0);
 		}
 		
+		menuProcess.x_g = data.cg.x;
+		menuProcess.y_g = data.cg.y;
+		menuProcess.z_g = data.cg.z;
+		
 		data.AfterLoad(Bem().rho, Bem().g, action == NONE, false);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);

@@ -493,7 +493,6 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 												lastPrint << data.C(i, j) << " ";
 										}
 									}
-									Upp::Color backColorUnder;
 									int idColor = data.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
 									if (idColor == -1)
 										lastPrint << ". " << t_("Mesh warning_ Maybe incomplete");
@@ -508,7 +507,6 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									data.under.GetHydrostaticForce(f, data.c0, bem.rho, bem.g);
 									for (int i = 0; i < 6; ++i) 				
 										lastPrint << f(i) << " ";
-									Upp::Color backColorUnder;
 									int idColor = data.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
 									if (idColor == -1)
 										lastPrint << ". " << t_("Mesh warning: Maybe incomplete");
