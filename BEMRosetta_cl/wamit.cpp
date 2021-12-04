@@ -94,7 +94,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEM::Print(S(": ** .12d ") + t_("Not found") + "**");
 		}
 		
-		if (IsNull(hd().Nb))
+		if (IsNull(hd().Nb) || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0)
 			return false;
 		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 6);
