@@ -120,9 +120,9 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 	else if (type == HAMS_PNL)		
 		static_cast<HAMSMesh&>(*this).SavePnl(file, surf, symX, symY);	// Only one symmetry really available
 	else if (type == STL_BIN)		
-		SaveStlBin(file, surf);
+		SaveStlBin(file, surf, 1000);
 	else if (type == STL_TXT)		
-		SaveStlTxt(file, surf);
+		SaveStlTxt(file, surf, 1000);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
