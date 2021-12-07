@@ -120,7 +120,7 @@ bool Nemoh::Load_Cal(String fileName) {
 		hd().T[i] = 2*M_PI/hd().w[i];  
    
 	hd().Nh = dcase.Nh;  						
-    LinSpaced(hd().head, hd().Nh, dcase.minH, dcase.maxH); 		
+    LinSpaced(hd().head, hd().Nh, FixHeading_180(dcase.minH), FixHeading_180(dcase.maxH)); 		
 
 	hd().dataFromW = true;
 	

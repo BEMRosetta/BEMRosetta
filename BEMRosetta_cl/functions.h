@@ -84,6 +84,7 @@ void FitToDecay(const Eigen::VectorXd &z, const Eigen::VectorXd &dz, const Eigen
 			double dt, double mass, double Kh, double g, ParamDecay &param);
 void Decay(double mass, double ainf, double av, double Kh, double b, double b2, double dt, double zDecay, double maxT, Eigen::VectorXd &z);
 
-double FixHeading(double head);
+double FixHeading_0_360(double head);
+double FixHeading_180(double head);
 		
 #endif

@@ -287,10 +287,18 @@ void FitToDecay(const VectorXd &z, const VectorXd &dz, const VectorXd &d2z,
 	par.b2   = par.getb2 ? coeff[idc]   : 0;
 }
 
-double FixHeading(double head) {
+double FixHeading_0_360(double head) {
 	while (head < 0)
 		head += 360;
 	while (head >= 360)
+		head -= 360;
+	return head;
+}
+
+double FixHeading_180(double head) {
+	while (head < -180)
+		head += 360;
+	while (head >= 180)
 		head -= 360;
 	return head;
 }
