@@ -16,6 +16,7 @@ options(MSC) -D_SCL_SECURE_NO_WARNINGS;
 file
 	main.cpp,
 	BEMRosetta.cpp,
+	BEMRosetta_int.h,
 	BEMRosetta.h,
 	CommandLine.cpp,
 	Mesh.cpp,

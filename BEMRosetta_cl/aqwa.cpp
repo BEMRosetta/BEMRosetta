@@ -77,7 +77,7 @@ bool Aqwa::Load_AH1() {
 	if (hd().Nh != f.size() - 3)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), hd().Nh, f.size() - 3));
 	for (int i = 3; i < f.size(); ++i)
-		hd().head << f.GetDouble(i);
+		hd().head << FixHeading_180(f.GetDouble(i));
 	
 	hd().names.SetCount(hd().Nb);
 	hd().cg.setConstant(3, hd().Nb, Null);
@@ -351,7 +351,7 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(line);
 				for (int i = idini; i < f.size(); ++i)
-					hd().head << f.GetDouble(i);
+					hd().head << FixHeading_180(f.GetDouble(i));
 				idini = 0;
 			}
 			hd().Nh = hd().head.size();
@@ -468,7 +468,7 @@ bool Aqwa::Load_LIS() {
 				f.Load(in.GetLine(), separatorsh);
 
 				double heading = f.GetDouble(2);
-				int idh = FindClosest(hd().head, heading);
+				int idh = FindClosest(hd().head, FixHeading_180(heading));
 				if (idh < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
 				int dd = 1;
@@ -626,7 +626,7 @@ bool Aqwa::Load_QTF() {
 		while (!in.IsEof()) {		// Check headings
 			while (col < f.size() && ih < Nh) {
 				double head = f.GetDouble(col++);
-				FindAddRatio(hd().qtfhead, head, 0.001);
+				FindAddRatio(hd().qtfhead, FixHeading_180(head), 0.001);
 				ih++;
 			}
 			if (ih >= Nh)
@@ -746,7 +746,7 @@ bool AQWACase::Load(String fileName) {
 			if (f.GetText(0) == "1HRTZ")
 				hrtz << f.GetDouble(3);
 			else if (f.GetText(0) == "1DIRN") 
-				head << f.GetDouble(3);
+				head << FixHeading_180(f.GetDouble(3));
 			else if (f.GetInt_nothrow(0) == 198000) {
 				body.cg[0] = f.GetDouble(1);
 				body.cg[1] = f.GetDouble(2);
@@ -766,7 +766,7 @@ bool AQWACase::Load(String fileName) {
 	maxF = fround(hrtz[hrtz.size()-1]*2*M_PI, 5);
 	
 	minH = head[0];
-	maxH = head[head.size()-1];
+	maxH = head.Top();
 	
 	return true;
 }
