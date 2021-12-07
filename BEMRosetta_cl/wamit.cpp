@@ -251,7 +251,7 @@ bool Wamit::Load_out() {
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						FindAddDelta(hd().head, FixHeading(f.GetDouble(4)), 0.001);
+						FindAddDelta(hd().head, FixHeading_180(f.GetDouble(4)), 0.001);
 					}
 				}
 			}
@@ -908,7 +908,7 @@ bool Wamit::Load_3(String fileName) {
 		}
 		
 		double freq = f.GetDouble(0);
-		double head = FixHeading(f.GetDouble(1));
+		double head = FixHeading_180(f.GetDouble(1));
 		FindAdd(w, freq);
 		FindAdd(hd().head, head);
 		
@@ -965,7 +965,7 @@ bool Wamit::Load_3(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}
-		double head = FixHeading(f.GetDouble(1));
+		double head = FixHeading_180(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1076,7 +1076,7 @@ bool Wamit::Load_4(String fileName) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 		
-		double head = FixHeading(f.GetDouble(1));
+		double head = FixHeading_180(f.GetDouble(1));
 		
 		FindAdd(hd().head, head);
 	}
@@ -1135,7 +1135,7 @@ bool Wamit::Load_4(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
-		double head = FixHeading(f.GetDouble(1));
+		double head = FixHeading_180(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
