@@ -251,7 +251,7 @@ void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Ve
 
 static double MirrorHead(double head, bool xAxis) {
 	if (xAxis)
-		return FixHeading_180(-head);
+		return (-head);
 	else {
 		head = FixHeading_180(head);
 		head += 90;
@@ -1293,8 +1293,8 @@ void Hydro::Jsonize(JsonIO &json) {
 		GetOldAB(oldA, A);
 		GetOldAB(oldB, B);
 		GetOldAB(oldKirf, Kirf);
-		for (auto &h : head)
-			h = FixHeading_180(h);
+		//for (auto &h : head)
+		//	h = FixHeading_180(h);
 	}
 }
 	

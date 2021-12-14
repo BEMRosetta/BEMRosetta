@@ -149,7 +149,7 @@ bool HamsCase::Load(String fileName) {
 	int input_frequency_type = 0, output_frequency_type = 0;
 	
 	while (!f.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		
 		if (f.GetText().Find("End HAMS Control file") >= 0)
 			break;
@@ -172,16 +172,16 @@ bool HamsCase::Load(String fileName) {
 			Nf = f.GetInt(1);
 			if (Nf < 0) {
 				Nf = -Nf;
-				f.LoadLine();
+				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_frequency_Wmin")
 					throw Exc("Minimum_frequency_Wmin not found");
 				minF = f.GetDouble(1);
-				f.LoadLine();
+				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Frequency_step")
 					throw Exc("Frequency_step not found");
 				maxF = minF + f.GetDouble(1)*Nf;
 			} else {
-				f.LoadLine();
+				f.GetLine();
 				if (f.size() < 2)
 					throw Exc("Frequencies or periods not found");
 				Vector<double> data;
@@ -203,16 +203,16 @@ bool HamsCase::Load(String fileName) {
 			Nh = f.GetInt(1);
 			if (Nh < 0) {
 				Nh = -Nh;
-				f.LoadLine();
+				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_heading")
 					throw Exc("Minimum_heading not found");
 				minH = f.GetDouble(1);
-				f.LoadLine();
+				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Heading_step")
 					throw Exc("Heading_step not found");
 				maxH = minH + f.GetDouble(1)*Nh;
 			} else {
-				f.LoadLine();
+				f.GetLine();
 				if (f.size() < 1)
 					throw Exc("Headings not found");
 				Vector<double> data;
@@ -259,7 +259,7 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 	f.IsSeparator = IsTabSpace;
 	
 	while (!f.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		
 		if (f.size() < 1)
 			continue;	
@@ -267,7 +267,7 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 		String line = Trim(f.GetText());
 	
 		if (line == "Centre of Gravity:") {
-			f.LoadLine();
+			f.GetLine();
 			if (f.size() < 3)
 				throw Exc("Centre of Gravity data is not complete");
 			body.cg[0] = f.GetDouble(0);
@@ -425,7 +425,7 @@ void HamsCase::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat
 
 void HamsCase::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y) {
-		f.LoadLine();
+		f.GetLine();
 		for (int x = 0; x < 6; ++x)
 			mat(x, y) = f.GetDouble(x);
 	}

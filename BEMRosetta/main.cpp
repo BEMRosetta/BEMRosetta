@@ -42,7 +42,17 @@ void Main::Init() {
 	ma(this);
 	CtrlLayout(*this);
 	
-	Title(S("BEMRosetta") + (Bem().experimental ? " EXPERIMENTAL" : ""));
+	String name, mode;
+	Time date;
+	int version, bits;
+	GetCompilerInfo(name, version, date, mode, bits);
+	
+	SetLanguage(GetSystemLNG());
+	String sdate = Format("%Mon %d", date.month, date.year);
+	
+	SetLanguage(LNG_('E', 'N', 'U', 'S'));
+	
+	Title(S("BEMRosetta") + "     - " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
 			 << t_("Mooring") << t_("Decay") << t_("FAST .out+b Reader");
