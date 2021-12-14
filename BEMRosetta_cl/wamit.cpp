@@ -94,7 +94,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEM::Print(S(": ** .12d ") + t_("Not found") + "**");
 		}
 		
-		if (IsNull(hd().Nb) || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0)
+		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/)
 			return false;
 		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 6);
@@ -251,7 +251,7 @@ bool Wamit::Load_out() {
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						FindAddDelta(hd().head, FixHeading_180(f.GetDouble(4)), 0.001);
+						FindAddDelta(hd().head, f.GetDouble(4), 0.001);
 					}
 				}
 			}
@@ -704,7 +704,9 @@ static double w_iperout4(double nuL, double g, double len, double h) {
 	return x[0];
 }
 			
-void Wamit::ProcessFirstColumn(Vector<double> &w, Vector<double> &T) {	
+void Wamit::ProcessFirstColumn(Vector<double> &w, Vector<double> &T) {
+	if (w.size() < 2)
+		return;	
 	if (IsNull(iperout)) {
 		if (w[0] > w[1]) {
 			hd().dataFromW = false;
@@ -771,7 +773,7 @@ bool Wamit::Load_1(String fileName) {
 	int maxDof = 0;
 	bool thereIsA0 = false, thereIsAinf = false; 
 	while (!in.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3))) {
 			BEM::PrintWarning(S("\nWarning: ") + t_("Wrong data found before file end"));
 			break;
@@ -802,7 +804,7 @@ bool Wamit::Load_1(String fileName) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
-	if (hd().Nb == 0 || hd().Nf < 2)
+	if (hd().Nb == 0)// || hd().Nf < 2)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	Vector<double> sourcew = clone(w);
@@ -814,14 +816,16 @@ bool Wamit::Load_1(String fileName) {
 	if (thereIsAinf)
 		hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
 
-	hd().A.SetCount(6*hd().Nb);
-	hd().B.SetCount(6*hd().Nb);
-	for (int i = 0; i < 6*hd().Nb; ++i) {
-		hd().A[i].SetCount(6*hd().Nb);
-		hd().B[i].SetCount(6*hd().Nb);
-		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, Null);	
-			hd().B[i][j].setConstant(hd().Nf, Null);	
+	if (Nf > 0) {
+		hd().A.SetCount(6*hd().Nb);
+		hd().B.SetCount(6*hd().Nb);
+		for (int i = 0; i < 6*hd().Nb; ++i) {
+			hd().A[i].SetCount(6*hd().Nb);
+			hd().B[i].SetCount(6*hd().Nb);
+			for (int j = 0; j < 6*hd().Nb; ++j) {
+				hd().A[i][j].setConstant(hd().Nf, Null);	
+				hd().B[i][j].setConstant(hd().Nf, Null);	
+			}
 		}
 	}
 	
@@ -838,7 +842,7 @@ bool Wamit::Load_1(String fileName) {
 	in.SeekPos(fpos);
 	
 	while (!in.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3)))
 			break;
 				
@@ -901,14 +905,14 @@ bool Wamit::Load_3(String fileName) {
 	int maxDof = 0;	
 	hd().head.Clear();
 	while (!in.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3))) {
 			BEM::PrintWarning(S("\nWarning: ") + t_("Wrong data found before file end"));
 			break;
 		}
 		
 		double freq = f.GetDouble(0);
-		double head = FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);
 		FindAdd(w, freq);
 		FindAdd(hd().head, head);
 		
@@ -953,7 +957,7 @@ bool Wamit::Load_3(String fileName) {
 	hd().Initialize_Forces(hd().ex);
 	
 	while (!in.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3)))
 			break;
 		
@@ -965,7 +969,7 @@ bool Wamit::Load_3(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}
-		double head = FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1063,7 +1067,7 @@ bool Wamit::Load_4(String fileName) {
 	int maxDof = 0;
 	hd().head.Clear();
 	while (!in.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3))) {
 			BEM::PrintWarning(S("\nWarning: ") + t_("Wrong data found before file end"));
 			break;
@@ -1076,7 +1080,7 @@ bool Wamit::Load_4(String fileName) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 		
-		double head = FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);
 		
 		FindAdd(hd().head, head);
 	}
@@ -1123,7 +1127,7 @@ bool Wamit::Load_4(String fileName) {
 	hd().Initialize_RAO();
 		
 	while (!in.IsEof()) {
-		f.LoadLine();
+		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3))) 
 			break;
 		
@@ -1135,7 +1139,7 @@ bool Wamit::Load_4(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
-		double head = FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));

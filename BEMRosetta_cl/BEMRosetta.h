@@ -443,12 +443,12 @@ public:
 	
 	const BEM &GetBEM() const {return *bem;}
 	
-	bool IsLoadedA() 	 const {return !A.IsEmpty();}
+	bool IsLoadedA() 	 const {return !A.IsEmpty() && A[0][0].size() > 0;}
 	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty();}
 	bool IsLoadedAinf()  const {return Ainf.size() > 0;}
 	bool IsLoadedDlin()  const {return Dlin.size() > 0;}
 	bool IsLoadedA0()	 const {return A0.size() > 0;}
-	bool IsLoadedB() 	 const {return !B.IsEmpty();}
+	bool IsLoadedB() 	 const {return !B.IsEmpty() && B[0][0].size() > 0;}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && !IsNull(C[0](0, 0));}
 	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && !IsNull(M[0](0, 0));}
 	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty()  && ex.ma[0].size() > 0;}

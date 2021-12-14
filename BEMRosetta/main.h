@@ -188,7 +188,7 @@ public:
 	virtual inline double x(int64 id) {
 		ASSERT(data != 0);
 		
-		if ((dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0) && id == 1)
+		if ((dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0) && id == 1 && data->Nf > 0)
 			id = data->Nf - 1;
 		
 		if (dataToPlot == Hydro::PLOT_K)
@@ -197,10 +197,14 @@ public:
 		if (show_w) {
 			if (dataToPlot == Hydro::PLOT_A0)
 				return 0;
+			else if (dataToPlot == Hydro::PLOT_AINF && data->w.size() == 0)
+				return double(id);
 			return data->w[int(id)];
 		} else {
 			if (dataToPlot == Hydro::PLOT_AINF)
 				return 0;
+			else if (dataToPlot == Hydro::PLOT_A0 && data->w.size() == 0)
+				return double(id);
 			return data->T[int(id)];
 		}
 	}
