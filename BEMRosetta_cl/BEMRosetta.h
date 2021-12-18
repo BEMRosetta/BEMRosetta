@@ -554,6 +554,8 @@ public:
 		cg0 = Point3D(0, 0, 0);
 		c0  = Point3D(0, 0, 0);
 	}
+	bool IsEmpty() {return mesh.IsEmpty();}
+		
 	const char *GetCodeMeshStr() const {
 		return meshStr[code];
 	}
@@ -951,13 +953,18 @@ public:
 	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
 	Upp::Vector<double> headAll;	// Common models data
+	Vector<int> orderHeadAll;
+	
 	int Nb = 0;				
 	
 	double depth, rho, g, len;
 	
 	enum DOFType {DOF123, DOFSurgeSway, DOFxyz};
 	static DOFType dofType;
+	enum HeadingType {HEAD_180_180, HEAD_0_360};
+	static HeadingType headingType;
 	static const char *strDOFType[];
+	static const char *strHeadingType[];
 	
 	int calcAinf, calcAinf_w;
 	double maxTimeA;
@@ -999,17 +1006,21 @@ public:
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
+	void UpdateHeadAll();
+	
 	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {
-		int idofType;
+		int idofType, iheadingType;
 		if (json.IsLoading()) {
 			volWarning = 1;
 			volError = 10;
 			idofType = 0;
+			iheadingType = 0;
 		} else {
 			idofType = dofType;
+			iheadingType = headingType;
 		}
 		json
 			("depth", depth)
@@ -1034,9 +1045,11 @@ public:
 			("volWarning", volWarning)
 			("volError", volError)
 			("dofType", idofType)
+			("headingType", iheadingType)
 		;
 		if (json.IsLoading()) {
 			dofType = BEM::DOFType(idofType);
+			headingType = BEM::HeadingType(iheadingType);
 		}
 	}
 

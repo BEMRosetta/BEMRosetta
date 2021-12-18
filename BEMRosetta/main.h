@@ -975,7 +975,7 @@ public:
 
 	void Init();
 
-	void OptionsUpdated(double rho, double g, int dofType);
+	void OptionsUpdated(double rho, double g, int dofType, int headingType);
 
 	bool LoadSerializeJson(bool &firstTime, bool &openOptions);
 	bool StoreSerializeJson();

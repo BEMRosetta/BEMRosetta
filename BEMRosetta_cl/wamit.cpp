@@ -912,7 +912,7 @@ bool Wamit::Load_3(String fileName) {
 		}
 		
 		double freq = f.GetDouble(0);
-		double head = f.GetDouble(1);
+		double head = FixHeading_180(f.GetDouble(1));
 		FindAdd(w, freq);
 		FindAdd(hd().head, head);
 		
@@ -920,6 +920,7 @@ bool Wamit::Load_3(String fileName) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 	}
+	Sort(hd().head);
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
@@ -969,7 +970,7 @@ bool Wamit::Load_3(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}
-		double head = f.GetDouble(1);
+		double head = FixHeading_180(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1080,7 +1081,7 @@ bool Wamit::Load_4(String fileName) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 		
-		double head = f.GetDouble(1);
+		double head = FixHeading_180(f.GetDouble(1));
 		
 		FindAdd(hd().head, head);
 	}
@@ -1139,7 +1140,7 @@ bool Wamit::Load_4(String fileName) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
-		double head = f.GetDouble(1);
+		double head = FixHeading_180(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1190,7 +1191,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		double freq = f.GetDouble(0);
-		double hd = f.GetDouble(2);
+		double hd = FixHeading_180(f.GetDouble(2));
 		FindAdd(w, freq);
 		FindAdd(head, hd);
 		
@@ -1284,11 +1285,11 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 			if (!EqualRatio(hd().qtfT[iwT2], wT2, 0.01, 0.001))
 				throw Exc(in.Str() + "\n"  + Format(t_("Period 2 %f not found"), wT2));
 		}
-		double h1 = f.GetDouble(2);
+		double h1 = FixHeading_180(f.GetDouble(2));
 		int ih1 = FindClosest(hd().qtfhead, h1);
 		if (!EqualRatio(hd().qtfhead[ih1], h1, 0.01, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading 1 %f not found"), h1));
-		double h2 = f.GetDouble(3);
+		double h2 = FixHeading_180(f.GetDouble(3));
 		int ih2 = FindClosest(hd().qtfhead, h2);
 		if (!EqualRatio(hd().qtfhead[ih2], h2, 0.01, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading 2 %f not found"), h2));
@@ -1326,7 +1327,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		if (abs(fim - qtf.fim[idof]) > 0.1)  
 			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force %f does not match with magnitude %f and phase %f (%f)"), 
 										qtf.fim[idof], qtf.fma[idof], ph, fim));
-		if (Status && !Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
+		if (Status && !(it%500) && !Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
 			throw Exc(t_("Stop by user"));
 	}
 	hd().GetQTFList(qtfList, hd().qtfCases);
@@ -1544,7 +1545,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	int it = 0;
 	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) {
 		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) {
-			if (Status && !Status(Format("Saving %s %d/%d", ext, it, num*num), 100*it/(num*num)))
+			if (Status && !(it%500) && !Status(Format("Saving %s %d/%d", ext, it, num*num), 100*it/(num*num)))
 				throw Exc(t_("Stop by user"));
 			it++;
 			int id = 0;

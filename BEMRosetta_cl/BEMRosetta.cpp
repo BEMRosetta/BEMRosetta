@@ -23,8 +23,11 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(�
 				t_("RAO_ma"), t_("RAO_ph"), t_("Z_ma"), t_("Z_ph"), t_("Kr_ma"), t_("Kr_ph"), 
 				t_("TFS_ma"), t_("TFS_ph")};
 
-const char *BEM::strDOFType[] 	 = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
+const char *BEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
 BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
+
+const char *BEM::strHeadingType[] = {t_("-180->180º"), t_("0->360º"), ""};
+BEM::HeadingType BEM::headingType = BEM::HEAD_180_180;
 	
 const char *BEMCase::solverStr[] = {t_("Nemoh"), t_("Nemoh v115"), t_("Capytaine"), t_("HAMS"), t_("AQWA")};
 
@@ -251,7 +254,7 @@ void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Ve
 
 static double MirrorHead(double head, bool xAxis) {
 	if (xAxis)
-		return (-head);
+		return -head;
 	else {
 		head = FixHeading_180(head);
 		head += 90;
@@ -266,8 +269,8 @@ void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vect
 	
 	for (int idb = 0; idb < 6*Nb; ++idb) {
 		for (int ih = 0; ih < Nh; ++ih) {
-			Symmetrize_Forces_Each0(f, newf, newHead, head[ih], ih, idb);
-			Symmetrize_Forces_Each0(f, newf, newHead, MirrorHead(head[ih], xAxis), ih, idb);
+			Symmetrize_Forces_Each0(f, newf, newHead, FixHeading_180(head[ih]), ih, idb);
+			Symmetrize_Forces_Each0(f, newf, newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), ih, idb);
 		}
 	}
 }
@@ -343,8 +346,8 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 	
 	Upp::Vector<double> newHead;
 	for (int ih = 0; ih < Nh; ++ih) {
-		FindAddRatio(newHead, head[ih], 0.001);
-		FindAddRatio(newHead, MirrorHead(head[ih], xAxis), 0.001);
+		FindAddRatio(newHead, FixHeading_180(head[ih]), 0.001);
+		FindAddRatio(newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), 0.001);
 	}
 	Sort(newHead);
 	int newNh = newHead.size();
@@ -368,7 +371,7 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 		Symmetrize_ForcesEach(rao, newrao, newHead, newNh, xAxis);
 		rao = pick(newrao);
 	}
-	head = pick(newHead);
+	head = pick(newHead);		// New headings are set between -180 and 180
 	Nh = newNh;
 }
 
@@ -1032,6 +1035,7 @@ void Hydro::StateSpace::GetTFS(const Upp::Vector<double> &w) {
 }
 
 int Hydro::GetHeadId(double hd) const {
+	hd = FixHeading_180(hd);
 	for (int i = 0; i < head.size(); ++i) {
 		if (EqualRatio(head[i], hd, 0.01))
 			return i;
@@ -1293,8 +1297,6 @@ void Hydro::Jsonize(JsonIO &json) {
 		GetOldAB(oldA, A);
 		GetOldAB(oldB, B);
 		GetOldAB(oldKirf, Kirf);
-		//for (auto &h : head)
-		//	h = FixHeading_180(h);
 	}
 }
 	
@@ -1409,9 +1411,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			Nb = justLoaded.Nb;
 		}
 	}
-	for (int i = 0; i < justLoaded.head.size(); ++i) 
-		FindAddRatio(headAll, justLoaded.head[i], 0.01);
-	Sort(headAll);
+	UpdateHeadAll();
 }
 
 HydroClass &BEM::Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status) {
@@ -1443,9 +1443,18 @@ HydroClass &BEM::Duplicate(int id) {
 void BEM::Symmetrize(int id, bool xAxis) {
 	hydros[id].hd().Symmetrize_Forces(xAxis);
 	
-	for (int i = 0; i < hydros[id].hd().head.size(); ++i) 
-		FindAddRatio(headAll, hydros[id].hd().head[i], 0.01);
-	Sort(headAll);
+	UpdateHeadAll();
+}
+
+void BEM::UpdateHeadAll() {
+	headAll.Clear();
+	orderHeadAll.Clear();
+				
+	for (int id = 0; id < hydros.size(); ++id) {
+		for (int ih = 0; ih < hydros[id].hd().head.size(); ++ih) 
+			FindAddDelta(headAll, FixHeading(hydros[id].hd().head[ih], headingType), 0.1);
+	}
+	orderHeadAll = GetSortOrder(headAll);
 }
 
 void BEM::A0(int id) {

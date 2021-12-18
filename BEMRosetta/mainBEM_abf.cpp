@@ -51,7 +51,7 @@ bool MainABForce::Load(BEM &bem, const Upp::Vector<int> &ids) {
 		case Hydro::DATA_FORCE_SC:	
 		case Hydro::DATA_FORCE_FK:	
 		case Hydro::DATA_FORCE_EX:	
-		case Hydro::DATA_RAO:		format = t_("%s%.1fº");	break;
+		case Hydro::DATA_RAO:		format = t_("%s %.1fº");	break;
 		case Hydro::DATA_STS:		NEVER();
 		case Hydro::DATA_STS2:		NEVER();
 		}
@@ -83,9 +83,9 @@ bool MainABForce::Load(BEM &bem, const Upp::Vector<int> &ids) {
 				plots[ih].SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {
 				for (int ih = 0; ih < Nh; ++ih) {
-					plots[ih][idf].Init(idf, bem.headAll[ih], dataToShow);
+					plots[ih][idf].Init(idf, bem.headAll[bem.orderHeadAll[ih]], dataToShow);
 					if (plots[ih][idf].Load(hydros, mbm, ids))
-						tab.Add(plots[ih][idf].SizePos(), Format(format, BEM::StrBDOF(idf, false), bem.headAll[ih]));
+						tab.Add(plots[ih][idf].SizePos(), Format(format, BEM::StrBDOF(idf, false), bem.headAll[bem.orderHeadAll[ih]]));
 				}
 			}
 		}

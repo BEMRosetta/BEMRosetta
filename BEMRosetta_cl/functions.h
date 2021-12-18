@@ -86,5 +86,6 @@ void Decay(double mass, double ainf, double av, double Kh, double b, double b2, 
 
 double FixHeading_0_360(double head);
 double FixHeading_180(double head);
+double FixHeading(double head, BEM::HeadingType range);
 		
 #endif
