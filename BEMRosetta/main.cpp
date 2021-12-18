@@ -130,6 +130,10 @@ void Main::Init() {
 	editdofType.SetReadOnly();
 	editdofType <<= BEM::strDOFType[bem.dofType];
 	
+	editHeadingType.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.headingType.SetFocus(); menuOptions.headingType.Underline(1);};
+	editHeadingType.SetReadOnly();
+	editHeadingType <<= BEM::strHeadingType[bem.headingType];
+	
 	butWindow.SetImage(Img::application_double()).SetLabel(t_("New window")).Tip(t_("Open new window"));
 	butWindow.Hide();
 	
@@ -211,13 +215,14 @@ void Main::Init() {
 	BEM::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput); Status(s);};
 }
 
-void Main::OptionsUpdated(double rho, double g, int dofType) {
+void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
 	mainBEM.OnOpt();
 	mainMesh.OnOpt();
 	
 	editg <<= g;
 	editrho <<= rho;
 	editdofType <<= BEM::strDOFType[dofType];
+	editHeadingType <<= BEM::strHeadingType[headingType];
 }
 
 bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
@@ -305,7 +310,7 @@ void MenuOptions::Init(BEM &_bem) {
 	butSave  <<= THISBACK(OnSave);
 	butSave2 <<= THISBACK(OnSave);
 	
-	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = false;
+	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = headingType.isMouseEnter = false;
 	
 	arrayShown.AddColumn("");
 	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
@@ -317,6 +322,8 @@ void MenuOptions::Init(BEM &_bem) {
 	
 	for (int i = 0; BEM::strDOFType[i][0] != '\0'; ++i)
 		dofType.Add(BEM::strDOFType[i]);
+	for (int i = 0; BEM::strHeadingType[i][0] != '\0'; ++i)
+		headingType.Add(BEM::strHeadingType[i]);
 }
 
 void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
@@ -369,6 +376,7 @@ void MenuOptions::Load() {
 	arrayShown.GetCtrl(Main::TAB_FAST,  0)->SetData(showTabFAST);
 	
 	dofType.SetIndex(bem->dofType);
+	headingType.SetIndex(bem->headingType);
 }
 
 void MenuOptions::OnSave() {
@@ -402,8 +410,9 @@ void MenuOptions::OnSave() {
 	showTabFAST  = arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData();
 	
 	bem->dofType = BEM::DOFType(dofType.GetIndex());
-	
-	ma().OptionsUpdated(rho, g, bem->dofType);
+	bem->headingType = BEM::HeadingType(headingType.GetIndex());
+	bem->UpdateHeadAll();
+	ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
 }
 
 bool MenuOptions::IsChanged() {
@@ -450,6 +459,8 @@ bool MenuOptions::IsChanged() {
 	if (bem->volError != ~volError)
 		return true;
 	if (bem->dofType != dofType.GetIndex())
+		return true;
+	if (bem->headingType != headingType.GetIndex())
 		return true;
 	
 	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())

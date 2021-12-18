@@ -121,6 +121,8 @@ bool Nemoh::Load_Cal(String fileName) {
    
 	hd().Nh = dcase.Nh;  						
     LinSpaced(hd().head, hd().Nh, dcase.minH, dcase.maxH); 		
+    for (int ih = 0; ih < hd().head.size(); ++ih)
+		hd().head[ih] = FixHeading_180(hd().head[ih]);
 
 	hd().dataFromW = true;
 	

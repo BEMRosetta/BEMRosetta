@@ -287,6 +287,7 @@ void FitToDecay(const VectorXd &z, const VectorXd &dz, const VectorXd &d2z,
 	par.b2   = par.getb2 ? coeff[idc]   : 0;
 }
 
+// Forces angle range: 0 <= angle < 360
 double FixHeading_0_360(double head) {
 	while (head < 0)
 		head += 360;
@@ -295,10 +296,18 @@ double FixHeading_0_360(double head) {
 	return head;
 }
 
+// Forces angle range: -180 < angle <= 180
 double FixHeading_180(double head) {
-	while (head < -180)
+	while (head <= -180)
 		head += 360;
-	while (head >= 180)
+	while (head > 180)
 		head -= 360;
 	return head;
+}
+
+double FixHeading(double head, BEM::HeadingType range) {
+	if (range == BEM::HEAD_180_180)
+		return FixHeading_180(head);
+	else
+		return FixHeading_0_360(head);
 }
