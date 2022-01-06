@@ -6,6 +6,7 @@
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 

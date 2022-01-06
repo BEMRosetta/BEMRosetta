@@ -251,10 +251,11 @@ bool Wamit::Load_out() {
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						FindAddDelta(hd().head, f.GetDouble(4), 0.001);
+						FindAddDelta(hd().head, FixHeading_180(f.GetDouble(4)), 0.001);
 					}
 				}
 			}
+			Sort(hd().head);
 			hd().Nh = hd().head.size();
 			if (hd().Nb == 0 || hd().Nh == 0 || hd().Nf == 0)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
@@ -345,20 +346,25 @@ bool Wamit::Load_out() {
 						while (!in.IsEof()) {		
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
-								in.GetLine(3); 
-								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
-									f.Load(line);
-									double ma = f.GetDouble(1);
-									double ph = ToRad(f.GetDouble(2));
-									double re = ma*cos(ph);
-									double im = ma*sin(ph);
-									int i = abs(f.GetInt(0)) - 1;
-									if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
-										throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
-									hd().ex.ma[ih](ifr, i) = ma;	
-									hd().ex.ph[ih](ifr, i) = ph;	
-									hd().ex.re[ih](ifr, i) = re;	
-									hd().ex.im[ih](ifr, i) = im;	
+								f.Load(line);
+								double head = FixHeading_180(f.GetDouble(4)); 
+								int iih = FindDelta(hd().head, head, 0.001);
+								if (iih >= 0) {
+									in.GetLine(3); 
+									while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
+										f.Load(line);
+										double ma = f.GetDouble(1);
+										double ph = ToRad(f.GetDouble(2));
+										double re = ma*cos(ph);
+										double im = ma*sin(ph);
+										int i = abs(f.GetInt(0)) - 1;
+										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
+											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
+										hd().ex.ma[ih](ifr, i) = ma;	
+										hd().ex.ph[ih](ifr, i) = ph;	
+										hd().ex.re[ih](ifr, i) = re;	
+										hd().ex.im[ih](ifr, i) = im;	
+									}
 								}
 								ih++;
 								if (ih >= hd().Nh)
@@ -373,20 +379,25 @@ bool Wamit::Load_out() {
 						while (!in.IsEof()) {		
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
-								in.GetLine(3); 
-								while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
-									f.Load(line);
-									double ma = f.GetDouble(1);
-									double ph = ToRad(f.GetDouble(2));
-									double re = ma*cos(ph);
-									double im = ma*sin(ph);
-									int i = abs(f.GetInt(0)) - 1;
-									if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
-										throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
-									hd().rao.ma[ih](ifr, i) = ma;	
-									hd().rao.ph[ih](ifr, i) = ph;	
-									hd().rao.re[ih](ifr, i) = re;	
-									hd().rao.im[ih](ifr, i) = im;	
+								f.Load(line);
+								double head = FixHeading_180(f.GetDouble(4)); 
+								int iih = FindDelta(hd().head, head, 0.001);
+								if (iih >= 0) {
+									in.GetLine(3); 
+									while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
+										f.Load(line);
+										double ma = f.GetDouble(1);
+										double ph = ToRad(f.GetDouble(2));
+										double re = ma*cos(ph);
+										double im = ma*sin(ph);
+										int i = abs(f.GetInt(0)) - 1;
+										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
+											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
+										hd().rao.ma[ih](ifr, i) = ma;	
+										hd().rao.ph[ih](ifr, i) = ph;	
+										hd().rao.re[ih](ifr, i) = re;	
+										hd().rao.im[ih](ifr, i) = im;	
+									}
 								}
 								ih++;
 								if (ih >= hd().Nh)
@@ -1179,9 +1190,12 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	in.GetLine();		// Avoid header
-	
 	FileInLine::Pos fpos = in.GetPos();
+	f.GetLine();		
+	if (!IsNull(f.GetDouble_nothrow(0)))
+		in.SeekPos(fpos);		// No header, rewind
+	else
+		fpos = in.GetPos();		// Avoid header
 	
     Vector<double> w, T;
     Vector<double> head;
@@ -1189,7 +1203,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
     bool isRad = true;
 	int maxDof = 0;	
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.GetLine();
 		double freq = f.GetDouble(0);
 		double hd = FixHeading_180(f.GetDouble(2));
 		FindAdd(w, freq);
@@ -1202,6 +1216,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		if (abs(f.GetDouble(6)) > M_PI + 0.01)
 			isRad = false;
 	}
+	Sort(head);
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
@@ -1330,7 +1345,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		if (Status && !(it%500) && !Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
 			throw Exc(t_("Stop by user"));
 	}
-	hd().GetQTFList(qtfList, hd().qtfCases);
+	hd().GetQTFList(qtfList, hd().qtfCases, hd().qtfhead);
 	
 	return true;
 }

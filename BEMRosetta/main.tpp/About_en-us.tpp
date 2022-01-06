@@ -50,4 +50,9 @@ ww.gnu.org/licenses/][2 .]&]
 .com/][2 . The pictures are free for personal and even for commercial 
 use. You can modify, copy and distribute the vectors on The Rosetta 
 Stone in iconspng.com. All without asking for permission or setting 
-a link to the source. So, attribution is not required. ]]]
+a link to the source. So, attribution is not required. ]&]
+[s0;2 &]
+[s0;2 &]
+[s0; System info&]
+[s0;2 &]
+[s0; [2 SYSTEMINFO]]]

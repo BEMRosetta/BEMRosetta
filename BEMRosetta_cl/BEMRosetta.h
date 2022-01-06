@@ -5,6 +5,7 @@
 
 #include <Core/Core.h>
 #include <SysInfo/SysInfo.h>
+#include <ScatterDraw/DataSource.h>
 #include <Surface/Surface.h>
 
 using namespace Upp;
@@ -14,6 +15,7 @@ class BEM;
 
 bool ConsoleMain(const Upp::Vector<String>& command, bool gui, Function <bool(String, int pos)> Status);
 void SetBuildInfo(String &str);
+String GetSystemInfo();
 
 bool PrintStatus(String s, int d);
 
@@ -252,12 +254,40 @@ public:
     		ih1.Clear();
     		ih2.Clear();
     	}
+    	int size() {return ib.size();}
+    	void Sort(const Vector<double> &headings) {
+    		Vector<int> indices(ib.size());
+			for (int i = 0; i < indices.size(); ++i)
+				indices[i] = i;
+			StableSort(indices, [&](int a, int b)-> bool {
+				if (ib[a] < ib[b])
+					return true;
+				else if (ib[a] > ib[b])
+					return false;	 
+				else { 
+					if (ih1[a] < ih1[b])
+						return true;
+					else if (ih1[a] > ih1[b])
+						return false;	 
+					else {
+						if (ih2[a] < ih2[b])
+							return true;
+						else
+							return false;
+					}
+				}
+			});
+					
+			ib  = ApplyIndex(ib, indices);
+			ih1 = ApplyIndex(ih1, indices);
+			ih2 = ApplyIndex(ih2, indices);
+    	}
     } qtfCases;
     
     int GetQTFHeadId(double hd) const;
     static int GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList, 
     			const QTFCases &qtfCases, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
-	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases);
+	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases, const Vector<double> &headings);
 							
     Upp::Vector<double> T;					// [Nf]    			Wave periods
     Upp::Vector<double> w;		 			// [Nf]             Wave frequencies
@@ -490,7 +520,12 @@ public:
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail);
 	void GetTranslationTo(double xto, double yto, double zto);
-		
+	
+	void DeleteFrequencies(const Vector<int> &idFreq);
+	void DeleteFrequenciesQTF(const Vector<int> &idFreqQTF);
+	void DeleteHeadings(const Vector<int> &idHead);
+	void DeleteHeadingsQTF(const Vector<int> &idHeadQTF);
+	
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
 	String S_g()	const {return IsNull(g)   ? S("-") : Format("%.3f", g);}
@@ -542,9 +577,9 @@ class Mesh {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   false,		true,	   false, false};       
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  false};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -852,7 +887,7 @@ public:
 	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
 	Upp::Vector<String> Check() const;
 	
-	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels) const;
+	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels, bool isCapy) const;
 	
 	virtual ~NemohCase() noexcept {}
 	
@@ -986,6 +1021,8 @@ public:
 	void Ainf_w(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail);
 	void TranslationTo(int id, double xto, double yto, double zto);
+	void DeleteHeadingsFrequencies(int id, const Vector<int> &idFreq, const Vector<int> &idFreqQTF, 
+										   const Vector<int> &idHead, const Vector<int> &idHeadQTF);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
@@ -1008,14 +1045,12 @@ public:
 	
 	void UpdateHeadAll();
 	
-	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";
+	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst";
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {
 		int idofType, iheadingType;
 		if (json.IsLoading()) {
-			volWarning = 1;
-			volError = 10;
 			idofType = 0;
 			iheadingType = 0;
 		} else {

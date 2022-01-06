@@ -14,6 +14,7 @@
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 using namespace Upp;
 
@@ -48,11 +49,11 @@ void Main::Init() {
 	GetCompilerInfo(name, version, date, mode, bits);
 	
 	SetLanguage(GetSystemLNG());
-	String sdate = Format("%Mon %d", date.month, date.year);
+	String sdate = Format("%mon %d", date.month, date.year);
 	
 	SetLanguage(LNG_('E', 'N', 'U', 'S'));
 	
-	Title(S("BEMRosetta") + "     - " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
+	Title(S("BEMRosetta") + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
 			 << t_("Mooring") << t_("Decay") << t_("FAST .out+b Reader");
@@ -188,10 +189,9 @@ void Main::Init() {
 		} else if (tab.IsAt(mainFAST)) {
 			butWindow.Show(true);
 			lastTab = ~tab;
-		} else {
+		} else 
 			butWindow.Show(false);
-			lastTab = 0;
-		}
+			
 		if (tab.IsAt(mainMesh)) 
 			mainMesh.mainTab.WhenSet();
 		else if (tab.IsAt(mainBEM)) 
@@ -204,7 +204,7 @@ void Main::Init() {
 	} else if (openOptions)
 		tab.Set(menuOptionsScroll);
 	else 
-		tab.Set(lastTab);
+		SetLastTab();
 	
 	tab.WhenSet();
 	
@@ -413,6 +413,8 @@ void MenuOptions::OnSave() {
 	bem->headingType = BEM::HeadingType(headingType.GetIndex());
 	bem->UpdateHeadAll();
 	ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
+	
+	ma().SetLastTab();
 }
 
 bool MenuOptions::IsChanged() {
@@ -484,6 +486,7 @@ void MenuAbout::Init() {
 	
 	String qtf = GetTopic(S("BEMRosetta/main/About$en-us")); 
 	SetBuildInfo(qtf);
+	qtf.Replace("SYSTEMINFO", DeQtf(GetSystemInfo()));
 	info.SetQTF(qtf);
 }
 

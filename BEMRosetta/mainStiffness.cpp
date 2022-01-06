@@ -6,6 +6,7 @@
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 
@@ -209,7 +210,7 @@ bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &
 		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
 			Add(hydro.name, i, hydro.names[ibody], ibody, hydro, hydro.GetId(), ndim);
-		if (data[i].size() > 0) 
+		if (data.size() > i && data[i].size() > 0) 
 			loaded = true;
 	}
 	if (!loaded)	

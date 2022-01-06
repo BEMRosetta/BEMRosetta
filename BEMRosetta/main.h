@@ -905,6 +905,7 @@ public:
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnOgilvie();
 	void OnUpdateCrot();
+	void OnDeleteHeadingsFrequencies();
 	void OnDescription();
 	void OnMenuConvertArraySel();
 	void OnMenuAdvancedArraySel();
@@ -941,7 +942,7 @@ private:
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEM &bem);
-	int GetIdOneSelected();
+	int GetIdOneSelected(bool complain = true);
 	int AskQtfHeading(const Hydro &hydro);
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
@@ -994,6 +995,8 @@ public:
 	
 	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_MOOR, TAB_DECAY, TAB_FAST};
 	Upp::Vector<String> tabTexts;
+	
+	void SetLastTab()	{tab.Set(lastTab);};
 	
 private:
 	int lastTab;

@@ -380,7 +380,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 				throw Exc(err);
 			
 			String dest = AppendFileNameX(folderInput, "WaterplaneMesh.pnl");
-			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
+			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::ALL, y0zmesh, x0zmesh);
 		}
 		
 		Save_Settings(folder, !bodies[ib].lidFile.IsEmpty());

@@ -11,6 +11,20 @@ void SetBuildInfo(String &str) {
 				date.year, date.month, date.day, date.hour, mode, bits)); 
 }
 
+String GetSystemInfo() {
+	String name, mode;
+	Time date;
+	int version, bits;
+	GetCompilerInfo(name, version, date, mode, bits);
+
+	String systemInfo;
+	systemInfo << Format(t_("BEMRosetta is at '%s'"), GetExeFilePath());
+	systemInfo << "\n" << Format(t_("Build date is %s"), Format(date));
+	systemInfo << "\n" << Format(t_("Compiler is %s, version %d, mode %s, %d bits"), name, version, mode, bits);
+	
+	return systemInfo;
+}
+
 Vector<String> GetCommandLineParams(String str) {
 	Vector<String> ret;
 	

@@ -33,6 +33,13 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 			return std::move(e);
 		}
 		SetCode(isText ? Mesh::STL_TXT : Mesh::STL_BIN);
+	} else if (ext == ".msh") {
+		try {
+			LoadTDynMsh(file, mesh);
+		} catch(Exc e) {
+			return std::move(e);
+		}
+		SetCode(Mesh::MSH_TDYN);
 	} else
 		ret = Format(t_("Unknown mesh file format '%s'"), file);	
 	
