@@ -6,6 +6,7 @@
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 
@@ -68,7 +69,7 @@ void MainSolver::Init(const BEM &bem) {
 		ArrayUpdateCursor();
 	};
 	
-	const String meshFiles = ".gdf .dat .stl .pnl";
+	const String meshFiles = ".gdf .dat .stl .pnl .msh";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	

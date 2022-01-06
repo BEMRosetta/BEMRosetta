@@ -610,6 +610,9 @@ bool Aqwa::Load_QTF() {
 	hd().qtfdif.Reserve(hd().Nb*nrows);
 	hd().qtfsum.Reserve(hd().Nb*nrows);
 	
+	VectorMap<int, double> headings;
+	Vector<int> finalId;
+	
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		int ib = f.GetInt(0);
@@ -628,6 +631,7 @@ bool Aqwa::Load_QTF() {
 		while (!in.IsEof()) {		// Check headings
 			while (col < f.size() && ih < Nh) {
 				double head = FixHeading_180(f.GetDouble(col++));
+				headings.Add(ih, head);
 				FindAddRatio(hd().qtfhead, head, 0.001);
 				ih++;
 			}
@@ -636,6 +640,20 @@ bool Aqwa::Load_QTF() {
 			f.Load(in.GetLine());
 			col = 0;
 		}
+		Sort(hd().qtfhead);
+		
+		finalId.SetCount(Nh, Null);
+		for (int i = 0; i < headings.size(); ++i) {				// All file headings
+			for (int j = 0; j < hd().qtfhead.size(); ++j) {		// Just the final headings
+				if (abs(headings.GetValues()[i] - hd().qtfhead[j]) < 0.01) {
+					finalId[i] = j;			
+					break;
+				}
+			}
+			if (IsNull(finalId[i]))
+				throw Exc(t_("Bad heading matching"));
+		}
+		
 		f.Load(in.GetLine());
 		col = 0;
 		int ifr = 0;
@@ -671,7 +689,7 @@ bool Aqwa::Load_QTF() {
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, Nf));
 							
 			Hydro::QTF &qtfdif = hd().qtfdif.Add();
-			qtfdif.Set(ib, ih, ih, ifr1, ifr2);
+			qtfdif.Set(ib, finalId[ih], finalId[ih], ifr1, ifr2);
 	        
 			for (int idof = 0; idof < 6; ++idof) 
 				qtfdif.fre[idof] = f.GetDouble(4 + idof);
@@ -686,7 +704,7 @@ bool Aqwa::Load_QTF() {
 			}
 	
 			Hydro::QTF &qtfsum = hd().qtfsum.Add();
-			qtfsum.Set(ib, ih, ih, ifr1, ifr2);
+			qtfsum.Set(ib, finalId[ih], finalId[ih], ifr1, ifr2);
 					
 			f.Load(in.GetLine());
 			for (int idof = 0; idof < 6; ++idof) 
@@ -702,7 +720,7 @@ bool Aqwa::Load_QTF() {
 			}
 		}
 	}
-	hd().GetQTFList(hd().qtfsum, hd().qtfCases);
+	hd().GetQTFList(hd().qtfsum, hd().qtfCases, hd().qtfhead);
 	
 	return true;
 }
@@ -729,7 +747,6 @@ bool AQWACase::Load(String fileName) {
 	body.ndof = 6;
 	Resize(body.dof, 6, true);
 	
-	
 	Vector<double> hrtz, head;
 	
 	while (!in.IsEof()) {
@@ -748,7 +765,7 @@ bool AQWACase::Load(String fileName) {
 			if (f.GetText(0) == "1HRTZ")
 				hrtz << f.GetDouble(3);
 			else if (f.GetText(0) == "1DIRN") 
-				head << FixHeading_180(f.GetDouble(3));
+				FindAddDelta(head, FixHeading_180(f.GetDouble(3)), 0.01);
 			else if (f.GetInt_nothrow(0) == 198000) {
 				body.cg[0] = f.GetDouble(1);
 				body.cg[1] = f.GetDouble(2);
@@ -757,6 +774,8 @@ bool AQWACase::Load(String fileName) {
 			}
 		}
 	}
+	Sort(head);
+	
 	Nf = hrtz.size();
 	if (Nf <= 0)
 		throw Exc("Number of frequencies should have to be higher than zero");

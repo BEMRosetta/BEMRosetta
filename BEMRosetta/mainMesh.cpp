@@ -6,6 +6,7 @@
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 
@@ -361,7 +362,7 @@ void MainMesh::LoadSelTab(BEM &bem) {
 void MainMesh::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
-	const String meshFiles = ".gdf .dat .stl .pnl";
+	const String meshFiles = ".gdf .dat .stl .pnl .msh";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	menuOpen.file.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
@@ -1448,6 +1449,13 @@ void MainView::CalcEnvelope() {
 }
 
 void MainMesh::LoadDragDrop() {
+	GuiLock __;
+	
+	Sort(filesToDrop);
+	for (int i = filesToDrop.size()-1; i > 0; --i)
+		if (GetFileTitle(filesToDrop[i]) == GetFileTitle(filesToDrop[i-1]))
+			filesToDrop.Remove(i);
+		
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {
 		menuOpen.file <<= filesToDrop[i];
@@ -1462,6 +1470,7 @@ void MainMesh::LoadDragDrop() {
 }
 	
 void MainMesh::DragAndDrop(Point , PasteClip& d) {
+	GuiLock __;
 	if (IsDragAndDropSource())
 		return;
 	if (AcceptFiles(d)) {
@@ -1471,6 +1480,7 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 }
 
 bool MainMesh::Key(dword key, int ) {
+	GuiLock __;
 	if (key == K_CTRL_V) {
 		filesToDrop = GetFiles(Ctrl::Clipboard());
 		timerDrop.Set(0, [=] {LoadDragDrop();});

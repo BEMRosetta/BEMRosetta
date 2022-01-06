@@ -1074,7 +1074,7 @@ int Hydro::GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList,
 	return -1;
 }
 
-void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases) {
+void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases, const Vector<double> &headings) {
 	qtfCases.Clear();
 	for (int i = 0; i < qtfList.size(); ++i) {
 		const QTF &qtf = qtfList[i];
@@ -1091,6 +1091,7 @@ void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases
 			qtfCases.ih2 << qtf.ih2;	
 		}
 	}
+	qtfCases.Sort(headings);
 }
 
 Eigen::VectorXd Hydro::B_dim(int idf, int jdf) const {
@@ -1477,6 +1478,13 @@ void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayi
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail);
 }
 
+void BEM::DeleteHeadingsFrequencies(int id, const Vector<int> &idFreq, const Vector<int> &idFreqQTF, const Vector<int> &idHead, const Vector<int> &idHeadQTF) {
+	hydros[id].hd().DeleteFrequencies(idFreq);
+	hydros[id].hd().DeleteFrequenciesQTF(idFreqQTF);
+	hydros[id].hd().DeleteHeadings(idHead);
+	hydros[id].hd().DeleteHeadingsQTF(idHeadQTF);
+}
+
 void BEM::TranslationTo(int id, double xto, double yto, double zto) {
 	hydros[id].hd().GetTranslationTo(xto, yto, zto);
 }
@@ -1708,7 +1716,11 @@ bool BEM::LoadSerializeJson() {
 		numValsA = 1000;
 	if (!ret || IsNull(onlyDiagonal))
 		onlyDiagonal = false;
-	
+	if (!ret || IsNull(volWarning))	
+		volWarning = 1;
+	if (!ret || IsNull(volError))
+		volError = 10;
+			
 	return ret;
 }
 

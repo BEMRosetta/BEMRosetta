@@ -348,7 +348,196 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	}
 }
 
+void Hydro::DeleteFrequencies(const Vector<int> &idFreq) {
+	if (idFreq.size() > 0) {
+		auto DeleteAB = [&](Upp::Array<Upp::Array<VectorXd>> &A) {
+	        Upp::Array<Upp::Array<VectorXd>> An;
+		
+			An.SetCount(6*Nb);
+			for (int ib = 0; ib < 6*Nb; ++ib) {
+				An[ib].SetCount(6*Nb);
+				for (int jb = 0; jb < 6*Nb; ++jb) {
+					An[ib][jb].resize(Nf - idFreq.size());	
+					int i = 0, j = 0;
+					for (int iif = 0; iif < Nf; ++iif) {
+						if (j >= idFreq.size() || iif != idFreq[j])
+							An[ib][jb][i++] = A[ib][jb][iif];		
+						else 
+							j++;
+					}
+				}
+			}
+			A = pick(An);
+	    };
+		
+		if (IsLoadedA())
+			DeleteAB(A);
+		if (IsLoadedAinf_w())
+			DeleteAB(Ainf_w);
+		if (IsLoadedB())
+			DeleteAB(B);
 	
+		auto DeleteF = [&](Forces &ex) {
+	        Forces _ex;
+		
+			_ex.ma.SetCount(Nh);
+			_ex.ph.SetCount(Nh);
+			_ex.re.SetCount(Nh);
+			_ex.im.SetCount(Nh);
+		    for (int ih = 0; ih < Nh; ++ih) {
+		        _ex.ma[ih].resize(Nf-idFreq.size(), 6*Nb);
+		    	_ex.ph[ih].resize(Nf-idFreq.size(), 6*Nb);
+		    	_ex.re[ih].resize(Nf-idFreq.size(), 6*Nb);
+		    	_ex.im[ih].resize(Nf-idFreq.size(), 6*Nb);
+		    	for (int ib = 0; ib < 6*Nb; ++ib) {
+					int i = 0, j = 0;
+					for (int iif = 0; iif < Nf; ++iif) {
+						if (j >= idFreq.size() || iif != idFreq[j]) {
+							_ex.ma[ih](i, ib) = ex.ma[ih](iif, ib);
+							_ex.ph[ih](i, ib) = ex.ph[ih](iif, ib);
+							_ex.re[ih](i, ib) = ex.re[ih](iif, ib);
+							_ex.im[ih](i, ib) = ex.im[ih](iif, ib);
+							i++;
+						} else 
+							j++;
+					}
+		    	}
+		    }
+		    ex = pick(_ex);
+	    };	
+	
+	    if (IsLoadedFex())
+	    	DeleteF(ex);
+		if (IsLoadedFsc())
+			DeleteF(sc);
+		if (IsLoadedFfk())
+			DeleteF(fk);	
+	
+		int j = idFreq.size()-1;	
+		for (int i = w.size()-1; i >= 0 && j >= 0; --i) {
+			if (i == idFreq[j]) {	
+				w.Remove(i);
+				T.Remove(i);
+				j--;
+			}
+		}
+		Nf = w.size();
+	}
+}
+
+void Hydro::DeleteFrequenciesQTF(const Vector<int> &idFreqQTF) {
+	if (idFreqQTF.size() > 0) {
+		auto DeleteSumDif = [&](Upp::Array<QTF> &qtf) {
+			Vector<int> idsum(qtfw.size());
+			for (int i = 0, j = 0; i < qtfw.size(); ++i) {
+				if (j < idFreqQTF.size() && i == idFreqQTF[j])
+					j++;
+				idsum[i] = j;
+			}
+			for (int i = qtf.size()-1; i >= 0; --i) {
+				if (Find(idFreqQTF, qtf[i].ifr1) >= 0 || Find(idFreqQTF, qtf[i].ifr2) >= 0)
+					qtf.Remove(i);
+			}
+			for (int i = 0; i < qtf.size(); ++i) {
+				qtf[i].ifr1 -= idsum[qtf[i].ifr1];
+				qtf[i].ifr2 -= idsum[qtf[i].ifr2];
+			}
+		};
+		if (IsLoadedQTF()) {
+			DeleteSumDif(qtfsum);
+			DeleteSumDif(qtfdif);
+		}
+		
+		int j = idFreqQTF.size()-1;	
+		for (int i = qtfw.size()-1; i >= 0 && j >= 0; --i) {
+			if (i == idFreqQTF[j]) {	
+				qtfw.Remove(i);
+				qtfT.Remove(i);
+				j--;
+			}
+		}
+	}
+}
+
+void Hydro::DeleteHeadings(const Vector<int> &idHead) {
+	if (idHead.size() > 0) {
+		auto DeleteF = [&](Forces &ex) {
+			int j = idHead.size()-1;	
+			for (int i = head.size()-1; i >= 0 && j >= 0; --i) {
+				if (i == idHead[j]) {	
+					ex.ma.Remove(i);
+					ex.ph.Remove(i);
+					ex.re.Remove(i);
+					ex.im.Remove(i);
+					j--;
+				}
+			}
+	    };	
+	
+	    if (IsLoadedFex())
+	    	DeleteF(ex);
+		if (IsLoadedFsc())
+			DeleteF(sc);
+		if (IsLoadedFfk())
+			DeleteF(fk);	
+	
+		int j = idHead.size()-1;	
+		for (int i = head.size()-1; i >= 0 && j >= 0; --i) {
+			if (i == idHead[j]) {	
+				head.Remove(i);
+				j--;
+			}
+		}
+		Nh = head.size();
+	}
+}
+
+void Hydro::DeleteHeadingsQTF(const Vector<int> &idHeadQTF) {
+	if (idHeadQTF.size() > 0) {
+		Vector<int> idsum(qtfhead.size());
+		for (int i = 0, j = 0; i < qtfhead.size(); ++i) {
+			if (j < idHeadQTF.size() && i == idHeadQTF[j])
+				j++;
+			idsum[i] = j;
+		}
+			
+		auto DeleteSumDif = [&](Upp::Array<QTF> &qtf) {
+			for (int i = qtf.size()-1; i >= 0; --i) {
+				if (Find(idHeadQTF, qtf[i].ih1) >= 0 || Find(idHeadQTF, qtf[i].ih2) >= 0)
+					qtf.Remove(i);
+			}
+			for (int i = 0; i < qtf.size(); ++i) {
+				qtf[i].ih1 -= idsum[qtf[i].ih1];
+				qtf[i].ih2 -= idsum[qtf[i].ih2];
+			}
+		};
+		if (IsLoadedQTF()) {
+			DeleteSumDif(qtfsum);
+			DeleteSumDif(qtfdif);
+		}
+		
+		for (int i = qtfCases.ih1.size()-1; i >= 0; --i) {
+			if (Find(idHeadQTF, qtfCases.ih1[i]) >= 0 || Find(idHeadQTF, qtfCases.ih2[i]) >= 0) {
+				qtfCases.ih1.Remove(i);
+				qtfCases.ih2.Remove(i);
+				qtfCases.ib.Remove(i);
+			}
+		}
+		for (int i = 0; i < qtfCases.ih1.size(); ++i) {
+			qtfCases.ih1[i] -= idsum[qtfCases.ih1[i]];
+			qtfCases.ih2[i] -= idsum[qtfCases.ih2[i]];
+		}
+			
+		int j = idHeadQTF.size()-1;	
+		for (int i = qtfhead.size()-1; i >= 0 && j >= 0; --i) {
+			if (i == idHeadQTF[j]) {	
+				qtfhead.Remove(i);
+				j--;
+			}
+		}
+	}
+}
+
 void Heal();
 void Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, double maxT, int num);
 void Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 

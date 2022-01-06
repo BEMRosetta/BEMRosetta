@@ -5,6 +5,7 @@
 #include <ScatterCtrl/ScatterCtrl.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 using namespace Upp;
 

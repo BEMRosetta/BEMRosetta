@@ -81,6 +81,15 @@ bool Nemoh::Load(String file, double) {
 		if (!Load_FroudeKrylov(folderForces))
 			BEM::PrintWarning(S(": ** FKForce.tec ") + t_("Not found") + "**");
 		
+		Vector<int> idsRemove;
+		for (int ih = 0; ih < hd().Nh; ++ih) {
+			int id = FindDelta(hd().head, hd().head[ih], 0.001, ih+1);
+			if (id > 0)
+				idsRemove << ih;
+		}
+		hd().DeleteHeadings(idsRemove);
+				
+		
 		if (hd().code == Hydro::NEMOH) {
 			if (!hd().dof.IsEmpty()) {
 				BEM::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
@@ -573,7 +582,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			//Save_Mesh_cal(folder, ib, bodies[ib].meshFile, mesh, panels[ib], x0z, bodies[ib].cg, rho, g);
 			//meshes[ib] = GetFileTitle(bodies[ib].meshFile);
 		}
-		Save_Cal(folder, _nf, _minf, _maxf, nodes, panels);
+		Save_Cal(folder, _nf, _minf, _maxf, nodes, panels, solver);
 				
 		String folderResults = AppendFileNameX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
@@ -622,7 +631,7 @@ void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh
 	
 }
 	
-void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels) const {
+void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels, bool isCapy) const {
 	String fileName = AppendFileNameX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -681,6 +690,9 @@ void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, con
 	}
 	out << NemohHeader("Load cases to be solved") << "\n";
 	out << NemohField(Format("%d %f %f", _nf, _minf, _maxf), cp) << "! Number of wave frequencies, Min, and Max (rad/s)" << "\n";
+	
+	//double _minH = !isCapy ? minH : ToRad(minH);	// 29/12/2021 Capytaine issue
+	//double _maxH = !isCapy ? maxH : ToRad(maxH);
 	out << NemohField(Format("%d %f %f", Nh, minH, maxH), cp) << "! Number of wave directions, Min and Max (degrees)" << "\n";
 	
 	out << NemohHeader("Post processing") << "\n";
