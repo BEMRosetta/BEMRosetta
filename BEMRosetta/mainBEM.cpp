@@ -6,6 +6,7 @@
 #include <GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
+#include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 
@@ -60,12 +61,40 @@ void MainBEM::Init() {
 	menuProcess.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
+
+	menuProcess.dropFreq.AddColumn("", 20);
+	menuProcess.dropFreq.AddColumn("", 50);
+	menuProcess.dropFreq.GetList().GetColumn(0).Option();
+	menuProcess.dropFreq.Width(100);
+	menuProcess.dropFreq.GetList().Sorting(false);
+	menuProcess.dropFreqQTF.AddColumn("", 20);
+	menuProcess.dropFreqQTF.AddColumn("", 50);
+	menuProcess.dropFreqQTF.GetList().GetColumn(0).Option();
+	menuProcess.dropFreqQTF.Width(100);
+	menuProcess.dropFreqQTF.GetList().Sorting(false);
+	menuProcess.butRemoveFreq << THISBACK(OnDeleteHeadingsFrequencies);
+	
+	menuProcess.dropHead.AddColumn("", 20);
+	menuProcess.dropHead.AddColumn("Heading [º]", 50);
+	menuProcess.dropHead.GetList().GetColumn(0).Option();
+	menuProcess.dropHead.Width(100);
+	menuProcess.dropHead.GetList().Sorting(false);
+	menuProcess.dropHeadQTF.AddColumn("", 20);
+	menuProcess.dropHeadQTF.AddColumn("Heading [º]", 50);
+	menuProcess.dropHeadQTF.GetList().GetColumn(0).Option();
+	menuProcess.dropHeadQTF.Width(100);
+	menuProcess.dropHeadQTF.GetList().Sorting(false);
+	menuProcess.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
+	
 	
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
 	menuAdvanced.butOgilvie <<= THISBACK(OnOgilvie);
 	menuAdvanced.butAinfw.Disable();	
 	menuAdvanced.butOgilvie.Disable();
+	menuAdvanced.opDecayingTail.Disable();
+	menuAdvanced.opThinremoval.Disable();
+	menuAdvanced.opZremoval.Disable();
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
 	
 	CtrlLayout(menuConvert);
@@ -298,6 +327,8 @@ void MainBEM::OnMenuAdvancedArraySel() {
 		return;
 	
 	Hydro &data = Bem().hydros[id].hd();
+	if (data.c0.size() != 3)
+		return;
 	menuAdvanced.x_0 <<= data.c0(0);
 	menuAdvanced.y_0 <<= data.c0(1);
 	menuAdvanced.z_0 <<= data.c0(2);
@@ -342,6 +373,8 @@ void MainBEM::LoadSelTab(BEM &bem) {
 		mainQTF.Load();
 	else 
 		GetSelABForce().Load(bem, ids);
+	
+	UpdateButtons();
 }
 
 MainABForce &MainBEM::GetSelABForce() {
@@ -556,14 +589,38 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butDuplicate.Enable(numsel == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
-	menuProcess.butSymX.Enable	(numsel == 1 || numrow == 1);
-	menuProcess.butSymY.Enable	(numsel == 1 || numrow == 1);
-	menuProcess.butKirf.Enable	(numsel == 1 || numrow == 1);
-	menuProcess.butA0.Enable  	(numsel == 1 || numrow == 1);
-	menuProcess.butAinf.Enable	(numsel == 1 || numrow == 1);
-	menuAdvanced.butAinfw.Enable  (numsel == 1 || numrow == 1);
-	menuAdvanced.butOgilvie.Enable(numsel == 1 || numrow == 1);
-	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
+	menuProcess.butSymX.		Enable(numsel == 1 || numrow == 1);
+	menuProcess.butSymY.		Enable(numsel == 1 || numrow == 1);
+	menuProcess.butKirf.		Enable(numsel == 1 || numrow == 1);
+	menuProcess.butA0.			Enable(numsel == 1 || numrow == 1);
+	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.butOgilvie.	Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.opDecayingTail.Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
+	menuConvert.butConvert.		Enable(numsel == 1 || numrow == 1);
+	
+	bool show_w = menuPlot.opwT == 0;
+	menuProcess.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	menuProcess.dropFreqQTF.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	menuProcess.dropFreq.Clear();
+	menuProcess.dropFreqQTF.Clear();
+	menuProcess.dropHead.Clear();
+	menuProcess.dropHeadQTF.Clear();
+	
+	int id = GetIdOneSelected(false);
+	if (id >= 0) { 
+		Hydro &data = Bem().hydros[id].hd();
+		for (int i = 0; i < data.w.size(); ++i)
+			menuProcess.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
+		for (int i = 0; i < data.qtfw.size(); ++i)
+			menuProcess.dropFreqQTF.Add(false, show_w ? data.qtfw[i] : data.qtfT[i]);
+		for (int i = 0; i < data.head.size(); ++i)
+			menuProcess.dropHead.Add(false, data.head[i]);
+		for (int i = 0; i < data.qtfhead.size(); ++i)
+			menuProcess.dropHeadQTF.Add(false, data.qtfhead[i]);
+	}
 }
 
 void MainBEM::OnJoin() {
@@ -772,6 +829,55 @@ void MainBEM::OnOgilvie() {
 	}	
 }
 
+void MainBEM::OnDeleteHeadingsFrequencies() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		//bool show_w = menuPlot.opwT == 0;
+		Vector<int> idFreq, idFreqQTF, idHead, idHeadQTF;
+		for (int i = 0; i < menuProcess.dropFreq.GetList().GetRowCount(); ++i)
+			if (menuProcess.dropFreq.GetList().Get(i, 0) == true)
+				idFreq << i;
+		for (int i = 0; i < menuProcess.dropFreqQTF.GetList().GetRowCount(); ++i)
+			if (menuProcess.dropFreqQTF.GetList().Get(i, 0) == true)
+				idFreqQTF << i;
+		for (int i = 0; i < menuProcess.dropHead.GetList().GetRowCount(); ++i)
+			if (menuProcess.dropHead.GetList().Get(i, 0) == true)
+				idHead << i;
+		for (int i = 0; i < menuProcess.dropHeadQTF.GetList().GetRowCount(); ++i)
+			if (menuProcess.dropHeadQTF.GetList().Get(i, 0) == true)
+				idHeadQTF << i;
+		
+		WaitCursor wait;
+		
+		Bem().DeleteHeadingsFrequencies(id, idFreq, idFreqQTF, idHead, idHeadQTF);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
+		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
 void MainBEM::OnUpdateCrot() {
 	try {
 		int id = GetIdOneSelected();
@@ -914,7 +1020,7 @@ bool MainBEM::OnConvert() {
 	return true;
 }
 
-int MainBEM::GetIdOneSelected() {
+int MainBEM::GetIdOneSelected(bool complain) {
 	int id = -1;
 	for (int row = 0; row < listLoaded.GetCount(); ++row) {
 		if (listLoaded.IsSelected(row)) {
@@ -925,11 +1031,13 @@ int MainBEM::GetIdOneSelected() {
 	if (id < 0 && listLoaded.GetCount() == 1)
 		id = ArrayModel_IdHydro(listLoaded, 0);
 	if (id < 0) {
-		Exclamation(t_("No model selected"));
+		if (complain)
+			Exclamation(t_("No model selected"));
 		return -1;
 	}
 	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
-		Exclamation(t_("Please select just one model"));
+		if (complain)
+			Exclamation(t_("Please select just one model"));
 		return -1;
 	}
 	return id;
@@ -991,6 +1099,11 @@ String MainBEM::BEMFile(String fileFolder) const {
 
 void MainBEM::LoadDragDrop() {
 	GuiLock __;
+	
+	Sort(filesToDrop);
+	for (int i = filesToDrop.size()-1; i > 0; --i)
+		if (GetFileTitle(filesToDrop[i]) == GetFileTitle(filesToDrop[i-1]))
+			filesToDrop.Remove(i);
 	
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {
