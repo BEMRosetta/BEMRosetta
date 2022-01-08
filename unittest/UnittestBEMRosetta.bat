@@ -1,16 +1,16 @@
 mkdir .\.test
 del .\.test\*.* /q
 
-umk BEMRosetta BEMRosetta    %1 -r +GUI 			.\.test\BEMRosetta.exe
-@IF %ERRORLEVEL% NEQ 0 EXIT /B 1
-umk BEMRosetta BEMRosetta_cl %1 -r +BEMR_CL    		.\.test\BEMRosetta_cl.exe
+umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_CL    		.\.test\BEMRosetta_cl.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 .\.test\BEMRosetta_cl.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
-
-umk BEMRosetta BEMRosetta_cl %1 -r +BEMR_DLL,DLL	.\.test\libbemrosetta.dll
+umk BEMRosetta BEMRosetta    %1 %2 +GUI 			.\.test\BEMRosetta.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
-umk BEMRosetta BEMRosetta_cl %1 -r +BEMR_TEST_DLL	.\.test\testdll_bemrosetta.exe
+
+umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_DLL,DLL	.\.test\libbemrosetta.dll
+@IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_TEST_DLL	.\.test\testdll_bemrosetta.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 .\.test\testdll_bemrosetta.exe  .\.test ..
 

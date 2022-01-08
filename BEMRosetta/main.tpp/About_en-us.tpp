@@ -22,9 +22,14 @@ Galvan, A. Otter, M. Alonso, A. Aristondo.]&]
 he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 
 library][2 .]&]
-[s0; [2 We would like to thank École Centrale de Nantes, CNRS, and 
-the NEMOH developers for making it freely available under the 
-Apache 2.0 license.]&]
+[s0; [2 We would like to thank the developers of the open source BEM 
+solvers:]&]
+[s0;i150;O0; [2 École Centrale de Nantes, CNRS, and the ][^https`:`/`/lheea`.ec`-nantes`.fr`/research`-impact`/software`-and`-patents`/nemoh`-presentation^2 N
+EMOH ][2 developers.]&]
+[s0;i150;O0; [2 Matthieu Ancellin, the developer of ][^https`:`/`/github`.com`/mancellin`/capytaine^2 C
+apytaine][2 .]&]
+[s0;i150;O0; [2 Yingyi Liu, the developer of ][^https`:`/`/github`.com`/YingyiLiu`/HAMS^2 H
+AMS][2 .]&]
 [s0;2 &]
 [s0;2 &]
 [s0; License&]
@@ -45,12 +50,6 @@ GNU General Public License for details.]&]
 [s0; [2 You should have received a copy of the GNU General Public License 
 along with BEMRosetta. If not, see ][^http`:`/`/www`.gnu`.org`/licenses`/^2 http://w
 ww.gnu.org/licenses/][2 .]&]
-[s0;2 &]
-[s0; [2 Rosetta stone image from ][^https`:`/`/www`.iconspng`.com`/^2 https://www.iconspng
-.com/][2 . The pictures are free for personal and even for commercial 
-use. You can modify, copy and distribute the vectors on The Rosetta 
-Stone in iconspng.com. All without asking for permission or setting 
-a link to the source. So, attribution is not required. ]&]
 [s0;2 &]
 [s0;2 &]
 [s0; System info&]

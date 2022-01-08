@@ -42,3 +42,6 @@ int DLL_FAST_SaveFile(const char *file)
 int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value)
 // Reads the value of a var after paragraph. If paragraph is "", it is read the first time var appears in the file
 const char *DLL_FAST_GetVar(const char *name, const char *paragraph)
+
+double DemoVectorPy_C(const double *v, int num) 
+int DemoVectorC_Py(double **v, int *num) 

@@ -6,11 +6,16 @@
 
 #ifdef PLATFORM_WIN32
 
-#if defined(flagBEMR_TEST_DLL)
+#if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
+
+#ifdef flagBEMR_TEST_DLL_INTERNAL
+	#include "export.h"
+#endif
 
 CONSOLE_APP_MAIN
-{
+{	
 	try {
+#ifdef flagBEMR_TEST_DLL
 		const Vector<String>& command = CommandLine();
 		
 		if (command.GetCount() < 2) 
@@ -42,22 +47,38 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, double, 	   DLL_FAST_GetTime, (int idtime));		
 		DLLFunction(dll, double, 	   DLL_FAST_GetData, (int idtime, int idparam));
 		DLLFunction(dll, double, 	   DLL_FAST_GetAvg, (const char *));
+		
+		DLLFunction(dll, double, 	   DemoVectorPy_C, (const double *, int));
+		DLLFunction(dll, double, 	   DemoVectorC_Py, (double **, int *));
+#endif
 
+		
+		Vector<double> dat = {1, 2, 3};
+		double res = DemoVectorPy_C(dat, 3);
+		double *v;
+		int num;
+		DemoVectorC_Py(&v, &num);
+		
+	
 		Cout() << "\nVersion: " << DLL_Version();
 		Cout() << "\n\nDLL functions list:\n";
 		String strList = DLL_strListFunctions();
 		Cout() << strList;
+#ifdef flagBEMR_TEST_DLL
 		strList = "// BEMRosetta DLL functions list\n\n" + strList;
 		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList))
 			throw Exc(t_("Impossible to save DLL functions list file"));
-		
+#endif
+
 		Cout() << "\n\nPython declarations:\n";
 		String strPy = DLL_strPythonDeclaration();
 		Cout() << strPy;
+#ifdef flagBEMR_TEST_DLL
 		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
+#endif
 
-#if defined(COMPILER_MSC)
+#if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)
 		String wxs = LoadFile(AppendFileNameX(installFolder, "BEMRosetta_master.wxs"));
 		if (wxs.IsEmpty())
 			throw Exc(t_("Installer definition file not found"));
@@ -74,7 +95,8 @@ CONSOLE_APP_MAIN
 		if (!SaveFile(AppendFileNameX(installFolder, "BEMRosetta.wxs"), wxs))
 			throw Exc(t_("Impossible to save installer file"));
 #endif
-			
+
+#ifdef flagBEMR_TEST_DLL		
 		Cout() << "\n\nLoading FAST .out file";
 		String outfile = AppendFileNameX(bemFolder, "examples/fast.out/demo.outb");
 		if (!DLL_FAST_Load(outfile))
@@ -92,13 +114,12 @@ CONSOLE_APP_MAIN
 			avg += DLL_FAST_GetData(i, idptfmheave);
 		Cout() << "\nptfmheave_avg = " << avg/DLL_FAST_GetLen();
 		Cout() << "\nptfmheave_avg = " << DLL_FAST_GetAvg("ptfmheave");
-	
-	
+		
 		DLLFunction(dll, int, 	   		DLL_FAST_LoadFile, (const char *file));
 		DLLFunction(dll, int, 	   		DLL_FAST_SaveFile, (const char *file));
 		DLLFunction(dll, int, 	   		DLL_FAST_SetVar, (const char *name, const char *paragraph, const char *value));
 		DLLFunction(dll, const char *, 	DLL_FAST_GetVar, (const char *name, const char *paragraph));				
-	
+
 		Cout() << "\n\nLoading InflowWind .dat file";
 		String datfile = AppendFileNameX(bemFolder, "examples/fast.out/InflowWind.dat");
 		if (!DLL_FAST_LoadFile(datfile))
@@ -128,7 +149,8 @@ CONSOLE_APP_MAIN
 		str = DLL_FAST_GetVar("Filename", "================== Parameters for Binary TurbSim");				
 		Cout() << "\nNew Filename: " << str;
 		VERIFY(str == "\"New file\"");
-		
+#endif
+	
 #ifdef flagDEBUG	
 		DLL_FAST_SaveFile(AppendFileNameX(GetDesktopFolder(), "test.dat"));
 #endif
@@ -142,7 +164,9 @@ CONSOLE_APP_MAIN
 #endif
 }
 
-#else
+#endif
+
+#ifndef flagBEMR_TEST_DLL
 
 #include "FastOut.h"
 #include "export.h"
@@ -153,8 +177,7 @@ FastOut &DLL_Fastout() {
 	return fast;
 }
 
-extern "C" {
-	
+
 const char *DLL_Version() noexcept {
 	static String version;
 	version << __DATE__ << ", " << __TIME__;
@@ -346,16 +369,33 @@ const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 	return ret;
 }
 
+double DemoVectorPy_C(const double *v, int num) noexcept {
+    double res = 0;
+    for (int i = 0; i < num; ++i) 
+        res += v[i];
+    return res;
 }
 
-#endif
+int DemoVectorC_Py(double **v, int *num) noexcept {
+	static Vector<double> data;
+	
+	*num = 321;
+	data.SetCount(*num);
+	for (int i = 0; i < *num; ++i)
+		data[i] = i/2.;
+	*v = data;
+	
+	return 1;
+}
+
 
 #endif
 
+#endif
+
+#endif
 
 #if defined(flagBEMR_CL)
-
-void TestFast();
 
 CONSOLE_APP_MAIN {
 	const Vector<String>& command = CommandLine();
@@ -368,7 +408,7 @@ CONSOLE_APP_MAIN {
 	ReadStdIn();
 #endif
 }
-
 #endif
 
-#endif
+
+
