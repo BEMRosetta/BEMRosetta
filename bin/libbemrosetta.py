@@ -13,6 +13,8 @@ libc.DLL_FAST_LoadFile.argtypes = [ctypes.c_char_p]
 libc.DLL_FAST_SaveFile.argtypes = [ctypes.c_char_p]
 libc.DLL_FAST_SetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 libc.DLL_FAST_GetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+libc.DemoVectorPy_C.argtypes = [ctypes.c_int]
+libc.DemoVectorC_Py.argtypes = [ctypes.c_double, ctypes.c_int]
 
 # OUTPUT TYPES
 libc.DLL_Version.restype = ctypes.c_char_p
@@ -33,3 +35,5 @@ libc.DLL_FAST_LoadFile.restype = ctypes.c_int
 libc.DLL_FAST_SaveFile.restype = ctypes.c_int
 libc.DLL_FAST_SetVar.restype = ctypes.c_int
 libc.DLL_FAST_GetVar.restype = ctypes.c_char_p
+libc.DemoVectorPy_C.restype = ctypes.c_double
+libc.DemoVectorC_Py.restype = ctypes.c_int

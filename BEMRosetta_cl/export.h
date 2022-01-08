@@ -41,4 +41,8 @@ extern "C" {
 	__declspec(dllexport) int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept;
 	// Reads the value of a var after paragraph. If paragraph is "", it is read the first time var appears in the file
 	__declspec(dllexport) const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept;
+
+
+	__declspec(dllexport) double DemoVectorPy_C(const double *v, int num) noexcept; 	
+	__declspec(dllexport) int DemoVectorC_Py(double **v, int *num) noexcept; 	
 };

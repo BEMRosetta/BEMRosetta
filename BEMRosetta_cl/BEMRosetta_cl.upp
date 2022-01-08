@@ -49,7 +49,8 @@ file
 
 mainconfig
 	"" = "BEMR_CL",
-	"" = "BEMR_DLL",
-	"" = "BEMR_TEST_DLL";
+	"BEMR_DLL" = "BEMR_DLL DLL",
+	"" = "BEMR_TEST_DLL",
+	"" = "BEMR_TEST_DLL_INTERNAL";
 
  spellcheck_comments "EN-GB"
