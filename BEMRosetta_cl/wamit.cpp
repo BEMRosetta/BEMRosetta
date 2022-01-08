@@ -895,7 +895,8 @@ bool Wamit::Load_1(String fileName) {
 
 bool Wamit::Load_3(String fileName) {
 	hd().dimen = false;
-	hd().len = 1;
+	if (IsNull(hd().len))
+		hd().len = 1;
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -933,6 +934,13 @@ bool Wamit::Load_3(String fileName) {
 	}
 	Sort(hd().head);
 	
+	if (hd().head.size() == 0)
+		throw Exc(in.Str() + "\n" + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
+		
+	if (!IsNull(hd().Nh) && hd().Nh != hd().head.size())
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings loaded is different than previous (%d != %d)"), hd().Nh, hd().head.size()));
+	hd().Nh = hd().head.size();		
+		
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
@@ -940,18 +948,14 @@ bool Wamit::Load_3(String fileName) {
 	if (hd().names.IsEmpty())
 		hd().names.SetCount(hd().Nb);
 		
-	if (hd().head.size() == 0)
-		throw Exc(in.Str() + "\n" + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
-	
-	if (!IsNull(hd().Nh) && hd().Nh != hd().head.size())
-		throw Exc(in.Str() + "\n" + "\n"  + Format(t_("Number of headings is different than previous (%d != %d)"), hd().Nh, hd().head.size()));
-	hd().Nh = hd().head.size();
-	
 	int Nf = w.size();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
+	if (hd().Nb == 0 || hd().Nf < 2)
+		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
+
 	Vector<double> sourcew = clone(w);
 	
 	ProcessFirstColumn(w, T);
@@ -1086,17 +1090,16 @@ bool Wamit::Load_4(String fileName) {
 		}
 		
 		double freq = f.GetDouble(0);
+		double head = FixHeading_180(f.GetDouble(1));
 		FindAdd(w, freq);
+		FindAdd(hd().head, head);
 		
 		int dof = f.GetInt(2);
 		if (dof > maxDof)
 			maxDof = dof-1;
-		
-		double head = FixHeading_180(f.GetDouble(1));
-		
-		FindAdd(hd().head, head);
 	}
-
+	Sort(hd().head);
+	
 	if (hd().head.size() == 0)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
