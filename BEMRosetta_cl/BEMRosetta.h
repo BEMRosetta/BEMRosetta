@@ -741,7 +741,7 @@ protected:
 class HAMS : public Wamit {
 public:
 	HAMS(BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro) {}
-	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
+	bool Load(String file, Function <bool(String, int)> Status);
 	virtual ~HAMS() noexcept {}
 	
 	bool Load_Settings(String settingsFile);
@@ -751,7 +751,7 @@ public:
 class Fast : public Wamit {
 public:
 	Fast(BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
-	bool Load(String file, Function <bool(String, int)> Status, double g = 9.81);
+	bool Load(String file, Function <bool(String, int)> Status);
 	bool Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
 	
@@ -1046,6 +1046,7 @@ public:
 	void UpdateHeadAll();
 	
 	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst";
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";	// Priority
 	String bemFilesAst;
 	
 	void Jsonize(JsonIO &json) {

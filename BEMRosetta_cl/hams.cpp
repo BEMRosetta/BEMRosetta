@@ -5,11 +5,11 @@
 #include <STEM4U/Utility.h>
 
 
-bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
+bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	
-	hd().g = g;
+	//hd().g = g;
 	
 	String baseFolder = GetFileFolder(GetFileFolder(file));
 	
@@ -40,7 +40,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 		if (FileExists(settingsFile) && !Load_Settings(settingsFile))
 			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
 			
-		String hydrostaticFile = AppendFileNameX(baseFolder, "Hydrostatic.in");
+		String hydrostaticFile = AppendFileNameX(baseFolder, "Input", "Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
 			if (hd().IsLoadedC()) {
@@ -54,7 +54,22 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status, double g) {
 			if (iszero && !Load_HydrostaticMesh(hydrostaticFile, rhog))
 				throw Exc("\n" + Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile));
 		}
-		
+		String controlFile = AppendFileNameX(baseFolder, "Input", "ControlFile.in");
+		if (FileExists(controlFile)) {
+			HamsCase cas;
+			cas.Load(controlFile);
+			hd().h = cas.h;
+			if (cas.bodies.size() > 0) {
+				hd().c0.setConstant(3, hd().Nb, Null);
+				hd().c0(0, 0) = cas.bodies[0].c0(0);
+				hd().c0(1, 0) = cas.bodies[0].c0(1);
+				hd().c0(2, 0) = cas.bodies[0].c0(2);
+				hd().cg.setConstant(3, hd().Nb, Null);
+				hd().cg(0, 0) = cas.bodies[0].cg(0);
+				hd().cg(1, 0) = cas.bodies[0].cg(1);
+				hd().cg(2, 0) = cas.bodies[0].cg(2);
+			}
+		}
 	} catch (Exc e) {
 		BEM::PrintWarning("\nWarning: " + e);
 	}
@@ -163,27 +178,27 @@ bool HamsCase::Load(String fileName) {
 		else if (var == "Input_frequency_type") {
 			input_frequency_type = f.GetInt(1); 
 			if (input_frequency_type != 3 && input_frequency_type != 4)
-				throw Exc("HAMS loader just allows loading input_frequency_type = 3 wave frequency or 4 wave period");
+				throw Exc(t_("HAMS loader just allows loading input_frequency_type = 3 wave frequency or 4 wave period"));
 		} else if (var == "Output_frequency_type") {
 			output_frequency_type = f.GetInt(1);
 			if (output_frequency_type != 3 && output_frequency_type != 4)
-				throw Exc("HAMS loader just allows loading output_frequency_type = 3 wave frequency or 4 wave period");
+				throw Exc(t_("HAMS loader just allows loading output_frequency_type = 3 wave frequency or 4 wave period"));
 		} else if (var == "Number_of_frequencies") {
 			Nf = f.GetInt(1);
 			if (Nf < 0) {
 				Nf = -Nf;
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_frequency_Wmin")
-					throw Exc("Minimum_frequency_Wmin not found");
+					throw Exc(t_("Minimum_frequency_Wmin not found"));
 				minF = f.GetDouble(1);
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Frequency_step")
-					throw Exc("Frequency_step not found");
+					throw Exc(t_("Frequency_step not found"));
 				maxF = minF + f.GetDouble(1)*Nf;
 			} else {
 				f.GetLine();
 				if (f.size() < 2)
-					throw Exc("Frequencies or periods not found");
+					throw Exc(t_("Frequencies or periods not found"));
 				Vector<double> data;
 				double delta;
 				for (int i = 0; i < f.size(); ++i) {
@@ -193,8 +208,10 @@ bool HamsCase::Load(String fileName) {
 						data.At(0, 2*M_PI/f.GetDouble(i));
 					if (i == 1)
 						delta = data[i] - data[i-1];
-					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 3))
-						throw Exc("HAMS loader just allows equidistant frequencies");
+					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 2)) {
+						BEM::PrintWarning(t_("HAMS loader just allows equidistant frequencies"));
+						continue;
+					}
 				}
 				minF = data[0];
 				maxF = data[data.size()-1];
@@ -205,31 +222,33 @@ bool HamsCase::Load(String fileName) {
 				Nh = -Nh;
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_heading")
-					throw Exc("Minimum_heading not found");
+					throw Exc(t_("Minimum_heading not found"));
 				minH = f.GetDouble(1);
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Heading_step")
-					throw Exc("Heading_step not found");
+					throw Exc(t_("Heading_step not found"));
 				maxH = minH + f.GetDouble(1)*Nh;
 			} else {
 				f.GetLine();
 				if (f.size() < 1)
-					throw Exc("Headings not found");
+					throw Exc(t_("Headings not found"));
 				Vector<double> data;
 				double delta = 0;
 				for (int i = 0; i < f.size(); ++i) {
 					data << f.GetDouble(i);
 					if (i == 1)
 						delta = data[i] - data[i-1];
-					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 3))
-						throw Exc("HAMS loader just allows equidistant headings");
+					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 2)) {
+						BEM::PrintWarning(t_("HAMS loader just allows equidistant headings"));
+						continue;
+					}
 				}
 				minH = data[0];
 				maxH = data[data.size()-1];
 			}
 		} else if (var == "Reference_body_centre") {
 			if (f.size() < 4)
-				throw Exc("Lack of data in Reference_body_center");
+				throw Exc(t_("Lack of data in Reference_body_center"));
 			bodies.SetCount(1);
 			BEMBody &body = bodies[0];
 			body.c0[0] = f.GetDouble(1);
@@ -269,7 +288,7 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 		if (line == "Centre of Gravity:") {
 			f.GetLine();
 			if (f.size() < 3)
-				throw Exc("Centre of Gravity data is not complete");
+				throw Exc(t_("Centre of Gravity data is not complete"));
 			body.cg[0] = f.GetDouble(0);
 			body.cg[1] = f.GetDouble(1);
 			body.cg[2] = f.GetDouble(2);
