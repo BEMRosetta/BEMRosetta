@@ -8,11 +8,11 @@
 #include <plugin/lz4/lz4.h>
 #include <plugin/zstd/zstd.h>
 
-bool Fast::Load(String file, Function <bool(String, int)> Status, double g) {
+bool Fast::Load(String file, Function <bool(String, int)> Status) {
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	
-	hd().g = g;
+	//hd().g = g;
 	
 	try {
 		FASTFiles fast;
