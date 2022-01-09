@@ -1080,17 +1080,17 @@ String MainBEM::BEMFile(String fileFolder) const {
 					return ff.GetPath();
 				if (name == "nemoh.cal")
 					return ff.GetPath();
-				int ipos = Bem().bemFilesExt.Find(GetFileExt(name));
+				if (ff.GetName() == "ControlFile.in") 
+					return ff.GetPath();
+				int ipos = Bem().bstFilesExt.Find(GetFileExt(name));
  				if (ipos >= 0 && ipos < bestipos) {
 					fileFolder = ff.GetPath();
 					bestipos = ipos;	// It takes the file with most probable extension
 				}
-			} else if (ff.IsFolder()) {
-				if (ff.GetName() == "Output") {
-					String hamsFolder = AppendFileNameX(fileFolder, "Output", "Wamit_format");
-					if (DirectoryExists(hamsFolder))
-						return BEMFile(hamsFolder);
-				}
+			} else if (ff.IsFolder() && ff.GetName() == "Input") {
+				String controlFile = AppendFileNameX(ff.GetPath(), "ControlFile.in");
+				if (FileExists(controlFile))
+					return controlFile;
 			}
 		}
 	}
