@@ -102,8 +102,9 @@ void MainMatrixKA::PrintData() {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					double val = data[i](r, c);
+					double rat = mx == 0 ? 0 : abs(val/mx);
 					String sdata;
-					if (~opEmptyZero && abs(val/mx) < ratio)
+					if (~opEmptyZero && rat < ratio)
 						sdata = "";
 					else if (bool(~opDigits) == 0)
 						sdata = FormatDoubleSize(val, numDigits);
@@ -210,7 +211,7 @@ bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &
 		Hydro &hydro = hydros[isurf].hd();
 		for (int ibody = 0; ibody < hydro.Nb; ++ibody) 
 			Add(hydro.name, i, hydro.names[ibody], ibody, hydro, hydro.GetId(), ndim);
-		if (data.size() > i && data[i].size() > 0) 
+		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0))) 
 			loaded = true;
 	}
 	if (!loaded)	

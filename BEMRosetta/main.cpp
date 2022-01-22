@@ -99,7 +99,7 @@ void Main::Init() {
 		if (!menuOptions.showTabMoor)
 			tab.Add().Disable();
 		mainDecay.Init();	LOG("Init Decay");
-		if (Bem().experimental)
+		if (false/*Bem().experimental*/)
 			tab.Add(mainDecay.SizePos(), tabTexts[TAB_DECAY]);
 	}
 	if (menuOptions.showTabFAST) {

@@ -34,8 +34,6 @@ void MainMoor_Connections::Init(Mooring &mooring) {
 	edx.WhenAction 		= [&] {ArrayUpdateCursor();};
 	edy.WhenAction 		= [&] {ArrayUpdateCursor();};
 	edz.WhenAction 		= [&] {ArrayUpdateCursor();};
-	
-	
 }
 	
 void MainMoor_Connections::InitArray() {

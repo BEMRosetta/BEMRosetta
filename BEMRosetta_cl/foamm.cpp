@@ -89,7 +89,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		
 		double Mu = mat.VarRead<double>("Mu");
 		if (!IsNull(Mu)) {
-			hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
+			hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, 0);
 			hd().Ainf(idf, jdf) = Mu;
 		}
 	}

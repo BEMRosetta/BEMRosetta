@@ -903,7 +903,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	if (Ainf_w.size() == 0)
 		InitAinf_w();
 	if (Ainf.size() == 0)
-		Ainf.setConstant(Nb*6, Nb*6, Null);
+		Ainf.setConstant(Nb*6, Nb*6, 0);
 	
 	/*try {
 		CheckNaN();
@@ -1904,7 +1904,7 @@ Vector<String> BEMCase::Check(int solver) const {
 		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(Nh));
 	if (IsNull(minH) || minH < -180)
 		ret << Format(t_("Incorrect min heading %s"), FormatDoubleEmpty(minH));
-	if (IsNull(maxH) || maxH > 180)
+	if (IsNull(maxH) || maxH > 360)
 		ret << Format(t_("Incorrect max heading %s"), FormatDoubleEmpty(maxH));
 	if (maxH < minH)
 		ret << Format(t_("Minimum heading %s has to be lower than maximum heading %s"), FormatDoubleEmpty(minH), FormatDoubleEmpty(maxH));	

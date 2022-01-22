@@ -59,12 +59,13 @@ void Hydro::GetAinf() {
 	if (Nf == 0 || A.size() < Nb*6 || !IsLoadedKirf())
 		return;	
 	
-	Ainf.setConstant(Nb*6, Nb*6, Null);
+	Ainf.setConstant(Nb*6, Nb*6, 0);
 	int numT = int(Tirf.size());
 	
-    for (int i = 0; i < Nb*6; ++i)
-        for (int j = 0; j < Nb*6; ++j)
-		    Ainf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j]);
+    for (int i = 0; i < Nb*6; ++i) 
+        for (int j = 0; j < Nb*6; ++j) 
+            if (IsNum(Kirf[i][j][0]))
+		    	Ainf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j]);
 }
 
 void Hydro::InitAinf_w() {
@@ -72,7 +73,7 @@ void Hydro::InitAinf_w() {
     for (int i = 0; i < Nb*6; ++i) {
     	Ainf_w[i].SetCount(Nb*6); 			 
    		for (int j = 0; j < Nb*6; ++j)
-			Ainf_w[i][j].setConstant(Nf, Null);
+			Ainf_w[i][j].setConstant(Nf, 0);
     }
 }
 
@@ -165,6 +166,12 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 			for (int jb = 0; jb < Nb; ++jb) {
 				int jb6 = jb*6;
 				
+				for (int idof = 0; idof < 6; ++idof) {		// All dof are available?
+					for (int jdof = 0; jdof < 6; ++jdof)
+						if (!IsNum(A[ib6 + idof][jb6 + jdof][0])) 
+							throw Exc("Coefficient translations requires all DOFs to be available");
+				}
+				
 				for (int iif = 0; iif < Nf; ++iif) {
 					An[ib6 + 0][jb6 + 3][iif] += - yg*A[ib6 + 0][jb6 + 2][iif] + zg*A[ib6 + 0][jb6 + 1][iif];
 					An[ib6 + 1][jb6 + 3][iif] += - yg*A[ib6 + 1][jb6 + 2][iif] + zg*A[ib6 + 1][jb6 + 1][iif];
@@ -202,13 +209,6 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 												 +   xg*xg*A[ib6 + 1][jb6 + 1][iif] + yg*yg*A[ib6 + 0][jb6 + 0][iif]
 												 - 2*xg*yg*A[ib6 + 0][jb6 + 1][iif];
 				}
-				An[ib6 + 3][jb6 + 0] = clone(A[ib6 + 0][jb6 + 3]);
-				An[ib6 + 3][jb6 + 1] = clone(A[ib6 + 1][jb6 + 3]);
-				An[ib6 + 3][jb6 + 2] = clone(A[ib6 + 2][jb6 + 3]);
-
-				An[ib6 + 4][jb6 + 0] = clone(A[ib6 + 0][jb6 + 4]);
-				An[ib6 + 4][jb6 + 1] = clone(A[ib6 + 1][jb6 + 4]);
-				An[ib6 + 4][jb6 + 2] = clone(A[ib6 + 2][jb6 + 4]);
 			}
 		}
 		A = pick(An);
@@ -228,6 +228,12 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 			int ib6 = ib*6;
 			for (int jb = 0; jb < Nb; ++jb) {
 				int jb6 = jb*6;
+				
+				for (int idof = 0; idof < 6; ++idof) {
+					for (int jdof = 0; jdof < 6; ++jdof)
+						if (!IsNum(A(ib6 + idof, jb6 + jdof))) 
+							throw Exc("Coefficient translations requires all DOFs to be available");
+				}
 				
 				An(ib6 + 0, jb6 + 3) += - yg*A(ib6 + 0, jb6 + 2) + zg*A(ib6 + 0, jb6 + 1);
 				An(ib6 + 1, jb6 + 3) += - yg*A(ib6 + 1, jb6 + 2) + zg*A(ib6 + 1, jb6 + 1);
@@ -264,7 +270,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				An(ib6 + 5, jb6 + 5) += -    2*xg*A(ib6 + 1, jb6 + 5) +  2*yg*A(ib6 + 0, jb6 + 5)
 										+   xg*xg*A(ib6 + 1, jb6 + 1) + yg*yg*A(ib6 + 0, jb6 + 0)
 										- 2*xg*yg*A(ib6 + 0, jb6 + 1);
-			}
+			} 
 		}
 		A = pick(An);
     };

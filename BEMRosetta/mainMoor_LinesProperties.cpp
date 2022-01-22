@@ -34,8 +34,6 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 	edLength.WhenAction		= [&] {ArrayUpdateCursor();};
 	dropFrom.WhenAction		= [&] {ArrayUpdateCursor();};
 	dropTo.WhenAction		= [&] {ArrayUpdateCursor();};
-	
-	
 }
 	
 void MainMoor_LineProperties::InitArray() {
