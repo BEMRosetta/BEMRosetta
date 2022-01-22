@@ -24,7 +24,11 @@ void MainMoor::Init() {
 
 	edVessX <<= 0;
 	edVessY <<= 0;
-
+	edDepth <<= 100;
+	
+	edVessX.WhenAction = THISBACK(OnUpdate);
+	edVessY.WhenAction = THISBACK(OnUpdate);
+	
 	lineTypes.Init(mooring);
 	lineProperties.Init(mooring);
 	lineConnections.Init(mooring);
@@ -49,7 +53,22 @@ void MainMoor::Init() {
 	file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	butLoad.Tip(t_("Loads mooring file")).WhenAction = [&] {OnLoad();};
 	butSave.Tip(t_("Saves mooring file")).WhenAction = [&] {OnSave();};
+	butSave.Enable(false);
 	butUpdate.Tip(t_("Update mooring"))  .WhenAction = [&] {OnUpdate();};
+	
+	results.Reset();
+	results.SetLineCy(EditField::GetStdHeight());
+	results.AddColumn(t_("Line"), 8);
+	results.AddColumn(t_("Status"), 10);
+	results.AddColumn(t_("Ffair [kN]"), 10);
+	results.AddColumn(t_("Angle [º]"), 10);
+	results.AddColumn(t_("Fhor [kN]"), 10);
+	results.AddColumn(t_("Fvanchor [kN]"), 10);
+	results.AddColumn(t_("Fvvessel [kN]"), 10);
+	results.AddColumn(t_("Lenseabed [m]"), 10);
+	results.AddColumn(t_("Footprint [m]"), 10);
+	results.AddColumn(t_("FootprintX [m]"), 10);
+	results.AddColumn(t_("FootprintY [m]"), 10);
 }
 
 
@@ -62,10 +81,14 @@ bool MainMoor::OnLoad() {
 		lineTypes.Load();
 		lineProperties.Load();
 		lineConnections.Load();
+		edDepth <<= mooring.depth;
 	} catch (const Exc &e) {
 		Exclamation(DeQtfLf(e));
 		return false;
 	}
+	butSave.Enable(true);
+	
+	OnUpdate();
 	
 	return true;
 }
@@ -75,8 +98,9 @@ bool MainMoor::OnSave() {
 		lineTypes.Save();
 		lineProperties.Save();
 		lineConnections.Save();
+		mooring.depth = ~edDepth;
 		if (!mooring.Save(~file)) {
-			Exclamation(Format("Problem loading %s file", DeQtf(~file)));
+			Exclamation(Format(t_("Problem loading %s file"), DeQtf(~file)));
 			return false;
 		}
 	} catch (const Exc &e) {
@@ -88,5 +112,34 @@ bool MainMoor::OnSave() {
 }
 
 void MainMoor::OnUpdate() {
-	Exclamation("Pendiente");	
+	results.Clear();
+	scatLateral.RemoveAllSeries().SetSequentialXAll();
+	scatUp.RemoveAllSeries().SetSequentialXAll();
+	
+	if (!mooring.Calc(-double(~edVessX), -double(~edVessY), Bem().rho))
+		return;
+	
+	for (int i = 0; i < mooring.lineProperties.size(); ++i) {
+		const auto &line = mooring.lineProperties[i];
+		double lenx = abs(line.x[0] - line.x.Top());
+		double leny = abs(line.y[0] - line.y.Top());
+		double len = sqrt(sqr(lenx) + sqr(leny));
+		results.Add(line.name, InitCaps(MooringStatusStr(line.status)), 
+					FormatF(sqrt(sqr(line.fVvessel) + sqr(line.fanchorvessel))/1000., 0),
+					FormatF(ToDeg(atan2(line.fVvessel, line.fanchorvessel)), 0),
+					FormatF(line.fanchorvessel/1000., 0), FormatF(line.fVanchor/1000., 0), 
+					FormatF(line.fVvessel/1000., 0), FormatF(line.lenonfloor, 1), len, lenx, leny);
+	}
+	
+	for (int i = 0; i < mooring.lineProperties.size(); ++i) {
+		auto &line = mooring.lineProperties[i];
+		scatLateral.AddSeries(line.x, line.z).NoMark().Legend(line.name).Units("m", "m").Stroke(1);
+	}
+	scatLateral.ZoomToFit(true, true);
+	
+	for (int i = 0; i < mooring.lineProperties.size(); ++i) {
+		auto &line = mooring.lineProperties[i];
+		scatUp.AddSeries(line.x, line.y).NoMark().Legend(line.name).Units("m", "m").Stroke(1);
+	}
+	scatUp.ZoomToFit(true, true);
 }

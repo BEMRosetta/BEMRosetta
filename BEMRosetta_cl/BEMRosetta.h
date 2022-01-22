@@ -7,6 +7,7 @@
 #include <SysInfo/SysInfo.h>
 #include <ScatterDraw/DataSource.h>
 #include <Surface/Surface.h>
+#include <STEM4U/Mooring.h>
 
 using namespace Upp;
 
@@ -73,12 +74,12 @@ public:
 		int i = ib*6+idf;
 		
 		if (Ainf.size() > 0)
-			if (!IsNull(Ainf(i, i)))
+			if (IsNum(Ainf(i, i)))
 				return true;
 		
 		if (!A.IsEmpty())
 			if (A[i][i].size() > 0)
-				if (!IsNull(A[i][i][0]))
+				if (IsNum(A[i][i][0]))
 					return true;
 		
 		return false;			   
@@ -473,14 +474,14 @@ public:
 	
 	const BEM &GetBEM() const {return *bem;}
 	
-	bool IsLoadedA() 	 const {return !A.IsEmpty() && A[0][0].size() > 0;}
-	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty();}
+	bool IsLoadedA() 	 const {return !A.IsEmpty() && A[0][0].size() > 0 && IsNum(A[0][0][0]);}
+	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty() && Ainf_w[0][0].size() > 0 && IsNum(Ainf_w[0][0][0]);}
 	bool IsLoadedAinf()  const {return Ainf.size() > 0;}
 	bool IsLoadedDlin()  const {return Dlin.size() > 0;}
 	bool IsLoadedA0()	 const {return A0.size() > 0;}
-	bool IsLoadedB() 	 const {return !B.IsEmpty() && B[0][0].size() > 0;}
-	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && !IsNull(C[0](0, 0));}
-	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && !IsNull(M[0](0, 0));}
+	bool IsLoadedB() 	 const {return !B.IsEmpty() && B[0][0].size() > 0 && IsNum(B[0][0][0]);}
+	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && IsNum(C[0](0, 0));}
+	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && IsNum(M[0](0, 0));}
 	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty()  && ex.ma[0].size() > 0;}
 	bool IsLoadedFsc() 	 const {return !sc.ma.IsEmpty()  && sc.ma[0].size() > 0;}
 	bool IsLoadedFfk() 	 const {return !fk.ma.IsEmpty()  && fk.ma[0].size() > 0;}
@@ -528,10 +529,10 @@ public:
 	
 	void Join(const Upp::Vector<Hydro *> &hydrosp);
 	
-	String S_g()	const {return IsNull(g)   ? S("-") : Format("%.3f", g);}
-	String S_h()	const {return IsNull(h)   ? S("-") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
-	String S_rho() 	const {return IsNull(rho) ? S("-") : Format("%.3f", rho);}
-	String S_len() 	const {return IsNull(len) ? S("-") : Format("%.1f", len);}
+	String S_g()	const {return !IsNum(g)   ? S("-") : Format("%.3f", g);}
+	String S_h()	const {return !IsNum(h)   ? S("-") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
+	String S_rho() 	const {return !IsNum(rho) ? S("-") : Format("%.3f", rho);}
+	String S_len() 	const {return !IsNum(len) ? S("-") : Format("%.1f", len);}
 
 	String GetLastError()	{return lastError;}
 };
@@ -1220,21 +1221,47 @@ public:
 	
 	bool Load(String file);
 	bool Save(String file);
+	bool Calc(double x, double y, double rho_water);
 	String Test();
 	void Jsonize(JsonIO &json);
 	
 	struct LineType : Moveable<LineType> {
 		String name;
-		double mass, diameter;
+		double mass, diameter, bl;
 		void Jsonize(JsonIO &json);
 	};
 	Vector<LineType> lineTypes;
 	
-	struct LineProperty : Moveable<LineProperty> {
+	LineType &GetLineType(String name);
+	
+	struct LineProperty : MoveableAndDeepCopyOption<LineProperty> {
+		LineProperty() {}
+		LineProperty(const LineProperty &line, int) {
+			name = line.name;
+			nameType = line.nameType;
+			length = line.length;
+			from = line.from;
+			to = line.to;
+			status = line.status;
+			lenonfloor = line.lenonfloor;
+			theta = line.theta;
+			fanchorvessel = line.fanchorvessel;
+			fVanchor = line.fVanchor;
+			fVvessel = line.fVvessel;
+			x = clone(line.x);
+			y = clone(line.y);
+			z = clone(line.z);
+		}
+		
 		String name, nameType;
 		double length;
 		String from, to;
 		void Jsonize(JsonIO &json);
+		
+		MooringStatus status;		// Obtained with Calc()
+		double lenonfloor;
+		Vector<double> x, y, z;
+		double theta, fanchorvessel, fVanchor, fVvessel;
 	};
 	Vector<LineProperty> lineProperties;	
 
@@ -1245,6 +1272,10 @@ public:
 		void Jsonize(JsonIO &json);
 	};
 	Vector<Connection> connections;	
+	
+	Connection &GetConnection(String name);
+	
+	double depth;
 };
 	
 String FormatDoubleEmpty(double val);
@@ -1307,13 +1338,13 @@ private:
 		}
 		double GetDouble(String var) {
 			double ddata = ScanDouble(GetString(var));
-			if (IsNull(ddata))
+			if (!IsNum(ddata))
 				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
 			return ddata;
 		}
 		double GetInt(String var) {
 			int ddata = ScanInt(GetString(var));
-			if (IsNull(ddata))
+			if (!IsNum(ddata))
 				throw Exc(Format(t_("Wrong variable '%s' in GetInt"), var));
 			return ddata;
 		}
@@ -1341,7 +1372,7 @@ private:
 			
 			String data = fileText.Mid(posIni, posEnd-posIni);
 			double ddata = ScanDouble(data);
-			if (IsNull(ddata))
+			if (!IsNum(ddata))
 				throw Exc(Format(t_("Problem reading variable '%s' in GetMatrix %d, %d"), var, row, col));
 			return ddata;
 		}

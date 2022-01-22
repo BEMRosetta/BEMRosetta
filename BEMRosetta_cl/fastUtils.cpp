@@ -28,7 +28,8 @@ bool GetFASTVarLine(const String &strFile, String varName, String paragraph, int
 		}
 		posIni = strFile.ReverseFind("\n", pos);
 		if (posIni < 0) 
-			throw Exc(Format("Bad format parsing FAST file for variable %s", varName));
+			posIni = 0;		// It is the first line
+			//throw Exc(Format("Bad format parsing FAST file for variable %s", varName));
 		posIni++;	
 
 		String str = Trim(strFile.Mid(posIni, pos - posIni));
