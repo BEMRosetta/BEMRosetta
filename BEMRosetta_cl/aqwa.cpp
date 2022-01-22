@@ -92,8 +92,8 @@ bool Aqwa::Load_AH1() {
 		hd().A[i].SetCount(6*hd().Nb);
 		hd().B[i].SetCount(6*hd().Nb);
 		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, Null);	
-			hd().B[i][j].setConstant(hd().Nf, Null);	
+			hd().A[i][j].setConstant(hd().Nf, 0);	
+			hd().B[i][j].setConstant(hd().Nf, 0);	
 		}
 	}
 	hd().Initialize_Forces(hd().ex);
@@ -371,8 +371,8 @@ bool Aqwa::Load_LIS() {
 		hd().A[i].SetCount(6*hd().Nb);
 		hd().B[i].SetCount(6*hd().Nb);
 		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, Null);	
-			hd().B[i][j].setConstant(hd().Nf, Null);	
+			hd().A[i][j].setConstant(hd().Nf, 0);	
+			hd().B[i][j].setConstant(hd().Nf, 0);	
 		}
 	}
 	

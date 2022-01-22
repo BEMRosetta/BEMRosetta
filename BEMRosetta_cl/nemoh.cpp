@@ -224,13 +224,17 @@ bool NemohCase::Load(String fileName) {
 		
 		BEMBody &body = bodies[ib];
 		in.GetLine();
-		f.Load(in.GetLine());	body.meshFile = f.GetText(0);
-		f.Load(in.GetLine());	npoints = f.GetInt(0);		npanels = f.GetInt(1);
-		String file = AppendFileNameX(GetFileFolder(fileName), body.meshFile);
-		if (!FileExists(file)) 
-			BEM::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
-			//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
-		
+		f.Load(in.GetLine());	
+		body.meshFile = f.GetText(0);
+		f.Load(in.GetLine());	
+		npoints = f.GetInt(0);		
+		npanels = f.GetInt(1);
+		if (!FileExists(body.meshFile)) {
+			body.meshFile = AppendFileNameX(GetFileFolder(fileName), body.meshFile);
+			if (!FileExists(body.meshFile)) 
+				BEM::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), body.meshFile));
+				//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
+		}
 		if (npoints < 1 || npoints > 100000000)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of points %s"), f.GetText(0)));
 		if (npanels < 1 || npanels > 100000000)
@@ -565,9 +569,12 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			bool y0z, x0z;
 			Mesh mesh;
 			String err = mesh.Load(bodies[ib].meshFile, rho, g, false, y0z, x0z);
-			if (!err.IsEmpty())
-				throw Exc(err);
-			
+			if (!err.IsEmpty()) {
+				err = mesh.Load(AppendFileNameX(folderMesh, GetFileName(bodies[ib].meshFile)), rho, g, false, y0z, x0z);
+				if (!err.IsEmpty()) {
+					throw Exc(err);
+				}
+			}
 			mesh.c0 = clone(bodies[ib].c0);
 			mesh.cg = clone(bodies[ib].cg);
 			mesh.AfterLoad(rho, g, true, false);
@@ -868,8 +875,8 @@ bool Nemoh::Load_Radiation(String fileName) {
 		hd().A[i].SetCount(6*hd().Nb);
 		hd().B[i].SetCount(6*hd().Nb);
 		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, Null);	
-			hd().B[i][j].setConstant(hd().Nf, Null);	
+			hd().A[i][j].setConstant(hd().Nf, 0);	
+			hd().B[i][j].setConstant(hd().Nf, 0);	
 		}
 	}
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
@@ -955,7 +962,7 @@ bool Nemoh::Load_IRF(String fileName) {
 	String line;
 	FieldSplit f(in);	
 	f.IsSeparator = IsTabSpace;
-	hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, Null);
+	hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, 0);
 	//int ibodydof = 0;
 	hd().Kirf.SetCount(hd().Nb*6); 	// Initialize Kirf		
     for (int i = 0; i < hd().Nb*6; ++i) {

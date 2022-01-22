@@ -36,6 +36,8 @@ void MainMesh::Init() {
 		listLoaded.StdBar(menu);
 		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), Null, [&]{
 			LaunchWebBrowser(GetFileFolder(ArrayModel_GetFileName(listLoaded)));}).Help(t_("Opens file explorer in the file folder"));
+		menu.Add(listLoaded.GetCount() > 0, t_("Remove"), Null, [&]{
+			OnRemoveSelected(false);}).Help(t_("Remove model"));
 		menu.Add(listLoaded.GetCount() > 0, t_("Deselect all"), Null, [&]{listLoaded.ClearSelection();})
 			.Help(t_("Deselect all table rows"));
 	};
@@ -1209,7 +1211,7 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 	int idColor;
 	Upp::Color backColorMesh;
 	idColor = data.mesh.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
-	if (idColor == -2)
+	if (idColor == -2 || data.mesh.surface < 0)
 		backColorMesh = Upp::Color(255, 165, 158);	// Light red
 	else if (idColor == -1)
 		backColorMesh = Upp::Color(255, 255, 150);	// Light yellow
