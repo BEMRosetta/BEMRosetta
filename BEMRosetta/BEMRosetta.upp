@@ -16,6 +16,7 @@ file
 	auxiliar.h,
 	mainStiffness.cpp,
 	mainMesh.cpp,
+	mainMeshView.cpp,
 	mainSolver.cpp,
 	mainDecay.cpp,
 	mainDecay_Files.cpp,

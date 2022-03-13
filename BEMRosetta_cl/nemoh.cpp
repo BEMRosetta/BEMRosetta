@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <STEM4U/Utility.h>
@@ -445,7 +445,7 @@ void NemohCase::Save_Input(String folder) const {
 	out << "20         ! IRES           ! - ! Restart parameter for GMRES" << "\n";
 	out << "5.E-07     ! TOL_GMRES      ! - ! Stopping criterion for GMRES" << "\n";
 	out << "100        ! MAXIT          ! - ! Maximum iterations for GMRES" << "\n";
-	out << "1          ! Sav_potential  ! -	! Save potential for visualization";
+	out << "1          ! Sav_potential  ! - ! Save potential for visualization";
 }
 	
 

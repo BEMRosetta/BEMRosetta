@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
@@ -564,7 +564,7 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT ty
 		else if (ext == ".bem")
 			type = Hydro::BEMROSETTA;
 		else
-			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
+			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
 	bool ret = false;
 	if (type == WAMIT) {
@@ -811,7 +811,7 @@ void Hydro::Report() const {
 	else if (head.size() > 1) {
 		String strDeltaH;
 		if (GetIrregularHead() < 0) 
-			strDeltaH = Format(t_("delta %.1f [deg]"), head[1] - head[0]);
+			strDeltaH = Format(t_("delta %.1f [º]"), head[1] - head[0]);
 		else {
 			String strHead;
 			for (int i = 0; i < head.size(); ++i) {
@@ -823,7 +823,7 @@ void Hydro::Report() const {
 		}
 	 	heads = Format(t_("%.1f to %.1f %s"), head[0], head[head.size()-1], strDeltaH);	
 	} else
-		heads = Format(t_("%.1f [deg]"), head[0]);
+		heads = Format(t_("%.1f [º]"), head[0]);
 	
 	BEM::Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
 	BEM::Print("\n" + Format(t_("#headings: %d (%s)"), Nh, heads)); 
@@ -1474,8 +1474,8 @@ void BEM::Ainf_w(int id) {
 	hydros[id].hd().GetAinf_w();
 }
 
-void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail) {
-	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail);
+void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
+	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind);
 }
 
 void BEM::DeleteHeadingsFrequencies(int id, const Vector<int> &idFreq, const Vector<int> &idFreqQTF, const Vector<int> &idHead, const Vector<int> &idHeadQTF) {

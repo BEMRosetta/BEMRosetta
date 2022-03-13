@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
 int Mesh::idCount = 0;
@@ -40,6 +40,13 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 			return std::move(e);
 		}
 		SetCode(Mesh::MSH_TDYN);
+	} else if (ext == ".mesh") {
+		try {
+			LoadMesh(file, mesh, mass, cg);
+		} catch(Exc e) {
+			return std::move(e);
+		}
+		SetCode(Mesh::BEM_MESH);
 	} else
 		ret = Format(t_("Unknown mesh file format '%s'"), file);	
 	
@@ -91,8 +98,10 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 			type = HAMS_PNL;
 		else if (ext == ".stl")
 			type = STL_TXT;
+		else if (ext == ".mesh")
+			type = BEM_MESH;
 		else
-			throw Exc(Format(t_("Conversion to type of file '%s' not supported"), file));
+			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
 	
 	if (symX && (type == WAMIT_GDF || type == HAMS_PNL)) {
@@ -130,6 +139,8 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 		SaveStlBin(file, surf, 1000);
 	else if (type == STL_TXT)		
 		SaveStlTxt(file, surf, 1000);
+	else if (type == BEM_MESH)		
+		SaveMesh(file, surf, mass, cg);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
@@ -161,6 +172,8 @@ void Mesh::Reset(double rho, double g) {
 }
 	
 void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
+	if (mesh.IsEmpty())
+		return;
 	if (!onlyCG) {
 		mesh.GetPanelParams();
 		mesh.GetLimits();
@@ -214,3 +227,64 @@ bool Mesh::IsSymmetricX() {
 bool Mesh::IsSymmetricY() {
 	return abs(cb.y)/abs(mesh.env.maxY - mesh.env.minY) < 0.001 && abs(mesh.env.maxY + mesh.env.minY) < 0.001;
 }
+
+void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
+	Function <bool(String, int pos)> Status, 
+	Vector<double> &dataangle, Vector<double> &datagz, Vector<double> &dataMoment,
+	Vector<double> &vol, Vector<double> &disp, Vector<double> &wett, Vector<double> &wplane,
+	Vector<Point3D> &dcb, Vector<Point3D> &dcg) {
+	
+	datagz.Clear();
+	dataMoment.Clear();
+	vol.Clear();
+	disp.Clear();
+	wett.Clear();
+	wplane.Clear();
+	dcb.Clear();
+	dcg.Clear();
+	
+	Surface base0 = clone(mesh);
+	Point3D cg0 = clone(cg);
+	Point3D c00 = clone(c0);
+
+	base0.Rotate(0, 0, angleCalc, c00.x, c00.y, c00.z);
+	cg0.Rotate(0, 0, angleCalc, c00.x, c00.y, c00.z);
+	
+	double dz = 0.1;
+	for (double angle = from; angle <= to; angle += delta) {
+		if (!Status("", int(100*(angle - from)/(to - from))))
+			throw Exc(t_("Cancelled by the user"));
+				
+		Surface base = clone(base0);
+		Point3D cg = clone(cg0);
+		
+		base.Rotate(0, angle, 0, c00.x, c00.y, c00.z);
+		cg.Rotate(0, angle, 0, c00.x, c00.y, c00.z);
+		
+		Surface under;
+		if (!base.TranslateArchimede(mass, rho, dz, under))
+			throw Exc(t_("Problem obtaining GZ"));
+		
+		cg.Translate(0, 0, dz);
+		
+		Point3D cb = under.GetCenterOfBuoyancy();
+		
+		Eigen::VectorXd fcb, fcg;
+		under.GetHydrostaticForceCB(fcb, c00, cb, rho, g);	
+		Surface::GetMassForce(fcg, c00, cg, mass, g);
+	
+		double moment = -(fcg[4]+fcb[4]);
+		double gz = moment/mass/g;
+		
+		dataangle << angle;
+		datagz << gz;
+		dataMoment << moment;
+		vol << under.volume;
+		disp << under.volume*rho;
+		wett << under.GetSurface();
+		wplane << under.GetWaterPlaneArea();
+		dcb << cb;
+		dcg << cg;
+	}	
+}
+	

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -97,6 +97,7 @@ void MainBEM::Init() {
 	menuAdvanced.opDecayingTail.Disable();
 	menuAdvanced.opThinremoval.Disable();
 	menuAdvanced.opZremoval.Disable();
+	menuAdvanced.opHaskind.Disable();
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
 	
 	CtrlLayout(menuConvert);
@@ -601,6 +602,7 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.opDecayingTail.Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.opHaskind.		Enable(numsel == 1 || numrow == 1);
 	menuConvert.butConvert.		Enable(numsel == 1 || numrow == 1);
 	
 	bool show_w = menuPlot.opwT == 0;
@@ -814,7 +816,7 @@ void MainBEM::OnOgilvie() {
 		
 		double maxT = Null;
 		
-		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail);
+		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail, ~menuAdvanced.opHaskind);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1066,6 +1068,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
 		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
+		("opHaskind", menuAdvanced.opHaskind)
 		("mainStiffness", mainMatrixK)
 		("mainMatrixA", mainMatrixA)
 		("mainMatrixDlin", mainMatrixDlin)
@@ -1280,7 +1283,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		else
 			array.Set(row++, col, "-");
 		
-		array.Set(row, 0, sib + " " + t_("Water plane area [m2]"));
+		array.Set(row, 0, sib + " " + t_("Waterplane area [m2]"));
 		if (data.C.size() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_ndim(ib, 2, 2);
 			array.Set(row++, col, FormatDoubleSize(wPlaneArea, 10, false));		
@@ -1326,7 +1329,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 void MainOutput::Init() {
 	CtrlLayout(*this);
 	cout.SetReadOnly();
-	Print(t_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary Element Method solver formats"));
+	Print(t_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary Element Method solver formats\n"));
 }
 
 void MainOutput::Print(String str) {
@@ -1516,7 +1519,8 @@ bool MainQTF::Load() {
 	return true;		
 }
 
-void MainBEMW::Init(MainBEM &_bem, const Image &icon, const Image &largeIcon) {
+void MainBEMW::Init(MainBEM &_bem, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose) {
+	WhenClose = _WhenClose;
 	LoadFromJson(bem, StoreAsJson(_bem));
 	bem.Init();
 	Add(bem.SizePos());
