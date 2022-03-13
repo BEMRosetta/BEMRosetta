@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #ifndef _BEM_Rosetta_BEM_Rosetta_h_
 #define _BEM_Rosetta_BEM_Rosetta_h_
 
@@ -519,7 +519,7 @@ public:
 	void GetAinf();
 	void GetAinf_w();
 	void InitAinf_w();
-	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail);
+	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
 	void GetTranslationTo(double xto, double yto, double zto);
 	
 	void DeleteFrequencies(const Vector<int> &idFreq);
@@ -578,9 +578,9 @@ class Mesh {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  false};       
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	false};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -626,6 +626,12 @@ public:
 		
 	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime);
 	void Reset(double rho, double g);
+
+	void GZ(double from, double to, double delta, double angle, double rho, double g,
+		Function <bool(String, int pos)> Status, 
+		Vector<double> &dataangle, Vector<double> &dataGZ, Vector<double> &dataMoment,
+		Vector<double> &vol, Vector<double> &disp, Vector<double> &wett, Vector<double> &wplane,
+		Vector<Point3D> &dcb, Vector<Point3D> &dcg);
 
 	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels);
 	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
@@ -1020,7 +1026,7 @@ public:
 	void Kirf(int id, double maxT);
 	void Ainf(int id);
 	void Ainf_w(int id);
-	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail);
+	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const Vector<int> &idFreq, const Vector<int> &idFreqQTF, 
 										   const Vector<int> &idHead, const Vector<int> &idHeadQTF);

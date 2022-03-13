@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #ifndef _BEMRosetta_cl_heal_h_
 #define _BEMRosetta_cl_heal_h_
 
 class HealBEM {
 public:
-	void Heal(bool zremoval, bool thinremoval, bool decayingTail);
-	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT);
+	void Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
+	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT, const Eigen::MatrixXd &ex_hf);
 	void Save(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
 				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);
 	void Reset(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
@@ -17,6 +17,8 @@ public:
 	double fainf;
 	static String filterType;
 	Eigen::VectorXd Tirf, fKirf;
+	Eigen::MatrixXd ex_hf;
+	
 	String title;
 	String sdof;
 

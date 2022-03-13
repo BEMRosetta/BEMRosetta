@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
 void SetBuildInfo(String &str) {
@@ -462,7 +462,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 						} else if (param == "-getwaterplane") {
 							bem.AddWaterSurface(meshid, 'e');
 							meshid = bem.surfs.size() - 1;
-							BEM::Print("\n" + Format(t_("Mesh id %d water plane is got"), meshid));
+							BEM::Print("\n" + Format(t_("Mesh id %d waterplane is got"), meshid));
 						} else if (param == "-gethull") {
 							bem.AddWaterSurface(meshid, 'r');
 							meshid = bem.surfs.size() - 1;

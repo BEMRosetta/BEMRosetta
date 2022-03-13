@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #ifndef _BEM_Rosetta_GUI_arrange_h_
 #define _BEM_Rosetta_GUI_arrange_h_
 

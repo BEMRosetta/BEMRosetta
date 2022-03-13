@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -60,11 +60,11 @@ void MainMoor::Init() {
 	results.SetLineCy(EditField::GetStdHeight());
 	results.AddColumn(t_("Line"), 8);
 	results.AddColumn(t_("Status"), 10);
-	results.AddColumn(t_("Ffair [kN]"), 10);
+	results.AddColumn(t_("Ffair [t]"), 10);
 	results.AddColumn(t_("Angle [º]"), 10);
-	results.AddColumn(t_("Fhor [kN]"), 10);
-	results.AddColumn(t_("Fvanchor [kN]"), 10);
-	results.AddColumn(t_("Fvvessel [kN]"), 10);
+	results.AddColumn(t_("Fhor [t]"), 10);
+	results.AddColumn(t_("Fvanchor [t]"), 10);
+	results.AddColumn(t_("Fvvessel [t]"), 10);
 	results.AddColumn(t_("Lenseabed [m]"), 10);
 	results.AddColumn(t_("Footprint [m]"), 10);
 	results.AddColumn(t_("FootprintX [m]"), 10);
@@ -125,10 +125,10 @@ void MainMoor::OnUpdate() {
 		double leny = abs(line.y[0] - line.y.Top());
 		double len = sqrt(sqr(lenx) + sqr(leny));
 		results.Add(line.name, InitCaps(MooringStatusStr(line.status)), 
-					FormatF(sqrt(sqr(line.fVvessel) + sqr(line.fanchorvessel))/1000., 0),
+					FormatF(sqrt(sqr(line.fVvessel) + sqr(line.fanchorvessel))/1000./9.8, 0),
 					FormatF(ToDeg(atan2(line.fVvessel, line.fanchorvessel)), 0),
-					FormatF(line.fanchorvessel/1000., 0), FormatF(line.fVanchor/1000., 0), 
-					FormatF(line.fVvessel/1000., 0), FormatF(line.lenonfloor, 1), len, lenx, leny);
+					FormatF(line.fanchorvessel/1000./9.8, 0), FormatF(line.fVanchor/1000./9.8, 0), 
+					FormatF(line.fVvessel/1000./9.8, 0), FormatF(line.lenonfloor, 1), len, lenx, leny);
 	}
 	
 	for (int i = 0; i < mooring.lineProperties.size(); ++i) {

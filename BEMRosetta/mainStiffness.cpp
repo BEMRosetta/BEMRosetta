@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -88,7 +88,8 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 
 void MainMatrixKA::PrintData() {
 	expRatio.Enable(~opEmptyZero);
-	double ratio = 1/pow(10., double(~expRatio));
+	double exr = double(~expRatio);
+	double ratio = 1/pow(10., exr);
 	
 	if (IsNull(numDigits) || numDigits < 5 || numDigits > 14)
 		numDigits <<= 5;
@@ -102,14 +103,18 @@ void MainMatrixKA::PrintData() {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					double val = data[i](r, c);
-					double rat = mx == 0 ? 0 : abs(val/mx);
 					String sdata;
-					if (~opEmptyZero && rat < ratio)
+					if (IsNull(val)) 
 						sdata = "";
-					else if (bool(~opDigits) == 0)
-						sdata = FormatDoubleSize(val, numDigits);
-					else
-						sdata = FormatF(val, numDecimals);
+					else {
+						double rat = mx == 0 ? 0 : abs(val/mx);
+						if (~opEmptyZero && rat < ratio)
+							sdata = "";
+						else if (bool(~opDigits) == 0)
+							sdata = FormatDoubleSize(val, numDigits);
+						else
+							sdata = FormatF(val, numDecimals);
+					}
 					array.Set(row0 + r + 2, col0 + c + 1, AttrText(sdata).Align(ALIGN_RIGHT));
 				}
 			}
