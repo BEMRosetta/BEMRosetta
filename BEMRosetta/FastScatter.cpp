@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -602,7 +602,8 @@ void FastScatter::SaveParams() {
 	StoreAsJsonFile(params, fileName, true);
 }
 
-void MainFASTW::Init(String appDataFolder, const Image &icon, const Image &largeIcon, StatusBar &statusBar) {
+void MainFASTW::Init(String appDataFolder, const Image &icon, const Image &largeIcon, StatusBar &statusBar, Function <void()> _WhenClose) {
+	WhenClose = _WhenClose;
 	fast.Init(appDataFolder, statusBar);
 	Add(fast.SizePos());
 	Title(t_("BEMRosetta FAST .out+b Reader")).Sizeable().Zoomable().Icon(icon, largeIcon);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <Core/Core.h>
 #include <Functions4U/Functions4U.h>
 #include <STEM4U/Integral.h>
@@ -213,7 +213,7 @@ bool IsNull(const VectorXd &data) {
 	return false;
 }
 
-bool HealBEM::Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, int numT, double maxT) {
+bool HealBEM::Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, int numT, double maxT, const MatrixXd &ex_hf) {
 	if (A.size() == 0 || B.size() == 0)
 		return false;
 	this->w = clone(w);
@@ -221,6 +221,7 @@ bool HealBEM::Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, int 
 	this->A = clone(A);
 	this->numT = numT;
 	this->maxT = maxT;
+	this->ex_hf = clone(ex_hf);
 	return true;
 }
 
@@ -246,7 +247,7 @@ void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf
 	}	
 }
 	
-void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail) {
+void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
 	// Removes NaN, Inf, duplicated (or nearly) w, sorts by w 
 	CleanNANDupXSort(w, A, B, w, A, B);
 	double srate = GetSampleRate(w, 4, .8);	// Gets the most probable sample rate, or the average if the most probable probability is lower than 0.8

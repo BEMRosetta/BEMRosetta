@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include <STEM4U/Integral.h>
 #include "functions.h"
@@ -96,7 +96,7 @@ void Hydro::GetAinf_w() {
         }
 }
 
-void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail) {
+void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
 	if (Nf == 0 || A.size() < Nb*6)
 		return;	
 	
@@ -123,11 +123,16 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 	}
 		
     for (int idf = 0; idf < Nb*6; ++idf) {
+        MatrixXd ex_hf(Nh, Nf);
+        
+        //double F_ma_dim(ex, int _h, int ifr, int idf)
+
         for (int jdf = 0; jdf < Nb*6; ++jdf) {
             if (B[idf][jdf].size() == 0 || IsNull(B[idf][jdf][0])) 
                 continue;
-    		if (data.Load(Get_w(), A_dim(idf, jdf), B_dim(idf, jdf), numT, maxT)) {
-				data.Heal(zremoval, thinremoval, decayingTail);
+            
+    		if (data.Load(Get_w(), A_dim(idf, jdf), B_dim(idf, jdf), numT, maxT, ex_hf)) {
+				data.Heal(zremoval, thinremoval, decayingTail, haskind && idf == jdf);
             	data.Save(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]); 
     		} else
     			data.Reset(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]);

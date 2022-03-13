@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 
 #define IMAGECLASS Img
@@ -55,6 +55,8 @@ void Main::Init() {
 	
 	Title(S("BEMRosetta") + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
+	rectangleButtons.SetBackground(SColorFace());
+	
 	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
 			 << t_("Mooring") << t_("Decay") << t_("FAST .out+b Reader");
 		
@@ -92,7 +94,7 @@ void Main::Init() {
 	if (menuOptions.showTabMoor) {
 		tab.Add().Disable();
 		mainMoor.Init();	LOG("Init Moor");
-		if (Bem().experimental)
+		if (false/*Bem().experimental*/)
 			tab.Add(mainMoor.SizePos(), tabTexts[TAB_MOOR]);
 	}
 	if (menuOptions.showTabDecay) {
@@ -140,16 +142,19 @@ void Main::Init() {
 	
 	butWindow << [&] {
 		if (tab.IsAt(mainMesh)) {
+			AddWindow();
 			MainMeshW *mainMeshW = new MainMeshW();
-			mainMeshW->Init(mainMesh, Img::Rosetta64(), Img::Rosetta256());
+			mainMeshW->Init(mainMesh, Img::Rosetta64(), Img::Rosetta256(), [&]() {DeleteWindow();});
 			mainMeshW->OpenMain();
 		} else if (tab.IsAt(mainBEM)) {
+			AddWindow();
 			MainBEMW *mainBEMW = new MainBEMW();
-			mainBEMW->Init(mainBEM, Img::Rosetta64(), Img::Rosetta256());
+			mainBEMW->Init(mainBEM, Img::Rosetta64(), Img::Rosetta256(), [&]() {DeleteWindow();});
 			mainBEMW->OpenMain();
 		} else if (tab.IsAt(mainFAST)) {
+			AddWindow();
 			MainFASTW *mainFASTW = new MainFASTW();
-			mainFASTW->Init(GetBEMRosettaDataFolder(), Img::Rosetta64(), Img::Rosetta256(), bar);
+			mainFASTW->Init(GetBEMRosettaDataFolder(), Img::Rosetta64(), Img::Rosetta256(), bar, [&]() {DeleteWindow();});
 			mainFASTW->OpenMain();
 		}
 	};
@@ -278,6 +283,10 @@ void Main::Close() {
 }
 
 void Main::CloseMain(bool store) {
+	if (numWindows > 0) {
+		if (!PromptOKCancel(t_("There windows opened.&Do you want to close anyway?")))	
+			return;
+	}
 	if (store) {
 		bem.StoreSerializeJson();
 		StoreSerializeJson();

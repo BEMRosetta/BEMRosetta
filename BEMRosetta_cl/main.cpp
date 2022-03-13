@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #if !defined(flagGUI)
 
 #include "BEMRosetta.h"
@@ -22,12 +22,12 @@ CONSOLE_APP_MAIN
 			throw Exc("Please include in command line binary and BEMRosetta folders");
 		
 		String binFolder = command[0];
-		String installFolder = AppendFileNameX(binFolder, "..", "..", "install");
-		
-		Cout() << "\n\n\n----------------\n" << installFolder;
-		
 		String bemFolder = command[1];
-		 
+		String installFolder = AppendFileNameX(bemFolder, "install");
+		
+		FileDelete(AppendFileNameX(binFolder, "libbemrosetta.exp"));
+		FileDelete(AppendFileNameX(binFolder, "libbemrosetta.lib"));
+		
 		Dl dll;		
 		if (!dll.Load(AppendFileNameX(binFolder, "libbemrosetta.dll")))
 			throw Exc("Dll not found");
@@ -65,7 +65,7 @@ CONSOLE_APP_MAIN
 		String strList = DLL_strListFunctions();
 		Cout() << strList;
 #ifdef flagBEMR_TEST_DLL
-		strList = "// BEMRosetta DLL functions list\n\n" + strList;
+		strList = "// BEMRosetta DLL functions list\n\n" + strList;	
 		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList))
 			throw Exc(t_("Impossible to save DLL functions list file"));
 #endif
@@ -73,8 +73,12 @@ CONSOLE_APP_MAIN
 		Cout() << "\n\nPython declarations:\n";
 		String strPy = DLL_strPythonDeclaration();
 		Cout() << strPy;
-#ifdef flagBEMR_TEST_DLL
+		
+#if defined(flagBEMR_TEST_DLL)
 		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy))
+			throw Exc(t_("Impossible to save Python declarations file"));
+#else if defined(flagBEMR_TEST_DLL_INTERNAL)
+		if (!SaveFile(AppendFileNameX(GetDesktopFolder(), "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
 #endif
 
@@ -149,11 +153,12 @@ CONSOLE_APP_MAIN
 		str = DLL_FAST_GetVar("Filename", "================== Parameters for Binary TurbSim");				
 		Cout() << "\nNew Filename: " << str;
 		VERIFY(str == "\"New file\"");
+
+	#ifdef flagDEBUG	
+		DLL_FAST_SaveFile(AppendFileNameX(GetDesktopFolder(), "InflowWind_test.dat"));
+	#endif
 #endif
 	
-#ifdef flagDEBUG	
-		DLL_FAST_SaveFile(AppendFileNameX(GetDesktopFolder(), "test.dat"));
-#endif
 	} catch (Exc err) {
 		Cout() << "\n" << Format(t_("Problem found: %s"), err);
 		SetExitCode(-1);
@@ -178,6 +183,10 @@ FastOut &DLL_Fastout() {
 }
 
 
+void DLL_NoPrint() noexcept {
+	CoutStreamX::NoPrint();
+}
+	
 const char *DLL_Version() noexcept {
 	static String version;
 	version << __DATE__ << ", " << __TIME__;
@@ -193,7 +202,7 @@ const char *DLL_strListFunctions() noexcept {
 const char *DLL_strPythonDeclaration() noexcept {
 	static String str;
 	
-	return str = GetPythonDeclaration(String(DLLexport, DLLexport_length));	
+	return str = GetPythonDeclaration("BEMRosetta", String(DLLexport, DLLexport_length));	
 }
 
 void DLL_ListFunctions() noexcept {
@@ -204,7 +213,7 @@ int DLL_FAST_Load(const char *filename) noexcept {
 	try {
 		return DLL_Fastout().Load(filename);
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_Load()";
+		CoutX() << "Unknown error in DLL_FAST_Load()";
 		return 0;
 	}
 }
@@ -214,7 +223,7 @@ const char *DLL_FAST_GetParameterName(int id) noexcept {
 	try {
 		return ret = DLL_Fastout().GetParameter(id);
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetParameterName()";
+		CoutX() << "Unknown error in DLL_FAST_GetParameterName()";
 		return ret = "Error";
 	}
 }
@@ -224,7 +233,7 @@ const char *DLL_FAST_GetUnitName(int id) noexcept {
 	try {
 		return ret = DLL_Fastout().GetUnit(id);
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetUnitName()";
+		CoutX() << "Unknown error in DLL_FAST_GetUnitName()";
 		return ret = "Error";
 	}
 }
@@ -237,7 +246,7 @@ int DLL_FAST_GetParameterId(const char *name) noexcept {
 		else
 			return p[0];
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetParameterCount()";
+		CoutX() << "Unknown error in DLL_FAST_GetParameterCount()";
 		return Null;
 	}
 }
@@ -246,7 +255,7 @@ int DLL_FAST_GetParameterCount() noexcept {
 	try {
 		return DLL_Fastout().GetParameterCount();
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetParameterCount()";
+		CoutX() << "Unknown error in DLL_FAST_GetParameterCount()";
 		return Null;
 	}
 }
@@ -255,7 +264,7 @@ int DLL_FAST_GetLen() noexcept {
 	try {
 		return DLL_Fastout().size();
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetLen()";
+		CoutX() << "Unknown error in DLL_FAST_GetLen()";
 		return Null;
 	}
 }
@@ -264,7 +273,7 @@ double DLL_FAST_GetTimeInit() noexcept {
 	try {
 		return DLL_Fastout().GetTimeInit();
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetTimeInit()";
+		CoutX() << "Unknown error in DLL_FAST_GetTimeInit()";
 		return Null;
 	}
 }
@@ -273,7 +282,7 @@ double DLL_FAST_GetTimeEnd() noexcept {
 	try {
 		return DLL_Fastout().GetTimeEnd();
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetTimeEnd()";
+		CoutX() << "Unknown error in DLL_FAST_GetTimeEnd()";
 		return Null;
 	}
 }
@@ -284,19 +293,19 @@ double DLL_FAST_GetTime(int idtime) noexcept {
 
 double DLL_FAST_GetData(int idtime, int idparam) noexcept {
 	if (idtime < 0) {
-		Cout() << "DLL_FAST_GetData() idtime < 0";
+		CoutX() << "DLL_FAST_GetData() idtime < 0";
 		return Null;
 	}
 	if (idtime >= DLL_Fastout().size()) {
-		Cout() << "DLL_FAST_GetData() idtime >= time";
+		CoutX() << "DLL_FAST_GetData() idtime >= time";
 		return Null;
 	}
 	if (idparam < 0) {
-		Cout() << "DLL_FAST_GetData() idparam < 0";
+		CoutX() << "DLL_FAST_GetData() idparam < 0";
 		return Null;
 	}
 	if (idparam >= DLL_Fastout().GetParameterCount()) {
-		Cout() << "DLL_FAST_GetData() idparam >= num_params";
+		CoutX() << "DLL_FAST_GetData() idparam >= num_params";
 		return Null;
 	}
 		
@@ -308,7 +317,7 @@ double DLL_FAST_GetAvg(const char *param) noexcept {
 		const Vector<double> &data = DLL_Fastout().GetVal(param);
 		return Eigen::Map<const Eigen::VectorXd>(data, data.size()).mean();
 	} catch (...) {
-		Cout() << "Unknown error in DLL_FAST_GetAvg()";
+		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
 	}
 	return Null;
 }
@@ -334,7 +343,7 @@ int DLL_FAST_SaveFile(const char *file) noexcept {
 		
 	} catch (Exc e) {
 		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
-		Cout() << "\n" << "Error: " << e;
+		CoutX() << "\n" << "Error: " << e;
 		SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 		return false;
 	}
@@ -346,7 +355,7 @@ int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) 
 		SetFASTVar(fastFileStr, name, value, paragraph);
 	} catch (Exc e) {
 		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
-		Cout() << "\n" << "Error: " << e;
+		CoutX() << "\n" << "Error: " << e;
 		SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 		return false;
 	}
@@ -360,7 +369,7 @@ const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
 		ret = GetFASTVar(fastFileStr, name, paragraph);
 	} catch (Exc e) {
 		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
-		Cout() << "\n" << "Error: " << e;
+		CoutX() << "\n" << "Error: " << e;
 		SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 		return ret = "";
 	}

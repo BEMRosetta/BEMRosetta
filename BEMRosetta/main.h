@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #ifndef _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
@@ -319,6 +319,95 @@ private:
 	bool paintSelect = true;
 };
 
+class VideoSequence {
+public:
+	virtual bool Load(String fileName) = 0;
+	virtual bool Save(String fileName) const = 0;
+	virtual void Clear() = 0;
+	template <class T>  bool Is() const	{return dynamic_cast<const T*>(this);}
+};
+
+class BasicVideoSequence : public VideoSequence {
+public:
+	virtual bool Load(String fileName) {
+		return LoadFromJsonFile(*this, fileName);
+	}
+	virtual bool Save(String fileName) const {
+		return StoreAsJsonFile(*this, fileName, true);
+	}
+	virtual void Clear() {
+		reg.Clear();
+	}
+	void Add(const Point3D &pos, const Point3D &angle, double time) {
+		auto &rg = reg.Add();
+		rg.pos = clone(pos);
+		rg.angle = clone(angle);
+		rg.time = time;
+	}
+	void AddDelta(const Point3D &pos, const Point3D &angle, double dt) {
+		Add(pos, angle, dt*reg.size());
+	}
+	void Jsonize(JsonIO &json) {
+		json
+			("reg", reg)
+		;
+	}
+	
+private:
+	struct Record {
+		Point3D pos, angle;
+		double time;
+		void Jsonize(JsonIO &json) {
+			json
+				("pos",   pos)
+				("angle", angle)
+				("time",  time)
+			;
+		}
+	} record;
+	Array<Record> reg;
+};
+
+class VideoCtrl : public WithVideoCtrl<StaticRect> {
+public:
+	typedef VideoCtrl CLASSNAME;
+	
+	VideoCtrl() {}
+	void Init();
+		
+	void OnPlay();
+	void OnStop();
+	void OnRecord();
+	
+	void AddReg(const Point3D &pos, const Point3D &angle, double time) {
+		ASSERT(video->Is<BasicVideoSequence>());
+		static_cast<BasicVideoSequence&>(*video).Add(pos, angle, time);
+	}
+	void AddRegDelta(const Point3D &pos, const Point3D &angle, double dt) {
+		ASSERT(video->Is<BasicVideoSequence>());
+		static_cast<BasicVideoSequence&>(*video).AddDelta(pos, angle, dt);	
+	}	
+	void ClearReg() {
+		ASSERT(video->Is<BasicVideoSequence>());
+		static_cast<BasicVideoSequence&>(*video).Clear();
+	}
+	void Jsonize(JsonIO &json) {
+		if (json.IsLoading()) {
+			deltaT <<= Null;	
+		}
+		json
+			("deltaT", deltaT)
+		;
+	}
+	
+private:	
+	void TimerFun();
+	bool playing = false, recording = false;
+	RealTimeStop time;
+	double dT;
+	
+	One<VideoSequence> video;
+};
 
 class MainViewDataEach : public StaticRect {
 public:
@@ -403,13 +492,9 @@ public:
 	
 	void Jsonize(JsonIO &json) {
 		bool opdigits = ~opDigits;
-		if (json.IsLoading()) {
-			opEmptyZero <<= false;
-			numDigits <<= 6;
-			numDecimals <<= 0;
+		if (json.IsLoading()) 
 			opdigits = true;
-			expRatio <<= 5;
-		} else
+		else
 			opdigits = ~opDigits;
 		json
 			("opEmptyZero", opEmptyZero)
@@ -421,6 +506,14 @@ public:
 		if (json.IsLoading()) {
 			opDigits <<= opdigits;
 			opDecimals <<= !opdigits;
+			if (IsNull(opEmptyZero)) 
+				opEmptyZero <<= false;
+			if (IsNull(numDigits)) 
+				numDigits <<= 6;
+			if (IsNull(numDecimals)) 
+				numDecimals <<= 0;
+			if (IsNull(expRatio)) 
+				expRatio <<= 5;
 		}
 	}
 	
@@ -434,6 +527,24 @@ private:
 	Upp::Array<int> row0s, col0s;
 	
 	Hydro::DataMatrix what;
+};
+
+class MainGZ : public WithMainGZ<StaticRect> {
+public:
+	typedef MainGZ CLASSNAME;
+
+	void Init();
+	void Clear(bool force);
+	
+	void OnUpdate();
+	void Jsonize(JsonIO &json);
+	
+private:
+	Array<Vector<double>> dataangle, datagz, dataMoment;
+	int idOpened = Null;
+	
+	ScatterCtrl scatter;
+	ArrayCtrl array;
 };
 
 class MainBEM;
@@ -538,7 +649,9 @@ public:
 	void OnJoin();
 	void OnSplit();
 	bool OnConvertMesh();
-	void OnUpdate(Action action);
+	void OnUpdate(Action action, bool fromMenuProcess);
+	void OnTranslateArchimede(bool fromMenuProcess);
+	void OnArchimede();
 	void OnUpdateMass();
 	void OnHealing(bool basic);
 	void OnOrientSurface();
@@ -547,6 +660,7 @@ public:
 	void OnArraySel();
 	void OnMenuProcessArraySel();
 	void OnMenuAdvancedArraySel();
+	void OnMenuMoveArraySel();
 	void OnMenuConvertArraySel();
 	void OnAddPanel();
 	void OnAddRevolution();
@@ -565,6 +679,7 @@ public:
 	WithMenuMeshConvert<StaticRect> menuConvert;
 	WithMenuMeshPlot<StaticRect> menuPlot;
 	WithMenuMeshProcess<StaticRect> menuProcess;
+	WithMenuMeshMove<StaticRect> menuMove;
 	WithMenuMeshEdit<StaticRect> menuEdit;
 	
 	bool GetShowMesh()			{return menuPlot.showMesh;}
@@ -572,10 +687,12 @@ public:
 
 private:	
 	MainView mainView;
+	VideoCtrl videoCtrl;
 	MainViewData mainViewData;
-	SplitterButton mainVAll;
+	SplitterButton splitterAll, splitterVideo;
 	MainSummaryMesh mainSummary;
 	MainMatrixKA mainStiffness;
+	MainGZ mainGZ;
 
 	Upp::Array<Option> optionsPlot;
 	
@@ -593,10 +710,16 @@ class MainMeshW : public TopWindow {
 public:
 	typedef MainMeshW CLASSNAME;
 	
-	void Init(MainMesh &_mesh, const Image &icon, const Image &largeIcon);
-	virtual void Close() 		{delete this;}
+	void Init(MainMesh &_mesh, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose);
+	virtual void Close() {
+		WhenClose();
+		delete this;
+	}
 	
 	MainMesh mesh;
+
+private:
+	Function <void()> WhenClose;
 };
 
 class MainSolver : public WithMainSolver<StaticRect> {
@@ -958,10 +1081,16 @@ class MainBEMW : public TopWindow {
 public:
 	typedef MainBEMW CLASSNAME;
 	
-	void Init(MainBEM &_bem, const Image &icon, const Image &largeIcon);
-	virtual void Close() 		{delete this;}
+	void Init(MainBEM &_bem, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose);
+	virtual void Close() {
+		WhenClose();
+		delete this;
+	}
 	
 	MainBEM bem;
+	
+private:
+	Function <void()> WhenClose;
 };
 
 
@@ -985,10 +1114,11 @@ public:
 
 	BEM bem;
 	
-	void Status(String str = String(), int time = 2000)	{
-		if (!str.IsEmpty()) 
+	void Status(String str = String(), int time = 6000)	{
+		if (!str.IsEmpty()) {
 			bar.Temporary(str, time);
-		else
+			BEM::Print("\n" + str);
+		} else
 			bar.EndTemporary();
 		ProcessEvents();
 	}
@@ -998,7 +1128,12 @@ public:
 	
 	void SetLastTab()	{tab.Set(lastTab);};
 	
+	void AddWindow()	{numWindows++;}
+	void DeleteWindow()	{numWindows--;}
+	
 private:
+	int numWindows = 0;
+	
 	int lastTab;
 	
 	MainSolver mainSolver;

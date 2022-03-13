@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2021, the BEMRosetta author and contributors
+// Copyright 2020 - 2022, the BEMRosetta author and contributors
 extern "C" {
+	__declspec(dllexport) double DemoVectorPy_C(const double *v, int num) noexcept; 	
+	__declspec(dllexport) int DemoVectorC_Py(double **v, int *num) noexcept; 	
+	
 	// Returns dll time and date
 	__declspec(dllexport) const char *DLL_Version() noexcept; 		
 	// Lists all available functions
@@ -9,6 +12,9 @@ extern "C" {
 	__declspec(dllexport) const char *DLL_strListFunctions() noexcept;		
 	// Returns the Python declaration of all available functions
 	__declspec(dllexport) const char *DLL_strPythonDeclaration() noexcept;	
+	
+	// Blocks the printing of messages on the screen
+	__declspec(dllexport) void DLL_NoPrint() noexcept;	
 	
 	// Loads a FAST .out or .outb file
 	__declspec(dllexport) int DLL_FAST_Load(const char *filename) noexcept;		
@@ -41,8 +47,4 @@ extern "C" {
 	__declspec(dllexport) int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept;
 	// Reads the value of a var after paragraph. If paragraph is "", it is read the first time var appears in the file
 	__declspec(dllexport) const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept;
-
-
-	__declspec(dllexport) double DemoVectorPy_C(const double *v, int num) noexcept; 	
-	__declspec(dllexport) int DemoVectorC_Py(double **v, int *num) noexcept; 	
 };
