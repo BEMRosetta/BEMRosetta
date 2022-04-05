@@ -176,7 +176,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		return;
 	if (!onlyCG) {
 		mesh.GetPanelParams();
-		mesh.GetLimits();
+		mesh.GetEnvelope();
 		mesh.GetSurface();
 		mesh.GetVolume();
 		
@@ -188,6 +188,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		yProjectionNeg = under.GetSurfaceYProjection(false, true);
 		zProjectionPos = under.GetSurfaceZProjection(true, false);
 		zProjectionNeg = under.GetSurfaceZProjection(false, true);
+		cgZ0surface = under.GetSurfaceZProjectionCG();
 		under.GetSurface();
 		under.GetVolume();
 		
@@ -228,18 +229,36 @@ bool Mesh::IsSymmetricY() {
 	return abs(cb.y)/abs(mesh.env.maxY - mesh.env.minY) < 0.001 && abs(mesh.env.maxY + mesh.env.minY) < 0.001;
 }
 
+double Mesh::GMroll(double rho, double g) const {
+	return C(3, 3)/(rho*g*under.volume);
+}
+
+double Mesh::GMpitch(double rho, double g) const {
+	return C(4, 4)/(rho*g*under.volume);
+}
+		
+void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
+				Vector<double> &dataangle, Vector<double> &datagz) {
+	Vector<double> dataMoment, vol, disp, wett, wplane, draft;
+	Vector<Point3D> dcb, dcg;
+	GZ(from, to, delta, angleCalc, rho, g, Null, dataangle, datagz, dataMoment, 
+		vol, disp, wett, wplane, draft, dcb, dcg);
+}
+
 void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
 	Function <bool(String, int pos)> Status, 
 	Vector<double> &dataangle, Vector<double> &datagz, Vector<double> &dataMoment,
 	Vector<double> &vol, Vector<double> &disp, Vector<double> &wett, Vector<double> &wplane,
-	Vector<Point3D> &dcb, Vector<Point3D> &dcg) {
+	Vector<double> &draft, Vector<Point3D> &dcb, Vector<Point3D> &dcg) {
 	
+	dataangle.Clear();
 	datagz.Clear();
 	dataMoment.Clear();
 	vol.Clear();
 	disp.Clear();
 	wett.Clear();
 	wplane.Clear();
+	draft.Clear();
 	dcb.Clear();
 	dcg.Clear();
 	
@@ -252,7 +271,7 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 	
 	double dz = 0.1;
 	for (double angle = from; angle <= to; angle += delta) {
-		if (!Status("", int(100*(angle - from)/(to - from))))
+		if (Status && !Status("", int(100*(angle - from)/(to - from))))
 			throw Exc(t_("Cancelled by the user"));
 				
 		Surface base = clone(base0);
@@ -269,11 +288,11 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		
 		Point3D cb = under.GetCenterOfBuoyancy();
 		
-		Eigen::VectorXd fcb, fcg;
+		Force6 fcb, fcg;
 		under.GetHydrostaticForceCB(fcb, c00, cb, rho, g);	
 		Surface::GetMassForce(fcg, c00, cg, mass, g);
 	
-		double moment = -(fcg[4]+fcb[4]);
+		double moment = -(fcg.ry + fcb.ry);
 		double gz = moment/mass/g;
 		
 		dataangle << angle;
@@ -283,6 +302,7 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		disp << under.volume*rho;
 		wett << under.GetSurface();
 		wplane << under.GetWaterPlaneArea();
+		draft << under.GetEnvelope().minZ;
 		dcb << cb;
 		dcg << cg;
 	}	

@@ -77,7 +77,7 @@ CONSOLE_APP_MAIN
 #if defined(flagBEMR_TEST_DLL)
 		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
-#else if defined(flagBEMR_TEST_DLL_INTERNAL)
+#elif defined(flagBEMR_TEST_DLL_INTERNAL)
 		if (!SaveFile(AppendFileNameX(GetDesktopFolder(), "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
 #endif
