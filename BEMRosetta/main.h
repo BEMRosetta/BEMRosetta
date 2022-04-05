@@ -321,14 +321,35 @@ private:
 
 class VideoSequence {
 public:
+	struct VideoRecord {
+		Point3D pos, angle, c0;
+		double time;
+		void Jsonize(JsonIO &json) {
+			json
+				("pos",   pos)
+				("angle", angle)
+				("c0", 	  c0)
+				("time",  time)
+			;
+		}
+	};
+	
+	virtual ~VideoSequence() = 0; 
+	
 	virtual bool Load(String fileName) = 0;
 	virtual bool Save(String fileName) const = 0;
 	virtual void Clear() = 0;
+	virtual int GetRecord(VideoRecord &record, double time) = 0;
+	virtual int size() = 0;
 	template <class T>  bool Is() const	{return dynamic_cast<const T*>(this);}
+	virtual bool HasTime() = 0;
+	virtual void SetDeltaTime(double dt) = 0;
 };
 
 class BasicVideoSequence : public VideoSequence {
 public:
+	virtual ~BasicVideoSequence() {}
+	
 	virtual bool Load(String fileName) {
 		return LoadFromJsonFile(*this, fileName);
 	}
@@ -338,15 +359,32 @@ public:
 	virtual void Clear() {
 		reg.Clear();
 	}
-	void Add(const Point3D &pos, const Point3D &angle, double time) {
+	virtual int GetRecord(VideoRecord &record, double time) {
+		int askedId = min(reg.size()-1, int(time/deltaT));
+		
+		if (askedId > lastId) {
+			lastId++;
+			record = clone(reg[lastId]);
+			record.time = askedId*deltaT;
+			if (lastId == reg.size()-1) {
+				lastId = -1;
+				return 2;		// Last pos
+			}
+			return 1;
+		} else 
+			return 0;			// Pos already processed
+	}
+	virtual int size() {return reg.size();}
+	void Add(const Point3D &pos, const Point3D &angle, const Point3D &c0) {
 		auto &rg = reg.Add();
 		rg.pos = clone(pos);
 		rg.angle = clone(angle);
-		rg.time = time;
+		rg.c0 = clone(c0);
+		rg.time = 0;
 	}
-	void AddDelta(const Point3D &pos, const Point3D &angle, double dt) {
-		Add(pos, angle, dt*reg.size());
-	}
+	virtual bool HasTime() {return false;};
+	virtual void SetDeltaTime(double dt)	{deltaT = dt;}
+	
 	void Jsonize(JsonIO &json) {
 		json
 			("reg", reg)
@@ -354,49 +392,63 @@ public:
 	}
 	
 private:
-	struct Record {
-		Point3D pos, angle;
-		double time;
-		void Jsonize(JsonIO &json) {
-			json
-				("pos",   pos)
-				("angle", angle)
-				("time",  time)
-			;
-		}
-	} record;
-	Array<Record> reg;
+	Array<VideoRecord> reg;
+	double deltaT;
+	int lastId = -1;
 };
 
 class VideoCtrl : public WithVideoCtrl<StaticRect> {
 public:
 	typedef VideoCtrl CLASSNAME;
 	
-	VideoCtrl() {}
-	void Init();
-		
-	void OnPlay();
-	void OnStop();
-	void OnRecord();
+	enum VideoType {UNKNOWN, JSON, OpenFAST, CSV};
 	
-	void AddReg(const Point3D &pos, const Point3D &angle, double time) {
-		ASSERT(video->Is<BasicVideoSequence>());
-		static_cast<BasicVideoSequence&>(*video).Add(pos, angle, time);
+	VideoCtrl() {}
+	void Init(Function <int(Vector<int> &ids)> _GetMeshId, Function <void(int id, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action);
+	
+	~VideoCtrl() {
+		video.Clear();
 	}
-	void AddRegDelta(const Point3D &pos, const Point3D &angle, double dt) {
-		ASSERT(video->Is<BasicVideoSequence>());
-		static_cast<BasicVideoSequence&>(*video).AddDelta(pos, angle, dt);	
+	
+	void OnPlay();
+	void OnRecord();
+	void OnRecordClear();
+	void OnLoad();
+	void OnSave();
+	
+	VideoType GetVideoType(String name);
+	
+	bool IsBasicOpened() {return video && video->Is<BasicVideoSequence>();}
+	
+	void AddReg(const Point3D &pos, const Point3D &angle, const Point3D &c0) {
+		if (!IsBasicOpened())
+			return;
+		static_cast<BasicVideoSequence&>(*video).Add(pos, angle, c0);
+		numFrames <<= static_cast<BasicVideoSequence&>(*video).size();
+	}
+	void AddReg(const Point3D &angle, const Point3D &c0) {
+		if (!IsBasicOpened())
+			return;
+		static_cast<BasicVideoSequence&>(*video).Add(Point3D(0, 0, 0), angle, c0);
+		numFrames <<= static_cast<BasicVideoSequence&>(*video).size();
+	}
+	void AddReg(const Point3D &pos) {
+		if (!IsBasicOpened())
+			return;
+		static_cast<BasicVideoSequence&>(*video).Add(pos, Point3D(0, 0, 0), Point3D(0, 0, 0));	
+		numFrames <<= static_cast<BasicVideoSequence&>(*video).size();
 	}	
 	void ClearReg() {
-		ASSERT(video->Is<BasicVideoSequence>());
+		if (!IsBasicOpened())
+			return;
 		static_cast<BasicVideoSequence&>(*video).Clear();
+		numFrames <<= 0;
 	}
 	void Jsonize(JsonIO &json) {
-		if (json.IsLoading()) {
-			deltaT <<= Null;	
-		}
 		json
 			("deltaT", deltaT)
+			("editFile", editFile)
+			("opSaveBitmap", opSaveBitmap)
 		;
 	}
 	
@@ -405,6 +457,12 @@ private:
 	bool playing = false, recording = false;
 	RealTimeStop time;
 	double dT;
+	
+	Vector<int> ids;
+	int meshId = -1;
+	
+	Function <int(Vector<int> &ids)> GetMeshId;
+	Function<void(int meshid, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> Action;
 	
 	One<VideoSequence> video;
 };
@@ -540,7 +598,8 @@ public:
 	void Jsonize(JsonIO &json);
 	
 private:
-	Array<Vector<double>> dataangle, datagz, dataMoment;
+	Array<Vector<double>> datagz, dataMoment;
+	Vector<double> dangle, mingz;
 	int idOpened = Null;
 	
 	ScatterCtrl scatter;

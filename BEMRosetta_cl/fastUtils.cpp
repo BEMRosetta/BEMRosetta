@@ -91,3 +91,76 @@ String GetFASTVar(const String &strFile, String varName, String paragraph) {
 		return Null;
 	return Trim(strFile.Mid(posIni, pos - posIni));	
 }
+
+void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd) {
+	int id;
+	if ((id = strFile.Find(var)) < 0)
+		throw Exc(Format(t_("Wrong variable '%s' in GetMatrixIds"), var));
+	if ((id = strFile.ReverseFindAfter("\n", id)) < 0)
+		throw Exc(Format(t_("Problem reading variable '%s' in GetMatrixIds"), var));
+	
+	for (int i = 0; i < row; ++i) {
+		if ((id = strFile.FindAfter("\n", id)) < 0)
+			throw Exc(Format(t_("Problem reading variable '%s' row %d in GetMatrixIds"), var, row));
+	}
+	for (int ic = 0; ic <= col; ++ic) {
+		posIni = id;
+		while (id < strFile.GetCount() && IsSpace(strFile[id]))
+			id++;
+		while (id < strFile.GetCount() && !IsSpace(strFile[id]))
+			id++;
+		posEnd = id;
+	}
+	if (id == strFile.GetCount())
+		posEnd = id;
+		//throw Exc(Format(t_("Problem reading variable '%s' col %d in GetFASTMatrixIds"), var, col));				
+}
+
+double GetFASTMatrixVal(const String &strFile, String var, int row, int col) {
+	int posIni, posEnd;
+	GetFASTMatrixIds(strFile, var, row, col, posIni, posEnd);
+	
+	String data = strFile.Mid(posIni, posEnd-posIni);
+	double ddata = ScanDouble(data);
+	if (!IsNum(ddata))
+		throw Exc(Format(t_("Problem reading variable '%s' in GetFASTMatrixVal %d, %d"), var, row, col));
+	return ddata;
+}
+
+Eigen::MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols) {
+	Eigen::MatrixXd ret(rows, cols);
+	
+	for (int r = 0; r < rows; ++r)
+		for (int c = 0; c < cols; ++c)
+			ret(r, c) = GetFASTMatrixVal(strFile, var, r, c);
+			
+	return ret;
+}
+		
+Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph) {
+	int posIni, pos;
+	if (!GetFASTVarLine(strFile, var, paragraph, posIni, pos, 0))
+		throw Exc(Format(t_("Problem reading variable '%s' in GetFASTArray"), var));
+	
+	int num = ScanInt(strFile.Mid(posIni, pos - posIni));	
+	
+	for (int i = 0; i < 3; ++i) {
+		pos = strFile.FindAfter("\n", pos);
+		if (pos < 0)
+			throw Exc(Format(t_("Problem reading variable '%s' in GetFASTArray"), var));
+	}
+	Vector<Vector<String>> ret;
+	for (int i = 0; i < num; ++i) {
+		Vector<String> &str = ret.Add();
+		int npos = strFile.FindAfter("\n", pos);
+		if (npos < 0)
+			throw Exc(Format(t_("Problem reading variable '%s' in GetFASTArray"), var));
+		String line = strFile.Mid(pos, npos-pos);
+		line.Replace(",", " ");
+		line.Replace("\t", " ");
+		line = Trim(line);
+		str = Split(line, ' ', true);
+		pos = npos;
+	}
+	return ret;
+}
