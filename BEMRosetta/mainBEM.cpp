@@ -1252,41 +1252,41 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
 		if (data.Vo.size() > ib && !IsNull(data.Vo[ib])) 
-			array.Set(row++, col, FormatDoubleSize(data.Vo[ib], 10, false));
+			array.Set(row++, col, FDS(data.Vo[ib], 10, false));
 		else 
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
 		if (data.cg.size() > 3*ib && !IsNull(data.cg(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FormatDoubleSize(data.cg(0, ib), 10, false),
-									FormatDoubleSize(data.cg(1, ib), 10, false),
-									FormatDoubleSize(data.cg(2, ib), 10, false)));
+									FDS(data.cg(0, ib), 10, false),
+									FDS(data.cg(1, ib), 10, false),
+									FDS(data.cg(2, ib), 10, false)));
 		else
 			array.Set(row++, col, "-");
 
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
 		if (data.cb.size() > 3*ib && !IsNull(data.cb(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FormatDoubleSize(data.cb(0, ib), 10, false),
-									FormatDoubleSize(data.cb(1, ib), 10, false),
-									FormatDoubleSize(data.cb(2, ib), 10, false)));
+									FDS(data.cb(0, ib), 10, false),
+									FDS(data.cb(1, ib), 10, false),
+									FDS(data.cb(2, ib), 10, false)));
 		else
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("C0 [m]"));
 		if (data.c0.size() > 3*ib && !IsNull(data.c0(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FormatDoubleSize(data.c0(0, ib), 10, false),
-									FormatDoubleSize(data.c0(1, ib), 10, false),
-									FormatDoubleSize(data.c0(2, ib), 10, false)));
+									FDS(data.c0(0, ib), 10, false),
+									FDS(data.c0(1, ib), 10, false),
+									FDS(data.c0(2, ib), 10, false)));
 		else
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Waterplane area [m2]"));
 		if (data.C.size() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_ndim(ib, 2, 2);
-			array.Set(row++, col, FormatDoubleSize(wPlaneArea, 10, false));		
+			array.Set(row++, col, FDS(wPlaneArea, 10, false));		
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
@@ -1306,12 +1306,11 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		}
 		array.Set(row, 0, sib + " " + t_("Mass [kg]"));
 		if (data.M.size() > ib && data.M[ib].size() > 0) {
-			double mass = data.M[ib](0, 0); 
-			array.Set(row++, col, FormatDoubleSize(mass, 10, false));	
+			array.Set(row++, col, FDS(data.M[ib](0, 0), 10, false));	
 			for (int i = 3; i < 6; ++i) {
 				for (int j = 3; j < 6; ++j) {
 					array.Set(row, 0, sib + " " + Format(t_("Inertia(%d,%d) [kg/m2]"), i+1-3, j+1-3));	
-					array.Set(row++, col, FormatDoubleSize(data.M[ib](i, j), 10, false));		
+					array.Set(row++, col, FDS(data.M[ib](i, j), 10, false));		
 				}
 			}
 		} else {
@@ -1322,6 +1321,29 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 					array.Set(row++, col, "-");		
 				}
 			}
+		}
+		array.Set(row,   0, sib + " " + t_("Theave [s]"));
+		array.Set(row+1, 0, sib + " " + t_("Troll [s]"));
+		array.Set(row+2, 0, sib + " " + t_("Tpitch [s]"));
+		if (IsNum(data.rho) && IsNum(data.g) && 
+			data.M.size() > ib && data.M[ib].size() > 0 && 
+			data.C.size() > ib && data.C[ib].size() > 0) {
+			array.Set(row++, col, FDS(data.Theave(ib), 5, false));
+			array.Set(row++, col, FDS(data.Troll(ib), 5, false));
+			array.Set(row++, col, FDS(data.Tpitch(ib), 5, false));
+		} else {
+			array.Set(row++, col, "-");	
+			array.Set(row++, col, "-");	
+			array.Set(row++, col, "-");	
+		}
+		array.Set(row,   0, sib + " " + t_("GMroll [m]"));
+		array.Set(row+1, 0, sib + " " + t_("GMpitch [m]"));
+		if (IsNum(data.rho) && IsNum(data.g)) {
+			array.Set(row++, col, FDS(data.GMroll(ib), 5, false));
+			array.Set(row++, col, FDS(data.GMpitch(ib), 5, false));
+		} else {
+			array.Set(row++, col, "-");	
+			array.Set(row++, col, "-");	
 		}
 	}	
 }

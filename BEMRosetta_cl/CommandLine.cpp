@@ -87,6 +87,11 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
 	Cout() << "\n" << t_("                 nh                  # Number of headings    []");
 	Cout() << "\n" << t_("                 ainf <dof1> <dof2>  # Ainf(6*Nb, 6*Nb)  [Kg]");
+	Cout() << "\n" << t_("                 Theave <ibody>      # Heave resonance period for body ib [s]");
+	Cout() << "\n" << t_("                 Troll <ibody>       # Roll resonance period for body ib [s]");
+	Cout() << "\n" << t_("                 Tpitch <ibody>      # Pitch resonance period for body ib [s]");
+	Cout() << "\n" << t_("                 GMroll <ibody>      # GM in roll [m]");
+	Cout() << "\n" << t_("                 GMpitch <ibody>     # GM in pitch [m]");
 	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
 	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	Cout() << "\n";
@@ -129,6 +134,9 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("                                #         Mx(roll), My(pitch), Mz(yaw) [N·m]");
 	Cout() << "\n" << t_("              inertia <cx> <cy> <cz> # Inertia tensor around cx, cy, cz [m]");
 	Cout() << "\n" << t_("                                # returns Ixx Ixy Ixz Iyx Iyy Iyz Izx Izy Izz [m2]");
+	Cout() << "\n" << t_("              GZ <angle> <from> <to> <delta> # GZ around angle [deg] (0 is around Y axis), from-to-delta [deg]");
+	Cout() << "\n" << t_("                                # returns the set of angles [deg] and their gz values [m]");
+	Cout() << "\n" << t_("              GM                # returns GMpitch GMroll [m]");
 
 	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
 	
@@ -151,7 +159,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 	SetBuildInfo(str);
 	Cout() << str;
 	
-	SetCurrentDirectory(GetExeFilePath());
+	ChangeCurrentDirectory(GetExeFilePath());
 	
 	BEM bem;
 	
@@ -197,7 +205,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							String strfile = LoadFile(paramfile);
 							if (strfile.IsEmpty())
 								throw Exc(Format("-paramfile file '%s' not found", paramfile));
-							SetCurrentDirectory(GetFileFolder(paramfile));
+							ChangeCurrentDirectory(GetFileFolder(paramfile));
 							command.Insert(i+1 , pick(GetCommandLineParams(strfile)));
 						} else if (param == "-params") {
 							CheckIfAvailableArg(command, i+1, "-params");
@@ -334,7 +342,53 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									BEM::Print(Format(t_("Ainf(%d,%d):"), idf, jdf) + " "); 
 									lastPrint = Format("%f", data.Ainf_dim(idf-1, jdf-1));
 									Cout() << lastPrint;
-								}
+								} else if (param == "theave") {
+									CheckIfAvailableArg(command, ++i, "Id. body");
+									int ib = ScanInt(command[i]);
+									if (ib < 1 || ib > data.Nb)
+										throw Exc(Format(t_("Wrong body id. in '%s'"), command[i]));
+									Cout() << "\n";
+									BEM::Print(Format(t_("Theave(%d):"), ib) + " "); 
+									lastPrint = Format("%f", data.Theave(ib-1));
+									Cout() << lastPrint;
+								} else if (param == "troll") {
+									CheckIfAvailableArg(command, ++i, "Id. body");
+									int ib = ScanInt(command[i]);
+									if (ib < 1 || ib > data.Nb)
+										throw Exc(Format(t_("Wrong body id. in '%s'"), command[i]));
+									Cout() << "\n";
+									BEM::Print(Format(t_("Troll(%d):"), ib) + " "); 
+									lastPrint = Format("%f", data.Troll(ib-1));
+									Cout() << lastPrint;
+								} else if (param == "tpitch") {
+									CheckIfAvailableArg(command, ++i, "Id. body");
+									int ib = ScanInt(command[i]);
+									if (ib < 1 || ib > data.Nb)
+										throw Exc(Format(t_("Wrong body id. in '%s'"), command[i]));
+									Cout() << "\n";
+									BEM::Print(Format(t_("Tpitch(%d):"), ib) + " "); 
+									lastPrint = Format("%f", data.Tpitch(ib-1));
+									Cout() << lastPrint;
+								} else if (param == "gmroll") {
+									CheckIfAvailableArg(command, ++i, "Id. body");
+									int ib = ScanInt(command[i]);
+									if (ib < 1 || ib > data.Nb)
+										throw Exc(Format(t_("Wrong body id. in '%s'"), command[i]));
+									Cout() << "\n";
+									BEM::Print(Format(t_("GMroll(%d):"), ib) + " "); 
+									lastPrint = Format("%f", data.GMroll(ib-1));
+									Cout() << lastPrint;
+								} else if (param == "gmpitch") {
+									CheckIfAvailableArg(command, ++i, "Id. body");
+									int ib = ScanInt(command[i]);
+									if (ib < 1 || ib > data.Nb)
+										throw Exc(Format(t_("Wrong body id. in '%s'"), command[i]));
+									Cout() << "\n";
+									BEM::Print(Format(t_("GMpitch(%d):"), ib) + " "); 
+									lastPrint = Format("%f", data.GMpitch(ib-1));
+									Cout() << lastPrint;
+								} else
+									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 							}
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
@@ -517,10 +571,10 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									Cout() << "\n";
 									BEM::Print(t_("HydrostaticForce:") + S(" "));
 									lastPrint.Clear();
-									Eigen::VectorXd f;
+									Force6 f;
 									data.under.GetHydrostaticForce(f, data.c0, bem.rho, bem.g);
 									for (int i = 0; i < 6; ++i) 				
-										lastPrint << f(i) << " ";
+										lastPrint << f[i] << " ";
 									int idColor = data.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
 									if (idColor == -1)
 										lastPrint << ". " << t_("Mesh warning: Maybe incomplete");
@@ -539,10 +593,36 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									centre.y = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Inertia cz");
 									centre.z = ScanDouble(command[i]);
-									data.mesh.GetInertia(inertia, centre, true);
+									data.mesh.GetInertia33(inertia, centre, true);
 									for (int i = 0; i < 3; ++i) 
 										for (int j = 0; j < 3; ++j) 
 											lastPrint << inertia(i, j) << " ";
+									Cout() << lastPrint;
+								} else if (param == "gz") {
+									Cout() << "\n";
+									BEM::Print(t_("GZ:") + S(" "));
+									lastPrint.Clear();
+									Eigen::Matrix3d inertia;
+									CheckIfAvailableArg(command, ++i, "Angle");
+									double angle = ScanDouble(command[i]);
+									CheckIfAvailableArg(command, ++i, "From");
+									double from = ScanDouble(command[i]);
+									CheckIfAvailableArg(command, ++i, "To");
+									double to = ScanDouble(command[i]);
+									CheckIfAvailableArg(command, ++i, "Delta");
+									double delta = ScanDouble(command[i]);
+									Vector<double> dataangle, datagz;
+									data.GZ(from, to, delta, angle, bem.rho, bem.g, dataangle, datagz);									
+									for (int i = 0; i < dataangle.size(); ++i) 
+										lastPrint << dataangle[i] << " ";
+									lastPrint << "\n";
+									for (int i = 0; i < datagz.size(); ++i) 
+										lastPrint << datagz[i] << " ";
+									Cout() << lastPrint;
+								} else if (param == "gm") {
+									Cout() << "\n";
+									BEM::Print(t_("gm:") + S(" ")); 
+									lastPrint = Format("%f %f", data.GMpitch(bem.rho, bem.g), data.GMroll(bem.rho, bem.g));
 									Cout() << lastPrint;
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));

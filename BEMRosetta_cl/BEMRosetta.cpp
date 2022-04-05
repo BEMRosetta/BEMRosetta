@@ -1242,6 +1242,26 @@ void Hydro::CheckNaN() {
 		throw Exc("Error loading rao. NaN found");	
 }
 
+double Hydro::Theave(int ib) const {
+	return 2*M_PI*sqrt((M[ib](0, 0) + Ainf_dim(ib*6+2, ib*6+2))/C_dim(ib, 2, 2)); 
+}
+
+double Hydro::Troll(int ib) const {
+	return 2*M_PI*sqrt((M[ib](3, 3) + Ainf_dim(ib*6+3, ib*6+3))/C_dim(ib, 3, 3)); 
+}
+
+double Hydro::Tpitch(int ib) const {
+	return 2*M_PI*sqrt((M[ib](4, 4) + Ainf_dim(ib*6+4, ib*6+4))/C_dim(ib, 4, 4)); 
+}
+
+double Hydro::GMroll(int ib) const {
+	return C_dim(ib, 3, 3)/(rho*g*Vo[ib]);
+}
+
+double Hydro::GMpitch(int ib) const {
+	return C_dim(ib, 4, 4)/(rho*g*Vo[ib]);
+}
+
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
 	Upp::Array<Eigen::MatrixXd> oldA, oldB, oldKirf;

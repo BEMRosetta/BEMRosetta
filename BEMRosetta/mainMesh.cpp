@@ -230,14 +230,61 @@ void MainMesh::Init() {
 		
 	mainViewData.Init();
 	splitterVideo.Vert(mainView.SizePos(), videoCtrl.SizePos());
-	splitterVideo.SetPositions(9200, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
+	splitterVideo.SetPositions(8500, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
 	splitterAll.Horz(splitterVideo.SizePos(), mainViewData.SizePos());
 	splitterAll.SetPositions(6000, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
 	splitterAll.Tip(t_("")).WhenAction = [&] {mainView.SetPaintSelect(splitterAll.GetPos() < 9900);};
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
 	mainView.Init();
 	
-	videoCtrl.Init();
+	String bitmapFolder = AppendFileNameX(GetDesktopFolder(), "BEMRosetta Mesh Images");
+	int idBitmapFolder = 0;
+	
+	videoCtrl.Init([&](Vector<int> &ids)->int {
+			ids = ArrayModel_IdsMesh(listLoaded);
+			int num = ArrayCtrlSelectedGetCount(listLoaded);
+			if (num > 1) {
+				Exclamation(t_("Please select just one model"));
+				return -1;
+			}
+			int id;
+			if (num == 0 && listLoaded.GetCount() == 1)
+				id = ArrayModel_IdMesh(listLoaded, 0);
+			else {
+			 	id = ArrayModel_IdMesh(listLoaded);
+				if (id < 0) {
+					Exclamation(t_("Please select a model to process"));
+					return -1;
+				}
+			}
+			return id;
+		}, [&](int id, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
+			Mesh &data = Bem().surfs[id];			
+			
+			data.cg.TransRot(pos.x, pos.y, pos.z, angle.x, angle.y, angle.z, c0.x, c0.y, c0.z);
+			data.mesh.TransRot(pos.x, pos.y, pos.z, angle.x, angle.y, angle.z, c0.x, c0.y, c0.z);
+			
+			menuProcess.x_g <<= data.cg.x;
+			menuProcess.y_g <<= data.cg.y;
+			menuProcess.z_g <<= data.cg.z;
+			
+			data.AfterLoad(Bem().rho, Bem().g, false, false);
+			
+			if (full)
+				mainStiffness.Load(Bem().surfs, ids);
+			mainView.CalcEnvelope();
+			if (full)
+				mainSummary.Report(Bem().surfs, id);
+			
+			mainView.gl.Refresh();
+			if (saveBitmap) {
+				RealizeDirectory(bitmapFolder);
+				DeleteFileDeepWildcardsX(bitmapFolder);
+				mainView.gl.SaveToFile(AppendFileNameX(bitmapFolder, Format("Image%4d", idBitmapFolder++)));
+			}
+			if (full)
+				mainViewData.OnRefresh();
+		});
 	
 	
 	mainSummary.Init();
@@ -513,6 +560,7 @@ bool MainMesh::OnLoad() {
 			Surface under;
 			if (data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under)) {
 				data.cg.Translate(0, 0, dz);
+				videoCtrl.AddReg(Point3D(0, 0, dz));
 				//menuMove.pos_z <<= data.mesh.GetPos().z;
 			} else
 				Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
@@ -615,9 +663,9 @@ void MainMesh::OnReset() {
 		//menuMove.ang_x <<= data.mesh.GetAngle().x;
 		//menuMove.ang_y <<= data.mesh.GetAngle().y;
 		//menuMove.ang_z <<= data.mesh.GetAngle().z;
-		menuProcess.x_g<<= data.cg.x; 
-		menuProcess.y_g<<= data.cg.y;
-		menuProcess.z_g<<= data.cg.z;
+		menuProcess.x_g <<= data.cg.x; 
+		menuProcess.y_g <<= data.cg.y;
+		menuProcess.z_g <<= data.cg.z;
 		
 		ma().Status(t_("Model oriented on the initial layout"));
 		
@@ -731,20 +779,23 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		if (action == MOVE) {
 			data.cg.Translate(t_x, t_y, t_z);
 			data.mesh.Translate(t_x, t_y, t_z);
+			videoCtrl.AddReg(Point3D(t_x, t_y, t_z));
 			
 			ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
 			
 		} else if (action == ROTATE) {
 			data.cg.Rotate(a_x, a_y, a_z, x_0, y_0, z_0);
 			data.mesh.Rotate(a_x, a_y, a_z, x_0, y_0, z_0);
+			videoCtrl.AddReg(Point3D(a_x, a_y, a_z), Point3D(x_0, y_0, z_0));
 			
 			if (~menuMove.opZArchimede) {
 				double dz = 0;
 				Surface under;
 				data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under);
-				if (!IsNull(dz)) 
+				if (!IsNull(dz)) {
 					data.cg.Translate(0, 0, dz);
-				else
+					videoCtrl.AddReg(Point3D(0, 0, dz));
+				} else
 					Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
 				
 				ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
@@ -1419,12 +1470,24 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 														FormatDoubleSize(data.c0.x, 10, false),			
 														FormatDoubleSize(data.c0.y, 10, false),
 														FormatDoubleSize(data.c0.z, 10, false)));
-														
+
+	array.Set(row, 0, t_("GMroll [m]")); 		array.Set(row++, col, FormatDoubleSize(data.GMroll(Bem().rho, Bem().g), 5, false));
+	array.Set(row, 0, t_("GMpitch [m]")); 		array.Set(row++, col, FormatDoubleSize(data.GMpitch(Bem().rho, Bem().g), 5, false));
+	
+	Direction3D cgcb = data.cg - data.cb;
+	double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
+	array.Set(row, 0, t_("GZ [m]"));					array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
+												
 	array.Set(row, 0, t_("Surface projection Z-axis (Waterplane Area) [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
 														FormatDoubleSize(-data.zProjectionPos, 10, false),
 														FormatDoubleSize(data.zProjectionNeg,  10, false),
 														FormatDoubleSize(data.zProjectionPos+data.zProjectionNeg, 10, false)));
+	
+	array.Set(row, 0, t_("Waterplane geometric centre [m]"));
+												array.Set(row++, col, Format(t_("%s, %s"),
+														FormatDoubleSize(data.cgZ0surface.x, 10, false),			
+														FormatDoubleSize(data.cgZ0surface.y, 10, false)));
 		
 	array.Set(row, 0, t_("Surface projection X-axis [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
@@ -1446,7 +1509,7 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 														FormatDoubleSize(data.mesh.env.maxY, 10, false),
 														FormatDoubleSize(data.mesh.env.maxZ, 10, false)));
 
-	Eigen::VectorXd f, fcb, fcg;
+	Force6 f, fcb, fcg;
 	data.under.GetHydrostaticForce(f, data.c0, Bem().rho, Bem().g);	
 	data.under.GetHydrostaticForceCB(fcb, data.c0, data.cb, Bem().rho, Bem().g);	
 	Surface::GetMassForce(fcg, data.c0, data.cg, data.mass, Bem().g);	
@@ -1499,10 +1562,6 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 														"0")));		
 	else
 		array.Set(row++, col, "");
-
-	Vector3D cgcb = data.cg - data.cb;
-	double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
-	array.Set(row, 0, t_("GZ [m]"));					array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
 														
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (data.C.size() > 0) {
@@ -1765,18 +1824,20 @@ void MainGZ::OnUpdate() {
 		
 		Progress progress(t_("GZ calculation..."), 100*numAngle); 
 		
+		datagz.Clear();
+		dataMoment.Clear();
+			
 		int iangle = 0;
 		for (double angle = double(~edAngleFrom); angle <= angleTo; angle += angleDelta, iangle++) {
-			Vector<double> &dangle = dataangle.Add();
 			Vector<double> &dgz = datagz.Add();
 			Vector<double> &dMoment = dataMoment.Add();
-			Vector<double> vol, disp, wett, wplane;
+			Vector<double> vol, disp, wett, wplane, draft;
 			Vector<Point3D> cb, cg;
 			
 			data.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, [&](String, int pos)->bool {
 					progress.SetPos(pos + 100*iangle);
 					return !progress.Canceled();
-				}, dangle, dgz, dMoment, vol, disp, wett, wplane, cb, cg);
+				}, dangle, dgz, dMoment, vol, disp, wett, wplane, draft, cb, cg);
 			
 			Upp::Color color = ScatterDraw::GetNewColor(iangle);
 			scatter.AddSeries(dangle, dgz).NoMark().Legend(Format(t_("GZ %.1f"), angle))
@@ -1798,11 +1859,13 @@ void MainGZ::OnUpdate() {
 				array.Set(row++, col, angle);
 				array.Set(row++, col, dangle[i]);
 				int numdec = 8;
-				array.Set(row++, col, FormatDoubleSize(disp[i], numdec));
 				array.Set(row++, col, FormatDoubleSize(dgz[i], numdec));				
 				array.Set(row++, col, FormatDoubleSize(dMoment[i], numdec));
+				array.Set(row++, col, FormatDoubleSize(disp[i], numdec));
+				array.Set(row++, col, FormatDoubleSize(vol[i], numdec));
 				array.Set(row++, col, FormatDoubleSize(wett[i], numdec));
 				array.Set(row++, col, FormatDoubleSize(wplane[i], numdec));
+				array.Set(row++, col, FormatDoubleSize(draft[i], numdec));
 				array.Set(row++, col, FormatDoubleSize(cb[i].x, numdec));
 				array.Set(row++, col, FormatDoubleSize(cb[i].y, numdec));
 				array.Set(row++, col, FormatDoubleSize(cb[i].z, numdec));
@@ -1810,6 +1873,36 @@ void MainGZ::OnUpdate() {
 				array.Set(row++, col, FormatDoubleSize(cg[i].y, numdec));
 				array.Set(row++, col, FormatDoubleSize(cg[i].z, numdec));
 			}
+		}
+		
+		if (~opShowEnvelope) {
+			mingz.Clear();
+			mingz.SetCount(dangle.size(), 0);
+			for (int i = 0; i < dangle.size(); ++i) {
+				for (int iangle = 0; iangle < datagz.size(); ++iangle) {
+					if (dangle[i] < 0) {
+						if (datagz[iangle][i] > 0) {
+							mingz[i] = 0;
+							break;
+						} else if (mingz[i] == 0) 
+							mingz[i] = datagz[iangle][i];
+						else {
+							double d = datagz[iangle][i];
+							mingz[i] = mingz[i] < datagz[iangle][i] ? datagz[iangle][i] : mingz[i];
+						}
+					} else {
+						if (datagz[iangle][i] < 0) {
+							mingz[i] = 0;
+							break;
+						} else if (mingz[i] == 0) 
+							mingz[i] = datagz[iangle][i];
+						else 
+							mingz[i] = mingz[i] > datagz[iangle][i] ? datagz[iangle][i] : mingz[i];
+					}
+				}
+			}
+			scatter.AddSeries(dangle, mingz).NoMark().Legend(t_("Envelope"))
+					   .Units(t_("m"), t_("sec")).Stroke(4, Black()).Dash(LINE_SOLID);
 		}
 	} catch(Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -1836,11 +1929,13 @@ void MainGZ::Clear(bool force) {
 	int row = 0;
 	array.Set(row++, 0, t_("ZoY plane [º]"));
 	array.Set(row++, 0, t_("Angle [º]"));
-	array.Set(row++, 0, t_("Displacement [kg]"));
 	array.Set(row++, 0, t_("GZ [m]"));
 	array.Set(row++, 0, t_("Heeling lever [N·m]"));
+	array.Set(row++, 0, t_("Displacement [kg]"));
+	array.Set(row++, 0, t_("Sub. volume [m3]"));
 	array.Set(row++, 0, t_("Wetted area [m2]"));
 	array.Set(row++, 0, t_("Waterpl. area [m2]"));
+	array.Set(row++, 0, t_("Draft [m]"));
 	array.Set(row++, 0, t_("Cb_x [m]"));
 	array.Set(row++, 0, t_("Cb_y [m]"));
 	array.Set(row++, 0, t_("Cb_z [m]"));
@@ -1865,5 +1960,6 @@ void MainGZ::Jsonize(JsonIO &json) {
 		("edAngleFrom", edAngleFrom)
 		("edAngleTo", edAngleTo)
 		("edAngleDelta", edAngleDelta)
+		("opShowEnvelope", opShowEnvelope)
 	;
 }

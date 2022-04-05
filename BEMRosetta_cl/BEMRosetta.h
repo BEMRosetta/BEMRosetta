@@ -118,8 +118,6 @@ public:
     Upp::Array<Upp::Array<Eigen::VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
     Eigen::VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
     
-    double GetMass(int ib) {return M[ib](0, 0);}
-    
     int GetHeadId(double hd) const;
 	
     struct Forces : public DeepCopyOption<Forces> {
@@ -440,6 +438,12 @@ public:
 	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
+	double Theave(int ib) const;
+	double Troll(int ib) const;
+	double Tpitch(int ib) const;
+	double GMroll(int ib) const;
+	double GMpitch(int ib) const;
+	
 	void SetId(int _id)			{id = _id;}
 	int GetId()	const			{return id;}
 	
@@ -631,8 +635,13 @@ public:
 		Function <bool(String, int pos)> Status, 
 		Vector<double> &dataangle, Vector<double> &dataGZ, Vector<double> &dataMoment,
 		Vector<double> &vol, Vector<double> &disp, Vector<double> &wett, Vector<double> &wplane,
-		Vector<Point3D> &dcb, Vector<Point3D> &dcg);
+		Vector<double> &draft, Vector<Point3D> &dcb, Vector<Point3D> &dcg);
+	void GZ(double from, double to, double delta, double angleCalc, double rho, double g,
+				Vector<double> &dataangle, Vector<double> &datagz);
 
+	double GMroll(double rho, double g) const;
+	double GMpitch(double rho, double g) const;
+	
 	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels);
 	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
 		int nNodes, nPanels;
@@ -645,6 +654,7 @@ public:
 	bool IsSymmetricY();
 	
 	double xProjectionPos, xProjectionNeg, yProjectionPos, yProjectionNeg, zProjectionPos, zProjectionNeg; 
+	Pointf cgZ0surface = Null;
 	Point3D cb = Null;
 	Point3D cg, cg0, c0;
 	double mass = Null;
@@ -1290,7 +1300,10 @@ String FormatIntEmpty(int val);
 
 String GetFASTVar(const String &strFile, String varName, String paragraph = "");
 void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
-
+void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd);
+double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
+Eigen::MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
+Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph);	
 
 class FASTFiles {
 public:
@@ -1373,23 +1386,15 @@ private:
 				if (fileText.IsEmpty())
 					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			}
-			int posIni, posEnd;
-			GetMatrixIds(var, row, col, posIni, posEnd);
-			
-			String data = fileText.Mid(posIni, posEnd-posIni);
-			double ddata = ScanDouble(data);
-			if (!IsNum(ddata))
-				throw Exc(Format(t_("Problem reading variable '%s' in GetMatrix %d, %d"), var, row, col));
-			return ddata;
+			return GetFASTMatrixVal(fileText, var, row, col);
 		}
 		Eigen::MatrixXd GetMatrix(String var, int rows, int cols) {
-			Eigen::MatrixXd ret(rows, cols);
-			
-			for (int r = 0; r < rows; ++r)
-				for (int c = 0; c < rows; ++c)
-					ret(r, c) = GetMatrixVal(var, r, c);
-					
-			return ret;
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			return GetFASTMatrix(fileText, var, rows, cols);
 		}
 		void SetMatrixVal(String var, int row, int col, double val) {
 			int posIni, posEnd;
@@ -1437,26 +1442,7 @@ private:
 				if (fileText.IsEmpty())
 					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			}
-			int id;
-			if ((id = fileText.Find(var)) < 0)
-				throw Exc(Format(t_("Wrong variable '%s' in GetMatrixIds"), var));
-			if ((id = fileText.ReverseFindAfter("\n", id)) < 0)
-				throw Exc(Format(t_("Problem reading variable '%s' in GetMatrixIds"), var));
-			
-			for (int i = 0; i < row; ++i) {
-				if ((id = fileText.FindAfter("\n", id)) < 0)
-					throw Exc(Format(t_("Problem reading variable '%s' row %d in GetMatrixIds"), var, row));
-			}
-			for (int ic = 0; ic <= col; ++ic) {
-				posIni = id;
-				while (id < fileText.GetCount() && IsSpace(fileText[id]))
-					id++;
-				while (id < fileText.GetCount() && !IsSpace(fileText[id]))
-					id++;
-				posEnd = id;
-			}
-			if (id == fileText.GetCount())
-				throw Exc(Format(t_("Problem reading variable '%s' col %d in GetMatrixIds"), var, col));				
+			GetFASTMatrixIds(fileText, var, row, col, posIni, posEnd);
 		}
 	};
 
