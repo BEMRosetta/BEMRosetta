@@ -230,10 +230,14 @@ bool Mesh::IsSymmetricY() {
 }
 
 double Mesh::GMroll(double rho, double g) const {
+	if (!IsNum(rho) || !IsNum(g) || under.volume == 0)
+		return Null;
 	return C(3, 3)/(rho*g*under.volume);
 }
 
 double Mesh::GMpitch(double rho, double g) const {
+	if (!IsNum(rho) || !IsNum(g) || under.volume == 0)
+		return Null;
 	return C(4, 4)/(rho*g*under.volume);
 }
 		

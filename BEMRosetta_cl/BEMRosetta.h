@@ -1303,8 +1303,8 @@ void SetFASTVar(String &strFile, String varName, String value, String paragraph 
 void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd);
 double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
 Eigen::MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
-Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph);	
-
+Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
+	
 class FASTFiles {
 public:
 	void Load(String file) {
@@ -1402,7 +1402,7 @@ private:
 			
 			int delta = posEnd-posIni-1;
 			
-			fileText = fileText.Left(posIni) + S(" ") + FormatDoubleSize(val, delta, true) + fileText.Mid(posEnd);
+			fileText = fileText.Left(posIni) + S(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
 		}
 		
 		void SetString(String var, String val) {
@@ -1413,7 +1413,7 @@ private:
 			SetString0(var, FormatInt(val));
 		}
 		void SetDouble(String var, double val) {
-			SetString0(var, FormatDoubleSize(val, 10));
+			SetString0(var, FDS(val, 10));
 		}
 		void SetBool(String var, bool val) {
 			SetString0(var, val ? "True" : "False");

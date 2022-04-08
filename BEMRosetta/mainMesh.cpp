@@ -1444,70 +1444,87 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());
 
-	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FormatDoubleSize(data.mesh.surface, 8, false));
+	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FDS(data.mesh.surface, 8, false));
 	array.Set(row, 0, t_("Volume [m3] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
-														FormatDoubleSize(data.mesh.volume,  10, false),
-														FormatDoubleSize(data.mesh.volumex, 10, false),
-														FormatDoubleSize(data.mesh.volumey, 10, false),
-														FormatDoubleSize(data.mesh.volumez, 10, false))).Paper(backColorMesh));
+														FDS(data.mesh.volume,  10, false),
+														FDS(data.mesh.volumex, 10, false),
+														FDS(data.mesh.volumey, 10, false),
+														FDS(data.mesh.volumez, 10, false))).Paper(backColorMesh));
 	
-	array.Set(row, 0, t_("Wetted surface [m2]"));array.Set(row++, col, FormatDoubleSize(data.under.surface, 10, false));
+	array.Set(row, 0, t_("Wetted surface [m2]"));array.Set(row++, col, FDS(data.under.surface, 10, false));
 	array.Set(row, 0, t_("Immersed volume [m3] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
-														FormatDoubleSize(data.under.volume,  10, false),
-														FormatDoubleSize(data.under.volumex, 10, false),
-														FormatDoubleSize(data.under.volumey, 10, false),
-														FormatDoubleSize(data.under.volumez, 10, false))).Paper(backColorUnder));
-	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FormatDoubleSize(data.under.volume*Bem().rho, 10, false));
+														FDS(data.under.volume,  10, false),
+														FDS(data.under.volumex, 10, false),
+														FDS(data.under.volumey, 10, false),
+														FDS(data.under.volumez, 10, false))).Paper(backColorUnder));
+	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FDS(data.under.volume*Bem().rho, 10, false));
 	array.Set(row, 0, t_("Cg [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FormatDoubleSize(data.cg.x, 10, false),			
-														FormatDoubleSize(data.cg.y, 10, false),
-														FormatDoubleSize(data.cg.z, 10, false)));
-	array.Set(row, 0, t_("Cb [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FormatDoubleSize(data.cb.x, 10, false),			
-														FormatDoubleSize(data.cb.y, 10, false),
-														FormatDoubleSize(data.cb.z, 10, false)));
+														FDS(data.cg.x, 10, false),			
+														FDS(data.cg.y, 10, false),
+														FDS(data.cg.z, 10, false)));
+	array.Set(row, 0, t_("Cb [m]"));
+	if (!IsNull(data.cb))	
+		array.Set(row++, col, Format(t_("%s, %s, %s"),  FDS(data.cb.x, 10, false),			
+														FDS(data.cb.y, 10, false),
+														FDS(data.cb.z, 10, false)));
+	else 
+		array.Set(row++, col, "-");
 	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FormatDoubleSize(data.c0.x, 10, false),			
-														FormatDoubleSize(data.c0.y, 10, false),
-														FormatDoubleSize(data.c0.z, 10, false)));
+														FDS(data.c0.x, 10, false),			
+														FDS(data.c0.y, 10, false),
+														FDS(data.c0.z, 10, false)));
 
-	array.Set(row, 0, t_("GMroll [m]")); 		array.Set(row++, col, FormatDoubleSize(data.GMroll(Bem().rho, Bem().g), 5, false));
-	array.Set(row, 0, t_("GMpitch [m]")); 		array.Set(row++, col, FormatDoubleSize(data.GMpitch(Bem().rho, Bem().g), 5, false));
-	
-	Direction3D cgcb = data.cg - data.cb;
-	double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
-	array.Set(row, 0, t_("GZ [m]"));					array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
+	array.Set(row, 0, t_("GMroll [m]"));
+	double gmpitch = data.GMpitch(Bem().rho, Bem().g); 	
+	if (IsNum(gmpitch))
+ 		array.Set(row++, col, FDS(gmpitch, 5, false));
+	else
+		array.Set(row++, col, "-");
+	array.Set(row, 0, t_("GMpitch [m]")); 		
+	double gmroll = data.GMroll(Bem().rho, Bem().g); 	
+	if (IsNum(gmroll))
+		array.Set(row++, col, FDS(gmroll, 5, false));
+	else
+		array.Set(row++, col, "-");
+	array.Set(row, 0, t_("GZ [m]"));
+	if (!IsNull(data.cb)) {
+		Direction3D cgcb = data.cg - data.cb;
+		double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
+		array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
+	} else
+		array.Set(row++, col, "-");
 												
 	array.Set(row, 0, t_("Surface projection Z-axis (Waterplane Area) [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FormatDoubleSize(-data.zProjectionPos, 10, false),
-														FormatDoubleSize(data.zProjectionNeg,  10, false),
-														FormatDoubleSize(data.zProjectionPos+data.zProjectionNeg, 10, false)));
+														FDS(-data.zProjectionPos, 10, false),
+														FDS(data.zProjectionNeg,  10, false),
+														FDS(data.zProjectionPos+data.zProjectionNeg, 10, false)));
 	
 	array.Set(row, 0, t_("Waterplane geometric centre [m]"));
-												array.Set(row++, col, Format(t_("%s, %s"),
-														FormatDoubleSize(data.cgZ0surface.x, 10, false),			
-														FormatDoubleSize(data.cgZ0surface.y, 10, false)));
-		
+	if (!IsNull(data.cgZ0surface)) 
+		array.Set(row++, col, Format(t_("%s, %s"), FDS(data.cgZ0surface.x, 10, false),			
+												   FDS(data.cgZ0surface.y, 10, false)));
+	else
+		array.Set(row++, col, "-");
 	array.Set(row, 0, t_("Surface projection X-axis [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FormatDoubleSize(-data.xProjectionPos, 10, false),
-														FormatDoubleSize(data.xProjectionNeg,  10, false),
-														FormatDoubleSize(data.xProjectionPos+data.xProjectionNeg, 10, false)));
+														FDS(-data.xProjectionPos, 10, false),
+														FDS(data.xProjectionNeg,  10, false),
+														FDS(data.xProjectionPos+data.xProjectionNeg, 10, false)));
 	
 	array.Set(row, 0, t_("Surface projection Y-axis [m2]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FormatDoubleSize(-data.yProjectionPos, 10, false),
-														FormatDoubleSize(data.yProjectionNeg,  10, false),
-														FormatDoubleSize(data.yProjectionPos+data.yProjectionNeg, 10, false)));
+														FDS(-data.yProjectionPos, 10, false),
+														FDS(data.yProjectionNeg,  10, false),
+														FDS(data.yProjectionPos+data.yProjectionNeg, 10, false)));
 	
 	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
-														FormatDoubleSize(data.mesh.env.minX, 10, false),
-														FormatDoubleSize(data.mesh.env.minY, 10, false),
-														FormatDoubleSize(data.mesh.env.minZ, 10, false),
-														FormatDoubleSize(data.mesh.env.maxX, 10, false),
-														FormatDoubleSize(data.mesh.env.maxY, 10, false),
-														FormatDoubleSize(data.mesh.env.maxZ, 10, false)));
+														FDS(data.mesh.env.minX, 10, false),
+														FDS(data.mesh.env.minY, 10, false),
+														FDS(data.mesh.env.minZ, 10, false),
+														FDS(data.mesh.env.maxX, 10, false),
+														FDS(data.mesh.env.maxY, 10, false),
+														FDS(data.mesh.env.maxZ, 10, false)));
 
 	Force6 f, fcb, fcg;
 	data.under.GetHydrostaticForce(f, data.c0, Bem().rho, Bem().g);	
@@ -1515,50 +1532,50 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 	Surface::GetMassForce(fcg, data.c0, data.cg, data.mass, Bem().g);	
 	
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));   array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FormatDoubleSize(f[0], 10, false),
-														FormatDoubleSize(f[1], 10, false),
-														FormatDoubleSize(f[2], 10, false))).Paper(backColorUnder));
+														FDS(f[0], 10, false),
+														FDS(f[1], 10, false),
+														FDS(f[2], 10, false))).Paper(backColorUnder));
 
 	array.Set(row, 0, t_("Hydrostatic forces CB [N]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FormatDoubleSize(fcb[0], 10, false),
-														FormatDoubleSize(fcb[1], 10, false),
-														FormatDoubleSize(fcb[2], 10, false))).Paper(backColorUnder));
+														FDS(fcb[0], 10, false),
+														FDS(fcb[1], 10, false),
+														FDS(fcb[2], 10, false))).Paper(backColorUnder));
 
 	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FormatDoubleSize(f[3], 10, false),
-														FormatDoubleSize(f[4], 10, false),
-														FormatDoubleSize(f[5], 10, false))).Paper(backColorUnder));							
+														FDS(f[3], 10, false),
+														FDS(f[4], 10, false),
+														FDS(f[5], 10, false))).Paper(backColorUnder));							
 
 	array.Set(row, 0, t_("Hydrostatic moments CB [N·m]"));
 	if (fcb[2] > 0)
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FormatDoubleSize(fcb[3], 10, false),
-														FormatDoubleSize(fcb[4], 10, false),
-														FormatDoubleSize(fcb[5], 10, false))));							
+														FDS(fcb[3], 10, false),
+														FDS(fcb[4], 10, false),
+														FDS(fcb[5], 10, false))));							
 	else
 		array.Set(row++, col, "");
 		
 	array.Set(row, 0, t_("Mass [kg]"));			array.Set(row++, col, FormatF(data.mass, 1));
 	
 	array.Set(row, 0, t_("Mass moments [N·m]"));array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FormatDoubleSize(fcg[3], 10, false),
-														FormatDoubleSize(fcg[4], 10, false),
-														FormatDoubleSize(fcg[5], 10, false)));
+														FDS(fcg[3], 10, false),
+														FDS(fcg[4], 10, false),
+														FDS(fcg[5], 10, false)));
 
 	array.Set(row, 0, t_("Mass+Hydrostatics forces [N]"));
 	if (fcb[2] > 0)
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														"0",
 														"0",
-														FormatDoubleSize(fcg[2]+fcb[2], 10, false))).Paper(backColorUnder));
+														FDS(fcg[2]+fcb[2], 10, false))).Paper(backColorUnder));
 	else
 		array.Set(row++, col, "");
 	
 	array.Set(row, 0, t_("Mass+Hydrostatics moments [N·m]"));
 	if (fcb[2] > 0)
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FormatDoubleSize(fcg[3]+fcb[3], 10, false),
-														FormatDoubleSize(fcg[3]+fcb[4], 10, false),
+														FDS(fcg[3]+fcb[3], 10, false),
+														FDS(fcg[3]+fcb[4], 10, false),
 														"0")));		
 	else
 		array.Set(row++, col, "");
@@ -1859,19 +1876,19 @@ void MainGZ::OnUpdate() {
 				array.Set(row++, col, angle);
 				array.Set(row++, col, dangle[i]);
 				int numdec = 8;
-				array.Set(row++, col, FormatDoubleSize(dgz[i], numdec));				
-				array.Set(row++, col, FormatDoubleSize(dMoment[i], numdec));
-				array.Set(row++, col, FormatDoubleSize(disp[i], numdec));
-				array.Set(row++, col, FormatDoubleSize(vol[i], numdec));
-				array.Set(row++, col, FormatDoubleSize(wett[i], numdec));
-				array.Set(row++, col, FormatDoubleSize(wplane[i], numdec));
-				array.Set(row++, col, FormatDoubleSize(draft[i], numdec));
-				array.Set(row++, col, FormatDoubleSize(cb[i].x, numdec));
-				array.Set(row++, col, FormatDoubleSize(cb[i].y, numdec));
-				array.Set(row++, col, FormatDoubleSize(cb[i].z, numdec));
-				array.Set(row++, col, FormatDoubleSize(cg[i].x, numdec));
-				array.Set(row++, col, FormatDoubleSize(cg[i].y, numdec));
-				array.Set(row++, col, FormatDoubleSize(cg[i].z, numdec));
+				array.Set(row++, col, FDS(dgz[i], numdec));				
+				array.Set(row++, col, FDS(dMoment[i], numdec));
+				array.Set(row++, col, FDS(disp[i], numdec));
+				array.Set(row++, col, FDS(vol[i], numdec));
+				array.Set(row++, col, FDS(wett[i], numdec));
+				array.Set(row++, col, FDS(wplane[i], numdec));
+				array.Set(row++, col, FDS(draft[i], numdec));
+				array.Set(row++, col, FDS(cb[i].x, numdec));
+				array.Set(row++, col, FDS(cb[i].y, numdec));
+				array.Set(row++, col, FDS(cb[i].z, numdec));
+				array.Set(row++, col, FDS(cg[i].x, numdec));
+				array.Set(row++, col, FDS(cg[i].y, numdec));
+				array.Set(row++, col, FDS(cg[i].z, numdec));
 			}
 		}
 		

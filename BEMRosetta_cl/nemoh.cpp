@@ -627,14 +627,14 @@ void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh
 	out << Format("%20s ! Mesh file\n", "\"" + title + "\"");
 	out << (x0z ? "1" : "0") << "                    ! 1 if a symmetry about (x0z) is used. 0 otherwise\n";	
 	out << "0    0 	             ! Possible translation about x axis (first number) and y axis (second number)\n";
-	out << Format("%s %s %s ! Coordinates of gravity centre\n", FormatDoubleSize(cg[0], 6, true), FormatDoubleSize(cg[1], 6, true), 
-																FormatDoubleSize(cg[2], 6, true));
+	out << Format("%s %s %s ! Coordinates of gravity centre\n", FDS(cg[0], 6, true), FDS(cg[1], 6, true), 
+																FDS(cg[2], 6, true));
 	out << Format("%6d               ! Target for the number of panels in refined mesh\n", npanels);
 	out << "2\n";
 	out << "0                    ! Mesh z-axis translation from origin\n";
 	out << "1                    ! Mesh scale\n";
-	out << Format("%s               ! Water density (kg/m3)\n", FormatDoubleSize(rho, 6, true));
-	out << Format("%s               ! Gravity (m/s2)", FormatDoubleSize(g, 6, true));
+	out << Format("%s               ! Water density (kg/m3)\n", FDS(rho, 6, true));
+	out << Format("%s               ! Gravity (m/s2)", FDS(g, 6, true));
 	
 }
 	
