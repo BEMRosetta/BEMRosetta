@@ -499,7 +499,7 @@ bool Wamit::Save_out(String file, double g, double rho) {
 		out << "\n"
  		   	<< " Gravity:     " << (IsNull(hd().g) ? g : hd().g)
  		    << "                Length scale:        " << hd().len << "\n"
- 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FormatDoubleSize(hd().h, 9)) << "    "
+ 			<< " Water depth:        " << (hd().h < 0 ? "infinite" : FDS(hd().h, 9)) << "    "
  			<< " Water density:      " << (IsNull(hd().rho) ? rho : hd().rho) << "\n"
  			<< " Logarithmic singularity index:              ILOG =     1\n"
  			<< " Source formulation index:                   ISOR =     0\n"

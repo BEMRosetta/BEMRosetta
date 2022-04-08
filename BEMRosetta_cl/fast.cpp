@@ -245,34 +245,34 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		
 		String srho;
 		if (IsNull(hd().rho))
-			srho = FormatDoubleSize(hd().GetBEM().rho, 10, false);
+			srho = FDS(hd().GetBEM().rho, 10, false);
 		else
-			srho = FormatDoubleSize(hd().rho, 10, false);
+			srho = FDS(hd().rho, 10, false);
 		strFile.Replace("[WtrDens]", srho);
 		String sh;
 		if (IsNull(hd().h) || hd().h < 0)
 			sh = "INFINITE";
 		else
-			sh = FormatDoubleSize(hd().h, 8);
+			sh = FDS(hd().h, 8);
 		strFile.Replace("[WtrDpth]", sh);
 		String slen;
 		if (IsNull(hd().len))
 			slen = "1";
 		else
-			slen = FormatDoubleSize(hd().len, 8);
+			slen = FDS(hd().len, 8);
 		strFile.Replace("[WAMITULEN]", slen);
 		double hdVo0 = 0;
 		if (hd().Vo.size() > 0) 				
 			hdVo0 = hd().Vo[0];
-		strFile.Replace("[PtfmVol0]", FormatDoubleSize(hdVo0, 10));
+		strFile.Replace("[PtfmVol0]", FDS(hdVo0, 10));
 		if (IsNull(WaveNDir))
 			strFile.Replace("[WaveNDir]", FormatInt(hd().Nh));
 		else
 			strFile.Replace("[WaveNDir]", FormatInt(WaveNDir));
 		if (IsNull(WaveDirRange))
-			strFile.Replace("[WaveDirRange]", FormatDoubleSize((hd().head[hd().Nh-1] - hd().head[0])/2, 10));
+			strFile.Replace("[WaveDirRange]", FDS((hd().head[hd().Nh-1] - hd().head[0])/2, 10));
 		else
-			strFile.Replace("[WaveDirRange]", FormatDoubleSize(WaveDirRange, 10));
+			strFile.Replace("[WaveDirRange]", FDS(WaveDirRange, 10));
 		strFile.Replace("[PotFile]", Format("\"%s\"", AppendFileNameX(hydroFolder, hd().name)));
 	}
 	if (!SaveFile(fileName, strFile))

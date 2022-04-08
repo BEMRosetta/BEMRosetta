@@ -111,7 +111,7 @@ void MainMatrixKA::PrintData() {
 						if (~opEmptyZero && rat < ratio)
 							sdata = "";
 						else if (bool(~opDigits) == 0)
-							sdata = FormatDoubleSize(val, numDigits);
+							sdata = FDS(val, numDigits);
 						else
 							sdata = FormatF(val, numDecimals);
 					}

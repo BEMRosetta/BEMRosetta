@@ -138,23 +138,23 @@ Eigen::MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int c
 }
 		
 Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph) {
+	Vector<Vector<String>> ret;
 	int posIni, pos;
 	if (!GetFASTVarLine(strFile, var, paragraph, posIni, pos, 0))
-		throw Exc(Format(t_("Problem reading variable '%s' in GetFASTArray"), var));
+		return ret;
 	
 	int num = ScanInt(strFile.Mid(posIni, pos - posIni));	
 	
 	for (int i = 0; i < 3; ++i) {
 		pos = strFile.FindAfter("\n", pos);
 		if (pos < 0)
-			throw Exc(Format(t_("Problem reading variable '%s' in GetFASTArray"), var));
+			throw Exc(Format(t_("Problem reading variable '%s.%s' in GetFASTArray"), paragraph, var));
 	}
-	Vector<Vector<String>> ret;
 	for (int i = 0; i < num; ++i) {
 		Vector<String> &str = ret.Add();
 		int npos = strFile.FindAfter("\n", pos);
 		if (npos < 0)
-			throw Exc(Format(t_("Problem reading variable '%s' in GetFASTArray"), var));
+			throw Exc(Format(t_("Problem reading variable '%s.%s' in GetFASTArray"), paragraph, var));
 		String line = strFile.Mid(pos, npos-pos);
 		line.Replace(",", " ");
 		line.Replace("\t", " ");
@@ -164,3 +164,4 @@ Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String pa
 	}
 	return ret;
 }
+

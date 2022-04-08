@@ -1290,7 +1290,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
-						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FormatDoubleSize(data.C_dim(ib, i, j), 10, false));		
+						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FDS(data.C_dim(ib, i, j), 10, false));		
 					}
 				}
 			}
@@ -1441,9 +1441,9 @@ void MainQTF::Init() {
 	
 			listQTF.AddColumn(show_w ? t_("ω [rad/s]") : t_("T [s]"), 60);
 			for (int c = 0; c < qtfNf; ++c)
-				listQTF.AddColumn(FormatDoubleSize(show_w ? hd.qtfw[c] : hd.qtfT[c], 8), 90);
+				listQTF.AddColumn(FDS(show_w ? hd.qtfw[c] : hd.qtfT[c], 8), 90);
 			for (int r = 0; r < qtfNf; ++r)
-				listQTF.Add(FormatDoubleSize(show_w ? hd.qtfw[r] : hd.qtfT[r], 8));
+				listQTF.Add(FDS(show_w ? hd.qtfw[r] : hd.qtfT[r], 8));
 			
 			const Upp::Array<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
 			
@@ -1473,7 +1473,7 @@ void MainQTF::Init() {
 						listQTF.Set(ifr2, 1+ifr1, "-");
 					else {
 						if (PHASE == opShow.GetData()) 
-							listQTF.Set(ifr2, 1+ifr1, FormatDoubleSize(qtfList[idq].fph[idof], 10, false));
+							listQTF.Set(ifr2, 1+ifr1, FDS(qtfList[idq].fph[idof], 10, false));
 						else {
 							double val;
 							switch(int(opShow.GetData())) {
@@ -1490,7 +1490,7 @@ void MainQTF::Init() {
 							if (Grayscale(backColor) < 150)
 								color = White();
 							
-							String str = FormatDoubleSize(val, 10, false);
+							String str = FDS(val, 10, false);
 							
 							listQTF.Set(ifr2, 1+ifr1, AttrText(str).Center().Ink(color).Paper(backColor));
 						}
