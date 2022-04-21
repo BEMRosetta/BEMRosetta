@@ -14,7 +14,7 @@ String AQWAMesh::LoadDat(String fileName) {
 	
 	mesh.Clear();
 	
-	Index<int> ids;
+	Upp::Index<int> ids;
 	try {
 		String line;
 		line = in.GetLine();	

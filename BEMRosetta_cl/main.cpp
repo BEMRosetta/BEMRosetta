@@ -16,7 +16,7 @@ CONSOLE_APP_MAIN
 {	
 	try {
 #ifdef flagBEMR_TEST_DLL
-		const Vector<String>& command = CommandLine();
+		const UVector<String>& command = CommandLine();
 		
 		if (command.GetCount() < 2) 
 			throw Exc("Please include in command line binary and BEMRosetta folders");
@@ -53,7 +53,7 @@ CONSOLE_APP_MAIN
 #endif
 
 		
-		Vector<double> dat = {1, 2, 3};
+		UVector<double> dat = {1, 2, 3};
 		double res = DemoVectorPy_C(dat, 3);
 		double *v;
 		int num;
@@ -240,7 +240,7 @@ const char *DLL_FAST_GetUnitName(int id) noexcept {
 
 int DLL_FAST_GetParameterId(const char *name) noexcept {
 	try {
-		Vector<int> p = DLL_Fastout().FindParameterMatch(name);
+		UVector<int> p = DLL_Fastout().FindParameterMatch(name);
 		if (p.IsEmpty())
 			return -1;
 		else
@@ -314,7 +314,7 @@ double DLL_FAST_GetData(int idtime, int idparam) noexcept {
 
 double DLL_FAST_GetAvg(const char *param) noexcept {
 	try {
-		const Vector<double> &data = DLL_Fastout().GetVal(param);
+		const UVector<double> &data = DLL_Fastout().GetVal(param);
 		return Eigen::Map<const Eigen::VectorXd>(data, data.size()).mean();
 	} catch (...) {
 		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
@@ -386,7 +386,7 @@ double DemoVectorPy_C(const double *v, int num) noexcept {
 }
 
 int DemoVectorC_Py(double **v, int *num) noexcept {
-	static Vector<double> data;
+	static UVector<double> data;
 	
 	*num = 321;
 	data.SetCount(*num);
@@ -407,7 +407,7 @@ int DemoVectorC_Py(double **v, int *num) noexcept {
 #if defined(flagBEMR_CL)
 
 CONSOLE_APP_MAIN {
-	const Vector<String>& command = CommandLine();
+	const UVector<String>& command = CommandLine();
 	
 	if (!ConsoleMain(command, false, PrintStatus))
 		SetExitCode(1);

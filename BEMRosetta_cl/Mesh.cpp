@@ -242,18 +242,18 @@ double Mesh::GMpitch(double rho, double g) const {
 }
 		
 void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
-				Vector<double> &dataangle, Vector<double> &datagz) {
-	Vector<double> dataMoment, vol, disp, wett, wplane, draft;
-	Vector<Point3D> dcb, dcg;
+				UVector<double> &dataangle, UVector<double> &datagz) {
+	UVector<double> dataMoment, vol, disp, wett, wplane, draft;
+	UVector<Point3D> dcb, dcg;
 	GZ(from, to, delta, angleCalc, rho, g, Null, dataangle, datagz, dataMoment, 
 		vol, disp, wett, wplane, draft, dcb, dcg);
 }
 
 void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
 	Function <bool(String, int pos)> Status, 
-	Vector<double> &dataangle, Vector<double> &datagz, Vector<double> &dataMoment,
-	Vector<double> &vol, Vector<double> &disp, Vector<double> &wett, Vector<double> &wplane,
-	Vector<double> &draft, Vector<Point3D> &dcb, Vector<Point3D> &dcg) {
+	UVector<double> &dataangle, UVector<double> &datagz, UVector<double> &dataMoment,
+	UVector<double> &vol, UVector<double> &disp, UVector<double> &wett, UVector<double> &wplane,
+	UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg) {
 	
 	dataangle.Clear();
 	datagz.Clear();
@@ -270,8 +270,8 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 	Point3D cg0 = clone(cg);
 	Point3D c00 = clone(c0);
 
-	base0.Rotate(0, 0, angleCalc, c00.x, c00.y, c00.z);
-	cg0.Rotate(0, 0, angleCalc, c00.x, c00.y, c00.z);
+	base0.Rotate(0, 0, ToRad(angleCalc), c00.x, c00.y, c00.z);
+	cg0.Rotate(0, 0, ToRad(angleCalc), c00.x, c00.y, c00.z);
 	
 	double dz = 0.1;
 	for (double angle = from; angle <= to; angle += delta) {
@@ -281,8 +281,8 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		Surface base = clone(base0);
 		Point3D cg = clone(cg0);
 		
-		base.Rotate(0, angle, 0, c00.x, c00.y, c00.z);
-		cg.Rotate(0, angle, 0, c00.x, c00.y, c00.z);
+		base.Rotate(0, ToRad(angle), 0, c00.x, c00.y, c00.z);
+		cg.Rotate(0, ToRad(angle), 0, c00.x, c00.y, c00.z);
 		
 		Surface under;
 		if (!base.TranslateArchimede(mass, rho, dz, under))
@@ -292,11 +292,11 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		
 		Point3D cb = under.GetCenterOfBuoyancy();
 		
-		Force6 fcb, fcg;
+		Force6D fcb, fcg;
 		under.GetHydrostaticForceCB(fcb, c00, cb, rho, g);	
 		Surface::GetMassForce(fcg, c00, cg, mass, g);
 	
-		double moment = -(fcg.ry + fcb.ry);
+		double moment = -(fcg.r.y + fcb.r.y);
 		double gz = moment/mass/g;
 		
 		dataangle << angle;
@@ -311,4 +311,19 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		dcg << cg;
 	}	
 }
-	
+
+void Mesh::Move(double dx, double dy, double dz, double ax, double ay, double az, double rho, double g, bool setnewzero) {
+	mesh = clone(mesh0);
+	cg = clone(cg0);					
+	mesh.TransRot(dx, dy, dz, ax, ay, az, c0.x, c0.y, c0.z);
+	cg.TransRot(dx, dy, dz, ax, ay, az, c0.x, c0.y, c0.z);
+	AfterLoad(rho, g, false, setnewzero);	
+}
+
+void Mesh::Move(const double *pos, double rho, double g, bool setnewzero) {
+	Move(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], rho, g, setnewzero);	
+}
+
+void Mesh::Move(const float *pos, double rho, double g, bool setnewzero) {
+	Move(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], rho, g, setnewzero);	
+}

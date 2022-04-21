@@ -211,7 +211,7 @@ double FitToDampedSin(const VectorXd &y, double dt, double mass, double Kh, doub
 }
 
 void Decay(double mass, double ainf, double av, double Kh, double b, double b2, double dt, double zDecay, double maxT, VectorXd &z ) {
-	Upp::Array<VectorXd> res, dres;
+	UArray<VectorXd> res, dres;
 	VectorXd y(2), dy(2);
 	y[0] = zDecay;
 	y[1] = dy[0] = 0;

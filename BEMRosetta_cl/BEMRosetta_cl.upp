@@ -43,6 +43,8 @@ file
 	heal.h,
 	functions.cpp,
 	functions.h,
+	Simulation.cpp,
+	Simulation.h,
 	export.h,
 	export.brc,
 	Copying;

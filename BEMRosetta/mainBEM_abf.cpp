@@ -34,13 +34,13 @@ void MainABForce::Clear() {
 	selTab = 0;
 }
 
-bool MainABForce::Load(BEM &bem, const Upp::Vector<int> &ids) {
+bool MainABForce::Load(BEM &bem, const UVector<int> &ids) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 	
 		tab.Reset();
-		Upp::Array<HydroClass> &hydros = bem.hydros; 
+		UArray<HydroClass> &hydros = bem.hydros; 
 		if (hydros.IsEmpty() || ids.IsEmpty()) 
 			return false;
 		String format;

@@ -104,7 +104,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
 	scatP.SetLabelY(labelY2);
 }
 
-bool MainPlot::Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Upp::Vector<int> &ids) {
+bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const UVector<int> &ids) {
 	scatt.RemoveAllSeries();
 	scatP.RemoveAllSeries();
 	ABFZ_source.SetCount(ids.size());

@@ -293,7 +293,7 @@ void Fast::Save_SS(String fileName) {
 	else	
 		out << "BEMRosetta state space matrices" << "\n";
 	Eigen::Index nstates = 0;
-	Vector<Eigen::Index> nstatesdof;
+	UVector<Eigen::Index> nstatesdof;
 	for (int idf = 0; idf < 6; ++idf) {
 		Eigen::Index num = 0;
 		for (int jdf = 0; jdf < 6; ++jdf) {
@@ -349,7 +349,7 @@ void Fast::Save_SS(String fileName) {
 	}
 }
 
-static bool CheckRepeated(const Vector<Eigen::Index> &list) {
+static bool CheckRepeated(const UVector<Eigen::Index> &list) {
 	for (int i = 0; i < list.size()-1; ++i) {
 		for (int j = i+1; j < list.size(); ++j) {
 			if (list[i] == list[j])
@@ -359,7 +359,7 @@ static bool CheckRepeated(const Vector<Eigen::Index> &list) {
 	return false;
 }
 
-static void SortBy(Vector<Eigen::Index> &list, int idf) {
+static void SortBy(UVector<Eigen::Index> &list, int idf) {
 	Sort(list);
 	for (int i = 0; i < list.size(); ++i) {
 		if (list[i] == idf) {
@@ -369,7 +369,7 @@ static void SortBy(Vector<Eigen::Index> &list, int idf) {
 	}
 }
 
-static bool FillDOF(const Eigen::MatrixXd &C, int idf, int pos, int nstates, Vector<Eigen::Index> &listdof, Eigen::Index &nlistdof) {
+static bool FillDOF(const Eigen::MatrixXd &C, int idf, int pos, int nstates, UVector<Eigen::Index> &listdof, Eigen::Index &nlistdof) {
 	for (int ndofdof = 1; ndofdof <= 6; ++ndofdof) {
 		if (nstates%ndofdof != 0)
 			continue;
@@ -426,7 +426,7 @@ bool Fast::Load_SS(String fileName) {
 	f.Load(in.GetLine());
 	int nstates = f.GetInt(0);
 	
-	Vector<Eigen::Index> nstatesdof;
+	UVector<Eigen::Index> nstatesdof;
 	f.Load(in.GetLine());
 	int numtot = 0;
 	for (int i = 0; i < 6; ++i) {
@@ -457,8 +457,8 @@ bool Fast::Load_SS(String fileName) {
 		for (int c = 0; c < C.cols(); ++c) 
 			C(r, c) = -f.GetDouble(c);
 	}	
-	Vector<Vector<Eigen::Index>> dofdof;
-	Vector<Eigen::Index> ndofdof;
+	UVector<UVector<Eigen::Index>> dofdof;
+	UVector<Eigen::Index> ndofdof;
 	dofdof.SetCount(nstatesdof.size());
 	ndofdof.SetCount(nstatesdof.size());
 	int pos0 = 0;

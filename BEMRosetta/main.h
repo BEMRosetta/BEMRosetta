@@ -70,7 +70,7 @@ public:
 	}
 
 private:
-	Upp::Array<UnderlineCtrl<EditDouble>> edits;
+	UArray<UnderlineCtrl<EditDouble>> edits;
 	Button add;
 	int pos = 0;
 	int fWidth = 40, fThick = 3;
@@ -291,11 +291,11 @@ public:
 	typedef MainArrange CLASSNAME;
 	void Init();
 	void Clear();
-	void Load(Upp::Array<HydroClass> &hydro, const Upp::Vector<int> &ids);
+	void Load(UArray<HydroClass> &hydro, const UVector<int> &ids);
 	void Remove(int c);
 	
 private:
-	Upp::Array<ArrangeDOF> arrangeDOF;
+	UArray<ArrangeDOF> arrangeDOF;
 };
 
 class MainMesh;
@@ -392,7 +392,7 @@ public:
 	}
 	
 private:
-	Array<VideoRecord> reg;
+	UArray<VideoRecord> reg;
 	double deltaT;
 	int lastId = -1;
 };
@@ -404,7 +404,7 @@ public:
 	enum VideoType {UNKNOWN, JSON, OpenFAST, CSV};
 	
 	VideoCtrl() {}
-	void Init(Function <int(Vector<int> &ids)> _GetMeshId, Function <void(int id, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action);
+	void Init(Function <int(UVector<int> &ids)> _GetMeshId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action);
 	
 	~VideoCtrl() {
 		video.Clear();
@@ -458,11 +458,11 @@ private:
 	RealTimeStop time;
 	double dT;
 	
-	Vector<int> ids;
+	UVector<int> ids;
 	int meshId = -1;
 	
-	Function <int(Vector<int> &ids)> GetMeshId;
-	Function<void(int meshid, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> Action;
+	Function <int(UVector<int> &ids)> GetMeshId;
+	Function<void(int meshid, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> Action;
 	
 	One<VideoSequence> video;
 };
@@ -505,14 +505,14 @@ public:
 		int origMovedUnder;
 	};
 	
-	Upp::Array<DataSourceFacets> dataSourceFacetsAll, dataSourceFacetsUnder;
-	Upp::Array<DataSourceNodes> dataSourceNodesMoved;
+	UArray<DataSourceFacets> dataSourceFacetsAll, dataSourceFacetsUnder;
+	UArray<DataSourceNodes> dataSourceNodesMoved;
 
 private:
 	void OnTimer();
 	TimeCallback timeCallback;
 	void UpdateStatus(bool under);
-	Upp::Vector<int> selectedPanels, selectedNodes;  
+	UVector<int> selectedPanels, selectedNodes;  
 	int lastSel = -1;
 };
 
@@ -528,14 +528,14 @@ public:
 	
 private:
 	TabCtrl tab;
-	Upp::Array<MainViewDataEach> models;
+	UArray<MainViewDataEach> models;
 };
 
 class MainSummaryMesh : public MainSummary {
 public:
 	typedef MainSummaryCoeff CLASSNAME;
 
-	void Report(const Upp::Array<Mesh> &surfs, int id);
+	void Report(const UArray<Mesh> &surfs, int id);
 };
 
 class MainMatrixKA : public WithMainMatrixKA<StaticRect> {
@@ -545,8 +545,8 @@ public:
 	void Init(Hydro::DataMatrix what);
 	void OnOp(int id);
 	void Clear();
-	bool Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids, bool ndim);
-	void Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids);
+	bool Load(UArray<HydroClass> &hydros, const UVector<int> &ids, bool ndim);
+	void Load(UArray<Mesh> &surfs, const UVector<int> &ids);
 	
 	void Jsonize(JsonIO &json) {
 		bool opdigits = ~opDigits;
@@ -581,8 +581,8 @@ private:
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim);
 	void PrintData();
 		
-	Upp::Array<Eigen::MatrixXd> data;
-	Upp::Array<int> row0s, col0s;
+	UArray<Eigen::MatrixXd> data;
+	UArray<int> row0s, col0s;
 	
 	Hydro::DataMatrix what;
 };
@@ -598,8 +598,8 @@ public:
 	void Jsonize(JsonIO &json);
 	
 private:
-	Array<Vector<double>> datagz, dataMoment;
-	Vector<double> dangle, mingz;
+	UArray<UVector<double>> datagz, dataMoment;
+	UVector<double> dangle, mingz;
 	int idOpened = Null;
 	
 	ScatterCtrl scatter;
@@ -614,15 +614,15 @@ public:
 	
 	void Init(bool vert);
 	void Init(int idf, double jdf_ih, Hydro::DataToShow dataToShow);
-	bool Load(const Upp::Array<HydroClass> &hydro, const MainBEM &mbm, const Upp::Vector<int> &ids);
+	bool Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const UVector<int> &ids);
 	bool Load(const Hydro &hy, const MainBEM &mbm);
 	void LoadEach(const Hydro &hy, int id, bool &loaded, int idc = -1);
 	void Clear();
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
-	Upp::Array<HydroSource> ABFZ_source, ABFZ_source2;
-	Upp::Array<HydroSource> Ainf_source, A0_source;	
-	Upp::Array<HydroSource> TFS_source, TFS_source2;
+	UArray<HydroSource> ABFZ_source, ABFZ_source2;
+	UArray<HydroSource> Ainf_source, A0_source;	
+	UArray<HydroSource> TFS_source, TFS_source2;
 		
 	int plot_idf, plot_jdf;
 	double heading;
@@ -647,10 +647,10 @@ public:
 	
 	void Init(Hydro::DataToShow dataToShow);
 	void Clear();
-	bool Load(BEM &bem, const Upp::Vector<int> &ids);
+	bool Load(BEM &bem, const UVector<int> &ids);
 	
 	TabCtrl tab;
-	Upp::Array<Upp::Array<MainPlot>> plots;
+	UArray<UArray<MainPlot>> plots;
 
 private:
 	int selTab;
@@ -663,13 +663,13 @@ public:
 	typedef MainStateSpacePlot CLASSNAME;
 	
 	void Init(int _idf, int _jdf);
-	bool Load(Upp::Array<HydroClass> &hydro, const Upp::Vector<int> &ids, const MainBEM &mbm);
+	bool Load(UArray<HydroClass> &hydro, const UVector<int> &ids, const MainBEM &mbm);
 	void InitArray(ArrayCtrl &array);
 	
 	MainPlot mainPlot;
 	Splitter splitterTab;
 	TabCtrl tab;
-	Upp::Array<ArrayCtrl> arrays;
+	UArray<ArrayCtrl> arrays;
 };
 
 class MainStateSpace : public WithMainStateSpace<StaticRect> {
@@ -679,9 +679,9 @@ public:
 	void Init();
 	void Clear();
 	void Init(ArrayCtrl &array);
-	bool Load(BEM &bem, const Upp::Vector<int> &ids);
+	bool Load(BEM &bem, const UVector<int> &ids);
 	
-	Upp::Array<Upp::Array<MainStateSpacePlot>> plots;
+	UArray<UArray<MainStateSpacePlot>> plots;
 	
 private:
 	int selTab;
@@ -753,7 +753,7 @@ private:
 	MainMatrixKA mainStiffness;
 	MainGZ mainGZ;
 
-	Upp::Array<Option> optionsPlot;
+	UArray<Option> optionsPlot;
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
@@ -762,7 +762,7 @@ private:
 	Button::Style styleRed, styleGreen, styleBlue;
 	
 	TimeCallback timerDrop;
-	Upp::Vector<String> filesToDrop;
+	UVector<String> filesToDrop;
 };
 
 class MainMeshW : public TopWindow {
@@ -1025,8 +1025,8 @@ public:
 	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
 	//void OnMove(Point p);
 	
-	bool Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vector<int> &jdfs,
-		Upp::Vector<double> &froms, Upp::Vector<double> &tos, Upp::Vector<Upp::Vector<double>> &freqs); 
+	bool Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jdfs,
+		UVector<double> &froms, UVector<double> &tos, UVector<UVector<double>> &freqs); 
 	void Clear();
 	
 	MainPlot plots;
@@ -1034,7 +1034,7 @@ public:
 	FreqSelector selector;
 
 private:
-	Upp::Array<Option> options;
+	UArray<Option> options;
 	int id = -1;
 	RectEnterSet frameSet;
 };
@@ -1133,7 +1133,7 @@ private:
 	String BEMFile(String fileFolder) const;
 	
 	TimeCallback timerDrop;
-	Upp::Vector<String> filesToDrop;
+	UVector<String> filesToDrop;
 };
 
 class MainBEMW : public TopWindow {
@@ -1183,7 +1183,7 @@ public:
 	}
 	
 	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_MOOR, TAB_DECAY, TAB_FAST};
-	Upp::Vector<String> tabTexts;
+	UVector<String> tabTexts;
 	
 	void SetLastTab()	{tab.Set(lastTab);};
 	
@@ -1215,17 +1215,17 @@ private:
 ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool push = false);
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id);
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
-					Upp::Array<Option> &option, Function <void()>OnPush);
+					UArray<Option> &option, Function <void()>OnPush);
 int ArrayModel_Id(const ArrayCtrl &array);
 int ArrayModel_Id(const ArrayCtrl &array, int row);
 int ArrayModel_IdMesh(const ArrayCtrl &array);
 int ArrayModel_IdMesh(const ArrayCtrl &array, int row);
 int ArrayModel_IdHydro(const ArrayCtrl &array);
 int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
-Upp::Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
-Upp::Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
-void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids);
-void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids);
+UVector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
+UVector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const UVector<int> &ids);
+void ArrayModel_RowsHydroDel(ArrayCtrl &array, const UVector<int> &ids);
 bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);
 bool ArrayModel_IsSelected(const ArrayCtrl &array, int row);
 const Color& ArrayModel_GetColor(const ArrayCtrl &array, int row);

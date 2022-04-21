@@ -10,14 +10,16 @@ class FastOut {
 public:
 	FastOut();
 	
-	static Vector<String> GetFilesToLoad(String path);
+	static UVector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
-	int Load(String fileName);
+	
+	bool Load(String fileName);
+	bool Save(String fileName);
 	
 	void Clear();
 	int GetCol(String param) const;
 	int FindCol(String param) const;
-	Upp::Vector<int> FindParameterMatch(String param) const;
+	UVector<int> FindParameterMatch(String param) const;
 	
 	const String &GetParameter(int id) const	{return parameters[id];}
 	const String &GetUnit(int id) const			{return units[id];}
@@ -29,10 +31,10 @@ public:
 		
 	double GetVal(double time, int idparam) const;
 	inline double GetVal(int idtime, int idparam) const	{return dataOut[idparam][idtime];}
-	inline const Vector<double> &GetVal(int idparam)	{return dataOut[idparam];}
-	inline const Vector<double> &GetVal(String param) {
-		static Vector<double> bad;
-		Vector<int> ids = FindParameterMatch(param);
+	inline const UVector<double> &GetVal(int idparam)	{return dataOut[idparam];}
+	inline const UVector<double> &GetVal(String param) {
+		static UVector<double> bad;
+		UVector<int> ids = FindParameterMatch(param);
 		if (ids.IsEmpty())
 			return bad;
 		else
@@ -68,7 +70,7 @@ public:
 		bool IsEnabled()	{return enabled;}
 		
 	protected:
-		FastOut *dataFast = 0;
+		FastOut *dataFast = nullptr;
 		bool enabled = true;
 	};
 	
@@ -83,14 +85,22 @@ public:
 		c.units = units;
 		c.calc = &calc;
 	}
+	
+	int AddParam(String name, String units) {
+		parameters << name;
+		units << units;
+		dataOut.Add();
+		return dataOut.size() - 1;
+	}
 
-	Upp::Vector<String> parameters, units;
-	Upp::Vector<Upp::Vector <double> > dataOut;
-	Upp::Array<CalcParams> calcParams;
+	UVector<String> parameters, units;
+	UVector<UVector <double> > dataOut;
+	UArray<CalcParams> calcParams;
 
 private:
 	bool LoadOut(String fileName);
 	bool LoadOutb(String fileName);
+	bool SaveOut(String fileName);
 	void AfterLoad();
 
 	String lastFile;

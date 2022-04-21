@@ -185,8 +185,8 @@ void WamitMesh::SaveGdf(String fileName, const Surface &surf, double g, bool y0z
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
 	
-	const Vector<Panel> &panels = surf.panels;
-	const Vector<Point3D> &nodes = surf.nodes;
+	const UVector<Panel> &panels = surf.panels;
+	const UVector<Point3D> &nodes = surf.nodes;
 	
 	out << "BEMRosetta GDF mesh file export\n";
 	out << Format("  %12d   %12f 	ULEN GRAV\n", 1, g);

@@ -273,7 +273,7 @@ void MainMeshW::Init(MainMesh &_mesh, const Image &icon, const Image &largeIcon,
 }
 
 
-void VideoCtrl::Init(Function <int(Vector<int> &ids)> _GetMeshId, Function <void(int id, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action) {
+void VideoCtrl::Init(Function <int(UVector<int> &ids)> _GetMeshId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action) {
 	CtrlLayout(*this);
 	
 	butPlay <<= THISBACK(OnPlay);

@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-double Hydro::GetK_IRF_MaxT(const Vector<double> &w) {
+double Hydro::GetK_IRF_MaxT(const UVector<double> &w) {
 	if (w.size() < 2)
 		return -1;
 	double delta = 0;
@@ -40,7 +40,7 @@ void Hydro::GetK_IRF(double maxT, int numT) {
 		
 	GetTirf(Tirf, numT, maxT);
 	
-	Vector<double> y(Nf);
+	UVector<double> y(Nf);
   	for (int idf = 0; idf < Nb*6; ++idf) {
     	for (int jdf = 0; jdf < Nb*6; ++jdf) { 
 			if (B[idf][jdf].size() == 0 || IsNull(B[idf][jdf][0])) 
@@ -60,7 +60,7 @@ void Hydro::GetAinf() {
 		return;	
 	
 	Ainf.setConstant(Nb*6, Nb*6, 0);
-	int numT = int(Tirf.size());
+	//int numT = int(Tirf.size());
 	
     for (int i = 0; i < Nb*6; ++i) 
         for (int j = 0; j < Nb*6; ++j) 
@@ -129,30 +129,31 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 
         for (int jdf = 0; jdf < Nb*6; ++jdf) {
             if (B[idf][jdf].size() == 0 || IsNull(B[idf][jdf][0])) 
-                continue;
-            
-    		if (data.Load(Get_w(), A_dim(idf, jdf), B_dim(idf, jdf), numT, maxT, ex_hf)) {
-				data.Heal(zremoval, thinremoval, decayingTail, haskind && idf == jdf);
-            	data.Save(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]); 
-    		} else
-    			data.Reset(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]);
-    		if (dimen) {
-    			dimen = false;
-    			A[idf][jdf] = A_ndim(idf, jdf);
-    			Ainf_w[idf][jdf] *= (rho_ndim()/rho_dim());
-    			Ainf(idf, jdf)   *= (rho_ndim()/rho_dim());
-    			B[idf][jdf] = B_ndim(idf, jdf);
-    			Kirf[idf][jdf] = Kirf_ndim(idf, jdf);
-    			dimen = true;
-    		} else {
-    			dimen = true;
-    			A[idf][jdf] = A_ndim(idf, jdf);
-    			Ainf_w[idf][jdf] *= (1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));
-    			Ainf(idf, jdf)   *= (1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));
-    			B[idf][jdf] = B_ndim(idf, jdf);
-    			Kirf[idf][jdf] = Kirf_ndim(idf, jdf);
-    			dimen = false;
-    		}
+                ;
+            else {
+	    		if (data.Load(Get_w(), A_dim(idf, jdf), B_dim(idf, jdf), numT, maxT, ex_hf)) {
+					data.Heal(zremoval, thinremoval, decayingTail, haskind && idf == jdf);
+	            	data.Save(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]); 
+	    		} else
+	    			data.Reset(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]);
+	    		if (dimen) {
+	    			dimen = false;
+	    			A[idf][jdf] = A_ndim(idf, jdf);
+	    			Ainf_w[idf][jdf] *= (rho_ndim()/rho_dim());
+	    			Ainf(idf, jdf)   *= (rho_ndim()/rho_dim());
+	    			B[idf][jdf] = B_ndim(idf, jdf);
+	    			Kirf[idf][jdf] = Kirf_ndim(idf, jdf);
+	    			dimen = true;
+	    		} else {
+	    			dimen = true;
+	    			A[idf][jdf] = A_ndim(idf, jdf);
+	    			Ainf_w[idf][jdf] *= (1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));
+	    			Ainf(idf, jdf)   *= (1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));
+	    			B[idf][jdf] = B_ndim(idf, jdf);
+	    			Kirf[idf][jdf] = Kirf_ndim(idf, jdf);
+	    			dimen = false;
+	    		}
+            }
         }
     }
     rao.Clear();	// Previous RAO is now invalid
@@ -309,8 +310,8 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		GetMaPh(ex);
     };
     
-    if (IsLoadedFex())
-    	CalcF(ex);
+	if (IsLoadedFex())
+		CalcF(ex);
 	if (IsLoadedFsc())
 		CalcF(sc);
 	if (IsLoadedFfk())
@@ -359,10 +360,10 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	}
 }
 
-void Hydro::DeleteFrequencies(const Vector<int> &idFreq) {
+void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 	if (idFreq.size() > 0) {
-		auto DeleteAB = [&](Upp::Array<Upp::Array<VectorXd>> &A) {
-	        Upp::Array<Upp::Array<VectorXd>> An;
+		auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
+	        UArray<UArray<VectorXd>> An;
 		
 			An.SetCount(6*Nb);
 			for (int ib = 0; ib < 6*Nb; ++ib) {
@@ -417,8 +418,8 @@ void Hydro::DeleteFrequencies(const Vector<int> &idFreq) {
 		    ex = pick(_ex);
 	    };	
 	
-	    if (IsLoadedFex())
-	    	DeleteF(ex);
+		if (IsLoadedFex())
+			DeleteF(ex);
 		if (IsLoadedFsc())
 			DeleteF(sc);
 		if (IsLoadedFfk())
@@ -436,10 +437,10 @@ void Hydro::DeleteFrequencies(const Vector<int> &idFreq) {
 	}
 }
 
-void Hydro::DeleteFrequenciesQTF(const Vector<int> &idFreqQTF) {
+void Hydro::DeleteFrequenciesQTF(const UVector<int> &idFreqQTF) {
 	if (idFreqQTF.size() > 0) {
-		auto DeleteSumDif = [&](Upp::Array<QTF> &qtf) {
-			Vector<int> idsum(qtfw.size());
+		auto DeleteSumDif = [&](UArray<QTF> &qtf) {
+			UVector<int> idsum(qtfw.size());
 			for (int i = 0, j = 0; i < qtfw.size(); ++i) {
 				if (j < idFreqQTF.size() && i == idFreqQTF[j])
 					j++;
@@ -470,7 +471,7 @@ void Hydro::DeleteFrequenciesQTF(const Vector<int> &idFreqQTF) {
 	}
 }
 
-void Hydro::DeleteHeadings(const Vector<int> &idHead) {
+void Hydro::DeleteHeadings(const UVector<int> &idHead) {
 	if (idHead.size() > 0) {
 		auto DeleteF = [&](Forces &ex) {
 			int j = idHead.size()-1;	
@@ -485,8 +486,8 @@ void Hydro::DeleteHeadings(const Vector<int> &idHead) {
 			}
 	    };	
 	
-	    if (IsLoadedFex())
-	    	DeleteF(ex);
+		if (IsLoadedFex())
+			DeleteF(ex);
 		if (IsLoadedFsc())
 			DeleteF(sc);
 		if (IsLoadedFfk())
@@ -503,16 +504,16 @@ void Hydro::DeleteHeadings(const Vector<int> &idHead) {
 	}
 }
 
-void Hydro::DeleteHeadingsQTF(const Vector<int> &idHeadQTF) {
+void Hydro::DeleteHeadingsQTF(const UVector<int> &idHeadQTF) {
 	if (idHeadQTF.size() > 0) {
-		Vector<int> idsum(qtfhead.size());
+		UVector<int> idsum(qtfhead.size());
 		for (int i = 0, j = 0; i < qtfhead.size(); ++i) {
 			if (j < idHeadQTF.size() && i == idHeadQTF[j])
 				j++;
 			idsum[i] = j;
 		}
 			
-		auto DeleteSumDif = [&](Upp::Array<QTF> &qtf) {
+		auto DeleteSumDif = [&](UArray<QTF> &qtf) {
 			for (int i = qtf.size()-1; i >= 0; --i) {
 				if (Find(idHeadQTF, qtf[i].ih1) >= 0 || Find(idHeadQTF, qtf[i].ih2) >= 0)
 					qtf.Remove(i);

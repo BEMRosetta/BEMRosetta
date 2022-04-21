@@ -67,8 +67,8 @@ void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z) {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
 	
-	const Vector<Panel> &panels = surf.panels;
-	const Vector<Point3D> &nodes = surf.nodes;
+	const UVector<Panel> &panels = surf.panels;
+	const UVector<Point3D> &nodes = surf.nodes;
 	
 	out << "    2   " << (x0z ? "1" : "0") << "\n";
 	for (int i = 0; i < nodes.size(); ++i) {
@@ -89,8 +89,8 @@ void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
 	
-	const Vector<Panel> &panels = surf.panels;
-	const Vector<Point3D> &nodes = surf.nodes;
+	const UVector<Panel> &panels = surf.panels;
+	const UVector<Point3D> &nodes = surf.nodes;
 	
 	out << nodes.size() << "\n";
 	out << panels.size() << "\n";
