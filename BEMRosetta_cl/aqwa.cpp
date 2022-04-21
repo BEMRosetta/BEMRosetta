@@ -466,7 +466,7 @@ bool Aqwa::Load_LIS() {
 				if (line[0] == '1')
 					break;
 				
-				static const Vector<int> separatorsh = {8,16,26,36,44,54,62,72,80,90,98,108,116,126};
+				static const UVector<int> separatorsh = {8,16,26,36,44,54,62,72,80,90,98,108,116,126};
 				f.Load(in.GetLine(), separatorsh);
 
 				double heading = FixHeading_180(f.GetDouble(2));
@@ -487,7 +487,7 @@ bool Aqwa::Load_LIS() {
 					}
 					dd = 0;
 					line = in.GetLine();
-					static const Vector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};
+					static const UVector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};
 					f.Load(line, separators);
 				}
 			}
@@ -611,7 +611,7 @@ bool Aqwa::Load_QTF() {
 	hd().qtfsum.Reserve(hd().Nb*nrows);
 	
 	VectorMap<int, double> headings;
-	Vector<int> finalId;
+	UVector<int> finalId;
 	
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
@@ -747,7 +747,7 @@ bool AQWACase::Load(String fileName) {
 	body.ndof = 6;
 	Resize(body.dof, 6, true);
 	
-	Vector<double> hrtz, head;
+	UVector<double> hrtz, head;
 	
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());

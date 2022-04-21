@@ -14,7 +14,7 @@ using namespace Upp;
 
 class BEM;
 
-bool ConsoleMain(const Upp::Vector<String>& command, bool gui, Function <bool(String, int pos)> Status);
+bool ConsoleMain(const UVector<String>& command, bool gui, Function <bool(String, int pos)> Status);
 void SetBuildInfo(String &str);
 String GetSystemInfo();
 
@@ -96,26 +96,26 @@ public:
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
  	
-	Upp::Array<Upp::Array<Eigen::VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
-	Upp::Array<Upp::Array<Eigen::VectorXd>> Ainf_w;	// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
+	UArray<UArray<Eigen::VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
+	UArray<UArray<Eigen::VectorXd>> Ainf_w;	// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
     Eigen::MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     Eigen::MatrixXd A0;        				// (6*Nb, 6*Nb)  	Infinite period added mass
 
 	Eigen::MatrixXd Dlin;      				// (6*Nb, 6*Nb) 	Additional linear damping
 
-    Upp::Array<Upp::Array<Eigen::VectorXd>> B; 		// [6*Nb][6*Nb][Nf]	Radiation damping
-    Upp::Vector<double> head;				// [Nh]             Wave headings (deg)
-    Upp::Vector<String> names;  			// {Nb}             Body names
-    Upp::Array<Eigen::MatrixXd> C;			// [Nb](6, 6)		Hydrostatic restoring coefficients:
-    Upp::Array<Eigen::MatrixXd> M;			// [Nb](6, 6)		Mass and inertia matrix
+    UArray<UArray<Eigen::VectorXd>> B; 		// [6*Nb][6*Nb][Nf]	Radiation damping
+    UVector<double> head;				// [Nh]             Wave headings (deg)
+    UVector<String> names;  			// {Nb}             Body names
+    UArray<Eigen::MatrixXd> C;			// [Nb](6, 6)		Hydrostatic restoring coefficients:
+    UArray<Eigen::MatrixXd> M;			// [Nb](6, 6)		Mass and inertia matrix
     Eigen::MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     Eigen::MatrixXd c0;          			// (3,Nb)     		Centre of rotation
     BEM_SOFT code;        					// BEM_SOFT			BEM code 
-    Upp::Vector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
-    Upp::Vector<int> dofOrder;				// [6*Nb]			DOF order
+    UVector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
+    UVector<int> dofOrder;				// [6*Nb]			DOF order
     
-    Upp::Array<Upp::Array<Eigen::VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
+    UArray<UArray<Eigen::VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
     Eigen::VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
     
     int GetHeadId(double hd) const;
@@ -126,8 +126,8 @@ public:
             ma = clone(f.ma);		ph = clone(f.ph);
             re = clone(f.re);		im = clone(f.im);
         }
-    	Upp::Array<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
-    	Upp::Array<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
+    	UArray<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
+    	UArray<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
     
     	void Jsonize(JsonIO &json) {
 			json
@@ -162,14 +162,14 @@ public:
 			ssFrequencies_index = clone(s.ssFrequencies_index);
 			ssMAE = s.ssMAE;
         }
-	    Upp::Array<std::complex<double>> TFS;
+	    UArray<std::complex<double>> TFS;
 		Eigen::MatrixXd A_ss;
 		Eigen::VectorXd B_ss;
 		Eigen::VectorXd C_ss;
 		Eigen::VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
 		double ssMAE = Null;
 		
-		void GetTFS(const Upp::Vector<double> &w);
+		void GetTFS(const UVector<double> &w);
 		
 		void Jsonize(JsonIO &json) {
 			json
@@ -184,7 +184,7 @@ public:
 			;
     	}
     };
-    Upp::Array<Upp::Array<StateSpace>> sts;	// (6*Nb, 6*Nb)		State space data
+    UArray<UArray<StateSpace>> sts;	// (6*Nb, 6*Nb)		State space data
     int dimenSTS;							// false if data is dimensionless
     String stsProcessor;
     
@@ -213,7 +213,7 @@ public:
         int ib = -1;
         int ih1, ih2;
         int ifr1, ifr2;
-        Upp::Vector<double> fre, fim, fma, fph;
+        UVector<double> fre, fim, fma, fph;
  
 		void Jsonize(JsonIO &json) {
 			json
@@ -235,12 +235,12 @@ public:
     		fph.Clear();
     	}
     };
-    Upp::Array<QTF> qtfsum, qtfdif;
-    Upp::Vector<double> qtfw, qtfT, qtfhead;
+    UArray<QTF> qtfsum, qtfdif;
+    UVector<double> qtfw, qtfT, qtfhead;
     bool qtfdataFromW;
     
     struct QTFCases : public DeepCopyOption<QTFCases>  {
-    	Upp::Vector<int> ib, ih1, ih2;
+    	UVector<int> ib, ih1, ih2;
     	
     	QTFCases() {}
     	QTFCases(const QTFCases &q, int) {
@@ -254,8 +254,8 @@ public:
     		ih2.Clear();
     	}
     	int size() {return ib.size();}
-    	void Sort(const Vector<double> &headings) {
-    		Vector<int> indices(ib.size());
+    	void Sort(const UVector<double> &headings) {
+    		UVector<int> indices(ib.size());
 			for (int i = 0; i < indices.size(); ++i)
 				indices[i] = i;
 			StableSort(indices, [&](int a, int b)-> bool {
@@ -284,14 +284,14 @@ public:
     } qtfCases;
     
     int GetQTFHeadId(double hd) const;
-    static int GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList, 
+    static int GetQTFId(int lastid, const UArray<Hydro::QTF> &qtfList, 
     			const QTFCases &qtfCases, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
-	static void GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases, const Vector<double> &headings);
+	static void GetQTFList(const UArray<Hydro::QTF> &qtfList, QTFCases &qtfCases, const UVector<double> &headings);
 							
-    Upp::Vector<double> T;					// [Nf]    			Wave periods
-    Upp::Vector<double> w;		 			// [Nf]             Wave frequencies
+    UVector<double> T;					// [Nf]    			Wave periods
+    UVector<double> w;		 			// [Nf]             Wave frequencies
     bool dataFromW;
-    Upp::Vector<double> Vo;   				// [Nb]             Displaced volume
+    UVector<double> Vo;   				// [Nb]             Displaced volume
     		
     void Dimensionalize();
     void Normalize();
@@ -456,13 +456,13 @@ private:
 	static String C_units_base(int i, int j);
 	BEM *bem;
 		
-	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, double h, int ih, int idb);
-	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh, bool xAxis);
+	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb);
+	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis);
 	int id;
 	static int idCount;
 	 
-	static void GetOldAB(const Upp::Array<Eigen::MatrixXd> &oldAB, Upp::Array<Upp::Array<Eigen::VectorXd>> &AB);
-	static void SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::Array<Eigen::VectorXd>> &AB);
+	static void GetOldAB(const UArray<Eigen::MatrixXd> &oldAB, UArray<UArray<Eigen::VectorXd>> &AB);
+	static void SetOldAB(UArray<Eigen::MatrixXd> &oldAB, const UArray<UArray<Eigen::VectorXd>> &AB);
 	
 public:
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
@@ -510,8 +510,8 @@ public:
 	void Compare_C(Hydro &a);
 	void Compare_cg(Hydro &a);
 	
-	const Vector<int> &GetOrder() const		{return dofOrder;}
-	void SetOrder(Upp::Vector<int> &order)	{dofOrder = pick(order);}
+	const UVector<int> &GetOrder() const	{return dofOrder;}
+	void SetOrder(UVector<int> &order)		{dofOrder = pick(order);}
 	
 	int GetW0();
 	void Get3W0(int &id1, int &id2, int &id3);
@@ -519,19 +519,19 @@ public:
 		
 	void GetK_IRF(double maxT = 120, int numT = 1000);
 	double GetK_IRF_MaxT() const;
-	static double GetK_IRF_MaxT(const Vector<double> &w);
+	static double GetK_IRF_MaxT(const UVector<double> &w);
 	void GetAinf();
 	void GetAinf_w();
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
 	void GetTranslationTo(double xto, double yto, double zto);
 	
-	void DeleteFrequencies(const Vector<int> &idFreq);
-	void DeleteFrequenciesQTF(const Vector<int> &idFreqQTF);
-	void DeleteHeadings(const Vector<int> &idHead);
-	void DeleteHeadingsQTF(const Vector<int> &idHeadQTF);
+	void DeleteFrequencies(const UVector<int> &idFreq);
+	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
+	void DeleteHeadings(const UVector<int> &idHead);
+	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	
-	void Join(const Upp::Vector<Hydro *> &hydrosp);
+	void Join(const UVector<Hydro *> &hydrosp);
 	
 	String S_g()	const {return !IsNum(g)   ? S("-") : Format("%.3f", g);}
 	String S_h()	const {return !IsNum(h)   ? S("-") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
@@ -627,17 +627,21 @@ public:
 	void Orient();
 	void Join(const Surface &orig, double rho, double g);
 	void Image(int axis);
+	void Move(double dx, double dy, double dz, double ax, double ay, double az, 
+			  double rho, double g, bool setnewzero);
+	void Move(const double *pos, double rho, double g, bool setnewzero);
+	void Move(const float *pos, double rho, double g, bool setnewzero);
 		
 	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime);
 	void Reset(double rho, double g);
 
 	void GZ(double from, double to, double delta, double angle, double rho, double g,
 		Function <bool(String, int pos)> Status, 
-		Vector<double> &dataangle, Vector<double> &dataGZ, Vector<double> &dataMoment,
-		Vector<double> &vol, Vector<double> &disp, Vector<double> &wett, Vector<double> &wplane,
-		Vector<double> &draft, Vector<Point3D> &dcb, Vector<Point3D> &dcg);
+		UVector<double> &dataangle, UVector<double> &dataGZ, UVector<double> &dataMoment,
+		UVector<double> &vol, UVector<double> &disp, UVector<double> &wett, UVector<double> &wplane,
+		UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg);
 	void GZ(double from, double to, double delta, double angleCalc, double rho, double g,
-				Vector<double> &dataangle, Vector<double> &datagz);
+				UVector<double> &dataangle, UVector<double> &datagz);
 
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;
@@ -724,7 +728,7 @@ public:
 	static void Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rho, double g);
 	
 protected:
-	void ProcessFirstColumn(Vector<double> &w, Vector<double> &T);
+	void ProcessFirstColumn(UVector<double> &w, UVector<double> &T);
 	
 	bool Load_cfg(String fileName);
 	int iperout = Null;
@@ -787,9 +791,9 @@ class Foamm : public HydroClass {
 public:
 	Foamm(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
-	void Get_Each(int ibody, int idf, int jdf, double from, double to, const Upp::Vector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	void Get(const Upp::Vector<int> &ibs, const Upp::Vector<int> &idfs, const Upp::Vector<int> &jdfs,
-		const Upp::Vector<double> &froms, const Upp::Vector<double> &tos, const Upp::Vector<Upp::Vector<double>> &freqs, 
+	void Get_Each(int ibody, int idf, int jdf, double from, double to, const UVector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
+	void Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
+		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	virtual ~Foamm() noexcept {}
 	
@@ -800,15 +804,16 @@ protected:
 class BEMBody : public MoveableAndDeepCopyOption<BEMBody> {
 public:
 	BEMBody();
-	BEMBody(const BEMBody &d, int) : meshFile(d.meshFile), dof(clone(d.dof)), c0(clone(d.c0)), 
+	BEMBody(const BEMBody &d, int) : meshFile(d.meshFile), lidFile(d.lidFile),
+			ndof(d.ndof), dof(clone(d.dof)), c0(clone(d.c0)), 
 			cg(clone(d.cg)), mass(clone(d.mass)), 
 			linearDamping(clone(d.linearDamping)), quadraticDamping(clone(d.quadraticDamping)), 
-			hydrostaticRestoring(clone(d.hydrostaticRestoring)), externalRestoring(clone(d.externalRestoring)), 
-			ndof(d.ndof) {}
+			hydrostaticRestoring(clone(d.hydrostaticRestoring)), externalRestoring(clone(d.externalRestoring)) 
+			 {}
 	
 	String meshFile, lidFile;
 	int ndof;
-	Vector<bool> dof;
+	UVector<bool> dof;
 	Eigen::Vector3d c0;	
 	Eigen::Vector3d cg;
 	Eigen::MatrixXd mass, linearDamping, quadraticDamping, hydrostaticRestoring, externalRestoring;
@@ -822,7 +827,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
 	BEMCase() {bodies.SetCount(1);}
-	BEMCase(const BEMCase &bcase) : bodies(clone(bcase.bodies)), h(bcase.h),
+	BEMCase(const BEMCase &bcase) : h(bcase.h), bodies(clone(bcase.bodies)), 
 		Nf(bcase.Nf), minF(bcase.minF), maxF(bcase.maxF), Nh(bcase.Nh),
 		minH(bcase.minH), maxH(bcase.maxH), rho(bcase.rho), g(bcase.g),
 		xeff(bcase.xeff), yeff(bcase.yeff), irf(bcase.irf), 
@@ -834,7 +839,7 @@ public:
 		
 	void Load(String file, const BEM &bem);
 	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
-	Vector<String> Check(int solver) const;
+	UVector<String> Check(int solver) const;
 	
 	void BeforeSave(String folderBase, int numCases, bool deleteFolder) const;
 	
@@ -843,7 +848,7 @@ public:
 	
 	double h = Null;
 	
-	Upp::Vector<BEMBody> bodies;
+	UVector<BEMBody> bodies;
 
 	int Nf = Null;
 	double minF = Null, maxF = Null;
@@ -871,7 +876,7 @@ public:
 class AQWACase : public BEMCase {
 public:
 	bool Load(String fileName);
-	Upp::Vector<String> Check() const;	
+	UVector<String> Check() const;	
 	
 	virtual ~AQWACase() noexcept {}
 };
@@ -880,7 +885,7 @@ class HamsCase : public BEMCase {
 public:
 	bool Load(String fileName);
 	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
-	Upp::Vector<String> Check() const;
+	UVector<String> Check() const;
 	
 	bool LoadHydrostatic(String fileName);
 	
@@ -902,9 +907,9 @@ class NemohCase : public BEMCase {
 public:	
 	bool Load(String fileName);
 	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
-	Upp::Vector<String> Check() const;
+	UVector<String> Check() const;
 	
-	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels, bool isCapy) const;
+	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const UVector<int> &nodes, const UVector<int> &panels, bool isCapy) const;
 	
 	virtual ~NemohCase() noexcept {}
 	
@@ -916,7 +921,7 @@ private:
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
 	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const;
-	void Save_Mesh_bat(String folder, String caseFolder, const Vector<String> &meshes, String meshName, bool bin) const;
+	void Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases, const BEM &bem, 
@@ -966,7 +971,7 @@ private:
 };
 
 
-Upp::Vector<int> NumSets(int num, int numsets);	
+UVector<int> NumSets(int num, int numsets);	
 
 
 class FieldSplitWamit: public FieldSplit {
@@ -984,8 +989,8 @@ public:
 	
 	HydroClass &Duplicate(int id);
 		
-	Upp::Array<HydroClass> hydros;
-	Upp::Array<Mesh> surfs;
+	UArray<HydroClass> hydros;
+	UArray<Mesh> surfs;
 	
 	int GetHydroId(int id) {
 		for (int i = 0; i < hydros.size(); ++i) {
@@ -1004,8 +1009,8 @@ public:
 		
 	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
-	Upp::Vector<double> headAll;	// Common models data
-	Vector<int> orderHeadAll;
+	UVector<double> headAll;	// Common models data
+	UVector<int> orderHeadAll;
 	
 	int Nb = 0;				
 	
@@ -1030,7 +1035,7 @@ public:
 	int volWarning, volError;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
-	HydroClass &Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status = Null);
+	HydroClass &Join(UVector<int> &ids, Function <bool(String, int)> Status = Null);
 	void Symmetrize(int id, bool xAxis);
 	void A0(int id);
 	void Kirf(int id, double maxT);
@@ -1038,8 +1043,8 @@ public:
 	void Ainf_w(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
 	void TranslationTo(int id, double xto, double yto, double zto);
-	void DeleteHeadingsFrequencies(int id, const Vector<int> &idFreq, const Vector<int> &idFreqQTF, 
-										   const Vector<int> &idHead, const Vector<int> &idHeadQTF);
+	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
+										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
@@ -1048,11 +1053,11 @@ public:
 	void UnderwaterMesh(int id, Function <bool(String, int pos)> Status);
 	void RemoveMesh(int id);
 	void JoinMesh(int idDest, int idOrig);
-	Upp::Vector<int> SplitMesh(int id, Function <bool(String, int pos)> Status);
+	UVector<int> SplitMesh(int id, Function <bool(String, int pos)> Status);
 	
 	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
-	void AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
-	void AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals);
+	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
+	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddWaterSurface(int id, char c);
 	
 	bool LoadSerializeJson();
@@ -1225,7 +1230,6 @@ bool OUTB(int id, T total) {
 	return false;
 }
 
-
 class Mooring : public DeepCopyOption<Mooring> {
 public:
 	Mooring() {}
@@ -1246,7 +1250,7 @@ public:
 		double mass, diameter, bl;
 		void Jsonize(JsonIO &json);
 	};
-	Vector<LineType> lineTypes;
+	UVector<LineType> lineTypes;
 	
 	LineType &GetLineType(String name);
 	
@@ -1276,10 +1280,10 @@ public:
 		
 		MooringStatus status;		// Obtained with Calc()
 		double lenonfloor;
-		Vector<double> x, y, z;
+		UVector<double> x, y, z;
 		double theta, fanchorvessel, fVanchor, fVvessel;
 	};
-	Vector<LineProperty> lineProperties;	
+	UVector<LineProperty> lineProperties;	
 
 	struct Connection : Moveable<Connection> {
 		String name;
@@ -1287,7 +1291,7 @@ public:
 		double x, y, z;
 		void Jsonize(JsonIO &json);
 	};
-	Vector<Connection> connections;	
+	UVector<Connection> connections;	
 	
 	Connection &GetConnection(String name);
 	
@@ -1302,8 +1306,8 @@ String GetFASTVar(const String &strFile, String varName, String paragraph = "");
 void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
 void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd);
 double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
-Eigen::MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
-Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
+MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
+UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
 	
 class FASTFiles {
 public:
@@ -1341,7 +1345,7 @@ private:
 					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			}
 			String res;
-			Vector<String> vars = Split(var, "/");
+			UVector<String> vars = Split(var, "/");
 			if (vars.size() == 2)
 				res = GetFASTVar(fileText, vars[1], vars[0]);
 			else if (vars.size() == 1)		
@@ -1426,7 +1430,7 @@ private:
 				if (fileText.IsEmpty())
 					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			}
-			Vector<String> vars = Split(var, "/");
+			UVector<String> vars = Split(var, "/");
 			if (vars.size() == 2) {
 				isChanged = true;
 				return SetFASTVar(fileText, vars[1], val, vars[0]);

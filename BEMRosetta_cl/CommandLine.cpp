@@ -25,8 +25,8 @@ String GetSystemInfo() {
 	return systemInfo;
 }
 
-Vector<String> GetCommandLineParams(String str) {
-	Vector<String> ret;
+UVector<String> GetCommandLineParams(String str) {
+	UVector<String> ret;
 	
 	bool inQuotes = false, inComment = false;
 	String tempstr;
@@ -54,7 +54,7 @@ Vector<String> GetCommandLineParams(String str) {
 	return ret;
 }
 
-void CheckIfAvailableArg(const Vector<String>& command, int i, String param) {
+void CheckIfAvailableArg(const UVector<String>& command, int i, String param) {
 	if (i >= command.size())	
 		throw Exc(Format(t_("Missing parameters when reading '%s'"), param));
 }
@@ -148,8 +148,8 @@ void ShowHelp(BEM &md) {
 
 static bool NoPrint(String, int) {return true;}
 
-bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
-	Vector<String> command = clone(_command);
+bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
+	UVector<String> command = clone(_command);
 	
 	SetConsoleColor(CONSOLE_COLOR::LTCYAN);
 	Cout() << "BEMRosetta";
@@ -236,9 +236,10 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							String onoff = ToLower(command[i]);
 							if (onoff == "on") {
 								echo = true;
-								if (OldPrint)
+								if (OldPrint) {
 									BEM::Print = OldPrint;
 									BEM::PrintWarning = OldWarning;
+								}
 							} else if (onoff == "off") {
 								echo = false;
 								OldPrint = BEM::Print;
@@ -473,8 +474,8 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 							CheckIfAvailableArg(command, ++i, "cz");
 							double cz = ScanDouble(command[i]);
 							Mesh &data = bem.surfs[meshid];
-							data.mesh.Rotate(ax, ay, az, cx, cy, cz);	
-							data.cg.Rotate(ax, ay, az, cx, cy, cz);
+							data.mesh.Rotate(ToRad(ax), ToRad(ay), ToRad(az), cx, cy, cz);	
+							data.cg.Rotate(ToRad(ax), ToRad(ay), ToRad(az), cx, cy, cz);
 							data.AfterLoad(bem.rho, bem.g, false, false);	
 							BEM::Print("\n" + Format(t_("Mesh id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
 						} else if (param == "-cg") {
@@ -571,7 +572,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									Cout() << "\n";
 									BEM::Print(t_("HydrostaticForce:") + S(" "));
 									lastPrint.Clear();
-									Force6 f;
+									Force6D f;
 									data.under.GetHydrostaticForce(f, data.c0, bem.rho, bem.g);
 									for (int i = 0; i < 6; ++i) 				
 										lastPrint << f[i] << " ";
@@ -611,7 +612,7 @@ bool ConsoleMain(const Vector<String>& _command, bool gui, Function <bool(String
 									double to = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Delta");
 									double delta = ScanDouble(command[i]);
-									Vector<double> dataangle, datagz;
+									UVector<double> dataangle, datagz;
 									data.GZ(from, to, delta, angle, bem.rho, bem.g, dataangle, datagz);									
 									for (int i = 0; i < dataangle.size(); ++i) 
 										lastPrint << dataangle[i] << " ";

@@ -131,7 +131,7 @@ public:
 	Function <void()>WhenEnter;
 
 private:
-	Upp::Vector<RectEnter *> ctrls;
+	UVector<RectEnter *> ctrls;
 	
 	int Find(RectEnter &ctrl) {
 		for (int i = 0; i < ctrls.size(); ++i) 

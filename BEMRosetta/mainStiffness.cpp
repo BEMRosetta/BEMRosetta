@@ -207,7 +207,7 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 	//	return;
 }
 
-bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids, bool ndim) {
+bool MainMatrixKA::Load(UArray<HydroClass> &hydros, const UVector<int> &ids, bool ndim) {
 	Clear();
 	
 	bool loaded = false;
@@ -226,7 +226,7 @@ bool MainMatrixKA::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &
 	return true;
 }	
 
-void MainMatrixKA::Load(Upp::Array<Mesh> &surfs, const Upp::Vector<int> &ids) {
+void MainMatrixKA::Load(UArray<Mesh> &surfs, const UVector<int> &ids) {
 	Clear();
 
 	for (int i = 0; i < ids.size(); ++i) {

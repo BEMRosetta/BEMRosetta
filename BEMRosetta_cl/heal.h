@@ -22,7 +22,7 @@ public:
 	String title;
 	String sdof;
 
-	Vector<Pointf> aoi, maxB;
+	UVector<Pointf> aoi, maxB;
 	
 	// Parameters for IRF calculation	
 	double maxT;
@@ -48,7 +48,7 @@ private:
 					 
 	Upp::Index<int> SpineRemovalRight(int idpk, double maxDer);
 	Upp::Index<int> SpineRemovalLeft(int idpk, double maxDer);
-	void SpineRemoval(int idpk, double maxDer, Vector<bool> &idToVoid);
+	void SpineRemoval(int idpk, double maxDer, UVector<bool> &idToVoid);
 	
 	static void CubicFromEnds(double x0, double y0, double p0, double x1, double y1, double p1,
 				   			double &a, double &b, double &c, double &d);

@@ -137,8 +137,8 @@ Eigen::MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int c
 	return ret;
 }
 		
-Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String paragraph) {
-	Vector<Vector<String>> ret;
+UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph) {
+	UVector<UVector<String>> ret;
 	int posIni, pos;
 	if (!GetFASTVarLine(strFile, var, paragraph, posIni, pos, 0))
 		return ret;
@@ -151,7 +151,7 @@ Vector<Vector<String>> GetFASTArray(const String &strFile, String var, String pa
 			throw Exc(Format(t_("Problem reading variable '%s.%s' in GetFASTArray"), paragraph, var));
 	}
 	for (int i = 0; i < num; ++i) {
-		Vector<String> &str = ret.Add();
+		UVector<String> &str = ret.Add();
 		int npos = strFile.FindAfter("\n", pos);
 		if (npos < 0)
 			throw Exc(Format(t_("Problem reading variable '%s.%s' in GetFASTArray"), paragraph, var));

@@ -163,7 +163,7 @@ bool Wamit::Load_out() {
 	FieldSplitWamit f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	double xbody = 0, ybody = 0, zbody = 0;
+	//double xbody = 0, ybody = 0, zbody = 0;
 	
 	hd().names.Clear();
 	while(!in.IsEof()) {
@@ -715,7 +715,7 @@ static double w_iperout4(double nuL, double g, double len, double h) {
 	return x[0];
 }
 			
-void Wamit::ProcessFirstColumn(Vector<double> &w, Vector<double> &T) {
+void Wamit::ProcessFirstColumn(UVector<double> &w, UVector<double> &T) {
 	if (w.size() < 2)
 		return;	
 	if (IsNull(iperout)) {
@@ -777,7 +777,7 @@ bool Wamit::Load_1(String fileName) {
 	if (in.IsEof())
 		return false;
 	
-	Vector<double> w, T; 	
+	UVector<double> w, T; 	
     
 	in.SeekPos(fpos);
 	
@@ -818,7 +818,7 @@ bool Wamit::Load_1(String fileName) {
 	if (hd().Nb == 0)// || hd().Nf < 2)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
-	Vector<double> sourcew = clone(w);
+	UVector<double> sourcew = clone(w);
 	
 	ProcessFirstColumn(w, T);
 	
@@ -874,9 +874,6 @@ bool Wamit::Load_1(String fileName) {
 				throw Exc(in.Str() + "\n"  + t_("A[w=0] is not expected"));				
 			hd().Ainf(i, j) = Aij;
 		} else {
-			if (freq == 19.98)
-				int kk = 1;
-			
 			int ifr = FindRatio(sourcew, freq, 0.001);
 			if (ifr < 0) {
 				if (hd().dataFromW)
@@ -910,7 +907,7 @@ bool Wamit::Load_3(String fileName) {
 	if (in.IsEof())
 		return false;
 	
-	Vector<double> w, T; 	
+	UVector<double> w, T; 	
     
 	in.SeekPos(fpos);
 	
@@ -956,7 +953,7 @@ bool Wamit::Load_3(String fileName) {
 	if (hd().Nb == 0 || hd().Nf < 2)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 
-	Vector<double> sourcew = clone(w);
+	UVector<double> sourcew = clone(w);
 	
 	ProcessFirstColumn(w, T);
 
@@ -1076,7 +1073,7 @@ bool Wamit::Load_4(String fileName) {
 	if (in.IsEof()) 
 		return false;
 	
-	Vector<double> w, T; 	
+	UVector<double> w, T; 	
     
 	in.SeekPos(fpos);
 	
@@ -1122,7 +1119,7 @@ bool Wamit::Load_4(String fileName) {
 	if (hd().Nb == 0 || hd().Nf < 2)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
-	Vector<double> sourcew = clone(w);
+	UVector<double> sourcew = clone(w);
 		
 	ProcessFirstColumn(w, T);
 	
@@ -1185,7 +1182,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		return false;
 	
 	int nrows = hd().Nh*hd().Nf*hd().Nf;
-	Upp::Array<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
+	UArray<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
 	
 	qtfList.Clear();
 	qtfList.Reserve(hd().Nb*nrows);
@@ -1200,8 +1197,8 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	else
 		fpos = in.GetPos();		// Avoid header
 	
-    Vector<double> w, T;
-    Vector<double> head;
+    UVector<double> w, T;
+    UVector<double> head;
     
     bool isRad = true;
 	int maxDof = 0;	
@@ -1377,14 +1374,14 @@ void Wamit::Save_1(String fileName, bool force_T) {
 	if (hd().Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 		
-	Vector<double> *pdata;
+	UVector<double> *pdata;
 	if (force_T)
 		pdata = &hd().T;
 	else if (hd().dataFromW) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
-	Vector<double> &data = *pdata;
+	UVector<double> &data = *pdata;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
@@ -1417,13 +1414,13 @@ void Wamit::Save_3(String fileName, bool force_T) {
 	if (hd().Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 
-	Vector<double> *pdata;
+	UVector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
 	if (hd().dataFromW && !force_T) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
-	Vector<double> &data = *pdata;
+	UVector<double> &data = *pdata;
 	
 	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
 		ifr0 = 0;
@@ -1488,13 +1485,13 @@ void Wamit::Save_4(String fileName, bool force_T) {
 	if (hd().Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 		
-	Vector<double> *pdata;
+	UVector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
 	if (hd().dataFromW && !force_T) 
 		pdata = &hd().w;
 	else
 		pdata = &hd().T;
-	Vector<double> &data = *pdata;
+	UVector<double> &data = *pdata;
 	
 	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
 		ifr0 = 0;
@@ -1535,17 +1532,17 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 			
-	Upp::Array<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
+	UArray<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
 		
 	out << " WAMIT Numeric Output -- Filename  " << Format("%20<s", GetFileName(fileName)) << "  " << Format("%", GetSysTime()) << "\n";
 	
-	Vector<double> *pdata;
+	UVector<double> *pdata;
 	int ifr0, ifrEnd, ifrDelta;
 	if (hd().qtfdataFromW && !force_T) 
 		pdata = &hd().qtfw;
 	else
 		pdata = &hd().qtfT;
-	Vector<double> &data = *pdata;
+	UVector<double> &data = *pdata;
 	
 	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
 		ifr0 = 0;

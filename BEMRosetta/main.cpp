@@ -525,7 +525,7 @@ GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);
 	//SetAssertFailedHook(OnAssert);
 	
-	const Upp::Vector<String>& command = CommandLine();
+	const UVector<String>& command = CommandLine();
 	
 	if (!command.IsEmpty()) {
 		ConsoleOutput con(true);
@@ -609,7 +609,7 @@ ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option) {
 }
 
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
-					Upp::Array<Option> &option, Function <void()>OnPush) {
+					UArray<Option> &option, Function <void()>OnPush) {
 	array.Add(id, GetColorId(id), true, codeStr, title, fileName);
 	int row = array.GetCount()-1;
 	Option & opt = option.Add();
@@ -682,8 +682,8 @@ int ArrayModel_IdHydro(const ArrayCtrl &array, int row) {
 	return Bem().GetHydroId(id);
 }
 
-Upp::Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
-	Upp::Vector<int> ids;
+UVector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
+	UVector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) {
 		int id = ArrayModel_IdHydro(array, row);		
 		if (id >= 0)
@@ -692,14 +692,14 @@ Upp::Vector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {
 	return ids;
 }
 
-Upp::Vector<int> ArrayModel_IdsMesh(const ArrayCtrl &array) {		
-	Upp::Vector<int> ids;
+UVector<int> ArrayModel_IdsMesh(const ArrayCtrl &array) {		
+	UVector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) 
 		ids << ArrayModel_IdMesh(array, row);		
 	return ids;
 }
 
-void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids) {		
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const UVector<int> &ids) {		
 	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
 		int idrow = ArrayModel_IdHydro(array, row);
 		for (auto id : ids) {
@@ -711,7 +711,7 @@ void ArrayModel_IdsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &ids) {
 	}
 }
 
-void ArrayModel_RowsHydroDel(ArrayCtrl &array, const Upp::Vector<int> &rows) {		
+void ArrayModel_RowsHydroDel(ArrayCtrl &array, const UVector<int> &rows) {		
 	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
 		for (auto rw : rows) {
 			if (row == rw) {
