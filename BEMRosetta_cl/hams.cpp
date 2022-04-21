@@ -140,8 +140,8 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
 }
 	
 
-Vector<String> HamsCase::Check() const {
-	Vector<String> ret;
+UVector<String> HamsCase::Check() const {
+	UVector<String> ret;
 	
 	if (bodies.size() != 1)
 		ret << t_("HAMS just allows one body");
@@ -199,7 +199,7 @@ bool HamsCase::Load(String fileName) {
 				f.GetLine();
 				if (f.size() < 2)
 					throw Exc(t_("Frequencies or periods not found"));
-				Vector<double> data;
+				UVector<double> data;
 				double delta;
 				for (int i = 0; i < f.size(); ++i) {
 					if (input_frequency_type == 3)
@@ -232,7 +232,7 @@ bool HamsCase::Load(String fileName) {
 				f.GetLine();
 				if (f.size() < 1)
 					throw Exc(t_("Headings not found"));
-				Vector<double> data;
+				UVector<double> data;
 				double delta = 0;
 				for (int i = 0; i < f.size(); ++i) {
 					data << f.GetDouble(i);
@@ -321,11 +321,11 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 	if (fixminF < MIN_F_HAMS)
 		fixminF = MIN_F_HAMS;
 	
-	Vector<int> valsf;
+	UVector<int> valsf;
 	int _nf;
 	double _minf, _maxf;
 	int ifr = 0;
-	Vector<double> freqs;
+	UVector<double> freqs;
 	if (numCases > 1) { 
 		LinSpaced(freqs, Nf, fixminF, maxF);
 		valsf = NumSets(Nf, numCases);
@@ -526,7 +526,7 @@ void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, doubl
 		   "\n    Input_frequency_type        3"
 		   "\n    Output_frequency_type       3";
 	out << "\n    Number_of_frequencies      " << _nf;
-	Vector<double> freqs;
+	UVector<double> freqs;
 	LinSpaced(freqs, _nf, _minf, _maxf);
 	out << "\n    ";
 	for (const auto &freq : freqs)
@@ -535,7 +535,7 @@ void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, doubl
 		   "\n"
 		   "\n   #Start Definition of Wave Headings";
 	out << "\n    Number_of_headings         " << Nh;
-	Vector<double> headings;
+	UVector<double> headings;
 	LinSpaced(headings, Nh, minH, maxH);
 	out << "\n    ";
 	for (const auto &heading : headings)

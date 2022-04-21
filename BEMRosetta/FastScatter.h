@@ -59,7 +59,7 @@ private:
 		FastOut *datafast;
 		int col;
 	};
-	Upp::Array<DataSource> dataSource;
+	UArray<DataSource> dataSource;
 	
 	WithFastScatterLeft<StaticRect> left;
 	WithFastScatterRight<StaticRect> right;
@@ -70,7 +70,7 @@ private:
 	Function <void(String)> WhenCopyTabs;
 	
 	struct Params {
-		Vector<String> left, right;
+		UVector<String> left, right;
 		void Jsonize(JsonIO &json) {
 			json
 				("left", left)
@@ -100,16 +100,16 @@ public:
 	
 private:
 	TabBar tabBar;
-	Upp::Array<FastScatter> tabScatters;
+	UArray<FastScatter> tabScatters;
 	Upp::Index<int> tabKeys;
-	Vector<String> fileNames;
+	UVector<String> fileNames;
 	int tabCounter = 0;
 	
-	Index<String> history;
+	Upp::Index<String> history;
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
-	bool LoadDragDrop(const Upp::Vector<String> &files);
+	bool LoadDragDrop(const UVector<String> &files);
 	
 	void AddHistory(String filename);
 		

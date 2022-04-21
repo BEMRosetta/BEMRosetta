@@ -600,7 +600,7 @@ bool MainSolver::OnSave(const BEM &bem) {
 		if (!Save(data, isNemoh))
 			return false;
 		
-		Upp::Vector<String> errors = data.Check(~dropSolver);
+		UVector<String> errors = data.Check(~dropSolver);
 		
 		if (!errors.IsEmpty()) {
 			String str;

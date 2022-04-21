@@ -47,8 +47,8 @@ FastOut::FastOut() {
 	AddParam("+NcIMUTA", "m/s^2", ncIMUTA);
 }
 
-Vector<String> FastOut::GetFilesToLoad(String path) {
-	Vector<String> ret;
+UVector<String> FastOut::GetFilesToLoad(String path) {
+	UVector<String> ret;
 	
 	if (TrimBoth(path).IsEmpty())
 		return ret;
@@ -112,7 +112,7 @@ String FastOut::GetFileToLoad(String fileName) {
 	return Null;
 }
 
-int FastOut::Load(String fileName) {	
+bool FastOut::Load(String fileName) {	
 	Time actualTime = FileGetTime(fileName);
 	if (lastFile == fileName && actualTime - lastTime < 5) // Only loads if file is 5 sec older
 		return true;
@@ -145,7 +145,7 @@ bool FastOut::LoadOut(String fileName) {
 	while (npos >= 0) {
 		npos = raw.FindAfter("\n", pos);
 		String line = raw.Mid(pos, npos-pos);
-		Vector<String> fields = Split(line, IsTabSpaceRet, true);
+		UVector<String> fields = Split(line, IsTabSpaceRet, true);
 		
 		if (!begin) {
 			if (!fields.IsEmpty() && fields[0] == "Time") {
@@ -154,7 +154,7 @@ bool FastOut::LoadOut(String fileName) {
 				pos = npos;
 				npos = raw.FindAfter("\n", pos);
 				line = raw.Mid(pos, npos-pos);
-				Vector<String> fields = Split(line, IsTabSpaceRet, true);
+				UVector<String> fields = Split(line, IsTabSpaceRet, true);
 				for (int c = 0; c < fields.size(); ++c) 
 					units << Replace(Replace(fields[c], "(", ""), ")", "");
 				begin = true;
@@ -185,6 +185,38 @@ bool FastOut::LoadOut(String fileName) {
 		throw Exc(Format("Problem reading '%s'", fileName)); 
 
 	return true;
+}
+
+bool FastOut::Save(String fileName) {
+	return SaveOut(fileName);
+}
+	
+bool FastOut::SaveOut(String fileName) {
+	String data;
+	
+	data << "\n\n\n\n\n\n";
+	for (int i = 0; i < parameters.size(); ++i) {
+		if (i > 0)
+			data << "\t";
+		data << parameters[i];
+	}
+	data << "\n";
+	for (int i = 0; i < units.size(); ++i) {
+		if (i > 0)
+			data << "\t";
+		data << "(" << units[i] << ")";
+	}
+	for (int i = 0; i < dataOut.size(); ++i) {
+		if (i > 0)
+			data << "\n";
+		auto &row = dataOut[i];
+		for (int c = 0; c < row.size(); ++c) {
+			if (c > 0)
+				data << "\t";
+			data << FDS(row[c], 10, true);
+		}
+	}
+	return SaveFileBOMUtf8(fileName, data);
 }
 
 bool FastOut::LoadOutb(String fileName) {
@@ -303,9 +335,9 @@ int FastOut::FindCol(String param) const {
 	return Null;
 }
 
-Vector<int> FastOut::FindParameterMatch(String param) const {
+UVector<int> FastOut::FindParameterMatch(String param) const {
 	param = ToLower(param);
-	Vector<int> ret;
+	UVector<int> ret;
 	for (int c = 0; c < parameters.size(); ++c) {
 		if (PatternMatch(param, ToLower(parameters[c])))
 			ret << c;

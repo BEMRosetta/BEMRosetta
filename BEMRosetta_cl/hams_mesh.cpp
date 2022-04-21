@@ -17,7 +17,7 @@ String HAMSMesh::LoadPnl(String fileName, bool &y0z, bool &x0z) {
 	FieldSplit f(in);	
 	f.IsSeparator = IsTabSpace;
 		
-	Index<int> ids;
+	Upp::Index<int> ids;
 	try {
 		String line;
 		line = in.GetLine();	
@@ -145,8 +145,8 @@ void HAMSMesh::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z)
 		throw Exc(t_("HAMS only allows one symmetry at a time, either X or Y."));
 	
 	
-	const Vector<Panel> &panels = surf.panels;
-	const Vector<Point3D> &nodes = surf.nodes;
+	const UVector<Panel> &panels = surf.panels;
+	const UVector<Point3D> &nodes = surf.nodes;
 	
 	if (type == 'y')
 		out << "    --------------Waterplane Mesh File---------------";

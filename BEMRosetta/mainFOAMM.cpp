@@ -201,7 +201,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		selector.Clear();
 			
 		String freqs = arrayCases.Get(row, 6);
-		Upp::Vector<String> afreqs = Split(freqs, ';');
+		UVector<String> afreqs = Split(freqs, ';');
 		for (int i = 0; i < afreqs.size(); ++i)
 			selector.AddField(ScanDouble(afreqs[i]));
 		
@@ -231,7 +231,7 @@ void MainSetupFOAMM::WhenArrayCases() {
 	arrayCases.Set(row, 4, ~fromFreq);
 	arrayCases.Set(row, 5, ~toFreq);
 
-	Upp::Vector<double> freqs;
+	UVector<double> freqs;
 	for (int i = 0; i < selector.size(); ++i) {
 		double freq = selector.Get(i);
 		if (!IsNull(freq)) {
@@ -269,11 +269,11 @@ String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
 	if (toFreq <= fromFreq) 
 		return t_("From: frequency has to be lower than To: frequency");
 			
-	Upp::Vector<String> afreqs = Split(freqs, ';');
+	UVector<String> afreqs = Split(freqs, ';');
 	if (afreqs.IsEmpty()) 
 		return t_("No frequency has been selected");
 	
-	Upp::Vector<double> unique;
+	UVector<double> unique;
 	for (int i = 0; i < afreqs.size(); ++i) {
 		double freq = ScanDouble(afreqs[i]);
 		if (freq < fromFreq || freq > toFreq) 
@@ -286,8 +286,8 @@ String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
 	return String("");
 }
 
-bool MainSetupFOAMM::Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vector<int> &jdfs,
-		Upp::Vector<double> &froms, Upp::Vector<double> &tos, Upp::Vector<Upp::Vector<double>> &freqs) {
+bool MainSetupFOAMM::Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jdfs,
+		UVector<double> &froms, UVector<double> &tos, UVector<UVector<double>> &freqs) {
 	for (int row = 0; row < arrayCases.GetCount(); ++row) {
 		bool proc = arrayCases.Get(row, 0);
 		if (proc) {
@@ -307,8 +307,8 @@ bool MainSetupFOAMM::Get(Upp::Vector<int> &ibs, Upp::Vector<int> &idfs, Upp::Vec
 			}
 			froms << from;
 			tos << to;
-			Upp::Vector<double> &f = freqs.Add();
-			Upp::Vector<String> fs = Split(strfreqs, ';');
+			UVector<double> &f = freqs.Add();
+			UVector<String> fs = Split(strfreqs, ';');
 			for (int i = 0; i < fs.size(); ++i)
 				f << ScanDouble(fs[i]);
 		}
@@ -329,9 +329,9 @@ void MenuFOAMM::Clear() {
 }
 		
 bool MenuFOAMM::OnFOAMM() {
-	Upp::Vector<int> ibs, idfs, jdfs;
-	Upp::Vector<double> froms, tos;
-	Upp::Vector<Upp::Vector<double>> freqs;
+	UVector<int> ibs, idfs, jdfs;
+	UVector<double> froms, tos;
+	UVector<UVector<double>> freqs;
 	String ret;
 	
 	try {

@@ -81,7 +81,7 @@ bool Nemoh::Load(String file, double) {
 		if (!Load_FroudeKrylov(folderForces))
 			BEM::PrintWarning(S(": ** FKForce.tec ") + t_("Not found") + "**");
 		
-		Vector<int> idsRemove;
+		UVector<int> idsRemove;
 		for (int ih = 0; ih < hd().Nh; ++ih) {
 			int id = FindDelta(hd().head, hd().head[ih], 0.001, ih+1);
 			if (id > 0)
@@ -341,8 +341,8 @@ bool NemohCase::Load(String fileName) {
 	return true;
 }
 
-Vector<String> NemohCase::Check() const {
-	Vector<String> ret;
+UVector<String> NemohCase::Check() const {
+	UVector<String> ret;
 	
 	if (IsNull(rho) || rho < 0 || rho > 10000)
 		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(rho));
@@ -389,7 +389,7 @@ void NemohCase::Save_Id(String folder) const {
 	out << "1\n.";
 }
 
-void NemohCase::Save_Mesh_bat(String folder, String caseFolder, const Vector<String> &meshes, String meshName, bool bin) const {
+void NemohCase::Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const {
 	String fileName = AppendFileNameX(folder, "Mesh_cal.bat");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -478,11 +478,11 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 	if (fixminF < MIN_F_NEMOH)
 		fixminF = MIN_F_NEMOH;
 	
-	Vector<int> valsf;
+	UVector<int> valsf;
 	int _nf;
 	double _minf, _maxf;
 	int ifr = 0;
-	Vector<double> freqs;
+	UVector<double> freqs;
 	if (numCases > 1) { 
 		LinSpaced(freqs, Nf, fixminF, maxF);
 		valsf = NumSets(Nf, numCases);
@@ -558,8 +558,8 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 		if (!DirectoryCreateX(folderMesh))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
-		Vector<String> meshes(bodies.size());
-		Vector<int> nodes(bodies.size()), panels(bodies.size());
+		UVector<String> meshes(bodies.size());
+		UVector<int> nodes(bodies.size()), panels(bodies.size());
 		for (int ib = 0; ib < bodies.size(); ++ib) {
 			String name = GetFileName(bodies[ib].meshFile);
 			name = RemoveAccents(name);
@@ -638,7 +638,7 @@ void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh
 	
 }
 	
-void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, const Vector<int> &nodes, const Vector<int> &panels, bool isCapy) const {
+void NemohCase::Save_Cal(String folder, int _nf, double _minf, double _maxf, const UVector<int> &nodes, const UVector<int> &panels, bool isCapy) const {
 	String fileName = AppendFileNameX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -920,7 +920,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
 	in.GetLine();
-	Vector<Vector<int>> dof;
+	UVector<UVector<int>> dof;
 	dof.SetCount(hd().Nb);
 	while(!in.IsEof()) {
 		line = in.GetLine();

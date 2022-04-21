@@ -331,7 +331,7 @@ void FastScatter::ShowSelected() {
 	
 	left.scatter.SetLabelX(t_("Time"));
 	left.scatter.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
-	Upp::Vector<int> idsx, idsy, idsFixed;
+	UVector<int> idsx, idsy, idsFixed;
 	for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {
 		String param = Trim(leftSearch.array.Get(rw, 0));
 		if (!param.IsEmpty()) {
@@ -515,7 +515,7 @@ bool FastScatterTabs::Key(dword key, int) {
 	return false;
 }
 
-bool FastScatterTabs::LoadDragDrop(const Upp::Vector<String> &files) {
+bool FastScatterTabs::LoadDragDrop(const UVector<String> &files) {
 	if (files.size() == 0)
 		return false;
 	

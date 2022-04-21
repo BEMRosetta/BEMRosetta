@@ -234,7 +234,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 	}
 }
 
-void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, double h, int ih, int idb) {
+void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb) {
 	int nih  = FindClosest(newHead, h);
 	bool avg  = !IsNull(newf.re[nih](0, idb));
 	for (int ifr = 0; ifr < Nf; ++ifr) {
@@ -264,7 +264,7 @@ static double MirrorHead(double head, bool xAxis) {
 	}
 }
 
-void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const Upp::Vector<double> &newHead, int newNh, bool xAxis) {
+void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis) {
 	Initialize_Forces(newf, newNh);
 	
 	for (int idb = 0; idb < 6*Nb; ++idb) {
@@ -344,7 +344,7 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 	if (!IsLoadedFex() && !IsLoadedFsc() && !IsLoadedFfk() && !IsLoadedRAO())
 		return;
 	
-	Upp::Vector<double> newHead;
+	UVector<double> newHead;
 	for (int ih = 0; ih < Nh; ++ih) {
 		FindAddRatio(newHead, FixHeading_180(head[ih]), 0.001);
 		FindAddRatio(newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), 0.001);
@@ -587,7 +587,7 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT ty
 	return ret;
 }
 
-void Hydro::Join(const Upp::Vector<Hydro *> &hydrosp) {
+void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 	name = t_("Joined files");
 	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
 		const Hydro &hydro = *hydrosp[ihy];
@@ -924,7 +924,7 @@ int Hydro::GetW0() {
 }
 
 void Hydro::Get3W0(int &id1, int &id2, int &id3) {
-	Upp::Vector<double> ww = clone(w);
+	UVector<double> ww = clone(w);
 	
 	Sort(ww);
 	id1 = FindAdd(w, ww[0]); 	
@@ -1025,7 +1025,7 @@ double Hydro::rho_ndim()	const {return !IsNull(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	const {return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
 
-void Hydro::StateSpace::GetTFS(const Upp::Vector<double> &w) {
+void Hydro::StateSpace::GetTFS(const UVector<double> &w) {
 	Eigen::Index sz = A_ss.rows();
 	TFS.SetCount(w.size());
 	for (int ifr = 0; ifr < w.size(); ++ifr) {
@@ -1051,7 +1051,7 @@ int Hydro::GetQTFHeadId(double hd) const {
 	return -1;
 }
 	
-int Hydro::GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList, 
+int Hydro::GetQTFId(int lastid, const UArray<Hydro::QTF> &qtfList, 
 			const QTFCases &qtfCases, int ib, int ih1, int ih2, int ifr1, int ifr2) {
 	if (qtfCases.ib.size() > 0) {
 		bool found = false;
@@ -1074,7 +1074,7 @@ int Hydro::GetQTFId(int lastid, const Upp::Array<Hydro::QTF> &qtfList,
 	return -1;
 }
 
-void Hydro::GetQTFList(const Upp::Array<Hydro::QTF> &qtfList, QTFCases &qtfCases, const Vector<double> &headings) {
+void Hydro::GetQTFList(const UArray<Hydro::QTF> &qtfList, QTFCases &qtfCases, const UVector<double> &headings) {
 	qtfCases.Clear();
 	for (int i = 0; i < qtfList.size(); ++i) {
 		const QTF &qtf = qtfList[i];
@@ -1115,7 +1115,7 @@ Eigen::VectorXd Hydro::B_ndim(int idf, int jdf) const {
 }
 
 
-void Hydro::GetOldAB(const Upp::Array<Eigen::MatrixXd> &oldAB, Upp::Array<Upp::Array<Eigen::VectorXd>> &AB) {
+void Hydro::GetOldAB(const UArray<Eigen::MatrixXd> &oldAB, UArray<UArray<Eigen::VectorXd>> &AB) {
 	AB.Clear();
 	int Nf = oldAB.size();
 	int Nb = 0;
@@ -1132,7 +1132,7 @@ void Hydro::GetOldAB(const Upp::Array<Eigen::MatrixXd> &oldAB, Upp::Array<Upp::A
 	}
 }
 
-void Hydro::SetOldAB(Upp::Array<Eigen::MatrixXd> &oldAB, const Upp::Array<Upp::Array<Eigen::VectorXd>> &AB) {
+void Hydro::SetOldAB(UArray<Eigen::MatrixXd> &oldAB, const UArray<UArray<Eigen::VectorXd>> &AB) {
 	oldAB.Clear();
 	int Nb = AB.size()/6;
 	int Nf = 0;
@@ -1264,7 +1264,7 @@ double Hydro::GMpitch(int ib) const {
 
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
-	Upp::Array<Eigen::MatrixXd> oldA, oldB, oldKirf;
+	UArray<Eigen::MatrixXd> oldA, oldB, oldKirf;
 	if (json.IsStoring()) {
 		icode = code;
 		SetOldAB(oldA, A);
@@ -1435,8 +1435,8 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 	UpdateHeadAll();
 }
 
-HydroClass &BEM::Join(Upp::Vector<int> &ids, Function <bool(String, int)> Status) {
-	Upp::Vector<Hydro *>hydrosp;
+HydroClass &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
+	UVector<Hydro *>hydrosp;
 	
 	hydrosp.SetCount(ids.size());
 	for (int i = 0; i < ids.size(); ++i) 
@@ -1498,7 +1498,7 @@ void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayi
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind);
 }
 
-void BEM::DeleteHeadingsFrequencies(int id, const Vector<int> &idFreq, const Vector<int> &idFreqQTF, const Vector<int> &idHead, const Vector<int> &idHeadQTF) {
+void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadQTF) {
 	hydros[id].hd().DeleteFrequencies(idFreq);
 	hydros[id].hd().DeleteFrequenciesQTF(idFreqQTF);
 	hydros[id].hd().DeleteHeadings(idHead);
@@ -1597,13 +1597,13 @@ void BEM::JoinMesh(int idDest, int idOrig) {
 	}
 }
 
-Upp::Vector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
+UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
 	Mesh &orig = surfs[id];
 	
-	Upp::Vector<int> ret;
+	UVector<int> ret;
 	try {
-		Upp::Vector<Upp::Vector<int>> sets = orig.mesh.GetPanelSets(Status);
+		UVector<UVector<int>> sets = orig.mesh.GetPanelSets(Status);
 		if (sets.size() == 1)
 			return ret;
 		for (int i = 0; i < sets.size(); ++i) {		
@@ -1639,7 +1639,7 @@ void BEM::AddFlatPanel(double x, double y, double z, double size, double panWidt
 	}	
 }
 
-void BEM::AddRevolution(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
+void BEM::AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals) {
 	try {
 		Mesh &surf = surfs.Add();
 
@@ -1653,7 +1653,7 @@ void BEM::AddRevolution(double x, double y, double z, double size, Upp::Vector<P
 	}	
 }
 
-void BEM::AddPolygonalPanel(double x, double y, double z, double size, Upp::Vector<Pointf> &vals) {
+void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals) {
 	try {
 		Mesh &surf = surfs.Add();
 
@@ -1787,9 +1787,9 @@ int IsTabSpace(int c) {
 	return false;
 }
 
-Upp::Vector<int> NumSets(int num, int numsets) {
+UVector<int> NumSets(int num, int numsets) {
 	ASSERT(numsets > 0);
-	Upp::Vector<int> ret;
+	UVector<int> ret;
 	ret.SetCount(numsets);
 	
 	for (int i = 0; numsets > 0; ++i) {
@@ -1810,7 +1810,7 @@ String FormatWam(double d) {
 void FieldSplitWamit::LoadWamitJoinedFields(String _line) {	
 	line = _line;
 	fields.Clear();
-	Upp::Vector<String> prefields = Split(line, IsTabSpace, true);
+	UVector<String> prefields = Split(line, IsTabSpace, true);
 	for (int id = 0; id < prefields.size(); ++id) {
 		String s = prefields[id];
 		String ns;
@@ -1899,8 +1899,8 @@ void BEMCase::BeforeSave(String folderBase, int numCases, bool deleteFolder) con
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 }
 
-Vector<String> BEMCase::Check(int solver) const {
-	Vector<String> ret;
+UVector<String> BEMCase::Check(int solver) const {
+	UVector<String> ret;
 	
 	bool isNemoh = solver != BEMCase::HAMS;
 	bool oneBody = solver == BEMCase::HAMS;

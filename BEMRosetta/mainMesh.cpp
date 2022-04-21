@@ -240,7 +240,7 @@ void MainMesh::Init() {
 	String bitmapFolder = AppendFileNameX(GetDesktopFolder(), "BEMRosetta Mesh Images");
 	int idBitmapFolder = 0;
 	
-	videoCtrl.Init([&](Vector<int> &ids)->int {
+	videoCtrl.Init([&](UVector<int> &ids)->int {
 			ids = ArrayModel_IdsMesh(listLoaded);
 			int num = ArrayCtrlSelectedGetCount(listLoaded);
 			if (num > 1) {
@@ -258,11 +258,11 @@ void MainMesh::Init() {
 				}
 			}
 			return id;
-		}, [&](int id, const Vector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
+		}, [&](int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
 			Mesh &data = Bem().surfs[id];			
 			
-			data.cg.TransRot(pos.x, pos.y, pos.z, angle.x, angle.y, angle.z, c0.x, c0.y, c0.z);
-			data.mesh.TransRot(pos.x, pos.y, pos.z, angle.x, angle.y, angle.z, c0.x, c0.y, c0.z);
+			data.cg.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
+			data.mesh.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
 			
 			menuProcess.x_g <<= data.cg.x;
 			menuProcess.y_g <<= data.cg.y;
@@ -298,7 +298,7 @@ void MainMesh::Init() {
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		bool plot = true, move = false, convertProcess = true;
 		if (Bem().surfs.IsEmpty()) 
 			plot = convertProcess = false;
@@ -380,7 +380,7 @@ void MainMesh::OnMenuAdvancedArraySel() {
 	if (id < 0)
 		return;
 	
-	Mesh &data = Bem().surfs[id];
+	//Mesh &data = Bem().surfs[id];
 	
 }
 
@@ -448,7 +448,7 @@ void MainMesh::InitSerialize(bool ret) {
 }
 
 void MainMesh::LoadSelTab(BEM &bem) {
-	const Upp::Vector<int> &ids = ArrayModel_IdsMesh(listLoaded);
+	const UVector<int> &ids = ArrayModel_IdsMesh(listLoaded);
 	if (mainTab.Get() == mainTab.Find(mainStiffness))
 		mainStiffness.Load(bem.surfs, ids);
 	else if (mainTab.Get() == mainTab.Find(mainView))
@@ -538,7 +538,7 @@ bool MainMesh::OnLoad() {
 	try {
 		Progress progress(t_("Loading mesh file..."), 100); 
 		
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		for (int i = 0; i < ids.size(); ++i) {
 			if (Bem().surfs[ids[i]].fileName == file) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
@@ -630,7 +630,7 @@ void MainMesh::OnReset() {
 	GuiLock __;
 	
 	try {
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			Exclamation(t_("Please select just one model"));
@@ -678,7 +678,7 @@ void MainMesh::OnUpdateMass() {
 	GuiLock __;
 	
 	try {
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			Exclamation(t_("Please select just one model"));
@@ -723,7 +723,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			menuProcess.z_0 <<= ~menuMove.z_0;
 		}
 		
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			Exclamation(t_("Please select just one model"));
@@ -784,8 +784,8 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
 			
 		} else if (action == ROTATE) {
-			data.cg.Rotate(a_x, a_y, a_z, x_0, y_0, z_0);
-			data.mesh.Rotate(a_x, a_y, a_z, x_0, y_0, z_0);
+			data.cg.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
+			data.mesh.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
 			videoCtrl.AddReg(Point3D(a_x, a_y, a_z), Point3D(x_0, y_0, z_0));
 			
 			if (~menuMove.opZArchimede) {
@@ -835,7 +835,7 @@ void MainMesh::OnArchimede() {
 	GuiLock __;
 	
 	try {
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			Exclamation(t_("Please select just one model"));
@@ -928,7 +928,7 @@ void MainMesh::OnAddPanel() {
 void MainMesh::OnAddRevolution() {
 	GuiLock __;
 	
-	Upp::Vector<Pointf> vals;
+	UVector<Pointf> vals;
 	for (int r = 0; r < menuEdit.revolutionList.GetCount(); ++r) {
 		Pointf &val = vals.Add();
 		val.x = ScanDouble(AsString(menuEdit.revolutionList.Get(r, 0)));
@@ -971,7 +971,7 @@ void MainMesh::OnAddRevolution() {
 void MainMesh::OnAddPolygonalPanel() {
 	GuiLock __;
 	
-	Upp::Vector<Pointf> vals;
+	UVector<Pointf> vals;
 	for (int r = 0; r < menuEdit.polynomialList.GetCount(); ++r) {
 		Pointf &val = vals.Add();
 		val.x = ScanDouble(AsString(menuEdit.polynomialList.Get(r, 0)));
@@ -1072,7 +1072,7 @@ void MainMesh::OnHealing(bool basic) {
 		
 		Bem().HealingMesh(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);
@@ -1113,7 +1113,7 @@ void MainMesh::OnOrientSurface() {
 		
 		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false, false);
 		
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);
@@ -1132,7 +1132,7 @@ void MainMesh::OnImage(int axis) {
 	String saxis = (axis == 0) ? "X" : ((axis == 1) ? "Y" : "Z");
 
 	try {
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int id = ArrayModel_IdMesh(listLoaded);
 		if (id < 0) {
 			Exclamation(t_("Please select a model to process"));
@@ -1175,7 +1175,7 @@ void MainMesh::OnRemove() {
 void MainMesh::OnRemoveSelected(bool all) {	
 	bool selected = false;
 	
-	Upp::Vector<int> sel = ArrayCtrlSelectedGet(listLoaded);
+	UVector<int> sel = ArrayCtrlSelectedGet(listLoaded);
 	
 	for (int r = listLoaded.GetCount()-1; r >= 0; --r) {
 		if (all || Find(sel, r) >= 0) {
@@ -1196,7 +1196,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 		return;
 	}
 
-	Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+	UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 	mainStiffness.Load(Bem().surfs, ids);
 	mainViewData.ReLoad(mainView);
 	
@@ -1237,7 +1237,7 @@ void MainMesh::OnJoin() {
 			}
 		}	
 	
-		Upp::Vector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		mainStiffness.Load(Bem().surfs, ids);
 		mainViewData.ReLoad(mainView);
 		
@@ -1276,7 +1276,7 @@ void MainMesh::OnSplit() {
 		}
 		WaitCursor waitcursor;
 				
-		Upp::Vector<int> idsmesh;
+		UVector<int> idsmesh;
 		int row = -1;
 		for (row = listLoaded.GetCount()-1; row >= 0; --row) {
 			if (listLoaded.IsSelected(row)) 
@@ -1409,7 +1409,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 	;
 }
 
-void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
+void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	const Mesh &data = surfs[id];
 	String name = data.name;
 	
@@ -1526,7 +1526,7 @@ void MainSummaryMesh::Report(const Upp::Array<Mesh> &surfs, int id) {
 														FDS(data.mesh.env.maxY, 10, false),
 														FDS(data.mesh.env.maxZ, 10, false)));
 
-	Force6 f, fcb, fcg;
+	Force6D f, fcb, fcg;
 	data.under.GetHydrostaticForce(f, data.c0, Bem().rho, Bem().g);	
 	data.under.GetHydrostaticForceCB(fcb, data.c0, data.cb, Bem().rho, Bem().g);	
 	Surface::GetMassForce(fcg, data.c0, data.cg, data.mass, Bem().g);	
@@ -1678,22 +1678,22 @@ void MainView::OnPaint() {
 			}
 			if (paintSelect) {
 				if (~GetMenuPlot().showMesh) {
-					const Upp::Vector<int> &nod = mesh.mesh.GetSelNodes();
+					const UVector<int> &nod = mesh.mesh.GetSelNodes();
 					for (int in = 0; in < nod.size(); ++in)
 						gl.PaintCube(mesh.mesh.nodes[nod[in]], len/20, LtBlue());
-					const Upp::Vector<int> &pan = mesh.mesh.GetSelPanels();
-					const Upp::Vector<Point3D> &nodes = mesh.mesh.nodes;
+					const UVector<int> &pan = mesh.mesh.GetSelPanels();
+					const UVector<Point3D> &nodes = mesh.mesh.nodes;
 					for (int ip = 0; ip < pan.size(); ++ip) {
 						const Panel &panel = mesh.mesh.panels[pan[ip]];
 						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 					}
 				}
 				if (~GetMenuPlot().showUnderwater) {
-					const Upp::Vector<int> &nod = mesh.under.GetSelNodes();
+					const UVector<int> &nod = mesh.under.GetSelNodes();
 					for (int in = 0; in < nod.size(); ++in)
 						gl.PaintCube(mesh.under.nodes[nod[in]], len/20, LtBlue());
-					const Upp::Vector<int> &pan = mesh.under.GetSelPanels();
-					const Upp::Vector<Point3D> &nodes = mesh.under.nodes;
+					const UVector<int> &pan = mesh.under.GetSelPanels();
+					const UVector<Point3D> &nodes = mesh.under.nodes;
 					for (int ip = 0; ip < pan.size(); ++ip) {
 						const Panel &panel = mesh.under.panels[pan[ip]];
 						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
@@ -1846,10 +1846,10 @@ void MainGZ::OnUpdate() {
 			
 		int iangle = 0;
 		for (double angle = double(~edAngleFrom); angle <= angleTo; angle += angleDelta, iangle++) {
-			Vector<double> &dgz = datagz.Add();
-			Vector<double> &dMoment = dataMoment.Add();
-			Vector<double> vol, disp, wett, wplane, draft;
-			Vector<Point3D> cb, cg;
+			UVector<double> &dgz = datagz.Add();
+			UVector<double> &dMoment = dataMoment.Add();
+			UVector<double> vol, disp, wett, wplane, draft;
+			UVector<Point3D> cb, cg;
 			
 			data.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, [&](String, int pos)->bool {
 					progress.SetPos(pos + 100*iangle);
@@ -1897,24 +1897,23 @@ void MainGZ::OnUpdate() {
 			mingz.SetCount(dangle.size(), 0);
 			for (int i = 0; i < dangle.size(); ++i) {
 				for (int iangle = 0; iangle < datagz.size(); ++iangle) {
+					double d = datagz[iangle][i];
 					if (dangle[i] < 0) {
-						if (datagz[iangle][i] > 0) {
+						if (d > 0) {
 							mingz[i] = 0;
 							break;
 						} else if (mingz[i] == 0) 
-							mingz[i] = datagz[iangle][i];
-						else {
-							double d = datagz[iangle][i];
-							mingz[i] = mingz[i] < datagz[iangle][i] ? datagz[iangle][i] : mingz[i];
-						}
-					} else {
-						if (datagz[iangle][i] < 0) {
-							mingz[i] = 0;
-							break;
-						} else if (mingz[i] == 0) 
-							mingz[i] = datagz[iangle][i];
+							mingz[i] = d;
 						else 
-							mingz[i] = mingz[i] > datagz[iangle][i] ? datagz[iangle][i] : mingz[i];
+							mingz[i] = mingz[i] < d ? d : mingz[i];
+					} else {
+						if (d < 0) {
+							mingz[i] = 0;
+							break;
+						} else if (mingz[i] == 0) 
+							mingz[i] = d;
+						else 
+							mingz[i] = mingz[i] > d ? d : mingz[i];
 					}
 				}
 			}
@@ -1931,7 +1930,7 @@ void MainGZ::Clear(bool force) {
 	if (!force) {
 		MainMesh &mm = GetDefinedParent<MainMesh>(this);
 		
-		Vector<int> ids = ArrayModel_IdsMesh(mm.listLoaded);
+		UVector<int> ids = ArrayModel_IdsMesh(mm.listLoaded);
 		if (Find(ids, idOpened) >= 0)
 			return;
 	}

@@ -157,7 +157,7 @@ void MainBEM::Init() {
 	
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		bool plot = true, convertProcess = true, ismenuFOAMM = false;
 
 		if (ids.IsEmpty())
@@ -358,7 +358,7 @@ void MainBEM::InitSerialize(bool ret) {
 }
 
 void MainBEM::LoadSelTab(BEM &bem) {
-	Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+	UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	int id = mainTab.Get();
 	if (id == mainTab.Find(mainStateSpace))
 		mainStateSpace.Load(bem, ids);
@@ -502,7 +502,7 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		UpdateButtons();
 
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainArrange.Load(Bem().hydros, ids);	
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
@@ -562,7 +562,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 	
 	UpdateButtons();
 	
-	Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+	UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
 	mainArrange.Load(Bem().hydros, ids);	
 	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);	
@@ -628,7 +628,7 @@ void MainBEM::UpdateButtons() {
 }
 
 void MainBEM::OnJoin() {
-	Upp::Vector<int> idsjoin, rowsJoin;
+	UVector<int> idsjoin, rowsJoin;
 	for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
 		if (listLoaded.IsSelected(row)) {
 			rowsJoin << row;
@@ -660,7 +660,7 @@ void MainBEM::OnJoin() {
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		ArrayModel_RowsHydroDel(listLoaded, rowsJoin);
 	
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
 		for (int id = 0; id < Bem().hydros.size(); ++id) {
 			const Hydro &data = Bem().hydros[id].hd();
@@ -706,7 +706,7 @@ void MainBEM::OnDuplicate() {
 		
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 			
 		for (int i = 0; i < Bem().hydros.size(); ++i) {
 			const Hydro &data = Bem().hydros[id].hd();
@@ -739,7 +739,7 @@ void MainBEM::OnSymmetrize(bool xAxis) {
 		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
@@ -794,7 +794,7 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
@@ -814,7 +814,7 @@ void MainBEM::OnOgilvie() {
 		
 		WaitCursor wait;
 		
-		double maxT = Null;
+		//double maxT = Null;
 		
 		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail, ~menuAdvanced.opHaskind);
 				
@@ -822,7 +822,7 @@ void MainBEM::OnOgilvie() {
 		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
@@ -840,7 +840,7 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 			return;
 		
 		//bool show_w = menuPlot.opwT == 0;
-		Vector<int> idFreq, idFreqQTF, idHead, idHeadQTF;
+		UVector<int> idFreq, idFreqQTF, idHead, idHeadQTF;
 		for (int i = 0; i < menuProcess.dropFreq.GetList().GetRowCount(); ++i)
 			if (menuProcess.dropFreq.GetList().Get(i, 0) == true)
 				idFreq << i;
@@ -862,7 +862,7 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
@@ -896,7 +896,7 @@ void MainBEM::OnUpdateCrot() {
 		for (int i = 0; i < Bem().hydros.size(); ++i)
 			mainSummary.Report(Bem().hydros[i].hd(), i);
 		
-		Upp::Vector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
@@ -1338,7 +1338,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		}
 		array.Set(row,   0, sib + " " + t_("GMroll [m]"));
 		array.Set(row+1, 0, sib + " " + t_("GMpitch [m]"));
-		if (IsNum(data.rho) && IsNum(data.g)) {
+		if (IsNum(data.rho) && IsNum(data.g) && data.IsLoadedC()) {
 			array.Set(row++, col, FDS(data.GMroll(ib), 5, false));
 			array.Set(row++, col, FDS(data.GMpitch(ib), 5, false));
 		} else {
@@ -1368,7 +1368,7 @@ void MainArrange::Clear() {
 	arrangeDOF.Clear();
 }
 
-void MainArrange::Load(Upp::Array<HydroClass> &hydros, const Upp::Vector<int> &ids) {
+void MainArrange::Load(UArray<HydroClass> &hydros, const UVector<int> &ids) {
 	MainArrange::Clear();
 	for (int i = 0; i < ids.size(); ++i) {
 		int icase = ids[i];
@@ -1445,7 +1445,7 @@ void MainQTF::Init() {
 			for (int r = 0; r < qtfNf; ++r)
 				listQTF.Add(FDS(show_w ? hd.qtfw[r] : hd.qtfT[r], 8));
 			
-			const Upp::Array<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
+			const UArray<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
 			
 			double mn = DBL_MAX, mx = DBL_MIN;
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {

@@ -48,7 +48,7 @@ void CompareParameters::Load() {
 	list.Clear();
 	int col = 1;
 	
-	Vector<double> rms;
+	UVector<double> rms;
 	for(int i = 0; i < scatter.GetCount(); i++) {
 		String leg = scatter.GetLegend(i);
 		if (leg.StartsWith("A∞") || leg.StartsWith("A0"))
@@ -66,12 +66,12 @@ void CompareParameters::Load() {
 		list.Set(row, col, FDS(rms[row], 10, false));	
     
     //col++;
-    Vector<Vector<double>> data;
+    UVector<UVector<double>> data;
     for(int i = 0; i < scatter.GetCount(); i++) {
 		String leg = scatter.GetLegend(i);
 		if (leg.StartsWith("A∞") || leg.StartsWith("A0"))
 			continue;
-		Vector<double> &d = data.Add();
+		UVector<double> &d = data.Add();
 		
 		Eigen::VectorXd x, y;
 		scatter.GetDataSource(i).CopyXY(x, y);
@@ -86,7 +86,7 @@ void CompareParameters::Load() {
  
     if (dataToShow == Hydro::DATA_A) {
         col++;
-        Vector<double> ainf;
+        UVector<double> ainf;
         //int row = 0;
 		for(int i = 0; i < scatter.GetCount(); i++) {
 			String leg = scatter.GetLegend(i);

@@ -31,13 +31,13 @@ void ArrangeDOF::Init(Hydro &hydro) {
 	
 	dofList.WhenDropInsert = [&](int line, PasteClip& d) { 
 		if (DnDInsert(line, d)) {
-			Upp::Vector<int> order;
+			UVector<int> order;
 			for (int i = 0; i < dofList.GetCount(); ++i) {
 				int ib, idf;
 				BEM::DOFFromStr(dofList.Get(i, 0).ToString(), ib, idf); 
 				order << (idf + 6*ib);
 			}
-			/*Upp::Vector<int> neworder;
+			/*UVector<int> neworder;
 			for (int i = 0; i < order.size(); ++i) {
 				int id = FindIndex(order, i);
 				neworder << id;

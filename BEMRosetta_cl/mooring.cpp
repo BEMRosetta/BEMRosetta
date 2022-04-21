@@ -113,7 +113,7 @@ Mooring::LineType &Mooring::GetLineType(String name) {
 
 bool Mooring::Calc(double x, double y, double rho_water) {
 	for (LineProperty &line : lineProperties) {
-		Vector<double> vpos;
+		UVector<double> vpos;
 		int num = 50;
 		double rho_m3 = 7850;	// Steel
 		

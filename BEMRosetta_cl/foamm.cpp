@@ -161,8 +161,8 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	return true;
 }
 
-void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<int> &jdfs,
-		const Vector<double> &froms, const Vector<double> &tos, const Vector<Vector<double>> &freqs, 
+void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
+		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	if (!FileExists(hd().GetBEM().foammPath))
 		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
@@ -172,7 +172,7 @@ void Foamm::Get(const Vector<int> &ibs, const Vector<int> &idfs, const Vector<in
 	}
 }
 
-void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, const Vector<double> &freqs, 
+void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, const UVector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
 	String folder = AppendFileNameX(BEM::GetTempFilesFolder(), Format(id));
@@ -219,7 +219,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	if (!mat.VarWrite("Dof", matDof))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));*/
 	
-	Vector<String> optionsVars;
+	UVector<String> optionsVars;
 	optionsVars << "Mode" << "Method" << "FreqRangeChoice" << "FreqChoice";
 	MatVar options("Options", 1, 1, optionsVars);
 	
@@ -238,7 +238,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 		freqChoice(0, i) = freqs[i];
 	options.VarWriteStruct<double>("FreqChoice", freqChoice);
 	
-	Vector<String> optimVars;
+	UVector<String> optimVars;
 	optimVars << "InitCond" << "Tol" << "maxEval" << "maxIter" << "StepTol" << "ThresRel" << "ThresAbs";
 	MatVar optim("Optim", 1, 1, optimVars);
 	optim.VarWriteStruct<double>("InitCond", 50);

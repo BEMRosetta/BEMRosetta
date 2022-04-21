@@ -121,7 +121,7 @@ Upp::Index<int> HealBEM::SpineRemovalLeft(int idpk, double maxDer) {
 }
 
 // Removes both sides of a spine
-void HealBEM::SpineRemoval(int idpk, double maxDer, Vector<bool> &idToVoid) {
+void HealBEM::SpineRemoval(int idpk, double maxDer, UVector<bool> &idToVoid) {
 	int idpk0 = max(0, idpk - 3);
 	int idpkE = min(int(w.size())-1, idpk + 3);	
 	Upp::Index<int> maxLeft, maxRight;
@@ -283,16 +283,16 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 		LocalFitting(nw, nB, w, fB, 2, aoidx*0.25, false);		// Local fitting, quadratic
 	} else if (filterType == "full") {// The complex way
 		
-		Vector<bool>idToRemove;						// Signals with false if a value of B should be removed
+		UVector<bool>idToRemove;				// Signals with false if a value of B should be removed
 				
 		Resize(idToRemove, int(B.size()), true);	// Initialisation, resets points to be cleaned
 	
 		if (zremoval) {		// Removes sign of Zorro. Basic algorithm, but functional
-			Vector<int64> allupperPk, alllowerPk;
+			UVector<int64> allupperPk, alllowerPk;
 			FindPeaks(B, allupperPk, alllowerPk);		// Finds all lower and upper peaks, even the tiniest
 			
-			Vector<int> idZ;
-			Vector<double> heightZ;
+			UVector<int> idZ;
+			UVector<double> heightZ;
 			
 			for (int ip = 0; ip < allupperPk.size(); ++ip) {	// Max peaks
 				int i = int(allupperPk[ip]);	// Detects too much step between a peak and adjacent values
@@ -334,7 +334,7 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 		if (thinremoval) {	// This option can be avoided
 			double maxDer = 6*abs(aoidy/aoidx); // Max slope. Less sharp spine detection to get and remove bear claws
 			
-			Vector<int64> upperPk, lowerPk;
+			UVector<int64> upperPk, lowerPk;
 			FindPeaks(w, B, 0.1*aoidx, upperPk, lowerPk);	// Considers 0.1*aoidx as the window sensitivity to detect
 			
 			// Bear claws are removed after the max value idaoiyMx, not before
@@ -368,7 +368,7 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 		} else {
 			// Vectors to signal the begin and end of each area to be cleaned. size() is the
 			// number of scratches
-			Vector<int> fromScratch,		// Id of the first value of each scratch 
+			UVector<int> fromScratch,		// Id of the first value of each scratch 
 						toScratch;			// Id of the list value of each scratch
 			for (int i = 0; i < idToRemove.size(); ++i) {
 				bool equal = fromScratch.size() == toScratch.size();
