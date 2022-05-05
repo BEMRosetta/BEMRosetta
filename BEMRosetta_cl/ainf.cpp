@@ -68,6 +68,36 @@ void Hydro::GetAinf() {
 		    	Ainf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j]);
 }
 
+void Hydro::GetRAO() {
+	if (Nf == 0 || A.size() < Nb*6)
+		return;	
+
+	Initialize_Forces(rao);
+
+	MatrixXd D = MatrixXd::Zero(6, 6);
+	MatrixXd D2 = MatrixXd::Zero(6, 6);
+	
+	for (int ib = 0; ib < Nb; ++ib) {
+		MatrixXd C = C_(!dimen, ib);
+		const MatrixXd &M_ = M[ib];
+		for (int ih = 0; ih < Nh; ++ih) {	
+			for (int ifr = 0; ifr < Nf; ++ifr) {
+				VectorXcd RAO = GetRAO(w[ifr], A_(!dimen, ifr, ib), B_(!dimen, ifr, ib), 
+								F_(!dimen, ex, ih, ifr), C, M_, D, D2);
+				for (int idf = 0; idf < 6; ++idf)
+					rao.Set(ib, ih, ifr, idf, RAO[idf]);
+			}
+		}
+	}
+}
+
+VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
+		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2) {
+	const std::complex<double> j = std::complex<double>(0, 1);
+	VectorXcd RAO = (-sqr(w)*(M + Aw) - j*w*(Bw + D) + C).inverse()*Fwh;
+	return RAO;
+}
+	
 void Hydro::InitAinf_w() {
 	Ainf_w.SetCount(Nb*6); 			
     for (int i = 0; i < Nb*6; ++i) {

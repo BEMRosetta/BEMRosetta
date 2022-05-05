@@ -3,9 +3,28 @@
 #include "BEMRosetta.h"
 #include "Simulation.h"
 
-void Simulation::Load(const String &strFile, double _rho, double _g, double c0x, double c0y, double c0z) {
+Simulation::~Simulation() {
+	if (out.GetParamCount() > 0)
+		out.Save(AppendFileNameX(folder, "DLLData.out"));
+}
+
+void Simulation::Load(const String &datfile, double _rho, double _g, double c0x, double c0y, double c0z) {
 	rho = _rho;
 	g = _g;
+	
+	String strFile = LoadFile(datfile);
+	if (IsNull(strFile)) 
+		throw Exc(Format("File '%s' not found", datfile));
+		
+	String strcalc = GetFASTVar(strFile, "Hydrostatics", "");
+	if (IsNull(strcalc) || strcalc == "Static") 
+		calculation = 0;
+	else if (strcalc == "DynamicStatic")
+		calculation = 1;
+	else 
+		throw Exc(Format("Unknown Hydrostatics '%s'", strcalc));
+	
+	folder = GetFileFolder(datfile);
 	
 	String meshfile = GetFASTVar(strFile, "MeshFile", "");
 	if (IsNull(meshfile)) 
@@ -56,6 +75,42 @@ void Simulation::Load(const String &strFile, double _rho, double _g, double c0x,
 	addedMass     = GetFASTMatrix(strFile, "AddAmass", 6, 6);
 	if (addedMass.isZero(0))
 		addedMass.resize(0,0);
+	
+	auto AddVar = [&] (String name, String units, bool force = false) -> int {
+		if (force)
+			return out.AddParam(name, units);
+		else {
+			String res = ToLower(GetFASTVar(strFile, name, "OUTPUT CHANNELS"));
+			if (!IsNull(res) && res == "true") {
+				return out.AddParam(name, units);
+			}
+		}
+		return -1;
+	};
+	
+	output.time = AddVar("time", "s", true);
+	
+	output.ptfmSurge= AddVar("ptfmSurge", "m");
+	output.ptfmSway = AddVar("ptfmSway",  "m");
+	output.ptfmHeave= AddVar("ptfmHeave", "m");
+	output.ptfmRoll = AddVar("ptfmRoll",  "deg");
+	output.ptfmPitch= AddVar("ptfmPitch", "deg");
+	output.ptfmYaw  = AddVar("ptfmYaw",   "deg");
+	
+	output.PtfmTVxi = AddVar("PtfmTVxi", "m/s");
+	output.PtfmTVyi = AddVar("PtfmTVyi", "m/s");
+	output.PtfmTVzi = AddVar("PtfmTVzi", "m/s");
+	output.PtfmRVxi = AddVar("PtfmRVxi", "deg/s");
+	output.PtfmRVyi = AddVar("PtfmRVyi", "deg/s");
+	output.PtfmRVzi = AddVar("PtfmRVzi", "deg/s");
+	
+	output.PtfmTAxi = AddVar("PtfmTAxi", "m/s^2");
+	output.PtfmTAyi = AddVar("PtfmTAyi", "m/s^2");
+	output.PtfmTAzi = AddVar("PtfmTAzi", "m/s^2");
+	output.PtfmRAxi = AddVar("PtfmRAxi", "deg/s^2");
+	output.PtfmRAyi = AddVar("PtfmRAyi", "deg/s^2");
+	output.PtfmRAzi = AddVar("PtfmRAzi", "deg/s^2");
+	
 }
 
 Force6D Simulation::CalcForces_Static(const float *pos) {
@@ -78,9 +133,38 @@ Force6D Simulation::CalcForces_Dynamic(const float *pos, double volTolerance) {
 	return b;
 }
 
-Force6D Simulation::CalcForces(const float *pos, const float *vel, const float *acc) {
+Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, const float *acc) {
+	static double lasttime = -1;
+	
 	Force6D f6;
 	f6.Reset();
+	
+	if (lasttime == -1 || lasttime != time) {
+		out.AddVal(output.time,      time);
+		
+		out.AddVal(output.ptfmSurge, pos[0]);
+		out.AddVal(output.ptfmSway,  pos[1]);
+		out.AddVal(output.ptfmHeave, pos[2]);
+		out.AddVal(output.ptfmRoll,  ToDeg(pos[3]));
+		out.AddVal(output.ptfmPitch, ToDeg(pos[4]));
+		out.AddVal(output.ptfmYaw,   ToDeg(pos[5]));
+		
+		out.AddVal(output.PtfmTVxi,  vel[0]);
+		out.AddVal(output.PtfmTVyi,  vel[1]);
+		out.AddVal(output.PtfmTVzi,  vel[2]);
+		out.AddVal(output.PtfmRVxi,  ToDeg(vel[3]));
+		out.AddVal(output.PtfmRVyi,  ToDeg(vel[4]));
+		out.AddVal(output.PtfmRVzi,  ToDeg(vel[5]));
+		
+		out.AddVal(output.PtfmTAxi,  acc[0]);
+		out.AddVal(output.PtfmTAyi,  acc[1]);
+		out.AddVal(output.PtfmTAzi,  acc[2]);
+		out.AddVal(output.PtfmRAxi,  ToDeg(acc[3]));
+		out.AddVal(output.PtfmRAyi,  ToDeg(acc[4]));
+		out.AddVal(output.PtfmRAzi,  ToDeg(acc[5]));
+		
+		lasttime = time;
+	}
 	
 	if (fixedForces.size() > 0) {
 		for (int i = 0; i < fixedForces.size(); ++i) 

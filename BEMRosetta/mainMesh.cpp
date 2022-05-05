@@ -488,10 +488,14 @@ void MainMesh::OnOpt() {
 			menuConvert.file.Type("HAMS .pnl file", "*.pnl");
 			menuConvert.symX.Enable();
 			break;
-	case 4:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
+	case 4:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 	
+			menuConvert.file.Type("Diodore .dat file", "*.dat");
+			menuConvert.symX.Enable();
+			break;			
+	case 5:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
 			menuConvert.file.Type("STL binary .stl file", "*.stl");
 			break;
-	case 5:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
+	case 6:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
 			menuConvert.file.Type("STL text .stl file", "*.stl");
 			break;
 	default:menuConvert.file.Type("All converted files", "*.gdf *.dat *.pnl *.stl");
@@ -607,9 +611,10 @@ bool MainMesh::OnConvertMesh() {
 		case 1:	type = Mesh::NEMOH_DAT;	break;
 		case 2:	type = Mesh::NEMOH_PRE;	break;
 		case 3:	type = Mesh::HAMS_PNL;	break;
-		case 4:	type = Mesh::STL_BIN;	break;
-		case 5:	type = Mesh::STL_TXT;	break;
-		case 6:	type = Mesh::UNKNOWN;	break;
+		case 4:	type = Mesh::DIODORE_DAT;break;
+		case 5:	type = Mesh::STL_BIN;	break;
+		case 6:	type = Mesh::STL_TXT;	break;
+		case 7:	type = Mesh::UNKNOWN;	break;
 		default: throw Exc(t_("Unknown type in OnConvert()"));
 		}
 		

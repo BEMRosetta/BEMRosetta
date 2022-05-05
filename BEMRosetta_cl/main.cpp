@@ -314,7 +314,7 @@ double DLL_FAST_GetData(int idtime, int idparam) noexcept {
 
 double DLL_FAST_GetAvg(const char *param) noexcept {
 	try {
-		const UVector<double> &data = DLL_Fastout().GetVal(param);
+		const UVector<double> &data = DLL_Fastout().GetUVector(param);
 		return Eigen::Map<const Eigen::VectorXd>(data, data.size()).mean();
 	} catch (...) {
 		CoutX() << "Unknown error in DLL_FAST_GetAvg()";

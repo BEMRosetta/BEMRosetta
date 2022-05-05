@@ -24,6 +24,7 @@ file
 	aqwa_mesh.cpp,
 	nemoh_mesh.cpp,
 	wamit_mesh.cpp,
+	diodore_mesh.cpp,
 	nemoh.cpp,
 	hams.cpp,
 	wamit.cpp,

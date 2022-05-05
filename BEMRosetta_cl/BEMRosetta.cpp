@@ -8,6 +8,7 @@
 #include <plugin/matio/lib/matio.h>
 
 using namespace Upp;
+using namespace Eigen;
 
 Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
 Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << s;};
@@ -981,7 +982,7 @@ String Hydro::C_units(int i, int j) {
 	return ret;
 }
 
-void Hydro::SetC(int ib, const Eigen::MatrixXd &K) {		// K is supposed to be dimensionalized
+void Hydro::SetC(int ib, const MatrixXd &K) {		// K is supposed to be dimensionalized
 	if (C.IsEmpty())
 		C.SetCount(Nb);
 	if (C[ib].size() == 0)
@@ -1030,7 +1031,7 @@ void Hydro::StateSpace::GetTFS(const UVector<double> &w) {
 	TFS.SetCount(w.size());
 	for (int ifr = 0; ifr < w.size(); ++ifr) {
 		std::complex<double> wi = std::complex<double>(0, w[ifr]);
-		TFS[ifr] = (C_ss.transpose()*(Eigen::MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
+		TFS[ifr] = (C_ss.transpose()*(MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
 	}		
 }
 
@@ -1094,28 +1095,28 @@ void Hydro::GetQTFList(const UArray<Hydro::QTF> &qtfList, QTFCases &qtfCases, co
 	qtfCases.Sort(headings);
 }
 
-Eigen::VectorXd Hydro::B_dim(int idf, int jdf) const {
+VectorXd Hydro::B_dim(int idf, int jdf) const {
 	if (dimen)
 		return B[idf][jdf]*(rho_dim()/rho_ndim());
 	else {
-		Eigen::VectorXd ret = B[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));
-		Eigen::VectorXd ww = Eigen::Map<Eigen::VectorXd>((double *)w.begin(), w.size());
+		VectorXd ret = B[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));
+		VectorXd ww = Map<VectorXd>((double *)w.begin(), w.size());
 		return ret.array()*ww.array();
 	}
 }
 
-Eigen::VectorXd Hydro::B_ndim(int idf, int jdf) const {
+VectorXd Hydro::B_ndim(int idf, int jdf) const {
 	if (!dimen)
 		return B[idf][jdf]*(rho_ndim()/rho_dim());
 	else {
-		Eigen::VectorXd ret = B[idf][jdf]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));
-		Eigen::VectorXd ww = Eigen::Map<Eigen::VectorXd>((double *)w.begin(), w.size());
+		VectorXd ret = B[idf][jdf]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));
+		VectorXd ww = Map<VectorXd>((double *)w.begin(), w.size());
 		return ret.array()/ww.array();
 	}
 }
 
 
-void Hydro::GetOldAB(const UArray<Eigen::MatrixXd> &oldAB, UArray<UArray<Eigen::VectorXd>> &AB) {
+void Hydro::GetOldAB(const UArray<MatrixXd> &oldAB, UArray<UArray<VectorXd>> &AB) {
 	AB.Clear();
 	int Nf = oldAB.size();
 	int Nb = 0;
@@ -1132,7 +1133,7 @@ void Hydro::GetOldAB(const UArray<Eigen::MatrixXd> &oldAB, UArray<UArray<Eigen::
 	}
 }
 
-void Hydro::SetOldAB(UArray<Eigen::MatrixXd> &oldAB, const UArray<UArray<Eigen::VectorXd>> &AB) {
+void Hydro::SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB) {
 	oldAB.Clear();
 	int Nb = AB.size()/6;
 	int Nf = 0;
@@ -1147,8 +1148,19 @@ void Hydro::SetOldAB(UArray<Eigen::MatrixXd> &oldAB, const UArray<UArray<Eigen::
 	}
 }
 
-Eigen::MatrixXd Hydro::Ainf_(int ib, bool ndim) const {
-	Eigen::MatrixXd ret;
+MatrixXd Hydro::A_(bool ndim, int ifr, int ib) const {
+	MatrixXd ret;
+	if (!IsLoadedA())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = A_(ndim, ifr, idf + 6*ib, jdf + 6*ib);		// It doesn't return added mass between bodies...
+	return ret;
+}
+
+MatrixXd Hydro::Ainf_(bool ndim, int ib) const {
+	MatrixXd ret;
 	if (!IsLoadedAinf())
 		return ret;
 	ret.resize(6, 6);
@@ -1158,8 +1170,19 @@ Eigen::MatrixXd Hydro::Ainf_(int ib, bool ndim) const {
 	return ret;
 }
 
-Eigen::MatrixXd Hydro::C_(int ib, bool ndim) const {
-	Eigen::MatrixXd ret;
+MatrixXd Hydro::B_(bool ndim, int ifr, int ib) const {
+	MatrixXd ret;
+	if (!IsLoadedA())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = B_(ndim, ifr, idf + 6*ib, jdf + 6*ib);		// It doesn't return added mass between bodies...
+	return ret;
+}
+
+MatrixXd Hydro::C_(bool ndim, int ib) const {
+	MatrixXd ret;
 	if (C.IsEmpty())
 		return ret;
 	ret.resize(6, 6);
@@ -1169,8 +1192,8 @@ Eigen::MatrixXd Hydro::C_(int ib, bool ndim) const {
 	return ret;
 }
 
-Eigen::MatrixXd Hydro::Dlin_dim(int ib) const {
-	Eigen::MatrixXd ret;
+MatrixXd Hydro::Dlin_dim(int ib) const {
+	MatrixXd ret;
 	if (!IsLoadedDlin())
 		return ret;
 	ret.resize(6, 6);
@@ -1199,6 +1222,17 @@ void Hydro::F_dim(Forces &f) {
 				f.re[ih](ifr, idf) = F_re_dim(f, ih, ifr, idf);
 				f.im[ih](ifr, idf) = F_im_dim(f, ih, ifr, idf);
 			}
+}
+
+VectorXcd Hydro::F_(bool ndim, const Forces &f, int _h, int ifr) const {
+	VectorXcd ret;
+	if (f.ma.IsEmpty())
+		return ret;
+	ret.resize(6);
+	for (int idf = 0; idf < 6; ++idf) 
+		ret[idf] = std::complex<double>(F_re_(ndim, f, _h, ifr, idf), 
+										F_im_(ndim, f, _h, ifr, idf));
+	return ret;
 }
 
 void Hydro::CheckNaN() {
@@ -1255,16 +1289,20 @@ double Hydro::Tpitch(int ib) const {
 }
 
 double Hydro::GMroll(int ib) const {
+	if (Vo.size() <= ib || Vo[ib] == 0)
+		return Null;
 	return C_dim(ib, 3, 3)/(rho*g*Vo[ib]);
 }
 
 double Hydro::GMpitch(int ib) const {
+	if (Vo.size() <= ib || Vo[ib] == 0)
+		return Null;
 	return C_dim(ib, 4, 4)/(rho*g*Vo[ib]);
 }
 
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
-	UArray<Eigen::MatrixXd> oldA, oldB, oldKirf;
+	UArray<MatrixXd> oldA, oldB, oldKirf;
 	if (json.IsStoring()) {
 		icode = code;
 		SetOldAB(oldA, A);
@@ -1492,6 +1530,10 @@ void BEM::Ainf(int id) {
 
 void BEM::Ainf_w(int id) {
 	hydros[id].hd().GetAinf_w();
+}
+
+void BEM::RAO(int id) {
+	hydros[id].hd().GetRAO();
 }
 
 void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
@@ -1835,8 +1877,8 @@ void FieldSplitWamit::LoadWamitJoinedFields(String _line) {
 	
 BEMBody::BEMBody() {
 	dof.SetCount(6, false);	
-	cg = Eigen::Vector3d::Zero();
-	c0 = Eigen::Vector3d::Zero();
+	cg = Vector3d::Zero();
+	c0 = Vector3d::Zero();
 	mass.setConstant(6, 6, 0);
 	linearDamping.setConstant(6, 6, 0);
 	quadraticDamping.setConstant(6, 6, 0);

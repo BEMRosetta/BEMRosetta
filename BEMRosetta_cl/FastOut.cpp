@@ -5,6 +5,7 @@
 #include <Core/Core.h>
 #include <SysInfo/SysInfo.h>
 #include <Surface/Surface.h>
+#include <ScatterDraw/Equation.h>
 
 using namespace Upp;
 
@@ -112,21 +113,31 @@ String FastOut::GetFileToLoad(String fileName) {
 	return Null;
 }
 
-bool FastOut::Load(String fileName) {	
+bool FastOut::Load(String fileName) {
 	Time actualTime = FileGetTime(fileName);
 	if (lastFile == fileName && actualTime - lastTime < 5) // Only loads if file is 5 sec older
 		return true;
 	 
-	lastFile = fileName;
-	lastTime = actualTime;
-	
 	String ext = GetFileExt(fileName);
 	bool ret = false;
 	if (ext == ".out")
 		ret = LoadOut(fileName);
 	else if (ext == ".outb")
 		ret = LoadOutb(fileName);
-			
+	else {
+		fileName = ForceExt(fileName, ".outb");
+		if (FileExists(fileName))
+			ret = LoadOutb(fileName);
+		else {
+			fileName = ForceExt(fileName, ".out");
+			if (FileExists(fileName))
+				ret = LoadOut(fileName);
+			return false;
+		}
+	}
+	lastFile = fileName;
+	lastTime = actualTime;
+	
 	if (ret)
 		AfterLoad();
 	return ret;
@@ -148,7 +159,7 @@ bool FastOut::LoadOut(String fileName) {
 		UVector<String> fields = Split(line, IsTabSpaceRet, true);
 		
 		if (!begin) {
-			if (!fields.IsEmpty() && fields[0] == "Time") {
+			if (!fields.IsEmpty() && ToLower(fields[0]) == "time") {
 				for (int c = 0; c < fields.size(); ++c) 
 					parameters << fields[c];
 				pos = npos;
@@ -206,17 +217,18 @@ bool FastOut::SaveOut(String fileName) {
 			data << "\t";
 		data << "(" << units[i] << ")";
 	}
-	for (int i = 0; i < dataOut.size(); ++i) {
-		if (i > 0)
+	data << "\n";
+	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
+		if (idtime > 0)
 			data << "\n";
-		auto &row = dataOut[i];
-		for (int c = 0; c < row.size(); ++c) {
-			if (c > 0)
+		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
+			if (idparam > 0)
 				data << "\t";
-			data << FDS(row[c], 10, true);
+			if (dataOut[idparam].size() > idtime)
+				data << FDS(dataOut[idparam][idtime], 10, true);
 		}
 	}
-	return SaveFileBOMUtf8(fileName, data);
+	return SaveFile(fileName, data);
 }
 
 bool FastOut::LoadOutb(String fileName) {
@@ -359,6 +371,15 @@ double FastOut::GetVal(double time, int col) const {
 	return GetVal(idtime, col);
 }
 
+void FastOut::AddVal(int idparam, double val) {
+	if (idparam < 0)
+		return;
+	auto &data = dataOut[idparam];
+	if (data.GetAlloc() == data.size()) 
+		data.Reserve(data.size() + 10000);
+	dataOut[idparam] << val;
+}
+
 int FastOut::GetIdTime(double time) const {
 	if (time < 0)
 		return Null;	
@@ -441,4 +462,113 @@ bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
 		}
 	}
 	return false;
+}
+
+void FASTCase::CreateFolderCase() {
+	Time t = GetSysTime();
+	
+	std::random_device rd;
+	int randomSeed = rd();
+	std::default_random_engine re(randomSeed);
+	std::mt19937 rng(randomSeed);
+	std::uniform_int_distribution<int> gen(0, 999); 
+	int rnd = gen(rng);
+	
+	String cas = Format("%4d%02d%02d_%02d%02d%02d_%03d", t.year, t.month, t.day, t.hour, t.minute, t.second, rnd);
+	folderCase = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTCases", cas);
+	if (!RealizeDirectory(folderCase))
+		throw Exc(Format("Impossible to create folder %s", folderCase));
+}
+	
+void FASTCase::Setup(String seed) {
+	CreateFolderCase();
+
+	String errorStr;
+	DirectoryCopyX(seed, folderCase, false, "*.out*;*.txt;*.dbg", errorStr);
+	if (!IsEmpty(errorStr))
+		throw Exc(errorStr);
+	
+	FindFile ffpath(AppendFileNameX(folderCase, "*.fst"));
+	if (!ffpath) 
+		throw Exc(Format("No .fst file found in folder '%s'", seed));
+	
+	fstFile = ffpath.GetPath();
+	
+	Load(fstFile);
+}
+
+void FASTCaseDecay::Init(BEM::DOF dof, double val, double time) {
+	this->dof = dof;
+	
+	fast.SetInt("CompInflow", 0);
+	fast.SetInt("CompAero", 0);
+	fast.SetInt("CompServo", 0);
+	fast.SetInt("CompMooring", 0);
+	fast.SetInt("OutFileFmt", 2);
+
+	hydrodyn.SetInt("WaveMod", 0);
+	hydrodyn.SetBool("WvDiffQTF", false);
+	hydrodyn.SetBool("WvSumQTF", false);
+	hydrodyn.SetInt("CurrMod", 0);
+	hydrodyn.SetInt("PotMod", 1);
+	hydrodyn.SetInt("ExctnMod", 0);
+	hydrodyn.SetInt("RdtnMod", 1);
+	hydrodyn.SetInt("MnDrift", 0);
+	hydrodyn.SetInt("NewmanApp", 0);
+	hydrodyn.SetInt("DiffQTF", 0);
+	hydrodyn.SetInt("SumQTF", 0);
+
+	elastodyn.SetDouble("Gravity", 9.81);
+	elastodyn.SetBool("FlapDOF1", false);
+	elastodyn.SetBool("FlapDOF2", false);
+	elastodyn.SetBool("EdgeDOF", false);
+	elastodyn.SetBool("TeetDOF", false);
+	elastodyn.SetBool("DrTrDOF", false);
+	elastodyn.SetBool("GenDOF", false);
+	elastodyn.SetBool("YawDOF", false);
+	elastodyn.SetBool("TwFADOF1", false);
+	elastodyn.SetBool("TwFADOF2", false);
+	elastodyn.SetBool("TwSSDOF1", false);
+	elastodyn.SetBool("TwSSDOF2", false);
+	elastodyn.SetDouble("RotSpeed", 0);
+	elastodyn.SetDouble("NacYaw", 0);
+	
+	//elastodyn.SetBool("PtfmSgDOF", dof == BEM::SURGE ? true : false);
+	//elastodyn.SetBool("PtfmSwDOF", dof == BEM::SWAY  ? true : false);
+	elastodyn.SetBool("PtfmHvDOF", dof == BEM::HEAVE ? true : false);
+	//elastodyn.SetBool("PtfmRDOF",  dof == BEM::ROLL  ? true : false);
+	//elastodyn.SetBool("PtfmPDOF",  dof == BEM::PITCH ? true : false);
+	//elastodyn.SetBool("PtfmYDOF",  dof == BEM::YAW   ? true : false);	
+	
+	String strVar = "Ptfm" + InitCaps(BEM::strDOFtext[dof]);
+	//elastodyn.SetDouble(strVar, val + elastodyn.GetDouble(strVar));
+	elastodyn.SetDouble(strVar, val);
+	
+	fast.SetDouble("DT", 0.025);
+	fast.SetDouble("TMax", time);
+}
+
+void FASTCaseDecay::Postprocess() {
+	LoadOut();
+	T = GetDecayPeriod(out, dof, r2);
+}
+
+double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2) {
+	r2 = Null;
+	
+	String param = "ptfm" + S(BEM::strDOFtext[dof]);
+	int id = fst.FindCol(param);
+	if (IsNull(id)) 
+		throw Exc(Format("Param. %s not found in %s", param, fst.GetLastFile()));
+
+	UVector<int> idsx, idsy, idsFixed;
+	VectorVectorY<double> vect;
+	vect.Init(fst.dataOut, 0, id, idsx, idsy, idsFixed, false);
+	
+	DampedSinEquation eq;
+	ExplicitEquation::FitError err = eq.Fit(vect, r2);
+	if (err == ExplicitEquation::NoError)
+		return 2*M_PI/abs(eq.GetCoeff(3));
+	else
+		return Null;
 }
