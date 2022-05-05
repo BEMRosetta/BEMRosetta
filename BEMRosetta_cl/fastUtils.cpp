@@ -2,7 +2,7 @@
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
-
+#include <random>
 
 String GetSpaces(int num) {
 	ASSERT(num >= 0);
@@ -164,4 +164,3 @@ UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String 
 	}
 	return ret;
 }
-

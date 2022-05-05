@@ -13,6 +13,7 @@ using namespace Upp;
 #define IMAGEFILE <BEMRosetta/FastScatter.iml>
 #include <Draw/iml.h>
 
+#include <BEMRosetta_cl/BEMRosetta.h>
 #include <BEMRosetta_cl/FastOut.h>
 #include "auxiliar.h"
 #include "FastScatter.h"
@@ -144,15 +145,15 @@ void FastScatter::SelCopy() {
 void FastScatter::SelPaste(String str) {
 	if (str.IsEmpty())
 		str = ReadClipboardText();
-	Vector<String> params = Split(str, ";");
+	UVector<String> params = Split(str, ";");
 	params.SetCount(2);
-	Vector<String> left = Split(params[0], ",");
+	UVector<String> left = Split(params[0], ",");
 	leftSearch.array.Clear();
 	for (int rw = 0; rw < left.size(); ++rw) {
 		if (!IsNull(datafast.FindCol(left[rw])))
 			leftSearch.array.Set(rw, 0, left[rw]);
 	}
-	Vector<String> right = Split(params[1], ",");
+	UVector<String> right = Split(params[1], ",");
 	rightSearch.array.Clear();
 	for (int rw = 0; rw < right.size(); ++rw) {
 		if (!IsNull(datafast.FindCol(right[rw])))
@@ -184,7 +185,7 @@ bool ArrayExists(const ArrayCtrl &a, String val) {
 	return false;
 }
 
-void ArrayRemoveDuplicates(const ArrayCtrl &a, int id, Vector<bool> &index) {
+void ArrayRemoveDuplicates(const ArrayCtrl &a, int id, UVector<bool> &index) {
 	if (index[id])
 		return;
 	for (int rw = id+1; rw < a.GetCount(); ++rw)
@@ -193,7 +194,7 @@ void ArrayRemoveDuplicates(const ArrayCtrl &a, int id, Vector<bool> &index) {
 }
 
 void ArrayRemoveDuplicates(ArrayCtrl &a) {
-	Vector<bool> index;
+	UVector<bool> index;
 	index.SetCount(a.GetCount(), false);
 	for (int rw = 0; rw < a.GetCount(); ++rw)
 		ArrayRemoveDuplicates(a, rw, index);
@@ -461,7 +462,7 @@ void FastScatterTabs::AddHistory(String filename) {
 	}
 	for (int it = 0; it < tabBar.GetCount(); ++it) {
 		const Value &key = tabBar.GetKey(it);
-		if (int(key) > -1) {
+		if (int(key) > -1 && it < tabScatters.size()) {
 			tabScatters[it].file.ClearHistory();
 			for (int i = history.size()-1; i >= 0; --i)
 				tabScatters[it].file.AddHistory(history[i]);
@@ -519,7 +520,7 @@ bool FastScatterTabs::LoadDragDrop(const UVector<String> &files) {
 	if (files.size() == 0)
 		return false;
 	
-	Vector<String> fis;
+	UVector<String> fis;
 	for (int i = 0; i < files.size(); ++i)
 		fis.Append(FastOut::GetFilesToLoad(files[i]));
 	

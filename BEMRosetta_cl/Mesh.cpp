@@ -18,8 +18,11 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 		ret = static_cast<NemohMesh&>(*this).LoadDat(file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 			ret = static_cast<WamitMesh &>(*this).LoadDat(file);
-			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
-				ret = static_cast<AQWAMesh &>(*this).LoadDat(file);
+			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
+				ret = static_cast<DiodoreMesh &>(*this).LoadDat(file);
+				if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
+					ret = static_cast<AQWAMesh &>(*this).LoadDat(file);
+			}
 		}
 	} else if (ext == ".gdf") 
 		ret = static_cast<WamitMesh &>(*this).LoadGdf(file, y0z, x0z); 
@@ -104,12 +107,13 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
 	
-	if (symX && (type == WAMIT_GDF || type == HAMS_PNL)) {
+	if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT)) {
 		Surface nsurf;
 		nsurf.CutX(surf);
 		surf = pick(nsurf);
 	}
-	if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || type == HAMS_PNL)) {
+	if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
+				 type == HAMS_PNL || type == DIODORE_DAT)) {
 		Surface nsurf;
 		nsurf.CutY(surf);
 		surf = pick(nsurf);
@@ -135,6 +139,8 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 		static_cast<NemohMesh&>(*this).SavePreMesh(file, surf);
 	else if (type == HAMS_PNL)		
 		static_cast<HAMSMesh&>(*this).SavePnl(file, surf, symX, symY);	// Only one symmetry really available
+	else if (type == DIODORE_DAT) 
+		static_cast<DiodoreMesh&>(*this).SaveDat(file, surf);
 	else if (type == STL_BIN)		
 		SaveStlBin(file, surf, 1000);
 	else if (type == STL_TXT)		

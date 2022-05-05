@@ -1085,6 +1085,7 @@ public:
 	void OnSymmetrize(bool xAxis);
 	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
+	void OnRAO();
 	void OnOgilvie();
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();

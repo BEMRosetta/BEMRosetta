@@ -187,11 +187,11 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	
 void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim) {
 	if (what == Hydro::MAT_K) {
-		data << hydro.C_(ibody, ndim);
+		data << hydro.C_(ndim, ibody);
 		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
 						ndim ? t_("nondimensional") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
-		data << hydro.Ainf_(ibody, ndim);
+		data << hydro.Ainf_(ndim, ibody);
 		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
 						ndim ? t_("nondimensional") : t_("kg")));
 	} else if (what == Hydro::MAT_DAMP_LIN) {

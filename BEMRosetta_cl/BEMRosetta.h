@@ -96,27 +96,29 @@ public:
     int Nf;          		// number of wave frequencies
     int Nh;          		// number of wave headings
  	
-	UArray<UArray<Eigen::VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
-	UArray<UArray<Eigen::VectorXd>> Ainf_w;	// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
-    Eigen::MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
-    Eigen::MatrixXd A0;        				// (6*Nb, 6*Nb)  	Infinite period added mass
+	UArray<UArray<VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
+	UArray<UArray<VectorXd>> Ainf_w;// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
+    MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
+    MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 
-	Eigen::MatrixXd Dlin;      				// (6*Nb, 6*Nb) 	Additional linear damping
+	MatrixXd Dlin;      			// (6*Nb, 6*Nb) 	Additional linear damping
 
-    UArray<UArray<Eigen::VectorXd>> B; 		// [6*Nb][6*Nb][Nf]	Radiation damping
-    UVector<double> head;				// [Nh]             Wave headings (deg)
-    UVector<String> names;  			// {Nb}             Body names
-    UArray<Eigen::MatrixXd> C;			// [Nb](6, 6)		Hydrostatic restoring coefficients:
-    UArray<Eigen::MatrixXd> M;			// [Nb](6, 6)		Mass and inertia matrix
-    Eigen::MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
-    Eigen::MatrixXd cg;          			// (3,Nb)     		Centre of gravity
-    Eigen::MatrixXd c0;          			// (3,Nb)     		Centre of rotation
-    BEM_SOFT code;        					// BEM_SOFT			BEM code 
-    UVector<int> dof;      				// [Nb]            	Degrees of freedom for each body 
-    UVector<int> dofOrder;				// [6*Nb]			DOF order
+    UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
+    UVector<double> head;			// [Nh]             Wave headings (deg)
+    UVector<String> names;  		// {Nb}             Body names
+    UArray<MatrixXd> C;				// [Nb](6, 6)		Hydrostatic restoring coefficients:
+    UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix
+    MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
+    MatrixXd cg;          			// (3,Nb)     		Centre of gravity
+    MatrixXd c0;          			// (3,Nb)     		Centre of rotation
+    BEM_SOFT code;        			// BEM_SOFT			BEM code 
+    UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
+    UVector<int> dofOrder;			// [6*Nb]			DOF order
     
-    UArray<UArray<Eigen::VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
-    Eigen::VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
+    UArray<UArray<VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
+    VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
+    
+    double GetMass(int ib) const	{return M[ib](0, 0);}
     
     int GetHeadId(double hd) const;
 	
@@ -126,8 +128,8 @@ public:
             ma = clone(f.ma);		ph = clone(f.ph);
             re = clone(f.re);		im = clone(f.im);
         }
-    	UArray<Eigen::MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
-    	UArray<Eigen::MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
+    	UArray<MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
+    	UArray<MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
     
     	void Jsonize(JsonIO &json) {
 			json
@@ -136,6 +138,12 @@ public:
 				("re", re)
 				("im", im)
 			;
+    	}
+    	void Set(int ib, int ih, int ifr, int idof, const std::complex<double> &val) {
+    		re[ih](ifr, 6*ib + idof) = val.real();	
+    		im[ih](ifr, 6*ib + idof) = val.imag();
+    		ma[ih](ifr, 6*ib + idof) = std::abs(val);
+    		ph[ih](ifr, 6*ib + idof) = std::arg(val);
     	}
     	void Clear() {ma.Clear(); ph.Clear(); re.Clear(); im.Clear();}
     };
@@ -163,10 +171,10 @@ public:
 			ssMAE = s.ssMAE;
         }
 	    UArray<std::complex<double>> TFS;
-		Eigen::MatrixXd A_ss;
-		Eigen::VectorXd B_ss;
-		Eigen::VectorXd C_ss;
-		Eigen::VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
+		MatrixXd A_ss;
+		VectorXd B_ss;
+		VectorXd C_ss;
+		VectorXd ssFrequencies, ssFreqRange, ssFrequencies_index;
 		double ssMAE = Null;
 		
 		void GetTFS(const UVector<double> &w);
@@ -298,7 +306,7 @@ public:
     
     static String C_units(int i, int j);
     
-    void SetC(int ib, const Eigen::MatrixXd &K);
+    void SetC(int ib, const MatrixXd &K);
 	
 	bool AfterLoad(Function <bool(String, int)> Status = Null);
 	
@@ -365,32 +373,34 @@ public:
 	double g_rho_dim()  const;
 	double g_rho_ndim() const;
 	
-	Eigen::VectorXd Get_w() 					const {return Eigen::Map<const Eigen::VectorXd>(w, w.size());}
-	Eigen::VectorXd Get_T() 					const {return Eigen::Map<const Eigen::VectorXd>(T, T.size());}
+	VectorXd Get_w() 							const {return Map<const VectorXd>(w, w.size());}
+	VectorXd Get_T()		 					const {return Map<const VectorXd>(T, T.size());}
 	
 	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[idf][jdf][ifr]*rho_dim()/rho_ndim()  : A[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	Eigen::VectorXd A_dim(int idf, int jdf) 	const {return dimen  ? A[idf][jdf]    *(rho_dim()/rho_ndim()) : A[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	VectorXd A_dim(int idf, int jdf) 			const {return dimen  ? A[idf][jdf]    *(rho_dim()/rho_ndim()) : A[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : A[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	Eigen::VectorXd A_ndim(int idf, int jdf)	const {return !dimen ? A[idf][jdf]*(rho_ndim()/rho_dim()) : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
+	VectorXd A_ndim(int idf, int jdf)			const {return !dimen ? A[idf][jdf]*(rho_ndim()/rho_dim()) : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
+	MatrixXd A_(bool ndim, int ifr, int ib) 	const;
 	
 	double A0_dim(int idf, int jdf)   		 	const {return dimen  ? A0(idf, jdf)*rho_dim()/rho_ndim() : A0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_ndim(int idf, int jdf)  		 	const {return !dimen ? A0(idf, jdf)      : A0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0(idf, jdf);}
 	double Ainf_dim(int idf, int jdf) 		 	const {return dimen  ? Ainf(idf, jdf)*rho_dim()/rho_ndim() : Ainf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	Eigen::MatrixXd Ainf_(int ib, bool ndim) const;
+	MatrixXd Ainf_(bool ndim, int ib) const;
 	double Ainf_ndim(int idf, int jdf)		 	const {return !dimen ? Ainf(idf, jdf) : Ainf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Ainf_(bool ndim, int idf, int jdf) 	const {return ndim   ? Ainf_ndim(idf, jdf) : Ainf_dim(idf, jdf);}
 	
-	double B_dim(int ifr, int idf, int jdf)  	   const {return dimen  ? B[idf][jdf][ifr]*rho_dim()/rho_ndim() : B[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	Eigen::VectorXd B_dim(int idf, int jdf)  	   const;
-	double B_ndim(int ifr, int idf, int jdf) 	   const {return !dimen ? B[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : B[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	Eigen::VectorXd B_ndim(int idf, int jdf) 	   const;
+	double B_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B[idf][jdf][ifr]*rho_dim()/rho_ndim() : B[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	VectorXd B_dim(int idf, int jdf)  	   		const;
+	double B_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : B[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	VectorXd B_ndim(int idf, int jdf) 	   		const;
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
+	MatrixXd B_(bool ndim, int ifr, int ib) 	const;
 	
 	double Kirf_dim(int it, int idf, int jdf)  	   	  const {return dimen ? Kirf[idf][jdf][it]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][it]*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double Kirf_ndim(int it, int idf, int jdf) 	   	  const {return !dimen ? Kirf[idf][jdf][it] : Kirf[idf][jdf][it]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	Eigen::VectorXd Kirf_ndim(int idf, int jdf) 	  const {return !dimen ? Kirf[idf][jdf]     : Kirf[idf][jdf]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	VectorXd Kirf_ndim(int idf, int jdf) 	 		  const {return !dimen ? Kirf[idf][jdf]     : Kirf[idf][jdf]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
 	double Ainf_w_dim(int ifr, int idf, int jdf) 		const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
@@ -398,12 +408,12 @@ public:
 	double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
-	Eigen::MatrixXd C_(int ib, bool ndim) const;
+	MatrixXd C_(bool ndim, int ib) 				   const;
 	void C_dim();	
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
-	Eigen::MatrixXd Dlin_dim(int ib) const;
+	MatrixXd Dlin_dim(int ib) const;
 	
 	double F_ma_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double F_re_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
@@ -416,9 +426,9 @@ public:
 	double F_re_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? F_re_ndim(f, _h, ifr, idf) : F_re_dim(f, _h, ifr, idf);}
 	double F_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? F_im_ndim(f, _h, ifr, idf) : F_im_dim(f, _h, ifr, idf);}
 	
-	double R_ma_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
-	double R_re_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
-	double R_im_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.im[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
+	double R_ma_dim(const Forces &f,  int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
+	double R_re_dim(const Forces &f,  int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
+	double R_im_dim(const Forces &f,  int _h, int ifr, int idf)  	   const {return dimen ? f.im[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
 	double R_ma_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.ma[_h](ifr, idf) : f.ma[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));}
 	double R_re_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.re[_h](ifr, idf) : f.re[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));}
 	double R_im_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.im[_h](ifr, idf) : f.im[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));}
@@ -429,6 +439,8 @@ public:
 	double F_dim(double f, int idf)  	   const {return dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double F_ndim(double f, int idf) 	   const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double F_(bool ndim, double f, int idf) const {return ndim ? F_ndim(f, idf) : F_dim(f, idf);}
+
+	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr) const;
 
 	inline std::complex<double>Z(bool ndim, int ifr, int idf, int jdf) const {
 		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
@@ -461,8 +473,8 @@ private:
 	int id;
 	static int idCount;
 	 
-	static void GetOldAB(const UArray<Eigen::MatrixXd> &oldAB, UArray<UArray<Eigen::VectorXd>> &AB);
-	static void SetOldAB(UArray<Eigen::MatrixXd> &oldAB, const UArray<UArray<Eigen::VectorXd>> &AB);
+	static void GetOldAB(const UArray<MatrixXd> &oldAB, UArray<UArray<VectorXd>> &AB);
+	static void SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB);
 	
 public:
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
@@ -522,6 +534,9 @@ public:
 	static double GetK_IRF_MaxT(const UVector<double> &w);
 	void GetAinf();
 	void GetAinf_w();
+	void GetRAO();
+	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
+				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
 	void GetTranslationTo(double xto, double yto, double zto);
@@ -582,9 +597,9 @@ class Mesh {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	false};       
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT, 	UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", 	"Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	true,			false};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -662,7 +677,7 @@ public:
 	Point3D cb = Null;
 	Point3D cg, cg0, c0;
 	double mass = Null;
-	Eigen::MatrixXd C;
+	MatrixXd C;
 	
 	String name;
 	String fileName;
@@ -712,6 +727,13 @@ public:
 	virtual ~AQWAMesh() noexcept {}
 };
 
+class DiodoreMesh : public Mesh {
+public:
+	String LoadDat(String fileName);
+	void SaveDat(String fileName, const Surface &surf);
+	
+	virtual ~DiodoreMesh() noexcept {}
+};
 
 class Wamit : public HydroClass {
 public:
@@ -725,7 +747,7 @@ public:
 	bool LoadDatMesh(String file);
 	void SaveGdfMesh(String fileName);
 	
-	static void Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rho, double g);
+	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
 protected:
 	void ProcessFirstColumn(UVector<double> &w, UVector<double> &T);
@@ -736,7 +758,7 @@ protected:
 	bool Load_gdf(String fileName);
 	
 	bool Load_out();							
-	void Load_A(FileInLine &in, Eigen::MatrixXd &A);
+	void Load_A(FileInLine &in, MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
 
@@ -753,7 +775,7 @@ protected:
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
 
-	void Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod);
+	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod);
 	void Save_AB(FileOut &out, int ifr);
 	void Save_Forces(FileOut &out, int ifr);
 	void Save_RAO(FileOut &out, int ifr);
@@ -814,9 +836,9 @@ public:
 	String meshFile, lidFile;
 	int ndof;
 	UVector<bool> dof;
-	Eigen::Vector3d c0;	
-	Eigen::Vector3d cg;
-	Eigen::MatrixXd mass, linearDamping, quadraticDamping, hydrostaticRestoring, externalRestoring;
+	Vector3d c0;	
+	Vector3d cg;
+	MatrixXd mass, linearDamping, quadraticDamping, hydrostaticRestoring, externalRestoring;
 	
 	int GetNDOF() const;
 };
@@ -893,8 +915,8 @@ public:
 	
 private:
 	void SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, bool deleteFolder, int numThreads) const;
-	static void OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat);
-	static void InMatrix(FieldSplit &f, Eigen::MatrixXd &mat);
+	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
+	static void InMatrix(FieldSplit &f, MatrixXd &mat);
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
@@ -920,7 +942,7 @@ private:
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String preName, String solvName, String postName) const;
-	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, Eigen::Vector3d cg, double rho, double g) const;
+	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, Vector3d cg, double rho, double g) const;
 	void Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder) const;
 	
@@ -939,7 +961,7 @@ public:
 	void SaveDatMesh(String file); 
 	
 	bool Save_KH(String folder) const;
-	static bool Save_KH_static(const Eigen::MatrixXd &C, String fileKH);
+	static bool Save_KH_static(const MatrixXd &C, String fileKH);
 	
 private:
 	String folder;
@@ -1023,9 +1045,9 @@ public:
 	static const char *strDOFType[];
 	static const char *strHeadingType[];
 	
-	int calcAinf, calcAinf_w;
-	double maxTimeA;
-	int numValsA;
+	int calcAinf = false, calcAinf_w = false;
+	double maxTimeA = Null;
+	int numValsA = Null;
 	int onlyDiagonal;
 	
 	String nemohPathPreprocessor, nemohPathSolver, nemohPathPostprocessor, nemohPathNew, nemohPathGREN;
@@ -1041,6 +1063,7 @@ public:
 	void Kirf(int id, double maxT);
 	void Ainf(int id);
 	void Ainf_w(int id);
+	void RAO(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
@@ -1215,9 +1238,9 @@ public:
 				return i;
 		return -1;
 	}
+	static const char *strDOFtext[];
 
 private:
-	static const char *strDOFtext[];
 	static const char *strDOFnum[];
 	static const char *strDOFxyz[];
 	static const char *strDOFtextAbrev[];
@@ -1308,151 +1331,6 @@ void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &
 double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
 MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
 UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
-	
-class FASTFiles {
-public:
-	void Load(String file) {
-		String path = GetFileFolder(file);
-		
-		fast.fileName = file;
-		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
-		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
-	}
-	void Save() {
-		fast.Save();
-		elastodyn.Save();
-		hydrodyn.Save();
-	}
-	
-private:
-	class File {
-	public:
-		String fileName;
-		String fileText;
-		bool isChanged;
-		
-		void Save() const {
-			if (!isChanged)
-				return;
-			if (!SaveFile(fileName, fileText))
-				throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
-		}
-		
-		String GetString(String var) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
-			String res;
-			UVector<String> vars = Split(var, "/");
-			if (vars.size() == 2)
-				res = GetFASTVar(fileText, vars[1], vars[0]);
-			else if (vars.size() == 1)		
-				res = GetFASTVar(fileText, vars[0]);
-			else
-				throw Exc(Format(t_("Wrong variable '%s' in GetString"), var));
-			
-			if (res[0] == '\"')		// Remove quotes
-				res = res.Mid(1);
-			if (res[res.GetCount()-1] == '\"')
-				res = res.Left(res.GetCount()-1);
-			return res;
-		}
-		double GetDouble(String var) {
-			double ddata = ScanDouble(GetString(var));
-			if (!IsNum(ddata))
-				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
-			return ddata;
-		}
-		double GetInt(String var) {
-			int ddata = ScanInt(GetString(var));
-			if (!IsNum(ddata))
-				throw Exc(Format(t_("Wrong variable '%s' in GetInt"), var));
-			return ddata;
-		}
-		bool GetBool(String var) {
-			String data = ToLower(GetString(var));
-			if (data == "true")
-				return true;
-			if (data == "false")
-				return true;
-			int idata = ScanInt(data);
-			if (idata == 1)
-				return true;
-			if (idata == 0)
-				return false;
-			throw Exc(Format(t_("Wrong variable '%s' in GetBool"), var));
-		}
-		double GetMatrixVal(String var, int row, int col) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
-			return GetFASTMatrixVal(fileText, var, row, col);
-		}
-		Eigen::MatrixXd GetMatrix(String var, int rows, int cols) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
-			return GetFASTMatrix(fileText, var, rows, cols);
-		}
-		void SetMatrixVal(String var, int row, int col, double val) {
-			int posIni, posEnd;
-			GetMatrixIds(var, row, col, posIni, posEnd);
-			
-			int delta = posEnd-posIni-1;
-			
-			fileText = fileText.Left(posIni) + S(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
-		}
-		
-		void SetString(String var, String val) {
-			val = S("\"") + val + S("\"");
-			SetString0(var, val);
-		}
-		void SetInt(String var, int val) {
-			SetString0(var, FormatInt(val));
-		}
-		void SetDouble(String var, double val) {
-			SetString0(var, FDS(val, 10));
-		}
-		void SetBool(String var, bool val) {
-			SetString0(var, val ? "True" : "False");
-		}
-		
-	private:
-		void SetString0(String var, String val) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
-			UVector<String> vars = Split(var, "/");
-			if (vars.size() == 2) {
-				isChanged = true;
-				return SetFASTVar(fileText, vars[1], val, vars[0]);
-			} else if (vars.size() == 1) {
-				isChanged = true;	
-				return SetFASTVar(fileText, vars[0], val);
-			} else
-				throw Exc(Format(t_("Wrong variable '%s' in SetString"), var));
-		}
-		void GetMatrixIds(String var, int row, int col, int &posIni, int &posEnd) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
-			GetFASTMatrixIds(fileText, var, row, col, posIni, posEnd);
-		}
-	};
-
-public:
-	File fast, elastodyn, hydrodyn;
-};
 
 	
 #endif
