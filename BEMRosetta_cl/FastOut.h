@@ -30,17 +30,24 @@ public:
 	SortedVectorMap<String, String> GetList(String filterParam = "", String filterUnits = "");
 		
 	double GetVal(double time, int idparam) const;
-	inline double GetVal(int idtime, int idparam) const	{return dataOut[idparam][idtime];}
-	inline const UVector<double> &GetVal(int idparam)	{return dataOut[idparam];}
-	inline const UVector<double> &GetVal(String param) {
+	inline double GetVal(int idtime, int idparam) const	  {return dataOut[idparam][idtime];}
+	inline const UVector<double> &GetUVector(int idparam) {return dataOut[idparam];}
+	inline const UVector<double> &GetUVector(String param) {
 		static UVector<double> bad;
 		UVector<int> ids = FindParameterMatch(param);
 		if (ids.IsEmpty())
 			return bad;
 		else
-			return GetVal(ids[0]);
+			return GetUVector(ids[0]);
 	}
-		
+	VectorXd GetVector(String param) {
+		const UVector<double> &d = GetUVector(param);
+		VectorXd ret = Map<const VectorXd>(d, d.size());
+		return ret;
+	}
+	
+	void AddVal(int idparam, double val);
+	
 	int GetIdTime(double time) const;
 	double GetTimeInit() const	{return dataOut[0][0];}
 	double GetTimeEnd()	 const	{return dataOut[0][size()-1];}
@@ -86,13 +93,15 @@ public:
 		c.calc = &calc;
 	}
 	
-	int AddParam(String name, String units) {
+	int AddParam(String name, String unit) {
 		parameters << name;
-		units << units;
+		units << unit;
 		dataOut.Add();
 		return dataOut.size() - 1;
 	}
-
+	
+	int GetParamCount() {return parameters.size();}
+ 
 	UVector<String> parameters, units;
 	UVector<UVector <double> > dataOut;
 	UArray<CalcParams> calcParams;
@@ -353,5 +362,175 @@ private:
 		
 };
 
+
+class FASTCase {
+public:
+	~FASTCase() {
+		DeleteFolderDeepX(folderCase);
+	}
+	void Load(String file) {
+		String path = GetFileFolder(file);
+		
+		fast.fileName = file;
+		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
+		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
+	}
+	void Save() {
+		fast.Save();
+		elastodyn.Save();
+		hydrodyn.Save();
+	}
+	void Setup(String seed);
+	void CreateFolderCase();
+	
+	void LoadOut() {
+		out.Load(fstFile);
+	}
+	virtual void Postprocess() {};
+	
+private:
+	class File {
+	public:
+		String fileName;
+		String fileText;
+		bool isChanged;
+		
+		void Save() const {
+			if (!isChanged)
+				return;
+			if (!SaveFile(fileName, fileText))
+				throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
+		}
+		
+		String GetString(String var) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			String res;
+			UVector<String> vars = Split(var, "/");
+			if (vars.size() == 2)
+				res = GetFASTVar(fileText, vars[1], vars[0]);
+			else if (vars.size() == 1)		
+				res = GetFASTVar(fileText, vars[0]);
+			else
+				throw Exc(Format(t_("Wrong variable '%s' in GetString"), var));
+			
+			if (res[0] == '\"')		// Remove quotes
+				res = res.Mid(1);
+			if (res[res.GetCount()-1] == '\"')
+				res = res.Left(res.GetCount()-1);
+			return res;
+		}
+		double GetDouble(String var) {
+			double ddata = ScanDouble(GetString(var));
+			if (!IsNum(ddata))
+				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
+			return ddata;
+		}
+		double GetInt(String var) {
+			int ddata = ScanInt(GetString(var));
+			if (!IsNum(ddata))
+				throw Exc(Format(t_("Wrong variable '%s' in GetInt"), var));
+			return ddata;
+		}
+		bool GetBool(String var) {
+			String data = ToLower(GetString(var));
+			if (data == "true")
+				return true;
+			if (data == "false")
+				return true;
+			int idata = ScanInt(data);
+			if (idata == 1)
+				return true;
+			if (idata == 0)
+				return false;
+			throw Exc(Format(t_("Wrong variable '%s' in GetBool"), var));
+		}
+		double GetMatrixVal(String var, int row, int col) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			return GetFASTMatrixVal(fileText, var, row, col);
+		}
+		Eigen::MatrixXd GetMatrix(String var, int rows, int cols) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			return GetFASTMatrix(fileText, var, rows, cols);
+		}
+		void SetMatrixVal(String var, int row, int col, double val) {
+			int posIni, posEnd;
+			GetMatrixIds(var, row, col, posIni, posEnd);
+			
+			int delta = posEnd-posIni-1;
+			
+			fileText = fileText.Left(posIni) + S(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
+		}
+		
+		void SetString(String var, String val) {
+			val = S("\"") + val + S("\"");
+			SetString0(var, val);
+		}
+		void SetInt(String var, int val) {
+			SetString0(var, FormatInt(val));
+		}
+		void SetDouble(String var, double val) {
+			SetString0(var, FDS(val, 10));
+		}
+		void SetBool(String var, bool val) {
+			SetString0(var, val ? "True" : "False");
+		}
+		
+	private:
+		void SetString0(String var, String val) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			UVector<String> vars = Split(var, "/");
+			if (vars.size() == 2) {
+				isChanged = true;
+				return SetFASTVar(fileText, vars[1], val, vars[0]);
+			} else if (vars.size() == 1) {
+				isChanged = true;	
+				return SetFASTVar(fileText, vars[0], val);
+			} else
+				throw Exc(Format(t_("Wrong variable '%s' in SetString"), var));
+		}
+		void GetMatrixIds(String var, int row, int col, int &posIni, int &posEnd) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
+			GetFASTMatrixIds(fileText, var, row, col, posIni, posEnd);
+		}
+	};
+	String fstFile;
+	
+public:
+	File fast, elastodyn, hydrodyn;
+	String folderCase;
+	String log;
+	FastOut out;
+};
+
+class FASTCaseDecay : public FASTCase {
+public:
+	void Init(BEM::DOF dof, double val, double time = 100);
+	virtual void Postprocess();
+	
+	BEM::DOF dof;
+	double T, r2;
+};
+
+double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2);
 	
 #endif

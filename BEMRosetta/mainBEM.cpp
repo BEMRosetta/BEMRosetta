@@ -63,6 +63,8 @@ void MainBEM::Init() {
 	menuProcess.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
+	menuProcess.butRAO.Disable();	
+	menuProcess.butRAO <<= THISBACK(OnRAO);
 
 	menuProcess.dropFreq.AddColumn("", 20);
 	menuProcess.dropFreq.AddColumn("", 50);
@@ -597,6 +599,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butKirf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butA0.			Enable(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
+	menuProcess.butRAO.			Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butOgilvie.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opDecayingTail.Enable(numsel == 1 || numrow == 1);
@@ -804,6 +807,30 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 	}
 }
 
+void MainBEM::OnRAO() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+			
+		Progress progress(t_("Calculating RAO in selected BEM file..."), 100); 
+		
+		WaitCursor wait;
+
+		Bem().RAO(id);
+		
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));	
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}
+}	
+	
 void MainBEM::OnOgilvie() {
 	try {
 		int id = GetIdOneSelected();
