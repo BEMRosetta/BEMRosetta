@@ -572,8 +572,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									Cout() << "\n";
 									BEM::Print(t_("HydrostaticForce:") + S(" "));
 									lastPrint.Clear();
-									Force6D f;
-									data.under.GetHydrostaticForce(f, data.c0, bem.rho, bem.g);
+									Force6D f = data.under.GetHydrostaticForce(data.c0, bem.rho, bem.g);
 									for (int i = 0; i < 6; ++i) 				
 										lastPrint << f[i] << " ";
 									int idColor = data.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);

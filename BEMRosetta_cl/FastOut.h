@@ -46,8 +46,9 @@ public:
 		return ret;
 	}
 	
-	void AddVal(int idparam, double val);
-	
+	void SetVal(int idparam, double val);
+	void SetNextTime(double time);
+		
 	int GetIdTime(double time) const;
 	double GetTimeInit() const	{return dataOut[0][0];}
 	double GetTimeEnd()	 const	{return dataOut[0][size()-1];}
@@ -113,7 +114,9 @@ private:
 	void AfterLoad();
 
 	String lastFile;
-	Time lastTime;
+	//Time lastTime;
+	
+	int idtime = -1;
 	
 	// shear, bending moment
 	
@@ -127,7 +130,10 @@ private:
 		virtual double Calc(int idtime) {
 			double roll = dataFast->GetVal(idtime, idroll);
 			double pitch = dataFast->GetVal(idtime, idpitch);
-			
+
+			if (IsNull(roll) || IsNull(pitch))
+				return Null;
+							
 			return sqrt(roll*roll + pitch*pitch);
 		}	
 		int idroll = Null, idpitch = Null;	
@@ -143,6 +149,9 @@ private:
 		virtual double Calc(int idtime) {
 			double surge = dataFast->GetVal(idtime, idsurge);
 			double sway = dataFast->GetVal(idtime, idsway);
+			
+			if (IsNull(surge) || IsNull(sway))
+				return Null;			
 			
 			return sqrt(surge*surge + sway*sway);
 		}	
@@ -165,16 +174,14 @@ private:
 		}
 		virtual double Calc(int idtime) {
 			double heave = dataFast->GetVal(idtime, idheave);
-			if (IsNull(ptfmCOBxt))
-				return heave;
-	
 			double pitch = dataFast->GetVal(idtime, idpitch);
 			double roll = dataFast->GetVal(idtime, idroll);
-			//double yaw = dataFast->GetVal(idtime, idyaw);
+			
+			if (IsNull(heave) || IsNull(pitch) || IsNull(roll) || IsNull(ptfmCOBxt) || IsNull(ptfmCOByt))
+				return Null;
 			
 			pitch = ToRad(pitch);
 			roll = ToRad(roll);
-			//yaw = ToRad(yaw);
 
 			return heave - sin(pitch)*ptfmCOBxt + cos(pitch)*sin(roll)*ptfmCOByt;
 		}	
@@ -193,6 +200,9 @@ private:
 			double fx = dataFast->GetVal(idtime, idx);
 			double fy = dataFast->GetVal(idtime, idy);
 			
+			if (IsNull(fx) || IsNull(fy))
+				return Null;			
+			
 			return sqrt(fx*fx + fy*fy);
 		}	
 		int idx = Null, idy = Null;	
@@ -208,7 +218,10 @@ private:
 		virtual double Calc(int idtime) {
 			double mx = dataFast->GetVal(idtime, idx);
 			double my = dataFast->GetVal(idtime, idy);
-			
+
+			if (IsNull(mx) || IsNull(my))
+				return Null;
+							
 			return sqrt(mx*mx + my*my);
 		}	
 		int idx = Null, idy = Null;	
@@ -225,6 +238,9 @@ private:
 			double fx = dataFast->GetVal(idtime, idx);
 			double fy = dataFast->GetVal(idtime, idy);
 			
+			if (IsNull(fx) || IsNull(fy))
+				return Null;
+						
 			return sqrt(fx*fx + fy*fy);
 		}	
 		int idx = Null, idy = Null;	
@@ -241,6 +257,9 @@ private:
 			double mx = dataFast->GetVal(idtime, idx);
 			double my = dataFast->GetVal(idtime, idy);
 			
+			if (IsNull(mx) || IsNull(my))
+				return Null;
+						
 			return sqrt(mx*mx + my*my);
 		}	
 		int idx = Null, idy = Null;	
@@ -366,7 +385,7 @@ private:
 class FASTCase {
 public:
 	~FASTCase() {
-		DeleteFolderDeepX(folderCase);
+		//DeleteFolderDeepX(folderCase);
 	}
 	void Load(String file) {
 		String path = GetFileFolder(file);
@@ -374,29 +393,35 @@ public:
 		fast.fileName = file;
 		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
 		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
+		try {
+			dlldat.fileName = GetAbsolutePath(path, hydrodyn.GetString("NLFK_DLL_input"));
+		} catch(...) {
+		}
 	}
 	void Save() {
 		fast.Save();
 		elastodyn.Save();
 		hydrodyn.Save();
+		dlldat.Save();
 	}
-	void Setup(String seed);
-	void CreateFolderCase();
+	void Setup(String seed, String folder = "");
+	void CreateFolderCase(String folder = "");
 	
-	void LoadOut() {
-		out.Load(fstFile);
+	bool LoadOut() {
+		return out.Load(fstFile);
 	}
-	virtual void Postprocess() {};
+	virtual bool Postprocess() 		{return false;};
+	const String &GetFolderCase()	{return folderCase;}
 	
 private:
 	class File {
 	public:
 		String fileName;
 		String fileText;
-		bool isChanged;
+		bool isChanged = false;
 		
 		void Save() const {
-			if (!isChanged)
+			if (!isChanged || fileName.IsEmpty())
 				return;
 			if (!SaveFile(fileName, fileText))
 				throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
@@ -429,7 +454,7 @@ private:
 				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
 			return ddata;
 		}
-		double GetInt(String var) {
+		int GetInt(String var) {
 			int ddata = ScanInt(GetString(var));
 			if (!IsNum(ddata))
 				throw Exc(Format(t_("Wrong variable '%s' in GetInt"), var));
@@ -465,11 +490,17 @@ private:
 			return GetFASTMatrix(fileText, var, rows, cols);
 		}
 		void SetMatrixVal(String var, int row, int col, double val) {
+			if (fileText.IsEmpty()) {
+				fileText = LoadFile(fileName);
+				if (fileText.IsEmpty())
+					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			}
 			int posIni, posEnd;
 			GetMatrixIds(var, row, col, posIni, posEnd);
 			
 			int delta = posEnd-posIni-1;
 			
+			isChanged = true;
 			fileText = fileText.Left(posIni) + S(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
 		}
 		
@@ -513,22 +544,22 @@ private:
 			GetFASTMatrixIds(fileText, var, row, col, posIni, posEnd);
 		}
 	};
-	String fstFile;
 	
 public:
-	File fast, elastodyn, hydrodyn;
+	File fast, elastodyn, hydrodyn, dlldat;
 	String folderCase;
 	String log;
+	String fstFile;
 	FastOut out;
 };
 
 class FASTCaseDecay : public FASTCase {
 public:
-	void Init(BEM::DOF dof, double val, double time = 100);
-	virtual void Postprocess();
+	void Init(BEM::DOF dof, double time, double x, double y, double z, double rx, double ry, double rz);
+	virtual bool Postprocess();
 	
 	BEM::DOF dof;
-	double T, r2;
+	//double T, r2;
 };
 
 double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2);

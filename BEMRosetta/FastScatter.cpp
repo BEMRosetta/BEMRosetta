@@ -358,6 +358,8 @@ void FastScatter::ShowSelected() {
 	bool rightEmpty = rightSearch.array.GetCount() == 0;
 	if (!rightEmpty)
 		left.scatter.SetPlotAreaRightMargin(8*StdFont().GetHeight());
+	else
+		left.scatter.SetPlotAreaRightMargin(2*StdFont().GetHeight());
 	left.scatter.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
 	left.scatter.ZoomToFit(true, true);	
 	
