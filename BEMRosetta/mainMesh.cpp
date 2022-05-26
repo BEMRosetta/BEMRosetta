@@ -1531,10 +1531,9 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(data.mesh.env.maxY, 10, false),
 														FDS(data.mesh.env.maxZ, 10, false)));
 
-	Force6D f, fcb, fcg;
-	data.under.GetHydrostaticForce(f, data.c0, Bem().rho, Bem().g);	
-	data.under.GetHydrostaticForceCB(fcb, data.c0, data.cb, Bem().rho, Bem().g);	
-	Surface::GetMassForce(fcg, data.c0, data.cg, data.mass, Bem().g);	
+	Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
+	Force6D fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
+	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.mass, Bem().g);	
 	
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));   array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(f[0], 10, false),
@@ -1840,7 +1839,7 @@ void MainGZ::OnUpdate() {
 			Exclamation(t_("Wrong Z angle range"));
 			return;
 		}
-		Mesh &data = Bem().surfs[idOpened];	
+		Mesh &mesh = Bem().surfs[idOpened];	
 	
 		int numAngle = 1 + int((angleTo - double(~edAngleFrom))/angleDelta);
 		
@@ -1848,6 +1847,8 @@ void MainGZ::OnUpdate() {
 		
 		datagz.Clear();
 		dataMoment.Clear();
+		
+		scatter.SetTitle(Format(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), mesh.c0.x, mesh.c0.y, mesh.c0.z));
 			
 		int iangle = 0;
 		for (double angle = double(~edAngleFrom); angle <= angleTo; angle += angleDelta, iangle++) {
@@ -1856,7 +1857,7 @@ void MainGZ::OnUpdate() {
 			UVector<double> vol, disp, wett, wplane, draft;
 			UVector<Point3D> cb, cg;
 			
-			data.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, [&](String, int pos)->bool {
+			mesh.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, [&](String, int pos)->bool {
 					progress.SetPos(pos + 100*iangle);
 					return !progress.Canceled();
 				}, dangle, dgz, dMoment, vol, disp, wett, wplane, draft, cb, cg);

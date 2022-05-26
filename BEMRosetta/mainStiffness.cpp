@@ -137,9 +137,11 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 		return;
 
 	if (button) {
-		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Saves to Wamit .hst stiffness matrix format"))
+		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Saves to Wamit .hst or Nemoh stiffness matrix format"))
 			<< [&] {
 				FileSel fs;
+				fs.NoExeIcons();
+				fs.ActiveDir(hstFolder);
 				fs.Type(t_("Wamit stiffness matrix format"), "*.hst");
 				fs.Type(t_("Nemoh stiffness matrix format"), "KH.dat");
 				if (fs.ExecuteSaveAs(t_("Save to stiffness matrix format"))) {
@@ -151,6 +153,7 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 					else
 						throw Exc(t_("Unknown file format"));
 				}
+				hstFolder = GetFileFolder(~fs);
 			};
 	}
 	if (button && Bem().hydros.size() > 0) {

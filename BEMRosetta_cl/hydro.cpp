@@ -372,7 +372,6 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		CalcQTF(qtfsum);		
 		CalcQTF(qtfdif);
 	}
-
 	
 	c0(0) = xto;
 	c0(1) = yto;
@@ -383,10 +382,63 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	rao.Clear();	
 	C.Clear();
 	
-	
 	if (!AfterLoad()) {
 		String error = GetLastError();
 		throw Exc(Format(t_("Problem translating model: '%s'\n%s"), error));	
+	}
+}
+
+void Hydro::ResetForces(bool isfk) {
+	if (isfk) {
+		if (!IsLoadedFfk())
+			return;
+		if (!IsLoadedFsc() && !IsLoadedFex())
+			return;
+		
+		if (IsLoadedFsc()) 
+			ex = clone(sc);
+		else {
+			for (int ih = 0; ih < Nh; ++ih) {
+				for (int ifr = 0; ifr < Nf; ++ifr) {
+					for (int i = 0; i < Nb*6; ++i) {
+						if (!IsNull(sc.ma[ih](ifr, i))) {
+							double re = ex.re[ih](ifr, i) - fk.re[ih](ifr, i);
+							double im = sc.im[ih](ifr, i) - fk.im[ih](ifr, i);
+							ex.re[ih](ifr, i) = re;
+							ex.im[ih](ifr, i) = im;
+							ex.ma[ih](ifr, i) = sqrt(re*re + im*im);
+							ex.ph[ih](ifr, i) = atan2(im, re);
+						}
+					}
+				}
+			}		
+		}
+		fk.Clear();
+	} else {
+		if (!IsLoadedFsc())
+			return;
+		if (!IsLoadedFfk() && !IsLoadedFex())
+			return;
+		
+		if (IsLoadedFfk()) 
+			ex = clone(fk);
+		else {
+			for (int ih = 0; ih < Nh; ++ih) {
+				for (int ifr = 0; ifr < Nf; ++ifr) {
+					for (int i = 0; i < Nb*6; ++i) {
+						if (!IsNull(sc.ma[ih](ifr, i))) {
+							double re = ex.re[ih](ifr, i) - sc.re[ih](ifr, i);
+							double im = sc.im[ih](ifr, i) - sc.im[ih](ifr, i);
+							ex.re[ih](ifr, i) = re;
+							ex.im[ih](ifr, i) = im;
+							ex.ma[ih](ifr, i) = sqrt(re*re + im*im);
+							ex.ph[ih](ifr, i) = atan2(im, re);
+						}
+					}
+				}
+			}		
+		}
+		sc.Clear();		
 	}
 }
 

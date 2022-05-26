@@ -156,7 +156,6 @@ UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String 
 		if (npos < 0)
 			throw Exc(Format(t_("Problem reading variable '%s.%s' in GetFASTArray"), paragraph, var));
 		String line = strFile.Mid(pos, npos-pos);
-		line.Replace(",", " ");
 		line.Replace("\t", " ");
 		line = Trim(line);
 		str = Split(line, ' ', true);
