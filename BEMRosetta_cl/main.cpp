@@ -171,7 +171,7 @@ CONSOLE_APP_MAIN
 
 #endif
 
-#ifndef flagBEMR_TEST_DLL
+#if defined(flagBEMR_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 
 #include "FastOut.h"
 #include "export.h"

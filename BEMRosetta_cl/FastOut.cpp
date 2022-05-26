@@ -114,10 +114,6 @@ String FastOut::GetFileToLoad(String fileName) {
 }
 
 bool FastOut::Load(String fileName) {
-	Time actualTime = FileGetTime(fileName);
-	if (lastFile == fileName && actualTime - lastTime < 5) // Only loads if file is 5 sec older
-		return true;
-	 
 	String ext = GetFileExt(fileName);
 	bool ret = false;
 	if (ext == ".out")
@@ -136,7 +132,6 @@ bool FastOut::Load(String fileName) {
 		}
 	}
 	lastFile = fileName;
-	lastTime = actualTime;
 	
 	if (ret)
 		AfterLoad();
@@ -155,6 +150,8 @@ bool FastOut::LoadOut(String fileName) {
 	int numCol;
 	while (npos >= 0) {
 		npos = raw.FindAfter("\n", pos);
+		if (npos < 0) 					// The last row in the file
+			npos = raw.GetCount();		
 		String line = raw.Mid(pos, npos-pos);
 		UVector<String> fields = Split(line, IsTabSpaceRet, true);
 		
@@ -371,13 +368,36 @@ double FastOut::GetVal(double time, int col) const {
 	return GetVal(idtime, col);
 }
 
-void FastOut::AddVal(int idparam, double val) {
+void FastOut::SetVal(int idparam, double val) {
+	if (idtime == 0)
+		return;
+		//throw Exc("SetVal idparam == 0 is reserved to time");
+	if (idtime < 0)
+		throw Exc("SetNextTime has to bec called before SetVal");
 	if (idparam < 0)
 		return;
 	auto &data = dataOut[idparam];
+	if (idtime < data.size()) {
+		data[idtime] = val;
+		return;
+	}
 	if (data.GetAlloc() == data.size()) 
 		data.Reserve(data.size() + 10000);
-	dataOut[idparam] << val;
+	data << val;
+}
+
+void FastOut::SetNextTime(double time) {
+	auto &data = dataOut[0];
+	if (idtime >= 0) {
+		if (data[idtime] == time)
+			return;
+		if (data[idtime] > time)
+			throw Exc("SetNextTime time is lower than last");
+	}
+	idtime++;
+	if (data.GetAlloc() == data.size()) 
+		data.Reserve(data.size() + 10000);
+	data << time;
 }
 
 int FastOut::GetIdTime(double time) const {
@@ -464,7 +484,7 @@ bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
 	return false;
 }
 
-void FASTCase::CreateFolderCase() {
+void FASTCase::CreateFolderCase(String folder) {
 	Time t = GetSysTime();
 	
 	std::random_device rd;
@@ -475,13 +495,18 @@ void FASTCase::CreateFolderCase() {
 	int rnd = gen(rng);
 	
 	String cas = Format("%4d%02d%02d_%02d%02d%02d_%03d", t.year, t.month, t.day, t.hour, t.minute, t.second, rnd);
-	folderCase = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTCases", cas);
+	String base;
+	if (folder.IsEmpty())
+		base = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTCases");
+	else
+		base = folder;
+	folderCase = AppendFileNameX(base, cas);
 	if (!RealizeDirectory(folderCase))
 		throw Exc(Format("Impossible to create folder %s", folderCase));
 }
 	
-void FASTCase::Setup(String seed) {
-	CreateFolderCase();
+void FASTCase::Setup(String seed, String folderCases) {
+	CreateFolderCase(folderCases);
 
 	String errorStr;
 	DirectoryCopyX(seed, folderCase, false, "*.out*;*.txt;*.dbg", errorStr);
@@ -497,8 +522,8 @@ void FASTCase::Setup(String seed) {
 	Load(fstFile);
 }
 
-void FASTCaseDecay::Init(BEM::DOF dof, double val, double time) {
-	this->dof = dof;
+void FASTCaseDecay::Init(BEM::DOF _dof, double time, double x, double y, double z, double rx, double ry, double rz) {
+	dof = _dof;
 	
 	fast.SetInt("CompInflow", 0);
 	fast.SetInt("CompAero", 0);
@@ -533,24 +558,29 @@ void FASTCaseDecay::Init(BEM::DOF dof, double val, double time) {
 	elastodyn.SetDouble("RotSpeed", 0);
 	elastodyn.SetDouble("NacYaw", 0);
 	
-	//elastodyn.SetBool("PtfmSgDOF", dof == BEM::SURGE ? true : false);
-	//elastodyn.SetBool("PtfmSwDOF", dof == BEM::SWAY  ? true : false);
-	elastodyn.SetBool("PtfmHvDOF", dof == BEM::HEAVE ? true : false);
-	//elastodyn.SetBool("PtfmRDOF",  dof == BEM::ROLL  ? true : false);
-	//elastodyn.SetBool("PtfmPDOF",  dof == BEM::PITCH ? true : false);
-	//elastodyn.SetBool("PtfmYDOF",  dof == BEM::YAW   ? true : false);	
+	elastodyn.SetBool("PtfmSgDOF", true);
+	elastodyn.SetBool("PtfmSwDOF", true);
+	elastodyn.SetBool("PtfmHvDOF", true);
+	elastodyn.SetBool("PtfmRDOF",  true);
+	elastodyn.SetBool("PtfmPDOF",  true);
+	elastodyn.SetBool("PtfmYDOF",  true);
 	
-	String strVar = "Ptfm" + InitCaps(BEM::strDOFtext[dof]);
-	//elastodyn.SetDouble(strVar, val + elastodyn.GetDouble(strVar));
-	elastodyn.SetDouble(strVar, val);
+	elastodyn.SetDouble("PtfmSurge", x);
+	elastodyn.SetDouble("PtfmSway", y);
+	elastodyn.SetDouble("PtfmHeave", z);
+	elastodyn.SetDouble("PtfmRoll", rx);
+	elastodyn.SetDouble("PtfmPitch", ry);
+	elastodyn.SetDouble("PtfmYaw", rz);
 	
 	fast.SetDouble("DT", 0.025);
 	fast.SetDouble("TMax", time);
 }
 
-void FASTCaseDecay::Postprocess() {
-	LoadOut();
-	T = GetDecayPeriod(out, dof, r2);
+bool FASTCaseDecay::Postprocess() {
+	if (!LoadOut())
+		return false;
+	//T = GetDecayPeriod(out, dof, r2);
+	return true;
 }
 
 double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2) {

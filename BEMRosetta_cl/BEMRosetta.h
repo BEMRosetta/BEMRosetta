@@ -545,7 +545,8 @@ public:
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
-	
+	void ResetForces(bool isfk);
+		
 	void Join(const UVector<Hydro *> &hydrosp);
 	
 	String S_g()	const {return !IsNum(g)   ? S("-") : Format("%.3f", g);}
@@ -1068,6 +1069,7 @@ public:
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
+	void ResetForces(int id, bool fk);										
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);

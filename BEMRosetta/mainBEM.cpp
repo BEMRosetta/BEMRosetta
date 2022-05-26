@@ -89,7 +89,8 @@ void MainBEM::Init() {
 	menuProcess.dropHeadQTF.Width(100);
 	menuProcess.dropHeadQTF.GetList().Sorting(false);
 	menuProcess.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
-	
+	menuProcess.butDiffraction << THISBACK1(OnResetForces, false);
+	menuProcess.butFK << THISBACK1(OnResetForces, true);
 	
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
@@ -627,6 +628,9 @@ void MainBEM::UpdateButtons() {
 			menuProcess.dropHead.Add(false, data.head[i]);
 		for (int i = 0; i < data.qtfhead.size(); ++i)
 			menuProcess.dropHeadQTF.Add(false, data.qtfhead[i]);
+	
+		menuProcess.butDiffraction.Enable(data.IsLoadedFsc());
+		menuProcess.butFK.Enable(data.IsLoadedFfk());
 	}
 }
 
@@ -855,6 +859,34 @@ void MainBEM::OnOgilvie() {
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
+void MainBEM::OnResetForces(bool fk) {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+	
+		WaitCursor wait;
+		
+		Bem().ResetForces(id, fk);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));	
+	
+		LoadSelTab(Bem());
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	

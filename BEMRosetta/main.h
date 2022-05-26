@@ -560,6 +560,7 @@ public:
 			("numDecimals", numDecimals)
 			("expRatio", expRatio)
 			("opDigits", opdigits)
+			("hstFolder", hstFolder)
 		;
 		if (json.IsLoading()) {
 			opDigits <<= opdigits;
@@ -572,6 +573,8 @@ public:
 				numDecimals <<= 0;
 			if (IsNull(expRatio)) 
 				expRatio <<= 5;
+			if (IsNull(hstFolder))
+				hstFolder = GetDesktopFolder();
 		}
 	}
 	
@@ -585,6 +588,8 @@ private:
 	UArray<int> row0s, col0s;
 	
 	Hydro::DataMatrix what;
+	
+	String hstFolder;
 };
 
 class MainGZ : public WithMainGZ<StaticRect> {
@@ -1089,6 +1094,7 @@ public:
 	void OnOgilvie();
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();
+	void OnResetForces(bool fk);
 	void OnDescription();
 	void OnMenuConvertArraySel();
 	void OnMenuAdvancedArraySel();

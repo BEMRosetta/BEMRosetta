@@ -274,10 +274,9 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 	
 	Surface base0 = clone(mesh);
 	Point3D cg0 = clone(cg);
-	Point3D c00 = clone(c0);
 
-	base0.Rotate(0, 0, ToRad(angleCalc), c00.x, c00.y, c00.z);
-	cg0.Rotate(0, 0, ToRad(angleCalc), c00.x, c00.y, c00.z);
+	base0.Rotate(0, 0, ToRad(angleCalc), c0.x, c0.y, c0.z);
+	cg0.Rotate(0, 0, ToRad(angleCalc), c0.x, c0.y, c0.z);
 	
 	double dz = 0.1;
 	for (double angle = from; angle <= to; angle += delta) {
@@ -287,8 +286,8 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		Surface base = clone(base0);
 		Point3D cg = clone(cg0);
 		
-		base.Rotate(0, ToRad(angle), 0, c00.x, c00.y, c00.z);
-		cg.Rotate(0, ToRad(angle), 0, c00.x, c00.y, c00.z);
+		base.Rotate(0, ToRad(angle), 0, c0.x, c0.y, c0.z);
+		cg.Rotate(0, ToRad(angle), 0, c0.x, c0.y, c0.z);
 		
 		Surface under;
 		if (!base.TranslateArchimede(mass, rho, dz, under))
@@ -298,9 +297,9 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		
 		Point3D cb = under.GetCenterOfBuoyancy();
 		
-		Force6D fcb, fcg;
-		under.GetHydrostaticForceCB(fcb, c00, cb, rho, g);	
-		Surface::GetMassForce(fcg, c00, cg, mass, g);
+		//Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);	
+		Force6D fcb = under.GetHydrostaticForce(c0, rho, g);	
+		Force6D fcg = Surface::GetMassForce(c0, cg, mass, g);
 	
 		double moment = -(fcg.r.y + fcb.r.y);
 		double gz = moment/mass/g;
