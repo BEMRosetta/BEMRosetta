@@ -506,7 +506,7 @@ public:
 	};
 	
 	UArray<DataSourceFacets> dataSourceFacetsAll, dataSourceFacetsUnder;
-	UArray<DataSourceNodes> dataSourceNodesMoved;
+	UArray<DataSourceNodes> dataSourceNodesMoved, dataSourceNodesUnder;
 
 private:
 	void OnTimer();

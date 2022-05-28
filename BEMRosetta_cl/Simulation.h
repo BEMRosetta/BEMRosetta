@@ -4,6 +4,7 @@
 #ifndef _BEMRosetta_cl_Simulation_h_
 #define _BEMRosetta_cl_Simulation_h_
 
+#include <STEM4U/SeaWaves.h>
 #include "FastOut.h"
 
 class Simulation {
@@ -14,8 +15,8 @@ public:
 
 	Force6D CalcStiff_Static(const float *pos);
 	Force6D CalcStiff_DynamicStatic(double time, const float *pos, double volTolerance);
-	Force6D CalcStiff_Dynamic(double time, const float *pos, double volTolerance);
-	Force6D CalcStiff(double time, const float *pos, double volTolerance);
+	Force6D CalcStiff_Dynamic(double time, const float *pos, double volTolerance, SeaWaves &waves);
+	Force6D CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves);
 	Force6D CalcForces(double time, const float *pos, const float *vel, const float *acc);
 	
 	enum CALC_TYPE {STATIC, DYN_STATIC, DYNAMIC, UNKNOWN};
@@ -23,6 +24,7 @@ public:
 	CALC_TYPE calculation = UNKNOWN;
 
 	MatrixXd stiff;
+	Point3D cb;
 	
 	Mesh mesh;
 	

@@ -94,7 +94,7 @@ void Main::Init() {
 	if (menuOptions.showTabMoor) {
 		tab.Add().Disable();
 		mainMoor.Init();	LOG("Init Moor");
-		if (false/*Bem().experimental*/)
+		if (Bem().experimental)
 			tab.Add(mainMoor.SizePos(), tabTexts[TAB_MOOR]);
 	}
 	if (menuOptions.showTabDecay) {

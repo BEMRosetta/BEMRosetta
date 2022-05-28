@@ -1531,26 +1531,16 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(data.mesh.env.maxY, 10, false),
 														FDS(data.mesh.env.maxZ, 10, false)));
 
-	Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
+	//Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
 	Force6D fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
 	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.mass, Bem().g);	
 	
-	array.Set(row, 0, t_("Hydrostatic forces [N]"));   array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FDS(f[0], 10, false),
-														FDS(f[1], 10, false),
-														FDS(f[2], 10, false))).Paper(backColorUnder));
-
-	array.Set(row, 0, t_("Hydrostatic forces CB [N]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("Hydrostatic forces [N]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcb[0], 10, false),
 														FDS(fcb[1], 10, false),
 														FDS(fcb[2], 10, false))).Paper(backColorUnder));
 
-	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
-														FDS(f[3], 10, false),
-														FDS(f[4], 10, false),
-														FDS(f[5], 10, false))).Paper(backColorUnder));							
-
-	array.Set(row, 0, t_("Hydrostatic moments CB [N·m]"));
+	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));
 	if (fcb[2] > 0)
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcb[3], 10, false),
@@ -1579,7 +1569,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	if (fcb[2] > 0)
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcg[3]+fcb[3], 10, false),
-														FDS(fcg[3]+fcb[4], 10, false),
+														FDS(fcg[4]+fcb[4], 10, false),
 														"0")));		
 	else
 		array.Set(row++, col, "");
@@ -1831,6 +1821,10 @@ void MainGZ::OnUpdate() {
 		if (edAngleTo.IsEnabled()) {
 			angleTo = double(~edAngleTo);
 			angleDelta =  double(~edAngleDelta);
+			if (angleDelta == 0) {
+				angleTo = double(~edAngleFrom);
+				angleDelta = 1;
+			}
 		} else {
 			angleTo = double(~edAngleFrom);
 			angleDelta = 1;

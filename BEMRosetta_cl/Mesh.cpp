@@ -296,9 +296,10 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		cg.Translate(0, 0, dz);
 		
 		Point3D cb = under.GetCenterOfBuoyancy();
-		
-		//Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);	
-		Force6D fcb = under.GetHydrostaticForce(c0, rho, g);	
+		Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);
+		//base.GetPanelParams();	
+		//Force6D fcb = base.GetHydrodynamicForce(c0, [&](double x, double y)->double {return 0;}, 
+		//											[&](double x, double y, double z, double et)->double {return z > 0 ? 0 : rho*g*z;});
 		Force6D fcg = Surface::GetMassForce(c0, cg, mass, g);
 	
 		double moment = -(fcg.r.y + fcb.r.y);
