@@ -92,13 +92,13 @@ Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 	
 	const Point3D &p = origMovedUnder == 0 ? pmesh->mesh.nodes[iq] : pmesh->under.nodes[iq];
 	if (xyz == -1)
-		return iq + 1;
+		return iq + 1;		// id
 	else if (xyz == 0)
-		return p.x;
+		return p.x;			// x
 	else if (xyz == 1)
-		return p.y;
+		return p.y;			// y
 	else
-		return p.z;
+		return p.z;			// z
 }
 
 void MainViewDataEach::UpdateStatus(bool under) {
@@ -177,10 +177,10 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	arrayNodesMoved.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesMoved.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesMoved.array);};
 	dataSourceNodesMoved.SetCount(4);
-	dataSourceNodesMoved[0].Init(_mesh, -1, 1);
+	dataSourceNodesMoved[0].Init(_mesh, -1, 0);
 	arrayNodesMoved.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesMoved[0]);
 	for (int c = 0; c < 3; ++c) {
-		dataSourceNodesMoved[c+1].Init(_mesh, c, 1);
+		dataSourceNodesMoved[c+1].Init(_mesh, c, 0);
 		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
 	arrayNodesMoved.array.WhenSel = [&] {
@@ -194,12 +194,12 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	arrayNodesUnder.title.SetText(t_("Node coordinates"));
 	arrayNodesUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesUnder.array);};
-	dataSourceNodesMoved.SetCount(4);
-	dataSourceNodesMoved[0].Init(_mesh, -1, 2);
-	arrayNodesUnder.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesMoved[0]);
+	dataSourceNodesUnder.SetCount(4);
+	dataSourceNodesUnder[0].Init(_mesh, -1, 1);
+	arrayNodesUnder.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesUnder[0]);
 	for (int c = 0; c < 3; ++c) {
-		dataSourceNodesMoved[c+1].Init(_mesh, c, 2);
-		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
+		dataSourceNodesUnder[c+1].Init(_mesh, c, 1);
+		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesUnder[c+1]);
 	}
 	arrayNodesUnder.array.WhenSel = [&] {
 		UpdateStatus(true);

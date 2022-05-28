@@ -49,7 +49,7 @@ void Simulation::Load(const String &datfile, double _rho, double _g, double c0x,
 	mesh.AfterLoad(rho, g, false, false);
 	
 	stiff = clone(mesh.C);
-	Point3D cb = mesh.under.GetCenterOfBuoyancy();
+	cb = mesh.under.GetCenterOfBuoyancy();
 	Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
 	forceb = forceb0.ToVector();		
 	
@@ -153,7 +153,7 @@ void Simulation::Load(const String &datfile, double _rho, double _g, double c0x,
 	output.ptfmVol = AddVar("ptfmVol", "m^3");
 }
 
-Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance) {
+Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves) {
 	Force6D f6;
 	
 	if (calculation == Simulation::STATIC)
@@ -161,15 +161,18 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 	else if (calculation == Simulation::DYN_STATIC)
 		f6 = CalcStiff_DynamicStatic(time, pos, volTolerance);
 	else if (calculation == Simulation::DYNAMIC)
-		f6 = CalcStiff_Dynamic(time, pos, volTolerance);
+		f6 = CalcStiff_Dynamic(time, pos, volTolerance, waves);
 
 	out.SetNextTime(time);
 
-	Point3D cb;
-	if (output.ptfmCBx >= 0 || output.ptfmCBy >= 0 || output.ptfmCBz >= 0)
-		cb = mesh.under.GetCenterOfBuoyancy();
-	if (output.ptfmVol >= 0)
-		mesh.under.GetVolume();
+	if (output.ptfmCBx >= 0 || output.ptfmCBy >= 0 || output.ptfmCBz >= 0) {
+		if (calculation != Simulation::STATIC)
+			cb = mesh.under.GetCenterOfBuoyancy();
+	}
+	if (output.ptfmVol >= 0) {
+		if (calculation != Simulation::STATIC)
+			mesh.under.GetVolume();
+	}
 	
 	out.SetVal(output.ptfmSurge, pos[0]);
 	out.SetVal(output.ptfmSway,  pos[1]);
@@ -202,11 +205,12 @@ Force6D Simulation::CalcStiff_Static(const float *pos) {
 }
 
 Force6D Simulation::CalcStiff_DynamicStatic(double time, const float *pos, double volTolerance) {
-	mesh.Move(0, 0, pos[2], pos[3], pos[4], pos[5], rho, g, false);
+	mesh.Move(pos, rho, g, false);
 
-	Force6D f6 = mesh.under.GetHydrostaticForce(mesh.c0, rho, g);
+	Point3D p(pos[0], pos[1], pos[2]);
+	Force6D f6 = mesh.under.GetHydrostaticForce(p - mesh.c0, rho, g);
 	//Point3D cb = mesh.under.GetCenterOfBuoyancy();
-	//Force6D f6 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
+	//Force6D f6 = mesh.under.GetHydrostaticForceCB(p - mesh.c0, cb, rho, g);
 	
 	if (mesh.under.VolumeMatch(volTolerance, volTolerance) == -2) 
 		throw Exc("Error: Mesh opened in the waterline");
@@ -214,10 +218,19 @@ Force6D Simulation::CalcStiff_DynamicStatic(double time, const float *pos, doubl
 	return f6;
 }
 
-Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volTolerance) {
+Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volTolerance, 
+			SeaWaves &waves) {
+	mesh.Move(pos, rho, g, false);
+
+	Point3D p(pos[0], pos[1], pos[2]);	
+	Force6D f6 = mesh.under.GetHydrodynamicForce(p - mesh.c0,  
+		[&](double x, double y)->double {return waves.ZSurf(x, y, time);},
+		[&](double x, double y, double z, double et)->double {return waves.Pressure(x, y, waves.ZWheelerStretching(z, waves.ZSurf(x, y, time)), time);});
 	
-	throw Exc("CalcStiff_Dynamic is not already implemented");
+	if (mesh.under.VolumeMatch(volTolerance, volTolerance) == -2) 
+		throw Exc("Error: Mesh opened in the waterline");
 	
+	return f6;
 }
 	
 Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, const float *acc) {
