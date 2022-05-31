@@ -1532,24 +1532,32 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(data.mesh.env.maxZ, 10, false)));
 
 	//Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
-	Force6D fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
-	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.mass, Bem().g);	
+	Force6D fcb;
+	if (!IsNull(data.cb))
+		fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
 	
-	array.Set(row, 0, t_("Hydrostatic forces [N]"));array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("Hydrostatic forces [N]"));
+	
+	if (!IsNull(data.cb))
+		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcb[0], 10, false),
 														FDS(fcb[1], 10, false),
 														FDS(fcb[2], 10, false))).Paper(backColorUnder));
+	else
+		array.Set(row++, col, "-");
 
 	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));
-	if (fcb[2] > 0)
+	if (!IsNull(data.cb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcb[3], 10, false),
 														FDS(fcb[4], 10, false),
 														FDS(fcb[5], 10, false))));							
 	else
-		array.Set(row++, col, "");
+		array.Set(row++, col, "-");
 		
 	array.Set(row, 0, t_("Mass [kg]"));			array.Set(row++, col, FormatF(data.mass, 1));
+	
+	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.mass, Bem().g);	
 	
 	array.Set(row, 0, t_("Mass moments [N·m]"));array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FDS(fcg[3], 10, false),
@@ -1557,22 +1565,22 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(fcg[5], 10, false)));
 
 	array.Set(row, 0, t_("Mass+Hydrostatics forces [N]"));
-	if (fcb[2] > 0)
+	if (!IsNull(data.cb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														"0",
 														"0",
 														FDS(fcg[2]+fcb[2], 10, false))).Paper(backColorUnder));
 	else
-		array.Set(row++, col, "");
+		array.Set(row++, col, "-");
 	
 	array.Set(row, 0, t_("Mass+Hydrostatics moments [N·m]"));
-	if (fcb[2] > 0)
+	if (!IsNull(data.cb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcg[3]+fcb[3], 10, false),
 														FDS(fcg[4]+fcb[4], 10, false),
 														"0")));		
 	else
-		array.Set(row++, col, "");
+		array.Set(row++, col, "-");
 														
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (data.C.size() > 0) {
@@ -1784,6 +1792,8 @@ void MainGZ::Init() {
 		edAngleTo <<= 0;
 	if (IsNull(edAngleDelta))
 		edAngleDelta <<= 30;
+	if (IsNull(edTolerance))
+		edTolerance <<= 5;
 	
 	butUpdate.WhenAction = THISBACK(OnUpdate);
 	
@@ -1813,7 +1823,7 @@ void MainGZ::OnUpdate() {
 		
 		Clear(true);
 		
-		if (double(~edFrom) >= double(~edTo)) {
+		if (double(~edFrom) > double(~edTo)) {
 			Exclamation(t_("Wrong Y angle range"));
 			return;
 		}
@@ -1843,7 +1853,8 @@ void MainGZ::OnUpdate() {
 		dataMoment.Clear();
 		
 		scatter.SetTitle(Format(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), mesh.c0.x, mesh.c0.y, mesh.c0.z));
-			
+		
+		String errors;
 		int iangle = 0;
 		for (double angle = double(~edAngleFrom); angle <= angleTo; angle += angleDelta, iangle++) {
 			UVector<double> &dgz = datagz.Add();
@@ -1851,10 +1862,11 @@ void MainGZ::OnUpdate() {
 			UVector<double> vol, disp, wett, wplane, draft;
 			UVector<Point3D> cb, cg;
 			
-			mesh.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, [&](String, int pos)->bool {
+			mesh.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, double(~edTolerance)/100., 
+				[&](String, int pos)->bool {
 					progress.SetPos(pos + 100*iangle);
 					return !progress.Canceled();
-				}, dangle, dgz, dMoment, vol, disp, wett, wplane, draft, cb, cg);
+				}, dangle, dgz, dMoment, vol, disp, wett, wplane, draft, cb, cg, errors);
 			
 			Upp::Color color = ScatterDraw::GetNewColor(iangle);
 			scatter.AddSeries(dangle, dgz).NoMark().Legend(Format(t_("GZ %.1f"), angle))
@@ -1920,6 +1932,8 @@ void MainGZ::OnUpdate() {
 			scatter.AddSeries(dangle, mingz).NoMark().Legend(t_("Envelope"))
 					   .Units(t_("m"), t_("sec")).Stroke(4, Black()).Dash(LINE_SOLID);
 		}
+		if (!errors.IsEmpty()) 
+			Exclamation(DeQtfLf("Errors found in mesh:\n" + errors));
 	} catch(Exc e) {
 		Exclamation(DeQtfLf(e));
 		Clear(true);
@@ -1968,6 +1982,7 @@ void MainGZ::Jsonize(JsonIO &json) {
 		edAngleFrom <<= Null;
 		edAngleTo <<= Null;
 		edAngleDelta <<= Null;
+		edTolerance <<= Null;
 	}
 	json
 		("edFrom", edFrom)
@@ -1977,5 +1992,6 @@ void MainGZ::Jsonize(JsonIO &json) {
 		("edAngleTo", edAngleTo)
 		("edAngleDelta", edAngleDelta)
 		("opShowEnvelope", opShowEnvelope)
+		("edTolerance", edTolerance)
 	;
 }

@@ -1,1 +1,1 @@
-BINARY(DLLexport, "export.h")
+BINARY(BEMR_DLLexport, "export.h")

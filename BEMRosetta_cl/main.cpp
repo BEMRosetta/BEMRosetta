@@ -196,13 +196,13 @@ const char *DLL_Version() noexcept {
 const char *DLL_strListFunctions() noexcept {
 	static String str;
 	
-	return str = CleanCFromDeclaration(String(DLLexport, DLLexport_length));
+	return str = CleanCFromDeclaration(String(BEMR_DLLexport, BEMR_DLLexport_length));
 }
 
 const char *DLL_strPythonDeclaration() noexcept {
 	static String str;
 	
-	return str = GetPythonDeclaration("BEMRosetta", String(DLLexport, DLLexport_length));	
+	return str = GetPythonDeclaration("BEMRosetta", String(BEMR_DLLexport, BEMR_DLLexport_length));	
 }
 
 void DLL_ListFunctions() noexcept {
