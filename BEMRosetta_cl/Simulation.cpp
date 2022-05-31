@@ -4,7 +4,7 @@
 #include "Simulation.h"
 
 
-const char *Simulation::strCalculation[] = {t_("Static"), t_("Dynamic-Static"), t_("Dynamic"), t_("Unknown")};
+const char *Simulation::strCalculation[] = {t_("Static"), t_("Dynamic-Static"), t_("Dynamic"), t_("OpenFAST"), t_("Unknown")};
 
 	
 Simulation::~Simulation() {
@@ -15,44 +15,48 @@ Simulation::~Simulation() {
 		DeleteFile(outFile);
 }
 
-void Simulation::Load(const String &datfile, double _rho, double _g, double c0x, double c0y, double c0z) {
+void Simulation::Load(const String &datfile, int stiffMod, int dllForce, 
+			double _rho, double _g, double c0x, double c0y, double c0z) {
 	rho = _rho;
 	g = _g;
 	
 	String strFile = LoadFile(datfile);
 	if (IsNull(strFile)) 
 		throw Exc(Format("File '%s' not found", datfile));
-		
-	String strcalc = GetFASTVar(strFile, "Hydrostatics", "");
-	if (IsNull(strcalc) || strcalc == "Static") 
-		calculation = STATIC;
-	else if (strcalc == "DynamicStatic")
-		calculation = DYN_STATIC;
-	else if (strcalc == "Dynamic")
-		calculation = DYNAMIC;
-	else 
-		throw Exc(Format("Unknown Hydrostatics '%s'", strcalc));
 	
 	folder = GetFileFolder(datfile);
 	
-	String meshfile = GetFASTVar(strFile, "MeshFile", "");
-	if (IsNull(meshfile)) 
-		throw Exc("Variable 'meshfile' not found");
-	meshfile.Replace("\"", "");
+	if (stiffMod < 3)
+		calculation = OPENFAST;
+	else {
+		String strcalc = GetFASTVar(strFile, "Hydrostatics", "");
+		if (IsNull(strcalc) || strcalc == "Static") 
+			calculation = STATIC;
+		else if (strcalc == "DynamicStatic")
+			calculation = DYN_STATIC;
+		else if (strcalc == "Dynamic")
+			calculation = DYNAMIC;
+		else 
+			throw Exc(Format("Unknown Hydrostatics '%s'", strcalc));
 	
-	String ret = mesh.Load(meshfile, rho, g, false);
-	if (!ret.IsEmpty()) 
-		throw Exc(Format("Error loading mesh: %s", ret));
-
-	mesh.c0.Set(c0x, c0y, c0z);		// Reference system
-	mesh.mass = 0;
-	mesh.AfterLoad(rho, g, false, false);
+		String meshfile = GetFASTVar(strFile, "MeshFile", "");
+		if (IsNull(meshfile)) 
+			throw Exc("Variable 'meshfile' not found");
+		meshfile.Replace("\"", "");
+		
+		String ret = mesh.Load(meshfile, rho, g, false);
+		if (!ret.IsEmpty()) 
+			throw Exc(Format("Error loading mesh: %s", ret));
 	
-	stiff = clone(mesh.C);
-	cb = mesh.under.GetCenterOfBuoyancy();
-	Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
-	forceb = forceb0.ToVector();		
-	
+		mesh.c0.Set(c0x, c0y, c0z);		// Reference system
+		mesh.mass = 0;
+		mesh.AfterLoad(rho, g, false, false);
+		
+		stiff = clone(mesh.C);
+		cb = mesh.under.GetCenterOfBuoyancy();
+		Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
+		forceb = forceb0.ToVector();		
+	}
 	UVector<UVector<String>> sforces = GetFASTArray(strFile, "NCoupledForces");
 	for (int i = 0; i < sforces.size(); ++i) {
 		if (sforces[i].size() < 9) 
@@ -72,17 +76,19 @@ void Simulation::Load(const String &datfile, double _rho, double _g, double c0x,
 			  sfixed[i][3], sfixed[i][4], sfixed[i][5], 
 			  sfixed[i][6], sfixed[i][7], sfixed[i][8]);
 	}
-			
-	dampingCentre = GetFASTMatrix(strFile, "DampingCentre", 1, 3).row(0);
-	linearDamping = GetFASTMatrix(strFile, "AddBLin", 6, 6);
-	if (linearDamping.isZero(0))
-		linearDamping.resize(0,0);
-	quadDamping   = GetFASTMatrix(strFile, "AddBQuad", 6, 6);
-	if (quadDamping.isZero(0))
-		quadDamping.resize(0,0);
-	addedMass     = GetFASTMatrix(strFile, "AddAmass", 6, 6);
-	if (addedMass.isZero(0))
-		addedMass.resize(0,0);
+	
+	if (dllForce > 0) {		
+		dampingCentre = GetFASTMatrix(strFile, "DampingCentre", 1, 3).row(0);
+		linearDamping = GetFASTMatrix(strFile, "AddBLin", 6, 6);
+		if (linearDamping.isZero(0))
+			linearDamping.resize(0,0);
+		quadDamping   = GetFASTMatrix(strFile, "AddBQuad", 6, 6);
+		if (quadDamping.isZero(0))
+			quadDamping.resize(0,0);
+		addedMass     = GetFASTMatrix(strFile, "AddAmass", 6, 6);
+		if (addedMass.isZero(0))
+			addedMass.resize(0,0);
+	}
 	
 	auto AddVar = [&] (String name, String units, bool isTime = false) -> int {
 		if (isTime)
@@ -94,7 +100,7 @@ void Simulation::Load(const String &datfile, double _rho, double _g, double c0x,
 		}
 		return -1;
 	};
-	
+		
 	output.time = AddVar("time", "s", true);
 
 	output.ptfmSurge= AddVar("ptfmSurge", "m");
@@ -221,9 +227,12 @@ Force6D Simulation::CalcStiff_DynamicStatic(double time, const float *pos, doubl
 Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volTolerance, 
 			SeaWaves &waves) {
 	mesh.Move(pos, rho, g, false);
-
+	
+	
+	bool clip = true;
+	
 	Point3D p(pos[0], pos[1], pos[2]);	
-	Force6D f6 = mesh.under.GetHydrodynamicForce(p - mesh.c0,  
+	Force6D f6 = mesh.under.GetHydrodynamicForce(p - mesh.c0, clip,  
 		[&](double x, double y)->double {return waves.ZSurf(x, y, time);},
 		[&](double x, double y, double z, double et)->double {return waves.Pressure(x, y, waves.ZWheelerStretching(z, waves.ZSurf(x, y, time)), time);});
 	

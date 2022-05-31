@@ -183,19 +183,19 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 	if (!onlyCG) {
 		mesh.GetPanelParams();
 		mesh.GetEnvelope();
-		mesh.GetSurface();
+		mesh.GetArea();
 		mesh.GetVolume();
 		
 		under.CutZ(mesh, -1);
 		under.GetPanelParams();
-		xProjectionPos = under.GetSurfaceXProjection(true, false);
-		xProjectionNeg = under.GetSurfaceXProjection(false, true);
-		yProjectionPos = under.GetSurfaceYProjection(true, false);
-		yProjectionNeg = under.GetSurfaceYProjection(false, true);
-		zProjectionPos = under.GetSurfaceZProjection(true, false);
-		zProjectionNeg = under.GetSurfaceZProjection(false, true);
-		cgZ0surface = under.GetSurfaceZProjectionCG();
-		under.GetSurface();
+		xProjectionPos = under.GetAreaXProjection(true, false);
+		xProjectionNeg = under.GetAreaXProjection(false, true);
+		yProjectionPos = under.GetAreaYProjection(true, false);
+		yProjectionNeg = under.GetAreaYProjection(false, true);
+		zProjectionPos = under.GetAreaZProjection(true, false);
+		zProjectionNeg = under.GetAreaZProjection(false, true);
+		cgZ0surface = under.GetAreaZProjectionCG();
+		under.GetArea();
 		under.GetVolume();
 		
 		if (IsNull(mass))
@@ -248,18 +248,18 @@ double Mesh::GMpitch(double rho, double g) const {
 }
 		
 void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
-				UVector<double> &dataangle, UVector<double> &datagz) {
+  double tolerance, UVector<double> &dataangle, UVector<double> &datagz, String &error) {
 	UVector<double> dataMoment, vol, disp, wett, wplane, draft;
 	UVector<Point3D> dcb, dcg;
-	GZ(from, to, delta, angleCalc, rho, g, Null, dataangle, datagz, dataMoment, 
-		vol, disp, wett, wplane, draft, dcb, dcg);
+	GZ(from, to, delta, angleCalc, rho, g, tolerance, Null, dataangle, datagz, dataMoment, 
+		vol, disp, wett, wplane, draft, dcb, dcg, error);
 }
 
-void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
+void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g, double tolerance,
 	Function <bool(String, int pos)> Status, 
 	UVector<double> &dataangle, UVector<double> &datagz, UVector<double> &dataMoment,
 	UVector<double> &vol, UVector<double> &disp, UVector<double> &wett, UVector<double> &wplane,
-	UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg) {
+	UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg, String &error) {
 	
 	dataangle.Clear();
 	datagz.Clear();
@@ -280,7 +280,8 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 	
 	double dz = 0.1;
 	for (double angle = from; angle <= to; angle += delta) {
-		if (Status && !Status("", int(100*(angle - from)/(to - from))))
+		double progress =  to == from ? 1 : (angle - from)/(to - from);
+		if (Status && !Status("", int(100*progress)))
 			throw Exc(t_("Cancelled by the user"));
 				
 		Surface base = clone(base0);
@@ -295,26 +296,33 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		
 		cg.Translate(0, 0, dz);
 		
-		Point3D cb = under.GetCenterOfBuoyancy();
-		Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);
-		//base.GetPanelParams();	
-		//Force6D fcb = base.GetHydrodynamicForce(c0, [&](double x, double y)->double {return 0;}, 
-		//											[&](double x, double y, double z, double et)->double {return z > 0 ? 0 : rho*g*z;});
-		Force6D fcg = Surface::GetMassForce(c0, cg, mass, g);
-	
-		double moment = -(fcg.r.y + fcb.r.y);
-		double gz = moment/mass/g;
+		if (under.VolumeMatch(tolerance, tolerance) < 0) {
+			if (!error.IsEmpty())
+				error << "\n";
+			error << Format("Around %.2f, angle %.2f", angleCalc, angle);
+		} else {
+			Point3D cb = under.GetCenterOfBuoyancy();
+			Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);
+			//base.GetPanelParams();	
+			//Force6D fcb = base.GetHydrodynamicForce(c0, true, 
+			//				[&](double x, double y)->double {return 0;}, 
+			//				[&](double x, double y, double z, double et)->double {return z > 0 ? 0 : rho*g*z;});
+			Force6D fcg = Surface::GetMassForce(c0, cg, mass, g);
 		
-		dataangle << angle;
-		datagz << gz;
-		dataMoment << moment;
-		vol << under.volume;
-		disp << under.volume*rho;
-		wett << under.GetSurface();
-		wplane << under.GetWaterPlaneArea();
-		draft << under.GetEnvelope().minZ;
-		dcb << cb;
-		dcg << cg;
+			double moment = -(fcg.r.y + fcb.r.y);
+			double gz = moment/mass/g;
+			
+			dataangle << angle;
+			datagz << gz;
+			dataMoment << moment;
+			vol << under.volume;
+			disp << under.volume*rho;
+			wett << under.GetArea();
+			wplane << under.GetWaterPlaneArea();
+			draft << under.GetEnvelope().minZ;
+			dcb << cb;
+			dcg << cg;
+		}
 	}	
 }
 
