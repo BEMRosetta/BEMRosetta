@@ -651,13 +651,14 @@ public:
 	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime);
 	void Reset(double rho, double g);
 
-	void GZ(double from, double to, double delta, double angle, double rho, double g,
+	void GZ(double from, double to, double delta, double angle, double rho, double g, 
+		double tolerance,
 		Function <bool(String, int pos)> Status, 
 		UVector<double> &dataangle, UVector<double> &dataGZ, UVector<double> &dataMoment,
 		UVector<double> &vol, UVector<double> &disp, UVector<double> &wett, UVector<double> &wplane,
-		UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg);
+		UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg, String &error);
 	void GZ(double from, double to, double delta, double angleCalc, double rho, double g,
-				UVector<double> &dataangle, UVector<double> &datagz);
+		double tolerance, UVector<double> &dataangle, UVector<double> &datagz, String &error);
 
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;

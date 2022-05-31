@@ -813,8 +813,10 @@ bool Nemoh::Load_KH() {
 			fileKH = AppendFileNameX(folder, "Mesh", Format("KH_%d.dat", ib));
 	    
 	    FileInLine in(fileKH);
-		if (!in.IsOpen()) 
+		if (!in.IsOpen()) {
+			hd().C.SetCount(ib);
 	        return false;
+		}
 
 		hd().C[ib].setConstant(6, 6, 0);
 	    

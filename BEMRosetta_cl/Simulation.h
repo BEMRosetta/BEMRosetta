@@ -11,7 +11,7 @@ class Simulation {
 public:
 	~Simulation();
 	
-	void Load(const String &strFile, double _rho, double _g, double c0x, double c0y, double c0z);
+	void Load(const String &strFile, int stiffMod, int dllForce, double _rho, double _g, double c0x, double c0y, double c0z);
 
 	Force6D CalcStiff_Static(const float *pos);
 	Force6D CalcStiff_DynamicStatic(double time, const float *pos, double volTolerance);
@@ -19,7 +19,7 @@ public:
 	Force6D CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves);
 	Force6D CalcForces(double time, const float *pos, const float *vel, const float *acc);
 	
-	enum CALC_TYPE {STATIC, DYN_STATIC, DYNAMIC, UNKNOWN};
+	enum CALC_TYPE {STATIC, DYN_STATIC, DYNAMIC, OPENFAST, UNKNOWN};
 	static const char *strCalculation[];
 	CALC_TYPE calculation = UNKNOWN;
 

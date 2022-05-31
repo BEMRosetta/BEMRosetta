@@ -1588,7 +1588,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 										FormatWam(qtfhead1),
 										FormatWam(qtfhead2),
 										ib*6 + idf + 1);
-								if ((qtfHeading >= 0 || id >= 0) /*&& idf == 2*/) {	/*// To remove dof */
+								if ((qtfHeading >= 0 || id >= 0) /*&& idf < 2*/) {	/*// To remove dof */
 									Hydro::QTF &qtf = qtfList[id];
 									out << Format("   %s   %s   %s   %s\n",		
 											FormatWam(hd().F_ndim(qtf.fma[idf], idf)), 

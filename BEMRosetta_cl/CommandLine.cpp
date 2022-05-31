@@ -612,7 +612,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									CheckIfAvailableArg(command, ++i, "Delta");
 									double delta = ScanDouble(command[i]);
 									UVector<double> dataangle, datagz;
-									data.GZ(from, to, delta, angle, bem.rho, bem.g, dataangle, datagz);									
+									double tolerance = 0.1;
+									String errors;
+									data.GZ(from, to, delta, angle, bem.rho, bem.g, tolerance, dataangle, datagz, errors);									
 									for (int i = 0; i < dataangle.size(); ++i) 
 										lastPrint << dataangle[i] << " ";
 									lastPrint << "\n";
