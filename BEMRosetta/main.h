@@ -1094,7 +1094,7 @@ public:
 	void OnOgilvie();
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();
-	void OnResetForces(bool fk);
+	void OnResetForces(Hydro::FORCE force);
 	void OnDescription();
 	void OnMenuConvertArraySel();
 	void OnMenuAdvancedArraySel();
