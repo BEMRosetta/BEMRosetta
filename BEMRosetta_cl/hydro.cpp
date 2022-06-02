@@ -388,8 +388,8 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	}
 }
 
-void Hydro::ResetForces(bool isfk) {
-	if (isfk) {
+void Hydro::ResetForces(Hydro::FORCE force) {
+	if (force == Hydro::FK) {
 		if (!IsLoadedFfk())
 			return;
 		if (!IsLoadedFsc() && !IsLoadedFex())
@@ -403,7 +403,7 @@ void Hydro::ResetForces(bool isfk) {
 					for (int i = 0; i < Nb*6; ++i) {
 						if (!IsNull(sc.ma[ih](ifr, i))) {
 							double re = ex.re[ih](ifr, i) - fk.re[ih](ifr, i);
-							double im = sc.im[ih](ifr, i) - fk.im[ih](ifr, i);
+							double im = ex.im[ih](ifr, i) - fk.im[ih](ifr, i);
 							ex.re[ih](ifr, i) = re;
 							ex.im[ih](ifr, i) = im;
 							ex.ma[ih](ifr, i) = sqrt(re*re + im*im);
@@ -414,7 +414,7 @@ void Hydro::ResetForces(bool isfk) {
 			}		
 		}
 		fk.Clear();
-	} else {
+	} else if (force == Hydro::SCATTERING) {
 		if (!IsLoadedFsc())
 			return;
 		if (!IsLoadedFfk() && !IsLoadedFex())
@@ -428,7 +428,7 @@ void Hydro::ResetForces(bool isfk) {
 					for (int i = 0; i < Nb*6; ++i) {
 						if (!IsNull(sc.ma[ih](ifr, i))) {
 							double re = ex.re[ih](ifr, i) - sc.re[ih](ifr, i);
-							double im = sc.im[ih](ifr, i) - sc.im[ih](ifr, i);
+							double im = ex.im[ih](ifr, i) - sc.im[ih](ifr, i);
 							ex.re[ih](ifr, i) = re;
 							ex.im[ih](ifr, i) = im;
 							ex.ma[ih](ifr, i) = sqrt(re*re + im*im);
@@ -439,6 +439,10 @@ void Hydro::ResetForces(bool isfk) {
 			}		
 		}
 		sc.Clear();		
+	} else {
+		ex.Clear();		
+		sc.Clear();		
+		fk.Clear();		
 	}
 }
 
