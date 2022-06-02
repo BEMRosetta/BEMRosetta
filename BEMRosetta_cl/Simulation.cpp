@@ -228,14 +228,14 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 			SeaWaves &waves) {
 	mesh.Move(pos, rho, g, false);
 	
-	
 	bool clip = true;
 	
 	Point3D p(pos[0], pos[1], pos[2]);	
 	Force6D f6 = mesh.under.GetHydrodynamicForce(p - mesh.c0, clip,  
 		[&](double x, double y)->double {return waves.ZSurf(x, y, time);},
-		[&](double x, double y, double z, double et)->double {return waves.Pressure(x, y, waves.ZWheelerStretching(z, waves.ZSurf(x, y, time)), time);});
-	
+		[&](double x, double y, double z, double et)->double {
+			return -waves.Pressure(x, y, waves.ZWheelerStretching(z, waves.ZSurf(x, y, time)), time);}
+	);
 	if (mesh.under.VolumeMatch(volTolerance, volTolerance) == -2) 
 		throw Exc("Error: Mesh opened in the waterline");
 	

@@ -1540,8 +1540,8 @@ void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayi
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind);
 }
 
-void BEM::ResetForces(int id, bool fk) {
-	hydros[id].hd().ResetForces(fk);
+void BEM::ResetForces(int id, Hydro::FORCE force) {
+	hydros[id].hd().ResetForces(force);
 }
 
 void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadQTF) {

@@ -89,8 +89,9 @@ void MainBEM::Init() {
 	menuProcess.dropHeadQTF.Width(100);
 	menuProcess.dropHeadQTF.GetList().Sorting(false);
 	menuProcess.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
-	menuProcess.butDiffraction << THISBACK1(OnResetForces, false);
-	menuProcess.butFK << THISBACK1(OnResetForces, true);
+	menuProcess.butDiffraction << THISBACK1(OnResetForces, Hydro::SCATTERING);
+	menuProcess.butFK << THISBACK1(OnResetForces, Hydro::FK);
+	menuProcess.butRemoveForces << THISBACK1(OnResetForces, Hydro::ALL);
 	
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
@@ -631,6 +632,7 @@ void MainBEM::UpdateButtons() {
 	
 		menuProcess.butDiffraction.Enable(data.IsLoadedFsc());
 		menuProcess.butFK.Enable(data.IsLoadedFfk());
+		menuProcess.butRemoveForces.Enable(data.IsLoadedFex());
 	}
 }
 
@@ -864,16 +866,15 @@ void MainBEM::OnOgilvie() {
 	}	
 }
 
-void MainBEM::OnResetForces(bool fk) {
+void MainBEM::OnResetForces(Hydro::FORCE force) {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 		
-	
 		WaitCursor wait;
 		
-		Bem().ResetForces(id, fk);
+		Bem().ResetForces(id, force);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)

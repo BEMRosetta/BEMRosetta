@@ -152,6 +152,8 @@ public:
     Forces sc;			 					// Diffraction scattering
     Forces fk; 								// Froude-Krylov
     
+    enum FORCE {SCATTERING, FK, ALL};
+        
   	typedef struct Forces RAO;
    
    	RAO rao;
@@ -545,7 +547,7 @@ public:
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
-	void ResetForces(bool isfk);
+	void ResetForces(Hydro::FORCE force);
 		
 	void Join(const UVector<Hydro *> &hydrosp);
 	
@@ -1070,7 +1072,7 @@ public:
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
-	void ResetForces(int id, bool fk);										
+	void ResetForces(int id, Hydro::FORCE force);										
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);

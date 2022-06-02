@@ -176,11 +176,11 @@ bool FastOut::LoadOut(String fileName) {
 			row++;
 			if (fields.IsEmpty())
 				break;
-			if (fields.size() != numCol) 
-				throw Exc(Format("Number of values (%d) and parameters (%d) do not match in row %d", fields.size(), numCol, row));
 
 			for (int c = 0; c < fields.size(); ++c) 
 				dataOut[c] << ScanDouble(fields[c]);
+			for (int c = fields.size(); c < numCol; ++c) 
+				dataOut[c] << Null;
 		}
 		pos = npos;
 	}
