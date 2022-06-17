@@ -315,8 +315,8 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		CalcA(A0);
     if (IsLoadedAinf())
 		CalcA(Ainf);
-	if (IsLoadedDlin())
-		CalcA(Dlin);
+	if (IsLoadedLinearDamping())
+		CalcA(linearDamping);
 		    
     auto CalcF = [&](auto &ex) {
     	auto exnre = clone(ex.re);

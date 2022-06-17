@@ -4,13 +4,12 @@
 #include "Simulation.h"
 
 
-const char *Simulation::strCalculation[] = {t_("Static"), t_("Dynamic-Static"), t_("Dynamic"), t_("OpenFAST"), t_("Unknown")};
-
+const char *Simulation::strCalculation[] = {t_("None"), t_("Static"), t_("Dynamic-Static"), t_("Dynamic"), t_("OpenFAST"), t_("Unknown")};
 	
 Simulation::~Simulation() {
 	String outFile = AppendFileNameX(folder, "DLLData.out");
 	if (out.GetParamCount() > 1)
-		out.Save(outFile);
+		out.Save(outFile, ".out");
 	else
 		DeleteFile(outFile);
 }
@@ -32,6 +31,8 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 		String strcalc = GetFASTVar(strFile, "Hydrostatics", "");
 		if (IsNull(strcalc) || strcalc == "Static") 
 			calculation = STATIC;
+		else if (strcalc == "None")
+			calculation = NONE;
 		else if (strcalc == "DynamicStatic")
 			calculation = DYN_STATIC;
 		else if (strcalc == "Dynamic")
@@ -39,23 +40,25 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 		else 
 			throw Exc(Format("Unknown Hydrostatics '%s'", strcalc));
 	
-		String meshfile = GetFASTVar(strFile, "MeshFile", "");
-		if (IsNull(meshfile)) 
-			throw Exc("Variable 'meshfile' not found");
-		meshfile.Replace("\"", "");
+		if (calculation != NONE) {
+			String meshfile = GetFASTVar(strFile, "MeshFile", "");
+			if (IsNull(meshfile)) 
+				throw Exc("Variable 'meshfile' not found");
+			meshfile.Replace("\"", "");
+			
+			String ret = mesh.Load(meshfile, rho, g, false);
+			if (!ret.IsEmpty()) 
+				throw Exc(Format("Error loading mesh: %s", ret));
 		
-		String ret = mesh.Load(meshfile, rho, g, false);
-		if (!ret.IsEmpty()) 
-			throw Exc(Format("Error loading mesh: %s", ret));
-	
-		mesh.c0.Set(c0x, c0y, c0z);		// Reference system
-		mesh.mass = 0;
-		mesh.AfterLoad(rho, g, false, false);
-		
-		stiff = clone(mesh.C);
-		cb = mesh.under.GetCenterOfBuoyancy();
-		Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
-		forceb = forceb0.ToVector();		
+			mesh.c0.Set(c0x, c0y, c0z);		// Reference system
+			mesh.mass = 0;
+			mesh.AfterLoad(rho, g, false, false);
+			
+			stiff = clone(mesh.C);
+			cb = mesh.under.GetCenterOfBuoyancy();
+			Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
+			forceb = forceb0.ToVector();		
+		}
 	}
 	UVector<UVector<String>> sforces = GetFASTArray(strFile, "NCoupledForces");
 	for (int i = 0; i < sforces.size(); ++i) {
@@ -85,9 +88,6 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 		quadDamping   = GetFASTMatrix(strFile, "AddBQuad", 6, 6);
 		if (quadDamping.isZero(0))
 			quadDamping.resize(0,0);
-		addedMass     = GetFASTMatrix(strFile, "AddAmass", 6, 6);
-		if (addedMass.isZero(0))
-			addedMass.resize(0,0);
 	}
 	
 	auto AddVar = [&] (String name, String units, bool isTime = false) -> int {
@@ -109,7 +109,9 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 	output.ptfmRoll = AddVar("ptfmRoll",  "deg");
 	output.ptfmPitch= AddVar("ptfmPitch", "deg");
 	output.ptfmYaw  = AddVar("ptfmYaw",   "deg");
-		
+	
+	output.wave1Elev= AddVar("wave1Elev", "m");
+	
 	output.ptfmSurge_cd= AddVar("ptfmSurge_cd", "m");
 	output.ptfmSway_cd = AddVar("ptfmSway_cd",  "m");
 	output.ptfmHeave_cd= AddVar("ptfmHeave_cd", "m");
@@ -162,7 +164,9 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves) {
 	Force6D f6;
 	
-	if (calculation == Simulation::STATIC)
+	if (calculation == Simulation::NONE)
+		f6.Reset();
+	else if (calculation == Simulation::STATIC)
 		f6 = CalcStiff_Static(pos);
 	else if (calculation == Simulation::DYN_STATIC)
 		f6 = CalcStiff_DynamicStatic(time, pos, volTolerance);
@@ -178,6 +182,10 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 	if (output.ptfmVol >= 0) {
 		if (calculation != Simulation::STATIC)
 			mesh.under.GetVolume();
+	}
+	if (output.wave1Elev >= 0) {
+		if (calculation != Simulation::STATIC)
+			out.SetVal(output.wave1Elev, waves.ZSurf(0, 0, time));
 	}
 	
 	out.SetVal(output.ptfmSurge, pos[0]);
@@ -231,13 +239,13 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 	bool clip = true;
 	
 	Point3D p(pos[0], pos[1], pos[2]);	
-	Force6D f6 = mesh.under.GetHydrodynamicForce(p - mesh.c0, clip,  
+	Force6D f6 = mesh.mesh.GetHydrodynamicForce(p - mesh.c0, clip,  
 		[&](double x, double y)->double {return waves.ZSurf(x, y, time);},
 		[&](double x, double y, double z, double et)->double {
-			return -waves.Pressure(x, y, waves.ZWheelerStretching(z, waves.ZSurf(x, y, time)), time);}
+			return -waves.Pressure(x, y, waves.ZWheelerStretching(z, et), time);}
 	);
-	if (mesh.under.VolumeMatch(volTolerance, volTolerance) == -2) 
-		throw Exc("Error: Mesh opened in the waterline");
+	//if (mesh.under.VolumeMatch(volTolerance, volTolerance) == -2) 
+	//	throw Exc("Error: Mesh opened in the waterline");
 	
 	return f6;
 }
@@ -307,10 +315,6 @@ Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, 
 		}
 		f6.Add(Force6D(vfdamp), dcentre, meshc0);
 	}
-	if (addedMass.size() == 36) {
-		VectorXd vacc = a.ToVector();
-		f6.Add(Force6D(-addedMass*vacc), dcentre, meshc0);
-	}
 	
 	out.SetNextTime(time);
 
@@ -358,3 +362,4 @@ Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, 
 
 	return f6;
 }
+

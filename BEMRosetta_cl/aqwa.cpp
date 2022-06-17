@@ -571,13 +571,13 @@ bool Aqwa::Load_LIS() {
 				}
 			}
 		} else if (line.Find("FREQUENCY INDEPENDENT DAMPING") >= 0) {
-			if (hd().Dlin.size() == 0)
-				hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
+			if (hd().linearDamping.size() == 0)
+				hd().linearDamping = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
 			in.GetLine(6);
 			for (int idf = 0; idf < 6; ++idf) {
 				f.GetLine();
 				for (int jdf = 0; jdf < 6; ++jdf) 
-					hd().Dlin(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
+					hd().linearDamping(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
 				f.GetLine(); 
 			}
 		}

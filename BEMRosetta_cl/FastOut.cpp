@@ -195,8 +195,15 @@ bool FastOut::LoadOut(String fileName) {
 	return true;
 }
 
-bool FastOut::Save(String fileName) {
-	return SaveOut(fileName);
+bool FastOut::Save(String fileName, String type, String sep) {
+	if (type.IsEmpty())
+		type = GetFileExt(fileName);
+	if (type == ".out")
+		return SaveOut(fileName);
+	else if (type == ".csv")
+		return SaveCsv(fileName, sep);
+
+	return false;
 }
 	
 bool FastOut::SaveOut(String fileName) {
@@ -228,25 +235,49 @@ bool FastOut::SaveOut(String fileName) {
 	return SaveFile(fileName, data);
 }
 
+bool FastOut::SaveCsv(String fileName, String sep) {
+	String data;
+	
+	for (int i = 0; i < parameters.size(); ++i) {
+		if (i > 0)
+			data << sep;
+		data << parameters[i] << " [" << units[i] << "]";
+	}
+	data << "\n";
+	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
+		if (idtime > 0)
+			data << "\n";
+		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
+			if (idparam > 0)
+				data << sep;
+			if (dataOut[idparam].size() > idtime)
+				data << FDS(dataOut[idparam][idtime], 10, true);
+		}
+	}
+	return SaveFile(fileName, data);
+}
+
 bool FastOut::LoadOutb(String fileName) {
 	Clear();
 	
-	enum FileType {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
+	enum FILETYPE {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
 
 	FileInBinary file(fileName);
 	if (!file.IsOpen())
 		return false;
 
-	int ChanLen2 = 10;
-	int16 FileID = file.ReadB<int16,2>();
-	if (FileID == FileType::ChanLen_In) 
+	int ChanLen2;
+	int16 FileType = file.ReadB<int16,2>();
+	if (FileType == FILETYPE::ChanLen_In) 
 		ChanLen2 = file.ReadB<int16,2>();
+	else
+		ChanLen2 = 10;
 
 	int32 NumChans = file.ReadB<int32,4>();
     int32 NumRecs = file.ReadB<int32,4>();
 
 	double TimeScl, TimeOff, TimeOut1, TimeIncr;
-    if (FileID == FileType::WithTime) {
+    if (FileType == FILETYPE::WithTime) {
         TimeScl = file.ReadB<double,8>(); 
         TimeOff = file.ReadB<double,8>();
     } else {
@@ -254,17 +285,32 @@ bool FastOut::LoadOutb(String fileName) {
         TimeIncr = file.ReadB<double,8>();  
     }
 
-	Buffer<float> ColScl(NumChans), ColOff(NumChans);
-    file.ReadB(ColScl, 4*NumChans);	
-    file.ReadB(ColOff, 4*NumChans);
+	Buffer<float> ChanNames(NumChans);
+	Buffer<float> ChanUnits(NumChans);
+	
+	//Buffer<float> ColMax, ColMin;	
+	Buffer<float> ColScl, ColOff;
+	Buffer<int32> TmpTimeArray;
+	if (FileType != FILETYPE::NoCompressWithoutTime) {
+		//ColMax.Alloc(NumChans); 
+		//ColMin.Alloc(NumChans);	
+		ColOff.Alloc(NumChans);
+		ColScl.Alloc(NumChans); 
+
+		if (FileType == FILETYPE::WithTime) 
+			TmpTimeArray.Alloc(NumRecs);		
+	}
+
+	if (FileType != FILETYPE::NoCompressWithoutTime) {
+	    file.ReadB(ColScl, 4*NumChans);	
+    	file.ReadB(ColOff, 4*NumChans);
+	}
 
 	int32 LenDesc = file.ReadB<int32,4>();
+	
     StringBuffer DescStrB(LenDesc);
     file.ReadB(DescStrB, LenDesc);
     String DescStr = DescStrB;
-    
-    if (FileID == FileType::NoCompressWithoutTime) 
-		ChanLen2 = 15;
 
 	parameters.SetCount(NumChans+1); 
 	parameters[0] = "Time";
@@ -282,29 +328,39 @@ bool FastOut::LoadOutb(String fileName) {
         units[iChan] = Replace(Replace(TrimBoth(String(unit, ChanLen2)), "(", ""), ")", "");
     }  
     
+    // End of header
+    
     int nPts = NumRecs*NumChans;           		   
     dataOut.SetCount(NumChans+1+calcParams.size());
     for (int i = 0; i < dataOut.size(); ++i)
         dataOut[i].SetCount(NumRecs);
     
     Buffer<int32> bufferTime;
-    if (FileID == FileType::WithTime) {
+    if (FileType == FILETYPE::WithTime) {
         bufferTime.Alloc(NumRecs);
         file.ReadB(bufferTime, 4*NumRecs); 
     }
     
-    Buffer<int16> bufferData(nPts);
-    file.ReadB(bufferData, 2*nPts); 	
+    Buffer<int16> bufferData;
+    Buffer<double> bufferDataFloat;
     int ip = 0;
-    for (int idt = 0; idt < NumRecs; ++idt) 
-    	for (int i = 1; i < NumChans+1; ++i) {
-	    	double off = ColOff[i-1];
-	    	double scl = ColScl[i-1];
-	        dataOut[i][idt] = (bufferData[ip] - off)/scl;
-	        ip++;
-	}    
+    if (FileType == FILETYPE::NoCompressWithoutTime) {
+        bufferDataFloat.Alloc(nPts);
+        file.ReadB(bufferDataFloat, 8*nPts); 
+        for (int idt = 0; idt < NumRecs; ++idt) {
+	    	for (int i = 1; i < NumChans+1; ++i) 
+		        dataOut[i][idt] = bufferDataFloat[ip++];
+        }
+    } else {
+	    bufferData.Alloc(nPts);
+    	file.ReadB(bufferData, 2*nPts); 	
+	    for (int idt = 0; idt < NumRecs; ++idt) {
+	    	for (int i = 1; i < NumChans+1; ++i) 
+		        dataOut[i][idt] = (bufferData[ip++] - ColOff[i-1])/ColScl[i-1];
+	    }
+    }
     
-    if (FileID == FileType::WithTime) {
+    if (FileType == FILETYPE::WithTime) {
         for (int idt = 0; idt < NumRecs; ++idt)
             dataOut[0][idt] = ( bufferTime[idt] - TimeOff)/ TimeScl;
     } else {

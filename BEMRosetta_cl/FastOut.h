@@ -14,7 +14,7 @@ public:
 	static String GetFileToLoad(String fileName);
 	
 	bool Load(String fileName);
-	bool Save(String fileName);
+	bool Save(String fileName, String type, String sep = Null);
 	
 	void Clear();
 	int GetCol(String param) const;
@@ -111,6 +111,7 @@ private:
 	bool LoadOut(String fileName);
 	bool LoadOutb(String fileName);
 	bool SaveOut(String fileName);
+	bool SaveCsv(String fileName, String sep);
 	void AfterLoad();
 
 	String lastFile;

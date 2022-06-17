@@ -101,7 +101,7 @@ public:
     MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 
-	MatrixXd Dlin;      			// (6*Nb, 6*Nb) 	Additional linear damping
+	MatrixXd linearDamping;			// (6*Nb, 6*Nb) 	Additional linear damping
 
     UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     UVector<double> head;			// [Nh]             Wave headings (deg)
@@ -110,7 +110,7 @@ public:
     UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix
     MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     MatrixXd cg;          			// (3,Nb)     		Centre of gravity
-    MatrixXd c0;          			// (3,Nb)     		Centre of rotation
+    MatrixXd c0;          			// (3,Nb)     		Centre of motion
     BEM_SOFT code;        			// BEM_SOFT			BEM code 
     UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
     UVector<int> dofOrder;			// [6*Nb]			DOF order
@@ -495,7 +495,7 @@ public:
 	bool IsLoadedA() 	 const {return !A.IsEmpty() && A[0][0].size() > 0 && IsNum(A[0][0][0]);}
 	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty() && Ainf_w[0][0].size() > 0 && IsNum(Ainf_w[0][0][0]);}
 	bool IsLoadedAinf()  const {return Ainf.size() > 0;}
-	bool IsLoadedDlin()  const {return Dlin.size() > 0;}
+	bool IsLoadedLinearDamping()  const {return linearDamping.size() > 0;}
 	bool IsLoadedA0()	 const {return A0.size() > 0;}
 	bool IsLoadedB() 	 const {return !B.IsEmpty() && B[0][0].size() > 0 && IsNum(B[0][0][0]);}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && IsNum(C[0](0, 0));}
@@ -557,6 +557,78 @@ public:
 	String S_len() 	const {return !IsNum(len) ? S("-") : Format("%.1f", len);}
 
 	String GetLastError()	{return lastError;}
+	
+	static String K_units(bool ndim, int r, int c) {
+		if (ndim) {
+			if (r < 3 && c < 3)
+				return "m^2";
+			if (r < 3)
+				return "m^3/rad";
+			if (c < 3)
+				return "m^3";
+			return "m^4/rad";			
+		} else {
+			if (r < 3 && c < 3)
+				return "N/m";
+			if (r < 3)
+				return "N/rad";
+			if (c < 3)
+				return "N";
+			return "N-m/rad";
+		}
+	}
+	static String Kirf_units(bool ndim, int r, int c) {
+		return K_units(ndim, r, c);
+	}
+	static String B_units(bool ndim, int r, int c) {
+		if (ndim) {
+			if (r < 3 && c < 3)
+				return "m^3-rad/s";
+			if (r < 3)
+				return "m^4/s";
+			if (c < 3)
+				return "m^4/s/rad";
+			return "m^5/s";
+		} else {
+			if (r < 3 && c < 3)
+				return "N/(m/s)";
+			if (r < 3)
+				return "N/(rad/s)";
+			if (c < 3)
+				return "N-s";
+			return "N-m/(rad/s)";
+		}
+	}
+	static String A_units(bool ndim, int r, int c) {
+		if (ndim) {
+			if (r < 3 && c < 3)
+				return "m^3";
+			if (r < 3)
+				return "m^4/rad";
+			if (c < 3)
+				return "m^4";
+			return "m^5/rad";			
+		} else {
+			if (r < 3 && c < 3)
+				return "kg";
+			if (r < 3)
+				return "kg-m/rad";
+			if (c < 3)
+				return "kg-m";
+			return "kg-m^2/rad";
+		}
+	}
+	static String F_units(bool ndim, int r) {
+		if (ndim) {
+			if (r < 3)
+				return "m^3";
+			return "m^4";
+		} else {
+			if (r < 3)
+				return "N";
+			return "N-m";
+		}
+	}
 };
 
 bool IsNum(const Hydro::Forces &f);
@@ -1059,6 +1131,7 @@ public:
 	String foammPath;
 	String hamsPath, hamsMeshPath;
 	int volWarning, volError;
+	String csvSeparator;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	HydroClass &Join(UVector<int> &ids, Function <bool(String, int)> Status = Null);
@@ -1104,6 +1177,7 @@ public:
 		if (json.IsLoading()) {
 			idofType = 0;
 			iheadingType = 0;
+			csvSeparator = ";";
 		} else {
 			idofType = dofType;
 			iheadingType = headingType;
@@ -1132,13 +1206,14 @@ public:
 			("volError", volError)
 			("dofType", idofType)
 			("headingType", iheadingType)
+			("csvSeparator", csvSeparator)
 		;
 		if (json.IsLoading()) {
 			dofType = BEM::DOFType(idofType);
 			headingType = BEM::HeadingType(iheadingType);
 		}
 	}
-
+	
 	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
 	static String StrBDOF(int i, bool abrev) {

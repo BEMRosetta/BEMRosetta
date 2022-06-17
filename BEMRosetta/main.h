@@ -588,6 +588,7 @@ private:
 	UArray<int> row0s, col0s;
 	
 	Hydro::DataMatrix what;
+	bool Ndim;
 	
 	String hstFolder;
 };
@@ -617,6 +618,8 @@ class MainPlot : public StaticRect {
 public:
 	typedef MainPlot CLASSNAME;
 	
+	~MainPlot()	{Clear();}
+		
 	void Init(bool vert);
 	void Init(int idf, double jdf_ih, Hydro::DataToShow dataToShow);
 	bool Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const UVector<int> &ids);
