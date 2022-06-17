@@ -73,7 +73,7 @@ void MainMesh::Init() {
 	menuPlot.showLimits.Tip(t_("Shows boundaris of the geometry")).WhenAction 	= [&] {mainView.gl.Refresh();};
 	menuPlot.showCb.Tip(t_("Shows the centre of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showCg.Tip(t_("Shows the centre of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
-	menuPlot.showCr.Tip(t_("Shows the centre of rotation")).WhenAction  		= [&] {mainView.gl.Refresh();};
+	menuPlot.showCr.Tip(t_("Shows the centre of motion")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.gl.Refresh();};	
 	menuPlot.showUnderwater.Tip(t_("Shows nderwater mesh")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.gl.View(true, true, true);};
@@ -120,16 +120,16 @@ void MainMesh::Init() {
 		menuProcess.z_0 <<= ~menuProcess.z_g;
 		OnUpdate(NONE, true);
 	};
-	menuProcess.butCgtoC0.Tip(t_("Sets the centre of rotation with the centre of gravity"));
+	menuProcess.butCgtoC0.Tip(t_("Sets the centre of motion with the centre of gravity"));
 	menuProcess.butC0toCg.WhenAction = [&] {
 		menuProcess.x_g <<= ~menuProcess.x_0;
 		menuProcess.y_g <<= ~menuProcess.y_0;
 		menuProcess.z_g <<= ~menuProcess.z_0;
 		OnUpdate(NONE, true);
 	};
-	menuProcess.butC0toCg.Tip(t_("Sets the centre of gravity with the centre of rotation"));
+	menuProcess.butC0toCg.Tip(t_("Sets the centre of gravity with the centre of motion"));
 	menuProcess.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, true);
-	menuProcess.butUpdateCrot.Tip(t_("Sets the centre of rotation"));	
+	menuProcess.butUpdateCrot.Tip(t_("Sets the centre of motion"));	
 	
 	menuProcess.butUpdateMass  <<= THISBACK(OnUpdateMass);
 	menuProcess.butUpdateMass.Tip(t_("Sets mass from inmersed volume"));
@@ -161,7 +161,7 @@ void MainMesh::Init() {
 	menuMove.butReset.Tip(t_("Translates the mesh"));
 	
 	menuMove.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, false);
-	menuMove.butUpdateCrot.Tip(t_("Sets the centre of rotation"));	
+	menuMove.butUpdateCrot.Tip(t_("Sets the centre of motion"));	
 	
 	
 	menuMove.t_x <<= 0;

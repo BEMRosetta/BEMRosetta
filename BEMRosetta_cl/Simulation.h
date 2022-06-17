@@ -19,7 +19,7 @@ public:
 	Force6D CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves);
 	Force6D CalcForces(double time, const float *pos, const float *vel, const float *acc);
 	
-	enum CALC_TYPE {STATIC, DYN_STATIC, DYNAMIC, OPENFAST, UNKNOWN};
+	enum CALC_TYPE {NONE, STATIC, DYN_STATIC, DYNAMIC, OPENFAST, UNKNOWN};
 	static const char *strCalculation[];
 	CALC_TYPE calculation = UNKNOWN;
 
@@ -34,7 +34,6 @@ private:
 	Point3D dampingCentre;
 	MatrixXd linearDamping;
 	MatrixXd quadDamping;
-	MatrixXd addedMass;
 	
 	struct InterpolateVal {
 		UVector<double> vx, vy;
@@ -82,6 +81,7 @@ private:
 	struct Outputs {
 		int time, 
 			ptfmSurge, ptfmSway, ptfmHeave, ptfmRoll, ptfmPitch, ptfmYaw,
+			wave1Elev,
 			ptfmSurge_cd, ptfmSway_cd, ptfmHeave_cd, ptfmRoll_cd, ptfmPitch_cd, ptfmYaw_cd,
 			ptfmTVxi_cd, ptfmTVyi_cd, ptfmTVzi_cd, ptfmRVxi_cd, ptfmRVyi_cd, ptfmRVzi_cd,
 			ptfmTAxi_cd, ptfmTAyi_cd, ptfmTAzi_cd, ptfmRAxi_cd, ptfmRAyi_cd, ptfmRAzi_cd;
