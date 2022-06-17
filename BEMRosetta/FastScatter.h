@@ -29,6 +29,8 @@ public:
 	
 private:
 	bool OnLoad(bool justUpdate = false);
+	void UpdateButtons(bool on);
+	void OnSaveAs();
 	void OnFilter(bool show);
 	void ShowSelected();
 	bool AddParameter(String param, ArrayCtrl *parray);
@@ -80,6 +82,8 @@ private:
 		void Get(const ArrayCtrl &aleft, const ArrayCtrl &aright);
 		void Set(ArrayCtrl &aleft, ArrayCtrl &aright) const;
 	};
+	
+	String saveFolder;
 };
 	
 class FastScatterTabs : public StaticRect {

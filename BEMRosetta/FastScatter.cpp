@@ -40,7 +40,13 @@ void FastScatter::Init(Function <void(String)> OnFile, Function <void(String)> O
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
 	file.Type(t_("FAST output file"), "*.out, *.outb"); 
-		
+	butSaveAs <<= THISBACK(OnSaveAs);
+	butSaveAs.Tip(t_("Saves data file"));
+	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
+	dropFormat.SetIndex(0);
+	
+	UpdateButtons(false);
+	
 	left.scatter.ShowAllMenus().SetMode(ScatterDraw::MD_DRAW);
 	
 	leftSearch.array.AutoHideSb().NoHeader().SetLineCy(EditField::GetStdHeight()).MultiSelect();
@@ -114,6 +120,8 @@ void FastScatter::Init(Function <void(String)> OnFile, Function <void(String)> O
 		updateTime <<= SecondsToString(seconds, 0, false, false, true, false, true);
 		updateTime.CancelSelection();
 	};
+	
+	saveFolder = GetDesktopFolder();
 }
 
 String FastScatter::SelectedStr() {
@@ -278,6 +286,12 @@ void FastScatter::Clear() {
 	datafast.Clear();
 	dataSource.Clear();
 	OnFilter(true);
+	UpdateButtons(false);
+}
+
+void FastScatter::UpdateButtons(bool on) {
+	butSaveAs.Enable(on);
+	dropFormat.Enable(on);
 }
 
 bool FastScatter::OnLoad(bool justUpdate) {
@@ -296,11 +310,13 @@ bool FastScatter::OnLoad(bool justUpdate) {
 		if (IsNull(fileName)) {
 			statusBar->Temporary(Format(t_("File '%s' not found"), ~file));
 			left.scatter.Enable();
+			UpdateButtons(false);
 			return false;
 		}
 		if (!datafast.Load(fileName)) {
 			statusBar->Temporary(Format(t_("File '%s' temporarily blocked by OpenFAST"), ~file));
 			left.scatter.Enable();
+			UpdateButtons(false);
 			return false;
 		}
 		
@@ -320,13 +336,59 @@ bool FastScatter::OnLoad(bool justUpdate) {
 	} catch (const Exc &e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
 		left.scatter.Enable();
+		UpdateButtons(false);
 		return false;
 	}
 	left.scatter.Enable();
 	
+	UpdateButtons(true);
 	return true;
 }
 
+void FastScatter::OnSaveAs() {
+	try {
+		statusBar->Temporary(t_("Saving data"));
+		String fileType = ~dropFormat;
+		
+		String ext;
+		FileSel fs;
+		if (fileType == ".out") {
+			fs.Type(t_("OpenFAST .out format"), "*.out");
+			ext = ".out";
+		} else {
+			fs.Type(t_("CSV format"), ".csv");
+			ext = ".csv";
+		}
+		fs.ActiveDir(saveFolder);
+		fs.ActiveType(0);
+		fs.Set(ForceExt(~file, ext));
+		
+		if (fs.ExecuteSaveAs(t_("Save register data"))) {
+			WaitCursor waitcursor;
+			
+			if (fileType == ".out") {	
+				if (!datafast.Save(~fs, ".out")) {
+					Exclamation(Format("Problem saving '%s'", ~fs));
+					return;
+				}
+			} else if (fileType == ".csv") {	
+				if (!datafast.Save(~fs, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
+					Exclamation(Format("Problem saving '%s'", ~fs));
+					return;
+				}
+			} else {
+				if (!left.scatter.SaveToFileData(~fs)) {
+					Exclamation(Format("Problem saving '%s'", ~fs));
+					return;
+				}
+			}
+		}
+		saveFolder = GetFileFolder(~fs);
+	} catch (const Exc &e) {
+		Exclamation(Format("Error: %s", DeQtf(e)));	
+	}		
+}
+	
 void FastScatter::ShowSelected() {
 	WaitCursor wait;
 	
@@ -340,7 +402,7 @@ void FastScatter::ShowSelected() {
 			if (IsNull(col))
 				statusBar->Temporary(Format("Parameter %s does not exist", param));
 			else
-				left.scatter.AddSeries(datafast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(datafast.units[col], t_("sec")).Stroke(1);	
+				left.scatter.AddSeries(datafast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(datafast.units[col], t_("s")).Stroke(1);	
 		}
 	}
 	for (int rw = 0; rw < rightSearch.array.GetCount(); ++rw) {
@@ -350,7 +412,7 @@ void FastScatter::ShowSelected() {
 			if (IsNull(col))
 				statusBar->Temporary(Format("Parameter %s does not exist", param));
 			else
-				left.scatter.AddSeries(datafast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(datafast.units[col], t_("sec")).SetDataSecondaryY().Stroke(1);	
+				left.scatter.AddSeries(datafast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(datafast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
 		}
 	}
 	left.scatter.SetPlotAreaLeftMargin(8*StdFont().GetHeight());

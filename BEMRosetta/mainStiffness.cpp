@@ -21,11 +21,13 @@ using namespace Eigen;
 void MainMatrixKA::Init(Hydro::DataMatrix what) {
 	CtrlLayout(*this);
 	
+	Ndim = false;
 	this->what = what;
 	
 	numDigits <<= THISBACK(PrintData);
 	numDecimals <<= THISBACK(PrintData);
 	opEmptyZero <<= THISBACK(PrintData);
+	opUnits <<= THISBACK(PrintData);
 	expRatio <<= THISBACK(PrintData);
 	
 	opDecimals <<= THISBACK1(OnOp, 0);
@@ -102,18 +104,27 @@ void MainMatrixKA::PrintData() {
 			double mx = data[i].maxCoeff();
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
-					double val = data[i](r, c);
 					String sdata;
-					if (IsNull(val)) 
-						sdata = "";
-					else {
-						double rat = mx == 0 ? 0 : abs(val/mx);
-						if (~opEmptyZero && rat < ratio)
+					if (~opUnits) {
+						if (what == Hydro::MAT_K)
+							sdata = Hydro::K_units(Ndim, r, c);
+						else if (what == Hydro::MAT_A) 
+							sdata = Hydro::A_units(Ndim, r, c);
+						else if (what == Hydro::MAT_DAMP_LIN)
+							sdata = Hydro::B_units(Ndim, r, c);
+					} else {
+						double val = data[i](r, c);
+						if (IsNull(val)) 
 							sdata = "";
-						else if (bool(~opDigits) == 0)
-							sdata = FDS(val, numDigits);
-						else
-							sdata = FormatF(val, numDecimals);
+						else {
+							double rat = mx == 0 ? 0 : abs(val/mx);
+							if (~opEmptyZero && rat < ratio)
+								sdata = "";
+							else if (bool(~opDigits) == 0)
+								sdata = FDS(val, numDigits);
+							else
+								sdata = FormatF(val, numDecimals);
+						}
 					}
 					array.Set(row0 + r + 2, col0 + c + 1, AttrText(sdata).Align(ALIGN_RIGHT));
 				}
@@ -192,14 +203,14 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 	if (what == Hydro::MAT_K) {
 		data << hydro.C_(ndim, ibody);
 		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
-						ndim ? t_("nondimensional") : t_("dimensional")));
+						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
 		data << hydro.Ainf_(ndim, ibody);
 		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
-						ndim ? t_("nondimensional") : t_("kg")));
+						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_DAMP_LIN) {
 		data << hydro.Dlin_dim(ibody);
-		label.SetText(t_("Additional linear damping (N/(m/s), N/(rad/s), N-m/(m/s), N-m/(rad/s))"));
+		label.SetText(t_("Additional linear damping (dimensional)"));
 	} else
 		NEVER();
 
@@ -212,6 +223,7 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 
 bool MainMatrixKA::Load(UArray<HydroClass> &hydros, const UVector<int> &ids, bool ndim) {
 	Clear();
+	Ndim = ndim;
 	
 	bool loaded = false;
 	for (int i = 0; i < ids.size(); ++i) {
@@ -231,7 +243,8 @@ bool MainMatrixKA::Load(UArray<HydroClass> &hydros, const UVector<int> &ids, boo
 
 void MainMatrixKA::Load(UArray<Mesh> &surfs, const UVector<int> &ids) {
 	Clear();
-
+	Ndim = false;
+	
 	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];
 		if (isurf >= 0)	

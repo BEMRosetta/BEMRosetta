@@ -376,6 +376,7 @@ void MenuOptions::Load() {
 	hamsMeshPath <<= bem->hamsMeshPath;
 	volWarning <<= bem->volWarning;
 	volError <<= bem->volError;
+	csvSeparator <<= bem->csvSeparator;
 	
 	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
 	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
@@ -410,6 +411,8 @@ void MenuOptions::OnSave() {
 	bem->hamsMeshPath = ~hamsMeshPath;
 	bem->volWarning = ~volWarning;
 	bem->volError = ~volError;
+	bem->csvSeparator = ~csvSeparator;
+	ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
 	
 	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
 	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
@@ -473,7 +476,9 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->headingType != headingType.GetIndex())
 		return true;
-	
+	if (bem->csvSeparator != ~csvSeparator)
+		return true;
+			
 	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())
 		return true;
 	if (showTabNemoh != arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData())

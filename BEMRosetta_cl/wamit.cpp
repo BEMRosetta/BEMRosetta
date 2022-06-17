@@ -1436,7 +1436,7 @@ void Wamit::Save_3(String fileName, bool force_T) {
 		for (int ih = 0; ih < hd().Nh; ++ih)
 			for (int i = 0; i < hd().Nb*6; ++i)
 				out << Format(" %s %s %5d %s %s %s %s\n", 
-						FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+			FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 			FormatWam(Nvl2(hd().ex.ma[ih](ifr, i), hd().F_ma_ndim(hd().ex, ih, ifr, i), 0.)), 
 			FormatWam(Nvl2(hd().ex.ph[ih](ifr, i), hd().ex.ph[ih](ifr, i)*180/M_PI, 0.)),
 			FormatWam(Nvl2(hd().ex.re[ih](ifr, i), hd().F_re_ndim(hd().ex, ih, ifr, i), 0.)), 

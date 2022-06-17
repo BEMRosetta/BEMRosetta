@@ -293,7 +293,7 @@ void Hydro::Copy(const Hydro &hyd) {
     Ainf = clone(hyd.Ainf);
     A0 = clone(hyd.A0);
 	
-	Dlin = clone(Dlin);
+	linearDamping = clone(linearDamping);
 	
     B = clone(hyd.B);
     
@@ -1194,12 +1194,12 @@ MatrixXd Hydro::C_(bool ndim, int ib) const {
 
 MatrixXd Hydro::Dlin_dim(int ib) const {
 	MatrixXd ret;
-	if (!IsLoadedDlin())
+	if (!IsLoadedLinearDamping())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = Dlin(ib*6 + idf, ib*6 + jdf);
+			ret(idf, jdf) = linearDamping(ib*6 + idf, ib*6 + jdf);
 	return ret;
 }
 
@@ -1349,7 +1349,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("description", description)
 		("qtfsum", qtfsum)
 		("qtfdif", qtfdif)
-		("Dlin", Dlin)
+		("Dlin", linearDamping)
 	;
 	if(json.IsLoading()) {
 		code = static_cast<Hydro::BEM_SOFT>(icode);
