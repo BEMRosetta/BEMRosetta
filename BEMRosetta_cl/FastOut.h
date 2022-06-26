@@ -14,9 +14,10 @@ public:
 	static String GetFileToLoad(String fileName);
 	
 	bool Load(String fileName);
-	bool Save(String fileName, String type, String sep = Null);
+	bool Save(String fileName, String type = "", String sep = "");
 	
 	void Clear();
+	bool IsEmpty();
 	int GetCol(String param) const;
 	int FindCol(String param) const;
 	UVector<int> FindParameterMatch(String param) const;

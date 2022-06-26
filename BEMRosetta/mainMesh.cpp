@@ -27,7 +27,7 @@ void MainMesh::Init() {
 
 	ArrayModel_Init(listLoaded, true).MultiSelect();
 	listLoaded.WhenSel = [&] {
-		OnMenuConvertArraySel();
+		OnMenuOpenArraySel();
 		OnMenuProcessArraySel();
 		OnMenuAdvancedArraySel();
 		LoadSelTab(Bem());
@@ -51,15 +51,14 @@ void MainMesh::Init() {
 	menuOpen.butSplit.Tip(t_("Splits mesh in parts (if parts are not joined together)")).Disable();	
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
 	menuOpen.opClean.Tip(t_("Cleans duplicated panels when loading (it may be slow!)"));
+	menuOpen.butExport <<= THISBACK(OnConvertMesh);
+	menuOpen.butExport.Tip(t_("Exports data file"));
+	for (int i = 0; i < Mesh::GetMeshStrCount(); ++i)
+		if (Mesh::meshCanSave[i])
+			menuOpen.dropExport.Add(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)));
+	menuOpen.dropExport.SetIndex(dropExportId);
+	menuOpen.dropExport <<= THISBACK(OnOpt);
 	
-	CtrlLayout(menuConvert);
-	menuConvert.file.WhenChange = THISBACK(OnConvertMesh);
-	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuConvert.file.SelLoad(false);
-	menuConvert.butConvert.Tip(t_("Saves mesh file")).WhenAction = [&] {menuConvert.file.DoGo();};
-
-	menuConvert.opt.WhenAction = [&] {OnOpt();};
-
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
@@ -226,7 +225,6 @@ void MainMesh::Init() {
 	menuTab.Add(menuMove.SizePos(), 	t_("Move")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();	
 	menuTab.Add(menuEdit.SizePos(), 	t_("Edit"));
-	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 		
 	mainViewData.Init();
 	splitterVideo.Vert(mainView.SizePos(), videoCtrl.SizePos());
@@ -313,8 +311,6 @@ void MainMesh::Init() {
 		
 		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
 		tabMenuPlot.Enable(plot);
-		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
-		tabMenuConvert.Enable(convertProcess);
 		TabCtrl::Item& tabMenuMove = menuTab.GetItem(menuTab.Find(menuMove));
 		tabMenuMove.Enable(convertProcess);
 		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
@@ -330,11 +326,9 @@ void MainMesh::Init() {
 				menuTab.Set(menuOpen);
 		}
 		if (convertProcess) {
-			tabMenuConvert.Text(t_("Save as"));
 			tabMenuProcess.Text(t_("Process"));
 			tabMenuMove.Text(t_("Move"));
 		} else {
-			tabMenuConvert.Text("");
 			tabMenuProcess.Text("");
 			tabMenuMove.Text("");
 		}
@@ -343,10 +337,23 @@ void MainMesh::Init() {
 	
 	menuTab.WhenSet = [&] {
 	LOGTAB(menuTab);
-		if (menuTab.IsAt(menuConvert)) 
-			listLoaded.WhenSel();
+	
 	};
 	menuTab.WhenSet();
+	
+	UpdateButtons();
+	saveFolder = GetDesktopFolder();
+}
+
+void MainMesh::OnMenuOpenArraySel() {
+	int id = ArrayModel_IdMesh(listLoaded);
+	if (id < 0)
+		return;
+	
+	Mesh &data = Bem().surfs[id];
+	Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(~menuOpen.dropExport);
+	menuOpen.symX <<= (type == Mesh::WAMIT_GDF && Bem().surfs[id].IsSymmetricX());
+	menuOpen.symY <<= Bem().surfs[id].IsSymmetricY();
 }
 
 void MainMesh::OnMenuProcessArraySel() {
@@ -385,30 +392,10 @@ void MainMesh::OnMenuAdvancedArraySel() {
 }
 
 void MainMesh::OnArraySel() {
-	OnMenuConvertArraySel();
+	OnMenuOpenArraySel();
 	OnMenuProcessArraySel();
 	OnMenuMoveArraySel();
 	OnMenuAdvancedArraySel();
-}
-	
-void MainMesh::OnMenuConvertArraySel() {
-	int id = ArrayModel_IdMesh(listLoaded);
-	if (id < 0)
-		return;
-	
-	String file = ~menuConvert.file;
-	String folder = GetFileFolder(file);
-	String ext = ToLower(GetFileExt(file));
-	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
-	if (fileName.IsEmpty())
-		fileName = ArrayModel_GetTitle(listLoaded);
-	file = AppendFileNameX(folder, fileName + ext);
-	menuConvert.file <<= file;
-
-	menuConvert.symX <<= (ext == ".gdf" && Bem().surfs[id].IsSymmetricX());
-	menuConvert.symY <<= Bem().surfs[id].IsSymmetricY();
-	
-	UpdateButtons();
 }
 	
 void MainMesh::InitSerialize(bool ret) {
@@ -441,10 +428,8 @@ void MainMesh::InitSerialize(bool ret) {
 	if (!ret || IsNull(menuPlot.backColor)) 
 		menuPlot.backColor <<= White();
 				
-	if (!ret || IsNull(menuConvert.opt)) 
-		menuConvert.opt = 0;
-	if (!ret || IsNull(menuConvert.optMeshType)) 
-		menuConvert.optMeshType = 0;
+	if (!ret || IsNull(menuOpen.optMeshType)) 
+		menuOpen.optMeshType = 0;
 }
 
 void MainMesh::LoadSelTab(BEM &bem) {
@@ -471,48 +456,20 @@ void MainMesh::OnOpt() {
 	else
 		menuOpen.file.ActiveType(1);
 	
-	menuConvert.file.ClearTypes();
-	menuConvert.symX.Disable();
-	switch (menuConvert.opt) {
-	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".gdf"); 	
-			menuConvert.file.Type("Wamit .gdf file", "*.gdf");
-			menuConvert.symX.Enable();
-			break;
-	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 	
-			menuConvert.file.Type("Nemoh .dat file", "*.dat");
-			break;
-	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, "."); 	
-			menuConvert.file.Type("Nemoh pre mesh file", "*.");
-			break;
-	case 3:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".pnl"); 	
-			menuConvert.file.Type("HAMS .pnl file", "*.pnl");
-			menuConvert.symX.Enable();
-			break;
-	case 4:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 	
-			menuConvert.file.Type("Diodore .dat file", "*.dat");
-			menuConvert.symX.Enable();
-			break;			
-	case 5:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
-			menuConvert.file.Type("STL binary .stl file", "*.stl");
-			break;
-	case 6:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".stl"); 	
-			menuConvert.file.Type("STL text .stl file", "*.stl");
-			break;
-	default:menuConvert.file.Type("All converted files", "*.gdf *.dat *.pnl *.stl");
-			menuConvert.symX.Enable();
-			break;
+	menuOpen.symX.Disable();
+	menuOpen.symY.Disable();
+	Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(~menuOpen.dropExport);
+		
+	switch (type) {
+	case Mesh::WAMIT_GDF:	menuOpen.symX.Enable();
+							menuOpen.symY.Enable();
+							break;
+	case Mesh::HAMS_PNL:	menuOpen.symX.Enable();
+							menuOpen.symY.Enable();
+							break;
+	case Mesh::NEMOH_DAT:	menuOpen.symY.Enable();
+							break;			
 	}
-	String extConvmesh = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
-	if (extConvmesh.IsEmpty())
-		menuConvert.file.ActiveType(0);
-	else if (String(".gdf").Find(extConvmesh) >= 0)
-		menuConvert.file.ActiveType(0);
-	else if (String(".dat").Find(extConvmesh) >= 0)
-		menuConvert.file.ActiveType(1);
-	else if (String(".pnl").Find(extConvmesh) >= 0)
-		menuConvert.file.ActiveType(2);
-	else if (String(".stl").Find(extConvmesh) >= 0)
-		menuConvert.file.ActiveType(3);
 }
 
 void MainMesh::AfterAdd(String file) {
@@ -585,14 +542,14 @@ bool MainMesh::OnLoad() {
 	return true;
 }
 
-bool MainMesh::OnConvertMesh() {
+void MainMesh::OnConvertMesh() {
 	GuiLock __;
 	
 	try {
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			Exclamation(t_("Please select just one model"));
-			return false;
+			return;
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
@@ -601,34 +558,41 @@ bool MainMesh::OnConvertMesh() {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
 				Exclamation(t_("Please select a model to process"));
-				return false;
+				return;
 			}
 		}
 		
-		Mesh::MESH_FMT type;	
-		switch (menuConvert.opt) {
-		case 0:	type = Mesh::WAMIT_GDF;	break;
-		case 1:	type = Mesh::NEMOH_DAT;	break;
-		case 2:	type = Mesh::NEMOH_PRE;	break;
-		case 3:	type = Mesh::HAMS_PNL;	break;
-		case 4:	type = Mesh::DIODORE_DAT;break;
-		case 5:	type = Mesh::STL_BIN;	break;
-		case 6:	type = Mesh::STL_TXT;	break;
-		case 7:	type = Mesh::UNKNOWN;	break;
-		default: throw Exc(t_("Unknown type in OnConvert()"));
-		}
+		Status(t_("Saving mesh data"));
+		String fileType = ~menuOpen.dropExport;
+		Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(fileType);
+		String ext = Mesh::meshExt[type];
 		
-		WaitCursor waitcursor;
+		FileSel fs;
+		
+		for (int i = 0; i < Mesh::GetMeshStrCount(); ++i)
+			if (Mesh::meshCanSave[i] && (i == type || i == Mesh::UNKNOWN)) 
+				fs.Type(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)), Mesh::meshExt[i]);
+		
+		fs.ActiveType(0);
+		fs.Set(ForceExt(~menuOpen.file, ext));
+		fs.ActiveDir(saveFolder);
+		
+		if (!fs.ExecuteSaveAs(Format(t_("Save mesh file as %s"), fileType)))
+			return;
+		
+		String fileName = ~fs;
+		
 		Progress progress(t_("Saving mesh file..."), 100); 
+		progress.Granularity(1000);
 		
-		Bem().surfs[id].SaveAs(~menuConvert.file, type, Bem().g, 
-							   static_cast<Mesh::MESH_TYPE>(int(~menuConvert.optMeshType)),
-							   ~menuConvert.symX, ~menuConvert.symY);	
+		Bem().surfs[id].SaveAs(fileName, type, Bem().g, 
+							   static_cast<Mesh::MESH_TYPE>(int(~menuOpen.optMeshType)),
+							   ~menuOpen.symX, ~menuOpen.symY);	
+							   
+		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
-		return false;
 	}
-	return true;
 }
 
 void MainMesh::OnReset() {
@@ -1254,7 +1218,7 @@ void MainMesh::OnJoin() {
 }
 
 void MainMesh::AddRow(const Mesh &surf) {
-	ArrayModel_Add(listLoaded, surf.GetCodeMeshStr(), surf.name, surf.fileName, surf.GetId(),
+	ArrayModel_Add(listLoaded, surf.GetMeshStr(), surf.name, surf.fileName, surf.GetId(),
 					optionsPlot, [&] {mainView.gl.Refresh();});
 }
 		
@@ -1335,8 +1299,8 @@ void MainMesh::UpdateButtons() {
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butSplit.Enable(numsel == 1 || numrow == 1);
-	menuConvert.butConvert.Enable(numsel == 1 || numrow == 1);
-	
+	menuOpen.dropExport.Enable(numsel == 1);
+	menuOpen.butExport.Enable(numsel == 1);
 	menuProcess.butUpdateCg.Enable(numsel == 1 || numrow == 1);
 	menuMove.butUpdatePos.Enable(numsel == 1 || numrow == 1);
 	menuMove.butUpdateAng.Enable(numsel == 1 || numrow == 1);
@@ -1383,15 +1347,15 @@ void MainMesh::Jsonize(JsonIO &json) {
 		menuPlot.showCb = Null;
 		menuPlot.showCr = Null;
 		menuPlot.showSel = Null;
-		menuConvert.opt = Null;
-		menuConvert.optMeshType = Null;
+		menuOpen.optMeshType = Null;
 		menuMove.opZArchimede = Null;
-	}
+		dropExportId = 2;
+	} else
+		dropExportId = menuOpen.dropExport.GetIndex();
 	json
 		("menuOpen_file", menuOpen.file)
-		("menuConvert_file", menuConvert.file)	
-		("menuConvert_opt", menuConvert.opt)
-		("menuConvert_optMesh", menuConvert.optMeshType)
+		("menuOpen_saveFolder", saveFolder)
+		("menuOpen_dropExport", dropExportId)
 		("menuPlot_showMesh", menuPlot.showMesh)		
 		("menuPlot_showNormals", menuPlot.showNormals)	
 		("menuPlot_showSkewed", menuPlot.showSkewed)	
@@ -1444,7 +1408,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.fileName);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
-	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetCodeMeshStr());	
+	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetMeshStr());	
 	
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());

@@ -137,7 +137,7 @@ bool FastOut::Load(String fileName) {
 		AfterLoad();
 	return ret;
 }
-	
+
 bool FastOut::LoadOut(String fileName) {
 	String raw = LoadFileBOM(fileName);
 	if (raw.IsEmpty()) 
@@ -238,6 +238,8 @@ bool FastOut::SaveOut(String fileName) {
 bool FastOut::SaveCsv(String fileName, String sep) {
 	String data;
 	
+	if (sep.IsEmpty())
+		sep = ";";
 	for (int i = 0; i < parameters.size(); ++i) {
 		if (i > 0)
 			data << sep;
@@ -389,6 +391,10 @@ void FastOut::Clear() {
 	parameters.Clear();	
 	units.Clear();		
 	dataOut.Clear();
+}
+
+bool FastOut::IsEmpty() {
+	return dataOut.IsEmpty();
 }
 
 int FastOut::FindCol(String param) const {
