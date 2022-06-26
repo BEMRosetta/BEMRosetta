@@ -25,7 +25,6 @@ void MainBEM::Init() {
 	
 	ArrayModel_Init(listLoaded).MultiSelect();
 	listLoaded.WhenSel = [&] {
-		OnMenuConvertArraySel();
 		OnMenuAdvancedArraySel();
 		menuFOAMM.OnCursor();
 		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
@@ -51,7 +50,13 @@ void MainBEM::Init() {
 	menuOpen.butDuplicate <<= THISBACK(OnDuplicate);
 	menuOpen.butDescription.Disable();
 	menuOpen.butDescription <<= THISBACK(OnDescription);
-	
+	menuOpen.butExport <<= THISBACK(OnConvert);
+	menuOpen.butExport.Tip(t_("Exports data file"));
+	for (int i = 0; i < Hydro::GetBemStrCount(); ++i)
+		if (Hydro::bemCanSave[i])
+			menuOpen.dropExport.Add(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)));
+	menuOpen.dropExport.SetIndex(dropExportId);
+
 	CtrlLayout(menuProcess);
 	menuProcess.butSymX.Disable();	
 	menuProcess.butSymX <<= THISBACK1(OnSymmetrize, true);
@@ -103,14 +108,7 @@ void MainBEM::Init() {
 	menuAdvanced.opZremoval.Disable();
 	menuAdvanced.opHaskind.Disable();
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
-	
-	CtrlLayout(menuConvert);
-	menuConvert.file.WhenChange = THISBACK(OnConvert);
-	menuConvert.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuConvert.file.SelLoad(false);
-	menuConvert.butConvert << [&] {menuConvert.file.DoGo();};
-	menuConvert.opt 	   << [&] {OnOpt();};
-	
+
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
@@ -134,7 +132,6 @@ void MainBEM::Init() {
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
 	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
-	menuTab.Add(menuConvert.SizePos(), 	t_("Save as")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
 	
 	menuTab.WhenSet = [&] {
@@ -153,8 +150,6 @@ void MainBEM::Init() {
 		
 		if (menuTab.IsAt(menuFOAMM)) 
 			mainTab.Set(mainSetupFOAMM);
-		else if (menuTab.IsAt(menuConvert)) 
-			listLoaded.WhenSel(); 
 		
 		ShowMenuPlotItems();
 	};
@@ -211,8 +206,7 @@ void MainBEM::Init() {
 		tabMenuProcess.Enable(convertProcess);
 		TabCtrl::Item& tabMenuAdvanced = menuTab.GetItem(menuTab.Find(menuAdvanced));
 		tabMenuAdvanced.Enable(convertProcess);
-		TabCtrl::Item& tabMenuConvert = menuTab.GetItem(menuTab.Find(menuConvert));
-		tabMenuConvert.Enable(convertProcess);
+
 		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
 			tabMenuProcess.Text(t_("Process"));
@@ -226,10 +220,8 @@ void MainBEM::Init() {
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));
 			tabMenuAdvanced.Text(t_("Advanced"));
-			tabMenuConvert.Text(t_("Save as"));
 		} else {
 			tabMenuProcess.Text("");
-			tabMenuConvert.Text("");
 			tabMenuAdvanced.Text("");
 		}
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
@@ -293,6 +285,9 @@ void MainBEM::Init() {
 
 	mainQTF.Init();
 	mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
+	
+	UpdateButtons();
+	saveFolder = GetDesktopFolder();
 }
 
 void MainBEM::ShowMenuPlotItems() {
@@ -311,21 +306,6 @@ void MainBEM::ShowMenuPlotItems() {
 	menuPlot.autoFit.Enable(show);
 	menuPlot.fromY0.Enable(show);
 	menuPlot.showPoints.Enable(show);
-}
-	
-void MainBEM::OnMenuConvertArraySel() {
-	int id = ArrayModel_IdHydro(listLoaded);
-	if (id < 0)
-		return;
-	
-	String file = ~menuConvert.file;
-	String folder = GetFileFolder(file);
-	String ext = ToLower(GetFileExt(file));
-	String fileName = GetFileTitle(ArrayModel_GetFileName(listLoaded));
-	if (fileName.IsEmpty())
-		fileName = ArrayModel_GetTitle(listLoaded);
-	file = AppendFileNameX(folder, fileName + ext);
-	menuConvert.file <<= file;
 }
 
 void MainBEM::OnMenuAdvancedArraySel() {
@@ -356,9 +336,6 @@ void MainBEM::InitSerialize(bool ret) {
 	
 	if (!ret || IsNull(menuPlot.showNdim)) 
 		menuPlot.showNdim = false;
-
-	if (!ret || IsNull(menuConvert.opt)) 
-		menuConvert.opt = 0;
 }
 
 void MainBEM::LoadSelTab(BEM &bem) {
@@ -439,33 +416,6 @@ void MainBEM::OnOpt() {
 		menuOpen.file.ActiveType(0);
 	else
 		menuOpen.file.ActiveType(1);
-	
-	menuConvert.file.ClearTypes();
-	switch (menuConvert.opt) {
-	case 0:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".out"); 	
-			menuConvert.file.Type(t_("Wamit .out file"), "*.out");
-			break;	
-	case 1:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".1"); 	
-			menuConvert.file.Type(t_("Wamit .1.2.3.4.hst.12s.12d file"), "*.1 *.3 *.hst *.4 *.12s *.12d");
-			break;
-	case 2:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".dat"); 
-			menuConvert.file.Type(t_("FAST HydroDyn file"), "*.dat");
-			break;
-	case 3:	menuConvert.file <<= ForceExtSafe(~menuConvert.file, ".bem"); 
-			menuConvert.file.Type(t_("BEMRosetta file"), "*.bem");
-			break;
-	default:menuConvert.file.Type(t_("All converted files"), "*.1 *.3 *.hst *.4 *.12s *.12d *.dat *.bem *.out");
-			break;
-	}
-	String extConv = ToLower(GetFileExt(menuConvert.file.GetData().ToString()));
-	if (extConv.IsEmpty())
-		extConv = "-";
-	if (String(".1 .2 .3 .hst .4 .12s .12d").Find(extConv) >= 0)
-		menuConvert.file.ActiveType(0);
-	else if (String(".dat").Find(extConv) >= 0)
-		menuConvert.file.ActiveType(1);
-	else
-		menuConvert.file.ActiveType(2);
 }
 
 bool MainBEM::OnLoad() {
@@ -596,6 +546,8 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butDuplicate.Enable(numsel == 1);
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
+	menuOpen.dropExport.Enable(numsel == 1);
+	menuOpen.butExport.Enable(numsel == 1);
 	menuProcess.butSymX.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butSymY.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butKirf.		Enable(numsel == 1 || numrow == 1);
@@ -608,7 +560,7 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opHaskind.		Enable(numsel == 1 || numrow == 1);
-	menuConvert.butConvert.		Enable(numsel == 1 || numrow == 1);
+//	menuConvert.butConvert.		Enable(numsel == 1 || numrow == 1);
 	
 	bool show_w = menuPlot.opwT == 0;
 	menuProcess.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
@@ -1041,47 +993,53 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 		return dialog.dropHeadings.GetIndex();
 }
 
-bool MainBEM::OnConvert() {
-	String file = ~menuConvert.file;
+void MainBEM::OnConvert() {
+	GuiLock __;
 	
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
-			return false;
+			return;
+		
+		Status(t_("Saving BEM data"));
+		String fileType = ~menuOpen.dropExport;
+		Hydro::BEM_FMT type = Hydro::GetCodeBemStr(fileType);
+		String ext = Hydro::bemExt[type];
+		
+		FileSel fs;
+		
+		for (int i = 0; i < Hydro::GetBemStrCount(); ++i)
+			if (Hydro::bemCanSave[i] && (i == type || i == Hydro::UNKNOWN)) 
+				fs.Type(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)), Hydro::bemExt[i]);
+		
+		fs.ActiveType(0);
+		fs.Set(ForceExt(~menuOpen.file, ext));
+		fs.ActiveDir(saveFolder);
+		
+		if (!fs.ExecuteSaveAs(Format(t_("Save BEM data as %s"), fileType)))
+			return;
+		
+		String fileName = ~fs;
 		
 		int qtfHeading = Null;
 		
-		Hydro::BEM_SOFT type;	
-		switch (menuConvert.opt) {
-		case 0:	type = Hydro::WAMIT;	
-				break;
-		case 1:	type = Hydro::WAMIT_1_3;	
-				qtfHeading = AskQtfHeading(Bem().hydros[id].hd());
-				break;
-		case 2:	type = Hydro::FAST_WAMIT;	
-				qtfHeading = AskQtfHeading(Bem().hydros[id].hd());	
-				break;
-		case 3:	type = Hydro::BEMROSETTA;	
-				break;
-		case 4:	type = Hydro::UNKNOWN;		
-				break;
-		default:throw Exc(t_("Unknown type in OnConvert()"));
-		}
+		if (type == Hydro::WAMIT_1_3 || type == Hydro::FAST_WAMIT || (type == Hydro::UNKNOWN && GetFileExt(fileName) == ".1"))	
+			qtfHeading = AskQtfHeading(Bem().hydros[id].hd());	
 		
 		Progress progress(t_("Saving BEM files..."), 100); 
 		progress.Granularity(1000);
 		
-		Bem().hydros[id].hd().SaveAs(file, [&](String str, int _pos) {
+		Bem().hydros[id].hd().SaveAs(fileName, [&](String str, int _pos) {
 			if (!IsEmpty(str))
 				progress.SetText(str); 
 			if (_pos >= 0)
 				progress.SetPos(_pos); 
 			return !progress.Canceled();}, type, qtfHeading);
+			
+		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
-		return false;
 	}
-	return true;
 }
 
 int MainBEM::GetIdOneSelected(bool complain) {
@@ -1114,12 +1072,13 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.opwT = Null;
 		menuPlot.showPoints = Null;
 		menuPlot.showNdim = Null;
-		menuConvert.opt = Null;
-	}
+		dropExportId = 2;
+	} else
+		dropExportId = menuOpen.dropExport.GetIndex();
 	json
 		("menuOpen_file", menuOpen.file)
-		("menuConvert_file", menuConvert.file)
-		("menuConvert_opt", menuConvert.opt)
+		("menuOpen_saveFolder", saveFolder)
+		("menuOpen_dropExport", dropExportId)
 		("menuPlot_autoFit", menuPlot.autoFit)
 		("menuPlot_fromY0", menuPlot.fromY0)
 		("menuPlot_opwT", menuPlot.opwT)

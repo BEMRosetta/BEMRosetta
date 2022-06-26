@@ -27,6 +27,8 @@ LAYOUT(MenuOpen, 648, 56)
 	ITEM(Upp::Button, butJoin, SetLabel(t_("Join")).Tip(t_("Joins selected files, mixing available values for A, B, forces, and hydrodynamic stiffness matrix")).LeftPosZ(144, 32).TopPosZ(28, 20))
 	ITEM(Upp::Button, butRemove, SetLabel(t_("Remove All")).Tip(t_("Removes all loaded files")).LeftPosZ(4, 76).TopPosZ(28, 20))
 	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).Tip(t_("Loads BEM file")).RightPosZ(4, 56).TopPosZ(4, 20))
+	ITEM(Upp::Button, butExport, SetLabel(t_("Export")).Tip(t_("Loads BEM file")).RightPosZ(4, 56).TopPosZ(28, 20))
+	ITEM(Upp::DropList, dropExport, RightPosZ(64, 144).TopPosZ(28, 20))
 END_LAYOUT
 
 LAYOUT(MenuProcess, 800, 56)
@@ -74,14 +76,6 @@ LAYOUT(MenuAdvanced, 648, 56)
 	ITEM(Upp::EditDouble, z_0, LeftPosZ(100, 40).TopPosZ(32, 19))
 END_LAYOUT
 
-LAYOUT(MenuConvert, 592, 56)
-	ITEM(Upp::Button, butConvert, SetLabel(t_("Convert")).RightPosZ(4, 56).TopPosZ(4, 20))
-	ITEM(Upp::Switch, opt, SetLabel(t_("Wamit .out\nWamit .1.2.3.hst.ss.12\nFAST .dat.1.2.3.hst.ss.12\nBEMRosetta .bem\nBy extension")).LeftPosZ(52, 524).TopPosZ(32, 16))
-	ITEM(Upp::Label, dv___2, SetLabel(t_("Format:")).LeftPosZ(8, 40).TopPosZ(32, 16))
-	ITEM(Upp::Label, dv___3, SetLabel(t_("File:")).LeftPosZ(8, 40).TopPosZ(4, 19))
-	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(48, 64).TopPosZ(4, 19))
-END_LAYOUT
-
 LAYOUT(MenuStateSpace, 672, 56)
 	ITEM(Upp::Button, butCancel, SetLabel(t_("Cancel")).RightPosZ(4, 56).TopPosZ(29, 19))
 	ITEM(Upp::Button, butLoad, SetLabel(t_("Identify")).RightPosZ(4, 56).TopPosZ(4, 20))
@@ -103,28 +97,22 @@ LAYOUT(MenuPlot, 372, 56)
 	ITEM(Upp::LabelBox, dv___8, SetLabel(t_("Show")).LeftPosZ(160, 100).TopPosZ(0, 48))
 END_LAYOUT
 
-LAYOUT(MenuMesh, 476, 56)
-	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(48, 64).TopPosZ(4, 19))
+LAYOUT(MenuMesh, 772, 56)
+	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(48, 180).TopPosZ(4, 19))
 	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).RightPosZ(4, 56).TopPosZ(4, 20))
 	ITEM(Upp::Button, butRemove, SetLabel(t_("Remove All")).LeftPosZ(4, 76).TopPosZ(28, 20))
 	ITEM(Upp::Label, dv___3, SetLabel(t_("File:")).LeftPosZ(8, 40).TopPosZ(4, 19))
 	ITEM(Upp::Button, butSplit, SetLabel(t_("Split")).LeftPosZ(188, 40).TopPosZ(28, 20))
 	ITEM(Upp::Button, butRemoveSelected, SetLabel(t_("Remove")).LeftPosZ(84, 56).TopPosZ(28, 20))
 	ITEM(Upp::Button, butJoin, SetLabel(t_("Join")).LeftPosZ(144, 40).TopPosZ(28, 20))
-	ITEM(Upp::Option, opClean, SetLabel(t_("Clean dup. panels")).RightPosZ(-4, 116).TopPosZ(32, 16))
-END_LAYOUT
-
-LAYOUT(MenuMeshConvert, 896, 56)
-	ITEM(Upp::Button, butConvert, SetLabel(t_("Convert")).RightPosZ(4, 56).TopPosZ(4, 20))
-	ITEM(Upp::Label, dv___1, SetLabel(t_("File:")).LeftPosZ(8, 36).TopPosZ(4, 19))
-	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(48, 64).TopPosZ(4, 19))
-	ITEM(Upp::Switch, opt, SetLabel(t_("Wamit .gdf\nNemoh .dat\nNemoh premesh\nHAMS pnl\nDiodore.dat\nSTL binary\nSTL text\nBy extension")).LeftPosZ(52, 572).TopPosZ(32, 16))
-	ITEM(Upp::Switch, optMeshType, SetLabel(t_("All\nUnderwater")).RightPosZ(128, 124).TopPosZ(32, 16))
-	ITEM(Upp::Label, dv___5, SetLabel(t_("Format:")).LeftPosZ(8, 40).TopPosZ(32, 16))
-	ITEM(Upp::Label, dv___6, SetLabel(t_("Symmetry:")).RightPosZ(56, 60).TopPosZ(32, 16))
-	ITEM(Upp::Label, dv___7, SetLabel(t_("Mesh:")).RightPosZ(256, 40).TopPosZ(32, 16))
-	ITEM(Upp::Option, symY, SetLabel(t_("xz")).RightPosZ(0, 28).TopPosZ(32, 16))
-	ITEM(Upp::Option, symX, SetLabel(t_("yz")).RightPosZ(32, 28).TopPosZ(32, 16))
+	ITEM(Upp::Option, opClean, SetLabel(t_("Clean dup. panels")).RightPosZ(60, 116).TopPosZ(4, 16))
+	ITEM(Upp::Button, butExport, SetLabel(t_("Export")).Tip(t_("Loads BEM file")).RightPosZ(4, 56).TopPosZ(28, 20))
+	ITEM(Upp::DropList, dropExport, RightPosZ(64, 88).TopPosZ(28, 20))
+	ITEM(Upp::Switch, optMeshType, SetLabel(t_("All\nUnderwater")).RightPosZ(284, 124).TopPosZ(32, 16))
+	ITEM(Upp::Label, dv___11, SetLabel(t_("Symmetry:")).RightPosZ(220, 60).TopPosZ(32, 16))
+	ITEM(Upp::Label, dv___12, SetLabel(t_("Mesh:")).RightPosZ(412, 40).TopPosZ(32, 16))
+	ITEM(Upp::Option, symY, SetLabel(t_("xz")).RightPosZ(164, 28).TopPosZ(32, 16))
+	ITEM(Upp::Option, symX, SetLabel(t_("yz")).RightPosZ(196, 28).TopPosZ(32, 16))
 END_LAYOUT
 
 LAYOUT(MenuMeshPlot, 736, 56)
