@@ -1,13 +1,13 @@
-LAYOUT(FastScatter, 648, 256)
-	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(40, 352).TopPosZ(4, 19))
+LAYOUT(FastScatter, 736, 256)
+	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).HSizePosZ(40, 372).TopPosZ(4, 19))
 	ITEM(Upp::Label, dv___1, SetLabel(t_("Update interval [s]:")).RightPosZ(68, 96).TopPosZ(4, 19))
 	ITEM(Upp::Label, dv___2, SetLabel(t_("File:")).LeftPosZ(8, 32).TopPosZ(4, 19))
 	ITEM(Splitter, splitter, HSizePosZ(4, 4).VSizePosZ(28, 4))
 	ITEM(WithClick<RasterPlayer>, player, RightPosZ(4, 20).TopPosZ(4, 20))
 	ITEM(Upp::EditString, updateTime, RightPosZ(28, 36).TopPosZ(4, 19))
-	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).RightPosZ(308, 40).TopPosZ(4, 20))
-	ITEM(Upp::Button, butSaveAs, SetLabel(t_("SaveAs")).RightPosZ(256, 48).TopPosZ(4, 20))
-	ITEM(Upp::DropList, dropFormat, RightPosZ(188, 64).TopPosZ(4, 20))
+	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).RightPosZ(324, 40).TopPosZ(4, 20))
+	ITEM(Upp::Button, butSaveAs, SetLabel(t_("SaveAs")).RightPosZ(272, 48).TopPosZ(4, 20))
+	ITEM(Upp::DropList, dropFormat, RightPosZ(184, 84).TopPosZ(4, 20))
 END_LAYOUT
 
 LAYOUT(FastScatterLeft, 400, 200)

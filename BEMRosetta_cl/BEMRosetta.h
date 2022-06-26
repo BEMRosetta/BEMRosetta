@@ -23,11 +23,30 @@ bool PrintStatus(String s, int d);
 class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	enum BEM_SOFT {WAMIT, FAST_WAMIT, WAMIT_1_3, HAMS_WAMIT, WADAM_WAMIT, NEMOH, SEAFEM_NEMOH, AQWA, FOAMM, BEMROSETTA, UNKNOWN};
 	
+	enum BEM_FMT 							   {WAMIT, 		  FAST_WAMIT, 				   WAMIT_1_3, 				 HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   FOAMM,   BEMROSETTA, 	   UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "FAST .dat.1.2.3.hst.ss.12", "Wamit .1.2.3.hst.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA", "FOAMM", "BEMRosetta .bem", "By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     				   true,		 			 false,		   false,		  false,   false, 		   false,  false,    true,			   true};       
+	static constexpr const char *bemExt[]	 = {".out", 	  ".1",	     				   ".1",		 			 "",		   "",		      "",      "", 		   	   "",     "",    	 ".bem",		   "*.*"};       
+	
+	static const char *GetBemStr(BEM_FMT c) {
+		if (c < 0 || c > UNKNOWN)
+			return "Unknown";
+		return bemStr[c];
+	}
+	static int GetBemStrCount() {return sizeof(bemStr)/sizeof(char *);}
+	
+	static BEM_FMT GetCodeBemStr(String fmt) {
+		fmt = ToLower(Trim(fmt));
+		for (int i = 0; i < GetBemStrCount(); ++i)
+			if (fmt == ToLower(bemStr[i]))
+				return static_cast<BEM_FMT>(i);
+		return UNKNOWN;
+	}
+		
 	void Copy(const Hydro &hyd);
 	Hydro(const Hydro &hyd, int) {Copy(hyd);}
-	bool SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_SOFT type = UNKNOWN, int qtfHeading = Null);
+	bool SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null);
 	void Report() const;
 	Hydro(BEM &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
@@ -111,7 +130,7 @@ public:
     MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     MatrixXd c0;          			// (3,Nb)     		Centre of motion
-    BEM_SOFT code;        			// BEM_SOFT			BEM code 
+    BEM_FMT code;        			// BEM_FMT			BEM code 
     UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
     UVector<int> dofOrder;			// [6*Nb]			DOF order
     
@@ -672,9 +691,10 @@ class Mesh {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT, 	UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", 	"Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	true,			false};       
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
+	static constexpr const char *meshExt[]	  = {".gdf", 	 ".dat",	 ".dat",	 "",		     ".dat",	".pnl",    ".stl", 		".stl",    "",    ".msh",	  ".bemr",  ".dat", 	   "*.*"};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -686,26 +706,24 @@ public:
 	}
 	bool IsEmpty() {return mesh.IsEmpty();}
 		
-	const char *GetCodeMeshStr() const {
+	const char *GetMeshStr() const {
 		return meshStr[code];
 	}
-	static const char *GetCodeMeshStr(MESH_FMT c) {
-		if (c < 0 || c >= UNKNOWN)
+	static const char *GetMeshStr(MESH_FMT c) {
+		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
 		return meshStr[c];
 	}
+	static int GetMeshStrCount() {return sizeof(meshStr)/sizeof(char *);}
+	
 	static MESH_FMT GetCodeMeshStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
-		for (int i = 0; i < sizeof(meshStr)/sizeof(char *); ++i)
+		for (int i = 0; i < GetMeshStrCount(); ++i)
 			if (fmt == ToLower(meshStr[i]))
 				return static_cast<MESH_FMT>(i);
 		return UNKNOWN;
 	}
-	static bool MeshCanSave(MESH_FMT c) {
-		if (c < 0 || c >= UNKNOWN)
-			return false;
-		return meshCanSave[c];
-	}
+	
 	void SetCode(MESH_FMT _code){code = _code;}
 	MESH_FMT GetCode()			{return code;}
 	int GetId()	const			{return id;}

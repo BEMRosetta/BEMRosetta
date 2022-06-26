@@ -1336,11 +1336,11 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		double fre = qtf.fma[idof]*cos(qtf.fph[idof]);
 		double fim = qtf.fma[idof]*sin(qtf.fph[idof]);
 		
-		if (abs(fre - qtf.fre[idof]) > 0.1)  
-			throw Exc(in.Str() + "\n"  + Format(t_("Real force %f does not match with magnitude %f and phase %f (%f)"), 
+		if (!EqualRatio(fre, qtf.fre[idof], 0.01, 10.))
+			throw Exc(in.Str() + "\n"  + Format(t_("Real force does not match with magnitude and phase calculation %f <> %f·cos(%f) = %f"), 
 										qtf.fre[idof], qtf.fma[idof], ph, fre));
-		if (abs(fim - qtf.fim[idof]) > 0.1)  
-			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force %f does not match with magnitude %f and phase %f (%f)"), 
+		if (!EqualRatio(fim, qtf.fim[idof], 0.01, 10.))
+			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force does not match with magnitude and phase calculation %f <> %f·sin(%f) = %f"), 
 										qtf.fim[idof], qtf.fma[idof], ph, fim));
 		if (Status && !(it%500) && !Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
 			throw Exc(t_("Stop by user"));

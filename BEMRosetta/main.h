@@ -715,7 +715,7 @@ public:
 	void OnRemoveSelected(bool all);
 	void OnJoin();
 	void OnSplit();
-	bool OnConvertMesh();
+	void OnConvertMesh();
 	void OnUpdate(Action action, bool fromMenuProcess);
 	void OnTranslateArchimede(bool fromMenuProcess);
 	void OnArchimede();
@@ -725,10 +725,10 @@ public:
 	void OnImage(int axis);
 	void OnOpt();
 	void OnArraySel();
+	void OnMenuOpenArraySel();
 	void OnMenuProcessArraySel();
 	void OnMenuAdvancedArraySel();
 	void OnMenuMoveArraySel();
-	void OnMenuConvertArraySel();
 	void OnAddPanel();
 	void OnAddRevolution();
 	void OnAddPolygonalPanel();
@@ -743,7 +743,6 @@ public:
 	void Jsonize(JsonIO &json);
 		
 	WithMenuMesh<StaticRect> menuOpen;
-	WithMenuMeshConvert<StaticRect> menuConvert;
 	WithMenuMeshPlot<StaticRect> menuPlot;
 	WithMenuMeshProcess<StaticRect> menuProcess;
 	WithMenuMeshMove<StaticRect> menuMove;
@@ -771,6 +770,9 @@ private:
 	
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
+	
+	String saveFolder;
+	int dropExportId;
 };
 
 class MainMeshW : public TopWindow {
@@ -1085,7 +1087,7 @@ public:
 
 	bool OnLoad();
 	bool OnLoadFile(String file);
-	bool OnConvert();
+	void OnConvert();
 	void OnOpt();
 	void OnRemove();
 	void OnRemoveSelected(bool all);
@@ -1099,7 +1101,6 @@ public:
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces(Hydro::FORCE force);
 	void OnDescription();
-	void OnMenuConvertArraySel();
 	void OnMenuAdvancedArraySel();
 	void OnSelListLoaded();
 	void UpdateButtons();
@@ -1110,7 +1111,6 @@ public:
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuProcess<StaticRect> menuProcess;
 	WithMenuAdvanced<StaticRect> menuAdvanced;
-	WithMenuConvert<StaticRect> menuConvert;
 	WithMenuPlot<StaticRect> menuPlot;
 	MenuFOAMM menuFOAMM;
 	
@@ -1144,6 +1144,9 @@ private:
 	
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
+	
+	String saveFolder;
+	int dropExportId;
 };
 
 class MainBEMW : public TopWindow {

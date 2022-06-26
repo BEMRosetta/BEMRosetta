@@ -28,6 +28,8 @@ public:
 	
 	Mesh mesh;
 	
+	double rho, g;
+	
 private:	
 	VectorXd forceb;
 	
@@ -74,8 +76,6 @@ private:
 	};
 	
 	UArray<ForceInterpolate> coupledForces, fixedForces;
-	
-	double rho, g;
 	
 	FastOut out;
 	struct Outputs {

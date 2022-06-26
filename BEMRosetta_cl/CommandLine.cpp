@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
+#include "FastOut.h"
+#include <ScatterDraw/ScatterDraw.h>
 
 void SetBuildInfo(String &str) {
 	String name, mode;
@@ -72,7 +74,8 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("               g         	# gravity       [m/s2]  ") << md.g;
 	Cout() << "\n" << t_("               rho        # water density [kg/m3] ") << md.rho;
 	Cout() << "\n" << t_("-echo off/on          # Show text messages");
-	Cout() << "\n" << t_("-isEqual \"<value>\"  # Stops if last print is not equal to \"<value>\"");
+	Cout() << "\n" << t_("-csvseparator <sep>   # Sets the separator for .csv files");
+	Cout() << "\n" << t_("-isEqual \"<value>\"    # Stops if last print is not equal to \"<value>\"");
 	
 	Cout() << "\n";
 	Cout() << "\n" << t_("-bem                  # The next commands are for BEM data");
@@ -139,6 +142,10 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("              GM                # returns GMpitch GMroll [m]");
 
 	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
+	Cout() << "\n";
+	Cout() << "\n" << t_("-fast                 # The next commands are for OpenFAST data");
+	Cout() << "\n" << t_("-i  -input <file>     # Load file");
+	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
 	
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -155,13 +162,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	Cout() << "BEMRosetta";
 	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 	
-	String str = S(". ") + t_("Copyright (c) 2021. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
+	String str = S(". ") + t_("Copyright (c) 2022. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
 	SetBuildInfo(str);
 	Cout() << str;
 	
 	ChangeCurrentDirectory(GetExeFilePath());
 	
 	BEM bem;
+	FastOut fast;
 	
 	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime)
@@ -185,6 +193,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 					nextcommands = "bem";
 				else if (param == "-mesh") 
 					nextcommands = "mesh";
+				else if (param == "-fast") 
+					nextcommands = "fast";
 				else if (param == "-h" || param == "-help") {
 					ShowHelp(bem);
 					break;
@@ -248,6 +258,12 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								BEM::PrintWarning.Clear();
 							} else
 								throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
+						} else if (param == "-csvseparator") {
+							CheckIfAvailableArg(command, ++i, "-csvseparator");
+							
+							String sep = ToLower(command[i]);				
+							
+							ScatterDraw::SetDefaultCSVSeparator(sep);
 						} else
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 					} else if (nextcommands == "bem") {
@@ -441,7 +457,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									symX = symY = true;
 								else if (Mesh::GetCodeMeshStr(param) != Mesh::UNKNOWN) {
 									meshFmt = Mesh::GetCodeMeshStr(param);
-									if (!Mesh::MeshCanSave(meshFmt))
+									if (!Mesh::meshCanSave[meshFmt])
 										throw Exc(Format(t_("Saving format '%s' is not implemented"), param));									
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
@@ -631,6 +647,27 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
+					} else if (nextcommands == "fast") {
+						if (param == "-i" || param == "-input") {
+							CheckIfAvailableArg(command, ++i, "--input");
+
+							String file = command[i];
+							if (!FileExists(file)) 
+								throw Exc(Format(t_("File '%s' not found"), file)); 
+							
+							fast.Load(file);
+							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
+						} else if (param == "-c" || param == "-convert") {
+							if (fast.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
+							
+							CheckIfAvailableArg(command, ++i, "-convert");
+							
+							String file = command[i];
+							
+							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
+								BEM::Print("\n" + Format(t_("Model saved as '%s'"), file));
+						}
 					}
 				}
 			}

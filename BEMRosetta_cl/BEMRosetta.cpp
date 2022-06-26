@@ -551,7 +551,7 @@ void Hydro::Compare_cg(Hydro &a) {
 	}
 }
 
-bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_SOFT type, int qtfHeading) {
+bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading) {
 	int realNh = Nh;
 	int realNf = Nf;
 	
@@ -1352,7 +1352,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("Dlin", linearDamping)
 	;
 	if(json.IsLoading()) {
-		code = static_cast<Hydro::BEM_SOFT>(icode);
+		code = static_cast<Hydro::BEM_FMT>(icode);
 		GetOldAB(oldA, A);
 		GetOldAB(oldB, B);
 		GetOldAB(oldKirf, Kirf);
