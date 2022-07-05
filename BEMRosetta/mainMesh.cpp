@@ -468,7 +468,8 @@ void MainMesh::OnOpt() {
 							menuOpen.symY.Enable();
 							break;
 	case Mesh::NEMOH_DAT:	menuOpen.symY.Enable();
-							break;			
+							break;	
+	default:				break;		
 	}
 }
 

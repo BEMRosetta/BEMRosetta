@@ -144,27 +144,19 @@ public:
     struct Forces : public DeepCopyOption<Forces> {
         Forces() {}
         Forces(const Forces &f, int) {
-            ma = clone(f.ma);		ph = clone(f.ph);
-            re = clone(f.re);		im = clone(f.im);
+            force = clone(f.force);
         }
-    	UArray<MatrixXd> ma, ph;	// [Nh](Nf, 6*Nb) 	Magnitude and phase
-    	UArray<MatrixXd> re, im;	// [Nh](Nf, 6*Nb)	Real and imaginary components
+    	UArray<MatrixXcd> force;	// [Nh](Nf, 6*Nb) 	
     
     	void Jsonize(JsonIO &json) {
 			json
-				("ma", ma)
-				("ph", ph)
-				("re", re)
-				("im", im)
+				("force", force)
 			;
     	}
     	void Set(int ib, int ih, int ifr, int idof, const std::complex<double> &val) {
-    		re[ih](ifr, 6*ib + idof) = val.real();	
-    		im[ih](ifr, 6*ib + idof) = val.imag();
-    		ma[ih](ifr, 6*ib + idof) = std::abs(val);
-    		ph[ih](ifr, 6*ib + idof) = std::arg(val);
+    		force[ih](ifr, 6*ib + idof) = val;	
     	}
-    	void Clear() {ma.Clear(); ph.Clear(); re.Clear(); im.Clear();}
+    	void Clear() {force.Clear();}
     };
     
     Forces ex; 								// Excitation
@@ -333,7 +325,7 @@ public:
 	
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f, int _Nh = -1);
-	void GetMaPh(Forces &f);
+	//void GetMaPh(Forces &f);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
@@ -436,34 +428,38 @@ public:
 
 	MatrixXd Dlin_dim(int ib) const;
 	
-	double F_ma_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_re_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_im_dim(const Forces &f, int _h, int ifr, int idf)  	   const {return dimen ? f.im[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
+		return dimen ? f.force[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	void F_dim(Forces &f);
-	double F_ma_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.ma[_h](ifr, idf) : f.ma[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	double F_re_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.re[_h](ifr, idf) : f.re[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	double F_im_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.im[_h](ifr, idf) : f.im[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	double F_ma_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? F_ma_ndim(f, _h, ifr, idf) : F_ma_dim(f, _h, ifr, idf);}
-	double F_re_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? F_re_ndim(f, _h, ifr, idf) : F_re_dim(f, _h, ifr, idf);}
-	double F_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? F_im_ndim(f, _h, ifr, idf) : F_im_dim(f, _h, ifr, idf);}
+	std::complex<double> F_ndim(const Forces &f, int _h, int ifr, int idf) const {
+		if (!dimen) 
+			return f.force[_h](ifr, idf); 
+		else 
+			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));
+	}
+	std::complex<double> F_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
+		return ndim ? F_ndim(f, _h, ifr, idf) : F_dim(f, _h, ifr, idf);
+	}
+	std::complex<double> R_dim(const Forces &f,  int _h, int ifr, int idf) const {
+		return dimen ? f.force[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));
+	}
+	std::complex<double> R_ndim(const Forces &f, int _h, int ifr, int idf) const {
+		if (!dimen) 
+			return f.force[_h](ifr, idf); 
+		else 
+			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));
+	}
+	std::complex<double> R_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
+		return ndim ? R_ndim(f, _h, ifr, idf) : R_dim(f, _h, ifr, idf);
+	}
 	
-	double R_ma_dim(const Forces &f,  int _h, int ifr, int idf)  	   const {return dimen ? f.ma[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.ma[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
-	double R_re_dim(const Forces &f,  int _h, int ifr, int idf)  	   const {return dimen ? f.re[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.re[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
-	double R_im_dim(const Forces &f,  int _h, int ifr, int idf)  	   const {return dimen ? f.im[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.im[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));}
-	double R_ma_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.ma[_h](ifr, idf) : f.ma[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));}
-	double R_re_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.re[_h](ifr, idf) : f.re[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));}
-	double R_im_ndim(const Forces &f, int _h, int ifr, int idf) 	   const {return !dimen ? f.im[_h](ifr, idf) : f.im[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));}
-	double R_ma_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_ma_ndim(f, _h, ifr, idf) : R_ma_dim(f, _h, ifr, idf);}
-	double R_re_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_re_ndim(f, _h, ifr, idf) : R_re_dim(f, _h, ifr, idf);}
-	double R_im_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {return ndim ? R_im_ndim(f, _h, ifr, idf) : R_im_dim(f, _h, ifr, idf);}
-
-	double F_dim(double f, int idf)  	   const {return dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_ndim(double f, int idf) 	   const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	double F_(bool ndim, double f, int idf) const {return ndim ? F_ndim(f, idf) : F_dim(f, idf);}
+	double F_dim(double f, int idf)  	    const {return  dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double F_ndim(double f, int idf) 	    const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double F_(bool ndim, double f, int idf) const {return   ndim ? F_ndim(f, idf) : F_dim(f, idf);}
 
 	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr) const;
 
-	inline std::complex<double>Z(bool ndim, int ifr, int idf, int jdf) const {
+	inline std::complex<double> Z(bool ndim, int ifr, int idf, int jdf) const {
 		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
 	}
 	
@@ -519,11 +515,11 @@ public:
 	bool IsLoadedB() 	 const {return !B.IsEmpty() && B[0][0].size() > 0 && IsNum(B[0][0][0]);}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && IsNum(C[0](0, 0));}
 	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && IsNum(M[0](0, 0));}
-	bool IsLoadedFex() 	 const {return !ex.ma.IsEmpty()  && ex.ma[0].size() > 0;}
-	bool IsLoadedFsc() 	 const {return !sc.ma.IsEmpty()  && sc.ma[0].size() > 0;}
-	bool IsLoadedFfk() 	 const {return !fk.ma.IsEmpty()  && fk.ma[0].size() > 0;}
-	bool IsLoadedRAO() 	 const {return !rao.ma.IsEmpty() && rao.ma[0].size() > 0;}
-	bool IsLoadedForce(const Forces &f) const {return !f.ma.IsEmpty();}
+	bool IsLoadedFex() 	 const {return !ex.force.IsEmpty() && ex.force[0].size() > 0;}
+	bool IsLoadedFsc() 	 const {return !sc.force.IsEmpty()  && sc.force[0].size() > 0;}
+	bool IsLoadedFfk() 	 const {return !fk.force.IsEmpty()  && fk.force[0].size() > 0;}
+	bool IsLoadedRAO() 	 const {return !rao.force.IsEmpty() && rao.force[0].size() > 0;}
+	bool IsLoadedForce(const Forces &f) const {return !f.force.IsEmpty();}
 	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
 	bool IsLoadedQTF() 	 const {return !qtfsum.IsEmpty();}
 	bool IsLoadedKirf()	 const {return !Kirf.IsEmpty();}
@@ -567,7 +563,10 @@ public:
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force);
-		
+	
+	void FillFrequencyGapsABForces(int zeroInter);
+	void FillFrequencyGapsQTF(int zeroInter);
+	
 	void Join(const UVector<Hydro *> &hydrosp);
 	
 	String S_g()	const {return !IsNum(g)   ? S("-") : Format("%.3f", g);}
@@ -1164,6 +1163,9 @@ public:
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force);										
+	
+	void FillFrequencyGapsABForces(int id, int zeroInter);
+	void FillFrequencyGapsQTF(int id, int zeroInter);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
