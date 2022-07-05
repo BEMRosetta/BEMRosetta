@@ -339,7 +339,7 @@ bool Wamit::Load_out() {
 						}
 						hd().GetBodyDOF();
 	            	} else if (line.Find("DIFFRACTION EXCITING FORCES AND MOMENTS") >= 0) {
-						if (hd().ex.ma.IsEmpty()) 
+						if (hd().ex.force.IsEmpty()) 
 							hd().Initialize_Forces(hd().ex);
 						
 						int ih = 0;
@@ -355,15 +355,10 @@ bool Wamit::Load_out() {
 										f.Load(line);
 										double ma = f.GetDouble(1);
 										double ph = ToRad(f.GetDouble(2));
-										double re = ma*cos(ph);
-										double im = ma*sin(ph);
 										int i = abs(f.GetInt(0)) - 1;
 										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
 											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
-										hd().ex.ma[ih](ifr, i) = ma;	
-										hd().ex.ph[ih](ifr, i) = ph;	
-										hd().ex.re[ih](ifr, i) = re;	
-										hd().ex.im[ih](ifr, i) = im;	
+										hd().ex.force[ih](ifr, i) = std::polar(ma, ph);	
 									}
 								}
 								ih++;
@@ -372,7 +367,7 @@ bool Wamit::Load_out() {
 							}
 						} 
 					} else if (line.Find("RESPONSE AMPLITUDE OPERATORS") >= 0) {
-						if (hd().rao.ma.IsEmpty()) 
+						if (hd().rao.force.IsEmpty()) 
 							hd().Initialize_Forces(hd().rao);
 						
 						int ih = 0;
@@ -388,15 +383,10 @@ bool Wamit::Load_out() {
 										f.Load(line);
 										double ma = f.GetDouble(1);
 										double ph = ToRad(f.GetDouble(2));
-										double re = ma*cos(ph);
-										double im = ma*sin(ph);
 										int i = abs(f.GetInt(0)) - 1;
 										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
 											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
-										hd().rao.ma[ih](ifr, i) = ma;	
-										hd().rao.ph[ih](ifr, i) = ph;	
-										hd().rao.re[ih](ifr, i) = re;	
-										hd().rao.im[ih](ifr, i) = im;	
+										hd().rao.force[ih](ifr, i) = std::polar(ma, ph);	
 									}
 								}
 								ih++;
@@ -448,9 +438,11 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 	for (int ih = 0; ih < hd().Nh; ++ih) {
 		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
-		for (int i = 0; i < hd().ex.ma[ih].cols(); ++i)
-			if (!IsNull(hd().ex.ma[ih](ifr, i))) 
-				out << Format(" %7>d   %E   %f\n", i+1, hd().F_ma_ndim(hd().ex, ih, ifr, i), ToDeg(hd().ex.ph[ih](ifr, i)));
+		for (int i = 0; i < hd().ex.force[ih].cols(); ++i)
+			if (!IsNull(hd().ex.force[ih](ifr, i))) {
+				std::complex<double> c = hd().F_ndim(hd().ex, ih, ifr, i);
+				out << Format(" %7>d   %E   %f\n", i+1, abs(c), ToDeg(arg(c)));
+			}
 		out << "\n\n\n\n";
 	}
 }
@@ -460,9 +452,11 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 	for (int ih = 0; ih < hd().Nh; ++ih) {
 		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
-		for (int i = 0; i < hd().rao.ma[ih].cols(); ++i)
-			if (!IsNull(hd().rao.ma[ih](ifr, i))) 
-				out << Format(" %7>d   %E   %f\n", i+1, hd().F_ma_ndim(hd().rao, ih, ifr, i), ToDeg(hd().rao.ph[ih](ifr, i)));
+		for (int i = 0; i < hd().rao.force[ih].cols(); ++i)
+			if (!IsNull(hd().rao.force[ih](ifr, i))) {
+				std::complex<double> c = hd().F_ndim(hd().rao, ih, ifr, i);
+				out << Format(" %7>d   %E   %f\n", i+1, abs(c), ToDeg(arg(c)));
+			}
 		out << "\n\n\n\n";
 	}
 }
@@ -610,10 +604,8 @@ bool Wamit::Load_Scattering(String fileName) {
         		int i = f.GetInt(2) - 1;
         		if (OUTB(i, hd().Nb*6))
         			throw Exc(in.Str() + "\n"  + Format(t_("Index (%d) out of bounds"), i));
-                hd().sc.ma[ih](ifr, i) = f.GetDouble(3);
-                hd().sc.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
-                hd().sc.re[ih](ifr, i) = f.GetDouble(5);
-                hd().sc.im[ih](ifr, i) = f.GetDouble(6);
+        		
+                hd().sc.force[ih](ifr, i) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
             }
         }
     }
@@ -638,10 +630,7 @@ bool Wamit::Load_FK(String fileName) {
         		int i = f.GetInt(2) - 1;
         		if (OUTB(i, hd().Nb*6))
         			throw Exc(in.Str() + "\n"  + Format(t_("Index (%d) out of bounds"), i));
-                hd().fk.ma[ih](ifr, i) = f.GetDouble(3);
-                hd().fk.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
-                hd().fk.re[ih](ifr, i) = f.GetDouble(5);
-                hd().fk.im[ih](ifr, i) = f.GetDouble(6);
+                hd().fk.force[ih](ifr, i) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
             }
         }
     }	
@@ -989,10 +978,14 @@ bool Wamit::Load_3(String fileName) {
 			
 		int i = f.GetInt(2) - 1;		
 		
-       	hd().ex.ma[ih](ifr, i) = f.GetDouble(3);
-     	hd().ex.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
-        hd().ex.re[ih](ifr, i) = f.GetDouble(5);
-        hd().ex.im[ih](ifr, i) = f.GetDouble(6);
+        hd().ex.force[ih](ifr, i) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
+        
+        std::complex<double> d = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
+        double re = d.real(),
+        	   im = d.imag(),
+        	   ma = abs(d),
+        	   ph = arg(d);
+        	   
 	}
 	
 	hd().c0.setConstant(3, hd().Nb, 0);
@@ -1158,10 +1151,7 @@ bool Wamit::Load_4(String fileName) {
 			
 		int i = f.GetInt(2) - 1;		
 		
-       	hd().rao.ma[ih](ifr, i) = f.GetDouble(3);
-     	hd().rao.ph[ih](ifr, i) = f.GetDouble(4)*M_PI/180;
-        hd().rao.re[ih](ifr, i) = f.GetDouble(5);
-        hd().rao.im[ih](ifr, i) = f.GetDouble(6);
+        hd().rao.force[ih](ifr, i) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
 	}
 	hd().c0.setConstant(3, hd().Nb, 0);
 	
@@ -1434,13 +1424,16 @@ void Wamit::Save_3(String fileName, bool force_T) {
 	
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < hd().Nh; ++ih)
-			for (int i = 0; i < hd().Nb*6; ++i)
+			for (int i = 0; i < hd().Nb*6; ++i) {
+				std::complex<double> &f = hd().ex.force[ih](ifr, i);
+				std::complex<double> fn = hd().F_ndim(hd().ex, ih, ifr, i);
 				out << Format(" %s %s %5d %s %s %s %s\n", 
-			FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
-			FormatWam(Nvl2(hd().ex.ma[ih](ifr, i), hd().F_ma_ndim(hd().ex, ih, ifr, i), 0.)), 
-			FormatWam(Nvl2(hd().ex.ph[ih](ifr, i), hd().ex.ph[ih](ifr, i)*180/M_PI, 0.)),
-			FormatWam(Nvl2(hd().ex.re[ih](ifr, i), hd().F_re_ndim(hd().ex, ih, ifr, i), 0.)), 
-			FormatWam(Nvl2(hd().ex.im[ih](ifr, i), hd().F_im_ndim(hd().ex, ih, ifr, i), 0.)));
+					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+					FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
+					FormatWam(Nvl2(arg(f), arg(fn)*180/M_PI, 0.)),
+					FormatWam(Nvl2(f.real(), fn.real(), 0.)), 
+					FormatWam(Nvl2(f.imag(), fn.imag(), 0.)));
+			}
 }
 
 void Wamit::Save_hst(String fileName) {
@@ -1505,13 +1498,16 @@ void Wamit::Save_4(String fileName, bool force_T) {
 	
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < hd().Nh; ++ih)
-			for (int i = 0; i < hd().Nb*6; ++i)
+			for (int i = 0; i < hd().Nb*6; ++i) {
+				std::complex<double> &f = hd().rao.force[ih](ifr, i);	
+				std::complex<double> fn = hd().R_ndim(hd().rao, ih, ifr, i);
 				out << Format(" %s %s %5d %s %s %s %s\n", 
 					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
-					FormatWam(Nvl2(hd().rao.ma[ih](ifr, i), hd().R_ma_ndim(hd().rao, ih, ifr, i), 0.)), 
-					FormatWam(Nvl2(hd().rao.ph[ih](ifr, i), hd().rao.ph[ih](ifr, i)*180/M_PI, 0.)),
-					FormatWam(Nvl2(hd().rao.re[ih](ifr, i), hd().R_re_ndim(hd().rao, ih, ifr, i), 0.)), 
-					FormatWam(Nvl2(hd().rao.im[ih](ifr, i), hd().R_im_ndim(hd().rao, ih, ifr, i), 0.)));
+					FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
+					FormatWam(Nvl2(arg(f), arg(fn), 0.)),
+					FormatWam(Nvl2(f.real(), fn.real(), 0.)), 
+					FormatWam(Nvl2(f.imag(), fn.imag(), 0.)));
+			}
 }
 	
 void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
