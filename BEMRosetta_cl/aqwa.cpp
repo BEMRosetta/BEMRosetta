@@ -182,6 +182,7 @@ bool Aqwa::Load_AH1() {
 	        for (int ib = 0; ib < hd().Nb; ++ib) {
 	            for (int ih = 0; ih < hd().Nh; ++ih) {
 	                for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+	                    VectorXd ma(6), ph(6);
 	                    f.Load(in.GetLine());
 	                  	for (int idf = 0; idf < 6; ++idf) {
 		                    int itb = f.GetInt(0);
@@ -193,15 +194,13 @@ bool Aqwa::Load_AH1() {
 		                    int itfr = f.GetInt(2);
 							if (itfr - 1 != ifr)
 								throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in 'FORCERAO' %d<>%d"), itfr, ifr+1));
-			                hd().ex.ma[ih](ifr, idf + 6*ib) = f.GetDouble(idf + 3);
+			                ma(idf) = f.GetDouble(idf + 3);
 	                  	}
 	                  	f.Load(in.GetLine());
 	                  	for (int idf = 0; idf < 6; ++idf) 
-	                       	hd().ex.ph[ih](ifr, idf + 6*ib) = -f.GetDouble(idf)*M_PI/180;
-	                    for (int idf = 0; idf < 6; ++idf) {   	
-		                    hd().ex.re[ih](ifr, idf + 6*ib) = hd().ex.ma[ih](ifr, idf + 6*ib)*cos(hd().ex.ph[ih](ifr, idf*ib));
-		       				hd().ex.im[ih](ifr, idf + 6*ib) = hd().ex.ma[ih](ifr, idf + 6*ib)*sin(hd().ex.ph[ih](ifr, idf*ib));
-	                    }
+	                       	ph(idf) = -f.GetDouble(idf)*M_PI/180;
+	                  	for (int idf = 0; idf < 6; ++idf) 
+	                       	hd().ex.force[ih](ifr, idf + 6*ib) = std::complex<double>(ma(idf), ph(idf));
 	                }
 	            }
 	        }
@@ -479,12 +478,9 @@ bool Aqwa::Load_LIS() {
 					int ifrr = FindClosest(hd().w, freq);
 					if (ifrr < 0)
 						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
-					for (int idf = 0; idf < 6; ++idf) {
-						frc.ma[idh](ifr, idf + 6*ib) = f.GetDouble(2 + dd + idf*2);
-						frc.ph[idh](ifr, idf + 6*ib) = -f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180; // Negative to follow Wamit
-						frc.re[idh](ifr, idf + 6*ib) = frc.ma[idh](ifr, idf + 6*ib)*cos(frc.ph[idh](ifr, idf + 6*ib));
-			       		frc.im[idh](ifr, idf + 6*ib) = frc.ma[idh](ifr, idf + 6*ib)*sin(frc.ph[idh](ifr, idf + 6*ib));
-					}
+					for (int idf = 0; idf < 6; ++idf) 
+						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2), -f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180); // Negative to follow Wamit
+					
 					dd = 0;
 					line = in.GetLine();
 					static const UVector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};

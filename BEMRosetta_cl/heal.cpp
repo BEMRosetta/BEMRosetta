@@ -38,6 +38,8 @@ bool HealBEM::AreaOfInterest(
 		accum[i] = accum[i-1] + B[i];
 	
 	double tot = accum[accum.size()-1];
+	if (tot < 0)
+		return false;
 	
 	idaoix0 = Null;
 	for (int i = 0; i < B.size(); ++i) {			// The area of interest goes
@@ -71,6 +73,9 @@ bool HealBEM::AreaOfInterest(
 	aoix0 = w[idaoix0];
 	aoidx = w[idaoixMx] - w[idaoix0];
 	
+	if (aoidx == 0)
+		return false;
+	
 	VectorXd fB;
 	double Tcut = aoidx*0.2;		// The maximum value is taken from the strongly filtered series
 	VectorXd num, den;
@@ -88,7 +93,10 @@ Upp::Index<int> HealBEM::SpineRemovalRight(int idpk, double maxDer) {
 	while (true) {
 		int k;
 		for (k = 1; k < 8 && idpk+k < w.size(); ++k) {
-			double der = abs((B[idpk]-B[idpk+k])/(w[idpk]-w[idpk+k]));
+			double dw = w[idpk]-w[idpk+k];
+			if (dw == 0)
+				return ret;
+			double der = abs((B[idpk]-B[idpk+k])/dw);
 			if (der > maxDer) {
 				for (int l = 0; l <= k; ++l)
 					ret.FindAdd(idpk+l);
@@ -107,7 +115,10 @@ Upp::Index<int> HealBEM::SpineRemovalLeft(int idpk, double maxDer) {
 	while (true) {
 		int k;
 		for (k = 1; k < 8 && idpk-k >= 0; ++k) {
-			double der = abs((B[idpk]-B[idpk-k])/(w[idpk]-w[idpk-k]));
+			double dw = w[idpk]-w[idpk-k];
+			if (dw == 0)
+				return ret;
+			double der = abs((B[idpk]-B[idpk-k])/dw);
 			if (der > maxDer) {
 				for (int l = 0; l <= k; ++l)
 					ret.FindAdd(idpk-l);
@@ -247,7 +258,8 @@ void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf
 	}	
 }
 	
-void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
+// Haskind is unused
+bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
 	// Removes NaN, Inf, duplicated (or nearly) w, sorts by w 
 	CleanNANDupXSort(w, A, B, w, A, B);
 	double srate = GetSampleRate(w, 4, .8);	// Gets the most probable sample rate, or the average if the most probable probability is lower than 0.8
@@ -258,7 +270,7 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 	
 	// 1. AreaOfInterest
 	if (!AreaOfInterest(0.01, 0.98, aoix0, aoidx, aoidy, idaoix0, idaoixMx, idaoiyMx))
-		return;
+		return false;
 
 
 	// Removes spikes	
@@ -390,6 +402,13 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 			ButterLowPass(3, 2*srate/Tcutsoft, num, den);
 			Filtfilt(B, num, den, fB);
 			
+			double ratio = abs(fB.mean()/B.mean());
+			if (ratio > 2 || ratio < 0.5) {
+				Tcutsoft = aoidx*0.2;
+				ButterLowPass(3, 2*srate/Tcutsoft, num, den);
+				Filtfilt(B, num, den, fB);
+			}
+			
 			// f2B is a more strongly filtered version
 			VectorXd f2B;
 			double Tcuthard = aoidx*0.4;
@@ -433,7 +452,10 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 						p0 += (f2B[j+1]-f2B[j])/(w[j+1]-w[j]);
 						num++;
 					}
-					p0 /= (2*num);	// Begin slope is the avg of the slope in 4 previous points for fB and f2B
+					if (num == 0)
+						p0 = 0;
+					else
+						p0 /= (2*num);	// Begin slope is the avg of the slope in 4 previous points for fB and f2B
 					double p1 = 0;	// End slope is zero (Could this be improved?)
 					
 					CubicFromEnds(x0, y0, p0, x1, y1, p1, a, b, c, d);	// Cubic from end points and slope
@@ -517,6 +539,7 @@ void HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 		} else 
 			fA = A;
 	}
+	return true;
 }
 
  

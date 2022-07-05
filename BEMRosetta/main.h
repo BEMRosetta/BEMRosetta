@@ -146,14 +146,14 @@ public:
 											   data->Kirf [idf][jdf].size() == 0 || IsNull(data->Kirf [idf][jdf][0]);
 		case Hydro::PLOT_AINFW:			return data->Ainf_w.size() <= idf || data->Ainf_w[idf].size() <= jdf || 
 											   data->Ainf_w[idf][jdf].size() == 0 || IsNull(data->Ainf_w[idf][jdf][0]);		
-		case Hydro::PLOT_FORCE_SC_MA:	return IsNull(data->sc.ma[jdf](0, idf));
-		case Hydro::PLOT_FORCE_SC_PH:	return IsNull(data->sc.ph[jdf](0, idf));
-		case Hydro::PLOT_FORCE_FK_MA:	return IsNull(data->fk.ma[jdf](0, idf));
-		case Hydro::PLOT_FORCE_FK_PH:	return IsNull(data->fk.ph[jdf](0, idf));
-		case Hydro::PLOT_FORCE_EX_MA:	return IsNull(data->ex.ma[jdf](0, idf));
-		case Hydro::PLOT_FORCE_EX_PH:	return IsNull(data->ex.ph[jdf](0, idf));
-		case Hydro::PLOT_RAO_MA:		return IsNull(data->rao.ma[jdf](0, idf));
-		case Hydro::PLOT_RAO_PH:		return IsNull(data->rao.ph[jdf](0, idf));
+		case Hydro::PLOT_FORCE_SC_MA:	return IsNull(data->sc.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_SC_PH:	return IsNull(data->sc.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_FK_MA:	return IsNull(data->fk.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_FK_PH:	return IsNull(data->fk.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_EX_MA:	return IsNull(data->ex.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_EX_PH:	return IsNull(data->ex.force[jdf](0, idf));
+		case Hydro::PLOT_RAO_MA:		return IsNull(data->rao.force[jdf](0, idf));
+		case Hydro::PLOT_RAO_PH:		return IsNull(data->rao.force[jdf](0, idf));
 		case Hydro::PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_Z_MA:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || IsNull(data->Ainf(idf, jdf));
@@ -170,18 +170,18 @@ public:
 		case Hydro::PLOT_B:				return data->B_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_K:				return data->Kirf_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINFW:			return data->Ainf_w_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_FORCE_SC_MA:	return data->F_ma_(ndim, data->sc, jdf, int(id), idf);
-		case Hydro::PLOT_FORCE_SC_PH:	return data->sc.ph[jdf](int(id), idf);
-		case Hydro::PLOT_FORCE_FK_MA:	return data->F_ma_(ndim, data->fk, jdf, int(id), idf);
-		case Hydro::PLOT_FORCE_FK_PH:	return data->fk.ph[jdf](int(id), idf);
-		case Hydro::PLOT_FORCE_EX_MA:	return data->F_ma_(ndim, data->ex, jdf, int(id), idf);
-		case Hydro::PLOT_FORCE_EX_PH:	return data->ex.ph[jdf](int(id), idf);
-		case Hydro::PLOT_RAO_MA:		return data->F_ma_(ndim, data->rao, jdf, int(id), idf);
-		case Hydro::PLOT_RAO_PH:		return data->rao.ph[jdf](int(id), idf);
-		case Hydro::PLOT_TFS_MA:		return std::abs(data->TFS_(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_TFS_PH:		return std::arg(data->TFS_(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_Z_MA:			return std::abs(data->Z(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_Z_PH:			return std::arg(data->Z(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_FORCE_SC_MA:	return abs(data->F_(ndim, data->sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_SC_PH:	return arg(data->F_(ndim, data->sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_MA:	return abs(data->F_(ndim, data->fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_PH:	return arg(data->F_(ndim, data->fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_MA:	return abs(data->F_(ndim, data->ex, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_PH:	return arg(data->F_(ndim, data->ex, jdf, int(id), idf));
+		case Hydro::PLOT_RAO_MA:		return abs(data->F_(ndim, data->rao, jdf, int(id), idf));
+		case Hydro::PLOT_RAO_PH:		return arg(data->F_(ndim, data->rao, jdf, int(id), idf));
+		case Hydro::PLOT_TFS_MA:		return abs(data->TFS_(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_TFS_PH:		return arg(data->TFS_(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_Z_MA:			return abs(data->Z(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_Z_PH:			return arg(data->Z(ndim, int(id), idf, jdf));
 		default:			NEVER();	return Null;
 		}
 	}
@@ -1105,7 +1105,9 @@ public:
 	void OnSelListLoaded();
 	void UpdateButtons();
 	void ShowMenuPlotItems();
-		
+	void OnABForces();
+	void OnQTF();
+	
 	void Jsonize(JsonIO &json);
 		
 	WithMenuOpen<StaticRect> menuOpen;

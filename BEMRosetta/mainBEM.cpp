@@ -98,6 +98,9 @@ void MainBEM::Init() {
 	menuProcess.butFK << THISBACK1(OnResetForces, Hydro::FK);
 	menuProcess.butRemoveForces << THISBACK1(OnResetForces, Hydro::ALL);
 	
+	menuProcess.butABForces << THISBACK(OnABForces);
+	menuProcess.butQTF << THISBACK(OnQTF);
+	
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
 	menuAdvanced.butOgilvie <<= THISBACK(OnOgilvie);
@@ -106,7 +109,8 @@ void MainBEM::Init() {
 	menuAdvanced.opDecayingTail.Disable();
 	menuAdvanced.opThinremoval.Disable();
 	menuAdvanced.opZremoval.Disable();
-	menuAdvanced.opHaskind.Disable();
+	//menuAdvanced.opHaskind.Disable();
+	menuAdvanced.opHaskind.Hide();		// Not ready
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
 
 	OnOpt();
@@ -845,6 +849,59 @@ void MainBEM::OnResetForces(Hydro::FORCE force) {
 	}	
 }
 
+void MainBEM::OnABForces() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		WaitCursor wait;
+		
+		Bem().FillFrequencyGapsABForces(id, menuProcess.opCalc);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+	
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
+void MainBEM::OnQTF() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		WaitCursor wait;
+		
+		Bem().FillFrequencyGapsQTF(id, menuProcess.opCalc);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+	
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
 void MainBEM::OnDeleteHeadingsFrequencies() {
 	try {
 		int id = GetIdOneSelected();
@@ -1066,6 +1123,7 @@ int MainBEM::GetIdOneSelected(bool complain) {
 }
 
 void MainBEM::Jsonize(JsonIO &json) {
+	bool opcalc;
 	if (json.IsLoading()) {
 		menuPlot.autoFit = Null;
 		menuPlot.fromY0 = Null;
@@ -1073,8 +1131,11 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.showPoints = Null;
 		menuPlot.showNdim = Null;
 		dropExportId = 2;
-	} else
+		opcalc = 0;
+	} else {
 		dropExportId = menuOpen.dropExport.GetIndex();
+		opcalc = ~menuProcess.opCalc;
+	}
 	json
 		("menuOpen_file", menuOpen.file)
 		("menuOpen_saveFolder", saveFolder)
@@ -1087,11 +1148,14 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
 		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
+		("menuProcess_opCalc", menuProcess.opCalc)
 		("opHaskind", menuAdvanced.opHaskind)
 		("mainStiffness", mainMatrixK)
 		("mainMatrixA", mainMatrixA)
 		("mainMatrixDlin", mainMatrixDlin)
 	;
+	if (json.IsLoading()) 
+		menuProcess.opCalc <<= opcalc;
 }
 
 String MainBEM::BEMFile(String fileFolder) const {

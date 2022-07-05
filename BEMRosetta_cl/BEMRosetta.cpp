@@ -49,14 +49,8 @@ void Hydro::GetFexFromFscFfk() {
 	for (int ih = 0; ih < Nh; ++ih) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			for (int i = 0; i < Nb*6; ++i) {
-				if (!IsNull(sc.ma[ih](ifr, i))) {
-					double exre = sc.re[ih](ifr, i) + fk.re[ih](ifr, i);
-					double exim = sc.im[ih](ifr, i) + fk.im[ih](ifr, i);
-					ex.re[ih](ifr, i) = exre;
-					ex.im[ih](ifr, i) = exim;
-					ex.ma[ih](ifr, i) = sqrt(exre*exre + exim*exim);
-					ex.ph[ih](ifr, i) = atan2(exim, exre);
-				}
+				if (!IsNull(sc.force[ih](ifr, i))) 
+					ex.force[ih](ifr, i) = sc.force[ih](ifr, i) + fk.force[ih](ifr, i);
 			}
 		}
 	}
@@ -101,15 +95,10 @@ void Hydro::Normalize() {
 	if (IsLoadedFfk())
 		Normalize_Forces(fk);
 	if (IsLoadedRAO()) {
-		for (int h = 0; h < Nh; ++h) {
-			for (int ifr = 0; ifr < Nf; ++ifr) {
-				for (int i = 0; i < 6*Nb; ++i) {	 
-					rao.ma[h](ifr, i) = R_ma_ndim(rao, h, ifr, i);
-					rao.re[h](ifr, i) = R_re_ndim(rao, h, ifr, i);
-					rao.im[h](ifr, i) = R_im_ndim(rao, h, ifr, i);
-				}
-			}
-		}
+		for (int h = 0; h < Nh; ++h) 
+			for (int ifr = 0; ifr < Nf; ++ifr) 
+				for (int i = 0; i < 6*Nb; ++i) 	 
+					rao.force[h](ifr, i) = R_ndim(rao, h, ifr, i);
 	}
 }
 
@@ -148,15 +137,10 @@ void Hydro::Dimensionalize() {
 	if (IsLoadedFfk())
 		Dimensionalize_Forces(fk);
 	if (IsLoadedRAO()) {
-		for (int h = 0; h < Nh; ++h) {
-			for (int ifr = 0; ifr < Nf; ++ifr) {
-				for (int i = 0; i < 6*Nb; ++i) {	 
-					rao.ma[h](ifr, i) = R_ma_dim(rao, h, ifr, i);
-					rao.re[h](ifr, i) = R_re_dim(rao, h, ifr, i);
-					rao.im[h](ifr, i) = R_im_dim(rao, h, ifr, i);
-				}
-			}
-		}
+		for (int h = 0; h < Nh; ++h) 
+			for (int ifr = 0; ifr < Nf; ++ifr) 
+				for (int i = 0; i < 6*Nb; ++i) 
+					rao.force[h](ifr, i) = R_dim(rao, h, ifr, i);
 	}
 }
 
@@ -169,18 +153,11 @@ void Hydro::Initialize_Forces() {
 void Hydro::Initialize_Forces(Forces &f, int _Nh) {
 	if (_Nh == -1)
 		_Nh = Nh;
-	f.ma.SetCount(_Nh);
-	f.ph.SetCount(_Nh);
-	f.re.SetCount(_Nh);
-	f.im.SetCount(_Nh);
-	for (int ih = 0; ih < _Nh; ++ih) {
-		f.ma[ih].setConstant(Nf, Nb*6, Null);
-		f.ph[ih].setConstant(Nf, Nb*6, Null);
-		f.re[ih].setConstant(Nf, Nb*6, Null);
-		f.im[ih].setConstant(Nf, Nb*6, Null);
-	}
+	f.force.SetCount(_Nh);
+	for (int ih = 0; ih < _Nh; ++ih) 
+		f.force[ih].setConstant(Nf, Nb*6, NullComplex);
 }
-
+/*
 void Hydro::GetMaPh(Forces &f) {
 	for (int ih = 0; ih < Nh; ++ih) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
@@ -191,29 +168,19 @@ void Hydro::GetMaPh(Forces &f) {
 		}
 	} 
 }
-    	
+  */  	
 void Hydro::Normalize_Forces(Forces &f) {
-	for (int ih = 0; ih < Nh; ++ih) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int idf = 0; idf < 6*Nb; ++idf) {	 
-				f.ma[ih](ifr, idf) = F_ma_dim(f, ih, ifr, idf);
-				f.re[ih](ifr, idf) = F_re_dim(f, ih, ifr, idf);
-				f.im[ih](ifr, idf) = F_im_dim(f, ih, ifr, idf);
-			}
-		}
-	} 
+	for (int ih = 0; ih < Nh; ++ih) 
+		for (int ifr = 0; ifr < Nf; ++ifr) 
+			for (int idf = 0; idf < 6*Nb; ++idf) 
+				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
 }
 
 void Hydro::Dimensionalize_Forces(Forces &f) {
-	for (int ih = 0; ih < Nh; ++ih) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int idf = 0; idf < 6*Nb; ++idf) {	 
-				f.ma[ih](ifr, idf) = F_ma_dim(f, ih, ifr, idf);
-				f.re[ih](ifr, idf) = F_re_dim(f, ih, ifr, idf);
-				f.im[ih](ifr, idf) = F_im_dim(f, ih, ifr, idf);
-			}
-		}
-	}
+	for (int ih = 0; ih < Nh; ++ih) 
+		for (int ifr = 0; ifr < Nf; ++ifr) 
+			for (int idf = 0; idf < 6*Nb; ++idf) 
+				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
 }
 
 void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
@@ -222,14 +189,9 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 			int ih = FindClosest(head, hydro.head[ihhy]);
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
 				int ifr = FindClosest(w, hydro.w[ifrhy]);
-				for (int idf = 0; idf < 6*Nb; ++idf) {	 
-					if (!IsNull(from.ma[ihhy](ifrhy, idf))) {
-						to.ma[ih](ifr, idf) = hydro.F_ma_ndim(from, ihhy, ifrhy, idf);
-						to.ph[ih](ifr, idf) = from.ph[ihhy](ifrhy, idf); 
-						to.re[ih](ifr, idf) = hydro.F_re_ndim(from, ihhy, ifrhy, idf);
-						to.im[ih](ifr, idf) = hydro.F_im_ndim(from, ihhy, ifrhy, idf);
-					}
-				}
+				for (int idf = 0; idf < 6*Nb; ++idf) 	 
+					if (!IsNull(from.force[ihhy](ifrhy, idf))) 
+						to.force[ih](ifr, idf) = hydro.F_ndim(from, ihhy, ifrhy, idf);
 			}
 		} 
 	}
@@ -237,19 +199,12 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 
 void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb) {
 	int nih  = FindClosest(newHead, h);
-	bool avg  = !IsNull(newf.re[nih](0, idb));
+	bool avg  = !IsNull(newf.force[nih](0, idb));
 	for (int ifr = 0; ifr < Nf; ++ifr) {
-		if (avg) {
-			double re = newf.re[nih](ifr, idb) = Avg(newf.re[nih](ifr, idb), f.re[ih](ifr, idb));
-			double im = newf.im[nih](ifr, idb) = Avg(newf.im[nih](ifr, idb), f.im[ih](ifr, idb));			
-			newf.ma[nih](ifr, idb) = sqrt(re*re + im*im);
-			newf.ph[nih](ifr, idb) = atan2(im, re);
-		} else {
-			newf.ma[nih](ifr, idb) = f.ma[ih](ifr, idb);
-			newf.ph[nih](ifr, idb) = f.ph[ih](ifr, idb); 
-			newf.re[nih](ifr, idb) = f.re[ih](ifr, idb);
-			newf.im[nih](ifr, idb) = f.im[ih](ifr, idb);
-		}
+		if (avg) 
+			newf.force[nih](ifr, idb) = Avg(newf.force[nih](ifr, idb), f.force[ih](ifr, idb));
+		else 
+			newf.force[nih](ifr, idb) = f.force[ih](ifr, idb);
 	}
 }
 
@@ -436,19 +391,19 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 		for (int i = 0; i < 6*Nb; ++i) {
 			double mx = -DBL_MAX, mn = DBL_MAX;
 			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = F_ma_ndim(f, h, ifr, i);
+				double val = abs(F_ndim(f, h, ifr, i));
 				mx = max(mx, val);
 				mn = min(mn, val);
 			}
-			double delta = mx - mn;
-			if (!IsNull(mx) && !IsNull(mn)) {
+			if (mx != -DBL_MAX && mn != DBL_MAX) {
+				double delta = mx - mn;
 				double res = 0;
 				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(F_ma_ndim(f, h, ifr, i) - F_ma_ndim(f, h, ifr-1, i));
+					res += abs(F_ndim(f, h, ifr, i) - F_ndim(f, h, ifr-1, i));
 				res /= delta*(Nf - 1);
 				if (res > thres) {
 					for (int ifr = 0; ifr < Nf; ifr++) 
-						f.ma[h](ifr, i) = Null;
+						f.force[h](ifr, i) = Null;
 				}
 			}
 		}
@@ -740,13 +695,9 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 				int ih = FindClosest(head, hydro.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
 					int ifr = FindClosest(w, hydro.w[ifrhy]);
-					for (int idf = 0; idf < 6*Nb; ++idf) {	 
-						if (!IsNull(rao.ma[ihhy](ifrhy, idf))) {
-							rao.ma[ih](ifr, idf) = hydro.R_ma_ndim(rao, ihhy, ifrhy, idf);
-							rao.ph[ih](ifr, idf) = rao.ph[ihhy](ifrhy, idf); 
-							rao.re[ih](ifr, idf) = hydro.R_re_ndim(rao, ihhy, ifrhy, idf);
-							rao.im[ih](ifr, idf) = hydro.R_im_ndim(rao, ihhy, ifrhy, idf);
-						}
+					for (int idf = 0; idf < 6*Nb; ++idf) {	
+						if (!IsNull(rao.force[ihhy](ifrhy, idf))) 
+							rao.force[ih](ifr, idf) = hydro.R_ndim(rao, ihhy, ifrhy, idf);
 					}
 				}
 			}
@@ -1106,6 +1057,8 @@ VectorXd Hydro::B_dim(int idf, int jdf) const {
 }
 
 VectorXd Hydro::B_ndim(int idf, int jdf) const {
+	if (B[idf][jdf].size() == 0)
+		return VectorXd();
 	if (!dimen)
 		return B[idf][jdf]*(rho_ndim()/rho_dim());
 	else {
@@ -1213,25 +1166,21 @@ void Hydro::C_dim() {
 }
 
 void Hydro::F_dim(Forces &f) {
-	if (f.ma.IsEmpty())
+	if (f.force.IsEmpty())
 		return;
 	for (int ih = 0; ih < Nh; ++ih) 	
 		for (int ifr = 0; ifr < Nf; ++ifr)
-			for (int idf = 0; idf < 6*Nb; ++idf) {
-				f.ma[ih](ifr, idf) = F_ma_dim(f, ih, ifr, idf);
-				f.re[ih](ifr, idf) = F_re_dim(f, ih, ifr, idf);
-				f.im[ih](ifr, idf) = F_im_dim(f, ih, ifr, idf);
-			}
+			for (int idf = 0; idf < 6*Nb; ++idf) 
+				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
 }
 
 VectorXcd Hydro::F_(bool ndim, const Forces &f, int _h, int ifr) const {
 	VectorXcd ret;
-	if (f.ma.IsEmpty())
+	if (f.force.IsEmpty())
 		return ret;
 	ret.resize(6);
 	for (int idf = 0; idf < 6; ++idf) 
-		ret[idf] = std::complex<double>(F_re_(ndim, f, _h, ifr, idf), 
-										F_im_(ndim, f, _h, ifr, idf));
+		ret[idf] = F_(ndim, f, _h, ifr, idf);
 	return ret;
 }
 
@@ -1542,6 +1491,14 @@ void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayi
 
 void BEM::ResetForces(int id, Hydro::FORCE force) {
 	hydros[id].hd().ResetForces(force);
+}
+
+void BEM::FillFrequencyGapsABForces(int id, int zeroInter) {
+	hydros[id].hd().FillFrequencyGapsABForces(zeroInter);
+}
+
+void BEM::FillFrequencyGapsQTF(int id, int zeroInter) {
+	hydros[id].hd().FillFrequencyGapsQTF(zeroInter);
 }
 
 void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadQTF) {
@@ -1998,6 +1955,6 @@ String FormatIntEmpty(int val) {
 }
 
 bool IsNum(const Hydro::Forces &f) {
-	return IsNum(f.ma) && IsNum(f.ph) && IsNum(f.re) && IsNum(f.im);
+	return IsNum(f.force);
 }
 
