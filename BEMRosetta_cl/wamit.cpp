@@ -176,10 +176,10 @@ bool Wamit::Load_out() {
 			hd().Nb = 1;
 			hd().names << GetFileTitle(TrimBoth(line.Mid(pos)));
 		} else if (line.Find("POTEN run date and starting time:") >= 0) {
-			hd().cg.setConstant(3, hd().Nb, Null);
-			hd().cb.setConstant(3, hd().Nb, Null);
+			hd().cg.setConstant(3, hd().Nb, NaNDouble);
+			hd().cb.setConstant(3, hd().Nb, NaNDouble);
 			hd().c0.setConstant(3, hd().Nb, 0);
-			hd().Vo.SetCount(hd().Nb, Null);
+			hd().Vo.SetCount(hd().Nb, NaNDouble);
 			hd().C.SetCount(hd().Nb);
 		} else if (line.Find("Gravity:") >= 0) {
 			hd().g = f.GetDouble(1);
@@ -269,8 +269,8 @@ bool Wamit::Load_out() {
 				hd().A[i].SetCount(6*hd().Nb);
 				hd().B[i].SetCount(6*hd().Nb);
 				for (int j = 0; j < 6*hd().Nb; ++j) {
-					hd().A[i][j].setConstant(hd().Nf, 0);		// In Wamit, unloaded DOFs are considered negligible	
-					hd().B[i][j].setConstant(hd().Nf, 0);	
+					hd().A[i][j].setConstant(hd().Nf, NaNDouble);// In Wamit, unloaded DOFs are considered negligible	
+					hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 				}
 			}			
 			
@@ -278,14 +278,14 @@ bool Wamit::Load_out() {
 			while (in.GetLine().Find("Wave period = infinite") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				hd().A0.setConstant(hd().Nb*6, hd().Nb*6, 0);
+				hd().A0.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
 				Load_A(in, hd().A0);
 			}
 			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = zero") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, 0);
+				hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
 				Load_A(in, hd().Ainf);
 			}
 			
@@ -812,9 +812,9 @@ bool Wamit::Load_1(String fileName) {
 	ProcessFirstColumn(w, T);
 	
 	if (thereIsA0)
-		hd().A0.setConstant(hd().Nb*6, hd().Nb*6, 0);
+		hd().A0.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
 	if (thereIsAinf)
-		hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, 0);
+		hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
 
 	if (Nf > 0) {
 		hd().A.SetCount(6*hd().Nb);
@@ -823,8 +823,8 @@ bool Wamit::Load_1(String fileName) {
 			hd().A[i].SetCount(6*hd().Nb);
 			hd().B[i].SetCount(6*hd().Nb);
 			for (int j = 0; j < 6*hd().Nb; ++j) {
-				hd().A[i][j].setConstant(hd().Nf, 0);	
-				hd().B[i][j].setConstant(hd().Nf, 0);	
+				hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
+				hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 			}
 		}
 	}
@@ -979,13 +979,6 @@ bool Wamit::Load_3(String fileName) {
 		int i = f.GetInt(2) - 1;		
 		
         hd().ex.force[ih](ifr, i) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
-        
-        std::complex<double> d = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
-        double re = d.real(),
-        	   im = d.imag(),
-        	   ma = abs(d),
-        	   ph = arg(d);
-        	   
 	}
 	
 	hd().c0.setConstant(3, hd().Nb, 0);

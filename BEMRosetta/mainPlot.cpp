@@ -188,7 +188,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		idc = id;
 	const Upp::Color &color = GetColorId(idc);
 	if (dataToShow == Hydro::DATA_A) {
-		if (hy.IsLoadedA()) {
+		if (hy.IsLoadedA(plot_idf, plot_jdf)) {
 			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_A, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A_%s"), nameType)).
@@ -220,7 +220,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			}
 		}
 	} else if (dataToShow == Hydro::DATA_AINFW) {
-		if (hy.IsLoadedAinf_w()) {
+		if (hy.IsLoadedAinf_w(plot_idf, plot_jdf)) {
 			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINFW, show_w, !dim)) {
 				loaded = true;
 				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A∞(ω)_%s"), nameType)).
@@ -241,7 +241,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_B && hy.IsLoadedB()) {
+	} else if (dataToShow == Hydro::DATA_B && hy.IsLoadedB(plot_idf, plot_jdf)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B_%s"), nameType)).
@@ -250,7 +250,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 		}
-	} else if (dataToShow == Hydro::DATA_K && hy.IsLoadedB()) {
+	} else if (dataToShow == Hydro::DATA_K && hy.IsLoadedC()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_K, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("K_%s"), nameType)).
@@ -259,7 +259,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::Kirf_units(!dim, plot_idf, plot_jdf));
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_SC && hy.IsLoadedFsc() && ih >= 0) {
+	} else if (dataToShow == Hydro::DATA_FORCE_SC && ih >= 0 && hy.IsLoadedFsc(plot_idf, ih)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_MA, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fsc_ma_%s"), nameType)).
@@ -274,7 +274,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_FK && hy.IsLoadedFfk() && ih >= 0) {
+	} else if (dataToShow == Hydro::DATA_FORCE_FK && ih >= 0 && hy.IsLoadedFfk(plot_idf, ih)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_MA, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Ffk_ma_%s"), nameType)).
@@ -289,7 +289,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_EX && hy.IsLoadedFex() && ih >= 0) {
+	} else if (dataToShow == Hydro::DATA_FORCE_EX && ih >= 0 && hy.IsLoadedFex(plot_idf, ih)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_EX_MA, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fex_ma_%s"), nameType)).
@@ -304,7 +304,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 						Stroke(2, color).Dash(LINE_SOLID);
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_RAO && hy.IsLoadedRAO() && ih >= 0) {
+	} else if (dataToShow == Hydro::DATA_RAO  && ih >= 0 && hy.IsLoadedRAO(plot_idf, ih)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_RAO_MA, show_w, !dim)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("RAO_ma_%s"), nameType)).

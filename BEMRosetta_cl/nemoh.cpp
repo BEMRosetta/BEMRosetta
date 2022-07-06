@@ -719,12 +719,12 @@ bool Nemoh::Load_Inf(String fileName) {
 	if (!in.IsOpen())
 		return false;
 				
-	hd().cg.setConstant(3, 1, Null);
-	hd().cb.setConstant(3, 1, Null);
-	//hd().c0.setConstant(3, 1, Null);
-	hd().Vo.SetCount(1, Null);
+	hd().cg.setConstant(3, 1, NaNDouble);
+	hd().cb.setConstant(3, 1, NaNDouble);
+	//hd().c0.setConstant(3, 1, NaNDouble);
+	hd().Vo.SetCount(1, NaNDouble);
 	hd().C.SetCount(1);
-	hd().C[0].setConstant(6, 6, Null);   
+	hd().C[0].setConstant(6, 6, NaNDouble);   
 	
 	double minimumDirectionAngle = 0;
 	
@@ -773,10 +773,10 @@ bool Nemoh::Load_Inf(String fileName) {
 }
 	
 bool Nemoh::Load_Hydrostatics() {
-	hd().cg.setConstant(3, hd().Nb, Null);
-	hd().cb.setConstant(3, hd().Nb, Null);
-	//hd().c0.setConstant(3, hd().Nb, Null);
-	hd().Vo.SetCount(hd().Nb, Null);
+	hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	hd().cb.setConstant(3, hd().Nb, NaNDouble);
+	//hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	hd().Vo.SetCount(hd().Nb, NaNDouble);
 	String line;
 	
 	for (int b = 0; b < hd().Nb; ++b) {
@@ -877,8 +877,8 @@ bool Nemoh::Load_Radiation(String fileName) {
 		hd().A[i].SetCount(6*hd().Nb);
 		hd().B[i].SetCount(6*hd().Nb);
 		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, 0);	
-			hd().B[i][j].setConstant(hd().Nf, 0);	
+			hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
+			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 		}
 	}
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
@@ -969,7 +969,7 @@ bool Nemoh::Load_IRF(String fileName) {
     for (int i = 0; i < hd().Nb*6; ++i) {
     	hd().Kirf[i].SetCount(hd().Nb*6); 			 
    		for (int j = 0; j < hd().Nb*6; ++j)
-			hd().Kirf[i][j].setConstant(hd().Tirf.size(), Null);
+			hd().Kirf[i][j].setConstant(hd().Tirf.size(), NaNDouble);
     }
     while(!in.IsEof()) {
 		line = in.GetLine();	
