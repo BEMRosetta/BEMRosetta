@@ -507,18 +507,18 @@ public:
 	
 	const BEM &GetBEM() const {return *bem;}
 	
-	bool IsLoadedA() 	 const {return !A.IsEmpty() && A[0][0].size() > 0 && IsNum(A[0][0][0]);}
-	bool IsLoadedAinf_w()const {return !Ainf_w.IsEmpty() && Ainf_w[0][0].size() > 0 && IsNum(Ainf_w[0][0][0]);}
-	bool IsLoadedAinf()  const {return Ainf.size() > 0;}
-	bool IsLoadedLinearDamping()  const {return linearDamping.size() > 0;}
-	bool IsLoadedA0()	 const {return A0.size() > 0;}
-	bool IsLoadedB() 	 const {return !B.IsEmpty() && B[0][0].size() > 0 && IsNum(B[0][0][0]);}
+	bool IsLoadedA(int i = 0, int j = 0) 	 const {return !A.IsEmpty() && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
+	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return !Ainf_w.IsEmpty() && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
+	bool IsLoadedAinf()  					 const {return Ainf.size() > 0;}
+	bool IsLoadedLinearDamping()  			 const {return linearDamping.size() > 0;}
+	bool IsLoadedA0()	 					 const {return A0.size() > 0;}
+	bool IsLoadedB(int i = 0, int j = 0) 	 const {return !B.IsEmpty() && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && IsNum(C[0](0, 0));}
 	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && IsNum(M[0](0, 0));}
-	bool IsLoadedFex() 	 const {return !ex.force.IsEmpty() && ex.force[0].size() > 0;}
-	bool IsLoadedFsc() 	 const {return !sc.force.IsEmpty()  && sc.force[0].size() > 0;}
-	bool IsLoadedFfk() 	 const {return !fk.force.IsEmpty()  && fk.force[0].size() > 0;}
-	bool IsLoadedRAO() 	 const {return !rao.force.IsEmpty() && rao.force[0].size() > 0;}
+	bool IsLoadedFex(int idf = 0, int ih = 0)const {return !ex.force.IsEmpty() && ex.force[ih].size() > 0 && !IsNull(ex.force[ih](0, idf));}
+	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return !sc.force.IsEmpty() && sc.force[ih].size() > 0 && !IsNull(sc.force[ih](0, idf));}
+	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return !fk.force.IsEmpty() && fk.force[ih].size() > 0 && !IsNull(fk.force[ih](0, idf));}
+	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return !rao.force.IsEmpty()&&rao.force[ih].size() > 0 && !IsNull(rao.force[ih](0, idf));}
 	bool IsLoadedForce(const Forces &f) const {return !f.force.IsEmpty();}
 	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
 	bool IsLoadedQTF() 	 const {return !qtfsum.IsEmpty();}
@@ -555,7 +555,7 @@ public:
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
-	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
+	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof);
 	void GetTranslationTo(double xto, double yto, double zto);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
@@ -1158,7 +1158,7 @@ public:
 	void Ainf(int id);
 	void Ainf_w(int id);
 	void RAO(int id);
-	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
+	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);

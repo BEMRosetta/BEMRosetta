@@ -88,6 +88,15 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 		array.SetLineCy(i*9, 10);	
 }
 
+double MaxIsNum(const double *data, int sz) {
+	double mx = NaNDouble;
+	for (int i = 0; i < sz; ++i) {
+		if (IsNum(data[i]) && (!IsNum(mx) || data[i] > mx))
+			mx = data[i];
+	}
+	return mx;
+}
+
 void MainMatrixKA::PrintData() {
 	expRatio.Enable(~opEmptyZero);
 	double exr = double(~expRatio);
@@ -101,32 +110,34 @@ void MainMatrixKA::PrintData() {
 		int row0 = row0s[i];
 		int col0 = col0s[i];
 		if (data[i].size() != 0) {
-			double mx = data[i].maxCoeff();
-			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
-					String sdata;
-					if (~opUnits) {
-						if (what == Hydro::MAT_K)
-							sdata = Hydro::K_units(Ndim, r, c);
-						else if (what == Hydro::MAT_A) 
-							sdata = Hydro::A_units(Ndim, r, c);
-						else if (what == Hydro::MAT_DAMP_LIN)
-							sdata = Hydro::B_units(Ndim, r, c);
-					} else {
-						double val = data[i](r, c);
-						if (IsNull(val)) 
-							sdata = "";
-						else {
-							double rat = mx == 0 ? 0 : abs(val/mx);
-							if (~opEmptyZero && rat < ratio)
+			double mx = MaxIsNum(data[i].data(), int(data[i].size()));
+			if (IsNum(mx)) {
+				for (int r = 0; r < 6; ++r) {
+					for (int c = 0; c < 6; ++c) {
+						String sdata;
+						if (~opUnits) {
+							if (what == Hydro::MAT_K)
+								sdata = Hydro::K_units(Ndim, r, c);
+							else if (what == Hydro::MAT_A) 
+								sdata = Hydro::A_units(Ndim, r, c);
+							else if (what == Hydro::MAT_DAMP_LIN)
+								sdata = Hydro::B_units(Ndim, r, c);
+						} else {
+							double val = data[i](r, c);
+							if (!IsNum(val)) 
 								sdata = "";
-							else if (bool(~opDigits) == 0)
-								sdata = FDS(val, numDigits);
-							else
-								sdata = FormatF(val, numDecimals);
+							else {
+								double rat = mx == 0 ? 0 : abs(val/mx);
+								if (~opEmptyZero && rat < ratio)
+									sdata = "";
+								else if (bool(~opDigits) == 0)
+									sdata = FDS(val, numDigits);
+								else
+									sdata = FormatF(val, numDecimals);
+							}
 						}
+						array.Set(row0 + r + 2, col0 + c + 1, AttrText(sdata).Align(ALIGN_RIGHT));
 					}
-					array.Set(row0 + r + 2, col0 + c + 1, AttrText(sdata).Align(ALIGN_RIGHT));
 				}
 			}
 		}

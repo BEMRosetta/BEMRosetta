@@ -794,6 +794,7 @@ void MainBEM::OnRAO() {
 }	
 	
 void MainBEM::OnOgilvie() {
+	String str;
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -804,8 +805,8 @@ void MainBEM::OnOgilvie() {
 		WaitCursor wait;
 		
 		//double maxT = Null;
-		
-		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail, ~menuAdvanced.opHaskind);
+		UVector<int> vidof, vjdof;
+		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail, ~menuAdvanced.opHaskind, vidof, vjdof);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -817,9 +818,17 @@ void MainBEM::OnOgilvie() {
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
+		
+		if (vidof.size() > 0) {
+			str = "The degrees of freedom healed are:";
+			for (int i = 0; i < vidof.size(); ++i) 
+				str << Format("\n- %d, %d", vidof[i], vjdof[i]);
+		} else
+			str = "No degrees of freedom has been healed";
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	
+	PromptOK(DeQtfLf(str));
 }
 
 void MainBEM::OnResetForces(Hydro::FORCE force) {

@@ -137,27 +137,27 @@ public:
 		ASSERT(data != 0);
 		switch (dataToPlot) {
 		case Hydro::PLOT_A:				return data->A.	   size() <= idf || data->A	   [idf].size() <= jdf || 
-											   data->A	  [idf][jdf].size() == 0 || IsNull(data->A	[idf][jdf][0]);
-		case Hydro::PLOT_AINF:			return data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || IsNull(data->Ainf(idf, jdf));
-		case Hydro::PLOT_A0:			return data->A0  .rows() <= idf || data->A0  .cols() <= jdf || IsNull(data->A0  (idf, jdf));
+											   data->A	  [idf][jdf].size() == 0 || !IsNum(data->A	[idf][jdf][0]);
+		case Hydro::PLOT_AINF:			return data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
+		case Hydro::PLOT_A0:			return data->A0  .rows() <= idf || data->A0  .cols() <= jdf || !IsNum(data->A0  (idf, jdf));
 		case Hydro::PLOT_B:				return data->B.	   size() <= idf || data->B	   [idf].size() <= jdf || 
-											   data->B	  [idf][jdf].size() == 0 || IsNull(data->B	[idf][jdf][0]);
+											   data->B	  [idf][jdf].size() == 0 || !IsNum(data->B	[idf][jdf][0]);
 		case Hydro::PLOT_K:				return data->Kirf. size() <= idf || data->Kirf [idf].size() <= jdf || 
-											   data->Kirf [idf][jdf].size() == 0 || IsNull(data->Kirf [idf][jdf][0]);
+											   data->Kirf [idf][jdf].size() == 0 || !IsNum(data->Kirf [idf][jdf][0]);
 		case Hydro::PLOT_AINFW:			return data->Ainf_w.size() <= idf || data->Ainf_w[idf].size() <= jdf || 
-											   data->Ainf_w[idf][jdf].size() == 0 || IsNull(data->Ainf_w[idf][jdf][0]);		
-		case Hydro::PLOT_FORCE_SC_MA:	return IsNull(data->sc.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_SC_PH:	return IsNull(data->sc.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_FK_MA:	return IsNull(data->fk.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_FK_PH:	return IsNull(data->fk.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_EX_MA:	return IsNull(data->ex.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_EX_PH:	return IsNull(data->ex.force[jdf](0, idf));
-		case Hydro::PLOT_RAO_MA:		return IsNull(data->rao.force[jdf](0, idf));
-		case Hydro::PLOT_RAO_PH:		return IsNull(data->rao.force[jdf](0, idf));
+											   data->Ainf_w[idf][jdf].size() == 0 || !IsNum(data->Ainf_w[idf][jdf][0]);		
+		case Hydro::PLOT_FORCE_SC_MA:	return !IsNum(data->sc.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_SC_PH:	return !IsNum(data->sc.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_FK_MA:	return !IsNum(data->fk.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_FK_PH:	return !IsNum(data->fk.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_EX_MA:	return !IsNum(data->ex.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_EX_PH:	return !IsNum(data->ex.force[jdf](0, idf));
+		case Hydro::PLOT_RAO_MA:		return !IsNum(data->rao.force[jdf](0, idf));
+		case Hydro::PLOT_RAO_PH:		return !IsNum(data->rao.force[jdf](0, idf));
 		case Hydro::PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
-		case Hydro::PLOT_Z_MA:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || IsNull(data->Ainf(idf, jdf));
-		case Hydro::PLOT_Z_PH:			return IsNull(data->A[idf][jdf][0]) || IsNull(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || IsNull(data->Ainf(idf, jdf));
+		case Hydro::PLOT_Z_MA:			return !IsNum(data->A[idf][jdf][0]) || !IsNum(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
+		case Hydro::PLOT_Z_PH:			return !IsNum(data->A[idf][jdf][0]) || !IsNum(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
 		default:				NEVER();	return true;
 		}
 	}
