@@ -155,7 +155,7 @@ void Hydro::Initialize_Forces(Forces &f, int _Nh) {
 		_Nh = Nh;
 	f.force.SetCount(_Nh);
 	for (int ih = 0; ih < _Nh; ++ih) 
-		f.force[ih].setConstant(Nf, Nb*6, NullComplex);
+		f.force[ih].setConstant(Nf, Nb*6, NaNComplex);
 }
 /*
 void Hydro::GetMaPh(Forces &f) {
@@ -1485,8 +1485,8 @@ void BEM::RAO(int id) {
 	hydros[id].hd().GetRAO();
 }
 
-void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind) {
-	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind);
+void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof) {
+	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind, vidof, vjdof);
 }
 
 void BEM::ResetForces(int id, Hydro::FORCE force) {

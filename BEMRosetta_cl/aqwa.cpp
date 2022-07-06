@@ -81,19 +81,19 @@ bool Aqwa::Load_AH1() {
 	Sort(hd().head);
 	
 	hd().names.SetCount(hd().Nb);
-	hd().cg.setConstant(3, hd().Nb, Null);
-	hd().c0.setConstant(3, hd().Nb, Null);
+	hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	hd().c0.setConstant(3, hd().Nb, NaNDouble);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, Null); 
+		hd().C[ib].setConstant(6, 6, NaNDouble); 
 	hd().A.SetCount(6*hd().Nb);
 	hd().B.SetCount(6*hd().Nb);
 	for (int i = 0; i < 6*hd().Nb; ++i) {
 		hd().A[i].SetCount(6*hd().Nb);
 		hd().B[i].SetCount(6*hd().Nb);
 		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, 0);	
-			hd().B[i][j].setConstant(hd().Nf, 0);	
+			hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
+			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 		}
 	}
 	hd().Initialize_Forces(hd().ex);
@@ -258,10 +258,10 @@ bool Aqwa::Load_LIS() {
 	}
 	
 	hd().names.SetCount(hd().Nb);
-	hd().Vo.SetCount(hd().Nb, Null);
-	hd().cg.setConstant(3, hd().Nb, Null);
-	hd().c0.setConstant(3, hd().Nb, Null);
-	hd().cb.setConstant(3, hd().Nb, Null);
+	hd().Vo.SetCount(hd().Nb, NaNDouble);
+	hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	hd().cb.setConstant(3, hd().Nb, NaNDouble);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, 0);
@@ -370,8 +370,8 @@ bool Aqwa::Load_LIS() {
 		hd().A[i].SetCount(6*hd().Nb);
 		hd().B[i].SetCount(6*hd().Nb);
 		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, 0);	
-			hd().B[i][j].setConstant(hd().Nf, 0);	
+			hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
+			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 		}
 	}
 	
@@ -534,9 +534,9 @@ bool Aqwa::Load_LIS() {
 							if (idr >= 0) {
 								freq = ScanDouble(line.Mid(idr + 3));
 								if (freq < 0.1 && hd().A0.size() == 0)
-									hd().A0.resize(6*hd().Nb, 6*hd().Nb);
+									hd().A0.setConstant(6*hd().Nb, 6*hd().Nb, NaNDouble);
 								else if (freq > 90 && hd().Ainf.size() == 0)
-									hd().Ainf.resize(6*hd().Nb, 6*hd().Nb);
+									hd().Ainf.setConstant(6*hd().Nb, 6*hd().Nb, NaNDouble);
 								break;
 							}
 						}
