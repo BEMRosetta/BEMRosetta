@@ -279,21 +279,16 @@ void Hydro::Copy(const Hydro &hyd) {
     
     qtfsum = clone(hyd.qtfsum);
     qtfdif = clone(hyd.qtfdif);
-    qtfw = clone(hyd.qtfw);
-    qtfT = clone(hyd.qtfT);
-    qtfhead = clone(hyd.qtfhead);
+    qw = clone(hyd.qw);
+    qh = clone(hyd.qh);
     qtfdataFromW = hyd.qtfdataFromW;
-    
-    qtfCases = clone(hyd.qtfCases);
-    
+        
     T = clone(hyd.T);
     w = clone(hyd.w);
     dataFromW = hyd.dataFromW;
     Vo = clone(hyd.Vo); 
     
     bem = hyd.bem;
-		
-	//id = hyd.id;
 }
 
 void Hydro::Symmetrize_Forces(bool xAxis) {
@@ -535,6 +530,9 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	} else if (type == BEMROSETTA) {
 		HydroClass data(*bem, this);
 		ret = data.Save(file);		
+	} else if (type == AQWA) {
+		Aqwa data(*bem, this);
+		ret = data.Save(file, Status);		
 	}
 	code = type;
 	Nh = realNh;
@@ -994,7 +992,7 @@ int Hydro::GetHeadId(double hd) const {
 	}
 	return -1;
 }
-	
+/*	
 int Hydro::GetQTFHeadId(double hd) const {
 	for (int i = 0; i < qtfhead.size(); ++i) {
 		if (EqualRatio(qtfhead[i], hd, 0.01))
@@ -1045,7 +1043,7 @@ void Hydro::GetQTFList(const UArray<Hydro::QTF> &qtfList, QTFCases &qtfCases, co
 	}
 	qtfCases.Sort(headings);
 }
-
+*/
 VectorXd Hydro::B_dim(int idf, int jdf) const {
 	if (dimen)
 		return B[idf][jdf]*(rho_dim()/rho_ndim());
@@ -1493,12 +1491,12 @@ void BEM::ResetForces(int id, Hydro::FORCE force) {
 	hydros[id].hd().ResetForces(force);
 }
 
-void BEM::FillFrequencyGapsABForces(int id, int zeroInter) {
-	hydros[id].hd().FillFrequencyGapsABForces(zeroInter);
+void BEM::FillFrequencyGapsABForces(int id) {
+	hydros[id].hd().FillFrequencyGapsABForces();
 }
 
-void BEM::FillFrequencyGapsQTF(int id, int zeroInter) {
-	hydros[id].hd().FillFrequencyGapsQTF(zeroInter);
+void BEM::FillFrequencyGapsQTF(int id) {
+	hydros[id].hd().FillFrequencyGapsQTF();
 }
 
 void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadQTF) {

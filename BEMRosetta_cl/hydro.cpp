@@ -2,6 +2,7 @@
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include <STEM4U/Integral.h>
+#include <STEM4U/Utility.h>
 #include "functions.h"
 #include "heal.h"
 
@@ -346,23 +347,20 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 
 
     auto CalcQTF = [&](auto &qtf) {
-	    for (int i = 0; i < qtf.size(); ++i) {
-	        QTF &q = qtf[i];
-			q.fre[3] += -yg*q.fre[2] + zg*q.fre[1];
-			q.fim[3] += -yg*q.fim[2] + zg*q.fim[1];
-			q.fma[3] = sqrt(sqr(q.fre[3]) + sqr(q.fim[3]));
-			q.fph[3] = atan2(q.fim[3], q.fre[3]);
-			
-			q.fre[4] += -yg*q.fre[0] + zg*q.fre[2];
-			q.fim[4] += -yg*q.fim[0] + zg*q.fim[2];
-			q.fma[4] = sqrt(sqr(q.fre[4]) + sqr(q.fim[4]));
-			q.fph[4] = atan2(q.fim[4], q.fre[4]);
-			
-			q.fre[5] += -yg*q.fre[1] + zg*q.fre[0];
-			q.fim[5] += -yg*q.fim[1] + zg*q.fim[0];
-			q.fma[5] = sqrt(sqr(q.fre[5]) + sqr(q.fim[5]));
-			q.fph[5] = atan2(q.fim[5], q.fre[5]);
-	    }
+		for (int ib = 0; ib < Nb; ++ib)
+		        for (int ih = 0; ih < qh.size(); ++ih) 
+					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
+						for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
+							std::complex<double> &v0 = qtfdif[ib][ih][0](ifr1, ifr2),
+												 &v1 = qtfdif[ib][ih][1](ifr1, ifr2),
+												 &v2 = qtfdif[ib][ih][2](ifr1, ifr2),
+												 &v3 = qtfdif[ib][ih][3](ifr1, ifr2),
+												 &v4 = qtfdif[ib][ih][4](ifr1, ifr2),
+												 &v5 = qtfdif[ib][ih][5](ifr1, ifr2);
+							v3 += -yg*v2 + zg*v1;
+							v4 += -yg*v0 + zg*v2;
+							v5 += -yg*v1 + zg*v0;
+						}
     };
 
 	if (IsLoadedQTF()) {
@@ -498,34 +496,26 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 
 void Hydro::DeleteFrequenciesQTF(const UVector<int> &idFreqQTF) {
 	if (idFreqQTF.size() > 0) {
-		auto DeleteSumDif = [&](UArray<QTF> &qtf) {
-			UVector<int> idsum(qtfw.size());
-			for (int i = 0, j = 0; i < qtfw.size(); ++i) {
-				if (j < idFreqQTF.size() && i == idFreqQTF[j])
-					j++;
-				idsum[i] = j;
-			}
-			for (int i = qtf.size()-1; i >= 0; --i) {
-				if (Find(idFreqQTF, qtf[i].ifr1) >= 0 || Find(idFreqQTF, qtf[i].ifr2) >= 0)
-					qtf.Remove(i);
-			}
-			for (int i = 0; i < qtf.size(); ++i) {
-				qtf[i].ifr1 -= idsum[qtf[i].ifr1];
-				qtf[i].ifr2 -= idsum[qtf[i].ifr2];
-			}
+		UVector<int> vids;
+		LinSpaced(vids, int(qw.size()), 0, int(qw.size())-1);
+		for (int i = idFreqQTF.size()-1; i >= 0; --i) 
+			vids.Remove(idFreqQTF[i]);
+		VectorXi ids;
+		::Copy(vids, ids);
+		qw = VectorXd(qw(ids));
+		
+		auto DeleteSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+			for (int ib = 0; ib < Nb; ++ib)
+		        for (int ih = 0; ih < qh.size(); ++ih) 
+					for (int idf = 0; idf < 6; ++idf) {
+						MatrixXcd &m = qtf[ib][ih][idf];
+						m = MatrixXcd(m(all, ids));
+						m = MatrixXcd(m(ids, all));
+					}
 		};
 		if (IsLoadedQTF()) {
 			DeleteSumDif(qtfsum);
 			DeleteSumDif(qtfdif);
-		}
-		
-		int j = idFreqQTF.size()-1;	
-		for (int i = qtfw.size()-1; i >= 0 && j >= 0; --i) {
-			if (i == idFreqQTF[j]) {	
-				qtfw.Remove(i);
-				qtfT.Remove(i);
-				j--;
-			}
 		}
 	}
 }
@@ -564,51 +554,27 @@ void Hydro::DeleteHeadings(const UVector<int> &idHead) {
 
 void Hydro::DeleteHeadingsQTF(const UVector<int> &idHeadQTF) {
 	if (idHeadQTF.size() > 0) {
-		UVector<int> idsum(qtfhead.size());
-		for (int i = 0, j = 0; i < qtfhead.size(); ++i) {
-			if (j < idHeadQTF.size() && i == idHeadQTF[j])
-				j++;
-			idsum[i] = j;
-		}
+		UVector<int> vids;
+		LinSpaced(vids, int(qh.size()), 0, int(qh.size())-1);
+		for (int i = idHeadQTF.size()-1; i >= 0; --i) 
+			vids.Remove(idHeadQTF[i]);
+		VectorXi ids;
+		::Copy(vids, ids);
+		qh = VectorXcd(qh(ids));
 			
-		auto DeleteSumDif = [&](UArray<QTF> &qtf) {
-			for (int i = qtf.size()-1; i >= 0; --i) {
-				if (Find(idHeadQTF, qtf[i].ih1) >= 0 || Find(idHeadQTF, qtf[i].ih2) >= 0)
-					qtf.Remove(i);
-			}
-			for (int i = 0; i < qtf.size(); ++i) {
-				qtf[i].ih1 -= idsum[qtf[i].ih1];
-				qtf[i].ih2 -= idsum[qtf[i].ih2];
-			}
+		auto DeleteSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+			for (int ib = 0; ib < Nb; ++ib)
+		        for (int ih = idHeadQTF.size()-1; ih >= 0; --ih)
+		        	qtf[ib].Remove(idHeadQTF[ih]);
 		};
 		if (IsLoadedQTF()) {
 			DeleteSumDif(qtfsum);
 			DeleteSumDif(qtfdif);
 		}
-		
-		for (int i = qtfCases.ih1.size()-1; i >= 0; --i) {
-			if (Find(idHeadQTF, qtfCases.ih1[i]) >= 0 || Find(idHeadQTF, qtfCases.ih2[i]) >= 0) {
-				qtfCases.ih1.Remove(i);
-				qtfCases.ih2.Remove(i);
-				qtfCases.ib.Remove(i);
-			}
-		}
-		for (int i = 0; i < qtfCases.ih1.size(); ++i) {
-			qtfCases.ih1[i] -= idsum[qtfCases.ih1[i]];
-			qtfCases.ih2[i] -= idsum[qtfCases.ih2[i]];
-		}
-			
-		int j = idHeadQTF.size()-1;	
-		for (int i = qtfhead.size()-1; i >= 0 && j >= 0; --i) {
-			if (i == idHeadQTF[j]) {	
-				qtfhead.Remove(i);
-				j--;
-			}
-		}
 	}
 }
 
-void Hydro::FillFrequencyGapsABForces(int zeroInter) {
+void Hydro::FillFrequencyGapsABForces() {
 	if (w.size() == 0)
 		return;
 	
@@ -628,15 +594,6 @@ void Hydro::FillFrequencyGapsABForces(int zeroInter) {
 	}
 	Nf = neww.size();
 	
-	Upp::Vector<bool> wzero(Nf, false);
-	if (zeroInter == 0) {
-		for (int i = 0; i < Nf; ++i) {
-			int idw = FindDelta(w, neww[i], dw);
-			if (idw < 0)
-				wzero[i] = true;
-		}
-	}
-	
 	auto FillAB = [&](UArray<UArray<VectorXd>> &A) {
         UArray<UArray<VectorXd>> An;
 	
@@ -645,12 +602,8 @@ void Hydro::FillFrequencyGapsABForces(int zeroInter) {
 			An[ib].SetCount(6*Nb);
 			for (int jb = 0; jb < 6*Nb; ++jb) {
 				An[ib][jb].resize(Nf);	
-				for (int i = 0; i < Nf; ++i) {
-					if (wzero[i]) 
-						An[ib][jb][i] = 0;
-					else
-						An[ib][jb][i] = LinearInterpolate(neww[i], ww, A[ib][jb]);
-				}
+				for (int i = 0; i < Nf; ++i) 
+					An[ib][jb][i] = LinearInterpolate(neww[i], ww, A[ib][jb]);
 			}
 		}
 		A = pick(An);
@@ -671,12 +624,8 @@ void Hydro::FillFrequencyGapsABForces(int zeroInter) {
 	        _ex.force[ih].resize(Nf, 6*Nb);
 	    	for (int ib = 0; ib < 6*Nb; ++ib) {
 				for (int i = 0; i < Nf; ++i) {
-					if (wzero[i]) 
-						_ex.force[ih](i, ib) = 0;
-					else {
-						const VectorXcd &ref = ex.force[ih].col(ib);
-						_ex.force[ih](i, ib) = LinearInterpolateC(neww[i], ww, ref);
-					}
+					const VectorXcd &ref = ex.force[ih].col(ib);
+					_ex.force[ih](i, ib) = LinearInterpolateC(neww[i], ww, ref);
 				}
 	    	}
 	    }
@@ -696,91 +645,36 @@ void Hydro::FillFrequencyGapsABForces(int zeroInter) {
 	T = pick(newT);
 }
 
-void Hydro::FillFrequencyGapsQTF(int zeroInter) {
-	if (qtfw.size() == 0)
+void Hydro::FillFrequencyGapsQTF() {
+	if (qw.size() == 0)
 		return;
 	
 	double dw = std::numeric_limits<double>::max();
-	for (int i = 1; i < qtfw.size(); ++i) {
-		if (qtfw[i] - qtfw[i-1] < dw)
-			dw = qtfw[i] - qtfw[i-1];
-	}
-	VectorXd ww = Eigen::Map<VectorXd>(qtfw, qtfw.size());
-	
-	UVector<double> neww, newT;
-	neww << qtfw[0];
-	newT << qtfT[0];
-	for (int i = 1; qtfw[0] + i*dw <= qtfw[qtfw.size()-1]; ++i) {
-		neww << qtfw[0] + i*dw;
-		newT << qtfT[0] + i*dw/2/M_PI;
-	}
-	
-	Upp::Vector<bool> wzero(Nf, false);
-	if (zeroInter == 0) {
-		for (int i = 0; i < Nf; ++i) {
-			int idw = FindDelta(qtfw, neww[i], dw);
-			if (idw < 0)
-				wzero[i] = true;
-		}
+	for (int i = 1; i < qw.size(); ++i) {
+		if (qw[i] - qw[i-1] < dw)
+			dw = qw[i] - qw[i-1];
 	}	
+	UVector<double> neww;
+	neww << qw[0];
+	for (int i = 1; qw[0] + i*dw <= qw[qw.size()-1]; ++i) 
+		neww << qw[0] + i*dw;
 	
-	auto FillSumDif = [&](UArray<QTF> &qtf) {
-		UArray<QTF> _qtf;
-		MatrixXd mzre, mzim, _mzre, _mzim;
-		for (int ib = 0; ib < qtfCases.ib.size(); ++ib) {
-			for (int ih1 = 0; ih1 < qtfCases.ih1.size(); ++ih1) {
-				for (int ih2 = 0; ih2 < qtfCases.ih2.size(); ++ih2) {
+	auto FillSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+		for (int ib = 0; ib < Nb; ++ib)
+		        for (int ih = 0; ih < qh.size(); ++ih) 
 					for (int idof = 0; idof < 6; ++idof) {
-						mzre = MatrixXd::Constant(qtfw.size(), qtfw.size(), Null);
-						mzim = MatrixXd::Constant(qtfw.size(), qtfw.size(), Null);
-						for (int i = 0; i < qtf.size(); ++i) {
-							if (qtf[i].ib == ib && qtf[i].ih1 == ih1 && qtf[i].ih2 == ih2) {
-								mzre(qtf[i].ifr1, qtf[i].ifr2) = qtf[i].fre[idof];
-								mzim(qtf[i].ifr1, qtf[i].ifr2) = qtf[i].fim[idof];
-							}
-						}
-						if (!IsNum(mzre))
-							throw Exc(Format("Wrong qtf structure in body %d, head1 %f, head2 %f", ib+1, qtfCases.ih1[ih1], qtfCases.ih2[ih2]));
+						MatrixXcd nm, &m = qtf[ib][ih][idof];
 						VectorXd nw;
-						VectorXd _qtfw = Eigen::Map<VectorXd>(qtfw, qtfw.size());
-						Resample(_qtfw, _qtfw, mzre, nw, nw, mzre, dw, dw);
-						Resample(_qtfw, _qtfw, mzim, nw, nw, mzim, dw, dw);
-						ASSERT(nw.size() == neww.size());
-						for (int ifr1 = 0; ifr1 < nw.size(); ++ifr1) {
-							for (int ifr2 = 0; ifr2 < nw.size(); ++ifr1) {
-								int id = Null;
-								for (int i = 0; i < _qtf.size(); ++i) {
-									if (_qtf[i].ib == ib && _qtf[i].ih1 == ih1 && _qtf[i].ih2 == ih2 && _qtf[i].ifr1 == ifr1 && _qtf[i].ifr2 == ifr2) {	
-										id = i;
-										break;
-									}
-								}
-								if (IsNull(id)) {
-									_qtf.Add();
-									id = _qtf.size()-1;
-									_qtf[id].Set(ib, ih1, ih2, ifr1, ifr2);
-								}
-								double &re = _qtf[id].fre[idof] = mzre(ifr1, ifr2);
-								double &im = _qtf[id].fim[idof] = mzim(ifr1, ifr2);		
-								_qtf[id].fma[idof] = sqrt(re*re + im*im);		
-								_qtf[id].fph[idof] = atan2(im, re);	
-							}
-						}
+						Resample(qw, qw, m, nw, nw, nm, dw, dw);
+						m = pick(nm);
 					}
-				}
-			}
-		}
-		qtf = pick(_qtf);
 	};
 	if (IsLoadedQTF()) {
 		FillSumDif(qtfsum);
 		FillSumDif(qtfdif);
-		
-		GetQTFList(qtfsum, qtfCases, qtfhead);
 	}
 	
-	qtfw = pick(neww);
-	qtfT = pick(newT);		
+	::Copy(neww, qw);
 }
 
 void Heal();

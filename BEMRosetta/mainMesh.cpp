@@ -566,7 +566,7 @@ void MainMesh::OnConvertMesh() {
 		Status(t_("Saving mesh data"));
 		String fileType = ~menuOpen.dropExport;
 		Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(fileType);
-		String ext = Mesh::meshExt[type];
+		String ext = Replace(Mesh::meshExt[type], "*", "");
 		
 		FileSel fs;
 		
