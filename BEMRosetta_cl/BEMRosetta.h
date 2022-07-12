@@ -24,10 +24,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  FAST_WAMIT, 				   WAMIT_1_3, 				 HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   FOAMM,   BEMROSETTA, 	   UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "FAST .dat.1.2.3.hst.ss.12", "Wamit .1.2.3.hst.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA", "FOAMM", "BEMRosetta .bem", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     				   true,		 			 false,		   false,		  false,   false, 		   false,  false,    true,			   true};       
-	static constexpr const char *bemExt[]	 = {".out", 	  ".1",	     				   ".1",		 			 "",		   "",		      "",      "", 		   	   "",     "",    	 ".bem",		   "*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  FAST_WAMIT, 				   WAMIT_1_3, 				 HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   BEMROSETTA, 	   	   UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "FAST .dat.1.2.3.hst.ss.12", "Wamit .1.2.3.hst.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "BEMRosetta .bem", "By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     				   true,		 			 false,		   false,		  false,   false, 		   true,  					  false,   true,			   true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     			   "*.1",		 			 "",		   "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.bem",		   	   "*.*"};       
 	
 	static const char *GetBemStr(BEM_FMT c) {
 		if (c < 0 || c > UNKNOWN)
@@ -205,110 +205,28 @@ public:
 			;
     	}
     };
-    UArray<UArray<StateSpace>> sts;	// (6*Nb, 6*Nb)		State space data
+    UArray<UArray<StateSpace>> sts;			// (6*Nb, 6*Nb)		State space data
     int dimenSTS;							// false if data is dimensionless
     String stsProcessor;
     
-    struct QTF : public DeepCopyOption<QTF> {
-        QTF() {
-            fre.SetCount(6, Null);
-            fim.SetCount(6, Null);
-            fma.SetCount(6, Null);
-            fph.SetCount(6, Null);
-        }
-        QTF(const QTF &q, int) {
-        	ib = q.ib;
-        	ih1 = q.ih1;	ih2 = q.ih2;
-        	ifr1 = q.ifr1;	ifr2 = q.ifr2;
-        	fre = clone(q.fre);		fim = clone(q.fim);
-        	fma = clone(q.fma); 	fph = clone(q.fph);
-        }
-        void Set(int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2) {
-            ib = _ib;
-            ih1 = _ih1;
-            ih2 = _ih2;
-            ifr1 = _ifr1;
-            ifr2 = _ifr2;
-        }
-        
-        int ib = -1;
-        int ih1, ih2;
-        int ifr1, ifr2;
-        UVector<double> fre, fim, fma, fph;
- 
-		void Jsonize(JsonIO &json) {
-			json
-				("ib",  ib)
-				("ih1", ih1)
-				("ih2", ih2)
-				("ifr1",ifr1)
-				("ifr2",ifr2)
-				("fre", fre)
-				("fim", fim)
-				("fma", fma)
-				("fph", fph)
-			;
-    	}
-    	void Clear() {
-    		fre.Clear();
-    		fim.Clear();
-    		fma.Clear();
-    		fph.Clear();
-    	}
-    };
-    UArray<QTF> qtfsum, qtfdif;
-    UVector<double> qtfw, qtfT, qtfhead;
-    bool qtfdataFromW;
     
-    struct QTFCases : public DeepCopyOption<QTFCases>  {
-    	UVector<int> ib, ih1, ih2;
-    	
-    	QTFCases() {}
-    	QTFCases(const QTFCases &q, int) {
-    		ib = clone(q.ib);
-    		ih1 = clone(q.ih1);
-    		ih2 = clone(q.ih2);
-    	}
-    	void Clear() {
-    		ib.Clear();
-    		ih1.Clear();
-    		ih2.Clear();
-    	}
-    	int size() {return ib.size();}
-    	void Sort(const UVector<double> &headings) {
-    		UVector<int> indices(ib.size());
-			for (int i = 0; i < indices.size(); ++i)
-				indices[i] = i;
-			StableSort(indices, [&](int a, int b)-> bool {
-				if (ib[a] < ib[b])
-					return true;
-				else if (ib[a] > ib[b])
-					return false;	 
-				else { 
-					if (ih1[a] < ih1[b])
-						return true;
-					else if (ih1[a] > ih1[b])
-						return false;	 
-					else {
-						if (ih2[a] < ih2[b])
-							return true;
-						else
-							return false;
-					}
-				}
-			});
-					
-			ib  = ApplyIndex(ib, indices);
-			ih1 = ApplyIndex(ih1, indices);
-			ih2 = ApplyIndex(ih2, indices);
-    	}
-    } qtfCases;
-    
-    int GetQTFHeadId(double hd) const;
-    static int GetQTFId(int lastid, const UArray<Hydro::QTF> &qtfList, 
-    			const QTFCases &qtfCases, int _ib, int _ih1, int _ih2, int _ifr1, int _ifr2);
-	static void GetQTFList(const UArray<Hydro::QTF> &qtfList, QTFCases &qtfCases, const UVector<double> &headings);
-							
+    VectorXd  qw;		 							// [Nf]             Wave frequencies
+    VectorXcd qh;									// [Nh]             Wave headings
+    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
+    bool qtfdataFromW = true;
+     
+    void InitQTF(UArray<UArray<UArray<MatrixXcd>>> &qtf, int nb, int nh, int nf) {
+        qtf.SetCount(nb);
+        for (int ib = 0; ib < nb; ++ib) {
+            qtf[ib].SetCount(nh);
+        	for (int ih = 0; ih < nh; ++ih) {    
+        		qtf[ib][ih].SetCount(6);
+        		for (int idf = 0; idf < 6; ++idf) 
+        			qtf[ib][ih][idf].resize(nf, nf);
+        	}
+        }
+    }
+    					
     UVector<double> T;					// [Nf]    			Wave periods
     UVector<double> w;		 			// [Nf]             Wave frequencies
     bool dataFromW;
@@ -564,8 +482,8 @@ public:
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force);
 	
-	void FillFrequencyGapsABForces(int zeroInter);
-	void FillFrequencyGapsQTF(int zeroInter);
+	void FillFrequencyGapsABForces();
+	void FillFrequencyGapsQTF();
 	
 	void Join(const UVector<Hydro *> &hydrosp);
 	
@@ -693,7 +611,7 @@ public:
 	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   UNKNOWN};	
 	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Unknown"};	
 	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
-	static constexpr const char *meshExt[]	  = {".gdf", 	 ".dat",	 ".dat",	 "",		     ".dat",	".pnl",    ".stl", 		".stl",    "",    ".msh",	  ".bemr",  ".dat", 	   "*.*"};       
+	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "",		     "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.*"};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -1076,13 +994,14 @@ class Aqwa : public HydroClass {
 public:
 	Aqwa(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
-	void Save(String file);
+	bool Save(String file, Function <bool(String, int)> Status);
 	virtual ~Aqwa() noexcept {}
 	
 private:
 	bool Load_AH1();
 	bool Load_LIS();
 	bool Load_QTF();
+	void Save_QTF(String file, Function <bool(String, int)> Status);
 };
 
 
@@ -1164,8 +1083,8 @@ public:
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force);										
 	
-	void FillFrequencyGapsABForces(int id, int zeroInter);
-	void FillFrequencyGapsQTF(int id, int zeroInter);
+	void FillFrequencyGapsABForces(int id);
+	void FillFrequencyGapsQTF(int id);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);

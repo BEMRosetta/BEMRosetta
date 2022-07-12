@@ -596,135 +596,170 @@ bool Aqwa::Load_QTF() {
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	in.GetLine();	// AQWA version	
+	f.GetLine();	// AQWA version	
+	f.GetLine();
 	
-	hd().qtfsum.Clear();
-	hd().qtfdif.Clear();
-	hd().qtfCases.Clear();
+	int Nb = f.GetInt(0);
+	int Nh = f.GetInt(1);
+	int Nf = f.GetInt(2);	
 	
-	int nrows = hd().Nh*hd().Nf*hd().Nf;
-	hd().qtfdif.Reserve(hd().Nb*nrows);
-	hd().qtfsum.Reserve(hd().Nb*nrows);
-	
-	VectorMap<int, double> headings;
-	UVector<int> finalId;
-	
-	while (!in.IsEof()) {
-		f.Load(in.GetLine());
-		int ib = f.GetInt(0);
-		if (IsNull(hd().Nb)) {
-			hd().Nb = ib;
-			if (hd().names.IsEmpty())
-				hd().names.SetCount(hd().Nb);
+    UVector<double> _qw;
+    UArray<std::complex<double>> _qh;
+    
+	int col = 3;
+	int ih = 0;
+	while (!in.IsEof()) {		// Check headings
+		while (col < f.size() && ih < Nh) {
+			double head = f.GetDouble(col++);
+			_qh << std::complex<double>(head, head);
+			ih++;
 		}
-		else if (ib > hd().Nb)
-			throw Exc(in.Str() + "\n"  + Format(t_("#%d body found when max are %d"), ib+1, hd().Nb));
-		int Nh = f.GetInt(1);
-		int Nf = f.GetInt(2);
-		
-		int col = 3;
-		int ih = 0;
-		while (!in.IsEof()) {		// Check headings
-			while (col < f.size() && ih < Nh) {
-				double head = FixHeading_180(f.GetDouble(col++));
-				headings.Add(ih, head);
-				FindAddRatio(hd().qtfhead, head, 0.001);
-				ih++;
-			}
-			if (ih >= Nh)
-				break;
-			f.Load(in.GetLine());
-			col = 0;
-		}
-		Sort(hd().qtfhead);
-		
-		finalId.SetCount(Nh, Null);
-		for (int i = 0; i < headings.size(); ++i) {				// All file headings
-			for (int j = 0; j < hd().qtfhead.size(); ++j) {		// Just the final headings
-				if (abs(headings.GetValues()[i] - hd().qtfhead[j]) < 0.01) {
-					finalId[i] = j;			
-					break;
-				}
-			}
-			if (IsNull(finalId[i]))
-				throw Exc(t_("Bad heading matching"));
-		}
-		
+		if (ih >= Nh)
+			break;
 		f.Load(in.GetLine());
 		col = 0;
-		int ifr = 0;
-		while (!in.IsEof()) {		// Check frequencies
-			while (col < f.size() && ifr < Nf) {
-				double w = f.GetDouble(col++);
-				FindAddRatio(hd().qtfw, w, 0.001);
-				ifr++;
-			}
-			if (ifr >= Nf)
-				break;
-			f.Load(in.GetLine());
-			col = 0;
+	}	
+
+	f.Load(in.GetLine());
+	col = 0;
+	int ifr = 0;
+	while (!in.IsEof()) {		// Check frequencies
+		while (col < f.size() && ifr < Nf) {
+			double w = f.GetDouble(col++);
+			_qw << w;
+			ifr++;
 		}
-		hd().qtfT.Clear();
-		for (int ifr = 0; ifr < hd().qtfw.size(); ++ifr)
-			hd().qtfT << 2*M_PI/hd().qtfw[ifr];
-		
-		nrows = Nh*Nf*Nf;
-		for (int i = 0; i < nrows; ++i) {
-			f.Load(in.GetLine());
-			int ib = f.GetInt(0)-1;
-			if (ib >= hd().Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Body id %d higher than number of bodies"), ib+1, hd().Nb));
-			int ih = f.GetInt(1)-1;
-			if (ih >= Nh)
-				throw Exc(in.Str() + "\n"  + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
-			int ifr1 = f.GetInt(2)-1;
-			if (ifr1 >= Nf)
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
-			int ifr2 = f.GetInt(3)-1;
-			if (ifr2 >= Nf)
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+2, Nf));
-							
-			Hydro::QTF &qtfdif = hd().qtfdif.Add();
-			qtfdif.Set(ib, finalId[ih], finalId[ih], ifr1, ifr2);
-	        
-			for (int idof = 0; idof < 6; ++idof) 
-				qtfdif.fre[idof] = f.GetDouble(4 + idof);
-				
-	        f.Load(in.GetLine());
-	        for (int idof = 0; idof < 6; ++idof)
-				qtfdif.fim[idof] = f.GetDouble(idof);
-		
-			for (int idof = 0; idof < 6; ++idof) {
-				qtfdif.fma[idof] = sqrt(sqr(qtfdif.fre[idof]) + sqr(qtfdif.fim[idof])); 
-				qtfdif.fph[idof] = atan2(qtfdif.fim[idof], qtfdif.fre[idof]);
-			}
-	
-			Hydro::QTF &qtfsum = hd().qtfsum.Add();
-			qtfsum.Set(ib, finalId[ih], finalId[ih], ifr1, ifr2);
-					
-			f.Load(in.GetLine());
-			for (int idof = 0; idof < 6; ++idof) 
-				qtfsum.fre[idof] = f.GetDouble(idof);
-				
-	        f.Load(in.GetLine());
-	        for (int idof = 0; idof < 6; ++idof)
-				qtfsum.fim[idof] = -f.GetDouble(idof);		// Negative to follow Wamit. Just to the sum term
-		
-			for (int idof = 0; idof < 6; ++idof) {
-				qtfsum.fma[idof] = sqrt(sqr(qtfsum.fre[idof]) + sqr(qtfsum.fim[idof])); 
-				qtfsum.fph[idof] = atan2(qtfsum.fim[idof], qtfsum.fre[idof]);
-			}
-		}
+		if (ifr >= Nf)
+			break;
+		f.Load(in.GetLine());
+		col = 0;
 	}
-	hd().GetQTFList(hd().qtfsum, hd().qtfCases, hd().qtfhead);
+
+	if (_qw.size() != Nf)
+		throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of frequencies %d found in qtf header. They should have to be %d"), _qw.size(), Nf));
+	if (_qh.size() != Nh)
+		throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
+						
+	Copy(_qw, hd().qw);
+	Copy(_qh, hd().qh);
+	
+	hd().InitQTF(hd().qtfsum, Nb, Nh, Nf);
+	hd().InitQTF(hd().qtfdif, Nb, Nh, Nf);
+	
+	int nrows = Nb*Nh*Nf*Nf;
+	
+	for (int i = 0; i < nrows; ++i) {
+		f.Load(in.GetLine());
+		int ib = f.GetInt(0)-1;
+		if (ib >= Nb)
+			throw Exc(in.Str() + "\n"  + Format(t_("Body id %d higher than number of bodies"), ib+1, Nb));
+		int ih = f.GetInt(1)-1;
+		if (ih >= Nh)
+			throw Exc(in.Str() + "\n"  + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
+		int ifr1 = f.GetInt(2)-1;
+		if (ifr1 >= Nf)
+			throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
+		int ifr2 = f.GetInt(3)-1;
+		if (ifr2 >= Nf)
+			throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr2+1, Nf));
+
+		for (int idf = 0; idf < 6; ++idf) 
+			hd().qtfdif[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(4 + idf));
+			
+        f.Load(in.GetLine());
+        for (int idf = 0; idf < 6; ++idf)
+            hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(idf));
+        
+		f.Load(in.GetLine());
+        for (int idf = 0; idf < 6; ++idf)
+            hd().qtfsum[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(idf));
+        
+        f.Load(in.GetLine());
+        for (int idf = 0; idf < 6; ++idf)
+            hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(idf));
+	}
 	
 	return true;
 }
 
-void Aqwa::Save(String ) {
-	throw Exc("Option not implemented");
+bool Aqwa::Save(String file, Function <bool(String, int)> Status) {
+	try {
+		BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+
+		if (hd().IsLoadedQTF()) {
+			BEM::Print("\n- " + S(t_("QTF file")));
+			Save_QTF(ForceExt(file, ".qtf"), Status);
+		}
+	} catch (Exc e) {
+		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = e;
+		return false;
+	}
+	return true;
 }		
 
+void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
+	if (!(hd().IsLoadedQTF())) 
+		return;
+		
+	FileOut out(file);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'"), file));
+	
+	out << "AQTF-2.0 :                                                            \n";
+	out << Format(" %2d %2d %3d    ", hd().Nb, hd().qh.size(), hd().qw.size());
+	int icol = 0;
+	for (int ih = 0; ih < hd().qh.size(); ++ih) {
+		if (hd().qh[ih].real() != hd().qh[ih].imag())
+			continue;
+		out << Format("   % 9.5f", hd().qh[ih].real());
+		icol++;
+		if (icol > 5) {
+			out << "\n              ";
+			icol = 0;
+		} 
+	}
+	out << "\n               ";
+	icol = 0;
+	for (int ifr = 0; ifr < hd().qw.size(); ++ifr) {
+		out << Format("   %9.7f", hd().qw[ifr]);
+		icol++;
+		if (icol > 5) {
+			out << "\n               ";
+			icol = 0;
+		}
+	}	
+
+	int num = int(hd().Nb*hd().qh.size());
+	int inum = 0;
+	for (int ib = 0; ib < hd().Nb; ++ib)
+        for (int ih = 0, realih = 0; ih < hd().qh.size(); ++ih) {
+            inum++;
+            if (Status && !(inum%(num/20)) && !Status(Format("Saving %s", file), (100*ih)/int(hd().qh.size())))
+				throw Exc(t_("Stop by user"));
+            
+	        if (hd().qh[ih].real() != hd().qh[ih].imag())
+				continue; 
+			for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) 
+				for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) {
+					out << Format("\n %2d %2d %3d %3d ", ib+1, realih+1, ifr1+1, ifr2+1);
+					for (int idf = 0; idf < 6; ++idf) 
+						out << Format(" % 6.4E", hd().qtfdif[ib][ih][idf](ifr1, ifr2).real());
+					out << "\n               ";
+					for (int idf = 0; idf < 6; ++idf) 
+						out << Format(" % 6.4E", hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag());
+					out << "\n               ";
+					for (int idf = 0; idf < 6; ++idf) 
+						out << Format(" % 6.4E", hd().qtfsum[ib][ih][idf](ifr1, ifr2).real());
+					out << "\n               ";
+					for (int idf = 0; idf < 6; ++idf) 
+						out << Format(" % 6.4E", hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag());
+				}
+			realih++;	
+        }
+}
+	
+	
 bool AQWACase::Load(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())

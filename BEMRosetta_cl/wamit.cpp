@@ -1158,18 +1158,12 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	
 	String ext = isSum ? ".12s" : ".12d";
 	
-	Status(Format("Loading %s base data", ext), -1);
+	Status(Format("Loading %s base data", ext), 0);
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
-	int nrows = hd().Nh*hd().Nf*hd().Nf;
-	UArray<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
-	
-	qtfList.Clear();
-	qtfList.Reserve(hd().Nb*nrows);
-		
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
 	
@@ -1180,155 +1174,74 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	else
 		fpos = in.GetPos();		// Avoid header
 	
-    UVector<double> w, T;
-    UVector<double> head;
-    
-    bool isRad = true;
-	int maxDof = 0;	
+	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd().qtfsum : hd().qtfdif;		
+	
+	qtf.Clear();
+	
+	UVector<double> w;
+    UArray<std::complex<double>> head;
+	
+	int Nb = 0;
+	int nline = 0;
 	while (!in.IsEof()) {
 		f.GetLine();
+		nline++;
 		double freq = f.GetDouble(0);
-		double hd = FixHeading_180(f.GetDouble(2));
 		FindAdd(w, freq);
-		FindAdd(head, hd);
-		
-		int dof = f.GetInt(4);
-		if (dof > maxDof)
-			maxDof = dof-1;
-		
-		if (abs(f.GetDouble(6)) > M_PI + 0.01)
-			isRad = false;
+		double hd1 = f.GetDouble(2);
+		double hd2 = f.GetDouble(3);
+		FindAdd(head, std::complex<double>(hd1, hd2));	
+		Nb = max(Nb, 1 + (f.GetInt(4)-1)/6);
 	}
-	Sort(head);
 	
-	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
 		throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
-	hd().Nb = Nb;	
+	
 	if (hd().names.IsEmpty())
 		hd().names.SetCount(hd().Nb);
 		
+	int Nf = w.size();
 	int Nh = head.size();
 	if (Nh == 0)
 		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
-	if (hd().qtfhead.IsEmpty()) 
-		hd().qtfhead = pick(head);
-	else {
-		for(int i = 0; i < head.size(); i++) {
-			bool found = false;
-			for(int j = 0; j < hd().qtfhead.size(); j++) {
-				if (EqualRatio(head[i], hd().qtfhead[j], 0.001, 0.001)) {
-					found = true;
-					break;
-				}
-			}
-			if (!found)
-				throw Exc(Format(t_("Heading %f not found in previous %s"), head[i], ToString(hd().head)));
-		}
-	}
-
-	int Nf = w.size();
 	
-	if (w[0] > w[1]) {
-		hd().qtfdataFromW = false;
-		T = pick(w);
-		w.SetCount(Nf);	
-	} else {
-		hd().qtfdataFromW = true;
-		T.SetCount(Nf);
-	}
+	hd().InitQTF(qtf, Nb, Nh, Nf);
 	
-	for (int ifr = 0; ifr < Nf; ++ifr) {
-		if (hd().qtfdataFromW)
-			T[ifr] = 2*M_PI/w[ifr];//fround(2*M_PI/w[ifr], 8);
-		else
-			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
-	}
-	
-	if (hd().qtfw.IsEmpty()) {
-		hd().qtfw = pick(w);
-		hd().qtfT = pick(T);
-	} else if (!CompareRatio(hd().qtfw, w, 0.01))
-		throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
-	else if (!CompareRatio(hd().qtfT, T, 0.01))
-		throw Exc(Format(t_("[%s] Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
+	Status(Format("Loading %s data", ext), 20);
 	
 	in.SeekPos(fpos);
-	
-	int total = Nb*6*pow2(hd().qtfw.size())*pow2(hd().qtfhead.size());
-	int it = 0;
+	int iline = 0;
 	while (!in.IsEof()) {
-		it++;
-		f.Load(in.GetLine());
-	
-		double wT1 = f.GetDouble(0);
-		int iwT1;
-		if (hd().qtfdataFromW) {
-			iwT1 = FindClosest(hd().qtfw, wT1);
-			if (!EqualRatio(hd().qtfw[iwT1], wT1, 0.01, 0.001))
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency 1 %f not found"), wT1));
-		} else {
-			iwT1 = FindClosest(hd().qtfT, wT1);
-			if (!EqualRatio(hd().qtfT[iwT1], wT1, 0.01, 0.001))
-				throw Exc(in.Str() + "\n"  + Format(t_("Period 1 %f not found"), wT1));
-		}
-		double wT2 = f.GetDouble(1);
-		int iwT2;
-		if (hd().qtfdataFromW) {
-			iwT2 = FindClosest(hd().qtfw, wT2);
-			if (!EqualRatio(hd().qtfw[iwT2], wT2, 0.01, 0.001))
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency 2 %f not found"), wT2));
-		} else {
-			iwT2 = FindClosest(hd().qtfT, wT2);
-			if (!EqualRatio(hd().qtfT[iwT2], wT2, 0.01, 0.001))
-				throw Exc(in.Str() + "\n"  + Format(t_("Period 2 %f not found"), wT2));
-		}
-		double h1 = FixHeading_180(f.GetDouble(2));
-		int ih1 = FindClosest(hd().qtfhead, h1);
-		if (!EqualRatio(hd().qtfhead[ih1], h1, 0.01, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Heading 1 %f not found"), h1));
-		double h2 = FixHeading_180(f.GetDouble(3));
-		int ih2 = FindClosest(hd().qtfhead, h2);
-		if (!EqualRatio(hd().qtfhead[ih2], h2, 0.01, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Heading 2 %f not found"), h2));
-
-		int idof = f.GetInt(4)-1;
-		if (idof < 0 || idof > hd().Nb*6 -1)
-			throw Exc(in.Str() + "\n"  + Format(t_("Wrong DOF id %d"), idof+1));
-	    
-		int ib = int(idof/6);
-		idof = idof - ib*6;
+		f.GetLine();
+		iline++;
 		
-		Hydro::QTF *pqtf;
-		int id = 0;
-		if ((id = hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, iwT1, iwT2)) >= 0)
-			pqtf = &qtfList[id];
-		else {
-			pqtf = &qtfList.Add();
-			pqtf->Set(ib, ih1, ih2, iwT1, iwT2);
-		}
-	    
-	    Hydro::QTF &qtf = *pqtf;
-	    
-	    qtf.fma[idof] = f.GetDouble(5);
-	    double ph = f.GetDouble(6);
-	    qtf.fph[idof] = isRad ? ph : ToRad(ph);
-	    qtf.fre[idof] = f.GetDouble(7);
-	    qtf.fim[idof] = f.GetDouble(8);    
-	        
-		double fre = qtf.fma[idof]*cos(qtf.fph[idof]);
-		double fim = qtf.fma[idof]*sin(qtf.fph[idof]);
-		
-		if (!EqualRatio(fre, qtf.fre[idof], 0.01, 10.))
-			throw Exc(in.Str() + "\n"  + Format(t_("Real force does not match with magnitude and phase calculation %f <> %f·cos(%f) = %f"), 
-										qtf.fre[idof], qtf.fma[idof], ph, fre));
-		if (!EqualRatio(fim, qtf.fim[idof], 0.01, 10.))
-			throw Exc(in.Str() + "\n"  + Format(t_("Imaginary force does not match with magnitude and phase calculation %f <> %f·sin(%f) = %f"), 
-										qtf.fim[idof], qtf.fma[idof], ph, fim));
-		if (Status && !(it%500) && !Status(Format("Loading %s %d/%d", ext, it, total), 100*it/total))
+		if (Status && !(iline%(nline/10)) && !Status(Format("Loading %s", ext), 20 + (80*iline)/nline))
 			throw Exc(t_("Stop by user"));
+
+		int ifr1 = Find(w, f.GetDouble(0));
+		int ifr2 = Find(w, f.GetDouble(1));
+		int ih = Find(head, std::complex<double>(f.GetDouble(2), f.GetDouble(3)));
+		int idf = f.GetInt(4)-1;
+		int ib = 0;
+		while (idf > 5) {
+			idf -= 6;
+			ib++;
+		}
+		qtf[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(7));
+		qtf[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(8));
 	}
-	hd().GetQTFList(qtfList, hd().qtfCases, hd().qtfhead);
+	
+	Copy(w, hd().qw);
+	Copy(head, hd().qh);
+	
+	hd().qtfdataFromW = !(w[0] > w[1]);
+	
+	if (!hd().qtfdataFromW) 
+		for (int i = 0; i < hd().qw.size(); ++i)
+   			hd().qw(i) = 2*M_PI/hd().qw(i);
+	
+	for (int i = 0; i < hd().qh.size(); ++i)
+   		hd().qh(i) = std::complex<double>(FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
 	
 	return true;
 }
@@ -1515,86 +1428,39 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 	
-	int Nf = hd().qtfw.size();
-	int Nh = hd().qtfhead.size(); 
+	int Nf = int(hd().qw.size());
+	int Nh = int(hd().qh.size()); 
 	
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 			
-	UArray<Hydro::QTF> &qtfList = isSum ? hd().qtfsum : hd().qtfdif;
-		
+	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd().qtfsum : hd().qtfdif;		
+			
 	out << " WAMIT Numeric Output -- Filename  " << Format("%20<s", GetFileName(fileName)) << "  " << Format("%", GetSysTime()) << "\n";
-	
-	UVector<double> *pdata;
-	int ifr0, ifrEnd, ifrDelta;
-	if (hd().qtfdataFromW && !force_T) 
-		pdata = &hd().qtfw;
-	else
-		pdata = &hd().qtfT;
-	UVector<double> &data = *pdata;
-	
-	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
-		ifr0 = 0;
-		ifrEnd = hd().qtfw.size();
-		ifrDelta = 1;
-	} else {
-		ifr0 = hd().qtfw.size() - 1;
-		ifrEnd = -1;
-		ifrDelta = -1;
-	}
-	
-	static int idf12[] = {1, 3, 5, 2, 4, 6};
-	
-	int num = hd().qtfw.size();
-	int it = 0;
-	for (int ifr1 = ifr0; ifr1 != ifrEnd; ifr1 += ifrDelta) {
-		for (int ifr2 = ifr0; ifr2 != ifrEnd; ifr2 += ifrDelta) {
-			if (Status && !(it%500) && !Status(Format("Saving %s %d/%d", ext, it, num*num), 100*it/(num*num)))
-				throw Exc(t_("Stop by user"));
-			it++;
-			int id = 0;
-			for (int ih1 = 0; ih1 < Nh; ++ih1) {
-				if (qtfHeading >= 0 && ih1 != qtfHeading)
-					continue;
-				for (int ih2 = 0; ih2 < Nh; ++ih2) {
-					if (qtfHeading >= 0 && ih1 != qtfHeading)
-						continue;	 
-					for (int ib = 0; ib < hd().Nb; ++ib) {
-						id = hd().GetQTFId(id, qtfList, hd().qtfCases, ib, ih1, ih2, ifr1, ifr2);
-						if (id >= 0 || qtfHeading == -2) {
-							double qtfhead1, qtfhead2;
-							if (qtfHeading >= 0) 
-								qtfhead1 = qtfhead2 = 0;		// Just 0º
-							else {
-								qtfhead1 = hd().qtfhead[ih1];
-								qtfhead2 = hd().qtfhead[ih2];
-							}							
-							for (int _idf = 0; _idf < 6; ++_idf) {
-								int idf = idf12[_idf]-1;
-								out << Format("   %s   %s   %s   %s   %2d", 
-										FormatWam(data[ifr1]),
-										FormatWam(data[ifr2]), 
-										FormatWam(qtfhead1),
-										FormatWam(qtfhead2),
-										ib*6 + idf + 1);
-								if ((qtfHeading >= 0 || id >= 0) /*&& idf < 2*/) {	/*// To remove dof */
-									Hydro::QTF &qtf = qtfList[id];
-									out << Format("   %s   %s   %s   %s\n",		
-											FormatWam(hd().F_ndim(qtf.fma[idf], idf)), 
-											FormatWam(!force_Deg ? qtf.fph[idf] : ToDeg(qtf.fph[idf])),
-											FormatWam(hd().F_ndim(qtf.fre[idf], idf)), 
-											FormatWam(hd().F_ndim(qtf.fim[idf], idf)));
-								} else // qtfHeading == -2
-									out << Format("   %s   %s   %s   %s\n",		
-											FormatWam(0), 
-											FormatWam(0),
-											FormatWam(0), 
-											FormatWam(0));
-							}
-						}
-					}
-				}
+
+	int num = int(pow2(hd().qw.size())*hd().qh.size());
+	int inum = 0;
+	for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) 
+		for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) 
+			for (int ih = 0; ih < hd().qh.size(); ++ih) {
+				inum++;
+				if (Status && !(inum%(num/20)) && !Status(Format("Saving %s", fileName), (100*inum)/num))
+					throw Exc(t_("Stop by user"));
+				
+				for (int ib = 0; ib < hd().Nb; ++ib)
+        			for (int idf = 0; idf < 6; ++idf) {
+        				static int idf12[] = {1, 3, 5, 2, 4, 6};
+        				int iidf = idf12[idf]-1;
+        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr1]);
+        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr2]);
+        				out << Format("   % 8.6E", hd().qh[ih].real());
+        				out << Format("   % 8.6E", hd().qh[ih].imag());
+        				out << Format("   %2d", ib*6 + iidf+1);
+        				out << Format("   % 8.6E", hd().F_ndim(abs(qtf[ib][ih][iidf](ifr1, ifr2)), iidf));
+        				out << Format("   % 8.6E", !force_Deg ? arg(qtf[ib][ih][iidf](ifr1, ifr2)) : ToDeg(arg(qtf[ib][ih][iidf](ifr1, ifr2))));
+        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).real(), iidf));
+        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).imag(), iidf));
+        				out << "\n";
+        			}
 			}
-		}
-	}
 }
