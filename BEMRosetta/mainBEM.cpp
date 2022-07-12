@@ -88,10 +88,10 @@ void MainBEM::Init() {
 	menuProcess.dropHead.GetList().GetColumn(0).Option();
 	menuProcess.dropHead.Width(100);
 	menuProcess.dropHead.GetList().Sorting(false);
-	menuProcess.dropHeadQTF.AddColumn("", 20);
+	menuProcess.dropHeadQTF.AddColumn("", 10);
 	menuProcess.dropHeadQTF.AddColumn("Heading [º]", 50);
 	menuProcess.dropHeadQTF.GetList().GetColumn(0).Option();
-	menuProcess.dropHeadQTF.Width(100);
+	menuProcess.dropHeadQTF.Width(150);
 	menuProcess.dropHeadQTF.GetList().Sorting(false);
 	menuProcess.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
 	menuProcess.butDiffraction << THISBACK1(OnResetForces, Hydro::SCATTERING);
@@ -579,12 +579,12 @@ void MainBEM::UpdateButtons() {
 		Hydro &data = Bem().hydros[id].hd();
 		for (int i = 0; i < data.w.size(); ++i)
 			menuProcess.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
-		for (int i = 0; i < data.qtfw.size(); ++i)
-			menuProcess.dropFreqQTF.Add(false, show_w ? data.qtfw[i] : data.qtfT[i]);
+		for (int i = 0; i < data.qw.size(); ++i)
+			menuProcess.dropFreqQTF.Add(false, show_w ? data.qw[i] : 2*M_PI/data.qw[i]);
 		for (int i = 0; i < data.head.size(); ++i)
 			menuProcess.dropHead.Add(false, data.head[i]);
-		for (int i = 0; i < data.qtfhead.size(); ++i)
-			menuProcess.dropHeadQTF.Add(false, data.qtfhead[i]);
+		for (int i = 0; i < data.qh.size(); ++i)
+			menuProcess.dropHeadQTF.Add(false, Format("%f-%f", data.qh[i].real(), data.qh[i].imag()));
 	
 		menuProcess.butDiffraction.Enable(data.IsLoadedFsc());
 		menuProcess.butFK.Enable(data.IsLoadedFfk());
@@ -866,7 +866,7 @@ void MainBEM::OnABForces() {
 		
 		WaitCursor wait;
 		
-		Bem().FillFrequencyGapsABForces(id, menuProcess.opCalc);
+		Bem().FillFrequencyGapsABForces(id);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -895,7 +895,7 @@ void MainBEM::OnQTF() {
 		
 		WaitCursor wait;
 		
-		Bem().FillFrequencyGapsQTF(id, menuProcess.opCalc);
+		Bem().FillFrequencyGapsQTF(id);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1017,7 +1017,7 @@ void MainBEM::OnDescription() {
 }
 
 int MainBEM::AskQtfHeading(const Hydro &hydro) {
-	int numH = hydro.qtfhead.size();
+	int numH = int(hydro.qh.size());
 	if (numH <= 1)
 		return Null;
 	
@@ -1031,8 +1031,8 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 	
 	int id0 = Null;
 	for (int i = 0; i < numH; ++i) {
-		dialog.dropHeadings.Add(hydro.qtfhead[i]);
-		if (abs(hydro.qtfhead[i]) < 0.001)
+		dialog.dropHeadings.Add(Format("%f-%f", hydro.qh[i].real(), hydro.qh[i].imag()));
+		if (abs(hydro.qh[i].real()) < 0.001)
 			id0 = i;
 	}
 	if (!IsNull(id0))
@@ -1070,7 +1070,7 @@ void MainBEM::OnConvert() {
 		Status(t_("Saving BEM data"));
 		String fileType = ~menuOpen.dropExport;
 		Hydro::BEM_FMT type = Hydro::GetCodeBemStr(fileType);
-		String ext = Hydro::bemExt[type];
+		String ext = Replace(Hydro::bemExt[type], "*", "");
 		
 		FileSel fs;
 		
@@ -1132,7 +1132,6 @@ int MainBEM::GetIdOneSelected(bool complain) {
 }
 
 void MainBEM::Jsonize(JsonIO &json) {
-	bool opcalc;
 	if (json.IsLoading()) {
 		menuPlot.autoFit = Null;
 		menuPlot.fromY0 = Null;
@@ -1140,10 +1139,8 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.showPoints = Null;
 		menuPlot.showNdim = Null;
 		dropExportId = 2;
-		opcalc = 0;
 	} else {
 		dropExportId = menuOpen.dropExport.GetIndex();
-		opcalc = ~menuProcess.opCalc;
 	}
 	json
 		("menuOpen_file", menuOpen.file)
@@ -1157,14 +1154,11 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
 		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
-		("menuProcess_opCalc", menuProcess.opCalc)
 		("opHaskind", menuAdvanced.opHaskind)
 		("mainStiffness", mainMatrixK)
 		("mainMatrixA", mainMatrixA)
 		("mainMatrixDlin", mainMatrixDlin)
 	;
-	if (json.IsLoading()) 
-		menuProcess.opCalc <<= opcalc;
 }
 
 String MainBEM::BEMFile(String fileFolder) const {
@@ -1521,10 +1515,9 @@ void MainQTF::Init() {
 			const Hydro &hd = Bem().hydros[idHydro].hd();
 			
 			int ib = int(listCases.Get(id, 0))-1;
-			int ih1 = hd.GetQTFHeadId(listCases.Get(id, 1));
-			int ih2 = hd.GetQTFHeadId(listCases.Get(id, 2));
+			int ih = id - ib*hd.Nb;
 			int idof = opDOF.GetIndex();
-			int qtfNf = hd.qtfw.size();
+			int qtfNf = int(hd.qw.size());
 			
 			listQTF.Reset();
 			listQTF.SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
@@ -1533,26 +1526,24 @@ void MainQTF::Init() {
 	
 			listQTF.AddColumn(show_w ? t_("ω [rad/s]") : t_("T [s]"), 60);
 			for (int c = 0; c < qtfNf; ++c)
-				listQTF.AddColumn(FDS(show_w ? hd.qtfw[c] : hd.qtfT[c], 8), 90);
+				listQTF.AddColumn(FDS(show_w ? hd.qw[c] : 2*M_PI/hd.qw[c], 8), 90);
 			for (int r = 0; r < qtfNf; ++r)
-				listQTF.Add(FDS(show_w ? hd.qtfw[r] : hd.qtfT[r], 8));
+				listQTF.Add(FDS(show_w ? hd.qw[r] : 2*M_PI/hd.qw[r], 8));
 			
-			const UArray<Hydro::QTF> &qtfList = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
+			const UArray<UArray<UArray<MatrixXcd>>> &qtf = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
+			const MatrixXcd &m = qtf[ib][ih][idof];
 			
 			double mn = DBL_MAX, mx = DBL_MIN;
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
-					int idq = 0;
-					if ((idq = hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2)) < 0)
-						continue;
 					double val;
 					switch(int(opShow.GetData())) {
 					case MAGNITUDE:
-						val = hd.F_(ndim, qtfList[idq].fma[idof], idof);	break;
+						val = hd.F_(ndim, abs(m(ifr1, ifr2)), idof);	break;
 					case REAL:
-						val = hd.F_(ndim, qtfList[idq].fre[idof], idof);	break;
+						val = hd.F_(ndim, m(ifr1, ifr2).real(), idof);	break;
 					case IMAGINARY:
-						val = hd.F_(ndim, qtfList[idq].fim[idof], idof);	break;
+						val = hd.F_(ndim, m(ifr1, ifr2).imag(), idof);	break;
 					}
 					mn = min(mn, val);
 					mx = max(mx, val);
@@ -1560,21 +1551,20 @@ void MainQTF::Init() {
 			}
 			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
-					int idq = 0;
-					if ((idq = hd.GetQTFId(idq, qtfList, hd.qtfCases, ib, ih1, ih2, ifr1, ifr2)) < 0)
+					if (IsNull(m(ifr1, ifr2)))
 						listQTF.Set(ifr2, 1+ifr1, "-");
 					else {
 						if (PHASE == opShow.GetData()) 
-							listQTF.Set(ifr2, 1+ifr1, FDS(qtfList[idq].fph[idof], 10, false));
+							listQTF.Set(ifr2, 1+ifr1, FDS(arg(m(ifr1, ifr2)), 10, false));
 						else {
 							double val;
 							switch(int(opShow.GetData())) {
 							case MAGNITUDE:
-								val = hd.F_(ndim, qtfList[idq].fma[idof], idof);	break;
+								val = hd.F_(ndim, abs(m(ifr1, ifr2)), idof);	break;
 							case REAL:
-								val = hd.F_(ndim, qtfList[idq].fre[idof], idof);	break;
+								val = hd.F_(ndim, m(ifr1, ifr2).real(), idof);	break;
 							case IMAGINARY:
-								val = hd.F_(ndim, qtfList[idq].fim[idof], idof);	break;
+								val = hd.F_(ndim, m(ifr1, ifr2).imag(), idof);	break;
 							}
 							
 							::Color backColor = GetRainbowColor((val - mn)/(mx - mn), White(), LtBlue(), 0);
@@ -1622,9 +1612,10 @@ bool MainQTF::Load() {
 		if (hd.qtfsum.IsEmpty() && hd.qtfdif.IsEmpty())
 			return false;
 		
-		for (int i = 0; i < hd.qtfCases.ib.size(); ++i) 
-			listCases.Add(hd.qtfCases.ib[i]+1, hd.qtfhead[hd.qtfCases.ih1[i]], hd.qtfhead[hd.qtfCases.ih2[i]]);
-
+		for (int ib = 0; ib < hd.Nb; ++ib) 
+			for (int ih = 0; ih < hd.qh.size(); ++ih)
+				listCases.Add(ib+1, hd.qh[ih].real(), hd.qh[ih].imag());
+				
 		if (listCases.GetCount() > 0)
 			listCases.SetCursor(0);
 	} catch (Exc e) {
