@@ -363,10 +363,10 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 						}
     };
 
-	if (IsLoadedQTF()) {
+	if (IsLoadedQTF(true)) 
 		CalcQTF(qtfsum);		
+	if (IsLoadedQTF(false))	
 		CalcQTF(qtfdif);
-	}
 	
 	c0(0) = xto;
 	c0(1) = yto;
@@ -513,10 +513,10 @@ void Hydro::DeleteFrequenciesQTF(const UVector<int> &idFreqQTF) {
 						m = MatrixXcd(m(ids, all));
 					}
 		};
-		if (IsLoadedQTF()) {
+		if (IsLoadedQTF(true)) 
 			DeleteSumDif(qtfsum);
+		if (IsLoadedQTF(false))
 			DeleteSumDif(qtfdif);
-		}
 	}
 }
 
@@ -567,10 +567,10 @@ void Hydro::DeleteHeadingsQTF(const UVector<int> &idHeadQTF) {
 		        for (int ih = idHeadQTF.size()-1; ih >= 0; --ih)
 		        	qtf[ib].Remove(idHeadQTF[ih]);
 		};
-		if (IsLoadedQTF()) {
+		if (IsLoadedQTF(true)) 
 			DeleteSumDif(qtfsum);
+		if (IsLoadedQTF(false))
 			DeleteSumDif(qtfdif);
-		}
 	}
 }
 
@@ -669,10 +669,10 @@ void Hydro::FillFrequencyGapsQTF() {
 						m = pick(nm);
 					}
 	};
-	if (IsLoadedQTF()) {
+	if (IsLoadedQTF(true)) 
 		FillSumDif(qtfsum);
+	if (IsLoadedQTF(false)) 
 		FillSumDif(qtfdif);
-	}
 	
 	::Copy(neww, qw);
 }
