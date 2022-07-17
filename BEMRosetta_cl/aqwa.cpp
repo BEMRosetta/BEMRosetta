@@ -686,7 +686,7 @@ bool Aqwa::Save(String file, Function <bool(String, int)> Status) {
 	try {
 		BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
 
-		if (hd().IsLoadedQTF()) {
+		if (hd().IsLoadedQTF(true) || hd().IsLoadedQTF(false)) {
 			BEM::Print("\n- " + S(t_("QTF file")));
 			Save_QTF(ForceExt(file, ".qtf"), Status);
 		}
@@ -699,9 +699,6 @@ bool Aqwa::Save(String file, Function <bool(String, int)> Status) {
 }		
 
 void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
-	if (!(hd().IsLoadedQTF())) 
-		return;
-		
 	FileOut out(file);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), file));
@@ -735,25 +732,28 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
 	for (int ib = 0; ib < hd().Nb; ++ib)
         for (int ih = 0, realih = 0; ih < hd().qh.size(); ++ih) {
             inum++;
-            if (Status && !(inum%(num/20)) && !Status(Format("Saving %s", file), (100*ih)/int(hd().qh.size())))
+            if (Status && !Status(Format("Saving %s", file), (100*ih)/int(hd().qh.size())))
 				throw Exc(t_("Stop by user"));
             
 	        if (hd().qh[ih].real() != hd().qh[ih].imag())
 				continue; 
-			for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) 
+	        for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) 
 				for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) {
+					bool nosum = hd().qtfsum.size() <= ib || hd().qtfsum[ib].size() <= ih || hd().qtfsum[ib][ih][0].rows() <= ifr1 || hd().qtfsum[ib][ih][0].cols() <= ifr2;
+			        bool nodif = hd().qtfdif.size() <= ib || hd().qtfdif[ib].size() <= ih || hd().qtfdif[ib][ih][0].rows() <= ifr1 || hd().qtfdif[ib][ih][0].cols() <= ifr2;
+			
 					out << Format("\n %2d %2d %3d %3d ", ib+1, realih+1, ifr1+1, ifr2+1);
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", hd().qtfdif[ib][ih][idf](ifr1, ifr2).real());
+						out << Format(" % 6.4E", nodif ? 0 : hd().qtfdif[ib][ih][idf](ifr1, ifr2).real());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag());
+						out << Format(" % 6.4E", nodif ? 0 : hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", hd().qtfsum[ib][ih][idf](ifr1, ifr2).real());
+						out << Format(" % 6.4E", nosum ? 0 : hd().qtfsum[ib][ih][idf](ifr1, ifr2).real());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag());
+						out << Format(" % 6.4E", nosum ? 0 : hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag());
 				}
 			realih++;	
         }
