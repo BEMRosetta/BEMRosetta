@@ -132,10 +132,12 @@ bool Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 			BEM::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
 			Save_4(fileRAO, force_T);
 		}
-		if (hd().IsLoadedQTF()) {
+		if (hd().IsLoadedQTF(true)) {
 			String fileQTFs = ForceExt(file, ".12s");
 			BEM::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileQTFs)));
 			Save_12(fileQTFs, true, Status, force_T, true, qtfHeading);
+		}
+		if (hd().IsLoadedQTF(false)) {
 			String fileQTFd = ForceExt(file, ".12d");
 			BEM::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileQTFd)));
 			Save_12(fileQTFd, false, Status, force_T, true, qtfHeading);
@@ -419,7 +421,7 @@ void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::M
 	for (int r = 0; r < hd().Nb*6; ++r) 
 		for (int c = 0; c < hd().Nb*6; ++c) 
 			if (!IsNull(base(r, c))) 
-				out << Format("%6>d%6>d %E\n", r+1, c+1, fun(r, c));
+				out << Format("%6>d%6>d  % E\n", r+1, c+1, fun(r, c));
 	out << "\n\n";
 }
 
@@ -429,7 +431,7 @@ void Wamit::Save_AB(FileOut &out, int ifr) {
 	for (int r = 0; r < hd().Nb*6; ++r) 
 		for (int c = 0; c < hd().Nb*6; ++c) 
 			if (!IsNull(hd().A[r][c][ifr]) && !IsNull(hd().B[r][c][ifr]))
-				out << Format("%6>d%6>d %E %E\n", r+1, c+1, hd().A_ndim(ifr, r, c), hd().B_ndim(ifr, r, c));
+				out << Format("%6>d%6>d  % E  % E\n", r+1, c+1, hd().A_ndim(ifr, r, c), hd().B_ndim(ifr, r, c));
 	out << "\n\n\n\n";
 }
 
@@ -441,9 +443,9 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 		for (int i = 0; i < hd().ex.force[ih].cols(); ++i)
 			if (!IsNull(hd().ex.force[ih](ifr, i))) {
 				std::complex<double> c = hd().F_ndim(hd().ex, ih, ifr, i);
-				out << Format(" %7>d   %E   %f\n", i+1, abs(c), ToDeg(arg(c)));
+				out << Format("%6>d   %E         %6>d\n", i+1, abs(c), round(ToDeg(arg(c))));
 			}
-		out << "\n\n\n\n";
+		out << "\n\n";
 	}
 }
 
@@ -463,25 +465,27 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 
 bool Wamit::Save_out(String file, double g, double rho) {
 	try {
+		String filename = GetFileTitle(file);
 		FileOut out(file);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to open '%s'"), file));
 
-		out << Format(" %s\n\n", String('-', 72))
-		    <<        "                   BEMRosetta generated .out format\n\n"
+		out << Format(" %s\n\n", String('-', 71))
+			<< "                        WAMIT  Version 7.2(x64)        \n"
+		    << "                        BEMRosetta generated .out format\n\n"
 		    << Format(" %s\n\n\n", String('-', 72))
 			<< " Low-order panel method  (ILOWHI=0)\n\n";
 		if (hd().Nb == 1)
-			out << " Input from Geometric Data File:         unknown.gdf\n"
+			out << " Input from Geometric Data File:         " << filename << ".gdf\n"
 				<< " Unknown gdf file source\n\n";
 		else {
 			out << " Input from Geometric Data Files:\n";
 			for (int ib = 0; ib < hd().Nb; ++ib)
-				out << Format("                               N=  %d     unknown%d.gdf\n"
-							  " Unknown gdf file source\n\n", ib+1, ib);
+				out << Format("                               N=  %d     %s%d.gdf\n"
+							  " Unknown gdf file source\n\n", ib+1, filename, ib);
 		}
-		out	<< " Input from Potential Control File:      unknown.pot\n"
-			<< " unknown.pot -- file type .gdf, ILOWHI=0, IRR=1\n\n\n"
+		out	<< " Input from Potential Control File:      " << filename << ".pot\n"
+			<< " " << filename << ".pot -- file type .gdf, ILOWHI=0, IRR=1\n\n\n"
 			<< " POTEN run date and starting time:        01-Jan-2000  --  00:00:00\n"
 			<< "   Period       Time           RAD      DIFF  (max iterations)\n";
 		if (hd().IsLoadedA0())
@@ -538,12 +542,17 @@ bool Wamit::Save_out(String file, double g, double rho) {
 						FormatWam(cgx), FormatWam(cgy), FormatWam(cgz));
 			out	<< " Radii of gyration:     0.000000     0.000000     0.000000\n"
       			   "                        0.000000     0.000000     0.000000\n"
-                   "                        0.000000     0.000000     0.000000\n\n";
+                   "                        0.000000     0.000000     0.000000\n\n\n";
 		}
 		out << " ------------------------------------------------------------------------\n"
-        	<< "                    Output from  WAMIT\n"
-			<< " ------------------------------------------------------------------------\n\n";
-		
+        	<< "                            Output from  WAMIT\n"
+			<< " ------------------------------------------------------------------------\n"
+			<< " FORCE run date and starting time:                22-Dec-2016 -- 11:54:03\n"
+			<< " ------------------------------------------------------------------------\n"
+			<< " I/O Files:         " << filename << ".frc       " << filename << ".p2f       " << filename << ".out\n"
+			<< "  " << filename << ".frc -- file type .gdf, ILOWHI=0, IRR=1\n \n\n"
+		;
+ 
 		if (hd().IsLoadedA0())
 			Save_A(out, [&](int idf, int jdf)->double {return hd().A0_ndim(idf, jdf);},   hd().A0,   "infinite");
 		if (hd().IsLoadedAinf())
@@ -1418,7 +1427,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 	
 void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 					bool force_T, bool force_Deg, int qtfHeading) {
-	if (!hd().IsLoadedQTF()) 
+	if (!hd().IsLoadedQTF(isSum)) 
 		return;
 	
 	String ext = isSum ? ".12s" : ".12d";

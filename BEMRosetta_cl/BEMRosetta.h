@@ -437,10 +437,10 @@ public:
 	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return !sc.force.IsEmpty() && sc.force[ih].size() > 0 && !IsNull(sc.force[ih](0, idf));}
 	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return !fk.force.IsEmpty() && fk.force[ih].size() > 0 && !IsNull(fk.force[ih](0, idf));}
 	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return !rao.force.IsEmpty()&&rao.force[ih].size() > 0 && !IsNull(rao.force[ih](0, idf));}
-	bool IsLoadedForce(const Forces &f) const {return !f.force.IsEmpty();}
-	bool IsLoadedStateSpace()	  const {return !sts.IsEmpty();}
-	bool IsLoadedQTF() 	 const {return !qtfsum.IsEmpty();}
-	bool IsLoadedKirf()	 const {return !Kirf.IsEmpty();}
+	bool IsLoadedForce(const Forces &f) 	 const {return !f.force.IsEmpty();}
+	bool IsLoadedStateSpace()	  			 const {return !sts.IsEmpty();}
+	bool IsLoadedQTF(bool isSum) 	const {return isSum ? !qtfsum.IsEmpty() : !qtfdif.IsEmpty();}
+	bool IsLoadedKirf()	 	 		const {return !Kirf.IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);

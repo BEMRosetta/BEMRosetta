@@ -1531,6 +1531,9 @@ void MainQTF::Init() {
 				listQTF.Add(FDS(show_w ? hd.qw[r] : 2*M_PI/hd.qw[r], 8));
 			
 			const UArray<UArray<UArray<MatrixXcd>>> &qtf = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
+			if (qtf.size() <= ib || qtf[ib].size() <= ih || qtf[ib][ih].size() <= idof)
+				return;
+			
 			const MatrixXcd &m = qtf[ib][ih][idof];
 			
 			double mn = DBL_MAX, mx = DBL_MIN;
