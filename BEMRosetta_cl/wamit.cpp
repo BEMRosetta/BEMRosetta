@@ -183,6 +183,7 @@ bool Wamit::Load_out() {
 			hd().c0.setConstant(3, hd().Nb, 0);
 			hd().Vo.SetCount(hd().Nb, NaNDouble);
 			hd().C.SetCount(hd().Nb);
+			hd().M.SetCount(hd().Nb);
 		} else if (line.Find("Gravity:") >= 0) {
 			hd().g = f.GetDouble(1);
 			hd().len = f.GetDouble(4);
@@ -221,6 +222,15 @@ bool Wamit::Load_out() {
 			hd().cb(0, ibody) = f.GetDouble(4);
 			hd().cb(1, ibody) = f.GetDouble(5);
 			hd().cb(2, ibody) = f.GetDouble(6);
+		} else if (line.Find("Global body and external mass matrix:") >= 0) {
+			if (hd().M.size() < hd().Nb)
+			 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
+			hd().M[ibody].setConstant(6, 6, NaNDouble);
+			for (int r = 0; r < 6; ++r) {
+				f.GetLine();
+				for (int c = 0; c < 6; ++c)
+					hd().M[ibody](r, c) = f.GetDouble(c);
+			}		
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
 			if (hd().C.size() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("C matrix is not dimensioned"));
@@ -315,15 +325,7 @@ bool Wamit::Load_out() {
 	            while (!in.IsEof() && !nextFreq) {
 	            	line = in.GetLine();
 	            	if (line.Find("ADDED-MASS AND DAMPING COEFFICIENTS") >= 0) {
-	            		//if (hd().A.IsEmpty()) {
-						//	hd().A.SetCount(hd().Nf);
-						//	hd().B.SetCount(hd().Nf);
-						//}
 						in.GetLine(2);
-						//if (hd().A.size() < hd().Nf)
-			 			//	throw Exc(in.Str() + "\n"  + t_("A matrix is not dimensioned"));
-						//if (hd().B.size() < hd().Nf)
-			 			//	throw Exc(in.Str() + "\n"  + t_("B matrix is not dimensioned"));
 		            
 			            while (!in.IsEof()) {
 							line = TrimBoth(in.GetLine());
@@ -1453,7 +1455,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 		for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) 
 			for (int ih = 0; ih < hd().qh.size(); ++ih) {
 				inum++;
-				if (Status && !(inum%(num/20)) && !Status(Format("Saving %s", fileName), (100*inum)/num))
+				if (Status && num >= 20 && !(inum%(num/20)) && !Status(Format("Saving %s", fileName), (100*inum)/num))
 					throw Exc(t_("Stop by user"));
 				
 				for (int ib = 0; ib < hd().Nb; ++ib)

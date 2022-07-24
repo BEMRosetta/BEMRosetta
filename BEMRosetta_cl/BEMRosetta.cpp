@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
-#include <ScatterDraw/DataSource.h>
-#include <ScatterDraw/Equation.h>
+#include <Scatter/ScatterDraw/DataSource.h>
+#include <Scatter/ScatterDraw/Equation.h>
 #include "functions.h"
 
-#include <plugin/matio/lib/matio.h>
+#include <MatIO/MatIO/matio.h>
 
 using namespace Upp;
 using namespace Eigen;
@@ -49,7 +49,7 @@ void Hydro::GetFexFromFscFfk() {
 	for (int ih = 0; ih < Nh; ++ih) {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			for (int i = 0; i < Nb*6; ++i) {
-				if (!IsNull(sc.force[ih](ifr, i))) 
+				if (IsNum(sc.force[ih](ifr, i))) 
 					ex.force[ih](ifr, i) = sc.force[ih](ifr, i) + fk.force[ih](ifr, i);
 			}
 		}
@@ -190,7 +190,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
 				int ifr = FindClosest(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) 	 
-					if (!IsNull(from.force[ihhy](ifrhy, idf))) 
+					if (IsNum(from.force[ihhy](ifrhy, idf))) 
 						to.force[ih](ifr, idf) = hydro.F_ndim(from, ihhy, ifrhy, idf);
 			}
 		} 
@@ -199,7 +199,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 
 void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb) {
 	int nih  = FindClosest(newHead, h);
-	bool avg  = !IsNull(newf.force[nih](0, idb));
+	bool avg  = IsNum(newf.force[nih](0, idb));
 	for (int ifr = 0; ifr < Nf; ++ifr) {
 		if (avg) 
 			newf.force[nih](ifr, idb) = Avg(newf.force[nih](ifr, idb), f.force[ih](ifr, idb));
@@ -338,7 +338,7 @@ void Hydro::RemoveThresDOF_A(double thres) {
 				mn = min(mn, val);
 			}
 			double delta = mx - mn;
-			if (!IsNull(mx) && !IsNull(mn)) {
+			if (IsNum(mx) && IsNum(mn)) {
 				double res = 0;
 				for (int ifr = 1; ifr < Nf; ifr++) 
 					res += abs(A_ndim(ifr, idf, jdf) - A_ndim(ifr-1, idf, jdf));
@@ -365,7 +365,7 @@ void Hydro::RemoveThresDOF_B(double thres) {
 				mn = min(mn, val);
 			}
 			double delta = mx - mn;
-			if (!IsNull(mx) && !IsNull(mn)) {
+			if (IsNum(mx) && IsNum(mn)) {
 				double res = 0;
 				for (int ifr = 1; ifr < Nf; ifr++) 
 					res += abs(B_ndim(ifr, idf, jdf) - B_ndim(ifr-1, idf, jdf));
@@ -451,7 +451,7 @@ void Hydro::Compare_A(Hydro &a) {
 			for (int jdf = 0; jdf < 6*a.Nb; ++jdf) {
 				double Aa = a.A[idf][jdf][ifr];
 				double Ab = A[idf][jdf][ifr];
-				if (!IsNull(Aa) && !IsNull(Ab) && Aa != Ab)
+				if (IsNum(Aa) && IsNum(Ab) && Aa != Ab)
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idf+1, jdf+1), 
 							Aa, Ab));
@@ -466,7 +466,7 @@ void Hydro::Compare_B(Hydro &a) {
 			for (int jdf = 0; jdf < 6*a.Nb; ++jdf) {
 				double Ba = a.B[idf][jdf][ifr];
 				double Bb = B[idf][jdf][ifr];
-				if (!IsNull(Ba) && !IsNull(Bb) && Ba != Bb)
+				if (IsNum(Ba) && IsNum(Bb) && Ba != Bb)
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idf+1, jdf+1), 
 							Ba, Bb));
@@ -481,7 +481,7 @@ void Hydro::Compare_C(Hydro &a) {
 			for (int jdf = 0; jdf < 6; ++jdf) {
 				double Ca = a.C[ib](idf, jdf);
 				double Cb = C[ib](idf, jdf);
-				if (!IsNull(Ca) && !IsNull(Cb) && !EqualRatio(Ca, Cb, 0.0001))
+				if (IsNum(Ca) && IsNum(Cb) && !EqualRatio(Ca, Cb, 0.0001))
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
 							Ca, Cb));
@@ -559,25 +559,25 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 	h = Null;
 	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
 		const Hydro &hydro = *hydrosp[ihy];
-		if (!IsNull(hydro.h))
+		if (IsNum(hydro.h))
 			h = hydro.h;
 		else if (h != hydro.h)
 			throw Exc(Format(t_("Water depth does not match between '%s'(%d) and '%s'(%d)"), 
 					hydrosp[0]->name, hydrosp[0]->h, hydro.name, hydro.h));			
 	}	
-	if (IsNull(h))
+	if (!IsNum(h))
 		throw Exc(t_("No water depth found in models"));
 			
 	Nb = Null;
 	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
 		const Hydro &hydro = *hydrosp[ihy];
-		if (IsNull(Nb))
+		if (!IsNum(Nb))
 			Nb = hydro.Nb;
 		else if (Nb != hydro.Nb)
 			throw Exc(Format(t_("Number of bodies does not match between '%s'(%d) and '%s'(%d)"), 
 					hydrosp[0]->name, hydrosp[0]->Nb, hydro.name, hydro.Nb));			
 	}
-	if (IsNull(Nb))
+	if (!IsNum(Nb))
 		throw Exc(t_("No body found in models"));
 		
 	head.Clear();
@@ -649,14 +649,14 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		for (int ib = 0; ib < Nb; ++ib) {
 			if (!hydro.names[ib].IsEmpty())
 				names[ib] = hydro.names[ib];
-			if (!IsNull(hydro.Vo[ib]))
+			if (IsNum(hydro.Vo[ib]))
 				Vo[ib] = hydro.Vo[ib];
 			for (int i = 0; i < 3; ++i) {
-				if (!IsNull(hydro.cg(i, ib)))
+				if (IsNum(hydro.cg(i, ib)))
 					cg(i, ib) = hydro.cg(i, ib);
-				if (!IsNull(hydro.cb(i, ib)))
+				if (IsNum(hydro.cb(i, ib)))
 					cb(i, ib) = hydro.cb(i, ib);
-				if (!IsNull(hydro.c0(i, ib)))
+				if (IsNum(hydro.c0(i, ib)))
 					c0(i, ib) = hydro.c0(i, ib);
 			}
 			dof[ib] = hydro.dof[ib];
@@ -676,9 +676,9 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 				int ifr = FindClosest(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {
 					for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
-						if (!IsNull(hydro.A[idf][jdf][ifrhy]))
+						if (IsNum(hydro.A[idf][jdf][ifrhy]))
 							A[idf][jdf][ifr] = hydro.A_ndim(ifrhy, idf, jdf);
-						if (!IsNull(hydro.B[idf][jdf][ifrhy]))
+						if (IsNum(hydro.B[idf][jdf][ifrhy]))
 							B[idf][jdf][ifr] = hydro.B_ndim(ifrhy, idf, jdf);
 					}
 				}
@@ -694,7 +694,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
 					int ifr = FindClosest(w, hydro.w[ifrhy]);
 					for (int idf = 0; idf < 6*Nb; ++idf) {	
-						if (!IsNull(rao.force[ihhy](ifrhy, idf))) 
+						if (IsNum(rao.force[ihhy](ifrhy, idf))) 
 							rao.force[ih](ifr, idf) = hydro.R_ndim(rao, ihhy, ifrhy, idf);
 					}
 				}
@@ -784,13 +784,13 @@ void Hydro::Report() const {
 			str += " '" + names[ib] + "'";
 		if (dof.size() > ib)
 			str += S(" ") + t_("dof") + ": " + FormatInt(dof[ib]);
-		if (Vo.size() > ib && !IsNull(Vo[ib]))
+		if (Vo.size() > ib && IsNum(Vo[ib]))
 			str += S(" ") + t_("vol [m3]") + ": " + FDS(Vo[ib], 8, false);
-		if (cg.size() > 3*ib && !IsNull(cg(0, ib)))
+		if (cg.size() > 3*ib && IsNum(cg(0, ib)))
 			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", cg(0, ib), cg(1, ib), cg(2, ib));
-		if (cb.size() > 3*ib && !IsNull(cb(0, ib)))
+		if (cb.size() > 3*ib && IsNum(cb(0, ib)))
 			str += " " + Format("Cb(%.3f, %.3f, %.3f)[m]", cb(0, ib), cb(1, ib), cb(2, ib));
-		if (c0.size() > 3*ib && !IsNull(c0(0, ib)))
+		if (c0.size() > 3*ib && IsNum(c0(0, ib)))
 			str += " " + Format("C0(%.3f, %.3f, %.3f)[m]", c0(0, ib), c0(1, ib), c0(2, ib));
 		
 		BEM::Print(str);
@@ -816,11 +816,11 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		GetA0();
 	
 	if ((!IsLoadedAinf() || !IsLoadedKirf()) && bem->calcAinf) {
-		if (IsNull(bem->maxTimeA) || bem->maxTimeA == 0) {
+		if (!IsNum(bem->maxTimeA) || bem->maxTimeA == 0) {
 			lastError = t_("Incorrect time for A∞ calculation. Please review it in Options");
 			return false;
 		}
-		if (IsNull(bem->numValsA) || bem->numValsA < 10) {
+		if (!IsNum(bem->numValsA) || bem->numValsA < 10) {
 			lastError = t_("Incorrect number of time values for A∞ calculation. Please review it in Options");
 			return false;
 		}
@@ -887,7 +887,7 @@ void Hydro::GetA0() {
 		return;
 	
 	int iw0 = GetW0();
-	if (!IsNull(iw0)) {
+	if (IsNum(iw0)) {
 		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
 	        for (int j = 0; j < Nb*6; ++j) 
@@ -905,7 +905,7 @@ void Hydro::GetA0() {
 		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
 	        for (int j = 0; j < Nb*6; ++j) {
-	            if (IsNull(A[i][j][iw1]) || IsNull(A[i][j][iw2]) || IsNull(A[i][j][iw3]))
+	            if (!IsNum(A[i][j][iw1]) || !IsNum(A[i][j][iw2]) || !IsNum(A[i][j][iw3]))
 	                A0(i, j) = Null;
 	            else
 					A0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
@@ -969,9 +969,9 @@ int Hydro::GetIrregularFreq() const {
 }
 
 double Hydro::g_dim() 		const {return bem->g;}					// Dimensionalize only with system data
-double Hydro::g_ndim()		const {return !IsNull(g) ? g : bem->g;}	// Nondimensionalize with model data, if possible
+double Hydro::g_ndim()		const {return IsNum(g) ? g : bem->g;}	// Nondimensionalize with model data, if possible
 double Hydro::rho_dim() 	const {return bem->rho;}		
-double Hydro::rho_ndim()	const {return !IsNull(rho) ? rho : bem->rho;}
+double Hydro::rho_ndim()	const {return IsNum(rho) ? rho : bem->rho;}
 double Hydro::g_rho_dim() 	const {return bem->rho*bem->g;}
 double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
 

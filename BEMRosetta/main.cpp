@@ -9,9 +9,9 @@
 #define TOPICFILE <BEMRosetta/main.tpp/all.i>
 #include <Core/topic_group.h>
 
-#include <Controls4U/Controls4U.h>
-#include <ScatterCtrl/ScatterCtrl.h>
-#include <GLCanvas/GLCanvas.h>
+#include <Controls4U/Controls4U/Controls4U.h>
+#include <Scatter/ScatterCtrl/ScatterCtrl.h>
+#include <GLCanvas/GLCanvas/GLCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>

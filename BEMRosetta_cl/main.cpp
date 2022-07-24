@@ -12,6 +12,10 @@
 	#include "export.h"
 #endif
 
+#ifdef flagDEBUG
+static CrashHandler crash;
+#endif
+
 CONSOLE_APP_MAIN
 {	
 	try {

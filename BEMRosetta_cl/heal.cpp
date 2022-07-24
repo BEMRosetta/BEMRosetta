@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <Core/Core.h>
-#include <Functions4U/Functions4U.h>
-#include <STEM4U/Integral.h>
-#include <STEM4U/Sundials.h>
-#include <STEM4U/Butterworth.h>
-#include <STEM4U/LocalFitting.h>
-#include <STEM4U/Utility.h>
+#include <Functions4U/Functions4U/Functions4U.h>
+#include <STEM4U/STEM4U/Integral.h>
+#include <STEM4U/STEM4U/Sundials.h>
+#include <STEM4U/STEM4U/Butterworth.h>
+#include <STEM4U/STEM4U/LocalFitting.h>
+#include <STEM4U/STEM4U/Utility.h>
 
 using namespace Upp;
 using namespace Eigen;
