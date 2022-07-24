@@ -2,7 +2,7 @@
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "FastOut.h"
-#include <Scatter/ScatterDraw/ScatterDraw.h>
+#include <ScatterDraw/ScatterDraw.h>
 
 void SetBuildInfo(String &str) {
 	String name, mode;
