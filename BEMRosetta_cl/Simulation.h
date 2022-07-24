@@ -4,7 +4,7 @@
 #ifndef _BEMRosetta_cl_Simulation_h_
 #define _BEMRosetta_cl_Simulation_h_
 
-#include <STEM4U/STEM4U/SeaWaves.h>
+#include <STEM4U/SeaWaves.h>
 #include "FastOut.h"
 
 class Simulation {

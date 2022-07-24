@@ -3,9 +3,9 @@
 #include "BEMRosetta.h"
 
 #include <Core/Core.h>
-#include <SysInfo/SysInfo/SysInfo.h>
-#include <Surface/Surface/Surface.h>
-#include <Scatter/ScatterDraw/Equation.h>
+#include <SysInfo/SysInfo.h>
+#include <Surface/Surface.h>
+#include <ScatterDraw/Equation.h>
 
 using namespace Upp;
 

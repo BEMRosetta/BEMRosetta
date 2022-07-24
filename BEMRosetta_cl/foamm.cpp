@@ -2,7 +2,7 @@
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
-#include <MatIO/MatIO/matio.h>
+#include <MatIO/matio.h>
 
 bool Foamm::Load(String file) {
 	hd().code = Hydro::FOAMM;

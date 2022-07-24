@@ -6,9 +6,9 @@ uses
 	TabBar,
 	BEMRosetta_cl,
 	DropGrid,
-	Scatter/ScatterCtrl,
-	GLCanvas/GLCanvas,
-	Controls4U/Controls4U;
+	Controls4U,
+	ScatterCtrl,
+	GLCanvas;
 
 file
 	main.cpp,
