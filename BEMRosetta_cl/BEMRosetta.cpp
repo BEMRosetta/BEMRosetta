@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
-#include <Scatter/ScatterDraw/DataSource.h>
-#include <Scatter/ScatterDraw/Equation.h>
+#include <ScatterDraw/DataSource.h>
+#include <ScatterDraw/Equation.h>
 #include "functions.h"
 
-#include <MatIO/MatIO/matio.h>
+#include <MatIO/matio.h>
 
 using namespace Upp;
 using namespace Eigen;
