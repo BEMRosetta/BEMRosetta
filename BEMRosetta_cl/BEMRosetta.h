@@ -4,10 +4,10 @@
 #define _BEM_Rosetta_BEM_Rosetta_h_
 
 #include <Core/Core.h>
-#include <SysInfo/SysInfo.h>
-#include <ScatterDraw/DataSource.h>
-#include <Surface/Surface.h>
-#include <STEM4U/Mooring.h>
+#include <SysInfo/SysInfo/SysInfo.h>
+#include <Scatter/ScatterDraw/DataSource.h>
+#include <Surface/Surface/Surface.h>
+#include <STEM4U/STEM4U/Mooring.h>
 
 using namespace Upp;
 

@@ -3,7 +3,7 @@
 #ifndef _BEMRosetta_BEMRosetta_cl_functions_h_
 #define _BEMRosetta_BEMRosetta_cl_functions_h_
 
-#include <ScatterDraw/ScatterDraw.h>
+#include <Scatter/ScatterDraw/ScatterDraw.h>
 
 double GetKirfMaxT(const Eigen::VectorXd &w);
 void GetTirf(Eigen::VectorXd &Tirf, int numT, double maxT);
