@@ -2,13 +2,13 @@ description "Hydrodynamic coefficients converter GUI\377";
 
 uses
 	CtrlLib,
-	ScatterCtrl,
-	Controls4U,
-	GLCanvas,
 	RasterPlayer,
 	TabBar,
 	BEMRosetta_cl,
-	DropGrid;
+	DropGrid,
+	Scatter/ScatterCtrl,
+	GLCanvas/GLCanvas,
+	Controls4U/Controls4U;
 
 file
 	main.cpp,

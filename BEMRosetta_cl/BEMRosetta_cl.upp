@@ -2,12 +2,12 @@ description "Hydrodynamic coefficients converter command line utility\377";
 
 uses
 	Core,
-	SysInfo,
 	plugin/zstd,
-	Surface,
-	STEM4U,
-	Matio,
-	CrashHandler;
+	MatIO/MatIO,
+	STEM4U/STEM4U,
+	SysInfo/SysInfo,
+	SysInfo/SysInfo,
+	Surface/Surface;
 
 options(MSC) /bigobj;
 

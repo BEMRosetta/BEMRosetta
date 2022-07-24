@@ -4,9 +4,9 @@
 #include "BEMRosetta_int.h"
 
 #include <Core/Core.h>
-#include <SysInfo/SysInfo.h>
-#include <Surface/Surface.h>
-#include <STEM4U/Mooring.h>
+#include <SysInfo/SysInfo/SysInfo.h>
+#include <Surface/Surface/Surface.h>
+#include <STEM4U/STEM4U/Mooring.h>
 
 
 using namespace Upp;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
-#include <Controls4U/Controls4U.h>
-#include <ScatterCtrl/ScatterCtrl.h>
+#include <Controls4U/Controls4U/Controls4U.h>
+#include <Scatter/ScatterCtrl/ScatterCtrl.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
