@@ -250,7 +250,7 @@ bool Wamit::Load_out() {
 			hd().head.Clear();
 			FileInLine::Pos fpos = in.GetPos();
 			
-			bool foundNh = false;
+			bool foundNh = false, found2ndorder = false;
 			while (!in.IsEof()) {
 				line = in.GetLine();
 				if (line.Find("Wave period (sec)") >= 0) {
@@ -265,6 +265,9 @@ bool Wamit::Load_out() {
 						f.Load(line);
 						FindAddDelta(hd().head, FixHeading_180(f.GetDouble(4)), 0.001);
 					}
+				} else if (line.Find("2nd-order") >= 0) {
+					found2ndorder = true;
+					break;
 				}
 			}
 			Sort(hd().head);
@@ -274,7 +277,7 @@ bool Wamit::Load_out() {
 		
 			hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
-			
+
 			hd().A.SetCount(6*hd().Nb);
 			hd().B.SetCount(6*hd().Nb);
 			for (int i = 0; i < 6*hd().Nb; ++i) {
@@ -284,7 +287,40 @@ bool Wamit::Load_out() {
 					hd().A[i][j].setConstant(hd().Nf, NaNDouble);// In Wamit, unloaded DOFs are considered negligible	
 					hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 				}
-			}			
+			}
+						
+			int qtfNh = 0, qtfNf = 0;
+			UArray<std::complex<double>> head;
+			if (found2ndorder) {
+				bool foundSum = false, foundDif = false;
+				while (!in.IsEof()) {
+					f.GetLine();
+					if (f.IsInLine("Period indices:")) {
+						int if1 = f.GetInt(2);
+						int if2 = f.GetInt(3);
+						if (if1 > qtfNf)
+							qtfNf = if1;
+						if (if2 > qtfNf)
+							qtfNf = if2;
+					} else if (f.IsInLine("Headings (deg):")) {
+						double hd1 = f.GetDouble(6);
+						double hd2 = f.GetDouble(7);
+						FindAdd(head, std::complex<double>(hd1, hd2));	
+					} else if (!foundSum && f.IsInLine("SUM-FREQUENCY")) 
+						foundSum = true;
+					else if (!foundDif && f.IsInLine("DIFFERENCE-FREQUENCY")) 
+						foundDif = true;
+				}
+				hd().qh.resize(qtfNh = head.size());
+				for (int i = 0; i < head.size(); ++i)
+					hd().qh[i] = head[i];
+				hd().qw.resize(qtfNf);
+				
+				if (foundSum)
+					hd().InitQTF(hd().qtfsum, hd().Nb, qtfNh, qtfNf);
+				if (foundDif)
+					hd().InitQTF(hd().qtfdif, hd().Nb, qtfNh, qtfNf);
+			}
 			
 			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = infinite") < 0 && !in.IsEof())
@@ -306,10 +342,10 @@ bool Wamit::Load_out() {
 			int ifr = -1;
 			while (!in.IsEof()) {
 				line = in.GetLine();
-				while ((line = in.GetLine()).Find("Wave period (sec)") < 0 && !in.IsEof())
-					; 
-				if (in.IsEof())
-					return true;
+				if (line.Find("2nd-order") >= 0) 
+					break;
+				else if (line.Find("Wave period (sec)") < 0)
+					continue;
 				
 				f.Load(line);
 				
@@ -359,10 +395,10 @@ bool Wamit::Load_out() {
 										f.Load(line);
 										double ma = f.GetDouble(1);
 										double ph = ToRad(f.GetDouble(2));
-										int i = abs(f.GetInt(0)) - 1;
-										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
-											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
-										hd().ex.force[ih](ifr, i) = std::polar(ma, ph);	
+										int ib = abs(f.GetInt(0)) - 1;
+										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(ib, hd().Nb*6))
+											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, ib));
+										hd().ex.force[ih](ifr, ib) = std::polar(ma, ph);	
 									}
 								}
 								ih++;
@@ -405,12 +441,45 @@ bool Wamit::Load_out() {
 							   line.Find("*************************************") >= 0) {
 						nextFreq = true;
 						break;
+					} 
+				}
+			}
+			if (found2ndorder) {
+				hd().qtfdataFromW = false;
+				int ifr1, ifr2, ih; 
+				UArray<UArray<UArray<MatrixXcd>>> *qtf = nullptr;
+				while (!in.IsEof()) {
+					f.GetLine();
+					if (f.IsInLine("Period indices:")) {
+						ifr1 = f.GetInt(2)-1; 
+						ifr2 = f.GetInt(3)-1;
+						hd().qw[ifr1] = 2*M_PI/f.GetDouble(5);
+						hd().qw[ifr2] = 2*M_PI/f.GetDouble(6);
+					} else if (f.IsInLine("SUM-FREQUENCY")) 
+						qtf = &hd().qtfsum;
+					else if (f.IsInLine("DIFFERENCE-FREQUENCY")) 
+						qtf = &hd().qtfdif;
+					else if (f.IsInLine("Heading indices:")) {
+						double hd1 = f.GetDouble(6);
+						double hd2 = f.GetDouble(7);
+						ih = Find(head, std::complex<double>(hd1, hd2));
+					} else if (f.IsInLine("Mod[F2(I)]")) {
+						f.GetLine();
+						while (!Trim(f.GetLine()).IsEmpty()) {						
+							int idof = f.GetInt(0)-1;
+							int ib = idof/6;
+							double ma = f.GetDouble(1);
+							double ph = ToRad(f.GetDouble(2));
+							if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, hd().Nb))
+								throw Exc(in.Str() + "\n"  + Format(t_("Index [%d][%d](%d, %d) out of bounds"), ib, ih, idof, ifr1, ifr2));
+							(*qtf)[ib][ih][idof](ifr1, ifr2) = std::polar(ma, ph);
+							(*qtf)[ib][ih][idof](ifr2, ifr1) = std::polar(ma, ph);	
+						}
 					}
 				}
 			}
 		}
 	}
-
 	return true;
 }
 
@@ -473,8 +542,9 @@ bool Wamit::Save_out(String file, double g, double rho) {
 			throw Exc(Format(t_("Impossible to open '%s'"), file));
 
 		out << Format(" %s\n\n", String('-', 71))
-			<< "                        WAMIT  Version 7.2(x64)        \n"
-		    << "                        BEMRosetta generated .out format\n\n"
+			<< "                        WAMIT  Version 6.1/6.107S \n\n"
+		    << "                        BEMRosetta generated .out format\n\n\n\n"
+		    << Format(" %s\n\n\n", String('-', 72))
 		    << Format(" %s\n\n\n", String('-', 72))
 			<< " Low-order panel method  (ILOWHI=0)\n\n";
 		if (hd().Nb == 1)
@@ -540,12 +610,18 @@ bool Wamit::Save_out(String file, double g, double rho) {
 				cgy = hd().cg(1, ibody);
 				cgz = hd().cg(2, ibody);
 			}
-			out	<< Format(" Center of Gravity  (Xg,Yg,Zg): %s %s %s\n", 
+			out	<< Format(" Center of Gravity  (Xg,Yg,Zg): %s %s %s\n\n", 
 						FormatWam(cgx), FormatWam(cgy), FormatWam(cgz));
-			out	<< " Radii of gyration:     0.000000     0.000000     0.000000\n"
-      			   "                        0.000000     0.000000     0.000000\n"
-                   "                        0.000000     0.000000     0.000000\n\n\n";
+			if (hd().IsLoadedM()) {
+				out	<< " Global body and external mass matrix:        ";
+				for (int r = 0; r < 6; ++r) {
+					out << "\n ";
+					for (int c = 0; c < 6; ++c)
+						out << Format(" % 10.4E", hd().M[ibody](r, c));
+				}
+			}
 		}
+		out << "\n\n\n";
 		out << " ------------------------------------------------------------------------\n"
         	<< "                            Output from  WAMIT\n"
 			<< " ------------------------------------------------------------------------\n"
@@ -571,6 +647,83 @@ bool Wamit::Save_out(String file, double g, double rho) {
 			if (hd().IsLoadedRAO())
 				Save_RAO(out, ifr);
 		}
+		UVector<double> heads;
+		UVector<int> id1(int(hd().qh.size())), id2(int(hd().qh.size()));
+		if (hd().IsLoadedQTF(true) || hd().IsLoadedQTF(false)) {
+			for (int ih = 0; ih < hd().qh.size(); ++ih) {
+				id1[ih] = 1+FindAdd(heads, hd().qh[ih].real());
+				id2[ih] = 1+FindAdd(heads, hd().qh[ih].imag());
+			}
+		}
+			
+		if (hd().IsLoadedQTF(true)) {
+			for (int ih = 0; ih < hd().qh.size(); ++ih) {
+				for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) {
+					for (int ifr2 = ifr1; ifr2 < hd().qw.size(); ++ifr2) {
+						double T = 2*M_PI/(hd().qw[ifr1] + hd().qw[ifr2]);
+						double T1 = 2*M_PI/(hd().qw[ifr1]);
+						double T2 = 2*M_PI/(hd().qw[ifr2]);
+						out << " ************************************************************************\n\n"
+							   " 2nd-order period (sec) =  " << Format("%12E", T) << "\n\n"
+							   " Period indices:     " << Format("%2d   %2d", ifr1+1, ifr2+1) << "          Periods:  " 
+							   		<< Format("%12E %12E", T1, T2) << "\n"
+							   " ------------------------------------------------------------------------\n\n\n"
+							   "SUM-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
+							   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       " 
+							   		<< Format("%4.1f", hd().qh[ih].real()) << "      " 
+							   		<< Format("%4.1f", hd().qh[ih].imag()) << "\n\n\n"
+							   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";
+						for (int ib = 0; ib < hd().Nb; ++ib) {
+							for (int idf = 0; idf < 6; ++idf) {
+								static int idf12[] = {1, 3, 5, 2, 4, 6};
+				        		int iidf = idf12[idf]-1;
+								out << Format("    %2d   %12.6E     %10d\n", 1+iidf + 6*ib, 
+										hd().F_ndim(abs(hd().qtfsum[ib][ih][iidf](ifr1, ifr2)), iidf),
+     									int(ToDeg(arg(hd().qtfsum[ib][ih][iidf](ifr1, ifr2)))));
+							}
+						}
+						out << "\n\n";
+					}
+				}
+			}
+		}
+		if (hd().IsLoadedQTF(false)) {
+			for (int ih = 0; ih < hd().qh.size(); ++ih) {
+				for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) {
+					for (int ifr1 = ifr2; ifr1 < hd().qw.size(); ++ifr1) {
+						String sT, units;
+						if (ifr1 == ifr2)
+							sT = "infinite";
+						else {
+							units = "(sec) ";
+							sT = Format(" %12E", 2*M_PI/(hd().qw[ifr1] - hd().qw[ifr2]));
+						}
+						double T1 = 2*M_PI/(hd().qw[ifr1]);
+						double T2 = 2*M_PI/(hd().qw[ifr2]);
+						out << " ************************************************************************\n\n"
+							   " 2nd-order period " << units << "= " << sT << "\n\n"
+							   " Period indices:     " << Format("%2d   %2d", ifr1+1, ifr2+1) << "          Periods:  " 
+							   		<< Format("%12E %12E", T1, T2) << "\n"
+							   " ------------------------------------------------------------------------\n\n\n"
+							   "DIFFERENCE-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
+							   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       "
+							   		<< Format("%4.1f", hd().qh[ih].real()) << "      " 
+							   		<< Format("%4.1f", hd().qh[ih].imag()) << "\n\n\n"
+							   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";
+						for (int ib = 0; ib < hd().Nb; ++ib) {
+							for (int idf = 0; idf < 6; ++idf) {
+								static int idf12[] = {1, 3, 5, 2, 4, 6};
+				        		int iidf = idf12[idf]-1;
+								out << Format("    %2d   %12.6E     %10d\n", 1+iidf + 6*ib, 
+										hd().F_ndim(abs(hd().qtfdif[ib][ih][iidf](ifr1, ifr2)), iidf),
+     									int(ToDeg(arg(hd().qtfdif[ib][ih][iidf](ifr1, ifr2)))));
+							}
+						}
+						out << "\n\n";
+					}
+				}
+			}
+		}     									     				
 	} catch (Exc e) {
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
 		hd().lastError = e;

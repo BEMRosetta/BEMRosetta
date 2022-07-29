@@ -1100,6 +1100,7 @@ public:
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces(Hydro::FORCE force);
+	void OnResetDOF();
 	void OnDescription();
 	void OnMenuAdvancedArraySel();
 	void OnSelListLoaded();

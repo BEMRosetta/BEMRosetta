@@ -754,3 +754,22 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 		return String();
 	return array.Get(row, 5);
 }
+
+// FileSel problem. SHGetFileInfo() gets locked in PC out of its network
+
+	/*FileSel fs;
+	
+	fs.ExecuteOK();
+	*/
+	/*
+	bool large = false;
+	bool exe = false;
+	SHFILEINFO info = {0};
+	SHGetFileInfo("w.lnk", FILE_ATTRIBUTE_NORMAL,
+		               &info, sizeof(info),
+		               SHGFI_ICON|
+		               (large ? SHGFI_LARGEICON : SHGFI_SMALLICON)|
+		               (exe ? 0 : SHGFI_USEFILEATTRIBUTES));
+	
+	Exclamation("It works!");
+	*/

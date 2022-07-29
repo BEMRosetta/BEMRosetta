@@ -243,7 +243,6 @@ public:
 	
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f, int _Nh = -1);
-	//void GetMaPh(Forces &f);
 	void Normalize_Forces(Forces &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
@@ -481,7 +480,9 @@ public:
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force);
-	
+	void ResetDOF(const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
+	void SwapDOF(int ib, int idof1, int idof2);
+		
 	void FillFrequencyGapsABForces();
 	void FillFrequencyGapsQTF();
 	
@@ -1082,6 +1083,7 @@ public:
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force);										
+	void ResetDOF(int id, const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
 	
 	void FillFrequencyGapsABForces(int id);
 	void FillFrequencyGapsQTF(int id);
