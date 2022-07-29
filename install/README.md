@@ -5,7 +5,7 @@
 ### Windows
 No compiling is required. Just copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
 
-## Compiling
+## Compiling -- The compilation process is now being simplified. We apologise for the inconvenience --
 
 BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language. U++ makes C++ so simple and efficient that it appeals even to scripting language programmers.
 
