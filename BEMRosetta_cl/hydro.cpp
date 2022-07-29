@@ -424,6 +424,123 @@ void Hydro::ResetForces(Hydro::FORCE force) {
 	}
 }
 
+void Hydro::ResetDOF(const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
+	if (_idDOF.size() > 0) {
+		UVector<int> idDOF;
+		for (int i = 0; i < _idDOF.size(); ++i)
+			for (int ib = 0; ib < Nb; ++ib)
+				idDOF << _idDOF[i] + ib*6;
+	
+		auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
+			for (int ib = 0; ib < idDOF.size(); ++ib) 
+				for (int jb = 0; jb < idDOF.size(); ++jb) 
+					A[idDOF[ib]][idDOF[jb]] = VectorXd::Zero(Nf);		
+	    };		
+		if (IsLoadedA())
+			DeleteAB(A);
+		if (IsLoadedAinf_w())
+			DeleteAB(Ainf_w);
+		if (IsLoadedB())
+			DeleteAB(B);
+
+		auto DeleteF = [&](Forces &ex) {
+			for (int ih = 0; ih < Nh; ++ih) 
+				for (int ifr = 0; ifr < Nf; ++ifr) 
+					for (int i = 0; i < idDOF.size(); ++i) 
+						ex.force[ih](ifr, idDOF[i]) = 0;
+		};
+		if (IsLoadedFex())
+			DeleteF(ex);
+		if (IsLoadedFsc())
+			DeleteF(sc);
+		if (IsLoadedFfk())
+			DeleteF(fk);	
+		if (IsLoadedRAO())
+			DeleteF(rao);
+	}
+	if (idDOFQTF.size() > 0) {
+		auto DeleteSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+			for (int ib = 0; ib < Nb; ++ib)
+		        for (int ih = 0; ih < qh.size(); ++ih) 
+					for (int idf = 0; idf < idDOFQTF.size(); ++idf) 
+						qtf[ib][ih][idDOFQTF[idf]] = MatrixXcd::Zero(qw.size(), qw.size());													
+		};
+		if (IsLoadedQTF(true)) 
+			DeleteSumDif(qtfsum);
+		if (IsLoadedQTF(false))
+			DeleteSumDif(qtfdif);
+	}
+	
+	// Some previous data is now invalid
+	Kirf.Clear();
+	
+	if (!AfterLoad()) {
+		String error = GetLastError();
+		throw Exc(Format(t_("Problem reseting DOF: '%s'\n%s"), error));	
+	}
+}
+
+void Hydro::SwapDOF(int ib, int idof1, int idof2) {
+	auto SwapAB = [&](UArray<UArray<VectorXd>> &A) {
+		UArray<UArray<VectorXd>> An(6*Nb);
+		for (int i = 0; i < 6*Nb; ++i) 
+			An[i].SetCount(6*Nb);
+		
+		for (int idof = 0; idof < 6; ++idof) {
+			for (int jdof = 0; jdof < 6; ++jdof) {
+				int idofn = idof, jdofn = jdof;
+				if (idofn == idof1)
+					idofn = idof2;
+				else if (idofn == idof2)
+					idofn = idof1;
+				if (jdofn == idof1)
+					jdofn = idof2;
+				else if (jdofn == idof2)
+					jdofn = idof1;	 
+				An[idofn+6*Nb][jdofn+6*Nb] = An[idof+6*Nb][jdof+6*Nb];
+			}
+		}
+    	A = pick(An);
+    };		
+	if (IsLoadedA())
+		SwapAB(A);
+	if (IsLoadedAinf_w())
+		SwapAB(Ainf_w);
+	if (IsLoadedB())
+		SwapAB(B);
+
+	auto SwapF = [&](Forces &ex) {
+		for (int ih = 0; ih < Nh; ++ih) 
+			for (int ifr = 0; ifr < Nf; ++ifr)
+				Swap(ex.force[ih](ifr, idof1+6*Nb), ex.force[ih](ifr, idof2+6*Nb));
+	};
+	if (IsLoadedFex())
+		SwapF(ex);
+	if (IsLoadedFsc())
+		SwapF(sc);
+	if (IsLoadedFfk())
+		SwapF(fk);	
+	if (IsLoadedRAO())
+		SwapF(rao);
+
+	auto SwapSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+        for (int ih = 0; ih < qh.size(); ++ih) 
+			Swap(qtf[ib][ih][idof1], qtf[ib][ih][idof2]); 		
+	};
+	if (IsLoadedQTF(true)) 
+		SwapSumDif(qtfsum);
+	if (IsLoadedQTF(false))
+		SwapSumDif(qtfdif);
+
+	// Some previous data is now invalid
+	Kirf.Clear();
+	
+	if (!AfterLoad()) {
+		String error = GetLastError();
+		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
+	}
+}
+
 void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 	if (idFreq.size() > 0) {
 		auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {

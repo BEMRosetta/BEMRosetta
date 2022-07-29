@@ -1491,6 +1491,10 @@ void BEM::ResetForces(int id, Hydro::FORCE force) {
 	hydros[id].hd().ResetForces(force);
 }
 
+void BEM::ResetDOF(int id, const UVector<int> &idDOF, const UVector<int> &idDOFQTF) {
+	hydros[id].hd().ResetDOF(idDOF, idDOFQTF);
+}
+
 void BEM::FillFrequencyGapsABForces(int id) {
 	hydros[id].hd().FillFrequencyGapsABForces();
 }
