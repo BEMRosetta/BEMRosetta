@@ -603,6 +603,12 @@ bool Aqwa::Load_QTF() {
 	int Nh = f.GetInt(1);
 	int Nf = f.GetInt(2);	
 	
+	if (!IsNull(hd().Nb) && hd().Nb < Nb)
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+	hd().Nb = Nb;
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
+			
     UVector<double> _qw;
     UArray<std::complex<double>> _qh;
     
@@ -709,22 +715,22 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
 	for (int ih = 0; ih < hd().qh.size(); ++ih) {
 		if (hd().qh[ih].real() != hd().qh[ih].imag())
 			continue;
-		out << Format("   % 9.5f", hd().qh[ih].real());
-		icol++;
 		if (icol > 5) {
 			out << "\n              ";
 			icol = 0;
 		} 
+		out << Format("   % 9.5f", hd().qh[ih].real());
+		icol++;
 	}
 	out << "\n               ";
 	icol = 0;
 	for (int ifr = 0; ifr < hd().qw.size(); ++ifr) {
-		out << Format("   %9.7f", hd().qw[ifr]);
-		icol++;
 		if (icol > 5) {
 			out << "\n               ";
 			icol = 0;
 		}
+		out << Format("   %9.7f", hd().qw[ifr]);
+		icol++;
 	}	
 
 	int num = int(hd().Nb*hd().qh.size());

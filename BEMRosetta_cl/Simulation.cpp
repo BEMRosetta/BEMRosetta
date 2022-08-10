@@ -15,7 +15,7 @@ Simulation::~Simulation() {
 }
 
 void Simulation::Load(const String &datfile, int stiffMod, int dllForce, 
-			double _rho, double _g, double c0x, double c0y, double c0z) {
+			double _rho, double _g, double c0x, double c0y, double c0z, const BEM &bem) {
 	rho = _rho;
 	g = _g;
 	

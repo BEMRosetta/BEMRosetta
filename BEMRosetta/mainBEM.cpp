@@ -70,7 +70,44 @@ void MainBEM::Init() {
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
 	menuProcess.butRAO.Disable();	
 	menuProcess.butRAO <<= THISBACK(OnRAO);
+	
+	menuProcess.butABForces << THISBACK(OnABForces);
+	menuProcess.butQTF << THISBACK(OnQTF);
 
+	auto DropDOF = [&](DropList &drop1, DropList &drop2)->bool {
+		if (drop1.GetIndex() < 1 || drop2.GetIndex() < 1)
+			return false;
+		if (drop1.GetIndex() == drop2.GetIndex())
+			return false;
+		return true;
+	};
+	
+	menuProcess.dropDOF1.WhenAction = [&] {
+		menuProcess.butSwapDOF.Show(DropDOF(menuProcess.dropDOF1, menuProcess.dropDOF2));
+	};
+	menuProcess.dropDOF1.Add(t_("Choose"));
+		for (int i = 0; i < 6; ++i)
+			menuProcess.dropDOF1.Add(BEM::StrDOF(i));
+	menuProcess.dropDOF1.SetIndex(0);
+	
+	menuProcess.dropDOF2.WhenAction = [&] {
+		menuProcess.butSwapDOF.Show(DropDOF(menuProcess.dropDOF1, menuProcess.dropDOF2));
+	};
+	menuProcess.dropDOF2.Add(t_("Choose"));
+		for (int i = 0; i < 6; ++i)
+			menuProcess.dropDOF2.Add(BEM::StrDOF(i));
+	menuProcess.dropDOF2.SetIndex(0);
+	
+	menuProcess.butSwapDOF << THISBACK(OnSwapDOF);
+	menuProcess.butSwapDOF.Hide();
+	
+	if (IsNull(menuProcess.opFill))
+		menuProcess.opFill <<= 0;
+	if (IsNull(menuProcess.maxFreq))
+		menuProcess.maxFreq <<= 150;
+	
+	CtrlLayout(menuProcess2);
+	
 	auto DropChecked = [&](DropGrid &drop)->bool {
 		for (int i = 0; i < drop.GetCount(); ++i) {
 			if (drop.GetList().Get(i, 0) == true) 
@@ -79,69 +116,104 @@ void MainBEM::Init() {
 		return false;
 	};
 	
-	menuProcess.dropFreq.AddColumn("", 20);
-	menuProcess.dropFreq.AddColumn("", 50);
-	menuProcess.dropFreq.GetList().GetColumn(0).Option();
-	menuProcess.dropFreq.Width(100);
-	menuProcess.dropFreq.GetList().Sorting(false);
-	menuProcess.dropFreq.OnFocus = [&] {
-		menuProcess.butRemoveFreq.Enable(DropChecked(menuProcess.dropFreq) || DropChecked(menuProcess.dropFreqQTF));
+	menuProcess2.factor <<= 0;
+	menuProcess2.dropDOF.AddColumn("", 20);
+	menuProcess2.dropDOF.AddColumn("", 50);
+	menuProcess2.dropDOF.GetList().GetColumn(0).Option();
+	menuProcess2.dropDOF.Width(100);
+	menuProcess2.dropDOF.GetList().Sorting(false);
+	menuProcess2.dropDOF.OnFocus = [&] {
+		menuProcess2.dropDOF.DropGrid::GotFocus();
+		menuProcess2.butResetDOF.Show(DropChecked(menuProcess2.dropDOF) || 
+									  DropChecked(menuProcess2.dropDOFQTF));
+		menuProcess2.butResetDOF0.Show(DropChecked(menuProcess2.dropDOF) || 
+									  DropChecked(menuProcess2.dropDOFQTF));
 	};
-	menuProcess.dropFreqQTF.AddColumn("", 20);
-	menuProcess.dropFreqQTF.AddColumn("", 50);
-	menuProcess.dropFreqQTF.GetList().GetColumn(0).Option();
-	menuProcess.dropFreqQTF.Width(100);
-	menuProcess.dropFreqQTF.GetList().Sorting(false);
-	menuProcess.butRemoveFreq << THISBACK(OnDeleteHeadingsFrequencies);
-	menuProcess.dropFreqQTF.OnFocus = [&] {
-		menuProcess.butRemoveFreq.Enable(DropChecked(menuProcess.dropFreq) || DropChecked(menuProcess.dropFreqQTF));
+	menuProcess2.dropDOFQTF.AddColumn("", 20);
+	menuProcess2.dropDOFQTF.AddColumn("", 50);
+	menuProcess2.dropDOFQTF.GetList().GetColumn(0).Option();
+	menuProcess2.dropDOFQTF.Width(100);
+	menuProcess2.dropDOFQTF.GetList().Sorting(false);
+	menuProcess2.dropDOFQTF.OnFocus = [&] {
+		menuProcess2.dropDOFQTF.DropGrid::GotFocus();
+		menuProcess2.butResetDOF.Show(DropChecked(menuProcess2.dropDOF) || 
+									  DropChecked(menuProcess2.dropDOFQTF));
+		menuProcess2.butResetDOF0.Show(DropChecked(menuProcess2.dropDOF) || 
+									   DropChecked(menuProcess2.dropDOFQTF));
 	};
-	menuProcess.butRemoveFreq.Disable();
+	menuProcess2.butResetDOF << THISBACK1(OnResetDOF, false);
+	menuProcess2.butResetDOF.Hide();
+	menuProcess2.butResetDOF0 << THISBACK1(OnResetDOF, true);
+	menuProcess2.butResetDOF0.Hide();
+			
+	menuProcess2.dropFreq.AddColumn("", 20);
+	menuProcess2.dropFreq.AddColumn("", 50);
+	menuProcess2.dropFreq.GetList().GetColumn(0).Option();
+	menuProcess2.dropFreq.Width(100);
+	menuProcess2.dropFreq.GetList().Sorting(false);
+	menuProcess2.dropFreq.OnFocus = [&] {
+		menuProcess2.dropFreq.DropGrid::GotFocus();
+		menuProcess2.butRemoveFreq.Show(DropChecked(menuProcess2.dropFreq) || 
+										DropChecked(menuProcess2.dropFreqQTF));
+	};
+	menuProcess2.dropFreqQTF.AddColumn("", 20);
+	menuProcess2.dropFreqQTF.AddColumn("", 50);
+	menuProcess2.dropFreqQTF.GetList().GetColumn(0).Option();
+	menuProcess2.dropFreqQTF.Width(100);
+	menuProcess2.dropFreqQTF.GetList().Sorting(false);
+	menuProcess2.butRemoveFreq << THISBACK(OnDeleteHeadingsFrequencies);
+	menuProcess2.dropFreqQTF.OnFocus = [&] {
+		menuProcess2.dropFreqQTF.DropGrid::GotFocus();
+		menuProcess2.butRemoveFreq.Show(DropChecked(menuProcess2.dropFreq) || 
+										DropChecked(menuProcess2.dropFreqQTF));
+	};
+	menuProcess2.butRemoveFreq.Hide();
 	
-	menuProcess.dropHead.AddColumn("", 20);
-	menuProcess.dropHead.AddColumn("Heading [º]", 50);
-	menuProcess.dropHead.GetList().GetColumn(0).Option();
-	menuProcess.dropHead.Width(100);
-	menuProcess.dropHead.GetList().Sorting(false);
-	menuProcess.dropHead.OnFocus = [&] {
-		menuProcess.butRemoveHead.Enable(DropChecked(menuProcess.dropHead) || DropChecked(menuProcess.dropHeadQTF));
+	menuProcess2.dropHead.AddColumn("", 20);
+	menuProcess2.dropHead.AddColumn(t_("Heading [º]"), 50);
+	menuProcess2.dropHead.GetList().GetColumn(0).Option();
+	menuProcess2.dropHead.Width(100);
+	menuProcess2.dropHead.GetList().Sorting(false);
+	menuProcess2.dropHead.OnFocus = [&] {
+		menuProcess2.dropHead.DropGrid::GotFocus();
+		menuProcess2.butRemoveHead.Show(DropChecked(menuProcess2.dropHead) || 
+										DropChecked(menuProcess2.dropHeadQTF));
 	};
-	menuProcess.dropHeadQTF.AddColumn("", 10);
-	menuProcess.dropHeadQTF.AddColumn("Heading [º]", 50);
-	menuProcess.dropHeadQTF.GetList().GetColumn(0).Option();
-	menuProcess.dropHeadQTF.Width(150);
-	menuProcess.dropHeadQTF.GetList().Sorting(false);
-	menuProcess.dropHeadQTF.OnFocus = [&] {
-		menuProcess.butRemoveHead.Enable(DropChecked(menuProcess.dropHead) || DropChecked(menuProcess.dropHeadQTF));
+	menuProcess2.dropHeadQTF.AddColumn("", 10);
+	menuProcess2.dropHeadQTF.AddColumn(t_("Heading [º]"), 50);
+	menuProcess2.dropHeadQTF.GetList().GetColumn(0).Option();
+	menuProcess2.dropHeadQTF.Width(150);
+	menuProcess2.dropHeadQTF.GetList().Sorting(false);
+	menuProcess2.dropHeadQTF.OnFocus = [&] {
+		menuProcess2.dropHeadQTF.DropGrid::GotFocus();
+		menuProcess2.butRemoveHead.Show(DropChecked(menuProcess2.dropHead) || 
+										DropChecked(menuProcess2.dropHeadQTF));
 	};
-	menuProcess.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
-	menuProcess.butRemoveHead.Disable();
+	menuProcess2.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
+	menuProcess2.butRemoveHead.Hide();
 	
-	menuProcess.butDiffraction << THISBACK1(OnResetForces, Hydro::SCATTERING);
-	menuProcess.butFK << THISBACK1(OnResetForces, Hydro::FK);
-	menuProcess.butRemoveForces << THISBACK1(OnResetForces, Hydro::ALL);
-	
-	menuProcess.butABForces << THISBACK(OnABForces);
-	menuProcess.butQTF << THISBACK(OnQTF);
-	
-	menuProcess.dropDOF.AddColumn("", 20);
-	menuProcess.dropDOF.AddColumn("", 50);
-	menuProcess.dropDOF.GetList().GetColumn(0).Option();
-	menuProcess.dropDOF.Width(100);
-	menuProcess.dropDOF.GetList().Sorting(false);
-	menuProcess.dropDOF.OnFocus = [&] {
-		menuProcess.butResetDOF.Enable(DropChecked(menuProcess.dropDOF) || DropChecked(menuProcess.dropDOFQTF));
+	menuProcess2.dropForce.AddColumn("", 20);
+	menuProcess2.dropForce.AddColumn(t_("Force type"), 50);
+	menuProcess2.dropForce.GetList().GetColumn(0).Option();
+	menuProcess2.dropForce.Width(120);
+	menuProcess2.dropForce.GetList().Sorting(false);
+	menuProcess2.dropForce.OnFocus = [&] {
+		menuProcess2.dropForce.DropGrid::GotFocus();
+		menuProcess2.butRemoveForces.Show(DropChecked(menuProcess2.dropForce) || 
+										DropChecked(menuProcess2.dropForceQTF));
 	};
-	menuProcess.dropDOFQTF.AddColumn("", 20);
-	menuProcess.dropDOFQTF.AddColumn("", 50);
-	menuProcess.dropDOFQTF.GetList().GetColumn(0).Option();
-	menuProcess.dropDOFQTF.Width(100);
-	menuProcess.dropDOFQTF.GetList().Sorting(false);
-	menuProcess.dropDOFQTF.OnFocus = [&] {
-		menuProcess.butResetDOF.Enable(DropChecked(menuProcess.dropDOF) || DropChecked(menuProcess.dropDOFQTF));
+	menuProcess2.dropForceQTF.AddColumn("", 20);
+	menuProcess2.dropForceQTF.AddColumn(t_("Force type"), 50);
+	menuProcess2.dropForceQTF.GetList().GetColumn(0).Option();
+	menuProcess2.dropForceQTF.Width(100);
+	menuProcess2.dropForceQTF.GetList().Sorting(false);
+	menuProcess2.dropForceQTF.OnFocus = [&] {
+		menuProcess2.dropForceQTF.DropGrid::GotFocus();
+		menuProcess2.butRemoveForces.Show(DropChecked(menuProcess2.dropForce) || 
+										DropChecked(menuProcess2.dropForceQTF));
 	};
-	menuProcess.butResetDOF << THISBACK(OnResetDOF);
-	menuProcess.butResetDOF.Disable();
+	menuProcess2.butRemoveForces << THISBACK(OnResetForces);
+	menuProcess2.butRemoveForces.Hide();
 	
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
@@ -177,6 +249,7 @@ void MainBEM::Init() {
 	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
+	menuTab.Add(menuProcess2.SizePos(), t_("Remove")).Disable();
 	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
 	
@@ -188,7 +261,8 @@ void MainBEM::Init() {
 			if (!FileExists(Bem().foammPath))
 				Status(t_("FOAMM not found. Please set FOAMM path in Options"), 10000);	
 		} else if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuOpen) || 
-				   menuTab.IsAt(menuProcess) || menuTab.IsAt(menuAdvanced)) 
+				   menuTab.IsAt(menuProcess) || menuTab.IsAt(menuProcess2) ||
+				   menuTab.IsAt(menuAdvanced)) 
 			setupfoamm = true;
 		
 		if (!setupfoamm) 
@@ -250,24 +324,30 @@ void MainBEM::Init() {
 		tabMenuPlot.Enable(plot);
 		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
 		tabMenuProcess.Enable(convertProcess);
+		TabCtrl::Item& tabMenuProcess2 = menuTab.GetItem(menuTab.Find(menuProcess2));
+		tabMenuProcess2.Enable(convertProcess);
 		TabCtrl::Item& tabMenuAdvanced = menuTab.GetItem(menuTab.Find(menuAdvanced));
 		tabMenuAdvanced.Enable(convertProcess);
 
 		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
 			tabMenuProcess.Text(t_("Process"));
+			tabMenuProcess2.Text(t_("Remove"));
 			tabMenuAdvanced.Text(t_("Advanced"));
 		} else {
 			tabMenuPlot.Text("");
 			tabMenuProcess.Text("");
+			tabMenuProcess2.Text("");
 			tabMenuAdvanced.Text("");
 		}
 		
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));
+			tabMenuProcess2.Text(t_("Remove"));
 			tabMenuAdvanced.Text(t_("Advanced"));
 		} else {
 			tabMenuProcess.Text("");
+			tabMenuProcess2.Text("");
 			tabMenuAdvanced.Text("");
 		}
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
@@ -286,9 +366,6 @@ void MainBEM::Init() {
 	
 	mainSummary.Init();
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
-	
-	mainArrange.Init();
-	mainTab.Add(mainArrange.SizePos(), t_("Arrange DOF")).Disable();
 	
 	mainMatrixK.Init(Hydro::MAT_K);
 	mainTab.Add(mainMatrixK.SizePos(), t_("K")).Disable();
@@ -395,7 +472,7 @@ void MainBEM::LoadSelTab(BEM &bem) {
 		mainMatrixA.Load(bem.hydros, ids, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixDlin))
 		mainMatrixDlin.Load(bem.hydros, ids, false);
-	else if (id == mainTab.Find(mainSummary) || id == mainTab.Find(mainArrange))
+	else if (id == mainTab.Find(mainSummary))
 		;
 	else if (id == mainTab.Find(mainSetupFOAMM))
 		mainSetupFOAMM.Load();
@@ -504,8 +581,6 @@ bool MainBEM::OnLoadFile(String file) {
 
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-		mainArrange.Load(Bem().hydros, ids);	
-		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(true);	
 		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
@@ -540,7 +615,6 @@ void MainBEM::OnRemoveSelected(bool all) {
 		if (all || listLoaded.IsSelected(row)) {
 			int id = ArrayModel_IdHydro(listLoaded, row);
 			Bem().hydros.Remove(id);
-			mainArrange.Remove(row);
 			listLoaded.Remove(row);
 			selected = true;
 		}
@@ -548,7 +622,6 @@ void MainBEM::OnRemoveSelected(bool all) {
 	if (!selected && listLoaded.GetCount() == 1) {	
 		int id = ArrayModel_IdHydro(listLoaded, 0);
 		Bem().hydros.Remove(id);
-		mainArrange.Remove(0);
 		listLoaded.Remove(0);
 		selected = true;
 	}		
@@ -564,8 +637,6 @@ void MainBEM::OnRemoveSelected(bool all) {
 	
 	UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 	
-	mainArrange.Load(Bem().hydros, ids);	
-	mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);	
 	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
@@ -606,41 +677,52 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opHaskind.		Enable(numsel == 1 || numrow == 1);
-//	menuConvert.butConvert.		Enable(numsel == 1 || numrow == 1);
 	
 	bool show_w = menuPlot.opwT == 0;
-	menuProcess.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
-	menuProcess.dropFreqQTF.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
-	menuProcess.dropFreq.Clear();
-	menuProcess.dropFreqQTF.Clear();
-	menuProcess.dropHead.Clear();
-	menuProcess.dropHeadQTF.Clear();
-	menuProcess.dropDOF.Clear();
-	menuProcess.dropDOFQTF.Clear();
+	menuProcess.dropBody.Clear();
+	menuProcess2.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	menuProcess2.dropFreqQTF.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	menuProcess2.dropFreq.Clear();
+	menuProcess2.dropFreqQTF.Clear();
+	menuProcess2.dropHead.Clear();
+	menuProcess2.dropHeadQTF.Clear();
+	menuProcess2.dropDOF.Clear();
+	menuProcess2.dropDOFQTF.Clear();
+	menuProcess2.dropForce.Clear();
+	menuProcess2.dropForceQTF.Clear();
 	
 	int id = GetIdOneSelected(false);
 	if (id >= 0) { 
 		Hydro &data = Bem().hydros[id].hd();
+		for (int i = 0; i < data.Nb; ++i)
+			menuProcess.dropBody.Add(i+1);
+		menuProcess.dropBody.SetIndex(0);
 		for (int i = 0; i < data.w.size(); ++i)
-			menuProcess.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
+			menuProcess2.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
 		for (int i = 0; i < data.qw.size(); ++i)
-			menuProcess.dropFreqQTF.Add(false, show_w ? data.qw[i] : 2*M_PI/data.qw[i]);
+			menuProcess2.dropFreqQTF.Add(false, show_w ? data.qw[i] : 2*M_PI/data.qw[i]);
 		for (int i = 0; i < data.head.size(); ++i)
-			menuProcess.dropHead.Add(false, data.head[i]);
+			menuProcess2.dropHead.Add(false, data.head[i]);
 		for (int i = 0; i < data.qh.size(); ++i)
-			menuProcess.dropHeadQTF.Add(false, Format("%f-%f", data.qh[i].real(), data.qh[i].imag()));
+			menuProcess2.dropHeadQTF.Add(false, Format("%f-%f", data.qh[i].real(), data.qh[i].imag()));
 		for (int i = 0; i < 6; ++i)
-			menuProcess.dropDOF.Add(false, BEM::StrDOF(i));
+			menuProcess2.dropDOF.Add(false, BEM::StrDOF(i));
 		for (int i = 0; i < 6; ++i)
-			menuProcess.dropDOFQTF.Add(false, BEM::StrDOF(i));
+			menuProcess2.dropDOFQTF.Add(false, BEM::StrDOF(i));
 		
-		menuProcess.butDiffraction.Enable(data.IsLoadedFsc());
-		menuProcess.butFK.Enable(data.IsLoadedFfk());
-		menuProcess.butRemoveForces.Enable(data.IsLoadedFex());
-		
-		menuProcess.butRemoveFreq.Disable();
-		menuProcess.butRemoveHead.Disable();
-		menuProcess.butResetDOF.Disable();
+		if (data.IsLoadedFex())
+			menuProcess2.dropForce.Add(false, t_("All"));
+		if (data.IsLoadedFsc())
+			menuProcess2.dropForce.Add(false, t_("Diffraction"));
+		if (data.IsLoadedFfk())
+			menuProcess2.dropForce.Add(false, t_("Froude-Krylov"));
+
+		if (data.IsLoadedQTF(true) || data.IsLoadedQTF(false))
+			menuProcess2.dropForceQTF.Add(false, t_("All"));
+		if (data.IsLoadedQTF(true))
+			menuProcess2.dropForceQTF.Add(false, t_("Summation"));
+		if (data.IsLoadedQTF(false))
+			menuProcess2.dropForceQTF.Add(false, t_("Difference"));
 	}
 }
 
@@ -672,7 +754,6 @@ void MainBEM::OnJoin() {
 		});
 		
 		mainSummary.Clear();
-		mainArrange.Clear();
 		
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 		ArrayModel_RowsHydroDel(listLoaded, rowsJoin);
@@ -682,14 +763,11 @@ void MainBEM::OnJoin() {
 		for (int id = 0; id < Bem().hydros.size(); ++id) {
 			const Hydro &data = Bem().hydros[id].hd();
 			mainSummary.Report(data, id);
-			mainArrange.Load(Bem().hydros, ids);
 		}
 			
 		if (Bem().hydros.size() > 0) 
 			listLoaded.SetCursor(0);
 
-		mainArrange.Load(Bem().hydros, ids);	
-		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
@@ -719,7 +797,6 @@ void MainBEM::OnDuplicate() {
 		HydroClass &data = Bem().Duplicate(id);
 		
 		mainSummary.Clear();
-		mainArrange.Clear();
 		
 		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
 
@@ -728,7 +805,6 @@ void MainBEM::OnDuplicate() {
 		for (int i = 0; i < Bem().hydros.size(); ++i) {
 			const Hydro &data = Bem().hydros[id].hd();
 			mainSummary.Report(data, id);
-			mainArrange.Load(Bem().hydros, ids);
 		}
 		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
@@ -883,15 +959,116 @@ void MainBEM::OnOgilvie() {
 	PromptOK(DeQtfLf(str));
 }
 
-void MainBEM::OnResetForces(Hydro::FORCE force) {
+void MainBEM::OnResetForces() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 		
+		
+		Hydro::FORCE force = Hydro::NONE;
+		for (int i = 0; i < menuProcess2.dropForce.GetCount(); ++i) {
+			if (menuProcess2.dropForce.GetList().Get(i, 0) == true) {
+				String val = menuProcess2.dropForce.GetList().Get(i, 1);
+				if (val == t_("All")) {
+					force = Hydro::ALL;
+					break;
+				} else if (val == t_("Diffraction")) {
+					if (force == Hydro::NONE)
+						force = Hydro::SCATTERING;
+					else {
+						force = Hydro::ALL;
+						break;
+					}
+				} else if (val == t_("Froude-Krylov")) {
+					if (force == Hydro::NONE)
+						force = Hydro::FK;
+					else {
+						force = Hydro::ALL;
+						break;
+					}
+				}
+			}
+		}
+
+		Hydro::FORCE forceQtf = Hydro::NONE;
+		for (int i = 0; i < menuProcess2.dropForceQTF.GetCount(); ++i) {
+			if (menuProcess2.dropForceQTF.GetList().Get(i, 0) == true) {
+				String val = menuProcess2.dropForceQTF.GetList().Get(i, 1);
+				if (val == t_("All")) {
+					forceQtf = Hydro::ALL;
+					break;
+				} else if (val == t_("Summation")) {
+					if (forceQtf == Hydro::NONE)
+						forceQtf = Hydro::QTFSUM;
+					else {
+						forceQtf = Hydro::ALL;
+						break;
+					}
+				} else if (val == t_("Difference")) {
+					if (forceQtf == Hydro::NONE)
+						forceQtf = Hydro::QTFDIF;
+					else {
+						forceQtf = Hydro::ALL;
+						break;
+					}
+				}
+			}
+		}
+					
 		WaitCursor wait;
 		
-		Bem().ResetForces(id, force);
+		Bem().ResetForces(id, force, forceQtf);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+	
+		LoadSelTab(Bem());
+		
+		if (menuProcess2.dropForce.GetCount() > 0)
+			menuProcess2.dropForce.SetIndex(0);
+		if (menuProcess2.dropForceQTF.GetCount() > 0)
+			menuProcess2.dropForceQTF.SetIndex(0);
+		menuProcess2.dropForce.OnFocus();
+		menuProcess2.dropForceQTF.OnFocus();
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
+void MainBEM::OnResetDOF(bool isReset) {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		if (isReset)
+			menuProcess2.factor <<= 0;
+			
+		double factor = ~menuProcess2.factor;
+		if (IsNull(factor))
+			factor = 0;
+				
+		UVector<int> idDOF, idDOFQTF;
+		for (int i = 0; i < 6; ++i)
+			if (menuProcess2.dropDOF.GetList().Get(i, 0) == true)
+				idDOF << i;
+		for (int i = 0; i < 6; ++i)
+			if (menuProcess2.dropDOFQTF.GetList().Get(i, 0) == true)
+				idDOFQTF << i;
+			
+		WaitCursor wait;
+		
+		Bem().ResetDOF(id, factor, idDOF, idDOFQTF);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -910,23 +1087,16 @@ void MainBEM::OnResetForces(Hydro::FORCE force) {
 	}	
 }
 
-void MainBEM::OnResetDOF() {
+void MainBEM::OnSwapDOF() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 		
-		UVector<int> idDOF, idDOFQTF;
-		for (int i = 0; i < 6; ++i)
-			if (menuProcess.dropDOF.GetList().Get(i, 0) == true)
-				idDOF << i;
-		for (int i = 0; i < 6; ++i)
-			if (menuProcess.dropDOFQTF.GetList().Get(i, 0) == true)
-				idDOFQTF << i;
-					
 		WaitCursor wait;
 		
-		Bem().ResetDOF(id, idDOF, idDOFQTF);
+		Bem().SwapDOF(id, menuProcess.dropBody.GetIndex(), 
+				menuProcess.dropDOF1.GetIndex()-1, menuProcess.dropDOF2.GetIndex()-1);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -934,12 +1104,24 @@ void MainBEM::OnResetDOF() {
 		
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	
 		LoadSelTab(Bem());
+		
+		if (menuProcess.dropDOF1.GetCount() > 0)
+			menuProcess.dropDOF1.SetIndex(0);
+		if (menuProcess.dropDOF2.GetCount() > 0)
+			menuProcess.dropDOF2.SetIndex(0);
+		menuProcess.dropDOF1.WhenAction();
+		menuProcess.dropDOF2.WhenAction();
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	
@@ -953,7 +1135,7 @@ void MainBEM::OnABForces() {
 		
 		WaitCursor wait;
 		
-		Bem().FillFrequencyGapsABForces(id);
+		Bem().FillFrequencyGapsABForces(id, ~menuProcess.opFill == 0, ~menuProcess.maxFreq);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -982,7 +1164,7 @@ void MainBEM::OnQTF() {
 		
 		WaitCursor wait;
 		
-		Bem().FillFrequencyGapsQTF(id);
+		Bem().FillFrequencyGapsQTF(id, ~menuProcess.opFill == 0, ~menuProcess.maxFreq);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1004,19 +1186,18 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 		if (id < 0) 
 			return;
 		
-		//bool show_w = menuPlot.opwT == 0;
 		UVector<int> idFreq, idFreqQTF, idHead, idHeadQTF;
-		for (int i = 0; i < menuProcess.dropFreq.GetList().GetRowCount(); ++i)
-			if (menuProcess.dropFreq.GetList().Get(i, 0) == true)
+		for (int i = 0; i < menuProcess2.dropFreq.GetList().GetRowCount(); ++i)
+			if (menuProcess2.dropFreq.GetList().Get(i, 0) == true)
 				idFreq << i;
-		for (int i = 0; i < menuProcess.dropFreqQTF.GetList().GetRowCount(); ++i)
-			if (menuProcess.dropFreqQTF.GetList().Get(i, 0) == true)
+		for (int i = 0; i < menuProcess2.dropFreqQTF.GetList().GetRowCount(); ++i)
+			if (menuProcess2.dropFreqQTF.GetList().Get(i, 0) == true)
 				idFreqQTF << i;
-		for (int i = 0; i < menuProcess.dropHead.GetList().GetRowCount(); ++i)
-			if (menuProcess.dropHead.GetList().Get(i, 0) == true)
+		for (int i = 0; i < menuProcess2.dropHead.GetList().GetRowCount(); ++i)
+			if (menuProcess2.dropHead.GetList().Get(i, 0) == true)
 				idHead << i;
-		for (int i = 0; i < menuProcess.dropHeadQTF.GetList().GetRowCount(); ++i)
-			if (menuProcess.dropHeadQTF.GetList().Get(i, 0) == true)
+		for (int i = 0; i < menuProcess2.dropHeadQTF.GetList().GetRowCount(); ++i)
+			if (menuProcess2.dropHeadQTF.GetList().Get(i, 0) == true)
 				idHeadQTF << i;
 		
 		WaitCursor wait;
@@ -1029,7 +1210,6 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 		
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
@@ -1063,7 +1243,6 @@ void MainBEM::OnUpdateCrot() {
 		
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-		mainTab.GetItem(mainTab.Find(mainArrange)).Enable(ids.size() > 0);		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
@@ -1226,6 +1405,8 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.showPoints = Null;
 		menuPlot.showNdim = Null;
 		dropExportId = 2;
+		menuProcess.opFill = Null;
+		menuProcess.maxFreq = Null;
 	} else {
 		dropExportId = menuOpen.dropExport.GetIndex();
 	}
@@ -1241,6 +1422,8 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
 		("menuProcess_opThinremoval", menuAdvanced.opThinremoval)
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
+		("menuProcess_opFill", menuProcess.opFill) 
+		("menuProcess_maxFreq", menuProcess.maxFreq)
 		("opHaskind", menuAdvanced.opHaskind)
 		("mainStiffness", mainMatrixK)
 		("mainMatrixA", mainMatrixA)
@@ -1458,7 +1641,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("Waterplane area [m2]"));
 		if (data.C.size() > ib && data.C[ib].size() > 0) {
-			double wPlaneArea = data.C_ndim(ib, 2, 2);
+			double wPlaneArea = data.C_dim(ib, 2, 2);
 			array.Set(row++, col, FDS(wPlaneArea, 10, false));		
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
@@ -1532,31 +1715,7 @@ void MainOutput::Print(String str) {
 	cout.ScrollEnd();
 }
 
-void MainArrange::Init() {
-	CtrlLayout(*this);
-}
 
-void MainArrange::Clear() {
-	tab.Reset();
-	arrangeDOF.Clear();
-}
-
-void MainArrange::Load(UArray<HydroClass> &hydros, const UVector<int> &ids) {
-	MainArrange::Clear();
-	for (int i = 0; i < ids.size(); ++i) {
-		int icase = ids[i];
-		ArrangeDOF &arr = arrangeDOF.Add();
-		arr.Init(hydros[icase].hd());
-		tab.Add(arr.SizePos(), Format("[%s] %s", hydros[icase].hd().GetCodeStr(), hydros[icase].hd().name));
-	}
-}
-
-void MainArrange::Remove(int c) {
-	tab.Remove(c);
-	arrangeDOF.Remove(c);
-}
-
-	
 void MainQTF::Init() {
 	CtrlLayout(*this);
 	
@@ -1575,10 +1734,10 @@ void MainQTF::Init() {
 		opDOF.Add(i, InitCaps(BEM::StrDOF(i)));
 	opDOF.SetIndex(0);
 	
-	opQTF.Clear();
+/*	opQTF.Clear();
 	opQTF.Add(FSUM, t_("Sum")).Add(FDIFFERENCE, t_("Difference"));
 	opQTF.SetIndex(0);
-	
+*/	
 	opShow << [&] {listCases.WhenSel();};
 	opDOF  << [&] {listCases.WhenSel();};
 	opQTF  << [&] {listCases.WhenSel();};
@@ -1699,9 +1858,16 @@ bool MainQTF::Load() {
 		
 		const Hydro &hd = Bem().hydros[idHydro].hd();
 		
-		if (hd.qtfsum.IsEmpty() && hd.qtfdif.IsEmpty())
+		if (!hd.IsLoadedQTF(true) && !hd.IsLoadedQTF(false))
 			return false;
 		
+		opQTF.Clear();
+		if (hd.IsLoadedQTF(true))
+			opQTF.Add(FSUM, t_("Sum"));
+		if (hd.IsLoadedQTF(false))
+			opQTF.Add(FDIFFERENCE, t_("Difference"));
+		opQTF.SetIndex(0);
+	
 		for (int ib = 0; ib < hd.Nb; ++ib) 
 			for (int ih = 0; ih < hd.qh.size(); ++ih)
 				listCases.Add(ib+1, hd.qh[ih].real(), hd.qh[ih].imag());

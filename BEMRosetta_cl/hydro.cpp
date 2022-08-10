@@ -36,7 +36,7 @@ void Hydro::GetK_IRF(double maxT, int numT) {
     for (int i = 0; i < Nb*6; ++i) {
     	Kirf[i].SetCount(Nb*6); 			 
    		for (int j = 0; j < Nb*6; ++j)
-			Kirf[i][j].setConstant(numT, Null);
+			Kirf[i][j].setConstant(numT, NaNDouble);
     }
 		
 	GetTirf(Tirf, numT, maxT);
@@ -60,8 +60,7 @@ void Hydro::GetAinf() {
 	if (Nf == 0 || A.size() < Nb*6 || !IsLoadedKirf())
 		return;	
 	
-	Ainf.setConstant(Nb*6, Nb*6, 0);
-	//int numT = int(Tirf.size());
+	Ainf.setConstant(Nb*6, Nb*6, NaNDouble);
 	
     for (int i = 0; i < Nb*6; ++i) 
         for (int j = 0; j < Nb*6; ++j) 
@@ -79,14 +78,14 @@ void Hydro::GetRAO() {
 	MatrixXd D2 = MatrixXd::Zero(6, 6);
 	
 	for (int ib = 0; ib < Nb; ++ib) {
-		MatrixXd C = C_(!dimen, ib);
+		MatrixXd C = C_(false, ib);
 		const MatrixXd &M_ = M[ib];
 		for (int ih = 0; ih < Nh; ++ih) {	
 			for (int ifr = 0; ifr < Nf; ++ifr) {
-				VectorXcd RAO = GetRAO(w[ifr], A_(!dimen, ifr, ib), B_(!dimen, ifr, ib), 
-								F_(!dimen, ex, ih, ifr), C, M_, D, D2);
+				VectorXcd RAO = GetRAO(w[ifr], A_(false, ifr, ib), B_(false, ifr, ib), 
+								F_(false, ex, ih, ifr), C, M_, D, D2);
 				for (int idf = 0; idf < 6; ++idf)
-					rao.Set(ib, ih, ifr, idf, RAO[idf]);
+					rao.force[ih](ifr, idf+6*ib) = F_(!dimen, RAO[idf], idf);
 			}
 		}
 	}
@@ -95,7 +94,17 @@ void Hydro::GetRAO() {
 VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2) {
 	const std::complex<double> j = std::complex<double>(0, 1);
-	VectorXcd RAO = (-sqr(w)*(M + Aw) - j*w*(Bw + D) + C).inverse()*Fwh;
+
+	MatrixXd Aw0 = clone(Aw),
+			 Bw0 = clone(Bw);
+	for (int i = 0; i < 36; ++i) {
+		if (!IsNum(Aw0.array()(i)))
+			Aw0.array()(i) = 0;
+		if (!IsNum(Bw0.array()(i)))
+			Bw0.array()(i) = 0;
+	}
+	
+	VectorXcd RAO = (-sqr(w)*(M + Aw0) - j*w*(Bw0 + D) + C).inverse()*Fwh;
 	return RAO;
 }
 	
@@ -104,7 +113,7 @@ void Hydro::InitAinf_w() {
     for (int i = 0; i < Nb*6; ++i) {
     	Ainf_w[i].SetCount(Nb*6); 			 
    		for (int j = 0; j < Nb*6; ++j)
-			Ainf_w[i][j].setConstant(Nf, Null);
+			Ainf_w[i][j].setConstant(Nf, NaNDouble);
     }
 }
 
@@ -140,7 +149,7 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 	    for (int idf = 0; idf < Nb*6; ++idf) {
     		Ainf_w[idf].SetCount(Nb*6); 			 
    			for (int jdf = 0; jdf < Nb*6; ++jdf)
-				Ainf_w[idf][jdf].setConstant(Nf, Null);
+				Ainf_w[idf][jdf].setConstant(Nf, NaNDouble);
 	    }
     }
     double maxT = min(bem->maxTimeA, Hydro::GetK_IRF_MaxT(w));
@@ -151,7 +160,7 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 	    for (int idf = 0; idf < Nb*6; ++idf) {
 	    	Kirf[idf].SetCount(Nb*6); 			 
 	   		for (int jdf = 0; jdf < Nb*6; ++jdf)
-				Kirf[idf][jdf].setConstant(numT, Null);
+				Kirf[idf][jdf].setConstant(numT, NaNDouble);
 	    }
 	}
 		
@@ -383,7 +392,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	}
 }
 
-void Hydro::ResetForces(Hydro::FORCE force) {
+void Hydro::ResetForces1st(Hydro::FORCE force) {
 	if (force == Hydro::FK) {
 		if (!IsLoadedFfk())
 			return;
@@ -396,7 +405,7 @@ void Hydro::ResetForces(Hydro::FORCE force) {
 			for (int ih = 0; ih < Nh; ++ih) {
 				for (int ifr = 0; ifr < Nf; ++ifr) 
 					for (int i = 0; i < Nb*6; ++i) 
-						if (!IsNull(sc.force[ih](ifr, i))) 
+						if (IsNum(sc.force[ih](ifr, i))) 
 							ex.force[ih](ifr, i) = ex.force[ih](ifr, i) - fk.force[ih](ifr, i);
 			}		
 		}
@@ -413,7 +422,7 @@ void Hydro::ResetForces(Hydro::FORCE force) {
 			for (int ih = 0; ih < Nh; ++ih) 
 				for (int ifr = 0; ifr < Nf; ++ifr) 
 					for (int i = 0; i < Nb*6; ++i) 
-						if (!IsNull(sc.force[ih](ifr, i))) 
+						if (IsNum(sc.force[ih](ifr, i))) 
 							ex.force[ih](ifr, i) = ex.force[ih](ifr, i) - sc.force[ih](ifr, i);
 		}
 		sc.Clear();		
@@ -424,7 +433,17 @@ void Hydro::ResetForces(Hydro::FORCE force) {
 	}
 }
 
-void Hydro::ResetDOF(const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
+void Hydro::ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf) {
+	if (force != Hydro::NONE)
+		Hydro::ResetForces1st(force);
+
+	if (forceQtf == Hydro::ALL || forceQtf == Hydro::QTFSUM) 
+		qtfsum.Clear();
+	if (forceQtf == Hydro::ALL || forceQtf == Hydro::QTFDIF) 
+		qtfdif.Clear();
+}
+
+void Hydro::ResetDOF(double factor, const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
 	if (_idDOF.size() > 0) {
 		UVector<int> idDOF;
 		for (int i = 0; i < _idDOF.size(); ++i)
@@ -434,7 +453,7 @@ void Hydro::ResetDOF(const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
 		auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
 			for (int ib = 0; ib < idDOF.size(); ++ib) 
 				for (int jb = 0; jb < idDOF.size(); ++jb) 
-					A[idDOF[ib]][idDOF[jb]] = VectorXd::Zero(Nf);		
+					A[idDOF[ib]][idDOF[jb]] *= factor;		
 	    };		
 		if (IsLoadedA())
 			DeleteAB(A);
@@ -443,11 +462,21 @@ void Hydro::ResetDOF(const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
 		if (IsLoadedB())
 			DeleteAB(B);
 
+		auto DeleteAinfA0 = [&](MatrixXd &A) {
+			for (int ib = 0; ib < idDOF.size(); ++ib) 
+				for (int jb = 0; jb < idDOF.size(); ++jb) 
+					A(idDOF[ib], idDOF[jb]) *= factor;		
+	    };	
+		if (IsLoadedAinf()) 
+			DeleteAinfA0(Ainf);
+		if (IsLoadedA0()) 
+			DeleteAinfA0(A0);
+		
 		auto DeleteF = [&](Forces &ex) {
 			for (int ih = 0; ih < Nh; ++ih) 
 				for (int ifr = 0; ifr < Nf; ++ifr) 
 					for (int i = 0; i < idDOF.size(); ++i) 
-						ex.force[ih](ifr, idDOF[i]) = 0;
+						ex.force[ih](ifr, idDOF[i]) *= factor;
 		};
 		if (IsLoadedFex())
 			DeleteF(ex);
@@ -463,7 +492,7 @@ void Hydro::ResetDOF(const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
 			for (int ib = 0; ib < Nb; ++ib)
 		        for (int ih = 0; ih < qh.size(); ++ih) 
 					for (int idf = 0; idf < idDOFQTF.size(); ++idf) 
-						qtf[ib][ih][idDOFQTF[idf]] = MatrixXcd::Zero(qw.size(), qw.size());													
+						qtf[ib][ih][idDOFQTF[idf]] *= factor;													
 		};
 		if (IsLoadedQTF(true)) 
 			DeleteSumDif(qtfsum);
@@ -486,18 +515,18 @@ void Hydro::SwapDOF(int ib, int idof1, int idof2) {
 		for (int i = 0; i < 6*Nb; ++i) 
 			An[i].SetCount(6*Nb);
 		
-		for (int idof = 0; idof < 6; ++idof) {
-			for (int jdof = 0; jdof < 6; ++jdof) {
+		for (int idof = 0; idof < 6*Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*Nb; ++jdof) {
 				int idofn = idof, jdofn = jdof;
-				if (idofn == idof1)
-					idofn = idof2;
-				else if (idofn == idof2)
-					idofn = idof1;
-				if (jdofn == idof1)
-					jdofn = idof2;
-				else if (jdofn == idof2)
-					jdofn = idof1;	 
-				An[idofn+6*Nb][jdofn+6*Nb] = An[idof+6*Nb][jdof+6*Nb];
+				if (idofn == idof1+6*ib)
+					idofn = idof2+6*ib;
+				else if (idofn == idof2+6*ib)
+					idofn = idof1+6*ib;
+				if (jdofn == idof1+6*ib)
+					jdofn = idof2+6*ib;
+				else if (jdofn == idof2+6*ib)
+					jdofn = idof1+6*ib;	 
+				An[idofn][jdofn] = pick(A[idof][jdof]);
 			}
 		}
     	A = pick(An);
@@ -509,10 +538,30 @@ void Hydro::SwapDOF(int ib, int idof1, int idof2) {
 	if (IsLoadedB())
 		SwapAB(B);
 
+		
+	auto SwapAinfA0 = [&](MatrixXd &A) {
+		Swap(A, idof1+6*ib, idof2+6*ib);
+    };	
+	if (IsLoadedAinf()) 
+		SwapAinfA0(Ainf);
+	if (IsLoadedA0()) 
+		SwapAinfA0(A0);
+			  
 	auto SwapF = [&](Forces &ex) {
-		for (int ih = 0; ih < Nh; ++ih) 
-			for (int ifr = 0; ifr < Nf; ++ifr)
-				Swap(ex.force[ih](ifr, idof1+6*Nb), ex.force[ih](ifr, idof2+6*Nb));
+		for (int ih = 0; ih < Nh; ++ih) {
+			MatrixXcd n(Nf, 6*Nb);
+			for (int idof = 0; idof < 6*Nb; ++idof) {
+				int idofn = idof;
+				if (idofn == idof1+6*ib)
+					idofn = idof2+6*ib;
+				else if (idofn == idof2+6*ib)
+					idofn = idof1+6*ib;
+				
+	    		const VectorXcd &m = ex.force[ih].col(idof);
+				n.col(idofn) = m;
+	    	}
+	    	ex.force[ih] = pick(n);
+		}
 	};
 	if (IsLoadedFex())
 		SwapF(ex);
@@ -532,6 +581,15 @@ void Hydro::SwapDOF(int ib, int idof1, int idof2) {
 	if (IsLoadedQTF(false))
 		SwapSumDif(qtfdif);
 
+	if (IsLoadedC()) {
+		for (int ib = 0; ib < Nb; ++ib) 
+			Swap(C[ib], idof1, idof2);
+	}
+	if (IsLoadedM()) {
+		for (int ib = 0; ib < Nb; ++ib) 
+			Swap(M[ib], idof1, idof2);
+	}
+
 	// Some previous data is now invalid
 	Kirf.Clear();
 	
@@ -547,14 +605,14 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 	        UArray<UArray<VectorXd>> An;
 		
 			An.SetCount(6*Nb);
-			for (int ib = 0; ib < 6*Nb; ++ib) {
-				An[ib].SetCount(6*Nb);
-				for (int jb = 0; jb < 6*Nb; ++jb) {
-					An[ib][jb].resize(Nf - idFreq.size());	
+			for (int idof = 0; idof < 6*Nb; ++idof) {
+				An[idof].SetCount(6*Nb);
+				for (int jdof = 0; jdof < 6*Nb; ++jdof) {
+					An[idof][jdof].resize(Nf - idFreq.size());	
 					int i = 0, j = 0;
 					for (int iif = 0; iif < Nf; ++iif) {
 						if (j >= idFreq.size() || iif != idFreq[j])
-							An[ib][jb][i++] = A[ib][jb][iif];		
+							An[idof][jdof][i++] = A[idof][jdof][iif];		
 						else 
 							j++;
 					}
@@ -576,11 +634,11 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 			_ex.force.SetCount(Nh);
 		    for (int ih = 0; ih < Nh; ++ih) {
 		        _ex.force[ih].resize(Nf-idFreq.size(), 6*Nb);
-		    	for (int ib = 0; ib < 6*Nb; ++ib) {
+		    	for (int idof = 0; idof < 6*Nb; ++idof) {
 					int i = 0, j = 0;
 					for (int iif = 0; iif < Nf; ++iif) {
 						if (j >= idFreq.size() || iif != idFreq[j]) {
-							_ex.force[ih](i, ib) = ex.force[ih](iif, ib);
+							_ex.force[ih](i, idof) = ex.force[ih](iif, idof);
 							i++;
 						} else 
 							j++;
@@ -691,39 +749,25 @@ void Hydro::DeleteHeadingsQTF(const UVector<int> &idHeadQTF) {
 	}
 }
 
-void Hydro::FillFrequencyGapsABForces() {
+void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	if (w.size() == 0)
 		return;
+
+	VectorXd w_, nw;
+	::Copy(w, w_);
 	
-	double dw = std::numeric_limits<double>::max();
-	for (int i = 1; i < w.size(); ++i) {
-		if (w[i] - w[i-1] < dw)
-			dw = w[i] - w[i-1];
-	}
-	VectorXd ww = Eigen::Map<VectorXd>(w, w.size());
-	
-	UVector<double> neww, newT;
-	neww << w[0];
-	newT << T[0];
-	for (int i = 1; w[0] + i*dw <= w[w.size()-1]; ++i) {
-		neww << w[0] + i*dw;
-		newT << T[0] + i*dw/2/M_PI;
-	}
-	Nf = neww.size();
+	UVector<int> idsx, w0x;
+	GapFillingAxisParams(w_, maxFreq, idsx, w0x, nw);
 	
 	auto FillAB = [&](UArray<UArray<VectorXd>> &A) {
-        UArray<UArray<VectorXd>> An;
-	
-		An.SetCount(6*Nb);
-		for (int ib = 0; ib < 6*Nb; ++ib) {
-			An[ib].SetCount(6*Nb);
-			for (int jb = 0; jb < 6*Nb; ++jb) {
-				An[ib][jb].resize(Nf);	
-				for (int i = 0; i < Nf; ++i) 
-					An[ib][jb][i] = LinearInterpolate(neww[i], ww, A[ib][jb]);
+		for (int idof = 0; idof < 6*Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*Nb; ++jdof) {
+				VectorXd nm;
+				const VectorXd &m = A[idof][jdof];
+				GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);					
+				A[idof][jdof] = pick(nm);
 			}
 		}
-		A = pick(An);
     };
 		
 	if (IsLoadedA())
@@ -734,19 +778,16 @@ void Hydro::FillFrequencyGapsABForces() {
 		FillAB(B);
 	
 	auto FillF = [&](Forces &ex) {
-        Forces _ex;
-	
-		_ex.force.SetCount(Nh);
 	    for (int ih = 0; ih < Nh; ++ih) {
-	        _ex.force[ih].resize(Nf, 6*Nb);
-	    	for (int ib = 0; ib < 6*Nb; ++ib) {
-				for (int i = 0; i < Nf; ++i) {
-					const VectorXcd &ref = ex.force[ih].col(ib);
-					_ex.force[ih](i, ib) = LinearInterpolateC(neww[i], ww, ref);
-				}
+	        MatrixXcd n(nw.size(), 6*Nb);
+	    	for (int idof = 0; idof < 6*Nb; ++idof) {
+	    		VectorXcd nm;
+	    		const VectorXcd &m = ex.force[ih].col(idof);
+	    		GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);					
+				n.col(idof) = nm;
 	    	}
+	    	ex.force[ih] = pick(n);
 	    }
-	    ex = pick(_ex);
     };	
 
 	if (IsLoadedFex())
@@ -758,40 +799,40 @@ void Hydro::FillFrequencyGapsABForces() {
 	if (IsLoadedRAO())
 		FillF(rao);	
 	
-	w = pick(neww);
-	T = pick(newT);
+	Nf = int(nw.size());
+	::Copy(nw, w);
+	T.SetCount(Nf);
+	for (int i = 0; i < Nf; ++i) 
+		T[i] = 2*M_PI/w[i];
 }
 
-void Hydro::FillFrequencyGapsQTF() {
+void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
 	if (qw.size() == 0)
 		return;
 	
-	double dw = std::numeric_limits<double>::max();
-	for (int i = 1; i < qw.size(); ++i) {
-		if (qw[i] - qw[i-1] < dw)
-			dw = qw[i] - qw[i-1];
-	}	
-	UVector<double> neww;
-	neww << qw[0];
-	for (int i = 1; qw[0] + i*dw <= qw[qw.size()-1]; ++i) 
-		neww << qw[0] + i*dw;
+	VectorXd nw;
+
+	UVector<int> idsx, w0x;
+	GapFillingAxisParams(qw, maxFreq, idsx, w0x, nw);
 	
 	auto FillSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
-		for (int ib = 0; ib < Nb; ++ib)
-		        for (int ih = 0; ih < qh.size(); ++ih) 
-					for (int idof = 0; idof < 6; ++idof) {
-						MatrixXcd nm, &m = qtf[ib][ih][idof];
-						VectorXd nw;
-						Resample(qw, qw, m, nw, nw, nm, dw, dw);
-						m = pick(nm);
-					}
+		for (int ib = 0; ib < Nb; ++ib) {
+	        for (int ih = 0; ih < qh.size(); ++ih) {
+				for (int idof = 0; idof < 6; ++idof) {
+					MatrixXcd nm, &m = qtf[ib][ih][idof];
+					GapFilling(qw, qw, m, idsx, w0x, idsx, w0x, nw, nw, nm, zero, maxFreq);					
+					m = pick(nm);
+				}
+	        }
+		}
 	};
+
 	if (IsLoadedQTF(true)) 
 		FillSumDif(qtfsum);
 	if (IsLoadedQTF(false)) 
 		FillSumDif(qtfdif);
 	
-	::Copy(neww, qw);
+	qw = pick(nw);
 }
 
 void Heal();

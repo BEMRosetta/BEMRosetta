@@ -402,7 +402,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::ALL, y0zmesh, x0zmesh);
 		}
 		
-		Save_Settings(folder, !bodies[ib].lidFile.IsEmpty());
+		Save_Settings(folder, !bodies[ib].lidFile.IsEmpty(), bem);
 		
 		String folderOutput = AppendFileNameX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -473,7 +473,7 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 }
 
 
-void HamsCase::Save_Settings(String folderInput, bool thereIsLid) const {
+void HamsCase::Save_Settings(String folderInput, bool thereIsLid, const BEM &bem) const {
 	String fileName = AppendFileNameX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())
