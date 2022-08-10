@@ -480,6 +480,9 @@ bool Wamit::Load_out() {
 			}
 		}
 	}
+	if (hd().Nb == 0)
+		throw Exc(t_("Incorrect .out format"));
+	
 	return true;
 }
 
@@ -596,14 +599,16 @@ bool Wamit::Save_out(String file, double g, double rho) {
 				cbz = hd().cb(2, ibody);
 			}
 			out	<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
-						FormatWam(cbx), FormatWam(cby), FormatWam(cbz));
-			out	<< " Hydrostatic and gravitational restoring coefficients:\n"; 
-			out	<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
-						FormatWam(hd().C[ibody](2, 2)), FormatWam(hd().C[ibody](2, 3)), FormatWam(hd().C[ibody](2, 4)));
-			out	<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
-						FormatWam(hd().C[ibody](3, 3)), FormatWam(hd().C[ibody](3, 4)), FormatWam(hd().C[ibody](3, 5)));
-			out	<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
-						FormatWam(hd().C[ibody](4, 4)), FormatWam(hd().C[ibody](4, 5)));
+							FormatWam(cbx), FormatWam(cby), FormatWam(cbz));
+			if (hd().IsLoadedC()) {
+				out	<< " Hydrostatic and gravitational restoring coefficients:\n"; 
+				out	<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
+							FormatWam(hd().C[ibody](2, 2)), FormatWam(hd().C[ibody](2, 3)), FormatWam(hd().C[ibody](2, 4)));
+				out	<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
+							FormatWam(hd().C[ibody](3, 3)), FormatWam(hd().C[ibody](3, 4)), FormatWam(hd().C[ibody](3, 5)));
+				out	<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
+							FormatWam(hd().C[ibody](4, 4)), FormatWam(hd().C[ibody](4, 5)));
+			}
 			double cgx = 0, cgy = 0, cgz = 0;
 			if (hd().cb.size() > 0) {
 				cgx = hd().cg(0, ibody);
@@ -1146,7 +1151,7 @@ bool Wamit::Load_3(String fileName) {
 	}
 	
 	hd().c0.setConstant(3, hd().Nb, 0);
-		
+	
 	return true;
 }
 
@@ -1269,6 +1274,7 @@ bool Wamit::Load_4(String fileName) {
 	if (hd().Nb == 0 || hd().Nf < 2)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
+	
 	UVector<double> sourcew = clone(w);
 		
 	ProcessFirstColumn(w, T);
@@ -1357,9 +1363,12 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		FindAdd(head, std::complex<double>(hd1, hd2));	
 		Nb = max(Nb, 1 + (f.GetInt(4)-1)/6);
 	}
-	
-	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+	if (IsNull(hd().Nb))
+		hd().Nb = Nb;
+	else {
+		if (hd().Nb < Nb)
+			throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+	}
 	
 	if (hd().names.IsEmpty())
 		hd().names.SetCount(hd().Nb);

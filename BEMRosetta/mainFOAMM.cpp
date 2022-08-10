@@ -170,8 +170,8 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 		for (int idf = 0; idf < 6; ++idf) {
 			for (int jdf = 0; jdf < 6; ++jdf) {
 				if (!bem.onlyDiagonal || idf == jdf) {
-					int _idf = hydro.GetOrder()[ib*6 + idf];
-					int _jdf = hydro.GetOrder()[ib*6 + jdf];
+					int _idf = ib*6 + idf/*hydro.GetOrder()[ib*6 + idf]*/;
+					int _jdf = ib*6 + jdf/*hydro.GetOrder()[ib*6 + jdf]*/;
 	
 					if (hydro.IsLoadedA() && hydro.IsLoadedB() && 
 						!IsNull(hydro.A[_idf][_jdf][0]) && !IsNull(hydro.B[_idf][_jdf][0])) {

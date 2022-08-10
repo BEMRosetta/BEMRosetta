@@ -5,6 +5,27 @@
 
 
 String NemohMesh::LoadDat(String fileName, bool &x0z) {
+	String ret = LoadDat0(fileName, x0z);
+	
+	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: ")))
+		return ret;
+
+	MatrixXd cg_(3, 1), cb_(3, 1);
+	UVector<double> Vo;
+	if (!Nemoh::Load_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo))
+		return ret;
+	
+	cg.x = cg_(0, 0);		//Supposed 1 body
+	cg.y = cg_(1, 0);		
+	cg.z = cg_(2, 0);		
+	cb.x = cb_(0, 0);		//Supposed 1 body
+	cb.y = cb_(1, 0);		
+	cb.z = cb_(2, 0);
+	
+	return ret;
+}
+	
+String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
@@ -62,7 +83,22 @@ String NemohMesh::LoadDat(String fileName, bool &x0z) {
 	return String();
 }
 
-void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z) {
+void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z) const {
+	SaveDat0(fileName, surf, x0z);
+	
+	MatrixXd cg_(3, 1), cb_(3, 1);
+	UVector<double> Vo;
+	
+	cg_(0, 0) = cg.x;		//Supposed 1 body
+	cg_(1, 0) = cg.y;		
+	cg_(2, 0) = cg.z;		
+	cb_(0, 0) = cb.x;		//Supposed 1 body
+	cb_(1, 0) = cb.y;		
+	cb_(2, 0) = cb.z;	
+	Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo);
+}
+
+void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	

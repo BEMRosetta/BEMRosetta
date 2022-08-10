@@ -141,8 +141,9 @@ bool Nemoh::Load_Cal(String fileName) {
 			hd().Tirf[i] = i*dcase.irfStep;
 	}
 	
-	if (hd().Nb > 0) 
-		hd().c0 = clone(dcase.bodies[0].c0);
+	hd().c0.resize(3, hd().Nb);
+	for (int i = 0; i < hd().Nb; ++i) 
+		hd().c0.col(i) = dcase.bodies[i].c0.transpose();
 		
 	return true;
 }
@@ -771,20 +772,22 @@ bool Nemoh::Load_Inf(String fileName) {
 
 	return true;	
 }
+
+bool Nemoh::Load_Hydrostatics(String subfolder) {
+	return Load_Hydrostatics_static(AppendFileNameX(folder, subfolder), hd().Nb, hd().cg, hd().cb, hd().Vo);	
+}
 	
-bool Nemoh::Load_Hydrostatics() {
-	hd().cg.setConstant(3, hd().Nb, NaNDouble);
-	hd().cb.setConstant(3, hd().Nb, NaNDouble);
-	//hd().c0.setConstant(3, hd().Nb, NaNDouble);
-	hd().Vo.SetCount(hd().Nb, NaNDouble);
-	String line;
+bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, MatrixXd &cg, MatrixXd &cb, UVector<double> &Vo) {
+	cg.setConstant(3, Nb, NaNDouble);
+	cb.setConstant(3, Nb, NaNDouble);
+	Vo.SetCount(Nb, NaNDouble);
 	
-	for (int b = 0; b < hd().Nb; ++b) {
+	for (int ib = 0; ib < Nb; ++ib) {
 	    String fileHydro;
-	    if (hd().Nb == 1)
-	        fileHydro = AppendFileNameX(folder, "Mesh", "Hydrostatics.dat");
+	    if (Nb == 1)
+	        fileHydro = AppendFileNameX(subfolder, "Hydrostatics.dat");
 	    else
-	        fileHydro = AppendFileNameX(folder, "Mesh", Format("Hydrostatics_%d.dat", b));
+	        fileHydro = AppendFileNameX(subfolder, Format("Hydrostatics_%d.dat", ib));
 	    
 	    FileInLine in(fileHydro);
 	    if (!in.IsOpen())
@@ -794,23 +797,47 @@ bool Nemoh::Load_Hydrostatics() {
 	    f.IsSeparator = IsTabSpace;
 	    for (int i = 0; i < 3 && !in.IsEof(); ++i) {
 			f.Load(in.GetLine());
-			hd().cg(i, b) = f.GetDouble(6);
-			hd().cb(i, b) = f.GetDouble(2);
+			cg(i, ib) = f.GetDouble(6);
+			cb(i, ib) = f.GetDouble(2);
 	    }
 		f.Load(in.GetLine());
-	    hd().Vo[b] = f.GetDouble(2); 		
+	    Vo[ib] = f.GetDouble(2); 		
 	}
 	return true;
 }
 
-bool Nemoh::Load_KH() {
+void Nemoh::Save_Hydrostatics(String subfolder) const {
+	Save_Hydrostatics_static(subfolder, hd().Nb, hd().cg, hd().cb, hd().Vo);	
+}
+
+void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const MatrixXd &cg, const MatrixXd &cb, const UVector<double> &Vo) {
+	for (int ib = 0; ib < Nb; ++ib) {
+	    String fileHydro;
+	    if (Nb == 1)
+	        fileHydro = AppendFileNameX(folder, "Hydrostatics.dat");
+	    else
+	        fileHydro = AppendFileNameX(folder, Format("Hydrostatics_%d.dat", ib));
+	    
+	    FileOut out(fileHydro);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to create '%s'"), fileHydro));
+	    
+		out << Format(" XF =   %.3f - XG =   %.3f\n", cb(0, ib), cg(0, ib));
+		out << Format(" YF =   %.3f - YG =   %.3f\n", cb(1, ib), cg(1, ib));
+		out << Format(" ZF =   %.3f - ZG =   %.3f\n", cb(2, ib), cg(2, ib));
+		if (Vo.size() == 3) 
+			out << Format(" Displacement =  %.7G\n", Vo[ib]);
+	}
+}
+
+bool Nemoh::Load_KH(String subfolder) {
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) {
 	    String fileKH;
 		if (hd().Nb == 1) 
-			fileKH = AppendFileNameX(folder, "Mesh", "KH.dat");
+			fileKH = AppendFileNameX(folder, subfolder, "KH.dat");
 		else 
-			fileKH = AppendFileNameX(folder, "Mesh", Format("KH_%d.dat", ib));
+			fileKH = AppendFileNameX(folder, subfolder, Format("KH_%d.dat", ib));
 	    
 	    FileInLine in(fileKH);
 		if (!in.IsOpen()) {

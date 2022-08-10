@@ -116,15 +116,15 @@ public:
 	bool Init(const Hydro &_data, int _idf, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
 		data = &_data;
 		dataToPlot = _dataToPlot;
-		if (_idf >= _data.dofOrder.size())
-			return false;
-		idf = _data.dofOrder[_idf];
+		/*if (_idf >= _data.dofOrder.size())
+			return false;*/
+		idf = _idf/*_data.dofOrder[_idf]*/;
 		if (dataToPlot == Hydro::PLOT_A || dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0 || 
 			dataToPlot == Hydro::PLOT_B || dataToPlot == Hydro::PLOT_K || 
 			dataToPlot == Hydro::PLOT_Z_MA || dataToPlot == Hydro::PLOT_Z_PH) {
-			if (_j_dof >= _data.dofOrder.size())
+			/*if (_j_dof >= _data.dofOrder.size())
 				return false;
-			_j_dof = _data.dofOrder[_j_dof];
+			_j_dof = _data.dofOrder[_j_dof];*/
 		}
 		jdf = _j_dof;
 		show_w = _show_w;
@@ -284,18 +284,6 @@ public:
 	typedef MainOutput CLASSNAME;
 	void Init();
 	void Print(String str);
-};
-
-class MainArrange : public WithMainArrange<StaticRect> {
-public:
-	typedef MainArrange CLASSNAME;
-	void Init();
-	void Clear();
-	void Load(UArray<HydroClass> &hydro, const UVector<int> &ids);
-	void Remove(int c);
-	
-private:
-	UArray<ArrangeDOF> arrangeDOF;
 };
 
 class MainMesh;
@@ -1099,8 +1087,9 @@ public:
 	void OnOgilvie();
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();
-	void OnResetForces(Hydro::FORCE force);
-	void OnResetDOF();
+	void OnResetForces();
+	void OnResetDOF(bool isReset);
+	void OnSwapDOF();
 	void OnDescription();
 	void OnMenuAdvancedArraySel();
 	void OnSelListLoaded();
@@ -1113,12 +1102,12 @@ public:
 		
 	WithMenuOpen<StaticRect> menuOpen;
 	WithMenuProcess<StaticRect> menuProcess;
+	WithMenuProcess2<StaticRect> menuProcess2;
 	WithMenuAdvanced<StaticRect> menuAdvanced;
 	WithMenuPlot<StaticRect> menuPlot;
 	MenuFOAMM menuFOAMM;
 	
 	MainSummaryCoeff mainSummary;
-	MainArrange mainArrange;
 	MainABForce mainA;
 	MainABForce mainB;
 	MainABForce mainAinfw;

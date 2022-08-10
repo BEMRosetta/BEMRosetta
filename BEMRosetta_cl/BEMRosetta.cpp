@@ -261,7 +261,6 @@ void Hydro::Copy(const Hydro &hyd) {
     c0 = clone(hyd.c0);
     code = hyd.code;     
     dof = clone(hyd.dof); 
-    dofOrder = clone(hyd.dofOrder);
     
     Kirf = clone(hyd.Kirf);
     Tirf = clone(hyd.Tirf);
@@ -724,8 +723,8 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 				Aw0(i, j) = hydrosp[ihminw]->Aw0_ndim(i, j);	
 	}*/
 	
-	bem->calcAinf = true;
-	bem->calcAinf_w = true;
+	//bem->calcAinf = true;
+	//bem->calcAinf_w = true;
 	
 	// sts has to be recalculated	
 }
@@ -806,12 +805,6 @@ void Hydro::GetBodyDOF() {
 }
 
 bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
-	if (dofOrder.IsEmpty()) {
-		dofOrder.SetCount(6*Nb);
-		for (int i = 0, order = 0; i < 6*Nb; ++i, ++order) 
-			dofOrder[i] = order;
-	}
-	
 	if (!IsLoadedA0())  
 		GetA0();
 	
@@ -850,10 +843,10 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		}
 		GetAinf_w();
 	}
-	if (Ainf_w.size() == 0)
-		InitAinf_w();
-	if (Ainf.size() == 0)
-		Ainf.setConstant(Nb*6, Nb*6, 0);
+//	if (Ainf_w.size() == 0)
+//		InitAinf_w();
+//	if (Ainf.size() == 0)
+//		Ainf.setConstant(Nb*6, Nb*6, 0);
 	
 	/*try {
 		CheckNaN();
@@ -992,58 +985,7 @@ int Hydro::GetHeadId(double hd) const {
 	}
 	return -1;
 }
-/*	
-int Hydro::GetQTFHeadId(double hd) const {
-	for (int i = 0; i < qtfhead.size(); ++i) {
-		if (EqualRatio(qtfhead[i], hd, 0.01))
-			return i;
-	}
-	return -1;
-}
-	
-int Hydro::GetQTFId(int lastid, const UArray<Hydro::QTF> &qtfList, 
-			const QTFCases &qtfCases, int ib, int ih1, int ih2, int ifr1, int ifr2) {
-	if (qtfCases.ib.size() > 0) {
-		bool found = false;
-		for (int i = 0; i < qtfCases.ib.size(); ++i) {
-			if (qtfCases.ib[i] == ib && qtfCases.ih1[i] == ih1 && qtfCases.ih2[i] == ih2) {
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-			return -1;
-	}
-	if (lastid < 0)
-		lastid = 0;
-	for (int i = lastid; i < qtfList.size(); ++i) {
-		const QTF &qtf = qtfList[i];
-		if (qtf.ib == ib && qtf.ih1 == ih1 && qtf.ih2 == ih2 && qtf.ifr1 == ifr1 && qtf.ifr2 == ifr2) 
-			return i;
-	}
-	return -1;
-}
 
-void Hydro::GetQTFList(const UArray<Hydro::QTF> &qtfList, QTFCases &qtfCases, const UVector<double> &headings) {
-	qtfCases.Clear();
-	for (int i = 0; i < qtfList.size(); ++i) {
-		const QTF &qtf = qtfList[i];
-		bool found = false;
-		for (int j = 0; j < qtfCases.ib.size(); ++j) {
-			if (qtf.ib == qtfCases.ib[j] && qtf.ih1 == qtfCases.ih1[j] && qtf.ih2 == qtfCases.ih2[j]) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			qtfCases.ib << qtf.ib;
-			qtfCases.ih1 << qtf.ih1;
-			qtfCases.ih2 << qtf.ih2;	
-		}
-	}
-	qtfCases.Sort(headings);
-}
-*/
 VectorXd Hydro::B_dim(int idf, int jdf) const {
 	if (dimen)
 		return B[idf][jdf]*(rho_dim()/rho_ndim());
@@ -1207,8 +1149,8 @@ void Hydro::CheckNaN() {
 		throw Exc("Error loading c0. NaN found");
 	if (!IsNum(dof))
 		throw Exc("Error loading dof. NaN found");
-	if (!IsNum(dofOrder))
-		throw Exc("Error loading dofOrder. NaN found");
+//	if (!IsNum(dofOrder))
+//		throw Exc("Error loading dofOrder. NaN found");
 	if (!IsNum(Kirf))
 		throw Exc("Error loading Kirf. NaN found");
 	if (!IsNum(Tirf))
@@ -1279,7 +1221,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("c0", c0)
 		("code", icode)
 		("dof", dof)
-		("dofOrder", dofOrder)
+//		("dofOrder", dofOrder)
 		("Kirf", oldKirf)
 		("Tirf", Tirf)
 		("ex", ex)
@@ -1487,20 +1429,24 @@ void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayi
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind, vidof, vjdof);
 }
 
-void BEM::ResetForces(int id, Hydro::FORCE force) {
-	hydros[id].hd().ResetForces(force);
+void BEM::ResetForces(int id, Hydro::FORCE force, Hydro::FORCE forceQtf) {
+	hydros[id].hd().ResetForces(force, forceQtf);
 }
 
-void BEM::ResetDOF(int id, const UVector<int> &idDOF, const UVector<int> &idDOFQTF) {
-	hydros[id].hd().ResetDOF(idDOF, idDOFQTF);
+void BEM::ResetDOF(int id, double factor, const UVector<int> &idDOF, const UVector<int> &idDOFQTF) {
+	hydros[id].hd().ResetDOF(factor, idDOF, idDOFQTF);
 }
 
-void BEM::FillFrequencyGapsABForces(int id) {
-	hydros[id].hd().FillFrequencyGapsABForces();
+void BEM::SwapDOF(int id, int ib, int idof1, int idof2) {
+	hydros[id].hd().SwapDOF(ib, idof1, idof2);
 }
 
-void BEM::FillFrequencyGapsQTF(int id) {
-	hydros[id].hd().FillFrequencyGapsQTF();
+void BEM::FillFrequencyGapsABForces(int id, bool zero, int maxFreq) {
+	hydros[id].hd().FillFrequencyGapsABForces(zero, maxFreq);
+}
+
+void BEM::FillFrequencyGapsQTF(int id, bool zero, int maxFreq) {
+	hydros[id].hd().FillFrequencyGapsQTF(zero, maxFreq);
 }
 
 void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadQTF) {

@@ -48,7 +48,7 @@ public:
 	Hydro(const Hydro &hyd, int) {Copy(hyd);}
 	bool SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null);
 	void Report() const;
-	Hydro(BEM &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
+	Hydro(const BEM &_bem) : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
 	virtual ~Hydro() noexcept {}	
 	
@@ -126,13 +126,12 @@ public:
     UVector<double> head;			// [Nh]             Wave headings (deg)
     UVector<String> names;  		// {Nb}             Body names
     UArray<MatrixXd> C;				// [Nb](6, 6)		Hydrostatic restoring coefficients:
-    UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix
+    UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix	ALWAYS DIMENSIONAL
     MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     MatrixXd c0;          			// (3,Nb)     		Centre of motion
     BEM_FMT code;        			// BEM_FMT			BEM code 
     UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
-    UVector<int> dofOrder;			// [6*Nb]			DOF order
     
     UArray<UArray<VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
     VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
@@ -153,9 +152,6 @@ public:
 				("force", force)
 			;
     	}
-    	void Set(int ib, int ih, int ifr, int idof, const std::complex<double> &val) {
-    		force[ih](ifr, 6*ib + idof) = val;	
-    	}
     	void Clear() {force.Clear();}
     };
     
@@ -163,7 +159,7 @@ public:
     Forces sc;			 					// Diffraction scattering
     Forces fk; 								// Froude-Krylov
     
-    enum FORCE {SCATTERING, FK, ALL};
+    enum FORCE {NONE, SCATTERING, FK, ALL, QTFSUM, QTFDIF};
         
   	typedef struct Forces RAO;
    
@@ -346,7 +342,7 @@ public:
 	MatrixXd Dlin_dim(int ib) const;
 	
 	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
-		return dimen ? f.force[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	void F_dim(Forces &f);
 	std::complex<double> F_ndim(const Forces &f, int _h, int ifr, int idf) const {
 		if (!dimen) 
@@ -358,7 +354,7 @@ public:
 		return ndim ? F_ndim(f, _h, ifr, idf) : F_dim(f, _h, ifr, idf);
 	}
 	std::complex<double> R_dim(const Forces &f,  int _h, int ifr, int idf) const {
-		return dimen ? f.force[_h](ifr, idf)*g_rho_dim()/g_rho_ndim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));
+		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));
 	}
 	std::complex<double> R_ndim(const Forces &f, int _h, int ifr, int idf) const {
 		if (!dimen) 
@@ -370,9 +366,12 @@ public:
 		return ndim ? R_ndim(f, _h, ifr, idf) : R_dim(f, _h, ifr, idf);
 	}
 	
-	double F_dim(double f, int idf)  	    const {return  dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double F_ndim(double f, int idf) 	    const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	double F_(bool ndim, double f, int idf) const {return   ndim ? F_ndim(f, idf) : F_dim(f, idf);}
+	template <class T>
+	T F_dim(T f, int idf)  	      const {return  dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	template <class T>
+	T F_ndim(T f, int idf) 	      const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	template <class T>
+	T F_(bool ndim, T f, int idf) const {return   ndim ? F_ndim(f, idf) : F_dim(f, idf);}
 
 	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr) const;
 
@@ -400,7 +399,7 @@ public:
 private:
 	static const char *strDataToPlot[];
 	static String C_units_base(int i, int j);
-	BEM *bem;
+	const BEM *bem;
 		
 	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb);
 	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis);
@@ -409,6 +408,8 @@ private:
 	 
 	static void GetOldAB(const UArray<MatrixXd> &oldAB, UArray<UArray<VectorXd>> &AB);
 	static void SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB);
+	
+	void ResetForces1st(Hydro::FORCE force);
 	
 public:
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
@@ -424,12 +425,12 @@ public:
 	
 	const BEM &GetBEM() const {return *bem;}
 	
-	bool IsLoadedA(int i = 0, int j = 0) 	 const {return !A.IsEmpty() && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
-	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return !Ainf_w.IsEmpty() && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
+	bool IsLoadedA(int i = 0, int j = 0) 	 const {return !A.IsEmpty() && A[i].size() > 0 && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
+	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return !Ainf_w.IsEmpty() && Ainf_w[i].size() > 0 && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
 	bool IsLoadedAinf()  					 const {return Ainf.size() > 0;}
 	bool IsLoadedLinearDamping()  			 const {return linearDamping.size() > 0;}
 	bool IsLoadedA0()	 					 const {return A0.size() > 0;}
-	bool IsLoadedB(int i = 0, int j = 0) 	 const {return !B.IsEmpty() && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
+	bool IsLoadedB(int i = 0, int j = 0) 	 const {return !B.IsEmpty() && B[i].size() > 0 && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
 	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && IsNum(C[0](0, 0));}
 	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && IsNum(M[0](0, 0));}
 	bool IsLoadedFex(int idf = 0, int ih = 0)const {return !ex.force.IsEmpty() && ex.force[ih].size() > 0 && !IsNull(ex.force[ih](0, idf));}
@@ -438,8 +439,9 @@ public:
 	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return !rao.force.IsEmpty()&&rao.force[ih].size() > 0 && !IsNull(rao.force[ih](0, idf));}
 	bool IsLoadedForce(const Forces &f) 	 const {return !f.force.IsEmpty();}
 	bool IsLoadedStateSpace()	  			 const {return !sts.IsEmpty();}
-	bool IsLoadedQTF(bool isSum) 	const {return isSum ? !qtfsum.IsEmpty() : !qtfdif.IsEmpty();}
-	bool IsLoadedKirf()	 	 		const {return !Kirf.IsEmpty();}
+	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !qtfsum.IsEmpty() : !qtfdif.IsEmpty();}
+	bool IsLoadedKirf()	 	 				 const {return !Kirf.IsEmpty() && Kirf[0].size() > 0 && Kirf[0][0].size() > 0;}
+	bool IsLoadedVo()	 	 				 const {return Vo.size() == 3 && IsNum(Vo[0]); }
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -456,8 +458,8 @@ public:
 	void Compare_C(Hydro &a);
 	void Compare_cg(Hydro &a);
 	
-	const UVector<int> &GetOrder() const	{return dofOrder;}
-	void SetOrder(UVector<int> &order)		{dofOrder = pick(order);}
+//	const UVector<int> &GetOrder() const	{return dofOrder;}
+//	void SetOrder(UVector<int> &order)		{dofOrder = pick(order);}
 	
 	int GetW0();
 	void Get3W0(int &id1, int &id2, int &id3);
@@ -479,12 +481,12 @@ public:
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
-	void ResetForces(Hydro::FORCE force);
-	void ResetDOF(const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
+	void ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf);
+	void ResetDOF(double factor, const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
 	void SwapDOF(int ib, int idof1, int idof2);
 		
-	void FillFrequencyGapsABForces();
-	void FillFrequencyGapsQTF();
+	void FillFrequencyGapsABForces(bool zero, int maxFreq);
+	void FillFrequencyGapsQTF(bool zero, int maxFreq);
 	
 	void Join(const UVector<Hydro *> &hydrosp);
 	
@@ -573,7 +575,7 @@ bool IsNum(const Hydro::Forces &f);
 class HydroData {
 public:
 	HydroData() : data(0) {}
-	HydroData(BEM &bem, Hydro *_data = 0) {
+	HydroData(const BEM &bem, Hydro *_data = 0) {
 		if (!_data) {
 			manages = true;
 			data = new Hydro(bem);
@@ -597,7 +599,7 @@ private:
 class HydroClass {
 public:
 	HydroClass()							{}
-	HydroClass(BEM &bem, Hydro *hydro = 0) : hd(bem, hydro)	{}
+	HydroClass(const BEM &bem, Hydro *hydro = 0) : hd(bem, hydro)	{}
 	virtual ~HydroClass() noexcept			{}
 	bool Load(String file);
 	bool Save(String file);
@@ -707,11 +709,15 @@ private:
 class NemohMesh : public Mesh {
 public:
 	String LoadDat(String fileName, bool &x0z);
-	static void SaveDat(String fileName, const Surface &surf, bool x0z);
+	void SaveDat(String fileName, const Surface &surf, bool x0z) const;
 	static void SavePreMesh(String fileName, const Surface &surf);
 	void SaveKH(String fileName) const; 
 	
 	virtual ~NemohMesh() noexcept {}
+
+private:
+	String LoadDat0(String fileName, bool &x0z);
+	void SaveDat0(String fileName, const Surface &surf, bool x0z) const;
 };
 
 class HAMSMesh : public Mesh {
@@ -749,7 +755,7 @@ public:
 
 class Wamit : public HydroClass {
 public:
-	Wamit(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Wamit(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, Function <bool(String, int)> Status);
 	bool Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
 	bool Save_out(String file, double g, double rho);
@@ -795,7 +801,7 @@ protected:
 
 class HAMS : public Wamit {
 public:
-	HAMS(BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro) {}
+	HAMS(const BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro) {}
 	bool Load(String file, Function <bool(String, int)> Status);
 	virtual ~HAMS() noexcept {}
 	
@@ -805,7 +811,7 @@ public:
 
 class Fast : public Wamit {
 public:
-	Fast(BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
+	Fast(const BEM &bem, Hydro *hydro = 0) : Wamit(bem, hydro), WaveNDir(Null), WaveDirRange(Null) {}
 	bool Load(String file, Function <bool(String, int)> Status);
 	bool Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
@@ -823,7 +829,7 @@ private:
 
 class Foamm : public HydroClass {
 public:
-	Foamm(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Foamm(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file);
 	void Get_Each(int ibody, int idf, int jdf, double from, double to, const UVector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	void Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
@@ -933,7 +939,7 @@ private:
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 							int numThreads) const;
-	void Save_Settings(String folderInput, bool thereIsLid) const;
+	void Save_Settings(String folderInput, bool thereIsLid, const BEM &bem) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
 };
 
@@ -964,7 +970,7 @@ private:
 
 class Nemoh : public HydroClass {
 public:
-	Nemoh(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Nemoh(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	void Save(String file);
 	virtual ~Nemoh() noexcept {}
@@ -975,14 +981,20 @@ public:
 	bool Save_KH(String folder) const;
 	static bool Save_KH_static(const MatrixXd &C, String fileKH);
 	
+	void SetFolder(String f)	{folder = f;}
+	
+	bool Load_Hydrostatics(String subfolder = "Mesh");
+	static bool Load_Hydrostatics_static(String folder, int Nb, MatrixXd &cg, MatrixXd &cb, UVector<double> &Vo);
+	void Save_Hydrostatics(String subfolder) const;
+	static void Save_Hydrostatics_static(String folder, int Nb, const MatrixXd &cg, const MatrixXd &cb, const UVector<double> &Vo);
+
 private:
 	String folder;
 	BEMCase dcase;
 	
 	bool Load_Cal(String fileName);
 	bool Load_Inf(String fileName);
-	bool Load_Hydrostatics();
-	bool Load_KH();
+	bool Load_KH(String subfolder = "Mesh");
 	bool Load_Radiation(String fileName);
 	bool Load_Excitation(String folder);
 	bool Load_Diffraction(String folder);
@@ -993,7 +1005,7 @@ private:
 
 class Aqwa : public HydroClass {
 public:
-	Aqwa(BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	Aqwa(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	bool Save(String file, Function <bool(String, int)> Status);
 	virtual ~Aqwa() noexcept {}
@@ -1082,11 +1094,12 @@ public:
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
-	void ResetForces(int id, Hydro::FORCE force);										
-	void ResetDOF(int id, const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
+	void ResetForces(int id, Hydro::FORCE force, Hydro::FORCE forceQtf);										
+	void ResetDOF(int id, double factor, const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
+	void SwapDOF(int id, int ib, int idof1, int idof2);
 	
-	void FillFrequencyGapsABForces(int id);
-	void FillFrequencyGapsQTF(int id);
+	void FillFrequencyGapsABForces(int id, bool zero, int maxFreq);
+	void FillFrequencyGapsQTF(int id, bool zero, int maxFreq);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);

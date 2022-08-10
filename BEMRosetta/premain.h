@@ -10,14 +10,6 @@ using namespace Upp;
 #define LAYOUTFILE <BEMRosetta/premain.lay>
 #include <CtrlCore/lay.h>
 
-class ArrangeDOF : public WithArrange<StaticRect> {
-public:
-	void Init(Hydro &hydro);
-
-private:		
-	bool DnDInsert(int line, PasteClip& d);
-	bool selecting = false;
-};
 
 
 
