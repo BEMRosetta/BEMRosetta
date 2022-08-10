@@ -236,7 +236,7 @@ bool MainMatrixKA::Load(UArray<HydroClass> &hydros, const UVector<int> &ids, boo
 	Clear();
 	Ndim = ndim;
 	
-	bool loaded = false;
+	bool loaded = false; 	
 	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];
 		Hydro &hydro = hydros[isurf].hd();

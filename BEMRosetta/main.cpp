@@ -284,7 +284,7 @@ void Main::Close() {
 
 void Main::CloseMain(bool store) {
 	if (numWindows > 0) {
-		if (!PromptOKCancel(t_("There windows opened.&Do you want to close anyway?")))	
+		if (!PromptOKCancel(t_("There are still open windows.&Do you want to close anyway?")))	
 			return;
 	}
 	if (store) {
