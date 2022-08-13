@@ -4,6 +4,7 @@
 
 #include "BEMRosetta.h"
 
+
 #ifdef PLATFORM_WIN32
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
@@ -12,9 +13,6 @@
 	#include "export.h"
 #endif
 
-#ifdef flagDEBUG
-static CrashHandler crash;
-#endif
 
 CONSOLE_APP_MAIN
 {	
