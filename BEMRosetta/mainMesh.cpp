@@ -23,7 +23,7 @@ void MainMesh::Init() {
 	CtrlLayout(menuOpen);
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
 	menuOpen.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
-	menuOpen.butLoad.Tip(t_("Loads mesh file")).WhenAction = [&] {menuOpen.file.DoGo();};
+	menuOpen.butLoad.WhenAction = [&] {menuOpen.file.DoGo();};
 
 	ArrayModel_Init(listLoaded, true).MultiSelect();
 	listLoaded.WhenSel = [&] {
@@ -42,17 +42,15 @@ void MainMesh::Init() {
 			.Help(t_("Deselect all table rows"));
 	};
 	
-	menuOpen.butRemove.Tip(t_("Removes all loaded files")).Disable();	
+	menuOpen.butRemove.Disable();	
 	menuOpen.butRemove.WhenAction = THISBACK(OnRemove);
-	menuOpen.butRemoveSelected.Tip(t_("Removes selected files")).Disable();	
+	menuOpen.butRemoveSelected.Disable();	
 	menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
-	menuOpen.butJoin.Tip(t_("Joins selected meshes")).Disable();	
+	menuOpen.butJoin.Disable();	
 	menuOpen.butJoin.WhenAction = THISBACK(OnJoin);
-	menuOpen.butSplit.Tip(t_("Splits mesh in parts (if parts are not joined together)")).Disable();	
+	menuOpen.butSplit.Disable();	
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
-	menuOpen.opClean.Tip(t_("Cleans duplicated panels when loading (it may be slow!)"));
 	menuOpen.butExport <<= THISBACK(OnConvertMesh);
-	menuOpen.butExport.Tip(t_("Exports data file"));
 	for (int i = 0; i < Mesh::GetMeshStrCount(); ++i)
 		if (Mesh::meshCanSave[i])
 			menuOpen.dropExport.Add(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)));
