@@ -10,6 +10,12 @@
 using namespace Upp;
 using namespace Eigen;
 
+#ifdef flagDEBUG
+#include <SysInfo/Crash.h>
+static CrashHandler crash;
+#endif
+
+
 Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
 Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << s;};
 Function <void(String)> BEM::PrintError   = [](String s) {Cout() << s;};
