@@ -74,6 +74,8 @@ void MainBEM::Init() {
 	menuProcess.butABForces << THISBACK(OnABForces);
 	menuProcess.butQTF << THISBACK(OnQTF);
 
+	menuProcess.opFill.Tip(t_("Fills with zeroes or with interpolated values"));
+
 	auto DropDOF = [&](DropList &drop1, DropList &drop2)->bool {
 		if (drop1.GetIndex() < 1 || drop2.GetIndex() < 1)
 			return false;
@@ -237,6 +239,7 @@ void MainBEM::Init() {
 	};
 	menuPlot.fromY0 	<< [&] {LoadSelTab(Bem());};
 	menuPlot.opwT 		<< [&] {LoadSelTab(Bem());};
+	menuPlot.opMP 		<< [&] {LoadSelTab(Bem());};
 	menuPlot.showPoints << [&] {LoadSelTab(Bem());};
 	menuPlot.showNdim 	<< [&] {LoadSelTab(Bem());};
 	
@@ -416,15 +419,21 @@ void MainBEM::Init() {
 void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showNdim.Enable();
 
-	bool show = true, showwT = true;
-	if (mainTab.IsAt(mainSetupFOAMM)) 
+	bool show = true, showwT = true, showComplex = false;
+	if (mainTab.IsAt(mainSetupFOAMM)) {
 		showwT = false;
-	else if (mainTab.IsAt(mainK)) 
+		showComplex = true;
+	} else if (mainTab.IsAt(mainK)) 
 		showwT = false;
-	else if (mainTab.IsAt(mainQTF))
+	else if (mainTab.IsAt(mainQTF)) {
 		show = false;
-	
+		showComplex = true;
+	} else if (mainTab.IsAt(mainForceSC) || mainTab.IsAt(mainForceFK) || mainTab.IsAt(mainForceEX) || 
+			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace))
+		showComplex = true;
+		
 	menuPlot.opwT.Enable(showwT);
+	menuPlot.opMP.Enable(showComplex);
 	menuPlot.butZoomToFit.Enable(show);
 	menuPlot.autoFit.Enable(show);
 	menuPlot.fromY0.Enable(show);
@@ -454,6 +463,9 @@ void MainBEM::InitSerialize(bool ret) {
 	if (!ret || IsNull(menuPlot.opwT)) 
 		menuPlot.opwT = 0;
 
+	if (!ret || IsNull(menuPlot.opMP)) 
+		menuPlot.opMP = 0;
+	
 	if (!ret || IsNull(menuPlot.showPoints)) 
 		menuPlot.showPoints = true;
 	
@@ -679,6 +691,8 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.opHaskind.		Enable(numsel == 1 || numrow == 1);
 	
 	bool show_w = menuPlot.opwT == 0;
+	bool show_ma_ph = menuPlot.opMP == 0;
+	
 	menuProcess.dropBody.Clear();
 	menuProcess2.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	menuProcess2.dropFreqQTF.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
@@ -1402,6 +1416,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.autoFit = Null;
 		menuPlot.fromY0 = Null;
 		menuPlot.opwT = Null;
+		menuPlot.opMP = Null;
 		menuPlot.showPoints = Null;
 		menuPlot.showNdim = Null;
 		dropExportId = 2;
@@ -1417,6 +1432,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_autoFit", menuPlot.autoFit)
 		("menuPlot_fromY0", menuPlot.fromY0)
 		("menuPlot_opwT", menuPlot.opwT)
+		("menuPlot_opMP", menuPlot.opMP)
 		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showNdim", menuPlot.showNdim)
 		("menuProcess_opZremoval", menuAdvanced.opZremoval)
@@ -1554,7 +1570,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, "-");
 	}
 	
-	array.Set(row, 0, t_("#headings"));			array.Set(row++, col, Nvl(data.Nh, 0));
+	array.Set(row, 0, t_("#1st order headings"));			array.Set(row++, col, Nvl(data.Nh, 0));
 	if (!data.head.IsEmpty()) {
 		array.Set(row, 0, t_("head_0 [º]"));	array.Set(row++, col, data.head[0]);
 	} else {
@@ -1757,6 +1773,7 @@ void MainQTF::Init() {
 			
 			bool ndim = mbm.menuPlot.showNdim;
 			bool show_w = mbm.menuPlot.opwT == 0;
+			bool show_ma_ph = mbm.menuPlot.opMP == 0;
 		
 			const Hydro &hd = Bem().hydros[idHydro].hd();
 			

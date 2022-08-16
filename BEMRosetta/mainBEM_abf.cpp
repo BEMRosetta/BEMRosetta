@@ -43,6 +43,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids) {
 		UArray<HydroClass> &hydros = bem.hydros; 
 		if (hydros.IsEmpty() || ids.IsEmpty()) 
 			return false;
+		
 		String format;
 		switch (dataToShow) {
 		case Hydro::DATA_A:			

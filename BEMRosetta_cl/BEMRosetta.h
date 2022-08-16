@@ -413,10 +413,10 @@ private:
 	
 public:
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
-	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_K, PLOT_FORCE_SC_MA, PLOT_FORCE_SC_PH,
-				 PLOT_FORCE_FK_MA, PLOT_FORCE_FK_PH, PLOT_FORCE_EX_MA, PLOT_FORCE_EX_PH, 
-				 PLOT_RAO_MA, PLOT_RAO_PH, PLOT_Z_MA, PLOT_Z_PH, PLOT_KR_MA, PLOT_KR_PH, 
-				 PLOT_TFS_MA, PLOT_TFS_PH};
+	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_K, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
+				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
+				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
+				 PLOT_TFS_1, PLOT_TFS_2};
 	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
@@ -779,7 +779,9 @@ protected:
 	void Load_A(FileInLine &in, MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
-
+	
+	bool Load_Forces(String fileName, Hydro::Forces &force);
+		
 	bool Load_1(String fileName);				
 	bool Load_3(String fileName);
 	bool Load_hst(String fileName);

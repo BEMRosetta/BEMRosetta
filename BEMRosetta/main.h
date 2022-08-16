@@ -107,27 +107,19 @@ String ForceExtSafe(String fileName, String ext);
 class HydroSource : public DataSource {
 public:
 	HydroSource() {}
-	HydroSource(Hydro &_data, int i, int _j_h, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
-		Init(_data, i, _j_h, _dataToPlot, _show_w, _ndim);
+	HydroSource(Hydro &_data, int i, int _j_h, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim, bool _show_ma_ph) {
+		Init(_data, i, _j_h, _dataToPlot, _show_w, _ndim, _show_ma_ph);
 	}
-	bool Init(Hydro *_data, int i, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim) 	{
-		return Init(*_data, i, _j_dof, _dataToPlot, _show_w, _ndim);
+	bool Init(Hydro *_data, int i, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim, bool _show_ma_ph) 	{
+		return Init(*_data, i, _j_dof, _dataToPlot, _show_w, _ndim, _show_ma_ph);
 	}
-	bool Init(const Hydro &_data, int _idf, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim) {
+	bool Init(const Hydro &_data, int _idf, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim, bool _show_ma_ph) {
 		data = &_data;
 		dataToPlot = _dataToPlot;
-		/*if (_idf >= _data.dofOrder.size())
-			return false;*/
-		idf = _idf/*_data.dofOrder[_idf]*/;
-		if (dataToPlot == Hydro::PLOT_A || dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0 || 
-			dataToPlot == Hydro::PLOT_B || dataToPlot == Hydro::PLOT_K || 
-			dataToPlot == Hydro::PLOT_Z_MA || dataToPlot == Hydro::PLOT_Z_PH) {
-			/*if (_j_dof >= _data.dofOrder.size())
-				return false;
-			_j_dof = _data.dofOrder[_j_dof];*/
-		}
+		idf = _idf;
 		jdf = _j_dof;
 		show_w = _show_w;
+		show_ma_ph = _show_ma_ph;
 		ndim = _ndim;
 		if (IsNullData())
 			return false;
@@ -136,53 +128,65 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:				return data->A.	   size() <= idf || data->A	   [idf].size() <= jdf || 
+		case Hydro::PLOT_A:			return data->A.	   size() <= idf || data->A	   [idf].size() <= jdf || 
 											   data->A	  [idf][jdf].size() == 0 || !IsNum(data->A	[idf][jdf][0]);
-		case Hydro::PLOT_AINF:			return data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
-		case Hydro::PLOT_A0:			return data->A0  .rows() <= idf || data->A0  .cols() <= jdf || !IsNum(data->A0  (idf, jdf));
-		case Hydro::PLOT_B:				return data->B.	   size() <= idf || data->B	   [idf].size() <= jdf || 
+		case Hydro::PLOT_AINF:		return data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
+		case Hydro::PLOT_A0:		return data->A0  .rows() <= idf || data->A0  .cols() <= jdf || !IsNum(data->A0  (idf, jdf));
+		case Hydro::PLOT_B:			return data->B.	   size() <= idf || data->B	   [idf].size() <= jdf || 
 											   data->B	  [idf][jdf].size() == 0 || !IsNum(data->B	[idf][jdf][0]);
-		case Hydro::PLOT_K:				return data->Kirf. size() <= idf || data->Kirf [idf].size() <= jdf || 
+		case Hydro::PLOT_K:			return data->Kirf. size() <= idf || data->Kirf [idf].size() <= jdf || 
 											   data->Kirf [idf][jdf].size() == 0 || !IsNum(data->Kirf [idf][jdf][0]);
-		case Hydro::PLOT_AINFW:			return data->Ainf_w.size() <= idf || data->Ainf_w[idf].size() <= jdf || 
+		case Hydro::PLOT_AINFW:		return data->Ainf_w.size() <= idf || data->Ainf_w[idf].size() <= jdf || 
 											   data->Ainf_w[idf][jdf].size() == 0 || !IsNum(data->Ainf_w[idf][jdf][0]);		
-		case Hydro::PLOT_FORCE_SC_MA:	return !IsNum(data->sc.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_SC_PH:	return !IsNum(data->sc.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_FK_MA:	return !IsNum(data->fk.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_FK_PH:	return !IsNum(data->fk.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_EX_MA:	return !IsNum(data->ex.force[jdf](0, idf));
-		case Hydro::PLOT_FORCE_EX_PH:	return !IsNum(data->ex.force[jdf](0, idf));
-		case Hydro::PLOT_RAO_MA:		return !IsNum(data->rao.force[jdf](0, idf));
-		case Hydro::PLOT_RAO_PH:		return !IsNum(data->rao.force[jdf](0, idf));
-		case Hydro::PLOT_TFS_MA:		return data->sts[idf][jdf].TFS.IsEmpty();
-		case Hydro::PLOT_TFS_PH:		return data->sts[idf][jdf].TFS.IsEmpty();
-		case Hydro::PLOT_Z_MA:			return !IsNum(data->A[idf][jdf][0]) || !IsNum(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
-		case Hydro::PLOT_Z_PH:			return !IsNum(data->A[idf][jdf][0]) || !IsNum(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
-		default:				NEVER();	return true;
+		case Hydro::PLOT_FORCE_SC_1:	
+		case Hydro::PLOT_FORCE_SC_2:return !IsNum(data->sc.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_FK_1:	
+		case Hydro::PLOT_FORCE_FK_2:return !IsNum(data->fk.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_EX_1:
+		case Hydro::PLOT_FORCE_EX_2:return !IsNum(data->ex.force[jdf](0, idf));
+		case Hydro::PLOT_RAO_1:
+		case Hydro::PLOT_RAO_2:		return !IsNum(data->rao.force[jdf](0, idf));
+		case Hydro::PLOT_TFS_1:
+		case Hydro::PLOT_TFS_2:		return data->sts[idf][jdf].TFS.IsEmpty();
+		case Hydro::PLOT_Z_1:
+		case Hydro::PLOT_Z_2:	return !IsNum(data->A[idf][jdf][0]) || !IsNum(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
+		default: 				NEVER();	return true;
 		}
 	}
 	virtual inline double y(int64 id) {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:				return data->A_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_AINF:			return data->Ainf_(ndim, idf, jdf);
-		case Hydro::PLOT_A0:			return data->A0_(ndim, idf, jdf);
-		case Hydro::PLOT_B:				return data->B_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_K:				return data->Kirf_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_AINFW:			return data->Ainf_w_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_FORCE_SC_MA:	return abs(data->F_(ndim, data->sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_SC_PH:	return arg(data->F_(ndim, data->sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_MA:	return abs(data->F_(ndim, data->fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_PH:	return arg(data->F_(ndim, data->fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_MA:	return abs(data->F_(ndim, data->ex, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_PH:	return arg(data->F_(ndim, data->ex, jdf, int(id), idf));
-		case Hydro::PLOT_RAO_MA:		return abs(data->F_(ndim, data->rao, jdf, int(id), idf));
-		case Hydro::PLOT_RAO_PH:		return arg(data->F_(ndim, data->rao, jdf, int(id), idf));
-		case Hydro::PLOT_TFS_MA:		return abs(data->TFS_(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_TFS_PH:		return arg(data->TFS_(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_Z_MA:			return abs(data->Z(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_Z_PH:			return arg(data->Z(ndim, int(id), idf, jdf));
-		default:			NEVER();	return Null;
+		case Hydro::PLOT_A:			return data->A_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_AINF:		return data->Ainf_(ndim, idf, jdf);
+		case Hydro::PLOT_A0:		return data->A0_(ndim, idf, jdf);
+		case Hydro::PLOT_B:			return data->B_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_K:			return data->Kirf_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_AINFW:		return data->Ainf_w_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (data->F_(ndim, data->sc, jdf, int(id), idf)) : 
+														real(data->F_(ndim, data->sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (data->F_(ndim, data->sc, jdf, int(id), idf)) : 
+														imag(data->F_(ndim, data->sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (data->F_(ndim, data->fk, jdf, int(id), idf)) : 
+														real(data->F_(ndim, data->fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (data->F_(ndim, data->fk, jdf, int(id), idf)) : 
+														imag(data->F_(ndim, data->fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (data->F_(ndim, data->ex, jdf, int(id), idf)) : 
+														real(data->F_(ndim, data->ex, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (data->F_(ndim, data->ex, jdf, int(id), idf)) : 
+														imag(data->F_(ndim, data->ex, jdf, int(id), idf));
+		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (data->F_(ndim, data->rao, jdf, int(id), idf)) : 
+														real(data->F_(ndim, data->rao, jdf, int(id), idf));
+		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (data->F_(ndim, data->rao, jdf, int(id), idf)) : 
+														imag(data->F_(ndim, data->rao, jdf, int(id), idf));
+		case Hydro::PLOT_TFS_1:		return show_ma_ph ? abs (data->TFS_(ndim, int(id), idf, jdf)) : 
+														real(data->TFS_(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_TFS_2:		return show_ma_ph ? arg (data->TFS_(ndim, int(id), idf, jdf)) : 
+														imag(data->TFS_(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_Z_1:		return show_ma_ph ? abs (data->Z(ndim, int(id), idf, jdf)) : 
+														real(data->Z(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_Z_2:		return show_ma_ph ? arg (data->Z(ndim, int(id), idf, jdf)) : 
+														imag(data->Z(ndim, int(id), idf, jdf));
+		default:					NEVER();	return Null;
 		}
 	}
 	virtual inline double x(int64 id) {
@@ -224,7 +228,7 @@ private:
 	const Hydro *data = nullptr;
 	int idf = -1, jdf = -1;
 	Hydro::DataToPlot dataToPlot;
-	bool show_w = false, ndim = 0;
+	bool show_w = false, show_ma_ph = true, ndim = 0;
 };
 
 
@@ -237,22 +241,7 @@ public:
 	void Load();
 	void OnSave();
 	bool IsChanged();
-	void Jsonize(JsonIO &json) {
-		if (json.IsLoading())
-			showTabMesh = showTabNemoh = showTabCoeff = showTabMoor = showTabFAST = Null;
-		json
-			("showTabMesh", showTabMesh)
-			("showTabNemoh",showTabNemoh)
-			("showTabCoeff",showTabCoeff)
-			("showTabMoor", showTabMoor)
-			("showTabDecay",showTabDecay)
-			("showTabFAST", showTabFAST);
-	}
-	
 	void InitSerialize(bool ret, bool &openOptions);
-	
-	int showTabMesh = Null, showTabNemoh = Null, showTabMoor = Null, showTabDecay = Null,
-		showTabCoeff = Null, showTabFAST = Null;
 	
 private:
 	BEM *bem = nullptr;
@@ -626,7 +615,7 @@ public:
 	
 	bool dim;
 	int markW;
-	bool show_w;
+	bool show_w, show_ma_ph;
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
@@ -1186,9 +1175,6 @@ public:
 			bar.EndTemporary();
 		ProcessEvents();
 	}
-	
-	enum TAB_IDS {TAB_MESH, TAB_NEMOH, TAB_COEFF, TAB_MOOR, TAB_DECAY, TAB_FAST};
-	UVector<String> tabTexts;
 	
 	void SetLastTab()	{tab.Set(lastTab);};
 	
