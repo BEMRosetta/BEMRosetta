@@ -378,7 +378,7 @@ bool Aqwa::Load_LIS() {
 	hd().Initialize_Forces(hd().ex);
 	hd().Initialize_Forces(hd().fk);
 	hd().Initialize_Forces(hd().sc);
-	hd().Initialize_RAO();
+	hd().Initialize_Forces(hd().rao);
 	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());

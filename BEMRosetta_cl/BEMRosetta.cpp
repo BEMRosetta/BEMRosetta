@@ -62,10 +62,6 @@ void Hydro::GetFexFromFscFfk() {
 	}
 }
 
-void Hydro::Initialize_RAO() {
-	Initialize_Forces(rao);
-}
-
 void Hydro::Normalize() {
 	if (IsLoadedC()) {
 		for (int ib = 0; ib < Nb; ++ib) {
@@ -163,18 +159,7 @@ void Hydro::Initialize_Forces(Forces &f, int _Nh) {
 	for (int ih = 0; ih < _Nh; ++ih) 
 		f.force[ih].setConstant(Nf, Nb*6, NaNComplex);
 }
-/*
-void Hydro::GetMaPh(Forces &f) {
-	for (int ih = 0; ih < Nh; ++ih) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int idf = 0; idf < 6*Nb; ++idf) {	 
-				f.ma[ih](ifr, idf) = sqrt(sqr(f.re[ih](ifr, idf)) + sqr(f.im[ih](ifr, idf)));
-				f.ph[ih](ifr, idf) = atan2(f.im[ih](ifr, idf), f.re[ih](ifr, idf));
-			}
-		}
-	} 
-}
-  */  	
+	
 void Hydro::Normalize_Forces(Forces &f) {
 	for (int ih = 0; ih < Nh; ++ih) 
 		for (int ifr = 0; ifr < Nf; ++ifr) 
@@ -513,7 +498,8 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(file));
 		
-		if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
+		if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
+			ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
 			type = Hydro::WAMIT_1_3;
 		else if (ext == ".dat")
 			type = Hydro::FAST_WAMIT;	
@@ -781,7 +767,7 @@ void Hydro::Report() const {
 		heads = Format(t_("%.1f [º]"), head[0]);
 	
 	BEM::Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
-	BEM::Print("\n" + Format(t_("#headings: %d (%s)"), Nh, heads)); 
+	BEM::Print("\n" + Format(t_("#1st order headings: %d (%s)"), Nh, heads)); 
 	BEM::Print("\n" + Format(t_("#bodies: %d"), Nb));
 	for (int ib = 0; ib < Nb; ++ib) {
 		String str = Format("\n%d.", ib+1);
@@ -1304,7 +1290,8 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
-	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
+	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
+			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
