@@ -34,7 +34,7 @@ AMS][2 .]&]
 [s0;2 &]
 [s0; License&]
 [s0;2 &]
-[s0; [2 Copyright © 2019`-2021 Iñaki Zabala, Markel Peñalba, Yerai 
+[s0; [2 Copyright © 2019`-2022 Iñaki Zabala, Markel Peñalba, Yerai 
 Peña`-Sanchez, Thomas Kelly.]&]
 [s0;2 &]
 [s0; [2 BEMRosetta is free software: you can redistribute it and/or 

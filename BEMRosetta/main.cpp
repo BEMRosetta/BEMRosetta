@@ -56,9 +56,6 @@ void Main::Init() {
 	Title(S("BEMRosetta") + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	rectangleButtons.SetBackground(SColorFace());
-	
-	tabTexts << t_("Mesh Handling") << t_("BEM Solver") << t_("Hydrodynamic Coefficients") 
-			 << t_("Mooring") << t_("Decay") << t_("FAST .out+b Reader");
 		
 	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime) 
@@ -78,46 +75,36 @@ void Main::Init() {
 	
 	LOG("Configuration loaded");
 	
-	if (menuOptions.showTabMesh) {
-		mainMesh.Init();			LOG("Init Mesh");
-		tab.Add(mainMesh.SizePos(), tabTexts[TAB_MESH]);
-	}
-	if (menuOptions.showTabNemoh) {
-		mainSolver.Init(bem);		LOG("Init Nemoh");
-		//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
-		tab.Add(mainSolver.SizePos(), tabTexts[TAB_NEMOH]);
-	}
-	if (menuOptions.showTabCoeff) {
-		mainBEM.Init();				LOG("Init BEM");
-		tab.Add(mainBEM.SizePos(),  tabTexts[TAB_COEFF]);
-	}
-	if (menuOptions.showTabMoor) {
-		tab.Add().Disable();
-		mainMoor.Init();	LOG("Init Moor");
-		if (Bem().experimental)
-			tab.Add(mainMoor.SizePos(), tabTexts[TAB_MOOR]);
-	}
-	if (menuOptions.showTabDecay) {
-		if (!menuOptions.showTabMoor)
-			tab.Add().Disable();
-		mainDecay.Init();	LOG("Init Decay");
-		if (false/*Bem().experimental*/)
-			tab.Add(mainDecay.SizePos(), tabTexts[TAB_DECAY]);
-	}
-	if (menuOptions.showTabFAST) {
-		if (!menuOptions.showTabMoor && !menuOptions.showTabDecay)	
-			tab.Add().Disable();
-		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
-		tab.Add(mainFAST.SizePos(), tabTexts[TAB_FAST]);
-	}
+	mainMesh.Init();			LOG("Init Mesh");
+	tab.Add(mainMesh.SizePos(), t_("Mesh"));
+
+	mainSolver.Init(bem);		LOG("Init Nemoh");
+	//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
+	tab.Add(mainSolver.SizePos(), t_("BEM Solver"));
+
+	mainBEM.Init();				LOG("Init BEM");
+	tab.Add(mainBEM.SizePos(),  t_("Hydro Coeff"));
+
+	mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
+	tab.Add(mainFAST.SizePos(), t_("FAST Read"));
 	
+	mainMoor.Init();	LOG("Init Moor");
+	if (Bem().experimental)
+		tab.Add(mainMoor.SizePos(), t_("Mooring"));
+
+	mainDecay.Init();	LOG("Init Decay");
+	if (false/*Bem().experimental*/)
+		tab.Add(mainDecay.SizePos(), t_("Decay"));
+
 	tab.Add().Disable();
+	
 	mainOutput.Init();			LOG("Init Output");
 	tab.Add(mainOutput.SizePos(), t_("Output"));	
+	
 	menuOptions.Init(bem);		LOG("Init Options");
 	menuOptions.Load();			LOG("Init Options.Load");
-	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(),t_("Options"));
-	tab.Add().Disable();
+	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(), t_("Options"));
+	
 	menuAbout.Init();			LOG("Init About");
 	tab.Add(menuAbout.SizePos(), t_("About"));
 	
@@ -321,14 +308,6 @@ void MenuOptions::Init(BEM &_bem) {
 	
 	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = headingType.isMouseEnter = false;
 	
-	arrayShown.AddColumn("");
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MESH,  0, false).SetLabel(ma().tabTexts[Main::TAB_MESH]);
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_NEMOH, 0, false).SetLabel(ma().tabTexts[Main::TAB_NEMOH]);
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_COEFF, 0, false).SetLabel(ma().tabTexts[Main::TAB_COEFF]);
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_MOOR,  0, false).SetLabel(ma().tabTexts[Main::TAB_MOOR]).Show(Bem().experimental);
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_DECAY, 0, false).SetLabel(ma().tabTexts[Main::TAB_DECAY]).Show(Bem().experimental);
-	arrayShown.Add();	arrayShown.CreateCtrl<Option>(Main::TAB_FAST,  0, false).SetLabel(ma().tabTexts[Main::TAB_FAST]);
-	
 	for (int i = 0; BEM::strDOFType[i][0] != '\0'; ++i)
 		dofType.Add(BEM::strDOFType[i]);
 	for (int i = 0; BEM::strHeadingType[i][0] != '\0'; ++i)
@@ -336,22 +315,7 @@ void MenuOptions::Init(BEM &_bem) {
 }
 
 void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
-	if (!ret || IsNull(showTabMesh)) 
-		showTabMesh = true;
-	if (!ret || IsNull(showTabNemoh)) 
-		showTabNemoh = true;
-	if (!ret || IsNull(showTabCoeff)) 
-		showTabCoeff = true;
-	if (!ret || IsNull(showTabMoor)) 
-		showTabMoor = true;
-	if (!ret || IsNull(showTabDecay)) 
-		showTabDecay = true;
-	if (!ret || IsNull(showTabFAST)) 
-		showTabFAST = true;
-	if (!showTabMesh && !showTabNemoh && !showTabCoeff && !showTabFAST && !showTabMoor && !showTabDecay) {
-		openOptions = true;
-		Exclamation(t_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs shown']"));
-	}
+	;
 }
 
 void MenuOptions::Load() {
@@ -377,13 +341,6 @@ void MenuOptions::Load() {
 	volWarning <<= bem->volWarning;
 	volError <<= bem->volError;
 	csvSeparator <<= bem->csvSeparator;
-	
-	arrayShown.GetCtrl(Main::TAB_MESH,  0)->SetData(showTabMesh);
-	arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->SetData(showTabNemoh);
-	arrayShown.GetCtrl(Main::TAB_COEFF, 0)->SetData(showTabCoeff);
-	arrayShown.GetCtrl(Main::TAB_MOOR,  0)->SetData(showTabMoor);
-	arrayShown.GetCtrl(Main::TAB_DECAY, 0)->SetData(showTabDecay);
-	arrayShown.GetCtrl(Main::TAB_FAST,  0)->SetData(showTabFAST);
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -413,13 +370,6 @@ void MenuOptions::OnSave() {
 	bem->volError = ~volError;
 	bem->csvSeparator = ~csvSeparator;
 	ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
-	
-	showTabMesh  = arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData();
-	showTabNemoh = arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData();
-	showTabCoeff = arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData();
-	showTabMoor  = arrayShown.GetCtrl(Main::TAB_MOOR,  0)->GetData();
-	showTabDecay = arrayShown.GetCtrl(Main::TAB_DECAY, 0)->GetData();
-	showTabFAST  = arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData();
 	
 	bem->dofType = BEM::DOFType(dofType.GetIndex());
 	bem->headingType = BEM::HeadingType(headingType.GetIndex());
@@ -479,19 +429,6 @@ bool MenuOptions::IsChanged() {
 	if (bem->csvSeparator != ~csvSeparator)
 		return true;
 			
-	if (showTabMesh  != arrayShown.GetCtrl(Main::TAB_MESH,  0)->GetData())
-		return true;
-	if (showTabNemoh != arrayShown.GetCtrl(Main::TAB_NEMOH, 0)->GetData())
-		return true;
-	if (showTabCoeff != arrayShown.GetCtrl(Main::TAB_COEFF, 0)->GetData())
-		return true;
-	if (showTabMoor  != arrayShown.GetCtrl(Main::TAB_MOOR,  0)->GetData())
-		return true;
-	if (showTabDecay != arrayShown.GetCtrl(Main::TAB_DECAY, 0)->GetData())
-		return true;
-	if (showTabFAST  != arrayShown.GetCtrl(Main::TAB_FAST,  0)->GetData())
-		return true;
-
 	return false;
 }
 
