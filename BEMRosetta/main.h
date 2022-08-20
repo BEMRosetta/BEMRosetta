@@ -1077,7 +1077,7 @@ public:
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces();
-	void OnResetDOF(bool isReset);
+	void OnMultiplyDOF(bool isReset);
 	void OnSwapDOF();
 	void OnDescription();
 	void OnMenuAdvancedArraySel();

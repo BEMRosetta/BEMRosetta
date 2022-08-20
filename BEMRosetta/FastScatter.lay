@@ -32,3 +32,7 @@ LAYOUT(SearchColumn, 148, 228)
 	ITEM(UnderlineCtrl<ArrayCtrl>, array, AutoHideSb(true).HSizePosZ(0, 0).VSizePosZ(24, 4))
 END_LAYOUT
 
+LAYOUT(FastSummary, 216, 264)
+	ITEM(Upp::DocEdit, str, HSizePosZ(4, 4).VSizePosZ(4, 4))
+END_LAYOUT
+

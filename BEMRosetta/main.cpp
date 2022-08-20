@@ -86,7 +86,7 @@ void Main::Init() {
 	tab.Add(mainBEM.SizePos(),  t_("Hydro Coeff"));
 
 	mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
-	tab.Add(mainFAST.SizePos(), t_("FAST Read"));
+	tab.Add(mainFAST.SizePos(), t_("FAST .out/b"));
 	
 	mainMoor.Init();	LOG("Init Moor");
 	if (Bem().experimental)

@@ -202,9 +202,9 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 }
 
 void Hydro::GetTranslationTo(double xto, double yto, double zto) {
-	double xg = xto - c0(0);
-	double yg = yto - c0(1);
-	double zg = zto - c0(2);
+	double xg = xto - c0(0);	double dx = xg;
+	double yg = yto - c0(1);	double dy = yg;
+	double zg = zto - c0(2);	double dz = zg;
 	
 	auto CalcAB = [&](auto &A) {
         auto An = clone(A);
@@ -377,6 +377,11 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedQTF(false))	
 		CalcQTF(qtfdif);
 	
+	if (IsLoadedM()) {
+		for (int ib = 0; ib < Nb; ++ib)
+			Surface::TranslateInertia66(M[ib], Value3D(dx, dy, dz));
+	}
+	
 	c0(0) = xto;
 	c0(1) = yto;
 	c0(2) = zto;
@@ -443,62 +448,78 @@ void Hydro::ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf) {
 		qtfdif.Clear();
 }
 
-void Hydro::ResetDOF(double factor, const UVector<int> &_idDOF, const UVector<int> &idDOFQTF) {
-	if (_idDOF.size() > 0) {
-		UVector<int> idDOF;
-		for (int i = 0; i < _idDOF.size(); ++i)
-			for (int ib = 0; ib < Nb; ++ib)
-				idDOF << _idDOF[i] + ib*6;
+void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool b, bool diag, bool f, bool qtf) {
+	if (_idDOF.size() == 0) 
+		return;
 	
-		auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
-			for (int ib = 0; ib < idDOF.size(); ++ib) 
-				for (int jb = 0; jb < idDOF.size(); ++jb) 
-					A[idDOF[ib]][idDOF[jb]] *= factor;		
-	    };		
-		if (IsLoadedA())
-			DeleteAB(A);
-		if (IsLoadedAinf_w())
-			DeleteAB(Ainf_w);
-		if (IsLoadedB())
-			DeleteAB(B);
+	UVector<int> idDOF;
+	for (int i = 0; i < _idDOF.size(); ++i)
+		for (int ib = 0; ib < Nb; ++ib)
+			idDOF << _idDOF[i] + ib*6;
+	
+	auto MultiplyAB = [&](UArray<UArray<VectorXd>> &A) {
+		for (int idf = 0; idf < 6*Nb; ++idf) {
+			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+				for (int i = 0; i < idDOF.size(); ++i) {
+					if (( diag &&  idf == idDOF[i] && jdf == idDOF[i]) ||
+					    (!diag && (idf == idDOF[i] || jdf == idDOF[i]))) {
+						A[idf][jdf] *= factor;		
+						break;
+					}
+				}
+			}
+		}
+    };		
+	if (a && IsLoadedA())
+		MultiplyAB(A);
+	if (a && IsLoadedAinf_w())
+		MultiplyAB(Ainf_w);
+	if (b && IsLoadedB())
+		MultiplyAB(B);
 
-		auto DeleteAinfA0 = [&](MatrixXd &A) {
-			for (int ib = 0; ib < idDOF.size(); ++ib) 
-				for (int jb = 0; jb < idDOF.size(); ++jb) 
-					A(idDOF[ib], idDOF[jb]) *= factor;		
-	    };	
-		if (IsLoadedAinf()) 
-			DeleteAinfA0(Ainf);
-		if (IsLoadedA0()) 
-			DeleteAinfA0(A0);
+	auto MultiplyAinfA0 = [&](MatrixXd &A) {
+		for (int idf = 0; idf < 6*Nb; ++idf) {
+			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+				for (int i = 0; i < idDOF.size(); ++i) {
+					if (( diag &&  idf == idDOF[i] && jdf == idDOF[i]) ||
+					    (!diag && (idf == idDOF[i] || jdf == idDOF[i]))) {
+						A(idf, jdf) *= factor;		
+						break;
+					}
+				}
+			}
+		}	
+    };	
+	if (a && IsLoadedAinf()) 
+		MultiplyAinfA0(Ainf);
+	if (a && IsLoadedA0()) 
+		MultiplyAinfA0(A0);
 		
-		auto DeleteF = [&](Forces &ex) {
-			for (int ih = 0; ih < Nh; ++ih) 
-				for (int ifr = 0; ifr < Nf; ++ifr) 
-					for (int i = 0; i < idDOF.size(); ++i) 
-						ex.force[ih](ifr, idDOF[i]) *= factor;
-		};
-		if (IsLoadedFex())
-			DeleteF(ex);
-		if (IsLoadedFsc())
-			DeleteF(sc);
-		if (IsLoadedFfk())
-			DeleteF(fk);	
-		if (IsLoadedRAO())
-			DeleteF(rao);
-	}
-	if (idDOFQTF.size() > 0) {
-		auto DeleteSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
-			for (int ib = 0; ib < Nb; ++ib)
-		        for (int ih = 0; ih < qh.size(); ++ih) 
-					for (int idf = 0; idf < idDOFQTF.size(); ++idf) 
-						qtf[ib][ih][idDOFQTF[idf]] *= factor;													
-		};
-		if (IsLoadedQTF(true)) 
-			DeleteSumDif(qtfsum);
-		if (IsLoadedQTF(false))
-			DeleteSumDif(qtfdif);
-	}
+	auto MultiplyF = [&](Forces &ex) {
+		for (int ih = 0; ih < Nh; ++ih) 
+			for (int ifr = 0; ifr < Nf; ++ifr) 
+				for (int i = 0; i < idDOF.size(); ++i) 
+					ex.force[ih](ifr, idDOF[i]) *= factor;
+	};
+	if (f && IsLoadedFex())
+		MultiplyF(ex);
+	if (f && IsLoadedFsc())
+		MultiplyF(sc);
+	if (f && IsLoadedFfk())
+		MultiplyF(fk);	
+	if (f && IsLoadedRAO())
+		MultiplyF(rao);
+	
+	auto MultiplySumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+		for (int ib = 0; ib < Nb; ++ib)
+	        for (int ih = 0; ih < qh.size(); ++ih) 
+				for (int idf = 0; idf < _idDOF.size(); ++idf) 
+					qtf[ib][ih][_idDOF[idf]] *= factor;													
+	};
+	if (qtf && IsLoadedQTF(true)) 
+		MultiplySumDif(qtfsum);
+	if (qtf && IsLoadedQTF(false))
+		MultiplySumDif(qtfdif);
 	
 	// Some previous data is now invalid
 	Kirf.Clear();

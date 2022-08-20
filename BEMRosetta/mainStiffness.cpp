@@ -212,14 +212,20 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	
 void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim) {
 	if (what == Hydro::MAT_K) {
+		if (!hydro.IsLoadedC())
+			return;
 		data << hydro.C_(ndim, ibody);
 		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
+		if (!hydro.IsLoadedA())
+			return;
 		data << hydro.Ainf_(ndim, ibody);
 		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_DAMP_LIN) {
+		if (!hydro.IsLoadedLinearDamping())
+			return;
 		data << hydro.Dlin_dim(ibody);
 		label.SetText(t_("Additional linear damping (dimensional)"));
 	} else
@@ -227,9 +233,6 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, bodyName, ibody, idc);
-
-	//if (hydro.C.IsEmpty() || hydro.C[ibody].size() == 0)
-	//	return;
 }
 
 bool MainMatrixKA::Load(UArray<HydroClass> &hydros, const UVector<int> &ids, bool ndim) {
