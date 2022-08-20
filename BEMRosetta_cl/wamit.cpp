@@ -166,8 +166,6 @@ bool Wamit::Load_out() {
 	FieldSplitWamit f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	//double xbody = 0, ybody = 0, zbody = 0;
-	
 	hd().names.Clear();
 	while(!in.IsEof()) {
 		line = in.GetLine();
@@ -223,9 +221,44 @@ bool Wamit::Load_out() {
 			hd().cb(0, ibody) = f.GetDouble(4);
 			hd().cb(1, ibody) = f.GetDouble(5);
 			hd().cb(2, ibody) = f.GetDouble(6);
+		} else if (line.Find("Radii of gyration:") >= 0) {
+			if (IsNull(hd().rho))
+				;
+			else {
+				double mass = hd().rho*hd().Vo[ibody];
+				if (hd().M.size() < hd().Nb)
+				 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
+				if (hd().M[ibody].size() > 0)
+					throw Exc(in.Str() + "\n"  + t_("Problem in M matrix. Please report"));
+				hd().M[ibody].setConstant(6, 6, 0);
+				Eigen::MatrixXd &inertia = hd().M[ibody];
+				inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = mass;
+				inertia(3, 3) = f.GetDouble(3)*mass;
+				inertia(3, 4) = f.GetDouble(4)*mass;
+				inertia(3, 5) = f.GetDouble(5)*mass;
+				f.GetLine();
+				inertia(4, 3) = f.GetDouble(0)*mass;
+				inertia(4, 4) = f.GetDouble(1)*mass;
+				inertia(4, 5) = f.GetDouble(2)*mass;
+				f.GetLine();
+				inertia(5, 3) = f.GetDouble(0)*mass;
+				inertia(5, 4) = f.GetDouble(1)*mass;
+				inertia(5, 5) = f.GetDouble(2)*mass;
+				double cx = mass*hd().cg(0, ibody);
+				double cy = mass*hd().cg(1, ibody);
+				double cz = mass*hd().cg(2, ibody);
+				inertia(1, 5) = inertia(5, 1) =  cx;
+				inertia(2, 4) = inertia(4, 2) = -cx;
+				inertia(0, 5) = inertia(5, 0) = -cy;
+				inertia(2, 3) = inertia(3, 2) =  cy;
+				inertia(0, 4) = inertia(4, 0) =  cz;
+				inertia(1, 3) = inertia(3, 1) = -cz;
+			}
 		} else if (line.Find("Global body and external mass matrix:") >= 0) {
 			if (hd().M.size() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
+			if (hd().M[ibody].size() > 0)
+				throw Exc(in.Str() + "\n"  + t_("Problem in M matrix. Please report"));
 			hd().M[ibody].setConstant(6, 6, NaNDouble);
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine();
@@ -589,7 +622,10 @@ bool Wamit::Save_out(String file, double g, double rho) {
 			out	<< " Total panels:  1111    Waterline panels:   11      Symmetries: none\n";
 			out	<< " Irregular frequency index: IRR =1\n"; 
 			out	<< " Free surface panels:     111\n\n";
-			out	<< " XBODY =    0.0000 YBODY =    0.0000 ZBODY =    0.0000 PHIBODY =   0.0\n";
+			out	<< Format(" XBODY =    %s YBODY =    %s ZBODY =    %s PHIBODY =   0.0\n", 
+							FormatWam(hd().c0(0, ibody)), 
+							FormatWam(hd().c0(1, ibody)), 
+							FormatWam(hd().c0(2, ibody)));
 			double Vo = hd().Vo.size() > ibody ? hd().Vo[ibody] : 0;
 			out	<< Format(" Volumes (VOLX,VOLY,VOLZ):      %s %s %s\n", 
 						FormatWam(Vo), FormatWam(Vo), FormatWam(Vo));
@@ -604,11 +640,16 @@ bool Wamit::Save_out(String file, double g, double rho) {
 			if (hd().IsLoadedC()) {
 				out	<< " Hydrostatic and gravitational restoring coefficients:\n"; 
 				out	<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
-							FormatWam(hd().C[ibody](2, 2)), FormatWam(hd().C[ibody](2, 3)), FormatWam(hd().C[ibody](2, 4)));
+							FormatWam(hd().C_ndim(ibody, 2, 2)), 
+							FormatWam(hd().C_ndim(ibody, 2, 3)), 
+							FormatWam(hd().C_ndim(ibody, 2, 4)));
 				out	<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
-							FormatWam(hd().C[ibody](3, 3)), FormatWam(hd().C[ibody](3, 4)), FormatWam(hd().C[ibody](3, 5)));
+							FormatWam(hd().C_ndim(ibody, 3, 3)), 
+							FormatWam(hd().C_ndim(ibody, 3, 4)), 
+							FormatWam(hd().C_ndim(ibody, 3, 5)));
 				out	<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
-							FormatWam(hd().C[ibody](4, 4)), FormatWam(hd().C[ibody](4, 5)));
+							FormatWam(hd().C_ndim(ibody, 4, 4)), 
+							FormatWam(hd().C_ndim(ibody, 4, 5)));
 			}
 			double cgx = 0, cgy = 0, cgz = 0;
 			if (hd().cb.size() > 0) {

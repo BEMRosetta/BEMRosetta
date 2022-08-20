@@ -482,7 +482,7 @@ public:
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf);
-	void ResetDOF(double factor, const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
+	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
 	void SwapDOF(int ib, int idof1, int idof2);
 		
 	void FillFrequencyGapsABForces(bool zero, int maxFreq);
@@ -1097,7 +1097,7 @@ public:
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, Hydro::FORCE forceQtf);										
-	void ResetDOF(int id, double factor, const UVector<int> &idDOF, const UVector<int> &idDOFQTF);
+	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
 	void SwapDOF(int id, int ib, int idof1, int idof2);
 	
 	void FillFrequencyGapsABForces(int id, bool zero, int maxFreq);

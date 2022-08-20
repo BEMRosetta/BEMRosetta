@@ -1141,8 +1141,6 @@ void Hydro::CheckNaN() {
 		throw Exc("Error loading c0. NaN found");
 	if (!IsNum(dof))
 		throw Exc("Error loading dof. NaN found");
-//	if (!IsNum(dofOrder))
-//		throw Exc("Error loading dofOrder. NaN found");
 	if (!IsNum(Kirf))
 		throw Exc("Error loading Kirf. NaN found");
 	if (!IsNum(Tirf))
@@ -1166,6 +1164,10 @@ double Hydro::Troll(int ib) const {
 }
 
 double Hydro::Tpitch(int ib) const {
+	double m = M[ib](4, 4);
+	double a = Ainf_dim(ib*6+4, ib*6+4);
+	double c = C_dim(ib, 4, 4);
+	
 	return 2*M_PI*sqrt((M[ib](4, 4) + Ainf_dim(ib*6+4, ib*6+4))/C_dim(ib, 4, 4)); 
 }
 
@@ -1426,8 +1428,8 @@ void BEM::ResetForces(int id, Hydro::FORCE force, Hydro::FORCE forceQtf) {
 	hydros[id].hd().ResetForces(force, forceQtf);
 }
 
-void BEM::ResetDOF(int id, double factor, const UVector<int> &idDOF, const UVector<int> &idDOFQTF) {
-	hydros[id].hd().ResetDOF(factor, idDOF, idDOFQTF);
+void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf) {
+	hydros[id].hd().MultiplyDOF(factor, idDOF, a, b, diag, f, qtf);
 }
 
 void BEM::SwapDOF(int id, int ib, int idof1, int idof2) {

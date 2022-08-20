@@ -126,26 +126,17 @@ void MainBEM::Init() {
 	menuProcess2.dropDOF.GetList().Sorting(false);
 	menuProcess2.dropDOF.OnFocus = [&] {
 		menuProcess2.dropDOF.DropGrid::GotFocus();
-		menuProcess2.butResetDOF.Show(DropChecked(menuProcess2.dropDOF) || 
-									  DropChecked(menuProcess2.dropDOFQTF));
-		menuProcess2.butResetDOF0.Show(DropChecked(menuProcess2.dropDOF) || 
-									  DropChecked(menuProcess2.dropDOFQTF));
+		bool show = DropChecked(menuProcess2.dropDOF) && 
+					(menuProcess2.opA || menuProcess2.opAd || 
+					 menuProcess2.opB || menuProcess2.opBd || 
+					 menuProcess2.opF || menuProcess2.opQTF);
+		menuProcess2.butResetDOF.Show(show);
+		menuProcess2.butResetDOF0.Show(show);
 	};
-	menuProcess2.dropDOFQTF.AddColumn("", 20);
-	menuProcess2.dropDOFQTF.AddColumn("", 50);
-	menuProcess2.dropDOFQTF.GetList().GetColumn(0).Option();
-	menuProcess2.dropDOFQTF.Width(100);
-	menuProcess2.dropDOFQTF.GetList().Sorting(false);
-	menuProcess2.dropDOFQTF.OnFocus = [&] {
-		menuProcess2.dropDOFQTF.DropGrid::GotFocus();
-		menuProcess2.butResetDOF.Show(DropChecked(menuProcess2.dropDOF) || 
-									  DropChecked(menuProcess2.dropDOFQTF));
-		menuProcess2.butResetDOF0.Show(DropChecked(menuProcess2.dropDOF) || 
-									   DropChecked(menuProcess2.dropDOFQTF));
-	};
-	menuProcess2.butResetDOF << THISBACK1(OnResetDOF, false);
+	
+	menuProcess2.butResetDOF << THISBACK1(OnMultiplyDOF, false);
 	menuProcess2.butResetDOF.Hide();
-	menuProcess2.butResetDOF0 << THISBACK1(OnResetDOF, true);
+	menuProcess2.butResetDOF0 << THISBACK1(OnMultiplyDOF, true);
 	menuProcess2.butResetDOF0.Hide();
 			
 	menuProcess2.dropFreq.AddColumn("", 20);
@@ -701,9 +692,14 @@ void MainBEM::UpdateButtons() {
 	menuProcess2.dropHead.Clear();
 	menuProcess2.dropHeadQTF.Clear();
 	menuProcess2.dropDOF.Clear();
-	menuProcess2.dropDOFQTF.Clear();
 	menuProcess2.dropForce.Clear();
 	menuProcess2.dropForceQTF.Clear();
+	menuProcess2.opA <<= false;
+	menuProcess2.opAd <<= false;
+	menuProcess2.opB <<= false;
+	menuProcess2.opBd <<= false;
+	menuProcess2.opF <<= false;
+	menuProcess2.opQTF <<= false;
 	
 	int id = GetIdOneSelected(false);
 	if (id >= 0) { 
@@ -721,8 +717,6 @@ void MainBEM::UpdateButtons() {
 			menuProcess2.dropHeadQTF.Add(false, Format("%f-%f", data.qh[i].real(), data.qh[i].imag()));
 		for (int i = 0; i < 6; ++i)
 			menuProcess2.dropDOF.Add(false, BEM::StrDOF(i));
-		for (int i = 0; i < 6; ++i)
-			menuProcess2.dropDOFQTF.Add(false, BEM::StrDOF(i));
 		
 		if (data.IsLoadedFex())
 			menuProcess2.dropForce.Add(false, t_("All"));
@@ -1059,7 +1053,7 @@ void MainBEM::OnResetForces() {
 	}	
 }
 
-void MainBEM::OnResetDOF(bool isReset) {
+void MainBEM::OnMultiplyDOF(bool isReset) {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -1072,17 +1066,18 @@ void MainBEM::OnResetDOF(bool isReset) {
 		if (IsNull(factor))
 			factor = 0;
 				
-		UVector<int> idDOF, idDOFQTF;
+		UVector<int> idDOF;
 		for (int i = 0; i < 6; ++i)
 			if (menuProcess2.dropDOF.GetList().Get(i, 0) == true)
 				idDOF << i;
-		for (int i = 0; i < 6; ++i)
-			if (menuProcess2.dropDOFQTF.GetList().Get(i, 0) == true)
-				idDOFQTF << i;
 			
 		WaitCursor wait;
 		
-		Bem().ResetDOF(id, factor, idDOF, idDOFQTF);
+		bool a = menuProcess2.opA || menuProcess2.opAd;
+		bool b = menuProcess2.opB || menuProcess2.opBd;
+		bool diag = menuProcess2.opAd || menuProcess2.opBd;
+		
+		Bem().MultiplyDOF(id, factor, idDOF, a, b, diag, menuProcess2.opF, menuProcess2.opQTF);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
