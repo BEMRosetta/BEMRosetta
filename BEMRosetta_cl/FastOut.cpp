@@ -645,8 +645,8 @@ bool FASTCaseDecay::Postprocess() {
 	return true;
 }
 
-double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2) {
-	r2 = Null;
+double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2, double &damp) {
+	r2 = damp = Null;
 	
 	String param = "ptfm" + S(BEM::strDOFtext[dof]);
 	int id = fst.FindCol(param);
@@ -659,8 +659,9 @@ double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2) {
 	
 	DampedSinEquation eq;
 	ExplicitEquation::FitError err = eq.Fit(vect, r2);
-	if (err == ExplicitEquation::NoError)
-		return 2*M_PI/abs(eq.GetCoeff(3));
-	else
+	if (err == ExplicitEquation::NoError) {
+		damp = eq.GetDampingRatio();
+		return eq.GetPeriod();
+	} else
 		return Null;
 }

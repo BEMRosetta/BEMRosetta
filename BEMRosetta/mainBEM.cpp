@@ -234,6 +234,11 @@ void MainBEM::Init() {
 	menuPlot.showPoints << [&] {LoadSelTab(Bem());};
 	menuPlot.showNdim 	<< [&] {LoadSelTab(Bem());};
 	
+	menuPlot.head1st.NoHeader().MultiSelect();
+	menuPlot.head1st.AddColumn("");
+	menuPlot.headQTF.NoHeader().MultiSelect();
+	menuPlot.headQTF.AddColumn("");
+	
 	OnOpt();
 	
 	menuFOAMM.Init(*this, mainSetupFOAMM);
@@ -279,7 +284,10 @@ void MainBEM::Init() {
 			mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixA))
 			mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim);
-		else if (mainTab.IsAt(mainMatrixDlin)) {
+		else if (mainTab.IsAt(mainMatrixM)) {
+			plot = false;
+			mainMatrixM.Load(Bem().hydros, ids, false);
+		} else if (mainTab.IsAt(mainMatrixDlin)) {
 			plot = false;
 			mainMatrixDlin.Load(Bem().hydros, ids, false);
 		} else if (mainTab.IsAt(mainA))
@@ -291,13 +299,13 @@ void MainBEM::Init() {
 		else if (mainTab.IsAt(mainAinfw))
 			mainAinfw.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainForceSC))
-			mainForceSC.Load(Bem(), ids);
+			mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		else if (mainTab.IsAt(mainForceFK))
-			mainForceFK.Load(Bem(), ids);
+			mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		else if (mainTab.IsAt(mainForceEX))
-			mainForceEX.Load(Bem(), ids);
+			mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		else if (mainTab.IsAt(mainRAO))
-			mainRAO.Load(Bem(), ids);
+			mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		else if (mainTab.IsAt(mainStateSpace)) {
 			mainStateSpace.Load(Bem(), ids);
 			ismenuFOAMM = true;
@@ -391,6 +399,9 @@ void MainBEM::Init() {
 	mainAinfw.Init(Hydro::DATA_AINFW);
 	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
 
+	mainMatrixM.Init(Hydro::MAT_M);
+	mainTab.Add(mainMatrixM.SizePos(), t_("M")).Disable();
+	
 	mainMatrixDlin.Init(Hydro::MAT_DAMP_LIN);
 	mainTab.Add(mainMatrixDlin.SizePos(), t_("Lin. Damp.")).Disable();
 		
@@ -473,6 +484,8 @@ void MainBEM::LoadSelTab(BEM &bem) {
 		mainMatrixK.Load(bem.hydros, ids, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixA))
 		mainMatrixA.Load(bem.hydros, ids, ~menuPlot.showNdim);
+	else if (id == mainTab.Find(mainMatrixM))
+		mainMatrixM.Load(bem.hydros, ids, false);
 	else if (id == mainTab.Find(mainMatrixDlin))
 		mainMatrixDlin.Load(bem.hydros, ids, false);
 	else if (id == mainTab.Find(mainSummary))
@@ -586,19 +599,33 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(data.IsLoadedB());
 		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		if (data.IsLoadedStateSpace())
 			mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(true);
+		
+		// Sets headings to 0
+		int rowid = Null;
+		double distanceTo0 = std::numeric_limits<double>::max();
+		for (int r = 0; r < menuPlot.head1st.GetCount(); ++r) {
+			double dist = abs(double(menuPlot.head1st.Get(r, 0)));
+			if (distanceTo0 > dist) {
+				rowid = r;
+				distanceTo0 = dist;
+			}
+		}
+		if (!IsNull(rowid))
+			menuPlot.head1st.SetCursor(rowid);
 		
 		mainTab.WhenSet();
 	} catch (Exc e) {
@@ -617,14 +644,14 @@ void MainBEM::OnRemoveSelected(bool all) {
 	for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
 		if (all || listLoaded.IsSelected(row)) {
 			int id = ArrayModel_IdHydro(listLoaded, row);
-			Bem().hydros.Remove(id);
+			Bem().RemoveHydro(id);
 			listLoaded.Remove(row);
 			selected = true;
 		}
 	}	// Only one available => directly selected
 	if (!selected && listLoaded.GetCount() == 1) {	
 		int id = ArrayModel_IdHydro(listLoaded, 0);
-		Bem().hydros.Remove(id);
+		Bem().RemoveHydro(id);
 		listLoaded.Remove(0);
 		selected = true;
 	}		
@@ -642,16 +669,17 @@ void MainBEM::OnRemoveSelected(bool all) {
 	
 	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));
 	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 	// if (Bem().experimental)
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
-	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(ids.size() > 0);
 	
@@ -680,6 +708,26 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opHaskind.		Enable(numsel == 1 || numrow == 1);
+	
+	int row = menuPlot.head1st.GetCursor();
+	menuPlot.head1st.Clear();
+	for (int ih = 0; ih < Bem().headAll.size(); ++ih)
+		menuPlot.head1st.Add(Bem().headAll[ih/*Bem().orderHeadAll[i]*/]);
+	if (row >= 0)
+		menuPlot.head1st.SetCursor(row);
+	
+	menuPlot.head1st.WhenCursor = [&] {
+		int row = menuPlot.head1st.GetCursor();
+		if (row < 0)
+			return;
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainForceSC.Load(Bem(), ids, row);
+		mainForceFK.Load(Bem(), ids, row);
+		mainForceEX.Load(Bem(), ids, row);
+		mainRAO.Load(Bem(), ids, row);
+	};
 	
 	bool show_w = menuPlot.opwT == 0;
 	bool show_ma_ph = menuPlot.opMP == 0;
@@ -778,15 +826,16 @@ void MainBEM::OnJoin() {
 
 		mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(true);
 	} catch (Exc e) {
@@ -816,9 +865,11 @@ void MainBEM::OnDuplicate() {
 		}
 		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
@@ -842,9 +893,9 @@ void MainBEM::OnSymmetrize(bool xAxis) {
 		
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}
@@ -1034,9 +1085,9 @@ void MainBEM::OnResetForces() {
 		
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	
@@ -1085,9 +1136,9 @@ void MainBEM::OnMultiplyDOF(bool isReset) {
 		
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));	
 	
 		LoadSelTab(Bem());
@@ -1117,10 +1168,10 @@ void MainBEM::OnSwapDOF() {
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));	
 		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 	
 		LoadSelTab(Bem());
@@ -1154,10 +1205,10 @@ void MainBEM::OnABForces() {
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 	
 		LoadSelTab(Bem());
 	} catch (Exc e) {
@@ -1220,15 +1271,16 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 		
 		LoadSelTab(Bem());
 	} catch (Exc e) {
@@ -1253,15 +1305,16 @@ void MainBEM::OnUpdateCrot() {
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 		mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));
+		mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));	
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	
@@ -1439,6 +1492,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("mainStiffness", mainMatrixK)
 		("mainMatrixA", mainMatrixA)
 		("mainMatrixDlin", mainMatrixDlin)
+		("mainMatrixM", mainMatrixM)
 	;
 }
 
@@ -1618,13 +1672,13 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
-		if (data.Vo.size() > ib && !IsNull(data.Vo[ib])) 
+		if (data.Vo.size() > ib && IsNum(data.Vo[ib])) 
 			array.Set(row++, col, FDS(data.Vo[ib], 10, false));
 		else 
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
-		if (data.cg.size() > 3*ib && !IsNull(data.cg(0, ib))) 
+		if (data.cg.size() > 3*ib && IsNum(data.cg(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
 									FDS(data.cg(0, ib), 10, false),
 									FDS(data.cg(1, ib), 10, false),
@@ -1633,7 +1687,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
-		if (data.cb.size() > 3*ib && !IsNull(data.cb(0, ib))) 
+		if (data.cb.size() > 3*ib && IsNum(data.cb(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
 									FDS(data.cb(0, ib), 10, false),
 									FDS(data.cb(1, ib), 10, false),
@@ -1642,7 +1696,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("C0 [m]"));
-		if (data.c0.size() > 3*ib && !IsNull(data.c0(0, ib))) 
+		if (data.c0.size() > 3*ib && IsNum(data.c0(0, ib))) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
 									FDS(data.c0(0, ib), 10, false),
 									FDS(data.c0(1, ib), 10, false),
@@ -1668,24 +1722,6 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
 						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, "-");		
 					}
-				}
-			}
-		}
-		array.Set(row, 0, sib + " " + t_("Mass [kg]"));
-		if (data.M.size() > ib && data.M[ib].size() > 0) {
-			array.Set(row++, col, FDS(data.M[ib](0, 0), 10, false));	
-			for (int i = 3; i < 6; ++i) {
-				for (int j = 3; j < 6; ++j) {
-					array.Set(row, 0, sib + " " + Format(t_("Inertia(%d,%d) [kg/m2]"), i+1-3, j+1-3));	
-					array.Set(row++, col, FDS(data.M[ib](i, j), 10, false));		
-				}
-			}
-		} else {
-			array.Set(row++, col, "-");	
-			for (int i = 3; i < 6; ++i) {
-				for (int j = 3; j < 6; ++j) {
-					array.Set(row, 0, sib + " " + Format(t_("Inertia(%d,%d) [kg/m2]"), i+1-3, j+1-3));	
-					array.Set(row++, col, "-");		
 				}
 			}
 		}
@@ -1745,10 +1781,6 @@ void MainQTF::Init() {
 		opDOF.Add(i, InitCaps(BEM::StrDOF(i)));
 	opDOF.SetIndex(0);
 	
-/*	opQTF.Clear();
-	opQTF.Add(FSUM, t_("Sum")).Add(FDIFFERENCE, t_("Difference"));
-	opQTF.SetIndex(0);
-*/	
 	opShow << [&] {listCases.WhenSel();};
 	opDOF  << [&] {listCases.WhenSel();};
 	opQTF  << [&] {listCases.WhenSel();};

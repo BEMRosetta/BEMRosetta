@@ -473,8 +473,6 @@ void FastScatterTabs::AddTab(String filename) {
 	String title;
 	if (filename == t_("New Tab"))
 		title = t_("New Tab");
-	else
-		title = GetFileTitle(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
 	
 	int id = tabBar.GetCursor();
 	Value key;
@@ -490,7 +488,7 @@ void FastScatterTabs::AddTab(String filename) {
 		sct = &tabScatters.Add();
 		int pos = max(tabBar.GetCount()-1, 0);
 		sct->Init([=] (String filename) {
-				String title = GetFileTitle(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
+				String title = GetFileName(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
 				tabBar.SetValue(key, title);
 				AddHistory(filename);
 			}, [=] (String clipboard) {

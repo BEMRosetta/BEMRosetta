@@ -418,6 +418,8 @@ void NemohCase::Save_Bat(String folder, String batname, String caseFolder, bool 
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
+	out << Format("title %s in '%s'\n", solvName, caseFolder);
+	
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
 	String strBin;
@@ -800,8 +802,10 @@ bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, MatrixXd &cg, Mat
 			cg(i, ib) = f.GetDouble(6);
 			cb(i, ib) = f.GetDouble(2);
 	    }
-		f.Load(in.GetLine());
-	    Vo[ib] = f.GetDouble(2); 		
+	    if (!f.IsEof() && f.GetCount() > 0) {
+			f.Load(in.GetLine());
+		    Vo[ib] = f.GetDouble(2); 		
+	    }
 	}
 	return true;
 }
