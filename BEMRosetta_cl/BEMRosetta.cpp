@@ -653,7 +653,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 			dof[ib] = hydro.dof[ib];
 		}
 		
-		if (IsLoadedC() && hydro.IsLoadedC()) {
+		if (/*IsLoadedC() && */ hydro.IsLoadedC()) {
 			for (int ib = 0; ib < Nb; ++ib) {
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int jdf = 0; jdf < 6; ++jdf) 
@@ -662,7 +662,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		}
 		///////////////////////////////////////////////////////////////////
 		
-		if (IsLoadedA() && IsLoadedB() && hydro.IsLoadedA() && hydro.IsLoadedB()) {
+		if (/*IsLoadedA() && IsLoadedB() && */hydro.IsLoadedA() && hydro.IsLoadedB()) {
 			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
 				int ifr = FindClosest(w, hydro.w[ifrhy]);
 				for (int idf = 0; idf < 6*Nb; ++idf) {
@@ -679,7 +679,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		Add_Forces(sc, hydro, hydro.sc);
 		Add_Forces(fk, hydro, hydro.fk);
 		
-		if (IsLoadedRAO() && hydro.IsLoadedRAO()) {
+		if (/*IsLoadedRAO() && */hydro.IsLoadedRAO()) {
 			for (int ihhy = 0; ihhy < Nh; ++ihhy) {
 				int ih = FindClosest(head, hydro.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
@@ -1376,6 +1376,12 @@ HydroClass &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
 	return data;
 }
 
+void BEM::RemoveHydro(int id) {
+	hydros.Remove(id);
+	if (hydros.IsEmpty())
+		Hydro::ResetIdCount();
+}
+
 HydroClass &BEM::Duplicate(int id) {
 	HydroClass &data = hydros.Create<HydroClass>(*this);
 	data.hd().Copy(hydros[id].hd());
@@ -1391,13 +1397,13 @@ void BEM::Symmetrize(int id, bool xAxis) {
 
 void BEM::UpdateHeadAll() {
 	headAll.Clear();
-	orderHeadAll.Clear();
+	//orderHeadAll.Clear();
 				
 	for (int id = 0; id < hydros.size(); ++id) {
 		for (int ih = 0; ih < hydros[id].hd().head.size(); ++ih) 
 			FindAddDelta(headAll, FixHeading(hydros[id].hd().head[ih], headingType), 0.1);
 	}
-	orderHeadAll = GetSortOrder(headAll);
+	//orderHeadAll = GetSortOrder(headAll);
 }
 
 void BEM::A0(int id) {
@@ -1526,6 +1532,8 @@ void BEM::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
 
 void BEM::RemoveMesh(int id) {
 	surfs.Remove(id);
+	if (surfs.IsEmpty())
+		Mesh::ResetIdCount();
 }
 
 void BEM::JoinMesh(int idDest, int idOrig) {
@@ -1748,7 +1756,7 @@ UVector<int> NumSets(int num, int numsets) {
 }
 
 String FormatWam(double d) {
-	if (IsNull(d))
+	if (!IsNum(d))
 		return "0.0";
 	return (d >= 0 ? " " : "-") + Format("%12E", abs(d));
 }

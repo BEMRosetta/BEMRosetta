@@ -632,8 +632,10 @@ public:
 	
 	void Init(Hydro::DataToShow dataToShow);
 	void Clear();
-	bool Load(BEM &bem, const UVector<int> &ids);
+	bool Load(BEM &bem, const UVector<int> &ids, int ih = Null);
 	
+	void UpdateHead(BEM &bem, int ih);
+		
 	TabCtrl tab;
 	UArray<UArray<MainPlot>> plots;
 
@@ -694,6 +696,7 @@ public:
 	void OnSplit();
 	void OnConvertMesh();
 	void OnUpdate(Action action, bool fromMenuProcess);
+	void OnScale();
 	void OnTranslateArchimede(bool fromMenuProcess);
 	void OnArchimede();
 	void OnUpdateMass();
@@ -1107,6 +1110,7 @@ public:
 	MainMatrixKA mainMatrixK;
 	MainMatrixKA mainMatrixA;
 	MainMatrixKA mainMatrixDlin;
+	MainMatrixKA mainMatrixM;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;
 		

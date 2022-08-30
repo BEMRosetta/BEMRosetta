@@ -17,7 +17,6 @@ using namespace Upp;
 using namespace Eigen;
 
 
-
 void MainMatrixKA::Init(Hydro::DataMatrix what) {
 	CtrlLayout(*this);
 	
@@ -29,9 +28,12 @@ void MainMatrixKA::Init(Hydro::DataMatrix what) {
 	opEmptyZero <<= THISBACK(PrintData);
 	opUnits <<= THISBACK(PrintData);
 	expRatio <<= THISBACK(PrintData);
+	if (IsNull(expRatio)) 
+		expRatio <<= 3;
 	
 	opDecimals <<= THISBACK1(OnOp, 0);
 	opDigits <<= THISBACK1(OnOp, 1);
+	
 	OnOp(~opDigits ? 0 : 1);
 }
 
@@ -120,6 +122,8 @@ void MainMatrixKA::PrintData() {
 								sdata = Hydro::K_units(Ndim, r, c);
 							else if (what == Hydro::MAT_A) 
 								sdata = Hydro::A_units(Ndim, r, c);
+							else if (what == Hydro::MAT_M)
+								sdata = Hydro::M_units(r, c);
 							else if (what == Hydro::MAT_DAMP_LIN)
 								sdata = Hydro::B_units(Ndim, r, c);
 						} else {
@@ -223,6 +227,11 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 		data << hydro.Ainf_(ndim, ibody);
 		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
+	} else if (what == Hydro::MAT_M) {
+		if (!hydro.IsLoadedM())
+			return;
+		data << hydro.M[ibody];
+		label.SetText(t_("Mass/Inertia matrix (dimensional)"));
 	} else if (what == Hydro::MAT_DAMP_LIN) {
 		if (!hydro.IsLoadedLinearDamping())
 			return;

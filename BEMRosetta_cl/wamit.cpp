@@ -297,7 +297,7 @@ bool Wamit::Load_out() {
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						FindAddDelta(hd().head, FixHeading_180(f.GetDouble(4)), 0.001);
+						FindAddDelta(hd().head, f.GetDouble(4)/*FixHeading_180(f.GetDouble(4))*/, 0.001);
 					}
 				} else if (line.Find("2nd-order") >= 0) {
 					found2ndorder = true;
@@ -421,7 +421,7 @@ bool Wamit::Load_out() {
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
 								f.Load(line);
-								double head = FixHeading_180(f.GetDouble(4)); 
+								double head = f.GetDouble(4); //FixHeading_180(f.GetDouble(4)); 
 								int iih = FindDelta(hd().head, head, 0.001);
 								if (iih >= 0) {
 									in.GetLine(3); 
@@ -449,7 +449,7 @@ bool Wamit::Load_out() {
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
 								f.Load(line);
-								double head = FixHeading_180(f.GetDouble(4)); 
+								double head = f.GetDouble(4); 	//FixHeading_180(f.GetDouble(4)); 
 								int iih = FindDelta(hd().head, head, 0.001);
 								if (iih >= 0) {
 									in.GetLine(3); 
@@ -528,7 +528,7 @@ void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::M
 			"     I     J         A(I,J)\n\n";
 	for (int r = 0; r < hd().Nb*6; ++r) 
 		for (int c = 0; c < hd().Nb*6; ++c) 
-			if (!IsNull(base(r, c))) 
+			if (IsNum(base(r, c))) 
 				out << Format("%6>d%6>d  % E\n", r+1, c+1, fun(r, c));
 	out << "\n\n";
 }
@@ -538,7 +538,7 @@ void Wamit::Save_AB(FileOut &out, int ifr) {
 			"     I     J         A(I,J)         B(I,J)\n\n";
 	for (int r = 0; r < hd().Nb*6; ++r) 
 		for (int c = 0; c < hd().Nb*6; ++c) 
-			if (!IsNull(hd().A[r][c][ifr]) && !IsNull(hd().B[r][c][ifr]))
+			if (IsNum(hd().A[r][c][ifr]) && !IsNull(hd().B[r][c][ifr]))
 				out << Format("%6>d%6>d  % E  % E\n", r+1, c+1, hd().A_ndim(ifr, r, c), hd().B_ndim(ifr, r, c));
 	out << "\n\n\n\n";
 }
@@ -549,7 +549,7 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
 		for (int i = 0; i < hd().ex.force[ih].cols(); ++i)
-			if (!IsNull(hd().ex.force[ih](ifr, i))) {
+			if (IsNum(hd().ex.force[ih](ifr, i))) {
 				std::complex<double> c = hd().F_ndim(hd().ex, ih, ifr, i);
 				out << Format("%6>d   %E         %6>d\n", i+1, abs(c), round(ToDeg(arg(c))));
 			}
@@ -563,7 +563,7 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
 		for (int i = 0; i < hd().rao.force[ih].cols(); ++i)
-			if (!IsNull(hd().rao.force[ih](ifr, i))) {
+			if (IsNum(hd().rao.force[ih](ifr, i))) {
 				std::complex<double> c = hd().F_ndim(hd().rao, ih, ifr, i);
 				out << Format(" %7>d   %E   %f\n", i+1, abs(c), ToDeg(arg(c)));
 			}
@@ -1142,7 +1142,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		}
 		
 		double freq = f.GetDouble(0);
-		double head = FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);	//FixHeading_180(f.GetDouble(1));
 		FindAdd(w, freq);
 		FindAdd(hd().head, head);
 		
@@ -1207,7 +1207,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
-		double head = FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);	//FixHeading_180(f.GetDouble(1));
 		int ih = FindRatio(hd().head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1314,7 +1314,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
    			hd().qw(i) = 2*M_PI/hd().qw(i);
 	
 	for (int i = 0; i < hd().qh.size(); ++i)
-   		hd().qh(i) = std::complex<double>(FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+   		hd().qh(i) = std::complex<double>(hd().qh(i).real(), hd().qh(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
 	
 	return true;
 }
