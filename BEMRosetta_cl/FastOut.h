@@ -231,8 +231,8 @@ private:
 
 	struct YawBrShearParam : CalcParam {
 		virtual void Init() {
-			idx = dataFast->FindCol("YawBrFxn");
-			idy = dataFast->FindCol("YawBrFyn");
+			idx = dataFast->FindCol("YawBrFxp");
+			idy = dataFast->FindCol("YawBrFyp");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -250,8 +250,8 @@ private:
 
 	struct YawBrBendParam : CalcParam {
 		virtual void Init() {
-			idx = dataFast->FindCol("YawBrMxn");
-			idy = dataFast->FindCol("YawBrMyn");
+			idx = dataFast->FindCol("YawBrMxp");
+			idy = dataFast->FindCol("YawBrMyp");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}

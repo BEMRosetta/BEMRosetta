@@ -128,9 +128,11 @@ void MainMesh::Init() {
 	menuProcess.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, true);
 	menuProcess.butUpdateCrot.Tip(t_("Sets the centre of motion"));	
 	
-	menuProcess.butUpdateMass  <<= THISBACK(OnUpdateMass);
-	menuProcess.butUpdateMass.Tip(t_("Sets mass from inmersed volume"));
-
+	menuProcess.butUpdateMassVol  <<= THISBACK(OnUpdateMass);
+	menuProcess.butUpdateMassVol.Tip(t_("Sets mass from inmersed volume"));
+	menuProcess.butUpdateMass  <<= THISBACK2(OnUpdate, NONE, true);
+	menuProcess.butUpdateMass.Tip(t_("Sets mass"));
+	
 	menuProcess.butImageX <<= THISBACK1(OnImage, 0);
 	menuProcess.butImageX.Tip(t_("Mirrors the mesh in X axis"));
 	menuProcess.butImageY <<= THISBACK1(OnImage, 1);
@@ -178,15 +180,14 @@ void MainMesh::Init() {
 	menuMove.butUpdateAng <<= THISBACK2(OnUpdate, ROTATE, false);
 	menuMove.butUpdateAng.Tip(t_("Rotates the mesh"));	
 	
+	menuMove.rat_x <<= 1;
+	menuMove.rat_y <<= 1;
+	menuMove.rat_z <<= 1;
+	menuMove.butScale <<= THISBACK(OnScale);
+	menuMove.butScale.Tip(t_("Scales the mesh"));
+	
 	menuMove.butArchimede <<= THISBACK(OnArchimede);
 	menuMove.butArchimede.Tip(t_("Lets the body fall to rest"));	
-	
-	//menuMove.pos_x <<= 0;
-	//menuMove.pos_y <<= 0;
-	//menuMove.pos_z <<= 0;
-	//menuMove.ang_x <<= 0;
-	//menuMove.ang_y <<= 0;
-	//menuMove.ang_z <<= 0;
 	
 	menuMove.opZArchimede.WhenAction = [&] {menuMove.t_z.Enable(!menuMove.opZArchimede);};
 	
@@ -521,7 +522,6 @@ bool MainMesh::OnLoad() {
 			if (data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under)) {
 				data.cg.Translate(0, 0, dz);
 				videoCtrl.AddReg(Point3D(0, 0, dz));
-				//menuMove.pos_z <<= data.mesh.GetPos().z;
 			} else
 				Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
 			
@@ -677,6 +677,54 @@ void MainMesh::OnUpdateMass() {
 	}	
 }
 
+void MainMesh::OnScale() {
+	GuiLock __;
+	
+	try {
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			Exclamation(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdMesh(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdMesh(listLoaded);
+			if (id < 0) {
+				Exclamation(t_("Please select a model to process"));
+				return;
+			}
+		}
+				
+		Mesh &mesh = Bem().surfs[id];
+	
+		WaitCursor wait;
+		
+		double rx = double(~menuMove.rat_x) - 1;
+		double ry = double(~menuMove.rat_y) - 1;
+		double rz = double(~menuMove.rat_z) - 1;
+		
+		mesh.mesh.Scale(rx, ry, rz, mesh.c0);
+		mesh.cg.Translate(rx*(mesh.cg.x - mesh.c0.x), ry*(mesh.cg.y - mesh.c0.y),
+						  rz*(mesh.cg.z - mesh.c0.z));
+		
+		ma().Status(Format(t_("Model scaled %f, %f, %f"), rx, ry, rz));
+				
+		mesh.AfterLoad(Bem().rho, Bem().g, NONE, false);
+			
+		mainStiffness.Load(Bem().surfs, ids);
+		mainView.CalcEnvelope();
+		mainSummary.Report(Bem().surfs, id);
+			
+		mainView.gl.Refresh();
+		mainViewData.OnRefresh();
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}		
+}
+	
 void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 	GuiLock __;
 	

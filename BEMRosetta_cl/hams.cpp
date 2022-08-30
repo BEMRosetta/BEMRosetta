@@ -426,6 +426,9 @@ void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool b
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
+	
+	out << Format("title %s in '%s'\n", solvName, caseFolder);
+	
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
 	

@@ -23,7 +23,7 @@ void MainABForce::Init(Hydro::DataToShow _dataToShow) {
 	selTab = 0;
 	isFilling = false;
 	tab.WhenSet = [&] {
-		LOGTAB(tab);
+		//LOGTAB(tab);
 		if (!isFilling)
 			selTab = tab.Get();
 	};
@@ -34,7 +34,7 @@ void MainABForce::Clear() {
 	selTab = 0;
 }
 
-bool MainABForce::Load(BEM &bem, const UVector<int> &ids) {
+bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
@@ -44,20 +44,8 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids) {
 		if (hydros.IsEmpty() || ids.IsEmpty()) 
 			return false;
 		
-		String format;
-		switch (dataToShow) {
-		case Hydro::DATA_A:			
-		case Hydro::DATA_B:
-		case Hydro::DATA_AINFW:
-		case Hydro::DATA_K:			format = t_("%s");		break;
-		case Hydro::DATA_FORCE_SC:	
-		case Hydro::DATA_FORCE_FK:	
-		case Hydro::DATA_FORCE_EX:	
-		case Hydro::DATA_RAO:		format = t_("%s %.1fº");	break;
-		case Hydro::DATA_STS:		NEVER();
-		case Hydro::DATA_STS2:		NEVER();
-		}
 		int sdof = 6*bem.Nb;
+		int nloaded = 0;
 		if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_AINFW || 
 			dataToShow == Hydro::DATA_K) {
 			plots.SetCount(sdof);
@@ -67,38 +55,54 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids) {
 					if (!bem.onlyDiagonal || idf == jdf) {
 						plots[idf][jdf].Init(idf, jdf, dataToShow);
 						if (plots[idf][jdf].Load(hydros, mbm, ids)) {
+							nloaded++;
 							if (idf != jdf)
-								tab.Add(plots[idf][jdf].SizePos(), Format(format, BEM::StrBDOF2(idf, jdf, false)));
+								tab.Add(plots[idf][jdf].SizePos(), Format(t_("%s"), BEM::StrBDOF2(idf, jdf, false)));
 							else
-								tab.Add(plots[idf][jdf].SizePos(), Format(format, BEM::StrBDOF(idf, false)));
+								tab.Add(plots[idf][jdf].SizePos(), Format(t_("%s"), BEM::StrBDOF(idf, false)));
 						}
 					}
 				}
 			}
 		} else {
+			ih = max(ih, 0);
+			
 			int Nh = bem.headAll.size();
-			if (Nh < 0) 
+			if (Nh == 0) 
 				return false;
 			
-			plots.SetCount(Nh);
-			for (int ih = 0; ih < Nh; ++ih) 
-				plots[ih].SetCount(sdof);
+			plots.SetCount(1);
+			plots[0].SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {
-				for (int ih = 0; ih < Nh; ++ih) {
-					plots[ih][idf].Init(idf, bem.headAll[bem.orderHeadAll[ih]], dataToShow);
-					if (plots[ih][idf].Load(hydros, mbm, ids))
-						tab.Add(plots[ih][idf].SizePos(), Format(format, BEM::StrBDOF(idf, false), bem.headAll[bem.orderHeadAll[ih]]));
-				}
+				plots[0][idf].Init(idf, bem.headAll[ih/*bem.orderHeadAll[ih]*/], dataToShow);
+				if (plots[0][idf].Load(hydros, mbm, ids))
+					nloaded++;
 			}
+			if (nloaded > 0)
+				UpdateHead(bem, ih);
 		}
 		
-		if (tab.GetCount() == 0)
+		if (nloaded == 0)
 			return false;
-		else if (tab.GetCount() > selTab)	
-			tab.Set(selTab);
+		
+		if (nloaded <= selTab)	
+			selTab = 0;
+		
+		tab.Set(selTab);
 		return true;
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 		return false;
 	}
+}
+		
+void MainABForce::UpdateHead(BEM &bem, int ih) {
+	int it = max(0, tab.Get());
+	{
+		TempAssign<bool> _isFilling(isFilling, true);
+		tab.Reset();
+		for (int idf = 0; idf < 6*bem.Nb; ++idf) 
+			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false), bem.headAll[ih/*bem.orderHeadAll[ih]*/]));
+	}
+	tab.Set(it);
 }

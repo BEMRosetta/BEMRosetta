@@ -425,7 +425,7 @@ bool Aqwa::Load_LIS() {
 			hd().C[ib](4, 4) = f.GetDouble(2);
 			if (f.size() > 3)
 	       		hd().C[ib](4, 5) = f.GetDouble(3);	
-		} else if (line.Find("STIFFNESS MATRIX") >= 0 && IsNull(hd().C[ib](0,0))) {	// 2nd option to get stiffness matrix
+		} /*else if (line.Find("STIFFNESS MATRIX") >= 0) {// Mooring stiffness matrix. Not implemented yet.	
 			hd().C[ib].setConstant(6, 6, 0);
 			in.GetLine(6);
 			for (int r = 0; r < 6; ++r) {
@@ -434,7 +434,7 @@ bool Aqwa::Load_LIS() {
 					hd().C[ib](r, c) = f.GetDouble(c + 1);
 				in.GetLine();
 			}
-		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
+		} */else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("= not found"));
@@ -750,16 +750,16 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
 			
 					out << Format("\n %2d %2d %3d %3d ", ib+1, realih+1, ifr1+1, ifr2+1);
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nodif ? 0 : hd().qtfdif[ib][ih][idf](ifr1, ifr2).real());
+						out << Format(" % 6.4E", nodif ? 0 : hd().F_dim(hd().qtfdif[ib][ih][idf](ifr1, ifr2), idf).real());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nodif ? 0 : hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag());
+						out << Format(" % 6.4E", nodif ? 0 : hd().F_dim(hd().qtfdif[ib][ih][idf](ifr1, ifr2), idf).imag());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nosum ? 0 : hd().qtfsum[ib][ih][idf](ifr1, ifr2).real());
+						out << Format(" % 6.4E", nosum ? 0 : hd().F_dim(hd().qtfsum[ib][ih][idf](ifr1, ifr2), idf).real());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nosum ? 0 : hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag());
+						out << Format(" % 6.4E", nosum ? 0 : hd().F_dim(hd().qtfsum[ib][ih][idf](ifr1, ifr2), idf).imag());
 				}
 			realih++;	
         }

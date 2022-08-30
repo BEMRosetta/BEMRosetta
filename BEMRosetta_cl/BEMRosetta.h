@@ -24,10 +24,12 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  FAST_WAMIT, 				   WAMIT_1_3, 				 HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   BEMROSETTA, 	   	   UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "FAST .dat.1.2.3.hst.ss.12", "Wamit .1.2.3.hst.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "BEMRosetta .bem", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     				   true,		 			 false,		   false,		  false,   false, 		   true,  					  false,   true,			   true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     			   "*.1",		 			 "",		   "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.bem",		   	   "*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 				FAST_WAMIT, 				 HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   BEMROSETTA, 	   	   UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.ss.12", "FAST .dat.1.2.3.hst.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "BEMRosetta .bem", "By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     				true,		 			 	 false,		   false,		  false,   false, 		   true,  					  false,   true,			   true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     			"*.1",		 			 	 "",		   "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.bem",		   	   "*.*"};       
+	
+	static void ResetIdCount()		{idCount = 0;}
 	
 	static const char *GetBemStr(BEM_FMT c) {
 		if (c < 0 || c > UNKNOWN)
@@ -311,7 +313,7 @@ public:
 	
 	double A0_dim(int idf, int jdf)   		 	const {return dimen  ? A0(idf, jdf)*rho_dim()/rho_ndim() : A0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_ndim(int idf, int jdf)  		 	const {return !dimen ? A0(idf, jdf)      : A0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0(idf, jdf);}
+	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0_dim(idf, jdf);}
 	double Ainf_dim(int idf, int jdf) 		 	const {return dimen  ? Ainf(idf, jdf)*rho_dim()/rho_ndim() : Ainf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	MatrixXd Ainf_(bool ndim, int ib) const;
 	double Ainf_ndim(int idf, int jdf)		 	const {return !dimen ? Ainf(idf, jdf) : Ainf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
@@ -417,7 +419,7 @@ public:
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
 				 PLOT_TFS_1, PLOT_TFS_2};
-	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN};
+	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
 		return strDataToPlot[dataToPlot];
@@ -557,6 +559,12 @@ public:
 			return "kg-m^2/rad";
 		}
 	}
+	static String M_units(int r, int c) {
+		if (r < 3 && c < 3)
+			return "kg";
+		else
+			return "kg-m";
+	}
 	static String F_units(bool ndim, int r) {
 		if (ndim) {
 			if (r < 3)
@@ -625,7 +633,8 @@ public:
 		c0  = Point3D(0, 0, 0);
 	}
 	bool IsEmpty() {return mesh.IsEmpty();}
-		
+	static void ResetIdCount()		{idCount = 0;}
+	
 	const char *GetMeshStr() const {
 		return meshStr[code];
 	}
@@ -1059,7 +1068,7 @@ public:
 	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
 	UVector<double> headAll;	// Common models data
-	UVector<int> orderHeadAll;
+	//UVector<int> orderHeadAll;
 	
 	int Nb = 0;				
 	
@@ -1100,6 +1109,8 @@ public:
 	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
 	void SwapDOF(int id, int ib, int idof1, int idof2);
 	
+	void RemoveHydro(int id);
+		
 	void FillFrequencyGapsABForces(int id, bool zero, int maxFreq);
 	void FillFrequencyGapsQTF(int id, bool zero, int maxFreq);
 	
