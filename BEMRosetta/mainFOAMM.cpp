@@ -112,7 +112,7 @@ void MainSetupFOAMM::OnPainter(Painter &w, ScatterCtrl *pscat) {
 	int plotW = scat.GetPlotWidth(), plotH = scat.GetPlotHeight();
 	
 	for (int i = 0; i < selector.size(); ++i) {
-		if (!IsNull(selector.Get(i))) {
+		if (IsNum(selector.Get(i))) {
 			double xFreq = scat.GetPosX(selector.Get(i));
 			if (selector.IsSelected(i))
 				DrawLineOpa(w, xFreq, 0, xFreq, plotH, 1, 1, 2, LtCyan(), "2 2");
@@ -174,7 +174,7 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 					int _jdf = ib*6 + jdf/*hydro.GetOrder()[ib*6 + jdf]*/;
 	
 					if (hydro.IsLoadedA() && hydro.IsLoadedB() && 
-						!IsNull(hydro.A[_idf][_jdf][0]) && !IsNull(hydro.B[_idf][_jdf][0])) {
+						IsNum(hydro.A[_idf][_jdf][0]) && IsNum(hydro.B[_idf][_jdf][0])) {
 						arrayCases.Add(false, ib+1, BEM::StrDOF(idf), BEM::StrDOF(jdf));
 						int row = arrayCases.GetCount()-1;
 						arrayCases.SetCtrl(row, 0, options.Add());
@@ -234,7 +234,7 @@ void MainSetupFOAMM::WhenArrayCases() {
 	UVector<double> freqs;
 	for (int i = 0; i < selector.size(); ++i) {
 		double freq = selector.Get(i);
-		if (!IsNull(freq)) {
+		if (IsNum(freq)) {
 			if (!plots.scatt.IsEmpty()) { 
 				DataSource &data = plots.scatt.GetDataSource(0);
 				freq = data.x(data.ClosestX(freq));
@@ -260,10 +260,10 @@ void MainSetupFOAMM::WhenArrayCases() {
 }
 
 String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
-	if (IsNull(fromFreq))
+	if (!IsNum(fromFreq))
 		return t_("From: frequency is empty");
 
-	if (IsNull(toFreq))
+	if (!IsNum(toFreq))
 		return t_("To: frequency is empty");
 
 	if (toFreq <= fromFreq) 

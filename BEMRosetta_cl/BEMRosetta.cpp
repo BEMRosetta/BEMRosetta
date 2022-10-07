@@ -511,7 +511,7 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	bool ret = false;
 	if (type == WAMIT) {
 		Wamit data(*bem, this);
-		ret = data.Save_out(file, bem->g, bem->rho);			
+		ret = data.Save_out(file);			
 	} else if (type == WAMIT_1_3) {
 		Wamit data(*bem, this);
 		ret = data.Save(file, Status, true, qtfHeading);	
@@ -1155,32 +1155,43 @@ void Hydro::CheckNaN() {
 		throw Exc("Error loading rao. NaN found");	
 }
 
+double Hydro::Tdof(int ib, int idf) const {
+	double m = M[ib](idf, idf);
+	double a = Ainf_dim(ib*6+idf, ib*6+idf);
+	double c = C_dim(ib, idf, idf);
+	double d = (m + a)/c;
+	if (d < 0 || c == 0)
+		return Null;
+	return 2*M_PI*sqrt(d); 
+}
+
 double Hydro::Theave(int ib) const {
-	return 2*M_PI*sqrt((M[ib](0, 0) + Ainf_dim(ib*6+2, ib*6+2))/C_dim(ib, 2, 2)); 
+	return Tdof(ib, 2);
 }
 
 double Hydro::Troll(int ib) const {
-	return 2*M_PI*sqrt((M[ib](3, 3) + Ainf_dim(ib*6+3, ib*6+3))/C_dim(ib, 3, 3)); 
+	return Tdof(ib, 3); 
 }
 
 double Hydro::Tpitch(int ib) const {
-	double m = M[ib](4, 4);
-	double a = Ainf_dim(ib*6+4, ib*6+4);
-	double c = C_dim(ib, 4, 4);
-	
-	return 2*M_PI*sqrt((M[ib](4, 4) + Ainf_dim(ib*6+4, ib*6+4))/C_dim(ib, 4, 4)); 
+	return Tdof(ib, 4); 
+}
+
+double Hydro::GM(int ib, int idf) const {
+	if (Vo.size() <= ib || Vo[ib] == 0)
+		return Null;
+	double den = rho*g*Vo[ib];
+	if (den == 0)
+		return Null;
+	return C_dim(ib, idf, idf)/den;
 }
 
 double Hydro::GMroll(int ib) const {
-	if (Vo.size() <= ib || Vo[ib] == 0)
-		return Null;
-	return C_dim(ib, 3, 3)/(rho*g*Vo[ib]);
+	return GM(ib, 3);
 }
 
 double Hydro::GMpitch(int ib) const {
-	if (Vo.size() <= ib || Vo[ib] == 0)
-		return Null;
-	return C_dim(ib, 4, 4)/(rho*g*Vo[ib]);
+	return GM(ib, 4);
 }
 
 void Hydro::Jsonize(JsonIO &json) {
@@ -1293,7 +1304,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
-			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") {
+			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
@@ -1389,7 +1400,7 @@ HydroClass &BEM::Duplicate(int id) {
 	return data;
 }
 
-void BEM::Symmetrize(int id, bool xAxis) {
+void BEM::SymmetrizeForces(int id, bool xAxis) {
 	hydros[id].hd().Symmetrize_Forces(xAxis);
 	
 	UpdateHeadAll();
@@ -1424,6 +1435,10 @@ void BEM::Ainf_w(int id) {
 
 void BEM::RAO(int id) {
 	hydros[id].hd().GetRAO();
+}
+
+void BEM::Symmetrize(int id) {
+	hydros[id].hd().Symmetrize();
 }
 
 void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof) {

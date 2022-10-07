@@ -154,6 +154,13 @@ void MainMesh::Init() {
 	menuProcess.butHull		  <<= THISBACK1(OnAddWaterSurface, 'r');
 	menuProcess.butHull.Tip(t_("Extracts underwater (wet) hull from a mesh"));
 	
+	menuProcess.rat_x <<= 1;
+	menuProcess.rat_y <<= 1;
+	menuProcess.rat_z <<= 1;
+	menuProcess.butScale <<= THISBACK(OnScale);
+	menuProcess.butScale.Tip(t_("Scales the mesh"));
+	
+	
 	CtrlLayout(menuMove);	
 	
 	menuMove.butReset <<= THISBACK(OnReset);
@@ -161,7 +168,6 @@ void MainMesh::Init() {
 	
 	menuMove.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, false);
 	menuMove.butUpdateCrot.Tip(t_("Sets the centre of motion"));	
-	
 	
 	menuMove.t_x <<= 0;
 	menuMove.t_x.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
@@ -179,12 +185,6 @@ void MainMesh::Init() {
 	menuMove.butUpdatePos.Tip(t_("Translates the mesh"));
 	menuMove.butUpdateAng <<= THISBACK2(OnUpdate, ROTATE, false);
 	menuMove.butUpdateAng.Tip(t_("Rotates the mesh"));	
-	
-	menuMove.rat_x <<= 1;
-	menuMove.rat_y <<= 1;
-	menuMove.rat_z <<= 1;
-	menuMove.butScale <<= THISBACK(OnScale);
-	menuMove.butScale.Tip(t_("Scales the mesh"));
 	
 	menuMove.butArchimede <<= THISBACK(OnArchimede);
 	menuMove.butArchimede.Tip(t_("Lets the body fall to rest"));	
@@ -385,9 +385,6 @@ void MainMesh::OnMenuAdvancedArraySel() {
 	int id = ArrayModel_IdMesh(listLoaded);
 	if (id < 0)
 		return;
-	
-	//Mesh &data = Bem().surfs[id];
-	
 }
 
 void MainMesh::OnArraySel() {
@@ -702,9 +699,9 @@ void MainMesh::OnScale() {
 	
 		WaitCursor wait;
 		
-		double rx = double(~menuMove.rat_x) - 1;
-		double ry = double(~menuMove.rat_y) - 1;
-		double rz = double(~menuMove.rat_z) - 1;
+		double rx = double(~menuProcess.rat_x) - 1;
+		double ry = double(~menuProcess.rat_y) - 1;
+		double rz = double(~menuProcess.rat_z) - 1;
 		
 		mesh.mesh.Scale(rx, ry, rz, mesh.c0);
 		mesh.cg.Translate(rx*(mesh.cg.x - mesh.c0.x), ry*(mesh.cg.y - mesh.c0.y),
