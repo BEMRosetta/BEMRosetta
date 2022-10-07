@@ -27,7 +27,9 @@ void MainBEM::Init() {
 	listLoaded.WhenSel = [&] {
 		OnMenuAdvancedArraySel();
 		menuFOAMM.OnCursor();
-		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+		//mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+		if (mainTab.Find(mainQTF) == mainTab.Get())
+			mainQTF.Load();
 		UpdateButtons();
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
@@ -59,9 +61,9 @@ void MainBEM::Init() {
 
 	CtrlLayout(menuProcess);
 	menuProcess.butSymX.Disable();	
-	menuProcess.butSymX <<= THISBACK1(OnSymmetrize, true);
+	menuProcess.butSymX <<= THISBACK1(OnSymmetrizeForces, true);
 	menuProcess.butSymY.Disable();
-	menuProcess.butSymY <<= THISBACK1(OnSymmetrize, false);
+	menuProcess.butSymY <<= THISBACK1(OnSymmetrizeForces, false);
 	menuProcess.butA0.Disable();	
 	menuProcess.butA0 <<= THISBACK1(OnKirfAinf, Hydro::PLOT_A0);
 	menuProcess.butAinf.Disable();	
@@ -70,6 +72,7 @@ void MainBEM::Init() {
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_K);
 	menuProcess.butRAO.Disable();	
 	menuProcess.butRAO <<= THISBACK(OnRAO);
+	menuProcess.butSymmetrize <<= THISBACK(OnSymmetrize);
 	
 	menuProcess.butABForces << THISBACK(OnABForces);
 	menuProcess.butQTF << THISBACK(OnQTF);
@@ -236,8 +239,8 @@ void MainBEM::Init() {
 	
 	menuPlot.head1st.NoHeader().MultiSelect();
 	menuPlot.head1st.AddColumn("");
-	menuPlot.headQTF.NoHeader().MultiSelect();
-	menuPlot.headQTF.AddColumn("");
+	//menuPlot.headQTF.NoHeader().MultiSelect();
+	//menuPlot.headQTF.AddColumn("");
 	
 	OnOpt();
 	
@@ -276,7 +279,7 @@ void MainBEM::Init() {
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
-		bool plot = true, convertProcess = true, ismenuFOAMM = false;
+		bool plot = true, convertProcess = true, ismenuFOAMM = false, isQTF = false;
 
 		if (ids.IsEmpty())
 			plot = convertProcess = false;
@@ -298,13 +301,16 @@ void MainBEM::Init() {
 			mainK.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainAinfw))
 			mainAinfw.Load(Bem(), ids);
-		else if (mainTab.IsAt(mainForceSC))
+		else if (mainTab.IsAt(mainForceSC)) {
 			mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor());
-		else if (mainTab.IsAt(mainForceFK))
+			isQTF = false;
+		} else if (mainTab.IsAt(mainForceFK)) {
 			mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor());
-		else if (mainTab.IsAt(mainForceEX))
+			isQTF = false;
+		} else if (mainTab.IsAt(mainForceEX)) {
 			mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor());
-		else if (mainTab.IsAt(mainRAO))
+			isQTF = false;
+		} else if (mainTab.IsAt(mainRAO))
 			mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		else if (mainTab.IsAt(mainStateSpace)) {
 			mainStateSpace.Load(Bem(), ids);
@@ -315,13 +321,20 @@ void MainBEM::Init() {
 			if (mainSetupFOAMM.arrayCases.GetCount() == 0 && ids.size() == 1) 
 				listLoaded.SetCursor(0);
 			menuFOAMM.OnCursor();
-		} else if (mainTab.IsAt(mainQTF))
+		} else if (mainTab.IsAt(mainQTF)) {
 			mainQTF.Load();
-		else if (menuTab.IsAt(menuFOAMM)) 
+			isQTF = true;
+		} else if (menuTab.IsAt(menuFOAMM)) 
 			;
 		else 
 			plot = false;
 		
+		if (!isQTF)
+			mainQTF.Unload();
+		
+		menuPlot.labHeadQTF.Show(isQTF);	menuPlot.headQTF.Show(isQTF);
+		menuPlot.labHead1st.Show(!isQTF);	menuPlot.head1st.Show(!isQTF);
+			
 		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
 		tabMenuPlot.Enable(plot);
 		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
@@ -405,14 +418,14 @@ void MainBEM::Init() {
 	mainMatrixDlin.Init(Hydro::MAT_DAMP_LIN);
 	mainTab.Add(mainMatrixDlin.SizePos(), t_("Lin. Damp.")).Disable();
 		
+	mainQTF.Init(*this);
+	mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
+	
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("Setup FOAMM")).Disable();
 
 	mainStateSpace.Init();
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
-
-	mainQTF.Init();
-	mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
 	
 	UpdateButtons();
 	saveFolder = GetDesktopFolder();
@@ -428,7 +441,7 @@ void MainBEM::ShowMenuPlotItems() {
 	} else if (mainTab.IsAt(mainK)) 
 		showwT = false;
 	else if (mainTab.IsAt(mainQTF)) {
-		show = false;
+		show = true;
 		showComplex = true;
 	} else if (mainTab.IsAt(mainForceSC) || mainTab.IsAt(mainForceFK) || mainTab.IsAt(mainForceEX) || 
 			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace))
@@ -875,7 +888,7 @@ void MainBEM::OnDuplicate() {
 	}
 }
 
-void MainBEM::OnSymmetrize(bool xAxis) {
+void MainBEM::OnSymmetrizeForces(bool xAxis) {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -885,7 +898,7 @@ void MainBEM::OnSymmetrize(bool xAxis) {
 
 		Progress progress(t_("Symmetrizing forces and RAOs in selected BEM file..."), 100); 
 		
-		Bem().Symmetrize(id, xAxis);
+		Bem().SymmetrizeForces(id, xAxis);
 		
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -979,7 +992,34 @@ void MainBEM::OnRAO() {
 		Exclamation(DeQtfLf(e));
 	}
 }	
-	
+
+void MainBEM::OnSymmetrize() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+			
+		WaitCursor wait;
+		
+		Bem().Symmetrize(id);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));	
+		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
 void MainBEM::OnOgilvie() {
 	String str;
 	try {
@@ -1009,7 +1049,7 @@ void MainBEM::OnOgilvie() {
 		if (vidof.size() > 0) {
 			str = "The degrees of freedom healed are:";
 			for (int i = 0; i < vidof.size(); ++i) 
-				str << Format("\n- %d, %d", vidof[i], vjdof[i]);
+				str << Format("\n- %d, %d", vidof[i]+1, vjdof[i]+1);
 		} else
 			str = "No degrees of freedom has been healed";
 	} catch (Exc e) {
@@ -1585,6 +1625,8 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	int row = 0;
 	int col = id + 1;
 	
+	Upp::Color lightRed = Upp::Color(255, 165, 158);								
+	
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, data.name);
 	array.Set(row, 0, t_("Description"));		array.Set(row++, col, data.description);
@@ -1672,9 +1714,10 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
-		if (data.Vo.size() > ib && IsNum(data.Vo[ib])) 
-			array.Set(row++, col, FDS(data.Vo[ib], 10, false));
-		else 
+		if (data.Vo.size() > ib && IsNum(data.Vo[ib])) {
+			
+			array.Set(row++, col, AttrText(FDS(data.Vo[ib], 10, false)).Paper(data.Vo[ib] < 0 ? lightRed : Null));
+		} else 
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
@@ -1760,168 +1803,6 @@ void MainOutput::Init() {
 void MainOutput::Print(String str) {
 	cout.Append(str);
 	cout.ScrollEnd();
-}
-
-
-void MainQTF::Init() {
-	CtrlLayout(*this);
-	
-	listCases.Reset();
-	listCases.SetLineCy(EditField::GetStdHeight());
-	listCases.AddColumn(t_("# Body"), 15);
-	listCases.AddColumn(t_("Heading 1"), 20);
-	listCases.AddColumn(t_("Heading 2"), 20);
-	
-	opShow.Clear();
-	opShow.Add(MAGNITUDE, t_("Magnitude")).Add(PHASE, t_("Phase")).Add(REAL, t_("Real")).Add(IMAGINARY, t_("Imaginary"));
-	opShow.SetIndex(0);
-
-	opDOF.Clear();
-	for (int i = 0; i < 6; ++i)
-		opDOF.Add(i, InitCaps(BEM::StrDOF(i)));
-	opDOF.SetIndex(0);
-	
-	opShow << [&] {listCases.WhenSel();};
-	opDOF  << [&] {listCases.WhenSel();};
-	opQTF  << [&] {listCases.WhenSel();};
-	
-	listCases.WhenSel = [&] {
-		if (idHydro < 0)
-			return;
-		
-		int id = listCases.GetCursor();
-		if (id < 0)
-			return;
-
-		try {
-			WaitCursor wait;
-			
-			MainBEM &mbm = GetDefinedParent<MainBEM>(this);
-			
-			bool ndim = mbm.menuPlot.showNdim;
-			bool show_w = mbm.menuPlot.opwT == 0;
-			bool show_ma_ph = mbm.menuPlot.opMP == 0;
-		
-			const Hydro &hd = Bem().hydros[idHydro].hd();
-			
-			int ib = int(listCases.Get(id, 0))-1;
-			int ih = id - ib*hd.Nb;
-			int idof = opDOF.GetIndex();
-			int qtfNf = int(hd.qw.size());
-			
-			listQTF.Reset();
-			listQTF.SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
-			listQTF.MultiSelect();
-			listQTF.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, listQTF);};
-	
-			listQTF.AddColumn(show_w ? t_("ω [rad/s]") : t_("T [s]"), 60);
-			for (int c = 0; c < qtfNf; ++c)
-				listQTF.AddColumn(FDS(show_w ? hd.qw[c] : 2*M_PI/hd.qw[c], 8), 90);
-			for (int r = 0; r < qtfNf; ++r)
-				listQTF.Add(FDS(show_w ? hd.qw[r] : 2*M_PI/hd.qw[r], 8));
-			
-			const UArray<UArray<UArray<MatrixXcd>>> &qtf = opQTF.GetData() == FSUM ? hd.qtfsum : hd.qtfdif;
-			if (qtf.size() <= ib || qtf[ib].size() <= ih || qtf[ib][ih].size() <= idof)
-				return;
-			
-			const MatrixXcd &m = qtf[ib][ih][idof];
-			
-			double mn = DBL_MAX, mx = DBL_MIN;
-			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
-				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
-					double val;
-					switch(int(opShow.GetData())) {
-					case MAGNITUDE:
-						val = hd.F_(ndim, abs(m(ifr1, ifr2)), idof);	break;
-					case REAL:
-						val = hd.F_(ndim, m(ifr1, ifr2).real(), idof);	break;
-					case IMAGINARY:
-						val = hd.F_(ndim, m(ifr1, ifr2).imag(), idof);	break;
-					}
-					mn = min(mn, val);
-					mx = max(mx, val);
-				}
-			}
-			for (int ifr1 = 0; ifr1 < qtfNf; ++ifr1) {
-				for (int ifr2 = 0; ifr2 < qtfNf; ++ifr2) {
-					if (IsNull(m(ifr1, ifr2)))
-						listQTF.Set(ifr2, 1+ifr1, "-");
-					else {
-						if (PHASE == opShow.GetData()) 
-							listQTF.Set(ifr2, 1+ifr1, FDS(arg(m(ifr1, ifr2)), 10, false));
-						else {
-							double val;
-							switch(int(opShow.GetData())) {
-							case MAGNITUDE:
-								val = hd.F_(ndim, abs(m(ifr1, ifr2)), idof);	break;
-							case REAL:
-								val = hd.F_(ndim, m(ifr1, ifr2).real(), idof);	break;
-							case IMAGINARY:
-								val = hd.F_(ndim, m(ifr1, ifr2).imag(), idof);	break;
-							}
-							
-							::Color backColor = GetRainbowColor((val - mn)/(mx - mn), White(), LtBlue(), 0);
-							::Color color = Black();
-							if (Grayscale(backColor) < 150)
-								color = White();
-							
-							String str = FDS(val, 10, false);
-							
-							listQTF.Set(ifr2, 1+ifr1, AttrText(str).Center().Ink(color).Paper(backColor));
-						}
-					}
-				}
-			}
-		} catch (Exc e) {
-			Exclamation(DeQtfLf(e));
-		}
-	};
-}
-	
-bool MainQTF::Load() {
-	listCases.Clear();
-	listQTF.Reset();
-	
-	try {
-		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
-		
-		idHydro = -1;
-		for (int row = 0; row < mbm.listLoaded.GetCount(); ++row) {
-			if (mbm.listLoaded.IsSelected(row)) {
-				idHydro = ArrayModel_IdHydro(mbm.listLoaded, row);
-				break;
-			}
-		}	// Only one available => directly selected
-		if (idHydro < 0 && mbm.listLoaded.GetCount() == 1)
-			idHydro = ArrayModel_IdHydro(mbm.listLoaded, 0);
-		if (idHydro < 0) 
-			return false;
-		
-		if (ArrayCtrlSelectedGetCount(mbm.listLoaded) > 1) 
-			return false;
-		
-		const Hydro &hd = Bem().hydros[idHydro].hd();
-		
-		if (!hd.IsLoadedQTF(true) && !hd.IsLoadedQTF(false))
-			return false;
-		
-		opQTF.Clear();
-		if (hd.IsLoadedQTF(true))
-			opQTF.Add(FSUM, t_("Sum"));
-		if (hd.IsLoadedQTF(false))
-			opQTF.Add(FDIFFERENCE, t_("Difference"));
-		opQTF.SetIndex(0);
-	
-		for (int ib = 0; ib < hd.Nb; ++ib) 
-			for (int ih = 0; ih < hd.qh.size(); ++ih)
-				listCases.Add(ib+1, hd.qh[ih].real(), hd.qh[ih].imag());
-				
-		if (listCases.GetCount() > 0)
-			listCases.SetCursor(0);
-	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
-	}				
-	return true;		
 }
 
 void MainBEMW::Init(MainBEM &_bem, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose) {

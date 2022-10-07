@@ -122,13 +122,13 @@ public:
     MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 
-	MatrixXd linearDamping;			// (6*Nb, 6*Nb) 	Additional linear damping
+	MatrixXd linearDamping;			// (6*Nb, 6*Nb) 	Additional linear damping	ALWAYS DIMENSIONAL
 
     UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     UVector<double> head;			// [Nh]             Wave headings (deg)
     UVector<String> names;  		// {Nb}             Body names
     UArray<MatrixXd> C;				// [Nb](6, 6)		Hydrostatic restoring coefficients:
-    UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix	ALWAYS DIMENSIONAL
+    UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix		ALWAYS DIMENSIONAL
     MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     MatrixXd c0;          			// (3,Nb)     		Centre of motion
@@ -245,6 +245,7 @@ public:
 	void Dimensionalize_Forces(Forces &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
 	void Symmetrize_Forces(bool xAxis);
+	void Symmetrize();
 	void Initialize_RAO();
 	void GetFexFromFscFfk();
 	void InitializeSts();
@@ -385,9 +386,11 @@ public:
 	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
+	double Tdof(int ib, int idf) const;
 	double Theave(int ib) const;
 	double Troll(int ib) const;
 	double Tpitch(int ib) const;
+	double GM(int ib, int idf) const;
 	double GMroll(int ib) const;
 	double GMpitch(int ib) const;
 	
@@ -486,7 +489,9 @@ public:
 	void ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf);
 	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
 	void SwapDOF(int ib, int idof1, int idof2);
-		
+	
+	void SymmetrizeDOF();
+	
 	void FillFrequencyGapsABForces(bool zero, int maxFreq);
 	void FillFrequencyGapsQTF(bool zero, int maxFreq);
 	
@@ -767,7 +772,7 @@ public:
 	Wamit(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, Function <bool(String, int)> Status);
 	bool Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
-	bool Save_out(String file, double g, double rho);
+	bool Save_out(String file);
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfMesh(String file);
@@ -777,12 +782,14 @@ public:
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
 protected:
-	void ProcessFirstColumn(UVector<double> &w, UVector<double> &T);
+	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T);
+	void ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T);
 	
 	bool Load_cfg(String fileName);
-	int iperout = Null;
+	int iperin = Null, iperout = Null;
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
+	bool Load_frc2(String fileName);
 	
 	bool Load_out();							
 	void Load_A(FileInLine &in, MatrixXd &A);
@@ -803,7 +810,9 @@ protected:
 	void Save_4(String fileName, bool force_T = false);
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
-
+	void Save_FRC(String fileName);
+	void Save_POT(String fileName);
+		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod);
 	void Save_AB(FileOut &out, int ifr);
 	void Save_Forces(FileOut &out, int ifr);
@@ -1095,7 +1104,8 @@ public:
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	HydroClass &Join(UVector<int> &ids, Function <bool(String, int)> Status = Null);
-	void Symmetrize(int id, bool xAxis);
+	void SymmetrizeForces(int id, bool xAxis);
+	void Symmetrize(int id);
 	void A0(int id);
 	void Kirf(int id, double maxT);
 	void Ainf(int id);

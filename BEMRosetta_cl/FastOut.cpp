@@ -18,34 +18,25 @@ static int IsTabSpaceRet(int c) {
 } 
 
 FastOut::FastOut() {
-	ptfmtilt.Init0(this);
-	AddParam("+PtfmTilt", "deg", ptfmtilt);
-	ptfmshift.Init0(this);
-	AddParam("+PtfmShift", "m", ptfmshift);
-	ptfmHeaveCB.Init0(this);
-	AddParam("+PtfmHeaveCB", "m", ptfmHeaveCB);
-	twrBsShear.Init0(this);
-	AddParam("+TwrBsShear", "kN", twrBsShear);
-	twrBsBend.Init0(this);
-	AddParam("+TwrBsBend", "kN-m", twrBsBend);
-	yawBrShear.Init0(this);
-	AddParam("+YawBrShear", "kN", yawBrShear);
-	yawBrBend.Init0(this);
-	AddParam("+YawBrBend", "kN-m", yawBrBend);	
-	rootShear1.Init0(this);
-	AddParam("+RootShear1", "kN", rootShear1);
-	rootShear2.Init0(this);
-	AddParam("+RootShear2", "kN", rootShear2);
-	rootShear3.Init0(this);
-	AddParam("+RootShear3", "kN", rootShear3);
-	rootBend1.Init0(this);
-	AddParam("+RootBend1", "kN-m", rootBend1);
-	rootBend2.Init0(this);
-	AddParam("+RootBend2", "kN-m", rootBend2);
-	rootBend3.Init0(this);
-	AddParam("+RootBend3", "kN-m", rootBend3);	
-	ncIMUTA.Init0(this);
-	AddParam("+NcIMUTA", "m/s^2", ncIMUTA);
+	AddParam(ptfmtilt.Init0(this));
+	AddParam(ptfmshift.Init0(this));
+	AddParam(ptfmHeaveCB.Init0(this));
+	AddParam(twrBsShear.Init0(this));
+	AddParam(twrBsBend.Init0(this));
+	AddParam(yawBrShear.Init0(this));
+	AddParam(yawBrBend.Init0(this));
+	AddParam(rootShear1.Init0(this));
+	AddParam(rootShear2.Init0(this));
+	AddParam(rootShear3.Init0(this));
+	AddParam(rootBend1.Init0(this));
+	AddParam(rootBend2.Init0(this));
+	AddParam(rootBend3.Init0(this));
+	AddParam(ncIMUTA.Init0(this));
+	for (int i = 0; i < 10; ++i) {
+		auto &f = fairTens.Add();
+		f.Init00(i+1);
+		AddParam(f.Init0(this));	
+	}
 }
 
 UVector<String> FastOut::GetFilesToLoad(String path) {
@@ -59,21 +50,13 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 			ret << GetFileToLoad(path);
 		return ret;
 	} 
-	int64 sz = -1;
 	String fileName;
 	for (FindFile ff(AppendFileNameX(path, "*.out*")); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name)) {
-				if (GetFileExt(name) == ".outb") {
-					ret << name;
-					return ret;
-				}
-				int64 nsz = GetFileLength(name);
-				if (nsz > sz) {
-					sz = nsz;
-					fileName = name;
-				}
+				ret << name;
+				return ret;
 			}
 		}
 	}
@@ -81,7 +64,7 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 		ret << fileName;
 		return ret;
 	}
-	for (FindFile ff(AppendFileNameX(path, "*.*")); ff; ff++) 
+	for (FindFile ff(AppendFileNameX(path, "*.*")); ff; ff++) // Search in inner other folders
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
 
@@ -89,7 +72,7 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 }
 
 String FastOut::GetFileToLoad(String fileName) {
-	if (TrimBoth(fileName).IsEmpty())
+	if (TrimBoth(fileName).IsEmpty() || GetFileName(fileName).Find(".MD") >= 0)
 		return Null;
 		
 	String strOut = ForceExt(fileName, ".out");
@@ -397,7 +380,7 @@ bool FastOut::IsEmpty() {
 	return dataOut.IsEmpty();
 }
 
-int FastOut::FindCol(String param) const {
+int FastOut::GetParameter(String param) const {
 	param = ToLower(param);
 	for (int c = 0; c < parameters.size(); ++c) {
 		if (ToLower(parameters[c]) == param)
@@ -416,8 +399,8 @@ UVector<int> FastOut::FindParameterMatch(String param) const {
 	return ret;
 }
 
-int FastOut::GetCol(String param) const {
-	int ret = FindCol(param);
+int FastOut::GetParameter_throw(String param) const {
+	int ret = GetParameter(param);
 	if (IsNull(ret))
 		throw Exc(Format("Parameter '%s' not found", param));	
 	return ret;
@@ -649,7 +632,7 @@ double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2, double &damp) {
 	r2 = damp = Null;
 	
 	String param = "ptfm" + S(BEM::strDOFtext[dof]);
-	int id = fst.FindCol(param);
+	int id = fst.GetParameter(param);
 	if (IsNull(id)) 
 		throw Exc(Format("Param. %s not found in %s", param, fst.GetLastFile()));
 

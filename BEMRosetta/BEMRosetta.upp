@@ -25,6 +25,7 @@ file
 	mainMoor_Connections.cpp,
 	mainMoor_LinesProperties.cpp,
 	mainBEM.cpp,
+	mainBEM_QTF.cpp,
 	mainBEM_abf.cpp,
 	mainBEM_sts.cpp,
 	mainFOAMM.cpp,

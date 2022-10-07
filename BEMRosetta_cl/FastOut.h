@@ -18,8 +18,8 @@ public:
 	
 	void Clear();
 	bool IsEmpty();
-	int GetCol(String param) const;
-	int FindCol(String param) const;
+	int GetParameter_throw(String param) const;
+	int GetParameter(String param) const;
 	UVector<int> FindParameterMatch(String param) const;
 	
 	const String &GetParameter(int id) const	{return parameters[id];}
@@ -41,6 +41,11 @@ public:
 		else
 			return GetUVector(ids[0]);
 	}
+	VectorXd GetVector(int idparam) {
+		const UVector<double> &d = GetUVector(idparam);
+		VectorXd ret = Map<const VectorXd>(d, d.size());
+		return ret;
+	}
 	VectorXd GetVector(String param) {
 		const UVector<double> &d = GetUVector(param);
 		VectorXd ret = Map<const VectorXd>(d, d.size());
@@ -58,7 +63,7 @@ public:
 	
 	String GetLastFile()		{return lastFile;}
 	
-	int ColFairlead(int i) const{return GetCol(Format("T[%d]", i-1));}
+	int ColFairlead(int i) const{return GetParameter_throw(Format("T[%d]", i-1));}
 		
 	int GetNumFairlead() const {
 		for (int i = 0; i < 100; ++i) {
@@ -73,10 +78,11 @@ public:
     }
 	
 	struct CalcParam {
-		void Init0(FastOut *_dataFast) {dataFast = _dataFast;}
+		CalcParam &Init0(FastOut *_dataFast) {dataFast = _dataFast; return *this;}
 		virtual void Init() = 0;
 		virtual double Calc(int idt) = 0;
 		bool IsEnabled()	{return enabled;}
+		String name, units;
 		
 	protected:
 		FastOut *dataFast = nullptr;
@@ -86,15 +92,20 @@ public:
 	struct CalcParams {
 		String name, units;
 		CalcParam *calc = nullptr;
-	};
+	}; 
 	
+	void AddParam(CalcParam &calc) {
+		CalcParams &c = calcParams.Add();
+		c.name = calc.name;
+		c.units = calc.units;
+		c.calc = &calc;
+	}
 	void AddParam(String name, String units, CalcParam &calc) {
 		CalcParams &c = calcParams.Add();
 		c.name = name;
 		c.units = units;
 		c.calc = &calc;
 	}
-	
 	int AddParam(String name, String unit) {
 		parameters << name;
 		units << unit;
@@ -123,9 +134,13 @@ private:
 	// shear, bending moment
 	
 	struct TiltParam : CalcParam {
+		TiltParam() {
+			name = "+PtfmTilt";
+			units = "deg";
+		}
 		virtual void Init() {
-			idroll = dataFast->FindCol("PtfmRoll");
-			idpitch = dataFast->FindCol("PtfmPitch");
+			idroll = dataFast->GetParameter("PtfmRoll");
+			idpitch = dataFast->GetParameter("PtfmPitch");
 			if (IsNull(idroll) || IsNull(idpitch))
 				enabled = false;
 		}
@@ -142,9 +157,13 @@ private:
 	} ptfmtilt; 
 
 	struct ShiftParam : CalcParam {
+		ShiftParam() {
+			name = "+PtfmShift";
+			units = "m";
+		}
 		virtual void Init() {
-			idsurge = dataFast->FindCol("PtfmSurge");
-			idsway = dataFast->FindCol("PtfmSway");
+			idsurge = dataFast->GetParameter("PtfmSurge");
+			idsway = dataFast->GetParameter("PtfmSway");
 			if (IsNull(idsurge) || IsNull(idsway))
 				enabled = false;
 		}
@@ -161,11 +180,15 @@ private:
 	} ptfmshift; 
 
 	struct HeaveCBParam : CalcParam {
+		HeaveCBParam() {
+			name = "+PtfmHeaveCB";
+			units = "m";
+		}
 		virtual void Init() {
-			idheave = dataFast->FindCol("PtfmHeave");
-			idpitch = dataFast->FindCol("PtfmPitch");
-			idroll = dataFast->FindCol("PtfmRoll");
-			idyaw = dataFast->FindCol("PtfmYaw");	
+			idheave = dataFast->GetParameter("PtfmHeave");
+			idpitch = dataFast->GetParameter("PtfmPitch");
+			idroll = dataFast->GetParameter("PtfmRoll");
+			idyaw = dataFast->GetParameter("PtfmYaw");	
 			if (IsNull(idroll) || IsNull(idpitch) || IsNull(idheave) || IsNull(idyaw)) 
 				enabled = false;
 			else {
@@ -192,9 +215,13 @@ private:
 	} ptfmHeaveCB; 
 	
 	struct TwrBsShearParam : CalcParam {
+		TwrBsShearParam() {
+			name = "+TwrBsShear";
+			units = "kN";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("TwrBsFxt");
-			idy = dataFast->FindCol("TwrBsFyt");
+			idx = dataFast->GetParameter("TwrBsFxt");
+			idy = dataFast->GetParameter("TwrBsFyt");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -211,9 +238,13 @@ private:
 	} twrBsShear;
 	
 	struct TwrBsBendParam : CalcParam {
+		TwrBsBendParam() {
+			name = "+TwrBsBend";
+			units = "kN-m";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("TwrBsMxt");
-			idy = dataFast->FindCol("TwrBsMyt");
+			idx = dataFast->GetParameter("TwrBsMxt");
+			idy = dataFast->GetParameter("TwrBsMyt");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -230,9 +261,13 @@ private:
 	} twrBsBend;	
 
 	struct YawBrShearParam : CalcParam {
+		YawBrShearParam() {
+			name = "+YawBrShear";
+			units = "kN";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("YawBrFxp");
-			idy = dataFast->FindCol("YawBrFyp");
+			idx = dataFast->GetParameter("YawBrFxp");
+			idy = dataFast->GetParameter("YawBrFyp");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -249,9 +284,13 @@ private:
 	} yawBrShear;
 
 	struct YawBrBendParam : CalcParam {
+		YawBrBendParam() {
+			name = "+YawBrBend";
+			units = "kN-m";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("YawBrMxp");
-			idy = dataFast->FindCol("YawBrMyp");
+			idx = dataFast->GetParameter("YawBrMxp");
+			idy = dataFast->GetParameter("YawBrMyp");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -268,9 +307,13 @@ private:
 	} yawBrBend;
 
 	struct RootShear1Param : CalcParam {
+		RootShear1Param() {
+			name = "+RootShear1";
+			units = "kN";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("RootFxc1");
-			idy = dataFast->FindCol("RootFyc1");
+			idx = dataFast->GetParameter("RootFxc1");
+			idy = dataFast->GetParameter("RootFyc1");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -284,9 +327,13 @@ private:
 	} rootShear1;
 
 	struct RootBend1Param : CalcParam {
+		RootBend1Param() {
+			name = "+RootBend1";
+			units = "kN-m";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("RootMxc1");
-			idy = dataFast->FindCol("RootMyc1");
+			idx = dataFast->GetParameter("RootMxc1");
+			idy = dataFast->GetParameter("RootMyc1");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -300,9 +347,13 @@ private:
 	} rootBend1;
 
 	struct RootShear2Param : CalcParam {
+		RootShear2Param() {
+			name = "+RootShear2";
+			units = "kN";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("RootFxc2");
-			idy = dataFast->FindCol("RootFyc2");
+			idx = dataFast->GetParameter("RootFxc2");
+			idy = dataFast->GetParameter("RootFyc2");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -316,9 +367,13 @@ private:
 	} rootShear2;
 
 	struct RootBend2Param : CalcParam {
+		RootBend2Param() {
+			name = "+RootBend2";
+			units = "kN-m";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("RootMxc2");
-			idy = dataFast->FindCol("RootMyc2");
+			idx = dataFast->GetParameter("RootMxc2");
+			idy = dataFast->GetParameter("RootMyc2");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -332,9 +387,13 @@ private:
 	} rootBend2;
 	
 	struct RootShear3Param : CalcParam {
+		RootShear3Param() {
+			name = "+RootShear3";
+			units = "kN";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("RootFxc3");
-			idy = dataFast->FindCol("RootFyc3");
+			idx = dataFast->GetParameter("RootFxc3");
+			idy = dataFast->GetParameter("RootFyc3");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -348,9 +407,13 @@ private:
 	} rootShear3;
 
 	struct RootBend3Param : CalcParam {
+		RootBend3Param() {
+			name = "+RootBend3";
+			units = "kN-m";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("RootMxc3");
-			idy = dataFast->FindCol("RootMyc3");
+			idx = dataFast->GetParameter("RootMxc3");
+			idy = dataFast->GetParameter("RootMyc3");
 			if (IsNull(idx) || IsNull(idy))
 				enabled = false;
 		}
@@ -364,10 +427,14 @@ private:
 	} rootBend3;
 	
 	struct NcIMUTAParam : CalcParam {
+		NcIMUTAParam() {
+			name = "+NcIMUTA";
+			units = "m/s^2";
+		}
 		virtual void Init() {
-			idx = dataFast->FindCol("NcIMUTAxs");
-			idy = dataFast->FindCol("NcIMUTAys");
-			idz = dataFast->FindCol("NcIMUTAzs");
+			idx = dataFast->GetParameter("NcIMUTAxs");
+			idy = dataFast->GetParameter("NcIMUTAys");
+			idz = dataFast->GetParameter("NcIMUTAzs");
 			if (IsNull(idx) || IsNull(idy) || IsNull(idz))
 				enabled = false;
 		}
@@ -380,7 +447,31 @@ private:
 		}	
 		int idx = Null, idy = Null, idz = Null;	
 	} ncIMUTA;
-		
+	
+	struct Fairten_tParam : CalcParam {
+		Fairten_tParam() {
+			units = "t";
+		}
+		void Init00(int _id) {
+			name = Format("+FAIRTEN%d_t", _id);
+			id = _id;
+		}
+		virtual void Init() {
+			idFair = dataFast->GetParameter(Format("FAIRTEN%d", id));
+			if (IsNull(idFair))
+				enabled = false;
+		}
+		virtual double Calc(int idtime) {
+			double fairTen = dataFast->GetVal(idtime, idFair);
+
+			if (IsNull(fairTen))
+				return Null;
+							
+			return fairTen/1000/9.8;
+		}	
+		int id, idFair;
+	};
+	UArray<Fairten_tParam> fairTens;	
 };
 
 

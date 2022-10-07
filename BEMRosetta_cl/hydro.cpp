@@ -3,6 +3,7 @@
 #include "BEMRosetta.h"
 #include <STEM4U/Integral.h>
 #include <STEM4U/Utility.h>
+#include <STEM4U/SeaWaves.h>
 #include "functions.h"
 #include "heal.h"
 
@@ -171,11 +172,14 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
             if (B[idf][jdf].size() == 0 || !IsNum(B[idf][jdf][0])) 
                 ;
             else {
-	    		if (data.Load(Get_w(), A_dim(idf, jdf), B_dim(idf, jdf), numT, maxT, ex_hf) &&
-					data.Heal(zremoval, thinremoval, decayingTail, haskind && idf == jdf)) {
+                bool done;
+	    		if (data.Load(Get_w(), A_dim(idf, jdf), Ainf_dim(idf, jdf), B_dim(idf, jdf), numT, maxT, ex_hf) &&
+					data.Heal(zremoval, thinremoval, decayingTail, haskind && idf == jdf, done)) {
 	            	data.Save(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]); 
-	            	vidof << idf;
-	            	vjdof << jdf;
+	            	if (done) {
+		            	vidof << idf;
+		            	vjdof << jdf;
+	            	}
 	    		} else
 	    			data.Reset(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]);
 	    		if (dimen) {
@@ -199,6 +203,12 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
         }
     }
     rao.Clear();	// Previous RAO is now invalid
+}
+
+void AddPhase(std::complex<double> &val, double arg) {
+	double mag = std::abs(val);
+	double pha = std::arg(val);
+	val = std::polar(mag, pha + arg);
 }
 
 void Hydro::GetTranslationTo(double xto, double yto, double zto) {
@@ -333,18 +343,24 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
     auto CalcF = [&](auto &ex) {
     	auto exforce = clone(ex.force);
     	
+    	UVector<double> k(Nf);
+    	for (int ifr = 0; ifr < Nf; ++ifr) 
+    		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g);
+    	
 	    for (int ih = 0; ih < Nh; ++ih) {
 	    	for (int ib = 0; ib < Nb; ++ib) {
 	    		int ib6 = ib*6;
 				for (int ifr = 0; ifr < Nf; ++ifr) {
-					exforce[ih](ifr, 3 + ib6) += -yg*ex.force[ih](ifr, 2 + ib6) + zg*ex.force[ih](ifr, 1 + ib6);
-	    			exforce[ih](ifr, 4 + ib6) += -zg*ex.force[ih](ifr, 0 + ib6) + xg*ex.force[ih](ifr, 2 + ib6);
-	    			exforce[ih](ifr, 5 + ib6) += -xg*ex.force[ih](ifr, 1 + ib6) + yg*ex.force[ih](ifr, 0 + ib6);
+					double ph = k[ifr]*(xg*cos(ToRad(head[ih])) + yg*sin(ToRad(head[ih])));
+					for (int idf = 0; idf < 6; ++idf) 
+						AddPhase(exforce[ih](ifr, idf + ib6), ph);
+					exforce[ih](ifr, 3 + ib6) += -yg*exforce[ih](ifr, 2 + ib6) + zg*exforce[ih](ifr, 1 + ib6);
+	    			exforce[ih](ifr, 4 + ib6) += -zg*exforce[ih](ifr, 0 + ib6) + xg*exforce[ih](ifr, 2 + ib6);
+	    			exforce[ih](ifr, 5 + ib6) += -xg*exforce[ih](ifr, 1 + ib6) + yg*exforce[ih](ifr, 0 + ib6);
 				}
 	    	}
 	    }
 		ex.force = pick(exforce);
-		//GetMaPh(ex);
     };
     
 	if (IsLoadedFex())
@@ -354,22 +370,32 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedFfk())
 		CalcF(fk);
 
-
     auto CalcQTF = [&](auto &qtf) {
+		UVector<double> k(qw.size());
+    	for (int ifr = 0; ifr < qw.size(); ++ifr) 
+    		k[ifr] = SeaWaves::WaveNumber(2*M_PI/qw[ifr], h, g);
+		
 		for (int ib = 0; ib < Nb; ++ib)
 		        for (int ih = 0; ih < qh.size(); ++ih) 
-					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
+					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
+						double ph1 = k[ifr1]*(xg*cos(ToRad(qh[ih].real())) + yg*sin(ToRad(qh[ih].real())));
 						for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
-							std::complex<double> &v0 = qtfdif[ib][ih][0](ifr1, ifr2),
-												 &v1 = qtfdif[ib][ih][1](ifr1, ifr2),
-												 &v2 = qtfdif[ib][ih][2](ifr1, ifr2),
-												 &v3 = qtfdif[ib][ih][3](ifr1, ifr2),
-												 &v4 = qtfdif[ib][ih][4](ifr1, ifr2),
-												 &v5 = qtfdif[ib][ih][5](ifr1, ifr2);
+							double ph2 = k[ifr2]*(xg*cos(ToRad(qh[ih].imag())) + yg*sin(ToRad(qh[ih].imag())));
+							for (int idf = 0; idf < 6; ++idf) 
+								AddPhase(qtfdif[ib][ih][idf](ifr1, ifr2), ph1 - ph2);
+							
+							auto &v0 = qtfdif[ib][ih][0](ifr1, ifr2),
+								 &v1 = qtfdif[ib][ih][1](ifr1, ifr2),
+								 &v2 = qtfdif[ib][ih][2](ifr1, ifr2),
+								 &v3 = qtfdif[ib][ih][3](ifr1, ifr2),
+								 &v4 = qtfdif[ib][ih][4](ifr1, ifr2),
+								 &v5 = qtfdif[ib][ih][5](ifr1, ifr2);
+							
 							v3 += -yg*v2 + zg*v1;
 							v4 += -yg*v0 + zg*v2;
 							v5 += -yg*v1 + zg*v0;
 						}
+					}
     };
 
 	if (IsLoadedQTF(true)) 
@@ -854,6 +880,59 @@ void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
 		FillSumDif(qtfdif);
 	
 	qw = pick(nw);
+}
+
+VectorXd AvgSafe(const VectorXd &a, const VectorXd &b) {
+	ASSERT(a.size() == b.size());
+	VectorXd r(a.size());
+	for (int i = 0; i < a.size(); ++i) 
+		r[i] = AvgSafe(a[i], b[i]);
+	return r;
+}
+
+void Hydro::Symmetrize() {
+	auto SymmetrizeAB = [&](UArray<UArray<VectorXd>> &A) {
+		for (int idf = 0; idf < 6*Nb; ++idf) 
+			for (int jdf = idf+1; jdf < 6*Nb; ++jdf) 
+				A[idf][jdf] = A[jdf][idf] = AvgSafe(A[idf][jdf], A[jdf][idf]);
+    };		
+	if (IsLoadedA())
+		SymmetrizeAB(A);
+	if (IsLoadedAinf_w())
+		SymmetrizeAB(Ainf_w);
+	if (IsLoadedB())
+		SymmetrizeAB(B);
+
+	auto SymmetrizeAinfA0 = [&](MatrixXd &A) {
+		for (int idf = 0; idf < 6*Nb; ++idf) 
+			for (int jdf = idf+1; jdf < 6*Nb; ++jdf) 
+				A(idf, jdf) = A(jdf, idf) = AvgSafe(A(idf, jdf), A(jdf, idf));
+    };	
+	if (IsLoadedAinf()) 
+		SymmetrizeAinfA0(Ainf);
+	if (IsLoadedA0()) 
+		SymmetrizeAinfA0(A0);
+		
+	auto SymmetrizeSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+		for (int ib = 0; ib < Nb; ++ib)
+	        for (int ih = 0; ih < qh.size(); ++ih) 
+				for (int idf = 0; idf < 6; ++idf) { 
+					MatrixXcd c = qtf[ib][ih][idf];
+					Eigen::Index rows = c.rows();
+					for (int iw = 0; iw < rows; ++iw)
+						for (int jw = iw+1; jw < rows; ++jw)
+							c(iw, jw) = c(jw, iw) = AvgSafe(c(iw, jw), c(jw, iw));
+				}
+	};
+	if (IsLoadedQTF(true)) 
+		SymmetrizeSumDif(qtfsum);
+	if (IsLoadedQTF(false))
+		SymmetrizeSumDif(qtfdif);
+	
+	if (!AfterLoad()) {
+		String error = GetLastError();
+		throw Exc(Format(t_("Problem symmetrizing data: '%s'\n%s"), error));	
+	}
 }
 
 void Heal();

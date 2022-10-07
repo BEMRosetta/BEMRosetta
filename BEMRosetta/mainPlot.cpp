@@ -160,15 +160,14 @@ bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const U
 		if (mbm.menuPlot.fromY0) {
 			double yRange = max<double>(0, scatt.GetYMin()) + scatt.GetYRange();
 			scatt.SetXYMin(Null, 0).SetRange(Null, yRange);
-			if (!show_ma_ph) {
-				double yRange = max<double>(0, scatP.GetYMin()) + scatP.GetYRange();
-				scatP.SetXYMin(Null, 0).SetRange(Null, yRange);
-			}
 		}
 		if (show_ma_ph) {
 			scatP.ZoomToFit(true, false);
 			scatP.SetXYMin(Null, -M_PI).SetRange(Null, 2*M_PI).SetMajorUnits(Null, 1);
 			scatP.SetMinUnits(Null, M_PI-3);
+		} else if (mbm.menuPlot.fromY0) {
+			double yRange = max<double>(0, scatP.GetYMin()) + scatP.GetYRange();
+			scatP.SetXYMin(Null, 0).SetRange(Null, yRange);
 		} else
 			scatP.ZoomToFit(true, true);
 	}
