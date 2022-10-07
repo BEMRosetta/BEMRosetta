@@ -13,11 +13,13 @@ private:
 #define LAYOUTFILE <BEMRosetta/FastScatter.lay>
 #include <CtrlCore/lay.h>
 
-class FastScatter : public WithFastScatter<StaticRect> {
+class FastScatter;
+
+class FastScatterBase : public WithScatterBase<StaticRect> {
 public:
-	typedef FastScatter CLASSNAME;
+	typedef FastScatterBase CLASSNAME;
 	
-	void Init(Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
+	void Init(FastScatter *parent, Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
 	void Clear();
 	
 	WithSearchColumn<StaticRect> leftSearch, rightSearch;
@@ -27,7 +29,11 @@ public:
 	
 	void SelPaste(String str = "");
 	
+	FastOut datafast;
+	
 private:
+	FastScatter *fastScatter = nullptr;
+	
 	bool OnLoad(bool justUpdate = false);
 	void UpdateButtons(bool on);
 	void OnSaveAs();
@@ -50,8 +56,6 @@ private:
 	
 	StatusBar *statusBar = nullptr;
 	
-	FastOut datafast;
-	
 	class DataSource : public Convert {
 	public:
 		DataSource() : datafast(0), col(0) {}
@@ -63,8 +67,8 @@ private:
 	};
 	UArray<DataSource> dataSource;
 	
-	WithFastScatterLeft<StaticRect> left;
-	WithFastScatterRight<StaticRect> right;
+	WithScatterLeft<StaticRect> left;
+	WithScatterRight<StaticRect> right;
 	
 	RectEnterSet frameSet;
 	
@@ -85,7 +89,19 @@ private:
 	
 	String saveFolder;
 };
+
+class FastScatter : public StaticRect {
+public:
+	typedef FastScatter CLASSNAME;
+
+	void Init(Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
+	void OnCalc();
 	
+	WithCompare<StaticRect> compare;
+	FastScatterBase fscatter;
+	SplitterButton splitCompare;
+};
+
 class FastScatterTabs : public StaticRect {
 public:
 	typedef FastScatterTabs CLASSNAME;

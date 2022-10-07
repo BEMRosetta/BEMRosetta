@@ -129,7 +129,7 @@ void MainMatrixKA::PrintData() {
 						} else {
 							double val = data[i](r, c);
 							if (!IsNum(val)) 
-								sdata = "";
+								sdata = "-";
 							else {
 								double rat = mx == 0 ? 0 : abs(val/mx);
 								if (~opEmptyZero && rat < ratio)
@@ -184,7 +184,7 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	}
 	if (button && Bem().hydros.size() > 0) {
 		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy")).Tip(t_("Copies matrix and paste it in selected BEM Coefficients file and body"))
-			<< [=] {
+			<< [&] {
 				WithBEMList<TopWindow> w;
 				CtrlLayout(w);
 				w.Title(t_("Copies matrix and paste it in selected BEM Coefficients file and body"));
@@ -206,9 +206,24 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 					int id = w.array.GetCursor();
 					if (id < 0)
 						return; 
-					int f = w.array.Get(id, 2);
+					
+					int hid = w.array.Get(id, 2);
+					Hydro &hydro = Bem().hydros[hid].hd();
+					
 					int ib = w.array.Get(id, 3);
-					Bem().hydros[f].hd().SetC(ib, K);
+					
+					VectorXd c0 = hydro.c0.col(ib);
+					if (Distance(mesh.c0, Point3D(c0[0], c0[1], c0[2])) > 0.1)
+						if (!ErrorOKCancel(Format(t_("Centre of rotation in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
+														mesh.c0.x, mesh.c0.y, mesh.c0.z, c0[0], c0[1], c0[2])))
+							cancel = true;	
+					VectorXd cg = hydro.cg.col(ib);
+					if (!cancel && Distance(mesh.cg, Point3D(cg[0], cg[1], cg[2])) > 0.1)
+						if (!ErrorOKCancel(Format(t_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
+														mesh.c0.x, mesh.c0.y, mesh.c0.z, c0[0], c0[1], c0[2])))
+							cancel = true;
+					if (!cancel)
+						hydro.SetC(ib, K);
 				}
 			 };
 	}

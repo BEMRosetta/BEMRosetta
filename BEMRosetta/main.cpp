@@ -204,7 +204,7 @@ void Main::Init() {
 	
 	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
 	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
-	BEM::PrintError   = [this](String s) {printf("%s", ~s); mainOutput.Print(s); tab.Set(mainOutput); Status(s);};
+	BEM::PrintError   = [this](String s) {printf("%s", ~s); tab.Set(mainOutput); Status(s);};
 }
 
 void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
@@ -347,35 +347,51 @@ void MenuOptions::Load() {
 }
 
 void MenuOptions::OnSave() {
-	bem->g = ~g;
-	bem->rho = ~rho;
-	bem->len = ~len;
-	bem->depth = ~depth;
-	//bem->discardNegDOF = ~discardNegDOF;
-	//bem->thres = ~thres;
-	bem->calcAinf = ~calcAinf;
-	bem->calcAinf_w = ~calcAinf_w;
-	bem->maxTimeA = ~maxTimeA;
-	bem->numValsA = ~numValsA;	
-	bem->onlyDiagonal = ~onlyDiagonal;
-	bem->nemohPathPreprocessor = ~nemohPathPreprocessor;
-	bem->nemohPathSolver = ~nemohPathSolver;
-	bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
-	bem->nemohPathNew = ~nemohPathNew;
-	bem->nemohPathGREN = ~nemohPathGREN;
-	bem->foammPath = ~foammPath;
-	bem->hamsPath = ~hamsPath;
-	bem->hamsMeshPath = ~hamsMeshPath;
-	bem->volWarning = ~volWarning;
-	bem->volError = ~volError;
-	bem->csvSeparator = ~csvSeparator;
-	ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
+	String warning;
 	
-	bem->dofType = BEM::DOFType(dofType.GetIndex());
-	bem->headingType = BEM::HeadingType(headingType.GetIndex());
-	bem->UpdateHeadAll();
-	ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
+	if (Trim(~nemohPathPreprocessor) != "" && !FileExists(~nemohPathPreprocessor))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPathPreprocessor);
+	if (Trim(~nemohPathSolver) != "" && !FileExists(~nemohPathSolver))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPathSolver);
+	if (Trim(~nemohPathPreprocessor) != "" && !FileExists(~nemohPathPreprocessor))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPathPreprocessor);
+	if (Trim(~nemohPathPostprocessor) != "" && !FileExists(~nemohPathPostprocessor))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPathPostprocessor);
+	if (Trim(~nemohPathNew) != "" && !FileExists(~nemohPathNew))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPathNew);
+	if (Trim(~nemohPathGREN) != "" && !FileExists(~nemohPathGREN))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPathGREN);
 	
+	if (warning.IsEmpty() || ErrorOKCancel(DeQtfLf(Format(t_("Some errors found:\n%sDo you wish to save them?"), warning)))) {
+		bem->g = ~g;
+		bem->rho = ~rho;
+		bem->len = ~len;
+		bem->depth = ~depth;
+		//bem->discardNegDOF = ~discardNegDOF;
+		//bem->thres = ~thres;
+		bem->calcAinf = ~calcAinf;
+		bem->calcAinf_w = ~calcAinf_w;
+		bem->maxTimeA = ~maxTimeA;
+		bem->numValsA = ~numValsA;	
+		bem->onlyDiagonal = ~onlyDiagonal;
+		bem->nemohPathPreprocessor = ~nemohPathPreprocessor;
+		bem->nemohPathSolver = ~nemohPathSolver;
+		bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
+		bem->nemohPathNew = ~nemohPathNew;
+		bem->nemohPathGREN = ~nemohPathGREN;
+		bem->foammPath = ~foammPath;
+		bem->hamsPath = ~hamsPath;
+		bem->hamsMeshPath = ~hamsMeshPath;
+		bem->volWarning = ~volWarning;
+		bem->volError = ~volError;
+		bem->csvSeparator = ~csvSeparator;
+		ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
+		
+		bem->dofType = BEM::DOFType(dofType.GetIndex());
+		bem->headingType = BEM::HeadingType(headingType.GetIndex());
+		bem->UpdateHeadAll();
+		ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
+	}
 	ma().SetLastTab();
 }
 

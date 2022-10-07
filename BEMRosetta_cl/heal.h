@@ -5,8 +5,8 @@
 
 class HealBEM {
 public:
-	bool Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind);
-	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, const Eigen::VectorXd &B, int numT, double maxT, const Eigen::MatrixXd &ex_hf);
+	bool Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind, bool &done);
+	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, double Ainf, const Eigen::VectorXd &B, int numT, double maxT, const Eigen::MatrixXd &ex_hf);
 	void Save(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
 				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);
 	void Reset(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
@@ -14,7 +14,7 @@ public:
 			   				
 	Eigen::VectorXd w, A, B;
 	Eigen::VectorXd fB, fA, fAinf;
-	double fainf;
+	double Ainf, fainf;
 	static String filterType;
 	Eigen::VectorXd Tirf, fKirf;
 	Eigen::MatrixXd ex_hf;

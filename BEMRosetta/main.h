@@ -1029,18 +1029,106 @@ private:
 	RectEnterSet frameSet;
 };
 
+class Scatter2DPlot : public StaticRect {
+public:
+	ScatterCtrl surf, scatter;	
+	
+	Scatter2DPlot() {
+		Add(surf);
+		surf.VSizePosZ(0, 0);
+		Add(scatter);
+		scatter.VSizePosZ(0, 0);
+	}
+	virtual void Layout() {
+		int vert = GetSize().cy;
+		surf.LeftPos(0, vert);
+		scatter.HSizePos(vert, 0);
+	}
+};
+
+class QTFTabDof : public StaticRect {
+public:
+	typedef QTFTabDof CLASSNAME;
+
+	void Init(int posSplitter);
+	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter);
+	
+	Splitter splitter;
+	
+	int type = 0;
+	bool isSum;
+	int ib, ih, idof;
+	bool ndim, show_w;
+	bool showPoints, fromY0, autoFit;
+	std::complex<double> head;
+	
+	struct Data {
+		ArrayCtrl array;
+		Scatter2DPlot sc;
+		UVector<double> zData, xAxis;
+		TableDataVector dataSurf;
+		UArray<UArray<Pointf>> dataPlot;
+		bool isUp;
+		bool show_ma_ph;
+		String labelY, units, ma_ph;
+	} up, down;
+	
+	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2);
+	double qwT(const Hydro &hd, int id);
+	
+private:
+	Box leftsplit, rightsplit;
+	Pointf pf = Null;
+	
+	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
+	void OnClick(Point p, ScatterCtrl::MouseAction action);
+	void DoClick(Data &up, bool titles);
+		
+	void OnPainter(Painter &w)		{OnPaint(w);}
+	void OnDraw(Draw &w)			{OnPaint(w);}
+	
+	template <class T>
+	void OnPaint(T& w) {
+		ScatterCtrl &s = up.sc.surf;
+		double mn = s.GetSurfMinX(), mx = s.GetSurfMaxX();
+		if (type == 0)
+			DrawLineOpa(w, s.GetPosX(mn), s.GetPosY(mn), s.GetPosX(mx), s.GetPosY(mx), 1, 1, 3, LtRed(), "2 2");
+		else if (type == 1)
+			DrawLineOpa(w, s.GetPosX(mn), s.GetPosY(mx), s.GetPosX(mx), s.GetPosY(mn), 1, 1, 3, LtRed(), "2 2");
+		else {
+			if (IsNull(pf))
+				return;
+			int px = up.sc.surf.GetPosX(pf.x), py = up.sc.surf.GetPosY(pf.y);
+			if (type == 2)
+				DrawLineOpa(w, s.GetPosX(mn), py, 			 s.GetPosX(mx), py,    		   1, 1, 3, LtRed(), "2 2");	
+			else
+				DrawLineOpa(w, px, 			  s.GetPosY(mn), px,    		s.GetPosY(mx), 1, 1, 3, LtRed(), "2 2");	
+		}
+	}
+};
+
 class MainQTF : public WithMainQTF<StaticRect> {
 public:
 	typedef MainQTF CLASSNAME;
 	
-	void Init();	
+	void Init(MainBEM &parent);	
 	bool Load();
+	void Unload(int idf = -1);
+	void OnHeadingsSel(ArrayCtrl *listHead);
+	void OnSurf();
 	
 	enum Mag {MAGNITUDE, PHASE, REAL, IMAGINARY};
 	enum Show {FSUM, FDIFFERENCE};
 	
 private:
-	int idHydro = -1;
+	MainBEM *_mbm = nullptr;
+	UArray<QTFTabDof> dof;
+	bool isLoading = false;
+	
+	int idof = -1;
+	int posSplitter = 3000;
+	std::complex<double> head;
+	bool isSumm = true;
 };
 
 class MenuFOAMM : public WithMenuStateSpace<StaticRect> {
@@ -1072,7 +1160,8 @@ public:
 	void OnRemove();
 	void OnRemoveSelected(bool all);
 	void OnJoin();
-	void OnSymmetrize(bool xAxis);
+	void OnSymmetrizeForces(bool xAxis);
+	void OnSymmetrize();
 	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnRAO();
@@ -1090,6 +1179,8 @@ public:
 	void OnABForces();
 	void OnQTF();
 	
+	int GetIdOneSelected(bool complain = true);
+		
 	void Jsonize(JsonIO &json);
 		
 	WithMenuOpen<StaticRect> menuOpen;
@@ -1119,7 +1210,7 @@ private:
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEM &bem);
-	int GetIdOneSelected(bool complain = true);
+
 	int AskQtfHeading(const Hydro &hydro);
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
