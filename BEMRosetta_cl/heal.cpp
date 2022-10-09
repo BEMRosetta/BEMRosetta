@@ -533,7 +533,6 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 	 	;
 	int toA = idaoiyMx;												// To the max value idaoiyMx
 	
-	
 	// IRF and Ainf obtained from filtered B fB. A used directly (should it be softly filtered?
 	GetTirf(Tirf, numT, maxT);
 	GetKirf(fKirf, Tirf, w, fB);
