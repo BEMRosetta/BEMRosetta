@@ -131,8 +131,10 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 				}
 				d << Pointf(qwT(hd, iw), val);
 			}
+			int idc = hd.GetId();
+			const Upp::Color &color = GetColorId(idc);
 			String nameType = Format("QTF %s %s(%s)", up.ma_ph, hd.name, hd.GetCodeStrAbr());
-			up.sc.scatter.AddSeries(d).Legend(nameType).Units(up.units);
+			up.sc.scatter.AddSeries(d).Legend(nameType).Units(up.units).SetMarkColor(color).Stroke(2, color);
 			if (!showPoints)
 				up.sc.scatter.NoMark();
 		}
@@ -170,7 +172,7 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 }
 
 void QTFTabDof::OnClick(Point p, ScatterCtrl::MouseAction action) {
-	if (action != ScatterCtrl::LEFT_DOWN)
+	if (action != ScatterCtrl::LEFT_DOWN && action != ScatterCtrl::LEFT_MOVE)
 		return;
 	
 	pf.x = up.sc.surf.GetRealPosX(p.x);

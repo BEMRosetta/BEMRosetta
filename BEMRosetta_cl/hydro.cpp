@@ -212,9 +212,9 @@ void AddPhase(std::complex<double> &val, double arg) {
 }
 
 void Hydro::GetTranslationTo(double xto, double yto, double zto) {
-	double xg = xto - c0(0);	double dx = xg;
-	double yg = yto - c0(1);	double dy = yg;
-	double zg = zto - c0(2);	double dz = zg;
+	double xg = xto - c0(0), dx = xg;
+	double yg = yto - c0(1), dy = yg;
+	double zg = zto - c0(2), dz = zg;
 	
 	auto CalcAB = [&](auto &A) {
         auto An = clone(A);
@@ -340,8 +340,8 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedLinearDamping())
 		CalcA(linearDamping);
 		    
-    auto CalcF = [&](auto &ex) {
-    	auto exforce = clone(ex.force);
+    auto CalcF = [&](Forces &ex) {
+    	UArray<MatrixXcd> exforce = clone(ex.force);
     	
     	UVector<double> k(Nf);
     	for (int ifr = 0; ifr < Nf; ++ifr) 
@@ -370,38 +370,37 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedFfk())
 		CalcF(fk);
 
-    auto CalcQTF = [&](auto &qtf) {
-		UVector<double> k(qw.size());
-    	for (int ifr = 0; ifr < qw.size(); ++ifr) 
-    		k[ifr] = SeaWaves::WaveNumber(2*M_PI/qw[ifr], h, g);
-		
-		for (int ib = 0; ib < Nb; ++ib)
-		        for (int ih = 0; ih < qh.size(); ++ih) 
-					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
-						double ph1 = k[ifr1]*(xg*cos(ToRad(qh[ih].real())) + yg*sin(ToRad(qh[ih].real())));
-						for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
-							double ph2 = k[ifr2]*(xg*cos(ToRad(qh[ih].imag())) + yg*sin(ToRad(qh[ih].imag())));
-							for (int idf = 0; idf < 6; ++idf) 
-								AddPhase(qtfdif[ib][ih][idf](ifr1, ifr2), ph1 - ph2);
-							
-							auto &v0 = qtfdif[ib][ih][0](ifr1, ifr2),
-								 &v1 = qtfdif[ib][ih][1](ifr1, ifr2),
-								 &v2 = qtfdif[ib][ih][2](ifr1, ifr2),
-								 &v3 = qtfdif[ib][ih][3](ifr1, ifr2),
-								 &v4 = qtfdif[ib][ih][4](ifr1, ifr2),
-								 &v5 = qtfdif[ib][ih][5](ifr1, ifr2);
-							
-							v3 += -yg*v2 + zg*v1;
-							v4 += -yg*v0 + zg*v2;
-							v5 += -yg*v1 + zg*v0;
-						}
+    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+        int sign = isSum ? 1 : -1;
+		for (int ib = 0; ib < Nb; ++ib) {
+	        for (int ih = 0; ih < qh.size(); ++ih) {
+				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
+					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
+						double k = SeaWaves::WaveNumber(2*M_PI/(qw[ifr1] - qw[ifr2]), h, g);
+						double ph = k*(xg*cos(ToRad(qh[ih].imag())) + yg*sin(ToRad(qh[ih].imag())));
+						for (int idf = 0; idf < 6; ++idf) 
+							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), ph);
+						
+						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
+							 				 &v1 = qtf[ib][ih][1](ifr1, ifr2),
+							 				 &v2 = qtf[ib][ih][2](ifr1, ifr2),
+							 				 &v3 = qtf[ib][ih][3](ifr1, ifr2),
+							 				 &v4 = qtf[ib][ih][4](ifr1, ifr2),
+							 				 &v5 = qtf[ib][ih][5](ifr1, ifr2);
+						
+						v3 += -yg*v2 + zg*v1;
+						v4 += -zg*v0 + xg*v2;
+						v5 += -xg*v1 + yg*v0;
 					}
+				}
+	        }
+		}
     };
 
 	if (IsLoadedQTF(true)) 
-		CalcQTF(qtfsum);		
+		CalcQTF(qtfsum, true);		
 	if (IsLoadedQTF(false))	
-		CalcQTF(qtfdif);
+		CalcQTF(qtfdif, false);
 	
 	if (IsLoadedM()) {
 		for (int ib = 0; ib < Nb; ++ib)
