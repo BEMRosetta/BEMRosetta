@@ -976,7 +976,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 							throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
 						double ma = f.GetDouble(1 + 2*il);	
 						double ph = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
-						fc.force[ih](ifr, ibdof) = std::polar(ma, ph); 
+						fc.force[ih](ifr, ibdof+6*ib) = std::polar(ma, ph); 
 						il++; 
 					}
 				}

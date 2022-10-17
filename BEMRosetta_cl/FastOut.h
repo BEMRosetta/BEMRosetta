@@ -57,8 +57,8 @@ public:
 		
 	int GetIdTime(double time) const;
 	double GetTimeInit() const	{return dataOut[0][0];}
-	double GetTimeEnd()	 const	{return dataOut[0][size()-1];}
-	int size() const			{return dataOut[0].size();}			
+	double GetTimeEnd()	 const	{return dataOut[0][GetNumData()-1];}
+	int GetNumData() const		{return dataOut[0].size();}			
 	bool IsEmpty() const		{return dataOut.IsEmpty();}	
 	
 	String GetLastFile()		{return lastFile;}

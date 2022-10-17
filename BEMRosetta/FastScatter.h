@@ -29,7 +29,7 @@ public:
 	
 	void SelPaste(String str = "");
 	
-	FastOut datafast;
+	UArray<FastOut> dataFast;
 	
 private:
 	FastScatter *fastScatter = nullptr;
@@ -65,10 +65,12 @@ private:
 		FastOut *datafast;
 		int col;
 	};
-	UArray<DataSource> dataSource;
+	UArray<UArray<DataSource>> dataSource;
 	
 	WithScatterLeft<StaticRect> left;
-	WithScatterRight<StaticRect> right;
+	WithScatterRightTop<StaticRect> rightT;
+	WithScatterRightBottom<StaticRect> rightB;
+	Box right;
 	
 	RectEnterSet frameSet;
 	
@@ -109,7 +111,7 @@ public:
 	virtual ~FastScatterTabs();
 	void Init(String appDataFolder, StatusBar &statusBar);
 	void OnTab();
-	void AddTab(String filename);
+	void AddFile(String filename, bool add);
 	void OnCloseTab(Value key);
 	
 	void Jsonize(JsonIO &json) {
@@ -122,7 +124,7 @@ private:
 	TabBar tabBar;
 	UArray<FastScatter> tabScatters;
 	Upp::Index<int> tabKeys;
-	UVector<String> fileNames;
+	//UVector<String> fileNames;
 	int tabCounter = 0;
 	
 	Upp::Index<String> history;

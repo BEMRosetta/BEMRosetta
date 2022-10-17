@@ -348,10 +348,12 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
     		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g);
     	
 	    for (int ih = 0; ih < Nh; ++ih) {
+	        double angle = ToRad(head[ih]);
+	        double factor = xg*cos(angle) + yg*sin(angle);
 	    	for (int ib = 0; ib < Nb; ++ib) {
 	    		int ib6 = ib*6;
 				for (int ifr = 0; ifr < Nf; ++ifr) {
-					double ph = k[ifr]*(xg*cos(ToRad(head[ih])) + yg*sin(ToRad(head[ih])));
+					double ph = k[ifr]*factor;
 					for (int idf = 0; idf < 6; ++idf) 
 						AddPhase(exforce[ih](ifr, idf + ib6), ph);
 					exforce[ih](ifr, 3 + ib6) += -yg*exforce[ih](ifr, 2 + ib6) + zg*exforce[ih](ifr, 1 + ib6);
@@ -374,13 +376,10 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
         int sign = isSum ? 1 : -1;
 		for (int ib = 0; ib < Nb; ++ib) {
 	        for (int ih = 0; ih < qh.size(); ++ih) {
+	            double angle = ToRad(qh[ih].imag());
+	            double factor = xg*cos(angle) + yg*sin(angle);
 				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
-						double k = SeaWaves::WaveNumber(2*M_PI/(qw[ifr1] - qw[ifr2]), h, g);
-						double ph = k*(xg*cos(ToRad(qh[ih].imag())) + yg*sin(ToRad(qh[ih].imag())));
-						for (int idf = 0; idf < 6; ++idf) 
-							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), ph);
-						
 						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
 							 				 &v1 = qtf[ib][ih][1](ifr1, ifr2),
 							 				 &v2 = qtf[ib][ih][2](ifr1, ifr2),
@@ -391,12 +390,21 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 						v3 += -yg*v2 + zg*v1;
 						v4 += -zg*v0 + xg*v2;
 						v5 += -xg*v1 + yg*v0;
+
+						double k = SeaWaves::WaveNumber_w(qw[ifr1] - qw[ifr2], h, g);
+						double ph = k*factor;
+						for (int idf = 0; idf < 6; ++idf) 
+							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), -ph);
 					}
 				}
 	        }
 		}
     };
 
+	for (int ih = 0; ih < qh.size(); ++ih) 
+		if (qh[ih].real() != qh[ih].imag())
+			throw Exc(Format(t_("QTF translation only valid for same headings (%.1f != %.1f)"), qh[ih].real(), qh[ih].imag()));
+	
 	if (IsLoadedQTF(true)) 
 		CalcQTF(qtfsum, true);		
 	if (IsLoadedQTF(false))	
@@ -912,21 +920,32 @@ void Hydro::Symmetrize() {
 	if (IsLoadedA0()) 
 		SymmetrizeAinfA0(A0);
 		
-	auto SymmetrizeSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
-		for (int ib = 0; ib < Nb; ++ib)
-	        for (int ih = 0; ih < qh.size(); ++ih) 
+	auto SymmetrizeSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+		for (int ib = 0; ib < Nb; ++ib) {
+	        for (int ih = 0; ih < qh.size(); ++ih) {
 				for (int idf = 0; idf < 6; ++idf) { 
 					MatrixXcd c = qtf[ib][ih][idf];
 					Eigen::Index rows = c.rows();
-					for (int iw = 0; iw < rows; ++iw)
-						for (int jw = iw+1; jw < rows; ++jw)
-							c(iw, jw) = c(jw, iw) = AvgSafe(c(iw, jw), c(jw, iw));
+					for (int iw = 0; iw < rows; ++iw) {
+						for (int jw = iw+1; jw < rows; ++jw) {
+							if (isSum)
+								c(iw, jw) = c(jw, iw) = AvgSafe(c(iw, jw), c(jw, iw));
+							else {
+								std::complex<double> cji = c(jw, iw);
+								std::complex<double> cji_ = std::complex<double>(cji.real(), -cji.imag());
+								c(iw, jw) = cji_ = AvgSafe(c(iw, jw), cji_);
+								c(jw, iw) = std::complex<double>(cji_.real(), -cji_.imag());
+							}
+						}
+					}
 				}
+	        }
+		}
 	};
 	if (IsLoadedQTF(true)) 
-		SymmetrizeSumDif(qtfsum);
+		SymmetrizeSumDif(qtfsum, true);
 	if (IsLoadedQTF(false))
-		SymmetrizeSumDif(qtfdif);
+		SymmetrizeSumDif(qtfdif, false);
 	
 	if (!AfterLoad()) {
 		String error = GetLastError();
