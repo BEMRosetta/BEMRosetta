@@ -879,10 +879,10 @@ bool Wamit::Load_pot(String fileName) {
 	 		hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
 			hd().T[0] = init;
-			hd().w[0] = 2*M_PI/hd().T[0];
+			hd().w[0] = 2*M_PI/init;
 	 		double delta = f.GetDouble(1);
 		 	for (int i = 1; i < hd().Nf; ++i) {
-		 		hd().T[i] = hd().T[0] + i*delta;
+		 		hd().T[i] = init + i*delta;
 		 		hd().w[i] = 2*M_PI/hd().T[i];
 		 	}
 	 	}
@@ -891,19 +891,31 @@ bool Wamit::Load_pot(String fileName) {
  	
  	f.GetLine();
  	hd().Nh = f.GetInt(0);
- 	if (hd().Nh < 1 || hd().Nh > 1000)
+ 	if (abs(hd().Nh) > 1000)
  		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %s"), hd().Nh));
- 
-	f.GetLine();
- 	if (hd().Nh > f.GetCount())
- 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %d. Found %d"), hd().Nf, f.GetCount()));
- 	hd().head.SetCount(hd().Nh);
- 	for (int i = 0; i < hd().Nh; ++i) {
-		hd().head[i] = f.GetDouble(i);
-		if (i > 0 && hd().head[i] <= hd().head[i-1])
-			throw Exc(in.Str() + "\n" + Format(t_("Wrong heading %f, it should be higher than previous one"), hd().head[i]));	
+ 	
+ 	if (hd().Nh != 0) {
+ 		f.GetLine();
+ 	 	if (hd().Nh > 0) {
+	 		hd().head.SetCount(hd().Nh);
+		 	if (hd().Nh > f.GetCount())
+		 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %d. Found %d"), hd().Nh, f.GetCount()));
+		 	for (int i = 0; i < hd().Nh; ++i) {
+				hd().head[i] = f.GetDouble(i);
+				if (i > 0 && hd().head[i] <= hd().head[i-1])
+					throw Exc(in.Str() + "\n" + Format(t_("Wrong heading %f, it should be higher than previous one"), hd().head[i]));	
+		 	}
+	 	} else {
+	 		hd().Nh = -hd().Nh;
+	 		double init = f.GetDouble(0);
+	 		hd().head.SetCount(hd().Nh);
+			hd().head[0] = init;
+	 		double delta = f.GetDouble(1);
+		 	for (int i = 1; i < hd().Nh; ++i) 
+		 		hd().head[i] = init + i*delta;
+	 	}
  	}
-
+ 	
  	f.GetLine();
  	hd().Nb = f.GetInt(0);
  	if (hd().Nb < 1 || hd().Nb > 100)

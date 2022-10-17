@@ -264,7 +264,7 @@ int DLL_FAST_GetParameterCount() noexcept {
 
 int DLL_FAST_GetLen() noexcept {
 	try {
-		return DLL_Fastout().size();
+		return DLL_Fastout().GetNumData();
 	} catch (...) {
 		CoutX() << "Unknown error in DLL_FAST_GetLen()";
 		return Null;
@@ -298,7 +298,7 @@ double DLL_FAST_GetData(int idtime, int idparam) noexcept {
 		CoutX() << "DLL_FAST_GetData() idtime < 0";
 		return Null;
 	}
-	if (idtime >= DLL_Fastout().size()) {
+	if (idtime >= DLL_Fastout().GetNumData()) {
 		CoutX() << "DLL_FAST_GetData() idtime >= time";
 		return Null;
 	}

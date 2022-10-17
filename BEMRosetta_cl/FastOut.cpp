@@ -446,7 +446,9 @@ void FastOut::SetNextTime(double time) {
 }
 
 int FastOut::GetIdTime(double time) const {
-	if (time < 0)
+	if (IsNull(time) || time < 0)
+		return Null;	
+	if (dataOut.size() == 0)
 		return Null;	
 	for (int r = 0; r < dataOut[0].size(); ++r) {
 		if (dataOut[0][r] >= time)

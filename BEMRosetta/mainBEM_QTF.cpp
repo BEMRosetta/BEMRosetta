@@ -375,7 +375,7 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
 		if (idof < 0)
 			return;
 		
-		int ib = idof/6;
+		ib = idof/6;
 		idof = idof - 6*ib;
 
 		OnSurf();
@@ -395,13 +395,20 @@ void MainQTF::OnSurf() {
 }
 	
 bool MainQTF::Load() {
-	try {		
+	try {	
 		MainBEM &mbm = *_mbm;
+		
+		int idHydro;
 		
 		{
 			TempAssign<bool> _isLoading(isLoading, true);
 
 			tab.Reset();
+
+			idHydro = mbm.GetIdOneSelected(false);
+			if (idHydro < 0) 
+				return false;
+						
 			dof.SetCount(6*Bem().Nb);
 			for (int ib = 0; ib < Bem().Nb; ++ib) {
 				for (int idf = 0; idf < 6; ++idf) {
@@ -409,10 +416,9 @@ bool MainQTF::Load() {
 					tab.Add(dof[idf].SizePos(), Format("%d.%s", ib+1, BEM::StrDOF(idf)));
 				}
 			}
+			if (tab.GetCount() >= idof + 6*ib && idof >= 0)
+				tab.Set(idof + 6*ib);
 		}
-		int idHydro = mbm.GetIdOneSelected(false);
-		if (idHydro < 0)
-			return false;
 			
 		ArrayCtrl &listHead = mbm.menuPlot.headQTF;
 		
@@ -448,7 +454,7 @@ bool MainQTF::Load() {
 		else
 			isSumm = true;
 		if (opQTF.GetCount() > 1)
-			opQTF.SetIndex(isSumm ? 0 : 1);
+			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
 	
 		for (int ih = 0; ih < hd.qh.size(); ++ih)
 			listHead.Add(hd.qh[ih].real(), hd.qh[ih].imag());

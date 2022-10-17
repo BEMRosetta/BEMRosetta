@@ -1125,7 +1125,7 @@ private:
 	UArray<QTFTabDof> dof;
 	bool isLoading = false;
 	
-	int idof = -1;
+	int idof = -1, ib = -1;
 	int posSplitter = 3000;
 	std::complex<double> head;
 	bool isSumm = true;
