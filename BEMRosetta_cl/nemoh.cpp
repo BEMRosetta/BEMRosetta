@@ -57,6 +57,9 @@ bool Nemoh::Load(String file, double) {
 			BEM::Print(S("\n- ") + t_("KH file(s) 'Mesh/KH*.dat'"));
 			if (!Load_KH())
 				BEM::PrintWarning(S(": ** Mesh/KH ") + t_("Not found") + "**");
+			
+			dynamic_cast<Wamit *>(this)->Load_frc2(ForceExt(fileCal, ".frc"));
+			
 			fileRad = AppendFileNameX(folder, AppendFileNameX("Results", "RadiationCoefficients.tec"));
 			folderForces = folder;
 		} else {
