@@ -37,6 +37,15 @@ FastOut::FastOut() {
 		f.Init00(i+1);
 		AddParam(f.Init0(this));	
 	}
+	
+	syn.Add("PtfmRoll", "roll");
+	syn.Add("PtfmPitch", "pitch");
+	syn.Add("PtfmYaw", "yaw");
+	
+	for (int i = 0; i < syn.size(); ++i) {
+		syn[i] = ToLower(syn[i]);
+		syn.SetKey(i, ToLower(syn.GetKey(i)));	
+	}
 }
 
 UVector<String> FastOut::GetFilesToLoad(String path) {
@@ -46,15 +55,16 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 		return ret;
 	
 	if (!DirectoryExists(path)) {
-		if (FileExists(path))
-			ret << GetFileToLoad(path);
+		String name = GetFileToLoad(path);
+		if (!IsNull(name) && !IsVoid(name)) 
+			ret << name;
 		return ret;
 	} 
 	String fileName;
 	for (FindFile ff(AppendFileNameX(path, "*.out*")); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
-			if (!IsNull(name)) {
+			if (!IsNull(name) && !IsVoid(name)) {
 				ret << name;
 				return ret;
 			}
@@ -72,9 +82,11 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 }
 
 String FastOut::GetFileToLoad(String fileName) {
-	if (TrimBoth(fileName).IsEmpty() || GetFileName(fileName).Find(".MD") >= 0)
-		return Null;
-		
+	if (TrimBoth(fileName).IsEmpty())
+		return "";
+	if (::GetFileName(fileName).Find(".MD") >= 0)
+		return String::GetVoid();
+	
 	String strOut = ForceExt(fileName, ".out");
 	String strOutB = ForceExt(fileName, ".outb");
 
@@ -93,28 +105,43 @@ String FastOut::GetFileToLoad(String fileName) {
 		else 
 			return strOut;
 	}
-	return Null;
+	if (FileExists(fileName))
+		return fileName;
+				
+	return "";
 }
 
 bool FastOut::Load(String fileName) {
 	String ext = GetFileExt(fileName);
 	bool ret = false;
 	if (ext == ".out")
+		;
+	else if (ext == ".outb")
+		;
+	else if (ext == ".csv")
+		;
+	else {
+		fileName = ForceExt(fileName, ".outb");
+		if (FileExists(fileName)) 
+			ext = ".outb";
+		else {
+			fileName = ForceExt(fileName, ".out");	
+			if (FileExists(fileName))
+				ext = ".out";
+			else
+				return false;
+		}
+	}
+	fileName = ForceExt(fileName, ext);
+	
+	if (ext == ".out")
 		ret = LoadOut(fileName);
 	else if (ext == ".outb")
 		ret = LoadOutb(fileName);
-	else {
-		fileName = ForceExt(fileName, ".outb");
-		if (FileExists(fileName))
-			ret = LoadOutb(fileName);
-		else {
-			fileName = ForceExt(fileName, ".out");
-			if (FileExists(fileName))
-				ret = LoadOut(fileName);
-			return false;
-		}
-	}
-	lastFile = fileName;
+	else if (ext == ".csv")
+		ret = LoadCsv(fileName);
+	
+	this->fileName = fileName;
 	
 	if (ret)
 		AfterLoad();
@@ -167,13 +194,12 @@ bool FastOut::LoadOut(String fileName) {
 		}
 		pos = npos;
 	}
-	if (dataOut.size() > 0) {		// Size for calc. fields
-		for (int i = numCol; i < dataOut.size(); ++i)
-        	dataOut[i].SetCount(dataOut[0].size());
-	}
-	
+
 	if (dataOut.IsEmpty()) 
 		throw Exc(Format("Problem reading '%s'", fileName)); 
+	
+	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
+    	dataOut[i].SetCount(dataOut[0].size());
 
 	return true;
 }
@@ -211,30 +237,6 @@ bool FastOut::SaveOut(String fileName) {
 		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
 			if (idparam > 0)
 				data << "\t";
-			if (dataOut[idparam].size() > idtime)
-				data << FDS(dataOut[idparam][idtime], 10, true);
-		}
-	}
-	return SaveFile(fileName, data);
-}
-
-bool FastOut::SaveCsv(String fileName, String sep) {
-	String data;
-	
-	if (sep.IsEmpty())
-		sep = ";";
-	for (int i = 0; i < parameters.size(); ++i) {
-		if (i > 0)
-			data << sep;
-		data << parameters[i] << " [" << units[i] << "]";
-	}
-	data << "\n";
-	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
-		if (idtime > 0)
-			data << "\n";
-		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
-			if (idparam > 0)
-				data << sep;
 			if (dataOut[idparam].size() > idtime)
 				data << FDS(dataOut[idparam][idtime], 10, true);
 		}
@@ -355,7 +357,95 @@ bool FastOut::LoadOutb(String fileName) {
 	return true;
 }
 
+bool FastOut::LoadCsv(String fileName) {
+	Clear();
+	
+	// Extracts the units from the header
+	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->bool {
+		int idp = str.Find(begin);
+		if (idp >= 0) {
+			int idep = str.Find(end, idp+1);
+			if (idep > 0) {
+				unit = str.Mid(idp+1, idep-idp-1);
+				param = str.Left(idp) + str.Mid(idep+1);
+			} else {
+				unit = str.Mid(idp+1);
+				param = str.Left(idp);
+			}
+			return true;
+		} else
+			return false;
+	};	
+    			
+	int numCol;
+	
+	char separator = ',';
+	char decimalSign = '.';
+	int fromRow = 0;
+	bool onlyStrings = true;
+	if (!ReadCSVFileByLine(fileName, [&](int row, UVector<Value> &result, String &line)-> bool {
+		if (row == 0) {
+			for (int i = 0; i < result.size(); ++i) {
+				String param, unit;
+				
+				if (!GetUnits(result[i], '(', ')', param, unit))
+					if (!GetUnits(result[i], '[', ']', param, unit))
+						param = result[i];
+				
+				parameters << param;
+				units << unit;
+			}
+			numCol = result.size();
+			dataOut.SetCount(numCol+calcParams.size());
+		} else {
+			for (int i = 0; i < result.size(); ++i) 
+				dataOut[i] << ScanDouble(AsString(result[i])); 
+		}
+		return true;
+	}, separator, decimalSign, onlyStrings, fromRow))
+		throw Exc(Format("Problem reading '%s'", fileName)); 
+	
+	if (dataOut.IsEmpty()) 
+		throw Exc(Format("Problem reading '%s'", fileName)); 
+	
+	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
+    	dataOut[i].SetCount(dataOut[0].size());
+	
+	return true;
+}
+
+bool FastOut::SaveCsv(String fileName, String sep) {
+	String data;
+	
+	if (sep.IsEmpty())
+		sep = ";";
+	for (int i = 0; i < parameters.size(); ++i) {
+		if (i > 0)
+			data << sep;
+		data << parameters[i] << " [" << units[i] << "]";
+	}
+	data << "\n";
+	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
+		if (idtime > 0)
+			data << "\n";
+		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
+			if (idparam > 0)
+				data << sep;
+			if (dataOut[idparam].size() > idtime)
+				data << FDS(dataOut[idparam][idtime], 10, true);
+		}
+	}
+	return SaveFile(fileName, data);
+}
+
 void FastOut::AfterLoad() {
+	parametersd.Clear();
+	for (int i = 0; i < parameters.size(); ++i)
+		parametersd << ToLower(parameters[i]);
+	unitsd.Clear();
+	for (int i = 0; i < units.size(); ++i)
+		unitsd << ToLower(units[i]);
+	
 	for (CalcParams &c : calcParams) {
 		if (!c.calc)
 			throw Exc("Unexpected error in AfterLoad()");
@@ -363,6 +453,8 @@ void FastOut::AfterLoad() {
 		if (c.calc->IsEnabled()) {
 			parameters << c.name;
 			units << c.units;
+			parametersd << ToLower(c.name);
+			unitsd << ToLower(c.units);
 			int id = parameters.size()-1;
 			for (int idt = 0; idt < dataOut[id].size(); ++idt)
 				dataOut[id][idt] = c.calc->Calc(idt);
@@ -373,6 +465,8 @@ void FastOut::AfterLoad() {
 void FastOut::Clear() {
 	parameters.Clear();	
 	units.Clear();		
+	parametersd.Clear();	
+	unitsd.Clear();	
 	dataOut.Clear();
 }
 
@@ -380,27 +474,29 @@ bool FastOut::IsEmpty() {
 	return dataOut.IsEmpty();
 }
 
-int FastOut::GetParameter(String param) const {
+int FastOut::GetParameterX(String param) const {
 	param = ToLower(param);
-	for (int c = 0; c < parameters.size(); ++c) {
-		if (ToLower(parameters[c]) == param)
-			return c;
+	int id = Find(parametersd, param);
+	if (id < 0) {
+		id = syn.Find(param);
+		if (id >= 0)
+			id = Find(parametersd, syn[id]);
 	}
-	return Null;
+	return id;
 }
 
 UVector<int> FastOut::FindParameterMatch(String param) const {
 	param = ToLower(param);
 	UVector<int> ret;
 	for (int c = 0; c < parameters.size(); ++c) {
-		if (PatternMatch(param, ToLower(parameters[c])))
+		if (PatternMatch(param, parametersd[c]))
 			ret << c;
 	}
 	return ret;
 }
 
 int FastOut::GetParameter_throw(String param) const {
-	int ret = GetParameter(param);
+	int ret = GetParameterX(param);
 	if (IsNull(ret))
 		throw Exc(Format("Parameter '%s' not found", param));	
 	return ret;
@@ -511,6 +607,126 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 		}
 	}
 	return list;
+}
+
+void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table) {
+	table.Clear();
+	UVector<UVector<double>> fullData(params.size());
+	for (const FastOut &fast : dataFast) {
+		int idBegin = fast.GetIdTime(start);
+		int num = fast.GetNumData();
+		if (IsNull(idBegin) || idBegin >= num) 
+			throw Exc(t_("Bad start time"));
+
+		int idEnd = fromEnd ? fast.GetIdTime(fast.GetTimeEnd() - end) : fast.GetIdTime(end);
+		if (!IsNull(idEnd)) {
+			if (idEnd >= num) 
+				throw Exc(t_("Bad end time"));
+		} else
+			idEnd = num-1;
+		
+		if (idBegin >= idEnd)
+			throw Exc(t_("Begin has to be before end time"));
+		
+		UVector<Value> &t = table.Add();
+		
+		t << fast.GetFileName();			
+		t << fast.GetVal(idBegin, 0);
+		t << fast.GetVal(idEnd, 0);
+		for (int ip = 0; ip < params.size(); ip++) {
+			const UVector<String> &param = params[ip];
+			if (param.size() < 3)
+				throw Exc(t_("Wrong number of parameters"));
+			String strpar = param[0];
+			//String format = param[1];
+			int id = fast.GetParameterX(strpar);
+			if (id < 0) {
+				for (int i = 2; i < param.size(); i++) 
+					t << "";
+			} else {
+				const VectorXd data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
+				UVector<double> ndata;
+				Copy(data, ndata);
+				fullData[ip].Append(ndata);
+			
+				for (int i = 2; i < param.size(); i++) {
+					String stat = param[i];
+					double val;
+					if (stat == "mean") 
+						val = data.mean();
+					else if (stat == "min") 
+						val = data.minCoeff();
+					else if (stat == "max") 
+						val = data.maxCoeff();
+					else if (stat == "maxval") { 
+						double mx = data.maxCoeff();
+						double mn = data.minCoeff();
+						if (abs(mx) > abs(mn))
+							val = mx;
+						else
+							val = mn;
+					} else if (stat == "maxmean") 
+						val = data.maxCoeff() - data.mean();
+					else if (stat == "minmean") 
+						val = data.minCoeff() - data.mean();
+					else if (stat == "std") 
+						val = sqrt((data.array() - data.mean()).square().sum() / (data.size() - 1));
+					else
+						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, strpar));
+					
+					t << val;//Format("%" + format, val);
+				}
+			}
+		}
+	}
+	if (dataFast.size() > 1) {
+		UVector<Value> &t = table.Add();
+		t << t_("Total");
+		t << t_("-");
+		t << t_("-");
+		VectorXd data(table.size()-1), time(table.size()-1);
+		int col = 3;
+		for (int ip = 0; ip < params.size(); ip++) {
+			const UVector<String> &param = params[ip];
+			String strpar = param[0];
+			String format = param[1];
+			for (int i = 2; i < param.size(); i++) {
+				for (int row = 0; row < table.size()-1; ++row) {
+					data[row] = double(table[row][col]);
+					time[row] = double(table[row][2]) - double(table[row][1]);
+				}
+				col++;
+				String stat = param[i];
+				double val;
+				if (stat == "mean") 
+					val = (data.array()*time.array()).sum() / time.sum();
+				else if (stat == "min") 
+					val = data.minCoeff();
+				else if (stat == "max") 
+					val = data.maxCoeff();
+				else if (stat == "maxval") { 
+					double mx = data.maxCoeff();
+					double mn = data.minCoeff();
+					if (abs(mx) > abs(mn))
+						val = mx;
+					else
+						val = mn;
+				} else if (stat == "maxmean") {
+					double mean = (data.array()*time.array()).sum() / time.sum();
+					val = data.maxCoeff() - mean;
+				} else if (stat == "minmean") { 
+					double mean = (data.array()*time.array()).sum() / time.sum();
+					val = data.minCoeff() - mean;
+				} else if (stat == "std") {
+					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());	
+					val = sqrt((d.array() - d.mean()).square().sum() / (d.size() - 1));
+				} else
+					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, strpar));
+				
+				t << val;//Format("%" + format, val);
+			}
+		}
+	}
 }
 
 bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
@@ -634,9 +850,9 @@ double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2, double &damp) {
 	r2 = damp = Null;
 	
 	String param = "ptfm" + S(BEM::strDOFtext[dof]);
-	int id = fst.GetParameter(param);
-	if (IsNull(id)) 
-		throw Exc(Format("Param. %s not found in %s", param, fst.GetLastFile()));
+	int id = fst.GetParameterX(param);
+	if (id < 0) 
+		throw Exc(Format("Param. %s not found in %s", param, fst.GetFileName()));
 
 	UVector<int> idsx, idsy, idsFixed;
 	VectorVectorY<double> vect;

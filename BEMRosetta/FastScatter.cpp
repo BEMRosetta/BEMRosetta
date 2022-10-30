@@ -21,29 +21,43 @@ using namespace Upp;
 #include "clip.brc"
 
 
-void FastScatter::Init(Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar) {
+void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar) {
 	int len = StdFont().GetHeight();
 	
 	CtrlLayout(compare);
 	compare.butCalc <<= THISBACK(OnCalc);
-	compare.editStart <<= 0;
+	compare.editStart <<= "0";
 	compare.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, compare.array);};
 	
-	fscatter.Init(this, OnFile, OnCopyTabs, statusBar);
+	compare.editFromEnd <<= "0";
+	
+	compare.opFrom = 1;
+	compare.opFrom.WhenAction = [&] {
+		compare.editEnd.Enable(compare.opFrom == 0);
+		compare.editFromEnd.Enable(compare.opFrom == 1);
+	};
+	
+	fscbase.Init(this, OnFile, OnCopyTabs, statusBar);
 #ifdef flagDEBUG
-	splitCompare.Horz(fscatter.SizePos(), compare.SizePos());
+	splitCompare.Horz(fscbase.SizePos(), compare.SizePos());
 	splitCompare.SetPositions(3000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
 	Add(splitCompare.SizePos());
 #else
-	Add(fscatter.SizePos());
+	Add(fscbase.SizePos());
 #endif
 }
 	
 void FastScatter::OnCalc() {
 	try {
 		compare.array.Reset();
-		compare.array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
-
+		compare.array.SetLineCy(EditField::GetStdHeight()).MultiSelect().NoHeader();
+		
+		compare.arrayStats.Reset();
+		compare.arrayStats.SetLineCy(EditField::GetStdHeight());
+		compare.arrayStats.AddColumn(t_("Parameter"));
+		compare.arrayStats.AddColumn(t_("Format"));
+		compare.arrayStats.AddColumn(t_("Statistics"));
+		
 		const UVector<UVector<String>> params = {{"+FAIRTEN1_t", ".0f", "max"},
 												 {"+FAIRTEN2_t", ".0f", "max"},
 												 {"+FAIRTEN3_t", ".0f", "max"},
@@ -58,95 +72,76 @@ void FastScatter::OnCalc() {
 												 {"+TwrBsShear", ".0f", "max"},
 												 {"+TwrBsBend",  ".0f", "max"}
 		};
-				
-		if (fscatter.dataFast.IsEmpty()) {
+		
+		for (int i = 0; i < params.size(); ++i) {
+			String stats;
+			for (int is = 2; is < params[i].size(); ++is) {
+				if (is > 2)
+					stats << ",";
+				stats << params[i][is];
+			}
+			compare.arrayStats.Add(params[i][0], params[i][1], stats);
+		}
+	
+		if (fscbase.IsEmpty()) {
 			Exclamation("No data loaded");
 			return;	
 		}
 		
-		for (FastOut &fast : fscatter.dataFast) {
-			int idTime = fast.GetIdTime(~compare.editStart);
-			int num = fast.GetNumData();
-			if (idTime < 0 || idTime >= num) {
-				Exclamation("Bad start time");
-				return;
-			}
-			int idEnd = fast.GetIdTime(~compare.editEnd);
-			if (!IsNull(idEnd)) {
-				if (idEnd >= num) {
-					Exclamation("Bad end time");
-					return;
-				}
-			} else
-				idEnd = num-1;
-			
-	
-			int col = 0;
-			if (compare.array.GetColumnCount() == 0) {
-				for (const UVector<String> &param : params) {				
-					if (param.size() < 3)
-						throw Exc(t_("Wrong number of parameters"));
-					String strpar = param[0];
-					int id = fast.GetParameter_throw(strpar);
-					String units = fast.GetUnit(id);
-					for (int i = 2; i < param.size(); i++) {
-						if (i == 2)
-							compare.array.AddColumn(Format("%s [%s]", strpar, units));
-						else
-							compare.array.AddColumn("");
-			
-						String stat = param[i];
-						compare.array.Set(0, col++, stat);
-					}
-				}
-			}
-			
-			int row = 1;
-			col = 0;			
-			for (const UVector<String> &param : params) {
-				String strpar = param[0];
-				String format = param[1];
-				int id = fast.GetParameter_throw(strpar);
-				const VectorXd data = fast.GetVector(id).segment(idTime, idEnd - idTime);
-				
+		double end = compare.opFrom == 0 ? StringToSeconds(~compare.editEnd) : StringToSeconds(~compare.editFromEnd);
+
+		UVector<UVector<Value>> table;
+		Calc(fscbase.left.dataFast, params, StringToSeconds(~compare.editStart), compare.opFrom == 1, end, table);
+		
+		int col = 0;
+		compare.array.AddColumn("");
+		compare.array.Set(0, col++, t_("File"));
+		compare.array.AddColumn("");
+		compare.array.Set(0, col++, t_("Begin [s]"));
+		compare.array.AddColumn("");
+		compare.array.Set(0, col++, t_("End [s]"));
+		FastOut &fast = fscbase.left.dataFast[0];
+		UVector<String> fmt;
+		for (const UVector<String> &param : params) {				
+			String strpar = param[0];
+			String format = param[1];
+			int id = fast.GetParameterX(strpar);
+			if (id < 0) {
 				for (int i = 2; i < param.size(); i++) {
-					String stat = param[i];
-					double val;
-					if (stat == "mean") 
-						val = data.mean();
-					else if (stat == "min") 
-						val = data.minCoeff();
-					else if (stat == "max") 
-						val = data.maxCoeff();
-					else if (stat == "maxval") { 
-						double mx = data.maxCoeff();
-						double mn = data.minCoeff();
-						if (abs(mx) > abs(mn))
-							val = mx;
-						else
-							val = mn;
-					} else if (stat == "std") 
-						val = sqrt((data.array() - data.mean()).square().sum() / (data.size() - 1));
-					else
-						throw Exc(Format("Unknown '%s' statistic in parameter '%s'", stat, strpar));
-					
-					compare.array.Set(row, col++, Format("%" + format, val));
+					compare.array.AddColumn("");
+					if (i == 2) 
+						compare.array.Set(0, col, Format("%s", strpar));
+					compare.array.Set(1, col++, param[i]);
+					fmt << "";
+				}
+			} else {
+				String units = fast.GetUnit(id);
+				for (int i = 2; i < param.size(); i++) {
+					compare.array.AddColumn("");
+					if (i == 2) 
+						compare.array.Set(0, col, Format("%s [%s]", strpar, units));
+					compare.array.Set(1, col++, param[i]);
+					fmt << format;
 				}
 			}
 		}
+		for (int row = 0; row < table.size(); ++row) 
+			for (int col = 0; col < table[row].size(); ++col) 
+				compare.array.Set(row+2, col, col <= 2 ? S(table[row][col]) : Format("%" + fmt[col-3], double(table[row][col])));
+			
 	} catch (const Exc &e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
 	}
 }
 	
-void FastScatterBase::Init(FastScatter *parent, Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &_statusBar) {
+void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &_statusBar) {
 	fastScatter = parent;
+	
 	WhenFile = OnFile;
 	WhenCopyTabs = OnCopyTabs;
 	statusBar = &_statusBar;
 	CtrlLayout(*this);
 	
-	CtrlLayout(left);
 	CtrlLayout(rightT);
 	CtrlLayout(rightB);
 	right.Vert(rightT.SizePos(), rightB.SizePos());
@@ -157,7 +152,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <void(String)> OnFile, 
 	CtrlLayout(rightSearch);
 	rightB.splitterSearch.Horz(leftSearch.SizePos(), rightSearch.SizePos());
 	
-	file.WhenChange = THISBACK1(OnLoad, false);
+	file.WhenChange = [&] {return WhenFile(~file);};
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
@@ -167,19 +162,17 @@ void FastScatterBase::Init(FastScatter *parent, Function <void(String)> OnFile, 
 	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
 	dropFormat.SetIndex(0);
 	
-	opLoad <<= 0;
-	opLoad.WhenAction = [&] {
-		if (opLoad == 0)	
+	opLoad3 <<= 0;
+	opLoad3.WhenAction = [&] {
+		if (opLoad3 == 0)	
 			right.SetPos(0, 0);	
 		else
 			right.SetPos(2000, 0);	
+		ShowSelected();
 	};
-	opLoad.WhenAction();
-	opLoad.Disable();
+	opLoad3.WhenAction();
 	
 	UpdateButtons(false);
-	
-	left.scatter.ShowAllMenus().SetMode(ScatterDraw::MD_DRAW);
 	
 	leftSearch.array.AutoHideSb().NoHeader().SetLineCy(EditField::GetStdHeight()).MultiSelect();
 	rightSearch.array.AutoHideSb().NoHeader().SetLineCy(EditField::GetStdHeight()).MultiSelect();
@@ -233,12 +226,13 @@ void FastScatterBase::Init(FastScatter *parent, Function <void(String)> OnFile, 
 	rightB.arrayParam.WhenDrag 		= [&] {OnDrag(rightB.arrayParam, false);};
 	
 	rightT.arrayFiles.NoHeader().SetLineCy(EditField::GetStdHeight());
-	rightT.arrayFiles.AddColumn("");
+	rightT.arrayFiles.AddColumn(t_("Id"), 2);
+	rightT.arrayFiles.AddColumn(t_("File"), 20);
 	rightT.arrayFiles.WhenSel = [&] {
 		int row = rightT.arrayFiles.GetCursor();
 		if (row < 0)
 			return;
-		file <<= rightT.arrayFiles.Get(row, 0);
+		file <<= rightT.arrayFiles.Get(row, 1);
 	};
 	
 	player.LoadBuffer(String(animatedStar, animatedStar_length));
@@ -296,17 +290,17 @@ void FastScatterBase::SelPaste(String str) {
 		str = ReadClipboardText();
 	UVector<String> params = Split(str, ";");
 	params.SetCount(2);
-	UVector<String> left = Split(params[0], ",");
+	UVector<String> leftp = Split(params[0], ",");
 	leftSearch.array.Clear();
-	for (int rw = 0; rw < left.size(); ++rw) {
-		if (!IsNull(dataFast[0].GetParameter(left[rw])))
-			leftSearch.array.Set(rw, 0, left[rw]);
+	for (int rw = 0; rw < leftp.size(); ++rw) {
+		if (left.dataFast[0].GetParameterX(leftp[rw]) >= 0)
+			leftSearch.array.Set(rw, 0, leftp[rw]);
 	}
-	UVector<String> right = Split(params[1], ",");
+	UVector<String> rightp = Split(params[1], ",");
 	rightSearch.array.Clear();
-	for (int rw = 0; rw < right.size(); ++rw) {
-		if (!IsNull(dataFast[0].GetParameter(right[rw])))
-			rightSearch.array.Set(rw, 0, right[rw]);
+	for (int rw = 0; rw < rightp.size(); ++rw) {
+		if (left.dataFast[0].GetParameterX(rightp[rw]) >= 0)
+			rightSearch.array.Set(rw, 0, rightp[rw]);
 	}
 	ShowSelected();	
 }
@@ -324,7 +318,7 @@ void FastScatterBase::OnTimer() {
 		return;
 	timeStop.Reset();
 	
-	OnLoad(true);
+	OnLoad();
 }
 
 bool ArrayExists(const ArrayCtrl &a, String val) {
@@ -403,12 +397,12 @@ void FastScatterBase::WhenArrayLeftDouble(ArrayCtrl *parray) {
 }
  
 void FastScatterBase::OnFilter(bool show) {
-	SortedVectorMap<String, String> list = dataFast[0].GetList(Trim(~rightB.filterParam), Trim(~rightB.filterUnits));
+	SortedVectorMap<String, String> list = left.dataFast[0].GetList(Trim(~rightB.filterParam), Trim(~rightB.filterUnits));
 	if (list.size() == 1) {
 		if (AddParameter(list.GetKey(0), nullptr)) {
 			rightB.filterParam.Clear();
 			rightB.filterUnits.Clear();
-			list = dataFast[0].GetList();
+			list = left.dataFast[0].GetList();
 			if (show)
 				ShowSelected();
 		}
@@ -423,9 +417,9 @@ void FastScatterBase::OnFilter(bool show) {
 
 void FastScatterBase::Clear() {
 	file.Clear();
-	left.scatter.RemoveAllSeries();
-	dataFast.Clear();
-	dataSource.Clear();
+	left.scatter.Clear();
+	left.dataFast.Clear();
+	left.dataSource.Clear();
 	OnFilter(true);
 	UpdateButtons(false);
 }
@@ -435,57 +429,80 @@ void FastScatterBase::UpdateButtons(bool on) {
 	dropFormat.Enable(on);
 }
 
-bool FastScatterBase::OnLoad(bool justUpdate) {
+bool FastScatterBase::OnLoad() {
+	NON_REENTRANT_V(false);
+	
 	try {
+		String fileName = FastOut::GetFileToLoad(~file);
+		if (IsNull(fileName) || IsVoid(fileName)) {
+			String error;
+			if (IsVoid(fileName))
+			 	error = Format(t_("File '%s' not supported"), ~file);
+			else
+			 	error = Format(t_("File '%s' not found"), ~file);
+			Exclamation(DeQtf(error));
+			statusBar->Temporary(error);
+			left.EnableX();
+			UpdateButtons(false);
+			return false;
+		}
+		
 		WaitCursor waitcursor;
-
-		if (!justUpdate)
+		
+		int iff = -1;
+		if (opLoad3 == 0) {
+			if (left.scatterSize() > 0)
+				iff = 0;
+		} else
+			iff = left.Find(fileName);
+		
+		bool justUpdate = false;
+		if (iff < 0) {
 			statusBar->Temporary(t_("Loading file"));
-		else
+			iff = left.AddAll(opLoad3 == 2);
+		} else {
 			statusBar->Temporary(t_("Updating data"));
+			justUpdate = true;
+		}
+		
 		Ctrl::ProcessEvents();
 		
-		left.scatter.Disable();
+		left.EnableX(false);
 		
-		String fileName = FastOut::GetFileToLoad(~file);
-		if (IsNull(fileName)) {
-			statusBar->Temporary(Format(t_("File '%s' not found"), ~file));
-			left.scatter.Enable();
+		FastOut &fout = left.dataFast[iff];
+		
+		if (!fout.Load(fileName)) {
+			statusBar->Temporary(Format(t_("File '%s' temporarily blocked"), ~file));
+			left.EnableX();
 			UpdateButtons(false);
 			return false;
 		}
 		
-		FastOut &fast = dataFast.Add();
-		if (!fast.Load(fileName)) {
-			statusBar->Temporary(Format(t_("File '%s' temporarily blocked by OpenFAST"), ~file));
-			left.scatter.Enable();
-			UpdateButtons(false);
-			return false;
-		}
-		
-		UArray<DataSource> &src = dataSource.Add();
-		src.SetCount(fast.parameters.size());
 		if (!justUpdate) {
+			UArray<ScatterLeft::DataSource> &src = left.dataSource[iff];
+			src.SetCount(fout.parameters.size());
+		
 			for (int c = 0; c < src.size(); ++c) 
-				src[c].Init(fast, c);
+				src[c].Init(fout, c);
 		
 			LoadParams();
 			OnFilter(false);
 			ShowSelected();
 		
-			WhenFile(fileName);
+			//if (!WhenFile(fileName))
+				//return false;
+			
+			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount(), fileName);
 		} else 
 			ShowSelected();
 		
-		rightT.arrayFiles.Add(fileName);
-		
 	} catch (const Exc &e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
-		left.scatter.Enable();
+		left.EnableX();
 		UpdateButtons(false);
 		return false;
 	}
-	left.scatter.Enable();
+	left.EnableX();
 	
 	UpdateButtons(true);
 	return true;
@@ -517,23 +534,24 @@ void FastScatterBase::OnSaveAs() {
 		int row = rightT.arrayFiles.GetCursor();
 		if (row < 0)
 			row = 0;
-		String fileName = rightT.arrayFiles.Get(row, 0);
+		String fileName = rightT.arrayFiles.Get(row, 1);
 		
 		if (fs.ExecuteSaveAs(t_("Save register data"))) {
 			WaitCursor waitcursor;
 			
 			if (fileType == ".out") {	
-				if (!dataFast[row].Save(fileName, ".out")) {
+				if (!left.dataFast[row].Save(fileName, ".out")) {
 					Exclamation(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			} else if (fileType == ".csv") {	
-				if (!dataFast[row].Save(fileName, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
+				if (!left.dataFast[row].Save(fileName, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
 					Exclamation(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			} else {
-				if (!left.scatter.SaveToFileData(fileName)) {
+				int id = opLoad3 == 2 ? row : 0;
+				if (!left.scatter[id].SaveToFileData(fileName)) {
 					Exclamation(Format("Problem saving '%s'", fileName));
 					return;
 				}
@@ -547,49 +565,101 @@ void FastScatterBase::OnSaveAs() {
 	
 void FastScatterBase::ShowSelected() {
 	WaitCursor wait;
+
+	if (opLoad3 == 0 && left.dataFast.size() > 0)
+		file <<= left.dataFast[0].GetFileName();
 	
-	left.scatter.SetLabelX(t_("Time"));
-	left.scatter.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
+	int datasize    = opLoad3 == 0 ? min(1, left.dataFast.size()) : left.dataFast.size();
+	int scattersize = opLoad3 == 2 ? datasize : min(1, left.scatterSize());
 	
-	for (auto &fast : dataFast) {
+	FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
+	if (pf) {
+		FastScatterTabs &f = *pf;
+		
+		Value key = -1;
+		int id = f.tabBar.GetCursor();
+		if (id >= 0) {
+			key = f.tabBar.GetKey(id);
+			if (scattersize == 1) {
+				String title = left.dataFast[0].GetFileName();
+				if (GetUpperFolder(title).IsEmpty())
+					title = GetFileTitle(title);
+				else
+					title = GetFileName(GetUpperFolder(title)) + "/" + GetFileTitle(title);
+				f.tabBar.SetValue(key, title);
+			} else
+				f.tabBar.SetValue(key, t_("Multiple files"));
+		}
+	}
+	left.ClearScatter();
+	for (int i = 0; i < scattersize; ++i)
+		left.AddScatter();
+	
+	for (int iff = 0; iff < scattersize; ++iff) {
+		auto &scat = left.scatter[iff];
+		
+		scat.SetLabelX(t_("Time"));
+		scat.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
+		scat.SetPlotAreaLeftMargin(8*StdFont().GetHeight());
+		scat.SetPlotAreaBottomMargin(4*StdFont().GetHeight());
+		bool rightEmpty = rightSearch.array.GetCount() == 0;
+		if (!rightEmpty)
+			scat.SetPlotAreaRightMargin(8*StdFont().GetHeight());
+		else
+			scat.SetPlotAreaRightMargin(2*StdFont().GetHeight());
+		scat.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
+		if (scattersize > 1) {
+			String title = left.dataFast[iff].GetFileName();
+			if (GetUpperFolder(title).IsEmpty())
+				title = GetFileTitle(title);
+			else
+				title = GetFileName(GetUpperFolder(title)) + "/" + GetFileTitle(title);
+			Font f = scat.GetTitleFont();
+			f.Height(12);
+			scat.SetTitleFont(f).SetTitle(title);	
+		}
+	}
+	
+	for (int iff = 0; iff < datasize; ++iff) {
+		auto &fast = left.dataFast[iff];
+		auto &scat = opLoad3 == 2 ? left.scatter[iff] : left.scatter[0];
+		
 		UVector<int> idsx, idsy, idsFixed;
 		for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {
 			String param = Trim(leftSearch.array.Get(rw, 0));
 			if (!param.IsEmpty()) {
-				int col = fast.GetParameter(param);
-				if (IsNull(col))
+				int col = fast.GetParameterX(param);
+				if (col < 0)
 					statusBar->Temporary(Format("Parameter %s does not exist", param));
-				else
-					left.scatter.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(fast.units[col], t_("s")).Stroke(1);	
+				else {
+					if (left.dataFast.size() > 1 && opLoad3 != 0)
+						param = Format("%d.", iff) + param;
+					scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(fast.units[col], t_("s")).Stroke(1);	
+				}
 			}
 		}
 		for (int rw = 0; rw < rightSearch.array.GetCount(); ++rw) {
 			String param = Trim(rightSearch.array.Get(rw, 0));
 			if (!param.IsEmpty()) {
-				int col = fast.GetParameter(param);
-				if (IsNull(col))
+				int col = fast.GetParameterX(param);
+				if (col < 0)
 					statusBar->Temporary(Format("Parameter %s does not exist", param));
-				else
-					left.scatter.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(fast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
+				else {
+					if (left.dataFast.size() > 1 && opLoad3 != 0)
+						param = Format("%d.", iff) + param;
+					scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false).NoMark().Legend(param).Units(fast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
+				}
 			}
 		}
 	}
-	left.scatter.SetPlotAreaLeftMargin(8*StdFont().GetHeight());
-	left.scatter.SetPlotAreaBottomMargin(4*StdFont().GetHeight());
-	bool rightEmpty = rightSearch.array.GetCount() == 0;
-	if (!rightEmpty)
-		left.scatter.SetPlotAreaRightMargin(8*StdFont().GetHeight());
-	else
-		left.scatter.SetPlotAreaRightMargin(2*StdFont().GetHeight());
-	left.scatter.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
-	left.scatter.ZoomToFit(true, true);	
+	
+	for (int iff = 0; iff < scattersize; ++iff) {
+		auto &scat = left.scatter[iff];
+		
+		scat.ZoomToFit(true, true);	
+	}
 	
 	SaveParams();
-}
-
-Value FastScatterBase::DataSource::Format(const Value& q) const {
-	ASSERT(datafast);
-	return datafast->dataOut[col][q];
 }
 
 void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
@@ -627,63 +697,100 @@ void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
 	tabBar.AddKey(-1, "", ImgF::Plus());
 }
 
-void FastScatterTabs::AddFile(String filename, bool add) {
-	
-	
-	///////////////////////////////////////////////////
-	///////////////////////////////////////////////////
-	///////////////////////////////////////////////////
-	// Falta add == false
-	///////////////////////////////////////////////////
-	///////////////////////////////////////////////////
-	///////////////////////////////////////////////////
-	
-	
-	FastScatter *sct = nullptr;
+void FastScatterTabs::AddFile(String filename) {
 	String title;
 	if (filename == t_("New Tab"))
 		title = t_("New Tab");
 	
+	Value key = -1;
+	int idKey = -1;
 	int id = tabBar.GetCursor();
-	Value key;
-	if (id >= 0 && (t_("New Tab") == tabBar.GetValue(id))) { 
+	if (id >= 0) {
 		key = tabBar.GetKey(id);
-		int idKey = tabKeys.Find(key);
-		//fileNames[idKey] = filename;
-		sct = &tabScatters[idKey];
+		idKey = tabKeys.Find(key);
+	}
+		
+	if (id >= 0 && (t_("New Tab") == tabBar.GetValue(id))) { 
+		title = GetFileName(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
 		tabBar.SetValue(key, title);
 	} else {
-		key = tabCounter++;
-		tabKeys << key;
-		sct = &tabScatters.Add();
-		int pos = max(tabBar.GetCount()-1, 0);
-		sct->Init([=] (String filename) {
-				String title = GetFileName(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
-				tabBar.SetValue(key, title);
-				AddHistory(filename);
-			}, [=] (String clipboard) {
-				if (tabBar.GetCount() == 0)
-					return; 
-				int id = tabBar.GetCursor();
-				if (id < 0)
-					return;
-				Value key = tabBar.GetKey(id);
-				for (int i = 0; i < tabKeys.size(); ++i) {
-					if (tabKeys[i] != key) {
-						tabScatters[i].fscatter.SelPaste(clipboard);
-						tabScatters[i].compare.editStart <<= ~tabScatters[id].compare.editStart;
-						tabScatters[i].compare.editEnd <<= ~tabScatters[id].compare.editEnd;
-					}
+		bool addTab = true;
+		
+		if (idKey >= 0) {
+			FastScatterBase &fscbase = tabScatters[idKey].fscbase;
+		
+			int idLoaded = -1;
+			for (int i = 0; i < fscbase.left.dataFast.size(); ++i) {
+				if (fscbase.left.dataFast[i].GetFileName() == filename) {
+					idLoaded = i;
+					break;
 				}
-			}, *statusBar);
-		tabBar.InsertKey(pos, key, title);
-		Add(sct->SizePos());
-		//fileNames << filename;
+			}
+			if (fscbase.opLoad3 == 0 && idLoaded < 0)
+				addTab = true;
+			else if (idLoaded < 0)
+				addTab = false;
+		}
+			
+		if (addTab) {
+			key = tabCounter++;
+			tabKeys << key;
+			FastScatter &sct = tabScatters.Add();
+			idKey = tabScatters.size()-1;
+			int pos = max(tabBar.GetCount()-1, 0);
+			sct.Init([=] (String filename) {
+					if (tabBar.GetCount() == 0)
+						return false; 
+					int id = tabBar.GetCursor();
+					if (id < 0)
+						return false;
+					Value key = tabBar.GetKey(id);
+					bool ret = false;
+					for (int i = 0; i < tabKeys.size(); ++i) {
+						if (tabKeys[i] == key) {
+							ret = tabScatters[i].fscbase.OnLoad();
+							break;
+						}
+					}
+					if (ret)		
+						AddHistory(filename);
+					return ret;
+				}, [=] (String clipboard) {
+					if (tabBar.GetCount() == 0)
+						return; 
+					int id = tabBar.GetCursor();
+					if (id < 0)
+						return;
+					Value key = tabBar.GetKey(id);
+					for (int i = 0; i < tabKeys.size(); ++i) {
+						if (tabKeys[i] != key) {
+							tabScatters[i].fscbase.SelPaste(clipboard);
+							tabScatters[i].compare.editStart <<= ~tabScatters[id].compare.editStart;
+							tabScatters[i].compare.editEnd <<= ~tabScatters[id].compare.editEnd;
+						}
+					}
+				}, *statusBar);
+			tabBar.InsertKey(pos, key, title);
+			Add(sct.SizePos());
+			
+			/*String title;
+			if (GetUpperFolder(filename).IsEmpty())
+				title = GetFileTitle(filename);
+			else
+				title = GetFileName(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
+			tabBar.SetValue(key, title);*/
+		} /*else {
+			FastScatterBase &fscbase = tabScatters[idKey].fscbase;
+			
+			if (fscbase.left.dataFast.size() > 1)
+				tabBar.SetValue(key, t_("Multiple files"));
+		}*/
 	}
 	AddHistory(filename);
 	if (int(key) > -1 && filename != t_("New Tab")) {
-		sct->fscatter.file <<= filename;
-		if (!sct->fscatter.file.WhenChange())
+		FastScatter &sct = tabScatters[idKey];
+		sct.fscbase.file <<= filename;
+		if (!sct.fscbase.file.WhenChange())
 			OnCloseTab(key); 
 	}
 }
@@ -698,9 +805,9 @@ void FastScatterTabs::AddHistory(String filename) {
 	for (int it = 0; it < tabBar.GetCount(); ++it) {
 		const Value &key = tabBar.GetKey(it);
 		if (int(key) > -1 && it < tabScatters.size()) {
-			tabScatters[it].fscatter.file.ClearHistory();
+			tabScatters[it].fscbase.file.ClearHistory();
 			for (int i = history.size()-1; i >= 0; --i)
-				tabScatters[it].fscatter.file.AddHistory(history[i]);
+				tabScatters[it].fscbase.file.AddHistory(history[i]);
 		}
 	}
 }
@@ -718,7 +825,7 @@ void FastScatterTabs::OnTab() {
 		if (id > 0 && tabBar.FindValue(t_("New Tab")) >= 0)
 			tabBar.SetCursor(tabBar.GetCursor()-1);
 		else
-			AddFile(t_("New Tab"), true);
+			AddFile(t_("New Tab"));
 		return;
 	}
 	
@@ -731,7 +838,7 @@ void FastScatterTabs::OnCloseTab(Value key) {
 	int idKey = tabKeys.Find(key);
 	if (idKey < 0)
 		return;
-	FastScatterBase &sct = tabScatters[idKey].fscatter;
+	FastScatterBase &sct = tabScatters[idKey].fscbase;
 	sct.SaveParams();
 	tabKeys.Remove(idKey);	
 	tabScatters.Remove(idKey);
@@ -755,32 +862,24 @@ bool FastScatterTabs::LoadDragDrop(const UVector<String> &files) {
 	if (files.size() == 0)
 		return false;
 	
-	UVector<String> fis;
+	UVector<String> filesDrop;
 	for (int i = 0; i < files.size(); ++i)
-		fis.Append(FastOut::GetFilesToLoad(files[i]));
+		filesDrop.Append(FastOut::GetFilesToLoad(files[i]));
 	
-	if (fis.size() > 6) {
-		if (!PromptYesNo(Format(t_("You are about to open %d files"), fis.size())))
+	if (filesDrop.size() > 6) {
+		if (!PromptYesNo(Format(t_("You are about to open %d files"), filesDrop.size())))
 			return false;
 	}
 	
-	bool add = true;
-	int id = tabBar.GetCursor();
-	if (id >= 0) { 
-		Value key = tabBar.GetKey(id);
-		int idKey = tabKeys.Find(key);
-		FastScatter &tanSc = tabScatters[idKey];
-		add = tanSc.fscatter.opLoad == 0;
-	}
-	for (int i = 0; i < fis.size(); ++i) 
-		AddFile(fis[i], add);
+	for (auto &f : filesDrop) 
+		AddFile(f);
 
 	return true;
 }
 
 FastScatterTabs::~FastScatterTabs() {
 	for (int i = 0; i < tabScatters.size(); ++i)
-		tabScatters[i].fscatter.SaveParams();	
+		tabScatters[i].fscbase.SaveParams();	
 	
 	String file = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTScatter", "FASTScatter.json");	
 	StoreAsJsonFile(*this, file, true);

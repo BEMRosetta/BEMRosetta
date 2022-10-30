@@ -781,6 +781,8 @@ public:
 	
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
+	bool Load_frc2(String fileName);
+	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T);
 	void ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T);
@@ -789,7 +791,6 @@ protected:
 	int iperin = Null, iperout = Null;
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
-	bool Load_frc2(String fileName);
 	
 	bool Load_out();							
 	void Load_A(FileInLine &in, MatrixXd &A);
