@@ -15,11 +15,77 @@ private:
 
 class FastScatter;
 
+class ScatterLeft : public StaticRect {
+public: 
+	typedef ScatterLeft CLASSNAME;
+		
+	ScatterLeft() {
+		box.Vert();
+		Add(box.SizePos());
+	}
+	void ClearScatter() {
+		scatter.Clear();
+		box.Clear();
+	}
+	void AddScatter() {
+		ScatterCtrl &s = scatter.Add();
+		s.ShowAllMenus().SetMode(ScatterDraw::MD_DRAW);
+		if (scatter.size() > 1)
+			s.LinkedWith(scatter[0]);
+		box.Add(s.SizePos());
+	}
+	int AddAll(bool addScatter) {
+		dataFast.Add();
+		dataSource.Add();
+		if (addScatter || scatter.size() == 0) 
+			AddScatter();
+		return dataFast.size()-1;
+	}
+	void EnableX(bool en = true) {
+		for (ScatterCtrl &s : scatter)
+			s.Enable(en);
+		Enable(en);
+	}
+	int Find(String fileName) {
+		for (int iff = 0; iff < dataFast.size(); ++iff) {
+			if (fileName == dataFast[iff].GetFileName() || 
+				(ForceExt(fileName, "") == ForceExt(dataFast[iff].GetFileName(), "") && 
+				 PatternMatch(".out*", ForceExt(fileName, "")) && 
+				 PatternMatch(".out*", ForceExt(dataFast[iff].GetFileName(), "")))) {
+				return iff;
+			}
+		}
+		return -1;
+	}
+	
+	class DataSource : public Convert {
+	public:
+		DataSource() : datafast(0), col(0) {}
+		void Init(FastOut &_datafast, int _col)	{datafast = &_datafast;	col = _col;};	
+		Value Format(const Value& q) const {
+			ASSERT(datafast);
+			return datafast->dataOut[col][q];
+		}
+	private:
+		FastOut *datafast;
+		int col;
+	};
+	
+	int scatterSize() {return scatter.size();}
+	
+	UArray<ScatterCtrl> scatter;
+	UArray<UArray<DataSource>> dataSource;
+	UArray<FastOut> dataFast;
+	
+private:
+	Box box;
+};
+
 class FastScatterBase : public WithScatterBase<StaticRect> {
 public:
 	typedef FastScatterBase CLASSNAME;
 	
-	void Init(FastScatter *parent, Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
+	void Init(FastScatter *parent, Function <bool(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
 	void Clear();
 	
 	WithSearchColumn<StaticRect> leftSearch, rightSearch;
@@ -27,14 +93,17 @@ public:
 	void LoadParams();
 	void SaveParams();
 	
+	bool OnLoad();
+	
 	void SelPaste(String str = "");
 	
-	UArray<FastOut> dataFast;
+	bool IsEmpty()		{return left.dataFast.IsEmpty();}
+	
+	ScatterLeft left;
 	
 private:
 	FastScatter *fastScatter = nullptr;
 	
-	bool OnLoad(bool justUpdate = false);
 	void UpdateButtons(bool on);
 	void OnSaveAs();
 	void OnFilter(bool show);
@@ -56,25 +125,13 @@ private:
 	
 	StatusBar *statusBar = nullptr;
 	
-	class DataSource : public Convert {
-	public:
-		DataSource() : datafast(0), col(0) {}
-		void Init(FastOut &_datafast, int _col)	{datafast = &_datafast;	col = _col;};	
-		Value Format(const Value& q) const;
-	private:
-		FastOut *datafast;
-		int col;
-	};
-	UArray<UArray<DataSource>> dataSource;
-	
-	WithScatterLeft<StaticRect> left;
 	WithScatterRightTop<StaticRect> rightT;
 	WithScatterRightBottom<StaticRect> rightB;
 	Box right;
 	
 	RectEnterSet frameSet;
 	
-	Function <void(String)> WhenFile;
+	Function <bool(String)> WhenFile;
 	Function <void(String)> WhenCopyTabs;
 	
 	struct Params {
@@ -96,11 +153,11 @@ class FastScatter : public StaticRect {
 public:
 	typedef FastScatter CLASSNAME;
 
-	void Init(Function <void(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
+	void Init(Function <bool(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
 	void OnCalc();
 	
 	WithCompare<StaticRect> compare;
-	FastScatterBase fscatter;
+	FastScatterBase fscbase;
 	SplitterButton splitCompare;
 };
 
@@ -111,7 +168,7 @@ public:
 	virtual ~FastScatterTabs();
 	void Init(String appDataFolder, StatusBar &statusBar);
 	void OnTab();
-	void AddFile(String filename, bool add);
+	void AddFile(String filename);
 	void OnCloseTab(Value key);
 	
 	void Jsonize(JsonIO &json) {
@@ -120,11 +177,12 @@ public:
 		;
 	}
 	
-private:
 	TabBar tabBar;
 	UArray<FastScatter> tabScatters;
 	Upp::Index<int> tabKeys;
-	//UVector<String> fileNames;
+	//Value key = -1;
+	
+private:
 	int tabCounter = 0;
 	
 	Upp::Index<String> history;
