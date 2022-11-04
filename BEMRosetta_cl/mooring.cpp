@@ -48,12 +48,12 @@ void Mooring::LineProperty::Jsonize(JsonIO &json) {
 
 void Mooring::Connection::Jsonize(JsonIO &json) {
 	if (json.IsLoading()) {
-		vessel = true;
+		type = 'v';
 		x = y = z = 0;
 	}
 	json
 		("name", name)
-		("vessel", vessel)
+		("type", type)
 		("x", x)
 		("y", y)
 		("z", z)
@@ -125,21 +125,21 @@ bool Mooring::Calc(double x, double y, double rho_water) {
 		double tox = to.x;
 		double fromy = from.y;
 		double toy = to.y;
-		if (!from.vessel) {
-			zanchor = to.z;
-			zvessel = from.z;
-			fromx += x;  
-			fromy += y;
-		} else {
+		if (from.type != 'v') {
 			zanchor = from.z;
 			zvessel = to.z;
 			tox += x;  
 			toy += y;
+		} else {
+			zvessel = from.z;
+			zanchor = to.z;
+			fromx += x;  
+			fromy += y;
 		}
 		double xanchorvessel = sqrt(sqr(fromx - tox) + sqr(fromy - toy));
 		
 		line.status = Catenary(linetype.mass, rho_m3, rho_water, line.length, linetype.bl, 
-					xanchorvessel, zanchor + depth, zvessel + depth, line.fanchorvessel, line.fVvessel, line.fVanchor, 
+					xanchorvessel, zanchor + depth, zvessel + depth, line.fanchorvessel, line.fVanchor, line.fVvessel, 
 					line.lenonfloor, vpos, line.z, num);	
 		
 		line.fVanchor = -line.fVanchor;
@@ -147,8 +147,8 @@ bool Mooring::Calc(double x, double y, double rho_water) {
 		line.x.SetCount(vpos.size());		
 		line.y.SetCount(vpos.size());		
 		for (int i = 0; i < vpos.size(); ++i) {
-			line.x[i] = fromx + vpos[i]*cos(line.theta);
-			line.y[i] = fromy + vpos[i]*sin(line.theta);
+			line.x[i] = fromx + vpos[vpos.size()-i-1]*cos(line.theta);
+			line.y[i] = fromy + vpos[vpos.size()-i-1]*sin(line.theta);
 		}
 	}
 	return true;
