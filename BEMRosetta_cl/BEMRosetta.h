@@ -1368,7 +1368,7 @@ public:
 
 	struct Connection : Moveable<Connection> {
 		String name;
-		bool vessel;
+		int type;
 		double x, y, z;
 		void Jsonize(JsonIO &json);
 	};
