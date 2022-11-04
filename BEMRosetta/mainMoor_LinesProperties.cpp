@@ -38,7 +38,9 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 	
 void MainMoor_LineProperties::InitArray() {
 	array.Reset();
-	array.SetLineCy(EditField::GetStdHeight());
+	array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
+	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
+	
 	array.AddColumn(t_("Name"), 40);
 	array.AddColumn(t_("Line type"), 40);
 	array.AddColumn(t_("Length"), 40);

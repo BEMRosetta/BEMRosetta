@@ -881,7 +881,24 @@ protected:
 
 };
 
+
+class ScatterMooring : public StaticRect {
+public:
+	ScatterCtrl scatLateral, scatUp;	
 	
+	ScatterMooring() {
+		Add(scatLateral.SizePos());
+		Add(scatUp.SizePos());
+	}
+	virtual void Layout() {
+		int horiz = GetSize().cx;
+		int vert = GetSize().cy - horiz;
+		scatLateral.TopPos(0, vert);
+		scatUp.VSizePos(vert, 0);
+		
+	}
+};
+
 class MainMoor_LinesTypes : public WithMainMoor_LinesTypes<StaticRect>, public ArrayFields {
 public:
 	typedef MainMoor_LinesTypes CLASSNAME;
@@ -934,26 +951,31 @@ private:
 	virtual void ArrayClear();
 };
 
-class MainMoor : public WithMainMoor<StaticRect> {
+class MainMoor : public StaticRect {
 public:
 	typedef MainMoor CLASSNAME;
 
 	void Init();
 	
+	Splitter splitter;
+	ScatterMooring scat;
+	WithMainMoorRight<StaticRect> right;
 	MainMoor_LinesTypes lineTypes;
 	MainMoor_LineProperties lineProperties;
 	MainMoor_Connections lineConnections;
 	
 	void Jsonize(JsonIO &json) {
 		if (json.IsLoading())
-			file <<= "";
+			right.file <<= "";
 		json
-			("file", file)
+			("file", right.file)
 		;
 	}
 	
 private:
 	Mooring mooring;
+	
+	UVector<double> px, py, pz;
 	
 	bool OnLoad();
 	bool OnSave();

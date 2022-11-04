@@ -89,8 +89,12 @@ void Main::Init() {
 	tab.Add(mainFAST.SizePos(), t_("FAST .out/b"));
 	
 	mainMoor.Init();	LOG("Init Moor");
+#ifdef flagDEBUG
+		tab.Add(mainMoor.SizePos(), t_("Mooring"));
+#else
 	if (Bem().experimental)
 		tab.Add(mainMoor.SizePos(), t_("Mooring"));
+#endif
 
 	mainDecay.Init();	LOG("Init Decay");
 	if (false/*Bem().experimental*/)

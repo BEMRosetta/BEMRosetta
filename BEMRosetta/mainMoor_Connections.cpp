@@ -38,7 +38,9 @@ void MainMoor_Connections::Init(Mooring &mooring) {
 	
 void MainMoor_Connections::InitArray() {
 	array.Reset();
-	array.SetLineCy(EditField::GetStdHeight());
+	array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
+	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
+	
 	array.AddColumn(t_("Name"), 40);
 	array.AddColumn(t_("Vessel"), 30).With([](One<Ctrl>& x) {x.Create<Option>().SetReadOnly();});
 	array.AddColumn(t_("x"), 40);
@@ -93,7 +95,7 @@ void MainMoor_Connections::Load() {
 	
 	for (int id = 0; id < mooring.connections.size(); ++id) {
 		const auto &con = mooring.connections[id];
-		array.Add(con.name, con.vessel, con.x, con.y, con.z);
+		array.Add(con.name, con.type == 'v', con.x, con.y, con.z);
 	}
 	if (mooring.connections.size() > 0)
 		array.SetCursor(0);
@@ -105,7 +107,7 @@ void MainMoor_Connections::Save() {
 	mooring.connections.SetCount(array.GetCount());
 	for (int id = 0; id < mooring.connections.size(); ++id) {
 		mooring.connections[id].name = array.Get(id, 0);
-		mooring.connections[id].vessel = array.Get(id, 1);
+		mooring.connections[id].type = bool(array.Get(id, 1)) ? 'v' : 'a';
 		mooring.connections[id].x = array.Get(id, 2);
 		mooring.connections[id].y = array.Get(id, 3);
 		mooring.connections[id].z = array.Get(id, 4);
