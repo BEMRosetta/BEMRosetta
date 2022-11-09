@@ -138,7 +138,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	
 	CtrlLayout(rightT);
 	CtrlLayout(rightB);
-	right.Vert(rightT.SizePos(), rightB.SizePos());
+	right.Add(rightT, 0, 0).Add(rightB, 1, 0);
 	splitter.Horz(left.SizePos(), right.SizePos());
 	splitter.SetPos(7000, 0);
 
@@ -159,9 +159,9 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	opLoad3 <<= 0;
 	opLoad3.WhenAction = [&] {
 		if (opLoad3 == 0)	
-			right.SetPos(0, 0);	
+			right.SetHeight(0, 0);	
 		else
-			right.SetPos(2000, 0);	
+			right.SetHeight(0, 200);	
 		ShowSelected();
 	};
 	opLoad3.WhenAction();
@@ -627,26 +627,29 @@ void FastScatterBase::ShowSelected() {
 		
 		for (int iff = 0; iff < scattersize; ++iff) {
 			auto &scat = left.scatter[iff];
+			auto &fast = left.dataFast[iff];
 			
-			scat.SetLabelX(t_("Time"));
-			scat.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
-			scat.SetPlotAreaLeftMargin(8*StdFont().GetHeight());
-			scat.SetPlotAreaBottomMargin(4*StdFont().GetHeight());
-			bool rightEmpty = rightSearch.array.GetCount() == 0;
-			if (!rightEmpty)
-				scat.SetPlotAreaRightMargin(8*StdFont().GetHeight());
-			else
-				scat.SetPlotAreaRightMargin(2*StdFont().GetHeight());
-			scat.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
-			if (scattersize > 1) {
-				String title = left.dataFast[iff].GetFileName();
-				if (GetUpperFolder(title).IsEmpty())
-					title = GetFileTitle(title);
+			if (fast.GetNumData() > 0) {
+				scat.SetLabelX(t_("Time"));
+				scat.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
+				scat.SetPlotAreaLeftMargin(8*StdFont().GetHeight());
+				scat.SetPlotAreaBottomMargin(4*StdFont().GetHeight());
+				bool rightEmpty = rightSearch.array.GetCount() == 0;
+				if (!rightEmpty)
+					scat.SetPlotAreaRightMargin(8*StdFont().GetHeight());
 				else
-					title = GetFileName(GetUpperFolder(title)) + "/" + GetFileTitle(title);
-				Font f = scat.GetTitleFont();
-				f.Height(12);
-				scat.SetTitleFont(f).SetTitle(title);	
+					scat.SetPlotAreaRightMargin(2*StdFont().GetHeight());
+				scat.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
+				if (scattersize > 1) {
+					String title = fast.GetFileName();
+					if (GetUpperFolder(title).IsEmpty())
+						title = GetFileTitle(title);
+					else
+						title = GetFileName(GetUpperFolder(title)) + "/" + GetFileTitle(title);
+					Font f = scat.GetTitleFont();
+					f.Height(12);
+					scat.SetTitleFont(f).SetTitle(title);	
+				}
 			}
 		}
 		
@@ -654,47 +657,49 @@ void FastScatterBase::ShowSelected() {
 			auto &fast = left.dataFast[iff];
 			auto &scat = opLoad3 == 2 ? left.scatter[iff] : left.scatter[0];
 			
-			int idBegin = fast.GetIdTime(beginTime);
-			int numData;
-			double end;
-			
-			if (IsNull(endTime)) 
-				end = fast.GetTimeEnd() - timeFromEnd;
-			else 
-				end = beginTime + endTime;
-			
-			int id = fast.GetIdTime(end);	
-			numData = id - idBegin + 1;
-			
-			if (numData <= 1) 
-				throw Exc(t_("Incorrect start/end times"));
-			
-			UVector<int> idsx, idsy, idsFixed;
-			for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {
-				String param = Trim(leftSearch.array.Get(rw, 0));
-				if (!param.IsEmpty()) {
-					int col = fast.GetParameterX(param);
-					if (col < 0)
-						statusBar->Temporary(Format("Parameter %s does not exist", param));
-					else {
-						if (left.dataFast.size() > 1 && opLoad3 != 0)
-							param = Format("%d.", iff) + param;
-						scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
-							.NoMark().Legend(param).Units(fast.units[col], t_("s")).Stroke(1);	
+			if (fast.GetNumData() > 0) {
+				int idBegin = fast.GetIdTime(beginTime);
+				int numData;
+				double end;
+				
+				if (IsNull(endTime)) 
+					end = fast.GetTimeEnd() - timeFromEnd;
+				else 
+					end = beginTime + endTime;
+				
+				int id = fast.GetIdTime(end);	
+				numData = id - idBegin + 1;
+				
+				if (numData <= 1) 
+					throw Exc(t_("Incorrect start/end times"));
+				
+				UVector<int> idsx, idsy, idsFixed;
+				for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {
+					String param = Trim(leftSearch.array.Get(rw, 0));
+					if (!param.IsEmpty()) {
+						int col = fast.GetParameterX(param);
+						if (col < 0)
+							statusBar->Temporary(Format("Parameter %s does not exist", param));
+						else {
+							if (left.dataFast.size() > 1 && opLoad3 != 0)
+								param = Format("%d.", iff) + param;
+							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
+								.NoMark().Legend(param).Units(fast.units[col], t_("s")).Stroke(1);	
+						}
 					}
 				}
-			}
-			for (int rw = 0; rw < rightSearch.array.GetCount(); ++rw) {
-				String param = Trim(rightSearch.array.Get(rw, 0));
-				if (!param.IsEmpty()) {
-					int col = fast.GetParameterX(param);
-					if (col < 0)
-						statusBar->Temporary(Format("Parameter %s does not exist", param));
-					else {
-						if (left.dataFast.size() > 1 && opLoad3 != 0)
-							param = Format("%d.", iff) + param;
-						scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
-							.NoMark().Legend(param).Units(fast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
+				for (int rw = 0; rw < rightSearch.array.GetCount(); ++rw) {
+					String param = Trim(rightSearch.array.Get(rw, 0));
+					if (!param.IsEmpty()) {
+						int col = fast.GetParameterX(param);
+						if (col < 0)
+							statusBar->Temporary(Format("Parameter %s does not exist", param));
+						else {
+							if (left.dataFast.size() > 1 && opLoad3 != 0)
+								param = Format("%d.", iff) + param;
+							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
+								.NoMark().Legend(param).Units(fast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
+						}
 					}
 				}
 			}
