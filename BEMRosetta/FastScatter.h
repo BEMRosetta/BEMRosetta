@@ -20,7 +20,6 @@ public:
 	typedef ScatterLeft CLASSNAME;
 		
 	ScatterLeft() {
-		box.Vert();
 		Add(box.SizePos());
 	}
 	void ClearScatter() {
@@ -32,7 +31,7 @@ public:
 		s.ShowAllMenus().SetMode(ScatterDraw::MD_DRAW);
 		if (scatter.size() > 1)
 			s.LinkedWith(scatter[0]);
-		box.Add(s.SizePos());
+		box.Add(s, box.GetRows(), 0);
 	}
 	int AddAll(bool addScatter) {
 		dataFast.Add();
