@@ -19,8 +19,8 @@ void QTFTabDof::Init(int posSplitter) {
 	Add(splitter);
 	splitter.Horz(leftsplit.SizePos(), rightsplit.SizePos());
 	splitter.SetPos(posSplitter, 0);
-	leftsplit.Vert(up.array.SizePos(), down.array.SizePos());
-	rightsplit.Vert(up.sc.SizePos(), down.sc.SizePos());
+	leftsplit.Add(up.array, 0, 0).Add(down.array, 1, 0);
+	rightsplit.Add(up.sc, 0, 0).Add(down.sc, 1, 0);
 	
 	up.sc.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
 	down.sc.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
