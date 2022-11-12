@@ -49,19 +49,19 @@ void FastScatter::OnCalc() {
 		compare.arrayStats.AddColumn(t_("Format"));
 		compare.arrayStats.AddColumn(t_("Statistics"));
 		
-		const UVector<UVector<String>> params = {{"+FAIRTEN1_t", ".0f", "max"},
-												 {"+FAIRTEN2_t", ".0f", "max"},
-												 {"+FAIRTEN3_t", ".0f", "max"},
-												 //{"+FAIRTEN4_t", ".3E", "max"},
-												 //{"+FAIRTEN5_t", ".3E", "max"},
-												 //{"+FAIRTEN6_t", ".3E", "max"},
-												 //{"+FAIRTEN7_t", ".3E", "max"},
-												 {"+PtfmShift",  ".0f", "mean", "maxval"}, 
-												 {"+PtfmTilt",   ".1f", "mean", "maxval"}, 
+		const UVector<UVector<String>> params = {{"FAIRTEN1_t", ".0f", "max"},
+												 {"FAIRTEN2_t", ".0f", "max"},
+												 {"FAIRTEN3_t", ".0f", "max"},
+												 //{"FAIRTEN4_t", ".3E", "max"},
+												 //{"FAIRTEN5_t", ".3E", "max"},
+												 //{"FAIRTEN6_t", ".3E", "max"},
+												 //{"FAIRTEN7_t", ".3E", "max"},
+												 {"PtfmShift",  ".0f", "mean", "maxval"}, 
+												 {"PtfmTilt",   ".1f", "mean", "maxval"}, 
 												 {"PtfmYaw",     ".1f", "mean", "maxval"}, 
-												 {"+NcIMUTA",    ".1f", "max"}, 
-												 {"+TwrBsShear", ".0f", "max"},
-												 {"+TwrBsBend",  ".0f", "max"}
+												 {"NcIMUTA",    ".1f", "max"}, 
+												 {"TwrBsShear", ".0f", "max"},
+												 {"TwrBsBend",  ".0f", "max"}
 		};
 		
 		for (int i = 0; i < params.size(); ++i) {
@@ -96,6 +96,8 @@ void FastScatter::OnCalc() {
 		compare.array.Set(0, col++, t_("End [s]"));
 		FastOut &fast = fscbase.left.dataFast[0];
 		UVector<String> fmt;
+		fmt << "s" << "s" << "s";
+		
 		for (const UVector<String> &param : params) {				
 			String strpar = param[0];
 			String format = param[1];
@@ -119,9 +121,16 @@ void FastScatter::OnCalc() {
 				}
 			}
 		}
-		for (int row = 0; row < table.size(); ++row) 
-			for (int col = 0; col < table[row].size(); ++col) 
-				compare.array.Set(row+2, col, col <= 2 ? S(table[row][col]) : Format("%" + fmt[col-3], double(table[row][col])));
+		for (int row = 0; row < table.size(); ++row) {
+			for (int col = 0; col < table[row].size(); ++col) {
+				String val;
+				if (col < 3)
+					val = Format("%" + fmt[col], S(table[row][col]));
+				else
+					val = Format("%" + fmt[col], double(table[row][col]));
+				compare.array.Set(row+2, col, val);
+			}
+		}
 			
 	} catch (const Exc &e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
@@ -238,7 +247,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	editEnd <<= "-";
 	editFromEnd <<= "0";
 	
-	opFrom.MinCaseHeight(20);
+	opFrom.MinCaseHeight(int(1.2*StdFont().GetCy()));
 	opFrom = 0;
 	opFrom.WhenAction = [&] {
 		editEnd.Enable(opFrom == 0);
@@ -413,6 +422,7 @@ void FastScatterBase::OnFilter(bool show) {
 		if (AddParameter(list.GetKey(0), nullptr)) {
 			rightB.filterParam.Clear();
 			rightB.filterUnits.Clear();
+			rightB.filterUnits.Clear();
 			list = left.dataFast[0].GetList();
 			if (show)
 				ShowSelected();
@@ -440,17 +450,39 @@ void FastScatterBase::UpdateButtons(bool on) {
 	dropFormat.Enable(on);
 }
 
-bool FastScatterBase::OnLoad() {
+void FastScatterBase::OnLoad() {
+	for (int r = 0; r < rightT.arrayFiles.GetCount(); ++r)
+		OnLoad0(rightT.arrayFiles.Get(r, 1));
+}
+
+bool FastScatterBase::OnLoad(String fileName) {
+	FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
+	
+	if (pf && !pf->loadingDragDrop) {
+		OnLoad();
+		for (int r = 0; r < rightT.arrayFiles.GetCount(); ++r) {		
+			String file = rightT.arrayFiles.Get(r, 1);
+			if (fileName == file || 
+				(ForceExt(fileName, "") == ForceExt(file, "") && 
+				 PatternMatch(".out*", GetFileExt(fileName)) && 
+				 PatternMatch(".out*", GetFileExt(file)))) 
+				return true;
+		}
+	}
+	return OnLoad0(fileName);
+}
+	
+bool FastScatterBase::OnLoad0(String fileName) {
 	NON_REENTRANT(false);
 	
 	try {
-		String fileName = FastOut::GetFileToLoad(~file);
+		fileName = FastOut::GetFileToLoad(fileName);
 		if (IsNull(fileName) || IsVoid(fileName)) {
 			String error;
 			if (IsVoid(fileName))
-			 	error = Format(t_("File '%s' not supported"), ~file);
+			 	error = Format(t_("File '%s' not supported"), fileName);
 			else
-			 	error = Format(t_("File '%s' not found"), ~file);
+			 	error = Format(t_("File '%s' not found"), fileName);
 			Exclamation(DeQtf(error));
 			statusBar->Temporary(error);
 			left.EnableX();
@@ -503,7 +535,7 @@ bool FastScatterBase::OnLoad() {
 			//if (!WhenFile(fileName))
 				//return false;
 			
-			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount(), fileName);
+			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount()+1, fileName);
 		} else 
 			ShowSelected();
 		
@@ -803,7 +835,7 @@ void FastScatterTabs::AddFile(String filename) {
 					bool ret = false;
 					for (int i = 0; i < tabKeys.size(); ++i) {
 						if (tabKeys[i] == key) {
-							ret = tabScatters[i].fscbase.OnLoad();
+							ret = tabScatters[i].fscbase.OnLoad(filename);
 							break;
 						}
 					}
@@ -926,8 +958,12 @@ bool FastScatterTabs::LoadDragDrop(const UVector<String> &files) {
 			return false;
 	}
 	
+	loadingDragDrop = true;
+	
 	for (auto &f : filesDrop) 
 		AddFile(f);
+	
+	loadingDragDrop = false;
 
 	return true;
 }

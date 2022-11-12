@@ -22,27 +22,33 @@ void QTFTabDof::Init(int posSplitter) {
 	leftsplit.Add(up.array, 0, 0).Add(down.array, 1, 0);
 	rightsplit.Add(up.sc, 0, 0).Add(down.sc, 1, 0);
 	
-	up.sc.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
-	down.sc.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
-	up.sc.surf.LinkedWith(down.sc.surf);
+	up.sc.Add(up.surf, 0, 0).Add(up.scatter, 0, 1);
+	up.sc.WhenWidths = [&](int width, int height, UVector<int> &widths) {
+		widths[0] = height;
+		widths[1] = max(0, width - height);
+	};
 	
-	up  .sc.surf.WhenPainter = THISBACK(OnPainter);
-	down.sc.surf.WhenPainter = THISBACK(OnPainter);
-	up  .sc.surf.WhenDraw    = THISBACK(OnDraw);
-	down.sc.surf.WhenDraw    = THISBACK(OnDraw);
+	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
+	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
+	up	.surf.LinkedWith(down.surf);
 	
-	up  .sc.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, action);};
-	down.sc.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, action);};
+	up  .surf.WhenPainter = THISBACK(OnPainter);
+	down.surf.WhenPainter = THISBACK(OnPainter);
+	up  .surf.WhenDraw    = THISBACK(OnDraw);
+	down.surf.WhenDraw    = THISBACK(OnDraw);
+	
+	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, action);};
+	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, action);};
 	
 	up.isUp = true;
 	down.isUp = false;
 	
 	int len = StdFont().GetHeight();
-	up.sc.scatter.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
+	up.scatter.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
 			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-	down.sc.scatter.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
+	down.scatter.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
 			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
-	up.sc.scatter.LinkedWith(down.sc.scatter);
+	up.scatter.LinkedWith(down.scatter);
 }
 
 double QTFTabDof::qwT(const Hydro &hd, int id) {
@@ -54,7 +60,7 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 		//return;
 	
 	up.dataPlot.Clear();
-	up.sc.scatter.RemoveAllSeries();
+	up.scatter.RemoveAllSeries();
 	
 	if (titles) {
 		if (up.show_ma_ph) {
@@ -78,8 +84,8 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 				up.units = t_("N/m2");
 			}
 		}
-		up.sc.scatter.SetLabelY(up.labelY);
-		up.sc.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+		up.scatter.SetLabelY(up.labelY);
+		up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	}
 	double avgw = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
@@ -134,9 +140,9 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 			int idc = hd.GetId();
 			const Upp::Color &color = GetColorId(idc);
 			String nameType = Format("QTF %s %s(%s)", up.ma_ph, hd.name, hd.GetCodeStrAbr());
-			up.sc.scatter.AddSeries(d).Legend(nameType).Units(up.units).SetMarkColor(color).Stroke(2, color);
+			up.scatter.AddSeries(d).Legend(nameType).Units(up.units).SetMarkColor(color).Stroke(2, color);
 			if (!showPoints)
-				up.sc.scatter.NoMark();
+				up.scatter.NoMark();
 		}
 		avgw /= Bem().hydros.size();
 	}
@@ -148,38 +154,38 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 			strw = "Conjugate";
 		else 
 			strw = Format("%.2f rad/s", show_w ? avgw : 2*M_PI/avgw);
-		up.sc.scatter.SetTitle(Format(t_("QTF %d.%s %s heading %.1f:%.1fº"), ib+1, BEM::StrDOF(idof), strw, real(head), imag(head)));
+		up.scatter.SetTitle(Format(t_("QTF %d.%s %s heading %.1f:%.1fº"), ib+1, BEM::StrDOF(idof), strw, real(head), imag(head)));
 	}
 	if (autoFit) {
-		up.sc.scatter.ZoomToFit(true, true);
+		up.scatter.ZoomToFit(true, true);
 		if (up.isUp || !up.show_ma_ph) {
 			if (fromY0) {
-				double yRange = max<double>(0, up.sc.scatter.GetYMin()) + up.sc.scatter.GetYRange();
-				up.sc.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
+				double yRange = max<double>(0, up.scatter.GetYMin()) + up.scatter.GetYRange();
+				up.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
 			}
 		} else {
 			if (up.show_ma_ph && !up.isUp) {
-				up.sc.scatter.ZoomToFit(true, false);
-				up.sc.scatter.SetXYMin(Null, -M_PI).SetRange(Null, 2*M_PI).SetMajorUnits(Null, 1);
-				up.sc.scatter.SetMinUnits(Null, M_PI-3);
+				up.scatter.ZoomToFit(true, false);
+				up.scatter.SetXYMin(Null, -M_PI).SetRange(Null, 2*M_PI).SetMajorUnits(Null, 1);
+				up.scatter.SetMinUnits(Null, M_PI-3);
 			} else if (fromY0) {
-				double yRange = max<double>(0, up.sc.scatter.GetYMin()) + up.sc.scatter.GetYRange();
-				up.sc.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
+				double yRange = max<double>(0, up.scatter.GetYMin()) + up.scatter.GetYRange();
+				up.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
 			} 
 		}
 	}
-	up.sc.scatter.Refresh();
+	up.scatter.Refresh();
 }
 
 void QTFTabDof::OnClick(Point p, ScatterCtrl::MouseAction action) {
 	if (action != ScatterCtrl::LEFT_DOWN && action != ScatterCtrl::LEFT_MOVE)
 		return;
 	
-	pf.x = up.sc.surf.GetRealPosX(p.x);
-	pf.y = up.sc.surf.GetRealPosY(p.y);
+	pf.x = up.surf.GetRealPosX(p.x);
+	pf.y = up.surf.GetRealPosY(p.y);
 	
-	up.sc.surf.Refresh();
-	down.sc.surf.Refresh();
+	up.surf.Refresh();
+	down.surf.Refresh();
 	
 	DoClick(up, false);
 	DoClick(down, false);
@@ -278,11 +284,9 @@ void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool o
 	
 	data.dataSurf.Init(data.zData, data.xAxis, data.xAxis, opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO, false);
 
-	Scatter2DPlot &scp = data.sc;
-	
-	scp.surf.AddSurf(data.dataSurf);
-	scp.surf.SetRainbowPaletteTextColor(White);
-	scp.surf.ZoomToFitZ().ZoomToFit(true, true);
+	data.surf.AddSurf(data.dataSurf);
+	data.surf.SetRainbowPaletteTextColor(White);
+	data.surf.ZoomToFitZ().ZoomToFit(true, true);
 }
 	
 void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter) {
@@ -389,9 +393,9 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
 void MainQTF::OnSurf() {
 	dof[idof].type = ~opLine;
 	dof[idof].up.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
-	dof[idof].up.sc.surf.Refresh();
+	dof[idof].up.surf.Refresh();
 	dof[idof].down.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
-	dof[idof].down.sc.surf.Refresh();
+	dof[idof].down.surf.Refresh();
 }
 	
 bool MainQTF::Load() {
