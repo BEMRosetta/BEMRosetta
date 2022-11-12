@@ -726,6 +726,10 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 				t << val;//Format("%" + format, val);
 			}
 		}
+		for (int row = 0; row < table.size()-1; ++row) {
+			table[row][1] = SecondsToString(double(table[row][1]), 0, false, false, true, false, true);
+			table[row][2] = SecondsToString(double(table[row][2]), 0, false, false, true, false, true);
+		}
 	}
 }
 

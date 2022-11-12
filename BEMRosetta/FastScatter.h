@@ -47,12 +47,12 @@ public:
 	}
 	int Find(String fileName) {
 		for (int iff = 0; iff < dataFast.size(); ++iff) {
-			if (fileName == dataFast[iff].GetFileName() || 
-				(ForceExt(fileName, "") == ForceExt(dataFast[iff].GetFileName(), "") && 
-				 PatternMatch(".out*", ForceExt(fileName, "")) && 
-				 PatternMatch(".out*", ForceExt(dataFast[iff].GetFileName(), "")))) {
+			String file = dataFast[iff].GetFileName();
+			if (fileName == file || 
+				(ForceExt(fileName, "") == ForceExt(file, "") && 
+				 PatternMatch(".out*", GetFileExt(fileName)) && 
+				 PatternMatch(".out*", GetFileExt(file)))) 
 				return iff;
-			}
 		}
 		return -1;
 	}
@@ -92,7 +92,8 @@ public:
 	void LoadParams();
 	void SaveParams();
 	
-	bool OnLoad();
+	void OnLoad();
+	bool OnLoad(String filename);
 	
 	void SelPaste(String str = "");
 	
@@ -102,6 +103,8 @@ public:
 	
 private:
 	FastScatter *fastScatter = nullptr;
+	
+	bool OnLoad0(String filename);
 	
 	void UpdateButtons(bool on);
 	void OnSaveAs();
@@ -180,6 +183,8 @@ public:
 	UArray<FastScatter> tabScatters;
 	Upp::Index<int> tabKeys;
 	//Value key = -1;
+	
+	bool loadingDragDrop = false;
 	
 private:
 	int tabCounter = 0;
