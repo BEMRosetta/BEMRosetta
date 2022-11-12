@@ -22,6 +22,11 @@ using namespace Upp;
 void MainMoor::Init() {
 	Add(splitter.SizePos());
 
+	scat.Add(scatLateral, 1, 0).Add(scatUp, 0, 0);
+	scat.WhenHeights =[&](int width, int height, UVector<int> &heights) {
+		heights[0] = max(0, height - width);
+		heights[1] = width;
+	};
 	splitter.Horz(scat.SizePos(), right.SizePos());
 	splitter.SetPos(3000, 0);
 	
@@ -76,8 +81,8 @@ void MainMoor::Init() {
 	right.results.AddColumn("", 10);
 	right.results.AddColumn("", 10);
 	
-	scat.scatLateral.SetTitle(t_("Side view")).SetTitleFont(Arial(12)).SetLeftMargin(70).SetRightMargin(25).SetTopMargin(30).SetBottomMargin(50);
-	scat.scatUp.SetTitle(t_("Top view")).SetTitleFont(Arial(12)).SetLeftMargin(70).SetRightMargin(25).SetTopMargin(30).SetBottomMargin(50);
+	scatLateral.SetTitle(t_("Side view")).SetTitleFont(Arial(12)).SetLeftMargin(70).SetRightMargin(25).SetTopMargin(30).SetBottomMargin(50);
+	scatUp.SetTitle(t_("Top view")).SetTitleFont(Arial(12)).SetLeftMargin(70).SetRightMargin(25).SetTopMargin(30).SetBottomMargin(50);
 }
 
 
@@ -123,8 +128,8 @@ bool MainMoor::OnSave() {
 void MainMoor::OnUpdate() {
 	try {
 		right.results.Clear();
-		scat.scatLateral.RemoveAllSeries();
-		scat.scatUp.RemoveAllSeries();
+		scatLateral.RemoveAllSeries();
+		scatUp.RemoveAllSeries();
 		
 		lineTypes.Save();
 		lineProperties.Save();
@@ -138,11 +143,11 @@ void MainMoor::OnUpdate() {
 			pz << conn.z + mooring.depth;
 		}
 		
-		scat.scatLateral.AddSeries(px, pz).NoPlot().MarkStyle<CircleMarkPlot>().NoSeriesLegend();
-		scat.scatLateral.ZoomToFit(true, true);
+		scatLateral.AddSeries(px, pz).NoPlot().MarkStyle<CircleMarkPlot>().NoSeriesLegend();
+		scatLateral.ZoomToFit(true, true);
 		
-		scat.scatUp.AddSeries(px, py).NoPlot().MarkStyle<CircleMarkPlot>().NoSeriesLegend();
-		scat.scatUp.ZoomToFit(true, true);
+		scatUp.AddSeries(px, py).NoPlot().MarkStyle<CircleMarkPlot>().NoSeriesLegend();
+		scatUp.ZoomToFit(true, true);
 		
 
 		if (!mooring.Calc(double(~right.edVessX), double(~right.edVessY), Bem().rho))
@@ -174,19 +179,19 @@ void MainMoor::OnUpdate() {
 		
 		for (int i = 0; i < mooring.lineProperties.size(); ++i) {
 			auto &line = mooring.lineProperties[i];
-			scat.scatLateral.AddSeries(line.x, line.z).NoMark().Legend(line.name).Units("m", "m").Stroke(1).NoDash();
+			scatLateral.AddSeries(line.x, line.z).NoMark().Legend(line.name).Units("m", "m").Stroke(1).NoDash();
 			if (line.status == MooringStatus::BROKEN || line.status == MooringStatus::BL_EXCEDEED) 
-				scat.scatLateral.Dash(LINE_DASHED);
+				scatLateral.Dash(LINE_DASHED);
 		}
-		scat.scatLateral.ZoomToFit(true, true);
+		scatLateral.ZoomToFit(true, true);
 		
 		for (int i = 0; i < mooring.lineProperties.size(); ++i) {
 			auto &line = mooring.lineProperties[i];
-			scat.scatUp.AddSeries(line.x, line.y).NoMark().Legend(line.name).Units("m", "m").Stroke(1).NoDash();
+			scatUp.AddSeries(line.x, line.y).NoMark().Legend(line.name).Units("m", "m").Stroke(1).NoDash();
 			if (line.status == MooringStatus::BROKEN || line.status == MooringStatus::BL_EXCEDEED) 
-				scat.scatUp.Dash(LINE_DASHED);
+				scatUp.Dash(LINE_DASHED);
 		}
-		scat.scatUp.ZoomToFit(true, true);
+		scatUp.ZoomToFit(true, true);
 	} catch (const Exc &e) {	
 		Exclamation(DeQtfLf(e));
 		return;

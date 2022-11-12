@@ -881,24 +881,6 @@ protected:
 
 };
 
-
-class ScatterMooring : public StaticRect {
-public:
-	ScatterCtrl scatLateral, scatUp;	
-	
-	ScatterMooring() {
-		Add(scatLateral.SizePos());
-		Add(scatUp.SizePos());
-	}
-	virtual void Layout() {
-		int horiz = GetSize().cx;
-		int vert = GetSize().cy - horiz;
-		scatLateral.TopPos(0, vert);
-		scatUp.VSizePos(vert, 0);
-		
-	}
-};
-
 class MainMoor_LinesTypes : public WithMainMoor_LinesTypes<StaticRect>, public ArrayFields {
 public:
 	typedef MainMoor_LinesTypes CLASSNAME;
@@ -958,7 +940,8 @@ public:
 	void Init();
 	
 	Splitter splitter;
-	ScatterMooring scat;
+	Box scat;
+	ScatterCtrl scatLateral, scatUp;
 	WithMainMoorRight<StaticRect> right;
 	MainMoor_LinesTypes lineTypes;
 	MainMoor_LineProperties lineProperties;
@@ -1051,23 +1034,6 @@ private:
 	RectEnterSet frameSet;
 };
 
-class Scatter2DPlot : public StaticRect {
-public:
-	ScatterCtrl surf, scatter;	
-	
-	Scatter2DPlot() {
-		Add(surf);
-		surf.VSizePosZ(0, 0);
-		Add(scatter);
-		scatter.VSizePosZ(0, 0);
-	}
-	virtual void Layout() {
-		int vert = GetSize().cy;
-		surf.LeftPos(0, vert);
-		scatter.HSizePos(vert, 0);
-	}
-};
-
 class QTFTabDof : public StaticRect {
 public:
 	typedef QTFTabDof CLASSNAME;
@@ -1086,7 +1052,8 @@ public:
 	
 	struct Data {
 		ArrayCtrl array;
-		Scatter2DPlot sc;
+		Box sc;
+		ScatterCtrl surf, scatter;
 		UVector<double> zData, xAxis;
 		TableDataVector dataSurf;
 		UArray<UArray<Pointf>> dataPlot;
@@ -1111,7 +1078,7 @@ private:
 	
 	template <class T>
 	void OnPaint(T& w) {
-		ScatterCtrl &s = up.sc.surf;
+		ScatterCtrl &s = up.surf;
 		double mn = s.GetSurfMinX(), mx = s.GetSurfMaxX();
 		if (type == 0)
 			DrawLineOpa(w, s.GetPosX(mn), s.GetPosY(mn), s.GetPosX(mx), s.GetPosY(mx), 1, 1, 3, LtRed(), "2 2");
@@ -1120,7 +1087,7 @@ private:
 		else {
 			if (IsNull(pf))
 				return;
-			int px = up.sc.surf.GetPosX(pf.x), py = up.sc.surf.GetPosY(pf.y);
+			int px = up.surf.GetPosX(pf.x), py = up.surf.GetPosY(pf.y);
 			if (type == 2)
 				DrawLineOpa(w, s.GetPosX(mn), py, 			 s.GetPosX(mx), py,    		   1, 1, 3, LtRed(), "2 2");	
 			else
