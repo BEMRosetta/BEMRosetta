@@ -23,11 +23,12 @@ void QTFTabDof::Init(int posSplitter) {
 	rightsplit.Add(up.sc, 0, 0).Add(down.sc, 1, 0);
 	
 	up.sc.Add(up.surf, 0, 0).Add(up.scatter, 0, 1);
-	up.sc.WhenWidths = [&](int width, int height, UVector<int> &widths) {
+	down.sc.Add(down.surf, 0, 0).Add(down.scatter, 0, 1);
+	up.sc.WhenWidths = down.sc.WhenWidths = [&](int width, int height, UVector<int> &widths) {
 		widths[0] = height;
 		widths[1] = max(0, width - height);
 	};
-	
+		
 	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
 	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
 	up	.surf.LinkedWith(down.surf);
