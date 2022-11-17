@@ -5,19 +5,20 @@ class BEMRosetta:
         self.libc = ctypes.CDLL(dll)
 
         # INPUT TYPES
-        self.libc.DemoVectorPy_C.argtypes = [np.ctypeslib.ndpointer(dtype=np.float64), c_int]
+        self.libc.DemoVectorPy_C.argtypes = [np.ctypeslib.ndpointer(dtype=np.float64), ctypes.c_int]
         self.libc.DemoVectorC_Py.argtypes = [ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
-        self.libc.DLL_FAST_Load.argtypes = [c_char_p]
-        self.libc.DLL_FAST_GetParameterName.argtypes = [c_int]
-        self.libc.DLL_FAST_GetUnitName.argtypes = [c_int]
-        self.libc.DLL_FAST_GetParameterId.argtypes = [c_char_p]
-        self.libc.DLL_FAST_GetTime.argtypes = [c_int]
-        self.libc.DLL_FAST_GetData.argtypes = [c_int, c_int]
-        self.libc.DLL_FAST_GetAvg.argtypes = [c_char_p]
-        self.libc.DLL_FAST_LoadFile.argtypes = [c_char_p]
-        self.libc.DLL_FAST_SaveFile.argtypes = [c_char_p]
-        self.libc.DLL_FAST_SetVar.argtypes = [c_char_p, c_char_p, c_char_p]
-        self.libc.DLL_FAST_GetVar.argtypes = [c_char_p, c_char_p]
+        self.libc.DLL_FAST_Load.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_GetParameterName.argtypes = [ctypes.c_int]
+        self.libc.DLL_FAST_GetUnitName.argtypes = [ctypes.c_int]
+        self.libc.DLL_FAST_GetParameterId.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_GetTime.argtypes = [ctypes.c_int]
+        self.libc.DLL_FAST_GetData.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.libc.DLL_FAST_GetAvg.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_GetArray.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
+        self.libc.DLL_FAST_LoadFile.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_SaveFile.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_SetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+        self.libc.DLL_FAST_GetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
 
         # OUTPUT TYPES
         self.libc.DemoVectorPy_C.restype = ctypes.c_double
@@ -36,6 +37,7 @@ class BEMRosetta:
         self.libc.DLL_FAST_GetTime.restype = ctypes.c_double
         self.libc.DLL_FAST_GetData.restype = ctypes.c_double
         self.libc.DLL_FAST_GetAvg.restype = ctypes.c_double
+        self.libc.DLL_FAST_GetArray.restype = ctypes.c_int
         self.libc.DLL_FAST_LoadFile.restype = ctypes.c_int
         self.libc.DLL_FAST_SaveFile.restype = ctypes.c_int
         self.libc.DLL_FAST_SetVar.restype = ctypes.c_int
@@ -44,7 +46,7 @@ class BEMRosetta:
     def DemoVectorPy_C(self, v):
         self.libc.DemoVectorPy_C(v, len(v))
 
-    def DemoVectorC_Py(self, v):
+    def DemoVectorC_Py(self):
         # Argument preparation
         _data0 = ctypes.POINTER(ctypes.c_double)()
         _size0 = ctypes.c_int()
@@ -54,7 +56,7 @@ class BEMRosetta:
         _arraySize0 = ctypes.c_double * _size0.value
         _data0_pointer = ctypes.cast(_data0, ctypes.POINTER(_arraySize0))
 		v = np.frombuffer(_data0_pointer.contents)
-        return ret
+        return ret, v
 
     def FAST_Load(self, filename):
         self.libc.DLL_FAST_Load(str.encode(filename, 'UTF-8'))
@@ -76,6 +78,18 @@ class BEMRosetta:
 
     def FAST_GetAvg(self, param):
         self.libc.DLL_FAST_GetAvg(str.encode(param, 'UTF-8'))
+
+    def FAST_GetArray(self, idparam):
+        # Argument preparation
+        _data0 = ctypes.POINTER(ctypes.c_double)()
+        _size0 = ctypes.c_int()
+        # DLL function call
+        ret = self.libc.DLL_FAST_GetArray(idparam, ctypes.byref(_data0), ctypes.byref(_size0))
+        # Vector processing
+        _arraySize0 = ctypes.c_double * _size0.value
+        _data0_pointer = ctypes.cast(_data0, ctypes.POINTER(_arraySize0))
+		data = np.frombuffer(_data0_pointer.contents)
+        return ret, data
 
     def FAST_LoadFile(self, file):
         self.libc.DLL_FAST_LoadFile(str.encode(file, 'UTF-8'))

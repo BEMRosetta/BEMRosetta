@@ -645,6 +645,7 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 					t << "";
 			} else {
 				const VectorXd data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
+				const VectorXd time = fast.GetVector(0).segment(idBegin, idEnd - idBegin);
 				UVector<double> ndata;
 				Copy(data, ndata);
 				fullData[ip].Append(ndata);
@@ -671,6 +672,15 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 						val = data.minCoeff() - data.mean();
 					else if (stat == "std") 
 						val = sqrt((data.array() - data.mean()).square().sum() / (data.size() - 1));
+					else if (stat == "rao") {
+						bool onlyFFT = true;
+						double r2Max = 0.95;
+						double T, H;
+						GetWaveRegularAmplitude(fast, T, H);
+						val = GetRAO(data, time, T, onlyFFT, r2Max);
+						val /= H;
+					} else if (stat == "rao_mean") 
+						val = data.tail(data.size()/2).mean();	// mean of the half end
 					else
 						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, strpar));
 					
@@ -733,7 +743,7 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 	}
 }
 
-bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
+bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt) {
 	for (FindFile ff(AppendFileNameX(path, "*.dat")); ff; ++ff) {
 		if (ff.IsFile()) { 
 			String str = LoadFile(ff.GetPath());
@@ -744,7 +754,7 @@ bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt) {
 				return true;	
 			}
 		} else if (ff.IsFolder()) { 
-			if (FindHydrodyn(ff.GetPath(), ptfmCOBxt, ptfmCOByt))
+			if (FindHydrodynCB(ff.GetPath(), ptfmCOBxt, ptfmCOByt))
 				return true;
 		}
 	}
@@ -869,4 +879,59 @@ double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2, double &damp) {
 		return eq.GetPeriod();
 	} else
 		return Null;
+}
+
+double GetRAO(const VectorXd &data, const VectorXd &time, double T, bool onlyFFT, double r2Max) {
+	EigenVector vect(data, time);
+	
+	if (!onlyFFT) {
+		DataXRange vectx(vect, time[time.size()/2], time[time.size()-1]);
+		
+		SinEquation eq;
+		double r2;
+		ExplicitEquation::FitError err = eq.Fit(vectx, r2);
+		if (err == ExplicitEquation::NoError && r2 > r2Max) 
+			return 2*abs(eq.GetCoeff(1));
+	}
+	
+	double samplingTime = time(1) - time(0);
+	UVector<Pointf> fft = vect.FFTY(samplingTime, false, FFT_TYPE::T_FFT, FFT_WINDOW::NO_WINDOW);
+	double closestT = 0, rao = Null;
+	for (int i = 0; i < fft.GetCount(); ++i) {
+		if (abs(T - fft[i].x) < abs(T - closestT)) {
+			closestT = fft[i].x;
+			rao = 2*fft[i].y;
+		}
+	}
+	return rao;
+}
+
+void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A) {
+	String param = "Wave1Elev";
+	int id = dataFast.GetParameterX(param);
+	if (id < 0) 
+		throw Exc(Format("Param. %s not found", param));
+
+	UVector<int> idsx, idsy, idsFixed;
+	VectorVectorY<double> vect;
+	vect.Init(dataFast.dataOut, 0, id, idsx, idsy, idsFixed, false);
+
+	SinEquation eq;
+	double r2;
+	eq.GuessCoeff(vect);
+	ExplicitEquation::FitError err = eq.Fit(vect, r2);
+	if (err != ExplicitEquation::NoError || r2 < 0.9) 
+		throw Exc("Error in GetWavePeriodAmplitude, wave is not regular");
+	
+	double newA = 2*eq.GetCoeff(1);
+	double newT = 2*M_PI/eq.GetCoeff(2);
+	
+	//if (abs((T-newT)/T) > 0.05)
+	//	throw Exc(Format("Wave period %f is too different to the defined %f", newT, T));
+	
+	//if (abs((A-newA)/A) > 0.05)
+	//	throw Exc(Format("Wave amplitude %f is too different to the defined %f", newA, A));
+	
+	T = newT;
+	A = newA;
 }
