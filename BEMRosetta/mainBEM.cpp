@@ -422,7 +422,7 @@ void MainBEM::Init() {
 	mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
 	
 	mainSetupFOAMM.Init();
-	mainTab.Add(mainSetupFOAMM.SizePos(), t_("Setup FOAMM")).Disable();
+	mainTab.Add(mainSetupFOAMM.SizePos(), t_("FOAMM")).Disable();
 
 	mainStateSpace.Init();
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();

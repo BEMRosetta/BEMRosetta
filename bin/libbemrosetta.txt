@@ -39,6 +39,8 @@ double DLL_FAST_GetTime(int idtime)
 double DLL_FAST_GetData(int idtime, int idparam)
  // Returns the average value for parameter param
 double DLL_FAST_GetAvg(const char *param)
+ // Returns an Array of parameter idparam 
+int DLL_FAST_GetArray(int idparam, double **data, int *num)
  
  // Open a .dat or .fst FAST file to read or save parameters
 int DLL_FAST_LoadFile(const char *file)
