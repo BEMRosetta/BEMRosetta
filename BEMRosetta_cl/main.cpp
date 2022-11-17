@@ -17,7 +17,7 @@
 CONSOLE_APP_MAIN
 {	
 	try {
-#ifdef flagBEMR_TEST_DLL
+#if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		const UVector<String>& command = CommandLine();
 		
 		if (command.GetCount() < 2) 
@@ -26,7 +26,8 @@ CONSOLE_APP_MAIN
 		String binFolder = command[0];
 		String bemFolder = command[1];
 		String installFolder = AppendFileNameX(bemFolder, "install");
-		
+#endif
+#ifdef flagBEMR_TEST_DLL
 		FileDelete(AppendFileNameX(binFolder, "libbemrosetta.exp"));
 		FileDelete(AppendFileNameX(binFolder, "libbemrosetta.lib"));
 		
@@ -49,19 +50,19 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, double, 	   DLL_FAST_GetTime, (int idtime));		
 		DLLFunction(dll, double, 	   DLL_FAST_GetData, (int idtime, int idparam));
 		DLLFunction(dll, double, 	   DLL_FAST_GetAvg, (const char *));
+		DLLFunction(dll, double, 	   DLL_FAST_GetArray, (int idparam, double **, int *));
 		
 		DLLFunction(dll, double, 	   DemoVectorPy_C, (const double *, int));
-		DLLFunction(dll, double, 	   DemoVectorC_Py, (double **, int *));
+		
+		DLLFunction(dll, int, 	   	   DLL_FAST_LoadFile, (const char *file));
+		DLLFunction(dll, int, 	   	   DLL_FAST_SaveFile, (const char *file));
+		DLLFunction(dll, int, 	   	   DLL_FAST_SetVar, (const char *name, const char *paragraph, const char *value));
+		DLLFunction(dll, const char *, DLL_FAST_GetVar, (const char *name, const char *paragraph));
 #endif
 
-		
 		UVector<double> dat = {1, 2, 3};
 		double res = DemoVectorPy_C(dat, 3);
-		double *v;
-		int num;
-		DemoVectorC_Py(&v, &num);
-		
-	
+			
 		Cout() << "\nVersion: " << DLL_Version();
 		Cout() << "\n\nDLL functions list:\n";
 		String strList = DLL_strListFunctions();
@@ -102,7 +103,7 @@ CONSOLE_APP_MAIN
 			throw Exc(t_("Impossible to save installer file"));
 #endif
 
-#ifdef flagBEMR_TEST_DLL		
+#if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		Cout() << "\n\nLoading FAST .out file";
 		String outfile = AppendFileNameX(bemFolder, "examples/fast.out/demo.outb");
 		if (!DLL_FAST_Load(outfile))
@@ -114,18 +115,21 @@ CONSOLE_APP_MAIN
 		
 		Cout() << "\nSimulation begins at " << DLL_FAST_GetTimeInit() << " and ends at " << DLL_FAST_GetTimeEnd();
 		
-		int idptfmheave = DLL_FAST_GetParameterId("ptfmheave");
-		double avg = 0;
-		for (int i = 0; i < DLL_FAST_GetLen(); ++i)
+		int idptfmheave = DLL_FAST_GetParameterId("ptfmHeave");
+		int num;
+		double *v;
+		DLL_FAST_GetArray(idptfmheave, &v, &num);
+		Cout() << "\nRead " << num << " heave values"; 
+
+		double avg = 0, avgv = 0;
+		for (int i = 0; i < DLL_FAST_GetLen(); ++i) {
 			avg += DLL_FAST_GetData(i, idptfmheave);
+			avgv += v[i];
+		}
 		Cout() << "\nptfmheave_avg = " << avg/DLL_FAST_GetLen();
+		Cout() << "\nptfmheave_avg = " << avgv/DLL_FAST_GetLen();
 		Cout() << "\nptfmheave_avg = " << DLL_FAST_GetAvg("ptfmheave");
 		
-		DLLFunction(dll, int, 	   		DLL_FAST_LoadFile, (const char *file));
-		DLLFunction(dll, int, 	   		DLL_FAST_SaveFile, (const char *file));
-		DLLFunction(dll, int, 	   		DLL_FAST_SetVar, (const char *name, const char *paragraph, const char *value));
-		DLLFunction(dll, const char *, 	DLL_FAST_GetVar, (const char *name, const char *paragraph));				
-
 		Cout() << "\n\nLoading InflowWind .dat file";
 		String datfile = AppendFileNameX(bemFolder, "examples/fast.out/InflowWind.dat");
 		if (!DLL_FAST_LoadFile(datfile))
@@ -312,6 +316,29 @@ double DLL_FAST_GetData(int idtime, int idparam) noexcept {
 	}
 		
 	return DLL_Fastout().GetVal(idtime, idparam);
+}
+
+int DLL_FAST_GetArray(int idparam, double **data, int *num) noexcept {
+	static UVector<double> v;
+	
+	if (idparam < 0) {
+		CoutX() << "DLL_FAST_GetData() idparam < 0";
+		return Null;
+	}
+	if (idparam >= DLL_Fastout().GetParameterCount()) {
+		CoutX() << "DLL_FAST_GetData() idparam >= num_params";
+		return Null;
+	}
+	try {
+		v = clone(DLL_Fastout().GetUVector(idparam));
+		
+		*num = v.size();
+		*data = v.begin();
+		return 1;
+	} catch (...) {
+		CoutX() << "Unknown error in DLL_FAST_GetArray()";
+	}
+	return Null;	
 }
 
 double DLL_FAST_GetAvg(const char *param) noexcept {

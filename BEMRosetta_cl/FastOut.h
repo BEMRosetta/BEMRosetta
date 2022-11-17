@@ -4,7 +4,7 @@
 #define _BEMRosetta_BEMRosetta_cl_FastOut_h_
 
 
-bool FindHydrodyn(String path, double &ptfmCOBxt, double &ptfmCOByt);
+bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt);
 	
 class FastOut {
 public:
@@ -31,7 +31,7 @@ public:
 	SortedVectorMap<String, String> GetList(String filterParam = "", String filterUnits = "");
 		
 	double GetVal(double time, int idparam) const;
-	inline double GetVal(int idtime, int idparam) const	  {return dataOut[idparam][idtime];}
+	inline double GetVal(int idtime, int idparam) const	  		{return dataOut[idparam][idtime];}
 	inline const UVector<double> &GetUVector(int idparam) const {return dataOut[idparam];}
 	inline const UVector<double> &GetUVector(String param) const {
 		static UVector<double> bad;
@@ -205,7 +205,7 @@ private:
 				enabled = false;
 			else {
 				String folder = GetFileFolder(dataFast->GetFileName());
-				if (!FindHydrodyn(folder, ptfmCOBxt, ptfmCOByt)) 
+				if (!FindHydrodynCB(folder, ptfmCOBxt, ptfmCOByt)) 
 					ptfmCOBxt = ptfmCOByt = Null;
 			}
 		}
@@ -670,5 +670,8 @@ public:
 };
 
 double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2);
+
+double GetRAO(const VectorXd &data, const VectorXd &time, double T, bool onlyFFT, double r2Max);
+void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A);
 	
 #endif

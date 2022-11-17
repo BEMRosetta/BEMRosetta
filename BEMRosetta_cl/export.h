@@ -38,6 +38,8 @@ extern "C" {
 	__declspec(dllexport) double DLL_FAST_GetData(int idtime, int idparam) noexcept;
 	// Returns the average value for parameter param
 	__declspec(dllexport) double DLL_FAST_GetAvg(const char *param) noexcept;
+	// Returns an Array of parameter idparam 
+	__declspec(dllexport) int DLL_FAST_GetArray(int idparam, double **data, int *num) noexcept;
 	
 	// Open a .dat or .fst FAST file to read or save parameters
 	__declspec(dllexport) int DLL_FAST_LoadFile(const char *file) noexcept;
