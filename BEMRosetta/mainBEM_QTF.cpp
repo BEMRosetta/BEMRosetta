@@ -9,6 +9,7 @@
 #include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
+#include <BEMRosetta_cl/functions.h>
 
 using namespace Upp;
 
@@ -460,8 +461,21 @@ bool MainQTF::Load() {
 		if (opQTF.GetCount() > 1)
 			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
 	
+		UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
+		for (const auto &c : qh)
+			qh << FixHeading(c, Bem().headingType);
+		
+		Sort(qh, [&](auto& a, auto& b)->bool const { 
+			if (a.real() < b.real())
+				return true; 
+			else if (a.real() > b.real())
+				return false;
+			else
+				return a.imag() < b.imag();	
+		});
+	
 		for (int ih = 0; ih < hd.qh.size(); ++ih)
-			listHead.Add(hd.qh[ih].real(), hd.qh[ih].imag());
+			listHead.Add(qh[ih].real(), qh[ih].imag());
 				
 		if (listHead.GetCount() > 0) {
 			int id = FindClosest(hd.qh, head);

@@ -972,15 +972,16 @@ void Hydro::StateSpace::GetTFS(const UVector<double> &w) {
 int Hydro::GetHeadId(double hd) const {
 	hd = FixHeading_180(hd);
 	for (int i = 0; i < head.size(); ++i) {
-		if (EqualRatio(head[i], hd, 0.01))
+		if (EqualRatio(FixHeading_180(head[i]), hd, 0.01))
 			return i;
 	}
 	return -1;
 }
 
 int Hydro::GetHeadIdMD(const std::complex<double> &hd) const {
+	std::complex<double> hd_ = FixHeading_180(hd);
 	for (int i = 0; i < mdhead.size(); ++i) {
-		if (EqualRatio(mdhead[i], hd, 0.01))
+		if (EqualRatio(FixHeading_180(mdhead[i]), hd_, 0.01))
 			return i;
 	}
 	return -1;
@@ -1426,6 +1427,7 @@ void BEM::UpdateHeadAll() {
 		for (int ih = 0; ih < hydros[id].hd().head.size(); ++ih) 
 			FindAddDelta(headAll, FixHeading(hydros[id].hd().head[ih], headingType), 0.1);
 	}
+	Sort(headAll);
 	//orderHeadAll = GetSortOrder(headAll);
 }
 
@@ -1437,6 +1439,14 @@ void BEM::UpdateHeadAllMD() {
 		for (int ih = 0; ih < hydros[id].hd().mdhead.size(); ++ih) 
 			FindAddDelta(headAllMD, FixHeading(hydros[id].hd().mdhead[ih], headingType), 0.1);
 	}
+	Sort(headAllMD, [&](auto& a, auto& b)->bool const { 
+		if (a.real() < b.real())
+			return true; 
+		else if (a.real() > b.real())
+			return false;
+		else
+			return a.imag() < b.imag();	
+	});
 	//orderHeadAll = GetSortOrder(headAll);
 }
 
