@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 double DemoVectorPy_C(const double *v, int num)  
-int DemoVectorC_Py(double **v, int *num)  
  
  // Returns dll time and date
 const char *DLL_Version()   
@@ -30,17 +29,21 @@ int DLL_FAST_GetParameterCount()
  // Returns the number of registers per parameter
 int DLL_FAST_GetLen()   
  // Returns the initial time in seconds
-double DLL_FAST_GetTimeInit() 
+double DLL_FAST_GetTimeStart() 
  // Returns the end time in seconds
 double DLL_FAST_GetTimeEnd() 
  // Returns the idtime_th time(idtime goes from 0 to DLL_FAST_GetLen())
 double DLL_FAST_GetTime(int idtime)
  // Returns the idtime_th value of parameter idparam(idtime goes from 0 to DLL_FAST_GetLen())
 double DLL_FAST_GetData(int idtime, int idparam)
- // Returns the average value for parameter param
-double DLL_FAST_GetAvg(const char *param)
+ // Returns the average value for parameter idparam
+double DLL_FAST_GetAvg(int idparam, int idbegin, int idend)
+ // Returns the maximum value for parameter idparam
+double DLL_FAST_GetMax(int idparam, int idbegin, int idend)
+ // Returns the minimum value for parameter idparam
+double DLL_FAST_GetMin(int idparam, int idbegin, int idend)
  // Returns an Array of parameter idparam 
-int DLL_FAST_GetArray(int idparam, double **data, int *num)
+int DLL_FAST_GetArray(int idparam, int idbegin, int idend, double **data, int *num)
  
  // Open a .dat or .fst FAST file to read or save parameters
 int DLL_FAST_LoadFile(const char *file)

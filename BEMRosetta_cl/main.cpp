@@ -45,12 +45,12 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, int, 		   DLL_FAST_GetParameterId, (const char *name));
 		DLLFunction(dll, int, 		   DLL_FAST_GetParameterCount, ());
 		DLLFunction(dll, int, 		   DLL_FAST_GetLen, ());		
-		DLLFunction(dll, double,	   DLL_FAST_GetTimeInit, ());
+		DLLFunction(dll, double,	   DLL_FAST_GetTimeStart, ());
 		DLLFunction(dll, double,	   DLL_FAST_GetTimeEnd, ());
 		DLLFunction(dll, double, 	   DLL_FAST_GetTime, (int idtime));		
 		DLLFunction(dll, double, 	   DLL_FAST_GetData, (int idtime, int idparam));
 		DLLFunction(dll, double, 	   DLL_FAST_GetAvg, (const char *));
-		DLLFunction(dll, double, 	   DLL_FAST_GetArray, (int idparam, double **, int *));
+		DLLFunction(dll, double, 	   DLL_FAST_GetArray, (int idparam, int idbegin, int idend, double **, int *));
 		
 		DLLFunction(dll, double, 	   DemoVectorPy_C, (const double *, int));
 		
@@ -113,12 +113,12 @@ CONSOLE_APP_MAIN
 		for (int i = 0; i < DLL_FAST_GetParameterCount(); ++i)
 			Cout() << Format(" %s[%s]", DLL_FAST_GetParameterName(i), DLL_FAST_GetUnitName(i));
 		
-		Cout() << "\nSimulation begins at " << DLL_FAST_GetTimeInit() << " and ends at " << DLL_FAST_GetTimeEnd();
+		Cout() << "\nSimulation begins at " << DLL_FAST_GetTimeStart() << " and ends at " << DLL_FAST_GetTimeEnd();
 		
 		int idptfmheave = DLL_FAST_GetParameterId("ptfmHeave");
 		int num;
 		double *v;
-		DLL_FAST_GetArray(idptfmheave, &v, &num);
+		DLL_FAST_GetArray(idptfmheave, -1, -1, &v, &num);
 		Cout() << "\nRead " << num << " heave values"; 
 
 		double avg = 0, avgv = 0;
@@ -275,11 +275,11 @@ int DLL_FAST_GetLen() noexcept {
 	}
 }
 
-double DLL_FAST_GetTimeInit() noexcept {
+double DLL_FAST_GetTimeStart() noexcept {
 	try {
-		return DLL_Fastout().GetTimeInit();
+		return DLL_Fastout().GetTimeStart();
 	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetTimeInit()";
+		CoutX() << "Unknown error in DLL_FAST_GetTimeStart()";
 		return Null;
 	}
 }
@@ -299,52 +299,98 @@ double DLL_FAST_GetTime(int idtime) noexcept {
 
 double DLL_FAST_GetData(int idtime, int idparam) noexcept {
 	if (idtime < 0) {
-		CoutX() << "DLL_FAST_GetData() idtime < 0";
+		CoutX() << "Error in DLL_FAST_GetData() idtime < 0";
 		return Null;
 	}
 	if (idtime >= DLL_Fastout().GetNumData()) {
-		CoutX() << "DLL_FAST_GetData() idtime >= time";
+		CoutX() << "Error in DLL_FAST_GetData() idtime >= time";
 		return Null;
 	}
 	if (idparam < 0) {
-		CoutX() << "DLL_FAST_GetData() idparam < 0";
+		CoutX() << "Error in DLL_FAST_GetData() idparam < 0";
 		return Null;
 	}
 	if (idparam >= DLL_Fastout().GetParameterCount()) {
-		CoutX() << "DLL_FAST_GetData() idparam >= num_params";
+		CoutX() << "Error in DLL_FAST_GetData() idparam >= num_params";
 		return Null;
 	}
 		
 	return DLL_Fastout().GetVal(idtime, idparam);
 }
 
-int DLL_FAST_GetArray(int idparam, double **data, int *num) noexcept {
-	static UVector<double> v;
+static void DLL_FAST_GetData(int idparam, int idbegin, int idend, VectorXd &data) {
+	if (idparam < 0) 
+		throw Exc("idparam < 0");
+	if (idparam >= DLL_Fastout().GetParameterCount()) 
+		throw Exc("idparam >= num_params");
+
+	if (idbegin < 0)
+		idbegin = 0;
+	if (idend < 0)
+		idend = DLL_Fastout().GetNumData()-1;
 	
-	if (idparam < 0) {
-		CoutX() << "DLL_FAST_GetData() idparam < 0";
-		return Null;
-	}
-	if (idparam >= DLL_Fastout().GetParameterCount()) {
-		CoutX() << "DLL_FAST_GetData() idparam >= num_params";
-		return Null;
-	}
+	if (idbegin > idend) 
+		throw Exc("idbegin > idend");
+		
+	data = DLL_Fastout().GetVector(idparam).segment(idbegin, idend - idbegin);
+}
+
+int DLL_FAST_GetArray(int idparam, int idbegin, int idend, double **data, int *num) noexcept {
+	static VectorXd v;
+	
 	try {
-		v = clone(DLL_Fastout().GetUVector(idparam));
+		DLL_FAST_GetData(idparam, idbegin, idend, v);
 		
 		*num = v.size();
-		*data = v.begin();
+		*data = v.data();
 		return 1;
+	} catch (Exc e) {
+		CoutX() << Format("Error in DLL_FAST_GetArray(): %s", e);
 	} catch (...) {
 		CoutX() << "Unknown error in DLL_FAST_GetArray()";
 	}
 	return Null;	
 }
 
-double DLL_FAST_GetAvg(const char *param) noexcept {
+double DLL_FAST_GetAvg(int idparam, int idbegin, int idend) noexcept {
 	try {
-		const UVector<double> &data = DLL_Fastout().GetUVector(param);
-		return Eigen::Map<const Eigen::VectorXd>(data, data.size()).mean();
+		VectorXd data;
+		
+		DLL_FAST_GetData(idparam, idbegin, idend, data);
+		
+		return data.mean();
+	} catch (Exc e) {
+		CoutX() << Format("Error in DLL_FAST_GetAvg(): %s", e);
+	} catch (...) {
+		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
+	}
+	return Null;
+}
+
+double DLL_FAST_GetMax(int idparam, int idbegin, int idend) noexcept {
+	try {
+		VectorXd data;
+		
+		DLL_FAST_GetData(idparam, idbegin, idend, data);
+		
+		return data.maxCoeff();
+	} catch (Exc e) {
+		CoutX() << Format("Error in DLL_FAST_GetMax(): %s", e);
+	} catch (...) {
+		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
+	}
+	return Null;
+}
+
+double DLL_FAST_GetMin(int idparam, int idbegin, int idend) noexcept {
+	try {
+		VectorXd data;
+		
+		DLL_FAST_GetData(idparam, idbegin, idend, data);
+		
+		return data.minCoeff();
+	} catch (Exc e) {
+		CoutX() << Format("Error in DLL_FAST_GetMin(): %s", e);
 	} catch (...) {
 		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
 	}
@@ -412,18 +458,6 @@ double DemoVectorPy_C(const double *v, int num) noexcept {
     for (int i = 0; i < num; ++i) 
         res += v[i];
     return res;
-}
-
-int DemoVectorC_Py(double **v, int *num) noexcept {
-	static UVector<double> data;
-	
-	*num = 321;
-	data.SetCount(*num);
-	for (int i = 0; i < *num; ++i)
-		data[i] = i/2.;
-	*v = data;
-	
-	return 1;
 }
 
 

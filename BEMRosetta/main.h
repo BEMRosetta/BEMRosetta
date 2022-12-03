@@ -128,29 +128,26 @@ public:
 	inline bool IsNullData() {
 		ASSERT(data != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:			return data->A.	   size() <= idf || data->A	   [idf].size() <= jdf || 
-											   data->A	  [idf][jdf].size() == 0 || !IsNum(data->A	[idf][jdf][0]);
-		case Hydro::PLOT_AINF:		return data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
-		case Hydro::PLOT_A0:		return data->A0  .rows() <= idf || data->A0  .cols() <= jdf || !IsNum(data->A0  (idf, jdf));
-		case Hydro::PLOT_B:			return data->B.	   size() <= idf || data->B	   [idf].size() <= jdf || 
-											   data->B	  [idf][jdf].size() == 0 || !IsNum(data->B	[idf][jdf][0]);
-		case Hydro::PLOT_K:			return data->Kirf. size() <= idf || data->Kirf [idf].size() <= jdf || 
-											   data->Kirf [idf][jdf].size() == 0 || !IsNum(data->Kirf [idf][jdf][0]);
-		case Hydro::PLOT_AINFW:		return data->Ainf_w.size() <= idf || data->Ainf_w[idf].size() <= jdf || 
-											   data->Ainf_w[idf][jdf].size() == 0 || !IsNum(data->Ainf_w[idf][jdf][0]);		
+		case Hydro::PLOT_A:			return !data->IsLoadedA(idf, jdf);
+		case Hydro::PLOT_AINF:		return !data->IsLoadedAinf(idf, jdf);
+		case Hydro::PLOT_A0:		return !data->IsLoadedA0(idf, jdf);
+		case Hydro::PLOT_B:			return !data->IsLoadedB(idf, jdf);
+		case Hydro::PLOT_MD:		return !data->IsLoadedMD(int(idf/6), jdf);
+		case Hydro::PLOT_KIRF:		return !data->IsLoadedKirf(idf, jdf);
+		case Hydro::PLOT_AINFW:		return !data->IsLoadedAinf_w(idf, jdf);
 		case Hydro::PLOT_FORCE_SC_1:	
-		case Hydro::PLOT_FORCE_SC_2:return !IsNum(data->sc.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_SC_2:return !data->IsLoadedFsc(idf, jdf);		// jdf: heading, idf: body
 		case Hydro::PLOT_FORCE_FK_1:	
-		case Hydro::PLOT_FORCE_FK_2:return !IsNum(data->fk.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_FK_2:return !data->IsLoadedFfk(idf, jdf);
 		case Hydro::PLOT_FORCE_EX_1:
-		case Hydro::PLOT_FORCE_EX_2:return !IsNum(data->ex.force[jdf](0, idf));
+		case Hydro::PLOT_FORCE_EX_2:return !data->IsLoadedFex(idf, jdf);
 		case Hydro::PLOT_RAO_1:
-		case Hydro::PLOT_RAO_2:		return !IsNum(data->rao.force[jdf](0, idf));
+		case Hydro::PLOT_RAO_2:		return !data->IsLoadedRAO(idf, jdf);
 		case Hydro::PLOT_TFS_1:
-		case Hydro::PLOT_TFS_2:		return data->sts[idf][jdf].TFS.IsEmpty();
+		case Hydro::PLOT_TFS_2:		return !data->sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_Z_1:
-		case Hydro::PLOT_Z_2:	return !IsNum(data->A[idf][jdf][0]) || !IsNum(data->B[idf][jdf][0]) || data->Ainf.rows() <= idf || data->Ainf.cols() <= jdf || !IsNum(data->Ainf(idf, jdf));
-		default: 				NEVER();	return true;
+		case Hydro::PLOT_Z_2:		return !data->IsLoadedA(idf, jdf) || !data->IsLoadedAinf(idf, jdf) || !data->IsLoadedB(idf, jdf);
+		default: 		NEVER();	return true;
 		}
 	}
 	virtual inline double y(int64 id) {
@@ -160,8 +157,9 @@ public:
 		case Hydro::PLOT_AINF:		return data->Ainf_(ndim, idf, jdf);
 		case Hydro::PLOT_A0:		return data->A0_(ndim, idf, jdf);
 		case Hydro::PLOT_B:			return data->B_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_K:			return data->Kirf_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_KIRF:		return data->Kirf_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINFW:		return data->Ainf_w_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_MD:		return data->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
 		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (data->F_(ndim, data->sc, jdf, int(id), idf)) : 
 														real(data->F_(ndim, data->sc, jdf, int(id), idf));
 		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (data->F_(ndim, data->sc, jdf, int(id), idf)) : 
@@ -195,7 +193,7 @@ public:
 		if ((dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0) && id == 1 && data->Nf > 0)
 			id = data->Nf - 1;
 		
-		if (dataToPlot == Hydro::PLOT_K)
+		if (dataToPlot == Hydro::PLOT_KIRF)
 			return data->Tirf[int(id)];
 		
 		if (show_w) {
@@ -219,7 +217,7 @@ public:
 			return show_w  ? 2 : 1;		
 		if (dataToPlot == Hydro::PLOT_A0)
 			return !show_w ? 2 : 1;
-		if (dataToPlot == Hydro::PLOT_K)
+		if (dataToPlot == Hydro::PLOT_KIRF)
 			return data->Tirf.size();
 		return data->Nf;
 	}
@@ -598,7 +596,7 @@ public:
 	~MainPlot()	{Clear();}
 		
 	void Init(bool vert);
-	void Init(int idf, double jdf_ih, Hydro::DataToShow dataToShow);
+	void Init(int idf, double jdf_ih, Hydro::DataToShow dataToShow, double _heading1 = Null);
 	bool Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const UVector<int> &ids);
 	bool Load(const Hydro &hy, const MainBEM &mbm);
 	void LoadEach(const Hydro &hy, int id, bool &loaded, int idc = -1);
@@ -610,7 +608,7 @@ public:
 	UArray<HydroSource> TFS_source, TFS_source2;
 		
 	int plot_idf, plot_jdf;
-	double heading;
+	double heading0, heading1;
 	Hydro::DataToShow dataToShow;
 	
 	bool dim;
@@ -635,6 +633,7 @@ public:
 	bool Load(BEM &bem, const UVector<int> &ids, int ih = Null);
 	
 	void UpdateHead(BEM &bem, int ih);
+	void UpdateHeadMD(BEM &bem, int ih);
 		
 	TabCtrl tab;
 	UArray<UArray<MainPlot>> plots;
@@ -1038,7 +1037,7 @@ class QTFTabDof : public StaticRect {
 public:
 	typedef QTFTabDof CLASSNAME;
 
-	void Init(int posSplitter);
+	void Init(int posSplitter, int idof);
 	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter);
 	
 	Splitter splitter;
@@ -1070,8 +1069,8 @@ private:
 	Pointf pf = Null;
 	
 	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
-	void OnClick(Point p, ScatterCtrl::MouseAction action);
-	void DoClick(Data &up, bool titles);
+	void OnClick(Point p, int idof, ScatterCtrl::MouseAction action);
+	void DoClick(Data &up, int idof, bool titles);
 		
 	void OnPainter(Painter &w)		{OnPaint(w);}
 	void OnDraw(Draw &w)			{OnPaint(w);}
@@ -1185,6 +1184,7 @@ public:
 	MainABForce mainAinfw;
 	MainABForce mainK;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
+	MainABForce mainMD;
 	MainRAO mainRAO;
 	MainStateSpace mainStateSpace;
 	MainMatrixKA mainMatrixK;

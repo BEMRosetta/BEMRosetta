@@ -4,7 +4,7 @@
 #define _BEMRosetta_BEMRosetta_cl_FastOut_h_
 
 
-bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt);
+//bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt);
 	
 class FastOut {
 public:
@@ -21,10 +21,11 @@ public:
 	int GetParameter_throw(String param) const;
 	int GetParameterX(String param) const;
 	UVector<int> FindParameterMatch(String param) const;
+	UVector<String> FindParameterMatchStr(String param) const;
 	
-	const String &GetParameter(int id) const	{return parameters[id];}
-	const String &GetUnit(int id) const			{return units[id];}
-	int GetParameterCount() const				{return parameters.size();}
+	const String &GetParameter(int idparam) const	{return parameters[idparam];}
+	const String &GetUnit(int idparam) const		{return units[idparam];}
+	int GetParameterCount() const					{return parameters.size();}
 	 
 	SortedIndex<String> GetParameterList(String filter = ""); 
 	SortedIndex<String> GetUnitList(String filter = "");
@@ -56,7 +57,7 @@ public:
 	void SetNextTime(double time);
 		
 	int GetIdTime(double time) const;
-	double GetTimeInit() const	{return dataOut[0][0];}
+	double GetTimeStart() const	{return dataOut[0][0];}
 	double GetTimeEnd()	 const	{return dataOut[0][GetNumData()-1];}
 	int GetNumData() const		{return dataOut[0].size();}			
 	bool IsEmpty() const		{return dataOut.IsEmpty();}	
@@ -196,19 +197,8 @@ private:
 			name = "PtfmHeaveCB";
 			units = "m";
 		}
-		virtual void Init() {
-			idheave = dataFast->GetParameterX("PtfmHeave");
-			idpitch = dataFast->GetParameterX("PtfmPitch");
-			idroll = dataFast->GetParameterX("PtfmRoll");
-			idyaw = dataFast->GetParameterX("PtfmYaw");	
-			if (idroll < 0 || idpitch < 0 || idheave < 0 || idyaw < 0) 
-				enabled = false;
-			else {
-				String folder = GetFileFolder(dataFast->GetFileName());
-				if (!FindHydrodynCB(folder, ptfmCOBxt, ptfmCOByt)) 
-					ptfmCOBxt = ptfmCOByt = Null;
-			}
-		}
+		virtual void Init();
+		
 		virtual double Calc(int idtime) {
 			double heave = dataFast->GetVal(idtime, idheave);
 			double pitch = dataFast->GetVal(idtime, idpitch);
@@ -486,7 +476,7 @@ private:
 	UArray<Fairten_tParam> fairTens;	
 };
 
-void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table);
+void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params, UVector<UVector<String>> &realparams, double start, bool fromEnd, double end, UVector<UVector<Value>> &table);
 
 
 class FASTCase {
@@ -548,6 +538,9 @@ public:
 				res = GetFASTVar(fileText, vars[0]);
 			else
 				throw Exc(Format(t_("Wrong variable '%s' in GetString"), var));
+			
+			if (res == "")
+				throw Exc(Format(t_("Unknown variable '%s' in GetString"), var));
 			
 			if (res[0] == '\"')		// Remove quotes
 				res = res.Mid(1);
