@@ -24,10 +24,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 				FAST_WAMIT, 				 HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   BEMROSETTA, 	   	   UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.ss.12", "FAST .dat.1.2.3.hst.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "BEMRosetta .bem", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     				true,		 			 	 false,		   false,		  false,   false, 		   true,  					  false,   true,			   true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     			"*.1",		 			 	 "",		   "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.bem",		   	   "*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   BEMROSETTA, 	   	   UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "BEMRosetta .bem", "By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,			   true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.bem",		   	   "*.*"};       
 	
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -141,6 +141,7 @@ public:
     double GetMass(int ib) const	{return M[ib](0, 0);}
     
     int GetHeadId(double hd) const;
+    int GetHeadIdMD(const std::complex<double> &h) const;
 	
     struct Forces : public DeepCopyOption<Forces> {
         Forces() {}
@@ -208,8 +209,8 @@ public:
     String stsProcessor;
     
     
-    VectorXd  qw;		 							// [Nf]             Wave frequencies
-    VectorXcd qh;									// [Nh]             Wave headings
+    VectorXd  qw;		 							 // [Nf]             Wave frequencies
+    VectorXcd qh;									 // [Nh]             Wave headings
     UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
     bool qtfdataFromW = true;
      
@@ -224,10 +225,26 @@ public:
         	}
         }
     }
+    
+    VectorXcd mdhead;							// [Nh]             Wave headings
+	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	
+	int mdtype = 0;
+	
+    void InitMd(UArray<UArray<UArray<VectorXd>>> &md, int nb, int nh, int nf) {
+        md.SetCount(nb);
+        for (int ib = 0; ib < nb; ++ib) {
+            md[ib].SetCount(nh);
+        	for (int ih = 0; ih < nh; ++ih) {    
+        		md[ib][ih].SetCount(6);
+        		for (int idf = 0; idf < 6; ++idf) 
+        			md[ib][ih][idf].setConstant(nf, NaNDouble);
+        	}
+        }
+    }
     					
     UVector<double> T;					// [Nf]    			Wave periods
     UVector<double> w;		 			// [Nf]             Wave frequencies
-    bool dataFromW;
+    int dataFromW = Null;
     UVector<double> Vo;   				// [Nb]             Displaced volume
     		
     void Dimensionalize();
@@ -307,8 +324,8 @@ public:
 	
 	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[idf][jdf][ifr]*rho_dim()/rho_ndim()  : A[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	VectorXd A_dim(int idf, int jdf) 			const {return dimen  ? A[idf][jdf]    *(rho_dim()/rho_ndim()) : A[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : A[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd A_ndim(int idf, int jdf)			const {return !dimen ? A[idf][jdf]*(rho_ndim()/rho_dim()) : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
+	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : A[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	VectorXd A_ndim(int idf, int jdf)			const {return !dimen ? A[idf][jdf]/**(rho_ndim()/rho_dim())*/ : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
 	MatrixXd A_(bool ndim, int ifr, int ib) 	const;
 	
@@ -322,7 +339,7 @@ public:
 	
 	double B_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B[idf][jdf][ifr]*rho_dim()/rho_ndim() : B[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	VectorXd B_dim(int idf, int jdf)  	   		const;
-	double B_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : B[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	VectorXd B_ndim(int idf, int jdf) 	   		const;
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
 	MatrixXd B_(bool ndim, int ifr, int ib) 	const;
@@ -333,15 +350,25 @@ public:
 	double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
 	double Ainf_w_dim(int ifr, int idf, int jdf) 		const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Ainf_w_ndim(int ifr, int idf, int jdf) 		const {return !dimen ? Ainf_w[idf][jdf][ifr]*(rho_ndim()/rho_dim()) : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainf_w_ndim(int ifr, int idf, int jdf) 		const {return !dimen ? Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
-	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)*g_rho_dim()/g_rho_ndim()  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
 	MatrixXd C_(bool ndim, int ib) 				   const;
 	void C_dim();	
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
+	double Md_dim(int idf, int ih, int ifr)  const {
+		int ib = int(idf/6);
+		idf -= 6*ib;
+		return dimen ? md[ib][ih][idf](ifr)*g_rho_ndim()/g_rho_dim()  : md[ib][ih][idf](ifr)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	double Md_ndim(int idf, int ih, int ifr) const {
+		int ib = int(idf/6);
+		idf -= 6*ib;
+		return !dimen ? md[ib][ih][idf](ifr) : md[ib][ih][idf](ifr)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double Md_(bool ndim, int idf, int ih, int ifr) const {return ndim ? Md_ndim(idf, ih, ifr) : Md_dim(idf, ih, ifr);}	// idf: body, jdf: heading, [Nb][Nh][6](Nf)
+	
 	MatrixXd Dlin_dim(int ib) const;
 	
 	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
@@ -383,7 +410,7 @@ public:
 	}
 	
 	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dimenSTS  ? sts[idf][jdf].TFS[ifr]*g_rho_dim()/g_rho_ndim() : sts[idf][jdf].TFS[ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]*g_rho_ndim()/g_rho_dim() : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]/**g_rho_ndim()/g_rho_dim()*/ : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
 	double Tdof(int ib, int idf) const;
@@ -417,11 +444,11 @@ private:
 	void ResetForces1st(Hydro::FORCE force);
 	
 public:
-	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2};
-	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_K, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
+	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2, DATA_MD};
+	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_KIRF, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
-				 PLOT_TFS_1, PLOT_TFS_2};
+				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD};
 	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
@@ -430,22 +457,27 @@ public:
 	
 	const BEM &GetBEM() const {return *bem;}
 	
-	bool IsLoadedA(int i = 0, int j = 0) 	 const {return !A.IsEmpty() && A[i].size() > 0 && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
-	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return !Ainf_w.IsEmpty() && Ainf_w[i].size() > 0 && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
-	bool IsLoadedAinf()  					 const {return Ainf.size() > 0;}
+	bool IsLoadedA	   (int i = 0, int j = 0)const {return A.size() > i && A[i].size() > j && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
+	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return Ainf_w.size() > i && Ainf_w[i].size() > j && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
+	bool IsLoadedAinf  (int i = 0, int j = 0)const {return Ainf.rows() > i && Ainf.cols() > j && IsNum(Ainf(i, j));}
+	bool IsLoadedA0	   (int i = 0, int j = 0)const {return A0.rows() > i && A0.cols() > j && IsNum(A0(i, j));}
 	bool IsLoadedLinearDamping()  			 const {return linearDamping.size() > 0;}
-	bool IsLoadedA0()	 					 const {return A0.size() > 0;}
-	bool IsLoadedB(int i = 0, int j = 0) 	 const {return !B.IsEmpty() && B[i].size() > 0 && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
-	bool IsLoadedC()	 const {return !C.IsEmpty() && C[0].size() > 0 && IsNum(C[0](0, 0));}
-	bool IsLoadedM()	 const {return !M.IsEmpty() && M[0].size() > 0 && IsNum(M[0](0, 0));}
-	bool IsLoadedFex(int idf = 0, int ih = 0)const {return !ex.force.IsEmpty() && ex.force[ih].size() > 0 && !IsNull(ex.force[ih](0, idf));}
-	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return !sc.force.IsEmpty() && sc.force[ih].size() > 0 && !IsNull(sc.force[ih](0, idf));}
-	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return !fk.force.IsEmpty() && fk.force[ih].size() > 0 && !IsNull(fk.force[ih](0, idf));}
-	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return !rao.force.IsEmpty()&&rao.force[ih].size() > 0 && !IsNull(rao.force[ih](0, idf));}
-	bool IsLoadedForce(const Forces &f) 	 const {return !f.force.IsEmpty();}
+	bool IsLoadedB	   (int i = 0, int j = 0)const {return B.size() > i && B[i].size() > j && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
+	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return C.size() > ib && C[ib].rows() > idf && C[ib].cols() > jdf && IsNum(C[ib](idf, jdf));}
+	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return M.size() > ib && M[ib].rows() > idf && M[ib].cols() > jdf && IsNum(M[ib](idf, jdf));}
+	
+	bool IsLoadedFex(int idf = 0, int ih = 0)const {return IsLoadedForce(ex, idf, ih);}
+	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return IsLoadedForce(sc, idf, ih);}
+	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return IsLoadedForce(fk, idf, ih);}
+	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return IsLoadedForce(rao,idf, ih);}
+	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0)
+											 const {return f.force.size() > ih && f.force[ih].cols() > idf && IsNum(f.force[ih](0, idf));}
+	
 	bool IsLoadedStateSpace()	  			 const {return !sts.IsEmpty();}
 	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !qtfsum.IsEmpty() : !qtfdif.IsEmpty();}
-	bool IsLoadedKirf()	 	 				 const {return !Kirf.IsEmpty() && Kirf[0].size() > 0 && Kirf[0][0].size() > 0;}
+	bool IsLoadedMD(int ib = 0, int ih = 0)	 const {return md.size() > ib && md[ib].size() > ih && md[ib][ih].size() == 6 && md[ib][ih][0].size() > 0 && IsNum(md[ib][ih][0](0));}
+	static bool IsLoadedMD(const UArray<UArray<UArray<VectorXd>>> &mD, int ib = 0, int ih = 0) {return mD.size() > ib && mD[ib].size() > ih && mD[ib][ih].size() == 6 && mD[ib][ih][0].size() > 0 && IsNum(mD[ib][ih][0](0));}
+	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return Kirf.size() > idf && Kirf[idf].size() > jdf && Kirf[idf][jdf].size() > 0 && IsNum(Kirf[idf][jdf][0]);}
 	bool IsLoadedVo()	 	 				 const {return Vo.size() == 3 && IsNum(Vo[0]); }
 	
 	void RemoveThresDOF_A(double thres);
@@ -485,6 +517,7 @@ public:
 	void DeleteFrequencies(const UVector<int> &idFreq);
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
 	void DeleteHeadings(const UVector<int> &idHead);
+	void DeleteHeadingsMD(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf);
 	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
@@ -573,14 +606,25 @@ public:
 	static String F_units(bool ndim, int r) {
 		if (ndim) {
 			if (r < 3)
-				return "m^3";
-			return "m^4";
+				return "m^2";
+			return "m^3";
 		} else {
 			if (r < 3)
-				return "N";
-			return "N-m";
+				return "N/m";
+			return "N-m/m";
 		}
 	}
+	static String MD_units(bool ndim, int r) {
+		if (ndim) {
+			if (r < 3)
+				return t_("m");
+			return t_("m2");
+		} else {
+			if (r < 3)
+				return t_("N/m2");
+			return t_("N-m/m2");
+		}
+	} 
 };
 
 bool IsNum(const Hydro::Forces &f);
@@ -785,7 +829,7 @@ public:
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T);
-	void ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T);
+	bool ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T);
 	
 	bool Load_cfg(String fileName);
 	int iperin = Null, iperout = Null;
@@ -804,6 +848,8 @@ protected:
 	bool Load_hst(String fileName);
 	bool Load_4(String fileName);
 	bool Load_12(String fileName, bool isSum, Function <bool(String, int)> Status);
+	bool Load_789(String fileName);
+	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf);
 	
 	void Save_1(String fileName, bool force_T = false);
 	void Save_3(String fileName, bool force_T = false);
@@ -811,6 +857,7 @@ protected:
 	void Save_4(String fileName, bool force_T = false);
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
+	void Save_789(String fileName, bool force_T, bool force_Deg);
 	void Save_FRC(String fileName);
 	void Save_POT(String fileName);
 		
@@ -1078,6 +1125,7 @@ public:
 	static Function <void(String)> Print, PrintWarning, PrintError;	
 	
 	UVector<double> headAll;	// Common models data
+	UArray<std::complex<double>> headAllMD;
 	//UVector<int> orderHeadAll;
 	
 	int Nb = 0;				
@@ -1145,10 +1193,20 @@ public:
 	static String GetTempFilesFolder() {return AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "Temp");}
 	
 	void UpdateHeadAll();
+	void UpdateHeadAllMD();
 	
 	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst";
 	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";	// Priority
+	const UVector<String> bemExtSets = {".1.2.3.hst.4.12s.12d", ".out", ".lis.qtf"};
 	String bemFilesAst;
+	
+	int GetBEMExtSet(String file) {
+		String ext = GetFileExt(file);
+		for (int i = 0; i < bemExtSets.size(); ++i)
+			if (bemExtSets[i].Find(ext) >= 0)
+				return i;
+		return -1;
+	}
 	
 	void Jsonize(JsonIO &json) {
 		int idofType, iheadingType;

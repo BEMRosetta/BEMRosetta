@@ -311,3 +311,10 @@ double FixHeading(double head, BEM::HeadingType range) {
 	else
 		return FixHeading_0_360(head);
 }
+
+std::complex<double> FixHeading(std::complex<double> &head, BEM::HeadingType range) {
+	if (range == BEM::HEAD_180_180) 
+		return std::complex<double>(FixHeading_180(head.real()), FixHeading_180(head.imag()));
+	else
+		return std::complex<double>(FixHeading_0_360(head.real()), FixHeading_0_360(head.imag())); 
+}

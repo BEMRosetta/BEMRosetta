@@ -2,7 +2,6 @@
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 extern "C" {
 	__declspec(dllexport) double DemoVectorPy_C(const double *v, int num) noexcept; 	
-	__declspec(dllexport) int DemoVectorC_Py(double **v, int *num) noexcept; 	
 	
 	// Returns dll time and date
 	__declspec(dllexport) const char *DLL_Version() noexcept; 		
@@ -29,17 +28,21 @@ extern "C" {
 	// Returns the number of registers per parameter
 	__declspec(dllexport) int DLL_FAST_GetLen() noexcept;			
 	// Returns the initial time in seconds
-	__declspec(dllexport) double DLL_FAST_GetTimeInit() noexcept;	
+	__declspec(dllexport) double DLL_FAST_GetTimeStart() noexcept;	
 	// Returns the end time in seconds
 	__declspec(dllexport) double DLL_FAST_GetTimeEnd() noexcept;	
 	// Returns the idtime_th time (idtime goes from 0 to DLL_FAST_GetLen())
 	__declspec(dllexport) double DLL_FAST_GetTime(int idtime) noexcept;
 	// Returns the idtime_th value of parameter idparam (idtime goes from 0 to DLL_FAST_GetLen())
 	__declspec(dllexport) double DLL_FAST_GetData(int idtime, int idparam) noexcept;
-	// Returns the average value for parameter param
-	__declspec(dllexport) double DLL_FAST_GetAvg(const char *param) noexcept;
+	// Returns the average value for parameter idparam
+	__declspec(dllexport) double DLL_FAST_GetAvg(int idparam, int idbegin, int idend) noexcept;
+	// Returns the maximum value for parameter idparam
+	__declspec(dllexport) double DLL_FAST_GetMax(int idparam, int idbegin, int idend) noexcept;
+	// Returns the minimum value for parameter idparam
+	__declspec(dllexport) double DLL_FAST_GetMin(int idparam, int idbegin, int idend) noexcept;
 	// Returns an Array of parameter idparam 
-	__declspec(dllexport) int DLL_FAST_GetArray(int idparam, double **data, int *num) noexcept;
+	__declspec(dllexport) int DLL_FAST_GetArray(int idparam, int idbegin, int idend, double **data, int *num) noexcept;
 	
 	// Open a .dat or .fst FAST file to read or save parameters
 	__declspec(dllexport) int DLL_FAST_LoadFile(const char *file) noexcept;

@@ -495,6 +495,16 @@ UVector<int> FastOut::FindParameterMatch(String param) const {
 	return ret;
 }
 
+UVector<String> FastOut::FindParameterMatchStr(String param) const {
+	param = ToLower(param);
+	UVector<String> ret;
+	for (int c = 0; c < parameters.size(); ++c) {
+		if (PatternMatch(param, parametersd[c]))
+			ret << parameters[c];
+	}
+	return ret;
+}
+
 int FastOut::GetParameter_throw(String param) const {
 	int ret = GetParameterX(param);
 	if (IsNull(ret))
@@ -609,8 +619,34 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 	return list;
 }
 
-void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table) {
+void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params0, UVector<UVector<String>> &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table) {
 	table.Clear();
+	
+	// Gets the real et of parameters taking into account *
+	auto FindParam = [&](String strpartofind)->bool {
+		for (auto &param : params) {
+			String strpar = param[0];
+			if (ToLower(strpartofind) == ToLower(strpar))
+				return true;
+		}	
+		return false;
+	};
+	
+	for (const FastOut &fast : dataFast) {
+		for (auto &param0 : params0) {
+			String strpar = param0[0];
+			UVector<String> sids = fast.FindParameterMatchStr(strpar);
+			for (String str : sids) {
+				if (!FindParam(str)) {
+					auto &param = params.Add();
+					param = clone(param0);
+					param[0] = str;
+				}
+			}
+		}
+	}
+	
+	// Does the real job
 	UVector<UVector<double>> fullData(params.size());
 	for (const FastOut &fast : dataFast) {
 		int idBegin = fast.GetIdTime(start);
@@ -634,11 +670,11 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 		t << fast.GetVal(idBegin, 0);
 		t << fast.GetVal(idEnd, 0);
 		for (int ip = 0; ip < params.size(); ip++) {
-			const UVector<String> &param = params[ip];
+			auto &param = params[ip];
 			if (param.size() < 3)
 				throw Exc(t_("Wrong number of parameters"));
 			String strpar = param[0];
-			//String format = param[1];
+			
 			int id = fast.GetParameterX(strpar);
 			if (id < 0) {
 				for (int i = 2; i < param.size(); i++) 
@@ -736,13 +772,13 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 				t << val;//Format("%" + format, val);
 			}
 		}
-		for (int row = 0; row < table.size()-1; ++row) {
-			table[row][1] = SecondsToString(double(table[row][1]), 0, false, false, true, false, true);
-			table[row][2] = SecondsToString(double(table[row][2]), 0, false, false, true, false, true);
-		}
+	}
+	for (int row = 0; row < table.size() - (table.size() > 1 ? 1 : 0); ++row) {
+		table[row][1] = SecondsToString(double(table[row][1]), 0, false, false, true, false, true);
+		table[row][2] = SecondsToString(double(table[row][2]), 0, false, false, true, false, true);
 	}
 }
-
+/*
 bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt) {
 	for (FindFile ff(AppendFileNameX(path, "*.dat")); ff; ++ff) {
 		if (ff.IsFile()) { 
@@ -759,7 +795,7 @@ bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt) {
 		}
 	}
 	return false;
-}
+}*/
 
 void FASTCase::CreateFolderCase(String folder) {
 	Time t = GetSysTime();
@@ -934,4 +970,24 @@ void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A) {
 	
 	T = newT;
 	A = newA;
+}
+
+void FastOut::HeaveCBParam::Init() {
+	idheave = dataFast->GetParameterX("PtfmHeave");
+	idpitch = dataFast->GetParameterX("PtfmPitch");
+	idroll = dataFast->GetParameterX("PtfmRoll");
+	idyaw = dataFast->GetParameterX("PtfmYaw");	
+	if (idroll < 0 || idpitch < 0 || idheave < 0 || idyaw < 0) 
+		enabled = false;
+	else {
+		String folder = GetFileFolder(dataFast->GetFileName());
+		FindFile ffpath(AppendFileNameX(folder, "*.fst"));
+		if (ffpath) {
+			FASTCase cas;
+			cas.Load(ffpath.GetPath());
+			ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
+			ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
+		} else
+			ptfmCOBxt = ptfmCOByt = Null;
+	}
 }

@@ -394,6 +394,7 @@ void MenuOptions::OnSave() {
 		bem->dofType = BEM::DOFType(dofType.GetIndex());
 		bem->headingType = BEM::HeadingType(headingType.GetIndex());
 		bem->UpdateHeadAll();
+		bem->UpdateHeadAllMD();
 		ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
 	}
 	ma().SetLastTab();

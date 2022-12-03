@@ -978,6 +978,14 @@ int Hydro::GetHeadId(double hd) const {
 	return -1;
 }
 
+int Hydro::GetHeadIdMD(const std::complex<double> &hd) const {
+	for (int i = 0; i < mdhead.size(); ++i) {
+		if (EqualRatio(mdhead[i], hd, 0.01))
+			return i;
+	}
+	return -1;
+}
+
 VectorXd Hydro::B_dim(int idf, int jdf) const {
 	if (dimen)
 		return B[idf][jdf]*(rho_dim()/rho_ndim());
@@ -1156,6 +1164,8 @@ void Hydro::CheckNaN() {
 }
 
 double Hydro::Tdof(int ib, int idf) const {
+	if (!IsLoadedAinf(idf+6*ib, idf+6*ib) || !IsLoadedM(ib, idf, idf) || !IsLoadedC(ib, idf, idf))
+		return Null;
 	double m = M[ib](idf, idf);
 	double a = Ainf_dim(ib*6+idf, ib*6+idf);
 	double c = C_dim(ib, idf, idf);
@@ -1303,7 +1313,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
-	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
+	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
 			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Status)) {
@@ -1366,6 +1376,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		}
 	}
 	UpdateHeadAll();
+	UpdateHeadAllMD();
 }
 
 HydroClass &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
@@ -1404,6 +1415,7 @@ void BEM::SymmetrizeForces(int id, bool xAxis) {
 	hydros[id].hd().Symmetrize_Forces(xAxis);
 	
 	UpdateHeadAll();
+	UpdateHeadAllMD();
 }
 
 void BEM::UpdateHeadAll() {
@@ -1413,6 +1425,17 @@ void BEM::UpdateHeadAll() {
 	for (int id = 0; id < hydros.size(); ++id) {
 		for (int ih = 0; ih < hydros[id].hd().head.size(); ++ih) 
 			FindAddDelta(headAll, FixHeading(hydros[id].hd().head[ih], headingType), 0.1);
+	}
+	//orderHeadAll = GetSortOrder(headAll);
+}
+
+void BEM::UpdateHeadAllMD() {
+	headAllMD.Clear();
+	//orderHeadAll.Clear();
+				
+	for (int id = 0; id < hydros.size(); ++id) {
+		for (int ih = 0; ih < hydros[id].hd().mdhead.size(); ++ih) 
+			FindAddDelta(headAllMD, FixHeading(hydros[id].hd().mdhead[ih], headingType), 0.1);
 	}
 	//orderHeadAll = GetSortOrder(headAll);
 }

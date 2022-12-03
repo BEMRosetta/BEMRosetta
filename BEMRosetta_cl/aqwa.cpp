@@ -570,15 +570,75 @@ bool Aqwa::Load_LIS() {
 			if (hd().linearDamping.size() == 0)
 				hd().linearDamping = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
 			in.GetLine(6);
-			for (int idf = 0; idf < 6; ++idf) {
+			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
-				for (int jdf = 0; jdf < 6; ++jdf) 
-					hd().linearDamping(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
+				for (int jdof = 0; jdof < 6; ++jdof) 
+					hd().linearDamping(6*ib + idof, 6*ib + jdof) = f.GetDouble(jdof + 1);
 				f.GetLine(); 
+			}
+		} else if (line.Find("W A V E - D R I F T   L O A D S ") >= 0) {
+			if (hd().md.size() == 0) {
+				hd().mdhead.resize(hd().head.size());
+				for (int ih = 0; ih < hd().head.size(); ++ih)
+					hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
+				hd().InitMd(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+			}
+			int id;
+			while(!in.IsEof() && (id = line.FindAfter("S T R U C T U R E")) < 0) 
+				line = in.GetLine();
+			int ib = ScanInt(line.Mid(id));
+			if (ib < 1 || ib > hd().Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib)); 
+			ib -= 1;
+			
+			while(!in.IsEof() && (id = f.GetText().FindAfter("(RADIANS/SEC)")) < 0)
+				f.GetLine();
+			line = f.GetText().Mid(id);				// Because of joined fields like this: 'DUE TO (RADIANS/SEC)-120.0'
+			f.Load(line);
+			
+			UVector<int> idhblock(f.size());
+			for (int ih = 0; ih < f.size(); ++ih) {
+				double heading = FixHeading_180(f.GetDouble(ih));	
+				int id = FindClosest(hd().head, heading);
+				if (id < 0)
+					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
+				idhblock[ih] = id;
+			}
+
+			while(!in.IsEof() && Trim(line) != "DRIFT") 
+				line = in.GetLine();
+			in.GetLine();
+			line = ToLower(Trim(in.GetLine()));	
+			int idof;
+			if (line.StartsWith("surge"))
+				idof = 0;
+			else if (line.StartsWith("sway"))
+				idof = 1;
+			else if (line.StartsWith("heave"))
+				idof = 2;
+			else if (line.StartsWith("roll"))
+				idof = 3;
+			else if (line.StartsWith("pitch"))
+				idof = 4;
+			else if (line.StartsWith("yaw"))
+				idof = 5;
+			else 
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong DOF %s found"), line));
+
+			for (int idf = 0; idf < hd().Nf; ++idf) {
+				f.GetLine();
+				for (int ih = 0; ih < idhblock.size(); ++ih) 
+					hd().md[ib][idhblock[ih]][idof](idf) = f.GetDouble(1 + ih);
 			}
 		}
 	}
-		
+	if (hd().IsLoadedMD()) {
+		if (IsNum(hd().md[0][0][2][0]))			
+			hd().mdtype = 9;				// Pressure integration/Near field
+		else									
+			hd().mdtype = 8;				// Momentum conservation/Far field
+	}
+	
 	return true;
 }
 
