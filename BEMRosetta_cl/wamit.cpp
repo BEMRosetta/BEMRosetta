@@ -202,13 +202,14 @@ bool Wamit::Load_out() {
 					in.GetLine(3); 
 					while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
 						f.Load(line);
-						double ma = f.GetDouble(1);
 						int idf = abs(f.GetInt(0)) - 1;
 						int ib = int(idf/6);
 						idf -= ib*6;
 						if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(ib, hd().Nb*6))
 							throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, ib));
-						md[ib][iih][idf][ifr] = ma;	
+						double ma = f.GetDouble(1);
+						double ph = ToRad(f.GetDouble(2));
+						md[ib][iih][idf][ifr] = (std::polar<double>(ma, ph)).real();	// To get the sign properly
 					}
 				}
 				ih++;
@@ -556,13 +557,13 @@ bool Wamit::Load_out() {
 				}
 			}
 			
-			if (md7.size() > 0 && md7[0].size() > 0 && md7[0][0].size() > 0 && md7[0][0][0].size() > 0 && md7[0][0][0][md7[0][0][0].size()/2] > 0.1) {
+			if (Hydro::IsLoadedMD(md7) && md7[0][0][0][md7[0][0][0].size()/2] > 0.) {
 				hd().md = pick(md7);
 				hd().mdtype = 7;
-			} else if (md9.size() > 0 && md9[0].size() > 0 && md9[0][0].size() > 0 && md9[0][0][0].size() > 0 && md9[0][0][0][md9[0][0][0].size()/2] > 0.1) {
+			} else if (Hydro::IsLoadedMD(md9) && md9[0][0][0][md9[0][0][0].size()/2] > 0.) {
 				hd().md = pick(md9);
 				hd().mdtype = 9;
-			} else if (md8.size() > 0 && md8[0].size() > 0 && md8[0][0].size() > 0 && md8[0][0][0].size() > 0 && md8[0][0][0][md8[0][0][0].size()/2] > 0.1) {
+			} else if (Hydro::IsLoadedMD(md8) && md8[0][0][0][md8[0][0][0].size()/2] > 0.) {
 				hd().md = pick(md8);
 				hd().mdtype = 8;
 			}
@@ -1621,19 +1622,19 @@ bool Wamit::Load_789(String fileName) {
 	
 	UArray<UArray<UArray<VectorXd>>> md;
 	if (Load_789_0(fileName, 7, md)) {
-		if (Hydro::IsLoadedMD(md)) {
+		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) > 0.) {
 			hd().md = pick(md);
 			return true;
 		}
 	}
 	if (Load_789_0(fileName, 9, md)) {
-		if (Hydro::IsLoadedMD(md)) {
+		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) > 0.) {
 			hd().md = pick(md);
 			return true;
 		}
 	}
 	if (Load_789_0(fileName, 8, md)) {
-		if (Hydro::IsLoadedMD(md)) {
+		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) > 0.) {
 			hd().md = pick(md);
 			return true;
 		}
@@ -2107,13 +2108,14 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) {
     			for (int idf = 0; idf < 6; ++idf) {
     				static int idf12[] = {1, 2, 3, 4, 5, 6};
     				int iidf = idf12[idf]-1;
+    				double re = hd().F_ndim(md[ib][ih][iidf](ifr), iidf);
     				out << Format("   % 8.6E", hd().T[ifr]);
     				out << Format("   % 8.6E", hd().mdhead[ih].real());
     				out << Format("   % 8.6E", hd().mdhead[ih].imag());
     				out << Format("   %2d", ib*6 + iidf+1);
-    				out << Format("   % 8.6E", abs(hd().F_ndim(md[ib][ih][iidf](ifr), iidf)));
-    				out << Format("   % 8.6E", 0.);
-    				out << Format("   % 8.6E", hd().F_ndim(md[ib][ih][iidf](ifr), iidf));
+    				out << Format("   % 8.6E", abs(re));
+    				out << Format("   % 8.6E", re > 0 ? 0. : 180.);
+    				out << Format("   % 8.6E", re);
     				out << Format("   % 8.6E", 0.);
     				out << "\n";
     			}

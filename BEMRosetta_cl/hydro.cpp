@@ -752,7 +752,7 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 
 			mdn.SetCount(Nb);
 			for (int ib = 0; ib < Nb; ++ib) {
-				mdn[ib].SetCount(mdhead.size());
+				mdn[ib].SetCount(int(mdhead.size()));
 	    		for (int ih = 0; ih < mdhead.size(); ++ih) {
 	    			mdn[ib][ih].SetCount(6);
 	    			for (int idf = 0; idf < 6; ++idf) {
