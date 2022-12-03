@@ -227,7 +227,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				for (int idof = 0; idof < 6; ++idof) {		// All dof are available?
 					for (int jdof = 0; jdof < 6; ++jdof)
 						if (!IsNum(A[ib6 + idof][jb6 + jdof][0])) 
-							throw Exc("Coefficient translations requires all DOFs to be available");
+							throw Exc("Coefficient translations require all DOFs to be available");
 				}
 				
 				for (int iif = 0; iif < Nf; ++iif) {
@@ -290,7 +290,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				for (int idof = 0; idof < 6; ++idof) {
 					for (int jdof = 0; jdof < 6; ++jdof)
 						if (!IsNum(A(ib6 + idof, jb6 + jdof))) 
-							throw Exc("Coefficient translations requires all DOFs to be available");
+							throw Exc("Coefficient translations require all DOFs to be available");
 				}
 				
 				An(ib6 + 0, jb6 + 3) += - yg*A(ib6 + 0, jb6 + 2) + zg*A(ib6 + 0, jb6 + 1);
@@ -372,6 +372,24 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedFfk())
 		CalcF(fk);
 
+    auto CalcMD = [&]() {
+    	UArray<UArray<UArray<VectorXd>>> mdn = clone(md);
+    	
+    	for (int ib = 0; ib < Nb; ++ib) {
+    		for (int ih = 0; ih < mdhead.size(); ++ih) {
+    			for (int ifr = 0; ifr < Nf; ++ifr) {
+    				mdn[ib][ih][3](ifr) += -yg*mdn[ib][ih][2](ifr) + zg*mdn[ib][ih][1](ifr);
+    				mdn[ib][ih][4](ifr) += -zg*mdn[ib][ih][0](ifr) + xg*mdn[ib][ih][2](ifr);
+    				mdn[ib][ih][5](ifr) += -xg*mdn[ib][ih][1](ifr) + yg*mdn[ib][ih][0](ifr);
+				}
+	    	}
+	    }
+		md = pick(mdn);
+    };
+    
+	if (IsLoadedMD())
+		CalcMD();
+	
     auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
         int sign = isSum ? 1 : -1;
 		for (int ib = 0; ib < Nb; ++ib) {
@@ -469,6 +487,7 @@ void Hydro::ResetForces1st(Hydro::FORCE force) {
 		sc.Clear();		
 		fk.Clear();		
 	}
+	md.Clear();
 }
 
 void Hydro::ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf) {
@@ -542,7 +561,17 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 		MultiplyF(fk);	
 	if (f && IsLoadedRAO())
 		MultiplyF(rao);
-	
+
+	auto MultiplyMD = [&]() {
+		for (int ib = 0; ib < Nb; ++ib) 
+    		for (int ih = 0; ih < mdhead.size(); ++ih) 
+    			for (int idf = 0; idf < 6; ++idf) 
+	    			for (int ifr = 0; ifr < Nf; ++ifr) 
+	    				md[ib][ih][idf](ifr) *= factor;
+	};
+	if (qtf && IsLoadedMD()) 
+		MultiplyMD();
+			
 	auto MultiplySumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 		for (int ib = 0; ib < Nb; ++ib)
 	        for (int ih = 0; ih < qh.size(); ++ih) 
@@ -626,6 +655,14 @@ void Hydro::SwapDOF(int ib, int idof1, int idof2) {
 	if (IsLoadedRAO())
 		SwapF(rao);
 
+	auto SwapMD = [&]() {
+			for (int ib = 0; ib < Nb; ++ib) 
+    			for (int ih = 0; ih < mdhead.size(); ++ih) 
+	    			Swap(md[ib][ih][idof1], md[ib][ih][idof2]);
+	};
+	if (IsLoadedMD(true)) 
+		SwapMD();
+		
 	auto SwapSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
         for (int ih = 0; ih < qh.size(); ++ih) 
 			Swap(qtf[ib][ih][idof1], qtf[ib][ih][idof2]); 		
@@ -691,10 +728,9 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 		    	for (int idof = 0; idof < 6*Nb; ++idof) {
 					int i = 0, j = 0;
 					for (int iif = 0; iif < Nf; ++iif) {
-						if (j >= idFreq.size() || iif != idFreq[j]) {
-							_ex.force[ih](i, idof) = ex.force[ih](iif, idof);
-							i++;
-						} else 
+						if (j >= idFreq.size() || iif != idFreq[j]) 
+							_ex.force[ih](i++, idof) = ex.force[ih](iif, idof);
+						else 
 							j++;
 					}
 		    	}
@@ -710,7 +746,33 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 			DeleteF(fk);	
 		if (IsLoadedRAO())
 			DeleteF(rao);
-	
+
+		auto DeleteMD = [&]() {
+			UArray<UArray<UArray<VectorXd>>> mdn;
+
+			mdn.SetCount(Nb);
+			for (int ib = 0; ib < Nb; ++ib) {
+				mdn[ib].SetCount(mdhead.size());
+	    		for (int ih = 0; ih < mdhead.size(); ++ih) {
+	    			mdn[ib][ih].SetCount(6);
+	    			for (int idf = 0; idf < 6; ++idf) {
+	    				mdn[ib][ih][idf].setConstant(Nf-idFreq.size());
+	    				int i = 0, j = 0;
+						for (int iif = 0; iif < Nf; ++iif) {
+							if (j >= idFreq.size() || iif != idFreq[j])
+								md[ib][ih][idf](i++) = md[ib][ih][idf](iif);		
+							else 
+								j++;
+						}
+	    			}
+	    		}
+			}
+		    md = pick(mdn);			
+	    };
+
+		if (IsLoadedMD())
+			DeleteMD();
+				
 		int j = idFreq.size()-1;	
 		for (int i = w.size()-1; i >= 0 && j >= 0; --i) {
 			if (i == idFreq[j]) {	
@@ -781,6 +843,36 @@ void Hydro::DeleteHeadings(const UVector<int> &idHead) {
 	}
 }
 
+void Hydro::DeleteHeadingsMD(const UVector<int> &idHead) {
+	if (idHead.size() > 0) {
+		auto DeleteMD = [&]() {
+			for (int ib = 0; ib < Nb; ++ib) {
+	    		int j = idHead.size()-1;	
+				for (int i = mdhead.size()-1; i >= 0 && j >= 0; --i) {
+	    			if (i == idHead[j]) {	
+						md[ib].Remove(i);
+						j--;
+					}
+				}
+			}
+	    };
+
+		if (IsLoadedMD())
+			DeleteMD();
+		
+		UArray<std::complex<double>> mdh;
+		::Copy(mdhead, mdh);
+		int j = idHead.size()-1;	
+		for (int i = mdh.size()-1; i >= 0 && j >= 0; --i) {
+			if (i == idHead[j]) {	
+				mdh.Remove(i);
+				j--;
+			}
+		}
+		::Copy(mdh, mdhead);
+	}
+}
+
 void Hydro::DeleteHeadingsQTF(const UVector<int> &idHeadQTF) {
 	if (idHeadQTF.size() > 0) {
 		UVector<int> vids;
@@ -833,14 +925,14 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	
 	auto FillF = [&](Forces &ex) {
 	    for (int ih = 0; ih < Nh; ++ih) {
-	        MatrixXcd n(nw.size(), 6*Nb);
+	        MatrixXcd nm(nw.size(), 6*Nb);
 	    	for (int idof = 0; idof < 6*Nb; ++idof) {
 	    		VectorXcd nm;
 	    		const VectorXcd &m = ex.force[ih].col(idof);
 	    		GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);					
-				n.col(idof) = nm;
+				nm.col(idof) = nm;
 	    	}
-	    	ex.force[ih] = pick(n);
+	    	ex.force[ih] = pick(nm);
 	    }
     };	
 
@@ -852,6 +944,22 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 		FillF(fk);	
 	if (IsLoadedRAO())
 		FillF(rao);	
+	
+	auto FillMD = [&]() {
+		for (int ib = 0; ib < Nb; ++ib) {
+    		for (int ih = 0; ih < mdhead.size(); ++ih) {
+    			for (int idf = 0; idf < 6; ++idf) {
+    				VectorXd nm(nw.size());
+	    			VectorXd &m = md[ib][ih][idf];
+					GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);
+					md[ib][ih][idf] = pick(nm);
+    			}
+    		}
+		}
+    };		
+	
+	if (IsLoadedMD())
+		FillMD();		
 	
 	Nf = int(nw.size());
 	::Copy(nw, w);

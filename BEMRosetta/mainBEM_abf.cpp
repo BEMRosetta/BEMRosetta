@@ -67,19 +67,36 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 		} else {
 			ih = max(ih, 0);
 			
-			int Nh = bem.headAll.size();
-			if (Nh == 0) 
-				return false;
-			
-			plots.SetCount(1);
-			plots[0].SetCount(sdof);
-			for (int idf = 0; idf < sdof; ++idf) {
-				plots[0][idf].Init(idf, bem.headAll[ih/*bem.orderHeadAll[ih]*/], dataToShow);
-				if (plots[0][idf].Load(hydros, mbm, ids))
-					nloaded++;
+			if (dataToShow == Hydro::DATA_MD) {
+				int Nh = bem.headAllMD.size();
+				if (Nh == 0) 
+					return false;
+				
+				plots.SetCount(1);
+				plots[0].SetCount(sdof);
+				for (int idf = 0; idf < sdof; ++idf) {
+					const std::complex<double> &head = bem.headAllMD[ih];
+					plots[0][idf].Init(idf, head.real(), dataToShow, head.imag());
+					if (plots[0][idf].Load(hydros, mbm, ids))
+						nloaded++;
+				}
+				if (nloaded > 0)
+					UpdateHeadMD(bem, ih);
+			} else {
+				int Nh = bem.headAll.size();
+				if (Nh == 0) 
+					return false;
+				
+				plots.SetCount(1);
+				plots[0].SetCount(sdof);
+				for (int idf = 0; idf < sdof; ++idf) {
+					plots[0][idf].Init(idf, bem.headAll[ih/*bem.orderHeadAll[ih]*/], dataToShow);
+					if (plots[0][idf].Load(hydros, mbm, ids))
+						nloaded++;
+				}
+				if (nloaded > 0)
+					UpdateHead(bem, ih);
 			}
-			if (nloaded > 0)
-				UpdateHead(bem, ih);
 		}
 		
 		if (nloaded == 0)
@@ -102,7 +119,19 @@ void MainABForce::UpdateHead(BEM &bem, int ih) {
 		TempAssign<bool> _isFilling(isFilling, true);
 		tab.Reset();
 		for (int idf = 0; idf < 6*bem.Nb; ++idf) 
-			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false), bem.headAll[ih/*bem.orderHeadAll[ih]*/]));
+			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false)));//, bem.headAll[ih/*bem.orderHeadAll[ih]*/]));
+	}
+	tab.Set(it);
+}
+
+void MainABForce::UpdateHeadMD(BEM &bem, int ih) {
+	int it = max(0, tab.Get());
+	{
+		TempAssign<bool> _isFilling(isFilling, true);
+		tab.Reset();
+		//const std::complex<double> &h = bem.headAllMD[ih];
+		for (int idf = 0; idf < 6*bem.Nb; ++idf) 
+			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false)));///*, h.real(), h.imag())*/);
 	}
 	tab.Set(it);
 }

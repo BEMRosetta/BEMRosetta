@@ -49,20 +49,16 @@ void FastScatter::OnCalc() {
 		compare.arrayStats.AddColumn(t_("Format"));
 		compare.arrayStats.AddColumn(t_("Statistics"));
 		
-		const UVector<UVector<String>> params = {{"FAIRTEN1_t", ".0f", "max"},
-												 {"FAIRTEN2_t", ".0f", "max"},
-												 {"FAIRTEN3_t", ".0f", "max"},
-												 //{"FAIRTEN4_t", ".3E", "max"},
-												 //{"FAIRTEN5_t", ".3E", "max"},
-												 //{"FAIRTEN6_t", ".3E", "max"},
-												 //{"FAIRTEN7_t", ".3E", "max"},
+		const UVector<UVector<String>> params = {{"FAIRTEN*_t", ".0f", "max"},
 												 {"PtfmShift",  ".0f", "mean", "maxval"}, 
 												 {"PtfmTilt",   ".1f", "mean", "maxval"}, 
-												 {"PtfmYaw",     ".1f", "mean", "maxval"}, 
+												 {"PtfmYaw",    ".1f", "mean", "maxval"}, 
 												 {"NcIMUTA",    ".1f", "max"}, 
 												 {"TwrBsShear", ".0f", "max"},
 												 {"TwrBsBend",  ".0f", "max"}
 		};
+		
+		//const UVector<UVector<String>> params = {{"ptfm", ".0f", "max"}
 		
 		for (int i = 0; i < params.size(); ++i) {
 			String stats;
@@ -85,7 +81,8 @@ void FastScatter::OnCalc() {
 		double end = fscbase.opFrom == 0 ? StringToSeconds(editEnd) : StringToSeconds(~fscbase.editFromEnd);
 
 		UVector<UVector<Value>> table;
-		Calc(fscbase.left.dataFast, params, StringToSeconds(~fscbase.editStart), fscbase.opFrom == 1, end, table);
+		UVector<UVector<String>> realparams; 
+		Calc(fscbase.left.dataFast, params, realparams, StringToSeconds(~fscbase.editStart), fscbase.opFrom == 1, end, table);
 		
 		int col = 0;
 		compare.array.AddColumn("");
@@ -98,27 +95,17 @@ void FastScatter::OnCalc() {
 		UVector<String> fmt;
 		fmt << "s" << "s" << "s";
 		
-		for (const UVector<String> &param : params) {				
+		for (const UVector<String> &param : realparams) {				
 			String strpar = param[0];
 			String format = param[1];
 			int id = fast.GetParameterX(strpar);
-			if (id < 0) {
-				for (int i = 2; i < param.size(); i++) {
-					compare.array.AddColumn("");
-					if (i == 2) 
-						compare.array.Set(0, col, Format("%s", strpar));
-					compare.array.Set(1, col++, param[i]);
-					fmt << "";
-				}
-			} else {
-				String units = fast.GetUnit(id);
-				for (int i = 2; i < param.size(); i++) {
-					compare.array.AddColumn("");
-					if (i == 2) 
-						compare.array.Set(0, col, Format("%s [%s]", strpar, units));
-					compare.array.Set(1, col++, param[i]);
-					fmt << format;
-				}
+			String units = fast.GetUnit(id);
+			for (int i = 2; i < param.size(); i++) {
+				compare.array.AddColumn("");
+				if (i == 2) 
+					compare.array.Set(0, col, Format("%s [%s]", strpar, units));
+				compare.array.Set(1, col++, param[i]);
+				fmt << format;
 			}
 		}
 		for (int row = 0; row < table.size(); ++row) {
@@ -472,17 +459,17 @@ bool FastScatterBase::OnLoad(String fileName) {
 	return OnLoad0(fileName);
 }
 	
-bool FastScatterBase::OnLoad0(String fileName) {
+bool FastScatterBase::OnLoad0(String fileName0) {
 	NON_REENTRANT(false);
 	
 	try {
-		fileName = FastOut::GetFileToLoad(fileName);
+		String fileName = FastOut::GetFileToLoad(fileName0);
 		if (IsNull(fileName) || IsVoid(fileName)) {
 			String error;
 			if (IsVoid(fileName))
-			 	error = Format(t_("File '%s' not supported"), fileName);
+			 	error = Format(t_("File '%s' not supported"), fileName0);
 			else
-			 	error = Format(t_("File '%s' not found"), fileName);
+			 	error = Format(t_("File '%s' not found"), fileName0);
 			Exclamation(DeQtf(error));
 			statusBar->Temporary(error);
 			left.EnableX();
@@ -952,6 +939,8 @@ bool FastScatterTabs::LoadDragDrop(const UVector<String> &files) {
 	UVector<String> filesDrop;
 	for (int i = 0; i < files.size(); ++i)
 		filesDrop.Append(FastOut::GetFilesToLoad(files[i]));
+	
+	Sort(filesDrop);
 	
 	if (filesDrop.size() > 6) {
 		if (!PromptYesNo(Format(t_("You are about to open %d files"), filesDrop.size())))

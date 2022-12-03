@@ -15,7 +15,7 @@ using namespace Upp;
 #include "main.h"
 
 
-void QTFTabDof::Init(int posSplitter) {
+void QTFTabDof::Init(int posSplitter, int idf) {
 	Add(splitter);
 	splitter.Horz(leftsplit.SizePos(), rightsplit.SizePos());
 	splitter.SetPos(posSplitter, 0);
@@ -38,8 +38,8 @@ void QTFTabDof::Init(int posSplitter) {
 	up  .surf.WhenDraw    = THISBACK(OnDraw);
 	down.surf.WhenDraw    = THISBACK(OnDraw);
 	
-	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, action);};
-	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, action);};
+	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, idf, action);};
+	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, idf, action);};
 	
 	up.isUp = true;
 	down.isUp = false;
@@ -56,7 +56,7 @@ double QTFTabDof::qwT(const Hydro &hd, int id) {
 	return show_w ? hd.qw[id] : 2*M_PI/hd.qw[id];
 }
 
-void QTFTabDof::DoClick(Data &up, bool titles) {
+void QTFTabDof::DoClick(Data &up, int idof, bool titles) {
 	//if (type < 2)
 		//return;
 	
@@ -68,7 +68,7 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 			if (up.isUp) {
 				up.labelY = t_("Magnitude");
 				up.ma_ph = t_("ma");
-				up.units = t_("N/m2");
+				up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
 			} else {
 				up.labelY = t_("Phase");
 				up.ma_ph = t_("ph");
@@ -78,12 +78,11 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 			if (up.isUp) {
 				up.labelY = t_("Real");
 				up.ma_ph = t_("re");
-				up.units = t_("N/m2");
 			} else {
 				up.labelY = t_("Imaginary");
 				up.ma_ph = t_("im");
-				up.units = t_("N/m2");
 			}
+			up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
 		}
 		up.scatter.SetLabelY(up.labelY);
 		up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
@@ -178,7 +177,7 @@ void QTFTabDof::DoClick(Data &up, bool titles) {
 	up.scatter.Refresh();
 }
 
-void QTFTabDof::OnClick(Point p, ScatterCtrl::MouseAction action) {
+void QTFTabDof::OnClick(Point p, int idof, ScatterCtrl::MouseAction action) {
 	if (action != ScatterCtrl::LEFT_DOWN && action != ScatterCtrl::LEFT_MOVE)
 		return;
 	
@@ -188,8 +187,8 @@ void QTFTabDof::OnClick(Point p, ScatterCtrl::MouseAction action) {
 	up.surf.Refresh();
 	down.surf.Refresh();
 	
-	DoClick(up, false);
-	DoClick(down, false);
+	DoClick(up, idof, false);
+	DoClick(down, idof, false);
 }
 
 double QTFTabDof::GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2) {
@@ -311,8 +310,8 @@ void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool 
 		
 		UpdateArray(hd, show_ma_ph, up, opBilinear);
 		UpdateArray(hd, show_ma_ph, down, opBilinear);
-		DoClick(up, true);
-		DoClick(down, true);
+		DoClick(up, idof, true);
+		DoClick(down, idof, true);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	
@@ -417,7 +416,7 @@ bool MainQTF::Load() {
 			dof.SetCount(6*Bem().Nb);
 			for (int ib = 0; ib < Bem().Nb; ++ib) {
 				for (int idf = 0; idf < 6; ++idf) {
-					dof[idf].Init(posSplitter);
+					dof[idf].Init(posSplitter, idf);
 					tab.Add(dof[idf].SizePos(), Format("%d.%s", ib+1, BEM::StrDOF(idf)));
 				}
 			}

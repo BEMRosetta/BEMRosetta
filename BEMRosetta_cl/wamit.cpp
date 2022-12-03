@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
@@ -18,7 +17,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEM::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
 				return false;
 			}
-		} else if (S(".1.2.3.3sc.3fk.hst.4.12d.12s.cfg.frc.pot").Find(ext) >= 0) {
+		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
 				hd().code = Hydro::HAMS_WAMIT;
 			else if (hd().name == "WAMIT_5S")
@@ -79,6 +78,10 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			if (!Load_4(fileRAO))
 				BEM::Print(S(": ** .4 ") + t_("Not found or empty") + "**");
 			
+			BEM::Print("\n- " + Format(t_("Mean drift file '%s.7/.8/.9'"), GetFileTitle(file)));
+			if (!Load_789(file))
+				BEM::Print(S(": ** .7.8.9 ") + t_("Not found or empty") + "**");
+			
 			String file12s = ForceExt(file, ".12s");
 			BEM::Print("\n- " + Format(t_("Second order sum coefficients .12s file '%s'"), GetFileName(file12s)));
 			if (!Load_12(file12s, true, Status))
@@ -104,7 +107,6 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		if (IsNull(hd().Nf))
 			hd().Nf = 0;
 
-	
 		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/)
 			return false;
 		
@@ -148,6 +150,10 @@ bool Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 			BEM::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileext = ForceExt(file, ".4"))));
 			Save_4(fileext, force_T);
 		}
+		if (hd().IsLoadedMD()) {
+			BEM::Print("\n- " + Format(t_("Mean drift file '%s'"), GetFileName(fileext = ForceExt(file, Format(".%d", hd().mdtype)))));
+			Save_789(fileext, force_T, true);
+		}
 		if (hd().IsLoadedQTF(true)) {
 			BEM::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileext = ForceExt(file, ".12s"))));
 			Save_12(fileext, true, Status, force_T, true, qtfHeading);
@@ -168,6 +174,8 @@ bool Wamit::Load_out() {
 	hd().Nb = 0;
 	hd().Nf = 0;
 	hd().Nh = 0;
+	hd().dataFromW = false;
+	
 	int pos;
 	int ibody = -1;
 	hd().dimen = false;
@@ -178,6 +186,39 @@ bool Wamit::Load_out() {
 	String line;
 	FieldSplitWamit f(in);
 	f.IsSeparator = IsTabSpace;
+	
+	UArray<UArray<UArray<VectorXd>>> md7, md8, md9;
+	
+	auto LoadDrift = [&](UArray<UArray<UArray<VectorXd>>> &md, int ifr) {
+		int ih = 0;
+		while (!in.IsEof()) {		
+			line = in.GetLine();
+			if (line.Find("Wave Heading (deg) :") >= 0) {
+				f.Load(line);
+				double hd1 = f.GetDouble(4);
+				double hd2 = f.GetDouble(5);
+				int iih = Find(hd().mdhead, std::complex<double>(hd1, hd2));
+				if (iih >= 0) {
+					in.GetLine(3); 
+					while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
+						f.Load(line);
+						double ma = f.GetDouble(1);
+						int idf = abs(f.GetInt(0)) - 1;
+						int ib = int(idf/6);
+						idf -= ib*6;
+						if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(ib, hd().Nb*6))
+							throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, ib));
+						md[ib][iih][idf][ifr] = ma;	
+					}
+				}
+				ih++;
+				if (ih >= hd().Nh)
+					break;
+			}
+		}
+	};
+	
+	UArray<std::complex<double>> mdhead;
 	
 	hd().names.Clear();
 	while(!in.IsEof()) {
@@ -293,11 +334,12 @@ bool Wamit::Load_out() {
 			f.LoadWamitJoinedFields(in.GetLine());
 			hd().C[ibody](4, 4) = f.GetDouble(1);
 			hd().C[ibody](4, 5) = f.GetDouble(2);
+			
 		} else if (line.Find("Output from  WAMIT") >= 0) {
 			hd().head.Clear();
 			FileInLine::Pos fpos = in.GetPos();
 			
-			bool foundNh = false, found2ndorder = false;
+			bool foundNh = false, found2ndorder = false, found7 = false, found8 = false, found9 = false;
 			while (!in.IsEof()) {
 				line = in.GetLine();
 				if (line.Find("Wave period (sec)") >= 0) {
@@ -305,17 +347,25 @@ bool Wamit::Load_out() {
 					if (hd().head.size() > 0 && !foundNh)
 						foundNh = true;
 				} else if (!foundNh) {
-					if (hd().head.size() > 0 && (line.Find("*********************") >= 0 ||
-								   line.Find("FORCES AND MOMENTS") >= 0)) 
+					if (hd().head.size() > 0 && (line.Find("*********************") >= 0))// ||
+								   				 //line.Find("FORCES AND MOMENTS") >= 0)) 
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
-						FindAddDelta(hd().head, f.GetDouble(4)/*FixHeading_180(f.GetDouble(4))*/, 0.001);
+						if (f.size() == 5)
+							FindAddDelta(hd().head, f.GetDouble(4)/*FixHeading_180(f.GetDouble(4))*/, 0.001);
+						else if (f.size() == 6)
+							FindAdd(mdhead, std::complex<double>(f.GetDouble(4), f.GetDouble(5)));
 					}
 				} else if (line.Find("2nd-order") >= 0) {
 					found2ndorder = true;
 					break;
-				}
+				} else if (line.Find("(Momentum Conservation)") >= 0) 
+					found8 = true;
+				else if (line.Find("(Pressure Integration)") >= 0) 
+					found9 = true;
+				else if (line.Find("(Control Surface)") >= 0) 
+					found7 = true;
 			}
 			Sort(hd().head);
 			hd().Nh = hd().head.size();
@@ -335,6 +385,17 @@ bool Wamit::Load_out() {
 					hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 				}
 			}
+			
+			//Sort(qhdrift);
+			hd().mdhead.resize(mdhead.size());
+			Copy(mdhead, hd().mdhead);
+			
+			if (found7)
+				hd().InitMd(md7, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+			if (found8)
+				hd().InitMd(md8, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+			if (found9)
+				hd().InitMd(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 						
 			int qtfNh = 0, qtfNf = 0;
 			UArray<std::complex<double>> head;
@@ -362,7 +423,7 @@ bool Wamit::Load_out() {
 				for (int i = 0; i < head.size(); ++i)
 					hd().qh[i] = head[i];
 				hd().qw.resize(qtfNf);
-				
+					
 				if (foundSum)
 					hd().InitQTF(hd().qtfsum, hd().Nb, qtfNh, qtfNf);
 				if (foundDif)
@@ -401,8 +462,7 @@ bool Wamit::Load_out() {
 					throw Exc(in.Str() + "\n" + Format(t_("Found additional frequencies over %d"), hd().Nf));
 				
 	            hd().T[ifr] = f.GetDouble(4);  			
-	            hd().w[ifr] = 2*M_PI/hd().T[ifr];//fround(2*M_PI/hd().T[ifr], 8);
-	            hd().dataFromW = false;
+	            hd().w[ifr] = 2*M_PI/hd().T[ifr];//fround(2*M_PI/hd().T[ifr], 8);	    
 	            
 	            bool nextFreq = false;
 	            while (!in.IsEof() && !nextFreq) {
@@ -470,10 +530,10 @@ bool Wamit::Load_out() {
 										f.Load(line);
 										double ma = f.GetDouble(1);
 										double ph = ToRad(f.GetDouble(2));
-										int i = abs(f.GetInt(0)) - 1;
-										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(i, hd().Nb*6))
-											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, i));
-										hd().rao.force[ih](ifr, i) = std::polar(ma, ph);	
+										int idf = abs(f.GetInt(0)) - 1;
+										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(idf, hd().Nb*6))
+											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, idf));
+										hd().rao.force[iih](ifr, idf) = std::polar(ma, ph);	
 									}
 								}
 								ih++;
@@ -481,9 +541,13 @@ bool Wamit::Load_out() {
 									break;
 							}
 						}
-					} else if (line.Find("SURGE, SWAY & YAW DRIFT FORCES") >= 0 ||
-							   line.Find("SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES") >= 0 ||
-							   line.Find("VELOCITY VECTOR IN FLUID DOMAIN") >= 0 ||
+					} else if (line.Find("SURGE, SWAY & YAW DRIFT FORCES (Momentum Conservation)") >= 0) 
+						LoadDrift(md8, ifr);
+					else if (line.Find("SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Pressure Integration)") >= 0)
+						LoadDrift(md9, ifr);
+					else if (line.Find("SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Control Surface)") >= 0)
+						LoadDrift(md7, ifr);					
+					else if (line.Find("VELOCITY VECTOR IN FLUID DOMAIN") >= 0 ||
 							   line.Find("HYDRODYNAMIC PRESSURE IN FLUID DOMAIN") >= 0 ||
 							   line.Find("*************************************") >= 0) {
 						nextFreq = true;
@@ -491,6 +555,18 @@ bool Wamit::Load_out() {
 					} 
 				}
 			}
+			
+			if (md7.size() > 0 && md7[0].size() > 0 && md7[0][0].size() > 0 && md7[0][0][0].size() > 0 && md7[0][0][0][md7[0][0][0].size()/2] > 0.1) {
+				hd().md = pick(md7);
+				hd().mdtype = 7;
+			} else if (md9.size() > 0 && md9[0].size() > 0 && md9[0][0].size() > 0 && md9[0][0][0].size() > 0 && md9[0][0][0][md9[0][0][0].size()/2] > 0.1) {
+				hd().md = pick(md9);
+				hd().mdtype = 9;
+			} else if (md8.size() > 0 && md8[0].size() > 0 && md8[0][0].size() > 0 && md8[0][0][0].size() > 0 && md8[0][0][0][md8[0][0][0].size()/2] > 0.1) {
+				hd().md = pick(md8);
+				hd().mdtype = 8;
+			}
+			
 			if (found2ndorder) {
 				hd().qtfdataFromW = false;
 				int ifr1, ifr2, ih; 
@@ -589,7 +665,7 @@ bool Wamit::Save_out(String file) {
 		String filename = GetFileTitle(file);
 		FileOut out(file);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to open '%s'"), file));
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), file));
 
 		out << Format(" %s\n\n", String('-', 71))
 			<< "                        WAMIT  Version 6.1/6.107S \n\n"
@@ -821,8 +897,6 @@ bool Wamit::Load_cfg(String fileName) {
 		return false;
 	};
  	
- 	// in.GetLine();
- 	
  	while (!in.IsEof()) {
 		f.Load(in.GetLine());
 		if (!f.IsEmpty()) {
@@ -850,12 +924,17 @@ bool Wamit::Load_pot(String fileName) {
 	
 	in.GetLine();
  	f.GetLine();
- 	hd().Nf = f.GetInt(0);
- 	if (abs(hd().Nf) > 1000)
- 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), hd().Nf));
  	
- 	if (hd().Nf != 0) {
+ 	// Commented, as there is no relationship between the units of input and output time/frequency. 
+
+	int /*hd().*/Nf = f.GetInt(0);		
+	
+ 	if (abs(/*hd().*/Nf) > 1000)
+ 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), /*hd().*/Nf));
+ 	
+ 	if (/*hd().*/Nf != 0) {
 	 	f.GetLine();
+	 	/*
 	 	if (hd().Nf > 0) {
 	 		hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
@@ -887,6 +966,7 @@ bool Wamit::Load_pot(String fileName) {
 		 	}
 	 	}
 	 	ProcessFirstColumnPot(hd().w, hd().T);
+	 	*/
  	}
  	
  	f.GetLine();
@@ -1034,35 +1114,36 @@ static double w_iperout4(double nuL, double g, double len, double h) {
 	return x[0];
 }
 			
-void Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T) {	
+bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T) {	
+	bool dataFromW;
 	if (IsNull(iperout)) {
 		if (w.size() < 2)
-			return;
+			return false;
 		if (w[0] > w[1]) {
-			hd().dataFromW = false;
+			dataFromW = false;
 			T = pick(w);
 			w.SetCount(hd().Nf);	
 		} else {
-			hd().dataFromW = true;
+			dataFromW = true;
 			T.SetCount(hd().Nf);
 		}
 	} else {
 		if (iperout == 1) {
-			hd().dataFromW = false;
+			dataFromW = false;
 			T = pick(w);
 			w.SetCount(hd().Nf);
 		} else if (iperout == 2) {
-			hd().dataFromW = true;
+			dataFromW = true;
 			T.SetCount(hd().Nf);
 		} else if (iperout == 3) {
-			hd().dataFromW = true;
+			dataFromW = true;
 			T.SetCount(hd().Nf);
 			double g = Nvl(hd().g, hd().GetBEM().g);
 			double len = Nvl(hd().len, hd().GetBEM().len);
 			for (auto &ww : w)
 				ww = w_iperout3(ww, g, len);
 		} else {
-			hd().dataFromW = true;
+			dataFromW = true;
 			T.SetCount(hd().Nf);
 			double g = Nvl(hd().g, hd().GetBEM().g);
 			double len = Nvl(hd().len, hd().GetBEM().len);
@@ -1073,11 +1154,14 @@ void Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T) {
 		}
 	}
 	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-		if (hd().dataFromW)
+		if (dataFromW)
 			T[ifr] = 2*M_PI/w[ifr];//fround(2*M_PI/w[ifr], 8);
 		else
 			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
 	}
+	if (IsNull(hd().dataFromW))
+		hd().dataFromW = dataFromW;
+	return dataFromW;
 }
 
 void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T) {	
@@ -1168,9 +1252,9 @@ bool Wamit::Load_1(String fileName) {
 	if (hd().Nb == 0)// || hd().Nf < 2)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
-	UVector<double> sourcew = clone(w);
+	UVector<double> src = clone(w);
 	
-	ProcessFirstColumn1_3(w, T);
+	bool dataFromW = ProcessFirstColumn1_3(w, T);
 	
 	if (thereIsA0)
 		hd().A0.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
@@ -1190,7 +1274,8 @@ bool Wamit::Load_1(String fileName) {
 		}
 	}
 	
-	hd().names.SetCount(Nb);
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
 	
 	if (!hd().w.IsEmpty()) {
 		UVector<double> rw = clone(w);		Upp::Reverse(rw);
@@ -1227,9 +1312,9 @@ bool Wamit::Load_1(String fileName) {
 				throw Exc(in.Str() + "\n"  + t_("A[w=0] is not expected"));				
 			hd().Ainf(i, j) = Aij;
 		} else {
-			int ifr = FindRatio(sourcew, freq, 0.001);
+			int ifr = FindRatio(src, freq, 0.001);
 			if (ifr < 0) {
-				if (hd().dataFromW)
+				if (dataFromW)
 					throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 				else 
 					throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
@@ -1380,9 +1465,9 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	
-	UVector<double> sourcew = clone(w);
+	UVector<double> src = clone(w);
 		
-	ProcessFirstColumn1_3(w, T);
+	bool dataFromW = ProcessFirstColumn1_3(w, T);
 	
 	if (!hd().w.IsEmpty()) {
 		UVector<double> rw = clone(w);		Upp::Reverse(rw);
@@ -1408,9 +1493,9 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 			break;
 		
 		double freq = f.GetDouble(0);
-		int ifr = FindRatio(sourcew, freq, 0.001);
+		int ifr = FindRatio(src, freq, 0.001);
 		if (ifr < 0) {
-			if (hd().dataFromW)
+			if (dataFromW)
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
@@ -1437,11 +1522,11 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	
 	String ext = isSum ? ".12s" : ".12d";
 	
-	Status(Format("Loading %s base data", ext), 0);
-	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
+	
+	Status(Format("Loading %s base data", ext), 0);
 	
 	FieldSplit f(in);
 	f.IsSeparator = IsTabSpace;
@@ -1506,11 +1591,8 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		int ifr2 = Find(w, f.GetDouble(1));
 		int ih = Find(head, std::complex<double>(f.GetDouble(2), f.GetDouble(3)));
 		int idf = f.GetInt(4)-1;
-		int ib = 0;
-		while (idf > 5) {
-			idf -= 6;
-			ib++;
-		}
+		int ib = int(idf/6);
+		idf -= 6*ib;
 		qtf[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(7));
 		qtf[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(8));
 	}
@@ -1530,13 +1612,153 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	return true;
 }
 
+bool Wamit::Load_789(String fileName) {
+	/* The priority is:
+										Extension	DOF				Accuracy	Run time	Control surface
+	Control surface 					.7			1,2,3,4,5,6		Better		More		Yes
+	Pressure integration/Near field		.9			1,2,3,4,5,6		Less		Less		No
+	Momentum conservation/Far field		.8			1,2,6									No				*/
+	
+	UArray<UArray<UArray<VectorXd>>> md;
+	if (Load_789_0(fileName, 7, md)) {
+		if (Hydro::IsLoadedMD(md)) {
+			hd().md = pick(md);
+			return true;
+		}
+	}
+	if (Load_789_0(fileName, 9, md)) {
+		if (Hydro::IsLoadedMD(md)) {
+			hd().md = pick(md);
+			return true;
+		}
+	}
+	if (Load_789_0(fileName, 8, md)) {
+		if (Hydro::IsLoadedMD(md)) {
+			hd().md = pick(md);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf) {
+	hd().dimen = false;
+	if (IsNull(hd().len))
+		hd().len = 1;
+	
+	fileName = ForceExt(fileName, Format(".%d", type));
+	
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	hd().mdtype = type;
+	
+	FieldSplit f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	FileInLine::Pos fpos = in.GetPos();
+	f.GetLine();		
+	if (!IsNull(f.GetDouble_nothrow(0)))
+		in.SeekPos(fpos);		// No header, rewind
+	else
+		fpos = in.GetPos();		// Avoid header
+	
+	UVector<double> w, T;
+    UArray<std::complex<double>> head;
+	
+	int Nb = 0;
+	int nline = 0;
+	while (!in.IsEof()) {
+		f.GetLine();
+		nline++;
+		double freq = f.GetDouble(0);
+		FindAdd(w, freq);
+		double hd1 = f.GetDouble(1);
+		double hd2 = f.GetDouble(2);
+		FindAdd(head, std::complex<double>(hd1, hd2));	
+		Nb = max(Nb, 1 + (f.GetInt(3)-1)/6);
+	}
+	
+	if (IsNull(hd().Nb))
+		hd().Nb = Nb;
+	else {
+		if (hd().Nb < Nb)
+			throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+	}
+	
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
+		
+	int Nf = w.size();
+	if (!IsNull(hd().Nf) && hd().Nf != Nf)
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
+	hd().Nf = Nf;
+	
+	int Nh = head.size();
+	if (Nh == 0)
+		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
+	
+	UVector<double> src = clone(w);
+	
+	bool dataFromW = ProcessFirstColumn1_3(w, T);
+	
+	hd().InitMd(qtf, Nb, Nh, Nf);
+	
+	if (!hd().w.IsEmpty()) {
+		UVector<double> rw = clone(w);		Upp::Reverse(rw);
+		UVector<double> rT = clone(T);		Upp::Reverse(rT);
+		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
+			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
+			throw Exc(in.Str() + "\n"  + Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
+	}
+	hd().w = pick(w);
+	hd().T = pick(T);	
+	
+	in.SeekPos(fpos);
+	
+	int iline = 0;
+	while (!in.IsEof()) {
+		f.GetLine();
+		iline++;
+		
+		double freq = f.GetDouble(0);
+		int ifr1 = FindRatio(src, freq, 0.001);
+		if (ifr1 < 0) {
+			if (dataFromW)
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
+			else 
+				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
+		}
+
+		int ih = Find(head, std::complex<double>(f.GetDouble(1), f.GetDouble(2)));
+		int idf = f.GetInt(3)-1;
+		if (idf >= 0) {			// idf may be negative!
+			int ib = 0;
+			while (idf > 5) {
+				idf -= 6;
+				ib++;
+			}
+			qtf[ib][ih][idf][ifr1] = f.GetDouble(6);
+		}
+	}	
+
+	Copy(head, hd().mdhead);
+
+	for (int i = 0; i < hd().mdhead.size(); ++i)
+   		hd().mdhead(i) = std::complex<double>(hd().mdhead(i).real(), hd().mdhead(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+	
+	return true;
+}
+
 void Wamit::Save_1(String fileName, bool force_T) {
 	if (!(hd().IsLoadedA() && hd().IsLoadedB())) 
 		return;
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
 	if (hd().IsLoadedA0()) {
 		for (int i = 0; i < hd().Nb*6; ++i)  
@@ -1589,7 +1811,7 @@ void Wamit::Save_3(String fileName, bool force_T) {
 	
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	if (hd().Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
@@ -1632,7 +1854,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
 	if (hd().Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
@@ -1679,7 +1901,7 @@ String WamitField(String str, int length) {
 void Wamit::Save_FRC(String fileName) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .frc file\n";
 	out << WamitField(Format("%d 0 %d %d 0 0 0 0 0", hd().IsLoadedA() && hd().IsLoadedB() ? 1 : 0,
@@ -1725,7 +1947,7 @@ void Wamit::Save_FRC(String fileName) {
 void Wamit::Save_POT(String fileName) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .pot file\n";
 	out << WamitField(Format("%.2f", hd().h), 12) << "% HBOT\n";
@@ -1755,7 +1977,7 @@ void Wamit::Save_hst(String fileName) {
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	for (int i = 0; i < 6*hd().Nb; ++i)  
 		for (int j = 0; j < 6*hd().Nb; ++j) {
@@ -1773,7 +1995,7 @@ void Wamit::Save_hst(String fileName) {
 void Wamit::Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rho, double g) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	for (int i = 0; i < 6; ++i)  
 		for (int j = 0; j < 6; ++j) 
@@ -1791,7 +2013,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
 	int Nf = int(hd().qw.size());
 	int Nh = int(hd().qh.size()); 
@@ -1803,29 +2025,97 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 			
 	out << " WAMIT Numeric Output -- Filename  " << Format("%20<s", GetFileName(fileName)) << "  " << Format("%", GetSysTime()) << "\n";
 
-	int num = int(pow2(hd().qw.size())*hd().qh.size());
+	int num = int(pow2(Nf)*Nh);
 	int inum = 0;
-	for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) 
-		for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) 
-			for (int ih = 0; ih < hd().qh.size(); ++ih) {
+	for (int ifr1 = 0; ifr1 < Nf; ++ifr1) 
+		for (int ifr2 = 0; ifr2 < Nf; ++ifr2) 
+			for (int ih = 0; ih < Nh; ++ih) {
 				inum++;
 				if (Status && num >= 20 && !(inum%(num/20)) && !Status(Format("Saving %s", fileName), (100*inum)/num))
 					throw Exc(t_("Stop by user"));
 				
-				for (int ib = 0; ib < hd().Nb; ++ib)
-        			for (int idf = 0; idf < 6; ++idf) {
-        				static int idf12[] = {1, 3, 5, 2, 4, 6};
-        				int iidf = idf12[idf]-1;
-        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr1]);
-        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr2]);
-        				out << Format("   % 8.6E", hd().qh[ih].real());
-        				out << Format("   % 8.6E", hd().qh[ih].imag());
-        				out << Format("   %2d", ib*6 + iidf+1);
-        				out << Format("   % 8.6E", hd().F_ndim(abs(qtf[ib][ih][iidf](ifr1, ifr2)), iidf));
-        				out << Format("   % 8.6E", !force_Deg ? arg(qtf[ib][ih][iidf](ifr1, ifr2)) : ToDeg(arg(qtf[ib][ih][iidf](ifr1, ifr2))));
-        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).real(), iidf));
-        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).imag(), iidf));
-        				out << "\n";
-        			}
+				double h1 = hd().qh[ih].real();
+				double h2 = hd().qh[ih].imag();
+				
+				if (IsNull(qtfHeading) ||
+					(qtfHeading == -1 && abs(h1 - h2) < 0.01) ||
+					(ih == qtfHeading)) {
+					if (ih == qtfHeading)
+						h1 = h2 = 0;
+					for (int ib = 0; ib < hd().Nb; ++ib)
+	        			for (int idf = 0; idf < 6; ++idf) {
+	        				static int idf12[] = {1, 3, 5, 2, 4, 6};
+	        				int iidf = idf12[idf]-1;
+	        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr1]);
+	        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr2]);
+	        				out << Format("   % 8.6E", h1);
+	        				out << Format("   % 8.6E", h2);
+	        				out << Format("   %2d", ib*6 + iidf+1);
+	        				out << Format("   % 8.6E", hd().F_ndim(abs(qtf[ib][ih][iidf](ifr1, ifr2)), iidf));
+	        				out << Format("   % 8.6E", !force_Deg ? arg(qtf[ib][ih][iidf](ifr1, ifr2)) : ToDeg(arg(qtf[ib][ih][iidf](ifr1, ifr2))));
+	        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).real(), iidf));
+	        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).imag(), iidf));
+	        				out << "\n";
+	        			}
+				}
 			}
+}
+
+void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) {
+	if (!hd().IsLoadedMD()) 
+		return;
+	
+	String ext = Format(".%d", hd().mdtype);
+	fileName = ForceExt(fileName, ext);
+	
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
+	
+	int Nf = int(hd().w.size());
+	int Nh = int(hd().mdhead.size()); 
+	
+	if (Nf < 2)
+		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
+		
+	UVector<double> *pdata;
+	if (force_T)
+		pdata = &hd().T;
+	else if (hd().dataFromW) 
+		pdata = &hd().w;
+	else
+		pdata = &hd().T;
+	UVector<double> &data = *pdata;
+	
+	int ifr0, ifrEnd, ifrDelta;
+	bool growing = data[1] > data[0];
+	if ((growing && (hd().dataFromW && !force_T)) || (!growing && !(hd().dataFromW && !force_T))) {
+		ifr0 = 0;
+		ifrEnd = hd().Nf;
+		ifrDelta = 1;
+	} else {
+		ifr0 = hd().Nf - 1;
+		ifrEnd = -1;
+		ifrDelta = -1;
+	}
+		
+	UArray<UArray<UArray<VectorXd>>> &md = hd().md;		
+			
+	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
+		for (int ih = 0; ih < Nh; ++ih) {
+			for (int ib = 0; ib < hd().Nb; ++ib)
+    			for (int idf = 0; idf < 6; ++idf) {
+    				static int idf12[] = {1, 2, 3, 4, 5, 6};
+    				int iidf = idf12[idf]-1;
+    				out << Format("   % 8.6E", hd().T[ifr]);
+    				out << Format("   % 8.6E", hd().mdhead[ih].real());
+    				out << Format("   % 8.6E", hd().mdhead[ih].imag());
+    				out << Format("   %2d", ib*6 + iidf+1);
+    				out << Format("   % 8.6E", abs(hd().F_ndim(md[ib][ih][iidf](ifr), iidf)));
+    				out << Format("   % 8.6E", 0.);
+    				out << Format("   % 8.6E", hd().F_ndim(md[ib][ih][iidf](ifr), iidf));
+    				out << Format("   % 8.6E", 0.);
+    				out << "\n";
+    			}
+		}
 }

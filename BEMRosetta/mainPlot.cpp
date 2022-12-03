@@ -40,12 +40,13 @@ void MainPlot::Init(bool vert) {
 	Clear();
 }
 
-void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
+void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, double _heading1) {
 	MainPlot::Init(true);
 	
 	plot_idf = _idf;
 	plot_jdf = int(jdf_ih);
-	heading = jdf_ih;
+	heading0 = jdf_ih;
+	heading1 = _heading1;
 	dataToShow = _dataToShow;
 	
 	compare.Init(dataToShow);
@@ -60,6 +61,10 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
 						labelY = t_("Radiation damping");
 						splitter.SetPos(10000, 0);	
 						break;
+	case Hydro::DATA_MD:title = Format(t_("Mean drift %s heading %.1f:%.1fº"), BEM::StrBDOF(plot_idf, false), heading0, heading1);
+						labelY = t_("Mean drift");
+						splitter.SetPos(10000, 0);	
+						break;						
 	case Hydro::DATA_AINFW:	title = Format(t_("Added mass at infinity (ω) %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));		
 						labelY = t_("Added mass at infinity (ω)");
 						splitter.SetPos(10000, 0);				
@@ -68,7 +73,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
 						labelY = t_("Kirf Impulse Response Function");
 						splitter.SetPos(10000, 0);	
 						break;
-	case Hydro::DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading);
+	case Hydro::DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
 						if (show_ma_ph) {
 							labelY = t_("Diffraction scattering force");
 							labelY2 = t_("Diffraction scattering force phase");
@@ -78,7 +83,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
 						}
 						splitter.SetPos(5000, 0);	
 						break;
-	case Hydro::DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading);
+	case Hydro::DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
 						if (show_ma_ph) {
 							labelY = t_("Froude-Krylov force");		
 							labelY2 = t_("Froude-Krylov force phase");
@@ -88,7 +93,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
 						}
 						splitter.SetPos(5000, 0);			
 						break;
-	case Hydro::DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading);
+	case Hydro::DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
 						if (show_ma_ph) {
 							labelY = t_("Excitation force");		
 							labelY2 = t_("Excitation force phase");
@@ -98,7 +103,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow) {
 						}
 						splitter.SetPos(5000, 0);				
 						break;
-	case Hydro::DATA_RAO:	title = Format(t_("Response Amplitude Operator %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading);
+	case Hydro::DATA_RAO:	title = Format(t_("Response Amplitude Operator %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
 						if (show_ma_ph) {
 							labelY = t_("RAO");		
 							labelY2 = t_("RAO phase");
@@ -220,8 +225,13 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 
 void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	int ih = -1;
-	if (dataToShow != Hydro::DATA_A && dataToShow != Hydro::DATA_B && dataToShow != Hydro::DATA_AINFW) 
-		ih = hy.GetHeadId(heading);
+	if (dataToShow != Hydro::DATA_A && dataToShow != Hydro::DATA_B && dataToShow != Hydro::DATA_AINFW) {
+		if (dataToShow == Hydro::DATA_MD) {
+			std::complex<double> h(heading0, heading1);
+			ih = hy.GetHeadIdMD(h);
+		} else
+			ih = hy.GetHeadId(heading0);
+	}
 	String nameType = Format("%s(%s)", hy.name, hy.GetCodeStrAbr());
 	if (idc < 0)
 		idc = id;
@@ -292,8 +302,17 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 		}
+	} else if (dataToShow == Hydro::DATA_MD && hy.IsLoadedMD()) {
+		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
+			loaded = true;
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD_%s"), nameType)).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_SOLID);
+			if (dim)
+				scatt.Units(Hydro::MD_units(!dim, plot_idf));
+		}
 	} else if (dataToShow == Hydro::DATA_K && hy.IsLoadedC()) {
-		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_K, show_w, !dim, show_ma_ph)) {
+		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_KIRF, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("K_%s"), nameType)).
 						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
