@@ -391,7 +391,8 @@ bool FastOut::LoadCsv(String fileName) {
 				if (!GetUnits(result[i], '(', ')', param, unit))
 					if (!GetUnits(result[i], '[', ']', param, unit))
 						param = result[i];
-				
+				if (param == "")
+					param = t_("void");
 				parameters << param;
 				units << unit;
 			}

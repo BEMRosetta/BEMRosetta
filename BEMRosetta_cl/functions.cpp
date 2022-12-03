@@ -305,6 +305,14 @@ double FixHeading_180(double head) {
 	return head;
 }
 
+std::complex<double> FixHeading_180(const std::complex<double> &head) {
+	return std::complex<double>(FixHeading_180(head.real()), FixHeading_180(head.imag()));
+}
+
+std::complex<double> FixHeading_0_360(const std::complex<double> &head) {
+	return std::complex<double>(FixHeading_0_360(head.real()), FixHeading_0_360(head.imag())); 
+}
+
 double FixHeading(double head, BEM::HeadingType range) {
 	if (range == BEM::HEAD_180_180)
 		return FixHeading_180(head);
@@ -312,9 +320,9 @@ double FixHeading(double head, BEM::HeadingType range) {
 		return FixHeading_0_360(head);
 }
 
-std::complex<double> FixHeading(std::complex<double> &head, BEM::HeadingType range) {
+std::complex<double> FixHeading(const std::complex<double> &head, BEM::HeadingType range) {
 	if (range == BEM::HEAD_180_180) 
-		return std::complex<double>(FixHeading_180(head.real()), FixHeading_180(head.imag()));
+		return FixHeading_180(head);
 	else
-		return std::complex<double>(FixHeading_0_360(head.real()), FixHeading_0_360(head.imag())); 
+		return FixHeading_0_360(head);
 }

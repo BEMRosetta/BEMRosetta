@@ -146,7 +146,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
-	file.Type(t_("FAST output file"), "*.out, *.outb"); 
+	file.Type(t_("FAST output file"), "*.out, *.outb").Type(t_("CSV file"), "*.csv"); 
 	butSaveAs <<= THISBACK(OnSaveAs);
 	butSaveAs.Tip(t_("Saves data file"));
 	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
