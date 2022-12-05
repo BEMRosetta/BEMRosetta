@@ -1166,6 +1166,7 @@ public:
 	void ShowMenuPlotItems();
 	void OnABForces();
 	void OnQTF();
+	void OnQTF_MD();
 	
 	int GetIdOneSelected(bool complain = true);
 		

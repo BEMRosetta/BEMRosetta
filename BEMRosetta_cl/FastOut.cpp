@@ -767,7 +767,11 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 				} else if (stat == "std") {
 					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());	
 					val = sqrt((d.array() - d.mean()).square().sum() / (d.size() - 1));
-				} else
+				} else if (stat == "rao") 
+					val = Null;
+				else if (stat == "rao_mean") 
+					val = Null;
+				else
 					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, strpar));
 				
 				t << val;//Format("%" + format, val);
@@ -919,7 +923,7 @@ double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2, double &damp) {
 }
 
 double GetRAO(const VectorXd &data, const VectorXd &time, double T, bool onlyFFT, double r2Max) {
-	EigenVector vect(data, time);
+	EigenVector vect(time, data);
 	
 	if (!onlyFFT) {
 		DataXRange vectx(vect, time[time.size()/2], time[time.size()-1]);
