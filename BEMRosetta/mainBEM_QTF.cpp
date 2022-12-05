@@ -462,7 +462,7 @@ bool MainQTF::Load() {
 			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
 	
 		UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
-		for (const auto &c : qh)
+		for (const auto &c : hd.qh)
 			qh << FixHeading(c, Bem().headingType);
 		
 		Sort(qh, [&](auto& a, auto& b)->bool const { 

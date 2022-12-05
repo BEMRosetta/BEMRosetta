@@ -111,6 +111,8 @@ void MainBEM::Init() {
 	if (IsNull(menuProcess.maxFreq))
 		menuProcess.maxFreq <<= 150;
 	
+	menuProcess.butQTF_MD << THISBACK(OnQTF_MD);
+	
 	CtrlLayout(menuProcess2);
 	
 	auto DropChecked = [&](DropGrid &drop)->bool {
@@ -141,7 +143,8 @@ void MainBEM::Init() {
 	menuProcess2.butResetDOF.Hide();
 	menuProcess2.butResetDOF0 << THISBACK1(OnMultiplyDOF, true);
 	menuProcess2.butResetDOF0.Hide();
-			
+	
+	menuProcess2.dropFreq.Tip(t_("Selects the frequencies to be removed from the first order hydrodynamic coefficients and mean drift."));		
 	menuProcess2.dropFreq.AddColumn("", 20);
 	menuProcess2.dropFreq.AddColumn("", 50);
 	menuProcess2.dropFreq.GetList().GetColumn(0).Option();
@@ -152,6 +155,7 @@ void MainBEM::Init() {
 		menuProcess2.butRemoveFreq.Show(DropChecked(menuProcess2.dropFreq) || 
 										DropChecked(menuProcess2.dropFreqQTF));
 	};
+	menuProcess2.dropFreq.Tip(t_("Selects the frequencies to be removed from the QTF."));
 	menuProcess2.dropFreqQTF.AddColumn("", 20);
 	menuProcess2.dropFreqQTF.AddColumn("", 50);
 	menuProcess2.dropFreqQTF.GetList().GetColumn(0).Option();
@@ -173,6 +177,18 @@ void MainBEM::Init() {
 	menuProcess2.dropHead.OnFocus = [&] {
 		menuProcess2.dropHead.DropGrid::GotFocus();
 		menuProcess2.butRemoveHead.Show(DropChecked(menuProcess2.dropHead) || 
+										DropChecked(menuProcess2.dropHeadMD) || 
+										DropChecked(menuProcess2.dropHeadQTF));
+	};
+	menuProcess2.dropHeadMD.AddColumn("", 10);
+	menuProcess2.dropHeadMD.AddColumn(t_("Heading [º]"), 50);
+	menuProcess2.dropHeadMD.GetList().GetColumn(0).Option();
+	menuProcess2.dropHeadMD.Width(150);
+	menuProcess2.dropHeadMD.GetList().Sorting(false);
+	menuProcess2.dropHeadMD.OnFocus = [&] {
+		menuProcess2.dropHeadMD.DropGrid::GotFocus();
+		menuProcess2.butRemoveHead.Show(DropChecked(menuProcess2.dropHead) || 
+										DropChecked(menuProcess2.dropHeadMD) || 
 										DropChecked(menuProcess2.dropHeadQTF));
 	};
 	menuProcess2.dropHeadQTF.AddColumn("", 10);
@@ -183,6 +199,7 @@ void MainBEM::Init() {
 	menuProcess2.dropHeadQTF.OnFocus = [&] {
 		menuProcess2.dropHeadQTF.DropGrid::GotFocus();
 		menuProcess2.butRemoveHead.Show(DropChecked(menuProcess2.dropHead) || 
+										DropChecked(menuProcess2.dropHeadMD) || 
 										DropChecked(menuProcess2.dropHeadQTF));
 	};
 	menuProcess2.butRemoveHead << THISBACK(OnDeleteHeadingsFrequencies);
@@ -196,7 +213,19 @@ void MainBEM::Init() {
 	menuProcess2.dropForce.OnFocus = [&] {
 		menuProcess2.dropForce.DropGrid::GotFocus();
 		menuProcess2.butRemoveForces.Show(DropChecked(menuProcess2.dropForce) || 
-										DropChecked(menuProcess2.dropForceQTF));
+										  DropChecked(menuProcess2.dropForceMD) ||
+										  DropChecked(menuProcess2.dropForceQTF));
+	};
+	menuProcess2.dropForceMD.AddColumn("", 20);
+	menuProcess2.dropForceMD.AddColumn(t_("Force type"), 50);
+	menuProcess2.dropForceMD.GetList().GetColumn(0).Option();
+	menuProcess2.dropForceMD.Width(100);
+	menuProcess2.dropForceMD.GetList().Sorting(false);
+	menuProcess2.dropForceMD.OnFocus = [&] {
+		menuProcess2.dropForceMD.DropGrid::GotFocus();
+		menuProcess2.butRemoveForces.Show(DropChecked(menuProcess2.dropForce) || 
+										  DropChecked(menuProcess2.dropForceMD) ||
+										  DropChecked(menuProcess2.dropForceQTF));
 	};
 	menuProcess2.dropForceQTF.AddColumn("", 20);
 	menuProcess2.dropForceQTF.AddColumn(t_("Force type"), 50);
@@ -206,7 +235,8 @@ void MainBEM::Init() {
 	menuProcess2.dropForceQTF.OnFocus = [&] {
 		menuProcess2.dropForceQTF.DropGrid::GotFocus();
 		menuProcess2.butRemoveForces.Show(DropChecked(menuProcess2.dropForce) || 
-										DropChecked(menuProcess2.dropForceQTF));
+										  DropChecked(menuProcess2.dropForceMD) ||
+										  DropChecked(menuProcess2.dropForceQTF));
 	};
 	menuProcess2.butRemoveForces << THISBACK(OnResetForces);
 	menuProcess2.butRemoveForces.Hide();
@@ -800,9 +830,11 @@ void MainBEM::UpdateButtons() {
 	menuProcess2.dropFreq.Clear();
 	menuProcess2.dropFreqQTF.Clear();
 	menuProcess2.dropHead.Clear();
+	menuProcess2.dropHeadMD.Clear();
 	menuProcess2.dropHeadQTF.Clear();
 	menuProcess2.dropDOF.Clear();
 	menuProcess2.dropForce.Clear();
+	menuProcess2.dropForceMD.Clear();
 	menuProcess2.dropForceQTF.Clear();
 	menuProcess2.opA <<= false;
 	menuProcess2.opAd <<= false;
@@ -823,8 +855,10 @@ void MainBEM::UpdateButtons() {
 			menuProcess2.dropFreqQTF.Add(false, show_w ? data.qw[i] : 2*M_PI/data.qw[i]);
 		for (int i = 0; i < data.head.size(); ++i)
 			menuProcess2.dropHead.Add(false, data.head[i]);
+		for (int i = 0; i < data.mdhead.size(); ++i)
+			menuProcess2.dropHeadMD.Add(false, Format("%.1f-%.1f", data.mdhead[i].real(), data.mdhead[i].imag()));
 		for (int i = 0; i < data.qh.size(); ++i)
-			menuProcess2.dropHeadQTF.Add(false, Format("%f-%f", data.qh[i].real(), data.qh[i].imag()));
+			menuProcess2.dropHeadQTF.Add(false, Format("%.1f-%.1f", data.qh[i].real(), data.qh[i].imag()));
 		for (int i = 0; i < 6; ++i)
 			menuProcess2.dropDOF.Add(false, BEM::StrDOF(i));
 		
@@ -834,6 +868,9 @@ void MainBEM::UpdateButtons() {
 			menuProcess2.dropForce.Add(false, t_("Diffraction"));
 		if (data.IsLoadedFfk())
 			menuProcess2.dropForce.Add(false, t_("Froude-Krylov"));
+
+		if (data.IsLoadedMD())
+			menuProcess2.dropForceMD.Add(false, t_("All"));
 
 		if (data.IsLoadedQTF(true) || data.IsLoadedQTF(false))
 			menuProcess2.dropForceQTF.Add(false, t_("All"));
@@ -1142,6 +1179,17 @@ void MainBEM::OnResetForces() {
 			}
 		}
 
+		bool forceMD = false;
+		for (int i = 0; i < menuProcess2.dropForceMD.GetCount(); ++i) {
+			if (menuProcess2.dropForceMD.GetList().Get(i, 0) == true) {
+				String val = menuProcess2.dropForceMD.GetList().Get(i, 1);
+				if (val == t_("All")) {
+					forceMD = true;
+					break;
+				}
+			}
+		}
+		
 		Hydro::FORCE forceQtf = Hydro::NONE;
 		for (int i = 0; i < menuProcess2.dropForceQTF.GetCount(); ++i) {
 			if (menuProcess2.dropForceQTF.GetList().Get(i, 0) == true) {
@@ -1169,7 +1217,7 @@ void MainBEM::OnResetForces() {
 					
 		WaitCursor wait;
 		
-		Bem().ResetForces(id, force, forceQtf);
+		Bem().ResetForces(id, force, forceMD, forceQtf);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1334,13 +1382,39 @@ void MainBEM::OnQTF() {
 	}	
 }
 
+void MainBEM::OnQTF_MD() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		WaitCursor wait;
+		
+		Bem().CopyQTF_MD(id);
+		
+		Bem().UpdateHeadAllMD();
+		
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor()));
+	
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
 void MainBEM::OnDeleteHeadingsFrequencies() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
 		
-		UVector<int> idFreq, idFreqQTF, idHead, idHeadQTF;
+		UVector<int> idFreq, idFreqQTF, idHead, idHeadMD, idHeadQTF;
 		for (int i = 0; i < menuProcess2.dropFreq.GetList().GetRowCount(); ++i)
 			if (menuProcess2.dropFreq.GetList().Get(i, 0) == true)
 				idFreq << i;
@@ -1350,13 +1424,16 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 		for (int i = 0; i < menuProcess2.dropHead.GetList().GetRowCount(); ++i)
 			if (menuProcess2.dropHead.GetList().Get(i, 0) == true)
 				idHead << i;
+		for (int i = 0; i < menuProcess2.dropHeadMD.GetList().GetRowCount(); ++i)
+			if (menuProcess2.dropHeadMD.GetList().Get(i, 0) == true)
+				idHeadMD << i;
 		for (int i = 0; i < menuProcess2.dropHeadQTF.GetList().GetRowCount(); ++i)
 			if (menuProcess2.dropHeadQTF.GetList().Get(i, 0) == true)
 				idHeadQTF << i;
 		
 		WaitCursor wait;
 		
-		Bem().DeleteHeadingsFrequencies(id, idFreq, idFreqQTF, idHead, idHeadQTF);
+		Bem().DeleteHeadingsFrequencies(id, idFreq, idFreqQTF, idHead, idHeadMD, idHeadQTF);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)

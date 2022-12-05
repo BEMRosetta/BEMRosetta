@@ -392,11 +392,11 @@ bool Wamit::Load_out() {
 			Copy(mdhead, hd().mdhead);
 			
 			if (found7)
-				hd().InitMd(md7, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::InitMD(md7, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 			if (found8)
-				hd().InitMd(md8, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::InitMD(md8, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 			if (found9)
-				hd().InitMd(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::InitMD(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 						
 			int qtfNh = 0, qtfNf = 0;
 			UArray<std::complex<double>> head;
@@ -1642,7 +1642,7 @@ bool Wamit::Load_789(String fileName) {
 	return false;
 }
 
-bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf) {
+bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &mmd) {
 	hd().dimen = false;
 	if (IsNull(hd().len))
 		hd().len = 1;
@@ -1704,7 +1704,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	
 	bool dataFromW = ProcessFirstColumn1_3(w, T);
 	
-	hd().InitMd(qtf, Nb, Nh, Nf);
+	Hydro::InitMD(mmd, Nb, Nh, Nf);
 	
 	if (!hd().w.IsEmpty()) {
 		UVector<double> rw = clone(w);		Upp::Reverse(rw);
@@ -1741,7 +1741,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 				idf -= 6;
 				ib++;
 			}
-			qtf[ib][ih][idf][ifr1] = f.GetDouble(6);
+			mmd[ib][ih][idf][ifr1] = f.GetDouble(6);
 		}
 	}	
 
@@ -1951,7 +1951,7 @@ void Wamit::Save_POT(String fileName) {
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .pot file\n";
-	out << WamitField(Format("%.2f", hd().h), 12) << "% HBOT\n";
+	out << WamitField(Format("%.2f", IsNum(hd().h) ? hd().h : -1), 12) << "% HBOT\n";
 	out << WamitField("1 1", 12) << "% IRAD, IDIFF\n";
 	out << WamitField(Format("%d", hd().Nf), 12) << "% NPER\n";
 	UVector<double> T = clone(hd().T);

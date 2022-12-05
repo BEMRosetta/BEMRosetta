@@ -581,7 +581,7 @@ bool Aqwa::Load_LIS() {
 				hd().mdhead.resize(hd().head.size());
 				for (int ih = 0; ih < hd().head.size(); ++ih)
 					hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
-				hd().InitMd(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::InitMD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 			}
 			int id;
 			while(!in.IsEof() && (id = line.FindAfter("S T R U C T U R E")) < 0) 
