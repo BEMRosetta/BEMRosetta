@@ -55,7 +55,8 @@ void FastScatter::OnCalc() {
 												 {"PtfmYaw",    ".1f", "mean", "maxval"}, 
 												 {"NcIMUTA",    ".1f", "max"}, 
 												 {"TwrBsShear", ".0f", "max"},
-												 {"TwrBsBend",  ".0f", "max"}
+												 {"TwrBsBend",  ".0f", "max"},
+												 {"ptfmSurge",  ".1f", "rao_mean", "rao"}
 		};
 		
 		//const UVector<UVector<String>> params = {{"ptfm", ".0f", "max"}
@@ -74,6 +75,8 @@ void FastScatter::OnCalc() {
 			Exclamation("No data loaded");
 			return;	
 		}
+		
+		WaitCursor waitcursor;
 		
 		String editEnd = ~fscbase.editEnd;
 		if (Trim(editEnd) == "-")
@@ -113,8 +116,13 @@ void FastScatter::OnCalc() {
 				String val;
 				if (col < 3)
 					val = Format("%" + fmt[col], S(table[row][col]));
-				else
-					val = Format("%" + fmt[col], double(table[row][col]));
+				else {
+					double d = double(table[row][col]);
+					if (IsNull(d))
+						val = "-";
+					else
+						val = Format("%" + fmt[col], d);
+				}
 				compare.array.Set(row+2, col, val);
 			}
 		}
@@ -146,7 +154,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
-	file.Type(t_("FAST output file"), "*.out, *.outb").Type(t_("CSV file"), "*.csv"); 
+	file.Type(t_("All files"), "*.*").Type(t_("FAST output file"), "*.out, *.outb").Type(t_("CSV file"), "*.csv"); 
 	butSaveAs <<= THISBACK(OnSaveAs);
 	butSaveAs.Tip(t_("Saves data file"));
 	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
@@ -701,7 +709,7 @@ void FastScatterBase::ShowSelected() {
 							statusBar->Temporary(Format("Parameter %s does not exist", param));
 						else {
 							if (left.dataFast.size() > 1 && opLoad3 != 0)
-								param = Format("%d.", iff) + param;
+								param = Format("%d.", iff+1) + param;
 							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
 								.NoMark().Legend(param).Units(fast.units[col], t_("s")).Stroke(1);	
 						}
@@ -715,7 +723,7 @@ void FastScatterBase::ShowSelected() {
 							statusBar->Temporary(Format("Parameter %s does not exist", param));
 						else {
 							if (left.dataFast.size() > 1 && opLoad3 != 0)
-								param = Format("%d.", iff) + param;
+								param = Format("%d.", iff+1) + param;
 							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
 								.NoMark().Legend(param).Units(fast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
 						}

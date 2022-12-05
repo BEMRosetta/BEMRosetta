@@ -230,7 +230,7 @@ public:
 	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	
 	int mdtype = 0;
 	
-    void InitMd(UArray<UArray<UArray<VectorXd>>> &md, int nb, int nh, int nf) {
+    static void InitMD(UArray<UArray<UArray<VectorXd>>> &md, int nb, int nh, int nf) {
         md.SetCount(nb);
         for (int ib = 0; ib < nb; ++ib) {
             md[ib].SetCount(nh);
@@ -519,7 +519,7 @@ public:
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsMD(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
-	void ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf);
+	void ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);
 	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
 	void SwapDOF(int ib, int idof1, int idof2);
 	
@@ -527,6 +527,8 @@ public:
 	
 	void FillFrequencyGapsABForces(bool zero, int maxFreq);
 	void FillFrequencyGapsQTF(bool zero, int maxFreq);
+	
+	void CopyQTF_MD();
 	
 	void Join(const UVector<Hydro *> &hydrosp);
 	
@@ -1163,8 +1165,8 @@ public:
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
-										   const UVector<int> &idHead, const UVector<int> &idHeadQTF);
-	void ResetForces(int id, Hydro::FORCE force, Hydro::FORCE forceQtf);										
+										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
+	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										
 	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
 	void SwapDOF(int id, int ib, int idof1, int idof2);
 	
@@ -1182,6 +1184,8 @@ public:
 	void JoinMesh(int idDest, int idOrig);
 	UVector<int> SplitMesh(int id, Function <bool(String, int pos)> Status);
 	
+	void CopyQTF_MD(int id);
+		
 	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);

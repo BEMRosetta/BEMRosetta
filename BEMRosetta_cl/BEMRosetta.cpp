@@ -1478,8 +1478,8 @@ void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayi
 	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind, vidof, vjdof);
 }
 
-void BEM::ResetForces(int id, Hydro::FORCE force, Hydro::FORCE forceQtf) {
-	hydros[id].hd().ResetForces(force, forceQtf);
+void BEM::ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf) {
+	hydros[id].hd().ResetForces(force, forceMD, forceQtf);
 }
 
 void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf) {
@@ -1498,10 +1498,15 @@ void BEM::FillFrequencyGapsQTF(int id, bool zero, int maxFreq) {
 	hydros[id].hd().FillFrequencyGapsQTF(zero, maxFreq);
 }
 
-void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadQTF) {
+void BEM::CopyQTF_MD(int id) {
+	hydros[id].hd().CopyQTF_MD();
+}
+
+void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF) {
 	hydros[id].hd().DeleteFrequencies(idFreq);
 	hydros[id].hd().DeleteFrequenciesQTF(idFreqQTF);
 	hydros[id].hd().DeleteHeadings(idHead);
+	hydros[id].hd().DeleteHeadingsMD(idHeadMD);
 	hydros[id].hd().DeleteHeadingsQTF(idHeadQTF);
 }
 

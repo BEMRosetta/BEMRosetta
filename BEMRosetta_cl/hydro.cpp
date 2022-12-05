@@ -490,10 +490,13 @@ void Hydro::ResetForces1st(Hydro::FORCE force) {
 	md.Clear();
 }
 
-void Hydro::ResetForces(Hydro::FORCE force, Hydro::FORCE forceQtf) {
+void Hydro::ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf) {
 	if (force != Hydro::NONE)
 		Hydro::ResetForces1st(force);
 
+	if (forceMD)
+		md.Clear();
+	
 	if (forceQtf == Hydro::ALL || forceQtf == Hydro::QTFSUM) 
 		qtfsum.Clear();
 	if (forceQtf == Hydro::ALL || forceQtf == Hydro::QTFDIF) 
@@ -848,7 +851,7 @@ void Hydro::DeleteHeadingsMD(const UVector<int> &idHead) {
 		auto DeleteMD = [&]() {
 			for (int ib = 0; ib < Nb; ++ib) {
 	    		int j = idHead.size()-1;	
-				for (int i = mdhead.size()-1; i >= 0 && j >= 0; --i) {
+				for (int i = int(mdhead.size())-1; i >= 0 && j >= 0; --i) {
 	    			if (i == idHead[j]) {	
 						md[ib].Remove(i);
 						j--;
@@ -995,6 +998,26 @@ void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
 		FillSumDif(qtfdif);
 	
 	qw = pick(nw);
+}
+
+void Hydro::CopyQTF_MD() {
+	mdtype = 9;
+	::Copy(qh, mdhead);
+	
+	InitMD(md, Nb, Nh, Nf);
+
+	VectorXd ww;
+	::Copy(w, ww);
+	
+	for (int ib = 0; ib < Nb; ++ib) {
+        for (int ih = 0; ih < qh.size(); ++ih) {
+			for (int idof = 0; idof < 6; ++idof) {
+				const MatrixXcd &m = qtfdif[ib][ih][idof];
+				VectorXd diag = m.diagonal().real();
+				Resample(qw, diag, ww, md[ib][ih][idof]);
+			}
+        }
+	}
 }
 
 VectorXd AvgSafe(const VectorXd &a, const VectorXd &b) {
