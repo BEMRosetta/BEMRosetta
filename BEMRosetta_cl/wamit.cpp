@@ -2107,12 +2107,20 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) {
 			for (int ib = 0; ib < hd().Nb; ++ib)
     			for (int idf = 0; idf < 6; ++idf) {
     				static int idf12[] = {1, 2, 3, 4, 5, 6};
-    				int iidf = idf12[idf]-1;
-    				double re = hd().F_ndim(md[ib][ih][iidf](ifr), iidf);
+    				int idof = idf12[idf]-1;
+    				double re = hd().F_ndim(md[ib][ih][idof](ifr), idof);
+    		/*if (idof == 0)
+    			re = min(20., re);
+    		else if (idof == 1)
+    			re = min(20., hd().F_ndim(md[ib][ih][0](ifr), idof));
+    		else if (idof == 3)
+				re = min(1000., hd().F_ndim(md[ib][ih][4](ifr), idof));
+    		else if (idof == 4)
+				re = min(1000., re);*/
     				out << Format("   % 8.6E", hd().T[ifr]);
     				out << Format("   % 8.6E", hd().mdhead[ih].real());
     				out << Format("   % 8.6E", hd().mdhead[ih].imag());
-    				out << Format("   %2d", ib*6 + iidf+1);
+    				out << Format("   %2d", ib*6 + idof+1);
     				out << Format("   % 8.6E", abs(re));
     				out << Format("   % 8.6E", re > 0 ? 0. : 180.);
     				out << Format("   % 8.6E", re);
