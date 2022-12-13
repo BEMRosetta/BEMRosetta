@@ -520,7 +520,7 @@ public:
 	void DeleteHeadingsMD(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);
-	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
+	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
 	void SwapDOF(int ib, int idof1, int idof2);
 	
 	void SymmetrizeDOF();
@@ -1167,7 +1167,7 @@ public:
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										
-	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool qtf);
+	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
 	void SwapDOF(int id, int ib, int idof1, int idof2);
 	
 	void RemoveHydro(int id);
@@ -1199,9 +1199,9 @@ public:
 	void UpdateHeadAll();
 	void UpdateHeadAllMD();
 	
-	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";	// Priority
-	const UVector<String> bemExtSets = {".1.2.3.hst.4.12s.12d", ".out", ".lis.qtf"};
+	const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst";
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem";	// Priority
+	const UVector<String> bemExtSets = {".1.2.3.hst.4.12s.12d.frc.pot", ".lis.qtf"};
 	String bemFilesAst;
 	
 	int GetBEMExtSet(String file) {

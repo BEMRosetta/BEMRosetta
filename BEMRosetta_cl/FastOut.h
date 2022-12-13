@@ -490,6 +490,7 @@ public:
 		fast.fileName = file;
 		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
 		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
+		inflowfile.fileName = AppendFileNameX(path, fast.GetString("InflowFile"));
 		try {
 			dlldat.fileName = GetAbsolutePath(path, hydrodyn.GetString("NLFK_DLL_input"));
 		} catch(...) {
@@ -646,7 +647,7 @@ public:
 	};
 	
 public:
-	File fast, elastodyn, hydrodyn, dlldat;
+	File fast, elastodyn, hydrodyn, inflowfile, dlldat;
 	String folderCase;
 	String log;
 	String fstFile;
