@@ -49,14 +49,20 @@ void FastScatter::OnCalc() {
 		compare.arrayStats.AddColumn(t_("Format"));
 		compare.arrayStats.AddColumn(t_("Statistics"));
 		
-		const UVector<UVector<String>> params = {{"FAIRTEN*_t", ".0f", "max"},
-												 {"PtfmShift",  ".0f", "mean", "maxval"}, 
+		const UVector<UVector<String>> params = {
+												 {"PtfmSurge",  ".1f", "max", "mean"},
+												 {"PtfmPitch",  ".1f", "max", "mean", "std"},
+												 {"NcIMUTA",    ".1f", "max", "mean", "std"},
+												 {"FAIRTEN2_t", ".0f", "max", "mean"}//,
+		
+												 /*{"FAIRTEN*_t", ".0f", "max"},
+												 {"PtfmShift",  ".1f", "mean", "maxval"}, 
 												 {"PtfmTilt",   ".1f", "mean", "maxval"}, 
 												 {"PtfmYaw",    ".1f", "mean", "maxval"}, 
 												 {"NcIMUTA",    ".1f", "max"}, 
 												 {"TwrBsShear", ".0f", "max"},
-												 {"TwrBsBend",  ".0f", "max"},
-												 {"ptfmSurge",  ".1f", "rao_mean", "rao"}
+												 {"TwrBsBend",  ".0f", "max"}//,*/
+												 //{"ptfmSurge",  ".1f", "rao_mean", "rao"}
 		};
 		
 		//const UVector<UVector<String>> params = {{"ptfm", ".0f", "max"}
@@ -97,6 +103,7 @@ void FastScatter::OnCalc() {
 		FastOut &fast = fscbase.left.dataFast[0];
 		UVector<String> fmt;
 		fmt << "s" << "s" << "s";
+		
 		
 		for (const UVector<String> &param : realparams) {				
 			String strpar = param[0];
@@ -166,14 +173,14 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 			right.SetHeight(0, 0);	
 		else
 			right.SetHeight(0, 200);	
-		ShowSelected();
+		ShowSelected(true);
 	};
 	opLoad3.WhenAction();
 	
-	editStart.WhenEnter = THISBACK(ShowSelected);
-	opFrom.WhenAction = THISBACK(ShowSelected);
-	editEnd.WhenEnter = THISBACK(ShowSelected);
-	editFromEnd.WhenEnter = THISBACK(ShowSelected);
+	editStart.WhenEnter = THISBACK1(ShowSelected, true);
+	opFrom.WhenAction = THISBACK1(ShowSelected, true);
+	editEnd.WhenEnter = THISBACK1(ShowSelected, true);
+	editFromEnd.WhenEnter = THISBACK1(ShowSelected, true);
 	
 	UpdateButtons(false);
 	
@@ -194,8 +201,8 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	rightSearch.array.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &rightSearch.array);	
 	rightSearch.array.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &rightSearch.array);	
 	
-	leftSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK(ShowSelected);
-	rightSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK(ShowSelected);
+	leftSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK1(ShowSelected, false);
+	rightSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK1(ShowSelected, false);
 	
 	leftSearch.array.AddColumn("");
 	leftSearch.array.NoVertGrid();
@@ -317,7 +324,7 @@ void FastScatterBase::SelPaste(String str) {
 		if (left.dataFast[0].GetParameterX(rightp[rw]) >= 0)
 			rightSearch.array.Set(rw, 0, rightp[rw]);
 	}
-	ShowSelected();	
+	ShowSelected(false);	
 }
 
 void FastScatterBase::SelCopyTabs() {
@@ -366,13 +373,13 @@ void FastScatterBase::OnDropInsert(int line, PasteClip& d, ArrayCtrl &array) {
 		array.InsertDrop(line, d);
 		array.SetFocus();
 		ArrayRemoveDuplicates(array);
-		ShowSelected();
+		ShowSelected(true);
 	} else if(AcceptText(d) && !ArrayExists(array, GetString(d))) {
 		array.Insert(line);
 		array.Set(line, 0, GetString(d));
 		array.SetCursor(line);
 		array.SetFocus();
-		ShowSelected();
+		ShowSelected(true);
 	}	
 }
 
@@ -408,7 +415,7 @@ void FastScatterBase::WhenArrayLeftDouble(ArrayCtrl *parray) {
 	} else
 		AddParameter(param, nullptr);
 	
-	ShowSelected();
+	ShowSelected(false);
 }
  
 void FastScatterBase::OnFilter(bool show) {
@@ -420,7 +427,7 @@ void FastScatterBase::OnFilter(bool show) {
 			rightB.filterUnits.Clear();
 			list = left.dataFast[0].GetList();
 			if (show)
-				ShowSelected();
+				ShowSelected(false);
 		}
 	} 
 	rightB.arrayParam.Clear();
@@ -525,14 +532,14 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 		
 			LoadParams();
 			OnFilter(false);
-			ShowSelected();
+			ShowSelected(true);
 		
 			//if (!WhenFile(fileName))
 				//return false;
 			
 			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount()+1, fileName);
 		} else 
-			ShowSelected();
+			ShowSelected(false);
 		
 	} catch (const Exc &e) {
 		Exclamation(Format("Error: %s", DeQtf(e)));	
@@ -601,7 +608,7 @@ void FastScatterBase::OnSaveAs() {
 	}		
 }
 	
-void FastScatterBase::ShowSelected() {
+void FastScatterBase::ShowSelected(bool zoomtofit) {
 	NON_REENTRANT_V;
 	
 	try {
@@ -648,9 +655,11 @@ void FastScatterBase::ShowSelected() {
 			}
 		}
 		
-		left.ClearScatter();
-		for (int i = 0; i < scattersize; ++i)
-			left.AddScatter();
+		if (zoomtofit) {
+			left.ClearScatter();
+			for (int i = 0; i < scattersize; ++i)
+				left.AddScatter();
+		}
 		
 		for (int iff = 0; iff < scattersize; ++iff) {
 			auto &scat = left.scatter[iff];
@@ -732,10 +741,12 @@ void FastScatterBase::ShowSelected() {
 			}
 		}
 		
-		for (int iff = 0; iff < scattersize; ++iff) {
-			auto &scat = left.scatter[iff];
-			
-			scat.ZoomToFit(true, true);	
+		if (zoomtofit) {
+			for (int iff = 0; iff < scattersize; ++iff) {
+				auto &scat = left.scatter[iff];
+				
+				scat.ZoomToFit(true, true);	
+			}
 		}
 		
 		SaveParams();

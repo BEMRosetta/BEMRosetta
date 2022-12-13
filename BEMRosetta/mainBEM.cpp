@@ -134,10 +134,16 @@ void MainBEM::Init() {
 		bool show = DropChecked(menuProcess2.dropDOF) && 
 					(menuProcess2.opA || menuProcess2.opAd || 
 					 menuProcess2.opB || menuProcess2.opBd || 
-					 menuProcess2.opF || menuProcess2.opQTF);
+					 menuProcess2.opF || menuProcess2.opMD ||
+					 menuProcess2.opQTF);
 		menuProcess2.butResetDOF.Show(show);
 		menuProcess2.butResetDOF0.Show(show);
 	};
+	menuProcess2.opA.WhenAction = menuProcess2.opAd.WhenAction =
+		menuProcess2.opB.WhenAction = menuProcess2.opBd.WhenAction =
+		menuProcess2.opF.WhenAction = menuProcess2.opMD.WhenAction =
+		menuProcess2.opQTF.WhenAction = menuProcess2.dropDOF.OnFocus;
+	
 	
 	menuProcess2.butResetDOF << THISBACK1(OnMultiplyDOF, false);
 	menuProcess2.butResetDOF.Hide();
@@ -1268,7 +1274,7 @@ void MainBEM::OnMultiplyDOF(bool isReset) {
 		bool b = menuProcess2.opB || menuProcess2.opBd;
 		bool diag = menuProcess2.opAd || menuProcess2.opBd;
 		
-		Bem().MultiplyDOF(id, factor, idDOF, a, b, diag, menuProcess2.opF, menuProcess2.opQTF);
+		Bem().MultiplyDOF(id, factor, idDOF, a, b, diag, menuProcess2.opF, menuProcess2.opMD, menuProcess2.opQTF);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1705,10 +1711,17 @@ void MainBEM::LoadDragDrop() {
 	for (int i = 0; i < filesToDrop.size(); ++i)
 		sets[i] = Bem().GetBEMExtSet(filesToDrop[i]);
 	
-	for (int i = filesToDrop.size()-1; i > 0; --i)
-		for (int j = 0; j < i; ++j)
-			if (sets[i] >= 0 && sets[i] == sets[j])		// Removes files that are loaded in a set, like .lis .qtf, or .1 .3 .hst
+	for (int i = filesToDrop.size()-1; i > 0; --i) {
+		for (int j = 0; j < i; ++j) {
+			if (sets[i] >= 0 && 
+				sets[i] == sets[j] && 
+				GetFileFolder(filesToDrop[i]) == GetFileFolder(filesToDrop[j]) && 
+				GetFileTitle(filesToDrop[i]) == GetFileTitle(filesToDrop[j])) {		// Removes files that are loaded in a set, like .lis .qtf, or .1 .3 .hst
 				filesToDrop.Remove(i);
+				break;
+			}
+		}
+	}
 	
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {

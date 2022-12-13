@@ -109,7 +109,7 @@ private:
 	void UpdateButtons(bool on);
 	void OnSaveAs();
 	void OnFilter(bool show);
-	void ShowSelected();
+	void ShowSelected(bool zoomtofit);
 	bool AddParameter(String param, ArrayCtrl *parray);
 	void WhenArrayLeftDouble(ArrayCtrl *parray);
 	

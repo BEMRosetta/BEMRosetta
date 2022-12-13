@@ -461,7 +461,7 @@ bool MainQTF::Load() {
 		if (opQTF.GetCount() > 1)
 			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
 	
-		UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
+		/*UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
 		for (const auto &c : hd.qh)
 			qh << FixHeading(c, Bem().headingType);
 		
@@ -472,10 +472,10 @@ bool MainQTF::Load() {
 				return false;
 			else
 				return a.imag() < b.imag();	
-		});
+		});*/
 	
 		for (int ih = 0; ih < hd.qh.size(); ++ih)
-			listHead.Add(qh[ih].real(), qh[ih].imag());
+			listHead.Add(hd.qh[ih].real(), hd.qh[ih].imag());
 				
 		if (listHead.GetCount() > 0) {
 			int id = FindClosest(hd.qh, head);

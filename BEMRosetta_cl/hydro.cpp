@@ -503,21 +503,21 @@ void Hydro::ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf)
 		qtfdif.Clear();
 }
 
-void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool b, bool diag, bool f, bool qtf) {
+void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool b, bool diag, bool f, bool ismd, bool qtf) {
 	if (_idDOF.size() == 0) 
 		return;
 	
 	UVector<int> idDOF;
-	for (int i = 0; i < _idDOF.size(); ++i)
+	for (int idof = 0; idof < _idDOF.size(); ++idof)
 		for (int ib = 0; ib < Nb; ++ib)
-			idDOF << _idDOF[i] + ib*6;
+			idDOF << _idDOF[idof] + ib*6;
 	
 	auto MultiplyAB = [&](UArray<UArray<VectorXd>> &A) {
 		for (int idf = 0; idf < 6*Nb; ++idf) {
 			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-				for (int i = 0; i < idDOF.size(); ++i) {
-					if (( diag &&  idf == idDOF[i] && jdf == idDOF[i]) ||
-					    (!diag && (idf == idDOF[i] || jdf == idDOF[i]))) {
+				for (int idof = 0; idof < idDOF.size(); ++idof) {
+					if (( diag &&  idf == idDOF[idof] && jdf == idDOF[idof]) ||
+					    (!diag && (idf == idDOF[idof] || jdf == idDOF[idof]))) {
 						A[idf][jdf] *= factor;		
 						break;
 					}
@@ -535,9 +535,9 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	auto MultiplyAinfA0 = [&](MatrixXd &A) {
 		for (int idf = 0; idf < 6*Nb; ++idf) {
 			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-				for (int i = 0; i < idDOF.size(); ++i) {
-					if (( diag &&  idf == idDOF[i] && jdf == idDOF[i]) ||
-					    (!diag && (idf == idDOF[i] || jdf == idDOF[i]))) {
+				for (int idof = 0; idof < idDOF.size(); ++idof) {
+					if (( diag &&  idf == idDOF[idof] && jdf == idDOF[idof]) ||
+					    (!diag && (idf == idDOF[idof] || jdf == idDOF[idof]))) {
 						A(idf, jdf) *= factor;		
 						break;
 					}
@@ -553,8 +553,8 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	auto MultiplyF = [&](Forces &ex) {
 		for (int ih = 0; ih < Nh; ++ih) 
 			for (int ifr = 0; ifr < Nf; ++ifr) 
-				for (int i = 0; i < idDOF.size(); ++i) 
-					ex.force[ih](ifr, idDOF[i]) *= factor;
+				for (int idof = 0; idof < idDOF.size(); ++idof) 
+					ex.force[ih](ifr, idDOF[idof]) *= factor;
 	};
 	if (f && IsLoadedFex())
 		MultiplyF(ex);
@@ -568,18 +568,18 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	auto MultiplyMD = [&]() {
 		for (int ib = 0; ib < Nb; ++ib) 
     		for (int ih = 0; ih < mdhead.size(); ++ih) 
-    			for (int idf = 0; idf < 6; ++idf) 
+    			for (int idof = 0; idof < idDOF.size(); ++idof) 
 	    			for (int ifr = 0; ifr < Nf; ++ifr) 
-	    				md[ib][ih][idf](ifr) *= factor;
+	    				md[ib][ih][idDOF[idof]](ifr) *= factor;
 	};
-	if (qtf && IsLoadedMD()) 
+	if (ismd && IsLoadedMD()) 
 		MultiplyMD();
 			
 	auto MultiplySumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 		for (int ib = 0; ib < Nb; ++ib)
 	        for (int ih = 0; ih < qh.size(); ++ih) 
-				for (int idf = 0; idf < _idDOF.size(); ++idf) 
-					qtf[ib][ih][_idDOF[idf]] *= factor;													
+				for (int idof = 0; idof < _idDOF.size(); ++idof) 
+					qtf[ib][ih][_idDOF[idof]] *= factor;													
 	};
 	if (qtf && IsLoadedQTF(true)) 
 		MultiplySumDif(qtfsum);
