@@ -50,18 +50,18 @@ void FastScatter::OnCalc() {
 		compare.arrayStats.AddColumn(t_("Statistics"));
 		
 		const UVector<UVector<String>> params = {
-												 {"PtfmSurge",  ".1f", "max", "mean"},
+/*												 {"PtfmSurge",  ".1f", "max", "mean"},
 												 {"PtfmPitch",  ".1f", "max", "mean", "std"},
 												 {"NcIMUTA",    ".1f", "max", "mean", "std"},
-												 {"FAIRTEN2_t", ".0f", "max", "mean"}//,
+												 {"FAIRTEN2_t", ".0f", "max", "mean"}//,*/
 		
-												 /*{"FAIRTEN*_t", ".0f", "max"},
+												 {"FAIRTEN*_t", ".0f", "max"},
 												 {"PtfmShift",  ".1f", "mean", "maxval"}, 
 												 {"PtfmTilt",   ".1f", "mean", "maxval"}, 
 												 {"PtfmYaw",    ".1f", "mean", "maxval"}, 
 												 {"NcIMUTA",    ".1f", "max"}, 
 												 {"TwrBsShear", ".0f", "max"},
-												 {"TwrBsBend",  ".0f", "max"}//,*/
+												 {"TwrBsBend",  ".0f", "max"}//,
 												 //{"ptfmSurge",  ".1f", "rao_mean", "rao"}
 		};
 		
@@ -655,7 +655,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			}
 		}
 		
-		if (zoomtofit) {
+		if (zoomtofit || ~rightB.opZoomToFit) {
 			left.ClearScatter();
 			for (int i = 0; i < scattersize; ++i)
 				left.AddScatter();
@@ -741,7 +741,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			}
 		}
 		
-		if (zoomtofit) {
+		if (zoomtofit || ~rightB.opZoomToFit) {
 			for (int iff = 0; iff < scattersize; ++iff) {
 				auto &scat = left.scatter[iff];
 				

@@ -1665,6 +1665,9 @@ void MainView::OnPaint() {
 			gl.PaintSurface(mesh.under, color, ~GetMenuPlot().showUnderwater, 
 				showNormalsUnderwater);
 			
+			if (~GetMenuPlot().showMesh)
+				gl.PaintSegments(mesh.mesh, color);
+			
 			if (~GetMenuPlot().showSkewed)
 				gl.PaintSegments(mesh.mesh.skewed, LtRed());
 			if (~GetMenuPlot().showFissure)

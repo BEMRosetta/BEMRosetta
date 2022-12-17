@@ -1139,15 +1139,15 @@ bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T) {
 		} else if (iperout == 3) {
 			dataFromW = true;
 			T.SetCount(hd().Nf);
-			double g = Nvl(hd().g, hd().GetBEM().g);
-			double len = Nvl(hd().len, hd().GetBEM().len);
+			double g = Nvl2(hd().g, hd().GetBEM().g);
+			double len = Nvl2(hd().len, hd().GetBEM().len);
 			for (auto &ww : w)
 				ww = w_iperout3(ww, g, len);
 		} else {
 			dataFromW = true;
 			T.SetCount(hd().Nf);
-			double g = Nvl(hd().g, hd().GetBEM().g);
-			double len = Nvl(hd().len, hd().GetBEM().len);
+			double g = Nvl2(hd().g, hd().GetBEM().g);
+			double len = Nvl2(hd().len, hd().GetBEM().len);
 			if (IsNull(hd().h))
 				throw Exc(t_("Wamit .1 file with finite water depth wavenumber requires .pot file"));
 			for (auto &ww : w) 
@@ -1175,14 +1175,14 @@ void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T) {
 			hd().dataFromW = true;
 		else if (iperin == 3) {
 			hd().dataFromW = true;
-			double g = Nvl(hd().g, hd().GetBEM().g);
-			double len = Nvl(hd().len, hd().GetBEM().len);
+			double g = Nvl2(hd().g, hd().GetBEM().g);
+			double len = Nvl2(hd().len, hd().GetBEM().len);
 			for (auto &ww : T)
 				ww = w_iperout3(ww, g, len);
 		} else {
 			hd().dataFromW = true;
-			double g = Nvl(hd().g, hd().GetBEM().g);
-			double len = Nvl(hd().len, hd().GetBEM().len);
+			double g = Nvl2(hd().g, hd().GetBEM().g);
+			double len = Nvl2(hd().len, hd().GetBEM().len);
 			for (auto &ww : T) 
 				ww = w_iperout4(ww, g, len, hd().h);
 		}

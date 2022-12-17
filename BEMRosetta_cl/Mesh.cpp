@@ -17,11 +17,14 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 	if (ext == ".dat") {
 		ret = static_cast<NemohMesh&>(*this).LoadDat(file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-			ret = static_cast<WamitMesh &>(*this).LoadDat(file);
+			ret = static_cast<NemohMesh&>(*this).LoadDatFS(file, x0z);
 			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-				ret = static_cast<DiodoreMesh &>(*this).LoadDat(file);
-				if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
-					ret = static_cast<AQWAMesh &>(*this).LoadDat(file);
+				ret = static_cast<WamitMesh &>(*this).LoadDat(file);
+				if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
+					ret = static_cast<DiodoreMesh &>(*this).LoadDat(file);
+					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
+						ret = static_cast<AQWAMesh &>(*this).LoadDat(file);
+				}
 			}
 		}
 	} else if (ext == ".gdf") 

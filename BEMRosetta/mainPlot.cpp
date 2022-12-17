@@ -305,7 +305,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	} else if (dataToShow == Hydro::DATA_MD && ih >= 0 && hy.IsLoadedMD()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD_%s"), nameType)).
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD_%s_%d"), nameType, hy.mdtype)).
 						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)

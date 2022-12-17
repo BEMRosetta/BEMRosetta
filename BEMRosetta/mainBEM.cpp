@@ -1788,7 +1788,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++,col, data.S_h());
 	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, data.S_len());
 	
-	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl(data.Nf, 0)); 
+	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl2(data.Nf, 0)); 
 	if (!data.w.IsEmpty()) {
 		array.Set(row, 0, t_("freq_0 [rad/s]"));	array.Set(row++, col, data.w[0]);
 	} else {
@@ -1813,7 +1813,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, "-");
 	}
 	
-	array.Set(row, 0, t_("#1st order headings"));			array.Set(row++, col, Nvl(data.Nh, 0));
+	array.Set(row, 0, t_("#1st order headings"));			array.Set(row++, col, Nvl2(data.Nh, 0));
 	if (!data.head.IsEmpty()) {
 		array.Set(row, 0, t_("head_0 [º]"));	array.Set(row++, col, data.head[0]);
 	} else {
