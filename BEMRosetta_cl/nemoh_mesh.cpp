@@ -4,6 +4,77 @@
 #include "BEMRosetta_int.h"
 
 
+String NemohMesh::LoadDatFS(String fileName, bool &x0z) {
+	FileInLine in(fileName);
+	if (!in.IsOpen()) 
+		return Format(t_("Impossible to open file '%s'"), fileName);
+	
+	this->fileName = fileName;
+	SetCode(Mesh::NEMOHFS_DAT);
+	
+	try {
+		String line;
+		FieldSplit f(in);	
+		f.IsSeparator = IsTabSpace;
+			
+		line = in.GetLine();	
+		f.Load(line);
+	
+		if (f.size() != 4 || !f.IsInt(0) || (f.GetInt(0) != 1 && f.GetInt(0) != 0))
+			return t_("Format error in Nemoh .dat mesh file");	// To detect Nemoh format
+		
+		if (f.GetInt(0) == 1)
+			x0z = true;
+		
+		mesh.Clear();
+		
+		while(true) {
+			line = in.GetLine();
+			if (in.IsEof())
+				break;	
+			f.Load(line);
+			int id = f.GetInt(0);	
+			if (id == 0)
+				break;
+			Point3D &node = mesh.nodes.Add();
+			node.x = f.GetDouble(1);
+			node.y = f.GetDouble(2);
+			node.z = f.GetDouble(3); 
+		}
+		while(true) {
+			line = in.GetLine();	
+			if (in.IsEof())
+				break;
+			f.Load(line);
+			if (f.size() != 4)
+				break;
+			Panel &panel = mesh.panels.Add();
+			panel.id[0] = f.GetInt(0)-1;
+			panel.id[1] = f.GetInt(1)-1;	
+			panel.id[2] = f.GetInt(2)-1;	
+			panel.id[3] = f.GetInt(3)-1;	
+		}	
+		while(true) {
+			line = in.GetLine();	
+			if (in.IsEof())
+				break;
+			f.Load(line);
+			if (f.size() != 2)
+				break;
+			int id0 = f.GetInt(0);	
+			if (id0 == 0)
+				break;
+			Segment &seg = mesh.segments.Add();
+			seg.inode0 = id0-1;
+			seg.inode1 = f.GetInt(1)-1;	
+		}	
+	} catch (Exc e) {
+		return t_("Parsing error: ") + e;
+	}
+	
+	return String();
+}	
+		
 String NemohMesh::LoadDat(String fileName, bool &x0z) {
 	String ret = LoadDat0(fileName, x0z);
 	
@@ -41,7 +112,7 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 		line = in.GetLine();	
 		f.Load(line);
 	
-		if (!f.IsInt(0) || f.GetInt(0) != 2)
+		if (f.size() != 2 || !f.IsInt(0) || f.GetInt(0) != 2)
 			return t_("Format error in Nemoh .dat mesh file");	// To detect Nemoh format
 		
 		if (f.GetInt(1) == 1)
