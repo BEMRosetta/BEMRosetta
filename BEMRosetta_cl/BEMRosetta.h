@@ -670,10 +670,10 @@ class Mesh {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			 false,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
-	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "",		     "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.*"};       
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    false,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
+	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.*"};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -769,6 +769,7 @@ private:
 class NemohMesh : public Mesh {
 public:
 	String LoadDat(String fileName, bool &x0z);
+	String LoadDatFS(String fileName, bool &x0z);
 	void SaveDat(String fileName, const Surface &surf, bool x0z) const;
 	static void SavePreMesh(String fileName, const Surface &surf);
 	void SaveKH(String fileName) const; 
