@@ -235,6 +235,8 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	rightB.arrayParam.WhenDropInsert= [&] (int line, PasteClip& d) {OnDropInsert(line, d, rightB.arrayParam); };
 	rightB.arrayParam.WhenDrag 		= [&] {OnDrag(rightB.arrayParam, false);};
 	
+	rightB.opZoomToFit <<= true;
+	
 	rightT.arrayFiles.NoHeader().SetLineCy(EditField::GetStdHeight());
 	rightT.arrayFiles.AddColumn(t_("Id"), 2);
 	rightT.arrayFiles.AddColumn(t_("File"), 20);

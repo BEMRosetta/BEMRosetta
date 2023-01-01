@@ -205,12 +205,6 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
     rao.Clear();	// Previous RAO is now invalid
 }
 
-void AddPhase(std::complex<double> &val, double arg) {
-	double mag = std::abs(val);
-	double pha = std::arg(val);
-	val = std::polar(mag, pha + arg);
-}
-
 void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	double xg = xto - c0(0), dx = xg;
 	double yg = yto - c0(1), dy = yg;

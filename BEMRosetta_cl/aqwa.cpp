@@ -843,22 +843,62 @@ bool AQWACase::Load(String fileName) {
 	body.meshFile = fileName;
 	body.ndof = 6;
 	Resize(body.dof, 6, true);
+	body.mass = MatrixXd::Zero(6, 6);
 	
 	UVector<double> hrtz, head;
 	
 	while (!in.IsEof()) {
-		f.Load(in.GetLine());
+		f.GetLine();
 		
-		if (f.size() == 2) {
+		if (f.size() == 1) {
+			if (f.GetText(0) == "MATE") {
+				f.GetLine();
+				body.mass(0, 0) = body.mass(1, 1) = body.mass(2, 2) = f.GetDouble(2);
+			} else if (f.GetText(0) == "GEOM") {
+				f.GetLine();
+				body.mass(3, 3) = f.GetDouble(2);
+				body.mass(3, 4) = body.mass(4, 3) = f.GetDouble(3);
+				body.mass(3, 5) = body.mass(5, 3) = f.GetDouble(4);
+				body.mass(4, 4) = f.GetDouble(5);
+				body.mass(4, 5) = body.mass(5, 4) = f.GetDouble(6);
+				body.mass(5, 5) = f.GetDouble(7);
+			} else if (f.GetText(0) == "WFS1") {
+				for (int r = 0; r < 6; ++r) {
+					f.GetLine();
+					if (f.GetText(0) != "ASTF")		// Additional Hydrostatic Stiffness Matrix (normally due to mooring)
+						throw Exc("ASTF label expected");
+					if (f.GetInt(1) != r+1)
+						throw Exc(Format("Wrong row id '%s' in ASTF", f.GetText(1)));
+					for (int c = 0; c < 6; ++c) 
+						body.externalRestoring(r, c) = f.GetDouble(2+c);
+				}
+				for (int r = 0; r < 6; ++r) {
+					f.GetLine();
+					if (f.GetText(0) != "FIDP")		// Frequency independent Damping Matrix
+						throw Exc("FIDP label expected");
+					if (f.GetInt(1) != r+1)
+						throw Exc(Format("Wrong row id '%s' in FIDP", f.GetText(1)));
+					for (int c = 0; c < 6; ++c) 
+						body.linearDamping(r, c) = f.GetDouble(2+c);
+				}
+				for (int r = 0; r < 6; ++r) {
+					f.GetLine();
+					if (f.GetText(0) != "FIAM")		// Frequency independent Added Mass Matrix
+						throw Exc("FIAM label expected");
+					if (f.GetInt(1) != r+1)
+						throw Exc(Format("Wrong row id '%s' in FIAM", f.GetText(1)));
+					for (int c = 0; c < 6; ++c) 
+						body.additionalAddedMass(r, c) = f.GetDouble(2+c);
+				}	
+			}
+		} else if (f.size() == 2) {
 			if (f.GetText(0) == "DPTH")
 				h = f.GetDouble(1);
 			else if (f.GetText(0) == "DENS")
 				rho = f.GetDouble(1);
 			else if (f.GetText(0) == "ACCG")
 				g = f.GetDouble(1);	
-		}
-		
-		if (f.size() == 4) {
+		} else if (f.size() == 4) {
 			if (f.GetText(0) == "1HRTZ")
 				hrtz << f.GetDouble(3);
 			else if (f.GetText(0) == "1DIRN") 

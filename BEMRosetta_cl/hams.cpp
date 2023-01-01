@@ -40,7 +40,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 		if (FileExists(settingsFile) && !Load_Settings(settingsFile))
 			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
 			
-		String hydrostaticFile = AppendFileNameX(baseFolder, "Input", "Hydrostatic.in");
+		String hydrostaticFile = AppendFileNameX(baseFolder, /*"Input", */"Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
 			if (hd().IsLoadedC()) {
@@ -108,6 +108,7 @@ bool HAMS::Load_Settings(String fileName) {
 }
 
 // Load Hydrostatic.in obtained from WAMIT_MeshTran.exe
+// Warning: This file is not normally the one at Input folder
 bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -118,21 +119,21 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
  
 	hd().Nb = 1;
 	
-	hd().cg.setConstant(3, hd().Nb, Null);
+	hd().c0.setConstant(3, hd().Nb, Null);
 	
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib)
 		hd().C[ib].setConstant(6, 6, 0);
 
-	in.GetLine();	
-	f.Load(in.GetLine());	
-	hd().cg(0, 0) = f.GetDouble(0);
-	hd().cg(1, 0) = f.GetDouble(1);
-	hd().cg(2, 0) = f.GetDouble(2);
+	in.GetLine();
+	f.GetLine();	
+	hd().c0(0, 0) = f.GetDouble(0);
+	hd().c0(1, 0) = f.GetDouble(1);
+	hd().c0(2, 0) = f.GetDouble(2);
 		
 	in.GetLine(8);
 	for (int r = 0; r < 6; ++r) {
-		f.Load(in.GetLine());	
+		f.GetLine();	
 		for (int c = 0; c < 6; ++c) 
 			hd().C[0](r, c) = f.GetDouble(c)/rhog;
 	}

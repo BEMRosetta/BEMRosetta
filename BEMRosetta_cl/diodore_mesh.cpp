@@ -20,30 +20,42 @@ String DiodoreMesh::LoadDat(String fileName) {
 		FileInLine::Pos fpos = in.GetPos();
 		
 		f.GetLine();		// To check if format is right
-		f.GetInt(0);
-		f.GetDouble(1);
-		f.GetDouble(2);
-		f.GetDouble(3);
+		
+		if (f.size() == 1) {
+			if (f.GetText(0) != "*NODE")
+				return t_("Format error in Diodore .txt mesh file");	
+		} else {
+			f.GetInt(0);
+			f.GetDouble(1);
+			f.GetDouble(2);
+			f.GetDouble(3);
+		}
 		
 		in.SeekPos(fpos);
 	} catch (...) {
 		return t_("Format error");
 	}
 
+	UIndex<int> idnodes;
 	try {		
 		mesh.Clear();
-		
+		 
 		while(true) {
 			line = in.GetLine();
 			if (in.IsEof())
 				break;	
 			f.Load(line);
-			if (f.GetText() == "*RETURN")
+			if (f.GetText(0) == "*RETURN" || f.GetText(0) == "*TRIANGLE" || f.GetText(0) == "*QUADRANGLE")
 				break;
-			Point3D &node = mesh.nodes.Add();
-			node.x = f.GetDouble(1);
-			node.y = f.GetDouble(2);
-			node.z = f.GetDouble(3); 
+			else if (f.GetText(0) == "*NODE")
+				;
+			else {
+				idnodes << (f.GetInt(0)-1);		// Node ids may jump
+				Point3D &node = mesh.nodes.Add();
+				node.x = f.GetDouble(1);
+				node.y = f.GetDouble(2);
+				node.z = f.GetDouble(3); 
+			}
 		}
 		for (int i = 0; i < 2; ++i) {	// Twice: Quads and triangles
 			while(true) {
@@ -51,16 +63,20 @@ String DiodoreMesh::LoadDat(String fileName) {
 				if (in.IsEof())
 					break;
 				f.Load(line);
-				if (f.GetText() == "*RETURN")
+				if (f.GetText(0) == "*RETURN")
 					break;
-				Panel &panel = mesh.panels.Add();
-				panel.id[0] = f.GetInt(1)-1;
-				panel.id[1] = f.GetInt(2)-1;	
-				panel.id[2] = f.GetInt(3)-1;
-				if (f.GetCount() >= 5)	
-					panel.id[3] = f.GetInt(4)-1;	
-				else
-					panel.id[3] = panel.id[0];
+				else if (f.GetText(0) == "*TRIANGLE" || f.GetText(0) == "*QUADRANGLE") 
+					;
+				else {
+					Panel &panel = mesh.panels.Add();
+					panel.id[0] = idnodes.Find(f.GetInt(1)-1);		// Reassign the ids to be consecutive
+					panel.id[1] = idnodes.Find(f.GetInt(2)-1);	
+					panel.id[2] = idnodes.Find(f.GetInt(3)-1);
+					if (f.GetCount() >= 5)	
+						panel.id[3] = idnodes.Find(f.GetInt(4)-1);	
+					else
+						panel.id[3] = panel.id[0];
+				}
 			}	
 		}
 	} catch (Exc e) {

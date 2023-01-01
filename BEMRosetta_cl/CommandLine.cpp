@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2023, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "FastOut.h"
+#include "orca.h"
 #include <ScatterDraw/ScatterDraw.h>
 
 void SetBuildInfo(String &str) {
@@ -141,11 +142,16 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("                                # returns the set of angles [deg] and their gz values [m]");
 	Cout() << "\n" << t_("              GM                # returns GMpitch GMroll [m]");
 
-	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
+	Cout() << "\n" << t_("-cl -clear                      # Clear loaded model");
 	Cout() << "\n";
-	Cout() << "\n" << t_("-fast                 # The next commands are for OpenFAST data");
-	Cout() << "\n" << t_("-i  -input <file>     # Load file");
-	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
+	Cout() << "\n" << t_("-fast                           # The next commands are for OpenFAST data");
+	Cout() << "\n" << t_("-i  -input <file>               # Load file");
+	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
+	
+	Cout() << "\n";
+	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
+	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located");
+	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
 	
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -155,6 +161,12 @@ void ShowHelp(BEM &md) {
 
 static bool NoPrint(String, int) {return true;}
 
+Function<bool(String)> Orca::WhenWave = [](String str)->bool {
+	BEM::Print("\n" + str); 
+	return 0;
+};
+
+
 bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
 	UVector<String> command = clone(_command);
 	
@@ -162,7 +174,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	Cout() << "BEMRosetta";
 	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 	
-	String str = S(". ") + t_("Copyright (c) 2022. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
+	String str = S(". ") + t_("Copyright (c) 2023. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
 	SetBuildInfo(str);
 	Cout() << str;
 	
@@ -170,6 +182,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	
 	BEM bem;
 	FastOut fast;
+	Orca orca;
 	
 	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime)
@@ -195,6 +208,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 					nextcommands = "mesh";
 				else if (param == "-fast") 
 					nextcommands = "fast";
+				else if (param == "-orca") 
+					nextcommands = "orca";
 				else if (param == "-h" || param == "-help") {
 					ShowHelp(bem);
 					break;
@@ -649,7 +664,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 					} else if (nextcommands == "fast") {
 						if (param == "-i" || param == "-input") {
-							CheckIfAvailableArg(command, ++i, "--input");
+							CheckIfAvailableArg(command, ++i, "-input");
 
 							String file = command[i];
 							if (!FileExists(file)) 
@@ -667,6 +682,33 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
 								BEM::Print("\n" + Format(t_("Model saved as '%s'"), file));
+						}
+					} else if (nextcommands == "orca") {
+						if (param == "-dll") {
+							CheckIfAvailableArg(command, ++i, "-dll");
+
+							String file = command[i];
+							if (!FileExists(file)) {
+								file = AppendFileNameX(file, "OrcFxAPI.dll");
+								if (!FileExists(file)) 	
+									throw Exc(Format(t_("File '%s' not found"), file)); 
+							}
+							orca.Init(file);
+							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), file));
+						} else if (param == "-rw" || param == "-runwave") {
+							if (!orca.IsLoaded()) 
+								throw Exc(t_("Orca .dll is not loaded"));
+							
+							CheckIfAvailableArg(command, ++i, "-runwave from");
+							String from = command[i];
+							CheckIfAvailableArg(command, ++i, "-runwave to");
+							String to = command[i];
+							
+							orca.LoadWave(from);
+							orca.RunWave();
+							orca.SaveWaveResults(to);							
+							
+							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
 						}
 					}
 				}

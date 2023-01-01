@@ -27,7 +27,9 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 				}
 			}
 		}
-	} else if (ext == ".gdf") 
+	} else if (ext == ".txt") 
+		ret = static_cast<DiodoreMesh &>(*this).LoadDat(file); 
+	else if (ext == ".gdf") 
 		ret = static_cast<WamitMesh &>(*this).LoadGdf(file, y0z, x0z); 
 	else if (ext == ".pnl") 
 		ret = static_cast<HAMSMesh&>(*this).LoadPnl(file, y0z, x0z); 
@@ -137,7 +139,7 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 	if (type == WAMIT_GDF) 
 		static_cast<const WamitMesh &>(*this).SaveGdf(file, surf, g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		static_cast<NemohMesh&>(*this).SaveDat(file, surf, symY);
+		static_cast<NemohMesh&>(*this).SaveDat(file, surf, symY, nPanels);
 	else if (type == NEMOH_PRE) 
 		static_cast<NemohMesh&>(*this).SavePreMesh(file, surf);
 	else if (type == HAMS_PNL)		

@@ -36,7 +36,7 @@ BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
 const char *BEM::strHeadingType[] = {t_("-180->180º"), t_("0->360º"), ""};
 BEM::HeadingType BEM::headingType = BEM::HEAD_180_180;
 	
-const char *BEMCase::solverStr[] = {t_("Nemoh"), t_("Nemoh v115"), t_("Capytaine"), t_("HAMS"), t_("AQWA")};
+const char *BEMCase::solverStr[] = {t_("Nemoh"), t_("Nemoh v115"), t_("Nemoh v3"), t_("Capytaine"), t_("HAMS"), t_("AQWA")};
 
 int Hydro::idCount = 0;	
 
@@ -1329,6 +1329,13 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
+	} else if (ext == ".hdb") {
+		Diodore &data = hydros.Create<Diodore>(*this);
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.size()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
 	} else if (ext == ".mat") {
 		Foamm &data = hydros.Create<Foamm>(*this);
 		if (!data.Load(file)) {
@@ -1882,10 +1889,6 @@ void BEMCase::SaveFolder(String folder, bool bin, int numCases, int numThreads, 
 		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
 	else if (solver == HAMS)
 		static_cast<const HamsCase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
-	else if (solver == NEMOH)
-		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, Null, bem, solver);
-	else if (solver == NEMOHv115)
-		static_cast<const NemohCase &>(*this).SaveFolder(folder, bin, numCases, Null, bem, solver);
 	else
 		static_cast<const AQWACase &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
 }
