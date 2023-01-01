@@ -20,14 +20,15 @@ String NemohMesh::LoadDatFS(String fileName, bool &x0z) {
 		line = in.GetLine();	
 		f.Load(line);
 	
-		if (f.size() != 4 || !f.IsInt(0) || (f.GetInt(0) != 1 && f.GetInt(0) != 0))
+		if (f.size() != 4 || !f.IsInt(0) || (f.GetInt(0) != 1 && f.GetInt(0) != 0) || !f.IsInt(1) || !f.IsInt(2) || !f.IsInt(3))
 			return t_("Format error in Nemoh .dat mesh file");	// To detect Nemoh format
 		
 		if (f.GetInt(0) == 1)
 			x0z = true;
 		
 		mesh.Clear();
-		
+
+		bool isfirst = true;		
 		while(true) {
 			line = in.GetLine();
 			if (in.IsEof())
@@ -36,10 +37,16 @@ String NemohMesh::LoadDatFS(String fileName, bool &x0z) {
 			int id = f.GetInt(0);	
 			if (id == 0)
 				break;
+			if (isfirst && id != 1)
+				return t_("Format error in Nemoh .dat mesh file");	// To detect Nemoh format
+			
 			Point3D &node = mesh.nodes.Add();
 			node.x = f.GetDouble(1);
 			node.y = f.GetDouble(2);
 			node.z = f.GetDouble(3); 
+			
+			if (isfirst)
+				isfirst = false;
 		}
 		while(true) {
 			line = in.GetLine();	
@@ -154,8 +161,8 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 	return String();
 }
 
-void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z) const {
-	SaveDat0(fileName, surf, x0z);
+void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z, int &npanels) const {
+	SaveDat0(fileName, surf, x0z, npanels);
 	
 	MatrixXd cg_(3, 1), cb_(3, 1);
 	UVector<double> Vo;
@@ -169,10 +176,12 @@ void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z) const {
 	Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo);
 }
 
-void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z) const {
+void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+	
+	npanels = 0;
 	
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;
@@ -186,7 +195,10 @@ void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z) const {
 	
 	for (int i = 0; i < panels.size(); ++i) {
 		const Panel &panel = panels[i];
-		out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
+		if (panel.surface0+panel.surface1 >= 1.0E-07) {
+			out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
+			npanels++;
+		}
 	}
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
@@ -214,7 +226,10 @@ void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
 }
 
 void NemohMesh::SaveKH(String fileName) const {
-	Nemoh::Save_KH_static(C, fileName);
+	Nemoh::Save_6x6(C, fileName);
 }
-
+/*
+void NemohMesh::SaveInertia(String fileName) const {
+	Nemoh::Save_Inertia_static(M, fileName);
+}*/
 

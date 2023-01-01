@@ -334,10 +334,9 @@ void MenuOptions::Load() {
 	maxTimeA <<= bem->maxTimeA;
 	numValsA <<= bem->numValsA;	
 	onlyDiagonal <<= bem->onlyDiagonal;
-	nemohPathPreprocessor <<= bem->nemohPathPreprocessor;
-	nemohPathSolver <<= bem->nemohPathSolver;
-	nemohPathPostprocessor <<= bem->nemohPathPostprocessor;
-	nemohPathNew <<= bem->nemohPathNew;
+	nemoh3Path <<= bem->nemoh3Path;
+	nemoh115Path <<= bem->nemoh115Path;
+	nemohPath <<= bem->nemohPath;
 	nemohPathGREN <<= bem->nemohPathGREN;
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
@@ -353,20 +352,17 @@ void MenuOptions::Load() {
 void MenuOptions::OnSave() {
 	String warning;
 	
-	if (Trim(~nemohPathPreprocessor) != "" && !FileExists(~nemohPathPreprocessor))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPathPreprocessor);
-	if (Trim(~nemohPathSolver) != "" && !FileExists(~nemohPathSolver))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPathSolver);
-	if (Trim(~nemohPathPreprocessor) != "" && !FileExists(~nemohPathPreprocessor))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPathPreprocessor);
-	if (Trim(~nemohPathPostprocessor) != "" && !FileExists(~nemohPathPostprocessor))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPathPostprocessor);
-	if (Trim(~nemohPathNew) != "" && !FileExists(~nemohPathNew))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPathNew);
+	if (Trim(~nemohPath) != "" && !DirectoryExists(~nemohPath))
+		warning << Format("'%s' file doesn't exist\n", ~nemohPath);
+	if (Trim(~nemoh115Path) != "" && !DirectoryExists(~nemoh115Path))
+		warning << Format("'%s' file doesn't exist\n", ~nemoh115Path);
+	if (Trim(~nemoh3Path) != "" && !DirectoryExists(~nemoh3Path))
+		warning << Format("'%s' file doesn't exist\n", ~nemoh3Path);
 	if (Trim(~nemohPathGREN) != "" && !FileExists(~nemohPathGREN))
 		warning << Format("'%s' file doesn't exist\n", ~nemohPathGREN);
 	
-	if (warning.IsEmpty() || ErrorOKCancel(DeQtfLf(Format(t_("Some errors found:\n%sDo you wish to save them?"), warning)))) {
+	if (warning.IsEmpty() || 
+		ErrorOKCancel(DeQtfLf(Format(t_("Some errors found:\n%s Do you wish to save them?"), warning)))) {
 		bem->g = ~g;
 		bem->rho = ~rho;
 		bem->len = ~len;
@@ -378,10 +374,9 @@ void MenuOptions::OnSave() {
 		bem->maxTimeA = ~maxTimeA;
 		bem->numValsA = ~numValsA;	
 		bem->onlyDiagonal = ~onlyDiagonal;
-		bem->nemohPathPreprocessor = ~nemohPathPreprocessor;
-		bem->nemohPathSolver = ~nemohPathSolver;
-		bem->nemohPathPostprocessor = ~nemohPathPostprocessor;	
-		bem->nemohPathNew = ~nemohPathNew;
+		bem->nemohPath = ~nemohPath;
+		bem->nemoh115Path = ~nemoh115Path;
+		bem->nemoh3Path = ~nemoh3Path;	
 		bem->nemohPathGREN = ~nemohPathGREN;
 		bem->foammPath = ~foammPath;
 		bem->hamsPath = ~hamsPath;
@@ -423,13 +418,11 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->onlyDiagonal != ~onlyDiagonal)
 		return true;
-	if (bem->nemohPathPreprocessor != ~nemohPathPreprocessor)
+	if (bem->nemohPath != ~nemohPath)
 		return true;
-	if (bem->nemohPathSolver != ~nemohPathSolver)
+	if (bem->nemoh115Path != ~nemoh115Path)
 		return true;
-	if (bem->nemohPathPostprocessor != ~nemohPathPostprocessor)
-		return true;
-	if (bem->nemohPathNew != ~nemohPathNew)
+	if (bem->nemoh3Path != ~nemoh3Path)
 		return true;
 	if (bem->nemohPathGREN != ~nemohPathGREN)
 		return true;

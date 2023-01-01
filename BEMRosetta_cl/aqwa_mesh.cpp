@@ -99,6 +99,9 @@ String AQWAMesh::LoadDat(String fileName) {
 				break;
 			}
 		}
+		
+		
+		
 		if (!done)
 			throw Exc(t_("Format error in AQWA .dat mesh file. Panels list END not found"));
 			

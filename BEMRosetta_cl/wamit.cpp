@@ -1622,19 +1622,19 @@ bool Wamit::Load_789(String fileName) {
 	
 	UArray<UArray<UArray<VectorXd>>> md;
 	if (Load_789_0(fileName, 7, md)) {
-		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) > 0.) {
+		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
 			hd().md = pick(md);
 			return true;
 		}
 	}
 	if (Load_789_0(fileName, 9, md)) {
-		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) > 0.) {
+		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
 			hd().md = pick(md);
 			return true;
 		}
 	}
 	if (Load_789_0(fileName, 8, md)) {
-		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) > 0.) {
+		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
 			hd().md = pick(md);
 			return true;
 		}
