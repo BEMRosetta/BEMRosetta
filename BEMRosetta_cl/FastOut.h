@@ -115,7 +115,7 @@ public:
 		c.units = units;
 		c.calc = &calc;
 	}
-	int AddParam(String name, String unit) {
+	int AddParam(String name, String unit, String description = "") {
 		parameters << name;
 		units << unit;
 		parametersd << ToLower(name);
@@ -126,7 +126,7 @@ public:
 	
 	int GetParamCount() {return parameters.size();}
  
-	UVector<String> parameters, units;
+	UVector<String> parameters, units, descriptions;
 	UVector<String> parametersd, unitsd;
 	UVector<UVector <double> > dataOut;
 	UArray<CalcParams> calcParams;
@@ -137,6 +137,7 @@ private:
 	bool SaveOut(String fileName);
 	bool LoadCsv(String fileName);
 	bool SaveCsv(String fileName, String sep);
+	bool LoadDb(String fileName);
 	void AfterLoad();
 
 	String fileName;

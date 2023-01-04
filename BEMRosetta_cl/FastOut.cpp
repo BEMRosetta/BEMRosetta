@@ -120,6 +120,8 @@ bool FastOut::Load(String fileName) {
 		;
 	else if (ext == ".csv")
 		;
+	else if (ext == ".db")
+		;
 	else {
 		fileName = ForceExt(fileName, ".outb");
 		if (FileExists(fileName)) 
@@ -140,6 +142,8 @@ bool FastOut::Load(String fileName) {
 		ret = LoadOutb(fileName);
 	else if (ext == ".csv")
 		ret = LoadCsv(fileName);
+	else if (ext == ".db")
+		ret = LoadDb(fileName);
 	
 	this->fileName = fileName;
 	
@@ -393,8 +397,7 @@ bool FastOut::LoadCsv(String fileName) {
 						param = result[i];
 				if (param == "")
 					param = t_("void");
-				parameters << param;
-				units << unit;
+				AddParam(param, unit);
 			}
 			numCol = result.size();
 			dataOut.SetCount(numCol+calcParams.size());
@@ -469,6 +472,7 @@ void FastOut::Clear() {
 	parametersd.Clear();	
 	unitsd.Clear();	
 	dataOut.Clear();
+	descriptions.Clear();
 }
 
 bool FastOut::IsEmpty() {
