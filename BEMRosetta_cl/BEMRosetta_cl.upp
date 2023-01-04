@@ -7,7 +7,8 @@ uses
 	Surface,
 	STEM4U,
 	MatIO,
-	SysInfo;
+	SysInfo,
+	plugin/sqlite3;
 
 options(MSC) /bigobj;
 
@@ -35,6 +36,7 @@ file
 	hydrodyn.dat,
 	aqwa.cpp,
 	diodore.cpp,
+	deeplineswind.cpp,
 	FastOut.cpp,
 	FastOut.h,
 	mooring.cpp,
