@@ -473,18 +473,6 @@ void OnPanic(const char *title, const char *text) {
 }
 
 GUI_APP_MAIN {
-	
-	String file = "C:\\Users\\0203853\\Desktop\\nuevo 1.txt";
-	String header;
-	UVector<String> parameters;
-	char separator;
-	char decimalSign;
-	int64 beginData;
-	bool GuessCSV(file, header, parameters, separator, decimalSign, beginData);
-	
-	
-	
-	
 	InstallPanicMessageBox(OnPanic);
 	
 	const UVector<String>& command = CommandLine();
