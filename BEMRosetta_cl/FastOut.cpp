@@ -363,6 +363,17 @@ bool FastOut::LoadOutb(String fileName) {
 
 bool FastOut::LoadCsv(String fileName) {
 	Clear();
+		
+	String header;
+	UVector<String> parameters;
+	char separator;
+	bool repetition;
+	char decimalSign;
+	int64 beginData;
+	int beginDataRow;
+	
+	if (!GuessCSV(fileName, true, header, parameters, separator, repetition, decimalSign, beginData, beginDataRow))
+		throw Exc(Format("Problem reading '%s'. Impossible to guess structure", fileName)); 
 	
 	// Extracts the units from the header
 	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->bool {
@@ -379,36 +390,36 @@ bool FastOut::LoadCsv(String fileName) {
 			return true;
 		} else
 			return false;
+
+
 	};	
-    			
-	int numCol;
+   	
+   	for (int i = 0; i < parameters.size(); ++i) {
+		String param, unit;
+			
+		if (!GetUnits(parameters[i], '(', ')', param, unit))
+			if (!GetUnits(parameters[i], '[', ']', param, unit))
+				param = parameters[i];
+		if (param == "")
+			param = t_("void");
+		AddParam(param, unit);
+	}
+	int numCol = parameters.size();
+	dataOut.SetCount(numCol+calcParams.size());
 	
-	char separator = ',';
-	char decimalSign = '.';
-	int fromRow = 0;
-	bool onlyStrings = true;
-	if (!ReadCSVFileByLine(fileName, [&](int row, UVector<Value> &result, String &line)-> bool {
-		if (row == 0) {
-			for (int i = 0; i < result.size(); ++i) {
-				String param, unit;
-				
-				if (!GetUnits(result[i], '(', ')', param, unit))
-					if (!GetUnits(result[i], '[', ']', param, unit))
-						param = result[i];
-				if (param == "")
-					param = t_("void");
-				AddParam(param, unit);
-			}
-			numCol = result.size();
-			dataOut.SetCount(numCol+calcParams.size());
-		} else {
-			for (int i = 0; i < result.size(); ++i) 
-				dataOut[i] << ScanDouble(AsString(result[i])); 
-		}
-		return true;
-	}, separator, decimalSign, onlyStrings, fromRow))
-		throw Exc(Format("Problem reading '%s'", fileName)); 
-	
+	FileIn in(fileName);
+	if (!in)
+		return false;
+
+	in.Seek(beginData);
+
+	const char *endptr;	
+	while (!in.IsEof()) {
+		UVector<String> data = Split(in.GetLine(), separator, repetition);
+		for (int i = 0; i < min(numCol, data.size()); ++i) 
+			dataOut[i] << ScanDouble(data[i], &endptr, decimalSign == ',');
+	}
+		
 	if (dataOut.IsEmpty()) 
 		throw Exc(Format("Problem reading '%s'", fileName)); 
 	
