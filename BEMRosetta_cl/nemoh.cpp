@@ -1056,7 +1056,9 @@ bool Nemoh::Load_Radiation(String fileName) {
 	in.GetLine();
 	while(!in.IsEof()) {
 		line = in.GetLine();
-	    if (line.Find("Motion of body") >= 0 || line.Find("dof_") >= 0)
+	    if (line.Find("Motion of body") >= 0 || line.Find("dof_") >= 0 || 
+	    	line.Find("Surge") >= 0 || line.Find("Sway") >= 0 || line.Find("Heave") >= 0 || 
+	    	line.Find("Roll") >= 0 || line.Find("Pitch") >= 0 || line.Find("Yaw") >= 0)
 	        break;
 	}
 	hd().A.SetCount(6*hd().Nb);
