@@ -70,12 +70,17 @@ void Hydro::GetAinf() {
 }
 
 void Hydro::GetRAO() {
-	if (Nf == 0 || A.size() < Nb*6)
-		return;	
+	if (Nf == 0 || A.size() < Nb*6 || B.size() < Nb*6)
+		throw Exc(t_("Insufficient data to get RAO"));	
 
+	for (int ib = 0; ib < Nb; ++ib) 
+		if (C.size() < ib+1 || C[ib].rows() < 6 || C[ib].cols() < 6 || 
+			  M.size() < ib+1 || M[ib].rows() < 6 || M[ib].cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO"));   
+			      
 	Initialize_Forces(rao);
 
-	MatrixXd D = MatrixXd::Zero(6, 6);
+	MatrixXd D = MatrixXd::Zero(6, 6);		// Unused for now
 	MatrixXd D2 = MatrixXd::Zero(6, 6);
 	
 	for (int ib = 0; ib < Nb; ++ib) {
@@ -96,16 +101,10 @@ VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const 
 		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2) {
 	const std::complex<double> j = std::complex<double>(0, 1);
 
-	MatrixXd Aw0 = clone(Aw),
-			 Bw0 = clone(Bw);
-	for (int i = 0; i < 36; ++i) {
-		if (!IsNum(Aw0.array()(i)))
-			Aw0.array()(i) = 0;
-		if (!IsNum(Bw0.array()(i)))
-			Bw0.array()(i) = 0;
-	}
+	MatrixXd Aw0 = Aw.unaryExpr([](double x){return IsNum(x) ? x : 0;}),
+			 Bw0 = Bw.unaryExpr([](double x){return IsNum(x) ? x : 0;});
 	
-	VectorXcd RAO = (-sqr(w)*(M + Aw0) - j*w*(Bw0 + D) + C).inverse()*Fwh;
+	VectorXcd RAO = (C - sqr(w)*(M + Aw0) + j*w*(Bw0 + D)).inverse()*Fwh;
 	return RAO;
 }
 	

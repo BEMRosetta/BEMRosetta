@@ -240,7 +240,10 @@ bool Aqwa::Load_LIS() {
 	}
 	if (hd().Nb == 0)
 		throw Exc(t_("Number of bodies not found"));
-					
+	
+
+	double massF = 1;
+				
 	in.SeekPos(fpos);			
 				
 	while(!in.IsEof()) {
@@ -250,10 +253,15 @@ bool Aqwa::Load_LIS() {
 		if (line.StartsWith("WATER  DEPTH")) 
 			hd().h = f.GetDouble(f.LAST);
 		else if (line.StartsWith("DENSITY  OF  WATER")) 
-			hd().rho = f.GetDouble(f.LAST);
+			hd().rho = f.GetDouble(f.LAST)*massF;
 		else if (line.StartsWith("ACCELERATION  DUE  TO GRAVITY")) {
 			hd().g = f.GetDouble(f.LAST);	
 			break;
+		} else if (line.StartsWith("* Hydrodynamic Solver Unit System")) {
+			if (line.Find("Metric") < 0)
+				throw Exc(in.Str() + "\n"  + t_("Unknown metric system"));
+			if (line.Find("tonne") > 0)
+				massF = 1000;
 		}
 	}
 	
@@ -280,7 +288,7 @@ bool Aqwa::Load_LIS() {
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 		} else if (line.StartsWith("PMAS")) {
 			f.Load(line);
-			double mass = f.GetDouble(2);
+			double mass = f.GetDouble(2)*massF;
 			hd().M[ib](0, 0) = hd().M[ib](1, 1) = hd().M[ib](2, 2) = mass;
 		} else if (line.StartsWith("CENTRE OF GRAVITY")) {
 			f.Load(line);
@@ -289,31 +297,31 @@ bool Aqwa::Load_LIS() {
 			hd().cg(2, ib) = f.GetDouble(5);
 			hd().c0 = clone(hd().cg);
 		} else if (line.StartsWith("INERTIA MATRIX")) {
-			Eigen::MatrixXd &inertia = hd().M[ib];
+			Eigen::MatrixXd &M = hd().M[ib];
 			f.Load(line);
-			inertia(3, 3) = f.GetDouble(2);
-			inertia(3, 4) = f.GetDouble(3);
-			inertia(3, 5) = f.GetDouble(4);
+			M(3, 3) = f.GetDouble(2)*massF;
+			M(3, 4) = f.GetDouble(3)*massF;
+			M(3, 5) = f.GetDouble(4)*massF;
 			in.GetLine();
 			f.Load(TrimBoth(in.GetLine()));
-			inertia(4, 3) = f.GetDouble(0);
-			inertia(4, 4) = f.GetDouble(1);
-			inertia(4, 5) = f.GetDouble(2);
+			M(4, 3) = f.GetDouble(0)*massF;
+			M(4, 4) = f.GetDouble(1)*massF;
+			M(4, 5) = f.GetDouble(2)*massF;
 			in.GetLine();
 			f.Load(TrimBoth(in.GetLine()));
-			inertia(5, 3) = f.GetDouble(0);
-			inertia(5, 4) = f.GetDouble(1);
-			inertia(5, 5) = f.GetDouble(2);
-			double mass = inertia(0, 0);
+			M(5, 3) = f.GetDouble(0)*massF;
+			M(5, 4) = f.GetDouble(1)*massF;
+			M(5, 5) = f.GetDouble(2)*massF;
+			double mass = M(0, 0);
 			double cx = mass*hd().cg(0, ib);
 			double cy = mass*hd().cg(1, ib);
 			double cz = mass*hd().cg(2, ib);
-			inertia(1, 5) = inertia(5, 1) =  cx;
-			inertia(2, 4) = inertia(4, 2) = -cx;
-			inertia(0, 5) = inertia(5, 0) = -cy;
-			inertia(2, 3) = inertia(3, 2) =  cy;
-			inertia(0, 4) = inertia(4, 0) =  cz;
-			inertia(1, 3) = inertia(3, 1) = -cz;
+			M(1, 5) = M(5, 1) =  cx;
+			M(2, 4) = M(4, 2) = -cx;
+			M(0, 5) = M(5, 0) = -cy;
+			M(2, 3) = M(3, 2) =  cy;
+			M(0, 4) = M(4, 0) =  cz;
+			M(1, 3) = M(3, 1) = -cz;
 		} else if (IsNull(hd().Nf) && line.Find("W A V E   F R E Q U E N C I E S / P E R I O D S   A N D   D I R E C T I O N S") >= 0) {
 			in.GetLine(5);
 			hd().Nf = 0;
@@ -425,6 +433,8 @@ bool Aqwa::Load_LIS() {
 			hd().C[ib](4, 4) = f.GetDouble(2);
 			if (f.size() > 3)
 	       		hd().C[ib](4, 5) = f.GetDouble(3);	
+			
+			hd().C[ib] *= massF;
 		} /*else if (line.Find("STIFFNESS MATRIX") >= 0) {// Mooring stiffness matrix. Not implemented yet.	
 			hd().C[ib].setConstant(6, 6, 0);
 			in.GetLine(6);
@@ -455,7 +465,7 @@ bool Aqwa::Load_LIS() {
 				pfrc = &hd().fk;
 			else if (line.StartsWith("DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
 				pfrc = &hd().sc;
-			else //if (line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) 
+			else //if (line.StartsWith("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY")) // Only possible option
 				pfrc = &hd().rao;
 			Hydro::Forces &frc = *pfrc; 
 			
@@ -478,14 +488,21 @@ bool Aqwa::Load_LIS() {
 					int ifrr = FindClosest(hd().w, freq);
 					if (ifrr < 0)
 						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
-					for (int idf = 0; idf < 6; ++idf) 
-						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2), -f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180); // Negative to follow Wamit
-					
+					for (int idf = 0; idf < 6; ++idf) {
+						double factor;
+						if (pfrc != &hd().rao || idf < 3)
+							factor = 1;
+						else
+							factor = M_PI/180;	// Only for RAO
+						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factor, 
+																			-f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180); // Negative to follow Wamit
+					}
 					dd = 0;
 					line = in.GetLine();
 					static const UVector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};
 					f.Load(line, separators);
 				}
+				frc.force[idh] *= massF;
 			}
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			int ieq = line.FindAfter("="); ieq = line.FindAfter("=", ieq);
@@ -507,7 +524,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().A[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf);
+						hd().A[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf)*massF;
 				}
 				in.GetLine(8);
 				for (int idf = 0; idf < 6; ++idf) {
@@ -516,7 +533,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().B[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf);
+						hd().B[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf)*massF;
 				}
 			}
 		} else if (line.Find("H Y D R O D Y N A M I C   P A R A M E T E R S   A T   L O W   &   H I G H") >= 0) {
@@ -549,9 +566,9 @@ bool Aqwa::Load_LIS() {
 										for (int idf = 0; idf < 6; ++idf) {
 											for (int jdf = 0; jdf < 6; ++jdf) {
 												if (freq < 0.1)
-													hd().A0(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
+													hd().A0(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1)*massF;
 												else if (freq > 90)
-													hd().Ainf(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1);
+													hd().Ainf(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1)*massF;
 											}
 											f.GetLine(); 
 											f.GetLine();
@@ -573,7 +590,7 @@ bool Aqwa::Load_LIS() {
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					hd().linearDamping(6*ib + idof, 6*ib + jdof) = f.GetDouble(jdof + 1);
+					hd().linearDamping(6*ib + idof, 6*ib + jdof) = f.GetDouble(jdof + 1)*massF;
 				f.GetLine(); 
 			}
 		} else if (line.Find("W A V E - D R I F T   L O A D S ") >= 0) {
@@ -628,7 +645,7 @@ bool Aqwa::Load_LIS() {
 			for (int idf = 0; idf < hd().Nf; ++idf) {
 				f.GetLine();
 				for (int ih = 0; ih < idhblock.size(); ++ih) 
-					hd().md[ib][idhblock[ih]][idof](idf) = f.GetDouble(1 + ih);
+					hd().md[ib][idhblock[ih]][idof](idf) = f.GetDouble(1 + ih)*massF;
 			}
 		}
 	}

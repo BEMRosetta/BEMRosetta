@@ -157,10 +157,16 @@ public:
 
 	void Init(Function <bool(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
 	void OnCalc();
+	bool OnLoadCompare();
 	
 	WithCompare<StaticRect> compare;
 	FastScatterBase fscbase;
 	SplitterButton splitCompare;
+	
+	ParameterMetrics params;
+	
+private:
+	UArray<EditString> edits;
 };
 
 class FastScatterTabs : public StaticRect {
