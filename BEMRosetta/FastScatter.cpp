@@ -27,7 +27,21 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	CtrlLayout(compare);
 	compare.butCalc <<= THISBACK(OnCalc);
 	compare.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, compare.array);};
-		
+	
+	compare.file.WhenChange  = [&] {return OnLoadCompare();};
+	compare.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
+		.Tip(t_("Enter file with set of parameters and metrics"));
+	compare.file.Type(t_("json file"), "*.json").Type(t_("All files"), "*.*"); 
+	compare.butLoad.Tip(t_("Loads parameters and metrics file")) << [&] {compare.file.DoGo();};
+	
+	compare.arrayStats.AddColumn(t_("Parameter"), 80);
+	compare.arrayStats.GetColumn(0).Edit(edits.Add()); 
+	compare.arrayStats.AddColumn(t_("Format"), 80);
+	compare.arrayStats.GetColumn(1).Edit(edits.Add()); 
+	compare.arrayStats.AddColumn(t_("Statistics"), 200);
+	compare.arrayStats.GetColumn(2).Edit(edits.Add()); 
+	compare.arrayStats.Proportional().Clipboard().Editing().Removing().Appending().Duplicating();
+	
 	fscbase.Init(this, OnFile, OnCopyTabs, statusBar);
 #ifdef flagDEBUG
 	splitCompare.Horz(fscbase.SizePos(), compare.SizePos());
@@ -37,46 +51,31 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	Add(fscbase.SizePos());
 #endif
 }
+
+bool FastScatter::OnLoadCompare() {
+	if (!LoadFromJsonFile(params, ~compare.file)) {
+		Exclamation(t_("Impossible to load file"));
+		return false;
+	}
 	
+	for (int i = 0; i < params.params.size(); ++i) {
+		String stats;
+		for (int is = 0; is < params.params[i].metrics.size(); ++is) {
+			if (is > 0)
+				stats << ",";
+			stats << params.params[i].metrics[is];
+		}
+		compare.arrayStats.Add(params.params[i].str, params.params[i].format, stats);
+	}
+		
+	return true;
+}
+
 void FastScatter::OnCalc() {
 	try {
 		compare.array.Reset();
 		compare.array.SetLineCy(EditField::GetStdHeight()).MultiSelect().NoHeader();
 		
-		compare.arrayStats.Reset();
-		compare.arrayStats.SetLineCy(EditField::GetStdHeight());
-		compare.arrayStats.AddColumn(t_("Parameter"));
-		compare.arrayStats.AddColumn(t_("Format"));
-		compare.arrayStats.AddColumn(t_("Statistics"));
-		
-		const UVector<UVector<String>> params = {
-/*												 {"PtfmSurge",  ".1f", "max", "mean"},
-												 {"PtfmPitch",  ".1f", "max", "mean", "std"},
-												 {"NcIMUTA",    ".1f", "max", "mean", "std"},
-												 {"FAIRTEN2_t", ".0f", "max", "mean"}//,*/
-		
-												 {"FAIRTEN*_t", ".0f", "max"},
-												 {"PtfmShift",  ".1f", "mean", "maxval"}, 
-												 {"PtfmTilt",   ".1f", "mean", "maxval"}, 
-												 {"PtfmYaw",    ".1f", "mean", "maxval"}, 
-												 {"NcIMUTA",    ".1f", "max"}, 
-												 {"TwrBsShear", ".0f", "max"},
-												 {"TwrBsBend",  ".0f", "max"}//,
-												 //{"ptfmSurge",  ".1f", "rao_mean", "rao"}
-		};
-		
-		//const UVector<UVector<String>> params = {{"ptfm", ".0f", "max"}
-		
-		for (int i = 0; i < params.size(); ++i) {
-			String stats;
-			for (int is = 2; is < params[i].size(); ++is) {
-				if (is > 2)
-					stats << ",";
-				stats << params[i][is];
-			}
-			compare.arrayStats.Add(params[i][0], params[i][1], stats);
-		}
-	
 		if (fscbase.IsEmpty()) {
 			Exclamation("No data loaded");
 			return;	
@@ -84,14 +83,21 @@ void FastScatter::OnCalc() {
 		
 		WaitCursor waitcursor;
 		
+		double begin;
+		String editBegin = ~fscbase.editStart;
+		if (Trim(editBegin) == "-")
+			begin = 0;
+		else 
+			begin = StringToSeconds(~fscbase.editStart)
+			
 		String editEnd = ~fscbase.editEnd;
 		if (Trim(editEnd) == "-")
 			editEnd = "";
 		double end = fscbase.opFrom == 0 ? StringToSeconds(editEnd) : StringToSeconds(~fscbase.editFromEnd);
 
 		UVector<UVector<Value>> table;
-		UVector<UVector<String>> realparams; 
-		Calc(fscbase.left.dataFast, params, realparams, StringToSeconds(~fscbase.editStart), fscbase.opFrom == 1, end, table);
+		ParameterMetrics realparams; 
+		Calc(fscbase.left.dataFast, params, realparams, begin, fscbase.opFrom == 1, end, table);
 		
 		int col = 0;
 		compare.array.AddColumn("");
@@ -105,17 +111,15 @@ void FastScatter::OnCalc() {
 		fmt << "s" << "s" << "s";
 		
 		
-		for (const UVector<String> &param : realparams) {				
-			String strpar = param[0];
-			String format = param[1];
-			int id = fast.GetParameterX(strpar);
+		for (const ParameterMetric &param : realparams.params) {				
+			int id = fast.GetParameterX(param.str);
 			String units = fast.GetUnit(id);
-			for (int i = 2; i < param.size(); i++) {
+			for (int i = 0; i < param.metrics.size(); i++) {
 				compare.array.AddColumn("");
-				if (i == 2) 
-					compare.array.Set(0, col, Format("%s [%s]", strpar, units));
-				compare.array.Set(1, col++, param[i]);
-				fmt << format;
+				if (i == 0) 
+					compare.array.Set(0, col, Format("%s [%s]", param.str, units));
+				compare.array.Set(1, col++, param.metrics[i]);
+				fmt << param.format;
 			}
 		}
 		for (int row = 0; row < table.size(); ++row) {
@@ -247,7 +251,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 		file <<= rightT.arrayFiles.Get(row, 1);
 	};
 	
-	editStart <<= "0";
+	editStart <<= "-";
 	editEnd <<= "-";
 	editFromEnd <<= "0";
 	

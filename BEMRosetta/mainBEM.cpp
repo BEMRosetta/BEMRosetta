@@ -480,7 +480,7 @@ void MainBEM::Init() {
 void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showNdim.Enable();
 
-	bool show = true, showwT = true, showComplex = false;
+	bool show = true, showwT = true, showComplex = false, showDim = true;
 	if (mainTab.IsAt(mainSetupFOAMM)) {
 		showwT = false;
 		showComplex = true;
@@ -490,9 +490,13 @@ void MainBEM::ShowMenuPlotItems() {
 		show = true;
 		showComplex = true;
 	} else if (mainTab.IsAt(mainForceSC) || mainTab.IsAt(mainForceFK) || mainTab.IsAt(mainForceEX) || 
-			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace))
+			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace)) {
 		showComplex = true;
+		if (mainTab.IsAt(mainRAO))
+			showDim = false;
+	}
 		
+	menuPlot.showNdim.Enable(showDim);
 	menuPlot.opwT.Enable(showwT);
 	menuPlot.opMP.Enable(showComplex);
 	menuPlot.butZoomToFit.Enable(show);

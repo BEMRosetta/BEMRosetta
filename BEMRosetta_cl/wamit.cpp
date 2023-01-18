@@ -1040,9 +1040,10 @@ bool Wamit::Load_frc2(String fileName) {
 			break;
 	}
 		
-	if (hd().Nb != Nb) 
+	if (!IsNull(hd().Nb) && hd().Nb != Nb) 
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %d. They should be %d"), Nb, hd().Nb));
 	
+	hd().Nb = Nb;
 	hd().cg.resize(3, Nb);
 	
 	for (int ib = 0; ib < Nb; ++ib) {

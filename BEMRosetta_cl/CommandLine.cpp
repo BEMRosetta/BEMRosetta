@@ -2,7 +2,9 @@
 // Copyright 2020 - 2023, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "FastOut.h"
+#ifdef PLATFORM_WIN32
 #include "orca.h"
+#endif
 #include <ScatterDraw/ScatterDraw.h>
 
 void SetBuildInfo(String &str) {
@@ -147,12 +149,12 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-fast                           # The next commands are for OpenFAST data");
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
 	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
-	
+#ifdef PLATFORM_WIN32
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
 	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
-	
+#endif
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
 	Cout() << "\n" << t_("- are done in sequence: if a physical parameter is changed after export, saved files will not include the change");
@@ -182,8 +184,10 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	
 	BEM bem;
 	FastOut fast;
+#ifdef PLATFORM_WIN32
 	Orca orca;
-	
+#endif
+
 	bool firstTime = !bem.LoadSerializeJson();
 	if (firstTime)
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
@@ -683,6 +687,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
 								BEM::Print("\n" + Format(t_("Model saved as '%s'"), file));
 						}
+#ifdef PLATFORM_WIN32						
 					} else if (nextcommands == "orca") {
 						if (param == "-dll") {
 							CheckIfAvailableArg(command, ++i, "-dll");
@@ -711,6 +716,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
 						}
 					}
+#endif
 				}
 			}
 		}
