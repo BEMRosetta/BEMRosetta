@@ -992,7 +992,7 @@ VectorXd Hydro::B_dim(int idf, int jdf) const {
 		return B[idf][jdf]*(rho_dim()/rho_ndim());
 	else {
 		VectorXd ret = B[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));
-		VectorXd ww = Map<VectorXd>((double *)w.begin(), w.size());
+		VectorXd ww = Get_w();
 		return ret.array()*ww.array();
 	}
 }
@@ -1004,7 +1004,7 @@ VectorXd Hydro::B_ndim(int idf, int jdf) const {
 		return B[idf][jdf]*(rho_ndim()/rho_dim());
 	else {
 		VectorXd ret = B[idf][jdf]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));
-		VectorXd ww = Map<VectorXd>((double *)w.begin(), w.size());
+		VectorXd ww = Get_w();
 		return ret.array()/ww.array();
 	}
 }
@@ -1467,7 +1467,7 @@ void BEM::Kirf(int id, double maxT) {
 
 void BEM::Ainf(int id) {
 	hydros[id].hd().GetAinf();
-}
+} 
 
 void BEM::Ainf_w(int id) {
 	hydros[id].hd().GetAinf_w();

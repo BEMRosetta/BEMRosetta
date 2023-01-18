@@ -45,10 +45,12 @@ LAYOUT(Summary, 216, 264)
 END_LAYOUT
 
 LAYOUT(Compare, 576, 472)
-	ITEM(Upp::Label, dv___0, SetLabel(t_("Statistics")).LeftPosZ(4, 52).TopPosZ(0, 19))
-	ITEM(Upp::ArrayCtrl, arrayStats, LeftPosZ(4, 300).TopPosZ(20, 100))
+	ITEM(Upp::Label, dv___0, SetLabel(t_("Parameters && metrics:")).LeftPosZ(4, 116).TopPosZ(0, 19))
+	ITEM(Upp::GridCtrl, arrayStats, LeftPosZ(4, 372).TopPosZ(20, 100))
 	ITEM(Upp::ArrayCtrl, array, HSizePosZ(4, 4).VSizePosZ(144, 4))
 	ITEM(Upp::Label, dv___3, SetLabel(t_("Results")).LeftPosZ(8, 52).TopPosZ(124, 19))
 	ITEM(Upp::Button, butCalc, SetLabel(t_("Calculate")).RightPosZ(4, 56).TopPosZ(4, 24))
+	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).LeftPosZ(116, 192).TopPosZ(0, 19))
+	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).LeftPosZ(312, 64).TopPosZ(0, 20))
 END_LAYOUT
 

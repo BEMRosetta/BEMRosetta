@@ -18,24 +18,33 @@ static int IsTabSpaceRet(int c) {
 } 
 
 FastOut::FastOut() {
-	AddParam(ptfmtilt.Init0(this));
-	AddParam(ptfmshift.Init0(this));
-	AddParam(ptfmHeaveCB.Init0(this));
-	AddParam(twrBsShear.Init0(this));
-	AddParam(twrBsBend.Init0(this));
-	AddParam(yawBrShear.Init0(this));
-	AddParam(yawBrBend.Init0(this));
-	AddParam(rootShear1.Init0(this));
-	AddParam(rootShear2.Init0(this));
-	AddParam(rootShear3.Init0(this));
-	AddParam(rootBend1.Init0(this));
-	AddParam(rootBend2.Init0(this));
-	AddParam(rootBend3.Init0(this));
-	AddParam(ncIMUTA.Init0(this));
+	calcParams << ptfmtilt.Init0(this);
+	calcParams << ptfmshift.Init0(this);
+	calcParams << ptfmHeaveCB.Init0(this);
+	calcParams << bladeTip1xParam.Init0(this);
+	calcParams << bladeTip1yParam.Init0(this);
+	calcParams << bladeTip1zParam.Init0(this);
+	calcParams << bladeTip2xParam.Init0(this);
+	calcParams << bladeTip2yParam.Init0(this);
+	calcParams << bladeTip2zParam.Init0(this);
+	calcParams << bladeTip3xParam.Init0(this);
+	calcParams << bladeTip3yParam.Init0(this);
+	calcParams << bladeTip3zParam.Init0(this);	
+	calcParams << twrBsShear.Init0(this);
+	calcParams << twrBsBend.Init0(this);
+	calcParams << yawBrShear.Init0(this);
+	calcParams << yawBrBend.Init0(this);
+	calcParams << rootShear1.Init0(this);
+	calcParams << rootShear2.Init0(this);
+	calcParams << rootShear3.Init0(this);
+	calcParams << rootBend1.Init0(this);
+	calcParams << rootBend2.Init0(this);
+	calcParams << rootBend3.Init0(this);
+	calcParams << ncIMUTA.Init0(this);
 	for (int i = 0; i < 10; ++i) {
 		auto &f = fairTens.Add();
 		f.Init00(i+1);
-		AddParam(f.Init0(this));	
+		calcParams << f.Init0(this);	
 	}
 	
 	syn.Add("PtfmRoll", "roll");
@@ -461,20 +470,61 @@ void FastOut::AfterLoad() {
 	for (int i = 0; i < units.size(); ++i)
 		unitsd << ToLower(units[i]);
 	
-	for (CalcParams &c : calcParams) {
-		if (!c.calc)
-			throw Exc("Unexpected error in AfterLoad()");
-		c.calc->Init();
-		if (c.calc->IsEnabled()) {
-			parameters << c.name;
-			units << c.units;
-			parametersd << ToLower(c.name);
-			unitsd << ToLower(c.units);
-			int id = parameters.size()-1;
-			for (int idt = 0; idt < dataOut[id].size(); ++idt)
-				dataOut[id][idt] = c.calc->Calc(idt);
+	idsurge = GetParameterX("PtfmSurge");
+	idsway  = GetParameterX("PtfmSway");
+	idheave = GetParameterX("PtfmHeave");
+	idroll  = GetParameterX("PtfmRoll");
+	idpitch = GetParameterX("PtfmPitch");
+	idyaw   = GetParameterX("PtfmYaw");	
+	idaz    = GetParameterX("Azimuth");	
+	idnacyaw = GetParameterX("NacYaw");
+	
+	aff.SetCount(GetNumData());
+	for (int it = 0; it < GetNumData(); ++it)
+		GetTransform000(aff[it], GetVal(it, idsurge), GetVal(it, idsway), GetVal(it, idheave), 
+								ToRad(GetVal(it, idroll)), ToRad(GetVal(it, idpitch)), ToRad(GetVal(it, idyaw)));
+	
+	String folder = GetFileFolder(GetFileName());
+	FindFile ffpath(AppendFileNameX(folder, "*.fst"));
+	if (ffpath) {
+		FASTCase cas;
+		cas.Load(ffpath.GetPath());
+		
+		TipRad = cas.elastodyn.GetDouble("TipRad");
+		OverHang = cas.elastodyn.GetDouble("OverHang");
+		ShftTilt = ToRad(cas.elastodyn.GetDouble("ShftTilt"));
+		Precone = ToRad(cas.elastodyn.GetDouble("PreCone(1)"));
+		Twr2Shft = cas.elastodyn.GetDouble("Twr2Shft");
+		TowerHt = cas.elastodyn.GetDouble("TowerHt");
+		
+		ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
+		ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
+		
+		if (!IsNull(TipRad) && !IsNull(Precone)) {
+			double oh = TipRad*sin(Precone);
+			Hz = TowerHt + Twr2Shft + (OverHang + oh)*sin(ShftTilt);
+			Hx = (OverHang + oh)*cos(ShftTilt);
 		}
 	}
+	
+	for (CalcParam *c : calcParams) {
+		c->Init();
+		if (c->IsEnabled()) {
+			c->id = parameters.size();
+			parameters << c->name;
+			units << c->units;
+			parametersd << ToLower(c->name);
+			unitsd << ToLower(c->units);
+		}
+	}
+	for (int idt = 0; idt < dataOut[0].size(); ++idt) {
+		for (CalcParam *c : calcParams) {	
+			if (c->IsEnabled()) 
+				dataOut[c->id][idt] = c->Calc(idt);
+		}
+	}
+	
+	aff.Clear();
 }
 
 void FastOut::Clear() {
@@ -536,16 +586,16 @@ double FastOut::GetVal(double time, int col) const {
 }
 
 void FastOut::SetVal(int idparam, double val) {
-	if (idtime == 0)
+	if (idActualTime == 0)
 		return;
 		//throw Exc("SetVal idparam == 0 is reserved to time");
-	if (idtime < 0)
+	if (idActualTime < 0)
 		throw Exc("SetNextTime has to bec called before SetVal");
 	if (idparam < 0)
 		return;
 	auto &data = dataOut[idparam];
-	if (idtime < data.size()) {
-		data[idtime] = val;
+	if (idActualTime < data.size()) {
+		data[idActualTime] = val;
 		return;
 	}
 	if (data.GetAlloc() == data.size()) 
@@ -555,13 +605,13 @@ void FastOut::SetVal(int idparam, double val) {
 
 void FastOut::SetNextTime(double time) {
 	auto &data = dataOut[0];
-	if (idtime >= 0) {
-		if (data[idtime] == time)
+	if (idActualTime >= 0) {
+		if (data[idActualTime] == time)
 			return;
-		if (data[idtime] > time)
+		if (data[idActualTime] > time)
 			throw Exc("SetNextTime time is lower than last");
 	}
-	idtime++;
+	idActualTime++;
 	if (data.GetAlloc() == data.size()) 
 		data.Reserve(data.size() + 10000);
 	data << time;
@@ -635,35 +685,33 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 	return list;
 }
 
-void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params0, UVector<UVector<String>> &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table) {
+void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, ParameterMetrics &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table) {
 	table.Clear();
 	
 	// Gets the real et of parameters taking into account *
 	auto FindParam = [&](String strpartofind)->bool {
-		for (auto &param : params) {
-			String strpar = param[0];
-			if (ToLower(strpartofind) == ToLower(strpar))
+		for (auto &param : params.params) {
+			if (ToLower(strpartofind) == ToLower(param.str))
 				return true;
 		}	
 		return false;
 	};
 	
 	for (const FastOut &fast : dataFast) {
-		for (auto &param0 : params0) {
-			String strpar = param0[0];
-			UVector<String> sids = fast.FindParameterMatchStr(strpar);
+		for (auto &p0 : params0.params) {
+			UVector<String> sids = fast.FindParameterMatchStr(p0.str);
 			for (String str : sids) {
 				if (!FindParam(str)) {
-					auto &param = params.Add();
-					param = clone(param0);
-					param[0] = str;
+					auto &param = params.params.Add();
+					param = clone(p0);
+					param.str = str;
 				}
 			}
 		}
 	}
 	
 	// Does the real job
-	UVector<UVector<double>> fullData(params.size());
+	UVector<UVector<double>> fullData(params.params.size());
 	for (const FastOut &fast : dataFast) {
 		int idBegin = fast.GetIdTime(start);
 		int num = fast.GetNumData();
@@ -685,15 +733,14 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 		t << fast.GetFileName();			
 		t << fast.GetVal(idBegin, 0);
 		t << fast.GetVal(idEnd, 0);
-		for (int ip = 0; ip < params.size(); ip++) {
-			auto &param = params[ip];
-			if (param.size() < 3)
+		for (int ip = 0; ip < params.params.size(); ip++) {
+			auto &param = params.params[ip];
+			if (param.metrics.size() < 1)
 				throw Exc(t_("Wrong number of parameters"));
-			String strpar = param[0];
 			
-			int id = fast.GetParameterX(strpar);
+			int id = fast.GetParameterX(param.str);
 			if (id < 0) {
-				for (int i = 2; i < param.size(); i++) 
+				for (int i = 0; i < param.metrics.size(); i++) 
 					t << "";
 			} else {
 				const VectorXd data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
@@ -702,8 +749,12 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 				Copy(data, ndata);
 				fullData[ip].Append(ndata);
 			
-				for (int i = 2; i < param.size(); i++) {
-					String stat = param[i];
+				for (int i = 0; i < param.metrics.size(); i++) {
+					String str = param.metrics[i];
+					str.Replace("(", ",");
+					str.Replace(")", ",");
+					UVector<String> pars = Split(str, ",");
+					String stat = pars[0];
 					double val;
 					if (stat == "mean") 
 						val = data.mean();
@@ -733,8 +784,18 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 						val /= H;
 					} else if (stat == "rao_mean") 
 						val = data.tail(data.size()/2).mean();	// mean of the half end
-					else
-						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, strpar));
+					else if (stat == "percentile") {
+						if (pars.size() != 2)
+							throw Exc("'percentile' requires one argument");
+						EigenVector v(data, 0, 1);
+						val = v.PercentileValY(ScanDouble(pars[1]));
+					} else if (stat == "weibull") {
+						if (pars.size() != 2)
+							throw Exc("'weibull' requires one argument");
+						EigenVector v(data, 0, 1);
+						val = v.PercentileWeibullValY(ScanDouble(pars[1]));
+					} else
+						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.str));
 					
 					t << val;//Format("%" + format, val);
 				}
@@ -748,17 +809,21 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 		t << t_("-");
 		VectorXd data(table.size()-1), time(table.size()-1);
 		int col = 3;
-		for (int ip = 0; ip < params.size(); ip++) {
-			const UVector<String> &param = params[ip];
-			String strpar = param[0];
-			String format = param[1];
-			for (int i = 2; i < param.size(); i++) {
+		for (int ip = 0; ip < params.params.size(); ip++) {
+			const ParameterMetric &param = params.params[ip];
+		
+			for (int i = 0; i < param.metrics.size(); i++) {
 				for (int row = 0; row < table.size()-1; ++row) {
 					data[row] = double(table[row][col]);
 					time[row] = double(table[row][2]) - double(table[row][1]);
 				}
 				col++;
-				String stat = param[i];
+				String str = param.metrics[i];
+				str.Replace("(", ",");
+				str.Replace(")", ",");
+				UVector<String> pars = Split(str, ",");
+				String stat = pars[0];
+					
 				double val;
 				if (stat == "mean") 
 					val = (data.array()*time.array()).sum() / time.sum();
@@ -786,8 +851,12 @@ void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &param
 					val = Null;
 				else if (stat == "rao_mean") 
 					val = Null;
+				else if (stat == "percentile") 
+					val = Null;
+				else if (stat == "weibull") 
+					val = Null;
 				else
-					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, strpar));
+					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.str));
 				
 				t << val;//Format("%" + format, val);
 			}
@@ -992,22 +1061,51 @@ void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A) {
 	A = newA;
 }
 
-void FastOut::HeaveCBParam::Init() {
-	idheave = dataFast->GetParameterX("PtfmHeave");
-	idpitch = dataFast->GetParameterX("PtfmPitch");
-	idroll = dataFast->GetParameterX("PtfmRoll");
-	idyaw = dataFast->GetParameterX("PtfmYaw");	
-	if (idroll < 0 || idpitch < 0 || idheave < 0 || idyaw < 0) 
-		enabled = false;
-	else {
-		String folder = GetFileFolder(dataFast->GetFileName());
-		FindFile ffpath(AppendFileNameX(folder, "*.fst"));
-		if (ffpath) {
-			FASTCase cas;
-			cas.Load(ffpath.GetPath());
-			ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
-			ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
-		} else
-			ptfmCOBxt = ptfmCOByt = Null;
-	}
+
+void FastOut::BladeTip1xParam::Init() {
+	idTipdx = dF->GetParameterX("TipDxb1");
+	idTipdy = dF->GetParameterX("TipDyb1");
+	enabled = !(IsNull(dF->Hz) || idTipdx < 0 || idTipdy < 0);
+}
+
+void FastOut::BladeTip2xParam::Init() {
+	idTipdx = dF->GetParameterX("TipDxb2");
+	idTipdy = dF->GetParameterX("TipDyb2");
+	enabled = !(IsNull(dF->Hz) || idTipdx < 0 || idTipdy < 0);
+}
+
+void FastOut::BladeTip3xParam::Init() {
+	idTipdx = dF->GetParameterX("TipDxb3");
+	idTipdy = dF->GetParameterX("TipDyb3");
+	enabled = !(IsNull(dF->Hz) || idTipdx < 0 || idTipdy < 0);
+}
+
+bool FastOut::CalcTipPos(int idBlade, int idtime, double tipdx, double tipdy, double &Tx, double &Ty, double &Tz) {
+	double azimuth = GetVal(idtime, idaz);
+	double nacyaw = GetVal(idtime, idnacyaw);
+	
+	if (IsNull(azimuth) || IsNull(nacyaw)) 
+		return false;
+	
+	azimuth = ToRad(azimuth + idBlade*120);
+	nacyaw = ToRad(nacyaw);
+	
+	Tx = Hx - TipRad*cos(Precone)*cos(azimuth)*sin(ShftTilt) + tipdx;
+	Ty = -TipRad*cos(Precone)*sin(azimuth)+ tipdy;
+	
+	double d = sqrt(sqr(Tx) + sqr(Ty));
+	double ang = atan2(Ty, Tx) + nacyaw;
+	Tx = d*cos(ang);
+	Ty = -d*sin(ang);
+	
+	Tz = Hz + TipRad*cos(Precone)*cos(azimuth)*cos(ShftTilt);
+	
+	Value3D pos(Tx, Ty, Tz), npos;
+	TransRot(aff[idtime], pos, npos);
+	
+	Tx = npos.x;
+	Ty = npos.y;
+	Tz = npos.z;
+	
+	return true;	
 }

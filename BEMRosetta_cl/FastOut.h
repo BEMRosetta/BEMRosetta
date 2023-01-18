@@ -87,34 +87,18 @@ public:
     }
 	
 	struct CalcParam {
-		CalcParam &Init0(FastOut *_dataFast) {dataFast = _dataFast; return *this;}
+		CalcParam *Init0(FastOut *_dataFast) {dF = _dataFast; return this;}
 		virtual void Init() = 0;
 		virtual double Calc(int idt) = 0;
 		bool IsEnabled()	{return enabled;}
 		String name, units;
+		int id;
 		
 	protected:
-		FastOut *dataFast = nullptr;
+		FastOut *dF = nullptr;
 		bool enabled = true;
 	};
 	
-	struct CalcParams {
-		String name, units;
-		CalcParam *calc = nullptr;
-	}; 
-	
-	void AddParam(CalcParam &calc) {
-		CalcParams &c = calcParams.Add();
-		c.name = calc.name;
-		c.units = calc.units;
-		c.calc = &calc;
-	}
-	void AddParam(String name, String units, CalcParam &calc) {
-		CalcParams &c = calcParams.Add();
-		c.name = name;
-		c.units = units;
-		c.calc = &calc;
-	}
 	int AddParam(String name, String unit, String description = "") {
 		parameters << name;
 		units << unit;
@@ -129,8 +113,16 @@ public:
 	UVector<String> parameters, units, descriptions;
 	UVector<String> parametersd, unitsd;
 	UVector<UVector <double> > dataOut;
-	UArray<CalcParams> calcParams;
-
+	UVector<CalcParam *> calcParams;
+	
+	UArray<Affine3d> aff;
+	double Hx = Null, Hz = Null;			// Position of the hub projection to the blade tip rotation plane. with NacYaw = 0
+	
+	int idsurge = Null, idsway = Null, idheave = Null, idroll = Null, idpitch = Null, idyaw = Null, idaz = Null, idnacyaw = Null;
+	
+	double TipRad = Null, OverHang = Null, ShftTilt = Null, Precone = Null, Twr2Shft = Null, TowerHt = Null, baseClearance = Null;
+	double ptfmCOBxt = Null, ptfmCOByt = Null;
+	
 private:
 	bool LoadOut(String fileName);
 	bool LoadOutb(String fileName);
@@ -143,9 +135,9 @@ private:
 	String fileName;
 	//Time lastTime;
 	
-	int idtime = -1;
+	int idActualTime = -1;
 	
-	VectorMap<String, String> syn;
+	VectorMap<String, String> syn;		// Synonyms
 	
 	struct TiltParam : CalcParam {
 		TiltParam() {
@@ -153,21 +145,17 @@ private:
 			units = "deg";
 		}
 		virtual void Init() {
-			idroll = dataFast->GetParameterX("PtfmRoll");
-			idpitch = dataFast->GetParameterX("PtfmPitch");
-			if (idroll < 0 || idpitch < 0)
-				enabled = false;
+			enabled = !(dF->idroll < 0 || dF->idpitch < 0);
 		}
 		virtual double Calc(int idtime) {
-			double roll = dataFast->GetVal(idtime, idroll);
-			double pitch = dataFast->GetVal(idtime, idpitch);
+			double roll = dF->GetVal(idtime, dF->idroll);
+			double pitch = dF->GetVal(idtime, dF->idpitch);
 
 			if (IsNull(roll) || IsNull(pitch))
 				return Null;
 							
 			return sqrt(roll*roll + pitch*pitch);
 		}	
-		int idroll = Null, idpitch = Null;	
 	} ptfmtilt; 
 
 	struct ShiftParam : CalcParam {
@@ -176,21 +164,17 @@ private:
 			units = "m";
 		}
 		virtual void Init() {
-			idsurge = dataFast->GetParameterX("PtfmSurge");
-			idsway = dataFast->GetParameterX("PtfmSway");
-			if (idsurge < 0 || idsway < 0)
-				enabled = false;
+			enabled = !(dF->idsurge < 0 || dF->idsway < 0);
 		}
 		virtual double Calc(int idtime) {
-			double surge = dataFast->GetVal(idtime, idsurge);
-			double sway = dataFast->GetVal(idtime, idsway);
+			double surge = dF->GetVal(idtime, dF->idsurge);
+			double sway = dF->GetVal(idtime, dF->idsway);
 			
 			if (IsNull(surge) || IsNull(sway))
 				return Null;			
 			
 			return sqrt(surge*surge + sway*sway);
 		}	
-		int idsurge = Null, idsway = Null;	
 	} ptfmshift; 
 
 	struct HeaveCBParam : CalcParam {
@@ -198,39 +182,194 @@ private:
 			name = "PtfmHeaveCB";
 			units = "m";
 		}
+		virtual void Init() {
+			enabled = !(IsNull(dF->ptfmCOBxt) || IsNull(dF->ptfmCOByt) || dF->idroll < 0 || dF->idpitch < 0 || dF->idheave < 0 || dF->idyaw < 0); 
+		}
+		virtual double Calc(int idtime) {
+			Value3D pos(dF->ptfmCOBxt, dF->ptfmCOByt, 0), npos;
+			TransRot(dF->aff[idtime], pos, npos);
+						 
+			return npos.z;
+		}	
+	} ptfmHeaveCB; 
+
+	bool CalcTipPos(int idBlade, int idtime, double tipdx, double tipdy, double &Tx, double &Ty, double &Tz);
+	
+	struct BladeTip1xParam : CalcParam {
+		BladeTip1xParam() {
+			name = "BldTip1x";
+			units = "m";
+		}
 		virtual void Init();
 		
 		virtual double Calc(int idtime) {
-			double heave = dataFast->GetVal(idtime, idheave);
-			double pitch = dataFast->GetVal(idtime, idpitch);
-			double roll = dataFast->GetVal(idtime, idroll);
-			
-			if (IsNull(heave) || IsNull(pitch) || IsNull(roll) || IsNull(ptfmCOBxt) || IsNull(ptfmCOByt))
+			double tipdx = 0, tipdy = 0;
+			if (!IsNull(idTipdx) && !IsNull(idTipdy)) {
+				tipdx = Nvl(dF->GetVal(idtime, idTipdx), 0.);
+				tipdy = Nvl(dF->GetVal(idtime, idTipdy), 0.);
+			}
+			if ((isnull = !dF->CalcTipPos(0, idtime, tipdx, tipdy, Tx, Ty, Tz)))
 				return Null;
 			
-			pitch = ToRad(pitch);
-			roll = ToRad(roll);
-
-			return heave - sin(pitch)*ptfmCOBxt + cos(pitch)*sin(roll)*ptfmCOByt;
+			return Tx;
 		}	
-		int idheave = Null, idpitch = Null, idroll = Null, idyaw = Null;
-		double ptfmCOBxt = Null, ptfmCOByt = Null;	
-	} ptfmHeaveCB; 
+		double Tx, Ty, Tz;
+		int idTipdx = Null, idTipdy = Null;
+		bool isnull;
+	} bladeTip1xParam; 
+
+	struct BladeTip1yParam : CalcParam {
+		BladeTip1yParam() {
+			name = "BldTip1y";
+			units = "m";
+		}
+		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
+		
+		virtual double Calc(int idtime) {
+			if (dF->bladeTip1xParam.isnull)
+				return Null;
+			
+			return dF->bladeTip1xParam.Ty;
+		}	
+	} bladeTip1yParam; 
+
+
+	struct BladeTip1zParam : CalcParam {
+		BladeTip1zParam() {
+			name = "BldTip1z";
+			units = "m";
+		}
+		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
+		
+		virtual double Calc(int idtime) {
+			if (dF->bladeTip1xParam.isnull)
+				return Null;
+			
+			return dF->bladeTip1xParam.Tz;
+		}	
+	} bladeTip1zParam; 
+
+	struct BladeTip2xParam : CalcParam {
+		BladeTip2xParam() {
+			name = "BldTip2x";
+			units = "m";
+		}
+		virtual void Init();
+		
+		virtual double Calc(int idtime) {
+			double tipdx = 0, tipdy = 0;
+			if (!IsNull(idTipdx) && !IsNull(idTipdy)) {
+				tipdx = Nvl(dF->GetVal(idtime, idTipdx), 0.);
+				tipdy = Nvl(dF->GetVal(idtime, idTipdy), 0.);
+			}
+			if ((isnull = !dF->CalcTipPos(1, idtime, tipdx, tipdy, Tx, Ty, Tz)))
+				return Null;
+			
+			return Tx;
+		}	
+		double Tx, Ty, Tz;
+		int idTipdx = Null, idTipdy = Null;
+		bool isnull;
+	} bladeTip2xParam; 
+
+	struct BladeTip2yParam : CalcParam {
+		BladeTip2yParam() {
+			name = "BldTip2y";
+			units = "m";
+		}
+		virtual void Init() {enabled = dF->bladeTip2xParam.IsEnabled();}
+		
+		virtual double Calc(int idtime) {
+			if (dF->bladeTip2xParam.isnull)
+				return Null;
+			
+			return dF->bladeTip2xParam.Ty;
+		}	
+	} bladeTip2yParam; 
+
+
+	struct BladeTip2zParam : CalcParam {
+		BladeTip2zParam() {
+			name = "BldTip2z";
+			units = "m";
+		}
+		virtual void Init() {enabled = dF->bladeTip2xParam.IsEnabled();}
+		
+		virtual double Calc(int idtime) {
+			if (dF->bladeTip2xParam.isnull)
+				return Null;
+			
+			return dF->bladeTip2xParam.Tz;
+		}	
+	} bladeTip2zParam; 
 	
+	struct BladeTip3xParam : CalcParam {
+		BladeTip3xParam() {
+			name = "BldTip3x";
+			units = "m";
+		}
+		virtual void Init();
+		
+		virtual double Calc(int idtime) {
+			double tipdx = 0, tipdy = 0;
+			if (!IsNull(idTipdx) && !IsNull(idTipdy)) {
+				tipdx = Nvl(dF->GetVal(idtime, idTipdx), 0.);
+				tipdy = Nvl(dF->GetVal(idtime, idTipdy), 0.);
+			}
+			if ((isnull = !dF->CalcTipPos(2, idtime, tipdx, tipdy, Tx, Ty, Tz)))
+				return Null;
+			
+			return Tx;
+		}	
+		double Tx, Ty, Tz;
+		int idTipdx = Null, idTipdy = Null;
+		bool isnull;
+	} bladeTip3xParam; 
+
+	struct BladeTip3yParam : CalcParam {
+		BladeTip3yParam() {
+			name = "BldTip3y";
+			units = "m";
+		}
+		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
+		
+		virtual double Calc(int idtime) {
+			if (dF->bladeTip1xParam.isnull)
+				return Null;
+			
+			return dF->bladeTip3xParam.Ty;
+		}	
+	} bladeTip3yParam; 
+
+
+	struct BladeTip3zParam : CalcParam {
+		BladeTip3zParam() {
+			name = "BldTip3z";
+			units = "m";
+		}
+		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
+		
+		virtual double Calc(int idtime) {
+			if (dF->bladeTip3xParam.isnull)
+				return Null;
+			
+			return dF->bladeTip3xParam.Tz;
+		}	
+	} bladeTip3zParam; 	
+				
 	struct TwrBsShearParam : CalcParam {
 		TwrBsShearParam() {
 			name = "TwrBsShear";
 			units = "kN";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("TwrBsFxt");
-			idy = dataFast->GetParameterX("TwrBsFyt");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("TwrBsFxt");
+			idy = dF->GetParameterX("TwrBsFyt");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double fx = dataFast->GetVal(idtime, idx);
-			double fy = dataFast->GetVal(idtime, idy);
+			double fx = dF->GetVal(idtime, idx);
+			double fy = dF->GetVal(idtime, idy);
 			
 			if (IsNull(fx) || IsNull(fy))
 				return Null;			
@@ -246,14 +385,13 @@ private:
 			units = "kN-m";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("TwrBsMxt");
-			idy = dataFast->GetParameterX("TwrBsMyt");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("TwrBsMxt");
+			idy = dF->GetParameterX("TwrBsMyt");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double mx = dataFast->GetVal(idtime, idx);
-			double my = dataFast->GetVal(idtime, idy);
+			double mx = dF->GetVal(idtime, idx);
+			double my = dF->GetVal(idtime, idy);
 
 			if (IsNull(mx) || IsNull(my))
 				return Null;
@@ -269,14 +407,13 @@ private:
 			units = "kN";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("YawBrFxp");
-			idy = dataFast->GetParameterX("YawBrFyp");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("YawBrFxp");
+			idy = dF->GetParameterX("YawBrFyp");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double fx = dataFast->GetVal(idtime, idx);
-			double fy = dataFast->GetVal(idtime, idy);
+			double fx = dF->GetVal(idtime, idx);
+			double fy = dF->GetVal(idtime, idy);
 			
 			if (IsNull(fx) || IsNull(fy))
 				return Null;
@@ -292,14 +429,13 @@ private:
 			units = "kN-m";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("YawBrMxp");
-			idy = dataFast->GetParameterX("YawBrMyp");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("YawBrMxp");
+			idy = dF->GetParameterX("YawBrMyp");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double mx = dataFast->GetVal(idtime, idx);
-			double my = dataFast->GetVal(idtime, idy);
+			double mx = dF->GetVal(idtime, idx);
+			double my = dF->GetVal(idtime, idy);
 			
 			if (IsNull(mx) || IsNull(my))
 				return Null;
@@ -315,14 +451,13 @@ private:
 			units = "kN";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("RootFxc1");
-			idy = dataFast->GetParameterX("RootFyc1");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("RootFxc1");
+			idy = dF->GetParameterX("RootFyc1");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double fx = dataFast->GetVal(idtime, idx);
-			double fy = dataFast->GetVal(idtime, idy);
+			double fx = dF->GetVal(idtime, idx);
+			double fy = dF->GetVal(idtime, idy);
 			
 			return sqrt(fx*fx + fy*fy);
 		}	
@@ -335,14 +470,13 @@ private:
 			units = "kN-m";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("RootMxc1");
-			idy = dataFast->GetParameterX("RootMyc1");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("RootMxc1");
+			idy = dF->GetParameterX("RootMyc1");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double mx = dataFast->GetVal(idtime, idx);
-			double my = dataFast->GetVal(idtime, idy);
+			double mx = dF->GetVal(idtime, idx);
+			double my = dF->GetVal(idtime, idy);
 			
 			return sqrt(mx*mx + my*my);
 		}	
@@ -355,14 +489,13 @@ private:
 			units = "kN";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("RootFxc2");
-			idy = dataFast->GetParameterX("RootFyc2");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("RootFxc2");
+			idy = dF->GetParameterX("RootFyc2");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double fx = dataFast->GetVal(idtime, idx);
-			double fy = dataFast->GetVal(idtime, idy);
+			double fx = dF->GetVal(idtime, idx);
+			double fy = dF->GetVal(idtime, idy);
 			
 			return sqrt(fx*fx + fy*fy);
 		}	
@@ -375,14 +508,13 @@ private:
 			units = "kN-m";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("RootMxc2");
-			idy = dataFast->GetParameterX("RootMyc2");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("RootMxc2");
+			idy = dF->GetParameterX("RootMyc2");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double mx = dataFast->GetVal(idtime, idx);
-			double my = dataFast->GetVal(idtime, idy);
+			double mx = dF->GetVal(idtime, idx);
+			double my = dF->GetVal(idtime, idy);
 			
 			return sqrt(mx*mx + my*my);
 		}	
@@ -395,14 +527,13 @@ private:
 			units = "kN";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("RootFxc3");
-			idy = dataFast->GetParameterX("RootFyc3");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("RootFxc3");
+			idy = dF->GetParameterX("RootFyc3");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double fx = dataFast->GetVal(idtime, idx);
-			double fy = dataFast->GetVal(idtime, idy);
+			double fx = dF->GetVal(idtime, idx);
+			double fy = dF->GetVal(idtime, idy);
 			
 			return sqrt(fx*fx + fy*fy);
 		}	
@@ -415,14 +546,13 @@ private:
 			units = "kN-m";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("RootMxc3");
-			idy = dataFast->GetParameterX("RootMyc3");
-			if (idx < 0 || idy < 0)
-				enabled = false;
+			idx = dF->GetParameterX("RootMxc3");
+			idy = dF->GetParameterX("RootMyc3");
+			enabled = !(idx < 0 || idy < 0);
 		}
 		virtual double Calc(int idtime) {
-			double mx = dataFast->GetVal(idtime, idx);
-			double my = dataFast->GetVal(idtime, idy);
+			double mx = dF->GetVal(idtime, idx);
+			double my = dF->GetVal(idtime, idy);
 			
 			return sqrt(mx*mx + my*my);
 		}	
@@ -435,16 +565,15 @@ private:
 			units = "m/s^2";
 		}
 		virtual void Init() {
-			idx = dataFast->GetParameterX("NcIMUTAxs");
-			idy = dataFast->GetParameterX("NcIMUTAys");
-			idz = dataFast->GetParameterX("NcIMUTAzs");
-			if (idx < 0 || idy < 0 || idz < 0)
-				enabled = false;
+			idx = dF->GetParameterX("NcIMUTAxs");
+			idy = dF->GetParameterX("NcIMUTAys");
+			idz = dF->GetParameterX("NcIMUTAzs");
+			enabled = !(idx < 0 || idy < 0 || idz < 0);
 		}
 		virtual double Calc(int idtime) {
-			double ax = dataFast->GetVal(idtime, idx);
-			double ay = dataFast->GetVal(idtime, idy);
-			double az = dataFast->GetVal(idtime, idz);
+			double ax = dF->GetVal(idtime, idx);
+			double ay = dF->GetVal(idtime, idy);
+			double az = dF->GetVal(idtime, idz);
 			
 			return sqrt(ax*ax + ay*ay + az*az);
 		}	
@@ -460,12 +589,11 @@ private:
 			id = _id;
 		}
 		virtual void Init() {
-			idFair = dataFast->GetParameterX(Format("FAIRTEN%d", id));
-			if (idFair < 0)
-				enabled = false;
+			idFair = dF->GetParameterX(Format("FAIRTEN%d", id));
+			enabled = !(idFair < 0);
 		}
 		virtual double Calc(int idtime) {
-			double fairTen = dataFast->GetVal(idtime, idFair);
+			double fairTen = dF->GetVal(idtime, idFair);
 
 			if (IsNull(fairTen))
 				return Null;
@@ -477,7 +605,37 @@ private:
 	UArray<Fairten_tParam> fairTens;	
 };
 
-void Calc(const UArray<FastOut> &dataFast, const UVector<UVector<String>> &params, UVector<UVector<String>> &realparams, double start, bool fromEnd, double end, UVector<UVector<Value>> &table);
+
+class ParameterMetric : public DeepCopyOption<ParameterMetric> {
+public:
+	ParameterMetric() {}
+	ParameterMetric(const ParameterMetric &d, int) : str(d.str), format(d.format) {
+		metrics = clone(d.metrics);
+	}
+	String str;
+	String format;
+	UVector<String> metrics;
+	
+	void Jsonize(JsonIO &json) {
+		json
+			("str", str)
+			("format", format)
+			("metrics", metrics)
+		;
+	}	
+};
+
+struct ParameterMetrics {
+	UArray<ParameterMetric> params;	
+	
+	void Jsonize(JsonIO &json) {
+		json
+			("params", params)
+		;
+	}
+};
+
+void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params, ParameterMetrics &realparams, double start, bool fromEnd, double end, UVector<UVector<Value>> &table);
 
 
 class FASTCase {

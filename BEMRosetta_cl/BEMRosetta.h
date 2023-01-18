@@ -387,13 +387,13 @@ public:
 		return ndim ? F_ndim(f, _h, ifr, idf) : F_dim(f, _h, ifr, idf);
 	}
 	std::complex<double> R_dim(const Forces &f,  int _h, int ifr, int idf) const {
-		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_RAO(idf)));
+		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(/*g_rho_dim()* */pow(len, GetK_RAO(idf)));
 	}
 	std::complex<double> R_ndim(const Forces &f, int _h, int ifr, int idf) const {
 		if (!dimen) 
 			return f.force[_h](ifr, idf); 
 		else 
-			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_RAO(idf)));
+			return f.force[_h](ifr, idf)/( /*g_rho_ndim()**/ pow(len, GetK_RAO(idf)));
 	}
 	std::complex<double> R_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
 		return ndim ? R_ndim(f, _h, ifr, idf) : R_dim(f, _h, ifr, idf);
@@ -618,6 +618,11 @@ public:
 				return "N/m";
 			return "N-m/m";
 		}
+	}
+	static String RAO_units(int r) {
+		if (r < 3)
+			return "m/m";
+		return "rad/m";
 	}
 	static String MD_units(bool ndim, int r) {
 		if (ndim) {
