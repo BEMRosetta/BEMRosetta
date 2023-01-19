@@ -301,12 +301,12 @@ public:
 			return 4;
 	}
 	
-	static int GetK_RAO(int i) {
+	/*static int GetK_RAO(int i) {
 		if (i < 3)
 			return 0;	
 		else
 			return 1;
-	}
+	}*/
 	
 	void GetBodyDOF();
 	
@@ -386,17 +386,19 @@ public:
 	std::complex<double> F_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
 		return ndim ? F_ndim(f, _h, ifr, idf) : F_dim(f, _h, ifr, idf);
 	}
+	/*
 	std::complex<double> R_dim(const Forces &f,  int _h, int ifr, int idf) const {
-		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(/*g_rho_dim()* */pow(len, GetK_RAO(idf)));
+		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(**g_rho_dim()* **pow(len, GetK_RAO(idf)));
 	}
 	std::complex<double> R_ndim(const Forces &f, int _h, int ifr, int idf) const {
 		if (!dimen) 
 			return f.force[_h](ifr, idf); 
 		else 
-			return f.force[_h](ifr, idf)/( /*g_rho_ndim()**/ pow(len, GetK_RAO(idf)));
-	}
-	std::complex<double> R_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
-		return ndim ? R_ndim(f, _h, ifr, idf) : R_dim(f, _h, ifr, idf);
+			return f.force[_h](ifr, idf)/( **g_rho_ndim()*** pow(len, GetK_RAO(idf)));
+	}*/
+	std::complex<double> R_(/*bool ndim, */const Forces &f, int _h, int ifr, int idf) const {
+		//return ndim ? R_ndim(f, _h, ifr, idf) : R_dim(f, _h, ifr, idf);
+		return f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim();
 	}
 	
 	template <class T>

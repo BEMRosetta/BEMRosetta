@@ -100,7 +100,7 @@ void Hydro::Normalize() {
 		for (int h = 0; h < Nh; ++h) 
 			for (int ifr = 0; ifr < Nf; ++ifr) 
 				for (int i = 0; i < 6*Nb; ++i) 	 
-					rao.force[h](ifr, i) = R_ndim(rao, h, ifr, i);
+					rao.force[h](ifr, i) = R_(rao, h, ifr, i);
 	}
 }
 
@@ -142,7 +142,7 @@ void Hydro::Dimensionalize() {
 		for (int h = 0; h < Nh; ++h) 
 			for (int ifr = 0; ifr < Nf; ++ifr) 
 				for (int i = 0; i < 6*Nb; ++i) 
-					rao.force[h](ifr, i) = R_dim(rao, h, ifr, i);
+					rao.force[h](ifr, i) = R_(rao, h, ifr, i);
 	}
 }
 
@@ -686,7 +686,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 					int ifr = FindClosest(w, hydro.w[ifrhy]);
 					for (int idf = 0; idf < 6*Nb; ++idf) {	
 						if (IsNum(rao.force[ihhy](ifrhy, idf))) 
-							rao.force[ih](ifr, idf) = hydro.R_ndim(rao, ihhy, ifrhy, idf);
+							rao.force[ih](ifr, idf) = hydro.R_(rao, ihhy, ifrhy, idf);
 					}
 				}
 			}
