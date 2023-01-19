@@ -91,7 +91,7 @@ void Hydro::GetRAO() {
 				VectorXcd RAO = GetRAO(w[ifr], A_(false, ifr, ib), B_(false, ifr, ib), 
 								F_(false, ex, ih, ifr), C, M_, D, D2);
 				for (int idf = 0; idf < 6; ++idf)
-					rao.force[ih](ifr, idf+6*ib) = F_(!dimen, RAO[idf], idf);
+					rao.force[ih](ifr, idf+6*ib) = RAO[idf];
 			}
 		}
 	}
@@ -101,10 +101,10 @@ VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const 
 		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2) {
 	const std::complex<double> j = std::complex<double>(0, 1);
 
-	MatrixXd Aw0 = Aw.unaryExpr([](double x){return IsNum(x) ? x : 0;}),
+	MatrixXd Aw0 = Aw.unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
 			 Bw0 = Bw.unaryExpr([](double x){return IsNum(x) ? x : 0;});
-	
-	VectorXcd RAO = (C - sqr(w)*(M + Aw0) + j*w*(Bw0 + D)).inverse()*Fwh;
+		
+	VectorXcd RAO = Fwh.transpose()*(C - sqr(w)*(M + Aw0) + j*w*(Bw0 + D)).inverse();
 	return RAO;
 }
 	

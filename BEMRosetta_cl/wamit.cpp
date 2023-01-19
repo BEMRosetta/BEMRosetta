@@ -1883,7 +1883,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 		for (int ih = 0; ih < hd().Nh; ++ih)
 			for (int i = 0; i < hd().Nb*6; ++i) {
 				std::complex<double> &f = hd().rao.force[ih](ifr, i);	
-				std::complex<double> fn = hd().R_ndim(hd().rao, ih, ifr, i);
+				std::complex<double> fn = hd().R_(hd().rao, ih, ifr, i);
 				out << Format(" %s %s %5d %s %s %s %s\n", 
 					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 					FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
