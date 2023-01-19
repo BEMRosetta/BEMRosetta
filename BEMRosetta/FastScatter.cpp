@@ -83,12 +83,12 @@ void FastScatter::OnCalc() {
 		
 		WaitCursor waitcursor;
 		
-		double begin;
-		String editBegin = ~fscbase.editStart;
-		if (Trim(editBegin) == "-")
-			begin = 0;
+		double start;
+		String editStart = ~fscbase.editStart;
+		if (Trim(editStart) == "-")
+			start = 0;
 		else 
-			begin = StringToSeconds(~fscbase.editStart)
+			start = StringToSeconds(~fscbase.editStart);
 			
 		String editEnd = ~fscbase.editEnd;
 		if (Trim(editEnd) == "-")
@@ -97,7 +97,7 @@ void FastScatter::OnCalc() {
 
 		UVector<UVector<Value>> table;
 		ParameterMetrics realparams; 
-		Calc(fscbase.left.dataFast, params, realparams, begin, fscbase.opFrom == 1, end, table);
+		Calc(fscbase.left.dataFast, params, realparams, start, fscbase.opFrom == 1, end, table);
 		
 		int col = 0;
 		compare.array.AddColumn("");
@@ -700,10 +700,13 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			auto &scat = opLoad3 == 2 ? left.scatter[iff] : left.scatter[0];
 			
 			if (fast.GetNumData() > 0) {
+				if (IsNull(beginTime)) 
+					beginTime = 0;
+				
 				int idBegin = fast.GetIdTime(beginTime);
 				int numData;
 				double end;
-				
+					
 				if (IsNull(endTime)) 
 					end = fast.GetTimeEnd() - timeFromEnd;
 				else 
