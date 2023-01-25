@@ -44,13 +44,15 @@ LAYOUT(Summary, 216, 264)
 	ITEM(Upp::DocEdit, str, HSizePosZ(4, 4).VSizePosZ(4, 4))
 END_LAYOUT
 
-LAYOUT(Compare, 576, 472)
-	ITEM(Upp::Label, dv___0, SetLabel(t_("Parameters && metrics:")).LeftPosZ(4, 116).TopPosZ(0, 19))
-	ITEM(Upp::GridCtrl, arrayStats, LeftPosZ(4, 372).TopPosZ(20, 100))
-	ITEM(Upp::ArrayCtrl, array, HSizePosZ(4, 4).VSizePosZ(144, 4))
-	ITEM(Upp::Label, dv___3, SetLabel(t_("Results")).LeftPosZ(8, 52).TopPosZ(124, 19))
-	ITEM(Upp::Button, butCalc, SetLabel(t_("Calculate")).RightPosZ(4, 56).TopPosZ(4, 24))
-	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).LeftPosZ(116, 192).TopPosZ(0, 19))
-	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).LeftPosZ(312, 64).TopPosZ(0, 20))
+LAYOUT(Compare, 636, 400)
+	ITEM(Upp::Label, dv___0, SetLabel(t_("Parameters && metrics:")).LeftPosZ(4, 116).TopPosZ(28, 19))
+	ITEM(Upp::GridCtrl, arrayStats, LeftPosZ(4, 532).TopPosZ(52, 136))
+	ITEM(Upp::ArrayCtrl, array, HSizePosZ(4, 4).VSizePosZ(216, 4))
+	ITEM(Upp::Label, dv___3, SetLabel(t_("Results")).LeftPosZ(8, 52).TopPosZ(196, 19))
+	ITEM(Upp::Button, butCalc, SetLabel(t_("Calculate")).LeftPosZ(404, 64).TopPosZ(4, 20))
+	ITEM(EditFile, file, UseDropping(true).UseOpenFolder(true).LeftPosZ(116, 284).TopPosZ(28, 19))
+	ITEM(Upp::Button, butLoad, SetLabel(t_("Load")).LeftPosZ(404, 64).TopPosZ(28, 20))
+	ITEM(Upp::Label, dv___7, SetLabel(t_("Comparative of results")).SetFont(Upp::StdFontZ(12).Bold()).HSizePosZ(4, 412).TopPosZ(4, 19))
+	ITEM(Upp::Button, butSave, SetLabel(t_("Save")).LeftPosZ(472, 64).TopPosZ(28, 20))
 END_LAYOUT
 

@@ -33,6 +33,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 		.Tip(t_("Enter file with set of parameters and metrics"));
 	compare.file.Type(t_("json file"), "*.json").Type(t_("All files"), "*.*"); 
 	compare.butLoad.Tip(t_("Loads parameters and metrics file")) << [&] {compare.file.DoGo();};
+	compare.butSave.Tip(t_("Saves parameters and metrics")) << [&] {OnSaveCompare();};
 	
 	compare.arrayStats.AddColumn(t_("Parameter"), 80);
 	compare.arrayStats.GetColumn(0).Edit(edits.Add()); 
@@ -40,7 +41,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.arrayStats.GetColumn(1).Edit(edits.Add()); 
 	compare.arrayStats.AddColumn(t_("Statistics"), 200);
 	compare.arrayStats.GetColumn(2).Edit(edits.Add()); 
-	compare.arrayStats.Proportional().Clipboard().Editing().Removing().Appending().Duplicating();
+	compare.arrayStats.Proportional().Clipboard().Editing().Removing().Appending().Duplicating().SetToolBar();
 	
 	fscbase.Init(this, OnFile, OnCopyTabs, statusBar);
 #ifdef flagDEBUG
@@ -58,6 +59,12 @@ bool FastScatter::OnLoadCompare() {
 		return false;
 	}
 	
+	ParamsToGrid();
+		
+	return true;
+}
+
+void FastScatter::ParamsToGrid() {
 	for (int i = 0; i < params.params.size(); ++i) {
 		String stats;
 		for (int is = 0; is < params.params[i].metrics.size(); ++is) {
@@ -67,8 +74,42 @@ bool FastScatter::OnLoadCompare() {
 		}
 		compare.arrayStats.Add(params.params[i].str, params.params[i].format, stats);
 	}
+}
+
+void FastScatter::GridToParams() {
+	params.params.SetCount(compare.arrayStats.GetRowCount());
+	for (int r = 0; r < compare.arrayStats.GetRowCount(); ++r) {
+		params.params[r].str = AsString(compare.arrayStats.Get(r, 0));
+		params.params[r].format = AsString(compare.arrayStats.Get(r, 1));
+		String stats = AsString(compare.arrayStats.Get(r, 2));
+		params.params[r].metrics = Split(stats, ",");
+	}
+}
+
+void FastScatter::OnSaveCompare() {
+	GridToParams();
+	
+	GuiLock __;
+	
+	try {
+		FileSel fs;
 		
-	return true;
+		fs.Type("json file", "*.json");
+		
+		fs.ActiveType(0);
+		fs.ActiveDir(GetFileFolder(~compare.file));
+		
+		if (!fs.ExecuteSaveAs(t_("Save parameters")))
+			throw Exc(t_("Cancelled by the user"));
+		
+		String fileName = ~fs;
+				
+		if (!StoreAsJsonFile(params, fileName, true))
+			throw Exc(t_("Impossible to save file"));
+		
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
 }
 
 void FastScatter::OnCalc() {
@@ -80,7 +121,9 @@ void FastScatter::OnCalc() {
 			Exclamation("No data loaded");
 			return;	
 		}
-		
+
+		GridToParams();
+				
 		WaitCursor waitcursor;
 		
 		double start;

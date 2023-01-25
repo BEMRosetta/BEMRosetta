@@ -71,12 +71,12 @@ void Hydro::GetAinf() {
 
 void Hydro::GetRAO() {
 	if (Nf == 0 || A.size() < Nb*6 || B.size() < Nb*6)
-		throw Exc(t_("Insufficient data to get RAO"));	
+		throw Exc(t_("Insufficient data to get RAO: A and B are required"));	
 
 	for (int ib = 0; ib < Nb; ++ib) 
 		if (C.size() < ib+1 || C[ib].rows() < 6 || C[ib].cols() < 6 || 
 			  M.size() < ib+1 || M[ib].rows() < 6 || M[ib].cols() < 6) 
-			throw Exc(t_("Insufficient data to get RAO"));   
+			throw Exc(t_("Insufficient data to get RAO: C and M are required"));   
 			      
 	Initialize_Forces(rao);
 
