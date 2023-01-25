@@ -158,6 +158,7 @@ public:
 	void Init(Function <bool(String)> OnFile, Function <void(String)> OnCopyTabs, StatusBar &statusBar);
 	void OnCalc();
 	bool OnLoadCompare();
+	void OnSaveCompare();
 	
 	WithCompare<StaticRect> compare;
 	FastScatterBase fscbase;
@@ -167,6 +168,9 @@ public:
 	
 private:
 	UArray<EditString> edits;
+	
+	void ParamsToGrid();
+	void GridToParams();
 };
 
 class FastScatterTabs : public StaticRect {
