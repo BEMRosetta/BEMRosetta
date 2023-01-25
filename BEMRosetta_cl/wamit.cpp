@@ -1026,9 +1026,10 @@ bool Wamit::Load_frc2(String fileName) {
 
 	in.GetLine(2);
 	f.GetLine();
-	hd().rho = f.GetDouble(0);
-	if (hd().rho < 0 || hd().rho > 5000)
+	double rho = f.GetDouble(0);
+	if (rho <= 0 || rho > 5000)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong density %s"), f.GetText(0)));
+	hd().rho = rho;
 	
 	f.GetLine();
 	int mxNb = f.size()/3;
@@ -1507,9 +1508,9 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 			
-		int i = f.GetInt(2) - 1;		
+		int idof = f.GetInt(2) - 1;		
 		
-        force.force[ih](ifr, i) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
+        force.force[ih](ifr, idof) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
 	}
 	if (hd().c0.size() == 0)
 		hd().c0.setConstant(3, hd().Nb, 0);
@@ -1883,7 +1884,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 		for (int ih = 0; ih < hd().Nh; ++ih)
 			for (int i = 0; i < hd().Nb*6; ++i) {
 				std::complex<double> &f = hd().rao.force[ih](ifr, i);	
-				std::complex<double> fn = hd().R_(hd().rao, ih, ifr, i);
+				std::complex<double> fn = hd().R(ih, ifr, i);
 				out << Format(" %s %s %5d %s %s %s %s\n", 
 					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
 					FormatWam(Nvl2(abs(f), abs(fn), 0.)), 

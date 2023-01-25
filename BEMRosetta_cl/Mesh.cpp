@@ -305,6 +305,18 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 			if (!error.IsEmpty())
 				error << "\n";
 			error << Format("Around %.2f, angle %.2f", angleCalc, angle);
+			
+			dataangle << angle;
+			datagz << Null;
+			dataMoment << Null;
+			vol << Null;
+			disp << Null;
+			wett << Null;
+			wplane << Null;
+			draft << Null;
+			dcb << Null;
+			dcg << cg;
+			
 		} else {
 			Point3D cb = under.GetCenterOfBuoyancy();
 			Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);
