@@ -296,13 +296,13 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 		} else if (line == "Body Mass Matrix:") 
 			InMatrix(f, body.mass);
 		else if (line == "External Linear Damping Matrix:") 
-			InMatrix(f, body.linearDamping);
+			InMatrix(f, body.Dlin);
 		else if (line == "External Quadratic Damping Matrix:") 
-			InMatrix(f, body.quadraticDamping);	
+			InMatrix(f, body.Dquad);	
 		else if (line == "Hydrostatic Restoring Matrix:") 
-			InMatrix(f, body.hydrostaticRestoring);	
+			InMatrix(f, body.C);	
 		else if (line == "External Restoring Matrix:") 
-			InMatrix(f, body.externalRestoring);	
+			InMatrix(f, body.Cext);	
 	}
 	return true;
 }
@@ -470,10 +470,10 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 								FDS(b.cg[2], 15, true));
 
 	OutMatrix(out, "Body Mass Matrix", b.mass);
-	OutMatrix(out, "External Linear Damping Matrix", b.linearDamping);
-	OutMatrix(out, "External Quadratic Damping Matrix", b.quadraticDamping);
-	OutMatrix(out, "Hydrostatic Restoring Matrix", b.hydrostaticRestoring);
-	OutMatrix(out, "External Restoring Matrix", b.externalRestoring);
+	OutMatrix(out, "External Linear Damping Matrix", b.Dlin);
+	OutMatrix(out, "External Quadratic Damping Matrix", b.Dquad);
+	OutMatrix(out, "Hydrostatic Restoring Matrix", b.C);
+	OutMatrix(out, "External Restoring Matrix", b.Cext);
 }
 
 

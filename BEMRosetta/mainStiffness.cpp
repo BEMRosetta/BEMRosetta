@@ -251,7 +251,7 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ibody, const
 			data << hydro.M[ibody];
 		label.SetText(t_("Mass/Inertia matrix (dimensional)"));
 	} else if (what == Hydro::MAT_DAMP_LIN) {
-		if (!hydro.IsLoadedLinearDamping())
+		if (!hydro.IsLoadedDlin())
 			data << EigenNull;
 		else
 			data << hydro.Dlin_dim(ibody);

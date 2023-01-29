@@ -1852,8 +1852,8 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("RAO available"));		array.Set(row++, col, data.IsLoadedRAO()  ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Linear damping available"));		array.Set(row++, col, data.IsLoadedLinearDamping()   ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Mean Drift available"));array.Set(row++, col, data.IsLoadedMD() ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Linear damping available"));	array.Set(row++, col, data.IsLoadedDlin()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Mean Drift available"));		array.Set(row++, col, data.IsLoadedMD() 	? t_("Yes") : t_("No"));
 	
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, data.Nb);
 	for (int ib = 0; ib < data.Nb; ++ib) {
