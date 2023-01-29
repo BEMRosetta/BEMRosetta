@@ -36,7 +36,7 @@ bool Fast::Load(String file, Function <bool(String, int)> Status) {
 		if (!Wamit::Load(ForceExt(hydroFile, ".hst"), Status)) 
 			return false;
 		
-		hd().linearDamping = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
+		hd().Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
 		
 		if (hd().Nb > 1)
 			throw Exc(Format(t_("FAST does not support more than one body in file '%s'"), file));	

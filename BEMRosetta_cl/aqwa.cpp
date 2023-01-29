@@ -584,13 +584,13 @@ bool Aqwa::Load_LIS() {
 				}
 			}
 		} else if (line.Find("FREQUENCY INDEPENDENT DAMPING") >= 0) {
-			if (hd().linearDamping.size() == 0)
-				hd().linearDamping = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
+			if (hd().Dlin.size() == 0)
+				hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
 			in.GetLine(6);
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					hd().linearDamping(6*ib + idof, 6*ib + jdof) = f.GetDouble(jdof + 1)*massF;
+					hd().Dlin(6*ib + idof, 6*ib + jdof) = f.GetDouble(jdof + 1)*massF;
 				f.GetLine(); 
 			}
 		} else if (line.Find("W A V E - D R I F T   L O A D S ") >= 0) {
@@ -872,40 +872,59 @@ bool AQWACase::Load(String fileName) {
 				f.GetLine();
 				body.mass(0, 0) = body.mass(1, 1) = body.mass(2, 2) = f.GetDouble(2);
 			} else if (f.GetText(0) == "GEOM") {
-				f.GetLine();
-				body.mass(3, 3) = f.GetDouble(2);
-				body.mass(3, 4) = body.mass(4, 3) = f.GetDouble(3);
-				body.mass(3, 5) = body.mass(5, 3) = f.GetDouble(4);
-				body.mass(4, 4) = f.GetDouble(5);
-				body.mass(4, 5) = body.mass(5, 4) = f.GetDouble(6);
-				body.mass(5, 5) = f.GetDouble(7);
-			} else if (f.GetText(0) == "WFS1") {
-				for (int r = 0; r < 6; ++r) {
+				while (true) {
 					f.GetLine();
-					if (f.GetText(0) != "ASTF")		// Additional Hydrostatic Stiffness Matrix (normally due to mooring)
-						throw Exc("ASTF label expected");
-					if (f.GetInt(1) != r+1)
+					if (f.IsEof())
+						break;
+					if (f.size() == 1 && f.GetText(0) == "END")
+						break;
+					if (f.size() > 1 && f.GetText(0) == "1PMAS") {
+						body.mass(3, 3) = f.GetDouble(2);
+						body.mass(3, 4) = body.mass(4, 3) = f.GetDouble(3);
+						body.mass(3, 5) = body.mass(5, 3) = f.GetDouble(4);
+						body.mass(4, 4) = f.GetDouble(5);
+						body.mass(4, 5) = body.mass(5, 4) = f.GetDouble(6);
+						body.mass(5, 5) = f.GetDouble(7);
+					}
+				}
+			} else if (f.GetText(0) == "WFS1") {
+				const UVector<int> pos = {0, 10, 15, 20, 30, 40, 50, 60, 70, 80};
+				f.GetLineFields(pos);
+				for (int r = 0; r < 6; ++r) {
+					if (f.GetText(0) != "ASTF")		// Additional Hydrostatic Stiffness Matrix (sometimes due to mooring)
+						break;
+					if (f.GetInt(2) != r+1)
 						throw Exc(Format("Wrong row id '%s' in ASTF", f.GetText(1)));
 					for (int c = 0; c < 6; ++c) 
-						body.externalRestoring(r, c) = f.GetDouble(2+c);
+						body.Cadd(r, c) = f.GetDouble(3+c);
+					f.GetLineFields(pos);
 				}
 				for (int r = 0; r < 6; ++r) {
-					f.GetLine();
+					if (f.GetText(0) != "SSTF")		//  Additional Structural Stiffness Matrix (normally due to mooring)
+						break;
+					if (f.GetInt(2) != r+1)
+						throw Exc(Format("Wrong row id '%s' in SSTF", f.GetText(1)));
+					for (int c = 0; c < 6; ++c) 
+						body.Cext(r, c) = f.GetDouble(3+c);
+					f.GetLineFields(pos);
+				}
+				for (int r = 0; r < 6; ++r) {
 					if (f.GetText(0) != "FIDP")		// Frequency independent Damping Matrix
-						throw Exc("FIDP label expected");
-					if (f.GetInt(1) != r+1)
+						break;
+					if (f.GetInt(2) != r+1)
 						throw Exc(Format("Wrong row id '%s' in FIDP", f.GetText(1)));
 					for (int c = 0; c < 6; ++c) 
-						body.linearDamping(r, c) = f.GetDouble(2+c);
+						body.Dlin(r, c) = f.GetDouble(3+c);
+					f.GetLineFields(pos);
 				}
 				for (int r = 0; r < 6; ++r) {
-					f.GetLine();
 					if (f.GetText(0) != "FIAM")		// Frequency independent Added Mass Matrix
-						throw Exc("FIAM label expected");
-					if (f.GetInt(1) != r+1)
+						break;
+					if (f.GetInt(2) != r+1)
 						throw Exc(Format("Wrong row id '%s' in FIAM", f.GetText(1)));
 					for (int c = 0; c < 6; ++c) 
-						body.additionalAddedMass(r, c) = f.GetDouble(2+c);
+						body.Aadd(r, c) = f.GetDouble(3+c);
+					f.GetLineFields(pos);
 				}	
 			}
 		} else if (f.size() == 2) {

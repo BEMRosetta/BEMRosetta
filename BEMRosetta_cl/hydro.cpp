@@ -330,8 +330,8 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		CalcA(A0);
     if (IsLoadedAinf())
 		CalcA(Ainf);
-	if (IsLoadedLinearDamping())
-		CalcA(linearDamping);
+	if (IsLoadedDlin())
+		CalcA(Dlin);
 		    
     auto CalcF = [&](Forces &ex) {
     	UArray<MatrixXcd> exforce = clone(ex.force);

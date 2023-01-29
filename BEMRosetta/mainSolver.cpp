@@ -152,10 +152,11 @@ void MainSolver::Init(const BEM &bem) {
 		//bodies.ycm.Enable(!isNemoh);
 		//bodies.zcm.Enable(!isNemoh);
 		bodies.mass.Enable(!isNemoh);
-		bodies.linearDamping.Enable(!isNemoh);
-		bodies.quadraticDamping.Enable(!isNemoh);
-		bodies.hydrostaticRestoring.Enable(!isNemoh);
-		bodies.externalRestoring.Enable(!isNemoh);
+		bodies.Dlin.Enable(!isNemoh);
+		bodies.Dquad.Enable(!isNemoh);
+		bodies.C.Enable(!isNemoh);
+		bodies.Cext.Enable(!isNemoh);
+		bodies.Cadd.Enable(false);		// Not used for now
 	};
 	dropSolver.WhenAction();
 	
@@ -312,10 +313,11 @@ void MainSolver::Load(String file, const BEM &bem) {
 	bodies.ycm = b.cg[1];
 	bodies.zcm = b.cg[2];
 	MatrixXdToGridCtrl(bodies.mass, b.mass);
-	MatrixXdToGridCtrl(bodies.linearDamping, b.linearDamping);
-	MatrixXdToGridCtrl(bodies.quadraticDamping, b.quadraticDamping);
-	MatrixXdToGridCtrl(bodies.hydrostaticRestoring, b.hydrostaticRestoring);
-	MatrixXdToGridCtrl(bodies.externalRestoring, b.externalRestoring);
+	MatrixXdToGridCtrl(bodies.Dlin, b.Dlin);
+	MatrixXdToGridCtrl(bodies.Dquad, b.Dquad);
+	MatrixXdToGridCtrl(bodies.C, b.C);
+	MatrixXdToGridCtrl(bodies.Cext, b.Cext);
+	MatrixXdToGridCtrl(bodies.Cadd, b.Cadd);
 	
 	nemoh.g <<= data.g;
 	nemoh.rho <<= data.rho;
@@ -363,10 +365,11 @@ void MainSolver::InitArray(bool isNemoh) {
 	dropSolver.WhenAction();
 
 	InitGrid(bodies.mass, editMass);
-	InitGrid(bodies.linearDamping, editLinear);
-	InitGrid(bodies.quadraticDamping, editQuadratic);	
-	InitGrid(bodies.hydrostaticRestoring, editInternal);
-	InitGrid(bodies.externalRestoring, editExternal);
+	InitGrid(bodies.Dlin, editLinear);
+	InitGrid(bodies.Dquad, editQuadratic);	
+	InitGrid(bodies.C, editInternal);
+	InitGrid(bodies.Cext, editExternal);
+	InitGrid(bodies.Cadd, editAdd);
 }
 
 void MainSolver::InitGrid(GridCtrl &grid, EditDouble edit[]) {
@@ -412,10 +415,11 @@ bool MainSolver::Save(BEMCase &data, bool isNemoh) {
 			b.cg[1] = bodies.ycm;
 			b.cg[2] = bodies.zcm;
 			GridCtrlToMatrixXd(b.mass, bodies.mass);
-			GridCtrlToMatrixXd(b.linearDamping, bodies.linearDamping);
-			GridCtrlToMatrixXd(b.quadraticDamping, bodies.quadraticDamping);
-			GridCtrlToMatrixXd(b.hydrostaticRestoring, bodies.hydrostaticRestoring);
-			GridCtrlToMatrixXd(b.externalRestoring, bodies.externalRestoring);
+			GridCtrlToMatrixXd(b.Dlin, bodies.Dlin);
+			GridCtrlToMatrixXd(b.Dquad, bodies.Dquad);
+			GridCtrlToMatrixXd(b.C, bodies.C);
+			GridCtrlToMatrixXd(b.Cext, bodies.Cext);
+			GridCtrlToMatrixXd(b.Cadd, bodies.Cadd);
 		}
 	}
 		
