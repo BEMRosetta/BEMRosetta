@@ -239,7 +239,7 @@ void Hydro::Copy(const Hydro &hyd) {
     Ainf = clone(hyd.Ainf);
     A0 = clone(hyd.A0);
 	
-	linearDamping = clone(linearDamping);
+	Dlin = clone(Dlin);
 	
     B = clone(hyd.B);
     
@@ -1088,12 +1088,12 @@ MatrixXd Hydro::C_(bool ndim, int ib) const {
 
 MatrixXd Hydro::Dlin_dim(int ib) const {
 	MatrixXd ret;
-	if (!IsLoadedLinearDamping())
+	if (!IsLoadedDlin())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = linearDamping(ib*6 + idf, ib*6 + jdf);
+			ret(idf, jdf) = Dlin(ib*6 + idf, ib*6 + jdf);
 	return ret;
 }
 
@@ -1254,7 +1254,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("description", description)
 		("qtfsum", qtfsum)
 		("qtfdif", qtfdif)
-		("Dlin", linearDamping)
+		("Dlin", Dlin)
 	;
 	if(json.IsLoading()) {
 		code = static_cast<Hydro::BEM_FMT>(icode);
@@ -1852,10 +1852,12 @@ BEMBody::BEMBody() {
 	cg = Vector3d::Zero();
 	c0 = Vector3d::Zero();
 	mass.setConstant(6, 6, 0);
-	linearDamping.setConstant(6, 6, 0);
-	quadraticDamping.setConstant(6, 6, 0);
-	hydrostaticRestoring.setConstant(6, 6, 0);
-	externalRestoring.setConstant(6, 6, 0);
+	Dlin.setConstant(6, 6, 0);
+	Dquad.setConstant(6, 6, 0);
+	C.setConstant(6, 6, 0);
+	Cadd.setConstant(6, 6, 0);
+	Cext.setConstant(6, 6, 0);
+	Aadd.setConstant(6, 6, 0);
 }
 	
 int BEMBody::GetNDOF() const {

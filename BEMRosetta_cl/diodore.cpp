@@ -127,9 +127,9 @@ bool Diodore::Load_HDB() {
 			hd().M.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
 				hd().M[ib].setConstant(6, 6, 0);
-		    hd().moor.SetCount(hd().Nb);
+		    hd().Cmoor.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
-				hd().moor[ib].setConstant(6, 6, 0);
+				hd().Cmoor[ib].setConstant(6, 6, 0);
 		    hd().A.SetCount(6*hd().Nb);
 			hd().B.SetCount(6*hd().Nb);
 			for (int i = 0; i < 6*hd().Nb; ++i) {
@@ -140,7 +140,7 @@ bool Diodore::Load_HDB() {
 					hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
 				}
 			}
-			hd().linearDamping = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
+			hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
 			Hydro::InitMD(hd().md, hd().Nb, hd().Nh, hd().Nf);
 		} else if ((id = f.GetText().FindAfter("[STRUCTURE_")) > 0) {
 			ib = ScanInt(f.GetText().Mid(id));
@@ -174,7 +174,7 @@ bool Diodore::Load_HDB() {
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 
-					hd().moor[ib](r, c) = f.GetDouble(c);
+					hd().Cmoor[ib](r, c) = f.GetDouble(c);
 			}
 		} else if (f.GetText(0) == "[EXCITATION_FORCES_AND_MOMENTS]") {
 			hd().Initialize_Forces(hd().ex);

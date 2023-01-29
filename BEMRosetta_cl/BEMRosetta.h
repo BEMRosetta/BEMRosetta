@@ -124,7 +124,7 @@ public:
     MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 
-	MatrixXd linearDamping;			// (6*Nb, 6*Nb) 	Additional linear damping	ALWAYS DIMENSIONAL
+	MatrixXd Dlin;					// (6*Nb, 6*Nb) 	Additional linear damping	ALWAYS DIMENSIONAL
 
     UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     UVector<double> head;			// [Nh]             Wave headings (deg)
@@ -137,7 +137,7 @@ public:
     BEM_FMT code;        			// BEM_FMT			BEM code 
     UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
     
-    UArray<MatrixXd> moor;			// [Nb](6, 6)		Stiffness of the mooring system		ALWAYS DIMENSIONAL
+    UArray<MatrixXd> Cmoor;			// [Nb](6, 6)		Stiffness of the mooring system		ALWAYS DIMENSIONAL
     
     UArray<UArray<VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
     VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
@@ -461,7 +461,7 @@ public:
 	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return Ainf_w.size() > i && Ainf_w[i].size() > j && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
 	bool IsLoadedAinf  (int i = 0, int j = 0)const {return Ainf.rows() > i && Ainf.cols() > j && IsNum(Ainf(i, j));}
 	bool IsLoadedA0	   (int i = 0, int j = 0)const {return A0.rows() > i && A0.cols() > j && IsNum(A0(i, j));}
-	bool IsLoadedLinearDamping()  			 const {return linearDamping.size() > 0;}
+	bool IsLoadedDlin()  			 		 const {return Dlin.size() > 0;}
 	bool IsLoadedB	   (int i = 0, int j = 0)const {return B.size() > i && B[i].size() > j && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
 	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return C.size() > ib && C[ib].rows() > idf && C[ib].cols() > jdf && IsNum(C[ib](idf, jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return M.size() > ib && M[ib].rows() > idf && M[ib].cols() > jdf && IsNum(M[ib](idf, jdf));}
@@ -924,8 +924,8 @@ public:
 	BEMBody(const BEMBody &d, int) : meshFile(d.meshFile), lidFile(d.lidFile),
 			ndof(d.ndof), dof(clone(d.dof)), c0(clone(d.c0)), 
 			cg(clone(d.cg)), mass(clone(d.mass)), 
-			linearDamping(clone(d.linearDamping)), quadraticDamping(clone(d.quadraticDamping)), 
-			hydrostaticRestoring(clone(d.hydrostaticRestoring)), externalRestoring(clone(d.externalRestoring)), additionalAddedMass(clone(d.additionalAddedMass)) 
+			Dlin(clone(d.Dlin)), Dquad(clone(d.Dquad)), 
+			C(clone(d.C)), Cadd(clone(d.Cadd)), Cext(clone(d.Cext)), Aadd(clone(d.Aadd)) 
 			 {}
 	
 	String meshFile, lidFile;
@@ -933,7 +933,7 @@ public:
 	UVector<bool> dof;
 	Vector3d c0;	
 	Vector3d cg;
-	MatrixXd mass, linearDamping, quadraticDamping, hydrostaticRestoring, externalRestoring, additionalAddedMass;
+	MatrixXd mass, Dlin, Dquad, C, Cadd, Cext, Aadd;
 	
 	int GetNDOF() const;
 };

@@ -1074,11 +1074,11 @@ bool Wamit::Load_frc2(String fileName) {
 	if (idamp < 0 || idamp > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IDAMP %d"), idamp));
 	if (idamp == 1) {
-		hd().linearDamping.resize(6*Nb, 6*Nb);
+		hd().Dlin.resize(6*Nb, 6*Nb);
 		for (int r = 0; r < 6*Nb; ++r) {
 			f.GetLine();
 			for (int c = 0; c < 6*Nb; ++c) 
-				hd().linearDamping(r, c) = f.GetDouble(c);
+				hd().Dlin(r, c) = f.GetDouble(c);
 		}
 	}
 	return true;
@@ -1928,13 +1928,13 @@ void Wamit::Save_FRC(String fileName) {
 	} else 
 		out << "0 % IMASS\n";	
 
-	if (hd().IsLoadedLinearDamping()) {
+	if (hd().IsLoadedDlin()) {
 		out << "1 % IDAMP\n";
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				if (c > 0)
 					out << " ";
-				out << Format("%.2f", hd().linearDamping(r, c));
+				out << Format("%.2f", hd().Dlin(r, c));
 			}
 			out << "\n";
 		}

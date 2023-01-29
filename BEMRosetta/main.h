@@ -806,7 +806,7 @@ private:
 	void InitGrid(GridCtrl &grid, EditDouble edit[]);
 	void LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat);
 	
-	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6];
+	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
 	int dropSolverVal = 0;
 };
 

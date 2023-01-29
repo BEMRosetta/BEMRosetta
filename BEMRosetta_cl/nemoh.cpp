@@ -970,7 +970,7 @@ bool Nemoh::Load_Inertia(String subfolder) {
 }
 
 bool Nemoh::Load_LinearDamping(String subfolder) {
-	hd().linearDamping = MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
+	hd().Dlin = MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
 	
 	for (int ib = 0; ib < hd().Nb; ++ib) {
 	    String file;
@@ -982,7 +982,7 @@ bool Nemoh::Load_LinearDamping(String subfolder) {
 	    MatrixXd m;
 	    if (!Load_6x6(m, file))
 	        return false;
-	    hd().linearDamping.block<6,6>(ib*6, ib*6) = m;	        
+	    hd().Dlin.block<6,6>(ib*6, ib*6) = m;	        
 	}
 	return true;
 }	
