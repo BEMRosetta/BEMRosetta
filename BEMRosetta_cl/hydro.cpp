@@ -921,14 +921,14 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	
 	auto FillF = [&](Forces &ex) {
 	    for (int ih = 0; ih < Nh; ++ih) {
-	        MatrixXcd nm(nw.size(), 6*Nb);
+	        MatrixXcd nmn(nw.size(), 6*Nb);
 	    	for (int idof = 0; idof < 6*Nb; ++idof) {
 	    		VectorXcd nm;
 	    		const VectorXcd &m = ex.force[ih].col(idof);
 	    		GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);					
-				nm.col(idof) = nm;
+				nmn.col(idof) = nm;
 	    	}
-	    	ex.force[ih] = pick(nm);
+	    	ex.force[ih] = pick(nmn);
 	    }
     };	
 
@@ -991,6 +991,104 @@ void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
 		FillSumDif(qtfdif);
 	
 	qw = pick(nw);
+}
+
+void Hydro::FillFrequencyGapsABForcesZero() {
+	if (w.size() == 0)
+		return;
+
+	auto FillAB = [&](UArray<UArray<VectorXd>> &A) {
+		for (int idof = 0; idof < 6*Nb; ++idof) {
+			for (int jdof = 0; jdof < 6*Nb; ++jdof) {
+				VectorXd &a = A[idof][jdof];
+				if (a.size() == 0 || !IsNum(a(0)))
+					a = VectorXd::Zero(Nf);
+			}
+		}
+    };
+		
+	if (IsLoadedA())
+		FillAB(A);
+	if (IsLoadedAinf_w())
+		FillAB(Ainf_w);
+	if (IsLoadedB())
+		FillAB(B);
+
+	auto FillA = [&](MatrixXd &A) {
+		if (A.size() == 0)
+			A = MatrixXd::Zero(6*Nb, 6*Nb);
+		else 
+			A = A.unaryExpr([](double x){return IsNum(x) ? x : 0;});		// Replace NaN with 0
+    };
+		
+	if (IsLoadedAinf())
+		FillA(Ainf);
+	if (IsLoadedA0())
+		FillA(A0);
+	if (IsLoadedDlin())
+		FillA(Dlin);
+	
+	
+	auto FillF = [&](Forces &ex) {
+	    for (int ih = 0; ih < Nh; ++ih) {
+	        MatrixXcd nmn(Nf, 6*Nb);
+	    	for (int idof = 0; idof < 6*Nb; ++idof) {
+	    		const VectorXcd &m = ex.force[ih].col(idof);
+	    		if (!IsNum(m(0))) 
+	    			nmn.col(idof) = VectorXcd::Zero(Nf);
+	    		else 
+	    			nmn.col(idof) = m;
+	    	}
+	    	ex.force[ih] = pick(nmn);
+	    }
+    };	
+
+	if (IsLoadedFex())
+		FillF(ex);
+	if (IsLoadedFsc())
+		FillF(sc);
+	if (IsLoadedFfk())
+		FillF(fk);	
+	if (IsLoadedRAO())
+		FillF(rao);	
+	
+	auto FillMD = [&]() {
+		for (int ib = 0; ib < Nb; ++ib) {
+    		for (int ih = 0; ih < mdhead.size(); ++ih) {
+    			for (int idf = 0; idf < 6; ++idf) {
+    				if (md[ib][ih][idf].size() == 0 || !IsNum(md[ib][ih][idf][0]))
+						md[ib][ih][idf] = VectorXd::Zero(Nf);
+    			}
+    		}
+		}
+    };		
+	
+	if (IsLoadedMD())
+		FillMD();			
+}
+
+void Hydro::FillFrequencyGapsQTFZero() {
+	if (qw.size() == 0)
+		return;
+	
+	Eigen::Index nf = qw.size();
+	
+	auto FillSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+		for (int ib = 0; ib < Nb; ++ib) {
+	        for (int ih = 0; ih < qh.size(); ++ih) {
+				for (int idof = 0; idof < 6; ++idof) {
+					MatrixXcd &m = qtf[ib][ih][idof];
+					if (m.size() == 0 || !IsNum(m(0,0)))
+						m = MatrixXcd::Zero(nf, nf);
+				}
+	        }
+		}
+	};
+
+	if (IsLoadedQTF(true)) 
+		FillSumDif(qtfsum);
+	if (IsLoadedQTF(false)) 
+		FillSumDif(qtfdif);
 }
 
 void Hydro::CopyQTF_MD() {

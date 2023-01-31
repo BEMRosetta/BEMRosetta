@@ -528,6 +528,9 @@ public:
 	void FillFrequencyGapsABForces(bool zero, int maxFreq);
 	void FillFrequencyGapsQTF(bool zero, int maxFreq);
 	
+	void FillFrequencyGapsABForcesZero();
+	void FillFrequencyGapsQTFZero();
+	
 	void CopyQTF_MD();
 	
 	void Join(const UVector<Hydro *> &hydrosp);
@@ -835,6 +838,7 @@ public:
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
 	bool Load_frc2(String fileName);
+	void Save_4(String fileName, bool force_T = false);
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T);
@@ -863,7 +867,6 @@ protected:
 	void Save_1(String fileName, bool force_T = false);
 	void Save_3(String fileName, bool force_T = false);
 	void Save_hst(String fileName);
-	void Save_4(String fileName, bool force_T = false);
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
 	void Save_789(String fileName, bool force_T, bool force_Deg);
@@ -1197,6 +1200,9 @@ public:
 		
 	void FillFrequencyGapsABForces(int id, bool zero, int maxFreq);
 	void FillFrequencyGapsQTF(int id, bool zero, int maxFreq);
+	
+	void FillFrequencyGapsABForcesZero(int id);
+	void FillFrequencyGapsQTFZero(int id);
 	
 	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);

@@ -1505,6 +1505,14 @@ void BEM::FillFrequencyGapsQTF(int id, bool zero, int maxFreq) {
 	hydros[id].hd().FillFrequencyGapsQTF(zero, maxFreq);
 }
 
+void BEM::FillFrequencyGapsABForcesZero(int id) {
+	hydros[id].hd().FillFrequencyGapsABForcesZero();
+}
+
+void BEM::FillFrequencyGapsQTFZero(int id) {
+	hydros[id].hd().FillFrequencyGapsQTFZero();
+}
+
 void BEM::CopyQTF_MD(int id) {
 	hydros[id].hd().CopyQTF_MD();
 }
