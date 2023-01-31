@@ -77,6 +77,9 @@ void MainBEM::Init() {
 	menuProcess.butABForces << THISBACK(OnABForces);
 	menuProcess.butQTF << THISBACK(OnQTF);
 
+	menuProcess.butABForcesZero << THISBACK(OnABForcesZero);
+	menuProcess.butQTFZero << THISBACK(OnQTFZero);
+	
 	menuProcess.opFill.Tip(t_("Fills with zeroes or with interpolated values"));
 
 	auto DropDOF = [&](DropList &drop1, DropList &drop2)->bool {
@@ -290,7 +293,7 @@ void MainBEM::Init() {
 	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
-	menuTab.Add(menuProcess2.SizePos(), t_("Remove")).Disable();
+	menuTab.Add(menuProcess2.SizePos(), t_("Remove & Mult")).Disable();
 	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
 	
@@ -1377,6 +1380,60 @@ void MainBEM::OnQTF() {
 		WaitCursor wait;
 		
 		Bem().FillFrequencyGapsQTF(id, ~menuProcess.opFill == 0, ~menuProcess.maxFreq);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
+	
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
+void MainBEM::OnABForcesZero() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		WaitCursor wait;
+		
+		Bem().FillFrequencyGapsABForcesZero(id);
+				
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+		
+		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
+		
+		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+		mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));
+	
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
+}
+
+void MainBEM::OnQTFZero() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		WaitCursor wait;
+		
+		Bem().FillFrequencyGapsQTFZero(id);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
