@@ -1001,7 +1001,8 @@ bool Wamit::Load_pot(String fileName) {
  	hd().Nb = f.GetInt(0);
  	if (hd().Nb < 1 || hd().Nb > 100)
  		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %s"), f.GetText(0)));
-	hd().names.SetCount(hd().Nb);
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
 	hd().c0.resize(3, hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) {
 		f.GetLine();
@@ -1047,6 +1048,9 @@ bool Wamit::Load_frc2(String fileName) {
 	hd().Nb = Nb;
 	hd().cg.resize(3, Nb);
 	
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
+		
 	for (int ib = 0; ib < Nb; ++ib) {
 		hd().cg(0, ib) = f.GetDouble(0 + ib*Nb);
 		hd().cg(1, ib) = f.GetDouble(1 + ib*Nb);

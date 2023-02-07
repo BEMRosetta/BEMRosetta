@@ -1766,6 +1766,15 @@ String MainBEM::BEMFile(String fileFolder) const {
 void MainBEM::LoadDragDrop() {
 	GuiLock __;
 	
+	if (filesToDrop.size() == 1 && DirectoryExists(First(filesToDrop))) {	// If a folder is dropped, all the files are included
+		String folder = First(filesToDrop);
+		filesToDrop.Clear();
+		for (FindFile ff(AppendFileNameX(folder, "*.*")); ff; ff++) {
+			if (ff.IsFile())
+				filesToDrop << ff.GetPath();
+		}
+	}
+	
 	Sort(filesToDrop);
 	
 	UVector<int> sets(filesToDrop.size());

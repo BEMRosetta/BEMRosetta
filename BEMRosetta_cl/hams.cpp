@@ -493,7 +493,7 @@ void HamsCase::Save_Settings(String folderInput, bool thereIsLid, const BEM &bem
 		lid.mesh.AddWaterSurface(data.mesh, data.under, 'f'); 
 		lid.AfterLoad(rho, g, false, false);
 		
-		data.Join(lid.mesh, rho, g);
+		data.Append(lid.mesh, rho, g);
 	}
 	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
 	
