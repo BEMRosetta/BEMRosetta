@@ -796,8 +796,8 @@ void Hydro::DeleteFrequenciesQTF(const UVector<int> &idFreqQTF) {
 		        for (int ih = 0; ih < qh.size(); ++ih) 
 					for (int idf = 0; idf < 6; ++idf) {
 						MatrixXcd &m = qtf[ib][ih][idf];
-						m = MatrixXcd(m(all, ids));
-						m = MatrixXcd(m(ids, all));
+						m = MatrixXcd(m(indexing::all, ids));
+						m = MatrixXcd(m(ids, indexing::all));
 					}
 		};
 		if (IsLoadedQTF(true)) 

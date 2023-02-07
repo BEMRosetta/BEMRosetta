@@ -80,7 +80,8 @@ bool HealBEM::AreaOfInterest(
 	double Tcut = aoidx*0.2;		// The maximum value is taken from the strongly filtered series
 	VectorXd num, den;
 	ButterLowPass(3, 2*srate/Tcut, num, den);
-	Filtfilt(B, num, den, fB);
+	if (!Filtfilt(B, num, den, fB))
+		return false;
 	
 	aoidy = fB.maxCoeff(&idaoiyMx);	// Index of the maximum
 	
@@ -269,18 +270,18 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 	// Default values
 	fB = B;
 	fA = A;
-	done = true;
+	//done = true;
 	
 	// Filtered process, with irregular frequencies removal. 
 	
 	// 1. AreaOfInterest
 	if (!AreaOfInterest(0.01, 0.98, aoix0, aoidx, aoidy, idaoix0, idaoixMx, idaoiyMx)) 
-		done = false;
+		return false;
 	else {
 		double rangex = abs(w[0]-Last(w));
 		double rangey = abs(B.maxCoeff()-B.minCoeff());
 		if (aoidx < rangex/50 || aoidy < rangey/50)	// Ranges got are too small to be significant
-			done = false;
+			return false;
 		else {
 			// Removes spikes	
 			// Different ways
@@ -289,13 +290,15 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 				
 				VectorXd num, den;
 				ButterLowPass(3, 2*srate/Tcut, num, den);
-				Filtfilt(B, num, den, fB);
+				if (!Filtfilt(B, num, den, fB))
+					return false;
 			} else if (filterType == "localfitting") {// Just a filter
 				double Tcut = aoidx*0.08;				// Light filter
 				
 				VectorXd num, den;
 				ButterLowPass(3, 2*srate/Tcut, num, den);
-				Filtfilt(B, num, den, fB);
+				if (!Filtfilt(B, num, den, fB))
+					return false;
 				
 				VectorXd nw, nB;
 				CleanOutliers(w, B, fB, nw, nB, 0.4);	// Removed values +- 40 out of filtered B
@@ -409,20 +412,23 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 					VectorXd num, den;
 					double Tcutsoft = aoidx*0.1;
 					ButterLowPass(3, 2*srate/Tcutsoft, num, den);
-					Filtfilt(B, num, den, fB);
+					if (!Filtfilt(B, num, den, fB))
+						return false;
 					
 					double ratio = abs(fB.mean()/B.mean());
 					if (ratio > 2 || ratio < 0.5) {
 						Tcutsoft = aoidx*0.2;
 						ButterLowPass(3, 2*srate/Tcutsoft, num, den);
-						Filtfilt(B, num, den, fB);
+						if (!Filtfilt(B, num, den, fB))
+							return false;
 					}
 					
 					// f2B is a more strongly filtered version
 					VectorXd f2B;
 					double Tcuthard = aoidx*0.4;
 					ButterLowPass(3, 2*srate/Tcuthard, num, den);
-					Filtfilt(B, num, den, f2B);			
+					if (!Filtfilt(B, num, den, f2B))
+						return false;			
 					
 					for (int i = 0; i < fromScratch.size(); ++i) {	// For each scratch
 						int ifrom = max(0, fromScratch[i]-1);

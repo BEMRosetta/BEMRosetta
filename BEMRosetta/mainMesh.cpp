@@ -31,6 +31,7 @@ void MainMesh::Init() {
 		OnMenuProcessArraySel();
 		OnMenuAdvancedArraySel();
 		LoadSelTab(Bem());
+		UpdateButtons();
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
 		listLoaded.StdBar(menu);
@@ -70,8 +71,9 @@ void MainMesh::Init() {
 	menuPlot.showLimits.Tip(t_("Shows boundaris of the geometry")).WhenAction 	= [&] {mainView.gl.Refresh();};
 	menuPlot.showCb.Tip(t_("Shows the centre of buoyancy")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.showCg.Tip(t_("Shows the centre of gravity")).WhenAction  			= [&] {mainView.gl.Refresh();};
-	menuPlot.showCr.Tip(t_("Shows the centre of motion")).WhenAction  		= [&] {mainView.gl.Refresh();};
-	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.gl.Refresh();};	
+	menuPlot.showCr.Tip(t_("Shows the centre of motion")).WhenAction  		    = [&] {mainView.gl.Refresh();};
+	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.gl.Refresh();};
+	menuPlot.showCr.Tip(t_("Shows the lines")).WhenAction  						= [&] {mainView.gl.Refresh();};	
 	menuPlot.showUnderwater.Tip(t_("Shows nderwater mesh")).WhenAction  		= [&] {mainView.gl.Refresh();};
 	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.gl.View(true, true, true);};
 	menuPlot.butXoY.Tip(t_("Orients the camera through Z axis")).WhenAction  	= [&] {mainView.gl.View(true, true, false);};	
@@ -417,6 +419,8 @@ void MainMesh::InitSerialize(bool ret) {
 		menuPlot.showCb = true;
 	if (!ret || IsNull(menuPlot.showCr)) 
 		menuPlot.showCr = true;
+	if (!ret || IsNull(menuPlot.showLines)) 
+		menuPlot.showLines = true;
 	if (!ret || IsNull(menuPlot.showSel)) 
 		menuPlot.showSel = true;	
 	if (!ret || IsNull(menuPlot.lineThickness)) 
@@ -1390,6 +1394,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		menuPlot.showCg = Null;
 		menuPlot.showCb = Null;
 		menuPlot.showCr = Null;
+		menuPlot.showLines = Null;
 		menuPlot.showSel = Null;
 		menuOpen.optMeshType = Null;
 		menuMove.opZArchimede = Null;
@@ -1411,6 +1416,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuPlot_showCb", menuPlot.showCb)
 		("menuPlot_showCr", menuPlot.showCr)
 		("menuPlot_showSel", menuPlot.showSel)
+		("menuPlot_showLines", menuPlot.showLines)
 		("menuPlot_showUnderwater", menuPlot.showUnderwater)
 		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)
 		("menuPlot_backColor", menuPlot.backColor)
@@ -1689,6 +1695,9 @@ void MainView::OnPaint() {
 				gl.PaintDoubleAxis(mesh.c0, len*10, Cyan());
 				gl.PaintCube(mesh.c0, len/20, Gray());
 			}
+			if (~GetMenuPlot().showLines) 
+				gl.PaintLines(mesh.mesh.lines, color);
+			
 			if (paintSelect) {
 				if (~GetMenuPlot().showMesh) {
 					const UVector<int> &nod = mesh.mesh.GetSelNodes();

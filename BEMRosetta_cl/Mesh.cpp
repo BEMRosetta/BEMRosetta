@@ -48,7 +48,7 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 			return std::move(e);
 		}
 		SetCode(Mesh::MSH_TDYN);
-	} else if (ext == ".mesh") {
+	} else if (ext == ".mesh" || ext == ".bem") {
 		try {
 			LoadMesh(file, mesh, mass, cg);
 		} catch(Exc e) {
@@ -130,8 +130,8 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 		Surface::DetectTriBiP(surf.panels);
 	}
 	
-	if (surf.panels.IsEmpty())
-		throw Exc(t_("Model is empty. No panels found"));
+	if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
+		throw Exc(t_("Model is empty. No data found"));
 	
 	nNodes = surf.nodes.size();
 	nPanels = surf.panels.size();
@@ -170,8 +170,8 @@ void Mesh::Orient() {
 	mesh.Orient();
 }
 
-void Mesh::Join(const Surface &orig, double rho, double g) {
-	mesh.Join(orig);
+void Mesh::Append(const Surface &orig, double rho, double g) {
+	mesh.Append(orig);
 	
 	AfterLoad(rho, g, false, true);
 }
@@ -183,8 +183,11 @@ void Mesh::Reset(double rho, double g) {
 }
 	
 void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
-	if (mesh.IsEmpty())
+	if (mesh.IsEmpty()) {
+		if (!mesh.lines.IsEmpty())
+			mesh.GetEnvelope();
 		return;
+	}
 	if (!onlyCG) {
 		mesh.GetPanelParams();
 		mesh.GetEnvelope();
