@@ -1610,7 +1610,7 @@ void BEM::JoinMesh(int idDest, int idOrig) {
 	dest.fileName << "/" << orig.fileName;
 	
 	try {
-		dest.Join(orig.mesh, rho, g);
+		dest.Append(orig.mesh, rho, g);
 		RemoveMesh(idOrig);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
