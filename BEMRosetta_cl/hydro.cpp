@@ -103,9 +103,12 @@ VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const 
 
 	MatrixXd Aw0 = Aw.unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
 			 Bw0 = Bw.unaryExpr([](double x){return IsNum(x) ? x : 0;});
-		
-	VectorXcd RAO = Fwh.transpose()*(C - sqr(w)*(M + Aw0) + j*w*(Bw0 + D)).inverse();
-	return RAO;
+	
+	MatrixXcd m = C - sqr(w)*(M + Aw0) + j*w*(Bw0 + D);
+	if (!FullPivLU<MatrixXcd>(m).isInvertible())
+	   throw Exc(t_("Problem solving RAO"));
+	
+	return Fwh.transpose()*M.inverse();
 }
 	
 void Hydro::InitAinf_w() {
@@ -338,7 +341,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
     	
     	UVector<double> k(Nf);
     	for (int ifr = 0; ifr < Nf; ++ifr) 
-    		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g);
+    		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g_dim());
     	
 	    for (int ih = 0; ih < Nh; ++ih) {
 	        double angle = ToRad(head[ih]);
@@ -402,7 +405,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 						v4 += -zg*v0 + xg*v2;
 						v5 += -xg*v1 + yg*v0;
 
-						double k = SeaWaves::WaveNumber_w(qw[ifr1] - qw[ifr2], h, g);
+						double k = SeaWaves::WaveNumber_w(qw[ifr1] - qw[ifr2], h, g_dim());
 						double ph = k*factor;
 						for (int idf = 0; idf < 6; ++idf) 
 							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), -ph);

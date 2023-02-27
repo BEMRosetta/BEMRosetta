@@ -111,24 +111,26 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("               Nemoh.dat    # - Save in Nemoh .dat format");
 	Cout() << "\n" << t_("               HAMS.pnl     # - Save in HAMS  .pnl format");
 	Cout() << "\n" << t_("               STL.Text     # - Save in STL   text format");
-	Cout() << "\n" << t_("-t   -translate <x> <y> <z>       # Translate x, y, z [m]");
+	Cout() << "\n" << t_("-t   -translate <x> <y> <z>     # Translate x, y, z [m]");
 	Cout() << "\n" << t_("-rot -rotate    <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
-	Cout() << "\n" << t_("-cg             <x> <y> <z>       # Sets cg: x, y, z [m] cg is the centre of gravity");
-	Cout() << "\n" << t_("-c0             <x> <y> <z>       # Sets c0: x, y, z [m] c0 is the centre of motion");
-	Cout() << "\n" << t_("-mass           <value>     # Sets the body mass [kg]");
+	Cout() << "\n" << t_("-cg             <x> <y> <z>     # Sets cg: x, y, z [m] cg is the centre of gravity");
+	Cout() << "\n" << t_("-c0             <x> <y> <z>     # Sets c0: x, y, z [m] c0 is the centre of motion");
+	Cout() << "\n" << t_("-mass           <value>         # Sets the body mass [kg]");
 	
-	Cout() << "\n" << t_("-getwaterplane        # Extract in new model the waterplane mesh (lid)");
-	Cout() << "\n" << t_("-gethull              # Extract in new model the mesh underwater hull");
+	Cout() << "\n" << t_("-getwaterplane                  # Extract in new model the waterplane mesh (lid)");
+	Cout() << "\n" << t_("-gethull                        # Extract in new model the mesh underwater hull");
 	
-	Cout() << "\n" << t_("-setid <id>           # Set the id of the default mesh model");
-	Cout() << "\n" << t_("-reset                # Restore the mesh to the initial situation");
-	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
-	Cout() << "\n" << t_("-p  -print <params>   # Prints model data in a row");
+	Cout() << "\n" << t_("-setid <id>                     # Set the id of the default mesh model");
+	Cout() << "\n" << t_("-reset                          # Restore the mesh to the initial situation");
+	Cout() << "\n" << t_("-r  -report                     # Output last loaded model data");
+	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
 	Cout() << "\n" << t_("     <params> volume            # volx voly volx [m3]");
 	Cout() << "\n" << t_("              underwatervolume  # volx voly volx [m3]");
 	Cout() << "\n" << t_("              surface           # [m2]");
 	Cout() << "\n" << t_("              underwatersurface # [m2]");
 	Cout() << "\n" << t_("              cb                # cbx cby cbz [m]");
+	Cout() << "\n" << t_("              cg_vol            # cgx cgy cgz [m]");
+	Cout() << "\n" << t_("              cg_surf           # cgx cgy cgz [m]");
 	Cout() << "\n" << t_("              hydrostiffness    # Hydrostatic stiffness around the rotation centre");
 	Cout() << "\n" << t_("                                # returns K(3,3) [N/m]");
 	Cout() << "\n" << t_("                                #         K(3,4) K(3,5) K(4,3) [N/rad]");
@@ -138,7 +140,9 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("              hydrostatic_force # Hydrostatic force around the motion centre");
 	Cout() << "\n" << t_("                                # returns Fx, Fy, Fz [N]");
 	Cout() << "\n" << t_("                                #         Mx(roll), My(pitch), Mz(yaw) [N·m]");
-	Cout() << "\n" << t_("              inertia <cx> <cy> <cz> # Inertia tensor around cx, cy, cz [m]");
+	Cout() << "\n" << t_("              inertia      <cx> <cy> <cz>");
+	Cout() << "\n" << t_("              inertia_vol  <cx> <cy> <cz> # Inertia tensor around cx, cy, cz [m], considering the mass spread in the volume");
+	Cout() << "\n" << t_("              inertia_surf <cx> <cy> <cz> # Inertia tensor around cx, cy, cz [m], considering the mass spread in the surface");
 	Cout() << "\n" << t_("                                # returns Ixx Ixy Ixz Iyx Iyy Iyz Izx Izy Izz [m2]");
 	Cout() << "\n" << t_("              GZ <angle> <from> <to> <delta> # GZ around angle [deg] (0 is around Y axis), from-to-delta [deg]");
 	Cout() << "\n" << t_("                                # returns the set of angles [deg] and their gz values [m]");
@@ -154,6 +158,9 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
 	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
+	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads");
+	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
+	Cout() << "\n" << t_("              numthread         # Number of threads");
 #endif
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -163,11 +170,15 @@ void ShowHelp(BEM &md) {
 
 static bool NoPrint(String, int) {return true;}
 
-Function<bool(String)> Orca::WhenWave = [](String str)->bool {
-	BEM::Print("\n" + str); 
+Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int perc, const Time &et)->bool {
+	if (IsNull(et))
+		BEM::Print("\nCompleted 0%"); 
+	else
+		BEM::Print(Format("\nCompleted %d%%. Et: %", perc, et)); 
 	return 0;
 };
 
+Time Orca::startCalc = Null;
 
 bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
 	UVector<String> command = clone(_command);
@@ -585,7 +596,19 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								} else if (param == "cb") {
 									Cout() << "\n";
 									BEM::Print(t_("CB:") + S(" ")); 
-									lastPrint = Format("%f %f %f", data.cb.x,data.cb.y, data.cb.z);
+									lastPrint = Format("%f %f %f", data.cb.x, data.cb.y, data.cb.z);
+									Cout() << lastPrint;
+								} else if (param == "cg_vol") {
+									Cout() << "\n";
+									BEM::Print(t_("CG_vol:") + S(" ")); 
+									Point3D cg = data.mesh.GetCentreOfBuoyancy();
+									lastPrint = Format("%f %f %f", cg.x, cg.y, cg.z);
+									Cout() << lastPrint;
+								} else if (param == "cg_surf") {
+									Cout() << "\n";
+									BEM::Print(t_("CG_surf:") + S(" ")); 
+									Point3D cg = data.mesh.GetCentreOfGravity_Surface();
+									lastPrint = Format("%f %f %f", cg.x, cg.y, cg.z);
 									Cout() << lastPrint;
 								} else if (param == "hydrostiffness") {
 									Cout() << "\n";
@@ -616,7 +639,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									else if (idColor == -2)
 										lastPrint << ". " << t_("Mesh error: Probably incomplete");
 									Cout() << lastPrint;
-								} else if (param == "inertia") {
+								} else if (param.StartsWith("inertia")) {
 									Cout() << "\n";
 									BEM::Print(t_("Inertia:") + S(" "));
 									lastPrint.Clear();
@@ -628,7 +651,10 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									centre.y = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Inertia cz");
 									centre.z = ScanDouble(command[i]);
-									data.mesh.GetInertia33(inertia, centre, true);
+									if (param == "inertia" || param == "inertia_vol")
+										data.mesh.GetInertia33_Volume(inertia, centre, true);
+									else // if (param == "inertia_surf")
+										data.mesh.GetInertia33_Surface(inertia, centre, true);
 									for (int i = 0; i < 3; ++i) 
 										for (int j = 0; j < 3; ++j) 
 											lastPrint << inertia(i, j) << " ";
@@ -637,7 +663,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									Cout() << "\n";
 									BEM::Print(t_("GZ:") + S(" "));
 									lastPrint.Clear();
-									Eigen::Matrix3d inertia;
+									
 									CheckIfAvailableArg(command, ++i, "Angle");
 									double angle = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "From");
@@ -701,9 +727,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							orca.Init(file);
 							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), file));
 						} else if (param == "-rw" || param == "-runwave") {
-							if (!orca.IsLoaded()) 
-								throw Exc(t_("Orca .dll is not loaded"));
-							
 							CheckIfAvailableArg(command, ++i, "-runwave from");
 							String from = command[i];
 							CheckIfAvailableArg(command, ++i, "-runwave to");
@@ -714,7 +737,27 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							orca.SaveWaveResults(to);							
 							
 							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
-						}
+						} else if (param == "-numthread") {
+							CheckIfAvailableArg(command, ++i, "-numthread num");
+							int numth = ScanInt(command[i]);
+							if (IsNull(numth))
+								throw Exc(Format(t_("Invalid thread number %s"), command[i]));							
+
+							orca.SetThreadCount(numth);
+							
+							BEM::Print("\n" + Format(t_("Thread number set to %d"), numth));
+						} else if (param == "-p" || param == "-print") {
+							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
+								i++;
+								String param = ToLower(command[i]);
+								if (param == "numthread") {
+									int numth = orca.GetThreadCount();
+									BEM::Print("\n" + Format("%d", numth));
+								} else
+									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
+							}
+						} else 
+							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 					}
 #endif
 				}

@@ -65,10 +65,10 @@ bool Diodore::Load_HDB() {
 					ismod = false;
 					idh = ScanInt(str.Mid(3));
 				} else
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong text in %s"), ib, f.GetText()));
+					throw Exc(in.Str() + "\n"  + Format(t_("Wrong text in %s"), f.GetText()));
 					
 				if (IsNull(idh) || idh < 1 || idh > hd().Nh)
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong force id in %s"), ib, f.GetText()));
+					throw Exc(in.Str() + "\n"  + Format(t_("Wrong force id in %s"), f.GetText()));
 		
 				idh--;
 				
@@ -197,7 +197,7 @@ bool Diodore::Load_HDB() {
 					int idh = ScanInt(str);
 	
 					if (IsNull(idh) || idh < 1 || idh > hd().Nh)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong force id in %s"), ib, f.GetText()));
+						throw Exc(in.Str() + "\n"  + Format(t_("Wrong force id in %s"), f.GetText()));
 			
 					idh--;
 				
@@ -216,7 +216,7 @@ bool Diodore::Load_HDB() {
 					int idrow = ScanInt(str);
 			
 					if (IsNull(idrow) || idrow < 1 || idrow > 6)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong row id in %s"), ib, f.GetText()));
+						throw Exc(in.Str() + "\n"  + Format(t_("Wrong row id in %s"), f.GetText()));
 			
 					idrow--;
 			
@@ -230,7 +230,7 @@ bool Diodore::Load_HDB() {
 					int idrow = ScanInt(str);
 			
 					if (IsNull(idrow) || idrow < 1 || idrow > 6)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong row id in %s"), ib, f.GetText()));
+						throw Exc(in.Str() + "\n"  + Format(t_("Wrong row id in %s"), f.GetText()));
 			
 					idrow--;
 			

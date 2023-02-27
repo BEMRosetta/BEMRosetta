@@ -35,6 +35,7 @@ file
 	fastUtils.cpp,
 	hydrodyn.dat,
 	aqwa.cpp,
+	orcawave.cpp,
 	diodore.cpp,
 	deeplineswind.cpp,
 	FastOut.cpp,

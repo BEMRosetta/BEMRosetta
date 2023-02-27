@@ -1149,9 +1149,12 @@ void MainBEM::OnOgilvie() {
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
 		
 		if (vidof.size() > 0) {
-			str = "The degrees of freedom healed are:";
-			for (int i = 0; i < vidof.size(); ++i) 
-				str << Format("\n- %d, %d", vidof[i]+1, vjdof[i]+1);
+			str = "The degrees of freedom healed are:\n";
+			for (int i = 0; i < vidof.size(); ++i) {
+				str << Format("[%d, %d] ", vidof[i]+1, vjdof[i]+1);
+				if (i > 0 && vidof[i-1] != vidof[i])
+					str << "\n";
+			}
 		} else
 			str = "No degrees of freedom has been healed";
 	} catch (Exc e) {
@@ -1785,8 +1788,8 @@ void MainBEM::LoadDragDrop() {
 		for (int j = 0; j < i; ++j) {
 			if (sets[i] >= 0 && 
 				sets[i] == sets[j] && 
-				GetFileFolder(filesToDrop[i]) == GetFileFolder(filesToDrop[j]) && 
-				GetFileTitle(filesToDrop[i]) == GetFileTitle(filesToDrop[j])) {		// Removes files that are loaded in a set, like .lis .qtf, or .1 .3 .hst
+				ToLower(GetFileFolder(filesToDrop[i])) == ToLower(GetFileFolder(filesToDrop[j])) && 
+				ToLower(GetFileTitle (filesToDrop[i])) == ToLower(GetFileTitle (filesToDrop[j]))) {		// Removes files that are loaded in a set, like .lis .qtf, or .1 .3 .hst
 				filesToDrop.Remove(i);
 				break;
 			}

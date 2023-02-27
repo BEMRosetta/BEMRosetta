@@ -55,7 +55,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 			mesh.AfterLoad(rho, g, false, false);
 			
 			stiff = clone(mesh.C);
-			cb = mesh.under.GetCenterOfBuoyancy();
+			cb = mesh.under.GetCentreOfBuoyancy();
 			Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
 			forceb = forceb0.ToVector();		
 		}
@@ -165,7 +165,7 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 	Force6D f6;
 	
 	if (calculation == Simulation::NONE)
-		f6.Reset();
+		f6.Zero();
 	else if (calculation == Simulation::STATIC)
 		f6 = CalcStiff_Static(pos);
 	else if (calculation == Simulation::DYN_STATIC)
@@ -177,7 +177,7 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 
 	if (output.ptfmCBx >= 0 || output.ptfmCBy >= 0 || output.ptfmCBz >= 0) {
 		if (calculation != Simulation::STATIC)
-			cb = mesh.under.GetCenterOfBuoyancy();
+			cb = mesh.under.GetCentreOfBuoyancy();
 	}
 	if (output.ptfmVol >= 0) {
 		if (calculation != Simulation::STATIC)
@@ -252,7 +252,7 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 	
 Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, const float *acc) {
 	Force6D f6;
-	f6.Reset();
+	f6.Zero();
 	
 	Affine3d aff;
 	GetTransform(aff, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], mesh.c0.x, mesh.c0.y, mesh.c0.z);

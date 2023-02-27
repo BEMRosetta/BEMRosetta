@@ -1761,7 +1761,7 @@ void MainMesh::LoadDragDrop() {
 	
 	Sort(filesToDrop);
 	for (int i = filesToDrop.size()-1; i > 0; --i)
-		if (GetFileTitle(filesToDrop[i]) == GetFileTitle(filesToDrop[i-1]))
+		if (ToLower(GetFileTitle(filesToDrop[i])) == ToLower(GetFileTitle(filesToDrop[i-1])))
 			filesToDrop.Remove(i);
 		
 	bool followWithErrors = false;

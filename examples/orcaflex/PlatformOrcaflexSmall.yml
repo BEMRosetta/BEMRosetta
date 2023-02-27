@@ -1,10 +1,8 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2c
-# File: C:\Desarrollo\BEMRosetta\examples\orcaflex\PlatformOrcaflexSmall.yml
+# File: C:\BEMRosetta\examples\orcaflex\PlatformOrcaflexSmall.yml
 # Created: 17:23 on 31/12/2022
-# User: 0203853
-# Machine: CPU14650
 ---
 General:
   # Units
