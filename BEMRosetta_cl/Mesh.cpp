@@ -50,7 +50,7 @@ String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z
 		SetCode(Mesh::MSH_TDYN);
 	} else if (ext == ".mesh" || ext == ".bem") {
 		try {
-			LoadMesh(file, mesh, mass, cg);
+			mesh.Load(file);
 		} catch(Exc e) {
 			return std::move(e);
 		}
@@ -151,7 +151,7 @@ void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool
 	else if (type == STL_TXT)		
 		SaveStlTxt(file, surf, 1000);
 	else if (type == BEM_MESH)		
-		SaveMesh(file, surf, mass, cg);
+		surf.Save(file);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
@@ -208,7 +208,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		
 		if (IsNull(mass))
 			mass = under.volume*rho;
-		cb = under.GetCenterOfBuoyancy();
+		cb = under.GetCentreOfBuoyancy();
 	}
 	if (isFirstTime) {
 		mesh0 = clone(mesh);
@@ -321,7 +321,7 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 			dcg << cg;
 			
 		} else {
-			Point3D cb = under.GetCenterOfBuoyancy();
+			Point3D cb = under.GetCentreOfBuoyancy();
 			Force6D fcb = under.GetHydrostaticForceCB(c0, cb, rho, g);
 			//base.GetPanelParams();	
 			//Force6D fcb = base.GetHydrodynamicForce(c0, true, 

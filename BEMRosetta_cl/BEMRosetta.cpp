@@ -965,7 +965,13 @@ void Hydro::StateSpace::GetTFS(const UVector<double> &w) {
 	TFS.SetCount(w.size());
 	for (int ifr = 0; ifr < w.size(); ++ifr) {
 		std::complex<double> wi = std::complex<double>(0, w[ifr]);
-		TFS[ifr] = (C_ss.transpose()*(MatrixXd::Identity(sz, sz)*wi - A_ss).inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
+		
+		MatrixXcd Iwi_A = MatrixXd::Identity(sz, sz)*wi - A_ss;
+		
+		if (FullPivLU<MatrixXcd>(Iwi_A).isInvertible())
+			TFS[ifr] = (C_ss.transpose()*Iwi_A.inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
+		else
+			TFS[ifr] = Null;
 	}		
 }
 
@@ -1278,6 +1284,9 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 				throw Exc(Format(t_("Model '%s' is already loaded"), file));
 		}
 	}
+	SystemSignature sys;
+	sys.Load();
+		
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".cal" || ext == ".tec") {
 		Nemoh &data = hydros.Create<Nemoh>(*this);
@@ -1331,6 +1340,13 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		}
 	} else if (ext == ".hdb") {
 		Diodore &data = hydros.Create<Diodore>(*this);
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.size()-1);
+			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+	} else if (ext == ".yml") {
+		OrcaWave &data = hydros.Create<OrcaWave>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
@@ -1652,7 +1668,7 @@ void BEM::AddFlatPanel(double x, double y, double z, double size, double panWidt
 		Mesh &surf = surfs.Add();
 
 		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddFlatPanel(panWidth, panHeight, size); 
+		surf.mesh.AddFlatRectangle(panWidth, panHeight, size); 
 		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);

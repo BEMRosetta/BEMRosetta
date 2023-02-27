@@ -270,7 +270,7 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 	// Default values
 	fB = B;
 	fA = A;
-	//done = true;
+	done = true;
 	
 	// Filtered process, with irregular frequencies removal. 
 	
@@ -544,10 +544,9 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool hask
 	GetKirf(fKirf, Tirf, w, fB);
 	GetAinf_w(fAinf, fKirf, Tirf, w, A);
 	
-	if (toA > fromA) {
-		VectorXd tmp = fAinf.segment(fromA, toA-fromA);
-		fainf = tmp.mean();		// New clean Ainf
-	} else
+	if (toA > fromA) 
+		fainf = fAinf.segment(fromA, toA-fromA).mean();		// New clean Ainf
+	else
 		fainf = Ainf;
 
 	double dt = maxT/(numT-1);

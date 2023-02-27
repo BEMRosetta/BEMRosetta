@@ -25,7 +25,7 @@ void MainPlot::Init(bool vert) {
 			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 		scatt.LinkedWith(scatP);
 		
-		compare.Init(scatt);
+		compare.Init(scatt, splitCompare);
 		splitCompare.Horz(scatt.SizePos(), compare.SizePos());
 		splitCompare.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
 		if (vert)

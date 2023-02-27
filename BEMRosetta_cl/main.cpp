@@ -49,7 +49,7 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, double,	   DLL_FAST_GetTimeEnd, ());
 		DLLFunction(dll, double, 	   DLL_FAST_GetTime, (int idtime));		
 		DLLFunction(dll, double, 	   DLL_FAST_GetData, (int idtime, int idparam));
-		DLLFunction(dll, double, 	   DLL_FAST_GetAvg, (const char *));
+		DLLFunction(dll, double, 	   DLL_FAST_GetAvg,   (int idparam, int idbegin, int idend));
 		DLLFunction(dll, double, 	   DLL_FAST_GetArray, (int idparam, int idbegin, int idend, double **, int *));
 		
 		DLLFunction(dll, double, 	   DemoVectorPy_C, (const double *, int));
@@ -128,7 +128,7 @@ CONSOLE_APP_MAIN
 		}
 		Cout() << "\nptfmheave_avg = " << avg/DLL_FAST_GetLen();
 		Cout() << "\nptfmheave_avg = " << avgv/DLL_FAST_GetLen();
-		Cout() << "\nptfmheave_avg = " << DLL_FAST_GetAvg("ptfmheave");
+		Cout() << "\nptfmheave_avg = " << DLL_FAST_GetAvg(idptfmheave, -1, -1);
 		
 		Cout() << "\n\nLoading InflowWind .dat file";
 		String datfile = AppendFileNameX(bemFolder, "examples/fast.out/InflowWind.dat");
@@ -332,7 +332,7 @@ static void DLL_FAST_GetData(int idparam, int idbegin, int idend, VectorXd &data
 	if (idbegin > idend) 
 		throw Exc("idbegin > idend");
 		
-	data = DLL_Fastout().GetVector(idparam).segment(idbegin, idend - idbegin);
+	data = DLL_Fastout().GetVector(idparam).segment(idbegin, idend - idbegin + 1);
 }
 
 int DLL_FAST_GetArray(int idparam, int idbegin, int idend, double **data, int *num) noexcept {
@@ -341,7 +341,7 @@ int DLL_FAST_GetArray(int idparam, int idbegin, int idend, double **data, int *n
 	try {
 		DLL_FAST_GetData(idparam, idbegin, idend, v);
 		
-		*num = v.size();
+		*num = int(v.size());
 		*data = v.data();
 		return 1;
 	} catch (Exc e) {
