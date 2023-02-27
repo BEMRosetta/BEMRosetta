@@ -71,7 +71,7 @@ String NemohMesh::LoadDatFS(String fileName, bool &x0z) {
 			int id0 = f.GetInt(0);	
 			if (id0 == 0)
 				break;
-			Segment &seg = mesh.segments.Add();
+			LineSegment &seg = mesh.segments.Add();
 			seg.inode0 = id0-1;
 			seg.inode1 = f.GetInt(1)-1;	
 		}	
@@ -167,13 +167,15 @@ void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z, int &npa
 	MatrixXd cg_(3, 1), cb_(3, 1);
 	UVector<double> Vo;
 	
-	cg_(0, 0) = cg.x;		//Supposed 1 body
-	cg_(1, 0) = cg.y;		
-	cg_(2, 0) = cg.z;		
-	cb_(0, 0) = cb.x;		//Supposed 1 body
-	cb_(1, 0) = cb.y;		
-	cb_(2, 0) = cb.z;	
-	Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo);
+	if (!IsNull(cg) && !IsNull(cb)) {
+		cg_(0, 0) = cg.x;		//Supposed 1 body
+		cg_(1, 0) = cg.y;		
+		cg_(2, 0) = cg.z;		
+		cb_(0, 0) = cb.x;		//Supposed 1 body
+		cb_(1, 0) = cb.y;		
+		cb_(2, 0) = cb.z;	
+		Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo);
+	}
 }
 
 void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) const {

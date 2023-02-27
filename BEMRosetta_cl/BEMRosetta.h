@@ -24,10 +24,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   	   UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   false,		true,			   true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   	   "*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", "By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   false,		true,			   false,	   true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.*"};       
 	
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -67,6 +67,7 @@ public:
 		case FOAMM:			return t_("FOAMM");
 		case BEMROSETTA:	return t_("BEMRosetta");
 		case DIODORE:		return t_("Diodore");
+		case ORCAWAVE:		return t_("OrcaWave");
 		case UNKNOWN:		return t_("Unknown");
 		}
 		return t_("Unknown");
@@ -85,6 +86,7 @@ public:
 		case FOAMM:			return t_("FMM");
 		case BEMROSETTA:	return t_("BMR");
 		case DIODORE:		return t_("DIO");
+		case ORCAWAVE:		return t_("ORC");
 		case UNKNOWN:		return t_("¿?");
 		}
 		return t_("Unknown");
@@ -352,8 +354,10 @@ public:
 	VectorXd Kirf_ndim(int idf, int jdf) 	 		  const {return !dimen ? Kirf[idf][jdf]     : Kirf[idf][jdf]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
-	double Ainf_w_dim(int ifr, int idf, int jdf) 		const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Ainf_w_ndim(int ifr, int idf, int jdf) 		const {return !dimen ? Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainf_w_dim(int ifr, int idf, int jdf) 	const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	VectorXd Ainf_w_dim(int idf, int jdf)			const {return dimen  ? Ainf_w[idf][jdf]    *(rho_dim()/rho_ndim()) : Ainf_w[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainf_w_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	VectorXd Ainf_w_ndim(int idf, int jdf)			const {return !dimen ? Ainf_w[idf][jdf]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
 	double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
@@ -1113,6 +1117,15 @@ private:
 	bool Load_HDB();
 };
 
+class OrcaWave : public HydroClass {
+public:
+	OrcaWave(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	bool Load(String file, double rho = Null);
+	virtual ~OrcaWave() noexcept {}	
+	
+private:
+	bool Load_YML();
+};
 
 UVector<int> NumSets(int num, int numsets);	
 

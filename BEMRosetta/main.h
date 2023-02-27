@@ -92,13 +92,15 @@ String TabText(const TabCtrl &tab);
 
 class CompareParameters : public WithCompareParameters<StaticRect> {
 public:
-	void Init(ScatterDraw& scatter);
+	void Init(ScatterDraw& scatter, SplitterButton &psplitter);
 	void Init(Hydro::DataToShow data);
 	void Load();
 	
 private:
 	ScatterDraw *pscatter = nullptr;
+	SplitterButton *psplitter = nullptr;
 	Hydro::DataToShow dataToShow;
+	static UVector<CompareParameters *> plist;
 };
 
 
