@@ -16,7 +16,8 @@ using namespace Upp;
 #include "main.h"
 
 
-void QTFTabDof::Init(int posSplitter, int idf) {
+void QTFTabDof::Init(int posSplitter, int idof) {
+	this->idof = idof;
 	Add(splitter);
 	splitter.Horz(leftsplit.SizePos(), rightsplit.SizePos());
 	splitter.SetPos(posSplitter, 0);
@@ -39,8 +40,8 @@ void QTFTabDof::Init(int posSplitter, int idf) {
 	up  .surf.WhenDraw    = THISBACK(OnDraw);
 	down.surf.WhenDraw    = THISBACK(OnDraw);
 	
-	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, idf, action);};
-	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, idf, action);};
+	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, this->idof, action);};
+	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, this->idof, action);};
 	
 	up.isUp = true;
 	down.isUp = false;
