@@ -401,14 +401,14 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 							 				 &v4 = qtf[ib][ih][4](ifr1, ifr2),
 							 				 &v5 = qtf[ib][ih][5](ifr1, ifr2);
 						
+						double k = SeaWaves::WaveNumber_w(qw[ifr2], h, g_dim()) + sign*SeaWaves::WaveNumber_w(qw[ifr1], h, g_dim());
+						double ph = k*factor;
+						for (int idf = 0; idf < 6; ++idf) 
+							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), ph);
+						
 						v3 += -yg*v2 + zg*v1;
 						v4 += -zg*v0 + xg*v2;
 						v5 += -xg*v1 + yg*v0;
-
-						double k = SeaWaves::WaveNumber_w(qw[ifr1] - qw[ifr2], h, g_dim());
-						double ph = k*factor;
-						for (int idf = 0; idf < 6; ++idf) 
-							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), -ph);
 					}
 				}
 	        }

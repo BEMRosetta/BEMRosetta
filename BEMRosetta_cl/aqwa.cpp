@@ -751,7 +751,7 @@ bool Aqwa::Load_QTF() {
 			
         f.Load(in.GetLine());
         for (int idf = 0; idf < 6; ++idf)
-            hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(idf));
+            hd().qtfdif[ib][ih][idf](ifr1, ifr2).imag(-f.GetDouble(idf));	// Negative to follow Wamit
         
 		f.Load(in.GetLine());
         for (int idf = 0; idf < 6; ++idf)
@@ -759,7 +759,7 @@ bool Aqwa::Load_QTF() {
         
         f.Load(in.GetLine());
         for (int idf = 0; idf < 6; ++idf)
-            hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(idf));
+            hd().qtfsum[ib][ih][idf](ifr1, ifr2).imag(-f.GetDouble(idf));
 	}
 	
 	return true;
