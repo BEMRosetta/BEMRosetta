@@ -473,15 +473,15 @@ void MainMesh::OnOpt() {
 	}
 }
 
-void MainMesh::AfterAdd(String file) {
-	int id = Bem().surfs.size() - 1;
-	Mesh &surf = Bem().surfs[id];
-		
+void MainMesh::AfterAdd(String file, int num) {
 	mainTab.Set(mainView);
-	
-	surf.Report(Bem().rho);
-	
-	AddRow(surf);
+	for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
+		Mesh &surf = Bem().surfs[id];
+		
+		surf.Report(Bem().rho);
+		
+		AddRow(surf);
+	}
 
 	mainView.CalcEnvelope();
 	
@@ -512,25 +512,27 @@ bool MainMesh::OnLoad() {
 		
 		WaitCursor waitcursor;
 
-		Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();}, ~menuOpen.opClean, false);
+		int num = Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();}, ~menuOpen.opClean, false);
 		
-		int id = Bem().surfs.size()-1;
-		Mesh &data = Bem().surfs[id];
-		
-		if (!data.mesh.IsEmpty() && ~menuMove.opZArchimede) {
-			double dz = 0.1;
-			Surface under;
-			if (data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under)) {
-				data.cg.Translate(0, 0, dz);
-				videoCtrl.AddReg(Point3D(0, 0, dz));
-			} else
-				Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
+		//int id = Bem().surfs.size()-1;
+		for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
+			Mesh &data = Bem().surfs[id];
 			
-			ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
-		} else
-			ma().Status(Format(t_("Loaded '%s'"), file));			
+			if (!data.mesh.IsEmpty() && ~menuMove.opZArchimede) {
+				double dz = 0.1;
+				Surface under;
+				if (data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under)) {
+					data.cg.Translate(0, 0, dz);
+					videoCtrl.AddReg(Point3D(0, 0, dz));
+				} else
+					Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
+				
+				ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
+			} else
+				ma().Status(Format(t_("Loaded '%s'"), file));			
+		}
 		
-		AfterAdd(file);
+		AfterAdd(file, num);
 		
 		mainViewData.OnAddedModel(mainView);
 		

@@ -4,16 +4,13 @@
 #include "BEMRosetta_int.h"
 
 
-String DiodoreMesh::LoadDat(String fileName) {
+String DiodoreMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
-	SetCode(Mesh::DIODORE_DAT);
-
 	String line;
-	FieldSplit f(in);	
+	LineParser f(in);	
 	f.IsSeparator = IsTabSpace;
 
 	try {		
@@ -38,8 +35,10 @@ String DiodoreMesh::LoadDat(String fileName) {
 
 	UIndex<int> idnodes;
 	try {		
-		mesh.Clear();
-		 
+		Mesh &msh = mesh.Add();
+		msh.fileName = fileName;
+		msh.SetCode(Mesh::DIODORE_DAT);
+
 		while(true) {
 			line = in.GetLine();
 			if (in.IsEof())
@@ -51,7 +50,7 @@ String DiodoreMesh::LoadDat(String fileName) {
 				;
 			else {
 				idnodes << (f.GetInt(0)-1);		// Node ids may jump
-				Point3D &node = mesh.nodes.Add();
+				Point3D &node = msh.mesh.nodes.Add();
 				node.x = f.GetDouble(1);
 				node.y = f.GetDouble(2);
 				node.z = f.GetDouble(3); 
@@ -68,7 +67,7 @@ String DiodoreMesh::LoadDat(String fileName) {
 				else if (f.GetText(0) == "*TRIANGLE" || f.GetText(0) == "*QUADRANGLE") 
 					;
 				else {
-					Panel &panel = mesh.panels.Add();
+					Panel &panel = msh.mesh.panels.Add();
 					panel.id[0] = idnodes.Find(f.GetInt(1)-1);		// Reassign the ids to be consecutive
 					panel.id[1] = idnodes.Find(f.GetInt(2)-1);	
 					panel.id[2] = idnodes.Find(f.GetInt(3)-1);

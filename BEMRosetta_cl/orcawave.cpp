@@ -16,7 +16,7 @@ bool OrcaWave::Load(String file, double) {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		BEM::Print("\n- " + S(t_("YML file")));
-		if (!Load_YML()) 
+		if (!Load_YML_Res()) 
 			BEM::PrintWarning(S(": ** YML file ") + t_("Not found") + "**");
 		
 		if (IsNull(hd().Nb))
@@ -34,42 +34,11 @@ bool OrcaWave::Load(String file, double) {
 	return true;
 }
 
-bool OrcaWave::Load_YML() {
-	
-	auto GetVector = [](FieldSplit &f, String str = "")->UVector<double> {
-		UVector<String> list;
-
-		while (true) {
-			if (list.IsEmpty()) {
-				int id = str.Find("[");
-				if (id >= 0) {
-					str = str.Mid(id+1);
-					list = Split(str, ",");
-					str.Clear();
-				}
-			} else {
-				list.Append(Split(str, ","));
-				str.Clear();
-			}
-			if (!list.IsEmpty() && Last(list).EndsWith("]")) 
-				break;
-			str << Trim(f.GetLine());
-		}
-		
-		UVector<double> ret;
-		for (String &s : list)
-			ret << ScanDouble(s);
-		return ret;
-	};
-	
+bool OrcaWave::Load_YML_Res() {
 	String fileName = ForceExt(hd().file, ".yml");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return false;
-	
-	String line; 
-	FieldSplit f(in);
-	f.IsSeparator = IsTabSpace;
 	
 	hd().dataFromW = true;
 	bool rad_s = true;
@@ -79,109 +48,120 @@ bool OrcaWave::Load_YML() {
 	
 	int Nb = 0; 
 
+	YmlParser fy(in);
+
 	FileInLine::Pos fpos = in.GetPos();
-	
-	bool invessel = false;
-	while(!in.IsEof()) {
-		f.GetLine_discard_empty();
-		if (f.GetText(0) == "LoadRAOCalculationMethod:") 		// Only in OrcaWave cases
+
+	while(fy.GetLine()) {
+		if (fy.FirstIs("LoadRAOCalculationMethod")) 
 			throw Exc(t_("This .yml is an OrcaWave case"));
-		else if (f.GetText(0) == "UnitsSystem:") {
-			if (f.GetText(1) != "SI")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only SI units are supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "WaterSurfaceZ:") {
-			if (f.GetText(1) != "0")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only WaterSurfaceZ 0 is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "WavesReferredToBy:") {
-			if (f.GetText(1) == "frequency")
-				hd().dataFromW = true;
-			else if (f.GetText(1) == "period")
-				hd().dataFromW = false;
-			else
-				throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), f.GetText()));
-			if (f.GetText(2) == "(rad/s)")
-				rad_s = true;
-			else if (f.GetText(2) == "(Hz)")	 
-				rad_s = false;
-			else if (f.GetText(2) == "(s)")	 	
-				;
-			else
-				throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), f.GetText()));
-		} else if (f.GetText(0) == "SurgePositive:") {
-			if (f.GetText(1) != "forward")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only SurgePositive: forward is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "SwayPositive:") {
-			if (f.GetText(1) != "port")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only SwayPositive: port is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "HeavePositive:") {
-			if (f.GetText(1) != "up")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only HeavePositive: up is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "RollPositiveStarboard:") {
-			if (f.GetText(1) != "down")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only RollPositiveStarboard: down is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "PitchPositiveBowe:") {
-			if (f.GetText(1) != "down")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only PitchPositiveBow: down is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "YawPositiveBow:") {
-			if (f.GetText(1) != "port")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only YawPositiveBow: port is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "QTFConventionsRotationOrder:") {
-			if (f.GetText(1) != "RzRyRx")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationOrder: RzRyRx is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "QTFConventionsRotationAxes:") {
-			if (f.GetText(1) != "original")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationAxes: original is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "QTFConventionsFrameOfReference:") {
-			if (f.GetText(1) != "earth")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsFrameOfReference: earth is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "RAOOrigin:") {
-			String line = f.GetText();
-			line.Replace(" ", "");
-			line.Replace("\t", "");
-			if (line != "RAOOrigin:[0,0,0]")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only RAOOrigin:[0,0,0] is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "PhaseOrigin:") {
-			String line = f.GetText();
-			line.Replace(" ", "");
-			line.Replace("\t", "");
-			if (line != "PhaseOrigin:[0,0,0]" && line != "PhaseOrigin:[~,~,~]")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only PhaseOrigin:[0,0,0] is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "OtherDampingOrigin:") {
-			String line = f.GetText();
-			line.Replace(" ", "");
-			line.Replace("\t", "");
-			if (line != "OtherDampingOrigin:[0,0,0]")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only OtherDampingOrigin:[0,0,0] is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "ReferenceOrigin:") {
-			String line = f.GetText();
-			line.Replace(" ", "");
-			line.Replace("\t", "");
-			if (line != "ReferenceOrigin:[0,0,0]")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOrigin:[0,0,0] is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "ReferenceOriginDatumPosition:") {
-			String line = f.GetText();
-			line.Replace(" ", "");
-			line.Replace("\t", "");
-			if (line != "ReferenceOriginDatumPosition:[0,0,0]")
-				throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOriginDatumPosition:[0,0,0] is supported %s"), f.GetText()));
-		} else if (f.GetText(0) == "VesselTypes:")
-			invessel = true;
-		else if (invessel && f.GetText().StartsWith("      - Name:"))
-			Nb++;
-		else if (f.GetText(0) == "-" && f.GetText(1) == "RAODirection:")
-			FindAdd(hd().head, f.GetDouble(2));
-		else if (f.GetText(0) == "-" && f.GetText(1) == "AMDPeriodOrFrequency:") {
-			if (f.GetText(2) != "Infinity")
-				hd().w << f.GetDouble(2);
-		} else if (f.GetText(0) == "Vessels:")
-			break;
+		else if (fy.FirstIs("General")) {
+			if (fy.FirstIs("UnitsSystem") && fy.GetVal() != "SI") 
+				throw Exc(in.Str() + "\n" + Format(t_("Only SI units are supported %s"), fy.GetVal()));
+		} else if (fy.FirstIs("Environment")) {
+			if (fy.FirstIs("WaterSurfaceZ") && fy.GetVal() != "0") 
+				throw Exc(in.Str() + "\n" + Format(t_("Only WaterSurfaceZ 0 is supported %s"), fy.GetVal()));
+		} else if (fy.FirstIs("VesselTypes")) {
+			if (fy.FirstIs("Name")) {
+				if (fy.Index() != Nb)
+					throw Exc(in.Str() + "\n" + t_("Failed body count"));
+				hd().names << fy.GetVal();
+				Nb++;
+			} else if (fy.FirstIs("WavesReferredToBy") && fy.Index() == 0) {		// Only for the first body
+				String val = fy.GetVal();
+				if (val.Find("frequency") >= 0)
+					hd().dataFromW = true;
+				else if (val.Find("period") >= 0)
+					hd().dataFromW = false;
+				else
+					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));
+				
+				if (val.Find("(rad/s)") >= 0)
+					rad_s = true;
+				else if (val.Find("(Hz)") >= 0)	 
+					rad_s = false;
+				else if (val.Find("(s)") >= 0)	 	
+					;
+				else
+					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));
+			} else if (fy.FirstIs("SurgePositive")) {	
+				if (fy.GetVal() != "forward")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only SurgePositive: forward is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("SwayPositive")) {	
+				if (fy.GetVal() != "port")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only SwayPositive: port is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("HeavePositive")) {	
+				if (fy.GetVal() != "up")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only HeavePositive: up is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("RollPositiveStarboard")) {	
+				if (fy.GetVal() != "down")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only RollPositiveStarboard: down is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("PitchPositiveBowe")) {	
+				if (fy.GetVal() != "down")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only PitchPositiveBowe: down is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("YawPositiveBow")) {	
+				if (fy.GetVal() != "port")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only YawPositiveBow: port is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("QTFConventionsRotationOrder")) {	
+				if (fy.GetVal() != "RzRyRx")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationOrder: RzRyRx is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("QTFConventionsRotationAxes")) {	
+				if (fy.GetVal() != "original")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationAxes: original is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("QTFConventionsFrameOfReference")) {	
+				if (fy.GetVal() != "earth")
+					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsFrameOfReference: earth is supported %s"), fy.GetVal()));
+			} else if (fy.FirstIs("Draughts")) {
+				if (fy.FirstIs("DisplacementRAOs")) {
+					if (fy.FirstIs("RAOOrigin")) {
+						if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+							throw Exc(in.Str() + "\n"  + Format(t_("Only RAOOrigin:[0,0,0] is supported %s"), fy.StrVar()));	
+					} else if (fy.FirstIs("PhaseOrigin")) {
+						if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+							throw Exc(in.Str() + "\n"  + Format(t_("Only PhaseOrigin:[0,0,0] is supported %s"), fy.StrVar()));
+					} else if (fy.FirstIs("RAOs")) {
+						if (fy.FirstIs("RAODirection") && fy.GetIndex()[1] == 0) {		// Only for the first body
+							if (hd().head.size() != fy.Index())
+								throw Exc(in.Str() + "\n" + t_("Failed headings count"));			
+							hd().head << ScanDouble(fy.GetVal());
+						}
+					}
+				} else if (fy.FirstIs("OtherDampingOrigin")) {
+					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+						throw Exc(in.Str() + "\n"  + Format(t_("Only OtherDampingOrigin:[0,0,0] is supported %s"), fy.StrVar()));
+				} else if (fy.FirstIs("ReferenceOrigin")) {
+					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+						throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOrigin:[0,0,0] is supported %s"), fy.StrVar()));
+				} else if (fy.FirstIs("ReferenceOriginDatumPosition")) {
+					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+						throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOriginDatumPosition:[0,0,0] is supported %s"), fy.StrVar()));
+				} else if (fy.FirstIs("FrequencyDependentAddedMassAndDamping")) {
+					if (fy.FirstIs("AMDPeriodOrFrequency")) {
+						if (fy.GetVal() != "Infinity") {
+							if (hd().w.size() != fy.Index() - 1)		// -1 because Infinity is the first
+								throw Exc(in.Str() + "\n" + t_("Failed frequencies count"));			
+							hd().w << ScanDouble(fy.GetVal());
+						}
+					}
+				}
+			}
+		} else if (fy.FirstIs("MultibodyGroups")) {
+			if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
+				if (fy.FirstIs("AMDPeriodOrFrequency")) {
+					if (fy.GetVal() != "Infinity") {
+						if (hd().w.size() != fy.Index())
+							throw Exc(in.Str() + "\n" + t_("Failed frequencies count"));			
+						hd().w << ScanDouble(fy.GetVal());
+					}
+				}
+			}
+		}
 	}
-						
+	
 	if (Nb == 0)
 		throw Exc(S("\n") + t_("No body found"));
 	
 	hd().Nb = Nb;
-	hd().names.SetCount(hd().Nb);
 	hd().Vo.SetCount(hd().Nb, NaNDouble);
 	hd().cg.setConstant(3, hd().Nb, NaNDouble);
 	hd().c0.setConstant(3, hd().Nb, 0);				// OrcaWave reference is 0,0,0
@@ -227,52 +207,50 @@ bool OrcaWave::Load_YML() {
 	hd().Initialize_Forces(hd().rao);
 
 	in.SeekPos(fpos);
-
+		
+	while(fy.GetLine()) {
+		if (fy.FirstIs("Environment")) {
+			if (fy.FirstIs("Density")) 
+				hd().rho = ScanDouble(fy.GetVal())*1000;		// In kg/m3
+			else if (fy.FirstIs("WaterDepth")) { 
+				hd().rho = ScanDouble(fy.GetVal())*1000;		// In kg/m3
+				String h = fy.GetVal(); 
+				if (ToLower(h) == "infinite")
+					hd().h = -1;
+				else	
+					hd().h = ScanDouble(h);
+			}
+		} else if (fy.FirstIs("VesselTypes")) {
+			if (fy.FirstIs("Draughts")) {
+				int ib = fy.GetIndex()[1];
+				Eigen::MatrixXd &inertia = hd().M[ib];
+				if (fy.FirstIs("Mass")) 
+					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*1000;
+				else if (fy.FirstMatch("MomentOfInertiaTensor*")) {
+					UVector<UVector<double>> mat = fy.GetMatrixDouble();
+					
+					inertia(3, 3) = mat[0][0]*1000;				// In kg
+					inertia(3, 4) = mat[0][1]*1000;
+					inertia(3, 5) = mat[0][2]*1000;
+					inertia(4, 3) = mat[1][0]*1000;
+					inertia(4, 4) = mat[1][1]*1000;
+					inertia(4, 5) = mat[1][2]*1000;
+					inertia(5, 3) = mat[2][0]*1000;
+					inertia(5, 4) = mat[2][1]*1000;
+					inertia(5, 5) = mat[2][2]*1000;
+				}
+			}
+		}
+	}
+/*
 	char inforce = '\0';
 	invessel = false;
 	int ib = -1;
 	int idFreq = -2;		// First is infinity
 	int idHead = -1;
 	
-	double mass = Null;
+	
 	while(!f.IsEof()) {
-		f.GetLine_discard_empty();
-		if (f.size() == 0)
-			;
-		else if (f.GetText(0) == "Density:") 
-			hd().rho = f.GetDouble(1)*1000;		// In kg/m3
-		else if (f.GetText(0) == "WaterDepth:") {
-			String h = f.GetText(1); 
-			if (ToLower(h) == "infinite")
-				hd().h = -1;
-			else	
-				hd().h = ScanDouble(h);
-		} else if (f.GetText(0) == "VesselTypes:")
-			invessel = true;
-		else if (invessel && f.GetText().StartsWith("      - Name:")) {
-			ib++;	
-			hd().names[ib] = f.GetText(2);		
-		} else if (f.GetText(0) == "Mass:") 
-			mass = f.GetDouble(1)*1000;
-		else if (invessel && f.GetText().StartsWith("        MomentOfInertiaTensor")) {	
-			Eigen::MatrixXd &inertia = hd().M[ib];
-			
-			inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = mass;
-			
-			UVector<double> line;
-			
-			line = GetVector(f);			
-			inertia(3, 3) = line[0]*1000;
-			inertia(3, 4) = line[1]*1000;
-			inertia(3, 5) = line[2]*1000;
-			line = GetVector(f);			
-			inertia(4, 3) = line[0]*1000;
-			inertia(4, 4) = line[1]*1000;
-			inertia(4, 5) = line[2]*1000;
-			line = GetVector(f);			
-			inertia(5, 3) = line[0]*1000;
-			inertia(5, 4) = line[1]*1000;
-			inertia(5, 5) = line[2]*1000;
 		} else if (invessel && f.GetText().StartsWith("        CentreOfMass:")) {
 			Eigen::MatrixXd &inertia = hd().M[ib];
 			
@@ -355,6 +333,7 @@ bool OrcaWave::Load_YML() {
 			}
 		}
 	}
+	*/
 	if (hd().Nb == 0)
 		throw Exc(t_("Incorrect .yml format"));
 	

@@ -717,13 +717,14 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			if (fast.GetNumData() > 0) {
 				scat.SetLabelX(t_("Time"));
 				scat.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
-				scat.SetPlotAreaLeftMargin(8*StdFont().GetHeight());
-				scat.SetPlotAreaBottomMargin(4*StdFont().GetHeight());
+				scat.SetLeftMargin(8*StdFont().GetHeight());
+				scat.SetTopMargin(StdFont().GetHeight());
+				scat.SetBottomMargin(4*StdFont().GetHeight());
 				bool rightEmpty = rightSearch.array.GetCount() == 0;
 				if (!rightEmpty)
-					scat.SetPlotAreaRightMargin(8*StdFont().GetHeight());
+					scat.SetRightMargin(8*StdFont().GetHeight());
 				else
-					scat.SetPlotAreaRightMargin(2*StdFont().GetHeight());
+					scat.SetRightMargin(2*StdFont().GetHeight());
 				scat.SetDrawY2Reticle(!rightEmpty).SetDrawY2ReticleNumbers(!rightEmpty);
 				if (scattersize > 1) {
 					String title = fast.GetFileName();

@@ -336,20 +336,16 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedDlin())
 		CalcA(Dlin);
 		    
-    auto CalcF = [&](Forces &ex) {
+    auto CalcF = [&](Forces &ex, const UVector<double> &k) {
     	UArray<MatrixXcd> exforce = clone(ex.force);
-    	
-    	UVector<double> k(Nf);
-    	for (int ifr = 0; ifr < Nf; ++ifr) 
-    		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g_dim());
     	
 	    for (int ih = 0; ih < Nh; ++ih) {
 	        double angle = ToRad(head[ih]);
-	        double factor = xg*cos(angle) + yg*sin(angle);
+	        double dist = xg*cos(angle) + yg*sin(angle);
 	    	for (int ib = 0; ib < Nb; ++ib) {
 	    		int ib6 = ib*6;
 				for (int ifr = 0; ifr < Nf; ++ifr) {
-					double ph = k[ifr]*factor;
+					double ph = k[ifr]*dist;
 					for (int idf = 0; idf < 6; ++idf) 
 						AddPhase(exforce[ih](ifr, idf + ib6), ph);
 					exforce[ih](ifr, 3 + ib6) += -yg*exforce[ih](ifr, 2 + ib6) + zg*exforce[ih](ifr, 1 + ib6);
@@ -361,12 +357,16 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		ex.force = pick(exforce);
     };
     
+    UVector<double> k(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr) 
+		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g_dim());
+    	
 	if (IsLoadedFex())
-		CalcF(ex);
+		CalcF(ex, k);
 	if (IsLoadedFsc())
-		CalcF(sc);
+		CalcF(sc, k);
 	if (IsLoadedFfk())
-		CalcF(fk);
+		CalcF(fk, k);
 
     auto CalcMD = [&]() {
     	UArray<UArray<UArray<VectorXd>>> mdn = clone(md);
@@ -386,12 +386,12 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedMD())
 		CalcMD();
 	
-    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
         int sign = isSum ? 1 : -1;
 		for (int ib = 0; ib < Nb; ++ib) {
 	        for (int ih = 0; ih < qh.size(); ++ih) {
 	            double angle = ToRad(qh[ih].imag());
-	            double factor = xg*cos(angle) + yg*sin(angle);
+	            double dist = xg*cos(angle) + yg*sin(angle);
 				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
 						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
@@ -401,8 +401,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 							 				 &v4 = qtf[ib][ih][4](ifr1, ifr2),
 							 				 &v5 = qtf[ib][ih][5](ifr1, ifr2);
 						
-						double k = SeaWaves::WaveNumber_w(qw[ifr2], h, g_dim()) + sign*SeaWaves::WaveNumber_w(qw[ifr1], h, g_dim());
-						double ph = k*factor;
+						double ph = (qk[ifr2] + sign*qk[ifr1])*dist;
 						for (int idf = 0; idf < 6; ++idf) 
 							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), ph);
 						
@@ -418,11 +417,15 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	for (int ih = 0; ih < qh.size(); ++ih) 
 		if (qh[ih].real() != qh[ih].imag())
 			throw Exc(Format(t_("QTF translation only valid for same headings (%.1f != %.1f)"), qh[ih].real(), qh[ih].imag()));
-	
+
+    UVector<double> qk(Nf);
+	for (int ifr = 0; ifr < qw.size(); ++ifr) 
+		qk[ifr] = SeaWaves::WaveNumber_w(qw[ifr], h, g_dim());
+			
 	if (IsLoadedQTF(true)) 
-		CalcQTF(qtfsum, true);		
+		CalcQTF(qtfsum, qk, true);		
 	if (IsLoadedQTF(false))	
-		CalcQTF(qtfdif, false);
+		CalcQTF(qtfdif, qk, false);
 	
 	if (IsLoadedM()) {
 		for (int ib = 0; ib < Nb; ++ib)

@@ -184,7 +184,7 @@ bool Wamit::Load_out() {
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplitWamit f(in);
+	LineParserWamit f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	UArray<UArray<UArray<VectorXd>>> md7, md8, md9;
@@ -875,7 +875,7 @@ void Wamit::Load_A(FileInLine &in, Eigen::MatrixXd &A) {
 		String line = TrimBoth(in.GetLine());
 		if (line.IsEmpty())
            	break;
-		FieldSplit f(in);
+		LineParser f(in);
 		f.IsSeparator = IsTabSpace;
 		f.Load(line);
 		int i = f.GetInt(0) - 1;
@@ -891,7 +891,7 @@ bool Wamit::Load_cfg(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
  	f.IsSeparator = [](int c)->int {
 		if (c == '\t' || c == ' ' || c == '=')
 			return true;
@@ -914,7 +914,7 @@ bool Wamit::Load_pot(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
  	f.IsSeparator = IsTabSpace;
  	
  	in.GetLine();
@@ -1022,7 +1022,7 @@ bool Wamit::Load_frc2(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
  	f.IsSeparator = IsTabSpace;
 
 	in.GetLine(2);
@@ -1092,7 +1092,7 @@ bool Wamit::Load_gdf(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
  	f.IsSeparator = IsTabSpace;
  	
  	in.GetLine();
@@ -1209,7 +1209,7 @@ bool Wamit::Load_1(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
  	f.IsSeparator = IsTabSpace;
  	
  	FileInLine::Pos fpos;
@@ -1344,7 +1344,7 @@ bool Wamit::Load_hst(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
  
  	FileInLine::Pos fpos;
@@ -1416,7 +1416,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
  
  	FileInLine::Pos fpos;
@@ -1535,7 +1535,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	
 	Status(Format("Loading %s base data", ext), 0);
 	
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	FileInLine::Pos fpos = in.GetPos();
@@ -1661,7 +1661,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	
 	hd().mdtype = type;
 	
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	FileInLine::Pos fpos = in.GetPos();

@@ -5,83 +5,138 @@
 int Mesh::idCount = 0;
 
 
-String Mesh::Load(String file, double rho, double g, bool cleanPanels) {
+void Mesh::Copy(const Mesh &msh) {
+	xProjectionPos = msh.xProjectionPos;
+	xProjectionNeg = msh.xProjectionNeg;
+	yProjectionPos = msh.yProjectionPos;
+	yProjectionNeg = msh.yProjectionNeg;
+	zProjectionPos = msh.zProjectionPos;
+	zProjectionNeg = msh.zProjectionNeg;
+	
+	cgZ0surface = clone(msh.cgZ0surface);
+	cb = clone(msh.cb);
+	cg = clone(msh.cg);
+	cg0 = clone(msh.cg0);
+	c0 = clone(msh.c0);
+	
+	mass = msh.mass;
+	
+	C = clone(msh.C);
+	
+	name = msh.name;
+	fileName = msh.fileName;
+	header = msh.header;
+	
+	mesh = clone(msh.mesh);
+	under = clone(msh.under);
+	mesh0 = clone(msh.mesh0);
+	
+	code = msh.code;
+	id = msh.id;
+}
+
+String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels) {
 	bool y0z, x0z;
-	return Load(file, rho, g, cleanPanels, y0z, x0z);
+	return Load(mesh, file, rho, g, cleanPanels, y0z, x0z);
 }
 	
-String Mesh::Load(String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
+String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
+	UArray<Mesh> msh;
+	String ret = Load(msh, file, rho, g, cleanPanels, y0z, x0z);
+	if (!ret.IsEmpty())
+		return ret;
+	mesh = pick(First(msh));
+	return ret;
+}
+	
+String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels) {
+	bool y0z, x0z;
+	return Load(mesh, file, rho, g, cleanPanels, y0z, x0z);
+}
+	
+String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
+	
+	mesh.Clear();
+	
 	if (ext == ".dat") {
-		ret = static_cast<NemohMesh&>(*this).LoadDat(file, x0z);
+		ret = NemohMesh::LoadDat(mesh, file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-			ret = static_cast<NemohMesh&>(*this).LoadDatFS(file, x0z);
+			ret = NemohMesh::LoadDatFS(mesh, file, x0z);
 			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-				ret = static_cast<WamitMesh &>(*this).LoadDat(file);
+				ret = SalomeMesh::LoadDat(mesh, file);
 				if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-					ret = static_cast<DiodoreMesh &>(*this).LoadDat(file);
-					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
-						ret = static_cast<AQWAMesh &>(*this).LoadDat(file);
+					ret = WamitMesh::LoadDat(mesh, file);
+					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
+						ret = DiodoreMesh::LoadDat(mesh, file);
+						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
+							ret = AQWAMesh::LoadDat(mesh, file);
+					}
 				}
 			}
 		}
 	} else if (ext == ".txt") 
-		ret = static_cast<DiodoreMesh &>(*this).LoadDat(file); 
+		ret = DiodoreMesh::LoadDat(mesh, file); 
 	else if (ext == ".gdf") 
-		ret = static_cast<WamitMesh &>(*this).LoadGdf(file, y0z, x0z); 
+		ret = WamitMesh::LoadGdf(mesh, file, y0z, x0z); 
 	else if (ext == ".pnl") 
-		ret = static_cast<HAMSMesh&>(*this).LoadPnl(file, y0z, x0z); 
+		ret = HAMSMesh::LoadPnl(mesh, file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
+		Mesh &m = mesh.Add();
 		try {
-			LoadStl(file, mesh, isText, header);
+			LoadStl(file, m.mesh, isText, m.header);
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		SetCode(isText ? Mesh::STL_TXT : Mesh::STL_BIN);
+		m.SetCode(isText ? Mesh::STL_TXT : Mesh::STL_BIN);
 	} else if (ext == ".msh") {
+		Mesh &m = mesh.Add();
 		try {
-			LoadTDynMsh(file, mesh);
+			LoadTDynMsh(file, m.mesh);
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		SetCode(Mesh::MSH_TDYN);
+		m.SetCode(Mesh::MSH_TDYN);
 	} else if (ext == ".mesh" || ext == ".bem") {
+		Mesh &m = mesh.Add();
 		try {
-			mesh.Load(file);
+			m.mesh.Load(file);
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		SetCode(Mesh::BEM_MESH);
+		m.SetCode(Mesh::BEM_MESH);
 	} else
 		ret = Format(t_("Unknown mesh file format '%s'"), file);	
 	
 	if (!ret.IsEmpty())
 		return ret;
 	
-	ret = mesh.CheckErrors();
-	if (!ret.IsEmpty())
-		return ret;
-	
-	fileName = file;
-	name = InitCaps(GetFileTitle(file));
-	
-	if (y0z)
-		mesh.DeployXSymmetry();
-	if (x0z)
-		mesh.DeployYSymmetry();	
-	
-	if (cleanPanels) {
-		Surface::RemoveDuplicatedPanels(mesh.panels);
-		Surface::RemoveDuplicatedPointsAndRenumber(mesh.panels, mesh.nodes);
-		Surface::RemoveDuplicatedPanels(mesh.panels);
+	for (Mesh &m : mesh) {
+		ret = m.mesh.CheckErrors();
+		if (!ret.IsEmpty())
+			return ret;
+		
+		m.fileName = file;
+		if (m.name.IsEmpty())
+			m.name = InitCaps(GetFileTitle(file));
+		
+		if (y0z)
+			m.mesh.DeployXSymmetry();
+		if (x0z)
+			m.mesh.DeployYSymmetry();	
+		
+		if (cleanPanels) {
+			Surface::RemoveDuplicatedPanels(m.mesh.panels);
+			Surface::RemoveDuplicatedPointsAndRenumber(m.mesh.panels, m.mesh.nodes);
+			Surface::RemoveDuplicatedPanels(m.mesh.panels);
+		}
+		
+		if (!IsNull(rho))
+			m.AfterLoad(rho, g, false, true);
 	}
-	
-	if (!IsNull(rho))
-		AfterLoad(rho, g, false, true);
-	
 	return String();
 }
 

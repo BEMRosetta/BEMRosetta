@@ -687,7 +687,7 @@ public:
 	
 	enum Action {NONE, MOVE, ROTATE};
 	
-	void AfterAdd(String file);
+	void AfterAdd(String file, int num);
 	void After();
 	bool OnLoad();
 	void OnRemove();
@@ -1072,7 +1072,7 @@ private:
 	
 	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
 	void OnClick(Point p, int idof, ScatterCtrl::MouseAction action);
-	void DoClick(Data &up, int idof, bool titles);
+	void DoClick(Data &up, int idof);
 		
 	void OnPainter(Painter &w)		{OnPaint(w);}
 	void OnDraw(Draw &w)			{OnPaint(w);}

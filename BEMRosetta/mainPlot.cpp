@@ -19,10 +19,8 @@ void MainPlot::Init(bool vert) {
 	if (!isInit) {
 		int len = StdFont().GetHeight();
 		
-		scatt.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
-			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-		scatP.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
-			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
+		scatt.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
+		scatP.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 		scatt.LinkedWith(scatP);
 		
 		compare.Init(scatt, splitCompare);
@@ -51,6 +49,15 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 	
 	compare.Init(dataToShow);
 	
+	String smp_up, smp_down;
+	if (show_ma_ph) {
+		smp_up = t_("mag");
+		smp_down = t_("phase");
+	} else {
+		smp_up = t_("real");
+		smp_down = t_("imag");
+	}
+						
 	String title, title2, labelY, labelY2;
 	switch (dataToShow) {
 	case Hydro::DATA_A:	title = Format(t_("Added mass %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));		
@@ -74,43 +81,31 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 						splitter.SetPos(10000, 0);	
 						break;
 	case Hydro::DATA_FORCE_SC:	title = Format(t_("Diffraction scattering force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
-						if (show_ma_ph) {
-							labelY = t_("Diffraction scattering force");
-							labelY2 = t_("Diffraction scattering force phase");
-						} else {
-							labelY = t_("Diffraction scattering force real");
-							labelY2 = t_("Diffraction scattering force imag.");
-						}
+						title2 = title + " " + smp_down;
+						title  = title + " " + smp_up;
+						labelY  = t_("Diffraction scattering force") + smp_up;
+						labelY2 = t_("Diffraction scattering force") + smp_down;
 						splitter.SetPos(5000, 0);	
 						break;
 	case Hydro::DATA_FORCE_FK:	title = Format(t_("Froude-Krylov force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
-						if (show_ma_ph) {
-							labelY = t_("Froude-Krylov force");		
-							labelY2 = t_("Froude-Krylov force phase");
-						} else {
-							labelY = t_("Froude-Krylov force real");		
-							labelY2 = t_("Froude-Krylov force imag.");
-						}
+						title2 = title + " " + smp_down;
+						title  = title + " " + smp_up;
+						labelY  = t_("Froude-Krylov force") + smp_up;		
+						labelY2 = t_("Froude-Krylov force") + smp_down;
 						splitter.SetPos(5000, 0);			
 						break;
 	case Hydro::DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
-						if (show_ma_ph) {
-							labelY = t_("Excitation force");		
-							labelY2 = t_("Excitation force phase");
-						} else {
-							labelY = t_("Excitation force real");		
-							labelY2 = t_("Excitation force imag.");
-						}
+						title2 = title + " " + smp_down;
+						title  = title + " " + smp_up;
+						labelY  = t_("Excitation force") + smp_up;		
+						labelY2 = t_("Excitation force") + smp_down;
 						splitter.SetPos(5000, 0);				
 						break;
 	case Hydro::DATA_RAO:	title = Format(t_("Response Amplitude Operator %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
-						if (show_ma_ph) {
-							labelY = t_("RAO");		
-							labelY2 = t_("RAO phase");
-						} else {
-							labelY = t_("RAO real");		
-							labelY2 = t_("RAO imag");							
-						}
+						title2 = title + " " + smp_down;
+						title  = title + " " + smp_up;
+						labelY  = t_("RAO force") + smp_up;		
+						labelY2 = t_("RAO force") + smp_down;
 						splitter.SetPos(5000, 0);							
 						break;
 	case Hydro::DATA_STS:	title = Format(t_("Magnitude Kr(ω) = B(ω)+jω{A(ω)-A∞} %s"), BEM::StrBDOFFull(plot_idf, plot_jdf));		
