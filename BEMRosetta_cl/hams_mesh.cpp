@@ -4,17 +4,16 @@
 #include "BEMRosetta_int.h"
 
 
-String HAMSMesh::LoadPnl(String fileName, bool &y0z, bool &x0z) {
+String HAMSMesh::LoadPnl(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
-	SetCode(Mesh::HAMS_PNL);
+	Mesh &msh = mesh.Add();
+	msh.fileName = fileName;
+	msh.SetCode(Mesh::HAMS_PNL);
 	
-	mesh.Clear();
-	
-	FieldSplit f(in);	
+	LineParser f(in);	
 	f.IsSeparator = IsTabSpace;
 		
 	Upp::Index<int> ids;
@@ -65,7 +64,7 @@ String HAMSMesh::LoadPnl(String fileName, bool &y0z, bool &x0z) {
 			} else {
 				f.Load(line);
 				ids << f.GetInt(0);
-				Point3D &node = mesh.nodes.Add();
+				Point3D &node = msh.mesh.nodes.Add();
 				node.x = f.GetDouble(1);
 				node.y = f.GetDouble(2);
 				node.z = f.GetDouble(3);
@@ -98,7 +97,7 @@ String HAMSMesh::LoadPnl(String fileName, bool &y0z, bool &x0z) {
 				
 				int numVert = f.GetInt(1);
 
-				Panel &panel = mesh.panels.Add();
+				Panel &panel = msh.mesh.panels.Add();
 				int id;
 				id = f.GetInt(2);
 				if ((id = ids.Find(id)) < 0)

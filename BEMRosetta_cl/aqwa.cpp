@@ -61,7 +61,7 @@ bool Aqwa::Load_AH1() {
 	hd().dataFromW = true;
 	
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	while(!in.IsEof()) {
 		line = in.GetLine();
@@ -223,7 +223,7 @@ bool Aqwa::Load_LIS() {
 	hd().dataFromW = true;
 	
 	String line; 
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	int pos;
 	
@@ -670,7 +670,7 @@ bool Aqwa::Load_QTF() {
 	}
 	
 	String line; 
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	f.GetLine();	// AQWA version	
@@ -851,7 +851,7 @@ bool AQWACase::Load(String fileName) {
 	solver = AQWA;
 	
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	bodies.SetCount(1);

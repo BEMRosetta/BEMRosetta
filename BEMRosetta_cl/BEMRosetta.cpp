@@ -1546,7 +1546,7 @@ void BEM::TranslationTo(int id, double xto, double yto, double zto) {
 }
 
 
-void BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
+int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
@@ -1557,13 +1557,16 @@ void BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, boo
 			}
 		}
 	}
-	Mesh &mesh = surfs.Add();
-	String error = mesh.Load(fileName, rho, g, cleanPanels);
+	UArray<Mesh> mesh;
+	String error = Mesh::Load(mesh, fileName, rho, g, cleanPanels);
 	if (!error.IsEmpty()) {
 		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
-		RemoveMesh(surfs.size()-1);
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 	}
+	int num = mesh.size();
+	for (int i = 0; i < mesh.size(); ++i)
+		surfs.Add(pick(mesh[i]));
+	return num;
 }
 
 void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
@@ -1845,7 +1848,7 @@ String FormatWam(double d) {
 	return (d >= 0 ? " " : "-") + Format("%12E", abs(d));
 }
 
-void FieldSplitWamit::LoadWamitJoinedFields(String _line) {	
+void LineParserWamit::LoadWamitJoinedFields(String _line) {	
 	line = _line;
 	fields.Clear();
 	UVector<String> prefields = Split(line, IsTabSpace, true);

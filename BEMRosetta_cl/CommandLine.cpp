@@ -156,11 +156,11 @@ void ShowHelp(BEM &md) {
 #ifdef PLATFORM_WIN32
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
-	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
 	Cout() << "\n" << t_("              numthread         # Number of threads");
+	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located. Use only if automatic detection doesn't work");		
 #endif
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -197,6 +197,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	FastOut fast;
 #ifdef PLATFORM_WIN32
 	Orca orca;
+	bool dllOrcaLoaded = false;
 #endif
 
 	bool firstTime = !bem.LoadSerializeJson();
@@ -447,7 +448,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							bem.LoadMesh(file, echo ? Status : NoPrint, false, false);
+							bem.LoadMesh(file, echo ? Status : NoPrint, false, false);		// Doesn't work for multibody .dat
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
@@ -715,18 +716,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						}
 #ifdef PLATFORM_WIN32						
 					} else if (nextcommands == "orca") {
-						if (param == "-dll") {
-							CheckIfAvailableArg(command, ++i, "-dll");
-
-							String file = command[i];
-							if (!FileExists(file)) {
-								file = AppendFileNameX(file, "OrcFxAPI.dll");
-								if (!FileExists(file)) 	
-									throw Exc(Format(t_("File '%s' not found"), file)); 
+						if (param == "-rw" || param == "-runwave") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
 							}
-							orca.Init(file);
-							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), file));
-						} else if (param == "-rw" || param == "-runwave") {
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+									
 							CheckIfAvailableArg(command, ++i, "-runwave from");
 							String from = command[i];
 							CheckIfAvailableArg(command, ++i, "-runwave to");
@@ -738,6 +735,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
 						} else if (param == "-numthread") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+							
 							CheckIfAvailableArg(command, ++i, "-numthread num");
 							int numth = ScanInt(command[i]);
 							if (IsNull(numth))
@@ -747,6 +751,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							BEM::Print("\n" + Format(t_("Thread number set to %d"), numth));
 						} else if (param == "-p" || param == "-print") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+							
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
 								String param = ToLower(command[i]);
@@ -756,6 +767,19 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 							}
+						} else if (param == "-dll") {
+							CheckIfAvailableArg(command, ++i, "-dll");
+
+							String file = command[i];
+							if (!FileExists(file)) {
+								file = AppendFileNameX(file, "OrcFxAPI.dll");
+								if (!FileExists(file)) 	
+									throw Exc(Format(t_("File '%s' not found"), file)); 
+							}
+							if (!orca.Init(file))
+								throw Exc(Format(t_("DLL '%s' not found"), command[i]));
+							dllOrcaLoaded = true;
+							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), orca.GetDLLPath()));
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 					}

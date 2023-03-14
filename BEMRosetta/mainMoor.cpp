@@ -81,8 +81,8 @@ void MainMoor::Init() {
 	right.results.AddColumn("", 10);
 	right.results.AddColumn("", 10);
 	
-	scatLateral.SetTitle(t_("Side view")).SetTitleFont(Arial(12)).SetLeftMargin(70).SetRightMargin(25).SetTopMargin(30).SetBottomMargin(50);
-	scatUp.SetTitle(t_("Top view")).SetTitleFont(Arial(12)).SetLeftMargin(70).SetRightMargin(25).SetTopMargin(30).SetBottomMargin(50);
+	scatLateral.SetTitle(t_("Side view")).SetTitleFont(Arial(12)).SetMargin(70, 25, 30, 50);
+	scatUp.     SetTitle(t_("Top view")). SetTitleFont(Arial(12)).SetMargin(70, 25, 30, 50);
 }
 
 

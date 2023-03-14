@@ -82,7 +82,7 @@ bool HAMS::Load_Settings(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	f.Load(in.GetLine());
@@ -114,7 +114,7 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
 	if (!in.IsOpen())
 		return false;
 	
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
  
 	hd().Nb = 1;
@@ -159,7 +159,7 @@ bool HamsCase::Load(String fileName) {
 	solver = HAMS;
 	
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	int input_frequency_type = 0, output_frequency_type = 0;
@@ -275,7 +275,7 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 	BEMBody &body = bodies[0];
 	
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	while (!f.IsEof()) {
@@ -380,25 +380,29 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 		Save_Hydrostatic(folderInput);
 	
 		bool y0zmesh, x0zmesh;
-		Mesh mesh;
+		UArray<Mesh> msh;
 		int ib = 0;		// Just one file
-		{
-			String err = mesh.Load(bodies[ib].meshFile, rho, g, false, y0zmesh, x0zmesh);
-			if (!err.IsEmpty())
-				throw Exc(err);
-			
-			if (y0zmesh == true && x0zmesh == true) 
-				y0zmesh = false;
+		
+		String err = Mesh::Load(msh, bodies[ib].meshFile, rho, g, false, y0zmesh, x0zmesh);
+		if (!err.IsEmpty())
+			throw Exc(err);
+		
+		Mesh &mesh = First(msh);
+		
+		if (y0zmesh == true && x0zmesh == true) 
+			y0zmesh = false;
 
-			String dest = AppendFileNameX(folderInput, "HullMesh.pnl");
-			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
-		}
+		String dest = AppendFileNameX(folderInput, "HullMesh.pnl");
+		mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
+		
 		bool y0zlid, x0zlid;	// Hull symmetries rules over lid ones
 		if (!bodies[ib].lidFile.IsEmpty()) {
-			String err = mesh.Load(bodies[ib].lidFile, rho, g, false, y0zlid, x0zlid);
+			String err = Mesh::Load(msh, bodies[ib].lidFile, rho, g, false, y0zlid, x0zlid);
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
+			Mesh &mesh = First(msh);
+				
 			String dest = AppendFileNameX(folderInput, "WaterplaneMesh.pnl");
 			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::ALL, y0zmesh, x0zmesh);
 		}
@@ -446,7 +450,7 @@ void HamsCase::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat
 	}
 }
 
-void HamsCase::InMatrix(FieldSplit &f, Eigen::MatrixXd &mat) {
+void HamsCase::InMatrix(LineParser &f, Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y) {
 		f.GetLine();
 		for (int x = 0; x < 6; ++x)
@@ -483,19 +487,19 @@ void HamsCase::Save_Settings(String folderInput, bool thereIsLid, const BEM &bem
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
-	Mesh data;
-	String res = data.Load(AppendFileNameX(folderInput, "Input", "HullMesh.pnl"), rho, g, false);
+	Mesh mesh;
+	String res = Mesh::Load(mesh, AppendFileNameX(folderInput, "Input", "HullMesh.pnl"), rho, g, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
 	if (thereIsLid) {
 		Mesh lid;
-		lid.mesh.AddWaterSurface(data.mesh, data.under, 'f'); 
+		lid.mesh.AddWaterSurface(mesh.mesh, mesh.under, 'f'); 
 		lid.AfterLoad(rho, g, false, false);
 		
-		data.Append(lid.mesh, rho, g);
+		mesh.Append(lid.mesh, rho, g);
 	}
-	data.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
+	mesh.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
 	
 	out << g << "\n";
 	out << rho << "\n";
