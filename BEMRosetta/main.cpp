@@ -476,7 +476,7 @@ GUI_APP_MAIN {
 	InstallPanicMessageBox(OnPanic);
 	
 	const UVector<String>& command = CommandLine();
-	
+
 	if (!command.IsEmpty()) {
 		ConsoleOutput con(true);
 		

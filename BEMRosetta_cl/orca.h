@@ -30,10 +30,10 @@ public:
 		}
 	}
 	
-	void Init(String _dllFile) {
+	bool Init(String _dllFile) {
 		dllFile = _dllFile;
 		if (!dll.Load(dllFile))
-			throw Exc("Dll not found");
+			return false;
 
 		CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (HINSTANCE *handle, HWND hCaller, int *lpStatus));
 		DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(HINSTANCE handle, int *lpStatus));
@@ -48,16 +48,43 @@ public:
 		SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
 		
 		SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *lpStatus));
-		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount, (HINSTANCE handle, int *lpStatus));
+		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *lpStatus));
 		
 		GetLastErrorString = DLLGetFunction(dll, int,  C_GetLastErrorStringW, (LPCWSTR wcs));
 		FinaliseLibrary    = DLLGetFunction(dll, void, C_FinaliseLibrary,     (int *lpStatus));
+		
+		return true;
+	}
+	
+	bool FindInit() {
+		UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
+		if (orcadata.IsEmpty())
+			return false;
+		
+		int iversion = 0;
+		UVector<int> version = orcadata[0].GetVersion();
+		for (int i = 1; i < orcadata.size(); ++i) {							// Get the newest version from the installed
+			UVector<int> each = orcadata[i].GetVersion();
+			if (SoftwareDetails::IsHigherVersion(each, version)) {			// Version are numbers separated by .
+				iversion = i;
+				version = pick(each);
+			}
+		}
+		String arch;
+	#ifdef CPU_64
+		arch = "Win64";
+	#else
+		arch = "Win32";
+	#endif
+		String path = AppendFileNameX(orcadata[iversion].path, "OrcFxAPI", arch, "OrcFxAPI.dll");	// Assembles the path
+		
+		return Init(path);
 	}
 	
 	bool IsLoaded()	{return dll;}
 
 	void LoadFlex(String owryml) {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
 		int lpStatus;
@@ -81,7 +108,7 @@ public:
 	}
 	
 	void SaveFlex(String owryml) {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
 		int lpStatus;
@@ -95,7 +122,7 @@ public:
 	}
 	
 	void LoadWave(String owryml) {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 			
 		if (!wave) {
@@ -150,7 +177,7 @@ public:
 	}
 
 	void RunWave() {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
 			int lpStatus;
@@ -168,7 +195,7 @@ public:
 	}
 	
 	void SaveWaveResults(String owryml) {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
 			int lpStatus;
@@ -214,7 +241,7 @@ public:
 	}
 	
 	void SetThreadCount(int nth) {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
 			int lpStatus;
@@ -231,7 +258,7 @@ public:
 	}
 
 	int GetThreadCount() {
-		if (!dll)
+		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
 			int lpStatus;
@@ -248,7 +275,8 @@ public:
 			
 		return nth;	
 	}
-		
+	
+	String GetDLLPath() const		{return dllFile;}	
 	static Function<bool(String, int, const Time &)> WhenWave;
 	static Time startCalc;
 	

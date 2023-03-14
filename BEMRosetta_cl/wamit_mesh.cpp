@@ -4,17 +4,14 @@
 #include "BEMRosetta_int.h"
 
 
-String WamitMesh::LoadDat(String fileName) {
+String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
-	SetCode(Mesh::WAMIT_DAT);
-	
 	try {
 		String line;
-		FieldSplit f(in);
+		LineParser f(in);
 		f.IsSeparator = IsTabSpace;
 		
 		line = ToUpper(TrimBoth(in.GetLine()));
@@ -42,9 +39,13 @@ String WamitMesh::LoadDat(String fileName) {
 		if (pos > 0) 
 			F = line.Mid(pos);
 		
+		Mesh &msh = mesh.Add();
+		msh.fileName = fileName;
+		msh.SetCode(Mesh::WAMIT_DAT);
+	
 		if (IsNull(T)) {
 			while(!in.IsEof()) {
-				int id0 = mesh.nodes.size();
+				int id0 = msh.mesh.nodes.size();
 				for (int i = 0; i < I*J; ++i) {
 					line = in.GetLine();	
 					f.Load(line);
@@ -53,14 +54,14 @@ String WamitMesh::LoadDat(String fileName) {
 					double y = f.GetDouble(1);	
 					double z = f.GetDouble(2);	
 						
-					Point3D &node = mesh.nodes.Add();
+					Point3D &node = msh.mesh.nodes.Add();
 					node.x = x;
 					node.y = y;
 					node.z = z;
 				}
 				for (int i = 0; i < I-1; ++i) {
 					for (int j = 0; j < J-1; ++j) {
-						Panel &panel = mesh.panels.Add();
+						Panel &panel = msh.mesh.panels.Add();
 						panel.id[0] = id0 + I*j     + i;
 						panel.id[1] = id0 + I*j     + i+1;
 						panel.id[2] = id0 + I*(j+1) + i;
@@ -78,7 +79,7 @@ String WamitMesh::LoadDat(String fileName) {
 				double y = f.GetDouble(1);	
 				double z = f.GetDouble(2);	
 					
-				Point3D &node = mesh.nodes.Add();
+				Point3D &node = msh.mesh.nodes.Add();
 				node.x = x;
 				node.y = y;
 				node.z = z;
@@ -87,7 +88,7 @@ String WamitMesh::LoadDat(String fileName) {
 				line = in.GetLine();	
 				f.Load(line);
 				
-				Panel &panel = mesh.panels.Add();
+				Panel &panel = msh.mesh.panels.Add();
 				for (int ii = 0; ii < 4; ++ii)
 					panel.id[ii] = f.GetInt(ii) - 1;
 			}
@@ -99,16 +100,18 @@ String WamitMesh::LoadDat(String fileName) {
 	return String();
 }
 	
-String WamitMesh::LoadGdf(String fileName, bool &y0z, bool &x0z) {
+String WamitMesh::LoadGdf(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	SetCode(Mesh::WAMIT_GDF);
+	Mesh &msh = mesh.Add();
+	msh.name = fileName;
+	msh.SetCode(Mesh::WAMIT_GDF);
 	
 	try {
 		String line;
-		FieldSplit f(in);	
+		LineParser f(in);	
 		f.IsSeparator = IsTabSpace;
 		
 		in.GetLine();
@@ -147,8 +150,8 @@ String WamitMesh::LoadGdf(String fileName, bool &y0z, bool &x0z) {
 				double z = f.GetDouble(2)*len;	
 				
 				bool found = false;
-				for (int iin = 0; iin < mesh.nodes.size(); ++iin) {
-					Point3D &node = mesh.nodes[iin];
+				for (int iin = 0; iin < msh.mesh.nodes.size(); ++iin) {
+					Point3D &node = msh.mesh.nodes[iin];
 					if (x == node.x && y == node.y && z == node.z) {
 						ids[i] = iin;
 						found = true;
@@ -156,19 +159,19 @@ String WamitMesh::LoadGdf(String fileName, bool &y0z, bool &x0z) {
 					}
 				}
 				if (!found) {
-					Point3D &node = mesh.nodes.Add();
+					Point3D &node = msh.mesh.nodes.Add();
 					node.x = x;
 					node.y = y;
 					node.z = z;
-					ids[i] = mesh.nodes.size() - 1;
+					ids[i] = msh.mesh.nodes.size() - 1;
 				}
 			}
 			if (!npand) {
-				Panel &panel = mesh.panels.Add();
+				Panel &panel = msh.mesh.panels.Add();
 				for (int i = 0; i < 4; ++i)
 					panel.id[i] = ids[i];
 			}
-			if (mesh.panels.size() == nPatches)
+			if (msh.mesh.panels.size() == nPatches)
 				break;
 		}
 		//if (mesh.panels.size() != nPatches)

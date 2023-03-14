@@ -678,7 +678,7 @@ public:
 	HydroData hd;	
 };
 
-class Mesh {
+class Mesh : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
@@ -695,6 +695,9 @@ public:
 		cg0 = Point3D(0, 0, 0);
 		c0  = Point3D(0, 0, 0);
 	}
+	void Copy(const Mesh &msh);
+	Mesh(const Mesh &msh, int) {Copy(msh);}
+	
 	bool IsEmpty() {return mesh.IsEmpty();}
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -720,8 +723,10 @@ public:
 	MESH_FMT GetCode()			{return code;}
 	int GetId()	const			{return id;}
 
-	String Load(String fileName, double rho, double g, bool cleanPanels);
-	String Load(String fileName, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
+	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels);
+	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
+	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels);
+	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status);
 	void Orient();
@@ -780,8 +785,8 @@ private:
 
 class NemohMesh : public Mesh {
 public:
-	String LoadDat(String fileName, bool &x0z);
-	String LoadDatFS(String fileName, bool &x0z);
+	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z);
+	static String LoadDatFS(UArray<Mesh> &mesh, String fileName, bool &x0z);
 	void SaveDat(String fileName, const Surface &surf, bool x0z, int &npanels) const;
 	static void SavePreMesh(String fileName, const Surface &surf);
 	void SaveKH(String fileName) const; 
@@ -794,9 +799,19 @@ private:
 	void SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) const;
 };
 
+class SalomeMesh : public Mesh {
+public:
+	static String LoadDat(UArray<Mesh> &mesh, String fileName);
+		
+	virtual ~SalomeMesh() noexcept {}
+
+private:
+	String LoadDat0(String fileName);
+};
+
 class HAMSMesh : public Mesh {
 public:
-	String LoadPnl(String filefCaseName, bool &y0z, bool &x0z);
+	static String LoadPnl(UArray<Mesh> &mesh, String filefCaseName, bool &y0z, bool &x0z);
 	static void SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z);
 	
 	virtual ~HAMSMesh() noexcept {}
@@ -804,8 +819,8 @@ public:
 
 class WamitMesh : public Mesh {
 public:
-	String LoadDat(String fileName);
-	String LoadGdf(String fileName, bool &y0z, bool &x0z);
+	static String LoadDat(UArray<Mesh> &mesh, String fileName);
+	static String LoadGdf(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
 	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
 	void SaveHST(String fileName, double rho, double g) const; 
 
@@ -814,14 +829,14 @@ public:
 
 class AQWAMesh : public Mesh {
 public:
-	String LoadDat(String fileName);
+	static String LoadDat(UArray<Mesh> &mesh, String fileName);
 	
 	virtual ~AQWAMesh() noexcept {}
 };
 
 class DiodoreMesh : public Mesh {
 public:
-	String LoadDat(String fileName);
+	static String LoadDat(UArray<Mesh> &mesh, String fileName);
 	void SaveDat(String fileName, const Surface &surf);
 	
 	virtual ~DiodoreMesh() noexcept {}
@@ -1018,7 +1033,7 @@ public:
 private:
 	void SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, bool deleteFolder, int numThreads) const;
 	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
-	static void InMatrix(FieldSplit &f, MatrixXd &mat);
+	static void InMatrix(LineParser &f, MatrixXd &mat);
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
@@ -1038,9 +1053,9 @@ public:
 	virtual ~NemohCase() noexcept {}
 	
 private:
-	static int GetNumArgs(const FieldSplit &f);
-	void LoadFreeSurface(const FileInLine &in, const FieldSplit &f);
-	void LoadKochin(const FileInLine &in, const FieldSplit &f);
+	static int GetNumArgs(const LineParser &f);
+	void LoadFreeSurface(const FileInLine &in, const LineParser &f);
+	void LoadKochin(const FileInLine &in, const LineParser &f);
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
@@ -1124,15 +1139,15 @@ public:
 	virtual ~OrcaWave() noexcept {}	
 	
 private:
-	bool Load_YML();
+	bool Load_YML_Res();
 };
 
 UVector<int> NumSets(int num, int numsets);	
 
 
-class FieldSplitWamit: public FieldSplit {
+class LineParserWamit: public LineParser {
 public:
-	FieldSplitWamit(FileInLine &_in) : FieldSplit(_in) {}
+	LineParserWamit(FileInLine &_in) : LineParser(_in) {}
 	
 	void LoadWamitJoinedFields(String _line);// Trick for "glued" fields in Wamit
 };
@@ -1217,7 +1232,7 @@ public:
 	void FillFrequencyGapsABForcesZero(int id);
 	void FillFrequencyGapsQTFZero(int id);
 	
-	void LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
+	int LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
 	void ImageMesh(int id, int axis);

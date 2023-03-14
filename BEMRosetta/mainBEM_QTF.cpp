@@ -31,8 +31,8 @@ void QTFTabDof::Init(int posSplitter, int idof) {
 		widths[1] = max(0, width - height);
 	};
 		
-	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
-	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetBottomMargin(50);
+	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50);
+	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50);
 	up	.surf.LinkedWith(down.surf);
 	
 	up  .surf.WhenPainter = THISBACK(OnPainter);
@@ -47,10 +47,8 @@ void QTFTabDof::Init(int posSplitter, int idof) {
 	down.isUp = false;
 	
 	int len = StdFont().GetHeight();
-	up.scatter.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
-			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-	down.scatter.SetPlotAreaLeftMargin(8*len).SetPlotAreaRightMargin(len).SetPlotAreaBottomMargin(4*len)
-			   .SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
+	up.  scatter.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
+	down.scatter.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
 	up.scatter.LinkedWith(down.scatter);
 }
 
@@ -58,37 +56,42 @@ double QTFTabDof::qwT(const Hydro &hd, int id) {
 	return show_w ? hd.qw[id] : 2*M_PI/hd.qw[id];
 }
 
-void QTFTabDof::DoClick(Data &up, int idof, bool titles) {
+void QTFTabDof::DoClick(Data &up, int idof) {
 	//if (type < 2)
 		//return;
 	
 	up.dataPlot.Clear();
 	up.scatter.RemoveAllSeries();
 	
-	if (titles) {
-		if (up.show_ma_ph) {
-			if (up.isUp) {
-				up.labelY = t_("Magnitude");
-				up.ma_ph = t_("ma");
-				up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
-			} else {
-				up.labelY = t_("Phase");
-				up.ma_ph = t_("ph");
-				up.units = t_("rad");
-			}
-		} else {
-			if (up.isUp) {
-				up.labelY = t_("Real");
-				up.ma_ph = t_("re");
-			} else {
-				up.labelY = t_("Imaginary");
-				up.ma_ph = t_("im");
-			}
+	String strmag;
+	
+	if (up.show_ma_ph) {
+		if (up.isUp) {
+			up.labelY = t_("Magnitude");
+			up.ma_ph = t_("ma");
+			strmag = t_("mag");
 			up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
+		} else {
+			up.labelY = t_("Phase");
+			up.ma_ph = t_("ph");
+			strmag = t_("phase");
+			up.units = t_("rad");
 		}
-		up.scatter.SetLabelY(up.labelY);
-		up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	} else {
+		if (up.isUp) {
+			up.labelY = t_("Real");
+			up.ma_ph = t_("re");
+			strmag = t_("real");
+		} else {
+			up.labelY = t_("Imaginary");
+			up.ma_ph = t_("im");
+			strmag = t_("imag");
+		}
+		up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
 	}
+	up.scatter.SetLabelY(up.labelY);
+	up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	
 	double avgw = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
 		const Hydro &hd = Bem().hydros[i].hd();
@@ -146,18 +149,18 @@ void QTFTabDof::DoClick(Data &up, int idof, bool titles) {
 			if (!showPoints)
 				up.scatter.NoMark();
 		}
-		avgw /= Bem().hydros.size();
 	}
-	if (up.isUp) {
-		String strw;
-		if (type == 0)
-			strw = "Diagonal";
-		else if (type == 1)
-			strw = "Conjugate";
-		else 
-			strw = Format("%.2f rad/s", show_w ? avgw : 2*M_PI/avgw);
-		up.scatter.SetTitle(Format(t_("QTF %d.%s %s heading %.1f:%.1fº"), ib+1, BEM::StrDOF(idof), strw, real(head), imag(head)));
-	}
+	avgw /= Bem().hydros.size();		// Average value
+	
+	String strw;
+	if (type == 0)
+		strw = "Diagonal";
+	else if (type == 1)
+		strw = "Conjugate";
+	else 
+		strw = Format("%.2f rad/s", show_w ? avgw : 2*M_PI/avgw);
+	up.scatter.SetTitle(Format(t_("QTF %s %d.%s %s heading %.1f:%.1fº %s"), isSum ? "sum" : "dif", ib+1, BEM::StrDOF(idof), strw, real(head), imag(head), strmag));
+	
 	if (autoFit) {
 		up.scatter.ZoomToFit(true, true);
 		if (up.isUp || !up.show_ma_ph) {
@@ -189,8 +192,8 @@ void QTFTabDof::OnClick(Point p, int idof, ScatterCtrl::MouseAction action) {
 	up.surf.Refresh();
 	down.surf.Refresh();
 	
-	DoClick(up, idof, false);
-	DoClick(down, idof, false);
+	DoClick(up, idof);
+	DoClick(down, idof);
 }
 
 double QTFTabDof::GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2) {
@@ -312,8 +315,8 @@ void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool 
 		
 		UpdateArray(hd, show_ma_ph, up, opBilinear);
 		UpdateArray(hd, show_ma_ph, down, opBilinear);
-		DoClick(up, idof, true);
-		DoClick(down, idof, true);
+		DoClick(up, idof);
+		DoClick(down, idof);
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
 	}	

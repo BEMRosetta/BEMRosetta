@@ -156,7 +156,7 @@ bool Nemoh::Load_Cal(String fileName) {
 	return true;
 }
 
-int NemohCase::GetNumArgs(const FieldSplit &f) {
+int NemohCase::GetNumArgs(const LineParser &f) {
 	for (int i = 0; i < f.size(); ++i) {
 		double num = ScanDouble(f.GetText(i));
 		if (IsNull(num))
@@ -165,7 +165,7 @@ int NemohCase::GetNumArgs(const FieldSplit &f) {
 	return f.size();
 }
 	
-void NemohCase::LoadFreeSurface(const FileInLine &in, const FieldSplit &f) {
+void NemohCase::LoadFreeSurface(const FileInLine &in, const LineParser &f) {
 	nFreeX = f.GetInt(0);		nFreeY = f.GetInt(1);	
 	domainX = f.GetDouble(2);	domainY = f.GetDouble(3);
 	if (nFreeX < 0)
@@ -175,7 +175,7 @@ void NemohCase::LoadFreeSurface(const FileInLine &in, const FieldSplit &f) {
 }
 
 
-void NemohCase::LoadKochin(const FileInLine &in, const FieldSplit &f) {
+void NemohCase::LoadKochin(const FileInLine &in, const LineParser &f) {
 	nKochin = f.GetInt(0);	minK = f.GetDouble(1);	maxK = f.GetDouble(2);
 	if (nKochin < 0)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of Kochin function directions %s"), f.GetText(0)));
@@ -197,7 +197,7 @@ bool NemohCase::Load(String fileName) {
 	solver = NEMOH;
 	
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	in.GetLine();
@@ -652,9 +652,9 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			
 			bool y0z, x0z;
 			Mesh mesh;
-			String err = mesh.Load(bodies[ib].meshFile, rho, g, false, y0z, x0z);
+			String err = Mesh::Load(mesh, bodies[ib].meshFile, rho, g, false, y0z, x0z);
 			if (!err.IsEmpty()) {
-				err = mesh.Load(AppendFileNameX(folderMesh, GetFileName(bodies[ib].meshFile)), rho, g, false, y0z, x0z);
+				err = Mesh::Load(mesh, AppendFileNameX(folderMesh, GetFileName(bodies[ib].meshFile)), rho, g, false, y0z, x0z);
 				if (!err.IsEmpty()) {
 					throw Exc(err);
 				}
@@ -900,7 +900,7 @@ bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, MatrixXd &cg, Mat
 	    if (!in.IsOpen())
 	        return false;
 	    
-	    FieldSplit f(in);
+	    LineParser f(in);
 	    f.IsSeparator = IsTabSpace;
 	    for (int i = 0; i < 3 && !in.IsEof(); ++i) {
 			f.Load(in.GetLine());
@@ -995,7 +995,7 @@ bool Nemoh::Load_6x6(Eigen::MatrixXd &C, String file) {
 
 	C.setConstant(6, 6, 0);
     
-    FieldSplit f(in);
+    LineParser f(in);
     f.IsSeparator = IsTabSpace;
 	for (int i = 0; i < 6 && !in.IsEof(); ++i) {
 		f.Load(in.GetLine());
@@ -1051,7 +1051,7 @@ bool Nemoh::Load_Radiation(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	in.GetLine();
 	while(!in.IsEof()) {
@@ -1109,7 +1109,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	in.GetLine();
 	UVector<UVector<int>> dof;
@@ -1151,7 +1151,7 @@ bool Nemoh::Load_IRF(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	String line;
-	FieldSplit f(in);	
+	LineParser f(in);	
 	f.IsSeparator = IsTabSpace;
 	hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, 0);
 	//int ibodydof = 0;

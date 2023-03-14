@@ -41,7 +41,7 @@ bool Diodore::Load_HDB() {
 		return false;
 	
 	String line; 
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	hd().dataFromW = false;

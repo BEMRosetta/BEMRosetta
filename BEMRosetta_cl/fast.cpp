@@ -69,7 +69,7 @@ bool Fast::Load_HydroDyn(String fileName) {
 	hd().Vo.SetCount(hd().Nb, 0);
 	hd().rho = hd().h = hd().len = WaveDirRange = Null;
 	
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());
@@ -145,7 +145,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		if (!in.IsOpen())
 			return;
 	
-		FieldSplit f(in);
+		LineParser f(in);
 		f.IsSeparator = IsTabSpace;
 		while (!in.IsEof()) {
 			f.Load(in.GetLine());
@@ -414,7 +414,7 @@ bool Fast::Load_SS(String fileName) {
 		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
 	
 	String line; 
-	FieldSplit f(in);
+	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
 	hd().stsProcessor = TrimBoth(in.GetLine());

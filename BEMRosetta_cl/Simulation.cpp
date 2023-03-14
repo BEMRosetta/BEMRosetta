@@ -46,7 +46,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 				throw Exc("Variable 'meshfile' not found");
 			meshfile.Replace("\"", "");
 			
-			String ret = mesh.Load(meshfile, rho, g, false);
+			String ret = Mesh::Load(mesh, meshfile, rho, g, false);
 			if (!ret.IsEmpty()) 
 				throw Exc(Format("Error loading mesh: %s", ret));
 		
