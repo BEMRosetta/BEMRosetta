@@ -393,7 +393,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 			y0zmesh = false;
 
 		String dest = AppendFileNameX(folderInput, "HullMesh.pnl");
-		mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
+		Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, g, Mesh::UNDERWATER, y0zmesh, x0zmesh);
 		
 		bool y0zlid, x0zlid;	// Hull symmetries rules over lid ones
 		if (!bodies[ib].lidFile.IsEmpty()) {
@@ -404,7 +404,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 			Mesh &mesh = First(msh);
 				
 			String dest = AppendFileNameX(folderInput, "WaterplaneMesh.pnl");
-			mesh.SaveAs(dest, Mesh::HAMS_PNL, g, Mesh::ALL, y0zmesh, x0zmesh);
+			Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, g, Mesh::ALL, y0zmesh, x0zmesh);
 		}
 		
 		Save_Settings(folder, !bodies[ib].lidFile.IsEmpty(), bem);
@@ -499,7 +499,7 @@ void HamsCase::Save_Settings(String folderInput, bool thereIsLid, const BEM &bem
 		
 		mesh.Append(lid.mesh, rho, g);
 	}
-	mesh.SaveAs(AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
+	Mesh::SaveAs(mesh, AppendFileNameX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, g, Mesh::ALL, false, false);	
 	
 	out << g << "\n";
 	out << rho << "\n";

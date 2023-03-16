@@ -1557,16 +1557,42 @@ int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool
 			}
 		}
 	}
-	UArray<Mesh> mesh;
-	String error = Mesh::Load(mesh, fileName, rho, g, cleanPanels);
+	UArray<Mesh> meshes;
+	String error = Mesh::Load(meshes, fileName, rho, g, cleanPanels);
 	if (!error.IsEmpty()) {
 		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 	}
-	int num = mesh.size();
-	for (int i = 0; i < mesh.size(); ++i)
-		surfs.Add(pick(mesh[i]));
+	int num = meshes.size();
+	for (int i = 0; i < num; ++i)
+		surfs.Add(pick(meshes[i]));
 	return num;
+}
+
+void BEM::SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, double g, Mesh::MESH_TYPE meshType, bool symX, bool symY) {
+	if (type == Mesh::UNKNOWN) {
+		String ext = ToLower(GetFileExt(fileName));
+		
+		if (ext == ".gdf")
+			type = Mesh::WAMIT_GDF;
+		else if (ext == ".dat")
+			type = Mesh::NEMOH_DAT;
+		else if (ext == ".")
+			type = Mesh::NEMOH_PRE;
+		else if (ext == ".pnl")
+			type = Mesh::HAMS_PNL;
+		else if (ext == ".stl")
+			type = Mesh::STL_TXT;
+		else if (ext == ".mesh")
+			type = Mesh::BEM_MESH;
+		else
+			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
+	}
+	UArray<Mesh*> meshes;
+	for (int id : ids)
+		meshes << &surfs[id];
+	
+	Mesh::SaveAs(meshes, fileName, type, g, meshType, symX, symY);
 }
 
 void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
