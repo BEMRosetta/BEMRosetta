@@ -684,7 +684,7 @@ public:
 	
 	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   UNKNOWN};	
 	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    false,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
 	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.*"};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
@@ -752,10 +752,19 @@ public:
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;
 	
-	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels);
-	void SaveAs(String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+	static void SaveAs(const UArray<Mesh*> &meshes, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels);
+	static void SaveAs(const UArray<Mesh*> &meshes, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
 		int nNodes, nPanels;
-		SaveAs(fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+		SaveAs(meshes, fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+	}
+	static void SaveAs(Mesh &mesh, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels) {
+		UArray<Mesh*> meshes;
+		meshes << &mesh;
+		SaveAs(meshes, fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+	}
+	static void SaveAs(Mesh &mesh, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+		int nNodes, nPanels;
+		SaveAs(mesh, fileName, type, g, meshType, symX, symY, nNodes, nPanels);
 	}
 	
 	void Report(double rho) const;
@@ -787,7 +796,7 @@ class NemohMesh : public Mesh {
 public:
 	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z);
 	static String LoadDatFS(UArray<Mesh> &mesh, String fileName, bool &x0z);
-	void SaveDat(String fileName, const Surface &surf, bool x0z, int &npanels) const;
+	static void SaveDat(const Mesh &mesh, String fileName, const Surface &surf, bool x0z, int &npanels);
 	static void SavePreMesh(String fileName, const Surface &surf);
 	void SaveKH(String fileName) const; 
 	//void SaveInertia(String fileName) const;
@@ -796,7 +805,7 @@ public:
 
 private:
 	String LoadDat0(String fileName, bool &x0z);
-	void SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) const;
+	static void SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels);
 };
 
 class SalomeMesh : public Mesh {
@@ -830,6 +839,8 @@ public:
 class AQWAMesh : public Mesh {
 public:
 	static String LoadDat(UArray<Mesh> &mesh, String fileName);
+	static void SaveDat(String fileName, const UArray<Surface> &surf, bool y0z, bool x0z);
+	static String SaveDat(const UArray<Surface> &surf, bool y0z, bool x0z);
 	
 	virtual ~AQWAMesh() noexcept {}
 };
@@ -837,7 +848,7 @@ public:
 class DiodoreMesh : public Mesh {
 public:
 	static String LoadDat(UArray<Mesh> &mesh, String fileName);
-	void SaveDat(String fileName, const Surface &surf);
+	static void SaveDat(String fileName, const Surface &surf);
 	
 	virtual ~DiodoreMesh() noexcept {}
 };
@@ -1233,6 +1244,7 @@ public:
 	void FillFrequencyGapsQTFZero(int id);
 	
 	int LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
+	void SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, double g, Mesh::MESH_TYPE meshType, bool symX, bool symY);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
 	void ImageMesh(int id, int axis);

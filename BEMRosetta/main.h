@@ -1088,7 +1088,7 @@ private:
 		else {
 			if (IsNull(pf))
 				return;
-			int px = up.surf.GetPosX(pf.x), py = up.surf.GetPosY(pf.y);
+			int px = fround(up.surf.GetPosX(pf.x)), py = fround(up.surf.GetPosY(pf.y));
 			if (type == 2)
 				DrawLineOpa(w, s.GetPosX(mn), py, 			 s.GetPosX(mx), py,    		   1, 1, 3, LtRed(), "2 2");	
 			else

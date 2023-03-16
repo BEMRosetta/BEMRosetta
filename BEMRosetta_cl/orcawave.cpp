@@ -238,102 +238,124 @@ bool OrcaWave::Load_YML_Res() {
 					inertia(5, 3) = mat[2][0]*1000;
 					inertia(5, 4) = mat[2][1]*1000;
 					inertia(5, 5) = mat[2][2]*1000;
-				}
-			}
-		}
-	}
-/*
-	char inforce = '\0';
-	invessel = false;
-	int ib = -1;
-	int idFreq = -2;		// First is infinity
-	int idHead = -1;
-	
-	
-	while(!f.IsEof()) {
-		} else if (invessel && f.GetText().StartsWith("        CentreOfMass:")) {
-			Eigen::MatrixXd &inertia = hd().M[ib];
-			
-			UVector<double> line = GetVector(f, f.GetText().Mid(21));
-			
-			hd().cg(0, ib) = line[0];
-			hd().cg(1, ib) = line[1];
-			hd().cg(2, ib) = line[2];
+				} else if (fy.FirstMatch("HydrostaticStiffnessz")) {
+					UVector<UVector<double>> mat = fy.GetMatrixDouble();
+					
+					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
+						for (int c = 0; c < 3; ++c)
+							hd().C[ib](r+2, c+2) = mat[r][c]*1000;
+				} else if (fy.FirstIs("CentreOfMass")) {
+					UVector<double> line = fy.GetVectorDouble();
+					
+					hd().cg(0, ib) = line[0];
+					hd().cg(1, ib) = line[1];
+					hd().cg(2, ib) = line[2];
+				} else if (fy.FirstIs("CentreOfBuoyancy")) {
+					UVector<double> line = fy.GetVectorDouble();
+					
+					hd().cb(0, ib) = line[0];
+					hd().cb(1, ib) = line[1];
+					hd().cb(2, ib) = line[2];
+				} else if (fy.FirstIs("DisplacedVolume")) 
+					hd().Vo[ib] = ScanDouble(fy.GetVal());
+				else if (fy.FirstIs("DisplacementRAOs")) {
+					if (fy.FirstIs("RAOs")) {
+						if (fy.FirstMatch("RAOPeriodOrFrequency") && fy.GetIndex()[1] == 0) {	
+							int idh = fy.Index();
+							if (idh < 0 || idh >= hd().head.size())
+								throw Exc(in.Str() + "\n" + t_("Wrong heading"));
+								
+							UVector<UVector<double>> mat = fy.GetMatrixDouble();
+							
+							if (mat.size() != hd().Nf || mat[0].size() != 13)
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in DisplacementRAOs matrix"), fy.GetText()));
 
-			double cx = mass*hd().cg(0, ib);
-			double cy = mass*hd().cg(1, ib);
-			double cz = mass*hd().cg(2, ib);
-			inertia(1, 5) = inertia(5, 1) =  cx;
-			inertia(2, 4) = inertia(4, 2) = -cx;
-			inertia(0, 5) = inertia(5, 0) = -cy;
-			inertia(2, 3) = inertia(3, 2) =  cy;
-			inertia(0, 4) = inertia(4, 0) =  cz;
-			inertia(1, 3) = inertia(3, 1) = -cz;
-		} else if (invessel && f.GetText().StartsWith("          - AMDPeriodOrFrequency:")) 
-			idFreq++; 	
-		else if (invessel && f.GetText().StartsWith("            AddedMassMatrixX")) {
-			if (idFreq == -1) {
-				for (int r = 0; r < 6; ++r) {
-					UVector<double> line = GetVector(f); 
-					for (int c = 0; c < 6; ++c) 
-						hd().Ainf(r, c) = line[c]*1000; 
+							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
+								for (int idof = 0; idof < 6; ++idof) 
+									hd().rao.force[idh](ifr, idof) = std::polar<double>(mat[ifr][1 + 2*idof], ToRad(mat[ifr][1 + 2*idof + 1]));
+						}
+					}
+				}  else if (fy.FirstIs("LoadRAOs")) {
+					if (fy.FirstIs("RAOs")) {
+						if (fy.FirstMatch("RAOPeriodOrFrequency") && fy.GetIndex()[1] == 0) {	
+							int idh = fy.Index();
+							if (idh < 0 || idh >= hd().head.size())
+								throw Exc(in.Str() + "\n" + t_("Wrong heading"));
+								
+							UVector<UVector<double>> mat = fy.GetMatrixDouble();
+							
+							if (mat.size() != hd().Nf || mat[0].size() != 13)
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in LoadRAOs matrix"), fy.GetText()));
+
+							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
+								for (int idof = 0; idof < 6; ++idof) 
+									hd().ex.force[idh](ifr, idof) = std::polar<double>(mat[ifr][1 + 2*idof]*1000, ToRad(mat[ifr][1 + 2*idof + 1]));
+						}
+					}
+				} else if (fy.FirstIs("WaveDrift")) {
+					if (fy.FirstIs("RAOs")) {
+						if (fy.FirstMatch("RAOPeriodOrFrequency") && fy.GetIndex()[1] == 0) {	
+							if (hd().md.size() == 0) {
+								hd().mdhead.resize(hd().head.size());
+								for (int ih = 0; ih < hd().head.size(); ++ih)
+									hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
+								Hydro::InitMD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+							}
+							
+							int idh = fy.Index();
+							if (idh < 0 || idh >= hd().head.size())
+								throw Exc(in.Str() + "\n" + t_("Wrong heading"));
+								
+							UVector<UVector<double>> mat = fy.GetMatrixDouble();
+							
+							if (mat.size() != hd().Nf || mat[0].size() != 7)
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in WaveDrift matrix"), fy.GetText()));
+
+							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
+								for (int idof = 0; idof < 6; ++idof) 
+									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*1000;
+						}
+					}
+				} else if (fy.FirstIs("FrequencyDependentAddedMassAndDamping")) {
+					if (fy.FirstMatch("AddedMassMatrixX*")) {
+						int idf = fy.Index();
+						if (idf < 0 || idf >= hd().w.size())		// Infinity is the first
+							throw Exc(in.Str() + "\n" + t_("Wrong frequency"));			
+						idf--;
+						
+						UVector<UVector<double>> mat = fy.GetMatrixDouble();
+						
+						if (idf == -1) {
+							for (int r = 0; r < 6; ++r) {
+								for (int c = 0; c < 6; ++c) 
+									hd().Ainf(r, c) = mat[r][c]*1000; 
+							}
+						} else {
+							for (int r = 0; r < 6; ++r) {
+								for (int c = 0; c < 6; ++c) 
+									hd().A[r][c](idf) = mat[r][c]*1000; 
+							}
+						}
+					} else if (fy.FirstMatch("DampingX*")) {
+						int idf = fy.Index();
+						if (idf < 0 || idf >= hd().w.size())		// Infinity is the first
+							throw Exc(in.Str() + "\n" + t_("Wrong frequency"));			
+						idf--;
+						
+						if (idf >= 0) {
+							UVector<UVector<double>> mat = fy.GetMatrixDouble();
+							
+							for (int r = 0; r < 6; ++r) {
+								for (int c = 0; c < 6; ++c) 
+									hd().B[r][c](idf) = mat[r][c]*1000; 
+							}
+						}
+					}
 				}
-			} else {
-				for (int r = 0; r < 6; ++r) {
-					UVector<double> line = GetVector(f); 
-					for (int c = 0; c < 6; ++c) 
-						hd().A[r][c](idFreq) = line[c]*1000; 
-				}
-			}
-		} else if (invessel && f.GetText().StartsWith("            DampingX")) {
-			if (idFreq >= 0) {
-				for (int r = 0; r < 6; ++r) {
-					UVector<double> line = GetVector(f); 
-					for (int c = 0; c < 6; ++c) 
-						hd().B[r][c](idFreq) = line[c]*1000; 
-				}
-			}
-		} else if (f.GetText().StartsWith("        DisplacementRAOs:")) {
-			inforce = 'r';		
-			idHead = -1;
-		} else if (f.GetText().StartsWith("        LoadRAOs:")) {
-			inforce = 'f';		
-			idHead = -1;
-		} else if (f.GetText().StartsWith("        WaveDrift:")) {
-			inforce = 'd';		
-			idHead = -1;
-			if (hd().md.size() == 0) {
-				hd().mdhead.resize(hd().head.size());
-				for (int ih = 0; ih < hd().head.size(); ++ih)
-					hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
-				Hydro::InitMD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
-			}
-		} else if (f.GetText().StartsWith("              RAOPeriodOrFrequency")) {
-			idHead++;
-			for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-				UVector<double> line = GetVector(f); 
-				
-				if (inforce == 'f') {
-					if (line.size() != 13)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in line %s"), f.GetText()));
-					for (int idof = 0; idof < 6; ++idof) 
-						hd().ex .force[idHead](ifr, idof + 6*ib) = std::polar<double>(line[1 + 2*idof]*1000, ToRad(line[1 + 2*idof + 1]));
-				} else if (inforce == 'r') {
-					if (line.size() != 13)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in line %s"), f.GetText()));
-					for (int idof = 0; idof < 6; ++idof) 
-						hd().rao.force[idHead](ifr, idof + 6*ib) = std::polar<double>(line[1 + 2*idof], ToRad(line[1 + 2*idof + 1]));
-				} else if (inforce == 'd') {
-					if (line.size() != 7)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in line %s"), f.GetText()));
-					for (int idof = 0; idof < 6; ++idof) 
-						hd().md[ib][idHead][idof](ifr) = line[1 + idof]*1000;
-				} else
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong RAOPeriodOrFrequency status %s"), f.GetText()));
 			}
 		}
 	}
-	*/
+
 	if (hd().Nb == 0)
 		throw Exc(t_("Incorrect .yml format"));
 	

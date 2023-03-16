@@ -140,73 +140,60 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 	return String();
 }
 
-void Mesh::SaveAs(String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, 
+void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, 
 						int &nNodes, int &nPanels) {
-	Surface surf;
-	if (meshType == UNDERWATER) 
-		surf = clone(under);
-	else
-		surf = clone(mesh);
+	UArray<Surface> surfs(meshes.size());
+	nNodes = nPanels = 0;
 	
-	if (type == UNKNOWN) {
-		String ext = ToLower(GetFileExt(file));
-		
-		if (ext == ".gdf")
-			type = WAMIT_GDF;
-		else if (ext == ".dat")
-			type = NEMOH_DAT;
-		else if (ext == ".")
-			type = NEMOH_PRE;
-		else if (ext == ".pnl")
-			type = HAMS_PNL;
-		else if (ext == ".stl")
-			type = STL_TXT;
-		else if (ext == ".mesh")
-			type = BEM_MESH;
+	for (int i = 0; i < meshes.size(); ++i) {
+		Surface &surf = surfs[i];
+		if (meshType == UNDERWATER) 
+			surf = clone(meshes[i]->under);
 		else
-			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
+			surf = clone(meshes[i]->mesh);
+		
+		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT)) {
+			Surface nsurf;
+			nsurf.CutX(surf);
+			surf = pick(nsurf);
+		}
+		if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
+					 type == HAMS_PNL || type == DIODORE_DAT)) {
+			Surface nsurf;
+			nsurf.CutY(surf);
+			surf = pick(nsurf);
+		}
+		if (meshType == UNDERWATER || symX || symY) {// Some healing before saving
+			Surface::RemoveDuplicatedPanels(surf.panels);
+			Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes);
+			Surface::RemoveDuplicatedPanels(surf.panels);
+			Surface::DetectTriBiP(surf.panels);
+		}
+		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
+			throw Exc(t_("Model is empty. No data found"));
+
+		nNodes += surf.nodes.size();
+		nPanels += surf.panels.size();
 	}
-	
-	if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT)) {
-		Surface nsurf;
-		nsurf.CutX(surf);
-		surf = pick(nsurf);
-	}
-	if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
-				 type == HAMS_PNL || type == DIODORE_DAT)) {
-		Surface nsurf;
-		nsurf.CutY(surf);
-		surf = pick(nsurf);
-	}
-	if (meshType == UNDERWATER || symX || symY) {// Some healing before saving
-		Surface::RemoveDuplicatedPanels(surf.panels);
-		Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes);
-		Surface::RemoveDuplicatedPanels(surf.panels);
-		Surface::DetectTriBiP(surf.panels);
-	}
-	
-	if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
-		throw Exc(t_("Model is empty. No data found"));
-	
-	nNodes = surf.nodes.size();
-	nPanels = surf.panels.size();
 	
 	if (type == WAMIT_GDF) 
-		static_cast<const WamitMesh &>(*this).SaveGdf(file, surf, g, symX, symY);	
+		WamitMesh::SaveGdf(file, First(surfs), g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		static_cast<NemohMesh&>(*this).SaveDat(file, surf, symY, nPanels);
+		NemohMesh::SaveDat(*(First(meshes)), file, First(surfs), symY, nPanels);
 	else if (type == NEMOH_PRE) 
-		static_cast<NemohMesh&>(*this).SavePreMesh(file, surf);
+		NemohMesh::SavePreMesh(file, First(surfs));
 	else if (type == HAMS_PNL)		
-		static_cast<HAMSMesh&>(*this).SavePnl(file, surf, symX, symY);	// Only one symmetry really available
+		HAMSMesh::SavePnl(file, First(surfs), symX, symY);	// Only one symmetry is really available
+	else if (type == AQWA_DAT)		
+		AQWAMesh::SaveDat(file, surfs, symX, symY);	
 	else if (type == DIODORE_DAT) 
-		static_cast<DiodoreMesh&>(*this).SaveDat(file, surf);
+		DiodoreMesh::SaveDat(file, First(surfs));
 	else if (type == STL_BIN)		
-		SaveStlBin(file, surf, 1000);
+		SaveStlBin(file, First(surfs), 1000);
 	else if (type == STL_TXT)		
-		SaveStlTxt(file, surf, 1000);
+		SaveStlTxt(file, First(surfs), 1000);
 	else if (type == BEM_MESH)		
-		surf.Save(file);
+		First(surfs).Save(file);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
