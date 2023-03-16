@@ -239,24 +239,24 @@ String SalomeMesh::LoadDat0(String fileName) {
 	return String();
 }
 
-void NemohMesh::SaveDat(String fileName, const Surface &surf, bool x0z, int &npanels) const {
+void NemohMesh::SaveDat(const Mesh &mesh, String fileName, const Surface &surf, bool x0z, int &npanels) {
 	SaveDat0(fileName, surf, x0z, npanels);
 	
 	MatrixXd cg_(3, 1), cb_(3, 1);
 	UVector<double> Vo;
 	
-	if (!IsNull(cg) && !IsNull(cb)) {
-		cg_(0, 0) = cg.x;		//Supposed 1 body
-		cg_(1, 0) = cg.y;		
-		cg_(2, 0) = cg.z;		
-		cb_(0, 0) = cb.x;		//Supposed 1 body
-		cb_(1, 0) = cb.y;		
-		cb_(2, 0) = cb.z;	
+	if (!IsNull(mesh.cg) && !IsNull(mesh.cb)) {
+		cg_(0, 0) = mesh.cg.x;		//Supposed 1 body
+		cg_(1, 0) = mesh.cg.y;		
+		cg_(2, 0) = mesh.cg.z;		
+		cb_(0, 0) = mesh.cb.x;		//Supposed 1 body
+		cb_(1, 0) = mesh.cb.y;		
+		cb_(2, 0) = mesh.cb.z;	
 		Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo);
 	}
 }
 
-void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) const {
+void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	

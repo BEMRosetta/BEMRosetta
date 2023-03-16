@@ -353,7 +353,7 @@ void MainMesh::OnMenuOpenArraySel() {
 	
 	Mesh &data = Bem().surfs[id];
 	Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(~menuOpen.dropExport);
-	menuOpen.symX <<= (type == Mesh::WAMIT_GDF && Bem().surfs[id].IsSymmetricX());
+	menuOpen.symX <<= ((type == Mesh::WAMIT_GDF || type == Mesh::AQWA_DAT) && Bem().surfs[id].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[id].IsSymmetricY();
 }
 
@@ -467,6 +467,9 @@ void MainMesh::OnOpt() {
 	case Mesh::HAMS_PNL:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
+	case Mesh::AQWA_DAT:	menuOpen.symX.Enable();
+							menuOpen.symY.Enable();
+							break;
 	case Mesh::NEMOH_DAT:	menuOpen.symY.Enable();
 							break;	
 	default:				break;		
@@ -548,26 +551,24 @@ void MainMesh::OnConvertMesh() {
 	GuiLock __;
 	
 	try {
-		int num = ArrayCtrlSelectedGetCount(listLoaded);
-		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
-			return;
-		}
-		int id;
-		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
-		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
-			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
-				return;
-			}
-		}
-		
-		Status(t_("Saving mesh data"));
 		String fileType = ~menuOpen.dropExport;
 		Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(fileType);
 		String ext = Replace(Mesh::meshExt[type], "*", "");
+		
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		
+		if (ids.size() > 1 && type != Mesh::AQWA_DAT) {
+			Exclamation(t_("Please select just one model"));
+			return;
+		}
+		if (ids.size() == 0 && listLoaded.GetCount() == 1)
+			ids << ArrayModel_IdMesh(listLoaded, 0);
+		else {
+			Exclamation(t_("Please select a model to process"));
+			return;
+		}
+		
+		Status(t_("Saving mesh data"));
 		
 		FileSel fs;
 		
@@ -587,7 +588,7 @@ void MainMesh::OnConvertMesh() {
 		Progress progress(t_("Saving mesh file..."), 100); 
 		progress.Granularity(1000);
 		
-		Bem().surfs[id].SaveAs(fileName, type, Bem().g, 
+		Bem().SaveMesh(fileName, ids, type, Bem().g, 
 							   static_cast<Mesh::MESH_TYPE>(int(~menuOpen.optMeshType)),
 							   ~menuOpen.symX, ~menuOpen.symY);	
 							   
@@ -1349,8 +1350,8 @@ void MainMesh::UpdateButtons() {
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butSplit.Enable(numsel == 1 || numrow == 1);
-	menuOpen.dropExport.Enable(numsel == 1);
-	menuOpen.butExport.Enable(numsel == 1);
+	menuOpen.dropExport.Enable(numsel >= 1);
+	menuOpen.butExport.Enable(numsel >= 1);
 	menuProcess.butUpdateCg.Enable(numsel == 1 || numrow == 1);
 	menuMove.butUpdatePos.Enable(numsel == 1 || numrow == 1);
 	menuMove.butUpdateAng.Enable(numsel == 1 || numrow == 1);

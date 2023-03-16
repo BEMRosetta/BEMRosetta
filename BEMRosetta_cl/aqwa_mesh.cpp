@@ -9,6 +9,9 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
+	double factorMass = 1;
+	double factorLength = 1;
+	
 	UArray<Upp::Index<int>> ids;
 	try {
 		String line;
@@ -28,8 +31,20 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 					deck = ScanInt(line.Mid(pos));
 				else if ((pos = line.FindAfter("Unit System :")) >= 0) {
 					String system = Trim(line.Mid(pos));
-					if (system != "Metric: kg, m [N]")
+					if (system.Find("Metric") < 0)
 						throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
+					if (system.Find("kg") > 0)
+						factorMass = 1;
+					else if (system.Find("tonne") > 0)
+						factorMass = 1000;
+					else 
+						throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));
+					if (system.Find("m ") > 0)
+						factorLength = 1;
+					else if (system.Find("km ") > 0)
+						factorLength = 1000;
+					else 
+						throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
 				}
 			}
 			
@@ -50,13 +65,13 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 						mesh[ib].cg.x = f.GetDouble(2);
 						mesh[ib].cg.y = f.GetDouble(3);
 						mesh[ib].cg.z = f.GetDouble(4);
-						mesh[ib].c0 = clone(mesh[ib].cg);		// In AQWA, it's the same
+						mesh[ib].c0 = clone(mesh[ib].cg);		// In AQWA, cg == c0
 					} else {
 						ids[ib] << id;
 						Point3D &node = mesh[ib].mesh.nodes.Add();
-						node.x = f.GetDouble(2);
-						node.y = f.GetDouble(3);
-						node.z = f.GetDouble(4);
+						node.x = f.GetDouble(2)*factorLength;
+						node.y = f.GetDouble(3)*factorLength;
+						node.z = f.GetDouble(4)*factorLength;
 					}
 				}
 			} else if (deck == 2) {
@@ -108,3 +123,14 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	return String();
 }
 
+String AQWAMesh::SaveDat(const UArray<Surface> &surf, bool y0z, bool x0z) {
+	String ret;
+		
+	return ret;
+}
+
+void AQWAMesh::SaveDat(String fileName, const UArray<Surface> &surf, bool y0z, bool x0z) {
+	
+	
+	
+}

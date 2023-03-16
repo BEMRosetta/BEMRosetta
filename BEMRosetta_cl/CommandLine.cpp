@@ -493,7 +493,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 							}
-							bem.surfs[meshid].SaveAs(file, meshFmt, bem.g, Mesh::ALL, symX, symY);
+							Mesh::SaveAs(bem.surfs[meshid], file, meshFmt, bem.g, Mesh::ALL, symX, symY);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), meshid, file));
 						} else if (param == "-t" || param == "-translate") {
 							CheckIfAvailableArg(command, ++i, "x");
