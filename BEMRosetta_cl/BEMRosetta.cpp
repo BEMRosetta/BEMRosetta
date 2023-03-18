@@ -1592,7 +1592,7 @@ void BEM::SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type
 	for (int id : ids)
 		meshes << &surfs[id];
 	
-	Mesh::SaveAs(meshes, fileName, type, g, meshType, symX, symY);
+	Mesh::SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY);
 }
 
 void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {

@@ -493,7 +493,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 							}
-							Mesh::SaveAs(bem.surfs[meshid], file, meshFmt, bem.g, Mesh::ALL, symX, symY);
+							Mesh::SaveAs(bem.surfs[meshid], file, meshFmt, Mesh::ALL, bem.rho, bem.g, symX, symY);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), meshid, file));
 						} else if (param == "-t" || param == "-translate") {
 							CheckIfAvailableArg(command, ++i, "x");
@@ -554,9 +554,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						} else if (param == "-mass") { 
 							CheckIfAvailableArg(command, ++i, "mass");
 							double mass = ScanDouble(command[i]);
-							Mesh &data = bem.surfs[meshid];
-							data.mass = mass;
-							data.AfterLoad(bem.rho, bem.g, true, false);
+							Mesh &mesh = bem.surfs[meshid];
+							mesh.SetMass(mass);
+							mesh.AfterLoad(bem.rho, bem.g, true, false);
 							BEM::Print("\n" + Format(t_("Mass is %f"), mass));
 						} else if (param == "-reset") {	
 							bem.surfs[meshid].Reset(bem.rho, bem.g);
