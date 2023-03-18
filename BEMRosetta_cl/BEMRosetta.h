@@ -752,20 +752,23 @@ public:
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;
 	
-	static void SaveAs(const UArray<Mesh*> &meshes, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels);
-	static void SaveAs(const UArray<Mesh*> &meshes, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+	static void SaveAs(const UArray<Mesh*> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels);
+	static void SaveAs(const UArray<Mesh*> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
-		SaveAs(meshes, fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+		SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels);
 	}
-	static void SaveAs(Mesh &mesh, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, int &nNodes, int &nPanels) {
+	static void SaveAs(Mesh &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels) {
 		UArray<Mesh*> meshes;
 		meshes << &mesh;
-		SaveAs(meshes, fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+		SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels);
 	}
-	static void SaveAs(Mesh &mesh, String fileName, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY) {
+	static void SaveAs(Mesh &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
-		SaveAs(mesh, fileName, type, g, meshType, symX, symY, nNodes, nPanels);
+		SaveAs(mesh, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels);
 	}
+	
+	void SetMass(double m);
+	double GetMass() const		{return M(0, 0);}
 	
 	void Report(double rho) const;
 	
@@ -776,7 +779,7 @@ public:
 	Pointf cgZ0surface = Null;
 	Point3D cb = Null;
 	Point3D cg, cg0, c0;
-	double mass = Null;
+	MatrixXd M;
 	MatrixXd C;
 	
 	String name;
@@ -838,9 +841,9 @@ public:
 
 class AQWAMesh : public Mesh {
 public:
-	static String LoadDat(UArray<Mesh> &mesh, String fileName);
-	static void SaveDat(String fileName, const UArray<Surface> &surf, bool y0z, bool x0z);
-	static String SaveDat(const UArray<Surface> &surf, bool y0z, bool x0z);
+	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
+	static void SaveDat(String fileName, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
+	static String SaveDat(const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
 	
 	virtual ~AQWAMesh() noexcept {}
 };

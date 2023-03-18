@@ -231,6 +231,15 @@ bool Wamit::Load_out() {
 		} else if ((pos = line.FindAfter("Input from Geometric Data File:")) >= 0) {
 			hd().Nb = 1;
 			hd().names << GetFileTitle(TrimBoth(line.Mid(pos)));
+		} else if (hd().Nb == 0 && line.Find("BODY PARAMETERS:") >= 0) {		// Hydrostar
+			hd().Nb = 1;
+			hd().names << "Body1";
+			hd().cg.setConstant(3, hd().Nb, NaNDouble);
+			hd().cb.setConstant(3, hd().Nb, NaNDouble);
+			hd().c0.setConstant(3, hd().Nb, 0);
+			hd().Vo.SetCount(hd().Nb, NaNDouble);
+			hd().C.SetCount(hd().Nb);
+			hd().M.SetCount(hd().Nb);
 		} else if (line.Find("POTEN run date and starting time:") >= 0) {
 			hd().cg.setConstant(3, hd().Nb, NaNDouble);
 			hd().cb.setConstant(3, hd().Nb, NaNDouble);
@@ -336,7 +345,7 @@ bool Wamit::Load_out() {
 			hd().C[ibody](4, 4) = f.GetDouble(1);
 			hd().C[ibody](4, 5) = f.GetDouble(2);
 			
-		} else if (line.Find("Output from  WAMIT") >= 0) {
+		} else if (line.Find("Output from") >= 0) {
 			hd().head.Clear();
 			FileInLine::Pos fpos = in.GetPos();
 			
@@ -405,8 +414,15 @@ bool Wamit::Load_out() {
 				while (!in.IsEof()) {
 					f.GetLine();
 					if (f.IsInLine("Period indices:")) {
-						int if1 = f.GetInt(2);
-						int if2 = f.GetInt(3);
+						int if1, if2;
+						if (f.GetText(3) == "Periods:") {		// Hydrostar joins indexes
+							String stri = f.GetText(2);
+							stri = stri.Left(stri.GetCount()/2);
+							if1 = if2 = ScanInt(stri);
+						} else {
+							if1 = f.GetInt(2);
+							if2 = f.GetInt(3);
+						}
 						if (if1 > qtfNf)
 							qtfNf = if1;
 						if (if2 > qtfNf)
