@@ -51,7 +51,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 				throw Exc(Format("Error loading mesh: %s", ret));
 		
 			mesh.c0.Set(c0x, c0y, c0z);		// Reference system
-			mesh.mass = 0;
+			mesh.SetMass(0.);
 			mesh.AfterLoad(rho, g, false, false);
 			
 			stiff = clone(mesh.C);

@@ -369,7 +369,7 @@ void MainMesh::OnMenuProcessArraySel() {
 	menuProcess.x_0 <<= data.c0.x;
 	menuProcess.y_0 <<= data.c0.y;
 	menuProcess.z_0 <<= data.c0.z;
-	menuProcess.mass <<= data.mass;
+	menuProcess.mass <<= data.GetMass();
 }
 
 void MainMesh::OnMenuMoveArraySel() {
@@ -524,7 +524,7 @@ bool MainMesh::OnLoad() {
 			if (!data.mesh.IsEmpty() && ~menuMove.opZArchimede) {
 				double dz = 0.1;
 				Surface under;
-				if (data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under)) {
+				if (data.mesh.TranslateArchimede(data.GetMass(), Bem().rho, dz, under)) {
 					data.cg.Translate(0, 0, dz);
 					videoCtrl.AddReg(Point3D(0, 0, dz));
 				} else
@@ -555,17 +555,19 @@ void MainMesh::OnConvertMesh() {
 		Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(fileType);
 		String ext = Replace(Mesh::meshExt[type], "*", "");
 		
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> sel = ArrayCtrlSelectedGet(listLoaded);
 		
-		if (ids.size() > 1 && type != Mesh::AQWA_DAT) {
+		if (sel.size() > 1 && type != Mesh::AQWA_DAT) {
 			Exclamation(t_("Please select just one model"));
 			return;
 		}
-		if (ids.size() == 0 && listLoaded.GetCount() == 1)
-			ids << ArrayModel_IdMesh(listLoaded, 0);
-		else {
-			Exclamation(t_("Please select a model to process"));
-			return;
+		if (sel.size() == 0) {
+			if (listLoaded.GetCount() == 1)
+				sel << ArrayModel_IdMesh(listLoaded, 0);
+			else {
+				Exclamation(t_("Please select a model to process"));
+				return;
+			}
 		}
 		
 		Status(t_("Saving mesh data"));
@@ -588,7 +590,9 @@ void MainMesh::OnConvertMesh() {
 		Progress progress(t_("Saving mesh file..."), 100); 
 		progress.Granularity(1000);
 		
-		Bem().SaveMesh(fileName, ids, type, Bem().g, 
+		WaitCursor waitcursor;
+		
+		Bem().SaveMesh(fileName, sel, type, Bem().g, 
 							   static_cast<Mesh::MESH_TYPE>(int(~menuOpen.optMeshType)),
 							   ~menuOpen.symX, ~menuOpen.symY);	
 							   
@@ -811,7 +815,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			if (~menuMove.opZArchimede) {
 				double dz = 0;
 				Surface under;
-				data.mesh.TranslateArchimede(data.mass, Bem().rho, dz, under);
+				data.mesh.TranslateArchimede(data.GetMass(), Bem().rho, dz, under);
 				if (!IsNull(dz)) {
 					data.cg.Translate(0, 0, dz);
 					videoCtrl.AddReg(Point3D(0, 0, dz));
@@ -822,7 +826,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			} else
 				ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
 		} else if (action == NONE) {
-			data.mass = mass;
+			data.SetMass(mass);
 			data.cg.Set(x_g, y_g, z_g);
 			data.c0.Set(x_0, y_0, z_0);
 		}
@@ -876,7 +880,7 @@ void MainMesh::OnArchimede() {
 		
 		double dz = 0.5, droll = 0.5, dpitch = 0.5;
 		Surface under;
-		if (!data.mesh.Archimede(data.mass, data.cg, data.c0, Bem().rho, Bem().g, dz, droll, dpitch, under))
+		if (!data.mesh.Archimede(data.GetMass(), data.cg, data.c0, Bem().rho, Bem().g, dz, droll, dpitch, under))
 			Exclamation(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
 		
 		menuProcess.x_g <<= data.cg.x;
@@ -1163,7 +1167,7 @@ void MainMesh::OnImage(int axis) {
 		
 		Mesh &data = Bem().surfs[id];
 
-		data.mass = ~menuProcess.mass;
+		data.SetMass(~menuProcess.mass);
 		if (axis == 0)
 			data.cg.x = -data.cg.x;
 		else if (axis == 1)
@@ -1572,9 +1576,9 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	else
 		array.Set(row++, col, "-");
 		
-	array.Set(row, 0, t_("Mass [kg]"));			array.Set(row++, col, FormatF(data.mass, 1));
+	array.Set(row, 0, t_("Mass [kg]"));			array.Set(row++, col, FormatF(data.GetMass(), 1));
 	
-	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.mass, Bem().g);	
+	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.GetMass(), Bem().g);	
 	
 	array.Set(row, 0, t_("Mass moments [N·m]"));array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FDS(fcg[3], 10, false),

@@ -662,7 +662,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			mesh.c0 = clone(bodies[ib].c0);
 			mesh.cg = clone(bodies[ib].cg);
 			mesh.AfterLoad(rho, g, true, false);
-			Mesh::SaveAs(mesh, dest, Mesh::NEMOH_DAT, g, Mesh::UNDERWATER, false, x0z, nodes[ib], panels[ib]);
+			Mesh::SaveAs(mesh, dest, Mesh::NEMOH_DAT, Mesh::UNDERWATER, rho, g, false, x0z, nodes[ib], panels[ib]);
 			
 			if (solver == BEMCase::NEMOHv3) {
 				Save_Mesh_cal(folder, bodies.size() == 1 ? -1 : ib, 
@@ -711,7 +711,7 @@ void NemohCase::Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
 	Mesh::SaveAs(mesh, AppendFileNameX(folder, "Mesh", title), 
-				Mesh::NEMOH_PRE, g, Mesh::UNDERWATER, false, x0z);
+				Mesh::NEMOH_PRE, Mesh::UNDERWATER, rho, g, false, x0z);
 	
 	String fileName;
 	if (ib < 0)

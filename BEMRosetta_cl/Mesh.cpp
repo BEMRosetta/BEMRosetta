@@ -19,8 +19,7 @@ void Mesh::Copy(const Mesh &msh) {
 	cg0 = clone(msh.cg0);
 	c0 = clone(msh.c0);
 	
-	mass = msh.mass;
-	
+	M = clone(msh.M);
 	C = clone(msh.C);
 	
 	name = msh.name;
@@ -72,7 +71,7 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 						ret = DiodoreMesh::LoadDat(mesh, file);
 						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
-							ret = AQWAMesh::LoadDat(mesh, file);
+							ret = AQWAMesh::LoadDat(mesh, file, y0z, x0z);
 					}
 				}
 			}
@@ -140,7 +139,7 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 	return String();
 }
 
-void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, double g, MESH_TYPE meshType, bool symX, bool symY, 
+void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 						int &nNodes, int &nPanels) {
 	UArray<Surface> surfs(meshes.size());
 	nNodes = nPanels = 0;
@@ -149,16 +148,23 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, doubl
 		Surface &surf = surfs[i];
 		if (meshType == UNDERWATER) 
 			surf = clone(meshes[i]->under);
-		else
-			surf = clone(meshes[i]->mesh);
+		else {
+			if (type == AQWA_DAT) {		// Appends dry and wet sides. This way there are no panels between dry and wet side
+				surf = clone(meshes[i]->under);		// First the wet
+				Surface dry;	
+				dry.CutZ(meshes[i]->mesh, 1);
+				surf.Append(dry);					// Next the dry
+			} else
+				surf = clone(meshes[i]->mesh);
+		}
 		
-		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT)) {
+		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT)) {
 			Surface nsurf;
 			nsurf.CutX(surf);
 			surf = pick(nsurf);
 		}
 		if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
-					 type == HAMS_PNL || type == DIODORE_DAT)) {
+					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT)) {
 			Surface nsurf;
 			nsurf.CutY(surf);
 			surf = pick(nsurf);
@@ -185,7 +191,7 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, doubl
 	else if (type == HAMS_PNL)		
 		HAMSMesh::SavePnl(file, First(surfs), symX, symY);	// Only one symmetry is really available
 	else if (type == AQWA_DAT)		
-		AQWAMesh::SaveDat(file, surfs, symX, symY);	
+		AQWAMesh::SaveDat(file, meshes, surfs, rho, g, symX, symY);	
 	else if (type == DIODORE_DAT) 
 		DiodoreMesh::SaveDat(file, First(surfs));
 	else if (type == STL_BIN)		
@@ -248,15 +254,17 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		under.GetArea();
 		under.GetVolume();
 		
-		if (IsNull(mass))
-			mass = under.volume*rho;
+		if (M.size() != 36)
+			M = MatrixXd::Zero(6,6);
+		if (GetMass() == 0)
+			SetMass(under.volume*rho);
 		cb = under.GetCentreOfBuoyancy();
 	}
 	if (isFirstTime) {
 		mesh0 = clone(mesh);
 		cg0 = clone(cg);
 	}
-	under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, mass);
+	under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, GetMass());
 }
 
 void Mesh::Report(double rho) const {
@@ -341,7 +349,7 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		cg.Rotate(0, ToRad(angle), 0, c0.x, c0.y, c0.z);
 		
 		Surface under;
-		if (!base.TranslateArchimede(mass, rho, dz, under))
+		if (!base.TranslateArchimede(GetMass(), rho, dz, under))
 			throw Exc(t_("Problem obtaining GZ"));
 		
 		cg.Translate(0, 0, dz);
@@ -369,10 +377,10 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 			//Force6D fcb = base.GetHydrodynamicForce(c0, true, 
 			//				[&](double x, double y)->double {return 0;}, 
 			//				[&](double x, double y, double z, double et)->double {return z > 0 ? 0 : rho*g*z;});
-			Force6D fcg = Surface::GetMassForce(c0, cg, mass, g);
+			Force6D fcg = Surface::GetMassForce(c0, cg, GetMass(), g);
 		
 			double moment = -(fcg.r.y + fcb.r.y);
-			double gz = moment/mass/g;
+			double gz = moment/GetMass()/g;
 			
 			dataangle << angle;
 			datagz << gz;
@@ -402,4 +410,15 @@ void Mesh::Move(const double *pos, double rho, double g, bool setnewzero) {
 
 void Mesh::Move(const float *pos, double rho, double g, bool setnewzero) {
 	Move(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], rho, g, setnewzero);	
+}
+
+void Mesh::SetMass(double m) {
+	if (M.size() != 36)
+		M = MatrixXd::Zero(6,6);	
+	double oldm = M(0,0);
+	if (oldm != 0) {
+		double factor = m/oldm;
+		M.array() *= factor;
+	} else
+		M(0,0) = M(1,1) = M(2,2) = m;
 }
