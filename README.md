@@ -23,25 +23,28 @@ BEMRosetta allows to load the hydrodynamic coefficients from a format saving it 
 
 Moreover, BEMRosetta allows to view and visually compare the meshes from different programs.
 
-BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI, [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test) and a library (DLL). 
+BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(see Install)](https://github.com/izabala123/BEMRosetta/tree/master/install), and it includes a GUI, [a command line version](https://github.com/izabala123/BEMRosetta/blob/master/other/test), a library (DLL), and glue code for Python. 
 
 ## Features
 ### - Supported file formats
 
 * BEM coefficients
   * Load-View
-    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst, .12s, .12d
+    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst, .7, .8, .9, .12s, .12d
     * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
-    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss, .12s, .12d
-    * [SeaFEM-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
-	* [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
-	* [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
+    * [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
+    * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .out
+    * [OpenFAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat
+    * [SeaFEM/TDyn-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
+    * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
+    * [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
+    
   * Save
-    * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .12s, .12d
+    * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .7, .8, .9, .12s, .12d
     * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in and all the folder structure.
-    * [FAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat, .1, .3, .hst, .ss, .12s, .12d
-    * Other solvers that may use these files: [Bladed](https://www.dnvgl.com/services/bladed-3775), [Orcaflex](https://www.orcina.com/SoftwareProducts/OrcaFlex/) 
+    * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .qtf
+    * [OpenFAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat
 
 * Case files
     * Load-View
@@ -58,10 +61,13 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974) and [Capytaine](https://github.com/mancellin/capytaine): .dat
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
+    * [Salome](https://www.salome-platform.org/): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
+    * [SeaFEM/TDyn](http://www.compassis.com/compass/en/Productos/SeaFEM): .msh
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
     * [HAMS](https://github.com/YingyiLiu/HAMS): HullMesh.pnl, WaterplaneMesh.pnl
+    * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
