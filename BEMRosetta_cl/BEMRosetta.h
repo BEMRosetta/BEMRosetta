@@ -393,7 +393,7 @@ public:
 	std::complex<double> R(int ih, int ifr, int idf) const {
 		return rao.force[ih](ifr, idf)*g_rho_ndim()/g_rho_dim();
 	}
-	VectorXcd R(int ih, int idf) const {
+	VectorXcd R_dof(int ih, int idf) const {
 		VectorXcd ret(Nf);
 		for (int ifr = 0; ifr < Nf; ++ifr)
 			ret[ifr] = rao.force[ih](ifr, idf)*g_rho_ndim()/g_rho_dim();
@@ -408,6 +408,7 @@ public:
 	T F_(bool ndim, T f, int idf) const {return   ndim ? F_ndim(f, idf) : F_dim(f, idf);}
 
 	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr) const;
+	VectorXcd F_dof(bool ndim, const Forces &f, int _h, int idf) const;
 
 	inline std::complex<double> Z(bool ndim, int ifr, int idf, int jdf) const {
 		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
@@ -843,7 +844,7 @@ class AQWAMesh : public Mesh {
 public:
 	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
 	static void SaveDat(String fileName, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
-	static String SaveDat(const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
+	static void SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
 	
 	virtual ~AQWAMesh() noexcept {}
 };
@@ -1134,6 +1135,8 @@ private:
 	bool Load_LIS();
 	bool Load_QTF();
 	void Save_QTF(String file, Function <bool(String, int)> Status);
+	
+	double factorMass = 1, factorLength = 1;
 };
 
 class Diodore : public HydroClass {

@@ -4,12 +4,12 @@
 #include "BEMRosetta_int.h"
 
 
-String HAMSMesh::LoadPnl(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
+String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	Mesh &msh = mesh.Add();
+	Mesh &msh = _mesh.Add();
 	msh.fileName = fileName;
 	msh.SetCode(Mesh::HAMS_PNL);
 	

@@ -100,12 +100,12 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	return String();
 }
 	
-String WamitMesh::LoadGdf(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
+String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	Mesh &msh = mesh.Add();
+	Mesh &msh = _mesh.Add();
 	msh.name = fileName;
 	msh.SetCode(Mesh::WAMIT_GDF);
 	
@@ -131,9 +131,7 @@ String WamitMesh::LoadGdf(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &
 		int nPatches = f.GetInt(0);
 		if (nPatches < 1)
 			return t_("Number of patches not found in .gdf file");
-				
-		mesh.Clear();
-		
+						
 		while(!in.IsEof()) {
 			int ids[4];
 			bool npand = false;
