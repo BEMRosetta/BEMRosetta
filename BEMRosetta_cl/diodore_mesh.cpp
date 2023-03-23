@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String DiodoreMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
+String DiodoreMesh::LoadDat(UArray<Mesh> &_mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
@@ -35,7 +35,7 @@ String DiodoreMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 
 	UIndex<int> idnodes;
 	try {		
-		Mesh &msh = mesh.Add();
+		Mesh &msh = _mesh.Add();
 		msh.fileName = fileName;
 		msh.SetCode(Mesh::DIODORE_DAT);
 

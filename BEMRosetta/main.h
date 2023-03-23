@@ -95,6 +95,7 @@ public:
 	void Init(ScatterDraw& scatter, SplitterButton &psplitter);
 	void Init(Hydro::DataToShow data);
 	void Load();
+	~CompareParameters();
 	
 private:
 	ScatterDraw *pscatter = nullptr;

@@ -1131,6 +1131,16 @@ VectorXcd Hydro::F_(bool ndim, const Forces &f, int _h, int ifr) const {
 	return ret;
 }
 
+VectorXcd Hydro::F_dof(bool ndim, const Forces &f, int _h, int idf) const {
+	VectorXcd ret;
+	if (f.force.IsEmpty())
+		return ret;
+	ret.resize(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr) 
+		ret[ifr] = F_(ndim, f, _h, ifr, idf);
+	return ret;
+}
+
 void Hydro::CheckNaN() {
 	if (!IsNum(A))
 		throw Exc("Error loading A. NaN found");

@@ -29,8 +29,10 @@ void CompareParameters::Init(ScatterDraw &scatter, SplitterButton &splitter) {
 	splitter.WhenAction = [&] {
 		NON_REENTRANT_V;
 		int pos = psplitter->GetPos();
-		for (CompareParameters *c : plist) 
+		for (int i = 0; i < plist.size(); ++i) {
+			CompareParameters *c = plist[i];
 			c->psplitter->SetPos(pos);	
+		}
 	};
 	
 	swRelative <<= 0;
@@ -46,6 +48,12 @@ void CompareParameters::Init(ScatterDraw &scatter, SplitterButton &splitter) {
 	
 	swRelative.WhenAction = [=]() {Up();};
 	opMinRange.WhenAction = [=]() {Up();};
+}
+
+CompareParameters::~CompareParameters() {
+	int id = Find(plist, this);
+	if (id >= 0)
+		plist.Remove(id);
 }
 
 void CompareParameters::Init(Hydro::DataToShow dataToShow) {
