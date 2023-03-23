@@ -23,7 +23,6 @@ void MainPlot::Init(bool vert) {
 		scatP.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 		scatt.LinkedWith(scatP);
 		
-		compare.Init(scatt, splitCompare);
 		splitCompare.Horz(scatt.SizePos(), compare.SizePos());
 		splitCompare.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
 		if (vert)
@@ -33,6 +32,9 @@ void MainPlot::Init(bool vert) {
 		Add(splitter.SizePos());
 		scatt.ShowAllMenus();
 		scatP.ShowAllMenus();
+		
+		compare.Init(scatt, splitCompare);
+		
 		isInit = true;
 	}
 	Clear();
