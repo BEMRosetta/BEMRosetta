@@ -1666,6 +1666,8 @@ void MainBEM::OnConvert() {
 		Progress progress(t_("Saving BEM files..."), 100); 
 		progress.Granularity(1000);
 		
+		WaitCursor wait;
+		
 		Bem().hydros[id].hd().SaveAs(fileName, [&](String str, int _pos) {
 			if (!IsEmpty(str))
 				progress.SetText(str); 

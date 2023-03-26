@@ -464,7 +464,9 @@ bool MainQTF::Load() {
 			isSumm = true;
 		if (opQTF.GetCount() > 1)
 			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
-	
+		else
+			opQTF.SetIndex(0);
+			
 		/*UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
 		for (const auto &c : hd.qh)
 			qh << FixHeading(c, Bem().headingType);

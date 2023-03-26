@@ -911,6 +911,7 @@ protected:
 	void Save_AB(FileOut &out, int ifr);
 	void Save_Forces(FileOut &out, int ifr);
 	void Save_RAO(FileOut &out, int ifr);
+	void Save_MD(FileOut &out, int ifr);
 };
 
 class HAMS : public Wamit {
