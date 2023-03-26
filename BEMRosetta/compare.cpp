@@ -159,25 +159,25 @@ void CompareParameters::Load() {
 		
 		if (swRelative == 0) {
 			_r = rms[row];	
-			if (ainf.size() > 0) 
+			if (ainf.size() > row+1) 
 				_ai = ainf[row];		
-			if (a0.size() > 0) 
+			if (a0.size() > row+1) 
 				_a0 = a0[row];
 		} else if (swRelative == 1) {
 			_r = First(rms) != 0 ? rms[row]/First(rms) : Null;	
-			if (xcorr.size() > 0) 
+			if (xcorr.size() > row+1) 
 				_x = xcorr[row];
-			if (ainf.size() > 0) 
+			if (ainf.size() > row+1) 
 				_ai = First(ainf) != 0 ? ainf[row]/First(ainf) : Null;		
-			if (a0.size() > 0) 
+			if (a0.size() > row+1) 
 				_a0 = First(a0) != 0 ? a0[row]/First(a0) : Null;
 		} else {// if (swRelative == 2)
 			_r = Last(rms) != 0 ? rms[row]/Last(rms) : Null;	
-			if (xcorr.size() > 0) 
+			if (xcorr.size() > row+1) 
 				_x = xcorr[row];
-			if (ainf.size() > 0) 
+			if (ainf.size() > row+1) 
 				_ai = Last(ainf) != 0 ? ainf[row]/Last(ainf) : Null;		
-			if (a0.size() > 0) 
+			if (a0.size() > row+1) 
 				_a0 = Last(a0) != 0 ? a0[row]/Last(a0) : Null;
 		}
 		

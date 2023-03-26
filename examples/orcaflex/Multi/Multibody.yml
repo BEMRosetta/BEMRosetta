@@ -1,0 +1,489 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaWave 11.3d
+# File: C:\Files\Users\Imanol_Muinos\MultiBody\Multibody.yml
+# Created: 17:12 on 25/03/2023
+# User: d0227189
+# Machine: BPC13095-2
+---
+# Model
+UnitsSystem: SI
+# Calculation & output
+SolveType: Potential formulation only
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadControlSurface: No
+HasResonanceDampingLid: No
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Direct LU
+OutputPanelPressures: Yes
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ValidatePanelArrangement: No
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+# Environment
+WaterDepth: Infinity
+WaterDensity: 1.025
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: No
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 0.1
+  - 0.13
+  - 0.16
+  - 0.19
+  - 0.22
+  - 0.25
+  - 0.28
+  - 0.31
+  - 0.34
+  - 0.37
+  - 0.4
+  - 0.43
+  - 0.46
+  - 0.49
+  - 0.52
+  - 0.55
+  - 0.58
+  - 0.61
+  - 0.64
+  - 0.67
+  - 0.7
+  - 0.73
+  - 0.76
+  - 0.79
+  - 0.82
+  - 0.85
+  - 0.88
+  - 0.91
+  - 0.94
+  - 0.97
+  - 1
+  - 1.03
+  - 1.06
+  - 1.09
+  - 1.12
+  - 1.15
+  - 1.18
+  - 1.21
+  - 1.24
+  - 1.27
+  - 1.3
+  - 1.33
+  - 1.36
+  - 1.39
+  - 1.42
+  - 1.45
+  - 1.48
+  - 1.51
+  - 1.54
+  - 1.57
+  - 1.6
+  - 1.63
+  - 1.66
+  - 1.69
+  - 1.72
+  - 1.75
+  - 1.78
+  - 1.81
+  - 1.84
+  - 1.87
+  - 1.9
+  - 1.93
+  - 1.96
+  - 1.99
+  - 2.02
+  - 2.05
+  - 2.08
+  - 2.11
+  - 2.14
+  - 2.17
+  - 2.2
+  - 2.23
+  - 2.26
+  - 2.29
+  - 2.32
+  - 2.35
+  - 2.38
+  - 2.41
+  - 2.44
+  - 2.47
+  - 2.5
+WaveHeading:
+  - 0
+# Bodies
+Bodies:
+  - BodyName: Body1
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Square_UpLeft.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 502.25
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [18.7925208333e3, 0, 0]
+      - [0, 18.7925208333e3, 0]
+      - [0, 0, 4101.7083333]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [-18.5, 18.5, 0]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body2
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Rectangle_Up_v2.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 53.8125
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [4037.058594, 0, 0]
+      - [0, 220.855469, 0]
+      - [0, 0, 4255.671875]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [0, 18.5, -9.75]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body3
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Square_UpRight.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 502.25
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [18.7925208333e3, 0, 0]
+      - [0, 18.7925208333e3, 0]
+      - [0, 0, 4101.7083333]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [18.5, 18.5, 0]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body4
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Rectangle_Left_v2.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 53.8125
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [4037.058594, 0, 0]
+      - [0, 220.855469, 0]
+      - [0, 0, 4255.671875]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [-18.5, 0, -9.75]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body5
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Rectangle_Right_v2.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 53.8125
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [4037.058594, 0, 0]
+      - [0, 220.855469, 0]
+      - [0, 0, 4255.671875]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [18.5, 0, -9.75]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body6
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Square_DownLeft.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 502.25
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [18.7925208333e3, 0, 0]
+      - [0, 18.7925208333e3, 0]
+      - [0, 0, 4101.7083333]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [-18.5, -18.5, 0]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body7
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Rectangle_Down_v2.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 53.8125
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [4037.058594, 0, 0]
+      - [0, 220.855469, 0]
+      - [0, 0, 4255.671875]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [0, -18.5, -9.75]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+  - BodyName: Body8
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Square_DownRight.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: None
+    BodyMeshDipolePanels: 
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: ~
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: No
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [0, 0, 0]
+    BodyMass: 502.25
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [18.7925208333e3, 0, 0]
+      - [0, 18.7925208333e3, 0]
+      - [0, 0, 4101.7083333]
+    BodyInertiaTensorOriginType: User specified
+    BodyInertiaTensorUserOrigin: [18.5, -18.5, 0]
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No
+...

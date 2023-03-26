@@ -1760,6 +1760,12 @@ void BEM::AddWaterSurface(int id, char c) {
 		surf.name = surfs[id].name + " " + surf.name;
 		surf.fileName =  "";
 		
+		if (true) {		// Clean panels
+			Surface::RemoveDuplicatedPanels(surf.mesh.panels);
+			Surface::RemoveDuplicatedPointsAndRenumber(surf.mesh.panels, surf.mesh.nodes);
+			Surface::RemoveDuplicatedPanels(surf.mesh.panels);
+		}
+		
 		surf.AfterLoad(rho, g, false, false);
 		
 		//surf.Report(rho);
