@@ -407,14 +407,17 @@ bool Wamit::Load_out() {
 			if (found9)
 				Hydro::InitMD(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 						
-			int qtfNh = 0, qtfNf = 0;
+			int qtfNh = 0, qtfNf;
+			UVector<double> qw;
 			UArray<std::complex<double>> head;
 			if (found2ndorder) {
 				bool foundSum = false, foundDif = false;
 				while (!in.IsEof()) {
 					f.GetLine();
 					if (f.IsInLine("Period indices:")) {
-						int if1, if2;
+						FindAdd(qw, f.GetDouble(f.size()-1));
+						FindAdd(qw, f.GetDouble(f.size()-2));
+						/*int if1, if2;
 						if (f.GetText(3) == "Periods:") {		// Hydrostar joins indexes
 							String stri = f.GetText(2);
 							stri = stri.Left(stri.GetCount()/2);
@@ -426,7 +429,7 @@ bool Wamit::Load_out() {
 						if (if1 > qtfNf)
 							qtfNf = if1;
 						if (if2 > qtfNf)
-							qtfNf = if2;
+							qtfNf = if2;*/
 					} else if (f.IsInLine("Headings (deg):")) {
 						double hd1 = f.GetDouble(6);
 						double hd2 = f.GetDouble(7);
@@ -437,9 +440,11 @@ bool Wamit::Load_out() {
 						foundDif = true;
 				}
 				hd().qh.resize(qtfNh = head.size());
-				for (int i = 0; i < head.size(); ++i)
+				for (int i = 0; i < qtfNh; ++i)
 					hd().qh[i] = head[i];
-				hd().qw.resize(qtfNf);
+				hd().qw.resize(qtfNf = qw.size());
+				for (int i = 0; i < qtfNf; ++i)
+					hd().qw[i] = 2*M_PI/qw[i];
 					
 				if (foundSum)
 					hd().InitQTF(hd().qtfsum, hd().Nb, qtfNh, qtfNf);
@@ -478,7 +483,10 @@ bool Wamit::Load_out() {
 				if (OUTB(ifr, hd().Nf))
 					throw Exc(in.Str() + "\n" + Format(t_("Found additional frequencies over %d"), hd().Nf));
 				
-	            hd().T[ifr] = f.GetDouble(4);  			
+				int idT = 3;
+				if (f.GetText(3) == "=")	// Hydrostar
+					idT = 4;
+	            hd().T[ifr] = f.GetDouble(idT);  			
 	            hd().w[ifr] = 2*M_PI/hd().T[ifr];//fround(2*M_PI/hd().T[ifr], 8);	    
 	            
 	            bool nextFreq = false;
@@ -591,10 +599,14 @@ bool Wamit::Load_out() {
 				while (!in.IsEof()) {
 					f.GetLine();
 					if (f.IsInLine("Period indices:")) {
-						ifr1 = f.GetInt(2)-1; 
-						ifr2 = f.GetInt(3)-1;
-						hd().qw[ifr1] = 2*M_PI/f.GetDouble(5);
-						hd().qw[ifr2] = 2*M_PI/f.GetDouble(6);
+						//ifr1 = f.GetInt(2)-1; 
+						//ifr2 = f.GetInt(3)-1;
+						//hd().qw[ifr1] = 2*M_PI/f.GetDouble(5);
+						//hd().qw[ifr2] = 2*M_PI/f.GetDouble(6);
+						ifr1 = Find(hd().qw, 2*M_PI/f.GetDouble(f.size()-2));
+						ifr2 = Find(hd().qw, 2*M_PI/f.GetDouble(f.size()-1));
+						if (ifr1 < 0 || ifr2 < 0)
+							throw Exc(in.Str() + "\n"  + t_("Periods not found"));
 					} else if (f.IsInLine("SUM-FREQUENCY")) 
 						qtf = &hd().qtfsum;
 					else if (f.IsInLine("DIFFERENCE-FREQUENCY")) 
@@ -665,14 +677,41 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 
 void Wamit::Save_RAO(FileOut &out, int ifr) {
 	out <<	"    RESPONSE AMPLITUDE OPERATORS\n\n";
-	for (int ih = 0; ih < hd().Nh; ++ih) {
+	for (int ih = 0; ih < hd().mdhead.size(); ++ih) {
 		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
 		for (int i = 0; i < hd().rao.force[ih].cols(); ++i)
 			if (IsNum(hd().rao.force[ih](ifr, i))) {
-				std::complex<double> c = hd().F_ndim(hd().rao, ih, ifr, i);
+				std::complex<double> c = hd().rao.force[ih](ifr, i);
 				out << Format(" %7>d   %E   %f\n", i+1, abs(c), ToDeg(arg(c)));
 			}
+		out << "\n\n\n\n";
+	}
+}
+
+void Wamit::Save_MD(FileOut &out, int ifr) {
+	if (hd().mdtype == 7)
+		out << " SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Control Surface)";
+	else if (hd().mdtype == 8)
+		out << " SURGE, SWAY & YAW DRIFT FORCES (Momentum Conservation)";
+	else if (hd().mdtype == 9)
+		out << " SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Pressure Integration)  PRE";
+	else
+		throw Exc("Unknown drift type");
+	
+	out << "\n\n";
+	
+	for (int ih = 0; ih < hd().Nh; ++ih) {
+		out << Format("  Wave Heading (deg) : %s%s\n\n", FDS(hd().head[ih], 12, true), FDS(hd().head[ih], 12, true))
+			<< "     I      Mod[F(I)]    Pha[F(I)]\n\n";
+		for (int ib = 0; ib < hd().Nb; ++ib) {
+			for (int idf = 0; idf < 6; ++idf) {
+				if (IsNum(hd().md[ib][ih][idf][ifr])) {
+					const std::complex<double> &c = hd().Md_ndim(idf+ib*6, ih, ifr);
+					out << Format(" %7>d   %E         %6>d\n", idf+1+6*ib, abs(c), round(ToDeg(arg(c))));
+				}
+			}
+		}
 		out << "\n\n\n\n";
 	}
 }
@@ -799,6 +838,8 @@ bool Wamit::Save_out(String file) {
 				Save_Forces(out, ifr);
 			if (hd().IsLoadedRAO())
 				Save_RAO(out, ifr);
+			if (hd().IsLoadedMD())
+				Save_MD(out, ifr);
 		}
 		UVector<double> heads;
 		UVector<int> id1(int(hd().qh.size())), id2(int(hd().qh.size()));

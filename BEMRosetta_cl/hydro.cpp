@@ -147,6 +147,9 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 	
 	HealBEM data;
 	
+	if (Ainf.size() == 0) 
+		Ainf.setConstant(6*Nb, 6*Nb, NaNDouble); 
+	
 	if (Ainf_w.size() == 0) {
 		Ainf_w.SetCount(Nb*6); 			
 	    for (int idf = 0; idf < Nb*6; ++idf) {
