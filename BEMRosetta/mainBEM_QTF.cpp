@@ -16,7 +16,8 @@ using namespace Upp;
 #include "main.h"
 
 
-void QTFTabDof::Init(int posSplitter, int idof) {
+void QTFTabDof::Init(int posSplitter, int ib, int idof) {
+	this->ib = ib;
 	this->idof = idof;
 	Add(splitter);
 	splitter.Horz(leftsplit.SizePos(), rightsplit.SizePos());
@@ -286,6 +287,18 @@ void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool o
 			}
 		}
 	}
+	if (data.xAxis[0] > data.xAxis[1]) {
+		Flip(data.xAxis);
+		
+		for (int r = 0; r < qtfNf/2; ++r)
+			for (int c = 0; c < qtfNf; ++c)
+				Swap(data.zData[r*qtfNf + c], data.zData[(qtfNf-1-r)*qtfNf + (qtfNf-1-c)]);
+		if (Odd(qtfNf)) {
+			int r = qtfNf/2;
+			for (int c = 0; c < qtfNf/2; ++c)
+				Swap(data.zData[r*qtfNf + c], data.zData[r*qtfNf + (qtfNf-1-c)]);
+		}
+	}
 	
 	data.dataSurf.Init(data.zData, data.xAxis, data.xAxis, opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO, false);
 
@@ -388,7 +401,7 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
 		idof = idof - 6*ib;
 
 		OnSurf();
-		dof[idof].Load(hd, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, showPoints, fromY0, autoFit, posSplitter);
+		dof[idof+6*ib].Load(hd, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, showPoints, fromY0, autoFit, posSplitter);
 		
 	} catch (Exc e) {
 		Exclamation(DeQtfLf(e));
@@ -396,11 +409,11 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
 }
 
 void MainQTF::OnSurf() {
-	dof[idof].type = ~opLine;
-	dof[idof].up.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
-	dof[idof].up.surf.Refresh();
-	dof[idof].down.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
-	dof[idof].down.surf.Refresh();
+	dof[idof+6*ib].type = ~opLine;
+	dof[idof+6*ib].up.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
+	dof[idof+6*ib].up.surf.Refresh();
+	dof[idof+6*ib].down.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
+	dof[idof+6*ib].down.surf.Refresh();
 }
 	
 bool MainQTF::Load() {
@@ -421,8 +434,8 @@ bool MainQTF::Load() {
 			dof.SetCount(6*Bem().Nb);
 			for (int ib = 0; ib < Bem().Nb; ++ib) {
 				for (int idf = 0; idf < 6; ++idf) {
-					dof[idf].Init(posSplitter, idf);
-					tab.Add(dof[idf].SizePos(), Format("%d.%s", ib+1, BEM::StrDOF(idf)));
+					dof[idf+6*ib].Init(posSplitter, ib, idf);
+					tab.Add(dof[idf+6*ib].SizePos(), Format("%d.%s", ib+1, BEM::StrDOF(idf)));
 				}
 			}
 			if (tab.GetCount() >= idof + 6*ib && idof >= 0)
@@ -496,11 +509,14 @@ bool MainQTF::Load() {
 }
 
 void MainQTF::Unload(int idf) {
+	if (ib < 0)
+		return;
+	
 	if (idf < 0) {
 		idf = tab.Get();
 		if (idf < 0)
 			return;
 	}
 	
-	posSplitter = dof[idf].splitter.GetPos(0);
+	posSplitter = dof[idf+6*ib].splitter.GetPos(0);
 }

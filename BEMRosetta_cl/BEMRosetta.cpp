@@ -1281,7 +1281,7 @@ void Hydro::Jsonize(JsonIO &json) {
 }
 	
 BEM::BEM() {
-	bemFilesAst = clone(bemFilesExt);
+	bemFilesAst = clone(bstFilesExt);	// clone(bemFilesExt);
 	bemFilesAst.Replace(".", "*.");
 	experimental = ToLower(GetExeTitle()).Find("experimental") >= 0;
 }

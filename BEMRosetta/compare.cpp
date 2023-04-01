@@ -135,8 +135,10 @@ void CompareParameters::Load() {
 				Resample(x, y, x0, yyy);
 				VectorXd rr, lags;
 				XCorr(yyy, y0, rr, lags, 'c');
-				double xc = rr.maxCoeff();
-				xcorr << xc;
+				if (rr.size() == 0)
+					xcorr << Null;
+				else	
+					xcorr << rr.maxCoeff();
 			}
 		} else if (str.StartsWith("A∞")) {
 			if (ainf.size() == 0)

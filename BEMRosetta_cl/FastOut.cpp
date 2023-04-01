@@ -120,8 +120,8 @@ String FastOut::GetFileToLoad(String fileName) {
 	return "";
 }
 
-bool FastOut::Load(String fileName) {
-	String ext = GetFileExt(fileName);
+int FastOut::Load(String fileName) {
+	String ext = ToLower(GetFileExt(fileName));
 	bool ret = false;
 	if (ext == ".out")
 		;
@@ -130,6 +130,8 @@ bool FastOut::Load(String fileName) {
 	else if (ext == ".csv")
 		;
 	else if (ext == ".db")
+		;
+	else if (ext == ".lis")
 		;
 	else {
 		fileName = ForceExt(fileName, ".outb");
@@ -140,7 +142,7 @@ bool FastOut::Load(String fileName) {
 			if (FileExists(fileName))
 				ext = ".out";
 			else
-				return false;
+				return -1;
 		}
 	}
 	fileName = ForceExt(fileName, ext);
@@ -153,12 +155,14 @@ bool FastOut::Load(String fileName) {
 		ret = LoadCsv(fileName);
 	else if (ext == ".db")
 		ret = LoadDb(fileName);
+	else if (ext == ".lis")
+		ret = LoadLis(fileName);
 	
 	this->fileName = fileName;
 	
 	if (ret)
 		AfterLoad();
-	return ret;
+	return ret ? 1 : 0;
 }
 
 bool FastOut::LoadOut(String fileName) {
