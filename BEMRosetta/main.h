@@ -1040,7 +1040,7 @@ class QTFTabDof : public StaticRect {
 public:
 	typedef QTFTabDof CLASSNAME;
 
-	void Init(int posSplitter, int idof);
+	void Init(int posSplitter, int ib, int idof);
 	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter);
 	
 	Splitter splitter;
@@ -1080,6 +1080,8 @@ private:
 	
 	template <class T>
 	void OnPaint(T& w) {
+		if (!up.surf.IsSurf())
+			return;
 		ScatterCtrl &s = up.surf;
 		double mn = s.GetSurfMinX(), mx = s.GetSurfMaxX();
 		if (type == 0)

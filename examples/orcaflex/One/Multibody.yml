@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Diffraction
 # Program: OrcaWave 11.3d
-# File: C:\Files\Users\Imanol_Muinos\MultiBody\One\Multibody.yml
+# File: C:\One\Multibody.yml
 # Created: 18:42 on 25/03/2023
-# User: d0227189
-# Machine: BPC13095-2
+# User: Koldo345
+# Machine: EAB221
 ---
 # Model
 UnitsSystem: SI

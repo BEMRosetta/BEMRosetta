@@ -615,17 +615,22 @@ bool Wamit::Load_out() {
 						double hd1 = f.GetDouble(6);
 						double hd2 = f.GetDouble(7);
 						ih = Find(head, std::complex<double>(hd1, hd2));
-					} else if (f.IsInLine("Mod[F2(I)]")) {
-						f.GetLine();
-						while (!Trim(f.GetLine()).IsEmpty()) {						
-							int idof = f.GetInt(0)-1;
-							int ib = idof/6;
-							double ma = f.GetDouble(1);
-							double ph = ToRad(f.GetDouble(2));
-							if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, hd().Nb))
-								throw Exc(in.Str() + "\n"  + Format(t_("Index [%d][%d](%d, %d) out of bounds"), ib, ih, idof, ifr1, ifr2));
-							(*qtf)[ib][ih][idof](ifr1, ifr2) = std::polar(ma, ph);
-							(*qtf)[ib][ih][idof](ifr2, ifr1) = std::polar(ma, ph);	
+					} else if (f.IsInLine("Mod[F2(I)]")) {					
+						bool start = true;									// Because of Hydrostar has not an empty line
+						while (!Trim(f.GetLine()).IsEmpty() || start) {	
+							if (f.size() == 0) 					
+								;
+							else {
+								start = false;
+								int idof = f.GetInt(0)-1;
+								int ib = idof/6;
+								double ma = f.GetDouble(1);
+								double ph = ToRad(f.GetDouble(2));
+								if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, hd().Nb))
+									throw Exc(in.Str() + "\n"  + Format(t_("Index [%d][%d](%d, %d) out of bounds"), ib, ih, idof, ifr1, ifr2));
+								(*qtf)[ib][ih][idof](ifr1, ifr2) = std::polar(ma, ph);
+								(*qtf)[ib][ih][idof](ifr2, ifr1) = std::polar(ma, ph);	
+							}
 						}
 					}
 				}
@@ -866,7 +871,7 @@ bool Wamit::Save_out(String file) {
 							   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       " 
 							   		<< Format("%4.1f", hd().qh[ih].real()) << "      " 
 							   		<< Format("%4.1f", hd().qh[ih].imag()) << "\n\n\n"
-							   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";
+							   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";			// Hydrostar only one \n
 						for (int ib = 0; ib < hd().Nb; ++ib) {
 							for (int idf = 0; idf < 6; ++idf) {
 								static int idf12[] = {1, 3, 5, 2, 4, 6};
@@ -903,7 +908,7 @@ bool Wamit::Save_out(String file) {
 							   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       "
 							   		<< Format("%4.1f", hd().qh[ih].real()) << "      " 
 							   		<< Format("%4.1f", hd().qh[ih].imag()) << "\n\n\n"
-							   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";
+							   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";			// Hydrostar only one \n
 						for (int ib = 0; ib < hd().Nb; ++ib) {
 							for (int idf = 0; idf < 6; ++idf) {
 								static int idf12[] = {1, 3, 5, 2, 4, 6};
@@ -2023,8 +2028,10 @@ void Wamit::Save_POT(String fileName) {
 		out << Format("%.4f ", T[iT]);
 	out << "% PER(1), increment\n";
 	out << WamitField(Format("%d", hd().Nh), 12) << "% NBETA\n";
+	UVector<double> head = clone(hd().head);
+	Sort(head);
 	for (int ih = 0; ih < hd().Nh; ++ih) 
-		out << Format("%.4f ", hd().head[ih]);
+		out << Format("%.4f ", head[ih]);
 	out << "% BETA\n";
 	
 	out << WamitField(Format("%d ", hd().Nb), 12) << "% NBODY";
