@@ -13,7 +13,7 @@ public:
 	static UVector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
 	
-	bool Load(String fileName);
+	int Load(String fileName);
 	bool Save(String fileName, String type = "", String sep = "");
 	
 	void Clear();
@@ -130,6 +130,7 @@ private:
 	bool LoadCsv(String fileName);
 	bool SaveCsv(String fileName, String sep);
 	bool LoadDb(String fileName);
+	bool LoadLis(String fileName);
 	void AfterLoad();
 
 	String fileName;
@@ -665,7 +666,7 @@ public:
 	void CreateFolderCase(String folder = "");
 	
 	bool LoadOut() {
-		return out.Load(fstFile);
+		return out.Load(fstFile) > 0;
 	}
 	virtual bool Postprocess() 		{return false;};
 	const String &GetFolderCase()	{return folderCase;}

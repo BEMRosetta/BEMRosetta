@@ -208,7 +208,9 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
-	file.Type(t_("All files"), "*.*").Type(t_("FAST output file"), "*.out, *.outb").Type(t_("CSV file"), "*.csv").Type(t_("DeepLines Wind file"), "*.db"); 
+	file.Type(t_("All files"), "*.*").Type(t_("FAST output file"), "*.out, *.outb")
+									 .Type(t_("CSV file"), "*.csv").Type(t_("DeepLines Wind file"), "*.db")
+									 .Type(t_("AQWA Naut file"), "*.lis"); 
 	butSaveAs <<= THISBACK(OnSaveAs);
 	butSaveAs.Tip(t_("Saves data file"));
 	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
@@ -565,7 +567,13 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 		
 		FastOut &fout = left.dataFast[iff];
 		
-		if (!fout.Load(fileName)) {
+		int ret = fout.Load(fileName);
+		if (ret == -1) {
+			Exclamation(Format(t_("File '%s' is not supported"), ~file));
+			left.EnableX();
+			UpdateButtons(false);
+			return false;
+		} else if (ret == 0) {	
 			statusBar->Temporary(Format(t_("File '%s' temporarily blocked"), ~file));
 			left.EnableX();
 			UpdateButtons(false);

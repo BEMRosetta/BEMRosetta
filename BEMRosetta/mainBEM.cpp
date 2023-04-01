@@ -612,12 +612,12 @@ ScatterCtrl &MainBEM::GetSelScatter() {
 void MainBEM::OnOpt() {
 	menuOpen.file.ClearTypes();
 
-	menuOpen.file.Type(Format(t_("All supported BEM files (%s)"), Bem().bemFilesExt), Bem().bemFilesAst);
+	menuOpen.file.Type(Format(t_("All supported BEM files (%s)"), Bem().bstFilesExt/*bemFilesExt*/), Bem().bemFilesAst);
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
 		menuOpen.file.ActiveType(0);
-	else if (Bem().bemFilesExt.Find(extOpen) >= 0)
+	else if (Bem().bstFilesExt/*bemFilesExt*/.Find(extOpen) >= 0)
 		menuOpen.file.ActiveType(0);
 	else
 		menuOpen.file.ActiveType(1);
@@ -1742,6 +1742,8 @@ void MainBEM::Jsonize(JsonIO &json) {
 }
 
 String MainBEM::BEMFile(String fileFolder) const {
+	if (ToLower(fileFolder) == "id.dat")		// This a Nemoh file
+		return "";
 	if (DirectoryExists(fileFolder)) {
 		int bestipos = INT_MAX;
 		for (FindFile ff(AppendFileNameX(fileFolder, "*.*")); ff; ff++) {
@@ -1779,10 +1781,14 @@ void MainBEM::LoadDragDrop() {
 				filesToDrop << ff.GetPath();
 		}
 	}
+	for (int i = filesToDrop.size()-1; i >= 0; --i) {						// Remove files with unknown extensions
+		if (Bem().bstFilesExt.Find(ToLower(GetFileExt(filesToDrop[i]))) < 0)
+			filesToDrop.Remove(i);
+	}
 	
 	Sort(filesToDrop);
 	
-	UVector<int> sets(filesToDrop.size());
+	UVector<int> sets(filesToDrop.size());									// Remove files in a set
 	for (int i = 0; i < filesToDrop.size(); ++i)
 		sets[i] = Bem().GetBEMExtSet(filesToDrop[i]);
 	
@@ -1797,18 +1803,26 @@ void MainBEM::LoadDragDrop() {
 			}
 		}
 	}
-	
+	if (filesToDrop.IsEmpty()) {
+		Exclamation(t_("Impossible to load files"));
+		timerDrop.Kill();
+		return;	
+	}
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {
 		String file = BEMFile(filesToDrop[i]);
-		menuOpen.file <<= file;
-		Status(Format(t_("Loading '%s'"), file));
-		if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1)))
-				return;
-			followWithErrors = true;
+		if (!file.IsEmpty()) {
+			menuOpen.file <<= file;
+			Status(Format(t_("Loading '%s'"), file));
+			if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
+				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1))) {
+					timerDrop.Kill();
+					return;
+				}
+				followWithErrors = true;
+			}
+			ProcessEvents();
 		}
-		ProcessEvents();
 	}
 	timerDrop.Kill();
 }

@@ -45,7 +45,32 @@ bool OrcaWave::Load_YML_Res() {
 	hd().dimen = true;
 	
 	hd().Nb = hd().Nf = hd().Nh = Null;
-	
+
+	UArray<Point3D> c0s;	
+
+	auto Origin =[&] (int ib, const UVector<String> &norig) {
+		UVector<String> snorig(norig.size());
+		for (int i = 0; i < norig.size(); ++i)
+			snorig[i] = Trim(norig[i]);
+		if (IsNull(c0s[ib])) 
+			c0s[ib].Set(ScanDouble(snorig[0]), ScanDouble(snorig[1]), ScanDouble(snorig[2]));
+		else if (snorig[0] == "~" || snorig[1] == "~" || snorig[2] == "~")
+			;
+		else if (c0s[ib].x != ScanDouble(snorig[0]) || c0s[ib].y != ScanDouble(snorig[1]) || c0s[ib].z != ScanDouble(snorig[2]))
+			throw Exc(in.Str() + "\n"  + Format(t_("RAOOrigin for body %d (%s, %s, %s) diferent than the previously set (%f, %f, %f)"), 
+							ib, snorig[0], snorig[1], snorig[2], c0s[ib].x, c0s[ib].y, c0s[ib].z));
+	};
+	auto Phase =[&] (const UVector<String> &norig) {
+		UVector<String> snorig(norig.size());
+		for (int i = 0; i < norig.size(); ++i)
+			snorig[i] = Trim(norig[i]);
+		if (snorig[0] == "~" || snorig[1] == "~" || snorig[2] == "~")
+			;
+		else if (!IsEqualRange<UVector<String>>({"0","0","0"}, snorig))
+			throw Exc(in.Str() + "\n"  + Format(t_("Only PhaseOrigin:[0,0,0] is supported. Read (%s, %s, %s)"), snorig[0], snorig[1], snorig[2]));
+	};
+		
+	int ib = -1;
 	int Nb = 0; 
 
 	YmlParser fy(in);
@@ -67,6 +92,7 @@ bool OrcaWave::Load_YML_Res() {
 					throw Exc(in.Str() + "\n" + t_("Failed body count"));
 				hd().names << fy.GetVal();
 				Nb++;
+				c0s << Null;
 			} else if (fy.FirstIs("WavesReferredToBy") && fy.Index() == 0) {		// Only for the first body
 				String val = fy.GetVal();
 				if (val.Find("frequency") >= 0)
@@ -113,20 +139,40 @@ bool OrcaWave::Load_YML_Res() {
 					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsFrameOfReference: 'earth' is supported. Read '%s'"), fy.GetVal()));
 					*/
 			} else if (fy.FirstIs("Draughts")) {
+				ib = fy.GetIndex()[1];
 				if (fy.FirstIs("DisplacementRAOs")) {
-					if (fy.FirstIs("RAOOrigin")) {
-						if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
-							throw Exc(in.Str() + "\n"  + Format(t_("Only RAOOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));	
-					} else if (fy.FirstIs("PhaseOrigin")) {
-						if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
-							throw Exc(in.Str() + "\n"  + Format(t_("Only PhaseOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
-					} else if (fy.FirstIs("RAOs")) {
+					if (fy.FirstIs("RAOOrigin")) 
+						Origin(ib, fy.GetVector());
+					else if (fy.FirstIs("PhaseOrigin")) 
+						Phase(fy.GetVector());
+					else if (fy.FirstIs("RAOs")) {
 						if (fy.FirstIs("RAODirection") && fy.GetIndex()[1] == 0) {		// Only for the first body
-							if (hd().head.size() != fy.Index())
-								throw Exc(in.Str() + "\n" + t_("Failed headings count"));			
-							hd().head << ScanDouble(fy.GetVal());
+							FindAdd(hd().head, ScanDouble(fy.GetVal()));
 						}
 					}
+				} else if (fy.FirstIs("LoadRAOs")) {
+					if (fy.FirstIs("RAOOrigin")) 
+						Origin(ib, fy.GetVector());	
+					else if (fy.FirstIs("PhaseOrigin")) 
+						Phase(fy.GetVector());
+					else if (fy.FirstIs("RAOs")) {
+						if (fy.FirstIs("RAODirection") && fy.GetIndex()[1] == 0) {		// Only for the first body
+							FindAdd(hd().head, ScanDouble(fy.GetVal()));
+						}
+					}
+				} else if (fy.FirstIs("WaveDrift")) {
+					if (fy.FirstIs("RAOOrigin")) {
+						Origin(ib, fy.GetVector());	
+					} else if (fy.FirstIs("RAOs")) {
+						if (fy.FirstIs("RAODirection") && fy.GetIndex()[1] == 0) {		// Only for the first body
+							FindAdd(hd().head, ScanDouble(fy.GetVal()));
+						}
+					}
+				} else if (fy.FirstIs("SumFrequencyQTFs")) {
+					if (fy.FirstIs("RAOOrigin")) 
+						Origin(ib, fy.GetVector());	
+					else if (fy.FirstIs("PhaseOrigin")) 
+						Phase(fy.GetVector());
 				} else if (fy.FirstIs("OtherDampingOrigin")) {
 					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
 						throw Exc(in.Str() + "\n"  + Format(t_("Only OtherDampingOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
@@ -147,7 +193,10 @@ bool OrcaWave::Load_YML_Res() {
 				}
 			}
 		} else if (fy.FirstIs("MultibodyGroups")) {
-			if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
+			if (fy.FirstIs("Bodies")) {
+				if (fy.FirstIs("Name")) 
+					ib = fy.Index();
+			} else if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
 				if (fy.FirstIs("AMDPeriodOrFrequency")) {
 					if (fy.GetVal() != "Infinity") {
 						if (hd().w.size() != fy.Index() - 1)
@@ -165,7 +214,12 @@ bool OrcaWave::Load_YML_Res() {
 	hd().Nb = Nb;
 	hd().Vo.SetCount(hd().Nb, NaNDouble);
 	hd().cg.setConstant(3, hd().Nb, NaNDouble);
-	hd().c0.setConstant(3, hd().Nb, 0);				// OrcaWave reference is 0,0,0
+	
+	hd().c0.resize(3, hd().Nb);
+	for (int ib = 0; ib < Nb; ++ib)				
+		for (int idf = 0; idf < 3; ++idf)
+			hd().c0(idf, ib) = c0s[ib][idf];
+	
 	hd().cb.setConstant(3, hd().Nb, NaNDouble);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
@@ -207,7 +261,7 @@ bool OrcaWave::Load_YML_Res() {
 	hd().Initialize_Forces(hd().ex);
 	hd().Initialize_Forces(hd().rao);
 
-	int ib = -1, row = -1, col = -1;
+	int row = -1, col = -1;
 	int idf = -1;
 	
 	in.SeekPos(fpos);
@@ -225,8 +279,9 @@ bool OrcaWave::Load_YML_Res() {
 					hd().h = ScanDouble(h);
 			}
 		} else if (fy.FirstIs("VesselTypes")) {
-			if (fy.FirstIs("Draughts")) {
+			if (fy.FirstIs("Name")) 
 				ib = fy.GetIndex()[1];
+			else if (fy.FirstIs("Draughts")) {
 				Eigen::MatrixXd &inertia = hd().M[ib];
 				if (fy.FirstIs("Mass")) 
 					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*1000;
@@ -299,7 +354,7 @@ bool OrcaWave::Load_YML_Res() {
 				} else if (fy.FirstIs("WaveDrift")) {
 					if (fy.FirstIs("RAOs")) {
 						if (fy.FirstMatch("RAOPeriodOrFrequency*")) {	
-							if (hd().md.size() == 0) {
+							if (!hd().IsLoadedMD()) {
 								hd().mdhead.resize(hd().head.size());
 								for (int ih = 0; ih < hd().head.size(); ++ih)
 									hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
@@ -318,6 +373,45 @@ bool OrcaWave::Load_YML_Res() {
 							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
 									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*10;
+						}
+					}
+				} else if (fy.FirstIs("SumFrequencyQTFs")) {
+					if (fy.FirstMatch("RAOPeriodOrFrequency*")) {
+						if (!hd().IsLoadedQTF(true)) {
+							hd().qw.resize(hd().Nf);
+							for (int iw = 0; iw < hd().Nf; ++iw) 
+								hd().qw[iw] = hd().w[iw];
+							hd().qh.resize(hd().Nh);
+							for (int ih = 0; ih < hd().Nh; ++ih) 
+								hd().qh[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
+								
+							hd().InitQTF(hd().qtfsum, hd().Nb, hd().Nh, hd().Nf);
+							hd().mdtype = 9;
+						}
+													
+						UVector<UVector<double>> mat = fy.GetMatrixDouble();
+
+						for (int row = 0; row < mat.size(); ++row) {
+							if (mat[row].size() != 16)
+								throw Exc(in.Str() + "\n"  + t_("Wrong data in list"));
+							double w1 = mat[row][0],
+								   w2 = mat[row][1],
+								   h1 = mat[row][2],
+								   h2 = mat[row][3];
+							int ifr1 = FindDelta(hd().qw, w1, 0.0001),
+								ifr2 = FindDelta(hd().qw, w2, 0.0001),
+								ih = FindDelta(hd().qh, std::complex<double>(h1, h2), 0.0001);	
+							if (ifr1 < 0)
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%s' in QTF"), w1));
+							if (ifr2 < 0)
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%s' in QTF"), w2));
+							if (ih < 0)
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong head (%s,%s) in QTF"), h1, h2));
+							for (int idf = 0; idf < 6; ++idf) {
+								double mag = mat[row][4+idf*2]*10;
+								double ph  = ToRad(mat[row][4+idf*2+1]);
+								hd().qtfsum[ib][ih][idf](ifr1, ifr2) = hd().qtfsum[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph);
+							}
 						}
 					}
 				} else if (fy.FirstIs("FrequencyDependentAddedMassAndDamping")) {

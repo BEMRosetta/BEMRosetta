@@ -3,6 +3,8 @@
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
+#include "FastOut.h"
+
 const char *textDOF[] = {"X", "Y", "Z", "RX", "RY", "RZ"};
 
 bool Aqwa::Load(String file, double) {
@@ -973,4 +975,188 @@ bool AQWACase::Load(String fileName) {
 	maxH = head.Top();
 	
 	return true;
+}
+
+			
+bool FastOut::LoadLis(String fileName) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	LineParser f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	Clear();
+	
+	parameters << "time";
+	units << "s";	
+
+	auto Add3_dof =[&](String par) {
+		parameters << (par + "_x");		parameters << (par + "_y");		parameters << (par + "_z");
+	};
+	auto Add_3dof =[&](String par) {
+		parameters << (par + "_rx");	parameters << (par + "_ry");	parameters << (par + "_rz");
+	};
+	auto AddUnits6 =[&](String par) {
+		UVector<UVector<String>> sunits = {{"POSITION", "m", "deg"}, {"VELOCITY", "m/s", "deg/s"}, {"ACCEL", "m/s2", "deg/s2"},
+			{"GRAVITY", "N", "Nm"}, {"HYDROSTATIC", "N", "Nm"}, {"MORISON", "N", "Nm"}, {"KRYLOV", "N", "Nm"}, {"SLAM", "N", "Nm"},
+			{"DIFFRACTION", "N", "Nm"}, {"MOORING", "N", "Nm"}, {"DAMPING", "N", "Nm"}, {"GYROSCOPIC", "N", "Nm"},
+			{"FORCE", "N", "Nm"}, {"DRAG", "N", "Nm"}, {"WIND", "m/s", "m/s"}, {"ERROR", "%", "%"}};
+		for (int i = 0; i < sunits.size(); ++i) {
+			if (PatternMatch("*" + sunits[i][0] + "*", par)) {
+				units << sunits[i][1];	units << sunits[i][1];	units << sunits[i][1];
+				units << sunits[i][2];	units << sunits[i][2];	units << sunits[i][2];
+				return;
+			}
+		}
+		units << "";	units << "";	units << "";	units << "";	units << "";	units << "";
+	};
+	double factorMass = 1, factorLength = 1;
+	
+	try {
+		String line;
+		line = in.GetLine();
+		
+		if (!Trim(line).StartsWith("*********1*********2*********3"))
+			throw Exc(t_("Format error in AQWA file"));	// To detect AQWA format
+		
+		FileInLine::Pos fpos;
+	
+		bool endwhile = false;
+		while(!f.IsEof() && !endwhile) {
+			fpos = in.GetPos();
+			line = Trim(in.GetLine());
+			int pos;
+			if (line.StartsWith("*")) {
+				if ((pos = line.FindAfter("Unit System :")) >= 0) {
+					String system = Trim(line.Mid(pos));
+					if (system.Find("Metric") < 0)
+						throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
+					if (system.Find("kg") > 0)
+						factorMass = 1;
+					else if (system.Find("tonne") > 0)
+						factorMass = 1000;
+					else 
+						throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));
+					if (system.Find("m ") > 0)
+						factorLength = 1;
+					else if (system.Find("km ") > 0)
+						factorLength = 1000;
+					else 
+						throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
+				}
+			} else if (line.StartsWith("RECORD NO.")) {
+				bool inparameters = true;
+				while(!f.IsEof()) {		
+					String str = f.GetLine();
+					if (f.GetCount() > 3) {
+						String par = Trim(str.Mid(20, 47-20));
+						int id;
+						if ((id = par.FindAfter("NODE")) > 0) {
+							inparameters = false;
+							String node = Trim(par.Mid(id));
+							Add3_dof(S("Node_pos_") + node); units << "m";		units << "m";		units << "m";
+							Add3_dof(S("Node_vel_") + node); units << "m/s";	units << "m/s";		units << "m/s";
+							Add3_dof(S("Node_acc_") + node); units << "m/s2";	units << "m/s2";	units << "m/s2";
+						} else if (f.GetText(0) == "FORCE") {
+							inparameters = false;
+							String line = f.GetText(2);
+							Add3_dof(S("Force_") + line);	   units << "N";	units << "N";		units << "N";
+							parameters << ("Tension_" << line);units << "N";
+						} else if (f.GetText(0) == "TENSION") {
+							inparameters = false;
+							while(!f.IsEof() && f.size() >= 3) {		
+								String line = f.GetText(2);
+								do {
+									String joint;
+									if (f.size() == 6)
+									 	joint = Trim(f.GetText(4));
+									 else
+									    joint = Trim(f.GetText(1)); 
+									parameters << ("Tension_" + line + "_" + joint);	units << "N";
+									f.GetLine();
+								} while (f.size() == 3);
+							}
+							endwhile = true;
+							break;
+						} else if (inparameters) {
+							par = Replace(par, " ", "_");
+							Add3_dof(par);
+							Add_3dof(par);
+							AddUnits6(par);
+						}
+					}
+				}
+			}
+		}
+		if (parameters.size() != units.size()) 
+			throw Exc("Number of parameters and units do not match");
+		
+		if (factorMass == 1000) {
+			for (String &s : units) {
+				s = Replace(s, "N", "kN");
+				s = Replace(s, "kg", "t");
+			}
+		}
+		if (factorLength == 1000) {
+			for (String &s : units)
+				s = Replace(s, "m", "km");
+		}
+		
+		dataOut.SetCount(parameters.size());
+		
+		in.SeekPos(fpos);
+		
+		while(!f.IsEof()) {
+			line = f.GetLine();
+			if (line.StartsWith(" RECORD NO.")) {
+				int c = 0;
+				while(!f.IsEof()) {		// Look for time
+					String str = Trim(f.GetLine());
+					if (!str.IsEmpty()) {
+						double time = ScanDouble(str);
+						dataOut[c++] << time;
+						break;
+					}
+				}
+				while(!f.IsEof()) {
+					line = f.GetLine();
+					if (line.StartsWith("1"))
+						break;
+					f.LoadFields(line, {20, 49, 62, 75, 90, 103, 116});
+					if (f.GetCount() > 3) {
+						if (TrimLeft(line).StartsWith("***")) 
+							;		// System warning
+						else if (TrimLeft(f.GetText(0)).StartsWith("POSITION NODE")) {
+							f.Load(line);
+							dataOut[c++] << f.GetDouble(3);	dataOut[c++] << f.GetDouble(4);	dataOut[c++] << f.GetDouble(5);
+							f.Load(f.GetLine());
+							dataOut[c++] << f.GetDouble(1);	dataOut[c++] << f.GetDouble(2);	dataOut[c++] << f.GetDouble(3);
+							f.Load(f.GetLine());
+							dataOut[c++] << f.GetDouble(1);	dataOut[c++] << f.GetDouble(2);	dataOut[c++] << f.GetDouble(3);
+						} else if (TrimLeft(f.GetText(0)).StartsWith("FORCE")) {
+							f.Load(line);
+							dataOut[c++] << f.GetDouble(3);	dataOut[c++] << f.GetDouble(4);	dataOut[c++] << f.GetDouble(5);	dataOut[c++] << f.GetDouble(7);
+						} else if (TrimLeft(f.GetText(0)).StartsWith("TENSION")) {
+							f.Load(line);
+							dataOut[c++] << f.GetDouble(5);
+						} else if (Trim(line).StartsWith("S#")) {
+							f.Load(line);
+							dataOut[c++] << f.GetDouble(2);
+						} else {
+							dataOut[c++] << f.GetDouble(1);	dataOut[c++] << f.GetDouble(2);	dataOut[c++] << f.GetDouble(3);
+							dataOut[c++] << f.GetDouble(4);	dataOut[c++] << f.GetDouble(5);	dataOut[c++] << f.GetDouble(6);
+						}
+					}
+				}
+			}
+		}		
+	} catch (Exc e) {
+		throw t_("Parsing error: ") + e;
+	}			
+	
+	if (dataOut.IsEmpty()) 
+		throw Exc(Format(t_("Problem reading '%s'"), fileName)); 
+	
+	return true;	
 }
