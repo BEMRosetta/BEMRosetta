@@ -411,7 +411,7 @@ bool Aqwa::Load_LIS() {
 					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			}
 		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
-				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {
+				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {		// One place to get the hydrostatic stiffness
 			in.GetLine(3);
 			line = in.GetLine();
 			if (Trim(line).StartsWith("Z"))
@@ -447,7 +447,7 @@ bool Aqwa::Load_LIS() {
 	       		hd().C[ib](4, 5) = f.GetDouble(3);	
 			
 			hd().C[ib] *= factorMass;
-		} /*else if (line.Find("STIFFNESS MATRIX") >= 0) {// Mooring stiffness matrix. Not implemented yet.	
+		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness
 			hd().C[ib].setConstant(6, 6, 0);
 			in.GetLine(6);
 			for (int r = 0; r < 6; ++r) {
@@ -456,7 +456,7 @@ bool Aqwa::Load_LIS() {
 					hd().C[ib](r, c) = f.GetDouble(c + 1);
 				in.GetLine();
 			}
-		} */else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
+		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("= not found"));
@@ -595,7 +595,7 @@ bool Aqwa::Load_LIS() {
 					}
 				}
 			}
-		} else if (line.Find("FREQUENCY INDEPENDENT DAMPING") >= 0) {
+		} else if (Trim(line) == "FREQUENCY INDEPENDENT DAMPING") {
 			if (hd().Dlin.size() == 0)
 				hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
 			in.GetLine(6);
@@ -978,10 +978,10 @@ bool AQWACase::Load(String fileName) {
 }
 
 			
-bool FastOut::LoadLis(String fileName) {
+String FastOut::LoadLis(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
-		return false;
+		return t_("Impossible to open file");
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
@@ -1018,7 +1018,7 @@ bool FastOut::LoadLis(String fileName) {
 		line = in.GetLine();
 		
 		if (!Trim(line).StartsWith("*********1*********2*********3"))
-			throw Exc(t_("Format error in AQWA file"));	// To detect AQWA format
+			return t_("Format error in AQWA file");	// To detect AQWA format
 		
 		FileInLine::Pos fpos;
 	
@@ -1031,19 +1031,19 @@ bool FastOut::LoadLis(String fileName) {
 				if ((pos = line.FindAfter("Unit System :")) >= 0) {
 					String system = Trim(line.Mid(pos));
 					if (system.Find("Metric") < 0)
-						throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
+						return(in.Str() + "\n" + t_("Only metric system is supported"));
 					if (system.Find("kg") > 0)
 						factorMass = 1;
 					else if (system.Find("tonne") > 0)
 						factorMass = 1000;
 					else 
-						throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));
+						return(in.Str() + "\n" + t_("Unknown mass unit"));
 					if (system.Find("m ") > 0)
 						factorLength = 1;
 					else if (system.Find("km ") > 0)
 						factorLength = 1000;
 					else 
-						throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
+						return(in.Str() + "\n" + t_("Unknown length unit"));
 				}
 			} else if (line.StartsWith("RECORD NO.")) {
 				bool inparameters = true;
@@ -1087,10 +1087,19 @@ bool FastOut::LoadLis(String fileName) {
 						}
 					}
 				}
+			} else if (line.StartsWith("WAVE AMPLITUDE")) {
+				f.Load(line);
+				Hs = 2*f.GetDouble(f.size()-1);
+			} else if (line.StartsWith("WAVE PERIOD")) {
+				f.Load(line);
+				Tp = f.GetDouble(f.size()-1);
+			} else if (line.StartsWith("WAVE DIRECTION")) {
+				f.Load(line);
+				heading = f.GetDouble(f.size()-1);
 			}
 		}
 		if (parameters.size() != units.size()) 
-			throw Exc("Number of parameters and units do not match");
+			return t_("Number of parameters and units do not match");
 		
 		if (factorMass == 1000) {
 			for (String &s : units) {
@@ -1135,8 +1144,8 @@ bool FastOut::LoadLis(String fileName) {
 							f.Load(f.GetLine());
 							dataOut[c++] << f.GetDouble(1);	dataOut[c++] << f.GetDouble(2);	dataOut[c++] << f.GetDouble(3);
 						} else if (TrimLeft(f.GetText(0)).StartsWith("FORCE")) {
-							f.Load(line);
-							dataOut[c++] << f.GetDouble(3);	dataOut[c++] << f.GetDouble(4);	dataOut[c++] << f.GetDouble(5);	dataOut[c++] << f.GetDouble(7);
+							f.LoadFields(line, {48, 61, 75, 88, 91, 103});
+							dataOut[c++] << f.GetDouble(0);	dataOut[c++] << f.GetDouble(1);	dataOut[c++] << f.GetDouble(2);	dataOut[c++] << f.GetDouble(4);
 						} else if (TrimLeft(f.GetText(0)).StartsWith("TENSION")) {
 							f.Load(line);
 							dataOut[c++] << f.GetDouble(5);
@@ -1152,11 +1161,38 @@ bool FastOut::LoadLis(String fileName) {
 			}
 		}		
 	} catch (Exc e) {
-		throw t_("Parsing error: ") + e;
+		return t_("Parsing error: ") + e;
 	}			
 	
 	if (dataOut.IsEmpty()) 
-		throw Exc(Format(t_("Problem reading '%s'"), fileName)); 
+		return Format(t_("Problem reading '%s'"), fileName); 
 	
-	return true;	
+	if (!IsNull(Hs)) {
+		parameters << "Hs";
+		units << "m";
+		UVector<double> &data = dataOut.Add();
+		data.SetCount(First(dataOut).size());
+		for (int i = 0; i < data.size(); ++i)
+			data[i] = Hs;
+	}
+	if (!IsNull(Tp)) {
+		parameters << "Tp";
+		units << "s";
+		UVector<double> &data = dataOut.Add();
+		data.SetCount(First(dataOut).size());
+		for (int i = 0; i < data.size(); ++i)
+			data[i] = Tp;
+	}
+	if (!IsNull(Hs) && !IsNull(Tp)) {
+		parameters << "Wave1Elev";
+		units << "m";
+		UVector<double> &data = dataOut.Add();
+		UVector<double> &time = First(dataOut);
+		data.SetCount(First(dataOut).size());
+		double A = Hs/2;
+		double w = 2*M_PI/Tp;
+		for (int i = 0; i < data.size(); ++i)
+			data[i] = A*cos(w*time[i]);
+	}
+	return "";	
 }

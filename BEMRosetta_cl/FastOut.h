@@ -13,7 +13,7 @@ public:
 	static UVector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
 	
-	int Load(String fileName);
+	String Load(String fileName);
 	bool Save(String fileName, String type = "", String sep = "");
 	
 	void Clear();
@@ -123,14 +123,16 @@ public:
 	double TipRad = Null, OverHang = Null, ShftTilt = Null, Precone = Null, Twr2Shft = Null, TowerHt = Null, baseClearance = Null;
 	double ptfmCOBxt = Null, ptfmCOByt = Null;
 	
+	double Hs = Null, Tp = Null, heading = Null;
+	
 private:
-	bool LoadOut(String fileName);
-	bool LoadOutb(String fileName);
+	String LoadOut(String fileName);
+	String LoadOutb(String fileName);
 	bool SaveOut(String fileName);
-	bool LoadCsv(String fileName);
+	String LoadCsv(String fileName);
 	bool SaveCsv(String fileName, String sep);
-	bool LoadDb(String fileName);
-	bool LoadLis(String fileName);
+	String LoadDb(String fileName);
+	String LoadLis(String fileName);
 	void AfterLoad();
 
 	String fileName;
@@ -610,17 +612,17 @@ private:
 class ParameterMetric : public DeepCopyOption<ParameterMetric> {
 public:
 	ParameterMetric() {}
-	ParameterMetric(const ParameterMetric &d, int) : str(d.str), format(d.format) {
+	ParameterMetric(const ParameterMetric &d, int) : name(d.name), decimals(d.decimals) {
 		metrics = clone(d.metrics);
 	}
-	String str;
-	String format;
+	String name;
+	int decimals;
 	UVector<String> metrics;
 	
 	void Jsonize(JsonIO &json) {
 		json
-			("str", str)
-			("format", format)
+			("name", name)
+			("decimals", decimals)
 			("metrics", metrics)
 		;
 	}	
