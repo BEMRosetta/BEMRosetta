@@ -1285,7 +1285,7 @@ bool Wamit::Load_1(String fileName) {
 	in.SeekPos(fpos);
 	
 	int maxDof = 0;
-	bool thereIsA0 = false, thereIsAinf = false; 
+	bool thereIsA0 = false, thereIsAinf = false, minusFirst = true; 
 	while (!in.IsEof()) {
 		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3))) {
@@ -1294,9 +1294,11 @@ bool Wamit::Load_1(String fileName) {
 		}
 		
 		double freq = f.GetDouble(0);
-		if (freq < 0)
+		if (freq < 0) {
 			thereIsA0 = true;
-		else if (freq == 0)
+			if (thereIsAinf)
+				minusFirst = false;
+		} else if (freq == 0)
 			thereIsAinf = true;
 		else
 			FindAdd(w, freq);
@@ -1305,6 +1307,7 @@ bool Wamit::Load_1(String fileName) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 	}
+	bool isHams = thereIsA0 && thereIsAinf && !minusFirst;
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
@@ -1375,11 +1378,17 @@ bool Wamit::Load_1(String fileName) {
  		if ((freq < 0)) {
  			if (!thereIsA0)
 				throw Exc(in.Str() + "\n"  + t_("A[w=inf] is not expected"));
-			hd().A0(i, j) = Aij;
+ 			if (!isHams)
+				hd().A0(i, j) = Aij;
+ 			else
+ 				hd().Ainf(i, j) = Aij;	
 		} else if (freq == 0) {
 			if (!thereIsAinf)
 				throw Exc(in.Str() + "\n"  + t_("A[w=0] is not expected"));				
-			hd().Ainf(i, j) = Aij;
+			if (!isHams)
+				hd().Ainf(i, j) = Aij;
+			else
+				hd().A0(i, j) = Aij;
 		} else {
 			int ifr = FindRatio(src, freq, 0.001);
 			if (ifr < 0) {

@@ -461,10 +461,19 @@ bool MainQTF::Load() {
 		if (ArrayCtrlSelectedGetCount(mbm.listLoaded) > 1) 
 			return false;
 		
-		const Hydro &hd = Bem().hydros[idHydro].hd();
-		
-		if (!hd.IsLoadedQTF(true) && !hd.IsLoadedQTF(false))
+		// Show the tab if any model has QTFs
+		bool show = false;
+		for (const HydroClass &h : Bem().hydros) {
+			if (h.hd().IsLoadedQTF(true) || h.hd().IsLoadedQTF(false)) {
+				show = true;
+				break;
+			}
+		}
+		if (!show)
 			return false;
+		////
+		
+		const Hydro &hd = Bem().hydros[idHydro].hd();
 		
 		opQTF.Clear();
 		if (hd.IsLoadedQTF(true))
@@ -477,7 +486,7 @@ bool MainQTF::Load() {
 			isSumm = true;
 		if (opQTF.GetCount() > 1)
 			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
-		else
+		else if (opQTF.GetCount() > 0)
 			opQTF.SetIndex(0);
 			
 		/*UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
