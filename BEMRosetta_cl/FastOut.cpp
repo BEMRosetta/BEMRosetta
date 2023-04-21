@@ -120,9 +120,9 @@ String FastOut::GetFileToLoad(String fileName) {
 	return "";
 }
 
-int FastOut::Load(String fileName) {
+String FastOut::Load(String fileName) {
 	String ext = ToLower(GetFileExt(fileName));
-	bool ret = false;
+	
 	if (ext == ".out")
 		;
 	else if (ext == ".outb")
@@ -142,11 +142,12 @@ int FastOut::Load(String fileName) {
 			if (FileExists(fileName))
 				ext = ".out";
 			else
-				return -1;
+				return t_("Unknown file format");
 		}
 	}
 	fileName = ForceExt(fileName, ext);
 	
+	String ret;
 	if (ext == ".out")
 		ret = LoadOut(fileName);
 	else if (ext == ".outb")
@@ -160,15 +161,16 @@ int FastOut::Load(String fileName) {
 	
 	this->fileName = fileName;
 	
-	if (ret)
+	if (ret.IsEmpty())
 		AfterLoad();
-	return ret ? 1 : 0;
+	
+	return ret;
 }
 
-bool FastOut::LoadOut(String fileName) {
+String FastOut::LoadOut(String fileName) {
 	String raw = LoadFileBOM(fileName);
 	if (raw.IsEmpty()) 
-		throw Exc(Format("Problem reading '%s'", fileName)); 
+		return Format("Problem reading '%s'", fileName); 
 	
 	Clear();
 	bool begin = false;
@@ -213,12 +215,12 @@ bool FastOut::LoadOut(String fileName) {
 	}
 
 	if (dataOut.IsEmpty()) 
-		throw Exc(Format("Problem reading '%s'", fileName)); 
+		return Format("Problem reading '%s'", fileName); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
     	dataOut[i].SetCount(dataOut[0].size());
 
-	return true;
+	return "";
 }
 
 bool FastOut::Save(String fileName, String type, String sep) {
@@ -261,14 +263,14 @@ bool FastOut::SaveOut(String fileName) {
 	return SaveFile(fileName, data);
 }
 
-bool FastOut::LoadOutb(String fileName) {
+String FastOut::LoadOutb(String fileName) {
 	Clear();
 	
 	enum FILETYPE {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
 
 	FileInBinary file(fileName);
 	if (!file.IsOpen())
-		return false;
+		return t_("Impossible to open file");
 
 	int ChanLen2;
 	int16 FileType = file.ReadB<int16,2>();
@@ -371,10 +373,10 @@ bool FastOut::LoadOutb(String fileName) {
         for (int idt = 0; idt < NumRecs; ++idt)
             dataOut[0][idt] = TimeOut1 + TimeIncr*idt;
     }
-	return true;
+	return "";
 }
 
-bool FastOut::LoadCsv(String fileName) {
+String FastOut::LoadCsv(String fileName) {
 	Clear();
 		
 	String header;
@@ -386,7 +388,7 @@ bool FastOut::LoadCsv(String fileName) {
 	int beginDataRow;
 	
 	if (!GuessCSV(fileName, true, header, parameters, separator, repetition, decimalSign, beginData, beginDataRow))
-		throw Exc(Format("Problem reading '%s'. Impossible to guess structure", fileName)); 
+		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
 	
 	// Extracts the units from the header
 	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->bool {
@@ -400,9 +402,9 @@ bool FastOut::LoadCsv(String fileName) {
 				unit = str.Mid(idp+1);
 				param = str.Left(idp);
 			}
-			return true;
+			return "";
 		} else
-			return false;
+			return "Units not found";
 
 
 	};	
@@ -422,7 +424,7 @@ bool FastOut::LoadCsv(String fileName) {
 	
 	FileIn in(fileName);
 	if (!in)
-		return false;
+		return t_("Impossible to load file");
 
 	in.Seek(beginData);
 
@@ -434,12 +436,12 @@ bool FastOut::LoadCsv(String fileName) {
 	}
 		
 	if (dataOut.IsEmpty()) 
-		throw Exc(Format("Problem reading '%s'", fileName)); 
+		return Format("Problem reading '%s'", fileName); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
     	dataOut[i].SetCount(dataOut[0].size());
 	
-	return true;
+	return "";
 }
 
 bool FastOut::SaveCsv(String fileName, String sep) {
@@ -697,7 +699,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 	// Gets the real et of parameters taking into account *
 	auto FindParam = [&](String strpartofind)->bool {
 		for (auto &param : params.params) {
-			if (ToLower(strpartofind) == ToLower(param.str))
+			if (ToLower(strpartofind) == ToLower(param.name))
 				return true;
 		}	
 		return false;
@@ -705,12 +707,12 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 	
 	for (const FastOut &fast : dataFast) {
 		for (auto &p0 : params0.params) {
-			UVector<String> sids = fast.FindParameterMatchStr(p0.str);
-			for (String str : sids) {
-				if (!FindParam(str)) {
+			UVector<String> names = fast.FindParameterMatchStr(p0.name);
+			for (String name : names) {
+				if (!FindParam(name)) {
 					auto &param = params.params.Add();
 					param = clone(p0);
-					param.str = str;
+					param.name = name;
 				}
 			}
 		}
@@ -744,7 +746,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 			if (param.metrics.size() < 1)
 				throw Exc(t_("Wrong number of parameters"));
 			
-			int id = fast.GetParameterX(param.str);
+			int id = fast.GetParameterX(param.name);
 			if (id < 0) {
 				for (int i = 0; i < param.metrics.size(); i++) 
 					t << "";
@@ -800,8 +802,12 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 							throw Exc("'weibull' requires one argument");
 						EigenVector v(data, 0, 1);
 						val = v.PercentileWeibullValY(ScanDouble(pars[1]));
+					} else if (stat == "demo") {
+						if (pars.size() != 3)
+							throw Exc("'demo' requires two arguments");
+						val = ScanDouble(pars[1]) + ScanDouble(pars[2]);
 					} else
-						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.str));
+						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
 					
 					t << val;//Format("%" + format, val);
 				}
@@ -828,6 +834,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				str.Replace("(", ",");
 				str.Replace(")", ",");
 				UVector<String> pars = Split(str, ",");
+				Trim(pars);
 				String stat = pars[0];
 					
 				double val;
@@ -861,8 +868,10 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					val = Null;
 				else if (stat == "weibull") 
 					val = Null;
+				else if (stat == "demo") 
+					val = Null;
 				else
-					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.str));
+					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
 				
 				t << val;//Format("%" + format, val);
 			}
@@ -1037,7 +1046,13 @@ double GetRAO(const VectorXd &data, const VectorXd &time, double T, bool onlyFFT
 	return rao;
 }
 
-void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A) {
+void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &H) {
+	if (!IsNull(dataFast.Hs) && !IsNull(dataFast.Tp)) {
+		H = dataFast.Hs;
+		T = dataFast.Tp;
+		return;	
+	}
+		
 	String param = "Wave1Elev";
 	int id = dataFast.GetParameterX(param);
 	if (id < 0) 
@@ -1054,7 +1069,7 @@ void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A) {
 	if (err != ExplicitEquation::NoError || r2 < 0.9) 
 		throw Exc("Error in GetWavePeriodAmplitude, wave is not regular");
 	
-	double newA = 2*eq.GetCoeff(1);
+	double newH = 2*eq.GetCoeff(1);
 	double newT = 2*M_PI/eq.GetCoeff(2);
 	
 	//if (abs((T-newT)/T) > 0.05)
@@ -1064,7 +1079,7 @@ void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A) {
 	//	throw Exc(Format("Wave amplitude %f is too different to the defined %f", newA, A));
 	
 	T = newT;
-	A = newA;
+	H = newH;
 }
 
 

@@ -1186,8 +1186,10 @@ double Hydro::Tdof(int ib, int idf) const {
 	double m = M[ib](idf, idf);
 	double a = Ainf_dim(ib*6+idf, ib*6+idf);
 	double c = C_dim(ib, idf, idf);
+	if (c == 0)
+		return Null;
 	double d = (m + a)/c;
-	if (d < 0 || c == 0)
+	if (d < 0)
 		return Null;
 	return 2*M_PI*sqrt(d); 
 }

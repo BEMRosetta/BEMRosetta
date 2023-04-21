@@ -44,13 +44,13 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.arrayStats.Proportional().Clipboard().Editing().Removing().Appending().Duplicating().SetToolBar();
 	
 	fscbase.Init(this, OnFile, OnCopyTabs, statusBar);
-#ifdef flagDEBUG
+//#ifdef flagDEBUG
 	splitCompare.Horz(fscbase.SizePos(), compare.SizePos());
 	splitCompare.SetPositions(3000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
 	Add(splitCompare.SizePos());
-#else
-	Add(fscbase.SizePos());
-#endif
+//#else
+//	Add(fscbase.SizePos());
+//#endif
 }
 
 bool FastScatter::OnLoadCompare() {
@@ -65,24 +65,48 @@ bool FastScatter::OnLoadCompare() {
 }
 
 void FastScatter::ParamsToGrid() {
+	compare.arrayStats.Clear(false);
 	for (int i = 0; i < params.params.size(); ++i) {
 		String stats;
 		for (int is = 0; is < params.params[i].metrics.size(); ++is) {
 			if (is > 0)
-				stats << ",";
+				stats << ", ";
 			stats << params.params[i].metrics[is];
 		}
-		compare.arrayStats.Add(params.params[i].str, params.params[i].format, stats);
+		compare.arrayStats.Add(params.params[i].name, params.params[i].decimals, stats);
 	}
 }
 
 void FastScatter::GridToParams() {
+	params.params.Clear();
 	params.params.SetCount(compare.arrayStats.GetRowCount());
 	for (int r = 0; r < compare.arrayStats.GetRowCount(); ++r) {
-		params.params[r].str = AsString(compare.arrayStats.Get(r, 0));
-		params.params[r].format = AsString(compare.arrayStats.Get(r, 1));
+		params.params[r].name = AsString(compare.arrayStats.Get(r, 0));
+		params.params[r].decimals = compare.arrayStats.Get(r, 1);
 		String stats = AsString(compare.arrayStats.Get(r, 2));
-		params.params[r].metrics = Split(stats, ",");
+		int inparen = 0;
+		String met;
+		for (char c : stats) {		// converts "rao_mean, rao(), factor(2, 5)" into ["rao_mean", "rao", "factor(2, 5)"]
+			if (c == '(') {
+				if (inparen != 0)
+					throw Exc("Parenthesis opened after parenthesis is not allowed");
+				inparen = 1;
+				met << c;
+			} else if (c == ')') {
+				if (inparen != 1)
+					throw Exc("Parenthesis closed after parenthesis is not allowed");
+				inparen = 2;
+				met << c;
+			} else if (c == ',' && (inparen == 0 || inparen == 2)) {
+				params.params[r].metrics << Trim(met);
+				met.Clear();
+				inparen = 0;
+			} else if (inparen < 2)
+				met << c;
+			// Discards everything after ')' and before ','
+		}	
+		if (!met.IsEmpty())
+			params.params[r].metrics << Trim(met);
 	}
 }
 
@@ -152,17 +176,16 @@ void FastScatter::OnCalc() {
 		FastOut &fast = fscbase.left.dataFast[0];
 		UVector<String> fmt;
 		fmt << "s" << "s" << "s";
-		
-		
+				
 		for (const ParameterMetric &param : realparams.params) {				
-			int id = fast.GetParameterX(param.str);
+			int id = fast.GetParameterX(param.name);
 			String units = fast.GetUnit(id);
 			for (int i = 0; i < param.metrics.size(); i++) {
 				compare.array.AddColumn("");
 				if (i == 0) 
-					compare.array.Set(0, col, Format("%s [%s]", param.str, units));
+					compare.array.Set(0, col, Format("%s [%s]", param.name, units));
 				compare.array.Set(1, col++, param.metrics[i]);
-				fmt << param.format;
+				fmt << ("." << FormatInt(param.decimals) << "f");
 			}
 		}
 		for (int row = 0; row < table.size(); ++row) {
@@ -543,8 +566,6 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			return false;
 		}
 		
-		WaitCursor waitcursor;
-		
 		int iff = -1;
 		if (opLoad3 == 0) {
 			if (left.scatterSize() > 0)
@@ -561,13 +582,23 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			justUpdate = true;
 		}
 		
-		Ctrl::ProcessEvents();
-		
-		left.EnableX(false);
-		
 		FastOut &fout = left.dataFast[iff];
 		
-		int ret = fout.Load(fileName);
+		String ret;
+		{
+			WaitCursor waitcursor;
+			
+			left.EnableX(false);
+			
+			ret = fout.Load(fileName);
+		}
+		if (!ret.IsEmpty()) {
+			Exclamation(Format(t_("Problem reading file '%s': %s"), DeQtf(~file), DeQtf(ret)));
+			left.EnableX();
+			UpdateButtons(false);
+			return false;
+		}
+		/*
 		if (ret == -1) {
 			Exclamation(Format(t_("File '%s' is not supported"), ~file));
 			left.EnableX();
@@ -578,7 +609,7 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
-		}
+		}*/
 		
 		if (!justUpdate) {
 			UArray<ScatterLeft::DataSource> &src = left.dataSource[iff];

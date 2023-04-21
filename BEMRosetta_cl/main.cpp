@@ -217,7 +217,13 @@ void DLL_ListFunctions() noexcept {
 
 int DLL_FAST_Load(const char *filename) noexcept {
 	try {
-		return DLL_Fastout().Load(filename);
+		String ret = DLL_Fastout().Load(filename);
+		if (ret.IsEmpty())
+			return 1;
+		else {
+			CoutX() << Format("Error: %s", ret);
+			return 0;
+		}
 	} catch (...) {
 		CoutX() << "Unknown error in DLL_FAST_Load()";
 		return 0;

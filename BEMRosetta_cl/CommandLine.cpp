@@ -701,11 +701,11 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							int ret = fast.Load(file);
-							if (ret > 0)
+							String ret = fast.Load(file);
+							if (ret.IsEmpty())
 								BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 							else
-								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'"), file));
+								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s': %s"), file, ret));
 						} else if (param == "-c" || param == "-convert") {
 							if (fast.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
