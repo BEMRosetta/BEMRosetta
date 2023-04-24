@@ -128,7 +128,8 @@ void CompareParameters::Load() {
 			} else
 				Segment(x, y, wmin, wmax, xx, yy);
 			
-			rms << RMS(yy);
+			if (yy.size() > 0)
+				rms << RMS(yy);
 			
 			if (swRelative > 0) {
 				VectorXd yyy;
