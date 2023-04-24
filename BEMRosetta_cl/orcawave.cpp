@@ -377,20 +377,28 @@ bool OrcaWave::Load_YML_Res() {
 					}
 				} else if (fy.FirstIs("SumFrequencyQTFs")) {
 					if (fy.FirstMatch("RAOPeriodOrFrequency*")) {
-						if (!hd().IsLoadedQTF(true)) {
+						UVector<UVector<double>> mat = fy.GetMatrixDouble();
+						
+						if (!hd().IsLoadedQTF(true)) {		// Gets frequencies and headings
 							hd().qw.resize(hd().Nf);
 							for (int iw = 0; iw < hd().Nf; ++iw) 
 								hd().qw[iw] = hd().w[iw];
-							hd().qh.resize(hd().Nh);
-							for (int ih = 0; ih < hd().Nh; ++ih) 
-								hd().qh[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
-								
-							hd().InitQTF(hd().qtfsum, hd().Nb, hd().Nh, hd().Nf);
+							
+							UArray<std::complex<double>> qh;
+							for (int row = 0; row < mat.size(); ++row) {
+								if (mat[row].size() != 16)
+									throw Exc(in.Str() + "\n"  + t_("Wrong data in list"));
+								double h1 = mat[row][2],
+									   h2 = mat[row][3];
+									   
+								FindAddDelta(qh, std::complex<double>(h1, h2), 0.0001);	
+							}
+							Copy(qh, hd().qh);
+	
+							hd().InitQTF(hd().qtfsum, hd().Nb, int(hd().qh.size()), hd().Nf);
 							hd().mdtype = 9;
 						}
-													
-						UVector<UVector<double>> mat = fy.GetMatrixDouble();
-
+					
 						for (int row = 0; row < mat.size(); ++row) {
 							if (mat[row].size() != 16)
 								throw Exc(in.Str() + "\n"  + t_("Wrong data in list"));
@@ -398,15 +406,25 @@ bool OrcaWave::Load_YML_Res() {
 								   w2 = mat[row][1],
 								   h1 = mat[row][2],
 								   h2 = mat[row][3];
+								   
+							if (hd().dataFromW) {
+								if (!rad_s) {
+									w1 *= 2*M_PI;
+									w2 *= 2*M_PI;
+								}
+							} else {
+								w1 = 2*M_PI/w1;
+								w2 = 2*M_PI/w2;
+							}
 							int ifr1 = FindDelta(hd().qw, w1, 0.0001),
 								ifr2 = FindDelta(hd().qw, w2, 0.0001),
 								ih = FindDelta(hd().qh, std::complex<double>(h1, h2), 0.0001);	
 							if (ifr1 < 0)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%s' in QTF"), w1));
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%d' in QTF"), w1));
 							if (ifr2 < 0)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%s' in QTF"), w2));
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%d' in QTF"), w2));
 							if (ih < 0)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong head (%s,%s) in QTF"), h1, h2));
+								throw Exc(in.Str() + "\n"  + Format(t_("Wrong head (%d,%d) in QTF"), h1, h2));
 							for (int idf = 0; idf < 6; ++idf) {
 								double mag = mat[row][4+idf*2]*10;
 								double ph  = ToRad(mat[row][4+idf*2+1]);

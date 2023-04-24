@@ -1159,6 +1159,7 @@ public:
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnRAO();
 	void OnOgilvie();
+	void OnConvergence();
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces();
@@ -1175,6 +1176,8 @@ public:
 	void OnQTFZero();
 	void OnQTF_MD();
 	
+	void AfterBEM();
+		
 	int GetIdOneSelected(bool complain = true);
 		
 	void Jsonize(JsonIO &json);
