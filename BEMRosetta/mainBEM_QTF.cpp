@@ -96,59 +96,61 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 	double avgw = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
 		const Hydro &hd = Bem().hydros[i].hd();
-		int idh = FindDelta(hd.qh, head, 2.);
-		if (idh >= 0) {
-			UArray<Pointf> &d = up.dataPlot.Add();	
-			
-			int id;
-			if (IsNull(pf)) {
-				id = 0;
-				pf.x = pf.y = qwT(hd, id);
-			} else {
-				if (type == 2) {
-					id = FindClosest(hd.qw, show_w ? pf.y : 2*M_PI/pf.y);
-					pf.y = qwT(hd, id);
-				} else {			
-					id = FindClosest(hd.qw, show_w ? pf.x : 2*M_PI/pf.x);
-					pf.x = qwT(hd, id);
-				}
-			}
-			avgw += qwT(hd, id);
-			
-			double range, v0;
-			if (type == 1) {
-				v0 = qwT(hd, int(hd.qw.size() - 1));
-				range = qwT(hd, 0) - v0;
-			}
-			
-			for (int iw = 0; iw < hd.qw.size(); ++iw) {
-				double val;
-				if (type == 0) 
-					val = GetData(hd, up, idh, iw, iw);
-				else if (type == 1) {
-					double ratio = 1 - (qwT(hd, iw) - v0)/range;
-					double v = v0 + ratio*range;
-					v = show_w ? v : 2*M_PI/v;
-					int niw = FindClosest(hd.qw, v);
-					val = GetData(hd, up, idh, iw, niw);
+		if (hd.IsLoadedQTF(isSum)) {
+			int idh = FindDelta(hd.qh, head, 2.);
+			if (idh >= 0) {
+				UArray<Pointf> &d = up.dataPlot.Add();	
+				
+				int id;
+				if (IsNull(pf)) {
+					id = 0;
+					pf.x = pf.y = qwT(hd, id);
 				} else {
-					if (IsNull(pf)) 
-						pf.x = pf.y = qwT(hd, id);
-					else {
-						if (type == 2) 
-							val = GetData(hd, up, idh, id, iw);
-						else 
-							val = GetData(hd, up, idh, iw, id);
+					if (type == 2) {
+						id = FindClosest(hd.qw, show_w ? pf.y : 2*M_PI/pf.y);
+						pf.y = qwT(hd, id);
+					} else {			
+						id = FindClosest(hd.qw, show_w ? pf.x : 2*M_PI/pf.x);
+						pf.x = qwT(hd, id);
 					}
 				}
-				d << Pointf(qwT(hd, iw), val);
+				avgw += qwT(hd, id);
+				
+				double range, v0;
+				if (type == 1) {
+					v0 = qwT(hd, int(hd.qw.size() - 1));
+					range = qwT(hd, 0) - v0;
+				}
+				
+				for (int iw = 0; iw < hd.qw.size(); ++iw) {
+					double val;
+					if (type == 0) 
+						val = GetData(hd, up, idh, iw, iw);
+					else if (type == 1) {
+						double ratio = 1 - (qwT(hd, iw) - v0)/range;
+						double v = v0 + ratio*range;
+						v = show_w ? v : 2*M_PI/v;
+						int niw = FindClosest(hd.qw, v);
+						val = GetData(hd, up, idh, iw, niw);
+					} else {
+						if (IsNull(pf)) 
+							pf.x = pf.y = qwT(hd, id);
+						else {
+							if (type == 2) 
+								val = GetData(hd, up, idh, id, iw);
+							else 
+								val = GetData(hd, up, idh, iw, id);
+						}
+					}
+					d << Pointf(qwT(hd, iw), val);
+				}
+				int idc = hd.GetId();
+				const Upp::Color &color = GetColorId(idc);
+				String nameType = Format("QTF %s %s(%s)", up.ma_ph, hd.name, hd.GetCodeStrAbr());
+				up.scatter.AddSeries(d).Legend(nameType).Units(up.units).SetMarkColor(color).Stroke(2, color);
+				if (!showPoints)
+					up.scatter.NoMark();
 			}
-			int idc = hd.GetId();
-			const Upp::Color &color = GetColorId(idc);
-			String nameType = Format("QTF %s %s(%s)", up.ma_ph, hd.name, hd.GetCodeStrAbr());
-			up.scatter.AddSeries(d).Legend(nameType).Units(up.units).SetMarkColor(color).Stroke(2, color);
-			if (!showPoints)
-				up.scatter.NoMark();
 		}
 	}
 	avgw /= Bem().hydros.size();		// Average value
@@ -199,6 +201,9 @@ void QTFTabDof::OnClick(Point p, int idof, ScatterCtrl::MouseAction action) {
 
 double QTFTabDof::GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2) {
 	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd.qtfsum : hd.qtfdif;
+	if (qtf.IsEmpty())
+		return Null;
+	
 	const MatrixXcd &m = qtf[ib][idh][idof];
 	
 	if (IsNull(m(ifr1, ifr2)))
@@ -384,7 +389,7 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
 	
 		const Hydro &hd = Bem().hydros[idHydro].hd();
 	
-		head = hd.qw[ih];
+		head = hd.qh[ih];
 		bool ndim = mbm.menuPlot.showNdim;
 		bool show_w = mbm.menuPlot.opwT == 0;
 		bool show_ma_ph = mbm.menuPlot.opMP == 0;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
 #include "functions.h"
@@ -45,7 +46,7 @@ bool PrintStatus(String s, int) {
 	return true;
 };
 
-void Hydro::InitializeSts() {
+void Hydro::Initialize_Sts() {
 	sts.SetCount(6*Nb);
 	for (int ib = 0; ib < 6*Nb; ++ib) 
 		sts[ib].SetCount(6*Nb);
@@ -146,6 +147,15 @@ void Hydro::Dimensionalize() {
 	}
 }
 
+void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a) {
+	a.SetCount(6*Nb);
+	for (int i = 0; i < 6*Nb; ++i) {
+		a[i].SetCount(6*Nb);
+		for (int j = 0; j < 6*Nb; ++j) 
+			a[i][j].setConstant(Nf, NaNDouble);
+	}
+}
+
 void Hydro::Initialize_Forces() {
 	Initialize_Forces(ex);
 	Initialize_Forces(sc);
@@ -240,6 +250,7 @@ void Hydro::Copy(const Hydro &hyd) {
     A0 = clone(hyd.A0);
 	
 	Dlin = clone(Dlin);
+	Cmoor = clone(Cmoor);
 	
     B = clone(hyd.B);
     
@@ -272,13 +283,297 @@ void Hydro::Copy(const Hydro &hyd) {
     qw = clone(hyd.qw);
     qh = clone(hyd.qh);
     qtfdataFromW = hyd.qtfdataFromW;
-        
+    
+    mdhead = clone(mdhead);
+	md = clone(md);
+	mdtype = hyd.mdtype;
+	    
     T = clone(hyd.T);
     w = clone(hyd.w);
     dataFromW = hyd.dataFromW;
     Vo = clone(hyd.Vo); 
     
     bem = hyd.bem;
+}
+
+void AvgB(Eigen::MatrixXd &ret, const UArray<const Eigen::MatrixXd*> &d) {
+	int numT = d.size();
+	if (numT == 0) 
+		return;
+	
+	int num = int(d[0]->size());
+	for (int it = 1; it < numT; ++it) 
+		if (d[it]->size() != num)
+			throw Exc(t_("Avg() has to have same number of values"));
+	
+	for (int i = 0; i < num; ++i) {
+		Eigen::VectorXd r(numT);
+		for (int it = 0; it < numT; ++it) 
+			r[it] = (*d[it])(i);
+		ret(i) = r.mean();
+	}
+}
+
+using UA = UArray<UArray<VectorXd>>;
+void AvgB(UA &ret, const UArray<const UA*> &d) {
+	int numT = d.size();
+	if (numT == 0) 
+		return;
+
+	for (int i = 0; i < ret.size(); ++i) {
+		for (int j = 0; j < ret[i].size(); ++j) {
+			for (int k = 0; k < ret[i][j].size(); ++k) {
+				Eigen::VectorXd r(numT);
+				for (int it = 0; it < numT; ++it) 
+					r[it] = (*d[it])[i][j][k];
+				ret[i][j][k] = r.mean();
+			}
+		}
+	}
+}
+
+using UAM = UArray<MatrixXd>;
+void AvgB(UAM &ret, const UArray<const UAM*> &d) {
+	int numT = d.size();
+	if (numT == 0) 
+		return;
+
+	for (int i = 0; i < ret.size(); ++i) {
+		for (int j = 0; j < ret[i].size(); ++j) {
+			Eigen::VectorXd r(numT);
+			for (int it = 0; it < numT; ++it) 
+				r[it] = (*d[it])[i](j);
+			ret[i](j) = r.mean();
+		}
+	}
+}
+
+void AvgB(Hydro::Forces &ret, const UArray<const Hydro::Forces*> &d) {
+	int numT = d.size();
+	if (numT == 0) 
+		return;
+
+	for (int i = 0; i < ret.force.size(); ++i) {
+		for (int j = 0; j < ret.force[i].cols(); ++j) {
+			for (int k = 0; k < ret.force[i].rows(); ++k) {
+				Eigen::VectorXcd r(numT);
+				for (int it = 0; it < numT; ++it) 
+					r[it] = (*d[it]).force[i](k, j);
+				ret.force[i](k, j) = r.mean();
+			}
+		}
+	}
+}
+
+using UMD = UArray<UArray<UArray<VectorXd>>>;
+void AvgB(UMD &ret, const UArray<const UMD*> &d) {
+	int numT = d.size();
+	if (numT == 0) 
+		return;
+
+	for (int i = 0; i < ret.size(); ++i) {
+		for (int j = 0; j < ret[i].size(); ++j) {
+			for (int k = 0; k < ret[i][j].size(); ++k) {
+				for (int l = 0; l < ret[i][j][k].size(); ++l) {
+					Eigen::VectorXd r(numT);
+					for (int it = 0; it < numT; ++it) 
+						r[it] = (*d[it])[i][j][k][l];
+					ret[i][j][k][l] = r.mean();
+				}
+			}
+		}
+	}
+}
+
+using UMQ = UArray<UArray<UArray<MatrixXcd>>>;
+void AvgB(UMQ &ret, const UArray<const UMQ*> &d) {
+	int numT = d.size();
+	if (numT == 0) 
+		return;
+
+	for (int i = 0; i < ret.size(); ++i) {
+		for (int j = 0; j < ret[i].size(); ++j) {
+			for (int k = 0; k < ret[i][j].size(); ++k) {
+				for (int l = 0; l < ret[i][j][k].rows(); ++l) {
+					for (int m = 0; l < ret[i][j][k].cols(); ++m) {
+						Eigen::VectorXcd r(numT);
+						for (int it = 0; it < numT; ++it) 
+							r[it] = (*d[it])[i][j][k](l, m);
+						ret[i][j][k](l, m) = r.mean();
+					}
+				}
+			}
+		}
+	}
+}
+
+void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
+	const Hydro &h0 = hydros[0].hd();
+	Nb = h0.Nb;
+    Nf = h0.Nf;
+    Nh = h0.Nh;
+	h = h0.h;
+	rho = h0.rho;
+	g = h0.g;
+
+	T = clone(h0.T);
+    w = clone(h0.w);
+    head = clone(h0.head);
+	qw = clone(h0.qw);
+    qh = clone(h0.qh);
+	mdhead = clone(h0.mdhead);
+	c0 = clone(h0.c0);
+	dof = clone(h0.dof);
+	
+	for (int i = 1; i < ids.size(); ++i) {
+		const Hydro &hy = hydros[i].hd();
+		if (Nb != hy.Nb)
+			throw Exc(t_("All models have to have the same number of bodies"));
+		if (Nf != hy.Nf)
+			throw Exc(t_("All models have to have the same number of frequencies"));
+		if (Nh != hy.Nh)
+			throw Exc(t_("All models have to have the same number of headings"));
+		if (rho != hy.rho)
+			throw Exc(t_("All models have to have the same density"));
+		if (g != hy.g)
+			throw Exc(t_("All models have to have the same gravity"));
+		if (h != hy.h) 
+			h = -1;
+		if (!CompareDecimals(T, hy.T, 2))
+			throw Exc(t_("All models have to have the same periods"));
+		if (!CompareDecimals(w, hy.w, 2))
+			throw Exc(t_("All models have to have the same frequencies"));
+		if (!CompareDecimals(head, hy.head, 2))
+			throw Exc(t_("All models have to have the same headings"));
+		if (!CompareDecimals(qw, hy.qw, 2))
+			throw Exc(t_("All models have to have the same frequencies in QTF"));
+		if (!Compare(qh, hy.qh))
+			throw Exc(t_("All models have to have the same headings in QTF"));
+		if (!Compare(mdhead, hy.mdhead))
+			throw Exc(t_("All models have to have the same headings in mean drift"));
+		if (c0 != hy.c0)
+			throw Exc(t_("All models have to have the same centre of reference"));
+		if (dof != hy.dof)
+			throw Exc(t_("All models have to have the same number of dof"));
+	}
+	
+	bem = h0.bem;
+	
+	file = "Average";
+	name = "Average";
+	description = "Average";
+	code = BEMROSETTA;
+	
+    len = 1;
+    dimen = true;
+    
+    dataFromW = qtfdataFromW = true;
+    
+    names = clone(h0.names);
+    
+    mdtype = h0.mdtype;
+    
+    Vo.SetCount(Nb, NaNDouble);
+	cg.setConstant(3, Nb, NaNDouble);
+	cb.setConstant(3, Nb, NaNDouble);
+	Ainf.setConstant(Nb*6, Nb*6, NaNDouble);
+	A0.setConstant(Nb*6, Nb*6, NaNDouble);
+	
+	Initialize_AB(A);
+	Initialize_AB(B);
+	
+	C.SetCount(Nb);
+	for (int ib = 0; ib < Nb; ++ib) 
+		C[ib].setConstant(6, 6, 0);
+	M.SetCount(Nb);
+	for (int ib = 0; ib < Nb; ++ib) 
+		M[ib].setConstant(6, 6, 0);
+	
+	Initialize_Forces(ex);
+	Initialize_Forces(sc);
+	Initialize_Forces(fk);
+	Initialize_Forces(rao);
+	
+	Hydro::Initialize_MD(md, Nb, int(mdhead.size()), Nf);
+		
+	Hydro::Initialize_QTF(qtfsum, Nb, int(qh.size()), int(qw.size()));
+	Hydro::Initialize_QTF(qtfdif, Nb, int(qh.size()), int(qw.size()));
+			
+	UArray<const UVector<double>*> Vos;
+	UArray<const MatrixXd*> cgs, cbs, Ainfs, A0s;
+	UArray<const UArray<UArray<VectorXd>>*> As, Bs;
+	UArray<const UArray<MatrixXd>*> Cs, Ms;
+	UArray<const Forces*> exs, scs, fks, raos;
+	UArray<const UArray<UArray<UArray<VectorXd>>>*> mds;
+	UArray<const UArray<UArray<UArray<MatrixXcd>>>*> qtfsums, qtfdifs;
+	
+	for (int i = 0; i < ids.size(); ++i) {
+        if (hydros[i].hd().Vo.size() > i)
+        	Vos.Add(&(hydros[i].hd().Vo));
+        if (hydros[i].hd().cg.size() > 0)
+        	cgs.Add(&(hydros[i].hd().cg));
+        if (hydros[i].hd().cb.size() > 0)
+        	cbs.Add(&(hydros[i].hd().cb));
+        if (hydros[i].hd().Ainf.size() > 0)
+        	Ainfs.Add(&(hydros[i].hd().Ainf));
+        if (hydros[i].hd().A0.size() > 0)
+        	A0s.Add(&(hydros[i].hd().A0));
+        As.Add(&(hydros[i].hd().A));
+        Bs.Add(&(hydros[i].hd().B));
+        Cs.Add(&(hydros[i].hd().C));
+        Ms.Add(&(hydros[i].hd().M));
+        exs.Add(&(hydros[i].hd().ex));
+        scs.Add(&(hydros[i].hd().sc));
+        fks.Add(&(hydros[i].hd().fk));
+        raos.Add(&(hydros[i].hd().rao));
+        mds.Add(&(hydros[i].hd().md));
+        qtfsums.Add(&(hydros[i].hd().qtfsum));
+        qtfdifs.Add(&(hydros[i].hd().qtfdif));
+    }
+    
+	AvgB(Vo, Vos);    
+    AvgB(cg, cgs);    
+    AvgB(cb, cbs); 
+	AvgB(Ainf, Ainfs); 
+	AvgB(A0, A0s); 
+	
+	AvgB(A, As); 
+	AvgB(B, Bs);
+	 
+	AvgB(C, Cs);
+	AvgB(M, Ms);
+	
+    AvgB(ex, exs);
+    AvgB(sc, scs);
+    AvgB(fk, fks);
+    AvgB(rao, raos);
+    
+    AvgB(md, mds);
+    
+	AvgB(qtfsum, qtfsums);
+    AvgB(qtfdif, qtfdifs);
+    
+    /*
+
+  
+    qtfsum = clone(hyd.qtfsum);
+    qtfdif = clone(hyd.qtfdif);
+
+	*/
+	
+	/*
+	Ainf_w
+	
+	Dlin = clone(Dlin);
+	Cmoor
+   
+    Kirf = clone(hyd.Kirf);
+    Tirf = clone(hyd.Tirf);
+    */
+  
+    
+    
+    
 }
 
 void Hydro::Symmetrize_Forces(bool xAxis) {
@@ -606,25 +901,17 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 	
 	names.SetCount(Nb);
 	dof.SetCount(Nb);
-	cg.setConstant(3, Nb, Null);
-	c0.setConstant(3, Nb, Null);
-	cb.setConstant(3, Nb, Null);
-	Vo.SetCount(Nb, Null);
+	cg.setConstant(3, Nb, NaNDouble);
+	c0.setConstant(3, Nb, NaNDouble);
+	cb.setConstant(3, Nb, NaNDouble);
+	Vo.SetCount(Nb, NaNDouble);
 	
-	A.SetCount(6*Nb);
-	B.SetCount(6*Nb);
-	for (int i = 0; i < 6*Nb; ++i) {
-		A[i].SetCount(6*Nb);
-		B[i].SetCount(6*Nb);
-		for (int j = 0; j < 6*Nb; ++j) {
-			A[i][j].setConstant(Nf, Null);	
-			B[i][j].setConstant(Nf, Null);	
-		}
-	}
+	Initialize_AB(A);
+	Initialize_AB(B);
 	
 	C.SetCount(Nb);
 	for (int ib = 0; ib < Nb; ++ib) 
-		C[ib].setConstant(6, 6, Null);
+		C[ib].setConstant(6, 6, NaNDouble);
 	
 	Initialize_Forces(ex);
 	Initialize_Forces(sc);
@@ -1443,6 +1730,13 @@ void BEM::RemoveHydro(int id) {
 HydroClass &BEM::Duplicate(int id) {
 	HydroClass &data = hydros.Create<HydroClass>(*this);
 	data.hd().Copy(hydros[id].hd());
+	
+	return data;
+}
+
+HydroClass &BEM::Average(UVector<int> &ids) {
+	HydroClass &data = hydros.Create<HydroClass>(*this);
+	data.hd().Average(hydros, ids);
 	
 	return data;
 }

@@ -94,7 +94,7 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		}
 	}
 	
-	hd().InitializeSts();
+	hd().Initialize_Sts();
 	Hydro::StateSpace &sts = hd().sts[idf][jdf];
 
 	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	

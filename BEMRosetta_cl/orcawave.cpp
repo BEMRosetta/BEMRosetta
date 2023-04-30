@@ -232,16 +232,9 @@ bool OrcaWave::Load_YML_Res() {
 	hd().Nh = hd().head.size();
 	
 	hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
-	hd().A.SetCount(6*hd().Nb);
-	hd().B.SetCount(6*hd().Nb);
-	for (int i = 0; i < 6*hd().Nb; ++i) {
-		hd().A[i].SetCount(6*hd().Nb);
-		hd().B[i].SetCount(6*hd().Nb);
-		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, NaNDouble);// In Wamit, unloaded DOFs are considered negligible	
-			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-		}
-	}
+	
+	hd().Initialize_AB(hd().A);
+	hd().Initialize_AB(hd().B);
 		
 	if (hd().dataFromW) {
 		if (!rad_s) {
@@ -263,6 +256,7 @@ bool OrcaWave::Load_YML_Res() {
 
 	int row = -1, col = -1;
 	int idf = -1;
+	bool diffFullQTF = false;
 	
 	in.SeekPos(fpos);
 		
@@ -351,14 +345,16 @@ bool OrcaWave::Load_YML_Res() {
 									hd().ex.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*10, ToRad(mat[ifr][1 + 2*idof + 1]));
 						}
 					}
-				} else if (fy.FirstIs("WaveDrift")) {
+				} else if (fy.FirstIs("WaveDriftQTFMethod"))
+					diffFullQTF = fy.GetVal() == "Full QTFs";
+				else if (!diffFullQTF && fy.FirstIs("WaveDrift")) {
 					if (fy.FirstIs("RAOs")) {
 						if (fy.FirstMatch("RAOPeriodOrFrequency*")) {	
 							if (!hd().IsLoadedMD()) {
 								hd().mdhead.resize(hd().head.size());
 								for (int ih = 0; ih < hd().head.size(); ++ih)
 									hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
-								Hydro::InitMD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+								Hydro::Initialize_MD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 							}
 							
 							int idh = fy.Index();
@@ -375,11 +371,13 @@ bool OrcaWave::Load_YML_Res() {
 									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*10;
 						}
 					}
-				} else if (fy.FirstIs("SumFrequencyQTFs")) {
+				} else if (fy.FirstIs("SumFrequencyQTFs") || (diffFullQTF && fy.FirstIs("WaveDrift"))) {
 					if (fy.FirstMatch("RAOPeriodOrFrequency*")) {
 						UVector<UVector<double>> mat = fy.GetMatrixDouble();
 						
-						if (!hd().IsLoadedQTF(true)) {		// Gets frequencies and headings
+						UArray<UArray<UArray<MatrixXcd>>> &q = diffFullQTF ? hd().qtfdif : hd().qtfsum;
+						
+						if (!hd().IsLoadedQTF(!diffFullQTF)) {		// Gets frequencies and headings
 							hd().qw.resize(hd().Nf);
 							for (int iw = 0; iw < hd().Nf; ++iw) 
 								hd().qw[iw] = hd().w[iw];
@@ -395,10 +393,11 @@ bool OrcaWave::Load_YML_Res() {
 							}
 							Copy(qh, hd().qh);
 	
-							hd().InitQTF(hd().qtfsum, hd().Nb, int(hd().qh.size()), hd().Nf);
+							Hydro::Initialize_QTF(q, hd().Nb, int(hd().qh.size()), hd().Nf);
 							hd().mdtype = 9;
 						}
-					
+						diffFullQTF = false;
+						
 						for (int row = 0; row < mat.size(); ++row) {
 							if (mat[row].size() != 16)
 								throw Exc(in.Str() + "\n"  + t_("Wrong data in list"));
@@ -428,7 +427,7 @@ bool OrcaWave::Load_YML_Res() {
 							for (int idf = 0; idf < 6; ++idf) {
 								double mag = mat[row][4+idf*2]*10;
 								double ph  = ToRad(mat[row][4+idf*2+1]);
-								hd().qtfsum[ib][ih][idf](ifr1, ifr2) = hd().qtfsum[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph);
+								q[ib][ih][idf](ifr1, ifr2) = q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph);
 							}
 						}
 					}

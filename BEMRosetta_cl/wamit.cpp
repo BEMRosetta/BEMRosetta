@@ -385,27 +385,19 @@ bool Wamit::Load_out() {
 			hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
 
-			hd().A.SetCount(6*hd().Nb);
-			hd().B.SetCount(6*hd().Nb);
-			for (int i = 0; i < 6*hd().Nb; ++i) {
-				hd().A[i].SetCount(6*hd().Nb);
-				hd().B[i].SetCount(6*hd().Nb);
-				for (int j = 0; j < 6*hd().Nb; ++j) {
-					hd().A[i][j].setConstant(hd().Nf, NaNDouble);// In Wamit, unloaded DOFs are considered negligible	
-					hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-				}
-			}
+			hd().Initialize_AB(hd().A);
+			hd().Initialize_AB(hd().B);
 			
 			//Sort(qhdrift);
 			hd().mdhead.resize(mdhead.size());
 			Copy(mdhead, hd().mdhead);
 			
 			if (found7)
-				Hydro::InitMD(md7, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(md7, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 			if (found8)
-				Hydro::InitMD(md8, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(md8, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 			if (found9)
-				Hydro::InitMD(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 						
 			int qtfNh = 0, qtfNf;
 			UVector<double> qw;
@@ -447,9 +439,9 @@ bool Wamit::Load_out() {
 					hd().qw[i] = 2*M_PI/qw[i];
 					
 				if (foundSum)
-					hd().InitQTF(hd().qtfsum, hd().Nb, qtfNh, qtfNf);
+					Hydro::Initialize_QTF(hd().qtfsum, hd().Nb, qtfNh, qtfNf);
 				if (foundDif)
-					hd().InitQTF(hd().qtfdif, hd().Nb, qtfNh, qtfNf);
+					Hydro::Initialize_QTF(hd().qtfdif, hd().Nb, qtfNh, qtfNf);
 			}
 			
 			in.SeekPos(fpos);
@@ -1334,16 +1326,8 @@ bool Wamit::Load_1(String fileName) {
 		hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
 
 	if (Nf > 0) {
-		hd().A.SetCount(6*hd().Nb);
-		hd().B.SetCount(6*hd().Nb);
-		for (int i = 0; i < 6*hd().Nb; ++i) {
-			hd().A[i].SetCount(6*hd().Nb);
-			hd().B[i].SetCount(6*hd().Nb);
-			for (int j = 0; j < 6*hd().Nb; ++j) {
-				hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
-				hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-			}
-		}
+		hd().Initialize_AB(hd().A);
+		hd().Initialize_AB(hd().B);
 	}
 	
 	if (hd().names.IsEmpty())
@@ -1652,7 +1636,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	if (Nh == 0)
 		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
 	
-	hd().InitQTF(qtf, Nb, Nh, Nf);
+	Hydro::Initialize_QTF(qtf, Nb, Nh, Nf);
 	
 	Status(Format("Loading %s data", ext), 20);
 	
@@ -1781,7 +1765,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	
 	bool dataFromW = ProcessFirstColumn1_3(w, T);
 	
-	Hydro::InitMD(mmd, Nb, Nh, Nf);
+	Hydro::Initialize_MD(mmd, Nb, Nh, Nf);
 	
 	if (!hd().w.IsEmpty()) {
 		UVector<double> rw = clone(w);		Upp::Reverse(rw);

@@ -1104,7 +1104,7 @@ void Hydro::CopyQTF_MD() {
 	mdtype = 9;
 	::Copy(qh, mdhead);
 	
-	InitMD(md, Nb, Nh, Nf);
+	Initialize_MD(md, Nb, int(mdhead.size()), Nf);
 
 	VectorXd ww;
 	::Copy(w, ww);
@@ -1115,7 +1115,7 @@ void Hydro::CopyQTF_MD() {
 				const MatrixXcd &m = qtfdif[ib][ih][idof];
 				VectorXd diag = m.diagonal().real();
 				Resample(qw, diag, ww, md[ib][ih][idof]);
-			}
+            }
         }
 	}
 }
