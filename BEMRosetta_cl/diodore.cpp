@@ -130,18 +130,10 @@ bool Diodore::Load_HDB() {
 		    hd().Cmoor.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
 				hd().Cmoor[ib].setConstant(6, 6, 0);
-		    hd().A.SetCount(6*hd().Nb);
-			hd().B.SetCount(6*hd().Nb);
-			for (int i = 0; i < 6*hd().Nb; ++i) {
-				hd().A[i].SetCount(6*hd().Nb);
-				hd().B[i].SetCount(6*hd().Nb);
-				for (int j = 0; j < 6*hd().Nb; ++j) {
-					hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
-					hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-				}
-			}
+		    hd().Initialize_AB(hd().A);
+			hd().Initialize_AB(hd().B);
 			hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
-			Hydro::InitMD(hd().md, hd().Nb, hd().Nh, hd().Nf);
+			Hydro::Initialize_MD(hd().md, hd().Nb, hd().Nh, hd().Nf);
 		} else if ((id = f.GetText().FindAfter("[STRUCTURE_")) > 0) {
 			ib = ScanInt(f.GetText().Mid(id));
 			if (ib < 1 || ib > hd().Nb)

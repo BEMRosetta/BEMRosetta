@@ -260,6 +260,8 @@ void MainBEM::Init() {
 	menuAdvanced.opZremoval.Disable();
 	menuAdvanced.butConvergence <<= THISBACK(OnConvergence);
 	menuAdvanced.butConvergence.Disable();
+	menuAdvanced.butAverage <<= THISBACK(OnAverage);
+	menuAdvanced.butAverage.Disable();
 	//menuAdvanced.opHaskind.Disable();
 	menuAdvanced.opHaskind.Hide();		// Not ready
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
@@ -753,6 +755,7 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butOgilvie.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butConvergence.Enable(numsel >= 3);
+	menuAdvanced.butAverage.Enable(numsel >= 2);
 	menuAdvanced.opDecayingTail.Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
@@ -1055,6 +1058,37 @@ void MainBEM::OnOgilvie() {
 		Exclamation(DeQtfLf(e));
 	}	
 	PromptOK(DeQtfLf(str));
+}
+
+void MainBEM::OnAverage() {
+	try {
+		UVector<int> ids;
+		for (int row = 0; row < listLoaded.GetCount(); ++row) {
+			if (listLoaded.IsSelected(row)) {
+				int id = ArrayModel_IdHydro(listLoaded, row);
+				ids << id;
+			}
+		}		
+		if (ids.size() < 2) {
+			Exclamation(t_("Not enough models selected"));
+			return;
+		}
+			
+		Progress progress(t_("Calculating average..."), 100); 
+		
+		WaitCursor wait;
+		
+		HydroClass &data = Bem().Average(ids);
+		
+		mainSummary.Clear();
+		
+		ArrayModel_Add(listLoaded, data.hd().GetCodeStr(), data.hd().name, data.hd().file, data.hd().GetId());
+				
+		AfterBEM();
+
+	} catch (Exc e) {
+		Exclamation(DeQtfLf(e));
+	}	
 }
 
 void MainBEM::OnConvergence() {

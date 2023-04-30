@@ -8,6 +8,7 @@
 #include <ScatterDraw/DataSource.h>
 #include <Surface/Surface.h>
 #include <STEM4U/Mooring.h>
+#include <STEM4U/Utility.h>
 
 using namespace Upp;
 
@@ -19,6 +20,8 @@ void SetBuildInfo(String &str);
 String GetSystemInfo();
 
 bool PrintStatus(String s, int d);
+
+class HydroClass; 
 
 class Hydro : public DeepCopyOption<Hydro> {
 public:
@@ -220,7 +223,7 @@ public:
     UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
     bool qtfdataFromW = true;
      
-    void InitQTF(UArray<UArray<UArray<MatrixXcd>>> &qtf, int nb, int nh, int nf) {
+    static void Initialize_QTF(UArray<UArray<UArray<MatrixXcd>>> &qtf, int nb, int nh, int nf) {
         qtf.SetCount(nb);
         for (int ib = 0; ib < nb; ++ib) {
             qtf[ib].SetCount(nh);
@@ -236,7 +239,7 @@ public:
 	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	
 	int mdtype = 0;
 	
-    static void InitMD(UArray<UArray<UArray<VectorXd>>> &md, int nb, int nh, int nf) {
+    static void Initialize_MD(UArray<UArray<UArray<VectorXd>>> &md, int nb, int nh, int nf) {
         md.SetCount(nb);
         for (int ib = 0; ib < nb; ++ib) {
             md[ib].SetCount(nh);
@@ -262,6 +265,8 @@ public:
 	
 	bool AfterLoad(Function <bool(String, int)> Status = Null);
 	
+	void Initialize_AB(UArray<UArray<VectorXd>> &a);
+	
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f, int _Nh = -1);
 	void Normalize_Forces(Forces &f);
@@ -270,7 +275,11 @@ public:
 	void Symmetrize_Forces(bool xAxis);
 	void Symmetrize();
 	void GetFexFromFscFfk();
-	void InitializeSts();
+	
+	void Initialize_Sts();
+	
+	void Average(const UArray<HydroClass> &hydros, const UVector<int> &ids);
+	void Converge(const UArray<HydroClass> &hydros, const UVector<int> &ids);
 		
 	static int GetK_AB(int i, int j) {
 		while (i > 5)
@@ -401,7 +410,7 @@ public:
 	}
 	
 	template <class T>
-	T F_dim(T f, int idf)  	      const {return  dimen ? f*g_rho_dim()/g_rho_ndim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	T F_dim(T f, int idf)  	      const {return  dimen ? f*g_rho_ndim()/g_rho_dim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	template <class T>
 	T F_ndim(T f, int idf) 	      const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	template <class T>
@@ -1177,6 +1186,7 @@ public:
 	BEM();
 	
 	HydroClass &Duplicate(int id);
+	HydroClass &Average(UVector<int> &ids);
 		
 	UArray<HydroClass> hydros;
 	UArray<Mesh> surfs;
