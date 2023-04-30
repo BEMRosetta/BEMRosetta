@@ -420,7 +420,7 @@ bool Fast::Load_SS(String fileName) {
 	hd().stsProcessor = TrimBoth(in.GetLine());
 	hd().stsProcessor.Replace("BEMRosetta state space matrices obtained with ", "");
 	
-	hd().InitializeSts();
+	hd().Initialize_Sts();
 	
 	in.GetLine();
 	

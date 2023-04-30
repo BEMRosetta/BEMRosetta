@@ -1159,6 +1159,7 @@ public:
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnRAO();
 	void OnOgilvie();
+	void OnAverage();
 	void OnConvergence();
 	void OnUpdateCrot();
 	void OnDeleteHeadingsFrequencies();

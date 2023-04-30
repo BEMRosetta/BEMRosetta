@@ -1061,16 +1061,9 @@ bool Nemoh::Load_Radiation(String fileName) {
 	    	line.Find("Roll") >= 0 || line.Find("Pitch") >= 0 || line.Find("Yaw") >= 0)
 	        break;
 	}
-	hd().A.SetCount(6*hd().Nb);
-	hd().B.SetCount(6*hd().Nb);
-	for (int i = 0; i < 6*hd().Nb; ++i) {
-		hd().A[i].SetCount(6*hd().Nb);
-		hd().B[i].SetCount(6*hd().Nb);
-		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
-			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-		}
-	}
+	hd().Initialize_AB(hd().A);
+	hd().Initialize_AB(hd().B);
+	
 	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
 		for (int idof = 0; idof < 6; ++idof) {
 			if (dcase.IsDof(ibody, idof)) {

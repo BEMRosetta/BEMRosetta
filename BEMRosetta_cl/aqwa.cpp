@@ -88,16 +88,8 @@ bool Aqwa::Load_AH1() {
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, NaNDouble); 
-	hd().A.SetCount(6*hd().Nb);
-	hd().B.SetCount(6*hd().Nb);
-	for (int i = 0; i < 6*hd().Nb; ++i) {
-		hd().A[i].SetCount(6*hd().Nb);
-		hd().B[i].SetCount(6*hd().Nb);
-		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
-			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-		}
-	}
+	hd().Initialize_AB(hd().A);
+	hd().Initialize_AB(hd().B);
 	hd().Initialize_Forces(hd().ex);
 	
 	while(!in.IsEof() && hd().w.size() < hd().Nf) {
@@ -384,16 +376,8 @@ bool Aqwa::Load_LIS() {
 	if (IsNull(hd().Nh))
 		throw Exc(t_("Number of headings not found"));
 					
-	hd().A.SetCount(6*hd().Nb);
-	hd().B.SetCount(6*hd().Nb);
-	for (int i = 0; i < 6*hd().Nb; ++i) {
-		hd().A[i].SetCount(6*hd().Nb);
-		hd().B[i].SetCount(6*hd().Nb);
-		for (int j = 0; j < 6*hd().Nb; ++j) {
-			hd().A[i][j].setConstant(hd().Nf, NaNDouble);	
-			hd().B[i][j].setConstant(hd().Nf, NaNDouble);	
-		}
-	}
+	hd().Initialize_AB(hd().A);
+	hd().Initialize_AB(hd().B);
 	
 	hd().Initialize_Forces(hd().ex);
 	hd().Initialize_Forces(hd().fk);
@@ -610,7 +594,7 @@ bool Aqwa::Load_LIS() {
 				hd().mdhead.resize(hd().head.size());
 				for (int ih = 0; ih < hd().head.size(); ++ih)
 					hd().mdhead[ih] = std::complex<double>(hd().head[ih], hd().head[ih]);
-				Hydro::InitMD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(hd().md, hd().Nb, int(hd().mdhead.size()), hd().Nf);
 			}
 			int id;
 			while(!in.IsEof() && (id = line.FindAfter("S T R U C T U R E")) < 0) 
@@ -738,8 +722,8 @@ bool Aqwa::Load_QTF() {
 	Copy(_qw, hd().qw);
 	Copy(_qh, hd().qh);
 	
-	hd().InitQTF(hd().qtfsum, Nb, Nh, Nf);
-	hd().InitQTF(hd().qtfdif, Nb, Nh, Nf);
+	Hydro::Initialize_QTF(hd().qtfsum, Nb, Nh, Nf);
+	Hydro::Initialize_QTF(hd().qtfdif, Nb, Nh, Nf);
 	
 	int nrows = Nb*Nh*Nf*Nf;
 	
