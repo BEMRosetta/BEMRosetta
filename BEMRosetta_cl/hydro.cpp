@@ -417,9 +417,18 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 		}
     };
 
-	for (int ih = 0; ih < qh.size(); ++ih) 
-		if (qh[ih].real() != qh[ih].imag())
-			throw Exc(Format(t_("QTF translation only valid for same headings (%.1f != %.1f)"), qh[ih].real(), qh[ih].imag()));
+	// QTF translation only valid for same headings. Crossed headings are deleted
+	for (int ih = qh.size()-1; ih >= 0; --ih) { 
+		if (qh[ih].real() != qh[ih].imag()) {
+			Remove(qh, ih);
+			for (int ib = 0; ib < Nb; ++ib) {
+				if (IsLoadedQTF(true)) 
+					qtfsum[ib].Remove(ih);
+				if (IsLoadedQTF(false)) 
+					qtfdif[ib].Remove(ih);
+			}
+		}
+	}
 
     UVector<double> qk(Nf);
 	for (int ifr = 0; ifr < qw.size(); ++ifr) 

@@ -208,7 +208,7 @@ void Main::Init() {
 	
 	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
 	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
-	BEM::PrintError   = [this](String s) {printf("%s", ~s); tab.Set(mainOutput); Status(s);};
+	BEM::PrintError   = [this](String s) {printf("%s", ~s); /*tab.Set(mainOutput); */Status(s);	Exclamation(DeQtfLf(s));};
 }
 
 void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
@@ -510,7 +510,7 @@ GUI_APP_MAIN {
 	delete(main);
 
 	if (!errorStr.IsEmpty())
-		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
+		BEM::PrintError(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }
 
 String ForceExtSafe(String fileName, String ext) {
@@ -716,5 +716,5 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 		               (large ? SHGFI_LARGEICON : SHGFI_SMALLICON)|
 		               (exe ? 0 : SHGFI_USEFILEATTRIBUTES));
 	
-	Exclamation("It works!");
+	BEM::PrintError("It works!");
 	*/

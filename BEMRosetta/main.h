@@ -840,12 +840,12 @@ protected:
 	void ArrayOnDuplicate() {
 		ArrayCtrl &array = *parray;
 		if (array.GetCount() == 0) {
-			Exclamation(t_("No row available to duplicate"));
+			BEM::PrintError(t_("No row available to duplicate"));
 			return;
 		}
 		int id = array.GetCursor();
 		if (id < 0) {
-			Exclamation(t_("Please select the row to duplicate"));
+			BEM::PrintError(t_("Please select the row to duplicate"));
 			return;
 		}
 		int nr = id + 1;
@@ -861,12 +861,12 @@ protected:
 	void ArrayOnRemove() {
 		ArrayCtrl &array = *parray;
 		if (array.GetCount() == 0) {
-			Exclamation(t_("No row available to remove"));
+			BEM::PrintError(t_("No row available to remove"));
 			return;
 		}
 		int id = array.GetCursor();
 		if (id < 0) {
-			Exclamation(t_("Please select the row to remove"));
+			BEM::PrintError(t_("Please select the row to remove"));
 			return;
 		}
 		array.Remove(id);

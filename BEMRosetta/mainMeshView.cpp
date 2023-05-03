@@ -404,7 +404,7 @@ void VideoCtrl::OnLoad() {
 		butSave.Enable();
 		butRecordClear.Enable();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -417,7 +417,7 @@ void VideoCtrl::OnSave() {
 			throw Exc(t_("Problem saving file"));
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 

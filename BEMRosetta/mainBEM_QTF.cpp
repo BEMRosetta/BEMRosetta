@@ -336,7 +336,7 @@ void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool 
 		DoClick(up, idof);
 		DoClick(down, idof);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }	
 	
@@ -364,7 +364,7 @@ void MainQTF::Init(MainBEM &parent) {
 		listHead.WhenSel << THISBACK1(OnHeadingsSel, &listHead);
 		tab.WhenSet << THISBACK1(OnHeadingsSel, &listHead);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}		
 }
 
@@ -409,7 +409,7 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
 		dof[idof+6*ib].Load(hd, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, showPoints, fromY0, autoFit, posSplitter);
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -517,7 +517,7 @@ bool MainQTF::Load() {
 			listHead.SetCursor(id);
 		}
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}				
 	return true;		
 }

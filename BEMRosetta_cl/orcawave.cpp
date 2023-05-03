@@ -265,7 +265,6 @@ bool OrcaWave::Load_YML_Res() {
 			if (fy.FirstIs("Density")) 
 				hd().rho = ScanDouble(fy.GetVal())*1000;		// In kg/m3
 			else if (fy.FirstIs("WaterDepth")) { 
-				hd().rho = ScanDouble(fy.GetVal())*1000;		// In kg/m3
 				String h = fy.GetVal(); 
 				if (ToLower(h) == "infinite")
 					hd().h = -1;
@@ -296,7 +295,7 @@ bool OrcaWave::Load_YML_Res() {
 					
 					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
 						for (int c = 0; c < 3; ++c)
-							hd().C[ib](r+2, c+2) = mat[r][c]*1000;
+							hd().C[ib](r+2, c+2) = mat[r][c];
 				} else if (fy.FirstIs("CentreOfMass")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
@@ -342,7 +341,7 @@ bool OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									hd().ex.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*10, ToRad(mat[ifr][1 + 2*idof + 1]));
+									hd().ex.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*1000, ToRad(mat[ifr][1 + 2*idof + 1]));
 						}
 					}
 				} else if (fy.FirstIs("WaveDriftQTFMethod"))
@@ -368,7 +367,7 @@ bool OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*10;
+									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*1000;
 						}
 					}
 				} else if (fy.FirstIs("SumFrequencyQTFs") || (diffFullQTF && fy.FirstIs("WaveDrift"))) {
@@ -392,6 +391,7 @@ bool OrcaWave::Load_YML_Res() {
 								FindAddDelta(qh, std::complex<double>(h1, h2), 0.0001);	
 							}
 							Copy(qh, hd().qh);
+	
 	
 							Hydro::Initialize_QTF(q, hd().Nb, int(hd().qh.size()), hd().Nf);
 							hd().mdtype = 9;
@@ -425,7 +425,7 @@ bool OrcaWave::Load_YML_Res() {
 							if (ih < 0)
 								throw Exc(in.Str() + "\n"  + Format(t_("Wrong head (%d,%d) in QTF"), h1, h2));
 							for (int idf = 0; idf < 6; ++idf) {
-								double mag = mat[row][4+idf*2]*10;
+								double mag = mat[row][4+idf*2]*1000;
 								double ph  = ToRad(mat[row][4+idf*2+1]);
 								q[ib][ih][idf](ifr1, ifr2) = q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph);
 							}
@@ -443,12 +443,12 @@ bool OrcaWave::Load_YML_Res() {
 						if (idf == -1) {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().Ainf(r, c) = mat[r][c]*100000; 
+									hd().Ainf(r, c) = mat[r][c]*1000; 
 							}
 						} else {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().A[r][c](idf) = mat[r][c]*100000; 
+									hd().A[r][c](idf) = mat[r][c]*1000; 
 							}
 						}
 					} else if (fy.FirstMatch("DampingX*")) {
@@ -462,7 +462,7 @@ bool OrcaWave::Load_YML_Res() {
 							
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().B[r][c](idf) = mat[r][c]*100000; 
+									hd().B[r][c](idf) = mat[r][c]*1000; 
 							}
 						}
 					}
@@ -486,7 +486,7 @@ bool OrcaWave::Load_YML_Res() {
 					
 					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
 						for (int c = 0; c < 3; ++c)
-							hd().C[ib](r+2, c+2) = mat[r][c]*1000;
+							hd().C[ib](r+2, c+2) = mat[r][c]*1;
 				}
 			} else if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
 				if (fy.FirstIs("AMDPeriodOrFrequency")) {
@@ -508,12 +508,12 @@ bool OrcaWave::Load_YML_Res() {
 						if (idf == -1) {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().Ainf(r+row*6, c+col*6) = mat[r][c]*100000; 
+									hd().Ainf(r+row*6, c+col*6) = mat[r][c]*1000; 
 							}
 						} else {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().A[r+row*6][c+col*6](idf) = mat[r][c]*100000; 
+									hd().A[r+row*6][c+col*6](idf) = mat[r][c]*1000; 
 							}
 						}
 					} else if (fy.FirstMatch("DampingX*")) {
@@ -522,7 +522,7 @@ bool OrcaWave::Load_YML_Res() {
 							
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().B[r+row*6][c+col*6](idf) = mat[r][c]*100000; 
+									hd().B[r+row*6][c+col*6](idf) = mat[r][c]*1000; 
 							}
 						}
 					}
