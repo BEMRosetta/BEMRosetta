@@ -37,7 +37,7 @@ bool MainDecay::OnLoad() {
 	try {
 
 	} catch (const Exc &e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	
@@ -48,7 +48,7 @@ bool MainDecay::OnSave() {
 	try {
 
 	} catch (const Exc &e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	
@@ -56,5 +56,5 @@ bool MainDecay::OnSave() {
 }
 
 void MainDecay::OnUpdate() {
-	Exclamation("Pendiente");	
+	BEM::PrintError("Pendiente");	
 }

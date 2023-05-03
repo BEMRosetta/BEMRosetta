@@ -699,7 +699,7 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		mainTab.WhenSet();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	return true;
@@ -726,7 +726,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 		selected = true;
 	}		
 	if (!selected) {
-		Exclamation(t_("No model selected"));
+		BEM::PrintError(t_("No model selected"));
 		return;
 	}
 	UpdateButtons();
@@ -871,11 +871,11 @@ void MainBEM::OnJoin() {
 		}
 	}
 	if (idsjoin.IsEmpty()) {
-		Exclamation(t_("No model selected"));
+		BEM::PrintError(t_("No model selected"));
 		return;
 	}
 	if (idsjoin.size() == 1) {
-		Exclamation(t_("Please select more than one model"));
+		BEM::PrintError(t_("Please select more than one model"));
 		return;
 	}
 	try {
@@ -903,7 +903,7 @@ void MainBEM::OnJoin() {
 
 		AfterBEM();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 		
 	UpdateButtons();
@@ -924,7 +924,7 @@ void MainBEM::OnDuplicate() {
 		AfterBEM();
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -942,7 +942,7 @@ void MainBEM::OnSymmetrizeForces(bool xAxis) {
 		
 		AfterBEM();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -989,7 +989,7 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 		
 		AfterBEM();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -1007,7 +1007,7 @@ void MainBEM::OnRAO() {
 		
 		AfterBEM();	
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }	
 
@@ -1024,7 +1024,7 @@ void MainBEM::OnSymmetrize() {
 		AfterBEM();
 
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1055,7 +1055,7 @@ void MainBEM::OnOgilvie() {
 		} else
 			str = "No degrees of freedom has been healed";
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 	PromptOK(DeQtfLf(str));
 }
@@ -1070,7 +1070,7 @@ void MainBEM::OnAverage() {
 			}
 		}		
 		if (ids.size() < 2) {
-			Exclamation(t_("Not enough models selected"));
+			BEM::PrintError(t_("Not enough models selected"));
 			return;
 		}
 			
@@ -1087,7 +1087,7 @@ void MainBEM::OnAverage() {
 		AfterBEM();
 
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1102,7 +1102,7 @@ void MainBEM::OnConvergence() {
 			}
 		}		
 		if (ids.size() < 3) {
-			Exclamation(t_("Not enough models selected"));
+			BEM::PrintError(t_("Not enough models selected"));
 			return;
 		}
 			
@@ -1126,7 +1126,7 @@ void MainBEM::OnConvergence() {
 		} else
 			str = "No degrees of freedom has been healed";
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 	PromptOK(DeQtfLf(str));
 	
@@ -1228,7 +1228,7 @@ void MainBEM::OnResetForces() {
 		menuProcess2.dropForce.OnFocus();
 		menuProcess2.dropForceQTF.OnFocus();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1261,7 +1261,7 @@ void MainBEM::OnMultiplyDOF(bool isReset) {
 		AfterBEM();	
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1302,7 +1302,7 @@ void MainBEM::OnSwapDOF() {
 		menuProcess.dropDOF1.WhenAction();
 		menuProcess.dropDOF2.WhenAction();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1319,7 +1319,7 @@ void MainBEM::OnABForces() {
 		AfterBEM();
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1336,7 +1336,7 @@ void MainBEM::OnQTF() {
 		AfterBEM();
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1353,7 +1353,7 @@ void MainBEM::OnABForcesZero() {
 		AfterBEM();
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1370,7 +1370,7 @@ void MainBEM::OnQTFZero() {
 		AfterBEM();
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1389,7 +1389,7 @@ void MainBEM::OnQTF_MD() {
 		AfterBEM();
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1423,7 +1423,7 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 		AfterBEM();	
 		LoadSelTab(Bem());
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1439,7 +1439,7 @@ void MainBEM::OnUpdateCrot() {
 				
 		AfterBEM();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1592,7 +1592,7 @@ void MainBEM::OnConvert() {
 			
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -1608,12 +1608,12 @@ int MainBEM::GetIdOneSelected(bool complain) {
 		id = ArrayModel_IdHydro(listLoaded, 0);
 	if (id < 0) {
 		if (complain)
-			Exclamation(t_("No model selected"));
+			BEM::PrintError(t_("No model selected"));
 		return -1;
 	}
 	if (ArrayCtrlSelectedGetCount(listLoaded) > 1) {
 		if (complain)
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 		return -1;
 	}
 	return id;
@@ -1719,7 +1719,7 @@ void MainBEM::LoadDragDrop() {
 		}
 	}
 	if (filesToDrop.IsEmpty()) {
-		Exclamation(t_("Impossible to load files"));
+		BEM::PrintError(t_("Impossible to load files"));
 		timerDrop.Kill();
 		return;	
 	}

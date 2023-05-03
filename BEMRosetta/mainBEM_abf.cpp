@@ -108,7 +108,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 		tab.Set(selTab);
 		return true;
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 }

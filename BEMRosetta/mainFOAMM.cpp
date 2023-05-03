@@ -218,7 +218,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 		plots.Load(hydro, mbm);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return;
 	}
 }
@@ -302,7 +302,7 @@ bool MainSetupFOAMM::Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jd
 			String strfreqs = arrayCases.Get(row, 6);
 			String err = Check(from, to, strfreqs);
 			if (!err.IsEmpty()) {
-				Exclamation(Format(t_("Problem in body %d (%s, %s): %s"), ib+1, sidf, sjdf, err));
+				BEM::PrintError(Format(t_("Problem in body %d (%s, %s): %s"), ib+1, sidf, sjdf, err));
 				return false;		
 			}
 			froms << from;
@@ -314,7 +314,7 @@ bool MainSetupFOAMM::Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jd
 		}
 	}
 	if (ibs.IsEmpty()) {
-		Exclamation(t_("No case has been selected"));
+		BEM::PrintError(t_("No case has been selected"));
 		return false;			
 	}
 	return true;
@@ -371,7 +371,7 @@ bool MenuFOAMM::OnFOAMM() {
 				if (!str.IsEmpty()) {
 					str.Replace("\r", "");
 					str.Replace("\n\n", "\n");
-					Exclamation(t_("FOAMM message:&") + DeQtfLf(str));
+					BEM::PrintError(t_("FOAMM message:&") + DeQtfLf(str));
 				}
 				ProcessEvents(); 
 			});
@@ -385,7 +385,7 @@ bool MenuFOAMM::OnFOAMM() {
 	butCancel.Hide();
 	butLoad.Enable();
 	if (!ret.IsEmpty()) {
-		Exclamation(ret);
+		BEM::PrintError(ret);
 		return false;
 	}
 	return true;

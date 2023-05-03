@@ -89,7 +89,7 @@ void MainMoor::Init() {
 bool MainMoor::OnLoad() {
 	try {
 		if (!mooring.Load(~right.file)) {
-			Exclamation(Format("Problem loading %s file", DeQtf(~right.file)));
+			BEM::PrintError(Format("Problem loading %s file", DeQtf(~right.file)));
 			return false;
 		}
 		lineTypes.Load();
@@ -97,7 +97,7 @@ bool MainMoor::OnLoad() {
 		lineConnections.Load();
 		right.edDepth <<= mooring.depth;
 	} catch (const Exc &e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	//butSave.Enable(true);
@@ -114,11 +114,11 @@ bool MainMoor::OnSave() {
 		lineConnections.Save();
 		mooring.depth = ~right.edDepth;
 		if (!mooring.Save(~right.file)) {
-			Exclamation(Format(t_("Problem loading %s file"), DeQtf(~right.file)));
+			BEM::PrintError(Format(t_("Problem loading %s file"), DeQtf(~right.file)));
 			return false;
 		}
 	} catch (const Exc &e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	
@@ -193,7 +193,7 @@ void MainMoor::OnUpdate() {
 		}
 		scatUp.ZoomToFit(true, true);
 	} catch (const Exc &e) {	
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return;
 	}
 }
