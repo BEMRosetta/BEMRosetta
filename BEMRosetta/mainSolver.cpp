@@ -253,7 +253,7 @@ bool MainSolver::OnLoad(const BEM &bem) {
 		Load(file, bem);
 		dropSolver.WhenAction();
 	} catch (const Exc &e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	return true;		
@@ -518,7 +518,7 @@ bool MainSolver::ArrayUpdateCursor() {
 		bodies.array.Update();
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	
@@ -553,12 +553,12 @@ void MainSolver::arrayOnAdd() {
 
 void MainSolver::arrayOnDuplicate() {
 	if (bodies.array.GetCount() == 0) {
-		Exclamation(t_("No body available to duplicate"));
+		BEM::PrintError(t_("No body available to duplicate"));
 		return;
 	}
 	int id = bodies.array.GetCursor();
 	if (id < 0) {
-		Exclamation(t_("Please select body to duplicate"));
+		BEM::PrintError(t_("Please select body to duplicate"));
 		return;
 	}
 	int nr = id + 1;
@@ -573,12 +573,12 @@ void MainSolver::arrayOnDuplicate() {
 
 void MainSolver::arrayOnRemove() {
 	if (bodies.array.GetCount() == 0) {
-		Exclamation(t_("No body available to remove"));
+		BEM::PrintError(t_("No body available to remove"));
 		return;
 	}
 	int id = bodies.array.GetCursor();
 	if (id < 0) {
-		Exclamation(t_("Please select body to remove"));
+		BEM::PrintError(t_("Please select body to remove"));
 		return;
 	}
 	bodies.array.Remove(id);
@@ -627,7 +627,7 @@ bool MainSolver::OnSave(const BEM &bem) {
 		}
 		if (~opSplit) {
 			if (IsNull(~numSplit)) {
-				Exclamation(t_("Please enter number of parts to split the simulation (min. is 2)"));
+				BEM::PrintError(t_("Please enter number of parts to split the simulation (min. is 2)"));
 				return false;
 			} else if (int(~numSplit) > data.Nf) {
 				if (PromptOKCancel(Format(t_("Number of split cases %d must not be higher than number of frequencies %d"), int(~numSplit), data.Nf)
@@ -646,7 +646,7 @@ bool MainSolver::OnSave(const BEM &bem) {
 			data.SaveFolder(folder, ~opIncludeBin, ~opSplit ? int(~numSplit) : 1, ~numThreads, bem, ~dropSolver);
 
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	

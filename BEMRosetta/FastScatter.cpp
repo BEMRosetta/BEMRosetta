@@ -55,7 +55,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 
 bool FastScatter::OnLoadCompare() {
 	if (!LoadFromJsonFile(params, ~compare.file)) {
-		Exclamation(t_("Impossible to load file"));
+		BEM::PrintError(t_("Impossible to load file"));
 		return false;
 	}
 	
@@ -132,7 +132,7 @@ void FastScatter::OnSaveCompare() {
 			throw Exc(t_("Impossible to save file"));
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -142,7 +142,7 @@ void FastScatter::OnCalc() {
 		compare.array.SetLineCy(EditField::GetStdHeight()).MultiSelect().NoHeader();
 		
 		if (fscbase.IsEmpty()) {
-			Exclamation("No data loaded");
+			BEM::PrintError("No data loaded");
 			return;	
 		}
 
@@ -205,7 +205,7 @@ void FastScatter::OnCalc() {
 		}
 			
 	} catch (const Exc &e) {
-		Exclamation(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
 	}
 }
 	
@@ -559,8 +559,9 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			 	error = Format(t_("File '%s' not supported"), fileName0);
 			else
 			 	error = Format(t_("File '%s' not found"), fileName0);
-			Exclamation(DeQtf(error));
-			statusBar->Temporary(error);
+			//Exclamation(DeQtf(error));
+			//statusBar->Temporary(error);
+			BEM::PrintError(error);
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
@@ -593,14 +594,14 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			ret = fout.Load(fileName);
 		}
 		if (!ret.IsEmpty()) {
-			Exclamation(Format(t_("Problem reading file '%s': %s"), DeQtf(~file), DeQtf(ret)));
+			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), DeQtf(~file), DeQtf(ret)));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
 		}
 		/*
 		if (ret == -1) {
-			Exclamation(Format(t_("File '%s' is not supported"), ~file));
+			BEM::PrintError(Format(t_("File '%s' is not supported"), ~file));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
@@ -630,7 +631,7 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			ShowSelected(false);
 		
 	} catch (const Exc &e) {
-		Exclamation(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
 		left.EnableX();
 		UpdateButtons(false);
 		return false;
@@ -644,7 +645,7 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 void FastScatterBase::OnSaveAs() {
 	try {
 		if (rightT.arrayFiles.GetCount() == 0) {
-			Exclamation(t_("No file to save"));
+			BEM::PrintError(t_("No file to save"));
 			return;
 		}
 			
@@ -674,25 +675,25 @@ void FastScatterBase::OnSaveAs() {
 			
 			if (fileType == ".out") {	
 				if (!left.dataFast[row].Save(fileName, ".out")) {
-					Exclamation(Format("Problem saving '%s'", fileName));
+					BEM::PrintError(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			} else if (fileType == ".csv") {	
 				if (!left.dataFast[row].Save(fileName, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
-					Exclamation(Format("Problem saving '%s'", fileName));
+					BEM::PrintError(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			} else {
 				int id = opLoad3 == 2 ? row : 0;
 				if (!left.scatter[id].SaveToFileData(fileName)) {
-					Exclamation(Format("Problem saving '%s'", fileName));
+					BEM::PrintError(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			}
 		}
 		saveFolder = GetFileFolder(fileName);
 	} catch (const Exc &e) {
-		Exclamation(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
 	}		
 }
 	
@@ -843,7 +844,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 		
 		SaveParams();
 	} catch (const Exc &e) {
-		Exclamation(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
 	}
 }
 

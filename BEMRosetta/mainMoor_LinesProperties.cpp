@@ -71,7 +71,7 @@ bool MainMoor_LineProperties::ArrayUpdateCursor() {
 	Save();
 	String error = mooring.Test();
 	if (!error.IsEmpty()) {
-		Exclamation(error);
+		BEM::PrintError(error);
 		mooring = clone(temp);
 		Load();
 		return false;

@@ -243,7 +243,7 @@ void MainMesh::Init() {
 			ids = ArrayModel_IdsMesh(listLoaded);
 			int num = ArrayCtrlSelectedGetCount(listLoaded);
 			if (num > 1) {
-				Exclamation(t_("Please select just one model"));
+				BEM::PrintError(t_("Please select just one model"));
 				return -1;
 			}
 			int id;
@@ -252,7 +252,7 @@ void MainMesh::Init() {
 			else {
 			 	id = ArrayModel_IdMesh(listLoaded);
 				if (id < 0) {
-					Exclamation(t_("Please select a model to process"));
+					BEM::PrintError(t_("Please select a model to process"));
 					return -1;
 				}
 			}
@@ -528,7 +528,7 @@ bool MainMesh::OnLoad() {
 					data.cg.Translate(0, 0, dz);
 					videoCtrl.AddReg(Point3D(0, 0, dz));
 				} else
-					Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
+					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
 				
 				ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
 			} else
@@ -541,7 +541,7 @@ bool MainMesh::OnLoad() {
 		
 	} catch (Exc e) {
 		mainView.gl.Enable();
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	return true;
@@ -558,14 +558,14 @@ void MainMesh::OnConvertMesh() {
 		UVector<int> sel = ArrayCtrlSelectedGet(listLoaded);
 		
 		if (sel.size() > 1 && type != Mesh::AQWA_DAT) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		if (sel.size() == 0) {
 			if (listLoaded.GetCount() == 1)
 				sel << ArrayModel_IdMesh(listLoaded, 0);
 			else {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -598,7 +598,7 @@ void MainMesh::OnConvertMesh() {
 							   
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -609,7 +609,7 @@ void MainMesh::OnReset() {
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -618,7 +618,7 @@ void MainMesh::OnReset() {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -646,7 +646,7 @@ void MainMesh::OnReset() {
 		ma().Status(t_("Model oriented on the initial layout"));
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -657,7 +657,7 @@ void MainMesh::OnUpdateMass() {
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -666,7 +666,7 @@ void MainMesh::OnUpdateMass() {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -681,7 +681,7 @@ void MainMesh::OnUpdateMass() {
 		ma().Status(Format(t_("Mass updated to %f kg"), mass));
 		
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -692,7 +692,7 @@ void MainMesh::OnScale() {
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -701,7 +701,7 @@ void MainMesh::OnScale() {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -729,7 +729,7 @@ void MainMesh::OnScale() {
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}		
 }
 	
@@ -750,7 +750,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -759,7 +759,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -781,20 +781,20 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		double a_z = ~menuMove.a_z;
 
 		if (action == NONE && (IsNull(mass) || IsNull(x_g) || IsNull(y_g) || IsNull(z_g))) {
-			Exclamation(t_("Please fill CG data"));
+			BEM::PrintError(t_("Please fill CG data"));
 			return;
 		}
 		if (action == NONE && (IsNull(mass) || IsNull(x_0) || IsNull(y_0) || IsNull(z_0))) {
-			Exclamation(t_("Please fill centre of rotation data"));
+			BEM::PrintError(t_("Please fill centre of rotation data"));
 			return;
 		}
 				
 		if (action == MOVE && (IsNull(t_x) || IsNull(t_y) || IsNull(t_z))) {
-			Exclamation(t_("Please fill translation data"));
+			BEM::PrintError(t_("Please fill translation data"));
 			return;
 		}
 		if (action == ROTATE && (IsNull(a_x) || IsNull(a_y) || IsNull(a_z))) {
-			Exclamation(t_("Please fill rotation data"));
+			BEM::PrintError(t_("Please fill rotation data"));
 			return;
 		}
 		
@@ -820,7 +820,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 					data.cg.Translate(0, 0, dz);
 					videoCtrl.AddReg(Point3D(0, 0, dz));
 				} else
-					Exclamation(t_("Problem readjusting the Z value to comply with displacement"));
+					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
 				
 				ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
 			} else
@@ -851,7 +851,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -862,7 +862,7 @@ void MainMesh::OnArchimede() {
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -871,7 +871,7 @@ void MainMesh::OnArchimede() {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -881,7 +881,7 @@ void MainMesh::OnArchimede() {
 		double dz = 0.5, droll = 0.5, dpitch = 0.5;
 		Surface under;
 		if (!data.mesh.Archimede(data.GetMass(), data.cg, data.c0, Bem().rho, Bem().g, dz, droll, dpitch, under))
-			Exclamation(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
+			BEM::PrintError(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
 		
 		menuProcess.x_g <<= data.cg.x;
 		menuProcess.y_g <<= data.cg.y;
@@ -906,7 +906,7 @@ void MainMesh::OnArchimede() {
 		
 		ma().Status(Format(t_("Model rotated %f, %f, 0 deg and translated vertically %f m to comply with displacement"), droll, dpitch, dz));
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}			
 }			
 	
@@ -915,15 +915,15 @@ void MainMesh::OnAddPanel() {
 	GuiLock __;
 	
 	if (IsNull(menuEdit.edit_x) || IsNull(menuEdit.edit_y) || IsNull(menuEdit.edit_z)) {
-		Exclamation(t_("Panel position has to be set"));
+		BEM::PrintError(t_("Panel position has to be set"));
 		return;
 	}
 	if (IsNull(menuEdit.edit_size) || double(~menuEdit.edit_size) <= 0) {
-		Exclamation(t_("Wrong mesh size"));
+		BEM::PrintError(t_("Wrong mesh size"));
 		return;
 	}
 	if (IsNull(menuEdit.panWidthX) || IsNull(menuEdit.panWidthY)) {
-		Exclamation(t_("Panel width and height has to be set"));
+		BEM::PrintError(t_("Panel width and height has to be set"));
 		return;
 	}
 	
@@ -944,7 +944,7 @@ void MainMesh::OnAddPanel() {
 		After();
 		mainViewData.OnAddedModel(mainView);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 	mainView.gl.Enable();
 }
@@ -957,17 +957,17 @@ void MainMesh::OnAddRevolution() {
 		Pointf &val = vals.Add();
 		val.x = ScanDouble(AsString(menuEdit.revolutionList.Get(r, 0)));
 		if (IsNull(val.x)) {
-			Exclamation(Format(t_("Incorrect data in row %d, col %d"), r, 0));
+			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 0));
 			return;
 		}
 		val.y = ScanDouble(AsString(menuEdit.revolutionList.Get(r, 1)));
 		if (IsNull(val.x)) {
-			Exclamation(Format(t_("Incorrect data in row %d, col %d"), r, 1));
+			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
 		}
 	}
 	if (vals.size() < 2) {
-		Exclamation(t_("Unsufficient value number in list"));
+		BEM::PrintError(t_("Unsufficient value number in list"));
 		return;
 	}
 	
@@ -987,7 +987,7 @@ void MainMesh::OnAddRevolution() {
 		After();
 		mainViewData.OnAddedModel(mainView);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 	mainView.gl.Enable();
 }
@@ -1000,17 +1000,17 @@ void MainMesh::OnAddPolygonalPanel() {
 		Pointf &val = vals.Add();
 		val.x = ScanDouble(AsString(menuEdit.polynomialList.Get(r, 0)));
 		if (IsNull(val.x)) {
-			Exclamation(Format(t_("Incorrect data in row %d, col %d"), r, 0));
+			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 0));
 			return;
 		}
 		val.y = ScanDouble(AsString(menuEdit.polynomialList.Get(r, 1)));
 		if (IsNull(val.x)) {
-			Exclamation(Format(t_("Incorrect data in row %d, col %d"), r, 1));
+			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
 		}
 	}
 	if (vals.size() < 3) {
-		Exclamation(t_("Unsufficient value number in list"));
+		BEM::PrintError(t_("Unsufficient value number in list"));
 		return;
 	}
 	
@@ -1030,7 +1030,7 @@ void MainMesh::OnAddPolygonalPanel() {
 		After();
 		mainViewData.OnAddedModel(mainView);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 	mainView.gl.Enable();
 }
@@ -1041,7 +1041,7 @@ void MainMesh::OnAddWaterSurface(char c) {
 	try {
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -1050,7 +1050,7 @@ void MainMesh::OnAddWaterSurface(char c) {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -1065,7 +1065,7 @@ void MainMesh::OnAddWaterSurface(char c) {
 		After();
 		mainViewData.OnAddedModel(mainView);
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 	mainView.gl.Enable();
 }
@@ -1076,7 +1076,7 @@ void MainMesh::OnHealing(bool basic) {
 	try {
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -1085,7 +1085,7 @@ void MainMesh::OnHealing(bool basic) {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -1104,7 +1104,7 @@ void MainMesh::OnHealing(bool basic) {
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 	mainView.gl.Enable();
 }
@@ -1115,7 +1115,7 @@ void MainMesh::OnOrientSurface() {
 	try {
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		int id;
@@ -1124,7 +1124,7 @@ void MainMesh::OnOrientSurface() {
 		else {
 		 	id = ArrayModel_IdMesh(listLoaded);
 			if (id < 0) {
-				Exclamation(t_("Please select a model to process"));
+				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
@@ -1145,7 +1145,7 @@ void MainMesh::OnOrientSurface() {
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 	mainView.gl.Enable();
 }
@@ -1159,7 +1159,7 @@ void MainMesh::OnImage(int axis) {
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		int id = ArrayModel_IdMesh(listLoaded);
 		if (id < 0) {
-			Exclamation(t_("Please select a model to process"));
+			BEM::PrintError(t_("Please select a model to process"));
 			return;
 		}
 		
@@ -1186,7 +1186,7 @@ void MainMesh::OnImage(int axis) {
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 	} catch (Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
@@ -1216,7 +1216,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 		selected = true;		
 	}	
 	if (!selected) {
-		Exclamation(t_("No model selected"));
+		BEM::PrintError(t_("No model selected"));
 		return;
 	}
 
@@ -1244,7 +1244,7 @@ void MainMesh::OnJoin() {
 			}
 		}
 		if (IsNull(idDest)) {
-			Exclamation(t_("No model joined"));
+			BEM::PrintError(t_("No model joined"));
 			return;
 		}
 		
@@ -1268,7 +1268,7 @@ void MainMesh::OnJoin() {
 		After();
 	} catch (Exc e) {
 		mainView.gl.Enable();
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -1291,11 +1291,11 @@ void MainMesh::OnSplit() {
 		
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num == 0 && listLoaded.GetCount() != 1) {
-			Exclamation(t_("No model selected"));
+			BEM::PrintError(t_("No model selected"));
 			return;
 		}
 		if (num > 1) {
-			Exclamation(t_("Please select just one model"));
+			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		WaitCursor waitcursor;
@@ -1310,7 +1310,7 @@ void MainMesh::OnSplit() {
 			row = 0;
 	
 		if (idsmesh.size() == 1) {
-			Exclamation(t_("The mesh is monolithic so it cannot be automatically split"));
+			BEM::PrintError(t_("The mesh is monolithic so it cannot be automatically split"));
 			return;
 		}
 		int id = ArrayModel_IdMesh(listLoaded, row);
@@ -1343,7 +1343,7 @@ void MainMesh::OnSplit() {
 		After();
 	} catch (Exc e) {
 		mainView.gl.Enable();
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
@@ -1844,14 +1844,14 @@ void MainGZ::OnUpdate() {
 		
 		idOpened = ArrayModel_IdMesh(mm.listLoaded);
 		if (idOpened < 0) {
-			Exclamation(t_("Please select a model to process"));
+			BEM::PrintError(t_("Please select a model to process"));
 			return;
 		}
 		
 		Clear(true);
 		
 		if (double(~edFrom) > double(~edTo)) {
-			Exclamation(t_("Wrong Y angle range"));
+			BEM::PrintError(t_("Wrong Y angle range"));
 			return;
 		}
 		double angleTo, angleDelta;
@@ -1867,7 +1867,7 @@ void MainGZ::OnUpdate() {
 			angleDelta = 1;
 		}
 		if (double(~edAngleFrom) > angleTo) {
-			Exclamation(t_("Wrong Z angle range"));
+			BEM::PrintError(t_("Wrong Z angle range"));
 			return;
 		}
 		Mesh &mesh = Bem().surfs[idOpened];	
@@ -1960,9 +1960,9 @@ void MainGZ::OnUpdate() {
 					   .Units(t_("m"), t_("sec")).Stroke(4, Black()).Dash(LINE_SOLID);
 		}
 		if (!errors.IsEmpty()) 
-			Exclamation(DeQtfLf("Errors found in mesh:\n" + errors));
+			BEM::PrintError(DeQtfLf("Errors found in mesh:\n" + errors));
 	} catch(Exc e) {
-		Exclamation(DeQtfLf(e));
+		BEM::PrintError(DeQtfLf(e));
 		Clear(true);
 	}
 }
