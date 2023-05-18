@@ -88,7 +88,7 @@ void Hydro::GetRAO() {
 		const MatrixXd &M_ = M[ib];
 		for (int ih = 0; ih < Nh; ++ih) {	
 			for (int ifr = 0; ifr < Nf; ++ifr) {
-				VectorXcd RAO = GetRAO(w[ifr], A_(false, ifr, ib), B_(false, ifr, ib), 
+				VectorXcd RAO = GetRAO(w[ifr], A_mat(false, ifr, ib, ib), B_mat(false, ifr, ib, ib), 
 								F_(false, ex, ih, ifr), C, M_, D, D2);
 				for (int idf = 0; idf < 6; ++idf)
 					rao.force[ih](ifr, idf+6*ib) = RAO[idf];
@@ -418,7 +418,7 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
     };
 
 	// QTF translation only valid for same headings. Crossed headings are deleted
-	for (int ih = qh.size()-1; ih >= 0; --ih) { 
+	for (int ih = int(qh.size())-1; ih >= 0; --ih) { 
 		if (qh[ih].real() != qh[ih].imag()) {
 			Remove(qh, ih);
 			for (int ib = 0; ib < Nb; ++ib) {

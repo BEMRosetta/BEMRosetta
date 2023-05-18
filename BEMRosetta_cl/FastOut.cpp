@@ -781,9 +781,15 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 						val = data.maxCoeff() - data.mean();
 					else if (stat == "minmean") 
 						val = data.minCoeff() - data.mean();
-					else if (stat == "std") 
+					else if (stat == "std" || stat == "stddev") 
 						val = sqrt((data.array() - data.mean()).square().sum() / (data.size() - 1));
-					else if (stat == "rao") {
+					else if (stat == "amplitude") {
+						bool onlyFFT = true;
+						double r2Max = 0.95;
+						double T, H;
+						GetWaveRegularAmplitude(fast, T, H);
+						val = GetRAO(data, time, T, onlyFFT, r2Max);
+					} else if (stat == "rao") {
 						bool onlyFFT = true;
 						double r2Max = 0.95;
 						double T, H;
@@ -857,10 +863,12 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				} else if (stat == "minmean") { 
 					double mean = (data.array()*time.array()).sum() / time.sum();
 					val = data.minCoeff() - mean;
-				} else if (stat == "std") {
+				} else if (stat == "std" || stat == "stddev") {
 					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());	
 					val = sqrt((d.array() - d.mean()).square().sum() / (d.size() - 1));
-				} else if (stat == "rao") 
+				} else if (stat == "amplitude") 
+					val = Null;
+				else if (stat == "rao") 
 					val = Null;
 				else if (stat == "rao_mean") 
 					val = Null;

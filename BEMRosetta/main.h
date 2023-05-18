@@ -557,7 +557,7 @@ public:
 	}
 	
 private:
-	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc);
+	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc, int ncol);
 	void Add(const Mesh &mesh, int icase, bool button);
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim);
 	void PrintData();
