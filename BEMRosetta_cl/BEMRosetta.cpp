@@ -1335,36 +1335,36 @@ void Hydro::SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB
 	}
 }
 
-MatrixXd Hydro::A_(bool ndim, int ifr, int ib) const {
+MatrixXd Hydro::A_mat(bool ndim, int ifr, int ib1, int ib2) const {
 	MatrixXd ret;
 	if (!IsLoadedA())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = A_(ndim, ifr, idf + 6*ib, jdf + 6*ib);		// It doesn't return added mass between bodies...
+			ret(idf, jdf) = A_(ndim, ifr, idf + 6*ib1, jdf + 6*ib2);
 	return ret;
 }
 
-MatrixXd Hydro::Ainf_(bool ndim, int ib) const {
+MatrixXd Hydro::Ainf_mat(bool ndim, int ib1, int ib2) const {
 	MatrixXd ret;
 	if (!IsLoadedAinf())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = Ainf_(ndim, idf + 6*ib, jdf + 6*ib);	// It doesn't return added mass between bodies...
+			ret(idf, jdf) = Ainf_(ndim, idf + 6*ib1, jdf + 6*ib2);
 	return ret;
 }
 
-MatrixXd Hydro::B_(bool ndim, int ifr, int ib) const {
+MatrixXd Hydro::B_mat(bool ndim, int ifr, int ib1, int ib2) const {
 	MatrixXd ret;
 	if (!IsLoadedA())
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = B_(ndim, ifr, idf + 6*ib, jdf + 6*ib);		// It doesn't return added mass between bodies...
+			ret(idf, jdf) = B_(ndim, ifr, idf + 6*ib1, jdf + 6*ib2);
 	return ret;
 }
 

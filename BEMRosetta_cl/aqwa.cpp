@@ -511,7 +511,19 @@ bool Aqwa::Load_LIS() {
 				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 			
 			in.GetLine(2);
-			if (TrimBoth(in.GetLine()) == "ADDED  MASS") {
+			line = in.GetLine();
+			int ib2 = -1;
+			if (TrimBoth(line) == "ADDED  MASS")
+				ib2 = ib;
+			else if (line.Find("ADDED MASS FOR FORCE") > 0) {
+				int id = line.FindAfter("STR#");
+				if (id > 0) {
+					ib2 = ScanInt(line.Mid(id));
+					if (!IsNull(ib2))
+						ib2--;
+				}
+			}
+			if (ib2 >= 0) {
 				in.GetLine(5);
 			
 				for (int idf = 0; idf < 6; ++idf) {
@@ -520,7 +532,7 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().A[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf)*factorMass;
+						hd().A[6*ib + idf][6*ib2 + jdf][ifr] = f.GetDouble(1 + jdf)*factorMass;
 				}
 				in.GetLine(8);
 				for (int idf = 0; idf < 6; ++idf) {
@@ -529,10 +541,10 @@ bool Aqwa::Load_LIS() {
 					if (f.GetText(0) != textDOF[idf])
 						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
-						hd().B[6*ib + idf][6*ib + jdf][ifr] = f.GetDouble(1 + jdf)*factorMass;
+						hd().B[6*ib + idf][6*ib2 + jdf][ifr] = f.GetDouble(1 + jdf)*factorMass;
 				}
 			}
-		} else if (line.Find("H Y D R O D Y N A M I C   P A R A M E T E R S   A T   L O W   &   H I G H") >= 0) {
+		} else if (line.Find("H Y D R O D Y N A M I C   P A R A M E T E R S   A T   L O W   &   H I G H") >= 0) {	// To capture A0 and Ainf
 			int ib = -1;
 			double freq = -1;
 			while(!in.IsEof() && !(line[0] == '1')) {
@@ -555,16 +567,27 @@ bool Aqwa::Load_LIS() {
 						}
 						while(!in.IsEof() && !(line[0] == '1')) {
 							line = in.GetLine();
+							int ib2 = -1;
+							if (TrimBoth(line) == "ADDED MASS")
+								ib2 = ib;
+							else if (line.Find("ADDED MASS FOR FORCE") > 0) {
+								int id = line.FindAfter("STR#");
+								if (id > 0) {
+									ib2 = ScanInt(line.Mid(id));
+									if (!IsNull(ib2))
+										ib2--;
+								}
+							}
 							if (line.Find("ADDED MASS") >= 0) {
 								while(!in.IsEof() && !(line[0] == '1')) {
 									f.GetLine();
 									if (f.size() == 7 && f.GetText(0) == "X") {
 										for (int idf = 0; idf < 6; ++idf) {
 											for (int jdf = 0; jdf < 6; ++jdf) {
-												if (freq < 0.1)
-													hd().A0(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1)*factorMass;
-												else if (freq > 90)
-													hd().Ainf(6*ib + idf, 6*ib + jdf) = f.GetDouble(jdf + 1)*factorMass;
+												if (freq < 0.1)			// 0.001
+													hd().A0(6*ib + idf, 6*ib2 + jdf) = f.GetDouble(jdf + 1)*factorMass;
+												else if (freq > 90)		// 100.
+													hd().Ainf(6*ib + idf, 6*ib2 + jdf) = f.GetDouble(jdf + 1)*factorMass;
 											}
 											f.GetLine(); 
 											f.GetLine();
