@@ -37,7 +37,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	
 	compare.arrayStats.AddColumn(t_("Parameter"), 80);
 	compare.arrayStats.GetColumn(0).Edit(edits.Add()); 
-	compare.arrayStats.AddColumn(t_("Format"), 80);
+	compare.arrayStats.AddColumn(t_("# decimals"), 80);
 	compare.arrayStats.GetColumn(1).Edit(edits.Add()); 
 	compare.arrayStats.AddColumn(t_("Statistics"), 200);
 	compare.arrayStats.GetColumn(2).Edit(edits.Add()); 
@@ -82,8 +82,8 @@ void FastScatter::GridToParams() {
 	params.params.SetCount(compare.arrayStats.GetRowCount());
 	for (int r = 0; r < compare.arrayStats.GetRowCount(); ++r) {
 		params.params[r].name = AsString(compare.arrayStats.Get(r, 0));
-		params.params[r].decimals = compare.arrayStats.Get(r, 1);
-		String stats = AsString(compare.arrayStats.Get(r, 2));
+		params.params[r].decimals = ScanInt(compare.arrayStats.Get(r, 1).ToString());
+		String stats = compare.arrayStats.Get(r, 2).ToString();
 		int inparen = 0;
 		String met;
 		for (char c : stats) {		// converts "rao_mean, rao(), factor(2, 5)" into ["rao_mean", "rao", "factor(2, 5)"]
