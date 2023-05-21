@@ -17,6 +17,7 @@ using namespace Upp;
 #include "main.h"
 
 UVector<CompareParameters *> CompareParameters::plist;
+bool CompareParameters::comparing = false;
 
 void CompareParameters::Init(ScatterDraw &scatter, SplitterButton &splitter) {
 	CtrlLayout(*this);
@@ -28,11 +29,15 @@ void CompareParameters::Init(ScatterDraw &scatter, SplitterButton &splitter) {
 	
 	splitter.WhenAction = [&] {
 		NON_REENTRANT_V;
+		if (comparing)			// To avoid recursive update of everything with everything
+			return;
+		comparing = true;
 		int pos = psplitter->GetPos();
 		for (int i = 0; i < plist.size(); ++i) {
 			CompareParameters *c = plist[i];
 			c->psplitter->SetPos(pos);	
 		}
+		comparing = false;
 	};
 	
 	swRelative <<= 0;

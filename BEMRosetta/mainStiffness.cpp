@@ -62,10 +62,11 @@ void MainMatrixKA::Clear() {
 
 void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, String bodyName, int ibody, int idc, int ncol) {
 	row0 = ibody*9 + 1;
-	col0 = 2 + ncol;
-	if (col0s.size() > 0)
-		col0 += Last(col0s);
-
+	int realicase = 0;
+	for (int i = 0; i < icase; ++i) 
+		realicase += int(data[realicase].cols())/6;
+	col0 = realicase*7 + icase;
+	
 	row0s << row0;
 	col0s << col0;
 	
@@ -73,23 +74,37 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 	array.Set(2, col0, AttrText(" ").Paper(GetColorId(idc)));
 	
 	int len = StdFont().Bold().GetAveWidth()*(BEM::StrDOF_len() + 2);
-	
-	while (array.GetColumnCount() < col0 + 7) {
+	int ncols = int(data[realicase].cols());
+	int Nb = int(ncols/6);
+	while (array.GetColumnCount() < col0 + 1 + ncols) {
 		if (icase > 0) {
 			array.AddColumn("", max(10, len));
 			int icol = array.GetColumnCount() - 1;
 			array.HeaderObject().Tab(icol).SetMargin(0);
 		}
 		array.AddColumn("", max(20, len));
-		for (int i = 0; i < 2; ++i) 
-			array.AddColumn("", what == Hydro::MAT_K ? max(20, len) : max(70, len));	
-		for (int i = 2; i < 6; ++i)
-			array.AddColumn("", max(70, len));
+		
+		for (int nmat = 0; nmat < Nb; ++nmat) {
+			for (int i = 0; i < 2; ++i) 
+				array.AddColumn("", what == Hydro::MAT_K ? max(20, len) : max(70, len));	
+			for (int i = 2; i < 6; ++i)
+				array.AddColumn("", max(70, len));
+			if (Nb > 1 && nmat < Nb-1) 
+				array.AddColumn("", 10);
+		}
 	}
-	array.Set(row0, col0, AttrText(Format(t_("#%d body. %s"), ibody + 1, bodyName)).Bold());
-	for (int i = 0; i < 6; ++i) {
-		array.Set(row0 + 1, 	col0 + i + 1, AttrText(BEM::StrDOF(i)).Bold().Align(ALIGN_CENTER));
+	if (Nb == 1)
+		array.Set(row0, col0 + 1, AttrText(Format(t_("#%d body %s"), ibody + 1, bodyName)).Bold());
+	else {
+		for (int nmat = 0; nmat < Nb; ++nmat) 
+			array.Set(row0, col0 + nmat*7 + 1, AttrText(Format(t_("#%d-%d body %s"), ibody + 1, nmat + 1, bodyName)).Bold());
+	}
+	
+	for (int i = 0; i < 6; ++i) 
 		array.Set(row0 + i + 2, col0, 	  	  AttrText(BEM::StrDOF(i)).Bold().Align(ALIGN_CENTER));
+	for (int nmat = 0; nmat < Nb; ++nmat) {
+		for (int i = 0; i < 6; ++i) 
+			array.Set(row0 + 1, 	col0 + i + 1 + nmat*7, AttrText(BEM::StrDOF(i)).Bold().Align(ALIGN_CENTER));
 	}
 	for (int i = 1; i <= ibody; ++i) 
 		array.SetLineCy(i*9, 10);	
@@ -145,7 +160,7 @@ void MainMatrixKA::PrintData() {
 									sdata = FormatF(val, numDecimals);
 							}
 						}
-						array.Set(row0 + r + 2, col0 + c + 1, AttrText(sdata).Align(ALIGN_RIGHT));
+						array.Set(row0 + r + 2, col0 + c + 1 + int(c/6), AttrText(sdata).Align(ALIGN_RIGHT));
 					}
 				}
 			}
