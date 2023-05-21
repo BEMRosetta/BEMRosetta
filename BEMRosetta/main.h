@@ -102,6 +102,7 @@ private:
 	SplitterButton *psplitter = nullptr;
 	Hydro::DataToShow dataToShow;
 	static UVector<CompareParameters *> plist;
+	static bool comparing;
 };
 
 
