@@ -518,11 +518,19 @@ void MainBEM::OnMenuAdvancedArraySel() {
 		return;
 	
 	Hydro &data = Bem().hydros[id].hd();
-	if (data.c0.size() != 3)
-		return;
-	menuAdvanced.x_0 <<= data.c0(0);
-	menuAdvanced.y_0 <<= data.c0(1);
-	menuAdvanced.z_0 <<= data.c0(2);
+	menuAdvanced.x_0.Enable(data.c0.size() == 3);	
+	menuAdvanced.y_0.Enable(data.c0.size() == 3);	
+	menuAdvanced.z_0.Enable(data.c0.size() == 3);	
+		
+	if (data.c0.size() == 3) {
+		menuAdvanced.x_0 <<= data.c0(0);
+		menuAdvanced.y_0 <<= data.c0(1);
+		menuAdvanced.z_0 <<= data.c0(2);
+	} else {
+		menuAdvanced.x_0 <<= Null;
+		menuAdvanced.y_0 <<= Null;
+		menuAdvanced.z_0 <<= Null;
+	}
 }
 
 void MainBEM::InitSerialize(bool ret) {
