@@ -431,14 +431,19 @@ bool Aqwa::Load_LIS() {
 	       		hd().C[ib](4, 5) = f.GetDouble(3);	
 			
 			hd().C[ib] *= factorMass;
-		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness
-			hd().C[ib].setConstant(6, 6, 0);
-			in.GetLine(6);
-			for (int r = 0; r < 6; ++r) {
-				f.Load(in.GetLine());
-				for (int c = 0; c < 6; ++c) 
-					hd().C[ib](r, c) = f.GetDouble(c + 1);
-				in.GetLine();
+		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness, but less reliable
+			if (hd().C[ib](2, 2) != 0) {					// ... but less reliable
+				MatrixXd C;
+				C.setConstant(6, 6, 0);
+				in.GetLine(6);
+				for (int r = 0; r < 6; ++r) {
+					f.Load(in.GetLine());
+					for (int c = 0; c < 6; ++c) 
+						C(r, c) = f.GetDouble(c + 1);
+					in.GetLine();
+				}
+				if (C(0, 0) == 0 && C(1, 1) == 0)			// Only use if ASTF additional hydrostatics has not been used: surge = sway = 0
+					hd().C[ib] = C;							
 			}
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
@@ -491,14 +496,13 @@ bool Aqwa::Load_LIS() {
 						else
 							factor = M_PI/180;	// Only for RAO
 						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factor, 
-																			-f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180); // Negative to follow Wamit
+																			-f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180)*factorMass; // Negative to follow Wamit
 					}
 					dd = 0;
 					line = in.GetLine();
 					static const UVector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};
 					f.Load(line, separators);
 				}
-				frc.force[idh] *= factorMass;
 			}
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			int ieq = line.FindAfter("="); ieq = line.FindAfter("=", ieq);
