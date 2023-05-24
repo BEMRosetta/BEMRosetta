@@ -785,8 +785,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), orca.GetDLLPath()));
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
-					}
 #endif
+					}
 				}
 			}
 		}
