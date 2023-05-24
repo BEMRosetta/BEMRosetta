@@ -170,6 +170,7 @@ void ShowHelp(BEM &md) {
 
 static bool NoPrint(String, int) {return true;}
 
+#ifdef PLATFORM_WIN32
 Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int perc, const Time &et)->bool {
 	if (IsNull(et))
 		BEM::Print("\nCompleted 0%"); 
@@ -179,6 +180,7 @@ Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int pe
 };
 
 Time Orca::startCalc = Null;
+#endif
 
 bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
 	UVector<String> command = clone(_command);
