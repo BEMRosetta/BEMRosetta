@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
+#ifdef PLATFORM_WIN32
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
@@ -320,3 +321,4 @@ private:
 };
 
 
+#endif

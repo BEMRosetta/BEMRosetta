@@ -170,6 +170,7 @@ void ShowHelp(BEM &md) {
 
 static bool NoPrint(String, int) {return true;}
 
+#ifdef PLATFORM_WIN32
 Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int perc, const Time &et)->bool {
 	if (IsNull(et))
 		BEM::Print("\nCompleted 0%"); 
@@ -179,6 +180,7 @@ Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int pe
 };
 
 Time Orca::startCalc = Null;
+#endif
 
 bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
 	UVector<String> command = clone(_command);
@@ -717,8 +719,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
 								BEM::Print("\n" + Format(t_("Model saved as '%s'"), file));
 						}
+					}
 #ifdef PLATFORM_WIN32						
-					} else if (nextcommands == "orca") {
+					else if (nextcommands == "orca") {
 						if (param == "-rw" || param == "-runwave") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
