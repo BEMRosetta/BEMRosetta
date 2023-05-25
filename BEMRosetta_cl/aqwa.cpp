@@ -810,7 +810,7 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
 		throw Exc(Format(t_("Impossible to open '%s'"), file));
 	
 	out << "AQTF-2.0 :                                                            \n";
-	out << Format(" %2d %2d %3d    ", hd().Nb, hd().qh.size(), hd().qw.size());
+	out << Format(" %2d %2d %3d    ", hd().Nb, int(hd().qh.size()), int(hd().qw.size()));
 	int icol = 0;
 	for (int ih = 0; ih < hd().qh.size(); ++ih) {
 		if (hd().qh[ih].real() != hd().qh[ih].imag())
