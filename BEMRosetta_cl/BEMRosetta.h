@@ -27,10 +27,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   false,		true,			   false,	   true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   false,		true,			   false,	   true, 	   true, 		 true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.*"};       
 	
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -71,6 +71,8 @@ public:
 		case BEMROSETTA:	return t_("BEMRosetta");
 		case DIODORE:		return t_("Diodore");
 		case ORCAWAVE:		return t_("OrcaWave");
+		case CSV_MAT:		return t_("CSV.mat");
+		case CSV_TABLE:		return t_("CSV.tab");
 		case UNKNOWN:		return t_("Unknown");
 		}
 		return t_("Unknown");
@@ -90,6 +92,8 @@ public:
 		case BEMROSETTA:	return t_("BMR");
 		case DIODORE:		return t_("DIO");
 		case ORCAWAVE:		return t_("ORC");
+		case CSV_MAT:		return t_("CSVm");
+		case CSV_TABLE:		return t_("CSVt");
 		case UNKNOWN:		return t_("¿?");
 		}
 		return t_("Unknown");
@@ -684,8 +688,16 @@ public:
 	virtual ~HydroClass() noexcept			{}
 	bool Load(String file);
 	bool Save(String file);
+	bool SaveCSVMat(String file);
+	bool SaveCSVTable(String file);
 	
 	HydroData hd;	
+
+private:
+	void SaveForce(FileOut &out, Hydro::Forces &f);
+	void SaveMD(FileOut &out);
+	void SaveC(FileOut &out);
+	void SaveM(FileOut &out);
 };
 
 class Mesh : public DeepCopyOption<Hydro> {
