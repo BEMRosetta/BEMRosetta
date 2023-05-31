@@ -484,6 +484,7 @@ bool Aqwa::Load_LIS() {
 				if (idh < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
 				int dd = 1;
+				double factorM = pfrc == &hd().rao ? 1 : factorMass;
 				for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 					double freq = f.GetDouble(1);
 					int ifrr = FindClosest(hd().w, freq);
@@ -494,9 +495,12 @@ bool Aqwa::Load_LIS() {
 						if (pfrc != &hd().rao || idf < 3)
 							factor = 1;
 						else
-							factor = M_PI/180;	// Only for RAO
+							factor = M_PI/180;	// Only for RAO rotations
+						
 						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factor, 
-																			-f.GetDouble(2 + dd + idf*2 + 1)*M_PI/180)*factorMass; // Negative to follow Wamit
+																			-f.GetDouble(2 + dd
+																			+ idf*2 +
+																			1)*M_PI/180)*factorM; // Negative to follow Wamit */
 					}
 					dd = 0;
 					line = in.GetLine();
