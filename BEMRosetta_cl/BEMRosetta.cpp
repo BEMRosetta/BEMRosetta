@@ -819,6 +819,12 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	} else if (type == AQWA) {
 		Aqwa data(*bem, this);
 		ret = data.Save(file, Status);		
+	} else if (type == CSV_MAT) {
+		HydroClass data(*bem, this);
+		ret = data.SaveCSVMat(file);		
+	} else if (type == CSV_TABLE) {
+		HydroClass data(*bem, this);
+		ret = data.SaveCSVTable(file);		
 	}
 	code = type;
 	Nh = realNh;
@@ -2158,6 +2164,424 @@ bool HydroClass::Save(String file) {
 		return false;
 	}
 	return true;
+}
+
+void HydroClass::SaveForce(FileOut &out, Hydro::Forces &f) {
+	const String &sep = hd().GetBEM().csvSeparator;
+	
+	out << sep;
+	for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int idf = 0; idf < 6; ++idf) 			
+			out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf)) << sep;
+	}
+	out << "\n";
+	
+	out  << "Head [deg]" << sep << "Frec [rad/s]";
+	for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int idf = 0; idf < 6; ++idf) 			
+			out << sep << "mag" << sep << "phase";
+	}
+	out << "\n";
+	
+	UVector<int> ow = GetSortOrder(hd().w);
+	UVector<int> oh = GetSortOrder(hd().head);
+	
+	for (int ih = 0; ih < hd().Nh; ++ih) {
+		out << hd().head[oh[ih]];
+		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				out << sep;
+				out << hd().w[ow[ifr]];				
+				for (int idf = 0; idf < 6; ++idf) { 	
+					out << sep;	
+					if (IsNum(f.force[oh[ih]](ow[ifr], 6*ib + idf)))	{
+						const std::complex<double> &c = hd().F_dim(f, oh[ih], ow[ifr], idf);
+						out << FormatDouble(abs(c)) << sep << FormatDouble(ToDeg(arg(c)));
+					} else
+						out << sep;
+				}
+				out << "\n";
+			}
+		}
+	}
+}	
+
+void HydroClass::SaveMD(FileOut &out) {
+	const String &sep = hd().GetBEM().csvSeparator;
+	
+	out  << "Head [deg]" << sep << "Frec [rad/s]";
+	for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int idf = 0; idf < 6; ++idf) 			
+			out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+	}
+	out << "\n";
+	
+	UVector<int> ow = GetSortOrder(hd().w);
+	//UVector<int> oh = GetSortOrder(hd().mdhead);
+	
+	for (int ih = 0; ih < hd().mdhead.size(); ++ih) {
+		const std::complex<double> &h = hd().mdhead[ih];
+		out << Format("%s %s", FormatDouble(h.real()), FormatDouble(h.imag()));
+		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				out << sep;
+				out << hd().w[ow[ifr]];				
+				for (int idf = 0; idf < 6; ++idf) { 	
+					out << sep;	
+					if (IsNum(hd().md[ib][ih][idf](ifr))) 
+						out << FormatDouble(hd().Md_dim(idf, ih, ifr));
+				}
+				out << "\n";
+			}
+		}
+	}
+}
+
+void HydroClass::SaveC(FileOut &out) {
+	const String &sep = hd().GetBEM().csvSeparator;
+	
+	out  << "DoF";
+	for (int idf = 0; idf < 6; ++idf) 			
+		out << sep << BEM::StrDOF(idf);
+	out << "\n";
+		
+	for (int ib = 0; ib < hd().Nb; ++ib) {		
+		for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+			out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+			out << sep;	
+			for (int idf2 = 0; idf2 < 6; ++idf2) {
+				if (IsNum(hd().C[ib](idf1, idf2)))	
+					out << FormatDouble(hd().C_dim(ib, idf1, idf2));
+				out << sep;
+			}
+			out << "\n";
+		}
+	}
+}
+
+void HydroClass::SaveM(FileOut &out) {
+	const String &sep = hd().GetBEM().csvSeparator;
+	
+	out  << "DoF";
+	for (int idf = 0; idf < 6; ++idf) 			
+		out << sep << BEM::StrDOF(idf);
+	out << "\n";
+		
+	for (int ib = 0; ib < hd().Nb; ++ib) {		
+		for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+			out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+			out << sep;	
+			for (int idf2 = 0; idf2 < 6; ++idf2) {
+				if (IsNum(hd().M[ib](idf1, idf2)))	
+					out << FormatDouble(hd().M[ib](idf1, idf2));
+				out << sep;
+			}
+			out << "\n";
+		}
+	}
+}
+	
+bool HydroClass::SaveCSVMat(String file) {
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+	
+	String folder = GetFileFolder(file);
+	String name = GetFileTitle(file);
+	String ext = GetFileExt(file);
+	
+	if (hd().IsLoadedA())  {
+		String files = AppendFileNameX(folder, name + "_A" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		const String &sep = hd().GetBEM().csvSeparator;
+		
+		out  << "Frec [rad/s]" << sep << "DoF";
+		for (int ib = 0; ib < hd().Nb; ++ib) {			
+			for (int idf = 0; idf < 6; ++idf) 			
+				out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+		}
+		out << "\n";
+	
+		
+		if (hd().IsLoadedA0()) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << "0";				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					out << sep;	
+					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << sep;	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().A0(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(hd().A0_dim(idf1, idf2));
+						out << sep;
+					}
+					out << "\n";
+				}
+			}
+		}
+		UVector<int> ow = GetSortOrder(hd().w);
+		
+		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << hd().w[ow[ifr]];				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					out << sep;	
+					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << sep;	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(hd().A_dim(ow[ifr], idf1, idf2));
+						out << sep;
+					}
+					out << "\n";
+				}
+			}
+		}
+		if (hd().IsLoadedAinf()) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << "inf";				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					out << sep;	
+					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << sep;	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(hd().Ainf_dim(idf1, idf2));
+						out << sep;
+					}
+					out << "\n";
+				}
+			}
+		}	
+	}
+	
+	if (hd().IsLoadedB())  {
+		String files = AppendFileNameX(folder, name + "_B" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		const String &sep = hd().GetBEM().csvSeparator;
+		
+		out  << "Frec [rad/s]" << sep << "DoF";
+		for (int ib = 0; ib < hd().Nb; ++ib) {			
+			for (int idf = 0; idf < 6; ++idf) 			
+				out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+		}
+		out << "\n";
+	
+		
+		UVector<int> ow = GetSortOrder(hd().w);
+		
+		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << hd().w[ow[ifr]];				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					out << sep;	
+					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << sep;	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(hd().B_dim(ow[ifr], idf1, idf2));
+						out << sep;
+					}
+					out << "\n";
+				}
+			}
+		}
+	}
+	
+	if (hd().IsLoadedC())  {
+		String files = AppendFileNameX(folder, name + "_C" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		SaveC(out);
+	}
+	
+	if (hd().IsLoadedM())  {
+		String files = AppendFileNameX(folder, name + "_M" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		SaveM(out);
+	}
+	
+	if (hd().IsLoadedFex())  {
+		String files = AppendFileNameX(folder, name + "_Fex" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+		SaveForce(out, hd().ex);
+	}
+	
+	if (hd().IsLoadedMD())  {
+		String files = AppendFileNameX(folder, name + "_MD" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+		SaveMD(out);
+	}	
+		
+	return true;	
+}
+
+bool HydroClass::SaveCSVTable(String file) {
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+	
+	String folder = GetFileFolder(file);
+	String name = GetFileTitle(file);
+	String ext = GetFileExt(file);
+	
+	if (hd().IsLoadedA())  {
+		String files = AppendFileNameX(folder, name + "_A" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		const String &sep = hd().GetBEM().csvSeparator;
+		
+		out  << "Frec [rad/s]";
+		for (int ib = 0; ib < hd().Nb; ++ib) {			
+			for (int idf1 = 0; idf1 < 6; ++idf1) 
+				for (int idf2 = 0; idf2 < 6; ++idf2) 
+					out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+		}
+		out << "\n";
+	
+		if (hd().IsLoadedA0()) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << "0" << sep;				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().A0(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(hd().A0_dim(idf1, idf2));
+						out << sep;
+					}
+				}
+			}
+		}
+		out << "\n";
+		
+		UVector<int> ow = GetSortOrder(hd().w);
+		
+		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << hd().w[ow[ifr]] << sep;				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(hd().A_dim(ow[ifr], idf1, idf2));
+						out << sep;
+					}
+				}
+				out << "\n";
+			}
+		}
+		if (hd().IsLoadedAinf()) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << "inf" << sep;				
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(hd().Ainf_dim(idf1, idf2));
+						out << sep;
+					}
+				}
+			}
+		}	
+	}
+	
+	if (hd().IsLoadedB())  {
+		String files = AppendFileNameX(folder, name + "_B" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		const String &sep = hd().GetBEM().csvSeparator;
+		
+		out  << "Frec [rad/s]";
+		for (int ib = 0; ib < hd().Nb; ++ib) {			
+			for (int idf1 = 0; idf1 < 6; ++idf1) 
+				for (int idf2 = 0; idf2 < 6; ++idf2) 
+					out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+		}
+		out << "\n";
+		
+		UVector<int> ow = GetSortOrder(hd().w);
+		
+		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+			for (int ib = 0; ib < hd().Nb; ++ib) {		
+				if (ib == 0)
+					out << hd().w[ow[ifr]] << sep;			
+				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						if (IsNum(hd().B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(hd().B_dim(ow[ifr], idf1, idf2));
+						out << sep;
+					}
+				}
+				out << "\n";
+			}
+		}
+	}
+	
+	if (hd().IsLoadedC())  {
+		String files = AppendFileNameX(folder, name + "_C" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		SaveC(out);
+	}
+	
+	if (hd().IsLoadedM())  {
+		String files = AppendFileNameX(folder, name + "_M" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+
+		SaveM(out);
+	}
+	
+	if (hd().IsLoadedFex())  {
+		String files = AppendFileNameX(folder, name + "_Fex" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+		SaveForce(out, hd().ex);
+	}	
+	
+	if (hd().IsLoadedMD())  {
+		String files = AppendFileNameX(folder, name + "_MD" + ext);
+		FileOut out(files);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+
+		SaveMD(out);
+	}	
+	return true;	
 }
 
 int IsTabSpace(int c) {

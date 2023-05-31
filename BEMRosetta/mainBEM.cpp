@@ -326,7 +326,7 @@ void MainBEM::Init() {
 		LOGTAB(mainTab);
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		bool plot = true, convertProcess = true, ismenuFOAMM = false;
-		int is = 0;			// 0: 1st, 1: QTF, 2: MD
+		int is = -1;			// 0: 1st, 1: QTF, 2: MD
 
 		if (ids.IsEmpty())
 			plot = convertProcess = false;
@@ -334,8 +334,6 @@ void MainBEM::Init() {
 			mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixA))
 			mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim);
-		else if (mainTab.IsAt(mainMatrixM))
-			mainMatrixM.Load(Bem().hydros, ids, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixM)) {
 			plot = false;
 			mainMatrixM.Load(Bem().hydros, ids, false);
@@ -354,10 +352,13 @@ void MainBEM::Init() {
 		else if (mainTab.IsAt(mainAinfw))
 			mainAinfw.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainForceSC)) {
+			is = 0;
 			mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		} else if (mainTab.IsAt(mainForceFK)) {
+			is = 0;
 			mainForceFK.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		} else if (mainTab.IsAt(mainForceEX)) {
+			is = 0;
 			mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor());
 		} else if (mainTab.IsAt(mainRAO))
 			mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor());
