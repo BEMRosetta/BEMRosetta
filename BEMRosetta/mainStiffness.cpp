@@ -258,15 +258,18 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
-		if (!hydro.IsLoadedA())
+		if (!hydro.IsLoadedAinf())
 			data << EigenNull;
 		else {
 			if (Bem().onlyDiagonal)
 				data << hydro.Ainf_mat(ndim, ib, ib);
 			else {
 				MatrixXd mat(6, 6*hydro.Nb);
-				for (int ib2 = 0; ib2 < hydro.Nb; ++ib2)
-					mat.block(0, ib2*6, 6, 6) = hydro.Ainf_mat(ndim, ib, ib2);
+				for (int ib2 = 0; ib2 < hydro.Nb; ++ib2) {
+					MatrixXd submat = hydro.Ainf_mat(ndim, ib, ib2);
+					if (submat.size() == 36)
+						mat.block(0, ib2*6, 6, 6) = hydro.Ainf_mat(ndim, ib, ib2);
+				}
 				data << mat;
 			}
 		}

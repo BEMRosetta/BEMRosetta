@@ -498,9 +498,7 @@ bool Aqwa::Load_LIS() {
 							factor = M_PI/180;	// Only for RAO rotations
 						
 						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factor, 
-																			-f.GetDouble(2 + dd
-																			+ idf*2 +
-																			1)*M_PI/180)*factorM; // Negative to follow Wamit */
+																			-ToRad(f.GetDouble(2 + dd + idf*2 + 1))*factorM); // Negative to follow Wamit 
 					}
 					dd = 0;
 					line = in.GetLine();
