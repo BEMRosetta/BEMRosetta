@@ -800,6 +800,8 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 			type = Hydro::FAST_WAMIT;	
 		else if (ext == ".bem")
 			type = Hydro::BEMROSETTA;
+		else if (ext == ".csv")
+			type = Hydro::CSV_TABLE;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
