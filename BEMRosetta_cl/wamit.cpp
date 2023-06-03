@@ -1258,7 +1258,8 @@ void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T) {
 
 bool Wamit::Load_1(String fileName) {
 	hd().dimen = false;
-	hd().len = 1;
+	if (IsNull(hd().len))
+		hd().len = 1;
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
