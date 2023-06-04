@@ -69,26 +69,29 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n";
 	Cout() << "\n" << t_("Options:");
 	
-	Cout() << "\n" << t_("-h  -help             # Print options");
+	Cout() << "\n" << t_("-h  -help                 # Print options");
+	Cout() << "\n" << t_("-echo \"text\"            # Prints \"text\"");
+	Cout() << "\n" << t_("-pause");
 	
-	Cout() << "\n" << t_("-general              # The next commands are for any data (default)");
-	Cout() << "\n" << t_("-paramfile <file>     # Params in a file. New lines are like separators and # indicates a comment");
+	Cout() << "\n" << t_("-general                  # The next commands are for any data (default)");
+	Cout() << "\n" << t_("-paramfile <file>         # Params in a file. New lines are like separators and # indicates a comment");
 	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
 	Cout() << "\n" << t_("               g         	# gravity       [m/s2]  ") << md.g;
 	Cout() << "\n" << t_("               rho        # water density [kg/m3] ") << md.rho;
-	Cout() << "\n" << t_("-echo off/on          # Show text messages");
-	Cout() << "\n" << t_("-csvseparator <sep>   # Sets the separator for .csv files");
-	Cout() << "\n" << t_("-isEqual \"<value>\"    # Stops if last print is not equal to \"<value>\"");
+	Cout() << "\n" << t_("-echo off/on              # Show text messages");
+	Cout() << "\n" << t_("-csvseparator <sep>       # Sets the separator for .csv files");
+	Cout() << "\n" << t_("-isEqual <value>          # Stops if last print is not equal to <value>");
+	Cout() << "\n" << t_("-isSimilar <value>        # Stops if <value> is not included in last print");
 	
 	Cout() << "\n";
-	Cout() << "\n" << t_("-bem                  # The next commands are for BEM data");
-	Cout() << "\n" << t_("-i  -input <file>     # Load model");
-	Cout() << "\n" << t_("-c  -convert <file>   # Export actual model to output file");
-	Cout() << "\n" << t_("-setid <id>           # Set the id of the default BEM model");
+	Cout() << "\n" << t_("-bem                      # The next commands are for BEM data");
+	Cout() << "\n" << t_("-i  -input <file>         # Load model");
+	Cout() << "\n" << t_("-c  -convert <file>       # Export actual model to output file");
+	Cout() << "\n" << t_("-setid <id>               # Set the id of the default BEM model");
 	Cout() << "\n" << t_("-params <param> <value>   # Set parameters:");
 	Cout() << "\n" << t_("               length     # length scale  []      ") << md.len;
 	Cout() << "\n" << t_("               depth      # water depth   [m]     ") << md.depth;
-	Cout() << "\n" << t_("-p  -print <params>   # Prints model data in a row");
+	Cout() << "\n" << t_("-p  -print <params>       # Prints model data in a row");
 	Cout() << "\n" << t_("        <params> nb                  # Number of bodies  []");
 	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
 	Cout() << "\n" << t_("                 nh                  # Number of headings    []");
@@ -98,24 +101,24 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("                 Tpitch <ibody>      # Pitch resonance period for body ib [s]");
 	Cout() << "\n" << t_("                 GMroll <ibody>      # GM in roll [m]");
 	Cout() << "\n" << t_("                 GMpitch <ibody>     # GM in pitch [m]");
-	Cout() << "\n" << t_("-r  -report           # Output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear            # Clear loaded model");
+	Cout() << "\n" << t_("-r  -report               # Output last loaded model data");
+	Cout() << "\n" << t_("-cl -clear                # Clear loaded model");
 	Cout() << "\n";
-	Cout() << "\n" << t_("-mesh                 # The next commands are for mesh data");
-	Cout() << "\n" << t_("-i  -input <file>     # Load model");
-	Cout() << "\n" << t_("-c  -convert <file> <opts>  # Export actual model to output file");
-	Cout() << "\n" << t_("        <opts> symx         # - Save only positive X");
-	Cout() << "\n" << t_("               symy         # - Save only positive Y");
-	Cout() << "\n" << t_("               symx symy    # - Save only positive X and Y");
-	Cout() << "\n" << t_("               Wamit.gdf    # - Save in Wamit .gdf format");
-	Cout() << "\n" << t_("               Nemoh.dat    # - Save in Nemoh .dat format");
-	Cout() << "\n" << t_("               HAMS.pnl     # - Save in HAMS  .pnl format");
-	Cout() << "\n" << t_("               STL.Text     # - Save in STL   text format");
+	Cout() << "\n" << t_("-mesh                     # The next commands are for mesh data");
+	Cout() << "\n" << t_("-i  -input <file>         # Load model");
+	Cout() << "\n" << t_("-c  -convert <file> <opts># Export actual model to output file");
+	Cout() << "\n" << t_("        <opts> symx       # - Save only positive X");
+	Cout() << "\n" << t_("               symy       # - Save only positive Y");
+	Cout() << "\n" << t_("               symx symy  # - Save only positive X and Y");
+	Cout() << "\n" << t_("               Wamit.gdf  # - Save in Wamit .gdf format");
+	Cout() << "\n" << t_("               Nemoh.dat  # - Save in Nemoh .dat format");
+	Cout() << "\n" << t_("               HAMS.pnl   # - Save in HAMS  .pnl format");
+	Cout() << "\n" << t_("               STL.Text   # - Save in STL   text format");
 	Cout() << "\n" << t_("-t   -translate <x> <y> <z>     # Translate x, y, z [m]");
-	Cout() << "\n" << t_("-rot -rotate    <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around point cx, cy, cz [m]");
-	Cout() << "\n" << t_("-cg             <x> <y> <z>     # Sets cg: x, y, z [m] cg is the centre of gravity");
-	Cout() << "\n" << t_("-c0             <x> <y> <z>     # Sets c0: x, y, z [m] c0 is the centre of motion");
-	Cout() << "\n" << t_("-mass           <value>         # Sets the body mass [kg]");
+	Cout() << "\n" << t_("-rot -rotate   <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az [deg] around cx, cy, cz [m]");
+	Cout() << "\n" << t_("-cg            <x> <y> <z>      # Sets cg: x, y, z [m] cg is the centre of gravity");
+	Cout() << "\n" << t_("-c0            <x> <y> <z>      # Sets c0: x, y, z [m] c0 is the centre of motion");
+	Cout() << "\n" << t_("-mass          <value>          # Sets the body mass [kg]");
 	
 	Cout() << "\n" << t_("-getwaterplane                  # Extract in new model the waterplane mesh (lid)");
 	Cout() << "\n" << t_("-gethull                        # Extract in new model the mesh underwater hull");
@@ -150,9 +153,16 @@ void ShowHelp(BEM &md) {
 
 	Cout() << "\n" << t_("-cl -clear                      # Clear loaded model");
 	Cout() << "\n";
-	Cout() << "\n" << t_("-fast                           # The next commands are for OpenFAST data");
+	Cout() << "\n" << t_("-time                           # The next commands are for time series");
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
 	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
+	Cout() << "\n" << t_("-p  -print <params>             # Prints file data in a row");
+	Cout() << "\n" << t_("     <params> list              # Parameter names");
+	Cout() << "\n" << t_("              <param> <time>    # Value of <param> in <time>");
+	Cout() << "\n" << t_("              <param> avg       # <param> avg");
+	Cout() << "\n" << t_("              <param> max       # <param> max");
+	Cout() << "\n" << t_("              <param> min       # <param> min");	
+	
 #ifdef PLATFORM_WIN32
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
@@ -224,21 +234,35 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 					nextcommands = "bem";
 				else if (param == "-mesh") 
 					nextcommands = "mesh";
-				else if (param == "-fast") 
-					nextcommands = "fast";
+				else if (param == "-fast" || param == "-time") 
+					nextcommands = "time";
 				else if (param == "-orca") 
 					nextcommands = "orca";
 				else if (param == "-h" || param == "-help") {
 					ShowHelp(bem);
 					break;
-				} else if (param == "-isequal") {
-					CheckIfAvailableArg(command, ++i, "-isequal");
+				} else if (param == "-pause") 
+					ReadStdIn();
+				else if (param == "-echo") {
+					CheckIfAvailableArg(command, ++i, "-isEqual");
+					
+					Cout() << Replace(command[i], "\\n", "\n");
+				} else if (param == "-isequal") { 
+					CheckIfAvailableArg(command, ++i, "-isEqual");
 					
 					String data = Trim(command[i]);
 					if (Trim(lastPrint) == data) 
 						BEM::Print("\n" + Format(t_("Last print is equal to \"%s\""), data));
 					else
 						throw Exc(Format(t_("Last print is not equal to \"%s\""), data));
+				} else if (param == "-issimilar") { 
+					CheckIfAvailableArg(command, ++i, "-isSimilar");
+					
+					String data = Trim(command[i]);
+					if (Trim(lastPrint).Find(data) >= 0) 
+						BEM::Print("\n" + Format(t_("Last print is similar to \"%s\""), data));
+					else
+						throw Exc(Format(t_("Last print is not equal to \"%s\""), data)); 
 				} else {
 					if (nextcommands == "general") {
 					 	if (param == "-paramfile") {
@@ -246,7 +270,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							String paramfile = command[i];
 							String strfile = LoadFile(paramfile);
-							if (strfile.IsEmpty())
+							if (strfile.IsVoid())
 								throw Exc(Format("-paramfile file '%s' not found", paramfile));
 							ChangeCurrentDirectory(GetFileFolder(paramfile));
 							command.Insert(i+1 , pick(GetCommandLineParams(strfile)));
@@ -695,7 +719,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
-					} else if (nextcommands == "fast") {
+					} else if (nextcommands == "time") {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++i, "-input");
 
@@ -718,7 +742,47 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
 								BEM::Print("\n" + Format(t_("Model saved as '%s'"), file));
-						}
+						} else if (param == "-p" || param == "-print") {
+							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
+								i++;
+								String param = ToLower(command[i]);
+								if (param == "list") {
+									Cout() << "\n";
+									BEM::Print(t_("List of parameters:") + S(" ")); 
+									lastPrint = "";
+									for (int i = 0; i < fast.GetParamCount(); ++i) {
+										if (i > 0)
+											lastPrint << " ";
+										lastPrint << fast.GetParameter(i);
+									}
+									Cout() << lastPrint;
+								} else {
+									Cout() << "\n";
+									UVector<int> p = fast.FindParameterMatch(param);
+									if (p.IsEmpty())
+										throw Exc(Format(t_("Parameter '%s' not found"), param));
+
+									int id = p[0];
+									i++;
+									double time = ScanDouble(command[i]);
+									if (!IsNull(time))
+										lastPrint = FormatDouble(fast.GetVal(time, id));
+									else {
+										VectorXd d = fast.GetVector(id);
+										if (command[i] == "avg" || command[i] == "mean") 
+											lastPrint = FormatDouble(d.mean());
+										else if (command[i] == "max") 
+											lastPrint = FormatDouble(d.maxCoeff());
+										else if (command[i] == "min") 
+											lastPrint = FormatDouble(d.minCoeff());
+										else  
+											throw Exc(Format(t_("Parameter '%s' not found"), command[i]));
+									}
+									Cout() << lastPrint;
+								}
+							}
+						} else
+							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 					}
 #ifdef PLATFORM_WIN32						
 					else if (nextcommands == "orca") {

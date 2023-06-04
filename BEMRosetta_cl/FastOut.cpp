@@ -396,17 +396,15 @@ String FastOut::LoadCsv(String fileName) {
 		if (idp >= 0) {
 			int idep = str.Find(end, idp+1);
 			if (idep > 0) {
-				unit = str.Mid(idp+1, idep-idp-1);
-				param = str.Left(idp) + str.Mid(idep+1);
+				unit = Trim(str.Mid(idp+1, idep-idp-1));
+				param = Trim(str.Left(idp) + str.Mid(idep+1));
 			} else {
-				unit = str.Mid(idp+1);
-				param = str.Left(idp);
+				unit = Trim(str.Mid(idp+1));
+				param = Trim(str.Left(idp));
 			}
-			return "";
+			return true;
 		} else
-			return "Units not found";
-
-
+			return false;
 	};	
    	
    	for (int i = 0; i < parameters.size(); ++i) {
@@ -458,7 +456,7 @@ bool FastOut::SaveCsv(String fileName, String sep) {
 	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
 		if (idtime > 0)
 			data << "\n";
-		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
+		for (int idparam = 0; idparam < min(dataOut.size(), parameters.size()); ++idparam) {
 			if (idparam > 0)
 				data << sep;
 			if (dataOut[idparam].size() > idtime)
