@@ -769,6 +769,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 										lastPrint = FormatDouble(fast.GetVal(time, id));
 									else {
 										VectorXd d = fast.GetVector(id);
+										CleanNAN_safe(d);		// Just in case. It do happens
 										if (command[i] == "avg" || command[i] == "mean") 
 											lastPrint = FormatDouble(d.mean());
 										else if (command[i] == "max") 
