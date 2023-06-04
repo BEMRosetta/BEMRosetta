@@ -1,4 +1,4 @@
--time 
+-mesh 
 
 -echo "\n\nReading time series from .csv"
 -i "..\examples\csv\hello.csv"
@@ -54,11 +54,3 @@
 -print POSITION_z 23.5	-isSimilar  9.7241
 -print POSITION_z avg	-isSimilar  11.434
 -print POSITION_z max	-isSimilar  21.843
-
--echo "\n\nReading time series from DeepLines Wind .db"
--i "..\examples\deeplineswind\Timeseries.db"
--print list
--print TEV_Line1_3C_Effective_tension_at_2_3m 23.5	-isSimilar	935091.88
--print TEV_Line1_3C_Effective_tension_at_2_3m avg	-isSimilar	831674.75
--print TEV_Line1_3C_Effective_tension_at_2_3m max	-isSimilar	1519168.42
-
