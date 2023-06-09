@@ -17,8 +17,8 @@
          <Directory Id="ProgramFiles64Folder">
             <Directory Id="INSTALLDIR" Name="BEMRosetta">
                <Component Id="ApplicationFiles" Guid="85e7f37f-2e81-4331-9d27-5c1c18cd5003">
-                  <File Id="ApplicationFile1" Source="../bin/BEMRosetta.exe"/>
-				  <File Id="ApplicationFile2" Source="../bin/BEMRosetta_cl.exe"/>
+                  <File Id="ApplicationFile1" Source="../unittest/.test/BEMRosetta.exe"/>
+				  <File Id="ApplicationFile2" Source="../unittest/.test/BEMRosetta_cl.exe"/>
                </Component>
             </Directory>
          </Directory>
