@@ -360,9 +360,10 @@ void MainBEM::Init() {
 		} else if (mainTab.IsAt(mainForceEX)) {
 			is = 0;
 			mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor());
-		} else if (mainTab.IsAt(mainRAO))
+		} else if (mainTab.IsAt(mainRAO)) {
+			is = 0;
 			mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor());
-		else if (mainTab.IsAt(mainStateSpace)) {
+		} else if (mainTab.IsAt(mainStateSpace)) {
 			mainStateSpace.Load(Bem(), ids);
 			ismenuFOAMM = true;
 		} else if (mainTab.IsAt(mainSetupFOAMM)) {

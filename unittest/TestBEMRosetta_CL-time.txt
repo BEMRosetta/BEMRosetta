@@ -25,6 +25,12 @@
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
+-i "..\examples\csv\hello - other sep tab.csv"
+-print list
+-print FAIRTEN3 23.5	-isSimilar  1416118
+-print FAIRTEN3 avg		-isSimilar  1286553
+-print FAIRTEN3 max		-isSimilar  1416893
+
 -echo "\n\nReading time series from OpenFAST .outb"
 -i "..\examples\fast.out\demo.outb"
 -print list
