@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?define ProductVersion = "0.0.240"?>
+<?define ProductVersion = "0.0.244"?>
 <?define ProductUpgradeCode = "02830cdb-3033-4c91-a1a5-7f40fbca0cf7"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
    <Product Id="*" UpgradeCode="$(var.ProductUpgradeCode)" 
@@ -17,8 +17,8 @@
          <Directory Id="ProgramFiles64Folder">
             <Directory Id="INSTALLDIR" Name="BEMRosetta">
                <Component Id="ApplicationFiles" Guid="85e7f37f-2e81-4331-9d27-5c1c18cd5003">
-                  <File Id="ApplicationFile1" Source="../bin/BEMRosetta.exe"/>
-				  <File Id="ApplicationFile2" Source="../bin/BEMRosetta_cl.exe"/>
+                  <File Id="ApplicationFile1" Source="../unittest/.test/BEMRosetta.exe"/>
+				  <File Id="ApplicationFile2" Source="../unittest/.test/BEMRosetta_cl.exe"/>
                </Component>
             </Directory>
          </Directory>
