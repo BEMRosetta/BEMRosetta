@@ -274,8 +274,11 @@ public:
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f, int _Nh = -1);
 	void Normalize_Forces(Forces &f);
+	void Normalize_RAO(RAO &f);
 	void Dimensionalize_Forces(Forces &f);
+	void Dimensionalize_RAO(RAO &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
+	void Add_RAO(RAO &to, const Hydro &hydro, const RAO &from);
 	void Symmetrize_Forces(bool xAxis);
 	void Symmetrize();
 	void GetFexFromFscFfk();
@@ -305,6 +308,15 @@ public:
 			return 2;
 		else
 			return 3;
+	}
+	
+	static int GetK_RAO(int i) {
+		while (i > 5)
+			i -= 6;
+		if (i < 3)
+			return 0;
+		else
+			return 1;
 	}
 	
 	static int GetK_C(int i, int j) {
@@ -391,26 +403,22 @@ public:
 	
 	MatrixXd Dlin_dim(int ib) const;
 	
+	// F
+		
 	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
 		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	
 	void F_dim(Forces &f);
+	
 	std::complex<double> F_ndim(const Forces &f, int _h, int ifr, int idf) const {
 		if (!dimen) 
 			return f.force[_h](ifr, idf); 
 		else 
 			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));
 	}
+	
 	std::complex<double> F_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
 		return ndim ? F_ndim(f, _h, ifr, idf) : F_dim(f, _h, ifr, idf);
-	}
-	std::complex<double> R(int ih, int ifr, int idf) const {
-		return rao.force[ih](ifr, idf)*g_rho_ndim()/g_rho_dim();
-	}
-	VectorXcd R_dof(int ih, int idf) const {
-		VectorXcd ret(Nf);
-		for (int ifr = 0; ifr < Nf; ++ifr)
-			ret[ifr] = rao.force[ih](ifr, idf)*g_rho_ndim()/g_rho_dim();
-		return ret;
 	}
 	
 	template <class T>
@@ -423,6 +431,32 @@ public:
 	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr) const;
 	VectorXcd F_dof(bool ndim, const Forces &f, int _h, int idf) const;
 
+	// RAO
+	
+	std::complex<double> RAO_dim(const RAO &f, int _h, int ifr, int idf)  const {
+		return (g_rho_ndim()/g_rho_dim())*(dimen ? f.force[_h](ifr, idf)  : f.force[_h](ifr, idf)*pow(len, GetK_RAO(idf)));}
+	
+	void RAO_dim(RAO &f);
+	
+	std::complex<double> RAO_ndim(const RAO &f, int _h, int ifr, int idf) const {
+		return (g_rho_ndim()/g_rho_dim())*(!dimen ? f.force[_h](ifr, idf) : f.force[_h](ifr, idf)/pow(len, GetK_RAO(idf)));}
+	
+	std::complex<double> RAO_(bool ndim, const RAO &f, int _h, int ifr, int idf) const {
+		return ndim ? RAO_ndim(f, _h, ifr, idf) : RAO_dim(f, _h, ifr, idf);
+	}
+	
+	template <class T>
+	T RAO_dim(T f, int idf) 	const {return (g_rho_ndim()/g_rho_dim())*(dimen  ? f : f/pow(len, GetK_RAO(idf)));}
+	template <class T>
+	T RAO_ndim(T f, int idf) 	const {return (g_rho_ndim()/g_rho_dim())*(!dimen ? f : f*pow(len, GetK_RAO(idf)));}
+	template <class T>
+	T RAO_(bool ndim, T f, int idf) const {return   ndim ? RAO_ndim(f, idf) : RAO_dim(f, idf);}
+
+	VectorXcd RAO_(bool ndim, const RAO &f, int _h, int ifr) const;
+	VectorXcd RAO_dof(bool ndim, const RAO &f, int _h, int idf) const;
+	
+	// FOAMM
+	
 	inline std::complex<double> Z(bool ndim, int ifr, int idf, int jdf) const {
 		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
 	}
