@@ -97,12 +97,8 @@ void Hydro::Normalize() {
 		Normalize_Forces(sc);
 	if (IsLoadedFfk())
 		Normalize_Forces(fk);
-	if (IsLoadedRAO()) {
-		for (int h = 0; h < Nh; ++h) 
-			for (int ifr = 0; ifr < Nf; ++ifr) 
-				for (int i = 0; i < 6*Nb; ++i) 	 
-					rao.force[h](ifr, i) = R(h, ifr, i);
-	}
+	if (IsLoadedRAO()) 
+		Normalize_RAO(rao);
 }
 
 void Hydro::Dimensionalize() {
@@ -139,12 +135,8 @@ void Hydro::Dimensionalize() {
 		Dimensionalize_Forces(sc);
 	if (IsLoadedFfk())
 		Dimensionalize_Forces(fk);
-	if (IsLoadedRAO()) {
-		for (int h = 0; h < Nh; ++h) 
-			for (int ifr = 0; ifr < Nf; ++ifr) 
-				for (int i = 0; i < 6*Nb; ++i) 
-					rao.force[h](ifr, i) = R(h, ifr, i);
-	}
+	if (IsLoadedRAO()) 
+		Dimensionalize_RAO(rao);
 }
 
 void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a) {
@@ -177,11 +169,25 @@ void Hydro::Normalize_Forces(Forces &f) {
 				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
 }
 
+void Hydro::Normalize_RAO(RAO &f) {
+	for (int ih = 0; ih < Nh; ++ih) 
+		for (int ifr = 0; ifr < Nf; ++ifr) 
+			for (int idf = 0; idf < 6*Nb; ++idf) 
+				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
+}
+
 void Hydro::Dimensionalize_Forces(Forces &f) {
 	for (int ih = 0; ih < Nh; ++ih) 
 		for (int ifr = 0; ifr < Nf; ++ifr) 
 			for (int idf = 0; idf < 6*Nb; ++idf) 
 				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
+}
+
+void Hydro::Dimensionalize_RAO(RAO &f) {
+	for (int ih = 0; ih < Nh; ++ih) 
+		for (int ifr = 0; ifr < Nf; ++ifr) 
+			for (int idf = 0; idf < 6*Nb; ++idf) 
+				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
 }
 
 void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
@@ -193,6 +199,20 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
 				for (int idf = 0; idf < 6*Nb; ++idf) 	 
 					if (IsNum(from.force[ihhy](ifrhy, idf))) 
 						to.force[ih](ifr, idf) = hydro.F_ndim(from, ihhy, ifrhy, idf);
+			}
+		} 
+	}
+}
+
+void Hydro::Add_RAO(RAO &to, const Hydro &hydro, const RAO &from) {
+	if (hydro.IsLoadedForce(from)) {
+		for (int ihhy = 0; ihhy < hydro.Nh; ++ihhy) {
+			int ih = FindClosest(head, hydro.head[ihhy]);
+			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
+				int ifr = FindClosest(w, hydro.w[ifrhy]);
+				for (int idf = 0; idf < 6*Nb; ++idf) 	 
+					if (IsNum(from.force[ihhy](ifrhy, idf))) 
+						to.force[ih](ifr, idf) = hydro.RAO_ndim(from, ihhy, ifrhy, idf);
 			}
 		} 
 	}
@@ -974,19 +994,9 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		Add_Forces(sc, hydro, hydro.sc);
 		Add_Forces(fk, hydro, hydro.fk);
 		
-		if (/*IsLoadedRAO() && */hydro.IsLoadedRAO()) {
-			for (int ihhy = 0; ihhy < Nh; ++ihhy) {
-				int ih = FindClosest(head, hydro.head[ihhy]);
-				for (int ifrhy = 0; ifrhy < Nf; ++ifrhy) {
-					int ifr = FindClosest(w, hydro.w[ifrhy]);
-					for (int idf = 0; idf < 6*Nb; ++idf) {	
-						if (IsNum(rao.force[ihhy](ifrhy, idf))) 
-							rao.force[ih](ifr, idf) = hydro.R(ihhy, ifrhy, idf);
-					}
-				}
-			}
-		}
+		Add_RAO(rao, hydro, hydro.rao);
 	}
+
 	
 	// Aw0 has to be recalculated
 	/*
@@ -1433,6 +1443,35 @@ VectorXcd Hydro::F_dof(bool ndim, const Forces &f, int _h, int idf) const {
 	ret.resize(Nf);
 	for (int ifr = 0; ifr < Nf; ++ifr) 
 		ret[ifr] = F_(ndim, f, _h, ifr, idf);
+	return ret;
+}
+
+void Hydro::RAO_dim(RAO &f) {
+	if (f.force.IsEmpty())
+		return;
+	for (int ih = 0; ih < Nh; ++ih) 	
+		for (int ifr = 0; ifr < Nf; ++ifr)
+			for (int idf = 0; idf < 6*Nb; ++idf) 
+				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
+}
+
+VectorXcd Hydro::RAO_(bool ndim, const RAO &f, int _h, int ifr) const {
+	VectorXcd ret;
+	if (f.force.IsEmpty())
+		return ret;
+	ret.resize(6);
+	for (int idf = 0; idf < 6; ++idf) 
+		ret[idf] = RAO_(ndim, f, _h, ifr, idf);
+	return ret;
+}
+
+VectorXcd Hydro::RAO_dof(bool ndim, const RAO &f, int _h, int idf) const {
+	VectorXcd ret;
+	if (f.force.IsEmpty())
+		return ret;
+	ret.resize(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr) 
+		ret[ifr] = RAO_(ndim, f, _h, ifr, idf);
 	return ret;
 }
 
