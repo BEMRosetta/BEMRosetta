@@ -164,22 +164,22 @@ public:
 		case Hydro::PLOT_KIRF:		return data->Kirf_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINFW:		return data->Ainf_w_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_MD:		return data->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
-		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (data->F_(ndim, data->sc, jdf, int(id), idf)) : 
-														real(data->F_(ndim, data->sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (data->F_(ndim, data->sc, jdf, int(id), idf)) : 
-														imag(data->F_(ndim, data->sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (data->F_(ndim, data->fk, jdf, int(id), idf)) : 
-														real(data->F_(ndim, data->fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (data->F_(ndim, data->fk, jdf, int(id), idf)) : 
-														imag(data->F_(ndim, data->fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (data->F_(ndim, data->ex, jdf, int(id), idf)) : 
-														real(data->F_(ndim, data->ex, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (data->F_(ndim, data->ex, jdf, int(id), idf)) : 
-														imag(data->F_(ndim, data->ex, jdf, int(id), idf));
-		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (data->R(jdf, int(id), idf)) : 
-														real(data->R(jdf, int(id), idf));
-		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (data->R(jdf, int(id), idf)) : 
-														imag(data->R(jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (data->F_  (ndim, data->sc, jdf, int(id), idf)) : 
+														real(data->F_  (ndim, data->sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (data->F_  (ndim, data->sc, jdf, int(id), idf)) : 
+														imag(data->F_  (ndim, data->sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (data->F_  (ndim, data->fk, jdf, int(id), idf)) : 
+														real(data->F_  (ndim, data->fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (data->F_  (ndim, data->fk, jdf, int(id), idf)) : 
+														imag(data->F_  (ndim, data->fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (data->F_  (ndim, data->ex, jdf, int(id), idf)) : 
+														real(data->F_  (ndim, data->ex, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (data->F_  (ndim, data->ex, jdf, int(id), idf)) : 
+														imag(data->F_  (ndim, data->ex, jdf, int(id), idf));
+		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (data->RAO_(ndim, data->rao,jdf, int(id), idf)) : 
+														real(data->RAO_(ndim, data->rao,jdf, int(id), idf));
+		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (data->RAO_(ndim, data->rao,jdf, int(id), idf)) : 
+														imag(data->RAO_(ndim, data->rao,jdf, int(id), idf));
 		case Hydro::PLOT_TFS_1:		return show_ma_ph ? abs (data->TFS_(ndim, int(id), idf, jdf)) : 
 														real(data->TFS_(ndim, int(id), idf, jdf));
 		case Hydro::PLOT_TFS_2:		return show_ma_ph ? arg (data->TFS_(ndim, int(id), idf, jdf)) : 
