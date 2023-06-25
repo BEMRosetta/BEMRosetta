@@ -11,7 +11,7 @@ using namespace Eigen;
 
 
 double GetKirfMaxT(const VectorXd &w) {
-    return M_PI/((w[w.size()-1] - w[0])/(w.size()-1));
+    return M_PI/((Last(w) - First(w))/(w.size()-1));
 }
 
 void GetTirf(VectorXd &Tirf, int numT, double maxT) {

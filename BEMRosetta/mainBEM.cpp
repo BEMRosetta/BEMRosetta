@@ -709,7 +709,8 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		mainTab.WhenSet();
 	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
+		if (!e.IsEmpty())
+			BEM::PrintError(DeQtfLf(e));
 		return false;
 	}
 	return true;
@@ -1462,7 +1463,7 @@ void MainBEM::AfterBEM() {
 	
 	UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 
-	Progress progress(t_("Processing loaded data..."), 14);
+	Progress progress(t_("Processing loaded data..."), 15);
 	int pos = 0;
 	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));		progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));					progress.SetPos(pos++);
@@ -1478,7 +1479,8 @@ void MainBEM::AfterBEM() {
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(Bem(), ids, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(Bem(), ids, menuPlot.head1st.GetCursor()));			progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());													progress.SetPos(pos++);
-
+	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */ids.size() > 0);	
+	
 	bool isLoadedSS = false;
 	for (int id = 0; id < Bem().hydros.size(); ++id) {
 		Hydro &data = Bem().hydros[id].hd();

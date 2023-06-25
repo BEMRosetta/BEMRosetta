@@ -375,6 +375,7 @@ bool OrcaWave::Load_YML_Res() {
 						UVector<UVector<double>> mat = fy.GetMatrixDouble();
 						
 						UArray<UArray<UArray<MatrixXcd>>> &q = diffFullQTF ? hd().qtfdif : hd().qtfsum;
+						double phmult = !diffFullQTF ? 1 : -1;		// Difference is conjugate-symmetric
 						
 						if (!hd().IsLoadedQTF(!diffFullQTF)) {		// Gets frequencies and headings
 							hd().qw.resize(hd().Nf);
@@ -427,7 +428,8 @@ bool OrcaWave::Load_YML_Res() {
 							for (int idf = 0; idf < 6; ++idf) {
 								double mag = mat[row][4+idf*2]*1000;
 								double ph  = ToRad(mat[row][4+idf*2+1]);
-								q[ib][ih][idf](ifr1, ifr2) = q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph);
+								q[ib][ih][idf](ifr1, ifr2) = std::polar<double>(mag, ph);
+								q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph*phmult);
 							}
 						}
 					}

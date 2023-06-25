@@ -1142,7 +1142,7 @@ private:
 class Nemoh : public HydroClass {
 public:
 	Nemoh(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
-	bool Load(String file, double rho = Null);
+	bool Load(String file, Function <bool(String, int)> Status, double rho = Null);
 	void Save(String file);
 	virtual ~Nemoh() noexcept {}
 	
@@ -1177,6 +1177,8 @@ private:
 	bool Load_IRF(String fileName);
 	bool Load_Inertia(String subfolder);
 	bool Load_LinearDamping(String subfolder);
+	bool Load_QTF(String subfolder, Function <bool(String, int)> Status);
+	bool Load_12(String fileName, bool isSum, Function <bool(String, int)> Status);
 };
 
 class Aqwa : public HydroClass {

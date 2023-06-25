@@ -988,7 +988,11 @@ bool Wamit::Load_pot(String fileName) {
  		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), /*hd().*/Nf));
  	
  	if (/*hd().*/Nf != 0) {
-	 	f.GetLine();
+ 		int nf = Nf;
+ 		while (nf > 0 && !f.IsEof()) {
+	 		f.GetLine();
+	 		nf -= f.GetCount();
+ 		}
 	 	/*
 	 	if (hd().Nf > 0) {
 	 		hd().T.SetCount(hd().Nf);

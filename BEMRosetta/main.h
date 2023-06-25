@@ -1011,7 +1011,10 @@ public:
 	
 	void Init();
 	
-	void Load()				{WhenSelArrayCases();}
+	bool Load()	{
+		WhenSelArrayCases();
+		return true;
+	}
 	void WhenSelArrayModel(int id, BEM &bem);
 	void WhenSelArrayCases();
 	void WhenArrayCases();

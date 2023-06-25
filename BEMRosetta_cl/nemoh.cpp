@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 #include <STEM4U/Utility.h>
 
-bool Nemoh::Load(String file, double) {
+bool Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 	try {
 		String ext = GetFileExt(file); 
 
@@ -87,6 +87,7 @@ bool Nemoh::Load(String file, double) {
 		if (dcase.solver == BEMCase::NEMOHv3) {
 			Load_Inertia("mechanics");
 			Load_LinearDamping("mechanics");
+			Load_QTF(AppendFileNameX("results", "qtf"), Status);
 		}
 		
 		UVector<int> idsRemove;
@@ -96,7 +97,6 @@ bool Nemoh::Load(String file, double) {
 				idsRemove << ih;
 		}
 		hd().DeleteHeadings(idsRemove);
-				
 		
 		if (hd().code == Hydro::NEMOH) {
 			if (!hd().dof.IsEmpty()) {
@@ -985,8 +985,120 @@ bool Nemoh::Load_LinearDamping(String subfolder) {
 	    hd().Dlin.block<6,6>(ib*6, ib*6) = m;	        
 	}
 	return true;
-}	
+}
+
+bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> Status) {
+	hd().dimen = true;
+	if (IsNull(hd().len))
+		hd().len = 1;
 	
+	String ext    = isSum ? "summation" : "difference";
+	double phmult = isSum ? 1 : -1;		// Difference is conjugate-symmetric
+	
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	Status(Format("Loading %s base data", ext), 0);
+	
+	LineParser f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	FileInLine::Pos fpos = in.GetPos();
+	f.GetLine();		
+	if (!IsNull(f.GetDouble_nothrow(0)))
+		in.SeekPos(fpos);		// No header, rewind
+	else
+		fpos = in.GetPos();		// Avoid header
+	
+	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd().qtfsum : hd().qtfdif;		
+	
+	qtf.Clear();
+	
+	UVector<double> w;
+    UArray<std::complex<double>> head;
+	
+	int Nb = 0;
+	int nline = 0;
+	while (!in.IsEof()) {
+		f.GetLine();
+		nline++;
+		double freq = f.GetDouble(0);
+		FindAdd(w, freq);
+		double freq2 = f.GetDouble(1);
+		FindAdd(w, freq2);
+		double hd1 = f.GetDouble(2);
+		double hd2 = f.GetDouble(3);
+		FindAdd(head, std::complex<double>(hd1, hd2));	
+		Nb = max(Nb, 1 + (f.GetInt(4)-1)/6);
+	}
+	if (IsNull(hd().Nb))
+		hd().Nb = Nb;
+	else {
+		if (hd().Nb < Nb)
+			throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+	}
+	
+	if (hd().names.IsEmpty())
+		hd().names.SetCount(hd().Nb);
+		
+	int Nf = w.size();
+	int Nh = head.size();
+	if (Nh == 0)
+		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
+	
+	Hydro::Initialize_QTF(qtf, Nb, Nh, Nf);
+	
+	Status(Format("Loading %s data", ext), 20);
+	
+	in.SeekPos(fpos);
+	int iline = 0;
+	while (!in.IsEof()) {
+		f.GetLine();
+		iline++;
+		
+		if (Status && !(iline%(nline/10)) && !Status(Format("Loading %s", ext), 20 + (80*iline)/nline))
+			throw Exc(t_("Stop by user"));
+
+		int ifr1 = Find(w, f.GetDouble(0));
+		int ifr2 = Find(w, f.GetDouble(1));
+		int ih = Find(head, std::complex<double>(f.GetDouble(2), f.GetDouble(3)));
+		int idf = f.GetInt(4)-1;
+		int ib = int(idf/6);
+		idf -= 6*ib;
+		double ma = f.GetDouble(5)*hd().rho*hd().g;
+		double ph = -ToRad(f.GetDouble(6));			//-Phase to follow Wamit
+		qtf[ib][ih][idf](ifr1, ifr2) = std::polar(ma, ph);
+		qtf[ib][ih][idf](ifr2, ifr1) = std::polar(ma, ph*phmult);
+	}
+	
+	Copy(w, hd().qw);
+	Copy(head, hd().qh);
+	
+	hd().qtfdataFromW = !(w[0] > w[1]);
+	
+	if (!hd().qtfdataFromW) 
+		for (int i = 0; i < hd().qw.size(); ++i)
+   			hd().qw(i) = 2*M_PI/hd().qw(i);
+	
+	for (int i = 0; i < hd().qh.size(); ++i)
+   		hd().qh(i) = std::complex<double>(hd().qh(i).real(), hd().qh(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+	
+	return true;
+}	
+
+bool Nemoh::Load_QTF(String subfolder, Function <bool(String, int)> Status) {
+	String file;
+	
+	file = AppendFileNameX(folder, subfolder, "OUT_QTFM_N.dat");
+	if (!Load_12(file, false, Status))
+		return false;
+	file = AppendFileNameX(folder, subfolder, "OUT_QTFP_N.dat");
+	if (!Load_12(file, true, Status))
+		return false;
+	
+	return true;
+}
 	
 bool Nemoh::Load_6x6(Eigen::MatrixXd &C, String file) {
     FileInLine in(file);
