@@ -94,7 +94,7 @@ void MenuFOAMM::Init(MainBEM &mainBEM, MainSetupFOAMM &_setup) {
 	};
 	
 	foammLogo.Set(Img2::FOAMM());
-	foammLogo.SetHyperlink("http://www.eeng.nuim.ie/coer/downloads/");
+	foammLogo.SetHyperlink("https://coer.maynoothuniversity.ie/downloads/");
 	foammWorking.LoadBuffer(String(animatedStar, animatedStar_length));
 	foammWorking.Hide();
 	status.Hide();

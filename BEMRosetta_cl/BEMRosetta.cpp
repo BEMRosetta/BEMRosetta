@@ -1636,38 +1636,38 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".cal" || ext == ".tec") {
 		Nemoh &data = hydros.Create<Nemoh>(*this);
-		if (!data.Load(file)) {
+		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".inf") {
 		Nemoh &data = hydros.Create<Nemoh>(*this);
-		if (!data.Load(file)) {
+		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".out") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));
 		}
 	} else if (ext == ".in") {
 		HAMS &data = hydros.Create<HAMS>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));
 		}
 	} else if (ext == ".dat" || ext == ".fst") {
 		Fast &data = hydros.Create<Fast>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
 			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot") {
@@ -1675,42 +1675,42 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));		
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") {
 		Aqwa &data = hydros.Create<Aqwa>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".hdb") {
 		Diodore &data = hydros.Create<Diodore>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".yml") {
 		OrcaWave &data = hydros.Create<OrcaWave>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".mat") {
 		Foamm &data = hydros.Create<Foamm>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".bem") {
 		HydroClass &data = hydros.Create<HydroClass>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else 
 		throw Exc(Format(t_("Unknown BEM file extension in '%s'"), file));
