@@ -136,23 +136,23 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 	output.ptfmCdFx	= AddVar("ptfmCdFx", "N");
 	output.ptfmCdFy = AddVar("ptfmCdFy", "N");
 	output.ptfmCdFz = AddVar("ptfmCdFz", "N");
-	output.ptfmCdMx = AddVar("ptfmCdMx", "N-m");
-	output.ptfmCdMy = AddVar("ptfmCdMy", "N-m");
-	output.ptfmCdMz = AddVar("ptfmCdMz", "N-m");
+	output.ptfmCdMx = AddVar("ptfmCdMx", "Nm");
+	output.ptfmCdMy = AddVar("ptfmCdMy", "Nm");
+	output.ptfmCdMz = AddVar("ptfmCdMz", "Nm");
 	
 	output.ptfmCd2Fx = AddVar("ptfmCd2Fx", "N");
 	output.ptfmCd2Fy = AddVar("ptfmCd2Fy", "N");
 	output.ptfmCd2Fz = AddVar("ptfmCd2Fz", "N");
-	output.ptfmCd2Mx = AddVar("ptfmCd2Mx", "N-m");
-	output.ptfmCd2My = AddVar("ptfmCd2My", "N-m");
-	output.ptfmCd2Mz = AddVar("ptfmCd2Mz", "N-m");
+	output.ptfmCd2Mx = AddVar("ptfmCd2Mx", "Nm");
+	output.ptfmCd2My = AddVar("ptfmCd2My", "Nm");
+	output.ptfmCd2Mz = AddVar("ptfmCd2Mz", "Nm");
 	
 	output.ptfmStiffFx = AddVar("ptfmStiffFx", "N");
 	output.ptfmStiffFy = AddVar("ptfmStiffFy", "N");
 	output.ptfmStiffFz = AddVar("ptfmStiffFz", "N");
-	output.ptfmStiffMx = AddVar("ptfmStiffMx", "N-m");
-	output.ptfmStiffMy = AddVar("ptfmStiffMy", "N-m");
-	output.ptfmStiffMz = AddVar("ptfmStiffMz", "N-m");
+	output.ptfmStiffMx = AddVar("ptfmStiffMx", "Nm");
+	output.ptfmStiffMy = AddVar("ptfmStiffMy", "Nm");
+	output.ptfmStiffMz = AddVar("ptfmStiffMz", "Nm");
 	
 	output.ptfmCBx = AddVar("ptfmCBx", "m");
 	output.ptfmCBy = AddVar("ptfmCBy", "m");

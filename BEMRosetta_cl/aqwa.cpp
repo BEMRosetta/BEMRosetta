@@ -10,6 +10,8 @@ const char *textDOF[] = {"X", "Y", "Z", "RX", "RY", "RZ"};
 bool Aqwa::Load(String file, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(file);
+	if (ToLower(hd().name) == "analysis")
+		hd().name = GetFileTitle(GetFileFolder(file));	// The folder names the model
 	hd().dimen = true;
 	hd().len = 1;
 	hd().code = Hydro::AQWA;

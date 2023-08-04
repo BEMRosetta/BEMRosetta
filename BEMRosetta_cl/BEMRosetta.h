@@ -29,7 +29,7 @@ public:
 	
 	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    UNKNOWN};
 	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   false,		true,			   false,	   true, 	   true, 		 true};       
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,		true,			   false,	   true, 	   true, 		 true};       
 	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.*"};       
 	
 	static void ResetIdCount()		{idCount = 0;}
@@ -134,6 +134,7 @@ public:
     MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 
 	MatrixXd Dlin;					// (6*Nb, 6*Nb) 	Additional linear damping	ALWAYS DIMENSIONAL
+	MatrixXd Dquad;					// (6*Nb, 6*Nb) 	Additional quadratic damping	ALWAYS DIMENSIONAL
 
     UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     UVector<double> head;			// [Nh]             Wave headings (deg)
@@ -220,7 +221,6 @@ public:
     UArray<UArray<StateSpace>> sts;			// (6*Nb, 6*Nb)		State space data
     int dimenSTS;							// false if data is dimensionless
     String stsProcessor;
-    
     
     VectorXd  qw;		 							 // [Nf]             Wave frequencies
     VectorXcd qh;									 // [Nh]             Wave headings
@@ -391,6 +391,14 @@ public:
 	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? C[ib](idf, jdf)  : C[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
+	double CMoor_dim(int ib, int idf, int jdf)     const {return dimen  ? Cmoor[ib](idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : Cmoor[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	MatrixXd CMoor_(bool ndim, int ib) 			   const;
+	void CMoor_dim();	
+	double CMoor_ndim(int ib, int idf, int jdf)    const {return !dimen ? Cmoor[ib](idf, jdf)  : Cmoor[ib](idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
+	double CMoor_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CMoor_ndim(ib, idf, jdf) : CMoor_dim(ib, idf, jdf);}
+
+	// MD
+	
 	double Md_dim(int idf, int ih, int ifr)  const {
 		int ib = int(idf/6);
 		idf -= 6*ib;
@@ -401,8 +409,13 @@ public:
 		return !dimen ? md[ib][ih][idf](ifr) : md[ib][ih][idf](ifr)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double Md_(bool ndim, int idf, int ih, int ifr) const {return ndim ? Md_ndim(idf, ih, ifr) : Md_dim(idf, ih, ifr);}	// idf: body, jdf: heading, [Nb][Nh][6](Nf)
 	
-	MatrixXd Dlin_dim(int ib) const;
+	VectorXd Md_dof(bool ndim, int _h, int idf) const;
 	
+	MatrixXd Dlin_dim(int ib) const;
+	MatrixXd Dquad_dim(int ib) const;
+	
+	MatrixXcd QTF_dof(bool ndim, bool isSum, int _h, int idf, int ib) const;
+		
 	// F
 		
 	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
@@ -446,7 +459,9 @@ public:
 	}
 	
 	template <class T>
-	T RAO_dim(T f, int idf) 	const {return (g_rho_ndim()/g_rho_dim())*(dimen  ? f : f/pow(len, GetK_RAO(idf)));}
+	T RAO_dim(T f, int idf) 	const {
+		return (g_rho_ndim()/g_rho_dim())*(dimen  ? f : f/pow(len, GetK_RAO(idf)));
+	}
 	template <class T>
 	T RAO_ndim(T f, int idf) 	const {return (g_rho_ndim()/g_rho_dim())*(!dimen ? f : f*pow(len, GetK_RAO(idf)));}
 	template <class T>
@@ -454,6 +469,7 @@ public:
 
 	VectorXcd RAO_(bool ndim, const RAO &f, int _h, int ifr) const;
 	VectorXcd RAO_dof(bool ndim, const RAO &f, int _h, int idf) const;
+	VectorXcd RAO_dof(bool ndim, int _h, int idf) const;
 	
 	// FOAMM
 	
@@ -501,7 +517,7 @@ public:
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
 				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD};
-	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M};
+	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_K2, MAT_DAMP_QUAD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
 		return strDataToPlot[dataToPlot];
@@ -514,8 +530,10 @@ public:
 	bool IsLoadedAinf  (int i = 0, int j = 0)const {return Ainf.rows() > i && Ainf.cols() > j && IsNum(Ainf(i, j));}
 	bool IsLoadedA0	   (int i = 0, int j = 0)const {return A0.rows() > i && A0.cols() > j && IsNum(A0(i, j));}
 	bool IsLoadedDlin()  			 		 const {return Dlin.size() > 0;}
+	bool IsLoadedDquad()  			 		 const {return Dquad.size() > 0;}
 	bool IsLoadedB	   (int i = 0, int j = 0)const {return B.size() > i && B[i].size() > j && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
 	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return C.size() > ib && C[ib].rows() > idf && C[ib].cols() > jdf && IsNum(C[ib](idf, jdf));}
+	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return Cmoor.size()> ib && Cmoor[ib].rows()> idf &&Cmoor[ib].cols() > jdf && IsNum(Cmoor[ib](idf,jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return M.size() > ib && M[ib].rows() > idf && M[ib].cols() > jdf && IsNum(M[ib](idf, jdf));}
 	
 	bool IsLoadedFex(int idf = 0, int ih = 0)const {return IsLoadedForce(ex, idf, ih);}
@@ -597,12 +615,12 @@ public:
 	static String K_units(bool ndim, int r, int c) {
 		if (ndim) {
 			if (r < 3 && c < 3)
-				return "m^2";
+				return "m²";
 			if (r < 3)
-				return "m^3/rad";
+				return "m³/rad";
 			if (c < 3)
-				return "m^3";
-			return "m^4/rad";			
+				return "m³";
+			return "m⁴/rad";			
 		} else {
 			if (r < 3 && c < 3)
 				return "N/m";
@@ -610,7 +628,7 @@ public:
 				return "N/rad";
 			if (c < 3)
 				return "N";
-			return "N-m/rad";
+			return "Nm/rad";
 		}
 	}
 	static String Kirf_units(bool ndim, int r, int c) {
@@ -619,39 +637,58 @@ public:
 	static String B_units(bool ndim, int r, int c) {
 		if (ndim) {
 			if (r < 3 && c < 3)
-				return "m^3-rad/s";
+				return "m³-rad/s";
 			if (r < 3)
-				return "m^4/s";
+				return "m⁴/s";
 			if (c < 3)
-				return "m^4/s/rad";
-			return "m^5/s";
+				return "m⁴/s/rad";
+			return "m⁵/s";
 		} else {
 			if (r < 3 && c < 3)
 				return "N/(m/s)";
 			if (r < 3)
 				return "N/(rad/s)";
 			if (c < 3)
-				return "N-s";
-			return "N-m/(rad/s)";
+				return "N s";
+			return "N m/(rad/s)";
+		}
+	}
+	static String D2_units(bool ndim, int r, int c) {
+		if (ndim) {
+			if (r < 3 && c < 3)
+				return "";
+			if (r < 3)
+				return "";
+			if (c < 3)
+				return "";
+			return "";
+		} else {
+			if (r < 3 && c < 3)
+				return "";
+			if (r < 3)
+				return "";
+			if (c < 3)
+				return "";
+			return "";
 		}
 	}
 	static String A_units(bool ndim, int r, int c) {
 		if (ndim) {
 			if (r < 3 && c < 3)
-				return "m^3";
+				return "m³";
 			if (r < 3)
-				return "m^4/rad";
+				return "m⁴/rad";
 			if (c < 3)
-				return "m^4";
-			return "m^5/rad";			
+				return "m⁴";
+			return "m⁵/rad";			
 		} else {
 			if (r < 3 && c < 3)
 				return "kg";
 			if (r < 3)
-				return "kg-m/rad";
+				return "kg m/rad";
 			if (c < 3)
-				return "kg-m";
-			return "kg-m^2/rad";
+				return "kg m";
+			return "kg m²/rad";
 		}
 	}
 	static String M_units(int r, int c) {
@@ -663,12 +700,12 @@ public:
 	static String F_units(bool ndim, int r) {
 		if (ndim) {
 			if (r < 3)
-				return "m^2";
-			return "m^3";
+				return "m²";
+			return "m³";
 		} else {
 			if (r < 3)
 				return "N/m";
-			return "N-m/m";
+			return "Nm/m";
 		}
 	}
 	static String RAO_units(int r) {
@@ -684,7 +721,7 @@ public:
 		} else {
 			if (r < 3)
 				return t_("N/m2");
-			return t_("N-m/m2");
+			return t_("Nm/m2");
 		}
 	} 
 };
@@ -724,6 +761,8 @@ public:
 	bool Save(String file);
 	bool SaveCSVMat(String file);
 	bool SaveCSVTable(String file);
+	
+	bool SaveDiodoreHDB(String file);
 	
 	HydroData hd;	
 
@@ -1272,6 +1311,7 @@ public:
 	static const char *strHeadingType[];
 	
 	int calcAinf = false, calcAinf_w = false;
+	int legend_w_units = true, legend_w_solver = true;
 	double maxTimeA = Null;
 	int numValsA = Null;
 	int onlyDiagonal;
@@ -1383,6 +1423,8 @@ public:
 			("dofType", idofType)
 			("headingType", iheadingType)
 			("csvSeparator", csvSeparator)
+			("legend_w_units", legend_w_units)
+			("legend_w_solver", legend_w_solver)
 		;
 		if (json.IsLoading()) {
 			dofType = BEM::DOFType(idofType);
@@ -1499,7 +1541,8 @@ public:
 		return -1;
 	}
 	static const char *strDOFtext[];
-
+	static const char *strDOFnum_sub[];
+	
 private:
 	static const char *strDOFnum[];
 	static const char *strDOFxyz[];

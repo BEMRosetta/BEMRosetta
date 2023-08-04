@@ -332,6 +332,8 @@ void MainBEM::Init() {
 			plot = convertProcess = false;
 		else if (mainTab.IsAt(mainMatrixK)) 
 			mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim);
+		else if (mainTab.IsAt(mainMatrixK2)) 
+			mainMatrixK2.Load(Bem().hydros, ids, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixA))
 			mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixM)) {
@@ -340,6 +342,9 @@ void MainBEM::Init() {
 		} else if (mainTab.IsAt(mainMatrixDlin)) {
 			plot = false;
 			mainMatrixDlin.Load(Bem().hydros, ids, false);
+		} else if (mainTab.IsAt(mainMatrixDquad)) {
+			plot = false;
+			mainMatrixDquad.Load(Bem().hydros, ids, false);
 		} else if (mainTab.IsAt(mainA))
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
@@ -435,7 +440,7 @@ void MainBEM::Init() {
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 	
 	mainMatrixK.Init(Hydro::MAT_K);
-	mainTab.Add(mainMatrixK.SizePos(), t_("K")).Disable();
+	mainTab.Add(mainMatrixK.SizePos(), t_("StiffHydr")).Disable();
 		
 	mainA.Init(Hydro::DATA_A);
 	mainTab.Add(mainA.SizePos(), t_("A")).Disable();
@@ -444,7 +449,7 @@ void MainBEM::Init() {
 	mainTab.Add(mainB.SizePos(), t_("B")).Disable();
 	
 	mainK.Init(Hydro::DATA_K);
-	mainTab.Add(mainK.SizePos(), t_("Kirf")).Disable();
+	mainTab.Add(mainK.SizePos(), t_("IRF")).Disable();
 	
 	mainForceEX.Init(Hydro::DATA_FORCE_EX);
 	mainTab.Add(mainForceEX.SizePos(), t_("Fex")).Disable();
@@ -468,7 +473,13 @@ void MainBEM::Init() {
 	mainTab.Add(mainMatrixM.SizePos(), t_("M")).Disable();
 	
 	mainMatrixDlin.Init(Hydro::MAT_DAMP_LIN);
-	mainTab.Add(mainMatrixDlin.SizePos(), t_("Lin. Damp.")).Disable();
+	mainTab.Add(mainMatrixDlin.SizePos(), t_("DampLin")).Disable();
+	
+	mainMatrixDquad.Init(Hydro::MAT_DAMP_QUAD);
+	mainTab.Add(mainMatrixDquad.SizePos(), t_("DampQuad")).Disable();
+
+	mainMatrixK2.Init(Hydro::MAT_K2);
+	mainTab.Add(mainMatrixK2.SizePos(), t_("StiffMoor")).Disable();
 	
 	mainMD.Init(Hydro::DATA_MD);
 	mainTab.Add(mainMD.SizePos(), t_("Mean Drift")).Disable();
@@ -501,8 +512,8 @@ void MainBEM::ShowMenuPlotItems() {
 	} else if (mainTab.IsAt(mainForceSC) || mainTab.IsAt(mainForceFK) || mainTab.IsAt(mainForceEX) || 
 			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace)) {
 		showComplex = true;
-		if (mainTab.IsAt(mainRAO))
-			showDim = false;
+		//if (mainTab.IsAt(mainRAO))
+		//	showDim = false;
 	}
 		
 	menuPlot.showNdim.Enable(showDim);
@@ -562,12 +573,16 @@ void MainBEM::LoadSelTab(BEM &bem) {
 		mainStateSpace.Load(bem, ids);
 	else if (id == mainTab.Find(mainMatrixK))
 		mainMatrixK.Load(bem.hydros, ids, ~menuPlot.showNdim);
+	else if (id == mainTab.Find(mainMatrixK2))
+		mainMatrixK2.Load(bem.hydros, ids, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixA))
 		mainMatrixA.Load(bem.hydros, ids, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixM))
 		mainMatrixM.Load(bem.hydros, ids, false);
 	else if (id == mainTab.Find(mainMatrixDlin))
 		mainMatrixDlin.Load(bem.hydros, ids, false);
+	else if (id == mainTab.Find(mainMatrixDquad))
+		mainMatrixDquad.Load(bem.hydros, ids, false);
 	else if (id == mainTab.Find(mainSummary))
 		;
 	else if (id == mainTab.Find(mainSetupFOAMM))
@@ -1463,12 +1478,14 @@ void MainBEM::AfterBEM() {
 	
 	UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 
-	Progress progress(t_("Processing loaded data..."), 15);
+	Progress progress(t_("Processing loaded data..."), 16);
 	int pos = 0;
 	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));		progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));					progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, ids, ~menuPlot.showNdim));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixK2)).Enable(mainMatrixK2.Load(Bem().hydros, ids, ~menuPlot.showNdim));	progress.SetPos(pos++);	
 	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, ids, false));			progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixDquad)).Enable(mainMatrixDquad.Load(Bem().hydros, ids, false));			progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));											progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));									progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));											progress.SetPos(pos++);
@@ -1664,8 +1681,10 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_maxFreq", menuProcess.maxFreq)
 		("opHaskind", menuAdvanced.opHaskind)
 		("mainStiffness", mainMatrixK)
+		("mainStiffness2", mainMatrixK2)
 		("mainMatrixA", mainMatrixA)
 		("mainMatrixDlin", mainMatrixDlin)
+		("mainMatrixDquad", mainMatrixDquad)
 		("mainMatrixM", mainMatrixM)
 	;
 }
@@ -1860,13 +1879,15 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("A∞ available"));		array.Set(row++, col, data.IsLoadedAinf() ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("A available"));		array.Set(row++, col, data.IsLoadedA() 	  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("B available"));		array.Set(row++, col, data.IsLoadedB() 	  ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("K available"));		array.Set(row++, col, data.IsLoadedC() 	  ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Hydro stiff available"));		array.Set(row++, col, data.IsLoadedC() 	  ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Moor stiff available"));		array.Set(row++, col, data.IsLoadedCMoor()? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Inertia available"));	array.Set(row++, col, data.IsLoadedM() 	  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fex available"));		array.Set(row++, col, data.IsLoadedFex()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Fsc available"));		array.Set(row++, col, data.IsLoadedFsc()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Ffk available"));		array.Set(row++, col, data.IsLoadedFfk()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("RAO available"));		array.Set(row++, col, data.IsLoadedRAO()  ? t_("Yes") : t_("No"));
-	array.Set(row, 0, t_("Linear damping available"));	array.Set(row++, col, data.IsLoadedDlin()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Linear damping available"));		array.Set(row++, col, data.IsLoadedDlin()   ? t_("Yes") : t_("No"));
+	array.Set(row, 0, t_("Quadratic damping available"));	array.Set(row++, col, data.IsLoadedDquad()  ? t_("Yes") : t_("No"));
 	array.Set(row, 0, t_("Mean Drift available"));		array.Set(row++, col, data.IsLoadedMD() 	? t_("Yes") : t_("No"));
 	
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, data.Nb);
@@ -1918,7 +1939,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		else
 			array.Set(row++, col, "-");
 		
-		array.Set(row, 0, sib + " " + t_("Waterplane area [m2]"));
+		array.Set(row, 0, sib + " " + t_("Waterplane area [m²]"));
 		if (data.C.size() > ib && data.C[ib].size() > 0) {
 			double wPlaneArea = data.C_dim(ib, 2, 2);
 			array.Set(row++, col, FDS(wPlaneArea, 10, false));		
