@@ -51,6 +51,7 @@ file
 	main_cl.rc,
 	heal.cpp,
 	heal.h,
+	orca.cpp,
 	orca.h,
 	functions.cpp,
 	functions.h,

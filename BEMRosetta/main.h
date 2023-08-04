@@ -740,7 +740,7 @@ private:
 	MainViewData mainViewData;
 	SplitterButton splitterAll, splitterVideo;
 	MainSummaryMesh mainSummary;
-	MainMatrixKA mainStiffness;
+	MainMatrixKA mainStiffness, mainStiffness2;
 	MainGZ mainGZ;
 
 	UArray<Option> optionsPlot;
@@ -1203,9 +1203,9 @@ public:
 	MainABForce mainMD;
 	MainRAO mainRAO;
 	MainStateSpace mainStateSpace;
-	MainMatrixKA mainMatrixK;
+	MainMatrixKA mainMatrixK, mainMatrixK2;
 	MainMatrixKA mainMatrixA;
-	MainMatrixKA mainMatrixDlin;
+	MainMatrixKA mainMatrixDlin, mainMatrixDquad;
 	MainMatrixKA mainMatrixM;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;

@@ -385,7 +385,7 @@ private:
 	struct TwrBsBendParam : CalcParam {
 		TwrBsBendParam() {
 			name = "TwrBsBend";
-			units = "kN-m";
+			units = "kNm";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("TwrBsMxt");
@@ -429,7 +429,7 @@ private:
 	struct YawBrBendParam : CalcParam {
 		YawBrBendParam() {
 			name = "YawBrBend";
-			units = "kN-m";
+			units = "kNm";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("YawBrMxp");
@@ -470,7 +470,7 @@ private:
 	struct RootBend1Param : CalcParam {
 		RootBend1Param() {
 			name = "RootBend1";
-			units = "kN-m";
+			units = "kNm";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("RootMxc1");
@@ -508,7 +508,7 @@ private:
 	struct RootBend2Param : CalcParam {
 		RootBend2Param() {
 			name = "RootBend2";
-			units = "kN-m";
+			units = "kNm";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("RootMxc2");
@@ -546,7 +546,7 @@ private:
 	struct RootBend3Param : CalcParam {
 		RootBend3Param() {
 			name = "RootBend3";
-			units = "kN-m";
+			units = "kNm";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("RootMxc3");
@@ -565,7 +565,7 @@ private:
 	struct NcIMUTAParam : CalcParam {
 		NcIMUTAParam() {
 			name = "NcIMUTA";
-			units = "m/s^2";
+			units = "m/s²";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("NcIMUTAxs");

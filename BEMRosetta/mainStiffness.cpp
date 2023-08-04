@@ -86,7 +86,7 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 		
 		for (int nmat = 0; nmat < Nb; ++nmat) {
 			for (int i = 0; i < 2; ++i) 
-				array.AddColumn("", what == Hydro::MAT_K ? max(20, len) : max(70, len));	
+				array.AddColumn("", (what == Hydro::MAT_K || what == Hydro::MAT_K2) ? max(20, len) : max(70, len));	
 			for (int i = 2; i < 6; ++i)
 				array.AddColumn("", max(70, len));
 			if (Nb > 1 && nmat < Nb-1) 
@@ -138,7 +138,7 @@ void MainMatrixKA::PrintData() {
 					for (int c = 0; c < data[i].cols(); ++c) {
 						String sdata;
 						if (~opUnits) {
-							if (what == Hydro::MAT_K)
+							if (what == Hydro::MAT_K || what == Hydro::MAT_K2)
 								sdata = Hydro::K_units(Ndim, r, c);
 							else if (what == Hydro::MAT_A) 
 								sdata = Hydro::A_units(Ndim, r, c);
@@ -146,6 +146,8 @@ void MainMatrixKA::PrintData() {
 								sdata = Hydro::M_units(r, c);
 							else if (what == Hydro::MAT_DAMP_LIN)
 								sdata = Hydro::B_units(Ndim, r, c);
+							else if (what == Hydro::MAT_DAMP_QUAD)
+								sdata = Hydro::D2_units(Ndim, r, c);
 						} else {
 							double val = data[i](r, c);
 							if (!IsNum(val)) 
@@ -257,6 +259,13 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 			data << hydro.C_(ndim, ib);
 		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
+	} else if (what == Hydro::MAT_K2) {
+		if (!hydro.IsLoadedCMoor())
+			data << EigenNull;
+		else
+			data << hydro.CMoor_(ndim, ib);
+		label.SetText(Format(t_("Mooring Stiffness Matrices (%s)"),
+						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
 		if (!hydro.IsLoadedAinf())
 			data << EigenNull;
@@ -287,6 +296,12 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		else
 			data << hydro.Dlin_dim(ib);
 		label.SetText(t_("Additional linear damping (dimensional)"));
+	} else if (what == Hydro::MAT_DAMP_QUAD) {
+		if (!hydro.IsLoadedDquad())
+			data << EigenNull;
+		else
+			data << hydro.Dquad_dim(ib);
+		label.SetText(t_("Additional quadratic damping (dimensional)"));
 	} else
 		NEVER();
 

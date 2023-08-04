@@ -344,6 +344,8 @@ void MenuOptions::Load() {
 	volWarning <<= bem->volWarning;
 	volError <<= bem->volError;
 	csvSeparator <<= bem->csvSeparator;
+	legend_w_units <<= bem->legend_w_units;
+	legend_w_solver <<= bem->legend_w_solver;
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -385,6 +387,8 @@ void MenuOptions::OnSave() {
 		bem->volError = ~volError;
 		bem->csvSeparator = ~csvSeparator;
 		ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
+		bem->legend_w_units = ~legend_w_units;
+		bem->legend_w_solver = ~legend_w_solver;
 		
 		bem->dofType = BEM::DOFType(dofType.GetIndex());
 		bem->headingType = BEM::HeadingType(headingType.GetIndex());
@@ -442,7 +446,11 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->csvSeparator != ~csvSeparator)
 		return true;
-			
+	if (bem->legend_w_solver != ~legend_w_solver)
+		return true;
+	if (bem->legend_w_units != ~legend_w_units)
+		return true;
+				
 	return false;
 }
 
