@@ -167,9 +167,18 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
-	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads");
+	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads for OrcaWave");
+	Cout() << "\n" << t_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results in <to>");
+	Cout() << "\n" << t_("-ls -loadSim <sim>       		  # Load OrcaFlex simulation in <sim>");
+	Cout() << "\n" << t_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference system for outputs");
+	Cout() << "\n" << t_("-c  -convert <file> <params>    # Export the selected params of the actual model to output file (csv)");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
 	Cout() << "\n" << t_("              numthread         # Number of threads");
+	Cout() << "\n" << t_("     <params> list              # Parameter names");
+	Cout() << "\n" << t_("              <param> data      # <param> data series");
+	Cout() << "\n" << t_("              <param> avg       # <param> avg");
+	Cout() << "\n" << t_("              <param> max       # <param> max");
+	Cout() << "\n" << t_("              <param> min       # <param> min");	
 	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located. Use only if automatic detection doesn't work");		
 #endif
 	Cout() << "\n";
@@ -186,6 +195,11 @@ Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int pe
 		BEM::Print("\nCompleted 0%"); 
 	else
 		BEM::Print(Format("\nCompleted %d%%. Et: %", perc, et)); 
+	return 0;
+};
+
+Function<bool(String)> Orca::WhenPrint = [](String str)->bool {
+	BEM::Print(Format("\n%s", str)); 
 	return 0;
 };
 
@@ -741,7 +755,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							String file = command[i];
 							
 							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
-								BEM::Print("\n" + Format(t_("Model saved as '%s'"), file));
+								BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
 						} else if (param == "-p" || param == "-print") {
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
@@ -805,6 +819,38 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							orca.SaveWaveResults(to);							
 							
 							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+						} else if (param == "-rf" || param == "-runflex") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+									
+							CheckIfAvailableArg(command, ++i, "-runflex from");
+							String from = command[i];
+							CheckIfAvailableArg(command, ++i, "-runflex to");
+							String to = command[i];
+							
+							orca.LoadFlex(from);
+							orca.RunFlex();
+							orca.SaveFlexSim(to);							
+							
+							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+						} else if (param == "-ls" || param == "-loadSim") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+									
+							CheckIfAvailableArg(command, ++i, "-loadSim sim");
+							String sim = command[i];
+							
+							orca.LoadFlexSim(sim);
+							
+							BEM::Print("\n" + Format(t_("Simulation '%s' loaded"), sim));
 						} else if (param == "-numthread") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -821,6 +867,34 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							orca.SetThreadCount(numth);
 							
 							BEM::Print("\n" + Format(t_("Thread number set to %d"), numth));
+						} else if (param == "-c" || param == "-convert") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+							
+							CheckIfAvailableArg(command, ++i, "-convert");
+							
+							String file = command[i];
+							
+							UVector<String> paramList;
+							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
+								i++;
+								paramList << command[i];
+							}
+							orca.SaveCsv(file, paramList, ScatterDraw::GetDefaultCSVSeparator());
+							BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
+						} else if (param == "-rs" || param == "-refsystem") {	
+							Point3D centre;
+							CheckIfAvailableArg(command, ++i, "Reference cx");
+							centre.x = ScanDouble(command[i]);
+							CheckIfAvailableArg(command, ++i, "Reference cy");
+							centre.y = ScanDouble(command[i]);
+							CheckIfAvailableArg(command, ++i, "Reference cz");
+							centre.z = ScanDouble(command[i]);
+							orca.SetCentre(centre);
 						} else if (param == "-p" || param == "-print") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -832,11 +906,47 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								i++;
 								String param = ToLower(command[i]);
-								if (param == "numthread") {
+								if (param == "list") {
+									Cout() << "\n";
+									UVector<String> list = orca.GetFlexSimVariablesList();
+									BEM::Print(Format(t_("List of parameters (%d):"), list.size()) + S(" ")); 
+									lastPrint = "";
+									for (int i = 0; i < list.size(); ++i) {
+										if (i > 0)
+											lastPrint << ", ";
+										lastPrint << list[i];
+									}
+									Cout() << lastPrint;
+								} else if (param == "numthread") {
 									int numth = orca.GetThreadCount();
 									BEM::Print("\n" + Format("%d", numth));
-								} else
-									throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
+								} else {
+									Cout() << "\n";
+
+									String unit;
+									VectorXd d;
+									orca.GetFlexSimVar(command[i], unit, d);
+									
+									i++;
+									if (command.size() <= i)
+										throw Exc(Format(t_("Last command '%s' is not complete"), param));
+									if (command[i] == "data") {
+										lastPrint = "";
+										for (int i = 0; i < d.size(); ++i) {
+											if (i > 0)
+												lastPrint << " ";
+											lastPrint << d[i];
+										}
+									} else if (command[i] == "avg" || command[i] == "mean") 
+										lastPrint = FormatDouble(d.mean());
+									else if (command[i] == "max") 
+										lastPrint = FormatDouble(d.maxCoeff());
+									else if (command[i] == "min") 
+										lastPrint = FormatDouble(d.minCoeff());
+									else  
+										throw Exc(Format(t_("Parameter '%s' not found"), command[i]));
+									Cout() << lastPrint;
+								}
 							}
 						} else if (param == "-dll") {
 							CheckIfAvailableArg(command, ++i, "-dll");

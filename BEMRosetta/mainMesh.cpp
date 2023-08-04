@@ -290,7 +290,10 @@ void MainMesh::Init() {
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 
 	mainStiffness.Init(Hydro::MAT_K);
-	mainTab.Add(mainStiffness.SizePos(), t_("K Stiffness Matrix"));
+	mainTab.Add(mainStiffness.SizePos(), t_("Hydrostatic Stiffness"));
+	
+	mainStiffness2.Init(Hydro::MAT_K2);
+	mainTab.Add(mainStiffness2.SizePos(), t_("Mooring Stiffness"));
 	
 	mainGZ.Init();
 	mainTab.Add(mainGZ.SizePos(), t_("GZ"));
@@ -1470,14 +1473,14 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());
 
-	array.Set(row, 0, t_("Surface [m2]"));		array.Set(row++, col, FDS(data.mesh.surface, 8, false));
+	array.Set(row, 0, t_("Surface [m²]"));		array.Set(row++, col, FDS(data.mesh.surface, 8, false));
 	array.Set(row, 0, t_("Volume [m3] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
 														FDS(data.mesh.volume,  10, false),
 														FDS(data.mesh.volumex, 10, false),
 														FDS(data.mesh.volumey, 10, false),
 														FDS(data.mesh.volumez, 10, false))).Paper(backColorMesh));
 	
-	array.Set(row, 0, t_("Wetted surface [m2]"));array.Set(row++, col, FDS(data.under.surface, 10, false));
+	array.Set(row, 0, t_("Wetted surface [m²]"));array.Set(row++, col, FDS(data.under.surface, 10, false));
 	array.Set(row, 0, t_("Immersed volume [m3] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
 														FDS(data.under.volume,  10, false),
 														FDS(data.under.volumex, 10, false),
@@ -1520,25 +1523,25 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	} else
 		array.Set(row++, col, "-");
 												
-	array.Set(row, 0, t_("Surface projection Z-axis (Waterplane Area) [m2]"));	
+	array.Set(row, 0, t_("Surface projection Z-axis (waterplane area) [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
 														FDS(-data.zProjectionPos, 10, false),
 														FDS(data.zProjectionNeg,  10, false),
 														FDS(data.zProjectionPos+data.zProjectionNeg, 10, false)));
 	
-	array.Set(row, 0, t_("Waterplane geometric centre [m]"));
+	array.Set(row, 0, t_("Waterplane geometric centre (centre of flotation) [m]"));
 	if (!IsNull(data.cgZ0surface)) 
 		array.Set(row++, col, Format(t_("%s, %s"), FDS(data.cgZ0surface.x, 10, false),			
 												   FDS(data.cgZ0surface.y, 10, false)));
 	else
 		array.Set(row++, col, "-");
-	array.Set(row, 0, t_("Surface projection X-axis [m2]"));	
+	array.Set(row, 0, t_("Surface projection X-axis [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
 														FDS(-data.xProjectionPos, 10, false),
 														FDS(data.xProjectionNeg,  10, false),
 														FDS(data.xProjectionPos+data.xProjectionNeg, 10, false)));
 	
-	array.Set(row, 0, t_("Surface projection Y-axis [m2]"));	
+	array.Set(row, 0, t_("Surface projection Y-axis [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
 														FDS(-data.yProjectionPos, 10, false),
 														FDS(data.yProjectionNeg,  10, false),
@@ -1990,8 +1993,8 @@ void MainGZ::Clear(bool force) {
 	array.Set(row++, 0, t_("Heeling lever [N·m]"));
 	array.Set(row++, 0, t_("Displacement [kg]"));
 	array.Set(row++, 0, t_("Sub. volume [m3]"));
-	array.Set(row++, 0, t_("Wetted area [m2]"));
-	array.Set(row++, 0, t_("Waterpl. area [m2]"));
+	array.Set(row++, 0, t_("Wetted area [m²]"));
+	array.Set(row++, 0, t_("Waterpl. area [m²]"));
 	array.Set(row++, 0, t_("Draft [m]"));
 	array.Set(row++, 0, t_("Cb_x [m]"));
 	array.Set(row++, 0, t_("Cb_y [m]"));

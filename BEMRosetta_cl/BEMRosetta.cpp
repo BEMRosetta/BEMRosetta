@@ -24,12 +24,13 @@ Function <void(String)> BEM::PrintError   = [](String s) {Cout() << s;};
 const char *BEM::strDOFtext[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *BEM::strDOFtextAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
 const char *BEM::strDOFnum[] 	 = {t_("1"), t_("2"), t_("3"), t_("4"), t_("5"), t_("6")};
+const char *BEM::strDOFnum_sub[] = {t_("₁"), t_("₂"), t_("₃"), t_("₄"), t_("₅"), t_("₆")};
 const char *BEM::strDOFxyz[] 	 = {t_("x"), t_("y"), t_("z"), t_("rx"), t_("ry"), t_("rz")};
 
-const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A0"), t_("B(ω)"), t_("A∞(ω)"), t_("Kirf"),
-				t_("Fsc_ma"), t_("Fsc_ph"), t_("Ffk_ma"), t_("Ffk_ph"), t_("Fex_ma"), t_("Fex_ph"),
-				t_("RAO_ma"), t_("RAO_ph"), t_("Z_ma"), t_("Z_ph"), t_("Kr_ma"), t_("Kr_ph"), 
-				t_("TFS_ma"), t_("TFS_ph")};
+const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B(ω)"), t_("A∞(ω)"), t_("Kirf"),
+				t_("|Fsc|"), t_("arg(Fsc)"), t_("|Ffk|"), t_("arg(Ffk)"), t_("|Fex|"), t_("arg(Fex)"),
+				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
+				t_("|TFS|"), t_("arg(TFS)")};
 
 const char *BEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
 BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
@@ -270,6 +271,7 @@ void Hydro::Copy(const Hydro &hyd) {
     A0 = clone(hyd.A0);
 	
 	Dlin = clone(Dlin);
+	Dquad = clone(Dquad);
 	Cmoor = clone(Cmoor);
 	
     B = clone(hyd.B);
@@ -847,7 +849,12 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	} else if (type == CSV_TABLE) {
 		HydroClass data(*bem, this);
 		ret = data.SaveCSVTable(file);		
-	}
+	} else if (type == CSV_TABLE) {
+		HydroClass data(*bem, this);
+		ret = data.SaveDiodoreHDB(file);		
+	} else
+		throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
+	
 	code = type;
 	Nh = realNh;
 	Nf = realNf;
@@ -1397,6 +1404,17 @@ MatrixXd Hydro::C_(bool ndim, int ib) const {
 	return ret;
 }
 
+MatrixXd Hydro::CMoor_(bool ndim, int ib) const {
+	MatrixXd ret;
+	if (Cmoor.IsEmpty())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = CMoor_(ndim, ib, idf, jdf);
+	return ret;
+}
+
 MatrixXd Hydro::Dlin_dim(int ib) const {
 	MatrixXd ret;
 	if (!IsLoadedDlin())
@@ -1405,6 +1423,17 @@ MatrixXd Hydro::Dlin_dim(int ib) const {
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
 			ret(idf, jdf) = Dlin(ib*6 + idf, ib*6 + jdf);
+	return ret;
+}
+
+MatrixXd Hydro::Dquad_dim(int ib) const {
+	MatrixXd ret;
+	if (!IsLoadedDquad())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = Dquad(ib*6 + idf, ib*6 + jdf);
 	return ret;
 }
 
@@ -1465,6 +1494,10 @@ VectorXcd Hydro::RAO_(bool ndim, const RAO &f, int _h, int ifr) const {
 	return ret;
 }
 
+VectorXcd Hydro::RAO_dof(bool ndim, int _h, int idf) const {
+	return RAO_dof(ndim, rao, _h, idf);
+}
+
 VectorXcd Hydro::RAO_dof(bool ndim, const RAO &f, int _h, int idf) const {
 	VectorXcd ret;
 	if (f.force.IsEmpty())
@@ -1474,6 +1507,30 @@ VectorXcd Hydro::RAO_dof(bool ndim, const RAO &f, int _h, int idf) const {
 		ret[ifr] = RAO_(ndim, f, _h, ifr, idf);
 	return ret;
 }
+
+VectorXd Hydro::Md_dof(bool ndim, int _h, int idf) const {
+	VectorXd ret;
+	if (md.IsEmpty())
+		return ret;
+	ret.resize(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr) 
+		ret[ifr] = Md_(ndim, idf, _h, ifr);
+	return ret;
+}
+
+MatrixXcd Hydro::QTF_dof(bool ndim, bool isSum, int _h, int idf, int ib) const {
+	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? qtfsum : qtfdif;
+	
+	MatrixXcd ret;
+	if (qtf.IsEmpty())
+		return ret;
+	ret.resize(qw.size(), qw.size());
+	for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
+		for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) 
+			ret(ifr1, ifr2) = F_(ndim, qtf[ib][_h][idf](ifr1, ifr2), idf);
+	return ret;
+}
+
 
 void Hydro::CheckNaN() {
 	if (!IsNum(A))
@@ -2166,7 +2223,11 @@ bool BEM::LoadSerializeJson() {
 		volWarning = 1;
 	if (!ret || IsNull(volError))
 		volError = 10;
-			
+	if (!ret || IsNull(legend_w_solver))
+		legend_w_solver = true;
+	if (!ret || IsNull(legend_w_units))
+		legend_w_units = true;
+				
 	return ret;
 }
 

@@ -71,7 +71,7 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 			up.labelY = t_("Magnitude");
 			up.ma_ph = t_("ma");
 			strmag = t_("mag");
-			up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
+			up.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
 		} else {
 			up.labelY = t_("Phase");
 			up.ma_ph = t_("ph");
@@ -88,7 +88,7 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 			up.ma_ph = t_("im");
 			strmag = t_("imag");
 		}
-		up.units = idof < 3 ? t_("N/m2") : t_("N-m/m2");
+		up.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
 	}
 	up.scatter.SetLabelY(up.labelY);
 	up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
