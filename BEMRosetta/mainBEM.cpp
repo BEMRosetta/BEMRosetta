@@ -1507,6 +1507,8 @@ void MainBEM::AfterBEM() {
 		}
 	}	
 	mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(isLoadedSS);
+	
+	UpdateButtons();
 }
 
 void MainBEM::OnDescription() {

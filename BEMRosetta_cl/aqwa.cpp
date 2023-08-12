@@ -441,7 +441,7 @@ bool Aqwa::Load_LIS() {
 				for (int r = 0; r < 6; ++r) {
 					f.Load(in.GetLine());
 					for (int c = 0; c < 6; ++c) 
-						C(r, c) = f.GetDouble(c + 1);
+						C(r, c) = f.GetDouble(c + 1)*factorMass;
 					in.GetLine();
 				}
 				if (C(0, 0) == 0 && C(1, 1) == 0)			// Only use if ASTF additional hydrostatics has not been used: surge = sway = 0
@@ -493,14 +493,14 @@ bool Aqwa::Load_LIS() {
 					if (ifrr < 0)
 						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
-						double factor;
+						double factorPh;
 						if (pfrc != &hd().rao || idf < 3)
-							factor = 1;
+							factorPh = 1;
 						else
-							factor = M_PI/180;	// Only for RAO rotations
+							factorPh = M_PI/180;	// Only for RAO rotations
 						
-						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factor, 
-																			-ToRad(f.GetDouble(2 + dd + idf*2 + 1))*factorM); // Negative to follow Wamit 
+						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factorM, 
+																			-ToRad(f.GetDouble(2 + dd + idf*2 + 1))*factorPh); // Negative to follow Wamit 
 					}
 					dd = 0;
 					line = in.GetLine();
