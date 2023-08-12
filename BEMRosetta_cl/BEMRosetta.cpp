@@ -592,10 +592,6 @@ void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
     Kirf = clone(hyd.Kirf);
     Tirf = clone(hyd.Tirf);
     */
-  
-    
-    
-    
 }
 
 void Hydro::Symmetrize_Forces(bool xAxis) {

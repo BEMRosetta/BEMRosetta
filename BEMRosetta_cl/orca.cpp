@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
+#include "BEMRosetta_int.h"
 #include "FastOut.h"
 #ifdef PLATFORM_WIN32
 #include "orca.h"
@@ -8,7 +9,6 @@
 UVector<int> Orca::objTypes;
 UVector<String> Orca::objNames;
 UVector<HINSTANCE> Orca::objHandles;
-	
 UVector<int> Orca::varIDs;
 UVector<String> Orca::varNames, Orca::varFullNames, Orca::varUnits;
 

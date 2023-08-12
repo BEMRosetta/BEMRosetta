@@ -95,7 +95,11 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("        <params> nb                  # Number of bodies  []");
 	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
 	Cout() << "\n" << t_("                 nh                  # Number of headings    []");
-	Cout() << "\n" << t_("                 ainf <dof1> <dof2>  # Ainf(6*Nb, 6*Nb)  [Kg]");
+	Cout() << "\n" << t_("                 w                   # List of frequencies   [rad/s]");
+	Cout() << "\n" << t_("                 headings            # List of headings      [deg]");
+	Cout() << "\n" << t_("                 a <dof1> <dof2>     # List of A(w)(6*Nb, 6*Nb) [Kg]");
+	Cout() << "\n" << t_("                 b <dof1> <dof2>     # List of B(w)(6*Nb, 6*Nb)");
+	Cout() << "\n" << t_("                 ainf                # Ainf(6*Nb, 6*Nb)  [Kg]");
 	Cout() << "\n" << t_("                 Theave <ibody>      # Heave resonance period for body ib [s]");
 	Cout() << "\n" << t_("                 Troll <ibody>       # Roll resonance period for body ib [s]");
 	Cout() << "\n" << t_("                 Tpitch <ibody>      # Pitch resonance period for body ib [s]");
@@ -167,6 +171,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
+	Cout() << "\n" << t_("-numtries <num>                 # Number <num> of attempts to connect to the licence");
 	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads for OrcaWave");
 	Cout() << "\n" << t_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-ls -loadSim <sim>       		  # Load OrcaFlex simulation in <sim>");
@@ -224,6 +229,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 #ifdef PLATFORM_WIN32
 	Orca orca;
 	bool dllOrcaLoaded = false;
+	int numOrcaTries = 4;
 #endif
 
 	bool firstTime = !bem.LoadSerializeJson();
@@ -419,16 +425,60 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									BEM::Print(t_("Nf:") + S(" ")); 
 									lastPrint = FormatInt(data.Nf);
 									Cout() << lastPrint;
-								} else if (param == "ainf") {
-									CheckIfAvailableArg(command, ++i, "Ainf #1 dof");
+								} else if (param == "w" || param == "frequencies") {
+									Cout() << "\n";
+									BEM::Print(t_("w:") + S(" ")); 
+									lastPrint.Clear();
+									for (double d : data.w)
+										lastPrint << d << " "; 
+									Cout() << lastPrint;
+								} else if (param == "headings") {
+									Cout() << "\n";
+									BEM::Print(t_("head:") + S(" ")); 
+									lastPrint.Clear();
+									for (double d : data.head)
+										lastPrint << d << " "; 
+									Cout() << lastPrint; 
+								} else if (param == "a") {
+									CheckIfAvailableArg(command, ++i, "A #dof 1");									
 									int idf = ScanInt(command[i]);
-									CheckIfAvailableArg(command, ++i, "Ainf #2 dof");									
+									if (idf < 1 || idf > 6*data.Nb)
+										throw Exc(Format(t_("Wrong dof in '%s'"), command[i]));
+									CheckIfAvailableArg(command, ++i, "A #dof 2");									
 									int jdf = ScanInt(command[i]);
-									if (idf < 1 || jdf < 1 || idf > 6*data.Nb || jdf > 6*data.Nb)
+									if (jdf < 1 || jdf > 6*data.Nb)
 										throw Exc(Format(t_("Wrong dof in '%s'"), command[i]));
 									Cout() << "\n";
-									BEM::Print(Format(t_("Ainf(%d,%d):"), idf, jdf) + " "); 
-									lastPrint = Format("%f", data.Ainf_dim(idf-1, jdf-1));
+									BEM::Print(Format(t_("A(%d,%d):"), idf, jdf) + S(" "));
+									idf--;	jdf--;
+									lastPrint.Clear();
+									for (int ifr = 0; ifr < data.Nf; ++ifr) 
+										lastPrint << Format("%f ", data.A_dim(ifr, idf, jdf));
+									Cout() << lastPrint;
+								} else if (param == "ainf") {
+									Cout() << "\n";
+									BEM::Print(t_("Ainf:") + S(" "));
+									lastPrint.Clear();
+									for (int idf = 0; idf < 6*data.Nb; ++idf) 
+										for (int jdf = 0; jdf < 6*data.Nb; ++jdf) 
+											lastPrint << Format("%f ", data.Ainf_dim(idf, jdf));
+									Cout() << lastPrint;
+								} else if (param == "b") {
+									CheckIfAvailableArg(command, ++i, "B #dof 1");									
+									int idf = ScanInt(command[i]);
+									if (idf < 1 || idf > 6*data.Nb)
+										throw Exc(Format(t_("Wrong dof in '%s'"), command[i]));
+									idf--;
+									CheckIfAvailableArg(command, ++i, "B #dof 2");									
+									int jdf = ScanInt(command[i]);
+									if (jdf < 1 || jdf > 6*data.Nb)
+										throw Exc(Format(t_("Wrong dof in '%s'"), command[i]));
+									jdf--;
+									Cout() << "\n";
+									BEM::Print(t_("B:") + S(" "));
+									lastPrint.Clear();
+									for (int ifr = 0; ifr < data.Nf; ++ifr) 
+										lastPrint << Format("%f ", data.B_dim(ifr, idf, jdf));
 									Cout() << lastPrint;
 								} else if (param == "theave") {
 									CheckIfAvailableArg(command, ++i, "Id. body");
@@ -814,11 +864,29 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							CheckIfAvailableArg(command, ++i, "-runwave to");
 							String to = command[i];
 							
-							orca.LoadWave(from);
-							orca.RunWave();
-							orca.SaveWaveResults(to);							
+							int numTry = numOrcaTries;
+							String errorStr;
+							do {
+								try {
+									orca.LoadWave(from);
+									break;
+								} catch (Exc e) {
+									errorStr = e;
+									if (errorStr.Find("licence") < 0)
+										break;
+									numTry--;
+								}
+								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+							} while (numTry > 0);
 							
-							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+							if (numTry == 0)
+								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+							else {
+								orca.RunWave();
+								orca.SaveWaveResults(to);							
+							
+								BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+							}
 						} else if (param == "-rf" || param == "-runflex") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -832,11 +900,29 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							CheckIfAvailableArg(command, ++i, "-runflex to");
 							String to = command[i];
 							
-							orca.LoadFlex(from);
-							orca.RunFlex();
-							orca.SaveFlexSim(to);							
+							int numTry = numOrcaTries;
+							String errorStr;
+							do {
+								try {
+									orca.LoadFlex(from);
+									break;
+								} catch (Exc e) {
+									errorStr = e;
+									if (errorStr.Find("licence") < 0)
+										break;
+									numTry--;
+								}
+								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+							} while (numTry > 0);
 							
-							BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+							if (numTry == 0)
+								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+							else {
+								orca.RunFlex();
+								orca.SaveFlexSim(to);							
+								
+								BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+							}
 						} else if (param == "-ls" || param == "-loadSim") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -846,11 +932,27 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(t_("DLL not found"));
 									
 							CheckIfAvailableArg(command, ++i, "-loadSim sim");
-							String sim = command[i];
+							String from = command[i];
 							
-							orca.LoadFlexSim(sim);
+							int numTry = numOrcaTries;
+							String errorStr;
+							do {
+								try {
+									orca.LoadFlexSim(from);
+									break;
+								} catch (Exc e) {
+									errorStr = e;
+									if (errorStr.Find("licence") < 0)
+										break;
+									numTry--;
+								}
+								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+							} while (numTry > 0);
 							
-							BEM::Print("\n" + Format(t_("Simulation '%s' loaded"), sim));
+							if (numTry == 0)
+								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+							else
+								BEM::Print("\n" + Format(t_("Simulation '%s' loaded"), from));
 						} else if (param == "-numthread") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -867,6 +969,20 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							orca.SetThreadCount(numth);
 							
 							BEM::Print("\n" + Format(t_("Thread number set to %d"), numth));
+						} else if (param == "-numtries") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+							
+							CheckIfAvailableArg(command, ++i, "-numtries num");
+							numOrcaTries = ScanInt(command[i]);
+							if (IsNull(numOrcaTries))
+								throw Exc(Format(t_("Invalid thread number %s"), command[i]));							
+
+							BEM::Print("\n" + Format(t_("Number of OrcaFlex license tries set to %d"), numOrcaTries));
 						} else if (param == "-c" || param == "-convert") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 

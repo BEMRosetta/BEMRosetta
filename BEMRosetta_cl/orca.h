@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #ifdef PLATFORM_WIN32
-#include "BEMRosetta.h"
-#include "BEMRosetta_int.h"
 
-/* Object type constants */
+#pragma pack(push, 1)
+
+// Object type constants 
 #define otNull 0
 #define otGeneral 1
 #define otEnvironment 3
@@ -81,7 +81,6 @@
 #define otAddedMassCloseToSeabed 1035
 #define otSeabedTangentialResistance 1036
 
-
 typedef wchar_t TObjectName[50];
 typedef struct {
     HINSTANCE ObjectHandle;
@@ -150,24 +149,24 @@ typedef struct {
 
 class Orca {
 public:
-	Orca() {}
+	Orca() : centre(0, 0, 0) {}
 	~Orca() {
 		if (dll.GetHandle() != 0) {
-			int lpStatus;
+			int status;
 			
 			if (wave) {
-				DestroyDiffraction(wave, &lpStatus);
-				if (lpStatus != 0)
+				DestroyDiffraction(wave, &status);
+				if (status != 0)
 					throwError("DestroyDiffraction");
 			}
 			
 			if (flex) {
-				DestroyModel(flex, &lpStatus);
-				if (lpStatus != 0)
+				DestroyModel(flex, &status);
+				if (status != 0)
 					throwError("DestroyModel");
 			}
-			FinaliseLibrary(&lpStatus);
-			if (lpStatus != 0)
+			FinaliseLibrary(&status);
+			if (status != 0)
 				throwError("FinaliseLibrary");
 		}
 	}
@@ -177,33 +176,34 @@ public:
 		if (!dll.Load(dllFile))
 			return false;
 
-		CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (HINSTANCE *handle, HWND hCaller, int *lpStatus));
-		DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(HINSTANCE handle, int *lpStatus));
-		LoadData     = DLLGetFunction(dll, void, C_LoadDataW,   (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
-		SaveData     = DLLGetFunction(dll, void, C_SaveDataW,   (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
+		CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (HINSTANCE *handle, HWND hCaller, int *status));
+		DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(HINSTANCE handle, int *status));
+		LoadData     = DLLGetFunction(dll, void, C_LoadDataW,   (HINSTANCE handle, LPCWSTR wcs, int *status));
+		SaveData     = DLLGetFunction(dll, void, C_SaveDataW,   (HINSTANCE handle, LPCWSTR wcs, int *status));
 		
-		CreateDiffraction      = DLLGetFunction(dll, void, C_CreateDiffraction, 	  (HINSTANCE *handle, int *lpStatus));
-		DestroyDiffraction     = DLLGetFunction(dll, void, C_DestroyDiffraction,	  (HINSTANCE handle, int *lpStatus));
-		LoadDiffractionData    = DLLGetFunction(dll, void, C_LoadDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
-		SaveDiffractionData    = DLLGetFunction(dll, void, C_SaveDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
-		CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (HINSTANCE handle, TProgressHandlerProc proc, int *lpStatus));
-		SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
-		CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (HINSTANCE handle, TProgressHandlerProc proc, int *lpStatus));
-		RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *lpStatus));
-		LoadSimulation		   = DLLGetFunction(dll, void, C_LoadSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
-		SaveSimulation		   = DLLGetFunction(dll, void, C_SaveSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *lpStatus));
-		GetTimeHistory2		   = DLLGetFunction(dll, void, C_GetTimeHistory2W,		  (HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *lpStatus));
-		GetVarID			   = DLLGetFunction(dll, void, C_GetVarIDW,				  (HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *lpStatus));
-		GetNumOfSamples		   = DLLGetFunction(dll, int,  C_GetNumOfSamples, 		  (HINSTANCE handle, const TPeriod *period, int *lpStatus));
-		EnumerateObjects	   = DLLGetFunction(dll, void, C_EnumerateObjectsW, 	  (HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *lpStatus));
-		EnumerateVars2		   = DLLGetFunction(dll, void, C_EnumerateVars2W, 		  (HINSTANCE handle, const TObjectExtra2 *lpObjectExtra, int ResultType, 
-																							TEnumerateVarsProc EnumerateVarsProc, int *lpNumberOfVars, int *lpStatus));
+		CreateDiffraction      = DLLGetFunction(dll, void, C_CreateDiffraction, 	  (HINSTANCE *handle, int *status));
+		DestroyDiffraction     = DLLGetFunction(dll, void, C_DestroyDiffraction,	  (HINSTANCE handle, int *status));
+		LoadDiffractionData    = DLLGetFunction(dll, void, C_LoadDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
+		SaveDiffractionData    = DLLGetFunction(dll, void, C_SaveDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
+		CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
+		SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
+		CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
+		RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *status));
+		LoadSimulation		   = DLLGetFunction(dll, void, C_LoadSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
+		SaveSimulation		   = DLLGetFunction(dll, void, C_SaveSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
+		GetTimeHistory2		   = DLLGetFunction(dll, void, C_GetTimeHistory2W,		  (HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status));
+		GetVarID			   = DLLGetFunction(dll, void, C_GetVarIDW,				  (HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *status));
+		GetNumOfSamples		   = DLLGetFunction(dll, int,  C_GetNumOfSamples, 		  (HINSTANCE handle, const TPeriod *period, int *status));
+		EnumerateObjects	   = DLLGetFunction(dll, void, C_EnumerateObjectsW, 	  (HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status));
+		EnumerateVars2		   = DLLGetFunction(dll, void, C_EnumerateVars2W, 		  (HINSTANCE handle, const TObjectExtra2 *objectextra, int ResultType, 
+																							TEnumerateVarsProc EnumerateVarsProc, int *lpNumberOfVars, int *status));
+		ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (HINSTANCE ModelHandle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
 		
-		SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *lpStatus));
-		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *lpStatus));
+		SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *status));
+		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *status));
 		
 		GetLastErrorString = DLLGetFunction(dll, int,  C_GetLastErrorStringW, (LPCWSTR wcs));
-		FinaliseLibrary    = DLLGetFunction(dll, void, C_FinaliseLibrary,     (int *lpStatus));
+		FinaliseLibrary    = DLLGetFunction(dll, void, C_FinaliseLibrary,     (int *status));
 		
 		return true;
 	}
@@ -299,28 +299,28 @@ public:
 		varFullNames << WideToString(lpVarInfo->lpFullName);
 		varUnits << WideToString(lpVarInfo->lpVarUnits);
 	}
-			
+	
 	void LoadFlex(String owryml) {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
-		int lpStatus;
+		int status;
 		LPCWSTR wcs;
 		
 		if (flex) {
-			DestroyModel(flex, &lpStatus);
-			if (lpStatus != 0)
+			DestroyModel(flex, &status);
+			if (status != 0)
 				throwError("DestroyModel");
 		}		
 		
-		CreateModel(&flex, 0, &lpStatus);
-		if (lpStatus != 0)
+		CreateModel(&flex, 0, &status);
+		if (status != 0)
 			throwError("CreateModel: No license available");
 		
 		if (!StringToWide(owryml, wcs))
 			throwError("StringToWide LoadData");
-		LoadData(flex, wcs, &lpStatus);
-		if (lpStatus != 0)
+		LoadData(flex, wcs, &status);
+		if (status != 0)
 			throwError("LoadData");		
 	}
 	
@@ -328,13 +328,13 @@ public:
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
-		int lpStatus;
+		int status;
 		LPCWSTR wcs;
 					
 		if (!StringToWide(owryml, wcs))
 			throwError("StringToWide SaveData");
-		SaveData(flex, wcs, &lpStatus);
-		if (lpStatus != 0)
+		SaveData(flex, wcs, &status);
+		if (status != 0)
 			throwError("SaveData");
 	}
 	
@@ -344,15 +344,15 @@ public:
 		if (!flex) 
 			throwError("RunFlex");	
 		
-		int lpStatus;
+		int status;
 		startCalc = GetSysTime();
 		
-		CalculateStatics(flex, StaticsHandlerProc, &lpStatus);
-		if (lpStatus != 0)
+		CalculateStatics(flex, StaticsHandlerProc, &status);
+		if (status != 0)
 			throwError("CalculateStatics");	
 		
-		RunSimulation(flex, SimulationHandlerProc, NULL, &lpStatus);
-		if (lpStatus != 0)
+		RunSimulation(flex, SimulationHandlerProc, NULL, &status);
+		if (status != 0)
 			throwError("RunSimulation");	
 	}
 	
@@ -363,13 +363,13 @@ public:
 		if (!flex) 
 			throwError("SaveFlexSim");	
 			
-		int lpStatus;
+		int status;
 		LPCWSTR wcs;
 					
 		if (!StringToWide(owryml, wcs))
 			throwError("StringToWide SaveFlexSim");
-		SaveSimulation(flex, wcs, &lpStatus);
-		if (lpStatus != 0)
+		SaveSimulation(flex, wcs, &status);
+		if (status != 0)
 			throwError("SaveFlexSim");		
 	}
 
@@ -377,23 +377,23 @@ public:
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
-		int lpStatus;
+		int status;
 		LPCWSTR wcs;
 		
 		if (flex) {
-			DestroyModel(flex, &lpStatus);
-			if (lpStatus != 0)
+			DestroyModel(flex, &status);
+			if (status != 0)
 				throwError("LoadFlexSim");
 		}
-		
-		CreateModel(&flex, 0, &lpStatus);
-		if (lpStatus != 0)
+			
+		CreateModel(&flex, 0, &status);
+		if (status != 0)
 			throwError("CreateModel: No license available");
 						
 		if (!StringToWide(sim, wcs))
 			throwError("StringToWide LoadFlexSim");
-		LoadSimulation(flex, wcs, &lpStatus);
-		if (lpStatus != 0)
+		LoadSimulation(flex, wcs, &status);
+		if (status != 0)
 			throwError("LoadFlexSim");		
 	}
 	
@@ -412,14 +412,14 @@ public:
 		if (!flex) 
 			throwError("GetFlexSimObjects");	
 		
-		int lpStatus;
+		int status;
 		int num;
 		
 		objTypes.Clear();
 		objNames.Clear();
 		objHandles.Clear();
-		EnumerateObjects(flex, EnumerateObjectsProc, &num, &lpStatus);
-		if (lpStatus != 0)
+		EnumerateObjects(flex, EnumerateObjectsProc, &num, &status);
+		if (status != 0)
 			throwError("GetFlexSimObjects");	
 	};
 	
@@ -430,20 +430,20 @@ public:
 		if (!flex) 
 			throwError("GetFlexSimVariables");	
 		
-		int lpStatus;
+		int status;
 		
-		TObjectExtra2 lpObjectExtra = {};
-		lpObjectExtra.Size = sizeof(TObjectExtra2);
-		lpObjectExtra.DisturbanceVesselName = NULL;
+		TObjectExtra2 objectextra = {};
+		objectextra.Size = sizeof(TObjectExtra2);
+		objectextra.DisturbanceVesselName = NULL;
 		if (objType == otEnvironment) {
-			lpObjectExtra.EnvironmentPos[0] = centre.x;
-			lpObjectExtra.EnvironmentPos[1] = centre.y;
-			lpObjectExtra.EnvironmentPos[2] = centre.z;
-		} /*else if (objType == otVessel || objType == ot6DBuoy) {
-			lpObjectExtra.RigidBodyPos[0] = centre.x;
-			lpObjectExtra.RigidBodyPos[1] = centre.y;
-			lpObjectExtra.RigidBodyPos[2] = centre.z;
-		}*/
+			objectextra.EnvironmentPos[0] = centre.x;
+			objectextra.EnvironmentPos[1] = centre.y;
+			objectextra.EnvironmentPos[2] = centre.z;
+		} else if (objType == otVessel || objType == ot6DBuoy) {
+			objectextra.RigidBodyPos[0] = centre.x;
+			objectextra.RigidBodyPos[1] = centre.y;
+			objectextra.RigidBodyPos[2] = centre.z;
+		}
 		
 		varIDs.Clear();
 		varNames.Clear();
@@ -451,8 +451,8 @@ public:
 		varUnits.Clear();
 		int ResultType = rtTimeHistory;
 		int lpNumberOfVars = -1;
-		EnumerateVars2(objHandle, &lpObjectExtra, ResultType, EnumerateVarsProc, &lpNumberOfVars, &lpStatus);
-		if (lpStatus != 0)
+		EnumerateVars2(objHandle, &objectextra, ResultType, EnumerateVarsProc, &lpNumberOfVars, &status);
+		if (status != 0)
 			throwError("GetFlexSimVariables");		
 		
 		IDs = pick(varIDs);
@@ -484,32 +484,32 @@ public:
 		if (!flex) 
 			throwError("GetFlexSimVar");	
 		
-		int lpStatus;
+		int status;
 		
 		TPeriod period = {};
 		period.PeriodNum = pnWholeSimulation;
 		
-		int numS = GetNumOfSamples(flex, &period, &lpStatus);
-		if (lpStatus != 0)
-			throwError("GetFlexSimVar");
+		int numS = GetNumOfSamples(flex, &period, &status);
+		if (status != 0)
+			throwError("GetFlexSimVar.GetNumOfSamples");
 		
-		TObjectExtra2 lpObjectExtra = {};
-		lpObjectExtra.Size = sizeof(TObjectExtra2);
-		lpObjectExtra.DisturbanceVesselName = NULL;
+		TObjectExtra2 objectExtra = {};
+		
+		objectExtra.Size = sizeof(TObjectExtra2);
+		objectExtra.DisturbanceVesselName = NULL;
 		if (objType == otEnvironment) {
-			lpObjectExtra.EnvironmentPos[0] = centre.x;
-			lpObjectExtra.EnvironmentPos[1] = centre.y;
-			lpObjectExtra.EnvironmentPos[2] = centre.z;
-		} /*else if (objType == otVessel || objType == ot6DBuoy) {
-			lpObjectExtra.RigidBodyPos[0] = centre.x;
-			lpObjectExtra.RigidBodyPos[1] = centre.y;
-			lpObjectExtra.RigidBodyPos[2] = centre.z;
-		}*/
-		
+			objectExtra.EnvironmentPos[0] = centre.x;
+			objectExtra.EnvironmentPos[1] = centre.y;
+			objectExtra.EnvironmentPos[2] = centre.z;
+		} else if (objType == otVessel || objType == ot6DBuoy) {
+			objectExtra.RigidBodyPos[0] = centre.x;
+			objectExtra.RigidBodyPos[1] = centre.y;
+			objectExtra.RigidBodyPos[2] = centre.z;
+		}
 		data.resize(numS);
-		GetTimeHistory2(objHandle, &lpObjectExtra, &period, varId, data.data(), &lpStatus);
-		if (lpStatus != 0)
-			throwError("GetFlexSimVar");		
+		GetTimeHistory2(objHandle, &objectExtra, &period, varId, data.data(), &status);
+		if (status != 0)
+			throwError("GetFlexSimVar.GetTimeHistory2");		
 	}
 	
 	void GetFlexSimVar(String name, String &unit, VectorXd &data) {
@@ -545,8 +545,8 @@ public:
 				break;
 			}
 		}
-		if (handle == 0)
-			throwError(Format("GetFlexSimVar variable '%s' not found", var));
+		if (varId == -1)
+			throwError(Format("GetFlexSimVar variable '%s' not found", name));
 		
 		GetFlexSimVar(handle, objType, varId, data); 
 	}
@@ -556,45 +556,45 @@ public:
 			throw Exc("Orca DLL not loaded");
 			
 		if (!wave) {
-			int lpStatus;	
-			CreateDiffraction(&wave, &lpStatus);
-			if (lpStatus != 0)
+			int status;	
+			CreateDiffraction(&wave, &status);
+			if (status != 0)
 				throwError("CreateDiffraction: No license available");
 		}
 		
-		int lpStatus;
+		int status;
 		LPCWSTR wcs;
 		
 		if (!StringToWide(owryml, wcs))
 			throwError("StringToWide LoadDiffractionData");
-		LoadDiffractionData(wave, wcs, &lpStatus);
-		if (lpStatus != 0)
-			throwError("LoadDiffractionData");	
+		LoadDiffractionData(wave, wcs, &status);
+		if (status != 0)
+			throwError("LoadWave.LoadDiffractionData");	
 			
 		String owd = ForceExt(owryml, ".owd");
 		
 		if (!StringToWide(owd, wcs))
 			throwError("StringToWide LoadDiffractionData SaveDiffractionData");
-		SaveDiffractionData(wave, wcs, &lpStatus);
-		if (lpStatus != 0)
-			throwError("LoadDiffractionData SaveDiffractionData");
+		SaveDiffractionData(wave, wcs, &status);
+		if (status != 0)
+			throwError("LoadWave.SaveDiffractionData");
 	}
 		
 	void RunWave() {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
-			int lpStatus;
-			CreateDiffraction(&wave, &lpStatus);
-			if (lpStatus != 0)
+			int status;
+			CreateDiffraction(&wave, &status);
+			if (status != 0)
 				throwError("CreateDiffraction");
 		}
 		
-		int lpStatus;
+		int status;
 		startCalc = GetSysTime();
 		
-		CalculateDiffraction(wave, ProgressHandlerProc, &lpStatus);
-		if (lpStatus != 0)
+		CalculateDiffraction(wave, ProgressHandlerProc, &status);
+		if (status != 0)
 			throwError("CalculateDiffraction");	
 	}
 	
@@ -602,44 +602,44 @@ public:
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
-			int lpStatus;
-			CreateDiffraction(&wave, &lpStatus);
-			if (lpStatus != 0)
+			int status;
+			CreateDiffraction(&wave, &status);
+			if (status != 0)
 				throwError("CreateDiffraction");
 		}
 		
-		int lpStatus;
+		int status;
 		LPCWSTR wcs;
 		
 		String owr = ForceExt(owryml, ".owr");
 		
 		if (!StringToWide(owr, wcs))
 			throwError("StringToWide SaveData");
-		SaveDiffractionResults(wave, wcs, &lpStatus);
-		if (lpStatus != 0)
+		SaveDiffractionResults(wave, wcs, &status);
+		if (status != 0)
 			throwError("SaveDiffractionResults");		
 		
 		if (GetFileExt(owryml) == ".yml") {
 			HINSTANCE temp;
 			
-			CreateModel(&temp, 0, &lpStatus);
-			if (lpStatus != 0)
+			CreateModel(&temp, 0, &status);
+			if (status != 0)
 				throwError("CreateModel");
 			
 			if (!StringToWide(owr, wcs))
 				throwError("StringToWide LoadData");
-			LoadData(temp, wcs, &lpStatus);
-			if (lpStatus != 0)
+			LoadData(temp, wcs, &status);
+			if (status != 0)
 				throwError("LoadData");	
 			
 			if (!StringToWide(owryml, wcs))
 				throwError("StringToWide SaveData");
-			SaveData(temp, wcs, &lpStatus);
-			if (lpStatus != 0)
+			SaveData(temp, wcs, &status);
+			if (status != 0)
 				throwError("SaveData");
 			
-			DestroyModel(temp, &lpStatus);
-			if (lpStatus != 0)
+			DestroyModel(temp, &status);
+			if (status != 0)
 				throwError("DestroyModel");
 		}
 	}
@@ -648,16 +648,16 @@ public:
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
-			int lpStatus;
-			CreateDiffraction(&wave, &lpStatus);
-			if (lpStatus != 0)
+			int status;
+			CreateDiffraction(&wave, &status);
+			if (status != 0)
 				throwError("CreateDiffraction");
 		}
 		
-		int lpStatus;
+		int status;
 
-		SetModelThreadCount(wave, nth, &lpStatus);
-		if (lpStatus != 0)
+		SetModelThreadCount(wave, nth, &status);
+		if (status != 0)
 			throwError("SetThreadCount");		
 	}
 
@@ -665,16 +665,16 @@ public:
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!wave) {
-			int lpStatus;
-			CreateDiffraction(&wave, &lpStatus);
-			if (lpStatus != 0)
+			int status;
+			CreateDiffraction(&wave, &status);
+			if (status != 0)
 				throwError("CreateDiffraction");
 		}
 		
-		int lpStatus;
+		int status;
 
-		int nth = GetModelThreadCount(wave, &lpStatus);
-		if (lpStatus != 0)
+		int nth = GetModelThreadCount(wave, &status);
+		if (status != 0)
 			throwError("GetThreadCount");	
 			
 		return nth;	
@@ -735,40 +735,40 @@ private:
 	
 	HINSTANCE wave = 0, flex = 0;
 	
-	void (*CreateModel)(HINSTANCE *handle, HWND hCaller, int *lpStatus);
-	void (*DestroyModel)(HINSTANCE handle, int *lpStatus);
-	void (*LoadData)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
-	void (*SaveData)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
+	void (*CreateModel)(HINSTANCE *handle, HWND hCaller, int *status);
+	void (*DestroyModel)(HINSTANCE handle, int *status);
+	void (*LoadData)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*SaveData)(HINSTANCE handle, LPCWSTR wcs, int *status);
 	
-	void (*CreateDiffraction)(HINSTANCE *handle, int *lpStatus);
-	void (*DestroyDiffraction)(HINSTANCE handle, int *lpStatus);
-	void (*LoadDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
-	void (*SaveDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
-	void (*CalculateDiffraction)(HINSTANCE handle, TProgressHandlerProc proc, int *lpStatus);
-	void (*SaveDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
-	void (*RunSimulation)(HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *par, int *lpStatus);
-	void (*CalculateStatics)(HINSTANCE handle, TProgressHandlerProc proc, int *lpStatus);
-	void (*LoadSimulation)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
-	void (*SaveSimulation)(HINSTANCE handle, LPCWSTR wcs, int *lpStatus);
-	void (*GetTimeHistory2)(HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *lpStatus);	
-	void (*GetVarID)(HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *lpStatus);
-	int  (*GetNumOfSamples)(HINSTANCE handle, const TPeriod *period, int *lpStatus);
-	void (*EnumerateObjects)(HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *lpStatus);
-	void (*EnumerateVars2)(HINSTANCE handle, const TObjectExtra2 *lpObjectExtra, int ResultType, TEnumerateVarsProc EnumerateVarsProc,
-					int *lpNumberOfVars, int *lpStatus);
+	void (*CreateDiffraction)(HINSTANCE *handle, int *status);
+	void (*DestroyDiffraction)(HINSTANCE handle, int *status);
+	void (*LoadDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*SaveDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*CalculateDiffraction)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
+	void (*SaveDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*RunSimulation)(HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *par, int *status);
+	void (*CalculateStatics)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
+	void (*LoadSimulation)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*SaveSimulation)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*GetTimeHistory2)(HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status);	
+	void (*GetVarID)(HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *status);
+	int  (*GetNumOfSamples)(HINSTANCE handle, const TPeriod *lpPeriod, int *status);
+	void (*EnumerateObjects)(HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status);
+	void (*EnumerateVars2)(HINSTANCE handle, const TObjectExtra2 *lpObjectextra, int ResultType, TEnumerateVarsProc EnumerateVarsProc,
+					int *lpNumberOfVars, int *status);
+	void (*ObjectCalled)(HINSTANCE ModelHandle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status);
 	
-	void (*SetModelThreadCount)(HINSTANCE handle, int threadCount, int *lpStatus);
-	int (*GetModelThreadCount)(HINSTANCE handle, int *lpStatus);
+	void (*SetModelThreadCount)(HINSTANCE handle, int threadCount, int *status);
+	int (*GetModelThreadCount)(HINSTANCE handle, int *status);
 	
 	int (*GetLastErrorString)(LPCWSTR wcs);
 	
-	void (*FinaliseLibrary)(int *lpStatus);
+	void (*FinaliseLibrary)(int *status);
 	
 	String GetErrorString() {
-		LPWSTR wcs;
 		int len = GetLastErrorString(NULL);
 		Buffer<wchar_t> rw(len);
-		wcs = (LPWSTR)rw.begin();
+		LPWSTR wcs = (LPWSTR)rw.begin();
 		GetLastErrorString(wcs);
 		return WideToString(wcs, len);
 	}
