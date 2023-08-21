@@ -1,0 +1,55 @@
+description "Hydrodynamic coefficients converter GUI\377";
+
+uses
+	CtrlLib,
+	RasterPlayer,
+	TabBar,
+	BEMRosetta_cl,
+	DropGrid,
+	Controls4U,
+	ScatterCtrl,
+	GLCanvas;
+
+file
+	main.cpp,
+	main.h,
+	auxiliar.h,
+	mainStiffness.cpp,
+	mainMesh.cpp,
+	mainMeshView.cpp,
+	mainSolver.cpp,
+	mainDecay.cpp,
+	mainDecay_Files.cpp,
+	mainMoor.cpp,
+	mainMoor_LinesTypes.cpp,
+	mainMoor_Connections.cpp,
+	mainMoor_LinesProperties.cpp,
+	mainBEM.cpp,
+	mainBEM_QTF.cpp,
+	mainBEM_abf.cpp,
+	mainBEM_sts.cpp,
+	mainFOAMM.cpp,
+	compare.cpp,
+	mainPlot.cpp charset "UTF-8-BOM",
+	main.lay,
+	main.tpp,
+	main.iml,
+	premain.cpp,
+	premain.h,
+	premain.lay,
+	bemrosetta.t,
+	clip.brc,
+	ajax-loader.gif,
+	main.rc,
+	resource.h,
+	FAST readonly separator,
+	FastScatter.cpp,
+	FastScatter.h,
+	FastScatter.iml,
+	FastScatter.lay,
+	Copying;
+
+mainconfig
+	"" = "GUI";
+
+ spellcheck_comments "EN-GB"

@@ -1,0 +1,117 @@
+﻿%YAML 1.1
+# Type: Diffraction
+# Program: OrcaWave 11.2c
+# File: C:\Users\Koldo345\Desktop\Demo Orca\PlatformOrcawave.yml
+# Created: 9:58 on 29/12/2022
+# User: Koldo345
+# Machine: EAB221
+---
+# Model
+UnitsSystem: SI
+# Calculation & output
+SolveType: Potential and source formulations
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadCalculationMethod: Pressure integration
+HasResonanceDampingLid: No
+LengthTolerance: 100e-9
+WaterlineZTolerance: 1e-6
+WaterlineGapTolerance: 1e-6
+DivideNonPlanarPanels: No
+LinearSolverMethod: Iterative AGS
+LinearSolverMaxIterations: 30
+LinearSolverTolerance: 1e-6
+OutputPanelPressures: No
+OutputPanelVelocities: No
+OutputBodyWireFrames: Yes
+OutputIntermediateResults: No
+ValidatePanelArrangement: Yes
+BodyVolumeWarningLevel: 1e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 5
+PanelOverlapWarningLevel: 100e-6
+PanelGapWarningLevel: 100e-6
+PanelAngleWarningLevel: 120
+# Environment
+WaterDepth: 200
+WaterDensity: 1.025
+WavesReferredToBy: frequency (rad/s)   # Also 'frequency (Hz)' and 'period (s)'
+HasWaveSpectrumForDragLinearisation: Yes
+DragLinearisationMaxNumberOfIterations: 50
+DragLinearisationTolerance: 1e-6
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  - 1
+WaveHeading:
+  - 0
+  - 90
+QTFMinCrossingAngle: 0
+QTFMaxCrossingAngle: 180
+# Wave spectrum
+WaveType: JONSWAP
+WaveJONSWAPParametersMode: Partially specified
+WaveHs: 7
+WaveTz: 8
+WaveGamma: 1
+SpectrumDiscretisationMethod: Equal energy
+WaveNumberOfComponents: 200
+WaveNumberOfSpectralDirections: 1
+WaveSpectrumMinRelFrequency: 0.5
+WaveSpectrumMaxRelFrequency: 10
+WaveSpectrumMaxComponentFrequencyRange: 0.05
+# Bodies
+Bodies:
+  - BodyName: Body1
+    BodyMeshPosition: [0, 0, 0]
+    BodyMeshAttitude: [0, 0, 0]
+    BodyIncludedInAnalysis: Yes
+    BodyMeshFileName: Semisub.gdf
+    BodyMeshFormat: Wamit gdf
+    BodyMeshLengthUnits: m
+    BodyMeshSymmetry: xz plane
+    BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+    BodyOrcaFlexImportLength: 60
+    BodyHydrostaticIntegralMethod: Standard
+    BodyAddInteriorSurfacePanels: Yes
+    BodyInteriorSurfacePanelMethod: Triangulation method
+    BodyInertiaSpecifiedBy: Matrix (for a general body)
+    BodyCentreOfMass: [-0.01021, 0, -9.847563171981747]
+    BodyMass: 14.07272e3
+    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+      - [11.424196991778944e6, 0, 13.319768472330541e3]
+      - [0, 11.414011911787814e6, 0]
+      - [13.319768472330541e3, 0, 12.228241596263897e6]
+    BodyInertiaTensorOriginType: Centre of mass
+    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:
+      - [69.83646437502975, 14.482196953619102e-12, -0.053849348710455616, -114.18718383732261e-12, -119.31762761571355, 1.7141825031894123e-9]
+      - [10.167978249010994e-12, 69.84520261318539, -69.13125542132525e-12, 116.69636740975203, 1.280568452612091e-9, 0.8402436483427348]
+      - [-0.05364579507073404, -75.5017051276368e-12, 18.675587632571865, 696.6061137641876e-12, -0.9925542216989633, -2.157947209241667e-9]
+      - [787.6776646883822e-12, 115.87583164732035, 463.9138490746459e-12, 86.93197822387943e3, -27.943590345502003e-9, 56.00602621187022]
+      - [-118.50571421530886, 1.2623785582198766e-9, -0.9897044703483556, -13.052615533075848e-9, 86.9337190134842e3, 20.19344321285649e-9]
+      - [1.5637923967229128e-9, 0.8219938927379782, -1.1058870356302377e-9, -23.999277102152732, -285.0965592331814e-12, 118.52319402062734e3]
+    BodyExternalStiffnessMatrixOriginType: Body origin
+    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:
+      - [100e3, 0, 0, 0, 0, 0]
+      - [0, 100e3, 0, 0, 0, 0]
+      - [0, 0, 180e3, 0, 0, 0]
+      - [0, 0, 0, 75e6, 0, 0]
+      - [0, 0, 0, 0, 75e6, 0]
+      - [0, 0, 0, 0, 0, 0]
+    BodyExternalDampingMatrixOriginType: Body origin
+    BodyConnectionParent: Free
+    BodyIncreaseRollDampingToTarget: No
+    BodyFixedDOFx: No
+    BodyFixedDOFy: No
+    BodyFixedDOFz: No
+    BodyFixedDOFRx: No
+    BodyFixedDOFRy: No
+    BodyFixedDOFRz: No

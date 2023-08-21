@@ -1,0 +1,70 @@
+description "Hydrodynamic coefficients converter command line utility\377";
+
+uses
+	Core,
+	plugin/zstd,
+	ScatterDraw,
+	Surface,
+	STEM4U,
+	MatIO,
+	SysInfo,
+	plugin/sqlite3;
+
+options(MSC) /bigobj;
+
+options(MSC) -D_SCL_SECURE_NO_WARNINGS;
+
+file
+	main.cpp,
+	BEMRosetta.cpp,
+	BEMRosetta_int.h,
+	BEMRosetta.h,
+	CommandLine.cpp,
+	hydro.cpp,
+	Mesh readonly separator,
+	Mesh.cpp,
+	hams_mesh.cpp,
+	aqwa_mesh.cpp,
+	salome_mesh.cpp,
+	nemoh_mesh.cpp,
+	wamit_mesh.cpp,
+	diodore_mesh.cpp,
+	Solvers readonly separator,
+	nemoh.cpp,
+	hams.cpp,
+	aqwa.cpp,
+	wamit.cpp,
+	orcawave.cpp,
+	diodore.cpp,
+	deeplineswind.cpp,
+	foamm.cpp,
+	Fast readonly separator,
+	fast.cpp,
+	fastUtils.cpp,
+	hydrodyn.dat,
+	FastOut.cpp,
+	FastOut.h,
+	Other readonly separator,
+	mooring.cpp,
+	data.brc,
+	bemrosetta_cl.t,
+	main_cl.rc,
+	heal.cpp,
+	heal.h,
+	orca.cpp,
+	orca.h,
+	functions.cpp,
+	functions.h,
+	Simulation.cpp,
+	Simulation.h,
+	export.h,
+	export.brc,
+	Copying;
+
+mainconfig
+	"" = "BEMR_CL",
+	"BEMR_DLL" = "BEMR_DLL DLL",
+	"" = "BEMR_TEST_DLL",
+	"" = "BEMR_TEST_DLL_INTERNAL";
+
+ spellcheck_comments "EN-GB"
