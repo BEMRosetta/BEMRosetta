@@ -43,6 +43,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
   * Save
     * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .7, .8, .9, .12s, .12d
     * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in and all the folder structure.
+	* [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .qtf
     * [OpenFAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat
 
@@ -69,6 +70,17 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [HAMS](https://github.com/YingyiLiu/HAMS): HullMesh.pnl, WaterplaneMesh.pnl
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
+
+* Time domain simulations
+  * Load-View
+    * [OpenFAST]: .out, .outb
+    * [Deeplines Wind]: .db
+    * [AQWA Naut]: .lis
+    * [CSV]: .csv
+  * Save
+    * [OpenFAST]: .out
+    * [CSV]: .csv
+
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
 

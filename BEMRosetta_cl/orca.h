@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2023, the BEMRosetta author and contributors
 #ifdef PLATFORM_WIN32
-;		// Trick to avoid clang warning
+;
 #pragma pack(push, 1)
 
 // Object type constants 

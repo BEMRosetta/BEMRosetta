@@ -26,7 +26,7 @@ umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_DLL,DLL	.\.test\libbemrosetta.dll
 @echo Compiling BEMRosetta_cl TEST_DLL %1
 umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_TEST_DLL	.\.test\testdll_bemrosetta.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
-.\.test\testdll_bemrosetta.exe  . ..
+.\.test\testdll_bemrosetta.exe  .\.test ..
  
 rem @title Copying BEMRosetta %1
 rem @echo Copying BEMRosetta %1

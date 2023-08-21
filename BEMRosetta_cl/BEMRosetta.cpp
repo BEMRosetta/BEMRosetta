@@ -237,11 +237,16 @@ void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<d
 		bool avg = IsNum(newf.force[nih](0, idb));
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			std::complex<double> fr = f.force[ih](ifr, idb);
-			//if (applysym)
-			//	fr = std::polar(abs(fr), arg(fr) + M_PI);
-			if (avg) 
+			double ph = arg(fr);
+			if (applysym) {
+				fr = std::polar(abs(fr), arg(fr) + M_PI);
+				ph = arg(fr);
+			}
+			if (avg) {
+				double ph2 = arg(newf.force[nih](ifr, idb));	
 				newf.force[nih](ifr, idb) = Avg(newf.force[nih](ifr, idb), fr);
-			else 
+				ph2 = arg(newf.force[nih](ifr, idb));	
+			} else 
 				newf.force[nih](ifr, idb) = fr;
 		}
 	};
