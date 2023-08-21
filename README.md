@@ -35,6 +35,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
     * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .out
+    * [OrcaWave](https://www.orcina.com/orcaflex/): .yml
     * [OpenFAST-Wamit](https://www.nrel.gov/wind/nwtc/openfast.html): HydroDyn.dat
     * [SeaFEM/TDyn-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
@@ -139,13 +140,19 @@ Several meshes can be loaded in this basic viewer, allowing a visual comparison 
 
 Added Nemoh and [HAMS](https://github.com/YingyiLiu/HAMS) launcher. It can loadexisting files from HAMS, Nemoh or ANSYS AQWA, it lets you editing it, and creates the set of files to launch Nemoh and HAMS from a .bat file (it replaces the classic Nemoh MATLAB launcher)
 
-### - Bonus
+### - Time domain simulations
 
-BEMRosetta now includes an OpenFAST .out/.outb file reader, designed to be very easy to use.
-It includes an online mode for updating the plot while the simulation is in progress.
+BEMRosetta includes a time domain simulations viewer supporting OpenFAST, Deeplines Wind, Ansys AQWA Naut and csv formats, designed to be very easy to use.
 Files may be opened by drag and drop, and parameters are filtered by name or units.
 
 <p align="center"><img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/FAST_Reader.png" width="800" title="OpenFAST .out/.outb reader"></p>
+
+### - OrcaFlex command line
+
+If you have an [OrcaFlex](https://www.orcina.com/orcaflex/) licence, the command line version allows you to perform operations not available directly in OrcaWave/OrcaFlex, like:
+- Calculating hydrodynamic coefficients with OrcaWave.
+- Performing time domain simulations with OrcaWave.
+- Save the results of time domain simulations to .csv files.
 
 ### - Other
 
@@ -161,7 +168,6 @@ All files, mesh, case or BEM files, can be loaded by Drag and Drop or Copy and P
 J. C. C. Portillo, J. C. C. Henriques, M. J. Sanchez-Lara, J. Galvan, A. Otter, M. Alonso, A. Aristondo.<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
-
 
 ## License
 
