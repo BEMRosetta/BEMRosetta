@@ -35,7 +35,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
     * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .out
-    * [OpenFAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat
+    * [OpenFAST-Wamit](https://www.nrel.gov/wind/nwtc/openfast.html): HydroDyn.dat
     * [SeaFEM/TDyn-Nemoh](http://www.compassis.com/compass/en/Productos/SeaFEM): .flavia.inf, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
     * [FOAMM](http://www.eeng.nuim.ie/coer/downloads/): .mat
@@ -73,13 +73,13 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
 
 * Time domain simulations
   * Load-View
-    * [OpenFAST]: .out, .outb
-    * [Deeplines Wind]: .db
-    * [AQWA Naut]: .lis
-    * [CSV]: .csv
+    * [OpenFAST](https://www.nrel.gov/wind/nwtc/openfast.html): .out, .outb
+    * [Deeplines Wind](https://www.principia-group.com/blog/product/deeplines-wind/): .db
+    * [Ansys AQWA Naut](https://www.ansys.com/products/structures/ansys-aqwa): .lis
+    * CSV: .csv
   * Save
-    * [OpenFAST]: .out
-    * [CSV]: .csv
+    * [OpenFAST](https://www.nrel.gov/wind/nwtc/openfast.html): .out
+    * CSV: .csv
 
 
 ### - Load the hydrodynamic coefficients from one format and save them in another
