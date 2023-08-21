@@ -1625,7 +1625,7 @@ void MainBEM::OnConvert() {
 			
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
+		BEM::PrintError(e);
 	}
 }
 

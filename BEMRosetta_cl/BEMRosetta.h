@@ -500,11 +500,10 @@ private:
 	static const char *strDataToPlot[];
 	static String C_units_base(int i, int j);
 	const BEM *bem;
-		
-	void Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb);
-	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis);
 	int id;
 	static int idCount;
+		
+	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis);
 	 
 	static void GetOldAB(const UArray<MatrixXd> &oldAB, UArray<UArray<VectorXd>> &AB);
 	static void SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB);

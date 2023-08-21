@@ -219,17 +219,6 @@ void Hydro::Add_RAO(RAO &to, const Hydro &hydro, const RAO &from) {
 	}
 }
 
-void Hydro::Symmetrize_Forces_Each0(const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb) {
-	int nih  = FindClosest(newHead, h);
-	bool avg  = IsNum(newf.force[nih](0, idb));
-	for (int ifr = 0; ifr < Nf; ++ifr) {
-		if (avg) 
-			newf.force[nih](ifr, idb) = Avg(newf.force[nih](ifr, idb), f.force[ih](ifr, idb));
-		else 
-			newf.force[nih](ifr, idb) = f.force[ih](ifr, idb);
-	}
-}
-
 static double MirrorHead(double head, bool xAxis) {
 	if (xAxis)
 		return -head;
@@ -243,12 +232,35 @@ static double MirrorHead(double head, bool xAxis) {
 }
 
 void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis) {
+	auto Symmetrize_Forces_Each0 = [&](const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb, bool applysym) {
+		int nih = FindClosest(newHead, h);
+		bool avg = IsNum(newf.force[nih](0, idb));
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			std::complex<double> fr = f.force[ih](ifr, idb);
+			//if (applysym)
+			//	fr = std::polar(abs(fr), arg(fr) + M_PI);
+			if (avg) 
+				newf.force[nih](ifr, idb) = Avg(newf.force[nih](ifr, idb), fr);
+			else 
+				newf.force[nih](ifr, idb) = fr;
+		}
+	};
+
 	Initialize_Forces(newf, newNh);
 	
 	for (int idb = 0; idb < 6*Nb; ++idb) {
 		for (int ih = 0; ih < Nh; ++ih) {
-			Symmetrize_Forces_Each0(f, newf, newHead, FixHeading_180(head[ih]), ih, idb);
-			Symmetrize_Forces_Each0(f, newf, newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), ih, idb);
+			Symmetrize_Forces_Each0(f, newf, newHead, FixHeading_180(head[ih]), ih, idb, false);
+			double he = FixHeading_180(MirrorHead(head[ih], xAxis));
+			bool applysym = false;
+			if (xAxis) {
+				if (he != 0 && he != 180 && Odd(idb))
+					applysym = true;
+			} else {
+				if (he != 90 && he != -90 && Odd(idb))
+					applysym = true;
+			}
+			Symmetrize_Forces_Each0(f, newf, newHead, he, ih, idb, applysym);
 		}
 	}
 }
@@ -820,6 +832,8 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 			type = Hydro::BEMROSETTA;
 		else if (ext == ".csv")
 			type = Hydro::CSV_TABLE;
+		else if (ext == ".hdb")
+			type = Hydro::DIODORE;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
@@ -845,7 +859,7 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	} else if (type == CSV_TABLE) {
 		HydroClass data(*bem, this);
 		ret = data.SaveCSVTable(file);		
-	} else if (type == CSV_TABLE) {
+	} else if (type == DIODORE) {
 		HydroClass data(*bem, this);
 		ret = data.SaveDiodoreHDB(file);		
 	} else

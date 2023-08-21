@@ -92,7 +92,6 @@ bool Diodore::Load_HDB() {
 			hd().Nf = f.GetInt(1);
 			hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
-			hd().qw.resize(hd().Nf);
 		} else if (f.GetText(0) == "[QTF_PERIODS_NUMBER]") {
 			if (f.GetInt(1) > 0) {
 				nqw = f.GetInt(1);
@@ -106,7 +105,7 @@ bool Diodore::Load_HDB() {
 			for (int iw = 0; iw < hd().Nf; ++iw) {
 				f.GetLine_discard_empty();
 				hd().T[iw] = f.GetDouble(0);
-				hd().w[iw] = hd().qw[iw] = 2*M_PI/hd().T[iw];
+				hd().w[iw] = 2*M_PI/hd().T[iw];
 			}
 		} else if (f.GetText(0) == "[List_calculated_headings]") {
 			for (int ih = 0; ih < hd().Nh; ++ih) {
@@ -254,7 +253,7 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 	
 	out << "[SOFT]          DIODORE" << "\n" 	
 		<< "[VERSION]       5.5.2" << "\n"
-		<< "[Date]          " << Format("%02d:%02d:%02d    %mon %02d %d\n", t.hour, t.minute, t.second, t.month, t.day, t.year)
+		<< "[Date]          " << Format("%02d:%02d:%02d    %Mon %02d %d\n", t.hour, t.minute, t.second, t.month, t.day, t.year)
 		<< "[INPUT_FILE]    " << name << "\n"
 		<< "[Locally_At]    " << folder << "\n"
 		<< "[UNIT]" << "\n"          
@@ -264,64 +263,66 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 		<< "[RAO]               " << (hd().IsLoadedRAO() ? 'Y' : 'N') << "\n"
 		<< "[DRIFT_FORCE]       " << (hd().IsLoadedMD() ? 'Y' : 'N') << "\n"			
 		<< "[QTF]               " << (hd().IsLoadedQTF(false) ? 'Y' : 'N') << "\n"
-		<< "[QTF]               " << (hd().IsLoadedQTF(false) ? 'Y' : 'N') << "\n"							
 		<< "[PERIODS_NUMBER]    " << hd().Nf << "\n"
 		<< "[INTER_PERIODS_NB]  " << 0 << "\n"
 		<< "[QTF_PERIODS_NUMBER]    " << hd().qw.size() << "\n"							
-		<< "[QTF_SWEEPING_NUMBER]   " << 0 << "\n"			
+		<< "[QTF_SWEEPING_NUMBER]   " << 0 << "\n"	
+		<< "[QTF_SWEEPING_STEP]          0.000\n"		
 		<< "[HEADINGS_NUMBER]   " << hd().Nh << "\n"
-		<< "[LOWEST_HEADING]    " << (hd().Nh > 0 ? First(hd().head) : 0) << "\n"
-		<< "[HIGHEST_HEADING]   " << (hd().Nh > 0 ? Last(hd().head) : 0) << "\n";	
+		<< Format("[LOWEST_HEADING]    %.2f\n", (hd().Nh > 0 ? First(hd().head) : 0))
+		<< Format("[HIGHEST_HEADING]   %.2f\n", (hd().Nh > 0 ? Last(hd().head) : 0));	
 
-	out << "[List_calculated_periods]\n";								
+	out << "[List_calculated_periods]   \n";								
 	for (auto T : hd().T)
-		Format("10.3f", T);							
+		out << Format("%10.3f\n", T);							
 								
-	out << "[List_calculated_headings]\n";								
+	out << "[List_calculated_headings]  \n";								
 	for (auto h : hd().head)
-		Format("10.3f", h);	
+		out << Format("%10.3f\n", h);	
 										
 	out << "[STRUCTURES_NUMBER]        " << hd().Nb << "\n";							
 
 
 	auto WriteForce = [&](Hydro::Forces &force, String text) {
 		for (int ih = 0; ih < hd().Nh; ++ih) {
-			out << Format("[%s_MOD_%03d]   %10.3f\n", ih+1, hd().head[ih]);
+			out << Format("[%s_MOD_%03d]   %10.3f\n", text, ih+1, hd().head[ih]);
 			for (int iw = 0; iw < hd().Nf; ++iw) {
 				out << Format("%7.2f", hd().T[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
-					out << Format("  %.7E", abs(hd().F_dim(force, ih, iw, idof)));	
+					out << Format(" % .7E", abs(hd().F_dim(force, ih, iw, idof)));	
+				out << "\n";
 			}
 		}
 		for (int ih = 0; ih < hd().Nh; ++ih) {
-			out << Format("[%s_PH_%03d]   %10.3f\n", ih+1, hd().head[ih]);
+			out << Format("[%s_PH_%03d]   %10.3f\n", text, ih+1, hd().head[ih]);
 			for (int iw = 0; iw < hd().Nf; ++iw) {
 				out << Format("%7.2f", hd().T[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
-					out << Format("  %.7E", arg(hd().F_dim(force, ih, iw, idof)));	
+					out << Format(" % .7E", arg(hd().F_dim(force, ih, iw, idof)));	
+				out << "\n";
 			}
 		}
 	};
 		
 	for (int ib = 0; ib < hd().Nb; ++ib) {
-		out << Format("[STRUCTURE_%02d] ", ib, hd().names[ib]);
-		out << Format("[UNDERWATER_VOLUME]        %.3f", hd().Vo[ib]);
-		out << Format("[CENTER_OF_BUOYANCY]     %.3f   %.3f   %.3f", hd().cb(0, ib), hd().cb(1, ib), hd().cb(2, ib));
-		out << Format("[CENTER_OF_GRAVITY]      %.3f   %.3f   %.3f", hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
+		out << Format("[STRUCTURE_%02d] %s\n", ib+1, hd().names[ib]);
+		out << Format("[UNDERWATER_VOLUME]        %.3f\n", hd().Vo[ib]);
+		out << Format("[CENTER_OF_BUOYANCY]     %.4f   %.4f   %.4f\n", hd().cb(0, ib), hd().cb(1, ib), hd().cb(2, ib));
+		out << Format("[CENTER_OF_GRAVITY]      %.4f   %.4f   %.4f\n", hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
 		
-		out << "[Mass_Inertia_matrix]\n";		
+		out << "[Mass_Inertia_matrix]   \n";		
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				double d = hd().IsLoadedM() ? hd().M[ib](r, c) : 0;
-				out << Format("% .7e ", d);
+				out << Format("% .2E   ", d);
 			}
 			out << "\n";
 		}
-		out << "[Hydrostatic_matrix]\n";		
+		out << "[Hydrostatic_matrix]    \n";		
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				double d = hd().IsLoadedC() ? hd().C_dim(ib, r, c) : 0;
-				out << Format("% .7e ", d);
+				out << Format("% .7E ", d);
 			}
 			out << "\n";
 		}
@@ -329,167 +330,65 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				double d = hd().IsLoadedCMoor() ? hd().CMoor_dim(ib, r, c) : 0;
-				out << Format("% .7e ", d);
+				out << Format("% .7E ", d);
 			}
 			out << "\n";
 		}
 		out << "\n";
 		
-		out << "[EXCITATION_FORCES_AND_MOMENTS]\n";
-		WriteForce(hd().ex, "INCIDENCE_EFM");
-	
-		out << "[FROUDEKRYLOV_FORCES_AND_MOMENTS]\n";
-		WriteForce(hd().ex, "INCIDENCE_EFM_FFK");
-		
-		out << "[DIFFRACTION_FORCES_AND_MOMENTS]\n";
-		WriteForce(hd().ex, "INCIDENCE_EFM_DIFF");
-		
-		out << "[INCIDENCE_RAO]\n";
-		WriteForce(hd().ex, "INCIDENCE_RAO");
-		
-		out << "[DRIFT_FORCES_AND_MOMENTS]\n";
-		
-		
-			
-	
-	}
-
-/*				
-	if (hd().IsLoadedA())  {
-		String files = AppendFileNameX(folder, name + "_A" + ext);
-		FileOut out(files);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
-
-
-		const String &sep = hd().GetBEM().csvSeparator;
-		
-		out  << "Frec [rad/s]";
-		for (int ib = 0; ib < hd().Nb; ++ib) {			
-			for (int idf1 = 0; idf1 < 6; ++idf1) 
-				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+		if (hd().IsLoadedFex()) {
+			out << "[EXCITATION_FORCES_AND_MOMENTS]  \n";
+			WriteForce(hd().ex, "INCIDENCE_EFM");
 		}
-		out << "\n";
-	
-		if (hd().IsLoadedA0()) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
-				if (ib == 0)
-					out << "0" << sep;				
-				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().A0(idf1 + 6*ib, idf2 + 6*ib)))	
-							out << FormatDouble(hd().A0_dim(idf1, idf2));
-						out << sep;
-					}
+		if (hd().IsLoadedFfk()) {
+			out << "[FROUDEKRYLOV_FORCES_AND_MOMENTS]\n";
+			WriteForce(hd().fk, "INCIDENCE_EFM_FFK");
+		}
+		if (hd().IsLoadedFsc()) {
+			out << "[DIFFRACTION_FORCES_AND_MOMENTS]\n";
+			WriteForce(hd().sc, "INCIDENCE_EFM_DIFF");
+		}
+		if (hd().IsLoadedRAO()) {
+			out << "[RAO]\n";
+			WriteForce(hd().rao, "INCIDENCE_RAO");
+		}
+		if (hd().IsLoadedMD()) {
+			out << "[DRIFT_FORCES_AND_MOMENTS]\n";
+			for (int ih = 0; ih < hd().mdhead.size(); ++ih) {
+				out << Format("[INCIDENCE_DFM_%03d]   %10.3f\n", ih+1, real(hd().mdhead[ih]));
+				for (int iw = 0; iw < hd().Nf; ++iw) {
+					out << Format("%7.2f", hd().T[iw]);
+					for (int idf = 0; idf < 6; ++idf) 
+						out << Format(" % .7E", hd().Md_dim(idf, ih, iw));
+					out << "\n";
 				}
 			}
 		}
-		out << "\n";
-		
-		UVector<int> ow = GetSortOrder(hd().w);
-		
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
-				if (ib == 0)
-					out << hd().w[ow[ifr]] << sep;				
-				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
-							out << FormatDouble(hd().A_dim(ow[ifr], idf1, idf2));
-						out << sep;
-					}
-				}
-				out << "\n";
-			}
-		}
-		if (hd().IsLoadedAinf()) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
-				if (ib == 0)
-					out << "inf" << sep;				
-				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
-							out << FormatDouble(hd().Ainf_dim(idf1, idf2));
-						out << sep;
+		if (hd().IsLoadedA() || hd().IsLoadedB()) {
+			out << "[Added_mass_Radiation_Damping]\n";
+			if (hd().IsLoadedA()) {
+				for (int idrow = 0; idrow < 6; ++idrow) {
+					out << Format("[ADDED_MASS_LINE_%d]\n", idrow+1);
+					for (int iw = 0; iw < hd().Nf; ++iw) {
+						out << Format("%7.2f", hd().T[iw]);
+						for (int idof = 0; idof < 6; ++idof) 
+							out << Format(" % .7E", hd().A_dim(iw, idrow + 6*ib, idof + 6*ib));
+						out << "\n";
 					}
 				}
 			}
-		}	
-	}
-	
-	if (hd().IsLoadedB())  {
-		String files = AppendFileNameX(folder, name + "_B" + ext);
-		FileOut out(files);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
-
-
-		const String &sep = hd().GetBEM().csvSeparator;
-		
-		out  << "Frec [rad/s]";
-		for (int ib = 0; ib < hd().Nb; ++ib) {			
-			for (int idf1 = 0; idf1 < 6; ++idf1) 
-				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
-		}
-		out << "\n";
-		
-		UVector<int> ow = GetSortOrder(hd().w);
-		
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
-				if (ib == 0)
-					out << hd().w[ow[ifr]] << sep;			
-				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
-							out << FormatDouble(hd().B_dim(ow[ifr], idf1, idf2));
-						out << sep;
+			if (hd().IsLoadedB()) {
+				for (int idrow = 0; idrow < 6; ++idrow) {
+					out << Format("[DAMPING_TERM_%d]\n", idrow+1);
+					for (int iw = 0; iw < hd().Nf; ++iw) {
+						out << Format("%7.2f", hd().T[iw]);
+						for (int idof = 0; idof < 6; ++idof) 
+							out << Format(" % .7E", hd().B_dim(iw, idrow + 6*ib, idof + 6*ib));
+						out << "\n";
 					}
 				}
-				out << "\n";
 			}
-		}
+		}					
 	}
-	
-	if (hd().IsLoadedC())  {
-		String files = AppendFileNameX(folder, name + "_C" + ext);
-		FileOut out(files);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
-
-
-		SaveC(out);
-	}
-	
-	if (hd().IsLoadedM())  {
-		String files = AppendFileNameX(folder, name + "_M" + ext);
-		FileOut out(files);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
-
-
-		SaveM(out);
-	}
-	
-	if (hd().IsLoadedFex())  {
-		String files = AppendFileNameX(folder, name + "_Fex" + ext);
-		FileOut out(files);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
-
-		SaveForce(out, hd().ex);
-	}	
-	
-	if (hd().IsLoadedMD())  {
-		String files = AppendFileNameX(folder, name + "_MD" + ext);
-		FileOut out(files);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
-
-		SaveMD(out);
-	}	
-	*/
 	return true;	
 }

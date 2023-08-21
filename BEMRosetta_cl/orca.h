@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2023, the BEMRosetta author and contributors
 #ifdef PLATFORM_WIN32
-
+;		// Trick to avoid clang warning
 #pragma pack(push, 1)
 
 // Object type constants 
@@ -139,10 +139,10 @@ typedef struct {
 	double ToTime;
 } TPeriod;
 
-#define pnSpecifiedPeriod 32001
-#define pnLatestWave 32002
-#define pnWholeSimulation 32003
-#define pnStaticState 32004
+#define pnSpecifiedPeriod 	 32001
+#define pnLatestWave 		 32002
+#define pnWholeSimulation 	 32003
+#define pnStaticState 		 32004
 #define pnInstantaneousValue 32005
 
 #define rtTimeHistory 0
@@ -778,5 +778,6 @@ private:
 	}
 };
 
+#pragma pack(pop)
 
 #endif
