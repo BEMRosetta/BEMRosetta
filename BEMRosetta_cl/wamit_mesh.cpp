@@ -131,7 +131,21 @@ String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool 
 		int nPatches = f.GetInt(0);
 		if (nPatches < 1)
 			return t_("Number of patches not found in .gdf file");
-						
+		
+		if (f.size() >= 2) {
+			int igdef = f.GetInt_nothrow(1);
+			if (!IsNull(igdef)) {
+				if (igdef == 0)
+					;
+				else if (igdef == 1)
+					return t_(".gdf files represented by B-splines (IGDEF = 1) are not supported");
+				else if (igdef == 2)
+					return t_(".gdf files represented by MultiSurf .ms2 files (IGDEF = 2) are not supported");
+				else
+					return t_(".gdf files represented by a special subrutine (IGDEF < 0  or > 2) are not supported");
+			}
+		}
+		
 		while(!in.IsEof()) {
 			int ids[4];
 			bool npand = false;

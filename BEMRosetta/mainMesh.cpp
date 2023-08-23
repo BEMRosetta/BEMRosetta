@@ -544,7 +544,7 @@ bool MainMesh::OnLoad() {
 		
 	} catch (Exc e) {
 		mainView.gl.Enable();
-		BEM::PrintError(DeQtfLf(e));
+		BEM::PrintError(e);
 		return false;
 	}
 	return true;
