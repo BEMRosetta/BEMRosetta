@@ -81,6 +81,21 @@
 #define otAddedMassCloseToSeabed 1035
 #define otSeabedTangentialResistance 1036
 
+// For GetModelState 
+#define msReset 0
+#define msCalculatingStatics 1
+#define msInStaticState 2
+#define msRunningSimulation 3
+#define msSimulationStopped 4
+#define msSimulationStoppedUnstable 5
+
+// For TObjectExtra.LinePoint 
+#define ptEndA 0
+#define ptEndB 1
+#define ptTouchdown 2
+#define ptNodeNum 3
+#define ptArcLength 4
+
 typedef wchar_t TObjectName[50];
 typedef struct {
     HINSTANCE ObjectHandle;
@@ -149,7 +164,6 @@ typedef struct {
 
 class Orca {
 public:
-	Orca() : centre(0, 0, 0) {}
 	~Orca() {
 		if (dll.GetHandle() != 0) {
 			int status;
@@ -197,7 +211,8 @@ public:
 		EnumerateObjects	   = DLLGetFunction(dll, void, C_EnumerateObjectsW, 	  (HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status));
 		EnumerateVars2		   = DLLGetFunction(dll, void, C_EnumerateVars2W, 		  (HINSTANCE handle, const TObjectExtra2 *objectextra, int ResultType, 
 																							TEnumerateVarsProc EnumerateVarsProc, int *lpNumberOfVars, int *status));
-		ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (HINSTANCE ModelHandle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
+		ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (HINSTANCE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
+		CGetModelState		   = DLLGetFunction(dll, void, C_GetModelState,		  	  (HINSTANCE handle, int *lpModelState, int *status));
 		
 		SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *status));
 		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *status));
@@ -271,6 +286,7 @@ public:
 	}
 
 	static VectorMap<int, String> objectTypes;
+	static VectorMap<int, String> status;
 	
 	struct Object {
 		int type;
@@ -290,14 +306,19 @@ public:
 		objHandles << info->ObjectHandle;
 	}
 	
-	static UVector<int> varIDs;
+	static int actualBlade;
+	static UVector<int> varIDs, varBlades;
 	static UVector<String> varNames, varFullNames, varUnits;
 
 	static void __stdcall EnumerateVarsProc(const TVarInfo *lpVarInfo) {
-		varIDs << lpVarInfo->VarID;
-		varNames << WideToString(lpVarInfo->lpVarName);
-		varFullNames << WideToString(lpVarInfo->lpFullName);
-		varUnits << WideToString(lpVarInfo->lpVarUnits);
+		int id = Find(varIDs, lpVarInfo->VarID);
+		if (id < 0 || (actualBlade > 0 && varBlades[id] != actualBlade)) {
+			varIDs << lpVarInfo->VarID;
+			varBlades << actualBlade;
+			varNames << WideToString(lpVarInfo->lpVarName);
+			varFullNames << WideToString(lpVarInfo->lpFullName);
+			varUnits << WideToString(lpVarInfo->lpVarUnits);
+		}
 	}
 	
 	void LoadFlex(String owryml) {
@@ -434,33 +455,41 @@ public:
 		
 		TObjectExtra2 objectextra = {};
 		objectextra.Size = sizeof(TObjectExtra2);
-		objectextra.DisturbanceVesselName = NULL;
-		if (objType == otEnvironment) {
-			objectextra.EnvironmentPos[0] = centre.x;
-			objectextra.EnvironmentPos[1] = centre.y;
-			objectextra.EnvironmentPos[2] = centre.z;
-		} else if (objType == otVessel || objType == ot6DBuoy) {
-			objectextra.RigidBodyPos[0] = centre.x;
-			objectextra.RigidBodyPos[1] = centre.y;
-			objectextra.RigidBodyPos[2] = centre.z;
-		}
+		
+		int ResultType = rtTimeHistory;
+		int lpNumberOfVars = -1;
 		
 		varIDs.Clear();
+		varBlades.Clear();
 		varNames.Clear();
 		varFullNames.Clear();
 		varUnits.Clear();
-		int ResultType = rtTimeHistory;
-		int lpNumberOfVars = -1;
+		actualBlade = -1;
+		
 		EnumerateVars2(objHandle, &objectextra, ResultType, EnumerateVarsProc, &lpNumberOfVars, &status);
 		if (status != 0)
-			throwError("GetFlexSimVariables");		
+			throwError("GetFlexSimVariables.EnumerateVars2");		
 		
+		if (objType == otTurbine) {		// Adds the parameters related with each blade
+			int from = varNames.size();
+			for (int ib = 1; ib <= 3; ++ ib) {
+				objectextra.BladeIndex = actualBlade = ib;
+				EnumerateVars2(objHandle, &objectextra, ResultType, EnumerateVarsProc, &lpNumberOfVars, &status);
+				if (status != 0)
+					throwError("GetFlexSimVariables.EnumerateVars2");		
+				for (int i = from; i < varNames.size(); ++i) {
+					varNames[i] = varNames[i] + Format("|Blade|%d", ib);
+					varFullNames[i] = varFullNames[i] + Format("|Blade|%d", ib);
+				}
+				from = varNames.size();
+			}
+		}
 		IDs = pick(varIDs);
 		names = pick(varNames);
 		fullNames = pick(varFullNames);
 		units = pick(varUnits);
 	}
-	
+
 	UVector<String> GetFlexSimVariablesList() {
 		GetFlexSimObjects();
 		
@@ -471,13 +500,14 @@ public:
 				UVector<String> vnames, fullNames, units;
 				GetFlexSimVariables(objHandles[i], objTypes[i], IDs, vnames, fullNames, units);
 				for (const String &n : vnames)
-					ret << Format("%s.%s", objNames[i], n);
+					ret << Format("%s|%s", objNames[i], n);
 			}
 		}
 		return ret;
 	}
 
-	void GetFlexSimVar(HINSTANCE objHandle, int objType, int varId, VectorXd &data) {
+	void GetFlexSimVar(HINSTANCE objHandle, int objType, int varId, const Point3D &centre,
+					UVector<String> &linePoint, VectorXd &data) {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
@@ -506,38 +536,75 @@ public:
 			objectExtra.RigidBodyPos[1] = centre.y;
 			objectExtra.RigidBodyPos[2] = centre.z;
 		}
+		if (linePoint.size() > 0) {
+			if (linePoint[0] == "EndA")
+				objectExtra.LinePoint = ptEndA;
+			else if (linePoint[0] == "EndB")
+				objectExtra.LinePoint = ptEndB;
+			else if (linePoint[0] == "Touchdown")
+				objectExtra.LinePoint = ptTouchdown;
+			else if (linePoint[0] == "Node") {
+				objectExtra.LinePoint = ptNodeNum;
+				if (linePoint.size() != 2)
+					throwError("GetFlexSimVar Node number not found");
+				int num = ScanInt(linePoint[1]);
+				if (IsNull(num) || num < 0 || num > 10000)
+					throwError(Format("GetFlexSimVar Invalid node number %s", linePoint[1]));
+				objectExtra.NodeNum = num;
+			} else if (linePoint[0] == "ArcLength") {
+				objectExtra.LinePoint = ptArcLength;
+				if (linePoint.size() != 2)
+					throwError("GetFlexSimVar Arc length not found");
+				double len = ScanDouble(linePoint[1]);
+				if (IsNull(len) || len < 0 || len > 10000)
+					throwError(Format("GetFlexSimVar Invalid arc length %s", linePoint[1]));
+				objectExtra.ArcLength = len;
+			} else if (linePoint[0] == "Blade") {	
+				if (linePoint.size() != 2)
+					throwError("GetFlexSimVar Blade number not found");
+				int num = ScanInt(linePoint[1]);
+				if (IsNull(num) || num < 1 || num > 3)
+					throwError(Format("GetFlexSimVar Invalid blade number %s", linePoint[1]));
+				objectExtra.BladeIndex = num;
+			} else
+				throwError(Format("GetFlexSimVar Invalid option %s", linePoint[0]));
+		}
+		
 		data.resize(numS);
 		GetTimeHistory2(objHandle, &objectExtra, &period, varId, data.data(), &status);
 		if (status != 0)
 			throwError("GetFlexSimVar.GetTimeHistory2");		
 	}
 	
-	void GetFlexSimVar(String name, String &unit, VectorXd &data) {
-		UVector<String> sp = Split(name, ".");
-		if (sp.size() != 2)
-			throwError("GetFlexSimVar incorrect varName");
+	void GetFlexSimVar(String name, const Point3D &centre, String &unit, int &objType, VectorXd &data) {
+		UVector<String> sp = Split(name, "|");
+		if (sp.size() < 2 || sp.size() > 4)
+			throwError(Format("GetFlexSimVar incorrect varName %s", name));
 		
 		String object = sp[0];
 		String var = sp[1];
+		sp.Remove(0, 2);
+		UVector<String> &linePoint = sp;
+		if (linePoint.size() == 2 && linePoint[0] == "Blade")
+			var << Format("|Blade|%s", linePoint[1]);
 		
 		GetFlexSimObjects();
 		
-		HINSTANCE handle = 0;
-		int objType;
+		HINSTANCE objHandle = 0;
 		for (int i = 0; i < objNames.size(); ++i) {
 			if (objNames[i] == object) {
-				handle = objHandles[i];
+				objHandle = objHandles[i];
 				objType = objTypes[i];
 				break;
 			}
 		}
-		if (handle == 0)
+		if (objHandle == 0)
 			throwError(Format("GetFlexSimVar object '%s' not found", object));
 		
 		int varId = -1;
 		UVector<int> IDs;
 		UVector<String> names, fullNames, units;
-		GetFlexSimVariables(handle, objType, IDs, names, fullNames, units);
+		GetFlexSimVariables(objHandle, objType, IDs, names, fullNames, units);
 		for (int i = 0; i < names.size(); ++i) {
 			if (names[i] == var) {
 				varId = IDs[i];
@@ -548,7 +615,30 @@ public:
 		if (varId == -1)
 			throwError(Format("GetFlexSimVar variable '%s' not found", name));
 		
-		GetFlexSimVar(handle, objType, varId, data); 
+		GetFlexSimVar(objHandle, objType, varId, centre, linePoint, data); 
+	}
+	
+	int GetModelState() {
+		if (!dll && !FindInit())
+			throw Exc("Orca DLL not loaded");
+		
+		if (!flex) 
+			throwError("GetFlexSimVar");	
+		
+		int status, state;
+		CGetModelState(flex, &state, &status);
+		if (status != 0)
+			throwError("GetModelState");
+		
+		return state;
+	}
+	
+	String GetStatusString(int idState) {
+		int id = status.Find(idState);	
+		if (id >= 0)
+			return status[id];
+		else
+			return "UNKNOWN";
 	}
 	
 	void LoadWave(String owryml) {
@@ -680,29 +770,37 @@ public:
 		return nth;	
 	}
 	
-	void SaveCsv(String file, const UVector<String> &_parameters, String sep) {
+	void SaveCsv(String file, const UVector<String> &_parameters, const UArray<Point3D> &_centres, String sep) {
 		if (_parameters.IsEmpty())
 			return;
 		if (sep.IsEmpty())
 			sep = ";";	
 		
-		FileOut out(file);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to open '%s'"), file));
-		
 		UVector<String> parameters = clone(_parameters);
-		if (parameters[0] != "General.Time")
-			parameters.Insert(0, "General.Time");
+		UArray<Point3D> centres = clone(_centres);
+		if (parameters[0] != "General|Time") {
+			parameters.Insert(0, "General|Time");
+			centres.Insert(0, Point3D(0, 0, 0));
+		}
 		
 		UVector<String> units(parameters.size());
 		UArray<VectorXd> datas(parameters.size());
 		for (int i = 0; i < parameters.size(); ++i) {
 			String unit;
+			int objType;
 			VectorXd data;
-			GetFlexSimVar(parameters[i], unit, data);	
+			GetFlexSimVar(parameters[i], centres[i], unit, objType, data);	
 			units[i] = unit;
 			datas[i] = pick(data);
+			if (objType ==  otEnvironment || objType == otVessel || objType == ot6DBuoy)
+				parameters[i] << Format("(%s,%s,%s)", 
+						FDS(centres[i].x, 5), FDS(centres[i].y, 5), FDS(centres[i].z, 5)); 
 		}
+		
+		FileOut out(file);
+		if (!out.IsOpen())
+			throw Exc(Format(t_("Impossible to open '%s'"), file));
+		
 		for (int i = 0; i < parameters.size(); ++i) {
 			if (i > 0)
 				out << sep;
@@ -721,13 +819,10 @@ public:
 		}
 	}
 	
-	void SetCentre(const Point3D &c) {centre = clone(c);}
-	
 	String GetDLLPath() const		{return dllFile;}	
 	static Function<bool(String, int, const Time &)> WhenWave;
 	static Function<bool(String)> WhenPrint;
 	static Time startCalc;
-	Point3D centre;
 	
 private:
 	Dl dll;
@@ -756,7 +851,8 @@ private:
 	void (*EnumerateObjects)(HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status);
 	void (*EnumerateVars2)(HINSTANCE handle, const TObjectExtra2 *lpObjectextra, int ResultType, TEnumerateVarsProc EnumerateVarsProc,
 					int *lpNumberOfVars, int *status);
-	void (*ObjectCalled)(HINSTANCE ModelHandle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status);
+	void (*ObjectCalled)(HINSTANCE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status);
+	void (*CGetModelState)(HINSTANCE handle, int *lpModelState, int *status);
 	
 	void (*SetModelThreadCount)(HINSTANCE handle, int threadCount, int *status);
 	int (*GetModelThreadCount)(HINSTANCE handle, int *status);

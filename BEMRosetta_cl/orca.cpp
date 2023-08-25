@@ -9,8 +9,18 @@
 UVector<int> Orca::objTypes;
 UVector<String> Orca::objNames;
 UVector<HINSTANCE> Orca::objHandles;
-UVector<int> Orca::varIDs;
+int Orca::actualBlade;
+UVector<int> Orca::varIDs, Orca::varBlades;
 UVector<String> Orca::varNames, Orca::varFullNames, Orca::varUnits;
+
+VectorMap<int, String> Orca::status = {
+	{msReset, "Reset"},
+	{msCalculatingStatics, "Calculating Statics"},
+	{msInStaticState, "In Static State"},
+	{msRunningSimulation, "Running Simulation"},
+	{msSimulationStopped, "Simulation Stopped"},
+	{msSimulationStoppedUnstable, "Simulation Stopped Unstable"}
+};
 
 VectorMap<int, String> Orca::objectTypes = {
 	{otNull, "Null"},

@@ -176,7 +176,9 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-ls -loadSim <sim>       		  # Load OrcaFlex simulation in <sim>");
 	Cout() << "\n" << t_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference system for outputs");
-	Cout() << "\n" << t_("-c  -convert <file> <params>    # Export the selected params of the actual model to output file (csv)");
+	Cout() << "\n" << t_("-lp -loadParam <param>          # Load param to be saved");
+	Cout() << "\n" << t_("-cp -clearParams                # Clear parameters loaded");
+	Cout() << "\n" << t_("-c  -convert <file>             # Export the loaded params of the actual model to output file (csv)");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
 	Cout() << "\n" << t_("              numthread         # Number of threads");
 	Cout() << "\n" << t_("     <params> list              # Parameter names");
@@ -229,6 +231,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 #ifdef PLATFORM_WIN32
 	Orca orca;
 	bool dllOrcaLoaded = false;
+	UVector<String> paramList;
+	UArray<Point3D> centreList;
+	Point3D centre = Point3D(0, 0, 0);
 	int numOrcaTries = 4;
 #endif
 
@@ -875,11 +880,12 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (errorStr.Find("licence") < 0)
 										break;
 									numTry--;
+									errorStr.Clear();
 								}
 								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
-							if (numTry == 0)
+							if (!IsEmpty(errorStr))
 								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
 								orca.RunWave();
@@ -911,11 +917,12 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (errorStr.Find("licence") < 0)
 										break;
 									numTry--;
+									errorStr.Clear();
 								}
 								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
-							if (numTry == 0)
+							if (!IsEmpty(errorStr))
 								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
 								orca.RunFlex();
@@ -945,12 +952,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (errorStr.Find("licence") < 0)
 										break;
 									numTry--;
+									errorStr.Clear();
 								}
 								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
-							if (numTry == 0)
-								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+							if (!IsEmpty(errorStr))
+								throw Exc(Format(t_("Problem loading '%s'. %s"), from, errorStr));
 							else
 								BEM::Print("\n" + Format(t_("Simulation '%s' loaded"), from));
 						} else if (param == "-numthread") {
@@ -983,6 +991,11 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(Format(t_("Invalid thread number %s"), command[i]));							
 
 							BEM::Print("\n" + Format(t_("Number of OrcaFlex license tries set to %d"), numOrcaTries));
+						} else if (param == "-lp" || param == "-loadParam") {
+							CheckIfAvailableArg(command, ++i, "-loadParam");
+							
+							paramList << command[i];
+							centreList << centre;
 						} else if (param == "-c" || param == "-convert") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -994,23 +1007,19 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
 							String file = command[i];
-							
-							UVector<String> paramList;
-							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
-								i++;
-								paramList << command[i];
-							}
-							orca.SaveCsv(file, paramList, ScatterDraw::GetDefaultCSVSeparator());
+
+							orca.SaveCsv(file, paramList, centreList, ScatterDraw::GetDefaultCSVSeparator());
 							BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
 						} else if (param == "-rs" || param == "-refsystem") {	
-							Point3D centre;
 							CheckIfAvailableArg(command, ++i, "Reference cx");
 							centre.x = ScanDouble(command[i]);
 							CheckIfAvailableArg(command, ++i, "Reference cy");
 							centre.y = ScanDouble(command[i]);
 							CheckIfAvailableArg(command, ++i, "Reference cz");
 							centre.z = ScanDouble(command[i]);
-							orca.SetCentre(centre);
+						} else if (param == "-cp" || param == "-clearParams") {
+							paramList.Clear();
+							centreList.Clear();
 						} else if (param == "-p" || param == "-print") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -1040,8 +1049,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									Cout() << "\n";
 
 									String unit;
+									int objType;
 									VectorXd d;
-									orca.GetFlexSimVar(command[i], unit, d);
+									orca.GetFlexSimVar(command[i], centre, unit, objType, d);
 									
 									i++;
 									if (command.size() <= i)
@@ -1060,7 +1070,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									else if (command[i] == "min") 
 										lastPrint = FormatDouble(d.minCoeff());
 									else  
-										throw Exc(Format(t_("Parameter '%s' not found"), command[i]));
+										throw Exc(Format(t_("Parameter '%s' not found in -p"), command[i]));
 									Cout() << lastPrint;
 								}
 							}
