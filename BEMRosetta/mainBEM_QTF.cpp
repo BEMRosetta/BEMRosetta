@@ -32,8 +32,8 @@ void QTFTabDof::Init(int posSplitter, int ib, int idof) {
 		widths[1] = max(0, width - height);
 	};
 		
-	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50);
-	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50);
+	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50).SetSciExpTop();
+	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50).SetSciExpTop();
 	up	.surf.LinkedWith(down.surf);
 	
 	up  .surf.WhenPainter = THISBACK(OnPainter);
@@ -48,8 +48,8 @@ void QTFTabDof::Init(int posSplitter, int ib, int idof) {
 	down.isUp = false;
 	
 	int len = StdFont().GetHeight();
-	up.  scatter.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-	down.scatter.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
+	up.  scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
+	down.scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
 	up.scatter.LinkedWith(down.scatter);
 }
 

@@ -19,8 +19,8 @@ void MainPlot::Init(bool vert) {
 	if (!isInit) {
 		int len = StdFont().GetHeight();
 		
-		scatt.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-		scatP.SetMargin(8*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
+		scatt.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12));
+		scatP.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12));
 		scatt.LinkedWith(scatP);
 		
 		splitCompare.Horz(scatt.SizePos(), compare.SizePos());
@@ -30,8 +30,8 @@ void MainPlot::Init(bool vert) {
 		else
 			splitter.Horz(splitCompare.SizePos(), scatP.SizePos());
 		Add(splitter.SizePos());
-		scatt.ShowAllMenus();
-		scatP.ShowAllMenus();
+		scatt.ShowAllMenus().SetSciExpTop();
+		scatP.ShowAllMenus().SetSciExpTop();
 		
 		compare.Init(scatt, splitCompare);
 		
