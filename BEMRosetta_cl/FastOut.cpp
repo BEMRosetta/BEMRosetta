@@ -496,16 +496,18 @@ void FastOut::AfterLoad() {
 		FASTCase cas;
 		cas.Load(ffpath.GetPath());
 		
-		TipRad = cas.elastodyn.GetDouble("TipRad");
-		OverHang = cas.elastodyn.GetDouble("OverHang");
-		ShftTilt = ToRad(cas.elastodyn.GetDouble("ShftTilt"));
-		Precone = ToRad(cas.elastodyn.GetDouble("PreCone(1)"));
-		Twr2Shft = cas.elastodyn.GetDouble("Twr2Shft");
-		TowerHt = cas.elastodyn.GetDouble("TowerHt");
-		
-		ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
-		ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
-		
+		if (cas.elastodyn.IsAvailable()) {
+			TipRad = cas.elastodyn.GetDouble("TipRad");
+			OverHang = cas.elastodyn.GetDouble("OverHang");
+			ShftTilt = ToRad(cas.elastodyn.GetDouble("ShftTilt"));
+			Precone = ToRad(cas.elastodyn.GetDouble("PreCone(1)"));
+			Twr2Shft = cas.elastodyn.GetDouble("Twr2Shft");
+			TowerHt = cas.elastodyn.GetDouble("TowerHt");
+		}
+		if (cas.hydrodyn.IsAvailable()) {
+			ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
+			ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
+		}
 		if (!IsNull(TipRad) && !IsNull(Precone)) {
 			double oh = TipRad*sin(Precone);
 			Hz = TowerHt + Twr2Shft + (OverHang + oh)*sin(ShftTilt);
@@ -540,6 +542,11 @@ void FastOut::Clear() {
 	unitsd.Clear();	
 	dataOut.Clear();
 	descriptions.Clear();
+	Hx = Hz = Null;
+	idsurge = idsway = idheave = idroll = idpitch = idyaw = idaz = idnacyaw = Null;
+	TipRad = OverHang = ShftTilt = Precone = Twr2Shft = TowerHt = baseClearance = Null;
+	ptfmCOBxt = ptfmCOByt = Null;
+	Hs = Tp = heading = Null;
 }
 
 bool FastOut::IsEmpty() {

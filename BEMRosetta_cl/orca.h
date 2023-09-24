@@ -96,6 +96,11 @@
 #define ptNodeNum 3
 #define ptArcLength 4
 
+/* Licence reconnection constants */
+#define lrBegin 0
+#define lrContinue 1
+#define lrEnd 2
+
 typedef wchar_t TObjectName[50];
 typedef struct {
     HINSTANCE ObjectHandle;
@@ -139,7 +144,7 @@ typedef void (__stdcall *TProgressHandlerProc)(HINSTANCE, LPCWSTR, int *);
 typedef void (__stdcall *TSimulationHandlerProc)(HINSTANCE handle, double SimulationTime, double SimulationStart, double SimulationStop, int *);
 typedef void (__stdcall *TEnumerateObjectsProc)(HINSTANCE handle, const TObjectInfo*);
 typedef void (__stdcall *TEnumerateVarsProc)(const TVarInfo *lpVarInfo);
-
+typedef void (__stdcall *TLicenceNotFoundHandlerProc)(int, BOOL*, INT_PTR*);
 
 typedef struct {
 	int Size;
@@ -217,6 +222,8 @@ public:
 		SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *status));
 		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *status));
 		
+		RegisterLicenceNotFoundHandler = DLLGetFunction(dll, void, C_RegisterLicenceNotFoundHandler, 	  (TLicenceNotFoundHandlerProc Handler, int *lpStatus));
+		
 		GetLastErrorString = DLLGetFunction(dll, int,  C_GetLastErrorStringW, (LPCWSTR wcs));
 		FinaliseLibrary    = DLLGetFunction(dll, void, C_FinaliseLibrary,     (int *status));
 		
@@ -250,7 +257,7 @@ public:
 	
 	bool IsLoaded()	{return dll;}
 
-	static void __stdcall ProgressHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+	static void __stdcall DiffractionHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
 		static int lastPerc = -1;
 		String msg = WideToString(lpProgress);
 		int perc = -1;
@@ -269,7 +276,7 @@ public:
 		if (perc == 0)
 			et = Null;
 		else {
-			int64 sec = GetSysTime() - startCalc;
+			int64 sec = GetSysTime() - startCalc - noLicenseTime;
 			int64 estsec = int64(100*sec/double(perc));
 			et = GetSysTime() + estsec;
 		}
@@ -281,12 +288,50 @@ public:
 		*lpCancel = WhenPrint(msg);
 	}
 	
-	static void __stdcall SimulationHandlerProc(HINSTANCE handle, double SimulationTime, double SimulationStart, double SimulationStop, BOOL *lpCancel) {
-		*lpCancel = WhenPrint(Format("%f %f %f", SimulationTime, SimulationStart, SimulationStop));
+	static void __stdcall LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnection, INT_PTR *lpData) {
+		switch (action) {
+		case lrBegin:
+			beginNoLicense = GetSysTime();
+			Sleep(60*1000); 
+			*lpAttemptReconnection = TRUE;
+			WhenPrint("License lost. Attemping reconnection in a minute");
+			*lpData = 1;
+			return;
+		case lrContinue:
+			*lpAttemptReconnection = TRUE;	//*lpData < 10; 
+			if (*lpAttemptReconnection) {
+				Sleep(60*1000);
+				WhenPrint(Format("License lost for %d min. Attemping reconnection in a minute", *lpData));
+				(*lpData)++; 
+			}
+			return;
+		case lrEnd:
+			noLicenseTime += (GetSysTime() - beginNoLicense);
+		}
+	}
+	
+	static int deltaLogSimulation;
+	
+	static void __stdcall SimulationHandlerProc(HINSTANCE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel) {
+		Time tm = GetSysTime();
+		if (IsNull(startCalc))		// Time starts here. Statics calculation delay is discarded
+			startCalc = tm;
+		else if (tm - lastLog < deltaLogSimulation)
+			return;
+		lastLog = tm;
+		double elapsed  = simulationTime - simulationStart,
+			   total    = simulationStop - simulationStart;
+		int64  elapsedT = tm - startCalc - noLicenseTime,
+			   pending  = int64(elapsedT*(total/elapsed - 1));		// elapsedT*total/elapsed - elapsedT
+		double ratio = 0;
+		if (elapsed == 0)
+			ratio = elapsedT/elapsed;
+		*lpCancel = WhenPrint(Format("Elap/Total:%.1f/%.0f ET:%s Clk/Sim:%.1f", elapsed, total,
+											   					  SecondsToString(double(pending), 0, false, false, true, false, true), elapsedT/elapsed));
 	}
 
 	static VectorMap<int, String> objectTypes;
-	static VectorMap<int, String> status;
+	static VectorMap<int, String> state;
 	
 	struct Object {
 		int type;
@@ -331,18 +376,18 @@ public:
 		if (flex) {
 			DestroyModel(flex, &status);
 			if (status != 0)
-				throwError("DestroyModel");
+				throwError("LoadFlex DestroyModel");
 		}		
 		
 		CreateModel(&flex, 0, &status);
 		if (status != 0)
-			throwError("CreateModel: No license available");
+			throwError("LoadFlex CreateModel: No license available");
 		
 		if (!StringToWide(owryml, wcs))
-			throwError("StringToWide LoadData");
+			throwError("LoadFlex StringToWide LoadData");
 		LoadData(flex, wcs, &status);
 		if (status != 0)
-			throwError("LoadData");		
+			throwError("LoadFlex LoadData");		
 	}
 	
 	void SaveFlex(String owryml) {
@@ -366,15 +411,26 @@ public:
 			throwError("RunFlex");	
 		
 		int status;
-		startCalc = GetSysTime();
+		
+		RegisterLicenceNotFoundHandler(LicenceNotFoundHandler, &status);
+		if (status != 0)
+			throwError("RunFlex RegisterLicenceNotFoundHandler");		
+		
+		startCalc = lastLog = Null;
+		noLicenseTime = 0;
 		
 		CalculateStatics(flex, StaticsHandlerProc, &status);
 		if (status != 0)
-			throwError("CalculateStatics");	
+			throwError("RunFlex CalculateStatics");	
 		
 		RunSimulation(flex, SimulationHandlerProc, NULL, &status);
 		if (status != 0)
-			throwError("RunSimulation");	
+			throwError("RunFlex RunSimulation");	
+		
+		WhenPrint(GetFlexSimState(GetModelState()));
+		
+		if (GetModelState() == msSimulationStoppedUnstable)
+			throwError("Simulation aborted", "The simulation has become unstable because the solver parameters (time step, iterations num.) or other, have to ve reviewed.");
 	}
 	
 	void SaveFlexSim(String owryml) {
@@ -388,7 +444,7 @@ public:
 		LPCWSTR wcs;
 					
 		if (!StringToWide(owryml, wcs))
-			throwError("StringToWide SaveFlexSim");
+			throwError("SaveFlexSim StringToWide");
 		SaveSimulation(flex, wcs, &status);
 		if (status != 0)
 			throwError("SaveFlexSim");		
@@ -409,7 +465,7 @@ public:
 			
 		CreateModel(&flex, 0, &status);
 		if (status != 0)
-			throwError("CreateModel: No license available");
+			throwError("LoadFlexSim CreateModel: No license available");
 						
 		if (!StringToWide(sim, wcs))
 			throwError("StringToWide LoadFlexSim");
@@ -425,7 +481,15 @@ public:
 		else
 			return "UNKNOWN";
 	}
-	
+
+	String GetFlexSimState(int idState) {
+		int id = state.Find(idState);	
+		if (id >= 0)
+			return state[id];
+		else
+			return "UNKNOWN";
+	}
+		
 	void GetFlexSimObjects() {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
@@ -634,9 +698,9 @@ public:
 	}
 	
 	String GetStatusString(int idState) {
-		int id = status.Find(idState);	
+		int id = state.Find(idState);	
 		if (id >= 0)
-			return status[id];
+			return state[id];
 		else
 			return "UNKNOWN";
 	}
@@ -682,8 +746,9 @@ public:
 		
 		int status;
 		startCalc = GetSysTime();
+		noLicenseTime = 0;
 		
-		CalculateDiffraction(wave, ProgressHandlerProc, &status);
+		CalculateDiffraction(wave, DiffractionHandlerProc, &status);
 		if (status != 0)
 			throwError("CalculateDiffraction");	
 	}
@@ -822,7 +887,8 @@ public:
 	String GetDLLPath() const		{return dllFile;}	
 	static Function<bool(String, int, const Time &)> WhenWave;
 	static Function<bool(String)> WhenPrint;
-	static Time startCalc;
+	static Time startCalc, lastLog, beginNoLicense;
+	static int64 noLicenseTime;
 	
 private:
 	Dl dll;
@@ -857,6 +923,8 @@ private:
 	void (*SetModelThreadCount)(HINSTANCE handle, int threadCount, int *status);
 	int (*GetModelThreadCount)(HINSTANCE handle, int *status);
 	
+	void (*RegisterLicenceNotFoundHandler)(TLicenceNotFoundHandlerProc handler, int *lpStatus);
+	
 	int (*GetLastErrorString)(LPCWSTR wcs);
 	
 	void (*FinaliseLibrary)(int *status);
@@ -869,8 +937,11 @@ private:
 		return WideToString(wcs, len);
 	}
 	
-	void throwError(String where) {
-		throw Exc(Format("'%s': %s", where, GetErrorString()));
+	void throwError(String where, String errorString = Null) {
+		String str = errorString;
+		if (errorString == "")
+			str = GetErrorString();
+		throw Exc(Format("'%s': %s", where, str));
 	}
 };
 

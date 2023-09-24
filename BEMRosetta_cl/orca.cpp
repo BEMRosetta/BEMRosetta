@@ -6,6 +6,7 @@
 #ifdef PLATFORM_WIN32
 #include "orca.h"
 
+int Orca::deltaLogSimulation = 10;
 UVector<int> Orca::objTypes;
 UVector<String> Orca::objNames;
 UVector<HINSTANCE> Orca::objHandles;
@@ -13,12 +14,12 @@ int Orca::actualBlade;
 UVector<int> Orca::varIDs, Orca::varBlades;
 UVector<String> Orca::varNames, Orca::varFullNames, Orca::varUnits;
 
-VectorMap<int, String> Orca::status = {
+VectorMap<int, String> Orca::state = {
 	{msReset, "Reset"},
 	{msCalculatingStatics, "Calculating Statics"},
 	{msInStaticState, "In Static State"},
 	{msRunningSimulation, "Running Simulation"},
-	{msSimulationStopped, "Simulation Stopped"},
+	{msSimulationStopped, "Simulation finished OK"},
 	{msSimulationStoppedUnstable, "Simulation Stopped Unstable"}
 };
 

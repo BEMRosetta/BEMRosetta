@@ -171,8 +171,9 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
-	Cout() << "\n" << t_("-numtries <num>                 # Number <num> of attempts to connect to the licence");
+	Cout() << "\n" << t_("-numtries <num>                 # Number <num> of attempts to connect to the license");
 	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads for OrcaWave");
+	Cout() << "\n" << t_("-timelog <num>                  # Set minimum clock seconds per each OrcaFlex simulation log");
 	Cout() << "\n" << t_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-ls -loadSim <sim>       		  # Load OrcaFlex simulation in <sim>");
 	Cout() << "\n" << t_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference system for outputs");
@@ -186,7 +187,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("              <param> avg       # <param> avg");
 	Cout() << "\n" << t_("              <param> max       # <param> max");
 	Cout() << "\n" << t_("              <param> min       # <param> min");	
-	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located. Use only if automatic detection doesn't work");		
+	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located. Use if detection doesn't work");		
 #endif
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -210,7 +211,9 @@ Function<bool(String)> Orca::WhenPrint = [](String str)->bool {
 	return 0;
 };
 
-Time Orca::startCalc = Null;
+Time Orca::startCalc = Null, Orca::beginNoLicense = Null, Orca::lastLog;
+int64 Orca::noLicenseTime = 0;
+
 #endif
 
 bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(String, int pos)> Status) {	
@@ -228,6 +231,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	
 	BEM bem;
 	FastOut fast;
+	bool returnval = true;
+	
 #ifdef PLATFORM_WIN32
 	Orca orca;
 	bool dllOrcaLoaded = false;
@@ -877,7 +882,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									break;
 								} catch (Exc e) {
 									errorStr = e;
-									if (errorStr.Find("licence") < 0)
+									if (errorStr.Find("license") < 0)
 										break;
 									numTry--;
 									errorStr.Clear();
@@ -914,7 +919,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									break;
 								} catch (Exc e) {
 									errorStr = e;
-									if (errorStr.Find("licence") < 0)
+									if (errorStr.Find("license") < 0)
 										break;
 									numTry--;
 									errorStr.Clear();
@@ -925,10 +930,15 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!IsEmpty(errorStr))
 								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
-								orca.RunFlex();
-								orca.SaveFlexSim(to);							
-								
-								BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+								try {
+									orca.RunFlex();
+									orca.SaveFlexSim(to);							
+									
+									BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+								} catch (Exc e) {
+									Cerr() << "\n" << Format(t_("Error: %s"), errorStr);
+									returnval = false;
+								}
 							}
 						} else if (param == "-ls" || param == "-loadSim") {
 							if (!dllOrcaLoaded) {
@@ -949,7 +959,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									break;
 								} catch (Exc e) {
 									errorStr = e;
-									if (errorStr.Find("licence") < 0)
+									if (errorStr.Find("license") < 0)
 										break;
 									numTry--;
 									errorStr.Clear();
@@ -991,6 +1001,22 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(Format(t_("Invalid thread number %s"), command[i]));							
 
 							BEM::Print("\n" + Format(t_("Number of OrcaFlex license tries set to %d"), numOrcaTries));
+						} else if (param == "-timelog") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+							
+							CheckIfAvailableArg(command, ++i, "-timelog num");
+							int timeLog = int(StringToSeconds(command[i]));
+							if (IsNull(timeLog))
+								throw Exc(Format(t_("Invalid time between logs %s"), command[i]));							
+
+							BEM::Print("\n" + Format(t_("OrcaFlex time between logs set to %.1f sec"), timeLog));							
+							
+							orca.deltaLogSimulation = timeLog;
 						} else if (param == "-lp" || param == "-loadParam") {
 							CheckIfAvailableArg(command, ++i, "-loadParam");
 							
@@ -1106,12 +1132,12 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 		errorStr = t_("Unknown error");
 	}	
 	if (!errorStr.IsEmpty()) {
-		Cerr() << Format("\n%s: %s", t_("Error"), errorStr);
+		Cerr() << "\n" << Format(t_("Error: %s"), errorStr);
 		Cerr() << S("\n\n") + t_("In case of doubt try option -h or -help") + S("\n");
 		if (gui)
 			Cerr() << S("\n") + t_("or just call command line without arguments to open GUI window");
-		return false;
+		returnval = false;
 	}
 	Cout() << "\n";
-	return true;
+	return returnval;
 }

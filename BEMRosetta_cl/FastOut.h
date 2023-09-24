@@ -687,12 +687,16 @@ public:
 				throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
 		}
 		
-		String GetString(String var) {
-			if (fileText.IsEmpty()) {
+		bool IsAvailable() {
+			if (fileText.IsEmpty()) 
 				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
+			return !fileText.IsEmpty();
+		}
+		
+		String GetString(String var) {
+			if (!IsAvailable()) 
+				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			
 			String res;
 			UVector<String> vars = Split(var, "/");
 			if (vars.size() == 2)
@@ -728,7 +732,7 @@ public:
 			if (data == "true")
 				return true;
 			if (data == "false")
-				return true;
+				return false;
 			int idata = ScanInt(data);
 			if (idata == 1)
 				return true;
@@ -737,27 +741,18 @@ public:
 			throw Exc(Format(t_("Wrong variable '%s' in GetBool"), var));
 		}
 		double GetMatrixVal(String var, int row, int col) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
+			if (!IsAvailable()) 
+				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			return GetFASTMatrixVal(fileText, var, row, col);
 		}
 		Eigen::MatrixXd GetMatrix(String var, int rows, int cols) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
+			if (!IsAvailable()) 
+				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			return GetFASTMatrix(fileText, var, rows, cols);
 		}
 		void SetMatrixVal(String var, int row, int col, double val) {
-			if (fileText.IsEmpty()) {
-				fileText = LoadFile(fileName);
-				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
-			}
+			if (!IsAvailable()) 
+				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
 			int posIni, posEnd;
 			GetMatrixIds(var, row, col, posIni, posEnd);
 			

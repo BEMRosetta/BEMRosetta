@@ -648,7 +648,7 @@ public:
 			if (r < 3)
 				return "N/(rad/s)";
 			if (c < 3)
-				return "N s";
+				return "N m/(m/s)";
 			return "N m/(rad/s)";
 		}
 	}

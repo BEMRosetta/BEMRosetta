@@ -631,7 +631,7 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			ShowSelected(false);
 		
 	} catch (const Exc &e) {
-		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(Format("Error: %s", e));	
 		left.EnableX();
 		UpdateButtons(false);
 		return false;
