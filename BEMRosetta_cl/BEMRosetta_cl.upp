@@ -25,6 +25,7 @@ file
 	Mesh.cpp,
 	hams_mesh.cpp,
 	aqwa_mesh.cpp,
+	hydrostar_mesh.cpp,
 	salome_mesh.cpp,
 	nemoh_mesh.cpp,
 	wamit_mesh.cpp,

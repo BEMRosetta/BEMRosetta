@@ -389,7 +389,24 @@ bool Aqwa::Load_LIS() {
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		
-		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
+		if (line.Find("G L O B A L   A D D I T I O N A L   S T R U C T U R E   S T I F F N E S S   M A T R I X") >= 0) {
+			if (hd().Cmoor.size() == 0) 
+				hd().Cmoor.SetCount(hd().Nb);
+			f.GetLine(8);
+			int iib = f.GetInt(1);
+			if (iib < 1 || iib > hd().Nb)
+				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
+			iib--;
+			if (hd().Cmoor[iib].size() == 0)
+				hd().Cmoor[iib] = Eigen::MatrixXd::Zero(6, 6);
+			in.GetLine(4);
+			for (int idof = 0; idof < 6; ++idof) {
+				f.GetLine();
+				for (int jdof = 0; jdof < 6; ++jdof) 
+					hd().Cmoor[iib](idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
+				f.GetLine(); 
+			}
+		} else if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
 			ib = ScanInt(line.Mid(pos));
 			if (!IsNull(ib)) {
 				ib -= 1; 
@@ -507,7 +524,7 @@ bool Aqwa::Load_LIS() {
 					static const UVector<int> separators = {8,16,36,44,54,62,72,80,90,98,108,116,126};
 					f.Load(line, separators);
 				}
-			}
+			}						
 		} else if (line.Find("WAVE PERIOD") >= 0 && line.Find("WAVE FREQUENCY") >= 0) {
 			int ieq = line.FindAfter("="); ieq = line.FindAfter("=", ieq);
 			f.Load(line);

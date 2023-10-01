@@ -82,6 +82,8 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		ret = WamitMesh::LoadGdf(mesh, file, y0z, x0z); 
 	else if (ext == ".pnl") 
 		ret = HAMSMesh::LoadPnl(mesh, file, y0z, x0z); 
+	else if (ext == ".hst") 
+		ret = HydrostarMesh::LoadHst(mesh, file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
 		Mesh &m = mesh.Add();

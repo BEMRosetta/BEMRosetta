@@ -446,7 +446,7 @@ void MainMesh::LoadSelTab(BEM &bem) {
 void MainMesh::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
-	const String meshFiles = ".gdf .dat .stl .pnl .msh .mesh";
+	const String meshFiles = ".gdf .dat .stl .pnl .msh .mesh .hst";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	menuOpen.file.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);

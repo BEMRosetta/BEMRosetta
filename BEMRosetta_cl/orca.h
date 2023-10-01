@@ -404,7 +404,9 @@ public:
 			throwError("SaveData");
 	}
 	
-	void RunFlex() {
+	void RunFlex(String to, bool &saved) {
+		saved = false;
+		
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		if (!flex) 
@@ -424,13 +426,16 @@ public:
 			throwError("RunFlex CalculateStatics");	
 		
 		RunSimulation(flex, SimulationHandlerProc, NULL, &status);
-		if (status != 0)
-			throwError("RunFlex RunSimulation");	
 		
 		WhenPrint(GetFlexSimState(GetModelState()));
 		
-		if (GetModelState() == msSimulationStoppedUnstable)
-			throwError("Simulation aborted", "The simulation has become unstable because the solver parameters (time step, iterations num.) or other, have to ve reviewed.");
+		if (!IsNull(to) && !IsNull(startCalc)) {
+			SaveFlexSim(to);
+			saved = true;
+		}
+		
+		if (status != 0)		// The status of previous RunSimulation()
+			throwError("RunFlex RunSimulation");	
 	}
 	
 	void SaveFlexSim(String owryml) {
@@ -447,7 +452,7 @@ public:
 			throwError("SaveFlexSim StringToWide");
 		SaveSimulation(flex, wcs, &status);
 		if (status != 0)
-			throwError("SaveFlexSim");		
+			throwError("SaveFlexSim SaveSimulation");		
 	}
 
 	void LoadFlexSim(String sim) {
@@ -468,10 +473,10 @@ public:
 			throwError("LoadFlexSim CreateModel: No license available");
 						
 		if (!StringToWide(sim, wcs))
-			throwError("StringToWide LoadFlexSim");
+			throwError("LoadSimulation StringToWide");
 		LoadSimulation(flex, wcs, &status);
 		if (status != 0)
-			throwError("LoadFlexSim");		
+			throwError("LoadFlexSim LoadSimulation");		
 	}
 	
 	String GetFlexSimObjectString(int idType) {

@@ -930,15 +930,18 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!IsEmpty(errorStr))
 								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
+								bool saved = false;
 								try {
-									orca.RunFlex();
-									orca.SaveFlexSim(to);							
-									
-									BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+									orca.RunFlex(to, saved);
 								} catch (Exc e) {
-									Cerr() << "\n" << Format(t_("Error: %s"), errorStr);
+									Cerr() << "\n" << Format(t_("Error running OrcaFlex: %s"), e);
 									returnval = false;
 								}
+								if (orca.GetModelState() == msSimulationStoppedUnstable)
+									Cerr() << "\n" << t_("Simulation aborted: The simulation has become unstable because the solver parameters (time step, iterations num.) or other, have to ve reviewed.");
+		
+								if (saved)
+									BEM::Print("\n" + Format(t_("Simulation results saved at '%s'"), to));
 							}
 						} else if (param == "-ls" || param == "-loadSim") {
 							if (!dllOrcaLoaded) {

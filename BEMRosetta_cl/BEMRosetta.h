@@ -776,10 +776,10 @@ class Mesh : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		   false};       
-	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.*"};       
+	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Hydrostar.hst", "Unknown"};	
+	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		  false,   		   false};       
+	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	  "*.hst", 		   "*.*"};       
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -913,6 +913,16 @@ public:
 
 private:
 	String LoadDat0(String fileName);
+};
+
+class HydrostarMesh : public Mesh {
+public:
+	static String LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
+		
+	virtual ~HydrostarMesh() noexcept {}
+
+private:
+	String LoadHst0(String fileName, bool &y0z, bool &x0z);
 };
 
 class HAMSMesh : public Mesh {
