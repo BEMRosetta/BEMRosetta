@@ -23,53 +23,58 @@ String HydrostarMesh::LoadHst0(String fileName, bool &y0z, bool &x0z) {
 	
 	this->fileName = fileName;
 	SetCode(Mesh::HYDROSTAR_HST);
+	x0z = y0z = false;
 	
 	try {
 		String line;
 		LineParser f(in);	
 		f.IsSeparator = IsTabSpace;
-			
-		line = in.GetLine();	
-		f.Load(line);
-	
-		int nnodes;
-	
-		if (f.size() != 2 || !f.IsInt(0) || (nnodes = f.GetInt(0)) < 10 || !f.IsInt(1) || f.GetInt(1) < 10)
-			return t_("Format error in Nemoh .dat mesh file");	// To detect Salome format
-		
+				
 		mesh.Clear();
 		UIndex<int> idnodes;
 		
 		while(true) {
-			f.GetLine();
+			f.GetLine_discard_empty();
 			if (f.IsEof())
 				break;	
-
-			int id = f.GetInt(0);	
-			if (id > nnodes)
-				throw Exc(t_("Found more nodes that the indicated inthe first row"));
 			
-			idnodes << (id-1);	
-			Point3D &node = mesh.nodes.Add();
-			node.x = f.GetDouble(1);
-			node.y = f.GetDouble(2);
-			node.z = f.GetDouble(3); 
-			if (id == nnodes)
-				break;
-		}
-		while(!f.IsEof()) {
-			f.GetLine();	
+			if (f.GetText(0) == "SYMMETRY_BODY") {
+				int id1 = f.GetInt(1), 
+					id2 = f.GetInt(2); 
+				if (id1 == 1 && id2 == 1) {
+					x0z = true;
+					y0z = false;
+				} else if (id1 == 1 && id2 == 2) {
+					x0z = true;
+					y0z = true;
+				} 
+			} else if (f.GetText(0) == "COORDINATES") {
+				while(!f.IsEof()) {
+					f.GetLine_discard_empty();
+					if (f.GetText(0) == "ENDCOORDINATES")
+						break;
 			
-			int type = f.GetInt(1);	
-			if (type == 203 || type == 204) {
-				Panel &panel = mesh.panels.Add();
-				panel.id[0] = idnodes.Find(f.GetInt(2)-1);	
-				panel.id[1] = idnodes.Find(f.GetInt(3)-1);	
-				panel.id[2] = idnodes.Find(f.GetInt(4)-1);	
-				if (type == 204) 
-					panel.id[3] = f.GetInt(5)-1;		
-				else
-					panel.id[3] = panel.id[0];
+					idnodes << f.GetInt(0);	
+					Point3D &node = mesh.nodes.Add();
+					node.x = f.GetDouble(1);
+					node.y = f.GetDouble(2);
+					node.z = f.GetDouble(3); 
+				}
+			} else if (f.GetText(0) == "PANEL") {
+				while(!f.IsEof()) {
+					f.GetLine_discard_empty();
+					if (f.GetText(0) == "ENDPANEL")
+						break;
+					
+					Panel &panel = mesh.panels.Add();
+					panel.id[0] = idnodes.Find(f.GetInt(1));	
+					panel.id[1] = idnodes.Find(f.GetInt(2));	
+					panel.id[2] = idnodes.Find(f.GetInt(3));	
+					if (f.size() >= 5)
+						panel.id[3] = idnodes.Find(f.GetInt(4));	
+					else
+						panel.id[3] = panel.id[2];	
+				}
 			}
 		}	
 	} catch (Exc e) {

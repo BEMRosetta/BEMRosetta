@@ -47,7 +47,7 @@ String SalomeMesh::LoadDat0(String fileName) {
 
 			int id = f.GetInt(0);	
 			if (id > nnodes)
-				throw Exc(t_("Found more nodes that the indicated inthe first row"));
+				throw Exc(t_("Found more nodes that the indicated in the first row"));
 			
 			idnodes << (id-1);	
 			Point3D &node = mesh.nodes.Add();
