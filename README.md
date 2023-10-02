@@ -63,6 +63,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974) and [Capytaine](https://github.com/mancellin/capytaine): .dat
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
+    * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .hst
     * [Salome](https://www.salome-platform.org/): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
     * [SeaFEM/TDyn](http://www.compassis.com/compass/en/Productos/SeaFEM): .msh
