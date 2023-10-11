@@ -725,7 +725,7 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.WhenSet();
 	} catch (Exc e) {
 		if (!e.IsEmpty())
-			BEM::PrintError(DeQtfLf(e));
+			BEM::PrintError(e);
 		return false;
 	}
 	return true;
@@ -772,6 +772,7 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
 	menuOpen.dropExport.Enable(numsel == 1);
 	menuOpen.butExport.Enable(numsel == 1);
+
 	menuProcess.butSymX.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butSymY.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butKirf.		Enable(numsel == 1 || numrow == 1);
@@ -1963,14 +1964,20 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			}
 		}
 		array.Set(row,   0, sib + " " + t_("Theave [s]"));
-		array.Set(row+1, 0, sib + " " + t_("Troll [s]"));
-		array.Set(row+2, 0, sib + " " + t_("Tpitch [s]"));
+		array.Set(row+1, 0, sib + " " + t_("Theave(w) [s]"));
+		array.Set(row+2, 0, sib + " " + t_("Troll [s]"));
+		array.Set(row+3, 0, sib + " " + t_("Troll(w) [s]"));
+		array.Set(row+4, 0, sib + " " + t_("Tpitch [s]"));
+		array.Set(row+5, 0, sib + " " + t_("Tpitch(w) [s]"));
 		if (IsNum(data.rho) && IsNum(data.g) && 
 			data.M.size() > ib && data.M[ib].size() > 0 && 
 			data.C.size() > ib && data.C[ib].size() > 0) {
-			array.Set(row++, col, FDS(data.Theave(ib), 5, false));
-			array.Set(row++, col, FDS(data.Troll(ib), 5, false));
-			array.Set(row++, col, FDS(data.Tpitch(ib), 5, false));
+			array.Set(row++, col, FDS(data.Theave(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Theavew(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Troll(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Trollw(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Tpitch(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Tpitchw(ib), 5, false, "-"));
 		} else {
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
@@ -1979,8 +1986,8 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		array.Set(row,   0, sib + " " + t_("GMroll [m]"));
 		array.Set(row+1, 0, sib + " " + t_("GMpitch [m]"));
 		if (IsNum(data.rho) && IsNum(data.g) && data.IsLoadedC()) {
-			array.Set(row++, col, FDS(data.GMroll(ib), 5, false));
-			array.Set(row++, col, FDS(data.GMpitch(ib), 5, false));
+			array.Set(row++, col, FDS(data.GMroll(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.GMpitch(ib), 5, false, "-"));
 		} else {
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	

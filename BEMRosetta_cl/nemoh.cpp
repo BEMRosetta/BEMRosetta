@@ -109,7 +109,7 @@ bool Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 			return false;
 	} catch (Exc e) {
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
+		//hd().lastError = e;
 		return false;
 	}
 	return true;
@@ -650,7 +650,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 			name.Replace(" ", "_");
 			String dest = AppendFileNameX(folderMesh, name);
 			
-			bool y0z, x0z;
+			bool y0z = false, x0z = false;
 			Mesh mesh;
 			String err = Mesh::Load(mesh, bodies[ib].meshFile, rho, g, false, y0z, x0z);
 			if (!err.IsEmpty()) {

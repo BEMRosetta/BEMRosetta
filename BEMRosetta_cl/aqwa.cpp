@@ -37,15 +37,16 @@ bool Aqwa::Load(String file, double) {
 		if (!Load_QTF()) 
 			BEM::Print(S(": ** QTF file ") + t_("Not found") + "**");
 		
-		if (IsNull(hd().Nb))
+		if (IsNull(hd().Nb)) {
+			hd().lastError = t_("No data found");
 			return false;
-	
+		}
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
+		//hd().lastError = e;
 		return false;
 	}
 	

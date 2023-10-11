@@ -432,9 +432,9 @@ bool MainQTF::Load() {
 
 			tab.Reset();
 
-			idHydro = mbm.GetIdOneSelected(false);
-			if (idHydro < 0) 
-				return false;
+			//idHydro = mbm.GetIdOneSelected(false);
+			//if (idHydro < 0) 
+			//	return false;
 						
 			dof.SetCount(6*Bem().Nb);
 			for (int ib = 0; ib < Bem().Nb; ++ib) {
@@ -460,11 +460,11 @@ bool MainQTF::Load() {
 		}	// Only one available => directly selected
 		if (idHydro < 0 && mbm.listLoaded.GetCount() == 1)
 			idHydro = ArrayModel_IdHydro(mbm.listLoaded, 0);
-		if (idHydro < 0) 
-			return false;
+		//if (idHydro < 0) 
+		//	return false;
 		
-		if (ArrayCtrlSelectedGetCount(mbm.listLoaded) > 1) 
-			return false;
+		//if (ArrayCtrlSelectedGetCount(mbm.listLoaded) > 1) 
+		//	return false;
 		
 		// Show the tab if any model has QTFs
 		bool show = false;
@@ -478,43 +478,45 @@ bool MainQTF::Load() {
 			return false;
 		////
 		
-		const Hydro &hd = Bem().hydros[idHydro].hd();
-		
-		opQTF.Clear();
-		if (hd.IsLoadedQTF(true))
-			opQTF.Add(FSUM, t_("Summation"));
-		else 
-			isSumm = false;
-		if (hd.IsLoadedQTF(false))
-			opQTF.Add(FDIFFERENCE, t_("Difference"));
-		else
-			isSumm = true;
-		if (opQTF.GetCount() > 1)
-			opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
-		else if (opQTF.GetCount() > 0)
-			opQTF.SetIndex(0);
+		if (idHydro >= 0) {
+			const Hydro &hd = Bem().hydros[idHydro].hd();
 			
-		/*UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
-		for (const auto &c : hd.qh)
-			qh << FixHeading(c, Bem().headingType);
-		
-		Sort(qh, [&](auto& a, auto& b)->bool const { 
-			if (a.real() < b.real())
-				return true; 
-			else if (a.real() > b.real())
-				return false;
+			opQTF.Clear();
+			if (hd.IsLoadedQTF(true))
+				opQTF.Add(FSUM, t_("Summation"));
+			else 
+				isSumm = false;
+			if (hd.IsLoadedQTF(false))
+				opQTF.Add(FDIFFERENCE, t_("Difference"));
 			else
-				return a.imag() < b.imag();	
-		});*/
-	
-		for (int ih = 0; ih < hd.qh.size(); ++ih)
-			listHead.Add(hd.qh[ih].real(), hd.qh[ih].imag());
+				isSumm = true;
+			if (opQTF.GetCount() > 1)
+				opQTF.SetIndex(isSumm ? FSUM : FDIFFERENCE);
+			else if (opQTF.GetCount() > 0)
+				opQTF.SetIndex(0);
 				
-		if (listHead.GetCount() > 0) {
-			int id = FindClosest(hd.qh, head);
-			if (id < 0)
-				id = 0;
-			listHead.SetCursor(id);
+			/*UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
+			for (const auto &c : hd.qh)
+				qh << FixHeading(c, Bem().headingType);
+			
+			Sort(qh, [&](auto& a, auto& b)->bool const { 
+				if (a.real() < b.real())
+					return true; 
+				else if (a.real() > b.real())
+					return false;
+				else
+					return a.imag() < b.imag();	
+			});*/
+		
+			for (int ih = 0; ih < hd.qh.size(); ++ih)
+				listHead.Add(hd.qh[ih].real(), hd.qh[ih].imag());
+					
+			if (listHead.GetCount() > 0) {
+				int id = FindClosest(hd.qh, head);
+				if (id < 0)
+					id = 0;
+				listHead.SetCursor(id);
+			}
 		}
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));

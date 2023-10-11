@@ -27,7 +27,7 @@ bool Diodore::Load(String file, double) {
 			hd().dof[i] = 6;
 	} catch (Exc e) {
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
+		//hd().lastError = e;
 		return false;
 	}
 	

@@ -391,7 +391,7 @@ String FastOut::LoadCsv(String fileName) {
 		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
 	
 	// Extracts the units from the header
-	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->bool {
+	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->int {
 		int idp = str.Find(begin);
 		if (idp >= 0) {
 			int idep = str.Find(end, idp+1);
@@ -402,17 +402,42 @@ String FastOut::LoadCsv(String fileName) {
 				unit = Trim(str.Mid(idp+1));
 				param = Trim(str.Left(idp));
 			}
-			return true;
+			return idp;
 		} else
-			return false;
+			return -1;
 	};	
    	
    	for (int i = 0; i < parameters.size(); ++i) {
-		String param, unit;
-			
-		if (!GetUnits(parameters[i], '(', ')', param, unit))
-			if (!GetUnits(parameters[i], '[', ']', param, unit))
-				param = parameters[i];
+		String param1, param2, unit1, unit2;
+		int id1 = GetUnits(parameters[i], '(', ')', param1, unit1);
+		int id2 = GetUnits(parameters[i], '[', ']', param2, unit2);
+		
+		String param, unit;	// The most at right is the most probable to be
+		int sit;;
+		if (id1 < 0) {
+			if (id2 < 0)
+				sit = 0;
+			else
+				sit = 2;
+   		} else {
+   			if (id2 < 0)
+   				sit = 1;
+   			else {
+   				if (id2 > id1)
+   					sit = 2;
+   				else
+   					sit = 1;
+   			}
+   		}
+   		if (sit == 1) {
+   			param = param1;
+			unit = unit1;		
+   		} else if (sit == 2) {
+   			param = param2;
+			unit = unit2;
+		} else
+			param = parameters[i];
+
 		if (param == "")
 			param = t_("void");
 		AddParam(param, unit);

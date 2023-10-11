@@ -296,7 +296,7 @@ void MainMesh::Init() {
 	mainTab.Add(mainStiffness2.SizePos(), t_("Mooring Stiffness"));
 	
 	mainGZ.Init();
-	mainTab.Add(mainGZ.SizePos(), t_("GZ"));
+	mainTab.Add(mainGZ.SizePos(), t_("Stability GZ"));
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
@@ -433,6 +433,8 @@ void MainMesh::InitSerialize(bool ret) {
 				
 	if (!ret || IsNull(menuOpen.optMeshType)) 
 		menuOpen.optMeshType = 0;
+	if (!ret || IsNull(menuOpen.opClean)) 
+		menuOpen.opClean = false;
 }
 
 void MainMesh::LoadSelTab(BEM &bem) {
@@ -1359,9 +1361,18 @@ void MainMesh::UpdateButtons() {
 	menuOpen.butSplit.Enable(numsel == 1 || numrow == 1);
 	menuOpen.dropExport.Enable(numsel >= 1);
 	menuOpen.butExport.Enable(numsel >= 1);
+	menuOpen.optMeshType.Enable(numsel == 1);
+	menuOpen.symX.Enable(numsel == 1);
+	menuOpen.symY.Enable(numsel == 1);
+	menuOpen.labMesh.Enable(numsel == 1);
+	menuOpen.labSymmetry.Enable(numsel == 1);
+	
 	menuProcess.butUpdateCg.Enable(numsel == 1 || numrow == 1);
+	
 	menuMove.butUpdatePos.Enable(numsel == 1 || numrow == 1);
 	menuMove.butUpdateAng.Enable(numsel == 1 || numrow == 1);
+	menuMove.butReset.Enable(numsel == 1 || numrow == 1);
+	
 	menuProcess.butImageX.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butImageY.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butImageZ.Enable(numsel == 1 || numrow == 1);
@@ -1371,7 +1382,6 @@ void MainMesh::UpdateButtons() {
 	menuProcess.butWaterFill.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butWaterPlane.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butHull.Enable(numsel == 1 || numrow == 1);
-	menuMove.butReset.Enable(numsel == 1 || numrow == 1);
 }
 
 void MainMesh::After() {
@@ -1407,6 +1417,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		menuPlot.showLines = Null;
 		menuPlot.showSel = Null;
 		menuOpen.optMeshType = Null;
+		menuOpen.opClean = false;
 		menuMove.opZArchimede = Null;
 		dropExportId = 2;
 	} else
@@ -1415,6 +1426,8 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuOpen_file", menuOpen.file)
 		("menuOpen_saveFolder", saveFolder)
 		("menuOpen_dropExport", dropExportId)
+		("menuOpen_optMeshType", menuOpen.optMeshType)
+		("menuOpen_opClean", menuOpen.opClean)
 		("menuPlot_showMesh", menuPlot.showMesh)		
 		("menuPlot_showNormals", menuPlot.showNormals)	
 		("menuPlot_showSkewed", menuPlot.showSkewed)	

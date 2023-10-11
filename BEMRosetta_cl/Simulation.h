@@ -11,7 +11,7 @@ class Simulation {
 public:
 	~Simulation();
 	
-	void Load(const String &strFile, int stiffMod, int dllForce, double _rho, double _g, 
+	void Load(const String &strFile, int stiffMod, int dllForce, double _rho, double _g, double roundVal, double roundEps,
 			double c0x, double c0y, double c0z);
 
 	Force6D CalcStiff_Static(const float *pos);

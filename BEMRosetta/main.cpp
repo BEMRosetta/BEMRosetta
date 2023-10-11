@@ -343,6 +343,8 @@ void MenuOptions::Load() {
 	hamsMeshPath <<= bem->hamsMeshPath;
 	volWarning <<= bem->volWarning;
 	volError <<= bem->volError;
+	roundVal <<= bem->roundVal;
+	roundEps <<= bem->roundEps;
 	csvSeparator <<= bem->csvSeparator;
 	legend_w_units <<= bem->legend_w_units;
 	legend_w_solver <<= bem->legend_w_solver;
@@ -385,6 +387,8 @@ void MenuOptions::OnSave() {
 		bem->hamsMeshPath = ~hamsMeshPath;
 		bem->volWarning = ~volWarning;
 		bem->volError = ~volError;
+		bem->roundVal = ~roundVal;
+		bem->roundEps = ~roundEps;
 		bem->csvSeparator = ~csvSeparator;
 		ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
 		bem->legend_w_units = ~legend_w_units;
@@ -439,6 +443,10 @@ bool MenuOptions::IsChanged() {
 	if (bem->volWarning != ~volWarning)
 		return true;
 	if (bem->volError != ~volError)
+		return true;
+	if (bem->roundVal != ~roundVal)
+		return true;
+	if (bem->roundEps != ~roundEps)
 		return true;
 	if (bem->dofType != dofType.GetIndex())
 		return true;
@@ -707,22 +715,3 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 		return String();
 	return array.Get(row, 5);
 }
-
-// FileSel problem. SHGetFileInfo() gets locked in PC out of its network
-
-	/*FileSel fs;
-	
-	fs.ExecuteOK();
-	*/
-	/*
-	bool large = false;
-	bool exe = false;
-	SHFILEINFO info = {0};
-	SHGetFileInfo("w.lnk", FILE_ATTRIBUTE_NORMAL,
-		               &info, sizeof(info),
-		               SHGFI_ICON|
-		               (large ? SHGFI_LARGEICON : SHGFI_SMALLICON)|
-		               (exe ? 0 : SHGFI_USEFILEATTRIBUTES));
-	
-	BEM::PrintError("It works!");
-	*/

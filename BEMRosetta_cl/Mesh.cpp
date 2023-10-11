@@ -34,26 +34,26 @@ void Mesh::Copy(const Mesh &msh) {
 	id = msh.id;
 }
 
-String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels) {
+String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, y0z, x0z);
+	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
+String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
 	UArray<Mesh> msh;
-	String ret = Load(msh, file, rho, g, cleanPanels, y0z, x0z);
+	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 	if (!ret.IsEmpty())
 		return ret;
 	mesh = pick(First(msh));
 	return ret;
 }
 	
-String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels) {
+String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, y0z, x0z);
+	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z) {
+String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
@@ -129,11 +129,8 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		if (x0z)
 			m.mesh.DeployYSymmetry();	
 		
-		if (cleanPanels) {
-			Surface::RemoveDuplicatedPanels(m.mesh.panels);
-			Surface::RemoveDuplicatedPointsAndRenumber(m.mesh.panels, m.mesh.nodes);
-			Surface::RemoveDuplicatedPanels(m.mesh.panels);
-		}
+		if (cleanPanels) 
+			m.mesh.Heal(true, grid, eps);
 		
 		if (!IsNull(rho))
 			m.AfterLoad(rho, g, false, true);
@@ -206,8 +203,8 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_
 		throw Exc(t_("Unknown mesh file type"));
 }
 
-String Mesh::Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status) {
-	String ret = mesh.Heal(basic, Status);
+String Mesh::Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status) {
+	String ret = mesh.Heal(basic, grid, eps, Status);
 	if (!ret.IsEmpty())
 		return ret;
 	

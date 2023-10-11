@@ -15,6 +15,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			BEM::Print("\n\n" + Format(t_("Loading out file '%s'"), file));
 			if (!Load_out()) {
 				BEM::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
+				hd().lastError = t_("No data found");
 				return false;
 			}
 		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot").Find(ext) >= 0) {
@@ -107,15 +108,17 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		if (IsNull(hd().Nf))
 			hd().Nf = 0;
 
-		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/)
+		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/) {
+			hd().lastError = t_("No data found");
 			return false;
+		}
 		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 6);
 
 	} catch (Exc e) {
 		Status("", -1);
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
+		//hd().lastError = e;
 		return false;
 	}
 	Status("", -1);
@@ -260,7 +263,9 @@ bool Wamit::Load_out() {
 			}
 			if (line.Find("Water density:") >= 0) 
 				hd().rho = f.GetDouble(5);			
-		} else if (line.Find("XBODY =") >= 0) {
+		} else if (line.Find("Water density:") >= 0) 
+			hd().rho = f.GetDouble(2);			
+		else if (line.Find("XBODY =") >= 0) {
 			ibody++;
 			if (ibody >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Found additional bodies over %d"), hd().Nb));

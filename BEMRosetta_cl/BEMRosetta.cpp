@@ -1589,28 +1589,44 @@ void Hydro::CheckNaN() {
 double Hydro::Tdof(int ib, int idf) const {
 	if (!IsLoadedAinf(idf+6*ib, idf+6*ib) || !IsLoadedM(ib, idf, idf) || !IsLoadedC(ib, idf, idf))
 		return Null;
-	double m = M[ib](idf, idf);
-	double a = Ainf_dim(ib*6+idf, ib*6+idf);
 	double c = C_dim(ib, idf, idf);
 	if (c == 0)
 		return Null;
+	double m = M[ib](idf, idf);
+	double a = Ainf_dim(ib*6+idf, ib*6+idf);
 	double d = (m + a)/c;
 	if (d < 0)
 		return Null;
 	return 2*M_PI*sqrt(d); 
 }
 
-double Hydro::Theave(int ib) const {
-	return Tdof(ib, 2);
+double Hydro::Tdofw(int ib, int idf) const {
+	if (!IsLoadedA(idf+6*ib, idf+6*ib) || !IsLoadedM(ib, idf, idf) || !IsLoadedC(ib, idf, idf))
+		return Null;
+	double c = C_dim(ib, idf, idf);
+	if (c == 0)
+		return Null;
+	double m = M[ib](idf, idf);
+	VectorXd nw(w.size());
+	for (int ifr = 0; ifr < w.size(); ++ifr) {
+		double a = A_dim(ifr, ib*6+idf, ib*6+idf);
+		double d = (m + a)/c;
+		if (d < 0)
+			return Null;
+		nw[ifr] = 1/sqrt(d); 
+	}
+	VectorXd delta = Get_w() - nw;
+	int imin;
+	delta.array().abs().minCoeff(&imin);
+	return 2*M_PI/nw(imin); 
 }
 
-double Hydro::Troll(int ib) const {
-	return Tdof(ib, 3); 
-}
-
-double Hydro::Tpitch(int ib) const {
-	return Tdof(ib, 4); 
-}
+double Hydro::Theave(int ib)  const {return Tdof(ib, 2);}
+double Hydro::Theavew(int ib) const {return Tdofw(ib, 2);}
+double Hydro::Troll(int ib)   const {return Tdof(ib, 3);}
+double Hydro::Trollw(int ib)  const {return Tdofw(ib, 3);}
+double Hydro::Tpitch(int ib)  const {return Tdof(ib, 4);}
+double Hydro::Tpitchw(int ib) const {return Tdofw(ib, 4);}
 
 double Hydro::GM(int ib, int idf) const {
 	if (Vo.size() <= ib || Vo[ib] == 0)
@@ -1711,21 +1727,21 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".inf") {
 		Nemoh &data = hydros.Create<Nemoh>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".out") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));
 		}
 	} else if (ext == ".in") {
 		HAMS &data = hydros.Create<HAMS>(*this);
@@ -1739,7 +1755,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));		
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
 			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot") {
@@ -1747,44 +1763,46 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));		
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") {
 		Aqwa &data = hydros.Create<Aqwa>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".hdb") {
 		Diodore &data = hydros.Create<Diodore>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".yml") {
 		OrcaWave &data = hydros.Create<OrcaWave>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".mat") {
 		Foamm &data = hydros.Create<Foamm>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".bem") {
 		HydroClass &data = hydros.Create<HydroClass>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
-			throw Exc("");//Format(t_("Problem loading '%s'\n%s"), file, error));	
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
-	} else 
+	} else if (ext == ".owd") 
+		throw Exc(t_("OrcaWAVE .owd binary format is not supported.\nHowever OrcaFLEX .yml is supported.\nTo get it, load the .owd file in OrcaFlex and save it as .yml"));
+	else 
 		throw Exc(Format(t_("Unknown BEM file extension in '%s'"), file));
 	
 	Hydro &justLoaded = hydros.Top().hd();
@@ -1983,7 +2001,7 @@ int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool
 		}
 	}
 	UArray<Mesh> meshes;
-	String error = Mesh::Load(meshes, fileName, rho, g, cleanPanels);
+	String error = Mesh::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps);
 	if (!error.IsEmpty()) {
 		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
@@ -2026,7 +2044,7 @@ void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
 	
 	String ret;
 	try {
-		ret = surfs[id].Heal(basic, rho, g, Status);
+		ret = surfs[id].Heal(basic, rho, g, roundVal, roundEps, Status);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
 		Print("\n" + Format(t_("Problem healing '%s': %s") + S("\n%s"), e));
@@ -2164,7 +2182,7 @@ void BEM::AddWaterSurface(int id, char c) {
 		Mesh &surf = surfs.Add();
 
 		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddWaterSurface(surfs[id].mesh, surfs[id].under, c); 
+		surf.mesh.AddWaterSurface(surfs[id].mesh, surfs[id].under, c, roundVal, roundEps); 
 		
 		if (c == 'r')
 			surf.name = t_("Water surface removed");
@@ -2192,6 +2210,10 @@ void BEM::AddWaterSurface(int id, char c) {
 }
 			
 bool BEM::LoadSerializeJson() {
+	csvSeparator = Null;
+	volWarning = volError = Null;
+	roundVal = roundEps = Null;
+	
 	bool ret;
 	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
 	if (!DirectoryCreateX(folder))
@@ -2212,6 +2234,17 @@ bool BEM::LoadSerializeJson() {
 			}
 		}
 	}
+	
+	if (!ret || IsNull(csvSeparator))
+		csvSeparator = ";";
+	if (!ret || IsNull(volWarning))
+		volWarning = 1;
+	if (!ret || IsNull(volError))
+		volError = 10;
+	if (!ret || IsNull(roundVal))
+		roundVal = 1;
+	if (!ret || IsNull(roundEps))
+		roundEps = 1E-8;
 	if (!ret || IsNull(g)) 
 		g = 9.81;
 	if (!ret || IsNull(depth)) 
@@ -2238,6 +2271,10 @@ bool BEM::LoadSerializeJson() {
 		volWarning = 1;
 	if (!ret || IsNull(volError))
 		volError = 10;
+	if (!ret || IsNull(roundVal))
+		roundVal = 1;
+	if (!ret || IsNull(roundEps))
+		roundEps = 1E-8;
 	if (!ret || IsNull(legend_w_solver))
 		legend_w_solver = true;
 	if (!ret || IsNull(legend_w_units))

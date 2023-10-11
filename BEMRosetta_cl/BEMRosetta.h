@@ -482,9 +482,13 @@ public:
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
 	double Tdof(int ib, int idf) const;
+	double Tdofw(int ib, int idf) const;
 	double Theave(int ib) const;
+	double Theavew(int ib) const;
 	double Troll(int ib) const;
+	double Trollw(int ib) const;
 	double Tpitch(int ib) const;
+	double Tpitchw(int ib) const;
 	double GM(int ib, int idf) const;
 	double GMroll(int ib) const;
 	double GMpitch(int ib) const;
@@ -693,6 +697,8 @@ public:
 	static String M_units(int r, int c) {
 		if (r < 3 && c < 3)
 			return "kg";
+		else if (r >= 3 && c >= 3)
+			return "kg-m²";
 		else
 			return "kg-m";
 	}
@@ -817,12 +823,12 @@ public:
 	MESH_FMT GetCode()			{return code;}
 	int GetId()	const			{return id;}
 
-	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels);
-	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
-	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels);
-	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, bool &y0z, bool &x0z);
+	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
 	
-	String Heal(bool basic, double rho, double g, Function <bool(String, int pos)> Status);
+	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
 	void Orient();
 	void Append(const Surface &orig, double rho, double g);
 	void Image(int axis);
@@ -1330,6 +1336,7 @@ public:
 	String foammPath;
 	String hamsPath, hamsMeshPath;
 	int volWarning, volError;
+	double roundVal, roundEps;
 	String csvSeparator;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
@@ -1401,7 +1408,6 @@ public:
 		if (json.IsLoading()) {
 			idofType = 0;
 			iheadingType = 0;
-			csvSeparator = ";";
 		} else {
 			idofType = dofType;
 			iheadingType = headingType;
@@ -1429,6 +1435,8 @@ public:
 			("hamsMeshPath", hamsMeshPath)
 			("volWarning", volWarning)
 			("volError", volError)
+			("roundVal", roundVal)
+			("roundEps", roundEps)
 			("dofType", idofType)
 			("headingType", iheadingType)
 			("csvSeparator", csvSeparator)
