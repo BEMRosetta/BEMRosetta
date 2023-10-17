@@ -29,6 +29,7 @@ void MainMesh::Init() {
 	listLoaded.WhenSel = [&] {
 		OnMenuOpenArraySel();
 		OnMenuProcessArraySel();
+		OnMenuMoveArraySel();
 		OnMenuAdvancedArraySel();
 		LoadSelTab(Bem());
 		UpdateButtons();

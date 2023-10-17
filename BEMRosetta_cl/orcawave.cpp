@@ -526,7 +526,6 @@ bool OrcaWave::Load_YML_Res() {
 						idf = fy.Index()-1;
 						if (idf < -1 || idf >= hd().w.size())		// Infinity is the first
 							throw Exc(in.Str() + "\n" + t_("Wrong frequency"));			
-						//idf--;
 						
 						UVector<UVector<double>> mat = fy.GetMatrixDouble();
 						
@@ -580,13 +579,17 @@ bool OrcaWave::Load_YML_Res() {
 				}
 			} else if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
 				if (fy.FirstIs("AMDPeriodOrFrequency")) {
+					idf = fy.Index()-1;
+					if (idf < -1 || idf >= hd().w.size())		// Infinity is the first
+						throw Exc(in.Str() + "\n" + t_("Wrong frequency"));	
+						/*
 					if (fy.GetVal() == "Infinity")
 						idf = -1;
 					else {
 						idf = Find(hd().w, ScanDouble(fy.GetVal()));
 						if (idf < 0)
 							throw Exc(in.Str() + "\n" + t_("Wrong frequency"));	
-					}
+					}*/
 				} else if (fy.FirstIs("Matrices")) {
 					if (fy.FirstIs("Row")) 
 						row = ScanInt(fy.GetVal())-1;

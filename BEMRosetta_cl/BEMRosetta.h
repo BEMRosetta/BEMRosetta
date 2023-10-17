@@ -288,6 +288,8 @@ public:
 	void Average(const UArray<HydroClass> &hydros, const UVector<int> &ids);
 	void Converge(const UArray<HydroClass> &hydros, const UVector<int> &ids);
 		
+	void SortW();
+		
 	static int GetK_AB(int i, int j) {
 		while (i > 5)
 			i -= 6;
@@ -783,7 +785,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
 	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "DIODORE.dat", "Hydrostar.hst", "Unknown"};	
+	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "Unknown"};	
 	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		  false,   		   false};       
 	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	  "*.hst", 		   "*.*"};       
 	

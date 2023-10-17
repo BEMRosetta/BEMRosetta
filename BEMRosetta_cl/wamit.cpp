@@ -190,6 +190,8 @@ bool Wamit::Load_out() {
 	LineParserWamit f(in);
 	f.IsSeparator = IsTabSpace;
 	
+	bool isHydrostar = false;
+	
 	UArray<UArray<UArray<VectorXd>>> md7, md8, md9;
 	
 	auto LoadDrift = [&](UArray<UArray<UArray<VectorXd>>> &md, int ifr) {
@@ -228,6 +230,11 @@ bool Wamit::Load_out() {
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		f.Load(line);
+		
+		if (line.Find("HydroStar") > 0 || line.Find("HSrao") > 0) {
+			hd().description = "Created with HydroStar";
+			isHydrostar = true;
+		}
 		if (line.Find("N=") >= 0 && line.Find("Body number:") < 0) {
 			hd().Nb++;
 			hd().names << GetFileTitle(f.GetText(2));
@@ -284,6 +291,8 @@ bool Wamit::Load_out() {
 			hd().cg(0, ibody) = f.GetDouble(4);
 			hd().cg(1, ibody) = f.GetDouble(5);
 			hd().cg(2, ibody) = f.GetDouble(6);
+			if (isHydrostar)
+				hd().c0 = clone(hd().cg);	
 		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
 			if (hd().cb.rows() < 3 || hd().cb.cols() < hd().Nb)
 			 	throw Exc(in.Str() + "\n"  + t_("cb matrix is not dimensioned"));

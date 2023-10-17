@@ -1167,8 +1167,7 @@ void MainBEM::OnResetForces() {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
-		
-		
+			
 		Hydro::FORCE force = Hydro::NONE;
 		for (int i = 0; i < menuProcess2.dropForce.GetCount(); ++i) {
 			if (menuProcess2.dropForce.GetList().Get(i, 0) == true) {
@@ -1508,6 +1507,10 @@ void MainBEM::AfterBEM() {
 		}
 	}	
 	mainTab.GetItem(mainTab.Find(mainStateSpace)).Enable(isLoadedSS);
+	
+	int id = mainTab.Get();
+	if (id >= 0 && mainTab.GetItem(id).IsEnabled() == false)
+		mainTab.Set(0);
 	
 	UpdateButtons();
 }
@@ -1963,12 +1966,12 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 				}
 			}
 		}
-		array.Set(row,   0, sib + " " + t_("Theave [s]"));
-		array.Set(row+1, 0, sib + " " + t_("Theave(w) [s]"));
-		array.Set(row+2, 0, sib + " " + t_("Troll [s]"));
-		array.Set(row+3, 0, sib + " " + t_("Troll(w) [s]"));
-		array.Set(row+4, 0, sib + " " + t_("Tpitch [s]"));
-		array.Set(row+5, 0, sib + " " + t_("Tpitch(w) [s]"));
+		array.Set(row,   0, sib + " " + t_("Theave(∞) [s]"));
+		array.Set(row+1, 0, sib + " " + t_("Theave(ω) [s]"));
+		array.Set(row+2, 0, sib + " " + t_("Troll(∞)  [s]"));
+		array.Set(row+3, 0, sib + " " + t_("Troll(ω)  [s]"));
+		array.Set(row+4, 0, sib + " " + t_("Tpitch(∞) [s]"));
+		array.Set(row+5, 0, sib + " " + t_("Tpitch(ω) [s]"));
 		if (IsNum(data.rho) && IsNum(data.g) && 
 			data.M.size() > ib && data.M[ib].size() > 0 && 
 			data.C.size() > ib && data.C[ib].size() > 0) {
@@ -1983,7 +1986,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
 		}
-		array.Set(row,   0, sib + " " + t_("GMroll [m]"));
+		array.Set(row,   0, sib + " " + t_("GMroll  [m]"));
 		array.Set(row+1, 0, sib + " " + t_("GMpitch [m]"));
 		if (IsNum(data.rho) && IsNum(data.g) && data.IsLoadedC()) {
 			array.Set(row++, col, FDS(data.GMroll(ib), 5, false, "-"));

@@ -74,7 +74,7 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 	array.Set(2, col0, AttrText(" ").Paper(GetColorId(idc)));
 	
 	int len = StdFont().Bold().GetAveWidth()*(BEM::StrDOF_len() + 2);
-	int ncols = int(data[realicase].cols());
+	int ncols = int(data[icase].cols());
 	int Nb = int(ncols/6);
 	while (array.GetColumnCount() < col0 + 1 + ncols) {
 		if (icase > 0) {

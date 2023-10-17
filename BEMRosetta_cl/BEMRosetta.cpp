@@ -140,6 +140,75 @@ void Hydro::Dimensionalize() {
 		Dimensionalize_RAO(rao);
 }
 
+void Hydro::SortW() {
+	if (!IsSorted(w)) {
+		UVector<int> indices = GetSortOrderX(w);
+		w = ApplyIndex(w, indices);
+		T = ApplyIndex(T, indices);
+	
+		auto SortAB = [&](UArray<UArray<VectorXd>> &A) {
+			UArray<UArray<VectorXd>> a = clone(A);
+			for (int ifr = 0; ifr < Nf; ++ifr) 
+				for (int idf = 0; idf < 6*Nb; ++idf) 
+					for (int jdf = 0; jdf < 6*Nb; ++jdf) 	
+						A[idf][jdf][ifr] = a[idf][jdf][indices[ifr]];
+		};
+	
+		auto SortF = [&](Forces &F) {
+			Forces f = clone(F);
+			for (int ih = 0; ih < Nh; ++ih) 
+				for (int ifr = 0; ifr < Nf; ++ifr) 
+					for (int idf = 0; idf < 6*Nb; ++idf) 
+						F.force[ih](ifr, idf) = f.force[ih](indices[ifr], idf);
+		};
+		
+		auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
+			UArray<UArray<UArray<VectorXd>>> md = clone(MD);
+			for (int ib = 0; ib < Nb; ++ib) 
+				for (int ih = 0; ih < mdhead.size(); ++ih)
+					for (int idf = 0; idf < 6; ++idf) 
+						for (int ifr = 0; ifr < Nf; ++ifr) 		
+							MD[ib][ih][idf][ifr] = md[ib][ih][idf][indices[ifr]];
+		};
+		
+		if (IsLoadedA()) 
+			SortAB(A);
+		if (IsLoadedB()) 
+			SortAB(B);
+		
+		if (IsLoadedFex())
+			SortF(ex);
+		if (IsLoadedFsc())
+			SortF(sc);
+		if (IsLoadedFfk())
+			SortF(fk);
+		if (IsLoadedRAO()) 
+			SortF(rao);
+		
+		if(IsLoadedMD())
+			SortMD(md);
+	}
+	if (!IsSorted(qw)) {
+		UVector<int> indices = GetSortOrderX(qw);
+		qw = ApplyIndex(qw, indices);
+		
+		auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
+			UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
+			for (int ib = 0; ib < Nb; ++ib) 
+		        for (int ih = 0; ih < qh.size(); ++ih) 
+		        	for (int idf = 0; idf < 6; ++idf) 
+						for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
+							for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) 
+								QTF[ib][ih][idf](ifr1, ifr2) = qtf[ib][ih][idf](indices[ifr1], indices[ifr2]);
+		};
+			
+		if (IsLoadedQTF(true))
+			SortQTF(qtfsum);
+		if (IsLoadedQTF(false))
+			SortQTF(qtfdif);
+	}
+}
+
 void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a) {
 	a.SetCount(6*Nb);
 	for (int i = 0; i < 6*Nb; ++i) {
@@ -1124,6 +1193,8 @@ void Hydro::GetBodyDOF() {
 }
 
 bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
+	SortW();
+	
 	if (!IsLoadedA0())  
 		GetA0();
 	
@@ -1616,9 +1687,12 @@ double Hydro::Tdofw(int ib, int idf) const {
 		nw[ifr] = 1/sqrt(d); 
 	}
 	VectorXd delta = Get_w() - nw;
-	int imin;
-	delta.array().abs().minCoeff(&imin);
-	return 2*M_PI/nw(imin); 
+	
+	UVector<double> zeros; 
+	ZeroCrossing(Get_w(), delta, true, true, zeros);
+	if (zeros.IsEmpty())
+		return Null;
+	return 2*M_PI/First(zeros); 
 }
 
 double Hydro::Theave(int ib)  const {return Tdof(ib, 2);}
