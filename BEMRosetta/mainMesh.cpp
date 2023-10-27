@@ -1479,8 +1479,14 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 		backColorUnder = Upp::Color(255, 255, 150);
 									
 	bool healing = data.mesh.healing;
-	
-	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.fileName);
+
+	const MainMesh &mn = GetDefinedParent<MainMesh>(this);
+	Upp::Color color = ArrayModel_GetColor(mn.listLoaded, id);//GetColorId(id);
+	::Color textColor = Black();
+	if (Grayscale(color) < 150)
+		textColor = White();
+														
+	array.Set(row, 0, t_("File"));				array.Set(row++, col, AttrText(data.fileName).Paper(color).Ink(textColor).Bold()); 
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
 	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetMeshStr());	
 	

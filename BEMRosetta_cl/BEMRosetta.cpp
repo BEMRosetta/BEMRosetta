@@ -300,43 +300,22 @@ static double MirrorHead(double head, bool xAxis) {
 	}
 }
 
-void Hydro::Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis) {
-	auto Symmetrize_Forces_Each0 = [&](const Forces &f, Forces &newf, const UVector<double> &newHead, double h, int ih, int idb, bool applysym) {
-		int nih = FindClosest(newHead, h);
-		bool avg = IsNum(newf.force[nih](0, idb));
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			std::complex<double> fr = f.force[ih](ifr, idb);
-			double ph = arg(fr);
-			if (applysym) {
-				fr = std::polar(abs(fr), arg(fr) + M_PI);
-				ph = arg(fr);
-			}
-			if (avg) {
-				double ph2 = arg(newf.force[nih](ifr, idb));	
-				newf.force[nih](ifr, idb) = Avg(newf.force[nih](ifr, idb), fr);
-				ph2 = arg(newf.force[nih](ifr, idb));	
-			} else 
-				newf.force[nih](ifr, idb) = fr;
-		}
-	};
-
-	Initialize_Forces(newf, newNh);
-	
-	for (int idb = 0; idb < 6*Nb; ++idb) {
-		for (int ih = 0; ih < Nh; ++ih) {
-			Symmetrize_Forces_Each0(f, newf, newHead, FixHeading_180(head[ih]), ih, idb, false);
-			double he = FixHeading_180(MirrorHead(head[ih], xAxis));
-			bool applysym = false;
-			if (xAxis) {
-				if (he != 0 && he != 180 && Odd(idb))
-					applysym = true;
-			} else {
-				if (he != 90 && he != -90 && Odd(idb))
-					applysym = true;
-			}
-			Symmetrize_Forces_Each0(f, newf, newHead, he, ih, idb, applysym);
-		}
+static std::complex<double> MirrorHead(const std::complex<double> &head, bool xAxis) {
+	double h1 = head.real(), h2 = head.imag();
+	if (xAxis) {
+		h1 = -h1;
+		h2 = -h2;	
+	} else {
+		auto Fix = [](double h) {
+			h = FixHeading_180(h);
+			h += 90;
+			h = FixHeading_180(-h);
+			h -= 90;
+		};
+		Fix(h1);
+		Fix(h2);
 	}
+	return std::complex<double>(h1, h2);
 }
 
 void Hydro::Copy(const Hydro &hyd) {
@@ -662,8 +641,6 @@ void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
     AvgB(qtfdif, qtfdifs);
     
     /*
-
-  
     qtfsum = clone(hyd.qtfsum);
     qtfdif = clone(hyd.qtfdif);
 
@@ -680,39 +657,233 @@ void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
     */
 }
 
+bool Hydro::SymmetryRule(int idf6, bool xAxis) {
+	ASSERT(idf6 >= 0);
+	idf6 = idf6%6;
+	if (xAxis)
+		return symmetryRulesXZ[idf6];
+	else
+		return symmetryRulesYZ[idf6];
+}
+	
 void Hydro::Symmetrize_Forces(bool xAxis) {
 	if (!IsLoadedFex() && !IsLoadedFsc() && !IsLoadedFfk() && !IsLoadedRAO())
 		return;
 	
 	UVector<double> newHead;
 	for (int ih = 0; ih < Nh; ++ih) {
-		FindAddRatio(newHead, FixHeading_180(head[ih]), 0.001);
-		FindAddRatio(newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), 0.001);
+		FindAddDelta(newHead, FixHeading_180(head[ih]), 0.01);
+		FindAddDelta(newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), 0.01);
 	}
 	Sort(newHead);
-	int newNh = newHead.size();
 	
-	Forces newex, newsc, newfk;
-	RAO newrao;
+	auto Symmetrize_ForcesEach = [&](const Forces &f, Forces &newf) {
+		auto Symmetrize_Forces_Each0 = [&](const Forces &f, Forces &newf, double h, int ih, int idf, bool applysym) {
+			int nih = FindClosest(newHead, h);
+			bool avg = IsNum(newf.force[nih](0, idf));
+			for (int ifr = 0; ifr < Nf; ++ifr) {
+				std::complex<double> force = f.force[ih](ifr, idf);
+				double ph = arg(force);
+				if (applysym) {
+					force = std::polar(abs(force), arg(force) + M_PI);
+					ph = arg(force);
+				}
+				std::complex<double> &nf = newf.force[nih](ifr, idf);
+				if (avg) {
+					//double ph2 = arg(nf);	
+					nf = Avg(nf, force);
+					//ph2 = arg(nf);	
+				} else 
+					nf = force;
+			}
+		};
 	
+		Initialize_Forces(newf, newHead.size());
+		
+		for (int idf = 0; idf < 6*Nb; ++idf) {
+			for (int ih = 0; ih < Nh; ++ih) {
+				Symmetrize_Forces_Each0(f, newf, FixHeading_180(head[ih]), ih, idf, false);
+				double he = FixHeading_180(MirrorHead(head[ih], xAxis));
+				bool applysym = false;
+				if (SymmetryRule(idf, xAxis)) {
+					if (xAxis) {
+						if (he != 0 && he != 180)
+							applysym = true;
+					} else {
+						if (he != 90 && he != -90)
+							applysym = true;
+					}
+				}
+				Symmetrize_Forces_Each0(f, newf, he, ih, idf, applysym);
+			}
+		}
+	};
+
 	if (IsLoadedFex()) {
-		Symmetrize_ForcesEach(ex, newex, newHead, newNh, xAxis);
+		Forces newex;
+		Symmetrize_ForcesEach(ex, newex);
 		ex = pick(newex);
 	}
 	if (IsLoadedFsc()) {
-		Symmetrize_ForcesEach(sc, newsc, newHead, newNh, xAxis);
+		Forces newsc;
+		Symmetrize_ForcesEach(sc, newsc);
 		sc = pick(newsc);
 	}
 	if (IsLoadedFfk()) {
-		Symmetrize_ForcesEach(fk, newfk, newHead, newNh, xAxis);
+		Forces newfk;
+		Symmetrize_ForcesEach(fk, newfk);
 		fk = pick(newfk);
 	}
 	if (IsLoadedRAO()) {
-		Symmetrize_ForcesEach(rao, newrao, newHead, newNh, xAxis);
+		RAO newrao;
+		Symmetrize_ForcesEach(rao, newrao);
 		rao = pick(newrao);
 	}
 	head = pick(newHead);		// New headings are set between -180 and 180
-	Nh = newNh;
+	Nh = newHead.size();
+}
+
+void Hydro::Symmetrize_QTF(bool xAxis) {
+	if (!IsLoadedQTF(true) && !IsLoadedQTF(false))
+		return;
+	
+	UArray<std::complex<double>> newHead;
+	for (int ih = 0; ih < qh.size(); ++ih) {
+		FindAddDelta(newHead, FixHeading_180(qh[ih]), 0.01);
+		FindAddDelta(newHead, FixHeading_180(MirrorHead(qh[ih], xAxis)), 0.01);
+	}
+	Sort(newHead, [](const std::complex<double> &a, const std::complex<double> &b)->bool {
+		if (a.real() < b.real())
+			return true;
+		else if (a.real() == b.real())
+			return a.imag() < b.imag();
+		else
+			return false;
+	});
+
+	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<MatrixXcd>>> &f, UArray<UArray<UArray<MatrixXcd>>> &newf) {
+		auto Symmetrize_Forces_Each0 = [&](const UArray<UArray<UArray<MatrixXcd>>> &f, UArray<UArray<UArray<MatrixXcd>>> &newf, const std::complex<double> &h, int ib, int ih, int idf, bool applysym) {
+			int nih = FindClosest(newHead, h);
+			bool avg = IsNum(newf[ib][nih][idf](0, 0));
+			for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
+				for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
+					std::complex<double> force = f[ib][ih][idf](ifr1, ifr2);
+					double ph = arg(force);
+					if (applysym) {
+						force = std::polar(abs(force), arg(force) + M_PI);
+						ph = arg(force);
+					}
+					std::complex<double> &nf = newf[ib][nih][idf](ifr1, ifr2);
+					if (avg) {
+						//double ph2 = arg(nf);	
+						nf = Avg(nf, force);
+						//ph2 = arg(nf);		
+					} else 
+						nf = force;
+				}
+			}
+		};
+	
+		Initialize_QTF(newf, Nb, newHead.size(), qw.size());
+		
+		for (int ib = 0; ib < Nb; ++ib) {
+			for (int ih = 0; ih < qh.size(); ++ih) {
+				for (int idf = 0; idf < 6; ++idf) {
+					Symmetrize_Forces_Each0(f, newf, FixHeading_180(qh[ih]), ib, ih, idf, false);
+					std::complex<double> he = FixHeading_180(MirrorHead(qh[ih], xAxis));
+					bool applysym = false;
+					if (SymmetryRule(idf, xAxis)) {
+						if (xAxis) {
+							if (he != std::complex<double>(0, 0) && he != std::complex<double>(180, 180))
+								applysym = true;
+						} else {
+							if (he != std::complex<double>(90, 90) && he != std::complex<double>(-90, -90))
+								applysym = true;
+						}
+					}
+					Symmetrize_Forces_Each0(f, newf, he, ib, ih, idf, applysym);
+				}
+			}
+		}
+	};	
+	
+	if (IsLoadedQTF(true)) {
+		UArray<UArray<UArray<MatrixXcd>>> newqtf;
+		Symmetrize_ForcesEach(qtfsum, newqtf);
+		qtfsum = pick(newqtf);
+	}
+	if (IsLoadedQTF(false)) {
+		UArray<UArray<UArray<MatrixXcd>>> newqtf;
+		Symmetrize_ForcesEach(qtfdif, newqtf);
+		qtfdif = pick(newqtf);
+	}
+	
+	::Copy(newHead, qh);	
+}
+
+void Hydro::Symmetrize_MD(bool xAxis) {
+	if (!IsLoadedMD())
+		return;
+	
+	UArray<std::complex<double>> newHead;
+	for (int ih = 0; ih < mdhead.size(); ++ih) {
+		FindAddDelta(newHead, FixHeading_180(mdhead[ih]), 0.01);
+		FindAddDelta(newHead, FixHeading_180(MirrorHead(mdhead[ih], xAxis)), 0.01);
+	}
+	Sort(newHead, [](const std::complex<double> &a, const std::complex<double> &b)->bool {
+		if (a.real() < b.real())
+			return true;
+		else if (a.real() == b.real())
+			return a.imag() < b.imag();
+		else
+			return false;
+	});
+	int newNh = newHead.size();
+
+	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf) {
+		auto Symmetrize_Forces_Each0 = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf, const std::complex<double> &h, int ib, int ih, int idf, bool applysym) {
+			int nih = FindClosest(newHead, h);
+			bool avg = IsNum(newf[ib][nih][idf](0));
+			for (int ifr = 0; ifr < w.size(); ++ifr) {
+				double force = f[ib][ih][idf](ifr);
+				if (applysym) 
+					force = -force;
+				double& nf = newf[ib][nih][idf](ifr);
+				if (avg) 
+					nf = Avg(nf, force);
+				else 
+					nf = force;
+			}
+		};
+	
+		Initialize_MD(newf, Nb, newHead.size(), w.size());
+		
+		for (int ib = 0; ib < Nb; ++ib) {
+			for (int ih = 0; ih < mdhead.size(); ++ih) {
+				for (int idf = 0; idf < 6; ++idf) {
+					Symmetrize_Forces_Each0(f, newf, FixHeading_180(mdhead[ih]), ib, ih, idf, false);
+					std::complex<double> he = FixHeading_180(MirrorHead(mdhead[ih], xAxis));
+					bool applysym = false;
+					if (SymmetryRule(idf, xAxis)) {
+						if (xAxis) {
+							if (he != std::complex<double>(0, 0) && he != std::complex<double>(180, 180))
+								applysym = true;
+						} else {
+							if (he != std::complex<double>(90, 90) && he != std::complex<double>(-90, -90))
+								applysym = true;
+						}
+					}
+					Symmetrize_Forces_Each0(f, newf, he, ib, ih, idf, applysym);
+				}
+			}
+		}
+	};	
+	
+	UArray<UArray<UArray<VectorXd>>> newmd;
+	Symmetrize_ForcesEach(md, newmd);
+	md = pick(newmd);
+	
+	::Copy(newHead, mdhead);	
 }
 
 void Hydro::RemoveThresDOF_A(double thres) {
@@ -1954,6 +2125,8 @@ HydroClass &BEM::Average(UVector<int> &ids) {
 
 void BEM::SymmetrizeForces(int id, bool xAxis) {
 	hydros[id].hd().Symmetrize_Forces(xAxis);
+	hydros[id].hd().Symmetrize_QTF(xAxis);
+	hydros[id].hd().Symmetrize_MD(xAxis);
 	
 	UpdateHeadAll();
 	UpdateHeadAllMD();
@@ -1979,13 +2152,13 @@ void BEM::UpdateHeadAllMD() {
 		for (int ih = 0; ih < hydros[id].hd().mdhead.size(); ++ih) 
 			FindAddDelta(headAllMD, FixHeading(hydros[id].hd().mdhead[ih], headingType), 0.1);
 	}
-	Sort(headAllMD, [&](auto& a, auto& b)->bool const { 
+	Sort(headAllMD, [](const std::complex<double> &a, const std::complex<double> &b)->bool {
 		if (a.real() < b.real())
-			return true; 
-		else if (a.real() > b.real())
-			return false;
+			return true;
+		else if (a.real() == b.real())
+			return a.imag() < b.imag();
 		else
-			return a.imag() < b.imag();	
+			return false;
 	});
 	//orderHeadAll = GetSortOrder(headAll);
 }
@@ -2014,8 +2187,8 @@ void BEM::Symmetrize(int id) {
 	hydros[id].hd().Symmetrize();
 }
 
-void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof) {
-	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, haskind, vidof, vjdof);
+void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof) {
+	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, vidof, vjdof);
 }
 
 void BEM::ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf) {
@@ -2026,8 +2199,8 @@ void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, 
 	hydros[id].hd().MultiplyDOF(factor, idDOF, a, b, diag, f, md, qtf);
 }
 
-void BEM::SwapDOF(int id, int ib, int idof1, int idof2) {
-	hydros[id].hd().SwapDOF(ib, idof1, idof2);
+void BEM::SwapDOF(int id, int ib1, int idof1, int ib2, int idof2) {
+	hydros[id].hd().SwapDOF(ib1, idof1, ib2, idof2);
 }
 
 void BEM::FillFrequencyGapsABForces(int id, bool zero, int maxFreq) {

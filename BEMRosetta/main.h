@@ -636,8 +636,8 @@ public:
 	void Clear();
 	bool Load(BEM &bem, const UVector<int> &ids, int ih = Null);
 	
-	void UpdateHead(BEM &bem, int ih);
-	void UpdateHeadMD(BEM &bem, int ih);
+	void UpdateHead(BEM &bem/*, int ih*/);
+	void UpdateHeadMD(BEM &bem/*, int ih*/);
 		
 	TabCtrl tab;
 	UArray<UArray<MainPlot>> plots;
@@ -1184,6 +1184,7 @@ public:
 	void AfterBEM();
 		
 	int GetIdOneSelected(bool complain = true);
+	UVector<int> GetIdsSelected(bool complain);
 		
 	void Jsonize(JsonIO &json);
 		

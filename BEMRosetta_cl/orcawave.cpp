@@ -347,6 +347,16 @@ bool OrcaWave::Load_YML_Res() {
 	bool diffFullQTF = false;
 	
 	in.SeekPos(fpos);
+	
+	auto FillInertia = [](Eigen::MatrixXd &inertia, double cgx, double cgy, double cgz) {
+		double &mass = inertia(0, 0);
+		inertia(1, 5) = inertia(5, 1) =  cgx*mass;
+		inertia(2, 4) = inertia(4, 2) = -cgx*mass;
+		inertia(2, 3) = inertia(3, 2) =  cgy*mass;
+		inertia(0, 5) = inertia(5, 0) = -cgy*mass;
+		inertia(0, 4) = inertia(4, 0) =  cgz*mass;
+		inertia(1, 3) = inertia(3, 1) = -cgz*mass;
+	};
 		
 	while(fy.GetLine()) {
 		if (fy.FirstIs("Environment")) {
@@ -378,6 +388,9 @@ bool OrcaWave::Load_YML_Res() {
 					inertia(5, 3) = mat[2][0]*factorM(5, 3);
 					inertia(5, 4) = mat[2][1]*factorM(5, 4);
 					inertia(5, 5) = mat[2][2]*factorM(5, 5);
+					
+					if (IsNum(hd().cg(0, ib)))
+						FillInertia(inertia, hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
 				} else if (fy.FirstMatch("HydrostaticStiffnessz*")) {
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
@@ -390,6 +403,9 @@ bool OrcaWave::Load_YML_Res() {
 					hd().cg(0, ib) = line[0]*factorLen;
 					hd().cg(1, ib) = line[1]*factorLen;
 					hd().cg(2, ib) = line[2]*factorLen;
+					
+					if (inertia(0, 0) > 0)
+						FillInertia(inertia, hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
 				} else if (fy.FirstIs("CentreOfBuoyancy")) {
 					UVector<double> line = fy.GetVectorDouble();
 					

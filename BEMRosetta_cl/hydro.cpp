@@ -139,7 +139,7 @@ void Hydro::GetAinf_w() {
         }
 }
 
-void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof) {
+void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof) {
 	vidof.Clear();
 	vjdof.Clear();
 	if (Nf == 0 || A.size() < Nb*6)
@@ -179,7 +179,7 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
             else {
                 bool done;
 	    		if (data.Load(Get_w(), A_dim(idf, jdf), Ainf_dim(idf, jdf), B_dim(idf, jdf), numT, maxT, ex_hf) &&
-					data.Heal(zremoval, thinremoval, decayingTail, haskind && idf == jdf, done)) {
+					data.Heal(zremoval, thinremoval, decayingTail, done)) {
 	            	data.Save(Get_w(), A[idf][jdf], Ainf_w[idf][jdf], Ainf(idf, jdf), B[idf][jdf], Tirf, Kirf[idf][jdf]); 
 	            	if (done) {
 		            	vidof << idf;
@@ -448,8 +448,17 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	c0(1) = yto;
 	c0(2) = zto;
 	
+	if (IsLoadedKirf()) {
+		double maxT = GetK_IRF_MaxT();
+		if (maxT < 0)
+			maxT = bem->maxTimeA;
+		else if (bem->maxTimeA < maxT) 
+			maxT = bem->maxTimeA;
+
+		GetK_IRF(maxT, bem->numValsA);
+	}
+	
 	// Some previous data are now invalid
-	Kirf.Clear();
 	rao.Clear();	
 	C.Clear();
 	
@@ -606,8 +615,8 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	}
 }
 
-void Hydro::SwapDOF(int ib, int idof1, int idof2) {
-	auto SwapAB = [&](UArray<UArray<VectorXd>> &A) {
+void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
+/*	auto SwapAB = [&](UArray<UArray<VectorXd>> &A) {
 		UArray<UArray<VectorXd>> An(6*Nb);
 		for (int i = 0; i < 6*Nb; ++i) 
 			An[i].SetCount(6*Nb);
@@ -701,7 +710,7 @@ void Hydro::SwapDOF(int ib, int idof1, int idof2) {
 	if (!AfterLoad()) {
 		String error = GetLastError();
 		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
-	}
+	}*/
 }
 
 void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
@@ -1137,6 +1146,7 @@ VectorXd AvgSafe(const VectorXd &a, const VectorXd &b) {
 	return r;
 }
 
+// Forces the symmetry in values that have to be symmetric
 void Hydro::Symmetrize() {
 	auto SymmetrizeAB = [&](UArray<UArray<VectorXd>> &A) {
 		for (int idf = 0; idf < 6*Nb; ++idf) 

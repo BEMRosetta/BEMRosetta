@@ -1405,7 +1405,7 @@ bool Wamit::Load_1(String fileName) {
 		}
 	}
 	if (hd().c0.size() == 0)
-		hd().c0.setConstant(3, hd().Nb, 0);
+		hd().c0.setConstant(3, hd().Nb, NaNDouble);
 	
 	return true;	
 }
@@ -1591,7 +1591,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
         force.force[ih](ifr, idof) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
 	}
 	if (hd().c0.size() == 0)
-		hd().c0.setConstant(3, hd().Nb, 0);
+		hd().c0.setConstant(3, hd().Nb, NaNDouble);
 	
 	return true;
 }

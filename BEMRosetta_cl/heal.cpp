@@ -261,7 +261,7 @@ void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf
 }
 	
 // Haskind is unused
-bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind, bool &done) {
+bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &done) {
 	// Removes NaN, Inf, duplicated (or nearly) w, sorts by w 
 	CleanNANDupXSort(w, A, B, w, A, B);
 	double srate = GetSampleRate(w, 4, .8);	// Gets the most probable sample rate, or the average if the most probable probability is lower than 0.8

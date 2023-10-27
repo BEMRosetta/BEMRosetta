@@ -234,7 +234,7 @@ public:
         	for (int ih = 0; ih < nh; ++ih) {    
         		qtf[ib][ih].SetCount(6);
         		for (int idf = 0; idf < 6; ++idf) 
-        			qtf[ib][ih][idf].resize(nf, nf);
+        			qtf[ib][ih][idf].setConstant(nf, nf, NaNDouble);
         	}
         }
     }
@@ -279,9 +279,16 @@ public:
 	void Dimensionalize_RAO(RAO &f);
 	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
 	void Add_RAO(RAO &to, const Hydro &hydro, const RAO &from);
-	void Symmetrize_Forces(bool xAxis);
 	void Symmetrize();
 	void GetFexFromFscFfk();
+	
+	static constexpr const bool symmetryRulesXZ[] = {false, true,  false, true,  false, true};
+	static constexpr const bool symmetryRulesYZ[] = {true,  false, false, false, true,  true};
+	
+	bool SymmetryRule(int idf6, bool xAxis);
+	void Symmetrize_Forces(bool xAxis);
+	void Symmetrize_QTF(bool xAxis);
+	void Symmetrize_MD(bool xAxis);
 	
 	void Initialize_Sts();
 	
@@ -509,15 +516,13 @@ private:
 	int id;
 	static int idCount;
 		
-	void Symmetrize_ForcesEach(const Forces &f, Forces &newf, const UVector<double> &newHead, int newNh, bool xAxis);
-	 
 	static void GetOldAB(const UArray<MatrixXd> &oldAB, UArray<UArray<VectorXd>> &AB);
 	static void SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB);
 	
 	void ResetForces1st(Hydro::FORCE force);
 	
 public:
-	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_K, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2, DATA_MD};
+	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2, DATA_MD};
 	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_KIRF, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
@@ -586,7 +591,7 @@ public:
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
-	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof);
+	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void GetTranslationTo(double xto, double yto, double zto);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
@@ -596,7 +601,7 @@ public:
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);
 	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
-	void SwapDOF(int ib, int idof1, int idof2);
+	void SwapDOF(int ib1, int idof1, int ib2, int idof2);
 	
 	void SymmetrizeDOF();
 	
@@ -802,6 +807,7 @@ public:
 	
 	bool IsEmpty() {return mesh.IsEmpty();}
 	static void ResetIdCount()		{idCount = 0;}
+	static void DecrementIdCount()	{idCount--;}
 	
 	const char *GetMeshStr() const {
 		return meshStr[code];
@@ -824,6 +830,7 @@ public:
 	void SetCode(MESH_FMT _code){code = _code;}
 	MESH_FMT GetCode()			{return code;}
 	int GetId()	const			{return id;}
+	void SetId(int _id)			{id = _id;}
 
 	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
 	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
@@ -1350,13 +1357,13 @@ public:
 	void Ainf(int id);
 	void Ainf_w(int id);
 	void RAO(int id);
-	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, bool haskind, UVector<int> &vidof, UVector<int> &vjdof);
+	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, double xto, double yto, double zto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										
 	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
-	void SwapDOF(int id, int ib, int idof1, int idof2);
+	void SwapDOF(int id, int ib1, int idof1, int ib2, int idof2);
 	
 	void RemoveHydro(int id);
 		

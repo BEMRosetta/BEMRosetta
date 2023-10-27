@@ -10,9 +10,9 @@ String SalomeMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
+		Mesh::DecrementIdCount();
 		return ret;
 	}
-	
 	return ret;
 }
 	

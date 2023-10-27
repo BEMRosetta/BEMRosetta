@@ -5,7 +5,7 @@
 
 class HealBEM {
 public:
-	bool Heal(bool zremoval, bool thinremoval, bool decayingTail, bool haskind, bool &done);
+	bool Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &done);
 	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, double Ainf, const Eigen::VectorXd &B, int numT, double maxT, const Eigen::MatrixXd &ex_hf);
 	void Save(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
 				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);

@@ -31,6 +31,9 @@ void QTFTabDof::Init(int posSplitter, int ib, int idof) {
 		widths[0] = height;
 		widths[1] = max(0, width - height);
 	};
+	
+	up.isUp = true;
+	down.isUp = false;
 		
 	up	.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50).SetSciExpTop();
 	down.surf.ShowInfo().ShowContextMenu().ShowPropertiesDlg().ShowProcessDlg().SetLeftMargin(50).SetTopMargin(25).SetBottomMargin(50).SetSciExpTop();
@@ -44,10 +47,11 @@ void QTFTabDof::Init(int posSplitter, int ib, int idof) {
 	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, this->idof, action);};
 	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, this->idof, action);};
 	
-	up.isUp = true;
-	down.isUp = false;
-	
 	int len = StdFont().GetHeight();
+	
+	up  .surf.SetMargin(4*len, len, len, 4*len);
+	down.surf.SetMargin(4*len, len, len, 4*len);
+	
 	up.  scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 	down.scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
 	up.scatter.LinkedWith(down.scatter);
@@ -345,34 +349,34 @@ void MainQTF::Init(MainBEM &parent) {
 	
 	try {
 		_mbm = &parent;
-		ArrayCtrl &listHead = parent.menuPlot.headQTF;
+		ArrayCtrl &headQTF = parent.menuPlot.headQTF;
 		
-		listHead.Reset();
-		listHead.NoHeader();
-		listHead.AddColumn("", 20);
-		listHead.AddColumn("", 20);
+		headQTF.Reset();
+		headQTF.NoHeader();
+		headQTF.AddColumn("", 20);
+		headQTF.AddColumn("", 20);
 		
 		opLine <<= 0;
 		
 		opQTF  		<< [&] {
 			isSumm = opQTF.GetData() == FSUM;
-			OnHeadingsSel(&listHead);
+			OnHeadingsSel(&headQTF);
 		};
 		opBilinear  << THISBACK(OnSurf);
-		opLine 		<< THISBACK1(OnHeadingsSel, &listHead);
+		opLine 		<< THISBACK1(OnHeadingsSel, &headQTF);
 		
-		listHead.WhenSel << THISBACK1(OnHeadingsSel, &listHead);
-		tab.WhenSet << THISBACK1(OnHeadingsSel, &listHead);
+		headQTF.WhenSel << THISBACK1(OnHeadingsSel, &headQTF);
+		tab.WhenSet << THISBACK1(OnHeadingsSel, &headQTF);
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}		
 }
 
-void MainQTF::OnHeadingsSel(ArrayCtrl *listHead) {
+void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF) {
 	if (isLoading)
 		return;
 	
-	int ih = listHead->GetCursor();
+	int ih = headQTF->GetCursor();
 	if (ih < 0)
 		return;
 
@@ -447,9 +451,9 @@ bool MainQTF::Load() {
 				tab.Set(idof + 6*ib);
 		}
 			
-		ArrayCtrl &listHead = mbm.menuPlot.headQTF;
+		ArrayCtrl &headQTF = mbm.menuPlot.headQTF;
 		
-		listHead.Clear();
+		headQTF.Clear();
 	
 		idHydro = -1;
 		for (int row = 0; row < mbm.listLoaded.GetCount(); ++row) {
@@ -509,13 +513,13 @@ bool MainQTF::Load() {
 			});*/
 		
 			for (int ih = 0; ih < hd.qh.size(); ++ih)
-				listHead.Add(hd.qh[ih].real(), hd.qh[ih].imag());
+				headQTF.Add(hd.qh[ih].real(), hd.qh[ih].imag());
 					
-			if (listHead.GetCount() > 0) {
+			if (headQTF.GetCount() > 0) {
 				int id = FindClosest(hd.qh, head);
 				if (id < 0)
 					id = 0;
-				listHead.SetCursor(id);
+				headQTF.SetCursor(id);
 			}
 		}
 	} catch (Exc e) {

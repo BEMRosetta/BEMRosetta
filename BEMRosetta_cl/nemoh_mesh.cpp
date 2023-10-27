@@ -87,6 +87,7 @@ String NemohMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z) {
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
+		Mesh::DecrementIdCount();
 		return ret;
 	}
 	MatrixXd cg_(3, 1), cb_(3, 1);

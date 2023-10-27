@@ -78,7 +78,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 						labelY = t_("Added mass at infinity (ω)");
 						splitter.SetPos(10000, 0);				
 						break;
-	case Hydro::DATA_K:	title = Format(t_("Kirf Impulse Response Function %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));
+	case Hydro::DATA_KIRF:	title = Format(t_("Kirf Impulse Response Function %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));
 						labelY = t_("Kirf Impulse Response Function");
 						splitter.SetPos(10000, 0);	
 						break;
@@ -148,7 +148,7 @@ bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const U
 	show_w = mbm.menuPlot.opwT == 0;
 	show_ma_ph = mbm.menuPlot.opMP == 0;
 	
-	if (show_w && dataToShow != Hydro::DATA_K) {
+	if (show_w && dataToShow != Hydro::DATA_KIRF) {
 		scatt.SetLabelX(t_("ω [rad/s]"));
 		scatP.SetLabelX(t_("ω [rad/s]"));
 	} else {
@@ -158,7 +158,9 @@ bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const U
 	bool loaded = false;
 	for (int id = 0; id < ids.size(); ++id) {
 		const Hydro &hy = hydro[ids[id]].hd();
-		LoadEach(hy, id, loaded, hy.GetId());
+		bool ld = false;
+		LoadEach(hy, id, ld, hy.GetId());
+		loaded |= ld;		// If only one is loaded, then loaded = true
 	}
 	if (mbm.menuPlot.autoFit) {
 		scatt.ZoomToFit(true, true);
@@ -194,7 +196,7 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 	show_w = mainBem.menuPlot.opwT == 0;
 	show_ma_ph = mainBem.menuPlot.opMP == 0;
 	
-	if (show_w && dataToShow != Hydro::DATA_K) {
+	if (show_w && dataToShow != Hydro::DATA_KIRF) {
 		scatt.SetLabelX(t_("ω [rad/s]"));
 		scatP.SetLabelX(t_("ω [rad/s]"));
 	} else {
@@ -237,7 +239,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		nameType << Format("(%s)", hy.GetCodeStrAbr());
 	
 	String sids = BEM::strDOFnum_sub[plot_idf];
-	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_K)
+	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_KIRF)
 		sids += BEM::strDOFnum_sub[plot_jdf];
 	
 	if (idc < 0)
@@ -318,7 +320,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::MD_units(!dim, plot_idf));
 		}
-	} else if (dataToShow == Hydro::DATA_K && hy.IsLoadedC()) {
+	} else if (dataToShow == Hydro::DATA_KIRF && hy.IsLoadedKirf()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_KIRF, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("K%s %s"), sids, nameType)).

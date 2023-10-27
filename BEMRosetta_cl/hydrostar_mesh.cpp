@@ -10,6 +10,7 @@ String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bo
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
+		Mesh::DecrementIdCount();
 		return ret;
 	}
 	

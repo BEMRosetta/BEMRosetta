@@ -47,7 +47,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 		int sdof = 6*bem.Nb;
 		int nloaded = 0;
 		if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_AINFW || 
-			dataToShow == Hydro::DATA_K) {
+			dataToShow == Hydro::DATA_KIRF) {
 			plots.SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {
 				plots[idf].SetCount(sdof);
@@ -81,7 +81,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 						nloaded++;
 				}
 				if (nloaded > 0)
-					UpdateHeadMD(bem, ih);
+					UpdateHeadMD(bem/*, ih*/);
 			} else {
 				int Nh = bem.headAll.size();
 				if (Nh == 0) 
@@ -94,8 +94,20 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 					if (plots[0][idf].Load(hydros, mbm, ids))
 						nloaded++;
 				}
+				for (int i = 0; i < hydros.size(); ++i) {
+					if (dataToShow == Hydro::DATA_FORCE_EX) {
+						if (hydros[i].hd().IsLoadedFex())
+							nloaded++;	
+					} else if (dataToShow == Hydro::DATA_FORCE_SC) {
+						if (hydros[i].hd().IsLoadedFsc())
+							nloaded++;	
+					} else if (dataToShow == Hydro::DATA_FORCE_FK) {
+						if (hydros[i].hd().IsLoadedFfk())
+							nloaded++;	
+					}
+				}
 				if (nloaded > 0)
-					UpdateHead(bem, ih);
+					UpdateHead(bem/*, ih*/);
 			}
 		}
 		
@@ -113,7 +125,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 	}
 }
 		
-void MainABForce::UpdateHead(BEM &bem, int ih) {
+void MainABForce::UpdateHead(BEM &bem/*, int ih*/) {
 	int it = max(0, tab.Get());
 	{
 		TempAssign<bool> _isFilling(isFilling, true);
@@ -124,7 +136,7 @@ void MainABForce::UpdateHead(BEM &bem, int ih) {
 	tab.Set(it);
 }
 
-void MainABForce::UpdateHeadMD(BEM &bem, int ih) {
+void MainABForce::UpdateHeadMD(BEM &bem/*, int ih*/) {
 	int it = max(0, tab.Get());
 	{
 		TempAssign<bool> _isFilling(isFilling, true);

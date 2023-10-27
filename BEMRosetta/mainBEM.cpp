@@ -262,8 +262,6 @@ void MainBEM::Init() {
 	menuAdvanced.butConvergence.Disable();
 	menuAdvanced.butAverage <<= THISBACK(OnAverage);
 	menuAdvanced.butAverage.Disable();
-	//menuAdvanced.opHaskind.Disable();
-	menuAdvanced.opHaskind.Hide();		// Not ready
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
 
 	OnOpt();
@@ -448,7 +446,7 @@ void MainBEM::Init() {
 	mainB.Init(Hydro::DATA_B);
 	mainTab.Add(mainB.SizePos(), t_("B")).Disable();
 	
-	mainK.Init(Hydro::DATA_K);
+	mainK.Init(Hydro::DATA_KIRF);
 	mainTab.Add(mainK.SizePos(), t_("IRF")).Disable();
 	
 	mainForceEX.Init(Hydro::DATA_FORCE_EX);
@@ -786,7 +784,6 @@ void MainBEM::UpdateButtons() {
 	menuAdvanced.opDecayingTail.Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
-	menuAdvanced.opHaskind.		Enable(numsel == 1 || numrow == 1);
 
 	{	
 		int row = menuPlot.head1st.GetCursor();
@@ -831,7 +828,9 @@ void MainBEM::UpdateButtons() {
 	bool show_w = menuPlot.opwT == 0;
 	bool show_ma_ph = menuPlot.opMP == 0;
 	
-	menuProcess.dropBody.Clear();
+	menuProcess.dropBody1.Clear();
+	menuProcess.dropBody2.Clear();
+	
 	menuProcess2.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	menuProcess2.dropFreqQTF.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	menuProcess2.dropFreq.Clear();
@@ -850,12 +849,19 @@ void MainBEM::UpdateButtons() {
 	menuProcess2.opF <<= false;
 	menuProcess2.opQTF <<= false;
 	
+	
+	
+	
 	int id = GetIdOneSelected(false);
 	if (id >= 0) { 
 		Hydro &data = Bem().hydros[id].hd();
 		for (int i = 0; i < data.Nb; ++i)
-			menuProcess.dropBody.Add(i+1);
-		menuProcess.dropBody.SetIndex(0);
+			menuProcess.dropBody1.Add(i+1);
+		menuProcess.dropBody1.SetIndex(0);
+		for (int i = 0; i < data.Nb; ++i)
+			menuProcess.dropBody2.Add(i+1);
+		menuProcess.dropBody2.SetIndex(0);
+		menuProcess.dropBody2.Enable(data.Nb > 1);
 		for (int i = 0; i < data.w.size(); ++i)
 			menuProcess2.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
 		for (int i = 0; i < data.qw.size(); ++i)
@@ -1068,7 +1074,7 @@ void MainBEM::OnOgilvie() {
 		
 		//double maxT = Null;
 		UVector<int> vidof, vjdof;
-		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail, ~menuAdvanced.opHaskind, vidof, vjdof);
+		Bem().OgilvieCompliance(id, ~menuAdvanced.opZremoval, ~menuAdvanced.opThinremoval, ~menuAdvanced.opDecayingTail, vidof, vjdof);
 				
 		AfterBEM();
 		
@@ -1299,8 +1305,8 @@ void MainBEM::OnSwapDOF() {
 		
 		WaitCursor wait;
 		
-		Bem().SwapDOF(id, menuProcess.dropBody.GetIndex(), 
-				menuProcess.dropDOF1.GetIndex()-1, menuProcess.dropDOF2.GetIndex()-1);
+		Bem().SwapDOF(id, menuProcess.dropBody1.GetIndex(), 
+				menuProcess.dropDOF1.GetIndex()-1, menuProcess.dropBody2.GetIndex(), menuProcess.dropDOF2.GetIndex()-1);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1656,6 +1662,21 @@ int MainBEM::GetIdOneSelected(bool complain) {
 	return id;
 }
 
+UVector<int> MainBEM::GetIdsSelected(bool complain) {
+	UVector<int> ret = ArrayCtrlSelectedGet(listLoaded);
+
+	if (ret.IsEmpty() && listLoaded.GetCount() == 1)
+		ret << ArrayModel_IdHydro(listLoaded, 0);
+	if (ret.IsEmpty()) {
+		if (complain)
+			BEM::PrintError(t_("No model selected"));
+		return ret;
+	}
+	return ret;
+}	
+
+
+
 void MainBEM::Jsonize(JsonIO &json) {
 	if (json.IsLoading()) {
 		menuPlot.autoFit = Null;
@@ -1685,7 +1706,6 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuProcess_opDecayingTail", menuAdvanced.opDecayingTail)
 		("menuProcess_opFill", menuProcess.opFill) 
 		("menuProcess_maxFreq", menuProcess.maxFreq)
-		("opHaskind", menuAdvanced.opHaskind)
 		("mainStiffness", mainMatrixK)
 		("mainStiffness2", mainMatrixK2)
 		("mainMatrixA", mainMatrixA)
@@ -1821,8 +1841,12 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	int col = id + 1;
 	
 	Upp::Color lightRed = Upp::Color(255, 165, 158);								
-	
-	array.Set(row, 0, t_("File"));				array.Set(row++, col, data.file);
+	Upp::Color color = GetColorId(id);
+	::Color textColor = Black();
+	if (Grayscale(color) < 150)
+		textColor = White();
+						
+	array.Set(row, 0, t_("File"));				array.Set(row++, col, AttrText(data.file).Paper(color).Ink(textColor).Bold()); 
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, data.name);
 	array.Set(row, 0, t_("Description"));		array.Set(row++, col, data.description);
 	array.Set(row, 0, t_("Software"));			array.Set(row++, col, data.GetCodeStr());
