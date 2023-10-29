@@ -784,7 +784,7 @@ void Hydro::Symmetrize_QTF(bool xAxis) {
 			}
 		};
 	
-		Initialize_QTF(newf, Nb, newHead.size(), qw.size());
+		Initialize_QTF(newf, Nb, newHead.size(), int(qw.size()));
 		
 		for (int ib = 0; ib < Nb; ++ib) {
 			for (int ih = 0; ih < qh.size(); ++ih) {
