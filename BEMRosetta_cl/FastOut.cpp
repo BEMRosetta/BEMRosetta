@@ -127,7 +127,7 @@ String FastOut::Load(String fileName) {
 		;
 	else if (ext == ".outb")
 		;
-	else if (ext == ".csv")
+	else if (ext == ".csv" || ext == ".txt")
 		;
 	else if (ext == ".db")
 		;
@@ -152,7 +152,7 @@ String FastOut::Load(String fileName) {
 		ret = LoadOut(fileName);
 	else if (ext == ".outb")
 		ret = LoadOutb(fileName);
-	else if (ext == ".csv")
+	else if (ext == ".csv" || ext == ".txt")
 		ret = LoadCsv(fileName);
 	else if (ext == ".db")
 		ret = LoadDb(fileName);
@@ -508,7 +508,7 @@ void FastOut::AfterLoad() {
 	idaz    = GetParameterX("Azimuth");	
 	idnacyaw = GetParameterX("NacYaw");
 	
-	if (idsurge >= 0 || idsway >= 0 || idheave >= 0 || idroll >= 0 || idpitch >= 0 || idyaw >= 0) {
+	if (idsurge >= 0 && idsway >= 0 && idheave >= 0 && idroll >= 0 && idpitch >= 0 && idyaw >= 0) {
 		aff.SetCount(GetNumData());
 		for (int it = 0; it < GetNumData(); ++it)
 			GetTransform000(aff[it], GetVal(it, idsurge), GetVal(it, idsway), GetVal(it, idheave), 
@@ -661,7 +661,7 @@ int FastOut::GetIdTime(double time) const {
 	if (dataOut.size() == 0)
 		return Null;	
 	for (int r = 0; r < dataOut[0].size(); ++r) {
-		if (dataOut[0][r] >= time)
+		if (!IsNull(dataOut[0][r]) && dataOut[0][r] >= time)
 			return r;
 	}
 	return Null;

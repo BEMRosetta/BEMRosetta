@@ -507,8 +507,10 @@ void FastScatterBase::OnFilter(bool show) {
 	rightB.arrayParam.Clear();
 	rightB.filterUnits.ClearList();
 	for (int rw = 0; rw < list.size(); ++rw) {
-		rightB.arrayParam.Add(list.GetKey(rw), list[rw]);
-		rightB.filterUnits.FindAddList(list[rw]);
+		if (ToLower(list.GetKey(rw)) != "time") {
+			rightB.arrayParam.Add(list.GetKey(rw), list[rw]);
+			rightB.filterUnits.FindAddList(list[rw]);
+		}
 	}
 }
 
@@ -595,6 +597,12 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 		}
 		if (!ret.IsEmpty()) {
 			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), DeQtf(~file), DeQtf(ret)));
+			left.EnableX();
+			UpdateButtons(false);
+			return false;
+		}
+		if (fout.GetNumData() == 0) {
+			BEM::PrintError(Format(t_("File '%s' is empty"), DeQtf(~file)));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
@@ -800,7 +808,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 				numData = id - idBegin + 1;
 				
 				if (numData <= 1) 
-					throw Exc(t_("Incorrect start/end times"));
+					throw Exc(t_("Incorrect start or end times"));
 				
 				UVector<int> idsx, idsy, idsFixed;
 				for (int rw = 0; rw < leftSearch.array.GetCount(); ++rw) {

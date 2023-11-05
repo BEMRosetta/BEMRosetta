@@ -82,29 +82,34 @@ void MainBEM::Init() {
 	
 	menuProcess.opFill.Tip(t_("Fills with zeroes or with interpolated values"));
 
-	auto DropDOF = [&](DropList &drop1, DropList &drop2)->bool {
-		if (drop1.GetIndex() < 1 || drop2.GetIndex() < 1)
+	auto DropDOF = [&](DropList &b1, DropList &dof1, DropList &b2, DropList &dof2)->bool {
+		if (dof1.GetIndex() != dof2.GetIndex() && (dof1.GetIndex() == 0 || dof2.GetIndex() == 0)) 
 			return false;
-		if (drop1.GetIndex() == drop2.GetIndex())
-			return false;
+		if (b1.GetIndex() == b2.GetIndex()) {
+			if (dof1.GetIndex() != 0) {
+				if (dof1.GetIndex() == dof2.GetIndex())
+					return false;
+			} else 
+				return false;
+		}
 		return true;
 	};
 	
 	menuProcess.dropDOF1.WhenAction = [&] {
-		menuProcess.butSwapDOF.Show(DropDOF(menuProcess.dropDOF1, menuProcess.dropDOF2));
+		menuProcess.butSwapDOF.Show(DropDOF(menuProcess.dropBody1, menuProcess.dropDOF1, menuProcess.dropBody2, menuProcess.dropDOF2));
 	};
-	menuProcess.dropDOF1.Add(t_("Choose"));
-		for (int i = 0; i < 6; ++i)
-			menuProcess.dropDOF1.Add(BEM::StrDOF(i));
+	menuProcess.dropDOF1.Add(t_("All"));
+	for (int i = 0; i < 6; ++i)
+		menuProcess.dropDOF1.Add(BEM::StrDOF(i));
 	menuProcess.dropDOF1.SetIndex(0);
 	
-	menuProcess.dropDOF2.WhenAction = [&] {
-		menuProcess.butSwapDOF.Show(DropDOF(menuProcess.dropDOF1, menuProcess.dropDOF2));
-	};
-	menuProcess.dropDOF2.Add(t_("Choose"));
-		for (int i = 0; i < 6; ++i)
-			menuProcess.dropDOF2.Add(BEM::StrDOF(i));
+	menuProcess.dropDOF2.WhenAction = menuProcess.dropDOF1.WhenAction;
+	menuProcess.dropDOF2.Add(t_("All"));
+	for (int i = 0; i < 6; ++i)
+		menuProcess.dropDOF2.Add(BEM::StrDOF(i));
 	menuProcess.dropDOF2.SetIndex(0);
+	
+	menuProcess.dropBody1.WhenAction = menuProcess.dropBody2.WhenAction = menuProcess.dropDOF1.WhenAction;
 	
 	menuProcess.butSwapDOF << THISBACK(OnSwapDOF);
 	menuProcess.butSwapDOF.Hide();
@@ -849,19 +854,21 @@ void MainBEM::UpdateButtons() {
 	menuProcess2.opF <<= false;
 	menuProcess2.opQTF <<= false;
 	
-	
-	
-	
 	int id = GetIdOneSelected(false);
 	if (id >= 0) { 
 		Hydro &data = Bem().hydros[id].hd();
+		
 		for (int i = 0; i < data.Nb; ++i)
 			menuProcess.dropBody1.Add(i+1);
 		menuProcess.dropBody1.SetIndex(0);
-		for (int i = 0; i < data.Nb; ++i)
-			menuProcess.dropBody2.Add(i+1);
-		menuProcess.dropBody2.SetIndex(0);
+		
+		if (data.Nb > 1) {
+			for (int i = 0; i < data.Nb; ++i)
+				menuProcess.dropBody2.Add(i+1);
+			menuProcess.dropBody2.SetIndex(0);
+		}
 		menuProcess.dropBody2.Enable(data.Nb > 1);
+		
 		for (int i = 0; i < data.w.size(); ++i)
 			menuProcess2.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
 		for (int i = 0; i < data.qw.size(); ++i)
@@ -1305,8 +1312,8 @@ void MainBEM::OnSwapDOF() {
 		
 		WaitCursor wait;
 		
-		Bem().SwapDOF(id, menuProcess.dropBody1.GetIndex(), 
-				menuProcess.dropDOF1.GetIndex()-1, menuProcess.dropBody2.GetIndex(), menuProcess.dropDOF2.GetIndex()-1);
+		Bem().SwapDOF(id, menuProcess.dropBody1.GetIndex(), menuProcess.dropDOF1.GetIndex() - 1, 
+						  menuProcess.dropBody2.GetIndex(), menuProcess.dropDOF2.GetIndex() - 1);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)

@@ -602,6 +602,7 @@ public:
 	void ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);
 	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
 	void SwapDOF(int ib1, int idof1, int ib2, int idof2);
+	void SwapDOF(int ib1, int ib2);
 	
 	void SymmetrizeDOF();
 	

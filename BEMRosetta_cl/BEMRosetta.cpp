@@ -2200,7 +2200,10 @@ void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, 
 }
 
 void BEM::SwapDOF(int id, int ib1, int idof1, int ib2, int idof2) {
-	hydros[id].hd().SwapDOF(ib1, idof1, ib2, idof2);
+	if (idof1 < 0)
+		hydros[id].hd().SwapDOF(ib1, ib2);
+	else	
+		hydros[id].hd().SwapDOF(ib1, idof1, ib2, idof2);
 }
 
 void BEM::FillFrequencyGapsABForces(int id, bool zero, int maxFreq) {

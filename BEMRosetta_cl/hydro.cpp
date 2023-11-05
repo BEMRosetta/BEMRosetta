@@ -615,8 +615,13 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	}
 }
 
+void Hydro::SwapDOF(int ib1, int ib2) {
+	for (int idof = 0; idof < 6; ++idof)	
+		SwapDOF(ib1, idof, ib2, idof);	
+}
+
 void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
-/*	auto SwapAB = [&](UArray<UArray<VectorXd>> &A) {
+	auto SwapAB = [&](UArray<UArray<VectorXd>> &A) {
 		UArray<UArray<VectorXd>> An(6*Nb);
 		for (int i = 0; i < 6*Nb; ++i) 
 			An[i].SetCount(6*Nb);
@@ -624,14 +629,14 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		for (int idof = 0; idof < 6*Nb; ++idof) {
 			for (int jdof = 0; jdof < 6*Nb; ++jdof) {
 				int idofn = idof, jdofn = jdof;
-				if (idofn == idof1+6*ib)
-					idofn = idof2+6*ib;
-				else if (idofn == idof2+6*ib)
-					idofn = idof1+6*ib;
-				if (jdofn == idof1+6*ib)
-					jdofn = idof2+6*ib;
-				else if (jdofn == idof2+6*ib)
-					jdofn = idof1+6*ib;	 
+				if (idofn == idof1+6*ib1)
+					idofn = idof2+6*ib2;
+				else if (idofn == idof2+6*ib2)
+					idofn = idof1+6*ib1;
+				if (jdofn == idof1+6*ib1)
+					jdofn = idof2+6*ib2;
+				else if (jdofn == idof2+6*ib2)
+					jdofn = idof1+6*ib1;	 
 				An[idofn][jdofn] = pick(A[idof][jdof]);
 			}
 		}
@@ -646,7 +651,7 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 
 		
 	auto SwapAinfA0 = [&](MatrixXd &A) {
-		Swap(A, idof1+6*ib, idof2+6*ib);
+		Swap(A, idof1+6*ib1, idof2+6*ib2);
     };	
 	if (IsLoadedAinf()) 
 		SwapAinfA0(Ainf);
@@ -658,10 +663,10 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 			MatrixXcd n(Nf, 6*Nb);
 			for (int idof = 0; idof < 6*Nb; ++idof) {
 				int idofn = idof;
-				if (idofn == idof1+6*ib)
-					idofn = idof2+6*ib;
-				else if (idofn == idof2+6*ib)
-					idofn = idof1+6*ib;
+				if (idofn == idof1+6*ib1)
+					idofn = idof2+6*ib2;
+				else if (idofn == idof2+6*ib2)
+					idofn = idof1+6*ib1;
 				
 	    		const VectorXcd &m = ex.force[ih].col(idof);
 				n.col(idofn) = m;
@@ -679,30 +684,26 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		SwapF(rao);
 
 	auto SwapMD = [&]() {
-			for (int ib = 0; ib < Nb; ++ib) 
-    			for (int ih = 0; ih < mdhead.size(); ++ih) 
-	    			Swap(md[ib][ih][idof1], md[ib][ih][idof2]);
+		for (int ih = 0; ih < mdhead.size(); ++ih) 
+			Swap(md[ib1][ih][idof1], md[ib2][ih][idof2]);
 	};
 	if (IsLoadedMD(true)) 
 		SwapMD();
 		
 	auto SwapSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
         for (int ih = 0; ih < qh.size(); ++ih) 
-			Swap(qtf[ib][ih][idof1], qtf[ib][ih][idof2]); 		
+			Swap(qtf[ib1][ih][idof1], qtf[ib2][ih][idof2]); 		
 	};
 	if (IsLoadedQTF(true)) 
 		SwapSumDif(qtfsum);
 	if (IsLoadedQTF(false))
 		SwapSumDif(qtfdif);
 
-	if (IsLoadedC()) {
-		for (int ib = 0; ib < Nb; ++ib) 
-			Swap(C[ib], idof1, idof2);
-	}
-	if (IsLoadedM()) {
-		for (int ib = 0; ib < Nb; ++ib) 
-			Swap(M[ib], idof1, idof2);
-	}
+	if (IsLoadedC()) 
+		Swap(C[ib1], C[ib2], idof1, idof2);
+	
+	if (IsLoadedM()) 
+		Swap(M[ib1], M[ib2], idof1, idof2);
 
 	// Some previous data is now invalid
 	Kirf.Clear();
@@ -710,7 +711,7 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 	if (!AfterLoad()) {
 		String error = GetLastError();
 		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
-	}*/
+	}
 }
 
 void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
