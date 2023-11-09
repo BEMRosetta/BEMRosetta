@@ -174,7 +174,15 @@ bool Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 }
 
 bool Wamit::Load_out() {
-	hd().Nb = 0;
+	hd().Nb = 1;
+	hd().names.SetCount(hd().Nb);
+	hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	hd().cb.setConstant(3, hd().Nb, NaNDouble);
+	hd().c0.setConstant(3, hd().Nb, 0);
+	hd().Vo.SetCount(hd().Nb, NaNDouble);
+	hd().C.SetCount(hd().Nb);
+	hd().M.SetCount(hd().Nb);
+				
 	hd().Nf = 0;
 	hd().Nh = 0;
 	hd().dataFromW = false;
@@ -226,7 +234,6 @@ bool Wamit::Load_out() {
 	
 	UArray<std::complex<double>> mdhead;
 	
-	hd().names.Clear();
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		f.Load(line);
@@ -235,29 +242,26 @@ bool Wamit::Load_out() {
 			hd().description = "Created with HydroStar";
 			isHydrostar = true;
 		}
-		if (line.Find("N=") >= 0 && line.Find("Body number:") < 0) {
-			hd().Nb++;
-			hd().names << GetFileTitle(f.GetText(2));
-		} else if ((pos = line.FindAfter("Input from Geometric Data File:")) >= 0) {
-			hd().Nb = 1;
-			hd().names << GetFileTitle(TrimBoth(line.Mid(pos)));
-		} else if (hd().Nb == 0 && line.Find("BODY PARAMETERS:") >= 0) {		// Hydrostar
-			hd().Nb = 1;
-			hd().names << "Body1";
-			hd().cg.setConstant(3, hd().Nb, NaNDouble);
-			hd().cb.setConstant(3, hd().Nb, NaNDouble);
-			hd().c0.setConstant(3, hd().Nb, 0);
-			hd().Vo.SetCount(hd().Nb, NaNDouble);
-			hd().C.SetCount(hd().Nb);
-			hd().M.SetCount(hd().Nb);
-		} else if (line.Find("POTEN run date and starting time:") >= 0) {
-			hd().cg.setConstant(3, hd().Nb, NaNDouble);
-			hd().cb.setConstant(3, hd().Nb, NaNDouble);
-			hd().c0.setConstant(3, hd().Nb, 0);
-			hd().Vo.SetCount(hd().Nb, NaNDouble);
-			hd().C.SetCount(hd().Nb);
-			hd().M.SetCount(hd().Nb);
-		} else if (line.Find("Gravity:") >= 0) {
+		if ((pos = line.FindAfter("N=")) >= 0) {
+			int ib = ScanInt(line.Mid(pos, 10));
+			if (IsNull(ib))
+				throw Exc(in.Str() + "\n" +  t_("Wrong body index"));
+			hd().Nb = max(hd().Nb, ib);
+			if (ib > hd().names.size()) {
+				hd().names.SetCount(ib);
+				hd().cg.setConstant(3, hd().Nb, NaNDouble);
+				hd().cb.setConstant(3, hd().Nb, NaNDouble);
+				hd().c0.setConstant(3, hd().Nb, 0);
+				hd().Vo.SetCount(hd().Nb, NaNDouble);
+				hd().C.SetCount(hd().Nb);
+				hd().M.SetCount(hd().Nb);
+			}
+			ib--;
+			if (hd().names[ib].IsEmpty() && !isHydrostar)
+				hd().names[ib] = GetFileTitle(f.GetText(2));
+		} else if ((pos = line.FindAfter("Input from Geometric Data File:")) >= 0) 
+			hd().names[0] = GetFileTitle(TrimBoth(line.Mid(pos)));		// 1 body
+		else if (line.Find("Gravity:") >= 0) {
 			hd().g = f.GetDouble(1);
 			hd().len = f.GetDouble(4);
 		} else if (line.Find("Water depth:") >= 0) {

@@ -97,7 +97,7 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 	up.scatter.SetLabelY(up.labelY);
 	up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	
-	double avgw = 0;
+	double avgT = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
 		const Hydro &hd = Bem().hydros[i].hd();
 		if (hd.IsLoadedQTF(isSum)) {
@@ -118,7 +118,7 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 						pf.x = qwT(hd, id);
 					}
 				}
-				avgw += qwT(hd, id);
+				avgT += qwT(hd, id);
 				
 				double range, v0;
 				if (type == 1) {
@@ -157,7 +157,7 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 			}
 		}
 	}
-	avgw /= Bem().hydros.size();		// Average value
+	avgT /= Bem().hydros.size();		// Average value
 	
 	String strw;
 	if (type == 0)
@@ -165,7 +165,7 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 	else if (type == 1)
 		strw = "Conjugate";
 	else 
-		strw = Format("%.2f rad/s", show_w ? avgw : 2*M_PI/avgw);
+		strw = Format("%.2f %s", show_w ? 2*M_PI/avgT : avgT, show_w ? "rad/s" : "s");
 	up.scatter.SetTitle(Format(t_("QTF %s %d.%s %s heading %.1f:%.1fº %s"), isSum ? "sum" : "dif", ib+1, BEM::StrDOF(idof), strw, real(head), imag(head), strmag));
 	
 	if (autoFit) {

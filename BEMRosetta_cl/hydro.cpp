@@ -705,9 +705,9 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 	if (IsLoadedM()) 
 		Swap(M[ib1], M[ib2], idof1, idof2);
 
-	// Some previous data is now invalid
-	Kirf.Clear();
-	
+	if (IsLoadedKirf()) // Kirf structure is like A and B
+		SwapAB(Kirf);
+		
 	if (!AfterLoad()) {
 		String error = GetLastError();
 		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
