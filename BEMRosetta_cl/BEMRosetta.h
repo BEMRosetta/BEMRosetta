@@ -938,7 +938,7 @@ public:
 	virtual ~HydrostarMesh() noexcept {}
 
 private:
-	String LoadHst0(String fileName, bool &y0z, bool &x0z);
+	static String LoadHst0(String fileName, Mesh &mesh, Mesh &damping, bool &y0z, bool &x0z);
 };
 
 class HAMSMesh : public Mesh {
@@ -1386,7 +1386,7 @@ public:
 	
 	void CopyQTF_MD(int id);
 		
-	void AddFlatPanel(double x, double y, double z, double size, double panWidthX, double panWidthY);
+	void AddFlatRectangle(double x, double y, double z, double size, double panWidthX, double panWidthY);
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddWaterSurface(int id, char c);

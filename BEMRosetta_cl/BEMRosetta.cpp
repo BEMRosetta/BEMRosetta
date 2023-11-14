@@ -2385,12 +2385,12 @@ UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 	return ret;
 }
 
-void BEM::AddFlatPanel(double x, double y, double z, double size, double panWidth, double panHeight) {
+void BEM::AddFlatRectangle(double x, double y, double z, double size, double panWidth, double panHeight) {
 	try {
 		Mesh &surf = surfs.Add();
 
 		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddFlatRectangle(panWidth, panHeight, size); 
+		surf.mesh.AddFlatRectangle(panWidth, panHeight, size, size); 
 		surf.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);

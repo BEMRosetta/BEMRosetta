@@ -2006,13 +2006,16 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		if (IsNum(data.rho) && IsNum(data.g) && 
 			data.M.size() > ib && data.M[ib].size() > 0 && 
 			data.C.size() > ib && data.C[ib].size() > 0) {
-			array.Set(row++, col, FDS(data.Theave(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.Theavew(ib), 5, false, "-"));
-			array.Set(row++, col, FDS(data.Troll(ib), 5, false, "-"));
-			array.Set(row++, col, FDS(data.Trollw(ib), 5, false, "-"));
-			array.Set(row++, col, FDS(data.Tpitch(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Trollw (ib), 5, false, "-"));
+			array.Set(row++, col, FDS(data.Tpitch (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.Tpitchw(ib), 5, false, "-"));
 		} else {
+			array.Set(row++, col, "-");	
+			array.Set(row++, col, "-");	
+			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	

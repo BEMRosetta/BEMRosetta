@@ -255,7 +255,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		
 		if (M.size() != 36)
 			M = MatrixXd::Zero(6,6);
-		if (GetMass() == 0)
+		if (GetMass() == 0 && !IsNull(rho))
 			SetMass(under.volume*rho);
 		cb = under.GetCentreOfBuoyancy();
 	}
@@ -263,7 +263,8 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		mesh0 = clone(mesh);
 		cg0 = clone(cg);
 	}
-	under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, GetMass());
+	if (!IsNull(rho) && !IsNull(g))
+		under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, GetMass());
 }
 
 void Mesh::Report(double rho) const {

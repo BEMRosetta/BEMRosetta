@@ -5,25 +5,33 @@
 
 
 String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
-	Mesh &msh = mesh.Add();
-	String ret = static_cast<HydrostarMesh&>(msh).LoadHst0(fileName, y0z, x0z);
+	Mesh &msh = mesh.Add(),
+		 &damp = mesh.Add();
+	String ret = LoadHst0(fileName, msh, damp, y0z, x0z);
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
 		Mesh::DecrementIdCount();
+		Mesh::DecrementIdCount();
 		return ret;
 	}
-	
+	if (damp.mesh.GetNumPanels() == 0) {
+		mesh.SetCount(1);
+		Mesh::DecrementIdCount();
+	}
 	return ret;
 }
 	
-String HydrostarMesh::LoadHst0(String fileName, bool &y0z, bool &x0z) {
+String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return Format(t_("Impossible to open file '%s'"), fileName);
 	
-	this->fileName = fileName;
-	SetCode(Mesh::HYDROSTAR_HST);
+	mesh.fileName = fileName;
+	mesh.SetCode(Mesh::HYDROSTAR_HST);
+	damp.fileName = fileName;
+	damp.SetCode(Mesh::HYDROSTAR_HST);
+	
 	x0z = y0z = false;
 	
 	try {
@@ -31,7 +39,7 @@ String HydrostarMesh::LoadHst0(String fileName, bool &y0z, bool &x0z) {
 		LineParser f(in);	
 		f.IsSeparator = IsTabSpace;
 				
-		mesh.Clear();
+		mesh.mesh.Clear();
 		UIndex<int> idnodes;
 		
 		while(true) {
@@ -39,7 +47,21 @@ String HydrostarMesh::LoadHst0(String fileName, bool &y0z, bool &x0z) {
 			if (f.IsEof())
 				break;	
 			
-			if (f.GetText(0) == "SYMMETRY_BODY") {
+			if (f.GetText(0) == "ZONEDAMPING" && f.size() == 8) {	// Only rectangular damping panels
+				double xmin = f.GetDouble(1),
+					   xmax = f.GetDouble(2),
+					   dltx = f.GetDouble(3), 
+					   ymin = f.GetDouble(4),
+					   ymax = f.GetDouble(5),
+					   dlty = f.GetDouble(6);
+				
+				Mesh surf;
+				surf.mesh.AddFlatRectangle(xmax-xmin, ymax-ymin, dltx, dlty); 
+				surf.mesh.Translate(xmin, ymin, 0);
+				
+				damp.Append(surf.mesh, Null, Null);
+				
+			} else if (f.GetText(0) == "SYMMETRY_BODY") {
 				int id1 = f.GetInt(1), 
 					id2 = f.GetInt(2); 
 				if (id1 == 1 && id2 == 1) {
@@ -56,7 +78,7 @@ String HydrostarMesh::LoadHst0(String fileName, bool &y0z, bool &x0z) {
 						break;
 			
 					idnodes << f.GetInt(0);	
-					Point3D &node = mesh.nodes.Add();
+					Point3D &node = mesh.mesh.nodes.Add();
 					node.x = f.GetDouble(1);
 					node.y = f.GetDouble(2);
 					node.z = f.GetDouble(3); 
@@ -67,7 +89,7 @@ String HydrostarMesh::LoadHst0(String fileName, bool &y0z, bool &x0z) {
 					if (f.GetText(0) == "ENDPANEL")
 						break;
 					
-					Panel &panel = mesh.panels.Add();
+					Panel &panel = mesh.mesh.panels.Add();
 					panel.id[0] = idnodes.Find(f.GetInt(1));	
 					panel.id[1] = idnodes.Find(f.GetInt(2));	
 					panel.id[2] = idnodes.Find(f.GetInt(3));	

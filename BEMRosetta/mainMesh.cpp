@@ -936,7 +936,7 @@ void MainMesh::OnAddPanel() {
 	WaitCursor waitcursor;
 	mainView.gl.Disable();
 	try {
-		Bem().AddFlatPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
+		Bem().AddFlatRectangle(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
 							 ~menuEdit.panWidthX, ~menuEdit.panWidthY);
 		
 		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];

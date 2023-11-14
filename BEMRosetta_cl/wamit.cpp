@@ -1007,9 +1007,14 @@ bool Wamit::Load_pot(String fileName) {
  	
  	if (/*hd().*/Nf != 0) {
  		int nf = Nf;
- 		while (nf > 0 && !f.IsEof()) {
-	 		f.GetLine();
-	 		nf -= f.GetCount();
+ 		if (nf > 0) {
+	 		while (nf > 0 && !f.IsEof()) {
+		 		f.GetLine();
+		 		nf -= f.GetCount();
+	 		}
+ 		} else {
+ 			f.GetLine();
+ 			nf = abs(nf);
  		}
 	 	/*
 	 	if (hd().Nf > 0) {

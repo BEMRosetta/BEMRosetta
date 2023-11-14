@@ -3,27 +3,7 @@
 #endif
 // main.cpp
 
-T_("Mesh Handling")
-esES("")
-euES("")
-frFR("")
-
-T_("Nemoh")
-esES("")
-euES("")
-frFR("")
-
-T_("Hydrodynamic Coefficients")
-esES("")
-euES("")
-frFR("")
-
-T_("FAST .out Reader")
-esES("")
-euES("")
-frFR("")
-
-T_("BEM configuration data is not loaded. Defaults are set")
+T_("BEM configuration data is not loaded. Defaults values are set")
 esES("")
 euES("")
 frFR("")
@@ -34,6 +14,36 @@ euES("")
 frFR("")
 
 T_("Configuration data is not loaded. Defaults are set")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM Solver")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydro Coeff")
+esES("")
+euES("")
+frFR("")
+
+T_("Time series")
+esES("")
+euES("")
+frFR("")
+
+T_("Mooring")
+esES("")
+euES("")
+frFR("")
+
+T_("Decay")
 esES("")
 euES("")
 frFR("")
@@ -53,16 +63,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("rho [Kg/m3]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Gravity [m/s2]:")
-esES("")
-euES("")
-frFR("")
-
 T_("New window")
 esES("")
 euES("")
@@ -78,53 +78,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs "
-     "shown']")
-esES("")
-euES("")
-frFR("")
-
-T_("#%d body. %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Save")
-esES("")
-euES("")
-frFR("")
-
-T_("Saves to Wamit .hst stiffness matrix format")
-esES("")
-euES("")
-frFR("")
-
-T_("Wamit stiffness matrix format")
-esES("")
-euES("")
-frFR("")
-
-T_("Save to Wamit .hst stiffness matrix format")
-esES("")
-euES("")
-frFR("")
-
-T_("Copy")
-esES("Copiar")
-euES("")
-frFR("")
-
-T_("Copies matrix and paste it in selected BEM Coefficients file and body")
-esES("")
-euES("")
-frFR("")
-
-T_("File")
-esES("")
-euES("")
-frFR("")
-
-T_("Body")
+T_("There are still open windows.&Do you want to close anyway?")
 esES("")
 euES("")
 frFR("")
@@ -135,11 +89,6 @@ euES("")
 frFR("")
 
 T_("Error type 1 %s: %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Error type 2: %s")
 esES("")
 euES("")
 frFR("")
@@ -164,7 +113,30 @@ esES("")
 euES("")
 frFR("")
 
-T_("Id not found in ArrayModel_Change()")
+T_("Id %d not found in ArrayModel_Change()")
+esES("")
+euES("")
+frFR("")
+
+
+// main.h
+
+T_("No row available to duplicate")
+esES("")
+euES("")
+frFR("")
+
+T_("Please select the row to duplicate")
+esES("")
+euES("")
+frFR("")
+
+T_("No row available to remove")
+esES("")
+euES("")
+frFR("")
+
+T_("Please select the row to remove")
 esES("")
 euES("")
 frFR("")
@@ -172,7 +144,22 @@ frFR("")
 
 // mainMesh.cpp
 
-T_("Loads mesh file")
+T_("Open file folder")
+esES("")
+euES("")
+frFR("")
+
+T_("Opens file explorer in the file folder")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove model")
 esES("")
 euES("")
 frFR("")
@@ -187,42 +174,147 @@ esES("")
 euES("")
 frFR("")
 
-T_("Removes all loaded files")
+T_("Shows all the loaded mesh")
 esES("")
 euES("")
 frFR("")
 
-T_("Removes selected files")
+T_("Shows panel normals as arrows")
 esES("")
 euES("")
 frFR("")
 
-T_("Joins selected meshes")
+T_("Shows the cut of the mesh with the water line")
 esES("")
 euES("")
 frFR("")
 
-T_("Splits mesh in parts (if parts are not joined together)")
+T_("Shows skewed panels")
 esES("")
 euES("")
 frFR("")
 
-T_("Cleans duplicated panels when loading (it may be slow!)")
+T_("Shows fissures in the hull")
 esES("")
 euES("")
 frFR("")
 
-T_("Sets the center of gravity and mass")
+T_("Shows wrong panels")
 esES("")
 euES("")
 frFR("")
 
-T_("Translates the mesh")
+T_("Shows system axis")
 esES("")
 euES("")
 frFR("")
 
-T_("Rotates the mesh")
+T_("Shows boundaris of the geometry")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows the centre of buoyancy")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows the centre of gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows the centre of motion")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows volume around selected object")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows the lines")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows nderwater mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Orients the camera as isometric")
+esES("")
+euES("")
+frFR("")
+
+T_("Orients the camera through Z axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Orients the camera through X axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Orients the camera through Y axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Zooms the camera to fit the bodies")
+esES("")
+euES("")
+frFR("")
+
+T_("Shows a list of panels and nodes")
+esES("")
+euES("")
+frFR("")
+
+T_("Controls for 3D playing")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the background color")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the thickness of the mesh wireframe")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the centre of gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the centre of motion with the centre of gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the centre of gravity with the centre of motion")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the centre of motion")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets mass from inmersed volume")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets mass")
 esES("")
 euES("")
 frFR("")
@@ -262,12 +354,32 @@ esES("")
 euES("")
 frFR("")
 
-T_("Gets waterplane mesh")
+T_("Extracts waterplane from a mesh that already includes it")
 esES("")
 euES("")
 frFR("")
 
-T_("Gets hull mesh without waterplane")
+T_("Extracts underwater (wet) hull from a mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Scales the mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Translates the mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Rotates the mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Lets the body fall to rest")
 esES("")
 euES("")
 frFR("")
@@ -282,6 +394,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Move")
+esES("")
+euES("")
+frFR("")
+
 T_("Process")
 esES("")
 euES("")
@@ -292,7 +409,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Save as")
+T_("")
 esES("")
 euES("")
 frFR("")
@@ -302,12 +419,32 @@ esES("")
 euES("")
 frFR("")
 
+T_("Please select just one model")
+esES("")
+euES("")
+frFR("")
+
+T_("Please select a model to process")
+esES("")
+euES("")
+frFR("")
+
 T_("Summary")
 esES("")
 euES("")
 frFR("")
 
-T_("K Stiffness Matrix")
+T_("Hydrostatic Stiffness")
+esES("")
+euES("")
+frFR("")
+
+T_("Mooring Stiffness")
+esES("")
+euES("")
+frFR("")
+
+T_("Stability GZ")
 esES("")
 euES("")
 frFR("")
@@ -327,17 +464,27 @@ esES("")
 euES("")
 frFR("")
 
-T_("Please select just one model")
+T_("Problem readjusting the Z value to comply with displacement")
 esES("")
 euES("")
 frFR("")
 
-T_("Please select a model to process")
+T_("Loaded '%s', and translated vertically %f m to comply with displacement")
 esES("")
 euES("")
 frFR("")
 
-T_("Unknown type in OnConvert()")
+T_("Loaded '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Saving mesh data")
+esES("")
+euES("")
+frFR("")
+
+T_("Save mesh file as %s")
 esES("")
 euES("")
 frFR("")
@@ -347,7 +494,27 @@ esES("")
 euES("")
 frFR("")
 
+T_("Model oriented on the initial layout")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass updated to %f kg")
+esES("")
+euES("")
+frFR("")
+
+T_("Model scaled %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
 T_("Please fill CG data")
+esES("")
+euES("")
+frFR("")
+
+T_("Please fill centre of rotation data")
 esES("")
 euES("")
 frFR("")
@@ -362,7 +529,29 @@ esES("")
 euES("")
 frFR("")
 
-T_("Please fill center of rotation data")
+T_("Model moved %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically "
+     "%f m to comply with displacement")
+esES("")
+euES("")
+frFR("")
+
+T_("Model rotated %f, %f, %f around %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem readjusting the Z, roll and pitch values to comply with buoyancy")
+esES("")
+euES("")
+frFR("")
+
+T_("Model rotated %f, %f, 0 deg and translated vertically %f m to comply with "
+     "displacement")
 esES("")
 euES("")
 frFR("")
@@ -407,21 +596,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Water surface removed")
-esES("")
-euES("")
-frFR("")
-
-T_("Water surface")
-esES("")
-euES("")
-frFR("")
-
-T_("Water surface extracted")
-esES("")
-euES("")
-frFR("")
-
 T_("Healing mesh file...")
 esES("")
 euES("")
@@ -452,6 +626,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("File")
+esES("")
+euES("")
+frFR("")
+
 T_("Name")
 esES("")
 euES("")
@@ -477,12 +656,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Surface [m2]")
+T_("Surface [m\302\262]")
 esES("")
 euES("")
 frFR("")
 
-T_("Volume [m3]")
+T_("Volume [m3] Vavg (Vx,Vy,Vz)")
 esES("")
 euES("")
 frFR("")
@@ -492,17 +671,17 @@ esES("")
 euES("")
 frFR("")
 
-T_("Immersed surface [m2]")
+T_("Wetted surface [m\302\262]")
 esES("")
 euES("")
 frFR("")
 
-T_("Immersed volume [m3]")
+T_("Immersed volume [m3] Vavg (Vx,Vy,Vz)")
 esES("")
 euES("")
 frFR("")
 
-T_("Displacement [Kg]")
+T_("Displacement [kg]")
 esES("")
 euES("")
 frFR("")
@@ -522,7 +701,52 @@ esES("")
 euES("")
 frFR("")
 
-T_("Water Plane Area [m2]")
+T_("C0 [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("GMroll [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("GMpitch [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("GZ [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface projection Z-axis (waterplane area) [m\302\262]")
+esES("")
+euES("")
+frFR("")
+
+T_("%s - %s = %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Waterplane geometric centre (centre of flotation) [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("%s, %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface projection X-axis [m\302\262]")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface projection Y-axis [m\302\262]")
 esES("")
 euES("")
 frFR("")
@@ -533,6 +757,36 @@ euES("")
 frFR("")
 
 T_("From (%s, %s, %s) to (%s, %s, %s)")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrostatic forces [N]")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrostatic moments [N\302\267m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass [kg]")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass moments [N\302\267m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass+Hydrostatics forces [N]")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass+Hydrostatics moments [N\302\267m]")
 esES("")
 euES("")
 frFR("")
@@ -567,7 +821,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("# Seg Water Plane")
+T_("# Seg Waterplane")
 esES("")
 euES("")
 frFR("")
@@ -578,11 +832,6 @@ euES("")
 frFR("")
 
 T_("# Seg 3 panels")
-esES("")
-euES("")
-frFR("")
-
-T_("# Panels off")
 esES("")
 euES("")
 frFR("")
@@ -617,6 +866,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Avg. side [m]")
+esES("")
+euES("")
+frFR("")
+
 T_("Unexpected problem in OnPaint()")
 esES("")
 euES("")
@@ -632,6 +886,134 @@ esES("")
 euES("")
 frFR("")
 
+T_("Angle [\302\272]")
+esES("")
+euES("")
+frFR("")
+
+T_("GZ around Y axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong Y angle range")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong Z angle range")
+esES("")
+euES("")
+frFR("")
+
+T_("GZ calculation...")
+esES("")
+euES("")
+frFR("")
+
+T_("GZ around Y axis at (%.2f, %.2f, %.2f)")
+esES("")
+euES("")
+frFR("")
+
+T_("GZ %.1f")
+esES("")
+euES("")
+frFR("")
+
+T_("m")
+esES("")
+euES("")
+frFR("")
+
+T_("sec")
+esES("")
+euES("")
+frFR("")
+
+T_("Healing lever %.1f")
+esES("")
+euES("")
+frFR("")
+
+T_("N\302\267m")
+esES("")
+euES("")
+frFR("")
+
+T_("Envelope")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameter")
+esES("")
+euES("")
+frFR("")
+
+T_("ZoY plane [\302\272]")
+esES("")
+euES("")
+frFR("")
+
+T_("Heeling lever [N\302\267m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Sub. volume [m3]")
+esES("")
+euES("")
+frFR("")
+
+T_("Wetted area [m\302\262]")
+esES("")
+euES("")
+frFR("")
+
+T_("Waterpl. area [m\302\262]")
+esES("")
+euES("")
+frFR("")
+
+T_("Draft [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Cb_x [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Cb_y [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Cb_z [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Cg_x [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Cg_y [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Cg_z [m]")
+esES("")
+euES("")
+frFR("")
+
+
+// mainMeshView.cpp
+
 T_("no")
 esES("")
 euES("")
@@ -643,11 +1025,6 @@ euES("")
 frFR("")
 
 T_("Underwater mesh")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh")
 esES("")
 euES("")
 frFR("")
@@ -702,10 +1079,45 @@ esES("")
 euES("")
 frFR("")
 
+T_("Record")
+esES("")
+euES("")
+frFR("")
 
-// mainNemoh.cpp
+T_("...")
+esES("")
+euES("")
+frFR("")
 
-T_("Nemoh 115+")
+T_("Problem loading file")
+esES("")
+euES("")
+frFR("")
+
+T_("File type is not already handled")
+esES("")
+euES("")
+frFR("")
+
+T_("This sequence cannot be saved")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem saving file")
+esES("")
+euES("")
+frFR("")
+
+
+// mainSolver.cpp
+
+T_("All DOF")
+esES("")
+euES("")
+frFR("")
+
+T_("No DOF")
 esES("")
 euES("")
 frFR("")
@@ -730,7 +1142,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Errors found in Nemoh data:%s&Do you wish to continue?")
+T_("Errors found in data:%s&Do you wish to continue?")
 esES("")
 euES("")
 frFR("")
@@ -745,12 +1157,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Please enter number of parts to split the simulation (min. is 1)")
+T_("Please enter number of parts to split the simulation (min. is 2)")
 esES("")
 euES("")
 frFR("")
 
-T_("Number of Nemoh cases %d must not be higher than number of frequencies "
+T_("Number of split cases %d must not be higher than number of frequencies "
      "%d")
 esES("")
 euES("")
@@ -762,7 +1174,236 @@ euES("")
 frFR("")
 
 
+// mainDecay.cpp
+
+T_("Loads mooring file")
+esES("")
+euES("")
+frFR("")
+
+T_("Saves mooring file")
+esES("")
+euES("")
+frFR("")
+
+
+// mainDecay_Files.cpp
+
+T_("#Row")
+esES("")
+euES("")
+frFR("")
+
+T_("#Col t")
+esES("")
+euES("")
+frFR("")
+
+T_("#Col z")
+esES("")
+euES("")
+frFR("")
+
+
+// mainMoor.cpp
+
+T_("Types")
+esES("")
+euES("")
+frFR("")
+
+T_("Connections")
+esES("")
+euES("")
+frFR("")
+
+T_("Properties")
+esES("")
+euES("")
+frFR("")
+
+T_("Update mooring")
+esES("")
+euES("")
+frFR("")
+
+T_("Side view")
+esES("")
+euES("")
+frFR("")
+
+T_("Top view")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem loading %s file")
+esES("")
+euES("")
+frFR("")
+
+T_("Line")
+esES("")
+euES("")
+frFR("")
+
+T_("Status")
+esES("")
+euES("")
+frFR("")
+
+T_("Ffairlead [t]")
+esES("")
+euES("")
+frFR("")
+
+T_("Fh vessel [t]")
+esES("")
+euES("")
+frFR("")
+
+T_("Fv vessel [t]")
+esES("")
+euES("")
+frFR("")
+
+T_("Fv anchor [t]")
+esES("")
+euES("")
+frFR("")
+
+T_("Len Seabed [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("Footprint [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("FootprintX [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("FootprintY [m]")
+esES("")
+euES("")
+frFR("")
+
+
+// mainMoor_LinesTypes.cpp
+
+T_("Mass")
+esES("")
+euES("")
+frFR("")
+
+T_("Diameter")
+esES("")
+euES("")
+frFR("")
+
+T_("BL")
+esES("")
+euES("")
+frFR("")
+
+
+// mainMoor_Connections.cpp
+
+T_("Vessel")
+esES("")
+euES("")
+frFR("")
+
+T_("x")
+esES("")
+euES("")
+frFR("")
+
+T_("y")
+esES("")
+euES("")
+frFR("")
+
+T_("z")
+esES("")
+euES("")
+frFR("")
+
+
+// mainMoor_LinesProperties.cpp
+
+T_("Line type")
+esES("")
+euES("")
+frFR("")
+
+T_("Length")
+esES("")
+euES("")
+frFR("")
+
+T_("From")
+esES("")
+euES("")
+frFR("")
+
+T_("To")
+esES("")
+euES("")
+frFR("")
+
+
 // mainBEM.cpp
+
+T_("Exports data file")
+esES("")
+euES("")
+frFR("")
+
+T_("Fills with zeroes or with interpolated values")
+esES("")
+euES("")
+frFR("")
+
+T_("All")
+esES("")
+euES("")
+frFR("")
+
+T_("Selects the frequencies to be removed from the first order hydrodynamic "
+     "coefficients and mean drift.")
+esES("")
+euES("")
+frFR("")
+
+T_("Selects the frequencies to be removed from the QTF.")
+esES("")
+euES("")
+frFR("")
+
+T_("Heading [\302\272]")
+esES("")
+euES("")
+frFR("")
+
+T_("Force type")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove & Mult")
+esES("")
+euES("")
+frFR("")
+
+T_("Advanced")
+esES("")
+euES("")
+frFR("")
 
 T_("FOAMM State Space")
 esES("")
@@ -774,12 +1415,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Arrange DOF")
-esES("")
-euES("")
-frFR("")
-
-T_("K")
+T_("StiffHydr")
 esES("")
 euES("")
 frFR("")
@@ -794,7 +1430,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Kirf")
+T_("IRF")
 esES("")
 euES("")
 frFR("")
@@ -819,17 +1455,52 @@ esES("")
 euES("")
 frFR("")
 
-T_("Setup FOAMM")
+T_("A\342\210\236")
 esES("")
 euES("")
 frFR("")
 
-T_("State Space")
+T_("A\342\210\236(\317\211)")
+esES("")
+euES("")
+frFR("")
+
+T_("M")
+esES("")
+euES("")
+frFR("")
+
+T_("DampLin")
+esES("")
+euES("")
+frFR("")
+
+T_("DampQuad")
+esES("")
+euES("")
+frFR("")
+
+T_("StiffMoor")
+esES("")
+euES("")
+frFR("")
+
+T_("Mean Drift")
 esES("")
 euES("")
 frFR("")
 
 T_("QTF")
+esES("")
+euES("")
+frFR("")
+
+T_("FOAMM")
+esES("")
+euES("")
+frFR("")
+
+T_("State Space")
 esES("")
 euES("")
 frFR("")
@@ -879,32 +1550,37 @@ esES("")
 euES("")
 frFR("")
 
-T_("Wamit .out file")
-esES("")
-euES("")
-frFR("")
-
-T_("Wamit .1.3.4.hst.12s.12d file")
-esES("")
-euES("")
-frFR("")
-
-T_("FAST HydroDyn file")
-esES("")
-euES("")
-frFR("")
-
-T_("BEMRosetta file")
-esES("")
-euES("")
-frFR("")
-
-T_("All converted files")
-esES("")
-euES("")
-frFR("")
-
 T_("Loading BEM files...")
+esES("")
+euES("")
+frFR("")
+
+T_("\317\211 [rad/s]")
+esES("")
+euES("")
+frFR("")
+
+T_("T [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Diffraction")
+esES("")
+euES("")
+frFR("")
+
+T_("Froude-Krylov")
+esES("")
+euES("")
+frFR("")
+
+T_("Summation")
+esES("")
+euES("")
+frFR("")
+
+T_("Difference")
 esES("")
 euES("")
 frFR("")
@@ -924,18 +1600,43 @@ esES("")
 euES("")
 frFR("")
 
-T_("Calculating A0 in selected BEM file...")
-esES("")
-euES("")
-frFR("")
-
-T_("Calculating IRF and Ainf in selected BEM file...")
+T_("Calculating %s in selected BEM file...")
 esES("")
 euES("")
 frFR("")
 
 T_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). "
      "Do you wish to used advised time?")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating RAO in selected BEM file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating Ogilvie compliance in selected BEM file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Not enough models selected")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating average...")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating asympthotic convergence...")
+esES("")
+euES("")
+frFR("")
+
+T_("Processing loaded data...")
 esES("")
 euES("")
 frFR("")
@@ -955,12 +1656,32 @@ esES("")
 euES("")
 frFR("")
 
+T_("Saving BEM data")
+esES("")
+euES("")
+frFR("")
+
+T_("Save BEM data as %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Saving BEM files...")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to load files")
+esES("")
+euES("")
+frFR("")
+
 T_("Description")
 esES("")
 euES("")
 frFR("")
 
-T_("Soft")
+T_("Software")
 esES("")
 euES("")
 frFR("")
@@ -1010,7 +1731,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("#headings")
+T_("#1st order headings")
 esES("")
 euES("")
 frFR("")
@@ -1035,7 +1756,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Ainf available")
+T_("A\342\210\236 available")
 esES("")
 euES("")
 frFR("")
@@ -1050,7 +1771,17 @@ esES("")
 euES("")
 frFR("")
 
-T_("K available")
+T_("Hydro stiff available")
+esES("")
+euES("")
+frFR("")
+
+T_("Moor stiff available")
+esES("")
+euES("")
+frFR("")
+
+T_("Inertia available")
 esES("")
 euES("")
 frFR("")
@@ -1075,6 +1806,21 @@ esES("")
 euES("")
 frFR("")
 
+T_("Linear damping available")
+esES("")
+euES("")
+frFR("")
+
+T_("Quadratic damping available")
+esES("")
+euES("")
+frFR("")
+
+T_("Mean Drift available")
+esES("")
+euES("")
+frFR("")
+
 T_("#bodies")
 esES("")
 euES("")
@@ -1090,68 +1836,48 @@ esES("")
 euES("")
 frFR("")
 
-T_("Water plane area [m2]")
+T_("Waterplane area [m\302\262]")
+esES("")
+euES("")
+frFR("")
+
+T_("Theave(\342\210\236) [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Theave(\317\211) [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Troll(\342\210\236)  [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Troll(\317\211)  [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Tpitch(\342\210\236) [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Tpitch(\317\211) [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("GMroll  [m]")
 esES("")
 euES("")
 frFR("")
 
 T_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary "
-     "Element Method solver formats")
-esES("")
-euES("")
-frFR("")
-
-T_("# Body")
-esES("")
-euES("")
-frFR("")
-
-T_("Heading 1")
-esES("")
-euES("")
-frFR("")
-
-T_("Heading 2")
-esES("")
-euES("")
-frFR("")
-
-T_("Magnitude")
-esES("")
-euES("")
-frFR("")
-
-T_("Phase")
-esES("")
-euES("")
-frFR("")
-
-T_("Real")
-esES("")
-euES("")
-frFR("")
-
-T_("Imaginary")
-esES("")
-euES("")
-frFR("")
-
-T_("Sum")
-esES("")
-euES("")
-frFR("")
-
-T_("Difference")
-esES("")
-euES("")
-frFR("")
-
-T_("w [rad]")
-esES("")
-euES("")
-frFR("")
-
-T_("T [s]")
+     "Element Method solver formats\n")
 esES("")
 euES("")
 frFR("")
@@ -1162,9 +1888,84 @@ euES("")
 frFR("")
 
 
-// mainBEM_abf.cpp
+// mainBEM_QTF.cpp
 
-T_("%s%.1f\302\272")
+T_("Magnitude")
+esES("")
+euES("")
+frFR("")
+
+T_("ma")
+esES("")
+euES("")
+frFR("")
+
+T_("mag")
+esES("")
+euES("")
+frFR("")
+
+T_("N/m\302\262")
+esES("")
+euES("")
+frFR("")
+
+T_("N m/m\302\262")
+esES("")
+euES("")
+frFR("")
+
+T_("Phase")
+esES("")
+euES("")
+frFR("")
+
+T_("ph")
+esES("")
+euES("")
+frFR("")
+
+T_("phase")
+esES("")
+euES("")
+frFR("")
+
+T_("rad")
+esES("")
+euES("")
+frFR("")
+
+T_("Real")
+esES("")
+euES("")
+frFR("")
+
+T_("re")
+esES("")
+euES("")
+frFR("")
+
+T_("real")
+esES("")
+euES("")
+frFR("")
+
+T_("Imaginary")
+esES("")
+euES("")
+frFR("")
+
+T_("im")
+esES("")
+euES("")
+frFR("")
+
+T_("imag")
+esES("")
+euES("")
+frFR("")
+
+T_("QTF %s %d.%s %s heading %.1f:%.1f\302\272 %s")
 esES("")
 euES("")
 frFR("")
@@ -1206,6 +2007,11 @@ frFR("")
 // mainFOAMM.cpp
 
 T_("     Sel")
+esES("")
+euES("")
+frFR("")
+
+T_("Body")
 esES("")
 euES("")
 frFR("")
@@ -1293,12 +2099,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Ainf")
+T_("Xcorr")
 esES("")
 euES("")
 frFR("")
 
-T_("No parameters to compare")
+T_("A0")
 esES("")
 euES("")
 frFR("")
@@ -1326,6 +2132,26 @@ esES("")
 euES("")
 frFR("")
 
+T_("Mean drift %s heading %.1f:%.1f\302\272")
+esES("")
+euES("")
+frFR("")
+
+T_("Mean drift")
+esES("")
+euES("")
+frFR("")
+
+T_("Added mass at infinity (\317\211) %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Added mass at infinity (\317\211)")
+esES("")
+euES("")
+frFR("")
+
 T_("Kirf Impulse Response Function %s")
 esES("")
 euES("")
@@ -1346,22 +2172,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Diffraction scattering force phase [rad]")
-esES("")
-euES("")
-frFR("")
-
 T_("Froude-Krylov force %s heading %.1f\302\272")
 esES("")
 euES("")
 frFR("")
 
 T_("Froude-Krylov force")
-esES("")
-euES("")
-frFR("")
-
-T_("Froude-Krylov force phase [rad]")
 esES("")
 euES("")
 frFR("")
@@ -1376,12 +2192,2470 @@ esES("")
 euES("")
 frFR("")
 
-T_("Excitation force phase [rad]")
+T_("Response Amplitude Operator %s heading %.1f\302\272")
 esES("")
 euES("")
 frFR("")
 
-T_("Response Amplitude Operator %s heading %.1f\302\272")
+T_("RAO force")
+esES("")
+euES("")
+frFR("")
+
+T_("Magnitude Kr(\317\211) = B(\317\211)+j\317\211{A(\317\211)-A\342\210\236} "
+     "%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Phase Kr(\317\211) = B(\317\211)+j\317\211{A(\317\211)-A\342\210\236} "
+     "%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Magnitude response %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Frequency response %s")
+esES("")
+euES("")
+frFR("")
+
+T_("\342\202\230\342\202\220")
+esES("")
+euES("")
+frFR("")
+
+T_("\341\265\243")
+esES("")
+euES("")
+frFR("")
+
+T_("\342\202\232\342\202\225")
+esES("")
+euES("")
+frFR("")
+
+T_("\341\265\242\342\202\230")
+esES("")
+euES("")
+frFR("")
+
+T_("A%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("A\342\210\236%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("A\342\202\200%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("A\342\210\236%s(\317\211)%s")
+esES("")
+euES("")
+frFR("")
+
+T_("B%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("MD%s %s %d")
+esES("")
+euES("")
+frFR("")
+
+T_("K%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Fsc%s%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Ffk%s%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Fex%s%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("RAO%s%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Z%s%s_%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Ns/m")
+esES("")
+euES("")
+frFR("")
+
+T_("Z%s%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Kr_%s %s")
+esES("")
+euES("")
+frFR("")
+
+T_("TFS_%s %s")
+esES("")
+euES("")
+frFR("")
+
+
+// mainStiffness.cpp
+
+T_("#%d body %s")
+esES("")
+euES("")
+frFR("")
+
+T_("#%d-%d body %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Save")
+esES("")
+euES("")
+frFR("")
+
+T_("Saves to Wamit .hst or Nemoh stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
+T_("Nemoh stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
+T_("Save to stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown file format")
+esES("")
+euES("")
+frFR("")
+
+T_("Copy")
+esES("Copiar")
+euES("")
+frFR("")
+
+T_("Copies matrix and paste it in selected BEM Coefficients file and body")
+esES("")
+euES("")
+frFR("")
+
+T_("Centre of rotation in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) "
+     "are different.&Do you wish to continue?")
+esES("")
+euES("")
+frFR("")
+
+T_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) "
+     "are different.&Do you wish to continue?")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrostatic Stiffness Matrices (%s)")
+esES("")
+euES("")
+frFR("")
+
+T_("'dimensionless'")
+esES("")
+euES("")
+frFR("")
+
+T_("dimensional")
+esES("")
+euES("")
+frFR("")
+
+T_("Mooring Stiffness Matrices (%s)")
+esES("")
+euES("")
+frFR("")
+
+T_("Added Mass at infinite frequency (%s)")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass/Inertia matrix (dimensional)")
+esES("")
+euES("")
+frFR("")
+
+T_("Additional linear damping (dimensional)")
+esES("")
+euES("")
+frFR("")
+
+T_("Additional quadratic damping (dimensional)")
+esES("")
+euES("")
+frFR("")
+
+
+// menuOptions.cpp
+
+T_("Some errors found:\n%s Do you wish to save them?")
+esES("")
+euES("")
+frFR("")
+
+
+// main.lay
+
+T_("g [m/s2]:")
+esES("")
+euES("")
+frFR("")
+
+T_("rho [kg/m3]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Head:")
+esES("")
+euES("")
+frFR("")
+
+T_("DOF:")
+esES("")
+euES("")
+frFR("")
+
+T_("File:")
+esES("")
+euES("")
+frFR("")
+
+T_("Removes selected files")
+esES("")
+euES("")
+frFR("")
+
+T_("Rename")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the model name and description")
+esES("")
+euES("")
+frFR("")
+
+T_("Duplicate")
+esES("")
+euES("")
+frFR("")
+
+T_("Duplicates the model")
+esES("")
+euES("")
+frFR("")
+
+T_("Join")
+esES("")
+euES("")
+frFR("")
+
+T_("Joins selected files, mixing available values for A, B, forces, and hydrodynamic "
+     "stiffness matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove All")
+esES("")
+euES("")
+frFR("")
+
+T_("Removes all loaded files")
+esES("")
+euES("")
+frFR("")
+
+T_("Loads BEM file")
+esES("")
+euES("")
+frFR("")
+
+T_("Export")
+esES("")
+euES("")
+frFR("")
+
+T_("Recalculates A\342\210\236 based on IRF calculation using the Ogilvie's "
+     "formula")
+esES("")
+euES("")
+frFR("")
+
+T_("Gets the RAO")
+esES("")
+euES("")
+frFR("")
+
+T_("Recalculates A0 based on closest data")
+esES("")
+euES("")
+frFR("")
+
+T_("Kirf")
+esES("")
+euES("")
+frFR("")
+
+T_("Recalculates IRF using the Ogilvie's formula")
+esES("")
+euES("")
+frFR("")
+
+T_("Forces XZ (0-180\302\272)")
+esES("")
+euES("")
+frFR("")
+
+T_("Spreads the available forces around X axis (0-180\302\272) averaging them "
+     "when they are available on both sides")
+esES("")
+euES("")
+frFR("")
+
+T_("Forces YZ (90-270\302\272)")
+esES("")
+euES("")
+frFR("")
+
+T_("Spreads the available forces around Y axis (90-270\302\272), averaging "
+     "them when they are available on both sides")
+esES("")
+euES("")
+frFR("")
+
+T_("A(\317\211) A\342\210\236 B(\317\211) QTF")
+esES("")
+euES("")
+frFR("")
+
+T_("Ensures symmetry in added mass, radiation and QTF")
+esES("")
+euES("")
+frFR("")
+
+T_("Coefficients")
+esES("")
+euES("")
+frFR("")
+
+T_("Symmetrize")
+esES("")
+euES("")
+frFR("")
+
+T_("Fill unavailable frequencies")
+esES("")
+euES("")
+frFR("")
+
+T_("A/B/Forces")
+esES("")
+euES("")
+frFR("")
+
+T_("Fills unavailable A, B and Fexc frequencies with zeros or interpolated "
+     "data")
+esES("")
+euES("")
+frFR("")
+
+T_("Fills unavailable QTF frequencies with zeros or interpolated data")
+esES("")
+euES("")
+frFR("")
+
+T_("Choose DoF to swap")
+esES("")
+euES("")
+frFR("")
+
+T_("Swap DoF")
+esES("")
+euES("")
+frFR("")
+
+T_("Interchanges degrees of freedom")
+esES("")
+euES("")
+frFR("")
+
+T_("Body:")
+esES("")
+euES("")
+frFR("")
+
+T_("Zero\nInterpolate")
+esES("")
+euES("")
+frFR("")
+
+T_("With:")
+esES("")
+euES("")
+frFR("")
+
+T_("Max. frequencies:")
+esES("")
+euES("")
+frFR("")
+
+T_("Maximum number of total frequencies")
+esES("")
+euES("")
+frFR("")
+
+T_("QTF to M.Drift")
+esES("")
+euES("")
+frFR("")
+
+T_("Fills unavailable A, B and Fexc DOF with zeros")
+esES("")
+euES("")
+frFR("")
+
+T_("Fills unavailable QTF DOF with zeros")
+esES("")
+euES("")
+frFR("")
+
+T_("Fill zero unav. DOF")
+esES("")
+euES("")
+frFR("")
+
+T_("Choose forces to remove")
+esES("")
+euES("")
+frFR("")
+
+T_("Choose freq. to remove")
+esES("")
+euES("")
+frFR("")
+
+T_("General:")
+esES("")
+euES("")
+frFR("")
+
+T_("QTF:")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove frequencies")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove headings")
+esES("")
+euES("")
+frFR("")
+
+T_("1st order:")
+esES("")
+euES("")
+frFR("")
+
+T_("M.Drift:")
+esES("")
+euES("")
+frFR("")
+
+T_("Choose headings to remove")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove headings in forces")
+esES("")
+euES("")
+frFR("")
+
+T_("Choose DoF to multiply or reset")
+esES("")
+euES("")
+frFR("")
+
+T_("Reset DoF")
+esES("")
+euES("")
+frFR("")
+
+T_("Fill forces with zeroes")
+esES("")
+euES("")
+frFR("")
+
+T_("Multiply DoF")
+esES("")
+euES("")
+frFR("")
+
+T_("Multiply forcesw by a factor")
+esES("")
+euES("")
+frFR("")
+
+T_("Remove forces")
+esES("")
+euES("")
+frFR("")
+
+T_("Factor X:")
+esES("")
+euES("")
+frFR("")
+
+T_("Factor to multiply the QTFs")
+esES("")
+euES("")
+frFR("")
+
+T_("F")
+esES("")
+euES("")
+frFR("")
+
+T_("MD")
+esES("")
+euES("")
+frFR("")
+
+T_("A diag.")
+esES("")
+euES("")
+frFR("")
+
+T_("B diag.")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculates A\342\210\236(\317\211) based on IRF calculation using the "
+     "Ogilvie's formula")
+esES("")
+euES("")
+frFR("")
+
+T_("Ogilvie compliance")
+esES("")
+euES("")
+frFR("")
+
+T_("Convergence")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculates new coefficients based in asympthotic convergence")
+esES("")
+euES("")
+frFR("")
+
+T_("Irregular frecuencies handling and removal")
+esES("")
+euES("")
+frFR("")
+
+T_("Process multiple")
+esES("")
+euES("")
+frFR("")
+
+T_("\"Z\" peaks removal")
+esES("")
+euES("")
+frFR("")
+
+T_("Decaying right tail")
+esES("")
+euES("")
+frFR("")
+
+T_("Thinner peaks removal")
+esES("")
+euES("")
+frFR("")
+
+T_("C. Motion")
+esES("")
+euES("")
+frFR("")
+
+T_("x [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("y [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("z [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Average")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculates new coefficients as average of the selected")
+esES("")
+euES("")
+frFR("")
+
+T_("Cancel")
+esES("")
+euES("")
+frFR("")
+
+T_("Identify")
+esES("")
+euES("")
+frFR("")
+
+T_("Zoom to Fit")
+esES("")
+euES("")
+frFR("")
+
+T_("From Y=0")
+esES("")
+euES("")
+frFR("")
+
+T_("Auto fit")
+esES("")
+euES("")
+frFR("")
+
+T_("Dimensionless")
+esES("")
+euES("")
+frFR("")
+
+T_("Points")
+esES("")
+euES("")
+frFR("")
+
+T_("\317\211 [rad/s]\nT [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Plot fit")
+esES("")
+euES("")
+frFR("")
+
+T_("Horiz. axis")
+esES("")
+euES("")
+frFR("")
+
+T_("ma-ph\nre-im")
+esES("")
+euES("")
+frFR("")
+
+T_("Complex")
+esES("")
+euES("")
+frFR("")
+
+T_("Show")
+esES("")
+euES("")
+frFR("")
+
+T_("Headings 1st")
+esES("")
+euES("")
+frFR("")
+
+T_("Head. Mean Drift")
+esES("")
+euES("")
+frFR("")
+
+T_("Headings QTF")
+esES("")
+euES("")
+frFR("")
+
+T_("Loads mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Split")
+esES("")
+euES("")
+frFR("")
+
+T_("Splits mesh in parts (if parts are not joined together)")
+esES("")
+euES("")
+frFR("")
+
+T_("Joins selected meshes")
+esES("")
+euES("")
+frFR("")
+
+T_("Simplify mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Simplify the mesh cleaning duplicated points and panels and rounding values "
+     "(it may be slow!)")
+esES("")
+euES("")
+frFR("")
+
+T_("All\nUnderwater")
+esES("")
+euES("")
+frFR("")
+
+T_("Symmetry:")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh:")
+esES("")
+euES("")
+frFR("")
+
+T_("xz")
+esES("")
+euES("")
+frFR("")
+
+T_("yz")
+esES("")
+euES("")
+frFR("")
+
+T_("Cb")
+esES("")
+euES("")
+frFR("")
+
+T_("Show healing")
+esES("")
+euES("")
+frFR("")
+
+T_("View parameters")
+esES("")
+euES("")
+frFR("")
+
+T_("Multi pan")
+esES("")
+euES("")
+frFR("")
+
+T_("Normals")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater")
+esES("")
+euES("")
+frFR("")
+
+T_("Water level")
+esES("")
+euES("")
+frFR("")
+
+T_("Fissures")
+esES("")
+euES("")
+frFR("")
+
+T_("Skewed")
+esES("")
+euES("")
+frFR("")
+
+T_("Fit")
+esES("")
+euES("")
+frFR("")
+
+T_("Iso")
+esES("")
+euES("")
+frFR("")
+
+T_("X")
+esES("")
+euES("")
+frFR("")
+
+T_("Z")
+esES("")
+euES("")
+frFR("")
+
+T_("Y")
+esES("")
+euES("")
+frFR("")
+
+T_("Limits")
+esES("")
+euES("")
+frFR("")
+
+T_("Axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Selection")
+esES("")
+euES("")
+frFR("")
+
+T_("Show mesh data")
+esES("")
+euES("")
+frFR("")
+
+T_("Cg")
+esES("")
+euES("")
+frFR("")
+
+T_("Line thickness:")
+esES("")
+euES("")
+frFR("")
+
+T_("Background")
+esES("")
+euES("")
+frFR("")
+
+T_("Cr")
+esES("")
+euES("")
+frFR("")
+
+T_("Lines")
+esES("")
+euES("")
+frFR("")
+
+T_("From vol")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass [kg]:")
+esES("")
+euES("")
+frFR("")
+
+T_(">")
+esES("")
+euES("")
+frFR("")
+
+T_("<")
+esES("")
+euES("")
+frFR("")
+
+T_("\vWaterplane")
+esES("")
+euES("")
+frFR("")
+
+T_("FIll Waterp.")
+esES("")
+euES("")
+frFR("")
+
+T_("Get Hull")
+esES("")
+euES("")
+frFR("")
+
+T_("Get Waterp.")
+esES("")
+euES("")
+frFR("")
+
+T_("Simplify")
+esES("")
+euES("")
+frFR("")
+
+T_("Orient facets")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh processing")
+esES("")
+euES("")
+frFR("")
+
+T_("\vMirror")
+esES("")
+euES("")
+frFR("")
+
+T_("C. Gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("Scale")
+esES("")
+euES("")
+frFR("")
+
+T_("Ratio X:")
+esES("")
+euES("")
+frFR("")
+
+T_("Ratio Y:")
+esES("")
+euES("")
+frFR("")
+
+T_("Ratio Z:")
+esES("")
+euES("")
+frFR("")
+
+T_("Translate")
+esES("")
+euES("")
+frFR("")
+
+T_("Rotate")
+esES("")
+euES("")
+frFR("")
+
+T_("roll [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("pitch [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("yaw [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Reset")
+esES("")
+euES("")
+frFR("")
+
+T_("Archimede")
+esES("")
+euES("")
+frFR("")
+
+T_("Z Archimede")
+esES("")
+euES("")
+frFR("")
+
+T_("Edit position and mesh size ")
+esES("")
+euES("")
+frFR("")
+
+T_("size [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("wY [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("wX [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Style")
+esES("")
+euES("")
+frFR("")
+
+T_("Other")
+esES("")
+euES("")
+frFR("")
+
+T_("Plots")
+esES("")
+euES("")
+frFR("")
+
+T_("Environment")
+esES("")
+euES("")
+frFR("")
+
+T_("Depth [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Heading:")
+esES("")
+euES("")
+frFR("")
+
+T_("Error [%]:")
+esES("")
+euES("")
+frFR("")
+
+T_("g[m/s2]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Num. vals:")
+esES("")
+euES("")
+frFR("")
+
+T_("Warning [%]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Length scale [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Kirf and A\342\210\236 calculation")
+esES("")
+euES("")
+frFR("")
+
+T_("GREN.QAT:")
+esES("")
+euES("")
+frFR("")
+
+T_("Max. time [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("General")
+esES("")
+euES("")
+frFR("")
+
+T_("Path to binary")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume calculation tolerance")
+esES("")
+euES("")
+frFR("")
+
+T_("Epsilon [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Value [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Round to closest")
+esES("")
+euES("")
+frFR("")
+
+T_("Hide DOF cross-coupling")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM parameters")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh parameters")
+esES("")
+euES("")
+frFR("")
+
+T_("https://github.com/izabala123/Nemoh")
+esES("")
+euES("")
+frFR("")
+
+T_("Version 115:")
+esES("")
+euES("")
+frFR("")
+
+T_("https://gitlab.com/lheea/Nemoh/-/releases")
+esES("")
+euES("")
+frFR("")
+
+T_("Version 3:")
+esES("")
+euES("")
+frFR("")
+
+T_("FOAMM:")
+esES("")
+euES("")
+frFR("")
+
+T_("Binaries folder")
+esES("")
+euES("")
+frFR("")
+
+T_("Nemoh")
+esES("")
+euES("")
+frFR("")
+
+T_("https://box.lheea.ec-nantes.fr/index.php/s/6MybIloTDqWSFDL")
+esES("")
+euES("")
+frFR("")
+
+T_("Classic:")
+esES("")
+euES("")
+frFR("")
+
+T_("https://coer.maynoothuniversity.ie/downloads/")
+esES("")
+euES("")
+frFR("")
+
+T_("Maynooth COER FOAMM")
+esES("")
+euES("")
+frFR("")
+
+T_("https://github.com/YingyiLiu/HAMS")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS")
+esES("")
+euES("")
+frFR("")
+
+T_("https://github.com/YingyiLiu/HAMS/tree/master/MeshConverter")
+esES("")
+euES("")
+frFR("")
+
+T_("MeshTran:")
+esES("")
+euES("")
+frFR("")
+
+T_("https://github.com/YingyiLiu/HAMS/tree/master/Bin")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS_x64:")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculate if not available")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculate A\342\210\236(\317\211)")
+esES("")
+euES("")
+frFR("")
+
+T_("csv separator:")
+esES("")
+euES("")
+frFR("")
+
+T_("Legend with units")
+esES("")
+euES("")
+frFR("")
+
+T_("Legend with solver")
+esES("")
+euES("")
+frFR("")
+
+T_("Frequency choice [rad/s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Rng. to [rad/s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Cases available to identify")
+esES("")
+euES("")
+frFR("")
+
+T_("Rng. from [rad/s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Set to all")
+esES("")
+euES("")
+frFR("")
+
+T_("Row count:")
+esES("")
+euES("")
+frFR("")
+
+T_("Type:")
+esES("")
+euES("")
+frFR("")
+
+T_("Show:")
+esES("")
+euES("")
+frFR("")
+
+T_("Bilinear")
+esES("")
+euES("")
+frFR("")
+
+T_("Diagonal\nConjugate\nHorizontal\nVertical")
+esES("")
+euES("")
+frFR("")
+
+T_("Play")
+esES("")
+euES("")
+frFR("")
+
+T_("Num. frames:")
+esES("")
+euES("")
+frFR("")
+
+T_("Delta time [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Save bitmap")
+esES("")
+euES("")
+frFR("")
+
+T_("#Digits:")
+esES("")
+euES("")
+frFR("")
+
+T_("#Decimals:")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrostatic Stiffness Matrices")
+esES("")
+euES("")
+frFR("")
+
+T_("Empty if < max\302\26710^-")
+esES("")
+euES("")
+frFR("")
+
+T_("Units")
+esES("")
+euES("")
+frFR("")
+
+T_("Update")
+esES("")
+euES("")
+frFR("")
+
+T_("Plane XZ rot. around Z (yaw) from [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Y axis rot. (pitch) from [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("to [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("delta [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Show envelope")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh tol. [%]:")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM files list")
+esES("")
+euES("")
+frFR("")
+
+T_("Paste")
+esES("Pegar")
+euES("")
+frFR("")
+
+T_("Wave frequencies")
+esES("")
+euES("")
+frFR("")
+
+T_("Include solver binaries")
+esES("")
+euES("")
+frFR("")
+
+T_("Split model")
+esES("")
+euES("")
+frFR("")
+
+T_("Num. cases:")
+esES("")
+euES("")
+frFR("")
+
+T_("Wave directions/headings")
+esES("")
+euES("")
+frFR("")
+
+T_("Number:")
+esES("")
+euES("")
+frFR("")
+
+T_("Max [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Min [\302\272]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Max [rad/s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Min [rad/s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("General parameters")
+esES("")
+euES("")
+frFR("")
+
+T_("Infinite")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM solver:")
+esES("")
+euES("")
+frFR("")
+
+T_("Save to folder:")
+esES("")
+euES("")
+frFR("")
+
+T_("Load file:")
+esES("")
+euES("")
+frFR("")
+
+T_("Num. threads:")
+esES("")
+euES("")
+frFR("")
+
+T_("     Rotations")
+esES("")
+euES("")
+frFR("")
+
+T_("Centre of Motion")
+esES("")
+euES("")
+frFR("")
+
+T_("Centre of Gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("Bodies")
+esES("")
+euES("")
+frFR("")
+
+T_("Add")
+esES("")
+euES("")
+frFR("")
+
+T_("Surge")
+esES("")
+euES("")
+frFR("")
+
+T_("Sway")
+esES("")
+euES("")
+frFR("")
+
+T_("Heave")
+esES("")
+euES("")
+frFR("")
+
+T_("Roll")
+esES("")
+euES("")
+frFR("")
+
+T_("Pitch")
+esES("")
+euES("")
+frFR("")
+
+T_("Yaw")
+esES("")
+euES("")
+frFR("")
+
+T_("Lid file:")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh file:")
+esES("")
+euES("")
+frFR("")
+
+T_("Translations")
+esES("")
+euES("")
+frFR("")
+
+T_("Body Mass/Inertia Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("External Linear Damping Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("External Quadratic Damping Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrostatic Restoring Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("Additional Restoring Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("External Restoring Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("IRF calculation")
+esES("")
+euES("")
+frFR("")
+
+T_("Kochin function")
+esES("")
+euES("")
+frFR("")
+
+T_("Show pressure")
+esES("")
+euES("")
+frFR("")
+
+T_("Free surface elevation")
+esES("")
+euES("")
+frFR("")
+
+T_("X direction")
+esES("")
+euES("")
+frFR("")
+
+T_("Y direction")
+esES("")
+euES("")
+frFR("")
+
+T_("Yeff [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Gravity [m/s2]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Xeff [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Wave measurement point")
+esES("")
+euES("")
+frFR("")
+
+T_("Postprocessing")
+esES("")
+euES("")
+frFR("")
+
+T_("Dimension [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Duration [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Time step [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Decay files")
+esES("")
+euES("")
+frFR("")
+
+T_("#Row:")
+esES("")
+euES("")
+frFR("")
+
+T_("#Col z:")
+esES("")
+euES("")
+frFR("")
+
+T_("#Col t:")
+esES("")
+euES("")
+frFR("")
+
+T_("Results")
+esES("")
+euES("")
+frFR("")
+
+T_("Vessel position")
+esES("")
+euES("")
+frFR("")
+
+T_("Line types")
+esES("")
+euES("")
+frFR("")
+
+T_("EA [N]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Diam. [mm]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass [kg/m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Name:")
+esES("")
+euES("")
+frFR("")
+
+T_("Line type:")
+esES("")
+euES("")
+frFR("")
+
+T_("Length [m]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Line properties")
+esES("")
+euES("")
+frFR("")
+
+T_("To:")
+esES("")
+euES("")
+frFR("")
+
+T_("From:")
+esES("")
+euES("")
+frFR("")
+
+T_("Connection")
+esES("")
+euES("")
+frFR("")
+
+T_("Water density [kg/m3]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Ok")
+esES("")
+euES("")
+frFR("")
+
+T_("Description:")
+esES("")
+euES("")
+frFR("")
+
+T_("OK")
+esES("")
+euES("")
+frFR("")
+
+T_("All headings\nAll headings (without crossed)\nSelected heading saved as "
+     "0\302\272")
+esES("")
+euES("")
+frFR("")
+
+T_("https://github.com/OpenFAST/openfast/issues/9")
+esES("")
+euES("")
+frFR("")
+
+T_("- OpenFAST Issue")
+esES("")
+euES("")
+frFR("")
+
+T_("Why this option?:")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameters to compare series")
+esES("")
+euES("")
+frFR("")
+
+T_("Absolute\nRel. first\nRel. last")
+esES("")
+euES("")
+frFR("")
+
+T_("Fit to min. range")
+esES("")
+euES("")
+frFR("")
+
+
+// FastScatter.cpp
+
+T_("Enter file with set of parameters and metrics")
+esES("")
+euES("")
+frFR("")
+
+T_("json file")
+esES("")
+euES("")
+frFR("")
+
+T_("All files")
+esES("")
+euES("")
+frFR("")
+
+T_("Loads parameters and metrics file")
+esES("")
+euES("")
+frFR("")
+
+T_("Saves parameters and metrics")
+esES("")
+euES("")
+frFR("")
+
+T_("# decimals")
+esES("")
+euES("")
+frFR("")
+
+T_("Statistics")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to load file")
+esES("")
+euES("")
+frFR("")
+
+T_("Save parameters")
+esES("")
+euES("")
+frFR("")
+
+T_("Cancelled by the user")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to save file")
+esES("")
+euES("")
+frFR("")
+
+T_("Begin [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("End [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("Enter file path to show, or drop it from file explorer")
+esES("")
+euES("")
+frFR("")
+
+T_("Loads FAST out/outb file")
+esES("")
+euES("")
+frFR("")
+
+T_("FAST output file")
+esES("")
+euES("")
+frFR("")
+
+T_("CSV file")
+esES("")
+euES("")
+frFR("")
+
+T_("DeepLines Wind file")
+esES("")
+euES("")
+frFR("")
+
+T_("AQWA Naut file")
+esES("")
+euES("")
+frFR("")
+
+T_("Saves data file")
+esES("")
+euES("")
+frFR("")
+
+T_("Hover mouse to add new parameters to left axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Hover mouse to add new parameters to right axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Right axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Filters parameters to display. * are allowed")
+esES("")
+euES("")
+frFR("")
+
+T_("Filters parameters to be displayed according to their units. * are allowed")
+esES("")
+euES("")
+frFR("")
+
+T_("Fields")
+esES("")
+euES("")
+frFR("")
+
+T_("Double click to choose parameters to display")
+esES("")
+euES("")
+frFR("")
+
+T_("Copy selected parameters to clipboard")
+esES("")
+euES("")
+frFR("")
+
+T_("Paste selected parameters from clipboard")
+esES("")
+euES("")
+frFR("")
+
+T_("Copy selected parameters on the other tabs")
+esES("")
+euES("")
+frFR("")
+
+T_("Id")
+esES("")
+euES("")
+frFR("")
+
+T_("Click to update periodically plot from file")
+esES("")
+euES("")
+frFR("")
+
+T_("Interval to update data from file")
+esES("")
+euES("")
+frFR("")
+
+T_("File '%s' not supported")
+esES("")
+euES("")
+frFR("")
+
+T_("File '%s' not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading file")
+esES("")
+euES("")
+frFR("")
+
+T_("Updating data")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem reading file '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("File '%s' is empty")
+esES("")
+euES("")
+frFR("")
+
+T_("No file to save")
+esES("")
+euES("")
+frFR("")
+
+T_("Saving data")
+esES("")
+euES("")
+frFR("")
+
+T_("OpenFAST .out format")
+esES("")
+euES("")
+frFR("")
+
+T_("CSV format")
+esES("")
+euES("")
+frFR("")
+
+T_("Save register data")
+esES("")
+euES("")
+frFR("")
+
+T_("Multiple files")
+esES("")
+euES("")
+frFR("")
+
+T_("Time")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect start or end times")
+esES("")
+euES("")
+frFR("")
+
+T_("s")
+esES("")
+euES("")
+frFR("")
+
+T_("Click '+' to add new file in additional tab")
+esES("")
+euES("")
+frFR("")
+
+T_("New Tab")
+esES("")
+euES("")
+frFR("")
+
+T_("You are about to open %d files")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMRosetta FAST .out+b Reader")
+esES("")
+euES("")
+frFR("")
+
+
+// FastScatter.lay
+
+T_("Update interval [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("SaveAs")
+esES("")
+euES("")
+frFR("")
+
+T_("<>tab\n=tab =plot\n=tab <>plot")
+esES("")
+euES("")
+frFR("")
+
+T_("Start [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Duration [s]:\nT. from end [s]:")
+esES("")
+euES("")
+frFR("")
+
+T_("Files loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Filter:")
+esES("")
+euES("")
+frFR("")
+
+T_("Units:")
+esES("")
+euES("")
+frFR("")
+
+T_("Set on all tabs")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameter selection")
+esES("")
+euES("")
+frFR("")
+
+T_("Fit to data")
+esES("")
+euES("")
+frFR("")
+
+T_("Left axis")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameters && metrics:")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculate")
+esES("")
+euES("")
+frFR("")
+
+T_("Comparative of results")
+esES("")
+euES("")
+frFR("")
+
+
+// Obsolete
+
+T_("Mesh Handling")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrodynamic Coefficients")
+esES("")
+euES("")
+frFR("")
+
+T_("FAST .out Reader")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM configuration data is not loaded. Defaults are set")
+esES("")
+euES("")
+frFR("")
+
+T_("rho [Kg/m3]:")
+esES("")
+euES("")
+frFR("")
+
+T_("[* No tab selected to be shown]&To show them, choose them in [* 'Options/General/Tabs "
+     "shown']")
+esES("")
+euES("")
+frFR("")
+
+T_("#%d body. %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Saves to Wamit .hst stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
+T_("Save to Wamit .hst stiffness matrix format")
+esES("")
+euES("")
+frFR("")
+
+T_("Error type 2: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Id not found in ArrayModel_Change()")
+esES("")
+euES("")
+frFR("")
+
+T_("Cleans duplicated panels when loading (it may be slow!)")
+esES("")
+euES("")
+frFR("")
+
+T_("Sets the center of gravity and mass")
+esES("")
+euES("")
+frFR("")
+
+T_("Gets waterplane mesh")
+esES("")
+euES("")
+frFR("")
+
+T_("Gets hull mesh without waterplane")
+esES("")
+euES("")
+frFR("")
+
+T_("Save as")
+esES("")
+euES("")
+frFR("")
+
+T_("K Stiffness Matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown type in OnConvert()")
+esES("")
+euES("")
+frFR("")
+
+T_("Please fill center of rotation data")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface removed")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface extracted")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume [m3]")
+esES("")
+euES("")
+frFR("")
+
+T_("Immersed surface [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("Immersed volume [m3]")
+esES("")
+euES("")
+frFR("")
+
+T_("Displacement [Kg]")
+esES("")
+euES("")
+frFR("")
+
+T_("Water Plane Area [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("# Seg Water Plane")
+esES("")
+euES("")
+frFR("")
+
+T_("# Panels off")
+esES("")
+euES("")
+frFR("")
+
+T_("Nemoh 115+")
+esES("")
+euES("")
+frFR("")
+
+T_("Errors found in Nemoh data:%s&Do you wish to continue?")
+esES("")
+euES("")
+frFR("")
+
+T_("Please enter number of parts to split the simulation (min. is 1)")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of Nemoh cases %d must not be higher than number of frequencies "
+     "%d")
+esES("")
+euES("")
+frFR("")
+
+T_("Arrange DOF")
+esES("")
+euES("")
+frFR("")
+
+T_("K")
+esES("")
+euES("")
+frFR("")
+
+T_("Setup FOAMM")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit .out file")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit .1.3.4.hst.12s.12d file")
+esES("")
+euES("")
+frFR("")
+
+T_("FAST HydroDyn file")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMRosetta file")
+esES("")
+euES("")
+frFR("")
+
+T_("All converted files")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating A0 in selected BEM file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Calculating IRF and Ainf in selected BEM file...")
+esES("")
+euES("")
+frFR("")
+
+T_("Soft")
+esES("")
+euES("")
+frFR("")
+
+T_("#headings")
+esES("")
+euES("")
+frFR("")
+
+T_("Ainf available")
+esES("")
+euES("")
+frFR("")
+
+T_("K available")
+esES("")
+euES("")
+frFR("")
+
+T_("Water plane area [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary "
+     "Element Method solver formats")
+esES("")
+euES("")
+frFR("")
+
+T_("# Body")
+esES("")
+euES("")
+frFR("")
+
+T_("Heading 1")
+esES("")
+euES("")
+frFR("")
+
+T_("Heading 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Sum")
+esES("")
+euES("")
+frFR("")
+
+T_("w [rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("%s%.1f\302\272")
+esES("")
+euES("")
+frFR("")
+
+T_("Ainf")
+esES("")
+euES("")
+frFR("")
+
+T_("No parameters to compare")
+esES("")
+euES("")
+frFR("")
+
+T_("Diffraction scattering force phase [rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("Froude-Krylov force phase [rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("Excitation force phase [rad]")
 esES("")
 euES("")
 frFR("")
@@ -1402,16 +4676,6 @@ euES("")
 frFR("")
 
 T_("Phase Z = B(w)+jw(A(w)-Ainf) %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Magnitude response %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Frequency response %s")
 esES("")
 euES("")
 frFR("")
@@ -1446,11 +4710,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Ns/m")
-esES("")
-euES("")
-frFR("")
-
 T_("K_%s")
 esES("")
 euES("")
@@ -1467,11 +4726,6 @@ euES("")
 frFR("")
 
 T_("Fsc_ph_%s")
-esES("")
-euES("")
-frFR("")
-
-T_("rad")
 esES("")
 euES("")
 frFR("")
@@ -1536,39 +4790,6 @@ esES("")
 euES("")
 frFR("")
 
-
-// main.lay
-
-T_("File:")
-esES("")
-euES("")
-frFR("")
-
-T_("Remove")
-esES("")
-euES("")
-frFR("")
-
-T_("A0")
-esES("")
-euES("")
-frFR("")
-
-T_("Recalculates A0 based on closest data")
-esES("")
-euES("")
-frFR("")
-
-T_("Rename")
-esES("")
-euES("")
-frFR("")
-
-T_("Sets the model name and description")
-esES("")
-euES("")
-frFR("")
-
 T_("Kirf + Ainf")
 esES("")
 euES("")
@@ -1579,34 +4800,8 @@ esES("")
 euES("")
 frFR("")
 
-T_("Symmetrize")
-esES("")
-euES("")
-frFR("")
-
 T_("Spreads the available forces around X axis, averaging them when they are "
      "available on both sides")
-esES("")
-euES("")
-frFR("")
-
-T_("Join")
-esES("")
-euES("")
-frFR("")
-
-T_("Joins selected files, mixing available values for A, B, forces, and hydrodynamic "
-     "stiffness matrix")
-esES("")
-euES("")
-frFR("")
-
-T_("Remove All")
-esES("")
-euES("")
-frFR("")
-
-T_("Loads BEM file")
 esES("")
 euES("")
 frFR("")
@@ -1627,62 +4822,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Cancel")
-esES("")
-euES("")
-frFR("")
-
-T_("Identify")
-esES("")
-euES("")
-frFR("")
-
-T_("Zoom to Fit")
-esES("")
-euES("")
-frFR("")
-
-T_("From Y=0")
-esES("")
-euES("")
-frFR("")
-
-T_("Auto fit")
-esES("")
-euES("")
-frFR("")
-
-T_("Dimensionless")
-esES("")
-euES("")
-frFR("")
-
-T_("Points")
-esES("")
-euES("")
-frFR("")
-
 T_("w [rad/s]\nT [s]")
 esES("")
 euES("")
 frFR("")
 
-T_("Plot fit")
-esES("")
-euES("")
-frFR("")
-
 T_("Horizontal axis")
-esES("")
-euES("")
-frFR("")
-
-T_("Show")
-esES("")
-euES("")
-frFR("")
-
-T_("Split")
 esES("")
 euES("")
 frFR("")
@@ -1698,152 +4843,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("All\nUnderwater")
-esES("")
-euES("")
-frFR("")
-
-T_("Symmetry:")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh:")
-esES("")
-euES("")
-frFR("")
-
-T_("y")
-esES("")
-euES("")
-frFR("")
-
-T_("x")
-esES("")
-euES("")
-frFR("")
-
-T_("Cb")
-esES("")
-euES("")
-frFR("")
-
-T_("Show healing")
-esES("")
-euES("")
-frFR("")
-
-T_("Multi pan")
-esES("")
-euES("")
-frFR("")
-
-T_("Normals")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater")
-esES("")
-euES("")
-frFR("")
-
-T_("Water level")
-esES("")
-euES("")
-frFR("")
-
-T_("Fissures")
-esES("")
-euES("")
-frFR("")
-
-T_("Skewed")
-esES("")
-euES("")
-frFR("")
-
-T_("Fit")
-esES("")
-euES("")
-frFR("")
-
 T_("XYZ")
 esES("")
 euES("")
 frFR("")
 
-T_("X")
-esES("")
-euES("")
-frFR("")
-
-T_("Z")
-esES("")
-euES("")
-frFR("")
-
-T_("Y")
-esES("")
-euES("")
-frFR("")
-
-T_("Limits")
-esES("")
-euES("")
-frFR("")
-
-T_("Axis")
-esES("")
-euES("")
-frFR("")
-
-T_("Cg")
-esES("")
-euES("")
-frFR("")
-
-T_("Show mesh data")
-esES("")
-euES("")
-frFR("")
-
 T_("Set Cg")
-esES("")
-euES("")
-frFR("")
-
-T_("Update")
-esES("")
-euES("")
-frFR("")
-
-T_("\vWaterplane")
-esES("")
-euES("")
-frFR("")
-
-T_("Translate")
-esES("")
-euES("")
-frFR("")
-
-T_("Rotate")
-esES("")
-euES("")
-frFR("")
-
-T_("FIll Waterp.")
-esES("")
-euES("")
-frFR("")
-
-T_("Get Hull")
-esES("")
-euES("")
-frFR("")
-
-T_("Get Waterp.")
 esES("")
 euES("")
 frFR("")
@@ -1878,62 +4883,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("y [m]:")
-esES("")
-euES("")
-frFR("")
-
 T_("Mass [Kg]:")
-esES("")
-euES("")
-frFR("")
-
-T_("z [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("x [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Simplify")
-esES("")
-euES("")
-frFR("")
-
-T_("Orient facets")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh processing")
-esES("")
-euES("")
-frFR("")
-
-T_("\vMirror")
-esES("")
-euES("")
-frFR("")
-
-T_("Edit position and mesh size ")
-esES("")
-euES("")
-frFR("")
-
-T_("size [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("wY [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("wX [m]:")
 esES("")
 euES("")
 frFR("")
@@ -1948,32 +4898,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Environment")
-esES("")
-euES("")
-frFR("")
-
-T_("Depth [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Num. vals:")
-esES("")
-euES("")
-frFR("")
-
-T_("Length scale [m]:")
-esES("")
-euES("")
-frFR("")
-
 T_("Calc. A_inf if not in files")
-esES("")
-euES("")
-frFR("")
-
-T_("GREN.QAT:")
 esES("")
 euES("")
 frFR("")
@@ -1988,47 +4913,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Max. time [s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("General")
-esES("")
-euES("")
-frFR("")
-
-T_("Path to binary")
-esES("")
-euES("")
-frFR("")
-
-T_("Other")
-esES("")
-euES("")
-frFR("")
-
-T_("Hide DOF cross-coupling")
-esES("")
-euES("")
-frFR("")
-
 T_("BEM Coefficients")
-esES("")
-euES("")
-frFR("")
-
-T_("https://github.com/izabala123/Nemoh")
-esES("")
-euES("")
-frFR("")
-
-T_("Version 115:")
-esES("")
-euES("")
-frFR("")
-
-T_("https://box.lheea.ec-nantes.fr/index.php/s/6MybIloTDqWSFDL")
 esES("")
 euES("")
 frFR("")
@@ -2043,22 +4928,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("FOAMM:")
-esES("")
-euES("")
-frFR("")
-
 T_("Preprocessor:")
 esES("")
 euES("")
 frFR("")
 
 T_("http://www.eeng.nuim.ie/coer/")
-esES("")
-euES("")
-frFR("")
-
-T_("Maynooth COER FOAMM")
 esES("")
 euES("")
 frFR("")
@@ -2070,137 +4945,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Frequency choice [rad/s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Rng. to [rad/s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Cases available to identify")
-esES("")
-euES("")
-frFR("")
-
-T_("Rng. from [rad/s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Set to all")
-esES("")
-euES("")
-frFR("")
-
-T_("Row count:")
-esES("")
-euES("")
-frFR("")
-
-T_("Hydrostatic Stiffness Matrices")
-esES("")
-euES("")
-frFR("")
-
-T_("BEM files list")
-esES("")
-euES("")
-frFR("")
-
-T_("Paste")
-esES("Pegar")
-euES("")
-frFR("")
-
-T_("Bodies")
-esES("")
-euES("")
-frFR("")
-
-T_("Wave frequencies")
-esES("")
-euES("")
-frFR("")
-
 T_("Include Nemoh binaries")
-esES("")
-euES("")
-frFR("")
-
-T_("Add")
-esES("")
-euES("")
-frFR("")
-
-T_("Duplicate")
-esES("")
-euES("")
-frFR("")
-
-T_("Surge")
-esES("")
-euES("")
-frFR("")
-
-T_("Sway")
-esES("")
-euES("")
-frFR("")
-
-T_("Heave")
-esES("")
-euES("")
-frFR("")
-
-T_("Roll")
-esES("")
-euES("")
-frFR("")
-
-T_("Pitch")
-esES("")
-euES("")
-frFR("")
-
-T_("Yaw")
-esES("")
-euES("")
-frFR("")
-
-T_("IRF calculation")
-esES("")
-euES("")
-frFR("")
-
-T_("Kochin function")
-esES("")
-euES("")
-frFR("")
-
-T_("Show pressure")
-esES("")
-euES("")
-frFR("")
-
-T_("Free surface elevation")
-esES("")
-euES("")
-frFR("")
-
-T_("X direction")
-esES("")
-euES("")
-frFR("")
-
-T_("Y direction")
-esES("")
-euES("")
-frFR("")
-
-T_("Yeff [m]:")
 esES("")
 euES("")
 frFR("")
@@ -2210,72 +4955,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Xeff [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Wave measurement point")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh file:")
-esES("")
-euES("")
-frFR("")
-
-T_("Postprocessing")
-esES("")
-euES("")
-frFR("")
-
-T_("Dimension [m]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Number:")
-esES("")
-euES("")
-frFR("")
-
-T_("Wave directions/headings")
-esES("")
-euES("")
-frFR("")
-
-T_("Max [\302\272]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Min [\302\272]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Max [rad/s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Min [rad/s]:")
-esES("")
-euES("")
-frFR("")
-
 T_("Load cases to solve")
-esES("")
-euES("")
-frFR("")
-
-T_("Duration [s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Time step [s]:")
 esES("")
 euES("")
 frFR("")
@@ -2295,22 +4975,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Save to folder:")
-esES("")
-euES("")
-frFR("")
-
 T_("Load Nemoh.cal from:")
-esES("")
-euES("")
-frFR("")
-
-T_("Translations")
-esES("")
-euES("")
-frFR("")
-
-T_("All DOF")
 esES("")
 euES("")
 frFR("")
@@ -2320,52 +4985,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Ok")
-esES("")
-euES("")
-frFR("")
-
-T_("Description:")
-esES("")
-euES("")
-frFR("")
-
-T_("Name:")
-esES("")
-euES("")
-frFR("")
-
-T_("OK")
-esES("")
-euES("")
-frFR("")
-
-T_("Show:")
-esES("")
-euES("")
-frFR("")
-
-T_("QTF:")
-esES("")
-euES("")
-frFR("")
-
-T_("DOF:")
-esES("")
-euES("")
-frFR("")
-
 T_("All headings\nSelected heading saved as 0\302\272")
-esES("")
-euES("")
-frFR("")
-
-T_("https://github.com/OpenFAST/openfast/issues/9")
-esES("")
-euES("")
-frFR("")
-
-T_("- OpenFAST Issue")
 esES("")
 euES("")
 frFR("")
@@ -2380,23 +5000,10 @@ esES("")
 euES("")
 frFR("")
 
-T_("Why this option?:")
-esES("")
-euES("")
-frFR("")
-
-T_("Parameters to compare series")
-esES("")
-euES("")
-frFR("")
-
 T_("Absolute\nRelative")
 esES("")
 euES("")
 frFR("")
-
-
-// arrange.cpp
 
 T_("DOF")
 esES("")
@@ -2408,9 +5015,6 @@ esES("")
 euES("")
 frFR("")
 
-
-// arrange.lay
-
 T_("Rearrange DOF by drag && drop")
 esES("")
 euES("")
@@ -2421,130 +5025,7 @@ esES("")
 euES("")
 frFR("")
 
-
-// FastScatter.cpp
-
-T_("Enter file path to show, or drop it from file explorer")
-esES("")
-euES("")
-frFR("")
-
-T_("Loads FAST out/outb file")
-esES("")
-euES("")
-frFR("")
-
-T_("FAST output file")
-esES("")
-euES("")
-frFR("")
-
-T_("Hover mouse to add new parameters to left axis")
-esES("")
-euES("")
-frFR("")
-
-T_("Hover mouse to add new parameters to right axis")
-esES("")
-euES("")
-frFR("")
-
-T_("Right axis")
-esES("")
-euES("")
-frFR("")
-
-T_("Filters parameters to display. * are allowed")
-esES("")
-euES("")
-frFR("")
-
-T_("Filters parameters to be displayed according to their units. * are allowed")
-esES("")
-euES("")
-frFR("")
-
-T_("Fields")
-esES("")
-euES("")
-frFR("")
-
-T_("Units")
-esES("")
-euES("")
-frFR("")
-
-T_("Double click to choose parameters to display")
-esES("")
-euES("")
-frFR("")
-
-T_("Copy selected parameters to clipboard")
-esES("")
-euES("")
-frFR("")
-
-T_("Paste selected parameters from clipboard")
-esES("")
-euES("")
-frFR("")
-
-T_("Copy selected parameters on the other tabs")
-esES("")
-euES("")
-frFR("")
-
-T_("Click to update periodically plot from file")
-esES("")
-euES("")
-frFR("")
-
-T_("Interval to update data from file")
-esES("")
-euES("")
-frFR("")
-
-T_("Loading file")
-esES("")
-euES("")
-frFR("")
-
-T_("Updating data")
-esES("")
-euES("")
-frFR("")
-
-T_("File '%s' not found")
-esES("")
-euES("")
-frFR("")
-
 T_("File '%s' temporarily blocked by OpenFAST")
-esES("")
-euES("")
-frFR("")
-
-T_("Time")
-esES("")
-euES("")
-frFR("")
-
-T_("sec")
-esES("")
-euES("")
-frFR("")
-
-T_("Click '+' to add new file in additional tab")
-esES("")
-euES("")
-frFR("")
-
-T_("New Tab")
-esES("")
-euES("")
-frFR("")
-
-T_("You are about to open %d files")
 esES("")
 euES("")
 frFR("")
@@ -2554,41 +5035,10 @@ esES("")
 euES("")
 frFR("")
 
-
-// FastScatter.lay
-
-T_("Update interval [s]:")
-esES("")
-euES("")
-frFR("")
-
-T_("Filter:")
-esES("")
-euES("")
-frFR("")
-
-T_("Units:")
-esES("")
-euES("")
-frFR("")
-
-T_("Set on all tabs")
-esES("")
-euES("")
-frFR("")
-
 T_("Selection:")
 esES("")
 euES("")
 frFR("")
-
-T_("Left axis")
-esES("")
-euES("")
-frFR("")
-
-
-// Obsolete
 
 T_("Defined time for Kirf calculation %.1f may be longer than advised (%.1f). "
      "Do you wish to used advised time?")
@@ -2735,11 +5185,6 @@ euES("")
 frFR("")
 
 T_("Wamit .1.3.hst file")
-esES("")
-euES("")
-frFR("")
-
-T_("Coefficients")
 esES("")
 euES("")
 frFR("")
@@ -3014,17 +5459,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("To:")
-esES("")
-euES("")
-frFR("")
-
 T_("Cases available to process")
-esES("")
-euES("")
-frFR("")
-
-T_("From:")
 esES("")
 euES("")
 frFR("")
@@ -3229,11 +5664,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Unknown file format")
-esES("")
-euES("")
-frFR("")
-
 T_("Adimensional")
 esES("")
 euES("")
@@ -3362,6 +5792,9 @@ esES("")
 euES("")
 frFR("")
 
+
+// Obsolete
+
 T_("Failed to reorient panels to water side")
 esES("")
 euES("")
@@ -3371,6 +5804,9 @@ T_("%d panels not reoriented. Body contains separated surfaces")
 esES("")
 euES("")
 frFR("")
+
+
+// PACKAGE 'Surface' FILE 'Surface.cpp'
 
 T_("Detecting triangles and wrong panels")
 esES("")
@@ -3402,6 +5838,9 @@ esES("")
 euES("")
 frFR("")
 
+
+// Obsolete
+
 T_("Reorienting panels water side")
 esES("")
 euES("")
@@ -3409,11 +5848,6 @@ frFR("")
 
 
 // PACKAGE 'GLCanvas' FILE 'GLCanvas.cpp'
-
-T_("Fit to data")
-esES("")
-euES("")
-frFR("")
 
 T_("Zoom to fit visible all data")
 esES("")
@@ -3536,13 +5970,13 @@ esES("")
 euES("")
 frFR("")
 
-
-// PACKAGE 'Surface' FILE 'Surface.cpp'
-
 T_("Node %d in panel %d [%d] does not exist")
 esES("")
 euES("")
 frFR("")
+
+
+// PACKAGE 'Surface' FILE 'Surface.cpp'
 
 T_("Fixed %d triangles")
 esES("")
@@ -3588,11 +6022,6 @@ euES("")
 frFR("")
 
 T_("Error: %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Average")
 esES("")
 euES("")
 frFR("")
@@ -3687,16 +6116,10 @@ esES("")
 euES("")
 frFR("")
 
-
-// PACKAGE 'Surface' FILE 'Surface.cpp'
-
 T_("Point nimver has to be higher than 2")
 esES("")
 euES("")
 frFR("")
-
-
-// Obsolete
 
 T_("Panel width too small")
 esES("")
@@ -3822,6 +6245,109 @@ frFR("")
 // PACKAGE 'STEM4U' FILE 'LocalFitting.h'
 
 T_("LocalFitting: Impossible to get coefficients")
+esES("")
+euES("")
+frFR("")
+
+
+// DropGrid.cpp
+
+T_("Select a value.")
+esES("")
+euES("")
+frFR("")
+
+
+// Surface.cpp
+
+T_("Rounding points location")
+esES("")
+euES("")
+frFR("")
+
+T_("Node %d [%d] in panel %d does not exist")
+esES("")
+euES("")
+frFR("")
+
+T_("Model is empty")
+esES("")
+euES("")
+frFR("")
+
+T_("Point number has to be higher than 2")
+esES("")
+euES("")
+frFR("")
+
+T_("There is no mesh in the water surface")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to load file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to save file '%s'")
+esES("")
+euES("")
+frFR("")
+
+
+// msh.cpp
+
+T_("Parsing error: ")
+esES("")
+euES("")
+frFR("")
+
+T_("Parsing error")
+esES("")
+euES("")
+frFR("")
+
+
+// Sundials.cpp
+
+T_("Sundials %s error (%s): %s")
+esES("")
+euES("")
+frFR("")
+
+
+// SeaWaves.cpp
+
+T_("JONSWAP parametric")
+esES("")
+euES("")
+frFR("")
+
+
+// Mooring.cpp
+
+T_("loose on seabed")
+esES("")
+euES("")
+frFR("")
+
+T_("catenary on seabed")
+esES("")
+euES("")
+frFR("")
+
+T_("catenary")
+esES("")
+euES("")
+frFR("")
+
+T_("line length exceeded")
+esES("")
+euES("")
+frFR("")
+
+T_("break load exdeeded")
 esES("")
 euES("")
 frFR("")
