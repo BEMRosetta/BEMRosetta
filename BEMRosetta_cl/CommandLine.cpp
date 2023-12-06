@@ -285,14 +285,26 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						BEM::Print("\n" + Format(t_("Last print is equal to \"%s\""), data));
 					else
 						throw Exc(Format(t_("Last print is not equal to \"%s\""), data));
-				} else if (param == "-issimilar") { 
+				} else if (param.StartsWith("-issimilar")) { 
 					CheckIfAvailableArg(command, ++i, "-isSimilar");
 					
-					String data = Trim(command[i]);
-					if (Trim(lastPrint).Find(data) >= 0) 
-						BEM::Print("\n" + Format(t_("Last print is similar to \"%s\""), data));
-					else
-						throw Exc(Format(t_("Last print is not equal to \"%s\""), data)); 
+					UVector<String> data = Split(command[i], " ");
+					UVector<String> prnt = Split(lastPrint, " ");
+					bool isnum = param == "-issimilarnum";
+					for (int i = 0; i < min(data.size(), prnt.size()); ++i) {
+						if (data[i] != "*") {
+							if (isnum) {
+								double p = ScanDouble(prnt[i]),
+									   d = ScanDouble(data[i]);
+								if (!EqualRatio(p, d, 0.001))
+									throw Exc(Format(t_("Last print is not equal to \"%s\". \"%s\" != \"%s\""), Trim(command[i]), prnt[i], data[i])); 	
+							} else {
+								if (prnt[i].Find(data[i]) < 0) 
+									throw Exc(Format(t_("Last print is not equal to \"%s\". \"%s\" != \"%s\""), Trim(command[i]), prnt[i], data[i])); 	
+							}
+						}
+					}
+					BEM::Print("\n" + Format(t_("Last print is similar to \"%s\""), Trim(command[i])));
 				} else {
 					if (nextcommands == "general") {
 					 	if (param == "-paramfile") {
@@ -752,10 +764,11 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									centre.y = ScanDouble(command[i]);
 									CheckIfAvailableArg(command, ++i, "Inertia cz");
 									centre.z = ScanDouble(command[i]);
+									bool volume = false;
 									if (param == "inertia" || param == "inertia_vol")
-										data.mesh.GetInertia33_Volume(inertia, centre, true);
-									else // if (param == "inertia_surf")
-										data.mesh.GetInertia33_Surface(inertia, centre, true);
+										volume = true;
+									
+									data.mesh.GetInertia33_Radii(inertia, centre, volume, false);
 									for (int i = 0; i < 3; ++i) 
 										for (int j = 0; j < 3; ++j) 
 											lastPrint << inertia(i, j) << " ";

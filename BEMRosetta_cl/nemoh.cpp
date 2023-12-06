@@ -119,6 +119,8 @@ bool Nemoh::Load_Cal(String fileName) {
 	if (!static_cast<NemohCase&>(dcase).Load(fileName))
 		return false;
 
+	hd().x_w = hd().y_w = 0;
+
 	hd().rho = dcase.rho;
 	hd().g = dcase.g;
 	hd().h = dcase.h;
@@ -672,7 +674,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 					inertiaName = "inertia.dat";
 				else
 					inertiaName = Format("inertia_%d.dat", i);
-				Nemoh::Save_6x6(bodies[ib].mass, AppendFileNameX(folderMech, inertiaName));
+				Nemoh::Save_6x6(bodies[ib].M, AppendFileNameX(folderMech, inertiaName));
 				meshes[ib] = GetFileTitle(bodies[ib].meshFile);
 			} else {
 				String khName;

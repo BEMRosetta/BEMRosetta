@@ -210,16 +210,98 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
     rao.Clear();	// Previous RAO is now invalid
 }
 
-void Hydro::GetTranslationTo(double xto, double yto, double zto) {
-	double xg = xto - c0(0), dx = xg;
-	double yg = yto - c0(1), dy = yg;
-	double zg = zto - c0(2), dz = zg;
+void Hydro::GetWaveTo(double xto, double yto) {
+	double dx = xto - x_w,
+		   dy = yto - y_w;
+	
+	for (int ib = 0; ib < Nb; ++ib) 
+		AddWave(ib, dx, dy);
+	
+	x_w = xto;
+	y_w = yto;
+}
+
+void Hydro::AddWave(int ib, double dx, double dy) {
+  	auto CalcF = [&](Forces &ex, const UVector<double> &k) {
+    	UArray<MatrixXcd> exforce = clone(ex.force);
+    	
+	    for (int ih = 0; ih < Nh; ++ih) {
+	        double angle = ToRad(head[ih]);
+	    	{
+				double dist = dx*cos(angle) + dy*sin(angle);
+			
+	    		int ib6 = ib*6;
+				for (int ifr = 0; ifr < Nf; ++ifr) {
+					double ph = k[ifr]*dist;
+					for (int idf = 0; idf < 6; ++idf) 
+						AddPhase(exforce[ih](ifr, idf + ib6), -ph);
+				}
+	    	}
+	    }
+		ex.force = pick(exforce);
+    };
+    
+    UVector<double> k(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr) 
+		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g_dim());
+    	
+	if (IsLoadedFex())
+		CalcF(ex, k);
+	if (IsLoadedFsc())
+		CalcF(sc, k);
+	if (IsLoadedFfk())
+		CalcF(fk, k);
+
+    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
+        int sign = isSum ? 1 : -1;
+		{
+	        for (int ih = 0; ih < qh.size(); ++ih) {
+	            double angle = ToRad(qh[ih].imag());
+	            double dist = dx*cos(angle) + dy*sin(angle);
+				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
+					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
+						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
+							 				 &v1 = qtf[ib][ih][1](ifr1, ifr2),
+							 				 &v2 = qtf[ib][ih][2](ifr1, ifr2),
+							 				 &v3 = qtf[ib][ih][3](ifr1, ifr2),
+							 				 &v4 = qtf[ib][ih][4](ifr1, ifr2),
+							 				 &v5 = qtf[ib][ih][5](ifr1, ifr2);
+						
+						double ph = (qk[ifr2] + sign*qk[ifr1])*dist;
+						for (int idf = 0; idf < 6; ++idf) 
+							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), -ph);
+					}
+				}
+	        }
+		}
+    };
+
+    UVector<double> qk(Nf);
+	for (int ifr = 0; ifr < qw.size(); ++ifr) 
+		qk[ifr] = SeaWaves::WaveNumber_w(qw[ifr], h, g_dim());
+			
+	if (IsLoadedQTF(true)) 
+		CalcQTF(qtfsum, qk, true);		
+	if (IsLoadedQTF(false))	
+		CalcQTF(qtfdif, qk, false);	
+}
+
+void Hydro::GetTranslationTo(const MatrixXd &to) {
+	MatrixXd delta(3, Nb);
+	for (int ib = 0; ib < Nb; ++ib) 
+		for (int idf = 0; idf < 3; ++idf) 	
+			delta(idf, ib) = to(idf, ib) - c0(idf, ib);
+		
 	
 	auto CalcAB = [&](auto &A) {
         auto An = clone(A);
 	
 		for (int ib = 0; ib < Nb; ++ib) {
 			int ib6 = ib*6;
+			double dx = delta(0, ib);
+			double dy = delta(1, ib);
+			double dz = delta(2, ib);
+			
 			for (int jb = 0; jb < Nb; ++jb) {
 				int jb6 = jb*6;
 				
@@ -230,41 +312,41 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 				}
 				
 				for (int iif = 0; iif < Nf; ++iif) {
-					An[ib6 + 0][jb6 + 3][iif] += - yg*A[ib6 + 0][jb6 + 2][iif] + zg*A[ib6 + 0][jb6 + 1][iif];
-					An[ib6 + 1][jb6 + 3][iif] += - yg*A[ib6 + 1][jb6 + 2][iif] + zg*A[ib6 + 1][jb6 + 1][iif];
-					An[ib6 + 2][jb6 + 3][iif] += - yg*A[ib6 + 2][jb6 + 2][iif] + zg*A[ib6 + 2][jb6 + 1][iif];
+					An[ib6 + 0][jb6 + 3][iif] += - dy*A[ib6 + 0][jb6 + 2][iif] + dz*A[ib6 + 0][jb6 + 1][iif];
+					An[ib6 + 1][jb6 + 3][iif] += - dy*A[ib6 + 1][jb6 + 2][iif] + dz*A[ib6 + 1][jb6 + 1][iif];
+					An[ib6 + 2][jb6 + 3][iif] += - dy*A[ib6 + 2][jb6 + 2][iif] + dz*A[ib6 + 2][jb6 + 1][iif];
 
-					An[ib6 + 0][jb6 + 4][iif] += - zg*A[ib6 + 0][jb6 + 0][iif] + xg*A[ib6 + 0][jb6 + 2][iif];
-					An[ib6 + 1][jb6 + 4][iif] += - zg*A[ib6 + 1][jb6 + 0][iif] + xg*A[ib6 + 1][jb6 + 2][iif];
-					An[ib6 + 2][jb6 + 4][iif] += - zg*A[ib6 + 2][jb6 + 0][iif] + xg*A[ib6 + 2][jb6 + 2][iif];
+					An[ib6 + 0][jb6 + 4][iif] += - dz*A[ib6 + 0][jb6 + 0][iif] + dx*A[ib6 + 0][jb6 + 2][iif];
+					An[ib6 + 1][jb6 + 4][iif] += - dz*A[ib6 + 1][jb6 + 0][iif] + dx*A[ib6 + 1][jb6 + 2][iif];
+					An[ib6 + 2][jb6 + 4][iif] += - dz*A[ib6 + 2][jb6 + 0][iif] + dx*A[ib6 + 2][jb6 + 2][iif];
 
-					An[ib6 + 0][jb6 + 5][iif] += - xg*A[ib6 + 0][jb6 + 1][iif] + yg*A[ib6 + 0][jb6 + 0][iif];
-					An[ib6 + 1][jb6 + 5][iif] += - xg*A[ib6 + 1][jb6 + 1][iif] + yg*A[ib6 + 1][jb6 + 0][iif];
-					An[ib6 + 2][jb6 + 5][iif] += - xg*A[ib6 + 2][jb6 + 1][iif] + yg*A[ib6 + 2][jb6 + 0][iif];
+					An[ib6 + 0][jb6 + 5][iif] += - dx*A[ib6 + 0][jb6 + 1][iif] + dy*A[ib6 + 0][jb6 + 0][iif];
+					An[ib6 + 1][jb6 + 5][iif] += - dx*A[ib6 + 1][jb6 + 1][iif] + dy*A[ib6 + 1][jb6 + 0][iif];
+					An[ib6 + 2][jb6 + 5][iif] += - dx*A[ib6 + 2][jb6 + 1][iif] + dy*A[ib6 + 2][jb6 + 0][iif];
 
-					An[ib6 + 3][jb6 + 0][iif] += - yg*A[ib6 + 2][jb6 + 0][iif] + zg*A[ib6 + 1][jb6 + 0][iif];	
-					An[ib6 + 3][jb6 + 1][iif] += - yg*A[ib6 + 2][jb6 + 1][iif] + zg*A[ib6 + 1][jb6 + 1][iif];
-					An[ib6 + 3][jb6 + 2][iif] += - yg*A[ib6 + 2][jb6 + 2][iif] + zg*A[ib6 + 1][jb6 + 2][iif];
+					An[ib6 + 3][jb6 + 0][iif] += - dy*A[ib6 + 2][jb6 + 0][iif] + dz*A[ib6 + 1][jb6 + 0][iif];	
+					An[ib6 + 3][jb6 + 1][iif] += - dy*A[ib6 + 2][jb6 + 1][iif] + dz*A[ib6 + 1][jb6 + 1][iif];
+					An[ib6 + 3][jb6 + 2][iif] += - dy*A[ib6 + 2][jb6 + 2][iif] + dz*A[ib6 + 1][jb6 + 2][iif];
 
-					An[ib6 + 4][jb6 + 0][iif] += - zg*A[ib6 + 0][jb6 + 0][iif] + xg*A[ib6 + 2][jb6 + 0][iif];	
-					An[ib6 + 4][jb6 + 1][iif] += - zg*A[ib6 + 0][jb6 + 1][iif] + xg*A[ib6 + 2][jb6 + 1][iif];
-					An[ib6 + 4][jb6 + 2][iif] += - zg*A[ib6 + 0][jb6 + 2][iif] + xg*A[ib6 + 2][jb6 + 2][iif];
+					An[ib6 + 4][jb6 + 0][iif] += - dz*A[ib6 + 0][jb6 + 0][iif] + dx*A[ib6 + 2][jb6 + 0][iif];	
+					An[ib6 + 4][jb6 + 1][iif] += - dz*A[ib6 + 0][jb6 + 1][iif] + dx*A[ib6 + 2][jb6 + 1][iif];
+					An[ib6 + 4][jb6 + 2][iif] += - dz*A[ib6 + 0][jb6 + 2][iif] + dx*A[ib6 + 2][jb6 + 2][iif];
 
-					An[ib6 + 5][jb6 + 0][iif] += - xg*A[ib6 + 1][jb6 + 0][iif] + yg*A[ib6 + 0][jb6 + 0][iif];	
-					An[ib6 + 5][jb6 + 1][iif] += - xg*A[ib6 + 1][jb6 + 1][iif] + yg*A[ib6 + 0][jb6 + 1][iif];
-					An[ib6 + 5][jb6 + 2][iif] += - xg*A[ib6 + 1][jb6 + 2][iif] + yg*A[ib6 + 0][jb6 + 2][iif];
+					An[ib6 + 5][jb6 + 0][iif] += - dx*A[ib6 + 1][jb6 + 0][iif] + dy*A[ib6 + 0][jb6 + 0][iif];	
+					An[ib6 + 5][jb6 + 1][iif] += - dx*A[ib6 + 1][jb6 + 1][iif] + dy*A[ib6 + 0][jb6 + 1][iif];
+					An[ib6 + 5][jb6 + 2][iif] += - dx*A[ib6 + 1][jb6 + 2][iif] + dy*A[ib6 + 0][jb6 + 2][iif];
 
-					An[ib6 + 3][jb6 + 3][iif] += -    2*yg*A[ib6 + 2][jb6 + 3][iif] +  2*zg*A[ib6 + 1][jb6 + 3][iif]
-												 +   yg*yg*A[ib6 + 2][jb6 + 2][iif] + zg*zg*A[ib6 + 1][jb6 + 1][iif]
-												 - 2*yg*zg*A[ib6 + 1][jb6 + 2][iif];   
+					An[ib6 + 3][jb6 + 3][iif] += -    2*dy*A[ib6 + 2][jb6 + 3][iif] +  2*dz*A[ib6 + 1][jb6 + 3][iif]
+												 +   dy*dy*A[ib6 + 2][jb6 + 2][iif] + dz*dz*A[ib6 + 1][jb6 + 1][iif]
+												 - 2*dy*dz*A[ib6 + 1][jb6 + 2][iif];   
 
-		    		An[ib6 + 4][jb6 + 4][iif] += -    2*zg*A[ib6 + 0][jb6 + 4][iif] +  2*xg*A[ib6 + 2][jb6 + 4][iif]
-												 +   zg*zg*A[ib6 + 0][jb6 + 0][iif] + xg*xg*A[ib6 + 2][jb6 + 2][iif]
-												 - 2*zg*xg*A[ib6 + 0][jb6 + 2][iif];
+		    		An[ib6 + 4][jb6 + 4][iif] += -    2*dz*A[ib6 + 0][jb6 + 4][iif] +  2*dx*A[ib6 + 2][jb6 + 4][iif]
+												 +   dz*dz*A[ib6 + 0][jb6 + 0][iif] + dx*dx*A[ib6 + 2][jb6 + 2][iif]
+												 - 2*dz*dx*A[ib6 + 0][jb6 + 2][iif];
 
-					An[ib6 + 5][jb6 + 5][iif] += -    2*xg*A[ib6 + 1][jb6 + 5][iif] +  2*yg*A[ib6 + 0][jb6 + 5][iif]
-												 +   xg*xg*A[ib6 + 1][jb6 + 1][iif] + yg*yg*A[ib6 + 0][jb6 + 0][iif]
-												 - 2*xg*yg*A[ib6 + 0][jb6 + 1][iif];
+					An[ib6 + 5][jb6 + 5][iif] += -    2*dx*A[ib6 + 1][jb6 + 5][iif] +  2*dy*A[ib6 + 0][jb6 + 5][iif]
+												 +   dx*dx*A[ib6 + 1][jb6 + 1][iif] + dy*dy*A[ib6 + 0][jb6 + 0][iif]
+												 - 2*dx*dy*A[ib6 + 0][jb6 + 1][iif];
 				}
 			}
 		}
@@ -283,6 +365,10 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	
 		for (int ib = 0; ib < Nb; ++ib) {
 			int ib6 = ib*6;
+			double dx = delta(0, ib);
+			double dy = delta(1, ib);
+			double dz = delta(2, ib);
+			
 			for (int jb = 0; jb < Nb; ++jb) {
 				int jb6 = jb*6;
 				
@@ -292,41 +378,41 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 							throw Exc("Coefficient translations require all DOFs to be available");
 				}
 				
-				An(ib6 + 0, jb6 + 3) += - yg*A(ib6 + 0, jb6 + 2) + zg*A(ib6 + 0, jb6 + 1);
-				An(ib6 + 1, jb6 + 3) += - yg*A(ib6 + 1, jb6 + 2) + zg*A(ib6 + 1, jb6 + 1);
-				An(ib6 + 2, jb6 + 3) += - yg*A(ib6 + 2, jb6 + 2) + zg*A(ib6 + 2, jb6 + 1);
+				An(ib6 + 0, jb6 + 3) += - dy*A(ib6 + 0, jb6 + 2) + dz*A(ib6 + 0, jb6 + 1);
+				An(ib6 + 1, jb6 + 3) += - dy*A(ib6 + 1, jb6 + 2) + dz*A(ib6 + 1, jb6 + 1);
+				An(ib6 + 2, jb6 + 3) += - dy*A(ib6 + 2, jb6 + 2) + dz*A(ib6 + 2, jb6 + 1);
 	
-				An(ib6 + 0, jb6 + 4) += - zg*A(ib6 + 0, jb6 + 0) + xg*A(ib6 + 0, jb6 + 2);
-				An(ib6 + 1, jb6 + 4) += - zg*A(ib6 + 1, jb6 + 0) + xg*A(ib6 + 1, jb6 + 2);
-				An(ib6 + 2, jb6 + 4) += - zg*A(ib6 + 2, jb6 + 0) + xg*A(ib6 + 2, jb6 + 2);
+				An(ib6 + 0, jb6 + 4) += - dz*A(ib6 + 0, jb6 + 0) + dx*A(ib6 + 0, jb6 + 2);
+				An(ib6 + 1, jb6 + 4) += - dz*A(ib6 + 1, jb6 + 0) + dx*A(ib6 + 1, jb6 + 2);
+				An(ib6 + 2, jb6 + 4) += - dz*A(ib6 + 2, jb6 + 0) + dx*A(ib6 + 2, jb6 + 2);
 	
-				An(ib6 + 0, jb6 + 5) += - xg*A(ib6 + 0, jb6 + 1) + yg*A(ib6 + 0, jb6 + 0);
-				An(ib6 + 1, jb6 + 5) += - xg*A(ib6 + 1, jb6 + 1) + yg*A(ib6 + 1, jb6 + 0);
-				An(ib6 + 2, jb6 + 5) += - xg*A(ib6 + 2, jb6 + 1) + yg*A(ib6 + 2, jb6 + 0);
+				An(ib6 + 0, jb6 + 5) += - dx*A(ib6 + 0, jb6 + 1) + dy*A(ib6 + 0, jb6 + 0);
+				An(ib6 + 1, jb6 + 5) += - dx*A(ib6 + 1, jb6 + 1) + dy*A(ib6 + 1, jb6 + 0);
+				An(ib6 + 2, jb6 + 5) += - dx*A(ib6 + 2, jb6 + 1) + dy*A(ib6 + 2, jb6 + 0);
 	
-				An(ib6 + 3, jb6 + 0) += - yg*A(ib6 + 2, jb6 + 0) + zg*A(ib6 + 1, jb6 + 0);	
-				An(ib6 + 3, jb6 + 1) += - yg*A(ib6 + 2, jb6 + 1) + zg*A(ib6 + 1, jb6 + 1);
-				An(ib6 + 3, jb6 + 2) += - yg*A(ib6 + 2, jb6 + 2) + zg*A(ib6 + 1, jb6 + 2);
+				An(ib6 + 3, jb6 + 0) += - dy*A(ib6 + 2, jb6 + 0) + dz*A(ib6 + 1, jb6 + 0);	
+				An(ib6 + 3, jb6 + 1) += - dy*A(ib6 + 2, jb6 + 1) + dz*A(ib6 + 1, jb6 + 1);
+				An(ib6 + 3, jb6 + 2) += - dy*A(ib6 + 2, jb6 + 2) + dz*A(ib6 + 1, jb6 + 2);
 	
-				An(ib6 + 4, jb6 + 0) += - zg*A(ib6 + 0, jb6 + 0) + xg*A(ib6 + 2, jb6 + 0);	
-				An(ib6 + 4, jb6 + 1) += - zg*A(ib6 + 0, jb6 + 1) + xg*A(ib6 + 2, jb6 + 1);
-				An(ib6 + 4, jb6 + 2) += - zg*A(ib6 + 0, jb6 + 2) + xg*A(ib6 + 2, jb6 + 2);
+				An(ib6 + 4, jb6 + 0) += - dz*A(ib6 + 0, jb6 + 0) + dx*A(ib6 + 2, jb6 + 0);	
+				An(ib6 + 4, jb6 + 1) += - dz*A(ib6 + 0, jb6 + 1) + dx*A(ib6 + 2, jb6 + 1);
+				An(ib6 + 4, jb6 + 2) += - dz*A(ib6 + 0, jb6 + 2) + dx*A(ib6 + 2, jb6 + 2);
 	
-				An(ib6 + 5, jb6 + 0) += - xg*A(ib6 + 1, jb6 + 0) + yg*A(ib6 + 0, jb6 + 0);	
-				An(ib6 + 5, jb6 + 1) += - xg*A(ib6 + 1, jb6 + 1) + yg*A(ib6 + 0, jb6 + 1);
-				An(ib6 + 5, jb6 + 2) += - xg*A(ib6 + 1, jb6 + 2) + yg*A(ib6 + 0, jb6 + 2);
+				An(ib6 + 5, jb6 + 0) += - dx*A(ib6 + 1, jb6 + 0) + dy*A(ib6 + 0, jb6 + 0);	
+				An(ib6 + 5, jb6 + 1) += - dx*A(ib6 + 1, jb6 + 1) + dy*A(ib6 + 0, jb6 + 1);
+				An(ib6 + 5, jb6 + 2) += - dx*A(ib6 + 1, jb6 + 2) + dy*A(ib6 + 0, jb6 + 2);
 				
-				An(ib6 + 3, jb6 + 3) += -    2*yg*A(ib6 + 2, jb6 + 3) +  2*zg*A(ib6 + 1, jb6 + 3)
-									 	+   yg*yg*A(ib6 + 2, jb6 + 2) + zg*zg*A(ib6 + 1, jb6 + 1)
-										- 2*yg*zg*A(ib6 + 1, jb6 + 2);   
+				An(ib6 + 3, jb6 + 3) += -    2*dy*A(ib6 + 2, jb6 + 3) +  2*dz*A(ib6 + 1, jb6 + 3)
+									 	+   dy*dy*A(ib6 + 2, jb6 + 2) + dz*dz*A(ib6 + 1, jb6 + 1)
+										- 2*dy*dz*A(ib6 + 1, jb6 + 2);   
 	
-	    		An(ib6 + 4, jb6 + 4) += -    2*zg*A(ib6 + 0, jb6 + 4) +  2*xg*A(ib6 + 2, jb6 + 4)
-										+   zg*zg*A(ib6 + 0, jb6 + 0) + xg*xg*A(ib6 + 2, jb6 + 2)
-										- 2*zg*xg*A(ib6 + 0, jb6 + 2);
+	    		An(ib6 + 4, jb6 + 4) += -    2*dz*A(ib6 + 0, jb6 + 4) +  2*dx*A(ib6 + 2, jb6 + 4)
+										+   dz*dz*A(ib6 + 0, jb6 + 0) + dx*dx*A(ib6 + 2, jb6 + 2)
+										- 2*dz*dx*A(ib6 + 0, jb6 + 2);
 	
-				An(ib6 + 5, jb6 + 5) += -    2*xg*A(ib6 + 1, jb6 + 5) +  2*yg*A(ib6 + 0, jb6 + 5)
-										+   xg*xg*A(ib6 + 1, jb6 + 1) + yg*yg*A(ib6 + 0, jb6 + 0)
-										- 2*xg*yg*A(ib6 + 0, jb6 + 1);
+				An(ib6 + 5, jb6 + 5) += -    2*dx*A(ib6 + 1, jb6 + 5) +  2*dy*A(ib6 + 0, jb6 + 5)
+										+   dx*dx*A(ib6 + 1, jb6 + 1) + dy*dy*A(ib6 + 0, jb6 + 0)
+										- 2*dx*dy*A(ib6 + 0, jb6 + 1);
 			} 
 		}
 		A = pick(An);
@@ -339,47 +425,47 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedDlin())
 		CalcA(Dlin);
 		    
-    auto CalcF = [&](Forces &ex, const UVector<double> &k) {
+    auto CalcF = [&](Forces &ex) {
     	UArray<MatrixXcd> exforce = clone(ex.force);
     	
 	    for (int ih = 0; ih < Nh; ++ih) {
 	        double angle = ToRad(head[ih]);
-	        double dist = xg*cos(angle) + yg*sin(angle);
 	    	for (int ib = 0; ib < Nb; ++ib) {
+	    		double dx = delta(0, ib);
+				double dy = delta(1, ib);
+				double dz = delta(2, ib);
+				double dist = dx*cos(angle) + dy*sin(angle);
+			
 	    		int ib6 = ib*6;
 				for (int ifr = 0; ifr < Nf; ++ifr) {
-					double ph = k[ifr]*dist;
-					for (int idf = 0; idf < 6; ++idf) 
-						AddPhase(exforce[ih](ifr, idf + ib6), ph);
-					exforce[ih](ifr, 3 + ib6) += -yg*exforce[ih](ifr, 2 + ib6) + zg*exforce[ih](ifr, 1 + ib6);
-	    			exforce[ih](ifr, 4 + ib6) += -zg*exforce[ih](ifr, 0 + ib6) + xg*exforce[ih](ifr, 2 + ib6);
-	    			exforce[ih](ifr, 5 + ib6) += -xg*exforce[ih](ifr, 1 + ib6) + yg*exforce[ih](ifr, 0 + ib6);
+					exforce[ih](ifr, 3 + ib6) += -dy*exforce[ih](ifr, 2 + ib6) + dz*exforce[ih](ifr, 1 + ib6);
+	    			exforce[ih](ifr, 4 + ib6) += -dz*exforce[ih](ifr, 0 + ib6) + dx*exforce[ih](ifr, 2 + ib6);
+	    			exforce[ih](ifr, 5 + ib6) += -dx*exforce[ih](ifr, 1 + ib6) + dy*exforce[ih](ifr, 0 + ib6);
 				}
 	    	}
 	    }
 		ex.force = pick(exforce);
     };
-    
-    UVector<double> k(Nf);
-	for (int ifr = 0; ifr < Nf; ++ifr) 
-		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g_dim());
     	
 	if (IsLoadedFex())
-		CalcF(ex, k);
+		CalcF(ex);
 	if (IsLoadedFsc())
-		CalcF(sc, k);
+		CalcF(sc);
 	if (IsLoadedFfk())
-		CalcF(fk, k);
+		CalcF(fk);
 
     auto CalcMD = [&]() {
     	UArray<UArray<UArray<VectorXd>>> mdn = clone(md);
     	
     	for (int ib = 0; ib < Nb; ++ib) {
+    		double dx = delta(0, ib);
+			double dy = delta(1, ib);
+			double dz = delta(2, ib);    		
     		for (int ih = 0; ih < mdhead.size(); ++ih) {
     			for (int ifr = 0; ifr < Nf; ++ifr) {
-    				mdn[ib][ih][3](ifr) += -yg*mdn[ib][ih][2](ifr) + zg*mdn[ib][ih][1](ifr);
-    				mdn[ib][ih][4](ifr) += -zg*mdn[ib][ih][0](ifr) + xg*mdn[ib][ih][2](ifr);
-    				mdn[ib][ih][5](ifr) += -xg*mdn[ib][ih][1](ifr) + yg*mdn[ib][ih][0](ifr);
+    				mdn[ib][ih][3](ifr) += -dy*mdn[ib][ih][2](ifr) + dz*mdn[ib][ih][1](ifr);
+    				mdn[ib][ih][4](ifr) += -dz*mdn[ib][ih][0](ifr) + dx*mdn[ib][ih][2](ifr);
+    				mdn[ib][ih][5](ifr) += -dx*mdn[ib][ih][1](ifr) + dy*mdn[ib][ih][0](ifr);
 				}
 	    	}
 	    }
@@ -389,12 +475,15 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	if (IsLoadedMD())
 		CalcMD();
 	
-    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
+    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
         int sign = isSum ? 1 : -1;
 		for (int ib = 0; ib < Nb; ++ib) {
+			double dx = delta(0, ib);
+			double dy = delta(1, ib);
+			double dz = delta(2, ib);
 	        for (int ih = 0; ih < qh.size(); ++ih) {
 	            double angle = ToRad(qh[ih].imag());
-	            double dist = xg*cos(angle) + yg*sin(angle);
+	            double dist = dx*cos(angle) + dy*sin(angle);
 				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
 						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
@@ -404,13 +493,9 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 							 				 &v4 = qtf[ib][ih][4](ifr1, ifr2),
 							 				 &v5 = qtf[ib][ih][5](ifr1, ifr2);
 						
-						double ph = (qk[ifr2] + sign*qk[ifr1])*dist;
-						for (int idf = 0; idf < 6; ++idf) 
-							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), ph);
-						
-						v3 += -yg*v2 + zg*v1;
-						v4 += -zg*v0 + xg*v2;
-						v5 += -xg*v1 + yg*v0;
+						v3 += -dy*v2 + dz*v1;
+						v4 += -dz*v0 + dx*v2;
+						v5 += -dx*v1 + dy*v0;
 					}
 				}
 	        }
@@ -429,24 +514,16 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 			}
 		}
 	}
-
-    UVector<double> qk(Nf);
-	for (int ifr = 0; ifr < qw.size(); ++ifr) 
-		qk[ifr] = SeaWaves::WaveNumber_w(qw[ifr], h, g_dim());
 			
 	if (IsLoadedQTF(true)) 
-		CalcQTF(qtfsum, qk, true);		
+		CalcQTF(qtfsum, true);		
 	if (IsLoadedQTF(false))	
-		CalcQTF(qtfdif, qk, false);
+		CalcQTF(qtfdif, false);
 	
 	if (IsLoadedM()) {
-		for (int ib = 0; ib < Nb; ++ib)
-			Surface::TranslateInertia66(M[ib], Value3D(dx, dy, dz));
+		for (int ib = 0; ib < Nb; ++ib) 
+			Surface::TranslateInertia66(M[ib], Point3D(cg.col(ib)), Point3D(c0.col(ib)), Point3D(to.col(ib)));
 	}
-	
-	c0(0) = xto;
-	c0(1) = yto;
-	c0(2) = zto;
 	
 	if (IsLoadedKirf()) {
 		double maxT = GetK_IRF_MaxT();
@@ -462,6 +539,14 @@ void Hydro::GetTranslationTo(double xto, double yto, double zto) {
 	rao.Clear();	
 	C.Clear();
 	
+	for (int ib = 0; ib < Nb; ++ib) {
+		double dx = delta(0, ib);
+		double dy = delta(1, ib);			// Previous translation has moved implicitly the wave origin
+		AddWave(ib, -dx, -dy);				// Translate the wave back to the original position
+	}
+	
+	c0 = clone(to);
+		
 	if (!AfterLoad()) {
 		String error = GetLastError();
 		throw Exc(Format(t_("Problem translating model: '%s'\n%s"), error));	

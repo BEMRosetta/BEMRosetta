@@ -88,6 +88,7 @@ bool Aqwa::Load_AH1() {
 	hd().names.SetCount(hd().Nb);
 	hd().cg.setConstant(3, hd().Nb, NaNDouble);
 	hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	hd().x_w = hd().y_w = 0;
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, NaNDouble); 
@@ -126,6 +127,7 @@ bool Aqwa::Load_AH1() {
 				hd().cg(1, ib) = f.GetDouble(2);
 				hd().cg(2, ib) = f.GetDouble(3);
 				hd().c0 = clone(hd().cg);
+				hd().x_w = hd().y_w = 0;
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {
@@ -276,6 +278,7 @@ bool Aqwa::Load_LIS() {
 	hd().Vo.SetCount(hd().Nb, NaNDouble);
 	hd().cg.setConstant(3, hd().Nb, NaNDouble);
 	hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	hd().x_w = hd().y_w = 0;
 	hd().cb.setConstant(3, hd().Nb, NaNDouble);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
@@ -303,6 +306,7 @@ bool Aqwa::Load_LIS() {
 			hd().cg(1, ib) = f.GetDouble(4)*factorLength;
 			hd().cg(2, ib) = f.GetDouble(5)*factorLength;
 			hd().c0 = clone(hd().cg);
+			hd().x_w = hd().y_w = 0;
 		} else if (line.StartsWith("INERTIA MATRIX")) {
 			Eigen::MatrixXd &M = hd().M[ib];
 			f.Load(line);
@@ -319,7 +323,7 @@ bool Aqwa::Load_LIS() {
 			M(5, 3) = f.GetDouble(0)*factorMass;
 			M(5, 4) = f.GetDouble(1)*factorMass;
 			M(5, 5) = f.GetDouble(2)*factorMass;
-			double mass = M(0, 0);
+			/*double mass = M(0, 0);
 			double cx = mass*hd().cg(0, ib);
 			double cy = mass*hd().cg(1, ib);
 			double cz = mass*hd().cg(2, ib);
@@ -328,7 +332,7 @@ bool Aqwa::Load_LIS() {
 			M(0, 5) = M(5, 0) = -cy;
 			M(2, 3) = M(3, 2) =  cy;
 			M(0, 4) = M(4, 0) =  cz;
-			M(1, 3) = M(3, 1) = -cz;
+			M(1, 3) = M(3, 1) = -cz;*/
 		} else if (IsNull(hd().Nf) && line.Find("W A V E   F R E Q U E N C I E S / P E R I O D S   A N D   D I R E C T I O N S") >= 0) {
 			in.GetLine(5);
 			hd().Nf = 0;
@@ -517,8 +521,9 @@ bool Aqwa::Load_LIS() {
 						else
 							factorPh = M_PI/180;	// Only for RAO rotations
 						
-						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(2 + dd + idf*2)*factorM, 
-																			-ToRad(f.GetDouble(2 + dd + idf*2 + 1))*factorPh); // Negative to follow Wamit 
+						int pos = 2 + dd + idf*2;
+						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(pos)*factorM, 
+																			-ToRad(f.GetDouble(pos + 1))*factorPh); // Negative to follow Wamit 
 					}
 					dd = 0;
 					line = in.GetLine();
@@ -905,7 +910,7 @@ bool AQWACase::Load(String fileName) {
 	body.meshFile = fileName;
 	body.ndof = 6;
 	Resize(body.dof, 6, true);
-	body.mass = MatrixXd::Zero(6, 6);
+	body.M = MatrixXd::Zero(6, 6);
 	
 	UVector<double> hrtz, head;
 	
@@ -915,7 +920,7 @@ bool AQWACase::Load(String fileName) {
 		if (f.size() == 1) {
 			if (f.GetText(0) == "MATE") {
 				f.GetLine();
-				body.mass(0, 0) = body.mass(1, 1) = body.mass(2, 2) = f.GetDouble(2);
+				body.M(0, 0) = body.M(1, 1) = body.M(2, 2) = f.GetDouble(2);
 			} else if (f.GetText(0) == "GEOM") {
 				while (true) {
 					f.GetLine();
@@ -924,12 +929,12 @@ bool AQWACase::Load(String fileName) {
 					if (f.size() == 1 && f.GetText(0) == "END")
 						break;
 					if (f.size() > 1 && f.GetText(0) == "1PMAS") {
-						body.mass(3, 3) = f.GetDouble(2);
-						body.mass(3, 4) = body.mass(4, 3) = f.GetDouble(3);
-						body.mass(3, 5) = body.mass(5, 3) = f.GetDouble(4);
-						body.mass(4, 4) = f.GetDouble(5);
-						body.mass(4, 5) = body.mass(5, 4) = f.GetDouble(6);
-						body.mass(5, 5) = f.GetDouble(7);
+						body.M(3, 3) = f.GetDouble(2);
+						body.M(3, 4) = body.M(4, 3) = f.GetDouble(3);
+						body.M(3, 5) = body.M(5, 3) = f.GetDouble(4);
+						body.M(4, 4) = f.GetDouble(5);
+						body.M(4, 5) = body.M(5, 4) = f.GetDouble(6);
+						body.M(5, 5) = f.GetDouble(7);
 					}
 				}
 			} else if (f.GetText(0) == "WFS1") {

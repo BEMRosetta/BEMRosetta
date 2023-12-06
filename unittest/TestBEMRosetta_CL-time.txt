@@ -1,5 +1,7 @@
 -time 
 
+-echo "\nTesting time series functions"
+
 -echo "\n\nReading time series from .csv"
 -i "..\examples\csv\hello.csv"
 -print list

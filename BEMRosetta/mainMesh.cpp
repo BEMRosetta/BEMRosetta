@@ -112,8 +112,12 @@ void MainMesh::Init() {
 	menuProcess.z_0.WhenEnter = THISBACK2(OnUpdate, NONE, true);
 	menuProcess.mass <<= 0;
 	menuProcess.mass.WhenEnter = THISBACK2(OnUpdate, NONE, true);
-	menuProcess.butUpdateCg  <<= THISBACK2(OnUpdate, NONE, true);
+	menuProcess.butUpdateCg  << THISBACK2(OnUpdate, NONE, true);
 	menuProcess.butUpdateCg.Tip(t_("Sets the centre of gravity"));
+	menuProcess.x_g.WhenEnter << THISBACK2(OnUpdate, NONE, true);
+	menuProcess.y_g.WhenEnter << THISBACK2(OnUpdate, NONE, true);
+	menuProcess.z_g.WhenEnter << THISBACK2(OnUpdate, NONE, true);
+	
 	menuProcess.butCgtoC0.WhenAction = [&] {
 		menuProcess.x_0 <<= ~menuProcess.x_g;
 		menuProcess.y_0 <<= ~menuProcess.y_g;
@@ -129,7 +133,10 @@ void MainMesh::Init() {
 	};
 	menuProcess.butC0toCg.Tip(t_("Sets the centre of gravity with the centre of motion"));
 	menuProcess.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, true);
-	menuProcess.butUpdateCrot.Tip(t_("Sets the centre of motion"));	
+	menuProcess.butUpdateCrot.Tip(t_("Sets the centre of the body axis"));	
+	menuProcess.x_0.WhenEnter << THISBACK2(OnUpdate, NONE, true);
+	menuProcess.y_0.WhenEnter << THISBACK2(OnUpdate, NONE, true);
+	menuProcess.z_0.WhenEnter << THISBACK2(OnUpdate, NONE, true);	
 	
 	menuProcess.butUpdateMassVol  <<= THISBACK(OnUpdateMass);
 	menuProcess.butUpdateMassVol.Tip(t_("Sets mass from inmersed volume"));
@@ -163,6 +170,7 @@ void MainMesh::Init() {
 	menuProcess.butScale <<= THISBACK(OnScale);
 	menuProcess.butScale.Tip(t_("Scales the mesh"));
 	
+	menuProcess.butInertia <<= THISBACK(OnInertia);
 	
 	CtrlLayout(menuMove);	
 	
@@ -170,7 +178,7 @@ void MainMesh::Init() {
 	menuMove.butReset.Tip(t_("Translates the mesh"));
 	
 	menuMove.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, false);
-	menuMove.butUpdateCrot.Tip(t_("Sets the centre of motion"));	
+	menuMove.butUpdateCrot.Tip(t_("Sets the centre of the body axis"));	
 	
 	menuMove.t_x <<= 0;
 	menuMove.t_x.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
@@ -201,6 +209,8 @@ void MainMesh::Init() {
 	menuEdit.edit_size <<= 1;
 	
 	menuEdit.butPanel <<= THISBACK(OnAddPanel);
+	menuEdit.panWidthX.WhenEnter << THISBACK(OnAddPanel);
+	menuEdit.panWidthY.WhenEnter << THISBACK(OnAddPanel);
 	
 	menuEdit.revolutionList.AddColumn("H").Ctrls<EditString>().HeaderTab().SetMargin(-2);
 	menuEdit.revolutionList.AddColumn("V").Ctrls<EditString>().HeaderTab().SetMargin(-2);
@@ -210,8 +220,9 @@ void MainMesh::Init() {
 	menuEdit.revolutionList.SetLineCy(int(EditField::GetStdHeight()*2/3));
 	menuEdit.revolutionList.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, menuEdit.revolutionList, true, true);};
 	
-	menuEdit.butRevolution <<= THISBACK(OnAddRevolution);
-
+	menuEdit.butRevolution << THISBACK(OnAddRevolution);
+	menuEdit.revolutionList.WhenLeftDouble << THISBACK(OnAddRevolution);
+	
 	menuEdit.polynomialList.AddColumn("H").Ctrls<EditString>().HeaderTab().SetMargin(-2);
 	menuEdit.polynomialList.AddColumn("V").Ctrls<EditString>().HeaderTab().SetMargin(-2);
 	menuEdit.polynomialList.AddColumn("");
@@ -220,7 +231,8 @@ void MainMesh::Init() {
 	menuEdit.polynomialList.SetLineCy(int(EditField::GetStdHeight()*2/3));
 	menuEdit.polynomialList.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, menuEdit.polynomialList, true, true);};
 	
-	menuEdit.butPolynomial    <<= THISBACK(OnAddPolygonalPanel);
+	menuEdit.butPolynomial << THISBACK(OnAddPolygonalPanel);
+	menuEdit.polynomialList.WhenLeftDouble << THISBACK(OnAddPolygonalPanel);
 		
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
@@ -734,6 +746,168 @@ void MainMesh::OnScale() {
 			
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}		
+}
+
+void MainMesh::OnInertia() {
+	GuiLock __;
+	
+	try {
+		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			BEM::PrintError(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdMesh(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdMesh(listLoaded);
+			if (id < 0) {
+				BEM::PrintError(t_("Please select a model to process"));
+				return;
+			}
+		}
+				
+		Mesh &mesh = Bem().surfs[id];
+	
+		WithMenuMeshProcessInertia<TopWindow> dialog;
+		CtrlLayout(dialog);
+		
+		double volume = mesh.mesh.volume;
+		dialog.volume = volume;
+		
+		dialog.arrayVol.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, dialog.arrayVol);};
+		dialog.arrayVol.SetLineCy(EditField::GetStdHeight());
+	
+		dialog.arraySurf.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, dialog.arraySurf);};
+		dialog.arraySurf.SetLineCy(EditField::GetStdHeight());
+
+		auto Action = [&](bool vol, ArrayCtrl &array, const Point3D &cg) {
+			Point3D c0(~dialog.x_0, ~dialog.y_0, ~dialog.z_0);
+			
+			Matrix3d inertia3;
+			mesh.mesh.GetInertia33(inertia3, c0, vol, false);
+			MatrixXd inertia6;
+			mesh.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
+			if (dialog.opMass == 2)
+				inertia6 *= volume;
+			else if (dialog.opMass < 2)
+				inertia6 *= double(~dialog.mass);
+			
+			array.Reset();
+			array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
+			if (dialog.opMass < 3) {
+				for (int i = 0; i < 6; ++i)
+					array.AddColumn(BEM::StrDOF(i));
+	
+				for (int r = 0; r < 6; ++r)		
+					for (int c = 0; c < 6; ++c)
+						array.Set(r, c, FDS(inertia6(r, c), 8, false));
+			} else {
+				for (int i = 3; i < 6; ++i)
+					array.AddColumn(BEM::StrDOF(i));
+	
+				for (int r = 0; r < 3; ++r)	{	
+					for (int c = 0; c < 3; ++c) {
+						double val = inertia3(r, c);
+						int sign = Sign(val);
+						array.Set(r, c, FDS(sign*sqrt(abs(val)), 8, false));
+					}
+				}
+			}
+		};
+		auto ActionV = [&]() {
+			Action(true, dialog.arrayVol, Point3D(~dialog.x_g_v, ~dialog.y_g_v, ~dialog.z_g_v));
+		};
+		auto ActionS = [&](){
+			Action(false, dialog.arraySurf, Point3D(~dialog.x_g_s, ~dialog.y_g_s, ~dialog.z_g_s));
+		};
+				
+		dialog.Title(t_("Mass matrices obtained from mesh"));
+		dialog.opC0 = 0;
+		dialog.opMass = 0;
+
+		dialog.x_0.WhenEnter = [&]{ActionV();ActionS();};
+		dialog.y_0.WhenEnter = [&]{ActionV();ActionS();};
+		dialog.z_0.WhenEnter = [&]{ActionV();ActionS();};
+		
+		dialog.mass.WhenEnter = [&]{ActionV();ActionS();};
+
+		auto opC0_WhenAction = [&](bool action) {
+			dialog.x_0.Enable(dialog.opC0 != 0);
+			dialog.y_0.Enable(dialog.opC0 != 0);
+			dialog.z_0.Enable(dialog.opC0 != 0);
+			if (dialog.opC0 == 0) {
+				dialog.x_0 = mesh.c0.x;
+				dialog.y_0 = mesh.c0.y;
+				dialog.z_0 = mesh.c0.z;
+			}
+			if (action) {
+				ActionV();
+				ActionS();
+			}
+		};
+		auto opCG_v_WhenAction = [&](bool action) {
+			Point3D c = mesh.mesh.GetCentreOfBuoyancy();
+			dialog.x_g_v = c.x;
+			dialog.y_g_v = c.y;
+			dialog.z_g_v = c.z;
+			if (action)
+				ActionV();
+		};
+		auto opCG_s_WhenAction = [&](bool action) {
+			Point3D c = mesh.mesh.GetCentreOfGravity_Surface();
+			dialog.x_g_s = c.x;
+			dialog.y_g_s = c.y;
+			dialog.z_g_s = c.z;
+			if (action)
+				ActionS();
+		};
+		auto opMass_WhenAction = [&](bool action) {
+			dialog.mass.Enable(dialog.opMass == 1);
+			if (dialog.opMass == 0) 
+				dialog.mass = mesh.GetMass();
+			else if (dialog.opMass > 1)
+				dialog.mass = Null;
+			else {
+				if (IsNull(dialog.mass))
+					dialog.mass = mesh.GetMass();
+			}
+			String str;
+			if (dialog.opMass == 3) 
+				str = t_("Radii of gyration");
+			else if (dialog.opMass == 2)
+				str = t_("Volume moments of inertia");
+			else				
+				str = t_("Moments of inertia");
+			
+			dialog.labInertiaV.SetLabel(str);
+			dialog.labInertiaS.SetLabel(str);
+				
+			if (action) {
+				ActionV();
+				ActionS();
+			}
+		};
+				
+		dialog.opC0.WhenAction   = [&]{opC0_WhenAction(true);};
+		dialog.opMass.WhenAction = [&]{opMass_WhenAction(true);};
+		
+		opC0_WhenAction(false);
+		opCG_v_WhenAction(false);
+		opCG_s_WhenAction(false);
+		opMass_WhenAction(false);
+		
+		ActionV();
+		ActionS();
+		
+		dialog.update	<< [&] {ActionV();ActionS();};		
+		dialog.ok		<< [&] {dialog.Close();};
+		dialog.Execute();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}		
@@ -1874,6 +2048,13 @@ void MainGZ::OnUpdate() {
 		
 		Clear(true);
 		
+		double angleFrom = ~edAngleFrom;
+		if (IsNull(angleFrom)) {
+			BEM::PrintError(t_("Wrong angle from"));
+			return;
+		}
+			
+		
 		if (double(~edFrom) > double(~edTo)) {
 			BEM::PrintError(t_("Wrong Y angle range"));
 			return;
@@ -1883,20 +2064,20 @@ void MainGZ::OnUpdate() {
 			angleTo = double(~edAngleTo);
 			angleDelta =  double(~edAngleDelta);
 			if (angleDelta == 0) {
-				angleTo = double(~edAngleFrom);
+				angleTo = angleFrom;
 				angleDelta = 1;
 			}
 		} else {
-			angleTo = double(~edAngleFrom);
+			angleTo = angleFrom;
 			angleDelta = 1;
 		}
-		if (double(~edAngleFrom) > angleTo) {
+		if (angleFrom > angleTo) {
 			BEM::PrintError(t_("Wrong Z angle range"));
 			return;
 		}
 		Mesh &mesh = Bem().surfs[idOpened];	
 	
-		int numAngle = 1 + int((angleTo - double(~edAngleFrom))/angleDelta);
+		int numAngle = 1 + int((angleTo - angleFrom)/angleDelta);
 		
 		Progress progress(t_("GZ calculation..."), 100*numAngle); 
 		

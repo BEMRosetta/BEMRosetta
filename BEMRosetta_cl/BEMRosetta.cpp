@@ -2234,10 +2234,13 @@ void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UV
 	hydros[id].hd().DeleteHeadingsQTF(idHeadQTF);
 }
 
-void BEM::TranslationTo(int id, double xto, double yto, double zto) {
-	hydros[id].hd().GetTranslationTo(xto, yto, zto);
+void BEM::TranslationTo(int id, const MatrixXd &to) {
+	hydros[id].hd().GetTranslationTo(to);
 }
 
+void BEM::WaveTo(int id, double xto, double yto) {
+	hydros[id].hd().GetWaveTo(xto, yto);
+}
 
 int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
@@ -3044,7 +3047,7 @@ BEMBody::BEMBody() {
 	dof.SetCount(6, false);	
 	cg = Vector3d::Zero();
 	c0 = Vector3d::Zero();
-	mass.setConstant(6, 6, 0);
+	M.setConstant(6, 6, 0);
 	Dlin.setConstant(6, 6, 0);
 	Dquad.setConstant(6, 6, 0);
 	C.setConstant(6, 6, 0);

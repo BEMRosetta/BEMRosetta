@@ -268,7 +268,15 @@ void MainBEM::Init() {
 	menuAdvanced.butAverage <<= THISBACK(OnAverage);
 	menuAdvanced.butAverage.Disable();
 	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
-
+	menuAdvanced.c_array.AddColumn(t_("Body"));
+	menuAdvanced.c_array.AddColumn(t_("x"));
+	menuAdvanced.c_array.AddColumn(t_("y"));
+	menuAdvanced.c_array.AddColumn(t_("z"));
+	menuAdvanced.c_array.WhenLeftDouble << THISBACK(OnUpdateCrot);
+	menuAdvanced.butUpdateCwave << THISBACK(OnUpdateCwave);
+	menuAdvanced.x_w.WhenEnter << THISBACK(OnUpdateCwave);
+	menuAdvanced.y_w.WhenEnter << THISBACK(OnUpdateCwave);
+	
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
@@ -533,20 +541,20 @@ void MainBEM::OnMenuAdvancedArraySel() {
 	if (id < 0)
 		return;
 	
-	Hydro &data = Bem().hydros[id].hd();
-	menuAdvanced.x_0.Enable(data.c0.size() == 3);	
-	menuAdvanced.y_0.Enable(data.c0.size() == 3);	
-	menuAdvanced.z_0.Enable(data.c0.size() == 3);	
-		
-	if (data.c0.size() == 3) {
-		menuAdvanced.x_0 <<= data.c0(0);
-		menuAdvanced.y_0 <<= data.c0(1);
-		menuAdvanced.z_0 <<= data.c0(2);
-	} else {
-		menuAdvanced.x_0 <<= Null;
-		menuAdvanced.y_0 <<= Null;
-		menuAdvanced.z_0 <<= Null;
-	}
+	Hydro &hydro = Bem().hydros[id].hd();
+	menuAdvanced.x_w.Enable(!IsNull(hydro.x_w));	
+	menuAdvanced.y_w.Enable(!IsNull(hydro.y_w));	
+	menuAdvanced.x_w = hydro.x_w;
+	menuAdvanced.y_w = hydro.y_w;
+	
+	menuAdvanced.c_array.Clear();
+	for (int ib = 0; ib < hydro.Nb; ++ib)
+		menuAdvanced.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));			
+	
+	menuAdvanced.butUpdateCrot.SetLabel(Format(t_("Body Axis (%d)"), hydro.Nb)); 
+	
+	menuAdvanced.butUpdateCrot.Enable(hydro.Nb > 0);
+	menuAdvanced.c_array.Enable(hydro.Nb > 0);
 }
 
 void MainBEM::InitSerialize(bool ret) {
@@ -899,6 +907,7 @@ void MainBEM::UpdateButtons() {
 		if (data.IsLoadedQTF(false))
 			menuProcess2.dropForceQTF.Add(false, t_("Difference"));
 	}
+	OnMenuAdvancedArraySel();
 }
 
 void MainBEM::OnJoin() {
@@ -1466,7 +1475,7 @@ void MainBEM::OnDeleteHeadingsFrequencies() {
 	}	
 }
 
-void MainBEM::OnUpdateCrot() {
+void MainBEM::OnUpdateCwave() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -1474,13 +1483,63 @@ void MainBEM::OnUpdateCrot() {
 		
 		WaitCursor wait;
 		
-		Bem().TranslationTo(id, ~menuAdvanced.x_0, ~menuAdvanced.y_0, ~menuAdvanced.z_0);
+		Bem().WaveTo(id, ~menuAdvanced.x_w, ~menuAdvanced.y_w);
 				
 		AfterBEM();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}	
 }
+
+void MainBEM::OnUpdateCrot() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+	
+		WithMenuAdvancedReference<TopWindow> dialog;
+		CtrlLayout(dialog);
+		
+		Hydro &hydro = Bem().hydros[id].hd();
+		
+		EditDouble edit[3];
+		
+		dialog.Title(t_("Please edit the new centres"));
+		dialog.c_array./*Absolute().*/Editing().Clipboard();
+		dialog.c_array.AddColumn(t_("Body"));
+		dialog.c_array.AddColumn(t_("x")).Edit(edit[0]);
+		dialog.c_array.AddColumn(t_("y")).Edit(edit[1]);
+		dialog.c_array.AddColumn(t_("z")).Edit(edit[2]);
+		for (int ib = 0; ib < hydro.Nb; ++ib)
+			dialog.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));
+		
+		bool cancel = true;
+		dialog.ok		<< [&] {cancel = false;	dialog.Close();};
+		dialog.cancel	<< [&] {dialog.Close();}; 
+		dialog.Execute();
+		if (cancel) { 
+			Status(t_("Cancelled by user"));
+			return;
+		}
+		
+		if (dialog.c_array.GetRowCount() != hydro.Nb)
+			throw Exc(t_("Number of centres is different than the number of bodies"));
+		
+		WaitCursor wait;
+		
+		MatrixXd to(3, hydro.Nb);
+		for (int ib = 0; ib < hydro.Nb; ++ib) 
+			for (int idf = 0; idf < 3; ++idf) 
+				to(idf, ib) = dialog.c_array.Get(ib, idf+1);
+
+		Bem().TranslationTo(id, to);
+	
+		AfterBEM();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}	
+}
+
 
 void MainBEM::AfterBEM() {
 	mainSummary.Clear();

@@ -348,6 +348,9 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		base.Rotate(0, ToRad(angle), 0, c0.x, c0.y, c0.z);
 		cg.Rotate(0, ToRad(angle), 0, c0.x, c0.y, c0.z);
 		
+		if (GetMass() == 0)
+			throw Exc(t_("Problem obtaining GZ. Mass is zero"));
+		
 		Surface under;
 		if (!base.TranslateArchimede(GetMass(), rho, dz, under))
 			throw Exc(t_("Problem obtaining GZ"));

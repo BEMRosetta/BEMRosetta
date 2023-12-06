@@ -7,8 +7,10 @@ umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_CL  		.\.test\BEMRosetta_cl.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 @title Testing BEMRosetta_cl %1
 @echo Testing BEMRosetta_cl %1
-rem @.\.test\BEMRosetta_cl -paramfile TestBEMRosetta_CL-mesh.txt
-rem @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+@.\.test\BEMRosetta_cl -paramfile TestBEMRosetta_CL-mesh.txt
+@IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+@.\.test\BEMRosetta_cl -paramfile TestBEMRosetta_CL-bem.txt
+@IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 @.\.test\BEMRosetta_cl -paramfile TestBEMRosetta_CL-time.txt
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 

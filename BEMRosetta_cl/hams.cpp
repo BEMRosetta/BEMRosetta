@@ -11,6 +11,8 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 	
 	//hd().g = g;
 	
+	hd().x_w = hd().y_w = 0;
+	
 	String baseFolder = GetFileFolder(GetFileFolder(file));
 	
 	try {
@@ -294,7 +296,7 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 			body.cg[1] = f.GetDouble(1);
 			body.cg[2] = f.GetDouble(2);
 		} else if (line == "Body Mass Matrix:") 
-			InMatrix(f, body.mass);
+			InMatrix(f, body.M);
 		else if (line == "External Linear Damping Matrix:") 
 			InMatrix(f, body.Dlin);
 		else if (line == "External Quadratic Damping Matrix:") 
@@ -473,7 +475,7 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 								FDS(b.cg[1], 15, true), 
 								FDS(b.cg[2], 15, true));
 
-	OutMatrix(out, "Body Mass Matrix", b.mass);
+	OutMatrix(out, "Body Mass Matrix", b.M);
 	OutMatrix(out, "External Linear Damping Matrix", b.Dlin);
 	OutMatrix(out, "External Quadratic Damping Matrix", b.Dquad);
 	OutMatrix(out, "Hydrostatic Restoring Matrix", b.C);

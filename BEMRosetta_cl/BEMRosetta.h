@@ -144,6 +144,7 @@ public:
     MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
     MatrixXd cg;          			// (3,Nb)     		Centre of gravity
     MatrixXd c0;          			// (3,Nb)     		Centre of motion
+    double x_w, y_w;				// 					Wave centre
     BEM_FMT code;        			// BEM_FMT			BEM code 
     UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
     
@@ -592,7 +593,9 @@ public:
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
-	void GetTranslationTo(double xto, double yto, double zto);
+	void GetTranslationTo(const MatrixXd &to);
+	void GetWaveTo(double xto, double yto);
+	void AddWave(int ib, double dx, double dy);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
@@ -1001,8 +1004,9 @@ protected:
 	int iperin = Null, iperout = Null;
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
+	bool Load_mmx(String fileName);
 	
-	bool Load_out();							
+	bool Load_out(String fileName);							
 	void Load_A(FileInLine &in, MatrixXd &A);
 	bool Load_Scattering(String fileName);
 	bool Load_FK(String fileName);
@@ -1080,7 +1084,7 @@ public:
 	BEMBody();
 	BEMBody(const BEMBody &d, int) : meshFile(d.meshFile), lidFile(d.lidFile),
 			ndof(d.ndof), dof(clone(d.dof)), c0(clone(d.c0)), 
-			cg(clone(d.cg)), mass(clone(d.mass)), 
+			cg(clone(d.cg)), M(clone(d.M)), 
 			Dlin(clone(d.Dlin)), Dquad(clone(d.Dquad)), 
 			C(clone(d.C)), Cadd(clone(d.Cadd)), Cext(clone(d.Cext)), Aadd(clone(d.Aadd)) 
 			 {}
@@ -1090,7 +1094,7 @@ public:
 	UVector<bool> dof;
 	Vector3d c0;	
 	Vector3d cg;
-	MatrixXd mass, Dlin, Dquad, C, Cadd, Cext, Aadd;
+	MatrixXd M, Dlin, Dquad, C, Cadd, Cext, Aadd;
 	
 	int GetNDOF() const;
 };
@@ -1359,7 +1363,8 @@ public:
 	void Ainf_w(int id);
 	void RAO(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
-	void TranslationTo(int id, double xto, double yto, double zto);
+	void TranslationTo(int id, const MatrixXd &to);
+	void WaveTo(int id, double xto, double yto);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										

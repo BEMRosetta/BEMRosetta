@@ -716,6 +716,7 @@ public:
 	void OnAddRevolution();
 	void OnAddPolygonalPanel();
 	void OnAddWaterSurface(char c);
+	void OnInertia();
 	void UpdateButtons();
 			
 	void AddRow(const Mesh &surf);
@@ -1166,6 +1167,7 @@ public:
 	void OnAverage();
 	void OnConvergence();
 	void OnUpdateCrot();
+	void OnUpdateCwave();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces();
 	void OnMultiplyDOF(bool isReset);

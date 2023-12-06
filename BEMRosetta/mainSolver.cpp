@@ -151,7 +151,7 @@ void MainSolver::Init(const BEM &bem) {
 		//bodies.xcm.Enable(!isNemoh);
 		//bodies.ycm.Enable(!isNemoh);
 		//bodies.zcm.Enable(!isNemoh);
-		bodies.mass.Enable(!isNemoh);
+		bodies.M.Enable(!isNemoh);
 		bodies.Dlin.Enable(!isNemoh);
 		bodies.Dquad.Enable(!isNemoh);
 		bodies.C.Enable(!isNemoh);
@@ -312,7 +312,7 @@ void MainSolver::Load(String file, const BEM &bem) {
 	bodies.xcm = b.cg[0];
 	bodies.ycm = b.cg[1];
 	bodies.zcm = b.cg[2];
-	MatrixXdToGridCtrl(bodies.mass, b.mass);
+	MatrixXdToGridCtrl(bodies.M, b.M);
 	MatrixXdToGridCtrl(bodies.Dlin, b.Dlin);
 	MatrixXdToGridCtrl(bodies.Dquad, b.Dquad);
 	MatrixXdToGridCtrl(bodies.C, b.C);
@@ -364,7 +364,7 @@ void MainSolver::InitArray(bool isNemoh) {
 	
 	dropSolver.WhenAction();
 
-	InitGrid(bodies.mass, editMass);
+	InitGrid(bodies.M, editMass);
 	InitGrid(bodies.Dlin, editLinear);
 	InitGrid(bodies.Dquad, editQuadratic);	
 	InitGrid(bodies.C, editInternal);
@@ -414,7 +414,7 @@ bool MainSolver::Save(BEMCase &data, bool isNemoh) {
 			b.cg[0] = bodies.xcm;
 			b.cg[1] = bodies.ycm;
 			b.cg[2] = bodies.zcm;
-			GridCtrlToMatrixXd(b.mass, bodies.mass);
+			GridCtrlToMatrixXd(b.M, bodies.M);
 			GridCtrlToMatrixXd(b.Dlin, bodies.Dlin);
 			GridCtrlToMatrixXd(b.Dquad, bodies.Dquad);
 			GridCtrlToMatrixXd(b.C, bodies.C);
