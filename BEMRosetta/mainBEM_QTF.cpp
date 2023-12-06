@@ -49,8 +49,8 @@ void QTFTabDof::Init(int posSplitter, int ib, int idof) {
 	
 	int len = StdFont().GetHeight();
 	
-	up  .surf.SetMargin(4*len, len, 2.5*len, 4*len);
-	down.surf.SetMargin(4*len, len, 2.5*len, 4*len);
+	up  .surf.SetMargin(4*len, len, int(2.5*len), 4*len);
+	down.surf.SetMargin(4*len, len, int(2.5*len), 4*len);
 	
 	up.  scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
 	down.scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
