@@ -1405,8 +1405,8 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml";	// Priority
-	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot", ".lis.qtf.dat"};	// Any of these files opens all, and it is avoided to load them again
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml";	// Priority
+	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat"};	// Any of these files opens all, and it is avoided to load them again
 	String bemFilesAst;
 	
 	int GetBEMExtSet(String file) {

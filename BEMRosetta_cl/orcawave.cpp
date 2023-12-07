@@ -369,7 +369,7 @@ bool OrcaWave::Load_YML_Res() {
 				Eigen::MatrixXd &inertia = hd().M[ib];
 				if (fy.FirstIs("Mass")) 
 					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*factorMass;
-				else if (fy.FirstMatch("MomentOfInertiaTensor*")) {
+				else if (fy.FirstMatch("MomentOfInertiaTensor*")) {			// Referred to cg
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
 					inertia(3, 3) = mat[0][0]*factorM(3, 3);		// In kg
@@ -381,9 +381,6 @@ bool OrcaWave::Load_YML_Res() {
 					inertia(5, 3) = mat[2][0]*factorM(5, 3);
 					inertia(5, 4) = mat[2][1]*factorM(5, 4);
 					inertia(5, 5) = mat[2][2]*factorM(5, 5);
-					
-					if (IsNum(hd().cg(0, ib))) 						
-						Surface::FillInertia66mc(inertia, Point3D(hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib)), Point3D(0, 0, 0));
 				} else if (fy.FirstMatch("HydrostaticStiffnessz*")) {
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
@@ -396,9 +393,6 @@ bool OrcaWave::Load_YML_Res() {
 					hd().cg(0, ib) = line[0]*factorLen;
 					hd().cg(1, ib) = line[1]*factorLen;
 					hd().cg(2, ib) = line[2]*factorLen;
-					
-					if (inertia(3, 3) > 0) 
-						Surface::FillInertia66mc(inertia, Point3D(hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib)), Point3D(0, 0, 0));
 				} else if (fy.FirstIs("CentreOfBuoyancy")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
@@ -632,9 +626,16 @@ bool OrcaWave::Load_YML_Res() {
 			}
 		}
 	}
-
+	
 	if (hd().Nb == 0)
 		throw Exc(t_("Incorrect .yml format"));
+	
+	// Inertia matrices have to be translated from cg to c0
+	for (int ib = 0; ib < hd().Nb; ++ib) {
+		Point3D cg(hd().cg.col(ib));
+		Point3D c0(hd().c0.col(ib));
+		Surface::TranslateInertia66(hd().M[ib], cg, cg, c0);
+	}
 	
 	return true;	
 }

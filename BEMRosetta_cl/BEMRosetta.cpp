@@ -2003,7 +2003,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));		
 		}
 	} else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
-			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot") {
+			   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot" || ext == ".mmx") {
 		Wamit &data = hydros.Create<Wamit>(*this);
 		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
