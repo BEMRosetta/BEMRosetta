@@ -296,7 +296,7 @@ public:
 	void Average(const UArray<HydroClass> &hydros, const UVector<int> &ids);
 	void Converge(const UArray<HydroClass> &hydros, const UVector<int> &ids);
 		
-	void SortW();
+	void SortFrequencies();
 		
 	static int GetK_AB(int i, int j) {
 		while (i > 5)

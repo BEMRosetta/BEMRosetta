@@ -603,13 +603,19 @@ bool OrcaWave::Load_YML_Res() {
 						
 						if (idf == -1) {
 							for (int r = 0; r < 6; ++r) {
-								for (int c = 0; c < 6; ++c) 
+								for (int c = 0; c < 6; ++c) {
 									hd().Ainf(r+row*6, c+col*6) = mat[r][c]*factorA(r, c); 
+									if (row != col)		// Fill the symmetric
+										hd().Ainf(r+col*6, c+row*6) = hd().Ainf(r+row*6, c+col*6); 
+								}
 							}
 						} else {
 							for (int r = 0; r < 6; ++r) {
-								for (int c = 0; c < 6; ++c) 
+								for (int c = 0; c < 6; ++c) {
 									hd().A[r+row*6][c+col*6](idf) = mat[r][c]*factorA(r, c); 
+									if (row != col)		// Fill the symmetric
+										hd().A[r+col*6][c+row*6](idf) = hd().A[r+row*6][c+col*6](idf); 
+								}
 							}
 						}
 					} else if (fy.FirstMatch("DampingX*")) {
@@ -617,8 +623,11 @@ bool OrcaWave::Load_YML_Res() {
 							UVector<UVector<double>> mat = fy.GetMatrixDouble();
 							
 							for (int r = 0; r < 6; ++r) {
-								for (int c = 0; c < 6; ++c) 
+								for (int c = 0; c < 6; ++c) {
 									hd().B[r+row*6][c+col*6](idf) = mat[r][c]*factorB(r, c); 
+									if (row != col)		// Fill the symmetric
+										hd().B[r+col*6][c+row*6](idf) = hd().B[r+row*6][c+col*6](idf);
+								}
 							}
 						}
 					}

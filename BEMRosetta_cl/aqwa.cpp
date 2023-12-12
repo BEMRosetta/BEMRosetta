@@ -44,6 +44,13 @@ bool Aqwa::Load(String file, double) {
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
+			
+		for (int ib = 1; ib < hd().Nb; ++ib)		// Translates all bodies phase to c0 of first body
+			hd().AddWave(ib, hd().c0(0, 0)-hd().c0(0, ib), hd().c0(1, 0)-hd().c0(1, ib));
+	
+		hd().x_w = hd().c0(0, 0);
+		hd().y_w = hd().c0(1, 0);
+			
 	} catch (Exc e) {
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
 		//hd().lastError = e;
@@ -88,7 +95,6 @@ bool Aqwa::Load_AH1() {
 	hd().names.SetCount(hd().Nb);
 	hd().cg.setConstant(3, hd().Nb, NaNDouble);
 	hd().c0.setConstant(3, hd().Nb, NaNDouble);
-	hd().x_w = hd().y_w = 0;
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().C[ib].setConstant(6, 6, NaNDouble); 
@@ -127,7 +133,6 @@ bool Aqwa::Load_AH1() {
 				hd().cg(1, ib) = f.GetDouble(2);
 				hd().cg(2, ib) = f.GetDouble(3);
 				hd().c0 = clone(hd().cg);
-				hd().x_w = hd().y_w = 0;
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {
@@ -278,7 +283,6 @@ bool Aqwa::Load_LIS() {
 	hd().Vo.SetCount(hd().Nb, NaNDouble);
 	hd().cg.setConstant(3, hd().Nb, NaNDouble);
 	hd().c0.setConstant(3, hd().Nb, NaNDouble);
-	hd().x_w = hd().y_w = 0;
 	hd().cb.setConstant(3, hd().Nb, NaNDouble);
 	hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
@@ -306,7 +310,6 @@ bool Aqwa::Load_LIS() {
 			hd().cg(1, ib) = f.GetDouble(4)*factorLength;
 			hd().cg(2, ib) = f.GetDouble(5)*factorLength;
 			hd().c0 = clone(hd().cg);
-			hd().x_w = hd().y_w = 0;
 		} else if (line.StartsWith("INERTIA MATRIX")) {
 			Eigen::MatrixXd &M = hd().M[ib];
 			f.Load(line);

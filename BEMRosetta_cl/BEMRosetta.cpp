@@ -140,7 +140,7 @@ void Hydro::Dimensionalize() {
 		Dimensionalize_RAO(rao);
 }
 
-void Hydro::SortW() {
+void Hydro::SortFrequencies() {
 	if (!IsSorted(w)) {
 		UVector<int> indices = GetSortOrderX(w);
 		w = ApplyIndex(w, indices);
@@ -1364,7 +1364,7 @@ void Hydro::GetBodyDOF() {
 }
 
 bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
-	SortW();
+	SortFrequencies();
 	
 	if (!IsLoadedA0())  
 		GetA0();

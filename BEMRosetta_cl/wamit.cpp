@@ -134,6 +134,11 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			hd().cb += hd().c0;
 	}
 	
+	//for (int ib = 0; ib < hd().Nb; ++ib)		// Translate c_wave to 0,0 to all bodies
+	//	hd().AddWave(ib, -hd().c0(0, ib), -hd().c0(1, ib));
+	
+	hd().x_w = hd().y_w = 0;
+	
 	Status("", -1);
 	return true;
 }
@@ -207,7 +212,6 @@ bool Wamit::Load_out(String fileName) {
 	int pos;
 	int ibody = -1;
 	hd().dimen = false;
-	hd().x_w = hd().y_w = 0;
 	
 	String line;
 	LineParserWamit f(in);
@@ -1208,6 +1212,7 @@ bool Wamit::Load_mmx(String fileName) {
  	f.IsSeparator = IsTabSpace;
  	
  	int ib = Null;
+ 	int ialtfrc = 0;
  	
  	while (!in.IsEof()) {
 		f.GetLine();
@@ -1221,6 +1226,7 @@ bool Wamit::Load_mmx(String fileName) {
 			hd().len = f.GetDouble(4);
 		} else if (f.GetText(0) == "NBODY") {
 			hd().Nb = f.GetInt(2);
+			ialtfrc = f.GetInt(5);
 			hd().Vo.SetCount(hd().Nb, NaNDouble);
 			if (hd().cb.size() != 3*hd().Nb)
 				hd().cb.setConstant(3, hd().Nb, NaNDouble);
@@ -1261,9 +1267,15 @@ bool Wamit::Load_mmx(String fileName) {
  			i = i%6;
  			j = j%6;
  			
- 			hd().M[ib](i, j) = f.GetDouble(2);
- 			hd().Cmoor[ib](i, j) = f.GetDouble(3);
- 			hd().Dlin(i+6*ib, j+6*ib) = f.GetDouble(4);
+ 			if (ialtfrc == 1 && !IsNull(hd().rho)) 
+ 				hd().M[ib](i, j) = f.GetDouble(2)*hd().rho;
+ 			else if (ialtfrc == 2) {
+	 			hd().M[ib](i, j) = f.GetDouble(2);
+	 			if (f.size() > 3)
+	 				hd().Cmoor[ib](i, j) = f.GetDouble(3);
+	 			if (f.size() > 4)
+	 				hd().Dlin(i+6*ib, j+6*ib) = f.GetDouble(4);
+ 			}
  		}
  	}
  	return true;
@@ -1369,7 +1381,7 @@ void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T) {
 
 bool Wamit::Load_1(String fileName) {
 	hd().dimen = false;
-	hd().x_w = hd().y_w = 0;
+	
 	if (IsNull(hd().len))
 		hd().len = 1;
 	
@@ -1506,7 +1518,7 @@ bool Wamit::Load_1(String fileName) {
 
 bool Wamit::Load_hst(String fileName) {
 	hd().dimen = false;
-	hd().x_w = hd().y_w = 0;
+	
 	if (IsNull(hd().len))
 		hd().len = 1;
 	
@@ -1579,7 +1591,7 @@ bool Wamit::Load_4(String fileName) {
 
 bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 	hd().dimen = false;
-	hd().x_w = hd().y_w = 0;
+	
 	if (IsNull(hd().len))
 		hd().len = 1;
 	
@@ -1694,7 +1706,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 
 bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> Status) {
 	hd().dimen = false;
-	hd().x_w = hd().y_w = 0;
+	
 	if (IsNull(hd().len))
 		hd().len = 1;
 	
@@ -1821,7 +1833,7 @@ bool Wamit::Load_789(String fileName) {
 
 bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &mmd) {
 	hd().dimen = false;
-	hd().x_w = hd().y_w = 0;
+	
 	if (IsNull(hd().len))
 		hd().len = 1;
 	

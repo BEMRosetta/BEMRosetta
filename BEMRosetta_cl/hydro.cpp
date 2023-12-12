@@ -234,7 +234,7 @@ void Hydro::AddWave(int ib, double dx, double dy) {
 				for (int ifr = 0; ifr < Nf; ++ifr) {
 					double ph = k[ifr]*dist;
 					for (int idf = 0; idf < 6; ++idf) 
-						AddPhase(exforce[ih](ifr, idf + ib6), -ph);
+						AddPhase(exforce[ih](ifr, idf + ib6), ph);		// Add the phase
 				}
 	    	}
 	    }
@@ -539,11 +539,11 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 	rao.Clear();	
 	C.Clear();
 	
-	for (int ib = 0; ib < Nb; ++ib) {
+/*	for (int ib = 0; ib < Nb; ++ib) {
 		double dx = delta(0, ib);
 		double dy = delta(1, ib);			// Previous translation has moved implicitly the wave origin
 		AddWave(ib, -dx, -dy);				// Translate the wave back to the original position
-	}
+	}*/
 	
 	c0 = clone(to);
 		
@@ -703,6 +703,12 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 void Hydro::SwapDOF(int ib1, int ib2) {
 	for (int idof = 0; idof < 6; ++idof)	
 		SwapDOF(ib1, idof, ib2, idof);	
+	
+	c0.col(ib1).swap(c0.col(ib2));
+	cg.col(ib1).swap(cg.col(ib2));
+	cb.col(ib1).swap(cb.col(ib2));
+	Swap(Vo[ib1], Vo[ib2]);
+	Swap(names[ib1], names[ib2]);
 }
 
 void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
