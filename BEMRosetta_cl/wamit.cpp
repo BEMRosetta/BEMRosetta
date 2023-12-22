@@ -11,14 +11,14 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 	try {
 		String ext = GetFileExt(file);
 		
-		if (ext == ".out") 
+		if (ext == ".out") {
 			hd().code = Hydro::WAMIT;
 		
 			String fileout = ForceExt(file, ".out");
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
 			if (!Load_out(fileout)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
-		else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0) {
+		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
 				hd().code = Hydro::HAMS_WAMIT;
 			else if (hd().name == "WAMIT_5S")
@@ -133,10 +133,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		if (hd().cb.size() > 0 && IsNum(hd().cb(0))) 	
 			hd().cb += hd().c0;
 	}
-	
-	//for (int ib = 0; ib < hd().Nb; ++ib)		// Translate c_wave to 0,0 to all bodies
-	//	hd().AddWave(ib, -hd().c0(0, ib), -hd().c0(1, ib));
-	
+
 	hd().x_w = hd().y_w = 0;
 	
 	Status("", -1);

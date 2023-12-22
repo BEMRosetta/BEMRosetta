@@ -305,6 +305,8 @@ void MainMesh::Init() {
 	mainStiffness.Init(Hydro::MAT_K);
 	mainTab.Add(mainStiffness.SizePos(), t_("Hydrostatic Stiffness"));
 	
+	mainStiffness.opMassBuoy.WhenAction = THISBACK2(OnUpdate, NONE, true);
+	
 	mainStiffness2.Init(Hydro::MAT_K2);
 	mainTab.Add(mainStiffness2.SizePos(), t_("Mooring Stiffness"));
 	
@@ -1022,7 +1024,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		//menuMove.ang_y <<= data.mesh.GetAngle().y;
 		//menuMove.ang_z <<= data.mesh.GetAngle().z;
 		
-		data.AfterLoad(Bem().rho, Bem().g, action == NONE, false);
+		data.AfterLoad(Bem().rho, Bem().g, action == NONE, false, mainStiffness.opMassBuoy);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();

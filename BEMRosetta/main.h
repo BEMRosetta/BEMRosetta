@@ -953,10 +953,14 @@ public:
 	
 	void Jsonize(JsonIO &json) {
 		if (json.IsLoading())
-			right.file <<= "";
+			right.fileMoor <<= "";
 		json
-			("file", right.file)
+			("file", right.fileMoor)
 		;
+		if (json.IsLoading()) {
+			if (right.fileMoor.IsEmpty())
+				right.fileMoor <<= "You can open 'BEMRosetta/examples/mooring/demo.json'";
+		}
 	}
 	
 private:

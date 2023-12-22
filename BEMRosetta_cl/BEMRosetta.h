@@ -850,7 +850,7 @@ public:
 	void Move(const double *pos, double rho, double g, bool setnewzero);
 	void Move(const float *pos, double rho, double g, bool setnewzero);
 		
-	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime);
+	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy = true);
 	void Reset(double rho, double g);
 
 	void GZ(double from, double to, double delta, double angle, double rho, double g, 

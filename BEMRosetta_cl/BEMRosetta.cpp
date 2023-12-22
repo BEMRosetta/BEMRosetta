@@ -1454,15 +1454,25 @@ void Hydro::GetA0() {
 		double wiw1 = w[iw1];
 		double wiw2 = w[iw2];
 		double wiw3 = w[iw3];
-		if (wiw1 > 1. && wiw1 > 3*(wiw2 - wiw1))	// Too high to guess A[0]
+		if (wiw1 > 0.5 && wiw1 > 3*(wiw2 - wiw1))	// Too high to guess A[0]
 			return;
 		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
 	        for (int j = 0; j < Nb*6; ++j) {
 	            if (!IsNum(A[i][j][iw1]) || !IsNum(A[i][j][iw2]) || !IsNum(A[i][j][iw3]))
 	                A0(i, j) = Null;
-	            else
-					A0(i, j) = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
+	            else {
+	                double val = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
+	                if (abs(val) < 0.0000001) {
+	                    if (abs(A[i][j][iw1]) < 0.0000001) 
+	                        A0(i, j) = val;
+	                    else
+	                    	A0(i, j) = Null;
+	                } else if (abs(1 - val/A[i][j][iw1]) > 0.3)
+	                    A0(i, j) = Null;	// Too far to be good
+	                else
+						A0(i, j) = val;
+	            }
 	        }
 	}
 }
@@ -1879,7 +1889,10 @@ double Hydro::GM(int ib, int idf) const {
 	double den = rho*g*Vo[ib];
 	if (den == 0)
 		return Null;
-	return C_dim(ib, idf, idf)/den;
+	if (IsLoadedC(ib))
+		return C_dim(ib, idf, idf)/den;
+	else
+		return Null;
 }
 
 double Hydro::GMroll(int ib) const {

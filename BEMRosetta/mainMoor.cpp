@@ -58,9 +58,9 @@ void MainMoor::Init() {
 	const String moorFiles = ".json";
 	String moorFilesAst = clone(moorFiles);
 	moorFilesAst.Replace(".", "*.");
-	right.file.Type(Format("All supported mooring files (%s)", moorFiles), moorFilesAst);
-	right.file.AllFilesType();
-	right.file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
+	right.fileMoor.Type(Format("All supported mooring files (%s)", moorFiles), moorFilesAst);
+	right.fileMoor.AllFilesType();
+	right.fileMoor.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	right.butLoad.Tip(t_("Loads mooring file")).WhenAction = [&] {OnLoad();};
 	right.butSave.Tip(t_("Saves mooring file")).WhenAction = [&] {OnSave();};
 	//butSave.Enable(false);
@@ -88,8 +88,8 @@ void MainMoor::Init() {
 
 bool MainMoor::OnLoad() {
 	try {
-		if (!mooring.Load(~right.file)) {
-			BEM::PrintError(Format("Problem loading %s file", DeQtf(~right.file)));
+		if (!mooring.Load(~right.fileMoor)) {
+			BEM::PrintError(Format("Problem loading %s file", DeQtf(~right.fileMoor)));
 			return false;
 		}
 		lineTypes.Load();
@@ -113,8 +113,8 @@ bool MainMoor::OnSave() {
 		lineProperties.Save();
 		lineConnections.Save();
 		mooring.depth = ~right.edDepth;
-		if (!mooring.Save(~right.file)) {
-			BEM::PrintError(Format(t_("Problem loading %s file"), DeQtf(~right.file)));
+		if (!mooring.Save(~right.fileMoor)) {
+			BEM::PrintError(Format(t_("Problem loading %s file"), DeQtf(~right.fileMoor)));
 			return false;
 		}
 	} catch (const Exc &e) {

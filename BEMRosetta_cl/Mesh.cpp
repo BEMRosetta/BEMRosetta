@@ -229,7 +229,7 @@ void Mesh::Reset(double rho, double g) {
 	AfterLoad(rho, g, false, false);
 }
 	
-void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
+void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy) {
 	if (mesh.IsEmpty()) {
 		if (!mesh.lines.IsEmpty())
 			mesh.GetEnvelope();
@@ -264,7 +264,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime) {
 		cg0 = clone(cg);
 	}
 	if (!IsNull(rho) && !IsNull(g))
-		under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, GetMass());
+		under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, GetMass(), massBuoy);
 }
 
 void Mesh::Report(double rho) const {

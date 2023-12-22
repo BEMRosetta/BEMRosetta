@@ -23,6 +23,8 @@ void MainMatrixKA::Init(Hydro::DataMatrix what) {
 	Ndim = false;
 	this->what = what;
 	
+	opMassBuoy = true;
+		
 	numDigits <<= THISBACK(PrintData);
 	numDecimals <<= THISBACK(PrintData);
 	opEmptyZero <<= THISBACK(PrintData);
@@ -251,9 +253,10 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	}
 }
 	
-void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hydro &hydro, int idc, bool ndim) {
+void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hydro &hydro, int idc, bool ndim) {	
+	opMassBuoy.Hide();
 	if (what == Hydro::MAT_K) {
-		if (!hydro.IsLoadedC())
+		if (!hydro.IsLoadedC(ib))
 			data << EigenNull;
 		else
 			data << hydro.C_(ndim, ib);
