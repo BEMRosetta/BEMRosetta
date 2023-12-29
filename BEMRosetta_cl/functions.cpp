@@ -35,6 +35,7 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const Vect
     for (int it = 0; it < numT; ++it) {
 		for (int iw = 0; iw < Nf; ++iw)
 			y(iw) = B2(iw)*cos(w2(iw)*Tirf(it));
+		//y.array() = B2.array()*(w2.array()*Tirf(it)).cos();
 		Kirf(it) = Integral(w2, y, SIMPSON_1_3)*2/M_PI;
 	}
 }

@@ -2,13 +2,14 @@ description "Hydrodynamic coefficients converter command line utility\377";
 
 uses
 	Core,
-	plugin/zstd,
 	ScatterDraw,
 	Surface,
 	STEM4U,
 	MatIO,
 	SysInfo,
-	plugin/sqlite3;
+	plugin/sqlite3,
+	Hdf5,
+	plugin/zstd;
 
 options(MSC) /bigobj;
 

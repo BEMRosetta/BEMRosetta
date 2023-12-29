@@ -13,9 +13,8 @@
 	#include "export.h"
 #endif
 
-
 CONSOLE_APP_MAIN
-{	
+{		
 	try {
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		const UVector<String>& command = CommandLine();
@@ -474,17 +473,8 @@ double DemoVectorPy_C(const double *v, int num) noexcept {
 #endif
 
 #if defined(flagBEMR_CL)
-
+	
 CONSOLE_APP_MAIN {
-	float n = 3.0;
-	String sscore;
-	sscore = Format("%f", n);
-	Cout()<<sscore<<"\n" ;
-	
-	sscore = AsString(n);
-	Cout()<<sscore<<"\n" ;	
-	
-	
 	const UVector<String>& command = CommandLine();
 	
 	if (!ConsoleMain(command, false, PrintStatus))
