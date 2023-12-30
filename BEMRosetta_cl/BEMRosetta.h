@@ -27,10 +27,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,		true,			   false,	   true, 	   true, 		 true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,	UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", ".h5",		"By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,		true,			   false,	   true, 	   true, 		 false,		true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",	"*.*"};       
 	
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -73,6 +73,7 @@ public:
 		case ORCAWAVE:		return t_("OrcaWave");
 		case CSV_MAT:		return t_("CSV.mat");
 		case CSV_TABLE:		return t_("CSV.tab");
+		case BEMIOH5:		return t_("BEMIO.h5");
 		case UNKNOWN:		return t_("Unknown");
 		}
 		return t_("Unknown");
@@ -94,6 +95,7 @@ public:
 		case ORCAWAVE:		return t_("ORC");
 		case CSV_MAT:		return t_("CSVm");
 		case CSV_TABLE:		return t_("CSVt");
+		case BEMIOH5:		return t_("BMh5");
 		case UNKNOWN:		return t_("¿?");
 		}
 		return t_("Unknown");
@@ -1285,6 +1287,16 @@ private:
 	bool Load_YML_Res();
 };
 
+class BemioH5 : public HydroClass {
+public:
+	BemioH5(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	bool Load(String file, double rho = Null);
+	virtual ~BemioH5() noexcept {}	
+	
+private:
+	bool Load_H5();
+};
+
 UVector<int> NumSets(int num, int numsets);	
 
 
@@ -1405,7 +1417,7 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml";	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml .h5";	// Priority
 	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat"};	// Any of these files opens all, and it is avoided to load them again
 	String bemFilesAst;
 	
