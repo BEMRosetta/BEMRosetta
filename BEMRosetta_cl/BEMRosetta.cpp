@@ -1079,6 +1079,8 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 			type = Hydro::CSV_TABLE;
 		else if (ext == ".hdb")
 			type = Hydro::DIODORE;
+		else if (ext == ".h5")
+			type = Hydro::BEMIOH5;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
@@ -1107,6 +1109,9 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 	} else if (type == DIODORE) {
 		HydroClass data(*bem, this);
 		ret = data.SaveDiodoreHDB(file);		
+	} else if (type == BEMIOH5) {
+		BemioH5 data(*bem, this);
+		ret = data.Save(file);
 	} else
 		throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	

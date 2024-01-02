@@ -27,10 +27,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,	UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", ".h5",		"By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,		true,			   false,	   true, 	   true, 		 false,		true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",	"*.*"};       
+	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		UNKNOWN};
+	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	"By extension"};
+	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,		true,			   false,	   true, 	   true, 		 true,			true};       
+	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.*"};       
 	
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -1291,6 +1291,7 @@ class BemioH5 : public HydroClass {
 public:
 	BemioH5(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
+	bool Save(String file);
 	virtual ~BemioH5() noexcept {}	
 	
 private:
