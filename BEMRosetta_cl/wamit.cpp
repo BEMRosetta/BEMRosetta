@@ -20,7 +20,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
 		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
-				hd().code = Hydro::HAMS_WAMIT;
+				hd().code = Hydro::HAMS;
 			else if (hd().name == "WAMIT_5S")
 				hd().code = Hydro::WADAM_WAMIT;
 			else
@@ -663,6 +663,9 @@ bool Wamit::Load_out(String fileName) {
 			}
 		}
 	}
+	if (isHydrostar)
+		hd().code = Hydro::HYDROSTAR;
+	
 	if (hd().Nb == 0)
 		throw Exc(t_("Incorrect .out format"));
 	

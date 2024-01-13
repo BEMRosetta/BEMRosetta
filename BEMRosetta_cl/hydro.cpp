@@ -139,6 +139,81 @@ void Hydro::GetAinf_w() {
         }
 }
 
+void Hydro::GetB_H() {
+	if (!IsLoadedFex())
+		throw Exc(t_("The excitation force is not loaded"));
+	if (Nf == 0)
+		throw Exc(t_("No frecuencies loaded"));
+	if (Nh < 12)
+		throw Exc(t_("Not enough hedings for Haskind calculation"));
+	if (IsNull(rho))
+		throw Exc(t_("Unknown density"));
+	if (IsNull(g))
+		throw Exc(t_("Unknown gravity"));
+	if (IsNull(h))
+		throw Exc(t_("Unknown depth"));
+		
+	UVector<double> hd(Nh);
+	for (int ih = 0; ih < Nh; ++ih) 
+		hd[ih] = ToRad(FixHeading_0_360(head[ih]));
+	
+	UVector<int> order = GetSortOrderX(hd);
+	SetSortOrder(hd, order);
+	
+	enum RangeType {R_0_360, R_x_360, R_0_x, R_x_x};
+	RangeType rangeType;
+	double hd0 = hd[0],
+		   hdl = Last(hd);
+	if (hd0 == 0 && hdl < 2*M_PI) {
+		hd << 2*M_PI;
+		rangeType = R_0_x;
+	} else if (hd0 > 0 && hdl == 2*M_PI) {
+		hd.Insert(0, 0);
+		rangeType = R_x_360;
+	} else if (hd0 > 0 && hdl < 2*M_PI) {
+		hd.Insert(0, 0);
+		hd << 2*M_PI;
+		rangeType = R_x_x;
+	} else	
+		rangeType = R_0_360;
+	
+	VectorXd val(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr)
+	 	val[ifr] = w[ifr]*SeaWaves::WaveNumber_w(w[ifr], -1, g, true)/(4*M_PI*rho*g*g);
+	
+	Initialize_AB(B_H);
+	
+    for (int idof = 0; idof < Nb*6; ++idof) {
+        if (!IsLoadedFex(idof)) 		
+            continue;
+		
+		VectorXd b(Nf);
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			UVector<double> F2(Nh);
+			for (int ih = 0; ih < Nh; ++ih) 
+				F2[ih] = sqr(F_dim(abs(ex.force[order[ih]](ifr, idof)), idof));
+			
+			if (rangeType == R_0_x) 
+				F2 << F2[0];
+			else if (rangeType == R_x_360) 
+				F2.Insert(0, Last(F2));
+			else if (rangeType == R_x_x) {
+				double f = LinearInterpolate(2*M_PI, hdl, 2*M_PI + hd0, Last(F2), F2[0]);
+				F2.Insert(0, f);
+				F2 << f;
+			}
+			b(ifr) = Integral(hd, F2, SIMPSON_1_3)*val[ifr];
+		}
+		if (dimen)
+			B_H[idof][idof] = b*rho_ndim()/rho_dim();
+		else {
+			for (int ifr = 0; ifr < Nf; ++ifr)
+				b(ifr) /= (rho_dim()*pow(len, GetK_AB(idof, idof))*w[ifr]);
+			B_H[idof][idof] = b;
+		}
+    }
+}
+
 void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof) {
 	vidof.Clear();
 	vjdof.Clear();

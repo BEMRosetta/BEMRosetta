@@ -61,6 +61,7 @@ void MenuOptions::Load() {
 	csvSeparator <<= bem->csvSeparator;
 	legend_w_units <<= bem->legend_w_units;
 	legend_w_solver <<= bem->legend_w_solver;
+	pythonEnv <<= bem->pythonEnv;
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -106,6 +107,7 @@ void MenuOptions::OnSave() {
 		ScatterDraw::SetDefaultCSVSeparator(~csvSeparator);
 		bem->legend_w_units = ~legend_w_units;
 		bem->legend_w_solver = ~legend_w_solver;
+		bem->pythonEnv = ~pythonEnv;
 		
 		bem->dofType = BEM::DOFType(dofType.GetIndex());
 		bem->headingType = BEM::HeadingType(headingType.GetIndex());
@@ -170,6 +172,8 @@ bool MenuOptions::IsChanged() {
 	if (bem->legend_w_solver != ~legend_w_solver)
 		return true;
 	if (bem->legend_w_units != ~legend_w_units)
+		return true;
+	if (bem->pythonEnv != ~pythonEnv)
 		return true;
 				
 	return false;

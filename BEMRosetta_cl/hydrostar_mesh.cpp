@@ -25,7 +25,7 @@ String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bo
 String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return Format(t_("Impossible to open file '%s'"), fileName);
+		return t_("Impossible to open file");
 	
 	mesh.fileName = fileName;
 	mesh.SetCode(Mesh::HYDROSTAR_HST);

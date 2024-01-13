@@ -16,7 +16,7 @@ using namespace Upp;
 
 
 void MainBEM::Init() {
-	CtrlLayout(*this);
+	MainBEMMesh::Init();
 	
 	CtrlLayout(menuOpen);
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
@@ -54,16 +54,19 @@ void MainBEM::Init() {
 	menuOpen.butDescription <<= THISBACK(OnDescription);
 	menuOpen.butExport <<= THISBACK(OnConvert);
 	menuOpen.butExport.Tip(t_("Exports data file"));
-	for (int i = 0; i < Hydro::GetBemStrCount(); ++i)
+	for (int i = 0; i < Hydro::NUMBEM; ++i)
 		if (Hydro::bemCanSave[i])
 			menuOpen.dropExport.Add(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
 
 	CtrlLayout(menuProcess);
-	menuProcess.butSymX.Disable();	
-	menuProcess.butSymX <<= THISBACK1(OnSymmetrizeForces, true);
-	menuProcess.butSymY.Disable();
-	menuProcess.butSymY <<= THISBACK1(OnSymmetrizeForces, false);
+	menuProcess.butSym.Disable();	
+	menuProcess.butSym <<= THISBACK(OnSymmetrizeForces);
+	
+	menuProcess.dropSym.Add(SYM_NO, "No symmetry").Add(SYM_XZ, "XZ").Add(SYM_YZ, "YZ").Add(SYM_XZ_YZ, "XZ+YZ");//.Add(SYM_AXISYMMETRIC, "Axisymmetric");
+	menuProcess.dropSym.SetIndex(0);
+	menuProcess.dropSym.WhenAction = [&]() {UpdateButtons();};
+	
 	menuProcess.butA0.Disable();	
 	menuProcess.butA0 <<= THISBACK1(OnKirfAinf, Hydro::PLOT_A0);
 	menuProcess.butAinf.Disable();	
@@ -257,8 +260,10 @@ void MainBEM::Init() {
 	
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
+	menuAdvanced.butAinfw.Disable();
+	menuAdvanced.butBH <<= THISBACK(OnBH);
+	menuAdvanced.butBH.Disable();
 	menuAdvanced.butOgilvie <<= THISBACK(OnOgilvie);
-	menuAdvanced.butAinfw.Disable();	
 	menuAdvanced.butOgilvie.Disable();
 	menuAdvanced.opDecayingTail.Disable();
 	menuAdvanced.opThinremoval.Disable();
@@ -296,6 +301,20 @@ void MainBEM::Init() {
 	menuPlot.headMD.NoHeader().MultiSelect();
 	menuPlot.headMD.AddColumn("");
 	menuPlot.headMD.AddColumn("");
+	menuPlot.butList.WhenAction = [&]() {
+		try {
+			int id = GetIdOneSelected();
+			if (id < 0) 
+				return;
+		
+			Add(menuPlotList.LeftPosZ(535, 105).TopPosZ(23, 150));		// Values by hand
+			
+		} catch (Exc e) {
+			BEM::PrintError(DeQtfLf(e));
+		}	
+	};
+	menuPlotList.Init(*this, menuPlot.head1st, menuPlot.headMD, menuPlot.headQTF);
+	
 	//menuPlot.headQTF.NoHeader().MultiSelect();
 	//menuPlot.headQTF.AddColumn("");
 	
@@ -360,6 +379,8 @@ void MainBEM::Init() {
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
 			mainB.Load(Bem(), ids);
+		else if (mainTab.IsAt(mainB_H))
+			mainB_H.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainMD)) {
 			mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor());
 			is = 2;
@@ -402,6 +423,17 @@ void MainBEM::Init() {
 		menuPlot.labHead1st.Show(is == 0);	menuPlot.head1st.Show(is == 0);
 		menuPlot.labHeadQTF.Show(is == 1);	menuPlot.headQTF.Show(is == 1);
 		menuPlot.labHeadMD.Show(is == 2);	menuPlot.headMD.Show(is == 2);
+
+		menuPlot.butList.Show(is >= 0);
+		menuPlotList.head1st.Show(is == 0);
+		menuPlotList.headQTF.Show(is == 1);
+		menuPlotList.headMD.Show(is == 2);
+		if (is == 0)
+			menuPlotList.label.SetText(t_("Headings 1st"));
+		else if (is == 1)
+			menuPlotList.label.SetText(t_("Headings QTF"));
+		else if (is == 2)
+			menuPlotList.label.SetText(t_("Head. Mean Drift"));
 			
 		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
 		tabMenuPlot.Enable(plot);
@@ -476,9 +508,6 @@ void MainBEM::Init() {
 
 	mainMatrixA.Init(Hydro::MAT_A);
 	mainTab.Add(mainMatrixA.SizePos(), t_("A∞")).Disable();
-	
-	mainAinfw.Init(Hydro::DATA_AINFW);
-	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
 
 	mainMatrixM.Init(Hydro::MAT_M);
 	mainTab.Add(mainMatrixM.SizePos(), t_("M")).Disable();
@@ -498,6 +527,12 @@ void MainBEM::Init() {
 	mainQTF.Init(*this);
 	mainTab.Add(mainQTF.SizePos(), t_("QTF")).Disable();
 	
+	mainAinfw.Init(Hydro::DATA_AINFW);
+	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
+	
+	mainB_H.Init(Hydro::DATA_B_H);
+	mainTab.Add(mainB_H.SizePos(), t_("B Haskind")).Disable();
+	
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("FOAMM")).Disable();
 
@@ -507,6 +542,7 @@ void MainBEM::Init() {
 	UpdateButtons();
 	saveFolder = GetDesktopFolder();
 }
+
 
 void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showNdim.Enable();
@@ -549,9 +585,13 @@ void MainBEM::OnMenuAdvancedArraySel() {
 	
 	menuAdvanced.c_array.Clear();
 	for (int ib = 0; ib < hydro.Nb; ++ib)
-		menuAdvanced.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));			
+		menuAdvanced.c_array.Add		 (ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));			
 	
-	menuAdvanced.butUpdateCrot.SetLabel(Format(t_("Body Axis (%d)"), hydro.Nb)); 
+	menuAdvancedReference.c_array.Clear();
+	for (int ib = 0; ib < hydro.Nb; ++ib)
+		menuAdvancedReference.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));
+		
+	menuAdvanced.labelBodyAxis.SetLabel(Format(t_("Body Axis (%d)"), hydro.Nb)); 
 	
 	menuAdvanced.butUpdateCrot.Enable(hydro.Nb > 0);
 	menuAdvanced.c_array.Enable(hydro.Nb > 0);
@@ -718,6 +758,8 @@ bool MainBEM::OnLoadFile(String file) {
 			}
 			if (!IsNull(rowid))
 				menuPlot.head1st.SetCursor(rowid);
+			
+			menuPlotList.Set1st();
 		}
 		{
 			int rowid = Null;
@@ -731,6 +773,8 @@ bool MainBEM::OnLoadFile(String file) {
 			}
 			if (!IsNull(rowid))
 				menuPlot.headMD.SetCursor(rowid);
+			
+			menuPlotList.SetMD();
 		}
 		
 		mainTab.WhenSet();
@@ -784,16 +828,17 @@ void MainBEM::UpdateButtons() {
 	menuOpen.dropExport.Enable(numsel == 1);
 	menuOpen.butExport.Enable(numsel == 1);
 
-	menuProcess.butSymX.		Enable(numsel == 1 || numrow == 1);
-	menuProcess.butSymY.		Enable(numsel == 1 || numrow == 1);
+	menuProcess.butSym.			Enable((numsel == 1 || numrow == 1) && (int)menuProcess.dropSym.GetData() > 0);
+	
 	menuProcess.butKirf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butA0.			Enable(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butRAO.			Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.butBH.			Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butOgilvie.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butConvergence.Enable(numsel >= 3);
-	menuAdvanced.butAverage.Enable(numsel >= 2);
+	menuAdvanced.butAverage.	Enable(numsel >= 2);
 	menuAdvanced.opDecayingTail.Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opThinremoval. Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.opZremoval.	Enable(numsel == 1 || numrow == 1);
@@ -811,6 +856,8 @@ void MainBEM::UpdateButtons() {
 			if (row < 0)
 				return;
 			
+			menuPlotList.head1st.SetCursor(row);	
+			
 			UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 			
 			mainForceSC.Load(Bem(), ids, row);
@@ -818,6 +865,7 @@ void MainBEM::UpdateButtons() {
 			mainForceEX.Load(Bem(), ids, row);
 			mainRAO.Load(Bem(), ids, row);
 		};
+		menuPlot.head1st.WhenLeftDouble = [&] {menuPlot.butList.WhenAction();};
 	}
 	{
 		int row = menuPlot.headMD.GetCursor();
@@ -832,10 +880,13 @@ void MainBEM::UpdateButtons() {
 			if (row < 0)
 				return;
 			
+			menuPlotList.headMD.SetCursor(row);
+			
 			UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
 			mainMD.Load(Bem(), ids, row);
-		};		
+		};	
+		menuPlot.headMD.WhenLeftDouble = [&] {menuPlot.butList.WhenAction();};	
 	}
 	
 	bool show_w = menuPlot.opwT == 0;
@@ -977,7 +1028,7 @@ void MainBEM::OnDuplicate() {
 	}
 }
 
-void MainBEM::OnSymmetrizeForces(bool xAxis) {
+void MainBEM::OnSymmetrizeForces() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -987,7 +1038,10 @@ void MainBEM::OnSymmetrizeForces(bool xAxis) {
 
 		Progress progress(t_("Symmetrizing forces and RAOs in selected BEM file..."), 100); 
 		
-		Bem().SymmetrizeForces(id, xAxis);
+		if (~menuProcess.dropSym == SYM_YZ || ~menuProcess.dropSym == SYM_XZ_YZ)
+			Bem().SymmetrizeForces(id, false);
+		if (~menuProcess.dropSym == SYM_XZ || ~menuProcess.dropSym == SYM_XZ_YZ)
+			Bem().SymmetrizeForces(id, true);
 		
 		AfterBEM();
 	} catch (Exc e) {
@@ -1036,6 +1090,22 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 			Bem().Ainf_w(id);
 		}
 		
+		AfterBEM();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+}
+
+void MainBEM::OnBH() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+
+		WaitCursor wait;
+				
+		Bem().BH(id);		
+			
 		AfterBEM();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -1332,6 +1402,7 @@ void MainBEM::OnSwapDOF() {
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
+		mainTab.GetItem(mainTab.Find(mainB_H)).Enable(mainB_H.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor()));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
@@ -1496,50 +1567,56 @@ void MainBEM::OnUpdateCrot() {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
-	
-		WithMenuAdvancedReference<TopWindow> dialog;
-		CtrlLayout(dialog);
+			
+		menuAdvancedReference.Init(*this, id);
+		Add(menuAdvancedReference.LeftPosZ(260, 182).TopPosZ(23, 150));		// Values by hand
 		
-		Hydro &hydro = Bem().hydros[id].hd();
-		
-		EditDouble edit[3];
-		
-		dialog.Title(t_("Please edit the new centres"));
-		dialog.c_array./*Absolute().*/Editing().Clipboard();
-		dialog.c_array.AddColumn(t_("Body"));
-		dialog.c_array.AddColumn(t_("x")).Edit(edit[0]);
-		dialog.c_array.AddColumn(t_("y")).Edit(edit[1]);
-		dialog.c_array.AddColumn(t_("z")).Edit(edit[2]);
-		for (int ib = 0; ib < hydro.Nb; ++ib)
-			dialog.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));
-		
-		bool cancel = true;
-		dialog.ok		<< [&] {cancel = false;	dialog.Close();};
-		dialog.cancel	<< [&] {dialog.Close();}; 
-		dialog.Execute();
-		if (cancel) { 
-			Status(t_("Cancelled by user"));
-			return;
-		}
-		
-		if (dialog.c_array.GetRowCount() != hydro.Nb)
-			throw Exc(t_("Number of centres is different than the number of bodies"));
-		
-		WaitCursor wait;
-		
-		MatrixXd to(3, hydro.Nb);
-		for (int ib = 0; ib < hydro.Nb; ++ib) 
-			for (int idf = 0; idf < 3; ++idf) 
-				to(idf, ib) = dialog.c_array.Get(ib, idf+1);
-
-		Bem().TranslationTo(id, to);
-	
-		AfterBEM();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}	
 }
 
+MenuAdvancedReference::MenuAdvancedReference() {
+	CtrlLayout(*this);
+	
+	c_array.Editing().Clipboard();
+	c_array.AddColumn(t_("Body"));
+	c_array.AddColumn(t_("x")).Edit(edit[0]);
+	c_array.AddColumn(t_("y")).Edit(edit[1]);
+	c_array.AddColumn(t_("z")).Edit(edit[2]);
+	
+	cancel << [&] {Remove();}; 
+	cancel2<< [&] {Remove();}; 
+	ok 	   << [&] {
+		try {
+			Hydro &hydro = Bem().hydros[id].hd();
+			
+			if (c_array.GetRowCount() != hydro.Nb)
+				throw Exc(t_("Number of centres is different than the number of bodies"));
+		
+			WaitCursor wait;
+			
+			MatrixXd to(3, hydro.Nb);
+			for (int ib = 0; ib < hydro.Nb; ++ib) 
+				for (int idf = 0; idf < 3; ++idf) 
+					to(idf, ib) = c_array.Get(ib, idf+1);
+	
+			Bem().TranslationTo(id, to);
+		
+			mbem->AfterBEM();
+			
+			Remove();
+		} catch (Exc e) {
+			BEM::PrintError(DeQtfLf(e));
+		}
+	};
+}
+
+MenuPlotList::MenuPlotList() {
+	CtrlLayout(*this);
+		
+	cancel << [&] {Remove();}; 
+}
 
 void MainBEM::AfterBEM() {
 	mainSummary.Clear();
@@ -1550,7 +1627,7 @@ void MainBEM::AfterBEM() {
 	
 	UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 
-	Progress progress(t_("Processing loaded data..."), 16);
+	Progress progress(t_("Processing loaded data..."), 17);
 	int pos = 0;
 	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, ids, ~menuPlot.showNdim));		progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, ids, false));					progress.SetPos(pos++);
@@ -1561,6 +1638,7 @@ void MainBEM::AfterBEM() {
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));											progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));									progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));											progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainB_H)).Enable(mainB_H.Load(Bem(), ids));										progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));											progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor()));				progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
@@ -1669,7 +1747,7 @@ void MainBEM::OnConvert() {
 		
 		FileSel fs;
 		
-		for (int i = 0; i < Hydro::GetBemStrCount(); ++i)
+		for (int i = 0; i < Hydro::NUMBEM; ++i)
 			if (Hydro::bemCanSave[i] && (i == type || i == Hydro::UNKNOWN)) 
 				fs.Type(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)), Hydro::bemExt[i]);
 		

@@ -7,7 +7,7 @@
 String DiodoreMesh::LoadDat(UArray<Mesh> &_mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return Format(t_("Impossible to open file '%s'"), fileName);
+		return t_("Impossible to open file");
 	
 	String line;
 	LineParser f(in);	
@@ -88,7 +88,7 @@ String DiodoreMesh::LoadDat(UArray<Mesh> &_mesh, String fileName) {
 void DiodoreMesh::SaveDat(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+		throw Exc(t_("Impossible to open file"));	
 	
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;

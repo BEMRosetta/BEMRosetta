@@ -32,6 +32,19 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
 				t_("|TFS|"), t_("arg(TFS)")};
 
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS		  WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,  AQWA,   					FOAMM,   DIODORE,	BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   UNKNOWN, NUMBEM};
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore","BEMRosetta .bem","OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"By extension"};
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				    true,		 			 	 	false,		  false,		 false,   false, 		 true,  					false,   true,		true,			   false,	   true, 	   true, 		 true,			false, 	   false, 		true};       
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				"*.1",		 			 	    "",		   	  "",		     "",      "", 		   	 "*.qtf", 				    "",      "*.hdb",	"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.dat",   "*.out", 	"*.*"};       
+	
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
+const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "Unknown"};	
+const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		   false,   		false};       
+const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.hst", 		"*.*"};       
+
+//enum Solver 			   		 	  {NEMOH, NEMOHv115, NEMOHv3, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;	
+const bool BEMCase::solverCanSave[] = {true,  true, 	 true, 	  true,      true, false};
+	
 const char *BEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
 BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
 
@@ -658,6 +671,9 @@ void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
 }
 
 bool Hydro::SymmetryRule(int idf6, bool xAxis) {
+	const bool symmetryRulesXZ[] = {false, true,  false, true,  false, true};
+	const bool symmetryRulesYZ[] = {true,  false, false, false, true,  true};
+	
 	ASSERT(idf6 >= 0);
 	idf6 = idf6%6;
 	if (xAxis)
@@ -739,8 +755,8 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 		Symmetrize_ForcesEach(rao, newrao);
 		rao = pick(newrao);
 	}
-	head = pick(newHead);		// New headings are set between -180 and 180
 	Nh = newHead.size();
+	head = pick(newHead);		// New headings are set between -180 and 180
 }
 
 void Hydro::Symmetrize_QTF(bool xAxis) {
@@ -1005,11 +1021,11 @@ void Hydro::Compare_head(Hydro &a) {
 	}
 }
 
-void Hydro::Compare_A(Hydro &a) {
-	for (int ifr = 0; ifr < a.Nf; ifr++) {
-		for (int idf = 0; idf < 6*a.Nb; ++idf) {
-			for (int jdf = 0; jdf < 6*a.Nb; ++jdf) {
-				double Aa = a.A[idf][jdf][ifr];
+void Hydro::Compare_A(const UArray<UArray<VectorXd>> &a) {
+	for (int ifr = 0; ifr < Nf; ifr++) {
+		for (int idf = 0; idf < 6*Nb; ++idf) {
+			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+				double Aa = a[idf][jdf][ifr];
 				double Ab = A[idf][jdf][ifr];
 				if (IsNum(Aa) && IsNum(Ab) && Aa != Ab)
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
@@ -1020,11 +1036,11 @@ void Hydro::Compare_A(Hydro &a) {
 	}
 }
 
-void Hydro::Compare_B(Hydro &a) {
-	for (int ifr = 0; ifr < a.Nf; ifr++) {
-		for (int idf = 0; idf < 6*a.Nb; ++idf) {
-			for (int jdf = 0; jdf < 6*a.Nb; ++jdf) {
-				double Ba = a.B[idf][jdf][ifr];
+void Hydro::Compare_B(const UArray<UArray<VectorXd>> &b) {
+	for (int ifr = 0; ifr < Nf; ifr++) {
+		for (int idf = 0; idf < 6*Nb; ++idf) {
+			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
+				double Ba = b[idf][jdf][ifr];
 				double Bb = B[idf][jdf][ifr];
 				if (IsNum(Ba) && IsNum(Bb) && Ba != Bb)
 					throw Exc(Format(t_("%s is not the same %f<>%f"), 
@@ -1061,6 +1077,19 @@ void Hydro::Compare_cg(Hydro &a) {
 	}
 }
 
+void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
+	for (int ih = 0; ih < Nh; ++ih) 	
+		for (int ifr = 0; ifr < Nf; ++ifr)
+			for (int idf = 0; idf < 6*Nb; ++idf) {
+				std::complex<double> Fa = a.force[ih](ifr, idf);
+				std::complex<double> Fb = b.force[ih](ifr, idf);
+				if (IsLoadedForce(a, idf, ih) && Fa != Fb)
+					throw Exc(Format(t_("%s is not the same %f:%f<>%f:%f"), 
+							Format(t_("%s[%d](%d, %d)"), type, ifr+1, idf+1, ih+1), 
+							Fa.real(), Fa.imag(), Fb.real(), Fb.imag()));
+			}
+}
+
 bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading) {
 	int realNh = Nh;
 	int realNf = Nf;
@@ -1070,17 +1099,17 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 		
 		if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
 			ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
-			type = Hydro::WAMIT_1_3;
+			type = WAMIT_1_3;
 		else if (ext == ".dat")
-			type = Hydro::FAST_WAMIT;	
+			type = FAST_WAMIT;	
 		else if (ext == ".bem")
-			type = Hydro::BEMROSETTA;
+			type = BEMROSETTA;
 		else if (ext == ".csv")
-			type = Hydro::CSV_TABLE;
+			type = CSV_TABLE;
 		else if (ext == ".hdb")
-			type = Hydro::DIODORE;
+			type = DIODORE;
 		else if (ext == ".h5")
-			type = Hydro::BEMIOH5;
+			type = BEMIOH5;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
 	}
@@ -2207,6 +2236,10 @@ void BEM::Ainf_w(int id) {
 void BEM::RAO(int id) {
 	hydros[id].hd().GetRAO();
 }
+
+void BEM::BH(int id) {
+	hydros[id].hd().GetB_H();
+} 
 
 void BEM::Symmetrize(int id) {
 	hydros[id].hd().Symmetrize();

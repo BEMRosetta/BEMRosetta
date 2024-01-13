@@ -8,6 +8,7 @@
 #include "FastScatter.h"
 
 
+class Main;
 
 class FreqSelector : public StaticRect {
 public:
@@ -135,7 +136,8 @@ public:
 		case Hydro::PLOT_A:			return !data->IsLoadedA(idf, jdf);
 		case Hydro::PLOT_AINF:		return !data->IsLoadedAinf(idf, jdf);
 		case Hydro::PLOT_A0:		return !data->IsLoadedA0(idf, jdf);
-		case Hydro::PLOT_B:			return !data->IsLoadedB(idf, jdf);
+		case Hydro::PLOT_B:			return !data->IsLoadedB  (idf, jdf);
+		case Hydro::PLOT_B_H:		return !data->IsLoadedB_H(idf, jdf);
 		case Hydro::PLOT_MD:		return !data->IsLoadedMD(int(idf/6), jdf);
 		case Hydro::PLOT_KIRF:		return !data->IsLoadedKirf(idf, jdf);
 		case Hydro::PLOT_AINFW:		return !data->IsLoadedAinf_w(idf, jdf);
@@ -160,7 +162,8 @@ public:
 		case Hydro::PLOT_A:			return data->A_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINF:		return data->Ainf_(ndim, idf, jdf);
 		case Hydro::PLOT_A0:		return data->A0_(ndim, idf, jdf);
-		case Hydro::PLOT_B:			return data->B_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_B:			return data->B_  (ndim, int(id), idf, jdf);
+		case Hydro::PLOT_B_H:		return data->B_H_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_KIRF:		return data->Kirf_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINFW:		return data->Ainf_w_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_MD:		return data->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
@@ -284,7 +287,7 @@ public:
 	typedef MainView CLASSNAME;
 	
 	MainView() {}
-	void Init();
+	void Init(MainMesh &parent);
 	void CalcEnvelope();
 	void OnPaint();
 	const WithMenuMeshPlot<StaticRect> &GetMenuPlot() const;
@@ -593,6 +596,71 @@ private:
 
 class MainBEM;
 
+class MenuAdvancedReference : public WithMenuAdvancedReference<StaticRect> {
+public:
+	typedef MenuAdvancedReference CLASSNAME;
+	
+	MenuAdvancedReference();
+	
+	void Init(MainBEM &_mbem, int _id) {
+		mbem = &_mbem;
+		id = _id;
+	}
+
+private:
+	EditDouble edit[3];		
+	MainBEM *mbem = 0;
+	int id;
+};
+
+class MenuPlotList : public WithMenuPlotList<StaticRect> {
+public:
+	typedef MenuPlotList CLASSNAME;
+	
+	MenuPlotList();
+	
+	void Init(MainBEM &_mbem, ArrayCtrl &_head1st, ArrayCtrl &_headMD, ArrayCtrl &_headQTF) {
+		mbem = &_mbem;
+		mhead1st = &_head1st;
+		mheadMD = &_headMD;
+		mheadQTF = &_headQTF;
+		
+		head1st.AddColumn("Heading [deg]");
+		head1st.WhenCursor = [&] {mhead1st->SetCursor(head1st.GetCursor());};
+		head1st.WhenLeftDouble = [&] {Remove();};
+		
+		headMD.AddColumn("Hd. [deg]");
+		headMD.AddColumn("Hd. [deg]");
+		headMD.WhenCursor = [&] {mheadMD->SetCursor(headMD.GetCursor());};
+		headMD.WhenLeftDouble = [&] {Remove();};
+
+		headQTF.AddColumn("Hd. [deg]");
+		headQTF.AddColumn("Hd. [deg]");
+		headQTF.WhenCursor = [&] {mheadQTF->SetCursor(headQTF.GetCursor());};
+		headQTF.WhenLeftDouble = [&] {Remove();};
+			
+		head1st.SetCursor(mhead1st->GetCursor());
+		headMD.SetCursor(mheadMD->GetCursor());
+		headQTF.SetCursor(mheadQTF->GetCursor());
+	}
+	void Set(ArrayCtrl *from, ArrayCtrl &to) {
+		if (!from)
+			return;
+		to.Clear();
+		for (int r = 0; r < from->GetCount(); ++r)
+			for (int c = 0; c < from->GetColumnCount(); ++c)
+				to.Set(r, c, from->Get(r, c));
+		to.SetCursor(from->GetCursor());
+	}
+	void Set1st() {Set(mhead1st, head1st);}
+	void SetQTF() {Set(mheadQTF, headQTF);}
+	void SetMD()  {Set(mheadMD, headMD);}
+
+private:
+	MainBEM *mbem = 0;
+	ArrayCtrl *mhead1st = 0, *mheadMD = 0, *mheadQTF = 0;
+};
+
 class MainPlot : public StaticRect {
 public:
 	typedef MainPlot CLASSNAME;
@@ -608,7 +676,7 @@ public:
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
 	UArray<HydroSource> ABFZ_source, ABFZ_source2;
-	UArray<HydroSource> Ainf_source, A0_source;	
+	UArray<HydroSource> Ainf_source, A0_source, B_H_source;	
 	UArray<HydroSource> TFS_source, TFS_source2;
 		
 	int plot_idf, plot_jdf;
@@ -680,7 +748,25 @@ private:
 
 typedef class MainABForce MainRAO;
 
-class MainMesh : public WithMainBEMMesh<StaticRect> {
+class MainBEMMesh : public StaticRect {
+public:
+	typedef MainBEMMesh CLASSNAME;
+	
+	void Init() {
+		menu.Add(listLoaded.LeftPosZ(0, 152).VSizePosZ(0, 0));
+		menu.Add(menuTab.HSizePosZ(152, 0).VSizePosZ(0, 0));
+		Add(menu.HSizePosZ(0, 0).TopPosZ(0, 85));
+		Add(mainTab.HSizePosZ(0, 0).VSizePosZ(85, 0));
+	}
+	ArrayCtrl listLoaded;
+	TabCtrl menuTab;
+	TabCtrl mainTab;
+
+private:
+	StaticRect menu;
+};
+
+class MainMesh : public MainBEMMesh {
 public:
 	typedef MainMesh CLASSNAME;
 	
@@ -1045,12 +1131,14 @@ private:
 	RectEnterSet frameSet;
 };
 
+class MainQTF;
+
 class QTFTabDof : public StaticRect {
 public:
 	typedef QTFTabDof CLASSNAME;
 
-	void Init(int posSplitter, int ib, int idof);
-	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter);
+	void Init(MainQTF &parent, int posSplitter, int ib, int idof);
+	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
 	
 	Splitter splitter;
 	
@@ -1077,8 +1165,9 @@ public:
 	double qwT(const Hydro &hd, int id);
 	
 private:
+	MainQTF *parent = 0;
+	
 	Box leftsplit, rightsplit;
-	Pointf pf = Null;
 	
 	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
 	void OnClick(Point p, int idof, ScatterCtrl::MouseAction action);
@@ -1087,25 +1176,72 @@ private:
 	void OnPainter(Painter &w)		{OnPaint(w);}
 	void OnDraw(Draw &w)			{OnPaint(w);}
 	
+	Pointf &Pf();
+	
 	template <class T>
 	void OnPaint(T& w) {
-		if (!up.surf.IsSurf())
+		Pointf &pf = Pf();
+		if (IsNull(pf))
 			return;
+		
 		ScatterCtrl &s = up.surf;
+		if (!s.IsSurf())
+			return;
+		
+		// double (real) calculations
 		double mn = s.GetSurfMinX(), mx = s.GetSurfMaxX();
-		if (type == 0)
-			DrawLineOpa(w, s.GetPosX(mn), s.GetPosY(mn), s.GetPosX(mx), s.GetPosY(mx), 1, 1, 3, LtRed(), "2 2");
-		else if (type == 1)
-			DrawLineOpa(w, s.GetPosX(mn), s.GetPosY(mx), s.GetPosX(mx), s.GetPosY(mn), 1, 1, 3, LtRed(), "2 2");
-		else {
-			if (IsNull(pf))
-				return;
-			int px = fround(up.surf.GetPosX(pf.x)), py = fround(up.surf.GetPosY(pf.y));
-			if (type == 2)
-				DrawLineOpa(w, s.GetPosX(mn), py, 			 s.GetPosX(mx), py,    		   1, 1, 3, LtRed(), "2 2");	
-			else
-				DrawLineOpa(w, px, 			  s.GetPosY(mn), px,    		s.GetPosY(mx), 1, 1, 3, LtRed(), "2 2");	
-		}
+			   
+		auto RoundPointPixel = [&](const Pointf &pff, Point &p) {
+			p.x = fround(s.GetPosX(pff.x));
+			p.y = fround(s.GetPosY(pff.y));
+		};
+		auto Diagonal = [&](Point &_from, Point &_to) {
+			Pointf from, to;
+			if (pf.x > pf.y) {			// Lower right corner
+				from.x = mn + pf.x - pf.y;
+				from.y = mn;
+				to.x = mx;
+				to.y = mx + pf.y - pf.x;
+			} else {					// Upper left corner
+				from.x = mn;
+				from.y = mn + pf.y - pf.x;
+				to.x = mx + pf.x - pf.y;
+				to.y = mx;
+			}
+			RoundPointPixel(from, _from);
+			RoundPointPixel(to, _to);
+		};
+		auto Conjugate = [&](Point &_from, Point &_to) {
+			Pointf from, to;
+			if (pf.x + pf.y > mx + mn) {	// Upper right corner
+				from.x = to.y = pf.x + pf.y - mx;
+				from.y = to.x = mx;
+			} else {					// Lower left corner
+				from.x = to.y = mn;
+				from.y = to.x = pf.x + pf.y - mn;
+			}
+			RoundPointPixel(from, _from);
+			RoundPointPixel(to, _to);
+		};
+		
+		int mn_x = fround(s.GetPosX(mn)), mn_y = fround(s.GetPosY(mn)),
+			mx_x = fround(s.GetPosX(mx)), mx_y = fround(s.GetPosY(mx));
+		int px = fround(s.GetPosX(pf.x)), py = fround(s.GetPosY(pf.y));
+		
+		if (type == 0) {
+			Point from, to;
+			Diagonal(from, to);
+			DrawLineOpa(w, from.x, from.y, to.x, to.y, 1, 1, 3, LtRed(), "2 2");
+			// DrawLineOpa(w, mn_x, mn_y, mx_x, mx_y, 1, 1, 3, LtRed(), "2 2");
+		} else if (type == 1) {
+			Point from, to;
+			Conjugate(from, to);
+			DrawLineOpa(w, from.x, from.y, to.x, to.y, 1, 1, 3, LtRed(), "2 2");
+			// DrawLineOpa(w, mn_x, mx_y, mx_x, mn_y, 1, 1, 3, LtRed(), "2 2");
+		} else if (type == 2)
+			DrawLineOpa(w, mn_x, py,   mx_x, py,   1, 1, 3, LtRed(), "2 2");	
+		else
+			DrawLineOpa(w, px, 	 mn_y, px,   mx_y, 1, 1, 3, LtRed(), "2 2");	
 	}
 };
 
@@ -1116,11 +1252,13 @@ public:
 	void Init(MainBEM &parent);	
 	bool Load();
 	void Unload(int idf = -1);
-	void OnHeadingsSel(ArrayCtrl *listHead);
+	void OnHeadingsSel(ArrayCtrl *listHead, bool resetPf);
 	void OnSurf();
 	
 	enum Mag {MAGNITUDE, PHASE, REAL, IMAGINARY};
 	enum Show {FSUM, FDIFFERENCE};
+	
+	Pointf pf = Null;
 	
 private:
 	MainBEM *_mbm = nullptr;
@@ -1148,7 +1286,7 @@ private:
 	MainSetupFOAMM *setup = nullptr;
 };
 
-class MainBEM : public WithMainBEMMesh<StaticRect> {
+class MainBEM : public MainBEMMesh {
 public:
 	typedef MainBEM CLASSNAME;
 	
@@ -1162,11 +1300,12 @@ public:
 	void OnRemove();
 	void OnRemoveSelected(bool all);
 	void OnJoin();
-	void OnSymmetrizeForces(bool xAxis);
+	void OnSymmetrizeForces();
 	void OnSymmetrize();
 	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnRAO();
+	void OnBH();
 	void OnOgilvie();
 	void OnAverage();
 	void OnConvergence();
@@ -1204,6 +1343,7 @@ public:
 	MainSummaryCoeff mainSummary;
 	MainABForce mainA;
 	MainABForce mainB;
+	MainABForce mainB_H;
 	MainABForce mainAinfw;
 	MainABForce mainK;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;
@@ -1216,6 +1356,8 @@ public:
 	MainMatrixKA mainMatrixM;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;
+		
+	MenuPlotList menuPlotList;
 		
 private:
 	ScatterCtrl &GetSelScatter();
@@ -1235,7 +1377,10 @@ private:
 	
 	String saveFolder;
 	int dropExportId;
+	
+	MenuAdvancedReference menuAdvancedReference;
 };
+
 
 class MainBEMW : public TopWindow {
 public:

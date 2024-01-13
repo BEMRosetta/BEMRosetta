@@ -7,7 +7,7 @@
 String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return Format(t_("Impossible to open file '%s'"), fileName);
+		return t_("Impossible to open file");
 	
 	Mesh &msh = _mesh.Add();
 	msh.fileName = fileName;

@@ -46,7 +46,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 		
 		int sdof = 6*bem.Nb;
 		int nloaded = 0;
-		if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_AINFW || 
+		if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_AINFW || 
 			dataToShow == Hydro::DATA_KIRF) {
 			plots.SetCount(sdof);
 			for (int idf = 0; idf < sdof; ++idf) {

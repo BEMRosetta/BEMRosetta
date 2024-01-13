@@ -7,7 +7,7 @@
 String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return Format(t_("Impossible to open file '%s'"), fileName);
+		return t_("Impossible to open file");
 	
 	try {
 		String line;
@@ -108,7 +108,7 @@ String NemohMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z) {
 String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return Format(t_("Impossible to open file '%s'"), fileName);
+		return t_("Impossible to open file");
 	
 	this->fileName = fileName;
 	SetCode(Mesh::NEMOH_DAT);

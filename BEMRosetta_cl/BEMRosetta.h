@@ -12,6 +12,7 @@
 
 using namespace Upp;
 
+enum Symmetry {SYM_NO, SYM_XZ, SYM_YZ, SYM_XZ_YZ, SYM_AXISYMMETRIC};
 
 class BEM;
 
@@ -27,10 +28,10 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT 							   {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT,   WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		UNKNOWN};
-	static constexpr const char *bemStr[]    = {"Wamit .out", "Wamit .1.2.3.hst.789.ss.12", "FAST .dat.1.2.3.hst.789.ss.12","HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh", "AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore",	"BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	"By extension"};
-	static constexpr const bool bemCanSave[] = {true, 	      true,	     					true,		 			 	 	false,		  false,		  false,   false, 		   true,  					  false,   true,		true,			   false,	   true, 	   true, 		 true,			true};       
-	static constexpr const char *bemExt[]	 = {"*.out", 	  "*.1",	     				"*.1",		 			 	 	"",		   	  "",		      "",      "", 		   	   "*.qtf", 				  "",      "*.hdb",		"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.*"};       
+	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS, WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR, UNKNOWN, NUMBEM};
+	static const char *bemStr[];
+	static const bool bemCanSave[];
+	static const char *bemExt[];
 	
 	static void ResetIdCount()		{idCount = 0;}
 	
@@ -39,11 +40,10 @@ public:
 			return "Unknown";
 		return bemStr[c];
 	}
-	static int GetBemStrCount() {return sizeof(bemStr)/sizeof(char *);}
 	
 	static BEM_FMT GetCodeBemStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
-		for (int i = 0; i < GetBemStrCount(); ++i)
+		for (int i = 0; i < NUMBEM; ++i)
 			if (fmt == ToLower(bemStr[i]))
 				return static_cast<BEM_FMT>(i);
 		return UNKNOWN;
@@ -61,7 +61,6 @@ public:
 		switch (code) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
-		case HAMS_WAMIT: 	return t_("HAMS.Wamit");
 		case WADAM_WAMIT: 	return t_("Wadam.Wamit");
 		case FAST_WAMIT: 	return t_("Wamit.FAST");
 		case NEMOH:			return t_("Nemoh");
@@ -74,7 +73,11 @@ public:
 		case CSV_MAT:		return t_("CSV.mat");
 		case CSV_TABLE:		return t_("CSV.tab");
 		case BEMIOH5:		return t_("BEMIO.h5");
+		case HAMS:			return t_("HAMS.1.2.3");
+		case CAPYTAINE:		return t_("Capytaine");
+		case HYDROSTAR:		return t_("Hydrostar.out");
 		case UNKNOWN:		return t_("Unknown");
+		case NUMBEM:		NEVER();
 		}
 		return t_("Unknown");
 	}
@@ -83,7 +86,6 @@ public:
 		switch (code) {
 		case WAMIT: 		return t_("Wm.o");
 		case WAMIT_1_3: 	return t_("Wm.1");
-		case HAMS_WAMIT: 	return t_("HAM");
 		case WADAM_WAMIT: 	return t_("WDM");
 		case FAST_WAMIT: 	return t_("FST");
 		case NEMOH:			return t_("Nmh");
@@ -96,7 +98,11 @@ public:
 		case CSV_MAT:		return t_("CSVm");
 		case CSV_TABLE:		return t_("CSVt");
 		case BEMIOH5:		return t_("BMh5");
+		case HAMS:			return t_("HAMS");
+		case CAPYTAINE:		return t_("Capy");
+		case HYDROSTAR:		return t_("Hydr");
 		case UNKNOWN:		return t_("¿?");
+		case NUMBEM:		NEVER();
 		}
 		return t_("Unknown");
 	}
@@ -139,6 +145,7 @@ public:
 	MatrixXd Dquad;					// (6*Nb, 6*Nb) 	Additional quadratic damping	ALWAYS DIMENSIONAL
 
     UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
+    UArray<UArray<VectorXd>> B_H; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through Haskind
     UVector<double> head;			// [Nh]             Wave headings (deg)
     UVector<String> names;  		// {Nb}             Body names
     UArray<MatrixXd> C;				// [Nb](6, 6)		Hydrostatic restoring coefficients:
@@ -285,9 +292,6 @@ public:
 	void Symmetrize();
 	void GetFexFromFscFfk();
 	
-	static constexpr const bool symmetryRulesXZ[] = {false, true,  false, true,  false, true};
-	static constexpr const bool symmetryRulesYZ[] = {true,  false, false, false, true,  true};
-	
 	bool SymmetryRule(int idf6, bool xAxis);
 	void Symmetrize_Forces(bool xAxis);
 	void Symmetrize_QTF(bool xAxis);
@@ -385,6 +389,10 @@ public:
 	VectorXd B_ndim(int idf, int jdf) 	   		const;
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
 	MatrixXd B_mat(bool ndim, int ifr, int ib1, int ib2) 	const;
+	
+	double B_H_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B_H[idf][jdf][ifr]*rho_dim()/rho_ndim() : B_H[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_H_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B_H[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B_H[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_H_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_H_ndim(ifr, idf, jdf) : B_H_dim(ifr, idf, jdf);}	
 	
 	double Kirf_dim(int it, int idf, int jdf)  	   	  const {return dimen ? Kirf[idf][jdf][it]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][it]*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double Kirf_ndim(int it, int idf, int jdf) 	   	  const {return !dimen ? Kirf[idf][jdf][it] : Kirf[idf][jdf][it]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
@@ -525,11 +533,11 @@ private:
 	void ResetForces1st(Hydro::FORCE force);
 	
 public:
-	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2, DATA_MD};
+	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2, DATA_MD, DATA_B_H};
 	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_KIRF, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
-				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD};
+				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H};
 	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_K2, MAT_DAMP_QUAD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
@@ -545,6 +553,7 @@ public:
 	bool IsLoadedDlin()  			 		 const {return Dlin.size() > 0;}
 	bool IsLoadedDquad()  			 		 const {return Dquad.size() > 0;}
 	bool IsLoadedB	   (int i = 0, int j = 0)const {return B.size() > i && B[i].size() > j && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
+	bool IsLoadedB_H   (int i = 0, int j = 0)const {return B_H.size() > i && B_H[i].size() > j && B_H[i][j].size() > 0 && IsNum(B_H[i][j][0]);}
 	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return C.size() > ib && C[ib].rows() > idf && C[ib].cols() > jdf && IsNum(C[ib](idf, jdf));}
 	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return Cmoor.size()> ib && Cmoor[ib].rows()> idf &&Cmoor[ib].cols() > jdf && IsNum(Cmoor[ib](idf,jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return M.size() > ib && M[ib].rows() > idf && M[ib].cols() > jdf && IsNum(M[ib](idf, jdf));}
@@ -573,13 +582,11 @@ public:
 	void Compare_w(Hydro &a);
 	void Compare_head(Hydro &a);
 	void Compare_Nb(Hydro &a);
-	void Compare_A(Hydro &a);
-	void Compare_B(Hydro &a);
+	void Compare_A(const UArray<UArray<VectorXd>> &a);
+	void Compare_B(const UArray<UArray<VectorXd>> &b);
 	void Compare_C(Hydro &a);
 	void Compare_cg(Hydro &a);
-	
-//	const UVector<int> &GetOrder() const	{return dofOrder;}
-//	void SetOrder(UVector<int> &order)		{dofOrder = pick(order);}
+	void Compare_F(const Forces &a, const Forces &b, String type);
 	
 	int GetW0();
 	void Get3W0(int &id1, int &id2, int &id3);
@@ -591,6 +598,7 @@ public:
 	void GetAinf();
 	void GetAinf_w();
 	void GetRAO();
+	void GetB_H();
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
@@ -795,10 +803,10 @@ class Mesh : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT 			    		  		{WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN};	
-	static constexpr const char *meshStr[]    = {"Wamit.gdf","Wamit.dat","Nemoh.dat","NemohFS.dat", "Nemoh premesh","AQWA.dat","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "Unknown"};	
-	static constexpr const bool meshCanSave[] = {true, 	     false,	     true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		  false,   		   false};       
-	static constexpr const char *meshExt[]	  = {"*.gdf", 	 "*.dat",	 "*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	  "*.hst", 		   "*.*"};       
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
+	static const char *meshStr[];
+	static const bool meshCanSave[];
+	static const char *meshExt[];
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
@@ -823,11 +831,10 @@ public:
 			return "Unknown";
 		return meshStr[c];
 	}
-	static int GetMeshStrCount() {return sizeof(meshStr)/sizeof(char *);}
 	
 	static MESH_FMT GetCodeMeshStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
-		for (int i = 0; i < GetMeshStrCount(); ++i)
+		for (int i = 0; i < NUMMESH; ++i)
 			if (fmt == ToLower(meshStr[i]))
 				return static_cast<MESH_FMT>(i);
 		return UNKNOWN;
@@ -1146,9 +1153,9 @@ public:
 	int nKochin = 0;
 	double minK = 0, maxK = 0;
 	
-	enum Solver 			   		 			  {NEMOH, NEMOHv115, NEMOHv3, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;
+	enum Solver {NEMOH, NEMOHv115, NEMOHv3, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;
 	static const char *solverStr[];
-	static constexpr const bool solverCanSave[] = {true,  true, 	 true, 	  true,      true, false};
+	static const bool solverCanSave[];
 	
 	virtual ~BEMCase() noexcept {}
 };
@@ -1200,7 +1207,7 @@ private:
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName) const;
+		String preName, String hydroName, String solvName, String postName, const BEM &bem) const;
 	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, Vector3d cg, double rho, double g) const;
 	void Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder, int solver) const;
@@ -1365,6 +1372,7 @@ public:
 	int volWarning, volError;
 	double roundVal, roundEps;
 	String csvSeparator;
+	String pythonEnv;
 	
 	void LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	HydroClass &Join(UVector<int> &ids, Function <bool(String, int)> Status = Null);
@@ -1375,6 +1383,7 @@ public:
 	void Ainf(int id);
 	void Ainf_w(int id);
 	void RAO(int id);
+	void BH(int id);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, const MatrixXd &to);
 	void WaveTo(int id, double xto, double yto);
@@ -1470,6 +1479,7 @@ public:
 			("csvSeparator", csvSeparator)
 			("legend_w_units", legend_w_units)
 			("legend_w_solver", legend_w_solver)
+			("pythonEnv", pythonEnv)
 		;
 		if (json.IsLoading()) {
 			dofType = BEM::DOFType(idofType);

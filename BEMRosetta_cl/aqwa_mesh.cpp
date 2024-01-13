@@ -7,7 +7,7 @@
 String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return Format(t_("Impossible to open file '%s'"), fileName);
+		return t_("Impossible to open file");
 	
 	double factorMass = 1;
 	double factorLength = 1;

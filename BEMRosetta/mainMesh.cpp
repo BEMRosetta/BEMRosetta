@@ -16,7 +16,7 @@ using namespace Upp;
 
 
 void MainMesh::Init() {
-	CtrlLayout(*this);
+	MainBEMMesh::Init();
 	
 	OnOpt();
 	
@@ -53,7 +53,7 @@ void MainMesh::Init() {
 	menuOpen.butSplit.Disable();	
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
 	menuOpen.butExport <<= THISBACK(OnConvertMesh);
-	for (int i = 0; i < Mesh::GetMeshStrCount(); ++i)
+	for (int i = 0; i < Mesh::NUMMESH; ++i)
 		if (Mesh::meshCanSave[i])
 			menuOpen.dropExport.Add(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
@@ -247,7 +247,7 @@ void MainMesh::Init() {
 	splitterAll.SetPositions(6000, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
 	splitterAll.Tip(t_("")).WhenAction = [&] {mainView.SetPaintSelect(splitterAll.GetPos() < 9900);};
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
-	mainView.Init();
+	mainView.Init(*this);
 	
 	String bitmapFolder = AppendFileNameX(GetDesktopFolder(), "BEMRosetta Mesh Images");
 	int idBitmapFolder = 0;
@@ -594,7 +594,7 @@ void MainMesh::OnConvertMesh() {
 		
 		FileSel fs;
 		
-		for (int i = 0; i < Mesh::GetMeshStrCount(); ++i)
+		for (int i = 0; i < Mesh::NUMMESH; ++i)
 			if (Mesh::meshCanSave[i] && (i == type || i == Mesh::UNKNOWN)) 
 				fs.Type(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)), Mesh::meshExt[i]);
 		
@@ -1839,9 +1839,9 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	array.Set(row, 0, t_("Avg. side [m]"));		array.Set(row++, col, !healing ? Null : data.mesh.GetAvgLenSegment());
 }
 
-void MainView::Init() {
+void MainView::Init(MainMesh &parent) {
 	CtrlLayout(*this);
-	main = &GetDefinedParent<MainMesh>(this);
+	main = &parent;
 	
 	gl.SetEnv(env);
 	gl.WhenPaint = THISBACK(OnPaint);	

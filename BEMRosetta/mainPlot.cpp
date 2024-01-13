@@ -70,6 +70,10 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 						labelY = t_("Radiation damping");
 						splitter.SetPos(10000, 0);	
 						break;
+	case Hydro::DATA_B_H:	title = Format(t_("Radiation damping Haskind %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));
+						labelY = t_("Radiation damping Hask.");
+						splitter.SetPos(10000, 0);	
+						break;
 	case Hydro::DATA_MD:title = Format(t_("Mean drift %s heading %.1f:%.1fº"), BEM::StrBDOF(plot_idf, false), heading0, heading1);
 						labelY = t_("Mean drift");
 						splitter.SetPos(10000, 0);	
@@ -140,6 +144,7 @@ bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const U
 	ABFZ_source2.SetCount(ids.size());
 	Ainf_source.SetCount(ids.size());
 	A0_source.SetCount(ids.size());
+	B_H_source.SetCount(ids.size());
 	TFS_source.SetCount(ids.size());
 	TFS_source2.SetCount(ids.size());
 		
@@ -190,6 +195,7 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 	ABFZ_source2.SetCount(1);
 	Ainf_source.SetCount(1);
 	A0_source.SetCount(1);
+	B_H_source.SetCount(1);
 	
 	dim = !mainBem.menuPlot.showNdim;
 	markW = mainBem.menuPlot.showPoints ? 10 : 0;
@@ -227,7 +233,7 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 
 void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	int ih = -1;
-	if (dataToShow != Hydro::DATA_A && dataToShow != Hydro::DATA_B && dataToShow != Hydro::DATA_AINFW) {
+	if (dataToShow != Hydro::DATA_A && dataToShow != Hydro::DATA_B && dataToShow != Hydro::DATA_B_H && dataToShow != Hydro::DATA_AINFW) {
 		if (dataToShow == Hydro::DATA_MD) {
 			std::complex<double> h(heading0, heading1);
 			ih = hy.GetHeadIdMD(h);
@@ -239,7 +245,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		nameType << Format("(%s)", hy.GetCodeStrAbr());
 	
 	String sids = BEM::strDOFnum_sub[plot_idf];
-	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_KIRF)
+	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_KIRF)
 		sids += BEM::strDOFnum_sub[plot_jdf];
 	
 	if (idc < 0)
@@ -311,6 +317,28 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 		}
+	} else if (dataToShow == Hydro::DATA_B_H) {
+		if (hy.IsLoadedB(plot_idf, plot_jdf)) {
+			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B, show_w, !dim, show_ma_ph)) {
+				loaded = true;
+				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B%s %s"), sids, nameType)).
+							SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_SOLID);
+				if (dim)
+					scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
+			}
+		}
+		if (hy.IsLoadedB_H(plot_idf, plot_jdf)) {
+			if (B_H_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B_H, show_w, !dim, show_ma_ph)) {
+				loaded = true;
+				scatt.AddSeries(B_H_source[id]).Legend(Format(t_("B Haskind%s %s"), sids, nameType)).
+							SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_DOTTED);
+				if (dim)
+					scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
+			}
+		}
+		
 	} else if (dataToShow == Hydro::DATA_MD && ih >= 0 && hy.IsLoadedMD()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
 			loaded = true;
@@ -452,6 +480,9 @@ void MainPlot::Clear() {
 	ABFZ_source2.Clear();
 	Ainf_source.Clear();
 	A0_source.Clear();
+	B_H_source.Clear();
+	TFS_source.Clear();
+	TFS_source2.Clear();
 	scatt.RemoveAllSeries();
 	scatP.RemoveAllSeries();
 }

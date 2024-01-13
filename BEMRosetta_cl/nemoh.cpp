@@ -448,13 +448,16 @@ void NemohCase::Save_Mesh_bat(String folder, String caseFolder, const UVector<St
 }
 
 void NemohCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName) const {
+		String preName, String hydroName, String solvName, String postName, const BEM &bem) const {
 	String fileName = AppendFileNameX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
-	out << Format("title %s in '%s'\n", solvName, caseFolder);
+	if (!IsEmpty(caseFolder))
+		out << Format("title \"%s in '%s'\"\n", solvName, caseFolder);
+	else
+		out << Format("title %s\n", solvName);
 	
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
@@ -467,9 +470,11 @@ void NemohCase::Save_Bat(String folder, String batname, String caseFolder, bool 
 	if (!hydroName.IsEmpty()) 
 		out << "\"" << AppendFileNameX(strBin, hydroName) << "\"\n";
 	if (!solvName.IsEmpty()) {
-		if (solvName == "capytaine")
+		if (solvName == "capytaine") {
+			if (!IsEmpty(bem.pythonEnv)) 
+				out << Format("call activate %s\n", bem.pythonEnv); 
 			out << "\"" << solvName << "\"\n";
-		else if (preName.IsEmpty()) 
+		} else if (preName.IsEmpty()) 
 			out << "\"" << AppendFileNameX(strBin, solvName) << "\" -all\n";
 		else
 			out << "\"" << AppendFileNameX(strBin, solvName) << "\"\n";
@@ -556,6 +561,7 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 	if (solver == BEMCase::CAPYTAINE) {
 		solvName = "capytaine";
 		batName = "Capytaine_bat";
+		bin = false;
 	} else if (bin) {
 		if (solver == BEMCase::NEMOHv115) {
 			solvName = "nemoh.exe";
@@ -700,10 +706,10 @@ void NemohCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM
 		if (numCases > 1) {
 			String caseFolder = Format("%s_Part_%d", batName, i+1);
 			//Save_Mesh_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
-			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName);
+			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName, bem);
 		} else {
 			//Save_Mesh_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
-			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName);
+			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName, bem);
 		}
 	}
 }

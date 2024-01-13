@@ -21,7 +21,7 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 			
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
-		hd().code = Hydro::HAMS_WAMIT;
+		hd().code = Hydro::HAMS;
 		
 		String wamitFile = AppendFileNameX(baseFolder, "Output", "Wamit_format", "Buoy.1");
 		
