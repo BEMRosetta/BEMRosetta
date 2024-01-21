@@ -196,7 +196,7 @@ bool BemioH5::Load_H5() {
 			if (hfile.ChangeGroup("properties")) {
 				hd().names[ib] = hfile.GetString("name");
 				hd().Vo[ib] = hfile.GetDouble("disp_vol");
-				hd().dof[ib] = hfile.GetDouble("dof");
+				hd().dof[ib] = int(hfile.GetDouble("dof"));
 				hfile.GetDouble("cb", data);
 				if (data.rows() != 3 && data.cols() != 1)
 					throw Exc("Wrong data dimension in cb");
