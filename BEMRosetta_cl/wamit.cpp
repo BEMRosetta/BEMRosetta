@@ -1459,8 +1459,8 @@ bool Wamit::Load_1(String fileName) {
 		hd().names.SetCount(hd().Nb);
 	
 	if (!hd().w.IsEmpty()) {
-		UVector<double> rw = clone(w);		Upp::Reverse(rw);
-		UVector<double> rT = clone(T);		Upp::Reverse(rT);
+		UVector<double> rw = clone(w);		ReverseX(rw);
+		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
 		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
@@ -1659,8 +1659,8 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 	bool dataFromW = ProcessFirstColumn1_3(w, T);
 	
 	if (!hd().w.IsEmpty()) {
-		UVector<double> rw = clone(w);		Upp::Reverse(rw);
-		UVector<double> rT = clone(T);		Upp::Reverse(rT);
+		UVector<double> rw = clone(w);		ReverseX(rw);
+		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
 		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
@@ -1897,8 +1897,8 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	Hydro::Initialize_MD(mmd, Nb, Nh, Nf);
 	
 	if (!hd().w.IsEmpty()) {
-		UVector<double> rw = clone(w);		Upp::Reverse(rw);
-		UVector<double> rT = clone(T);		Upp::Reverse(rT);
+		UVector<double> rw = clone(w);		ReverseX(rw);
+		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
 		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))

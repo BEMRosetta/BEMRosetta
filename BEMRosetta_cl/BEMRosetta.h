@@ -57,7 +57,7 @@ public:
 							dataFromW(Null), bem(&_bem) {id = idCount++;}
 	virtual ~Hydro() noexcept {}	
 	
-	String GetCodeStr()	const {
+	const char *GetCodeStr()	const {
 		switch (code) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
@@ -82,7 +82,7 @@ public:
 		return t_("Unknown");
 	}
 	
-	String GetCodeStrAbr() const {
+	const char *GetCodeStrAbr() const {
 		switch (code) {
 		case WAMIT: 		return t_("Wm.o");
 		case WAMIT_1_3: 	return t_("Wm.1");
@@ -249,6 +249,9 @@ public:
         }
     }
     
+    double GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what) const;
+    MatrixXd GetQTFMat(int ib, int idof, int idh, bool isSum, char what) const;
+        
     VectorXcd mdhead;							// [Nh]             Wave headings
 	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	
 	int mdtype = 0;

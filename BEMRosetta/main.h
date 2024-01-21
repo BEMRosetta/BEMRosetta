@@ -1138,7 +1138,7 @@ public:
 	typedef QTFTabDof CLASSNAME;
 
 	void Init(MainQTF &parent, int posSplitter, int ib, int idof);
-	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
+	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool opSnap, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
 	
 	Splitter splitter;
 	
@@ -1148,6 +1148,7 @@ public:
 	bool ndim, show_w;
 	bool showPoints, fromY0, autoFit;
 	std::complex<double> head;
+	bool snap;
 	
 	struct Data {
 		ArrayCtrl array;
@@ -1161,15 +1162,15 @@ public:
 		String labelY, units, ma_ph;
 	} up, down;
 	
-	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2);
-	double qwT(const Hydro &hd, int id);
+	double qwT(const Hydro &hd, int id) const;
+	VectorXd qwT(const Hydro &hd) const;
 	
 private:
 	MainQTF *parent = 0;
 	
 	Box leftsplit, rightsplit;
 	
-	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
+	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear, bool opSnap);
 	void OnClick(Point p, int idof, ScatterCtrl::MouseAction action);
 	void DoClick(Data &up, int idof);
 		
@@ -1177,6 +1178,42 @@ private:
 	void OnDraw(Draw &w)			{OnPaint(w);}
 	
 	Pointf &Pf();
+	
+	static char GetWhat(const Data &data);	
+	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2) const;
+	MatrixXd GetMat(const Hydro &hd, const Data &data, int idh, bool show_w) const;
+	
+	
+	static void Diagonal(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to) {
+		if (!Between(pf.x, mn, mx) || !Between(pf.y, mn, mx)) {
+			from = to = Null;
+			return;
+		}
+		if (pf.x > pf.y) {			// Lower right corner
+			from.x = mn + pf.x - pf.y;
+			from.y = mn;
+			to.x = mx;
+			to.y = mx + pf.y - pf.x;
+		} else {					// Upper left corner
+			from.x = mn;
+			from.y = mn + pf.y - pf.x;
+			to.x = mx + pf.x - pf.y;
+			to.y = mx;
+		}
+	};
+	static void Conjugate(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to) {
+		if (!Between(pf.x, mn, mx) || !Between(pf.y, mn, mx)) {
+			from = to = Null;
+			return;
+		}
+		if (pf.x + pf.y > mx + mn) {// Upper right corner
+			from.x = to.y = pf.x + pf.y - mx;
+			from.y = to.x = mx;
+		} else {					// Lower left corner
+			from.x = to.y = mn;
+			from.y = to.x = pf.x + pf.y - mn;
+		}		
+	}
 	
 	template <class T>
 	void OnPaint(T& w) {
@@ -1195,31 +1232,15 @@ private:
 			p.x = fround(s.GetPosX(pff.x));
 			p.y = fround(s.GetPosY(pff.y));
 		};
-		auto Diagonal = [&](Point &_from, Point &_to) {
+		auto Diagonal2 = [&](Point &_from, Point &_to) {
 			Pointf from, to;
-			if (pf.x > pf.y) {			// Lower right corner
-				from.x = mn + pf.x - pf.y;
-				from.y = mn;
-				to.x = mx;
-				to.y = mx + pf.y - pf.x;
-			} else {					// Upper left corner
-				from.x = mn;
-				from.y = mn + pf.y - pf.x;
-				to.x = mx + pf.x - pf.y;
-				to.y = mx;
-			}
+			Diagonal(pf, mn, mx, from, to);
 			RoundPointPixel(from, _from);
 			RoundPointPixel(to, _to);
 		};
-		auto Conjugate = [&](Point &_from, Point &_to) {
+		auto Conjugate2 = [&](Point &_from, Point &_to) {
 			Pointf from, to;
-			if (pf.x + pf.y > mx + mn) {	// Upper right corner
-				from.x = to.y = pf.x + pf.y - mx;
-				from.y = to.x = mx;
-			} else {					// Lower left corner
-				from.x = to.y = mn;
-				from.y = to.x = pf.x + pf.y - mn;
-			}
+			Conjugate(pf, mn, mx, from, to);
 			RoundPointPixel(from, _from);
 			RoundPointPixel(to, _to);
 		};
@@ -1230,12 +1251,12 @@ private:
 		
 		if (type == 0) {
 			Point from, to;
-			Diagonal(from, to);
+			Diagonal2(from, to);
 			DrawLineOpa(w, from.x, from.y, to.x, to.y, 1, 1, 3, LtRed(), "2 2");
 			// DrawLineOpa(w, mn_x, mn_y, mx_x, mx_y, 1, 1, 3, LtRed(), "2 2");
 		} else if (type == 1) {
 			Point from, to;
-			Conjugate(from, to);
+			Conjugate2(from, to);
 			DrawLineOpa(w, from.x, from.y, to.x, to.y, 1, 1, 3, LtRed(), "2 2");
 			// DrawLineOpa(w, mn_x, mx_y, mx_x, mn_y, 1, 1, 3, LtRed(), "2 2");
 		} else if (type == 2)

@@ -47,6 +47,8 @@ file
 	hydrodyn.dat,
 	FastOut.cpp,
 	FastOut.h,
+	Wind readonly separator,
+	bts.cpp,
 	Other readonly separator,
 	mooring.cpp,
 	data.brc,

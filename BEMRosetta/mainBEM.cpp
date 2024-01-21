@@ -291,7 +291,7 @@ void MainBEM::Init() {
 		menuPlot.fromY0.Enable(~menuPlot.autoFit);
 	};
 	menuPlot.fromY0 	<< [&] {LoadSelTab(Bem());};
-	menuPlot.opwT 		<< [&] {LoadSelTab(Bem());};
+	menuPlot.opwT 		<< [&] {mainQTF.pf = Null;	LoadSelTab(Bem());};
 	menuPlot.opMP 		<< [&] {LoadSelTab(Bem());};
 	menuPlot.showPoints << [&] {LoadSelTab(Bem());};
 	menuPlot.showNdim 	<< [&] {LoadSelTab(Bem());};
@@ -1666,27 +1666,31 @@ void MainBEM::AfterBEM() {
 }
 
 void MainBEM::OnDescription() {
-	int id = GetIdOneSelected();
-	if (id < 0) 
-		return;
-
-	WithDescription<TopWindow> w;
-	CtrlLayout(w);
-	w.Title(t_("Enter model name and description"));
-	w.butOK 	  << [&] {w.Close();};
-	w.name  	  <<= Bem().hydros[id].hd().name;
-	w.description <<= Bem().hydros[id].hd().description;
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
 	
-	w.Execute();
-	
-	Bem().hydros[id].hd().name = ~w.name;
-	Bem().hydros[id].hd().description = ~w.description;
-	
-	ArrayModel_Change(listLoaded, Bem().GetHydroId(id), Null, ~w.name, Null);
-	
-	mainSummary.Clear();
-	for (int i = 0; i < Bem().hydros.size(); ++i)
-		mainSummary.Report(Bem().hydros[i].hd(), i);
+		WithDescription<TopWindow> w;
+		CtrlLayout(w);
+		w.Title(t_("Enter model name and description"));
+		w.butOK 	  << [&] {w.Close();};
+		w.name  	  <<= Bem().hydros[id].hd().name;
+		w.description <<= Bem().hydros[id].hd().description;
+		
+		w.Execute();
+		
+		Bem().hydros[id].hd().name = ~w.name;
+		Bem().hydros[id].hd().description = ~w.description;
+		
+		ArrayModel_Change(listLoaded, Bem().GetHydroId(id), Null, ~w.name, Null);
+		
+		mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i)
+			mainSummary.Report(Bem().hydros[i].hd(), i);
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
 }
 
 int MainBEM::AskQtfHeading(const Hydro &hydro) {

@@ -1370,6 +1370,50 @@ void Hydro::Symmetrize() {
 	}
 }
 
+double Hydro::GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what) const {
+	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? qtfsum : qtfdif;
+	if (qtf.IsEmpty())
+		return Null;
+	
+	const MatrixXcd &m = qtf[ib][idh][idof];
+	
+	if (IsNull(m(ifr1, ifr2)))
+		return Null;
+	
+	switch (what) {
+	case 'm':	return F_(!dimen, abs(m(ifr1, ifr2)), idof);
+	case 'p':	return arg(m(ifr1, ifr2));	 
+	case 'r':	return F_(!dimen, m(ifr1, ifr2).real(), idof);
+	case 'i':	return F_(!dimen, m(ifr1, ifr2).imag(), idof);
+	}
+	NEVER();	
+	return Null;
+}
+
+MatrixXd Hydro::GetQTFMat(int ib, int idof, int idh, bool isSum, char what) const {
+	MatrixXd ret;
+	
+	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? qtfsum : qtfdif;
+	if (qtf.IsEmpty())
+		return ret;
+	
+	const MatrixXcd &m = qtf[ib][idh][idof];
+	
+	if (m.size() == 0)
+		return ret;
+	
+	ret.resize(m.rows(), m.cols());
+
+	switch (what) {
+	case 'm':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!dimen, abs(m(i)), idof);	break;
+	case 'p':	for (int i = 0; i < m.size(); ++i)	ret(i) = arg(m(i));						break;
+	case 'r':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!dimen, m(i).real(), idof);	break;
+	case 'i':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!dimen, m(i).imag(), idof);	break;
+	default: NEVER();
+	}
+	return ret;
+}	
+
 void Heal();
 void Load(const VectorXd &w, const VectorXd &A, const VectorXd &B, double maxT, int num);
 void Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 

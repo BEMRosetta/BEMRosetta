@@ -368,7 +368,7 @@ GUI_APP_MAIN {
 	delete(main);
 
 	if (!errorStr.IsEmpty())
-		BEM::PrintError(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
+		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }
 
 String ForceExtSafe(String fileName, String ext) {

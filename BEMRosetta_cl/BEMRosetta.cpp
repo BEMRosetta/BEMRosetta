@@ -2195,7 +2195,7 @@ void BEM::UpdateHeadAll() {
 			FindAddDelta(headAll, FixHeading(hydros[id].hd().head[ih], headingType), 0.1);
 	}
 	Sort(headAll);
-	//orderHeadAll = GetSortOrder(headAll);
+	//orderHeadAll = GetSortOrderX(headAll);
 }
 
 void BEM::UpdateHeadAllMD() {
@@ -2214,7 +2214,7 @@ void BEM::UpdateHeadAllMD() {
 		else
 			return false;
 	});
-	//orderHeadAll = GetSortOrder(headAll);
+	//orderHeadAll = GetSortOrderX(headAll);
 }
 
 void BEM::A0(int id) {
@@ -2648,8 +2648,8 @@ void HydroClass::SaveForce(FileOut &out, Hydro::Forces &f) {
 	}
 	out << "\n";
 	
-	UVector<int> ow = GetSortOrder(hd().w);
-	UVector<int> oh = GetSortOrder(hd().head);
+	UVector<int> ow = GetSortOrderX(hd().w);
+	UVector<int> oh = GetSortOrderX(hd().head);
 	
 	for (int ih = 0; ih < hd().Nh; ++ih) {
 		out << hd().head[oh[ih]];
@@ -2681,8 +2681,8 @@ void HydroClass::SaveMD(FileOut &out) {
 	}
 	out << "\n";
 	
-	UVector<int> ow = GetSortOrder(hd().w);
-	//UVector<int> oh = GetSortOrder(hd().mdhead);
+	UVector<int> ow = GetSortOrderX(hd().w);
+	//UVector<int> oh = GetSortOrderX(hd().mdhead);
 	
 	for (int ih = 0; ih < hd().mdhead.size(); ++ih) {
 		const std::complex<double> &h = hd().mdhead[ih];
@@ -2787,7 +2787,7 @@ bool HydroClass::SaveCSVMat(String file) {
 				}
 			}
 		}
-		UVector<int> ow = GetSortOrder(hd().w);
+		UVector<int> ow = GetSortOrderX(hd().w);
 		
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {		
@@ -2842,7 +2842,7 @@ bool HydroClass::SaveCSVMat(String file) {
 		out << "\n";
 	
 		
-		UVector<int> ow = GetSortOrder(hd().w);
+		UVector<int> ow = GetSortOrderX(hd().w);
 		
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {		
@@ -2943,7 +2943,7 @@ bool HydroClass::SaveCSVTable(String file) {
 		}
 		out << "\n";
 		
-		UVector<int> ow = GetSortOrder(hd().w);
+		UVector<int> ow = GetSortOrderX(hd().w);
 		
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {		
@@ -2991,7 +2991,7 @@ bool HydroClass::SaveCSVTable(String file) {
 		}
 		out << "\n";
 		
-		UVector<int> ow = GetSortOrder(hd().w);
+		UVector<int> ow = GetSortOrderX(hd().w);
 		
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {		

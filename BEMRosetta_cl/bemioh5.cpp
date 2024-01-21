@@ -133,13 +133,12 @@ bool BemioH5::Load_H5() {
 		}		
 	};
 	auto LoadAllAB = [&](UArray<UArray<VectorXd>> &a, int ib) {
-		Buffer<double> d;
-		MultiDimMatrixIndexRowMajor indx;
-		hfile.GetDouble("all", d, indx);
+		MultiDimMatrixRowMajor<double> d;
+		hfile.GetDouble("all", d);
 		for (int r = 0; r < 6; ++r) 
 			for (int c = 0; c < 6*hd().Nb; ++c) 
 				for (int iw = 0; iw < hd().Nf; ++iw) 
-					a[r + 6*ib][c](iw) = d[indx(r, c, iw)];
+					a[r + 6*ib][c](iw) = d(r, c, iw);
 	};
 	
 	auto LoadForce = [&](Hydro::Forces &f, int ib) {
@@ -173,21 +172,20 @@ bool BemioH5::Load_H5() {
 		}
 	};
 	auto LoadForceAll = [&](Hydro::Forces &f, int ib) {
-		Buffer<double> d;
-		MultiDimMatrixIndexRowMajor indx;
+		MultiDimMatrixRowMajor<double> d;
 		if (hfile.ExistDataset("re")) {
-			hfile.GetDouble("re", d, indx);
+			hfile.GetDouble("re", d);
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < hd().Nh; ++ih) 
 					for (int iw = 0; iw < hd().Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf).real(d[indx(idf, ih, iw)]);		
+						f.force[ih](iw, 6*ib + idf).real(d(idf, ih, iw));		
 		}
 		if (hfile.ExistDataset("im")) {
-			hfile.GetDouble("im", d, indx);
+			hfile.GetDouble("im", d);
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < hd().Nh; ++ih) 
 					for (int iw = 0; iw < hd().Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf).imag(d[indx(idf, ih, iw)]);			
+						f.force[ih](iw, 6*ib + idf).imag(d(idf, ih, iw));			
 		}
 	};
 		
@@ -313,13 +311,12 @@ bool BemioH5::Save(String file) {
 		}		
 	};
 	auto SaveAllAB = [&](const UArray<UArray<VectorXd>> &a, int ib, String caption) {
-		MultiDimMatrixIndexRowMajor indx(6, hd().Nb*6, hd().Nf);
-		Buffer<double> d(indx.size());
+		MultiDimMatrixRowMajor<double> d(6, hd().Nb*6, hd().Nf);
 		for (int r = 0; r < 6; ++r) 
 			for (int c = 0; c < 6*hd().Nb; ++c) 
 				for (int iw = 0; iw < hd().Nf; ++iw) 
-					d[indx(r, c, iw)] = a[r + 6*ib][c](iw);
-		hfile.Set("all", d, indx).SetDescription(caption);
+					d(r, c, iw) = a[r + 6*ib][c](iw);
+		hfile.Set("all", d).SetDescription(caption);
 	};
 	
 	auto SaveForce = [&](Hydro::Forces &f, int ib, String caption) {
@@ -374,22 +371,21 @@ bool BemioH5::Save(String file) {
 		}
 	};
 	auto SaveForceAll = [&](Hydro::Forces &f, int ib, String caption) {
-		MultiDimMatrixIndexRowMajor indx(6, hd().Nh, hd().Nf);
-		Buffer<double> d_m(indx.size()), d_p(indx.size()), d_r(indx.size()), d_i(indx.size());		
+		MultiDimMatrixRowMajor<double> d_m(6, hd().Nh, hd().Nf), d_p(6, hd().Nh, hd().Nf), d_r(6, hd().Nh, hd().Nf), d_i(6, hd().Nh, hd().Nf);		
 		for (int idf = 0; idf < 6; ++idf) 
 			for (int ih = 0; ih < hd().Nh; ++ih) 
 				for (int iw = 0; iw < hd().Nf; ++iw) {
 					const std::complex<double> &n = f.force[ih](iw, 6*ib + idf);		
-					d_r[indx(idf, ih, iw)] = n.real();		
-					d_i[indx(idf, ih, iw)] = n.imag();		
-					d_m[indx(idf, ih, iw)] = abs(n);		
-					d_p[indx(idf, ih, iw)] = arg(n);		
+					d_r(idf, ih, iw) = n.real();		
+					d_i(idf, ih, iw) = n.imag();		
+					d_m(idf, ih, iw) = abs(n);		
+					d_p(idf, ih, iw) = arg(n);		
 				}
 				
-		hfile.Set("re",    d_r, indx).SetDescription(Format("Real component of %s force", caption));		
-		hfile.Set("im",    d_i, indx).SetDescription(Format("Imaginary component of %s force", caption));
-		hfile.Set("mag",   d_m, indx).SetDescription(Format("Magnitude of %s force", caption));
-		hfile.Set("phase", d_p, indx).SetDescription(Format("Phase angle of %s force", caption));
+		hfile.Set("re",    d_r).SetDescription(Format("Real component of %s force", caption));		
+		hfile.Set("im",    d_i).SetDescription(Format("Imaginary component of %s force", caption));
+		hfile.Set("mag",   d_m).SetDescription(Format("Magnitude of %s force", caption));
+		hfile.Set("phase", d_p).SetDescription(Format("Phase angle of %s force", caption));
 	};
 	
 	for (int ib = 0; ib < hd().Nb; ++ib) {
@@ -397,7 +393,7 @@ bool BemioH5::Save(String file) {
 			if (hfile.CreateGroup("properties", true)) {
 				MatrixXd mat;
 				hfile.Set("body_number", ib+1.).SetDescription("Number of rigid body from the BEM simulation");
-				hfile.Set("name", hd().names[ib]);
+				hfile.Set("name", ~hd().names[ib]);
 				hfile.Set("disp_vol", hd().Vo[ib]).SetDescription("Displaced volume").SetUnits("m^3");
 				hfile.Set("dof", (double)hd().dof[ib]).SetDescription("Degrees of freedom");
 				hfile.Set("dof_start", 1.);
