@@ -1693,5 +1693,153 @@ double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
 MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
 UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
 
+
+
+class Wind {
+public:
+	String Load(String fileName, String ext = "");
+	String Save(String fileName, String ext = "");
+	
+	const char *GetWindTypeStr() const;
+	const String &GetDescription() const {return description;}
+	void SetHubHeight(double h)			 {zHub = h;}
+	void SetGridHeight(double h)		 {zGrid = h;	SetYZ();}
+	
+	void GetPos(double z, double y, int &idz, int &idy);
+	VectorXd Get(int idz, int idy);
+	VectorXd GetTime();
+	
+	void Report(Grid &grid) const;	
+
+protected:
+	String fileName; 
+	String description;
+	Tensor<double, 4> velocity;		// 4-D array: time, velocity component (1=U, 2=V, 3=W), iy, iz 
+	Tensor<double, 3> twrVelocity;	// 3-D array: time, velocity component, iz
+	VectorXd yPos;						// horizontal locations y(iy)
+	VectorXd zPos;						// vertical locations z(iz)
+	//VectorXd zTwr;					// vertical locations of tower points zTwr(iz)
+	int nz = Null, ny = Null;		// number of points in the vertical and horizontal directions of the grid
+	float dz = Null, dy = Null, dt = Null;		// distance between two points in the vertical [m], horizontal [m], and time [s] dimensions
+	float zHub = Null;				// hub height [m]
+	float zGrid = Null;				// vertical location of bottom of grid [m above ground level]
+	float mffws = Null;				// mean hub-height wind speed
+	int nt = Null;					// the number of time steps, INT(4)
+	int ntwr = Null;				// the number of tower points, INT(4)
+    int fc = -1;						// 1 = 1-component von Karman
+										// 2 = 1-component Kaimal
+										// 3 = 3-component von Karman
+										// 4 = improved von Karman
+										// 5 = IEC-2 Kaimal
+										// 6 = (not supported)
+										// 7 = General Kaimal
+										// 8 = Mann model
+    
+    int turbSimFormat = 7;				// TurbSim format identifier (should = 7 or 8 if periodic), INT(2)
+    
+    bool LHR = true;		// Default value for Bladed
+    
+    void SetYZ();
+};
+
+class BTSWind : public Wind {
+public:
+	String LoadBTS(String file);
+	String SaveBTS(String file, int fmtSz = -1) const;
+	
+private:
+	void LoadBTSHeader(FileInBinary &file, VectorXf &Vslope, VectorXf &Voffset);
+	
+	template <class T>
+	String LoadBTSBody(FileInBinary &file, const VectorXf &Vslope, const VectorXf &Voffset) {
+		int nPts    = ny*nz;
+    	int nv      = 3*nPts;               // the size of one time step
+    	int nvTwr   = 3*ntwr;
+    
+        velocity    = Tensor<double, 4>(nt,3,ny,nz);
+    	twrVelocity = Tensor<double, 3>(nt,3,ntwr);
+  
+		Buffer<T> data(nv);
+		Buffer<T> datat(nvTwr);
+		int fmtSz = sizeof(T);
+		for (int it = 0; it < nt; ++it) {
+			// get the grid points
+			file.Read(data, fmtSz*nv); // read the velocity components for one time step
+			
+			int ip = 0;
+	        for (int iz = 0; iz < nz; ++iz)
+	            for (int iy = 0; iy < ny; ++iy)
+	                for (int k = 0; k < 3; ++k) {
+	                    double d = (double(data[ip++]) - Voffset(k))/Vslope(k);
+	                    if (d > 200 || d < -200)
+	                        return t_("Wrong format");
+	                    velocity(it,k,iy,iz) = d;
+	                }
+			// get the tower points
+			if (ntwr > 0) {
+				file.Read(datat, fmtSz*nvTwr);		// read the velocity components for the tower
+
+	            for (int k = 0; k < 3; ++k)      // scale the data
+	                for (int itw = 0; itw < ntwr; ++itw) {
+	                    double d = (double(datat[itw*3 + k]) - Voffset(k))/Vslope(k);
+	                    if (d > 500 || d < -500)
+	                        return t_("Wrong format");
+	                	twrVelocity(it,k,itw) = d; 
+	                }
+			}
+		}
+		return "";
+	}
+	
+	void SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Voffset, int fmtSz) const;
+	
+	template <class T>
+	void SaveBTSBody(FileOutBinary &file, const VectorXf &Vslope, const VectorXf &Voffset) const {
+		int nPts    = ny*nz;
+	    int nv      = 3*nPts;               // the size of one time step
+	    int nvTwr   = 3*ntwr;
+	
+		Buffer<T> data(nv);
+		Buffer<T> datat(nvTwr);
+		int fmtSz = sizeof(T);
+		
+		for (int it = 0; it < nt; ++it) {
+			int ip = 0;
+	        for (int iz = 0; iz < nz; ++iz)
+	            for (int iy = 0; iy < ny; ++iy)
+	                for (int k = 0; k < 3; ++k) 
+	                    data[ip++] = BetweenVal(T(velocity(it,k,iy,iz)*Vslope(k) + Voffset(k)),	
+	                    						std::numeric_limits<T>::lowest(),
+	                    						std::numeric_limits<T>::max());
+			
+			file.Write(data.begin(), fmtSz*nv);
+
+			if (ntwr > 0) {
+	            for (int k = 0; k < 3; ++k)      // scale the data
+	                for (int itw = 0; itw < ntwr; ++itw) 
+	                    datat[itw*3 + k] = BetweenVal(T(fround(twrVelocity(it,k,itw)*Vslope(k) + Voffset(k))), 
+	                    						 	  std::numeric_limits<T>::lowest(), 
+	                    						 	  std::numeric_limits<T>::max());
+
+	            file.Write(datat.begin(), fmtSz*nvTwr);		// read the velocity components for the tower
+			}
+		}		
+	}
+};
+
+class WNDWind : public Wind {
+public:
+	String LoadWND(String file, double _zHub = Null);	
+	
+private:
+	bool LoadSum(String fileName, const UVector<String> &str, UVector<float> &SummVars, float &ZGoffset);
+};
+
+
+class ArrayWind : public Upp::Array<Wind> {
+public:
+	void Report(Grid &grid);
+};
+
 	
 #endif

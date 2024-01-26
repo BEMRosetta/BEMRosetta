@@ -1142,7 +1142,7 @@ public:
 	
 	Splitter splitter;
 	
-	int type = 0;
+	char typec = 'd';
 	bool isSum;
 	int ib, ih, idof;
 	bool ndim, show_w;
@@ -1249,17 +1249,15 @@ private:
 			mx_x = fround(s.GetPosX(mx)), mx_y = fround(s.GetPosY(mx));
 		int px = fround(s.GetPosX(pf.x)), py = fround(s.GetPosY(pf.y));
 		
-		if (type == 0) {
+		if (typec == 'd') {
 			Point from, to;
 			Diagonal2(from, to);
 			DrawLineOpa(w, from.x, from.y, to.x, to.y, 1, 1, 3, LtRed(), "2 2");
-			// DrawLineOpa(w, mn_x, mn_y, mx_x, mx_y, 1, 1, 3, LtRed(), "2 2");
-		} else if (type == 1) {
+		} else if (typec == 'c') {
 			Point from, to;
 			Conjugate2(from, to);
 			DrawLineOpa(w, from.x, from.y, to.x, to.y, 1, 1, 3, LtRed(), "2 2");
-			// DrawLineOpa(w, mn_x, mx_y, mx_x, mn_y, 1, 1, 3, LtRed(), "2 2");
-		} else if (type == 2)
+		} else if (typec == 'h')
 			DrawLineOpa(w, mn_x, py,   mx_x, py,   1, 1, 3, LtRed(), "2 2");	
 		else
 			DrawLineOpa(w, px, 	 mn_y, px,   mx_y, 1, 1, 3, LtRed(), "2 2");	

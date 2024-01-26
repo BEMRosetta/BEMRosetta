@@ -105,7 +105,12 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 		up.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
 	}
 	up.scatter.SetLabelY(up.labelY);
-	up.scatter.SetLabelX(show_w ? t_("ω [rad/s]") : t_("T [s]"));
+	String saxis;
+	if (typec == 'v')
+		saxis = t_("Y axis");
+	else
+		saxis = t_("X axis");
+	up.scatter.SetLabelX(Format("%s %s", saxis, show_w ? t_("ω [rad/s]") : t_("T [s]")));
 	
 	double avgT = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
@@ -132,10 +137,10 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 			Pf().x = Pf().y = Qw(id);
 		} else {
 			if (snap) {
-				if (type == 2) {
+				if (typec == 'h') {
 					id = FindClosest(Qw, Pf().y);
 					Pf().y = Qw(id);
-				} else if (type == 3) {			
+				} else if (typec == 'v') {			
 					id = FindClosest(Qw, Pf().x);
 					Pf().x = Qw(id);
 				}
@@ -143,28 +148,28 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 		}
 		Pointf from, to;
 		
-		if (type == 2 || type == 3) {
+		if (typec == 'h' || typec == 'v') {
 			if (snap)
 				avgT += Qw(id);
 			else
 				avgT += Pf().x;
-		} else if (type == 0) 
+		} else if (typec == 'd') 
 			Diagonal (Pf(), First(Qw), Last(Qw), from, to);
 		else
 			Conjugate(Pf(), First(Qw), Last(Qw), from, to);
 		
-		if (type == 2 || type == 3) {
+		if (typec == 'h' || typec == 'v') {
 			if (snap) {
 				for (int iw = 0; iw < hd.qw.size(); ++iw) {
 					double val;
-					if (type == 2) 
+					if (typec == 'h') 
 						val = m(id, iw);
 					else 
 						val = m(iw, id);
 					d << Pointf(Qw(iw), val);
 				}	
 			} else {
-				if (type == 2) {
+				if (typec == 'h') {
 					from = Pointf(First(Qw), Pf().y);
 					to = Pointf(Last(Qw), Pf().y);
 				} else {
@@ -193,13 +198,13 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 		if (!showPoints)
 			up.scatter.NoMark();
 	}
-	if (type == 2 || type == 3)
+	if (typec == 'h' || typec == 'v')
 		avgT /= Bem().hydros.size();		// Average value
 	
 	String strw;
-	if (type == 0)
+	if (typec == 'd')
 		strw = t_("Diagonal");
-	else if (type == 1)
+	else if (typec == 'c')
 		strw = t_("Conjugate");
 	else 
 		strw = Format("%.2f %s", avgT, show_w ? "rad/s" : "s");
@@ -457,7 +462,12 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 }
 
 void MainQTF::OnSurf() {
-	dof[idof+6*ib].type = ~opLine;
+	switch (int(~opLine)) {
+	case 0:	dof[idof+6*ib].typec = 'd';	break;
+	case 1:	dof[idof+6*ib].typec = 'c';	break;
+	case 2:	dof[idof+6*ib].typec = 'h';	break;
+	default:dof[idof+6*ib].typec = 'v';
+	}
 	dof[idof+6*ib].up.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);
 	dof[idof+6*ib].up.surf.Refresh();
 	dof[idof+6*ib].down.dataSurf.SetInterpolate(opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO);

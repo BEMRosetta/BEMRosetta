@@ -72,6 +72,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-h  -help                 # Print options");
 	Cout() << "\n" << t_("-echo \"text\"            # Prints \"text\"");
 	Cout() << "\n" << t_("-pause");
+	Cout() << "\n" << t_("-exit                     # Exits BEMRosetta");
 	
 	Cout() << "\n" << t_("-general                  # The next commands are for any data (default)");
 	Cout() << "\n" << t_("-paramfile <file>         # Params in a file. New lines are like separators and # indicates a comment");
@@ -167,6 +168,22 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("              <param> max       # <param> max");
 	Cout() << "\n" << t_("              <param> min       # <param> min");	
 	
+	Cout() << "\n";
+	Cout() << "\n" << t_("-wind                           # The next commands are for wind series");
+	Cout() << "\n" << t_("-i  -input <file>               # Load file");
+	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
+	Cout() << "\n" << t_("-setid <id>                     # Set the id of the default BEM model");
+	Cout() << "\n" << t_("-params <param> <value>         # Set parameters:");
+	Cout() << "\n" << t_("               hubheight        # Hub heignt [m]       ");
+	Cout() << "\n" << t_("               gridheight       # Grid base height [m] ");
+	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
+	Cout() << "\n" << t_("              time              # Time series [s]");
+	Cout() << "\n" << t_("              vel  <y> <z>      # Wind speed norm [m/s ]at y, z [m]");
+	
+	Cout() << "\n" << t_("-r  -report                     # Output loaded model main data");
+	Cout() << "\n" << t_("-ra -reportall                  # Output all models main data");
+	Cout() << "\n" << t_("-cl -clear                      # Clear loaded model");	
+	
 #ifdef PLATFORM_WIN32
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
@@ -223,7 +240,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	Cout() << "BEMRosetta";
 	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 	
-	String str = S(". ") + t_("Copyright (c) 2023. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
+	String str = S(". ") + t_("Copyright (c) 2024. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
 	SetBuildInfo(str);
 	Cout() << str;
 	
@@ -231,6 +248,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	
 	BEM bem;
 	FastOut fast;
+	ArrayWind wind;
+	
 	bool returnval = true;
 	
 #ifdef PLATFORM_WIN32
@@ -255,7 +274,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 			ShowHelp(bem);
 		} else {
 			String nextcommands = "general";
-			int bemid = -1, meshid = -1;
+			int bemid = -1, meshid = -1, windid = -1;
 			for (int i = 0; i < command.size(); i++) {
 				String param = ToLower(command[i]);
 				if (param == "-general") 
@@ -268,17 +287,21 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 					nextcommands = "time";
 				else if (param == "-orca") 
 					nextcommands = "orca";
+				else if (param == "-wind") 
+					nextcommands = "wind";
 				else if (param == "-h" || param == "-help") {
 					ShowHelp(bem);
 					break;
 				} else if (param == "-pause") 
 					ReadStdIn();
+				else if (param == "-exit") 
+					break;
 				else if (param == "-echo") {
-					CheckIfAvailableArg(command, ++i, "-isEqual");
+					CheckIfAvailableArg(command, ++i, "-echo");
 					
 					Cout() << Replace(command[i], "\\n", "\n");
 				} else if (param == "-isequal") { 
-					CheckIfAvailableArg(command, ++i, "-isEqual");
+					CheckIfAvailableArg(command, ++i, "-isequal");
 					
 					String data = Trim(command[i]);
 					if (Trim(lastPrint) == data) 
@@ -321,14 +344,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								++i;
-								if (command[i] == "g") {
+								if (ToLower(command[i]) == "g") {
 									CheckIfAvailableArg(command, ++i, "-p g");
 									double g = ScanDouble(command[i]);
 									if (IsNull(g))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
 									bem.g = g;
 									BEM::Print("\n" + Format(t_("Gravity is %f"), g));	
-								} else if (command[i] == "rho") {
+								} else if (ToLower(command[i]) == "rho") {
 									CheckIfAvailableArg(command, ++i, "-p rho");
 									double rho = ScanDouble(command[i]);
 									if (IsNull(rho))
@@ -390,7 +413,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							CheckIfAvailableArg(command, ++i, "-setid");
 
-							int bemid = ScanInt(command[i]);
+							bemid = ScanInt(command[i]);
 							if (IsNull(bemid) || bemid < 0 || bemid > bem.hydros.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[i]));
 							BEM::Print("\n" + Format(t_("BEM active model id is %d"), bemid));	
@@ -410,14 +433,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
 								++i;
-								if (command[i] == "length") {
+								if (ToLower(command[i]) == "length") {
 									CheckIfAvailableArg(command, ++i, "-p length");
 									double len = ScanDouble(command[i]);
 									if (IsNull(len))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
 									bem.len = len;
 									BEM::Print("\n" + Format(t_("length is %f"), len));	
-								} else if (command[i] == "depth") {
+								} else if (ToLower(command[i]) == "depth") {
 									CheckIfAvailableArg(command, ++i, "-p depth");
 									double depth = ScanDouble(command[i]);
 									if (IsNull(depth))
@@ -425,7 +448,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									bem.depth = depth;
 									BEM::Print("\n" + Format(t_("depth is %f"), depth));	
 								} else 
-									throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
+									throw Exc(Format(t_("Wrong command '%s'"), command[i]));
 							}
 						} else if (param == "-p" || param == "-print") {
 							Hydro &data = bem.hydros[bemid].hd();
@@ -870,6 +893,115 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								}
 							}
 						} else
+							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
+					} else if (nextcommands == "wind") {
+						if (param == "-i" || param == "-input") {
+							CheckIfAvailableArg(command, ++i, "--input");
+							
+							String file = command[i];
+							if (!FileExists(file)) 
+								throw Exc(Format(t_("File '%s' not found"), file)); 
+							
+							Wind &w = wind.Add();
+							String ret;
+							if (!IsEmpty(ret = w.Load(file)))
+								throw Exc(ret);
+							
+							windid = wind.size() - 1;
+							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
+						} else if (param == "-params") {
+							CheckIfAvailableArg(command, i+1, "-params");
+							
+							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
+								++i;
+								if (ToLower(command[i]) == "hubheight") {
+									CheckIfAvailableArg(command, ++i, "-p hubheight");
+									double h = ScanDouble(command[i]);
+									if (IsNull(h))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
+									wind[windid].SetHubHeight(h);
+									BEM::Print("\n" + Format(t_("Hub height is %f"), h));	
+								} else if (ToLower(command[i]) == "gridheight") {
+									CheckIfAvailableArg(command, ++i, "-p gridheight");
+									double h = ScanDouble(command[i]);
+									if (IsNull(h))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[i]));
+									wind[windid].SetGridHeight(h);
+									BEM::Print("\n" + Format(t_("Grid height is %f"), h));	
+								} else 
+									throw Exc(Format(t_("Wrong command '%s'"), command[i]));
+							}
+						} else if (param == "-r" || param == "-report") {
+							if (wind.IsEmpty()) 
+								throw Exc(t_("Report: No file loaded"));
+							Grid grid;
+							wind[windid].Report(grid);
+							BEM::Print("\n" + grid.GetString(true, ' '));
+						} else if (param == "-ra" || param == "-reportall") {
+							if (wind.IsEmpty()) 
+								throw Exc(t_("Report: No file loaded"));
+							Grid grid;
+							wind.Report(grid);
+							BEM::Print("\n" + grid.GetString(true, ' '));
+						} else if (param == "-cl" || param == "-clear") {
+							wind.Clear();
+							windid = -1;
+							BEM::Print("\n" + S(t_("Wind data cleared")));	
+						} else if (param == "-setid") {
+							if (wind.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
+							
+							CheckIfAvailableArg(command, ++i, "-setid");
+
+							windid = ScanInt(command[i]);
+							if (IsNull(windid) || windid < 0 || windid > wind.size()-1)
+								throw Exc(Format(t_("Invalid id %s"), command[i]));
+							BEM::Print("\n" + Format(t_("Wind active model id is %d"), bemid));	
+						} else if (param == "-c" || param == "-convert") {
+							if (wind.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
+							
+							CheckIfAvailableArg(command, ++i, "-convert");
+							
+							String file = command[i];
+							
+							String ret;
+							if (!IsEmpty(ret = wind[windid].Save(file)))
+								throw Exc(ret);
+							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), windid, file));
+						} else if (param == "-p" || param == "-print") {
+							Wind &w = wind[windid];
+							while (command.size() > i+1 && !command[i+1].StartsWith("-")) {
+								i++;
+								String param = ToLower(command[i]);
+								if (param == "vel") {
+									BEM::Print("\n");
+									BEM::Print(t_("Velocity:") + S(" "));
+									lastPrint.Clear();
+									
+									CheckIfAvailableArg(command, ++i, "Position Y");
+									double ypos = ScanDouble(command[i]);
+									CheckIfAvailableArg(command, ++i, "Position Z");
+									double zpos = ScanDouble(command[i]);
+									int idz, idy;
+									w.GetPos(zpos, ypos, idz, idy);
+									Eigen::VectorXd v;
+									v = w.Get(idz, idy);
+									for (int i = 0; i < v.size(); ++i) 
+										lastPrint << v(i) << " ";
+									BEM::Print(lastPrint);
+								} else if (param == "time") {
+									BEM::Print("\n");
+									BEM::Print(t_("Time:") + S(" "));
+									lastPrint.Clear();
+									Eigen::VectorXd t;
+									t = w.GetTime();
+									for (int i = 0; i < t.size(); ++i) 
+										lastPrint << t(i) << " ";
+									BEM::Print(lastPrint);
+								}
+							}
+						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[i]));
 					}
 #ifdef PLATFORM_WIN32						
