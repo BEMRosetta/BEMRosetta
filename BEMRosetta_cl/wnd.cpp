@@ -23,10 +23,10 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 	    	
 	    String line = ToUpper(file.GetLine());
 	
-	    int findx = line.FindAfter("=");        //first index
+	    int findx = line.FindAfter("=");  // first index
 	    if (findx < 0)
 	        findx = 0;
-	    int lindx = line.GetCount();               //last  index
+	    int lindx = line.GetCount();      // last index
 	
 		for (int i = 0; i < varValues.size(); ++i) {
 			if (varValues[i] == 0) {
@@ -107,7 +107,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		    dx    = file.Read<int16>();               // delta x (actually t in this case) in mm
 		    nt    = file.Read<int16>();               // half number of time steps
 		    mffws = file.Read<int16>();               // 10 times mean FF wind speed, should be equal to MWS
-		              file.SeekCur(5*sizeof(int16));    // unnecessary lines
+		              file.SeekCur(5*sizeof(int16));  // unnecessary lines
 		    nz    = file.Read<int16>();               // 1000 times number of points in vertical direction, max 32
 		    ny    = file.Read<int16>();               // 1000 times the number of points in horizontal direction, max 32
 		    file.SeekCur(3*(-nffc-1)*sizeof(int16)); 

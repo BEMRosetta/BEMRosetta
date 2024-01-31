@@ -5,16 +5,11 @@
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
 #include "functions.h"
-
+#include <SysInfo/Crash.h>
 #include <MatIO/matio.h>
 
 using namespace Upp;
 using namespace Eigen;
-
-#ifdef flagDEBUG
-#include <SysInfo/Crash.h>
-static CrashHandler crash;
-#endif
 
 
 Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
@@ -1449,6 +1444,45 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		lastError = e;
 		return false;
 	}*/
+	
+	// Fill the other side of the diagonal. If Null, fill with zero
+	auto FillNullQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+		for (int ib = 0; ib < Nb; ++ib) {
+	        for (int ih = 0; ih < qh.size(); ++ih) {
+				for (int idf = 0; idf < 6; ++idf) { 
+					MatrixXcd &c = qtf[ib][ih][idf];
+					Eigen::Index rows = c.rows();
+					for (int iw = 0; iw < rows; ++iw) {
+						for (int jw = iw+1; jw < rows; ++jw) {
+							std::complex<double> &cij = c(iw, jw), &cji = c(jw, iw);
+							if (IsNull(cij)) {
+								if (IsNull(cji))
+									cij = cji = 0;
+								else {
+									if (isSum) 
+										cij = cji;
+									else
+										cij = std::complex<double>(cji.real(), -cji.imag());;
+								}
+							} else {
+								if (IsNull(cji)) {
+									if (isSum) 
+										cji = cij;
+									else
+										cji = std::complex<double>(cij.real(), -cij.imag());
+								}
+							}
+						}
+					}
+				}
+	        }
+		}
+	};
+	if (IsLoadedQTF(true)) 
+		FillNullQTF(qtfsum, true);
+	if (IsLoadedQTF(false))
+		FillNullQTF(qtfdif, false);
+	
 	
 	return true;
 }

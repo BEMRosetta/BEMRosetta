@@ -1138,7 +1138,7 @@ public:
 	typedef QTFTabDof CLASSNAME;
 
 	void Init(MainQTF &parent, int posSplitter, int ib, int idof);
-	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool opSnap, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
+	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
 	
 	Splitter splitter;
 	
@@ -1148,29 +1148,26 @@ public:
 	bool ndim, show_w;
 	bool showPoints, fromY0, autoFit;
 	std::complex<double> head;
-	bool snap;
 	
 	struct Data {
 		ArrayCtrl array;
 		Box sc;
 		ScatterCtrl surf, scatter;
-		UVector<double> zData, xAxis;
-		TableDataVector dataSurf;
+		Eigen::VectorXd xAxis;
+		Eigen::MatrixXd zData;
+		TableDataEigen dataSurf;
 		UArray<UArray<Pointf>> dataPlot;
 		bool isUp;
 		bool show_ma_ph;
 		String labelY, units, ma_ph;
 	} up, down;
 	
-	double qwT(const Hydro &hd, int id) const;
-	VectorXd qwT(const Hydro &hd) const;
-	
 private:
 	MainQTF *parent = 0;
 	
 	Box leftsplit, rightsplit;
 	
-	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear, bool opSnap);
+	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
 	void OnClick(Point p, int idof, ScatterCtrl::MouseAction action);
 	void DoClick(Data &up, int idof);
 		
@@ -1180,28 +1177,30 @@ private:
 	Pointf &Pf();
 	
 	static char GetWhat(const Data &data);	
-	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2) const;
-	MatrixXd GetMat(const Hydro &hd, const Data &data, int idh, bool show_w) const;
+	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const;
+	MatrixXd GetMat(const Hydro &hd, const Data &data, int idh, bool show_w, bool getDim) const;
 	
 	
-	static void Diagonal(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to) {
+	static void Diagonal(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to, double &a, double &b) {
 		if (!Between(pf.x, mn, mx) || !Between(pf.y, mn, mx)) {
 			from = to = Null;
 			return;
 		}
 		if (pf.x > pf.y) {			// Lower right corner
-			from.x = mn + pf.x - pf.y;
+			from.x = mn + (pf.x - pf.y);
 			from.y = mn;
 			to.x = mx;
-			to.y = mx + pf.y - pf.x;
+			to.y = mx + (pf.y - pf.x);
 		} else {					// Upper left corner
 			from.x = mn;
-			from.y = mn + pf.y - pf.x;
-			to.x = mx + pf.x - pf.y;
+			from.y = mn + (pf.y - pf.x);
+			to.x = mx + (pf.x - pf.y);
 			to.y = mx;
 		}
+		a = (to.y-from.y)/(to.x-from.x);
+		b = from.y - a*from.x;
 	};
-	static void Conjugate(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to) {
+	static void Conjugate(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to, double &a, double &b) {
 		if (!Between(pf.x, mn, mx) || !Between(pf.y, mn, mx)) {
 			from = to = Null;
 			return;
@@ -1212,7 +1211,10 @@ private:
 		} else {					// Lower left corner
 			from.x = to.y = mn;
 			from.y = to.x = pf.x + pf.y - mn;
-		}		
+		}
+		a = (to.y-from.y)/(to.x-from.x);
+		b = from.y - a*from.x;				
+		
 	}
 	
 	template <class T>
@@ -1234,13 +1236,15 @@ private:
 		};
 		auto Diagonal2 = [&](Point &_from, Point &_to) {
 			Pointf from, to;
-			Diagonal(pf, mn, mx, from, to);
+			double a, b;
+			Diagonal(pf, mn, mx, from, to, a, b);
 			RoundPointPixel(from, _from);
 			RoundPointPixel(to, _to);
 		};
 		auto Conjugate2 = [&](Point &_from, Point &_to) {
 			Pointf from, to;
-			Conjugate(pf, mn, mx, from, to);
+			double a, b;
+			Conjugate(pf, mn, mx, from, to, a, b);
 			RoundPointPixel(from, _from);
 			RoundPointPixel(to, _to);
 		};

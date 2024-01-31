@@ -59,58 +59,42 @@ void QTFTabDof::Init(MainQTF &par, int posSplitter, int ib, int idof) {
 	parent = &par;
 }
 
-double QTFTabDof::qwT(const Hydro &hd, int id) const {
-	return show_w ? hd.qw[id] : 2*M_PI/hd.qw[id];
-}
-
-VectorXd QTFTabDof::qwT(const Hydro &hd) const {
-	VectorXd ret(hd.qw.size());
-	for (int i = 0; i < hd.qw.size(); ++i)
-		ret[i] = show_w ? hd.qw[i] : 2*M_PI/hd.qw[i];
-	return ret;
-}
-
 Pointf &QTFTabDof::Pf() {
 	return parent->pf;
 }
 
-void QTFTabDof::DoClick(Data &up, int idof) {
-	up.dataPlot.Clear();
-	up.scatter.RemoveAllSeries();
+void QTFTabDof::DoClick(Data &data, int idof) {
+	data.dataPlot.Clear();
+	data.scatter.RemoveAllSeries();
 	
 	String strmag;
 	
-	if (up.show_ma_ph) {
-		if (up.isUp) {
-			up.labelY = t_("Magnitude");
-			up.ma_ph = t_("ma");
+	if (data.show_ma_ph) {
+		if (data.isUp) {
+			data.labelY = t_("Magnitude");
+			data.ma_ph = t_("ma");
 			strmag = t_("mag");
-			up.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
+			data.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
 		} else {
-			up.labelY = t_("Phase");
-			up.ma_ph = t_("ph");
+			data.labelY = t_("Phase");
+			data.ma_ph = t_("ph");
 			strmag = t_("phase");
-			up.units = t_("rad");
+			data.units = t_("rad");
 		}
 	} else {
-		if (up.isUp) {
-			up.labelY = t_("Real");
-			up.ma_ph = t_("re");
+		if (data.isUp) {
+			data.labelY = t_("Real");
+			data.ma_ph = t_("re");
 			strmag = t_("real");
 		} else {
-			up.labelY = t_("Imaginary");
-			up.ma_ph = t_("im");
+			data.labelY = t_("Imaginary");
+			data.ma_ph = t_("im");
 			strmag = t_("imag");
 		}
-		up.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
+		data.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
 	}
-	up.scatter.SetLabelY(up.labelY);
-	String saxis;
-	if (typec == 'v')
-		saxis = t_("Y axis");
-	else
-		saxis = t_("X axis");
-	up.scatter.SetLabelX(Format("%s %s", saxis, show_w ? t_("ω [rad/s]") : t_("T [s]")));
+	data.scatter.SetLabelY(data.labelY);
+	data.scatter.SetLabelX(Format(show_w ? t_("ω%s [rad/s]") : t_("T%s [s]"), typec == 'v' ? CharToSubSupScript('y', true) : CharToSubSupScript('x', true)));
 	
 	double avgT = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
@@ -122,81 +106,54 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 		if (idh < 0) 
 			continue;
 		
-		VectorXd Qw = qwT(hd);
-		if (!show_w)
-			Upp::Reverse(Qw);
+		VectorXd xAxis = hd.qw;
+		if (!show_w) {
+			for (double &d : xAxis)
+				d = 2*M_PI/d;
+			ReverseX(xAxis);
+		}
 		
-		MatrixXd m = GetMat(hd, up, idh, show_w);
+		MatrixXd zData = GetMat(hd, data, idh, show_w, !ndim);
 		
-		UArray<Pointf> &d = up.dataPlot.Add();	
+		UArray<Pointf> &d = data.dataPlot.Add();	
 		
 		int id = Null;
 		if (IsNull(Pf())) {
-			double freq = Avg(Last(Qw), First(Qw));
-			id = FindClosest(Qw, freq);
-			Pf().x = Pf().y = Qw(id);
-		} else {
-			if (snap) {
-				if (typec == 'h') {
-					id = FindClosest(Qw, Pf().y);
-					Pf().y = Qw(id);
-				} else if (typec == 'v') {			
-					id = FindClosest(Qw, Pf().x);
-					Pf().x = Qw(id);
-				}
-			}
+			double freq = Avg(Last(xAxis), First(xAxis));
+			id = FindClosest(xAxis, freq);
+			Pf().x = Pf().y = xAxis(id);
 		}
 		Pointf from, to;
+		double a, b;
 		
-		if (typec == 'h' || typec == 'v') {
-			if (snap)
-				avgT += Qw(id);
-			else
-				avgT += Pf().x;
+		if (typec == 'h') {
+			avgT += Pf().y;
+		} else if (typec == 'v') {
+			avgT += Pf().x;
 		} else if (typec == 'd') 
-			Diagonal (Pf(), First(Qw), Last(Qw), from, to);
+			Diagonal (Pf(), First(xAxis), Last(xAxis), from, to, a, b);
 		else
-			Conjugate(Pf(), First(Qw), Last(Qw), from, to);
+			Conjugate(Pf(), First(xAxis), Last(xAxis), from, to, a, b);
 		
-		if (typec == 'h' || typec == 'v') {
-			if (snap) {
-				for (int iw = 0; iw < hd.qw.size(); ++iw) {
-					double val;
-					if (typec == 'h') 
-						val = m(id, iw);
-					else 
-						val = m(iw, id);
-					d << Pointf(Qw(iw), val);
-				}	
-			} else {
-				if (typec == 'h') {
-					from = Pointf(First(Qw), Pf().y);
-					to = Pointf(Last(Qw), Pf().y);
-				} else {
-					from = Pointf(First(Qw), Pf().x);
-					to = Pointf(Last(Qw), Pf().x);
-				}
-				if (!IsNull(from) && !IsNull(to)) {
-					double dx = (to.x - from.x)/300;
-					double dy = (to.y - from.y)/300;
-					for (int i = 0; i <= 300; ++i)
-						d << Pointf(from.x + i*dx, BilinearInterpolate(from.x + i*dx, from.y + i*dy, Qw, Qw, m));
-				}	
-			}
+		if (typec == 'h') {
+			for (int iw = 0; iw < xAxis.size(); ++iw) 
+				d << Pointf(xAxis(iw), BilinearInterpolate(Pf().y, xAxis(iw), xAxis, xAxis, zData));	// row, col order, to fit with zData
+		} else if (typec == 'v') {
+			for (int iw = 0; iw < xAxis.size(); ++iw) 
+				d << Pointf(xAxis(iw), BilinearInterpolate(xAxis(iw), Pf().x, xAxis, xAxis, zData));
 		} else {
 			if (!IsNull(from) && !IsNull(to)) {
-				double dx = (to.x - from.x)/300;
-				double dy = (to.y - from.y)/300;
-				for (int i = 0; i <= 300; ++i)
-					d << Pointf(from.x + i*dx, BilinearInterpolate(from.x + i*dx, from.y + i*dy, Qw, Qw, m));
+				for (int iw = 0; iw < xAxis.size(); ++iw) 
+					if (Between(xAxis(iw), from.x, to.x)) 
+						d << Pointf(xAxis(iw), BilinearInterpolate(a*xAxis(iw) + b, xAxis(iw), xAxis, xAxis, zData));
 			}
 		}
 		int idc = hd.GetId();
 		const Upp::Color &color = GetColorId(idc);
-		String nameType = Format(t_("QTF %s %s(%s)"), up.ma_ph, hd.name, hd.GetCodeStrAbr());
-		up.scatter.AddSeries(d).Legend(nameType).Units(up.units).SetMarkColor(color).Stroke(2, color);
+		String nameType = Format(t_("QTF %s %s(%s)"), data.ma_ph, hd.name, hd.GetCodeStrAbr());
+		data.scatter.AddSeries(d).Legend(nameType).Units(data.units).SetMarkColor(color).Stroke(2, color);
 		if (!showPoints)
-			up.scatter.NoMark();
+			data.scatter.NoMark();
 	}
 	if (typec == 'h' || typec == 'v')
 		avgT /= Bem().hydros.size();		// Average value
@@ -208,27 +165,27 @@ void QTFTabDof::DoClick(Data &up, int idof) {
 		strw = t_("Conjugate");
 	else 
 		strw = Format("%.2f %s", avgT, show_w ? "rad/s" : "s");
-	up.scatter.SetTitle(Format(t_("QTF %s %d.%s %s heading %.1f:%.1fº %s"), isSum ? "sum" : "dif", ib+1, BEM::StrDOF(idof), strw, real(head), imag(head), strmag));
+	data.scatter.SetTitle(Format(t_("QTF %s %d.%s %s heading %.1f:%.1fº %s"), isSum ? "sum" : "dif", ib+1, BEM::StrDOF(idof), strw, real(head), imag(head), strmag));
 	
 	if (autoFit) {
-		up.scatter.ZoomToFit(true, true);
-		if (up.isUp || !up.show_ma_ph) {
+		data.scatter.ZoomToFit(true, true);
+		if (data.isUp || !data.show_ma_ph) {
 			if (fromY0) {
-				double yRange = max<double>(0, up.scatter.GetYMin()) + up.scatter.GetYRange();
-				up.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
+				double yRange = max<double>(0, data.scatter.GetYMin()) + data.scatter.GetYRange();
+				data.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
 			}
 		} else {
-			if (up.show_ma_ph && !up.isUp) {
-				up.scatter.ZoomToFit(true, false);
-				up.scatter.SetXYMin(Null, -M_PI).SetRange(Null, 2*M_PI).SetMajorUnits(Null, 1);
-				up.scatter.SetMinUnits(Null, M_PI-3);
+			if (data.show_ma_ph && !data.isUp) {	// Phase
+				data.scatter.ZoomToFit(true, false);
+				data.scatter.SetXYMin(Null, -M_PI).SetRange(Null, 2*M_PI).SetMajorUnits(Null, 1);
+				data.scatter.SetMinUnits(Null, M_PI-3);
 			} else if (fromY0) {
-				double yRange = max<double>(0, up.scatter.GetYMin()) + up.scatter.GetYRange();
-				up.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
+				double yRange = max<double>(0, data.scatter.GetYMin()) + data.scatter.GetYRange();
+				data.scatter.SetXYMin(Null, 0).SetRange(Null, yRange);
 			} 
 		}
 	}
-	up.scatter.Refresh();
+	data.scatter.Refresh();
 }
 
 void QTFTabDof::OnClick(Point p, int idof, ScatterCtrl::MouseAction action) {
@@ -259,62 +216,57 @@ char QTFTabDof::GetWhat(const Data &data) {
 	}
 }
 	
-double QTFTabDof::GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2) const {
-	return hd.GetQTFVal(ib, idof, idh, ifr1, ifr2, isSum, GetWhat(data));
+double QTFTabDof::GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const {
+	return hd.GetQTFVal(ib, idof, idh, ifr1, ifr2, isSum, GetWhat(data), getDim);
 }
 
-MatrixXd QTFTabDof::GetMat(const Hydro &hd, const Data &data, int idh, bool show_w) const {
-	MatrixXd m = hd.GetQTFMat(ib, idof, idh, isSum, GetWhat(data));
+MatrixXd QTFTabDof::GetMat(const Hydro &hd, const Data &data, int idh, bool show_w, bool getDim) const {
+	MatrixXd m = hd.GetQTFMat(ib, idof, idh, isSum, GetWhat(data), getDim);
 	if (!show_w)
 		ReverseX(m);
 	return m;
 }
 			
-void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear, bool opSnap) {
+void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear) {
 	data.show_ma_ph = show_ma_ph;
 	
 	int qtfNf = int(hd.qw.size());
 
-	ArrayCtrl &up = data.array;
-	
-	up.Reset();
-	up.SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
-	up.MultiSelect();
-	up.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, up);};
+	data.xAxis = hd.qw;
+	if (!show_w) {
+		for (double &d : data.xAxis)
+			d = 2*M_PI/d;
+		ReverseX(data.xAxis);
+	}
+	data.zData = GetMat(hd, data, ih, show_w, !ndim);
 
-	up.AddColumn(show_w ? t_("ω [rad/s]") : t_("T [s]"), 60);
-	for (int c = 0; c < qtfNf; ++c)
-		up.AddColumn(FDS(show_w ? hd.qw[c] : 2*M_PI/hd.qw[qtfNf-1-c], 8), 90);
-	for (int r = qtfNf-1; r >= 0; --r)
-		up.Add		(FDS(show_w ? hd.qw[r] : 2*M_PI/hd.qw[qtfNf-1-r], 8));
+	ArrayCtrl &array = data.array;
 	
-	data.xAxis.SetCount(qtfNf);
-	for (int i = 0; i < qtfNf; ++i) 
-		data.xAxis[i] = (show_w ? hd.qw[i] : 2*M_PI/hd.qw[qtfNf-1-i]);
+	array.Reset();
+	array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
+
+	array.AddColumn(show_w ? t_("ω [rad/s]") : t_("T [s]"), 60);
+	for (int c = 0; c < data.xAxis.size(); ++c) {
+		array.AddColumn(FDS(data.xAxis(c), 8), 90);
+		array.Set(c, 0, FDS(data.xAxis(c), 8));
+	}
 	
-	
-	MatrixXd mat = GetMat(hd, data, ih, show_w);
-	double mn = mat.minCoeff(), mx = mat.maxCoeff();
+	double mn = data.zData.minCoeff(), mx = data.zData.maxCoeff();
 	if (mx == mn)
 		mx = Null;
 			
-	data.zData.Clear();
-	data.zData.Reserve(qtfNf*qtfNf);
-
 	for (int if1 = 0; if1 < qtfNf; ++if1) {
 		for (int if2 = 0; if2 < qtfNf; ++if2) {
-			double val = mat(if1, if2);
-			if (IsNull(val)) {
-				up.Set(if2, 1+if1, "-");
-				data.zData << Null;
-			} else {				
-				data.zData << val;
-				
+			double val = data.zData(if1, if2);
+			if (IsNull(val)) 
+				array.Set(if1, if2+1, "-");
+			else {				
 				if (show_ma_ph && !data.isUp) 
-					up.Set(if2, 1+if1, FDS(val, 10, false));
+					array.Set(if1, if2+1, FDS(val, 10, false));	// Showing phase
 				else {
 					if (IsNull(mx)) 
-						up.Set(qtfNf-1-if2, 1+if1, FDS(val, 10, false));
+						array.Set(if1, if2+1, FDS(val, 10, false));
 					else {
 						double rat = (val - mn)/(mx - mn);
 						
@@ -325,25 +277,12 @@ void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool o
 						
 						String str = FDS(val, 10, false);
 						
-						up.Set(qtfNf-1-if2, 1+if1, AttrText(str).Center().Ink(color).Paper(backColor));
+						array.Set(if1, if2+1, AttrText(str).Center().Ink(color).Paper(backColor));
 					}
 				}
 			}
 		}
 	}
-	if (data.xAxis[0] > data.xAxis[1]) {
-		ReverseX(data.xAxis);
-		
-		for (int r = 0; r < qtfNf/2; ++r)
-			for (int c = 0; c < qtfNf; ++c)
-				Swap(data.zData[r*qtfNf + c], data.zData[(qtfNf-1-r)*qtfNf + (qtfNf-1-c)]);
-		if (Odd(qtfNf)) {
-			int r = qtfNf/2;
-			for (int c = 0; c < qtfNf/2; ++c)
-				Swap(data.zData[r*qtfNf + c], data.zData[r*qtfNf + (qtfNf-1-c)]);
-		}
-	}
-	
 	data.dataSurf.Init(data.zData, data.xAxis, data.xAxis, opBilinear ? TableInterpolate::BILINEAR : TableInterpolate::NO, false);
 
 	data.surf.AddSurf(data.dataSurf);
@@ -351,7 +290,7 @@ void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool o
 	data.surf.ZoomToFitZ().ZoomToFit(true, true);
 }
 	
-void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool opSnap, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf) {
+void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf) {
 	try {
 		splitter.SetPos(posSplitter, 0);
 		
@@ -369,13 +308,12 @@ void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool 
 		this->showPoints = showPoints;
 		this->fromY0 = fromY0;
 		this->autoFit = autoFit;
-		this->snap = opSnap;
 		
 		if (resetPf)
 			Pf() = Null;
 		
-		UpdateArray(hd, show_ma_ph, up, opBilinear, opSnap);
-		UpdateArray(hd, show_ma_ph, down, opBilinear, opSnap);
+		UpdateArray(hd, show_ma_ph, up, opBilinear);
+		UpdateArray(hd, show_ma_ph, down, opBilinear);
 		DoClick(up, idof);
 		DoClick(down, idof);
 	} catch (Exc e) {
@@ -402,13 +340,10 @@ void MainQTF::Init(MainBEM &parent) {
 			OnHeadingsSel(&headQTF, false);
 		};
 		opBilinear  	<< THISBACK(OnSurf);
-		opSnap 			<< THISBACK2(OnHeadingsSel, &headQTF, true);
 		opLine 			<< THISBACK2(OnHeadingsSel, &headQTF, true);
 		
 		headQTF.WhenSel << THISBACK2(OnHeadingsSel, &headQTF, false);
 		tab.WhenSet 	<< THISBACK2(OnHeadingsSel, &headQTF, false);
-		
-		opSnap = true;
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}		
@@ -427,8 +362,6 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 	try {
 		WaitCursor wait;
 		
-		opSnap.Enable(opLine > 1);
-			
 		MainBEM &mbm = *_mbm;
 
 		int idHydro = mbm.GetIdOneSelected(false);
@@ -454,7 +387,7 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 		idof = idof - 6*ib;
 
 		OnSurf();
-		dof[idof+6*ib].Load(hd, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, ~opSnap, showPoints, fromY0, autoFit, posSplitter, resetPf);
+		dof[idof+6*ib].Load(hd, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, showPoints, fromY0, autoFit, posSplitter, resetPf);
 		
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));

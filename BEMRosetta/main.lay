@@ -467,11 +467,10 @@ END_LAYOUT
 LAYOUT(MainQTF, 792, 312)
 	ITEM(Upp::TabCtrl, tab, HSizePosZ(0, 0).VSizePosZ(0, 0))
 	ITEM(Upp::Label, dv___1, SetLabel(t_("Type:")).RightPosZ(76, 32).TopPosZ(0, 19))
-	ITEM(Upp::Label, dv___2, SetLabel(t_("Show:")).RightPosZ(568, 32).TopPosZ(0, 19))
+	ITEM(Upp::Label, dv___2, SetLabel(t_("Show:")).RightPosZ(452, 32).TopPosZ(0, 19))
 	ITEM(Upp::DropList, opQTF, RightPosZ(0, 76).TopPosZ(0, 19))
-	ITEM(Upp::Option, opBilinear, SetLabel(t_("Bilinear")).RightPosZ(232, 56).TopPosZ(0, 19))
-	ITEM(Upp::Switch, opLine, SetLabel(t_("Diagonal\nConjugate\nHorizontal\nVertical")).RightPosZ(296, 268).TopPosZ(0, 19))
-	ITEM(Upp::Option, opSnap, SetLabel(t_("Snap to frequency")).RightPosZ(120, 104).TopPosZ(0, 19))
+	ITEM(Upp::Option, opBilinear, SetLabel(t_("Bilinear")).RightPosZ(116, 56).TopPosZ(0, 19))
+	ITEM(Upp::Switch, opLine, SetLabel(t_("Diagonal\nConjugate\nHorizontal\nVertical")).RightPosZ(180, 268).TopPosZ(0, 19))
 END_LAYOUT
 
 LAYOUT(MainView, 548, 308)

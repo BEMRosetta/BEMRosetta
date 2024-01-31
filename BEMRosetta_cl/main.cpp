@@ -15,6 +15,9 @@
 
 CONSOLE_APP_MAIN
 {		
+#ifdef flagDEBUG
+	GetCrashHandler().Enable();
+#endif
 	try {
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		const UVector<String>& command = CommandLine();

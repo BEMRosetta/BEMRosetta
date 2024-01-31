@@ -15,6 +15,7 @@
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
+#include <SysInfo/Crash.h>
 
 using namespace Upp;
 
@@ -331,6 +332,9 @@ void OnPanic(const char *title, const char *text) {
 }
 
 GUI_APP_MAIN {
+#ifdef flagDEBUG
+	GetCrashHandler().Enable();
+#endif
 	InstallPanicMessageBox(OnPanic);
 	
 	const UVector<String>& command = CommandLine();

@@ -249,8 +249,8 @@ public:
         }
     }
     
-    double GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what) const;
-    MatrixXd GetQTFMat(int ib, int idof, int idh, bool isSum, char what) const;
+    double GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what, bool getDim) const;
+    MatrixXd GetQTFMat(int ib, int idof, int idh, bool isSum, char what, bool getDim) const;
         
     VectorXcd mdhead;							// [Nh]             Wave headings
 	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	

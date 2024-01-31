@@ -1298,7 +1298,7 @@ void Hydro::CopyQTF_MD() {
         for (int ih = 0; ih < qh.size(); ++ih) {
 			for (int idof = 0; idof < 6; ++idof) {
 				const MatrixXcd &m = qtfdif[ib][ih][idof];
-				VectorXd diag = m.diagonal().real();
+				VectorXd diag = Eigen::abs(m.diagonal().array());
 				Resample(qw, diag, ww, md[ib][ih][idof]);
             }
         }
@@ -1341,17 +1341,17 @@ void Hydro::Symmetrize() {
 		for (int ib = 0; ib < Nb; ++ib) {
 	        for (int ih = 0; ih < qh.size(); ++ih) {
 				for (int idf = 0; idf < 6; ++idf) { 
-					MatrixXcd c = qtf[ib][ih][idf];
+					MatrixXcd &c = qtf[ib][ih][idf];
 					Eigen::Index rows = c.rows();
 					for (int iw = 0; iw < rows; ++iw) {
 						for (int jw = iw+1; jw < rows; ++jw) {
+							std::complex<double> &cij = c(iw, jw), &cji = c(jw, iw);
 							if (isSum)
-								c(iw, jw) = c(jw, iw) = AvgSafe(c(iw, jw), c(jw, iw));
+								cij = cji = AvgSafe(cij, cji);
 							else {
-								std::complex<double> cji = c(jw, iw);
 								std::complex<double> cji_ = std::complex<double>(cji.real(), -cji.imag());
-								c(iw, jw) = cji_ = AvgSafe(c(iw, jw), cji_);
-								c(jw, iw) = std::complex<double>(cji_.real(), -cji_.imag());
+								cij = cji_ = AvgSafe(cij, cji_);
+								cji = std::complex<double>(cji_.real(), -cji_.imag());
 							}
 						}
 					}
@@ -1370,7 +1370,7 @@ void Hydro::Symmetrize() {
 	}
 }
 
-double Hydro::GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what) const {
+double Hydro::GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what, bool getDim) const {
 	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? qtfsum : qtfdif;
 	if (qtf.IsEmpty())
 		return Null;
@@ -1381,16 +1381,16 @@ double Hydro::GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSu
 		return Null;
 	
 	switch (what) {
-	case 'm':	return F_(!dimen, abs(m(ifr1, ifr2)), idof);
+	case 'm':	return F_(!getDim, abs(m(ifr1, ifr2)), idof);
 	case 'p':	return arg(m(ifr1, ifr2));	 
-	case 'r':	return F_(!dimen, m(ifr1, ifr2).real(), idof);
-	case 'i':	return F_(!dimen, m(ifr1, ifr2).imag(), idof);
+	case 'r':	return F_(!getDim, m(ifr1, ifr2).real(), idof);
+	case 'i':	return F_(!getDim, m(ifr1, ifr2).imag(), idof);
 	}
 	NEVER();	
 	return Null;
 }
 
-MatrixXd Hydro::GetQTFMat(int ib, int idof, int idh, bool isSum, char what) const {
+MatrixXd Hydro::GetQTFMat(int ib, int idof, int idh, bool isSum, char what, bool getDim) const {
 	MatrixXd ret;
 	
 	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? qtfsum : qtfdif;
@@ -1405,10 +1405,10 @@ MatrixXd Hydro::GetQTFMat(int ib, int idof, int idh, bool isSum, char what) cons
 	ret.resize(m.rows(), m.cols());
 
 	switch (what) {
-	case 'm':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!dimen, abs(m(i)), idof);	break;
+	case 'm':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!getDim, abs(m(i)), idof);	break;
 	case 'p':	for (int i = 0; i < m.size(); ++i)	ret(i) = arg(m(i));						break;
-	case 'r':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!dimen, m(i).real(), idof);	break;
-	case 'i':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!dimen, m(i).imag(), idof);	break;
+	case 'r':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!getDim, m(i).real(), idof);break;
+	case 'i':	for (int i = 0; i < m.size(); ++i)	ret(i) = F_(!getDim, m(i).imag(), idof);break;
 	default: NEVER();
 	}
 	return ret;
