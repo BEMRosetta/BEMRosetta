@@ -175,10 +175,10 @@ void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector
 void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, const UVector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
-	String folder = AppendFileNameX(BEM::GetTempFilesFolder(), Format(id));
+	String folder = AFX(BEM::GetTempFilesFolder(), Format(id));
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
-	String file = AppendFileNameX(folder, "temp_file.mat");
+	String file = AFX(folder, "temp_file.mat");
 	
 	MatFile mat;
 	

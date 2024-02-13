@@ -70,7 +70,7 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 		return ret;
 	} 
 	String fileName;
-	for (FindFile ff(AppendFileNameX(path, "*.out*")); ff; ff++) {
+	for (FindFile ff(AFX(path, "*.out*")); ff; ff++) {
 		if (ff.IsFile()) { 
 			String name = GetFileToLoad(ff.GetPath());
 			if (!IsNull(name) && !IsVoid(name)) {
@@ -83,7 +83,7 @@ UVector<String> FastOut::GetFilesToLoad(String path) {
 		ret << fileName;
 		return ret;
 	}
-	for (FindFile ff(AppendFileNameX(path, "*.*")); ff; ff++) // Search in inner other folders
+	for (FindFile ff(AFX(path, "*.*")); ff; ff++) // Search in inner other folders
 		if (ff.IsFolder())
 			ret.Append(GetFilesToLoad(ff.GetPath()));
 
@@ -514,7 +514,7 @@ void FastOut::AfterLoad() {
 	}
 	
 	String folder = GetFileFolder(GetFileName());
-	FindFile ffpath(AppendFileNameX(folder, "*.fst"));
+	FindFile ffpath(AFX(folder, "*.fst"));
 	if (ffpath) {
 		FASTCase cas;
 		cas.Load(ffpath.GetPath());
@@ -920,7 +920,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 }
 /*
 bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt) {
-	for (FindFile ff(AppendFileNameX(path, "*.dat")); ff; ++ff) {
+	for (FindFile ff(AFX(path, "*.dat")); ff; ++ff) {
 		if (ff.IsFile()) { 
 			String str = LoadFile(ff.GetPath());
 			String strx = GetFASTVar(str, "PtfmCOBxt", "");
@@ -950,10 +950,10 @@ void FASTCase::CreateFolderCase(String folder) {
 	String cas = Format("%4d%02d%02d_%02d%02d%02d_%03d", t.year, t.month, t.day, t.hour, t.minute, t.second, rnd);
 	String base;
 	if (folder.IsEmpty())
-		base = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTCases");
+		base = AFX(GetAppDataFolder(), "BEMRosetta", "FASTCases");
 	else
 		base = folder;
-	folderCase = AppendFileNameX(base, cas);
+	folderCase = AFX(base, cas);
 	if (!RealizeDirectory(folderCase))
 		throw Exc(Format("Impossible to create folder %s", folderCase));
 }
@@ -966,7 +966,7 @@ void FASTCase::Setup(String seed, String folderCases) {
 	if (!IsEmpty(errorStr))
 		throw Exc(errorStr);
 	
-	FindFile ffpath(AppendFileNameX(folderCase, "*.fst"));
+	FindFile ffpath(AFX(folderCase, "*.fst"));
 	if (!ffpath) 
 		throw Exc(Format("No .fst file found in folder '%s'", seed));
 	

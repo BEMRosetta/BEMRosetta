@@ -650,9 +650,9 @@ public:
 		String path = GetFileFolder(file);
 		
 		fast.fileName = file;
-		elastodyn.fileName = AppendFileNameX(path, fast.GetString("EDFile"));
-		hydrodyn.fileName = AppendFileNameX(path, fast.GetString("HydroFile"));
-		inflowfile.fileName = AppendFileNameX(path, fast.GetString("InflowFile"));
+		elastodyn.fileName = AFX(path, fast.GetString("EDFile"));
+		hydrodyn.fileName = AFX(path, fast.GetString("HydroFile"));
+		inflowfile.fileName = AFX(path, fast.GetString("InflowFile"));
 		try {
 			dlldat.fileName = GetAbsolutePath(path, hydrodyn.GetString("NLFK_DLL_input"));
 		} catch(...) {

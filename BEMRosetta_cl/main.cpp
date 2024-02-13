@@ -15,7 +15,7 @@
 
 CONSOLE_APP_MAIN
 {		
-#ifdef flagDEBUG
+#if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
 	GetCrashHandler().Enable();
 #endif
 	try {
@@ -27,14 +27,14 @@ CONSOLE_APP_MAIN
 		
 		String binFolder = command[0];
 		String bemFolder = command[1];
-		String installFolder = AppendFileNameX(bemFolder, "install");
+		String installFolder = AFX(bemFolder, "install");
 #endif
 #ifdef flagBEMR_TEST_DLL
-		FileDelete(AppendFileNameX(binFolder, "libbemrosetta.exp"));
-		FileDelete(AppendFileNameX(binFolder, "libbemrosetta.lib"));
+		FileDelete(AFX(binFolder, "libbemrosetta.exp"));
+		FileDelete(AFX(binFolder, "libbemrosetta.lib"));
 		
 		Dl dll;		
-		if (!dll.Load(AppendFileNameX(binFolder, "libbemrosetta.dll")))
+		if (!dll.Load(AFX(binFolder, "libbemrosetta.dll")))
 			throw Exc("Dll not found");
 
 		DLLFunction(dll, const char *, DLL_Version, ());
@@ -71,7 +71,7 @@ CONSOLE_APP_MAIN
 		Cout() << strList;
 #ifdef flagBEMR_TEST_DLL
 		strList = "// BEMRosetta DLL functions list\n\n" + strList;	
-		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.txt"), strList))
+		if (!SaveFile(AFX(binFolder, "libbemrosetta.txt"), strList))
 			throw Exc(t_("Impossible to save DLL functions list file"));
 #endif
 
@@ -80,34 +80,34 @@ CONSOLE_APP_MAIN
 		Cout() << strPy;
 		
 #if defined(flagBEMR_TEST_DLL)
-		if (!SaveFile(AppendFileNameX(binFolder, "libbemrosetta.py"), strPy))
+		if (!SaveFile(AFX(binFolder, "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
 #elif defined(flagBEMR_TEST_DLL_INTERNAL)
-		if (!SaveFile(AppendFileNameX(GetDesktopFolder(), "libbemrosetta.py"), strPy))
+		if (!SaveFile(AFX(GetDesktopFolder(), "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
 #endif
 
 #if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)
-		String wxs = LoadFile(AppendFileNameX(installFolder, "BEMRosetta_master.wxs"));
+		String wxs = LoadFile(AFX(installFolder, "BEMRosetta_master.wxs"));
 		if (wxs.IsEmpty())
 			throw Exc(t_("Installer definition file not found"));
-		String strver = LoadFile(AppendFileNameX(installFolder, "build.txt"));
+		String strver = LoadFile(AFX(installFolder, "build.txt"));
 		if (strver.IsEmpty())
 			throw Exc(t_("Version file not found"));
 		int ver = ScanInt(strver);
 		if (IsNull(ver) || ver < 1)
 			throw Exc(t_("Wrong version found"));
 		ver++;
-		if (!SaveFile(AppendFileNameX(installFolder, "build.txt"), FormatInt(ver)))
+		if (!SaveFile(AFX(installFolder, "build.txt"), FormatInt(ver)))
 			throw Exc(t_("Impossible to save version file"));
 		wxs.Replace("$VERSION$", FormatInt(ver));
-		if (!SaveFile(AppendFileNameX(installFolder, "BEMRosetta.wxs"), wxs))
+		if (!SaveFile(AFX(installFolder, "BEMRosetta.wxs"), wxs))
 			throw Exc(t_("Impossible to save installer file"));
 #endif
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		Cout() << "\n\nLoading FAST .out file";
-		String outfile = AppendFileNameX(bemFolder, "examples/fast.out/demo.outb");
+		String outfile = AFX(bemFolder, "examples/fast.out/demo.outb");
 		if (!DLL_FAST_Load(outfile))
 			throw Exc(Format("Impossible to open file %s", outfile));
 		
@@ -133,7 +133,7 @@ CONSOLE_APP_MAIN
 		Cout() << "\nptfmheave_avg = " << DLL_FAST_GetAvg(idptfmheave, -1, -1);
 		
 		Cout() << "\n\nLoading InflowWind .dat file";
-		String datfile = AppendFileNameX(bemFolder, "examples/fast.out/InflowWind.dat");
+		String datfile = AFX(bemFolder, "examples/fast.out/InflowWind.dat");
 		if (!DLL_FAST_LoadFile(datfile))
 			throw Exc(Format("Impossible to open file %s", outfile));	
 	
@@ -163,7 +163,7 @@ CONSOLE_APP_MAIN
 		VERIFY(str == "\"New file\"");
 
 	#ifdef flagDEBUG	
-		DLL_FAST_SaveFile(AppendFileNameX(GetDesktopFolder(), "InflowWind_test.dat"));
+		DLL_FAST_SaveFile(AFX(GetDesktopFolder(), "InflowWind_test.dat"));
 	#endif
 #endif
 	

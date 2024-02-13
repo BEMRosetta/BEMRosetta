@@ -1253,7 +1253,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 
 							String file = command[i];
 							if (!FileExists(file)) {
-								file = AppendFileNameX(file, "OrcFxAPI.dll");
+								file = AFX(file, "OrcFxAPI.dll");
 								if (!FileExists(file)) 	
 									throw Exc(Format(t_("File '%s' not found"), file)); 
 							}

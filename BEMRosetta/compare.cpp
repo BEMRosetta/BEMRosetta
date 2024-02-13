@@ -74,15 +74,20 @@ void CompareParameters::Load() {
 	double wmin = std::numeric_limits<double>::min(), 
 		   wmax = std::numeric_limits<double>::max();
 	if (opMinRange) {
+		bool found = false;
 		for(int i = 0; i < scatter.GetCount(); i++) {
 			String leg = scatter.GetLegend(i);
 			if (leg.StartsWith("A∞(ω)") || !(leg.StartsWith("A∞") || leg.StartsWith("A0"))) {
 				DataSource &data = scatter.GetDataSource(i);
 				wmin = max(data.MinX(), wmin);
 				wmax = min(data.MaxX(), wmax);
+				found = true;
 			}
 		}
+		if (!found)
+			return;
 	}
+	
 	
 	list.Reset();
 	list.SetLineCy(EditField::GetStdHeight()).MultiSelect();
@@ -138,7 +143,7 @@ void CompareParameters::Load() {
 			
 			if (swRelative > 0) {
 				VectorXd yyy;
-				Resample(x, y, x0, yyy);
+				ResampleY(x, y, x0, yyy);
 				VectorXd rr, lags;
 				XCorr(yyy, y0, rr, lags, 'c');
 				if (rr.size() == 0)

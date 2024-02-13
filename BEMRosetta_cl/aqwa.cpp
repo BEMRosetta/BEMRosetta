@@ -89,7 +89,7 @@ bool Aqwa::Load_AH1() {
 	if (hd().Nh != f.size() - 3)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), hd().Nh, f.size() - 3));
 	for (int i = 3; i < f.size(); ++i)
-		FindAdd(hd().head, FixHeading_180(f.GetDouble(i)));
+		FindAdd(hd().head, FixHeading_0_360(f.GetDouble(i)));
 	Sort(hd().head);
 	
 	hd().names.SetCount(hd().Nb);
@@ -373,7 +373,7 @@ bool Aqwa::Load_LIS() {
 					break;
 				f.Load(line);
 				for (int i = idini; i < f.size(); ++i)
-					FindAdd(hd().head, FixHeading_180(f.GetDouble(i)));
+					FindAdd(hd().head, FixHeading_0_360(f.GetDouble(i)));
 				idini = 0;
 			}
 			hd().Nh = hd().head.size();
@@ -506,7 +506,7 @@ bool Aqwa::Load_LIS() {
 				static const UVector<int> separatorsh = {8,16,26,36,44,54,62,72,80,90,98,108,116,126};
 				f.Load(in.GetLine(), separatorsh);
 
-				double heading = FixHeading_180(f.GetDouble(2));
+				double heading = FixHeading_0_360(f.GetDouble(2));
 				int idh = FindClosest(hd().head, heading);
 				if (idh < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
@@ -668,7 +668,7 @@ bool Aqwa::Load_LIS() {
 			
 			UVector<int> idhblock(f.size());
 			for (int ih = 0; ih < f.size(); ++ih) {
-				double heading = FixHeading_180(f.GetDouble(ih));	
+				double heading = FixHeading_0_360(f.GetDouble(ih));	
 				int id = FindClosest(hd().head, heading);
 				if (id < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
@@ -716,7 +716,7 @@ bool Aqwa::Load_QTF() {
 	String fileName = ForceExt(hd().file, ".QTF");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) {
-		fileName = AppendFileNameX(GetFileFolder(fileName), "analysis.qtf"); 
+		fileName = AFX(GetFileFolder(fileName), "analysis.qtf"); 
 		in.Open(fileName);
 		if (!in.IsOpen()) 
 			return false;
@@ -991,7 +991,7 @@ bool AQWACase::Load(String fileName) {
 			if (f.GetText(0) == "1HRTZ")
 				hrtz << f.GetDouble(3);
 			else if (f.GetText(0) == "1DIRN") 
-				FindAddDelta(head, FixHeading_180(f.GetDouble(3)), 0.01);
+				FindAddDelta(head, FixHeading_0_360(f.GetDouble(3)), 0.01);
 			else if (f.GetInt_nothrow(0) == 198000) {
 				body.cg[0] = f.GetDouble(1);
 				body.cg[1] = f.GetDouble(2);

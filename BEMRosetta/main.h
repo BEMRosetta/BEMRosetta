@@ -1328,7 +1328,7 @@ public:
 	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnRAO();
-	void OnBH();
+	void OnBH(int num);
 	void OnOgilvie();
 	void OnAverage();
 	void OnConvergence();
@@ -1339,7 +1339,7 @@ public:
 	void OnMultiplyDOF(bool isReset);
 	void OnSwapDOF();
 	void OnDescription();
-	void OnMenuAdvancedArraySel();
+	void OnMenuAdvancedArraySel(bool updateBH);
 	void OnSelListLoaded();
 	void UpdateButtons();
 	void ShowMenuPlotItems();
@@ -1451,15 +1451,27 @@ public:
 		ProcessEvents();
 	}
 	
-	void SetLastTab()	{tab.Set(lastTab);};
-	
-	void AddWindow()	{numWindows++;}
-	void DeleteWindow()	{numWindows--;}
+	void SetLastTab() {
+		if (!parameter.IsEmpty())
+			tab.Set(0);
+		else {	
+			if (!lastTabS.IsEmpty()) {
+				for (int id = 0; id < tab.GetCount(); ++id) {
+					if (tab.GetItem(id).GetText() == lastTabS) {
+						tab.Set(id);
+						return;
+					}
+				}
+			}
+			tab.Set(tab.GetCount()-1);
+		}
+	};
+	String parameter;	
 	
 private:
 	int numWindows = 0;
 	
-	int lastTab;
+	String lastTabS;
 	
 	MainSolver mainSolver;
 	MainBEM mainBEM;

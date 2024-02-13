@@ -244,6 +244,10 @@ void MainSolver::Jsonize(JsonIO &json) {
 		("height", height)
 		("opInfinite", opInfinite)
 	;
+	if (json.IsLoading()) {
+		if (IsNull(dropSolverVal) || dropSolverVal < 0)
+			dropSolverVal = 0;
+	}
 }
 
 bool MainSolver::OnLoad(const BEM &bem) {

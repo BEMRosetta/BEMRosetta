@@ -249,7 +249,7 @@ void MainMesh::Init() {
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
 	mainView.Init(*this);
 	
-	String bitmapFolder = AppendFileNameX(GetDesktopFolder(), "BEMRosetta Mesh Images");
+	String bitmapFolder = AFX(GetDesktopFolder(), "BEMRosetta Mesh Images");
 	int idBitmapFolder = 0;
 	
 	videoCtrl.Init([&](UVector<int> &ids)->int {
@@ -292,7 +292,7 @@ void MainMesh::Init() {
 			if (saveBitmap) {
 				RealizeDirectory(bitmapFolder);
 				DeleteFileDeepWildcardsX(bitmapFolder);
-				mainView.gl.SaveToFile(AppendFileNameX(bitmapFolder, Format("Image%4d", idBitmapFolder++)));
+				mainView.gl.SaveToFile(AFX(bitmapFolder, Format("Image%4d", idBitmapFolder++)));
 			}
 			if (full)
 				mainViewData.OnRefresh();
@@ -1626,6 +1626,10 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("mainGZ", mainGZ)
 		("videoCtrl", videoCtrl)
 	;
+	if (json.IsLoading()) {
+		if (IsNull(dropExportId) || dropExportId < 0)
+			dropExportId = 0;
+	}	
 }
 
 void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {

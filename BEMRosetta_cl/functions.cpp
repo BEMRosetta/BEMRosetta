@@ -328,7 +328,6 @@ std::complex<double> FixHeading(const std::complex<double> &head, BEM::HeadingTy
 		return FixHeading_0_360(head);
 }
 
-
 void SetPhaseToMag(std::complex<double> &val, double arg) {
 	double mag = std::abs(val);
 	val = std::polar(mag, arg);
@@ -338,4 +337,13 @@ void AddPhase(std::complex<double> &val, double arg) {
 	double mag = std::abs(val);
 	double pha = std::arg(val);
 	val = std::polar(mag, pha + arg);
+}
+
+bool SortComplex(const std::complex<double>& a, const std::complex<double>& b) { 
+	if (a.real() < b.real())
+		return true; 
+	else if (a.real() > b.real())
+		return false;
+	else
+		return a.imag() < b.imag();	
 }

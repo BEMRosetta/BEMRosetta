@@ -52,8 +52,8 @@ void QTFTabDof::Init(MainQTF &par, int posSplitter, int ib, int idof) {
 	up  .surf.SetMargin(4*len, len, int(2.5*len), 4*len);
 	down.surf.SetMargin(4*len, len, int(2.5*len), 4*len);
 	
-	up.  scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();
-	down.scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus();		   
+	up.  scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus().SetSciExpTop();
+	down.scatter.SetMargin(6*len, len, len, 4*len).SetTitleFont(SansSerifZ(12)).ShowAllMenus().SetSciExpTop();		   
 	up.scatter.LinkedWith(down.scatter);
 	
 	parent = &par;
@@ -102,7 +102,7 @@ void QTFTabDof::DoClick(Data &data, int idof) {
 		if (!hd.IsLoadedQTF(isSum))
 			continue;
 		 
-		int idh = FindDelta(hd.qh, head, 2.);
+		int idh = FindDelta(hd.qh, FixHeading_0_360(head), 2.);
 		if (idh < 0) 
 			continue;
 		
@@ -304,7 +304,7 @@ void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool 
 		this->idof = idof;
 		this->ndim = ndim;
 		this->show_w = show_w;
-		this->head = hd.qh[ih];
+		this->head = FixHeading(hd.qh[ih], Bem().headingType);
 		this->showPoints = showPoints;
 		this->fromY0 = fromY0;
 		this->autoFit = autoFit;
@@ -353,8 +353,8 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 	if (isLoading)
 		return;
 	
-	int ih = headQTF->GetCursor();
-	if (ih < 0)
+	int row = headQTF->GetCursor();
+	if (row < 0)
 		return;
 
 	Unload(idof);
@@ -370,7 +370,11 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 	
 		const Hydro &hd = Bem().hydros[idHydro].hd();
 	
-		head = hd.qh[ih];
+		head.real(FixHeading_0_360(headQTF->Get(row, 0)));
+		head.imag(FixHeading_0_360(headQTF->Get(row, 1)));
+		int ih = FindClosest(hd.qh, head);
+		head = FixHeading(hd.qh[ih], Bem().headingType);
+		
 		bool ndim = mbm.menuPlot.showNdim;
 		bool show_w = mbm.menuPlot.opwT == 0;
 		bool show_ma_ph = mbm.menuPlot.opMP == 0;
@@ -432,10 +436,6 @@ bool MainQTF::Load() {
 			if (tab.GetCount() >= idof + 6*ib && idof >= 0)
 				tab.Set(idof + 6*ib);
 		}
-			
-		ArrayCtrl &headQTF = mbm.menuPlot.headQTF;
-		
-		headQTF.Clear();
 	
 		idHydro = -1;
 		for (int row = 0; row < mbm.listLoaded.GetCount(); ++row) {
@@ -481,28 +481,29 @@ bool MainQTF::Load() {
 			else if (opQTF.GetCount() > 0)
 				opQTF.SetIndex(0);
 				
-			/*UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
+			UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
 			for (const auto &c : hd.qh)
 				qh << FixHeading(c, Bem().headingType);
 			
-			Sort(qh, [&](auto& a, auto& b)->bool const { 
-				if (a.real() < b.real())
-					return true; 
-				else if (a.real() > b.real())
-					return false;
-				else
-					return a.imag() < b.imag();	
-			});*/
+			Sort(qh, SortComplex);
 		
-			for (int ih = 0; ih < hd.qh.size(); ++ih)
-				headQTF.Add(hd.qh[ih].real(), hd.qh[ih].imag());
-					
-			if (headQTF.GetCount() > 0) {
-				int id = FindClosest(hd.qh, head);
-				if (id < 0)
-					id = 0;
-				headQTF.SetCursor(id);
+			ArrayCtrl &headQTF = mbm.menuPlot.headQTF;
+			
+			int row = headQTF.GetCursor();
+			std::complex<double> val;
+			if (row >= 0) {
+				val.real(headQTF.Get(row, 0));
+				val.imag(headQTF.Get(row, 1));
 			}
+			headQTF.Clear();
+			for (int ih = 0; ih < qh.size(); ++ih) {
+				if (val == qh[ih])
+					row = ih;
+				headQTF.Add(qh[ih].real(), qh[ih].imag());
+			}
+			if (row >= 0)
+				headQTF.SetCursor(row);
+
 			mbm.menuPlotList.SetQTF();
 		}
 	} catch (Exc e) {

@@ -264,15 +264,6 @@ void MainViewDataEach::OnTimer() {
 	}
 }
 
-void MainMeshW::Init(MainMesh &_mesh, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose) {
-	WhenClose = _WhenClose;
-	LoadFromJson(mesh, StoreAsJson(_mesh));
-	mesh.Init();
-	Add(mesh.SizePos());
-	Title(t_("BEMRosetta Mesh Viewer")).Sizeable().Zoomable().Icon(icon, largeIcon);
-}
-
-
 void VideoCtrl::Init(Function <int(UVector<int> &ids)> _GetMeshId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action) {
 	CtrlLayout(*this);
 	

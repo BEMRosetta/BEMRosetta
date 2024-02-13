@@ -25,7 +25,7 @@ void MainBEM::Init() {
 	
 	ArrayModel_Init(listLoaded).MultiSelect();
 	listLoaded.WhenSel = [&] {
-		OnMenuAdvancedArraySel();
+		OnMenuAdvancedArraySel(true);
 		menuFOAMM.OnCursor();
 		//mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		if (mainTab.Find(mainQTF) == mainTab.Get())
@@ -261,7 +261,7 @@ void MainBEM::Init() {
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
 	menuAdvanced.butAinfw.Disable();
-	menuAdvanced.butBH <<= THISBACK(OnBH);
+	menuAdvanced.butBH.WhenAction = [&]() {OnBH(int(menuAdvanced.numBH));};
 	menuAdvanced.butBH.Disable();
 	menuAdvanced.butOgilvie <<= THISBACK(OnOgilvie);
 	menuAdvanced.butOgilvie.Disable();
@@ -572,7 +572,7 @@ void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showPoints.Enable(show);
 }
 
-void MainBEM::OnMenuAdvancedArraySel() {
+void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
 	int id = ArrayModel_IdHydro(listLoaded);
 	if (id < 0)
 		return;
@@ -582,6 +582,11 @@ void MainBEM::OnMenuAdvancedArraySel() {
 	menuAdvanced.y_w.Enable(!IsNull(hydro.y_w));	
 	menuAdvanced.x_w = hydro.x_w;
 	menuAdvanced.y_w = hydro.y_w;
+	
+	menuAdvanced.numBH.Enable(hydro.Nh > 0);
+	if (updateBH)
+		menuAdvanced.numBH = hydro.Nh;
+	menuAdvanced.labNum.SetText(Format("/\%d", hydro.Nh));
 	
 	menuAdvanced.c_array.Clear();
 	for (int ib = 0; ib < hydro.Nb; ++ib)
@@ -835,7 +840,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butRAO.			Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
-	menuAdvanced.butBH.			Enable(numsel == 1 || numrow == 1);
+	menuAdvanced.butBH.			Enable(numsel >= 1);
 	menuAdvanced.butOgilvie.	Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butConvergence.Enable(numsel >= 3);
 	menuAdvanced.butAverage.	Enable(numsel >= 2);
@@ -845,9 +850,16 @@ void MainBEM::UpdateButtons() {
 
 	{	
 		int row = menuPlot.head1st.GetCursor();
+		double h;
+		if (row >= 0)
+			h = menuPlot.head1st.Get(row, 0);
+		
 		menuPlot.head1st.Clear();
-		for (int ih = 0; ih < Bem().headAll.size(); ++ih)
-			menuPlot.head1st.Add(Bem().headAll[ih/*Bem().orderHeadAll[i]*/]);
+		for (int ih = 0; ih < Bem().headAll.size(); ++ih) {
+			if (Bem().headAll[ih] == h)
+				row = ih;
+			menuPlot.head1st.Add(Bem().headAll[ih]);
+		}
 		if (row >= 0)
 			menuPlot.head1st.SetCursor(row);
 		
@@ -856,22 +868,33 @@ void MainBEM::UpdateButtons() {
 			if (row < 0)
 				return;
 			
-			menuPlotList.head1st.SetCursor(row);	
+			menuPlotList.head1st.SetCursor(row);
+			
+			double h = menuPlot.head1st.Get(row, 0);
+			int ih = FindClosest(Bem().headAll, h); 
 			
 			UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 			
-			mainForceSC.Load(Bem(), ids, row);
-			mainForceFK.Load(Bem(), ids, row);
-			mainForceEX.Load(Bem(), ids, row);
-			mainRAO.Load(Bem(), ids, row);
+			mainForceSC.Load(Bem(), ids, ih);
+			mainForceFK.Load(Bem(), ids, ih);
+			mainForceEX.Load(Bem(), ids, ih);
+			mainRAO.Load(Bem(), ids, ih);
 		};
 		menuPlot.head1st.WhenLeftDouble = [&] {menuPlot.butList.WhenAction();};
 	}
 	{
 		int row = menuPlot.headMD.GetCursor();
+		std::complex<double> h;
+		if (row >= 0) {
+			h.real(menuPlot.headMD.Get(row, 0));
+			h.imag(menuPlot.headMD.Get(row, 1));
+		}
 		menuPlot.headMD.Clear();
-		for (int ih = 0; ih < Bem().headAllMD.size(); ++ih)
+		for (int ih = 0; ih < Bem().headAllMD.size(); ++ih) {
+			if (h == Bem().headAllMD[ih])
+				row = ih;
 			menuPlot.headMD.Add(Bem().headAllMD[ih].real(), Bem().headAllMD[ih].imag());
+		}
 		if (row >= 0)
 			menuPlot.headMD.SetCursor(row);
 		
@@ -882,9 +905,12 @@ void MainBEM::UpdateButtons() {
 			
 			menuPlotList.headMD.SetCursor(row);
 			
+			std::complex<double> h(menuPlot.headMD.Get(row, 0), menuPlot.headMD.Get(row, 1));
+			int ih = FindClosest(Bem().headAllMD, h); 
+			
 			UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
 		
-			mainMD.Load(Bem(), ids, row);
+			mainMD.Load(Bem(), ids, ih);
 		};	
 		menuPlot.headMD.WhenLeftDouble = [&] {menuPlot.butList.WhenAction();};	
 	}
@@ -958,7 +984,7 @@ void MainBEM::UpdateButtons() {
 		if (data.IsLoadedQTF(false))
 			menuProcess2.dropForceQTF.Add(false, t_("Difference"));
 	}
-	OnMenuAdvancedArraySel();
+	OnMenuAdvancedArraySel(false);
 }
 
 void MainBEM::OnJoin() {
@@ -1096,15 +1122,24 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 	}
 }
 
-void MainBEM::OnBH() {
+void MainBEM::OnBH(int num) {
 	try {
-		int id = GetIdOneSelected();
-		if (id < 0) 
+		UVector<int> ids;
+		for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
+			if (listLoaded.IsSelected(row)) {
+				int id = ArrayModel_IdHydro(listLoaded, row);
+				ids << id;
+			}
+		}
+		if (ids.IsEmpty()) {
+			BEM::PrintError(t_("No model selected"));
 			return;
+		}
 
 		WaitCursor wait;
-				
-		Bem().BH(id);		
+		
+		for (int id : ids)		
+			Bem().BH(id, num);		
 			
 		AfterBEM();
 	} catch (Exc e) {
@@ -1861,6 +1896,10 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("mainMatrixDquad", mainMatrixDquad)
 		("mainMatrixM", mainMatrixM)
 	;
+	if (json.IsLoading()) {
+		if (IsNull(dropExportId) || dropExportId < 0)
+			dropExportId = 0;
+	}
 }
 
 String MainBEM::BEMFile(String fileFolder) const {
@@ -1868,7 +1907,7 @@ String MainBEM::BEMFile(String fileFolder) const {
 		return "";
 	if (DirectoryExists(fileFolder)) {
 		int bestipos = INT_MAX;
-		for (FindFile ff(AppendFileNameX(fileFolder, "*.*")); ff; ff++) {
+		for (FindFile ff(AFX(fileFolder, "*.*")); ff; ff++) {
 			if (ff.IsFile()) {
 				String name = ToLower(ff.GetName());
 				if (GetFileExt(name) == ".bem")
@@ -1883,7 +1922,7 @@ String MainBEM::BEMFile(String fileFolder) const {
 					bestipos = ipos;	// It takes the file with most probable extension
 				}
 			} else if (ff.IsFolder() && ff.GetName() == "Input") {
-				String controlFile = AppendFileNameX(ff.GetPath(), "ControlFile.in");
+				String controlFile = AFX(ff.GetPath(), "ControlFile.in");
 				if (FileExists(controlFile))
 					return controlFile;
 			}
@@ -1898,7 +1937,7 @@ void MainBEM::LoadDragDrop() {
 	if (filesToDrop.size() == 1 && DirectoryExists(First(filesToDrop))) {	// If a folder is dropped, all the files are included
 		String folder = First(filesToDrop);
 		filesToDrop.Clear();
-		for (FindFile ff(AppendFileNameX(folder, "*.*")); ff; ff++) {
+		for (FindFile ff(AFX(folder, "*.*")); ff; ff++) {
 			if (ff.IsFile())
 				filesToDrop << ff.GetPath();
 		}
@@ -2182,12 +2221,4 @@ void MainOutput::Init() {
 void MainOutput::Print(String str) {
 	cout.Append(str);
 	cout.ScrollEnd();
-}
-
-void MainBEMW::Init(MainBEM &_bem, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose) {
-	WhenClose = _WhenClose;
-	LoadFromJson(bem, StoreAsJson(_bem));
-	bem.Init();
-	Add(bem.SizePos());
-	Title(t_("BEMRosetta BEM Coefficients Processing")).Sizeable().Zoomable().Icon(icon, largeIcon);
 }

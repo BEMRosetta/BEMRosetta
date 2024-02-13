@@ -17,7 +17,6 @@ options(MSC) -D_SCL_SECURE_NO_WARNINGS;
 
 file
 	main.cpp,
-	BEMRosetta.cpp,
 	BEMRosetta_int.h,
 	BEMRosetta.h,
 	CommandLine.cpp,
@@ -32,6 +31,7 @@ file
 	wamit_mesh.cpp,
 	diodore_mesh.cpp,
 	Solvers readonly separator,
+	BEM.cpp,
 	nemoh.cpp,
 	hams.cpp,
 	aqwa.cpp,

@@ -212,20 +212,5 @@ private:
 	StatusBar *statusBar = nullptr;
 };
 
-class MainFASTW : public TopWindow {
-public:
-	typedef MainFASTW CLASSNAME;
-	
-	void Init(String appDataFolder, const Image &icon, const Image &largeIcon, StatusBar &statusBar, Function <void()> _WhenClose);
-	virtual void Close() {
-		WhenClose();
-		delete this;
-	}
-	
-	FastScatterTabs fast;
-	
-private:
-	Function <void()> WhenClose;
-};
 
 #endif

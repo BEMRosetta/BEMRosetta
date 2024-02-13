@@ -858,11 +858,11 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 
 void FastScatterTabs::Init(String appDataFolder, StatusBar &_statusBar) {
 	statusBar = &_statusBar;
-	String folder = AppendFileNameX(appDataFolder, "FASTScatter");
+	String folder = AFX(appDataFolder, "FASTScatter");
 	if (!DirectoryCreateX(folder))
 		return;
 		
-	LoadFromJsonFile(*this, AppendFileNameX(folder, "FASTScatter.json"));
+	LoadFromJsonFile(*this, AFX(folder, "FASTScatter.json"));
 	
 	tabBar.Crosses(true).ContextMenu(true);
 	tabBar.SetTop();
@@ -1081,7 +1081,7 @@ FastScatterTabs::~FastScatterTabs() {
 	for (int i = 0; i < tabScatters.size(); ++i)
 		tabScatters[i].fscbase.SaveParams();	
 	
-	String file = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTScatter", "FASTScatter.json");	
+	String file = AFX(GetAppDataFolder(), "BEMRosetta", "FASTScatter", "FASTScatter.json");	
 	StoreAsJsonFile(*this, file, true);
 }
 
@@ -1107,16 +1107,16 @@ void FastScatterBase::LoadParams() {
 	String strpath = SHA1StringS(~file).Left(12);
 	String strname = SHA1StringS(GetFileName(~file)).Left(12);
 	
-	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
+	String folder = AFX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
 	if (!DirectoryCreateX(folder))
 		return;
 	
 	String fileName;
-	FindFile ffpath(AppendFileNameX(folder, strpath + "_*.json"));
+	FindFile ffpath(AFX(folder, strpath + "_*.json"));
 	if (ffpath) 
 		fileName = ffpath.GetPath();
 	else {
-		FindFile ffname(AppendFileNameX(folder,  "*_" + strname + ".json"));
+		FindFile ffname(AFX(folder,  "*_" + strname + ".json"));
 		if (ffname) 
 			fileName = ffname.GetPath();
 	}
@@ -1134,20 +1134,13 @@ void FastScatterBase::SaveParams() {
 	String strpath = SHA1StringS(~file).Left(12);
 	String strname = SHA1StringS(GetFileName(~file)).Left(12);
 	
-	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
+	String folder = AFX(GetAppDataFolder(), "BEMRosetta", "FASTScatter");
 	if (!DirectoryCreateX(folder))
 		return;
 	
-	String fileName = AppendFileNameX(folder, strpath + "_" + strname + ".json");
+	String fileName = AFX(folder, strpath + "_" + strname + ".json");
 
 	Params params;
 	params.Get(leftSearch.array, rightSearch.array);
 	StoreAsJsonFile(params, fileName, true);
-}
-
-void MainFASTW::Init(String appDataFolder, const Image &icon, const Image &largeIcon, StatusBar &statusBar, Function <void()> _WhenClose) {
-	WhenClose = _WhenClose;
-	fast.Init(appDataFolder, statusBar);
-	Add(fast.SizePos());
-	Title(t_("BEMRosetta FAST .out+b Reader")).Sizeable().Zoomable().Icon(icon, largeIcon);
 }

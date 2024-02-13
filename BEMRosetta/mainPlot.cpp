@@ -320,7 +320,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	} else if (dataToShow == Hydro::DATA_B_H) {
 		if (hy.IsLoadedB(plot_idf, plot_jdf)) {
 			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B, show_w, !dim, show_ma_ph)) {
-				loaded = true;
+				//loaded = true;		// Without B_H, it is not worth showing the tab
 				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B%s %s"), sids, nameType)).
 							SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
 							Stroke(2, color).Dash(LINE_SOLID);

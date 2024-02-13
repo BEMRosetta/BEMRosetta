@@ -30,7 +30,7 @@ bool Fast::Load(String file, Function <bool(String, int)> Status) {
 		if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
 			throw Exc("\n" + Format(t_("File '%s' not found"), file));
 
-		String hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
+		String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
 		hd().code = Hydro::FAST_WAMIT;
 		
 		if (!Wamit::Load(ForceExt(hydroFile, ".hst"), Status)) 
@@ -110,8 +110,8 @@ bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 		else
 			BEM::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
 			
-		String hydroFile = AppendFileNameX(GetFileFolder(file), hydroFolder, hd().name);
-		DirectoryCreateX(AppendFileNameX(GetFileFolder(file), hydroFolder));
+		String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
+		DirectoryCreateX(AFX(GetFileFolder(file), hydroFolder));
 	
 		Wamit::Save(hydroFile, Status, true, qtfHeading);
 		
@@ -239,7 +239,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		if (pos < 0 || poslf < 0)
 			throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "PotFile"));
 		
-		String folder = AppendFileNameX(hydroFolder, hd().name);
+		String folder = AFX(hydroFolder, hd().name);
 		strFile = strFile.Left(poslf+1) + Format("\"%s\" ", folder) + strFile.Mid(pos);
 	} else {
 		strFile = ZstdDecompress(hydroDyn, hydroDyn_length);
@@ -274,7 +274,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			strFile.Replace("[WaveDirRange]", FDS((hd().head[hd().Nh-1] - hd().head[0])/2, 10));
 		else
 			strFile.Replace("[WaveDirRange]", FDS(WaveDirRange, 10));
-		strFile.Replace("[PotFile]", Format("\"%s\"", AppendFileNameX(hydroFolder, hd().name)));
+		strFile.Replace("[PotFile]", Format("\"%s\"", AFX(hydroFolder, hd().name)));
 	}
 	if (!SaveFile(fileName, strFile))
 		throw Exc(Format(t_("Imposible to save file '%s'"), hd().file));

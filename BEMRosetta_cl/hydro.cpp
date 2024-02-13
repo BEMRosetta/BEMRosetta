@@ -139,47 +139,64 @@ void Hydro::GetAinf_w() {
         }
 }
 
-void Hydro::GetB_H() {
+void Hydro::GetB_H(int num) {
 	if (!IsLoadedFex())
 		throw Exc(t_("The excitation force is not loaded"));
 	if (Nf == 0)
 		throw Exc(t_("No frecuencies loaded"));
-	if (Nh < 12)
-		throw Exc(t_("Not enough hedings for Haskind calculation"));
-	if (IsNull(rho))
-		throw Exc(t_("Unknown density"));
-	if (IsNull(g))
-		throw Exc(t_("Unknown gravity"));
+	//if (Nh < 12)
+	//	throw Exc(t_("Not enough headings for Haskind calculation"));
+	if (num > Nh)
+		throw Exc(t_("Number of headings is higher than available"));
+	if (num <= 0)
+		throw Exc(t_("Not enough headings for Haskind calculation"));
 	if (IsNull(h))
 		throw Exc(t_("Unknown depth"));
 		
-	UVector<double> hd(Nh);
+	UVector<double> head360(Nh);
 	for (int ih = 0; ih < Nh; ++ih) 
-		hd[ih] = ToRad(FixHeading_0_360(head[ih]));
-	
-	UVector<int> order = GetSortOrderX(hd);
-	SetSortOrder(hd, order);
+		head360[ih] = ToRad(head[ih]);
 	
 	enum RangeType {R_0_360, R_x_360, R_0_x, R_x_x};
 	RangeType rangeType;
-	double hd0 = hd[0],
-		   hdl = Last(hd);
+	double hd0 = head360[0],
+		   hdl = Last(head360);
 	if (hd0 == 0 && hdl < 2*M_PI) {
-		hd << 2*M_PI;
+		head360 << 2*M_PI;
 		rangeType = R_0_x;
+		num++;
 	} else if (hd0 > 0 && hdl == 2*M_PI) {
-		hd.Insert(0, 0);
+		head360.Insert(0, 0);
 		rangeType = R_x_360;
+		num++;
 	} else if (hd0 > 0 && hdl < 2*M_PI) {
-		hd.Insert(0, 0);
-		hd << 2*M_PI;
+		head360.Insert(0, 0);
+		head360 << 2*M_PI;
 		rangeType = R_x_x;
+		num += 2;
 	} else	
 		rangeType = R_0_360;
 	
+	///
+	UVector<double> delta;
+	for (int i = 0; i < head360.size()-1; ++i)
+		delta << (head360[i+1] - head360[i]);
+	
+	UVector<int> idRemove;
+	for (int numdel = head360.size() - num; numdel > 0; --numdel) {
+		UVector<int> idRem = GetSortOrderX(delta);
+		int idrem = idRem[0];
+		if (idrem == 0)
+			idrem = 1;
+		idRemove << idrem;
+		head360.Remove(idrem);
+		delta[idrem-1] += delta[idrem];
+		delta.Remove(idrem);
+	}
+	
 	VectorXd val(Nf);
 	for (int ifr = 0; ifr < Nf; ++ifr)
-	 	val[ifr] = w[ifr]*SeaWaves::WaveNumber_w(w[ifr], -1, g, true)/(4*M_PI*rho*g*g);
+	 	val[ifr] = w[ifr]*SeaWaves::WaveNumber_w(w[ifr], -1, g_dim(), true)/(4*M_PI*rho_dim()*g_dim()*g_dim());
 	
 	Initialize_AB(B_H);
 	
@@ -191,7 +208,7 @@ void Hydro::GetB_H() {
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			UVector<double> F2(Nh);
 			for (int ih = 0; ih < Nh; ++ih) 
-				F2[ih] = sqr(F_dim(abs(ex.force[order[ih]](ifr, idof)), idof));
+				F2[ih] = sqr(F_dim(abs(ex.force[ih](ifr, idof)), idof));
 			
 			if (rangeType == R_0_x) 
 				F2 << F2[0];
@@ -202,7 +219,9 @@ void Hydro::GetB_H() {
 				F2.Insert(0, f);
 				F2 << f;
 			}
-			b(ifr) = Integral(hd, F2, SIMPSON_1_3)*val[ifr];
+			for (int i = 0; i < idRemove.size(); ++i)
+				F2.Remove(idRemove[i]);
+			b(ifr) = Integral(head360, F2, SIMPSON_1_3)*val[ifr];
 		}
 		if (dimen)
 			B_H[idof][idof] = b*rho_ndim()/rho_dim();
@@ -1299,7 +1318,7 @@ void Hydro::CopyQTF_MD() {
 			for (int idof = 0; idof < 6; ++idof) {
 				const MatrixXcd &m = qtfdif[ib][ih][idof];
 				VectorXd diag = Eigen::abs(m.diagonal().array());
-				Resample(qw, diag, ww, md[ib][ih][idof]);
+				ResampleY(qw, diag, ww, md[ib][ih][idof]);
             }
         }
 	}

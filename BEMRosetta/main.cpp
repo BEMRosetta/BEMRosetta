@@ -17,6 +17,7 @@
 #include <DropGrid/DropGrid.h>
 #include <SysInfo/Crash.h>
 
+
 using namespace Upp;
 
 #include <BEMRosetta_cl/BEMRosetta.h>
@@ -33,7 +34,7 @@ FreqSelector::FreqSelector() {
 };
 
 static String GetBEMRosettaDataFolder() {
-	return AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
+	return AFX(GetAppDataFolder(), "BEMRosetta");
 }
 
 void Main::Init() {
@@ -54,7 +55,19 @@ void Main::Init() {
 	
 	SetLanguage(LNG_('E', 'N', 'U', 'S'));
 	
-	Title(S("BEMRosetta") + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
+	String title;
+	if (parameter == "")
+		title = "BEMRosetta";
+	else if (parameter == "bem")
+		title = "BEMRosetta BEM models viewer";
+	else if (parameter == "mesh")
+		title = "BEMRosetta mesh files viewer";
+	else if (parameter == "time")
+		title = "BEMRosetta Time domain results viewer";
+	else
+		throw Exc(Format(t_("Unknown -gui parameter %s"), parameter));
+		
+	Title(title + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	rectangleButtons.SetBackground(SColorFace());
 		
@@ -63,9 +76,6 @@ void Main::Init() {
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
 	
 	LOG("BEM configuration loaded");
-	
-	if (IsNull(lastTab))
-		lastTab = 0;
 	
 	if (!bem.ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
@@ -76,32 +86,44 @@ void Main::Init() {
 	
 	LOG("Configuration loaded");
 	
-	mainMesh.Init();			LOG("Init Mesh");
-	tab.Add(mainMesh.SizePos(), t_("Mesh"));
-
-	mainSolver.Init(bem);		LOG("Init Nemoh");
-	//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
-	tab.Add(mainSolver.SizePos(), t_("BEM Solver"));
-
-	mainBEM.Init();				LOG("Init BEM");
-	tab.Add(mainBEM.SizePos(),  t_("Hydro Coeff"));
-
-	mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
-	tab.Add(mainFAST.SizePos(), t_("Time series"));
+	if (parameter.IsEmpty() || parameter == "mesh") {
+		mainMesh.Init();			LOG("Init Mesh");
+		tab.Add(mainMesh.SizePos(), t_("Mesh"));
+	}
+	if (parameter.IsEmpty()) {
+		mainSolver.Init(bem);		LOG("Init Nemoh");
+		//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
+		tab.Add(mainSolver.SizePos(), t_("BEM Solver"));
+	}
 	
-	mainMoor.Init();	LOG("Init Moor");
+	if (parameter.IsEmpty() || parameter == "bem") {
+		mainBEM.Init();				LOG("Init BEM");
+		tab.Add(mainBEM.SizePos(),  t_("Hydro Coeff"));
+	}
+	
+	if (parameter.IsEmpty() || parameter == "time") {
+		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
+		tab.Add(mainFAST.SizePos(), t_("Time series"));
+	}
+	
+	if (parameter.IsEmpty()) {
+		mainMoor.Init();	LOG("Init Moor");
 #ifdef flagDEBUG
-		tab.Add(mainMoor.SizePos(), t_("Mooring"));
+			tab.Add(mainMoor.SizePos(), t_("Mooring"));
 #else
-	if (Bem().experimental)
-		tab.Add(mainMoor.SizePos(), t_("Mooring"));
+		if (Bem().experimental)
+			tab.Add(mainMoor.SizePos(), t_("Mooring"));
 #endif
-
-	mainDecay.Init();	LOG("Init Decay");
-	if (false/*Bem().experimental*/)
-		tab.Add(mainDecay.SizePos(), t_("Decay"));
-
-	tab.Add().Disable();
+	}
+	
+	if (parameter.IsEmpty()) {
+		mainDecay.Init();	LOG("Init Decay");
+		if (false/*Bem().experimental*/)
+			tab.Add(mainDecay.SizePos(), t_("Decay"));
+	}
+	
+	if (parameter.IsEmpty())
+		tab.Add().Disable();
 	
 	mainOutput.Init();			LOG("Init Output");
 	tab.Add(mainOutput.SizePos(), t_("Output"));	
@@ -129,28 +151,25 @@ void Main::Init() {
 	editHeadingType.SetReadOnly();
 	editHeadingType <<= BEM::strHeadingType[bem.headingType];
 	
-	butWindow.SetImage(Img::application_double()).SetLabel(t_("New window")).Tip(t_("Open new window"));
+	butWindow.SetImage(Img::application_double()).Tip(t_("Open new window"));
 	butWindow.Hide();
-	
-	butWindow << [&] {
-		if (tab.IsAt(mainMesh)) {
-			AddWindow();
-			MainMeshW *mainMeshW = new MainMeshW();
-			mainMeshW->Init(mainMesh, Img::Rosetta64(), Img::Rosetta256(), [&]() {DeleteWindow();});
-			mainMeshW->OpenMain();
-		} else if (tab.IsAt(mainBEM)) {
-			AddWindow();
-			MainBEMW *mainBEMW = new MainBEMW();
-			mainBEMW->Init(mainBEM, Img::Rosetta64(), Img::Rosetta256(), [&]() {DeleteWindow();});
-			mainBEMW->OpenMain();
-		} else if (tab.IsAt(mainFAST)) {
-			AddWindow();
-			MainFASTW *mainFASTW = new MainFASTW();
-			mainFASTW->Init(GetBEMRosettaDataFolder(), Img::Rosetta64(), Img::Rosetta256(), bar, [&]() {DeleteWindow();});
-			mainFASTW->OpenMain();
-		}
+
+	auto Exec = [](String command) {
+#if defined(PLATFORM_WIN32) 
+		WinExec(command, SW_SHOWNORMAL);
+#else
+		system(command + "&");
+#endif		
 	};
-	
+	butWindow << [&] {
+		if (tab.IsAt(mainMesh)) 
+			Exec(Format("%s -gui mesh", GetExeFilePath()));
+		else if (tab.IsAt(mainBEM)) 
+			Exec(Format("%s -gui bem", GetExeFilePath()));
+		else if (tab.IsAt(mainFAST)) 
+			Exec(Format("%s -gui time", GetExeFilePath()));
+	};
+
 	tab.WhenSet = [&] {
 		LOGTAB(tab);
 		if (tab.IsAt(menuOptionsScroll)) 
@@ -165,27 +184,23 @@ void Main::Init() {
 		}
 		
 		if (tab.IsAt(mainMesh)) {
-#ifdef PLATFORM_POSIX
-			butWindow.Show(false);
-#else
 			butWindow.Show(true);
-#endif
-			lastTab = ~tab;
+			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else if (tab.IsAt(mainBEM)) {
 			butWindow.Show(true);
-			lastTab = ~tab;
+			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else 	if (tab.IsAt(mainSolver)) {		//	mainNemohScroll)) {
 			butWindow.Show(false);
-			lastTab = ~tab;
+			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else 	if (tab.IsAt(mainMoor)) {
 			butWindow.Show(false);
-			lastTab = ~tab;
+			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else 	if (tab.IsAt(mainDecay)) {
 			butWindow.Show(false);
-			lastTab = ~tab;
+			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else if (tab.IsAt(mainFAST)) {
 			butWindow.Show(true);
-			lastTab = ~tab;
+			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else 
 			butWindow.Show(false);
 			
@@ -196,7 +211,6 @@ void Main::Init() {
 	};	
 	
 	if (firstTime) {
-		lastTab = 0;
 		tab.Set(menuAbout);
 	} else if (openOptions)
 		tab.Set(menuOptionsScroll);
@@ -220,6 +234,8 @@ void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
 	editrho <<= rho;
 	editdofType <<= BEM::strDOFType[dofType];
 	editHeadingType <<= BEM::strHeadingType[headingType];
+	
+	mainBEM.UpdateButtons();
 }
 
 bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
@@ -228,7 +244,7 @@ bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	if (!DirectoryCreateX(folder))
 		ret = false;
 	else {
-		String fileName = AppendFileNameX(folder, "config.cf");
+		String fileName = AFX(folder, "config.cf");
 		if (!FileExists(fileName)) 
 			ret = false;
 		else {
@@ -261,7 +277,7 @@ bool Main::StoreSerializeJson() {
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
 		return 0;
-	String fileName = AppendFileNameX(folder, "config.cf");
+	String fileName = AFX(folder, "config.cf");
 	return StoreAsJsonFile(*this, fileName, true);
 }
 
@@ -275,10 +291,6 @@ void Main::Close() {
 }
 
 void Main::CloseMain(bool store) {
-	if (numWindows > 0) {
-		if (!PromptOKCancel(t_("There are still open windows.&Do you want to close anyway?")))	
-			return;
-	}
 	if (store) {
 		bem.StoreSerializeJson();
 		StoreSerializeJson();
@@ -300,7 +312,7 @@ void Main::Jsonize(JsonIO &json) {
 		("mooring", mainMoor)
 		("decay", mainDecay)
 		("menuOptions", menuOptions)
-		("lastTab", lastTab)
+		("lastTabS", lastTabS)
 	;
 }
 
@@ -324,7 +336,10 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
-BEM &Bem()							{return ma().bem;}
+BEM &Bem() {
+	return ma().bem;
+}
+
 void Status(String str, int time)	{ma().Status(str, time);}
 
 void OnPanic(const char *title, const char *text) {
@@ -332,32 +347,38 @@ void OnPanic(const char *title, const char *text) {
 }
 
 GUI_APP_MAIN {
-#ifdef flagDEBUG
+#if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
 	GetCrashHandler().Enable();
 #endif
 	InstallPanicMessageBox(OnPanic);
 	
 	const UVector<String>& command = CommandLine();
 
-	if (!command.IsEmpty()) {
+	if (!command.IsEmpty() && command[0] != "-gui") {
 		ConsoleOutput con(true);
 		
 		ConsoleMain(command, true, PrintStatus);
 		return;
 	}
-	
 	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
 	Ctrl::GlobalBackPaint();
 	
 	String errorStr;
-	Main *main = new Main();
+
 	try {
-		main->Init();
-		main->OpenMain();
-		
-		Ctrl::EventLoop(main);
-		
-		main->Close();		
+		Main main;
+		if (command.size() >= 1) {
+			if (command[0] == "-gui") {
+				if (command.size() < 2)
+					throw Exc("-gui option requires to indicate window to show");
+				main.parameter = ToLower(command[1]);
+			} else
+				throw Exc(Format("Unknown command %s", command[0]));
+		}
+		main.Init();
+		main.OpenMain();
+		Ctrl::EventLoop(&main);
+		main.Close();
 	} catch (Exc e) {
 		errorStr = e;
 	} catch(const char *cad) {
@@ -368,9 +389,7 @@ GUI_APP_MAIN {
 		errorStr = e.what();
 	} catch(...) {
 		errorStr = t_("Unknown error");
-	}	
-	delete(main);
-
+	}
 	if (!errorStr.IsEmpty())
 		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }

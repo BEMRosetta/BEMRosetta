@@ -7,7 +7,7 @@
 const char *Simulation::strCalculation[] = {t_("None"), t_("Static"), t_("Dynamic-Static"), t_("Dynamic"), t_("OpenFAST"), t_("Unknown")};
 	
 Simulation::~Simulation() {
-	String outFile = AppendFileNameX(folder, "DLLData.out");
+	String outFile = AFX(folder, "DLLData.out");
 	if (out.GetParamCount() > 1)
 		out.Save(outFile, ".out");
 	else

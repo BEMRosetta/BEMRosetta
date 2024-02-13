@@ -91,6 +91,8 @@ std::complex<double> FixHeading_180(const std::complex<double> &head);
 std::complex<double> FixHeading_0_360(const std::complex<double> &head);
 std::complex<double> FixHeading(const std::complex<double> &head, BEM::HeadingType range);
 
+bool SortComplex(const std::complex<double>& a, const std::complex<double>& b);
+	
 void SetPhaseToMag(std::complex<double> &val, double arg);
 void AddPhase(std::complex<double> &val, double arg);
 		

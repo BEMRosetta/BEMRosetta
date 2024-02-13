@@ -1796,8 +1796,8 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		for (int i = 0; i < hd().qw.size(); ++i)
    			hd().qw(i) = 2*M_PI/hd().qw(i);
 	
-	for (int i = 0; i < hd().qh.size(); ++i)
-   		hd().qh(i) = std::complex<double>(hd().qh(i).real(), hd().qh(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+//	for (int i = 0; i < hd().qh.size(); ++i)
+//   		hd().qh(i) = std::complex<double>(hd().qh(i).real(), hd().qh(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
 	
 	return true;
 }
@@ -1937,8 +1937,8 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 
 	Copy(head, hd().mdhead);
 
-	for (int i = 0; i < hd().mdhead.size(); ++i)
-   		hd().mdhead(i) = std::complex<double>(hd().mdhead(i).real(), hd().mdhead(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+//	for (int i = 0; i < hd().mdhead.size(); ++i)
+ //  		hd().mdhead(i) = std::complex<double>(hd().mdhead(i).real(), hd().mdhead(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
 	
 	return true;
 }

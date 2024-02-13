@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2024, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <ScatterDraw/DataSource.h>
@@ -146,6 +146,95 @@ void Hydro::Dimensionalize() {
 		Dimensionalize_Forces(fk);
 	if (IsLoadedRAO()) 
 		Dimensionalize_RAO(rao);
+}
+
+// 		-180	0	180
+//		180		0	180
+//		180		0
+//		1		0
+
+// 		0	180		360
+//		0	180		0
+//		0	180
+//		0	1
+
+void Hydro::SortHeadings() {
+	UVector<double> nhead;
+	for (int ih = 0; ih < head.size(); ++ih)
+		FindAdd(nhead, FixHeading_0_360(head[ih]));
+	
+	UVector<int> indices_h = GetSortOrderX(nhead);
+	Nh = indices_h.size();
+	head = pick(nhead);
+
+	UArray<std::complex<double>> nmhead;
+	for (int ih = 0; ih < mdhead.size(); ++ih)
+		FindAdd(nmhead, FixHeading_0_360(mdhead[ih]));
+	
+	UVector<int> indices_md = GetSortOrderX(nmhead, SortComplex);
+	
+	mdhead.resize(nmhead.size());		// Cannot pick()
+	for (int ih = 0; ih < mdhead.size(); ++ih)
+		mdhead[ih] = nmhead[ih];
+		
+	auto SortF = [&](Forces &F) {
+		Forces f = clone(F);
+		for (int ih = 0; ih < Nh; ++ih) 
+			for (int ifr = 0; ifr < Nf; ++ifr) 
+				for (int idf = 0; idf < 6*Nb; ++idf) 
+					F.force[ih](ifr, idf) = f.force[indices_h[ih]](ifr, idf);
+		F.force.SetCount(Nh);
+	};
+
+	auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
+		UArray<UArray<UArray<VectorXd>>> md = clone(MD);
+		for (int ib = 0; ib < Nb; ++ib) {
+			MD[ib].SetCount(mdhead.size());
+			for (int ih = 0; ih < mdhead.size(); ++ih)
+				for (int idf = 0; idf < 6; ++idf) 
+					for (int ifr = 0; ifr < Nf; ++ifr) 		
+						MD[ib][ih][idf][ifr] = md[ib][indices_md[ih]][idf][ifr];
+		}
+	};
+			
+	if (IsLoadedFex())
+		SortF(ex);
+	if (IsLoadedFsc())
+		SortF(sc);
+	if (IsLoadedFfk())
+		SortF(fk);
+	if (IsLoadedRAO()) 
+		SortF(rao);	
+
+	if(IsLoadedMD())
+		SortMD(md);
+
+	UArray<std::complex<double>> nqh;
+	for (int ih = 0; ih < qh.size(); ++ih)
+		FindAdd(nqh, FixHeading_0_360(qh[ih]));
+	
+	UVector<int> indices_qw = GetSortOrderX(nqh, SortComplex);
+	
+	qh.resize(nqh.size());
+	for (int ih = 0; ih < qh.size(); ++ih)
+		qh[ih] = nqh[ih];
+	
+	auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
+		UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
+		for (int ib = 0; ib < Nb; ++ib) {
+			QTF[ib].SetCount(qh.size());
+	        for (int ih = 0; ih < qh.size(); ++ih) 
+	        	for (int idf = 0; idf < 6; ++idf) 
+					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
+						for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) 
+							QTF[ib][ih][idf](ifr1, ifr2) = qtf[ib][indices_qw[ih]][idf](ifr1, ifr2);
+		}
+	};
+		
+	if (IsLoadedQTF(true))
+		SortQTF(qtfsum);
+	if (IsLoadedQTF(false))
+		SortQTF(qtfdif);
 }
 
 void Hydro::SortFrequencies() {
@@ -763,14 +852,7 @@ void Hydro::Symmetrize_QTF(bool xAxis) {
 		FindAddDelta(newHead, FixHeading_180(qh[ih]), 0.01);
 		FindAddDelta(newHead, FixHeading_180(MirrorHead(qh[ih], xAxis)), 0.01);
 	}
-	Sort(newHead, [](const std::complex<double> &a, const std::complex<double> &b)->bool {
-		if (a.real() < b.real())
-			return true;
-		else if (a.real() == b.real())
-			return a.imag() < b.imag();
-		else
-			return false;
-	});
+	Sort(newHead, SortComplex);
 
 	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<MatrixXcd>>> &f, UArray<UArray<UArray<MatrixXcd>>> &newf) {
 		auto Symmetrize_Forces_Each0 = [&](const UArray<UArray<UArray<MatrixXcd>>> &f, UArray<UArray<UArray<MatrixXcd>>> &newf, const std::complex<double> &h, int ib, int ih, int idf, bool applysym) {
@@ -841,14 +923,8 @@ void Hydro::Symmetrize_MD(bool xAxis) {
 		FindAddDelta(newHead, FixHeading_180(mdhead[ih]), 0.01);
 		FindAddDelta(newHead, FixHeading_180(MirrorHead(mdhead[ih], xAxis)), 0.01);
 	}
-	Sort(newHead, [](const std::complex<double> &a, const std::complex<double> &b)->bool {
-		if (a.real() < b.real())
-			return true;
-		else if (a.real() == b.real())
-			return a.imag() < b.imag();
-		else
-			return false;
-	});
+	Sort(newHead, SortComplex);
+	
 	int newNh = newHead.size();
 
 	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf) {
@@ -1394,6 +1470,7 @@ void Hydro::GetBodyDOF() {
 
 bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	SortFrequencies();
+	SortHeadings();
 	
 	if (!IsLoadedA0())  
 		GetA0();
@@ -2240,14 +2317,7 @@ void BEM::UpdateHeadAllMD() {
 		for (int ih = 0; ih < hydros[id].hd().mdhead.size(); ++ih) 
 			FindAddDelta(headAllMD, FixHeading(hydros[id].hd().mdhead[ih], headingType), 0.1);
 	}
-	Sort(headAllMD, [](const std::complex<double> &a, const std::complex<double> &b)->bool {
-		if (a.real() < b.real())
-			return true;
-		else if (a.real() == b.real())
-			return a.imag() < b.imag();
-		else
-			return false;
-	});
+	Sort(headAllMD, SortComplex);
 	//orderHeadAll = GetSortOrderX(headAll);
 }
 
@@ -2271,8 +2341,8 @@ void BEM::RAO(int id) {
 	hydros[id].hd().GetRAO();
 }
 
-void BEM::BH(int id) {
-	hydros[id].hd().GetB_H();
+void BEM::BH(int id, int num) {
+	hydros[id].hd().GetB_H(num);
 } 
 
 void BEM::Symmetrize(int id) {
@@ -2560,11 +2630,11 @@ bool BEM::LoadSerializeJson() {
 	roundVal = roundEps = Null;
 	
 	bool ret;
-	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
+	String folder = AFX(GetAppDataFolder(), "BEMRosetta");
 	if (!DirectoryCreateX(folder))
 		ret = false;
 	else {
-		String fileName = AppendFileNameX(folder, "configdata.cf");
+		String fileName = AFX(folder, "configdata.cf");
 		if (!FileExists(fileName)) 
 			ret = false;
 		else {
@@ -2635,10 +2705,10 @@ bool BEM::ClearTempFiles() {
 }
 	
 bool BEM::StoreSerializeJson() {
-	String folder = AppendFileNameX(GetAppDataFolder(), "BEMRosetta");
+	String folder = AFX(GetAppDataFolder(), "BEMRosetta");
 	if (!DirectoryCreateX(folder))
 		return 0;
-	String fileName = AppendFileNameX(folder, "configdata.cf");
+	String fileName = AFX(folder, "configdata.cf");
 	return StoreAsJsonFile(*this, fileName, true);
 }
 
@@ -2788,7 +2858,7 @@ bool HydroClass::SaveCSVMat(String file) {
 	String ext = GetFileExt(file);
 	
 	if (hd().IsLoadedA())  {
-		String files = AppendFileNameX(folder, name + "_A" + ext);
+		String files = AFX(folder, name + "_A" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -2860,7 +2930,7 @@ bool HydroClass::SaveCSVMat(String file) {
 	}
 	
 	if (hd().IsLoadedB())  {
-		String files = AppendFileNameX(folder, name + "_B" + ext);
+		String files = AFX(folder, name + "_B" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -2898,7 +2968,7 @@ bool HydroClass::SaveCSVMat(String file) {
 	}
 	
 	if (hd().IsLoadedC())  {
-		String files = AppendFileNameX(folder, name + "_C" + ext);
+		String files = AFX(folder, name + "_C" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -2908,7 +2978,7 @@ bool HydroClass::SaveCSVMat(String file) {
 	}
 	
 	if (hd().IsLoadedM())  {
-		String files = AppendFileNameX(folder, name + "_M" + ext);
+		String files = AFX(folder, name + "_M" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -2918,7 +2988,7 @@ bool HydroClass::SaveCSVMat(String file) {
 	}
 	
 	if (hd().IsLoadedFex())  {
-		String files = AppendFileNameX(folder, name + "_Fex" + ext);
+		String files = AFX(folder, name + "_Fex" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -2927,7 +2997,7 @@ bool HydroClass::SaveCSVMat(String file) {
 	}
 	
 	if (hd().IsLoadedMD())  {
-		String files = AppendFileNameX(folder, name + "_MD" + ext);
+		String files = AFX(folder, name + "_MD" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -2946,7 +3016,7 @@ bool HydroClass::SaveCSVTable(String file) {
 	String ext = GetFileExt(file);
 	
 	if (hd().IsLoadedA())  {
-		String files = AppendFileNameX(folder, name + "_A" + ext);
+		String files = AFX(folder, name + "_A" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3009,7 +3079,7 @@ bool HydroClass::SaveCSVTable(String file) {
 	}
 	
 	if (hd().IsLoadedB())  {
-		String files = AppendFileNameX(folder, name + "_B" + ext);
+		String files = AFX(folder, name + "_B" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3044,7 +3114,7 @@ bool HydroClass::SaveCSVTable(String file) {
 	}
 	
 	if (hd().IsLoadedC())  {
-		String files = AppendFileNameX(folder, name + "_C" + ext);
+		String files = AFX(folder, name + "_C" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3054,7 +3124,7 @@ bool HydroClass::SaveCSVTable(String file) {
 	}
 	
 	if (hd().IsLoadedM())  {
-		String files = AppendFileNameX(folder, name + "_M" + ext);
+		String files = AFX(folder, name + "_M" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3064,7 +3134,7 @@ bool HydroClass::SaveCSVTable(String file) {
 	}
 	
 	if (hd().IsLoadedFex())  {
-		String files = AppendFileNameX(folder, name + "_Fex" + ext);
+		String files = AFX(folder, name + "_Fex" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3073,7 +3143,7 @@ bool HydroClass::SaveCSVTable(String file) {
 	}	
 	
 	if (hd().IsLoadedMD())  {
-		String files = AppendFileNameX(folder, name + "_MD" + ext);
+		String files = AFX(folder, name + "_MD" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));

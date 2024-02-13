@@ -250,7 +250,7 @@ public:
 	#else
 		arch = "Win32";
 	#endif
-		String path = AppendFileNameX(orcadata[iversion].path, "OrcFxAPI", arch, "OrcFxAPI.dll");	// Assembles the path
+		String path = AFX(orcadata[iversion].path, "OrcFxAPI", arch, "OrcFxAPI.dll");	// Assembles the path
 		
 		return Init(path);
 	}
