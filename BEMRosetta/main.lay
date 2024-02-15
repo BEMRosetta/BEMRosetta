@@ -159,7 +159,7 @@ LAYOUT(MenuPlot, 728, 56)
 	ITEM(Upp::ArrayCtrl, headMD, LeftPosZ(384, 96).VSizePosZ(20, 4))
 	ITEM(Upp::LabelBox, labHeadQTF, SetLabel(t_("Headings QTF")).LeftPosZ(380, 104).TopPosZ(0, 56))
 	ITEM(Upp::ArrayCtrl, headQTF, LeftPosZ(384, 96).VSizePosZ(20, 4))
-	ITEM(Upp::Button, butList, LeftPosZ(472, 12).TopPosZ(0, 15))
+	ITEM(DropCtrl, butList, LeftPosZ(468, 16).TopPosZ(0, 15))
 END_LAYOUT
 
 LAYOUT(MenuPlotList, 112, 200)
@@ -167,7 +167,6 @@ LAYOUT(MenuPlotList, 112, 200)
 	ITEM(Upp::ArrayCtrl, headMD, HSizePosZ(4, 4).VSizePosZ(20, 4))
 	ITEM(Upp::ArrayCtrl, headQTF, HSizePosZ(4, 4).VSizePosZ(20, 4))
 	ITEM(Upp::Label, label, SetLabel(t_("label")).LeftPosZ(8, 80).TopPosZ(0, 19))
-	ITEM(Upp::Button, cancel, RightPosZ(0, 12).TopPosZ(0, 15))
 END_LAYOUT
 
 LAYOUT(MenuMesh, 772, 56)

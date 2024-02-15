@@ -301,18 +301,7 @@ void MainBEM::Init() {
 	menuPlot.headMD.NoHeader().MultiSelect();
 	menuPlot.headMD.AddColumn("");
 	menuPlot.headMD.AddColumn("");
-	menuPlot.butList.WhenAction = [&]() {
-		try {
-			int id = GetIdOneSelected();
-			if (id < 0) 
-				return;
-		
-			Add(menuPlotList.LeftPosZ(535, 105).TopPosZ(23, 150));		// Values by hand
-			
-		} catch (Exc e) {
-			BEM::PrintError(DeQtfLf(e));
-		}	
-	};
+	menuPlot.butList.SetCtrl(menuPlotList).Tip(t_("Click to select headings"));
 	menuPlotList.Init(*this, menuPlot.head1st, menuPlot.headMD, menuPlot.headQTF);
 	
 	//menuPlot.headQTF.NoHeader().MultiSelect();
@@ -1649,8 +1638,6 @@ MenuAdvancedReference::MenuAdvancedReference() {
 
 MenuPlotList::MenuPlotList() {
 	CtrlLayout(*this);
-		
-	cancel << [&] {Remove();}; 
 }
 
 void MainBEM::AfterBEM() {

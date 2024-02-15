@@ -85,8 +85,6 @@ String TabText(const TabCtrl &tab);
 
 #define LOGTAB(tab) LOG(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
 
-#include "premain.h"
-
 #define LAYOUTFILE <BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
 
@@ -613,7 +611,7 @@ private:
 	int id;
 };
 
-class MenuPlotList : public WithMenuPlotList<StaticRect> {
+class MenuPlotList : public WithMenuPlotList<DropCtrlDialog> {
 public:
 	typedef MenuPlotList CLASSNAME;
 	

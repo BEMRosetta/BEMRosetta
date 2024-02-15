@@ -3,7 +3,7 @@
 -echo "\nTesting mesh functions"
 
 -echo "\n\nTesting inertia"
--i "..\examples\wamit\cylinder\cylinder inertia.gdf"
+-i "../examples/wamit/cylinder/cylinder inertia.gdf"
 -print volume				-isSimilarNum "37699.1 37699.1 37699.1"
 -print cg_vol				-isSimilarNum "100 100 15"
 -print surface				-isSimilarNum "6283.18"

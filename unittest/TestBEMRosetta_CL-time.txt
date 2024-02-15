@@ -3,68 +3,68 @@
 -echo "\nTesting time series functions"
 
 -echo "\n\nReading time series from .csv"
--i "..\examples\csv\hello.csv"
+-i "../examples/csv/hello.csv"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
--i "..\examples\csv\hello - header.csv"
+-i "../examples/csv/hello - header.csv"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
--i "..\examples\csv\hello - comma.csv"
+-i "../examples/csv/hello - comma.csv"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
--i "..\examples\csv\hello - other sep.csv"
+-i "../examples/csv/hello - other sep.csv"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
--i "..\examples\csv\hello - other sep tab.csv"
+-i "../examples/csv/hello - other sep tab.csv"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
 -echo "\n\nReading time series from OpenFAST .outb"
--i "..\examples\fast.out\demo.outb"
+-i "../examples/fast.out/demo.outb"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
 -echo "\n\nSaving to and loading from OpenFAST .out"
--c ".test\hello.out"
--i ".test\hello.out"
+-c ".test/hello.out"
+-i ".test/hello.out"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
 -echo "\n\nSaving to and loading from .csv"
--c ".test\hello.csv"
--i ".test\hello.csv"
+-c ".test/hello.csv"
+-i ".test/hello.csv"
 -print list
 -print FAIRTEN3 23.5	-isSimilar  1416118
 -print FAIRTEN3 avg		-isSimilar  1286553
 -print FAIRTEN3 max		-isSimilar  1416893
 
 -echo "\n\nReading time series from AQWA Naut"
--i "..\examples\aqwa\naut\DemoTimeDomain.lis"
+-i "../examples/aqwa/naut/DemoTimeDomain.lis"
 -print list
 -print POSITION_z 23.5	-isSimilar  9.7241
 -print POSITION_z avg	-isSimilar  11.434
 -print POSITION_z max	-isSimilar  21.843
 
 -echo "\n\nReading time series from DeepLines Wind .db"
--i "..\examples\deeplineswind\Timeseries.db"
+-i "../examples/deeplineswind/Timeseries.db"
 -print list
 -print TEV_Line1_3C_Effective_tension_at_2_3m 23.5	-isSimilar	935091.88
 -print TEV_Line1_3C_Effective_tension_at_2_3m avg	-isSimilar	831674.75

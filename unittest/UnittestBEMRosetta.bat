@@ -3,7 +3,7 @@
 
 @title Compiling BEMRosetta_cl %1
 @echo Compiling BEMRosetta_cl %1
-umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_CL  		.\.test\BEMRosetta_cl.exe  		
+umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_CL  -r		.\.test\BEMRosetta_cl.exe  		
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 @title Testing BEMRosetta_cl %1
 @echo Testing BEMRosetta_cl %1
@@ -16,17 +16,17 @@ umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_CL  		.\.test\BEMRosetta_cl.exe
 
 @title Compiling BEMRosetta GUI %1
 @echo Compiling BEMRosetta GUI %1
-umk BEMRosetta BEMRosetta    %1 %2 +GUI 			.\.test\BEMRosetta.exe
+umk BEMRosetta BEMRosetta    %1 %2 +GUI 	  -r		.\.test\BEMRosetta.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 @title Compiling BEMRosetta_cl DLL %1
 @echo Compiling BEMRosetta_cl DLL %1
-umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_DLL,DLL	.\.test\libbemrosetta.dll
+umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_DLL,DLL -r	.\.test\libbemrosetta.dll
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 @title Compiling BEMRosetta_cl TEST_DLL %1
 @echo Compiling BEMRosetta_cl TEST_DLL %1
-umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_TEST_DLL	.\.test\testdll_bemrosetta.exe
+umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_TEST_DLL -r	.\.test\testdll_bemrosetta.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 .\.test\testdll_bemrosetta.exe  .\.test ..
  
