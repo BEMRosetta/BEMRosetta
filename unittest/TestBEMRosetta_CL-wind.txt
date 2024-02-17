@@ -1,0 +1,27 @@
+-wind 
+
+-echo "\nTesting wind functions"
+
+-echo "\n\nReading time series from .csv"
+
+-i ../examples/wind/TurbSim.wnd 
+
+-params 
+	hubHeight 90 
+	gridHeight 12.5 
+
+-c ./.test/TurbSim2.bts 
+-i ./.test/TurbSim2.bts 
+-i ../examples/wind/TurbSim.bts 
+
+-reportAll
+
+-setId 0
+-print vel 20 30 3.49 -isSimilar 8.531
+-print vel 20 30 avg  -isSimilar 9.023
+-setId 1
+-print vel 20 30 3.49 -isSimilar 8.531
+-print vel 20 30 avg  -isSimilar 9.023
+-setId 2
+-print vel 20 30 3.49 -isSimilar 8.531
+-print vel 20 30 avg  -isSimilar 9.023

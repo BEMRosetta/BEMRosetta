@@ -602,7 +602,7 @@ public:
 	void GetAinf();
 	void GetAinf_w();
 	void GetRAO();
-	void GetB_H(int num);
+	void GetB_H(int &num);
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
@@ -1387,7 +1387,7 @@ public:
 	void Ainf(int id);
 	void Ainf_w(int id);
 	void RAO(int id);
-	void BH(int id, int num);
+	void BH(int id, int &num);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, const MatrixXd &to);
 	void WaveTo(int id, double xto, double yto);
@@ -1709,6 +1709,7 @@ public:
 	void GetPos(double z, double y, int &idz, int &idy);
 	VectorXd Get(int idz, int idy);
 	VectorXd GetTime();
+	int GetTimeId(double time);
 	
 	void Report(Grid &grid) const;	
 

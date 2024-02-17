@@ -13,6 +13,8 @@ umk BEMRosetta BEMRosetta_cl %1 %2 +BEMR_CL  -r		.\.test\BEMRosetta_cl.exe
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 @.\.test\BEMRosetta_cl -paramfile TestBEMRosetta_CL-time.txt
 @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+@.\.test\BEMRosetta_cl -paramfile TestBEMRosetta_CL-wind.txt
+@IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 @title Compiling BEMRosetta GUI %1
 @echo Compiling BEMRosetta GUI %1
@@ -42,3 +44,6 @@ rem copy .\.test\libbemrosetta.txt ..\_bin
 rem @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 rem copy .\.test\libbemrosetta.py ..\_bin
 rem @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
+
+del .\.test\TurbSim2.bts
+del .\.test\hello.*

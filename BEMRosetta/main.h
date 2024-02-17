@@ -594,7 +594,7 @@ private:
 
 class MainBEM;
 
-class MenuAdvancedReference : public WithMenuAdvancedReference<StaticRect> {
+class MenuAdvancedReference : public WithMenuAdvancedReference<DropCtrlDialog> {
 public:
 	typedef MenuAdvancedReference CLASSNAME;
 	
@@ -1330,7 +1330,7 @@ public:
 	void OnOgilvie();
 	void OnAverage();
 	void OnConvergence();
-	void OnUpdateCrot();
+	//void OnUpdateCrot();
 	void OnUpdateCwave();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces();

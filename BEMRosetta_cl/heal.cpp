@@ -260,7 +260,6 @@ void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf
 	}	
 }
 	
-// Haskind is unused
 bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &done) {
 	// Removes NaN, Inf, duplicated (or nearly) w, sorts by w 
 	CleanNANDupXSort(w, A, B, w, A, B);

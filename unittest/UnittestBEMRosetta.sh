@@ -14,9 +14,13 @@ echo "Testing BEMRosetta_cl"
 ./.test/bemrosetta_cl -paramfile TestBEMRosetta_CL-mesh.txt
 ./.test/bemrosetta_cl -paramfile TestBEMRosetta_CL-bem.txt
 ./.test/bemrosetta_cl -paramfile TestBEMRosetta_CL-time.txt
+./.test/bemrosetta_cl -paramfile TestBEMRosetta_CL-wind.txt
 
 echo "Compiling BEMRosetta"
 umk BEMRosetta BEMRosetta    CLANG_17 -bd +GUI,SHARED 	  ./.test/bemrosetta
 umk BEMRosetta BEMRosetta    GCC 	  -bd +GUI,SHARED     ./.test/bemrosetta
+
+rm ./.test/TurbSim2.bts
+rm ./.test/hello.*
 
 echo -----------All done. NO error!

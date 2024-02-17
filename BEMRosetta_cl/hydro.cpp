@@ -139,61 +139,50 @@ void Hydro::GetAinf_w() {
         }
 }
 
-void Hydro::GetB_H(int num) {
+void Hydro::GetB_H(int &num) {
 	if (!IsLoadedFex())
 		throw Exc(t_("The excitation force is not loaded"));
 	if (Nf == 0)
 		throw Exc(t_("No frecuencies loaded"));
-	//if (Nh < 12)
-	//	throw Exc(t_("Not enough headings for Haskind calculation"));
 	if (num > Nh)
 		throw Exc(t_("Number of headings is higher than available"));
 	if (num <= 0)
 		throw Exc(t_("Not enough headings for Haskind calculation"));
 	if (IsNull(h))
 		throw Exc(t_("Unknown depth"));
-		
-	UVector<double> head360(Nh);
-	for (int ih = 0; ih < Nh; ++ih) 
-		head360[ih] = ToRad(head[ih]);
-	
-	enum RangeType {R_0_360, R_x_360, R_0_x, R_x_x};
+
+	UVector<double> head360 = clone(head);
+
+	double angle = 360/num;
+	double nextAngle = head360[0] + angle;
+	UVector<int> idRemove;
+	for (int i = 1; i < head360.size(); ++i) {
+		if (head360[i] < nextAngle) 
+			idRemove << i;
+		else
+			nextAngle += angle;
+	}
+	num = head.size() - idRemove.size();
+	for (int i = idRemove.size()-1; i >= 0; --i)
+		head360.Remove(idRemove[i]);
+
+	enum RangeType {R_0_360, R_x_360, R_0_x, R_x_x};	// There must be data from 0 to 360 deg
 	RangeType rangeType;
 	double hd0 = head360[0],
 		   hdl = Last(head360);
-	if (hd0 == 0 && hdl < 2*M_PI) {
-		head360 << 2*M_PI;
+	if (hd0 == 0 && hdl < 360) {
+		head360 << 360;
 		rangeType = R_0_x;
-		num++;
-	} else if (hd0 > 0 && hdl == 2*M_PI) {
+	} else if (hd0 > 0 && hdl == 360) {
 		head360.Insert(0, 0);
 		rangeType = R_x_360;
-		num++;
-	} else if (hd0 > 0 && hdl < 2*M_PI) {
+	} else if (hd0 > 0 && hdl < 360) {
 		head360.Insert(0, 0);
-		head360 << 2*M_PI;
+		head360 << 360;
 		rangeType = R_x_x;
-		num += 2;
 	} else	
-		rangeType = R_0_360;
-	
-	///
-	UVector<double> delta;
-	for (int i = 0; i < head360.size()-1; ++i)
-		delta << (head360[i+1] - head360[i]);
-	
-	UVector<int> idRemove;
-	for (int numdel = head360.size() - num; numdel > 0; --numdel) {
-		UVector<int> idRem = GetSortOrderX(delta);
-		int idrem = idRem[0];
-		if (idrem == 0)
-			idrem = 1;
-		idRemove << idrem;
-		head360.Remove(idrem);
-		delta[idrem-1] += delta[idrem];
-		delta.Remove(idrem);
-	}
-	
+		rangeType = R_0_360;	
+
 	VectorXd val(Nf);
 	for (int ifr = 0; ifr < Nf; ++ifr)
 	 	val[ifr] = w[ifr]*SeaWaves::WaveNumber_w(w[ifr], -1, g_dim(), true)/(4*M_PI*rho_dim()*g_dim()*g_dim());
@@ -210,18 +199,19 @@ void Hydro::GetB_H(int num) {
 			for (int ih = 0; ih < Nh; ++ih) 
 				F2[ih] = sqr(F_dim(abs(ex.force[ih](ifr, idof)), idof));
 			
-			if (rangeType == R_0_x) 
+			for (int i = idRemove.size()-1; i >= 0; --i)
+				F2.Remove(idRemove[i]);
+			
+			if (rangeType == R_0_x) 					// There must be data from 0 to 360 deg
 				F2 << F2[0];
 			else if (rangeType == R_x_360) 
 				F2.Insert(0, Last(F2));
 			else if (rangeType == R_x_x) {
-				double f = LinearInterpolate(2*M_PI, hdl, 2*M_PI + hd0, Last(F2), F2[0]);
+				double f = LinearInterpolate(360., hdl, 360 + hd0, Last(F2), F2[0]);
 				F2.Insert(0, f);
 				F2 << f;
 			}
-			for (int i = 0; i < idRemove.size(); ++i)
-				F2.Remove(idRemove[i]);
-			b(ifr) = Integral(head360, F2, SIMPSON_1_3)*val[ifr];
+			b(ifr) = Integral(head360, F2, SIMPSON_1_3)*val[ifr]*M_PI/180;
 		}
 		if (dimen)
 			B_H[idof][idof] = b*rho_ndim()/rho_dim();

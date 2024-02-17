@@ -124,9 +124,10 @@ String BTSWind::SaveBTS(String fileName, int fmtSz) const {
     if (fmtSz < 0) 
         fmtSz = 2;
     
-	FileOutBinary file(ForceExt(fileName, ".bts"));
+    fileName = ForceExt(fileName, ".bts");
+	FileOutBinary file(fileName);
 	if (!file.IsOpen())
-		return t_("Impossible to open file");
+		return Format(t_("Impossible to open file %s"), fileName);
 
     VectorXf Vslope(3);
     VectorXf Voffset(3);

@@ -1,0 +1,51 @@
+-orca -numtries 5 
+-ls "../examples/orcaflex/dll/K03 15MW semi-sub FOWT.sim"
+-p list
+
+-rs 0 0 0 
+#
+-lp "Environment|Elevation"
+#
+-lp "15MW RWT|X" 
+-lp "15MW RWT|Y" 
+-lp "15MW RWT|Z" 
+-lp "15MW RWT|Rotation 1" 
+-lp "15MW RWT|Rotation 2" 
+-lp "15MW RWT|Rotation 3" 
+#
+-rs 22.868 0 11.131 
+-lp "15MW RWT|Rotation 1" 
+-lp "15MW RWT|Rotation 2" 
+-lp "15MW RWT|Rotation 3" 
+#
+-rs 0 0 0 
+-lp "Tower|End Lx force|EndA"
+-lp "Tower|End Ly force|EndA"
+-lp "Tower|End Lz force|EndA"
+-lp "Tower|End Lx moment|EndA"
+-lp "Tower|End Ly moment|EndA"
+-lp "Tower|End Lz moment|EndA"
+-lp "Tower|End Lx force|EndB"
+-lp "Tower|End Ly force|EndB"
+-lp "Tower|End Lz force|EndB"
+-lp "Tower|End Lx moment|EndB"
+-lp "Tower|End Ly moment|EndB"
+-lp "Tower|End Lz moment|EndB"
+#
+-lp "Line1|Effective tension|EndA" 
+-lp "Line2|Effective tension|EndA" 
+-lp "Line3|Effective tension|EndA" 
+#
+-lp "Nacelle|x acceleration rel. g"
+-lp "Nacelle|y acceleration rel. g"
+-lp "Nacelle|z acceleration rel. g"
+#
+-lp "MySE11-230|Generator angular velocity"
+-lp "MySE11-230|Generator torque"
+-lp "MySE11-230|Generator power"
+-lp "MySE11-230|Main shaft angular velocity"
+-lp "MySE11-230|Rotor aero Lz force"
+-lp "MySE11-230|Blade pitch|Blade|1"
+-lp "MySE11-230|Connection Lz force"
+
+-c "./.test/file.csv" 

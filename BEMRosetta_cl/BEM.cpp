@@ -2341,7 +2341,7 @@ void BEM::RAO(int id) {
 	hydros[id].hd().GetRAO();
 }
 
-void BEM::BH(int id, int num) {
+void BEM::BH(int id, int &num) {
 	hydros[id].hd().GetB_H(num);
 } 
 

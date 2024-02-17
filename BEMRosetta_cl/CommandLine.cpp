@@ -70,14 +70,14 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("Options:");
 	
 	Cout() << "\n" << t_("-h  -help                 # Print options");
-	Cout() << "\n" << t_("-echo \"text\"            # Prints \"text\"");
+	Cout() << "\n" << t_("-echo \"text\"              # Prints \"text\"");
 	Cout() << "\n" << t_("-pause");
 	Cout() << "\n" << t_("-exit                     # Exits BEMRosetta");
 	
 	Cout() << "\n" << t_("-general                  # The next commands are for any data (default)");
 	Cout() << "\n" << t_("-paramfile <file>         # Params in a file. New lines are like separators and # indicates a comment");
 	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
-	Cout() << "\n" << t_("               g         	# gravity       [m/s2]  ") << md.g;
+	Cout() << "\n" << t_("               g          # gravity       [m/s2]  ") << md.g;
 	Cout() << "\n" << t_("               rho        # water density [kg/m3] ") << md.rho;
 	Cout() << "\n" << t_("-echo off/on              # Show text messages");
 	Cout() << "\n" << t_("-csvseparator <sep>       # Sets the separator for .csv files");
@@ -178,7 +178,9 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("               gridheight       # Grid base height [m] ");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
 	Cout() << "\n" << t_("              time              # Time series [s]");
-	Cout() << "\n" << t_("              vel  <y> <z>      # Wind speed norm [m/s ]at y, z [m]");
+	Cout() << "\n" << t_("              vel <y> <z> <time># Wind speed norm [m/s] at y, z [m] in <time>");
+	Cout() << "\n" << t_("              vel <y> <z> data  # Wind speed norm [m/s] at y, z [m] data series");
+	Cout() << "\n" << t_("              vel <y> <z> avg   # Wind speed norm [m/s] at y, z [m] average");
 	
 	Cout() << "\n" << t_("-r  -report                     # Output loaded model main data");
 	Cout() << "\n" << t_("-ra -reportall                  # Output all models main data");
@@ -192,7 +194,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads for OrcaWave");
 	Cout() << "\n" << t_("-timelog <num>                  # Set minimum clock seconds per each OrcaFlex simulation log");
 	Cout() << "\n" << t_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results in <to>");
-	Cout() << "\n" << t_("-ls -loadSim <sim>       		  # Load OrcaFlex simulation in <sim>");
+	Cout() << "\n" << t_("-ls -loadSim <sim>              # Load OrcaFlex simulation in <sim>");
 	Cout() << "\n" << t_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference system for outputs");
 	Cout() << "\n" << t_("-lp -loadParam <param>          # Load param to be saved");
 	Cout() << "\n" << t_("-cp -clearParams                # Clear parameters loaded");
@@ -956,7 +958,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							windid = ScanInt(command[i]);
 							if (IsNull(windid) || windid < 0 || windid > wind.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[i]));
-							BEM::Print("\n" + Format(t_("Wind active model id is %d"), bemid));	
+							BEM::Print("\n" + Format(t_("Wind active model id is %d"), windid));	
 						} else if (param == "-c" || param == "-convert") {
 							if (wind.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -987,8 +989,21 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									w.GetPos(zpos, ypos, idz, idy);
 									Eigen::VectorXd v;
 									v = w.Get(idz, idy);
-									for (int i = 0; i < v.size(); ++i) 
-										lastPrint << v(i) << " ";
+									
+									CheckIfAvailableArg(command, ++i, "<time>/avg/data");
+									String what = command[i];
+									if (what == "avg")
+										lastPrint << v.mean();
+									else if (what == "data") {
+										for (int i = 0; i < v.size(); ++i) 
+											lastPrint << v(i) << " ";
+									} else {
+										double time = ScanDouble(what);
+										if (IsNull(time))
+											throw Exc(t_("Parameter time not found in vel"));
+										int id = w.GetTimeId(time);
+										lastPrint << v(id);
+									}
 									BEM::Print(lastPrint);
 								} else if (param == "time") {
 									BEM::Print("\n");

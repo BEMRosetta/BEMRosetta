@@ -152,6 +152,10 @@ VectorXd Wind::GetTime() {
 	
 	return ret;
 }
+
+int Wind::GetTimeId(double time) {
+	return int(time/dt);
+}
 	
 void ArrayWind::Report(Grid &grid) {
 	for (const Wind	&w : *this)

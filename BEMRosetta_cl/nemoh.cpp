@@ -494,7 +494,7 @@ void NemohCase::Save_Input(String folder, int solver) const {
 		out << "0.001			! eps_zmin for determine minimum z of flow and source points of panel, zmin=eps_zmin*body_diameter" << "\n";
 		out << "1 				! 0 GAUSS ELIM.; 1 LU DECOMP.: 2 GMRES	!Linear system solver" << "\n";
 		out << "10 1e-5 1000  	! Restart parameter, Relative Tolerance, max iter -> additional input for GMRES";
-	} else {
+	} else if (solver != BEMCase::CAPYTAINE) {
 		String fileName = AFX(folder, "Input.txt");
 		FileOut out(fileName);
 		if (!out.IsOpen())

@@ -261,7 +261,7 @@ void MainBEM::Init() {
 	CtrlLayout(menuAdvanced);
 	menuAdvanced.butAinfw <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINFW);
 	menuAdvanced.butAinfw.Disable();
-	menuAdvanced.butBH.WhenAction = [&]() {OnBH(int(menuAdvanced.numBH));};
+	menuAdvanced.butBH.WhenAction = menuAdvanced.numBH.WhenEnter = [&]() {OnBH(int(menuAdvanced.numBH));};
 	menuAdvanced.butBH.Disable();
 	menuAdvanced.butOgilvie <<= THISBACK(OnOgilvie);
 	menuAdvanced.butOgilvie.Disable();
@@ -272,12 +272,13 @@ void MainBEM::Init() {
 	menuAdvanced.butConvergence.Disable();
 	menuAdvanced.butAverage <<= THISBACK(OnAverage);
 	menuAdvanced.butAverage.Disable();
-	menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
+	//menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
+	menuAdvanced.butUpdateCrot.SetCtrl(menuAdvancedReference).Tip(t_("Click to chage the centre of rotation"));
 	menuAdvanced.c_array.AddColumn(t_("Body"));
 	menuAdvanced.c_array.AddColumn(t_("x"));
 	menuAdvanced.c_array.AddColumn(t_("y"));
 	menuAdvanced.c_array.AddColumn(t_("z"));
-	menuAdvanced.c_array.WhenLeftDouble << THISBACK(OnUpdateCrot);
+	menuAdvanced.c_array.WhenLeftDouble = [&]() {menuAdvanced.butUpdateCrot.WhenAction();};
 	menuAdvanced.butUpdateCwave << THISBACK(OnUpdateCwave);
 	menuAdvanced.x_w.WhenEnter << THISBACK(OnUpdateCwave);
 	menuAdvanced.y_w.WhenEnter << THISBACK(OnUpdateCwave);
@@ -584,6 +585,7 @@ void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
 	menuAdvancedReference.c_array.Clear();
 	for (int ib = 0; ib < hydro.Nb; ++ib)
 		menuAdvancedReference.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));
+	menuAdvancedReference.Init(*this, id);
 		
 	menuAdvanced.labelBodyAxis.SetLabel(Format(t_("Body Axis (%d)"), hydro.Nb)); 
 	
@@ -1113,24 +1115,19 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 
 void MainBEM::OnBH(int num) {
 	try {
-		UVector<int> ids;
-		for (int row = listLoaded.GetCount()-1; row >= 0; --row) {
-			if (listLoaded.IsSelected(row)) {
-				int id = ArrayModel_IdHydro(listLoaded, row);
-				ids << id;
-			}
-		}
-		if (ids.IsEmpty()) {
-			BEM::PrintError(t_("No model selected"));
+		int id = GetIdOneSelected();
+		if (id < 0) 
 			return;
-		}
 
 		WaitCursor wait;
 		
-		for (int id : ids)		
-			Bem().BH(id, num);		
+		Bem().BH(id, num);
+			
+		menuAdvanced.numBH <<= num;
 			
 		AfterBEM();
+		
+		mainTab.Set(mainTab.Find(mainB_H));
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
@@ -1586,7 +1583,7 @@ void MainBEM::OnUpdateCwave() {
 	}	
 }
 
-void MainBEM::OnUpdateCrot() {
+/*void MainBEM::OnUpdateCrot() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
@@ -1598,7 +1595,7 @@ void MainBEM::OnUpdateCrot() {
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}	
-}
+}*/
 
 MenuAdvancedReference::MenuAdvancedReference() {
 	CtrlLayout(*this);
@@ -1609,8 +1606,7 @@ MenuAdvancedReference::MenuAdvancedReference() {
 	c_array.AddColumn(t_("y")).Edit(edit[1]);
 	c_array.AddColumn(t_("z")).Edit(edit[2]);
 	
-	cancel << [&] {Remove();}; 
-	cancel2<< [&] {Remove();}; 
+	cancel << [&] {Close();}; 
 	ok 	   << [&] {
 		try {
 			Hydro &hydro = Bem().hydros[id].hd();
@@ -1629,7 +1625,7 @@ MenuAdvancedReference::MenuAdvancedReference() {
 		
 			mbem->AfterBEM();
 			
-			Remove();
+			Close();
 		} catch (Exc e) {
 			BEM::PrintError(DeQtfLf(e));
 		}

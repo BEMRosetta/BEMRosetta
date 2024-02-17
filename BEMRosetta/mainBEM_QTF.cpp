@@ -343,6 +343,7 @@ void MainQTF::Init(MainBEM &parent) {
 		opLine 			<< THISBACK2(OnHeadingsSel, &headQTF, true);
 		
 		headQTF.WhenSel << THISBACK2(OnHeadingsSel, &headQTF, false);
+		headQTF.WhenLeftDouble = [&]() {_mbm->menuPlot.butList.WhenAction();};
 		tab.WhenSet 	<< THISBACK2(OnHeadingsSel, &headQTF, false);
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
