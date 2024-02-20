@@ -1094,6 +1094,30 @@ private:
 	void OnUpdate();
 };
 
+class Tools_WaveInfo : public WithTools_WaveInfo<StaticRect> {
+public:
+	typedef Tools_WaveInfo CLASSNAME;
+	Tools_WaveInfo() {}
+	
+	bool Init();
+	void OnCalc();
+	void OnDelta();
+	void OnArrayBar(Bar &menu);
+	void ArrayCopy();
+	void ArraySelect();
+};
+
+class MainTools : public StaticRect {
+public:
+	typedef MainDecay CLASSNAME;
+	
+	void Init();
+	
+	TabCtrl tab;
+	
+	Tools_WaveInfo waveInfo;
+};
+
 class MainSetupFOAMM : public WithMainStateSpaceSetup<StaticRect> {
 public:
 	typedef MainSetupFOAMM CLASSNAME;
@@ -1478,6 +1502,7 @@ private:
 	FastScatterTabs mainFAST;
 	MainMoor mainMoor;
 	MainDecay mainDecay;
+	MainTools mainTools;
 	
 	MenuOptions menuOptions;
 	CtrlScroll menuOptionsScroll;

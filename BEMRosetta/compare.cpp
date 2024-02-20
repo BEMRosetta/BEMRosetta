@@ -44,10 +44,10 @@ void CompareParameters::Init(ScatterDraw &scatter, SplitterButton &splitter) {
 	
 	auto Up = [&] {
 		NON_REENTRANT_V;
-		Load();
 		for (CompareParameters *c : plist) {
 			c->swRelative <<= ~swRelative;
 			c->opMinRange <<= ~opMinRange;
+			c->Load();
 		}
 	};
 	

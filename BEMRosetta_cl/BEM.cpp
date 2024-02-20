@@ -164,8 +164,9 @@ void Hydro::SortHeadings() {
 		FindAdd(nhead, FixHeading_0_360(head[ih]));
 	
 	UVector<int> indices_h = GetSortOrderX(nhead);
-	Nh = indices_h.size();
+	SetSortOrder(nhead, indices_h);
 	head = pick(nhead);
+	Nh = indices_h.size();
 
 	UArray<std::complex<double>> nmhead;
 	for (int ih = 0; ih < mdhead.size(); ++ih)
@@ -2717,7 +2718,7 @@ bool HydroClass::Load(String file) {
 	BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 	
 	if (!LoadFromJsonFile(hd(), file)) {
-		BEM::PrintError("\n" + Format(t_("Error loading '%s'"), file));
+		//BEM::PrintError("\n" + Format(t_("Error loading '%s'"), file));
 		hd().lastError = "\n" + Format(t_("Error loading '%s'"), file);
 		return false;
 	}

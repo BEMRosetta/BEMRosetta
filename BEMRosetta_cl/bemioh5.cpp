@@ -17,31 +17,31 @@ bool BemioH5::Load(String file, double) {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		BEM::Print("\n- " + S(t_("H5 file")));
-		if (!Load_H5()) 
-			BEM::PrintWarning(S(": ** H5 file ") + t_("Not found") + "**");
+		
+		Load_H5();
 		
 		if (IsNull(hd().Nb))
-			return false;
+			throw Exc(t_("No data found"));
 	
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//hd().lastError = e;
+		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = e;
 		return false;
 	}
 	
 	return true;
 }
 
-bool BemioH5::Load_H5() {
+void BemioH5::Load_H5() {
 	String fileName = ForceExt(hd().file, ".h5");
 	
 	Hdf5File hfile;
 	
 	if (!hfile.Open(fileName, H5F_ACC_RDONLY))
-		return false;
+		throw Exc(Format(t_("file %s"), fileName) + "\n" + t_("File not found or blocked"));
 	
 	hd().dataFromW = true;
 	
@@ -259,8 +259,6 @@ bool BemioH5::Load_H5() {
 		hd().Compare_F(hd().sc, sc, "Scattering");
 	if (hd().IsLoadedFfk())
 		hd().Compare_F(hd().fk, fk, "Froude-Krylov");
-	
-	return true;
 }
 
 bool BemioH5::Save(String file) {

@@ -16,29 +16,29 @@ bool Diodore::Load(String file, double) {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		BEM::Print("\n- " + S(t_("HDB file")));
-		if (!Load_HDB()) 
-			BEM::PrintWarning(S(": ** HDB file ") + t_("Not found") + "**");
+		
+		Load_HDB();
 		
 		if (IsNull(hd().Nb))
-			return false;
+			throw Exc(t_("No data found"));
 	
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//hd().lastError = e;
+		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = e;
 		return false;
 	}
 	
 	return true;
 }
 
-bool Diodore::Load_HDB() {
+void Diodore::Load_HDB() {
 	String fileName = ForceExt(hd().file, ".hdb");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return false;
+		throw Exc(in.Str() + "\n" + t_("File not found or blocked"));
 	
 	String line; 
 	LineParser f(in);
@@ -236,8 +236,6 @@ bool Diodore::Load_HDB() {
 		}
 	}
 	hd().mdtype = 9;
-	
-	return true;
 }
 
 bool HydroClass::SaveDiodoreHDB(String file) {

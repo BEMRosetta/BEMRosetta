@@ -1,5 +1,5 @@
 -orca -numtries 5 
--ls "../examples/orcaflex/dll/K03 15MW semi-sub FOWT.sim"
+-ls "C:\Users\0203853\OneDrive - SENER\Escritorio\K03 15MW semi-sub FOWT\K03 15MW semi-sub FOWT.sim"
 -p list
 
 -rs 0 0 0 

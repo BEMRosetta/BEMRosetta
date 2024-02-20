@@ -117,6 +117,11 @@ void Main::Init() {
 	}
 	
 	if (parameter.IsEmpty()) {
+		mainTools.Init();
+		tab.Add(mainTools.SizePos(), t_("Tools"));
+	}
+	
+	if (parameter.IsEmpty()) {
 		mainDecay.Init();	LOG("Init Decay");
 		if (false/*Bem().experimental*/)
 			tab.Add(mainDecay.SizePos(), t_("Decay"));

@@ -1089,7 +1089,7 @@ public:
 	virtual ~Foamm() noexcept {}
 	
 protected:
-	bool Load_mat(String fileName, int ib, int jb, bool loadCoeff);
+	void Load_mat(String fileName, int ib, int jb, bool loadCoeff);
 };
 
 class BEMBody : public MoveableAndDeepCopyOption<BEMBody> {
@@ -1285,7 +1285,7 @@ public:
 	virtual ~Diodore() noexcept {}	
 	
 private:
-	bool Load_HDB();
+	void Load_HDB();
 };
 
 class OrcaWave : public HydroClass {
@@ -1295,7 +1295,7 @@ public:
 	virtual ~OrcaWave() noexcept {}	
 	
 private:
-	bool Load_YML_Res();
+	void Load_YML_Res();
 };
 
 class BemioH5 : public HydroClass {
@@ -1306,7 +1306,7 @@ public:
 	virtual ~BemioH5() noexcept {}	
 	
 private:
-	bool Load_H5();
+	void Load_H5();
 };
 
 UVector<int> NumSets(int num, int numsets);	

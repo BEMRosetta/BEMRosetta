@@ -16,29 +16,28 @@ bool OrcaWave::Load(String file, double) {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		BEM::Print("\n- " + S(t_("YML file")));
-		if (!Load_YML_Res()) 
-			BEM::PrintWarning(S(": ** YML file ") + t_("Not found") + "**");
+		
+		Load_YML_Res();
 		
 		if (IsNull(hd().Nb))
-			return false;
+			throw Exc(t_("No data found"));
 	
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 	} catch (Exc e) {
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//hd().lastError = e;
+		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = e;
 		return false;
 	}
-	
 	return true;
 }
 
-bool OrcaWave::Load_YML_Res() {
+void OrcaWave::Load_YML_Res() {
 	String fileName = ForceExt(hd().file, ".yml");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return false;
+		throw Exc(in.Str() + "\n" + t_("File not found or blocked"));
 	
 	hd().dataFromW = true;
 	bool rad_s = true;
@@ -645,6 +644,4 @@ bool OrcaWave::Load_YML_Res() {
 		Point3D c0(hd().c0.col(ib));
 		Surface::TranslateInertia66(hd().M[ib], cg, cg, c0);
 	}
-	
-	return true;	
 }

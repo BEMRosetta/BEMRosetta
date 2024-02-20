@@ -113,17 +113,15 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		if (IsNull(hd().Nf))
 			hd().Nf = 0;
 
-		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/) {
-			hd().lastError = t_("No data found");
-			return false;
-		}
+		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/) 
+			throw Exc(t_("No data found"));
 		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 6);
 
 	} catch (Exc e) {
 		Status("", -1);
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//hd().lastError = e;
+		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = Format(t_("file %s "), file) + e;
 		return false;
 	}
 	

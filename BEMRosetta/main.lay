@@ -759,6 +759,19 @@ LAYOUT(MainMoor_LineProperties, 304, 292)
 	ITEM(Upp::LabelBox, dv___16, SetLabel(t_("Line")).LeftPosZ(12, 152).BottomPosZ(12, 72))
 END_LAYOUT
 
+LAYOUT(Tools_WaveInfo, 492, 236)
+	ITEM(Upp::EditDoubleSpin, editH, SetInc(1).Min(0.00001).NotNull(true).LeftPosZ(76, 60).TopPosZ(140, 19))
+	ITEM(Upp::EditDoubleSpin, editDepth, SetInc(1).Min(0.00001).NotNull(true).LeftPosZ(76, 60).TopPosZ(24, 19))
+	ITEM(Upp::Label, dv___2, SetLabel(t_("Delta incr.:")).LeftPosZ(4, 72).TopPosZ(188, 19))
+	ITEM(Upp::Label, dv___3, SetLabel(t_("H [m]:")).LeftPosZ(4, 72).TopPosZ(140, 19))
+	ITEM(Upp::EditDoubleSpin, editT, SetInc(1).Min(0.00001).NotNull(true).LeftPosZ(76, 60).TopPosZ(4, 19))
+	ITEM(Upp::Label, dv___5, SetLabel(t_("T [s]:")).LeftPosZ(4, 72).TopPosZ(4, 19))
+	ITEM(Upp::ArrayCtrl, gridResultsH, LeftPosZ(140, 320).TopPosZ(136, 76))
+	ITEM(Upp::ArrayCtrl, gridResultsT, LeftPosZ(140, 320).TopPosZ(4, 124))
+	ITEM(Upp::EditDoubleNotNull, editDelta, Min(0.00001).LeftPosZ(76, 24).TopPosZ(188, 19))
+	ITEM(Upp::Label, dv___9, SetLabel(t_("Depth [m]:")).LeftPosZ(4, 72).TopPosZ(24, 19))
+END_LAYOUT
+
 LAYOUT(AdditionalDataLoad, 188, 144)
 	ITEM(Upp::Label, dv___0, SetLabel(t_("Depth [m]:")).LeftPosZ(12, 120).TopPosZ(80, 19))
 	ITEM(Upp::EditString, h, LeftPosZ(132, 52).TopPosZ(80, 19))

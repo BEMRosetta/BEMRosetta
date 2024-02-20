@@ -20,31 +20,29 @@ bool Foamm::Load(String file) {
 	try {
 		if (GetFileExt(file) == ".mat") {
 			BEM::Print("\n\n" + Format(t_("Loading mat file '%s'"), file));
-			if (!Load_mat(file, 0, 0, true)) {
-				BEM::PrintWarning("\n" + Format(t_("File '%s' not found"), file));
-				return false;
-			}
+			
+			Load_mat(file, 0, 0, true);
 		}
 		if (IsNull(hd().Nb))
-			return false;
+			throw Exc(t_("No data found"));
 		
 		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 1;
 	} catch (Exc e) {
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
+		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		hd().lastError = Format(t_("file %s "), file) + e;
 		return false;
 	}
 	
 	return true;
 }
 
-bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
+void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	MatFile mat;
 	
 	if (!mat.OpenRead(file)) 
-		return false;
+		throw Exc(S("\n") + t_("File not found or blocked"));
 	
 	hd().stsProcessor = "FOAMM by COER (http://www.eeng.nuim.ie/coer/)";
 	
@@ -157,8 +155,6 @@ bool Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	sts.ssMAE = mat.VarRead<double>("MAE");	
 	
 	hd().dimenSTS = true;	
-			
-	return true;
 }
 
 void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,

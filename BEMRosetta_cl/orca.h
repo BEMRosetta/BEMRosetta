@@ -2,7 +2,8 @@
 // Copyright 2020 - 2023, the BEMRosetta author and contributors
 #ifdef PLATFORM_WIN32
 ;
-#pragma pack(push, 1)
+#pragma pack(push)
+#pragma pack(1)
 
 // Object type constants 
 #define otNull 0
@@ -545,7 +546,7 @@ public:
 				objectextra.BladeIndex = actualBlade = ib;
 				EnumerateVars2(objHandle, &objectextra, ResultType, EnumerateVarsProc, &lpNumberOfVars, &status);
 				if (status != 0)
-					throwError("GetFlexSimVariables.EnumerateVars2");		
+					throwError("GetFlexSimVariables.EnumerateVars2 Turbine");		
 				for (int i = from; i < varNames.size(); ++i) {
 					varNames[i] = varNames[i] + Format("|Blade|%d", ib);
 					varFullNames[i] = varFullNames[i] + Format("|Blade|%d", ib);

@@ -165,6 +165,11 @@ void Hydro::GetB_H(int &num) {
 	num = head.size() - idRemove.size();
 	for (int i = idRemove.size()-1; i >= 0; --i)
 		head360.Remove(idRemove[i]);
+	
+	String shead = FormatF(head360[0], 1);
+	for (int i = 1; i < head360.size(); ++i) 
+		shead << ", " + FormatF(head360[i], 1);
+	BEM::Print("\n" + Format(t_("Haskind got for %d headings %s"), num, shead));
 
 	enum RangeType {R_0_360, R_x_360, R_0_x, R_x_x};	// There must be data from 0 to 360 deg
 	RangeType rangeType;

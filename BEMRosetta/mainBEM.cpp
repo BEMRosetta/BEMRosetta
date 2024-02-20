@@ -776,7 +776,7 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.WhenSet();
 	} catch (Exc e) {
 		if (!e.IsEmpty())
-			BEM::PrintError(e);
+			BEM::PrintError(t_("Error: ") + e);
 		return false;
 	}
 	return true;
