@@ -1703,8 +1703,8 @@ public:
 	
 	const char *GetWindTypeStr() const;
 	const String &GetDescription() const {return description;}
-	void SetHubHeight(double h)			 {zHub = h;}
-	void SetGridHeight(double h)		 {zGrid = h;	SetYZ();}
+	void SetHubHeight(double h)			 {zHub  = float(h);}
+	void SetGridHeight(double h)		 {zGrid = float(h);	SetYZ();}
 	
 	void GetPos(double z, double y, int &idz, int &idy);
 	VectorXd Get(int idz, int idy);

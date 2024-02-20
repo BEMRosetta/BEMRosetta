@@ -190,7 +190,7 @@ void Hydro::SortHeadings() {
 	auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
 		UArray<UArray<UArray<VectorXd>>> md = clone(MD);
 		for (int ib = 0; ib < Nb; ++ib) {
-			MD[ib].SetCount(mdhead.size());
+			MD[ib].SetCount(int(mdhead.size()));
 			for (int ih = 0; ih < mdhead.size(); ++ih)
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int ifr = 0; ifr < Nf; ++ifr) 		
@@ -223,7 +223,7 @@ void Hydro::SortHeadings() {
 	auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
 		UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
 		for (int ib = 0; ib < Nb; ++ib) {
-			QTF[ib].SetCount(qh.size());
+			QTF[ib].SetCount(int(qh.size()));
 	        for (int ih = 0; ih < qh.size(); ++ih) 
 	        	for (int idf = 0; idf < 6; ++idf) 
 					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 

@@ -42,7 +42,7 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 	                else if (tmp[0] == 'F')
 	                    varValues[i] = -1;
 	                else
-	                    varValues[i] = ScanDouble(tmp);
+	                    varValues[i] = float(ScanDouble(tmp));
 				}
 			}
 		}
@@ -59,7 +59,7 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 	        int findx = line.FindAfter("=");
 	        if (findx < 0)
 	            findx = 0;
-	        ZGoffset = ScanDouble(line.Mid(findx, lindx-findx+1));	 //z grid offset
+	        ZGoffset = float(ScanDouble(line.Mid(findx, lindx-findx+1)));	 //z grid offset
 	        break;
 		}
 	}
@@ -97,7 +97,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		
 		// READ THE HEADER OF THE BINARY FILE 
 	
-		double dx;
+		float dx;
 		
 		int nffc  = file.Read<int16>();  	           // number of components
 	
@@ -114,10 +114,10 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		
 		    // convert the integers to real numbers 
 		    nffc  = -nffc;
-		    dz    = 0.001*ConvFact*dz;
-		    dy    = 0.001*ConvFact*dy;
-		    dx    = 0.001*ConvFact*dx;
-		    mffws = 0.1*ConvFact*mffws;
+		    dz    = float(0.001*ConvFact*dz);
+		    dy    = float(0.001*ConvFact*dy);
+		    dx    = float(0.001*ConvFact*dx);
+		    mffws = float(0.1*ConvFact*mffws);
 	
 		    nz    = static_cast<int>(std::round(std::fmod(nz, std::pow(2, 16))/1000.)); // the mod 2^16 is a work around for somewhat larger grids
 		    ny    = static_cast<int>(std::round(std::fmod(ny, std::pow(2, 16))/1000.)); // the mod 2^16 is a work around for somewhat larger grids
@@ -131,7 +131,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 									// 6 = (not supported)
 									// 7 = General Kaimal
 									// 8 = Mann model
-			double TI_U, TI_V, TI_W;
+			float TI_U, TI_V, TI_W;
 			
 	    	if (fc == 4) {
 		        nffc     = file.Read<int32>();        	// number of components (should be 3)
@@ -200,7 +200,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 			if (IsNull(_zHub))
 				varValues[0] = dz*(nz-1)/2;		// z1 == 0
 			else 
-				varValues[0] = _zHub;
+				varValues[0] = float(_zHub);
 			varValues[1] = 1;		//clockwise rotation
 		}
 		

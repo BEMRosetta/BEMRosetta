@@ -95,7 +95,7 @@ void BTSWind::SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Vof
                 }
 		}
     }
-    double maxType, minType;
+    float maxType, minType;
     if (fmtSz == 2) {
         maxType = std::numeric_limits<int16>::max();
         minType = std::numeric_limits<int16>::lowest();
@@ -103,10 +103,10 @@ void BTSWind::SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Vof
         maxType = std::numeric_limits<float>::max();
         minType = std::numeric_limits<float>::lowest();
     }
-    double rangeType = maxType - minType;
+    float rangeType = maxType - minType;
     for (int k = 0; k < 3; ++k) {
-        Vslope(k) = rangeType/(mx(k) - mn(k));
-       	Voffset(k) = maxType - mx(k)*Vslope(k);
+        Vslope(k) = float(rangeType/(mx(k) - mn(k)));
+       	Voffset(k) = float(maxType - mx(k)*Vslope(k));
     }	
     file.Write(float(Vslope(0)));  	// the U-component slope for scaling, REAL(4)
     file.Write(float(Voffset(0))); 	// the U-component offset for scaling, REAL(4)
