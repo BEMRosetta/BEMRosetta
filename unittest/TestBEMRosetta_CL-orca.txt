@@ -1,0 +1,49 @@
+-general
+-csvseparator ,
+
+-orca 
+-isAvailable
+-numtries 5 
+-ls "../examples/orcaflex/dll/K03 15MW semi-sub FOWT.sim"
+-p list
+
+-rs 0 0 0 
+#
+-lp "Environment|Elevation"
+#
+-lp "15MW RWT|X" 
+-lp "15MW RWT|Y" 
+-lp "15MW RWT|Z" 
+-lp "VolturnUS-S|Rotation 1" 
+-lp "VolturnUS-S|Rotation 2" 
+-lp "VolturnUS-S|Rotation 3" 
+#
+-rs 22.868 0 11.131 
+-lp "VolturnUS-S|Rotation 1" 
+-lp "VolturnUS-S|Rotation 2" 
+-lp "VolturnUS-S|Rotation 3" 
+#
+-rs 0 0 0 
+-lp "Tower|End Lx force|EndA"
+-lp "Tower|End Ly force|EndA"
+-lp "Tower|End Lz force|EndA"
+-lp "Tower|End Lx moment|EndA"
+-lp "Tower|End Ly moment|EndA"
+-lp "Tower|End Lz moment|EndA"
+-lp "Tower|End Lx force|EndB"
+-lp "Tower|End Ly force|EndB"
+-lp "Tower|End Lz force|EndB"
+-lp "Tower|End Lx moment|EndB"
+-lp "Tower|End Ly moment|EndB"
+-lp "Tower|End Lz moment|EndB"
+#
+-lp "Mooring1|Effective tension|EndA" 
+-lp "Mooring2|Effective tension|EndA" 
+-lp "Mooring3|Effective tension|EndA" 
+#
+-lp "Nacelle|x acceleration rel. g"
+-lp "Nacelle|y acceleration rel. g"
+-lp "Nacelle|z acceleration rel. g"
+#
+
+-c ".\.test\file.csv" 

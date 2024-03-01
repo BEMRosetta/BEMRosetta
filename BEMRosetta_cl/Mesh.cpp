@@ -194,9 +194,9 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_
 	else if (type == DIODORE_DAT) 
 		DiodoreMesh::SaveDat(file, First(surfs));
 	else if (type == STL_BIN)		
-		SaveStlBin(file, First(surfs), 1000);
+		SaveStlBin(file, First(surfs));
 	else if (type == STL_TXT)		
-		SaveStlTxt(file, First(surfs), 1000);
+		SaveStlTxt(file, First(surfs));
 	else if (type == BEM_MESH)		
 		First(surfs).Save(file);
 	else

@@ -189,6 +189,7 @@ void ShowHelp(BEM &md) {
 #ifdef PLATFORM_WIN32
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
+	Cout() << "\n" << t_("-isAvailable                    # Test if OrcaFLEX is installed and the license is available");
 	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-numtries <num>                 # Number <num> of attempts to connect to the license");
 	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads for OrcaWave");
@@ -215,6 +216,12 @@ void ShowHelp(BEM &md) {
 }
 
 static bool NoPrint(String, int) {return true;}
+
+String FileName(String file) {
+	file.Replace("*EXEFOLDER*", GetExeFolder());
+	return file;
+}
+
 
 #ifdef PLATFORM_WIN32
 Function<bool(String, int, const Time &)> Orca::WhenWave = [](String str, int perc, const Time &et)->bool {
@@ -394,7 +401,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++i, "--input");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
@@ -425,7 +432,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							
 							if (bem.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint)) {
 								BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
@@ -581,7 +588,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++i, "--input");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
@@ -610,7 +617,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							
 							bool symX = false, symY = false;
 							Mesh::MESH_FMT meshFmt = Mesh::UNKNOWN;
@@ -835,7 +842,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++i, "-input");
 
-							String file = command[i];
+							String file = FileName(command[i]);
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
@@ -850,7 +857,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							
 							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
 								BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
@@ -900,7 +907,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++i, "--input");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
@@ -965,7 +972,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 							
 							String ret;
 							if (!IsEmpty(ret = wind[windid].Save(file)))
@@ -1103,7 +1110,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								if (saved)
 									BEM::Print("\n" + Format(t_("Simulation results saved at '%s'"), to));
 							}
-						} else if (param == "-ls" || param == "-loadSim") {
+						} else if (param == "-ls" || param == "-loadsim") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
 									dllOrcaLoaded = true;		
@@ -1180,7 +1187,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n" + Format(t_("OrcaFlex time between logs set to %.1f sec"), timeLog));							
 							
 							orca.deltaLogSimulation = timeLog;
-						} else if (param == "-lp" || param == "-loadParam") {
+						} else if (param == "-lp" || param == "-loadparam") {
 							CheckIfAvailableArg(command, ++i, "-loadParam");
 							
 							paramList << command[i];
@@ -1195,7 +1202,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
-							String file = command[i];
+							String file = FileName(command[i]);
 
 							orca.SaveCsv(file, paramList, centreList, ScatterDraw::GetDefaultCSVSeparator());
 							BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
@@ -1206,9 +1213,30 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							centre.y = ScanDouble(command[i]);
 							CheckIfAvailableArg(command, ++i, "Reference cz");
 							centre.z = ScanDouble(command[i]);
-						} else if (param == "-cp" || param == "-clearParams") {
+						} else if (param == "-cp" || param == "-clearparams") {
 							paramList.Clear();
 							centreList.Clear();
+						} else if (param == "-isavailable") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded) {
+								BEM::PrintWarning(S("\n") + t_("OrcaFLEX is not installed"));
+								break;
+							}
+							int numTry = 2;
+							do {
+								if (orca.IsAvailable())
+									break;
+								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), 2-numTry+1, 2));
+								numTry--;
+							} while (numTry > 0);
+							if (numTry == 0) {
+								BEM::Print(S("\n") + t_("OrcaFLEX license is not available"));
+								break;
+							}
+							BEM::Print(S("\n") + t_("OrcaFLEX is installed and available"));
 						} else if (param == "-p" || param == "-print") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -1266,7 +1294,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						} else if (param == "-dll") {
 							CheckIfAvailableArg(command, ++i, "-dll");
 
-							String file = command[i];
+							String file = FileName(command[i]);
 							if (!FileExists(file)) {
 								file = AFX(file, "OrcFxAPI.dll");
 								if (!FileExists(file)) 	

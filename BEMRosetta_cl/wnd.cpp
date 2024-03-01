@@ -119,8 +119,8 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		    dx    = float(0.001*ConvFact*dx);
 		    mffws = float(0.1*ConvFact*mffws);
 	
-		    nz    = static_cast<int>(std::round(std::fmod(nz, std::pow(2, 16))/1000.)); // the mod 2^16 is a work around for somewhat larger grids
-		    ny    = static_cast<int>(std::round(std::fmod(ny, std::pow(2, 16))/1000.)); // the mod 2^16 is a work around for somewhat larger grids
+		    nz    = static_cast<int>(std::round(std::fmod(nz, PowInt(2., 16))/1000.)); // the mod 2^16 is a work around for somewhat larger grids
+		    ny    = static_cast<int>(std::round(std::fmod(ny, PowInt(2., 16))/1000.)); // the mod 2^16 is a work around for somewhat larger grids
 		} else {
 	    	fc = file.Read<int16>();// should be 4 to allow turbulence intensity to be stored in the header
 									// 1 = 1-component von Karman

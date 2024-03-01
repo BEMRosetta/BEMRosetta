@@ -82,6 +82,8 @@
 #define otAddedMassCloseToSeabed 1035
 #define otSeabedTangentialResistance 1036
 
+#define stInvalidHandle 19
+
 // For GetModelState 
 #define msReset 0
 #define msCalculatingStatics 1
@@ -367,6 +369,21 @@ public:
 		}
 	}
 	
+	bool IsAvailable() {
+		if (!dll && !FindInit())
+			throw Exc("Orca DLL not loaded");
+			
+		HINSTANCE test;
+		int status;	
+		CreateDiffraction(&test, &status);
+		if (status != 0)
+			return false;
+		DestroyDiffraction(test, &status);
+		if (status != 0)
+			return false;
+		return true;
+	}
+	
 	void LoadFlex(String owryml) {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
@@ -514,7 +531,7 @@ public:
 			throwError("GetFlexSimObjects");	
 	};
 	
-	void GetFlexSimVariables(HINSTANCE objHandle, int objType, UVector<int> &IDs, UVector<String> &names, UVector<String> &fullNames, UVector<String> &units) {
+	void GetFlexSimVariables(HINSTANCE objHandle, int objType, String name, UVector<int> &IDs, UVector<String> &names, UVector<String> &fullNames, UVector<String> &units) {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
 		
@@ -537,8 +554,10 @@ public:
 		actualBlade = -1;
 		
 		EnumerateVars2(objHandle, &objectextra, ResultType, EnumerateVarsProc, &lpNumberOfVars, &status);
-		if (status != 0)
-			throwError("GetFlexSimVariables.EnumerateVars2");		
+		if (status == stInvalidHandle)
+			return;
+		if (status != 0) 
+			throwError(Format("GetFlexSimVariables.EnumerateVars2 (type: %d name: %s)", objType, name));		
 		
 		if (objType == otTurbine) {		// Adds the parameters related with each blade
 			int from = varNames.size();
@@ -568,7 +587,7 @@ public:
 			if (objTypes[i] < 1000) {
 				UVector<int> IDs;
 				UVector<String> vnames, fullNames, units;
-				GetFlexSimVariables(objHandles[i], objTypes[i], IDs, vnames, fullNames, units);
+				GetFlexSimVariables(objHandles[i], objTypes[i], objNames[i], IDs, vnames, fullNames, units);
 				for (const String &n : vnames)
 					ret << Format("%s|%s", objNames[i], n);
 			}
@@ -674,7 +693,7 @@ public:
 		int varId = -1;
 		UVector<int> IDs;
 		UVector<String> names, fullNames, units;
-		GetFlexSimVariables(objHandle, objType, IDs, names, fullNames, units);
+		GetFlexSimVariables(objHandle, objType, name, IDs, names, fullNames, units);
 		for (int i = 0; i < names.size(); ++i) {
 			if (names[i] == var) {
 				varId = IDs[i];
@@ -844,9 +863,20 @@ public:
 	void SaveCsv(String file, const UVector<String> &_parameters, const UArray<Point3D> &_centres, String sep) {
 		if (_parameters.IsEmpty())
 			return;
+		String dec = ".", decParam = ",";
 		if (sep.IsEmpty())
 			sep = ";";	
+		else if (sep == ".")
+			dec = ",";
+		else if (sep == ",")
+			decParam = ";";
 		
+		auto SetDec = [dec=dec](String str)->String {
+			if (dec == ",")
+				str.Replace(".", ",");
+			return str;
+		};	
+			
 		UVector<String> parameters = clone(_parameters);
 		UArray<Point3D> centres = clone(_centres);
 		if (parameters[0] != "General|Time") {
@@ -864,8 +894,8 @@ public:
 			units[i] = unit;
 			datas[i] = pick(data);
 			if (objType ==  otEnvironment || objType == otVessel || objType == ot6DBuoy)
-				parameters[i] << Format("(%s,%s,%s)", 
-						FDS(centres[i].x, 5), FDS(centres[i].y, 5), FDS(centres[i].z, 5)); 
+				parameters[i] << Format("(%s%s%s%s%s)", 
+						SetDec(FDS(centres[i].x, 5)), decParam, SetDec(FDS(centres[i].y, 5)), decParam, SetDec(FDS(centres[i].z, 5))); 
 		}
 		
 		FileOut out(file);
@@ -885,7 +915,7 @@ public:
 				if (idparam > 0)
 					out << sep;
 				if (datas[idparam].size() > idtime)
-					out << FDS(datas[idparam][idtime], 10, true);
+					out << SetDec(FDS(datas[idparam][idtime], 10, true));
 			}
 		}
 	}
