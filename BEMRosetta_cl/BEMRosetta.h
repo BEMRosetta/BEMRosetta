@@ -23,6 +23,7 @@ String GetSystemInfo();
 bool PrintStatus(String s, int d);
 
 class HydroClass; 
+class Mesh;
 
 class Hydro : public DeepCopyOption<Hydro> {
 public:
@@ -273,6 +274,15 @@ public:
     int dataFromW = Null;
     UVector<double> Vo;   				// [Nb]             Displaced volume
     		
+   	UArray<Mesh> meshes;					// [Nb]
+   	
+   	struct Potential {
+   		int panelId;
+   		std::complex<double> vals[6];
+   	};
+   	
+   	UArray<UArray<UArray<Potential>>> potentials;	// [Nb][Nf][Np]
+   	
     void Dimensionalize();
     void Normalize();
     

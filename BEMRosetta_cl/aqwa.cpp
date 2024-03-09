@@ -246,7 +246,22 @@ bool Aqwa::Load_LIS() {
 	
 
 	factorMass = 1, factorLength = 1;
-				
+	
+	hd().names.SetCount(hd().Nb);
+	hd().Vo.SetCount(hd().Nb, NaNDouble);
+	hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	hd().cb.setConstant(3, hd().Nb, NaNDouble);
+	hd().C.SetCount(hd().Nb);
+	for (int ib = 0; ib < hd().Nb; ++ib) 
+		hd().C[ib].setConstant(6, 6, 0);
+	hd().M.SetCount(hd().Nb);
+	for (int ib = 0; ib < hd().Nb; ++ib) 
+		hd().M[ib].setConstant(6, 6, 0);
+	
+	hd().meshes.SetCount(hd().Nb);
+	hd().potentials.SetCount(hd().Nb);		
+		
 	in.SeekPos(fpos);			
 				
 	while(!in.IsEof()) {
@@ -276,19 +291,63 @@ bool Aqwa::Load_LIS() {
 				factorLength = 1000;
 			else 
 				throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
-		}
+		} else if ((pos = line.FindAfter("C O O R D I N A T E   D A T A")) >= 0) {
+			f.GetLine(7);
+			while (!in.IsEof()) {
+				if (f.GetLine()[0] == '1')
+					break;
+				int ib = f.GetInt(1) - 1;
+				hd().meshes[ib].mesh.nodesIDs << f.GetInt(2);
+				Point3D &p = hd().meshes[ib].mesh.nodes.Add();
+				p.x = f.GetDouble(3)*factorLength;
+				p.y = f.GetDouble(4)*factorLength;
+				p.z = f.GetDouble(5)*factorLength;
+			}
+		} else if ((pos = line.FindAfter("E L E M E N T   T O P O L O G Y   F O R   S T R U C T U R E")) >= 0) {
+			int ib = ScanInt(line.Mid(pos, 6)); 
+			if (IsNull(ib))
+				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
+			ib--;
+			f.GetLine(7);
+			while (!in.IsEof()) {
+				if (f.GetLine()[0] == '1')
+					break;
+				
+				String type = f.GetText(1);
+				if (type == "QPPL" || type == "TPPL") {
+					hd().meshes[ib].mesh.panelsIDs << f.GetInt(0);
+					Panel &p = hd().meshes[ib].mesh.panels.Add();
+					const Upp::Index<int> &nodes = hd().meshes[ib].mesh.nodesIDs;
+					
+					int id;
+					id = f.GetInt(2);
+					id = nodes.Find(id);
+					if (id < 0)
+						throw Exc(in.Str() + "\n"  + t_("Node number #1 not found"));
+					p.id[0] = id;
+					id = f.GetInt(3);
+					id = nodes.Find(id);
+					if (id < 0)
+						throw Exc(in.Str() + "\n"  + t_("Node number #2 not found"));
+					p.id[1] = id;
+					id = f.GetInt(4);
+					id = nodes.Find(id);
+					if (id < 0)
+						throw Exc(in.Str() + "\n"  + t_("Node number #3 not found"));
+					p.id[2] = id;
+					id = f.GetInt(5);
+					if (id == 0)
+						p.id[3] = p.id[0];
+					else {	
+						id = nodes.Find(id);
+						if (id < 0)
+							throw Exc(in.Str() + "\n"  + t_("Node number #4 not found"));
+						p.id[3] = id;
+					}
+				}
+			}
+		} 
 	}
-	hd().names.SetCount(hd().Nb);
-	hd().Vo.SetCount(hd().Nb, NaNDouble);
-	hd().cg.setConstant(3, hd().Nb, NaNDouble);
-	hd().c0.setConstant(3, hd().Nb, NaNDouble);
-	hd().cb.setConstant(3, hd().Nb, NaNDouble);
-	hd().C.SetCount(hd().Nb);
-	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0);
-	hd().M.SetCount(hd().Nb);
-	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().M[ib].setConstant(6, 6, 0);
 	
 	int ib;	
 	
@@ -359,6 +418,10 @@ bool Aqwa::Load_LIS() {
 				hd().T << 2*M_PI/w;
 			}
 			hd().Nf = hd().w.size();
+						
+			for (int ib = 0; ib < hd().Nb; ++ib) 
+				hd().potentials[ib].SetCount(hd().Nf);
+			
 		} else if (IsNull(hd().Nh) && line.Find("DIRECTIONS") >= 0) {
 			int idini = (line.Find("STRUCTURE") >= 0) ? 1 : 0;
 			while (!in.IsEof()) {
@@ -396,7 +459,77 @@ bool Aqwa::Load_LIS() {
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		
-		if (line.Find("G L O B A L   A D D I T I O N A L   S T R U C T U R E   S T I F F N E S S   M A T R I X") >= 0) {
+		if (line.FindAfter("* P O T E N T I A L S *") >= 0) {	
+			line = in.GetLine(2);
+			pos = line.FindAfter("S T R U C T U R E");
+			ib = ScanInt(line.Mid(pos)) - 1; 
+			if (ib >= hd().Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+			
+			bool trans;
+			line = in.GetLine(4);
+			if (line.Find("TRANSLATIONAL FREEDOMS") >= 0)
+				trans = true;
+			else if (line.Find("ROTATIONAL FREEDOMS") >= 0)
+				trans = false;
+			else
+				break;
+			
+			line = in.GetLine(2);
+			pos = line.FindAfter("=");
+			double freq = ScanDouble(line.Mid(pos));
+			if (IsNull(freq))
+				throw Exc(in.Str() + "\n"  + t_("Wrong frequency"));
+			int ifr = FindClosest(hd().w, freq);
+			if (ifr < 0)
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq)); 
+			
+			in.GetLine(5);
+			
+			String line;
+			while (!in.IsEof()) {
+				line = in.GetLine();
+				if (line[0] == '1')
+					break;
+				
+				if (line.GetCount() < 30)
+					continue;
+				
+				f.Load(line.Mid(20));		// Removed the initial 1:( X, Y,Z)
+				
+				if (f.size() == 8) {
+					int number = f.GetInt(0);
+					int id = hd().meshes[ib].mesh.panelsIDs.Find(number);
+					if (id < 0)
+						throw Exc(in.Str() + "\n"  + Format(t_("Element number %d not found"), number)); 		
+					
+					int idpot = -1;				
+					if (trans) {
+						hd().potentials[ib][ifr].Add();
+						idpot = hd().potentials[ib][ifr].size()-1;
+					} else {
+						for (int i = 0; i < hd().potentials[ib][ifr].size(); ++i) {
+							if (hd().potentials[ib][ifr][i].panelId == number)
+								idpot = i;
+						}
+					}
+					if (idpot < 0)
+						throw Exc(in.Str() + "\n"  + Format(t_("Element number %d not found 2"), number)); 		
+					
+					Hydro::Potential &pot = hd().potentials[ib][ifr][idpot];
+					pot.panelId = number;
+					if (trans) {
+						pot.vals[0] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+						pot.vals[1] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+						pot.vals[2] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+					} else {
+						pot.vals[3] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+						pot.vals[4] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+						pot.vals[5] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+					}
+				}
+			}
+		} else if (line.Find("G L O B A L   A D D I T I O N A L   S T R U C T U R E   S T I F F N E S S   M A T R I X") >= 0) {
 			if (hd().Cmoor.size() == 0) 
 				hd().Cmoor.SetCount(hd().Nb);
 			f.GetLine(8);

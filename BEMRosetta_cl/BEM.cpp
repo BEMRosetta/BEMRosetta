@@ -1561,6 +1561,17 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	if (IsLoadedQTF(false))
 		FillNullQTF(qtfdif, false);
 	
+	for (Mesh &m : meshes) {
+		lastError = m.mesh.CheckErrors();
+		if (!lastError.IsEmpty())
+			return false;
+		
+		m.fileName = file;
+		if (m.name.IsEmpty())
+			m.name = InitCaps(GetFileTitle(file));
+				
+		m.AfterLoad(rho, g, false, true);
+	}
 	
 	return true;
 }
@@ -2614,7 +2625,6 @@ void BEM::AddWaterSurface(int id, char c) {
 			Surface::RemoveDuplicatedPointsAndRenumber(surf.mesh.panels, surf.mesh.nodes);
 			Surface::RemoveDuplicatedPanels(surf.mesh.panels);
 		}
-		
 		surf.AfterLoad(rho, g, false, false);
 		
 		//surf.Report(rho);

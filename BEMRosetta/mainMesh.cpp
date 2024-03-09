@@ -558,6 +558,7 @@ bool MainMesh::OnLoad() {
 		AfterAdd(file, num);
 		
 		mainViewData.OnAddedModel(mainView);
+		OnOpt();
 		
 	} catch (Exc e) {
 		mainView.gl.Enable();

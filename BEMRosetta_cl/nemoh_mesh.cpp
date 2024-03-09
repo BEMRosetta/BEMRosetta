@@ -198,10 +198,8 @@ void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &np
 	
 	for (int i = 0; i < panels.size(); ++i) {
 		const Panel &panel = panels[i];
-		if (panel.surface0+panel.surface1 >= 1.0E-07) {
-			out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
-			npanels++;
-		}
+		out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
+		npanels++;
 	}
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }

@@ -1105,6 +1105,9 @@ public:
 	void OnArrayBar(Bar &menu);
 	void ArrayCopy();
 	void ArraySelect();
+
+private:
+	int prevTw;
 };
 
 class MainTools : public StaticRect {
@@ -1152,6 +1155,65 @@ private:
 	int id = -1;
 	RectEnterSet frameSet;
 };
+
+class MeshBody : public WithMeshBodyTable<StaticRect> {
+public:
+	typedef MeshBody CLASSNAME;
+	
+	void Init();
+	void Load(const Hydro &hydro, int ib, bool hasPotentials);
+	
+	class DataSourcePanels : public Convert {
+	public:
+		DataSourcePanels() : phydro(0), ib(-1), col(0) {}
+		DataSourcePanels& Init(const Hydro &_hydro, int _ib, int _col) {
+			phydro = &_hydro;	
+			ib = _ib;
+			col = _col;
+			return *this;
+		}
+		Value Format(const Value& q) const;
+		
+	private:
+		const Hydro *phydro;
+		int ib;
+		int col;
+	};
+	class DataSourceNodes : public Convert {
+	public:
+		DataSourceNodes() : pmesh(0), xyz(0) {}
+		DataSourceNodes& Init(const Surface &_mesh, int _xyz) {
+			pmesh = &_mesh;	
+			xyz = _xyz;
+			return *this;
+		}
+		Value Format(const Value& q) const;
+		
+	private:
+		const Surface *pmesh;
+		int xyz;
+	};
+	
+	UArray<DataSourceNodes> dataSourceNodes;
+	UArray<DataSourcePanels> dataSourcePanels;
+	
+private:
+	
+};
+
+class MainMeshTable : public StaticRect {
+public:
+	typedef MainMesh CLASSNAME;
+	
+	void Init();
+	bool Load(BEM &bem);
+	
+private:
+	TabCtrl tab;
+	
+	UArray<MeshBody> bodies;
+};
+
 
 class MainQTF;
 
@@ -1254,7 +1316,7 @@ private:
 			   
 		auto RoundPointPixel = [&](const Pointf &pff, Point &p) {
 			p.x = fround(s.GetPosX(pff.x));
-			p.y = fround(s.GetPosY(pff.y));
+			p.y = fround(s.GetPosY(pff.y, true));
 		};
 		auto Diagonal2 = [&](Point &_from, Point &_to) {
 			Pointf from, to;
@@ -1271,9 +1333,9 @@ private:
 			RoundPointPixel(to, _to);
 		};
 		
-		int mn_x = fround(s.GetPosX(mn)), mn_y = fround(s.GetPosY(mn)),
-			mx_x = fround(s.GetPosX(mx)), mx_y = fround(s.GetPosY(mx));
-		int px = fround(s.GetPosX(pf.x)), py = fround(s.GetPosY(pf.y));
+		int mn_x = fround(s.GetPosX(mn)), mn_y = fround(s.GetPosY(mn, true)),
+			mx_x = fround(s.GetPosX(mx)), mx_y = fround(s.GetPosY(mx, true));
+		int px = fround(s.GetPosX(pf.x)), py = fround(s.GetPosY(pf.y, true));
 		
 		if (typec == 'd') {
 			Point from, to;
@@ -1401,7 +1463,8 @@ public:
 	MainMatrixKA mainMatrixM;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;
-		
+	MainMeshTable mainMesh;
+	
 	MenuPlotList menuPlotList;
 		
 private:

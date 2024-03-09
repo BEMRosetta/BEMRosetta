@@ -42,10 +42,32 @@ bool Tools_WaveInfo::Init() {
 	gridResultsH.AddColumn(t_("Value"));
 	gridResultsH.Add(t_("Power flux [kW/m]"));
 	
-	editDepth <<= 50;
+	opInfinite.WhenAction = [&]() {editDepth.Enable(!opInfinite);	OnCalc();};		
 	editDepth.WhenAction = THISBACK(OnCalc);
-	editT <<= 12;
-	editT.WhenAction = THISBACK(OnCalc);
+	editDepth <<= 50;
+	
+	opTw = prevTw = 0;
+	opTw.WhenAction = [&]() {
+		double val;
+		if (prevTw == 0)
+			val = editTw;
+		else if (prevTw == 1)
+			val = 2*M_PI/editTw;
+		else
+			val = 1/editTw;
+		
+		if (opTw == 0)
+			editTw <<= val;
+		else if (opTw == 1)
+			editTw <<= 2*M_PI/val;
+		else
+			editTw <<= 1/val;
+			
+		prevTw = opTw;
+	};
+	editTw <<= 12;
+	editTw.WhenAction = THISBACK(OnCalc);
+	editTw.Pattern("%.6g");
 	editH <<= 2;
 	editH.WhenAction = THISBACK(OnCalc);
 	OnCalc();
@@ -60,33 +82,42 @@ void Tools_WaveInfo::OnCalc() {
 	double g = Bem().g;
 	double rho = Bem().rho;
 	
-	if (editDepth < 0 || editT < 0) {
+	if ((!opInfinite && editDepth < 0) || editTw < 0) {
 		for (int r = 0; r < gridResultsT.GetCount(); ++r)
 			gridResultsT.Set(r, 1, Null);		
 		for (int r = 0; r < gridResultsH.GetCount(); ++r)
 			gridResultsH.Set(r, 1, Null);
 		return;
 	}
-	gridResultsT.Set(0, 1, FDS(SeaWaves::Celerity(editT, editDepth, g), 8));
+	double depth = opInfinite ? -1 : double(editDepth);
+	double T;
+	if (opTw == 0)
+		T = editTw;
+	else if (opTw == 1)
+		T = 2*M_PI/editTw;
+	else
+		T = 1/editTw;
+	
+	gridResultsT.Set(0, 1, FDS(SeaWaves::Celerity(T, depth, g), 8));
 	String cond;
-	switch (SeaWaves::GetSeaType(editT, editDepth, g)) {
+	switch (SeaWaves::GetSeaType(T, depth, g)) {
 	case SeaWaves::SHALLOW: 		cond = t_("Shallow");		break;
 	case SeaWaves::INTERMEDIATE: 	cond = t_("Intermediate");	break;
 	default:						cond = t_("Deep");
 	}
 	gridResultsT.Set(1, 1, cond);
-	gridResultsT.Set(2, 1, FDS(SeaWaves::WaveNumber(editT, editDepth, true), 8));
-	gridResultsT.Set(3, 1, FDS(SeaWaves::WaveLength(editT, editDepth, g), 8));
-	gridResultsT.Set(4, 1, FDS(SeaWaves::GroupCelerity(editT, editDepth, g), 8));	
+	gridResultsT.Set(2, 1, FDS(SeaWaves::WaveNumber(T, depth, true), 8));
+	gridResultsT.Set(3, 1, FDS(SeaWaves::WaveLength(T, depth, g), 8));
+	gridResultsT.Set(4, 1, FDS(SeaWaves::GroupCelerity(T, depth, g), 8));	
 	
-	gridResultsH.Set(0, 1, FDS(SeaWaves::Power(editT, editH, editDepth, g, rho), 8));
+	gridResultsH.Set(0, 1, FDS(SeaWaves::Power(T, editH, depth, g, rho), 8));
 }
 
 void Tools_WaveInfo::OnDelta() {
 	if (editDelta < 0) 
 		return;
 	editDepth.SetInc(editDelta);	
-	editT.SetInc(editDelta);
+	editTw.SetInc(editDelta);
 	editH.SetInc(editDelta);
 }
 
