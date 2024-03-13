@@ -559,7 +559,6 @@ bool MainMesh::OnLoad() {
 		
 		mainViewData.OnAddedModel(mainView);
 		OnOpt();
-		
 	} catch (Exc e) {
 		mainView.gl.Enable();
 		BEM::PrintError(e);
@@ -1126,6 +1125,7 @@ void MainMesh::OnAddPanel() {
 		AddRow(surf);
 		After();
 		mainViewData.OnAddedModel(mainView);
+		OnOpt();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
@@ -1169,6 +1169,7 @@ void MainMesh::OnAddRevolution() {
 		AddRow(surf);
 		After();
 		mainViewData.OnAddedModel(mainView);
+		OnOpt();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
@@ -1212,6 +1213,7 @@ void MainMesh::OnAddPolygonalPanel() {
 		AddRow(surf);
 		After();
 		mainViewData.OnAddedModel(mainView);
+		OnOpt();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
@@ -1243,10 +1245,11 @@ void MainMesh::OnAddWaterSurface(char c) {
 	
 		Bem().AddWaterSurface(id, c);
 		
-		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
-		AddRow(surf);
+		Mesh &nw = Last(Bem().surfs);
+		AddRow(nw);
 		After();
 		mainViewData.OnAddedModel(mainView);
+		OnOpt();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}

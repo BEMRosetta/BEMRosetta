@@ -2218,10 +2218,19 @@ void MeshBody::Init() {
 	CtrlLayout(*this);
 	
 	nodes.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	nodes.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, nodes);};
+	nodes.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, nodes, true);};
 	
-	panels.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	panels.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, panels);};
+	panels.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
+	panels.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, panels, true);};
+	
+	dropFreq.WhenAction = [&] {
+		int idIfr = dropFreq.GetData();
+		for (auto &d : dataSourcePanels) {
+			d.idIfr = idIfr;
+			d.w = dropFreq.GetValue();
+		}
+		Refresh();
+	};
 }
 
 void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
@@ -2252,19 +2261,33 @@ void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 		panels.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		panels.AddRowNumColumn(t_("#id"), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		for (int c = 0; c < 4; ++c) {
-			panels.AddRowNumColumn(Format(t_("Panel %d"), c+1), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+			panels.AddRowNumColumn(Format(t_("Node %d"), c+1), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		}
 		panels.AddRowNumColumn(t_("Area"),60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		for (int c = 0; c < 3; ++c) 
 			panels.AddRowNumColumn(Format(t_("Center %s"), xyz[c]), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		for (int c = 0; c < 3; ++c) 
 			panels.AddRowNumColumn(Format(t_("Normal %s"), xyz[c]), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+		double freq = dropFreq.GetValue();
+		dropFreq.Clear();
 		if (hasPotentials) {
 			for (int i = 0; i < 6; ++i) {
 				panels.AddRowNumColumn(Format(t_("Pot %s real"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 				panels.AddRowNumColumn(Format(t_("Pot %s imag"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 			}
-		}
+			for (int r = 0; r < 6; ++r) 
+				for (int c = 0; c < 6; ++c) 
+					panels.AddRowNumColumn(Format(t_("A%d%d"), r+1, c+1), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+					
+			for (int ifr = 0; ifr < hydro.Nf; ++ifr)
+				dropFreq.Add(ifr, hydro.w[ifr]);
+			if (!IsNull(freq))
+				dropFreq.SetValue(freq);
+			else
+				dropFreq.SetData(0);
+		} 
+		labFreq.Enable(hasPotentials);
+		dropFreq.Enable(hasPotentials);
 	}
 }
 
@@ -2307,12 +2330,11 @@ Value MeshBody::DataSourcePanels::Format(const Value& q) const {
 	case 11:	return s.panels[iq].normalPaint.y;
 	case 12:	return s.panels[iq].normalPaint.z;
 	}
-	int ifr = 0;
-	
+
 	int id = s.panelsIDs[iq];
 	int idp = -1;
-	for (int i = 0; i < phydro->potentials[ib][ifr].size(); ++i) {
-		if (phydro->potentials[ib][ifr][i].panelId == id) {
+	for (int i = 0; i < phydro->potentials[ib][idIfr].size(); ++i) {
+		if (phydro->potentials[ib][idIfr][i].panelId == id) {
 			idp = i;
 			break;
 		}
@@ -2321,21 +2343,33 @@ Value MeshBody::DataSourcePanels::Format(const Value& q) const {
 		return "-";
 			
 	switch (col) {
-	case 13:	return abs(phydro->potentials[ib][ifr][idp].vals[0]);
-	case 14:	return ToDeg(arg(phydro->potentials[ib][ifr][idp].vals[0]));
-	case 15:	return abs(phydro->potentials[ib][ifr][idp].vals[1]);
-	case 16:	return ToDeg(arg(phydro->potentials[ib][ifr][idp].vals[1]));
-	case 17:	return abs(phydro->potentials[ib][ifr][idp].vals[2]);
-	case 18:	return ToDeg(arg(phydro->potentials[ib][ifr][idp].vals[2]));
-	case 19:	return abs(phydro->potentials[ib][ifr][idp].vals[3]);
-	case 20:	return ToDeg(arg(phydro->potentials[ib][ifr][idp].vals[3]));
-	case 21:	return abs(phydro->potentials[ib][ifr][idp].vals[4]);
-	case 22:	return ToDeg(arg(phydro->potentials[ib][ifr][idp].vals[4]));
-	case 23:	return abs(phydro->potentials[ib][ifr][idp].vals[5]);
-	case 24:	return ToDeg(arg(phydro->potentials[ib][ifr][idp].vals[5]));
+	case 13:	return abs(phydro->potentials[ib][idIfr][idp].vals[0]);
+	case 14:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[0]));
+	case 15:	return abs(phydro->potentials[ib][idIfr][idp].vals[1]);
+	case 16:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[1]));
+	case 17:	return abs(phydro->potentials[ib][idIfr][idp].vals[2]);
+	case 18:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[2]));
+	case 19:	return abs(phydro->potentials[ib][idIfr][idp].vals[3]);
+	case 20:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[3]));
+	case 21:	return abs(phydro->potentials[ib][idIfr][idp].vals[4]);
+	case 22:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[4]));
+	case 23:	return abs(phydro->potentials[ib][idIfr][idp].vals[5]);
+	case 24:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[5]));
 	}
-	NEVER();
-	return Null;
+	
+	int cl = col - 25;
+	int r = cl/6;
+	int c = cl - 6*r;
+	
+	double n;
+	if (r < 3)	// n
+		n = s.panels[iq].normalPaint[r];
+	else {		// r%n
+		Value3D n456 = s.panels[iq].centroidPaint%s.panels[iq].normalPaint;
+		n = n456[r-3];	
+	}
+	
+	return (Bem().rho/w)*phydro->potentials[ib][idIfr][idp].vals[c].imag()*n*(s.panels[iq].surface0 + s.panels[iq].surface1);
 }
 	
 void MainMeshTable::Init() {

@@ -2182,7 +2182,7 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		}
 	} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") {
 		Aqwa &data = hydros.Create<Aqwa>(*this);
-		if (!data.Load(file)) {
+		if (!data.Load(file, Status)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
@@ -2626,8 +2626,6 @@ void BEM::AddWaterSurface(int id, char c) {
 			Surface::RemoveDuplicatedPanels(surf.mesh.panels);
 		}
 		surf.AfterLoad(rho, g, false, false);
-		
-		//surf.Report(rho);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));

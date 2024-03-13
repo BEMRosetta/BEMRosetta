@@ -7,7 +7,7 @@
 
 const char *textDOF[] = {"X", "Y", "Z", "RX", "RY", "RZ"};
 
-bool Aqwa::Load(String file, double) {
+bool Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(file);
 	if (ToLower(hd().name) == "analysis")
@@ -21,7 +21,7 @@ bool Aqwa::Load(String file, double) {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		BEM::Print("\n- " + S(t_("LIS file")));
-		if (!Load_LIS()) {
+		if (!Load_LIS(Status)) {
 			BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
 			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
@@ -212,12 +212,14 @@ bool Aqwa::Load_AH1() {
 	return true;
 }
 
-bool Aqwa::Load_LIS() {
+bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	String fileName = ForceExt(hd().file, ".LIS");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 
+	Status("Loading", 0);
+	
 	hd().Nb = hd().Nh = hd().Nf = Null;
 	hd().head.Clear();
 	hd().w.Clear();
@@ -261,7 +263,11 @@ bool Aqwa::Load_LIS() {
 	
 	hd().meshes.SetCount(hd().Nb);
 	hd().potentials.SetCount(hd().Nb);		
-		
+	
+	double nlines = in.GetLineNumber();
+	double step = 0.01;
+	int lastIdPot = -1;
+	
 	in.SeekPos(fpos);			
 				
 	while(!in.IsEof()) {
@@ -456,8 +462,20 @@ bool Aqwa::Load_LIS() {
 	hd().Initialize_Forces(hd().sc);
 	hd().Initialize_Forces(hd().rao);
 	
+	int ifrPot = Null;
+	double lastPotFreq;
+	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
+		
+		if (Status) {
+			double adv = in.GetLineNumber()/nlines;
+			if (adv > step) {
+				step += 0.01;
+				if (!Status("Loading", 100*adv))
+					throw Exc(t_("Stop by user"));
+			}
+		}
 		
 		if (line.FindAfter("* P O T E N T I A L S *") >= 0) {	
 			line = in.GetLine(2);
@@ -466,66 +484,74 @@ bool Aqwa::Load_LIS() {
 			if (ib >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			
-			bool trans;
+			int trans;
 			line = in.GetLine(4);
 			if (line.Find("TRANSLATIONAL FREEDOMS") >= 0)
 				trans = true;
 			else if (line.Find("ROTATIONAL FREEDOMS") >= 0)
 				trans = false;
 			else
-				break;
+				trans = Null;
 			
-			line = in.GetLine(2);
-			pos = line.FindAfter("=");
-			double freq = ScanDouble(line.Mid(pos));
-			if (IsNull(freq))
-				throw Exc(in.Str() + "\n"  + t_("Wrong frequency"));
-			int ifr = FindClosest(hd().w, freq);
-			if (ifr < 0)
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq)); 
-			
-			in.GetLine(5);
-			
-			String line;
-			while (!in.IsEof()) {
-				line = in.GetLine();
-				if (line[0] == '1')
-					break;
+			if (!IsNull(trans)) {
+				line = in.GetLine(2);
+				pos = line.FindAfter("=");
+				double freq = ScanDouble(line.Mid(pos));
+				if (IsNull(freq))
+					throw Exc(in.Str() + "\n"  + t_("Wrong frequency"));
 				
-				if (line.GetCount() < 30)
-					continue;
+				if (freq != lastPotFreq) {	// To accelerate search
+					lastPotFreq = freq;
+					ifrPot = FindClosest(hd().w, freq);
+					if (ifrPot < 0)
+						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq)); 
+				}
 				
-				f.Load(line.Mid(20));		// Removed the initial 1:( X, Y,Z)
+				in.GetLine(5);
 				
-				if (f.size() == 8) {
-					int number = f.GetInt(0);
-					int id = hd().meshes[ib].mesh.panelsIDs.Find(number);
-					if (id < 0)
-						throw Exc(in.Str() + "\n"  + Format(t_("Element number %d not found"), number)); 		
+				String line;
+				while (!in.IsEof()) {
+					line = in.GetLine();
+					if (line[0] == '1')
+						break;
 					
-					int idpot = -1;				
-					if (trans) {
-						hd().potentials[ib][ifr].Add();
-						idpot = hd().potentials[ib][ifr].size()-1;
-					} else {
-						for (int i = 0; i < hd().potentials[ib][ifr].size(); ++i) {
-							if (hd().potentials[ib][ifr][i].panelId == number)
-								idpot = i;
+					if (line.GetCount() < 30)
+						continue;
+					
+					f.Load(line.Mid(20));		// Removed the initial 1:( X, Y,Z)
+					
+					if (f.size() == 8) {
+						int number = f.GetInt(0);
+						
+						int idpot = -1;				
+						if (trans) {
+							hd().potentials[ib][ifrPot].Add();
+							idpot = hd().potentials[ib][ifrPot].size()-1;
+						} else {
+							if (hd().potentials[ib][ifrPot].size() > lastIdPot+1 && hd().potentials[ib][ifrPot][lastIdPot+1].panelId == number)
+								idpot = lastIdPot+1;	// Trick to accelerate idpot search
+							else {
+								for (int i = 0; i < hd().potentials[ib][ifrPot].size(); ++i) {
+									if (hd().potentials[ib][ifrPot][i].panelId == number)
+										idpot = i;
+								}
+							}
+							lastIdPot = idpot;
 						}
-					}
-					if (idpot < 0)
-						throw Exc(in.Str() + "\n"  + Format(t_("Element number %d not found 2"), number)); 		
-					
-					Hydro::Potential &pot = hd().potentials[ib][ifr][idpot];
-					pot.panelId = number;
-					if (trans) {
-						pot.vals[0] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
-						pot.vals[1] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
-						pot.vals[2] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
-					} else {
-						pot.vals[3] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
-						pot.vals[4] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
-						pot.vals[5] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+						if (idpot < 0)
+							throw Exc(in.Str() + "\n"  + Format(t_("Element number %d not found"), number)); 		
+						
+						Hydro::Potential &pot = hd().potentials[ib][ifrPot][idpot];
+						pot.panelId = number;
+						if (trans) {
+							pot.vals[0] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+							pot.vals[1] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+							pot.vals[2] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+						} else {
+							pot.vals[3] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+							pot.vals[4] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+							pot.vals[5] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+						}
 					}
 				}
 			}

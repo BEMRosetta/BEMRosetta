@@ -1275,13 +1275,13 @@ private:
 class Aqwa : public HydroClass {
 public:
 	Aqwa(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
-	bool Load(String file, double rho = Null);
+	bool Load(String file, Function <bool(String, int)> Status, double rho = Null);
 	bool Save(String file, Function <bool(String, int)> Status);
 	virtual ~Aqwa() noexcept {}
 	
 private:
 	bool Load_AH1();
-	bool Load_LIS();
+	bool Load_LIS(Function <bool(String, int)> Status);
 	bool Load_QTF();
 	void Save_QTF(String file, Function <bool(String, int)> Status);
 	

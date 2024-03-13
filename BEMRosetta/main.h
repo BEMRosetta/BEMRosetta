@@ -1173,6 +1173,8 @@ public:
 			return *this;
 		}
 		Value Format(const Value& q) const;
+		int idIfr = 0;
+		double w;
 		
 	private:
 		const Hydro *phydro;
@@ -1196,9 +1198,6 @@ public:
 	
 	UArray<DataSourceNodes> dataSourceNodes;
 	UArray<DataSourcePanels> dataSourcePanels;
-	
-private:
-	
 };
 
 class MainMeshTable : public StaticRect {
