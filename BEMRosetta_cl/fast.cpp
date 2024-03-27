@@ -33,7 +33,7 @@ bool Fast::Load(String file, Function <bool(String, int)> Status) {
 		String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
 		hd().code = Hydro::FAST_WAMIT;
 		
-		if (!Wamit::Load(ForceExt(hydroFile, ".hst"), Status)) 
+		if (!Wamit::Load(ForceExtSafer(hydroFile, ".hst"), Status)) 
 			return false;
 		
 		hd().Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
@@ -45,7 +45,7 @@ bool Fast::Load(String file, Function <bool(String, int)> Status) {
 		//if (abs(hd().head[0]) != abs(hd().head[hd().head.size()-1]))
 		//	throw Exc(Format(t_("FAST requires symmetric wave headings. .2.3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.size()-1])); 
 	
-		String ssFile = ForceExt(hydroFile, ".ss");
+		String ssFile = ForceExtSafer(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
 			BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 			if (!Load_SS(ssFile)) 
@@ -116,7 +116,7 @@ bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 		Wamit::Save(hydroFile, Status, true, qtfHeading);
 		
 		if (hd().IsLoadedStateSpace()) {
-			String fileSts = ForceExt(hydroFile, ".ss");
+			String fileSts = ForceExtSafer(hydroFile, ".ss");
 			BEM::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
 			Save_SS(fileSts);
 		}

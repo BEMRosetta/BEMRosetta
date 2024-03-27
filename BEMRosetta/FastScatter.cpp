@@ -671,7 +671,7 @@ void FastScatterBase::OnSaveAs() {
 		}
 		fs.ActiveDir(saveFolder);
 		fs.ActiveType(0);
-		fs.Set(ForceExt(~file, ext));
+		fs.Set(ForceExtSafer(~file, ext));
 		
 		int row = rightT.arrayFiles.GetCursor();
 		if (row < 0)

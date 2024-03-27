@@ -96,8 +96,8 @@ String FastOut::GetFileToLoad(String fileName) {
 	if (::GetFileName(fileName).Find(".MD") >= 0)
 		return String::GetVoid();
 	
-	String strOut = ForceExt(fileName, ".out");
-	String strOutB = ForceExt(fileName, ".outb");
+	String strOut = ForceExtSafer(fileName, ".out");
+	String strOutB = ForceExtSafer(fileName, ".outb");
 
 	bool exOut = FileExists(strOut);
 	bool exOutB = FileExists(strOutB);
@@ -134,18 +134,18 @@ String FastOut::Load(String fileName) {
 	else if (ext == ".lis")
 		;
 	else {
-		fileName = ForceExt(fileName, ".outb");
+		fileName = ForceExtSafer(fileName, ".outb");
 		if (FileExists(fileName)) 
 			ext = ".outb";
 		else {
-			fileName = ForceExt(fileName, ".out");	
+			fileName = ForceExtSafer(fileName, ".out");	
 			if (FileExists(fileName))
 				ext = ".out";
 			else
 				return t_("Unknown file format");
 		}
 	}
-	fileName = ForceExt(fileName, ext);
+	fileName = ForceExtSafer(fileName, ext);
 	
 	String ret;
 	if (ext == ".out")

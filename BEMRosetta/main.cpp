@@ -399,12 +399,6 @@ GUI_APP_MAIN {
 		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }
 
-String ForceExtSafe(String fileName, String ext) {
-	if (fileName.IsEmpty())
-		return String();
-	return ForceExt(fileName, ext);
-}
-
 String TabText(const TabCtrl &tab) {
 	int id = tab.Get();
 	if (id < 0)

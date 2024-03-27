@@ -14,7 +14,7 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		if (ext == ".out") {
 			hd().code = Hydro::WAMIT;
 		
-			String fileout = ForceExt(file, ".out");
+			String fileout = ForceExtSafer(file, ".out");
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
 			if (!Load_out(fileout)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
@@ -26,17 +26,17 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			else
 				hd().code = Hydro::WAMIT;
 
-			String filecfg = ForceExt(file, ".cfg");
+			String filecfg = ForceExtSafer(file, ".cfg");
 			BEM::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
 			if (!Load_cfg(filecfg))
 				BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
 	
-			String filepot = ForceExt(file, ".pot");
+			String filepot = ForceExtSafer(file, ".pot");
 			BEM::Print("\n- " + Format(t_("Potential Control file .pot file '%s'"), GetFileName(filepot)));
 			if (!Load_pot(filepot))
 				BEM::Print(S(": ** pot ") + t_("Not found") + "**");
 	
-			String filefrc = ForceExt(file, ".frc");
+			String filefrc = ForceExtSafer(file, ".frc");
 			BEM::Print("\n- " + Format(t_("Force Control file .frc file '%s'"), GetFileName(filefrc)));
 			try {
 				if (!Load_frc2(filefrc))
@@ -45,18 +45,18 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEM::Print(S(": ** frc ") + t_("Only supported .frc alternative form 2") + "**");
 			}
 								
-			String filegdf = ForceExt(file, ".gdf");
+			String filegdf = ForceExtSafer(file, ".gdf");
 			BEM::Print("\n- " + Format(t_("Mesh file .gdf file '%s'"), GetFileName(filegdf)));
 			if (!Load_gdf(filegdf))
 				BEM::Print(S(": ** gdf ") + t_("Not found") + "**");
 			
-			String file1 = ForceExt(file, ".1");
+			String file1 = ForceExtSafer(file, ".1");
 			BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
 			if (!Load_1(file1))
 				BEM::PrintWarning(S(": ** .1 ") + t_("Not found or empty") + "**");
 			
-			String file2 = ForceExt(file, ".2"),
-				   file3 = ForceExt(file, ".3");
+			String file2 = ForceExtSafer(file, ".2"),
+				   file3 = ForceExtSafer(file, ".3");
 				   
 			if (ext == ".2")
 				;
@@ -69,12 +69,12 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			if (!Load_3(file))
 				BEM::PrintWarning(S(": ** .3 ") + t_("Not found or empty") + "**");
 			
-			String fileHST = ForceExt(file, ".hst");
+			String fileHST = ForceExtSafer(file, ".hst");
 			BEM::Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileHST)));
 			if (!Load_hst(fileHST))
 				BEM::PrintWarning(S(": ** .hst ") + t_("Not found or empty") + "**");
 		
-			String fileRAO = ForceExt(file, ".4");
+			String fileRAO = ForceExtSafer(file, ".4");
 			BEM::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
 			if (!Load_4(fileRAO))
 				BEM::Print(S(": ** .4 ") + t_("Not found or empty") + "**");
@@ -83,27 +83,27 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 			if (!Load_789(file))
 				BEM::Print(S(": ** .7.8.9 ") + t_("Not found or empty") + "**");
 			
-			String file12s = ForceExt(file, ".12s");
+			String file12s = ForceExtSafer(file, ".12s");
 			BEM::Print("\n- " + Format(t_("Second order sum coefficients .12s file '%s'"), GetFileName(file12s)));
 			if (!Load_12(file12s, true, Status))
 				BEM::Print(S(": ** .12s ") + t_("Not found") + "**");
 			
-			String file12d = ForceExt(file, ".12d");
+			String file12d = ForceExtSafer(file, ".12d");
 			BEM::Print("\n- " + Format(t_("Second order mean drift coefficients .12d file '%s'"), GetFileName(file12d)));
 			if (!Load_12(file12d, false, Status))
 				BEM::Print(S(": ** .12d ") + t_("Not found") + "**");
 		}
 		
-		String filemmx = ForceExt(file, ".mmx");
+		String filemmx = ForceExtSafer(file, ".mmx");
 		BEM::Print("\n- " + Format(t_("Mesh file .mmx file '%s'"), GetFileName(filemmx)));
 		if (!Load_mmx(filemmx))
 			BEM::Print(S(": ** mmx ") + t_("Not found") + "**");
 					
-		String fileSC = ForceExt(file, ".3sc");
+		String fileSC = ForceExtSafer(file, ".3sc");
 		BEM::Print("\n- " + Format(t_("Scattering file '%s'"), GetFileName(fileSC)));
 		if (!Load_Scattering(fileSC))
 			BEM::Print(S(": ** 3sc ") + t_("Not found") + "**");
-		String fileFK = ForceExt(file, ".3fk");
+		String fileFK = ForceExtSafer(file, ".3fk");
 		BEM::Print("\n- " + Format(t_("Froude-Krylov file '%s'"), GetFileName(fileFK)));
 		if (!Load_FK(fileFK))
 			BEM::Print(S(": ** 3fk ") + t_("Not found") + "**");
@@ -648,6 +648,7 @@ bool Wamit::Load_out(String fileName) {
 								start = false;
 								int idof = f.GetInt(0)-1;
 								int ib = idof/6;
+								idof -= ib*6;
 								double ma = f.GetDouble(1);
 								double ph = ToRad(f.GetDouble(2));
 								if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, hd().Nb))
@@ -892,7 +893,7 @@ bool Wamit::Save_out(String file) {
 						out << " ************************************************************************\n\n"
 							   " 2nd-order period (sec) =  " << Format("%12E", T) << "\n\n"
 							   " Period indices:     " << Format("%2d   %2d", ifr1+1, ifr2+1) << "          Periods:  " 
-							   		<< Format("%12E %12E", T1, T2) << "\n"
+							   		<< Format("%12E %12E", T1, 	T2) << "\n"
 							   " ------------------------------------------------------------------------\n\n\n"
 							   "SUM-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
 							   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       " 
@@ -1426,14 +1427,14 @@ bool Wamit::Load_1(String fileName) {
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
 	hd().Nb = Nb;
 	if (hd().names.IsEmpty())
 		hd().names.SetCount(hd().Nb);	
 	
 	int Nf = w.size();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
 	if (hd().Nb == 0)// || hd().Nf < 2)
@@ -1460,9 +1461,9 @@ bool Wamit::Load_1(String fileName) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(hd().w), ToString(w)));
 		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(hd().T), ToString(T)));
 	}
 	hd().w = pick(w);
 	hd().T = pick(T);
@@ -1547,7 +1548,7 @@ bool Wamit::Load_hst(String fileName) {
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
 	hd().Nb = Nb;
 	if (hd().names.IsEmpty())
 		hd().names.SetCount(hd().Nb);
@@ -1633,19 +1634,19 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
 	
 	if (!IsNull(hd().Nh) && hd().Nh != hd().head.size())
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings loaded is different than previous (%d != %d)"), hd().Nh, hd().head.size()));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of headings.\nIn one %d, in another %d"), hd().Nh, hd().head.size()));
 	hd().Nh = hd().head.size();
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
 	hd().Nb = Nb;
 	if (hd().names.IsEmpty())
 		hd().names.SetCount(hd().Nb);
 		
 	int Nf = w.size();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
 	if (hd().Nb == 0 || hd().Nf < 2)
@@ -1660,9 +1661,9 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(hd().w), ToString(w)));
 		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(hd().T), ToString(T)));
 	}
 	hd().w = pick(w);
 	hd().T = pick(T);
@@ -1751,7 +1752,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		hd().Nb = Nb;
 	else {
 		if (hd().Nb < Nb)
-			throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
 	}
 	
 	if (hd().names.IsEmpty())
@@ -1835,7 +1836,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	if (IsNull(hd().len))
 		hd().len = 1;
 	
-	fileName = ForceExt(fileName, Format(".%d", type));
+	fileName = ForceExtSafer(fileName, Format(".%d", type));
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1873,7 +1874,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		hd().Nb = Nb;
 	else {
 		if (hd().Nb < Nb)
-			throw Exc(Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
+			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
 	}
 	
 	if (hd().names.IsEmpty())
@@ -1881,7 +1882,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		
 	int Nf = w.size();
 	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies loaded is different than previous (%d != %d)"), hd().Nf, Nf));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), hd().Nf, Nf));
 	hd().Nf = Nf;
 	
 	int Nh = head.size();
@@ -1898,9 +1899,9 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Frequencies loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(hd().w), ToString(w)));
 		else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s"), ToString(hd().T), ToString(T)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(hd().T), ToString(T)));
 	}
 	hd().w = pick(w);
 	hd().T = pick(T);	

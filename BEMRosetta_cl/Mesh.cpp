@@ -76,7 +76,9 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 				}
 			}
 		}
-	} else if (ext == ".txt") 
+	} else if (ext == ".lis")
+		ret = AQWAMesh::Load_LIS(mesh, file, g, y0z, x0z);
+	else if (ext == ".txt") 
 		ret = DiodoreMesh::LoadDat(mesh, file); 
 	else if (ext == ".gdf") 
 		ret = WamitMesh::LoadGdf(mesh, file, y0z, x0z); 

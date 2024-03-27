@@ -4,6 +4,27 @@
 #include "BEMRosetta_int.h"
 
 
+String AQWAMesh::Load_LIS(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z) {
+	y0z = x0z = false;
+	
+	BEM bem;
+	bem.g = 9.8;	// This value is necessary, but discarded
+	
+	try {
+		bem.LoadBEM(fileName, Null, false);
+		
+		Hydro &hyd = bem.hydros[0].hd();
+
+		mesh = pick(hyd.meshes);
+		y0z = hyd.symX;
+		x0z = hyd.symY;
+	} catch (Exc e) {
+		return t_("Parsing error: ") + e;
+	}
+		
+	return String();
+}
+
 String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
@@ -123,6 +144,11 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 			} else if (deck == 3) 
 				break;
 		}
+		
+		// Removes mooring, Morison and other points unrelated with panels
+		for (Mesh &m : mesh) 
+			Surface::RemoveDuplicatedPointsAndRenumber(m.mesh.panels, m.mesh.nodes);
+		
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
 	}

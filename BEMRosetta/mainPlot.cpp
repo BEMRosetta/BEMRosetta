@@ -66,12 +66,20 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 						labelY = t_("Added mass");
 						splitter.SetPos(10000, 0);				
 						break;		
+	case Hydro::DATA_A_P:	title = Format(t_("Added mass Potentials %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));		
+						labelY = t_("Added mass Pot.");
+						splitter.SetPos(10000, 0);				
+						break;	
 	case Hydro::DATA_B:	title = Format(t_("Radiation damping %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));
 						labelY = t_("Radiation damping");
 						splitter.SetPos(10000, 0);	
 						break;
 	case Hydro::DATA_B_H:	title = Format(t_("Radiation damping Haskind %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));
 						labelY = t_("Radiation damping Hask.");
+						splitter.SetPos(10000, 0);	
+						break;
+	case Hydro::DATA_B_P:	title = Format(t_("Radiation damping Potentials %s"), BEM::StrBDOF2(plot_idf, plot_jdf, false));
+						labelY = t_("Radiation damping Pot.");
 						splitter.SetPos(10000, 0);	
 						break;
 	case Hydro::DATA_MD:title = Format(t_("Mean drift %s heading %.1f:%.1fº"), BEM::StrBDOF(plot_idf, false), heading0, heading1);
@@ -145,6 +153,9 @@ bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const U
 	Ainf_source.SetCount(ids.size());
 	A0_source.SetCount(ids.size());
 	B_H_source.SetCount(ids.size());
+	A_P_source.SetCount(ids.size());
+	B_P_source.SetCount(ids.size());
+	B_A_source.SetCount(ids.size());
 	TFS_source.SetCount(ids.size());
 	TFS_source2.SetCount(ids.size());
 		
@@ -152,6 +163,14 @@ bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const U
 	markW = mbm.menuPlot.showPoints ? 10 : 0;
 	show_w = mbm.menuPlot.opwT == 0;
 	show_ma_ph = mbm.menuPlot.opMP == 0;
+	
+	opAinf = mbm.menuPlot.opAinf;
+	opA0 = mbm.menuPlot.opA0;
+	opB = mbm.menuPlot.opB;
+	opApot = mbm.menuPlot.opApot;
+	
+	opBhask = mbm.menuPlot.opBhask;
+	opBpot = mbm.menuPlot.opBpot;
 	
 	if (show_w && dataToShow != Hydro::DATA_KIRF) {
 		scatt.SetLabelX(t_("ω [rad/s]"));
@@ -196,6 +215,9 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 	Ainf_source.SetCount(1);
 	A0_source.SetCount(1);
 	B_H_source.SetCount(1);
+	A_P_source.SetCount(1);
+	B_P_source.SetCount(1);
+	B_A_source.SetCount(1);
 	
 	dim = !mainBem.menuPlot.showNdim;
 	markW = mainBem.menuPlot.showPoints ? 10 : 0;
@@ -233,7 +255,8 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 
 void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	int ih = -1;
-	if (dataToShow != Hydro::DATA_A && dataToShow != Hydro::DATA_B && dataToShow != Hydro::DATA_B_H && dataToShow != Hydro::DATA_AINFW) {
+	if (dataToShow != Hydro::DATA_A && dataToShow != Hydro::DATA_B && dataToShow != Hydro::DATA_B_H && 
+		dataToShow != Hydro::DATA_A_P && dataToShow != Hydro::DATA_B_P && dataToShow != Hydro::DATA_AINFW) {
 		if (dataToShow == Hydro::DATA_MD) {
 			std::complex<double> h(heading0, heading1);
 			ih = hy.GetHeadIdMD(h);
@@ -245,7 +268,8 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		nameType << Format("(%s)", hy.GetCodeStrAbr());
 	
 	String sids = BEM::strDOFnum_sub[plot_idf];
-	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_KIRF)
+	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || 
+		dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_A_P || dataToShow == Hydro::DATA_B_P || dataToShow == Hydro::DATA_KIRF)
 		sids += BEM::strDOFnum_sub[plot_jdf];
 	
 	if (idc < 0)
@@ -265,7 +289,17 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
 			}
 		}
-		if (hy.IsLoadedAinf()) {
+		if (opApot && hy.IsLoadedA_P(plot_idf, plot_jdf)) {
+			if (A_P_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_A_P, show_w, !dim, show_ma_ph)) {
+				loaded = true;
+				scatt.AddSeries(A_P_source[id]).Legend(Format(t_("A potentials%s %s"), sids, nameType)).
+						SetMarkWidth(markW).MarkStyle<CrossMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_DASHED);
+				if (dim)
+					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
+			}
+		}
+		if (opAinf && hy.IsLoadedAinf()) {
 			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINF, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("A∞%s %s"), sids, nameType)).
@@ -276,7 +310,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
 			}
 		}
-		if (hy.IsLoadedA0()) {
+		if (opA0 && hy.IsLoadedA0()) {
 			if (A0_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_A0, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(A0_source[id]).Legend(Format(t_("A₀%s %s"), sids, nameType)).
@@ -285,6 +319,14 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 				if (dim)
 					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
 			}
+		}
+		if (opB && B_A_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B, show_w, !dim, show_ma_ph)) {
+			loaded = true;
+			scatt.AddSeries(B_A_source[id]).Legend(Format(t_("B%s %s"), sids, nameType)).
+						SetMarkWidth(markW).MarkStyle<TriangleMarkPlot>().SetMarkColor(color).
+						Stroke(2, color).Dash(LINE_DASHED_LONG);
+			if (dim)
+				scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 		}
 	} else if (dataToShow == Hydro::DATA_AINFW) {
 		if (hy.IsLoadedAinf_w(plot_idf, plot_jdf)) {
@@ -312,33 +354,31 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B%s %s"), sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 		}
-	} else if (dataToShow == Hydro::DATA_B_H) {
-		if (hy.IsLoadedB(plot_idf, plot_jdf)) {
-			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B, show_w, !dim, show_ma_ph)) {
-				//loaded = true;		// Without B_H, it is not worth showing the tab
-				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("B%s %s"), sids, nameType)).
-							SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
-							Stroke(2, color).Dash(LINE_SOLID);
-				if (dim)
-					scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
-			}
-		}
-		if (hy.IsLoadedB_H(plot_idf, plot_jdf)) {
+		if (opBhask && hy.IsLoadedB_H(plot_idf, plot_jdf)) {
 			if (B_H_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B_H, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(B_H_source[id]).Legend(Format(t_("B Haskind%s %s"), sids, nameType)).
-							SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
 							Stroke(2, color).Dash(LINE_DOTTED);
 				if (dim)
 					scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 			}
 		}
-		
+		if (opBpot && hy.IsLoadedB_P(plot_idf, plot_jdf)) {
+			if (B_P_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_B_P, show_w, !dim, show_ma_ph)) {
+				loaded = true;
+				scatt.AddSeries(B_P_source[id]).Legend(Format(t_("B potentials%s %s"), sids, nameType)).
+							SetMarkWidth(markW).MarkStyle<CrossMarkPlot>().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_DASHED);
+				if (dim)
+					scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
+			}
+		}
 	} else if (dataToShow == Hydro::DATA_MD && ih >= 0 && hy.IsLoadedMD()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
 			loaded = true;
@@ -481,6 +521,9 @@ void MainPlot::Clear() {
 	Ainf_source.Clear();
 	A0_source.Clear();
 	B_H_source.Clear();
+	A_P_source.Clear();
+	B_P_source.Clear();
+	B_A_source.Clear();
 	TFS_source.Clear();
 	TFS_source2.Clear();
 	scatt.RemoveAllSeries();

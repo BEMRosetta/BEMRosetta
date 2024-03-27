@@ -29,7 +29,7 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS, WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR, UNKNOWN, NUMBEM};
+	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS, WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR, CAPYNC, UNKNOWN, NUMBEM};
 	static const char *bemStr[];
 	static const bool bemCanSave[];
 	static const char *bemExt[];
@@ -77,6 +77,7 @@ public:
 		case HAMS:			return t_("HAMS.1.2.3");
 		case CAPYTAINE:		return t_("Capytaine");
 		case HYDROSTAR:		return t_("Hydrostar.out");
+		case CAPYNC:		return t_("Capytaine.nc");
 		case UNKNOWN:		return t_("Unknown");
 		case NUMBEM:		NEVER();
 		}
@@ -101,6 +102,7 @@ public:
 		case BEMIOH5:		return t_("BMh5");
 		case HAMS:			return t_("HAMS");
 		case CAPYTAINE:		return t_("Capy");
+		case CAPYNC:		return t_("Capy.nc");
 		case HYDROSTAR:		return t_("Hydr");
 		case UNKNOWN:		return t_("¿?");
 		case NUMBEM:		NEVER();
@@ -139,6 +141,7 @@ public:
  	
 	UArray<UArray<VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
 	UArray<UArray<VectorXd>> Ainf_w;// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
+	UArray<UArray<VectorXd>> A_P;	// [6*Nb][6*Nb][Nf]	Added mass obtained through potentials
     MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
     MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 
@@ -147,6 +150,7 @@ public:
 
     UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
     UArray<UArray<VectorXd>> B_H; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through Haskind
+    UArray<UArray<VectorXd>> B_P; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through potentials
     UVector<double> head;			// [Nh]             Wave headings (deg)
     UVector<String> names;  		// {Nb}             Body names
     UArray<MatrixXd> C;				// [Nb](6, 6)		Hydrostatic restoring coefficients:
@@ -274,14 +278,13 @@ public:
     int dataFromW = Null;
     UVector<double> Vo;   				// [Nb]             Displaced volume
     		
-   	UArray<Mesh> meshes;					// [Nb]
+   	UArray<Mesh> meshes;				// [Nb]
+   	bool symX, symY;
    	
-   	struct Potential {
-   		int panelId;
-   		std::complex<double> vals[6];
-   	};
+   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots;	// [Nb][Np][6][Nf]		Complex potentials
    	
-   	UArray<UArray<UArray<Potential>>> potentials;	// [Nb][Nf][Np]
+   	Tensor<double, 5> Apan;		// [Nb][Np][6][6][Nf]	Added mass
+   	Tensor<double, 5> Bpan;		// [Nb][Np][6][6][Nf]	Radiation damping
    	
     void Dimensionalize();
     void Normalize();
@@ -292,7 +295,8 @@ public:
 	
 	bool AfterLoad(Function <bool(String, int)> Status = Null);
 	
-	void Initialize_AB(UArray<UArray<VectorXd>> &a);
+	void Initialize_AB(UArray<UArray<VectorXd>> &a, double val = NaNDouble);
+	void Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, double val = NaNDouble);
 	
 	void Initialize_Forces();
 	void Initialize_Forces(Forces &f, int _Nh = -1);
@@ -358,13 +362,6 @@ public:
 			return 4;
 	}
 	
-	/*static int GetK_RAO(int i) {
-		if (i < 3)
-			return 0;	
-		else
-			return 1;
-	}*/
-	
 	void GetBodyDOF();
 	
 	int GetIrregularHead() const;	
@@ -389,6 +386,10 @@ public:
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
 	MatrixXd A_mat(bool ndim, int ifr, int ib1, int ib2) 	const;
 	
+	double A_P_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A_P[idf][jdf][ifr]*rho_dim()/rho_ndim()  : A_P[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_P_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A_P[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : A_P[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_P_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_P_ndim(ifr, idf, jdf) : A_P_dim(ifr, idf, jdf);}
+	
 	double A0_dim(int idf, int jdf)   		 	const {return dimen  ? A0(idf, jdf)*rho_dim()/rho_ndim() : A0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_ndim(int idf, int jdf)  		 	const {return !dimen ? A0(idf, jdf)      : A0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
 	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0_dim(idf, jdf);}
@@ -408,15 +409,19 @@ public:
 	double B_H_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B_H[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B_H[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
 	double B_H_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_H_ndim(ifr, idf, jdf) : B_H_dim(ifr, idf, jdf);}	
 	
+	double B_P_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B_P[idf][jdf][ifr]*rho_dim()/rho_ndim() : B_P[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_P_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B_P[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B_P[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_P_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_P_ndim(ifr, idf, jdf) : B_P_dim(ifr, idf, jdf);}	
+	
 	double Kirf_dim(int it, int idf, int jdf)  	   	  const {return dimen ? Kirf[idf][jdf][it]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][it]*(g_rho_dim()*pow(len, GetK_F(idf)));}
 	double Kirf_ndim(int it, int idf, int jdf) 	   	  const {return !dimen ? Kirf[idf][jdf][it] : Kirf[idf][jdf][it]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	VectorXd Kirf_ndim(int idf, int jdf) 	 		  const {return !dimen ? Kirf[idf][jdf]     : Kirf[idf][jdf]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
 	double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
-	double Ainf_w_dim(int ifr, int idf, int jdf) 	const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd Ainf_w_dim(int idf, int jdf)			const {return dimen  ? Ainf_w[idf][jdf]    *(rho_dim()/rho_ndim()) : Ainf_w[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Ainf_w_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd Ainf_w_ndim(int idf, int jdf)			const {return !dimen ? Ainf_w[idf][jdf]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
+	double Ainf_w_dim(int ifr, int idf, int jdf)   const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	VectorXd Ainf_w_dim(int idf, int jdf)		   const {return dimen  ? Ainf_w[idf][jdf]    *(rho_dim()/rho_ndim()) : Ainf_w[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainf_w_ndim(int ifr, int idf, int jdf)  const {return !dimen ? Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	VectorXd Ainf_w_ndim(int idf, int jdf)		   const {return !dimen ? Ainf_w[idf][jdf]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
 	double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
 	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? C[ib](idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : C[ib](idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
@@ -547,11 +552,12 @@ private:
 	void ResetForces1st(Hydro::FORCE force);
 	
 public:
-	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, DATA_STS, DATA_STS2, DATA_MD, DATA_B_H};
+	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, 
+					 DATA_STS, DATA_STS2, DATA_MD, DATA_B_H, DATA_A_P, DATA_B_P};
 	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_KIRF, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
-				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H};
+				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H, PLOT_A_P, PLOT_B_P};
 	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_K2, MAT_DAMP_QUAD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
@@ -562,12 +568,14 @@ public:
 	
 	bool IsLoadedA	   (int i = 0, int j = 0)const {return A.size() > i && A[i].size() > j && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
 	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return Ainf_w.size() > i && Ainf_w[i].size() > j && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
+	bool IsLoadedA_P   (int i = 0, int j = 0)const {return A_P.size() > i && A_P[i].size() > j && A_P[i][j].size() > 0 && IsNum(A_P[i][j][0]);}
 	bool IsLoadedAinf  (int i = 0, int j = 0)const {return Ainf.rows() > i && Ainf.cols() > j && IsNum(Ainf(i, j));}
 	bool IsLoadedA0	   (int i = 0, int j = 0)const {return A0.rows() > i && A0.cols() > j && IsNum(A0(i, j));}
 	bool IsLoadedDlin()  			 		 const {return Dlin.size() > 0;}
 	bool IsLoadedDquad()  			 		 const {return Dquad.size() > 0;}
 	bool IsLoadedB	   (int i = 0, int j = 0)const {return B.size() > i && B[i].size() > j && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
 	bool IsLoadedB_H   (int i = 0, int j = 0)const {return B_H.size() > i && B_H[i].size() > j && B_H[i][j].size() > 0 && IsNum(B_H[i][j][0]);}
+	bool IsLoadedB_P   (int i = 0, int j = 0)const {return B_P.size() > i && B_P[i].size() > j && B_P[i][j].size() > 0 && IsNum(B_P[i][j][0]);}
 	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return C.size() > ib && C[ib].rows() > idf && C[ib].cols() > jdf && IsNum(C[ib](idf, jdf));}
 	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return Cmoor.size()> ib && Cmoor[ib].rows()> idf &&Cmoor[ib].cols() > jdf && IsNum(Cmoor[ib](idf,jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return M.size() > ib && M[ib].rows() > idf && M[ib].cols() > jdf && IsNum(M[ib](idf, jdf));}
@@ -585,6 +593,8 @@ public:
 	static bool IsLoadedMD(const UArray<UArray<UArray<VectorXd>>> &mD, int ib = 0, int ih = 0) {return mD.size() > ib && mD[ib].size() > ih && mD[ib][ih].size() == 6 && mD[ib][ih][0].size() > 0 && IsNum(mD[ib][ih][0](0));}
 	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return Kirf.size() > idf && Kirf[idf].size() > jdf && Kirf[idf][jdf].size() > 0 && IsNum(Kirf[idf][jdf][0]);}
 	bool IsLoadedVo()	 	 				 const {return Vo.size() == 3 && IsNum(Vo[0]); }
+	
+	bool IsLoadedPot()						 const {return !pots.IsEmpty() && !pots[0].IsEmpty() && !pots[0][0].IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -619,6 +629,7 @@ public:
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void GetTranslationTo(const MatrixXd &to);
 	void GetWaveTo(double xto, double yto);
+	String SpreadNegative();
 	void AddWave(int ib, double dx, double dy);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
@@ -817,7 +828,7 @@ class Mesh : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
 	static const char *meshStr[];
 	static const bool meshCanSave[];
 	static const char *meshExt[];
@@ -988,6 +999,7 @@ public:
 class AQWAMesh : public Mesh {
 public:
 	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
+	static String Load_LIS(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z);
 	static void SaveDat(String fileName, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
 	static void SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
 	
@@ -1319,6 +1331,16 @@ private:
 	void Load_H5();
 };
 
+class CapyNC : public HydroClass {
+public:
+	CapyNC(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
+	bool Load(String file, double rho = Null);
+	virtual ~CapyNC() noexcept {}	
+	
+private:
+	void Load_NC();
+};
+
 UVector<int> NumSets(int num, int numsets);	
 
 
@@ -1401,6 +1423,7 @@ public:
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, const MatrixXd &to);
 	void WaveTo(int id, double xto, double yto);
+	String SpreadNegative(int id);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										
@@ -1441,7 +1464,7 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml .h5";	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml .h5 .nc";	// Priority
 	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat"};	// Any of these files opens all, and it is avoided to load them again
 	String bemFilesAst;
 	

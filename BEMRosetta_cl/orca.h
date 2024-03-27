@@ -750,7 +750,7 @@ public:
 		if (status != 0)
 			throwError("LoadWave.LoadDiffractionData");	
 			
-		String owd = ForceExt(owryml, ".owd");
+		String owd = ForceExtSafer(owryml, ".owd");
 		
 		if (!StringToWide(owd, wcs))
 			throwError("StringToWide LoadDiffractionData SaveDiffractionData");

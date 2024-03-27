@@ -88,10 +88,22 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-bem                      # The next commands are for BEM data");
 	Cout() << "\n" << t_("-i  -input <file>         # Load model");
 	Cout() << "\n" << t_("-c  -convert <file>       # Export actual model to output file");
+	Cout() << "\n" << t_("-convQTFHeads <params>    # Set heading save config. for Wamit .1");
+	Cout() << "\n" << t_("               all        # All headings");
+	Cout() << "\n" << t_("               allNoCross # All headings but crossed");
+	Cout() << "\n" << t_("               <h1> <h2>  # Indicated pair of headings [deg]");
 	Cout() << "\n" << t_("-setid <id>               # Set the id of the default BEM model");
 	Cout() << "\n" << t_("-params <param> <value>   # Set parameters:");
 	Cout() << "\n" << t_("               length     # length scale  []      ") << md.len;
 	Cout() << "\n" << t_("               depth      # water depth   [m]     ") << md.depth;
+	Cout() << "\n" << t_("-delHead   <h1> ...       # Delete forces for indicated headings [deg]");
+	Cout() << "\n" << t_("-delHeadId <h1> ...       # Delete forces for indicated heading ids");
+	Cout() << "\n" << t_("-delButHead   <h1> ...    # Delete forces for all but indicated headings [deg]");
+	Cout() << "\n" << t_("-delButHeadId <h1> ...    # Delete forces for all but indicated heading ids");
+	Cout() << "\n" << t_("-delQTFHead   <h1> <h2> ..# Delete QTF for indicated pairs of headings [deg]");
+	Cout() << "\n" << t_("-delQTFHeadId <h1> <h2> ..# Delete QTF for indicated heading ids");
+	Cout() << "\n" << t_("-delButQTFHead   <h1> <h2>..# Delete QTF for all but indicated pairs of headings [deg]");
+	Cout() << "\n" << t_("-delButQTFHeadId <h1> <h2>..# Delete QTF for all but indicated heading ids");
 	Cout() << "\n" << t_("-p  -print <params>       # Prints model data in a row");
 	Cout() << "\n" << t_("        <params> nb                  # Number of bodies  []");
 	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
@@ -274,6 +286,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	if (firstTime)
 		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
 	
+	
+	UVector<String> headParams(2);
+	
 	bool echo = true;
 	String lastPrint;
 	String errorStr;
@@ -427,16 +442,147 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(Format(t_("Invalid id %s"), command[i]));
 							BEM::Print("\n" + Format(t_("BEM active model id is %d"), bemid));	
 						} else if (param == "-c" || param == "-convert") {
+							Hydro &hd = bem.hydros[bemid].hd();
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							
 							CheckIfAvailableArg(command, ++i, "-convert");
 							
 							String file = FileName(command[i]);
-							
-							if (bem.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint)) {
+							int qtfHeading;
+							if (headParams[0] == "all" || IsEmpty(headParams[0]))
+								qtfHeading = Null;
+							else if (headParams[0] == "allnocross")
+								qtfHeading = -1;
+							else 
+								qtfHeading = FindClosest(hd.qh, std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
+							if (bem.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading)) 
 								BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
+						} else if (param == "-convqtfheads") {	
+							CheckIfAvailableArg(command, ++i, "-convqtfheads");
+							if (ToLower(command[i]) == "all") 
+								headParams[0] = "all";
+							else if (ToLower(command[i]) == "allnocross") 
+								headParams[0] = "allnocross";
+							else {
+								double d;
+								d = ScanDouble(command[i]);
+								if (IsNull(d))
+									throw Exc(Format(t_("Wrong 1st heading '%s'"), command[i]));
+								headParams[0] = command[i];
+							
+								CheckIfAvailableArg(command, ++i, "-convqtfheads 2nd head");
+								d = ScanDouble(command[i]);
+								if (IsNull(d))
+									throw Exc(Format(t_("Wrong 2nd heading '%s'"), command[i]));
+								headParams[1] = command[i];
 							}
+						} else if (param == "-delhead") {	
+							Hydro &hd = bem.hydros[bemid].hd();
+							UVector<int> ids;
+							double head;
+							while (i+1 < command.size() && !IsNull(head = ScanDouble(command[i+1]))) {
+								int id = FindClosest(hd.head, head);
+								FindAdd(ids, id);
+								i++;
+							}
+							hd.DeleteHeadings(ids);	
+						} else if (param == "-delheadid") {	
+							Hydro &hd = bem.hydros[bemid].hd();
+							UVector<int> ids;
+							int id;
+							while (i+1 < command.size() && !IsNull(id = ScanInt(command[i+1]))) {
+								if (id < 0 || id >= hd.head.size())
+									throw Exc(Format(t_("Wrong head id '%s'"), command[i+1]));
+								FindAdd(ids, id);
+								i++;
+							}
+							hd.DeleteHeadings(ids);	
+						} else if (param == "-delbuthead") {
+							Hydro &hd = bem.hydros[bemid].hd();	
+							UVector<int> ids;
+							double head;
+							while (i+1 < command.size() && !IsNull(head = ScanDouble(command[i+1]))) {
+								int id = FindClosest(hd.head, head);
+								FindAdd(ids, id);
+								i++;
+							}
+							UVector<int> idsDel;
+							for (int i = 0; i < hd.head.size(); ++i)
+								if (Find(ids, i) < 0)
+									idsDel << i;
+							hd.DeleteHeadings(idsDel);	
+						} else if (param == "-delbutheadid") {	
+							Hydro &hd = bem.hydros[bemid].hd();
+							UVector<int> ids;
+							int id;
+							while (i+1 < command.size() && !IsNull(id = ScanInt(command[i+1]))) {
+								if (id < 0 || id >= hd.head.size())
+									throw Exc(Format(t_("Wrong head id '%s'"), command[i+1]));
+								FindAdd(ids, id);
+							}
+							UVector<int> idsDel;
+							for (int i = 0; i < hd.head.size(); ++i)
+								if (Find(ids, i) < 0)
+									idsDel << i;
+							hd.DeleteHeadings(idsDel);	
+						} else if (param == "-delqtfhead") {
+							Hydro &hd = bem.hydros[bemid].hd();
+							UVector<int> ids;
+							double head1, head2;
+							while (i+1 < command.size() && !IsNull(head1 = ScanDouble(command[i+1]))) {
+								i++;
+								CheckIfAvailableArg(command, ++i, "-delqtfhead 2nd head");
+								if (IsNull(head2 = ScanDouble(command[i])))
+									throw Exc(Format(t_("Wrong head '%s'"), command[i]));
+								int id = FindClosest(hd.qh, std::complex<double>(head1, head2));
+								FindAdd(ids, id);
+								i++;
+							}
+							hd.DeleteHeadingsQTF(ids);
+						} else if (param == "-delqtfheadid") {	
+							Hydro &hd = bem.hydros[bemid].hd();
+							UVector<int> ids;
+							int id;
+							while (i+1 < command.size() && !IsNull(id = ScanInt(command[i+1]))) {
+								if (id < 0 || id >= hd.qh.size())
+									throw Exc(Format(t_("Wrong head id '%s'"), command[i+1]));
+								FindAdd(ids, id);
+								i++;
+							}
+							hd.DeleteHeadingsQTF(ids);	
+						} else if (param == "-delbutqtfhead") {
+							Hydro &hd = bem.hydros[bemid].hd();
+							UVector<int> ids;
+							double head1, head2;
+							while (i+1 < command.size() && !IsNull(head1 = ScanDouble(command[i+1]))) {
+								i++;
+								CheckIfAvailableArg(command, ++i, "-delqtfhead 2nd head");
+								if (IsNull(head2 = ScanDouble(command[i])))
+									throw Exc(Format(t_("Wrong head '%s'"), command[i]));
+								int id = FindClosest(hd.qh, std::complex<double>(head1, head2));
+								FindAdd(ids, id);
+							}
+							UVector<int> idsDel;
+							for (int i = 0; i < hd.qh.size(); ++i)
+								if (Find(ids, i) < 0)
+									idsDel << i;
+							hd.DeleteHeadingsQTF(idsDel);
+						} else if (param == "-delbutqtfheadid") {
+							Hydro &hd = bem.hydros[bemid].hd();	
+							UVector<int> ids;
+							int id;
+							while (i+1 < command.size() && !IsNull(id = ScanInt(command[i+1]))) {
+								if (id < 0 || id >= hd.qh.size())
+									throw Exc(Format(t_("Wrong head id '%s'"), command[i+1]));
+								FindAdd(ids, id);
+								i++;
+							}
+							UVector<int> idsDel;
+							for (int i = 0; i < hd.qh.size(); ++i)
+								if (Find(ids, i) < 0)
+									idsDel << i;
+							hd.DeleteHeadingsQTF(idsDel);	
 						} else if (param == "-params") {
 							CheckIfAvailableArg(command, i+1, "-params");
 							

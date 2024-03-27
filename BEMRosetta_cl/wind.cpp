@@ -34,7 +34,7 @@ String Wind::Load(String fileName, String ext) {
 	for (const String &ext : extS) {
 		String file;
 		if (hasExt)		
- 			file = ForceExt(fileName, ext);
+ 			file = ForceExtSafer(fileName, ext);
 		else
 			file = fileName + ext;
 		if (FileExists(file)) {

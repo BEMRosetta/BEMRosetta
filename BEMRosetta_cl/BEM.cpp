@@ -27,15 +27,15 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
 				t_("|TFS|"), t_("arg(TFS)")};
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS		  WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,  AQWA,   					FOAMM,   DIODORE,	BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   UNKNOWN, NUMBEM};
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore","BEMRosetta .bem","OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				    true,		 			 	 	false,		  false,		 false,   false, 		 true,  					false,   true,		true,			   false,	   true, 	   true, 		 true,			false, 	   false, 		true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				"*.1",		 			 	    "",		   	  "",		     "",      "", 		   	 "*.qtf", 				    "",      "*.hdb",	"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.dat",   "*.out", 	"*.*"};       
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS		  WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,  AQWA,   					FOAMM,   DIODORE,	BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   CAPY.nc, 			UNKNOWN, NUMBEM};
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore","BEMRosetta .bem","OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"Capytaine .nc",	"By extension"};
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				    true,		 			 	 	false,		  false,		 false,   false, 		 true,  					false,   true,		true,			   false,	   true, 	   true, 		 true,			false, 	   false, 		false,				true};       
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				"*.1",		 			 	    "",		   	  "",		     "",      "", 		   	 "*.qtf", 				    "",      "*.hdb",	"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.dat",   "*.out", 	"*.nc", 			"*.*"};       
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
-const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "Unknown"};	
-const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		true,	   true,		true,	   false, false, 	  true, 	true,		   false,   		false};       
-const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.pnl",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	   "*.hst", 		"*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
+const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "Unknown"};	
+const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   		false};       
+const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	"*.hst", 		"*.*"};       
 
 //enum Solver 			   		 	  {NEMOH, NEMOHv115, NEMOHv3, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;	
 const bool BEMCase::solverCanSave[] = {true,  true, 	 true, 	  true,      true, false};
@@ -307,12 +307,27 @@ void Hydro::SortFrequencies() {
 	}
 }
 
-void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a) {
+void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a, double val) {
 	a.SetCount(6*Nb);
 	for (int i = 0; i < 6*Nb; ++i) {
 		a[i].SetCount(6*Nb);
 		for (int j = 0; j < 6*Nb; ++j) 
-			a[i][j].setConstant(Nf, NaNDouble);
+			a[i][j].setConstant(Nf, val);
+	}
+}
+
+void Hydro::Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, double val) {
+	a.SetCount(Nb);
+	for (int ib = 0; ib < Nb; ++ib) {
+		a[ib].SetCount(pots[ib].size());
+		for (int idp = 0; idp < pots[ib].size(); ++idp) {
+			a[ib][idp].SetCount(6);
+			for (int idf1 = 0; idf1 < 6; ++idf1) {
+				a[ib][idp][idf1].SetCount(6);
+				for (int idf2 = 0; idf2 < 6; ++idf2) 
+					a[ib][idp][idf1][idf2].SetCount(Nf, val);
+			}
+		}
 	}
 }
 
@@ -1172,6 +1187,8 @@ bool Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT typ
 		if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
 			ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
 			type = WAMIT_1_3;
+		else if (ext == ".out")
+			type = WAMIT;
 		else if (ext == ".dat")
 			type = FAST_WAMIT;	
 		else if (ext == ".bem")
@@ -1561,7 +1578,8 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	if (IsLoadedQTF(false))
 		FillNullQTF(qtfdif, false);
 	
-	for (Mesh &m : meshes) {
+	for (int ib = 0; ib < meshes.size(); ++ib) {
+		Mesh &m = meshes[ib];
 		lastError = m.mesh.CheckErrors();
 		if (!lastError.IsEmpty())
 			return false;
@@ -1569,8 +1587,80 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		m.fileName = file;
 		if (m.name.IsEmpty())
 			m.name = InitCaps(GetFileTitle(file));
-				
+
+		if (symX) {
+			int npan = m.mesh.panels.size();
+			m.mesh.DeployXSymmetry();
+			if (!pots.IsEmpty()) {
+				pots[ib].SetCount(2*npan);
+				for (int ipan = 0; ipan < npan; ++ipan) {
+					pots[ib][ipan + npan].SetCount(6);
+					for (int idf = 0; idf < 6; ++idf) 
+						pots[ib][ipan + npan][idf].SetCount(Nf);
+					for (int ifr = 0; ifr < Nf; ++ifr) {
+						pots[ib][ipan + npan][0][ifr] = -pots[ib][ipan][0][ifr];
+						pots[ib][ipan + npan][1][ifr] =  pots[ib][ipan][1][ifr];
+						pots[ib][ipan + npan][2][ifr] =  pots[ib][ipan][2][ifr];
+						pots[ib][ipan + npan][3][ifr] =  pots[ib][ipan][3][ifr];
+						pots[ib][ipan + npan][4][ifr] = -pots[ib][ipan][4][ifr];
+						pots[ib][ipan + npan][5][ifr] = -pots[ib][ipan][5][ifr];
+					}
+				}
+			}
+		}
+		if (symY) {
+			int npan = m.mesh.panels.size();
+			m.mesh.DeployYSymmetry();
+			if (!pots.IsEmpty()) {
+				pots[ib].SetCount(2*npan);
+				for (int ipan = 0; ipan < npan; ++ipan) {
+					pots[ib][ipan + npan].SetCount(6);
+					for (int idf = 0; idf < 6; ++idf) 
+						pots[ib][ipan + npan][idf].SetCount(Nf);
+					for (int ifr = 0; ifr < Nf; ++ifr) {
+						pots[ib][ipan + npan][0][ifr] =  pots[ib][ipan][0][ifr];
+						pots[ib][ipan + npan][1][ifr] = -pots[ib][ipan][1][ifr];
+						pots[ib][ipan + npan][2][ifr] =  pots[ib][ipan][2][ifr];
+						pots[ib][ipan + npan][3][ifr] = -pots[ib][ipan][3][ifr];
+						pots[ib][ipan + npan][4][ifr] =  pots[ib][ipan][4][ifr];
+						pots[ib][ipan + npan][5][ifr] = -pots[ib][ipan][5][ifr];
+					}
+				}
+			}
+		}
 		m.AfterLoad(rho, g, false, true);
+	}
+	if (IsLoadedPot()) {
+		Initialize_AB(A_P, 0);
+		Initialize_AB(B_P, 0);
+		
+		Apan = Tensor<double, 5>(Nb, pots[0].size(), 6, 6, Nf);
+		Bpan = Tensor<double, 5>(Nb, pots[0].size(), 6, 6, Nf);
+		
+		UVector<double> n(6);
+		for (int ib = 0; ib < Nb; ++ib) {
+			Value3D c0_(c0.col(ib));
+			for (int idp = 0; idp < pots[ib].size(); ++idp) {
+				const Panel &p = meshes[ib].mesh.panels[idp];
+				double s = p.surface0 + p.surface1;
+				const Value3D &n1 = p.normalPaint;
+				n[0] = n1[0];	n[1] = n1[1];	n[2] = n1[2];
+				for (int ifr = 0; ifr < Nf; ++ifr) {
+					double rho_w = rho/w[ifr];
+					Value3D r = p.centroidPaint - c0_;
+					Value3D n2 = r%n1;
+					n[3] = n2[0];	n[4] = n2[1];	n[5] = n2[2];	
+					
+					for (int idf2 = 0; idf2 < 6; ++idf2) {
+						const std::complex<double> &comp = pots[ib][idp][idf2][ifr];
+						for (int idf1 = 0; idf1 < 6; ++idf1) {
+							A_P[idf1 + ib*Nb][idf2 + ib*Nb][ifr] += Apan(ib, idp, idf1, idf2, ifr) = rho_w*comp.imag()*n[idf1]*s;
+							B_P[idf1 + ib*Nb][idf2 + ib*Nb][ifr] -= Bpan(ib, idp, idf1, idf2, ifr) = rho*comp.real()*n[idf1]*s;
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	return true;
@@ -2133,8 +2223,8 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 				throw Exc(Format(t_("Model '%s' is already loaded"), file));
 		}
 	}
-	SystemSignature sys;
-	sys.Load();
+	//SystemSignature sys;
+	//sys.Load();
 		
 	String ext = ToLower(GetFileExt(file));
 	if (ext == ".cal" || ext == ".tec") {
@@ -2217,6 +2307,13 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 		}
 	} else if (ext == ".h5") {
 		BemioH5 &data = hydros.Create<BemioH5>(*this);
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.size()-1);
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+	} else if (ext == ".nc") {
+		CapyNC &data = hydros.Create<CapyNC>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
 			hydros.SetCount(hydros.size()-1);
@@ -2414,6 +2511,10 @@ void BEM::TranslationTo(int id, const MatrixXd &to) {
 
 void BEM::WaveTo(int id, double xto, double yto) {
 	hydros[id].hd().GetWaveTo(xto, yto);
+}
+
+String BEM::SpreadNegative(int id) {
+	return hydros[id].hd().SpreadNegative();
 }
 
 int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {

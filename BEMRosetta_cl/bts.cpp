@@ -40,7 +40,7 @@ void BTSWind::LoadBTSHeader(FileInBinary &file, VectorXf &Vslope, VectorXf &Voff
 }
 	              
 String BTSWind::LoadBTS(String fileName) {
-	FileInBinary file(ForceExt(fileName, ".bts"));
+	FileInBinary file(ForceExtSafer(fileName, ".bts"));
 	if (!file.IsOpen())
 		return t_("Impossible to load file");
 

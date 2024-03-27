@@ -13,7 +13,7 @@ using namespace Eigen;
 // Based on https://github.com/OpenFAST/matlab-toolbox/blob/main/Utilities/readfile_WND.m
 // Bonnie Jonkman, National Renewable Energy Laboratory
 bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<float> &varValues, float &ZGoffset) {
-	FileInLine file(ForceExt(fileName, ".sum"));
+	FileInLine file(ForceExtSafer(fileName, ".sum"));
 	if (!file.IsOpen())
 		return false;
 
@@ -81,7 +81,7 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 }
 
 String WNDWind::LoadWND(String fileName, double _zHub) {
-	FileInBinary file(ForceExt(fileName, ".wnd"));
+	FileInBinary file(ForceExtSafer(fileName, ".wnd"));
 	if (!file.IsOpen())
 		return t_("Impossible to load file");
 	

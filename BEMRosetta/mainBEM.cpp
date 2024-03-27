@@ -293,12 +293,18 @@ void MainBEM::Init() {
 		LoadSelTab(Bem());
 		menuPlot.fromY0.Enable(~menuPlot.autoFit);
 	};
-	menuPlot.fromY0 	<< [&] {LoadSelTab(Bem());};
-	menuPlot.opwT 		<< [&] {mainQTF.pf = Null;	LoadSelTab(Bem());};
-	menuPlot.opMP 		<< [&] {LoadSelTab(Bem());};
-	menuPlot.showPoints << [&] {LoadSelTab(Bem());};
-	menuPlot.showNdim 	<< [&] {LoadSelTab(Bem());};
-	
+	menuPlot.fromY0 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opwT 		<< [&]{mainQTF.pf = Null;	LoadSelTab(Bem());};
+	menuPlot.opMP 		<< [&]{LoadSelTab(Bem());};
+	menuPlot.showPoints << [&]{LoadSelTab(Bem());};
+	menuPlot.showNdim 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opAinf 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opA0 		<< [&]{LoadSelTab(Bem());};
+	menuPlot.opB 		<< [&]{LoadSelTab(Bem());};
+	menuPlot.opApot 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opBhask 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opBpot 	<< [&]{LoadSelTab(Bem());};
+		
 	menuPlot.head1st.NoHeader().MultiSelect();
 	menuPlot.head1st.AddColumn("");
 	menuPlot.headMD.NoHeader().MultiSelect();
@@ -309,6 +315,9 @@ void MainBEM::Init() {
 	
 	//menuPlot.headQTF.NoHeader().MultiSelect();
 	//menuPlot.headQTF.AddColumn("");
+	
+	CtrlLayout(menuMesh);
+	menuMesh.butSpreadNegative <<= THISBACK(OnSpreadNegative);
 	
 	OnOpt();
 	
@@ -322,6 +331,7 @@ void MainBEM::Init() {
 	menuTab.Add(menuProcess2.SizePos(), t_("Remove & Mult")).Disable();
 	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
+	menuTab.Add(menuMesh.SizePos(), 	t_("Mesh")).Disable();
 	
 	menuTab.WhenSet = [&] {
 		LOGTAB(menuTab);
@@ -332,7 +342,7 @@ void MainBEM::Init() {
 				Status(t_("FOAMM not found. Please set FOAMM path in Options"), 10000);	
 		} else if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuOpen) || 
 				   menuTab.IsAt(menuProcess) || menuTab.IsAt(menuProcess2) ||
-				   menuTab.IsAt(menuAdvanced)) 
+				   menuTab.IsAt(menuAdvanced) || menuTab.IsAt(menuMesh)) 
 			setupfoamm = true;
 		
 		if (!setupfoamm) 
@@ -340,6 +350,8 @@ void MainBEM::Init() {
 		
 		if (menuTab.IsAt(menuFOAMM)) 
 			mainTab.Set(mainSetupFOAMM);
+		else if (menuTab.IsAt(menuMesh)) 
+			mainTab.Set(mainMesh);
 		
 		ShowMenuPlotItems();
 	};
@@ -347,7 +359,7 @@ void MainBEM::Init() {
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
 		UVector<int> ids = ArrayModel_IdsHydro(listLoaded);
-		bool plot = true, convertProcess = true, ismenuFOAMM = false;
+		bool plot = true, convertProcess = true, ismenuFOAMM = false, ismesh = false;
 		int is = -1;			// 0: 1st, 1: QTF, 2: MD
 
 		if (ids.IsEmpty())
@@ -371,8 +383,6 @@ void MainBEM::Init() {
 			mainA.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainB))
 			mainB.Load(Bem(), ids);
-		else if (mainTab.IsAt(mainB_H))
-			mainB_H.Load(Bem(), ids);
 		else if (mainTab.IsAt(mainMD)) {
 			mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor());
 			is = 2;
@@ -406,11 +416,21 @@ void MainBEM::Init() {
 			is = 1;
 		} else if (menuTab.IsAt(menuFOAMM)) 
 			;
-		else if (mainTab.IsAt(mainMesh)) 
+		else if (mainTab.IsAt(mainMesh)) {
 			mainMesh.Load(Bem());
-		else 
+			menuTab.Set(menuMesh);	
+		} else {
 			plot = false;
+		}
 		
+		for (int id : ids) {
+			const Hydro &hydro = Bem().hydros[id].hd();
+			if (!hydro.meshes.IsEmpty()) {
+				ismesh = true;
+				break;
+			}
+		}
+			
 		if (is != 1)
 			mainQTF.Unload();
 		
@@ -437,7 +457,9 @@ void MainBEM::Init() {
 		tabMenuProcess2.Enable(convertProcess);
 		TabCtrl::Item& tabMenuAdvanced = menuTab.GetItem(menuTab.Find(menuAdvanced));
 		tabMenuAdvanced.Enable(convertProcess);
-
+		TabCtrl::Item& tabMenuMesh = menuTab.GetItem(menuTab.Find(menuMesh));
+		tabMenuMesh.Enable(convertProcess);
+		
 		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
 			tabMenuProcess.Text(t_("Process"));
@@ -459,6 +481,15 @@ void MainBEM::Init() {
 			tabMenuProcess2.Text("");
 			tabMenuAdvanced.Text("");
 		}
+		
+		if (ismesh) {
+			tabMenuMesh.Text(t_("Mesh"));
+			tabMenuMesh.Enable();
+		} else {
+			tabMenuMesh.Text("");
+			tabMenuMesh.Disable();
+		}
+		
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
 		tabMenuFOAMM.Enable(convertProcess);
 		if (convertProcess) 
@@ -524,9 +555,6 @@ void MainBEM::Init() {
 	mainAinfw.Init(Hydro::DATA_AINFW);
 	mainTab.Add(mainAinfw.SizePos(), t_("A∞(ω)")).Disable();
 	
-	mainB_H.Init(Hydro::DATA_B_H);
-	mainTab.Add(mainB_H.SizePos(), t_("B Haskind")).Disable();
-	
 	mainSetupFOAMM.Init();
 	mainTab.Add(mainSetupFOAMM.SizePos(), t_("FOAMM")).Disable();
 
@@ -544,7 +572,9 @@ void MainBEM::Init() {
 void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showNdim.Enable();
 
-	bool show = true, showwT = true, showComplex = false, showDim = true;
+	bool show = true, showwT = true, showComplex = false, showDim = true, 
+		 showA = false, showB = false;
+		 
 	if (mainTab.IsAt(mainSetupFOAMM)) {
 		showwT = false;
 		showComplex = true;
@@ -558,15 +588,28 @@ void MainBEM::ShowMenuPlotItems() {
 		showComplex = true;
 		//if (mainTab.IsAt(mainRAO))
 		//	showDim = false;
-	}
-		
+	} else if (mainTab.IsAt(mainA))
+		showA = true;
+	else if (mainTab.IsAt(mainB))
+		showB = true;
+			
 	menuPlot.showNdim.Enable(showDim);
 	menuPlot.opwT.Enable(showwT);
-	menuPlot.opMP.Enable(showComplex);
+	menuPlot.opMP.Show(showComplex);
+	menuPlot.labMP.Show(showComplex || showA || showB);
+
 	menuPlot.butZoomToFit.Enable(show);
 	menuPlot.autoFit.Enable(show);
 	menuPlot.fromY0.Enable(show);
 	menuPlot.showPoints.Enable(show);
+
+	menuPlot.opAinf.Show(showA);
+	menuPlot.opA0.Show(showA);
+	menuPlot.opB.Show(showA);
+	menuPlot.opApot.Show(showA);
+	
+	menuPlot.opBhask.Show(showB);
+	menuPlot.opBpot.Show(showB);
 }
 
 void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
@@ -612,6 +655,14 @@ void MainBEM::InitSerialize(bool ret) {
 
 	if (!ret || IsNull(menuPlot.opMP)) 
 		menuPlot.opMP = 0;
+	
+	menuPlot.opAinf = true;
+	menuPlot.opA0 = true;
+	menuPlot.opApot = true;
+	menuPlot.opB = false;
+	
+	menuPlot.opBhask = true;
+	menuPlot.opBpot = true;
 	
 	if (!ret || IsNull(menuPlot.showPoints)) 
 		menuPlot.showPoints = true;
@@ -1134,7 +1185,7 @@ void MainBEM::OnBH(int num) {
 			
 		AfterBEM();
 		
-		mainTab.Set(mainTab.Find(mainB_H));
+		mainTab.Set(mainTab.Find(mainB));
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
@@ -1430,7 +1481,6 @@ void MainBEM::OnSwapDOF() {
 		
 		mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));
-		mainTab.GetItem(mainTab.Find(mainB_H)).Enable(mainB_H.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor()));
 		mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));
 		mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));
@@ -1590,6 +1640,26 @@ void MainBEM::OnUpdateCwave() {
 	}	
 }
 
+void MainBEM::OnSpreadNegative() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+		
+		WaitCursor wait;
+		
+		String errors = Bem().SpreadNegative(id);
+		
+		if (!errors.IsEmpty())
+			Exclamation(t_("Some negative panels cannot be spread in:&") + DeQtfLf(errors));
+				
+		AfterBEM();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}	
+}
+
+
 /*void MainBEM::OnUpdateCrot() {
 	try {
 		int id = GetIdOneSelected();
@@ -1663,7 +1733,6 @@ void MainBEM::AfterBEM() {
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(Bem(), ids));											progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(Bem(), ids));									progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(Bem(), ids));											progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainB_H)).Enable(mainB_H.Load(Bem(), ids));										progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(Bem(), ids));											progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(Bem(), ids, menuPlot.headMD.GetCursor()));				progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(Bem(), ids, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
@@ -1734,7 +1803,7 @@ int MainBEM::AskQtfHeading(const Hydro &hydro) {
 	
 	int id0 = Null;
 	for (int i = 0; i < numH; ++i) {
-		dialog.dropHeadings.Add(Format("%f-%f", hydro.qh[i].real(), hydro.qh[i].imag()));
+		dialog.dropHeadings.Add(Format("%.3f-%.3f", hydro.qh[i].real(), hydro.qh[i].imag()));
 		if (abs(hydro.qh[i].real()) < 0.001)
 			id0 = i;
 	}
@@ -1848,8 +1917,6 @@ UVector<int> MainBEM::GetIdsSelected(bool complain) {
 	}
 	return ret;
 }	
-
-
 
 void MainBEM::Jsonize(JsonIO &json) {
 	if (json.IsLoading()) {
@@ -2168,28 +2235,28 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 				}
 			}
 		}
-		array.Set(row,   0, sib + " " + t_("Theave(∞) [s]"));
-		array.Set(row+1, 0, sib + " " + t_("Theave(ω) [s]"));
-		array.Set(row+2, 0, sib + " " + t_("Troll(∞)  [s]"));
-		array.Set(row+3, 0, sib + " " + t_("Troll(ω)  [s]"));
-		array.Set(row+4, 0, sib + " " + t_("Tpitch(∞) [s]"));
-		array.Set(row+5, 0, sib + " " + t_("Tpitch(ω) [s]"));
+		//array.Set(row,   0, sib + " " + t_("Theave(∞) [s]"));
+		array.Set(row, 0, sib + " " + t_("Theave(ω) [s]"));
+		//array.Set(row+2, 0, sib + " " + t_("Troll(∞)  [s]"));
+		array.Set(row+1, 0, sib + " " + t_("Troll(ω)  [s]"));
+		//array.Set(row+4, 0, sib + " " + t_("Tpitch(∞) [s]"));
+		array.Set(row+2, 0, sib + " " + t_("Tpitch(ω) [s]"));
 		if (IsNum(data.rho) && IsNum(data.g) && 
 			data.M.size() > ib && data.M[ib].size() > 0 && 
 			data.C.size() > ib && data.C[ib].size() > 0) {
-			array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
+			//array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.Theavew(ib), 5, false, "-"));
-			array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));
+			//array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.Trollw (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(data.Tpitch (ib), 5, false, "-"));
+			//array.Set(row++, col, FDS(data.Tpitch (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.Tpitchw(ib), 5, false, "-"));
 		} else {
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
-			array.Set(row++, col, "-");	
-			array.Set(row++, col, "-");	
-			array.Set(row++, col, "-");	
+			//array.Set(row++, col, "-");	
+			//array.Set(row++, col, "-");	
+			//array.Set(row++, col, "-");	
 		}
 		array.Set(row,   0, sib + " " + t_("GMroll  [m]"));
 		array.Set(row+1, 0, sib + " " + t_("GMpitch [m]"));
@@ -2224,9 +2291,9 @@ void MeshBody::Init() {
 	panels.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, panels, true);};
 	
 	dropFreq.WhenAction = [&] {
-		int idIfr = dropFreq.GetData();
+		int ifr = dropFreq.GetData();
 		for (auto &d : dataSourcePanels) {
-			d.idIfr = idIfr;
+			d.ifr = ifr;
 			d.w = dropFreq.GetValue();
 		}
 		Refresh();
@@ -2245,7 +2312,6 @@ void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 		
 		dataSourceNodes.Clear();
 		nodes.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourceNodes.Add().Init(hydro.meshes[ib].mesh, -2));
-		nodes.AddRowNumColumn(t_("#id"), 60).SetConvert(dataSourceNodes.Add().Init(hydro.meshes[ib].mesh, -1));
 		for (int c = 0; c < 3; ++c) 
 			nodes.AddRowNumColumn(Format("%s", xyz[c]), 80).SetConvert(dataSourceNodes.Add().Init(hydro.meshes[ib].mesh, c));
 	}{
@@ -2259,7 +2325,8 @@ void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 		dataSourcePanels.Clear();
 		int n = 0;
 		panels.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
-		panels.AddRowNumColumn(t_("#id"), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+		n++;
+		//panels.AddRowNumColumn(t_("#id"), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		for (int c = 0; c < 4; ++c) {
 			panels.AddRowNumColumn(Format(t_("Node %d"), c+1), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 		}
@@ -2275,10 +2342,22 @@ void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 				panels.AddRowNumColumn(Format(t_("Pot %s real"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 				panels.AddRowNumColumn(Format(t_("Pot %s imag"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 			}
-			for (int r = 0; r < 6; ++r) 
-				for (int c = 0; c < 6; ++c) 
-					panels.AddRowNumColumn(Format(t_("A%d%d"), r+1, c+1), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
-					
+			if (Bem().onlyDiagonal) {
+				for (int r = 0; r < 6; ++r) 
+					panels.AddRowNumColumn(Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(r)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+			} else {
+				for (int r = 0; r < 6; ++r) 
+					for (int c = 0; c < 6; ++c) 
+						panels.AddRowNumColumn(Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+			}
+			if (Bem().onlyDiagonal) {
+				for (int r = 0; r < 6; ++r) 
+					panels.AddRowNumColumn(Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(r)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+			} else {
+				for (int r = 0; r < 6; ++r) 
+					for (int c = 0; c < 6; ++c) 
+						panels.AddRowNumColumn(Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+			}
 			for (int ifr = 0; ifr < hydro.Nf; ++ifr)
 				dropFreq.Add(ifr, hydro.w[ifr]);
 			if (!IsNull(freq))
@@ -2300,7 +2379,6 @@ Value MeshBody::DataSourceNodes::Format(const Value& q) const {
 	const Point3D &p = pmesh->nodes[iq];
 	switch (xyz) {
 	case -2:	return iq + 1;		// id
-	case -1:	return pmesh->nodesIDs[iq];	
 	case  0:	return p.x;			// x
 	case  1:	return p.y;			// y
 	case  2:	return p.z;			// z
@@ -2310,66 +2388,62 @@ Value MeshBody::DataSourceNodes::Format(const Value& q) const {
 
 Value MeshBody::DataSourcePanels::Format(const Value& q) const {
 	ASSERT(phydro);
-	int iq = q;
+	int idp = q;
 	const Surface &s = phydro->meshes[ib].mesh;
-	if (s.panels.size() <= iq)
+	if (s.panels.size() <= idp)
 		return Null;
 	
 	switch (col) {
-	case 0:		return iq + 1;		// id
-	case 1:		return s.panelsIDs[iq];	
-	case 2:		return s.nodesIDs[s.panels[iq].id[0]];
-	case 3:		return s.nodesIDs[s.panels[iq].id[1]];
-	case 4:		return s.nodesIDs[s.panels[iq].id[2]];
-	case 5:		return s.nodesIDs[s.panels[iq].id[3]];
-	case 6:		return s.panels[iq].surface0 + s.panels[iq].surface1;
-	case 7:		return s.panels[iq].centroidPaint.x;
-	case 8:		return s.panels[iq].centroidPaint.y;
-	case 9:		return s.panels[iq].centroidPaint.z;
-	case 10:	return s.panels[iq].normalPaint.x;
-	case 11:	return s.panels[iq].normalPaint.y;
-	case 12:	return s.panels[iq].normalPaint.z;
+	case 0:		return idp + 1;		// id
+	case 2:		return s.panels[idp].id[0];
+	case 3:		return s.panels[idp].id[1];
+	case 4:		return s.panels[idp].id[2];
+	case 5:		return s.panels[idp].id[3];
+	case 6:		return s.panels[idp].surface0 + s.panels[idp].surface1;
+	case 7:		return s.panels[idp].centroidPaint.x;
+	case 8:		return s.panels[idp].centroidPaint.y;
+	case 9:		return s.panels[idp].centroidPaint.z;
+	case 10:	return s.panels[idp].normalPaint.x;
+	case 11:	return s.panels[idp].normalPaint.y;
+	case 12:	return s.panels[idp].normalPaint.z;
 	}
-
-	int id = s.panelsIDs[iq];
-	int idp = -1;
-	for (int i = 0; i < phydro->potentials[ib][idIfr].size(); ++i) {
-		if (phydro->potentials[ib][idIfr][i].panelId == id) {
-			idp = i;
-			break;
-		}
-	}
-	if (idp < 0)
-		return "-";
 			
 	switch (col) {
-	case 13:	return abs(phydro->potentials[ib][idIfr][idp].vals[0]);
-	case 14:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[0]));
-	case 15:	return abs(phydro->potentials[ib][idIfr][idp].vals[1]);
-	case 16:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[1]));
-	case 17:	return abs(phydro->potentials[ib][idIfr][idp].vals[2]);
-	case 18:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[2]));
-	case 19:	return abs(phydro->potentials[ib][idIfr][idp].vals[3]);
-	case 20:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[3]));
-	case 21:	return abs(phydro->potentials[ib][idIfr][idp].vals[4]);
-	case 22:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[4]));
-	case 23:	return abs(phydro->potentials[ib][idIfr][idp].vals[5]);
-	case 24:	return ToDeg(arg(phydro->potentials[ib][idIfr][idp].vals[5]));
+	case 13:	return abs(phydro->pots[ib][idp][0][ifr]);
+	case 14:	return ToDeg(arg(phydro->pots[ib][idp][0][ifr]));
+	case 15:	return abs(phydro->pots[ib][idp][1][ifr]);
+	case 16:	return ToDeg(arg(phydro->pots[ib][idp][1][ifr]));
+	case 17:	return abs(phydro->pots[ib][idp][2][ifr]);
+	case 18:	return ToDeg(arg(phydro->pots[ib][idp][2][ifr]));
+	case 19:	return abs(phydro->pots[ib][idp][3][ifr]);
+	case 20:	return ToDeg(arg(phydro->pots[ib][idp][3][ifr]));
+	case 21:	return abs(phydro->pots[ib][idp][4][ifr]);
+	case 22:	return ToDeg(arg(phydro->pots[ib][idp][4][ifr]));
+	case 23:	return abs(phydro->pots[ib][idp][5][ifr]);
+	case 24:	return ToDeg(arg(phydro->pots[ib][idp][5][ifr]));
 	}
 	
 	int cl = col - 25;
-	int r = cl/6;
-	int c = cl - 6*r;
-	
-	double n;
-	if (r < 3)	// n
-		n = s.panels[iq].normalPaint[r];
-	else {		// r%n
-		Value3D n456 = s.panels[iq].centroidPaint%s.panels[iq].normalPaint;
-		n = n456[r-3];	
+	if (Bem().onlyDiagonal) {
+		if (cl < 6) {
+			int col = cl;	
+			return phydro->Apan(ib, idp, col, col, ifr);
+		} else {
+			int col = cl - 6;	
+			return phydro->Bpan(ib, idp, col, col, ifr);
+		}
+	} else {
+		if (cl < 36) {
+			int row = cl/6;
+			int col = cl - 6*row;
+			return phydro->Apan(ib, idp, row, col, ifr);
+		} else {
+			cl -= 36;	
+			int row = cl/6;
+			int col = cl - 6*row;
+			return phydro->Bpan(ib, idp, row, col, ifr);
+		}
 	}
-	
-	return (Bem().rho/w)*phydro->potentials[ib][idIfr][idp].vals[c].imag()*n*(s.panels[iq].surface0 + s.panels[iq].surface1);
 }
 	
 void MainMeshTable::Init() {
@@ -2392,7 +2466,7 @@ bool MainMeshTable::Load(BEM &bem) {
 		if (hydro.meshes.IsEmpty() || hydro.meshes[0].mesh.panels.IsEmpty())
 			return false;
 		
-		bool hasPotentials = !hydro.potentials.IsEmpty() && !hydro.potentials[0].IsEmpty() && !hydro.potentials[0][0].IsEmpty();
+		bool hasPotentials = hydro.IsLoadedPot();
 		for (int ib = 0; ib < hydro.Nb; ++ib) {
 			MeshBody &b = bodies.Add();
 			b.Init();

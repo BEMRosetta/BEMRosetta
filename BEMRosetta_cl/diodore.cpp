@@ -35,7 +35,7 @@ bool Diodore::Load(String file, double) {
 }
 
 void Diodore::Load_HDB() {
-	String fileName = ForceExt(hd().file, ".hdb");
+	String fileName = ForceExtSafer(hd().file, ".hdb");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		throw Exc(in.Str() + "\n" + t_("File not found or blocked"));

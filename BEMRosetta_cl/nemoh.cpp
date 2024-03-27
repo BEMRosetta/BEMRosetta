@@ -58,7 +58,7 @@ bool Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 			if (!Load_KH("Mesh"))
 				BEM::PrintWarning(S(": ** Mesh/KH ") + t_("Not found") + "**");
 			
-			dynamic_cast<Wamit *>(this)->Load_frc2(ForceExt(fileCal, ".frc"));
+			dynamic_cast<Wamit *>(this)->Load_frc2(ForceExtSafer(fileCal, ".frc"));
 			
 			fileRad = AFX(folder, AFX("Results", "RadiationCoefficients.tec"));
 			folderForces = folder;
@@ -1040,7 +1040,11 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		FindAdd(head, std::complex<double>(hd1, hd2));	
 		Nb = max(Nb, 1 + (f.GetInt(4)-1)/6);
 	}
-	if (IsNull(hd().Nb))
+	
+	if (nline == 0)		// Only the header, but no data
+		return false;
+	
+	if (IsNull(hd().Nb) || Nb == 0)
 		hd().Nb = Nb;
 	else {
 		if (hd().Nb < Nb)
@@ -1053,7 +1057,7 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	int Nf = w.size();
 	int Nh = head.size();
 	if (Nh == 0)
-		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
+		throw Exc(Format(t_("Wrong format in QTF file '%s'. No headings found"), hd().file));
 	
 	Hydro::Initialize_QTF(qtf, Nb, Nh, Nf);
 	

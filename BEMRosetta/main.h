@@ -104,9 +104,6 @@ private:
 	static bool comparing;
 };
 
-
-String ForceExtSafe(String fileName, String ext);
-   
 class HydroSource : public DataSource {
 public:
 	HydroSource() {}
@@ -133,9 +130,11 @@ public:
 		switch (dataToPlot) {
 		case Hydro::PLOT_A:			return !data->IsLoadedA(idf, jdf);
 		case Hydro::PLOT_AINF:		return !data->IsLoadedAinf(idf, jdf);
+		case Hydro::PLOT_A_P:		return !data->IsLoadedA_P(idf, jdf);
 		case Hydro::PLOT_A0:		return !data->IsLoadedA0(idf, jdf);
 		case Hydro::PLOT_B:			return !data->IsLoadedB  (idf, jdf);
 		case Hydro::PLOT_B_H:		return !data->IsLoadedB_H(idf, jdf);
+		case Hydro::PLOT_B_P:		return !data->IsLoadedB_P(idf, jdf);
 		case Hydro::PLOT_MD:		return !data->IsLoadedMD(int(idf/6), jdf);
 		case Hydro::PLOT_KIRF:		return !data->IsLoadedKirf(idf, jdf);
 		case Hydro::PLOT_AINFW:		return !data->IsLoadedAinf_w(idf, jdf);
@@ -159,9 +158,11 @@ public:
 		switch (dataToPlot) {
 		case Hydro::PLOT_A:			return data->A_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINF:		return data->Ainf_(ndim, idf, jdf);
+		case Hydro::PLOT_A_P:			return data->A_P_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_A0:		return data->A0_(ndim, idf, jdf);
 		case Hydro::PLOT_B:			return data->B_  (ndim, int(id), idf, jdf);
 		case Hydro::PLOT_B_H:		return data->B_H_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_B_P:		return data->B_P_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_KIRF:		return data->Kirf_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINFW:		return data->Ainf_w_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_MD:		return data->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
@@ -673,8 +674,8 @@ public:
 	void Clear();
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
-	UArray<HydroSource> ABFZ_source, ABFZ_source2;
-	UArray<HydroSource> Ainf_source, A0_source, B_H_source;	
+	UArray<HydroSource> ABFZ_source, ABFZ_source2, B_A_source;
+	UArray<HydroSource> Ainf_source, A0_source, B_H_source, A_P_source, B_P_source;	
 	UArray<HydroSource> TFS_source, TFS_source2;
 		
 	int plot_idf, plot_jdf;
@@ -684,6 +685,7 @@ public:
 	bool dim;
 	int markW;
 	bool show_w, show_ma_ph;
+	bool opAinf, opA0, opB, opApot, opBhask, opBpot;
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
@@ -1173,7 +1175,7 @@ public:
 			return *this;
 		}
 		Value Format(const Value& q) const;
-		int idIfr = 0;
+		int ifr = 0;
 		double w;
 		
 	private:
@@ -1415,6 +1417,7 @@ public:
 	void OnOgilvie();
 	void OnAverage();
 	void OnConvergence();
+	void OnSpreadNegative();
 	//void OnUpdateCrot();
 	void OnUpdateCwave();
 	void OnDeleteHeadingsFrequencies();
@@ -1444,12 +1447,12 @@ public:
 	WithMenuProcess2<StaticRect> menuProcess2;
 	WithMenuAdvanced<StaticRect> menuAdvanced;
 	WithMenuPlot<StaticRect> menuPlot;
+	WithMenuBEMMesh<StaticRect> menuMesh;
 	MenuFOAMM menuFOAMM;
 	
 	MainSummaryCoeff mainSummary;
 	MainABForce mainA;
 	MainABForce mainB;
-	MainABForce mainB_H;
 	MainABForce mainAinfw;
 	MainABForce mainK;
 	MainABForce mainForceSC, mainForceFK, mainForceEX;

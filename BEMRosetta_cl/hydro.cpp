@@ -310,22 +310,66 @@ void Hydro::GetWaveTo(double xto, double yto) {
 	y_w = yto;
 }
 
+String Hydro::SpreadNegative() {
+	String ret;
+	UVector<String> errors;
+	for (int ib = 0; ib < Nb; ++ib) {
+		for (int idp = 0; idp < pots[ib].size(); ++idp) {
+			UVector<int> panIDs;
+			for (int ifr = 0; ifr < Nf; ++ifr) {
+				for (int idf = 0; idf < 6; ++idf) {		// Only diagonal
+					if (Apan(ib, idp, idf, idf, ifr) < 0) {
+						if (panIDs.IsEmpty())
+							meshes[ib].mesh.GetClosestPanels(idp, panIDs);
+						for (int i = 0; i < panIDs.size(); ++i) {
+							if (Apan(ib, i, idf, idf, ifr) > 0) {
+								double delta = Apan(ib, i, idf, idf, ifr) + Apan(ib, idp, idf, idf, ifr);
+								if (delta >= 0) {
+									Apan(ib, i, idf, idf, ifr) += Apan(ib, idp, idf, idf, ifr);
+									Apan(ib, idp, idf, idf, ifr) = 0;
+									break;
+								} else {
+									Apan(ib, idp, idf, idf, ifr) += Apan(ib, i, idf, idf, ifr);
+									Apan(ib, i, idf, idf, ifr) = 0;
+								}
+							}
+						}
+						if (Apan(ib, idp, idf, idf, ifr) < 0) {
+							FindAdd(errors, Format(t_("%d.%s Freq %d (%f rad/s)"), idf+1, BEM::strDOFtext[idf], ifr, w[ifr]));
+							// Resets this dof and frequency for all panels
+							for (int i = 0; i < pots[ib].size(); ++i) 
+								Apan(ib, i, idf, idf, ifr) = 0;
+						}
+					}
+				}
+			}
+		}
+	}
+	Sort(errors);
+	for (const String s : errors) {
+		if (!ret.IsEmpty())
+			ret << "\n";
+		ret << s;
+	}
+	return ret;
+}
+
 void Hydro::AddWave(int ib, double dx, double dy) {
+	if (dx == 0 && dy == 0)
+		return;
   	auto CalcF = [&](Forces &ex, const UVector<double> &k) {
     	UArray<MatrixXcd> exforce = clone(ex.force);
     	
 	    for (int ih = 0; ih < Nh; ++ih) {
 	        double angle = ToRad(head[ih]);
-	    	{
-				double dist = dx*cos(angle) + dy*sin(angle);
-			
-	    		int ib6 = ib*6;
-				for (int ifr = 0; ifr < Nf; ++ifr) {
-					double ph = k[ifr]*dist;
-					for (int idf = 0; idf < 6; ++idf) 
-						AddPhase(exforce[ih](ifr, idf + ib6), ph);		// Add the phase
-				}
-	    	}
+			double dist = dx*cos(angle) + dy*sin(angle);
+		
+    		int ib6 = ib*6;
+			for (int ifr = 0; ifr < Nf; ++ifr) {
+				double ph = k[ifr]*dist;
+				for (int idf = 0; idf < 6; ++idf) 
+					AddPhase(exforce[ih](ifr, idf + ib6), ph);		// Add the phase
+			}
 	    }
 		ex.force = pick(exforce);
     };
@@ -374,6 +418,7 @@ void Hydro::AddWave(int ib, double dx, double dy) {
 	if (IsLoadedQTF(false))	
 		CalcQTF(qtfdif, qk, false);	
 }
+
 
 void Hydro::GetTranslationTo(const MatrixXd &to) {
 	MatrixXd delta(3, Nb);
@@ -1235,7 +1280,6 @@ void Hydro::FillFrequencyGapsABForcesZero() {
 		FillA(A0);
 	if (IsLoadedDlin())
 		FillA(Dlin);
-	
 	
 	auto FillF = [&](Forces &ex) {
 	    for (int ih = 0; ih < Nh; ++ih) {

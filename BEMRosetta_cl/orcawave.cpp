@@ -34,7 +34,7 @@ bool OrcaWave::Load(String file, double) {
 }
 
 void OrcaWave::Load_YML_Res() {
-	String fileName = ForceExt(hd().file, ".yml");
+	String fileName = ForceExtSafer(hd().file, ".yml");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		throw Exc(in.Str() + "\n" + t_("File not found or blocked"));

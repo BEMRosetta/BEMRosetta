@@ -36,7 +36,7 @@ bool BemioH5::Load(String file, double) {
 }
 
 void BemioH5::Load_H5() {
-	String fileName = ForceExt(hd().file, ".h5");
+	String fileName = ForceExtSafer(hd().file, ".h5");
 	
 	Hdf5File hfile;
 	
@@ -392,7 +392,8 @@ bool BemioH5::Save(String file) {
 				MatrixXd mat;
 				hfile.Set("body_number", ib+1.).SetDescription("Number of rigid body from the BEM simulation");
 				hfile.Set("name", ~hd().names[ib]);
-				hfile.Set("disp_vol", hd().Vo[ib]).SetDescription("Displaced volume").SetUnits("m^3");
+				if (hd().Vo.size() > ib)
+					hfile.Set("disp_vol", hd().Vo[ib]).SetDescription("Displaced volume").SetUnits("m^3");
 				hfile.Set("dof", (double)hd().dof[ib]).SetDescription("Degrees of freedom");
 				hfile.Set("dof_start", 1.);
 				hfile.Set("dof_end", 6.);

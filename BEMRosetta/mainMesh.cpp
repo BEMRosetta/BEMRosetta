@@ -240,10 +240,11 @@ void MainMesh::Init() {
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();	
 	menuTab.Add(menuEdit.SizePos(), 	t_("Edit"));
 		
-	mainViewData.Init();
-	splitterVideo.Vert(mainView.SizePos(), videoCtrl.SizePos());
-	splitterVideo.SetPositions(8500, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
-	splitterAll.Horz(splitterVideo.SizePos(), mainViewData.SizePos());
+	mainViewData.Init();		// Un-comment this to view video controls
+	//splitterVideo.Vert(mainView.SizePos(), videoCtrl.SizePos());
+	//splitterVideo.SetPositions(8500, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
+	//splitterAll.Horz(splitterVideo.SizePos(), mainViewData.SizePos());
+	splitterAll.Horz(mainView.SizePos(), mainViewData.SizePos());
 	splitterAll.SetPositions(6000, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
 	splitterAll.Tip(t_("")).WhenAction = [&] {mainView.SetPaintSelect(splitterAll.GetPos() < 9900);};
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
@@ -599,7 +600,7 @@ void MainMesh::OnConvertMesh() {
 				fs.Type(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)), Mesh::meshExt[i]);
 		
 		fs.ActiveType(0);
-		fs.Set(ForceExt(~menuOpen.file, ext));
+		fs.Set(ForceExtSafer(~menuOpen.file, ext));
 		fs.ActiveDir(saveFolder);
 		
 		if (!fs.ExecuteSaveAs(Format(t_("Save mesh file as %s"), fileType)))

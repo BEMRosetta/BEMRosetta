@@ -44,11 +44,10 @@ bool Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 			
-		for (int ib = 1; ib < hd().Nb; ++ib)		// Translates all bodies phase to c0 of first body
-			hd().AddWave(ib, hd().c0(0, 0)-hd().c0(0, ib), hd().c0(1, 0)-hd().c0(1, ib));
+		for (int ib = 0; ib < hd().Nb; ++ib)		// Translates all bodies phase to 0,0
+			hd().AddWave(ib, -hd().c0(0, ib), -hd().c0(1, ib));
 	
-		hd().x_w = hd().c0(0, 0);
-		hd().y_w = hd().c0(1, 0);
+		hd().x_w = hd().y_w = 0;
 			
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -60,7 +59,7 @@ bool Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 }
 
 bool Aqwa::Load_AH1() {
-	String fileName = ForceExt(hd().file, ".AH1");
+	String fileName = ForceExtSafer(hd().file, ".AH1");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -213,7 +212,7 @@ bool Aqwa::Load_AH1() {
 }
 
 bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
-	String fileName = ForceExt(hd().file, ".LIS");
+	String fileName = ForceExtSafer(hd().file, ".LIS");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -234,6 +233,8 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	
 	FileInLine::Pos fpos = in.GetPos();
 	
+	Upp::Index<int> lidGroups;
+	
 	hd().Nb = 0;
 	while(!in.IsEof()) {
 		line = Trim(in.GetLine());
@@ -241,6 +242,10 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 		if ((pos = line.FindAfter("F O R   S T R U C T U R E")) >= 0) {
 			int ib = ScanInt(line.Mid(pos)); 
 			hd().Nb = max(ib, hd().Nb);
+		} else if ((pos = line.FindAfter("ELEMENT GROUP NUMBER")) >= 0) {		// Panels in the lid are not loaded
+			pos = line.FindAfter("=", pos);
+			int idGroup	 = ScanInt(line.Mid(pos));
+			lidGroups.FindAdd(idGroup);
 		}
 	}
 	if (hd().Nb == 0)
@@ -262,14 +267,19 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 		hd().M[ib].setConstant(6, 6, 0);
 	
 	hd().meshes.SetCount(hd().Nb);
-	hd().potentials.SetCount(hd().Nb);		
+	for (int i = 0; i < hd().Nb; ++i)
+		hd().meshes[i].SetCode(Mesh::AQWA_LIS);
+	hd().pots.SetCount(hd().Nb);		
 	
 	double nlines = in.GetLineNumber();
 	double step = 0.01;
 	int lastIdPot = -1;
 	
 	in.SeekPos(fpos);			
-				
+	
+	Upp::Index<int> panelIDs;
+	UArray<Upp::Index<int>> nodeIDs(hd().Nb);
+		
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
 		f.Load(line);
@@ -303,7 +313,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				if (f.GetLine()[0] == '1')
 					break;
 				int ib = f.GetInt(1) - 1;
-				hd().meshes[ib].mesh.nodesIDs << f.GetInt(2);
+				nodeIDs[ib] << f.GetInt(2);		// Node number
 				Point3D &p = hd().meshes[ib].mesh.nodes.Add();
 				p.x = f.GetDouble(3)*factorLength;
 				p.y = f.GetDouble(4)*factorLength;
@@ -321,31 +331,36 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				
 				String type = f.GetText(1);
 				if (type == "QPPL" || type == "TPPL") {
-					hd().meshes[ib].mesh.panelsIDs << f.GetInt(0);
+					if (!lidGroups.IsEmpty()) {
+						int idGroup = f.GetInt(8);
+						if (lidGroups.Find(idGroup) >= 0)		// Panels in the lid are not loaded
+							continue;
+					}
 					Panel &p = hd().meshes[ib].mesh.panels.Add();
-					const Upp::Index<int> &nodes = hd().meshes[ib].mesh.nodesIDs;
+					UArray<UArray<std::complex<double>>> &pots = hd().pots[ib].Add();
+					panelIDs << f.GetInt(0);
 					
 					int id;
-					id = f.GetInt(2);
-					id = nodes.Find(id);
+					id = nodeIDs[ib].Find(f.GetInt(2));
 					if (id < 0)
 						throw Exc(in.Str() + "\n"  + t_("Node number #1 not found"));
 					p.id[0] = id;
-					id = f.GetInt(3);
-					id = nodes.Find(id);
+					
+					id = nodeIDs[ib].Find(f.GetInt(3));
 					if (id < 0)
 						throw Exc(in.Str() + "\n"  + t_("Node number #2 not found"));
 					p.id[1] = id;
-					id = f.GetInt(4);
-					id = nodes.Find(id);
+					
+					id = nodeIDs[ib].Find(f.GetInt(4));
 					if (id < 0)
 						throw Exc(in.Str() + "\n"  + t_("Node number #3 not found"));
 					p.id[2] = id;
+					
 					id = f.GetInt(5);
 					if (id == 0)
 						p.id[3] = p.id[0];
 					else {	
-						id = nodes.Find(id);
+						id = nodeIDs[ib].Find(id);
 						if (id < 0)
 							throw Exc(in.Str() + "\n"  + t_("Node number #4 not found"));
 						p.id[3] = id;
@@ -424,10 +439,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				hd().T << 2*M_PI/w;
 			}
 			hd().Nf = hd().w.size();
-						
-			for (int ib = 0; ib < hd().Nb; ++ib) 
-				hd().potentials[ib].SetCount(hd().Nf);
-			
+					
 		} else if (IsNull(hd().Nh) && line.Find("DIRECTIONS") >= 0) {
 			int idini = (line.Find("STRUCTURE") >= 0) ? 1 : 0;
 			while (!in.IsEof()) {
@@ -484,6 +496,16 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			if (ib >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			
+			if (hd().pots[0][0].size() == 0) {
+				for (int ib = 0; ib < hd().Nb; ++ib) {
+					for (int ipot = 0; ipot < hd().pots[ib].size(); ++ipot) {
+						hd().pots[ib][ipot].SetCount(6);
+						for (int idf = 0; idf < 6; ++idf)
+							hd().pots[ib][ipot][idf].SetCount(hd().Nf, 0);
+					}
+				}
+			}
+			
 			int trans;
 			line = in.GetLine(4);
 			if (line.Find("TRANSLATIONAL FREEDOMS") >= 0)
@@ -521,36 +543,24 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 					f.Load(line.Mid(20));		// Removed the initial 1:( X, Y,Z)
 					
 					if (f.size() == 8) {
-						int number = f.GetInt(0);
+						int idPanel = f.GetInt(0);
 						
-						int idpot = -1;				
-						if (trans) {
-							hd().potentials[ib][ifrPot].Add();
-							idpot = hd().potentials[ib][ifrPot].size()-1;
-						} else {
-							if (hd().potentials[ib][ifrPot].size() > lastIdPot+1 && hd().potentials[ib][ifrPot][lastIdPot+1].panelId == number)
-								idpot = lastIdPot+1;	// Trick to accelerate idpot search
-							else {
-								for (int i = 0; i < hd().potentials[ib][ifrPot].size(); ++i) {
-									if (hd().potentials[ib][ifrPot][i].panelId == number)
-										idpot = i;
-								}
+						if (lastIdPot >= 0 && lastIdPot+1 < panelIDs.size() && panelIDs[lastIdPot+1] == idPanel)
+							lastIdPot++;
+						else
+							lastIdPot = panelIDs.Find(idPanel);
+						
+						if (lastIdPot >= 0) {
+							UArray<UArray<std::complex<double>>> &pan = hd().pots[ib][lastIdPot];
+							if (trans) {
+								pan[0][ifrPot] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+								pan[1][ifrPot] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+								pan[2][ifrPot] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+							} else {
+								pan[3][ifrPot] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+								pan[4][ifrPot] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+								pan[5][ifrPot] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
 							}
-							lastIdPot = idpot;
-						}
-						if (idpot < 0)
-							throw Exc(in.Str() + "\n"  + Format(t_("Element number %d not found"), number)); 		
-						
-						Hydro::Potential &pot = hd().potentials[ib][ifrPot][idpot];
-						pot.panelId = number;
-						if (trans) {
-							pot.vals[0] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
-							pot.vals[1] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
-							pot.vals[2] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
-						} else {
-							pot.vals[3] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
-							pot.vals[4] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
-							pot.vals[5] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
 						}
 					}
 				}
@@ -867,11 +877,47 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			hd().mdtype = 8;				// Momentum conservation/Far field
 	}
 	
+	if (!hd().meshes.IsEmpty()) {
+		// Removes mooring, Morison and other points unrelated with panels
+		for (Mesh &m : hd().meshes) {
+			m.mesh.GetPanelParams();
+			Surface::RemoveDuplicatedPointsAndRenumber(m.mesh.panels, m.mesh.nodes);
+		}
+		
+		// Checks the symmetry
+		hd().symX = hd().symY = false;
+		
+		Surface full = clone(hd().meshes[0].mesh);	
+		for (int i = 1; i < hd().meshes.size(); ++i)
+			full.Append(hd().meshes[i].mesh);
+		
+		full.GetPanelParams();
+		VolumeEnvelope env = full.GetEnvelope();
+	
+		if (abs(env.minX) < EPS_LEN || abs(env.maxX) < EPS_LEN) {
+			double xProjectionPos = full.GetAreaXProjection(true, false);
+			double xProjectionNeg = full.GetAreaXProjection(false, true);
+			if (abs(1-abs(xProjectionPos/xProjectionNeg)) > 0.2)
+				hd().symX = true;
+		}
+		if (abs(env.minY) < EPS_LEN || abs(env.maxY) < EPS_LEN) {
+			double yProjectionPos = full.GetAreaYProjection(true, false);
+			double yProjectionNeg = full.GetAreaYProjection(false, true);
+			if (abs(1-abs(yProjectionPos/yProjectionNeg)) > 0.2)
+				hd().symY = true;
+		}
+		
+		for (int ib = 0; ib < hd().Nb; ++ib) {
+			hd().meshes[ib].c0 = Point3D(hd().c0(0, ib), hd().c0(1, ib), hd().c0(2, ib));
+			hd().meshes[ib].cg = Point3D(hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
+		}
+	}
+ 			
 	return true;
 }
 
 bool Aqwa::Load_QTF() {
-	String fileName = ForceExt(hd().file, ".QTF");
+	String fileName = ForceExtSafer(hd().file, ".QTF");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) {
 		fileName = AFX(GetFileFolder(fileName), "analysis.qtf"); 
