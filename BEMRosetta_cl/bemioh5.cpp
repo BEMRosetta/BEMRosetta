@@ -39,9 +39,7 @@ void BemioH5::Load_H5() {
 	String fileName = ForceExtSafer(hd().file, ".h5");
 	
 	Hdf5File hfile;
-	
-	if (!hfile.Open(fileName, H5F_ACC_RDONLY))
-		throw Exc(Format(t_("file %s"), fileName) + "\n" + t_("File not found or blocked"));
+	hfile.Open(fileName, H5F_ACC_RDONLY);
 	
 	hd().dataFromW = true;
 	
@@ -266,8 +264,7 @@ bool BemioH5::Save(String file) {
 	
 	Hdf5File hfile;
 	
-	if (!hfile.Create(fileName))
-		return false;
+	hfile.Create(fileName);
 	
 	{
 		if (hfile.CreateGroup("bem_data", true)) {

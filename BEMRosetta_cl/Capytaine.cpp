@@ -40,8 +40,7 @@ void CapyNC::Load_NC() {
 	
 	Hdf5File hfile;
 	
-	if (!hfile.Open(fileName, H5F_ACC_RDONLY))
-		throw Exc(Format(t_("file %s"), fileName) + "\n" + t_("File not found or blocked"));
+	hfile.Open(fileName, H5F_ACC_RDONLY);
 	
 	hd().dataFromW = true;
 	
