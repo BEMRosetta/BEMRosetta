@@ -6,7 +6,7 @@
 #include <STEM4U/SeaWaves.h>
 #include "functions.h"
 #include "heal.h"
-
+#include <Xlnt/Xlnt.h>
 
 using namespace Eigen;
 
@@ -352,6 +352,126 @@ String Hydro::SpreadNegative() {
 		ret << s;
 	}
 	return ret;
+}
+
+void Hydro::MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan_nodes, Tensor<double, 4> &Bpan_nodes) const {
+	Apan_nodes.resize(points.size(), 6, 6, Nf);
+	Apan_nodes.setZero();
+	Bpan_nodes.resize(points.size(), 6, 6, Nf);
+	Bpan_nodes.setZero();
+	
+	auto GetClosest = [](const Point3D &p, const UVector<Point3D> &points)->int {
+		double dmin = std::numeric_limits<double>::max();
+		int ipmin = -1;
+		for (int ip = 0; ip < points.size(); ++ip) {
+			double d = Distance(p, points[ip]);
+			if (d < dmin) {
+				dmin = d;
+				ipmin = ip;
+			}
+		}
+		return ipmin;
+	};
+	
+	for (int idp = 0; idp < pots[ib].size(); ++idp) {
+		const Point3D &p = meshes[ib].mesh.panels[idp].centroidPaint;
+		int ip = GetClosest(p, points);
+		for (int ifr = 0; ifr < Nf; ++ifr) {
+			for (int idf1 = 0; idf1 < 6; ++idf1) {		
+				for (int idf2 = 0; idf2 < 6; ++idf2) {
+					Apan_nodes(ip, idf1, idf2, ifr) += Apan(ib, idp, idf1, idf2, ifr);
+					Bpan_nodes(ip, idf1, idf2, ifr) += Bpan(ib, idp, idf1, idf2, ifr);
+				}
+			}
+		}
+	}
+}
+
+void Hydro::SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
+		const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const {
+	g.SetNumHeaderRows(1);
+	g.SetRow(0);
+	int col = 0;
+	g.Set(Null, col++, t_("Id"));	g.AddCol(30);
+	g.Set(Null, col++, t_("x"));	g.AddCol(60);
+	g.Set(Null, col++, t_("y"));	g.AddCol(60);
+	g.Set(Null, col++, t_("z"));	g.AddCol(60);
+
+	if (Apan.size() > 0) {
+		if (onlyDiagonal) {
+			for (int c = 0; c < 6; ++c) 
+				g.Set(Null, col++, Format(t_("A_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
+			for (int c = 0; c < 6; ++c) 
+				g.Set(Null, col++, Format(t_("B_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
+		} else {
+			for (int r = 0; r < 6; ++r) 
+				for (int c = 0; c < 6; ++c) 
+					g.Set(Null, col++, Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
+			for (int r = 0; r < 6; ++r) 
+				for (int c = 0; c < 6; ++c) 
+					g.Set(Null, col++, Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
+		}
+	}
+			
+	for (int row = 0; row < ids.size(); ++row) {
+		int col = 0;
+		g.SetRow(row+1);
+		g.Set(Null, col++, ids[row]);
+		g.Set(Null, col++, points[row].x);
+		g.Set(Null, col++, points[row].y);
+		g.Set(Null, col++, points[row].z);
+		
+		if (Apan.size() > 0) {
+			if (onlyDiagonal) {
+				for (int c = 0; c < 6; ++c) 	
+					g.Set(Null, col++, Apan(row, c, c, ifr));
+				for (int c = 0; c < 6; ++c) 	
+					g.Set(Null, col++, Bpan(row, c, c, ifr));
+			} else {
+				for (int row = 0; row < ids.size(); ++row) {
+					for (int r = 0; r < 6; ++r) 
+						for (int c = 0; c < 6; ++c)
+							g.Set(Null, col++, Apan(row, r, c, ifr));	
+					for (int r = 0; r < 6; ++r) 
+						for (int c = 0; c < 6; ++c)
+							g.Set(Null, col++, Bpan(row, r, c, ifr));		
+				}
+			}
+		}
+	}
+}
+		
+void Hydro::SaveMap(String fileName, String type, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
+		const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const {
+	UArray<Grid> grid(Nf);
+	for (int ifr = 0; ifr < Nf; ++ifr) {
+		Grid &g = grid[ifr];
+		
+		SaveMap(g, ifr, onlyDiagonal, ids, points, Apan, Bpan);
+	}
+	
+	if (type == ".csv") {
+		for (int ifr = 0; ifr < Nf; ++ifr) { 
+			String folder = GetFileFolder(fileName);
+			String name = GetFileTitle(fileName);
+			String ext = GetFileExt(fileName);
+			String fname = AFX(folder, Format("%s_%.3f%s", name, w[ifr], ext));
+			SaveFile(fname, grid[ifr].GetString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
+		}
+	} else if (type == ".xlsx") {
+		xlnt::workbook wb;
+		for (int ifr = 0; ifr < Nf; ++ifr) { 
+			xlnt::worksheet ws;
+			String title = Format("%.3f", w[ifr]); 
+			if (ifr == 0)
+				ws = wb.active_sheet();	
+			else
+				ws = wb.create_sheet();
+			ws.title(~title);
+			XlsxFill(ws, grid[ifr], false);
+		}
+		wb.save(~fileName); 
+	}
 }
 
 void Hydro::AddWave(int ib, double dx, double dy) {

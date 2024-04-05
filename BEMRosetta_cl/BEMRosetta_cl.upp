@@ -9,7 +9,9 @@ uses
 	SysInfo,
 	plugin/sqlite3,
 	Hdf5,
-	plugin/zstd;
+	plugin/zstd,
+	NetCDF,
+	Xlnt;
 
 options(MSC) /bigobj;
 

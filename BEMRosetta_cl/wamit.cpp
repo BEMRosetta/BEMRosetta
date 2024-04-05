@@ -124,7 +124,9 @@ bool Wamit::Load(String file, Function <bool(String, int)> Status) {
 		hd().lastError = Format(t_("file %s "), file) + e;
 		return false;
 	}
-	
+	if (hd().c0.size() == 0)
+		hd().c0.setConstant(3, hd().Nb, 0);
+		
 	if (IsNum(hd().c0(0))) {		// In BEMRosetta, cg and cb are referred to global axis, not to XBODY
 		if (hd().cg.size() > 0 && IsNum(hd().cg(0))) 	
 			hd().cg += hd().c0;
@@ -1509,8 +1511,6 @@ bool Wamit::Load_1(String fileName) {
 		  	hd().B[i][j][ifr] = f.GetDouble(4);   	
 		}
 	}
-	if (hd().c0.size() == 0)
-		hd().c0.setConstant(3, hd().Nb, NaNDouble);
 	
 	return true;	
 }
@@ -1697,8 +1697,6 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		
         force.force[ih](ifr, idof) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
 	}
-	if (hd().c0.size() == 0)
-		hd().c0.setConstant(3, hd().Nb, NaNDouble);
 	
 	return true;
 }

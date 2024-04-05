@@ -1091,13 +1091,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(t_("Report: No file loaded"));
 							Grid grid;
 							wind[windid].Report(grid);
-							BEM::Print("\n" + grid.GetString(true, false, ' '));
+							BEM::Print("\n" + grid.GetString(true, false, " "));
 						} else if (param == "-ra" || param == "-reportall") {
 							if (wind.IsEmpty()) 
 								throw Exc(t_("Report: No file loaded"));
 							Grid grid;
 							wind.Report(grid);
-							BEM::Print("\n" + grid.GetString(true, false, ' '));
+							BEM::Print("\n" + grid.GetString(true, false, " "));
 						} else if (param == "-cl" || param == "-clear") {
 							wind.Clear();
 							windid = -1;

@@ -318,6 +318,7 @@ void MainBEM::Init() {
 	
 	CtrlLayout(menuMesh);
 	menuMesh.butSpreadNegative <<= THISBACK(OnSpreadNegative);
+	menuMesh.butMapNodes <<= THISBACK(OnMapNodes);
 	
 	OnOpt();
 	
@@ -1660,20 +1661,139 @@ void MainBEM::OnSpreadNegative() {
 }
 
 
-/*void MainBEM::OnUpdateCrot() {
+void MainBEM::OnMapNodes() {
 	try {
 		int id = GetIdOneSelected();
 		if (id < 0) 
 			return;
-			
-		menuAdvancedReference.Init(*this, id);
-		Add(menuAdvancedReference.LeftPosZ(260, 182).TopPosZ(23, 150));		// Values by hand
 		
+		const Hydro &hydro = Bem().hydros[id].hd();
+		if (hydro.meshes.IsEmpty() || hydro.meshes[0].mesh.panels.IsEmpty())
+			return;
+		
+		if (!hydro.IsLoadedPot())
+			return;
+
+		int ib = mainMesh.GetIb();
+		
+		mapNodes.Init(hydro, ib);
+		mapNodes.Execute();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
-	}	
-}*/
+	}
+}
 
+void MapNodes::Init(const Hydro &_hydro, int _ib) {
+	phydro = &_hydro;
+	ib = _ib;
+	
+	CtrlLayout(*this);
+	Title(Format(t_("Paste points and map to them the %d%s body mesh properties"), ib+1, Ordinal(ib+1)));
+	
+	butClose <<= THISBACK(OnClose);
+	butPaste <<= THISBACK(OnPasteNodes);
+	butMap <<= THISBACK(OnMapNodes);
+	butExport <<= THISBACK(OnExport);
+	
+	dropFreq.Clear();
+	for (int ifr = 0; ifr < _hydro.Nf; ++ifr)
+		dropFreq.Add(ifr, _hydro.w[ifr]);
+	dropFreq.SetIndex(0);
+	
+	dropExport.Clear();
+	dropExport.Add(".csv").Add(".xlsx");
+	dropExport.SetIndex(1);
+	
+	dropFreq.WhenAction = [&] {RefreshTable();};
+	
+	RefreshTable();
+}
+
+void MapNodes::RefreshTable() {
+	arrayNodes.Reset();
+	arrayNodes.SetLineCy(EditField::GetStdHeight()).MultiSelect().HeaderObject().Absolute();
+	arrayNodes.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodes, true);};
+	
+	Grid g;
+	phydro->SaveMap(g, dropFreq.GetData(), Bem().onlyDiagonal, ids, points, Apan, Bpan);
+	ArrayCtrlFill(arrayNodes, g, false);
+	
+	numNodes <<= arrayNodes.GetCount();
+}	
+	
+	
+void MapNodes::OnPasteNodes() {
+	String str = ReadClipboardText();
+	
+	CSVParameters par;
+	StringStream sin(str);
+	if (!GuessCSVStream(sin, true, par)) {
+		Exclamation(t_("Problem pasting nodes coordinates"));
+		return;
+	}
+	if (par.parameters.size() < 3 || par.parameters.size() > 4) {
+		Exclamation(t_("Incorrect number of columns"));
+		return;
+	}
+	
+	WaitCursor wait;
+	
+	ids.Clear();
+	points.Clear();
+	Apan = Tensor<double, 4>();
+	Bpan = Tensor<double, 4>();	
+	
+	sin.Seek(par.beginData);
+
+	const char *endptr;	
+	for (int row = 0; !sin.IsEof(); ++row) {
+		UVector<String> data = Split(sin.GetLine(), par.separator, par.repetition);
+		if (data.size() >= 3) {
+			Point3D &p = points.Add();
+			if (par.parameters.size() == 3) {
+				ids << row+1;
+				for (int c = 0; c < min(3, data.size()); ++c) 
+					p[c] = ScanDouble(data[c], &endptr, par.decimalSign == ',');
+			} else {
+				ids << ScanInt(data[0]);
+				for (int c = 0; c < min(3, data.size()); ++c) 
+					p[c] = ScanDouble(data[c+1], &endptr, par.decimalSign == ',');
+			}
+		}
+	}
+	
+	RefreshTable();
+}
+
+void MapNodes::OnMapNodes() {
+	phydro->MapNodes(ib, points, Apan, Bpan);
+	
+	RefreshTable();
+}
+
+void MapNodes::OnExport(){
+	String fileType = ~dropExport;
+	
+	FileSel fs;
+	
+	if (fileType == ".csv")
+		fs.Type("Comma-separated values", "*.csv");
+	else if (fileType == ".xlsx")
+		fs.Type("Spreadsheet", "*.xlsx");
+	fs.Type("Any file", "*.*");
+	fs.ActiveType(0);
+	fs.ActiveDir(GetDesktopFolder());
+	
+	if (!fs.ExecuteSaveAs(Format(t_("Save nodes data as %s"), fileType)))
+		return;
+	
+	WaitCursor wait;
+	
+	String fileName = ~fs;
+
+	phydro->SaveMap(fileName, fileType, Bem().onlyDiagonal, ids, points, Apan, Bpan);
+}
+	
 MenuAdvancedReference::MenuAdvancedReference() {
 	CtrlLayout(*this);
 	

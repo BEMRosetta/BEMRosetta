@@ -169,7 +169,8 @@ END_LAYOUT
 
 LAYOUT(MenuBEMMesh, 728, 56)
 	ITEM(Upp::LabelBox, dv___0, SetLabel(t_("Process")).LeftPosZ(4, 112).TopPosZ(0, 56))
-	ITEM(Upp::Button, butSpreadNegative, SetLabel(t_("Spread negative")).Tip(t_("Spreads negative values in the diagonal around closest panels")).LeftPosZ(12, 96).TopPosZ(24, 20))
+	ITEM(Upp::Button, butSpreadNegative, SetLabel(t_("Spread negative")).Tip(t_("Spreads negative values in the diagonal around closest panels")).LeftPosZ(12, 96).TopPosZ(16, 16))
+	ITEM(Upp::Button, butMapNodes, SetLabel(t_("Map to nodes")).Tip(t_("Map mesh values to set of nodes")).LeftPosZ(12, 96).TopPosZ(36, 16))
 END_LAYOUT
 
 LAYOUT(MenuPlotList, 112, 200)
@@ -830,5 +831,18 @@ LAYOUT(CompareParameters, 268, 236)
 	ITEM(Upp::Label, dv___1, SetLabel(t_("Parameters to compare series")).LeftPosZ(4, 156).TopPosZ(0, 19))
 	ITEM(Upp::Switch, swRelative, SetLabel(t_("Absolute\nRel. first\nRel. last")).LeftPosZ(4, 188).BottomPosZ(4, 16))
 	ITEM(Upp::Option, opMinRange, SetLabel(t_("Fit to min. range")).LeftPosZ(196, 108).BottomPosZ(4, 16))
+END_LAYOUT
+
+LAYOUT(MapNodes, 720, 388)
+	ITEM(Upp::ArrayCtrl, arrayNodes, HSizePosZ(0, 0).VSizePosZ(28, 32))
+	ITEM(Upp::Button, butPaste, SetLabel(t_("Paste Nodes")).Tip(t_("Paste nodes from x,y,z table")).LeftPosZ(4, 76).TopPosZ(4, 20))
+	ITEM(Upp::Button, butExport, SetLabel(t_("Export")).Tip(t_("Loads BEM file")).RightPosZ(4, 56).TopPosZ(4, 20))
+	ITEM(Upp::DropList, dropExport, RightPosZ(64, 96).TopPosZ(4, 20))
+	ITEM(Upp::Button, butClose, SetLabel(t_("Close")).RightPosZ(184, 56).BottomPosZ(460, 20))
+	ITEM(Upp::Button, butMap, SetLabel(t_("Map Nodes")).Tip(t_("Map the mesh to the nodes list")).LeftPosZ(344, 76).TopPosZ(4, 20))
+	ITEM(Upp::Label, dv___6, SetLabel(t_("Nodes")).LeftPosZ(92, 40).TopPosZ(4, 19))
+	ITEM(Upp::EditInt, numNodes, SetEditable(false).LeftPosZ(132, 36).TopPosZ(4, 19))
+	ITEM(Upp::Label, labFreq, SetLabel(t_("ω [rad/s]:")).LeftPosZ(180, 52).TopPosZ(4, 19))
+	ITEM(Upp::DropList, dropFreq, LeftPosZ(232, 68).TopPosZ(4, 19))
 END_LAYOUT
 

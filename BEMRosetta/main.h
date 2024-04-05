@@ -1208,6 +1208,7 @@ public:
 	
 	void Init();
 	bool Load(BEM &bem);
+	int GetIb()	{return tab.Get();}
 	
 private:
 	TabCtrl tab;
@@ -1394,6 +1395,27 @@ private:
 	MainSetupFOAMM *setup = nullptr;
 };
 
+class MapNodes : public WithMapNodes<TopWindow> {
+public:
+	typedef MapNodes CLASSNAME;	
+	
+	void Init(const Hydro &_hydro, int _ib);
+	void OnPasteNodes();
+	void OnMapNodes();
+	void RefreshTable();
+	void OnExport();
+	void OnClose() {Close();}
+	
+private:
+	const Hydro *phydro;
+	int ib;
+	
+	UVector<int> ids;
+	UVector<Point3D> points;
+	Tensor<double, 4> Apan;		// [Np][6][6][Nf]	Added mass
+	Tensor<double, 4> Bpan;		// [Np][6][6][Nf]	Radiation damping
+};
+
 class MainBEM : public MainBEMMesh {
 public:
 	typedef MainBEM CLASSNAME;
@@ -1418,6 +1440,7 @@ public:
 	void OnAverage();
 	void OnConvergence();
 	void OnSpreadNegative();
+	void OnMapNodes();
 	//void OnUpdateCrot();
 	void OnUpdateCwave();
 	void OnDeleteHeadingsFrequencies();
@@ -1449,6 +1472,7 @@ public:
 	WithMenuPlot<StaticRect> menuPlot;
 	WithMenuBEMMesh<StaticRect> menuMesh;
 	MenuFOAMM menuFOAMM;
+	MapNodes mapNodes;
 	
 	MainSummaryCoeff mainSummary;
 	MainABForce mainA;
