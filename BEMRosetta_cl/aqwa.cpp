@@ -44,8 +44,8 @@ bool Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		for (int i = 0; i < hd().Nb; ++i)
 			hd().dof[i] = 6;
 			
-		for (int ib = 0; ib < hd().Nb; ++ib)		// Translates all bodies phase to 0,0
-			hd().AddWave(ib, -hd().c0(0, ib), -hd().c0(1, ib));
+		for (int ib = 0; ib < hd().Nb; ++ib)					// Translates all bodies phase to 0,0
+			hd().AddWave(ib, -hd().c0(0, ib), -hd().c0(1, ib));	// Phase is translated -c0_x,-c0_y
 	
 		hd().x_w = hd().y_w = 0;
 			
