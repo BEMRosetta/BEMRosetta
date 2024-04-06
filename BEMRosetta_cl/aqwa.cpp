@@ -475,7 +475,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	hd().Initialize_Forces(hd().rao);
 	
 	int ifrPot = Null;
-	double lastPotFreq;
+	double lastPotFreq = Null;
 	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -484,7 +484,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			double adv = in.GetLineNumber()/nlines;
 			if (adv > step) {
 				step += 0.01;
-				if (!Status("Loading", 100*adv))
+				if (!Status("Loading", int(100*adv)))
 					throw Exc(t_("Stop by user"));
 			}
 		}
