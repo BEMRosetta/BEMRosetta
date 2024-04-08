@@ -35,6 +35,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [OrcaWave](https://www.orcina.com/orcaflex/): .yml
     * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
+    * [Capytaine](https://github.com/mancellin/capytaine): .nc
     * [Bemio](https://wec-sim.github.io/bemio/api.html#writing-the-data-to-the-standard-bemio-format): .h5
     * [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
     * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .out
