@@ -2,264 +2,208 @@
 // Copyright 2020 - 2023, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
-#include <Hdf5/hdf5.h>
+#include <NetCDF/NetCDF.h>
 
-bool CapyNC::Load(String file, double) {
-	hd().file = file;
-	hd().name = GetFileTitle(file);
-	hd().dimen = true;
-	hd().len = 1;
-	hd().code = Hydro::CAPYNC;
-	hd().Nb = Null;
-	hd().x_w = hd().y_w = 0;
-	
+String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
-
 		BEM::Print("\n- " + S(t_("NC file")));
 		
-		Load_NC();
+		String name = GetFileTitle(file);
+	
+		Upp::NetCDFFile cdf(file);
 		
-		if (IsNull(hd().Nb))
-			throw Exc(t_("No data found"));
-	
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
-		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 6;
-	} catch (Exc e) {
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
-		return false;
-	}
-	
-	return true;
-}
+		UVector<double> _rho;
+		cdf.GetDouble("rho", _rho);
 
-void CapyNC::Load_NC() {
-	String fileName = ForceExtSafer(hd().file, ".nc");
-	
-	Hdf5File hfile;
-	
-	hfile.Open(fileName, H5F_ACC_RDONLY);
-	
-	hd().dataFromW = true;
-	
-	hfile.GetDouble("omega", hd().w);
-	hfile.GetDouble("period", hd().T);
-	
-	for (hd().Nb = 0; hfile.ExistGroup(Format("body%d", hd().Nb+1)); hd().Nb++) 
-		;	
-	
-	{
-		hfile.ChangeGroup("bem_data");
-		String str = ToLower(hfile.GetString("code"));
-		if (str.Find("wamit") >= 0)
-			hd().code = Hydro::WAMIT;
-		else if (str.Find("hams") >= 0)
-			hd().code = Hydro::HAMS;
-		else if (str.Find("nemoh") >= 0)
-			hd().code = Hydro::NEMOH;
-		else if (str.Find("aqwa") >= 0)
-			hd().code = Hydro::AQWA;
-		else if (str.Find("capytaine") >= 0)
-			hd().code = Hydro::CAPYTAINE;
+		UVector<double> _h;
+		cdf.GetDouble("water_depth", _h);
+		for (auto &hh : _h) {
+			if (hh == std::numeric_limits<double>::infinity())
+				hh = -1;
+		}
 		
-		hfile.UpGroup();
-	}	
-	{
-		hfile.ChangeGroup("simulation_parameters");
+		UVector<double> _head;
+		cdf.GetDouble("wave_direction", _head);
+		for (auto &hh : _head)
+			hh = ToDeg(hh);
+		int Nh = _head.size();
 		
-		hfile.GetDouble("T", hd().T);
-		hfile.GetDouble("w", hd().w);
-		hd().Nf = hd().w.size();
-		hfile.GetDouble("wave_dir", hd().head);
-		hd().Nh = hd().head.size();
-		hd().rho = hfile.GetDouble("rho");
-		hd().g = hfile.GetDouble("g");
-		hd().dimen = hfile.GetDouble("scaled") != 0.;
-		
-		if (hfile.GetType("water_depth") == H5T_STRING) {
-			String str = hfile.GetString("water_depth");
-			if (str == "infinite")
-				hd().h = -1;
-			else
-				throw Exc(Format("Unknown depth '%s'", str));
-		} else 
-			hd().h = hfile.GetDouble("water_depth");
+		UVector<double> _w;
+		cdf.GetDouble("omega", _w);
+		int Nf = _w.size();
 
-		hfile.UpGroup();
-	}
-	
-	hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
-	
-	hd().Initialize_AB(hd().A);
-	UArray<UArray<VectorXd>> a;		
-	hd().Initialize_AB(a);
-	
-	hd().Initialize_AB(hd().B);
-	UArray<UArray<VectorXd>> b;		
-	hd().Initialize_AB(b);
-	
-	hd().Initialize_Forces();
-	Hydro::Forces ex, sc, fk;	
-	hd().Initialize_Forces(ex);	
-	hd().Initialize_Forces(sc); 
-	hd().Initialize_Forces(fk);
-	
-	hd().names.SetCount(hd().Nb);
-	hd().Vo.SetCount(hd().Nb);
-	hd().dof.SetCount(hd().Nb);
-	hd().cb.resize(3, hd().Nb);
-	hd().cg.resize(3, hd().Nb);
-	hd().c0.setConstant(3, hd().Nb, 0);
-	hd().C.SetCount(hd().Nb);
-	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0);
-	hd().M.SetCount(hd().Nb);
-	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().M[ib].setConstant(6, 6, 0);
+		UVector<double> _T;
+		cdf.GetDouble("period", _T);
 
-	auto LoadComponentsAB = [&](UArray<UArray<VectorXd>> &a, int ib) {
-		MatrixXd data;
-		if (hfile.ChangeGroup("components")) {
-			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6*hd().Nb; ++c) {	
-					hfile.GetDouble(Format("%d_%d", r+1, c+1), data);
-					if (data.rows() != hd().Nf && data.cols() != 2)
-						throw Exc("Wrong data dimension reading added_mass components");
-					for (int iw = 0; iw < hd().Nf; ++iw)
-						a[ib*6 + r][c](iw) = data(iw, 1);
-				}
-			}
-			hfile.UpGroup();	
-		}		
-	};
-	auto LoadAllAB = [&](UArray<UArray<VectorXd>> &a, int ib) {
-		MultiDimMatrixRowMajor<double> d;
-		hfile.GetDouble("all", d);
-		for (int r = 0; r < 6; ++r) 
-			for (int c = 0; c < 6*hd().Nb; ++c) 
-				for (int iw = 0; iw < hd().Nf; ++iw) 
-					a[r + 6*ib][c](iw) = d(r, c, iw);
-	};
-	
-	auto LoadForce = [&](Hydro::Forces &f, int ib) {
-		MatrixXd data;
-		if (hfile.ChangeGroup("components")) {
-			if (hfile.ChangeGroup("re")) {
-				for (int idf = 0; idf < 6; ++idf) {
-					for (int ih = 0; ih < hd().Nh; ++ih) {
-						hfile.GetDouble(Format("%d_%d", idf+1, ih+1), data);
-						if (data.rows() != hd().Nf && data.cols() != 2)
-							throw Exc("Wrong data dimension reading force real component");
-						for (int iw = 0; iw < hd().Nf; ++iw)
-							f.force[ih](iw, 6*ib + idf).real(data(iw, 1));
-					}
-				}
-				hfile.UpGroup();	
-			}
-			if (hfile.ChangeGroup("im")) {
-				for (int idf = 0; idf < 6; ++idf) {
-					for (int ih = 0; ih < hd().Nh; ++ih) {
-						hfile.GetDouble(Format("%d_%d", idf+1, ih+1), data);
-						if (data.rows() != hd().Nf && data.cols() != 2)
-							throw Exc("Wrong data dimension reading force imag component");
-						for (int iw = 0; iw < hd().Nf; ++iw)
-							f.force[ih](iw, 6*ib + idf).imag(data(iw, 1));
-					}
-				}
-				hfile.UpGroup();	
-			}
-			hfile.UpGroup();	
-		}
-	};
-	auto LoadForceAll = [&](Hydro::Forces &f, int ib) {
-		MultiDimMatrixRowMajor<double> d;
-		if (hfile.ExistDataset("re")) {
-			hfile.GetDouble("re", d);
-			for (int idf = 0; idf < 6; ++idf) 
-				for (int ih = 0; ih < hd().Nh; ++ih) 
-					for (int iw = 0; iw < hd().Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf).real(d(idf, ih, iw));		
-		}
-		if (hfile.ExistDataset("im")) {
-			hfile.GetDouble("im", d);
-			for (int idf = 0; idf < 6; ++idf) 
-				for (int ih = 0; ih < hd().Nh; ++ih) 
-					for (int iw = 0; iw < hd().Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf).imag(d(idf, ih, iw));			
-		}
-	};
+		int numaxisAB = 3;
+		if (_rho.size() > 1)
+			numaxisAB++;
+		if (_h.size() > 1)
+			numaxisAB++;
 		
-	MatrixXd data;
-	
-	for (int ib = 0; ib < hd().Nb; ++ib) {
-		if (hfile.ChangeGroup(Format("body%d", ib+1))) {
-			if (hfile.ChangeGroup("properties")) {
-				hd().names[ib] = hfile.GetString("name");
-				hd().Vo[ib] = hfile.GetDouble("disp_vol");
-				hd().dof[ib] = int(hfile.GetDouble("dof"));
-				hfile.GetDouble("cb", data);
-				if (data.rows() != 3 && data.cols() != 1)
-					throw Exc("Wrong data dimension in cb");
-				hd().cb.col(ib) = data;
-				hfile.GetDouble("cg", data);
-				if (data.rows() != 3 && data.cols() != 1)
-					throw Exc("Wrong data dimension in cg");
-				hd().cg.col(ib) = data;
-			
-				hfile.UpGroup();	
-			}
-			if (hfile.ChangeGroup("hydro_coeffs")) {
-				if (hfile.ChangeGroup("added_mass")) {
-					LoadAllAB(hd().A, ib);
-					LoadComponentsAB(a, ib);	
-						
-					hfile.GetDouble("inf_freq", data);
-					if (data.rows() != 6 && data.cols() != 6*hd().Nb)
-						throw Exc("Wrong data dimension in inf_freq");
-					hd().Ainf.block(ib*6, 0, 6, 6*hd().Nb) = data;	
-						
-					hfile.UpGroup();	
-				}
-				if (hfile.ChangeGroup("radiation_damping")) {
-					LoadAllAB(hd().B, ib);
-					LoadComponentsAB(b, ib);
-						
-					hfile.UpGroup();	
-				}
-				if (hfile.ChangeGroup("excitation")) {
-					LoadForce(hd().ex, ib);
-					LoadForceAll(ex, ib);
-					if (hfile.ChangeGroup("froude-krylov")) {
-						LoadForce(hd().fk, ib);
-						LoadForceAll(fk, ib);
-						hfile.UpGroup();		
-					}
-					if (hfile.ChangeGroup("scattering")) {
-						LoadForce(hd().sc, ib);
-						LoadForceAll(sc, ib);
-						hfile.UpGroup();	
-					}
-					hfile.UpGroup();	
-				}
-				hfile.GetDouble("linear_restoring_stiffness", hd().C[ib]);
+		MultiDimMatrixRowMajor<double> a;
+		cdf.GetDouble("added_mass", a);
+		ASSERT(numaxisAB == a.GetNumAxis());
+
+		MultiDimMatrixRowMajor<double> b;
+		cdf.GetDouble("radiation_damping", b);
+		ASSERT(numaxisAB == b.GetNumAxis());
+		
+		int numaxisF = 4;
+		if (_rho.size() > 1)
+			numaxisF++;
+		if (_h.size() > 1)
+			numaxisF++;
+		
+		MultiDimMatrixRowMajor<double> sc;
+		cdf.GetDouble("diffraction_force", sc);
+		ASSERT(numaxisF == sc.GetNumAxis());
+		
+		MultiDimMatrixRowMajor<double> fk;
+		cdf.GetDouble("Froude_Krylov_force", fk);
+		ASSERT(numaxisF == fk.GetNumAxis());
+					
+		if (_rho.size() == 1) {		// Added to simplify handling later
+			a.InsertAxis(0, 0);
+			b.InsertAxis(0, 0);
+			sc.InsertAxis(0, 0);
+			fk.InsertAxis(0, 0);
+		}
+		if (_h.size() == 1) {
+			a.InsertAxis(1, 0);
+			b.InsertAxis(1, 0);
+			sc.InsertAxis(1, 0);
+			fk.InsertAxis(1, 0);
+		}
+		
+		int Nb = a.size(3)/6;
+		
+		ASSERT(a.size(2) == Nf && a.size(3) == 6*Nb && a.size(4) == 6*Nb);
+		ASSERT(b.size(2) == Nf && b.size(3) == 6*Nb && b.size(4) == 6*Nb);
 				
-				hfile.UpGroup();	
-			}
-			hfile.UpGroup();	
+		ASSERT(sc.size(2) == 2 && sc.size(3) == Nf && sc.size(4) == Nh && sc.size(5) == 6*Nb);
+		ASSERT(fk.size(2) == 2 && fk.size(3) == Nf && fk.size(4) == Nh && fk.size(5) == 6*Nb);
+		
+		UArray<MatrixXd> M;
+		if (cdf.ExistVar("inertia_matrix")) {
+			MatrixXd _M;
+			cdf.GetDouble("inertia_matrix", _M);
+			M.SetCount(Nb);
+			for (int ib = 0; ib < Nb; ++ib)
+				M[ib] = _M.block(ib*6, ib*6, 6, 6);
 		}
-	}
+		
+		UArray<MatrixXd> C;
+		if (cdf.ExistVar("hydrostatic_stiffness")) {
+			MatrixXd _C;
+			cdf.GetDouble("hydrostatic_stiffness", _C);
+			C.SetCount(Nb);
+			for (int ib = 0; ib < Nb; ++ib)
+				C[ib] = _C.block(ib*6, ib*6, 6, 6);
+		}
+		
+		MatrixXd c0;
+		if (cdf.ExistVar("rotation_center")) {
+			cdf.GetDouble("rotation_center", c0);
+			c0.transposeInPlace();
+			ASSERT(c0.rows() == 3 && c0.cols() == Nb);
+		} else 
+			c0 = MatrixXd::Zero(3, Nb);
+		
+		String bodies = cdf.GetString("body_name");
+		UVector<String> bds = Split(bodies, "+");			
+		
+		auto LoadAB = [&](const MultiDimMatrixRowMajor<double> &_a, UArray<UArray<VectorXd>> &a, int irho, int ih, int ib) {
+			for (int r = 0; r < 6; ++r) 
+				for (int c = 0; c < 6*Nb; ++c) 
+					for (int iw = 0; iw < Nf; ++iw) 
+						a[r + 6*ib][c](iw) = _a(irho, ih, iw, r, c);
+		};
+		auto LoadForce = [&](const MultiDimMatrixRowMajor<double> &_f, Hydro::Forces &f, int irho, int _ih, int ib) {
+			for (int idf = 0; idf < 6; ++idf) 
+				for (int ih = 0; ih < Nh; ++ih) 
+					for (int iw = 0; iw < Nf; ++iw) 
+						f.force[ih](iw, 6*ib + idf) = std::complex<double>(_f(irho, _ih, 0, iw, ih, idf + 6*ib), 
+																		   _f(irho, _ih, 1, iw, ih, idf + 6*ib));
+		};
 	
-	if (hd().IsLoadedA())
-		hd().Compare_A(a);
-	if (hd().IsLoadedB())
-		hd().Compare_B(b);
-	if (hd().IsLoadedFex())
-		hd().Compare_F(hd().ex, ex, "Excitation");
-	if (hd().IsLoadedFsc())
-		hd().Compare_F(hd().sc, sc, "Scattering");
-	if (hd().IsLoadedFfk())
-		hd().Compare_F(hd().fk, fk, "Froude-Krylov");
+		for (int irho = 0; irho < _rho.size(); ++irho) {
+			for (int ih = 0; ih < _h.size(); ++ih) {
+				Hydro &hy = hydros.Create<CapyNC>(bem).hd();
+				
+				hy.file = file;
+				hy.name = name;
+				if (!_rho.IsEmpty())
+					hy.name + Format("_rho%.0f", _rho[irho]);
+				if (!_h.IsEmpty())
+					hy.name + Format("_h%.0f", _h[ih]);
+				hy.dimen = true;
+				hy.len = 1;
+				hy.code = Hydro::CAPYNC;
+		
+				hy.rho = _rho[irho];
+				hy.h = _h[ih];
+				
+				hy.Nb = Nb;
+				
+				hy.dataFromW = true;
+				
+				hy.w = clone(_w);
+				hy.T = clone(_T);
+				hy.Nf = Nf;
+				hy.head = clone(_head);
+				hy.Nh = Nh;
+				hy.M = clone(M);
+				hy.C = clone(C);
+				hy.c0 = clone(c0);
+				
+				hy.Initialize_AB(hy.A);
+				hy.Initialize_AB(hy.B);
+				hy.Initialize_Forces();
+				
+				for (int ib = 0; ib < Nb; ++ib) {
+					LoadAB(a, hy.A, irho, ih, ib);
+					LoadAB(b, hy.B, irho, ih, ib);
+					LoadForce(sc, hy.sc, irho, ih, ib);
+					LoadForce(fk, hy.fk, irho, ih, ib);
+				}
+				hy.GetFexFromFscFfk();
+				
+				hy.names.SetCount(Nb);
+				for (int i = 0; i < min(bds.size(), Nb); ++i)
+					hy.names[i] = bds[i];
+				
+				hy.dof.Clear();	hy.dof.SetCount(hy.Nb, 0);
+				for (int i = 0; i < hy.Nb; ++i)
+					hy.dof[i] = 6;
+			}
+		}
+	} catch (Exc e) {
+		return e;
+	}
+	return String();
 }
+
+
+// diffraction_force		rexim x Nf x Nh x 6xNb
+
+
+// omega					Nf
+// period
+// wave_direction			Nh
+// inertia_matrix			6xNb x 6xNb
+// hydrostatic_stiffness
+// added_mass				2 x 2 x Nf x 6xNb x 6xNb
+// radiation_damping
+// diffraction_force		2 x 2 x re/im x Nf x Nh x 6xNb
+// Froude_Krylov_force
+// excitation_force (no esta siempre)
+
+// A						[6*Nb][6*Nb][Nf]
+// C						[Nb](6, 6)
+// M
+// Force					[Nh](Nf, 6*Nb) 
+  
+
 

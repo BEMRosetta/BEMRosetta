@@ -323,7 +323,7 @@ public:
 	void SortHeadings();
 	
 	void MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan, Tensor<double, 4> &Bpan) const;
-	void SaveMap(String fileName, String type, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
+	void SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
 				 const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const;
 	void SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
 		const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const;
@@ -1337,14 +1337,13 @@ private:
 	void Load_H5();
 };
 
+String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem);
+
 class CapyNC : public HydroClass {
 public:
 	CapyNC(const BEM &bem, Hydro *hydro = 0) : HydroClass(bem, hydro) {}
 	bool Load(String file, double rho = Null);
 	virtual ~CapyNC() noexcept {}	
-	
-private:
-	void Load_NC();
 };
 
 UVector<int> NumSets(int num, int numsets);	

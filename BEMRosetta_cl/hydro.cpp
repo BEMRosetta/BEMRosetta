@@ -441,36 +441,48 @@ void Hydro::SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids
 	}
 }
 		
-void Hydro::SaveMap(String fileName, String type, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
+void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
 		const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const {
-	UArray<Grid> grid(Nf);
-	for (int ifr = 0; ifr < Nf; ++ifr) {
-		Grid &g = grid[ifr];
+	if (IsNull(ifr)) {
+		UArray<Grid> grid(Nf);
+		for (int ifr = 0; ifr < Nf; ++ifr) 
+			SaveMap(grid[ifr], ifr, onlyDiagonal, ids, points, Apan, Bpan);
 		
-		SaveMap(g, ifr, onlyDiagonal, ids, points, Apan, Bpan);
-	}
-	
-	if (type == ".csv") {
-		for (int ifr = 0; ifr < Nf; ++ifr) { 
-			String folder = GetFileFolder(fileName);
-			String name = GetFileTitle(fileName);
-			String ext = GetFileExt(fileName);
-			String fname = AFX(folder, Format("%s_%.3f%s", name, w[ifr], ext));
-			SaveFile(fname, grid[ifr].GetString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
+		if (type == ".csv") {
+			for (int ifr = 0; ifr < Nf; ++ifr) { 
+				String folder = GetFileFolder(fileName);
+				String name = GetFileTitle(fileName);
+				String ext = GetFileExt(fileName);
+				String fname = AFX(folder, Format("%s_%.3f%s", name, w[ifr], ext));
+				SaveFile(fname, grid[ifr].GetString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
+			}
+		} else if (type == ".xlsx") {
+			xlnt::workbook wb;
+			for (int ifr = 0; ifr < Nf; ++ifr) { 
+				xlnt::worksheet ws;
+				String title = Format("%.3f", w[ifr]); 
+				if (ifr == 0)
+					ws = wb.active_sheet();	
+				else
+					ws = wb.create_sheet();
+				ws.title(~title);
+				XlsxFill(ws, grid[ifr], false);
+			}
+			wb.save(~fileName); 
 		}
-	} else if (type == ".xlsx") {
-		xlnt::workbook wb;
-		for (int ifr = 0; ifr < Nf; ++ifr) { 
-			xlnt::worksheet ws;
-			String title = Format("%.3f", w[ifr]); 
-			if (ifr == 0)
-				ws = wb.active_sheet();	
-			else
-				ws = wb.create_sheet();
-			ws.title(~title);
-			XlsxFill(ws, grid[ifr], false);
+	} else {
+		Grid grid;
+		SaveMap(grid, ifr, onlyDiagonal, ids, points, Apan, Bpan);
+		
+		if (type == ".csv") 
+			SaveFile(fileName, grid.GetString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
+		else if (type == ".xlsx") {
+			xlnt::workbook wb;
+			xlnt::worksheet ws = wb.active_sheet();	
+			ws.title("Data");
+			XlsxFill(ws, grid, false);
+			wb.save(~fileName); 
 		}
-		wb.save(~fileName); 
 	}
 }
 

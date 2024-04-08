@@ -1791,7 +1791,11 @@ void MapNodes::OnExport(){
 	
 	String fileName = ~fs;
 
-	phydro->SaveMap(fileName, fileType, Bem().onlyDiagonal, ids, points, Apan, Bpan);
+	int freqId = Null;
+	if (opSaveAll)	
+ 		freqId = dropFreq.GetData();
+	
+	phydro->SaveMap(fileName, fileType, freqId, Bem().onlyDiagonal, ids, points, Apan, Bpan);
 }
 	
 MenuAdvancedReference::MenuAdvancedReference() {

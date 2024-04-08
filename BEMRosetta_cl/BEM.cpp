@@ -2313,12 +2313,9 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
 	} else if (ext == ".nc") {
-		CapyNC &data = hydros.Create<CapyNC>(*this);
-		if (!data.Load(file)) {
-			String error = data.hd().GetLastError();
-			hydros.SetCount(hydros.size()-1);
+		String error = CapyNC_Load(file, hydros, *this);
+		if (!error.IsEmpty()) 
 			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
-		}
 	} else if (ext == ".owd") 
 		throw Exc(t_("OrcaWAVE .owd binary format is not supported.\nHowever OrcaFLEX .yml is supported.\nTo get it, load the .owd file in OrcaFlex and save it as .yml"));
 	else 
