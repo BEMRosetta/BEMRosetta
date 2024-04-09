@@ -1193,6 +1193,8 @@ bool Nemoh::Load_Radiation(String fileName) {
 			if (dcase.IsDof(ibody, idof)) {
 				for (int ifr = 0; ifr < hd().Nf; ++ifr) {	
 					f.Load(in.GetLine());
+					if (IsNull(f.GetDouble_nothrow(0)))
+						throw Exc(in.Str() + "\n"  + t_("Frecuency not found. May be radiation file doesn't match with Nemoh.cal file"));		
 					int col = 1;
 					for (int idof2 = 0; idof2 < 6; ++idof2) {			
 						if (dcase.IsDof(ibody, idof2)) {
@@ -1244,6 +1246,8 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			if (line.StartsWith("Zone") || line.StartsWith("angle"))
 				break;
 			f.Load(line);
+			if (IsNull(f.GetDouble_nothrow(0)))
+				throw Exc(in.Str() + "\n"  + t_("Frecuency not found. May be excitation file doesn't match with Nemoh.cal file"));		
 			int il = 0;
 			for (int ib = 0; ib < hd().Nb; ++ib) {
 				for (int ibdof = 0; ibdof < 6; ++ibdof) {

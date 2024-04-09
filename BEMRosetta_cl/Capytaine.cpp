@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2023, the BEMRosetta author and contributors
+// Copyright 2020 - 2024, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <NetCDF/NetCDF.h>
@@ -11,7 +11,7 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 		
 		String name = GetFileTitle(file);
 	
-		Upp::NetCDFFile cdf(file);
+		NetCDFFile cdf(file);
 		
 		UVector<double> _rho;
 		cdf.GetDouble("rho", _rho);
@@ -125,7 +125,7 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 				for (int ih = 0; ih < Nh; ++ih) 
 					for (int iw = 0; iw < Nf; ++iw) 
 						f.force[ih](iw, 6*ib + idf) = std::complex<double>(_f(irho, _ih, 0, iw, ih, idf + 6*ib), 
-																		   _f(irho, _ih, 1, iw, ih, idf + 6*ib));
+																		   -_f(irho, _ih, 1, iw, ih, idf + 6*ib));//-Imaginary to follow Wamit
 		};
 	
 		for (int irho = 0; irho < _rho.size(); ++irho) {

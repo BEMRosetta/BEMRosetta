@@ -41,7 +41,7 @@ file
 	orcawave.cpp,
 	diodore.cpp,
 	bemioh5.cpp,
-	Capytaine.cpp,
+	capytaine.cpp,
 	deeplineswind.cpp,
 	foamm.cpp,
 	Fast readonly separator,
