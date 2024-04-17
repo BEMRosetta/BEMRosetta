@@ -32,7 +32,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
   * Load-View
     * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst, .7, .8, .9, .12s, .12d
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
-    * [OrcaWave](https://www.orcina.com/orcaflex/): .yml
+    * [OrcaWave](https://www.orcina.com/orcaflex/): .yml, .owr (requires OrcaWave installed)
     * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [Capytaine](https://github.com/mancellin/capytaine): .nc
@@ -71,6 +71,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
     * [SeaFEM/TDyn](http://www.compassis.com/compass/en/Productos/SeaFEM): .msh
     * [GMSH](https://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format): .msh
+    * [OrcaWave](https://www.orcina.com/orcaflex/): .owr (requires OrcaWave installed)
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
     * [HAMS](https://github.com/YingyiLiu/HAMS): HullMesh.pnl, WaterplaneMesh.pnl
