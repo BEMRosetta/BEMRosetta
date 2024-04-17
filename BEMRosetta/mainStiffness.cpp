@@ -88,7 +88,7 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 		
 		for (int nmat = 0; nmat < Nb; ++nmat) {
 			for (int i = 0; i < 2; ++i) 
-				array.AddColumn("", (what == Hydro::MAT_K || what == Hydro::MAT_K2) ? max(20, len) : max(70, len));	
+				array.AddColumn("", (what == Hydro::MAT_K /*|| what == Hydro::MAT_K2*/) ? max(20, len) : max(70, len));	
 			for (int i = 2; i < 6; ++i)
 				array.AddColumn("", max(70, len));
 			if (Nb > 1 && nmat < Nb-1) 

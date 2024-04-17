@@ -1,4 +1,4 @@
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+	// Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include "functions.h"
@@ -609,13 +609,13 @@ bool Wamit::Load_out(String fileName) {
 			
 			if (Hydro::IsLoadedMD(md7) && md7[0][0][0][md7[0][0][0].size()/2] > 0.) {
 				hd().md = pick(md7);
-				hd().mdtype = 7;
+				hd().mdtype = hd().qtftype = 7;
 			} else if (Hydro::IsLoadedMD(md9) && md9[0][0][0][md9[0][0][0].size()/2] > 0.) {
 				hd().md = pick(md9);
-				hd().mdtype = 9;
+				hd().mdtype = hd().qtftype = 9;
 			} else if (Hydro::IsLoadedMD(md8) && md8[0][0][0][md8[0][0][0].size()/2] > 0.) {
 				hd().md = pick(md8);
-				hd().mdtype = 8;
+				hd().mdtype = hd().qtftype = 8;
 			}
 			
 			if (found2ndorder) {
@@ -1184,6 +1184,22 @@ bool Wamit::Load_frc2(String fileName) {
 			f.GetLine();
 			for (int c = 0; c < 6*Nb; ++c) 
 				hd().Dlin(r, c) = f.GetDouble(c);
+		}
+	}
+
+	f.GetLine();
+	int imoor = f.GetInt(0);
+	if (imoor < 0 || imoor > 1)
+		throw Exc(in.Str() + "\n" + Format(t_("Wrong ISTIF %d"), imoor));
+	if (imoor == 1) {
+		hd().Cmoor.SetCount(Nb);
+		for (int ib = 0; ib < Nb; ++ib) {
+			hd().Cmoor[ib].resize(6, 6);
+			for (int r = 0; r < 6; ++r) {
+				f.GetLine();
+				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
+					hd().Cmoor[ib](r, c) = f.GetDouble(c + 6*ib);
+			}
 		}
 	}
 	return true;
@@ -1800,12 +1816,6 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 }
 
 bool Wamit::Load_789(String fileName) {
-	/* The priority is:
-										Extension	DOF				Accuracy	Run time	Control surface
-	Control surface 					.7			1,2,3,4,5,6		Better		More		Yes
-	Pressure integration/Near field		.9			1,2,3,4,5,6		Less		Less		No
-	Momentum conservation/Far field		.8			1,2,6									No				*/
-	
 	UArray<UArray<UArray<VectorXd>>> md;
 	if (Load_789_0(fileName, 7, md)) {
 		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
@@ -1840,7 +1850,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	if (!in.IsOpen())
 		return false;
 	
-	hd().mdtype = type;
+	hd().mdtype = hd().qtftype = type;
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;

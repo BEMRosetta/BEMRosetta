@@ -282,10 +282,11 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	int numOrcaTries = 4;
 #endif
 
-	bool firstTime = !bem.LoadSerializeJson();
-	if (firstTime)
-		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
-	
+	String errorJson = bem.LoadSerializeJson();
+	bool firstTime = !errorJson.IsEmpty();
+	if (firstTime) 
+		Cout() << "\n" << errorJson << "\n" << t_("BEM configuration data is not loaded. Defaults values are set"); 
+
 	
 	UVector<String> headParams(2);
 	

@@ -10,6 +10,10 @@
 using namespace Eigen;
 
 
+String GetBEMRosettaDataFolder() {
+	return AFX(GetAppDataFolder(), "BEMRosetta");
+}
+
 double GetKirfMaxT(const VectorXd &w) {
     return M_PI/((Last(w) - First(w))/(w.size()-1));
 }
@@ -26,7 +30,7 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const Vect
 	double srate = GetSampleRate(w, 4, .8);	// Gets the most probable sample rate
 	Resample(w, B, w2, B2, srate/2);		// Ainfw calculation is better resampling to half
 	
-    size_t Nf = B2.size(),
+    int Nf = B2.size(),
     	   numT = Tirf.size();
     
     Kirf.resize(numT);
@@ -347,3 +351,37 @@ bool SortComplex(const std::complex<double>& a, const std::complex<double>& b) {
 	else
 		return a.imag() < b.imag();	
 }
+
+double FactorLen(const char *units) {
+	if (strcmp(units, "m") == 0) 
+		return 1;	
+	else if (strcmp(units, "mm") == 0) 
+		return 1E-3;
+	else if (strcmp(units, "cm") == 0) 
+		return 1E-2;
+	else if (strcmp(units, "km") == 0) 
+		return 1000;
+	else
+		throw Exc(Format(t_("This length unit is not supported. Read '%s'"), units));
+}
+
+double FactorMass(const char *units) {
+	if (strcmp(units, "kg") == 0) 
+		return 1;	
+	else if (strcmp(units, "te") == 0) 
+		return 1000;
+	else
+		throw Exc(Format(t_("This mass unit is not supported. Read '%s'"), units));
+}
+
+double FactorForce(const char *units) {
+	if (strcmp(units, "N") == 0) 
+		return 1;	
+	else if (strcmp(units, "kN") == 0) 
+		return 1000;
+	else if (strcmp(units, "MN") == 0) 
+		return 1e6;
+	else
+		throw Exc(Format(t_("This force unit is not supported. Read '%s'"), units));
+}
+

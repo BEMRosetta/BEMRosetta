@@ -104,6 +104,93 @@
 #define lrContinue 1
 #define lrEnd 2
 
+/* Diffraction output */
+#define dotHeadings 					0
+#define dotFrequencies 					1
+#define dotAngularFrequencies 			2
+#define dotPeriods 						3
+#define dotPeriodsOrFrequencies 		4
+#define dotHydrostaticResults 			5
+#define dotAddedMass 					6
+#define dotInfiniteFrequencyAddedMass 	7
+#define dotDamping 						8
+#define dotLoadRAOsHaskind 				9
+#define dotLoadRAOsDiffraction 			10
+#define dotDisplacementRAOs 			11
+#define dotMeanDriftHeadingPairs 		12
+#define dotQTFHeadingPairs 				13
+#define dotQTFFrequencies 				14
+#define dotQTFAngularFrequencies 		15
+#define dotQTFPeriods 					16
+#define dotQTFPeriodsOrFrequencies 		17
+#define dotMeanDriftLoadPressureIntegration 18
+#define dotMeanDriftLoadControlSurface 	19
+#define dotFieldPointPressure 			20
+#define dotFieldPointRAO 				21
+#define dotFieldPointVelocity 			22
+#define dotFieldPointRAOGradient 		23
+#define dotPanelCount 					24
+#define dotPanelGeometry 				25
+#define dotPanelPressure 				26
+#define dotPanelVelocity 				27
+#define dotQuadraticLoadFromPressureIntegration 28
+#define dotQuadraticLoadFromControlSurface 29
+#define dotDirectPotentialLoad 			30
+#define dotIndirectPotentialLoad 		31
+#define dotExtraRollDamping 			32
+#define dotRollDampingPercentCritical 	33
+#define dotPanelPressureDiffraction 	34
+#define dotPanelPressureRadiation 		35
+#define dotPanelVelocityDiffraction 	36
+#define dotPanelVelocityRadiation 		37
+#define dotMeanDriftLoadMomentumConservation 38
+
+/* For C_GetDataType */
+#define dtDouble 0
+#define dtInteger 1
+#define dtString 2
+#define dtVariable 3
+#define dtIntegerIndex 4
+#define dtBoolean 5
+
+typedef double TVector[3];
+typedef double TVector2[2];
+typedef double TVector6[6];
+typedef TVector TMatrix[3];
+typedef TVector2 TMatrix2[2];
+typedef TVector6 TMatrix6[6];
+
+typedef struct {
+    double Re;
+    double Im;
+} TComplex;
+
+typedef TVector TPanel[4];
+
+typedef struct {
+    double Volume;
+    TVector CentreOfBuoyancy;
+    double Mass;
+    TVector CentreOfMass;
+    TMatrix6 RestoringMatrix;
+    TMatrix6 InertiaMatrix;
+    double Awp;
+    double Lxx;
+    double Lyy;
+    double Lxy;
+    TVector2 CentreOfFloatation;
+    TVector MeanHydrostaticForce;
+    TVector MeanHydrostaticMoment;
+} TDiffractionBodyHydrostaticInfo;
+
+typedef struct {
+    int ObjectId;
+    TPanel Vertices;
+    TVector Centroid;
+    TVector Normal;
+    double Area;
+} TDiffractionPanelGeometry;
+
 typedef wchar_t TObjectName[50];
 typedef struct {
     HINSTANCE ObjectHandle;
@@ -208,6 +295,7 @@ public:
 		LoadDiffractionData    = DLLGetFunction(dll, void, C_LoadDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
 		SaveDiffractionData    = DLLGetFunction(dll, void, C_SaveDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
 		CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
+		LoadDiffractionResults = DLLGetFunction(dll, void, C_LoadDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
 		SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
 		CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
 		RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *status));
@@ -221,10 +309,18 @@ public:
 																							TEnumerateVarsProc EnumerateVarsProc, int *lpNumberOfVars, int *status));
 		ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (HINSTANCE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
 		CGetModelState		   = DLLGetFunction(dll, void, C_GetModelState,		  	  (HINSTANCE handle, int *lpModelState, int *status));
+
+		GetDataType_	   	   = DLLGetFunction(dll, void, C_GetDataTypeW,		  	  (HINSTANCE handle, LPCWSTR name, int *lpType, int *status));
+		GetDataRowCount_	   = DLLGetFunction(dll, void, C_GetDataRowCountW,		  (HINSTANCE handle, LPCWSTR name, int *lpCount, int *status));
+		GetDataInteger		   = DLLGetFunction(dll, void, C_GetDataIntegerW,		  (HINSTANCE handle, LPCWSTR name, int index, int *lpData, int *status));
+		GetDataDouble		   = DLLGetFunction(dll, void, C_GetDataDoubleW,		  (HINSTANCE handle, LPCWSTR name, int index, double *lpData, int *status));
+		GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (HINSTANCE handle, LPCWSTR name, int index, LPWSTR lpData, int *status));
 		
 		SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *status));
 		GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *status));
 		
+		GetDiffractionOutput0 = DLLGetFunction(dll, void, C_GetDiffractionOutput, (HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus));
+
 		RegisterLicenceNotFoundHandler = DLLGetFunction(dll, void, C_RegisterLicenceNotFoundHandler, 	  (TLicenceNotFoundHandlerProc Handler, int *lpStatus));
 		
 		GetLastErrorString = DLLGetFunction(dll, int,  C_GetLastErrorStringW, (LPCWSTR wcs));
@@ -233,6 +329,11 @@ public:
 		return true;
 	}
 	
+	int GetDiffractionOutput(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput) {
+		int lpStatus;
+		GetDiffractionOutput0(handle, OutputType, lpOutputSize, lpOutput, &lpStatus);
+		return lpStatus;
+	}
 	bool FindInit() {
 		UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
 		if (orcadata.IsEmpty())
@@ -326,9 +427,6 @@ public:
 			   total    = simulationStop - simulationStart;
 		int64  elapsedT = tm - startCalc - noLicenseTime,
 			   pending  = int64(elapsedT*(total/elapsed - 1));		// elapsedT*total/elapsed - elapsedT
-		double ratio = 0;
-		if (elapsed == 0)
-			ratio = elapsedT/elapsed;
 		*lpCancel = WhenPrint(Format("Elap/Total:%.1f/%.0f ET:%s Clk/Sim:%.1f", elapsed, total,
 											   					  SecondsToString(double(pending), 0, false, false, true, false, true), elapsedT/elapsed));
 	}
@@ -777,7 +875,30 @@ public:
 		if (status != 0)
 			throwError("CalculateDiffraction");	
 	}
-	
+
+	void LoadWaveResults(String owr) {
+		if (!dll && !FindInit())
+			throw Exc("Orca DLL not loaded");
+		if (!wave) {
+			int status;
+			CreateDiffraction(&wave, &status);
+			if (status != 0)
+				throwError("CreateDiffraction");
+		}
+		
+		int status;
+		LPCWSTR wcs;		
+
+		owr = ForceExt(owr, ".owr");
+		
+		if (!StringToWide(owr, wcs))
+			throwError("StringToWide SaveData");
+
+		LoadDiffractionResults(wave, wcs, &status);
+		if (status != 0)
+			throwError("LoadDiffractionResults");					
+	}
+		
 	void SaveWaveResults(String owryml) {
 		if (!dll && !FindInit())
 			throw Exc("Orca DLL not loaded");
@@ -823,6 +944,8 @@ public:
 				throwError("DestroyModel");
 		}
 	}
+	
+	void LoadParameters(Hydro &hy);
 	
 	void SetThreadCount(int nth) {
 		if (!dll && !FindInit())
@@ -942,6 +1065,7 @@ private:
 	void (*LoadDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *status);
 	void (*SaveDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *status);
 	void (*CalculateDiffraction)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
+	void (*LoadDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
 	void (*SaveDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
 	void (*RunSimulation)(HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *par, int *status);
 	void (*CalculateStatics)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
@@ -959,6 +1083,20 @@ private:
 	void (*SetModelThreadCount)(HINSTANCE handle, int threadCount, int *status);
 	int (*GetModelThreadCount)(HINSTANCE handle, int *status);
 	
+	void (*GetDiffractionOutput0)(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus);
+	
+	void (*GetDataType_)(HINSTANCE handle, LPCWSTR name, int *lpType, int *status);
+	void (*GetDataRowCount_)(HINSTANCE handle, LPCWSTR name, int *lpCount, int *status);
+	void (*GetDataInteger)(HINSTANCE handle, LPCWSTR name, int index, int *lpData, int *status);
+	void (*GetDataDouble)(HINSTANCE handle, LPCWSTR name, int index, double *lpData, int *status);
+	int (*GetDataString)(HINSTANCE handle, LPCWSTR name, int index, LPWSTR lpData, int *status);
+	
+	int GetDataType(HINSTANCE handle, const wchar_t *name);
+	int GetDataRowCount(HINSTANCE handle, const wchar_t *name);
+	int GetInt(HINSTANCE handle, const wchar_t *name, int id = -1);
+	double GetDouble(HINSTANCE handle, const wchar_t *name, int id = -1);
+	String GetString(HINSTANCE handle, const wchar_t *name, int id = -1);
+		
 	void (*RegisterLicenceNotFoundHandler)(TLicenceNotFoundHandlerProc handler, int *lpStatus);
 	
 	int (*GetLastErrorString)(LPCWSTR wcs);

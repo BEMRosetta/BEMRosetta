@@ -9,7 +9,8 @@
 class FastOut {
 public:
 	FastOut();
-	
+    virtual ~FastOut() {};
+    
 	static UVector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
 	
@@ -124,7 +125,7 @@ public:
 	double ptfmCOBxt = Null, ptfmCOByt = Null;
 	
 	double Hs = Null, Tp = Null, heading = Null;
-	
+    	
 private:
 	String LoadOut(String fileName);
 	String LoadOutb(String fileName);
@@ -587,6 +588,8 @@ private:
 		Fairten_tParam() {
 			units = "t";
 		}
+		virtual ~Fairten_tParam() {}
+		
 		void Init00(int _id) {
 			name = Format("FAIRTEN%d_t", _id);
 			id = _id;

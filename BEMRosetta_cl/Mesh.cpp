@@ -78,6 +78,10 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		}
 	} else if (ext == ".lis")
 		ret = AQWAMesh::Load_LIS(mesh, file, g, y0z, x0z);
+#ifdef PLATFORM_WIN32	
+	else if (ext == ".owr")
+		ret = ORCAMesh::Load_OWR(mesh, file, g, y0z, x0z);
+#endif	
 	else if (ext == ".txt") 
 		ret = DiodoreMesh::LoadDat(mesh, file); 
 	else if (ext == ".gdf") 
@@ -100,7 +104,14 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		try {
 			LoadTDynMsh(file, m.mesh);
 		} catch(Exc e) {
-			return std::move(e);
+			if (e.StartsWith(t_("Parsing error: "))) {
+				try {
+					LoadGMSH(file, m.mesh);
+				} catch(Exc e) {
+					return std::move(e);
+				}	
+			} else
+				return std::move(e);
 		}
 		m.SetCode(Mesh::MSH_TDYN);
 	} else if (ext == ".mesh" || ext == ".bem") {

@@ -1546,7 +1546,7 @@ public:
 
 	void OptionsUpdated(double rho, double g, int dofType, int headingType);
 
-	bool LoadSerializeJson(bool &firstTime, bool &openOptions);
+	String LoadSerializeJson(bool &firstTime, bool &openOptions);
 	bool StoreSerializeJson();
 	
 	void Jsonize(JsonIO &json);
@@ -1580,7 +1580,7 @@ public:
 	String parameter;	
 	
 private:
-	int numWindows = 0;
+	//int numWindows = 0;
 	
 	String lastTabS;
 	

@@ -235,7 +235,7 @@ void Diodore::Load_HDB() {
 			}
 		}
 	}
-	hd().mdtype = 9;
+	hd().qtftype = hd().mdtype = 9;
 }
 
 bool HydroClass::SaveDiodoreHDB(String file) {

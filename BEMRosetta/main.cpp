@@ -21,6 +21,7 @@
 using namespace Upp;
 
 #include <BEMRosetta_cl/BEMRosetta.h>
+#include <BEMRosetta_cl/functions.h>
 
 #include "main.h"
 
@@ -32,10 +33,6 @@ FreqSelector::FreqSelector() {
 	add << [&] {AddField();};
 	Add(add.LeftPos(0, 19).TopPos(3, 19));
 };
-
-static String GetBEMRosettaDataFolder() {
-	return AFX(GetAppDataFolder(), "BEMRosetta");
-}
 
 void Main::Init() {
 	LOG("Init");
@@ -70,10 +67,18 @@ void Main::Init() {
 	Title(title + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
 
 	rectangleButtons.SetBackground(SColorFace());
-		
-	bool firstTime = !bem.LoadSerializeJson();
-	if (firstTime) 
-		Cout() << "\n" << t_("BEM configuration data is not loaded. Defaults values are set");
+	
+	String errorJson;
+	bool firstTime;
+	
+	errorJson = bem.LoadSerializeJson();
+	firstTime = !errorJson.IsEmpty();
+	if (firstTime) {
+		String str = errorJson + "\n" + t_("BEM config. data is not loaded. Defaults values are set"); 
+		if (errorJson != t_("First time")) 
+			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
+		LOG(str);
+	}
 	
 	LOG("BEM configuration loaded");
 	
@@ -81,9 +86,14 @@ void Main::Init() {
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	
 	bool openOptions = false;
-	if (!LoadSerializeJson(firstTime, openOptions)) 
-		Cout() << "\n" << t_("Configuration data is not loaded. Defaults are set");
-	
+	errorJson = LoadSerializeJson(firstTime, openOptions);
+	if (!errorJson.IsEmpty()) {
+		String str = errorJson + "\n" + t_("Config. data is not loaded. Defaults values are set"); 
+		if (errorJson != t_("First time")) 
+			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
+		LOG(str);
+	}
+
 	LOG("Configuration loaded");
 	
 	if (parameter.IsEmpty() || parameter == "mesh") {
@@ -243,37 +253,40 @@ void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
 	mainBEM.UpdateButtons();
 }
 
-bool Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
-	bool ret;
+String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
+	String ret;
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
-		ret = false;
+		ret = Format(t_("Impossible to create folder '%s' to store configuration file"), folder);
 	else {
 		String fileName = AFX(folder, "config.cf");
 		if (!FileExists(fileName)) 
-			ret = false;
+			ret = t_("First time");
 		else {
 			String jsonText = LoadFile(fileName);
 			if (jsonText.IsEmpty())
-				ret = false;
+				ret = Format(t_("Configuration file '%s' is empty"), fileName);
 			else {
-				if (!LoadFromJson(*this, jsonText))
-					ret = false;
-				else
-					ret = true;
+				ret = LoadFromJsonError(*this, jsonText);
+				if (!ret.IsEmpty())
+					ret = Format(t_("Problem loading configuration file '%s': %s"), fileName, ret);
+			}
+			if (!ret.IsEmpty()) {
+				DirectoryCreateX(AFX(folder, "Errors"));
+				FileCopy(fileName, AFX(folder, "Errors", "config.cf"));
 			}
 		}
 	}
 	
-	mainMesh.InitSerialize(ret);
-	mainSolver.InitSerialize(ret);
-	mainBEM.InitSerialize(ret);
-	menuOptions.InitSerialize(ret, openOptions);
+	firstTime = !ret.IsEmpty();
 	
-	if (!ret)
+	mainMesh.InitSerialize(!firstTime);
+	mainSolver.InitSerialize(!firstTime);
+	mainBEM.InitSerialize(!firstTime);
+	menuOptions.InitSerialize(!firstTime, openOptions);
+	
+	if (firstTime)
 		tab.Set(menuAbout);
-	
-	firstTime = !ret;
 	
 	return ret;
 }

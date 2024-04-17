@@ -33,11 +33,11 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 				int k = line.Find(varNames[i]);
 				if (k >= 0) {
 	                k = line.Find("%");
-	                if (k >= 0)
+	        		if (k >= 0)
 	                    lindx = std::max(findx, k-1);
 	                
 	                String tmp = Trim(line.Mid(findx, lindx - findx + 1));
-	                if (tmp[0] == 'T')
+	        		if (tmp[0] == 'T')
 	                    varValues[i] = 1;
 	                else if (tmp[0] == 'F')
 	                    varValues[i] = -1;
@@ -57,7 +57,7 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 		if (findx >= 0) {
 			int lindx = line.GetCount();        
 	        int findx = line.FindAfter("=");
-	        if (findx < 0)
+			if (findx < 0)
 	            findx = 0;
 	        ZGoffset = float(ScanDouble(line.Mid(findx, lindx-findx+1)));	 //z grid offset
 	        break;
@@ -135,14 +135,14 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 			
 	    	if (fc == 4) {
 		        nffc     = file.Read<int32>();        	// number of components (should be 3)
-		        double lat      = file.Read<float>();	// latitude (deg)
-		        double z0       = file.Read<float>();   // Roughness length (m)
-		        double zOffset  = file.Read<float>();   // Reference height (m) = Z(1) + GridHeight / 2.0
+		        /*double lat    =*/ file.Read<float>();	// latitude (deg)
+		        /*double z0     =*/ file.Read<float>();   // Roughness length (m)
+		        /*double zOffset=*/ file.Read<float>();   // Reference height (m) = Z(1) + GridHeight / 2.0
 		        TI_U 		    = file.Read<float>();   // Turbulence Intensity of u component (%)
 		        TI_V    		= file.Read<float>();   // Turbulence Intensity of v component (%)
 		        TI_W     		= file.Read<float>();   // Turbulence Intensity of w component (%)
 		    } else {
-		        if (fc > 2)
+				if (fc > 2)
 		            nffc = 3;
 		        else
 		            nffc = 1;
@@ -151,9 +151,9 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		        TI_V  = 1;
 		        TI_W  = 1;
 		        
-		        if (fc == 8  //MANN model 
+				if (fc == 8  //MANN model 
 		         || fc == 7) { // General Kaimal      
-		            int HeadRec = file.Read<int32>();	// Number of bytes in the header (Nheader)
+		            /*int HeadRec =*/ file.Read<int32>();	// Number of bytes in the header (Nheader)
 		            nffc    = file.Read<int32>();  		// Number of turbulence components (1, 2 or 3)
 		        }
 		    } 
@@ -171,16 +171,16 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		    	file.SeekCur(2*nffc*sizeof(int32));     // other length scales: unused variables (for BLADED)                
 		    
 		    if (fc == 7) {
-		        float CohDec = file.Read<float>();		// Coherence decay constant
-		        float CohLc  = file.Read<float>();		// Coherence scale parameter in m
+		        /*float CohDec =*/ file.Read<float>();		// Coherence decay constant
+		        /*float CohLc  =*/ file.Read<float>();		// Coherence scale parameter in m
 		    } else if (fc == 8) {        
-		        float gamma  = file.Read<float>();      // MANN model shear parameter
-		        float Scale  = file.Read<float>();      // MANN model scale length
-		                 file.SeekCur(4*sizeof(float) +
-		                 			  3*sizeof(int32) +
-		                 			  2*sizeof(float) +
-		                 			  3*sizeof(int32) +
-		                 			  2*sizeof(float));
+		        /*float gamma  =*/ file.Read<float>();      // MANN model shear parameter
+		        /*float Scale  =*/ file.Read<float>();      // MANN model scale length
+				file.SeekCur(4*sizeof(float) +
+						  3*sizeof(int32) +
+						  2*sizeof(float) +
+						  3*sizeof(int32) +
+						  2*sizeof(float));
 		    }
 	    	varValues[3] = TI_U;
 	    	varValues[4] = TI_V;

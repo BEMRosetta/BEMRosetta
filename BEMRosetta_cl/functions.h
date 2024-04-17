@@ -5,6 +5,8 @@
 
 #include <ScatterDraw/ScatterDraw.h>
 
+String GetBEMRosettaDataFolder();
+
 double GetKirfMaxT(const Eigen::VectorXd &w);
 void GetTirf(Eigen::VectorXd &Tirf, int numT, double maxT);
 	
@@ -95,5 +97,9 @@ bool SortComplex(const std::complex<double>& a, const std::complex<double>& b);
 	
 void SetPhaseToMag(std::complex<double> &val, double arg);
 void AddPhase(std::complex<double> &val, double arg);
-		
+
+double FactorLen(const char *units);
+double FactorMass(const char *units);
+double FactorForce(const char *units);
+	
 #endif

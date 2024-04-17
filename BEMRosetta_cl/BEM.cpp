@@ -27,15 +27,27 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
 				t_("|TFS|"), t_("arg(TFS)")};
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS		  WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,  AQWA,   					FOAMM,   DIODORE,	BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   CAPY.nc, 			UNKNOWN, NUMBEM};
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore","BEMRosetta .bem","OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"Capytaine .nc",	"By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				    true,		 			 	 	false,		  false,		 false,   false, 		 true,  					false,   true,		true,			   false,	   true, 	   true, 		 true,			false, 	   false, 		false,				true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				"*.1",		 			 	    "",		   	  "",		     "",      "", 		   	 "*.qtf", 				    "",      "*.hdb",	"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.dat",   "*.out", 	"*.nc", 			"*.*"};       
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS		  WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,  AQWA,   					FOAMM,   DIODORE,	BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   CAPY.nc, 		 ORCAWAVE.owr,		UNKNOWN, NUMBEM};
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "Wadam Wamit", "Nemoh", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf [W]", "FOAMM", "Diodore","BEMRosetta .bem","OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"Capytaine .nc", 
+#ifdef PLATFORM_WIN32	
+"OrcaWave .owr", 	
+#endif
+				"By extension"};
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				    true,		 			 	 	false,		  false,		 false,   false, 		 true,  					false,   true,		true,			   false,	   true, 	   true, 		 true,			false, 	   false, 		false,			 
+#ifdef PLATFORM_WIN32	
+false,
+#endif
+				true};       
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				"*.1",		 			 	    "",		   	  "",		     "",      "", 		   	 "*.qtf", 				    "",      "*.hdb",	"*.bem",		   "*.yml",	   "*.csv",    "*.csv", 	 "*.h5",		"*.dat",   "*.out", 	"*.nc", 		 
+#ifdef PLATFORM_WIN32	
+"*.owr",	
+#endif		
+				"*.*"};       
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
-const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "Unknown"};	
-const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   		false};       
-const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	"*.hst", 		"*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, UNKNOWN, NUMMESH};	
+const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "Unknown"};	
+const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 	false};       
+const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.stl", 	"*.stl",   "",    "*.msh",	  "*.bemr", "*.dat", 	"*.hst", 	   "*.owr",	"*.*"};       
 
 //enum Solver 			   		 	  {NEMOH, NEMOHv115, NEMOHv3, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;	
 const bool BEMCase::solverCanSave[] = {true,  true, 	 true, 	  true,      true, false};
@@ -331,6 +343,19 @@ void Hydro::Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, 
 	}
 }
 
+void Hydro::Initialize_Pots() {
+	pots.SetCount(Nb);
+	for (int ib = 0; ib < Nb; ++ib) {
+		if (pots[ib].IsEmpty())
+			pots[ib].SetCount(meshes[ib].mesh.GetNumPanels());
+		for (int ipot = 0; ipot < pots[ib].size(); ++ipot) {
+			pots[ib][ipot].SetCount(6);
+			for (int idf = 0; idf < 6; ++idf)
+				pots[ib][ipot][idf].SetCount(Nf, 0);
+		}
+	}
+}
+
 void Hydro::Initialize_Forces() {
 	Initialize_Forces(ex);
 	Initialize_Forces(sc);
@@ -483,6 +508,7 @@ void Hydro::Copy(const Hydro &hyd) {
     qw = clone(hyd.qw);
     qh = clone(hyd.qh);
     qtfdataFromW = hyd.qtfdataFromW;
+    qtftype = hyd.qtftype;
     
     mdhead = clone(mdhead);
 	md = clone(md);
@@ -671,6 +697,7 @@ void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
     
     names = clone(h0.names);
     
+    qtftype = h0.qtftype;
     mdtype = h0.mdtype;
     
     Vo.SetCount(Nb, NaNDouble);
@@ -708,15 +735,15 @@ void Hydro::Average(const UArray<HydroClass> &hydros, const UVector<int> &ids) {
 	UArray<const UArray<UArray<UArray<MatrixXcd>>>*> qtfsums, qtfdifs;
 	
 	for (int i = 0; i < ids.size(); ++i) {
-        if (hydros[i].hd().Vo.size() > i)
+		if (hydros[i].hd().Vo.size() > i)
         	Vos.Add(&(hydros[i].hd().Vo));
-        if (hydros[i].hd().cg.size() > 0)
+		if (hydros[i].hd().cg.size() > 0)
         	cgs.Add(&(hydros[i].hd().cg));
-        if (hydros[i].hd().cb.size() > 0)
+		if (hydros[i].hd().cb.size() > 0)
         	cbs.Add(&(hydros[i].hd().cb));
-        if (hydros[i].hd().Ainf.size() > 0)
+		if (hydros[i].hd().Ainf.size() > 0)
         	Ainfs.Add(&(hydros[i].hd().Ainf));
-        if (hydros[i].hd().A0.size() > 0)
+		if (hydros[i].hd().A0.size() > 0)
         	A0s.Add(&(hydros[i].hd().A0));
         As.Add(&(hydros[i].hd().A));
         Bs.Add(&(hydros[i].hd().B));
@@ -799,17 +826,12 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 			bool avg = IsNum(newf.force[nih](0, idf));
 			for (int ifr = 0; ifr < Nf; ++ifr) {
 				std::complex<double> force = f.force[ih](ifr, idf);
-				double ph = arg(force);
-				if (applysym) {
+				if (applysym)
 					force = std::polar(abs(force), arg(force) + M_PI);
-					ph = arg(force);
-				}
 				std::complex<double> &nf = newf.force[nih](ifr, idf);
-				if (avg) {
-					//double ph2 = arg(nf);	
+				if (avg)
 					nf = Avg(nf, force);
-					//ph2 = arg(nf);	
-				} else 
+				else 
 					nf = force;
 			}
 		};
@@ -877,17 +899,12 @@ void Hydro::Symmetrize_QTF(bool xAxis) {
 			for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
 				for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
 					std::complex<double> force = f[ib][ih][idf](ifr1, ifr2);
-					double ph = arg(force);
-					if (applysym) {
+					if (applysym) 
 						force = std::polar(abs(force), arg(force) + M_PI);
-						ph = arg(force);
-					}
 					std::complex<double> &nf = newf[ib][nih][idf](ifr1, ifr2);
-					if (avg) {
-						//double ph2 = arg(nf);	
+					if (avg) 
 						nf = Avg(nf, force);
-						//ph2 = arg(nf);		
-					} else 
+					else 
 						nf = force;
 				}
 			}
@@ -941,8 +958,6 @@ void Hydro::Symmetrize_MD(bool xAxis) {
 	}
 	Sort(newHead, SortComplex);
 	
-	int newNh = newHead.size();
-
 	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf) {
 		auto Symmetrize_Forces_Each0 = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf, const std::complex<double> &h, int ib, int ih, int idf, bool applysym) {
 			int nih = FindClosest(newHead, h);
@@ -1611,7 +1626,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		if (symY) {
 			int npan = m.mesh.panels.size();
 			m.mesh.DeployYSymmetry();
-			if (!pots.IsEmpty()) {
+			if (IsLoadedPots()) {
 				pots[ib].SetCount(2*npan);
 				for (int ipan = 0; ipan < npan; ++ipan) {
 					pots[ib][ipan + npan].SetCount(6);
@@ -1630,7 +1645,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		}
 		m.AfterLoad(rho, g, false, true);
 	}
-	if (IsLoadedPot()) {
+	if (IsLoadedPots()) {
 		Initialize_AB(A_P, 0);
 		Initialize_AB(B_P, 0);
 		
@@ -1649,7 +1664,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 					double rho_w = rho/w[ifr];
 					Value3D r = p.centroidPaint - c0_;
 					Value3D n2 = r%n1;
-					n[3] = n2[0];	n[4] = n2[1];	n[5] = n2[2];	
+					n[3] = n2[0];	n[4] = n2[1];	n[5] = n2[2];
 					
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
 						const std::complex<double> &comp = pots[ib][idp][idf2][ifr];
@@ -1667,7 +1682,7 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 }
 
 int Hydro::GetW0() {
-	for (int i = 0; i < w.size(); ++i) {	
+	for (int i = 0; i < w.size(); ++i) {
 		if (w[i] < 0.0001)
 			return i;
 	}
@@ -1678,7 +1693,7 @@ void Hydro::Get3W0(int &id1, int &id2, int &id3) {
 	UVector<double> ww = clone(w);
 	
 	Sort(ww);
-	id1 = FindAdd(w, ww[0]); 	
+	id1 = FindAdd(w, ww[0]);
 	id2 = FindAdd(w, ww[1]); 
 	id3 = FindAdd(w, ww[2]); 
 }
@@ -1691,11 +1706,11 @@ void Hydro::GetA0() {
 	if (IsNum(iw0)) {
 		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
-	        for (int j = 0; j < Nb*6; ++j) 
+	        for (int j = 0; j < Nb*6; ++j)
 				A0(i, j) = A[i][j][iw0];
 	} else if (w.size() < 3)
 		return;
-	else { 
+	else {
 		int iw1, iw2, iw3;
 		Get3W0(iw1, iw2, iw3);
 		double wiw1 = w[iw1];
@@ -1706,12 +1721,12 @@ void Hydro::GetA0() {
 		A0.setConstant(Nb*6, Nb*6, Null);
 		for (int i = 0; i < Nb*6; ++i)
 	        for (int j = 0; j < Nb*6; ++j) {
-	            if (!IsNum(A[i][j][iw1]) || !IsNum(A[i][j][iw2]) || !IsNum(A[i][j][iw3]))
+				if (!IsNum(A[i][j][iw1]) || !IsNum(A[i][j][iw2]) || !IsNum(A[i][j][iw3]))
 	                A0(i, j) = Null;
 	            else {
 	                double val = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
-	                if (abs(val) < 0.0000001) {
-	                    if (abs(A[i][j][iw1]) < 0.0000001) 
+	        		if (abs(val) < 0.0000001) {
+			    		if (abs(A[i][j][iw1]) < 0.0000001) 
 	                        A0(i, j) = val;
 	                    else
 	                    	A0(i, j) = Null;
@@ -2291,7 +2306,18 @@ void BEM::LoadBEM(String file, Function <bool(String, int)> Status, bool checkDu
 			hydros.SetCount(hydros.size()-1);
 			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
 		}
-	} else if (ext == ".mat") {
+	} 
+#ifdef PLATFORM_WIN32	
+	else if (ext == ".owr") {
+		OrcaWave &data = hydros.Create<OrcaWave>(*this);
+		if (!data.Load(file)) {
+			String error = data.hd().GetLastError();
+			hydros.SetCount(hydros.size()-1);
+			throw Exc(error);//Format(t_("Problem loading '%s'\n%s"), file, error));	
+		}
+	} 
+#endif
+	else if (ext == ".mat") {
 		Foamm &data = hydros.Create<Foamm>(*this);
 		if (!data.Load(file)) {
 			String error = data.hd().GetLastError();
@@ -2731,75 +2757,79 @@ void BEM::AddWaterSurface(int id, char c) {
 	}	
 }
 			
-bool BEM::LoadSerializeJson() {
+String BEM::LoadSerializeJson() {
 	csvSeparator = Null;
 	volWarning = volError = Null;
 	roundVal = roundEps = Null;
 	
-	bool ret;
-	String folder = AFX(GetAppDataFolder(), "BEMRosetta");
+	String ret;
+	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
-		ret = false;
+		ret = Format(t_("Impossible to create folder '%s' to store configuration file"), folder);
 	else {
 		String fileName = AFX(folder, "configdata.cf");
 		if (!FileExists(fileName)) 
-			ret = false;
+			ret = t_("First time");
 		else {
 			String jsonText = LoadFile(fileName);
 			if (jsonText.IsEmpty())
-				ret = false;
+				ret = Format(t_("Configuration file '%s' is empty"), fileName);
 			else {
-				if (!LoadFromJson(*this, jsonText))
-					ret = false;
-				else
-					ret = true;
+				ret = LoadFromJsonError(*this, jsonText);
+				if (!ret.IsEmpty())
+					ret = Format(t_("Problem loading configuration file '%s': %s"), fileName, ret);
+			}
+			if (!ret.IsEmpty()) {
+				DirectoryCreateX(AFX(folder, "Errors"));
+				FileCopy(fileName, AFX(folder, "Errors", "configdata.cf"));
 			}
 		}
 	}
 	
-	if (!ret || IsNull(csvSeparator))
+	bool ok = ret.IsEmpty();
+	if (!ok || IsNull(csvSeparator))
 		csvSeparator = ";";
-	if (!ret || IsNull(volWarning))
+	if (!ok || IsNull(volWarning))
 		volWarning = 1;
-	if (!ret || IsNull(volError))
+	if (!ok || IsNull(volError))
 		volError = 10;
-	if (!ret || IsNull(roundVal))
+	if (!ok || IsNull(roundVal))
 		roundVal = 1;
-	if (!ret || IsNull(roundEps))
+	if (!ok || IsNull(roundEps))
 		roundEps = 1E-8;
-	if (!ret || IsNull(g)) 
+	if (!ok || IsNull(g)) 
 		g = 9.81;
-	if (!ret || IsNull(depth)) 
+	if (!ok || IsNull(depth)) 
 		depth = 100;
-	if (!ret || IsNull(rho)) 
+	if (!ok || IsNull(rho)) 
 		rho = 1000;
-	if (!ret || IsNull(len)) 
+	if (!ok || IsNull(len)) 
 		len = 1;
-	//if (!ret || IsNull(discardNegDOF))
+	//if (!ok || IsNull(discardNegDOF))
 	//	discardNegDOF = false;
-	//if (!ret || IsNull(thres)) 
+	//if (!ok || IsNull(thres)) 
 	//	thres = 0.01;
-	if (!ret || IsNull(calcAinf))
+	if (!ok || IsNull(calcAinf))
 		calcAinf = true;
-	if (!ret || IsNull(calcAinf_w))
+	if (!ok || IsNull(calcAinf_w))
 		calcAinf_w = true;
-	if (!ret || IsNull(maxTimeA))
+	if (!ok || IsNull(maxTimeA))
 		maxTimeA = 120;
-	if (!ret || IsNull(numValsA))
+	if (!ok || IsNull(numValsA))
 		numValsA = 1000;
-	if (!ret || IsNull(onlyDiagonal))
+	if (!ok || IsNull(onlyDiagonal))
 		onlyDiagonal = false;
-	if (!ret || IsNull(volWarning))	
+	if (!ok || IsNull(volWarning))	
 		volWarning = 1;
-	if (!ret || IsNull(volError))
+	if (!ok || IsNull(volError))
 		volError = 10;
-	if (!ret || IsNull(roundVal))
+	if (!ok || IsNull(roundVal))
 		roundVal = 1;
-	if (!ret || IsNull(roundEps))
+	if (!ok || IsNull(roundEps))
 		roundEps = 1E-8;
-	if (!ret || IsNull(legend_w_solver))
+	if (!ok || IsNull(legend_w_solver))
 		legend_w_solver = true;
-	if (!ret || IsNull(legend_w_units))
+	if (!ok || IsNull(legend_w_units))
 		legend_w_units = true;
 				
 	return ret;

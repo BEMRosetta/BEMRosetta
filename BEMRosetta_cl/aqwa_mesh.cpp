@@ -30,7 +30,7 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
-	double factorMass = 1;
+	//double factorMass = 1;
 	double factorLength = 1;
 	
 	y0z = x0z = false;
@@ -56,12 +56,12 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 					String system = Trim(line.Mid(pos));
 					if (system.Find("Metric") < 0)
 						throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
-					if (system.Find("kg") > 0)
+					/*if (system.Find("kg") > 0)
 						factorMass = 1;
 					else if (system.Find("tonne") > 0)
 						factorMass = 1000;
 					else 
-						throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));
+						throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));*/
 					if (system.Find("m ") > 0)
 						factorLength = 1;
 					else if (system.Find("km ") > 0)

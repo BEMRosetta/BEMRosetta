@@ -65,7 +65,7 @@ void Hydro::GetAinf() {
 	
     for (int i = 0; i < Nb*6; ++i) 
         for (int j = 0; j < Nb*6; ++j) 
-            if (IsNum(Kirf[i][j][0]))
+    		if (IsNum(Kirf[i][j][0]))
 		    	Ainf(i, j) = ::GetAinf(Kirf[i][j], Tirf, Get_w(), A[i][j]);
 }
 
@@ -128,9 +128,9 @@ void Hydro::GetAinf_w() {
     
     for (int idf = 0; idf < Nb*6; ++idf)
         for (int jdf = 0; jdf < Nb*6; ++jdf) {
-            if (!IsLoadedB(idf, jdf)) 
+    		if (!IsLoadedB(idf, jdf)) 
                 continue;
-            if (dimen)
+    		if (dimen)
 		    	::GetAinf_w(Ainf_w[idf][jdf], Kirf[idf][jdf], Tirf, Get_w(), A[idf][jdf]);
             else {
                 ::GetAinf_w(Ainf_w[idf][jdf], Kirf[idf][jdf]*g_rho_dim(), Tirf, Get_w(), A_dim(idf, jdf));
@@ -195,7 +195,7 @@ void Hydro::GetB_H(int &num) {
 	Initialize_AB(B_H);
 	
     for (int idof = 0; idof < Nb*6; ++idof) {
-        if (!IsLoadedFex(idof)) 		
+		if (!IsLoadedFex(idof)) 		
             continue;
 		
 		VectorXd b(Nf);
@@ -263,7 +263,7 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
         MatrixXd ex_hf(Nh, Nf);
         
         for (int jdf = 0; jdf < Nb*6; ++jdf) {
-            if (B[idf][jdf].size() == 0 || !IsNum(B[idf][jdf][0])) 
+    		if (B[idf][jdf].size() == 0 || !IsNum(B[idf][jdf][0])) 
                 ;
             else {
                 bool done;
@@ -346,7 +346,7 @@ String Hydro::SpreadNegative() {
 		}
 	}
 	Sort(errors);
-	for (const String s : errors) {
+	for (const String &s : errors) {
 		if (!ret.IsEmpty())
 			ret << "\n";
 		ret << s;
@@ -399,17 +399,21 @@ void Hydro::SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids
 
 	if (Apan.size() > 0) {
 		if (onlyDiagonal) {
-			for (int c = 0; c < 6; ++c) 
+			for (int c = 0; c < 6; ++c) {
 				g.Set(Null, col++, Format(t_("A_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
-			for (int c = 0; c < 6; ++c) 
+			}
+			for (int c = 0; c < 6; ++c) {
 				g.Set(Null, col++, Format(t_("B_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
+			}
 		} else {
 			for (int r = 0; r < 6; ++r) 
-				for (int c = 0; c < 6; ++c) 
+				for (int c = 0; c < 6; ++c) {
 					g.Set(Null, col++, Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
+				}
 			for (int r = 0; r < 6; ++r) 
-				for (int c = 0; c < 6; ++c) 
+				for (int c = 0; c < 6; ++c) {
 					g.Set(Null, col++, Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
+				}
 		}
 	}
 			
@@ -525,13 +529,6 @@ void Hydro::AddWave(int ib, double dx, double dy) {
 	            double dist = dx*cos(angle) + dy*sin(angle);
 				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
-						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
-							 				 &v1 = qtf[ib][ih][1](ifr1, ifr2),
-							 				 &v2 = qtf[ib][ih][2](ifr1, ifr2),
-							 				 &v3 = qtf[ib][ih][3](ifr1, ifr2),
-							 				 &v4 = qtf[ib][ih][4](ifr1, ifr2),
-							 				 &v5 = qtf[ib][ih][5](ifr1, ifr2);
-						
 						double ph = (qk[ifr2] + sign*qk[ifr1])*dist;
 						for (int idf = 0; idf < 6; ++idf) 
 							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), -ph);
@@ -695,12 +692,10 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
     	UArray<MatrixXcd> exforce = clone(ex.force);
     	
 	    for (int ih = 0; ih < Nh; ++ih) {
-	        double angle = ToRad(head[ih]);
 	    	for (int ib = 0; ib < Nb; ++ib) {
 	    		double dx = delta(0, ib);
 				double dy = delta(1, ib);
 				double dz = delta(2, ib);
-				double dist = dx*cos(angle) + dy*sin(angle);
 			
 	    		int ib6 = ib*6;
 				for (int ifr = 0; ifr < Nf; ++ifr) {
@@ -742,14 +737,11 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		CalcMD();
 	
     auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
-        int sign = isSum ? 1 : -1;
 		for (int ib = 0; ib < Nb; ++ib) {
 			double dx = delta(0, ib);
 			double dy = delta(1, ib);
 			double dz = delta(2, ib);
 	        for (int ih = 0; ih < qh.size(); ++ih) {
-	            double angle = ToRad(qh[ih].imag());
-	            double dist = dx*cos(angle) + dy*sin(angle);
 				for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
 						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),

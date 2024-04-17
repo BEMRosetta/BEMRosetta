@@ -138,10 +138,10 @@ bool Aqwa::Load_AH1() {
 	            for (int idf = 0; idf < 6; ++idf) {
 	                f.Load(in.GetLine());
 	                int did = 0;
-	                if (idf == 0) {
+	        		if (idf == 0) {
 	                    did = 1;
 	                    int itb = f.GetInt(0);
-	                    if (itb - 1 != ib)
+	            		if (itb - 1 != ib)
 	                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
 	                }
 	                for (int jdf = 0; jdf < 6; ++jdf) 
@@ -157,21 +157,21 @@ bool Aqwa::Load_AH1() {
 			            for (int idf = 0; idf < 6; ++idf) {
 			                f.Load(in.GetLine());
 			                int did = 0;
-			                if (idf == 0) {
+			        		if (idf == 0) {
 			                    did = 3;
 			                    int itb0 = f.GetInt(0);
-			                    if (itb0 - 1 != ib0)
+			            		if (itb0 - 1 != ib0)
 			                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb0, ib0+1));
 			                    int itb1 = f.GetInt(1);
-			                    if (itb1 - 1 != ib1)
+			            		if (itb1 - 1 != ib1)
 			                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb1, ib1+1));
 			                    int itfr = f.GetInt(2);
-			                    if (itfr - 1 != ifr)
+			            		if (itfr - 1 != ifr)
 			                        throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
 			                } else
 			                    did = 0;
 			                for (int jdf = 0; jdf < 6; ++jdf) {
-			                    if (am)
+			            		if (am)
 			                    	hd().A[6*ib0 + idf][6*ib1 + jdf][ifr] = f.GetDouble(jdf + did);
 			                    else
 			                        hd().B[6*ib0 + idf][6*ib1 + jdf][ifr] = f.GetDouble(jdf + did);
@@ -188,10 +188,10 @@ bool Aqwa::Load_AH1() {
 	                    f.Load(in.GetLine());
 	                  	for (int idf = 0; idf < 6; ++idf) {
 		                    int itb = f.GetInt(0);
-		                    if (itb - 1 != ib)
+		            		if (itb - 1 != ib)
 		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'FORCERAO' %d<>%d"), itb, ib+1));
 		                    int ith = f.GetInt(1);
-		                    if (ith - 1 != ih)
+		            		if (ith - 1 != ih)
 		                        throw Exc(in.Str() + "\n"  + Format(t_("Heading # does not match in 'FORCERAO' %d<>%d"), ith, ih+1));
 		                    int itfr = f.GetInt(2);
 							if (itfr - 1 != ifr)
@@ -266,10 +266,10 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	for (int ib = 0; ib < hd().Nb; ++ib) 
 		hd().M[ib].setConstant(6, 6, 0);
 	
-	hd().meshes.SetCount(hd().Nb);
-	for (int i = 0; i < hd().Nb; ++i)
-		hd().meshes[i].SetCode(Mesh::AQWA_LIS);
-	hd().pots.SetCount(hd().Nb);		
+	//hd().meshes.SetCount(hd().Nb);
+	//for (int i = 0; i < hd().Nb; ++i)
+	//	hd().meshes[i].SetCode(Mesh::AQWA_LIS);
+	//hd().pots.SetCount(hd().Nb);		
 	
 	double nlines = in.GetLineNumber();
 	double step = 0.01;
@@ -308,6 +308,9 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			else 
 				throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
 		} else if ((pos = line.FindAfter("C O O R D I N A T E   D A T A")) >= 0) {
+			if (hd().meshes.IsEmpty()) 
+				hd().meshes.SetCount(hd().Nb);
+			
 			f.GetLine(7);
 			while (!in.IsEof()) {
 				if (f.GetLine()[0] == '1')
@@ -320,6 +323,9 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				p.z = f.GetDouble(5)*factorLength;
 			}
 		} else if ((pos = line.FindAfter("E L E M E N T   T O P O L O G Y   F O R   S T R U C T U R E")) >= 0) {
+			if (hd().meshes.IsEmpty()) 
+				hd().meshes.SetCount(hd().Nb);
+			
 			int ib = ScanInt(line.Mid(pos, 6)); 
 			if (IsNull(ib))
 				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
@@ -337,7 +343,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 							continue;
 					}
 					Panel &p = hd().meshes[ib].mesh.panels.Add();
-					UArray<UArray<std::complex<double>>> &pots = hd().pots[ib].Add();
+					//UArray<UArray<std::complex<double>>> &pots = hd().pots[ib].Add();
 					panelIDs << f.GetInt(0);
 					
 					int id;
@@ -366,10 +372,43 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 						p.id[3] = id;
 					}
 				}
+			} 
+		} else if ((pos = line.FindAfter("M O O R I N G   S T I F F N E S S   F O R   S T R U C T U R E")) >= 0) {			// LIBRIUM
+			if (hd().Cmoor.size() == 0) 
+				hd().Cmoor.SetCount(hd().Nb);
+			for (int ib = 0; ib < hd().Nb; ++ib) 
+				hd().Cmoor[ib].setConstant(6, 6, 0);
+			
+			int iib = ScanInt(line.Mid(pos));
+			if (iib < 1 || iib > hd().Nb)
+				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
+			iib--;
+			f.GetLine(10); 
+			for (int idof = 0; idof < 6; ++idof) {
+				f.GetLine();
+				for (int jdof = 0; jdof < 6; ++jdof) 
+					hd().Cmoor[iib](idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
+				f.GetLine(); 
+			}
+		} else if ((pos = line.FindAfter("H Y D R O S T A T I C   S T I F F N E S S   O F   S T R U C T U R E")) >= 0) {	// LIBRIUM	
+			int iib = ScanInt(line.Mid(pos));
+			if (iib < 1 || iib > hd().Nb)
+				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
+			iib--;
+			f.GetLine(7); 
+			for (int idof = 0; idof < 6; ++idof) {
+				f.GetLine(3);
+				for (int jdof = 0; jdof < 6; ++jdof) 
+					hd().C[iib](idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
 			}
 		} 
 	}
 	
+	if (!hd().meshes.IsEmpty()) {
+		for (int i = 0; i < hd().Nb; ++i)
+			hd().meshes[i].SetCode(Mesh::AQWA_LIS);
+	}
+			
 	int ib;	
 	
 	while(!in.IsEof()) {
@@ -458,14 +497,19 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			}
 			hd().Nh = hd().head.size();
 			break;
-		}
+		} 
 	}
 	Sort(hd().head);
+	//if (IsNull(hd().Nf))
+	//	throw Exc(t_("Number of frequencies not found"));
+	//if (IsNull(hd().Nh))
+	//	throw Exc(t_("Number of headings not found"));
+	
 	if (IsNull(hd().Nf))
-		throw Exc(t_("Number of frequencies not found"));
+		hd().Nf = 0;
 	if (IsNull(hd().Nh))
-		throw Exc(t_("Number of headings not found"));
-					
+		hd().Nh = 0;
+	
 	hd().Initialize_AB(hd().A);
 	hd().Initialize_AB(hd().B);
 	
@@ -496,15 +540,8 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			if (ib >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			
-			if (hd().pots[0][0].size() == 0) {
-				for (int ib = 0; ib < hd().Nb; ++ib) {
-					for (int ipot = 0; ipot < hd().pots[ib].size(); ++ipot) {
-						hd().pots[ib][ipot].SetCount(6);
-						for (int idf = 0; idf < 6; ++idf)
-							hd().pots[ib][ipot][idf].SetCount(hd().Nf, 0);
-					}
-				}
-			}
+			if (!hd().IsLoadedPots())
+				hd().Initialize_Pots(); 				// Initialise potentials
 			
 			int trans;
 			line = in.GetLine(4);
@@ -626,7 +663,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	       		hd().C[ib](4, 5) = f.GetDouble(3);	
 			
 			hd().C[ib] *= factorMass;
-		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness, but less reliable
+		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness, 
 			if (hd().C[ib](2, 2) != 0) {					// ... but less reliable
 				MatrixXd C;
 				C.setConstant(6, 6, 0);
@@ -876,7 +913,18 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 		else									
 			hd().mdtype = 8;				// Momentum conservation/Far field
 	}
-	
+	if (hd().IsLoadedQTF(true)) {
+		if (IsNum(hd().qtfsum[0][0][2](0, 0)))			
+			hd().qtftype = 9;				// Pressure integration/Near field
+		else									
+			hd().qtftype = 8;				// Momentum conservation/Far field
+	} else if (hd().IsLoadedQTF(false)) {
+		if (IsNum(hd().qtfdif[0][0][2](0, 0)))			
+			hd().qtftype = 9;				// Pressure integration/Near field
+		else									
+			hd().qtftype = 8;				// Momentum conservation/Far field
+	}
+		
 	if (!hd().meshes.IsEmpty()) {
 		// Removes mooring, Morison and other points unrelated with panels
 		for (Mesh &m : hd().meshes) {
@@ -1067,15 +1115,15 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
 		icol++;
 	}	
 
-	int num = int(hd().Nb*hd().qh.size());
+	//int num = int(hd().Nb*hd().qh.size());
 	int inum = 0;
 	for (int ib = 0; ib < hd().Nb; ++ib)
         for (int ih = 0, realih = 0; ih < hd().qh.size(); ++ih) {
             inum++;
-            if (Status && !Status(Format("Saving %s", file), (100*ih)/int(hd().qh.size())))
+    		if (Status && !Status(Format("Saving %s", file), (100*ih)/int(hd().qh.size())))
 				throw Exc(t_("Stop by user"));
             
-	        if (hd().qh[ih].real() != hd().qh[ih].imag())
+			if (hd().qh[ih].real() != hd().qh[ih].imag())
 				continue; 
 	        for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) 
 				for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) {

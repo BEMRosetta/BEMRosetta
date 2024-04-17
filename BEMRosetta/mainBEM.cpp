@@ -966,7 +966,7 @@ void MainBEM::UpdateButtons() {
 	}
 	
 	bool show_w = menuPlot.opwT == 0;
-	bool show_ma_ph = menuPlot.opMP == 0;
+	//bool show_ma_ph = menuPlot.opMP == 0;
 	
 	menuProcess.dropBody1.Clear();
 	menuProcess.dropBody2.Clear();
@@ -1671,7 +1671,7 @@ void MainBEM::OnMapNodes() {
 		if (hydro.meshes.IsEmpty() || hydro.meshes[0].mesh.panels.IsEmpty())
 			return;
 		
-		if (!hydro.IsLoadedPot())
+		if (!hydro.IsLoadedPots())
 			return;
 
 		int ib = mainMesh.GetIb();
@@ -2590,7 +2590,7 @@ bool MainMeshTable::Load(BEM &bem) {
 		if (hydro.meshes.IsEmpty() || hydro.meshes[0].mesh.panels.IsEmpty())
 			return false;
 		
-		bool hasPotentials = hydro.IsLoadedPot();
+		bool hasPotentials = hydro.IsLoadedPots();
 		for (int ib = 0; ib < hydro.Nb; ++ib) {
 			MeshBody &b = bodies.Add();
 			b.Init();

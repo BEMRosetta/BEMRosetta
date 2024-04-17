@@ -29,7 +29,11 @@ class Hydro : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS, WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR, CAPYNC, UNKNOWN, NUMBEM};
+	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS, WADAM_WAMIT,   NEMOH,   SEAFEM_NEMOH,   AQWA,   					  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR, CAPYNC, 
+#ifdef PLATFORM_WIN32	
+	ORCAWAVE_OWR, 
+#endif
+	UNKNOWN, NUMBEM};
 	static const char *bemStr[];
 	static const bool bemCanSave[];
 	static const char *bemExt[];
@@ -78,6 +82,9 @@ public:
 		case CAPYTAINE:		return t_("Capytaine");
 		case HYDROSTAR:		return t_("Hydrostar.out");
 		case CAPYNC:		return t_("Capytaine.nc");
+#ifdef PLATFORM_WIN32	
+		case ORCAWAVE_OWR: 	return t_("OrcaWave.owr");
+#endif
 		case UNKNOWN:		return t_("Unknown");
 		case NUMBEM:		NEVER();
 		}
@@ -103,6 +110,9 @@ public:
 		case HAMS:			return t_("HAMS");
 		case CAPYTAINE:		return t_("Capy");
 		case CAPYNC:		return t_("Capy.nc");
+#ifdef PLATFORM_WIN32	
+		case ORCAWAVE_OWR: 	return t_("ORC.owr");
+#endif
 		case HYDROSTAR:		return t_("Hydr");
 		case UNKNOWN:		return t_("¿?");
 		case NUMBEM:		NEVER();
@@ -241,6 +251,14 @@ public:
     VectorXcd qh;									 // [Nh]             Wave headings
     UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
     bool qtfdataFromW = true;
+    int qtftype = 0;								// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field	
+	
+	/* The priority is:
+										Extension	DOF				Accuracy	Run time	Control surface
+	Control surface 					.7			1,2,3,4,5,6		Better		More		Yes
+	Pressure integration/Near field		.9			1,2,3,4,5,6		Less		Less		No
+	Momentum conservation/Far field		.8			1,2,6									No				*/
+	
      
     static void Initialize_QTF(UArray<UArray<UArray<MatrixXcd>>> &qtf, int nb, int nh, int nf) {
         qtf.SetCount(nb);
@@ -259,7 +277,7 @@ public:
         
     VectorXcd mdhead;							// [Nh]             Wave headings
 	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	
-	int mdtype = 0;
+	int mdtype = 0;								// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field		
 	
     static void Initialize_MD(UArray<UArray<UArray<VectorXd>>> &md, int nb, int nh, int nf) {
         md.SetCount(nb);
@@ -313,6 +331,8 @@ public:
 	void Symmetrize_Forces(bool xAxis);
 	void Symmetrize_QTF(bool xAxis);
 	void Symmetrize_MD(bool xAxis);
+	
+	void Initialize_Pots();
 	
 	void Initialize_Sts();
 	
@@ -600,7 +620,7 @@ public:
 	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return Kirf.size() > idf && Kirf[idf].size() > jdf && Kirf[idf][jdf].size() > 0 && IsNum(Kirf[idf][jdf][0]);}
 	bool IsLoadedVo()	 	 				 const {return Vo.size() == 3 && IsNum(Vo[0]); }
 	
-	bool IsLoadedPot()						 const {return !pots.IsEmpty() && !pots[0].IsEmpty() && !pots[0][0].IsEmpty();}
+	bool IsLoadedPots()						 const {return !pots.IsEmpty() && !pots[0].IsEmpty() && !pots[0][0].IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -834,7 +854,7 @@ class Mesh : public DeepCopyOption<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   UNKNOWN, NUMMESH};	
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, UNKNOWN, NUMMESH};	
 	static const char *meshStr[];
 	static const bool meshCanSave[];
 	static const char *meshExt[];
@@ -1010,6 +1030,14 @@ public:
 	static void SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
 	
 	virtual ~AQWAMesh() noexcept {}
+};
+
+class ORCAMesh : public Mesh {
+public:
+#ifdef PLATFORM_WIN32
+	static String Load_OWR(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z);
+#endif
+	virtual ~ORCAMesh() noexcept {}
 };
 
 class DiodoreMesh : public Mesh {
@@ -1324,6 +1352,83 @@ public:
 	
 private:
 	void Load_YML_Res();
+#ifdef PLATFORM_WIN32
+	void Load_OWR();
+#endif
+};
+
+
+class OrcaFactors {
+public:
+	double mass = 1, len = 1, force = 1;
+	
+	Matrix<double, 6, 6> A, K, B, M;
+	Eigen::Vector<double, 6> F, RAO, MD;
+	
+	void Update() {
+		for (int r = 0; r < 6; ++r)	{
+			for (int c = 0; c < 6; ++c) {
+				A(r, c) = A_(r, c);
+				B(r, c) = B_(r, c);
+				K(r, c) = K_(r, c);
+				M(r, c) = M_(r, c);
+			}
+			F(r) = F_(r);
+			RAO(r) = RAO_(r);
+			MD(r) = MD_(r);
+		}
+	}
+	
+private:
+	double A_(int r, int c) const {
+		if (r < 3 && c < 3)
+			return mass;
+		else if (r >= 3 && c >= 3)
+			return len*len*len;
+		else
+			return mass*len;
+	}
+	double K_(int r, int c) const {
+		if (r < 3 && c < 3)
+			return force/len;
+		if (r < 3)
+			return force;
+		if (c < 3)
+			return force;
+		return force*len;
+	}
+	double B_(int r, int c) const {
+		if (r < 3 && c < 3)
+			return force/len;
+		if (r < 3)
+			return force;
+		if (c < 3)
+			return force;
+		return force*len;
+	}
+	double M_(int r, int c) const {
+		if (r < 3 && c < 3)
+			return mass;
+		else if (r >= 3 && c >= 3)
+			return mass*len*len;
+		else
+			return mass*len;
+	}
+	double F_(int r) const {
+		if (r < 3) 
+			return force/len;
+		return force;
+	}
+	double RAO_(int r) const {
+		if (r < 3)
+			return 1;
+		return 1/len;
+	}
+	double MD_(int r) const {
+		if (r < 3)
+			return force/len/len;
+		return force/len;
+	}
 };
 
 class BemioH5 : public HydroClass {
@@ -1460,7 +1565,7 @@ public:
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddWaterSurface(int id, char c);
 	
-	bool LoadSerializeJson();
+	String LoadSerializeJson();
 	bool StoreSerializeJson();
 	bool ClearTempFiles();
 	static String GetTempFilesFolder() {return AFX(GetAppDataFolder(), "BEMRosetta", "Temp");}
@@ -1469,7 +1574,11 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml .h5 .nc";	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml .h5 .nc"	// Priority
+#ifdef PLATFORM_WIN32
+		" .owr"
+#endif
+	;
 	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat"};	// Any of these files opens all, and it is avoided to load them again
 	String bemFilesAst;
 	
@@ -1579,7 +1688,7 @@ public:
 		auto MaxLen = [&] (const char *str[]) {
 			int mx = 0;
 			for (int i = 0; i < 6; ++i) {
-				if (strlen(str[i]) > mx)
+				if ((int)strlen(str[i]) > mx)
 					mx = int(strlen(str[i]));
 			}
 			return mx;
@@ -1807,25 +1916,28 @@ private:
 			file.Read(data, fmtSz*nv); // read the velocity components for one time step
 			
 			int ip = 0;
-	        for (int iz = 0; iz < nz; ++iz)
-	            for (int iy = 0; iy < ny; ++iy)
-	                for (int k = 0; k < 3; ++k) {
+	    	for (int iz = 0; iz < nz; ++iz) {
+	    		for (int iy = 0; iy < ny; ++iy) {
+	    			for (int k = 0; k < 3; ++k) {
 	                    double d = (double(data[ip++]) - Voffset(k))/Vslope(k);
-	                    if (d > 200 || d < -200)
+	            		if (d > 200 || d < -200)
 	                        return t_("Wrong format");
 	                    velocity(it,k,iy,iz) = d;
 	                }
+	    		}
+	    	}
 			// get the tower points
 			if (ntwr > 0) {
 				file.Read(datat, fmtSz*nvTwr);		// read the velocity components for the tower
 
-	            for (int k = 0; k < 3; ++k)      // scale the data
+	            for (int k = 0; k < 3; ++k) {      // scale the data
 	                for (int itw = 0; itw < ntwr; ++itw) {
-	                    double d = (double(datat[itw*3 + k]) - Voffset(k))/Vslope(k);
-	                    if (d > 500 || d < -500)
-	                        return t_("Wrong format");
+						double d = (double(datat[itw*3 + k]) - Voffset(k))/Vslope(k);
+						if (d > 500 || d < -500)
+							return t_("Wrong format");
 	                	twrVelocity(it,k,itw) = d; 
 	                }
+	            }
 			}
 		}
 		return "";
@@ -1845,13 +1957,15 @@ private:
 		
 		for (int it = 0; it < nt; ++it) {
 			int ip = 0;
-	        for (int iz = 0; iz < nz; ++iz)
-	            for (int iy = 0; iy < ny; ++iy)
-	                for (int k = 0; k < 3; ++k) 
+	        for (int iz = 0; iz < nz; ++iz) {
+	            for (int iy = 0; iy < ny; ++iy) {
+	                for (int k = 0; k < 3; ++k) {
 	                    data[ip++] = BetweenVal(T(velocity(it,k,iy,iz)*Vslope(k) + Voffset(k)),	
 	                    						std::numeric_limits<T>::lowest(),
 	                    						std::numeric_limits<T>::max());
-			
+	                }
+	            }
+	        }			
 			file.Write(data.begin(), fmtSz*nv);
 
 			if (ntwr > 0) {

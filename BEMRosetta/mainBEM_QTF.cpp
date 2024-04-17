@@ -150,7 +150,7 @@ void QTFTabDof::DoClick(Data &data, int idof) {
 		}
 		int idc = hd.GetId();
 		const Upp::Color &color = GetColorId(idc);
-		String nameType = Format(t_("QTF %s %s(%s)"), data.ma_ph, hd.name, hd.GetCodeStrAbr());
+		String nameType = Format(t_("QTF %s %s(%s) %d"), data.ma_ph, hd.name, hd.GetCodeStrAbr(), hd.qtftype);
 		data.scatter.AddSeries(d).Legend(nameType).Units(data.units).SetMarkColor(color).Stroke(2, color);
 		if (!showPoints)
 			data.scatter.NoMark();

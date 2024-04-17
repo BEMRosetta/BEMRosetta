@@ -1,5 +1,7 @@
 description "Hydrodynamic coefficients converter command line utility\377";
 
+noblitz;
+
 uses
 	Core,
 	ScatterDraw,
@@ -26,6 +28,7 @@ file
 	Mesh readonly separator,
 	Mesh.cpp,
 	hams_mesh.cpp,
+	orca_mesh.cpp,
 	aqwa_mesh.cpp,
 	hydrostar_mesh.cpp,
 	salome_mesh.cpp,

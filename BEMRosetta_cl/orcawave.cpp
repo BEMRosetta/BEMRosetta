@@ -2,7 +2,9 @@
 // Copyright 2020 - 2022, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
-
+#ifdef PLATFORM_WIN32
+#include "orca.h"
+#endif
 
 bool OrcaWave::Load(String file, double) {
 	hd().file = file;
@@ -16,9 +18,14 @@ bool OrcaWave::Load(String file, double) {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
 		BEM::Print("\n- " + S(t_("YML file")));
-		
-		Load_YML_Res();
-		
+
+#ifdef PLATFORM_WIN32
+		if (GetFileExt(file) == ".owr")
+			Load_OWR();
+		else
+#endif
+			Load_YML_Res();
+
 		if (IsNull(hd().Nb))
 			throw Exc(t_("No data found"));
 	
@@ -32,6 +39,26 @@ bool OrcaWave::Load(String file, double) {
 	}
 	return true;
 }
+
+#ifdef PLATFORM_WIN32
+void OrcaWave::Load_OWR() {
+	String fileName = ForceExtSafer(hd().file, ".owr");
+	
+	Orca orca;
+	
+	orca.LoadWaveResults(fileName);
+	
+	hd().dataFromW = true;
+	hd().dimen = true;
+		
+	hd().x_w = hd().y_w = 0;
+	
+	hd().Nb = hd().Nf = hd().Nh = Null;
+	
+	orca.LoadParameters(hd());
+	
+}
+#endif
 
 void OrcaWave::Load_YML_Res() {
 	String fileName = ForceExtSafer(hd().file, ".yml");
@@ -71,7 +98,7 @@ void OrcaWave::Load_YML_Res() {
 			throw Exc(in.Str() + "\n"  + Format(t_("Only PhaseOrigin:[0,0,0] is supported. Read (%s, %s, %s)"), snorig[0], snorig[1], snorig[2]));
 	};
 		
-	double factorMass = 1, factorLen = 1, factorForce = 1;	
+	OrcaFactors factor;	
 	
 	int ib = -1;
 	int Nb = 0; 
@@ -86,41 +113,20 @@ void OrcaWave::Load_YML_Res() {
 		else if (fy.FirstIs("General")) {
 			if (fy.FirstIs("UnitsSystem")) {
 				if (fy.GetVal() == "SI") {
-					factorMass = factorForce = 1000;
-					factorLen = 1;	
+					factor.mass = factor.force = 1000;
+					factor.len = 1;	
 				} else if (fy.GetVal() == "User") 
 					;
 				else
 					throw Exc(in.Str() + "\n" + Format(t_("Only SI and User units are supported. Read '%s'"), fy.GetVal()));
-			} else if (fy.FirstIs("LengthUnits")) {
-				if (fy.GetVal() == "m") 
-					factorLen = 1;	
-				else if (fy.GetVal() == "mm") 
-					factorLen = 1E-3;
-				else if (fy.GetVal() == "cm") 
-					factorLen = 1E-2;
-				else if (fy.GetVal() == "km") 
-					factorLen = 1000;
-				else
-					throw Exc(in.Str() + "\n" + Format(t_("This length unit is not supported. Read '%s'"), fy.GetVal()));
-			} else if (fy.FirstIs("MassUnits")) {
-				if (fy.GetVal() == "kg") 
-					factorMass = 1;	
-				else if (fy.GetVal() == "te") 
-					factorMass = 1000;
-				else
-					throw Exc(in.Str() + "\n" + Format(t_("This mass unit is not supported. Read '%s'"), fy.GetVal())); 
-			} else if (fy.FirstIs("ForceUnits")) {
-				if (fy.GetVal() == "N") 
-					factorForce = 1;	
-				else if (fy.GetVal() == "kN") 
-					factorForce = 1000;
-				else if (fy.GetVal() == "MN") 
-					factorForce = 1E6;
-				else
-					throw Exc(in.Str() + "\n" + Format(t_("This force unit is not supported. Read '%s'"), fy.GetVal())); 
-			} else if (fy.FirstIs("g")) 
-				hd().g = ScanDouble(fy.GetVal())*factorLen;
+			} else if (fy.FirstIs("LengthUnits")) 
+				factor.len = FactorLen(fy.GetVal());
+			else if (fy.FirstIs("MassUnits")) 
+				factor.mass = FactorMass(fy.GetVal());
+			else if (fy.FirstIs("ForceUnits")) 
+				factor.force = FactorForce(fy.GetVal());
+			else if (fy.FirstIs("g")) 
+				hd().g = ScanDouble(fy.GetVal())*factor.len;
 		} else if (fy.FirstIs("Environment")) {
 			if (fy.FirstIs("WaterSurfaceZ") && fy.GetVal() != "0") 
 				throw Exc(in.Str() + "\n" + Format(t_("Only WaterSurfaceZ 0 is supported. Read '%s'"), fy.GetVal()));
@@ -246,56 +252,7 @@ void OrcaWave::Load_YML_Res() {
 		}
 	}
 	
-	auto factorA = [&](int r, int c)->double {
-		if (r < 3 && c < 3)
-			return factorMass;
-		else if (r >= 3 && c >= 3)
-			return factorMass*factorLen*factorLen;
-		else
-			return factorMass*factorLen;
-	};
-	auto factorK = [&](int r, int c)->double {
-		if (r < 3 && c < 3)
-			return factorForce/factorLen;
-		if (r < 3)
-			return factorForce;
-		if (c < 3)
-			return factorForce;
-		return factorForce*factorLen;
-	};
-	auto factorB = [&](int r, int c)->double {
-		if (r < 3 && c < 3)
-			return factorForce/factorLen;
-		if (r < 3)
-			return factorForce;
-		if (c < 3)
-			return factorForce;
-		return factorForce*factorLen;
-	};
-	auto factorM = [&](int r, int c)->double {
-		if (r < 3 && c < 3)
-			return factorMass;
-		else if (r >= 3 && c >= 3)
-			return factorMass*factorLen*factorLen;
-		else
-			return factorMass*factorLen;
-	};
-	auto factorF = [&](int r)->double {
-		if (r < 3)
-			return factorForce/factorLen;
-		return factorForce;
-	};
-	auto factorRAO = [&](int r)->double {
-		if (r < 3)
-			return 1;
-		return 1/factorLen;
-	};
-	auto factorMD = [&](int r)->double {
-		if (r < 3)
-			return factorForce/factorLen/factorLen;
-		return factorForce/factorLen;
-	}; 
-	
+	factor.Update();
 	
 	if (Nb == 0)
 		throw Exc(S("\n") + t_("No body found"));
@@ -353,13 +310,13 @@ void OrcaWave::Load_YML_Res() {
 	while(fy.GetLine()) {
 		if (fy.FirstIs("Environment")) {
 			if (fy.FirstIs("Density")) 
-				hd().rho = ScanDouble(fy.GetVal())*factorMass/factorLen/factorLen/factorLen;		// In kg/m3
+				hd().rho = ScanDouble(fy.GetVal())*factor.mass/factor.len/factor.len/factor.len;		// In kg/m3
 			else if (fy.FirstIs("WaterDepth")) { 
 				String h = fy.GetVal(); 
 				if (ToLower(h) == "infinite")
 					hd().h = -1;
 				else	
-					hd().h = ScanDouble(h)*factorLen;
+					hd().h = ScanDouble(h)*factor.len;
 			}
 		} else if (fy.FirstIs("VesselTypes")) {
 			if (fy.FirstIs("Name")) 
@@ -367,37 +324,37 @@ void OrcaWave::Load_YML_Res() {
 			else if (fy.FirstIs("Draughts")) {
 				Eigen::MatrixXd &inertia = hd().M[ib];
 				if (fy.FirstIs("Mass")) 
-					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*factorMass;
+					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*factor.mass;
 				else if (fy.FirstMatch("MomentOfInertiaTensor*")) {			// Referred to cg
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
-					inertia(3, 3) = mat[0][0]*factorM(3, 3);		// In kg
-					inertia(3, 4) = mat[0][1]*factorM(3, 4);
-					inertia(3, 5) = mat[0][2]*factorM(3, 5);
-					inertia(4, 3) = mat[1][0]*factorM(4, 3);
-					inertia(4, 4) = mat[1][1]*factorM(4, 4);
-					inertia(4, 5) = mat[1][2]*factorM(4, 5);
-					inertia(5, 3) = mat[2][0]*factorM(5, 3);
-					inertia(5, 4) = mat[2][1]*factorM(5, 4);
-					inertia(5, 5) = mat[2][2]*factorM(5, 5);
+					inertia(3, 3) = mat[0][0]*factor.M(3, 3);		// In kg
+					inertia(3, 4) = mat[0][1]*factor.M(3, 4);
+					inertia(3, 5) = mat[0][2]*factor.M(3, 5);
+					inertia(4, 3) = mat[1][0]*factor.M(4, 3);
+					inertia(4, 4) = mat[1][1]*factor.M(4, 4);
+					inertia(4, 5) = mat[1][2]*factor.M(4, 5);
+					inertia(5, 3) = mat[2][0]*factor.M(5, 3);
+					inertia(5, 4) = mat[2][1]*factor.M(5, 4);
+					inertia(5, 5) = mat[2][2]*factor.M(5, 5);
 				} else if (fy.FirstMatch("HydrostaticStiffnessz*")) {
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
 					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
 						for (int c = 0; c < 3; ++c)
-							hd().C[ib](r+2, c+2) = mat[r][c]*factorK(r+2, c+2);
+							hd().C[ib](r+2, c+2) = mat[r][c]*factor.K(r+2, c+2);
 				} else if (fy.FirstIs("CentreOfMass")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
-					hd().cg(0, ib) = line[0]*factorLen;
-					hd().cg(1, ib) = line[1]*factorLen;
-					hd().cg(2, ib) = line[2]*factorLen;
+					hd().cg(0, ib) = line[0]*factor.len;
+					hd().cg(1, ib) = line[1]*factor.len;
+					hd().cg(2, ib) = line[2]*factor.len;
 				} else if (fy.FirstIs("CentreOfBuoyancy")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
-					hd().cb(0, ib) = line[0]*factorLen;
-					hd().cb(1, ib) = line[1]*factorLen;
-					hd().cb(2, ib) = line[2]*factorLen;
+					hd().cb(0, ib) = line[0]*factor.len;
+					hd().cb(1, ib) = line[1]*factor.len;
+					hd().cb(2, ib) = line[2]*factor.len;
 				} else if (fy.FirstIs("DisplacedVolume")) 
 					hd().Vo[ib] = ScanDouble(fy.GetVal());
 				else if (fy.FirstIs("DisplacementRAOs")) {
@@ -414,7 +371,7 @@ void OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									hd().rao.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*factorRAO(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
+									hd().rao.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*factor.RAO(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
 						}
 					}
 				}  else if (fy.FirstIs("LoadRAOs")) {
@@ -431,7 +388,7 @@ void OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									hd().ex.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*factorF(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
+									hd().ex.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*factor.F(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
 						}
 					}
 				} else if (fy.FirstIs("WaveDriftQTFMethod"))
@@ -457,7 +414,7 @@ void OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < hd().Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*factorMD(idof);
+									hd().md[ib][idh][idof](ifr) = mat[ifr][1 + idof]*factor.MD(idof);
 						}
 					}
 				} else if (fy.FirstIs("SumFrequencyQTFs") || (diffFullQTF && fy.FirstIs("WaveDrift"))) {
@@ -468,9 +425,7 @@ void OrcaWave::Load_YML_Res() {
 						double phmult = !diffFullQTF ? 1 : -1;		// Difference is conjugate-symmetric
 						
 						if (!hd().IsLoadedQTF(!diffFullQTF)) {		// Gets frequencies and headings
-							hd().qw.resize(hd().Nf);
-							for (int iw = 0; iw < hd().Nf; ++iw) 
-								hd().qw[iw] = hd().w[iw];
+							Copy(hd().w, hd().qw);
 							
 							UArray<std::complex<double>> qh;
 							for (int row = 0; row < mat.size(); ++row) {
@@ -485,7 +440,7 @@ void OrcaWave::Load_YML_Res() {
 	
 	
 							Hydro::Initialize_QTF(q, hd().Nb, int(hd().qh.size()), hd().Nf);
-							hd().mdtype = 9;
+							hd().mdtype = hd().qtftype = 9;
 						}
 						diffFullQTF = false;
 						
@@ -516,7 +471,7 @@ void OrcaWave::Load_YML_Res() {
 							if (ih < 0)
 								throw Exc(in.Str() + "\n"  + Format(t_("Wrong head (%d,%d) in QTF"), h1, h2));
 							for (int idf = 0; idf < 6; ++idf) {
-								double mag = mat[row][4+idf*2]*factorF(idf);
+								double mag = mat[row][4+idf*2]*factor.F(idf);
 								double ph  = ToRad(mat[row][4+idf*2+1]);
 								q[ib][ih][idf](ifr1, ifr2) = std::polar<double>(mag, ph);
 								q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph*phmult);
@@ -534,12 +489,12 @@ void OrcaWave::Load_YML_Res() {
 						if (idf == -1) {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().Ainf(r, c) = mat[r][c]*factorA(r, c); 
+									hd().Ainf(r, c) = mat[r][c]*factor.A(r, c); 
 							}
 						} else {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().A[r][c](idf) = mat[r][c]*factorA(r, c); 
+									hd().A[r][c](idf) = mat[r][c]*factor.A(r, c); 
 							}
 						}
 					} else if (fy.FirstMatch("DampingX*")) {
@@ -553,7 +508,7 @@ void OrcaWave::Load_YML_Res() {
 							
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) 
-									hd().B[r][c](idf) = mat[r][c]*factorB(r, c); 
+									hd().B[r][c](idf) = mat[r][c]*factor.B(r, c); 
 							}
 						}
 					}
@@ -565,19 +520,19 @@ void OrcaWave::Load_YML_Res() {
 					ib = fy.Index();
 					hd().names[ib] = fy.GetVal();
 				} else if (fy.FirstIs("DisplacedVolume")) 
-					hd().Vo[ib] = ScanDouble(fy.GetVal())*factorLen*factorLen*factorLen;
+					hd().Vo[ib] = ScanDouble(fy.GetVal())*factor.len*factor.len*factor.len;
 				else if (fy.FirstIs("CentreOfBuoyancy")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
-					hd().cb(0, ib) = line[0]*factorLen;
-					hd().cb(1, ib) = line[1]*factorLen;
-					hd().cb(2, ib) = line[2]*factorLen;
+					hd().cb(0, ib) = line[0]*factor.len;
+					hd().cb(1, ib) = line[1]*factor.len;
+					hd().cb(2, ib) = line[2]*factor.len;
 				} else if (fy.FirstMatch("HydrostaticStiffnessz*")) {
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
 					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
 						for (int c = 0; c < 3; ++c)
-							hd().C[ib](r+2, c+2) = mat[r][c]*factorK(r, c);
+							hd().C[ib](r+2, c+2) = mat[r][c]*factor.K(r, c);
 				}
 			} else if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
 				if (fy.FirstIs("AMDPeriodOrFrequency")) {
@@ -603,7 +558,7 @@ void OrcaWave::Load_YML_Res() {
 						if (idf == -1) {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) {
-									hd().Ainf(r+row*6, c+col*6) = mat[r][c]*factorA(r, c); 
+									hd().Ainf(r+row*6, c+col*6) = mat[r][c]*factor.A(r, c); 
 									if (row != col)		// Fill the symmetric
 										hd().Ainf(r+col*6, c+row*6) = hd().Ainf(r+row*6, c+col*6); 
 								}
@@ -611,7 +566,7 @@ void OrcaWave::Load_YML_Res() {
 						} else {
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) {
-									hd().A[r+row*6][c+col*6](idf) = mat[r][c]*factorA(r, c); 
+									hd().A[r+row*6][c+col*6](idf) = mat[r][c]*factor.A(r, c); 
 									if (row != col)		// Fill the symmetric
 										hd().A[r+col*6][c+row*6](idf) = hd().A[r+row*6][c+col*6](idf); 
 								}
@@ -623,7 +578,7 @@ void OrcaWave::Load_YML_Res() {
 							
 							for (int r = 0; r < 6; ++r) {
 								for (int c = 0; c < 6; ++c) {
-									hd().B[r+row*6][c+col*6](idf) = mat[r][c]*factorB(r, c); 
+									hd().B[r+row*6][c+col*6](idf) = mat[r][c]*factor.B(r, c); 
 									if (row != col)		// Fill the symmetric
 										hd().B[r+col*6][c+row*6](idf) = hd().B[r+row*6][c+col*6](idf);
 								}

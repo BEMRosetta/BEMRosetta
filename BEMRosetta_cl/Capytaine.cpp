@@ -4,6 +4,8 @@
 #include "BEMRosetta_int.h"
 #include <NetCDF/NetCDF.h>
 
+using namespace Upp;
+
 String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));

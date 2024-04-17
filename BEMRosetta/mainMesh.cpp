@@ -370,7 +370,6 @@ void MainMesh::OnMenuOpenArraySel() {
 	if (id < 0)
 		return;
 	
-	Mesh &data = Bem().surfs[id];
 	Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(~menuOpen.dropExport);
 	menuOpen.symX <<= ((type == Mesh::WAMIT_GDF || type == Mesh::AQWA_DAT) && Bem().surfs[id].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[id].IsSymmetricY();
@@ -1420,7 +1419,7 @@ void MainMesh::OnJoin() {
 	GuiLock __;
 	
 	try {	
-		bool selected = false;
+		//bool selected = false;
 		int idDest = Null;
 		for (int r = 0; r < listLoaded.GetCount(); ++r) {
 			if (listLoaded.IsSelected(r)) {
@@ -1443,7 +1442,7 @@ void MainMesh::OnJoin() {
 				if (idDest != id) {
 					Bem().JoinMesh(idDest, id);
 					RemoveRow(r);
-					selected = true;
+					//selected = true;
 				}
 			}
 		}	

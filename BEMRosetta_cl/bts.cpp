@@ -80,9 +80,9 @@ void BTSWind::SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Vof
     VectorXd mn = VectorXd::Constant(3, std::numeric_limits<double>::max());
     VectorXd mx = VectorXd::Constant(3, std::numeric_limits<double>::lowest());
     for (int it = 0; it < nt; ++it) {
-        for (int iz = 0; iz < nz; ++iz)
-            for (int iy = 0; iy < ny; ++iy)
-                for (int k = 0; k < 3; ++k) {
+		for (int iz = 0; iz < nz; ++iz)
+			for (int iy = 0; iy < ny; ++iy)
+				for (int k = 0; k < 3; ++k) {
                     mx(k) = std::max(velocity(it,k,iy,iz), mx(k));
                     mn(k) = std::min(velocity(it,k,iy,iz), mn(k));
                 }
