@@ -70,6 +70,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Salome](https://www.salome-platform.org/): .dat
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
     * [SeaFEM/TDyn](http://www.compassis.com/compass/en/Productos/SeaFEM): .msh
+    * [GMSH](https://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format): .msh
   * Save
     * [Wamit](https://www.wamit.com/): .gdf
     * [HAMS](https://github.com/YingyiLiu/HAMS): HullMesh.pnl, WaterplaneMesh.pnl
