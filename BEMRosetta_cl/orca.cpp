@@ -102,6 +102,193 @@ VectorMap<int, String> Orca::objectTypes = {
     {otSeabedTangentialResistance, "SeabedTangentialResistance"}
 };
 
+Orca::~Orca() {
+	if (dll.GetHandle() != 0) {
+		int status;
+		
+		if (wave) {
+			DestroyDiffraction(wave, &status);
+			if (status != 0)
+				throwError("DestroyDiffraction");
+		}
+		
+		if (flex) {
+			DestroyModel(flex, &status);
+			if (status != 0)
+				throwError("DestroyModel");
+		}
+		FinaliseLibrary(&status);
+		if (status != 0)
+			throwError("FinaliseLibrary");
+	}
+}
+	
+bool Orca::Init(String _dllFile) {
+	dllFile = _dllFile;
+	if (!dll.Load(dllFile))
+		return false;
+
+	CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (HINSTANCE *handle, HWND hCaller, int *status));
+	DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(HINSTANCE handle, int *status));
+	LoadData     = DLLGetFunction(dll, void, C_LoadDataW,   (HINSTANCE handle, LPCWSTR wcs, int *status));
+	SaveData     = DLLGetFunction(dll, void, C_SaveDataW,   (HINSTANCE handle, LPCWSTR wcs, int *status));
+	
+	CreateDiffraction      = DLLGetFunction(dll, void, C_CreateDiffraction, 	  (HINSTANCE *handle, int *status));
+	DestroyDiffraction     = DLLGetFunction(dll, void, C_DestroyDiffraction,	  (HINSTANCE handle, int *status));
+	LoadDiffractionData    = DLLGetFunction(dll, void, C_LoadDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
+	SaveDiffractionData    = DLLGetFunction(dll, void, C_SaveDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
+	CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
+	LoadDiffractionResults = DLLGetFunction(dll, void, C_LoadDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
+	SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
+	CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
+	RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *status));
+	LoadSimulation		   = DLLGetFunction(dll, void, C_LoadSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
+	SaveSimulation		   = DLLGetFunction(dll, void, C_SaveSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
+	GetTimeHistory2		   = DLLGetFunction(dll, void, C_GetTimeHistory2W,		  (HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status));
+	GetVarID			   = DLLGetFunction(dll, void, C_GetVarIDW,				  (HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *status));
+	GetNumOfSamples		   = DLLGetFunction(dll, int,  C_GetNumOfSamples, 		  (HINSTANCE handle, const TPeriod *period, int *status));
+	EnumerateObjects	   = DLLGetFunction(dll, void, C_EnumerateObjectsW, 	  (HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status));
+	EnumerateVars2		   = DLLGetFunction(dll, void, C_EnumerateVars2W, 		  (HINSTANCE handle, const TObjectExtra2 *objectextra, int ResultType, 
+																						TEnumerateVarsProc EnumerateVarsProc, int *lpNumberOfVars, int *status));
+	ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (HINSTANCE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
+	CGetModelState		   = DLLGetFunction(dll, void, C_GetModelState,		  	  (HINSTANCE handle, int *lpModelState, int *status));
+
+	GetDataType_	   	   = DLLGetFunction(dll, void, C_GetDataTypeW,		  	  (HINSTANCE handle, LPCWSTR name, int *lpType, int *status));
+	GetDataRowCount_	   = DLLGetFunction(dll, void, C_GetDataRowCountW,		  (HINSTANCE handle, LPCWSTR name, int *lpCount, int *status));
+	GetDataInteger		   = DLLGetFunction(dll, void, C_GetDataIntegerW,		  (HINSTANCE handle, LPCWSTR name, int index, int *lpData, int *status));
+	GetDataDouble		   = DLLGetFunction(dll, void, C_GetDataDoubleW,		  (HINSTANCE handle, LPCWSTR name, int index, double *lpData, int *status));
+	GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (HINSTANCE handle, LPCWSTR name, int index, LPWSTR lpData, int *status));
+	
+	SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *status));
+	GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *status));
+	
+	GetDiffractionOutput0 = DLLGetFunction(dll, void, C_GetDiffractionOutput, (HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus));
+
+	RegisterLicenceNotFoundHandler = DLLGetFunction(dll, void, C_RegisterLicenceNotFoundHandler, 	  (TLicenceNotFoundHandlerProc Handler, int *lpStatus));
+	
+	GetLastErrorString = DLLGetFunction(dll, int,  C_GetLastErrorStringW, (LPCWSTR wcs));
+	FinaliseLibrary    = DLLGetFunction(dll, void, C_FinaliseLibrary,     (int *status));
+	
+	return true;
+}
+
+int Orca::GetDiffractionOutput(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput) {
+	int lpStatus;
+	GetDiffractionOutput0(handle, OutputType, lpOutputSize, lpOutput, &lpStatus);
+	return lpStatus;
+}
+
+void __stdcall Orca::DiffractionHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+	static int lastPerc = -1;
+	String msg = WideToString(lpProgress);
+	int perc = -1;
+	int idp = msg.Find("%");
+	if (idp >= 0) {
+		int idbp = msg.ReverseFind(" ", idp);
+		if (idbp >= 0) 
+			perc = ScanInt(msg.Mid(idbp+1, idp-idbp));
+	}
+	if (lastPerc == perc) 
+		return;
+	
+	lastPerc = perc;
+	
+	Time et;
+	if (perc == 0)
+		et = Null;
+	else {
+		int64 sec = GetSysTime() - startCalc - noLicenseTime;
+		int64 estsec = int64(100*sec/double(perc));
+		et = GetSysTime() + estsec;
+	}
+	*lpCancel = WhenWave(msg, perc, et);
+}
+
+void __stdcall Orca::StaticsHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+	String msg = WideToString(lpProgress);
+	*lpCancel = WhenPrint(msg);
+}
+
+void __stdcall Orca::LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnection, INT_PTR *lpData) {
+	switch (action) {
+	case lrBegin:
+		beginNoLicense = GetSysTime();
+		Sleep(60*1000); 
+		*lpAttemptReconnection = TRUE;
+		WhenPrint("License lost. Attemping reconnection in a minute");
+		*lpData = 1;
+		return;
+	case lrContinue:
+		*lpAttemptReconnection = TRUE;	//*lpData < 10; 
+		if (*lpAttemptReconnection) {
+			Sleep(60*1000);
+			WhenPrint(Format("License lost for %d min. Attemping reconnection in a minute", *lpData));
+			(*lpData)++; 
+		}
+		return;
+	case lrEnd:
+		noLicenseTime += (GetSysTime() - beginNoLicense);
+	}
+}
+
+void __stdcall Orca::SimulationHandlerProc(HINSTANCE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel) {
+	Time tm = GetSysTime();
+	if (IsNull(startCalc))		// Time starts here. Statics calculation delay is discarded
+		startCalc = tm;
+	else if (tm - lastLog < deltaLogSimulation)
+		return;
+	lastLog = tm;
+	double elapsed  = simulationTime - simulationStart,
+		   total    = simulationStop - simulationStart;
+	int64  elapsedT = tm - startCalc - noLicenseTime,
+		   pending  = int64(elapsedT*(total/elapsed - 1));		// elapsedT*total/elapsed - elapsedT
+	*lpCancel = WhenPrint(Format("Elap/Total:%.1f/%.0f ET:%s Clk/Sim:%.1f", elapsed, total,
+										   					  SecondsToString(double(pending), 0, false, false, true, false, true), elapsedT/elapsed));
+}
+
+void __stdcall Orca::EnumerateObjectsProc(HINSTANCE handle, const TObjectInfo *info) {
+	objTypes << info->ObjectType;
+	WString str(info->ObjectName);
+	objNames << str.ToString();
+	objHandles << info->ObjectHandle;
+}
+
+void __stdcall Orca::EnumerateVarsProc(const TVarInfo *lpVarInfo) {
+	int id = Find(varIDs, lpVarInfo->VarID);
+	if (id < 0 || (actualBlade > 0 && varBlades[id] != actualBlade)) {
+		varIDs << lpVarInfo->VarID;
+		varBlades << actualBlade;
+		varNames << WideToString(lpVarInfo->lpVarName);
+		varFullNames << WideToString(lpVarInfo->lpFullName);
+		varUnits << WideToString(lpVarInfo->lpVarUnits);
+	}
+}
+			
+bool Orca::FindInit() {
+	UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
+	if (orcadata.IsEmpty())
+		return false;
+	
+	int iversion = 0;
+	UVector<int> version = orcadata[0].GetVersion();
+	for (int i = 1; i < orcadata.size(); ++i) {							// Get the newest version from the installed
+		UVector<int> each = orcadata[i].GetVersion();
+		if (SoftwareDetails::IsHigherVersion(each, version)) {			// Version are numbers separated by .
+			iversion = i;
+			version = pick(each);
+		}
+	}
+	String arch;
+#ifdef CPU_64
+	arch = "Win64";
+#else
+	arch = "Win32";
+#endif
+	String path = AFX(orcadata[iversion].path, "OrcFxAPI", arch, "OrcFxAPI.dll");	// Assembles the path
+	
+	return Init(path);
+}
+		
 int Orca::GetDataType(HINSTANCE handle, const wchar_t *name) {
 	int status;
 	int ret;
@@ -155,8 +342,7 @@ String Orca::GetString(HINSTANCE handle, const wchar_t *name, int id) {
 		throwError(Format("Load GetDataString 2 %s", name));	
 	return WideToString(wcs, len);
 }
-	
-	
+		
 void Orca::LoadParameters(Hydro &hy) {
 	int sz;
 	
@@ -331,10 +517,8 @@ void Orca::LoadParameters(Hydro &hy) {
 
 	sz /= (2*sizeof(double));
 	hy.mdhead.resize(sz);
-	for (int i = 0; i < sz; i++) {
-		hy.mdhead[i].real(qmh[2*i]);
-		hy.mdhead[i].imag(qmh[2*i+1]);
-	}
+	for (int i = 0; i < sz; i++) 
+		hy.mdhead[i] = std::complex<double>(qmh[2*i], qmh[2*i+1]);
 	
 	auto LoadMD = [&](int type, const char *stype)->bool {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
@@ -436,8 +620,8 @@ void Orca::LoadParameters(Hydro &hy) {
 		return true;
 	};
 		
-	//if (!LoadQTF(dotQuadraticLoadFromControlSurface, "QTF Control Surface"))
-	//	LoadQTF(dotQuadraticLoadFromPressureIntegration, "QTF Pressure Integration");
+	if (!LoadQTF(dotQuadraticLoadFromControlSurface, "QTF Control Surface"))
+		LoadQTF(dotQuadraticLoadFromPressureIntegration, "QTF Pressure Integration");
 
 	int Np;
 	if (GetDiffractionOutput(wave, dotPanelCount, &sz, NULL))
@@ -499,7 +683,8 @@ void Orca::LoadParameters(Hydro &hy) {
 				for (int ifr = 0; ifr < hy.Nf; ++ifr)
 					for (int ip = 0; ip < Np; ++ip) {
 						const TComplex &c = pres(idf + 6*ib, ifr, ip);
-						hy.pots[ib][ip][idf][ifr] = std::complex<double>(-c.Im, c.Re)/hy.rho/hy.w[ifr]; // press = i w rho phi(potential)
+						hy.pots[ib][ip][idf][ifr] = std::complex<double>(-c.Re, c.Im)/hy.rho;
+							//std::complex<double>(c.Im, -c.Re)/hy.rho/hy.w[ifr]; // press = i w rho phi(potential)
 					}
 	}
 }

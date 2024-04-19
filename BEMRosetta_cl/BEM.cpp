@@ -188,7 +188,7 @@ void Hydro::SortHeadings() {
 	
 	mdhead.resize(nmhead.size());		// Cannot pick()
 	for (int ih = 0; ih < mdhead.size(); ++ih)
-		mdhead[ih] = nmhead[ih];
+		mdhead[ih] = nmhead[indices_md[ih]];
 		
 	auto SortF = [&](Forces &F) {
 		Forces f = clone(F);
@@ -1669,8 +1669,8 @@ bool Hydro::AfterLoad(Function <bool(String, int)> Status) {
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
 						const std::complex<double> &comp = pots[ib][idp][idf2][ifr];
 						for (int idf1 = 0; idf1 < 6; ++idf1) {
-							A_P[idf1 + ib*Nb][idf2 + ib*Nb][ifr] += Apan(ib, idp, idf1, idf2, ifr) = rho_w*comp.imag()*n[idf1]*s;
-							B_P[idf1 + ib*Nb][idf2 + ib*Nb][ifr] -= Bpan(ib, idp, idf1, idf2, ifr) = rho*comp.real()*n[idf1]*s;
+							A_P[idf1 + ib*6][idf2 + ib*6][ifr] += (Apan(ib, idp, idf1, idf2, ifr) = rho_w*comp.imag()*n[idf1]*s);
+							B_P[idf1 + ib*6][idf2 + ib*6][ifr] -= (Bpan(ib, idp, idf1, idf2, ifr) = rho*comp.real()*n[idf1]*s);
 						}
 					}
 				}

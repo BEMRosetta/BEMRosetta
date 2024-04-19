@@ -158,7 +158,7 @@ public:
 		switch (dataToPlot) {
 		case Hydro::PLOT_A:			return data->A_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINF:		return data->Ainf_(ndim, idf, jdf);
-		case Hydro::PLOT_A_P:			return data->A_P_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_A_P:		return data->A_P_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_A0:		return data->A0_(ndim, idf, jdf);
 		case Hydro::PLOT_B:			return data->B_  (ndim, int(id), idf, jdf);
 		case Hydro::PLOT_B_H:		return data->B_H_(ndim, int(id), idf, jdf);

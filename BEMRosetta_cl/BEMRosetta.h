@@ -297,7 +297,7 @@ public:
     UVector<double> Vo;   				// [Nb]             Displaced volume
     		
    	UArray<Mesh> meshes;				// [Nb]
-   	bool symX, symY;
+   	bool symX = false, symY = false;
    	
    	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots;	// [Nb][Np][6][Nf]		Complex potentials
    	

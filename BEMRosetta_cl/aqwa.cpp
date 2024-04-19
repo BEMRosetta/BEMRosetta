@@ -277,7 +277,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	
 	in.SeekPos(fpos);			
 	
-	Upp::Index<int> panelIDs;
+	UArray<Upp::Index<int>> panelIDs(hd().Nb);
 	UArray<Upp::Index<int>> nodeIDs(hd().Nb);
 		
 	while(!in.IsEof()) {
@@ -344,7 +344,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 					}
 					Panel &p = hd().meshes[ib].mesh.panels.Add();
 					//UArray<UArray<std::complex<double>>> &pots = hd().pots[ib].Add();
-					panelIDs << f.GetInt(0);
+					panelIDs[ib] << f.GetInt(0);
 					
 					int id;
 					id = nodeIDs[ib].Find(f.GetInt(2));
@@ -518,8 +518,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	hd().Initialize_Forces(hd().sc);
 	hd().Initialize_Forces(hd().rao);
 	
-	int ifrPot = Null;
-	double lastPotFreq = Null;
+	int ifrPot = -1, prevTrans = Null;
 	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -537,7 +536,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			line = in.GetLine(2);
 			pos = line.FindAfter("S T R U C T U R E");
 			ib = ScanInt(line.Mid(pos)) - 1; 
-			if (ib >= hd().Nb)
+			if (ib < 0 || ib >= hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			
 			if (!hd().IsLoadedPots())
@@ -553,20 +552,23 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				trans = Null;
 			
 			if (!IsNull(trans)) {
-				line = in.GetLine(2);
-				pos = line.FindAfter("=");
-				double freq = ScanDouble(line.Mid(pos));
-				if (IsNull(freq))
-					throw Exc(in.Str() + "\n"  + t_("Wrong frequency"));
+				int ib2 = ScanInt(Trim(line).Right(3)) - 1;
+				if (ib2 < 0 || ib2 >= hd().Nb)
+					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 				
-				if (freq != lastPotFreq) {	// To accelerate search
-					lastPotFreq = freq;
-					ifrPot = FindClosest(hd().w, freq);
-					if (ifrPot < 0)
-						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq)); 
-				}
+				if (trans) {
+				 	if (IsNull(prevTrans) || !prevTrans) {
+						prevTrans = true;
+						if (ib2 == 0)
+							++ifrPot;
+					}
+				} else
+					prevTrans = false;
 				
-				in.GetLine(5);
+				if (hd().Nb == 1)
+					in.GetLine(7);
+				else
+					in.GetLine(6);
 				
 				String line;
 				while (!in.IsEof()) {
@@ -582,21 +584,21 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 					if (f.size() == 8) {
 						int idPanel = f.GetInt(0);
 						
-						if (lastIdPot >= 0 && lastIdPot+1 < panelIDs.size() && panelIDs[lastIdPot+1] == idPanel)
+						if (lastIdPot >= 0 && lastIdPot+1 < panelIDs[ib2].size() && panelIDs[ib2][lastIdPot+1] == idPanel)
 							lastIdPot++;
 						else
-							lastIdPot = panelIDs.Find(idPanel);
+							lastIdPot = panelIDs[ib2].Find(idPanel);
 						
 						if (lastIdPot >= 0) {
-							UArray<UArray<std::complex<double>>> &pan = hd().pots[ib][lastIdPot];
+							UArray<UArray<std::complex<double>>> &pan = hd().pots[ib2][lastIdPot];
 							if (trans) {
-								pan[0][ifrPot] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
-								pan[1][ifrPot] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
-								pan[2][ifrPot] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+								pan[0][ifrPot] += std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+								pan[1][ifrPot] += std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+								pan[2][ifrPot] += std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
 							} else {
-								pan[3][ifrPot] = std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
-								pan[4][ifrPot] = std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
-								pan[5][ifrPot] = std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
+								pan[3][ifrPot] += std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
+								pan[4][ifrPot] += std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
+								pan[5][ifrPot] += std::polar<double>(f.GetDouble(6), ToRad(f.GetDouble(7)));
 							}
 						}
 					}

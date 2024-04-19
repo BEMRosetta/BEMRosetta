@@ -2463,8 +2463,8 @@ void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 		dropFreq.Clear();
 		if (hasPotentials) {
 			for (int i = 0; i < 6; ++i) {
-				panels.AddRowNumColumn(Format(t_("Pot %s real"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
-				panels.AddRowNumColumn(Format(t_("Pot %s imag"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+				panels.AddRowNumColumn(Format(t_("Pot %s mag"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
+				panels.AddRowNumColumn(Format(t_("Pot %s phase"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
 			}
 			if (Bem().onlyDiagonal) {
 				for (int r = 0; r < 6; ++r) 
