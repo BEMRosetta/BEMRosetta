@@ -30,8 +30,8 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const Vect
 	double srate = GetSampleRate(w, 4, .8);	// Gets the most probable sample rate
 	Resample(w, B, w2, B2, srate/2);		// Ainfw calculation is better resampling to half
 	
-    int Nf = B2.size(),
-    	   numT = Tirf.size();
+    int Nf = (int)B2.size(),
+    	numT = (int)Tirf.size();
     
     Kirf.resize(numT);
 	

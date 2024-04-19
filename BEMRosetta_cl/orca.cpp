@@ -530,7 +530,7 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (sz/sizeof(TComplex) != 6*hy.Nb*hy.Nf*hy.mdhead.size())		
 			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*hy.Nf*hy.mdhead.size()));
 		
-		MultiDimMatrixRowMajor<TComplex> md(hy.mdhead.size(), hy.Nf, 6*hy.Nb);
+		MultiDimMatrixRowMajor<TComplex> md((int)hy.mdhead.size(), hy.Nf, 6*hy.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, md.begin()))
 			throwError(Format("Load %s 2", stype));		
 		
@@ -586,12 +586,12 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (sz/sizeof(TComplex) != 6*hy.Nb*(Nqw/3)*hy.qh.size())		
 			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*(Nqw/3)*hy.qh.size()));
 		
-		MultiDimMatrixRowMajor<TComplex> qtf(hy.qh.size(), Nqw, 6*hy.Nb);
+		MultiDimMatrixRowMajor<TComplex> qtf((int)hy.qh.size(), Nqw, 6*hy.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
 			throwError(Format("Load %s 2", stype));		
 		
-		Hydro::Initialize_QTF(hy.qtfsum, hy.Nb, int(hy.qh.size()), hy.qw.size());
-		Hydro::Initialize_QTF(hy.qtfdif, hy.Nb, int(hy.qh.size()), hy.qw.size());
+		Hydro::Initialize_QTF(hy.qtfsum, hy.Nb, int(hy.qh.size()), int(hy.qw.size()));
+		Hydro::Initialize_QTF(hy.qtfdif, hy.Nb, int(hy.qh.size()), int(hy.qw.size()));
 		
 		int Nb = hy.Nb;
 		if (type == dotQuadraticLoadFromControlSurface)
