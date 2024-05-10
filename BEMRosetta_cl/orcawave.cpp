@@ -6,12 +6,12 @@
 #include "orca.h"
 #endif
 
-bool OrcaWave::Load(String file, double) {
+String OrcaWave::Load(String file, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(file);
 	hd().dimen = true;
 	hd().len = 1;
-	hd().code = Hydro::ORCAWAVE;
+	hd().solver = Hydro::ORCAWAVE;
 	hd().Nb = Null;
 	
 	try {
@@ -27,17 +27,17 @@ bool OrcaWave::Load(String file, double) {
 			Load_YML_Res();
 
 		if (IsNull(hd().Nb))
-			throw Exc(t_("No data found"));
+			return t_("No data found");
 	
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
+		/*hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 6;
+			hd().dof[i] = 6;*/
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
-		return false;
+		//hd().lastError = e;
+		return e;
 	}
-	return true;
+	return String();
 }
 
 #ifdef PLATFORM_WIN32
@@ -102,7 +102,9 @@ void OrcaWave::Load_YML_Res() {
 	
 	int ib = -1;
 	int Nb = 0; 
-
+	
+	hd().g = 9.80665;		// Default value used when SI units
+	
 	YmlParser fy(in);
 
 	FileInLine::Pos fpos = in.GetPos();
@@ -134,7 +136,8 @@ void OrcaWave::Load_YML_Res() {
 			if (fy.FirstIs("Name")) {
 				if (fy.Index() != Nb)
 					throw Exc(in.Str() + "\n" + t_("Failed body count"));
-				hd().names << fy.GetVal();
+				hd().msh.SetCount(Nb+1);
+				hd().msh[Nb].name = fy.GetVal();
 				Nb++;
 				c0s << Null;
 			} else if (fy.FirstIs("WavesReferredToBy") && fy.Index() == 0) {		// Only for the first body
@@ -258,21 +261,22 @@ void OrcaWave::Load_YML_Res() {
 		throw Exc(S("\n") + t_("No body found"));
 	
 	hd().Nb = Nb;
-	hd().Vo.SetCount(hd().Nb, NaNDouble);
-	hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	hd().msh.SetCount(hd().Nb);
+	//hd().Vo.SetCount(hd().Nb, NaNDouble);
+	//hd().cg.setConstant(3, hd().Nb, NaNDouble);
 	
-	hd().c0.resize(3, hd().Nb);
+	//hd().c0.resize(3, hd().Nb);
 	for (int ib = 0; ib < Nb; ++ib)				
 		for (int idf = 0; idf < 3; ++idf)
-			hd().c0(idf, ib) = c0s[ib][idf];
+			hd().msh[ib].c0[idf] = c0s[ib][idf];
 	
-	hd().cb.setConstant(3, hd().Nb, NaNDouble);
-	hd().C.SetCount(hd().Nb);
+	//hd().cb.setConstant(3, hd().Nb, NaNDouble);
+	//hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0);
-	hd().M.SetCount(hd().Nb);
+		hd().msh[ib].C.setConstant(6, 6, 0);
+	//hd().M.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().M[ib].setConstant(6, 6, 0);
+		hd().msh[ib].M.setConstant(6, 6, 0);
 
 	hd().Nf = hd().w.size();
 	hd().Nh = hd().head.size();
@@ -287,14 +291,14 @@ void OrcaWave::Load_YML_Res() {
 			for (int i = 0; i < hd().w.size(); ++i)
 				hd().w[i] *= 2*M_PI;	
 		}
-		hd().T.SetCount(hd().w.size());
+		/*hd().T.SetCount(hd().w.size());
 		for (int i = 0; i < hd().w.size(); ++i)
-			hd().T[i] = 2*M_PI/hd().w[i];	
+			hd().T[i] = 2*M_PI/hd().w[i];	*/
 	} else {
-		hd().T = pick(hd().w);
-		hd().w.SetCount(hd().T.size());
+		//hd().T = pick(hd().w);
+		//hd().w.SetCount(hd().T.size());
 		for (int i = 0; i < hd().w.size(); ++i)
-			hd().w[i] = 2*M_PI/hd().T[i];	
+			hd().w[i] = 2*M_PI/hd().w[i];	
 	}	
 
 	hd().Initialize_Forces(hd().ex);
@@ -322,7 +326,7 @@ void OrcaWave::Load_YML_Res() {
 			if (fy.FirstIs("Name")) 
 				ib = fy.GetIndex()[1];
 			else if (fy.FirstIs("Draughts")) {
-				Eigen::MatrixXd &inertia = hd().M[ib];
+				Eigen::MatrixXd &inertia = hd().msh[ib].M;
 				if (fy.FirstIs("Mass")) 
 					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*factor.mass;
 				else if (fy.FirstMatch("MomentOfInertiaTensor*")) {			// Referred to cg
@@ -342,21 +346,21 @@ void OrcaWave::Load_YML_Res() {
 					
 					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
 						for (int c = 0; c < 3; ++c)
-							hd().C[ib](r+2, c+2) = mat[r][c]*factor.K(r+2, c+2);
+							hd().msh[ib].C(r+2, c+2) = mat[r][c]*factor.K(r+2, c+2);
 				} else if (fy.FirstIs("CentreOfMass")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
-					hd().cg(0, ib) = line[0]*factor.len;
-					hd().cg(1, ib) = line[1]*factor.len;
-					hd().cg(2, ib) = line[2]*factor.len;
+					hd().msh[ib].cg.x = line[0]*factor.len;
+					hd().msh[ib].cg.y = line[1]*factor.len;
+					hd().msh[ib].cg.z = line[2]*factor.len;
 				} else if (fy.FirstIs("CentreOfBuoyancy")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
-					hd().cb(0, ib) = line[0]*factor.len;
-					hd().cb(1, ib) = line[1]*factor.len;
-					hd().cb(2, ib) = line[2]*factor.len;
+					hd().msh[ib].cb.x = line[0]*factor.len;
+					hd().msh[ib].cb.y = line[1]*factor.len;
+					hd().msh[ib].cb.z = line[2]*factor.len;
 				} else if (fy.FirstIs("DisplacedVolume")) 
-					hd().Vo[ib] = ScanDouble(fy.GetVal());
+					hd().msh[ib].Vo = ScanDouble(fy.GetVal());
 				else if (fy.FirstIs("DisplacementRAOs")) {
 					if (fy.FirstIs("RAOs")) {
 						if (fy.FirstMatch("RAOPeriodOrFrequency*")) {	
@@ -425,7 +429,7 @@ void OrcaWave::Load_YML_Res() {
 						double phmult = !diffFullQTF ? 1 : -1;		// Difference is conjugate-symmetric
 						
 						if (!hd().IsLoadedQTF(!diffFullQTF)) {		// Gets frequencies and headings
-							Copy(hd().w, hd().qw);
+							::Copy(hd().w, hd().qw);
 							
 							UArray<std::complex<double>> qh;
 							for (int row = 0; row < mat.size(); ++row) {
@@ -436,7 +440,7 @@ void OrcaWave::Load_YML_Res() {
 									   
 								FindAddDelta(qh, std::complex<double>(h1, h2), 0.0001);	
 							}
-							Copy(qh, hd().qh);
+							::Copy(qh, hd().qh);
 	
 	
 							Hydro::Initialize_QTF(q, hd().Nb, int(hd().qh.size()), hd().Nf);
@@ -474,7 +478,7 @@ void OrcaWave::Load_YML_Res() {
 								double mag = mat[row][4+idf*2]*factor.F(idf);
 								double ph  = ToRad(mat[row][4+idf*2+1]);
 								q[ib][ih][idf](ifr1, ifr2) = std::polar<double>(mag, ph);
-								q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph*phmult);
+								q[ib][ih][idf](ifr2, ifr1) = std::polar<double>(mag, ph*phmult);	// Diagonal
 							}
 						}
 					}
@@ -518,21 +522,21 @@ void OrcaWave::Load_YML_Res() {
 			if (fy.FirstIs("Bodies")) {
 				if (fy.FirstIs("Name")) {
 					ib = fy.Index();
-					hd().names[ib] = fy.GetVal();
+					hd().msh[ib].name = fy.GetVal();
 				} else if (fy.FirstIs("DisplacedVolume")) 
-					hd().Vo[ib] = ScanDouble(fy.GetVal())*factor.len*factor.len*factor.len;
+					hd().msh[ib].Vo = ScanDouble(fy.GetVal())*factor.len*factor.len*factor.len;
 				else if (fy.FirstIs("CentreOfBuoyancy")) {
 					UVector<double> line = fy.GetVectorDouble();
 					
-					hd().cb(0, ib) = line[0]*factor.len;
-					hd().cb(1, ib) = line[1]*factor.len;
-					hd().cb(2, ib) = line[2]*factor.len;
+					hd().msh[ib].cb.x = line[0]*factor.len;
+					hd().msh[ib].cb.y = line[1]*factor.len;
+					hd().msh[ib].cb.z = line[2]*factor.len;
 				} else if (fy.FirstMatch("HydrostaticStiffnessz*")) {
 					UVector<UVector<double>> mat = fy.GetMatrixDouble();
 					
 					for (int r = 0; r < 3; ++r)				// Only heave, roll, pitch
 						for (int c = 0; c < 3; ++c)
-							hd().C[ib](r+2, c+2) = mat[r][c]*factor.K(r, c);
+							hd().msh[ib].C(r+2, c+2) = mat[r][c]*factor.K(r, c);
 				}
 			} else if (fy.FirstIs("MultibodyAddedMassAndDamping")) {
 				if (fy.FirstIs("AMDPeriodOrFrequency")) {
@@ -594,9 +598,9 @@ void OrcaWave::Load_YML_Res() {
 		throw Exc(t_("Incorrect .yml format"));
 	
 	// Inertia matrices have to be translated from cg to c0
-	for (int ib = 0; ib < hd().Nb; ++ib) {
-		Point3D cg(hd().cg.col(ib));
-		Point3D c0(hd().c0.col(ib));
-		Surface::TranslateInertia66(hd().M[ib], cg, cg, c0);
-	}
+	for (int ib = 0; ib < hd().Nb; ++ib) //{
+		//Point3D cg(hd().cg.col(ib));
+		//Point3D c0(hd().c0.col(ib));
+		Surface::TranslateInertia66(hd().msh[ib].M, hd().msh[ib].cg, hd().msh[ib].cg, hd().msh[ib].c0);
+	//}
 }

@@ -30,6 +30,13 @@ String GetSystemInfo() {
 	return systemInfo;
 }
 
+#if defined(flagBEMR_CL)
+BEM &Bem() {
+	static BEM bem;
+	return &bem;
+}
+#endif
+
 UVector<String> GetCommandLineParams(String str) {
 	UVector<String> ret;
 	
@@ -267,7 +274,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	
 	ChangeCurrentDirectory(GetExeFilePath());
 	
-	BEM bem;
+	BEM &bem = Bem();
 	FastOut fast;
 	ArrayWind wind;
 	
@@ -457,8 +464,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								qtfHeading = -1;
 							else 
 								qtfHeading = FindClosest(hd.qh, std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
-							if (bem.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading)) 
-								BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
+							bem.hydros[bemid].hd().SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading);
+							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
 						} else if (param == "-convqtfheads") {	
 							CheckIfAvailableArg(command, ++i, "-convqtfheads");
 							if (ToLower(command[i]) == "all") 

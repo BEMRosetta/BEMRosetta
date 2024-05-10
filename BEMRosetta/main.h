@@ -213,7 +213,7 @@ public:
 				return 0;
 			else if (dataToPlot == Hydro::PLOT_A0 && data->w.size() == 0)
 				return double(id);
-			return data->T[int(id)];
+			return 2*M_PI/data->w[int(id)];
 		}
 	}
 	virtual int64 GetCount() const {
@@ -526,7 +526,7 @@ public:
 	void Init(Hydro::DataMatrix what);
 	void OnOp(int id);
 	void Clear();
-	bool Load(UArray<HydroClass> &hydros, const UVector<int> &ids, bool ndim);
+	bool Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim);
 	void Load(UArray<Mesh> &surfs, const UVector<int> &ids);
 	
 	void Jsonize(JsonIO &json) {
@@ -668,7 +668,7 @@ public:
 		
 	void Init(bool vert);
 	void Init(int idf, double jdf_ih, Hydro::DataToShow dataToShow, double _heading1 = Null);
-	bool Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const UVector<int> &ids);
+	bool Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVector<int> &ids);
 	bool Load(const Hydro &hy, const MainBEM &mbm);
 	void LoadEach(const Hydro &hy, int id, bool &loaded, int idc = -1);
 	void Clear();
@@ -704,7 +704,7 @@ public:
 	void Clear();
 	bool Load(BEM &bem, const UVector<int> &ids, int ih = Null);
 	
-	void UpdateHead(BEM &bem/*, int ih*/);
+	void UpdateHead(BEM &bem/*, int ih*/, const UVector<int> &loaded);
 	void UpdateHeadMD(BEM &bem/*, int ih*/);
 		
 	TabCtrl tab;
@@ -721,7 +721,7 @@ public:
 	typedef MainStateSpacePlot CLASSNAME;
 	
 	void Init(int _idf, int _jdf);
-	bool Load(UArray<HydroClass> &hydro, const UVector<int> &ids, const MainBEM &mbm);
+	bool Load(UArray<Hydro> &hydro, const UVector<int> &ids, const MainBEM &mbm);
 	void InitArray(ArrayCtrl &array);
 	
 	MainPlot mainPlot;
@@ -861,43 +861,53 @@ private:
 	Function <void()> WhenClose;
 };
 
+class MainSolverBody : public WithMainSolver_Body<StaticRect> {
+public:
+	typedef MainSolverBody CLASSNAME;
+	
+	MainSolverBody();
+	
+	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
+};
+
 class MainSolver : public WithMainSolver<StaticRect> {
 public:
 	typedef MainSolver CLASSNAME;
 
-	void Init(const BEM &bem);
+	void Init();
 	void InitSerialize(bool ret);
+	void InitBeforeSerialize();
 	
-	void Load(String file, const BEM &bem);
-	void Load(const BEM &bem);
+	void Load(String file);
+	void Load();
 	
-	bool Save(BEMCase &data, bool isNemoh);
+	bool Save(Hydro &data, bool isNemoh);
 	
 	void Jsonize(JsonIO &json);
 	
+	WithMainSolver_General<StaticRect> gen;
+	CtrlScroll genScroll;
 	WithMainSolver_Bodies<StaticRect> bodies;
-	WithMainSolver_Nemoh<StaticRect> nemoh;
-	WithMainSolver_HAMS<StaticRect> hams;
-	
-	CtrlScroll nemohScroll;
-	//CtrlScroll hamsScroll;
+	UArray<MainSolverBody> bodiesEach;
+	UArray<CtrlScroll> bodiesEachScroll;
+	WithMainSolver_Save<StaticRect> save;
 	
 private:
-	bool OnLoad(const BEM &bem);
-	bool OnSave(const BEM &bem);
+	bool OnLoad();
+	bool OnSave();
 	void OnCursor();
 	void arrayOnCursor();
-	bool ArrayUpdateCursor();
+	//bool ArrayUpdateCursor();
 	void arrayClear();
 	void arrayOnAdd();
 	void arrayOnDuplicate();
 	void arrayOnRemove();
-	void InitArray(bool isNemoh);
+	//void InitArray(bool isNemoh);
 	
 	void InitGrid(GridCtrl &grid, EditDouble edit[]);
 	void LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat);
 	
-	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
+	EditDouble editF, editH;
 	int dropSolverVal = 0;
 };
 
@@ -1580,8 +1590,6 @@ public:
 	String parameter;	
 	
 private:
-	//int numWindows = 0;
-	
 	String lastTabS;
 	
 	MainSolver mainSolver;
@@ -1625,7 +1633,6 @@ String ArrayModel_GetTitle(ArrayCtrl &array, int row = -1);
 void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName);
 		
 Main &ma(Main *m = 0);
-BEM &Bem();
 void Status(String str = String(), int time = 2000);
 
 	

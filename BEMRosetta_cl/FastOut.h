@@ -133,7 +133,7 @@ private:
 	String LoadCsv(String fileName);
 	bool SaveCsv(String fileName, String sep);
 	String LoadDb(String fileName);
-	String LoadLis(String fileName);
+	String Load_LIS(String fileName);
 	void AfterLoad();
 
 	String fileName;

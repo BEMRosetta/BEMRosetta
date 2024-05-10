@@ -4,15 +4,16 @@
 
 #include <MatIO/matio.h>
 
-bool Foamm::Load(String file) {
-	hd().code = Hydro::FOAMM;
+String Foamm::Load(String file) {
+	hd().solver = Hydro::FOAMM;
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	hd().len = 1;
 	hd().dimen = true;
 	hd().Nb = 1;
-	hd().dof.SetCount(1);
-	hd().dof[0] = 1;
+	hd().msh.SetCount(1);
+	//hd().dof.SetCount(1);
+	//hd().dof[0] = 1;
 	hd().Nh = 1;
 	hd().head.SetCount(1);
 	hd().head[0] = 0;
@@ -24,18 +25,18 @@ bool Foamm::Load(String file) {
 			Load_mat(file, 0, 0, true);
 		}
 		if (IsNull(hd().Nb))
-			throw Exc(t_("No data found"));
+			return t_("No data found");
 		
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
+		/*hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 1;
+			hd().dof[i] = 1;*/
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = Format(t_("file %s "), file) + e;
-		return false;
+		//hd().lastError = Format(t_("file %s "), file) + e;
+		return e;
 	}
 	
-	return true;
+	return String();
 }
 
 void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
@@ -54,11 +55,11 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		hd().Nf = w.size();
 		
 		hd().w.SetCount(hd().Nf);
-		hd().T.SetCount(hd().Nf);
+		//hd().T.SetCount(hd().Nf);
 		hd().dataFromW = true;
 		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
 			hd().w[ifr] = w[ifr];
-			hd().T[ifr] = 2*M_PI/w[ifr];
+			//hd().T[ifr] = 2*M_PI/w[ifr];
 		}
 		
 		MatMatrix<double> A = mat.VarReadMat<double>("A");	
@@ -83,7 +84,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 				hd().B[idf][jdf][ifr] = B[ifr];
 		}
 		
-		hd().names << "Body";
+		hd().msh[0].name = "Body";
 		
 		double Mu = mat.VarRead<double>("Mu");
 		if (!IsNull(Mu)) {
@@ -160,7 +161,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
 		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
-	if (!FileExists(hd().GetBEM().foammPath))
+	if (!FileExists(Bem().foammPath))
 		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ibs.size(); ++i) {
 		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.size()));
@@ -251,7 +252,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	mat.Close();
 	
 	LocalProcess process;
-	if (!process.Start(hd().GetBEM().foammPath, NULL, folder))
+	if (!process.Start(Bem().foammPath, NULL, folder))
 		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
 
 	String msg, reso, rese;

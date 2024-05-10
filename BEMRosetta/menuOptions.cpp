@@ -20,8 +20,7 @@ void MenuOptions::Init(BEM &_bem) {
 	CtrlLayout(*this);
 	
 	bem = &_bem;
-	butSave  <<= THISBACK(OnSave);
-	butSave2 <<= THISBACK(OnSave);
+	butSave <<= butSave2 <<= THISBACK(OnSave);
 	
 	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = headingType.isMouseEnter = false;
 	

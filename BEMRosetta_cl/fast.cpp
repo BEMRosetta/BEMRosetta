@@ -9,7 +9,7 @@
 #include <plugin/zstd/zstd.h>
 #include "FastOut.h"
 
-bool Fast::Load(String file, Function <bool(String, int)> Status) {
+String Fast::Load(String file, Function <bool(String, int)> Status) {
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	
@@ -23,25 +23,26 @@ bool Fast::Load(String file, Function <bool(String, int)> Status) {
 		else if (ToLower(GetFileExt(file)) == ".dat")
 			fast.hydrodyn.fileName = file;
 		else
-			throw Exc("\n" + Format(t_("File '%s' is not of FAST type"), file));
+			return Format(t_("File '%s' is not of FAST type"), file);
 			
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 		
 		if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
-			throw Exc("\n" + Format(t_("File '%s' not found"), file));
+			return Format(t_("File '%s' not found"), file);
 
 		String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
-		hd().code = Hydro::FAST_WAMIT;
+		hd().solver = Hydro::FAST_WAMIT;
 		
-		if (!Wamit::Load(ForceExtSafer(hydroFile, ".hst"), Status)) 
-			return false;
+		String ret = Wamit::Load(ForceExtSafer(hydroFile, ".hst"), Status);
+		if (!ret.IsEmpty())
+			return ret;
 		
-		hd().Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
+		hd().msh[0].Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
 		
 		if (hd().Nb > 1)
-			throw Exc(Format(t_("FAST does not support more than one body in file '%s'"), file));	
+			return Format(t_("FAST does not support more than one body in file '%s'"), file);	
 		if (hd().head.IsEmpty())
-			throw Exc(t_("No wave headings found in Wamit file"));
+			return t_("No wave headings found in Wamit file");
 		//if (abs(hd().head[0]) != abs(hd().head[hd().head.size()-1]))
 		//	throw Exc(Format(t_("FAST requires symmetric wave headings. .2.3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.size()-1])); 
 	
@@ -49,15 +50,15 @@ bool Fast::Load(String file, Function <bool(String, int)> Status) {
 		if (FileExists(ssFile)) {
 			BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 			if (!Load_SS(ssFile)) 
-				throw Exc("\n" + Format(t_("File '%s' not found"), file));	
+				return Format(t_("File '%s' not found"), file);	
 		}
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
-		hd().lastError = e;
-		return false;
+		//hd().lastError = e;
+		return e;
 	}
 	
-	return true;
+	return String();
 }
 
 bool Fast::Load_HydroDyn(String fileName) {
@@ -66,7 +67,8 @@ bool Fast::Load_HydroDyn(String fileName) {
 		return false;
 
 	hd().Nb = WaveNDir = 1;
-	hd().Vo.SetCount(hd().Nb, 0);
+	hd().msh.SetCount(hd().Nb);
+	//hd().Vo.SetCount(hd().Nb, 0);
 	hd().rho = hd().h = hd().len = WaveDirRange = Null;
 	
 	LineParser f(in);
@@ -82,7 +84,7 @@ bool Fast::Load_HydroDyn(String fileName) {
 		else if (f.GetText(1) == "WAMITULEN") 
 			hd().len = f.GetDouble(0);
 		else if (f.GetText(1) == "PtfmVol0") 
-			hd().Vo[0] = f.GetDouble(0);
+			hd().msh[0].Vo = f.GetDouble(0);
 		else if (f.GetText(1) == "WaveNDir") 
 			WaveNDir = f.GetInt(0);
 		else if (f.GetText(1) == "WaveDirRange") 
@@ -101,31 +103,24 @@ bool Fast::Load_HydroDyn(String fileName) {
 }
 
 
-bool Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
-	try {
-		file = ForceExt(file, ".dat");
-		
-		if (hd().IsLoadedA() && hd().IsLoadedB()) 
-			Save_HydroDyn(file, true);
-		else
-			BEM::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
-			
-		String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
-		DirectoryCreateX(AFX(GetFileFolder(file), hydroFolder));
+void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
+	file = ForceExt(file, ".dat");
 	
-		Wamit::Save(hydroFile, Status, true, qtfHeading);
+	if (hd().IsLoadedA() && hd().IsLoadedB()) 
+		Save_HydroDyn(file, true);
+	else
+		BEM::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
 		
-		if (hd().IsLoadedStateSpace()) {
-			String fileSts = ForceExtSafer(hydroFile, ".ss");
-			BEM::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
-			Save_SS(fileSts);
-		}
-	} catch (Exc e) {
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
-		return false;
+	String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
+	DirectoryCreateX(AFX(GetFileFolder(file), hydroFolder));
+
+	Wamit::Save(hydroFile, Status, true, qtfHeading);
+	
+	if (hd().IsLoadedStateSpace()) {
+		String fileSts = ForceExtSafer(hydroFile, ".ss");
+		BEM::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
+		Save_SS(fileSts);
 	}
-	return true;
 }
 
 void Fast::Save_HydroDyn(String fileName, bool force) {
@@ -181,8 +176,8 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		int poslf, pos;
 			
 		if (!force) {
-			if (lVo != hd().Vo[0])
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("volume"), hd().Vo[0], lVo, hd().file));
+			if (lVo != hd().msh[0].Vo)
+				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("volume"), hd().msh[0].Vo, lVo, hd().file));
 			if (lrho != hd().rho)
 				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("density"), hd().rho, lrho, hd().file));
 			if (lh != hd().h)
@@ -214,8 +209,8 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			if (pos < 0 || poslf < 0)
 				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "PtfmVol0"));
 			double hdVo0 = 0;
-			if (hd().Vo.size() > 0) 				
-				hdVo0 = hd().Vo[0];
+			//if (hd().Vo.size() > 0) 				
+				hdVo0 = hd().msh[0].Vo;
 			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hdVo0) + strFile.Mid(pos);
 			pos   = strFile.Find("WaveNDir");
 			poslf = strFile.ReverseFind("\n", pos);
@@ -246,7 +241,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		
 		String srho;
 		if (IsNull(hd().rho))
-			srho = FDS(hd().GetBEM().rho, 10, false);
+			srho = FDS(Bem().rho, 10, false);
 		else
 			srho = FDS(hd().rho, 10, false);
 		strFile.Replace("[WtrDens]", srho);
@@ -263,8 +258,8 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			slen = FDS(hd().len, 8);
 		strFile.Replace("[WAMITULEN]", slen);
 		double hdVo0 = 0;
-		if (hd().Vo.size() > 0) 				
-			hdVo0 = hd().Vo[0];
+		//if (hd().Vo.size() > 0) 				
+			hdVo0 = hd().msh[0].Vo;
 		strFile.Replace("[PtfmVol0]", FDS(hdVo0, 10));
 		if (IsNull(WaveNDir))
 			strFile.Replace("[WaveNDir]", FormatInt(hd().Nh));

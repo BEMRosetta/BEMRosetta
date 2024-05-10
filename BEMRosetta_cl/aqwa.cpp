@@ -7,21 +7,23 @@
 
 const char *textDOF[] = {"X", "Y", "Z", "RX", "RY", "RZ"};
 
-bool Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
+String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(file);
 	if (ToLower(hd().name) == "analysis")
 		hd().name = GetFileTitle(GetFileFolder(file));	// The folder names the model
 	hd().dimen = true;
 	hd().len = 1;
-	hd().code = Hydro::AQWA;
+	hd().solver = Hydro::AQWA;
 	hd().Nb = Null;
 	
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
-
+		
+		double factorMass = 1;
+		
 		BEM::Print("\n- " + S(t_("LIS file")));
-		if (!Load_LIS(Status)) {
+		if (!Load_LIS(factorMass, Status)) {
 			BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
 			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
@@ -34,28 +36,28 @@ bool Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		//	return false;
 		
 		BEM::Print("\n- " + S(t_("QTF file")));
-		if (!Load_QTF()) 
+		if (!Load_QTF(factorMass)) 
 			BEM::Print(S(": ** QTF file ") + t_("Not found") + "**");
 		
 		if (IsNull(hd().Nb)) 
-			throw Exc(t_("No data found"));
+			return t_("No data found");
 		
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
+		/*hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 6;
+			hd().dof[i] = 6;*/
 			
 		for (int ib = 0; ib < hd().Nb; ++ib)					// Translates all bodies phase to 0,0
-			hd().AddWave(ib, -hd().c0(0, ib), -hd().c0(1, ib));	// Phase is translated -c0_x,-c0_y
+			hd().AddWave(ib, -hd().msh[ib].c0.x, -hd().msh[ib].c0.y);	// Phase is translated -c0_x,-c0_y
 	
 		hd().x_w = hd().y_w = 0;
 			
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = Format(t_("file %s "), file) + e;
-		return false;
+		//hd().lastError = Format(t_("file %s "), file) + e;
+		return e;
 	}
 	
-	return true;
+	return String();
 }
 
 bool Aqwa::Load_AH1() {
@@ -90,12 +92,13 @@ bool Aqwa::Load_AH1() {
 		FindAdd(hd().head, FixHeading_0_360(f.GetDouble(i)));
 	Sort(hd().head);
 	
-	hd().names.SetCount(hd().Nb);
-	hd().cg.setConstant(3, hd().Nb, NaNDouble);
-	hd().c0.setConstant(3, hd().Nb, NaNDouble);
-	hd().C.SetCount(hd().Nb);
+	//hd().names.SetCount(hd().Nb);
+	hd().msh.SetCount(hd().Nb);
+	//hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	//hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	//hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, NaNDouble); 
+		hd().msh[ib].C.setConstant(6, 6, NaNDouble); 
 	hd().Initialize_AB(hd().A);
 	hd().Initialize_AB(hd().B);
 	hd().Initialize_Forces(hd().ex);
@@ -107,7 +110,7 @@ bool Aqwa::Load_AH1() {
 		for (int i = 0; i < f.size(); ++i) {
 			double w = f.GetDouble(i);
 			hd().w << w;
-			hd().T << 2*M_PI/w;
+			//hd().T << 2*M_PI/w;
 		}
 	}	
 	if (hd().Nf != hd().w.size())
@@ -127,14 +130,14 @@ bool Aqwa::Load_AH1() {
 				if (ib < 0 || ib >= hd().Nb)
 					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COG %d (%d)"), ib+1, hd().Nb));
 				
-				hd().cg(0, ib) = f.GetDouble(1);
-				hd().cg(1, ib) = f.GetDouble(2);
-				hd().cg(2, ib) = f.GetDouble(3);
-				hd().c0 = clone(hd().cg);
+				hd().msh[ib].cg.x = f.GetDouble(1);
+				hd().msh[ib].cg.y = f.GetDouble(2);
+				hd().msh[ib].cg.z = f.GetDouble(3);
+				hd().msh[ib].c0 = clone(hd().msh[ib].cg);
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < hd().Nb; ++ib) {
-				hd().C[ib].setConstant(6, 6, 0);
+				hd().msh[ib].C.setConstant(6, 6, 0);
 	            for (int idf = 0; idf < 6; ++idf) {
 	                f.Load(in.GetLine());
 	                int did = 0;
@@ -145,7 +148,7 @@ bool Aqwa::Load_AH1() {
 	                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
 	                }
 	                for (int jdf = 0; jdf < 6; ++jdf) 
-	                    hd().C[ib](idf, jdf) = f.GetDouble(jdf + did);
+	                    hd().msh[ib].C(idf, jdf) = f.GetDouble(jdf + did);
 	            }
 			}
 		} else if (line.StartsWith("ADDEDMASS") || line.StartsWith("DAMPING")) {
@@ -211,18 +214,18 @@ bool Aqwa::Load_AH1() {
 	return true;
 }
 
-bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
+bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	String fileName = ForceExtSafer(hd().file, ".LIS");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 
-	Status("Loading", 0);
+	Status(t_("Loading"), 0);
 	
 	hd().Nb = hd().Nh = hd().Nf = Null;
 	hd().head.Clear();
 	hd().w.Clear();
-	hd().T.Clear();
+	//hd().T.Clear();
 	hd().rho = hd().g = hd().h = Null;
 	hd().dataFromW = true;
 	
@@ -251,20 +254,21 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 	if (hd().Nb == 0)
 		throw Exc(t_("Number of bodies not found"));
 	
-
-	factorMass = 1, factorLength = 1;
+	factorMass = 1;
+	double factorLength = 1;
 	
-	hd().names.SetCount(hd().Nb);
-	hd().Vo.SetCount(hd().Nb, NaNDouble);
-	hd().cg.setConstant(3, hd().Nb, NaNDouble);
-	hd().c0.setConstant(3, hd().Nb, NaNDouble);
-	hd().cb.setConstant(3, hd().Nb, NaNDouble);
-	hd().C.SetCount(hd().Nb);
+	hd().msh.SetCount(hd().Nb);
+	//hd().names.SetCount(hd().Nb);
+	//hd().Vo.SetCount(hd().Nb, NaNDouble);
+	//hd().cg.setConstant(3, hd().Nb, NaNDouble);
+	//hd().c0.setConstant(3, hd().Nb, NaNDouble);
+	//hd().cb.setConstant(3, hd().Nb, NaNDouble);
+	//hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0);
-	hd().M.SetCount(hd().Nb);
+		hd().msh[ib].C.setConstant(6, 6, 0);
+	//hd().M.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().M[ib].setConstant(6, 6, 0);
+		hd().msh[ib].M.setConstant(6, 6, 0);
 	
 	//hd().meshes.SetCount(hd().Nb);
 	//for (int i = 0; i < hd().Nb; ++i)
@@ -308,8 +312,8 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			else 
 				throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
 		} else if ((pos = line.FindAfter("C O O R D I N A T E   D A T A")) >= 0) {
-			if (hd().meshes.IsEmpty()) 
-				hd().meshes.SetCount(hd().Nb);
+			if (hd().msh.IsEmpty()) 
+				hd().msh.SetCount(hd().Nb);
 			
 			f.GetLine(7);
 			while (!in.IsEof()) {
@@ -317,14 +321,14 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 					break;
 				int ib = f.GetInt(1) - 1;
 				nodeIDs[ib] << f.GetInt(2);		// Node number
-				Point3D &p = hd().meshes[ib].mesh.nodes.Add();
+				Point3D &p = hd().msh[ib].mesh.nodes.Add();
 				p.x = f.GetDouble(3)*factorLength;
 				p.y = f.GetDouble(4)*factorLength;
 				p.z = f.GetDouble(5)*factorLength;
 			}
 		} else if ((pos = line.FindAfter("E L E M E N T   T O P O L O G Y   F O R   S T R U C T U R E")) >= 0) {
-			if (hd().meshes.IsEmpty()) 
-				hd().meshes.SetCount(hd().Nb);
+			if (hd().msh.IsEmpty()) 
+				hd().msh.SetCount(hd().Nb);
 			
 			int ib = ScanInt(line.Mid(pos, 6)); 
 			if (IsNull(ib))
@@ -342,7 +346,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 						if (lidGroups.Find(idGroup) >= 0)		// Panels in the lid are not loaded
 							continue;
 					}
-					Panel &p = hd().meshes[ib].mesh.panels.Add();
+					Panel &p = hd().msh[ib].mesh.panels.Add();
 					//UArray<UArray<std::complex<double>>> &pots = hd().pots[ib].Add();
 					panelIDs[ib] << f.GetInt(0);
 					
@@ -374,10 +378,10 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				}
 			} 
 		} else if ((pos = line.FindAfter("M O O R I N G   S T I F F N E S S   F O R   S T R U C T U R E")) >= 0) {			// LIBRIUM
-			if (hd().Cmoor.size() == 0) 
-				hd().Cmoor.SetCount(hd().Nb);
+			//if (hd().Cmoor.size() == 0) 
+			//	hd().Cmoor.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
-				hd().Cmoor[ib].setConstant(6, 6, 0);
+				hd().msh[ib].Cmoor.setConstant(6, 6, 0);
 			
 			int iib = ScanInt(line.Mid(pos));
 			if (iib < 1 || iib > hd().Nb)
@@ -387,7 +391,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					hd().Cmoor[iib](idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
+					hd().msh[iib].Cmoor(idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
 				f.GetLine(); 
 			}
 		} else if ((pos = line.FindAfter("H Y D R O S T A T I C   S T I F F N E S S   O F   S T R U C T U R E")) >= 0) {	// LIBRIUM	
@@ -399,14 +403,14 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine(3);
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					hd().C[iib](idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
+					hd().msh[iib].C(idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
 			}
 		} 
 	}
 	
-	if (!hd().meshes.IsEmpty()) {
+	if (!hd().msh.IsEmpty()) {
 		for (int i = 0; i < hd().Nb; ++i)
-			hd().meshes[i].SetCode(Mesh::AQWA_LIS);
+			hd().msh[i].SetCode(Mesh::AQWA_LIS);
 	}
 			
 	int ib;	
@@ -421,15 +425,15 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 		} else if (line.StartsWith("PMAS")) {
 			f.Load(line);
 			double mass = f.GetDouble(2)*factorMass;
-			hd().M[ib](0, 0) = hd().M[ib](1, 1) = hd().M[ib](2, 2) = mass;
+			hd().msh[ib].M(0, 0) = hd().msh[ib].M(1, 1) = hd().msh[ib].M(2, 2) = mass;
 		} else if (line.StartsWith("CENTRE OF GRAVITY")) {
 			f.Load(line);
-			hd().cg(0, ib) = f.GetDouble(3)*factorLength;
-			hd().cg(1, ib) = f.GetDouble(4)*factorLength;
-			hd().cg(2, ib) = f.GetDouble(5)*factorLength;
-			hd().c0 = clone(hd().cg);
+			hd().msh[ib].cg.x = f.GetDouble(3)*factorLength;
+			hd().msh[ib].cg.y = f.GetDouble(4)*factorLength;
+			hd().msh[ib].cg.z = f.GetDouble(5)*factorLength;
+			hd().msh[ib].c0 = clone(hd().msh[ib].cg);
 		} else if (line.StartsWith("INERTIA MATRIX")) {
-			Eigen::MatrixXd &M = hd().M[ib];
+			Eigen::MatrixXd &M = hd().msh[ib].M;
 			f.Load(line);
 			M(3, 3) = f.GetDouble(2)*factorMass;
 			M(3, 4) = f.GetDouble(3)*factorMass;
@@ -475,7 +479,7 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				} else
 					w = f.GetDouble(1);
 				hd().w << w;
-				hd().T << 2*M_PI/w;
+				//hd().T << 2*M_PI/w;
 			}
 			hd().Nf = hd().w.size();
 					
@@ -552,25 +556,24 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				trans = Null;
 			
 			if (!IsNull(trans)) {
-				int ib2 = ScanInt(Trim(line).Right(3)) - 1;
-				if (ib2 < 0 || ib2 >= hd().Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+				if (hd().Nb == 1)
+					in.GetLine(7);
+				else {
+					ib = ScanInt(Trim(line).Right(3)) - 1;
+					if (ib < 0 || ib >= hd().Nb)
+						throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 				
+					in.GetLine(6);
+				}
 				if (trans) {
 				 	if (IsNull(prevTrans) || !prevTrans) {
 						prevTrans = true;
-						if (ib2 == 0)
+						if (ib == 0)
 							++ifrPot;
 					}
 				} else
 					prevTrans = false;
 				
-				if (hd().Nb == 1)
-					in.GetLine(7);
-				else
-					in.GetLine(6);
-				
-				String line;
 				while (!in.IsEof()) {
 					line = in.GetLine();
 					if (line[0] == '1')
@@ -584,13 +587,13 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 					if (f.size() == 8) {
 						int idPanel = f.GetInt(0);
 						
-						if (lastIdPot >= 0 && lastIdPot+1 < panelIDs[ib2].size() && panelIDs[ib2][lastIdPot+1] == idPanel)
+						if (lastIdPot >= 0 && lastIdPot+1 < panelIDs[ib].size() && panelIDs[ib][lastIdPot+1] == idPanel)
 							lastIdPot++;
 						else
-							lastIdPot = panelIDs[ib2].Find(idPanel);
+							lastIdPot = panelIDs[ib].Find(idPanel);
 						
 						if (lastIdPot >= 0) {
-							UArray<UArray<std::complex<double>>> &pan = hd().pots[ib2][lastIdPot];
+							UArray<UArray<std::complex<double>>> &pan = hd().pots[ib][lastIdPot];
 							if (trans) {
 								pan[0][ifrPot] += std::polar<double>(f.GetDouble(2), ToRad(f.GetDouble(3)));
 								pan[1][ifrPot] += std::polar<double>(f.GetDouble(4), ToRad(f.GetDouble(5)));
@@ -605,20 +608,20 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				}
 			}
 		} else if (line.Find("G L O B A L   A D D I T I O N A L   S T R U C T U R E   S T I F F N E S S   M A T R I X") >= 0) {
-			if (hd().Cmoor.size() == 0) 
-				hd().Cmoor.SetCount(hd().Nb);
+			//if (hd().Cmoor.size() == 0) 
+			//	hd().Cmoor.SetCount(hd().Nb);
 			f.GetLine(8);
 			int iib = f.GetInt(1);
 			if (iib < 1 || iib > hd().Nb)
 				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
 			iib--;
-			if (hd().Cmoor[iib].size() == 0)
-				hd().Cmoor[iib] = Eigen::MatrixXd::Zero(6, 6);
+			if (hd().msh[iib].Cmoor.size() == 0)
+				hd().msh[iib].Cmoor = Eigen::MatrixXd::Zero(6, 6);
 			in.GetLine(4);
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					hd().Cmoor[iib](idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
+					hd().msh[iib].Cmoor(idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
 				f.GetLine(); 
 			}
 		} else if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
@@ -638,35 +641,35 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-			hd().C[ib](2, 2) = f.GetDouble(0);
-			hd().C[ib](2, 3) = f.GetDouble(1);
-			hd().C[ib](2, 4) = f.GetDouble(2);
+			hd().msh[ib].C(2, 2) = f.GetDouble(0);
+			hd().msh[ib].C(2, 3) = f.GetDouble(1);
+			hd().msh[ib].C(2, 4) = f.GetDouble(2);
 			if (f.size() > 3)
-				hd().C[ib](2, 5) = f.GetDouble(3);	
+				hd().msh[ib].C(2, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-			hd().C[ib](3, 2) = f.GetDouble(0);
-			hd().C[ib](3, 3) = f.GetDouble(1);
-			hd().C[ib](3, 4) = f.GetDouble(2);
+			hd().msh[ib].C(3, 2) = f.GetDouble(0);
+			hd().msh[ib].C(3, 3) = f.GetDouble(1);
+			hd().msh[ib].C(3, 4) = f.GetDouble(2);
 			if (f.size() > 3)
-				hd().C[ib](3, 5) = f.GetDouble(3);	
+				hd().msh[ib].C(3, 5) = f.GetDouble(3);	
 			line = in.GetLine();
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("Format error, '=' not found"));
 			f.Load(line.Mid(pos));
-			hd().C[ib](4, 2) = f.GetDouble(0);
-			hd().C[ib](4, 3) = f.GetDouble(1);
-			hd().C[ib](4, 4) = f.GetDouble(2);
+			hd().msh[ib].C(4, 2) = f.GetDouble(0);
+			hd().msh[ib].C(4, 3) = f.GetDouble(1);
+			hd().msh[ib].C(4, 4) = f.GetDouble(2);
 			if (f.size() > 3)
-	       		hd().C[ib](4, 5) = f.GetDouble(3);	
+	       		hd().msh[ib].C(4, 5) = f.GetDouble(3);	
 			
-			hd().C[ib] *= factorMass;
+			hd().msh[ib].C *= factorMass;
 		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness, 
-			if (hd().C[ib](2, 2) != 0) {					// ... but less reliable
+			if (hd().msh[ib].C(2, 2) != 0) {					// ... but less reliable
 				MatrixXd C;
 				C.setConstant(6, 6, 0);
 				in.GetLine(6);
@@ -677,18 +680,18 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 					in.GetLine();
 				}
 				if (C(0, 0) == 0 && C(1, 1) == 0)			// Only use if ASTF additional hydrostatics has not been used: surge = sway = 0
-					hd().C[ib] = C;							
+					hd().msh[ib].C = C;							
 			}
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
 				throw Exc(in.Str() + "\n"  + t_("= not found"));
-			hd().Vo[ib] = ScanDouble(line.Mid(pos));
+			hd().msh[ib].Vo = ScanDouble(line.Mid(pos));
 		} else if (line.StartsWith("POSITION OF THE CENTRE OF BUOYANCY")) {
 			f.Load(line);
-			hd().cb(0, ib) = f.GetDouble(8)*factorLength;	
-			hd().cb(1, ib) = f.Load(in.GetLine()).GetDouble(2)*factorLength;
-			hd().cb(2, ib) = f.Load(in.GetLine()).GetDouble(2)*factorLength;
+			hd().msh[ib].cb.x = f.GetDouble(8)*factorLength;	
+			hd().msh[ib].cb.y = f.Load(in.GetLine()).GetDouble(2)*factorLength;
+			hd().msh[ib].cb.z = f.Load(in.GetLine()).GetDouble(2)*factorLength;
 		} else if (line.StartsWith("FROUDE KRYLOV + DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
 				   line.StartsWith(				 "FROUDE KRYLOV FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
 				   line.StartsWith(  			   "DIFFRACTION FORCES-VARIATION WITH WAVE PERIOD/FREQUENCY") ||
@@ -844,13 +847,13 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				}
 			}
 		} else if (Trim(line) == "FREQUENCY INDEPENDENT DAMPING") {
-			if (hd().Dlin.size() == 0)
-				hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
+			if (hd().msh[ib].Dlin.size() == 0)
+				hd().msh[ib].Dlin = Eigen::MatrixXd::Zero(6, 6);
 			in.GetLine(6);
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					hd().Dlin(6*ib + idof, 6*ib + jdof) = f.GetDouble(jdof + 1)*factorMass;
+					hd().msh[ib].Dlin(idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
 				f.GetLine(); 
 			}
 		} else if (line.Find("W A V E - D R I F T   L O A D S ") >= 0) {
@@ -927,9 +930,9 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 			hd().qtftype = 8;				// Momentum conservation/Far field
 	}
 		
-	if (!hd().meshes.IsEmpty()) {
+	if (!hd().msh.IsEmpty()) {
 		// Removes mooring, Morison and other points unrelated with panels
-		for (Mesh &m : hd().meshes) {
+		for (Mesh &m : hd().msh) {
 			m.mesh.GetPanelParams();
 			Surface::RemoveDuplicatedPointsAndRenumber(m.mesh.panels, m.mesh.nodes);
 		}
@@ -937,9 +940,9 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 		// Checks the symmetry
 		hd().symX = hd().symY = false;
 		
-		Surface full = clone(hd().meshes[0].mesh);	
-		for (int i = 1; i < hd().meshes.size(); ++i)
-			full.Append(hd().meshes[i].mesh);
+		Surface full = clone(hd().msh[0].mesh);	
+		for (int i = 1; i < hd().msh.size(); ++i)
+			full.Append(hd().msh[i].mesh);
 		
 		full.GetPanelParams();
 		VolumeEnvelope env = full.GetEnvelope();
@@ -957,16 +960,16 @@ bool Aqwa::Load_LIS(Function <bool(String, int)> Status) {
 				hd().symY = true;
 		}
 		
-		for (int ib = 0; ib < hd().Nb; ++ib) {
-			hd().meshes[ib].c0 = Point3D(hd().c0(0, ib), hd().c0(1, ib), hd().c0(2, ib));
-			hd().meshes[ib].cg = Point3D(hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
-		}
+		/*for (int ib = 0; ib < hd().Nb; ++ib) {
+			hd().msh[ib].c0 = Point3D(hd().c0(0, ib), hd().c0(1, ib), hd().c0(2, ib));
+			hd().msh[ib].cg = Point3D(hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
+		}*/
 	}
  			
 	return true;
 }
 
-bool Aqwa::Load_QTF() {
+bool Aqwa::Load_QTF(double factorMass) {
 	String fileName = ForceExtSafer(hd().file, ".QTF");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) {
@@ -990,8 +993,8 @@ bool Aqwa::Load_QTF() {
 	if (!IsNull(hd().Nb) && hd().Nb < Nb)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), hd().Nb, Nb));
 	hd().Nb = Nb;
-	if (hd().names.IsEmpty())
-		hd().names.SetCount(hd().Nb);
+	if (hd().msh.IsEmpty())
+		hd().msh.SetCount(hd().Nb);
 			
     UVector<double> _qw;
     UArray<std::complex<double>> _qh;
@@ -1030,8 +1033,8 @@ bool Aqwa::Load_QTF() {
 	if (_qh.size() != Nh)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
 						
-	Copy(_qw, hd().qw);
-	Copy(_qh, hd().qh);
+	::Copy(_qw, hd().qw);
+	::Copy(_qh, hd().qh);
 	
 	Hydro::Initialize_QTF(hd().qtfsum, Nb, Nh, Nf);
 	Hydro::Initialize_QTF(hd().qtfdif, Nb, Nh, Nf);
@@ -1072,20 +1075,13 @@ bool Aqwa::Load_QTF() {
 	return true;
 }
 
-bool Aqwa::Save(String file, Function <bool(String, int)> Status) {
-	try {
-		BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+void Aqwa::Save(String file, Function <bool(String, int)> Status) {
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
 
-		if (hd().IsLoadedQTF(true) || hd().IsLoadedQTF(false)) {
-			BEM::Print("\n- " + S(t_("QTF file")));
-			Save_QTF(ForceExt(file, ".qtf"), Status);
-		}
-	} catch (Exc e) {
-		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
-		return false;
+	if (hd().IsLoadedQTF(true) || hd().IsLoadedQTF(false)) {
+		BEM::Print("\n- " + S(t_("QTF file")));
+		Save_QTF(ForceExt(file, ".qtf"), Status);
 	}
-	return true;
 }		
 
 void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
@@ -1149,7 +1145,7 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
         }
 }
 	
-	
+/*	
 bool AQWACase::Load(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1162,11 +1158,11 @@ bool AQWACase::Load(String fileName) {
 	f.IsSeparator = IsTabSpace;
 	
 	bodies.SetCount(1);
-	BEMBody &body = bodies[0];
+	Mesh &body = bodies[0];
 	
-	body.meshFile = fileName;
-	body.ndof = 6;
-	Resize(body.dof, 6, true);
+	body.fileName = fileName;
+	//body.ndof = 6;
+	//Resize(body.dof, 6, true);
 	body.M = MatrixXd::Zero(6, 6);
 	
 	UVector<double> hrtz, head;
@@ -1212,7 +1208,7 @@ bool AQWACase::Load(String fileName) {
 					if (f.GetInt(2) != r+1)
 						throw Exc(Format("Wrong row id '%s' in SSTF", f.GetText(1)));
 					for (int c = 0; c < 6; ++c) 
-						body.Cext(r, c) = f.GetDouble(3+c);
+						body.Cmoor(r, c) = f.GetDouble(3+c);
 					f.GetLineFields(pos);
 				}
 				for (int r = 0; r < 6; ++r) {
@@ -1271,9 +1267,9 @@ bool AQWACase::Load(String fileName) {
 	
 	return true;
 }
-
+*/
 			
-String FastOut::LoadLis(String fileName) {
+String FastOut::Load_LIS(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return t_("Impossible to open file");

@@ -455,7 +455,7 @@ bool MainQTF::Load() {
 		
 		// Show the tab if any model has QTFs
 		bool show = false;
-		for (const HydroClass &h : Bem().hydros) {
+		for (const Hydro &h : Bem().hydros) {
 			if (h.hd().IsLoadedQTF(true) || h.hd().IsLoadedQTF(false)) {
 				show = true;
 				break;
@@ -502,8 +502,14 @@ bool MainQTF::Load() {
 					row = ih;
 				headQTF.Add(qh[ih].real(), qh[ih].imag());
 			}
-			if (row >= 0)
+			if (row >= 0) 
 				headQTF.SetCursor(row);
+			else {
+				for (int i = 0; i < dof.size(); ++i) {		// No QTF found. Clear surfs
+					dof[i].up.surf.RemoveSurf();
+					dof[i].down.surf.RemoveSurf();
+				}
+			}
 
 			mbm.menuPlotList.SetQTF();
 		}

@@ -5,7 +5,7 @@
 #include <STEM4U/Utility.h>
 
 
-bool HAMS::Load(String file, Function <bool(String, int)> Status) {
+String Hams::Load(String file, Function <bool(String, int)> Status) {
 	hd().file = file;	
 	hd().name = GetFileTitle(file);
 	
@@ -17,24 +17,25 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 	
 	try {
 		if (GetFileExt(file) != ".in") 
-			throw Exc("\n" + Format(t_("File '%s' is not of HAMS type"), file));
+			return Format(t_("File '%s' is not of HAMS type"), file);
 			
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
-		hd().code = Hydro::HAMS;
+		hd().solver = Hydro::HAMS_WAMIT;
 		
 		String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
 		
-		if (!Wamit::Load(wamitFile, Status)) 
-			return false;
+		String ret = Wamit::Load(wamitFile, Status);
+		if (!ret.IsEmpty()) 
+			return ret;
 		
 		if (IsNull(hd().Nb))
-			return false;
+			return t_("No body found");
 
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
-		hd().lastError = e;
-		return false;
+		//hd().lastError = e;
+		return e;
 	}
 	try {		
 		double rhog = hd().g_rho_dim();
@@ -43,28 +44,15 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
 		
 		String controlFile = AFX(baseFolder, "Input", "ControlFile.in");
-		if (FileExists(controlFile)) {
-			HamsCase cas;
-			cas.Load(controlFile);
-			hd().h = cas.h;
-			if (cas.bodies.size() > 0) {
-				hd().c0.setConstant(3, hd().Nb, Null);
-				hd().c0(0, 0) = cas.bodies[0].c0(0);
-				hd().c0(1, 0) = cas.bodies[0].c0(1);
-				hd().c0(2, 0) = cas.bodies[0].c0(2);
-				hd().cg.setConstant(3, hd().Nb, Null);
-				hd().cg(0, 0) = cas.bodies[0].cg(0);
-				hd().cg(1, 0) = cas.bodies[0].cg(1);
-				hd().cg(2, 0) = cas.bodies[0].cg(2);
-			}
-		}
+		if (FileExists(controlFile)) 
+			Load_In(controlFile);
 			
 		String hydrostaticFile = AFX(baseFolder, /*"Input", */"Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
 			if (hd().IsLoadedC()) {
-				for (int i = 0; i < hd().C[0].size(); ++i) {
-					if (abs(hd().C[0].array()(i)) > 1E-8) {
+				for (int i = 0; i < 36; ++i) {
+					if (abs(hd().msh[0].C.array()(i)) > 1E-8) {
 						iszero = false;
 						break;
 					}
@@ -77,10 +65,10 @@ bool HAMS::Load(String file, Function <bool(String, int)> Status) {
 		BEM::PrintWarning("\nWarning: " + e);
 	}
 	
-	return true;
+	return String();
 }
 
-bool HAMS::Load_Settings(String fileName) {
+bool Hams::Load_Settings(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -95,24 +83,24 @@ bool HAMS::Load_Settings(String fileName) {
 	
 	in.GetLine();
 	
-	hd().c0.setConstant(3, hd().Nb, Null);
+	//hd().c0.setConstant(3, hd().Nb, Null);
 	f.Load(in.GetLine());	
-	hd().c0(0, 0) = f.GetDouble(0);
-	hd().c0(1, 0) = f.GetDouble(1);
-	hd().c0(2, 0) = f.GetDouble(2);
+	hd().msh[0].c0.x = f.GetDouble(0);
+	hd().msh[0].c0.y = f.GetDouble(1);
+	hd().msh[0].c0.z = f.GetDouble(2);
 	
-	hd().cg.setConstant(3, hd().Nb, Null);
+	//hd().cg.setConstant(3, hd().Nb, Null);
 	f.Load(in.GetLine());	
-	hd().cg(0, 0) = f.GetDouble(0);
-	hd().cg(1, 0) = f.GetDouble(1);
-	hd().cg(2, 0) = f.GetDouble(2);	
+	hd().msh[0].cg.x = f.GetDouble(0);
+	hd().msh[0].cg.y = f.GetDouble(1);
+	hd().msh[0].cg.z = f.GetDouble(2);	
 	
 	return true;
 }
 
 // Load Hydrostatic.in obtained from WAMIT_MeshTran.exe
 // Warning: This file is not normally the one at Input folder
-bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
+bool Hams::Load_HydrostaticMesh(String fileName, double rhog) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -121,45 +109,46 @@ bool HAMS::Load_HydrostaticMesh(String fileName, double rhog) {
 	f.IsSeparator = IsTabSpace;
  
 	hd().Nb = 1;
+	hd().msh.SetCount(1);
 	
-	hd().c0.setConstant(3, hd().Nb, Null);
+	//hd().c0.setConstant(3, hd().Nb, Null);
 	
-	hd().C.SetCount(hd().Nb);
+	//hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib)
-		hd().C[ib].setConstant(6, 6, 0);
+		hd().msh[ib].C.setConstant(6, 6, 0);
 
 	in.GetLine();
 	f.GetLine();	
-	hd().c0(0, 0) = f.GetDouble(0);
-	hd().c0(1, 0) = f.GetDouble(1);
-	hd().c0(2, 0) = f.GetDouble(2);
+	hd().msh[0].c0.x = f.GetDouble(0);
+	hd().msh[0].c0.y = f.GetDouble(1);
+	hd().msh[0].c0.z = f.GetDouble(2);
 		
 	in.GetLine(8);
 	for (int r = 0; r < 6; ++r) {
 		f.GetLine();	
 		for (int c = 0; c < 6; ++c) 
-			hd().C[0](r, c) = f.GetDouble(c)/rhog;
+			hd().msh[0].C(r, c) = f.GetDouble(c)/rhog;
 	}
 	return true;
 }
 	
 
-UVector<String> HamsCase::Check() const {
+UVector<String> Hams::Check() const {
 	UVector<String> ret;
 	
-	if (bodies.size() != 1)
+	if (hd().msh.size() != 1)
 		ret << t_("HAMS just allows one body");
 
 	return ret;
 }
 
-bool HamsCase::Load(String fileName) {
+bool Hams::Load_In(String fileName) {
 	fileName = AFX(GetFileFolder(fileName), "ControlFile.in");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
-	solver = HAMS;
+	hd().solver = Hydro::HAMS_WAMIT;
 	
 	String line;
 	LineParser f(in);
@@ -178,7 +167,7 @@ bool HamsCase::Load(String fileName) {
 		if (var.StartsWith("#"))
 			continue;
 		if (var == "Waterdepth")
-			h = f.GetDouble(1);
+			hd().h = f.GetDouble(1);
 		else if (var == "Input_frequency_type") {
 			input_frequency_type = f.GetInt(1); 
 			if (input_frequency_type != 3 && input_frequency_type != 4)
@@ -188,22 +177,30 @@ bool HamsCase::Load(String fileName) {
 			if (output_frequency_type != 3 && output_frequency_type != 4)
 				throw Exc(t_("HAMS loader just allows loading output_frequency_type = 3 wave frequency or 4 wave period"));
 		} else if (var == "Number_of_frequencies") {
-			Nf = f.GetInt(1);
+			int Nf = f.GetInt(1);
+			if (!IsNull(hd().Nf)) {
+				if (hd().Nf != abs(Nf))
+					throw Exc(Format(t_("Number of frequencies %d does not match with previously loaded %d"), Nf, hd().Nf));
+			} else 
+				hd().Nf = Nf;
+			UVector<double> data;
 			if (Nf < 0) {
 				Nf = -Nf;
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_frequency_Wmin")
 					throw Exc(t_("Minimum_frequency_Wmin not found"));
-				minF = f.GetDouble(1);
+				double minF = f.GetDouble(1);
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Frequency_step")
 					throw Exc(t_("Frequency_step not found"));
-				maxF = minF + f.GetDouble(1)*Nf;
+				double maxF = minF + f.GetDouble(1)*Nf;
+				
+				LinSpaced(data, Nf, minF, maxF);
 			} else {
 				f.GetLine();
 				if (f.size() < 2)
 					throw Exc(t_("Frequencies or periods not found"));
-				UVector<double> data;
+
 				double delta;
 				for (int i = 0; i < f.size(); ++i) {
 					if (input_frequency_type == 3)
@@ -217,26 +214,39 @@ bool HamsCase::Load(String fileName) {
 						continue;
 					}
 				}
-				minF = data[0];
-				maxF = data[data.size()-1];
 			}
+			if (hd().w.IsEmpty()) {
+				hd().w = pick(data);
+				/*for (int ifr = 0; ifr < hd().Nf; ++ifr) 
+					hd().T[ifr] = 2*M_PI/hd().w[ifr];*/
+			} else if (!CompareDecimals(hd().w, data, 3))
+				throw Exc(t_("List of frequencies does not match with previously loaded"));
+
 		} else if (var == "Number_of_headings") {
-			Nh = f.GetInt(1);
+			int Nh = f.GetInt(1);
+			if (!IsNull(hd().Nh)) {
+				if (hd().Nh != abs(Nh))
+					throw Exc(Format(t_("Number of headings %d does not match with previously loaded %d"), Nh, hd().Nh));
+			} else 
+				hd().Nh = Nh;
+			UVector<double> data;
 			if (Nh < 0) {
 				Nh = -Nh;
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Minimum_heading")
 					throw Exc(t_("Minimum_heading not found"));
-				minH = f.GetDouble(1);
+				double minH = f.GetDouble(1);
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Heading_step")
 					throw Exc(t_("Heading_step not found"));
-				maxH = minH + f.GetDouble(1)*Nh;
+				double maxH = minH + f.GetDouble(1)*Nh;
+				
+				LinSpaced(data, Nh, minH, maxH);
 			} else {
 				f.GetLine();
 				if (f.size() < 1)
 					throw Exc(t_("Headings not found"));
-				UVector<double> data;
+				
 				double delta = 0;
 				for (int i = 0; i < f.size(); ++i) {
 					data << f.GetDouble(i);
@@ -247,20 +257,23 @@ bool HamsCase::Load(String fileName) {
 						continue;
 					}
 				}
-				minH = data[0];
-				maxH = data[data.size()-1];
 			}
+			if (hd().head.IsEmpty()) 
+				hd().head = pick(data);
+			else if (!CompareDecimals(hd().head, data, 2))
+				throw Exc(t_("List of headings does not match with previously loaded"));
+
 		} else if (var == "Reference_body_centre") {
 			if (f.size() < 4)
 				throw Exc(t_("Lack of data in Reference_body_center"));
-			bodies.SetCount(1);
-			BEMBody &body = bodies[0];
+			hd().msh.SetCount(1);
+			Mesh &body = hd().msh[0];
 			body.c0[0] = f.GetDouble(1);
 			body.c0[1] = f.GetDouble(2);
 			body.c0[2] = f.GetDouble(3);
 			String meshFile = AFX(GetFileFolder(fileName), "HullMesh.pnl");
 			if (FileExists(meshFile))
-				body.meshFile = meshFile;
+				body.fileName = meshFile;
 			String lidFile = AFX(GetFileFolder(fileName), "WaterplaneMesh.pnl");
 			if (FileExists(lidFile))
 				body.lidFile = lidFile;
@@ -269,13 +282,13 @@ bool HamsCase::Load(String fileName) {
 	return LoadHydrostatic(AFX(GetFileFolder(fileName), "Hydrostatic.in"));
 }
 
-bool HamsCase::LoadHydrostatic(String fileName) {
+bool Hams::LoadHydrostatic(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
-	bodies.SetCount(1);
-	BEMBody &body = bodies[0];
+	hd().msh.SetCount(1);
+	Mesh &body = hd().msh[0];
 	
 	String line;
 	LineParser f(in);
@@ -305,55 +318,51 @@ bool HamsCase::LoadHydrostatic(String fileName) {
 		else if (line == "Hydrostatic Restoring Matrix:") 
 			InMatrix(f, body.C);	
 		else if (line == "External Restoring Matrix:") 
-			InMatrix(f, body.Cext);	
+			InMatrix(f, body.Cadd);	
 	}
 	return true;
 }
 
-void HamsCase::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, const BEM &bem, int) const {
-	SaveFolder0(folderBase, bin, 1, bem, true, numThreads);
+void Hams::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, int) const {
+	SaveFolder0(folderBase, bin, 1, true, numThreads);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, bem, false, numThreads);
+		SaveFolder0(folderBase, bin, numCases, false, numThreads);
 }
 
-void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, bool deleteFolder, int numThreads) const {
-	BeforeSave(folderBase, numCases, deleteFolder);
+void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads) const {
+	hd().BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
 	#define MIN_F_HAMS 0.01
 	
-	double fixminF = minF;
-	if (fixminF < MIN_F_HAMS)
-		fixminF = MIN_F_HAMS;
+	double fixminF = max(MIN_F_HAMS, First(hd().w));
 	
 	UVector<int> valsf;
 	int _nf;
 	double _minf, _maxf;
 	int ifr = 0;
 	UVector<double> freqs;
-	if (numCases > 1) { 
-		LinSpaced(freqs, Nf, fixminF, maxF);
-		valsf = NumSets(Nf, numCases);
-	}
+	if (numCases > 1)  
+		valsf = NumSets(hd().Nf, numCases);
 	
 	String solvName = "HAMS_x64.exe";
 	if (bin) {
-		String source = bem.hamsPath;
+		String source = Bem().hamsPath;
 		solvName = GetFileName(source);
 		String destNew = AFX(folderBase, solvName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams exe file from '%s'"), bem.hamsPath));
-		source = AFX(GetFileFolder(bem.hamsPath), "libiomp5md.dll");		
+			throw Exc(Format(t_("Problem copying Hams exe file from '%s'"), Bem().hamsPath));
+		source = AFX(GetFileFolder(Bem().hamsPath), "libiomp5md.dll");		
 		destNew = AFX(folderBase, "libiomp5md.dll");		
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams dll file from '%s'"), source));					
 	} 
 	String meshName = "WAMIT_MeshTran.exe";
 	if (bin) {
-		String source = bem.hamsMeshPath;
+		String source = Bem().hamsMeshPath;
 		meshName = GetFileName(source);
 		String destNew = AFX(folderBase, meshName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), bem.hamsMeshPath));				
+			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), Bem().hamsMeshPath));				
 	} 
 		
 	//String sumcases;
@@ -366,14 +375,14 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 			//sumcases << " " << AFX(folder, "Nemoh.cal");
 			_minf = freqs[ifr];
 			int deltaf = valsf[i];
-			_maxf = freqs[ifr + deltaf - 1];
+			_maxf = hd().w[ifr + deltaf - 1];
 			_nf = deltaf;
 			ifr += deltaf;
 		} else {
 			folder = folderBase;
-			_nf = Nf;
+			_nf = hd().Nf;
 			_minf = fixminF;
-			_maxf = maxF;
+			_maxf = Last(hd().w);
 		}
 		String folderInput = AFX(folder, "Input");
 		if (!DirectoryCreateX(folderInput))
@@ -386,7 +395,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 		UArray<Mesh> msh;
 		int ib = 0;		// Just one file
 		
-		String err = Mesh::Load(msh, bodies[ib].meshFile, rho, g, false, y0zmesh, x0zmesh);
+		String err = Mesh::Load(msh, hd().msh[ib].fileName, hd().rho, hd().g, false, y0zmesh, x0zmesh);
 		if (!err.IsEmpty())
 			throw Exc(err);
 		
@@ -396,21 +405,21 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 			y0zmesh = false;
 
 		String dest = AFX(folderInput, "HullMesh.pnl");
-		Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, Mesh::UNDERWATER, rho, g, y0zmesh, x0zmesh);
+		Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, Mesh::UNDERWATER, hd().rho, hd().g, y0zmesh, x0zmesh);
 		
 		bool y0zlid = false, x0zlid = false;	// Hull symmetries rules over lid ones
-		if (!bodies[ib].lidFile.IsEmpty()) {
-			String err = Mesh::Load(msh, bodies[ib].lidFile, rho, g, false, y0zlid, x0zlid);
+		if (!hd().msh[ib].lidFile.IsEmpty()) {
+			String err = Mesh::Load(msh, hd().msh[ib].lidFile, hd().rho, hd().g, false, y0zlid, x0zlid);
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
 			Mesh &mesh = First(msh);
 				
 			String dest = AFX(folderInput, "WaterplaneMesh.pnl");
-			Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, Mesh::ALL, rho, g, y0zmesh, x0zmesh);
+			Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, Mesh::ALL, hd().rho, hd().g, y0zmesh, x0zmesh);
 		}
 		
-		Save_Settings(folder, !bodies[ib].lidFile.IsEmpty(), bem);
+		Save_Settings(folder, !hd().msh[ib].lidFile.IsEmpty());
 		
 		String folderOutput = AFX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -429,7 +438,7 @@ void HamsCase::SaveFolder0(String folderBase, bool bin, int numCases, const BEM 
 	}
 }
 
-void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const {
+void Hams::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const {
 	String fileName = AFX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -444,7 +453,7 @@ void HamsCase::Save_Bat(String folder, String batname, String caseFolder, bool b
 	out << "\"" << solvName << "\"\n";
 }
 
-void HamsCase::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
+void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
 	out << "\n " << header << ":";
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
@@ -453,7 +462,7 @@ void HamsCase::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat
 	}
 }
 
-void HamsCase::InMatrix(LineParser &f, Eigen::MatrixXd &mat) {
+void Hams::InMatrix(LineParser &f, Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y) {
 		f.GetLine();
 		for (int x = 0; x < 6; ++x)
@@ -461,17 +470,17 @@ void HamsCase::InMatrix(LineParser &f, Eigen::MatrixXd &mat) {
 	}
 }
 	
-void HamsCase::Save_Hydrostatic(String folderInput) const {
+void Hams::Save_Hydrostatic(String folderInput) const {
 	String fileName = AFX(folderInput, "Hydrostatic.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	out << " Centre of Gravity:";
 	
-	if (bodies.IsEmpty())
+	if (hd().msh.IsEmpty())
 		throw Exc(t_("No bodies found"));
 	
-	const BEMBody &b = bodies[0];
+	const Mesh &b = hd().msh[0];
 	out << Format("\n%s %s %s", FDS(b.cg[0], 15, true), 
 								FDS(b.cg[1], 15, true), 
 								FDS(b.cg[2], 15, true));
@@ -480,35 +489,35 @@ void HamsCase::Save_Hydrostatic(String folderInput) const {
 	OutMatrix(out, "External Linear Damping Matrix", b.Dlin);
 	OutMatrix(out, "External Quadratic Damping Matrix", b.Dquad);
 	OutMatrix(out, "Hydrostatic Restoring Matrix", b.C);
-	OutMatrix(out, "External Restoring Matrix", b.Cext);
+	OutMatrix(out, "External Restoring Matrix", b.Cadd);
 }
 
 
-void HamsCase::Save_Settings(String folderInput, bool thereIsLid, const BEM &bem) const {
+void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 	String fileName = AFX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
 	Mesh mesh;
-	String res = Mesh::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), rho, g, Null, Null, false);
+	String res = Mesh::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), hd().rho, hd().g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
 	if (thereIsLid) {
 		Mesh lid;
-		lid.mesh.AddWaterSurface(mesh.mesh, mesh.under, 'f', bem.roundVal, bem.roundEps); 
-		lid.AfterLoad(rho, g, false, false);
+		lid.mesh.AddWaterSurface(mesh.mesh, mesh.under, 'f', Bem().roundVal, Bem().roundEps); 
+		lid.AfterLoad(hd().rho, hd().g, false, false);
 		
-		mesh.Append(lid.mesh, rho, g);
+		mesh.Append(lid.mesh, hd().rho, hd().g);
 	}
-	Mesh::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, Mesh::ALL, rho, g, false, false);	
+	Mesh::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, Mesh::ALL, hd().rho, hd().g, false, false);	
 	
-	out << g << "\n";
-	out << rho << "\n";
+	out << hd().g << "\n";
+	out << hd().rho << "\n";
 	out << ".\\Input\\mesh.gdf" << "\n";
-	out << bodies[0].c0[0] << "   " << bodies[0].c0[1] << "   " << bodies[0].c0[2] << "\n";
-	out << bodies[0].cg[0] << "   " << bodies[0].cg[1] << "   " << bodies[0].cg[2] << "\n";
+	out << hd().msh[0].c0[0] << "   " << hd().msh[0].c0[1] << "   " << hd().msh[0].c0[2] << "\n";
+	out << hd().msh[0].cg[0] << "   " << hd().msh[0].cg[1] << "   " << hd().msh[0].cg[2] << "\n";
 	out << "\n"
 		<< "The format is as below:\n"
 		<< "gravity acceleration\n"
@@ -518,7 +527,7 @@ void HamsCase::Save_Settings(String folderInput, bool thereIsLid, const BEM &bem
 		<< "Centre of gravity";
 }
 
-void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
+void Hams::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
 					int numThreads) const {
 	String fileName = AFX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
@@ -527,7 +536,7 @@ void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, doubl
 	
 	out << "   --------------HAMS Control file---------------"
 		   "\n";
-	double depth = h;
+	double depth = hd().h;
 	if (depth >= 400)
 		depth = -1;
 	out << "\n   Waterdepth  " << Format("%.4f", depth) << "D0";
@@ -545,19 +554,19 @@ void HamsCase::Save_ControlFile(String folderInput, int _nf, double _minf, doubl
 	out << "\n   #End Definition of Wave Frequencies"
 		   "\n"
 		   "\n   #Start Definition of Wave Headings";
-	out << "\n    Number_of_headings         " << Nh;
+	out << "\n    Number_of_headings         " << hd().Nh;
 	UVector<double> headings;
-	LinSpaced(headings, Nh, minH, maxH);
+	LinSpaced(headings, hd().Nh, First(hd().head), Last(hd().head));
 	out << "\n    ";
 	for (const auto &heading : headings)
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
 	out << "\n    Reference_body_centre " << Format("%11.3f %11.3f %11.3f", 
-								bodies[0].c0[0], bodies[0].c0[1], bodies[0].c0[2]) << 
+								hd().msh[0].c0[0], hd().msh[0].c0[1], hd().msh[0].c0[2]) << 
 		   "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";
-	bool remove_irr_freq = !bodies[0].lidFile.IsEmpty();
+	bool remove_irr_freq = !hd().msh[0].lidFile.IsEmpty();
 	out << "\n    If_remove_irr_freq      " << (remove_irr_freq ? 1 : 0);
 	out << "\n    Number of threads       " << numThreads;
 	out << "\n"

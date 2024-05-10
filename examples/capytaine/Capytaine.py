@@ -48,6 +48,6 @@ separate_complex_values(dataset).to_netcdf("dataset.nc",
                                            encoding={'radiating_dof': {'dtype': 'U'},
                                                      'influenced_dof': {'dtype': 'U'}})
                                                      
-# Export to NetCDF file
+# Export to Nemoh file
 from capytaine.io.legacy import write_dataset_as_tecplot_files
 write_dataset_as_tecplot_files("./results", dataset)

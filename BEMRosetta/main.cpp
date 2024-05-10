@@ -71,6 +71,8 @@ void Main::Init() {
 	String errorJson;
 	bool firstTime;
 	
+	mainSolver.InitBeforeSerialize();
+	
 	errorJson = bem.LoadSerializeJson();
 	firstTime = !errorJson.IsEmpty();
 	if (firstTime) {
@@ -101,7 +103,7 @@ void Main::Init() {
 		tab.Add(mainMesh.SizePos(), t_("Mesh"));
 	}
 	if (parameter.IsEmpty()) {
-		mainSolver.Init(bem);		LOG("Init Nemoh");
+		mainSolver.Init();		LOG("Init Nemoh");
 		//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
 		tab.Add(mainSolver.SizePos(), t_("BEM Solver"));
 	}
@@ -190,7 +192,7 @@ void Main::Init() {
 		if (tab.IsAt(menuOptionsScroll)) 
 			menuOptions.Load();
 		else if (tab.IsAt(mainSolver))			// mainNemohScroll)) 
-			mainSolver.Load(bem);
+			mainSolver.Load();
 		if (!tab.IsAt(menuOptionsScroll) && menuOptions.IsChanged()) {
 			if (PromptYesNo(t_("Options have changed&Do you want to save them?")))
 				menuOptions.OnSave();

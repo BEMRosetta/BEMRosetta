@@ -6,25 +6,28 @@ int Mesh::idCount = 0;
 
 
 void Mesh::Copy(const Mesh &msh) {
-	xProjectionPos = msh.xProjectionPos;
-	xProjectionNeg = msh.xProjectionNeg;
-	yProjectionPos = msh.yProjectionPos;
-	yProjectionNeg = msh.yProjectionNeg;
-	zProjectionPos = msh.zProjectionPos;
-	zProjectionNeg = msh.zProjectionNeg;
+	projectionPos = clone(msh.projectionPos);
+	projectionNeg = clone(msh.projectionNeg);
 	
 	cgZ0surface = clone(msh.cgZ0surface);
 	cb = clone(msh.cb);
 	cg = clone(msh.cg);
 	cg0 = clone(msh.cg0);
 	c0 = clone(msh.c0);
+	Vo = msh.Vo;
 	
 	M = clone(msh.M);
 	C = clone(msh.C);
+	Cmoor = clone(msh.Cmoor);
+	Cadd = clone(msh.Cadd);
+	//Dlin = clone(msh.Dlin);
+	//Dquad = clone(msh.Dquad);
+	Aadd = clone(msh.Aadd);
 	
 	name = msh.name;
 	fileName = msh.fileName;
-	header = msh.header;
+	fileHeader = msh.fileHeader;
+	lidFile = msh.lidFile;
 	
 	mesh = clone(msh.mesh);
 	under = clone(msh.under);
@@ -94,7 +97,7 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		bool isText;
 		Mesh &m = mesh.Add();
 		try {
-			LoadStl(file, m.mesh, isText, m.header);
+			LoadStl(file, m.mesh, isText, m.fileHeader);
 		} catch(Exc e) {
 			return std::move(e);
 		}
@@ -114,6 +117,14 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 				return std::move(e);
 		}
 		m.SetCode(Mesh::MSH_TDYN);
+	} else if (ext == ".grd") {
+		Mesh &m = mesh.Add();
+		try {
+			LoadGRD(file, m.mesh, y0z, x0z);
+		} catch(Exc e) {
+			return std::move(e);
+		}
+		m.SetCode(Mesh::MIKE21_GRD);
 	} else if (ext == ".mesh" || ext == ".bem") {
 		Mesh &m = mesh.Add();
 		try {
@@ -129,6 +140,9 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		return ret;
 	
 	for (Mesh &m : mesh) {
+		if (IsNull(m.c0))
+			m.c0 = Point3D(0, 0, 0);
+		
 		ret = m.mesh.CheckErrors();
 		if (!ret.IsEmpty())
 			return ret;
@@ -147,11 +161,13 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 		
 		if (!IsNull(rho))
 			m.AfterLoad(rho, g, false, true);
+		
+		m.IncrementIdCount();
 	}
 	return String();
 }
 
-void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
+void Mesh::SaveAs(const UArray<Mesh> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 						int &nNodes, int &nPanels) {
 	UArray<Surface> surfs(meshes.size());
 	nNodes = nPanels = 0;
@@ -159,24 +175,24 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_
 	for (int i = 0; i < meshes.size(); ++i) {
 		Surface &surf = surfs[i];
 		if (meshType == UNDERWATER) 
-			surf = clone(meshes[i]->under);
+			surf = clone(meshes[i].under);
 		else {
 			if (type == AQWA_DAT) {		// Appends dry and wet sides. This way there are no panels between dry and wet side
-				surf = clone(meshes[i]->under);		// First the wet
+				surf = clone(meshes[i].under);		// First the wet
 				Surface dry;	
-				dry.CutZ(meshes[i]->mesh, 1);
+				dry.CutZ(meshes[i].mesh, 1);
 				surf.Append(dry);					// Next the dry
 			} else
-				surf = clone(meshes[i]->mesh);
+				surf = clone(meshes[i].mesh);
 		}
 		
-		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT)) {
+		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || type == MIKE21_GRD)) {
 			Surface nsurf;
 			nsurf.CutX(surf);
 			surf = pick(nsurf);
 		}
 		if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
-					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT)) {
+					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || type == MIKE21_GRD)) {
 			Surface nsurf;
 			nsurf.CutY(surf);
 			surf = pick(nsurf);
@@ -197,7 +213,7 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_
 	if (type == WAMIT_GDF) 
 		WamitMesh::SaveGdf(file, First(surfs), g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		NemohMesh::SaveDat(*(First(meshes)), file, First(surfs), symY, nPanels);
+		NemohMesh::SaveDat(meshes, file, First(surfs), symY, nPanels);
 	else if (type == NEMOH_PRE) 
 		NemohMesh::SavePreMesh(file, First(surfs));
 	else if (type == HAMS_PNL)		
@@ -212,6 +228,8 @@ void Mesh::SaveAs(const UArray<Mesh*> &meshes, String file, MESH_FMT type, MESH_
 		SaveStlTxt(file, First(surfs));
 	else if (type == BEM_MESH)		
 		First(surfs).Save(file);
+	else if (type == MIKE21_GRD)		
+		SaveGRD(file, First(surfs), g, symX, symY);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
@@ -256,12 +274,12 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		
 		under.CutZ(mesh, -1);
 		under.GetPanelParams();
-		xProjectionPos = under.GetAreaXProjection(true, false);
-		xProjectionNeg = under.GetAreaXProjection(false, true);
-		yProjectionPos = under.GetAreaYProjection(true, false);
-		yProjectionNeg = under.GetAreaYProjection(false, true);
-		zProjectionPos = under.GetAreaZProjection(true, false);
-		zProjectionNeg = under.GetAreaZProjection(false, true);
+		projectionPos.x = under.GetAreaXProjection(true, false);
+		projectionNeg.x = under.GetAreaXProjection(false, true);
+		projectionPos.y = under.GetAreaYProjection(true, false);
+		projectionNeg.y = under.GetAreaYProjection(false, true);
+		projectionPos.z = under.GetAreaZProjection(true, false);
+		projectionNeg.z = under.GetAreaZProjection(false, true);
 		cgZ0surface = under.GetAreaZProjectionCG();
 		under.GetArea();
 		under.GetVolume();
@@ -276,7 +294,7 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		mesh0 = clone(mesh);
 		cg0 = clone(cg);
 	}
-	if (!IsNull(rho) && !IsNull(g))
+	if (!IsNull(rho) && !IsNull(g) && !IsNull(cg) && !IsNull(cb))
 		under.GetHydrostaticStiffness(C, c0, cg, cb, rho, g, GetMass(), massBuoy);
 }
 
@@ -285,9 +303,9 @@ void Mesh::Report(double rho) const {
 	
 	BEM::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			mesh.env.minX, mesh.env.maxX, mesh.env.minY, mesh.env.maxY, mesh.env.minZ, mesh.env.maxZ));
-	BEM::Print(S("\n") + Format(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -zProjectionPos, zProjectionNeg, zProjectionPos + zProjectionNeg));
-	BEM::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -xProjectionPos, xProjectionNeg, xProjectionPos + xProjectionNeg));
-	BEM::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -yProjectionPos, yProjectionNeg, yProjectionPos + yProjectionNeg));
+	BEM::Print(S("\n") + Format(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -projectionPos.z, projectionNeg.z, projectionPos.z + projectionNeg.z));
+	BEM::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -projectionPos.x, projectionNeg.x, projectionPos.x + projectionNeg.x));
+	BEM::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -projectionPos.y, projectionNeg.y, projectionPos.y + projectionNeg.y));
 	BEM::Print(S("\n") + Format(t_("Surface [m2] %f"), mesh.surface));
 	BEM::Print(S("\n") + Format(t_("Volume [m3] %f"), mesh.volume));
 	BEM::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), under.surface));
@@ -438,3 +456,33 @@ void Mesh::SetMass(double m) {
 	} else
 		M(0,0) = M(1,1) = M(2,2) = m;
 }
+
+void Mesh::Jsonize(JsonIO &json) {
+	json
+		("projectionPos", projectionPos)
+		("projectionNeg", projectionNeg)
+		("cgZ0surface", cgZ0surface)
+		("cb", cb)
+		("cg", cg)
+		("cg0", cg0)
+		("c0", c0)
+		("cb", cb)
+		("Vo", Vo)
+		("M", M)
+		("C", C)
+		("Cmoor", Cmoor)
+		("Cadd", Cadd)
+		("Dlin", Dlin)
+		("Dquad", Dquad)
+		("Aadd", Aadd)
+		("name", name)
+		("fileName", fileName)
+		("fileHeader", fileHeader)
+		("lidFile", lidFile)
+		("mesh", mesh)
+		("under", under)
+		("mesh0", mesh0)
+	;
+}
+
+	

@@ -87,20 +87,11 @@ String NemohMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z) {
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
-		Mesh::DecrementIdCount();
 		return ret;
 	}
-	MatrixXd cg_(3, 1), cb_(3, 1);
-	UVector<double> Vo;
-	if (!Nemoh::Load_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo))
+	//UVector<double> Vo;
+	if (!Nemoh::Load_Hydrostatics_static(GetFileFolder(fileName), 1, mesh))
 		return ret;
-	
-	msh.cg.x = cg_(0, 0);		//Supposed 1 body
-	msh.cg.y = cg_(1, 0);		
-	msh.cg.z = cg_(2, 0);		
-	msh.cb.x = cb_(0, 0);		//Supposed 1 body
-	msh.cb.y = cb_(1, 0);		
-	msh.cb.z = cb_(2, 0);
 	
 	return ret;
 }
@@ -162,21 +153,21 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 	return String();
 }
 
-void NemohMesh::SaveDat(const Mesh &mesh, String fileName, const Surface &surf, bool x0z, int &npanels) {
+void NemohMesh::SaveDat(const UArray<Mesh> &msh, String fileName, const Surface &surf, bool x0z, int &npanels) {
 	SaveDat0(fileName, surf, x0z, npanels);
 	
-	MatrixXd cg_(3, 1), cb_(3, 1);
-	UVector<double> Vo;
+	//MatrixXd cg_(3, 1), cb_(3, 1);
+	//UVector<double> Vo;
 	
-	if (!IsNull(mesh.cg) && !IsNull(mesh.cb)) {
+	/*if (!IsNull(msh.cg) && !IsNull(msh.cb)) {
 		cg_(0, 0) = mesh.cg.x;		//Supposed 1 body
 		cg_(1, 0) = mesh.cg.y;		
 		cg_(2, 0) = mesh.cg.z;		
 		cb_(0, 0) = mesh.cb.x;		//Supposed 1 body
 		cb_(1, 0) = mesh.cb.y;		
-		cb_(2, 0) = mesh.cb.z;	
-		Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, cg_, cb_, Vo);
-	}
+		cb_(2, 0) = mesh.cb.z;	*/
+		Nemoh::Save_Hydrostatics_static(GetFileFolder(fileName), 1, msh);
+	//}
 }
 
 void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) {

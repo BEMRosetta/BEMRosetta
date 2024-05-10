@@ -157,7 +157,7 @@ String FastOut::Load(String fileName) {
 	else if (ext == ".db")
 		ret = LoadDb(fileName);
 	else if (ext == ".lis")
-		ret = LoadLis(fileName);
+		ret = Load_LIS(fileName);
 	
 	this->fileName = fileName;
 	

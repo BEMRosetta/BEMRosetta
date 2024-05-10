@@ -220,7 +220,7 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 				for (int f = 0; f < Bem().hydros.size(); ++f) {
 					const Hydro &hy = Bem().hydros[f].hd();
 					for (int ib = 0; ib < hy.Nb; ++ib)
-						w.array.Add(hy.name, hy.names[ib].IsEmpty() ? AsString(ib+1) : hy.names[ib], f, ib);
+						w.array.Add(hy.name, hy.msh[ib].name.IsEmpty() ? AsString(ib+1) : hy.msh[ib].name, f, ib);
 				}
 				bool cancel = true;
 				w.butSelect << [&] {cancel = false;	w.Close();};
@@ -232,22 +232,21 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 						return; 
 					
 					int hid = w.array.Get(id, 2);
-					Hydro &hydro = Bem().hydros[hid].hd();
+					Hydro &hy = Bem().hydros[hid].hd();
 					
 					int ib = w.array.Get(id, 3);
 					
-					VectorXd c0 = hydro.c0.col(ib);
-					if (Distance(mesh.c0, Point3D(c0[0], c0[1], c0[2])) > 0.1)
+					if (Distance(mesh.c0, hy.msh[ib].c0) > 0.1)
 						if (!ErrorOKCancel(Format(t_("Centre of rotation in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
-														mesh.c0.x, mesh.c0.y, mesh.c0.z, c0[0], c0[1], c0[2])))
+														mesh.c0.x, mesh.c0.y, mesh.c0.z, hy.msh[ib].c0[0], hy.msh[ib].c0[1], hy.msh[ib].c0[2])))
 							cancel = true;	
-					VectorXd cg = hydro.cg.col(ib);
-					if (!cancel && Distance(mesh.cg, Point3D(cg[0], cg[1], cg[2])) > 0.1)
+					
+					if (!cancel && Distance(mesh.cg, hy.msh[ib].cg) > 0.1)
 						if (!ErrorOKCancel(Format(t_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
-														mesh.c0.x, mesh.c0.y, mesh.c0.z, c0[0], c0[1], c0[2])))
+														mesh.cg.x, mesh.cg.y, mesh.cg.z, hy.msh[ib].cg[0], hy.msh[ib].cg[1], hy.msh[ib].cg[2])))
 							cancel = true;
 					if (!cancel)
-						hydro.SetC(ib, K);
+						hy.SetC(ib, K);
 				}
 			 };
 	}
@@ -291,7 +290,7 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		if (!hydro.IsLoadedM())
 			data << EigenNull;
 		else
-			data << hydro.M[ib];
+			data << hydro.msh[ib].M;
 		label.SetText(t_("Mass/Inertia matrix (dimensional)"));
 	} else if (what == Hydro::MAT_DAMP_LIN) {
 		if (!hydro.IsLoadedDlin())
@@ -312,16 +311,16 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 	AddPrepare(row0, col0, name, icase, bodyName, ib, idc, Bem().onlyDiagonal && what == Hydro::MAT_A ? 6*hydro.Nb : 6);
 }
 
-bool MainMatrixKA::Load(UArray<HydroClass> &hydros, const UVector<int> &ids, bool ndim) {
+bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim) {
 	Clear();
 	Ndim = ndim;
 	
 	bool loaded = false; 	
 	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];
-		Hydro &hydro = hydros[isurf].hd();
-		for (int ib = 0; ib < hydro.Nb; ++ib) 
-			Add(hydro.name, i, hydro.names[ib], ib, hydro, hydro.GetId(), ndim);
+		Hydro &hy = hydros[isurf].hd();
+		for (int ib = 0; ib < hy.Nb; ++ib) 
+			Add(hy.name, i, hy.msh[ib].name, ib, hy, hy.GetId(), ndim);
 		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0))) 
 			loaded = true;
 	}

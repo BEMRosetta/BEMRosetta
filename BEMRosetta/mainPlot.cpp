@@ -145,7 +145,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 	scatP.SetLegendWithUnits(Bem().legend_w_units);
 }
 
-bool MainPlot::Load(const UArray<HydroClass> &hydro, const MainBEM &mbm, const UVector<int> &ids) {
+bool MainPlot::Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVector<int> &ids) {
 	scatt.RemoveAllSeries();
 	scatP.RemoveAllSeries();
 	ABFZ_source.SetCount(ids.size());
@@ -267,10 +267,10 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	if (Bem().legend_w_solver)
 		nameType << Format("(%s)", hy.GetCodeStrAbr());
 	
-	String sids = BEM::strDOFnum_sub[plot_idf];
+	String sids = BEM::strDOFnum_sub[plot_idf%6];
 	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || 
 		dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_A_P || dataToShow == Hydro::DATA_B_P || dataToShow == Hydro::DATA_KIRF)
-		sids += BEM::strDOFnum_sub[plot_jdf];
+		sids += BEM::strDOFnum_sub[plot_jdf%6];
 	
 	if (idc < 0)
 		idc = id;

@@ -426,7 +426,7 @@ void MainBEM::Init() {
 		
 		for (int id : ids) {
 			const Hydro &hydro = Bem().hydros[id].hd();
-			if (!hydro.meshes.IsEmpty()) {
+			if (!hydro.msh.IsEmpty()) {
 				ismesh = true;
 				break;
 			}
@@ -631,11 +631,11 @@ void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
 	
 	menuAdvanced.c_array.Clear();
 	for (int ib = 0; ib < hydro.Nb; ++ib)
-		menuAdvanced.c_array.Add		 (ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));			
+		menuAdvanced.c_array.Add		 (ib+1, hydro.msh[ib].c0.x, hydro.msh[ib].c0.y, hydro.msh[ib].c0.z);			
 	
 	menuAdvancedReference.c_array.Clear();
 	for (int ib = 0; ib < hydro.Nb; ++ib)
-		menuAdvancedReference.c_array.Add(ib+1, hydro.c0(0, ib), hydro.c0(1, ib), hydro.c0(2, ib));
+		menuAdvancedReference.c_array.Add(ib+1, hydro.msh[ib].c0.x, hydro.msh[ib].c0.y, hydro.msh[ib].c0.z);
 	menuAdvancedReference.Init(*this, id);
 		
 	menuAdvanced.labelBodyAxis.SetLabel(Format(t_("Body Axis (%d)"), hydro.Nb)); 
@@ -765,6 +765,7 @@ bool MainBEM::OnLoad() {
 
 bool MainBEM::OnLoadFile(String file) {
 	GuiLock __;
+	
 	try {
 		Progress progress(t_("Loading BEM files..."), 100); 
 		
@@ -780,21 +781,23 @@ bool MainBEM::OnLoadFile(String file) {
 		
 		WaitCursor wait;
 		
-		Bem().LoadBEM(file, [&](String str, int _pos) {
+		int num = Bem().LoadBEM(file, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
 		}, false);
 		
-		int id = Bem().hydros.size()-1;
-		Hydro &data = Bem().hydros[id].hd();
+		//int id = Bem().hydros.size()-1;
+		for (int id = Bem().hydros.size() - num; id < Bem().hydros.size(); ++id) {
+			Hydro &data = Bem().hydros[id].hd();
 		
-		data.Report();
-		mainSummary.Report(data, id);
-		if (data.Nf < 0)
-			return false;
-		
-		ArrayModel_Add(listLoaded, data.GetCodeStr(), data.name, data.file, data.GetId());
+			data.Report();
+			mainSummary.Report(data, id);
+			if (data.Nf < 0)
+				return false;
+			
+			ArrayModel_Add(listLoaded, data.GetCodeStr(), data.name, data.file, data.GetId());
+		}
 		
 		UpdateButtons();
 
@@ -1004,8 +1007,9 @@ void MainBEM::UpdateButtons() {
 		}
 		menuProcess.dropBody2.Enable(data.Nb > 1);
 		
+		VectorXd TT	= data.Get_T();			
 		for (int i = 0; i < data.w.size(); ++i)
-			menuProcess2.dropFreq.Add(false, show_w ? data.w[i] : data.T[i]);
+			menuProcess2.dropFreq.Add(false, show_w ? data.w[i] : TT[i]);
 		for (int i = 0; i < data.qw.size(); ++i)
 			menuProcess2.dropFreqQTF.Add(false, show_w ? data.qw[i] : 2*M_PI/data.qw[i]);
 		for (int i = 0; i < data.head.size(); ++i)
@@ -1058,7 +1062,7 @@ void MainBEM::OnJoin() {
 		WaitCursor wait;
 		Progress progress(t_("Joining selected BEM files..."), 100); 
 		
-		HydroClass &data = Bem().Join(idsjoin, [&](String str, int _pos) {
+		Hydro &data = Bem().Join(idsjoin, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
@@ -1091,7 +1095,7 @@ void MainBEM::OnDuplicate() {
 		if (id < 0) 
 			return;
 
-		HydroClass &data = Bem().Duplicate(id);
+		Hydro &data = Bem().Duplicate(id);
 		
 		mainSummary.Clear();
 		
@@ -1277,7 +1281,7 @@ void MainBEM::OnAverage() {
 		
 		WaitCursor wait;
 		
-		HydroClass &data = Bem().Average(ids);
+		Hydro &data = Bem().Average(ids);
 		
 		mainSummary.Clear();
 		
@@ -1647,9 +1651,15 @@ void MainBEM::OnSpreadNegative() {
 		if (id < 0) 
 			return;
 		
-		WaitCursor wait;
+		Progress progress(t_("Spreading negative values..."), 100); 
 		
-		String errors = Bem().SpreadNegative(id);
+		String errors = Bem().SpreadNegative(id, [&](String str, int _pos) {
+			progress.SetText(str); 
+			progress.SetPos(_pos); 
+			return !progress.Canceled();
+		});
+		
+		progress.Close();
 		
 		if (!errors.IsEmpty())
 			Exclamation(t_("Some negative panels cannot be spread in:&") + DeQtfLf(errors));
@@ -1668,7 +1678,7 @@ void MainBEM::OnMapNodes() {
 			return;
 		
 		const Hydro &hydro = Bem().hydros[id].hd();
-		if (hydro.meshes.IsEmpty() || hydro.meshes[0].mesh.panels.IsEmpty())
+		if (hydro.msh.IsEmpty() || hydro.msh[0].mesh.panels.IsEmpty())
 			return;
 		
 		if (!hydro.IsLoadedPots())
@@ -2292,54 +2302,50 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, data.Nb);
 	for (int ib = 0; ib < data.Nb; ++ib) {
 		String sib = Format("#%d", ib+1);
-		if (data.names.size() > ib) {
-			sib += " " + data.names[ib];
-			array.Set(row, 0, sib + " " + t_("Name"));		array.Set(row++, col, data.names[ib]);
-		} else {
-			array.Set(row, 0, sib + " " + t_("Name"));		array.Set(row++, col, "-");
-		}
-		array.Set(row, 0, sib + " " + t_("#dof"));
+		//sib += " " + data.msh[ib].name;
+		array.Set(row, 0, sib + " " + t_("Name"));		array.Set(row++, col, data.msh[ib].name);
+		/*array.Set(row, 0, sib + " " + t_("#dof"));
 		if (data.dof.size() > ib) 
 			array.Set(row++, col, data.dof[ib]);
 		else 
-			array.Set(row++, col, "-");
+			array.Set(row++, col, "-");*/
 		
 		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
-		if (data.Vo.size() > ib && IsNum(data.Vo[ib])) {
+		if (/*data.Vo.size() > ib && */IsNum(data.msh[ib].Vo)) {
 			
-			array.Set(row++, col, AttrText(FDS(data.Vo[ib], 10, false)).Paper(data.Vo[ib] < 0 ? lightRed : Null));
+			array.Set(row++, col, AttrText(FDS(data.msh[ib].Vo, 10, false)).Paper(data.msh[ib].Vo < 0 ? lightRed : Null));
 		} else 
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
-		if (data.cg.size() > 3*ib && IsNum(data.cg(0, ib))) 
+		if (IsNum(data.msh[ib].cg)) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FDS(data.cg(0, ib), 10, false),
-									FDS(data.cg(1, ib), 10, false),
-									FDS(data.cg(2, ib), 10, false)));
+									FDS(data.msh[ib].cg.x, 10, false),
+									FDS(data.msh[ib].cg.y, 10, false),
+									FDS(data.msh[ib].cg.z, 10, false)));
 		else
 			array.Set(row++, col, "-");
 
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
-		if (data.cb.size() > 3*ib && IsNum(data.cb(0, ib))) 
+		if (IsNum(data.msh[ib].cb)) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FDS(data.cb(0, ib), 10, false),
-									FDS(data.cb(1, ib), 10, false),
-									FDS(data.cb(2, ib), 10, false)));
+									FDS(data.msh[ib].cb.x, 10, false),
+									FDS(data.msh[ib].cb.y, 10, false),
+									FDS(data.msh[ib].cb.z, 10, false)));
 		else
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("C0 [m]"));
-		if (data.c0.size() > 3*ib && IsNum(data.c0(0, ib))) 
+		if (IsNum(data.msh[ib].c0)) 
 			array.Set(row++, col, Format(t_("%s, %s, %s"),
-									FDS(data.c0(0, ib), 10, false),
-									FDS(data.c0(1, ib), 10, false),
-									FDS(data.c0(2, ib), 10, false)));
+									FDS(data.msh[ib].c0.x, 10, false),
+									FDS(data.msh[ib].c0.y, 10, false),
+									FDS(data.msh[ib].c0.z, 10, false)));
 		else
 			array.Set(row++, col, "-");
 		
 		array.Set(row, 0, sib + " " + t_("Waterplane area [m²]"));
-		if (data.C.size() > ib && data.C[ib].size() > 0) {
+		if (/*data.C.size() > ib && */data.msh[ib].C.size() > 0) {
 			double wPlaneArea = data.C_dim(ib, 2, 2);
 			array.Set(row++, col, FDS(wPlaneArea, 10, false));		
 			for (int i = 0; i < 6; ++i) {
@@ -2365,9 +2371,9 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		array.Set(row+1, 0, sib + " " + t_("Troll(ω)  [s]"));
 		//array.Set(row+4, 0, sib + " " + t_("Tpitch(∞) [s]"));
 		array.Set(row+2, 0, sib + " " + t_("Tpitch(ω) [s]"));
-		if (IsNum(data.rho) && IsNum(data.g) && 
-			data.M.size() > ib && data.M[ib].size() > 0 && 
-			data.C.size() > ib && data.C[ib].size() > 0) {
+		if (/*IsNum(data.rho) && IsNum(data.g) &&*/ 
+			/*data.M.size() > ib && */data.msh[ib].M.size() > 0 && 
+			/*data.C.size() > ib && */data.msh[ib].C.size() > 0) {
 			//array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.Theavew(ib), 5, false, "-"));
 			//array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));
@@ -2384,7 +2390,7 @@ void MainSummaryCoeff::Report(const Hydro &data, int id) {
 		}
 		array.Set(row,   0, sib + " " + t_("GMroll  [m]"));
 		array.Set(row+1, 0, sib + " " + t_("GMpitch [m]"));
-		if (IsNum(data.rho) && IsNum(data.g) && data.IsLoadedC()) {
+		if (/*IsNum(data.rho) && IsNum(data.g) && */data.IsLoadedC()) {
 			array.Set(row++, col, FDS(data.GMroll(ib), 5, false, "-"));
 			array.Set(row++, col, FDS(data.GMpitch(ib), 5, false, "-"));
 		} else {
@@ -2427,7 +2433,7 @@ void MeshBody::Init() {
 void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 	const char *xyz[] = {"x", "y", "z"};
 	{
-		int num = hydro.meshes[ib].mesh.nodes.size();
+		int num = hydro.msh[ib].mesh.nodes.size();
 		nodes.Clear();
 		nodes.ClearSelection();
 		nodes.SetVirtualCount(num);
@@ -2435,11 +2441,11 @@ void MeshBody::Load(const Hydro &hydro, int ib, bool hasPotentials) {
 		numNodes <<= num;
 		
 		dataSourceNodes.Clear();
-		nodes.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourceNodes.Add().Init(hydro.meshes[ib].mesh, -2));
+		nodes.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourceNodes.Add().Init(hydro.msh[ib].mesh, -2));
 		for (int c = 0; c < 3; ++c) 
-			nodes.AddRowNumColumn(Format("%s", xyz[c]), 80).SetConvert(dataSourceNodes.Add().Init(hydro.meshes[ib].mesh, c));
+			nodes.AddRowNumColumn(Format("%s", xyz[c]), 80).SetConvert(dataSourceNodes.Add().Init(hydro.msh[ib].mesh, c));
 	}{
-		int num = hydro.meshes[ib].mesh.panels.size();
+		int num = hydro.msh[ib].mesh.panels.size();
 		panels.Clear();
 		panels.ClearSelection();
 		panels.SetVirtualCount(num);
@@ -2513,7 +2519,7 @@ Value MeshBody::DataSourceNodes::Format(const Value& q) const {
 Value MeshBody::DataSourcePanels::Format(const Value& q) const {
 	ASSERT(phydro);
 	int idp = q;
-	const Surface &s = phydro->meshes[ib].mesh;
+	const Surface &s = phydro->msh[ib].mesh;
 	if (s.panels.size() <= idp)
 		return Null;
 	
@@ -2582,12 +2588,12 @@ bool MainMeshTable::Load(BEM &bem) {
 		tab.Reset();
 		bodies.Clear();
 		
-		UArray<HydroClass> &hydros = bem.hydros; 
+		UArray<Hydro> &hydros = bem.hydros; 
 		if (hydros.IsEmpty() || id < 0) 
 			return false;
 		
 		const Hydro &hydro = hydros[id].hd();
-		if (hydro.meshes.IsEmpty() || hydro.meshes[0].mesh.panels.IsEmpty())
+		if (hydro.msh.IsEmpty() || hydro.msh[0].mesh.panels.IsEmpty())
 			return false;
 		
 		bool hasPotentials = hydro.IsLoadedPots();
@@ -2595,7 +2601,7 @@ bool MainMeshTable::Load(BEM &bem) {
 			MeshBody &b = bodies.Add();
 			b.Init();
 			b.Load(hydro, ib, hasPotentials);
-			tab.Add(b.SizePos(), Format("%d. %s", ib+1, hydro.names[ib]));
+			tab.Add(b.SizePos(), Format("%d. %s", ib+1, hydro.msh[ib].name));
 		}
 		return true;
 	} catch (Exc e) {

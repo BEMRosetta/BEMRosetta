@@ -596,13 +596,13 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			ret = fout.Load(fileName);
 		}
 		if (!ret.IsEmpty()) {
-			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), DeQtf(~file), DeQtf(ret)));
+			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), ~file, ret));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
 		}
 		if (fout.GetNumData() == 0) {
-			BEM::PrintError(Format(t_("File '%s' is empty"), DeQtf(~file)));
+			BEM::PrintError(Format(t_("File '%s' is empty"), ~file));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;

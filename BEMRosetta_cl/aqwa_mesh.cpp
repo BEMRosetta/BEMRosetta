@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String AQWAMesh::Load_LIS(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z) {
+String AQWAMesh::Load_LIS(UArray<Mesh> &msh, String fileName, double g, bool &y0z, bool &x0z) {
 	y0z = x0z = false;
 	
 	BEM bem;
@@ -15,7 +15,7 @@ String AQWAMesh::Load_LIS(UArray<Mesh> &mesh, String fileName, double g, bool &y
 		
 		Hydro &hyd = bem.hydros[0].hd();
 
-		mesh = pick(hyd.meshes);
+		msh = pick(hyd.msh);
 		y0z = hyd.symX;
 		x0z = hyd.symY;
 	} catch (Exc e) {
@@ -156,7 +156,7 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 	return String();
 }
 
-void AQWAMesh::SaveDat(String fileName, const UArray<Mesh*> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z) {
+void AQWAMesh::SaveDat(String fileName, const UArray<Mesh> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
@@ -164,7 +164,7 @@ void AQWAMesh::SaveDat(String fileName, const UArray<Mesh*> &meshes, const UArra
 	SaveDat(out, meshes, surf, rho, g, y0z, x0z);
 }
 
-void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z) {
+void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z) {
 	ASSERT(meshes.size() == surfs.size());
 	
 	Time t = GetSysTime();
@@ -228,7 +228,7 @@ void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Su
 			ret << Format("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
 						FDS(p.x/factorLength, 10, true), FDS(p.y/factorLength, 10, true), FDS(p.z/factorLength, 10, true));
 		}
-		Point3D &cg = meshes[ib]->cg;
+		const Point3D &cg = meshes[ib].cg;
 		ret << Format("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
 	}
@@ -294,7 +294,7 @@ void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Su
 	<< "          MATE\n";
 		
 	for (int ib = 0; ib < meshes.size(); ++ib)
-		ret << Format("    %2d         %5d  %s", ib+1, 9800+ib, FDS(meshes[ib]->GetMass(), 8, true));
+		ret << Format("    %2d         %5d  %s", ib+1, 9800+ib, FDS(meshes[ib].GetMass(), 8, true));
 
 	ret	<< "\n END\n";	
 		
@@ -306,8 +306,8 @@ void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh*> &meshes, const UArray<Su
 
 	for (int ib = 0; ib < meshes.size(); ++ib)
 		ret << Format("%6d%s     %5d%s%s%s%s%s%s", ib+1, "PMAS", 9800+ib, 
-			FDS(meshes[ib]->M(3, 3), 10, true), FDS(meshes[ib]->M(3, 4), 10, true), FDS(meshes[ib]->M(3, 5), 10, true),
-			FDS(meshes[ib]->M(4, 4), 10, true), FDS(meshes[ib]->M(4, 5), 10, true), FDS(meshes[ib]->M(5, 5), 10, true));
+			FDS(meshes[ib].M(3, 3), 10, true), FDS(meshes[ib].M(3, 4), 10, true), FDS(meshes[ib].M(3, 5), 10, true),
+			FDS(meshes[ib].M(4, 4), 10, true), FDS(meshes[ib].M(4, 5), 10, true), FDS(meshes[ib].M(5, 5), 10, true));
 
 	ret	<< "\n END\n";
 	

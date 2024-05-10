@@ -125,8 +125,10 @@ Orca::~Orca() {
 	
 bool Orca::Init(String _dllFile) {
 	dllFile = _dllFile;
-	if (!dll.Load(dllFile))
+	if (!dll.Load(dllFile)) {
+		BEM::PrintWarning(Format(t_("OrcaFlex DLL is not found in '%s'"), dllFile));
 		return false;
+	}
 
 	CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (HINSTANCE *handle, HWND hCaller, int *status));
 	DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(HINSTANCE handle, int *status));
@@ -266,8 +268,10 @@ void __stdcall Orca::EnumerateVarsProc(const TVarInfo *lpVarInfo) {
 			
 bool Orca::FindInit() {
 	UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
-	if (orcadata.IsEmpty())
+	if (orcadata.IsEmpty()) {
+		BEM::PrintWarning("OrcaFlex is not installed");
 		return false;
+	}
 	
 	int iversion = 0;
 	UVector<int> version = orcadata[0].GetVersion();
@@ -374,9 +378,9 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, hy.w.begin()))
 		throwError("Load dotAngularFrequencies 2");	
 		
-	hy.T.SetCount(hy.Nf);
+	/*hy.T.SetCount(hy.Nf);
 	for (int i = 0; i < hy.Nf; ++i)	
-		hy.T[i] = 2*M_PI/hy.w[i];	
+		hy.T[i] = 2*M_PI/hy.w[i];	*/
 	
 	if (GetDiffractionOutput(wave, dotHeadings, &sz, NULL))
 		throwError("Load dotHeadings");	
@@ -399,34 +403,35 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, bodies.begin()))
 		throwError("Load dotHydrostaticResults 2");
 	
-	hy.Vo.SetCount(hy.Nb);
-	hy.cb.resize(3, hy.Nb);
-	hy.cg.resize(3, hy.Nb);
-	hy.C.SetCount(hy.Nb);
+	hy.msh.SetCount(hy.Nb);
+	//hy.Vo.SetCount(hy.Nb);
+	//hy.cb.resize(3, hy.Nb);
+	//hy.cg.resize(3, hy.Nb);
+	//hy.C.SetCount(hy.Nb);
 	for (int ib = 0; ib < hy.Nb; ++ib) 
-		hy.C[ib].resize(6, 6);
-	hy.M.SetCount(hy.Nb);
+		hy.msh[ib].C.resize(6, 6);
+	//hy.M.SetCount(hy.Nb);
 	for (int ib = 0; ib < hy.Nb; ++ib) 
-		hy.M[ib].resize(6, 6);
+		hy.msh[ib].M.resize(6, 6);
 	
-	hy.c0.setConstant(3, hy.Nb, 0);
-	hy.names.SetCount(hy.Nb);
+	//hy.c0.setConstant(3, hy.Nb, 0);
+	//hy.names.SetCount(hy.Nb);
 	
 	for (int ib = 0; ib < hy.Nb; ++ib) {
 		const TDiffractionBodyHydrostaticInfo &b = bodies[ib];
 		
-		hy.Vo[ib] = b.Volume*factor.len*factor.len*factor.len;
+		hy.msh[ib].Vo = b.Volume*factor.len*factor.len*factor.len;
 		for (int idf = 0; idf < 3; ++idf) {
-			hy.cb(idf, ib) = b.CentreOfBuoyancy[idf]*factor.len;
-			hy.cg(idf, ib) = b.CentreOfMass[idf]*factor.len;
+			hy.msh[ib].cb[idf] = b.CentreOfBuoyancy[idf]*factor.len;
+			hy.msh[ib].cg[idf] = b.CentreOfMass[idf]*factor.len;
 		}
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
-				hy.C[ib](r, c) = b.RestoringMatrix[r][c]*factor.K(r, c);
-				hy.M[ib](r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
+				hy.msh[ib].C(r, c) = b.RestoringMatrix[r][c]*factor.K(r, c);
+				hy.msh[ib].M(r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
 			}
 		}
-		hy.names[ib] = FormatInt(ib+1);
+		hy.msh[ib].name = FormatInt(ib+1);
 	}
 	
 	auto LoadAB = [&](UArray<UArray<VectorXd>> &ab, int type, const char *stype, const Matrix<double, 6, 6> &factor) {
@@ -502,10 +507,12 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotQTFAngularFrequencies, &sz, qfreq))
 		throwError("Load dotQTFAngularFrequencies 2");	
 	
-	int Nqw = sz /= sizeof(double);
+	sz /= sizeof(double);
+	int Nqw = sz/3;
 	UVector<double> qw;
 	for (int i = 0; i < sz; i += 3) 
 		FindAdd(qw, qfreq[i]);
+	Sort(qw);
 	Copy(qw, hy.qw);
 	
 	if (GetDiffractionOutput(wave, dotMeanDriftHeadingPairs, &sz, NULL))
@@ -583,8 +590,8 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (sz == 0)
 			return false;
 		
-		if (sz/sizeof(TComplex) != 6*hy.Nb*(Nqw/3)*hy.qh.size())		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*(Nqw/3)*hy.qh.size()));
+		if (sz/sizeof(TComplex) != 6*hy.Nb*Nqw*hy.qh.size())		
+			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*Nqw*hy.qh.size()));
 		
 		MultiDimMatrixRowMajor<TComplex> qtf((int)hy.qh.size(), Nqw, 6*hy.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
@@ -599,21 +606,21 @@ void Orca::LoadParameters(Hydro &hy) {
 		else if (type == dotQuadraticLoadFromPressureIntegration)
 			hy.qtftype = 9;
 	
-		
 		for (int ib = 0; ib < Nb; ++ib) 
 			for (int ih = 0; ih < hy.qh.size(); ++ih) 
 				for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr = 0; ifr < Nqw; ifr += 3) {
-						int ifr1 = Find(hy.qw, qfreq[ifr]);
-						if (ifr1 < 0)
-							throw Exc(Format("Frequency %.3f not found", qfreq[ifr]));
-						int ifr2 = Find(hy.qw, qfreq[ifr+1]);
-						if (ifr2 < 0)
-							throw Exc(Format("Frequency %.3f not found", qfreq[ifr]));
-						if (abs(qfreq[ifr] + qfreq[ifr+1] - qfreq[ifr+2]) < 0.001)
-							hy.qtfsum[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, ifr, 6*ib+idf).Re, qtf(ih, ifr, 6*ib+idf).Im)*factor.F(idf);
-						else
-							hy.qtfdif[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, ifr, 6*ib+idf).Re, qtf(ih, ifr, 6*ib+idf).Im)*factor.F(idf);
+					for (int ifr = 0, iNqw = 0; ifr < 3*Nqw; ifr += 3, iNqw++) {
+						double freq1 = qfreq[ifr];
+						double freq2 = qfreq[ifr+1];
+						double freq12= qfreq[ifr+2];
+						int ifr1 = Find(hy.qw, freq1);
+						int ifr2 = Find(hy.qw, freq2);
+						if (abs(freq1 + freq2 - freq12) < 0.001)
+							hy.qtfsum[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, iNqw, 6*ib+idf).Re, 
+																					  qtf(ih, iNqw, 6*ib+idf).Im)*factor.F(idf);
+						else 
+							hy.qtfdif[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, iNqw, 6*ib+idf).Re, 
+																					  qtf(ih, iNqw, 6*ib+idf).Im)*factor.F(idf);
 					}
 
 			
@@ -639,11 +646,11 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotPanelGeometry, &sz, panels.begin()))
 		throwError("Load dotPanelGeometry 2");
 	
-	hy.meshes.SetCount(hy.Nb);
+	hy.msh.SetCount(hy.Nb);
 	for (int ib = 0; ib < hy.Nb; ++ib) {
-		hy.meshes[ib].SetCode(Mesh::ORCA_OWR);
-		hy.meshes[ib].c0 = Point3D(hy.c0(0, ib), hy.c0(1, ib), hy.c0(2, ib));
-		hy.meshes[ib].cg = Point3D(hy.cg(0, ib), hy.cg(1, ib), hy.cg(2, ib));
+		hy.msh[ib].SetCode(Mesh::ORCA_OWR);
+		hy.msh[ib].c0 = Point3D(0, 0, 0);
+		//hy.msh[ib].cg = Point3D(hy.cg(0, ib), hy.cg(1, ib), hy.cg(2, ib));
 	}
 	for (int ip = 0; ip < Np; ++ip) {
 		const TDiffractionPanelGeometry &pan = panels[ip];
@@ -652,7 +659,7 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (ib < 0)		// Artificial damping lid
 			continue;
 		
-		Panel &p = hy.meshes[ib].mesh.panels.Add();
+		Panel &p = hy.msh[ib].mesh.panels.Add();
 		
 		for (int i = 0; i < 4; ++i) {
 			const TVector &v0 = pan.Vertices[i];
@@ -661,7 +668,7 @@ void Orca::LoadParameters(Hydro &hy) {
 				p.id[i] = p.id[0];
 			else {
 				Point3D pnt(v0[0]*factor.len, v0[1]*factor.len, v0[2]*factor.len);
-				p.id[i] = FindAdd(hy.meshes[ib].mesh.nodes, pnt);
+				p.id[i] = FindAdd(hy.msh[ib].mesh.nodes, pnt);
 			}
 		}
 	}

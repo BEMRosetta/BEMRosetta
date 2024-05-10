@@ -5,7 +5,7 @@
 
 #ifdef PLATFORM_WIN32
 
-String ORCAMesh::Load_OWR(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z) {
+String ORCAMesh::Load_OWR(UArray<Mesh> &msh, String fileName, double g, bool &y0z, bool &x0z) {
 	y0z = x0z = false;
 	
 	BEM bem;
@@ -16,11 +16,11 @@ String ORCAMesh::Load_OWR(UArray<Mesh> &mesh, String fileName, double g, bool &y
 		
 		Hydro &hyd = bem.hydros[0].hd();
 
-		mesh = pick(hyd.meshes);
+		msh = pick(hyd.msh);
 		y0z = hyd.symX;
 		x0z = hyd.symY;
 	} catch (Exc e) {
-		return t_("Parsing error: ") + e;
+		return t_("Error loading owr: ") + e;
 	}
 		
 	return String();

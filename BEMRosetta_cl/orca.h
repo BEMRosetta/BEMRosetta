@@ -300,7 +300,7 @@ public:
 	
 	bool IsAvailable() {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 			
 		HINSTANCE test;
 		int status;	
@@ -315,7 +315,7 @@ public:
 	
 	void LoadFlex(String owryml) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		int status;
 		LPCWSTR wcs;
@@ -339,7 +339,7 @@ public:
 	
 	void SaveFlex(String owryml) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlexFlex OrcFxAPI.dll not loaded");
 		
 		int status;
 		LPCWSTR wcs;
@@ -355,7 +355,7 @@ public:
 		saved = false;
 		
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!flex) 
 			throwError("RunFlex");	
 		
@@ -387,7 +387,7 @@ public:
 	
 	void SaveFlexSim(String owryml) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		if (!flex) 
 			throwError("SaveFlexSim");	
@@ -404,7 +404,7 @@ public:
 
 	void LoadFlexSim(String sim) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		int status;
 		LPCWSTR wcs;
@@ -444,7 +444,7 @@ public:
 		
 	void GetFlexSimObjects() {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		if (!flex) 
 			throwError("GetFlexSimObjects");	
@@ -462,7 +462,7 @@ public:
 	
 	void GetFlexSimVariables(HINSTANCE objHandle, int objType, String name, UVector<int> &IDs, UVector<String> &names, UVector<String> &fullNames, UVector<String> &units) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		if (!flex) 
 			throwError("GetFlexSimVariables");	
@@ -527,7 +527,7 @@ public:
 	void GetFlexSimVar(HINSTANCE objHandle, int objType, int varId, const Point3D &centre,
 					UVector<String> &linePoint, VectorXd &data) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		if (!flex) 
 			throwError("GetFlexSimVar");	
@@ -638,7 +638,7 @@ public:
 	
 	int GetModelState() {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		if (!flex) 
 			throwError("GetFlexSimVar");	
@@ -661,7 +661,7 @@ public:
 	
 	void LoadWave(String owryml) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 			
 		if (!wave) {
 			int status;	
@@ -690,7 +690,7 @@ public:
 		
 	void RunWave() {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);
@@ -709,7 +709,7 @@ public:
 
 	void LoadWaveResults(String owr) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);
@@ -732,7 +732,7 @@ public:
 		
 	void SaveWaveResults(String owryml) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);
@@ -780,7 +780,7 @@ public:
 	
 	void SetThreadCount(int nth) {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);
@@ -797,7 +797,7 @@ public:
 
 	int GetThreadCount() {
 		if (!dll && !FindInit())
-			throw Exc("Orca DLL not loaded");
+			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);

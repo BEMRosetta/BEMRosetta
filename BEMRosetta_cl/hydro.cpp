@@ -74,8 +74,8 @@ void Hydro::GetRAO() {
 		throw Exc(t_("Insufficient data to get RAO: A and B are required"));	
 
 	for (int ib = 0; ib < Nb; ++ib) 
-		if (C.size() < ib+1 || C[ib].rows() < 6 || C[ib].cols() < 6 || 
-			  M.size() < ib+1 || M[ib].rows() < 6 || M[ib].cols() < 6) 
+		if (/*C.size() < ib+1 || */msh[ib].C.rows() < 6 || msh[ib].C.cols() < 6 || 
+			  /*M.size() < ib+1 || */msh[ib].M.rows() < 6 || msh[ib].M.cols() < 6) 
 			throw Exc(t_("Insufficient data to get RAO: C and M are required"));   
 			      
 	Initialize_Forces(rao);
@@ -85,7 +85,7 @@ void Hydro::GetRAO() {
 	
 	for (int ib = 0; ib < Nb; ++ib) {
 		MatrixXd C = C_(false, ib);
-		const MatrixXd &M_ = M[ib];
+		const MatrixXd &M_ = msh[ib].M;
 		for (int ih = 0; ih < Nh; ++ih) {	
 			for (int ifr = 0; ifr < Nf; ++ifr) {
 				VectorXcd RAO = GetRAO(w[ifr], A_mat(false, ifr, ib, ib), B_mat(false, ifr, ib, ib), 
@@ -247,8 +247,8 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 				Ainf_w[idf][jdf].setConstant(Nf, NaNDouble);
 	    }
     }
-    double maxT = min(bem->maxTimeA, Hydro::GetK_IRF_MaxT(w));
-    int numT = bem->numValsA;
+    double maxT = min(Bem().maxTimeA, Hydro::GetK_IRF_MaxT(w));
+    int numT = Bem().numValsA;
     
     if (Kirf.size() == 0) {
         Kirf.SetCount(Nb*6); 			
@@ -310,32 +310,45 @@ void Hydro::GetWaveTo(double xto, double yto) {
 	y_w = yto;
 }
 
-String Hydro::SpreadNegative() {
+String Hydro::SpreadNegative(Function <bool(String, int)> Status) {
 	String ret;
 	UVector<String> errors;
+
+	int numT = 0, num = 0;
+	for (int ib = 0; ib < Nb; ++ib) 
+		numT += pots[ib].size();
+
 	for (int ib = 0; ib < Nb; ++ib) {
 		for (int idp = 0; idp < pots[ib].size(); ++idp) {
+			int adv = 100*num/numT;
+			if (Status && !(adv%2)) {
+				if (!Status(t_("Spreading negative values in diagonal"), adv))
+					throw Exc(t_("Stop by user"));
+			}
+			num++;	
+				
 			UVector<int> panIDs;
 			for (int ifr = 0; ifr < Nf; ++ifr) {
 				for (int idf = 0; idf < 6; ++idf) {		// Only diagonal
-					if (Apan(ib, idp, idf, idf, ifr) < 0) {
-						if (panIDs.IsEmpty())
-							meshes[ib].mesh.GetClosestPanels(idp, panIDs);
+					double &apan = Apan(ib, idp, idf, idf, ifr);
+					if (apan < 0) {
+						if (panIDs.IsEmpty())			// It is only get if the added mass in any dof is negative
+							msh[ib].mesh.GetClosestPanels(idp, panIDs);
 						for (int i = 0; i < panIDs.size(); ++i) {
-							if (Apan(ib, i, idf, idf, ifr) > 0) {
-								double delta = Apan(ib, i, idf, idf, ifr) + Apan(ib, idp, idf, idf, ifr);
-								if (delta >= 0) {
-									Apan(ib, i, idf, idf, ifr) += Apan(ib, idp, idf, idf, ifr);
-									Apan(ib, idp, idf, idf, ifr) = 0;
+							double &apan_i = Apan(ib, panIDs[i], idf, idf, ifr);
+							if (apan_i > 0) {
+								if (apan_i + apan >= 0) {	// apan_i has enough mass
+									apan_i += apan;
+									apan = 0;
 									break;
-								} else {
-									Apan(ib, idp, idf, idf, ifr) += Apan(ib, i, idf, idf, ifr);
-									Apan(ib, i, idf, idf, ifr) = 0;
+								} else {					// apan_i has not enough mass
+									apan += apan_i;
+									apan_i = 0;
 								}
 							}
 						}
-						if (Apan(ib, idp, idf, idf, ifr) < 0) {
-							FindAdd(errors, Format(t_("%d.%s Freq %d (%f rad/s)"), idf+1, BEM::strDOFtext[idf], ifr, w[ifr]));
+						if (apan < 0) {			// Impossible to spread
+							FindAdd(errors, Format(t_("%d.%s Freq %.3f rad/s"), ib+1, BEM::strDOFtext[idf], w[ifr]));
 							// Resets this dof and frequency for all panels
 							for (int i = 0; i < pots[ib].size(); ++i) 
 								Apan(ib, i, idf, idf, ifr) = 0;
@@ -374,7 +387,7 @@ void Hydro::MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan_n
 	};
 	
 	for (int idp = 0; idp < pots[ib].size(); ++idp) {
-		const Point3D &p = meshes[ib].mesh.panels[idp].centroidPaint;
+		const Point3D &p = msh[ib].mesh.panels[idp].centroidPaint;
 		int ip = GetClosest(p, points);
 		for (int ifr = 0; ifr < Nf; ++ifr) {
 			for (int idf1 = 0; idf1 < 6; ++idf1) {		
@@ -512,7 +525,7 @@ void Hydro::AddWave(int ib, double dx, double dy) {
     
     UVector<double> k(Nf);
 	for (int ifr = 0; ifr < Nf; ++ifr) 
-		k[ifr] = SeaWaves::WaveNumber(T[ifr], h, g_dim());
+		k[ifr] = SeaWaves::WaveNumber_w(w[ifr], h, g_dim());
     	
 	if (IsLoadedFex())
 		CalcF(ex, k);
@@ -553,7 +566,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 	MatrixXd delta(3, Nb);
 	for (int ib = 0; ib < Nb; ++ib) 
 		for (int idf = 0; idf < 3; ++idf) 	
-			delta(idf, ib) = to(idf, ib) - c0(idf, ib);
+			delta(idf, ib) = to(idf, ib) - msh[ib].c0[idf];
 		
 	
 	auto CalcAB = [&](auto &A) {
@@ -685,8 +698,8 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		CalcA(A0);
     if (IsLoadedAinf())
 		CalcA(Ainf);
-	if (IsLoadedDlin())
-		CalcA(Dlin);
+//	if (IsLoadedDlin())
+//		CalcA(Dlin);
 		    
     auto CalcF = [&](Forces &ex) {
     	UArray<MatrixXcd> exforce = clone(ex.force);
@@ -780,22 +793,26 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 	
 	if (IsLoadedM()) {
 		for (int ib = 0; ib < Nb; ++ib) 
-			Surface::TranslateInertia66(M[ib], Point3D(cg.col(ib)), Point3D(c0.col(ib)), Point3D(to.col(ib)));
+			Surface::TranslateInertia66(msh[ib].M, msh[ib].cg, msh[ib].c0, Point3D(to.col(ib)));
 	}
 	
 	if (IsLoadedKirf()) {
 		double maxT = GetK_IRF_MaxT();
 		if (maxT < 0)
-			maxT = bem->maxTimeA;
-		else if (bem->maxTimeA < maxT) 
-			maxT = bem->maxTimeA;
+			maxT = Bem().maxTimeA;
+		else if (Bem().maxTimeA < maxT) 
+			maxT = Bem().maxTimeA;
 
-		GetK_IRF(maxT, bem->numValsA);
+		GetK_IRF(maxT, Bem().numValsA);
 	}
 	
 	// Some previous data are now invalid
 	rao.Clear();	
-	C.Clear();
+	
+	for (int ib = 0; ib < Nb; ++ib) {
+		msh[ib].C = MatrixXd();
+		msh[ib].Dlin = MatrixXd();
+	}
 	
 /*	for (int ib = 0; ib < Nb; ++ib) {
 		double dx = delta(0, ib);
@@ -803,12 +820,21 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		AddWave(ib, -dx, -dy);				// Translate the wave back to the original position
 	}*/
 	
-	c0 = clone(to);
-		
-	if (!AfterLoad()) {
-		String error = GetLastError();
+	for (int ib = 0; ib < Nb; ++ib)
+		msh[ib].c0 = to.col(ib);
+	
+	String error = AfterLoad();
+	if (!error.IsEmpty())
 		throw Exc(Format(t_("Problem translating model: '%s'\n%s"), error));	
-	}
+}
+
+void Hydro::CompleteForces1st() {
+	if (!IsLoadedFex() && IsLoadedFsc() && IsLoadedFfk()) 
+		GetFexFromFscFfk();
+	if (!IsLoadedFsc() && IsLoadedFex() && IsLoadedFfk()) 
+		GetFscFromFexFfk();
+	if (!IsLoadedFfk() && IsLoadedFex() && IsLoadedFsc()) 
+		GetFfkFromFexFsc();	
 }
 
 void Hydro::ResetForces1st(Hydro::FORCE force) {
@@ -952,21 +978,23 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	// Some previous data is now invalid
 	Kirf.Clear();
 	
-	if (!AfterLoad()) {
-		String error = GetLastError();
-		throw Exc(Format(t_("Problem reseting DOF: '%s'\n%s"), error));	
-	}
+	String error = AfterLoad();
+	if (!error.IsEmpty())
+		throw Exc(Format(t_("Problem reseting DOF: '%s'\n%s"), error));
 }
 
 void Hydro::SwapDOF(int ib1, int ib2) {
 	for (int idof = 0; idof < 6; ++idof)	
 		SwapDOF(ib1, idof, ib2, idof);	
 	
-	c0.col(ib1).swap(c0.col(ib2));
-	cg.col(ib1).swap(cg.col(ib2));
-	cb.col(ib1).swap(cb.col(ib2));
-	Swap(Vo[ib1], Vo[ib2]);
-	Swap(names[ib1], names[ib2]);
+	Swap(msh[ib1].c0, msh[ib2].c0);
+	Swap(msh[ib1].cg, msh[ib2].cg);
+	Swap(msh[ib1].cb, msh[ib2].cb);
+	//c0.col(ib1).swap(c0.col(ib2));
+	//cg.col(ib1).swap(cg.col(ib2));
+	//cb.col(ib1).swap(cb.col(ib2));
+	Swap(msh[ib1].Vo, msh[ib2].Vo);
+	Swap(msh[ib1].name, msh[ib2].name);
 }
 
 void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
@@ -1049,18 +1077,17 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		SwapSumDif(qtfdif);
 
 	if (IsLoadedC()) 
-		Swap(C[ib1], C[ib2], idof1, idof2);
+		Swap(msh[ib1].C, msh[ib2].C, idof1, idof2);
 	
 	if (IsLoadedM()) 
-		Swap(M[ib1], M[ib2], idof1, idof2);
+		Swap(msh[ib1].M, msh[ib2].M, idof1, idof2);
 
 	if (IsLoadedKirf()) // Kirf structure is like A and B
 		SwapAB(Kirf);
 		
-	if (!AfterLoad()) {
-		String error = GetLastError();
+	String error = AfterLoad();
+	if (!error.IsEmpty())
 		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
-	}
 }
 
 void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
@@ -1150,7 +1177,7 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 		for (int i = w.size()-1; i >= 0 && j >= 0; --i) {
 			if (i == idFreq[j]) {	
 				w.Remove(i);
-				T.Remove(i);
+				//T.Remove(i);
 				j--;
 			}
 		}
@@ -1336,9 +1363,9 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	
 	Nf = int(nw.size());
 	::Copy(nw, w);
-	T.SetCount(Nf);
+	/*T.SetCount(Nf);
 	for (int i = 0; i < Nf; ++i) 
-		T[i] = 2*M_PI/w[i];
+		T[i] = 2*M_PI/w[i];*/
 }
 
 void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
@@ -1402,8 +1429,8 @@ void Hydro::FillFrequencyGapsABForcesZero() {
 		FillA(Ainf);
 	if (IsLoadedA0())
 		FillA(A0);
-	if (IsLoadedDlin())
-		FillA(Dlin);
+	//if (IsLoadedDlin())
+		//FillA(Dlin);
 	
 	auto FillF = [&](Forces &ex) {
 	    for (int ih = 0; ih < Nh; ++ih) {
@@ -1546,10 +1573,10 @@ void Hydro::Symmetrize() {
 	if (IsLoadedQTF(false))
 		SymmetrizeSumDif(qtfdif, false);
 	
-	if (!AfterLoad()) {
-		String error = GetLastError();
+	String error = AfterLoad();
+	if (!error.IsEmpty())
 		throw Exc(Format(t_("Problem symmetrizing data: '%s'\n%s"), error));	
-	}
+	
 }
 
 double Hydro::GetQTFVal(int ib, int idof, int idh, int ifr1, int ifr2, bool isSum, char what, bool getDim) const {
@@ -1602,5 +1629,7 @@ void Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorX
 			VectorXd &Tirf, VectorXd &Kinf);
 			   				
 
-	
+
+
+
 	

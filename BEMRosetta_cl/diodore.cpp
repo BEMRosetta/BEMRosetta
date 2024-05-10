@@ -4,12 +4,12 @@
 #include "BEMRosetta_int.h"
 
 
-bool Diodore::Load(String file, double) {
+String Diodore::Load(String file, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(file);
 	hd().dimen = true;
 	hd().len = 1;
-	hd().code = Hydro::DIODORE;
+	hd().solver = Hydro::DIODORE;
 	hd().Nb = Null;
 	
 	try {
@@ -20,18 +20,18 @@ bool Diodore::Load(String file, double) {
 		Load_HDB();
 		
 		if (IsNull(hd().Nb))
-			throw Exc(t_("No data found"));
+			return t_("No data found");
 	
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
+		/*hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 6;
+			hd().dof[i] = 6;*/
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
-		return false;
+		//hd().lastError = e;
+		return e;
 	}
 	
-	return true;
+	return String();
 }
 
 void Diodore::Load_HDB() {
@@ -90,7 +90,7 @@ void Diodore::Load_HDB() {
 			;
 		else if (f.GetText(0) == "[PERIODS_NUMBER]") {
 			hd().Nf = f.GetInt(1);
-			hd().T.SetCount(hd().Nf);
+			//hd().T.SetCount(hd().Nf);
 			hd().w.SetCount(hd().Nf);
 		} else if (f.GetText(0) == "[QTF_PERIODS_NUMBER]") {
 			if (f.GetInt(1) > 0) {
@@ -104,8 +104,8 @@ void Diodore::Load_HDB() {
 		} else if (f.GetText(0) == "[List_calculated_periods]") {
 			for (int iw = 0; iw < hd().Nf; ++iw) {
 				f.GetLine_discard_empty();
-				hd().T[iw] = f.GetDouble(0);
-				hd().w[iw] = 2*M_PI/hd().T[iw];
+				double T = f.GetDouble(0);
+				hd().w[iw] = 2*M_PI/T;
 			}
 		} else if (f.GetText(0) == "[List_calculated_headings]") {
 			for (int ih = 0; ih < hd().Nh; ++ih) {
@@ -115,20 +115,21 @@ void Diodore::Load_HDB() {
 			}
 		} else if (f.GetText(0) == "[STRUCTURES_NUMBER]") {
 			hd().Nb = f.GetInt(1);
-			hd().names.SetCount(hd().Nb);
-			hd().Vo.SetCount(hd().Nb);
-			hd().cb.resize(3, hd().Nb);
-			hd().cg.resize(3, hd().Nb);
-			hd().c0.resize(3, hd().Nb);
-			hd().C.SetCount(hd().Nb);
+			hd().msh.SetCount(hd().Nb);
+			//hd().names.SetCount(hd().Nb);
+			//hd().Vo.SetCount(hd().Nb);
+			//hd().cb.resize(3, hd().Nb);
+			//hd().cg.resize(3, hd().Nb);
+			//hd().c0.resize(3, hd().Nb);
+			//hd().C.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
-				hd().C[ib].setConstant(6, 6, 0);
-			hd().M.SetCount(hd().Nb);
+				hd().msh[ib].C.setConstant(6, 6, 0);
+			//hd().M.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
-				hd().M[ib].setConstant(6, 6, 0);
-		    hd().Cmoor.SetCount(hd().Nb);
+				hd().msh[ib].M.setConstant(6, 6, 0);
+		    //hd().Cmoor.SetCount(hd().Nb);
 			for (int ib = 0; ib < hd().Nb; ++ib) 
-				hd().Cmoor[ib].setConstant(6, 6, 0);
+				hd().msh[ib].Cmoor.setConstant(6, 6, 0);
 		    hd().Initialize_AB(hd().A);
 			hd().Initialize_AB(hd().B);
 			//hd().Dlin = Eigen::MatrixXd::Zero(6*hd().Nb, 6*hd().Nb);
@@ -138,35 +139,35 @@ void Diodore::Load_HDB() {
 			if (ib < 1 || ib > hd().Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d (%s)"), ib, f.GetText()));
 			ib--;
-			hd().names[ib] = f.GetText(1);
+			hd().msh[ib].name = f.GetText(1);
 		} else if (f.GetText(0) == "[UNDERWATER_VOLUME]") 
-			hd().Vo[ib] = f.GetDouble(1);
+			hd().msh[ib].Vo = f.GetDouble(1);
 		else if (f.GetText(0) == "[CENTER_OF_BUOYANCY]") {
-			hd().cb(0, ib) = f.GetDouble(1);
-			hd().cb(1, ib) = f.GetDouble(2);
-			hd().cb(2, ib) = f.GetDouble(3);
+			hd().msh[ib].cb.x = f.GetDouble(1);
+			hd().msh[ib].cb.y = f.GetDouble(2);
+			hd().msh[ib].cb.z = f.GetDouble(3);
 		} else if (f.GetText(0) == "[CENTER_OF_GRAVITY]") {
-			hd().cg(0, ib) = f.GetDouble(1);
-			hd().cg(1, ib) = f.GetDouble(2);
-			hd().cg(2, ib) = f.GetDouble(3);
-			hd().c0 = clone(hd().cg);
+			hd().msh[ib].cg.x = f.GetDouble(1);
+			hd().msh[ib].cg.y = f.GetDouble(2);
+			hd().msh[ib].cg.z = f.GetDouble(3);
+			hd().msh[ib].c0 = clone(hd().msh[ib].cg);
 		} else if (f.GetText(0) == "[Mass_Inertia_matrix]") {
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 
-					hd().M[ib](r, c) = f.GetDouble(c);
+					hd().msh[ib].M(r, c) = f.GetDouble(c);
 			}
 		} else if (f.GetText(0) == "[Hydrostatic_matrix]") {
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 
-					hd().C[ib](r, c) = f.GetDouble(c);
+					hd().msh[ib].C(r, c) = f.GetDouble(c);
 			}
 		} else if (f.GetText(0) == "[Stiffness_matrix_of_the_mooring_system]") {
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 
-					hd().Cmoor[ib](r, c) = f.GetDouble(c);
+					hd().msh[ib].Cmoor(r, c) = f.GetDouble(c);
 			}
 		} else if (f.GetText(0) == "[EXCITATION_FORCES_AND_MOMENTS]") {
 			hd().Initialize_Forces(hd().ex);
@@ -238,7 +239,7 @@ void Diodore::Load_HDB() {
 	hd().qtftype = hd().mdtype = 9;
 }
 
-bool HydroClass::SaveDiodoreHDB(String file) {
+void Hydro::SaveDiodoreHDB(String file) {
 	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
 	
 	String folder = GetFileFolder(file);
@@ -270,8 +271,10 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 		<< Format("[LOWEST_HEADING]    %.2f\n", (hd().Nh > 0 ? First(hd().head) : 0))
 		<< Format("[HIGHEST_HEADING]   %.2f\n", (hd().Nh > 0 ? Last(hd().head) : 0));	
 
-	out << "[List_calculated_periods]   \n";								
-	for (auto T : hd().T)
+	out << "[List_calculated_periods]   \n";
+	
+	VectorXd TT	= hd().Get_T();							
+	for (auto T : TT)
 		out << Format("%10.3f\n", T);							
 								
 	out << "[List_calculated_headings]  \n";								
@@ -285,7 +288,7 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 		for (int ih = 0; ih < hd().Nh; ++ih) {
 			out << Format("[%s_MOD_%03d]   %10.3f\n", text, ih+1, hd().head[ih]);
 			for (int iw = 0; iw < hd().Nf; ++iw) {
-				out << Format("%7.2f", hd().T[iw]);
+				out << Format("%7.2f", TT[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
 					out << Format(" % .7E", abs(hd().F_dim(force, ih, iw, idof)));	
 				out << "\n";
@@ -294,7 +297,7 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 		for (int ih = 0; ih < hd().Nh; ++ih) {
 			out << Format("[%s_PH_%03d]   %10.3f\n", text, ih+1, hd().head[ih]);
 			for (int iw = 0; iw < hd().Nf; ++iw) {
-				out << Format("%7.2f", hd().T[iw]);
+				out << Format("%7.2f", TT[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
 					out << Format(" % .7E", arg(hd().F_dim(force, ih, iw, idof)));	
 				out << "\n";
@@ -303,15 +306,15 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 	};
 		
 	for (int ib = 0; ib < hd().Nb; ++ib) {
-		out << Format("[STRUCTURE_%02d] %s\n", ib+1, hd().names[ib]);
-		out << Format("[UNDERWATER_VOLUME]        %.3f\n", hd().Vo[ib]);
-		out << Format("[CENTER_OF_BUOYANCY]     %.4f   %.4f   %.4f\n", hd().cb(0, ib), hd().cb(1, ib), hd().cb(2, ib));
-		out << Format("[CENTER_OF_GRAVITY]      %.4f   %.4f   %.4f\n", hd().cg(0, ib), hd().cg(1, ib), hd().cg(2, ib));
+		out << Format("[STRUCTURE_%02d] %s\n", ib+1, hd().msh[ib].name);
+		out << Format("[UNDERWATER_VOLUME]        %.3f\n", hd().msh[ib].Vo);
+		out << Format("[CENTER_OF_BUOYANCY]     %.4f   %.4f   %.4f\n", hd().msh[ib].cb.x, hd().msh[ib].cb.x, hd().msh[ib].cb.x);
+		out << Format("[CENTER_OF_GRAVITY]      %.4f   %.4f   %.4f\n", hd().msh[ib].cg.x, hd().msh[ib].cg.y, hd().msh[ib].cg.z);
 		
 		out << "[Mass_Inertia_matrix]   \n";		
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
-				double d = hd().IsLoadedM() ? hd().M[ib](r, c) : 0;
+				double d = hd().IsLoadedM() ? hd().msh[ib].M(r, c) : 0;
 				out << Format("% .2E   ", d);
 			}
 			out << "\n";
@@ -355,7 +358,7 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 			for (int ih = 0; ih < hd().mdhead.size(); ++ih) {
 				out << Format("[INCIDENCE_DFM_%03d]   %10.3f\n", ih+1, real(hd().mdhead[ih]));
 				for (int iw = 0; iw < hd().Nf; ++iw) {
-					out << Format("%7.2f", hd().T[iw]);
+					out << Format("%7.2f", TT[iw]);
 					for (int idf = 0; idf < 6; ++idf) 
 						out << Format(" % .7E", hd().Md_dim(idf, ih, iw));
 					out << "\n";
@@ -368,7 +371,7 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 				for (int idrow = 0; idrow < 6; ++idrow) {
 					out << Format("[ADDED_MASS_LINE_%d]\n", idrow+1);
 					for (int iw = 0; iw < hd().Nf; ++iw) {
-						out << Format("%7.2f", hd().T[iw]);
+						out << Format("%7.2f", TT[iw]);
 						for (int idof = 0; idof < 6; ++idof) 
 							out << Format(" % .7E", hd().A_dim(iw, idrow + 6*ib, idof + 6*ib));
 						out << "\n";
@@ -379,7 +382,7 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 				for (int idrow = 0; idrow < 6; ++idrow) {
 					out << Format("[DAMPING_TERM_%d]\n", idrow+1);
 					for (int iw = 0; iw < hd().Nf; ++iw) {
-						out << Format("%7.2f", hd().T[iw]);
+						out << Format("%7.2f", TT[iw]);
 						for (int idof = 0; idof < 6; ++idof) 
 							out << Format(" % .7E", hd().B_dim(iw, idrow + 6*ib, idof + 6*ib));
 						out << "\n";
@@ -388,5 +391,4 @@ bool HydroClass::SaveDiodoreHDB(String file) {
 			}
 		}					
 	}
-	return true;	
 }

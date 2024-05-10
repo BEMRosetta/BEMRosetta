@@ -6,7 +6,7 @@
 
 using namespace Upp;
 
-String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
+String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 		BEM::Print("\n- " + S(t_("NC file")));
@@ -14,6 +14,8 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 		String name = GetFileTitle(file);
 	
 		NetCDFFile cdf(file);
+
+		double _g = cdf.GetDouble("g");
 		
 		UVector<double> _rho;
 		cdf.GetDouble("rho", _rho);
@@ -35,8 +37,8 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 		cdf.GetDouble("omega", _w);
 		int Nf = _w.size();
 
-		UVector<double> _T;
-		cdf.GetDouble("period", _T);
+		//UVector<double> _T;
+		//cdf.GetDouble("period", _T);
 
 		int numaxisAB = 3;
 		if (_rho.size() > 1)
@@ -130,9 +132,11 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 																		   -_f(irho, _ih, 1, iw, ih, idf + 6*ib));//-Imaginary to follow Wamit
 		};
 	
+		num = _rho.size()*_h.size();
+		
 		for (int irho = 0; irho < _rho.size(); ++irho) {
 			for (int ih = 0; ih < _h.size(); ++ih) {
-				Hydro &hy = hydros.Create<CapyNC>(bem).hd();
+				Hydro &hy = hydros.Add();
 				
 				hy.file = file;
 				hy.name = name;
@@ -142,8 +146,9 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 					hy.name + Format("_h%.0f", _h[ih]);
 				hy.dimen = true;
 				hy.len = 1;
-				hy.code = Hydro::CAPYNC;
+				hy.solver = Hydro::CAPYNC;
 		
+				hy.g = _g;
 				hy.rho = _rho[irho];
 				hy.h = _h[ih];
 				
@@ -152,13 +157,22 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 				hy.dataFromW = true;
 				
 				hy.w = clone(_w);
-				hy.T = clone(_T);
+				//hy.T = clone(_T);
 				hy.Nf = Nf;
 				hy.head = clone(_head);
 				hy.Nh = Nh;
-				hy.M = clone(M);
-				hy.C = clone(C);
-				hy.c0 = clone(c0);
+				//hy.M = clone(M);
+				//hy.C = clone(C);
+				//hy.c0 = clone(c0);
+				hy.msh.SetCount(Nb);
+				for (int ib = 0; ib < Nb; ++ib) {
+					for (int i = 0; i < 3; ++i)
+						hy.msh[ib].c0[i] = c0(i, ib);
+					if (bds.size() > ib)
+						hy.msh[ib].name = bds[ib];
+					hy.msh[ib].M = clone(M[ib]);
+					hy.msh[ib].C = clone(C[ib]);
+				}
 				
 				hy.Initialize_AB(hy.A);
 				hy.Initialize_AB(hy.B);
@@ -170,15 +184,15 @@ String CapyNC_Load(const String &file, UArray<HydroClass> &hydros, BEM &bem) {
 					LoadForce(sc, hy.sc, irho, ih, ib);
 					LoadForce(fk, hy.fk, irho, ih, ib);
 				}
-				hy.GetFexFromFscFfk();
+				//hy.GetFexFromFscFfk();
 				
-				hy.names.SetCount(Nb);
-				for (int i = 0; i < min(bds.size(), Nb); ++i)
-					hy.names[i] = bds[i];
+				//hy.names.SetCount(Nb);
+				//for (int i = 0; i < min(bds.size(), Nb); ++i)
+				//	hy.names[i] = bds[i];
 				
-				hy.dof.Clear();	hy.dof.SetCount(hy.Nb, 0);
+				/*hy.dof.Clear();	hy.dof.SetCount(hy.Nb, 0);
 				for (int i = 0; i < hy.Nb; ++i)
-					hy.dof[i] = 6;
+					hy.dof[i] = 6;*/
 			}
 		}
 	} catch (Exc e) {

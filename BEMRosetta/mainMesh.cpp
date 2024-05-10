@@ -98,11 +98,11 @@ void MainMesh::Init() {
 	
 	CtrlLayout(menuProcess);
 	
-	menuProcess.x_g <<= 0;
+	menuProcess.x_g <<= Null;
 	menuProcess.x_g.WhenEnter = THISBACK2(OnUpdate, NONE, true);
-	menuProcess.y_g <<= 0;
+	menuProcess.y_g <<= Null;
 	menuProcess.y_g.WhenEnter = THISBACK2(OnUpdate, NONE, true);
-	menuProcess.z_g <<= 0;
+	menuProcess.z_g <<= Null;
 	menuProcess.z_g.WhenEnter = THISBACK2(OnUpdate, NONE, true);
 	menuProcess.x_0 <<= 0;
 	menuProcess.x_0.WhenEnter = THISBACK2(OnUpdate, NONE, true);
@@ -381,9 +381,13 @@ void MainMesh::OnMenuProcessArraySel() {
 		return;
 	
 	Mesh &data = Bem().surfs[id];
-	menuProcess.x_g <<= data.cg.x;
-	menuProcess.y_g <<= data.cg.y;
-	menuProcess.z_g <<= data.cg.z;
+	if (!IsNull(data.cg)) {
+		menuProcess.x_g <<= data.cg.x;
+		menuProcess.y_g <<= data.cg.y;
+		menuProcess.z_g <<= data.cg.z;
+	} else
+		menuProcess.x_g <<= menuProcess.y_g <<= menuProcess.z_g <<= Null;
+	
 	menuProcess.x_0 <<= data.c0.x;
 	menuProcess.y_0 <<= data.c0.y;
 	menuProcess.z_0 <<= data.c0.z;
@@ -463,7 +467,7 @@ void MainMesh::LoadSelTab(BEM &bem) {
 void MainMesh::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
-	const String meshFiles = ".gdf .dat .stl .pnl .msh .mesh .hst";
+	const String meshFiles = ".gdf .dat .stl .pnl .msh .mesh .hst .grd";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	menuOpen.file.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
@@ -535,7 +539,11 @@ bool MainMesh::OnLoad() {
 		
 		WaitCursor waitcursor;
 
-		int num = Bem().LoadMesh(file, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();}, ~menuOpen.opClean, false);
+		int num = Bem().LoadMesh(file, [&](String str, int _pos) {
+			progress.SetText(str); 
+			progress.SetPos(_pos); 
+			return !progress.Canceled();
+		}, ~menuOpen.opClean, false);
 		
 		//int id = Bem().surfs.size()-1;
 		for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
@@ -1691,10 +1699,15 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(data.under.volumey, 10, false),
 														FDS(data.under.volumez, 10, false))).Paper(backColorUnder));
 	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FDS(data.under.volume*Bem().rho, 10, false));
-	array.Set(row, 0, t_("Cg [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("Cg [m]"));			
+	if (!IsNull(data.cg))
+		array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FDS(data.cg.x, 10, false),			
 														FDS(data.cg.y, 10, false),
 														FDS(data.cg.z, 10, false)));
+	else
+		array.Set(row++, col, "-");
+			
 	array.Set(row, 0, t_("Cb [m]"));
 	if (!IsNull(data.cb))	
 		array.Set(row++, col, Format(t_("%s, %s, %s"),  FDS(data.cb.x, 10, false),			
@@ -1702,6 +1715,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(data.cb.z, 10, false)));
 	else 
 		array.Set(row++, col, "-");
+	
 	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FDS(data.c0.x, 10, false),			
 														FDS(data.c0.y, 10, false),
@@ -1719,8 +1733,9 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 		array.Set(row++, col, FDS(gmroll, 5, false));
 	else
 		array.Set(row++, col, "-");
+	
 	array.Set(row, 0, t_("GZ [m]"));
-	if (!IsNull(data.cb)) {
+	if (!IsNull(data.cb) && !IsNull(data.cg)) {
 		Direction3D cgcb = data.cg - data.cb;
 		double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
 		array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
@@ -1729,9 +1744,9 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 												
 	array.Set(row, 0, t_("Surface projection Z-axis (waterplane area) [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FDS(-data.zProjectionPos, 10, false),
-														FDS(data.zProjectionNeg,  10, false),
-														FDS(data.zProjectionPos+data.zProjectionNeg, 10, false)));
+														FDS(-data.projectionPos.z, 10, false),
+														FDS(data.projectionNeg.z,  10, false),
+														FDS(data.projectionPos.z+data.projectionNeg.z, 10, false)));
 	
 	array.Set(row, 0, t_("Waterplane geometric centre (centre of flotation) [m]"));
 	if (!IsNull(data.cgZ0surface)) 
@@ -1741,15 +1756,15 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 		array.Set(row++, col, "-");
 	array.Set(row, 0, t_("Surface projection X-axis [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FDS(-data.xProjectionPos, 10, false),
-														FDS(data.xProjectionNeg,  10, false),
-														FDS(data.xProjectionPos+data.xProjectionNeg, 10, false)));
+														FDS(-data.projectionPos.x, 10, false),
+														FDS(data.projectionNeg.x,  10, false),
+														FDS(data.projectionPos.x+data.projectionNeg.x, 10, false)));
 	
 	array.Set(row, 0, t_("Surface projection Y-axis [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FDS(-data.yProjectionPos, 10, false),
-														FDS(data.yProjectionNeg,  10, false),
-														FDS(data.yProjectionPos+data.yProjectionNeg, 10, false)));
+														FDS(-data.projectionPos.y, 10, false),
+														FDS(data.projectionNeg.y,  10, false),
+														FDS(data.projectionPos.y+data.projectionNeg.y, 10, false)));
 	
 	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
 														FDS(data.mesh.env.minX, 10, false),
@@ -1760,9 +1775,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(data.mesh.env.maxZ, 10, false)));
 
 	//Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
-	Force6D fcb;
-	if (!IsNull(data.cb))
-		fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
+	Force6D fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
 	
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));
 	
@@ -1787,13 +1800,17 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	
 	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.GetMass(), Bem().g);	
 	
-	array.Set(row, 0, t_("Mass moments [N·m]"));array.Set(row++, col, Format(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("Mass moments [N·m]"));
+	if (!IsNull(fcg)) 
+		array.Set(row++, col, Format(t_("%s, %s, %s"),
 														FDS(fcg[3], 10, false),
 														FDS(fcg[4], 10, false),
 														FDS(fcg[5], 10, false)));
-
+	else
+		array.Set(row++, col, "-");
+	
 	array.Set(row, 0, t_("Mass+Hydrostatics forces [N]"));
-	if (!IsNull(data.cb))
+	if (!IsNull(fcg) && !IsNull(fcb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														"0",
 														"0",
@@ -1802,7 +1819,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 		array.Set(row++, col, "-");
 	
 	array.Set(row, 0, t_("Mass+Hydrostatics moments [N·m]"));
-	if (!IsNull(data.cb))
+	if (!IsNull(fcb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcg[3]+fcb[3], 10, false),
 														FDS(fcg[4]+fcb[4], 10, false),

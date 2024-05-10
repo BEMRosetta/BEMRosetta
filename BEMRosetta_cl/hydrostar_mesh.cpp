@@ -11,13 +11,10 @@ String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bo
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
-		Mesh::DecrementIdCount();
-		Mesh::DecrementIdCount();
 		return ret;
 	}
 	if (damp.mesh.GetNumPanels() == 0) {
 		mesh.SetCount(1);
-		Mesh::DecrementIdCount();
 	}
 	return ret;
 }
@@ -84,17 +81,20 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 					node.z = f.GetDouble(3); 
 				}
 			} else if (f.GetText(0) == "PANEL") {
+				int panelType = f.GetInt(2);
+				int ibegin = panelType == 1 ? 1 : 0;
+				
 				while(!f.IsEof()) {
 					f.GetLine_discard_empty();
 					if (f.GetText(0) == "ENDPANEL")
 						break;
 					
 					Panel &panel = mesh.mesh.panels.Add();
-					panel.id[0] = idnodes.Find(f.GetInt(1));	
-					panel.id[1] = idnodes.Find(f.GetInt(2));	
-					panel.id[2] = idnodes.Find(f.GetInt(3));	
-					if (f.size() >= 5)
-						panel.id[3] = idnodes.Find(f.GetInt(4));	
+					panel.id[0] = idnodes.Find(f.GetInt(ibegin));	
+					panel.id[1] = idnodes.Find(f.GetInt(ibegin+1));	
+					panel.id[2] = idnodes.Find(f.GetInt(ibegin+2));	
+					if (f.size() >= 4+ibegin)
+						panel.id[3] = idnodes.Find(f.GetInt(ibegin+3));	
 					else
 						panel.id[3] = panel.id[2];	
 				}

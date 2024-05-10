@@ -144,7 +144,8 @@ private:
 
 const Color &GetColorId(int id);
 
-void GridCtrlToMatrixXd(Eigen::MatrixXd &mat, const GridCtrl &grid);
+Eigen::MatrixXd GridCtrlToMatrixXd(const GridCtrl &grid);
 void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat);
+void VectorToGridCtrl(GridCtrl &grid, const Upp::Vector<double> &mat);
 	
 #endif

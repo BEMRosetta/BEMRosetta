@@ -4,12 +4,12 @@
 #include "BEMRosetta_int.h"
 #include <Hdf5/hdf5.h>
 
-bool BemioH5::Load(String file, double) {
+String BemioH5::Load(String file, double) {
 	hd().file = file;
 	hd().name = GetFileTitle(file);
 	hd().dimen = true;
 	hd().len = 1;
-	hd().code = Hydro::BEMIOH5;
+	hd().solver = Hydro::BEMIOH5;
 	hd().Nb = Null;
 	hd().x_w = hd().y_w = 0;
 	
@@ -21,18 +21,18 @@ bool BemioH5::Load(String file, double) {
 		Load_H5();
 		
 		if (IsNull(hd().Nb))
-			throw Exc(t_("No data found"));
+			return t_("No data found");
 	
-		hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
+		/*hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
 		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 6;
+			hd().dof[i] = 6;*/
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		hd().lastError = e;
-		return false;
+		//hd().lastError = e;
+		return e;
 	}
 	
-	return true;
+	return String();
 }
 
 void BemioH5::Load_H5() {
@@ -50,22 +50,22 @@ void BemioH5::Load_H5() {
 		hfile.ChangeGroup("bem_data");
 		String str = ToLower(hfile.GetString("code"));
 		if (str.Find("wamit") >= 0)
-			hd().code = Hydro::WAMIT;
+			hd().solver = Hydro::WAMIT;
 		else if (str.Find("hams") >= 0)
-			hd().code = Hydro::HAMS;
+			hd().solver = Hydro::HAMS;
 		else if (str.Find("nemoh") >= 0)
-			hd().code = Hydro::NEMOH;
+			hd().solver = Hydro::NEMOH;
 		else if (str.Find("aqwa") >= 0)
-			hd().code = Hydro::AQWA;
+			hd().solver = Hydro::AQWA;
 		else if (str.Find("capytaine") >= 0)
-			hd().code = Hydro::CAPYTAINE;
+			hd().solver = Hydro::CAPYTAINE;
 		
 		hfile.UpGroup();
 	}	
 	{
 		hfile.ChangeGroup("simulation_parameters");
 		
-		hfile.GetDouble("T", hd().T);
+		//hfile.GetDouble("T", hd().T);
 		hfile.GetDouble("w", hd().w);
 		hd().Nf = hd().w.size();
 		hfile.GetDouble("wave_dir", hd().head);
@@ -102,18 +102,19 @@ void BemioH5::Load_H5() {
 	hd().Initialize_Forces(sc); 
 	hd().Initialize_Forces(fk);
 	
-	hd().names.SetCount(hd().Nb);
-	hd().Vo.SetCount(hd().Nb);
-	hd().dof.SetCount(hd().Nb);
-	hd().cb.resize(3, hd().Nb);
-	hd().cg.resize(3, hd().Nb);
-	hd().c0.setConstant(3, hd().Nb, 0);
-	hd().C.SetCount(hd().Nb);
+	hd().msh.SetCount(hd().Nb);
+	//hd().names.SetCount(hd().Nb);
+	//hd().Vo.SetCount(hd().Nb);
+	//hd().dof.SetCount(hd().Nb);
+	//hd().cb.resize(3, hd().Nb);
+	//hd().cg.resize(3, hd().Nb);
+	//hd().c0.setConstant(3, hd().Nb, 0);
+	//hd().C.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().C[ib].setConstant(6, 6, 0);
-	hd().M.SetCount(hd().Nb);
+		hd().msh[ib].C.setConstant(6, 6, 0);
+	//hd().M.SetCount(hd().Nb);
 	for (int ib = 0; ib < hd().Nb; ++ib) 
-		hd().M[ib].setConstant(6, 6, 0);
+		hd().msh[ib].M.setConstant(6, 6, 0);
 
 	auto LoadComponentsAB = [&](UArray<UArray<VectorXd>> &a, int ib) {
 		MatrixXd data;
@@ -192,17 +193,17 @@ void BemioH5::Load_H5() {
 	for (int ib = 0; ib < hd().Nb; ++ib) {
 		if (hfile.ChangeGroup(Format("body%d", ib+1))) {
 			if (hfile.ChangeGroup("properties")) {
-				hd().names[ib] = hfile.GetString("name");
-				hd().Vo[ib] = hfile.GetDouble("disp_vol");
-				hd().dof[ib] = int(hfile.GetDouble("dof"));
+				hd().msh[ib].name = hfile.GetString("name");
+				hd().msh[ib].Vo = hfile.GetDouble("disp_vol");
+				//hd().dof[ib] = int(hfile.GetDouble("dof"));
 				hfile.GetDouble("cb", data);
 				if (data.rows() != 3 && data.cols() != 1)
 					throw Exc("Wrong data dimension in cb");
-				hd().cb.col(ib) = data;
+				hd().msh[ib].cb = data;
 				hfile.GetDouble("cg", data);
 				if (data.rows() != 3 && data.cols() != 1)
 					throw Exc("Wrong data dimension in cg");
-				hd().cg.col(ib) = data;
+				hd().msh[ib].cg = data;
 			
 				hfile.UpGroup();	
 			}
@@ -239,7 +240,7 @@ void BemioH5::Load_H5() {
 					}
 					hfile.UpGroup();	
 				}
-				hfile.GetDouble("linear_restoring_stiffness", hd().C[ib]);
+				hfile.GetDouble("linear_restoring_stiffness", hd().msh[ib].C);
 				
 				hfile.UpGroup();	
 			}
@@ -259,7 +260,7 @@ void BemioH5::Load_H5() {
 		hd().Compare_F(hd().fk, fk, "Froude-Krylov");
 }
 
-bool BemioH5::Save(String file) {
+void BemioH5::Save(String file) {
 	String fileName = ForceExt(file, ".h5");
 	
 	Hdf5File hfile;
@@ -275,7 +276,8 @@ bool BemioH5::Save(String file) {
 	{
 		if (hfile.CreateGroup("simulation_parameters", true)) {
 			
-			hfile.Set("T", hd().T).SetDescription("Wave frequencies").SetUnits("s");
+			VectorXd T = hd().Get_T();
+			hfile.Set("T", T).SetDescription("Wave frequencies").SetUnits("s");
 			hfile.Set("w", hd().w).SetDescription("Wave periods").SetUnits("rad/s");
 			hfile.Set("wave_dir", hd().head).SetDescription("Wave direction").SetUnits("deg");
 			hfile.Set("rho", hd().rho).SetDescription("Water density").SetUnits("kg/m^3");
@@ -388,15 +390,15 @@ bool BemioH5::Save(String file) {
 			if (hfile.CreateGroup("properties", true)) {
 				MatrixXd mat;
 				hfile.Set("body_number", ib+1.).SetDescription("Number of rigid body from the BEM simulation");
-				hfile.Set("name", ~hd().names[ib]);
-				if (hd().Vo.size() > ib)
-					hfile.Set("disp_vol", hd().Vo[ib]).SetDescription("Displaced volume").SetUnits("m^3");
-				hfile.Set("dof", (double)hd().dof[ib]).SetDescription("Degrees of freedom");
+				hfile.Set("name", ~hd().msh[ib].name);
+				//if (hd().Vo.size() > ib)
+					hfile.Set("disp_vol", hd().msh[ib].Vo).SetDescription("Displaced volume").SetUnits("m^3");
+				hfile.Set("dof", 6/*(double)hd().dof[ib]*/).SetDescription("Degrees of freedom");
 				hfile.Set("dof_start", 1.);
 				hfile.Set("dof_end", 6.);
-				mat = hd().cb.col(ib);
+				mat = hd().msh[ib].cb;
 				hfile.Set("cb", mat).SetDescription("Centre of bouyancy").SetUnits("m");
-				mat = hd().cg.col(ib);
+				mat = hd().msh[ib].cg;
 				hfile.Set("cg", mat).SetDescription("Centre of gravity").SetUnits("m");
 				
 				hfile.UpGroup();	
@@ -441,13 +443,11 @@ bool BemioH5::Save(String file) {
 					}
 					hfile.UpGroup();	
 				}
-				hfile.Set("linear_restoring_stiffness", hd().C[ib]).SetDescription("Hydrostatic stiffness matrix");
+				hfile.Set("linear_restoring_stiffness", hd().msh[ib].C).SetDescription("Hydrostatic stiffness matrix");
 				
 				hfile.UpGroup();	
 			}
 			hfile.UpGroup();
 		}
 	}
-	
-	return true;
 }

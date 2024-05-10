@@ -35,7 +35,7 @@ CONSOLE_APP_MAIN
 		
 		Dl dll;		
 		if (!dll.Load(AFX(binFolder, "libbemrosetta.dll")))
-			throw Exc("Dll not found");
+			throw Exc("DLL not found");
 
 		DLLFunction(dll, const char *, DLL_Version, ());
 		DLLFunction(dll, void, 		   DLL_ListFunctions, ());
