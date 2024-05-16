@@ -34,17 +34,17 @@ void MainABForce::Clear() {
 	selTab = 0;
 }
 
-bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
+bool MainABForce::Load(const UVector<int> &ids, int ih) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 	
 		tab.Reset();
-		UArray<Hydro> &hydros = bem.hydros; 
+		UArray<Hydro> &hydros = Bem().hydros; 
 		if (hydros.IsEmpty() || ids.IsEmpty()) 
 			return false;
 		
-		int sdof = 6*bem.Nb;
+		int sdof = 6*Bem().Nb;
 		int nloaded = 0;
 		if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_B || dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_AINFW || 
 			dataToShow == Hydro::DATA_KIRF || dataToShow == Hydro::DATA_A_P || dataToShow == Hydro::DATA_B_P) {
@@ -52,7 +52,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 			for (int idf = 0; idf < sdof; ++idf) {
 				plots[idf].SetCount(sdof);
 				for (int jdf = 0; jdf < sdof; ++jdf) {
-					if (!bem.onlyDiagonal || idf == jdf) {
+					if (!Bem().onlyDiagonal || idf == jdf) {
 						plots[idf][jdf].Init(idf, jdf, dataToShow);
 						if (plots[idf][jdf].Load(hydros, mbm, ids)) {
 							nloaded++;
@@ -68,22 +68,22 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 			ih = max(ih, 0);
 			
 			if (dataToShow == Hydro::DATA_MD) {
-				int Nh = bem.headAllMD.size();
+				int Nh = Bem().headAllMD.size();
 				if (Nh == 0) 
 					return false;
 				
 				plots.SetCount(1);
 				plots[0].SetCount(sdof);
 				for (int idf = 0; idf < sdof; ++idf) {
-					const std::complex<double> &head = bem.headAllMD[ih];
+					const std::complex<double> &head = Bem().headAllMD[ih];
 					plots[0][idf].Init(idf, head.real(), dataToShow, head.imag());
 					if (plots[0][idf].Load(hydros, mbm, ids))
 						nloaded++;
 				}
 				if (nloaded > 0)
-					UpdateHeadMD(bem/*, ih*/);
+					UpdateHeadMD();
 			} else {
-				int Nh = bem.headAll.size();
+				int Nh = Bem().headAll.size();
 				if (Nh == 0) 
 					return false;
 				
@@ -91,7 +91,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 				plots[0].SetCount(sdof);
 				UVector<int> loaded;
 				for (int idf = 0; idf < sdof; ++idf) {
-					plots[0][idf].Init(idf, bem.headAll[ih/*bem.orderHeadAll[ih]*/], dataToShow);
+					plots[0][idf].Init(idf, Bem().headAll[ih/*bem.orderHeadAll[ih]*/], dataToShow);
 					if (plots[0][idf].Load(hydros, mbm, ids)) 
 						loaded << idf;
 				}/*
@@ -108,7 +108,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 					}
 				}*/
 				if (!loaded.IsEmpty())
-					UpdateHead(bem/*, ih*/, loaded);
+					UpdateHead(loaded);
 				
 				nloaded = loaded.size();
 			}
@@ -128,7 +128,7 @@ bool MainABForce::Load(BEM &bem, const UVector<int> &ids, int ih) {
 	}
 }
 		
-void MainABForce::UpdateHead(BEM &bem/*, int ih*/, const UVector<int> &loaded) {
+void MainABForce::UpdateHead(const UVector<int> &loaded) {
 	int it = max(0, tab.Get());
 	{
 		TempAssign<bool> _isFilling(isFilling, true);
@@ -141,13 +141,13 @@ void MainABForce::UpdateHead(BEM &bem/*, int ih*/, const UVector<int> &loaded) {
 	tab.Set(it);
 }
 
-void MainABForce::UpdateHeadMD(BEM &bem/*, int ih*/) {
+void MainABForce::UpdateHeadMD() {
 	int it = max(0, tab.Get());
 	{
 		TempAssign<bool> _isFilling(isFilling, true);
 		tab.Reset();
 		//const std::complex<double> &h = bem.headAllMD[ih];
-		for (int idf = 0; idf < 6*bem.Nb; ++idf) 
+		for (int idf = 0; idf < 6*Bem().Nb; ++idf) 
 			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false)));///*, h.real(), h.imag())*/);
 	}
 	tab.Set(it);

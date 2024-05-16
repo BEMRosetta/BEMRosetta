@@ -181,9 +181,9 @@ bool MainPlot::Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVecto
 	}
 	bool loaded = false;
 	for (int id = 0; id < ids.size(); ++id) {
-		const Hydro &hy = hydro[ids[id]].hd();
+		const Hydro &hy = hydro[ids[id]];
 		bool ld = false;
-		LoadEach(hy, id, ld, hy.GetId());
+		LoadEach(hy, id, ld, hy.dt.GetId());
 		loaded |= ld;		// If only one is loaded, then loaded = true
 	}
 	if (mbm.menuPlot.autoFit) {
@@ -263,7 +263,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		} else
 			ih = hy.GetHeadId(heading0);
 	}
-	String nameType = hy.name;
+	String nameType = hy.dt.name;
 	if (Bem().legend_w_solver)
 		nameType << Format("(%s)", hy.GetCodeStrAbr());
 	
@@ -382,7 +382,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	} else if (dataToShow == Hydro::DATA_MD && ih >= 0 && hy.IsLoadedMD()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD%s %s %d"), sids, nameType, hy.mdtype)).
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD%s %s %d"), sids, nameType, hy.dt.mdtype)).
 						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
@@ -483,12 +483,12 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	} else if (dataToShow == Hydro::DATA_STS2 && hy.IsLoadedStateSpace()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_Z_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Kr_%s %s"), st, hy.name)).
+			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Kr_%s %s"), st, hy.dt.name)).
 						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
 						Stroke(2, color);//.Units("dB");
 			if (ABFZ_source2[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_Z_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
-				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Kr_%s %s"), sp, hy.name)).Units(t_("rad")).
+				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Kr_%s %s"), sp, hy.dt.name)).Units(t_("rad")).
 						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
@@ -499,12 +499,12 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (TFS_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_TFS_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			const Upp::Color &bcolor = LtRed();
-			scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFS_%s %s"), st, hy.name)).
+			scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFS_%s %s"), st, hy.dt.name)).
 						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(bcolor).
 						Stroke(4, bcolor).Dash(LINE_DASH_DOT);//.Units("dB");
 			if (TFS_source2[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_TFS_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
-				scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFS_%s %s"), sp, hy.name)).Units(t_("rad")).
+				scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFS_%s %s"), sp, hy.dt.name)).Units(t_("rad")).
 						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(bcolor).
 						Stroke(2, bcolor).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)

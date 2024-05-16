@@ -13,11 +13,11 @@ String AQWAMesh::Load_LIS(UArray<Mesh> &msh, String fileName, double g, bool &y0
 	try {
 		bem.LoadBEM(fileName, Null, false);
 		
-		Hydro &hyd = bem.hydros[0].hd();
+		Hydro &hy = bem.hydros[0];
 
-		msh = pick(hyd.msh);
-		y0z = hyd.symX;
-		x0z = hyd.symY;
+		msh = pick(hy.dt.msh);
+		y0z = hy.dt.symX;
+		x0z = hy.dt.symY;
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
 	}
@@ -80,18 +80,18 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 					if (ib+1 > mesh.size()) {
 						mesh.SetCount(ib+1);
 						ids.SetCount(ib+1);
-						mesh[ib].fileName = fileName;
-						mesh[ib].SetCode(Mesh::AQWA_DAT);
+						mesh[ib].dt.fileName = fileName;
+						mesh[ib].dt.SetCode(Mesh::AQWA_DAT);
 					}
 					int id = f.GetInt(1);
 					if (id >= 98000 && id < 99000) {
-						mesh[ib].cg.x = f.GetDouble(2);
-						mesh[ib].cg.y = f.GetDouble(3);
-						mesh[ib].cg.z = f.GetDouble(4);
-						mesh[ib].c0 = clone(mesh[ib].cg);		// In AQWA, cg == c0
+						mesh[ib].dt.cg.x = f.GetDouble(2);
+						mesh[ib].dt.cg.y = f.GetDouble(3);
+						mesh[ib].dt.cg.z = f.GetDouble(4);
+						mesh[ib].dt.c0 = clone(mesh[ib].dt.cg);		// In AQWA, cg == c0
 					} else {
 						ids[ib] << id;
-						Point3D &node = mesh[ib].mesh.nodes.Add();
+						Point3D &node = mesh[ib].dt.mesh.nodes.Add();
 						node.x = f.GetDouble(2)*factorLength;
 						node.y = f.GetDouble(3)*factorLength;
 						node.z = f.GetDouble(4)*factorLength;
@@ -102,22 +102,22 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 				
 				int ib = f.GetInt_nothrow(0);
 				if (IsNull(ib)) {
-					int pos;
-					if ((pos = line.FindAfter("ELM")) >= 0) {
-						ib = ScanInt(line.Mid(pos, 3))-1;
-						String name = Trim(line.Mid(pos+3));
-						mesh[ib].name = name;
+					int ps;
+					if ((ps = line.FindAfter("ELM")) >= 0) {
+						ib = ScanInt(line.Mid(ps, 3))-1;
+						String name = Trim(line.Mid(ps+3));
+						mesh[ib].dt.name = name;
 					} else {
-						if ((pos = line.FindAfter("SYMX")) >= 0) 
+						if ((ps = line.FindAfter("SYMX")) >= 0) 
 							x0z = true;
-						if ((pos = line.FindAfter("SYMY")) >= 0) 
+						if ((ps = line.FindAfter("SYMY")) >= 0) 
 							y0z = true;
 					}
 				} else {
 					ib--;
 					String code = f.GetText(1);
 					if (code == "QPPL" || code == "TPPL") {
-						Panel &panel = mesh[ib].mesh.panels.Add();
+						Panel &panel = mesh[ib].dt.mesh.panels.Add();
 						int id;
 						id = f.GetInt(4);
 						if ((id = ids[ib].Find(id)) < 0)
@@ -147,7 +147,7 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 		
 		// Removes mooring, Morison and other points unrelated with panels
 		for (Mesh &m : mesh) 
-			Surface::RemoveDuplicatedPointsAndRenumber(m.mesh.panels, m.mesh.nodes);
+			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
 		
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
@@ -228,7 +228,7 @@ void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh> &meshes, const UArray<Sur
 			ret << Format("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
 						FDS(p.x/factorLength, 10, true), FDS(p.y/factorLength, 10, true), FDS(p.z/factorLength, 10, true));
 		}
-		const Point3D &cg = meshes[ib].cg;
+		const Point3D &cg = meshes[ib].dt.cg;
 		ret << Format("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
 	}
@@ -306,8 +306,8 @@ void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh> &meshes, const UArray<Sur
 
 	for (int ib = 0; ib < meshes.size(); ++ib)
 		ret << Format("%6d%s     %5d%s%s%s%s%s%s", ib+1, "PMAS", 9800+ib, 
-			FDS(meshes[ib].M(3, 3), 10, true), FDS(meshes[ib].M(3, 4), 10, true), FDS(meshes[ib].M(3, 5), 10, true),
-			FDS(meshes[ib].M(4, 4), 10, true), FDS(meshes[ib].M(4, 5), 10, true), FDS(meshes[ib].M(5, 5), 10, true));
+			FDS(meshes[ib].dt.M(3, 3), 10, true), FDS(meshes[ib].dt.M(3, 4), 10, true), FDS(meshes[ib].dt.M(3, 5), 10, true),
+			FDS(meshes[ib].dt.M(4, 4), 10, true), FDS(meshes[ib].dt.M(4, 5), 10, true), FDS(meshes[ib].dt.M(5, 5), 10, true));
 
 	ret	<< "\n END\n";
 	

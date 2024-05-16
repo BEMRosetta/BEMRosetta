@@ -36,8 +36,8 @@ String DiodoreMesh::LoadDat(UArray<Mesh> &_mesh, String fileName) {
 	UIndex<int> idnodes;
 	try {		
 		Mesh &msh = _mesh.Add();
-		msh.fileName = fileName;
-		msh.SetCode(Mesh::DIODORE_DAT);
+		msh.dt.fileName = fileName;
+		msh.dt.SetCode(Mesh::DIODORE_DAT);
 
 		while(true) {
 			line = in.GetLine();
@@ -50,7 +50,7 @@ String DiodoreMesh::LoadDat(UArray<Mesh> &_mesh, String fileName) {
 				;
 			else {
 				idnodes << (f.GetInt(0)-1);		// Node ids may jump
-				Point3D &node = msh.mesh.nodes.Add();
+				Point3D &node = msh.dt.mesh.nodes.Add();
 				node.x = f.GetDouble(1);
 				node.y = f.GetDouble(2);
 				node.z = f.GetDouble(3); 
@@ -67,7 +67,7 @@ String DiodoreMesh::LoadDat(UArray<Mesh> &_mesh, String fileName) {
 				else if (f.GetText(0) == "*TRIANGLE" || f.GetText(0) == "*QUADRANGLE") 
 					;
 				else {
-					Panel &panel = msh.mesh.panels.Add();
+					Panel &panel = msh.dt.mesh.panels.Add();
 					panel.id[0] = idnodes.Find(f.GetInt(1)-1);		// Reassign the ids to be consecutive
 					panel.id[1] = idnodes.Find(f.GetInt(2)-1);	
 					panel.id[2] = idnodes.Find(f.GetInt(3)-1);
@@ -100,8 +100,7 @@ void DiodoreMesh::SaveDat(String fileName, const Surface &surf) {
 	out << "*RETURN\n";
 	
 	int panelId = 1;
-	for (int i = 0; i < panels.size(); ++i) {		// First Quads
-		const Panel &panel = panels[i];
+	for (const Panel &panel : panels) {		// First Quads
 		if (panel.IsTriangle())
 			continue;
 		out << Format("  %8d", panelId++);
@@ -110,8 +109,7 @@ void DiodoreMesh::SaveDat(String fileName, const Surface &surf) {
 		out << "\n";
 	}
 	out << "*RETURN\n";
-	for (int i = 0; i < panels.size(); ++i) {		// Second triangles
-		const Panel &panel = panels[i];
+	for (const Panel &panel : panels) {		// Second triangles
 		if (!panel.IsTriangle())
 			continue;
 		out << Format("  %8d", panelId++);

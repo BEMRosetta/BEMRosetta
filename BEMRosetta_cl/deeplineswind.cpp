@@ -9,7 +9,7 @@ using namespace Upp;
 
 #include "FastOut.h"
 
-String FastOut::LoadDb(String fileName) {
+String FastOut::LoadDb(String file) {
 	Clear();
 	
 	parameters << "TIME_SCALE";
@@ -18,9 +18,11 @@ String FastOut::LoadDb(String fileName) {
 	
 	Sqlite3Session sqlite3;
 
-	if(!sqlite3.Open(fileName)) 
+	if(!sqlite3.Open(file)) 
 		return t_("Impossible to open file");
 
+	fileName = file;
+	
 	{
 		Sql sqlvariable(sqlite3);
 		if (!sqlvariable.Execute("SELECT long_name, unit, description FROM 'variable'"))

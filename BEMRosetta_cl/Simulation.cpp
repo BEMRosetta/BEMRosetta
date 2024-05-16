@@ -50,13 +50,13 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 			if (!ret.IsEmpty()) 
 				throw Exc(Format("Error loading mesh: %s", ret));
 		
-			mesh.c0.Set(c0x, c0y, c0z);		// Reference system
+			mesh.dt.c0.Set(c0x, c0y, c0z);		// Reference system
 			mesh.SetMass(0.);
 			mesh.AfterLoad(rho, g, false, false);
 			
-			stiff = clone(mesh.C);
-			cb = mesh.under.GetCentreOfBuoyancy();
-			Force6D forceb0 = mesh.under.GetHydrostaticForceCB(mesh.c0, cb, rho, g);
+			stiff = clone(mesh.dt.C);
+			cb = mesh.dt.under.GetCentreOfBuoyancy();
+			Force6D forceb0 = mesh.dt.under.GetHydrostaticForceCB(mesh.dt.c0, cb, rho, g);
 			forceb = forceb0.ToVector();		
 		}
 	}
@@ -177,11 +177,11 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 
 	if (output.ptfmCBx >= 0 || output.ptfmCBy >= 0 || output.ptfmCBz >= 0) {
 		if (calculation != Simulation::STATIC)
-			cb = mesh.under.GetCentreOfBuoyancy();
+			cb = mesh.dt.under.GetCentreOfBuoyancy();
 	}
 	if (output.ptfmVol >= 0) {
 		if (calculation != Simulation::STATIC)
-			mesh.under.GetVolume();
+			mesh.dt.under.GetVolume();
 	}
 	if (output.wave1Elev >= 0) {
 		if (calculation != Simulation::STATIC)
@@ -206,7 +206,7 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 	out.SetVal(output.ptfmCBy, 	cb.y);
 	out.SetVal(output.ptfmCBz,  cb.z);
 
-	out.SetVal(output.ptfmVol,  mesh.under.volume);
+	out.SetVal(output.ptfmVol,  mesh.dt.under.volume);
 			
 	return f6;
 }
@@ -222,11 +222,11 @@ Force6D Simulation::CalcStiff_DynamicStatic(double time, const float *pos, doubl
 	mesh.Move(pos, rho, g, false);
 
 	Point3D p(pos[0], pos[1], pos[2]);
-	Force6D f6 = mesh.under.GetHydrostaticForce(p - mesh.c0, rho, g);
+	Force6D f6 = mesh.dt.under.GetHydrostaticForce(p - mesh.dt.c0, rho, g);
 	//Point3D cb = mesh.under.GetCenterOfBuoyancy();
 	//Force6D f6 = mesh.under.GetHydrostaticForceCB(p - mesh.c0, cb, rho, g);
 	
-	if (mesh.under.VolumeMatch(volTolerance, volTolerance) == -2) 
+	if (mesh.dt.under.VolumeMatch(volTolerance, volTolerance) == -2) 
 		throw Exc("Error: Mesh opened in the waterline");
 	
 	return f6;
@@ -239,7 +239,7 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 	bool clip = true;
 	
 	Point3D p(pos[0], pos[1], pos[2]);	
-	Force6D f6 = mesh.mesh.GetHydrodynamicForce(p - mesh.c0, clip,  
+	Force6D f6 = mesh.dt.mesh.GetHydrodynamicForce(p - mesh.dt.c0, clip,  
 		[&](double x, double y)->double {return waves.ZSurf(x, y, time);},
 		[&](double x, double y, double z, double et)->double {
 			return -waves.Pressure(x, y, waves.ZWheelerStretching(z, et), time);}
@@ -255,9 +255,9 @@ Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, 
 	f6.Zero();
 	
 	Affine3d aff;
-	GetTransform(aff, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], mesh.c0.x, mesh.c0.y, mesh.c0.z);
+	GetTransform(aff, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], mesh.dt.c0.x, mesh.dt.c0.y, mesh.dt.c0.z);
 	
-	Point3D meshc0 = clone(mesh.c0);
+	Point3D meshc0 = clone(mesh.dt.c0);
 	Point3D dcentre = clone(dampingCentre);
 	
 	meshc0.TransRot(aff);

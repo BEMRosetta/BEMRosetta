@@ -31,22 +31,22 @@ void MainStateSpace::Clear() {
 	selTab = 0;
 }
 
-bool MainStateSpace::Load(BEM &bem, const UVector<int> &ids) {
+bool MainStateSpace::Load(const UVector<int> &ids) {
 	try {
-		UArray<Hydro> &hydros = bem.hydros; 
+		UArray<Hydro> &hydros = Bem().hydros; 
 		
 		if (ids.IsEmpty())
 			return false;
 		isFilling = true;
 		tab.Reset();
-		int sdof = 6*bem.Nb;
+		int sdof = 6*Bem().Nb;
 		
 		const MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 		plots.SetCount(sdof);
 		for (int i = 0; i < sdof; ++i) {
 			plots[i].SetCount(sdof);
 			for (int j = 0; j < sdof; ++j) {
-				if (!bem.onlyDiagonal || i == j) {
+				if (!Bem().onlyDiagonal || i == j) {
 					plots[i][j].Init(i, j);
 					if (plots[i][j].Load(hydros, ids, mbm)) {
 						if (i != j)
@@ -88,15 +88,15 @@ bool MainStateSpacePlot::Load(UArray<Hydro> &hydros, const UVector<int> &ids, co
 	int idf = mainPlot.plot_idf;
 	int jdf = mainPlot.plot_jdf;
 	for (int id = 0; id < ids.size(); ++id) {
-		Hydro &hy = hydros[ids[id]].hd();
+		Hydro &hy = hydros[ids[id]];
 		if (hy.IsLoadedStateSpace()) {
-			Hydro::StateSpace &sts = hy.sts[idf][jdf];
+			Hydro::StateSpace &sts = hy.dt.sts[idf][jdf];
 			int row = 0;
 			if (sts.A_ss.size() > 0 || sts.B_ss.size() > 0 || sts.C_ss.size() > 0) {
 				loaded = true;
 				ArrayCtrl &array = arrays.Add();
 				InitArray(array);
-				tab.Add(array.SizePos(), hy.name);
+				tab.Add(array.SizePos(), hy.dt.name);
 				if (sts.A_ss.size() > 0) {
 					if (sts.A_ss.cols() > array.GetColumnCount()) {
 						int ncols = int(sts.A_ss.cols()) - array.GetColumnCount();

@@ -13,7 +13,7 @@ String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bo
 		mesh.Clear();
 		return ret;
 	}
-	if (damp.mesh.GetNumPanels() == 0) {
+	if (damp.dt.mesh.GetNumPanels() == 0) {
 		mesh.SetCount(1);
 	}
 	return ret;
@@ -24,10 +24,10 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
-	mesh.fileName = fileName;
-	mesh.SetCode(Mesh::HYDROSTAR_HST);
-	damp.fileName = fileName;
-	damp.SetCode(Mesh::HYDROSTAR_HST);
+	mesh.dt.fileName = fileName;
+	mesh.dt.SetCode(Mesh::HYDROSTAR_HST);
+	damp.dt.fileName = fileName;
+	damp.dt.SetCode(Mesh::HYDROSTAR_HST);
 	
 	x0z = y0z = false;
 	
@@ -36,7 +36,7 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 		LineParser f(in);	
 		f.IsSeparator = IsTabSpace;
 				
-		mesh.mesh.Clear();
+		mesh.dt.mesh.Clear();
 		UIndex<int> idnodes;
 		
 		while(true) {
@@ -53,10 +53,10 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 					   dlty = f.GetDouble(6);
 				
 				Mesh surf;
-				surf.mesh.AddFlatRectangle(xmax-xmin, ymax-ymin, dltx, dlty); 
-				surf.mesh.Translate(xmin, ymin, 0);
+				surf.dt.mesh.AddFlatRectangle(xmax-xmin, ymax-ymin, dltx, dlty); 
+				surf.dt.mesh.Translate(xmin, ymin, 0);
 				
-				damp.Append(surf.mesh, Null, Null);
+				damp.Append(surf.dt.mesh, Null, Null);
 				
 			} else if (f.GetText(0) == "SYMMETRY_BODY") {
 				int id1 = f.GetInt(1), 
@@ -75,7 +75,7 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 						break;
 			
 					idnodes << f.GetInt(0);	
-					Point3D &node = mesh.mesh.nodes.Add();
+					Point3D &node = mesh.dt.mesh.nodes.Add();
 					node.x = f.GetDouble(1);
 					node.y = f.GetDouble(2);
 					node.z = f.GetDouble(3); 
@@ -89,7 +89,7 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 					if (f.GetText(0) == "ENDPANEL")
 						break;
 					
-					Panel &panel = mesh.mesh.panels.Add();
+					Panel &panel = mesh.dt.mesh.panels.Add();
 					panel.id[0] = idnodes.Find(f.GetInt(ibegin));	
 					panel.id[1] = idnodes.Find(f.GetInt(ibegin+1));	
 					panel.id[2] = idnodes.Find(f.GetInt(ibegin+2));	

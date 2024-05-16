@@ -7,10 +7,9 @@ class HealBEM {
 public:
 	bool Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &done);
 	bool Load(const Eigen::VectorXd &w, const Eigen::VectorXd &A, double Ainf, const Eigen::VectorXd &B, int numT, double maxT, const Eigen::MatrixXd &ex_hf);
-	void Save(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
+	void Save(Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
 				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);
-	void Reset(const Eigen::VectorXd &w, Eigen::VectorXd &A, Eigen::VectorXd &Ainfw, double &ainf, Eigen::VectorXd &B, 
-				Eigen::VectorXd &Tirf, Eigen::VectorXd &Kinf);
+	static void Reset(VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, VectorXd &Kirf);
 			   				
 	Eigen::VectorXd w, A, B;
 	Eigen::VectorXd fB, fA, fAinf;
@@ -37,14 +36,7 @@ public:
 		idaoiyMx;			// Index of the max value in y
 		
 private:
-	bool AreaOfInterest(double percMin, 
-						double percMax, 
-						double &aoix0, 		// Value x from which the AOI begins
-						double &aoidx, 		// AOI width 
-						double &aoidy, 		// AOI height (aoiy0 = 0)
-						int &idaoix0, 		// index of aoix0
-						int &idaoixMx, 		// index of aoix0 + aoidx
-						int &idaoiyMx);
+	bool AreaOfInterest(double percMin, double percMax);
 					 
 	Upp::Index<int> SpineRemovalRight(int idpk, double maxDer);
 	Upp::Index<int> SpineRemovalLeft(int idpk, double maxDer);

@@ -24,8 +24,8 @@ String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 			x0z = true;
 		
 		Mesh &msh = _mesh.Add();
-		msh.fileName = fileName;
-		msh.SetCode(Mesh::NEMOHFS_DAT);
+		msh.dt.fileName = fileName;
+		msh.dt.SetCode(Mesh::NEMOHFS_DAT);
 
 		bool isfirst = true;		
 		while(true) {
@@ -39,7 +39,7 @@ String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 			if (isfirst && id != 1)
 				return t_("Format error in Nemoh .dat mesh file");	// To detect Nemoh format
 			
-			Point3D &node = msh.mesh.nodes.Add();
+			Point3D &node = msh.dt.mesh.nodes.Add();
 			node.x = f.GetDouble(1);
 			node.y = f.GetDouble(2);
 			node.z = f.GetDouble(3); 
@@ -54,7 +54,7 @@ String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 			f.Load(line);
 			if (f.size() != 4)
 				break;
-			Panel &panel = msh.mesh.panels.Add();
+			Panel &panel = msh.dt.mesh.panels.Add();
 			panel.id[0] = f.GetInt(0)-1;
 			panel.id[1] = f.GetInt(1)-1;	
 			panel.id[2] = f.GetInt(2)-1;	
@@ -70,7 +70,7 @@ String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 			int id0 = f.GetInt(0);	
 			if (id0 == 0)
 				break;
-			LineSegment &seg = msh.mesh.segments.Add();
+			LineSegment &seg = msh.dt.mesh.segments.Add();
 			seg.inode0 = id0-1;
 			seg.inode1 = f.GetInt(1)-1;	
 		}	
@@ -101,8 +101,8 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
-	this->fileName = fileName;
-	SetCode(Mesh::NEMOH_DAT);
+	dt.fileName = fileName;
+	dt.SetCode(Mesh::NEMOH_DAT);
 	
 	try {
 		String line;
@@ -118,7 +118,7 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 		if (f.GetInt(1) == 1)
 			x0z = true;
 		
-		mesh.Clear();
+		dt.mesh.Clear();
 		
 		while(true) {
 			line = in.GetLine();
@@ -128,7 +128,7 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 			int id = f.GetInt(0);	
 			if (id == 0)
 				break;
-			Point3D &node = mesh.nodes.Add();
+			Point3D &node = dt.mesh.nodes.Add();
 			node.x = f.GetDouble(1);
 			node.y = f.GetDouble(2);
 			node.z = f.GetDouble(3); 
@@ -140,7 +140,7 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 			int id0 = f.GetInt(0);	
 			if (id0 == 0)
 				break;
-			Panel &panel = mesh.panels.Add();
+			Panel &panel = dt.mesh.panels.Add();
 			panel.id[0] = id0-1;
 			panel.id[1] = f.GetInt(1)-1;	
 			panel.id[2] = f.GetInt(2)-1;	
@@ -218,7 +218,7 @@ void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
 }
 
 void NemohMesh::SaveKH(String fileName) const {
-	Nemoh::Save_6x6(C, fileName);
+	Nemoh::Save_6x6(dt.C, fileName);
 }
 /*
 void NemohMesh::SaveInertia(String fileName) const {

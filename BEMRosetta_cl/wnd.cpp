@@ -56,7 +56,7 @@ bool WNDWind::LoadSum(String fileName, const UVector<String> &varNames, UVector<
 	    int findx = line.Find("HEIGHT OFFSET");	// used to allow grids that are not centered vertically on the turbine hub-height. 
 		if (findx >= 0) {
 			int lindx = line.GetCount();        
-	        int findx = line.FindAfter("=");
+	        findx = line.FindAfter("=");
 			if (findx < 0)
 	            findx = 0;
 	        ZGoffset = float(ScanDouble(line.Mid(findx, lindx-findx+1)));	 //z grid offset

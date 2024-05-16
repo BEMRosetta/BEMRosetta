@@ -5,18 +5,18 @@
 #include <MatIO/matio.h>
 
 String Foamm::Load(String file) {
-	hd().solver = Hydro::FOAMM;
-	hd().file = file;	
-	hd().name = GetFileTitle(file);
-	hd().len = 1;
-	hd().dimen = true;
-	hd().Nb = 1;
-	hd().msh.SetCount(1);
-	//hd().dof.SetCount(1);
-	//hd().dof[0] = 1;
-	hd().Nh = 1;
-	hd().head.SetCount(1);
-	hd().head[0] = 0;
+	dt.solver = Hydro::FOAMM;
+	dt.file = file;	
+	dt.name = GetFileTitle(file);
+	dt.len = 1;
+	dt.dimen = true;
+	dt.Nb = 1;
+	dt.msh.SetCount(1);
+	//dt.dof.SetCount(1);
+	//dt.dof[0] = 1;
+	dt.Nh = 1;
+	dt.head.SetCount(1);
+	dt.head[0] = 0;
 	
 	try {
 		if (GetFileExt(file) == ".mat") {
@@ -24,15 +24,15 @@ String Foamm::Load(String file) {
 			
 			Load_mat(file, 0, 0, true);
 		}
-		if (IsNull(hd().Nb))
+		if (IsNull(dt.Nb))
 			return t_("No data found");
 		
-		/*hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 0);
-		for (int i = 0; i < hd().Nb; ++i)
-			hd().dof[i] = 1;*/
+		/*dt.dof.Clear();	dt.dof.SetCount(dt.Nb, 0);
+		for (int i = 0; i < dt.Nb; ++i)
+			dt.dof[i] = 1;*/
 	} catch (Exc e) {
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//hd().lastError = Format(t_("file %s "), file) + e;
+		//dt.lastError = Format(t_("file %s "), file) + e;
 		return e;
 	}
 	
@@ -45,65 +45,65 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	if (!mat.OpenRead(file)) 
 		throw Exc(S("\n") + t_("File not found or blocked"));
 	
-	hd().stsProcessor = "FOAMM by COER (http://www.eeng.nuim.ie/coer/)";
+	dt.stsProcessor = "FOAMM by COER (http://www.eeng.nuim.ie/coer/)";
 	
 	if (loadCoeff) {
 		MatMatrix<double> w = mat.VarReadMat<double>("w");	
 		if (w.size() == 0)
 			throw Exc(S("\n") + t_("Vector w not found"));
 			
-		hd().Nf = w.size();
+		dt.Nf = w.size();
 		
-		hd().w.SetCount(hd().Nf);
-		//hd().T.SetCount(hd().Nf);
-		hd().dataFromW = true;
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			hd().w[ifr] = w[ifr];
-			//hd().T[ifr] = 2*M_PI/w[ifr];
+		dt.w.SetCount(dt.Nf);
+		//dt.T.SetCount(dt.Nf);
+		dt.dataFromW = true;
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			dt.w[ifr] = w[ifr];
+			//dt.T[ifr] = 2*M_PI/w[ifr];
 		}
 		
 		MatMatrix<double> A = mat.VarReadMat<double>("A");	
 		if (A.size() == 0)
 			BEM::Print(S("\n") + t_("Vector A not found"));
 		else {
-			if (hd().Nf != A.size())
+			if (dt.Nf != A.size())
 				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
-			hd().A[idf][jdf].setConstant(hd().Nf);	
-			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().A[idf][jdf][ifr] = A[ifr];
+			dt.A[idf][jdf].setConstant(dt.Nf);	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+				dt.A[idf][jdf][ifr] = A[ifr];
 		}
 	
 		MatMatrix<double> B = mat.VarReadMat<double>("B");	
 		if (B.size() == 0)
 			BEM::Print(S("\n") + t_("Vector B not found"));
 		else {
-			if (hd().Nf != B.size())
+			if (dt.Nf != B.size())
 				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
-			hd().B[idf][jdf].setConstant(hd().Nf);	
-			for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-				hd().B[idf][jdf][ifr] = B[ifr];
+			dt.B[idf][jdf].setConstant(dt.Nf);	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+				dt.B[idf][jdf][ifr] = B[ifr];
 		}
 		
-		hd().msh[0].name = "Body";
+		dt.msh[0].dt.name = "Body";
 		
 		double Mu = mat.VarRead<double>("Mu");
 		if (!IsNull(Mu)) {
-			hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, 0);
-			hd().Ainf(idf, jdf) = Mu;
+			dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, 0);
+			dt.Ainf(idf, jdf) = Mu;
 		}
 	}
 	
-	hd().Initialize_Sts();
-	Hydro::StateSpace &sts = hd().sts[idf][jdf];
+	Initialize_Sts();
+	Hydro::StateSpace &sts = dt.sts[idf][jdf];
 
 	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	
 	if (TFS.size() == 0)
 		BEM::Print(S("\n") + t_("Vector TFSResponse not found"));
 	else {
-		sts.TFS.SetCount(hd().Nf);
-		if (hd().Nf != TFS.size())
+		sts.TFS.SetCount(dt.Nf);
+		if (dt.Nf != TFS.size())
 			throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) 
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 			sts.TFS[ifr] = TFS[ifr];
 	}
 	
@@ -155,7 +155,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 
 	sts.ssMAE = mat.VarRead<double>("MAE");	
 	
-	hd().dimenSTS = true;	
+	dt.dimenSTS = true;	
 }
 
 void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
@@ -185,24 +185,24 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	int idf = ibody*6 + _idf;
 	int jdf = ibody*6 + _jdf;
 
-	MatMatrix<double> matA(hd().Nf, 1);
-	for (int ifr = 0; ifr < hd().Nf; ++ifr)
-		matA(ifr, 0) = hd().A_dim(ifr, idf, jdf);
+	MatMatrix<double> matA(dt.Nf, 1);
+	for (int ifr = 0; ifr < dt.Nf; ++ifr)
+		matA(ifr, 0) = A_dim(ifr, idf, jdf);
  	if (!mat.VarWrite("A", matA))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "A", file));
 
- 	if (!mat.VarWrite<double>("Mu", hd().Ainf_dim(idf, jdf)))
+ 	if (!mat.VarWrite<double>("Mu", Ainf_dim(idf, jdf)))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Mu", file));
  		 	
-	MatMatrix<double> matB(hd().Nf, 1);
-	for (int ifr = 0; ifr < hd().Nf; ++ifr)
-		matB(ifr, 0) = hd().B_dim(ifr, idf, jdf);
+	MatMatrix<double> matB(dt.Nf, 1);
+	for (int ifr = 0; ifr < dt.Nf; ++ifr)
+		matB(ifr, 0) = B_dim(ifr, idf, jdf);
 	if (!mat.VarWrite("B", matB))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "B", file));
 	
-	MatMatrix<double> matw(1, hd().Nf);
-	for (int ifr = 0; ifr < hd().Nf; ++ifr)
-		matw(0, ifr) = hd().w[ifr];
+	MatMatrix<double> matw(1, dt.Nf);
+	for (int ifr = 0; ifr < dt.Nf; ++ifr)
+		matw(0, ifr) = dt.w[ifr];
 	if (!mat.VarWrite("w", matw))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "w", file));
 	

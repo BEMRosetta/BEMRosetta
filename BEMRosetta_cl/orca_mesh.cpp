@@ -14,11 +14,11 @@ String ORCAMesh::Load_OWR(UArray<Mesh> &msh, String fileName, double g, bool &y0
 	try {
 		bem.LoadBEM(fileName, Null, false);
 		
-		Hydro &hyd = bem.hydros[0].hd();
+		Hydro &hy = bem.hydros[0];
 
-		msh = pick(hyd.msh);
-		y0z = hyd.symX;
-		x0z = hyd.symY;
+		msh = pick(hy.dt.msh);
+		y0z = hy.dt.symX;
+		x0z = hy.dt.symY;
 	} catch (Exc e) {
 		return t_("Error loading owr: ") + e;
 	}

@@ -17,11 +17,11 @@ using namespace Upp;
 using namespace Eigen;
 
 
-void MainMatrixKA::Init(Hydro::DataMatrix what) {
+void MainMatrixKA::Init(Hydro::DataMatrix _what) {
 	CtrlLayout(*this);
 	
 	Ndim = false;
-	this->what = what;
+	this->what = _what;
 	
 	opMassBuoy = true;
 		
@@ -172,13 +172,13 @@ void MainMatrixKA::PrintData() {
 	}
 }
 
-void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
-	String name = mesh.fileName;
+void MainMatrixKA::Add(const Mesh &msh, int icase, bool button) {
+	String name = msh.dt.fileName;
 	
-	const MatrixXd &K = mesh.C;
+	const MatrixXd &K = msh.dt.C;
 	data << clone(K);
 	
-	int idc = mesh.GetId();
+	int idc = msh.dt.GetId();
 	
 	int row0, col0;
 	AddPrepare(row0, col0, name, icase, "", 0, idc, 6);
@@ -197,9 +197,9 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 				if (fs.ExecuteSaveAs(t_("Save to stiffness matrix format"))) {
 					String ext = GetFileExt(~fs);
 					if (ext == ".hst")
-						static_cast<const WamitMesh &>(mesh).SaveHST(~fs, Bem().rho, Bem().g);
+						static_cast<const WamitMesh &>(msh).SaveHST(~fs, Bem().rho, Bem().g);
 					else if (ext == ".dat")
-						static_cast<const NemohMesh &>(mesh).SaveKH(~fs);
+						static_cast<const NemohMesh &>(msh).SaveKH(~fs);
 					else
 						throw Exc(t_("Unknown file format"));
 				}
@@ -218,9 +218,9 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
 				for (int f = 0; f < Bem().hydros.size(); ++f) {
-					const Hydro &hy = Bem().hydros[f].hd();
-					for (int ib = 0; ib < hy.Nb; ++ib)
-						w.array.Add(hy.name, hy.msh[ib].name.IsEmpty() ? AsString(ib+1) : hy.msh[ib].name, f, ib);
+					const Hydro &hy = Bem().hydros[f];
+					for (int ib = 0; ib < hy.dt.Nb; ++ib)
+						w.array.Add(hy.dt.name, hy.dt.msh[ib].dt.name.IsEmpty() ? AsString(ib+1) : hy.dt.msh[ib].dt.name, f, ib);
 				}
 				bool cancel = true;
 				w.butSelect << [&] {cancel = false;	w.Close();};
@@ -232,18 +232,18 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 						return; 
 					
 					int hid = w.array.Get(id, 2);
-					Hydro &hy = Bem().hydros[hid].hd();
+					Hydro &hy = Bem().hydros[hid];
 					
 					int ib = w.array.Get(id, 3);
 					
-					if (Distance(mesh.c0, hy.msh[ib].c0) > 0.1)
+					if (Distance(msh.dt.c0, hy.dt.msh[ib].dt.c0) > 0.1)
 						if (!ErrorOKCancel(Format(t_("Centre of rotation in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
-														mesh.c0.x, mesh.c0.y, mesh.c0.z, hy.msh[ib].c0[0], hy.msh[ib].c0[1], hy.msh[ib].c0[2])))
+														msh.dt.c0.x, msh.dt.c0.y, msh.dt.c0.z, hy.dt.msh[ib].dt.c0[0], hy.dt.msh[ib].dt.c0[1], hy.dt.msh[ib].dt.c0[2])))
 							cancel = true;	
 					
-					if (!cancel && Distance(mesh.cg, hy.msh[ib].cg) > 0.1)
+					if (!cancel && Distance(msh.dt.cg, hy.dt.msh[ib].dt.cg) > 0.1)
 						if (!ErrorOKCancel(Format(t_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
-														mesh.cg.x, mesh.cg.y, mesh.cg.z, hy.msh[ib].cg[0], hy.msh[ib].cg[1], hy.msh[ib].cg[2])))
+														msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z, hy.dt.msh[ib].dt.cg[0], hy.dt.msh[ib].dt.cg[1], hy.dt.msh[ib].dt.cg[2])))
 							cancel = true;
 					if (!cancel)
 						hy.SetC(ib, K);
@@ -252,34 +252,34 @@ void MainMatrixKA::Add(const Mesh &mesh, int icase, bool button) {
 	}
 }
 	
-void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hydro &hydro, int idc, bool ndim) {	
+void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hydro &hy, int idc, bool ndim) {	
 	opMassBuoy.Hide();
 	if (what == Hydro::MAT_K) {
-		if (!hydro.IsLoadedC(ib))
+		if (!hy.IsLoadedC(ib))
 			data << EigenNull;
 		else
-			data << hydro.C_(ndim, ib);
+			data << hy.C_(ndim, ib);
 		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_K2) {
-		if (!hydro.IsLoadedCMoor())
+		if (!hy.IsLoadedCMoor())
 			data << EigenNull;
 		else
-			data << hydro.CMoor_(ndim, ib);
+			data << hy.CMoor_(ndim, ib);
 		label.SetText(Format(t_("Mooring Stiffness Matrices (%s)"),
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
-		if (!hydro.IsLoadedAinf())
+		if (!hy.IsLoadedAinf())
 			data << EigenNull;
 		else {
 			if (Bem().onlyDiagonal)
-				data << hydro.Ainf_mat(ndim, ib, ib);
+				data << hy.Ainf_mat(ndim, ib, ib);
 			else {
-				MatrixXd mat(6, 6*hydro.Nb);
-				for (int ib2 = 0; ib2 < hydro.Nb; ++ib2) {
-					MatrixXd submat = hydro.Ainf_mat(ndim, ib, ib2);
+				MatrixXd mat(6, 6*hy.dt.Nb);
+				for (int ib2 = 0; ib2 < hy.dt.Nb; ++ib2) {
+					MatrixXd submat = hy.Ainf_mat(ndim, ib, ib2);
 					if (submat.size() == 36)
-						mat.block(0, ib2*6, 6, 6) = hydro.Ainf_mat(ndim, ib, ib2);
+						mat.block(0, ib2*6, 6, 6) = hy.Ainf_mat(ndim, ib, ib2);
 				}
 				data << mat;
 			}
@@ -287,28 +287,28 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
 						ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_M) {
-		if (!hydro.IsLoadedM())
+		if (!hy.IsLoadedM())
 			data << EigenNull;
 		else
-			data << hydro.msh[ib].M;
+			data << hy.dt.msh[ib].dt.M;
 		label.SetText(t_("Mass/Inertia matrix (dimensional)"));
 	} else if (what == Hydro::MAT_DAMP_LIN) {
-		if (!hydro.IsLoadedDlin())
+		if (!hy.IsLoadedDlin())
 			data << EigenNull;
 		else
-			data << hydro.Dlin_dim(ib);
+			data << hy.Dlin_dim(ib);
 		label.SetText(t_("Additional linear damping (dimensional)"));
 	} else if (what == Hydro::MAT_DAMP_QUAD) {
-		if (!hydro.IsLoadedDquad())
+		if (!hy.IsLoadedDquad())
 			data << EigenNull;
 		else
-			data << hydro.Dquad_dim(ib);
+			data << hy.Dquad_dim(ib);
 		label.SetText(t_("Additional quadratic damping (dimensional)"));
 	} else
 		NEVER();
 
 	int row0, col0;
-	AddPrepare(row0, col0, name, icase, bodyName, ib, idc, Bem().onlyDiagonal && what == Hydro::MAT_A ? 6*hydro.Nb : 6);
+	AddPrepare(row0, col0, name, icase, bodyName, ib, idc, Bem().onlyDiagonal && what == Hydro::MAT_A ? 6*hy.dt.Nb : 6);
 }
 
 bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim) {
@@ -318,9 +318,9 @@ bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndi
 	bool loaded = false; 	
 	for (int i = 0; i < ids.size(); ++i) {
 		int isurf = ids[i];
-		Hydro &hy = hydros[isurf].hd();
-		for (int ib = 0; ib < hy.Nb; ++ib) 
-			Add(hy.name, i, hy.msh[ib].name, ib, hy, hy.GetId(), ndim);
+		Hydro &hy = hydros[isurf];
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+			Add(hy.dt.name, i, hy.dt.msh[ib].dt.name, ib, hy, hy.dt.GetId(), ndim);
 		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0))) 
 			loaded = true;
 	}

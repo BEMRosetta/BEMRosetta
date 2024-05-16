@@ -40,12 +40,10 @@ public:
 	void Copy(const Mesh &msh);
 	Mesh(const Mesh &msh, int) {Copy(msh);}
 	
-	bool IsEmpty() {return mesh.IsEmpty();}
-	static void ResetIdCount()	{idCount = 0;}
-	void IncrementIdCount()		{id = idCount++;}
+	bool IsEmpty() {return dt.mesh.IsEmpty();}
 	
 	const char *GetMeshStr() const {
-		return meshStr[code];
+		return meshStr[dt.GetCode()];
 	}
 	static const char *GetMeshStr(MESH_FMT c) {
 		if (c < 0 || c > UNKNOWN)
@@ -60,11 +58,6 @@ public:
 				return static_cast<MESH_FMT>(i);
 		return UNKNOWN;
 	}
-	
-	void SetCode(MESH_FMT _code){code = _code;}
-	MESH_FMT GetCode()			{return code;}
-	int GetId()	const			{return id;}
-	void SetId(int _id)			{id = _id;}
 
 	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
 	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
@@ -111,7 +104,7 @@ public:
 	}
 	
 	void SetMass(double m);
-	double GetMass() const		{return M(0, 0);}
+	double GetMass() const		{return dt.M(0, 0);}
 	
 	void Report(double rho) const;
 	
@@ -120,28 +113,41 @@ public:
 	
 	void Jsonize(JsonIO &json);
 		
-	// Mesh data
+	// All Mesh data is here
+	class Data {
+	public:
+		Point3D projectionPos = Null, projectionNeg = Null;
+		Pointf cgZ0surface = Null;
+		Point3D cb = Null;
+		Point3D cg = Null, cg0 = Null, c0 = Null;
+		double Vo = Null;   				// Displaced volume
+		MatrixXd M,
+				 Dlin, Dquad, 
+				 C, Cmoor, Cadd,
+				 Aadd;
+		
+		String name;
+		String fileName;
+		String fileHeader;
+		String lidFile;
+		
+		Surface mesh, under, mesh0;
+		
+		void SetId(int iid)					{id = iid;}
+		int  GetId() const					{return id;}
+		
+		void	 SetCode(MESH_FMT _code)	{code = _code;}
+		MESH_FMT GetCode() const			{return code;}
+		
+	private:
+		MESH_FMT code = UNKNOWN;
+		int id = -1;
+	};
+	Data dt;
 	
-	Point3D projectionPos = Null, projectionNeg = Null;
-	Pointf cgZ0surface = Null;
-	Point3D cb = Null;
-	Point3D cg = Null, cg0 = Null, c0 = Null;
-	double Vo = Null;   				// Displaced volume
-	MatrixXd M,
-			 Dlin, Dquad, 
-			 C, Cmoor, Cadd,
-			 Aadd;
+	static void ResetIdCount()	{idCount = 0;}
+	void IncrementIdCount()		{dt.SetId(idCount++);}
 	
-	String name;
-	String fileName;
-	String fileHeader;
-	String lidFile;
-	
-	Surface mesh, under, mesh0;
-	
-private:
-	MESH_FMT code = UNKNOWN;
-	int id = -1;
 	static int idCount;
 };
 
@@ -159,8 +165,6 @@ public:
 	static const bool caseCanSave[];
 	static const char *bemExt[];
 	
-	static void ResetIdCount()		{idCount = 0;}
-	
 	static const char *GetBemStr(BEM_FMT c) {
 		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
@@ -175,19 +179,18 @@ public:
 		return UNKNOWN;
 	}
 	
-	Hydro &hd() 			{return *this;}
-	const Hydro &hd() const {return *this;}
+	//Hydro &hd() 			{return *this;}
+	//const Hydro &hd() const {return *this;}
 	
 	void Copy(const Hydro &hyd);
 	Hydro(const Hydro &hyd, int) {Copy(hyd);}
 	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null);
 	void Report() const;
-	Hydro() : g(Null), h(Null), rho(Null), len(Null), Nb(Null), Nf(Null), Nh(Null), 
-							dataFromW(Null) {id = idCount++;}
+	Hydro() {}
 	virtual ~Hydro() noexcept {}	
 	
 	const char *GetCodeStr()	const {
-		switch (solver) {
+		switch (dt.solver) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
 		case WADAM_WAMIT: 	return t_("Wadam.Wamit");
@@ -219,7 +222,7 @@ public:
 	}
 	
 	const char *GetCodeStrAbr() const {
-		switch (solver) {
+		switch (dt.solver) {
 		case WAMIT: 		return t_("Wm.o");
 		case WAMIT_1_3: 	return t_("Wm.1");
 		case WADAM_WAMIT: 	return t_("WDM");
@@ -256,21 +259,21 @@ public:
 		
 		int i = ib*6+idf;
 		
-		if (Ainf.size() > 0)
-			if (IsNum(Ainf(i, i)))
+		if (dt.Ainf.size() > 0)
+			if (IsNum(dt.Ainf(i, i)))
 				return true;
 		
-		if (!A.IsEmpty())
-			if (A[i][i].size() > 0)
-				if (IsNum(A[i][i][0]))
+		if (!dt.A.IsEmpty())
+			if (dt.A[i][i].size() > 0)
+				if (IsNum(dt.A[i][i][0]))
 					return true;
 		
 		return false;			   
 	}
 	
-	bool IsNemoh() {return solver == CAPYTAINE || solver == NEMOH || solver == NEMOHv115 || solver == NEMOHv3;}
+	bool IsNemoh() {return dt.solver == CAPYTAINE || dt.solver == NEMOH || dt.solver == NEMOHv115 || dt.solver == NEMOHv3;}
 	
-    double GetMass(int ib) const	{return msh[ib].M(0, 0);}
+    double GetMass(int ib) const	{return dt.msh[ib].GetMass();}
     
     int GetHeadId(double hd) const;
     int GetHeadIdMD(const std::complex<double> &h) const;
@@ -296,7 +299,7 @@ public:
         
   	typedef struct Forces RAO;
     
-     struct StateSpace : public DeepCopyOption<StateSpace> {
+    struct StateSpace : public DeepCopyOption<StateSpace> {
         StateSpace() {}
         StateSpace(const StateSpace &s, int) {
         	TFS = clone(s.TFS);
@@ -371,13 +374,13 @@ public:
 	void Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, double val = NaNDouble);
 	
 	void Initialize_Forces();
-	void Initialize_Forces(Forces &f, int _Nh = -1);
+	void Initialize_Forces(Forces &f, int _Nh = -1, double val = NaNDouble);
 	void Normalize_Forces(Forces &f);
 	void Normalize_RAO(RAO &f);
 	void Dimensionalize_Forces(Forces &f);
 	void Dimensionalize_RAO(RAO &f);
-	void Add_Forces(Forces &to, const Hydro &hydro, const Forces &from);
-	void Add_RAO(RAO &to, const Hydro &hydro, const RAO &from);
+	void Add_Forces(Forces &to, const Hydro &hy, const Forces &from);
+	void Add_RAO(RAO &to, const Hydro &hy, const RAO &from);
 	void Symmetrize();
 	void GetFexFromFscFfk();
 	void GetFscFromFexFfk();
@@ -389,7 +392,8 @@ public:
 	void Symmetrize_QTF(bool xAxis);
 	void Symmetrize_MD(bool xAxis);
 	
-	void Initialize_Pots();
+	void Initialize_PotsRad();
+	void Initialize_PotsIncDiff(UArray<UArray<UArray<UArray<std::complex<double>>>>> &pots);
 	
 	void Initialize_Sts();
 	
@@ -459,69 +463,69 @@ public:
 	double g_rho_dim()  const;
 	double g_rho_ndim() const;
 	
-	VectorXd Get_w() 							const {return Map<const VectorXd>(w, w.size());}
+	VectorXd Get_w() 							const {return Map<const VectorXd>(dt.w, dt.w.size());}
 	VectorXd Get_T()		 					const {
-		VectorXd ret(w.size());
+		VectorXd ret(dt.w.size());
 		for (int i = 0; i < ret.size(); ++i)
-			ret[i] = 2*M_PI/w[i];
+			ret[i] = 2*M_PI/dt.w[i];
 		return ret;
 	}
 	
-	double A_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A[idf][jdf][ifr]*rho_dim()/rho_ndim()  : A[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd A_dim(int idf, int jdf) 			const {return dimen  ? A[idf][jdf]    *(rho_dim()/rho_ndim()) : A[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double A_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : A[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd A_ndim(int idf, int jdf)			const {return !dimen ? A[idf][jdf]/**(rho_ndim()/rho_dim())*/ : A[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
+	double A_dim(int ifr, int idf, int jdf) 	const {return dt.dimen  ? dt.A[idf][jdf][ifr]*rho_dim()/rho_ndim()  : dt.A[idf][jdf][ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	VectorXd A_dim(int idf, int jdf) 			const {return dt.dimen  ? dt.A[idf][jdf]    *(rho_dim()/rho_ndim()) : dt.A[idf][jdf]*     (rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	double A_ndim(int ifr, int idf, int jdf) 	const {return !dt.dimen ? dt.A[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : dt.A[idf][jdf][ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	VectorXd A_ndim(int idf, int jdf)			const {return !dt.dimen ? dt.A[idf][jdf]/**(rho_ndim()/rho_dim())*/ : dt.A[idf][jdf]*(1/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))));}
 	double A_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_ndim(ifr, idf, jdf) : A_dim(ifr, idf, jdf);}
 	MatrixXd A_mat(bool ndim, int ifr, int ib1, int ib2) 	const;
 	
-	double A_P_dim(int ifr, int idf, int jdf) 	const {return dimen  ? A_P[idf][jdf][ifr]*rho_dim()/rho_ndim()  : A_P[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double A_P_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? A_P[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : A_P[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double A_P_dim(int ifr, int idf, int jdf) 	const {return dt.dimen  ? dt.A_P[idf][jdf][ifr]*rho_dim()/rho_ndim()  : dt.A_P[idf][jdf][ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	double A_P_ndim(int ifr, int idf, int jdf) 	const {return !dt.dimen ? dt.A_P[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : dt.A_P[idf][jdf][ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
 	double A_P_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_P_ndim(ifr, idf, jdf) : A_P_dim(ifr, idf, jdf);}
 	
-	double A0_dim(int idf, int jdf)   		 	const {return dimen  ? A0(idf, jdf)*rho_dim()/rho_ndim() : A0(idf, jdf)  *(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double A0_ndim(int idf, int jdf)  		 	const {return !dimen ? A0(idf, jdf)      : A0(idf, jdf)  /(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double A0_dim(int idf, int jdf)   		 	const {return dt.dimen  ? dt.A0(idf, jdf)*rho_dim()/rho_ndim() : dt.A0(idf, jdf)  *(rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	double A0_ndim(int idf, int jdf)  		 	const {return !dt.dimen ? dt.A0(idf, jdf)      : dt.A0(idf, jdf)  /(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
 	double A0_(bool ndim, int idf, int jdf) 	const {return ndim   ? A0_ndim(idf, jdf) : A0_dim(idf, jdf);}
-	double Ainf_dim(int idf, int jdf) 		 	const {return dimen  ? Ainf(idf, jdf)*rho_dim()/rho_ndim() : Ainf(idf, jdf)*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainf_dim(int idf, int jdf) 		 	const {return dt.dimen  ? dt.Ainf(idf, jdf)*rho_dim()/rho_ndim() : dt.Ainf(idf, jdf)*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
 	MatrixXd Ainf_mat(bool ndim, int ib1, int ib2) const;
-	double Ainf_ndim(int idf, int jdf)		 	const {return !dimen ? Ainf(idf, jdf) : Ainf(idf, jdf)/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
+	double Ainf_ndim(int idf, int jdf)		 	const {return !dt.dimen ? dt.Ainf(idf, jdf) : dt.Ainf(idf, jdf)/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
 	double Ainf_(bool ndim, int idf, int jdf) 	const {return ndim   ? Ainf_ndim(idf, jdf) : Ainf_dim(idf, jdf);}
 	
-	double B_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B[idf][jdf][ifr]*rho_dim()/rho_ndim() : B[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_dim(int ifr, int idf, int jdf)  	const {return dt.dimen  ? dt.B[idf][jdf][ifr]*rho_dim()/rho_ndim() : dt.B[idf][jdf][ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	VectorXd B_dim(int idf, int jdf)  	   		const;
-	double B_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_ndim(int ifr, int idf, int jdf) 	const {return !dt.dimen ? dt.B[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : dt.B[idf][jdf][ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	VectorXd B_ndim(int idf, int jdf) 	   		const;
 	double B_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_ndim(ifr, idf, jdf) : B_dim(ifr, idf, jdf);}	
 	MatrixXd B_mat(bool ndim, int ifr, int ib1, int ib2) 	const;
 	
-	double B_H_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B_H[idf][jdf][ifr]*rho_dim()/rho_ndim() : B_H[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	double B_H_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B_H[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B_H[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_H_dim(int ifr, int idf, int jdf)  	const {return dt.dimen  ? dt.B_H[idf][jdf][ifr]*rho_dim()/rho_ndim() : dt.B_H[idf][jdf][ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
+	double B_H_ndim(int ifr, int idf, int jdf) 	const {return !dt.dimen ? dt.B_H[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : dt.B_H[idf][jdf][ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	double B_H_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_H_ndim(ifr, idf, jdf) : B_H_dim(ifr, idf, jdf);}	
 	
-	double B_P_dim(int ifr, int idf, int jdf)  	const {return dimen  ? B_P[idf][jdf][ifr]*rho_dim()/rho_ndim() : B_P[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	double B_P_ndim(int ifr, int idf, int jdf) 	const {return !dimen ? B_P[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : B_P[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	double B_P_dim(int ifr, int idf, int jdf)  	const {return dt.dimen  ? dt.B_P[idf][jdf][ifr]*rho_dim()/rho_ndim() : dt.B_P[idf][jdf][ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
+	double B_P_ndim(int ifr, int idf, int jdf) 	const {return !dt.dimen ? dt.B_P[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : dt.B_P[idf][jdf][ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	double B_P_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_P_ndim(ifr, idf, jdf) : B_P_dim(ifr, idf, jdf);}	
 	
-	double Kirf_dim(int it, int idf, int jdf)  	   	  const {return dimen ? Kirf[idf][jdf][it]*g_rho_dim()/g_rho_ndim()  : Kirf[idf][jdf][it]*(g_rho_dim()*pow(len, GetK_F(idf)));}
-	double Kirf_ndim(int it, int idf, int jdf) 	   	  const {return !dimen ? Kirf[idf][jdf][it] : Kirf[idf][jdf][it]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
-	VectorXd Kirf_ndim(int idf, int jdf) 	 		  const {return !dimen ? Kirf[idf][jdf]     : Kirf[idf][jdf]/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	double Kirf_dim(int it, int idf, int jdf)  	   	  const {return dt.dimen ? dt.Kirf[idf][jdf][it]*g_rho_dim()/g_rho_ndim()  : dt.Kirf[idf][jdf][it]*(g_rho_dim()*pow(dt.len, GetK_F(idf)));}
+	double Kirf_ndim(int it, int idf, int jdf) 	   	  const {return !dt.dimen ? dt.Kirf[idf][jdf][it] : dt.Kirf[idf][jdf][it]/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
+	VectorXd Kirf_ndim(int idf, int jdf) 	 		  const {return !dt.dimen ? dt.Kirf[idf][jdf]     : dt.Kirf[idf][jdf]/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
-	double Ainf_w_dim(int ifr, int idf, int jdf)   const {return dimen  ? Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd Ainf_w_dim(int idf, int jdf)		   const {return dimen  ? Ainf_w[idf][jdf]    *(rho_dim()/rho_ndim()) : Ainf_w[idf][jdf]*     (rho_dim()*pow(len, GetK_AB(idf, jdf)));}
-	double Ainf_w_ndim(int ifr, int idf, int jdf)  const {return !dimen ? Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));}
-	VectorXd Ainf_w_ndim(int idf, int jdf)		   const {return !dimen ? Ainf_w[idf][jdf]/**(rho_ndim()/rho_dim())*/ : Ainf_w[idf][jdf]*(1/(rho_ndim()*pow(len, GetK_AB(idf, jdf))));}
+	double Ainf_w_dim(int ifr, int idf, int jdf)   const {return dt.dimen  ? dt.Ainf_w[idf][jdf][ifr]*rho_dim()/rho_ndim() : dt.Ainf_w[idf][jdf][ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	VectorXd Ainf_w_dim(int idf, int jdf)		   const {return dt.dimen  ? dt.Ainf_w[idf][jdf]    *(rho_dim()/rho_ndim()) : dt.Ainf_w[idf][jdf]*     (rho_dim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	double Ainf_w_ndim(int ifr, int idf, int jdf)  const {return !dt.dimen ? dt.Ainf_w[idf][jdf][ifr]/**(rho_ndim()/rho_dim())*/ : dt.Ainf_w[idf][jdf][ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
+	VectorXd Ainf_w_ndim(int idf, int jdf)		   const {return !dt.dimen ? dt.Ainf_w[idf][jdf]/**(rho_ndim()/rho_dim())*/ : dt.Ainf_w[idf][jdf]*(1/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))));}
 	double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
-	double C_dim(int ib, int idf, int jdf)   	   const {return dimen  ? msh[ib].C(idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : msh[ib].C(idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	double C_dim(int ib, int idf, int jdf)   	   const {return dt.dimen  ? dt.msh[ib].dt.C(idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : dt.msh[ib].dt.C(idf, jdf)*(g_rho_dim()*pow(dt.len, GetK_C(idf, jdf)));}
 	MatrixXd C_(bool ndim, int ib) 				   const;
 	void C_dim();	
-	double C_ndim(int ib, int idf, int jdf)  	   const {return !dimen ? msh[ib].C(idf, jdf)  : msh[ib].C(idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
+	double C_ndim(int ib, int idf, int jdf)  	   const {return !dt.dimen ? dt.msh[ib].dt.C(idf, jdf)  : dt.msh[ib].dt.C(idf, jdf)/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
 	double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
-	double CMoor_dim(int ib, int idf, int jdf)     const {return dimen  ? msh[ib].Cmoor(idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : msh[ib].Cmoor(idf, jdf)*(g_rho_dim()*pow(len, GetK_C(idf, jdf)));}
+	double CMoor_dim(int ib, int idf, int jdf)     const {return dt.dimen  ? dt.msh[ib].dt.Cmoor(idf, jdf)/**g_rho_dim()/g_rho_ndim()*/  : dt.msh[ib].dt.Cmoor(idf, jdf)*(g_rho_dim()*pow(dt.len, GetK_C(idf, jdf)));}
 	MatrixXd CMoor_(bool ndim, int ib) 			   const;
 	void CMoor_dim();	
-	double CMoor_ndim(int ib, int idf, int jdf)    const {return !dimen ? msh[ib].Cmoor(idf, jdf)  : msh[ib].Cmoor(idf, jdf)/(g_rho_ndim()*pow(len, GetK_C(idf, jdf)));}
+	double CMoor_ndim(int ib, int idf, int jdf)    const {return !dt.dimen ? dt.msh[ib].dt.Cmoor(idf, jdf)  : dt.msh[ib].dt.Cmoor(idf, jdf)/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
 	double CMoor_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CMoor_ndim(ib, idf, jdf) : CMoor_dim(ib, idf, jdf);}
 
 	// MD
@@ -529,11 +533,11 @@ public:
 	double Md_dim(int idf, int ih, int ifr)  const {
 		int ib = int(idf/6);
 		idf -= 6*ib;
-		return dimen ? md[ib][ih][idf](ifr)*g_rho_ndim()/g_rho_dim()  : md[ib][ih][idf](ifr)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+		return dt.dimen ? dt.md[ib][ih][idf](ifr)*g_rho_ndim()/g_rho_dim()  : dt.md[ib][ih][idf](ifr)*(g_rho_dim()*pow(dt.len, GetK_F(idf)));}
 	double Md_ndim(int idf, int ih, int ifr) const {
 		int ib = int(idf/6);
 		idf -= 6*ib;
-		return !dimen ? md[ib][ih][idf](ifr) : md[ib][ih][idf](ifr)/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+		return !dt.dimen ? dt.md[ib][ih][idf](ifr) : dt.md[ib][ih][idf](ifr)/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	double Md_(bool ndim, int idf, int ih, int ifr) const {return ndim ? Md_ndim(idf, ih, ifr) : Md_dim(idf, ih, ifr);}	// idf: body, jdf: heading, [Nb][Nh][6](Nf)
 	
 	VectorXd Md_dof(bool ndim, int _h, int idf) const;
@@ -546,15 +550,15 @@ public:
 	// F
 		
 	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
-		return dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(len, GetK_F(idf)));}
+		return dt.dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(dt.len, GetK_F(idf)));}
 	
 	void F_dim(Forces &f);
 	
 	std::complex<double> F_ndim(const Forces &f, int _h, int ifr, int idf) const {
-		if (!dimen) 
+		if (!dt.dimen) 
 			return f.force[_h](ifr, idf); 
 		else 
-			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(len, GetK_F(idf)));
+			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));
 	}
 	
 	std::complex<double> F_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
@@ -562,9 +566,9 @@ public:
 	}
 	
 	template <class T>
-	T F_dim(T f, int idf)  	      const {return  dimen ? f*g_rho_ndim()/g_rho_dim() : f*(g_rho_dim()*pow(len, GetK_F(idf)));}
+	T F_dim(T f, int idf)  	      const {return  dt.dimen ? f*g_rho_ndim()/g_rho_dim() : f*(g_rho_dim()*pow(dt.len, GetK_F(idf)));}
 	template <class T>
-	T F_ndim(T f, int idf) 	      const {return !dimen ? f : f/(g_rho_ndim()*pow(len, GetK_F(idf)));}
+	T F_ndim(T f, int idf) 	      const {return !dt.dimen ? f : f/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	template <class T>
 	T F_(bool ndim, T f, int idf) const {return   ndim ? F_ndim(f, idf) : F_dim(f, idf);}
 
@@ -574,12 +578,12 @@ public:
 	// RAO
 	
 	std::complex<double> RAO_dim(const RAO &f, int _h, int ifr, int idf)  const {
-		return (g_rho_ndim()/g_rho_dim())*(dimen ? f.force[_h](ifr, idf)  : f.force[_h](ifr, idf)*pow(len, GetK_RAO(idf)));}
+		return (g_rho_ndim()/g_rho_dim())*(dt.dimen ? f.force[_h](ifr, idf)  : f.force[_h](ifr, idf)*pow(dt.len, GetK_RAO(idf)));}
 	
 	void RAO_dim(RAO &f);
 	
 	std::complex<double> RAO_ndim(const RAO &f, int _h, int ifr, int idf) const {
-		return (g_rho_ndim()/g_rho_dim())*(!dimen ? f.force[_h](ifr, idf) : f.force[_h](ifr, idf)/pow(len, GetK_RAO(idf)));}
+		return (g_rho_ndim()/g_rho_dim())*(!dt.dimen ? f.force[_h](ifr, idf) : f.force[_h](ifr, idf)/pow(dt.len, GetK_RAO(idf)));}
 	
 	std::complex<double> RAO_(bool ndim, const RAO &f, int _h, int ifr, int idf) const {
 		return ndim ? RAO_ndim(f, _h, ifr, idf) : RAO_dim(f, _h, ifr, idf);
@@ -587,10 +591,10 @@ public:
 	
 	template <class T>
 	T RAO_dim(T f, int idf) 	const {
-		return (g_rho_ndim()/g_rho_dim())*(dimen  ? f : f/pow(len, GetK_RAO(idf)));
+		return (g_rho_ndim()/g_rho_dim())*(dt.dimen  ? f : f/pow(dt.len, GetK_RAO(idf)));
 	}
 	template <class T>
-	T RAO_ndim(T f, int idf) 	const {return (g_rho_ndim()/g_rho_dim())*(!dimen ? f : f*pow(len, GetK_RAO(idf)));}
+	T RAO_ndim(T f, int idf) 	const {return (g_rho_ndim()/g_rho_dim())*(!dt.dimen ? f : f*pow(dt.len, GetK_RAO(idf)));}
 	template <class T>
 	T RAO_(bool ndim, T f, int idf) const {return   ndim ? RAO_ndim(f, idf) : RAO_dim(f, idf);}
 
@@ -601,11 +605,11 @@ public:
 	// FOAMM
 	
 	inline std::complex<double> Z(bool ndim, int ifr, int idf, int jdf) const {
-		return std::complex<double>(B_(ndim, ifr, idf, jdf), w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : w[ifr]));
+		return std::complex<double>(B_(ndim, ifr, idf, jdf), dt.w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : dt.w[ifr]));
 	}
 	
-	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dimenSTS  ? sts[idf][jdf].TFS[ifr]*g_rho_dim()/g_rho_ndim() : sts[idf][jdf].TFS[ifr]*(rho_dim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
-	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dimenSTS ? sts[idf][jdf].TFS[ifr]/**g_rho_ndim()/g_rho_dim()*/ : sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(len, GetK_AB(idf, jdf))*w[ifr]);}
+	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dt.dimenSTS  ? dt.sts[idf][jdf].TFS[ifr]*g_rho_dim()/g_rho_ndim() : dt.sts[idf][jdf].TFS[ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
+	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dt.dimenSTS ? dt.sts[idf][jdf].TFS[ifr]/**g_rho_ndim()/g_rho_dim()*/ : dt.sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
 	double Tdof(int ib, int idf) const;
@@ -620,100 +624,97 @@ public:
 	double GMroll(int ib) const;
 	double GMpitch(int ib) const;
 	
-	void SetId(int _id)			{id = _id;}
-	int GetId()	const			{return id;}
-	
 	void CheckNaN();
 		
 	void Jsonize(JsonIO &json);
 	
-    
-    // Hydro data
-    
-	String file;        			// BEM output file name
-	String name;
-    double g = Null;        	   	// gravity
-    double h = Null;    	       	// water depth
-   	double rho = Null;        		// density
-   	double len;						// Length scale
-   	int dimen = Null;				// false if data is dimensionless
-    int Nb = Null;          		// number of bodies
-    int Nf = Null;          		// number of wave frequencies
-    int Nh = Null;          		// number of wave headings
- 	
-	UArray<UArray<VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
-	UArray<UArray<VectorXd>> Ainf_w;// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
-	UArray<UArray<VectorXd>> A_P;	// [6*Nb][6*Nb][Nf]	Added mass obtained through potentials
-    MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
-    MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
-
-	//MatrixXd Dlin;					// (6*Nb, 6*Nb) 	Additional linear damping	ALWAYS DIMENSIONAL
-	//MatrixXd Dquad;					// (6*Nb, 6*Nb) 	Additional quadratic damping	ALWAYS DIMENSIONAL
-
-    UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
-    UArray<UArray<VectorXd>> B_H; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through Haskind
-    UArray<UArray<VectorXd>> B_P; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through potentials
-    UVector<double> head;			// [Nh]             Wave headings (deg)
-    //UVector<String> names;  		// {Nb}             Body names
-    //UArray<MatrixXd> C;				// [Nb](6, 6)		Hydrostatic restoring coefficients:
-    //UArray<MatrixXd> M;				// [Nb](6, 6)		Mass and inertia matrix		ALWAYS DIMENSIONAL
-    //MatrixXd cb;          			// (3,Nb)           Centre of buoyancy
-    //MatrixXd cg;          			// (3,Nb)     		Centre of gravity
-    //MatrixXd c0;          			// (3,Nb)     		Centre of motion
-    double x_w = Null, y_w = Null;	// 					Wave centre
-    BEM_FMT solver;        			// BEM_FMT			BEM code 
-    //UVector<int> dof;      			// [Nb]            	Degrees of freedom for each body 
-    
-    //UArray<MatrixXd> Cmoor;			// [Nb](6, 6)		Stiffness of the mooring system		ALWAYS DIMENSIONAL
-    
-    UArray<UArray<VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
-    VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
-    
-    Forces ex; 								// Excitation
-    Forces sc;			 					// Diffraction scattering
-    Forces fk; 								// Froude-Krylov
-   
-   	RAO rao;
-    
-    String description;
-
-    UArray<UArray<StateSpace>> sts;			// (6*Nb, 6*Nb)		State space data
-    int dimenSTS;							// false if data is dimensionless
-    String stsProcessor;
-    
-    VectorXd  qw;		 							 // [Nf]             Wave frequencies
-    VectorXcd qh;									 // [Nh]             Wave headings
-    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
-    bool qtfdataFromW = true;
-    int qtftype = 0;								// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field	
+	// All Hydro data is here
+	class Data {
+	public:
+		String file;        			// BEM output file name
+		String name;
+	    double g = Null;        	   	// gravity
+	    double h = Null;    	       	// water depth
+	   	double rho = Null;        		// density
+	   	double len;						// Length scale
+	   	int dimen = Null;				// false if data is dimensionless
+	    int Nb = Null;          		// number of bodies
+	    int Nf = Null;          		// number of wave frequencies
+	    int Nh = Null;          		// number of wave headings
+	 	
+		UArray<UArray<VectorXd>> A;		// [6*Nb][6*Nb][Nf]	Added mass
+		UArray<UArray<VectorXd>> Ainf_w;// [6*Nb][6*Nb][Nf]	Infinite frequency added mass (w)
+		UArray<UArray<VectorXd>> A_P;	// [6*Nb][6*Nb][Nf]	Added mass obtained through potentials
+	    MatrixXd Ainf;        			// (6*Nb, 6*Nb) 	Infinite frequency added mass
+	    MatrixXd A0;        			// (6*Nb, 6*Nb)  	Infinite period added mass
 	
-	/* The priority is:
-										Extension	DOF				Accuracy	Run time	Control surface
-	Control surface 					.7			1,2,3,4,5,6		Better		More		Yes
-	Pressure integration/Near field		.9			1,2,3,4,5,6		Less		Less		No
-	Momentum conservation/Far field		.8			1,2,6									No				*/
-	        
-    VectorXcd mdhead;							// [Nh]             Wave headings
-	UArray<UArray<UArray<VectorXd>>> md;		// [Nb][Nh][6](Nf)	
-	int mdtype = 0;								// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field		
-    					
-    //UVector<double> T;					// [Nf]    			Wave periods
-    UVector<double> w;		 			// [Nf]             Wave frequencies
-    int dataFromW = Null;
-    		
-   	UArray<Mesh> msh;					// [Nb]
-   	
-   	bool symX = false, symY = false;
-   	
-   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots;	// [Nb][Np][6][Nf]		Complex potentials
-   	
-   	Tensor<double, 5> Apan;		// [Nb][Np][6][6][Nf]	Added mass
-   	Tensor<double, 5> Bpan;		// [Nb][Np][6][6][Nf]	Radiation damping
+	    UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
+	    UArray<UArray<VectorXd>> B_H; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through Haskind
+	    UArray<UArray<VectorXd>> B_P; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through potentials
+	    UVector<double> head;			// [Nh]             Wave headings (deg)
+
+	    double x_w = Null, y_w = Null;	// 					Wave centre
+	    BEM_FMT solver;        			// BEM_FMT			BEM code 
+	    
+	    UArray<UArray<VectorXd>> Kirf;	// [6*Nb][6*Nb][Nt]	Radiation impulse response function IRF
+	    VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
+	    
+	    Forces ex; 						// Excitation
+	    Forces sc;			 			// Diffraction scattering
+	    Forces fk; 						// Froude-Krylov
+	    Forces fk_pot; 					// Froude-Krylov obtained through potentials
+	   
+	   	RAO rao;
+	    
+	    String description;
 	
-private:
-	int id = -1;
+	    UArray<UArray<StateSpace>> sts;	// (6*Nb, 6*Nb)		State space data
+	    int dimenSTS;					// false if data is dimensionless
+	    String stsProcessor;
+	    
+	    VectorXd  qw;		 			// [Nf]             Wave frequencies
+	    VectorXcd qh;					// [Nh]             Wave headings
+	    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
+	    bool qtfdataFromW = true;
+	    int qtftype = 0;				// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field	
+		
+		/* The priority is:
+											Extension	DOF				Accuracy	Run time	Control surface
+		Control surface 					.7			1,2,3,4,5,6		Better		More		Yes
+		Pressure integration/Near field		.9			1,2,3,4,5,6		Less		Less		No
+		Momentum conservation/Far field		.8			1,2,6									No				*/
+		        
+	    VectorXcd mdhead;						// [Nh]             Wave headings
+		UArray<UArray<UArray<VectorXd>>> md;	// [Nb][Nh][6](Nf)	
+		int mdtype = 0;							// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field		
+	    					
+	    UVector<double> w;		 				// [Nf]             Wave frequencies
+	    int dataFromW = Null;
+	    		
+	   	UArray<Mesh> msh;						// [Nb]
+	   	
+	   	bool symX = false, symY = false;
+	   	
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_rad;	// [Nb][Np][6][Nf]		Radiation complex potentials
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_diff;	// [Nb][Np][Nh][Nf]		Diffraction complex potentials
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc;	// [Nb][Np][Nh][Nf]		Incident complex potentials
+	   	
+	   	Tensor<double, 5> Apan;		// [Nb][Np][6][6][Nf]	Added mass
+	   	Tensor<double, 5> Bpan;		// [Nb][Np][6][6][Nf]	Radiation damping
+		
+		void SetId(int _id)			{id = _id;}
+		int GetId()	const			{return id;}
+	
+	private:
+		int id = -1;
+	};
+	Data dt;
+	
 	static int idCount;
 	
+	static void ResetIdCount()	{idCount = 0;}
+	void IncrementIdCount()		{dt.SetId(idCount++);}
+
 	static const char *strDataToPlot[];
 	static String C_units_base(int i, int j);
 		
@@ -741,7 +742,7 @@ public:
 	
 	void SaveDiodoreHDB(String file);
 	
-	UVector<String> Check(int solver) const;
+	UVector<String> Check(BEM_FMT type) const;
 	
 	
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, 
@@ -756,35 +757,37 @@ public:
 		return strDataToPlot[dataToPlot];
 	}
 	
-	bool IsLoadedA	   (int i = 0, int j = 0)const {return A.size() > i && A[i].size() > j && A[i][j].size() > 0 && IsNum(A[i][j][0]);}
-	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return Ainf_w.size() > i && Ainf_w[i].size() > j && Ainf_w[i][j].size() > 0 && IsNum(Ainf_w[i][j][0]);}
-	bool IsLoadedA_P   (int i = 0, int j = 0)const {return A_P.size() > i && A_P[i].size() > j && A_P[i][j].size() > 0 && IsNum(A_P[i][j][0]);}
-	bool IsLoadedAinf  (int i = 0, int j = 0)const {return Ainf.rows() > i && Ainf.cols() > j && IsNum(Ainf(i, j));}
-	bool IsLoadedA0	   (int i = 0, int j = 0)const {return A0.rows() > i && A0.cols() > j && IsNum(A0(i, j));}
-	bool IsLoadedDlin(int ib = 0, int idf = 0, int jdf = 0)	const {return msh[ib].Dlin.size() > 0 && msh[ib].Dlin.rows() > idf && msh[ib].Dlin.cols() > jdf && IsNum(msh[ib].Dlin(idf, jdf));}
-	bool IsLoadedDquad(int ib = 0, int idf = 0, int jdf = 0)const {return msh[ib].Dquad.size() > 0 && msh[ib].Dquad.rows() > idf && msh[ib].Dquad.cols() > jdf && IsNum(msh[ib].Dquad(idf, jdf));}
-	bool IsLoadedB	   (int i = 0, int j = 0)const {return B.size() > i && B[i].size() > j && B[i][j].size() > 0 && IsNum(B[i][j][0]);}
-	bool IsLoadedB_H   (int i = 0, int j = 0)const {return B_H.size() > i && B_H[i].size() > j && B_H[i][j].size() > 0 && IsNum(B_H[i][j][0]);}
-	bool IsLoadedB_P   (int i = 0, int j = 0)const {return B_P.size() > i && B_P[i].size() > j && B_P[i][j].size() > 0 && IsNum(B_P[i][j][0]);}
-	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return msh[ib].C.size() > 0 && msh[ib].C.rows() > idf && msh[ib].C.cols() > jdf && IsNum(msh[ib].C(idf, jdf));}
-	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return msh[ib].Cmoor.size() > 0 && msh[ib].Cmoor.rows() > idf && msh[ib].Cmoor.cols() > jdf && IsNum(msh[ib].Cmoor(idf, jdf));}
-	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return msh[ib].M.size() > 0 && msh[ib].M.rows() > idf && msh[ib].M.cols() > jdf && IsNum(msh[ib].M(idf, jdf));}
+	bool IsLoadedA	   (int i = 0, int j = 0)const {return dt.A.size() > i && dt.A[i].size() > j && dt.A[i][j].size() > 0 && IsNum(dt.A[i][j][0]);}
+	bool IsLoadedAinf_w(int i = 0, int j = 0)const {return dt.Ainf_w.size() > i && dt.Ainf_w[i].size() > j && dt.Ainf_w[i][j].size() > 0 && IsNum(dt.Ainf_w[i][j][0]);}
+	bool IsLoadedA_P   (int i = 0, int j = 0)const {return dt.A_P.size() > i && dt.A_P[i].size() > j && dt.A_P[i][j].size() > 0 && IsNum(dt.A_P[i][j][0]);}
+	bool IsLoadedAinf  (int i = 0, int j = 0)const {return dt.Ainf.rows() > i && dt.Ainf.cols() > j && IsNum(dt.Ainf(i, j));}
+	bool IsLoadedA0	   (int i = 0, int j = 0)const {return dt.A0.rows() > i && dt.A0.cols() > j && IsNum(dt.A0(i, j));}
+	bool IsLoadedDlin(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.Dlin.size() > 0 && dt.msh[ib].dt.Dlin.rows() > idf && dt.msh[ib].dt.Dlin.cols() > jdf && IsNum(dt.msh[ib].dt.Dlin(idf, jdf));}
+	bool IsLoadedDquad(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Dquad.size() > 0 && dt.msh[ib].dt.Dquad.rows() > idf && dt.msh[ib].dt.Dquad.cols() > jdf && IsNum(dt.msh[ib].dt.Dquad(idf, jdf));}
+	bool IsLoadedB	   (int i = 0, int j = 0)const {return dt.B.size() > i && dt.B[i].size() > j && dt.B[i][j].size() > 0 && IsNum(dt.B[i][j][0]);}
+	bool IsLoadedB_H   (int i = 0, int j = 0)const {return dt.B_H.size() > i && dt.B_H[i].size() > j && dt.B_H[i][j].size() > 0 && IsNum(dt.B_H[i][j][0]);}
+	bool IsLoadedB_P   (int i = 0, int j = 0)const {return dt.B_P.size() > i && dt.B_P[i].size() > j && dt.B_P[i][j].size() > 0 && IsNum(dt.B_P[i][j][0]);}
+	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.C.size() > 0 && dt.msh[ib].dt.C.rows() > idf && dt.msh[ib].dt.C.cols() > jdf && IsNum(dt.msh[ib].dt.C(idf, jdf));}
+	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));}
+	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.M.size() > 0 && dt.msh[ib].dt.M.rows() > idf && dt.msh[ib].dt.M.cols() > jdf && IsNum(dt.msh[ib].dt.M(idf, jdf));}
 	
-	bool IsLoadedFex(int idf = 0, int ih = 0)const {return IsLoadedForce(ex, idf, ih);}
-	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return IsLoadedForce(sc, idf, ih);}
-	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return IsLoadedForce(fk, idf, ih);}
-	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return IsLoadedForce(rao,idf, ih);}
+	bool IsLoadedFex(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.ex, idf, ih);}
+	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.sc, idf, ih);}
+	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.fk, idf, ih);}
+	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.rao,idf, ih);}
 	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0)
 											 const {return f.force.size() > ih && f.force[ih].cols() > idf && IsNum(f.force[ih](0, idf));}
 	
-	bool IsLoadedStateSpace()	  			 const {return !sts.IsEmpty();}
-	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !qtfsum.IsEmpty() : !qtfdif.IsEmpty();}
-	bool IsLoadedMD(int ib = 0, int ih = 0)	 const {return md.size() > ib && md[ib].size() > ih && md[ib][ih].size() == 6 && md[ib][ih][0].size() > 0 && IsNum(md[ib][ih][0](0));}
+	bool IsLoadedStateSpace()	  			 const {return !dt.sts.IsEmpty();}
+	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !dt.qtfsum.IsEmpty() : !dt.qtfdif.IsEmpty();}
+	bool IsLoadedMD(int ib = 0, int ih = 0)	 const {return dt.md.size() > ib && dt.md[ib].size() > ih && dt.md[ib][ih].size() == 6 && dt.md[ib][ih][0].size() > 0 && IsNum(dt.md[ib][ih][0](0));}
 	static bool IsLoadedMD(const UArray<UArray<UArray<VectorXd>>> &mD, int ib = 0, int ih = 0) {return mD.size() > ib && mD[ib].size() > ih && mD[ib][ih].size() == 6 && mD[ib][ih][0].size() > 0 && IsNum(mD[ib][ih][0](0));}
-	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return Kirf.size() > idf && Kirf[idf].size() > jdf && Kirf[idf][jdf].size() > 0 && IsNum(Kirf[idf][jdf][0]);}
+	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return dt.Kirf.size() > idf && dt.Kirf[idf].size() > jdf && dt.Kirf[idf][jdf].size() > 0 && IsNum(dt.Kirf[idf][jdf][0]);}
 	//bool IsLoadedVo()	 	 				 const {return Vo.size() == 3 && IsNum(Vo[0]); }
 	
-	bool IsLoadedPots()						 const {return !pots.IsEmpty() && !pots[0].IsEmpty() && !pots[0][0].IsEmpty();}
+	bool IsLoadedPotsRad()						 const {return !dt.pots_rad.IsEmpty()  && !dt.pots_rad[0].IsEmpty()  && !dt.pots_rad[0][0].IsEmpty();}
+	bool IsLoadedPotsDiff()						 const {return !dt.pots_diff.IsEmpty() && !dt.pots_diff[0].IsEmpty() && !dt.pots_diff[0][0].IsEmpty();}
+	bool IsLoadedPotsInc()						 const {return !dt.pots_inc.IsEmpty()  && !dt.pots_inc[0].IsEmpty()  && !dt.pots_inc[0][0].IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -844,10 +847,10 @@ public:
 	
 	void Join(const UVector<Hydro *> &hydrosp);
 	
-	String S_g()	const {return !IsNum(g)   ? S("-") : Format("%.3f", g);}
-	String S_h()	const {return !IsNum(h)   ? S("-") : (h < 0 ? S(t_("INFINITY")) : Format("%.1f", h));}
-	String S_rho() 	const {return !IsNum(rho) ? S("-") : Format("%.3f", rho);}
-	String S_len() 	const {return !IsNum(len) ? S("-") : Format("%.1f", len);}
+	String S_g()	const {return !IsNum(dt.g)   ? S("-") : Format("%.3f", dt.g);}
+	String S_h()	const {return !IsNum(dt.h)   ? S("-") : (dt.h < 0 ? S(t_("INFINITY")) : Format("%.1f", dt.h));}
+	String S_rho() 	const {return !IsNum(dt.rho) ? S("-") : Format("%.3f", dt.rho);}
+	String S_len() 	const {return !IsNum(dt.len) ? S("-") : Format("%.1f", dt.len);}
 
 	//String GetLastError()	{return lastError;}
 	
@@ -1139,29 +1142,29 @@ public:
 	void Save_4(String fileName, bool force_T = false);
 	
 protected:
-	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T);
-	bool ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T);
+	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin);
+	bool ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int iperout);
 	
-	bool Load_cfg(String fileName);
-	int iperin = Null, iperout = Null;
+	bool Load_cfg(String fileName, int &iperin, int &iperout);
+	//int iperin = Null, iperout = Null;
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
 	
 	bool Load_out(String fileName);							
 	void Load_A(FileInLine &in, MatrixXd &A);
-	bool Load_Scattering(String fileName);
-	bool Load_FK(String fileName);
+	bool Load_Scattering(String fileName, int iperout);
+	bool Load_FK(String fileName, int iperout);
 	
-	bool Load_Forces(String fileName, Hydro::Forces &force);
+	bool Load_Forces(String fileName, Hydro::Forces &force, int iperout);
 		
-	bool Load_1(String fileName);				
-	bool Load_3(String fileName);
+	bool Load_1(String fileName, int iperout);				
+	bool Load_3(String fileName, int iperout);
 	bool Load_hst(String fileName);
-	bool Load_4(String fileName);
+	bool Load_4(String fileName, int iperout);
 	bool Load_12(String fileName, bool isSum, Function <bool(String, int)> Status);
-	bool Load_789(String fileName);
-	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf);
+	bool Load_789(String fileName, int iperout);
+	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int iperout);
 	
 	void Save_1(String fileName, bool force_T = false);
 	void Save_3(String fileName, bool force_T = false);
@@ -1410,7 +1413,7 @@ public:
 	virtual ~Aqwa() noexcept {}
 	
 	bool Load(String fileName);
-	UVector<String> Check() const;	
+	//UVector<String> Check() const;	
 	
 private:
 	bool Load_AH1();
@@ -1560,14 +1563,14 @@ public:
 	
 	int GetHydroId(int id) {
 		for (int i = 0; i < hydros.size(); ++i) {
-			if (hydros[i].hd().GetId() == id)
+			if (hydros[i].dt.GetId() == id)
 				return i;
 		}
 		return -1;
 	}
 	int GetMeshId(int id) {	
 		for (int i = 0; i < surfs.size(); ++i) {
-			if (surfs[i].GetId() == id)
+			if (surfs[i].dt.GetId() == id)
 				return i;
 		}
 		return -1;
@@ -1634,7 +1637,7 @@ public:
 	void FillFrequencyGapsQTFZero(int id);
 	
 	int LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
-	void SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, double g, Mesh::MESH_TYPE meshType, bool symX, bool symY);
+	void SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, Mesh::MESH_TYPE meshType, bool symX, bool symY);
 	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
 	void ImageMesh(int id, int axis);
@@ -2080,5 +2083,16 @@ public:
 	void Report(Grid &grid);
 };
 
-	
+
+// Compiler options
+
+// Normal
+// -Wall -Wextra 
+
+// Extra
+// -Wno-unused-parameter -Wno-logical-op-parentheses -Wno-deprecated-copy-with-user-provided-copy -Wno-overloaded-virtual -Wno-missing-braces 
+
+// Full
+// -Wshadow	
+
 #endif

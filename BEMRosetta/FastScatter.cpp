@@ -189,7 +189,7 @@ void FastScatter::OnCalc() {
 			}
 		}
 		for (int row = 0; row < table.size(); ++row) {
-			for (int col = 0; col < table[row].size(); ++col) {
+			for (col = 0; col < table[row].size(); ++col) {
 				String val;
 				if (col < 3)
 					val = Format("%" + fmt[col], S(table[row][col]));

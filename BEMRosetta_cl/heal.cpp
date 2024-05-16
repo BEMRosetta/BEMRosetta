@@ -20,15 +20,7 @@ String HealBEM::filterType = "full";
 
 // Gets the x and y limits of the area of interest of B(w). The obtained rectangle will serve
 // as a reference for all the algorithms to be implemented later
-bool HealBEM::AreaOfInterest(
-	double percMin, 
-	double percMax, 
-	double &aoix0, 		// Value x from which the AOI begins
-	double &aoidx, 		// AOI width 
-	double &aoidy, 		// AOI height (aoiy0 = 0)
-	int &idaoix0, 		// index of aoix0
-	int &idaoixMx, 		// index of aoix0 + aoidx
-	int &idaoiyMx) {	// Index of the max value in y
+bool HealBEM::AreaOfInterest(double percMin, double percMax) {
 				
 	VectorXd accum(B.size());
 	double srate = w[1] - w[0];
@@ -58,13 +50,13 @@ bool HealBEM::AreaOfInterest(
 	///////////////////////////////////////////////////////
 	
 	// Second pass to calculate idaoixMx by somewhat reducing the effect of the mini-peaks on the right-hand side.
-	double maxB = B.maxCoeff();						// Preliminary (unfiltered) max
+	double mxB = B.maxCoeff();						// Preliminary (unfiltered) max
 	int iddeltax = int(w.size()/20);				// Divide x (w) in 20 sections
 	for (int i = idaoixMx; i >= idaoix0; i -= iddeltax) {				// From initial idaoixMx guess
 		int idfrom = max(0, i-iddeltax/2);
 		int iddeltaxx = min(iddeltax, int(B.size()) - idfrom - 1);
 		double avg = B.segment(idfrom, iddeltaxx).mean();	// Section avg
-		if (avg > maxB*0.05) {											// If section avg is relevant (> 5% Max)
+		if (avg > mxB*0.05) {											// If section avg is relevant (> 5% Max)
 			idaoixMx = i;												// it may be the max relevant x
 			break;														
 		}
@@ -76,7 +68,6 @@ bool HealBEM::AreaOfInterest(
 	if (aoidx == 0)
 		return false;
 	
-	VectorXd fB;
 	double Tcut = aoidx*0.2;		// The maximum value is taken from the strongly filtered series
 	VectorXd num, den;
 	ButterLowPass(3, 2*srate/Tcut, num, den);
@@ -225,21 +216,20 @@ bool IsNull(const VectorXd &data) {
 	return false;
 }
 
-bool HealBEM::Load(const VectorXd &w, const VectorXd &A, double Ainf, const VectorXd &B, int numT, double maxT, const MatrixXd &ex_hf) {
+bool HealBEM::Load(const VectorXd &_w, const VectorXd &_A, double _Ainf, const VectorXd &_B, int _numT, double _maxT, const MatrixXd &_ex_hf) {
 	if (A.size() == 0 || B.size() == 0)
 		return false;
-	this->w = clone(w);
-	this->B = clone(B);
-	this->A = clone(A);
-	this->Ainf = Ainf;
-	this->numT = numT;
-	this->maxT = maxT;
-	this->ex_hf = clone(ex_hf);
+	this->w = clone(_w);
+	this->B = clone(_B);
+	this->A = clone(_A);
+	this->Ainf = _Ainf;
+	this->numT = _numT;
+	this->maxT = _maxT;
+	this->ex_hf = clone(_ex_hf);
 	return true;
 }
 
-void HealBEM::Reset(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 
-		VectorXd &Tirf, VectorXd &Kirf) {
+void HealBEM::Reset(VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, VectorXd &Kirf) {
 	A.resize(0);
 	Ainfw.resize(0);
 	ainf = 0;
@@ -247,16 +237,15 @@ void HealBEM::Reset(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ain
 	Kirf.resize(0);
 }
 	
-void HealBEM::Save(const VectorXd &w, VectorXd &A, VectorXd &Ainfw, double &ainf, VectorXd &B, 
-		VectorXd &Tirf, VectorXd &Kirf) {
-	Tirf = this->Tirf;
-	Kirf = this->fKirf;
-	ainf = this->fainf;
+void HealBEM::Save(VectorXd &_A, VectorXd &_Ainfw, double &_ainf, VectorXd &_B, VectorXd &_Tirf, VectorXd &_Kirf) {
+	_Tirf = this->Tirf;
+	_Kirf = this->fKirf;
+	_ainf = this->fainf;
 	
 	for (int iw = 0; iw < w.size(); ++iw) {
-		A(iw)  = LinearInterpolate(w[iw], this->w, this->fA);
-		Ainfw(iw) = LinearInterpolate(w[iw], this->w, this->fAinf);
-		B(iw)  = LinearInterpolate(w[iw], this->w, this->fB);
+		_A(iw)  = LinearInterpolate(w[iw], this->w, this->fA);
+		_Ainfw(iw) = LinearInterpolate(w[iw], this->w, this->fAinf);
+		_B(iw)  = LinearInterpolate(w[iw], this->w, this->fB);
 	}	
 }
 	
@@ -274,7 +263,7 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &don
 	// Filtered process, with irregular frequencies removal. 
 	
 	// 1. AreaOfInterest
-	if (!AreaOfInterest(0.01, 0.98, aoix0, aoidx, aoidy, idaoix0, idaoixMx, idaoiyMx)) 
+	if (!AreaOfInterest(0.01, 0.98)) 
 		return false;
 	else {
 		double rangex = abs(w[0]-Last(w));
@@ -460,16 +449,16 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &don
 							double a, b, c, d;
 							
 							double p0 = 0;
-							int num = 0;
-							for (int j = fromScratch[i] - 1; j >= 0 && num < 4; --j) {
+							int nm = 0;
+							for (int j = fromScratch[i] - 1; j >= 0 && nm < 4; --j) {
 								p0 += (fB[j+1]-fB[j])/(w[j+1]-w[j]);
 								p0 += (f2B[j+1]-f2B[j])/(w[j+1]-w[j]);
-								num++;
+								nm++;
 							}
-							if (num == 0)
+							if (nm == 0)
 								p0 = 0;
 							else
-								p0 /= (2*num);	// Begin slope is the avg of the slope in 4 previous points for fB and f2B
+								p0 /= (2*nm);	// Begin slope is the avg of the slope in 4 previous points for fB and f2B
 							double p1 = 0;	// End slope is zero (Could this be improved?)
 							
 							CubicFromEnds(x0, y0, p0, x1, y1, p1, a, b, c, d);	// Cubic from end points and slope

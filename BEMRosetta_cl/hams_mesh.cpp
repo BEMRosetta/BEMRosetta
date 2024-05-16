@@ -10,8 +10,8 @@ String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &
 		return t_("Impossible to open file");
 	
 	Mesh &msh = _mesh.Add();
-	msh.fileName = fileName;
-	msh.SetCode(Mesh::HAMS_PNL);
+	msh.dt.fileName = fileName;
+	msh.dt.SetCode(Mesh::HAMS_PNL);
 	
 	LineParser f(in);	
 	f.IsSeparator = IsTabSpace;
@@ -64,7 +64,7 @@ String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &
 			} else {
 				f.Load(line);
 				ids << f.GetInt(0);
-				Point3D &node = msh.mesh.nodes.Add();
+				Point3D &node = msh.dt.mesh.nodes.Add();
 				node.x = f.GetDouble(1);
 				node.y = f.GetDouble(2);
 				node.z = f.GetDouble(3);
@@ -97,7 +97,7 @@ String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &
 				
 				int numVert = f.GetInt(1);
 
-				Panel &panel = msh.mesh.panels.Add();
+				Panel &panel = msh.dt.mesh.panels.Add();
 				int id;
 				id = f.GetInt(2);
 				if ((id = ids.Find(id)) < 0)

@@ -643,12 +643,12 @@ public:
 		if (!flex) 
 			throwError("GetFlexSimVar");	
 		
-		int status, state;
-		CGetModelState(flex, &state, &status);
+		int status, istate;
+		CGetModelState(flex, &istate, &status);
 		if (status != 0)
 			throwError("GetModelState");
 		
-		return state;
+		return istate;
 	}
 	
 	String GetStatusString(int idState) {

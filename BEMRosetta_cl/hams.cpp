@@ -6,12 +6,12 @@
 
 
 String Hams::Load(String file, Function <bool(String, int)> Status) {
-	hd().file = file;	
-	hd().name = GetFileTitle(file);
+	dt.file = file;	
+	dt.name = GetFileTitle(file);
 	
-	//hd().g = g;
+	//dt.g = g;
 	
-	hd().x_w = hd().y_w = 0;
+	dt.x_w = dt.y_w = 0;
 	
 	String baseFolder = GetFileFolder(GetFileFolder(file));
 	
@@ -21,7 +21,7 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 			
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
-		hd().solver = Hydro::HAMS_WAMIT;
+		dt.solver = Hydro::HAMS_WAMIT;
 		
 		String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
 		
@@ -29,16 +29,16 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 		if (!ret.IsEmpty()) 
 			return ret;
 		
-		if (IsNull(hd().Nb))
+		if (IsNull(dt.Nb))
 			return t_("No body found");
 
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
-		//hd().lastError = e;
+		//dt.lastError = e;
 		return e;
 	}
 	try {		
-		double rhog = hd().g_rho_dim();
+		double rhog = g_rho_dim();
 		String settingsFile = AFX(baseFolder, "Settings.ctrl");
 		if (FileExists(settingsFile) && !Load_Settings(settingsFile))
 			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
@@ -50,9 +50,9 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 		String hydrostaticFile = AFX(baseFolder, /*"Input", */"Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
-			if (hd().IsLoadedC()) {
+			if (IsLoadedC()) {
 				for (int i = 0; i < 36; ++i) {
-					if (abs(hd().msh[0].C.array()(i)) > 1E-8) {
+					if (abs(dt.msh[0].dt.C.array()(i)) > 1E-8) {
 						iszero = false;
 						break;
 					}
@@ -77,23 +77,23 @@ bool Hams::Load_Settings(String fileName) {
 	f.IsSeparator = IsTabSpace;
 	
 	f.Load(in.GetLine());
-	hd().g = f.GetDouble(0);
+	dt.g = f.GetDouble(0);
 	f.Load(in.GetLine());
-	hd().rho = f.GetDouble(0);
+	dt.rho = f.GetDouble(0);
 	
 	in.GetLine();
 	
-	//hd().c0.setConstant(3, hd().Nb, Null);
+	//dt.c0.setConstant(3, dt.Nb, Null);
 	f.Load(in.GetLine());	
-	hd().msh[0].c0.x = f.GetDouble(0);
-	hd().msh[0].c0.y = f.GetDouble(1);
-	hd().msh[0].c0.z = f.GetDouble(2);
+	dt.msh[0].dt.c0.x = f.GetDouble(0);
+	dt.msh[0].dt.c0.y = f.GetDouble(1);
+	dt.msh[0].dt.c0.z = f.GetDouble(2);
 	
-	//hd().cg.setConstant(3, hd().Nb, Null);
+	//dt.cg.setConstant(3, dt.Nb, Null);
 	f.Load(in.GetLine());	
-	hd().msh[0].cg.x = f.GetDouble(0);
-	hd().msh[0].cg.y = f.GetDouble(1);
-	hd().msh[0].cg.z = f.GetDouble(2);	
+	dt.msh[0].dt.cg.x = f.GetDouble(0);
+	dt.msh[0].dt.cg.y = f.GetDouble(1);
+	dt.msh[0].dt.cg.z = f.GetDouble(2);	
 	
 	return true;
 }
@@ -108,26 +108,26 @@ bool Hams::Load_HydrostaticMesh(String fileName, double rhog) {
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
  
-	hd().Nb = 1;
-	hd().msh.SetCount(1);
+	dt.Nb = 1;
+	dt.msh.SetCount(1);
 	
-	//hd().c0.setConstant(3, hd().Nb, Null);
+	//dt.c0.setConstant(3, dt.Nb, Null);
 	
-	//hd().C.SetCount(hd().Nb);
-	for (int ib = 0; ib < hd().Nb; ++ib)
-		hd().msh[ib].C.setConstant(6, 6, 0);
+	//dt.C.SetCount(dt.Nb);
+	for (int ib = 0; ib < dt.Nb; ++ib)
+		dt.msh[ib].dt.C.setConstant(6, 6, 0);
 
 	in.GetLine();
 	f.GetLine();	
-	hd().msh[0].c0.x = f.GetDouble(0);
-	hd().msh[0].c0.y = f.GetDouble(1);
-	hd().msh[0].c0.z = f.GetDouble(2);
+	dt.msh[0].dt.c0.x = f.GetDouble(0);
+	dt.msh[0].dt.c0.y = f.GetDouble(1);
+	dt.msh[0].dt.c0.z = f.GetDouble(2);
 		
 	in.GetLine(8);
 	for (int r = 0; r < 6; ++r) {
 		f.GetLine();	
 		for (int c = 0; c < 6; ++c) 
-			hd().msh[0].C(r, c) = f.GetDouble(c)/rhog;
+			dt.msh[0].dt.C(r, c) = f.GetDouble(c)/rhog;
 	}
 	return true;
 }
@@ -136,7 +136,7 @@ bool Hams::Load_HydrostaticMesh(String fileName, double rhog) {
 UVector<String> Hams::Check() const {
 	UVector<String> ret;
 	
-	if (hd().msh.size() != 1)
+	if (dt.msh.size() != 1)
 		ret << t_("HAMS just allows one body");
 
 	return ret;
@@ -148,7 +148,7 @@ bool Hams::Load_In(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	
-	hd().solver = Hydro::HAMS_WAMIT;
+	dt.solver = Hydro::HAMS_WAMIT;
 	
 	String line;
 	LineParser f(in);
@@ -167,7 +167,7 @@ bool Hams::Load_In(String fileName) {
 		if (var.StartsWith("#"))
 			continue;
 		if (var == "Waterdepth")
-			hd().h = f.GetDouble(1);
+			dt.h = f.GetDouble(1);
 		else if (var == "Input_frequency_type") {
 			input_frequency_type = f.GetInt(1); 
 			if (input_frequency_type != 3 && input_frequency_type != 4)
@@ -178,11 +178,11 @@ bool Hams::Load_In(String fileName) {
 				throw Exc(t_("HAMS loader just allows loading output_frequency_type = 3 wave frequency or 4 wave period"));
 		} else if (var == "Number_of_frequencies") {
 			int Nf = f.GetInt(1);
-			if (!IsNull(hd().Nf)) {
-				if (hd().Nf != abs(Nf))
-					throw Exc(Format(t_("Number of frequencies %d does not match with previously loaded %d"), Nf, hd().Nf));
+			if (!IsNull(dt.Nf)) {
+				if (dt.Nf != abs(Nf))
+					throw Exc(Format(t_("Number of frequencies %d does not match with previously loaded %d"), Nf, dt.Nf));
 			} else 
-				hd().Nf = Nf;
+				dt.Nf = Nf;
 			UVector<double> data;
 			if (Nf < 0) {
 				Nf = -Nf;
@@ -215,20 +215,20 @@ bool Hams::Load_In(String fileName) {
 					}
 				}
 			}
-			if (hd().w.IsEmpty()) {
-				hd().w = pick(data);
-				/*for (int ifr = 0; ifr < hd().Nf; ++ifr) 
-					hd().T[ifr] = 2*M_PI/hd().w[ifr];*/
-			} else if (!CompareDecimals(hd().w, data, 3))
+			if (dt.w.IsEmpty()) {
+				dt.w = pick(data);
+				/*for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+					dt.T[ifr] = 2*M_PI/dt.w[ifr];*/
+			} else if (!CompareDecimals(dt.w, data, 3))
 				throw Exc(t_("List of frequencies does not match with previously loaded"));
 
 		} else if (var == "Number_of_headings") {
 			int Nh = f.GetInt(1);
-			if (!IsNull(hd().Nh)) {
-				if (hd().Nh != abs(Nh))
-					throw Exc(Format(t_("Number of headings %d does not match with previously loaded %d"), Nh, hd().Nh));
+			if (!IsNull(dt.Nh)) {
+				if (dt.Nh != abs(Nh))
+					throw Exc(Format(t_("Number of headings %d does not match with previously loaded %d"), Nh, dt.Nh));
 			} else 
-				hd().Nh = Nh;
+				dt.Nh = Nh;
 			UVector<double> data;
 			if (Nh < 0) {
 				Nh = -Nh;
@@ -258,25 +258,25 @@ bool Hams::Load_In(String fileName) {
 					}
 				}
 			}
-			if (hd().head.IsEmpty()) 
-				hd().head = pick(data);
-			else if (!CompareDecimals(hd().head, data, 2))
+			if (dt.head.IsEmpty()) 
+				dt.head = pick(data);
+			else if (!CompareDecimals(dt.head, data, 2))
 				throw Exc(t_("List of headings does not match with previously loaded"));
 
 		} else if (var == "Reference_body_centre") {
 			if (f.size() < 4)
 				throw Exc(t_("Lack of data in Reference_body_center"));
-			hd().msh.SetCount(1);
-			Mesh &body = hd().msh[0];
-			body.c0[0] = f.GetDouble(1);
-			body.c0[1] = f.GetDouble(2);
-			body.c0[2] = f.GetDouble(3);
+			dt.msh.SetCount(1);
+			Mesh &body = dt.msh[0];
+			body.dt.c0[0] = f.GetDouble(1);
+			body.dt.c0[1] = f.GetDouble(2);
+			body.dt.c0[2] = f.GetDouble(3);
 			String meshFile = AFX(GetFileFolder(fileName), "HullMesh.pnl");
 			if (FileExists(meshFile))
-				body.fileName = meshFile;
+				body.dt.fileName = meshFile;
 			String lidFile = AFX(GetFileFolder(fileName), "WaterplaneMesh.pnl");
 			if (FileExists(lidFile))
-				body.lidFile = lidFile;
+				body.dt.lidFile = lidFile;
 		}
 	}
 	return LoadHydrostatic(AFX(GetFileFolder(fileName), "Hydrostatic.in"));
@@ -287,10 +287,9 @@ bool Hams::LoadHydrostatic(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	
-	hd().msh.SetCount(1);
-	Mesh &body = hd().msh[0];
+	dt.msh.SetCount(1);
+	Mesh &body = dt.msh[0];
 	
-	String line;
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
@@ -306,19 +305,19 @@ bool Hams::LoadHydrostatic(String fileName) {
 			f.GetLine();
 			if (f.size() < 3)
 				throw Exc(t_("Centre of Gravity data is not complete"));
-			body.cg[0] = f.GetDouble(0);
-			body.cg[1] = f.GetDouble(1);
-			body.cg[2] = f.GetDouble(2);
+			body.dt.cg[0] = f.GetDouble(0);
+			body.dt.cg[1] = f.GetDouble(1);
+			body.dt.cg[2] = f.GetDouble(2);
 		} else if (line == "Body Mass Matrix:") 
-			InMatrix(f, body.M);
+			InMatrix(f, body.dt.M);
 		else if (line == "External Linear Damping Matrix:") 
-			InMatrix(f, body.Dlin);
+			InMatrix(f, body.dt.Dlin);
 		else if (line == "External Quadratic Damping Matrix:") 
-			InMatrix(f, body.Dquad);	
+			InMatrix(f, body.dt.Dquad);	
 		else if (line == "Hydrostatic Restoring Matrix:") 
-			InMatrix(f, body.C);	
+			InMatrix(f, body.dt.C);	
 		else if (line == "External Restoring Matrix:") 
-			InMatrix(f, body.Cadd);	
+			InMatrix(f, body.dt.Cadd);	
 	}
 	return true;
 }
@@ -330,11 +329,11 @@ void Hams::SaveFolder(String folderBase, bool bin, int numCases, int numThreads,
 }
 
 void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads) const {
-	hd().BeforeSaveCase(folderBase, numCases, deleteFolder);
+	BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
 	#define MIN_F_HAMS 0.01
 	
-	double fixminF = max(MIN_F_HAMS, First(hd().w));
+	double fixminF = max(MIN_F_HAMS, First(dt.w));
 	
 	UVector<int> valsf;
 	int _nf;
@@ -342,7 +341,7 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 	int ifr = 0;
 	UVector<double> freqs;
 	if (numCases > 1)  
-		valsf = NumSets(hd().Nf, numCases);
+		valsf = NumSets(dt.Nf, numCases);
 	
 	String solvName = "HAMS_x64.exe";
 	if (bin) {
@@ -375,14 +374,14 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			//sumcases << " " << AFX(folder, "Nemoh.cal");
 			_minf = freqs[ifr];
 			int deltaf = valsf[i];
-			_maxf = hd().w[ifr + deltaf - 1];
+			_maxf = dt.w[ifr + deltaf - 1];
 			_nf = deltaf;
 			ifr += deltaf;
 		} else {
 			folder = folderBase;
-			_nf = hd().Nf;
+			_nf = dt.Nf;
 			_minf = fixminF;
-			_maxf = Last(hd().w);
+			_maxf = Last(dt.w);
 		}
 		String folderInput = AFX(folder, "Input");
 		if (!DirectoryCreateX(folderInput))
@@ -392,34 +391,34 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		Save_Hydrostatic(folderInput);
 	
 		bool y0zmesh = false, x0zmesh = false;
-		UArray<Mesh> msh;
+		UArray<Mesh> meshes;
 		int ib = 0;		// Just one file
 		
-		String err = Mesh::Load(msh, hd().msh[ib].fileName, hd().rho, hd().g, false, y0zmesh, x0zmesh);
+		String err = Mesh::Load(meshes, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0zmesh, x0zmesh);
 		if (!err.IsEmpty())
 			throw Exc(err);
 		
-		Mesh &mesh = First(msh);
+		Mesh &mesh0 = First(meshes);
 		
 		if (y0zmesh == true && x0zmesh == true) 
 			y0zmesh = false;
 
 		String dest = AFX(folderInput, "HullMesh.pnl");
-		Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, Mesh::UNDERWATER, hd().rho, hd().g, y0zmesh, x0zmesh);
+		Mesh::SaveAs(mesh0, dest, Mesh::HAMS_PNL, Mesh::UNDERWATER, dt.rho, dt.g, y0zmesh, x0zmesh);
 		
 		bool y0zlid = false, x0zlid = false;	// Hull symmetries rules over lid ones
-		if (!hd().msh[ib].lidFile.IsEmpty()) {
-			String err = Mesh::Load(msh, hd().msh[ib].lidFile, hd().rho, hd().g, false, y0zlid, x0zlid);
+		if (!dt.msh[ib].dt.lidFile.IsEmpty()) {
+			err = Mesh::Load(meshes, dt.msh[ib].dt.lidFile, dt.rho, dt.g, false, y0zlid, x0zlid);
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
-			Mesh &mesh = First(msh);
+			//Mesh &mesh = First(meshes);
 				
-			String dest = AFX(folderInput, "WaterplaneMesh.pnl");
-			Mesh::SaveAs(mesh, dest, Mesh::HAMS_PNL, Mesh::ALL, hd().rho, hd().g, y0zmesh, x0zmesh);
+			dest = AFX(folderInput, "WaterplaneMesh.pnl");
+			Mesh::SaveAs(mesh0, dest, Mesh::HAMS_PNL, Mesh::ALL, dt.rho, dt.g, y0zmesh, x0zmesh);
 		}
 		
-		Save_Settings(folder, !hd().msh[ib].lidFile.IsEmpty());
+		Save_Settings(folder, !dt.msh[ib].dt.lidFile.IsEmpty());
 		
 		String folderOutput = AFX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -477,19 +476,19 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	out << " Centre of Gravity:";
 	
-	if (hd().msh.IsEmpty())
+	if (dt.msh.IsEmpty())
 		throw Exc(t_("No bodies found"));
 	
-	const Mesh &b = hd().msh[0];
-	out << Format("\n%s %s %s", FDS(b.cg[0], 15, true), 
-								FDS(b.cg[1], 15, true), 
-								FDS(b.cg[2], 15, true));
+	const Mesh &b = dt.msh[0];
+	out << Format("\n%s %s %s", FDS(b.dt.cg[0], 15, true), 
+								FDS(b.dt.cg[1], 15, true), 
+								FDS(b.dt.cg[2], 15, true));
 
-	OutMatrix(out, "Body Mass Matrix", b.M);
-	OutMatrix(out, "External Linear Damping Matrix", b.Dlin);
-	OutMatrix(out, "External Quadratic Damping Matrix", b.Dquad);
-	OutMatrix(out, "Hydrostatic Restoring Matrix", b.C);
-	OutMatrix(out, "External Restoring Matrix", b.Cadd);
+	OutMatrix(out, "Body Mass Matrix", b.dt.M);
+	OutMatrix(out, "External Linear Damping Matrix", b.dt.Dlin);
+	OutMatrix(out, "External Quadratic Damping Matrix", b.dt.Dquad);
+	OutMatrix(out, "Hydrostatic Restoring Matrix", b.dt.C);
+	OutMatrix(out, "External Restoring Matrix", b.dt.Cadd);
 }
 
 
@@ -500,24 +499,24 @@ void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
 	Mesh mesh;
-	String res = Mesh::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), hd().rho, hd().g, Null, Null, false);
+	String res = Mesh::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
 	if (thereIsLid) {
 		Mesh lid;
-		lid.mesh.AddWaterSurface(mesh.mesh, mesh.under, 'f', Bem().roundVal, Bem().roundEps); 
-		lid.AfterLoad(hd().rho, hd().g, false, false);
+		lid.dt.mesh.AddWaterSurface(mesh.dt.mesh, mesh.dt.under, 'f', Bem().roundVal, Bem().roundEps); 
+		lid.AfterLoad(dt.rho, dt.g, false, false);
 		
-		mesh.Append(lid.mesh, hd().rho, hd().g);
+		mesh.Append(lid.dt.mesh, dt.rho, dt.g);
 	}
-	Mesh::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, Mesh::ALL, hd().rho, hd().g, false, false);	
+	Mesh::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, Mesh::ALL, dt.rho, dt.g, false, false);	
 	
-	out << hd().g << "\n";
-	out << hd().rho << "\n";
+	out << dt.g << "\n";
+	out << dt.rho << "\n";
 	out << ".\\Input\\mesh.gdf" << "\n";
-	out << hd().msh[0].c0[0] << "   " << hd().msh[0].c0[1] << "   " << hd().msh[0].c0[2] << "\n";
-	out << hd().msh[0].cg[0] << "   " << hd().msh[0].cg[1] << "   " << hd().msh[0].cg[2] << "\n";
+	out << dt.msh[0].dt.c0[0] << "   " << dt.msh[0].dt.c0[1] << "   " << dt.msh[0].dt.c0[2] << "\n";
+	out << dt.msh[0].dt.cg[0] << "   " << dt.msh[0].dt.cg[1] << "   " << dt.msh[0].dt.cg[2] << "\n";
 	out << "\n"
 		<< "The format is as below:\n"
 		<< "gravity acceleration\n"
@@ -536,7 +535,7 @@ void Hams::Save_ControlFile(String folderInput, int _nf, double _minf, double _m
 	
 	out << "   --------------HAMS Control file---------------"
 		   "\n";
-	double depth = hd().h;
+	double depth = dt.h;
 	if (depth >= 400)
 		depth = -1;
 	out << "\n   Waterdepth  " << Format("%.4f", depth) << "D0";
@@ -554,19 +553,19 @@ void Hams::Save_ControlFile(String folderInput, int _nf, double _minf, double _m
 	out << "\n   #End Definition of Wave Frequencies"
 		   "\n"
 		   "\n   #Start Definition of Wave Headings";
-	out << "\n    Number_of_headings         " << hd().Nh;
+	out << "\n    Number_of_headings         " << dt.Nh;
 	UVector<double> headings;
-	LinSpaced(headings, hd().Nh, First(hd().head), Last(hd().head));
+	LinSpaced(headings, dt.Nh, First(dt.head), Last(dt.head));
 	out << "\n    ";
 	for (const auto &heading : headings)
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
 	out << "\n    Reference_body_centre " << Format("%11.3f %11.3f %11.3f", 
-								hd().msh[0].c0[0], hd().msh[0].c0[1], hd().msh[0].c0[2]) << 
+								dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]) << 
 		   "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";
-	bool remove_irr_freq = !hd().msh[0].lidFile.IsEmpty();
+	bool remove_irr_freq = !dt.msh[0].dt.lidFile.IsEmpty();
 	out << "\n    If_remove_irr_freq      " << (remove_irr_freq ? 1 : 0);
 	out << "\n    Number of threads       " << numThreads;
 	out << "\n"

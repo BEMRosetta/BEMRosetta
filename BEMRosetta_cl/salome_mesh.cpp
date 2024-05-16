@@ -20,8 +20,8 @@ String SalomeMesh::LoadDat0(String fileName) {
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
-	this->fileName = fileName;
-	SetCode(Mesh::NEMOH_DAT);
+	dt.fileName = fileName;
+	dt.SetCode(Mesh::NEMOH_DAT);
 	
 	try {
 		String line;
@@ -36,7 +36,7 @@ String SalomeMesh::LoadDat0(String fileName) {
 		if (f.size() != 2 || !f.IsInt(0) || (nnodes = f.GetInt(0)) < 10 || !f.IsInt(1) || f.GetInt(1) < 10)
 			return t_("Format error in Nemoh .dat mesh file");	// To detect Salome format
 		
-		mesh.Clear();
+		dt.mesh.Clear();
 		UIndex<int> idnodes;
 		
 		while(true) {
@@ -49,7 +49,7 @@ String SalomeMesh::LoadDat0(String fileName) {
 				throw Exc(t_("Found more nodes that the indicated in the first row"));
 			
 			idnodes << (id-1);	
-			Point3D &node = mesh.nodes.Add();
+			Point3D &node = dt.mesh.nodes.Add();
 			node.x = f.GetDouble(1);
 			node.y = f.GetDouble(2);
 			node.z = f.GetDouble(3); 
@@ -61,7 +61,7 @@ String SalomeMesh::LoadDat0(String fileName) {
 			
 			int type = f.GetInt(1);	
 			if (type == 203 || type == 204) {
-				Panel &panel = mesh.panels.Add();
+				Panel &panel = dt.mesh.panels.Add();
 				panel.id[0] = idnodes.Find(f.GetInt(2)-1);	
 				panel.id[1] = idnodes.Find(f.GetInt(3)-1);	
 				panel.id[2] = idnodes.Find(f.GetInt(4)-1);	

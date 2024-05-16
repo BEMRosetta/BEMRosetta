@@ -40,12 +40,12 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 			F = line.Mid(pos);
 		
 		Mesh &msh = mesh.Add();
-		msh.fileName = fileName;
-		msh.SetCode(Mesh::WAMIT_DAT);
+		msh.dt.fileName = fileName;
+		msh.dt.SetCode(Mesh::WAMIT_DAT);
 	
 		if (IsNull(T)) {
 			while(!in.IsEof()) {
-				int id0 = msh.mesh.nodes.size();
+				int id0 = msh.dt.mesh.nodes.size();
 				for (int i = 0; i < I*J; ++i) {
 					line = in.GetLine();	
 					f.Load(line);
@@ -54,14 +54,14 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 					double y = f.GetDouble(1);	
 					double z = f.GetDouble(2);	
 						
-					Point3D &node = msh.mesh.nodes.Add();
+					Point3D &node = msh.dt.mesh.nodes.Add();
 					node.x = x;
 					node.y = y;
 					node.z = z;
 				}
 				for (int i = 0; i < I-1; ++i) {
 					for (int j = 0; j < J-1; ++j) {
-						Panel &panel = msh.mesh.panels.Add();
+						Panel &panel = msh.dt.mesh.panels.Add();
 						panel.id[0] = id0 + I*j     + i;
 						panel.id[1] = id0 + I*j     + i+1;
 						panel.id[2] = id0 + I*(j+1) + i;
@@ -79,7 +79,7 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 				double y = f.GetDouble(1);	
 				double z = f.GetDouble(2);	
 					
-				Point3D &node = msh.mesh.nodes.Add();
+				Point3D &node = msh.dt.mesh.nodes.Add();
 				node.x = x;
 				node.y = y;
 				node.z = z;
@@ -88,7 +88,7 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 				line = in.GetLine();	
 				f.Load(line);
 				
-				Panel &panel = msh.mesh.panels.Add();
+				Panel &panel = msh.dt.mesh.panels.Add();
 				for (int ii = 0; ii < 4; ++ii)
 					panel.id[ii] = f.GetInt(ii) - 1;
 			}
@@ -106,8 +106,8 @@ String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool 
 		return t_("Impossible to open file");
 	
 	Mesh &msh = _mesh.Add();
-	msh.name = fileName;
-	msh.SetCode(Mesh::WAMIT_GDF);
+	msh.dt.name = fileName;
+	msh.dt.SetCode(Mesh::WAMIT_GDF);
 	
 	try {
 		String line;
@@ -162,8 +162,8 @@ String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool 
 				double z = f.GetDouble(2)*len;	
 				
 				bool found = false;
-				for (int iin = 0; iin < msh.mesh.nodes.size(); ++iin) {
-					Point3D &node = msh.mesh.nodes[iin];
+				for (int iin = 0; iin < msh.dt.mesh.nodes.size(); ++iin) {
+					Point3D &node = msh.dt.mesh.nodes[iin];
 					if (x == node.x && y == node.y && z == node.z) {
 						ids[i] = iin;
 						found = true;
@@ -171,19 +171,19 @@ String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool 
 					}
 				}
 				if (!found) {
-					Point3D &node = msh.mesh.nodes.Add();
+					Point3D &node = msh.dt.mesh.nodes.Add();
 					node.x = x;
 					node.y = y;
 					node.z = z;
-					ids[i] = msh.mesh.nodes.size() - 1;
+					ids[i] = msh.dt.mesh.nodes.size() - 1;
 				}
 			}
 			if (!npand) {
-				Panel &panel = msh.mesh.panels.Add();
+				Panel &panel = msh.dt.mesh.panels.Add();
 				for (int i = 0; i < 4; ++i)
 					panel.id[i] = ids[i];
 			}
-			if (msh.mesh.panels.size() == nPatches)
+			if (msh.dt.mesh.panels.size() == nPatches)
 				break;
 		}
 		//if (mesh.panels.size() != nPatches)
@@ -217,6 +217,6 @@ void WamitMesh::SaveGdf(String fileName, const Surface &surf, double g, bool y0z
 }
 
 void WamitMesh::SaveHST(String fileName, double rho, double g) const {
-	Wamit::Save_hst_static(C, fileName, rho, g);
+	Wamit::Save_hst_static(dt.C, fileName, rho, g);
 }
 	

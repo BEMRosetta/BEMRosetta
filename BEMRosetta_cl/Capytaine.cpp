@@ -132,67 +132,68 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 																		   -_f(irho, _ih, 1, iw, ih, idf + 6*ib));//-Imaginary to follow Wamit
 		};
 	
-		num = _rho.size()*_h.size();
+		num = 0;
 		
 		for (int irho = 0; irho < _rho.size(); ++irho) {
 			for (int ih = 0; ih < _h.size(); ++ih) {
 				Hydro &hy = hydros.Add();
+				num++;
 				
-				hy.file = file;
-				hy.name = name;
+				hy.dt.file = file;
+				hy.dt.name = name;
 				if (!_rho.IsEmpty())
-					hy.name + Format("_rho%.0f", _rho[irho]);
+					hy.dt.name + Format("_rho%.0f", _rho[irho]);
 				if (!_h.IsEmpty())
-					hy.name + Format("_h%.0f", _h[ih]);
-				hy.dimen = true;
-				hy.len = 1;
-				hy.solver = Hydro::CAPYNC;
+					hy.dt.name + Format("_h%.0f", _h[ih]);
+				hy.dt.dimen = true;
+				hy.dt.len = 1;
+				hy.dt.solver = Hydro::CAPYNC;
 		
-				hy.g = _g;
-				hy.rho = _rho[irho];
-				hy.h = _h[ih];
+				hy.dt.g = _g;
+				hy.dt.rho = _rho[irho];
+				hy.dt.h = _h[ih];
 				
-				hy.Nb = Nb;
+				hy.dt.Nb = Nb;
 				
-				hy.dataFromW = true;
+				hy.dt.dataFromW = true;
 				
-				hy.w = clone(_w);
-				//hy.T = clone(_T);
-				hy.Nf = Nf;
-				hy.head = clone(_head);
-				hy.Nh = Nh;
-				//hy.M = clone(M);
-				//hy.C = clone(C);
-				//hy.c0 = clone(c0);
-				hy.msh.SetCount(Nb);
+				hy.dt.w = clone(_w);
+				//hy.dt.T = clone(_T);
+				hy.dt.Nf = Nf;
+				hy.dt.head = clone(_head);
+				hy.dt.Nh = Nh;
+				//hy.dt.M = clone(M);
+				//hy.dt.C = clone(C);
+				//hy.dt.c0 = clone(c0);
+				hy.dt.msh.SetCount(Nb);
 				for (int ib = 0; ib < Nb; ++ib) {
 					for (int i = 0; i < 3; ++i)
-						hy.msh[ib].c0[i] = c0(i, ib);
+						hy.dt.msh[ib].dt.c0[i] = c0(i, ib);
 					if (bds.size() > ib)
-						hy.msh[ib].name = bds[ib];
-					hy.msh[ib].M = clone(M[ib]);
-					hy.msh[ib].C = clone(C[ib]);
+						hy.dt.msh[ib].dt.name = bds[ib];
+					hy.dt.msh[ib].dt.M = clone(M[ib]);
+					hy.dt.msh[ib].dt.C = clone(C[ib]);
 				}
 				
-				hy.Initialize_AB(hy.A);
-				hy.Initialize_AB(hy.B);
+				hy.Initialize_AB(hy.dt.A);
+				hy.Initialize_AB(hy.dt.B);
 				hy.Initialize_Forces();
 				
 				for (int ib = 0; ib < Nb; ++ib) {
-					LoadAB(a, hy.A, irho, ih, ib);
-					LoadAB(b, hy.B, irho, ih, ib);
-					LoadForce(sc, hy.sc, irho, ih, ib);
-					LoadForce(fk, hy.fk, irho, ih, ib);
+					LoadAB(a, hy.dt.A, irho, ih, ib);
+					LoadAB(b, hy.dt.B, irho, ih, ib);
+					LoadForce(sc, hy.dt.sc, irho, ih, ib);
+					LoadForce(fk, hy.dt.fk, irho, ih, ib);
 				}
-				//hy.GetFexFromFscFfk();
+				//hy.dt.GetFexFromFscFfk();
 				
-				//hy.names.SetCount(Nb);
+				//hy.dt.names.SetCount(Nb);
 				//for (int i = 0; i < min(bds.size(), Nb); ++i)
-				//	hy.names[i] = bds[i];
+				//	hy.dt.names[i] = bds[i];
 				
-				/*hy.dof.Clear();	hy.dof.SetCount(hy.Nb, 0);
-				for (int i = 0; i < hy.Nb; ++i)
-					hy.dof[i] = 6;*/
+				/*hy.dt.dof.Clear();	hy.dt.dof.SetCount(hy.dt.Nb, 0);
+				for (int i = 0; i < hy.dt.Nb; ++i)
+					hy.dt.dof[i] = 6;*/
 			}
 		}
 	} catch (Exc e) {

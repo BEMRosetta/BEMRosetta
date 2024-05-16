@@ -120,8 +120,8 @@ String FastOut::GetFileToLoad(String fileName) {
 	return "";
 }
 
-String FastOut::Load(String fileName) {
-	String ext = ToLower(GetFileExt(fileName));
+String FastOut::Load(String file) {
+	String ext = ToLower(GetFileExt(file));
 	
 	if (ext == ".out")
 		;
@@ -134,32 +134,32 @@ String FastOut::Load(String fileName) {
 	else if (ext == ".lis")
 		;
 	else {
-		fileName = ForceExtSafer(fileName, ".outb");
-		if (FileExists(fileName)) 
+		file = ForceExtSafer(file, ".outb");
+		if (FileExists(file)) 
 			ext = ".outb";
 		else {
-			fileName = ForceExtSafer(fileName, ".out");	
-			if (FileExists(fileName))
+			file = ForceExtSafer(file, ".out");	
+			if (FileExists(file))
 				ext = ".out";
 			else
 				return t_("Unknown file format");
 		}
 	}
-	fileName = ForceExtSafer(fileName, ext);
+	file = ForceExtSafer(file, ext);
 	
 	String ret;
 	if (ext == ".out")
-		ret = LoadOut(fileName);
+		ret = LoadOut(file);
 	else if (ext == ".outb")
-		ret = LoadOutb(fileName);
+		ret = LoadOutb(file);
 	else if (ext == ".csv" || ext == ".txt")
-		ret = LoadCsv(fileName);
+		ret = LoadCsv(file);
 	else if (ext == ".db")
-		ret = LoadDb(fileName);
+		ret = LoadDb(file);
 	else if (ext == ".lis")
-		ret = Load_LIS(fileName);
+		ret = Load_LIS(file);
 	
-	this->fileName = fileName;
+	fileName = file;
 	
 	if (ret.IsEmpty())
 		AfterLoad();
@@ -167,14 +167,14 @@ String FastOut::Load(String fileName) {
 	return ret;
 }
 
-String FastOut::LoadOut(String fileName) {
-	String raw = LoadFileBOM(fileName);
+String FastOut::LoadOut(String file) {
+	String raw = LoadFileBOM(file);
 	if (raw.IsEmpty()) 
-		return Format("Problem reading '%s'", fileName); 
+		return Format("Problem reading '%s'", file); 
 	
 	Clear();
 	bool begin = false;
-	int row = -1;
+	//int row = -1;
 	int pos = 0, npos = 0;
 	int numCol;
 	while (npos >= 0) {
@@ -191,9 +191,9 @@ String FastOut::LoadOut(String fileName) {
 				pos = npos;
 				npos = raw.FindAfter("\n", pos);
 				line = raw.Mid(pos, npos-pos);
-				UVector<String> fields = Split(line, IsTabSpaceRet, true);
-				for (int c = 0; c < fields.size(); ++c) 
-					units << Replace(Replace(fields[c], "(", ""), ")", "");
+				UVector<String> ffields = Split(line, IsTabSpaceRet, true);
+				for (int c = 0; c < ffields.size(); ++c) 
+					units << Replace(Replace(ffields[c], "(", ""), ")", "");
 				begin = true;
 				if (parameters.size() != units.size()) 
 					throw Exc("Number of parameters and units do not match");
@@ -202,7 +202,7 @@ String FastOut::LoadOut(String fileName) {
 				dataOut.SetCount(numCol+calcParams.size());
 			}
 		} else {
-			row++;
+			//row++;
 			if (fields.IsEmpty())
 				break;
 
@@ -215,7 +215,7 @@ String FastOut::LoadOut(String fileName) {
 	}
 
 	if (dataOut.IsEmpty()) 
-		return Format("Problem reading '%s'", fileName); 
+		return Format("Problem reading '%s'", file); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
     	dataOut[i].SetCount(dataOut[0].size());
@@ -223,18 +223,18 @@ String FastOut::LoadOut(String fileName) {
 	return "";
 }
 
-bool FastOut::Save(String fileName, String type, String sep) {
+bool FastOut::Save(String fileSave, String type, String sep) {
 	if (type.IsEmpty())
-		type = GetFileExt(fileName);
+		type = GetFileExt(fileSave);
 	if (type == ".out")
-		return SaveOut(fileName);
+		return SaveOut(fileSave);
 	else if (type == ".csv")
-		return SaveCsv(fileName, sep);
+		return SaveCsv(fileSave, sep);
 
 	return false;
 }
 	
-bool FastOut::SaveOut(String fileName) {
+bool FastOut::SaveOut(String fileSave) {
 	String data;
 	
 	data << "\n\n\n\n\n\n";
@@ -260,15 +260,15 @@ bool FastOut::SaveOut(String fileName) {
 				data << FDS(dataOut[idparam][idtime], 10, true);
 		}
 	}
-	return SaveFile(fileName, data);
+	return SaveFile(fileSave, data);
 }
 
-String FastOut::LoadOutb(String fileName) {
+String FastOut::LoadOutb(String fileNa) {
 	Clear();
 	
 	enum FILETYPE {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
 
-	FileInBinary file(fileName);
+	FileInBinary file(fileNa);
 	if (!file.IsOpen())
 		return t_("Impossible to open file");
 
@@ -374,19 +374,19 @@ String FastOut::LoadOutb(String fileName) {
 	return "";
 }
 
-String FastOut::LoadCsv(String fileName) {
+String FastOut::LoadCsv(String fileNa) {
 	Clear();
 		
 	String header;
-	UVector<String> parameters;
+	//UVector<String> parameters;
 	char separator;
 	bool repetition;
 	char decimalSign;
 	int64 beginData;
 	int beginDataRow;
 	
-	if (!GuessCSV(fileName, true, header, parameters, separator, repetition, decimalSign, beginData, beginDataRow))
-		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
+	if (!GuessCSV(fileNa, true, header, parameters, separator, repetition, decimalSign, beginData, beginDataRow))
+		return Format("Problem reading '%s'. Impossible to guess structure", fileNa); 
 	
 	// Extracts the units from the header
 	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->int {
@@ -465,7 +465,7 @@ String FastOut::LoadCsv(String fileName) {
 	return "";
 }
 
-bool FastOut::SaveCsv(String fileName, String sep) {
+bool FastOut::SaveCsv(String fileSave, String sep) {
 	String data;
 	
 	if (sep.IsEmpty())
@@ -486,7 +486,7 @@ bool FastOut::SaveCsv(String fileName, String sep) {
 				data << FDS(dataOut[idparam][idtime], 10, true);
 		}
 	}
-	return SaveFile(fileName, data);
+	return SaveFile(fileSave, data);
 }
 
 void FastOut::AfterLoad() {

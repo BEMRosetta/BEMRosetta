@@ -23,7 +23,7 @@ void MainViewData::OnAddedModel(MainView &mainView) {
 	
 	MainViewDataEach &model = models.Add();
 	model.Init(Bem().surfs[id], mainView);
-	tab.Add(model.SizePos(), Bem().surfs[id].name);
+	tab.Add(model.SizePos(), Bem().surfs[id].dt.name);
 }
 
 void MainViewData::OnRefresh() {
@@ -42,7 +42,7 @@ void MainViewData::ReLoad(MainView &mainView) {
 	for (int i = 0; i < Bem().surfs.size(); ++i)  {
 		MainViewDataEach &model = models.Add();
 		model.Init(Bem().surfs[i], mainView);
-		tab.Add(model.SizePos(), Bem().surfs[i].name);		
+		tab.Add(model.SizePos(), Bem().surfs[i].dt.name);		
 	}
 }
 
@@ -59,19 +59,19 @@ Value MainViewDataEach::DataSourceFacets::Format(const Value& q) const {
 		return iq + 1;
 	else {
 		if (all) {
-			if (iq >= pmesh->mesh.panels.size())
+			if (iq >= pmesh->dt.mesh.panels.size())
 				return Null;
-			if (col == 3 && pmesh->mesh.panels[iq].IsTriangle())
+			if (col == 3 && pmesh->dt.mesh.panels[iq].IsTriangle())
 				return "-";
 			else
-				return pmesh->mesh.panels[iq].id[col]+1;
+				return pmesh->dt.mesh.panels[iq].id[col]+1;
 		} else {
-			if (iq >= pmesh->under.panels.size())
+			if (iq >= pmesh->dt.under.panels.size())
 				return Null;
-			if (col == 3 && pmesh->under.panels[iq].IsTriangle())
+			if (col == 3 && pmesh->dt.under.panels[iq].IsTriangle())
 				return "-";
 			else
-				return pmesh->under.panels[iq].id[col]+1;
+				return pmesh->dt.under.panels[iq].id[col]+1;
 		}
 	}
 }
@@ -85,12 +85,12 @@ void MainViewDataEach::DataSourceNodes::Init(Mesh &_mesh, int _xyz, int _origMov
 Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 	ASSERT(pmesh);
 	int iq = q;
-	if (origMovedUnder == 0 && pmesh->mesh.nodes.size() <= iq)
+	if (origMovedUnder == 0 && pmesh->dt.mesh.nodes.size() <= iq)
 		return Null;
-	if (origMovedUnder == 1 && pmesh->under.nodes.size() <= iq)
+	if (origMovedUnder == 1 && pmesh->dt.under.nodes.size() <= iq)
 		return Null;
 	
-	const Point3D &p = origMovedUnder == 0 ? pmesh->mesh.nodes[iq] : pmesh->under.nodes[iq];
+	const Point3D &p = origMovedUnder == 0 ? pmesh->dt.mesh.nodes[iq] : pmesh->dt.under.nodes[iq];
 	if (xyz == -1)
 		return iq + 1;		// id
 	else if (xyz == 0)
@@ -129,7 +129,7 @@ void MainViewDataEach::UpdateStatus(bool under) {
 		status.Set("");
 }
 
-void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
+void MainViewDataEach::Init(Mesh &msh, MainView &mainView) {
 	CtrlLayout(arrayFacetsAll2);
 	CtrlLayout(arrayFacetsUnder);
 	CtrlLayout(arrayNodesMoved);
@@ -139,15 +139,15 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	arrayFacetsAll2.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsAll2.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsAll2.array);};
 	dataSourceFacetsAll.SetCount(5);
-	dataSourceFacetsAll[0].Init(_mesh, -1, true);
+	dataSourceFacetsAll[0].Init(msh, -1, true);
 	arrayFacetsAll2.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsAll[0]);
 	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsAll[c+1].Init(_mesh, c, true);
+		dataSourceFacetsAll[c+1].Init(msh, c, true);
 		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
 	arrayFacetsAll2.array.WhenSel = [&] {
 		UpdateStatus(false);
-		_mesh.mesh.SelPanels(selectedPanels);	
+		msh.dt.mesh.SelPanels(selectedPanels);	
 		arrayFacetsUnder.array.ClearSelection();	
 		mainView.gl.Refresh();		
 		lastSel = 0;
@@ -157,15 +157,15 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	arrayFacetsUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsUnder.array);};
 	dataSourceFacetsUnder.SetCount(5);
-	dataSourceFacetsUnder[0].Init(_mesh, -1, true);
+	dataSourceFacetsUnder[0].Init(msh, -1, true);
 	arrayFacetsUnder.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsUnder[0]);
 	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsUnder[c+1].Init(_mesh, c, false);
+		dataSourceFacetsUnder[c+1].Init(msh, c, false);
 		arrayFacetsUnder.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsUnder[c+1]);
 	}
 	arrayFacetsUnder.array.WhenSel = [&] {
 		UpdateStatus(true);
-		_mesh.under.SelPanels(selectedPanels);
+		msh.dt.under.SelPanels(selectedPanels);
 		arrayFacetsAll2.array.ClearSelection();	
 		mainView.gl.Refresh();	
 		lastSel = 1;	
@@ -177,15 +177,15 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	arrayNodesMoved.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesMoved.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesMoved.array);};
 	dataSourceNodesMoved.SetCount(4);
-	dataSourceNodesMoved[0].Init(_mesh, -1, 0);
+	dataSourceNodesMoved[0].Init(msh, -1, 0);
 	arrayNodesMoved.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesMoved[0]);
 	for (int c = 0; c < 3; ++c) {
-		dataSourceNodesMoved[c+1].Init(_mesh, c, 0);
+		dataSourceNodesMoved[c+1].Init(msh, c, 0);
 		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
 	arrayNodesMoved.array.WhenSel = [&] {
 		UpdateStatus(false);
-		_mesh.mesh.SelNodes(selectedNodes);
+		msh.dt.mesh.SelNodes(selectedNodes);
 		arrayNodesUnder.array.ClearSelection();
 		mainView.gl.Refresh();	
 		lastSel = 2;
@@ -195,15 +195,15 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 	arrayNodesUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesUnder.array);};
 	dataSourceNodesUnder.SetCount(4);
-	dataSourceNodesUnder[0].Init(_mesh, -1, 1);
+	dataSourceNodesUnder[0].Init(msh, -1, 1);
 	arrayNodesUnder.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesUnder[0]);
 	for (int c = 0; c < 3; ++c) {
-		dataSourceNodesUnder[c+1].Init(_mesh, c, 1);
+		dataSourceNodesUnder[c+1].Init(msh, c, 1);
 		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesUnder[c+1]);
 	}
 	arrayNodesUnder.array.WhenSel = [&] {
 		UpdateStatus(true);
-		_mesh.under.SelNodes(selectedNodes);	
+		msh.dt.under.SelNodes(selectedNodes);	
 		arrayNodesMoved.array.ClearSelection();
 		mainView.gl.Refresh();	
 		lastSel = 3;
@@ -222,10 +222,10 @@ void MainViewDataEach::Init(Mesh &_mesh, MainView &mainView) {
 }
 
 void MainViewDataEach::OnRefresh() {
-	const Mesh &mesh = dataSourceFacetsAll[0].GetMesh();
+	const Mesh &msh = dataSourceFacetsAll[0].GetMesh();
 	int num;
 	
-	num = mesh.mesh.panels.size();
+	num = msh.dt.mesh.panels.size();
 	arrayFacetsAll2.array.GoBegin();
 	arrayFacetsAll2.array.Clear();
 	arrayFacetsAll2.array.ClearSelection();
@@ -233,21 +233,21 @@ void MainViewDataEach::OnRefresh() {
 	arrayFacetsAll2.array.Refresh();
 	arrayFacetsAll2.numRows.SetText(FormatInt(num));
 		
-	num = mesh.under.panels.size();
+	num = msh.dt.under.panels.size();
 	arrayFacetsUnder.array.Clear();
 	arrayFacetsUnder.array.ClearSelection();
 	arrayFacetsUnder.array.SetVirtualCount(num);
 	arrayFacetsUnder.array.Refresh();
 	arrayFacetsUnder.numRows.SetText(FormatInt(num));
 	
-	num = mesh.mesh.nodes.size();
+	num = msh.dt.mesh.nodes.size();
 	arrayNodesMoved.array.Clear();
 	arrayNodesMoved.array.ClearSelection();
 	arrayNodesMoved.array.SetVirtualCount(num);
 	arrayNodesMoved.array.Refresh();
 	arrayNodesMoved.numRows.SetText(FormatInt(num));
 	
-	num = mesh.under.nodes.	size();
+	num = msh.dt.under.nodes.size();
 	arrayNodesUnder.array.Clear();
 	arrayNodesUnder.array.ClearSelection();
 	arrayNodesUnder.array.SetVirtualCount(num);

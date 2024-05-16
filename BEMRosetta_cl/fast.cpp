@@ -10,10 +10,10 @@
 #include "FastOut.h"
 
 String Fast::Load(String file, Function <bool(String, int)> Status) {
-	hd().file = file;	
-	hd().name = GetFileTitle(file);
+	dt.file = file;	
+	dt.name = GetFileTitle(file);
 	
-	//hd().g = g;
+	//dt.g = g;
 	
 	try {
 		FASTCase fast;
@@ -30,21 +30,21 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 		if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
 			return Format(t_("File '%s' not found"), file);
 
-		String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
-		hd().solver = Hydro::FAST_WAMIT;
+		String hydroFile = AFX(GetFileFolder(file), hydroFolder, dt.name);
+		dt.solver = Hydro::FAST_WAMIT;
 		
 		String ret = Wamit::Load(ForceExtSafer(hydroFile, ".hst"), Status);
 		if (!ret.IsEmpty())
 			return ret;
 		
-		hd().msh[0].Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
+		dt.msh[0].dt.Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
 		
-		if (hd().Nb > 1)
+		if (dt.Nb > 1)
 			return Format(t_("FAST does not support more than one body in file '%s'"), file);	
-		if (hd().head.IsEmpty())
+		if (dt.head.IsEmpty())
 			return t_("No wave headings found in Wamit file");
-		//if (abs(hd().head[0]) != abs(hd().head[hd().head.size()-1]))
-		//	throw Exc(Format(t_("FAST requires symmetric wave headings. .2.3 file headings found from %f to %f"), hd().head[0], hd().head[hd().head.size()-1])); 
+		//if (abs(dt.head[0]) != abs(dt.head[dt.head.size()-1]))
+		//	throw Exc(Format(t_("FAST requires symmetric wave headings. .2.3 file headings found from %f to %f"), dt.head[0], dt.head[dt.head.size()-1])); 
 	
 		String ssFile = ForceExtSafer(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
@@ -54,7 +54,7 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 		}
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
-		//hd().lastError = e;
+		//dt.lastError = e;
 		return e;
 	}
 	
@@ -66,10 +66,10 @@ bool Fast::Load_HydroDyn(String fileName) {
 	if (!in.IsOpen())
 		return false;
 
-	hd().Nb = WaveNDir = 1;
-	hd().msh.SetCount(hd().Nb);
-	//hd().Vo.SetCount(hd().Nb, 0);
-	hd().rho = hd().h = hd().len = WaveDirRange = Null;
+	dt.Nb = WaveNDir = 1;
+	dt.msh.SetCount(dt.Nb);
+	//dt.Vo.SetCount(dt.Nb, 0);
+	dt.rho = dt.h = dt.len = WaveDirRange = Null;
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
@@ -78,13 +78,13 @@ bool Fast::Load_HydroDyn(String fileName) {
 		if (f.size() < 2)
 			break;
 		if (f.GetText(1) == "WtrDens") 
-			hd().rho = f.GetDouble(0);
+			dt.rho = f.GetDouble(0);
 		else if (f.GetText(1) == "WtrDpth") 
-			hd().h = f.GetDouble(0);
+			dt.h = f.GetDouble(0);
 		else if (f.GetText(1) == "WAMITULEN") 
-			hd().len = f.GetDouble(0);
+			dt.len = f.GetDouble(0);
 		else if (f.GetText(1) == "PtfmVol0") 
-			hd().msh[0].Vo = f.GetDouble(0);
+			dt.msh[0].dt.Vo = f.GetDouble(0);
 		else if (f.GetText(1) == "WaveNDir") 
 			WaveNDir = f.GetInt(0);
 		else if (f.GetText(1) == "WaveDirRange") 
@@ -93,10 +93,10 @@ bool Fast::Load_HydroDyn(String fileName) {
 			String path = f.GetText(0);
 			path.Replace("\"", "");
 			hydroFolder = GetFileFolder(path);
-			hd().name = GetFileName(path);
+			dt.name = GetFileName(path);
 		}
 	}
-	if (IsNull(hd().rho) || IsNull(hd().h) || IsNull(hd().len))
+	if (IsNull(dt.rho) || IsNull(dt.h) || IsNull(dt.len))
 		throw Exc(Format(t_("Wrong format in FAST file '%s'"), fileName));
 	
 	return true;
@@ -106,17 +106,17 @@ bool Fast::Load_HydroDyn(String fileName) {
 void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
 	file = ForceExt(file, ".dat");
 	
-	if (hd().IsLoadedA() && hd().IsLoadedB()) 
+	if (IsLoadedA() && IsLoadedB()) 
 		Save_HydroDyn(file, true);
 	else
 		BEM::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
 		
-	String hydroFile = AFX(GetFileFolder(file), hydroFolder, hd().name);
+	String hydroFile = AFX(GetFileFolder(file), hydroFolder, dt.name);
 	DirectoryCreateX(AFX(GetFileFolder(file), hydroFolder));
 
 	Wamit::Save(hydroFile, Status, true, qtfHeading);
 	
-	if (hd().IsLoadedStateSpace()) {
+	if (IsLoadedStateSpace()) {
 		String fileSts = ForceExtSafer(hydroFile, ".ss");
 		BEM::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
 		Save_SS(fileSts);
@@ -129,7 +129,7 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 	if (hydroFolder.IsEmpty())
 		hydroFolder = "HydroData";
 	
-	if (hd().Nb != 1)
+	if (dt.Nb != 1)
 		throw Exc(t_("Number of bodies different to 1 incompatible with FAST"));
 		
 	if (FileExists(fileName)) {
@@ -176,103 +176,103 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		int poslf, pos;
 			
 		if (!force) {
-			if (lVo != hd().msh[0].Vo)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("volume"), hd().msh[0].Vo, lVo, hd().file));
-			if (lrho != hd().rho)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("density"), hd().rho, lrho, hd().file));
-			if (lh != hd().h)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("water depth"), hd().h, lh, hd().file));
-			if (llen != hd().len)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("length scale"), hd().len, llen, hd().file));
+			if (lVo != dt.msh[0].dt.Vo)
+				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("volume"), dt.msh[0].dt.Vo, lVo, dt.file));
+			if (lrho != dt.rho)
+				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("density"), dt.rho, lrho, dt.file));
+			if (lh != dt.h)
+				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("water depth"), dt.h, lh, dt.file));
+			if (llen != dt.len)
+				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("length scale"), dt.len, llen, dt.file));
 			if (!IsNull(WaveNDir) && lWaveNDir != WaveNDir)
-				throw Exc(Format(t_("Different %s (%d != %d) in FAST file '%s'"), t_("number of wave headings"), WaveNDir, lWaveNDir, hd().file));
+				throw Exc(Format(t_("Different %s (%d != %d) in FAST file '%s'"), t_("number of wave headings"), WaveNDir, lWaveNDir, dt.file));
 			if (!IsNull(WaveDirRange) && lWaveDirRange != WaveDirRange)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("headings range"), WaveDirRange, lWaveDirRange, hd().file));
+				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("headings range"), WaveDirRange, lWaveDirRange, dt.file));
 		} else {		
 			pos   = strFile.Find("WtrDens");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "WtrDens"));
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hd().rho) + strFile.Mid(pos);
+				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WtrDens"));
+			strFile = strFile.Left(poslf+1) + Format("%14>f   ", dt.rho) + strFile.Mid(pos);
 			pos   = strFile.Find("WtrDpth");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "WtrDpth"));
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hd().h) + strFile.Mid(pos);
+				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WtrDpth"));
+			strFile = strFile.Left(poslf+1) + Format("%14>f   ", dt.h) + strFile.Mid(pos);
 			pos   = strFile.Find("WAMITULEN");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "WAMITULEN"));
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hd().len) + strFile.Mid(pos);
+				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WAMITULEN"));
+			strFile = strFile.Left(poslf+1) + Format("%14>f   ", dt.len) + strFile.Mid(pos);
 			pos   = strFile.Find("PtfmVol0");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "PtfmVol0"));
+				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "PtfmVol0"));
 			double hdVo0 = 0;
-			//if (hd().Vo.size() > 0) 				
-				hdVo0 = hd().msh[0].Vo;
+			//if (dt.Vo.size() > 0) 				
+				hdVo0 = dt.msh[0].dt.Vo;
 			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hdVo0) + strFile.Mid(pos);
 			pos   = strFile.Find("WaveNDir");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "WaveNDir"));
+				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WaveNDir"));
 			if (IsNull(WaveNDir))
-				strFile = strFile.Left(poslf+1) + Format("%14>d   ", hd().Nh) + strFile.Mid(pos);
+				strFile = strFile.Left(poslf+1) + Format("%14>d   ", dt.Nh) + strFile.Mid(pos);
 			else
 				strFile = strFile.Left(poslf+1) + Format("%14>d   ", WaveNDir) + strFile.Mid(pos);
 			pos   = strFile.Find("WaveDirRange");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "WaveDirRange"));
+				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WaveDirRange"));
 			if (IsNull(WaveDirRange))
-				strFile = strFile.Left(poslf+1) + Format("%14>f   ", (hd().head[hd().Nh-1] - hd().head[0])/2) + strFile.Mid(pos);
+				strFile = strFile.Left(poslf+1) + Format("%14>f   ", (dt.head[dt.Nh-1] - dt.head[0])/2) + strFile.Mid(pos);
 			else
 				strFile = strFile.Left(poslf+1) + Format("%14>f   ", WaveDirRange) + strFile.Mid(pos);
 		}
 		pos   = strFile.Find("PotFile");
 		poslf = strFile.ReverseFind("\n", pos);
 		if (pos < 0 || poslf < 0)
-			throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), hd().file, "PotFile"));
+			throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "PotFile"));
 		
-		String folder = AFX(hydroFolder, hd().name);
+		String folder = AFX(hydroFolder, dt.name);
 		strFile = strFile.Left(poslf+1) + Format("\"%s\" ", folder) + strFile.Mid(pos);
 	} else {
 		strFile = ZstdDecompress(hydroDyn, hydroDyn_length);
 		
 		String srho;
-		if (IsNull(hd().rho))
+		if (IsNull(dt.rho))
 			srho = FDS(Bem().rho, 10, false);
 		else
-			srho = FDS(hd().rho, 10, false);
+			srho = FDS(dt.rho, 10, false);
 		strFile.Replace("[WtrDens]", srho);
 		String sh;
-		if (IsNull(hd().h) || hd().h < 0)
+		if (IsNull(dt.h) || dt.h < 0)
 			sh = "INFINITE";
 		else
-			sh = FDS(hd().h, 8);
+			sh = FDS(dt.h, 8);
 		strFile.Replace("[WtrDpth]", sh);
 		String slen;
-		if (IsNull(hd().len))
+		if (IsNull(dt.len))
 			slen = "1";
 		else
-			slen = FDS(hd().len, 8);
+			slen = FDS(dt.len, 8);
 		strFile.Replace("[WAMITULEN]", slen);
 		double hdVo0 = 0;
-		//if (hd().Vo.size() > 0) 				
-			hdVo0 = hd().msh[0].Vo;
+		//if (dt.Vo.size() > 0) 				
+			hdVo0 = dt.msh[0].dt.Vo;
 		strFile.Replace("[PtfmVol0]", FDS(hdVo0, 10));
 		if (IsNull(WaveNDir))
-			strFile.Replace("[WaveNDir]", FormatInt(hd().Nh));
+			strFile.Replace("[WaveNDir]", FormatInt(dt.Nh));
 		else
 			strFile.Replace("[WaveNDir]", FormatInt(WaveNDir));
 		if (IsNull(WaveDirRange))
-			strFile.Replace("[WaveDirRange]", FDS((hd().head[hd().Nh-1] - hd().head[0])/2, 10));
+			strFile.Replace("[WaveDirRange]", FDS((dt.head[dt.Nh-1] - dt.head[0])/2, 10));
 		else
 			strFile.Replace("[WaveDirRange]", FDS(WaveDirRange, 10));
-		strFile.Replace("[PotFile]", Format("\"%s\"", AFX(hydroFolder, hd().name)));
+		strFile.Replace("[PotFile]", Format("\"%s\"", AFX(hydroFolder, dt.name)));
 	}
 	if (!SaveFile(fileName, strFile))
-		throw Exc(Format(t_("Imposible to save file '%s'"), hd().file));
+		throw Exc(Format(t_("Imposible to save file '%s'"), dt.file));
 }
 
 // Just can save the first body			
@@ -281,11 +281,11 @@ void Fast::Save_SS(String fileName) {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
 	
-	if (hd().Nb > 1)
+	if (dt.Nb > 1)
 		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
 
-	if (!hd().stsProcessor.IsEmpty())
-		out << Format("BEMRosetta state space matrices obtained with %s", hd().stsProcessor) << "\n";
+	if (!dt.stsProcessor.IsEmpty())
+		out << Format("BEMRosetta state space matrices obtained with %s", dt.stsProcessor) << "\n";
 	else	
 		out << "BEMRosetta state space matrices" << "\n";
 	Eigen::Index nstates = 0;
@@ -293,7 +293,7 @@ void Fast::Save_SS(String fileName) {
 	for (int idf = 0; idf < 6; ++idf) {
 		Eigen::Index num = 0;
 		for (int jdf = 0; jdf < 6; ++jdf) {
-			const Hydro::StateSpace &sts = hd().sts[idf][jdf];
+			const Hydro::StateSpace &sts = dt.sts[idf][jdf];
 			num += sts.A_ss.cols();
 		}
 		if (num > 0) 
@@ -316,7 +316,7 @@ void Fast::Save_SS(String fileName) {
 	int pos = 0;
 	for (int jdf = 0; jdf < 6; ++jdf) {
 		for (int idf = 0; idf < 6; ++idf) {
-			const Hydro::StateSpace &sts = hd().sts[idf][jdf];
+			const Hydro::StateSpace &sts = dt.sts[idf][jdf];
 			if (sts.A_ss.size() > 0) {
 				for (int r = 0; r < sts.A_ss.rows(); ++r) 
 					for (int c = 0; c < sts.A_ss.cols(); ++c) {
@@ -405,17 +405,17 @@ bool Fast::Load_SS(String fileName) {
 	if (!in.IsOpen())
 		return false;
 
-	if (hd().Nb > 1)
+	if (dt.Nb > 1)
 		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
 	
 	String line; 
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	hd().stsProcessor = TrimBoth(in.GetLine());
-	hd().stsProcessor.Replace("BEMRosetta state space matrices obtained with ", "");
+	dt.stsProcessor = TrimBoth(in.GetLine());
+	dt.stsProcessor.Replace("BEMRosetta state space matrices obtained with ", "");
 	
-	hd().Initialize_Sts();
+	Initialize_Sts();
 	
 	in.GetLine();
 	
@@ -468,7 +468,7 @@ bool Fast::Load_SS(String fileName) {
 	for (int idf = 0; idf < dofdof.size(); ++idf) {
 		for (int i = 0; i < dofdof[idf].size(); ++i) {
 			int jdf = int(dofdof[idf][i]);
-			Hydro::StateSpace &sts = hd().sts[idf][jdf];
+			Hydro::StateSpace &sts = dt.sts[idf][jdf];
 			Eigen::Index num = ndofdof[idf];
 			sts.A_ss.setConstant(num, num, Null);
 			sts.B_ss.setConstant(num, Null);
@@ -480,7 +480,7 @@ bool Fast::Load_SS(String fileName) {
 					sts.C_ss(r)    = C(jdf, pos + r);
 				}		 
 			}
-			sts.GetTFS(hd().w);
+			sts.GetTFS(dt.w);
 			pos += num;
 		}
 	}

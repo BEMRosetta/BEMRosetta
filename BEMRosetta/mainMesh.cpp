@@ -272,16 +272,16 @@ void MainMesh::Init() {
 			}
 			return id;
 		}, [&](int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
-			Mesh &data = Bem().surfs[id];			
+			Mesh &msh = Bem().surfs[id];			
 			
-			data.cg.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
-			data.mesh.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
+			msh.dt.cg.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
+			msh.dt.mesh.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
 			
-			menuProcess.x_g <<= data.cg.x;
-			menuProcess.y_g <<= data.cg.y;
-			menuProcess.z_g <<= data.cg.z;
+			menuProcess.x_g <<= msh.dt.cg.x;
+			menuProcess.y_g <<= msh.dt.cg.y;
+			menuProcess.z_g <<= msh.dt.cg.z;
 			
-			data.AfterLoad(Bem().rho, Bem().g, false, false);
+			msh.AfterLoad(Bem().rho, Bem().g, false, false);
 			
 			if (full)
 				mainStiffness.Load(Bem().surfs, ids);
@@ -380,18 +380,18 @@ void MainMesh::OnMenuProcessArraySel() {
 	if (id < 0)
 		return;
 	
-	Mesh &data = Bem().surfs[id];
-	if (!IsNull(data.cg)) {
-		menuProcess.x_g <<= data.cg.x;
-		menuProcess.y_g <<= data.cg.y;
-		menuProcess.z_g <<= data.cg.z;
+	Mesh &msh = Bem().surfs[id];
+	if (!IsNull(msh.dt.cg)) {
+		menuProcess.x_g <<= msh.dt.cg.x;
+		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.z_g <<= msh.dt.cg.z;
 	} else
 		menuProcess.x_g <<= menuProcess.y_g <<= menuProcess.z_g <<= Null;
 	
-	menuProcess.x_0 <<= data.c0.x;
-	menuProcess.y_0 <<= data.c0.y;
-	menuProcess.z_0 <<= data.c0.z;
-	menuProcess.mass <<= data.GetMass();
+	menuProcess.x_0 <<= msh.dt.c0.x;
+	menuProcess.y_0 <<= msh.dt.c0.y;
+	menuProcess.z_0 <<= msh.dt.c0.z;
+	menuProcess.mass <<= msh.GetMass();
 }
 
 void MainMesh::OnMenuMoveArraySel() {
@@ -399,10 +399,10 @@ void MainMesh::OnMenuMoveArraySel() {
 	if (id < 0)
 		return;
 	
-	Mesh &data = Bem().surfs[id];
-	menuMove.x_0 <<= data.c0.x;
-	menuMove.y_0 <<= data.c0.y;
-	menuMove.z_0 <<= data.c0.z;	
+	Mesh &msh = Bem().surfs[id];
+	menuMove.x_0 <<= msh.dt.c0.x;
+	menuMove.y_0 <<= msh.dt.c0.y;
+	menuMove.z_0 <<= msh.dt.c0.z;	
 }
 
 void MainMesh::OnMenuAdvancedArraySel() {
@@ -529,7 +529,7 @@ bool MainMesh::OnLoad() {
 		
 		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
 		for (int i = 0; i < ids.size(); ++i) {
-			if (Bem().surfs[ids[i]].fileName == file) {
+			if (Bem().surfs[ids[i]].dt.fileName == file) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
 					return false;
 				break;
@@ -547,13 +547,13 @@ bool MainMesh::OnLoad() {
 		
 		//int id = Bem().surfs.size()-1;
 		for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
-			Mesh &data = Bem().surfs[id];
+			Mesh &msh = Bem().surfs[id];
 			
-			if (!data.mesh.IsEmpty() && ~menuMove.opZArchimede) {
+			if (!msh.dt.mesh.IsEmpty() && ~menuMove.opZArchimede) {
 				double dz = 0.1;
 				Surface under;
-				if (data.mesh.TranslateArchimede(data.GetMass(), Bem().rho, dz, under)) {
-					data.cg.Translate(0, 0, dz);
+				if (msh.dt.mesh.TranslateArchimede(msh.GetMass(), Bem().rho, dz, under)) {
+					msh.dt.cg.Translate(0, 0, dz);
 					videoCtrl.AddReg(Point3D(0, 0, dz));
 				} else
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
@@ -620,7 +620,7 @@ void MainMesh::OnConvertMesh() {
 		
 		WaitCursor waitcursor;
 		
-		Bem().SaveMesh(fileName, sel, type, Bem().g, 
+		Bem().SaveMesh(fileName, sel, type, 
 							   static_cast<Mesh::MESH_TYPE>(int(~menuOpen.optMeshType)),
 							   ~menuOpen.symX, ~menuOpen.symY);	
 							   
@@ -651,8 +651,8 @@ void MainMesh::OnReset() {
 			}
 		}
 				
-		Mesh &data = Bem().surfs[id];
-		data.Reset(Bem().rho, Bem().g);
+		Mesh &msh = Bem().surfs[id];
+		msh.Reset(Bem().rho, Bem().g);
 
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -667,9 +667,9 @@ void MainMesh::OnReset() {
 		//menuMove.ang_x <<= data.mesh.GetAngle().x;
 		//menuMove.ang_y <<= data.mesh.GetAngle().y;
 		//menuMove.ang_z <<= data.mesh.GetAngle().z;
-		menuProcess.x_g <<= data.cg.x; 
-		menuProcess.y_g <<= data.cg.y;
-		menuProcess.z_g <<= data.cg.z;
+		menuProcess.x_g <<= msh.dt.cg.x; 
+		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.z_g <<= msh.dt.cg.z;
 		
 		ma().Status(t_("Model oriented on the initial layout"));
 		
@@ -699,9 +699,9 @@ void MainMesh::OnUpdateMass() {
 			}
 		}
 		
-		Mesh &data = Bem().surfs[id];
+		Mesh &msh = Bem().surfs[id];
 		
-		double mass = data.under.volume*Bem().rho;
+		double mass = msh.dt.under.volume*Bem().rho;
 		menuProcess.mass <<= mass;
 
 		OnUpdate(NONE, true);
@@ -734,7 +734,7 @@ void MainMesh::OnScale() {
 			}
 		}
 				
-		Mesh &mesh = Bem().surfs[id];
+		Mesh &msh = Bem().surfs[id];
 	
 		WaitCursor wait;
 		
@@ -742,13 +742,13 @@ void MainMesh::OnScale() {
 		double ry = double(~menuProcess.rat_y) - 1;
 		double rz = double(~menuProcess.rat_z) - 1;
 		
-		mesh.mesh.Scale(rx, ry, rz, mesh.c0);
-		mesh.cg.Translate(rx*(mesh.cg.x - mesh.c0.x), ry*(mesh.cg.y - mesh.c0.y),
-						  rz*(mesh.cg.z - mesh.c0.z));
+		msh.dt.mesh.Scale(rx, ry, rz, msh.dt.c0);
+		msh.dt.cg.Translate(rx*(msh.dt.cg.x - msh.dt.c0.x), ry*(msh.dt.cg.y - msh.dt.c0.y),
+						    rz*(msh.dt.cg.z - msh.dt.c0.z));
 		
 		ma().Status(Format(t_("Model scaled %f, %f, %f"), rx, ry, rz));
 				
-		mesh.AfterLoad(Bem().rho, Bem().g, NONE, false);
+		msh.AfterLoad(Bem().rho, Bem().g, NONE, false);
 			
 		mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -787,7 +787,7 @@ void MainMesh::OnInertia() {
 		WithMenuMeshProcessInertia<TopWindow> dialog;
 		CtrlLayout(dialog);
 		
-		double volume = mesh.mesh.volume;
+		double volume = mesh.dt.mesh.volume;
 		dialog.volume = volume;
 		
 		dialog.arrayVol.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, dialog.arrayVol);};
@@ -800,9 +800,9 @@ void MainMesh::OnInertia() {
 			Point3D c0(~dialog.x_0, ~dialog.y_0, ~dialog.z_0);
 			
 			Matrix3d inertia3;
-			mesh.mesh.GetInertia33(inertia3, c0, vol, false);
+			mesh.dt.mesh.GetInertia33(inertia3, c0, vol, false);
 			MatrixXd inertia6;
-			mesh.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
+			mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
 			if (dialog.opMass == 2)
 				inertia6 *= volume;
 			else if (dialog.opMass < 2)
@@ -852,9 +852,9 @@ void MainMesh::OnInertia() {
 			dialog.y_0.Enable(dialog.opC0 != 0);
 			dialog.z_0.Enable(dialog.opC0 != 0);
 			if (dialog.opC0 == 0) {
-				dialog.x_0 = mesh.c0.x;
-				dialog.y_0 = mesh.c0.y;
-				dialog.z_0 = mesh.c0.z;
+				dialog.x_0 = mesh.dt.c0.x;
+				dialog.y_0 = mesh.dt.c0.y;
+				dialog.z_0 = mesh.dt.c0.z;
 			}
 			if (action) {
 				ActionV();
@@ -862,7 +862,7 @@ void MainMesh::OnInertia() {
 			}
 		};
 		auto opCG_v_WhenAction = [&](bool action) {
-			Point3D c = mesh.mesh.GetCentreOfBuoyancy();
+			Point3D c = mesh.dt.mesh.GetCentreOfBuoyancy();
 			dialog.x_g_v = c.x;
 			dialog.y_g_v = c.y;
 			dialog.z_g_v = c.z;
@@ -870,7 +870,7 @@ void MainMesh::OnInertia() {
 				ActionV();
 		};
 		auto opCG_s_WhenAction = [&](bool action) {
-			Point3D c = mesh.mesh.GetCentreOfGravity_Surface();
+			Point3D c = mesh.dt.mesh.GetCentreOfGravity_Surface();
 			dialog.x_g_s = c.x;
 			dialog.y_g_s = c.y;
 			dialog.z_g_s = c.z;
@@ -954,7 +954,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			}
 		}
 				
-		Mesh &data = Bem().surfs[id];
+		Mesh &msh = Bem().surfs[id];
 
 		double mass = ~menuProcess.mass;
 		double x_g = ~menuProcess.x_g;
@@ -991,23 +991,23 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		WaitCursor wait;
 
 		if (action == MOVE) {
-			data.cg.Translate(t_x, t_y, t_z);
-			data.mesh.Translate(t_x, t_y, t_z);
+			msh.dt.cg.Translate(t_x, t_y, t_z);
+			msh.dt.mesh.Translate(t_x, t_y, t_z);
 			videoCtrl.AddReg(Point3D(t_x, t_y, t_z));
 			
 			ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
 			
 		} else if (action == ROTATE) {
-			data.cg.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
-			data.mesh.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
+			msh.dt.cg.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
+			msh.dt.mesh.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
 			videoCtrl.AddReg(Point3D(a_x, a_y, a_z), Point3D(x_0, y_0, z_0));
 			
 			if (~menuMove.opZArchimede) {
 				double dz = 0;
 				Surface under;
-				data.mesh.TranslateArchimede(data.GetMass(), Bem().rho, dz, under);
+				msh.dt.mesh.TranslateArchimede(msh.GetMass(), Bem().rho, dz, under);
 				if (!IsNull(dz)) {
-					data.cg.Translate(0, 0, dz);
+					msh.dt.cg.Translate(0, 0, dz);
 					videoCtrl.AddReg(Point3D(0, 0, dz));
 				} else
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
@@ -1016,14 +1016,14 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			} else
 				ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
 		} else if (action == NONE) {
-			data.SetMass(mass);
-			data.cg.Set(x_g, y_g, z_g);
-			data.c0.Set(x_0, y_0, z_0);
+			msh.SetMass(mass);
+			msh.dt.cg.Set(x_g, y_g, z_g);
+			msh.dt.c0.Set(x_0, y_0, z_0);
 		}
 		
-		menuProcess.x_g <<= data.cg.x;
-		menuProcess.y_g <<= data.cg.y;
-		menuProcess.z_g <<= data.cg.z;
+		menuProcess.x_g <<= msh.dt.cg.x;
+		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.z_g <<= msh.dt.cg.z;
 		
 		//menuMove.pos_x <<= data.mesh.GetPos().x;
 		//menuMove.pos_y <<= data.mesh.GetPos().y;
@@ -1032,7 +1032,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		//menuMove.ang_y <<= data.mesh.GetAngle().y;
 		//menuMove.ang_z <<= data.mesh.GetAngle().z;
 		
-		data.AfterLoad(Bem().rho, Bem().g, action == NONE, false, mainStiffness.opMassBuoy);
+		msh.AfterLoad(Bem().rho, Bem().g, action == NONE, false, mainStiffness.opMassBuoy);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -1066,16 +1066,16 @@ void MainMesh::OnArchimede() {
 			}
 		}
 		
-		Mesh &data = Bem().surfs[id];
+		Mesh &msh = Bem().surfs[id];
 		
 		double dz = 0.5, droll = 0.5, dpitch = 0.5;
 		Surface under;
-		if (!data.mesh.Archimede(data.GetMass(), data.cg, data.c0, Bem().rho, Bem().g, dz, droll, dpitch, under))
+		if (!msh.dt.mesh.Archimede(msh.GetMass(), msh.dt.cg, msh.dt.c0, Bem().rho, Bem().g, dz, droll, dpitch, under))
 			BEM::PrintError(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
 		
-		menuProcess.x_g <<= data.cg.x;
-		menuProcess.y_g <<= data.cg.y;
-		menuProcess.z_g <<= data.cg.z;
+		menuProcess.x_g <<= msh.dt.cg.x;
+		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.z_g <<= msh.dt.cg.z;
 				
 		//menuMove.pos_x <<= data.mesh.GetPos().x;
 		//menuMove.pos_y <<= data.mesh.GetPos().y;
@@ -1085,7 +1085,7 @@ void MainMesh::OnArchimede() {
 		//menuMove.ang_y <<= data.mesh.GetAngle().y;
 		//menuMove.ang_z <<= data.mesh.GetAngle().z;
 		
-		data.AfterLoad(Bem().rho, Bem().g, false, false);
+		msh.AfterLoad(Bem().rho, Bem().g, false, false);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -1123,14 +1123,14 @@ void MainMesh::OnAddPanel() {
 		Bem().AddFlatRectangle(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
 							 ~menuEdit.panWidthX, ~menuEdit.panWidthY);
 		
-		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
-		surf.name = t_("Panel");
-		surf.fileName =  "";
+		Mesh &msh = Bem().surfs[Bem().surfs.size()-1];
+		msh.dt.name = t_("Panel");
+		msh.dt.fileName =  "";
 		
-		surf.AfterLoad(Bem().rho, Bem().g, false, true);
+		msh.AfterLoad(Bem().rho, Bem().g, false, true);
 		
-		surf.Report(Bem().rho);
-		AddRow(surf);
+		msh.Report(Bem().rho);
+		AddRow(msh);
 		After();
 		mainViewData.OnAddedModel(mainView);
 		OnOpt();
@@ -1167,14 +1167,14 @@ void MainMesh::OnAddRevolution() {
 	try {
 		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
-		surf.name = t_("Revolution");
-		surf.fileName =  "";
+		Mesh &msh = Bem().surfs[Bem().surfs.size()-1];
+		msh.dt.name = t_("Revolution");
+		msh.dt.fileName =  "";
 		
-		surf.AfterLoad(Bem().rho, Bem().g, false, true);
+		msh.AfterLoad(Bem().rho, Bem().g, false, true);
 		
-		surf.Report(Bem().rho);
-		AddRow(surf);
+		msh.Report(Bem().rho);
+		AddRow(msh);
 		After();
 		mainViewData.OnAddedModel(mainView);
 		OnOpt();
@@ -1211,14 +1211,14 @@ void MainMesh::OnAddPolygonalPanel() {
 	try {
 		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		Mesh &surf = Bem().surfs[Bem().surfs.size()-1];
-		surf.name = t_("Polynomial");
-		surf.fileName =  "";
+		Mesh &msh = Bem().surfs[Bem().surfs.size()-1];
+		msh.dt.name = t_("Polynomial");
+		msh.dt.fileName =  "";
 		
-		surf.AfterLoad(Bem().rho, Bem().g, false, true);
+		msh.AfterLoad(Bem().rho, Bem().g, false, true);
 		
-		surf.Report(Bem().rho);
-		AddRow(surf);
+		msh.Report(Bem().rho);
+		AddRow(msh);
 		After();
 		mainViewData.OnAddedModel(mainView);
 		OnOpt();
@@ -1359,19 +1359,19 @@ void MainMesh::OnImage(int axis) {
 		
 		WaitCursor waitcursor;
 		
-		Mesh &data = Bem().surfs[id];
+		Mesh &msh = Bem().surfs[id];
 
-		data.SetMass(~menuProcess.mass);
+		msh.SetMass(~menuProcess.mass);
 		if (axis == 0)
-			data.cg.x = -data.cg.x;
+			msh.dt.cg.x = -msh.dt.cg.x;
 		else if (axis == 1)
-			data.cg.y = -data.cg.y;
+			msh.dt.cg.y = -msh.dt.cg.y;
 		else
-			data.cg.z = -data.cg.z;
+			msh.dt.cg.z = -msh.dt.cg.z;
 		
-		data.mesh.Image(axis);
+		msh.dt.mesh.Image(axis);
 	
-		data.AfterLoad(Bem().rho, Bem().g, false, false);
+		msh.AfterLoad(Bem().rho, Bem().g, false, false);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
@@ -1466,8 +1466,8 @@ void MainMesh::OnJoin() {
 	}
 }
 
-void MainMesh::AddRow(const Mesh &surf) {
-	ArrayModel_Add(listLoaded, surf.GetMeshStr(), surf.name, surf.fileName, surf.GetId(),
+void MainMesh::AddRow(const Mesh &msh) {
+	ArrayModel_Add(listLoaded, msh.GetMeshStr(), msh.dt.name, msh.dt.fileName, msh.dt.GetId(),
 					optionsPlot, [&] {mainView.gl.Refresh();});
 }
 		
@@ -1508,8 +1508,8 @@ void MainMesh::OnSplit() {
 			return;
 		}
 		int id = ArrayModel_IdMesh(listLoaded, row);
-		String fileName = Bem().surfs[id].fileName;
-		String name = Bem().surfs[id].name;
+		String fileName = Bem().surfs[id].dt.fileName;
+		String name = Bem().surfs[id].dt.name;
 		idsmesh = Bem().SplitMesh(id, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
@@ -1520,16 +1520,16 @@ void MainMesh::OnSplit() {
 		RemoveRow(row);
 		
 		for (int i = 0; i < idsmesh.size(); ++i) {
-			int id = idsmesh[i];
-			Mesh &surf = Bem().surfs[id];
+			int idm = idsmesh[i];
+			Mesh &msh = Bem().surfs[idm];
 			
 			mainTab.Set(mainView);
 			
-			surf.Report(Bem().rho);
+			msh.Report(Bem().rho);
 	
-			surf.fileName = fileName;
-			surf.name = name + S("-") + FormatInt(i+1);		
-			AddRow(surf);
+			msh.dt.fileName = fileName;
+			msh.dt.name = name + S("-") + FormatInt(i+1);		
+			AddRow(msh);
 		}
 		
 		mainViewData.ReLoad(mainView);
@@ -1645,8 +1645,8 @@ void MainMesh::Jsonize(JsonIO &json) {
 }
 
 void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
-	const Mesh &data = surfs[id];
-	String name = data.name;
+	const Mesh &msh = surfs[id];
+	String name = msh.dt.name;
 	
 	if (array.GetColumnCount() == 0)
 		array.AddColumn("Param");
@@ -1657,20 +1657,20 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 
 	int idColor;
 	Upp::Color backColorMesh;
-	idColor = data.mesh.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
-	if (idColor == -2 || data.mesh.surface < 0)
+	idColor = msh.dt.mesh.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
+	if (idColor == -2 || msh.dt.mesh.surface < 0)
 		backColorMesh = Upp::Color(255, 165, 158);	// Light red
 	else if (idColor == -1)
 		backColorMesh = Upp::Color(255, 255, 150);	// Light yellow
 	
 	Upp::Color backColorUnder;
-	idColor = data.under.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
+	idColor = msh.dt.under.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
 	if (idColor == -2)
 		backColorUnder = Upp::Color(255, 165, 158);
 	else if (idColor == -1)
 		backColorUnder = Upp::Color(255, 255, 150);
 									
-	bool healing = data.mesh.healing;
+	bool healing = msh.dt.mesh.healing;
 
 	const MainMesh &mn = GetDefinedParent<MainMesh>(this);
 	Upp::Color color = ArrayModel_GetColor(mn.listLoaded, id);//GetColorId(id);
@@ -1678,65 +1678,65 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	if (Grayscale(color) < 150)
 		textColor = White();
 														
-	array.Set(row, 0, t_("File"));				array.Set(row++, col, AttrText(data.fileName).Paper(color).Ink(textColor).Bold()); 
+	array.Set(row, 0, t_("File"));				array.Set(row++, col, AttrText(msh.dt.fileName).Paper(color).Ink(textColor).Bold()); 
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
-	array.Set(row, 0, t_("Format"));			array.Set(row++, col, data.GetMeshStr());	
+	array.Set(row, 0, t_("Format"));			array.Set(row++, col, msh.GetMeshStr());	
 	
-	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, data.mesh.panels.size());
-	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, data.mesh.nodes.size());
+	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, msh.dt.mesh.panels.size());
+	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, msh.dt.mesh.nodes.size());
 
-	array.Set(row, 0, t_("Surface [m²]"));		array.Set(row++, col, FDS(data.mesh.surface, 8, false));
+	array.Set(row, 0, t_("Surface [m²]"));		array.Set(row++, col, FDS(msh.dt.mesh.surface, 8, false));
 	array.Set(row, 0, t_("Volume [m3] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
-														FDS(data.mesh.volume,  10, false),
-														FDS(data.mesh.volumex, 10, false),
-														FDS(data.mesh.volumey, 10, false),
-														FDS(data.mesh.volumez, 10, false))).Paper(backColorMesh));
+														FDS(msh.dt.mesh.volume,  10, false),
+														FDS(msh.dt.mesh.volumex, 10, false),
+														FDS(msh.dt.mesh.volumey, 10, false),
+														FDS(msh.dt.mesh.volumez, 10, false))).Paper(backColorMesh));
 	
-	array.Set(row, 0, t_("Wetted surface [m²]"));array.Set(row++, col, FDS(data.under.surface, 10, false));
+	array.Set(row, 0, t_("Wetted surface [m²]"));array.Set(row++, col, FDS(msh.dt.under.surface, 10, false));
 	array.Set(row, 0, t_("Immersed volume [m3] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
-														FDS(data.under.volume,  10, false),
-														FDS(data.under.volumex, 10, false),
-														FDS(data.under.volumey, 10, false),
-														FDS(data.under.volumez, 10, false))).Paper(backColorUnder));
-	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FDS(data.under.volume*Bem().rho, 10, false));
+														FDS(msh.dt.under.volume,  10, false),
+														FDS(msh.dt.under.volumex, 10, false),
+														FDS(msh.dt.under.volumey, 10, false),
+														FDS(msh.dt.under.volumez, 10, false))).Paper(backColorUnder));
+	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FDS(msh.dt.under.volume*Bem().rho, 10, false));
 	array.Set(row, 0, t_("Cg [m]"));			
-	if (!IsNull(data.cg))
+	if (!IsNull(msh.dt.cg))
 		array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FDS(data.cg.x, 10, false),			
-														FDS(data.cg.y, 10, false),
-														FDS(data.cg.z, 10, false)));
+														FDS(msh.dt.cg.x, 10, false),			
+														FDS(msh.dt.cg.y, 10, false),
+														FDS(msh.dt.cg.z, 10, false)));
 	else
 		array.Set(row++, col, "-");
 			
 	array.Set(row, 0, t_("Cb [m]"));
-	if (!IsNull(data.cb))	
-		array.Set(row++, col, Format(t_("%s, %s, %s"),  FDS(data.cb.x, 10, false),			
-														FDS(data.cb.y, 10, false),
-														FDS(data.cb.z, 10, false)));
+	if (!IsNull(msh.dt.cb))	
+		array.Set(row++, col, Format(t_("%s, %s, %s"),  FDS(msh.dt.cb.x, 10, false),			
+														FDS(msh.dt.cb.y, 10, false),
+														FDS(msh.dt.cb.z, 10, false)));
 	else 
 		array.Set(row++, col, "-");
 	
 	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
-														FDS(data.c0.x, 10, false),			
-														FDS(data.c0.y, 10, false),
-														FDS(data.c0.z, 10, false)));
+														FDS(msh.dt.c0.x, 10, false),			
+														FDS(msh.dt.c0.y, 10, false),
+														FDS(msh.dt.c0.z, 10, false)));
 
 	array.Set(row, 0, t_("GMroll [m]"));
-	double gmpitch = data.GMpitch(Bem().rho, Bem().g); 	
+	double gmpitch = msh.GMpitch(Bem().rho, Bem().g); 	
 	if (IsNum(gmpitch))
  		array.Set(row++, col, FDS(gmpitch, 5, false));
 	else
 		array.Set(row++, col, "-");
 	array.Set(row, 0, t_("GMpitch [m]")); 		
-	double gmroll = data.GMroll(Bem().rho, Bem().g); 	
+	double gmroll = msh.GMroll(Bem().rho, Bem().g); 	
 	if (IsNum(gmroll))
 		array.Set(row++, col, FDS(gmroll, 5, false));
 	else
 		array.Set(row++, col, "-");
 	
 	array.Set(row, 0, t_("GZ [m]"));
-	if (!IsNull(data.cb) && !IsNull(data.cg)) {
-		Direction3D cgcb = data.cg - data.cb;
+	if (!IsNull(msh.dt.cb) && !IsNull(msh.dt.cg)) {
+		Direction3D cgcb = msh.dt.cg - msh.dt.cb;
 		double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
 		array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
 	} else
@@ -1744,42 +1744,42 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 												
 	array.Set(row, 0, t_("Surface projection Z-axis (waterplane area) [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FDS(-data.projectionPos.z, 10, false),
-														FDS(data.projectionNeg.z,  10, false),
-														FDS(data.projectionPos.z+data.projectionNeg.z, 10, false)));
+														FDS(-msh.dt.projectionPos.z, 10, false),
+														FDS(msh.dt.projectionNeg.z,  10, false),
+														FDS(msh.dt.projectionPos.z + msh.dt.projectionNeg.z, 10, false)));
 	
 	array.Set(row, 0, t_("Waterplane geometric centre (centre of flotation) [m]"));
-	if (!IsNull(data.cgZ0surface)) 
-		array.Set(row++, col, Format(t_("%s, %s"), FDS(data.cgZ0surface.x, 10, false),			
-												   FDS(data.cgZ0surface.y, 10, false)));
+	if (!IsNull(msh.dt.cgZ0surface)) 
+		array.Set(row++, col, Format(t_("%s, %s"), FDS(msh.dt.cgZ0surface.x, 10, false),			
+												   FDS(msh.dt.cgZ0surface.y, 10, false)));
 	else
 		array.Set(row++, col, "-");
 	array.Set(row, 0, t_("Surface projection X-axis [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FDS(-data.projectionPos.x, 10, false),
-														FDS(data.projectionNeg.x,  10, false),
-														FDS(data.projectionPos.x+data.projectionNeg.x, 10, false)));
+														FDS(-msh.dt.projectionPos.x, 10, false),
+														FDS(msh.dt.projectionNeg.x,  10, false),
+														FDS(msh.dt.projectionPos.x + msh.dt.projectionNeg.x, 10, false)));
 	
 	array.Set(row, 0, t_("Surface projection Y-axis [m²]"));	
 												array.Set(row++, col, Format(t_("%s - %s = %s"),
-														FDS(-data.projectionPos.y, 10, false),
-														FDS(data.projectionNeg.y,  10, false),
-														FDS(data.projectionPos.y+data.projectionNeg.y, 10, false)));
+														FDS(-msh.dt.projectionPos.y, 10, false),
+														FDS(msh.dt.projectionNeg.y,  10, false),
+														FDS(msh.dt.projectionPos.y + msh.dt.projectionNeg.y, 10, false)));
 	
 	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
-														FDS(data.mesh.env.minX, 10, false),
-														FDS(data.mesh.env.minY, 10, false),
-														FDS(data.mesh.env.minZ, 10, false),
-														FDS(data.mesh.env.maxX, 10, false),
-														FDS(data.mesh.env.maxY, 10, false),
-														FDS(data.mesh.env.maxZ, 10, false)));
+														FDS(msh.dt.mesh.env.minX, 10, false),
+														FDS(msh.dt.mesh.env.minY, 10, false),
+														FDS(msh.dt.mesh.env.minZ, 10, false),
+														FDS(msh.dt.mesh.env.maxX, 10, false),
+														FDS(msh.dt.mesh.env.maxY, 10, false),
+														FDS(msh.dt.mesh.env.maxZ, 10, false)));
 
 	//Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
-	Force6D fcb = data.under.GetHydrostaticForceCB(data.c0, data.cb, Bem().rho, Bem().g);	
+	Force6D fcb = msh.dt.under.GetHydrostaticForceCB(msh.dt.c0, msh.dt.cb, Bem().rho, Bem().g);	
 	
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));
 	
-	if (!IsNull(data.cb))
+	if (!IsNull(msh.dt.cb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcb[0], 10, false),
 														FDS(fcb[1], 10, false),
@@ -1788,7 +1788,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 		array.Set(row++, col, "-");
 
 	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));
-	if (!IsNull(data.cb))
+	if (!IsNull(msh.dt.cb))
 		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
 														FDS(fcb[3], 10, false),
 														FDS(fcb[4], 10, false),
@@ -1796,9 +1796,9 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	else
 		array.Set(row++, col, "-");
 		
-	array.Set(row, 0, t_("Mass [kg]"));			array.Set(row++, col, FormatF(data.GetMass(), 1));
+	array.Set(row, 0, t_("Mass [kg]"));			array.Set(row++, col, FormatF(msh.GetMass(), 1));
 	
-	Force6D fcg = Surface::GetMassForce(data.c0, data.cg, data.GetMass(), Bem().g);	
+	Force6D fcg = Surface::GetMassForce(msh.dt.c0, msh.dt.cg, msh.GetMass(), Bem().g);	
 	
 	array.Set(row, 0, t_("Mass moments [N·m]"));
 	if (!IsNull(fcg)) 
@@ -1828,11 +1828,11 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 		array.Set(row++, col, "-");
 														
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
-	if (data.C.size() > 0) {
+	if (msh.dt.C.size() > 0) {
 		for (int i = 0; i < 6; ++i) {
 			for (int j = 0; j < 6; ++j) {
 				if (!Hydro::C_units(i, j).IsEmpty()) {
-					array.Set(row, 0, Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, Format("%12E", data.C(i, j)));		
+					array.Set(row, 0, Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, Format("%12E", msh.dt.C(i, j)));		
 				}
 			}
 		}
@@ -1848,20 +1848,20 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	
 	array.Set(row, 0, t_("Healing"));			array.Set(row++, col, healing ? t_("Yes") : t_("No"));
 
-	array.Set(row, 0, t_("# Segments"));		array.Set(row++, col, !healing ? Null : data.mesh.segments.size());
-	array.Set(row, 0, t_("# Seg Waterplane"));	array.Set(row++, col, !healing ? Null : data.mesh.segWaterlevel.size());
-	array.Set(row, 0, t_("# Seg leak"));		array.Set(row++, col, !healing ? Null : data.mesh.segTo1panel.size());
-	array.Set(row, 0, t_("# Seg 3 panels"));	array.Set(row++, col, !healing ? Null : data.mesh.segTo3panel.size());
+	array.Set(row, 0, t_("# Segments"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.segments.size());
+	array.Set(row, 0, t_("# Seg Waterplane"));	array.Set(row++, col, !healing ? Null : msh.dt.mesh.segWaterlevel.size());
+	array.Set(row, 0, t_("# Seg leak"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.segTo1panel.size());
+	array.Set(row, 0, t_("# Seg 3 panels"));	array.Set(row++, col, !healing ? Null : msh.dt.mesh.segTo3panel.size());
 
 //	array.Set(row, 0, t_("# Panels off"));		array.Set(row++, col, !healing ? Null : data.mesh.numUnprocessed);
 
-	array.Set(row, 0, t_("# Triangles"));		array.Set(row++, col, !healing ? Null : data.mesh.numTriangles);
-	array.Set(row, 0, t_("# BiQuads"));			array.Set(row++, col, !healing ? Null : data.mesh.numBiQuads);
-	array.Set(row, 0, t_("# MonoQuads"));		array.Set(row++, col, !healing ? Null : data.mesh.numMonoQuads);
-	array.Set(row, 0, t_("# Dup panels"));		array.Set(row++, col, !healing ? Null : data.mesh.numDupPan);
-	array.Set(row, 0, t_("# Dup nodes"));		array.Set(row++, col, !healing ? Null : data.mesh.numDupP);
-	array.Set(row, 0, t_("# Skewed pan"));		array.Set(row++, col, !healing ? Null : data.mesh.numSkewed);
-	array.Set(row, 0, t_("Avg. side [m]"));		array.Set(row++, col, !healing ? Null : data.mesh.GetAvgLenSegment());
+	array.Set(row, 0, t_("# Triangles"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numTriangles);
+	array.Set(row, 0, t_("# BiQuads"));			array.Set(row++, col, !healing ? Null : msh.dt.mesh.numBiQuads);
+	array.Set(row, 0, t_("# MonoQuads"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numMonoQuads);
+	array.Set(row, 0, t_("# Dup panels"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numDupPan);
+	array.Set(row, 0, t_("# Dup nodes"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numDupP);
+	array.Set(row, 0, t_("# Skewed pan"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numSkewed);
+	array.Set(row, 0, t_("Avg. side [m]"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.GetAvgLenSegment());
 }
 
 void MainView::Init(MainMesh &parent) {
@@ -1895,69 +1895,69 @@ void MainView::OnPaint() {
 				showNormals = true;
 			
 			const Upp::Color &color = ArrayModel_GetColor(GetMain().listLoaded, row);
-			const Mesh &mesh = Bem().surfs[id];
+			const Mesh &msh = Bem().surfs[id];
 			
-			gl.PaintSurface(mesh.mesh, color, ~GetMenuPlot().showMesh, 	
+			gl.PaintSurface(msh.dt.mesh, color, ~GetMenuPlot().showMesh, 	
 				showNormals);
 				
-			gl.PaintSurface(mesh.under, color, ~GetMenuPlot().showUnderwater, 
+			gl.PaintSurface(msh.dt.under, color, ~GetMenuPlot().showUnderwater, 
 				showNormalsUnderwater);
 			
 			if (~GetMenuPlot().showMesh)
-				gl.PaintSegments(mesh.mesh, color);
+				gl.PaintSegments(msh.dt.mesh, color);
 			
 			if (~GetMenuPlot().showSkewed)
-				gl.PaintSegments(mesh.mesh.skewed, LtRed());
+				gl.PaintSegments(msh.dt.mesh.skewed, LtRed());
 			if (~GetMenuPlot().showFissure)
-				gl.PaintSegments(mesh.mesh.segTo1panel, LtRed());
+				gl.PaintSegments(msh.dt.mesh.segTo1panel, LtRed());
 			if (~GetMenuPlot().showWaterLevel)
-				gl.PaintSegments(mesh.under.segWaterlevel, LtBlue());
+				gl.PaintSegments(msh.dt.under.segWaterlevel, LtBlue());
 			if (~GetMenuPlot().showMultiPan)
-				gl.PaintSegments(mesh.mesh.segTo3panel, Black());
+				gl.PaintSegments(msh.dt.mesh.segTo3panel, Black());
 			
 			if (~GetMenuPlot().showCb) {
-				gl.PaintDoubleAxis(mesh.cb, len, LtBlue());
-				gl.PaintCube(mesh.cb, len/10, LtBlue());
+				gl.PaintDoubleAxis(msh.dt.cb, len, LtBlue());
+				gl.PaintCube(msh.dt.cb, len/10, LtBlue());
 			}
 			if (~GetMenuPlot().showCg) {
-				gl.PaintDoubleAxis(mesh.cg, len, Black());
-				gl.PaintCube(mesh.cg, len/5, Black());
+				gl.PaintDoubleAxis(msh.dt.cg, len, Black());
+				gl.PaintCube(msh.dt.cg, len/5, Black());
 			}
 			if (~GetMenuPlot().showCr) {
-				gl.PaintDoubleAxis(mesh.c0, len*10, Cyan());
-				gl.PaintCube(mesh.c0, len/20, Gray());
+				gl.PaintDoubleAxis(msh.dt.c0, len*10, Cyan());
+				gl.PaintCube(msh.dt.c0, len/20, Gray());
 			}
 			if (~GetMenuPlot().showLines) 
-				gl.PaintLines(mesh.mesh.lines, color);
+				gl.PaintLines(msh.dt.mesh.lines, color);
 			
 			if (paintSelect) {
 				if (~GetMenuPlot().showMesh) {
-					const UVector<int> &nod = mesh.mesh.GetSelNodes();
+					const UVector<int> &nod = msh.dt.mesh.GetSelNodes();
 					for (int in = 0; in < nod.size(); ++in)
-						gl.PaintCube(mesh.mesh.nodes[nod[in]], len/20, LtBlue());
-					const UVector<int> &pan = mesh.mesh.GetSelPanels();
-					const UVector<Point3D> &nodes = mesh.mesh.nodes;
+						gl.PaintCube(msh.dt.mesh.nodes[nod[in]], len/20, LtBlue());
+					const UVector<int> &pan = msh.dt.mesh.GetSelPanels();
+					const UVector<Point3D> &nodes = msh.dt.mesh.nodes;
 					for (int ip = 0; ip < pan.size(); ++ip) {
-						const Panel &panel = mesh.mesh.panels[pan[ip]];
+						const Panel &panel = msh.dt.mesh.panels[pan[ip]];
 						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 					}
 				}
 				if (~GetMenuPlot().showUnderwater) {
-					const UVector<int> &nod = mesh.under.GetSelNodes();
+					const UVector<int> &nod = msh.dt.under.GetSelNodes();
 					for (int in = 0; in < nod.size(); ++in)
-						gl.PaintCube(mesh.under.nodes[nod[in]], len/20, LtBlue());
-					const UVector<int> &pan = mesh.under.GetSelPanels();
-					const UVector<Point3D> &nodes = mesh.under.nodes;
+						gl.PaintCube(msh.dt.under.nodes[nod[in]], len/20, LtBlue());
+					const UVector<int> &pan = msh.dt.under.GetSelPanels();
+					const UVector<Point3D> &nodes = msh.dt.under.nodes;
 					for (int ip = 0; ip < pan.size(); ++ip) {
-						const Panel &panel = mesh.under.panels[pan[ip]];
+						const Panel &panel = msh.dt.under.panels[pan[ip]];
 						gl.PaintQuad(nodes[panel.id[0]], nodes[panel.id[1]], nodes[panel.id[2]], nodes[panel.id[3]], LtRed(), .2);
 					}
 				}
 			}
 			if (~GetMenuPlot().showSel && ArrayModel_IsSelected(GetMain().listLoaded, row)) { 
-				double minX = mesh.mesh.env.minX*.99; double maxX = mesh.mesh.env.maxX*1.01;
-				double minY = mesh.mesh.env.minY*.99; double maxY = mesh.mesh.env.maxY*1.01;
-				double minZ = mesh.mesh.env.minZ*.99; double maxZ = mesh.mesh.env.maxZ*1.01;
+				double minX = msh.dt.mesh.env.minX*.99; double maxX = msh.dt.mesh.env.maxX*1.01;
+				double minY = msh.dt.mesh.env.minY*.99; double maxY = msh.dt.mesh.env.maxY*1.01;
+				double minZ = msh.dt.mesh.env.minZ*.99; double maxZ = msh.dt.mesh.env.maxZ*1.01;
 				
 				gl.PaintCuboid(Point3D(maxX, maxY, maxZ), Point3D(minX, minY, minZ), color);
 				gl.PaintCube(Point3D(maxX, maxY, minZ), len/10, color);
@@ -1984,7 +1984,7 @@ void MainView::CalcEnvelope() {
 		int id = ArrayModel_IdMesh(GetMain().listLoaded, row);
 		if (id < 0)
 			throw Exc("Unexpected problem in CalcEnvelope()");
-		env.MixEnvelope(Bem().surfs[id].mesh.env);
+		env.MixEnvelope(Bem().surfs[id].dt.mesh.env);
 	}
 }
 
@@ -2102,7 +2102,7 @@ void MainGZ::OnUpdate() {
 			BEM::PrintError(t_("Wrong Z angle range"));
 			return;
 		}
-		Mesh &mesh = Bem().surfs[idOpened];	
+		Mesh &msh = Bem().surfs[idOpened];	
 	
 		int numAngle = 1 + int((angleTo - angleFrom)/angleDelta);
 		
@@ -2111,7 +2111,7 @@ void MainGZ::OnUpdate() {
 		datagz.Clear();
 		dataMoment.Clear();
 		
-		scatter.SetTitle(Format(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), mesh.c0.x, mesh.c0.y, mesh.c0.z));
+		scatter.SetTitle(Format(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), msh.dt.c0.x, msh.dt.c0.y, msh.dt.c0.z));
 		
 		String errors;
 		int iangle = 0;
@@ -2121,7 +2121,7 @@ void MainGZ::OnUpdate() {
 			UVector<double> vol, disp, wett, wplane, draft;
 			UVector<Point3D> cb, cg;
 			
-			mesh.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, double(~edTolerance)/100., 
+			msh.GZ(~edFrom, ~edTo, ~edDelta, angle, Bem().rho, Bem().g, double(~edTolerance)/100., 
 				[&](String, int pos)->bool {
 					progress.SetPos(pos + 100*iangle);
 					return !progress.Canceled();
@@ -2167,7 +2167,7 @@ void MainGZ::OnUpdate() {
 			mingz.Clear();
 			mingz.SetCount(dangle.size(), 0);
 			for (int i = 0; i < dangle.size(); ++i) {
-				for (int iangle = 0; iangle < datagz.size(); ++iangle) {
+				for (iangle = 0; iangle < datagz.size(); ++iangle) {
 					double d = datagz[iangle][i];
 					if (dangle[i] < 0) {
 						if (d > 0) {

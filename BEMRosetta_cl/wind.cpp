@@ -10,11 +10,11 @@
 using namespace Eigen;
 
 
-String Wind::Load(String fileName, String ext) {
+String Wind::Load(String _fileName, String ext) {
 	const UVector<String> extStr = {".bts", ".wnd"};
 	UVector<String> extS;
 	
-	fileName = Trim(fileName);
+	fileName = Trim(_fileName);
 	if (*fileName.Last() == '.')
 		fileName = fileName.Left(fileName.GetCount()-1);		// Removes a last point, if it exists
 	
@@ -31,17 +31,17 @@ String Wind::Load(String fileName, String ext) {
 		extS << ext;
 
 	String ret = Format(t_("File '%s' not found"), fileName);
-	for (const String &ext : extS) {
+	for (const String &eext : extS) {
 		String file;
 		if (hasExt)		
- 			file = ForceExtSafer(fileName, ext);
+ 			file = ForceExtSafer(fileName, eext);
 		else
-			file = fileName + ext;
+			file = fileName + eext;
 		if (FileExists(file)) {
-			if (ext == ".bts") {
+			if (eext == ".bts") {
 				if(IsEmpty(ret = static_cast<BTSWind&>(*this).LoadBTS(file)))
 					break;	
-			} else if (ext == ".wnd") {
+			} else if (eext == ".wnd") {
 				if(IsEmpty(ret = static_cast<WNDWind&>(*this).LoadWND(file)))
 					break;	
 			} else
@@ -61,15 +61,15 @@ void Wind::SetYZ() {
 	zPos = zPos.array()*dz + zGrid;
 }
 
-String Wind::Save(String fileName, String ext) {
+String Wind::Save(String fileSave, String ext) {
 	const UVector<String> extStr = {".bts"};
 	UVector<String> extS;
 	
-	fileName = Trim(fileName);
-	if (*fileName.Last() == '.')
-		fileName = fileName.Left(fileName.GetCount()-1);	// Removes a last point, if it exists
+	fileSave = Trim(fileSave);
+	if (*fileSave.Last() == '.')
+		fileSave = fileSave.Left(fileSave.GetCount()-1);	// Removes a last point, if it exists
 	
-	String fileExt = GetFileExt(fileName);
+	String fileExt = GetFileExt(fileSave);
 	bool hasExt = !IsEmpty(fileExt) && fileExt.GetCount() <= 4;		// An extension larger than ... is not an extension
 	
 	if (IsEmpty(ext)) {
@@ -81,19 +81,19 @@ String Wind::Save(String fileName, String ext) {
 	} else
 		extS << ext;
 
-	String ret = Format(t_("Impossible to save '%s'"), fileName);
-	for (const String &ext : extS) {
+	String ret = Format(t_("Impossible to save '%s'"), fileSave);
+	for (const String &eext : extS) {
 		String file;
 		if (hasExt)		
- 			file = ForceExt(fileName, ext);
+ 			file = ForceExt(fileSave, eext);
 		else
-			file = fileName + ext;
+			file = fileSave + eext;
 		
-		if (ext == ".bts") {
+		if (eext == ".bts") {
 			if(IsEmpty(ret = static_cast<BTSWind&>(*this).SaveBTS(file)))
 				return "";	
 		} else
-			return Format(t_("'%s' format not supported for writing"), fileName);
+			return Format(t_("'%s' format not supported for writing"), fileSave);
 	}
 	return ret;
 }

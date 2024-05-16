@@ -16,9 +16,9 @@ using namespace Upp;
 #include "main.h"
 
 
-void QTFTabDof::Init(MainQTF &par, int posSplitter, int ib, int idof) {
-	this->ib = ib;
-	this->idof = idof;
+void QTFTabDof::Init(MainQTF &par, int posSplitter, int _ib, int _idof) {
+	this->ib = _ib;
+	this->idof = _idof;
 	Add(splitter);
 	splitter.Horz(leftsplit.SizePos(), rightsplit.SizePos());
 	splitter.SetPos(posSplitter, 0);
@@ -44,8 +44,8 @@ void QTFTabDof::Init(MainQTF &par, int posSplitter, int ib, int idof) {
 	up  .surf.WhenDraw    = THISBACK(OnDraw);
 	down.surf.WhenDraw    = THISBACK(OnDraw);
 	
-	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, this->idof, action);};
-	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, this->idof, action);};
+	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, /*this->idof, */action);};
+	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, /*this->idof, */action);};
 	
 	int len = StdFont().GetHeight();
 	
@@ -63,7 +63,7 @@ Pointf &QTFTabDof::Pf() {
 	return parent->pf;
 }
 
-void QTFTabDof::DoClick(Data &data, int idof) {
+void QTFTabDof::DoClick(Data &data/*, int idof*/) {
 	data.dataPlot.Clear();
 	data.scatter.RemoveAllSeries();
 	
@@ -98,22 +98,22 @@ void QTFTabDof::DoClick(Data &data, int idof) {
 	
 	double avgT = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
-		const Hydro &hd = Bem().hydros[i].hd();
-		if (!hd.IsLoadedQTF(isSum))
+		const Hydro &hy = Bem().hydros[i];
+		if (!hy.IsLoadedQTF(isSum))
 			continue;
 		 
-		int idh = FindDelta(hd.qh, FixHeading_0_360(head), 2.);
+		int idh = FindDelta(hy.dt.qh, FixHeading_0_360(head), 2.);
 		if (idh < 0) 
 			continue;
 		
-		VectorXd xAxis = hd.qw;
+		VectorXd xAxis = hy.dt.qw;
 		if (!show_w) {
 			for (double &d : xAxis)
 				d = 2*M_PI/d;
 			ReverseX(xAxis);
 		}
 		
-		MatrixXd zData = GetMat(hd, data, idh, show_w, !ndim);
+		MatrixXd zData = GetMat(hy, data, idh, /*show_w, */!ndim);
 		
 		UArray<Pointf> &d = data.dataPlot.Add();	
 		
@@ -148,9 +148,9 @@ void QTFTabDof::DoClick(Data &data, int idof) {
 						d << Pointf(xAxis(iw), BilinearInterpolate(a*xAxis(iw) + b, xAxis(iw), xAxis, xAxis, zData));
 			}
 		}
-		int idc = hd.GetId();
+		int idc = hy.dt.GetId();
 		const Upp::Color &color = GetColorId(idc);
-		String nameType = Format(t_("QTF %s %s(%s) %d"), data.ma_ph, hd.name, hd.GetCodeStrAbr(), hd.qtftype);
+		String nameType = Format(t_("QTF %s %s(%s) %d"), data.ma_ph, hy.dt.name, hy.GetCodeStrAbr(), hy.dt.qtftype);
 		data.scatter.AddSeries(d).Legend(nameType).Units(data.units).SetMarkColor(color).Stroke(2, color);
 		if (!showPoints)
 			data.scatter.NoMark();
@@ -188,7 +188,7 @@ void QTFTabDof::DoClick(Data &data, int idof) {
 	data.scatter.Refresh();
 }
 
-void QTFTabDof::OnClick(Point p, int idof, ScatterCtrl::MouseAction action) {
+void QTFTabDof::OnClick(Point p, /*int idof, */ScatterCtrl::MouseAction action) {
 	if (action != ScatterCtrl::LEFT_DOWN && action != ScatterCtrl::LEFT_MOVE)
 		return;
 	
@@ -198,8 +198,8 @@ void QTFTabDof::OnClick(Point p, int idof, ScatterCtrl::MouseAction action) {
 	up.surf.Refresh();
 	down.surf.Refresh();
 	
-	DoClick(up, idof);
-	DoClick(down, idof);
+	DoClick(up/*, idof*/);
+	DoClick(down/*, idof*/);
 }
 
 char QTFTabDof::GetWhat(const Data &data) {
@@ -216,29 +216,29 @@ char QTFTabDof::GetWhat(const Data &data) {
 	}
 }
 	
-double QTFTabDof::GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const {
-	return hd.GetQTFVal(ib, idof, idh, ifr1, ifr2, isSum, GetWhat(data), getDim);
+double QTFTabDof::GetData(const Hydro &hy, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const {
+	return hy.GetQTFVal(ib, idof, idh, ifr1, ifr2, isSum, GetWhat(data), getDim);
 }
 
-MatrixXd QTFTabDof::GetMat(const Hydro &hd, const Data &data, int idh, bool show_w, bool getDim) const {
-	MatrixXd m = hd.GetQTFMat(ib, idof, idh, isSum, GetWhat(data), getDim);
+MatrixXd QTFTabDof::GetMat(const Hydro &hy, const Data &data, int idh, /*bool show_w, */bool getDim) const {
+	MatrixXd m = hy.GetQTFMat(ib, idof, idh, isSum, GetWhat(data), getDim);
 	if (!show_w)
 		ReverseX(m);
 	return m;
 }
 			
-void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear) {
+void QTFTabDof::UpdateArray(const Hydro &hy, bool show_ma_ph, Data &data, bool opBilinear) {
 	data.show_ma_ph = show_ma_ph;
 	
-	int qtfNf = int(hd.qw.size());
+	int qtfNf = int(hy.dt.qw.size());
 
-	data.xAxis = hd.qw;
+	data.xAxis = hy.dt.qw;
 	if (!show_w) {
 		for (double &d : data.xAxis)
 			d = 2*M_PI/d;
 		ReverseX(data.xAxis);
 	}
-	data.zData = GetMat(hd, data, ih, show_w, !ndim);
+	data.zData = GetMat(hy, data, ih, /*show_w, */!ndim);
 
 	ArrayCtrl &array = data.array;
 	
@@ -290,32 +290,34 @@ void QTFTabDof::UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool o
 	data.surf.ZoomToFitZ().ZoomToFit(true, true);
 }
 	
-void QTFTabDof::Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf) {
+void QTFTabDof::Load(const Hydro &hy, int _ib, int _ih, int _idof, bool _ndim, bool _show_w, 
+				bool show_ma_ph, bool _isSum, bool opBilinear, bool _showPoints, bool _fromY0, 
+				bool _autoFit, int posSplitter, bool resetPf) {
 	try {
 		splitter.SetPos(posSplitter, 0);
 		
-		const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd.qtfsum : hd.qtfdif;
-		if (qtf.size() <= ib || qtf[ib].size() <= ih || qtf[ib][ih].size() <= idof)
+		const UArray<UArray<UArray<MatrixXcd>>> &qtf = _isSum ? hy.dt.qtfsum : hy.dt.qtfdif;
+		if (qtf.size() <= _ib || qtf[_ib].size() <= _ih || qtf[_ib][_ih].size() <= _idof)
 			return;
 		
-		this->isSum = isSum;
-		this->ib = ib;
-		this->ih = ih;
-		this->idof = idof;
-		this->ndim = ndim;
-		this->show_w = show_w;
-		this->head = FixHeading(hd.qh[ih], Bem().headingType);
-		this->showPoints = showPoints;
-		this->fromY0 = fromY0;
-		this->autoFit = autoFit;
+		this->isSum = _isSum;
+		this->ib = _ib;
+		this->ih = _ih;
+		this->idof = _idof;
+		this->ndim = _ndim;
+		this->show_w = _show_w;
+		this->head = FixHeading(hy.dt.qh[ih], Bem().headingType);
+		this->showPoints = _showPoints;
+		this->fromY0 = _fromY0;
+		this->autoFit = _autoFit;
 		
 		if (resetPf)
 			Pf() = Null;
 		
-		UpdateArray(hd, show_ma_ph, up, opBilinear);
-		UpdateArray(hd, show_ma_ph, down, opBilinear);
-		DoClick(up, idof);
-		DoClick(down, idof);
+		UpdateArray(hy, show_ma_ph, up, opBilinear);
+		UpdateArray(hy, show_ma_ph, down, opBilinear);
+		DoClick(up/*, idof*/);
+		DoClick(down/*, idof*/);
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}	
@@ -369,12 +371,12 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 		if (idHydro < 0)
 			return;
 	
-		const Hydro &hd = Bem().hydros[idHydro].hd();
+		const Hydro &hy = Bem().hydros[idHydro];
 	
 		head.real(FixHeading_0_360(headQTF->Get(row, 0)));
 		head.imag(FixHeading_0_360(headQTF->Get(row, 1)));
-		int ih = FindClosest(hd.qh, head);
-		head = FixHeading(hd.qh[ih], Bem().headingType);
+		int ih = FindClosest(hy.dt.qh, head);
+		head = FixHeading(hy.dt.qh[ih], Bem().headingType);
 		
 		bool ndim = mbm.menuPlot.showNdim;
 		bool show_w = mbm.menuPlot.opwT == 0;
@@ -392,7 +394,7 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 		idof = idof - 6*ib;
 
 		OnSurf();
-		dof[idof+6*ib].Load(hd, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, showPoints, fromY0, autoFit, posSplitter, resetPf);
+		dof[idof+6*ib].Load(hy, ib, ih, idof, ndim, show_w, show_ma_ph, isSum, ~opBilinear, showPoints, fromY0, autoFit, posSplitter, resetPf);
 		
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -428,10 +430,10 @@ bool MainQTF::Load() {
 			//	return false;
 						
 			dof.SetCount(6*Bem().Nb);
-			for (int ib = 0; ib < Bem().Nb; ++ib) {
+			for (int iib = 0; iib < Bem().Nb; ++iib) {
 				for (int idf = 0; idf < 6; ++idf) {
-					dof[idf+6*ib].Init(*this, posSplitter, ib, idf);
-					tab.Add(dof[idf+6*ib].SizePos(), Format("%d.%s", ib+1, BEM::StrDOF(idf)));
+					dof[idf + 6*iib].Init(*this, posSplitter, iib, idf);
+					tab.Add(dof[idf + 6*iib].SizePos(), Format("%d.%s", iib+1, BEM::StrDOF(idf)));
 				}
 			}
 			if (tab.GetCount() >= idof + 6*ib && idof >= 0)
@@ -455,8 +457,8 @@ bool MainQTF::Load() {
 		
 		// Show the tab if any model has QTFs
 		bool show = false;
-		for (const Hydro &h : Bem().hydros) {
-			if (h.hd().IsLoadedQTF(true) || h.hd().IsLoadedQTF(false)) {
+		for (const Hydro &hy : Bem().hydros) {
+			if (hy.IsLoadedQTF(true) || hy.IsLoadedQTF(false)) {
 				show = true;
 				break;
 			}
@@ -466,14 +468,14 @@ bool MainQTF::Load() {
 		////
 		
 		if (idHydro >= 0) {
-			const Hydro &hd = Bem().hydros[idHydro].hd();
-			
+			const Hydro &hy = Bem().hydros[idHydro];
+		
 			opQTF.Clear();
-			if (hd.IsLoadedQTF(true))
+			if (hy.IsLoadedQTF(true))
 				opQTF.Add(FSUM, t_("Summation"));
 			else 
 				isSumm = false;
-			if (hd.IsLoadedQTF(false))
+			if (hy.IsLoadedQTF(false))
 				opQTF.Add(FDIFFERENCE, t_("Difference"));
 			else
 				isSumm = true;
@@ -483,7 +485,7 @@ bool MainQTF::Load() {
 				opQTF.SetIndex(0);
 				
 			UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
-			for (const auto &c : hd.qh)
+			for (const auto &c : hy.dt.qh)
 				qh << FixHeading(c, Bem().headingType);
 			
 			Sort(qh, SortComplex);

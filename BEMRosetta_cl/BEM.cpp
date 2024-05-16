@@ -21,40 +21,6 @@ const char *BEM::strDOFtextAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"
 const char *BEM::strDOFnum[] 	 = {t_("1"), t_("2"), t_("3"), t_("4"), t_("5"), t_("6")};
 const char *BEM::strDOFnum_sub[] = {t_("₁"), t_("₂"), t_("₃"), t_("₄"), t_("₅"), t_("₆")};
 const char *BEM::strDOFxyz[] 	 = {t_("x"), t_("y"), t_("z"), t_("rx"), t_("ry"), t_("rz")};
-
-const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B(ω)"), t_("A∞(ω)"), t_("Kirf"),
-				t_("|Fsc|"), t_("arg(Fsc)"), t_("|Ffk|"), t_("arg(Ffk)"), t_("|Fex|"), t_("arg(Fex)"),
-				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
-				t_("|TFS|"), t_("arg(TFS)")};
-
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					 FAST_WAMIT, 				 	  HAMS Wamit    HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115, 	NEMOHv3, 	SEAFEM_NEMOH,  AQWA,   					  FOAMM,   DIODORE,	  BEMROSETTA, 	     ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   CAPY.nc, 		 ORCAWAVE.owr,		UNKNOWN, NUMBEM};
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	  "FOAMM", "Diodore", "BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"Capytaine .nc", 
-#ifdef PLATFORM_WIN32	
-"OrcaWave .owr", 	
-#endif
-				"By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   true,  					  false,   true,	  true,			     false,	     true, 	     true, 		   true,		false, 	   false, 		false,			 
-#ifdef PLATFORM_WIN32	
-false,
-#endif
-				true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "*.qtf", 				  "",      "*.hdb",	  "*.bem",		   	 "*.yml",	 "*.csv",    "*.csv", 	   "*.h5",		"*.dat",   "*.out", 	"*.nc", 		 
-#ifdef PLATFORM_WIN32	
-"*.owr",	
-#endif		
-				"*.*"};       
-	
-const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					  false,   false,	  false,			 false,	     false, 	 false, 	   false,		false, 	   false, 		false,			 
-#ifdef PLATFORM_WIN32	
-false,
-#endif
-				true};
-	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	UNKNOWN, NUMMESH};	
-const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Unknown"};	
-const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false};       
-const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.*"};       
-
 	
 const char *BEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
 BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
@@ -63,2218 +29,11 @@ const char *BEM::strHeadingType[] = {t_("-180->180º"), t_("0->360º"), ""};
 BEM::HeadingType BEM::headingType = BEM::HEAD_180_180;
 	
 
-
-int Hydro::idCount = 0;	
-
 bool PrintStatus(String s, int) {
 	Cout() << "\n" << RemoveAccents(s);
 	return true;
 };
 
-void Hydro::Initialize_Sts() {
-	sts.SetCount(6*Nb);
-	for (int ib = 0; ib < 6*Nb; ++ib) 
-		sts[ib].SetCount(6*Nb);
-}
-
-void Hydro::GetFexFromFscFfk() {
-	Initialize_Forces(ex);
-	for (int ih = 0; ih < Nh; ++ih) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int i = 0; i < Nb*6; ++i) {
-				if (IsNum(sc.force[ih](ifr, i)) && IsNum(fk.force[ih](ifr, i))) 
-					ex.force[ih](ifr, i) = sc.force[ih](ifr, i) + fk.force[ih](ifr, i);
-			}
-		}
-	}
-}
-
-void Hydro::GetFscFromFexFfk() {
-	Initialize_Forces(sc);
-	for (int ih = 0; ih < Nh; ++ih) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int i = 0; i < Nb*6; ++i) {
-				if (IsNum(ex.force[ih](ifr, i)) && IsNum(fk.force[ih](ifr, i))) 
-					sc.force[ih](ifr, i) = ex.force[ih](ifr, i) - fk.force[ih](ifr, i);
-			}
-		}
-	}	
-}
-
-void Hydro::GetFfkFromFexFsc() {
-	Initialize_Forces(fk);
-	for (int ih = 0; ih < Nh; ++ih) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int i = 0; i < Nb*6; ++i) {
-				if (IsNum(ex.force[ih](ifr, i)) && IsNum(sc.force[ih](ifr, i))) 
-					fk.force[ih](ifr, i) = ex.force[ih](ifr, i) - sc.force[ih](ifr, i);
-			}
-		}
-	}	
-}
-
-void Hydro::Normalize() {
-	if (IsLoadedC()) {
-		for (int ib = 0; ib < Nb; ++ib) {
-			for (int idf = 0; idf < 6; ++idf) 
-				for (int jdf = 0; jdf < 6; ++jdf) 
-					msh[ib].C(idf, jdf) = C_ndim(ib, idf, jdf);
-		}
-	}
-	if (IsLoadedA() && IsLoadedB()) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int idf = 0; idf < 6*Nb; ++idf) {
-				for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
-					A[idf][jdf][ifr] = A_ndim(ifr, idf, jdf);
-					B[idf][jdf][ifr] = B_ndim(ifr, idf, jdf);
-				}
-			}
-		}
-	}
-	if (IsLoadedAinf()) {
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				Ainf(i, j) = Ainf_ndim(i, j);
-	}
-	if (IsLoadedA0()) {
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				A0(i, j) = A0_ndim(i, j);
-	}
-	if (IsLoadedFex())
-    	Normalize_Forces(ex);
-	if (IsLoadedFsc())
-		Normalize_Forces(sc);
-	if (IsLoadedFfk())
-		Normalize_Forces(fk);
-	if (IsLoadedRAO()) 
-		Normalize_RAO(rao);
-}
-
-void Hydro::Dimensionalize() {
-	if (IsLoadedC()) {
-		for (int ib = 0; ib < Nb; ++ib) {
-			for (int idf = 0; idf < 6; ++idf) 
-				for (int jdf = 0; jdf < 6; ++jdf) 
-					msh[ib].C(idf, jdf) = C_dim(ib, idf, jdf);
-		}
-	}
-	if (IsLoadedA() && IsLoadedB()) {
-		for (int ifr = 0; ifr < Nf; ++ifr) {
-			for (int idf = 0; idf < 6*Nb; ++idf) {
-				for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
-					A[idf][jdf][ifr] = A_dim(ifr, idf, jdf);
-					B[idf][jdf][ifr] = B_dim(ifr, idf, jdf);
-				}
-			}
-		}
-	}
-	if (IsLoadedAinf()) {	
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				Ainf(i, j) = Ainf_dim(i, j);
-	}
-	if (IsLoadedA0()) {	
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				A0(i, j) = A0_ndim(i, j);
-	}
-	if (IsLoadedFex())
-    	Dimensionalize_Forces(ex);
-	if (IsLoadedFsc())
-		Dimensionalize_Forces(sc);
-	if (IsLoadedFfk())
-		Dimensionalize_Forces(fk);
-	if (IsLoadedRAO()) 
-		Dimensionalize_RAO(rao);
-}
-
-// 		-180	0	180
-//		180		0	180
-//		180		0
-//		1		0
-
-// 		0	180		360
-//		0	180		0
-//		0	180
-//		0	1
-
-void Hydro::SortHeadings() {
-	UVector<double> nhead;
-	for (int ih = 0; ih < head.size(); ++ih)
-		FindAdd(nhead, FixHeading_0_360(head[ih]));
-	
-	UVector<int> indices_h = GetSortOrderX(nhead);
-	SetSortOrder(nhead, indices_h);
-	head = pick(nhead);
-	Nh = indices_h.size();
-
-	UArray<std::complex<double>> nmhead;
-	for (int ih = 0; ih < mdhead.size(); ++ih)
-		FindAdd(nmhead, FixHeading_0_360(mdhead[ih]));
-	
-	UVector<int> indices_md = GetSortOrderX(nmhead, SortComplex);
-	
-	mdhead.resize(nmhead.size());		// Cannot pick()
-	for (int ih = 0; ih < mdhead.size(); ++ih)
-		mdhead[ih] = nmhead[indices_md[ih]];
-		
-	auto SortF = [&](Forces &F) {
-		Forces f = clone(F);
-		for (int ih = 0; ih < Nh; ++ih) 
-			for (int ifr = 0; ifr < Nf; ++ifr) 
-				for (int idf = 0; idf < 6*Nb; ++idf) 
-					F.force[ih](ifr, idf) = f.force[indices_h[ih]](ifr, idf);
-		F.force.SetCount(Nh);
-	};
-
-	auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
-		UArray<UArray<UArray<VectorXd>>> md = clone(MD);
-		for (int ib = 0; ib < Nb; ++ib) {
-			MD[ib].SetCount(int(mdhead.size()));
-			for (int ih = 0; ih < mdhead.size(); ++ih)
-				for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr = 0; ifr < Nf; ++ifr) 		
-						MD[ib][ih][idf][ifr] = md[ib][indices_md[ih]][idf][ifr];
-		}
-	};
-			
-	if (IsLoadedFex())
-		SortF(ex);
-	if (IsLoadedFsc())
-		SortF(sc);
-	if (IsLoadedFfk())
-		SortF(fk);
-	if (IsLoadedRAO()) 
-		SortF(rao);	
-
-	if(IsLoadedMD())
-		SortMD(md);
-
-	UArray<std::complex<double>> nqh;
-	for (int ih = 0; ih < qh.size(); ++ih)
-		FindAdd(nqh, FixHeading_0_360(qh[ih]));
-	
-	UVector<int> indices_qw = GetSortOrderX(nqh, SortComplex);
-	
-	qh.resize(nqh.size());
-	for (int ih = 0; ih < qh.size(); ++ih)
-		qh[ih] = nqh[ih];
-	
-	auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
-		UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
-		for (int ib = 0; ib < Nb; ++ib) {
-			QTF[ib].SetCount(int(qh.size()));
-	        for (int ih = 0; ih < qh.size(); ++ih) 
-	        	for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
-						for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) 
-							QTF[ib][ih][idf](ifr1, ifr2) = qtf[ib][indices_qw[ih]][idf](ifr1, ifr2);
-		}
-	};
-		
-	if (IsLoadedQTF(true))
-		SortQTF(qtfsum);
-	if (IsLoadedQTF(false))
-		SortQTF(qtfdif);
-}
-
-void Hydro::SortFrequencies() {
-	if (!IsSorted(w)) {
-		UVector<int> indices = GetSortOrderX(w);
-		w = ApplyIndex(w, indices);
-		//T = ApplyIndex(T, indices);
-	
-		auto SortAB = [&](UArray<UArray<VectorXd>> &A) {
-			UArray<UArray<VectorXd>> a = clone(A);
-			for (int ifr = 0; ifr < Nf; ++ifr) 
-				for (int idf = 0; idf < 6*Nb; ++idf) 
-					for (int jdf = 0; jdf < 6*Nb; ++jdf) 	
-						A[idf][jdf][ifr] = a[idf][jdf][indices[ifr]];
-		};
-	
-		auto SortF = [&](Forces &F) {
-			Forces f = clone(F);
-			for (int ih = 0; ih < Nh; ++ih) 
-				for (int ifr = 0; ifr < Nf; ++ifr) 
-					for (int idf = 0; idf < 6*Nb; ++idf) 
-						F.force[ih](ifr, idf) = f.force[ih](indices[ifr], idf);
-		};
-		
-		auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
-			UArray<UArray<UArray<VectorXd>>> md = clone(MD);
-			for (int ib = 0; ib < Nb; ++ib) 
-				for (int ih = 0; ih < mdhead.size(); ++ih)
-					for (int idf = 0; idf < 6; ++idf) 
-						for (int ifr = 0; ifr < Nf; ++ifr) 		
-							MD[ib][ih][idf][ifr] = md[ib][ih][idf][indices[ifr]];
-		};
-		
-		if (IsLoadedA()) 
-			SortAB(A);
-		if (IsLoadedB()) 
-			SortAB(B);
-		
-		if (IsLoadedFex())
-			SortF(ex);
-		if (IsLoadedFsc())
-			SortF(sc);
-		if (IsLoadedFfk())
-			SortF(fk);
-		if (IsLoadedRAO()) 
-			SortF(rao);
-		
-		if(IsLoadedMD())
-			SortMD(md);
-	}
-	if (!IsSorted(qw)) {
-		UVector<int> indices = GetSortOrderX(qw);
-		qw = ApplyIndex(qw, indices);
-		
-		auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
-			UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
-			for (int ib = 0; ib < Nb; ++ib) 
-		        for (int ih = 0; ih < qh.size(); ++ih) 
-		        	for (int idf = 0; idf < 6; ++idf) 
-						for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
-							for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) 
-								QTF[ib][ih][idf](ifr1, ifr2) = qtf[ib][ih][idf](indices[ifr1], indices[ifr2]);
-		};
-			
-		if (IsLoadedQTF(true))
-			SortQTF(qtfsum);
-		if (IsLoadedQTF(false))
-			SortQTF(qtfdif);
-	}
-}
-
-void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a, double val) {
-	a.SetCount(6*Nb);
-	for (int i = 0; i < 6*Nb; ++i) {
-		a[i].SetCount(6*Nb);
-		for (int j = 0; j < 6*Nb; ++j) 
-			a[i][j].setConstant(Nf, val);
-	}
-}
-
-void Hydro::Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, double val) {
-	a.SetCount(Nb);
-	for (int ib = 0; ib < Nb; ++ib) {
-		a[ib].SetCount(pots[ib].size());
-		for (int idp = 0; idp < pots[ib].size(); ++idp) {
-			a[ib][idp].SetCount(6);
-			for (int idf1 = 0; idf1 < 6; ++idf1) {
-				a[ib][idp][idf1].SetCount(6);
-				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					a[ib][idp][idf1][idf2].SetCount(Nf, val);
-			}
-		}
-	}
-}
-
-void Hydro::Initialize_Pots() {
-	pots.SetCount(Nb);
-	for (int ib = 0; ib < Nb; ++ib) {
-		if (pots[ib].IsEmpty())
-			pots[ib].SetCount(msh[ib].mesh.GetNumPanels());
-		for (int ipot = 0; ipot < pots[ib].size(); ++ipot) {
-			pots[ib][ipot].SetCount(6);
-			for (int idf = 0; idf < 6; ++idf)
-				pots[ib][ipot][idf].SetCount(Nf, 0);
-		}
-	}
-}
-
-void Hydro::Initialize_Forces() {
-	Initialize_Forces(ex);
-	Initialize_Forces(sc);
-	Initialize_Forces(fk);
-}
-
-void Hydro::Initialize_Forces(Forces &f, int _Nh) {
-	if (_Nh == -1)
-		_Nh = Nh;
-	f.force.SetCount(_Nh);
-	for (int ih = 0; ih < _Nh; ++ih) 
-		f.force[ih].setConstant(Nf, Nb*6, NaNComplex);
-}
-	
-void Hydro::Normalize_Forces(Forces &f) {
-	for (int ih = 0; ih < Nh; ++ih) 
-		for (int ifr = 0; ifr < Nf; ++ifr) 
-			for (int idf = 0; idf < 6*Nb; ++idf) 
-				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
-}
-
-void Hydro::Normalize_RAO(RAO &f) {
-	for (int ih = 0; ih < Nh; ++ih) 
-		for (int ifr = 0; ifr < Nf; ++ifr) 
-			for (int idf = 0; idf < 6*Nb; ++idf) 
-				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
-}
-
-void Hydro::Dimensionalize_Forces(Forces &f) {
-	for (int ih = 0; ih < Nh; ++ih) 
-		for (int ifr = 0; ifr < Nf; ++ifr) 
-			for (int idf = 0; idf < 6*Nb; ++idf) 
-				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
-}
-
-void Hydro::Dimensionalize_RAO(RAO &f) {
-	for (int ih = 0; ih < Nh; ++ih) 
-		for (int ifr = 0; ifr < Nf; ++ifr) 
-			for (int idf = 0; idf < 6*Nb; ++idf) 
-				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
-}
-
-void Hydro::Add_Forces(Forces &to, const Hydro &hydro, const Forces &from) {
-	if (hydro.IsLoadedForce(from)) {
-		for (int ihhy = 0; ihhy < hydro.Nh; ++ihhy) {
-			int ih = FindClosest(head, hydro.head[ihhy]);
-			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
-				int ifr = FindClosest(w, hydro.w[ifrhy]);
-				for (int idf = 0; idf < 6*Nb; ++idf) 	 
-					if (IsNum(from.force[ihhy](ifrhy, idf))) 
-						to.force[ih](ifr, idf) = hydro.F_ndim(from, ihhy, ifrhy, idf);
-			}
-		} 
-	}
-}
-
-void Hydro::Add_RAO(RAO &to, const Hydro &hydro, const RAO &from) {
-	if (hydro.IsLoadedForce(from)) {
-		for (int ihhy = 0; ihhy < hydro.Nh; ++ihhy) {
-			int ih = FindClosest(head, hydro.head[ihhy]);
-			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
-				int ifr = FindClosest(w, hydro.w[ifrhy]);
-				for (int idf = 0; idf < 6*Nb; ++idf) 	 
-					if (IsNum(from.force[ihhy](ifrhy, idf))) 
-						to.force[ih](ifr, idf) = hydro.RAO_ndim(from, ihhy, ifrhy, idf);
-			}
-		} 
-	}
-}
-
-static double MirrorHead(double head, bool xAxis) {
-	if (xAxis)
-		return -head;
-	else {
-		head = FixHeading_180(head);
-		head += 90;
-		head = FixHeading_180(-head);
-		head -= 90;
-		return head;		
-	}
-}
-
-static std::complex<double> MirrorHead(const std::complex<double> &head, bool xAxis) {
-	double h1 = head.real(), h2 = head.imag();
-	if (xAxis) {
-		h1 = -h1;
-		h2 = -h2;	
-	} else {
-		auto Fix = [](double h) {
-			h = FixHeading_180(h);
-			h += 90;
-			h = FixHeading_180(-h);
-			h -= 90;
-		};
-		Fix(h1);
-		Fix(h2);
-	}
-	return std::complex<double>(h1, h2);
-}
-
-void Hydro::Copy(const Hydro &hyd) {
-	file = hyd.file;
-	name = hyd.name;
-	g = hyd.g;
-    h = hyd.h;
-    rho = hyd.rho;
-    len = hyd.len;
-    dimen = hyd.dimen;
-    Nb = hyd.Nb;
-    Nf = hyd.Nf;
-    Nh = hyd.Nh;
-
-    A = clone(hyd.A);
-	Ainf_w = clone(hyd.Ainf_w);
-    Ainf = clone(hyd.Ainf);
-    A0 = clone(hyd.A0);
-	
-	//Dlin = clone(Dlin);
-	//Dquad = clone(Dquad);
-	//Cmoor = clone(Cmoor);
-	
-    B = clone(hyd.B);
-    
-    msh = clone(hyd.msh);
-    
-    head = clone(hyd.head);
-    //names = clone(hyd.names);
-    //C = clone(hyd.C);
-    //M = clone(hyd.M);
-    //cb = clone(hyd.cb);
-    //cg = clone(hyd.cg);
-    //c0 = clone(hyd.c0);
-    solver = hyd.solver;     
-    //dof = clone(hyd.dof); 
-    
-    Kirf = clone(hyd.Kirf);
-    Tirf = clone(hyd.Tirf);
-    
-    ex = clone(hyd.ex);
-    sc = clone(hyd.sc);
-    fk = clone(hyd.fk);
-    rao = clone(hyd.rao);
-    
-    description = hyd.description;
-
-    sts = clone(hyd.sts);
-    dimenSTS = hyd.dimenSTS;
-    stsProcessor = hyd.stsProcessor;
-    
-    qtfsum = clone(hyd.qtfsum);
-    qtfdif = clone(hyd.qtfdif);
-    qw = clone(hyd.qw);
-    qh = clone(hyd.qh);
-    qtfdataFromW = hyd.qtfdataFromW;
-    qtftype = hyd.qtftype;
-    
-    mdhead = clone(mdhead);
-	md = clone(md);
-	mdtype = hyd.mdtype;
-	    
-    //T = clone(hyd.T);
-    w = clone(hyd.w);
-    dataFromW = hyd.dataFromW;
-    //Vo = clone(hyd.Vo); 
-    
-}
-
-void AvgB(Eigen::MatrixXd &ret, const UArray<const Eigen::MatrixXd*> &d) {
-	int numT = d.size();
-	if (numT == 0) 
-		return;
-	
-	int num = int(d[0]->size());
-	for (int it = 1; it < numT; ++it) 
-		if (d[it]->size() != num)
-			throw Exc(t_("Avg() has to have same number of values"));
-	
-	for (int i = 0; i < num; ++i) {
-		Eigen::VectorXd r(numT);
-		for (int it = 0; it < numT; ++it) 
-			r[it] = (*d[it])(i);
-		ret(i) = r.mean();
-	}
-}
-
-using UA = UArray<UArray<VectorXd>>;
-void AvgB(UA &ret, const UArray<const UA*> &d) {
-	int numT = d.size();
-	if (numT == 0) 
-		return;
-
-	for (int i = 0; i < ret.size(); ++i) {
-		for (int j = 0; j < ret[i].size(); ++j) {
-			for (int k = 0; k < ret[i][j].size(); ++k) {
-				Eigen::VectorXd r(numT);
-				for (int it = 0; it < numT; ++it) 
-					r[it] = (*d[it])[i][j][k];
-				ret[i][j][k] = r.mean();
-			}
-		}
-	}
-}
-
-using UAM = UArray<MatrixXd>;
-void AvgB(UAM &ret, const UArray<const UAM*> &d) {
-	int numT = d.size();
-	if (numT == 0) 
-		return;
-
-	for (int i = 0; i < ret.size(); ++i) {
-		for (int j = 0; j < ret[i].size(); ++j) {
-			Eigen::VectorXd r(numT);
-			for (int it = 0; it < numT; ++it) 
-				r[it] = (*d[it])[i](j);
-			ret[i](j) = r.mean();
-		}
-	}
-}
-
-void AvgB(Hydro::Forces &ret, const UArray<const Hydro::Forces*> &d) {
-	int numT = d.size();
-	if (numT == 0) 
-		return;
-
-	for (int i = 0; i < ret.force.size(); ++i) {
-		for (int j = 0; j < ret.force[i].cols(); ++j) {
-			for (int k = 0; k < ret.force[i].rows(); ++k) {
-				Eigen::VectorXcd r(numT);
-				for (int it = 0; it < numT; ++it) 
-					r[it] = (*d[it]).force[i](k, j);
-				ret.force[i](k, j) = r.mean();
-			}
-		}
-	}
-}
-
-using UMD = UArray<UArray<UArray<VectorXd>>>;
-void AvgB(UMD &ret, const UArray<const UMD*> &d) {
-	int numT = d.size();
-	if (numT == 0) 
-		return;
-
-	for (int i = 0; i < ret.size(); ++i) {
-		for (int j = 0; j < ret[i].size(); ++j) {
-			for (int k = 0; k < ret[i][j].size(); ++k) {
-				for (int l = 0; l < ret[i][j][k].size(); ++l) {
-					Eigen::VectorXd r(numT);
-					for (int it = 0; it < numT; ++it) 
-						r[it] = (*d[it])[i][j][k][l];
-					ret[i][j][k][l] = r.mean();
-				}
-			}
-		}
-	}
-}
-
-using UMQ = UArray<UArray<UArray<MatrixXcd>>>;
-void AvgB(UMQ &ret, const UArray<const UMQ*> &d) {
-	int numT = d.size();
-	if (numT == 0) 
-		return;
-
-	for (int i = 0; i < ret.size(); ++i) {
-		for (int j = 0; j < ret[i].size(); ++j) {
-			for (int k = 0; k < ret[i][j].size(); ++k) {
-				for (int l = 0; l < ret[i][j][k].rows(); ++l) {
-					for (int m = 0; l < ret[i][j][k].cols(); ++m) {
-						Eigen::VectorXcd r(numT);
-						for (int it = 0; it < numT; ++it) 
-							r[it] = (*d[it])[i][j][k](l, m);
-						ret[i][j][k](l, m) = r.mean();
-					}
-				}
-			}
-		}
-	}
-}
-
-void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
-	const Hydro &h0 = hydros[0].hd();
-	Nb = h0.Nb;
-    Nf = h0.Nf;
-    Nh = h0.Nh;
-	h = h0.h;
-	rho = h0.rho;
-	g = h0.g;
-
-	//T = clone(h0.T);
-    w = clone(h0.w);
-    head = clone(h0.head);
-	qw = clone(h0.qw);
-    qh = clone(h0.qh);
-	mdhead = clone(h0.mdhead);
-	msh = clone(h0.msh);
-	//c0 = clone(h0.c0);
-	//dof = clone(h0.dof);
-	
-	for (int i = 1; i < ids.size(); ++i) {
-		const Hydro &hy = hydros[i].hd();
-		if (Nb != hy.Nb)
-			throw Exc(t_("All models have to have the same number of bodies"));
-		if (Nf != hy.Nf)
-			throw Exc(t_("All models have to have the same number of frequencies"));
-		if (Nh != hy.Nh)
-			throw Exc(t_("All models have to have the same number of headings"));
-		if (rho != hy.rho)
-			throw Exc(t_("All models have to have the same density"));
-		if (g != hy.g)
-			throw Exc(t_("All models have to have the same gravity"));
-		if (h != hy.h) 
-			h = -1;
-		//if (!CompareDecimals(T, hy.T, 2))
-		//	throw Exc(t_("All models have to have the same periods"));
-		if (!CompareDecimals(w, hy.w, 2))
-			throw Exc(t_("All models have to have the same frequencies"));
-		if (!CompareDecimals(head, hy.head, 2))
-			throw Exc(t_("All models have to have the same headings"));
-		if (!CompareDecimals(qw, hy.qw, 2))
-			throw Exc(t_("All models have to have the same frequencies in QTF"));
-		if (!Compare(qh, hy.qh))
-			throw Exc(t_("All models have to have the same headings in QTF"));
-		if (!Compare(mdhead, hy.mdhead))
-			throw Exc(t_("All models have to have the same headings in mean drift"));
-		for (int ib = 0; ib < Nb; ++ib) {
-			if (msh[ib].c0 != hy.msh[ib].c0)
-				throw Exc(t_("All models and bodies have to have the same centre of reference"));
-		}
-		//if (c0 != hy.c0)
-		//	throw Exc(t_("All models have to have the same centre of reference"));
-		//if (dof != hy.dof)
-			//throw Exc(t_("All models have to have the same number of dof"));
-	}
-	
-	file = "Average";
-	name = "Average";
-	description = "Average";
-	solver = BEMROSETTA;
-	
-    len = 1;
-    dimen = true;
-    
-    dataFromW = qtfdataFromW = true;
-    
-    //names = clone(h0.names);
-    
-    qtftype = h0.qtftype;
-    mdtype = h0.mdtype;
-    
-    //Vo.SetCount(Nb, NaNDouble);
-	//cg.setConstant(3, Nb, NaNDouble);
-	//cb.setConstant(3, Nb, NaNDouble);
-	Ainf.setConstant(Nb*6, Nb*6, NaNDouble);
-	A0.setConstant(Nb*6, Nb*6, NaNDouble);
-	
-	Initialize_AB(A);
-	Initialize_AB(B);
-	
-	//C.SetCount(Nb);
-	for (int ib = 0; ib < Nb; ++ib) 
-		msh[ib].C.setConstant(6, 6, 0);
-	//M.SetCount(Nb);
-	for (int ib = 0; ib < Nb; ++ib) 
-		msh[ib].M.setConstant(6, 6, 0);
-	
-	Initialize_Forces(ex);
-	Initialize_Forces(sc);
-	Initialize_Forces(fk);
-	Initialize_Forces(rao);
-	
-	Hydro::Initialize_MD(md, Nb, int(mdhead.size()), Nf);
-		
-	Hydro::Initialize_QTF(qtfsum, Nb, int(qh.size()), int(qw.size()));
-	Hydro::Initialize_QTF(qtfdif, Nb, int(qh.size()), int(qw.size()));
-			
-	//UArray<const UVector<double>*> Vos;
-	UArray<const MatrixXd*> Ainfs, A0s;
-	UArray<const UArray<UArray<VectorXd>>*> As, Bs;
-	UArray<const Forces*> exs, scs, fks, raos;
-	UArray<const UArray<UArray<UArray<VectorXd>>>*> mds;
-	UArray<const UArray<UArray<UArray<MatrixXcd>>>*> qtfsums, qtfdifs;
-	UArray<UArray<const MatrixXd*>> Cs(Nb), Ms(Nb);
-	UArray<UArray<const Point3D*>> cgs(Nb), cbs(Nb);
-	VectorXd Vos(Nb);
-	
-	for (int i = 0; i < ids.size(); ++i) {
-		const Hydro &hy = hydros[i].hd();
-		
-		for (int ib = 0; ib < Nb; ++ib) {
-			if (!IsNull(hy.msh[ib].cg))
-				cgs[ib].Add(&(hy.msh[ib].cg));
-			if (!IsNull(hy.msh[ib].cb))
-				cbs[ib].Add(&(hy.msh[ib].cb));
-			if (!IsNull(hy.msh[ib].Vo))
-				Vos[ib] = hy.msh[ib].Vo;
-			Cs[ib].Add(&(hy.msh[ib].C));
-			Ms[ib].Add(&(hy.msh[ib].M));
-		}
-		//if (hy.Vo.size() > i)
-        	//Vos.Add(&(hy.Vo));
-		//if (hy.cg.size() > 0)
-        //	cgs.Add(&(hydros[i].hd().cg));
-		//if (hy.cb.size() > 0)
-        //	cbs.Add(&(hydros[i].hd().cb));
-		if (hy.Ainf.size() > 0)
-        	Ainfs.Add(&hy.Ainf);
-		if (hy.A0.size() > 0)
-        	A0s.Add(&hy.A0);
-        As.Add(&hy.A);
-        Bs.Add(&hy.B);
-        //Cs.Add(&hy.C);
-        //Ms.Add(&hy.M);
-        exs.Add(&hy.ex);
-        scs.Add(&hy.sc);
-        fks.Add(&hy.fk);
-        raos.Add(&hy.rao);
-        mds.Add(&hy.md);
-        qtfsums.Add(&hy.qtfsum);
-        qtfdifs.Add(&hy.qtfdif);
-    }
-    
-    for (int ib = 0; ib < Nb; ++ib) {
-    	AvgB(msh[ib].cg, cgs[ib]);
-    	AvgB(msh[ib].cb, cbs[ib]);
-    	AvgB(msh[ib].C, Cs[ib]);
-    	AvgB(msh[ib].M, Ms[ib]);
-    	
-    	msh[ib].Vo = Vos.mean();
-    }
-    
-	//AvgB(Vo, Vos);   
-	
-	AvgB(Ainf, Ainfs); 
-	AvgB(A0, A0s); 
-	
-	AvgB(A, As); 
-	AvgB(B, Bs);
-	 
-	//AvgB(C, Cs);
-	//AvgB(M, Ms);
-	
-    AvgB(ex, exs);
-    AvgB(sc, scs);
-    AvgB(fk, fks);
-    AvgB(rao, raos);
-    
-    AvgB(md, mds);
-    
-	AvgB(qtfsum, qtfsums);
-    AvgB(qtfdif, qtfdifs);
-
-	
-	/*
-	Ainf_w
-	
-	Dlin = clone(Dlin);
-	Cmoor
-   
-    Kirf = clone(hyd.Kirf);
-    Tirf = clone(hyd.Tirf);
-    */
-}
-
-bool Hydro::SymmetryRule(int idf6, bool xAxis) {
-	const bool symmetryRulesXZ[] = {false, true,  false, true,  false, true};
-	const bool symmetryRulesYZ[] = {true,  false, false, false, true,  true};
-	
-	ASSERT(idf6 >= 0);
-	idf6 = idf6%6;
-	if (xAxis)
-		return symmetryRulesXZ[idf6];
-	else
-		return symmetryRulesYZ[idf6];
-}
-	
-void Hydro::Symmetrize_Forces(bool xAxis) {
-	if (!IsLoadedFex() && !IsLoadedFsc() && !IsLoadedFfk() && !IsLoadedRAO())
-		return;
-	
-	UVector<double> newHead;
-	for (int ih = 0; ih < Nh; ++ih) {
-		FindAddDelta(newHead, FixHeading_180(head[ih]), 0.01);
-		FindAddDelta(newHead, FixHeading_180(MirrorHead(head[ih], xAxis)), 0.01);
-	}
-	Sort(newHead);
-	
-	auto Symmetrize_ForcesEach = [&](const Forces &f, Forces &newf) {
-		auto Symmetrize_Forces_Each0 = [&](const Forces &f, Forces &newf, double h, int ih, int idf, bool applysym) {
-			int nih = FindClosest(newHead, h);
-			bool avg = IsNum(newf.force[nih](0, idf));
-			for (int ifr = 0; ifr < Nf; ++ifr) {
-				std::complex<double> force = f.force[ih](ifr, idf);
-				if (applysym)
-					force = std::polar(abs(force), arg(force) + M_PI);
-				std::complex<double> &nf = newf.force[nih](ifr, idf);
-				if (avg)
-					nf = Avg(nf, force);
-				else 
-					nf = force;
-			}
-		};
-	
-		Initialize_Forces(newf, newHead.size());
-		
-		for (int idf = 0; idf < 6*Nb; ++idf) {
-			for (int ih = 0; ih < Nh; ++ih) {
-				Symmetrize_Forces_Each0(f, newf, FixHeading_180(head[ih]), ih, idf, false);
-				double he = FixHeading_180(MirrorHead(head[ih], xAxis));
-				bool applysym = false;
-				if (SymmetryRule(idf, xAxis)) {
-					if (xAxis) {
-						if (he != 0 && he != 180)
-							applysym = true;
-					} else {
-						if (he != 90 && he != -90)
-							applysym = true;
-					}
-				}
-				Symmetrize_Forces_Each0(f, newf, he, ih, idf, applysym);
-			}
-		}
-	};
-
-	if (IsLoadedFex()) {
-		Forces newex;
-		Symmetrize_ForcesEach(ex, newex);
-		ex = pick(newex);
-	}
-	if (IsLoadedFsc()) {
-		Forces newsc;
-		Symmetrize_ForcesEach(sc, newsc);
-		sc = pick(newsc);
-	}
-	if (IsLoadedFfk()) {
-		Forces newfk;
-		Symmetrize_ForcesEach(fk, newfk);
-		fk = pick(newfk);
-	}
-	if (IsLoadedRAO()) {
-		RAO newrao;
-		Symmetrize_ForcesEach(rao, newrao);
-		rao = pick(newrao);
-	}
-	Nh = newHead.size();
-	head = pick(newHead);		// New headings are set between -180 and 180
-}
-
-void Hydro::Symmetrize_QTF(bool xAxis) {
-	if (!IsLoadedQTF(true) && !IsLoadedQTF(false))
-		return;
-	
-	UArray<std::complex<double>> newHead;
-	for (int ih = 0; ih < qh.size(); ++ih) {
-		FindAddDelta(newHead, FixHeading_180(qh[ih]), 0.01);
-		FindAddDelta(newHead, FixHeading_180(MirrorHead(qh[ih], xAxis)), 0.01);
-	}
-	Sort(newHead, SortComplex);
-
-	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<MatrixXcd>>> &f, UArray<UArray<UArray<MatrixXcd>>> &newf) {
-		auto Symmetrize_Forces_Each0 = [&](const UArray<UArray<UArray<MatrixXcd>>> &f, UArray<UArray<UArray<MatrixXcd>>> &newf, const std::complex<double> &h, int ib, int ih, int idf, bool applysym) {
-			int nih = FindClosest(newHead, h);
-			bool avg = IsNum(newf[ib][nih][idf](0, 0));
-			for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) {
-				for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) {
-					std::complex<double> force = f[ib][ih][idf](ifr1, ifr2);
-					if (applysym) 
-						force = std::polar(abs(force), arg(force) + M_PI);
-					std::complex<double> &nf = newf[ib][nih][idf](ifr1, ifr2);
-					if (avg) 
-						nf = Avg(nf, force);
-					else 
-						nf = force;
-				}
-			}
-		};
-	
-		Initialize_QTF(newf, Nb, newHead.size(), int(qw.size()));
-		
-		for (int ib = 0; ib < Nb; ++ib) {
-			for (int ih = 0; ih < qh.size(); ++ih) {
-				for (int idf = 0; idf < 6; ++idf) {
-					Symmetrize_Forces_Each0(f, newf, FixHeading_180(qh[ih]), ib, ih, idf, false);
-					std::complex<double> he = FixHeading_180(MirrorHead(qh[ih], xAxis));
-					bool applysym = false;
-					if (SymmetryRule(idf, xAxis)) {
-						if (xAxis) {
-							if (he != std::complex<double>(0, 0) && he != std::complex<double>(180, 180))
-								applysym = true;
-						} else {
-							if (he != std::complex<double>(90, 90) && he != std::complex<double>(-90, -90))
-								applysym = true;
-						}
-					}
-					Symmetrize_Forces_Each0(f, newf, he, ib, ih, idf, applysym);
-				}
-			}
-		}
-	};	
-	
-	if (IsLoadedQTF(true)) {
-		UArray<UArray<UArray<MatrixXcd>>> newqtf;
-		Symmetrize_ForcesEach(qtfsum, newqtf);
-		qtfsum = pick(newqtf);
-	}
-	if (IsLoadedQTF(false)) {
-		UArray<UArray<UArray<MatrixXcd>>> newqtf;
-		Symmetrize_ForcesEach(qtfdif, newqtf);
-		qtfdif = pick(newqtf);
-	}
-	
-	::Copy(newHead, qh);	
-}
-
-void Hydro::Symmetrize_MD(bool xAxis) {
-	if (!IsLoadedMD())
-		return;
-	
-	UArray<std::complex<double>> newHead;
-	for (int ih = 0; ih < mdhead.size(); ++ih) {
-		FindAddDelta(newHead, FixHeading_180(mdhead[ih]), 0.01);
-		FindAddDelta(newHead, FixHeading_180(MirrorHead(mdhead[ih], xAxis)), 0.01);
-	}
-	Sort(newHead, SortComplex);
-	
-	auto Symmetrize_ForcesEach = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf) {
-		auto Symmetrize_Forces_Each0 = [&](const UArray<UArray<UArray<VectorXd>>> &f, UArray<UArray<UArray<VectorXd>>> &newf, const std::complex<double> &h, int ib, int ih, int idf, bool applysym) {
-			int nih = FindClosest(newHead, h);
-			bool avg = IsNum(newf[ib][nih][idf](0));
-			for (int ifr = 0; ifr < w.size(); ++ifr) {
-				double force = f[ib][ih][idf](ifr);
-				if (applysym) 
-					force = -force;
-				double& nf = newf[ib][nih][idf](ifr);
-				if (avg) 
-					nf = Avg(nf, force);
-				else 
-					nf = force;
-			}
-		};
-	
-		Initialize_MD(newf, Nb, newHead.size(), w.size());
-		
-		for (int ib = 0; ib < Nb; ++ib) {
-			for (int ih = 0; ih < mdhead.size(); ++ih) {
-				for (int idf = 0; idf < 6; ++idf) {
-					Symmetrize_Forces_Each0(f, newf, FixHeading_180(mdhead[ih]), ib, ih, idf, false);
-					std::complex<double> he = FixHeading_180(MirrorHead(mdhead[ih], xAxis));
-					bool applysym = false;
-					if (SymmetryRule(idf, xAxis)) {
-						if (xAxis) {
-							if (he != std::complex<double>(0, 0) && he != std::complex<double>(180, 180))
-								applysym = true;
-						} else {
-							if (he != std::complex<double>(90, 90) && he != std::complex<double>(-90, -90))
-								applysym = true;
-						}
-					}
-					Symmetrize_Forces_Each0(f, newf, he, ib, ih, idf, applysym);
-				}
-			}
-		}
-	};	
-	
-	UArray<UArray<UArray<VectorXd>>> newmd;
-	Symmetrize_ForcesEach(md, newmd);
-	md = pick(newmd);
-	
-	::Copy(newHead, mdhead);	
-}
-
-void Hydro::RemoveThresDOF_A(double thres) {
-	if (!IsLoadedA())
-		return;
-	for (int idf = 0; idf < 6*Nb; ++idf) {
-		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-			double mx = -DBL_MAX, mn = DBL_MAX;
-			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = A_ndim(ifr, idf, jdf);
-				mx = max(mx, val);
-				mn = min(mn, val);
-			}
-			double delta = mx - mn;
-			if (IsNum(mx) && IsNum(mn)) {
-				double res = 0;
-				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(A_ndim(ifr, idf, jdf) - A_ndim(ifr-1, idf, jdf));
-				res /= delta*(Nf - 1);
-				if (res > thres) {
-					for (int ifr = 0; ifr < Nf; ifr++) 
-						A[idf][jdf][ifr] = Null;
-					Ainf(idf, jdf) = Null;		
-				}
-			}
-		}
-	}
-}
-
-void Hydro::RemoveThresDOF_B(double thres) {
-	if (!IsLoadedB())
-		return;
-	for (int idf = 0; idf < 6*Nb; ++idf) {
-		for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-			double mx = -DBL_MAX, mn = DBL_MAX;
-			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = B_ndim(ifr, idf, jdf);
-				mx = max(mx, val);
-				mn = min(mn, val);
-			}
-			double delta = mx - mn;
-			if (IsNum(mx) && IsNum(mn)) {
-				double res = 0;
-				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(B_ndim(ifr, idf, jdf) - B_ndim(ifr-1, idf, jdf));
-				res /= delta*(Nf - 1);
-				if (res > thres) {
-					for (int ifr = 0; ifr < Nf; ifr++) 
-						B[idf][jdf][ifr] = Null;
-				}
-			}
-		}
-	}
-}
-
-void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
-	if (!IsLoadedForce(f))
-		return;
-	for (int h = 0; h < Nh; ++h) {
-		for (int i = 0; i < 6*Nb; ++i) {
-			double mx = -DBL_MAX, mn = DBL_MAX;
-			for (int ifr = 0; ifr < Nf; ifr++) {
-				double val = abs(F_ndim(f, h, ifr, i));
-				mx = max(mx, val);
-				mn = min(mn, val);
-			}
-			if (mx != -DBL_MAX && mn != DBL_MAX) {
-				double delta = mx - mn;
-				double res = 0;
-				for (int ifr = 1; ifr < Nf; ifr++) 
-					res += abs(F_ndim(f, h, ifr, i) - F_ndim(f, h, ifr-1, i));
-				res /= delta*(Nf - 1);
-				if (res > thres) {
-					for (int ifr = 0; ifr < Nf; ifr++) 
-						f.force[h](ifr, i) = Null;
-				}
-			}
-		}
-	}
-}
-
-void Hydro::Compare_rho(Hydro &a) {
-	if (a.rho != rho)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Density rho"), a.rho, rho));
-}
-
-void Hydro::Compare_g(Hydro &a) {
-	if (a.g != g)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Gravity g"), a.g, g));
-}
-
-void Hydro::Compare_h(Hydro &a) {
-	if (a.h != h)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Water depth h"), a.h, h));
-}
-
-void Hydro::Compare_Nb(Hydro &a) {
-	if (a.Nb != Nb)
-		throw Exc(Format(t_("%s is not the same %d<>%d"), t_("Number of bodies"), a.Nb, Nb));
-}
-
-void Hydro::Compare_w(Hydro &a) {
-	if (a.Nf != Nf)	
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.Nf, Nf));
-	for (int i = 0; i < a.Nf; ++i) {
-		if (!EqualRatio(a.w[i], w[i], 0.0001))
-			throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], w[i]));
-	}
-}
-
-void Hydro::Compare_head(Hydro &a) {
-	if (a.Nh != Nh)	
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of headings"), a.Nh, Nh));
-	for (int i = 0; i < a.Nh; ++i) {
-		if (a.head[i] != head[i])
-			throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("frequency")), a.w[i], w[i]));
-	}
-}
-
-void Hydro::Compare_A(const UArray<UArray<VectorXd>> &a) {
-	for (int ifr = 0; ifr < Nf; ifr++) {
-		for (int idf = 0; idf < 6*Nb; ++idf) {
-			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-				double Aa = a[idf][jdf][ifr];
-				double Ab = A[idf][jdf][ifr];
-				if (IsNum(Aa) && IsNum(Ab) && Aa != Ab)
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idf+1, jdf+1), 
-							Aa, Ab));
-			}
-		}
-	}
-}
-
-void Hydro::Compare_B(const UArray<UArray<VectorXd>> &b) {
-	for (int ifr = 0; ifr < Nf; ifr++) {
-		for (int idf = 0; idf < 6*Nb; ++idf) {
-			for (int jdf = 0; jdf < 6*Nb; ++jdf) {
-				double Ba = b[idf][jdf][ifr];
-				double Bb = B[idf][jdf][ifr];
-				if (IsNum(Ba) && IsNum(Bb) && Ba != Bb)
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idf+1, jdf+1), 
-							Ba, Bb));
-			}
-		}
-	}
-}
-
-void Hydro::Compare_C(Hydro &a) {
-	for (int ib = 0; ib < a.Nb; ib++) {
-		for (int idf = 0; idf < 6; ++idf) {
-			for (int jdf = 0; jdf < 6; ++jdf) {
-				double Ca = a.msh[ib].C(idf, jdf);
-				double Cb = msh[ib].C(idf, jdf);
-				if (IsNum(Ca) && IsNum(Cb) && !EqualRatio(Ca, Cb, 0.0001))
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
-							Ca, Cb));
-			}
-		}
-	}
-}
-
-void Hydro::Compare_cg(Hydro &a) {
-	for (int i = 0; i < 3; i++) {
-		for (int ib = 0; ib < a.Nb; ib++) {
-			if (a.msh[ib].cg[i] != msh[ib].cg[i])
-				throw Exc(Format(t_("%s is not the same %f<>%f"), 
-						Format(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
-							a.msh[ib].cg[i], msh[ib].cg[i]));
-		}
-	}
-}
-
-void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
-	for (int ih = 0; ih < Nh; ++ih) 	
-		for (int ifr = 0; ifr < Nf; ++ifr)
-			for (int idf = 0; idf < 6*Nb; ++idf) {
-				std::complex<double> Fa = a.force[ih](ifr, idf);
-				std::complex<double> Fb = b.force[ih](ifr, idf);
-				if (IsLoadedForce(a, idf, ih) && Fa != Fb)
-					throw Exc(Format(t_("%s is not the same %f:%f<>%f:%f"), 
-							Format(t_("%s[%d](%d, %d)"), type, ifr+1, idf+1, ih+1), 
-							Fa.real(), Fa.imag(), Fb.real(), Fb.imag()));
-			}
-}
-
-void Hydro::SaveAs(String file, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading) {
-	int realNh = Nh;
-	int realNf = Nf;
-	
-	if (type == UNKNOWN) {
-		String ext = ToLower(GetFileExt(file));
-		
-		if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || 
-			ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d") 
-			type = WAMIT_1_3;
-		else if (ext == ".out")
-			type = WAMIT;
-		else if (ext == ".dat")
-			type = FAST_WAMIT;	
-		else if (ext == ".bem")
-			type = BEMROSETTA;
-		else if (ext == ".csv")
-			type = CSV_TABLE;
-		else if (ext == ".hdb")
-			type = DIODORE;
-		else if (ext == ".h5")
-			type = BEMIOH5;
-		else
-			throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
-	}
-	if (type == WAMIT) {
-		Wamit data;
-		data.Save_out(file);			
-	} else if (type == WAMIT_1_3) {
-		Wamit data;
-		data.Save(file, Status, true, qtfHeading);	
-	} else if (type == FAST_WAMIT) {
-		Fast data;
-		data.Save(file, Status, qtfHeading);		
-	} else if (type == BEMROSETTA) {
-		Hydro data;
-		data.SaveSerialization(file);		
-	} else if (type == AQWA) {
-		Aqwa data;
-		data.Save(file, Status);		
-	} else if (type == CSV_MAT) {
-		Hydro data;
-		data.SaveCSVMat(file);		
-	} else if (type == CSV_TABLE) {
-		Hydro data;
-		data.SaveCSVTable(file);		
-	} else if (type == DIODORE) {
-		Hydro data;
-		data.SaveDiodoreHDB(file);		
-	} else if (type == BEMIOH5) {
-		BemioH5 data;
-		data.Save(file);
-	} else
-		throw Exc(Format(t_("Conversion to file type '%s' not supported"), file));
-	
-	solver = type;
-	Nh = realNh;
-	Nf = realNf;
-}
-
-void Hydro::Join(const UVector<Hydro *> &hydrosp) {
-	name = t_("Joined files");
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		if (hydro.name.Find("Nemoh_Part") >= 0) {
-			name = GetFileTitle(GetFileFolder(GetFileFolder(hydro.file)));
-			break;
-		}
-	}
-	
-	dimen = false;
-	g = Bem().g;
-	rho = Bem().rho;
-	len = 1;
-
-	h = Null;
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		if (IsNum(hydro.h))
-			h = hydro.h;
-		else if (h != hydro.h)
-			throw Exc(Format(t_("Water depth does not match between '%s'(%d) and '%s'(%d)"), 
-					hydrosp[0]->name, hydrosp[0]->h, hydro.name, hydro.h));			
-	}	
-	if (!IsNum(h))
-		throw Exc(t_("No water depth found in models"));
-			
-	Nb = Null;
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		if (!IsNum(Nb))
-			Nb = hydro.Nb;
-		else if (Nb != hydro.Nb)
-			throw Exc(Format(t_("Number of bodies does not match between '%s'(%d) and '%s'(%d)"), 
-					hydrosp[0]->name, hydrosp[0]->Nb, hydro.name, hydro.Nb));			
-	}
-	if (!IsNum(Nb))
-		throw Exc(t_("No body found in models"));
-		
-	head.Clear();
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		if (hydro.IsLoadedFex() || hydro.IsLoadedFsc() || hydro.IsLoadedFfk()) {
-			for (int ih = 0; ih < hydro.head.size(); ih++) {
-				double head_v = hydro.head[ih];
-				FindAddRatio(head, head_v, 0.001);
-			}
-		}
-	}
-	Nh = head.size();
-	if (Nh == 0)
-		throw Exc(t_("No head found in models"));
-	
-	w.Clear();
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		if (hydro.IsLoadedA() && hydro.IsLoadedB()) {
-			for (int ifr = 0; ifr < hydro.w.size(); ifr++) {
-				double w_v = hydro.w[ifr];
-				FindAddRatio(w, w_v, 0.001);
-			}
-		}
-	}
-	Sort(w);
-	Nf = w.size();
-	/*T.Clear();
-	for (int i = 0; i < Nf; ++i)
-		T << 2*M_PI/w[i];*/
-	
-	if (Nf == 0)
-		throw Exc(t_("No frequency found in models"));
-	
-	msh.SetCount(Nb);
-//	dof.SetCount(Nb);
-//	cg.setConstant(3, Nb, NaNDouble);
-//	c0.setConstant(3, Nb, NaNDouble);
-//	cb.setConstant(3, Nb, NaNDouble);
-//	Vo.SetCount(Nb, NaNDouble);
-	
-	Initialize_AB(A);
-	Initialize_AB(B);
-	
-	//C.SetCount(Nb);
-	for (int ib = 0; ib < Nb; ++ib) 
-		msh[ib].C.setConstant(6, 6, NaNDouble);
-	
-	Initialize_Forces(ex);
-	Initialize_Forces(sc);
-	Initialize_Forces(fk);
-		
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		
-		// All this block should have to be the same. Now it is not tested
-		
-		solver = hydro.solver;
-		
-		for (int ib = 0; ib < Nb; ++ib) {
-			if (!hydro.msh[ib].name.IsEmpty())
-				msh[ib].name = hydro.msh[ib].name;
-			//if (IsNum(hydro.Vo[ib]))
-			msh[ib].Vo = hydro.msh[ib].Vo;
-			msh[ib].cg = clone(hydro.msh[ib].cg);
-			msh[ib].c0 = clone(hydro.msh[ib].c0);
-			for (int i = 0; i < 3; ++i) {
-				/*if (IsNum(hydro.cg(i, ib)))
-					msh[ib].cg[i] = hydro.cg(i, ib);*/
-				if (IsNum(hydro.msh[ib].cb[i]))
-					msh[ib].cb[i] = hydro.msh[ib].cb[i];
-				/*if (IsNum(hydro.c0(i, ib)))
-					c0(i, ib) = hydro.c0(i, ib);*/
-			}
-			//dof[ib] = hydro.dof[ib];
-		}
-		
-		if (/*IsLoadedC() && */ hydro.IsLoadedC()) {
-			for (int ib = 0; ib < Nb; ++ib) {
-				for (int idf = 0; idf < 6; ++idf) 
-					for (int jdf = 0; jdf < 6; ++jdf) 
-						msh[ib].C(idf, jdf) = hydro.C_ndim(ib, idf, jdf);
-			}
-		}
-		///////////////////////////////////////////////////////////////////
-		
-		if (/*IsLoadedA() && IsLoadedB() && */hydro.IsLoadedA() && hydro.IsLoadedB()) {
-			for (int ifrhy = 0; ifrhy < hydro.Nf; ++ifrhy) {
-				int ifr = FindClosest(w, hydro.w[ifrhy]);
-				for (int idf = 0; idf < 6*Nb; ++idf) {
-					for (int jdf = 0; jdf < 6*Nb; ++jdf) {	
-						if (IsNum(hydro.A[idf][jdf][ifrhy]))
-							A[idf][jdf][ifr] = hydro.A_ndim(ifrhy, idf, jdf);
-						if (IsNum(hydro.B[idf][jdf][ifrhy]))
-							B[idf][jdf][ifr] = hydro.B_ndim(ifrhy, idf, jdf);
-					}
-				}
-			}
-		}	
-		Add_Forces(ex, hydro, hydro.ex);
-		Add_Forces(sc, hydro, hydro.sc);
-		Add_Forces(fk, hydro, hydro.fk);
-		
-		Add_RAO(rao, hydro, hydro.rao);
-	}
-
-	
-	// Aw0 has to be recalculated
-	/*
-	// A0 is set from the lower frequency data set
-	
-	int ihminw = -1;
-	double minw = DBL_MAX;
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hydro = *hydrosp[ihy];
-		if (hydro.IsLoadedAw0()) {
-			double minwhy = Min(hydro.w);
-			if (minw > minwhy) {
-				ihminw = ihy;
-				minw = minwhy;
-			}
-		}
-	}
-	if (ihminw >= 0) {
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) = hydrosp[ihminw]->Aw0_ndim(i, j);	
-	}*/
-	
-	//bem->calcAinf = true;
-	//bem->calcAinf_w = true;
-	
-	// sts has to be recalculated	
-}
-
-void Hydro::Report() const {
-	BEM::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), file));
-	BEM::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s"), 
-								S_g(), S_h(), S_rho(), S_len()));
-	String freqs;
-	if (w.IsEmpty()) 
-		freqs = t_("NONE");
-	else if (w.size() > 1) {
-		String strDeltaH;
-		if (GetIrregularFreq() < 0) 
-			strDeltaH = Format(t_("delta %s [rad/s]"), FDS(w[1] - w[0], 8, false));
-		else {
-			String strHead;
-			for (int i = 0; i < w.size(); ++i) {
-				if (i > 0)
-					strHead << ", ";
-				strHead << w[i];
-			}
-			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
-		}
-	 	freqs = Format(t_("%s to %s %s"), FDS(w[0], 8, false), 
-	 									  FDS(w[w.size()-1], 8, false), strDeltaH);	
-	} else
-		freqs = Format(t_("%s [rad/s]"), FDS(w[0], 8, false));
-	
-	String heads;
-	if (head.IsEmpty())
-		heads = t_("NONE");
-	else if (head.size() > 1) {
-		String strDeltaH;
-		if (GetIrregularHead() < 0) 
-			strDeltaH = Format(t_("delta %.1f [º]"), head[1] - head[0]);
-		else {
-			String strHead;
-			for (int i = 0; i < head.size(); ++i) {
-				if (i > 0)
-					strHead << ", ";
-				strHead << head[i];
-			}
-			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
-		}
-	 	heads = Format(t_("%.1f to %.1f %s"), head[0], head[head.size()-1], strDeltaH);	
-	} else
-		heads = Format(t_("%.1f [º]"), head[0]);
-	
-	BEM::Print("\n" + Format(t_("#freqs: %d (%s)"), Nf, freqs)); 
-	BEM::Print("\n" + Format(t_("#1st order headings: %d (%s)"), Nh, heads)); 
-	BEM::Print("\n" + Format(t_("#bodies: %d"), Nb));
-	for (int ib = 0; ib < Nb; ++ib) {
-		String str = Format("\n%d.", ib+1);
-		str += " '" + msh[ib].name + "'";
-		//if (dof.size() > ib)
-		//	str += S(" ") + t_("dof") + ": " + FormatInt(dof[ib]);
-		if (/*Vo.size() > ib && */IsNum(msh[ib].Vo))
-			str += S(" ") + t_("vol [m3]") + ": " + FDS(msh[ib].Vo, 8, false);
-		if (IsNum(msh[ib].cg))
-			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", msh[ib].cg.x, msh[ib].cg.y, msh[ib].cg.z);
-		if (IsNum(msh[ib].cb))
-			str += " " + Format("Cb(%.3f, %.3f, %.3f)[m]", msh[ib].cb.x, msh[ib].cb.y, msh[ib].cb.z);
-		if (IsNum(msh[ib].c0))
-			str += " " + Format("C0(%.3f, %.3f, %.3f)[m]", msh[ib].c0.x, msh[ib].c0.y, msh[ib].c0.z);
-		
-		BEM::Print(str);
-	}
-}
-/*
-void Hydro::GetBodyDOF() {
-	dof.Clear();	 dof.SetCount(Nb, 0);
-	for (int ib = 0; ib < Nb; ++ib)
-		for (int idf = 0; idf < 6; ++idf)
-			if (IsAvailableDOF(ib, idf))
-				dof[ib]++;
-}
-*/
-String Hydro::AfterLoad(Function <bool(String, int)> Status) {
-	SortFrequencies();
-	SortHeadings();
-	
-	if (!IsLoadedA0())  
-		GetA0();
-	
-	if ((!IsLoadedAinf() || !IsLoadedKirf()) && Bem().calcAinf) {
-		if (!IsNum(Bem().maxTimeA) || Bem().maxTimeA == 0) 
-			return t_("Incorrect time for A∞ calculation. Please review it in Options");
-		if (!IsNum(Bem().numValsA) || Bem().numValsA < 10) 
-			return t_("Incorrect number of time values for A∞ calculation. Please review it in Options");
-		if (!IsLoadedKirf()) {
-			if (Status && !Status(t_("Obtaining the Impulse Response Function"), 40)) 
-				return t_("Cancelled by the user");
-			GetK_IRF(min(Bem().maxTimeA, GetK_IRF_MaxT()), Bem().numValsA);
-		}
-		if (!IsLoadedAinf()) {
-			if (Status && !Status(t_("Obtaining the infinite-frequency added mass (A∞)"), 70)) 
-				return t_("Cancelled by the user");
-			GetAinf();
-		}
-	}
-	if (Bem().calcAinf_w) {
-		if (!IsLoadedKirf())
-			GetK_IRF(min(Bem().maxTimeA, GetK_IRF_MaxT()), Bem().numValsA);
-		if (!IsLoadedAinf())
-			GetAinf();
-		if (Status && !Status(t_("Obtaining the frequency-dependent infinite-frequency added mass (A∞(ω))"), 90)) 
-			return t_("Cancelled by the user");
-		GetAinf_w();
-	}
-	
-	CompleteForces1st();
-	
-//	if (Ainf_w.size() == 0)
-//		InitAinf_w();
-//	if (Ainf.size() == 0)
-//		Ainf.setConstant(Nb*6, Nb*6, 0);
-	
-	/*try {
-		CheckNaN();
-	} catch (Exc e) {
-		lastError = e;
-		return false;
-	}*/
-	
-	// Fill the other side of the diagonal. If Null, fill with zero
-	auto FillNullQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
-		for (int ib = 0; ib < Nb; ++ib) {
-	        for (int ih = 0; ih < qh.size(); ++ih) {
-				for (int idf = 0; idf < 6; ++idf) { 
-					MatrixXcd &c = qtf[ib][ih][idf];
-					Eigen::Index rows = c.rows();
-					for (int iw = 0; iw < rows; ++iw) {
-						for (int jw = iw+1; jw < rows; ++jw) {
-							std::complex<double> &cij = c(iw, jw), &cji = c(jw, iw);
-							if (IsNull(cij)) {
-								if (IsNull(cji))
-									cij = cji = 0;
-								else {
-									if (isSum) 
-										cij = cji;
-									else
-										cij = std::complex<double>(cji.real(), -cji.imag());;
-								}
-							} else {
-								if (IsNull(cji)) {
-									if (isSum) 
-										cji = cij;
-									else
-										cji = std::complex<double>(cij.real(), -cij.imag());
-								}
-							}
-						}
-					}
-				}
-	        }
-		}
-	};
-	if (IsLoadedQTF(true)) 
-		FillNullQTF(qtfsum, true);
-	if (IsLoadedQTF(false))
-		FillNullQTF(qtfdif, false);
-	
-	for (int ib = 0; ib < msh.size(); ++ib) {
-		Mesh &m = msh[ib];
-		String ret;
-		if (!m.mesh.IsEmpty())
-			ret = m.mesh.CheckErrors();
-		if (!ret.IsEmpty())
-			return ret;
-		
-		m.fileName = file;
-		if (m.name.IsEmpty())
-			m.name = InitCaps(GetFileTitle(file));
-
-		if (symX) {
-			int npan = m.mesh.panels.size();
-			m.mesh.DeployXSymmetry();
-			if (!pots.IsEmpty()) {
-				pots[ib].SetCount(2*npan);
-				for (int ipan = 0; ipan < npan; ++ipan) {
-					pots[ib][ipan + npan].SetCount(6);
-					for (int idf = 0; idf < 6; ++idf) 
-						pots[ib][ipan + npan][idf].SetCount(Nf);
-					for (int ifr = 0; ifr < Nf; ++ifr) {
-						pots[ib][ipan + npan][0][ifr] = -pots[ib][ipan][0][ifr];
-						pots[ib][ipan + npan][1][ifr] =  pots[ib][ipan][1][ifr];
-						pots[ib][ipan + npan][2][ifr] =  pots[ib][ipan][2][ifr];
-						pots[ib][ipan + npan][3][ifr] =  pots[ib][ipan][3][ifr];
-						pots[ib][ipan + npan][4][ifr] = -pots[ib][ipan][4][ifr];
-						pots[ib][ipan + npan][5][ifr] = -pots[ib][ipan][5][ifr];
-					}
-				}
-			}
-		}
-		if (symY) {
-			int npan = m.mesh.panels.size();
-			m.mesh.DeployYSymmetry();
-			if (IsLoadedPots()) {
-				pots[ib].SetCount(2*npan);
-				for (int ipan = 0; ipan < npan; ++ipan) {
-					pots[ib][ipan + npan].SetCount(6);
-					for (int idf = 0; idf < 6; ++idf) 
-						pots[ib][ipan + npan][idf].SetCount(Nf);
-					for (int ifr = 0; ifr < Nf; ++ifr) {
-						pots[ib][ipan + npan][0][ifr] =  pots[ib][ipan][0][ifr];
-						pots[ib][ipan + npan][1][ifr] = -pots[ib][ipan][1][ifr];
-						pots[ib][ipan + npan][2][ifr] =  pots[ib][ipan][2][ifr];
-						pots[ib][ipan + npan][3][ifr] = -pots[ib][ipan][3][ifr];
-						pots[ib][ipan + npan][4][ifr] =  pots[ib][ipan][4][ifr];
-						pots[ib][ipan + npan][5][ifr] = -pots[ib][ipan][5][ifr];
-					}
-				}
-			}
-		}
-		m.AfterLoad(rho, g, false, true);
-	}
-	if (IsLoadedPots()) {
-		Initialize_AB(A_P, 0);
-		Initialize_AB(B_P, 0);
-		
-		Apan = Tensor<double, 5>(Nb, pots[0].size(), 6, 6, Nf);
-		Bpan = Tensor<double, 5>(Nb, pots[0].size(), 6, 6, Nf);
-		
-		UVector<double> n(6);
-		for (int ib = 0; ib < Nb; ++ib) {
-			const Value3D &c0_ = msh[ib].c0;
-			for (int idp = 0; idp < pots[ib].size(); ++idp) {
-				const Panel &p = msh[ib].mesh.panels[idp];
-				double s = p.surface0 + p.surface1;
-				const Value3D &n1 = p.normalPaint;
-				n[0] = n1[0];	n[1] = n1[1];	n[2] = n1[2];
-				for (int ifr = 0; ifr < Nf; ++ifr) {
-					double rho_w = rho/w[ifr];
-					Value3D r = p.centroidPaint - c0_;
-					Value3D n2 = r%n1;
-					n[3] = n2[0];	n[4] = n2[1];	n[5] = n2[2];
-					
-					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						const std::complex<double> &comp = pots[ib][idp][idf2][ifr];
-						for (int idf1 = 0; idf1 < 6; ++idf1) {
-							A_P[idf1 + ib*6][idf2 + ib*6][ifr] += (Apan(ib, idp, idf1, idf2, ifr) = rho_w*comp.imag()*n[idf1]*s);
-							B_P[idf1 + ib*6][idf2 + ib*6][ifr] -= (Bpan(ib, idp, idf1, idf2, ifr) = rho*comp.real()*n[idf1]*s);
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	return String();
-}
-
-int Hydro::GetW0() {
-	for (int i = 0; i < w.size(); ++i) {
-		if (w[i] < 0.0001)
-			return i;
-	}
-	return Null;
-}
-
-void Hydro::Get3W0(int &id1, int &id2, int &id3) {
-	UVector<double> ww = clone(w);
-	
-	Sort(ww);
-	id1 = FindAdd(w, ww[0]);
-	id2 = FindAdd(w, ww[1]); 
-	id3 = FindAdd(w, ww[2]); 
-}
-
-void Hydro::GetA0() {
-	if (!IsLoadedA())
-		return;
-	
-	int iw0 = GetW0();
-	if (IsNum(iw0)) {
-		A0.setConstant(Nb*6, Nb*6, Null);
-		for (int i = 0; i < Nb*6; ++i)
-	        for (int j = 0; j < Nb*6; ++j)
-				A0(i, j) = A[i][j][iw0];
-	} else if (w.size() < 3)
-		return;
-	else {
-		int iw1, iw2, iw3;
-		Get3W0(iw1, iw2, iw3);
-		double wiw1 = w[iw1];
-		double wiw2 = w[iw2];
-		double wiw3 = w[iw3];
-		if (wiw1 > 0.5 && wiw1 > 3*(wiw2 - wiw1))	// Too high to guess A[0]
-			return;
-		A0.setConstant(Nb*6, Nb*6, Null);
-		for (int i = 0; i < Nb*6; ++i)
-	        for (int j = 0; j < Nb*6; ++j) {
-				if (!IsNum(A[i][j][iw1]) || !IsNum(A[i][j][iw2]) || !IsNum(A[i][j][iw3]))
-	                A0(i, j) = Null;
-	            else {
-	                double val = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, A[i][j][iw1], A[i][j][iw2], A[i][j][iw3]);
-	        		if (abs(val) < 0.0000001) {
-			    		if (abs(A[i][j][iw1]) < 0.0000001) 
-	                        A0(i, j) = val;
-	                    else
-	                    	A0(i, j) = Null;
-	                } else if (abs(1 - val/A[i][j][iw1]) > 0.3)
-	                    A0(i, j) = Null;	// Too far to be good
-	                else
-						A0(i, j) = val;
-	            }
-	        }
-	}
-}
-
-String Hydro::C_units_base(int i, int j) {
-	if (i == 2 && j == 2)
-		return "N/m";
-	else if ((i == 2 && j == 3) || (i == 2 && j == 4))
-		return "N/rad";
-	else if (i >= 3 && j >= 3)
-		return "Nm/rad";
-	else
-		return "";
-}
-
-String Hydro::C_units(int i, int j) {
-	String ret = C_units_base(i, j);
-	if (ret.IsEmpty())
-		return C_units_base(j, i);
-	return ret;
-}
-
-void Hydro::SetC(int ib, const MatrixXd &K) {		// K is supposed to be dimensionalized
-	//if (C.IsEmpty())
-	//	C.SetCount(Nb);
-	if (msh[ib].C.size() == 0)
-		msh[ib].C.setConstant(6, 6, Null); 
-	for (int idf = 0; idf < 6; ++idf) {
-		for (int jdf = 0; jdf < 6; ++jdf) {
-			double k = dimen ? g_rho_dim()/g_rho_ndim() : g_rho_ndim()*pow(len, GetK_C(idf, jdf));
-	      	msh[ib].C(idf, jdf) = K(idf, jdf)/k;
-		}
-	}
-}
-
-int Hydro::GetIrregularHead() const {
-	if (Nh <= 2)
-		return -1;
-	double delta0 = head[1] - head[0];
-	for (int i = 1; i < Nh - 1; ++i) {
-		double delta = head[i+1] - head[i];
-		if (!EqualRatio(delta, delta0, 0.001))
-			return i;
-	}
-	return -1;
-}
-
-int Hydro::GetIrregularFreq() const {
-	if (Nf <= 2)
-		return -1;
-	double delta0 = w[1] - w[0];
-	for (int i = 1; i < Nf - 1; ++i) {
-		double delta = w[i+1] - w[i];
-		if (!EqualRatio(delta, delta0, delta0/10))
-			return i;
-	}
-	return -1;
-}
-
-double Hydro::g_dim() 		const {return Bem().g;}					// Dimensionalize only with system data
-double Hydro::g_ndim()		const {return IsNum(g) ? g : Bem().g;}	// Nondimensionalize with model data, if possible
-double Hydro::rho_dim() 	const {return Bem().rho;}		
-double Hydro::rho_ndim()	const {return IsNum(rho) ? rho : Bem().rho;}
-double Hydro::g_rho_dim() 	const {return Bem().rho*Bem().g;}
-double Hydro::g_rho_ndim()	const {return g_ndim()*rho_ndim();}
-
-void Hydro::StateSpace::GetTFS(const UVector<double> &w) {
-	Eigen::Index sz = A_ss.rows();
-	TFS.SetCount(w.size());
-	for (int ifr = 0; ifr < w.size(); ++ifr) {
-		std::complex<double> wi = std::complex<double>(0, w[ifr]);
-		
-		MatrixXcd Iwi_A = MatrixXd::Identity(sz, sz)*wi - A_ss;
-		
-		if (FullPivLU<MatrixXcd>(Iwi_A).isInvertible())
-			TFS[ifr] = (C_ss.transpose()*Iwi_A.inverse()*B_ss)(0);	// C_ss*inv(I*w*i-A_ss)*B_ss
-		else
-			TFS[ifr] = Null;
-	}		
-}
-
-int Hydro::GetHeadId(double hd) const {
-	hd = FixHeading_180(hd);
-	for (int i = 0; i < head.size(); ++i) {
-		if (EqualRatio(FixHeading_180(head[i]), hd, 0.01))
-			return i;
-	}
-	return -1;
-}
-
-int Hydro::GetHeadIdMD(const std::complex<double> &hd) const {
-	std::complex<double> hd_ = FixHeading_180(hd);
-	for (int i = 0; i < mdhead.size(); ++i) {
-		if (EqualRatio(FixHeading_180(mdhead[i]), hd_, 0.01))
-			return i;
-	}
-	return -1;
-}
-
-VectorXd Hydro::B_dim(int idf, int jdf) const {
-	if (dimen)
-		return B[idf][jdf]*(rho_dim()/rho_ndim());
-	else {
-		VectorXd ret = B[idf][jdf]*(rho_dim()*pow(len, GetK_AB(idf, jdf)));
-		VectorXd ww = Get_w();
-		return ret.array()*ww.array();
-	}
-}
-
-VectorXd Hydro::B_ndim(int idf, int jdf) const {
-	if (B[idf][jdf].size() == 0)
-		return VectorXd();
-	if (!dimen)
-		return B[idf][jdf]*(rho_ndim()/rho_dim());
-	else {
-		VectorXd ret = B[idf][jdf]/(rho_ndim()*pow(len, GetK_AB(idf, jdf)));
-		VectorXd ww = Get_w();
-		return ret.array()/ww.array();
-	}
-}
-
-
-void Hydro::GetOldAB(const UArray<MatrixXd> &oldAB, UArray<UArray<VectorXd>> &AB) {
-	AB.Clear();
-	int Nf = oldAB.size();
-	int Nb = 0;
-	if (Nf > 0)
-		Nb = int(oldAB[0].rows())/6;
-	AB.SetCount(6*Nb);
-	for (int i = 0; i < 6*Nb; ++i) {
-		AB[i].SetCount(6*Nb);
-		for (int j = 0; j < 6*Nb; ++j) {
-			AB[i][j].resize(Nf);	
-			for (int idf = 0; idf < Nf; ++idf) 
-				AB[i][j][idf] = oldAB[idf](i, j);	
-		}
-	}
-}
-
-void Hydro::SetOldAB(UArray<MatrixXd> &oldAB, const UArray<UArray<VectorXd>> &AB) {
-	oldAB.Clear();
-	int Nb = AB.size()/6;
-	int Nf = 0;
-	if (Nb > 0)
-		Nf = int(AB[0][0].size());
-	oldAB.SetCount(Nf);
-	for (int idf = 0; idf < Nf; ++idf) {
-		oldAB[idf].resize(6*Nb, 6*Nb);
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				oldAB[idf](i, j) = AB[i][j][idf];
-	}
-}
-
-MatrixXd Hydro::A_mat(bool ndim, int ifr, int ib1, int ib2) const {
-	MatrixXd ret;
-	if (!IsLoadedA())
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = A_(ndim, ifr, idf + 6*ib1, jdf + 6*ib2);
-	return ret;
-}
-
-MatrixXd Hydro::Ainf_mat(bool ndim, int ib1, int ib2) const {
-	MatrixXd ret;
-	if (!IsLoadedAinf())
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = Ainf_(ndim, idf + 6*ib1, jdf + 6*ib2);
-	return ret;
-}
-
-MatrixXd Hydro::B_mat(bool ndim, int ifr, int ib1, int ib2) const {
-	MatrixXd ret;
-	if (!IsLoadedA())
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = B_(ndim, ifr, idf + 6*ib1, jdf + 6*ib2);
-	return ret;
-}
-
-MatrixXd Hydro::C_(bool ndim, int ib) const {
-	MatrixXd ret;
-	if (msh[ib].C.size() == 0)
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = C_(ndim, ib, idf, jdf);
-	return ret;
-}
-
-MatrixXd Hydro::CMoor_(bool ndim, int ib) const {
-	MatrixXd ret;
-	if (msh[ib].Cmoor.size() == 0)
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = CMoor_(ndim, ib, idf, jdf);
-	return ret;
-}
-
-MatrixXd Hydro::Dlin_dim(int ib) const {
-	MatrixXd ret;
-	if (!IsLoadedDlin())
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = msh[ib].Dlin(idf, jdf);
-	return ret;
-}
-
-MatrixXd Hydro::Dquad_dim(int ib) const {
-	MatrixXd ret;
-	if (!IsLoadedDquad())
-		return ret;
-	ret.resize(6, 6);
-	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = msh[ib].Dquad(idf, jdf);
-	return ret;
-}
-
-void Hydro::C_dim() {
-	//if (C.IsEmpty())
-	//	return;
-	for (int ib = 0; ib < Nb; ++ib) 
-		for (int idf = 0; idf < 6; ++idf) 	
-			for (int jdf = 0; jdf < 6; ++jdf) 
-				msh[ib].C(idf, jdf) = C_dim(ib, idf, jdf);
-}
-
-void Hydro::F_dim(Forces &f) {
-	if (f.force.IsEmpty())
-		return;
-	for (int ih = 0; ih < Nh; ++ih) 	
-		for (int ifr = 0; ifr < Nf; ++ifr)
-			for (int idf = 0; idf < 6*Nb; ++idf) 
-				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
-}
-
-VectorXcd Hydro::F_(bool ndim, const Forces &f, int _h, int ifr) const {
-	VectorXcd ret;
-	if (f.force.IsEmpty())
-		return ret;
-	ret.resize(6);
-	for (int idf = 0; idf < 6; ++idf) 
-		ret[idf] = F_(ndim, f, _h, ifr, idf);
-	return ret;
-}
-
-VectorXcd Hydro::F_dof(bool ndim, const Forces &f, int _h, int idf) const {
-	VectorXcd ret;
-	if (f.force.IsEmpty())
-		return ret;
-	ret.resize(Nf);
-	for (int ifr = 0; ifr < Nf; ++ifr) 
-		ret[ifr] = F_(ndim, f, _h, ifr, idf);
-	return ret;
-}
-
-void Hydro::RAO_dim(RAO &f) {
-	if (f.force.IsEmpty())
-		return;
-	for (int ih = 0; ih < Nh; ++ih) 	
-		for (int ifr = 0; ifr < Nf; ++ifr)
-			for (int idf = 0; idf < 6*Nb; ++idf) 
-				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
-}
-
-VectorXcd Hydro::RAO_(bool ndim, const RAO &f, int _h, int ifr) const {
-	VectorXcd ret;
-	if (f.force.IsEmpty())
-		return ret;
-	ret.resize(6);
-	for (int idf = 0; idf < 6; ++idf) 
-		ret[idf] = RAO_(ndim, f, _h, ifr, idf);
-	return ret;
-}
-
-VectorXcd Hydro::RAO_dof(bool ndim, int _h, int idf) const {
-	return RAO_dof(ndim, rao, _h, idf);
-}
-
-VectorXcd Hydro::RAO_dof(bool ndim, const RAO &f, int _h, int idf) const {
-	VectorXcd ret;
-	if (f.force.IsEmpty())
-		return ret;
-	ret.resize(Nf);
-	for (int ifr = 0; ifr < Nf; ++ifr) 
-		ret[ifr] = RAO_(ndim, f, _h, ifr, idf);
-	return ret;
-}
-
-VectorXd Hydro::Md_dof(bool ndim, int _h, int idf) const {
-	VectorXd ret;
-	if (md.IsEmpty())
-		return ret;
-	ret.resize(Nf);
-	for (int ifr = 0; ifr < Nf; ++ifr) 
-		ret[ifr] = Md_(ndim, idf, _h, ifr);
-	return ret;
-}
-
-MatrixXcd Hydro::QTF_dof(bool ndim, bool isSum, int _h, int idf, int ib) const {
-	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? qtfsum : qtfdif;
-	
-	MatrixXcd ret;
-	if (qtf.IsEmpty())
-		return ret;
-	ret.resize(qw.size(), qw.size());
-	for (int ifr1 = 0; ifr1 < qw.size(); ++ifr1) 
-		for (int ifr2 = 0; ifr2 < qw.size(); ++ifr2) 
-			ret(ifr1, ifr2) = F_(ndim, qtf[ib][_h][idf](ifr1, ifr2), idf);
-	return ret;
-}
-
-
-void Hydro::CheckNaN() {
-	if (!IsNum(A))
-		throw Exc("Error loading A. NaN found");
-	if (!IsNum(Ainf_w))
-		throw Exc("Error loading Ainfw. NaN found");
-	if (!IsNum(Ainf))
-		throw Exc("Error loading Awinf. NaN found");
-	if (!IsNum(A0))
-		throw Exc("Error loading A_0. NaN found");
-	if (!IsNum(B))
-		throw Exc("Error loading B. NaN found");
-	if (!IsNum(head))
-		throw Exc("Error loading head. NaN found");
-//	if (!IsNum(M))
-//		throw Exc("Error loading M. NaN found");
-//	if (!IsNum(C))
-//		throw Exc("Error loading C. NaN found");
-	//if (!IsNum(dof))
-		//throw Exc("Error loading dof. NaN found");
-	if (!IsNum(Kirf))
-		throw Exc("Error loading Kirf. NaN found");
-	if (!IsNum(Tirf))
-		throw Exc("Error loading Tirf. NaN found");
-	if (!IsNum(ex))
-		throw Exc("Error loading ex. NaN found");
-	if (!IsNum(sc))
-		throw Exc("Error loading sc. NaN found");
-	if (!IsNum(fk))
-		throw Exc("Error loading fk. NaN found");
-	if (!IsNum(rao))
-		throw Exc("Error loading rao. NaN found");	
-	
-	for (int ib = 0; ib < Nb; ++ib) {
-		if (!IsNum(msh[ib].cb))
-			throw Exc("Error loading cb. NaN found");
-		if (!IsNum(msh[ib].cg))
-			throw Exc("Error loading cg. NaN found");
-		if (!IsNum(msh[ib].c0))
-			throw Exc("Error loading c0. NaN found");
-		
-		if (!IsNum(msh[ib].M))
-			throw Exc("Error loading M. NaN found");
-		if (!IsNum(msh[ib].C))
-			throw Exc("Error loading C. NaN found");
-	}
-}
-
-double Hydro::Tdof(int ib, int idf) const {
-	if (!IsLoadedAinf(idf+6*ib, idf+6*ib) || !IsLoadedM(ib, idf, idf) || !IsLoadedC(ib, idf, idf))
-		return Null;
-	double c = C_dim(ib, idf, idf);
-	if (c == 0)
-		return Null;
-	double m = msh[ib].M(idf, idf);
-	double a = Ainf_dim(ib*6+idf, ib*6+idf);
-	double d = (m + a)/c;
-	if (d < 0)
-		return Null;
-	return 2*M_PI*sqrt(d); 
-}
-
-double Hydro::Tdofw(int ib, int idf) const {
-	if (!IsLoadedA(idf+6*ib, idf+6*ib) || !IsLoadedM(ib, idf, idf) || !IsLoadedC(ib, idf, idf))
-		return Null;
-	double c = C_dim(ib, idf, idf);
-	if (c == 0)
-		return Null;
-	double m = msh[ib].M(idf, idf);
-	VectorXd nw(w.size());
-	for (int ifr = 0; ifr < w.size(); ++ifr) {
-		double a = A_dim(ifr, ib*6+idf, ib*6+idf);
-		double d = (m + a)/c;
-		if (d < 0)
-			return Null;
-		nw[ifr] = 1/sqrt(d); 
-	}
-	VectorXd delta = Get_w() - nw;
-	
-	UVector<double> zeros; 
-	ZeroCrossing(Get_w(), delta, true, true, zeros);
-	if (zeros.IsEmpty())
-		return Null;
-	return 2*M_PI/First(zeros); 
-}
-
-double Hydro::Theave(int ib)  const {return Tdof(ib, 2);}
-double Hydro::Theavew(int ib) const {return Tdofw(ib, 2);}
-double Hydro::Troll(int ib)   const {return Tdof(ib, 3);}
-double Hydro::Trollw(int ib)  const {return Tdofw(ib, 3);}
-double Hydro::Tpitch(int ib)  const {return Tdof(ib, 4);}
-double Hydro::Tpitchw(int ib) const {return Tdofw(ib, 4);}
-
-double Hydro::GM(int ib, int idf) const {
-	if (/*Vo.size() <= ib*/ !IsNum(msh[ib].Vo) || msh[ib].Vo == 0)
-		return Null;
-	double den = rho_dim()*g_dim()*msh[ib].Vo;
-	if (den == 0)
-		return Null;
-	if (IsLoadedC(ib))
-		return C_dim(ib, idf, idf)/den;
-	else
-		return Null;
-}
-
-double Hydro::GMroll(int ib) const {
-	return GM(ib, 3);
-}
-
-double Hydro::GMpitch(int ib) const {
-	return GM(ib, 4);
-}
-
-void Hydro::Jsonize(JsonIO &json) {
-	int icode;
-	UArray<MatrixXd> oldA, oldB, oldKirf;
-	if (json.IsStoring()) {
-		icode = solver;
-		SetOldAB(oldA, A);
-		SetOldAB(oldB, B);
-		SetOldAB(oldKirf, Kirf);
-	}
-	json
-		("file", file)
-		("name", name)
-		("g", g)
-		("h", h)
-		("rho", rho)
-		("len", len)
-		("dimen", dimen)
-		("Nb", Nb)
-		("Nf", Nf)
-		("Nh", Nh)
-		("A", oldA)
-		("Awinf", Ainf)
-		("Aw0", A0)
-		("B", oldB)
-		("head", head)
-		//("names", names)
-		//("C", C)
-		//("cb", cb)
-		//("cg", cg)
-		//("c0", c0)
-		("code", icode)
-		//("dof", dof)
-//		("dofOrder", dofOrder)
-		("Kirf", oldKirf)
-		("Tirf", Tirf)
-		("ex", ex)
-		("sc", sc)
-		("fk", fk)
-		("rao", rao)
-		("sts", sts)
-		//("T", T)
-		("w", w)
-		("dataFromW", dataFromW)
-		//("Vo", Vo)
-		("stsProcessor", stsProcessor)
-		("dimenSTS", dimenSTS)
-		("description", description)
-		("qtfsum", qtfsum)
-		("qtfdif", qtfdif)
-		//("Dlin", Dlin)
-		("msh", msh)
-	;
-	if(json.IsLoading()) {
-		solver = static_cast<Hydro::BEM_FMT>(icode);
-		GetOldAB(oldA, A);
-		GetOldAB(oldB, B);
-		GetOldAB(oldKirf, Kirf);
-	}
-}
 	
 BEM::BEM() {
 	bemFilesAst = clone(bstFilesExt);	// clone(bemFilesExt);
@@ -2287,7 +46,7 @@ int BEM::LoadBEM(String fileName, Function <bool(String, int)> Status, bool chec
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < hydros.size(); ++i) {
-			if (hydros[i].hd().file == fileName) {
+			if (hydros[i].dt.file == fileName) {
 				BEM::Print(S("\n") + t_("Model is already loaded"));
 				throw Exc(Format(t_("Model '%s' is already loaded"), fileName));
 			}
@@ -2300,18 +59,10 @@ int BEM::LoadBEM(String fileName, Function <bool(String, int)> Status, bool chec
 	
 	int num = Hydro::LoadHydro(hydros, fileName, Status);
 	
-	for (int i = hydros.size() - num; i < hydros.size(); ++i) {
-		Hydro &hyd = hydros[i].hd();
-
-		String ret = hyd.AfterLoad(Status);
-		if (!ret.IsEmpty()) {
-			//String error = RemoveAccents(ret);
-			//hydros.SetCount(hydros.size()-1);
-			throw Exc(Format(t_("Problem processing '%s'\n%s"), fileName, ret));	
-		}
-	}
-	
-	
+	Bem().Nb = 0;
+	for (int i = 0; i < hydros.size(); ++i) 
+		Bem().Nb = max(Bem().Nb, hydros[i].dt.Nb);	
+		
 	/*if (discardNegDOF) {
 		if (Status && !Status(t_("Discarding negligible DOF"), 90)) {
 			hydros.SetCount(hydros.size()-1);	
@@ -2347,72 +98,23 @@ void HydroClass::LoadHydro(HydroClass &hydro, String file, Function <bool(String
 	hydro = pick(First(hyd));
 }*/
 
-int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, int)> Status) {
-	String ext = ToLower(GetFileExt(file));
-	String ret;
-	
-	int num = 1;
-	
-	if (ext == ".nc")
-		ret = CapyNC_Load(file, hydros, num);
-	else {
-		Hydro &hyd = hydros.Add();	
-	
-		if (ext == ".cal" || ext == ".tec" || ext == ".inf") 
-			ret = static_cast<Nemoh&>(hyd).Load(file, Status);
-		else if (ext == ".out") 
-			ret = static_cast<Wamit&>(hyd).Load(file, Status);
-		else if (ext == ".in") 
-			ret = static_cast<Hams&>(hyd).Load(file, Status);
-		else if (ext == ".dat" || ext == ".fst") 
-			ret = static_cast<Fast&>(hyd).Load(file, Status);
-		else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
-				   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot" || ext == ".mmx") 
-			ret = static_cast<Wamit&>(hyd).Load(file, Status);
-		else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") 
-			ret = static_cast<Aqwa&>(hyd).Load(file, Status);
-		else if (ext == ".hdb") 
-			ret = static_cast<Diodore&>(hyd).Load(file, Status);
-		else if (ext == ".yml")
-			ret = static_cast<OrcaWave&>(hyd).Load(file, Status);
-	#ifdef PLATFORM_WIN32	
-		else if (ext == ".owr") 
-			ret = static_cast<OrcaWave&>(hyd).Load(file, Status);
-	#endif
-		else if (ext == ".mat") 
-			ret = static_cast<Foamm&>(hyd).Load(file);
-		else if (ext == ".bem") 
-			ret = static_cast<Hydro&>(hyd).LoadSerialization(file);
-		else if (ext == ".h5") 
-			ret = static_cast<BemioH5&>(hyd).Load(file, Status);
-		else if (ext == ".owd") 
-			ret = t_("OrcaWAVE .owd binary format is not supported.\nHowever OrcaFLEX .yml is supported.\nTo get it, load the .owd file in OrcaFlex and save it as .yml");
-		else 
-			ret = Format(t_("Unknown BEM file extension in '%s'"), file);	
-	}
-	if (!ret.IsEmpty()) 
-		throw Exc(ret);//Format(t_("Problem loading '%s'\n%s"), file, error));	
-	
-	return num;
-}
-
 Hydro &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
 	UVector<Hydro *>hydrosp;
 	
 	hydrosp.SetCount(ids.size());
 	for (int i = 0; i < ids.size(); ++i) 
-		hydrosp[i] = &hydros[ids[i]].hd(); 
+		hydrosp[i] = &hydros[ids[i]]; 
 	
-	Hydro &data = hydros.Create<Hydro>();
-	data.hd().Join(hydrosp);
-	String error = data.hd().AfterLoad(Status);
+	Hydro &hy = hydros.Create<Hydro>();
+	hy.Join(hydrosp);
+	String error = hy.AfterLoad(Status);
 	if (!error.IsEmpty()) 
 		throw Exc(Format(t_("Problem joining models: '%s'\n%s"), error));	
 	
 	Sort(ids, StdLess<int>());
 	for (int i = ids.size()-1; i >= 0; --i)
 		hydros.Remove(ids[i]);
-	return data;
+	return hy;
 }
 
 void BEM::RemoveHydro(int id) {
@@ -2422,23 +124,23 @@ void BEM::RemoveHydro(int id) {
 }
 
 Hydro &BEM::Duplicate(int id) {
-	Hydro &data = hydros.Create<Hydro>();
-	data.hd().Copy(hydros[id].hd());
+	Hydro &hy = hydros.Create<Hydro>();
+	hy.Copy(hydros[id]);
 	
-	return data;
+	return hy;
 }
 
 Hydro &BEM::Average(UVector<int> &ids) {
-	Hydro &data = hydros.Create<Hydro>();
-	data.hd().Average(hydros, ids);
+	Hydro &hy = hydros.Create<Hydro>();
+	hy.Average(hydros, ids);
 	
-	return data;
+	return hy;
 }
 
 void BEM::SymmetrizeForces(int id, bool xAxis) {
-	hydros[id].hd().Symmetrize_Forces(xAxis);
-	hydros[id].hd().Symmetrize_QTF(xAxis);
-	hydros[id].hd().Symmetrize_MD(xAxis);
+	hydros[id].Symmetrize_Forces(xAxis);
+	hydros[id].Symmetrize_QTF(xAxis);
+	hydros[id].Symmetrize_MD(xAxis);
 	
 	UpdateHeadAll();
 	UpdateHeadAllMD();
@@ -2449,8 +151,8 @@ void BEM::UpdateHeadAll() {
 	//orderHeadAll.Clear();
 				
 	for (int id = 0; id < hydros.size(); ++id) {
-		for (int ih = 0; ih < hydros[id].hd().head.size(); ++ih) 
-			FindAddDelta(headAll, FixHeading(hydros[id].hd().head[ih], headingType), 0.1);
+		for (int ih = 0; ih < hydros[id].dt.head.size(); ++ih) 
+			FindAddDelta(headAll, FixHeading(hydros[id].dt.head[ih], headingType), 0.1);
 	}
 	Sort(headAll);
 	//orderHeadAll = GetSortOrderX(headAll);
@@ -2461,98 +163,98 @@ void BEM::UpdateHeadAllMD() {
 	//orderHeadAll.Clear();
 				
 	for (int id = 0; id < hydros.size(); ++id) {
-		for (int ih = 0; ih < hydros[id].hd().mdhead.size(); ++ih) 
-			FindAddDelta(headAllMD, FixHeading(hydros[id].hd().mdhead[ih], headingType), 0.1);
+		for (int ih = 0; ih < hydros[id].dt.mdhead.size(); ++ih) 
+			FindAddDelta(headAllMD, FixHeading(hydros[id].dt.mdhead[ih], headingType), 0.1);
 	}
 	Sort(headAllMD, SortComplex);
 	//orderHeadAll = GetSortOrderX(headAll);
 }
 
 void BEM::A0(int id) {
-	hydros[id].hd().GetA0();
+	hydros[id].GetA0();
 }
 
 void BEM::Kirf(int id, double maxT) {
-	hydros[id].hd().GetK_IRF(maxT, numValsA);
+	hydros[id].GetK_IRF(maxT, numValsA);
 }
 
 void BEM::Ainf(int id) {
-	hydros[id].hd().GetAinf();
+	hydros[id].GetAinf();
 } 
 
 void BEM::Ainf_w(int id) {
-	hydros[id].hd().GetAinf_w();
+	hydros[id].GetAinf_w();
 }
 
 void BEM::RAO(int id) {
-	hydros[id].hd().GetRAO();
+	hydros[id].GetRAO();
 }
 
 void BEM::BH(int id, int &num) {
-	hydros[id].hd().GetB_H(num);
+	hydros[id].GetB_H(num);
 } 
 
 void BEM::Symmetrize(int id) {
-	hydros[id].hd().Symmetrize();
+	hydros[id].Symmetrize();
 }
 
 void BEM::OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof) {
-	hydros[id].hd().GetOgilvieCompliance(zremoval, thinremoval, decayingTail, vidof, vjdof);
+	hydros[id].GetOgilvieCompliance(zremoval, thinremoval, decayingTail, vidof, vjdof);
 }
 
 void BEM::ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf) {
-	hydros[id].hd().ResetForces(force, forceMD, forceQtf);
+	hydros[id].ResetForces(force, forceMD, forceQtf);
 }
 
 void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf) {
-	hydros[id].hd().MultiplyDOF(factor, idDOF, a, b, diag, f, md, qtf);
+	hydros[id].MultiplyDOF(factor, idDOF, a, b, diag, f, md, qtf);
 }
 
 void BEM::SwapDOF(int id, int ib1, int idof1, int ib2, int idof2) {
 	if (idof1 < 0)
-		hydros[id].hd().SwapDOF(ib1, ib2);
+		hydros[id].SwapDOF(ib1, ib2);
 	else	
-		hydros[id].hd().SwapDOF(ib1, idof1, ib2, idof2);
+		hydros[id].SwapDOF(ib1, idof1, ib2, idof2);
 }
 
 void BEM::FillFrequencyGapsABForces(int id, bool zero, int maxFreq) {
-	hydros[id].hd().FillFrequencyGapsABForces(zero, maxFreq);
+	hydros[id].FillFrequencyGapsABForces(zero, maxFreq);
 }
 
 void BEM::FillFrequencyGapsQTF(int id, bool zero, int maxFreq) {
-	hydros[id].hd().FillFrequencyGapsQTF(zero, maxFreq);
+	hydros[id].FillFrequencyGapsQTF(zero, maxFreq);
 }
 
 void BEM::FillFrequencyGapsABForcesZero(int id) {
-	hydros[id].hd().FillFrequencyGapsABForcesZero();
+	hydros[id].FillFrequencyGapsABForcesZero();
 }
 
 void BEM::FillFrequencyGapsQTFZero(int id) {
-	hydros[id].hd().FillFrequencyGapsQTFZero();
+	hydros[id].FillFrequencyGapsQTFZero();
 }
 
 void BEM::CopyQTF_MD(int id) {
-	hydros[id].hd().CopyQTF_MD();
+	hydros[id].CopyQTF_MD();
 }
 
 void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF) {
-	hydros[id].hd().DeleteFrequencies(idFreq);
-	hydros[id].hd().DeleteFrequenciesQTF(idFreqQTF);
-	hydros[id].hd().DeleteHeadings(idHead);
-	hydros[id].hd().DeleteHeadingsMD(idHeadMD);
-	hydros[id].hd().DeleteHeadingsQTF(idHeadQTF);
+	hydros[id].DeleteFrequencies(idFreq);
+	hydros[id].DeleteFrequenciesQTF(idFreqQTF);
+	hydros[id].DeleteHeadings(idHead);
+	hydros[id].DeleteHeadingsMD(idHeadMD);
+	hydros[id].DeleteHeadingsQTF(idHeadQTF);
 }
 
 void BEM::TranslationTo(int id, const MatrixXd &to) {
-	hydros[id].hd().GetTranslationTo(to);
+	hydros[id].GetTranslationTo(to);
 }
 
 void BEM::WaveTo(int id, double xto, double yto) {
-	hydros[id].hd().GetWaveTo(xto, yto);
+	hydros[id].GetWaveTo(xto, yto);
 }
 
 String BEM::SpreadNegative(int id, Function <bool(String, int)> Status) {
-	return hydros[id].hd().SpreadNegative(Status);
+	return hydros[id].SpreadNegative(Status);
 }
 
 int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
@@ -2560,7 +262,7 @@ int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < surfs.size(); ++i) {
-			if (surfs[i].fileName == fileName) {
+			if (surfs[i].dt.fileName == fileName) {
 				BEM::Print(S("\n") + t_("Model is already loaded"));
 				throw Exc(t_("Model is already loaded"));
 			}
@@ -2578,7 +280,7 @@ int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool
 	return num;
 }
 
-void BEM::SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, double g, Mesh::MESH_TYPE meshType, bool symX, bool symY) {
+void BEM::SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, Mesh::MESH_TYPE meshType, bool symX, bool symY) {
 	if (type == Mesh::UNKNOWN) {
 		String ext = ToLower(GetFileExt(fileName));
 		
@@ -2605,8 +307,8 @@ void BEM::SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type
 }
 
 void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
-	Status(Format(t_("Healing mesh '%s'"), surfs[id].fileName), 10);
-	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].fileName));
+	Status(Format(t_("Healing mesh '%s'"), surfs[id].dt.fileName), 10);
+	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].dt.fileName));
 	
 	String ret;
 	try {
@@ -2624,8 +326,8 @@ void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
 }
 
 void BEM::OrientSurface(int id, Function <bool(String, int)> Status) {
-	Status(Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName), 10);
-	Print(S("\n\n") + Format(t_("Orienting surface mesh '%s'"), surfs[id].fileName));
+	Status(Format(t_("Orienting surface mesh '%s'"), surfs[id].dt.fileName), 10);
+	Print(S("\n\n") + Format(t_("Orienting surface mesh '%s'"), surfs[id].dt.fileName));
 	
 	try {
 		surfs[id].Orient();
@@ -2637,14 +339,14 @@ void BEM::OrientSurface(int id, Function <bool(String, int)> Status) {
 }
 
 void BEM::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
-	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].fileName), 10);
+	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].dt.fileName), 10);
 	
 	Mesh &mesh = surfs.Add();
 	Mesh &orig = surfs[id];
-	mesh.fileName = orig.fileName;
+	mesh.dt.fileName = orig.dt.fileName;
 	
 	try {
-		mesh.mesh.CutZ(orig.mesh, -1);
+		mesh.dt.mesh.CutZ(orig.dt.mesh, -1);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
@@ -2661,10 +363,10 @@ void BEM::RemoveMesh(int id) {
 void BEM::JoinMesh(int idDest, int idOrig) {
 	const Mesh &orig = surfs[idOrig];
 	Mesh &dest = surfs[idDest];
-	dest.fileName << "/" << orig.fileName;
+	dest.dt.fileName << "/" << orig.dt.fileName;
 	
 	try {
-		dest.Append(orig.mesh, rho, g);
+		dest.Append(orig.dt.mesh, rho, g);
 		RemoveMesh(idOrig);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
@@ -2674,22 +376,22 @@ void BEM::JoinMesh(int idDest, int idOrig) {
 }
 
 UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
-	Status(Format(t_("Splitting mesh '%s'"), surfs[id].fileName), 0);
+	Status(Format(t_("Splitting mesh '%s'"), surfs[id].dt.fileName), 0);
 	Mesh &orig = surfs[id];
 	
 	UVector<int> ret;
 	try {
-		UVector<UVector<int>> sets = orig.mesh.GetPanelSets(Status);
+		UVector<UVector<int>> sets = orig.dt.mesh.GetPanelSets(Status);
 		if (sets.size() == 1)
 			return ret;
 		for (int i = 0; i < sets.size(); ++i) {		
 			Mesh &surf = surfs.Add();
 			ret << surfs.size()-1-1;		// One more as id is later removed
 			for (int ii = 0; ii < sets[i].size(); ++ii) 
-				surf.mesh.panels << clone(orig.mesh.panels[sets[i][ii]]);	
+				surf.dt.mesh.panels << clone(orig.dt.mesh.panels[sets[i][ii]]);	
 			
-			surf.mesh.nodes = clone(orig.mesh.nodes);
-			surf.SetCode(orig.GetCode());
+			surf.dt.mesh.nodes = clone(orig.dt.mesh.nodes);
+			surf.dt.SetCode(orig.dt.GetCode());
 			surf.AfterLoad(rho, g, false, true);
 		}
 		RemoveMesh(id);
@@ -2705,9 +407,9 @@ void BEM::AddFlatRectangle(double x, double y, double z, double size, double pan
 	try {
 		Mesh &surf = surfs.Add();
 
-		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddFlatRectangle(panWidth, panHeight, size, size); 
-		surf.mesh.Translate(x, y, z);
+		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.mesh.AddFlatRectangle(panWidth, panHeight, size, size); 
+		surf.dt.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
@@ -2719,9 +421,9 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 	try {
 		Mesh &surf = surfs.Add();
 
-		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddRevolution(vals, size); 
-		surf.mesh.Translate(x, y, z);
+		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.mesh.AddRevolution(vals, size); 
+		surf.dt.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
@@ -2733,9 +435,9 @@ void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<P
 	try {
 		Mesh &surf = surfs.Add();
 
-		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddPolygonalPanel(vals, size, true); 
-		surf.mesh.Translate(x, y, z);
+		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.mesh.AddPolygonalPanel(vals, size, true); 
+		surf.dt.mesh.Translate(x, y, z);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
@@ -2747,22 +449,22 @@ void BEM::AddWaterSurface(int id, char c) {
 	try {
 		Mesh &surf = surfs.Add();
 
-		surf.SetCode(Mesh::EDIT);
-		surf.mesh.AddWaterSurface(surfs[id].mesh, surfs[id].under, c, roundVal, roundEps); 
+		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.mesh.AddWaterSurface(surfs[id].dt.mesh, surfs[id].dt.under, c, roundVal, roundEps); 
 		
 		if (c == 'r')
-			surf.name = t_("Water surface removed");
+			surf.dt.name = t_("Water surface removed");
 		else if (c == 'f')
-			surf.name = t_("Water surface");
+			surf.dt.name = t_("Water surface");
 		else if (c == 'e')
-			surf.name = t_("Water surface extracted");
-		surf.name = surfs[id].name + " " + surf.name;
-		surf.fileName =  "";
+			surf.dt.name = t_("Water surface extracted");
+		surf.dt.name = surfs[id].dt.name + " " + surf.dt.name;
+		surf.dt.fileName =  "";
 		
 		if (true) {		// Clean panels
-			Surface::RemoveDuplicatedPanels(surf.mesh.panels);
-			Surface::RemoveDuplicatedPointsAndRenumber(surf.mesh.panels, surf.mesh.nodes);
-			Surface::RemoveDuplicatedPanels(surf.mesh.panels);
+			Surface::RemoveDuplicatedPanels(surf.dt.mesh.panels);
+			Surface::RemoveDuplicatedPointsAndRenumber(surf.dt.mesh.panels, surf.dt.mesh.nodes);
+			Surface::RemoveDuplicatedPanels(surf.dt.mesh.panels);
 		}
 		surf.AfterLoad(rho, g, false, false);
 	} catch (Exc e) {
@@ -2865,22 +567,22 @@ bool BEM::StoreSerializeJson() {
 }
 
 
-String Hydro::LoadSerialization(String file) {
-	BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
+String Hydro::LoadSerialization(String fileName) {
+	BEM::Print("\n\n" + Format(t_("Loading '%s'"), dt.file));
 	
-	if (!LoadFromJsonFile(hd(), file)) 
+	if (!LoadFromJsonFile(*this, dt.file)) 
 		//BEM::PrintError("\n" + Format(t_("Error loading '%s'"), file));
-		return Format(t_("Error loading '%s'"), file);
+		return Format(t_("Error loading '%s'"), dt.file);
 	
-	hd().file = file;
+	dt.file = fileName;
 	return String();
 }
 	
-void Hydro::SaveSerialization(String file) {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
-	if (!StoreAsJsonFile(hd(), file, true)) {
-		BEM::PrintError("\n" + Format(t_("Error saving '%s'"), file));
-		throw Exc(Format(t_("Error saving '%s'"), file));
+void Hydro::SaveSerialization(String fileName) {
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
+	if (!StoreAsJsonFile(*this, fileName, true)) {
+		BEM::PrintError("\n" + Format(t_("Error saving '%s'"), fileName));
+		throw Exc(Format(t_("Error saving '%s'"), fileName));
 	}
 }
 
@@ -2888,32 +590,32 @@ void Hydro::SaveForce(FileOut &out, Hydro::Forces &f) {
 	const String &sep = Bem().csvSeparator;
 	
 	out << sep;
-	for (int ib = 0; ib < hd().Nb; ++ib) {			
+	for (int ib = 0; ib < dt.Nb; ++ib) {			
 		for (int idf = 0; idf < 6; ++idf) 			
-			out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf)) << sep;
+			out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf)) << sep;
 	}
 	out << "\n";
 	
 	out  << "Head [deg]" << sep << "Frec [rad/s]";
-	for (int ib = 0; ib < hd().Nb; ++ib) {			
+	for (int ib = 0; ib < dt.Nb; ++ib) {			
 		for (int idf = 0; idf < 6; ++idf) 			
 			out << sep << "mag" << sep << "phase";
 	}
 	out << "\n";
 	
-	UVector<int> ow = GetSortOrderX(hd().w);
-	UVector<int> oh = GetSortOrderX(hd().head);
+	UVector<int> ow = GetSortOrderX(dt.w);
+	UVector<int> oh = GetSortOrderX(dt.head);
 	
-	for (int ih = 0; ih < hd().Nh; ++ih) {
-		out << hd().head[oh[ih]];
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+	for (int ih = 0; ih < dt.Nh; ++ih) {
+		out << dt.head[oh[ih]];
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				out << sep;
-				out << hd().w[ow[ifr]];				
+				out << dt.w[ow[ifr]];				
 				for (int idf = 0; idf < 6; ++idf) { 	
 					out << sep;	
 					if (IsNum(f.force[oh[ih]](ow[ifr], 6*ib + idf)))	{
-						const std::complex<double> &c = hd().F_dim(f, oh[ih], ow[ifr], idf);
+						const std::complex<double> &c = F_dim(f, oh[ih], ow[ifr], idf);
 						out << FormatDouble(abs(c)) << sep << FormatDouble(ToDeg(arg(c)));
 					} else
 						out << sep;
@@ -2928,26 +630,26 @@ void Hydro::SaveMD(FileOut &out) {
 	const String &sep = Bem().csvSeparator;
 	
 	out  << "Head [deg]" << sep << "Frec [rad/s]";
-	for (int ib = 0; ib < hd().Nb; ++ib) {			
+	for (int ib = 0; ib < dt.Nb; ++ib) {			
 		for (int idf = 0; idf < 6; ++idf) 			
-			out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+			out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
 	}
 	out << "\n";
 	
-	UVector<int> ow = GetSortOrderX(hd().w);
-	//UVector<int> oh = GetSortOrderX(hd().mdhead);
+	UVector<int> ow = GetSortOrderX(dt.w);
+	//UVector<int> oh = GetSortOrderX(mdhead);
 	
-	for (int ih = 0; ih < hd().mdhead.size(); ++ih) {
-		const std::complex<double> &h = hd().mdhead[ih];
-		out << Format("%s %s", FormatDouble(h.real()), FormatDouble(h.imag()));
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+	for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
+		const std::complex<double> &hh = dt.mdhead[ih];
+		out << Format("%s %s", FormatDouble(hh.real()), FormatDouble(hh.imag()));
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				out << sep;
-				out << hd().w[ow[ifr]];				
+				out << dt.w[ow[ifr]];				
 				for (int idf = 0; idf < 6; ++idf) { 	
 					out << sep;	
-					if (IsNum(hd().md[ib][ih][idf](ifr))) 
-						out << FormatDouble(hd().Md_dim(idf, ih, ifr));
+					if (IsNum(dt.md[ib][ih][idf](ifr))) 
+						out << FormatDouble(Md_dim(idf, ih, ifr));
 				}
 				out << "\n";
 			}
@@ -2963,13 +665,13 @@ void Hydro::SaveC(FileOut &out) {
 		out << sep << BEM::StrDOF(idf);
 	out << "\n";
 		
-	for (int ib = 0; ib < hd().Nb; ++ib) {		
+	for (int ib = 0; ib < dt.Nb; ++ib) {		
 		for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-			out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+			out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
 			out << sep;	
 			for (int idf2 = 0; idf2 < 6; ++idf2) {
-				if (IsNum(hd().msh[ib].C(idf1, idf2)))	
-					out << FormatDouble(hd().C_dim(ib, idf1, idf2));
+				if (IsNum(dt.msh[ib].dt.C(idf1, idf2)))	
+					out << FormatDouble(C_dim(ib, idf1, idf2));
 				out << sep;
 			}
 			out << "\n";
@@ -2985,13 +687,13 @@ void Hydro::SaveM(FileOut &out) {
 		out << sep << BEM::StrDOF(idf);
 	out << "\n";
 		
-	for (int ib = 0; ib < hd().Nb; ++ib) {		
+	for (int ib = 0; ib < dt.Nb; ++ib) {		
 		for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-			out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+			out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
 			out << sep;	
 			for (int idf2 = 0; idf2 < 6; ++idf2) {
-				if (IsNum(hd().msh[ib].M(idf1, idf2)))	
-					out << FormatDouble(hd().msh[ib].M(idf1, idf2));
+				if (IsNum(dt.msh[ib].dt.M(idf1, idf2)))	
+					out << FormatDouble(dt.msh[ib].dt.M(idf1, idf2));
 				out << sep;
 			}
 			out << "\n";
@@ -2999,15 +701,15 @@ void Hydro::SaveM(FileOut &out) {
 	}
 }
 	
-void Hydro::SaveCSVMat(String file) {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+void Hydro::SaveCSVMat(String fileName) {
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
 	
-	String folder = GetFileFolder(file);
-	String name = GetFileTitle(file);
-	String ext = GetFileExt(file);
+	String folder = GetFileFolder(fileName);
+	String nname = GetFileTitle(fileName);
+	String ext = GetFileExt(fileName);
 	
-	if (hd().IsLoadedA())  {
-		String files = AFX(folder, name + "_A" + ext);
+	if (IsLoadedA())  {
+		String files = AFX(folder, nname + "_A" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3016,60 +718,60 @@ void Hydro::SaveCSVMat(String file) {
 		const String &sep = Bem().csvSeparator;
 		
 		out  << "Frec [rad/s]" << sep << "DoF";
-		for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf = 0; idf < 6; ++idf) 			
-				out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+				out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
 		}
 		out << "\n";
 	
 		
-		if (hd().IsLoadedA0()) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		if (IsLoadedA0()) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
 					out << "0";				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().A0(idf1 + 6*ib, idf2 + 6*ib)))	
-							out << FormatDouble(hd().A0_dim(idf1, idf2));
+						if (IsNum(dt.A0(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(A0_dim(idf1, idf2));
 						out << sep;
 					}
 					out << "\n";
 				}
 			}
 		}
-		UVector<int> ow = GetSortOrderX(hd().w);
+		UVector<int> ow = GetSortOrderX(dt.w);
 		
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
-					out << hd().w[ow[ifr]];				
+					out << dt.w[ow[ifr]];				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
-							out << FormatDouble(hd().A_dim(ow[ifr], idf1, idf2));
+						if (IsNum(dt.A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(A_dim(ow[ifr], idf1, idf2));
 						out << sep;
 					}
 					out << "\n";
 				}
 			}
 		}
-		if (hd().IsLoadedAinf()) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		if (IsLoadedAinf()) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
 					out << "inf";				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
-							out << FormatDouble(hd().Ainf_dim(idf1, idf2));
+						if (IsNum(dt.Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(Ainf_dim(idf1, idf2));
 						out << sep;
 					}
 					out << "\n";
@@ -3078,8 +780,8 @@ void Hydro::SaveCSVMat(String file) {
 		}	
 	}
 	
-	if (hd().IsLoadedB())  {
-		String files = AFX(folder, name + "_B" + ext);
+	if (IsLoadedB())  {
+		String files = AFX(folder, nname + "_B" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3088,26 +790,26 @@ void Hydro::SaveCSVMat(String file) {
 		const String &sep = Bem().csvSeparator;
 		
 		out  << "Frec [rad/s]" << sep << "DoF";
-		for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf = 0; idf < 6; ++idf) 			
-				out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+				out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
 		}
 		out << "\n";
 	
 		
-		UVector<int> ow = GetSortOrderX(hd().w);
+		UVector<int> ow = GetSortOrderX(dt.w);
 		
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
-					out << hd().w[ow[ifr]];				
+					out << dt.w[ow[ifr]];				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
-							out << FormatDouble(hd().B_dim(ow[ifr], idf1, idf2));
+						if (IsNum(dt.B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(B_dim(ow[ifr], idf1, idf2));
 						out << sep;
 					}
 					out << "\n";
@@ -3116,8 +818,8 @@ void Hydro::SaveCSVMat(String file) {
 		}
 	}
 	
-	if (hd().IsLoadedC())  {
-		String files = AFX(folder, name + "_C" + ext);
+	if (IsLoadedC())  {
+		String files = AFX(folder, nname + "_C" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3126,8 +828,8 @@ void Hydro::SaveCSVMat(String file) {
 		SaveC(out);
 	}
 	
-	if (hd().IsLoadedM())  {
-		String files = AFX(folder, name + "_M" + ext);
+	if (IsLoadedM())  {
+		String files = AFX(folder, nname + "_M" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3136,17 +838,17 @@ void Hydro::SaveCSVMat(String file) {
 		SaveM(out);
 	}
 	
-	if (hd().IsLoadedFex())  {
-		String files = AFX(folder, name + "_Fex" + ext);
+	if (IsLoadedFex())  {
+		String files = AFX(folder, nname + "_Fex" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
 
-		SaveForce(out, hd().ex);
+		SaveForce(out, dt.ex);
 	}
 	
-	if (hd().IsLoadedMD())  {
-		String files = AFX(folder, name + "_MD" + ext);
+	if (IsLoadedMD())  {
+		String files = AFX(folder, nname + "_MD" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3155,15 +857,15 @@ void Hydro::SaveCSVMat(String file) {
 	}		
 }
 
-void Hydro::SaveCSVTable(String file) {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+void Hydro::SaveCSVTable(String fileName) {
+	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
 	
-	String folder = GetFileFolder(file);
-	String name = GetFileTitle(file);
-	String ext = GetFileExt(file);
+	String folder = GetFileFolder(fileName);
+	String nname = GetFileTitle(fileName);
+	String ext = GetFileExt(fileName);
 	
-	if (hd().IsLoadedA())  {
-		String files = AFX(folder, name + "_A" + ext);
+	if (IsLoadedA())  {
+		String files = AFX(folder, nname + "_A" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3172,21 +874,21 @@ void Hydro::SaveCSVTable(String file) {
 		const String &sep = Bem().csvSeparator;
 		
 		out  << "Frec [rad/s]";
-		for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf1 = 0; idf1 < 6; ++idf1) 
 				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+					out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
 		}
 		out << "\n";
 	
-		if (hd().IsLoadedA0()) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		if (IsLoadedA0()) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
 					out << "0" << sep;				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().A0(idf1 + 6*ib, idf2 + 6*ib)))	
-							out << FormatDouble(hd().A0_dim(idf1, idf2));
+						if (IsNum(dt.A0(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(A0_dim(idf1, idf2));
 						out << sep;
 					}
 				}
@@ -3194,30 +896,30 @@ void Hydro::SaveCSVTable(String file) {
 		}
 		out << "\n";
 		
-		UVector<int> ow = GetSortOrderX(hd().w);
+		UVector<int> ow = GetSortOrderX(dt.w);
 		
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
-					out << hd().w[ow[ifr]] << sep;				
+					out << dt.w[ow[ifr]] << sep;				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
-							out << FormatDouble(hd().A_dim(ow[ifr], idf1, idf2));
+						if (IsNum(dt.A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(A_dim(ow[ifr], idf1, idf2));
 						out << sep;
 					}
 				}
 				out << "\n";
 			}
 		}
-		if (hd().IsLoadedAinf()) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		if (IsLoadedAinf()) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
 					out << "inf" << sep;				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
-							out << FormatDouble(hd().Ainf_dim(idf1, idf2));
+						if (IsNum(dt.Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
+							out << FormatDouble(Ainf_dim(idf1, idf2));
 						out << sep;
 					}
 				}
@@ -3225,8 +927,8 @@ void Hydro::SaveCSVTable(String file) {
 		}	
 	}
 	
-	if (hd().IsLoadedB())  {
-		String files = AFX(folder, name + "_B" + ext);
+	if (IsLoadedB())  {
+		String files = AFX(folder, nname + "_B" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3235,23 +937,23 @@ void Hydro::SaveCSVTable(String file) {
 		const String &sep = Bem().csvSeparator;
 		
 		out  << "Frec [rad/s]";
-		for (int ib = 0; ib < hd().Nb; ++ib) {			
+		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf1 = 0; idf1 < 6; ++idf1) 
 				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					out << sep << ((hd().Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+					out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
 		}
 		out << "\n";
 		
-		UVector<int> ow = GetSortOrderX(hd().w);
+		UVector<int> ow = GetSortOrderX(dt.w);
 		
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
-			for (int ib = 0; ib < hd().Nb; ++ib) {		
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				if (ib == 0)
-					out << hd().w[ow[ifr]] << sep;			
+					out << dt.w[ow[ifr]] << sep;			
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						if (IsNum(hd().B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
-							out << FormatDouble(hd().B_dim(ow[ifr], idf1, idf2));
+						if (IsNum(dt.B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
+							out << FormatDouble(B_dim(ow[ifr], idf1, idf2));
 						out << sep;
 					}
 				}
@@ -3260,8 +962,8 @@ void Hydro::SaveCSVTable(String file) {
 		}
 	}
 	
-	if (hd().IsLoadedC())  {
-		String files = AFX(folder, name + "_C" + ext);
+	if (IsLoadedC())  {
+		String files = AFX(folder, nname + "_C" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3270,8 +972,8 @@ void Hydro::SaveCSVTable(String file) {
 		SaveC(out);
 	}
 	
-	if (hd().IsLoadedM())  {
-		String files = AFX(folder, name + "_M" + ext);
+	if (IsLoadedM())  {
+		String files = AFX(folder, nname + "_M" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3280,17 +982,17 @@ void Hydro::SaveCSVTable(String file) {
 		SaveM(out);
 	}
 	
-	if (hd().IsLoadedFex())  {
-		String files = AFX(folder, name + "_Fex" + ext);
+	if (IsLoadedFex())  {
+		String files = AFX(folder, nname + "_Fex" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
 
-		SaveForce(out, hd().ex);
+		SaveForce(out, dt.ex);
 	}	
 	
-	if (hd().IsLoadedMD())  {
-		String files = AFX(folder, name + "_MD" + ext);
+	if (IsLoadedMD())  {
+		String files = AFX(folder, nname + "_MD" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
@@ -3372,31 +1074,35 @@ BEMBody::BEMBody() {
 	return ret;
 }*/
 
-void Hydro::LoadCase(String file, Function <bool(String, int)> Status) {
+void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
+	dt.file = fileName;
+	
 	String ret;
-	if (ToLower(GetFileName(file)) == "nemoh.cal")
-		ret = static_cast<Nemoh&>(*this).Load(file);
-	else if (ToLower(GetFileExt(file)) == ".in")
-		ret = static_cast<Hams&>(*this).Load(file, Status); 
-	else if (ToLower(GetFileExt(file)) == ".dat")
-		ret = static_cast<Aqwa&>(*this).Load(file, Status);
+	if (ToLower(GetFileName(fileName)) == "nemoh.cal")
+		ret = static_cast<Nemoh&>(*this).Load(fileName);
+	else if (ToLower(GetFileExt(fileName)) == ".in")
+		ret = static_cast<Hams&>(*this).Load(fileName, Status); 
+	else if (ToLower(GetFileExt(fileName)) == ".dat")
+		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
 	else
 		ret = t_("Unknown BEM input format");
 	
 	if (!ret.IsEmpty())
 		throw Exc(ret);
 	
-	if (IsNull(hd().rho))
-		hd().rho = Bem().rho;
-	if (IsNull(hd().g))
-		hd().g = Bem().g;	
+	if (IsNull(dt.rho))
+		dt.rho = Bem().rho;
+	if (IsNull(dt.g))
+		dt.g = Bem().g;	
+	
+	AfterLoad();
 }
 
-void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int solver) const {
-	if (solver <= Hydro::CAPYTAINE)
-		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, numThreads, solver);
-	else if (solver == Hydro::HAMS)
-		static_cast<const Hams &>(*this).SaveFolder(folder, bin, numCases, numThreads, solver);
+void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int ssolver) const {
+	if (ssolver <= Hydro::CAPYTAINE)
+		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, numThreads, ssolver);
+	else if (ssolver == Hydro::HAMS)
+		static_cast<const Hams &>(*this).SaveFolder(folder, bin, numCases, numThreads, ssolver);
 	//else
 	//	static_cast<const Aqwa &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
 }
@@ -3405,8 +1111,8 @@ void Hydro::BeforeSaveCase(String folderBase, int numCases, bool deleteFolder) c
 	if (numCases < 1)
 		throw Exc(Format(t_("Number cases must be higher than 1 (%d)"), numCases));
 	
-	if (numCases > Nf)
-		throw Exc(Format(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, Nf));
+	if (numCases > dt.Nf)
+		throw Exc(Format(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, dt.Nf));
 	
 	if (deleteFolder) {		// If called from GUI, user has been warned
 		if (!DeleteFileDeepWildcardsX(folderBase))
@@ -3417,27 +1123,27 @@ void Hydro::BeforeSaveCase(String folderBase, int numCases, bool deleteFolder) c
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 }
 
-UVector<String> Hydro::Check(int solver) const {
+UVector<String> Hydro::Check(BEM_FMT type) const {
 	UVector<String> ret;
 	
-	bool oneBody = solver == Hydro::HAMS;
+	if (IsNull(dt.rho) || dt.rho < 0 || dt.rho > 10000)
+		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(dt.rho));
+	if (IsNull(dt.g) || dt.g < 0 || dt.g > 100)
+		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(dt.g));
 	
-	if (IsNull(hd().rho) || hd().rho < 0 || hd().rho > 10000)
-		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(hd().rho));
-	if (IsNull(hd().g) || hd().g < 0 || hd().g > 100)
-		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(hd().g));
-	
-	if (IsNull(hd().h) || hd().h < -1 || hd().h > 100000)
-		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(hd().h));
+	if (IsNull(dt.h) || dt.h < -1 || dt.h > 100000)
+		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(dt.h));
 
-	if (IsNull(hd().Nf) || hd().Nf < 1 || hd().Nf > 1000)
-		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(hd().Nf));
+	if (IsNull(dt.Nf) || dt.Nf < 1 || dt.Nf > 1000)
+		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(dt.Nf));
 	
-	if (IsNull(hd().Nh) || hd().Nh < 1 || hd().Nh > 1000)
-		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(hd().Nh));
-
-	if (oneBody && hd().msh.size() > 1)
-		ret << t_("This solver just processes one body");
+	if (IsNull(dt.Nh) || dt.Nh < 1 || dt.Nh > 1000)
+		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(dt.Nh));
+	
+	if (type == BEM_FMT::HAMS)
+		ret = static_cast<const Hams&>(*this).Check();
+	//else if (type == BEM_FMT::AQWA)
+	//	ret = static_cast<const Aqwa&>(*this).Check();
 	
 	return ret;
 }

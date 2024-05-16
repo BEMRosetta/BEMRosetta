@@ -114,7 +114,7 @@ public:
 		return Init(*_data, i, _j_dof, _dataToPlot, _show_w, _ndim, _show_ma_ph);
 	}
 	bool Init(const Hydro &_data, int _idf, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim, bool _show_ma_ph) {
-		data = &_data;
+		hy = &_data;
 		dataToPlot = _dataToPlot;
 		idf = _idf;
 		jdf = _j_dof;
@@ -126,110 +126,110 @@ public:
 		return true;
 	}
 	inline bool IsNullData() {
-		ASSERT(data != 0);
+		ASSERT(hy != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:			return !data->IsLoadedA(idf, jdf);
-		case Hydro::PLOT_AINF:		return !data->IsLoadedAinf(idf, jdf);
-		case Hydro::PLOT_A_P:		return !data->IsLoadedA_P(idf, jdf);
-		case Hydro::PLOT_A0:		return !data->IsLoadedA0(idf, jdf);
-		case Hydro::PLOT_B:			return !data->IsLoadedB  (idf, jdf);
-		case Hydro::PLOT_B_H:		return !data->IsLoadedB_H(idf, jdf);
-		case Hydro::PLOT_B_P:		return !data->IsLoadedB_P(idf, jdf);
-		case Hydro::PLOT_MD:		return !data->IsLoadedMD(int(idf/6), jdf);
-		case Hydro::PLOT_KIRF:		return !data->IsLoadedKirf(idf, jdf);
-		case Hydro::PLOT_AINFW:		return !data->IsLoadedAinf_w(idf, jdf);
+		case Hydro::PLOT_A:			return !hy->IsLoadedA(idf, jdf);
+		case Hydro::PLOT_AINF:		return !hy->IsLoadedAinf(idf, jdf);
+		case Hydro::PLOT_A_P:		return !hy->IsLoadedA_P(idf, jdf);
+		case Hydro::PLOT_A0:		return !hy->IsLoadedA0(idf, jdf);
+		case Hydro::PLOT_B:			return !hy->IsLoadedB  (idf, jdf);
+		case Hydro::PLOT_B_H:		return !hy->IsLoadedB_H(idf, jdf);
+		case Hydro::PLOT_B_P:		return !hy->IsLoadedB_P(idf, jdf);
+		case Hydro::PLOT_MD:		return !hy->IsLoadedMD(int(idf/6), jdf);
+		case Hydro::PLOT_KIRF:		return !hy->IsLoadedKirf(idf, jdf);
+		case Hydro::PLOT_AINFW:		return !hy->IsLoadedAinf_w(idf, jdf);
 		case Hydro::PLOT_FORCE_SC_1:	
-		case Hydro::PLOT_FORCE_SC_2:return !data->IsLoadedFsc(idf, jdf);		// jdf: heading, idf: body
+		case Hydro::PLOT_FORCE_SC_2:return !hy->IsLoadedFsc(idf, jdf);		// jdf: heading, idf: body
 		case Hydro::PLOT_FORCE_FK_1:	
-		case Hydro::PLOT_FORCE_FK_2:return !data->IsLoadedFfk(idf, jdf);
+		case Hydro::PLOT_FORCE_FK_2:return !hy->IsLoadedFfk(idf, jdf);
 		case Hydro::PLOT_FORCE_EX_1:
-		case Hydro::PLOT_FORCE_EX_2:return !data->IsLoadedFex(idf, jdf);
+		case Hydro::PLOT_FORCE_EX_2:return !hy->IsLoadedFex(idf, jdf);
 		case Hydro::PLOT_RAO_1:
-		case Hydro::PLOT_RAO_2:		return !data->IsLoadedRAO(idf, jdf);
+		case Hydro::PLOT_RAO_2:		return !hy->IsLoadedRAO(idf, jdf);
 		case Hydro::PLOT_TFS_1:
-		case Hydro::PLOT_TFS_2:		return !data->sts[idf][jdf].TFS.IsEmpty();
+		case Hydro::PLOT_TFS_2:		return !hy->dt.sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_Z_1:
-		case Hydro::PLOT_Z_2:		return !data->IsLoadedA(idf, jdf) || !data->IsLoadedAinf(idf, jdf) || !data->IsLoadedB(idf, jdf);
+		case Hydro::PLOT_Z_2:		return !hy->IsLoadedA(idf, jdf) || !hy->IsLoadedAinf(idf, jdf) || !hy->IsLoadedB(idf, jdf);
 		default: 		NEVER();	return true;
 		}
 	}
 	virtual inline double y(int64 id) {
-		ASSERT(data != 0);
+		ASSERT(hy != 0);
 		switch (dataToPlot) {
-		case Hydro::PLOT_A:			return data->A_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_AINF:		return data->Ainf_(ndim, idf, jdf);
-		case Hydro::PLOT_A_P:		return data->A_P_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_A0:		return data->A0_(ndim, idf, jdf);
-		case Hydro::PLOT_B:			return data->B_  (ndim, int(id), idf, jdf);
-		case Hydro::PLOT_B_H:		return data->B_H_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_B_P:		return data->B_P_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_KIRF:		return data->Kirf_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_AINFW:		return data->Ainf_w_(ndim, int(id), idf, jdf);
-		case Hydro::PLOT_MD:		return data->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
-		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (data->F_  (ndim, data->sc, jdf, int(id), idf)) : 
-														real(data->F_  (ndim, data->sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (data->F_  (ndim, data->sc, jdf, int(id), idf)) : 
-														imag(data->F_  (ndim, data->sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (data->F_  (ndim, data->fk, jdf, int(id), idf)) : 
-														real(data->F_  (ndim, data->fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (data->F_  (ndim, data->fk, jdf, int(id), idf)) : 
-														imag(data->F_  (ndim, data->fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (data->F_  (ndim, data->ex, jdf, int(id), idf)) : 
-														real(data->F_  (ndim, data->ex, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (data->F_  (ndim, data->ex, jdf, int(id), idf)) : 
-														imag(data->F_  (ndim, data->ex, jdf, int(id), idf));
-		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (data->RAO_(ndim, data->rao,jdf, int(id), idf)) : 
-														real(data->RAO_(ndim, data->rao,jdf, int(id), idf));
-		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (data->RAO_(ndim, data->rao,jdf, int(id), idf)) : 
-														imag(data->RAO_(ndim, data->rao,jdf, int(id), idf));
-		case Hydro::PLOT_TFS_1:		return show_ma_ph ? abs (data->TFS_(ndim, int(id), idf, jdf)) : 
-														real(data->TFS_(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_TFS_2:		return show_ma_ph ? arg (data->TFS_(ndim, int(id), idf, jdf)) : 
-														imag(data->TFS_(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_Z_1:		return show_ma_ph ? abs (data->Z(ndim, int(id), idf, jdf)) : 
-														real(data->Z(ndim, int(id), idf, jdf));
-		case Hydro::PLOT_Z_2:		return show_ma_ph ? arg (data->Z(ndim, int(id), idf, jdf)) : 
-														imag(data->Z(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_A:			return hy->A_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_AINF:		return hy->Ainf_(ndim, idf, jdf);
+		case Hydro::PLOT_A_P:		return hy->A_P_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_A0:		return hy->A0_(ndim, idf, jdf);
+		case Hydro::PLOT_B:			return hy->B_  (ndim, int(id), idf, jdf);
+		case Hydro::PLOT_B_H:		return hy->B_H_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_B_P:		return hy->B_P_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_KIRF:		return hy->Kirf_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_AINFW:		return hy->Ainf_w_(ndim, int(id), idf, jdf);
+		case Hydro::PLOT_MD:		return hy->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
+		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf)) : 
+														real(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf)) : 
+														imag(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf)) : 
+														real(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf)) : 
+														imag(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf)) : 
+														real(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf)) : 
+														imag(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf));
+		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf)) : 
+														real(hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf));
+		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf)) : 
+														imag(hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf));
+		case Hydro::PLOT_TFS_1:		return show_ma_ph ? abs (hy->TFS_(ndim, int(id), idf, jdf)) : 
+														real(hy->TFS_(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_TFS_2:		return show_ma_ph ? arg (hy->TFS_(ndim, int(id), idf, jdf)) : 
+														imag(hy->TFS_(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_Z_1:		return show_ma_ph ? abs (hy->Z(ndim, int(id), idf, jdf)) : 
+														real(hy->Z(ndim, int(id), idf, jdf));
+		case Hydro::PLOT_Z_2:		return show_ma_ph ? arg (hy->Z(ndim, int(id), idf, jdf)) : 
+														imag(hy->Z(ndim, int(id), idf, jdf));
 		default:					NEVER();	return Null;
 		}
 	}
 	virtual inline double x(int64 id) {
-		ASSERT(data != 0);
+		ASSERT(hy != 0);
 		
-		if ((dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0) && id == 1 && data->Nf > 0)
-			id = data->Nf - 1;
+		if ((dataToPlot == Hydro::PLOT_AINF || dataToPlot == Hydro::PLOT_A0) && id == 1 && hy->dt.Nf > 0)
+			id = hy->dt.Nf - 1;
 		
 		if (dataToPlot == Hydro::PLOT_KIRF)
-			return data->Tirf[int(id)];
+			return hy->dt.Tirf[int(id)];
 		
 		if (show_w) {
 			if (dataToPlot == Hydro::PLOT_A0)
 				return 0;
-			else if (dataToPlot == Hydro::PLOT_AINF && data->w.size() == 0)
+			else if (dataToPlot == Hydro::PLOT_AINF && hy->dt.w.size() == 0)
 				return double(id);
-			return data->w[int(id)];
+			return hy->dt.w[int(id)];
 		} else {
 			if (dataToPlot == Hydro::PLOT_AINF)
 				return 0;
-			else if (dataToPlot == Hydro::PLOT_A0 && data->w.size() == 0)
+			else if (dataToPlot == Hydro::PLOT_A0 && hy->dt.w.size() == 0)
 				return double(id);
-			return 2*M_PI/data->w[int(id)];
+			return 2*M_PI/hy->dt.w[int(id)];
 		}
 	}
 	virtual int64 GetCount() const {
-		ASSERT(data != 0); 
+		ASSERT(hy != 0); 
 		
 		if (dataToPlot == Hydro::PLOT_AINF)
 			return show_w  ? 2 : 1;		
 		if (dataToPlot == Hydro::PLOT_A0)
 			return !show_w ? 2 : 1;
 		if (dataToPlot == Hydro::PLOT_KIRF)
-			return data->Tirf.size();
-		return data->Nf;
+			return hy->dt.Tirf.size();
+		return hy->dt.Nf;
 	}
 	
 private:
-	const Hydro *data = nullptr;
+	const Hydro *hy = nullptr;
 	int idf = -1, jdf = -1;
 	Hydro::DataToPlot dataToPlot;
 	bool show_w = false, show_ma_ph = true, ndim = 0;
@@ -269,7 +269,7 @@ class MainSummaryCoeff : public MainSummary {
 public:
 	typedef MainSummaryCoeff CLASSNAME;
 
-	void Report(const Hydro &data, int id);
+	void Report(const Hydro &hy, int id);
 };
 
 class MainOutput : public WithMainOutput<StaticRect> {
@@ -562,7 +562,7 @@ public:
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc, int ncol);
 	void Add(const Mesh &mesh, int icase, bool button);
-	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hydro, int idc, bool ndim);
+	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hy, int idc, bool ndim);
 	void PrintData();
 		
 	UArray<Eigen::MatrixXd> data;
@@ -702,10 +702,10 @@ public:
 	
 	void Init(Hydro::DataToShow dataToShow);
 	void Clear();
-	bool Load(BEM &bem, const UVector<int> &ids, int ih = Null);
+	bool Load(const UVector<int> &ids, int ih = Null);
 	
-	void UpdateHead(BEM &bem/*, int ih*/, const UVector<int> &loaded);
-	void UpdateHeadMD(BEM &bem/*, int ih*/);
+	void UpdateHead(const UVector<int> &loaded);
+	void UpdateHeadMD();
 		
 	TabCtrl tab;
 	UArray<UArray<MainPlot>> plots;
@@ -737,7 +737,7 @@ public:
 	void Init();
 	void Clear();
 	void Init(ArrayCtrl &array);
-	bool Load(BEM &bem, const UVector<int> &ids);
+	bool Load(const UVector<int> &ids);
 	
 	UArray<UArray<MainStateSpacePlot>> plots;
 	
@@ -881,7 +881,7 @@ public:
 	void Load(String file);
 	void Load();
 	
-	bool Save(Hydro &data, bool isNemoh);
+	bool Save(Hydro &hy, bool isNemoh);
 	
 	void Jsonize(JsonIO &json);
 	
@@ -1164,7 +1164,7 @@ public:
 
 private:
 	UArray<Option> options;
-	int id = -1;
+	//int id = -1;
 	RectEnterSet frameSet;
 };
 
@@ -1173,7 +1173,7 @@ public:
 	typedef MeshBody CLASSNAME;
 	
 	void Init();
-	void Load(const Hydro &hydro, int ib, bool hasPotentials);
+	void Load(const Hydro &hy, int ib, bool hasPotentials);
 	
 	class DataSourcePanels : public Convert {
 	public:
@@ -1217,7 +1217,7 @@ public:
 	typedef MainMesh CLASSNAME;
 	
 	void Init();
-	bool Load(BEM &bem);
+	bool Load();
 	int GetIb()	{return tab.Get();}
 	
 private:
@@ -1264,8 +1264,8 @@ private:
 	Box leftsplit, rightsplit;
 	
 	void UpdateArray(const Hydro &hd, bool show_ma_ph, Data &data, bool opBilinear);
-	void OnClick(Point p, int idof, ScatterCtrl::MouseAction action);
-	void DoClick(Data &up, int idof);
+	void OnClick(Point p, /*int idof, */ScatterCtrl::MouseAction action);
+	void DoClick(Data &up/*, int idof*/);
 		
 	void OnPainter(Painter &w)		{OnPaint(w);}
 	void OnDraw(Draw &w)			{OnPaint(w);}
@@ -1274,7 +1274,7 @@ private:
 	
 	static char GetWhat(const Data &data);	
 	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const;
-	MatrixXd GetMat(const Hydro &hd, const Data &data, int idh, bool show_w, bool getDim) const;
+	MatrixXd GetMat(const Hydro &hd, const Data &data, int idh, /*bool show_w, */bool getDim) const;
 	
 	
 	static void Diagonal(const Pointf &pf, double mn, double mx, Pointf &from, Pointf &to, double &a, double &b) {
@@ -1509,7 +1509,7 @@ private:
 	MainStateSpace &GetSelStateSpace();
 	void LoadSelTab(BEM &bem);
 
-	int AskQtfHeading(const Hydro &hydro);
+	int AskQtfHeading(const Hydro &hy);
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);

@@ -5,14 +5,15 @@
 
 
 String Wamit::Load(String file, Function <bool(String, int)> Status) {
-	hd().name = GetFileTitle(file);
-	hd().file = file;	
+	dt.name = GetFileTitle(file);
+	dt.file = file;	
 	
 	try {
 		String ext = GetFileExt(file);
+		int iperin = Null, iperout = Null;
 		
 		if (ext == ".out") {
-			hd().solver = Hydro::WAMIT;
+			dt.solver = Hydro::WAMIT;
 		
 			String fileout = ForceExtSafer(file, ".out");
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
@@ -20,15 +21,15 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
 		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
-				hd().solver = Hydro::HAMS_WAMIT;
-			else if (hd().name == "WAMIT_5S")
-				hd().solver = Hydro::WADAM_WAMIT;
+				dt.solver = Hydro::HAMS_WAMIT;
+			else if (dt.name == "WAMIT_5S")
+				dt.solver = Hydro::WADAM_WAMIT;
 			else
-				hd().solver = Hydro::WAMIT;
+				dt.solver = Hydro::WAMIT;
 
 			String filecfg = ForceExtSafer(file, ".cfg");
 			BEM::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
-			if (!Load_cfg(filecfg))
+			if (!Load_cfg(filecfg, iperin, iperout))
 				BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
 	
 			String filepot = ForceExtSafer(file, ".pot");
@@ -52,7 +53,7 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 			
 			String file1 = ForceExtSafer(file, ".1");
 			BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
-			if (!Load_1(file1))
+			if (!Load_1(file1, iperout))
 				BEM::PrintWarning(S(": ** .1 ") + t_("Not found or empty") + "**");
 			
 			String file2 = ForceExtSafer(file, ".2"),
@@ -66,7 +67,7 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 					file = file2;
 			}
 			BEM::Print("\n- " + Format(t_("Diffraction exciting %s file '%s'"), GetFileExt(file), GetFileName(file)));
-			if (!Load_3(file))
+			if (!Load_3(file, iperout))
 				BEM::PrintWarning(S(": ** .3 ") + t_("Not found or empty") + "**");
 			
 			String fileHST = ForceExtSafer(file, ".hst");
@@ -76,11 +77,11 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 		
 			String fileRAO = ForceExtSafer(file, ".4");
 			BEM::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileRAO)));
-			if (!Load_4(fileRAO))
+			if (!Load_4(fileRAO, iperout))
 				BEM::Print(S(": ** .4 ") + t_("Not found or empty") + "**");
 			
 			BEM::Print("\n- " + Format(t_("Mean drift file '%s.7/.8/.9'"), GetFileTitle(file)));
-			if (!Load_789(file))
+			if (!Load_789(file, iperout))
 				BEM::Print(S(": ** .7.8.9 ") + t_("Not found or empty") + "**");
 			
 			String file12s = ForceExtSafer(file, ".12s");
@@ -101,42 +102,42 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 					
 		String fileSC = ForceExtSafer(file, ".3sc");
 		BEM::Print("\n- " + Format(t_("Scattering file '%s'"), GetFileName(fileSC)));
-		if (!Load_Scattering(fileSC))
+		if (!Load_Scattering(fileSC, iperout))
 			BEM::Print(S(": ** 3sc ") + t_("Not found") + "**");
 		String fileFK = ForceExtSafer(file, ".3fk");
 		BEM::Print("\n- " + Format(t_("Froude-Krylov file '%s'"), GetFileName(fileFK)));
-		if (!Load_FK(fileFK))
+		if (!Load_FK(fileFK, iperout))
 			BEM::Print(S(": ** 3fk ") + t_("Not found") + "**");
 		
-		if (IsNull(hd().Nh))
-			hd().Nh = 0;
-		if (IsNull(hd().Nf))
-			hd().Nf = 0;
+		if (IsNull(dt.Nh))
+			dt.Nh = 0;
+		if (IsNull(dt.Nf))
+			dt.Nf = 0;
 
-		if (IsNull(hd().Nb)/* || IsNull(hd().Nh) || IsNull(hd().Nf) || hd().Nh == 0 || hd().Nf == 0*/) 
+		if (IsNull(dt.Nb)/* || IsNull(dt.Nh) || IsNull(dt.Nf) || dt.Nh == 0 || dt.Nf == 0*/) 
 			throw Exc(t_("No data found"));
 		
-		//hd().dof.Clear();	hd().dof.SetCount(hd().Nb, 6);
+		//dt.dof.Clear();	dt.dof.SetCount(dt.Nb, 6);
 
 	} catch (Exc e) {
 		Status("", -1);
 		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//hd().lastError = Format(t_("file %s "), file) + e;
+		//dt.lastError = Format(t_("file %s "), file) + e;
 		return e;
 	}
-	/*if (hd().c0.size() == 0)
-		hd().c0.setConstant(3, hd().Nb, 0);*/
+	/*if (dt.c0.size() == 0)
+		dt.c0.setConstant(3, dt.Nb, 0);*/
 	
-	if (IsNum(hd().msh[0].c0)) {		// In BEMRosetta, cg and cb are referred to global axis, not to XBODY
-		for (int ib = 0; ib < hd().Nb; ++ib) {
-			if (!IsNull(hd().msh[ib].cg)) 	
-				hd().msh[ib].cg += hd().msh[ib].c0;
-			if (!IsNull(hd().msh[ib].cb)) 	
-				hd().msh[ib].cb += hd().msh[ib].c0;
+	if (IsNum(dt.msh[0].dt.c0)) {		// In BEMRosetta, cg and cb are referred to global axis, not to XBODY
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			if (!IsNull(dt.msh[ib].dt.cg)) 	
+				dt.msh[ib].dt.cg += dt.msh[ib].dt.c0;
+			if (!IsNull(dt.msh[ib].dt.cb)) 	
+				dt.msh[ib].dt.cb += dt.msh[ib].dt.c0;
 		}
 	}
 
-	hd().x_w = hd().y_w = 0;
+	dt.x_w = dt.y_w = 0;
 	
 	Status("", -1);
 	return String();
@@ -145,39 +146,39 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) {
 	String fileext;
 	
-	if (!IsNull(hd().rho) && !IsNull(hd().msh[0].cg) > 0) {
+	if (!IsNull(dt.rho) && !IsNull(dt.msh[0].dt.cg) > 0) {
 		BEM::Print("\n- " + Format(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt(file, ".frc"))));
 		Save_FRC(fileext);
 	}
-	if (hd().Nh > 0 && hd().Nf > 0) {
+	if (dt.Nh > 0 && dt.Nf > 0) {
 		BEM::Print("\n- " + Format(t_("Potential Control file '%s'"), GetFileName(fileext = ForceExt(file, ".pot"))));
 		Save_POT(fileext);
 	}
-	if (hd().IsLoadedA() && hd().IsLoadedB()) {
+	if (IsLoadedA() && IsLoadedB()) {
 		BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(fileext = ForceExt(file, ".1"))));
 		Save_1(fileext, force_T);
 	}
-	if (hd().IsLoadedFex()) {
+	if (IsLoadedFex()) {
 		BEM::Print("\n- " + Format(t_("Diffraction exciting file '%s'"), GetFileName(fileext = ForceExt(file, ".3"))));
 		Save_3(fileext, force_T);
 	}
-	if (hd().IsLoadedC()) {
+	if (IsLoadedC()) {
 		BEM::Print("\n- " + Format(t_("Hydrostatic restoring file '%s'"), GetFileName(fileext = ForceExt(file, ".hst"))));
 		Save_hst(fileext);
 	}
-	if (hd().IsLoadedRAO()) {
+	if (IsLoadedRAO()) {
 		BEM::Print("\n- " + Format(t_("RAO file '%s'"), GetFileName(fileext = ForceExt(file, ".4"))));
 		Save_4(fileext, force_T);
 	}
-	if (hd().IsLoadedMD()) {
-		BEM::Print("\n- " + Format(t_("Mean drift file '%s'"), GetFileName(fileext = ForceExt(file, Format(".%d", hd().mdtype)))));
+	if (IsLoadedMD()) {
+		BEM::Print("\n- " + Format(t_("Mean drift file '%s'"), GetFileName(fileext = ForceExt(file, Format(".%d", dt.mdtype)))));
 		Save_789(fileext, force_T, true);
 	}
-	if (hd().IsLoadedQTF(true)) {
+	if (IsLoadedQTF(true)) {
 		BEM::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileext = ForceExt(file, ".12s"))));
 		Save_12(fileext, true, Status, force_T, true, qtfHeading);
 	}
-	if (hd().IsLoadedQTF(false)) {
+	if (IsLoadedQTF(false)) {
 		BEM::Print("\n- " + Format(t_("QTF file '%s'"), GetFileName(fileext = ForceExt(file, ".12d"))));
 		Save_12(fileext, false, Status, force_T, true, qtfHeading);
 	}
@@ -188,22 +189,22 @@ bool Wamit::Load_out(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	
-	/*hd().Nb = 1;
-	hd().names.SetCount(hd().Nb);
-	hd().cg.setConstant(3, hd().Nb, NaNDouble);
-	hd().cb.setConstant(3, hd().Nb, NaNDouble);
-	hd().c0.setConstant(3, hd().Nb, 0);
-	hd().Vo.SetCount(hd().Nb, NaNDouble);
-	hd().C.SetCount(hd().Nb);
-	hd().M.SetCount(hd().Nb);*/
+	/*dt.Nb = 1;
+	dt.names.SetCount(dt.Nb);
+	dt.cg.setConstant(3, dt.Nb, NaNDouble);
+	dt.cb.setConstant(3, dt.Nb, NaNDouble);
+	dt.c0.setConstant(3, dt.Nb, 0);
+	dt.Vo.SetCount(dt.Nb, NaNDouble);
+	dt.C.SetCount(dt.Nb);
+	dt.M.SetCount(dt.Nb);*/
 				
-	hd().Nf = 0;
-	hd().Nh = 0;
-	hd().dataFromW = false;
+	dt.Nf = 0;
+	dt.Nh = 0;
+	dt.dataFromW = false;
 	
 	int pos;
 	int ibody = -1;
-	hd().dimen = false;
+	dt.dimen = false;
 	
 	String line;
 	LineParserWamit f(in);
@@ -221,7 +222,7 @@ bool Wamit::Load_out(String fileName) {
 				f.Load(line);
 				double hd1 = f.GetDouble(4);
 				double hd2 = f.GetDouble(5);
-				int iih = Find(hd().mdhead, std::complex<double>(hd1, hd2));
+				int iih = Find(dt.mdhead, std::complex<double>(hd1, hd2));
 				if (iih >= 0) {
 					in.GetLine(3); 
 					while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
@@ -229,7 +230,7 @@ bool Wamit::Load_out(String fileName) {
 						int idf = abs(f.GetInt(0)) - 1;
 						int ib = int(idf/6);
 						idf -= ib*6;
-						if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(ib, hd().Nb*6))
+						if (OUTB(ih, dt.Nh) || OUTB(ifr, dt.Nf) || OUTB(ib, dt.Nb*6))
 							throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, ib));
 						double ma = f.GetDouble(1);
 						double ph = ToRad(f.GetDouble(2));
@@ -237,7 +238,7 @@ bool Wamit::Load_out(String fileName) {
 					}
 				}
 				ih++;
-				if (ih >= hd().Nh)
+				if (ih >= dt.Nh)
 					break;
 			}
 		}
@@ -250,87 +251,87 @@ bool Wamit::Load_out(String fileName) {
 		f.Load(line);
 		
 		if (line.Find("HydroStar") > 0 || line.Find("HSrao") > 0) {
-			hd().description = "Created with HydroStar";
+			dt.description = "Created with HydroStar";
 			isHydrostar = true;
 		}
 		if ((pos = line.FindAfter("N=")) >= 0) {
 			ibody = ScanInt(line.Mid(pos, 10));
 			if (IsNull(ibody))
 				throw Exc(in.Str() + "\n" +  t_("Wrong body index"));
-			hd().Nb = max(hd().Nb, ibody);
-			if (ibody > hd().msh.size()) {
-				//hd().names.SetCount(ib);
-				hd().msh.SetCount(hd().Nb);
-				//hd().cg.setConstant(3, hd().Nb, NaNDouble);
-				//hd().cb.setConstant(3, hd().Nb, NaNDouble);
-				//hd().c0.setConstant(3, hd().Nb, 0);
-				//hd().Vo.SetCount(hd().Nb, NaNDouble);
-				//hd().C.SetCount(hd().Nb);
-				//hd().M.SetCount(hd().Nb);
+			dt.Nb = max(dt.Nb, ibody);
+			if (ibody > dt.msh.size()) {
+				//dt.names.SetCount(ib);
+				dt.msh.SetCount(dt.Nb);
+				//dt.cg.setConstant(3, dt.Nb, NaNDouble);
+				//dt.cb.setConstant(3, dt.Nb, NaNDouble);
+				//dt.c0.setConstant(3, dt.Nb, 0);
+				//dt.Vo.SetCount(dt.Nb, NaNDouble);
+				//dt.C.SetCount(dt.Nb);
+				//dt.M.SetCount(dt.Nb);
 			}
 			ibody--;
-			if (hd().msh[ibody].name.IsEmpty() && !isHydrostar)
-				hd().msh[ibody].name = GetFileTitle(f.GetText(2));
+			if (dt.msh[ibody].dt.name.IsEmpty() && !isHydrostar)
+				dt.msh[ibody].dt.name = GetFileTitle(f.GetText(2));
 		} else if ((pos = line.FindAfter("Input from Geometric Data File:")) >= 0) {
 			ibody = 0;
-			hd().Nb = 1;
-			hd().msh.SetCount(hd().Nb);
-			hd().msh[ibody].name = GetFileTitle(TrimBoth(line.Mid(pos)));		// 1 body
+			dt.Nb = 1;
+			dt.msh.SetCount(dt.Nb);
+			dt.msh[ibody].dt.name = GetFileTitle(TrimBoth(line.Mid(pos)));		// 1 body
 		} else if (line.Find("Gravity:") >= 0) {
-			hd().g = f.GetDouble(1);
-			hd().len = f.GetDouble(4);
+			dt.g = f.GetDouble(1);
+			dt.len = f.GetDouble(4);
 		} else if (line.Find("Water depth:") >= 0) {
 			if (ToLower(f.GetText(2)) == "infinite")
-				hd().h = -1;
+				dt.h = -1;
 			else {
-				hd().h = f.GetDouble(2);
-				if (hd().h < 0)
+				dt.h = f.GetDouble(2);
+				if (dt.h < 0)
 					throw Exc(in.Str() + "\n" +  t_("Water depth has to be positive"));
 			}
 			if (line.Find("Water density:") >= 0) 
-				hd().rho = f.GetDouble(5);			
+				dt.rho = f.GetDouble(5);			
 		} else if (line.Find("Water density:") >= 0) 
-			hd().rho = f.GetDouble(2);			
+			dt.rho = f.GetDouble(2);			
 		else if (line.Find("XBODY =") >= 0) {
-			if (IsNull(hd().Nb)) {
-				hd().Nb = 1;
-				hd().msh.SetCount(hd().Nb);
+			if (IsNull(dt.Nb)) {
+				dt.Nb = 1;
+				dt.msh.SetCount(dt.Nb);
 				ibody = 0;
 			}
-			if (ibody >= hd().Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Found additional bodies over %d"), hd().Nb));
-			//if (hd().c0.rows() < 3 || hd().c0.cols() < hd().Nb)
+			if (ibody >= dt.Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Found additional bodies over %d"), dt.Nb));
+			//if (dt.c0.rows() < 3 || dt.c0.cols() < dt.Nb)
 			// 	throw Exc(in.Str() + "\n"  + t_("c0 matrix is not dimensioned"));
-			hd().msh[ibody].c0.x = f.GetDouble(2);
-			hd().msh[ibody].c0.y = f.GetDouble(5);
-			hd().msh[ibody].c0.z = f.GetDouble(8);
+			dt.msh[ibody].dt.c0.x = f.GetDouble(2);
+			dt.msh[ibody].dt.c0.y = f.GetDouble(5);
+			dt.msh[ibody].dt.c0.z = f.GetDouble(8);
 		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {
-			//if (hd().Vo.size() < hd().Nb)
+			//if (dt.Vo.size() < dt.Nb)
 			// 	throw Exc(in.Str() + "\n"  + t_("Vo matrix is not dimensioned"));		
-			hd().msh[ibody].Vo = ScanDouble(line.Mid(pos));
+			dt.msh[ibody].dt.Vo = ScanDouble(line.Mid(pos));
 		} else if (line.Find("Center of Gravity  (Xg,Yg,Zg):") >= 0) {
-			//if (hd().cg.rows() < 3 || hd().cg.cols() < hd().Nb)
+			//if (dt.cg.rows() < 3 || dt.cg.cols() < dt.Nb)
 			// 	throw Exc(in.Str() + "\n"  + t_("cg matrix is not dimensioned"));
-			hd().msh[ibody].cg.x = f.GetDouble(4);
-			hd().msh[ibody].cg.y = f.GetDouble(5);
-			hd().msh[ibody].cg.z = f.GetDouble(6);
+			dt.msh[ibody].dt.cg.x = f.GetDouble(4);
+			dt.msh[ibody].dt.cg.y = f.GetDouble(5);
+			dt.msh[ibody].dt.cg.z = f.GetDouble(6);
 //			if (isHydrostar)
-//				hd().c0 = clone(hd().cg);	
+//				dt.c0 = clone(dt.cg);	
 		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
-			//if (hd().cb.rows() < 3 || hd().cb.cols() < hd().Nb)
+			//if (dt.cb.rows() < 3 || dt.cb.cols() < dt.Nb)
 			// 	throw Exc(in.Str() + "\n"  + t_("cb matrix is not dimensioned"));
-			hd().msh[ibody].cb.x = f.GetDouble(4);
-			hd().msh[ibody].cb.y = f.GetDouble(5);
-			hd().msh[ibody].cb.z = f.GetDouble(6);
+			dt.msh[ibody].dt.cb.x = f.GetDouble(4);
+			dt.msh[ibody].dt.cb.y = f.GetDouble(5);
+			dt.msh[ibody].dt.cb.z = f.GetDouble(6);
 		} else if (line.Find("Radii of gyration:") >= 0) {
-			if (IsNum(hd().rho) && IsNum(hd().msh[ibody].Vo)) {
-				double mass = hd().rho*hd().msh[ibody].Vo;
-				//if (hd().M.size() < hd().Nb)
+			if (IsNum(dt.rho) && IsNum(dt.msh[ibody].dt.Vo)) {
+				double mass = dt.rho*dt.msh[ibody].dt.Vo;
+				//if (dt.M.size() < dt.Nb)
 				// 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
-				if (hd().msh[ibody].M.size() > 0)
+				if (dt.msh[ibody].dt.M.size() > 0)
 					throw Exc(in.Str() + "\n"  + t_("Problem in M matrix. Please report"));
-				hd().msh[ibody].M.setConstant(6, 6, 0);
-				Eigen::MatrixXd &inertia = hd().msh[ibody].M;
+				dt.msh[ibody].dt.M.setConstant(6, 6, 0);
+				Eigen::MatrixXd &inertia = dt.msh[ibody].dt.M;
 				inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = 1;
 				inertia(3, 3) = sqr(f.GetDouble(3));
 				inertia(3, 4) = sqr(f.GetDouble(4));
@@ -343,9 +344,9 @@ bool Wamit::Load_out(String fileName) {
 				inertia(5, 3) = sqr(f.GetDouble(0));
 				inertia(5, 4) = sqr(f.GetDouble(1));
 				inertia(5, 5) = sqr(f.GetDouble(2));
-				double cx = hd().msh[ibody].cg.x;// - hd().c0(0, ibody); // cg is loaded referred to XBODY
-				double cy = hd().msh[ibody].cg.y;// - hd().c0(1, ibody);
-				double cz = hd().msh[ibody].cg.z;// - hd().c0(2, ibody);
+				double cx = dt.msh[ibody].dt.cg.x;// - dt.c0(0, ibody); // cg is loaded referred to XBODY
+				double cy = dt.msh[ibody].dt.cg.y;// - dt.c0(1, ibody);
+				double cz = dt.msh[ibody].dt.cg.z;// - dt.c0(2, ibody);
 				inertia(1, 5) = inertia(5, 1) =  cx;
 				inertia(2, 4) = inertia(4, 2) = -cx;
 				inertia(2, 3) = inertia(3, 2) =  cy;
@@ -356,51 +357,51 @@ bool Wamit::Load_out(String fileName) {
 				inertia *= mass;
 			}
 		} else if (line.Find("Global body and external mass matrix:") >= 0) {
-			//if (hd().M.size() < hd().Nb)
+			//if (dt.M.size() < dt.Nb)
 			// 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
-			if (hd().msh[ibody].M.size() > 0)
+			if (dt.msh[ibody].dt.M.size() > 0)
 				throw Exc(in.Str() + "\n"  + t_("Problem in M matrix. Please report"));
-			hd().msh[ibody].M.setConstant(6, 6, NaNDouble);
+			dt.msh[ibody].dt.M.setConstant(6, 6, NaNDouble);
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine();
 				for (int c = 0; c < 6; ++c)
-					hd().msh[ibody].M(r, c) = f.GetDouble(c);
+					dt.msh[ibody].dt.M(r, c) = f.GetDouble(c);
 			}		
 		} else if (line.Find("Hydrostatic and gravitational") >= 0) {
-			//if (hd().C.size() < hd().Nb)
+			//if (dt.C.size() < dt.Nb)
 			// 	throw Exc(in.Str() + "\n"  + t_("C matrix is not dimensioned"));
-			hd().msh[ibody].C.setConstant(6, 6, 0);
+			dt.msh[ibody].dt.C.setConstant(6, 6, 0);
 			f.LoadWamitJoinedFields(in.GetLine());
-			hd().msh[ibody].C(2, 2) = f.GetDouble(1);
-			hd().msh[ibody].C(2, 3) = hd().msh[ibody].C(3, 2) = f.GetDouble(2);
-			hd().msh[ibody].C(2, 4) = hd().msh[ibody].C(4, 2) = f.GetDouble(3);
+			dt.msh[ibody].dt.C(2, 2) = f.GetDouble(1);
+			dt.msh[ibody].dt.C(2, 3) = dt.msh[ibody].dt.C(3, 2) = f.GetDouble(2);
+			dt.msh[ibody].dt.C(2, 4) = dt.msh[ibody].dt.C(4, 2) = f.GetDouble(3);
 			f.LoadWamitJoinedFields(in.GetLine());
-			hd().msh[ibody].C(3, 3) = f.GetDouble(1);
-			hd().msh[ibody].C(3, 4) = hd().msh[ibody].C(4, 3) = f.GetDouble(2);
-			hd().msh[ibody].C(3, 5) = f.GetDouble(3);
+			dt.msh[ibody].dt.C(3, 3) = f.GetDouble(1);
+			dt.msh[ibody].dt.C(3, 4) = dt.msh[ibody].dt.C(4, 3) = f.GetDouble(2);
+			dt.msh[ibody].dt.C(3, 5) = f.GetDouble(3);
 			f.LoadWamitJoinedFields(in.GetLine());
-			hd().msh[ibody].C(4, 4) = f.GetDouble(1);
-			hd().msh[ibody].C(4, 5) = f.GetDouble(2);
+			dt.msh[ibody].dt.C(4, 4) = f.GetDouble(1);
+			dt.msh[ibody].dt.C(4, 5) = f.GetDouble(2);
 			
 		} else if (line.Find("Output from") >= 0) {
-			hd().head.Clear();
+			dt.head.Clear();
 			FileInLine::Pos fpos = in.GetPos();
 			
 			bool foundNh = false, found2ndorder = false, found7 = false, found8 = false, found9 = false;
 			while (!in.IsEof()) {
 				line = in.GetLine();
 				if (line.Find("Wave period (sec)") >= 0) {
-					++hd().Nf;
-					if (hd().head.size() > 0 && !foundNh)
+					++dt.Nf;
+					if (dt.head.size() > 0 && !foundNh)
 						foundNh = true;
 				} else if (!foundNh) {
-					if (hd().head.size() > 0 && (line.Find("*********************") >= 0))// ||
+					if (dt.head.size() > 0 && (line.Find("*********************") >= 0))// ||
 								   				 //line.Find("FORCES AND MOMENTS") >= 0)) 
 						foundNh = true;
 					else if (line.Find("Wave Heading (deg) :") >= 0) {
 						f.Load(line);
 						if (f.size() == 5)
-							FindAddDelta(hd().head, f.GetDouble(4)/*FixHeading_180(f.GetDouble(4))*/, 0.001);
+							FindAddDelta(dt.head, f.GetDouble(4)/*FixHeading_180(f.GetDouble(4))*/, 0.001);
 						else if (f.size() == 6)
 							FindAdd(mdhead, std::complex<double>(f.GetDouble(4), f.GetDouble(5)));
 					}
@@ -414,27 +415,27 @@ bool Wamit::Load_out(String fileName) {
 				else if (line.Find("(Control Surface)") >= 0) 
 					found7 = true;
 			}
-			Sort(hd().head);
-			hd().Nh = hd().head.size();
-			if (hd().Nb == 0 || hd().Nh == 0 || hd().Nf == 0)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
+			Sort(dt.head);
+			dt.Nh = dt.head.size();
+			if (dt.Nb == 0 || dt.Nh == 0 || dt.Nf == 0)
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));
 		
-			//hd().T.SetCount(hd().Nf);
-			hd().w.SetCount(hd().Nf);
+			//dt.T.SetCount(dt.Nf);
+			dt.w.SetCount(dt.Nf);
 
-			hd().Initialize_AB(hd().A);
-			hd().Initialize_AB(hd().B);
+			Initialize_AB(dt.A);
+			Initialize_AB(dt.B);
 			
 			//Sort(qhdrift);
-			hd().mdhead.resize(mdhead.size());
-			::Copy(mdhead, hd().mdhead);
+			dt.mdhead.resize(mdhead.size());
+			::Copy(mdhead, dt.mdhead);
 			
 			if (found7)
-				Hydro::Initialize_MD(md7, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(md7, dt.Nb, int(dt.mdhead.size()), dt.Nf);
 			if (found8)
-				Hydro::Initialize_MD(md8, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(md8, dt.Nb, int(dt.mdhead.size()), dt.Nf);
 			if (found9)
-				Hydro::Initialize_MD(md9, hd().Nb, int(hd().mdhead.size()), hd().Nf);
+				Hydro::Initialize_MD(md9, dt.Nb, int(dt.mdhead.size()), dt.Nf);
 						
 			int qtfNh = 0, qtfNf;
 			UVector<double> qw;
@@ -468,32 +469,32 @@ bool Wamit::Load_out(String fileName) {
 					else if (!foundDif && f.IsInLine("DIFFERENCE-FREQUENCY")) 
 						foundDif = true;
 				}
-				hd().qh.resize(qtfNh = head.size());
+				dt.qh.resize(qtfNh = head.size());
 				for (int i = 0; i < qtfNh; ++i)
-					hd().qh[i] = head[i];
-				hd().qw.resize(qtfNf = qw.size());
+					dt.qh[i] = head[i];
+				dt.qw.resize(qtfNf = qw.size());
 				for (int i = 0; i < qtfNf; ++i)
-					hd().qw[i] = 2*M_PI/qw[i];
+					dt.qw[i] = 2*M_PI/qw[i];
 					
 				if (foundSum)
-					Hydro::Initialize_QTF(hd().qtfsum, hd().Nb, qtfNh, qtfNf);
+					Hydro::Initialize_QTF(dt.qtfsum, dt.Nb, qtfNh, qtfNf);
 				if (foundDif)
-					Hydro::Initialize_QTF(hd().qtfdif, hd().Nb, qtfNh, qtfNf);
+					Hydro::Initialize_QTF(dt.qtfdif, dt.Nb, qtfNh, qtfNf);
 			}
 			
 			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = infinite") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				hd().A0.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
-				Load_A(in, hd().A0);
+				dt.A0.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
+				Load_A(in, dt.A0);
 			}
 			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = zero") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
-				Load_A(in, hd().Ainf);
+				dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
+				Load_A(in, dt.Ainf);
 			}
 			
 			in.SeekPos(fpos);
@@ -509,14 +510,14 @@ bool Wamit::Load_out(String fileName) {
 				f.Load(line);
 				
 				ifr++;
-				if (OUTB(ifr, hd().Nf))
-					throw Exc(in.Str() + "\n" + Format(t_("Found additional frequencies over %d"), hd().Nf));
+				if (OUTB(ifr, dt.Nf))
+					throw Exc(in.Str() + "\n" + Format(t_("Found additional frequencies over %d"), dt.Nf));
 				
 				int idT = 3;
 				if (f.GetText(3) == "=")	// Hydrostar
 					idT = 4;
-	            //hd().T[ifr] = f.GetDouble(idT);  			
-	            hd().w[ifr] = 2*M_PI/f.GetDouble(idT);//fround(2*M_PI/hd().T[ifr], 8);	    
+	            //dt.T[ifr] = f.GetDouble(idT);  			
+	            dt.w[ifr] = 2*M_PI/f.GetDouble(idT);//fround(2*M_PI/dt.T[ifr], 8);	    
 	            
 	            bool nextFreq = false;
 	            while (!in.IsEof() && !nextFreq) {
@@ -533,23 +534,23 @@ bool Wamit::Load_out(String fileName) {
 							int j = f.GetInt(1) - 1;
 							double Aij = f.GetDouble(2);
 							double Bij = f.GetDouble(3);
-							if (OUTB(i, hd().Nb*6) || OUTB(j, hd().Nb*6))
+							if (OUTB(i, dt.Nb*6) || OUTB(j, dt.Nb*6))
 								throw Exc(in.Str() + "\n"  + Format(t_("Index (%d, %d) out of bounds"), i, j));
-							hd().A[i][j][ifr] = Aij;
-							hd().B[i][j][ifr] = Bij;
+							dt.A[i][j][ifr] = Aij;
+							dt.B[i][j][ifr] = Bij;
 						}
-						//hd().GetBodyDOF();
+						//dt.GetBodyDOF();
 	            	} else if (line.Find("DIFFRACTION EXCITING FORCES AND MOMENTS") >= 0) {
-						if (hd().ex.force.IsEmpty()) 
-							hd().Initialize_Forces(hd().ex);
+						if (dt.ex.force.IsEmpty()) 
+							Initialize_Forces(dt.ex);
 						
 						int ih = 0;
 						while (!in.IsEof()) {		
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
 								f.Load(line);
-								double head = f.GetDouble(4); //FixHeading_180(f.GetDouble(4)); 
-								int iih = FindDelta(hd().head, head, 0.001);
+								double hd = f.GetDouble(4); //FixHeading_180(f.GetDouble(4)); 
+								int iih = FindDelta(dt.head, hd, 0.001);
 								if (iih >= 0) {
 									in.GetLine(3); 
 									while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
@@ -557,27 +558,27 @@ bool Wamit::Load_out(String fileName) {
 										double ma = f.GetDouble(1);
 										double ph = ToRad(f.GetDouble(2));
 										int ib = abs(f.GetInt(0)) - 1;
-										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(ib, hd().Nb*6))
+										if (OUTB(ih, dt.Nh) || OUTB(ifr, dt.Nf) || OUTB(ib, dt.Nb*6))
 											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, ib));
-										hd().ex.force[ih](ifr, ib) = std::polar(ma, ph);	
+										dt.ex.force[ih](ifr, ib) = std::polar(ma, ph);	
 									}
 								}
 								ih++;
-								if (ih >= hd().Nh)
+								if (ih >= dt.Nh)
 									break;
 							}
 						} 
 					} else if (line.Find("RESPONSE AMPLITUDE OPERATORS") >= 0) {
-						if (hd().rao.force.IsEmpty()) 
-							hd().Initialize_Forces(hd().rao);
+						if (dt.rao.force.IsEmpty()) 
+							Initialize_Forces(dt.rao);
 						
 						int ih = 0;
 						while (!in.IsEof()) {		
 							line = in.GetLine();
 							if (line.Find("Wave Heading (deg) :") >= 0) {
 								f.Load(line);
-								double head = f.GetDouble(4); 	//FixHeading_180(f.GetDouble(4)); 
-								int iih = FindDelta(hd().head, head, 0.001);
+								double hd = f.GetDouble(4); 	//FixHeading_180(f.GetDouble(4)); 
+								int iih = FindDelta(dt.head, hd, 0.001);
 								if (iih >= 0) {
 									in.GetLine(3); 
 									while (!TrimBoth(line = in.GetLine()).IsEmpty()) {
@@ -585,13 +586,13 @@ bool Wamit::Load_out(String fileName) {
 										double ma = f.GetDouble(1);
 										double ph = ToRad(f.GetDouble(2));
 										int idf = abs(f.GetInt(0)) - 1;
-										if (OUTB(ih, hd().Nh) || OUTB(ifr, hd().Nf) || OUTB(idf, hd().Nb*6))
+										if (OUTB(ih, dt.Nh) || OUTB(ifr, dt.Nf) || OUTB(idf, dt.Nb*6))
 											throw Exc(in.Str() + "\n"  + Format(t_("Index [%d](%d, %d) out of bounds"), ih, ifr, idf));
-										hd().rao.force[iih](ifr, idf) = std::polar(ma, ph);	
+										dt.rao.force[iih](ifr, idf) = std::polar(ma, ph);	
 									}
 								}
 								ih++;
-								if (ih >= hd().Nh)
+								if (ih >= dt.Nh)
 									break;
 							}
 						}
@@ -611,18 +612,18 @@ bool Wamit::Load_out(String fileName) {
 			}
 			
 			if (Hydro::IsLoadedMD(md7) && md7[0][0][0][md7[0][0][0].size()/2] > 0.) {
-				hd().md = pick(md7);
-				hd().mdtype = hd().qtftype = 7;
+				dt.md = pick(md7);
+				dt.mdtype = dt.qtftype = 7;
 			} else if (Hydro::IsLoadedMD(md9) && md9[0][0][0][md9[0][0][0].size()/2] > 0.) {
-				hd().md = pick(md9);
-				hd().mdtype = hd().qtftype = 9;
+				dt.md = pick(md9);
+				dt.mdtype = dt.qtftype = 9;
 			} else if (Hydro::IsLoadedMD(md8) && md8[0][0][0][md8[0][0][0].size()/2] > 0.) {
-				hd().md = pick(md8);
-				hd().mdtype = hd().qtftype = 8;
+				dt.md = pick(md8);
+				dt.mdtype = dt.qtftype = 8;
 			}
 			
 			if (found2ndorder) {
-				hd().qtfdataFromW = false;
+				dt.qtfdataFromW = false;
 				int ifr1, ifr2, ih; 
 				UArray<UArray<UArray<MatrixXcd>>> *qtf = nullptr;
 				while (!in.IsEof()) {
@@ -630,16 +631,16 @@ bool Wamit::Load_out(String fileName) {
 					if (f.IsInLine("Period indices:")) {
 						//ifr1 = f.GetInt(2)-1; 
 						//ifr2 = f.GetInt(3)-1;
-						//hd().qw[ifr1] = 2*M_PI/f.GetDouble(5);
-						//hd().qw[ifr2] = 2*M_PI/f.GetDouble(6);
-						ifr1 = Find(hd().qw, 2*M_PI/f.GetDouble(f.size()-2));
-						ifr2 = Find(hd().qw, 2*M_PI/f.GetDouble(f.size()-1));
+						//dt.qw[ifr1] = 2*M_PI/f.GetDouble(5);
+						//dt.qw[ifr2] = 2*M_PI/f.GetDouble(6);
+						ifr1 = Find(dt.qw, 2*M_PI/f.GetDouble(f.size()-2));
+						ifr2 = Find(dt.qw, 2*M_PI/f.GetDouble(f.size()-1));
 						if (ifr1 < 0 || ifr2 < 0)
 							throw Exc(in.Str() + "\n"  + t_("Periods not found"));
 					} else if (f.IsInLine("SUM-FREQUENCY")) 
-						qtf = &hd().qtfsum;
+						qtf = &dt.qtfsum;
 					else if (f.IsInLine("DIFFERENCE-FREQUENCY")) 
-						qtf = &hd().qtfdif;
+						qtf = &dt.qtfdif;
 					else if (f.IsInLine("Heading indices:")) {
 						double hd1 = f.GetDouble(6);
 						double hd2 = f.GetDouble(7);
@@ -656,7 +657,7 @@ bool Wamit::Load_out(String fileName) {
 								idof -= ib*6;
 								double ma = f.GetDouble(1);
 								double ph = ToRad(f.GetDouble(2));
-								if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, hd().Nb))
+								if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, dt.Nb))
 									throw Exc(in.Str() + "\n"  + Format(t_("Index [%d][%d](%d, %d) out of bounds"), ib, ih, idof, ifr1, ifr2));
 								(*qtf)[ib][ih][idof](ifr1, ifr2) = std::polar(ma, ph);
 								(*qtf)[ib][ih][idof](ifr2, ifr1) = std::polar(ma, ph);	
@@ -668,9 +669,9 @@ bool Wamit::Load_out(String fileName) {
 		}
 	}
 	if (isHydrostar)
-		hd().solver = Hydro::HYDROSTAR;
+		dt.solver = Hydro::HYDROSTAR;
 	
-	if (hd().Nb == 0)
+	if (dt.Nb == 0)
 		throw Exc(t_("Incorrect .out format"));
 	
 	return true;
@@ -682,8 +683,8 @@ void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::M
 			" ------------------------------------------------------------------------\n\n\n"
 			"    ADDED-MASS COEFFICIENTS\n"
 			"     I     J         A(I,J)\n\n";
-	for (int r = 0; r < hd().Nb*6; ++r) 
-		for (int c = 0; c < hd().Nb*6; ++c) 
+	for (int r = 0; r < dt.Nb*6; ++r) 
+		for (int c = 0; c < dt.Nb*6; ++c) 
 			if (IsNum(base(r, c))) 
 				out << Format("%6>d%6>d  % E\n", r+1, c+1, fun(r, c));
 	out << "\n\n";
@@ -692,21 +693,21 @@ void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::M
 void Wamit::Save_AB(FileOut &out, int ifr) {
 	out <<	"    ADDED-MASS AND DAMPING COEFFICIENTS\n"
 			"     I     J         A(I,J)         B(I,J)\n\n";
-	for (int r = 0; r < hd().Nb*6; ++r) 
-		for (int c = 0; c < hd().Nb*6; ++c) 
-			if (IsNum(hd().A[r][c][ifr]) && !IsNull(hd().B[r][c][ifr]))
-				out << Format("%6>d%6>d  % E  % E\n", r+1, c+1, hd().A_ndim(ifr, r, c), hd().B_ndim(ifr, r, c));
+	for (int r = 0; r < dt.Nb*6; ++r) 
+		for (int c = 0; c < dt.Nb*6; ++c) 
+			if (IsNum(dt.A[r][c][ifr]) && !IsNull(dt.B[r][c][ifr]))
+				out << Format("%6>d%6>d  % E  % E\n", r+1, c+1, A_ndim(ifr, r, c), B_ndim(ifr, r, c));
 	out << "\n\n\n\n";
 }
 
 void Wamit::Save_Forces(FileOut &out, int ifr) {
 	out <<	"    DIFFRACTION EXCITING FORCES AND MOMENTS\n\n";
-	for (int ih = 0; ih < hd().Nh; ++ih) {
-		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
+	for (int ih = 0; ih < dt.Nh; ++ih) {
+		out << "  Wave Heading (deg) :      " << dt.head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
-		for (int i = 0; i < hd().ex.force[ih].cols(); ++i)
-			if (IsNum(hd().ex.force[ih](ifr, i))) {
-				std::complex<double> c = hd().F_ndim(hd().ex, ih, ifr, i);
+		for (int i = 0; i < dt.ex.force[ih].cols(); ++i)
+			if (IsNum(dt.ex.force[ih](ifr, i))) {
+				std::complex<double> c = F_ndim(dt.ex, ih, ifr, i);
 				out << Format("%6>d   %E         %6>d\n", i+1, abs(c), round(ToDeg(arg(c))));
 			}
 		out << "\n\n";
@@ -715,12 +716,12 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 
 void Wamit::Save_RAO(FileOut &out, int ifr) {
 	out <<	"    RESPONSE AMPLITUDE OPERATORS\n\n";
-	for (int ih = 0; ih < hd().Nh; ++ih) {
-		out << "  Wave Heading (deg) :      " << hd().head[ih] << "\n\n"
+	for (int ih = 0; ih < dt.Nh; ++ih) {
+		out << "  Wave Heading (deg) :      " << dt.head[ih] << "\n\n"
 			<< "     I     Mod[Xh(I)]     Pha[Xh(I)]\n\n";
-		for (int i = 0; i < hd().rao.force[ih].cols(); ++i)
-			if (IsNum(hd().rao.force[ih](ifr, i))) {
-				std::complex<double> c = hd().RAO_ndim(hd().rao, ih, ifr, i);
+		for (int i = 0; i < dt.rao.force[ih].cols(); ++i)
+			if (IsNum(dt.rao.force[ih](ifr, i))) {
+				std::complex<double> c = RAO_ndim(dt.rao, ih, ifr, i);
 				out << Format(" %7>d   %E   %f\n", i+1, abs(c), ToDeg(arg(c)));
 			}
 		out << "\n\n\n\n";
@@ -728,24 +729,24 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 }
 
 void Wamit::Save_MD(FileOut &out, int ifr) {
-	if (hd().mdtype == 7)
+	if (dt.mdtype == 7)
 		out << " SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Control Surface)";
-	else if (hd().mdtype == 8)
+	else if (dt.mdtype == 8)
 		out << " SURGE, SWAY & YAW DRIFT FORCES (Momentum Conservation)";
-	else if (hd().mdtype == 9)
+	else if (dt.mdtype == 9)
 		out << " SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Pressure Integration)  PRE";
 	else
 		throw Exc("Unknown drift type");
 	
 	out << "\n\n";
 	
-	for (int ih = 0; ih < hd().Nh; ++ih) {
-		out << Format("  Wave Heading (deg) : %s%s\n\n", FDS(hd().head[ih], 12, true), FDS(hd().head[ih], 12, true))
+	for (int ih = 0; ih < dt.Nh; ++ih) {
+		out << Format("  Wave Heading (deg) : %s%s\n\n", FDS(dt.head[ih], 12, true), FDS(dt.head[ih], 12, true))
 			<< "     I      Mod[F(I)]    Pha[F(I)]\n\n";
-		for (int ib = 0; ib < hd().Nb; ++ib) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
 			for (int idf = 0; idf < 6; ++idf) {
-				if (IsNum(hd().md[ib][ih][idf][ifr])) {
-					const std::complex<double> &c = hd().Md_ndim(idf+ib*6, ih, ifr);
+				if (IsNum(dt.md[ib][ih][idf][ifr])) {
+					const std::complex<double> &c = Md_ndim(idf+ib*6, ih, ifr);
 					out << Format(" %7>d   %E         %6>d\n", idf+1+6*ib, abs(c), round(ToDeg(arg(c))));
 				}
 			}
@@ -766,12 +767,12 @@ void Wamit::Save_out(String file) {
 	    << Format(" %s\n\n\n", String('-', 72))
 	    << Format(" %s\n\n\n", String('-', 72))
 		<< " Low-order panel method  (ILOWHI=0)\n\n";
-	if (hd().Nb == 1)
+	if (dt.Nb == 1)
 		out << " Input from Geometric Data File:         " << filename << ".gdf\n"
 			<< " Unknown gdf file source\n\n";
 	else {
 		out << " Input from Geometric Data Files:\n";
-		for (int ib = 0; ib < hd().Nb; ++ib)
+		for (int ib = 0; ib < dt.Nb; ++ib)
 			out << Format("                               N=  %d     %s%d.gdf\n"
 						  " Unknown gdf file source\n\n", ib+1, filename, ib);
 	}
@@ -779,18 +780,18 @@ void Wamit::Save_out(String file) {
 		<< " " << filename << ".pot -- file type .gdf, ILOWHI=0, IRR=1\n\n\n"
 		<< " POTEN run date and starting time:        01-Jan-2000  --  00:00:00\n"
 		<< "   Period       Time           RAD      DIFF  (max iterations)\n";
-	if (hd().IsLoadedA0())
+	if (IsLoadedA0())
 		out << "   -1.0000    00:00:00          -1\n";
-	if (hd().IsLoadedAinf())
+	if (IsLoadedAinf())
 		out << "    0.0000    00:00:00          -1\n";
-	VectorXd T = hd().Get_T();
+	VectorXd T = Get_T();
 	for (int it = 0; it < T.size(); ++it)
 		out << " " << Format("%9.4f", T[it]) << "    00:00:00          -1      -1\n";
 	out << "\n"
-	   	<< " Gravity:     " << (IsNull(hd().g) ? Bem().g : hd().g)
-	    << "                Length scale:        " << hd().len << "\n"
-		<< " Water depth:        " << (hd().h < 0 ? "infinite" : FDS(hd().h, 9)) << "    "
-		<< " Water density:      " << (IsNull(hd().rho) ? Bem().rho : hd().rho) << "\n"
+	   	<< " Gravity:     " << (IsNull(dt.g) ? Bem().g : dt.g)
+	    << "                Length scale:        " << dt.len << "\n"
+		<< " Water depth:        " << (dt.h < 0 ? "infinite" : FDS(dt.h, 9)) << "    "
+		<< " Water density:      " << (IsNull(dt.rho) ? Bem().rho : dt.rho) << "\n"
 		<< " Logarithmic singularity index:              ILOG =     1\n"
 		<< " Source formulation index:                   ISOR =     0\n"
 		<< " Diffraction/scattering formulation index: ISCATT =     0\n"
@@ -799,55 +800,55 @@ void Wamit::Save_out(String file) {
 	
 	out << " BODY PARAMETERS:\n\n";
 	
-	for (int ibody = 0; ibody < hd().Nb; ++ibody) {
-		if (hd().Nb > 1)
+	for (int ibody = 0; ibody < dt.Nb; ++ibody) {
+		if (dt.Nb > 1)
 			out << " Body number: N= " << ibody+1 << "   ";
 		out	<< " Total panels:  1111    Waterline panels:   11      Symmetries: none\n";
 		out	<< " Irregular frequency index: IRR =1\n"; 
 		out	<< " Free surface panels:     111\n\n";
 		out	<< Format(" XBODY =    %s YBODY =    %s ZBODY =    %s PHIBODY =   0.0\n", 
-						FormatWam(hd().msh[ibody].c0.x), 
-						FormatWam(hd().msh[ibody].c0.y), 
-						FormatWam(hd().msh[ibody].c0.z));
-		double Vo = /*hd().Vo.size() > ibody ?*/ hd().msh[ibody].Vo;// : 0;
+						FormatWam(dt.msh[ibody].dt.c0.x), 
+						FormatWam(dt.msh[ibody].dt.c0.y), 
+						FormatWam(dt.msh[ibody].dt.c0.z));
+		double Vo = /*dt.Vo.size() > ibody ?*/ dt.msh[ibody].dt.Vo;// : 0;
 		out	<< Format(" Volumes (VOLX,VOLY,VOLZ):      %s %s %s\n", 
 					FormatWam(Vo), FormatWam(Vo), FormatWam(Vo));
 		double cbx = 0, cby = 0, cbz = 0;
-		if (!IsNull(hd().msh[ibody].cb)) {
-			cbx = hd().msh[ibody].cb.x - hd().msh[ibody].c0.x;
-			cby = hd().msh[ibody].cb.y - hd().msh[ibody].c0.y;
-			cbz = hd().msh[ibody].cb.z - hd().msh[ibody].c0.z;
+		if (!IsNull(dt.msh[ibody].dt.cb)) {
+			cbx = dt.msh[ibody].dt.cb.x - dt.msh[ibody].dt.c0.x;
+			cby = dt.msh[ibody].dt.cb.y - dt.msh[ibody].dt.c0.y;
+			cbz = dt.msh[ibody].dt.cb.z - dt.msh[ibody].dt.c0.z;
 		}
 		out	<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
 						FormatWam(cbx), FormatWam(cby), FormatWam(cbz));
-		if (hd().IsLoadedC()) {
+		if (IsLoadedC()) {
 			out	<< " Hydrostatic and gravitational restoring coefficients:\n"; 
 			out	<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 
-						FormatWam(hd().C_ndim(ibody, 2, 2)), 
-						FormatWam(hd().C_ndim(ibody, 2, 3)), 
-						FormatWam(hd().C_ndim(ibody, 2, 4)));
+						FormatWam(C_ndim(ibody, 2, 2)), 
+						FormatWam(C_ndim(ibody, 2, 3)), 
+						FormatWam(C_ndim(ibody, 2, 4)));
 			out	<< " C(4,4),C(4,5),C(4,6):               " << Format("%s %s %s\n", 
-						FormatWam(hd().C_ndim(ibody, 3, 3)), 
-						FormatWam(hd().C_ndim(ibody, 3, 4)), 
-						FormatWam(hd().C_ndim(ibody, 3, 5)));
+						FormatWam(C_ndim(ibody, 3, 3)), 
+						FormatWam(C_ndim(ibody, 3, 4)), 
+						FormatWam(C_ndim(ibody, 3, 5)));
 			out	<< "        C(5,5),C(5,6):                             " << Format("%s %s\n", 
-						FormatWam(hd().C_ndim(ibody, 4, 4)), 
-						FormatWam(hd().C_ndim(ibody, 4, 5)));
+						FormatWam(C_ndim(ibody, 4, 4)), 
+						FormatWam(C_ndim(ibody, 4, 5)));
 		}
 		double cgx = 0, cgy = 0, cgz = 0;
-		if (!IsNull(hd().msh[ibody].cg)) {
-			cgx = hd().msh[ibody].cg.x - hd().msh[ibody].c0.x;
-			cgy = hd().msh[ibody].cg.y - hd().msh[ibody].c0.y;
-			cgz = hd().msh[ibody].cg.z - hd().msh[ibody].c0.z;
+		if (!IsNull(dt.msh[ibody].dt.cg)) {
+			cgx = dt.msh[ibody].dt.cg.x - dt.msh[ibody].dt.c0.x;
+			cgy = dt.msh[ibody].dt.cg.y - dt.msh[ibody].dt.c0.y;
+			cgz = dt.msh[ibody].dt.cg.z - dt.msh[ibody].dt.c0.z;
 		}
 		out	<< Format(" Center of Gravity  (Xg,Yg,Zg): %s %s %s\n\n", 
 					FormatWam(cgx), FormatWam(cgy), FormatWam(cgz));
-		if (hd().IsLoadedM()) {
+		if (IsLoadedM()) {
 			out	<< " Global body and external mass matrix:        ";
 			for (int r = 0; r < 6; ++r) {
 				out << "\n ";
 				for (int c = 0; c < 6; ++c)
-					out << Format(" % 10.4E", hd().msh[ibody].M(r, c));
+					out << Format(" % 10.4E", dt.msh[ibody].dt.M(r, c));
 			}
 		}
 	}
@@ -861,57 +862,57 @@ void Wamit::Save_out(String file) {
 		<< "  " << filename << ".frc -- file type .gdf, ILOWHI=0, IRR=1\n \n\n"
 	;
 
-	if (hd().IsLoadedA0())
-		Save_A(out, [&](int idf, int jdf)->double {return hd().A0_ndim(idf, jdf);},   hd().A0,   "infinite");
-	if (hd().IsLoadedAinf())
-		Save_A(out, [&](int idf, int jdf)->double {return hd().Ainf_ndim(idf, jdf);}, hd().Ainf, "zero");
+	if (IsLoadedA0())
+		Save_A(out, [&](int idf, int jdf)->double {return A0_ndim(idf, jdf);},   dt.A0,   "infinite");
+	if (IsLoadedAinf())
+		Save_A(out, [&](int idf, int jdf)->double {return Ainf_ndim(idf, jdf);}, dt.Ainf, "zero");
 	
 	for (int ifr = 0; ifr < T.size(); ++ifr) {
 		out << 	" ************************************************************************\n\n"
 				" Wave period (sec) = " << FormatWam(T[ifr]) << "\n"
 				" ------------------------------------------------------------------------\n\n\n";
-		if (hd().IsLoadedA() && hd().IsLoadedB()) 
+		if (IsLoadedA() && IsLoadedB()) 
 			Save_AB(out, ifr);
-		if (hd().IsLoadedFex())
+		if (IsLoadedFex())
 			Save_Forces(out, ifr);
-		if (hd().IsLoadedRAO())
+		if (IsLoadedRAO())
 			Save_RAO(out, ifr);
-		if (hd().IsLoadedMD())
+		if (IsLoadedMD())
 			Save_MD(out, ifr);
 	}
 	UVector<double> heads;
-	UVector<int> id1(int(hd().qh.size())), id2(int(hd().qh.size()));
-	if (hd().IsLoadedQTF(true) || hd().IsLoadedQTF(false)) {
-		for (int ih = 0; ih < hd().qh.size(); ++ih) {
-			id1[ih] = 1+FindAdd(heads, hd().qh[ih].real());
-			id2[ih] = 1+FindAdd(heads, hd().qh[ih].imag());
+	UVector<int> id1(int(dt.qh.size())), id2(int(dt.qh.size()));
+	if (IsLoadedQTF(true) || IsLoadedQTF(false)) {
+		for (int ih = 0; ih < dt.qh.size(); ++ih) {
+			id1[ih] = 1+FindAdd(heads, dt.qh[ih].real());
+			id2[ih] = 1+FindAdd(heads, dt.qh[ih].imag());
 		}
 	}
 		
-	if (hd().IsLoadedQTF(true)) {
-		for (int ih = 0; ih < hd().qh.size(); ++ih) {
-			for (int ifr1 = 0; ifr1 < hd().qw.size(); ++ifr1) {
-				for (int ifr2 = ifr1; ifr2 < hd().qw.size(); ++ifr2) {
-					double T = 2*M_PI/(hd().qw[ifr1] + hd().qw[ifr2]);
-					double T1 = 2*M_PI/(hd().qw[ifr1]);
-					double T2 = 2*M_PI/(hd().qw[ifr2]);
+	if (IsLoadedQTF(true)) {
+		for (int ih = 0; ih < dt.qh.size(); ++ih) {
+			for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) {
+				for (int ifr2 = ifr1; ifr2 < dt.qw.size(); ++ifr2) {
+					double TT = 2*M_PI/(dt.qw[ifr1] + dt.qw[ifr2]);
+					double T1 = 2*M_PI/(dt.qw[ifr1]);
+					double T2 = 2*M_PI/(dt.qw[ifr2]);
 					out << " ************************************************************************\n\n"
-						   " 2nd-order period (sec) =  " << Format("%12E", T) << "\n\n"
+						   " 2nd-order period (sec) =  " << Format("%12E", TT) << "\n\n"
 						   " Period indices:     " << Format("%2d   %2d", ifr1+1, ifr2+1) << "          Periods:  " 
 						   		<< Format("%12E %12E", T1, 	T2) << "\n"
 						   " ------------------------------------------------------------------------\n\n\n"
 						   "SUM-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
 						   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       " 
-						   		<< Format("%4.1f", hd().qh[ih].real()) << "      " 
-						   		<< Format("%4.1f", hd().qh[ih].imag()) << "\n\n\n"
+						   		<< Format("%4.1f", dt.qh[ih].real()) << "      " 
+						   		<< Format("%4.1f", dt.qh[ih].imag()) << "\n\n\n"
 						   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";			// Hydrostar only one \n
-					for (int ib = 0; ib < hd().Nb; ++ib) {
+					for (int ib = 0; ib < dt.Nb; ++ib) {
 						for (int idf = 0; idf < 6; ++idf) {
 							static int idf12[] = {1, 3, 5, 2, 4, 6};
 			        		int iidf = idf12[idf]-1;
 							out << Format("    %2d   %12.6E     %10d\n", 1+iidf + 6*ib, 
-									hd().F_ndim(abs(hd().qtfsum[ib][ih][iidf](ifr1, ifr2)), iidf),
- 									int(ToDeg(arg(hd().qtfsum[ib][ih][iidf](ifr1, ifr2)))));
+									F_ndim(abs(dt.qtfsum[ib][ih][iidf](ifr1, ifr2)), iidf),
+ 									int(ToDeg(arg(dt.qtfsum[ib][ih][iidf](ifr1, ifr2)))));
 						}
 					}
 					out << "\n\n";
@@ -919,19 +920,19 @@ void Wamit::Save_out(String file) {
 			}
 		}
 	}
-	if (hd().IsLoadedQTF(false)) {
-		for (int ih = 0; ih < hd().qh.size(); ++ih) {
-			for (int ifr2 = 0; ifr2 < hd().qw.size(); ++ifr2) {
-				for (int ifr1 = ifr2; ifr1 < hd().qw.size(); ++ifr1) {
+	if (IsLoadedQTF(false)) {
+		for (int ih = 0; ih < dt.qh.size(); ++ih) {
+			for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) {
+				for (int ifr1 = ifr2; ifr1 < dt.qw.size(); ++ifr1) {
 					String sT, units;
 					if (ifr1 == ifr2)
 						sT = "infinite";
 					else {
 						units = "(sec) ";
-						sT = Format(" %12E", 2*M_PI/(hd().qw[ifr1] - hd().qw[ifr2]));
+						sT = Format(" %12E", 2*M_PI/(dt.qw[ifr1] - dt.qw[ifr2]));
 					}
-					double T1 = 2*M_PI/(hd().qw[ifr1]);
-					double T2 = 2*M_PI/(hd().qw[ifr2]);
+					double T1 = 2*M_PI/(dt.qw[ifr1]);
+					double T2 = 2*M_PI/(dt.qw[ifr2]);
 					out << " ************************************************************************\n\n"
 						   " 2nd-order period " << units << "= " << sT << "\n\n"
 						   " Period indices:     " << Format("%2d   %2d", ifr1+1, ifr2+1) << "          Periods:  " 
@@ -939,16 +940,16 @@ void Wamit::Save_out(String file) {
 						   " ------------------------------------------------------------------------\n\n\n"
 						   "DIFFERENCE-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
 						   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       "
-						   		<< Format("%4.1f", hd().qh[ih].real()) << "      " 
-						   		<< Format("%4.1f", hd().qh[ih].imag()) << "\n\n\n"
+						   		<< Format("%4.1f", dt.qh[ih].real()) << "      " 
+						   		<< Format("%4.1f", dt.qh[ih].imag()) << "\n\n\n"
 						   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";			// Hydrostar only one \n
-					for (int ib = 0; ib < hd().Nb; ++ib) {
+					for (int ib = 0; ib < dt.Nb; ++ib) {
 						for (int idf = 0; idf < 6; ++idf) {
 							static int idf12[] = {1, 3, 5, 2, 4, 6};
 			        		int iidf = idf12[idf]-1;
 							out << Format("    %2d   %12.6E     %10d\n", 1+iidf + 6*ib, 
-									hd().F_ndim(abs(hd().qtfdif[ib][ih][iidf](ifr1, ifr2)), iidf),
- 									int(ToDeg(arg(hd().qtfdif[ib][ih][iidf](ifr1, ifr2)))));
+									F_ndim(abs(dt.qtfdif[ib][ih][iidf](ifr1, ifr2)), iidf),
+ 									int(ToDeg(arg(dt.qtfdif[ib][ih][iidf](ifr1, ifr2)))));
 						}
 					}
 					out << "\n\n";
@@ -976,7 +977,7 @@ void Wamit::Load_A(FileInLine &in, Eigen::MatrixXd &A) {
 	}
 }
 
-bool Wamit::Load_cfg(String fileName) {
+bool Wamit::Load_cfg(String fileName, int &iperin, int &iperout) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -1008,21 +1009,21 @@ bool Wamit::Load_pot(String fileName) {
  	
  	in.GetLine();
  	f.GetLine();
- 	hd().h = f.GetDouble(0);
-	if (hd().h < 0)
-		hd().h = -1;
+ 	dt.h = f.GetDouble(0);
+	if (dt.h < 0)
+		dt.h = -1;
 	
 	in.GetLine();
  	f.GetLine();
  	
  	// Commented, as there is no relationship between the units of input and output time/frequency. 
 
-	int /*hd().*/Nf = f.GetInt(0);		
+	int /*dt.*/Nf = f.GetInt(0);		
 	
- 	if (abs(/*hd().*/Nf) > 1000)
- 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), /*hd().*/Nf));
+ 	if (abs(/*dt.*/Nf) > 1000)
+ 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), /*dt.*/Nf));
  	
- 	if (/*hd().*/Nf != 0) {
+ 	if (/*dt.*/Nf != 0) {
  		int nf = Nf;
  		if (nf > 0) {
 	 		while (nf > 0 && !f.IsEof()) {
@@ -1034,83 +1035,83 @@ bool Wamit::Load_pot(String fileName) {
  			nf = abs(nf);
  		}
 	 	/*
-	 	if (hd().Nf > 0) {
-	 		hd().T.SetCount(hd().Nf);
-			hd().w.SetCount(hd().Nf);
-		 	if (hd().Nf > f.GetCount())
-		 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %d. Found %d"), hd().Nf, f.GetCount()));
-		 	for (int i = 0; i < hd().Nf; ++i) {
-				hd().T[i] = f.GetDouble(i);
-				if (hd().T[i] < 0.00001)
-					throw Exc(in.Str() + "\n" + Format(t_("Wrong period %f"), hd().T[i]));
-				if (i > 0 && hd().T[i] <= hd().T[i-1])
-					throw Exc(in.Str() + "\n" + Format(t_("Wrong period %f, it should be higher than previous one"), hd().T[i]));	
-		 		hd().w[i] = 2*M_PI/hd().T[i];
+	 	if (dt.Nf > 0) {
+	 		dt.T.SetCount(dt.Nf);
+			dt.w.SetCount(dt.Nf);
+		 	if (dt.Nf > f.GetCount())
+		 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %d. Found %d"), dt.Nf, f.GetCount()));
+		 	for (int i = 0; i < dt.Nf; ++i) {
+				dt.T[i] = f.GetDouble(i);
+				if (dt.T[i] < 0.00001)
+					throw Exc(in.Str() + "\n" + Format(t_("Wrong period %f"), dt.T[i]));
+				if (i > 0 && dt.T[i] <= dt.T[i-1])
+					throw Exc(in.Str() + "\n" + Format(t_("Wrong period %f, it should be higher than previous one"), dt.T[i]));	
+		 		dt.w[i] = 2*M_PI/dt.T[i];
 		 	}
 	 	} else {
-	 		hd().Nf = -hd().Nf;
+	 		dt.Nf = -dt.Nf;
 	 		double init = f.GetDouble(0);
 	 		if (init < 0) {
 	 			init = -init;
-	 			hd().Nf -= 2;		// Removed inf and zero	
+	 			dt.Nf -= 2;		// Removed inf and zero	
 	 		}
-	 		hd().T.SetCount(hd().Nf);
-			hd().w.SetCount(hd().Nf);
-			hd().T[0] = init;
-			hd().w[0] = 2*M_PI/init;
+	 		dt.T.SetCount(dt.Nf);
+			dt.w.SetCount(dt.Nf);
+			dt.T[0] = init;
+			dt.w[0] = 2*M_PI/init;
 	 		double delta = f.GetDouble(1);
-		 	for (int i = 1; i < hd().Nf; ++i) {
-		 		hd().T[i] = init + i*delta;
-		 		hd().w[i] = 2*M_PI/hd().T[i];
+		 	for (int i = 1; i < dt.Nf; ++i) {
+		 		dt.T[i] = init + i*delta;
+		 		dt.w[i] = 2*M_PI/dt.T[i];
 		 	}
 	 	}
-	 	ProcessFirstColumnPot(hd().w, hd().T);
+	 	ProcessFirstColumnPot(dt.w, dt.T);
 	 	*/
  	}
  	
  	f.GetLine();
- 	hd().Nh = f.GetInt(0);
- 	if (abs(hd().Nh) > 1000)
- 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %s"), hd().Nh));
+ 	dt.Nh = f.GetInt(0);
+ 	if (abs(dt.Nh) > 1000)
+ 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %s"), dt.Nh));
  	
- 	if (hd().Nh != 0) {
+ 	if (dt.Nh != 0) {
  		f.GetLine();
- 	 	if (hd().Nh > 0) {
-	 		hd().head.SetCount(hd().Nh);
-		 	if (hd().Nh > f.GetCount())
-		 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %d. Found %d"), hd().Nh, f.GetCount()));
-		 	for (int i = 0; i < hd().Nh; ++i) {
-				hd().head[i] = f.GetDouble(i);
-				if (i > 0 && hd().head[i] <= hd().head[i-1])
-					throw Exc(in.Str() + "\n" + Format(t_("Wrong heading %f, it should be higher than previous one"), hd().head[i]));	
+ 	 	if (dt.Nh > 0) {
+	 		dt.head.SetCount(dt.Nh);
+		 	if (dt.Nh > f.GetCount())
+		 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of headings %d. Found %d"), dt.Nh, f.GetCount()));
+		 	for (int i = 0; i < dt.Nh; ++i) {
+				dt.head[i] = f.GetDouble(i);
+				if (i > 0 && dt.head[i] <= dt.head[i-1])
+					throw Exc(in.Str() + "\n" + Format(t_("Wrong heading %f, it should be higher than previous one"), dt.head[i]));	
 		 	}
 	 	} else {
-	 		hd().Nh = -hd().Nh;
+	 		dt.Nh = -dt.Nh;
 	 		double init = f.GetDouble(0);
-	 		hd().head.SetCount(hd().Nh);
-			hd().head[0] = init;
+	 		dt.head.SetCount(dt.Nh);
+			dt.head[0] = init;
 	 		double delta = f.GetDouble(1);
-		 	for (int i = 1; i < hd().Nh; ++i) 
-		 		hd().head[i] = init + i*delta;
+		 	for (int i = 1; i < dt.Nh; ++i) 
+		 		dt.head[i] = init + i*delta;
 	 	}
  	}
  	
  	f.GetLine();
- 	hd().Nb = f.GetInt(0);
- 	if (hd().Nb < 1 || hd().Nb > 100)
+ 	dt.Nb = f.GetInt(0);
+ 	if (dt.Nb < 1 || dt.Nb > 100)
  		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %s"), f.GetText(0)));
-	//if (hd().names.IsEmpty())
-	//	hd().names.SetCount(hd().Nb);
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);
-	//hd().c0.resize(3, hd().Nb);
-	for (int ib = 0; ib < hd().Nb; ++ib) {
+	//if (dt.names.IsEmpty())
+	//	dt.names.SetCount(dt.Nb);
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);
+	//dt.c0.resize(3, dt.Nb);
+	for (int ib = 0; ib < dt.Nb; ++ib) {
 		f.GetLine();
-		hd().msh[ib].name = f.GetText(0);
+		dt.msh[ib].dt.name = f.GetText(0);
 		f.GetLine();
-		hd().msh[ib].c0.x = f.GetDouble(0);
-		hd().msh[ib].c0.y = f.GetDouble(1);
-		hd().msh[ib].c0.z = f.GetDouble(2);
+		dt.msh[ib].dt.c0.x = f.GetDouble(0);
+		dt.msh[ib].dt.c0.y = f.GetDouble(1);
+		dt.msh[ib].dt.c0.z = f.GetDouble(2);
 		if (f.GetCount() >= 4 && f.GetDouble(3) != 0)
 			BEM::PrintWarning("\n" + Format(t_("XBODY angle %f cannot be handled by BEMRosetta"), f.GetDouble(3)));
 		in.GetLine();
@@ -1130,7 +1131,7 @@ bool Wamit::Load_frc2(String fileName) {
 	double rho = f.GetDouble(0);
 	if (rho <= 0 || rho > 5000)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong density %s"), f.GetText(0)));
-	hd().rho = rho;
+	dt.rho = rho;
 	
 	f.GetLine();
 	int mxNb = f.size()/3;
@@ -1142,19 +1143,19 @@ bool Wamit::Load_frc2(String fileName) {
 			break;
 	}
 		
-	if (!IsNull(hd().Nb) && hd().Nb != Nb) 
-		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %d. They should be %d"), Nb, hd().Nb));
+	if (!IsNull(dt.Nb) && dt.Nb != Nb) 
+		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %d. They should be %d"), Nb, dt.Nb));
 	
-	hd().Nb = Nb;
-	//hd().cg.resize(3, Nb);
+	dt.Nb = Nb;
+	//dt.cg.resize(3, Nb);
 	
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);
 		
 	for (int ib = 0; ib < Nb; ++ib) {
-		hd().msh[ib].cg.x = f.GetDouble(0 + ib*Nb);
-		hd().msh[ib].cg.y = f.GetDouble(1 + ib*Nb);
-		hd().msh[ib].cg.z = f.GetDouble(2 + ib*Nb);
+		dt.msh[ib].dt.cg.x = f.GetDouble(0 + ib*Nb);
+		dt.msh[ib].dt.cg.y = f.GetDouble(1 + ib*Nb);
+		dt.msh[ib].dt.cg.z = f.GetDouble(2 + ib*Nb);
 	}
 	
 	f.GetLine();
@@ -1162,13 +1163,13 @@ bool Wamit::Load_frc2(String fileName) {
 	if (imass < 0 || imass > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IMASS %d"), imass));
 	if (imass == 1) {
-		//hd().M.SetCount(Nb);
+		//dt.M.SetCount(Nb);
 		for (int ib = 0; ib < Nb; ++ib) {
-			hd().msh[ib].M.resize(6, 6);
+			dt.msh[ib].dt.M.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine();
 				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
-					hd().msh[ib].M(r, c) = f.GetDouble(c + 6*ib);
+					dt.msh[ib].dt.M(r, c) = f.GetDouble(c + 6*ib);
 			}
 		}
 	}
@@ -1178,13 +1179,13 @@ bool Wamit::Load_frc2(String fileName) {
 	if (idamp < 0 || idamp > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IDAMP %d"), idamp));
 	if (idamp == 1) {
-		//hd().Dlin.resize(6*Nb, 6*Nb);
+		//dt.Dlin.resize(6*Nb, 6*Nb);
 		for (int ib = 0; ib < Nb; ++ib) {
-			hd().msh[ib].Dlin.resize(6, 6);
+			dt.msh[ib].dt.Dlin.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine();
 				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
-					hd().msh[ib].Dlin(r, c) = f.GetDouble(c + 6*ib);
+					dt.msh[ib].dt.Dlin(r, c) = f.GetDouble(c + 6*ib);
 			}
 		}
 	}
@@ -1194,13 +1195,13 @@ bool Wamit::Load_frc2(String fileName) {
 	if (imoor < 0 || imoor > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong ISTIF %d"), imoor));
 	if (imoor == 1) {
-		//hd().Cmoor.SetCount(Nb);
+		//dt.Cmoor.SetCount(Nb);
 		for (int ib = 0; ib < Nb; ++ib) {
-			hd().msh[ib].Cmoor.resize(6, 6);
+			dt.msh[ib].dt.Cmoor.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
 				f.GetLine();
 				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
-					hd().msh[ib].Cmoor(r, c) = f.GetDouble(c + 6*ib);
+					dt.msh[ib].dt.Cmoor(r, c) = f.GetDouble(c + 6*ib);
 			}
 		}
 	}
@@ -1217,8 +1218,8 @@ bool Wamit::Load_gdf(String fileName) {
  	in.GetLine();
  	f.GetLine();
  	
- 	hd().len = f.GetDouble(0);
-	hd().g = f.GetDouble(1);
+ 	dt.len = f.GetDouble(0);
+	dt.g = f.GetDouble(1);
 
  	return true;
 }
@@ -1239,47 +1240,47 @@ bool Wamit::Load_mmx(String fileName) {
 		if (f.IsEmpty())
 			;
 		else if (f.GetText(0) == "Gravity:") {
-			hd().g = f.GetDouble(1);
+			dt.g = f.GetDouble(1);
 			if (f.GetText(2) != "Length" || f.GetText(3) != "scale:") 
 				throw Exc(t_("Expected to find 'Length scale:' text in .mmx file"));
-			hd().len = f.GetDouble(4);
+			dt.len = f.GetDouble(4);
 		} else if (f.GetText(0) == "NBODY") {
-			hd().Nb = f.GetInt(2);
+			dt.Nb = f.GetInt(2);
 			ialtfrc = f.GetInt(5);
-			//hd().Vo.SetCount(hd().Nb, NaNDouble);
-			hd().msh.SetCount(hd().Nb);
-			/*if (hd().cb.size() != 3*hd().Nb)
-				hd().cb.setConstant(3, hd().Nb, NaNDouble);
-			if (hd().cg.size() != 3*hd().Nb)
-				hd().cg.setConstant(3, hd().Nb, NaNDouble);*/
-			if (!hd().IsLoadedM()) {
-				//hd().M.SetCount(hd().Nb);
-				for (int i = 0; i < hd().Nb; ++i)
-					hd().msh[i].M = MatrixXd::Zero(6, 6);
+			//dt.Vo.SetCount(dt.Nb, NaNDouble);
+			dt.msh.SetCount(dt.Nb);
+			/*if (dt.cb.size() != 3*dt.Nb)
+				dt.cb.setConstant(3, dt.Nb, NaNDouble);
+			if (dt.cg.size() != 3*dt.Nb)
+				dt.cg.setConstant(3, dt.Nb, NaNDouble);*/
+			if (!IsLoadedM()) {
+				//dt.M.SetCount(dt.Nb);
+				for (int i = 0; i < dt.Nb; ++i)
+					dt.msh[i].dt.M = MatrixXd::Zero(6, 6);
 			}
-			if (!hd().IsLoadedCMoor()) {
-				//hd().Cmoor.SetCount(hd().Nb);
-				for (int i = 0; i < hd().Nb; ++i)
-					hd().msh[i].Cmoor = MatrixXd::Zero(6, 6);
+			if (!IsLoadedCMoor()) {
+				//dt.Cmoor.SetCount(dt.Nb);
+				for (int i = 0; i < dt.Nb; ++i)
+					dt.msh[i].dt.Cmoor = MatrixXd::Zero(6, 6);
 			}
-			if (!hd().IsLoadedDlin()) {
-				for (int i = 0; i < hd().Nb; ++i)
-					hd().msh[i].Dlin = MatrixXd::Zero(6, 6);
+			if (!IsLoadedDlin()) {
+				for (int i = 0; i < dt.Nb; ++i)
+					dt.msh[i].dt.Dlin = MatrixXd::Zero(6, 6);
 			}
 		} else if (f.GetText(0) == "WAMIT" && (f.GetText(1) == "Ouputs" || f.GetText(1) == "Outputs")) {
 			ib = f.GetInt(6) - 1; 
-			if (ib >= hd().Nb)
+			if (ib >= dt.Nb)
 				throw Exc(Format(t_("Unexpected body %d found"), ib+1));
  		} else if (f.GetText(0) == "Volumes") 
- 			hd().msh[ib].Vo = Avg(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
+ 			dt.msh[ib].dt.Vo = Avg(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
  		else if (f.GetText(0) == "Center" && f.GetText(2).StartsWith("Buoyancy")) {
- 			hd().msh[ib].cb.x = f.GetDouble(4);
- 			hd().msh[ib].cb.y = f.GetDouble(5);
- 			hd().msh[ib].cb.z = f.GetDouble(6);
+ 			dt.msh[ib].dt.cb.x = f.GetDouble(4);
+ 			dt.msh[ib].dt.cb.y = f.GetDouble(5);
+ 			dt.msh[ib].dt.cb.z = f.GetDouble(6);
  		} else if (f.GetText(0) == "Center" && f.GetText(2).StartsWith("Gravity")) {
- 			hd().msh[ib].cg.x = f.GetDouble(4);
- 			hd().msh[ib].cg.y = f.GetDouble(5);
- 			hd().msh[ib].cg.z = f.GetDouble(6);
+ 			dt.msh[ib].dt.cg.x = f.GetDouble(4);
+ 			dt.msh[ib].dt.cg.y = f.GetDouble(5);
+ 			dt.msh[ib].dt.cg.z = f.GetDouble(6);
  		} else if (f.IsInt(0) && f.IsInt(1)) {
  			int i = f.GetInt(0) - 1;
  			int j = f.GetInt(1) - 1;
@@ -1287,14 +1288,14 @@ bool Wamit::Load_mmx(String fileName) {
  			i = i%6;
  			j = j%6;
  			
- 			if (ialtfrc == 1 && !IsNull(hd().rho)) 
- 				hd().msh[ib].M(i, j) = f.GetDouble(2)*hd().rho;
+ 			if (ialtfrc == 1 && !IsNull(dt.rho)) 
+ 				dt.msh[ib].dt.M(i, j) = f.GetDouble(2)*dt.rho;
  			else if (ialtfrc == 2) {
-	 			hd().msh[ib].M(i, j) = f.GetDouble(2);
+	 			dt.msh[ib].dt.M(i, j) = f.GetDouble(2);
 	 			if (f.size() > 3)
-	 				hd().msh[ib].Cmoor(i, j) = f.GetDouble(3);
+	 				dt.msh[ib].dt.Cmoor(i, j) = f.GetDouble(3);
 	 			if (f.size() > 4)
-	 				hd().msh[ib].Dlin(i, j) = f.GetDouble(4);
+	 				dt.msh[ib].dt.Dlin(i, j) = f.GetDouble(4);
  			}
  		}
  	}
@@ -1318,7 +1319,7 @@ static double w_iperout4(double nuL, double g, double len, double h) {
 	return x[0];
 }
 			
-bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T) {	
+bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int iperout) {	
 	bool dataFromW;
 	if (IsNull(iperout)) {
 		if (w.size() < 2)
@@ -1326,72 +1327,72 @@ bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T) {
 		if (w[0] > w[1]) {
 			dataFromW = false;
 			T = pick(w);
-			w.SetCount(hd().Nf);	
+			w.SetCount(dt.Nf);	
 		} else {
 			dataFromW = true;
-			T.SetCount(hd().Nf);
+			T.SetCount(dt.Nf);
 		}
 	} else {
 		if (iperout == 1) {
 			dataFromW = false;
 			T = pick(w);
-			w.SetCount(hd().Nf);
+			w.SetCount(dt.Nf);
 		} else if (iperout == 2) {
 			dataFromW = true;
-			T.SetCount(hd().Nf);
+			T.SetCount(dt.Nf);
 		} else if (iperout == 3) {
 			dataFromW = true;
-			T.SetCount(hd().Nf);
-			double g = Nvl2(hd().g, Bem().g);
-			double len = Nvl2(hd().len, Bem().len);
+			T.SetCount(dt.Nf);
+			double g = Nvl2(dt.g, Bem().g);
+			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : w)
 				ww = w_iperout3(ww, g, len);
 		} else {
 			dataFromW = true;
-			T.SetCount(hd().Nf);
-			double g = Nvl2(hd().g, Bem().g);
-			double len = Nvl2(hd().len, Bem().len);
-			if (IsNull(hd().h))
+			T.SetCount(dt.Nf);
+			double g = Nvl2(dt.g, Bem().g);
+			double len = Nvl2(dt.len, Bem().len);
+			if (IsNull(dt.h))
 				throw Exc(t_("Wamit .1 file with finite water depth wavenumber requires .pot file"));
 			for (auto &ww : w) 
-				ww = w_iperout4(ww, g, len, hd().h);
+				ww = w_iperout4(ww, g, len, dt.h);
 		}
 	}
-	for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+	for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 		if (dataFromW)
 			T[ifr] = 2*M_PI/w[ifr];//fround(2*M_PI/w[ifr], 8);
 		else
 			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
 	}
-	if (IsNull(hd().dataFromW))
-		hd().dataFromW = dataFromW;
+	if (IsNull(dt.dataFromW))
+		dt.dataFromW = dataFromW;
 	return dataFromW;
 }
 
-void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T) {	
+void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin) {	
 	if (IsNull(iperin)) 
-		hd().dataFromW = false;
+		dt.dataFromW = false;
 	else {
 		if (iperin == 1) 
-			hd().dataFromW = false;
+			dt.dataFromW = false;
 		else if (iperin == 2) 
-			hd().dataFromW = true;
+			dt.dataFromW = true;
 		else if (iperin == 3) {
-			hd().dataFromW = true;
-			double g = Nvl2(hd().g, Bem().g);
-			double len = Nvl2(hd().len, Bem().len);
+			dt.dataFromW = true;
+			double g = Nvl2(dt.g, Bem().g);
+			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : T)
 				ww = w_iperout3(ww, g, len);
 		} else {
-			hd().dataFromW = true;
-			double g = Nvl2(hd().g, Bem().g);
-			double len = Nvl2(hd().len, Bem().len);
+			dt.dataFromW = true;
+			double g = Nvl2(dt.g, Bem().g);
+			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : T) 
-				ww = w_iperout4(ww, g, len, hd().h);
+				ww = w_iperout4(ww, g, len, dt.h);
 		}
 	}
-	if (hd().dataFromW) {
-		for (int ifr = 0; ifr < hd().Nf; ++ifr) {
+	if (dt.dataFromW) {
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			w[ifr] = T[ifr];
 			T[ifr] = 2*M_PI/w[ifr];
 		}
@@ -1399,11 +1400,11 @@ void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T) {
 }
 
 
-bool Wamit::Load_1(String fileName) {
-	hd().dimen = false;
+bool Wamit::Load_1(String fileName, int iperout) {
+	dt.dimen = false;
 	
-	if (IsNull(hd().len))
-		hd().len = 1;
+	if (IsNull(dt.len))
+		dt.len = 1;
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1447,47 +1448,47 @@ bool Wamit::Load_1(String fileName) {
 	bool isHams = thereIsA0 && thereIsAinf && !minusFirst;
 	
 	int Nb = 1 + int(maxDof/6);
-	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
-	hd().Nb = Nb;
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);	
+	if (!IsNull(dt.Nb) && dt.Nb < Nb)
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+	dt.Nb = Nb;
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);	
 	
 	int Nf = w.size();
-	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), hd().Nf, Nf));
-	hd().Nf = Nf;
+	if (!IsNull(dt.Nf) && dt.Nf != Nf)
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), dt.Nf, Nf));
+	dt.Nf = Nf;
 	
-	if (hd().Nb == 0)// || hd().Nf < 2)
-		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
+	if (dt.Nb == 0)// || dt.Nf < 2)
+		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));
 	
 	UVector<double> src = clone(w);
 	
-	bool dataFromW = ProcessFirstColumn1_3(w, T);
+	bool dataFromW = ProcessFirstColumn1_3(w, T, iperout);
 	
 	if (thereIsA0)
-		hd().A0.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
+		dt.A0.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
 	if (thereIsAinf)
-		hd().Ainf.setConstant(hd().Nb*6, hd().Nb*6, NaNDouble);
+		dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
 
 	if (Nf > 0) {
-		hd().Initialize_AB(hd().A);
-		hd().Initialize_AB(hd().B);
+		Initialize_AB(dt.A);
+		Initialize_AB(dt.B);
 	}
 	
-//	if (hd().names.IsEmpty())
-//		hd().names.SetCount(hd().Nb);
+//	if (dt.names.IsEmpty())
+//		dt.names.SetCount(dt.Nb);
 	
-	if (!hd().w.IsEmpty()) {
+	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		//UVector<double> rT = clone(T);		ReverseX(rT);
-		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(hd().w), ToString(w)));
-		//else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
-		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(hd().T), ToString(T)));
+		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
+		//else if (!CompareRatio(dt.T, T, 0.01) && !CompareRatio(dt.T, rT, 0.001))
+		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(dt.T), ToString(T)));
 	}
-	hd().w = pick(w);
-	//hd().T = pick(T);
+	dt.w = pick(w);
+	//dt.T = pick(T);
 		
 	in.SeekPos(fpos);
 	
@@ -1508,16 +1509,16 @@ bool Wamit::Load_1(String fileName) {
  			if (!thereIsA0)
 				throw Exc(in.Str() + "\n"  + t_("A[w=inf] is not expected"));
  			if (!isHams)
-				hd().A0(i, j) = Aij;
+				dt.A0(i, j) = Aij;
  			else
- 				hd().Ainf(i, j) = Aij;	
+ 				dt.Ainf(i, j) = Aij;	
 		} else if (freq == 0) {
 			if (!thereIsAinf)
 				throw Exc(in.Str() + "\n"  + t_("A[w=0] is not expected"));				
 			if (!isHams)
-				hd().Ainf(i, j) = Aij;
+				dt.Ainf(i, j) = Aij;
 			else
-				hd().A0(i, j) = Aij;
+				dt.A0(i, j) = Aij;
 		} else {
 			int ifr = FindRatio(src, freq, 0.001);
 			if (ifr < 0) {
@@ -1526,8 +1527,8 @@ bool Wamit::Load_1(String fileName) {
 				else 
 					throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 			}
-		  	hd().A[i][j][ifr] = Aij;    
-		  	hd().B[i][j][ifr] = f.GetDouble(4);   	
+		  	dt.A[i][j][ifr] = Aij;    
+		  	dt.B[i][j][ifr] = f.GetDouble(4);   	
 		}
 	}
 	
@@ -1535,10 +1536,10 @@ bool Wamit::Load_1(String fileName) {
 }
 
 bool Wamit::Load_hst(String fileName) {
-	hd().dimen = false;
+	dt.dimen = false;
 	
-	if (IsNull(hd().len))
-		hd().len = 1;
+	if (IsNull(dt.len))
+		dt.len = 1;
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1566,15 +1567,15 @@ bool Wamit::Load_hst(String fileName) {
 	in.SeekPos(fpos);
 	
 	int Nb = 1 + int(maxDof/6);
-	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
-	hd().Nb = Nb;
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);
+	if (!IsNull(dt.Nb) && dt.Nb < Nb)
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+	dt.Nb = Nb;
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);
 	
-	//hd().C.SetCount(hd().Nb);
-	for(int ib = 0; ib < hd().Nb; ++ib)
-		hd().msh[ib].C.setConstant(6, 6, 0);
+	//dt.C.SetCount(dt.Nb);
+	for(int ib = 0; ib < dt.Nb; ++ib)
+		dt.msh[ib].dt.C.setConstant(6, 6, 0);
 
 	while (!in.IsEof()) {
 		f.Load(in.GetLine());	
@@ -1585,33 +1586,33 @@ bool Wamit::Load_hst(String fileName) {
 		int ib_j = j/6;
 		j = j - ib_j*6;
 		if (ib_i == ib_j) 
-			hd().msh[ib_i].C(i, j) = f.GetDouble(2);
+			dt.msh[ib_i].dt.C(i, j) = f.GetDouble(2);
 	}
 		
 	return true;
 }
 
-bool Wamit::Load_3(String fileName) {
-	return Load_Forces(fileName, hd().ex);
+bool Wamit::Load_3(String fileName, int iperout) {
+	return Load_Forces(fileName, dt.ex, iperout);
 }
 
-bool Wamit::Load_Scattering(String fileName) {
-	return Load_Forces(fileName, hd().sc);
+bool Wamit::Load_Scattering(String fileName, int iperout) {
+	return Load_Forces(fileName, dt.sc, iperout);
 }
 		
-bool Wamit::Load_FK(String fileName) {
-	return Load_Forces(fileName, hd().fk);
+bool Wamit::Load_FK(String fileName, int iperout) {
+	return Load_Forces(fileName, dt.fk, iperout);
 }
 
-bool Wamit::Load_4(String fileName) {
-	return Load_Forces(fileName, hd().rao);
+bool Wamit::Load_4(String fileName, int iperout) {
+	return Load_Forces(fileName, dt.rao, iperout);
 }
 
-bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
-	hd().dimen = false;
+bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
+	dt.dimen = false;
 	
-	if (IsNull(hd().len))
-		hd().len = 1;
+	if (IsNull(dt.len))
+		dt.len = 1;
 	
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1630,7 +1631,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 	in.SeekPos(fpos);
 	
 	int maxDof = 0;
-	hd().head.Clear();
+	dt.head.Clear();
 	while (!in.IsEof()) {
 		f.GetLine();
 		if (IsNull(f.GetDouble_nothrow(3))) {
@@ -1641,58 +1642,58 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 		double freq = f.GetDouble(0);
 		double head = f.GetDouble(1);	//FixHeading_180(f.GetDouble(1));
 		FindAdd(w, freq);
-		FindAdd(hd().head, head);
+		FindAdd(dt.head, head);
 		
 		int dof = f.GetInt(2);
 		if (dof > maxDof)
 			maxDof = dof-1;
 	}
-	Sort(hd().head);
+	Sort(dt.head);
 	
-	if (hd().head.size() == 0)
-		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
+	if (dt.head.size() == 0)
+		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));
 	
-	if (!IsNull(hd().Nh) && hd().Nh != hd().head.size())
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of headings.\nIn one %d, in another %d"), hd().Nh, hd().head.size()));
-	hd().Nh = hd().head.size();
+	if (!IsNull(dt.Nh) && dt.Nh != dt.head.size())
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of headings.\nIn one %d, in another %d"), dt.Nh, dt.head.size()));
+	dt.Nh = dt.head.size();
 	
 	int Nb = 1 + int(maxDof/6);
-	if (!IsNull(hd().Nb) && hd().Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
-	hd().Nb = Nb;
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);
+	if (!IsNull(dt.Nb) && dt.Nb < Nb)
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+	dt.Nb = Nb;
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);
 		
 	int Nf = w.size();
-	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), hd().Nf, Nf));
-	hd().Nf = Nf;
+	if (!IsNull(dt.Nf) && dt.Nf != Nf)
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), dt.Nf, Nf));
+	dt.Nf = Nf;
 	
-	if (hd().Nb == 0 || hd().Nf < 2)
-		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), hd().file));
+	if (dt.Nb == 0 || dt.Nf < 2)
+		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));
 	
 	
 	UVector<double> src = clone(w);
 		
-	bool dataFromW = ProcessFirstColumn1_3(w, T);
+	bool dataFromW = ProcessFirstColumn1_3(w, T, iperout);
 	
-	if (!hd().w.IsEmpty()) {
+	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
-		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(hd().w), ToString(w)));
-		//else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
-		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(hd().T), ToString(T)));
+		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
+		//else if (!CompareRatio(dt.T, T, 0.01) && !CompareRatio(dt.T, rT, 0.001))
+		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(dt.T), ToString(T)));
 	}
-	hd().w = pick(w);
-	//hd().T = pick(T);
+	dt.w = pick(w);
+	//dt.T = pick(T);
 	
-//	if (hd().names.IsEmpty())
-//		hd().names.SetCount(hd().Nb);
+//	if (dt.names.IsEmpty())
+//		dt.names.SetCount(dt.Nb);
 	
 	in.SeekPos(fpos);
 	
-	hd().Initialize_Forces(force);
+	Initialize_Forces(force);
 		
 	while (!in.IsEof()) {
 		f.GetLine();
@@ -1708,7 +1709,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
 		double head = f.GetDouble(1);	//FixHeading_180(f.GetDouble(1));
-		int ih = FindRatio(hd().head, head, 0.001);
+		int ih = FindRatio(dt.head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 			
@@ -1721,10 +1722,10 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force) {
 }
 
 bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> Status) {
-	hd().dimen = false;
+	dt.dimen = false;
 	
-	if (IsNull(hd().len))
-		hd().len = 1;
+	if (IsNull(dt.len))
+		dt.len = 1;
 	
 	String ext = isSum ? ".12s" : ".12d";
 	
@@ -1744,7 +1745,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	else
 		fpos = in.GetPos();		// Avoid header
 	
-	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd().qtfsum : hd().qtfdif;		
+	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? dt.qtfsum : dt.qtfdif;		
 	
 	qtf.Clear();
 	
@@ -1765,20 +1766,20 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		FindAdd(head, std::complex<double>(hd1, hd2));	
 		Nb = max(Nb, 1 + (f.GetInt(4)-1)/6);
 	}
-	if (IsNull(hd().Nb))
-		hd().Nb = Nb;
+	if (IsNull(dt.Nb))
+		dt.Nb = Nb;
 	else {
-		if (hd().Nb < Nb)
-			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
+		if (dt.Nb < Nb)
+			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
 	}
 	
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);
 		
 	int Nf = w.size();
 	int Nh = head.size();
 	if (Nh == 0)
-		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
+		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), dt.file));
 	
 	Hydro::Initialize_QTF(qtf, Nb, Nh, Nf);
 	
@@ -1803,49 +1804,49 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		qtf[ib][ih][idf](ifr1, ifr2).imag(f.GetDouble(8));
 	}
 	
-	::Copy(w, hd().qw);
-	::Copy(head, hd().qh);
+	::Copy(w, dt.qw);
+	::Copy(head, dt.qh);
 	
-	hd().qtfdataFromW = !(w[0] > w[1]);
+	dt.qtfdataFromW = !(w[0] > w[1]);
 	
-	if (!hd().qtfdataFromW) 
-		for (int i = 0; i < hd().qw.size(); ++i)
-   			hd().qw(i) = 2*M_PI/hd().qw(i);
+	if (!dt.qtfdataFromW) 
+		for (int i = 0; i < dt.qw.size(); ++i)
+   			dt.qw(i) = 2*M_PI/dt.qw(i);
 	
-//	for (int i = 0; i < hd().qh.size(); ++i)
-//   		hd().qh(i) = std::complex<double>(hd().qh(i).real(), hd().qh(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+//	for (int i = 0; i < dt.qh.size(); ++i)
+//   		dt.qh(i) = std::complex<double>(dt.qh(i).real(), dt.qh(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
 	
 	return true;
 }
 
-bool Wamit::Load_789(String fileName) {
+bool Wamit::Load_789(String fileName, int iperout) {
 	UArray<UArray<UArray<VectorXd>>> md;
-	if (Load_789_0(fileName, 7, md)) {
+	if (Load_789_0(fileName, 7, md, iperout)) {
 		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
-			hd().md = pick(md);
+			dt.md = pick(md);
 			return true;
 		}
 	}
-	if (Load_789_0(fileName, 9, md)) {
+	if (Load_789_0(fileName, 9, md, iperout)) {
 		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
-			hd().md = pick(md);
+			dt.md = pick(md);
 			return true;
 		}
 	}
-	if (Load_789_0(fileName, 8, md)) {
+	if (Load_789_0(fileName, 8, md, iperout)) {
 		if (Hydro::IsLoadedMD(md) && md[0][0][0](md[0][0][0].size()/2) != 0.) {
-			hd().md = pick(md);
+			dt.md = pick(md);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &mmd) {
-	hd().dimen = false;
+bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &mmd, int iperout) {
+	dt.dimen = false;
 	
-	if (IsNull(hd().len))
-		hd().len = 1;
+	if (IsNull(dt.len))
+		dt.len = 1;
 	
 	fileName = ForceExtSafer(fileName, Format(".%d", type));
 	
@@ -1853,7 +1854,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	if (!in.IsOpen())
 		return false;
 	
-	hd().mdtype = hd().qtftype = type;
+	dt.mdtype = dt.qtftype = type;
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
@@ -1869,10 +1870,10 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
     UArray<std::complex<double>> head;
 	
 	int Nb = 0;
-	int nline = 0;
+	//int nline = 0;
 	while (!in.IsEof()) {
 		f.GetLine();
-		nline++;
+		//nline++;
 		double freq = f.GetDouble(0);
 		FindAdd(w, freq);
 		double hd1 = f.GetDouble(1);
@@ -1881,48 +1882,48 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		Nb = max(Nb, 1 + (f.GetInt(3)-1)/6);
 	}
 	
-	if (IsNull(hd().Nb))
-		hd().Nb = Nb;
+	if (IsNull(dt.Nb))
+		dt.Nb = Nb;
 	else {
-		if (hd().Nb < Nb)
-			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), hd().Nb, Nb));
+		if (dt.Nb < Nb)
+			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
 	}
 	
-	if (hd().msh.IsEmpty())
-		hd().msh.SetCount(hd().Nb);
+	if (dt.msh.IsEmpty())
+		dt.msh.SetCount(dt.Nb);
 		
 	int Nf = w.size();
-	if (!IsNull(hd().Nf) && hd().Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), hd().Nf, Nf));
-	hd().Nf = Nf;
+	if (!IsNull(dt.Nf) && dt.Nf != Nf)
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), dt.Nf, Nf));
+	dt.Nf = Nf;
 	
 	int Nh = head.size();
 	if (Nh == 0)
-		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), hd().file));
+		throw Exc(Format(t_("Wrong format in Wamit file '%s'. No headings found"), dt.file));
 	
 	UVector<double> src = clone(w);
 	
-	bool dataFromW = ProcessFirstColumn1_3(w, T);
+	bool dataFromW = ProcessFirstColumn1_3(w, T, iperout);
 	
 	Hydro::Initialize_MD(mmd, Nb, Nh, Nf);
 	
-	if (!hd().w.IsEmpty()) {
+	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
-		if (!CompareRatio(hd().w, w, 0.01) && !CompareRatio(hd().w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(hd().w), ToString(w)));
-		//else if (!CompareRatio(hd().T, T, 0.01) && !CompareRatio(hd().T, rT, 0.001))
-		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(hd().T), ToString(T)));
+		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
+		//else if (!CompareRatio(dt.T, T, 0.01) && !CompareRatio(dt.T, rT, 0.001))
+		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(dt.T), ToString(T)));
 	}
-	hd().w = pick(w);
-	//hd().T = pick(T);	
+	dt.w = pick(w);
+	//dt.T = pick(T);	
 	
 	in.SeekPos(fpos);
 	
-	int iline = 0;
+	//int iline = 0;
 	while (!in.IsEof()) {
 		f.GetLine();
-		iline++;
+		//iline++;
 		
 		double freq = f.GetDouble(0);
 		int ifr1 = FindRatio(src, freq, 0.001);
@@ -1945,103 +1946,103 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		}
 	}	
 
-	::Copy(head, hd().mdhead);
+	::Copy(head, dt.mdhead);
 
-//	for (int i = 0; i < hd().mdhead.size(); ++i)
- //  		hd().mdhead(i) = std::complex<double>(hd().mdhead(i).real(), hd().mdhead(i).imag()); //FixHeading_180(hd().qh(i).real()), FixHeading_180(hd().qh(i).imag()));
+//	for (int i = 0; i < dt.mdhead.size(); ++i)
+ //  		dt.mdhead(i) = std::complex<double>(dt.mdhead(i).real(), dt.mdhead(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
 	
 	return true;
 }
 
 void Wamit::Save_1(String fileName, bool force_T) {
-	if (!(hd().IsLoadedA() && hd().IsLoadedB())) 
+	if (!(IsLoadedA() && IsLoadedB())) 
 		return;
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
-	if (hd().IsLoadedA0()) {
-		for (int i = 0; i < hd().Nb*6; ++i)  
-			for (int j = 0; j < hd().Nb*6; ++j) 
+	if (IsLoadedA0()) {
+		for (int i = 0; i < dt.Nb*6; ++i)  
+			for (int j = 0; j < dt.Nb*6; ++j) 
 				out << Format(" %s %5d %5d %s\n", FormatWam(-1), i+1, j+1,
-								FormatWam(Nvl2(hd().A0(i, j), hd().A0_ndim(i, j), 0.)));
+								FormatWam(Nvl2(dt.A0(i, j), A0_ndim(i, j), 0.)));
 	}
-	if (hd().IsLoadedAinf()) {
-		for (int i = 0; i < hd().Nb*6; ++i)  
-			for (int j = 0; j < hd().Nb*6; ++j)
+	if (IsLoadedAinf()) {
+		for (int i = 0; i < dt.Nb*6; ++i)  
+			for (int j = 0; j < dt.Nb*6; ++j)
 				out << Format(" %s %5d %5d %s\n", FormatWam(0), i+1, j+1,
-								FormatWam(Nvl2(hd().Ainf(i, j), hd().Ainf_ndim(i, j), 0.)));
+								FormatWam(Nvl2(dt.Ainf(i, j), Ainf_ndim(i, j), 0.)));
 	}
 	
-	if (hd().Nf < 2)
+	if (dt.Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 	
-	VectorXd TT	= hd().Get_T();			
+	VectorXd TT	= Get_T();			
 	VectorXd data;
 	if (force_T)
 		data = TT;
-	else if (hd().dataFromW) 
-		data = hd().Get_w();
+	else if (dt.dataFromW) 
+		data = Get_w();
 	else
 		data = TT;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
-	if ((growing && (hd().dataFromW && !force_T)) || (!growing && !(hd().dataFromW && !force_T))) {
+	if ((growing && (dt.dataFromW && !force_T)) || (!growing && !(dt.dataFromW && !force_T))) {
 		ifr0 = 0;
-		ifrEnd = hd().Nf;
+		ifrEnd = dt.Nf;
 		ifrDelta = 1;
 	} else {
-		ifr0 = hd().Nf - 1;
+		ifr0 = dt.Nf - 1;
 		ifrEnd = -1;
 		ifrDelta = -1;
 	}
 	
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
-		for (int i = 0; i < hd().Nb*6; ++i)  
-			for (int j = 0; j < hd().Nb*6; ++j)
+		for (int i = 0; i < dt.Nb*6; ++i)  
+			for (int j = 0; j < dt.Nb*6; ++j)
 				out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
-							 FormatWam(Nvl2(hd().A[i][j][ifr], hd().A_ndim(ifr, i, j), 0.)), 
-							 FormatWam(Nvl2(hd().B[i][j][ifr], hd().B_ndim(ifr, i, j), 0.)));
+							 FormatWam(Nvl2(dt.A[i][j][ifr], A_ndim(ifr, i, j), 0.)), 
+							 FormatWam(Nvl2(dt.B[i][j][ifr], B_ndim(ifr, i, j), 0.)));
 }
 
 void Wamit::Save_3(String fileName, bool force_T) {
-	if (!hd().IsLoadedFex()) 
+	if (!IsLoadedFex()) 
 		return;
 	
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
-	if (hd().Nf < 2)
+	if (dt.Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 
 	VectorXd data;
 	int ifr0, ifrEnd, ifrDelta;
-	if (hd().dataFromW && !force_T) 
-		data = hd().Get_w();
+	if (dt.dataFromW && !force_T) 
+		data = Get_w();
 	else
-		data = hd().Get_T();
+		data = Get_T();
 	//UVector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
+	if (((data[1] > data[0]) && (dt.dataFromW && !force_T)) || ((data[1] < data[0]) && !(dt.dataFromW && !force_T))) {
 		ifr0 = 0;
-		ifrEnd = hd().Nf;
+		ifrEnd = dt.Nf;
 		ifrDelta = 1;
 	} else {
-		ifr0 = hd().Nf - 1;
+		ifr0 = dt.Nf - 1;
 		ifrEnd = -1;
 		ifrDelta = -1;
 	}
 	
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
-		for (int ih = 0; ih < hd().Nh; ++ih)
-			for (int i = 0; i < hd().Nb*6; ++i) {
-				std::complex<double> &f = hd().ex.force[ih](ifr, i);
-				std::complex<double> fn = hd().F_ndim(hd().ex, ih, ifr, i);
+		for (int ih = 0; ih < dt.Nh; ++ih)
+			for (int i = 0; i < dt.Nb*6; ++i) {
+				std::complex<double> &f = dt.ex.force[ih](ifr, i);
+				std::complex<double> fn = F_ndim(dt.ex, ih, ifr, i);
 				out << Format(" %s %s %5d %s %s %s %s\n", 
-					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+					FormatWam(data[ifr]), FormatWam(dt.head[ih]), i+1,
 					FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
 					FormatWam(Nvl2(arg(f), arg(fn)*180/M_PI, 0.)),
 					FormatWam(Nvl2(f.real(), fn.real(), 0.)), 
@@ -2050,41 +2051,41 @@ void Wamit::Save_3(String fileName, bool force_T) {
 }
 
 void Wamit::Save_4(String fileName, bool force_T) {
-	if (!hd().IsLoadedRAO()) 
+	if (!IsLoadedRAO()) 
 		return;
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
-	if (hd().Nf < 2)
+	if (dt.Nf < 2)
 		throw Exc(t_("No enough data to save (at least 2 frequencies)"));
 		
 	VectorXd data;
 	int ifr0, ifrEnd, ifrDelta;
-	if (hd().dataFromW && !force_T) 
-		data = hd().Get_w();
+	if (dt.dataFromW && !force_T) 
+		data = Get_w();
 	else
-		data = hd().Get_T();
+		data = Get_T();
 	//UVector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && (hd().dataFromW && !force_T)) || ((data[1] < data[0]) && !(hd().dataFromW && !force_T))) {
+	if (((data[1] > data[0]) && (dt.dataFromW && !force_T)) || ((data[1] < data[0]) && !(dt.dataFromW && !force_T))) {
 		ifr0 = 0;
-		ifrEnd = hd().Nf;
+		ifrEnd = dt.Nf;
 		ifrDelta = 1;
 	} else {
-		ifr0 = hd().Nf - 1;
+		ifr0 = dt.Nf - 1;
 		ifrEnd = -1;
 		ifrDelta = -1;
 	}
 	
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
-		for (int ih = 0; ih < hd().Nh; ++ih)
-			for (int i = 0; i < hd().Nb*6; ++i) {
-				std::complex<double> &f = hd().rao.force[ih](ifr, i);	
-				std::complex<double> fn = hd().RAO_ndim(hd().rao, ih, ifr, i);
+		for (int ih = 0; ih < dt.Nh; ++ih)
+			for (int i = 0; i < dt.Nb*6; ++i) {
+				std::complex<double> &f = dt.rao.force[ih](ifr, i);	
+				std::complex<double> fn = RAO_ndim(dt.rao, ih, ifr, i);
 				out << Format(" %s %s %5d %s %s %s %s\n", 
-					FormatWam(data[ifr]), FormatWam(hd().head[ih]), i+1,
+					FormatWam(data[ifr]), FormatWam(dt.head[ih]), i+1,
 					FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
 					FormatWam(Nvl2(arg(f), arg(fn)*180/M_PI, 0.)),
 					FormatWam(Nvl2(f.real(), fn.real(), 0.)), 
@@ -2105,61 +2106,61 @@ void Wamit::Save_FRC(String fileName) {
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .frc file\n";
-	out << WamitField(Format("%d 0 %d %d 0 0 0 0 0", hd().IsLoadedA() && hd().IsLoadedB() ? 1 : 0,
-										 			 hd().IsLoadedFex() ? 2 : 0,
-										 			 hd().IsLoadedRAO() ? 1 : 0), 22);
+	out << WamitField(Format("%d 0 %d %d 0 0 0 0 0", IsLoadedA() && IsLoadedB() ? 1 : 0,
+										 			 IsLoadedFex() ? 2 : 0,
+										 			 IsLoadedRAO() ? 1 : 0), 22);
 	out << "% 9 digits for Wamit .1 ... .9 files included\n";
-	out << WamitField(Format("%.1f", hd().rho), 22) << "% RHO\n";
+	out << WamitField(Format("%.1f", dt.rho), 22) << "% RHO\n";
 	
-	for (int ib = 0; ib < hd().Nb; ++ib) {
-		out << WamitField(Format("%.2f %.2f %.2f", hd().msh[ib].cg.x - hd().msh[ib].c0.x, 
-												   hd().msh[ib].cg.y - hd().msh[ib].c0.y, 
-												   hd().msh[ib].cg.z - hd().msh[ib].c0.z), 22);
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		out << WamitField(Format("%.2f %.2f %.2f", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 
+												   dt.msh[ib].dt.cg.y - dt.msh[ib].dt.c0.y, 
+												   dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z), 22);
 		out << "% XCG, YCG, ZCG\n";
 		
-		if (hd().IsLoadedM()) {
+		if (IsLoadedM()) {
 			out << "1  % IMASS\n";
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					if (c > 0)
 						out << " ";
-					out << Format("%.2f", hd().msh[ib].M(r, c));
+					out << Format("%.2f", dt.msh[ib].dt.M(r, c));
 				}
 				out << "\n";
 			}
 		} else 
 			out << "0 % IMASS\n";	
 	
-		if (hd().IsLoadedDlin()) {
+		if (IsLoadedDlin()) {
 			out << "1 % IDAMP\n";
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					if (c > 0)
 						out << " ";
-					out << Format("%.2f", hd().msh[ib].Dlin(r, c));
+					out << Format("%.2f", dt.msh[ib].dt.Dlin(r, c));
 				}
 				out << "\n";
 			}
 		} else 
 			out << "0 % IDAMP\n";
 		
-		if (hd().IsLoadedCMoor()) {
+		if (IsLoadedCMoor()) {
 			out << "1 % ISTIF\n";
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					if (c > 0)
 						out << " ";
-					out << Format("%.2f", hd().msh[ib].Cmoor(r, c));
+					out << Format("%.2f", dt.msh[ib].dt.Cmoor(r, c));
 				}
 				out << "\n";
 			}
 		} else 
 			out << "0 % ISTIF\n";
 	}
-	out << WamitField(Format("%d", hd().Nh), 12) << "% NBETA\n";
-	UVector<double> head = clone(hd().head);
+	out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
+	UVector<double> head = clone(dt.head);
 	Sort(head);
-	for (int ih = 0; ih < hd().Nh; ++ih) 
+	for (int ih = 0; ih < dt.Nh; ++ih) 
 		out << Format("%.4f ", head[ih]);
 	out << "% BETA\n";
 	out << "0 % NFIELD\n";
@@ -2172,46 +2173,46 @@ void Wamit::Save_POT(String fileName) {
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .pot file\n";
-	out << WamitField(Format("%.2f", IsNum(hd().h) ? hd().h : -1), 12) << "% HBOT\n";
+	out << WamitField(Format("%.2f", IsNum(dt.h) ? dt.h : -1), 12) << "% HBOT\n";
 	out << WamitField("1 1", 12) << "% IRAD, IDIFF\n";
-	out << WamitField(Format("%d", hd().Nf), 12) << "% NPER\n";
-	VectorXd TT	= hd().Get_T();	
+	out << WamitField(Format("%d", dt.Nf), 12) << "% NPER\n";
+	VectorXd TT	= Get_T();	
 	Sort(TT);
-	for (int iT = 0; iT < hd().Nf; ++iT) 
+	for (int iT = 0; iT < dt.Nf; ++iT) 
 		out << Format("%.4f ", TT[iT]);
 	out << "% PER(1), increment\n";
-	out << WamitField(Format("%d", hd().Nh), 12) << "% NBETA\n";
-	UVector<double> head = clone(hd().head);
+	out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
+	UVector<double> head = clone(dt.head);
 	Sort(head);
-	for (int ih = 0; ih < hd().Nh; ++ih) 
+	for (int ih = 0; ih < dt.Nh; ++ih) 
 		out << Format("%.4f ", head[ih]);
 	out << "% BETA\n";
 	
-	out << WamitField(Format("%d ", hd().Nb), 12) << "% NBODY";
-	for (int ib = 0; ib < hd().Nb; ++ib) {
-		out << "\n" << ForceExt(hd().msh[ib].name, ".gdf") << "\n";
-		out << Format("%.3f %.3f %.3f 0.0 ", hd().msh[ib].c0.x, hd().msh[ib].c0.y, hd().msh[ib].c0.z) << "% XBODY(1-4)\n";
+	out << WamitField(Format("%d ", dt.Nb), 12) << "% NBODY";
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		out << "\n" << ForceExt(dt.msh[ib].dt.name, ".gdf") << "\n";
+		out << Format("%.3f %.3f %.3f 0.0 ", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z) << "% XBODY(1-4)\n";
 		out << "1 1 1 1 1 1  % MODE(1:6)";
 	}
 }
 	
 void Wamit::Save_hst(String fileName) {
-	if (!hd().IsLoadedC()) 
+	if (!IsLoadedC()) 
 		return;
 		
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
-	for (int i = 0; i < 6*hd().Nb; ++i)  
-		for (int j = 0; j < 6*hd().Nb; ++j) {
+	for (int i = 0; i < 6*dt.Nb; ++i)  
+		for (int j = 0; j < 6*dt.Nb; ++j) {
 			int ib_i = i/6;
 			int ii = i - ib_i*6;
 			int ib_j = j/6;
 			int jj = j - ib_j*6;
 			
 			out << Format(" %5d %5d  %s\n", i+1, j+1, 
-					FormatWam(Nvl2(hd().msh[ib_i].C(ii, jj), hd().C_ndim(ib_i, ii, jj), 0.)));
+					FormatWam(Nvl2(dt.msh[ib_i].dt.C(ii, jj), C_ndim(ib_i, ii, jj), 0.)));
 		}
 }
 
@@ -2229,7 +2230,7 @@ void Wamit::Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rh
 
 void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 					bool force_T, bool force_Deg, int qtfHeading) {
-	if (!hd().IsLoadedQTF(isSum)) 
+	if (!IsLoadedQTF(isSum)) 
 		return;
 	
 	String ext = isSum ? ".12s" : ".12d";
@@ -2239,13 +2240,13 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
-	int Nf = int(hd().qw.size());
-	int Nh = int(hd().qh.size()); 
+	int Nf = int(dt.qw.size());
+	int Nh = int(dt.qh.size()); 
 	
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 			
-	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? hd().qtfsum : hd().qtfdif;		
+	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? dt.qtfsum : dt.qtfdif;		
 			
 	out << " WAMIT Numeric Output -- Filename  " << Format("%20<s", GetFileName(fileName)) << "  " << Format("%", GetSysTime()) << "\n";
 
@@ -2258,27 +2259,27 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 				if (Status && num >= 20 && !(inum%(num/20)) && !Status(Format("Saving %s", fileName), (100*inum)/num))
 					throw Exc(t_("Stop by user"));
 				
-				double h1 = hd().qh[ih].real();
-				double h2 = hd().qh[ih].imag();
+				double h1 = dt.qh[ih].real();
+				double h2 = dt.qh[ih].imag();
 				
 				if (IsNull(qtfHeading) ||
 					(qtfHeading == -1 && abs(h1 - h2) < 0.01) ||
 					(ih == qtfHeading)) {
 					if (ih == qtfHeading)
 						h1 = h2 = 0;
-					for (int ib = 0; ib < hd().Nb; ++ib)
+					for (int ib = 0; ib < dt.Nb; ++ib)
 	        			for (int idf = 0; idf < 6; ++idf) {
 	        				static int idf12[] = {1, 3, 5, 2, 4, 6};
 	        				int iidf = idf12[idf]-1;
-	        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr1]);
-	        				out << Format("   % 8.6E", 2*M_PI/hd().qw[ifr2]);
+	        				out << Format("   % 8.6E", 2*M_PI/dt.qw[ifr1]);
+	        				out << Format("   % 8.6E", 2*M_PI/dt.qw[ifr2]);
 	        				out << Format("   % 8.6E", h1);
 	        				out << Format("   % 8.6E", h2);
 	        				out << Format("   %2d", ib*6 + iidf+1);
-	        				out << Format("   % 8.6E", hd().F_ndim(abs(qtf[ib][ih][iidf](ifr1, ifr2)), iidf));
+	        				out << Format("   % 8.6E", F_ndim(abs(qtf[ib][ih][iidf](ifr1, ifr2)), iidf));
 	        				out << Format("   % 8.6E", !force_Deg ? arg(qtf[ib][ih][iidf](ifr1, ifr2)) : ToDeg(arg(qtf[ib][ih][iidf](ifr1, ifr2))));
-	        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).real(), iidf));
-	        				out << Format("   % 8.6E", hd().F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).imag(), iidf));
+	        				out << Format("   % 8.6E", F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).real(), iidf));
+	        				out << Format("   % 8.6E", F_ndim(qtf[ib][ih][iidf](ifr1, ifr2).imag(), iidf));
 	        				out << "\n";
 	        			}
 				}
@@ -2286,63 +2287,63 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 }
 
 void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) {
-	if (!hd().IsLoadedMD()) 
+	if (!IsLoadedMD()) 
 		return;
 	
-	String ext = Format(".%d", hd().mdtype);
+	String ext = Format(".%d", dt.mdtype);
 	fileName = ForceExt(fileName, ext);
 	
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
-	int Nf = int(hd().w.size());
-	int Nh = int(hd().mdhead.size()); 
+	int Nf = int(dt.w.size());
+	int Nh = int(dt.mdhead.size()); 
 	
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 	
-	VectorXd TT	= hd().Get_T();			
+	VectorXd TT	= Get_T();			
 	VectorXd data;
 	if (force_T)
 		data = TT;
-	else if (hd().dataFromW) 
-		data = hd().Get_w();
+	else if (dt.dataFromW) 
+		data = Get_w();
 	else
 		data = TT;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
-	if ((growing && (hd().dataFromW && !force_T)) || (!growing && !(hd().dataFromW && !force_T))) {
+	if ((growing && (dt.dataFromW && !force_T)) || (!growing && !(dt.dataFromW && !force_T))) {
 		ifr0 = 0;
-		ifrEnd = hd().Nf;
+		ifrEnd = dt.Nf;
 		ifrDelta = 1;
 	} else {
-		ifr0 = hd().Nf - 1;
+		ifr0 = dt.Nf - 1;
 		ifrEnd = -1;
 		ifrDelta = -1;
 	}
 		
-	UArray<UArray<UArray<VectorXd>>> &md = hd().md;		
+	UArray<UArray<UArray<VectorXd>>> &md = dt.md;		
 			
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < Nh; ++ih) {
-			for (int ib = 0; ib < hd().Nb; ++ib)
+			for (int ib = 0; ib < dt.Nb; ++ib)
     			for (int idf = 0; idf < 6; ++idf) {
     				static int idf12[] = {1, 2, 3, 4, 5, 6};
     				int idof = idf12[idf]-1;
-    				double re = hd().F_ndim(md[ib][ih][idof](ifr), idof);
+    				double re = F_ndim(md[ib][ih][idof](ifr), idof);
     		/*if (idof == 0)
     			re = min(20., re);
     		else if (idof == 1)
-    			re = min(20., hd().F_ndim(md[ib][ih][0](ifr), idof));
+    			re = min(20., dt.F_ndim(md[ib][ih][0](ifr), idof));
     		else if (idof == 3)
-				re = min(1000., hd().F_ndim(md[ib][ih][4](ifr), idof));
+				re = min(1000., dt.F_ndim(md[ib][ih][4](ifr), idof));
     		else if (idof == 4)
 				re = min(1000., re);*/
     				out << Format("   % 8.6E", TT[ifr]);
-    				out << Format("   % 8.6E", hd().mdhead[ih].real());
-    				out << Format("   % 8.6E", hd().mdhead[ih].imag());
+    				out << Format("   % 8.6E", dt.mdhead[ih].real());
+    				out << Format("   % 8.6E", dt.mdhead[ih].imag());
     				out << Format("   %2d", ib*6 + idof+1);
     				out << Format("   % 8.6E", abs(re));
     				out << Format("   % 8.6E", re > 0 ? 0. : 180.);

@@ -358,80 +358,80 @@ void Orca::LoadParameters(Hydro &hy) {
 
 	factor.Update();
 
-	hy.symX = hy.symY = false;
+	hy.dt.symX = hy.dt.symY = false;
 	
-	hy.g = GetDouble(wave, L"g")*factor.len;
+	hy.dt.g = GetDouble(wave, L"g")*factor.len;
 
-	hy.h = GetDouble(wave, L"WaterDepth");
-	if (hy.h == 1e307)
-		hy.h = -1;
+	hy.dt.h = GetDouble(wave, L"WaterDepth");
+	if (hy.dt.h == 1e307)
+		hy.dt.h = -1;
 	else
-		hy.h *= factor.len;
+		hy.dt.h *= factor.len;
 	
-	hy.rho = GetDouble(wave, L"WaterDensity")*factor.mass/factor.len/factor.len/factor.len;
+	hy.dt.rho = GetDouble(wave, L"WaterDensity")*factor.mass/factor.len/factor.len/factor.len;
 			
 	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, NULL))
 		throwError("Load dotAngularFrequencies");	
 	
-	hy.Nf = sz/sizeof(double);
-	hy.w.SetCount(hy.Nf);
-	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, hy.w.begin()))
+	hy.dt.Nf = sz/sizeof(double);
+	hy.dt.w.SetCount(hy.dt.Nf);
+	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, hy.dt.w.begin()))
 		throwError("Load dotAngularFrequencies 2");	
 		
-	/*hy.T.SetCount(hy.Nf);
-	for (int i = 0; i < hy.Nf; ++i)	
-		hy.T[i] = 2*M_PI/hy.w[i];	*/
+	/*hy.dt.dt.T.SetCount(hy.dt.dt.Nf);
+	for (int i = 0; i < hy.dt.dt.Nf; ++i)	
+		hy.dt.dt.T[i] = 2*M_PI/hy.dt.dt.w[i];	*/
 	
 	if (GetDiffractionOutput(wave, dotHeadings, &sz, NULL))
 		throwError("Load dotHeadings");	
 	
-	hy.Nh = sz/sizeof(double);
-	hy.head.SetCount(hy.Nh);
-	if (GetDiffractionOutput(wave, dotHeadings, &sz, hy.head.begin()))
+	hy.dt.Nh = sz/sizeof(double);
+	hy.dt.head.SetCount(hy.dt.Nh);
+	if (GetDiffractionOutput(wave, dotHeadings, &sz, hy.dt.head.begin()))
 		throwError("Load dotHeadings 2");	
 	
 	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, NULL))
 		throwError("Load dotHydrostaticResults");			
 	
-	hy.Nb = GetInt(wave, L"NumberOfIncludedBodies");
+	hy.dt.Nb = GetInt(wave, L"NumberOfIncludedBodies");
 	
-	if (sz/hy.Nb != sizeof(TDiffractionBodyHydrostaticInfo))
+	if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo))
 		throwError("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match");			
 	
-	hy.Nb = sz/sizeof(TDiffractionBodyHydrostaticInfo);
-	Buffer<TDiffractionBodyHydrostaticInfo> bodies(hy.Nb);
+	hy.dt.Nb = sz/sizeof(TDiffractionBodyHydrostaticInfo);
+	Buffer<TDiffractionBodyHydrostaticInfo> bodies(hy.dt.Nb);
 	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, bodies.begin()))
 		throwError("Load dotHydrostaticResults 2");
 	
-	hy.msh.SetCount(hy.Nb);
-	//hy.Vo.SetCount(hy.Nb);
-	//hy.cb.resize(3, hy.Nb);
-	//hy.cg.resize(3, hy.Nb);
-	//hy.C.SetCount(hy.Nb);
-	for (int ib = 0; ib < hy.Nb; ++ib) 
-		hy.msh[ib].C.resize(6, 6);
-	//hy.M.SetCount(hy.Nb);
-	for (int ib = 0; ib < hy.Nb; ++ib) 
-		hy.msh[ib].M.resize(6, 6);
+	hy.dt.msh.SetCount(hy.dt.Nb);
+	//hy.dt.dt.Vo.SetCount(hy.dt.dt.Nb);
+	//hy.dt.dt.cb.resize(3, hy.dt.dt.Nb);
+	//hy.dt.dt.cg.resize(3, hy.dt.dt.Nb);
+	//hy.dt.dt.C.SetCount(hy.dt.dt.Nb);
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+		hy.dt.msh[ib].dt.C.resize(6, 6);
+	//hy.dt.dt.M.SetCount(hy.dt.dt.Nb);
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+		hy.dt.msh[ib].dt.M.resize(6, 6);
 	
-	//hy.c0.setConstant(3, hy.Nb, 0);
-	//hy.names.SetCount(hy.Nb);
+	//hy.dt.dt.c0.setConstant(3, hy.dt.dt.Nb, 0);
+	//hy.dt.dt.names.SetCount(hy.dt.dt.Nb);
 	
-	for (int ib = 0; ib < hy.Nb; ++ib) {
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 		const TDiffractionBodyHydrostaticInfo &b = bodies[ib];
 		
-		hy.msh[ib].Vo = b.Volume*factor.len*factor.len*factor.len;
+		hy.dt.msh[ib].dt.Vo = b.Volume*factor.len*factor.len*factor.len;
 		for (int idf = 0; idf < 3; ++idf) {
-			hy.msh[ib].cb[idf] = b.CentreOfBuoyancy[idf]*factor.len;
-			hy.msh[ib].cg[idf] = b.CentreOfMass[idf]*factor.len;
+			hy.dt.msh[ib].dt.cb[idf] = b.CentreOfBuoyancy[idf]*factor.len;
+			hy.dt.msh[ib].dt.cg[idf] = b.CentreOfMass[idf]*factor.len;
 		}
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
-				hy.msh[ib].C(r, c) = b.RestoringMatrix[r][c]*factor.K(r, c);
-				hy.msh[ib].M(r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
+				hy.dt.msh[ib].dt.C(r, c) = b.RestoringMatrix[r][c]*factor.K(r, c);
+				hy.dt.msh[ib].dt.M(r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
 			}
 		}
-		hy.msh[ib].name = FormatInt(ib+1);
+		hy.dt.msh[ib].dt.name = FormatInt(ib+1);
 	}
 	
 	auto LoadAB = [&](UArray<UArray<VectorXd>> &ab, int type, const char *stype, const Matrix<double, 6, 6> &factor) {
@@ -440,36 +440,36 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
 			throwError("Load dotAddedMass_Radiation");	
 		
-		if (sz/sizeof(double) != 6*hy.Nb*6*hy.Nb*hy.Nf)		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), 6*hy.Nb*6*hy.Nb*hy.Nf));
+		if (sz/sizeof(double) != 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf)		
+			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf));
 		
-		MultiDimMatrixRowMajor<double> a(hy.Nf, 6*hy.Nb, 6*hy.Nb);
+		MultiDimMatrixRowMajor<double> a(hy.dt.Nf, 6*hy.dt.Nb, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
 			throwError("Load dotAddedMass_Radiation 2");		
 		
-		for (int r = 0; r < 6*hy.Nb; ++r)
-			for (int c = 0; c < 6*hy.Nb; ++c)
-				for (int ifr = 0; ifr < hy.Nf; ++ifr)
+		for (int r = 0; r < 6*hy.dt.Nb; ++r)
+			for (int c = 0; c < 6*hy.dt.Nb; ++c)
+				for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
 		 			ab[r][c][ifr] = a(ifr, r, c)*factor(r%6, c%6);
 	};
 	
-	LoadAB(hy.A, dotAddedMass, "added mass", factor.A);
-	LoadAB(hy.B, dotDamping, "radiation damping", factor.B);
+	LoadAB(hy.dt.A, dotAddedMass, "added mass", factor.A);
+	LoadAB(hy.dt.B, dotDamping, "radiation damping", factor.B);
 	
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, NULL))
 		throwError("Load dotInfiniteFrequencyAddedMass");	
 	
-	if (sz/sizeof(double) != 6*hy.Nb*6*hy.Nb)		
-		throw Exc(Format("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), 6*hy.Nb*6*hy.Nb));
+	if (sz/sizeof(double) != 6*hy.dt.Nb*6*hy.dt.Nb)		
+		throw Exc(Format("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), 6*hy.dt.Nb*6*hy.dt.Nb));
 	
-	MultiDimMatrixRowMajor<double> a(6*hy.Nb, 6*hy.Nb);
+	MultiDimMatrixRowMajor<double> a(6*hy.dt.Nb, 6*hy.dt.Nb);
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, a.begin()))
 		throwError("Load dotInfiniteFrequencyAddedMass 2");		
 	
-	hy.Ainf.resize(6*hy.Nb, 6*hy.Nb);
-	for (int r = 0; r < 6*hy.Nb; ++r)
-		for (int c = 0; c < 6*hy.Nb; ++c)
-	 		hy.Ainf(r, c) = a(r, c)*factor.A(r%6, c%6);	
+	hy.dt.Ainf.resize(6*hy.dt.Nb, 6*hy.dt.Nb);
+	for (int r = 0; r < 6*hy.dt.Nb; ++r)
+		for (int c = 0; c < 6*hy.dt.Nb; ++c)
+	 		hy.dt.Ainf(r, c) = a(r, c)*factor.A(r%6, c%6);	
 	
 	
 	auto LoadF = [&](Hydro::Forces &f, int type, const char *stype, const Eigen::Vector<double, 6> &factor) {
@@ -478,16 +478,16 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
 			throwError("Load dotLoadRAOs");	
 		
-		if (sz/sizeof(TComplex) != 6*hy.Nb*hy.Nf*hy.Nh)		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*6*hy.Nb*hy.Nf));
+		if (sz/sizeof(TComplex) != 6*hy.dt.Nb*hy.dt.Nf*hy.dt.Nh)		
+			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf));
 		
-		MultiDimMatrixRowMajor<TComplex> a(hy.Nh, hy.Nf, 6*hy.Nb);
+		MultiDimMatrixRowMajor<TComplex> a(hy.dt.Nh, hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
 			throwError("Load dotLoadRAOs 2");		
 		
-		for (int r = 0; r < 6*hy.Nb; ++r) {
-			for (int ih = 0; ih < hy.Nh; ++ih) {
-				for (int ifr = 0; ifr < hy.Nf; ++ifr) {
+		for (int r = 0; r < 6*hy.dt.Nb; ++r) {
+			for (int ih = 0; ih < hy.dt.Nh; ++ih) {
+				for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) {
 					f.force[ih](ifr, r).real(a(ih, ifr, r).Re*factor(r%6));
 					f.force[ih](ifr, r).imag(a(ih, ifr, r).Im*factor(r%6));
 				}
@@ -495,9 +495,9 @@ void Orca::LoadParameters(Hydro &hy) {
 		}
 	};
 	
-	LoadF(hy.ex, dotLoadRAOsDiffraction, "diffraction force", factor.F);
+	LoadF(hy.dt.ex, dotLoadRAOsDiffraction, "diffraction force", factor.F);
 	
-	LoadF(hy.rao, dotDisplacementRAOs, "RAO", factor.RAO);
+	LoadF(hy.dt.rao, dotDisplacementRAOs, "RAO", factor.RAO);
 	
 
 	if (GetDiffractionOutput(wave, dotQTFAngularFrequencies, &sz, NULL))
@@ -513,7 +513,7 @@ void Orca::LoadParameters(Hydro &hy) {
 	for (int i = 0; i < sz; i += 3) 
 		FindAdd(qw, qfreq[i]);
 	Sort(qw);
-	Copy(qw, hy.qw);
+	Copy(qw, hy.dt.qw);
 	
 	if (GetDiffractionOutput(wave, dotMeanDriftHeadingPairs, &sz, NULL))
 		throwError("Load dotMeanDriftHeadingPairs");	
@@ -523,9 +523,9 @@ void Orca::LoadParameters(Hydro &hy) {
 		throwError("Load dotMeanDriftHeadingPairs 2");	
 
 	sz /= (2*sizeof(double));
-	hy.mdhead.resize(sz);
+	hy.dt.mdhead.resize(sz);
 	for (int i = 0; i < sz; i++) 
-		hy.mdhead[i] = std::complex<double>(qmh[2*i], qmh[2*i+1]);
+		hy.dt.mdhead[i] = std::complex<double>(qmh[2*i], qmh[2*i+1]);
 	
 	auto LoadMD = [&](int type, const char *stype)->bool {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
@@ -534,32 +534,32 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (sz == 0)
 			return false;
 		
-		if (sz/sizeof(TComplex) != 6*hy.Nb*hy.Nf*hy.mdhead.size())		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*hy.Nf*hy.mdhead.size()));
+		if (sz/sizeof(TComplex) != 6*hy.dt.Nb*hy.dt.Nf*hy.dt.mdhead.size())		
+			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*hy.dt.Nf*hy.dt.mdhead.size()));
 		
-		MultiDimMatrixRowMajor<TComplex> md((int)hy.mdhead.size(), hy.Nf, 6*hy.Nb);
+		MultiDimMatrixRowMajor<TComplex> md((int)hy.dt.mdhead.size(), hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, md.begin()))
 			throwError(Format("Load %s 2", stype));		
 		
-		Hydro::Initialize_MD(hy.md, hy.Nb, int(hy.mdhead.size()), hy.Nf);
+		Hydro::Initialize_MD(hy.dt.md, hy.dt.Nb, int(hy.dt.mdhead.size()), hy.dt.Nf);
 		
-		int Nb = hy.Nb;
+		int Nb = hy.dt.Nb;
 		if (type == dotMeanDriftLoadControlSurface)
-			hy.mdtype = 7;
+			hy.dt.mdtype = 7;
 		else if (type == dotMeanDriftLoadPressureIntegration)
-			hy.mdtype = 9;
+			hy.dt.mdtype = 9;
 		else {
-			hy.mdtype = 8;
+			hy.dt.mdtype = 8;
 			Nb = 1;			// Momentum Conservation handles only 1 body
 		}
 		
 		for (int ib = 0; ib < Nb; ++ib) 
-			for (int ih = 0; ih < hy.mdhead.size(); ++ih) 
+			for (int ih = 0; ih < hy.dt.mdhead.size(); ++ih) 
 				for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr = 0; ifr < hy.Nf; ++ifr) {
+					for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) {
 						double re = md(ih, ifr, 6*ib+idf).Re;
 						double im = md(ih, ifr, 6*ib+idf).Im;
-						hy.md[ib][ih][idf](ifr) = Sign(re)*sqrt(sqr(re) + sqr(im))*factor.MD(idf);
+						hy.dt.md[ib][ih][idf](ifr) = Sign(re)*sqrt(sqr(re) + sqr(im))*factor.MD(idf);
 					}
 					
 		return true;
@@ -577,49 +577,74 @@ void Orca::LoadParameters(Hydro &hy) {
 		throwError("Load dotQTFHeadingPairs 2");	
 	
 	sz /= (2*sizeof(double));
-	hy.qh.resize(sz);
+	hy.dt.qh.resize(sz);
 	for (int i = 0; i < sz; i++) {
-		hy.qh[i].real(qh[2*i]);
-		hy.qh[i].imag(qh[2*i+1]);
+		hy.dt.qh[i].real(qh[2*i]);
+		hy.dt.qh[i].imag(qh[2*i+1]);
 	}
 	
 	auto LoadQTF = [&](int type, const char *stype)->bool {
-		if (GetDiffractionOutput(wave, type, &sz, NULL))
-			throwError(Format("Load %s", stype));	
-	
-		if (sz == 0)
-			return false;
+		MultiDimMatrixRowMajor<TComplex> qtf, qtfDirect;
+		{
+			if (GetDiffractionOutput(wave, type, &sz, NULL))
+				throwError(Format("Load %s", stype));	
 		
-		if (sz/sizeof(TComplex) != 6*hy.Nb*Nqw*hy.qh.size())		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.Nb*Nqw*hy.qh.size()));
+			if (sz == 0)
+				return false;
+			
+			if (sz/sizeof(TComplex) != 6*hy.dt.Nb*Nqw*hy.dt.qh.size())		
+				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*Nqw*hy.dt.qh.size()));
+			
+			qtf.Resize((int)hy.dt.qh.size(), Nqw, 6*hy.dt.Nb);
+			if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
+				throwError(Format("Load %s 2", stype));		
+		}
+		{
+			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, NULL))
+				throwError(Format("Load %s", stype));	
 		
-		MultiDimMatrixRowMajor<TComplex> qtf((int)hy.qh.size(), Nqw, 6*hy.Nb);
-		if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
-			throwError(Format("Load %s 2", stype));		
+			if (sz == 0)
+				return false;
+			
+			if (sz/sizeof(TComplex) != 6*hy.dt.Nb*Nqw*hy.dt.qh.size())		
+				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*Nqw*hy.dt.qh.size()));
+			
+			qtfDirect.Resize((int)hy.dt.qh.size(), Nqw, 6*hy.dt.Nb);
+			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, qtfDirect.begin()))
+				throwError(Format("Load %s 2", stype));		
+		}
+		int Nb = hy.dt.Nb;
 		
-		Hydro::Initialize_QTF(hy.qtfsum, hy.Nb, int(hy.qh.size()), int(hy.qw.size()));
-		Hydro::Initialize_QTF(hy.qtfdif, hy.Nb, int(hy.qh.size()), int(hy.qw.size()));
+		for (int ib = 0; ib < Nb; ++ib) 
+			for (int ih = 0; ih < hy.dt.qh.size(); ++ih) 
+				for (int idf = 0; idf < 6; ++idf) 
+					for (int ifr = 0, iNqw = 0; ifr < 3*Nqw; ifr += 3, iNqw++) {
+						qtf(ih, iNqw, 6*ib + idf).Re += qtfDirect(ih, iNqw, 6*ib + idf).Re;
+						qtf(ih, iNqw, 6*ib + idf).Im += qtfDirect(ih, iNqw, 6*ib + idf).Im;
+					}
+					
+		Hydro::Initialize_QTF(hy.dt.qtfsum, hy.dt.Nb, int(hy.dt.qh.size()), int(hy.dt.qw.size()));
+		Hydro::Initialize_QTF(hy.dt.qtfdif, hy.dt.Nb, int(hy.dt.qh.size()), int(hy.dt.qw.size()));
 		
-		int Nb = hy.Nb;
 		if (type == dotQuadraticLoadFromControlSurface)
-			hy.qtftype = 7;
+			hy.dt.qtftype = 7;
 		else if (type == dotQuadraticLoadFromPressureIntegration)
-			hy.qtftype = 9;
+			hy.dt.qtftype = 9;
 	
 		for (int ib = 0; ib < Nb; ++ib) 
-			for (int ih = 0; ih < hy.qh.size(); ++ih) 
+			for (int ih = 0; ih < hy.dt.qh.size(); ++ih) 
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int ifr = 0, iNqw = 0; ifr < 3*Nqw; ifr += 3, iNqw++) {
 						double freq1 = qfreq[ifr];
 						double freq2 = qfreq[ifr+1];
 						double freq12= qfreq[ifr+2];
-						int ifr1 = Find(hy.qw, freq1);
-						int ifr2 = Find(hy.qw, freq2);
+						int ifr1 = Find(hy.dt.qw, freq1);
+						int ifr2 = Find(hy.dt.qw, freq2);
 						if (abs(freq1 + freq2 - freq12) < 0.001)
-							hy.qtfsum[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, iNqw, 6*ib+idf).Re, 
+							hy.dt.qtfsum[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, iNqw, 6*ib+idf).Re, 
 																					  qtf(ih, iNqw, 6*ib+idf).Im)*factor.F(idf);
 						else 
-							hy.qtfdif[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, iNqw, 6*ib+idf).Re, 
+							hy.dt.qtfdif[ib][ih][idf](ifr1, ifr2) = std::complex<double>(qtf(ih, iNqw, 6*ib+idf).Re, 
 																					  qtf(ih, iNqw, 6*ib+idf).Im)*factor.F(idf);
 					}
 
@@ -646,11 +671,11 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotPanelGeometry, &sz, panels.begin()))
 		throwError("Load dotPanelGeometry 2");
 	
-	hy.msh.SetCount(hy.Nb);
-	for (int ib = 0; ib < hy.Nb; ++ib) {
-		hy.msh[ib].SetCode(Mesh::ORCA_OWR);
-		hy.msh[ib].c0 = Point3D(0, 0, 0);
-		//hy.msh[ib].cg = Point3D(hy.cg(0, ib), hy.cg(1, ib), hy.cg(2, ib));
+	hy.dt.msh.SetCount(hy.dt.Nb);
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+		hy.dt.msh[ib].dt.SetCode(Mesh::ORCA_OWR);
+		hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
+		//hy.dt.msh[ib].cg = Point3D(hy.dt.cg(0, ib), hy.dt.cg(1, ib), hy.dt.cg(2, ib));
 	}
 	for (int ip = 0; ip < Np; ++ip) {
 		const TDiffractionPanelGeometry &pan = panels[ip];
@@ -659,7 +684,7 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (ib < 0)		// Artificial damping lid
 			continue;
 		
-		Panel &p = hy.msh[ib].mesh.panels.Add();
+		Panel &p = hy.dt.msh[ib].dt.mesh.panels.Add();
 		
 		for (int i = 0; i < 4; ++i) {
 			const TVector &v0 = pan.Vertices[i];
@@ -668,7 +693,7 @@ void Orca::LoadParameters(Hydro &hy) {
 				p.id[i] = p.id[0];
 			else {
 				Point3D pnt(v0[0]*factor.len, v0[1]*factor.len, v0[2]*factor.len);
-				p.id[i] = FindAdd(hy.msh[ib].mesh.nodes, pnt);
+				p.id[i] = FindAdd(hy.dt.msh[ib].dt.mesh.nodes, pnt);
 			}
 		}
 	}
@@ -677,21 +702,21 @@ void Orca::LoadParameters(Hydro &hy) {
 		throwError("Load dotPanelPressureRadiation");			
 	
 	if (sz > 0) {
-		if (sz/sizeof(TComplex) != 6*hy.Nb*hy.Nf*Np)
-			throw Exc(Format("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), 6*hy.Nb*hy.Nf*Np));
+		if (sz/sizeof(TComplex) != 6*hy.dt.Nb*hy.dt.Nf*Np)
+			throw Exc(Format("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), 6*hy.dt.Nb*hy.dt.Nf*Np));
 					
-		MultiDimMatrixRowMajor<TComplex> pres(6*hy.Nb, hy.Nf, Np);
+		MultiDimMatrixRowMajor<TComplex> pres(6*hy.dt.Nb, hy.dt.Nf, Np);
 		if (GetDiffractionOutput(wave, dotPanelPressureRadiation, &sz, pres.begin()))
 			throwError("Load dotPanelPressureRadiation 2");
 		
-		hy.Initialize_Pots();
-		for (int ib = 0; ib < hy.Nb; ++ib)
+		hy.Initialize_PotsRad();
+		for (int ib = 0; ib < hy.dt.Nb; ++ib)
 			for (int idf = 0; idf < 6; ++idf)
-				for (int ifr = 0; ifr < hy.Nf; ++ifr)
+				for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
 					for (int ip = 0; ip < Np; ++ip) {
 						const TComplex &c = pres(idf + 6*ib, ifr, ip);
-						hy.pots[ib][ip][idf][ifr] = std::complex<double>(-c.Re, c.Im)/hy.rho;
-							//std::complex<double>(c.Im, -c.Re)/hy.rho/hy.w[ifr]; // press = i w rho phi(potential)
+						hy.dt.pots_rad[ib][ip][idf][ifr] = std::complex<double>(-c.Re, c.Im)/hy.dt.rho;
+							//std::complex<double>(c.Im, -c.Re)/hy.dt.rho/hy.dt.w[ifr]; // press = i w rho phi(potential)
 					}
 	}
 }

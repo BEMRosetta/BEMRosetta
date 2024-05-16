@@ -61,8 +61,8 @@ CompareParameters::~CompareParameters() {
 		plist.Remove(id);
 }
 
-void CompareParameters::Init(Hydro::DataToShow dataToShow) {
-	this->dataToShow = dataToShow;
+void CompareParameters::Init(Hydro::DataToShow _dataToShow) {
+	this->dataToShow = _dataToShow;
 	
 	swRelative.Enable();
 	opMinRange.Enable();
