@@ -52,10 +52,6 @@ int BEM::LoadBEM(String fileName, Function <bool(String, int)> Status, bool chec
 			}
 		}
 	}
-	//SystemSignature sys;
-	//sys.Load();
-	
-	//UArray<Hydro> data;
 	
 	int num = Hydro::LoadHydro(hydros, fileName, Status);
 	
@@ -63,40 +59,11 @@ int BEM::LoadBEM(String fileName, Function <bool(String, int)> Status, bool chec
 	for (int i = 0; i < hydros.size(); ++i) 
 		Bem().Nb = max(Bem().Nb, hydros[i].dt.Nb);	
 		
-	/*if (discardNegDOF) {
-		if (Status && !Status(t_("Discarding negligible DOF"), 90)) {
-			hydros.SetCount(hydros.size()-1);	
-			throw Exc(t_("Cancelled by user"));
-		}
-		justLoaded.RemoveThresDOF_A(thres);
-		justLoaded.RemoveThresDOF_B(thres);
-		justLoaded.RemoveThresDOF_Force(justLoaded.ex, thres);
-		justLoaded.RemoveThresDOF_Force(justLoaded.sc, thres);
-		justLoaded.RemoveThresDOF_Force(justLoaded.fk, thres);
-		justLoaded.RemoveThresDOF_Force(justLoaded.rao, thres);
-	}*/
-	/*
-	if (hydros.size() == 1)
-		Nb = justLoaded.Nb;
-	else {
-		if (justLoaded.Nb > Nb) {
-			//int justLoaded_Nb = justLoaded.Nb;	Error removed for now
-			//hydros.SetCount(hydros.size()-1);
-			//throw Exc(Format(t_("Model has more bodies (%d) than previously loaded (%d)"), justLoaded_Nb, Nb));
-			Nb = justLoaded.Nb;
-		}
-	}*/
 	UpdateHeadAll();
 	UpdateHeadAllMD();
 	
 	return num;
 }
-/*
-void HydroClass::LoadHydro(HydroClass &hydro, String file, Function <bool(String, int)> Status) {
-	UArray<HydroClass> hyd;
-	LoadHydro(hyd, file, Status);	
-	hydro = pick(First(hyd));
-}*/
 
 Hydro &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
 	UVector<Hydro *>hydrosp;
@@ -148,26 +115,22 @@ void BEM::SymmetrizeForces(int id, bool xAxis) {
 
 void BEM::UpdateHeadAll() {
 	headAll.Clear();
-	//orderHeadAll.Clear();
 				
 	for (int id = 0; id < hydros.size(); ++id) {
 		for (int ih = 0; ih < hydros[id].dt.head.size(); ++ih) 
 			FindAddDelta(headAll, FixHeading(hydros[id].dt.head[ih], headingType), 0.1);
 	}
 	Sort(headAll);
-	//orderHeadAll = GetSortOrderX(headAll);
 }
 
 void BEM::UpdateHeadAllMD() {
 	headAllMD.Clear();
-	//orderHeadAll.Clear();
 				
 	for (int id = 0; id < hydros.size(); ++id) {
 		for (int ih = 0; ih < hydros[id].dt.mdhead.size(); ++ih) 
 			FindAddDelta(headAllMD, FixHeading(hydros[id].dt.mdhead[ih], headingType), 0.1);
 	}
 	Sort(headAllMD, SortComplex);
-	//orderHeadAll = GetSortOrderX(headAll);
 }
 
 void BEM::A0(int id) {
@@ -257,7 +220,7 @@ String BEM::SpreadNegative(int id, Function <bool(String, int)> Status) {
 	return hydros[id].SpreadNegative(Status);
 }
 
-int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
+int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
@@ -268,8 +231,8 @@ int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool
 			}
 		}
 	}
-	UArray<Mesh> meshes;
-	String error = Mesh::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps);
+	UArray<Body> meshes;
+	String error = Body::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps);
 	if (!error.IsEmpty()) {
 		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
@@ -280,33 +243,30 @@ int BEM::LoadMesh(String fileName, Function <bool(String, int pos)> Status, bool
 	return num;
 }
 
-void BEM::SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, Mesh::MESH_TYPE meshType, bool symX, bool symY) {
-	if (type == Mesh::UNKNOWN) {
+void BEM::SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type, Body::MESH_TYPE meshType, bool symX, bool symY) {
+	if (type == Body::UNKNOWN) {
 		String ext = ToLower(GetFileExt(fileName));
 		
 		if (ext == ".gdf")
-			type = Mesh::WAMIT_GDF;
+			type = Body::WAMIT_GDF;
 		else if (ext == ".dat")
-			type = Mesh::NEMOH_DAT;
+			type = Body::NEMOH_DAT;
 		else if (ext == ".")
-			type = Mesh::NEMOH_PRE;
+			type = Body::NEMOH_PRE;
 		else if (ext == ".pnl")
-			type = Mesh::HAMS_PNL;
+			type = Body::HAMS_PNL;
 		else if (ext == ".stl")
-			type = Mesh::STL_TXT;
+			type = Body::STL_TXT;
 		else if (ext == ".mesh")
-			type = Mesh::BEM_MESH;
+			type = Body::BEM_MESH;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	}
-	/*UArray<Mesh*> meshes;
-	for (int id : ids)
-		meshes << &surfs[id];*/
 	
-	Mesh::SaveAs(surfs, fileName, type, meshType, rho, g, symX, symY);
+	Body::SaveAs(surfs, fileName, type, meshType, rho, g, symX, symY);
 }
 
-void BEM::HealingMesh(int id, bool basic, Function <bool(String, int)> Status) {
+void BEM::HealingBody(int id, bool basic, Function <bool(String, int)> Status) {
 	Status(Format(t_("Healing mesh '%s'"), surfs[id].dt.fileName), 10);
 	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].dt.fileName));
 	
@@ -338,11 +298,11 @@ void BEM::OrientSurface(int id, Function <bool(String, int)> Status) {
 	}
 }
 
-void BEM::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
+void BEM::UnderwaterBody(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].dt.fileName), 10);
 	
-	Mesh &mesh = surfs.Add();
-	Mesh &orig = surfs[id];
+	Body &mesh = surfs.Add();
+	Body &orig = surfs[id];
 	mesh.dt.fileName = orig.dt.fileName;
 	
 	try {
@@ -354,20 +314,20 @@ void BEM::UnderwaterMesh(int id, Function <bool(String, int pos)> Status) {
 	}
 }
 
-void BEM::RemoveMesh(int id) {
+void BEM::RemoveBody(int id) {
 	surfs.Remove(id);
 	if (surfs.IsEmpty())
-		Mesh::ResetIdCount();
+		Body::ResetIdCount();
 }
 
-void BEM::JoinMesh(int idDest, int idOrig) {
-	const Mesh &orig = surfs[idOrig];
-	Mesh &dest = surfs[idDest];
+void BEM::JoinBody(int idDest, int idOrig) {
+	const Body &orig = surfs[idOrig];
+	Body &dest = surfs[idDest];
 	dest.dt.fileName << "/" << orig.dt.fileName;
 	
 	try {
 		dest.Append(orig.dt.mesh, rho, g);
-		RemoveMesh(idOrig);
+		RemoveBody(idOrig);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
@@ -375,9 +335,9 @@ void BEM::JoinMesh(int idDest, int idOrig) {
 	}
 }
 
-UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
+UVector<int> BEM::SplitBody(int id, Function <bool(String, int pos)> Status) {
 	Status(Format(t_("Splitting mesh '%s'"), surfs[id].dt.fileName), 0);
-	Mesh &orig = surfs[id];
+	Body &orig = surfs[id];
 	
 	UVector<int> ret;
 	try {
@@ -385,7 +345,7 @@ UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 		if (sets.size() == 1)
 			return ret;
 		for (int i = 0; i < sets.size(); ++i) {		
-			Mesh &surf = surfs.Add();
+			Body &surf = surfs.Add();
 			ret << surfs.size()-1-1;		// One more as id is later removed
 			for (int ii = 0; ii < sets[i].size(); ++ii) 
 				surf.dt.mesh.panels << clone(orig.dt.mesh.panels[sets[i][ii]]);	
@@ -394,7 +354,7 @@ UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 			surf.dt.SetCode(orig.dt.GetCode());
 			surf.AfterLoad(rho, g, false, true);
 		}
-		RemoveMesh(id);
+		RemoveBody(id);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - ret.size());
 		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
@@ -405,9 +365,9 @@ UVector<int> BEM::SplitMesh(int id, Function <bool(String, int pos)> Status) {
 
 void BEM::AddFlatRectangle(double x, double y, double z, double size, double panWidth, double panHeight) {
 	try {
-		Mesh &surf = surfs.Add();
+		Body &surf = surfs.Add();
 
-		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddFlatRectangle(panWidth, panHeight, size, size); 
 		surf.dt.mesh.Translate(x, y, z);
 	} catch (Exc e) {
@@ -419,9 +379,9 @@ void BEM::AddFlatRectangle(double x, double y, double z, double size, double pan
 
 void BEM::AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals) {
 	try {
-		Mesh &surf = surfs.Add();
+		Body &surf = surfs.Add();
 
-		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddRevolution(vals, size); 
 		surf.dt.mesh.Translate(x, y, z);
 	} catch (Exc e) {
@@ -433,9 +393,9 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 
 void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals) {
 	try {
-		Mesh &surf = surfs.Add();
+		Body &surf = surfs.Add();
 
-		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddPolygonalPanel(vals, size, true); 
 		surf.dt.mesh.Translate(x, y, z);
 	} catch (Exc e) {
@@ -447,9 +407,9 @@ void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<P
 
 void BEM::AddWaterSurface(int id, char c) {
 	try {
-		Mesh &surf = surfs.Add();
+		Body &surf = surfs.Add();
 
-		surf.dt.SetCode(Mesh::EDIT);
+		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddWaterSurface(surfs[id].dt.mesh, surfs[id].dt.under, c, roundVal, roundEps); 
 		
 		if (c == 'r')
@@ -571,7 +531,6 @@ String Hydro::LoadSerialization(String fileName) {
 	BEM::Print("\n\n" + Format(t_("Loading '%s'"), dt.file));
 	
 	if (!LoadFromJsonFile(*this, dt.file)) 
-		//BEM::PrintError("\n" + Format(t_("Error loading '%s'"), file));
 		return Format(t_("Error loading '%s'"), dt.file);
 	
 	dt.file = fileName;
@@ -614,8 +573,8 @@ void Hydro::SaveForce(FileOut &out, Hydro::Forces &f) {
 				out << dt.w[ow[ifr]];				
 				for (int idf = 0; idf < 6; ++idf) { 	
 					out << sep;	
-					if (IsNum(f.force[oh[ih]](ow[ifr], 6*ib + idf)))	{
-						const std::complex<double> &c = F_dim(f, oh[ih], ow[ifr], idf);
+					if (IsNum(f[ib][oh[ih]](ow[ifr], idf)))	{
+						const std::complex<double> &c = F_dim(f, oh[ih], ow[ifr], idf, ib);
 						out << FormatDouble(abs(c)) << sep << FormatDouble(ToDeg(arg(c)));
 					} else
 						out << sep;
@@ -637,7 +596,6 @@ void Hydro::SaveMD(FileOut &out) {
 	out << "\n";
 	
 	UVector<int> ow = GetSortOrderX(dt.w);
-	//UVector<int> oh = GetSortOrderX(mdhead);
 	
 	for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
 		const std::complex<double> &hh = dt.mdhead[ih];
@@ -1053,27 +1011,6 @@ void LineParserWamit::LoadWamitJoinedFields(String _line) {
 	}
 }
 
-/*	
-BEMBody::BEMBody() {
-	//dof.SetCount(6, false);	
-	cg = Vector3d::Zero();
-	c0 = Vector3d::Zero();
-	M.setConstant(6, 6, 0);
-	Dlin.setConstant(6, 6, 0);
-	Dquad.setConstant(6, 6, 0);
-	C.setConstant(6, 6, 0);
-	Cadd.setConstant(6, 6, 0);
-	Cext.setConstant(6, 6, 0);
-	Aadd.setConstant(6, 6, 0);
-}*/
-	
-/*int BEMBody::GetNDOF() const {
-	int ret = 0;
-	for (auto &d : dof)
-		ret += d;
-	return ret;
-}*/
-
 void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	dt.file = fileName;
 	
@@ -1142,8 +1079,6 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 	
 	if (type == BEM_FMT::HAMS)
 		ret = static_cast<const Hams&>(*this).Check();
-	//else if (type == BEM_FMT::AQWA)
-	//	ret = static_cast<const Aqwa&>(*this).Check();
 	
 	return ret;
 }
@@ -1161,8 +1096,3 @@ String FormatIntEmpty(int val) {
 	else
 		return FormatInt(val);
 }
-
-bool IsNum(const Hydro::Forces &f) {
-	return IsNum(f.force);
-}
-

@@ -5,7 +5,7 @@
 
 #ifdef PLATFORM_WIN32
 
-String ORCAMesh::Load_OWR(UArray<Mesh> &msh, String fileName, double g, bool &y0z, bool &x0z) {
+String ORCABody::Load_OWR(UArray<Body> &msh, String fileName, double g, bool &y0z, bool &x0z) {
 	y0z = x0z = false;
 	
 	BEM bem;

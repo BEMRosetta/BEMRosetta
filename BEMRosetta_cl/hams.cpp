@@ -58,7 +58,7 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 					}
 				}
 			}
-			if (iszero && !Load_HydrostaticMesh(hydrostaticFile, rhog))
+			if (iszero && !Load_HydrostaticBody(hydrostaticFile, rhog))
 				throw Exc("\n" + Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile));
 		}
 	} catch (Exc e) {
@@ -98,9 +98,9 @@ bool Hams::Load_Settings(String fileName) {
 	return true;
 }
 
-// Load Hydrostatic.in obtained from WAMIT_MeshTran.exe
+// Load Hydrostatic.in obtained from WAMIT_BodyTran.exe
 // Warning: This file is not normally the one at Input folder
-bool Hams::Load_HydrostaticMesh(String fileName, double rhog) {
+bool Hams::Load_HydrostaticBody(String fileName, double rhog) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -267,7 +267,7 @@ bool Hams::Load_In(String fileName) {
 			if (f.size() < 4)
 				throw Exc(t_("Lack of data in Reference_body_center"));
 			dt.msh.SetCount(1);
-			Mesh &body = dt.msh[0];
+			Body &body = dt.msh[0];
 			body.dt.c0[0] = f.GetDouble(1);
 			body.dt.c0[1] = f.GetDouble(2);
 			body.dt.c0[2] = f.GetDouble(3);
@@ -288,7 +288,7 @@ bool Hams::LoadHydrostatic(String fileName) {
 		return false;
 	
 	dt.msh.SetCount(1);
-	Mesh &body = dt.msh[0];
+	Body &body = dt.msh[0];
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
@@ -357,11 +357,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 	} 
 	String meshName = "WAMIT_MeshTran.exe";
 	if (bin) {
-		String source = Bem().hamsMeshPath;
+		String source = Bem().hamsBodyPath;
 		meshName = GetFileName(source);
 		String destNew = AFX(folderBase, meshName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), Bem().hamsMeshPath));				
+			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), Bem().hamsBodyPath));				
 	} 
 		
 	//String sumcases;
@@ -391,31 +391,31 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		Save_Hydrostatic(folderInput);
 	
 		bool y0zmesh = false, x0zmesh = false;
-		UArray<Mesh> meshes;
+		UArray<Body> meshes;
 		int ib = 0;		// Just one file
 		
-		String err = Mesh::Load(meshes, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0zmesh, x0zmesh);
+		String err = Body::Load(meshes, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0zmesh, x0zmesh);
 		if (!err.IsEmpty())
 			throw Exc(err);
 		
-		Mesh &mesh0 = First(meshes);
+		Body &mesh0 = First(meshes);
 		
 		if (y0zmesh == true && x0zmesh == true) 
 			y0zmesh = false;
 
 		String dest = AFX(folderInput, "HullMesh.pnl");
-		Mesh::SaveAs(mesh0, dest, Mesh::HAMS_PNL, Mesh::UNDERWATER, dt.rho, dt.g, y0zmesh, x0zmesh);
+		Body::SaveAs(mesh0, dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0zmesh, x0zmesh);
 		
 		bool y0zlid = false, x0zlid = false;	// Hull symmetries rules over lid ones
 		if (!dt.msh[ib].dt.lidFile.IsEmpty()) {
-			err = Mesh::Load(meshes, dt.msh[ib].dt.lidFile, dt.rho, dt.g, false, y0zlid, x0zlid);
+			err = Body::Load(meshes, dt.msh[ib].dt.lidFile, dt.rho, dt.g, false, y0zlid, x0zlid);
 			if (!err.IsEmpty())
 				throw Exc(err);
 			
-			//Mesh &mesh = First(meshes);
+			//Body &mesh = First(meshes);
 				
-			dest = AFX(folderInput, "WaterplaneMesh.pnl");
-			Mesh::SaveAs(mesh0, dest, Mesh::HAMS_PNL, Mesh::ALL, dt.rho, dt.g, y0zmesh, x0zmesh);
+			dest = AFX(folderInput, "WaterplaneBody.pnl");
+			Body::SaveAs(mesh0, dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0zmesh, x0zmesh);
 		}
 		
 		Save_Settings(folder, !dt.msh[ib].dt.lidFile.IsEmpty());
@@ -479,7 +479,7 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 	if (dt.msh.IsEmpty())
 		throw Exc(t_("No bodies found"));
 	
-	const Mesh &b = dt.msh[0];
+	const Body &b = dt.msh[0];
 	out << Format("\n%s %s %s", FDS(b.dt.cg[0], 15, true), 
 								FDS(b.dt.cg[1], 15, true), 
 								FDS(b.dt.cg[2], 15, true));
@@ -498,19 +498,19 @@ void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
-	Mesh mesh;
-	String res = Mesh::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
+	Body mesh;
+	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
 	if (thereIsLid) {
-		Mesh lid;
+		Body lid;
 		lid.dt.mesh.AddWaterSurface(mesh.dt.mesh, mesh.dt.under, 'f', Bem().roundVal, Bem().roundEps); 
 		lid.AfterLoad(dt.rho, dt.g, false, false);
 		
 		mesh.Append(lid.dt.mesh, dt.rho, dt.g);
 	}
-	Mesh::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Mesh::WAMIT_GDF, Mesh::ALL, dt.rho, dt.g, false, false);	
+	Body::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, false, false);	
 	
 	out << dt.g << "\n";
 	out << dt.rho << "\n";

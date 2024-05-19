@@ -89,9 +89,9 @@ void Hydro::GetRAO() {
 		for (int ih = 0; ih < dt.Nh; ++ih) {	
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 				VectorXcd RAO = GetRAO(dt.w[ifr], A_mat(false, ifr, ib, ib), B_mat(false, ifr, ib, ib), 
-								F_(false, dt.ex, ih, ifr), C, M_, D, D2);
+								F_(false, dt.ex, ih, ifr, ib), C, M_, D, D2);
 				for (int idf = 0; idf < 6; ++idf)
-					dt.rao.force[ih](ifr, idf+6*ib) = RAO[idf];
+					dt.rao[ib][ih](ifr, idf) = RAO[idf];
 			}
 		}
 	}
@@ -194,37 +194,39 @@ void Hydro::GetB_H(int &num) {
 	
 	Initialize_AB(dt.B_H);
 	
-    for (int idof = 0; idof < dt.Nb*6; ++idof) {
-		if (!IsLoadedFex(idof)) 		
-            continue;
-		
-		VectorXd b(dt.Nf);
-		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-			UVector<double> F2(dt.Nh);
-			for (int ih = 0; ih < dt.Nh; ++ih) 
-				F2[ih] = sqr(F_dim(abs(dt.ex.force[ih](ifr, idof)), idof));
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+	    for (int idf = 0; idf < 6; ++idf) {
+			if (!IsLoadedFex(idf, 0, ib)) 		
+	            continue;
 			
-			for (int i = idRemove.size()-1; i >= 0; --i)
-				F2.Remove(idRemove[i]);
-			
-			if (rangeType == R_0_x) 					// There must be data from 0 to 360 deg
-				F2 << F2[0];
-			else if (rangeType == R_x_360) 
-				F2.Insert(0, Last(F2));
-			else if (rangeType == R_x_x) {
-				double f = LinearInterpolate(360., hdl, 360 + hd0, Last(F2), F2[0]);
-				F2.Insert(0, f);
-				F2 << f;
+			VectorXd b(dt.Nf);
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+				UVector<double> F2(dt.Nh);
+				for (int ih = 0; ih < dt.Nh; ++ih) 
+					F2[ih] = sqr(F_dim(abs(dt.ex[ib][ih](ifr, idf)), idf));
+				
+				for (int i = idRemove.size()-1; i >= 0; --i)
+					F2.Remove(idRemove[i]);
+				
+				if (rangeType == R_0_x) 					// There must be data from 0 to 360 deg
+					F2 << F2[0];
+				else if (rangeType == R_x_360) 
+					F2.Insert(0, Last(F2));
+				else if (rangeType == R_x_x) {
+					double f = LinearInterpolate(360., hdl, 360 + hd0, Last(F2), F2[0]);
+					F2.Insert(0, f);
+					F2 << f;
+				}
+				b(ifr) = Integral(head360, F2, SIMPSON_1_3)*val[ifr]*M_PI/180;
 			}
-			b(ifr) = Integral(head360, F2, SIMPSON_1_3)*val[ifr]*M_PI/180;
-		}
-		if (dt.dimen)
-			dt.B_H[idof][idof] = b*rho_ndim()/rho_dim();
-		else {
-			for (int ifr = 0; ifr < dt.Nf; ++ifr)
-				b(ifr) /= (rho_dim()*pow(dt.len, GetK_AB(idof, idof))*dt.w[ifr]);
-			dt.B_H[idof][idof] = b;
-		}
+			if (dt.dimen)
+				dt.B_H[idf][idf] = b*rho_ndim()/rho_dim();
+			else {
+				for (int ifr = 0; ifr < dt.Nf; ++ifr)
+					b(ifr) /= (rho_dim()*pow(dt.len, GetK_AB(idf, idf))*dt.w[ifr]);
+				dt.B_H[idf][idf] = b;
+			}
+	    }
     }
 }
 
@@ -507,20 +509,19 @@ void Hydro::AddWave(int ib, double dx, double dy) {
 	if (dx == 0 && dy == 0)
 		return;
   	auto CalcF = [&](Forces &ex, const UVector<double> &k) {
-    	UArray<MatrixXcd> exforce = clone(ex.force);
+    	Forces exforce = clone(ex);
     	
 	    for (int ih = 0; ih < dt.Nh; ++ih) {
 	        double angle = ToRad(dt.head[ih]);
 			double dist = dx*cos(angle) + dy*sin(angle);
 		
-    		int ib6 = ib*6;
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 				double ph = k[ifr]*dist;
 				for (int idf = 0; idf < 6; ++idf) 
-					AddPhase(exforce[ih](ifr, idf + ib6), ph);		// Add the phase
+					AddPhase(exforce[ib][ih](ifr, idf), ph);		// Add the phase
 			}
 	    }
-		ex.force = pick(exforce);
+		ex = pick(exforce);
     };
     
     UVector<double> k(dt.Nf);
@@ -698,11 +699,9 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		CalcA(dt.A0);
     if (IsLoadedAinf())
 		CalcA(dt.Ainf);
-//	if (IsLoadedDlin())
-//		CalcA(Dlin);
 		    
     auto CalcF = [&](Forces &ex) {
-    	UArray<MatrixXcd> exforce = clone(ex.force);
+    	Forces exforce = clone(ex);
     	
 	    for (int ih = 0; ih < dt.Nh; ++ih) {
 	    	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -710,15 +709,14 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 				double dy = delta(1, ib);
 				double dz = delta(2, ib);
 			
-	    		int ib6 = ib*6;
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-					exforce[ih](ifr, 3 + ib6) += -dy*exforce[ih](ifr, 2 + ib6) + dz*exforce[ih](ifr, 1 + ib6);
-	    			exforce[ih](ifr, 4 + ib6) += -dz*exforce[ih](ifr, 0 + ib6) + dx*exforce[ih](ifr, 2 + ib6);
-	    			exforce[ih](ifr, 5 + ib6) += -dx*exforce[ih](ifr, 1 + ib6) + dy*exforce[ih](ifr, 0 + ib6);
+					exforce[ib][ih](ifr, 3) += -dy*exforce[ib][ih](ifr, 2) + dz*exforce[ib][ih](ifr, 1);
+	    			exforce[ib][ih](ifr, 4) += -dz*exforce[ib][ih](ifr, 0) + dx*exforce[ib][ih](ifr, 2);
+	    			exforce[ib][ih](ifr, 5) += -dx*exforce[ib][ih](ifr, 1) + dy*exforce[ib][ih](ifr, 0);
 				}
 	    	}
 	    }
-		ex.force = pick(exforce);
+		ex = pick(exforce);
     };
     	
 	if (IsLoadedFex())
@@ -814,12 +812,6 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		dt.msh[ib].dt.Dlin = MatrixXd();
 	}
 	
-/*	for (int ib = 0; ib < Nb; ++ib) {
-		double dx = delta(0, ib);
-		double dy = delta(1, ib);			// Previous translation has moved implicitly the wave origin
-		AddWave(ib, -dx, -dy);				// Translate the wave back to the original position
-	}*/
-	
 	for (int ib = 0; ib < dt.Nb; ++ib)
 		dt.msh[ib].dt.c0 = to.col(ib);
 	
@@ -847,12 +839,12 @@ void Hydro::ResetForces1st(Hydro::FORCE force) {
 		if (IsLoadedFsc()) 
 			dt.ex = clone(dt.sc);
 		else {
-			for (int ih = 0; ih < dt.Nh; ++ih) {
-				for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-					for (int i = 0; i < dt.Nb*6; ++i) 
-						if (IsNum(dt.sc.force[ih](ifr, i))) 
-							dt.ex.force[ih](ifr, i) = dt.ex.force[ih](ifr, i) - dt.fk.force[ih](ifr, i);
-			}		
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int ih = 0; ih < dt.Nh; ++ih) 
+					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+						for (int i = 0; i < 6; ++i) 
+							if (IsNum(dt.fk[ib][ih](ifr, i))) 
+								dt.ex[ib][ih](ifr, i) = dt.ex[ib][ih](ifr, i) - dt.fk[ib][ih](ifr, i);
 		}
 		dt.fk.Clear();
 	} else if (force == Hydro::SCATTERING) {
@@ -864,11 +856,12 @@ void Hydro::ResetForces1st(Hydro::FORCE force) {
 		if (IsLoadedFfk()) 
 			dt.ex = clone(dt.fk);
 		else {
-			for (int ih = 0; ih < dt.Nh; ++ih) 
-				for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-					for (int i = 0; i < dt.Nb*6; ++i) 
-						if (IsNum(dt.sc.force[ih](ifr, i))) 
-							dt.ex.force[ih](ifr, i) = dt.ex.force[ih](ifr, i) - dt.sc.force[ih](ifr, i);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int ih = 0; ih < dt.Nh; ++ih) 
+					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+						for (int i = 0; i < 6; ++i) 
+							if (IsNum(dt.sc[ib][ih](ifr, i))) 
+								dt.ex[ib][ih](ifr, i) = dt.ex[ib][ih](ifr, i) - dt.sc[ib][ih](ifr, i);
 		}
 		dt.sc.Clear();		
 	} else {
@@ -940,10 +933,11 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 		MultiplyAinfA0(dt.A0);
 		
 	auto MultiplyF = [&](Forces &ex) {
-		for (int ih = 0; ih < dt.Nh; ++ih) 
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				for (int idof = 0; idof < idDOF.size(); ++idof) 
-					ex.force[ih](ifr, idDOF[idof]) *= factor;
+		for (int ib = 0; ib < dt.Nb; ++ib) 
+			for (int ih = 0; ih < dt.Nh; ++ih) 
+				for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+					for (int idof = 0; idof < _idDOF.size(); ++idof) 
+						ex[ib][ih](ifr, _idDOF[idof]) *= factor;
 	};
 	if (f && IsLoadedFex())
 		MultiplyF(dt.ex);
@@ -990,9 +984,6 @@ void Hydro::SwapDOF(int ib1, int ib2) {
 	Swap(dt.msh[ib1].dt.c0, dt.msh[ib2].dt.c0);
 	Swap(dt.msh[ib1].dt.cg, dt.msh[ib2].dt.cg);
 	Swap(dt.msh[ib1].dt.cb, dt.msh[ib2].dt.cb);
-	//c0.col(ib1).swap(c0.col(ib2));
-	//cg.col(ib1).swap(cg.col(ib2));
-	//cb.col(ib1).swap(cb.col(ib2));
 	Swap(dt.msh[ib1].dt.Vo, dt.msh[ib2].dt.Vo);
 	Swap(dt.msh[ib1].dt.name, dt.msh[ib2].dt.name);
 }
@@ -1036,20 +1027,9 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		SwapAinfA0(dt.A0);
 			  
 	auto SwapF = [&](Forces &ex) {
-		for (int ih = 0; ih < dt.Nh; ++ih) {
-			MatrixXcd n(dt.Nf, 6*dt.Nb);
-			for (int idof = 0; idof < 6*dt.Nb; ++idof) {
-				int idofn = idof;
-				if (idofn == idof1+6*ib1)
-					idofn = idof2+6*ib2;
-				else if (idofn == idof2+6*ib2)
-					idofn = idof1+6*ib1;
-				
-	    		const VectorXcd &m = ex.force[ih].col(idof);
-				n.col(idofn) = m;
-	    	}
-	    	ex.force[ih] = pick(n);
-		}
+		for (int ih = 0; ih < dt.Nh; ++ih) 
+			for (int ifr = 0; ifr < dt.Nf; ++ifr)
+				Swap(ex[ib2][ih](ifr, idof2), ex[ib1][ih](ifr, idof1));
 	};
 	if (IsLoadedFex())
 		SwapF(dt.ex);
@@ -1122,18 +1102,20 @@ void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 		auto DeleteF = [&](Forces &ex) {
 	        Forces _ex;
 		
-			_ex.force.SetCount(dt.Nh);
-		    for (int ih = 0; ih < dt.Nh; ++ih) {
-		        _ex.force[ih].resize(dt.Nf - idFreq.size(), 6*dt.Nb);
-		    	for (int idof = 0; idof < 6*dt.Nb; ++idof) {
-					int i = 0, j = 0;
-					for (int iif = 0; iif < dt.Nf; ++iif) {
-						if (j >= idFreq.size() || iif != idFreq[j]) 
-							_ex.force[ih](i++, idof) = ex.force[ih](iif, idof);
-						else 
-							j++;
-					}
-		    	}
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				_ex[ib].SetCount(dt.Nb);
+			    for (int ih = 0; ih < dt.Nh; ++ih) {
+			        _ex[ib][ih].resize(dt.Nf - idFreq.size(), 6*dt.Nb);
+			    	for (int idof = 0; idof < 6; ++idof) {
+						int i = 0, j = 0;
+						for (int iif = 0; iif < dt.Nf; ++iif) {
+							if (j >= idFreq.size() || iif != idFreq[j]) 
+								_ex[ib][ih](i++, idof) = ex[ib][ih](iif, idof);
+							else 
+								j++;
+						}
+			    	}
+			    }
 		    }
 		    ex = pick(_ex);
 	    };	
@@ -1217,7 +1199,7 @@ void Hydro::DeleteHeadings(const UVector<int> &idHead) {
 			int j = idHead.size()-1;	
 			for (int i = dt.head.size()-1; i >= 0 && j >= 0; --i) {
 				if (i == idHead[j]) {	
-					ex.force.Remove(i);
+					ex.Remove(i);
 					j--;
 				}
 			}
@@ -1324,15 +1306,17 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 		FillAB(dt.B);
 	
 	auto FillF = [&](Forces &ex) {
-	    for (int ih = 0; ih < dt.Nh; ++ih) {
-	        MatrixXcd nmn(nw.size(), 6*dt.Nb);
-	    	for (int idof = 0; idof < 6*dt.Nb; ++idof) {
-	    		VectorXcd nm;
-	    		const VectorXcd &m = ex.force[ih].col(idof);
-	    		GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);					
-				nmn.col(idof) = nm;
-	    	}
-	    	ex.force[ih] = pick(nmn);
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+		    for (int ih = 0; ih < dt.Nh; ++ih) {
+		        MatrixXcd nmn(nw.size(), 6);
+		    	for (int idof = 0; idof < 6; ++idof) {
+		    		VectorXcd nm;
+		    		const VectorXcd &m = ex[ib][ih].col(idof);
+		    		GapFilling(w_, m, idsx, w0x, nw, nm, zero, maxFreq);					
+					nmn.col(idof) = nm;
+		    	}
+		    	ex[ib][ih] = pick(nmn);
+		    }
 	    }
     };	
 
@@ -1433,16 +1417,18 @@ void Hydro::FillFrequencyGapsABForcesZero() {
 		//FillA(Dlin);
 	
 	auto FillF = [&](Forces &ex) {
-	    for (int ih = 0; ih < dt.Nh; ++ih) {
-	        MatrixXcd nmn(dt.Nf, 6*dt.Nb);
-	    	for (int idof = 0; idof < 6*dt.Nb; ++idof) {
-	    		const VectorXcd &m = ex.force[ih].col(idof);
-	    		if (!IsNum(m(0))) 
-	    			nmn.col(idof) = VectorXcd::Zero(dt.Nf);
-	    		else 
-	    			nmn.col(idof) = m;
-	    	}
-	    	ex.force[ih] = pick(nmn);
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+		    for (int ih = 0; ih < dt.Nh; ++ih) {
+		        MatrixXcd nmn(dt.Nf, 6);
+		    	for (int idof = 0; idof < 6; ++idof) {
+		    		const VectorXcd &m = ex[ib][ih].col(idof);
+		    		if (!IsNum(m(0))) 
+		    			nmn.col(idof) = VectorXcd::Zero(dt.Nf);
+		    		else 
+		    			nmn.col(idof) = m;
+		    	}
+		    	ex[ib][ih] = pick(nmn);
+		    }
 	    }
     };	
 

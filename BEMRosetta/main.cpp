@@ -99,8 +99,8 @@ void Main::Init() {
 	LOG("Configuration loaded");
 	
 	if (parameter.IsEmpty() || parameter == "mesh") {
-		mainMesh.Init();			LOG("Init Mesh");
-		tab.Add(mainMesh.SizePos(), t_("Mesh"));
+		mainBody.Init();			LOG("Init Body");
+		tab.Add(mainBody.SizePos(), t_("Body"));
 	}
 	if (parameter.IsEmpty()) {
 		mainSolver.Init();		LOG("Init Nemoh");
@@ -179,7 +179,7 @@ void Main::Init() {
 #endif		
 	};
 	butWindow << [&] {
-		if (tab.IsAt(mainMesh)) 
+		if (tab.IsAt(mainBody)) 
 			Exec(Format("%s -gui mesh", GetExeFilePath()));
 		else if (tab.IsAt(mainBEM)) 
 			Exec(Format("%s -gui bem", GetExeFilePath()));
@@ -200,7 +200,7 @@ void Main::Init() {
 				menuOptions.Load();
 		}
 		
-		if (tab.IsAt(mainMesh)) {
+		if (tab.IsAt(mainBody)) {
 			butWindow.Show(true);
 			lastTabS = tab.GetItem(tab.Get()).GetText();
 		} else if (tab.IsAt(mainBEM)) {
@@ -221,8 +221,8 @@ void Main::Init() {
 		} else 
 			butWindow.Show(false);
 			
-		if (tab.IsAt(mainMesh)) 
-			mainMesh.mainTab.WhenSet();
+		if (tab.IsAt(mainBody)) 
+			mainBody.mainTab.WhenSet();
 		else if (tab.IsAt(mainBEM)) 
 			mainBEM.mainTab.WhenSet();
 	};	
@@ -245,7 +245,7 @@ void Main::Init() {
 
 void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
 	mainBEM.OnOpt();
-	mainMesh.OnOpt();
+	mainBody.OnOpt();
 	
 	editg <<= g;
 	editrho <<= rho;
@@ -282,7 +282,7 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	
 	firstTime = !ret.IsEmpty();
 	
-	mainMesh.InitSerialize(!firstTime);
+	mainBody.InitSerialize(!firstTime);
 	mainSolver.InitSerialize(!firstTime);
 	mainBEM.InitSerialize(!firstTime);
 	menuOptions.InitSerialize(!firstTime, openOptions);
@@ -326,7 +326,7 @@ void Main::CloseMain(bool store) {
 
 void Main::Jsonize(JsonIO &json) {
 	json
-		("mesh", mainMesh)
+		("mesh", mainBody)
 		("nemoh", mainSolver)
 		("bem", mainBEM)
 		("mooring", mainMoor)
@@ -494,7 +494,7 @@ int ArrayModel_Id(const ArrayCtrl &array, int row) {
 	return array.Get(row, 0);
 }
 
-int ArrayModel_IdMesh(const ArrayCtrl &array) {
+int ArrayModel_IdBody(const ArrayCtrl &array) {
 	int id;
 	if (array.GetCount() == 1)
 		id = ArrayModel_Id(array, 0);
@@ -503,14 +503,14 @@ int ArrayModel_IdMesh(const ArrayCtrl &array) {
 		if (id < 0)
 			return -1;
 	}
-	return Bem().GetMeshId(id);
+	return Bem().GetBodyId(id);
 }
 
-int ArrayModel_IdMesh(const ArrayCtrl &array, int row) {
+int ArrayModel_IdBody(const ArrayCtrl &array, int row) {
 	int id = ArrayModel_Id(array, row);
 	if (id < 0)
 		return -1;
-	return Bem().GetMeshId(id);
+	return Bem().GetBodyId(id);
 }
 
 int ArrayModel_IdHydro(const ArrayCtrl &array) {
@@ -537,10 +537,10 @@ UVector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {
 	return ids;
 }
 
-UVector<int> ArrayModel_IdsMesh(const ArrayCtrl &array) {		
+UVector<int> ArrayModel_IdsBody(const ArrayCtrl &array) {		
 	UVector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) 
-		ids << ArrayModel_IdMesh(array, row);		
+		ids << ArrayModel_IdBody(array, row);		
 	return ids;
 }
 

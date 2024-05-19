@@ -150,7 +150,7 @@ void BemioH5::Load_H5() {
 						if (data.rows() != dt.Nf && data.cols() != 2)
 							throw Exc("Wrong data dimension reading force real component");
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							f.force[ih](iw, 6*ib + idf).real(data(iw, 1));
+							f[ib][ih](iw, idf).real(data(iw, 1));
 					}
 				}
 				hfile.UpGroup();	
@@ -162,7 +162,7 @@ void BemioH5::Load_H5() {
 						if (data.rows() != dt.Nf && data.cols() != 2)
 							throw Exc("Wrong data dimension reading force imag component");
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							f.force[ih](iw, 6*ib + idf).imag(data(iw, 1));
+							f[ib][ih](iw, idf).imag(data(iw, 1));
 					}
 				}
 				hfile.UpGroup();	
@@ -177,14 +177,14 @@ void BemioH5::Load_H5() {
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < dt.Nh; ++ih) 
 					for (int iw = 0; iw < dt.Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf).real(d(idf, ih, iw));		
+						f[ib][ih](iw, idf).real(d(idf, ih, iw));		
 		}
 		if (hfile.ExistDataset("im")) {
 			hfile.GetDouble("im", d);
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < dt.Nh; ++ih) 
 					for (int iw = 0; iw < dt.Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf).imag(d(idf, ih, iw));			
+						f[ib][ih](iw, idf).imag(d(idf, ih, iw));			
 		}
 	};
 		
@@ -325,7 +325,7 @@ void BemioH5::Save(String file) {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = f.force[ih](iw, 6*ib + idf).real();
+							data(iw, 1) = f[ib][ih](iw, idf).real();
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
@@ -336,7 +336,7 @@ void BemioH5::Save(String file) {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = f.force[ih](iw, 6*ib + idf).imag();
+							data(iw, 1) = f[ib][ih](iw, idf).imag();
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
@@ -347,7 +347,7 @@ void BemioH5::Save(String file) {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = abs(f.force[ih](iw, 6*ib + idf));
+							data(iw, 1) = abs(f[ib][ih](iw, idf));
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
@@ -358,7 +358,7 @@ void BemioH5::Save(String file) {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = arg(f.force[ih](iw, 6*ib + idf));
+							data(iw, 1) = arg(f[ib][ih](iw, idf));
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str).SetUnits("rad");
 					}
 				}
@@ -372,7 +372,7 @@ void BemioH5::Save(String file) {
 		for (int idf = 0; idf < 6; ++idf) 
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int iw = 0; iw < dt.Nf; ++iw) {
-					const std::complex<double> &n = f.force[ih](iw, 6*ib + idf);		
+					const std::complex<double> &n = f[ib][ih](iw, idf);		
 					d_r(idf, ih, iw) = n.real();		
 					d_i(idf, ih, iw) = n.imag();		
 					d_m(idf, ih, iw) = abs(n);		

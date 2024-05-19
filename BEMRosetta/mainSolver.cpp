@@ -369,7 +369,7 @@ void MainSolver::Load(String file) {
 	bodies.array.SetCount(hy.dt.msh.size());
 	bodiesEach.SetCount(hy.dt.msh.size());
 	for (int i = 0; i < hy.dt.msh.size(); ++i) {
-		const Mesh &b = hy.dt.msh[i];
+		const Body &b = hy.dt.msh[i];
 		WithMainSolver_Body<StaticRect> &d = bodiesEach[i];
 		//WithMainSolver_Body<StaticRect> &d0 = *bodies.array.Get(i);
 		d.meshFile <<= b.dt.fileName;
@@ -453,7 +453,7 @@ bool MainSolver::Save(Hydro &hy, bool isNemoh) {
 	
 	hy.dt.msh.SetCount(bodiesEach.size());
 	for (int i = 0; i < hy.dt.msh.size(); ++i) {
-		Mesh &b = hy.dt.msh[i];
+		Body &b = hy.dt.msh[i];
 		b.dt.name = ~bodiesEach[i].name;
 		b.dt.fileName = bodiesEach[i].meshFile;
 		b.dt.lidFile  = bodiesEach[i].lidFile;

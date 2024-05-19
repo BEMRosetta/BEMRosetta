@@ -53,9 +53,11 @@ void Hydro::GetFexFromFscFfk() {
 	Initialize_Forces(dt.ex);
 	for (int ih = 0; ih < dt.Nh; ++ih) {
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-			for (int i = 0; i < dt.Nb*6; ++i) {
-				if (IsNum(dt.sc.force[ih](ifr, i)) && IsNum(dt.fk.force[ih](ifr, i))) 
-					dt.ex.force[ih](ifr, i) = dt.sc.force[ih](ifr, i) + dt.fk.force[ih](ifr, i);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				for (int i = 0; i < 6; ++i) {
+					if (IsNum(dt.sc[ib][ih](ifr, i)) && IsNum(dt.fk[ib][ih](ifr, i))) 
+						dt.ex[ib][ih](ifr, i) = dt.sc[ib][ih](ifr, i) + dt.fk[ib][ih](ifr, i);
+				}
 			}
 		}
 	}
@@ -65,9 +67,11 @@ void Hydro::GetFscFromFexFfk() {
 	Initialize_Forces(dt.sc);
 	for (int ih = 0; ih < dt.Nh; ++ih) {
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-			for (int i = 0; i < dt.Nb*6; ++i) {
-				if (IsNum(dt.ex.force[ih](ifr, i)) && IsNum(dt.fk.force[ih](ifr, i))) 
-					dt.sc.force[ih](ifr, i) = dt.ex.force[ih](ifr, i) - dt.fk.force[ih](ifr, i);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				for (int i = 0; i < 6; ++i) {
+					if (IsNum(dt.ex[ib][ih](ifr, i)) && IsNum(dt.fk[ib][ih](ifr, i))) 
+						dt.sc[ib][ih](ifr, i) = dt.ex[ib][ih](ifr, i) - dt.fk[ib][ih](ifr, i);
+				}
 			}
 		}
 	}	
@@ -77,9 +81,11 @@ void Hydro::GetFfkFromFexFsc() {
 	Initialize_Forces(dt.fk);
 	for (int ih = 0; ih < dt.Nh; ++ih) {
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-			for (int i = 0; i < dt.Nb*6; ++i) {
-				if (IsNum(dt.ex.force[ih](ifr, i)) && IsNum(dt.sc.force[ih](ifr, i))) 
-					dt.fk.force[ih](ifr, i) = dt.ex.force[ih](ifr, i) - dt.sc.force[ih](ifr, i);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				for (int i = 0; i < 6; ++i) {
+					if (IsNum(dt.ex[ib][ih](ifr, i)) && IsNum(dt.sc[ib][ih](ifr, i))) 
+						dt.fk[ib][ih](ifr, i) = dt.ex[ib][ih](ifr, i) - dt.sc[ib][ih](ifr, i);
+				}
 			}
 		}
 	}	
@@ -195,9 +201,10 @@ void Hydro::SortHeadings() {
 		Forces f = clone(F);
 		for (int ih = 0; ih < dt.Nh; ++ih) 
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-					F.force[ih](ifr, idf) = f.force[indices_h[ih]](ifr, idf);
-		F.force.SetCount(dt.Nh);
+				for (int ib = 0; ib < dt.Nb; ++ib) 
+					for (int idf = 0; idf < 6; ++idf) 
+						F[ib][ih](ifr, idf) = f[ib][indices_h[ih]](ifr, idf);
+		//F.SetCount(dt.Nh);
 	};
 
 	auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
@@ -269,8 +276,9 @@ void Hydro::SortFrequencies() {
 			Forces f = clone(F);
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-					for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-						F.force[ih](ifr, idf) = f.force[ih](indices[ifr], idf);
+					for (int ib = 0; ib < dt.Nb; ++ib) 
+						for (int idf = 0; idf < 6; ++idf) 
+							F[ib][ih](ifr, idf) = f[ib][ih](indices[ifr], idf);
 		};
 		
 		auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
@@ -379,64 +387,73 @@ void Hydro::Initialize_Forces() {
 void Hydro::Initialize_Forces(Forces &f, int _Nh, double val) {
 	if (_Nh == -1)
 		_Nh = dt.Nh;
-	f.force.SetCount(_Nh);
-	for (int ih = 0; ih < _Nh; ++ih) 
-		f.force[ih].setConstant(dt.Nf, dt.Nb*6, val);
+	f.SetCount(dt.Nb);
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		f[ib].SetCount(_Nh);
+		for (int ih = 0; ih < _Nh; ++ih) 
+			f[ib][ih].setConstant(dt.Nf, 6, val);
+	}
 }
 	
 void Hydro::Normalize_Forces(Forces &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int idf = 0; idf < 6; ++idf) 
+					f[ib][ih](ifr, idf) = F_dim(f, ih, ifr, idf, ib);
 }
 
 void Hydro::Normalize_RAO(RAO &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
+					f[ib][ih](ifr, idf) = RAO_dim(f, ih, ifr, idf, ib);
 }
 
 void Hydro::Dimensionalize_Forces(Forces &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
+					f[ib][ih](ifr, idf) = F_dim(f, ih, ifr, idf, ib);
 }
 
 void Hydro::Dimensionalize_RAO(RAO &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
+					f[ib][ih](ifr, idf) = RAO_dim(f, ih, ifr, idf, ib);
 }
 
 void Hydro::Add_Forces(Forces &to, const Hydro &hy, const Forces &from) {
 	if (hy.IsLoadedForce(from)) {
-		for (int ihhy = 0; ihhy < hy.dt.Nh; ++ihhy) {
-			int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
-			for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
-				int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) 	 
-					if (IsNum(from.force[ihhy](ifrhy, idf))) 
-						to.force[ih](ifr, idf) = hy.F_ndim(from, ihhy, ifrhy, idf);
-			}
-		} 
+		for (int ib = 0; ib < dt.Nb; ++ib) 
+			for (int ihhy = 0; ihhy < hy.dt.Nh; ++ihhy) {
+				int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
+				for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
+					int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
+					for (int idf = 0; idf < 6*dt.Nb; ++idf) 	 
+						if (IsNum(from[ib][ihhy](ifrhy, idf))) 
+							to[ib][ih](ifr, idf) = hy.F_ndim(from, ihhy, ifrhy, idf, ib);
+				}
+			} 
 	}
 }
 
 void Hydro::Add_RAO(RAO &to, const Hydro &hy, const RAO &from) {
 	if (hy.IsLoadedForce(from)) {
-		for (int ihhy = 0; ihhy < hy.dt.Nh; ++ihhy) {
-			int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
-			for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
-				int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) 	 
-					if (IsNum(from.force[ihhy](ifrhy, idf))) 
-						to.force[ih](ifr, idf) = hy.RAO_ndim(from, ihhy, ifrhy, idf);
-			}
-		} 
+		for (int ib = 0; ib < dt.Nb; ++ib) 
+			for (int ihhy = 0; ihhy < hy.dt.Nh; ++ihhy) {
+				int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
+				for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
+					int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
+					for (int idf = 0; idf < 6*dt.Nb; ++idf) 	 
+						if (IsNum(from[ib][ihhy](ifrhy, idf))) 
+							to[ib][ih](ifr, idf) = hy.RAO_ndim(from, ihhy, ifrhy, idf, ib);
+				}
+			} 
 	}
 }
 
@@ -487,23 +504,13 @@ void Hydro::Copy(const Hydro &hyd) {
     dt.Ainf = clone(hyd.dt.Ainf);
     dt.A0 = clone(hyd.dt.A0);
 	
-	//Dlin = clone(Dlin);
-	//Dquad = clone(Dquad);
-	//Cmoor = clone(Cmoor);
-	
     dt.B = clone(hyd.dt.B);
     
     dt.msh = clone(hyd.dt.msh);
     
     dt.head = clone(hyd.dt.head);
-    //names = clone(hyd.names);
-    //C = clone(hyd.C);
-    //M = clone(hyd.M);
-    //cb = clone(hyd.cb);
-    //cg = clone(hyd.cg);
-    //c0 = clone(hyd.c0);
+
     dt.solver = hyd.dt.solver;     
-    //dof = clone(hyd.dof); 
     
     dt.Kirf = clone(hyd.dt.Kirf);
     dt.Tirf = clone(hyd.dt.Tirf);
@@ -595,16 +602,15 @@ void AvgB(Hydro::Forces &ret, const UArray<const Hydro::Forces*> &d) {
 	if (numT == 0) 
 		return;
 
-	for (int i = 0; i < ret.force.size(); ++i) {
-		for (int j = 0; j < ret.force[i].cols(); ++j) {
-			for (int k = 0; k < ret.force[i].rows(); ++k) {
-				Eigen::VectorXcd r(numT);
-				for (int it = 0; it < numT; ++it) 
-					r[it] = (*d[it]).force[i](k, j);
-				ret.force[i](k, j) = r.mean();
-			}
-		}
-	}
+	for (int ib = 0; ib < ret.size(); ++ib) 
+		for (int i = 0; i < ret[ib].size(); ++i) 
+			for (int j = 0; j < ret[ib][i].cols(); ++j) 
+				for (int k = 0; k < ret[ib][i].rows(); ++k) {
+					Eigen::VectorXcd r(numT);
+					for (int it = 0; it < numT; ++it) 
+						r[it] = (*d[it])[ib][i](k, j);
+					ret[ib][i](k, j) = r.mean();
+				}
 }
 
 using UMD = UArray<UArray<UArray<VectorXd>>>;
@@ -658,15 +664,12 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 	dt.rho = h0.dt.rho;
 	dt.g = h0.dt.g;
 
-	//T = clone(h0.T);
     dt.w = clone(h0.dt.w);
     dt.head = clone(h0.dt.head);
 	dt.qw = clone(h0.dt.qw);
     dt.qh = clone(h0.dt.qh);
 	dt.mdhead = clone(h0.dt.mdhead);
 	dt.msh = clone(h0.dt.msh);
-	//c0 = clone(h0.c0);
-	//dof = clone(h0.dof);
 	
 	for (int i = 1; i < ids.size(); ++i) {
 		const Hydro &hy = hydros[i];
@@ -682,8 +685,6 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 			throw Exc(t_("All models have to have the same gravity"));
 		if (dt.h != hy.dt.h) 
 			dt.h = -1;
-		//if (!CompareDecimals(T, hy.T, 2))
-		//	throw Exc(t_("All models have to have the same periods"));
 		if (!CompareDecimals(dt.w, hy.dt.w, 2))
 			throw Exc(t_("All models have to have the same frequencies"));
 		if (!CompareDecimals(dt.head, hy.dt.head, 2))
@@ -698,10 +699,6 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 			if (dt.msh[ib].dt.c0 != hy.dt.msh[ib].dt.c0)
 				throw Exc(t_("All models and bodies have to have the same centre of reference"));
 		}
-		//if (c0 != hy.c0)
-		//	throw Exc(t_("All models have to have the same centre of reference"));
-		//if (dof != hy.dof)
-			//throw Exc(t_("All models have to have the same number of dof"));
 	}
 	
 	dt.file = "Average";
@@ -714,24 +711,17 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
     
     dt.dataFromW = dt.qtfdataFromW = true;
     
-    //names = clone(h0.names);
-    
     dt.qtftype = h0.dt.qtftype;
     dt.mdtype = h0.dt.mdtype;
     
-    //Vo.SetCount(Nb, NaNDouble);
-	//cg.setConstant(3, Nb, NaNDouble);
-	//cb.setConstant(3, Nb, NaNDouble);
 	dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
 	dt.A0.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
 	
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);
 	
-	//C.SetCount(Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.C.setConstant(6, 6, 0);
-	//M.SetCount(Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.M.setConstant(6, 6, 0);
 	
@@ -745,7 +735,6 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 	Hydro::Initialize_QTF(dt.qtfsum, dt.Nb, int(dt.qh.size()), int(dt.qw.size()));
 	Hydro::Initialize_QTF(dt.qtfdif, dt.Nb, int(dt.qh.size()), int(dt.qw.size()));
 			
-	//UArray<const UVector<double>*> Vos;
 	UArray<const MatrixXd*> Ainfs, A0s;
 	UArray<const UArray<UArray<VectorXd>>*> As, Bs;
 	UArray<const Forces*> exs, scs, fks, raos;
@@ -768,20 +757,12 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 			Cs[ib].Add(&(hy.dt.msh[ib].dt.C));
 			Ms[ib].Add(&(hy.dt.msh[ib].dt.M));
 		}
-		//if (hy.Vo.size() > i)
-        	//Vos.Add(&(hy.Vo));
-		//if (hy.cg.size() > 0)
-        //	cgs.Add(&(hydros[i].cg));
-		//if (hy.cb.size() > 0)
-        //	cbs.Add(&(hydros[i].cb));
 		if (hy.dt.Ainf.size() > 0)
         	Ainfs.Add(&hy.dt.Ainf);
 		if (hy.dt.A0.size() > 0)
         	A0s.Add(&hy.dt.A0);
         As.Add(&hy.dt.A);
         Bs.Add(&hy.dt.B);
-        //Cs.Add(&hy.C);
-        //Ms.Add(&hy.M);
         exs.Add(&hy.dt.ex);
         scs.Add(&hy.dt.sc);
         fks.Add(&hy.dt.fk);
@@ -800,17 +781,12 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
     	dt.msh[ib].dt.Vo = Vos.mean();
     }
     
-	//AvgB(Vo, Vos);   
-	
 	AvgB(dt.Ainf, Ainfs); 
 	AvgB(dt.A0, A0s); 
 	
 	AvgB(dt.A, As); 
 	AvgB(dt.B, Bs);
 	 
-	//AvgB(C, Cs);
-	//AvgB(M, Ms);
-	
     AvgB(dt.ex, exs);
     AvgB(dt.sc, scs);
     AvgB(dt.fk, fks);
@@ -857,14 +833,14 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 	Sort(newHead);
 	
 	auto Symmetrize_ForcesEach = [&](const Forces &f, Forces &newf) {
-		auto Symmetrize_Forces_Each0 = [&](const Forces &f, Forces &newf, double hh, int ih, int idf, bool applysym) {
+		auto Symmetrize_Forces_Each0 = [&](const Forces &f, Forces &newf, double hh, int ih, int idf, int ib, bool applysym) {
 			int nih = FindClosest(newHead, hh);
-			bool avg = IsNum(newf.force[nih](0, idf));
+			bool avg = IsNum(newf[ib][nih](0, idf));
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-				std::complex<double> force = f.force[ih](ifr, idf);
+				std::complex<double> force = f[ib][ih](ifr, idf);
 				if (applysym)
 					force = std::polar(abs(force), arg(force) + M_PI);
-				std::complex<double> &nf = newf.force[nih](ifr, idf);
+				std::complex<double> &nf = newf[ib][nih](ifr, idf);
 				if (avg)
 					nf = Avg(nf, force);
 				else 
@@ -874,21 +850,23 @@ void Hydro::Symmetrize_Forces(bool xAxis) {
 	
 		Initialize_Forces(newf, newHead.size());
 		
-		for (int idf = 0; idf < 6*dt.Nb; ++idf) {
-			for (int ih = 0; ih < dt.Nh; ++ih) {
-				Symmetrize_Forces_Each0(f, newf, FixHeading_180(dt.head[ih]), ih, idf, false);
-				double he = FixHeading_180(MirrorHead(dt.head[ih], xAxis));
-				bool applysym = false;
-				if (SymmetryRule(idf, xAxis)) {
-					if (xAxis) {
-						if (he != 0 && he != 180)
-							applysym = true;
-					} else {
-						if (he != 90 && he != -90)
-							applysym = true;
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			for (int idf = 0; idf < 6; ++idf) {
+				for (int ih = 0; ih < dt.Nh; ++ih) {
+					Symmetrize_Forces_Each0(f, newf, FixHeading_180(dt.head[ih]), ih, idf, ib, false);
+					double he = FixHeading_180(MirrorHead(dt.head[ih], xAxis));
+					bool applysym = false;
+					if (SymmetryRule(idf, xAxis)) {
+						if (xAxis) {
+							if (he != 0 && he != 180)
+								applysym = true;
+						} else {
+							if (he != 90 && he != -90)
+								applysym = true;
+						}
 					}
+					Symmetrize_Forces_Each0(f, newf, he, ih, idf, ib, applysym);
 				}
-				Symmetrize_Forces_Each0(f, newf, he, ih, idf, applysym);
 			}
 		}
 	};
@@ -1097,22 +1075,24 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 	if (!IsLoadedForce(f))
 		return;
 	for (int ih = 0; ih < dt.Nh; ++ih) {
-		for (int i = 0; i < 6*dt.Nb; ++i) {
-			double mx = -DBL_MAX, mn = DBL_MAX;
-			for (int ifr = 0; ifr < dt.Nf; ifr++) {
-				double val = abs(F_ndim(f, ih, ifr, i));
-				mx = max(mx, val);
-				mn = min(mn, val);
-			}
-			if (mx != -DBL_MAX && mn != DBL_MAX) {
-				double delta = mx - mn;
-				double res = 0;
-				for (int ifr = 1; ifr < dt.Nf; ifr++) 
-					res += abs(F_ndim(f, ih, ifr, i) - F_ndim(f, ih, ifr-1, i));
-				res /= delta*(dt.Nf - 1);
-				if (res > thres) {
-					for (int ifr = 0; ifr < dt.Nf; ifr++) 
-						f.force[ih](ifr, i) = Null;
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			for (int i = 0; i < 6; ++i) {
+				double mx = -DBL_MAX, mn = DBL_MAX;
+				for (int ifr = 0; ifr < dt.Nf; ifr++) {
+					double val = abs(F_ndim(f, ih, ifr, i, ib));
+					mx = max(mx, val);
+					mn = min(mn, val);
+				}
+				if (mx != -DBL_MAX && mn != DBL_MAX) {
+					double delta = mx - mn;
+					double res = 0;
+					for (int ifr = 1; ifr < dt.Nf; ifr++) 
+						res += abs(F_ndim(f, ih, ifr, i, ib) - F_ndim(f, ih, ifr-1, i, ib));
+					res /= delta*(dt.Nf - 1);
+					if (res > thres) {
+						for (int ifr = 0; ifr < dt.Nf; ifr++) 
+							f[ib][ih](ifr, i) = Null;
+					}
 				}
 			}
 		}
@@ -1216,16 +1196,17 @@ void Hydro::Compare_cg(Hydro &a) {
 }
 
 void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
-	for (int ih = 0; ih < dt.Nh; ++ih) 	
-		for (int ifr = 0; ifr < dt.Nf; ++ifr)
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) {
-				std::complex<double> Fa = a.force[ih](ifr, idf);
-				std::complex<double> Fb = b.force[ih](ifr, idf);
-				if (IsLoadedForce(a, idf, ih) && Fa != Fb)
-					throw Exc(Format(t_("%s is not the same %f:%f<>%f:%f"), 
-							Format(t_("%s[%d](%d, %d)"), type, ifr+1, idf+1, ih+1), 
-							Fa.real(), Fa.imag(), Fb.real(), Fb.imag()));
-			}
+	for (int ib = 0; ib < dt.Nb; ++ib)
+		for (int ih = 0; ih < dt.Nh; ++ih) 	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr)
+				for (int idf = 0; idf < 6*dt.Nb; ++idf) {
+					std::complex<double> Fa = a[ib][ih](ifr, idf);
+					std::complex<double> Fb = b[ib][ih](ifr, idf);
+					if (IsLoadedForce(a, idf, ih) && Fa != Fb)
+						throw Exc(Format(t_("%s is not the same %f:%f<>%f:%f"), 
+								Format(t_("%s[%d][%d](%d, %d)"), type, ib+1, ih+1, ifr+1, idf+1), 
+								Fa.real(), Fa.imag(), Fb.real(), Fb.imag()));
+				}
 }
 
 void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading) {
@@ -1353,19 +1334,11 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 	}
 	Sort(dt.w);
 	dt.Nf = dt.w.size();
-	/*T.Clear();
-	for (int i = 0; i < Nf; ++i)
-		T << 2*M_PI/w[i];*/
 	
 	if (dt.Nf == 0)
 		throw Exc(t_("No frequency found in models"));
 	
 	dt.msh.SetCount(dt.Nb);
-//	dof.SetCount(Nb);
-//	cg.setConstant(3, Nb, NaNDouble);
-//	c0.setConstant(3, Nb, NaNDouble);
-//	cb.setConstant(3, Nb, NaNDouble);
-//	Vo.SetCount(Nb, NaNDouble);
 	
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);
@@ -1388,22 +1361,16 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			if (!hy.dt.msh[ib].dt.name.IsEmpty())
 				dt.msh[ib].dt.name = hy.dt.msh[ib].dt.name;
-			//if (IsNum(hy.Vo[ib]))
 			dt.msh[ib].dt.Vo = hy.dt.msh[ib].dt.Vo;
 			dt.msh[ib].dt.cg = clone(hy.dt.msh[ib].dt.cg);
 			dt.msh[ib].dt.c0 = clone(hy.dt.msh[ib].dt.c0);
 			for (int i = 0; i < 3; ++i) {
-				/*if (IsNum(hy.cg(i, ib)))
-					msh[ib].cg[i] = hy.cg(i, ib);*/
 				if (IsNum(hy.dt.msh[ib].dt.cb[i]))
 					dt.msh[ib].dt.cb[i] = hy.dt.msh[ib].dt.cb[i];
-				/*if (IsNum(hy.c0(i, ib)))
-					c0(i, ib) = hy.c0(i, ib);*/
 			}
-			//dof[ib] = hy.dof[ib];
 		}
 		
-		if (/*IsLoadedC() && */ hy.IsLoadedC()) {
+		if (hy.IsLoadedC()) {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int jdf = 0; jdf < 6; ++jdf) 
@@ -1412,7 +1379,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		}
 		///////////////////////////////////////////////////////////////////
 		
-		if (/*IsLoadedA() && IsLoadedB() && */hy.IsLoadedA() && hy.IsLoadedB()) {
+		if (hy.IsLoadedA() && hy.IsLoadedB()) {
 			for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
 				int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
 				for (int idf = 0; idf < 6*dt.Nb; ++idf) {
@@ -1431,34 +1398,6 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		
 		Add_RAO(dt.rao, hy, hy.dt.rao);
 	}
-
-	
-	// Aw0 has to be recalculated
-	/*
-	// A0 is set from the lower frequency data set
-	
-	int ihminw = -1;
-	double minw = DBL_MAX;
-	for (int ihy = 0; ihy < hydrosp.size(); ++ihy) {
-		const Hydro &hy = *hydrosp[ihy];
-		if (hydro.IsLoadedAw0()) {
-			double minwhy = Min(hydro.w);
-			if (minw > minwhy) {
-				ihminw = ihy;
-				minw = minwhy;
-			}
-		}
-	}
-	if (ihminw >= 0) {
-		for (int i = 0; i < 6*Nb; ++i) 
-			for (int j = 0; j < 6*Nb; ++j) 
-				Aw0(i, j) = hydrosp[ihminw]->Aw0_ndim(i, j);	
-	}*/
-	
-	//bem->calcAinf = true;
-	//bem->calcAinf_w = true;
-	
-	// sts has to be recalculated	
 }
 
 void Hydro::Report() const {
@@ -1526,15 +1465,7 @@ void Hydro::Report() const {
 		BEM::Print(str);
 	}
 }
-/*
-void Hydro::GetBodyDOF() {
-	dof.Clear();	 dof.SetCount(Nb, 0);
-	for (int ib = 0; ib < Nb; ++ib)
-		for (int idf = 0; idf < 6; ++idf)
-			if (IsAvailableDOF(ib, idf))
-				dof[ib]++;
-}
-*/
+
 String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	SortFrequencies();
 	SortHeadings();
@@ -1569,18 +1500,6 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	}
 	
 	CompleteForces1st();
-	
-//	if (Ainf_w.size() == 0)
-//		InitAinf_w();
-//	if (Ainf.size() == 0)
-//		Ainf.setConstant(Nb*6, Nb*6, 0);
-	
-	/*try {
-		CheckNaN();
-	} catch (Exc e) {
-		lastError = e;
-		return false;
-	}*/
 	
 	// Fill the other side of the diagonal. If Null, fill with zero
 	auto FillNullQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
@@ -1621,7 +1540,7 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		FillNullQTF(dt.qtfdif, false);
 	
 	for (int ib = 0; ib < dt.msh.size(); ++ib) {
-		Mesh &m = dt.msh[ib];
+		Body &m = dt.msh[ib];
 		String ret;
 		if (!m.dt.mesh.IsEmpty())
 			ret = m.dt.mesh.CheckErrors();
@@ -1631,8 +1550,6 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		m.dt.fileName = dt.file;
 		if (m.dt.name.IsEmpty())
 			m.dt.name = InitCaps(GetFileTitle(dt.file));
-
-		//m.AfterLoad(dt.rho, dt.g, false, true, true);
 
 		// Symmetrize radiation potentials
 		if (dt.symX) {
@@ -1712,17 +1629,19 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	if (!dt.msh.IsEmpty()) {
 		Initialize_PotsIncDiff(dt.pots_inc);
 
+		const std::complex<double> i = std::complex<double>(0, 1);
+
     	for (int ifr = 0; ifr < dt.Nf; ++ifr) {		
     		double k = SeaWaves::WaveNumber_w(dt.w[ifr], dt.h, g_dim());
     		double g_w = g_dim()/dt.w[ifr];
 			for (int ib = 0; ib < dt.Nb; ++ib) {
-				Mesh &m = dt.msh[ib];
+				Body &m = dt.msh[ib];
 				int npan = m.dt.mesh.panels.size();
 				for (int ip = 0; ip < npan; ++ip) {
-					const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
+					const Panel &pan = m.dt.mesh.panels[ip];
 					const Point3D &p = pan.centroidPaint;
 					for (int ih = 0; ih < dt.Nh; ++ih) {	
-						if (p.z >= 0) {
+						if (p.z < 0) {
 							double th = ToRad(dt.head[ih]);
 							double cs;
 							if (dt.h > 0 && k*dt.h < 700) 
@@ -1730,8 +1649,8 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 							else
 								cs = exp(k*p.z);
 							double ex = k*(p.x*cos(th) + p.y*sin(th));
-							
-							dt.pots_inc[ib][ip][ih][ifr] = g_w*cs*std::complex<double>(sin(ex), -cos(ex));
+														
+							dt.pots_inc[ib][ip][ih][ifr] = i*g_w*cs*std::complex<double>(cos(ex), -sin(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))	Wamit criterion	
 						}
 					}
 				}
@@ -1740,12 +1659,10 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
     	
     	Initialize_Forces(dt.fk_pot, -1, 0);
     	
-    	const std::complex<double> i = std::complex<double>(0, 1);
-    	
     	UVector<double> n(6);
 		for (int ih = 0; ih < dt.Nh; ++ih) {
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-				double rho_w = dt.rho/dt.w[ifr];
+				double rho_w = dt.rho*dt.w[ifr];
 				for (int ib = 0; ib < dt.Nb; ++ib) {
 					const Value3D &c0 = dt.msh[ib].dt.c0;
 					for (int ip = 0; ip < dt.pots_inc[ib].size(); ++ip) {
@@ -1757,8 +1674,11 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 						Value3D n26 = r%n13;
 						n[3] = n26[0];	n[4] = n26[1];	n[5] = n26[2];	
 												
-						for (int idf = 0; idf < 6; ++idf) 
-							dt.fk_pot.force[ih](ifr, idf + 6*ib) += rho_w*dt.pots_inc[ib][ip][ih][ifr]*n[idf]*s*i;
+						for (int idf = 0; idf < 6; ++idf) {
+							const std::complex<double> &pot = dt.pots_inc[ib][ip][ih][ifr];
+							std::complex<double> p = i*rho_w*pot;						// p = iρωΦ
+							dt.fk_pot[ib][ih](ifr, idf) += p*n[idf]*s;			// F += p n ds
+						}
 					}
 				}
 			}
@@ -1845,8 +1765,6 @@ String Hydro::C_units(int i, int j) {
 }
 
 void Hydro::SetC(int ib, const MatrixXd &K) {		// K is supposed to be dimensionalized
-	//if (C.IsEmpty())
-	//	C.SetCount(Nb);
 	if (dt.msh[ib].dt.C.size() == 0)
 		dt.msh[ib].dt.C.setConstant(6, 6, Null); 
 	for (int idf = 0; idf < 6; ++idf) {
@@ -2054,8 +1972,6 @@ MatrixXd Hydro::Dquad_dim(int ib) const {
 }
 
 void Hydro::C_dim() {
-	//if (C.IsEmpty())
-	//	return;
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		for (int idf = 0; idf < 6; ++idf) 	
 			for (int jdf = 0; jdf < 6; ++jdf) 
@@ -2063,64 +1979,66 @@ void Hydro::C_dim() {
 }
 
 void Hydro::F_dim(Forces &f) {
-	if (f.force.IsEmpty())
+	if (f.IsEmpty())
 		return;
-	for (int ih = 0; ih < dt.Nh; ++ih) 	
-		for (int ifr = 0; ifr < dt.Nf; ++ifr)
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-				f.force[ih](ifr, idf) = F_dim(f, ih, ifr, idf);
+	for (int ib = 0; ib < dt.Nb; ++ib)
+		for (int ih = 0; ih < dt.Nh; ++ih) 	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr)
+				for (int idf = 0; idf < 6; ++idf) 
+					f[ib][ih](ifr, idf) = F_dim(f, ih, ifr, idf, ib);
 }
 
-VectorXcd Hydro::F_(bool ndim, const Forces &f, int _h, int ifr) const {
+VectorXcd Hydro::F_(bool ndim, const Forces &f, int _h, int ifr, int ib) const {
 	VectorXcd ret;
-	if (f.force.IsEmpty())
+	if (f.IsEmpty())
 		return ret;
 	ret.resize(6);
 	for (int idf = 0; idf < 6; ++idf) 
-		ret[idf] = F_(ndim, f, _h, ifr, idf);
+		ret[idf] = F_(ndim, f, _h, ifr, idf, ib);
 	return ret;
 }
 
-VectorXcd Hydro::F_dof(bool ndim, const Forces &f, int _h, int idf) const {
+VectorXcd Hydro::F_dof(bool ndim, const Forces &f, int _h, int idf, int ib) const {
 	VectorXcd ret;
-	if (f.force.IsEmpty())
+	if (f.IsEmpty())
 		return ret;
 	ret.resize(dt.Nf);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-		ret[ifr] = F_(ndim, f, _h, ifr, idf);
+		ret[ifr] = F_(ndim, f, _h, ifr, idf, ib);
 	return ret;
 }
 
 void Hydro::RAO_dim(RAO &f) {
-	if (f.force.IsEmpty())
+	if (f.IsEmpty())
 		return;
-	for (int ih = 0; ih < dt.Nh; ++ih) 	
-		for (int ifr = 0; ifr < dt.Nf; ++ifr)
-			for (int idf = 0; idf < 6*dt.Nb; ++idf) 
-				f.force[ih](ifr, idf) = RAO_dim(f, ih, ifr, idf);
+	for (int ib = 0; ib < dt.Nb; ++ib)
+		for (int ih = 0; ih < dt.Nh; ++ih) 	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr)
+				for (int idf = 0; idf < 6; ++idf) 
+					f[ib][ih](ifr, idf) = RAO_dim(f, ih, ifr, idf, ib);
 }
 
-VectorXcd Hydro::RAO_(bool ndim, const RAO &f, int _h, int ifr) const {
+VectorXcd Hydro::RAO_(bool ndim, const RAO &f, int _h, int ifr, int ib) const {
 	VectorXcd ret;
-	if (f.force.IsEmpty())
+	if (f.IsEmpty())
 		return ret;
 	ret.resize(6);
 	for (int idf = 0; idf < 6; ++idf) 
-		ret[idf] = RAO_(ndim, f, _h, ifr, idf);
+		ret[idf] = RAO_(ndim, f, _h, ifr, idf, ib);
 	return ret;
 }
 
-VectorXcd Hydro::RAO_dof(bool ndim, int _h, int idf) const {
-	return RAO_dof(ndim, dt.rao, _h, idf);
+VectorXcd Hydro::RAO_dof(bool ndim, int _h, int idf, int ib) const {
+	return RAO_dof(ndim, dt.rao, _h, idf, ib);
 }
 
-VectorXcd Hydro::RAO_dof(bool ndim, const RAO &f, int _h, int idf) const {
+VectorXcd Hydro::RAO_dof(bool ndim, const RAO &f, int _h, int idf, int ib) const {
 	VectorXcd ret;
-	if (f.force.IsEmpty())
+	if (f.IsEmpty())
 		return ret;
 	ret.resize(dt.Nf);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-		ret[ifr] = RAO_(ndim, f, _h, ifr, idf);
+		ret[ifr] = RAO_(ndim, f, _h, ifr, idf, ib);
 	return ret;
 }
 
@@ -2161,12 +2079,6 @@ void Hydro::CheckNaN() {
 		throw Exc("Error loading B. NaN found");
 	if (!IsNum(dt.head))
 		throw Exc("Error loading head. NaN found");
-//	if (!IsNum(M))
-//		throw Exc("Error loading M. NaN found");
-//	if (!IsNum(C))
-//		throw Exc("Error loading C. NaN found");
-	//if (!IsNum(dof))
-		//throw Exc("Error loading dof. NaN found");
 	if (!IsNum(dt.Kirf))
 		throw Exc("Error loading Kirf. NaN found");
 	if (!IsNum(dt.Tirf))
@@ -2241,7 +2153,7 @@ double Hydro::Tpitch(int ib)  const {return Tdof(ib, 4);}
 double Hydro::Tpitchw(int ib) const {return Tdofw(ib, 4);}
 
 double Hydro::GM(int ib, int idf) const {
-	if (/*Vo.size() <= ib*/ !IsNum(dt.msh[ib].dt.Vo) || dt.msh[ib].dt.Vo == 0)
+	if (!IsNum(dt.msh[ib].dt.Vo) || dt.msh[ib].dt.Vo == 0)
 		return Null;
 	double den = rho_dim()*g_dim()*dt.msh[ib].dt.Vo;
 	if (den == 0)
@@ -2285,14 +2197,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("Aw0", dt.A0)
 		("B", oldB)
 		("head", dt.head)
-		//("names", names)
-		//("C", C)
-		//("cb", cb)
-		//("cg", cg)
-		//("c0", c0)
 		("code", icode)
-		//("dof", dof)
-//		("dofOrder", dofOrder)
 		("Kirf", oldKirf)
 		("Tirf", dt.Tirf)
 		("ex", dt.ex)
@@ -2300,16 +2205,13 @@ void Hydro::Jsonize(JsonIO &json) {
 		("fk", dt.fk)
 		("rao", dt.rao)
 		("sts", dt.sts)
-		//("T", T)
 		("w", dt.w)
 		("dataFromW", dt.dataFromW)
-		//("Vo", Vo)
 		("stsProcessor", dt.stsProcessor)
 		("dimenSTS", dt.dimenSTS)
 		("description", dt.description)
 		("qtfsum", dt.qtfsum)
 		("qtfdif", dt.qtfdif)
-		//("Dlin", Dlin)
 		("msh", dt.msh)
 	;
 	if(json.IsLoading()) {

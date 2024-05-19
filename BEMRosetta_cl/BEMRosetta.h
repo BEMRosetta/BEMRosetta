@@ -25,7 +25,7 @@ bool PrintStatus(String s, int d);
 
 //class HydroClass; 
 
-class Mesh : public DeepCopyOption<Mesh> {
+class Body : public DeepCopyOption<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
@@ -36,22 +36,22 @@ public:
 	
 	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
 	
-	Mesh() {}
-	void Copy(const Mesh &msh);
-	Mesh(const Mesh &msh, int) {Copy(msh);}
+	Body() {}
+	void Copy(const Body &msh);
+	Body(const Body &msh, int) {Copy(msh);}
 	
 	bool IsEmpty() {return dt.mesh.IsEmpty();}
 	
-	const char *GetMeshStr() const {
+	const char *GetBodyStr() const {
 		return meshStr[dt.GetCode()];
 	}
-	static const char *GetMeshStr(MESH_FMT c) {
+	static const char *GetBodyStr(MESH_FMT c) {
 		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
 		return meshStr[c];
 	}
 	
-	static MESH_FMT GetCodeMeshStr(String fmt) {
+	static MESH_FMT GetCodeBodyStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
 		for (int i = 0; i < NUMMESH; ++i)
 			if (fmt == ToLower(meshStr[i]))
@@ -59,10 +59,10 @@ public:
 		return UNKNOWN;
 	}
 
-	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
-	static String Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
-	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
-	static String Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
 	void Orient();
@@ -88,17 +88,17 @@ public:
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;
 	
-	static void SaveAs(const UArray<Mesh> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels);
-	static void SaveAs(const UArray<Mesh> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
+	static void SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels);
+	static void SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
 		SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels);
 	}
-	static void SaveAs(const Mesh &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels) {
-		UArray<Mesh> meshes;
+	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels) {
+		UArray<Body> meshes;
 		meshes.Add(clone(mesh));
 		SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels);
 	}
-	static void SaveAs(const Mesh &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
+	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
 		SaveAs(mesh, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels);
 	}
@@ -113,7 +113,7 @@ public:
 	
 	void Jsonize(JsonIO &json);
 		
-	// All Mesh data is here
+	// All Body data is here
 	class Data {
 	public:
 		Point3D projectionPos = Null, projectionNeg = Null;
@@ -138,7 +138,7 @@ public:
 		
 		void	 SetCode(MESH_FMT _code)	{code = _code;}
 		MESH_FMT GetCode() const			{return code;}
-		
+			
 	private:
 		MESH_FMT code = UNKNOWN;
 		int id = -1;
@@ -280,7 +280,7 @@ public:
 	
 	void BeforeSaveCase(String folderBase, int numCases, bool deleteFolder) const;
 		
-    struct Forces : public DeepCopyOption<Forces> {
+    /*struct Forces : public DeepCopyOption<Forces> {
         Forces() {}
         Forces(const Forces &f, int) {
             force = clone(f.force);
@@ -293,11 +293,13 @@ public:
 			;
     	}
     	void Clear() {force.Clear();}
-    };
+    };*/
     
-    enum FORCE {NONE, SCATTERING, FK, ALL, QTFSUM, QTFDIF};
-        
-  	typedef struct Forces RAO;
+    enum FORCE {NONE, ALL, SCATTERING, FK, QTFSUM, QTFDIF};
+    
+	//typedef UArray<MatrixXcd> Forces;  	 	// [Nh](Nf, 6*Nb) 	
+	typedef UArray<UArray<MatrixXcd>> Forces;  	// [Nb][Nh](Nf, 6) 	
+  	typedef Forces RAO;
     
     struct StateSpace : public DeepCopyOption<StateSpace> {
         StateSpace() {}
@@ -449,12 +451,8 @@ public:
 			return 4;
 	}
 	
-	//void GetBodyDOF();
-	
 	int GetIrregularHead() const;	
 	int GetIrregularFreq() const;	
-	
-	//String lastError;
 	
 	double g_dim()		const;
 	double g_ndim()		const;
@@ -549,20 +547,20 @@ public:
 		
 	// F
 		
-	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf)  const {
-		return dt.dimen ? f.force[_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f.force[_h](ifr, idf)*(g_rho_dim()*pow(dt.len, GetK_F(idf)));}
+	std::complex<double> F_dim(const Forces &f, int _h, int ifr, int idf, int ib)  const {
+		return dt.dimen ? f[ib][_h](ifr, idf)*g_rho_ndim()/g_rho_dim()  : f[ib][_h](ifr, idf)*(g_rho_dim()*pow(dt.len, GetK_F(idf)));}
 	
 	void F_dim(Forces &f);
 	
-	std::complex<double> F_ndim(const Forces &f, int _h, int ifr, int idf) const {
+	std::complex<double> F_ndim(const Forces &f, int _h, int ifr, int idf, int ib) const {
 		if (!dt.dimen) 
-			return f.force[_h](ifr, idf); 
+			return f[ib][_h](ifr, idf); 
 		else 
-			return f.force[_h](ifr, idf)/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));
+			return f[ib][_h](ifr, idf)/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));
 	}
 	
-	std::complex<double> F_(bool ndim, const Forces &f, int _h, int ifr, int idf) const {
-		return ndim ? F_ndim(f, _h, ifr, idf) : F_dim(f, _h, ifr, idf);
+	std::complex<double> F_(bool ndim, const Forces &f, int _h, int ifr, int idf, int ib) const {
+		return ndim ? F_ndim(f, _h, ifr, idf, ib) : F_dim(f, _h, ifr, idf, ib);
 	}
 	
 	template <class T>
@@ -572,21 +570,21 @@ public:
 	template <class T>
 	T F_(bool ndim, T f, int idf) const {return   ndim ? F_ndim(f, idf) : F_dim(f, idf);}
 
-	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr) const;
-	VectorXcd F_dof(bool ndim, const Forces &f, int _h, int idf) const;
+	VectorXcd F_(bool ndim, const Forces &f, int _h, int ifr, int ib) const;
+	VectorXcd F_dof(bool ndim, const Forces &f, int _h, int idf, int ib) const;
 
 	// RAO
 	
-	std::complex<double> RAO_dim(const RAO &f, int _h, int ifr, int idf)  const {
-		return (g_rho_ndim()/g_rho_dim())*(dt.dimen ? f.force[_h](ifr, idf)  : f.force[_h](ifr, idf)*pow(dt.len, GetK_RAO(idf)));}
+	std::complex<double> RAO_dim(const RAO &f, int _h, int ifr, int idf, int ib)  const {
+		return (g_rho_ndim()/g_rho_dim())*(dt.dimen ? f[ib][_h](ifr, idf)  : f[ib][_h](ifr, idf)*pow(dt.len, GetK_RAO(idf)));}
 	
 	void RAO_dim(RAO &f);
 	
-	std::complex<double> RAO_ndim(const RAO &f, int _h, int ifr, int idf) const {
-		return (g_rho_ndim()/g_rho_dim())*(!dt.dimen ? f.force[_h](ifr, idf) : f.force[_h](ifr, idf)/pow(dt.len, GetK_RAO(idf)));}
+	std::complex<double> RAO_ndim(const RAO &f, int _h, int ifr, int idf, int ib) const {
+		return (g_rho_ndim()/g_rho_dim())*(!dt.dimen ? f[ib][_h](ifr, idf) : f[ib][_h](ifr, idf)/pow(dt.len, GetK_RAO(idf)));}
 	
-	std::complex<double> RAO_(bool ndim, const RAO &f, int _h, int ifr, int idf) const {
-		return ndim ? RAO_ndim(f, _h, ifr, idf) : RAO_dim(f, _h, ifr, idf);
+	std::complex<double> RAO_(bool ndim, const RAO &f, int _h, int ifr, int idf, int ib) const {
+		return ndim ? RAO_ndim(f, _h, ifr, idf, ib) : RAO_dim(f, _h, ifr, idf, ib);
 	}
 	
 	template <class T>
@@ -598,9 +596,9 @@ public:
 	template <class T>
 	T RAO_(bool ndim, T f, int idf) const {return   ndim ? RAO_ndim(f, idf) : RAO_dim(f, idf);}
 
-	VectorXcd RAO_(bool ndim, const RAO &f, int _h, int ifr) const;
-	VectorXcd RAO_dof(bool ndim, const RAO &f, int _h, int idf) const;
-	VectorXcd RAO_dof(bool ndim, int _h, int idf) const;
+	VectorXcd RAO_(bool ndim, const RAO &f, int _h, int ifr, int ib) const;
+	VectorXcd RAO_dof(bool ndim, const RAO &f, int _h, int idf, int ib) const;
+	VectorXcd RAO_dof(bool ndim, int _h, int idf, int ib) const;
 	
 	// FOAMM
 	
@@ -651,6 +649,7 @@ public:
 	    UArray<UArray<VectorXd>> B; 	// [6*Nb][6*Nb][Nf]	Radiation damping
 	    UArray<UArray<VectorXd>> B_H; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through Haskind
 	    UArray<UArray<VectorXd>> B_P; 	// [6*Nb][6*Nb][Nf]	Radiation damping obtained through potentials
+	    
 	    UVector<double> head;			// [Nh]             Wave headings (deg)
 
 	    double x_w = Null, y_w = Null;	// 					Wave centre
@@ -691,9 +690,7 @@ public:
 	    UVector<double> w;		 				// [Nf]             Wave frequencies
 	    int dataFromW = Null;
 	    		
-	   	UArray<Mesh> msh;						// [Nb]
-	   	
-	   	bool symX = false, symY = false;
+	   	UArray<Body> msh;						// [Nb]
 	   	
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_rad;	// [Nb][Np][6][Nf]		Radiation complex potentials
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_diff;	// [Nb][Np][Nh][Nf]		Diffraction complex potentials
@@ -701,6 +698,8 @@ public:
 	   	
 	   	Tensor<double, 5> Apan;		// [Nb][Np][6][6][Nf]	Added mass
 	   	Tensor<double, 5> Bpan;		// [Nb][Np][6][6][Nf]	Radiation damping
+	   	
+	   	bool symX = false, symY = false;
 		
 		void SetId(int _id)			{id = _id;}
 		int GetId()	const			{return id;}
@@ -746,11 +745,11 @@ public:
 	
 	
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, 
-					 DATA_STS, DATA_STS2, DATA_MD, DATA_B_H, DATA_A_P, DATA_B_P};
+					 DATA_STS, DATA_STS2, DATA_MD, DATA_B_H, DATA_A_P, DATA_B_P, DATA_FORCE_FK_P};
 	enum DataToPlot {PLOT_A, PLOT_AINF, PLOT_A0, PLOT_B, PLOT_AINFW, PLOT_KIRF, PLOT_FORCE_SC_1, PLOT_FORCE_SC_2,
 				 PLOT_FORCE_FK_1, PLOT_FORCE_FK_2, PLOT_FORCE_EX_1, PLOT_FORCE_EX_2, 
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
-				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H, PLOT_A_P, PLOT_B_P};
+				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H, PLOT_A_P, PLOT_B_P, PLOT_FORCE_FK_1_P, PLOT_FORCE_FK_2_P};
 	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_K2, MAT_DAMP_QUAD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
@@ -771,23 +770,23 @@ public:
 	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.M.size() > 0 && dt.msh[ib].dt.M.rows() > idf && dt.msh[ib].dt.M.cols() > jdf && IsNum(dt.msh[ib].dt.M(idf, jdf));}
 	
-	bool IsLoadedFex(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.ex, idf, ih);}
-	bool IsLoadedFsc(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.sc, idf, ih);}
-	bool IsLoadedFfk(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.fk, idf, ih);}
+	bool IsLoadedFex(int idf = 0, int ih = 0, int ib = 0)const {return IsLoadedForce(dt.ex, idf, ih, ib);}
+	bool IsLoadedFsc(int idf = 0, int ih = 0, int ib = 0)const {return IsLoadedForce(dt.sc, idf, ih, ib);}
+	bool IsLoadedFfk(int idf = 0, int ih = 0, int ib = 0)const {return IsLoadedForce(dt.fk, idf, ih, ib);}
+	bool IsLoadedFfk_P(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.fk_pot, idf, ih);}
 	bool IsLoadedRAO(int idf = 0, int ih = 0)const {return IsLoadedForce(dt.rao,idf, ih);}
-	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0)
-											 const {return f.force.size() > ih && f.force[ih].cols() > idf && IsNum(f.force[ih](0, idf));}
+	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0)
+											 const {return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && IsNum(f[ib][ih](0, idf));}
 	
 	bool IsLoadedStateSpace()	  			 const {return !dt.sts.IsEmpty();}
 	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !dt.qtfsum.IsEmpty() : !dt.qtfdif.IsEmpty();}
 	bool IsLoadedMD(int ib = 0, int ih = 0)	 const {return dt.md.size() > ib && dt.md[ib].size() > ih && dt.md[ib][ih].size() == 6 && dt.md[ib][ih][0].size() > 0 && IsNum(dt.md[ib][ih][0](0));}
 	static bool IsLoadedMD(const UArray<UArray<UArray<VectorXd>>> &mD, int ib = 0, int ih = 0) {return mD.size() > ib && mD[ib].size() > ih && mD[ib][ih].size() == 6 && mD[ib][ih][0].size() > 0 && IsNum(mD[ib][ih][0](0));}
 	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return dt.Kirf.size() > idf && dt.Kirf[idf].size() > jdf && dt.Kirf[idf][jdf].size() > 0 && IsNum(dt.Kirf[idf][jdf][0]);}
-	//bool IsLoadedVo()	 	 				 const {return Vo.size() == 3 && IsNum(Vo[0]); }
 	
-	bool IsLoadedPotsRad()						 const {return !dt.pots_rad.IsEmpty()  && !dt.pots_rad[0].IsEmpty()  && !dt.pots_rad[0][0].IsEmpty();}
-	bool IsLoadedPotsDiff()						 const {return !dt.pots_diff.IsEmpty() && !dt.pots_diff[0].IsEmpty() && !dt.pots_diff[0][0].IsEmpty();}
-	bool IsLoadedPotsInc()						 const {return !dt.pots_inc.IsEmpty()  && !dt.pots_inc[0].IsEmpty()  && !dt.pots_inc[0][0].IsEmpty();}
+	bool IsLoadedPotsRad()					 const {return !dt.pots_rad.IsEmpty()  && !dt.pots_rad[0].IsEmpty()  && !dt.pots_rad[0][0].IsEmpty();}
+	bool IsLoadedPotsDiff()					 const {return !dt.pots_diff.IsEmpty() && !dt.pots_diff[0].IsEmpty() && !dt.pots_diff[0][0].IsEmpty();}
+	bool IsLoadedPotsInc()					 const {return !dt.pots_inc.IsEmpty()  && !dt.pots_inc[0].IsEmpty()  && !dt.pots_inc[0][0].IsEmpty();}
 	
 	void RemoveThresDOF_A(double thres);
 	void RemoveThresDOF_B(double thres);
@@ -851,8 +850,6 @@ public:
 	String S_h()	const {return !IsNum(dt.h)   ? S("-") : (dt.h < 0 ? S(t_("INFINITY")) : Format("%.1f", dt.h));}
 	String S_rho() 	const {return !IsNum(dt.rho) ? S("-") : Format("%.3f", dt.rho);}
 	String S_len() 	const {return !IsNum(dt.len) ? S("-") : Format("%.1f", dt.len);}
-
-	//String GetLastError()	{return lastError;}
 	
 	static String K_units(bool ndim, int r, int c) {
 		if (ndim) {
@@ -970,158 +967,85 @@ public:
 	} 
 };
 
-bool IsNum(const Hydro::Forces &f);
-/*			
-class HydroData {
+//bool IsNum(const Hydro::Forces &f);
+
+class NemohBody : public Body {
 public:
-	HydroData() : data(0) {}
-	HydroData(const BEM &bem, Hydro *_data = 0) {
-		if (!_data) {
-			manages = true;
-			data = new Hydro(bem);
-		} else {
-			manages = false;
-			data = _data;
-		}
-	}
-	Hydro &operator()()				{return *data;}
-	const Hydro &operator()() const	{return *data;}
-	virtual ~HydroData() noexcept {
-		if (manages)
-			delete data;
-	}
-	
-private:
-	Hydro *data;	
-	bool manages;
-};*/
-
-/*
-class HydroClass : DeepCopyOption<HydroClass> {
-public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	
-	HydroClass()							{}
-	HydroClass(const BEM &bem) : hdd(bem)	{}
-	HydroClass(const HydroClass &hyd, int) : hdd(hyd.hdd.GetBEM()) 	{Copy(hyd);}
-	virtual ~HydroClass() noexcept			{}
-	
-	void Copy(const HydroClass &hyd) 		{hdd.Copy(hyd.hdd);}
-	
-	String LoadSerialization(String file);
-	void SaveSerialization(String file);
-	
-	//static void LoadHydro(HydroClass &hydro, String file, Function <bool(String, int)> Status);
-	static void LoadHydro(UArray<HydroClass> &hydro, String file, BEM &bem, Function <bool(String, int)> Status);
-	
-	void LoadCase(String file, Function <bool(String, int)> Status);
-	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
-	
-	void SaveCSVMat(String file);
-	void SaveCSVTable(String file);
-	
-	void SaveDiodoreHDB(String file);
-	
-	//HydroData hd;
-	Hydro hdd;	
-	Hydro &hd()				{return hdd;}
-	const Hydro &hd() const {return hdd;}
-	
-	UVector<String> Check(int solver) const;
-
-	//String folder;
-	
-private:
-	void SaveForce(FileOut &out, Hydro::Forces &f);
-	void SaveMD(FileOut &out);
-	void SaveC(FileOut &out);
-	void SaveM(FileOut &out);
-	
-	//void SetFolder(String f)	{folder = f;}		// Nemoh
-
-//protected:
-	//double factorMass = 1, factorLength = 1;		// AQWA
-};
-*/
-
-class NemohMesh : public Mesh {
-public:
-	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z);
-	static String LoadDatFS(UArray<Mesh> &mesh, String fileName, bool &x0z);
-	static void SaveDat(const UArray<Mesh> &mesh, String fileName, const Surface &surf, bool x0z, int &npanels);
-	static void SavePreMesh(String fileName, const Surface &surf);
+	static String LoadDat(UArray<Body> &mesh, String fileName, bool &x0z);
+	static String LoadDatFS(UArray<Body> &mesh, String fileName, bool &x0z);
+	static void SaveDat(const UArray<Body> &mesh, String fileName, const Surface &surf, bool x0z, int &npanels);
+	static void SavePreBody(String fileName, const Surface &surf);
 	void SaveKH(String fileName) const; 
-	//void SaveInertia(String fileName) const;
 		
-	virtual ~NemohMesh() noexcept {}
+	virtual ~NemohBody() noexcept {}
 
 private:
 	String LoadDat0(String fileName, bool &x0z);
 	static void SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels);
 };
 
-class SalomeMesh : public Mesh {
+class SalomeBody : public Body {
 public:
-	static String LoadDat(UArray<Mesh> &mesh, String fileName);
+	static String LoadDat(UArray<Body> &mesh, String fileName);
 		
-	virtual ~SalomeMesh() noexcept {}
+	virtual ~SalomeBody() noexcept {}
 
 private:
 	String LoadDat0(String fileName);
 };
 
-class HydrostarMesh : public Mesh {
+class HydrostarBody : public Body {
 public:
-	static String LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
+	static String LoadHst(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z);
 		
-	virtual ~HydrostarMesh() noexcept {}
+	virtual ~HydrostarBody() noexcept {}
 
 private:
-	static String LoadHst0(String fileName, Mesh &mesh, Mesh &damping, bool &y0z, bool &x0z);
+	static String LoadHst0(String fileName, Body &mesh, Body &damping, bool &y0z, bool &x0z);
 };
 
-class HAMSMesh : public Mesh {
+class HAMSBody : public Body {
 public:
-	static String LoadPnl(UArray<Mesh> &mesh, String filefCaseName, bool &y0z, bool &x0z);
+	static String LoadPnl(UArray<Body> &mesh, String filefCaseName, bool &y0z, bool &x0z);
 	static void SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z);
 	
-	virtual ~HAMSMesh() noexcept {}
+	virtual ~HAMSBody() noexcept {}
 };
 
-class WamitMesh : public Mesh {
+class WamitBody : public Body {
 public:
-	static String LoadDat(UArray<Mesh> &mesh, String fileName);
-	static String LoadGdf(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
+	static String LoadDat(UArray<Body> &mesh, String fileName);
+	static String LoadGdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z);
 	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
 	void SaveHST(String fileName, double rho, double g) const; 
 
-	virtual ~WamitMesh() noexcept {}
+	virtual ~WamitBody() noexcept {}
 };
 
-class AQWAMesh : public Mesh {
+class AQWABody : public Body {
 public:
-	static String LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z);
-	static String Load_LIS(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z);
-	static void SaveDat(String fileName, const UArray<Mesh> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
-	static void SaveDat(Stream &ret, const UArray<Mesh> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
+	static String LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z);
+	static String Load_LIS(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
+	static void SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
+	static void SaveDat(Stream &ret, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z);
 	
-	virtual ~AQWAMesh() noexcept {}
+	virtual ~AQWABody() noexcept {}
 };
 
-class ORCAMesh : public Mesh {
+class ORCABody : public Body {
 public:
 #ifdef PLATFORM_WIN32
-	static String Load_OWR(UArray<Mesh> &mesh, String fileName, double g, bool &y0z, bool &x0z);
+	static String Load_OWR(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
 #endif
-	virtual ~ORCAMesh() noexcept {}
+	virtual ~ORCABody() noexcept {}
 };
 
-class DiodoreMesh : public Mesh {
+class DiodoreBody : public Body {
 public:
-	static String LoadDat(UArray<Mesh> &mesh, String fileName);
+	static String LoadDat(UArray<Body> &mesh, String fileName);
 	static void SaveDat(String fileName, const Surface &surf);
 	
-	virtual ~DiodoreMesh() noexcept {}
+	virtual ~DiodoreBody() noexcept {}
 };
 
 class Wamit : public Hydro {
@@ -1132,9 +1056,9 @@ public:
 	void Save_out(String file);
 	virtual ~Wamit() noexcept {}
 	
-	bool LoadGdfMesh(String file);
-	bool LoadDatMesh(String file);
-	void SaveGdfMesh(String fileName);
+	bool LoadGdfBody(String file);
+	bool LoadDatBody(String file);
+	void SaveGdfBody(String fileName);
 	
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
@@ -1146,7 +1070,6 @@ protected:
 	bool ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int iperout);
 	
 	bool Load_cfg(String fileName, int &iperin, int &iperout);
-	//int iperin = Null, iperout = Null;
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
@@ -1189,7 +1112,7 @@ public:
 	virtual ~Hams() noexcept {}
 	
 	bool Load_Settings(String settingsFile);
-	bool Load_HydrostaticMesh(String fileName, double rhog);
+	bool Load_HydrostaticBody(String fileName, double rhog);
 	
 	bool Load_In(String fileName);
 	void SaveFolder(String folder, bool bin, int numCases, int numThreads, int solver) const;
@@ -1241,114 +1164,6 @@ protected:
 	void Load_mat(String fileName, int ib, int jb, bool loadCoeff);
 };
 
-/*
-class BEMCase {
-public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	
-	BEMCase() {bodies.SetCount(1);}
-	BEMCase(const BEMCase &bcase) : h(bcase.h), bodies(clone(bcase.bodies)), 
-		Nf(bcase.Nf), minF(bcase.minF), maxF(bcase.maxF), Nh(bcase.Nh),
-		minH(bcase.minH), maxH(bcase.maxH), rho(bcase.rho), g(bcase.g),
-		x_w(bcase.x_w), y_w(bcase.y_w), irf(bcase.irf), 
-		irfStep(bcase.irfStep), irfDuration(bcase.irfDuration),
-		Dlin(bcase.Dlin), Dquad(bcase.Dquad),
-		solver(bcase.solver) {} 
-		
-	void Load(String file, const BEM &bem);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
-	UVector<String> Check(int solver) const;
-	
-	void BeforeSave(String folderBase, int numCases, bool deleteFolder) const;
-	
-	bool IsNemoh() {return solver <= CAPYTAINE;}
-	
-	double h = Null;
-	
-	UArray<Mesh> bodies;
-
-	int Nf = Null;
-	double minF = Null, maxF = Null;
-	int Nh = Null;
-	double minH = Null, maxH = Null;
-	
-	double rho = Null, g = Null;
-	double x_w = 0, y_w = 0;
-	
-	bool irf = false;
-	double irfStep = 0.1, irfDuration = 100;
-	
-	MatrixXd Dlin;					// (6*Nb, 6*Nb) 	Additional linear damping	ALWAYS DIMENSIONAL
-	MatrixXd Dquad;					// (6*Nb, 6*Nb) 	Additional quadratic damping	ALWAYS DIMENSIONAL	
-	
-	enum Solver {NEMOH, NEMOHv115, NEMOHv3, CAPYTAINE, HAMS, AQWA, NUMSOLVERS} solver;
-	static const char *solverStr[];
-	static const bool solverCanSave[];
-	
-	virtual ~BEMCase() noexcept {}
-};
-*/
-/*
-class AQWACase : public BEMCase {
-public:
-	//bool Load(String fileName);
-	//UVector<String> Check() const;	
-	
-	virtual ~AQWACase() noexcept {}
-};
-*/
-
-/*
-class HamsCase : public BEMCase {
-public:
-	bool Load(String fileName);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int solver) const;
-	UVector<String> Check() const;
-	
-	bool LoadHydrostatic(String fileName);
-	
-	virtual ~HamsCase() noexcept {}
-	
-private:
-	void SaveFolder0(String folderBase, bool bin, int numCases, const BEM &bem, bool deleteFolder, int numThreads) const;
-	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
-	static void InMatrix(LineParser &f, MatrixXd &mat);
-		
-	void Save_Hydrostatic(String folderInput) const;
-	void Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
-							int numThreads) const;
-	void Save_Settings(String folderInput, bool thereIsLid, const BEM &bem) const;
-	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName,
-	String meshName) const;
-};
-*/
-/*
-class NemohCase : public BEMCase {
-public:	
-
-	bool Load(String fileName);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, const BEM &bem, int
-	solver) const;
-	//UVector<String> Check() const;
-	
-	//void Save_Cal(String folder, int _nf, double _minf, double _maxf, const UVector<int> &nodes, const UVector<int> &panels, int solver) const;
-	
-	virtual ~NemohCase() noexcept {}
-
-private:
-	static int GetNumArgs(const LineParser &f);
-
-	void Save_Id(String folder) const;
-	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName, const BEM &bem) const;
-	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, const Point3D &cg, double rho, double g) const;
-	void Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
-	void Save_Input(String folder, int solver) const;
-	
-	void SaveFolder0(String folder, bool bin, int numCases, const BEM &bem, 
-					bool deleteFolder, int solver) const;
-};*/
-
 class Nemoh : public Hydro {
 public:
 	Nemoh() {}
@@ -1356,10 +1171,9 @@ public:
 	void Save(String file);
 	virtual ~Nemoh() noexcept {}
 	
-	bool LoadDatMesh(String file);
-	void SaveDatMesh(String file); 
+	bool LoadDatBody(String file);
+	void SaveDatBody(String file); 
 	
-	//bool Load(String fileName);
 	void SaveFolder(String folder, bool bin, int numCases, int numThreads, int solver) const;
 	
 	void Save_Cal(String folder, int _nf, double _minf, double _maxf, const UVector<int> &nodes, const UVector<int> &panels, int solver) const;
@@ -1368,9 +1182,9 @@ public:
 	bool Save_Inertia(String folder) const;
 	
 	bool Load_Hydrostatics(String folder, String subfolder);
-	static bool Load_Hydrostatics_static(String folder, int Nb, UArray<Mesh> &msh);
+	static bool Load_Hydrostatics_static(String folder, int Nb, UArray<Body> &msh);
 	void Save_Hydrostatics(String subfolder) const;
-	static void Save_Hydrostatics_static(String folder, int Nb, const UArray<Mesh> &msh);
+	static void Save_Hydrostatics_static(String folder, int Nb, const UArray<Body> &msh);
 
 	static bool Load_6x6(Eigen::MatrixXd &C, String file);
 	static bool Save_6x6(const Eigen::MatrixXd &C, String file);
@@ -1397,8 +1211,8 @@ private:
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
 		String preName, String hydroName, String solvName, String postName) const;
-	void Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, const Point3D &cg, double rho, double g) const;
-	void Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
+	void Save_Body_cal(String folder, int ib, String meshFile, Body &mesh, int npanels, bool x0z, const Point3D &cg, double rho, double g) const;
+	void Save_Body_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder, int solver) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases,  
@@ -1559,7 +1373,7 @@ public:
 	Hydro &Average(UVector<int> &ids);
 		
 	UArray<Hydro> hydros;
-	UArray<Mesh> surfs;
+	UArray<Body> surfs;
 	
 	int GetHydroId(int id) {
 		for (int i = 0; i < hydros.size(); ++i) {
@@ -1568,7 +1382,7 @@ public:
 		}
 		return -1;
 	}
-	int GetMeshId(int id) {	
+	int GetBodyId(int id) {	
 		for (int i = 0; i < surfs.size(); ++i) {
 			if (surfs[i].dt.GetId() == id)
 				return i;
@@ -1580,7 +1394,6 @@ public:
 	
 	UVector<double> headAll;	// Common models data
 	UArray<std::complex<double>> headAllMD;
-	//UVector<int> orderHeadAll;
 	
 	int Nb = 0;				
 	
@@ -1602,7 +1415,7 @@ public:
 	String nemohPath, nemoh115Path, nemoh3Path, nemohPathGREN;
 	bool experimental;
 	String foammPath;
-	String hamsPath, hamsMeshPath;
+	String hamsPath, hamsBodyPath;
 	int volWarning, volError;
 	double roundVal, roundEps;
 	String csvSeparator;
@@ -1636,15 +1449,15 @@ public:
 	void FillFrequencyGapsABForcesZero(int id);
 	void FillFrequencyGapsQTFZero(int id);
 	
-	int LoadMesh(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
-	void SaveMesh(String fileName, const UVector<int> &ids, Mesh::MESH_FMT type, Mesh::MESH_TYPE meshType, bool symX, bool symY);
-	void HealingMesh(int id, bool basic, Function <bool(String, int pos)> Status);
+	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
+	void SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type, Body::MESH_TYPE meshType, bool symX, bool symY);
+	void HealingBody(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
-	void ImageMesh(int id, int axis);
-	void UnderwaterMesh(int id, Function <bool(String, int pos)> Status);
-	void RemoveMesh(int id);
-	void JoinMesh(int idDest, int idOrig);
-	UVector<int> SplitMesh(int id, Function <bool(String, int pos)> Status);
+	void ImageBody(int id, int axis);
+	void UnderwaterBody(int id, Function <bool(String, int pos)> Status);
+	void RemoveBody(int id);
+	void JoinBody(int idDest, int idOrig);
+	UVector<int> SplitBody(int id, Function <bool(String, int pos)> Status);
 	
 	void CopyQTF_MD(int id);
 		
@@ -1693,8 +1506,6 @@ public:
 			("rho", rho)
 			("g", g)
 			("length", len)
-			//("discardNegDOF", discardNegDOF)
-			//("thres", thres)
 			("calcAwinf", calcAinf)
 			("calcAwinfw", calcAinf_w)
 			("maxTimeA", maxTimeA)
@@ -1708,7 +1519,7 @@ public:
 			("nemoh3Path", nemoh3Path)
 			("foammPath", foammPath)
 			("hamsPath", hamsPath)
-			("hamsMeshPath", hamsMeshPath)
+			("hamsBodyPath", hamsBodyPath)
 			("volWarning", volWarning)
 			("volError", volError)
 			("roundVal", roundVal)
@@ -1928,7 +1739,6 @@ void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &
 double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
 MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
 UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
-
 
 
 class Wind {

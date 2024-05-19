@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
+String NemohBody::LoadDatFS(UArray<Body> &_mesh, String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
@@ -23,9 +23,9 @@ String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 		if (f.GetInt(0) == 1)
 			x0z = true;
 		
-		Mesh &msh = _mesh.Add();
+		Body &msh = _mesh.Add();
 		msh.dt.fileName = fileName;
-		msh.dt.SetCode(Mesh::NEMOHFS_DAT);
+		msh.dt.SetCode(Body::NEMOHFS_DAT);
 
 		bool isfirst = true;		
 		while(true) {
@@ -81,9 +81,9 @@ String NemohMesh::LoadDatFS(UArray<Mesh> &_mesh, String fileName, bool &x0z) {
 	return String();
 }	
 		
-String NemohMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z) {
-	Mesh &msh = mesh.Add();
-	String ret = static_cast<NemohMesh&>(msh).LoadDat0(fileName, x0z);
+String NemohBody::LoadDat(UArray<Body> &mesh, String fileName, bool &x0z) {
+	Body &msh = mesh.Add();
+	String ret = static_cast<NemohBody&>(msh).LoadDat0(fileName, x0z);
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
@@ -96,13 +96,13 @@ String NemohMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &x0z) {
 	return ret;
 }
 	
-String NemohMesh::LoadDat0(String fileName, bool &x0z) {
+String NemohBody::LoadDat0(String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
 	dt.fileName = fileName;
-	dt.SetCode(Mesh::NEMOH_DAT);
+	dt.SetCode(Body::NEMOH_DAT);
 	
 	try {
 		String line;
@@ -153,7 +153,7 @@ String NemohMesh::LoadDat0(String fileName, bool &x0z) {
 	return String();
 }
 
-void NemohMesh::SaveDat(const UArray<Mesh> &msh, String fileName, const Surface &surf, bool x0z, int &npanels) {
+void NemohBody::SaveDat(const UArray<Body> &msh, String fileName, const Surface &surf, bool x0z, int &npanels) {
 	SaveDat0(fileName, surf, x0z, npanels);
 	
 	//MatrixXd cg_(3, 1), cb_(3, 1);
@@ -170,7 +170,7 @@ void NemohMesh::SaveDat(const UArray<Mesh> &msh, String fileName, const Surface 
 	//}
 }
 
-void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) {
+void NemohBody::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
@@ -195,7 +195,7 @@ void NemohMesh::SaveDat0(String fileName, const Surface &surf, bool x0z, int &np
 	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
 
-void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
+void NemohBody::SavePreBody(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
@@ -217,11 +217,7 @@ void NemohMesh::SavePreMesh(String fileName, const Surface &surf) {
 	}
 }
 
-void NemohMesh::SaveKH(String fileName) const {
+void NemohBody::SaveKH(String fileName) const {
 	Nemoh::Save_6x6(dt.C, fileName);
 }
-/*
-void NemohMesh::SaveInertia(String fileName) const {
-	Nemoh::Save_Inertia_static(M, fileName);
-}*/
 

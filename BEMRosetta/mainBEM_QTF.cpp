@@ -126,11 +126,11 @@ void QTFTabDof::DoClick(Data &data/*, int idof*/) {
 		Pointf from, to;
 		double a, b;
 		
-		if (typec == 'h') {
+		if (typec == 'h')
 			avgT += Pf().y;
-		} else if (typec == 'v') {
+		else if (typec == 'v')
 			avgT += Pf().x;
-		} else if (typec == 'd') 
+		else if (typec == 'd') 
 			Diagonal (Pf(), First(xAxis), Last(xAxis), from, to, a, b);
 		else
 			Conjugate(Pf(), First(xAxis), Last(xAxis), from, to, a, b);

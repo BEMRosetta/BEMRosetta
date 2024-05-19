@@ -91,22 +91,10 @@ bool MainABForce::Load(const UVector<int> &ids, int ih) {
 				plots[0].SetCount(sdof);
 				UVector<int> loaded;
 				for (int idf = 0; idf < sdof; ++idf) {
-					plots[0][idf].Init(idf, Bem().headAll[ih/*bem.orderHeadAll[ih]*/], dataToShow);
+					plots[0][idf].Init(idf, Bem().headAll[ih], dataToShow);
 					if (plots[0][idf].Load(hydros, mbm, ids)) 
 						loaded << idf;
-				}/*
-				for (int i = 0; i < hydros.size(); ++i) {
-					if (dataToShow == Hydro::DATA_FORCE_EX) {
-						if (hydros[i].hd().IsLoadedFex())
-							nloaded++;	
-					} else if (dataToShow == Hydro::DATA_FORCE_SC) {
-						if (hydros[i].hd().IsLoadedFsc())
-							nloaded++;	
-					} else if (dataToShow == Hydro::DATA_FORCE_FK) {
-						if (hydros[i].hd().IsLoadedFfk())
-							nloaded++;	
-					}
-				}*/
+				}
 				if (!loaded.IsEmpty())
 					UpdateHead(loaded);
 				
@@ -146,7 +134,6 @@ void MainABForce::UpdateHeadMD() {
 	{
 		TempAssign<bool> _isFilling(isFilling, true);
 		tab.Reset();
-		//const std::complex<double> &h = bem.headAllMD[ih];
 		for (int idf = 0; idf < 6*Bem().Nb; ++idf) 
 			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false)));///*, h.real(), h.imag())*/);
 	}

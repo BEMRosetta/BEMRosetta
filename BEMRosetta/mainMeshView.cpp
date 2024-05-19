@@ -46,7 +46,7 @@ void MainViewData::ReLoad(MainView &mainView) {
 	}
 }
 
-void MainViewDataEach::DataSourceFacets::Init(Mesh &_mesh, int _col, bool _all) {
+void MainViewDataEach::DataSourceFacets::Init(Body &_mesh, int _col, bool _all) {
 	pmesh = &_mesh;	
 	col = _col; 
 	all = _all;
@@ -76,7 +76,7 @@ Value MainViewDataEach::DataSourceFacets::Format(const Value& q) const {
 	}
 }
 
-void MainViewDataEach::DataSourceNodes::Init(Mesh &_mesh, int _xyz, int _origMovedUnder) {
+void MainViewDataEach::DataSourceNodes::Init(Body &_mesh, int _xyz, int _origMovedUnder) {
 	pmesh = &_mesh;	
 	xyz = _xyz;
 	origMovedUnder = _origMovedUnder;
@@ -102,15 +102,15 @@ Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 }
 
 void MainViewDataEach::UpdateStatus(bool under) {
-	MainMesh &mainMesh = GetDefinedParent<MainMesh>(this);
+	MainBody &mainBody = GetDefinedParent<MainBody>(this);
 	
 	bool show;
 	if (!under) {
-		show = mainMesh.GetShowMesh();
+		show = mainBody.GetShowBody();
 		selectedPanels = ArrayCtrlSelectedGet(arrayFacetsAll2.array);
 		selectedNodes = ArrayCtrlSelectedGet(arrayNodesMoved.array);
 	} else {
-		show = mainMesh.GetShowUnderwater();
+		show = mainBody.GetShowUnderwater();
 		selectedPanels = ArrayCtrlSelectedGet(arrayFacetsUnder.array);
 		selectedNodes = ArrayCtrlSelectedGet(arrayNodesUnder.array);
 	}
@@ -129,7 +129,7 @@ void MainViewDataEach::UpdateStatus(bool under) {
 		status.Set("");
 }
 
-void MainViewDataEach::Init(Mesh &msh, MainView &mainView) {
+void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 	CtrlLayout(arrayFacetsAll2);
 	CtrlLayout(arrayFacetsUnder);
 	CtrlLayout(arrayNodesMoved);
@@ -222,7 +222,7 @@ void MainViewDataEach::Init(Mesh &msh, MainView &mainView) {
 }
 
 void MainViewDataEach::OnRefresh() {
-	const Mesh &msh = dataSourceFacetsAll[0].GetMesh();
+	const Body &msh = dataSourceFacetsAll[0].GetBody();
 	int num;
 	
 	num = msh.dt.mesh.panels.size();
@@ -264,7 +264,7 @@ void MainViewDataEach::OnTimer() {
 	}
 }
 
-void VideoCtrl::Init(Function <int(UVector<int> &ids)> _GetMeshId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action) {
+void VideoCtrl::Init(Function <int(UVector<int> &ids)> _GetBodyId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action) {
 	CtrlLayout(*this);
 	
 	butPlay <<= THISBACK(OnPlay);
@@ -288,12 +288,12 @@ void VideoCtrl::Init(Function <int(UVector<int> &ids)> _GetMeshId, Function <voi
 	
 	progress.SetTotal(1000);
 	
-	GetMeshId = _GetMeshId;
+	GetBodyId = _GetBodyId;
 	Action = _Action;
 }
 
 void VideoCtrl::OnPlay() {
-	if ((meshId = GetMeshId(ids)) < 0) 
+	if ((meshId = GetBodyId(ids)) < 0) 
 		return;
 	
 	playing = !playing;

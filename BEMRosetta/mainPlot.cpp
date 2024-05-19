@@ -108,6 +108,13 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 						labelY2 = t_("Froude-Krylov force") + S(" ") + smp_down;
 						splitter.SetPos(5000, 0);			
 						break;
+	case Hydro::DATA_FORCE_FK_P:	title = Format(t_("Froude-Krylov force Potentials %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
+						title2 = title + " " + smp_down;
+						title  = title + " " + smp_up;
+						labelY  = t_("Froude-Krylov force Pot.") + S(" ") + smp_up;		
+						labelY2 = t_("Froude-Krylov force Pot.") + S(" ") + smp_down;
+						splitter.SetPos(5000, 0);			
+						break;
 	case Hydro::DATA_FORCE_EX:	title = Format(t_("Excitation Force %s heading %.1fº"), BEM::StrBDOF(plot_idf, false), heading0);
 						title2 = title + " " + smp_down;
 						title  = title + " " + smp_up;
@@ -150,6 +157,8 @@ bool MainPlot::Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVecto
 	scatP.RemoveAllSeries();
 	ABFZ_source.SetCount(ids.size());
 	ABFZ_source2.SetCount(ids.size());
+	ABFZ_source_p.SetCount(ids.size());
+	ABFZ_source2_p.SetCount(ids.size());
 	Ainf_source.SetCount(ids.size());
 	A0_source.SetCount(ids.size());
 	B_H_source.SetCount(ids.size());
@@ -171,6 +180,8 @@ bool MainPlot::Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVecto
 	
 	opBhask = mbm.menuPlot.opBhask;
 	opBpot = mbm.menuPlot.opBpot;
+	
+	opFfkpot = mbm.menuPlot.opFfkpot;
 	
 	if (show_w && dataToShow != Hydro::DATA_KIRF) {
 		scatt.SetLabelX(t_("ω [rad/s]"));
@@ -212,6 +223,8 @@ bool MainPlot::Load(const Hydro &hy, const MainBEM &mainBem) {
 	scatP.RemoveAllSeries();
 	ABFZ_source.SetCount(1);
 	ABFZ_source2.SetCount(1);
+	ABFZ_source_p.SetCount(1);
+	ABFZ_source2_p.SetCount(1);
 	Ainf_source.SetCount(1);
 	A0_source.SetCount(1);
 	B_H_source.SetCount(1);
@@ -314,7 +327,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (A0_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_A0, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(A0_source[id]).Legend(Format(t_("A₀%s %s"), sids, nameType)).
-						SetMarkWidth(!show_w ? 0 : 8).SetMarkColor(color).MarkStyle<SquareMarkPlot>().
+						SetMarkWidth(!show_w ? 0 : 8).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_DOTTED);
 				if (dim)
 					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
@@ -333,7 +346,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINFW, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("A∞%s(ω)%s"), sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim)
 					scatt.Units(Hydro::A_units(!dim, plot_idf, plot_jdf));
@@ -343,7 +356,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (Ainf_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_AINF, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(Ainf_source[id]).Legend(Format(t_("A∞%s %s"), sids, nameType)).
-						MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_DOTTED);
 				scatt.Stroke(show_w ? 2 : 0, color).SetMarkWidth(show_w ? 0 : 8);
 				if (dim)
@@ -383,7 +396,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD%s %s %d"), sids, nameType, hy.dt.mdtype)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(Hydro::MD_units(!dim, plot_idf));
@@ -392,7 +405,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_KIRF, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("K%s %s"), sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(Hydro::Kirf_units(!dim, plot_idf, plot_jdf));
@@ -401,14 +414,14 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fsc%s%s %s"), st, sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(Hydro::F_units(!dim, plot_idf));
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fsc%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
@@ -418,31 +431,49 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Ffk%s%s %s"), st, sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(Hydro::F_units(!dim, plot_idf));
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Ffk%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
+			}
+		}
+		if (opFfkpot && hy.IsLoadedFfk_P(plot_idf, ih)) {
+			if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1_P, show_w, !dim, show_ma_ph)) {
+				loaded = true;
+				scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), st, sids, nameType)).
+							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_DOTTED);
+				if (dim)
+					scatt.Units(Hydro::F_units(!dim, plot_idf));
+				if (ABFZ_source2_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_2_P, show_w, !dim, show_ma_ph)) {
+					loaded = true;
+					scatP.AddSeries(ABFZ_source2_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
+							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_DOTTED);
+					if (dim && !show_ma_ph)
+						scatP.Units(Hydro::F_units(!dim, plot_idf));
+				}
 			}
 		}
 	} else if (dataToShow == Hydro::DATA_FORCE_EX && ih >= 0 && hy.IsLoadedFex(plot_idf, ih)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_EX_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fex%s%s %s"), st, sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(Hydro::F_units(!dim, plot_idf));
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_EX_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Fex%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
@@ -452,12 +483,12 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_RAO_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("RAO%s%s %s"), st, sids, nameType)).Units(Hydro::RAO_units(plot_idf)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (ABFZ_source2[id].Init(hy, plot_idf, ih, Hydro::PLOT_RAO_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("RAO%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (!show_ma_ph)
 					scatP.Units(Hydro::RAO_units(plot_idf));		
@@ -467,14 +498,14 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_Z_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Z%s%s_%s"), st, sids, nameType)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 			if (dim)
 				scatt.Units(t_("Ns/m"));
 			if (ABFZ_source2[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_Z_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Z%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
 					scatt.Units(t_("Ns/m"));
@@ -484,12 +515,12 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_Z_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Kr_%s %s"), st, hy.dt.name)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color);//.Units("dB");
 			if (ABFZ_source2[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_Z_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(ABFZ_source2[id]).Legend(Format(t_("Kr_%s %s"), sp, hy.dt.name)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(color).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
 						Stroke(2, color).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
 					scatt.Units(t_("Ns/m"));
@@ -500,12 +531,12 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			loaded = true;
 			const Upp::Color &bcolor = LtRed();
 			scatt.AddSeries(TFS_source[id]).Legend(Format(t_("TFS_%s %s"), st, hy.dt.name)).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(bcolor).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(bcolor).
 						Stroke(4, bcolor).Dash(LINE_DASH_DOT);//.Units("dB");
 			if (TFS_source2[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_TFS_2, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatP.AddSeries(TFS_source2[id]).Legend(Format(t_("TFS_%s %s"), sp, hy.dt.name)).Units(t_("rad")).
-						SetMarkWidth(markW).SetMarkStyleType().SetMarkColor(bcolor).
+						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(bcolor).
 						Stroke(2, bcolor).Dash(LINE_SOLID);
 				if (dim && !show_ma_ph)
 					scatt.Units(t_("Ns/m"));
@@ -518,6 +549,8 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 void MainPlot::Clear() {
 	ABFZ_source.Clear();
 	ABFZ_source2.Clear();
+	ABFZ_source_p.Clear();
+	ABFZ_source2_p.Clear();
 	Ainf_source.Clear();
 	A0_source.Clear();
 	B_H_source.Clear();

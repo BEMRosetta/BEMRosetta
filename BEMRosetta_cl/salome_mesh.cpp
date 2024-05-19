@@ -4,9 +4,9 @@
 #include "BEMRosetta_int.h"
 
 
-String SalomeMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
-	Mesh &msh = mesh.Add();
-	String ret = static_cast<SalomeMesh&>(msh).LoadDat0(fileName);
+String SalomeBody::LoadDat(UArray<Body> &mesh, String fileName) {
+	Body &msh = mesh.Add();
+	String ret = static_cast<SalomeBody&>(msh).LoadDat0(fileName);
 	
 	if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 		mesh.Clear();
@@ -15,13 +15,13 @@ String SalomeMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	return ret;
 }
 	
-String SalomeMesh::LoadDat0(String fileName) {
+String SalomeBody::LoadDat0(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
 	dt.fileName = fileName;
-	dt.SetCode(Mesh::NEMOH_DAT);
+	dt.SetCode(Body::NEMOH_DAT);
 	
 	try {
 		String line;

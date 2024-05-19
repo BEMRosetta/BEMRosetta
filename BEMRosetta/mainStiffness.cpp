@@ -172,7 +172,7 @@ void MainMatrixKA::PrintData() {
 	}
 }
 
-void MainMatrixKA::Add(const Mesh &msh, int icase, bool button) {
+void MainMatrixKA::Add(const Body &msh, int icase, bool button) {
 	String name = msh.dt.fileName;
 	
 	const MatrixXd &K = msh.dt.C;
@@ -197,9 +197,9 @@ void MainMatrixKA::Add(const Mesh &msh, int icase, bool button) {
 				if (fs.ExecuteSaveAs(t_("Save to stiffness matrix format"))) {
 					String ext = GetFileExt(~fs);
 					if (ext == ".hst")
-						static_cast<const WamitMesh &>(msh).SaveHST(~fs, Bem().rho, Bem().g);
+						static_cast<const WamitBody &>(msh).SaveHST(~fs, Bem().rho, Bem().g);
 					else if (ext == ".dat")
-						static_cast<const NemohMesh &>(msh).SaveKH(~fs);
+						static_cast<const NemohBody &>(msh).SaveKH(~fs);
 					else
 						throw Exc(t_("Unknown file format"));
 				}
@@ -331,7 +331,7 @@ bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndi
 	return true;
 }	
 
-void MainMatrixKA::Load(UArray<Mesh> &surfs, const UVector<int> &ids) {
+void MainMatrixKA::Load(UArray<Body> &surfs, const UVector<int> &ids) {
 	Clear();
 	Ndim = false;
 	

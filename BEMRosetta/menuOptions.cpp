@@ -52,7 +52,7 @@ void MenuOptions::Load() {
 	nemohPathGREN <<= bem->nemohPathGREN;
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
-	hamsMeshPath <<= bem->hamsMeshPath;
+	hamsBodyPath <<= bem->hamsBodyPath;
 	volWarning <<= bem->volWarning;
 	volError <<= bem->volError;
 	roundVal <<= bem->roundVal;
@@ -97,7 +97,7 @@ void MenuOptions::OnSave() {
 		bem->nemohPathGREN = ~nemohPathGREN;
 		bem->foammPath = ~foammPath;
 		bem->hamsPath = ~hamsPath;
-		bem->hamsMeshPath = ~hamsMeshPath;
+		bem->hamsBodyPath = ~hamsBodyPath;
 		bem->volWarning = ~volWarning;
 		bem->volError = ~volError;
 		bem->roundVal = ~roundVal;
@@ -152,7 +152,7 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->hamsPath != ~hamsPath)
 		return true;
-	if (bem->hamsMeshPath != ~hamsMeshPath)
+	if (bem->hamsBodyPath != ~hamsBodyPath)
 		return true;
 	if (bem->volWarning != ~volWarning)
 		return true;

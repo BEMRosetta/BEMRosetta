@@ -373,7 +373,7 @@ void OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									dt.rao.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*factor.RAO(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
+									dt.rao[ib][idh](ifr, idof) = std::polar<double>(mat[ifr][1 + 2*idof]*factor.RAO(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
 						}
 					}
 				}  else if (fy.FirstIs("LoadRAOs")) {
@@ -390,7 +390,7 @@ void OrcaWave::Load_YML_Res() {
 
 							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
-									dt.ex.force[idh](ifr, idof+6*ib) = std::polar<double>(mat[ifr][1 + 2*idof]*factor.F(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
+									dt.ex[ib][idh](ifr, idof) = std::polar<double>(mat[ifr][1 + 2*idof]*factor.F(idof), ToRad(mat[ifr][1 + 2*idof + 1]));
 						}
 					}
 				} else if (fy.FirstIs("WaveDriftQTFMethod"))

@@ -76,9 +76,9 @@ void Diodore::Load_HDB() {
 					f.GetLine_discard_empty();
 					for (int idof = 0; idof < 6; ++idof) 
 						if (ismod)
-							force.force[idh](iw, idof + 6*ib) = std::complex<double>(f.GetDouble(1+idof), 0);
+							force[ib][idh](iw, idof) = std::complex<double>(f.GetDouble(1+idof), 0);
 						else
-							SetPhaseToMag(force.force[idh](iw, idof + 6*ib), f.GetDouble(1+idof));
+							SetPhaseToMag(force[ib][idh](iw, idof), f.GetDouble(1+idof));
 				}
 			}
 		}
@@ -284,13 +284,13 @@ void Hydro::SaveDiodoreHDB(String file) {
 	out << "[STRUCTURES_NUMBER]        " << dt.Nb << "\n";							
 
 
-	auto WriteForce = [&](Hydro::Forces &force, String text) {
+	auto WriteForce = [&](Hydro::Forces &force, int ib, String text) {
 		for (int ih = 0; ih < dt.Nh; ++ih) {
 			out << Format("[%s_MOD_%03d]   %10.3f\n", text, ih+1, dt.head[ih]);
 			for (int iw = 0; iw < dt.Nf; ++iw) {
 				out << Format("%7.2f", TT[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
-					out << Format(" % .7E", abs(F_dim(force, ih, iw, idof)));	
+					out << Format(" % .7E", abs(F_dim(force, ih, iw, idof, ib)));	
 				out << "\n";
 			}
 		}
@@ -299,7 +299,7 @@ void Hydro::SaveDiodoreHDB(String file) {
 			for (int iw = 0; iw < dt.Nf; ++iw) {
 				out << Format("%7.2f", TT[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
-					out << Format(" % .7E", arg(F_dim(force, ih, iw, idof)));	
+					out << Format(" % .7E", arg(F_dim(force, ih, iw, idof, ib)));	
 				out << "\n";
 			}
 		}
@@ -339,19 +339,19 @@ void Hydro::SaveDiodoreHDB(String file) {
 		
 		if (IsLoadedFex()) {
 			out << "[EXCITATION_FORCES_AND_MOMENTS]  \n";
-			WriteForce(dt.ex, "INCIDENCE_EFM");
+			WriteForce(dt.ex, ib, "INCIDENCE_EFM");
 		}
 		if (IsLoadedFfk()) {
 			out << "[FROUDEKRYLOV_FORCES_AND_MOMENTS]\n";
-			WriteForce(dt.fk, "INCIDENCE_EFM_FFK");
+			WriteForce(dt.fk, ib, "INCIDENCE_EFM_FFK");
 		}
 		if (IsLoadedFsc()) {
 			out << "[DIFFRACTION_FORCES_AND_MOMENTS]\n";
-			WriteForce(dt.sc, "INCIDENCE_EFM_DIFF");
+			WriteForce(dt.sc, ib, "INCIDENCE_EFM_DIFF");
 		}
 		if (IsLoadedRAO()) {
 			out << "[RAO]\n";
-			WriteForce(dt.rao, "INCIDENCE_RAO");
+			WriteForce(dt.rao, ib, "INCIDENCE_RAO");
 		}
 		if (IsLoadedMD()) {
 			out << "[DRIFT_FORCES_AND_MOMENTS]\n";

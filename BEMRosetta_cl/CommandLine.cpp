@@ -746,7 +746,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							bem.LoadMesh(file, echo ? Status : NoPrint, false, false);		// Doesn't work for multibody .dat
+							bem.LoadBody(file, echo ? Status : NoPrint, false, false);		// Doesn't work for multibody .dat
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
@@ -756,7 +756,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						} else if (param == "-cl" || param == "-clear") {
 							bem.surfs.Clear();
 							meshid = -1;
-							BEM::Print("\n" + S(t_("Mesh data cleared")));	
+							BEM::Print("\n" + S(t_("Body data cleared")));	
 						} else if (param == "-setid") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -765,7 +765,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							meshid = ScanInt(command[ic]);
 							if (IsNull(meshid) || meshid < 0 || meshid > bem.surfs.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[ic]));
-							BEM::Print("\n" + Format(t_("Mesh active model id is %d"), bemid));	
+							BEM::Print("\n" + Format(t_("Body active model id is %d"), bemid));	
 						} else if (param == "-c" || param == "-convert") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -774,7 +774,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							String file = FileName(command[ic]);
 							
 							bool symX = false, symY = false;
-							Mesh::MESH_FMT meshFmt = Mesh::UNKNOWN;
+							Body::MESH_FMT meshFmt = Body::UNKNOWN;
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
 								String pparam = ToLower(command[ic]);
@@ -784,14 +784,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									symY = true;
 								else if (pparam == "symxy")
 									symX = symY = true;
-								else if (Mesh::GetCodeMeshStr(pparam) != Mesh::UNKNOWN) {
-									meshFmt = Mesh::GetCodeMeshStr(pparam);
-									if (!Mesh::meshCanSave[meshFmt])
+								else if (Body::GetCodeBodyStr(pparam) != Body::UNKNOWN) {
+									meshFmt = Body::GetCodeBodyStr(pparam);
+									if (!Body::meshCanSave[meshFmt])
 										throw Exc(Format(t_("Saving format '%s' is not implemented"), pparam));									
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
 							}
-							Mesh::SaveAs(bem.surfs[meshid], file, meshFmt, Mesh::ALL, bem.rho, bem.g, symX, symY);
+							Body::SaveAs(bem.surfs[meshid], file, meshFmt, Body::ALL, bem.rho, bem.g, symX, symY);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), meshid, file));
 						} else if (param == "-t" || param == "-translate") {
 							CheckIfAvailableArg(command, ++ic, "x");
@@ -800,11 +800,11 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "z");
 							double z = ScanDouble(command[ic]);
-							Mesh &msh = bem.surfs[meshid];
+							Body &msh = bem.surfs[meshid];
 							msh.dt.mesh.Translate(x, y, z);
 							msh.dt.cg.Translate(x, y, z);
 							msh.AfterLoad(bem.rho, bem.g, false, false);	
-							BEM::Print("\n" + Format(t_("Mesh id %d translated %f, %f, %f"), meshid, x, y, z)); 
+							BEM::Print("\n" + Format(t_("Body id %d translated %f, %f, %f"), meshid, x, y, z)); 
 						} else if (param == "-rot" || param == "-rotate") {
 							CheckIfAvailableArg(command, ++ic, "ax");
 							double ax = ScanDouble(command[ic]);
@@ -818,11 +818,11 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							double cy = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cz");
 							double cz = ScanDouble(command[ic]);
-							Mesh &msh = bem.surfs[meshid];
+							Body &msh = bem.surfs[meshid];
 							msh.dt.mesh.Rotate(ToRad(ax), ToRad(ay), ToRad(az), cx, cy, cz);	
 							msh.dt.cg.Rotate(ToRad(ax), ToRad(ay), ToRad(az), cx, cy, cz);
 							msh.AfterLoad(bem.rho, bem.g, false, false);	
-							BEM::Print("\n" + Format(t_("Mesh id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
+							BEM::Print("\n" + Format(t_("Body id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
 						} else if (param == "-cg") {
 							CheckIfAvailableArg(command, ++ic, "cgx");
 							double x = ScanDouble(command[ic]);
@@ -830,7 +830,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cgz");
 							double z = ScanDouble(command[ic]);
-							Mesh &msh = bem.surfs[meshid];
+							Body &msh = bem.surfs[meshid];
 							msh.dt.cg.x = x;
 							msh.dt.cg.y = y;
 							msh.dt.cg.z = z;
@@ -843,7 +843,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "c0z");
 							double z = ScanDouble(command[ic]);
-							Mesh &msh = bem.surfs[meshid];
+							Body &msh = bem.surfs[meshid];
 							msh.dt.c0.x = x;
 							msh.dt.c0.y = y;
 							msh.dt.c0.z = z;
@@ -852,23 +852,23 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						} else if (param == "-mass") { 
 							CheckIfAvailableArg(command, ++ic, "mass");
 							double mass = ScanDouble(command[ic]);
-							Mesh &msh = bem.surfs[meshid];
+							Body &msh = bem.surfs[meshid];
 							msh.SetMass(mass);
 							msh.AfterLoad(bem.rho, bem.g, true, false);
 							BEM::Print("\n" + Format(t_("Mass is %f"), mass));
 						} else if (param == "-reset") {	
 							bem.surfs[meshid].Reset(bem.rho, bem.g);
-							BEM::Print("\n" + Format(t_("Mesh id %d position is reset"), meshid));
+							BEM::Print("\n" + Format(t_("Body id %d position is reset"), meshid));
 						} else if (param == "-getwaterplane") {
 							bem.AddWaterSurface(meshid, 'e');
 							meshid = bem.surfs.size() - 1;
-							BEM::Print("\n" + Format(t_("Mesh id %d waterplane is got"), meshid));
+							BEM::Print("\n" + Format(t_("Body id %d waterplane is got"), meshid));
 						} else if (param == "-gethull") {
 							bem.AddWaterSurface(meshid, 'r');
 							meshid = bem.surfs.size() - 1;
-							BEM::Print("\n" + Format(t_("Mesh id %d hull is got"), meshid));
+							BEM::Print("\n" + Format(t_("Body id %d hull is got"), meshid));
 						} else if (param == "-p" || param == "-print") {
-							Mesh &msh = bem.surfs[meshid];
+							Body &msh = bem.surfs[meshid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
 								String pparam = ToLower(command[ic]);
@@ -921,9 +921,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									}
 									int idColor = msh.dt.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
 									if (idColor == -1)
-										lastPrint << ". " << t_("Mesh warning_ Maybe incomplete");
+										lastPrint << ". " << t_("Body warning_ Maybe incomplete");
 									else if (idColor == -2)
-										lastPrint << ". " << t_("Mesh error: Probably incomplete");
+										lastPrint << ". " << t_("Body error: Probably incomplete");
 									Cout() << lastPrint;
 								} else if (pparam == "hydrostatic_force") {
 									Cout() << "\n";
@@ -934,9 +934,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 										lastPrint << f[i] << " ";
 									int idColor = msh.dt.under.VolumeMatch(bem.volWarning/100., bem.volError/100.);
 									if (idColor == -1)
-										lastPrint << ". " << t_("Mesh warning: Maybe incomplete");
+										lastPrint << ". " << t_("Body warning: Maybe incomplete");
 									else if (idColor == -2)
-										lastPrint << ". " << t_("Mesh error: Probably incomplete");
+										lastPrint << ". " << t_("Body error: Probably incomplete");
 									Cout() << lastPrint;
 								} else if (pparam.StartsWith("inertia")) {
 									Cout() << "\n";

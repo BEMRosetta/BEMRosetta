@@ -205,7 +205,7 @@ bool Aqwa::Load_AH1() {
 	                  	for (int idf = 0; idf < 6; ++idf) 
 	                       	ph(idf) = -f.GetDouble(idf)*M_PI/180;
 	                  	for (int idf = 0; idf < 6; ++idf) 
-	                       	dt.ex.force[ih](ifr, idf + 6*ib) = std::complex<double>(ma(idf), ph(idf));
+	                       	dt.ex[ib][ih](ifr, idf) = std::complex<double>(ma(idf), ph(idf));
 	                }
 	            }
 	        }
@@ -410,7 +410,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	
 	if (!dt.msh.IsEmpty()) {
 		for (int i = 0; i < dt.Nb; ++i)
-			dt.msh[i].dt.SetCode(Mesh::AQWA_LIS);
+			dt.msh[i].dt.SetCode(Body::AQWA_LIS);
 	}
 			
 	int ib;	
@@ -504,10 +504,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		} 
 	}
 	Sort(dt.head);
-	//if (IsNull(dt.Nf))
-	//	throw Exc(t_("Number of frequencies not found"));
-	//if (IsNull(dt.Nh))
-	//	throw Exc(t_("Number of headings not found"));
 	
 	if (IsNull(dt.Nf))
 		dt.Nf = 0;
@@ -735,8 +731,8 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 							factorPh = M_PI/180;	// Only for RAO rotations
 						
 						pos = 2 + dd + idf*2;
-						frc.force[idh](ifr, idf + 6*ib) = std::polar<double>(f.GetDouble(pos)*factorM, 
-																			-ToRad(f.GetDouble(pos + 1))*factorPh); // Negative to follow Wamit 
+						frc[ib][idh](ifr, idf) = std::polar<double>(f.GetDouble(pos)*factorM, 
+															 -ToRad(f.GetDouble(pos + 1))*factorPh); // Negative to follow Wamit 
 					}
 					dd = 0;
 					line = in.GetLine();
@@ -932,7 +928,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		
 	if (!dt.msh.IsEmpty()) {
 		// Removes mooring, Morison and other points unrelated with panels
-		for (Mesh &m : dt.msh) {
+		for (Body &m : dt.msh) {
 			m.dt.mesh.GetPanelParams();
 			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
 		}
@@ -1144,130 +1140,6 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
 			realih++;	
         }
 }
-	
-/*	
-bool AQWACase::Load(String fileName) {
-	FileInLine in(fileName);
-	if (!in.IsOpen())
-		return false;
-	
-	solver = AQWA;
-	
-	String line;
-	LineParser f(in);
-	f.IsSeparator = IsTabSpace;
-	
-	bodies.SetCount(1);
-	Mesh &body = bodies[0];
-	
-	body.fileName = fileName;
-	//body.ndof = 6;
-	//Resize(body.dof, 6, true);
-	body.M = MatrixXd::Zero(6, 6);
-	
-	UVector<double> hrtz, head;
-	
-	while (!in.IsEof()) {
-		f.GetLine();
-		
-		if (f.size() == 1) {
-			if (f.GetText(0) == "MATE") {
-				f.GetLine();
-				body.M(0, 0) = body.M(1, 1) = body.M(2, 2) = f.GetDouble(2);
-			} else if (f.GetText(0) == "GEOM") {
-				while (true) {
-					f.GetLine();
-					if (f.IsEof())
-						break;
-					if (f.size() == 1 && f.GetText(0) == "END")
-						break;
-					if (f.size() > 1 && f.GetText(0) == "1PMAS") {
-						body.M(3, 3) = f.GetDouble(2);
-						body.M(3, 4) = body.M(4, 3) = f.GetDouble(3);
-						body.M(3, 5) = body.M(5, 3) = f.GetDouble(4);
-						body.M(4, 4) = f.GetDouble(5);
-						body.M(4, 5) = body.M(5, 4) = f.GetDouble(6);
-						body.M(5, 5) = f.GetDouble(7);
-					}
-				}
-			} else if (f.GetText(0) == "WFS1") {
-				const UVector<int> pos = {0, 10, 15, 20, 30, 40, 50, 60, 70, 80};
-				f.GetLineFields(pos);
-				for (int r = 0; r < 6; ++r) {
-					if (f.GetText(0) != "ASTF")		// Additional Hydrostatic Stiffness Matrix (sometimes due to mooring)
-						break;
-					if (f.GetInt(2) != r+1)
-						throw Exc(Format("Wrong row id '%s' in ASTF", f.GetText(1)));
-					for (int c = 0; c < 6; ++c) 
-						body.Cadd(r, c) = f.GetDouble(3+c);
-					f.GetLineFields(pos);
-				}
-				for (int r = 0; r < 6; ++r) {
-					if (f.GetText(0) != "SSTF")		//  Additional Structural Stiffness Matrix (normally due to mooring)
-						break;
-					if (f.GetInt(2) != r+1)
-						throw Exc(Format("Wrong row id '%s' in SSTF", f.GetText(1)));
-					for (int c = 0; c < 6; ++c) 
-						body.Cmoor(r, c) = f.GetDouble(3+c);
-					f.GetLineFields(pos);
-				}
-				for (int r = 0; r < 6; ++r) {
-					if (f.GetText(0) != "FIDP")		// Frequency independent Damping Matrix
-						break;
-					if (f.GetInt(2) != r+1)
-						throw Exc(Format("Wrong row id '%s' in FIDP", f.GetText(1)));
-					for (int c = 0; c < 6; ++c) 
-						body.Dlin(r, c) = f.GetDouble(3+c);
-					f.GetLineFields(pos);
-				}
-				for (int r = 0; r < 6; ++r) {
-					if (f.GetText(0) != "FIAM")		// Frequency independent Added Mass Matrix
-						break;
-					if (f.GetInt(2) != r+1)
-						throw Exc(Format("Wrong row id '%s' in FIAM", f.GetText(1)));
-					for (int c = 0; c < 6; ++c) 
-						body.Aadd(r, c) = f.GetDouble(3+c);
-					f.GetLineFields(pos);
-				}	
-			}
-		} else if (f.size() == 2) {
-			if (f.GetText(0) == "DPTH")
-				h = f.GetDouble(1);
-			else if (f.GetText(0) == "DENS")
-				rho = f.GetDouble(1);
-			else if (f.GetText(0) == "ACCG")
-				g = f.GetDouble(1);	
-		} else if (f.size() == 4) {
-			if (f.GetText(0) == "1HRTZ")
-				hrtz << f.GetDouble(3);
-			else if (f.GetText(0) == "1DIRN") 
-				FindAddDelta(head, FixHeading_0_360(f.GetDouble(3)), 0.01);
-			else if (f.GetInt_nothrow(0) == 198000) {
-				body.cg[0] = f.GetDouble(1);
-				body.cg[1] = f.GetDouble(2);
-				body.cg[2] = f.GetDouble(3);
-				body.c0 = clone(body.cg);
-			}
-		}
-	}
-	Sort(head);
-	
-	Nf = hrtz.size();
-	if (Nf <= 0)
-		throw Exc("Number of frequencies should have to be higher than zero");
-	Nh = head.size();
-	if (Nh <= 0)
-		throw Exc("Number of headings should have to be higher than zero");
-	
-	minF = fround(hrtz[0]*2*M_PI, 5);				// 5 decimals is enough to filter conversion
-	maxF = fround(hrtz[hrtz.size()-1]*2*M_PI, 5);
-	
-	minH = head[0];
-	maxH = head.Top();
-	
-	return true;
-}
-*/
 			
 String FastOut::Load_LIS(String file) {
 	FileInLine in(file);

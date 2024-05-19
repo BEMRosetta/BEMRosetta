@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String AQWAMesh::Load_LIS(UArray<Mesh> &msh, String fileName, double g, bool &y0z, bool &x0z) {
+String AQWABody::Load_LIS(UArray<Body> &msh, String fileName, double g, bool &y0z, bool &x0z) {
 	y0z = x0z = false;
 	
 	BEM bem;
@@ -25,7 +25,7 @@ String AQWAMesh::Load_LIS(UArray<Mesh> &msh, String fileName, double g, bool &y0
 	return String();
 }
 
-String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
+String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
@@ -81,7 +81,7 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 						mesh.SetCount(ib+1);
 						ids.SetCount(ib+1);
 						mesh[ib].dt.fileName = fileName;
-						mesh[ib].dt.SetCode(Mesh::AQWA_DAT);
+						mesh[ib].dt.SetCode(Body::AQWA_DAT);
 					}
 					int id = f.GetInt(1);
 					if (id >= 98000 && id < 99000) {
@@ -146,7 +146,7 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 		}
 		
 		// Removes mooring, Morison and other points unrelated with panels
-		for (Mesh &m : mesh) 
+		for (Body &m : mesh) 
 			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
 		
 	} catch (Exc e) {
@@ -156,7 +156,7 @@ String AQWAMesh::LoadDat(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x
 	return String();
 }
 
-void AQWAMesh::SaveDat(String fileName, const UArray<Mesh> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z) {
+void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
@@ -164,7 +164,7 @@ void AQWAMesh::SaveDat(String fileName, const UArray<Mesh> &meshes, const UArray
 	SaveDat(out, meshes, surf, rho, g, y0z, x0z);
 }
 
-void AQWAMesh::SaveDat(Stream &ret, const UArray<Mesh> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z) {
+void AQWABody::SaveDat(Stream &ret, const UArray<Body> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z) {
 	ASSERT(meshes.size() == surfs.size());
 	
 	Time t = GetSysTime();

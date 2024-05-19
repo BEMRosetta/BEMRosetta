@@ -27,7 +27,7 @@ public:
 	MatrixXd stiff;
 	Point3D cb;
 	
-	Mesh mesh;
+	Body mesh;
 	
 	double rho, g;
 	

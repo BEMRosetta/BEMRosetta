@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
+String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
@@ -39,9 +39,9 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 		if (pos > 0) 
 			F = line.Mid(pos);
 		
-		Mesh &msh = mesh.Add();
+		Body &msh = mesh.Add();
 		msh.dt.fileName = fileName;
-		msh.dt.SetCode(Mesh::WAMIT_DAT);
+		msh.dt.SetCode(Body::WAMIT_DAT);
 	
 		if (IsNull(T)) {
 			while(!in.IsEof()) {
@@ -100,14 +100,14 @@ String WamitMesh::LoadDat(UArray<Mesh> &mesh, String fileName) {
 	return String();
 }
 	
-String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &x0z) {
+String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
-	Mesh &msh = _mesh.Add();
+	Body &msh = _mesh.Add();
 	msh.dt.name = fileName;
-	msh.dt.SetCode(Mesh::WAMIT_GDF);
+	msh.dt.SetCode(Body::WAMIT_GDF);
 	
 	try {
 		String line;
@@ -195,7 +195,7 @@ String WamitMesh::LoadGdf(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool 
 	return String();
 }
 
-void WamitMesh::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
+void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(t_("Impossible to open file"));	
@@ -216,7 +216,7 @@ void WamitMesh::SaveGdf(String fileName, const Surface &surf, double g, bool y0z
 	}	 
 }
 
-void WamitMesh::SaveHST(String fileName, double rho, double g) const {
+void WamitBody::SaveHST(String fileName, double rho, double g) const {
 	Wamit::Save_hst_static(dt.C, fileName, rho, g);
 }
 	

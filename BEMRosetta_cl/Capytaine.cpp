@@ -128,7 +128,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < Nh; ++ih) 
 					for (int iw = 0; iw < Nf; ++iw) 
-						f.force[ih](iw, 6*ib + idf) = std::complex<double>(_f(irho, _ih, 0, iw, ih, idf + 6*ib), 
+						f[ib][ih](iw, idf) = std::complex<double>(_f(irho, _ih, 0, iw, ih, idf + 6*ib), 
 																		   -_f(irho, _ih, 1, iw, ih, idf + 6*ib));//-Imaginary to follow Wamit
 		};
 	

@@ -16,7 +16,7 @@ using namespace Upp;
 
 
 void MainBEM::Init() {
-	MainBEMMesh::Init();
+	MainBEMBody::Init();
 	
 	CtrlLayout(menuOpen);
 	menuOpen.file.WhenChange = THISBACK(OnLoad);
@@ -30,8 +30,8 @@ void MainBEM::Init() {
 		//mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());
 		if (mainTab.Find(mainQTF) == mainTab.Get())
 			mainQTF.Load();
-		else if (mainTab.Find(mainMesh) == mainTab.Get())
-			mainMesh.Load();
+		else if (mainTab.Find(mainBody) == mainTab.Get())
+			mainBody.Load();
 		UpdateButtons();
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
@@ -304,6 +304,7 @@ void MainBEM::Init() {
 	menuPlot.opApot 	<< [&]{LoadSelTab(Bem());};
 	menuPlot.opBhask 	<< [&]{LoadSelTab(Bem());};
 	menuPlot.opBpot 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opFfkpot 	<< [&]{LoadSelTab(Bem());};
 		
 	menuPlot.head1st.NoHeader().MultiSelect();
 	menuPlot.head1st.AddColumn("");
@@ -316,9 +317,9 @@ void MainBEM::Init() {
 	//menuPlot.headQTF.NoHeader().MultiSelect();
 	//menuPlot.headQTF.AddColumn("");
 	
-	CtrlLayout(menuMesh);
-	menuMesh.butSpreadNegative <<= THISBACK(OnSpreadNegative);
-	menuMesh.butMapNodes <<= THISBACK(OnMapNodes);
+	CtrlLayout(menuBody);
+	menuBody.butSpreadNegative <<= THISBACK(OnSpreadNegative);
+	menuBody.butMapNodes <<= THISBACK(OnMapNodes);
 	
 	OnOpt();
 	
@@ -332,7 +333,7 @@ void MainBEM::Init() {
 	menuTab.Add(menuProcess2.SizePos(), t_("Remove & Mult")).Disable();
 	menuTab.Add(menuAdvanced.SizePos(), t_("Advanced")).Disable();
 	menuTab.Add(menuFOAMM.SizePos(), 	t_("FOAMM State Space")).Disable();
-	menuTab.Add(menuMesh.SizePos(), 	t_("Mesh")).Disable();
+	menuTab.Add(menuBody.SizePos(), 	t_("Body")).Disable();
 	
 	menuTab.WhenSet = [&] {
 		LOGTAB(menuTab);
@@ -343,7 +344,7 @@ void MainBEM::Init() {
 				Status(t_("FOAMM not found. Please set FOAMM path in Options"), 10000);	
 		} else if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuOpen) || 
 				   menuTab.IsAt(menuProcess) || menuTab.IsAt(menuProcess2) ||
-				   menuTab.IsAt(menuAdvanced) || menuTab.IsAt(menuMesh)) 
+				   menuTab.IsAt(menuAdvanced) || menuTab.IsAt(menuBody)) 
 			setupfoamm = true;
 		
 		if (!setupfoamm) 
@@ -351,8 +352,8 @@ void MainBEM::Init() {
 		
 		if (menuTab.IsAt(menuFOAMM)) 
 			mainTab.Set(mainSetupFOAMM);
-		else if (menuTab.IsAt(menuMesh)) 
-			mainTab.Set(mainMesh);
+		else if (menuTab.IsAt(menuBody)) 
+			mainTab.Set(mainBody);
 		
 		ShowMenuPlotItems();
 	};
@@ -417,9 +418,9 @@ void MainBEM::Init() {
 			is = 1;
 		} else if (menuTab.IsAt(menuFOAMM)) 
 			;
-		else if (mainTab.IsAt(mainMesh)) {
-			mainMesh.Load();
-			menuTab.Set(menuMesh);	
+		else if (mainTab.IsAt(mainBody)) {
+			mainBody.Load();
+			menuTab.Set(menuBody);	
 		} else {
 			plot = false;
 		}
@@ -458,8 +459,8 @@ void MainBEM::Init() {
 		tabMenuProcess2.Enable(convertProcess);
 		TabCtrl::Item& tabMenuAdvanced = menuTab.GetItem(menuTab.Find(menuAdvanced));
 		tabMenuAdvanced.Enable(convertProcess);
-		TabCtrl::Item& tabMenuMesh = menuTab.GetItem(menuTab.Find(menuMesh));
-		tabMenuMesh.Enable(convertProcess);
+		TabCtrl::Item& tabMenuBody = menuTab.GetItem(menuTab.Find(menuBody));
+		tabMenuBody.Enable(convertProcess);
 		
 		if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
@@ -484,11 +485,11 @@ void MainBEM::Init() {
 		}
 		
 		if (ismesh) {
-			tabMenuMesh.Text(t_("Mesh"));
-			tabMenuMesh.Enable();
+			tabMenuBody.Text(t_("Body"));
+			tabMenuBody.Enable();
 		} else {
-			tabMenuMesh.Text("");
-			tabMenuMesh.Disable();
+			tabMenuBody.Text("");
+			tabMenuBody.Disable();
 		}
 		
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
@@ -562,8 +563,8 @@ void MainBEM::Init() {
 	mainStateSpace.Init();
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
 	
-	mainMesh.Init();
-	mainTab.Add(mainMesh.SizePos(), t_("Mesh")).Disable();
+	mainBody.Init();
+	mainTab.Add(mainBody.SizePos(), t_("Body Mesh")).Disable();
 	
 	UpdateButtons();
 	saveFolder = GetDesktopFolder();
@@ -574,7 +575,7 @@ void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showNdim.Enable();
 
 	bool show = true, showwT = true, showComplex = false, showDim = true, 
-		 showA = false, showB = false;
+		 showA = false, showB = false, showFfk = false;
 		 
 	if (mainTab.IsAt(mainSetupFOAMM)) {
 		showwT = false;
@@ -587,8 +588,8 @@ void MainBEM::ShowMenuPlotItems() {
 	} else if (mainTab.IsAt(mainForceSC) || mainTab.IsAt(mainForceFK) || mainTab.IsAt(mainForceEX) || 
 			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace)) {
 		showComplex = true;
-		//if (mainTab.IsAt(mainRAO))
-		//	showDim = false;
+		if (mainTab.IsAt(mainForceFK))
+			showFfk = true;
 	} else if (mainTab.IsAt(mainA))
 		showA = true;
 	else if (mainTab.IsAt(mainB))
@@ -611,6 +612,8 @@ void MainBEM::ShowMenuPlotItems() {
 	
 	menuPlot.opBhask.Show(showB);
 	menuPlot.opBpot.Show(showB);
+	
+	menuPlot.opFfkpot.Show(showFfk);
 }
 
 void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
@@ -664,6 +667,8 @@ void MainBEM::InitSerialize(bool ret) {
 	
 	menuPlot.opBhask = true;
 	menuPlot.opBpot = true;
+	
+	menuPlot.opFfkpot = true;
 	
 	if (!ret || IsNull(menuPlot.showPoints)) 
 		menuPlot.showPoints = true;
@@ -1684,17 +1689,17 @@ void MainBEM::OnMapNodes() {
 		if (!hy.IsLoadedPotsRad())
 			return;
 
-		int ib = mainMesh.GetIb();
+		int ib = mainBody.GetIb();
 		
-		mapNodes.Init(hy, ib);
+		mapNodes.Init(id, ib);
 		mapNodes.Execute();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
 }
 
-void MapNodes::Init(const Hydro &hy, int _ib) {
-	phydro = &hy;
+void MapNodes::Init(int _id, int _ib) {
+	id = _id;
 	ib = _ib;
 	
 	CtrlLayout(*this);
@@ -1704,6 +1709,8 @@ void MapNodes::Init(const Hydro &hy, int _ib) {
 	butPaste <<= THISBACK(OnPasteNodes);
 	butMap <<= THISBACK(OnMapNodes);
 	butExport <<= THISBACK(OnExport);
+	
+	const Hydro &hy = Bem().hydros[id];
 	
 	dropFreq.Clear();
 	for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
@@ -1724,8 +1731,9 @@ void MapNodes::RefreshTable() {
 	arrayNodes.SetLineCy(EditField::GetStdHeight()).MultiSelect().HeaderObject().Absolute();
 	arrayNodes.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodes, true);};
 	
+	const Hydro &hy = Bem().hydros[id];
 	Grid g;
-	phydro->SaveMap(g, dropFreq.GetData(), Bem().onlyDiagonal, ids, points, Apan, Bpan);
+	hy.SaveMap(g, dropFreq.GetData(), Bem().onlyDiagonal, ids, points, Apan, Bpan);
 	ArrayCtrlFill(arrayNodes, g, false);
 	
 	numNodes <<= arrayNodes.GetCount();
@@ -1776,7 +1784,9 @@ void MapNodes::OnPasteNodes() {
 }
 
 void MapNodes::OnMapNodes() {
-	phydro->MapNodes(ib, points, Apan, Bpan);
+	const Hydro &hy = Bem().hydros[id];
+	
+	hy.MapNodes(ib, points, Apan, Bpan);
 	
 	RefreshTable();
 }
@@ -1805,7 +1815,9 @@ void MapNodes::OnExport(){
 	if (opSaveAll)	
  		freqId = dropFreq.GetData();
 	
-	phydro->SaveMap(fileName, fileType, freqId, Bem().onlyDiagonal, ids, points, Apan, Bpan);
+	const Hydro &hy = Bem().hydros[id];
+	
+	hy.SaveMap(fileName, fileType, freqId, Bem().onlyDiagonal, ids, points, Apan, Bpan);
 }
 	
 MenuAdvancedReference::MenuAdvancedReference() {
@@ -1875,7 +1887,7 @@ void MainBEM::AfterBEM() {
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(ids, menuPlot.head1st.GetCursor()));			progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());													progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */ids.size() > 0);					progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMesh)).Enable(mainMesh.Load());											progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainBody)).Enable(mainBody.Load());											progress.SetPos(pos++);
 	
 	bool isLoadedSS = false;
 	for (int id = 0; id < Bem().hydros.size(); ++id) {
@@ -2413,7 +2425,7 @@ void MainOutput::Print(String str) {
 	cout.ScrollEnd();
 }
 
-void MeshBody::Init() {
+void BodyBody::Init() {
 	CtrlLayout(*this);
 	
 	nodes.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
@@ -2432,7 +2444,7 @@ void MeshBody::Init() {
 	};
 }
 
-void MeshBody::Load(const Hydro &hy, int ib, bool hasPotentials) {
+void BodyBody::Load(const Hydro &hy, int ib, bool hasPotentials) {
 	const char *xyz[] = {"x", "y", "z"};
 	{
 		int num = hy.dt.msh[ib].dt.mesh.nodes.size();
@@ -2502,7 +2514,7 @@ void MeshBody::Load(const Hydro &hy, int ib, bool hasPotentials) {
 	}
 }
 
-Value MeshBody::DataSourceNodes::Format(const Value& q) const {
+Value BodyBody::DataSourceNodes::Format(const Value& q) const {
 	ASSERT(pmesh);
 	int iq = q;
 	if (pmesh->nodes.size() <= iq)
@@ -2518,7 +2530,7 @@ Value MeshBody::DataSourceNodes::Format(const Value& q) const {
 	}
 }
 
-Value MeshBody::DataSourcePanels::Format(const Value& q) const {
+Value BodyBody::DataSourcePanels::Format(const Value& q) const {
 	ASSERT(phydro);
 	int idp = q;
 	const Surface &s = phydro->dt.msh[ib].dt.mesh;
@@ -2578,11 +2590,11 @@ Value MeshBody::DataSourcePanels::Format(const Value& q) const {
 	}
 }
 	
-void MainMeshTable::Init() {
+void MainBodyTable::Init() {
 	Add(tab.SizePos());
 }
 
-bool MainMeshTable::Load() {
+bool MainBodyTable::Load() {
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
 		int id = ArrayModel_IdHydro(mbm.listLoaded);
@@ -2600,7 +2612,7 @@ bool MainMeshTable::Load() {
 		
 		bool hasPotentials = hy.IsLoadedPotsRad();
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-			MeshBody &b = bodies.Add();
+			BodyBody &b = bodies.Add();
 			b.Init();
 			b.Load(hy, ib, hasPotentials);
 			tab.Add(b.SizePos(), Format("%d. %s", ib+1, hy.dt.msh[ib].dt.name));

@@ -203,7 +203,7 @@ bool Nemoh::Load_Cal(String fileName) {
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		int npoints, npanels;
 		
-		Mesh &body = dt.msh[ib];
+		Body &body = dt.msh[ib];
 		in.GetLine();
 		f.GetLine();	
 		body.dt.fileName = f.GetText(0);
@@ -348,7 +348,7 @@ void Nemoh::Save_Id(String folder) const {
 	out << "1\n.";
 }
 
-void Nemoh::Save_Mesh_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const {
+void Nemoh::Save_Body_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const {
 	String fileName = AFX(folder, "Mesh_cal.bat");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -564,9 +564,9 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 		if (solver != Hydro::NEMOHv3)
 			Save_Id(folder);
 		Save_Input(folder, solver);
-		String folderMesh = AFX(folder, "mesh");
-		if (!DirectoryCreateX(folderMesh))
-			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
+		String folderBody = AFX(folder, "mesh");
+		if (!DirectoryCreateX(folderBody))
+			throw Exc(Format(t_("Problem creating '%s' folder"), folderBody));
 	
 		UVector<String> meshes(dt.msh.size());
 		UVector<int> nodes(dt.msh.size()), panels(dt.msh.size());
@@ -574,13 +574,13 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 			String name = GetFileName(dt.msh[ib].dt.fileName);
 			name = RemoveAccents(name);
 			name.Replace(" ", "_");
-			String dest = AFX(folderMesh, name);
+			String dest = AFX(folderBody, name);
 			
 			bool y0z = false, x0z = false;
-			Mesh mesh;
-			String err = Mesh::Load(mesh, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0z, x0z);
+			Body mesh;
+			String err = Body::Load(mesh, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0z, x0z);
 			if (!err.IsEmpty()) {
-				err = Mesh::Load(mesh, AFX(folderMesh, GetFileName(dt.msh[ib].dt.fileName)), dt.rho, dt.g, false, y0z, x0z);
+				err = Body::Load(mesh, AFX(folderBody, GetFileName(dt.msh[ib].dt.fileName)), dt.rho, dt.g, false, y0z, x0z);
 				if (!err.IsEmpty()) {
 					throw Exc(err);
 				}
@@ -588,10 +588,10 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 			mesh.dt.c0 = clone(dt.msh[ib].dt.c0);
 			mesh.dt.cg = clone(dt.msh[ib].dt.cg);
 			mesh.AfterLoad(dt.rho, dt.g, true, false);
-			Mesh::SaveAs(mesh, dest, Mesh::NEMOH_DAT, Mesh::UNDERWATER, dt.rho, dt.g, false, x0z, nodes[ib], panels[ib]);
+			Body::SaveAs(mesh, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, x0z, nodes[ib], panels[ib]);
 			
 			if (solver == Hydro::NEMOHv3) {
-				Save_Mesh_cal(folder, dt.msh.size() == 1 ? -1 : ib, 
+				Save_Body_cal(folder, dt.msh.size() == 1 ? -1 : ib, 
 						dt.msh[ib].dt.fileName, mesh, panels[ib], x0z, dt.msh[ib].dt.cg, dt.rho, dt.g);
 				String inertiaName;
 				if (dt.msh.size() == 1)
@@ -606,7 +606,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 					khName = "KH.dat";
 				else
 					khName = Format("KH_%d.dat", i);
-				static_cast<NemohMesh&>(mesh).SaveKH(AFX(folderMesh, khName));			
+				static_cast<NemohBody&>(mesh).SaveKH(AFX(folderBody, khName));			
 			}
 		}
 		Save_Cal(folder, _nf, _minf, _maxf, nodes, panels, solver);
@@ -623,21 +623,21 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 		
 		if (numCases > 1) {
 			String caseFolder = Format("%s_Part_%d", batName, i+1);
-			//Save_Mesh_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
+			//Save_Body_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
 			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName);
 		} else {
-			//Save_Mesh_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
+			//Save_Body_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
 			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName);
 		}
 	}
 }
 
-void Nemoh::Save_Mesh_cal(String folder, int ib, String meshFile, Mesh &mesh, int npanels, bool x0z, const Point3D &cg, double rho, double g) const {
+void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, Body &mesh, int npanels, bool x0z, const Point3D &cg, double rho, double g) const {
 	String title = ForceExt(GetFileTitle(meshFile), ".pmsh");
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
-	Mesh::SaveAs(mesh, AFX(folder, "Mesh", title), 
-				Mesh::NEMOH_PRE, Mesh::UNDERWATER, rho, g, false, x0z);
+	Body::SaveAs(mesh, AFX(folder, "Mesh", title), 
+				Body::NEMOH_PRE, Body::UNDERWATER, rho, g, false, x0z);
 	
 	String fileName;
 	if (ib < 0)
@@ -683,7 +683,7 @@ void Nemoh::Save_Cal(String folder, int _nf, double _minf, double _maxf, const U
 	out << NemohField(Format("%d", dt.msh.size()), cp) << "! Number of bodies" << "\n";
 	
 	for (int i = 0; i < dt.msh.size(); ++i) {
-		const Mesh &b = dt.msh[i];
+		const Body &b = dt.msh[i];
 		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
 		String name = GetFileName(b.dt.fileName);
 		name = RemoveAccents(name);
@@ -811,7 +811,7 @@ bool Nemoh::Load_Hydrostatics(String folder, String subfolder) {
 	return Load_Hydrostatics_static(AFX(folder, subfolder), dt.Nb, dt.msh);	
 }
 	
-bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, UArray<Mesh> &msh) {
+bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, UArray<Body> &msh) {
 	//cg.setConstant(3, Nb, NaNDouble);
 	//cb.setConstant(3, Nb, NaNDouble);
 	//Vo.SetCount(Nb, NaNDouble);
@@ -846,7 +846,7 @@ void Nemoh::Save_Hydrostatics(String subfolder) const {
 	Save_Hydrostatics_static(subfolder, dt.Nb, dt.msh);	
 }
 
-void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const UArray<Mesh> &msh) {
+void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const UArray<Body> &msh) {
 	for (int ib = 0; ib < Nb; ++ib) {
 	    String fileHydro;
 	    if (Nb == 1)
@@ -858,7 +858,7 @@ void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const UArray<Mesh> &
 		if (!out.IsOpen())
 			throw Exc(Format(t_("Impossible to create '%s'"), fileHydro));
 	    
-	    const Mesh &m = msh[ib];
+	    const Body &m = msh[ib];
 		out << Format(" XF =   %.3f - XG =   %.3f\n", m.dt.cb.x, m.dt.cg.x);
 		out << Format(" YF =   %.3f - YG =   %.3f\n", m.dt.cb.y, m.dt.cg.y);
 		out << Format(" ZF =   %.3f - ZG =   %.3f\n", m.dt.cb.z, m.dt.cg.z);
@@ -1176,7 +1176,7 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 							throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
 						double ma = f.GetDouble(1 + 2*il);	
 						double ph = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
-						fc.force[ih](ifr, ibdof+6*ib) = std::polar(ma, ph); 
+						fc[ib][ih](ifr, ibdof) = std::polar(ma, ph); 
 						il++; 
 					//}
 				}

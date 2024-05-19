@@ -15,8 +15,8 @@ using namespace Upp;
 #include "main.h"
 
 
-void MainMesh::Init() {
-	MainBEMMesh::Init();
+void MainBody::Init() {
+	MainBEMBody::Init();
 	
 	OnOpt();
 	
@@ -52,17 +52,17 @@ void MainMesh::Init() {
 	menuOpen.butJoin.WhenAction = THISBACK(OnJoin);
 	menuOpen.butSplit.Disable();	
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
-	menuOpen.butExport <<= THISBACK(OnConvertMesh);
-	for (int i = 0; i < Mesh::NUMMESH; ++i)
-		if (Mesh::meshCanSave[i])
-			menuOpen.dropExport.Add(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)));
+	menuOpen.butExport <<= THISBACK(OnConvertBody);
+	for (int i = 0; i < Body::NUMMESH; ++i)
+		if (Body::meshCanSave[i])
+			menuOpen.dropExport.Add(Body::GetBodyStr(static_cast<Body::MESH_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
 	menuOpen.dropExport <<= THISBACK(OnOpt);
 	
 	OnOpt();
 	
 	CtrlLayout(menuPlot);
-	menuPlot.showMesh.Tip(t_("Shows all the loaded mesh")).WhenAction 	    	= [&] {LoadSelTab(Bem());};
+	menuPlot.showBody.Tip(t_("Shows all the loaded mesh")).WhenAction 	    	= [&] {LoadSelTab(Bem());};
 	menuPlot.showNormals.Tip(t_("Shows panel normals as arrows")).WhenAction 	= [&] {LoadSelTab(Bem());};
 	menuPlot.showWaterLevel.Tip(t_("Shows the cut of the mesh with the water line")).WhenAction  = [&] {LoadSelTab(Bem());};
 	menuPlot.showSkewed.Tip(t_("Shows skewed panels")).WhenAction      			= [&] {LoadSelTab(Bem());};
@@ -81,8 +81,8 @@ void MainMesh::Init() {
 	menuPlot.butYoZ.Tip(t_("Orients the camera through X axis")).WhenAction  	= [&] {mainView.gl.View(false, true, true);};
 	menuPlot.butXoZ.Tip(t_("Orients the camera through Y axis")).WhenAction  	= [&] {mainView.gl.View(true, false, true);};
 	menuPlot.butFit.Tip(t_("Zooms the camera to fit the bodies")).WhenAction	= [&] {mainView.gl.ZoomToFit();};
-	menuPlot.showMeshData.Tip(t_("Shows a list of panels and nodes")).WhenAction= [&] {splitterAll.SetButton(0);};
-	menuPlot.showMeshData.Tip(t_("Controls for 3D playing")).WhenAction			= [&] {splitterVideo.SetButton(0);};
+	menuPlot.showBodyData.Tip(t_("Shows a list of panels and nodes")).WhenAction= [&] {splitterAll.SetButton(0);};
+	menuPlot.showBodyData.Tip(t_("Controls for 3D playing")).WhenAction			= [&] {splitterVideo.SetButton(0);};
 	menuPlot.backColor.Tip(t_("Sets the background color")).WhenAction      	= [&] {LoadSelTab(Bem());};
 	menuPlot.lineThickness.Tip(t_("Sets the thickness of the mesh wireframe")).WhenAction = [&] {LoadSelTab(Bem());};
 	
@@ -250,11 +250,11 @@ void MainMesh::Init() {
 	mainTab.Add(splitterAll.SizePos(), t_("View"));
 	mainView.Init(*this);
 	
-	String bitmapFolder = AFX(GetDesktopFolder(), "BEMRosetta Mesh Images");
+	String bitmapFolder = AFX(GetDesktopFolder(), "BEMRosetta Body Images");
 	int idBitmapFolder = 0;
 	
 	videoCtrl.Init([&](UVector<int> &ids)->int {
-			ids = ArrayModel_IdsMesh(listLoaded);
+			ids = ArrayModel_IdsBody(listLoaded);
 			int num = ArrayCtrlSelectedGetCount(listLoaded);
 			if (num > 1) {
 				BEM::PrintError(t_("Please select just one model"));
@@ -262,9 +262,9 @@ void MainMesh::Init() {
 			}
 			int id;
 			if (num == 0 && listLoaded.GetCount() == 1)
-				id = ArrayModel_IdMesh(listLoaded, 0);
+				id = ArrayModel_IdBody(listLoaded, 0);
 			else {
-			 	id = ArrayModel_IdMesh(listLoaded);
+			 	id = ArrayModel_IdBody(listLoaded);
 				if (id < 0) {
 					BEM::PrintError(t_("Please select a model to process"));
 					return -1;
@@ -272,7 +272,7 @@ void MainMesh::Init() {
 			}
 			return id;
 		}, [&](int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
-			Mesh &msh = Bem().surfs[id];			
+			Body &msh = Bem().surfs[id];			
 			
 			msh.dt.cg.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
 			msh.dt.mesh.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
@@ -316,7 +316,7 @@ void MainMesh::Init() {
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		bool plot = true, move = false, convertProcess = true;
 		if (Bem().surfs.IsEmpty()) 
 			plot = convertProcess = false;
@@ -365,22 +365,22 @@ void MainMesh::Init() {
 	saveFolder = GetDesktopFolder();
 }
 
-void MainMesh::OnMenuOpenArraySel() {
-	int id = ArrayModel_IdMesh(listLoaded);
+void MainBody::OnMenuOpenArraySel() {
+	int id = ArrayModel_IdBody(listLoaded);
 	if (id < 0)
 		return;
 	
-	Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(~menuOpen.dropExport);
-	menuOpen.symX <<= ((type == Mesh::WAMIT_GDF || type == Mesh::AQWA_DAT) && Bem().surfs[id].IsSymmetricX());
+	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
+	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT) && Bem().surfs[id].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[id].IsSymmetricY();
 }
 
-void MainMesh::OnMenuProcessArraySel() {
-	int id = ArrayModel_IdMesh(listLoaded);
+void MainBody::OnMenuProcessArraySel() {
+	int id = ArrayModel_IdBody(listLoaded);
 	if (id < 0)
 		return;
 	
-	Mesh &msh = Bem().surfs[id];
+	Body &msh = Bem().surfs[id];
 	if (!IsNull(msh.dt.cg)) {
 		menuProcess.x_g <<= msh.dt.cg.x;
 		menuProcess.y_g <<= msh.dt.cg.y;
@@ -394,33 +394,33 @@ void MainMesh::OnMenuProcessArraySel() {
 	menuProcess.mass <<= msh.GetMass();
 }
 
-void MainMesh::OnMenuMoveArraySel() {
-	int id = ArrayModel_IdMesh(listLoaded);
+void MainBody::OnMenuMoveArraySel() {
+	int id = ArrayModel_IdBody(listLoaded);
 	if (id < 0)
 		return;
 	
-	Mesh &msh = Bem().surfs[id];
+	Body &msh = Bem().surfs[id];
 	menuMove.x_0 <<= msh.dt.c0.x;
 	menuMove.y_0 <<= msh.dt.c0.y;
 	menuMove.z_0 <<= msh.dt.c0.z;	
 }
 
-void MainMesh::OnMenuAdvancedArraySel() {
-	int id = ArrayModel_IdMesh(listLoaded);
+void MainBody::OnMenuAdvancedArraySel() {
+	int id = ArrayModel_IdBody(listLoaded);
 	if (id < 0)
 		return;
 }
 
-void MainMesh::OnArraySel() {
+void MainBody::OnArraySel() {
 	OnMenuOpenArraySel();
 	OnMenuProcessArraySel();
 	OnMenuMoveArraySel();
 	OnMenuAdvancedArraySel();
 }
 	
-void MainMesh::InitSerialize(bool ret) {
-	if (!ret || IsNull(menuPlot.showMesh)) 
-		menuPlot.showMesh = true;	
+void MainBody::InitSerialize(bool ret) {
+	if (!ret || IsNull(menuPlot.showBody)) 
+		menuPlot.showBody = true;	
 	if (!ret || IsNull(menuPlot.showNormals)) 
 		menuPlot.showNormals = true;	
 	if (!ret || IsNull(menuPlot.showWaterLevel)) 
@@ -450,21 +450,21 @@ void MainMesh::InitSerialize(bool ret) {
 	if (!ret || IsNull(menuPlot.backColor)) 
 		menuPlot.backColor <<= White();
 				
-	if (!ret || IsNull(menuOpen.optMeshType)) 
-		menuOpen.optMeshType = 0;
+	if (!ret || IsNull(menuOpen.optBodyType)) 
+		menuOpen.optBodyType = 0;
 	if (!ret || IsNull(menuOpen.opClean)) 
 		menuOpen.opClean = false;
 }
 
-void MainMesh::LoadSelTab(BEM &bem) {
-	const UVector<int> &ids = ArrayModel_IdsMesh(listLoaded);
+void MainBody::LoadSelTab(BEM &bem) {
+	const UVector<int> &ids = ArrayModel_IdsBody(listLoaded);
 	if (mainTab.Get() == mainTab.Find(mainStiffness))
 		mainStiffness.Load(bem.surfs, ids);
 	else if (mainTab.Get() == mainTab.Find(mainView))
 		mainView.gl.Refresh();
 }
 
-void MainMesh::OnOpt() {
+void MainBody::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
 	const String meshFiles = ".gdf .dat .stl .pnl .msh .mesh .hst .grd";
@@ -482,28 +482,28 @@ void MainMesh::OnOpt() {
 	
 	menuOpen.symX.Disable();
 	menuOpen.symY.Disable();
-	Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(~menuOpen.dropExport);
+	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
 		
 	switch (type) {
-	case Mesh::WAMIT_GDF:	menuOpen.symX.Enable();
+	case Body::WAMIT_GDF:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
-	case Mesh::HAMS_PNL:	menuOpen.symX.Enable();
+	case Body::HAMS_PNL:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
-	case Mesh::AQWA_DAT:	menuOpen.symX.Enable();
+	case Body::AQWA_DAT:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
-	case Mesh::NEMOH_DAT:	menuOpen.symY.Enable();
+	case Body::NEMOH_DAT:	menuOpen.symY.Enable();
 							break;	
 	default:				break;		
 	}
 }
 
-void MainMesh::AfterAdd(String file, int num) {
+void MainBody::AfterAdd(String file, int num) {
 	mainTab.Set(mainView);
 	for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
-		Mesh &surf = Bem().surfs[id];
+		Body &surf = Bem().surfs[id];
 		
 		surf.Report(Bem().rho);
 		
@@ -519,7 +519,7 @@ void MainMesh::AfterAdd(String file, int num) {
 	OnArraySel();	
 }
 
-bool MainMesh::OnLoad() {
+bool MainBody::OnLoad() {
 	GuiLock __;
 	
 	String file = ~menuOpen.file;
@@ -527,7 +527,7 @@ bool MainMesh::OnLoad() {
 	try {
 		Progress progress(t_("Loading mesh file..."), 100); 
 		
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		for (int i = 0; i < ids.size(); ++i) {
 			if (Bem().surfs[ids[i]].dt.fileName == file) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
@@ -539,7 +539,7 @@ bool MainMesh::OnLoad() {
 		
 		WaitCursor waitcursor;
 
-		int num = Bem().LoadMesh(file, [&](String str, int _pos) {
+		int num = Bem().LoadBody(file, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
@@ -547,7 +547,7 @@ bool MainMesh::OnLoad() {
 		
 		//int id = Bem().surfs.size()-1;
 		for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
-			Mesh &msh = Bem().surfs[id];
+			Body &msh = Bem().surfs[id];
 			
 			if (!msh.dt.mesh.IsEmpty() && ~menuMove.opZArchimede) {
 				double dz = 0.1;
@@ -575,23 +575,23 @@ bool MainMesh::OnLoad() {
 	return true;
 }
 
-void MainMesh::OnConvertMesh() {
+void MainBody::OnConvertBody() {
 	GuiLock __;
 	
 	try {
 		String fileType = ~menuOpen.dropExport;
-		Mesh::MESH_FMT type = Mesh::GetCodeMeshStr(fileType);
-		String ext = Replace(Mesh::meshExt[type], "*", "");
+		Body::MESH_FMT type = Body::GetCodeBodyStr(fileType);
+		String ext = Replace(Body::meshExt[type], "*", "");
 		
 		UVector<int> sel = ArrayCtrlSelectedGet(listLoaded);
 		
-		if (sel.size() > 1 && type != Mesh::AQWA_DAT) {
+		if (sel.size() > 1 && type != Body::AQWA_DAT) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
 		if (sel.size() == 0) {
 			if (listLoaded.GetCount() == 1)
-				sel << ArrayModel_IdMesh(listLoaded, 0);
+				sel << ArrayModel_IdBody(listLoaded, 0);
 			else {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
@@ -602,9 +602,9 @@ void MainMesh::OnConvertMesh() {
 		
 		FileSel fs;
 		
-		for (int i = 0; i < Mesh::NUMMESH; ++i)
-			if (Mesh::meshCanSave[i] && (i == type || i == Mesh::UNKNOWN)) 
-				fs.Type(Mesh::GetMeshStr(static_cast<Mesh::MESH_FMT>(i)), Mesh::meshExt[i]);
+		for (int i = 0; i < Body::NUMMESH; ++i)
+			if (Body::meshCanSave[i] && (i == type || i == Body::UNKNOWN)) 
+				fs.Type(Body::GetBodyStr(static_cast<Body::MESH_FMT>(i)), Body::meshExt[i]);
 		
 		fs.ActiveType(0);
 		fs.Set(ForceExtSafer(~menuOpen.file, ext));
@@ -620,8 +620,8 @@ void MainMesh::OnConvertMesh() {
 		
 		WaitCursor waitcursor;
 		
-		Bem().SaveMesh(fileName, sel, type, 
-							   static_cast<Mesh::MESH_TYPE>(int(~menuOpen.optMeshType)),
+		Bem().SaveBody(fileName, sel, type, 
+							   static_cast<Body::MESH_TYPE>(int(~menuOpen.optBodyType)),
 							   ~menuOpen.symX, ~menuOpen.symY);	
 							   
 		saveFolder = GetFileFolder(~fs);
@@ -630,11 +630,11 @@ void MainMesh::OnConvertMesh() {
 	}
 }
 
-void MainMesh::OnReset() {
+void MainBody::OnReset() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -642,16 +642,16 @@ void MainMesh::OnReset() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 				
-		Mesh &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[id];
 		msh.Reset(Bem().rho, Bem().g);
 
 	 	mainStiffness.Load(Bem().surfs, ids);
@@ -678,11 +678,11 @@ void MainMesh::OnReset() {
 	}
 }
 
-void MainMesh::OnUpdateMass() {
+void MainBody::OnUpdateMass() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -690,16 +690,16 @@ void MainMesh::OnUpdateMass() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 		
-		Mesh &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[id];
 		
 		double mass = msh.dt.under.volume*Bem().rho;
 		menuProcess.mass <<= mass;
@@ -713,11 +713,11 @@ void MainMesh::OnUpdateMass() {
 	}	
 }
 
-void MainMesh::OnScale() {
+void MainBody::OnScale() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -725,16 +725,16 @@ void MainMesh::OnScale() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 				
-		Mesh &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[id];
 	
 		WaitCursor wait;
 		
@@ -761,11 +761,11 @@ void MainMesh::OnScale() {
 	}		
 }
 
-void MainMesh::OnInertia() {
+void MainBody::OnInertia() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -773,18 +773,18 @@ void MainMesh::OnInertia() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 				
-		Mesh &mesh = Bem().surfs[id];
+		Body &mesh = Bem().surfs[id];
 	
-		WithMenuMeshProcessInertia<TopWindow> dialog;
+		WithMenuBodyProcessInertia<TopWindow> dialog;
 		CtrlLayout(dialog);
 		
 		double volume = mesh.dt.mesh.volume;
@@ -923,7 +923,7 @@ void MainMesh::OnInertia() {
 	}		
 }
 	
-void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
+void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 	GuiLock __;
 	
 	try {
@@ -937,7 +937,7 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 			menuProcess.z_0 <<= ~menuMove.z_0;
 		}
 		
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -945,16 +945,16 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 				
-		Mesh &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[id];
 
 		double mass = ~menuProcess.mass;
 		double x_g = ~menuProcess.x_g;
@@ -1045,11 +1045,11 @@ void MainMesh::OnUpdate(Action action, bool fromMenuProcess) {
 	}
 }
 
-void MainMesh::OnArchimede() {
+void MainBody::OnArchimede() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -1057,16 +1057,16 @@ void MainMesh::OnArchimede() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 		
-		Mesh &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[id];
 		
 		double dz = 0.5, droll = 0.5, dpitch = 0.5;
 		Surface under;
@@ -1101,7 +1101,7 @@ void MainMesh::OnArchimede() {
 }			
 	
 
-void MainMesh::OnAddPanel() {
+void MainBody::OnAddPanel() {
 	GuiLock __;
 	
 	if (IsNull(menuEdit.edit_x) || IsNull(menuEdit.edit_y) || IsNull(menuEdit.edit_z)) {
@@ -1123,7 +1123,7 @@ void MainMesh::OnAddPanel() {
 		Bem().AddFlatRectangle(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
 							 ~menuEdit.panWidthX, ~menuEdit.panWidthY);
 		
-		Mesh &msh = Bem().surfs[Bem().surfs.size()-1];
+		Body &msh = Bem().surfs[Bem().surfs.size()-1];
 		msh.dt.name = t_("Panel");
 		msh.dt.fileName =  "";
 		
@@ -1140,7 +1140,7 @@ void MainMesh::OnAddPanel() {
 	mainView.gl.Enable();
 }
 
-void MainMesh::OnAddRevolution() {
+void MainBody::OnAddRevolution() {
 	GuiLock __;
 	
 	UVector<Pointf> vals;
@@ -1167,7 +1167,7 @@ void MainMesh::OnAddRevolution() {
 	try {
 		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		Mesh &msh = Bem().surfs[Bem().surfs.size()-1];
+		Body &msh = Bem().surfs[Bem().surfs.size()-1];
 		msh.dt.name = t_("Revolution");
 		msh.dt.fileName =  "";
 		
@@ -1184,7 +1184,7 @@ void MainMesh::OnAddRevolution() {
 	mainView.gl.Enable();
 }
 
-void MainMesh::OnAddPolygonalPanel() {
+void MainBody::OnAddPolygonalPanel() {
 	GuiLock __;
 	
 	UVector<Pointf> vals;
@@ -1211,7 +1211,7 @@ void MainMesh::OnAddPolygonalPanel() {
 	try {
 		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		Mesh &msh = Bem().surfs[Bem().surfs.size()-1];
+		Body &msh = Bem().surfs[Bem().surfs.size()-1];
 		msh.dt.name = t_("Polynomial");
 		msh.dt.fileName =  "";
 		
@@ -1228,7 +1228,7 @@ void MainMesh::OnAddPolygonalPanel() {
 	mainView.gl.Enable();
 }
 
-void MainMesh::OnAddWaterSurface(char c) {
+void MainBody::OnAddWaterSurface(char c) {
 	GuiLock __;
 
 	try {
@@ -1239,9 +1239,9 @@ void MainMesh::OnAddWaterSurface(char c) {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
@@ -1253,7 +1253,7 @@ void MainMesh::OnAddWaterSurface(char c) {
 	
 		Bem().AddWaterSurface(id, c);
 		
-		Mesh &nw = Last(Bem().surfs);
+		Body &nw = Last(Bem().surfs);
 		AddRow(nw);
 		After();
 		mainViewData.OnAddedModel(mainView);
@@ -1264,7 +1264,7 @@ void MainMesh::OnAddWaterSurface(char c) {
 	mainView.gl.Enable();
 }
 
-void MainMesh::OnHealing(bool basic) {
+void MainBody::OnHealing(bool basic) {
 	GuiLock __;
 	
 	try {
@@ -1275,9 +1275,9 @@ void MainMesh::OnHealing(bool basic) {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
@@ -1288,9 +1288,9 @@ void MainMesh::OnHealing(bool basic) {
 		Progress progress(t_("Healing mesh file..."), 100); 
 		mainView.gl.Disable();
 		
-		Bem().HealingMesh(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
+		Bem().HealingBody(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);
@@ -1303,7 +1303,7 @@ void MainMesh::OnHealing(bool basic) {
 	mainView.gl.Enable();
 }
 
-void MainMesh::OnOrientSurface() {
+void MainBody::OnOrientSurface() {
 	GuiLock __;
 	
 	try {
@@ -1314,9 +1314,9 @@ void MainMesh::OnOrientSurface() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdMesh(listLoaded, 0);
+			id = ArrayModel_IdBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdMesh(listLoaded);
+		 	id = ArrayModel_IdBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
@@ -1331,7 +1331,7 @@ void MainMesh::OnOrientSurface() {
 		
 		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false, false);
 		
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);
@@ -1344,14 +1344,14 @@ void MainMesh::OnOrientSurface() {
 	mainView.gl.Enable();
 }
 
-void MainMesh::OnImage(int axis) {
+void MainBody::OnImage(int axis) {
 	GuiLock __;
 	
 	String saxis = (axis == 0) ? "X" : ((axis == 1) ? "Y" : "Z");
 
 	try {
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
-		int id = ArrayModel_IdMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		int id = ArrayModel_IdBody(listLoaded);
 		if (id < 0) {
 			BEM::PrintError(t_("Please select a model to process"));
 			return;
@@ -1359,7 +1359,7 @@ void MainMesh::OnImage(int axis) {
 		
 		WaitCursor waitcursor;
 		
-		Mesh &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[id];
 
 		msh.SetMass(~menuProcess.mass);
 		if (axis == 0)
@@ -1384,28 +1384,28 @@ void MainMesh::OnImage(int axis) {
 	}	
 }
 
-void MainMesh::OnRemove() {
+void MainBody::OnRemove() {
 	WaitCursor waitcursor;
 
 	OnRemoveSelected(true);
 }
 
-void MainMesh::OnRemoveSelected(bool all) {	
+void MainBody::OnRemoveSelected(bool all) {	
 	bool selected = false;
 	
 	UVector<int> sel = ArrayCtrlSelectedGet(listLoaded);
 	
 	for (int r = listLoaded.GetCount()-1; r >= 0; --r) {
 		if (all || Find(sel, r) >= 0) {
-			int id = ArrayModel_IdMesh(listLoaded, r);
-			Bem().RemoveMesh(id);
+			int id = ArrayModel_IdBody(listLoaded, r);
+			Bem().RemoveBody(id);
 			listLoaded.Remove(r);
 			selected = true;
 		}
 	}	// Only one available => directly selected
 	if (!selected && listLoaded.GetCount() == 1) {
-		int id = ArrayModel_IdMesh(listLoaded, 0);
-		Bem().RemoveMesh(id);
+		int id = ArrayModel_IdBody(listLoaded, 0);
+		Bem().RemoveBody(id);
 		listLoaded.Remove(0);
 		selected = true;		
 	}	
@@ -1414,7 +1414,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 		return;
 	}
 
-	UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+	UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 	mainStiffness.Load(Bem().surfs, ids);
 	mainViewData.ReLoad(mainView);
 	
@@ -1423,7 +1423,7 @@ void MainMesh::OnRemoveSelected(bool all) {
 	After();
 }
 
-void MainMesh::OnJoin() {
+void MainBody::OnJoin() {
 	GuiLock __;
 	
 	try {	
@@ -1432,9 +1432,9 @@ void MainMesh::OnJoin() {
 		for (int r = 0; r < listLoaded.GetCount(); ++r) {
 			if (listLoaded.IsSelected(r)) {
 				if (IsNull(idDest))
-					idDest = ArrayModel_IdMesh(listLoaded, r);
+					idDest = ArrayModel_IdBody(listLoaded, r);
 				else
-					idDest = min(idDest, ArrayModel_IdMesh(listLoaded, r));
+					idDest = min(idDest, ArrayModel_IdBody(listLoaded, r));
 			}
 		}
 		if (IsNull(idDest)) {
@@ -1446,16 +1446,16 @@ void MainMesh::OnJoin() {
 		
 		for (int r = listLoaded.GetCount()-1; r >= 0; --r) {
 			if (listLoaded.IsSelected(r)) {
-				int id = ArrayModel_IdMesh(listLoaded, r);
+				int id = ArrayModel_IdBody(listLoaded, r);
 				if (idDest != id) {
-					Bem().JoinMesh(idDest, id);
+					Bem().JoinBody(idDest, id);
 					RemoveRow(r);
 					//selected = true;
 				}
 			}
 		}	
 	
-		UVector<int> ids = ArrayModel_IdsMesh(listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		mainStiffness.Load(Bem().surfs, ids);
 		mainViewData.ReLoad(mainView);
 		
@@ -1466,16 +1466,16 @@ void MainMesh::OnJoin() {
 	}
 }
 
-void MainMesh::AddRow(const Mesh &msh) {
-	ArrayModel_Add(listLoaded, msh.GetMeshStr(), msh.dt.name, msh.dt.fileName, msh.dt.GetId(),
+void MainBody::AddRow(const Body &msh) {
+	ArrayModel_Add(listLoaded, msh.GetBodyStr(), msh.dt.name, msh.dt.fileName, msh.dt.GetId(),
 					optionsPlot, [&] {mainView.gl.Refresh();});
 }
 		
-void MainMesh::RemoveRow(int row) {
+void MainBody::RemoveRow(int row) {
 	listLoaded.Remove(row);
 }	
 	
-void MainMesh::OnSplit() {
+void MainBody::OnSplit() {
 	GuiLock __;
 	
 	String file = ~menuOpen.file;
@@ -1507,10 +1507,10 @@ void MainMesh::OnSplit() {
 			BEM::PrintError(t_("The mesh is monolithic so it cannot be automatically split"));
 			return;
 		}
-		int id = ArrayModel_IdMesh(listLoaded, row);
+		int id = ArrayModel_IdBody(listLoaded, row);
 		String fileName = Bem().surfs[id].dt.fileName;
 		String name = Bem().surfs[id].dt.name;
-		idsmesh = Bem().SplitMesh(id, [&](String str, int _pos) {
+		idsmesh = Bem().SplitBody(id, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			progress.Refresh();
@@ -1521,7 +1521,7 @@ void MainMesh::OnSplit() {
 		
 		for (int i = 0; i < idsmesh.size(); ++i) {
 			int idm = idsmesh[i];
-			Mesh &msh = Bem().surfs[idm];
+			Body &msh = Bem().surfs[idm];
 			
 			mainTab.Set(mainView);
 			
@@ -1541,7 +1541,7 @@ void MainMesh::OnSplit() {
 	}
 }
 
-void MainMesh::UpdateButtons() {
+void MainBody::UpdateButtons() {
 	int numrow = listLoaded.GetCount();
 	int numsel = ArrayCtrlSelectedGetCount(listLoaded);
 	menuOpen.butRemove.Enable(numrow > 0);
@@ -1550,10 +1550,10 @@ void MainMesh::UpdateButtons() {
 	menuOpen.butSplit.Enable(numsel == 1 || numrow == 1);
 	menuOpen.dropExport.Enable(numsel >= 1);
 	menuOpen.butExport.Enable(numsel >= 1);
-	menuOpen.optMeshType.Enable(numsel == 1);
+	menuOpen.optBodyType.Enable(numsel == 1);
 	menuOpen.symX.Enable(numsel == 1);
 	menuOpen.symY.Enable(numsel == 1);
-	menuOpen.labMesh.Enable(numsel == 1);
+	menuOpen.labBody.Enable(numsel == 1);
 	menuOpen.labSymmetry.Enable(numsel == 1);
 	
 	menuProcess.butUpdateCg.Enable(numsel == 1 || numrow == 1);
@@ -1573,14 +1573,14 @@ void MainMesh::UpdateButtons() {
 	menuProcess.butHull.Enable(numsel == 1 || numrow == 1);
 }
 
-void MainMesh::After() {
+void MainBody::After() {
 	UpdateButtons();
 
 	mainView.CalcEnvelope();	
 
 	mainSummary.Clear();
 	for (int row = 0; row < listLoaded.GetCount(); ++row) {
-		int id = ArrayModel_IdMesh(listLoaded, row);
+		int id = ArrayModel_IdBody(listLoaded, row);
 		mainSummary.Report(Bem().surfs, id);
 	}		
 
@@ -1590,9 +1590,9 @@ void MainMesh::After() {
 	mainView.gl.Refresh();
 }
 	
-void MainMesh::Jsonize(JsonIO &json) {
+void MainBody::Jsonize(JsonIO &json) {
 	if (json.IsLoading()) {
-		menuPlot.showMesh = Null;	
+		menuPlot.showBody = Null;	
 		menuPlot.showNormals = Null;	
 		menuPlot.showWaterLevel = Null;	
 		menuPlot.showSkewed = Null;
@@ -1605,7 +1605,7 @@ void MainMesh::Jsonize(JsonIO &json) {
 		menuPlot.showCr = Null;
 		menuPlot.showLines = Null;
 		menuPlot.showSel = Null;
-		menuOpen.optMeshType = Null;
+		menuOpen.optBodyType = Null;
 		menuOpen.opClean = false;
 		menuMove.opZArchimede = Null;
 		dropExportId = 2;
@@ -1615,9 +1615,9 @@ void MainMesh::Jsonize(JsonIO &json) {
 		("menuOpen_file", menuOpen.file)
 		("menuOpen_saveFolder", saveFolder)
 		("menuOpen_dropExport", dropExportId)
-		("menuOpen_optMeshType", menuOpen.optMeshType)
+		("menuOpen_optBodyType", menuOpen.optBodyType)
 		("menuOpen_opClean", menuOpen.opClean)
-		("menuPlot_showMesh", menuPlot.showMesh)		
+		("menuPlot_showBody", menuPlot.showBody)		
 		("menuPlot_showNormals", menuPlot.showNormals)	
 		("menuPlot_showSkewed", menuPlot.showSkewed)	
 		("menuPlot_showFissure", menuPlot.showFissure)	
@@ -1644,8 +1644,8 @@ void MainMesh::Jsonize(JsonIO &json) {
 	}	
 }
 
-void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
-	const Mesh &msh = surfs[id];
+void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
+	const Body &msh = surfs[id];
 	String name = msh.dt.name;
 	
 	if (array.GetColumnCount() == 0)
@@ -1656,12 +1656,12 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	int col = id + 1;
 
 	int idColor;
-	Upp::Color backColorMesh;
+	Upp::Color backColorBody;
 	idColor = msh.dt.mesh.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
 	if (idColor == -2 || msh.dt.mesh.surface < 0)
-		backColorMesh = Upp::Color(255, 165, 158);	// Light red
+		backColorBody = Upp::Color(255, 165, 158);	// Light red
 	else if (idColor == -1)
-		backColorMesh = Upp::Color(255, 255, 150);	// Light yellow
+		backColorBody = Upp::Color(255, 255, 150);	// Light yellow
 	
 	Upp::Color backColorUnder;
 	idColor = msh.dt.under.VolumeMatch(Bem().volWarning/100., Bem().volError/100.);
@@ -1672,7 +1672,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 									
 	bool healing = msh.dt.mesh.healing;
 
-	const MainMesh &mn = GetDefinedParent<MainMesh>(this);
+	const MainBody &mn = GetDefinedParent<MainBody>(this);
 	Upp::Color color = ArrayModel_GetColor(mn.listLoaded, id);//GetColorId(id);
 	::Color textColor = Black();
 	if (Grayscale(color) < 150)
@@ -1680,7 +1680,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, AttrText(msh.dt.fileName).Paper(color).Ink(textColor).Bold()); 
 	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
-	array.Set(row, 0, t_("Format"));			array.Set(row++, col, msh.GetMeshStr());	
+	array.Set(row, 0, t_("Format"));			array.Set(row++, col, msh.GetBodyStr());	
 	
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, msh.dt.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, msh.dt.mesh.nodes.size());
@@ -1690,7 +1690,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 														FDS(msh.dt.mesh.volume,  10, false),
 														FDS(msh.dt.mesh.volumex, 10, false),
 														FDS(msh.dt.mesh.volumey, 10, false),
-														FDS(msh.dt.mesh.volumez, 10, false))).Paper(backColorMesh));
+														FDS(msh.dt.mesh.volumez, 10, false))).Paper(backColorBody));
 	
 	array.Set(row, 0, t_("Wetted surface [m²]"));array.Set(row++, col, FDS(msh.dt.under.surface, 10, false));
 	array.Set(row, 0, t_("Immersed volume [m3] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
@@ -1864,7 +1864,7 @@ void MainSummaryMesh::Report(const UArray<Mesh> &surfs, int id) {
 	array.Set(row, 0, t_("Avg. side [m]"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.GetAvgLenSegment());
 }
 
-void MainView::Init(MainMesh &parent) {
+void MainView::Init(MainBody &parent) {
 	CtrlLayout(*this);
 	main = &parent;
 	
@@ -1884,26 +1884,26 @@ void MainView::OnPaint() {
 	
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {
 		if (ArrayModel_IsVisible(GetMain().listLoaded, row)) {
-			int id = ArrayModel_IdMesh(GetMain().listLoaded, row);
+			int id = ArrayModel_IdBody(GetMain().listLoaded, row);
 			if (id < 0)
 				throw Exc(t_("Unexpected problem in OnPaint()"));
 			
 			double len = env.LenRef()/10;
-			bool showNormals = ~GetMenuPlot().showNormals && ~GetMenuPlot().showMesh;
+			bool showNormals = ~GetMenuPlot().showNormals && ~GetMenuPlot().showBody;
 			bool showNormalsUnderwater = ~GetMenuPlot().showNormals && ~GetMenuPlot().showUnderwater;
-			if (~GetMenuPlot().showNormals && !~GetMenuPlot().showMesh && !~GetMenuPlot().showUnderwater)
+			if (~GetMenuPlot().showNormals && !~GetMenuPlot().showBody && !~GetMenuPlot().showUnderwater)
 				showNormals = true;
 			
 			const Upp::Color &color = ArrayModel_GetColor(GetMain().listLoaded, row);
-			const Mesh &msh = Bem().surfs[id];
+			const Body &msh = Bem().surfs[id];
 			
-			gl.PaintSurface(msh.dt.mesh, color, ~GetMenuPlot().showMesh, 	
+			gl.PaintSurface(msh.dt.mesh, color, ~GetMenuPlot().showBody, 	
 				showNormals);
 				
 			gl.PaintSurface(msh.dt.under, color, ~GetMenuPlot().showUnderwater, 
 				showNormalsUnderwater);
 			
-			if (~GetMenuPlot().showMesh)
+			if (~GetMenuPlot().showBody)
 				gl.PaintSegments(msh.dt.mesh, color);
 			
 			if (~GetMenuPlot().showSkewed)
@@ -1931,7 +1931,7 @@ void MainView::OnPaint() {
 				gl.PaintLines(msh.dt.mesh.lines, color);
 			
 			if (paintSelect) {
-				if (~GetMenuPlot().showMesh) {
+				if (~GetMenuPlot().showBody) {
 					const UVector<int> &nod = msh.dt.mesh.GetSelNodes();
 					for (int in = 0; in < nod.size(); ++in)
 						gl.PaintCube(msh.dt.mesh.nodes[nod[in]], len/20, LtBlue());
@@ -1973,7 +1973,7 @@ void MainView::OnPaint() {
 	}
 }
 
-const WithMenuMeshPlot<StaticRect> &MainView::GetMenuPlot() const {
+const WithMenuBodyPlot<StaticRect> &MainView::GetMenuPlot() const {
 	return main->menuPlot;
 }
 
@@ -1981,14 +1981,14 @@ void MainView::CalcEnvelope() {
 	env.Reset();
 	//for (int i = 0; i < Bem().surfs.size(); ++i)
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {
-		int id = ArrayModel_IdMesh(GetMain().listLoaded, row);
+		int id = ArrayModel_IdBody(GetMain().listLoaded, row);
 		if (id < 0)
 			throw Exc("Unexpected problem in CalcEnvelope()");
 		env.MixEnvelope(Bem().surfs[id].dt.mesh.env);
 	}
 }
 
-void MainMesh::LoadDragDrop() {
+void MainBody::LoadDragDrop() {
 	GuiLock __;
 	
 	Sort(filesToDrop);
@@ -2009,7 +2009,7 @@ void MainMesh::LoadDragDrop() {
 	}
 }
 	
-void MainMesh::DragAndDrop(Point , PasteClip& d) {
+void MainBody::DragAndDrop(Point , PasteClip& d) {
 	GuiLock __;
 	if (IsDragAndDropSource())
 		return;
@@ -2019,7 +2019,7 @@ void MainMesh::DragAndDrop(Point , PasteClip& d) {
 	}
 }
 
-bool MainMesh::Key(dword key, int ) {
+bool MainBody::Key(dword key, int ) {
 	GuiLock __;
 	if (key == K_CTRL_V) {
 		filesToDrop = GetFiles(Ctrl::Clipboard());
@@ -2065,9 +2065,9 @@ void MainGZ::Init() {
 
 void MainGZ::OnUpdate() {
 	try {
-		MainMesh &mm = GetDefinedParent<MainMesh>(this);
+		MainBody &mm = GetDefinedParent<MainBody>(this);
 		
-		idOpened = ArrayModel_IdMesh(mm.listLoaded);
+		idOpened = ArrayModel_IdBody(mm.listLoaded);
 		if (idOpened < 0) {
 			BEM::PrintError(t_("Please select a model to process"));
 			return;
@@ -2102,7 +2102,7 @@ void MainGZ::OnUpdate() {
 			BEM::PrintError(t_("Wrong Z angle range"));
 			return;
 		}
-		Mesh &msh = Bem().surfs[idOpened];	
+		Body &msh = Bem().surfs[idOpened];	
 	
 		int numAngle = 1 + int((angleTo - angleFrom)/angleDelta);
 		
@@ -2201,9 +2201,9 @@ void MainGZ::OnUpdate() {
 
 void MainGZ::Clear(bool force) {
 	if (!force) {
-		MainMesh &mm = GetDefinedParent<MainMesh>(this);
+		MainBody &mm = GetDefinedParent<MainBody>(this);
 		
-		UVector<int> ids = ArrayModel_IdsMesh(mm.listLoaded);
+		UVector<int> ids = ArrayModel_IdsBody(mm.listLoaded);
 		if (Find(ids, idOpened) >= 0)
 			return;
 	}

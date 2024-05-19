@@ -4,14 +4,14 @@
 #include "BEMRosetta_int.h"
 
 
-String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &x0z) {
+String HAMSBody::LoadPnl(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
-	Mesh &msh = _mesh.Add();
+	Body &msh = _mesh.Add();
 	msh.dt.fileName = fileName;
-	msh.dt.SetCode(Mesh::HAMS_PNL);
+	msh.dt.SetCode(Body::HAMS_PNL);
 	
 	LineParser f(in);	
 	f.IsSeparator = IsTabSpace;
@@ -131,7 +131,7 @@ String HAMSMesh::LoadPnl(UArray<Mesh> &_mesh, String fileName, bool &y0z, bool &
 	return String();
 }
 
-void HAMSMesh::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z) {
+void HAMSBody::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	

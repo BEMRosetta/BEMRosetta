@@ -4,8 +4,8 @@
 #include "BEMRosetta_int.h"
 
 
-String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bool &x0z) {
-	Mesh &msh = mesh.Add(),
+String HydrostarBody::LoadHst(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z) {
+	Body &msh = mesh.Add(),
 		 &damp = mesh.Add();
 	String ret = LoadHst0(fileName, msh, damp, y0z, x0z);
 	
@@ -19,15 +19,15 @@ String HydrostarMesh::LoadHst(UArray<Mesh> &mesh, String fileName, bool &y0z, bo
 	return ret;
 }
 	
-String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0z, bool &x0z) {
+String HydrostarBody::LoadHst0(String fileName, Body &mesh, Body &damp, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
 	
 	mesh.dt.fileName = fileName;
-	mesh.dt.SetCode(Mesh::HYDROSTAR_HST);
+	mesh.dt.SetCode(Body::HYDROSTAR_HST);
 	damp.dt.fileName = fileName;
-	damp.dt.SetCode(Mesh::HYDROSTAR_HST);
+	damp.dt.SetCode(Body::HYDROSTAR_HST);
 	
 	x0z = y0z = false;
 	
@@ -52,7 +52,7 @@ String HydrostarMesh::LoadHst0(String fileName, Mesh &mesh, Mesh &damp, bool &y0
 					   ymax = f.GetDouble(5),
 					   dlty = f.GetDouble(6);
 				
-				Mesh surf;
+				Body surf;
 				surf.dt.mesh.AddFlatRectangle(xmax-xmin, ymax-ymin, dltx, dlty); 
 				surf.dt.mesh.Translate(xmin, ymin, 0);
 				

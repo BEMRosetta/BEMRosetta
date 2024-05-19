@@ -4,14 +4,14 @@
 
 	
 // enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	UNKNOWN, NUMMESH};	
-const char *Mesh::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Unknown"};	
-const bool Mesh::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false};       
-const char *Mesh::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.*"};       
+const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.*"};       
 
-int Mesh::idCount = 0;
+int Body::idCount = 0;
 
 
-void Mesh::Copy(const Mesh &msh) {
+void Body::Copy(const Body &msh) {
 	dt.projectionPos = clone(msh.dt.projectionPos);
 	dt.projectionNeg = clone(msh.dt.projectionNeg);
 	
@@ -43,13 +43,13 @@ void Mesh::Copy(const Mesh &msh) {
 	dt.SetId(msh.dt.GetId());
 }
 
-String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
 	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
-	UArray<Mesh> msh;
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
+	UArray<Body> msh;
 	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 	if (!ret.IsEmpty())
 		return ret;
@@ -57,12 +57,12 @@ String Mesh::Load(Mesh &mesh, String file, double rho, double g, bool cleanPanel
 	return ret;
 }
 	
-String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
 	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
@@ -70,46 +70,46 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 	mesh.Clear();
 	
 	if (ext == ".dat") {
-		ret = NemohMesh::LoadDat(mesh, file, x0z);
+		ret = NemohBody::LoadDat(mesh, file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-			ret = NemohMesh::LoadDatFS(mesh, file, x0z);
+			ret = NemohBody::LoadDatFS(mesh, file, x0z);
 			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-				ret = SalomeMesh::LoadDat(mesh, file);
+				ret = SalomeBody::LoadDat(mesh, file);
 				if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-					ret = WamitMesh::LoadDat(mesh, file);
+					ret = WamitBody::LoadDat(mesh, file);
 					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-						ret = DiodoreMesh::LoadDat(mesh, file);
+						ret = DiodoreBody::LoadDat(mesh, file);
 						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
-							ret = AQWAMesh::LoadDat(mesh, file, y0z, x0z);
+							ret = AQWABody::LoadDat(mesh, file, y0z, x0z);
 					}
 				}
 			}
 		}
 	} else if (ext == ".lis")
-		ret = AQWAMesh::Load_LIS(mesh, file, g, y0z, x0z);
+		ret = AQWABody::Load_LIS(mesh, file, g, y0z, x0z);
 #ifdef PLATFORM_WIN32	
 	else if (ext == ".owr")
-		ret = ORCAMesh::Load_OWR(mesh, file, g, y0z, x0z);
+		ret = ORCABody::Load_OWR(mesh, file, g, y0z, x0z);
 #endif	
 	else if (ext == ".txt") 
-		ret = DiodoreMesh::LoadDat(mesh, file); 
+		ret = DiodoreBody::LoadDat(mesh, file); 
 	else if (ext == ".gdf") 
-		ret = WamitMesh::LoadGdf(mesh, file, y0z, x0z); 
+		ret = WamitBody::LoadGdf(mesh, file, y0z, x0z); 
 	else if (ext == ".pnl") 
-		ret = HAMSMesh::LoadPnl(mesh, file, y0z, x0z); 
+		ret = HAMSBody::LoadPnl(mesh, file, y0z, x0z); 
 	else if (ext == ".hst") 
-		ret = HydrostarMesh::LoadHst(mesh, file, y0z, x0z); 
+		ret = HydrostarBody::LoadHst(mesh, file, y0z, x0z); 
 	else if (ext == ".stl") {
 		bool isText;
-		Mesh &m = mesh.Add();
+		Body &m = mesh.Add();
 		try {
 			LoadStl(file, m.dt.mesh, isText, m.dt.fileHeader);
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		m.dt.SetCode(isText ? Mesh::STL_TXT : Mesh::STL_BIN);
+		m.dt.SetCode(isText ? Body::STL_TXT : Body::STL_BIN);
 	} else if (ext == ".msh") {
-		Mesh &m = mesh.Add();
+		Body &m = mesh.Add();
 		try {
 			LoadTDynMsh(file, m.dt.mesh);
 		} catch(Exc e) {
@@ -122,30 +122,30 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 			} else
 				return std::move(e);
 		}
-		m.dt.SetCode(Mesh::MSH_TDYN);
+		m.dt.SetCode(Body::MSH_TDYN);
 	} else if (ext == ".grd") {
-		Mesh &m = mesh.Add();
+		Body &m = mesh.Add();
 		try {
 			LoadGRD(file, m.dt.mesh, y0z, x0z);
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		m.dt.SetCode(Mesh::MIKE21_GRD);
+		m.dt.SetCode(Body::MIKE21_GRD);
 	} else if (ext == ".mesh" || ext == ".bem") {
-		Mesh &m = mesh.Add();
+		Body &m = mesh.Add();
 		try {
 			m.dt.mesh.Load(file);
 		} catch(Exc e) {
 			return std::move(e);
 		}
-		m.dt.SetCode(Mesh::BEM_MESH);
+		m.dt.SetCode(Body::BEM_MESH);
 	} else
 		ret = Format(t_("Unknown mesh file format '%s'"), file);	
 	
 	if (!ret.IsEmpty())
 		return ret;
 	
-	for (Mesh &m : mesh) {
+	for (Body &m : mesh) {
 		if (IsNull(m.dt.c0))
 			m.dt.c0 = Point3D(0, 0, 0);
 		
@@ -173,7 +173,7 @@ String Mesh::Load(UArray<Mesh> &mesh, String file, double rho, double g, bool cl
 	return String();
 }
 
-void Mesh::SaveAs(const UArray<Mesh> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
+void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 						int &nNodes, int &nPanels) {
 	UArray<Surface> surfs(meshes.size());
 	nNodes = nPanels = 0;
@@ -217,17 +217,17 @@ void Mesh::SaveAs(const UArray<Mesh> &meshes, String file, MESH_FMT type, MESH_T
 	}
 	
 	if (type == WAMIT_GDF) 
-		WamitMesh::SaveGdf(file, First(surfs), g, symX, symY);	
+		WamitBody::SaveGdf(file, First(surfs), g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		NemohMesh::SaveDat(meshes, file, First(surfs), symY, nPanels);
+		NemohBody::SaveDat(meshes, file, First(surfs), symY, nPanels);
 	else if (type == NEMOH_PRE) 
-		NemohMesh::SavePreMesh(file, First(surfs));
+		NemohBody::SavePreBody(file, First(surfs));
 	else if (type == HAMS_PNL)		
-		HAMSMesh::SavePnl(file, First(surfs), symX, symY);	// Only one symmetry is really available
+		HAMSBody::SavePnl(file, First(surfs), symX, symY);	// Only one symmetry is really available
 	else if (type == AQWA_DAT)		
-		AQWAMesh::SaveDat(file, meshes, surfs, rho, g, symX, symY);	
+		AQWABody::SaveDat(file, meshes, surfs, rho, g, symX, symY);	
 	else if (type == DIODORE_DAT) 
-		DiodoreMesh::SaveDat(file, First(surfs));
+		DiodoreBody::SaveDat(file, First(surfs));
 	else if (type == STL_BIN)		
 		SaveStlBin(file, First(surfs));
 	else if (type == STL_TXT)		
@@ -240,7 +240,7 @@ void Mesh::SaveAs(const UArray<Mesh> &meshes, String file, MESH_FMT type, MESH_T
 		throw Exc(t_("Unknown mesh file type"));
 }
 
-String Mesh::Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status) {
+String Body::Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status) {
 	String ret = dt.mesh.Heal(basic, grid, eps, Status);
 	if (!ret.IsEmpty())
 		return ret;
@@ -250,23 +250,23 @@ String Mesh::Heal(bool basic, double rho, double g, double grid, double eps, Fun
 	return String();
 }
 
-void Mesh::Orient() {
+void Body::Orient() {
 	dt.mesh.Orient();
 }
 
-void Mesh::Append(const Surface &orig, double rho, double g) {
+void Body::Append(const Surface &orig, double rho, double g) {
 	dt.mesh.Append(orig);
 	
 	AfterLoad(rho, g, false, true);
 }
 
-void Mesh::Reset(double rho, double g) {
+void Body::Reset(double rho, double g) {
 	dt.mesh = clone(dt.mesh0);
 	dt.cg = clone(dt.cg0);
 	AfterLoad(rho, g, false, false);
 }
 	
-void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy) {
+void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy) {
 	if (dt.mesh.IsEmpty()) {
 		if (!dt.mesh.lines.IsEmpty())
 			dt.mesh.GetEnvelope();
@@ -304,8 +304,8 @@ void Mesh::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		dt.under.GetHydrostaticStiffness(dt.C, dt.c0, dt.cg, dt.cb, rho, g, GetMass(), massBuoy);
 }
 
-void Mesh::Report(double rho) const {
-	BEM::Print("\n\n" + Format(t_("Mesh file '%s'"), dt.fileName));
+void Body::Report(double rho) const {
+	BEM::Print("\n\n" + Format(t_("Body file '%s'"), dt.fileName));
 	
 	BEM::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			dt.mesh.env.minX, dt.mesh.env.maxX, dt.mesh.env.minY, dt.mesh.env.maxY, dt.mesh.env.minZ, dt.mesh.env.maxZ));
@@ -322,27 +322,27 @@ void Mesh::Report(double rho) const {
 	BEM::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), dt.mesh.panels.size(), dt.mesh.nodes.size()));
 }
 
-bool Mesh::IsSymmetricX() {
+bool Body::IsSymmetricX() {
 	return abs(dt.cb.x)/abs(dt.mesh.env.maxX - dt.mesh.env.minX) < 0.001 && abs(dt.mesh.env.maxX + dt.mesh.env.minX) < 0.001;
 }
 
-bool Mesh::IsSymmetricY() {
+bool Body::IsSymmetricY() {
 	return abs(dt.cb.y)/abs(dt.mesh.env.maxY - dt.mesh.env.minY) < 0.001 && abs(dt.mesh.env.maxY + dt.mesh.env.minY) < 0.001;
 }
 
-double Mesh::GMroll(double rho, double g) const {
+double Body::GMroll(double rho, double g) const {
 	if (!IsNum(rho) || !IsNum(g) || dt.under.volume == 0 || dt.C.size() == 0)
 		return Null;
 	return dt.C(3, 3)/(rho*g*dt.under.volume);
 }
 
-double Mesh::GMpitch(double rho, double g) const {
+double Body::GMpitch(double rho, double g) const {
 	if (!IsNum(rho) || !IsNum(g) || dt.under.volume == 0 || dt.C.size() == 0)
 		return Null;
 	return dt.C(4, 4)/(rho*g*dt.under.volume);
 }
 		
-void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
+void Body::GZ(double from, double to, double delta, double angleCalc, double rho, double g,
   double tolerance, UVector<double> &dataangle, UVector<double> &datagz, String &error) {
 	UVector<double> dataMoment, vol, disp, wett, wplane, draft;
 	UVector<Point3D> dcb, dcg;
@@ -350,7 +350,7 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 		vol, disp, wett, wplane, draft, dcb, dcg, error);
 }
 
-void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho, double g, double tolerance,
+void Body::GZ(double from, double to, double delta, double angleCalc, double rho, double g, double tolerance,
 	Function <bool(String, int pos)> Status, 
 	UVector<double> &dataangle, UVector<double> &datagz, UVector<double> &dataMoment,
 	UVector<double> &vol, UVector<double> &disp, UVector<double> &wett, UVector<double> &wplane,
@@ -436,7 +436,7 @@ void Mesh::GZ(double from, double to, double delta, double angleCalc, double rho
 	}	
 }
 
-void Mesh::Move(double dx, double dy, double dz, double ax, double ay, double az, double rho, double g, bool setnewzero) {
+void Body::Move(double dx, double dy, double dz, double ax, double ay, double az, double rho, double g, bool setnewzero) {
 	dt.mesh = clone(dt.mesh0);
 	dt.cg = clone(dt.cg0);					
 	dt.mesh.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
@@ -444,15 +444,15 @@ void Mesh::Move(double dx, double dy, double dz, double ax, double ay, double az
 	AfterLoad(rho, g, false, setnewzero);	
 }
 
-void Mesh::Move(const double *pos, double rho, double g, bool setnewzero) {
+void Body::Move(const double *pos, double rho, double g, bool setnewzero) {
 	Move(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], rho, g, setnewzero);	
 }
 
-void Mesh::Move(const float *pos, double rho, double g, bool setnewzero) {
+void Body::Move(const float *pos, double rho, double g, bool setnewzero) {
 	Move(pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], rho, g, setnewzero);	
 }
 
-void Mesh::SetMass(double m) {
+void Body::SetMass(double m) {
 	if (dt.M.size() != 36)
 		dt.M = MatrixXd::Zero(6,6);	
 	double oldm = dt.M(0,0);
@@ -463,7 +463,7 @@ void Mesh::SetMass(double m) {
 		dt.M(0,0) = dt.M(1,1) = dt.M(2,2) = m;
 }
 
-void Mesh::Jsonize(JsonIO &json) {
+void Body::Jsonize(JsonIO &json) {
 	json
 		("projectionPos", dt.projectionPos)
 		("projectionNeg", dt.projectionNeg)

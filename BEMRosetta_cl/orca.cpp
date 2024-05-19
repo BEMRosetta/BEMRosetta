@@ -485,14 +485,13 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
 			throwError("Load dotLoadRAOs 2");		
 		
-		for (int r = 0; r < 6*hy.dt.Nb; ++r) {
-			for (int ih = 0; ih < hy.dt.Nh; ++ih) {
-				for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) {
-					f.force[ih](ifr, r).real(a(ih, ifr, r).Re*factor(r%6));
-					f.force[ih](ifr, r).imag(a(ih, ifr, r).Im*factor(r%6));
-				}
-			}
-		}
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+			for (int idf = 0; idf < 6; ++idf) 
+				for (int ih = 0; ih < hy.dt.Nh; ++ih) 
+					for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) {
+						f[ib][ih](ifr, idf).real(a(ih, ifr, idf + 6*ib).Re*factor(idf));
+						f[ib][ih](ifr, idf).imag(a(ih, ifr, idf + 6*ib).Im*factor(idf));
+					}
 	};
 	
 	LoadF(hy.dt.ex, dotLoadRAOsDiffraction, "diffraction force", factor.F);
@@ -673,7 +672,7 @@ void Orca::LoadParameters(Hydro &hy) {
 	
 	hy.dt.msh.SetCount(hy.dt.Nb);
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-		hy.dt.msh[ib].dt.SetCode(Mesh::ORCA_OWR);
+		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
 		hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
 		//hy.dt.msh[ib].cg = Point3D(hy.dt.cg(0, ib), hy.dt.cg(1, ib), hy.dt.cg(2, ib));
 	}

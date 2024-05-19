@@ -142,6 +142,8 @@ public:
 		case Hydro::PLOT_FORCE_SC_2:return !hy->IsLoadedFsc(idf, jdf);		// jdf: heading, idf: body
 		case Hydro::PLOT_FORCE_FK_1:	
 		case Hydro::PLOT_FORCE_FK_2:return !hy->IsLoadedFfk(idf, jdf);
+		case Hydro::PLOT_FORCE_FK_1_P:	
+		case Hydro::PLOT_FORCE_FK_2_P:return !hy->IsLoadedFfk_P(idf, jdf);
 		case Hydro::PLOT_FORCE_EX_1:
 		case Hydro::PLOT_FORCE_EX_2:return !hy->IsLoadedFex(idf, jdf);
 		case Hydro::PLOT_RAO_1:
@@ -166,22 +168,26 @@ public:
 		case Hydro::PLOT_KIRF:		return hy->Kirf_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_AINFW:		return hy->Ainf_w_(ndim, int(id), idf, jdf);
 		case Hydro::PLOT_MD:		return hy->Md_(ndim, idf, jdf, int(id));		// idf: body, jdf: heading, [Nb][Nh][6](Nf)
-		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf)) : 
-														real(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf)) : 
-														imag(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf)) : 
-														real(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf)) : 
-														imag(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf)) : 
-														real(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf));
-		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf)) : 
-														imag(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf));
-		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf)) : 
-														real(hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf));
-		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf)) : 
-														imag(hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf));
+		case Hydro::PLOT_FORCE_SC_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6)) : 
+														real(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6)) : 
+														imag(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6)) : 
+														real(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6)) : 
+														imag(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_FK_1_P:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6)) : 
+														  real(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_FK_2_P:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6)) : 
+														  imag(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));														
+		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6)) : 
+														real(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6)) : 
+														imag(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_RAO_1:		return show_ma_ph ? abs (hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf%6, idf/6)) : 
+														real(hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_RAO_2:		return show_ma_ph ? arg (hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf%6, idf/6)) : 
+														imag(hy->RAO_(ndim, hy->dt.rao,jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_TFS_1:		return show_ma_ph ? abs (hy->TFS_(ndim, int(id), idf, jdf)) : 
 														real(hy->TFS_(ndim, int(id), idf, jdf));
 		case Hydro::PLOT_TFS_2:		return show_ma_ph ? arg (hy->TFS_(ndim, int(id), idf, jdf)) : 
@@ -279,24 +285,24 @@ public:
 	void Print(String str);
 };
 
-class MainMesh;
+class MainBody;
 	
 class MainView : public WithMainView<StaticRect> {
 public:
 	typedef MainView CLASSNAME;
 	
 	MainView() {}
-	void Init(MainMesh &parent);
+	void Init(MainBody &parent);
 	void CalcEnvelope();
 	void OnPaint();
-	const WithMenuMeshPlot<StaticRect> &GetMenuPlot() const;
-	const MainMesh &GetMain() const 						{return *main;}			
+	const WithMenuBodyPlot<StaticRect> &GetMenuPlot() const;
+	const MainBody &GetMain() const 						{return *main;}			
 	void SetPaintSelect(bool _paintSelect)					{paintSelect = _paintSelect;}
 	
 	VolumeEnvelope env;
 	
 private:
-	const MainMesh *main = nullptr;
+	const MainBody *main = nullptr;
 	bool paintSelect = true;
 };
 
@@ -385,7 +391,7 @@ public:
 	enum VideoType {UNKNOWN, JSON, OpenFAST, CSV};
 	
 	VideoCtrl() {}
-	void Init(Function <int(UVector<int> &ids)> _GetMeshId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action);
+	void Init(Function <int(UVector<int> &ids)> _GetBodyId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action);
 	
 	~VideoCtrl() {
 		video.Clear();
@@ -442,7 +448,7 @@ private:
 	UVector<int> ids;
 	int meshId = -1;
 	
-	Function <int(UVector<int> &ids)> GetMeshId;
+	Function <int(UVector<int> &ids)> GetBodyId;
 	Function<void(int meshid, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> Action;
 	
 	One<VideoSequence> video;
@@ -453,7 +459,7 @@ public:
 	typedef MainViewDataEach CLASSNAME;
 	
 	MainViewDataEach() {}
-	void Init(Mesh &_mesh, MainView &mainView);
+	void Init(Body &_mesh, MainView &mainView);
 	void OnRefresh();
 	
 	TabCtrl tab;
@@ -465,23 +471,23 @@ public:
 	class DataSourceFacets : public Convert {
 	public:
 		DataSourceFacets() : pmesh(0), col(0), all(true) {}
-		void Init(Mesh &_mesh, int _col, bool _all);
+		void Init(Body &_mesh, int _col, bool _all);
 		Value Format(const Value& q) const;
-		inline const Mesh &GetMesh()	{return *pmesh;}
+		inline const Body &GetBody()	{return *pmesh;}
 		
 	private:
-		Mesh *pmesh;
+		Body *pmesh;
 		int col;
 		bool all;
 	};
 	class DataSourceNodes : public Convert {
 	public:
 		DataSourceNodes() : pmesh(0), xyz(0), origMovedUnder(0) {}
-		void Init(Mesh &_mesh, int _xyz, int _origMovedUnder);
+		void Init(Body &_mesh, int _xyz, int _origMovedUnder);
 		Value Format(const Value& q) const;
 		
 	private:
-		Mesh *pmesh;
+		Body *pmesh;
 		int xyz;
 		int origMovedUnder;
 	};
@@ -512,11 +518,11 @@ private:
 	UArray<MainViewDataEach> models;
 };
 
-class MainSummaryMesh : public MainSummary {
+class MainSummaryBody : public MainSummary {
 public:
 	typedef MainSummaryCoeff CLASSNAME;
 
-	void Report(const UArray<Mesh> &surfs, int id);
+	void Report(const UArray<Body> &surfs, int id);
 };
 
 class MainMatrixKA : public WithMainMatrixKA<StaticRect> {
@@ -527,7 +533,7 @@ public:
 	void OnOp(int id);
 	void Clear();
 	bool Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim);
-	void Load(UArray<Mesh> &surfs, const UVector<int> &ids);
+	void Load(UArray<Body> &surfs, const UVector<int> &ids);
 	
 	void Jsonize(JsonIO &json) {
 		bool opdigits = ~opDigits;
@@ -561,7 +567,7 @@ public:
 	
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc, int ncol);
-	void Add(const Mesh &mesh, int icase, bool button);
+	void Add(const Body &mesh, int icase, bool button);
 	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hy, int idc, bool ndim);
 	void PrintData();
 		
@@ -674,7 +680,7 @@ public:
 	void Clear();
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
-	UArray<HydroSource> ABFZ_source, ABFZ_source2, B_A_source;
+	UArray<HydroSource> ABFZ_source, ABFZ_source2, B_A_source, ABFZ_source_p, ABFZ_source2_p;
 	UArray<HydroSource> Ainf_source, A0_source, B_H_source, A_P_source, B_P_source;	
 	UArray<HydroSource> TFS_source, TFS_source2;
 		
@@ -685,7 +691,7 @@ public:
 	bool dim;
 	int markW;
 	bool show_w, show_ma_ph;
-	bool opAinf, opA0, opB, opApot, opBhask, opBpot;
+	bool opAinf, opA0, opB, opApot, opBhask, opBpot, opFfkpot;
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
@@ -748,9 +754,9 @@ private:
 
 typedef class MainABForce MainRAO;
 
-class MainBEMMesh : public StaticRect {
+class MainBEMBody : public StaticRect {
 public:
-	typedef MainBEMMesh CLASSNAME;
+	typedef MainBEMBody CLASSNAME;
 	
 	void Init() {
 		menu.Add(listLoaded.LeftPosZ(0, 152).VSizePosZ(0, 0));
@@ -766,9 +772,9 @@ private:
 	StaticRect menu;
 };
 
-class MainMesh : public MainBEMMesh {
+class MainBody : public MainBEMBody {
 public:
-	typedef MainMesh CLASSNAME;
+	typedef MainBody CLASSNAME;
 	
 	void Init();
 	void InitSerialize(bool ret);
@@ -783,7 +789,7 @@ public:
 	void OnRemoveSelected(bool all);
 	void OnJoin();
 	void OnSplit();
-	void OnConvertMesh();
+	void OnConvertBody();
 	void OnUpdate(Action action, bool fromMenuProcess);
 	void OnScale();
 	void OnTranslateArchimede(bool fromMenuProcess);
@@ -805,20 +811,20 @@ public:
 	void OnInertia();
 	void UpdateButtons();
 			
-	void AddRow(const Mesh &surf);
+	void AddRow(const Body &surf);
 	void RemoveRow(int row);
 	
 	void LoadSelTab(BEM &bem);
 		
 	void Jsonize(JsonIO &json);
 		
-	WithMenuMesh<StaticRect> menuOpen;
-	WithMenuMeshPlot<StaticRect> menuPlot;
-	WithMenuMeshProcess<StaticRect> menuProcess;
-	WithMenuMeshMove<StaticRect> menuMove;
-	WithMenuMeshEdit<StaticRect> menuEdit;
+	WithMenuBody<StaticRect> menuOpen;
+	WithMenuBodyPlot<StaticRect> menuPlot;
+	WithMenuBodyProcess<StaticRect> menuProcess;
+	WithMenuBodyMove<StaticRect> menuMove;
+	WithMenuBodyEdit<StaticRect> menuEdit;
 	
-	bool GetShowMesh()			{return menuPlot.showMesh;}
+	bool GetShowBody()			{return menuPlot.showBody;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
 
 private:	
@@ -826,7 +832,7 @@ private:
 	VideoCtrl videoCtrl;
 	MainViewData mainViewData;
 	SplitterButton splitterAll, splitterVideo;
-	MainSummaryMesh mainSummary;
+	MainSummaryBody mainSummary;
 	MainMatrixKA mainStiffness, mainStiffness2;
 	MainGZ mainGZ;
 
@@ -845,17 +851,17 @@ private:
 	int dropExportId;
 };
 
-class MainMeshW : public TopWindow {
+class MainBodyW : public TopWindow {
 public:
-	typedef MainMeshW CLASSNAME;
+	typedef MainBodyW CLASSNAME;
 	
-	void Init(MainMesh &_mesh, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose);
+	void Init(MainBody &_mesh, const Image &icon, const Image &largeIcon, Function <void()> _WhenClose);
 	virtual void Close() {
 		WhenClose();
 		delete this;
 	}
 	
-	MainMesh mesh;
+	MainBody mesh;
 
 private:
 	Function <void()> WhenClose;
@@ -897,12 +903,10 @@ private:
 	bool OnSave();
 	void OnCursor();
 	void arrayOnCursor();
-	//bool ArrayUpdateCursor();
 	void arrayClear();
 	void arrayOnAdd();
 	void arrayOnDuplicate();
 	void arrayOnRemove();
-	//void InitArray(bool isNemoh);
 	
 	void InitGrid(GridCtrl &grid, EditDouble edit[]);
 	void LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat);
@@ -913,7 +917,6 @@ private:
 
 class ArrayFields {
 public:
-	//void Init(Mooring &mooring) = 0;
 	virtual void Load() = 0;
 	virtual void Save() = 0;
 
@@ -1152,7 +1155,6 @@ public:
 	void WhenFocus();
 	void OnPainter(Painter &w, ScatterCtrl *scat);
 	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
-	//void OnMove(Point p);
 	
 	bool Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jdfs,
 		UVector<double> &froms, UVector<double> &tos, UVector<UVector<double>> &freqs); 
@@ -1164,13 +1166,12 @@ public:
 
 private:
 	UArray<Option> options;
-	//int id = -1;
 	RectEnterSet frameSet;
 };
 
-class MeshBody : public WithMeshBodyTable<StaticRect> {
+class BodyBody : public WithBodyBodyTable<StaticRect> {
 public:
-	typedef MeshBody CLASSNAME;
+	typedef BodyBody CLASSNAME;
 	
 	void Init();
 	void Load(const Hydro &hy, int ib, bool hasPotentials);
@@ -1212,9 +1213,9 @@ public:
 	UArray<DataSourcePanels> dataSourcePanels;
 };
 
-class MainMeshTable : public StaticRect {
+class MainBodyTable : public StaticRect {
 public:
-	typedef MainMesh CLASSNAME;
+	typedef MainBodyTable CLASSNAME;
 	
 	void Init();
 	bool Load();
@@ -1223,7 +1224,7 @@ public:
 private:
 	TabCtrl tab;
 	
-	UArray<MeshBody> bodies;
+	UArray<BodyBody> bodies;
 };
 
 
@@ -1409,7 +1410,7 @@ class MapNodes : public WithMapNodes<TopWindow> {
 public:
 	typedef MapNodes CLASSNAME;	
 	
-	void Init(const Hydro &_hydro, int _ib);
+	void Init(int _id, int _ib);
 	void OnPasteNodes();
 	void OnMapNodes();
 	void RefreshTable();
@@ -1417,8 +1418,8 @@ public:
 	void OnClose() {Close();}
 	
 private:
-	const Hydro *phydro;
-	int ib;
+	int id = -1;
+	int ib = -1;
 	
 	UVector<int> ids;
 	UVector<Point3D> points;
@@ -1426,7 +1427,7 @@ private:
 	Tensor<double, 4> Bpan;		// [Np][6][6][Nf]	Radiation damping
 };
 
-class MainBEM : public MainBEMMesh {
+class MainBEM : public MainBEMBody {
 public:
 	typedef MainBEM CLASSNAME;
 	
@@ -1451,7 +1452,6 @@ public:
 	void OnConvergence();
 	void OnSpreadNegative();
 	void OnMapNodes();
-	//void OnUpdateCrot();
 	void OnUpdateCwave();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces();
@@ -1480,7 +1480,7 @@ public:
 	WithMenuProcess2<StaticRect> menuProcess2;
 	WithMenuAdvanced<StaticRect> menuAdvanced;
 	WithMenuPlot<StaticRect> menuPlot;
-	WithMenuBEMMesh<StaticRect> menuMesh;
+	WithMenuBEMBody<StaticRect> menuBody;
 	MenuFOAMM menuFOAMM;
 	MapNodes mapNodes;
 	
@@ -1499,7 +1499,7 @@ public:
 	MainMatrixKA mainMatrixM;
 	MainSetupFOAMM mainSetupFOAMM;
 	MainQTF mainQTF;
-	MainMeshTable mainMesh;
+	MainBodyTable mainBody;
 	
 	MenuPlotList menuPlotList;
 		
@@ -1595,7 +1595,7 @@ private:
 	MainSolver mainSolver;
 	MainBEM mainBEM;
 	MainOutput mainOutput;
-	MainMesh mainMesh;
+	MainBody mainBody;
 	FastScatterTabs mainFAST;
 	MainMoor mainMoor;
 	MainDecay mainDecay;
@@ -1616,12 +1616,12 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
 					UArray<Option> &option, Function <void()>OnPush);
 int ArrayModel_Id(const ArrayCtrl &array);
 int ArrayModel_Id(const ArrayCtrl &array, int row);
-int ArrayModel_IdMesh(const ArrayCtrl &array);
-int ArrayModel_IdMesh(const ArrayCtrl &array, int row);
+int ArrayModel_IdBody(const ArrayCtrl &array);
+int ArrayModel_IdBody(const ArrayCtrl &array, int row);
 int ArrayModel_IdHydro(const ArrayCtrl &array);
 int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
 UVector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
-UVector<int> ArrayModel_IdsMesh(const ArrayCtrl &array);
+UVector<int> ArrayModel_IdsBody(const ArrayCtrl &array);
 void ArrayModel_IdsHydroDel(ArrayCtrl &array, const UVector<int> &ids);
 void ArrayModel_RowsHydroDel(ArrayCtrl &array, const UVector<int> &ids);
 bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);
