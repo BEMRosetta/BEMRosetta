@@ -11,7 +11,6 @@ String OrcaWave::Load(String _file, double) {
 	dt.name = GetFileTitle(dt.file);
 	dt.dimen = true;
 	dt.len = 1;
-	dt.solver = Hydro::ORCAWAVE;
 	dt.Nb = Null;
 	
 	try {
@@ -24,7 +23,7 @@ String OrcaWave::Load(String _file, double) {
 			Load_OWR();
 		else
 #endif
-			Load_YML_Res();
+			Load_OF_YML();
 
 		if (IsNull(dt.Nb))
 			return t_("No data found");
@@ -48,6 +47,8 @@ void OrcaWave::Load_OWR() {
 	
 	orca.LoadWaveResults(fileName);
 	
+	dt.solver = Hydro::ORCAWAVE_OWR;
+	
 	dt.dataFromW = true;
 	dt.dimen = true;
 		
@@ -60,11 +61,13 @@ void OrcaWave::Load_OWR() {
 }
 #endif
 
-void OrcaWave::Load_YML_Res() {
+void OrcaWave::Load_OF_YML() {
 	String fileName = ForceExtSafer(dt.file, ".yml");
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		throw Exc(in.Str() + "\n" + t_("File not found or blocked"));
+	
+	dt.solver = Hydro::ORCAFLEX_YML;
 	
 	dt.dataFromW = true;
 	bool rad_s = true;
@@ -601,4 +604,204 @@ void OrcaWave::Load_YML_Res() {
 		//Point3D c0(c0.col(ib));
 		Surface::TranslateInertia66(dt.msh[iib].dt.M, dt.msh[iib].dt.cg, dt.msh[iib].dt.cg, dt.msh[iib].dt.c0);
 	//}
+}
+
+void OrcaWave::SaveFolder_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const {
+	String exeName = "bemrosetta_cl";
+	if (bin) {
+		String exe = GetExeFilePath();		
+		String ext = GetFileExt(exe);
+		String exe_cl = AFX(GetFileFolder(GetExeFilePath()), exeName + ext);
+		if (FileExists(exe_cl))
+			FileCopy(exe_cl, AFX(folder, exeName + ext));
+		else {
+			exeName = "bemrosetta";
+			FileCopy(exe, AFX(folder, exeName + ext));
+		}
+	}
+	
+	String name = GetFileTitle(folder); 
+	String fileYaml = AFX(folder, name + ".wave.yml");
+	String fileBat  = AFX(folder, name + ".bat");
+	FileOut bat;
+	if (!bat.Open(fileBat))
+		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+	bat << Format("%s -orca -numtries 5 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, fileYaml, AFX(folder, name + ".flex.yml"));
+	
+	FileOut	out;
+	if (!out.Open(fileYaml))
+		throw Exc(Format(t_("Impossible to open file '%s'"), fileYaml));
+	
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		const Body &b = dt.msh[ib];
+		Body::SaveAs(b, AFX(folder, Format("Body_%d.gdf", ib+1)), Body::WAMIT_GDF, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+	}
+	
+	String machineName, domain, ip4, ip6;
+	GetNetworkInfo(machineName, domain, ip4, ip6);
+	Time t = GetSysTime(); 
+	
+	out << 	"\%YAML 1.1\n"
+			"# Type: Diffraction\n"
+			"# Program: OrcaWave 11.4c\n"
+			"# File: " << fileYaml << "\n"
+			"# Created: " << Format("%02d:%02d", t.hour, t.minute) << " on " << Format("%02d/%02d/%04d", t.day, t.month, t.year) << "\n"
+			"# User: " << GetUserName() << "\n"
+			"# Machine: " << machineName << "\n"
+			"---\n";
+			
+	out << 	"# Model\n"
+			"UnitsSystem: User\n"
+			"LengthUnits: m\n"
+			"MassUnits: kg\n"
+			"ForceUnits: N\n"
+			"g: " << Format("%.5f", dt.g) << "\n";
+	
+	out << 	"# Calculation & output\n"
+			"SolveType: " << (withQTF ? "Full QTF calculation" : "Potential and source formulations") << "\n"
+			"LoadRAOCalculationMethod: Diffraction\n"
+			"QuadraticLoadPressureIntegration: No\n"
+			"QuadraticLoadControlSurface: " << (withQTF ? "Yes" : "No") << "\n"
+			"QuadraticLoadMomentumConservation: No\n";
+	out << 	(withQTF ? "PreferredQuadraticLoadCalculationMethod: Control surface\n" : "");
+	out << 	"HasResonanceDampingLid: No\n"
+			"LengthTolerance: 100e-9\n"
+			"WaterlineZTolerance: 1e-6\n"
+			"WaterlineGapTolerance: 1e-6\n"
+			"DivideNonPlanarPanels: Yes\n"
+			"LinearSolverMethod: Direct LU\n"
+			"OutputPanelPressures: " << (withPotentials ? "Yes" : "No") << "\n"
+			"OutputPanelVelocities: No\n"
+			"OutputBodyWireFrames: " << (withMesh ? "Yes" : "No") << "\n"
+			"OutputIntermediateResults: " << (withPotentials ? "Yes" : "No") << "\n"
+			"ValidatePanelArrangement: No\n"
+			"BodyVolumeWarningLevel: 1e-12\n"
+			"PanelAspectRatioWarningLevel: 25\n"
+			"PanelsPerWavelengthWarningLevel: 5\n";
+	
+	out << 	"# Environment\n"
+			"WaterDepth: " << (dt.h > 0 ? Format("%.2f", dt.h) : "Infinity") << "\n"
+			"WaterDensity: " << Format("%.2f", dt.rho) << "\n"
+			"WavesReferredToBy: frequency (rad/s)\n"
+			"HasWaveSpectrumForDragLinearisation: No\n"
+			"MorisonFluidVelocity: Undisturbed incident wave\n"
+			"PeriodOrFrequency:\n";
+	for (int ifr = 0; ifr < dt.Nf; ++ifr)
+		out << "  - " << Format("%.5f", dt.w[ifr]) << "\n";
+	out << 	"WaveHeading:\n";
+	for (int ih = 0; ih < dt.Nh; ++ih)
+		out << "  - " << Format("%.1f", dt.head[ih]) << "\n";
+	
+	if (withQTF) 
+		out << 	"QTFMinCrossingAngle: 0\n"
+				"QTFMaxCrossingAngle: 180\n"
+				"QTFMinPeriodOrFrequency: 0\n"
+				"QTFMaxPeriodOrFrequency: Infinity\n"
+				"QTFFrequencyTypes: Both\n";
+	
+	out << 	"# Bodies\n"
+			"Bodies:\n";
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		const Body &b = dt.msh[ib];
+		const Body::Data &d = b.dt;
+		
+		double panelSize = 0;	///////////////////////////////////////////////////////////////////////
+		double separationFromBody = 0;		//////////////////////////////////////////////////////
+		
+		out <<	"  - BodyName: " << d.name << "\n"
+				"    BodyMeshPosition: [0, 0, 0]\n"
+				"    BodyMeshAttitude: [0, 0, 0]\n"
+				"    BodyIncludedInAnalysis: Yes\n"
+				"    BodyMeshFileName: " << Format(".\\Body_%d.gdf", ib+1) << "\n"
+				"    BodyMeshFormat: Wamit gdf\n"
+				"    BodyMeshLengthUnits: m\n"
+				"    BodyMeshSymmetry: ";
+		if (y0z) {	
+			if (x0z)
+				out << 	"xz and yz planes";
+			else
+				out << 	"yz plane";
+		} else if (x0z)
+			out << 	"xz plane";
+		else
+			out << 	"None";
+		out << 	"\n"
+				"    BodyMeshDipolePanels:\n"
+				"    BodyAddInteriorSurfacePanels: Yes\n"
+				"    BodyInteriorSurfacePanelMethod: Triangulation method\n";
+				
+		if (withQTF)
+			out <<	"    BodyControlSurfaceType: Automatically generated\n"
+					"    BodyControlSurfacePanelSize: " << panelSize << "\n"
+					"    BodyControlSurfaceSeparationFromBody: " << separationFromBody << "\n"
+					"    BodyControlSurfaceIncludeFreeSurface: Yes\n";		
+    	out <<	"    BodyOrcaFlexImportSymmetry: Use global mesh symmetry\n"
+    			"    BodyOrcaFlexImportLength: ~\n"
+    			"    BodyHydrostaticIntegralMethod: Standard\n"
+    			"    BodyHydrostaticStiffnessMethod: Displacement\n"
+    			"    BodyInertiaSpecifiedBy: Matrix (for a general body)\n"
+    			"    BodyCentreOfMass: [" << Format("%f, %f, %f", d.cg.x, d.cg.y, d.cg.z) << "]\n"
+    			"    BodyMass: " << b.GetMass() << "\n"
+    			"    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:\n";
+		if (d.M.size() > 0)
+			out << 	"      - [" << Format("%f, %f, %f", d.M(3, 3), d.M(3, 4), d.M(3, 5)) << "]\n"
+					"      - [" << Format("%f, %f, %f", d.M(4, 3), d.M(4, 4), d.M(4, 5)) << "]\n"
+					"      - [" << Format("%f, %f, %f", d.M(5, 3), d.M(5, 4), d.M(5, 5)) << "]\n";
+		else
+			out <<	"      - [0.001, 0, 	0]\n"
+					"      - [0, 	 0.001,	0]\n"
+					"      - [0, 	 0, 	0.001]\n";
+    	out << 	"    BodyInertiaTensorOriginType: Body origin\n"
+    			"    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:\n";
+    	if (d.Cadd.size() > 0) {
+    		for (int r = 0; r < 6; ++r) {
+    			out << "      - [";
+    			for (int c = 0; c < 6; ++c) {
+    				if (c > 0)
+    					out << ", ";
+    				out << d.Cadd(r, c);
+    			}
+    			out << "]\n";
+    		}
+		} else {
+			for (int r = 0; r < 6; ++r) 
+				out << "      - [0, 0, 0, 0, 0, 0]\n";
+		}
+    	out <<	"    BodyExternalStiffnessMatrixOriginType: Body origin\n"
+    			"    BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz, BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz:\n";
+    	if (d.Dlin.size() > 0) {
+    		for (int r = 0; r < 6; ++r) {
+    			out << "      - [";
+    			for (int c = 0; c < 6; ++c) {
+    				if (c > 0)
+    					out << ", ";
+    				out << d.Dlin(r, c);
+    			}
+    			out << "]\n";
+    		}
+		} else {
+			for (int r = 0; r < 6; ++r) 
+				out << "      - [0, 0, 0, 0, 0, 0]\n";
+		}		
+    	out <<	"    BodyExternalDampingMatrixOriginType: Body origin\n"
+    			"    BodyConnectionParent: Free\n"
+    			"    BodyIncreaseRollDampingToTarget: No\n"
+    			"    BodyFixedDOFx: No\n"
+    			"    BodyFixedDOFy: No\n"
+    			"    BodyFixedDOFz: No\n"
+    			"    BodyFixedDOFRx: No\n"
+    			"    BodyFixedDOFRy: No\n"
+    			"    BodyFixedDOFRz: No\n";
+	}
+	out <<	"# Field points\n"
+			"DetectAndSkipFieldPointsInsideBodies: Yes\n";
+	if (withQTF) 
+		out << 	"# QTFs\n"
+				"QTFCalculationMethod: Both\n"
+				"PreferredQTFCalculationMethod: Direct method\n"
+				"FreeSurfacePanelledZoneType: Defined by mesh file\n"
+				"FreeSurfacePanelledZoneMeshFileName: n"
+				"FreeSurfacePanelledZoneMeshFormat: Wamit gdf\n"
+				"FreeSurfacePanelledZoneMeshLengthUnits: m\n";
+	out << 	"...\n";
 }

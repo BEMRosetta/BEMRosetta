@@ -128,7 +128,10 @@ void CompareParameters::Load() {
 		String str = scatter.GetLegend(i);
 		VectorXd x, y;
 		scatter.GetDataSource(i).CopyXY(x, y);
-			
+		
+		if (x.size() == 0 || y.size() == 0)
+			return;
+	
 		if (str.StartsWith("A∞(ω)") || !(str.StartsWith("A∞") || str.StartsWith("A0"))) {
 			leg << str;
 			VectorXd xx, yy;

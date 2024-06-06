@@ -322,24 +322,17 @@ bool Hams::LoadHydrostatic(String fileName) {
 	return true;
 }
 
-void Hams::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, int) const {
-	SaveFolder0(folderBase, bin, 1, true, numThreads);
+void Hams::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const {
+	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, numThreads);
+		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids);
 }
 
-void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads) const {
+void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
-	#define MIN_F_HAMS 0.01
-	
-	double fixminF = max(MIN_F_HAMS, First(dt.w));
-	
 	UVector<int> valsf;
-	int _nf;
-	double _minf, _maxf;
 	int ifr = 0;
-	UVector<double> freqs;
 	if (numCases > 1)  
 		valsf = NumSets(dt.Nf, numCases);
 	
@@ -361,61 +354,43 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		meshName = GetFileName(source);
 		String destNew = AFX(folderBase, meshName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams mesh exe file from '%s'"), Bem().hamsBodyPath));				
+			throw Exc(Format(t_("Problem copying Hams WAMIT_MeshTran exe file from '%s'"), Bem().hamsBodyPath));				
 	} 
 		
 	//String sumcases;
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
+		UVector<double> freqs;
 		if (numCases > 1) {
 			folder = AFX(folderBase, Format("HAMS_Part_%d", i+1));
 			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 			//sumcases << " " << AFX(folder, "Nemoh.cal");
-			_minf = freqs[ifr];
-			int deltaf = valsf[i];
-			_maxf = dt.w[ifr + deltaf - 1];
-			_nf = deltaf;
-			ifr += deltaf;
+			Upp::Block(dt.w, freqs, ifr, valsf[i]);
+			ifr += valsf[i];
 		} else {
 			folder = folderBase;
-			_nf = dt.Nf;
-			_minf = fixminF;
-			_maxf = Last(dt.w);
+			freqs = clone(dt.w);
 		}
 		String folderInput = AFX(folder, "Input");
 		if (!DirectoryCreateX(folderInput))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderInput));
 		
-		Save_ControlFile(folderInput, _nf, _minf, _maxf, numThreads);
+		
+		Save_ControlFile(folderInput, freqs, numThreads);
 		Save_Hydrostatic(folderInput);
 	
-		bool y0zmesh = false, x0zmesh = false;
-		UArray<Body> meshes;
-		int ib = 0;		// Just one file
+		int ib = 0;			// Just one file
 		
-		String err = Body::Load(meshes, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0zmesh, x0zmesh);
-		if (!err.IsEmpty())
-			throw Exc(err);
-		
-		Body &mesh0 = First(meshes);
-		
-		if (y0zmesh == true && x0zmesh == true) 
-			y0zmesh = false;
+		if (y0z == true && x0z == true) 
+			y0z = false;
 
 		String dest = AFX(folderInput, "HullMesh.pnl");
-		Body::SaveAs(mesh0, dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0zmesh, x0zmesh);
+		Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
 		
-		bool y0zlid = false, x0zlid = false;	// Hull symmetries rules over lid ones
-		if (!dt.msh[ib].dt.lidFile.IsEmpty()) {
-			err = Body::Load(meshes, dt.msh[ib].dt.lidFile, dt.rho, dt.g, false, y0zlid, x0zlid);
-			if (!err.IsEmpty())
-				throw Exc(err);
-			
-			//Body &mesh = First(meshes);
-				
+		if (!lids[0].IsEmpty()) {
 			dest = AFX(folderInput, "WaterplaneBody.pnl");
-			Body::SaveAs(mesh0, dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0zmesh, x0zmesh);
+			Body::SaveAs(lids[0], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
 		}
 		
 		Save_Settings(folder, !dt.msh[ib].dt.lidFile.IsEmpty());
@@ -453,6 +428,8 @@ void Hams::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
 }
 
 void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
+	if (mat.size() != 36)
+		return;
 	out << "\n " << header << ":";
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
@@ -462,6 +439,8 @@ void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
 }
 
 void Hams::InMatrix(LineParser &f, Eigen::MatrixXd &mat) {
+	if (mat.size() != 36)
+		mat.resize(6, 6);
 	for (int y = 0; y < 6; ++y) {
 		f.GetLine();
 		for (int x = 0; x < 6; ++x)
@@ -526,7 +505,7 @@ void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 		<< "Centre of gravity";
 }
 
-void Hams::Save_ControlFile(String folderInput, int _nf, double _minf, double _maxf,
+void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 					int numThreads) const {
 	String fileName = AFX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
@@ -544,9 +523,8 @@ void Hams::Save_ControlFile(String folderInput, int _nf, double _minf, double _m
 		   "\n    0_inf_frequency_limits      1"
 		   "\n    Input_frequency_type        3"
 		   "\n    Output_frequency_type       3";
-	out << "\n    Number_of_frequencies      " << _nf;
-	UVector<double> freqs;
-	LinSpaced(freqs, _nf, _minf, _maxf);
+	out << "\n    Number_of_frequencies      " << freqs.size();
+	
 	out << "\n    ";
 	for (const auto &freq : freqs)
 		out << Format("%.4f ", freq);	

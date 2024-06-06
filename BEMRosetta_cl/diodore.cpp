@@ -74,11 +74,11 @@ void Diodore::Load_HDB() {
 				
 				for (int iw = 0; iw < dt.Nf; ++iw) {
 					f.GetLine_discard_empty();
-					for (int idof = 0; idof < 6; ++idof) 
+					for (int idf = 0; idf < 6; ++idf) 
 						if (ismod)
-							force[ib][idh](iw, idof) = std::complex<double>(f.GetDouble(1+idof), 0);
+							force[ib][idh](iw, idf) = std::complex<double>(f.GetDouble(1+idf), 0);
 						else
-							SetPhaseToMag(force[ib][idh](iw, idof), f.GetDouble(1+idof));
+							SetPhaseToMag(force[ib][idh](iw, idf), f.GetDouble(1+idf));
 				}
 			}
 		}

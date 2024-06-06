@@ -72,7 +72,7 @@ Hydro &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
 	for (int i = 0; i < ids.size(); ++i) 
 		hydrosp[i] = &hydros[ids[i]]; 
 	
-	Hydro &hy = hydros.Create<Hydro>();
+	Hydro hy;
 	hy.Join(hydrosp);
 	String error = hy.AfterLoad(Status);
 	if (!error.IsEmpty()) 
@@ -81,24 +81,28 @@ Hydro &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
 	Sort(ids, StdLess<int>());
 	for (int i = ids.size()-1; i >= 0; --i)
 		hydros.Remove(ids[i]);
-	return hy;
+	hy.IncrementIdCount();
+	hydros << hy;
+	return Last(hydros);
 }
 
 void BEM::RemoveHydro(int id) {
+	if (id < 0)
+		return;
 	hydros.Remove(id);
 	if (hydros.IsEmpty())
 		Hydro::ResetIdCount();
 }
 
 Hydro &BEM::Duplicate(int id) {
-	Hydro &hy = hydros.Create<Hydro>();
+	Hydro &hy = hydros.Add();
 	hy.Copy(hydros[id]);
-	
+	hy.IncrementIdCount();
 	return hy;
 }
 
 Hydro &BEM::Average(UVector<int> &ids) {
-	Hydro &hy = hydros.Create<Hydro>();
+	Hydro &hy = hydros.Add();
 	hy.Average(hydros, ids);
 	
 	return hy;
@@ -263,7 +267,11 @@ void BEM::SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	}
 	
-	Body::SaveAs(surfs, fileName, type, meshType, rho, g, symX, symY);
+	UArray<Body> bds;
+	for (int i = 0; i < ids.size(); ++i)
+		bds.Add(clone(surfs[ids[i]]));
+	
+	Body::SaveAs(bds, fileName, type, meshType, rho, g, symX, symY);
 }
 
 void BEM::HealingBody(int id, bool basic, Function <bool(String, int)> Status) {
@@ -475,11 +483,11 @@ String BEM::LoadSerializeJson() {
 	if (!ok || IsNull(roundEps))
 		roundEps = 1E-8;
 	if (!ok || IsNull(g)) 
-		g = 9.81;
+		g = 9.80665;
 	if (!ok || IsNull(depth)) 
 		depth = 100;
 	if (!ok || IsNull(rho)) 
-		rho = 1000;
+		rho = 1025;
 	if (!ok || IsNull(len)) 
 		len = 1;
 	//if (!ok || IsNull(discardNegDOF))
@@ -1019,8 +1027,25 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 		ret = static_cast<Nemoh&>(*this).Load(fileName);
 	else if (ToLower(GetFileExt(fileName)) == ".in")
 		ret = static_cast<Hams&>(*this).Load(fileName, Status); 
-	else if (ToLower(GetFileExt(fileName)) == ".dat")
+	else if (ToLower(GetFileExt(fileName)) == ".dat") 
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
+	else if (ToLower(GetFileExt(fileName)) == ".lis") 
+		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
+	else if (ToLower(GetFileExt(fileName)) == ".ah1") 
+		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
+	else if (ToLower(GetFileExt(fileName)) == ".nc") {
+		UArray<Hydro> hydros;
+		int num;
+		ret = CapyNC_Load(fileName, hydros, num);
+		if (ret.IsEmpty() && num > 0)
+			*this = pick(First(hydros));
+	}
+#ifdef PLATFORM_WIN32	 
+	else if (ToLower(GetFileExt(fileName)) == ".owr")
+		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
+#endif	
+	else if (ToLower(GetFileExt(fileName)) == ".yml")
+		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
 	else
 		ret = t_("Unknown BEM input format");
 	
@@ -1035,13 +1060,19 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	AfterLoad();
 }
 
-void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int ssolver) const {
-	if (ssolver <= Hydro::CAPYTAINE)
-		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, numThreads, ssolver);
+void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int ssolver, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const {
+	if (ssolver == Hydro::CAPYTAINE || ssolver == Hydro::NEMOH || ssolver == Hydro::NEMOHv115 || ssolver == Hydro::NEMOHv3 || ssolver == Hydro::SEAFEM_NEMOH)
+		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, ssolver, x0z, y0z);
+	else if (ssolver == Hydro::CAPYTAINE_PY)
+		static_cast<const Nemoh &>(*this).SaveFolder_Capy(folder, withPotentials, withMesh, x0z, y0z, lids);
 	else if (ssolver == Hydro::HAMS)
-		static_cast<const Hams &>(*this).SaveFolder(folder, bin, numCases, numThreads, ssolver);
-	//else
-	//	static_cast<const Aqwa &>(*this).SaveFolder(folder, bin, numCases, numThreads, bem, solver);
+		static_cast<const Hams &>(*this).SaveFolder(folder, bin, numCases, numThreads, x0z, y0z, lids);
+	else if (ssolver == Hydro::ORCAWAVE_YML)
+		static_cast<const OrcaWave &>(*this).SaveFolder_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
+	else if (ssolver == Hydro::AQWA_DAT)
+		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, withQTF, x0z, y0z);
+	else
+		throw Exc(t_("Format is not supported"));
 }
 
 void Hydro::BeforeSaveCase(String folderBase, int numCases, bool deleteFolder) const {
@@ -1079,6 +1110,9 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 	
 	if (type == BEM_FMT::HAMS)
 		ret = static_cast<const Hams&>(*this).Check();
+	
+	if (First(dt.w) <= 0.01)
+		ret << Format(t_("First frequency %f < 0.01 is too low"), First(dt.w));
 	
 	return ret;
 }

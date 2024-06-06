@@ -5,7 +5,7 @@
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
 #include "functions.h"
-#include <SysInfo/Crash.h>
+//#include <SysInfo/Crash.h>
 #include <STEM4U/SeaWaves.h>
 #include <MatIO/matio.h>
 
@@ -18,24 +18,24 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
 				t_("|TFS|"), t_("arg(TFS)")};
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					 FAST_WAMIT, 				 	  HAMS Wamit    HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115, 	NEMOHv3, 	SEAFEM_NEMOH,  AQWA,   					  FOAMM,   DIODORE,	  BEMROSETTA, 	     ORCAWAVE,   CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, HYDROSTAR,   CAPY.nc, 		 ORCAWAVE.owr,		UNKNOWN, NUMBEM};
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	  "FOAMM", "Diodore", "BEMRosetta .bem", "OrcaWave", ".csv mat", ".csv table", "BEMIO .h5",	".dat",    ".out", 		"Capytaine .nc", 
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	   HAMS_WAMIT,  HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,   AQWA,   			    AQWA_QTF,	  AQWA_DAT, 	FOAMM,   DIODORE,			BEMROSETTA, 	   ORCAFLEX_YML,   		CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, 			HYDROSTAR, 	CAPYNC, 		ORCAWAVE_YML, 		CAPYTAINE_PY, ORCAWAVE.owr,		UNKNOWN, NUMBEM};
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	"AQWA .qtf",  "AQWA .dat", "FOAMM", "Diodore .hdb", 	"BEMRosetta .bem", "OrcaFlex .yml", 	".csv mat", ".csv table", "BEMIO .h5",	"Capytaine .cal",    ".out", 	"Capytaine .nc", "OrcaWave .yml",	"Capytaine .py",
 #ifdef PLATFORM_WIN32	
 "OrcaWave .owr", 	
 #endif
 				"By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   true,  					  false,   true,	  true,			     false,	     true, 	     true, 		   true,		false, 	   false, 		false,			 
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   false,  					 true, 	 	  false,		false,   true,	  		true,			     false,	     		true, 	     true, 		   true,		false, 	   			false, 		false,			 false,				false,		 
 #ifdef PLATFORM_WIN32	
 false,
 #endif
 				true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "*.qtf", 				  "",      "*.hdb",	  "*.bem",		   	 "*.yml",	 "*.csv",    "*.csv", 	   "*.h5",		"*.dat",   "*.out", 	"*.nc", 		 
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "", 				  		 "*.qtf",	  ".dat",		"",      "*.hdb",	  		"*.bem",		   	 "*.yml",	 		"*.csv",    "*.csv", 	   "*.h5",		"",        			"*.out", 	"*.nc", 		 "*.yml",			"*.py",	 
 #ifdef PLATFORM_WIN32	
 "*.owr",	
 #endif		
 				"*.*"};       
 	
-const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					  false,   false,	  false,			 false,	     false, 	 false, 	   false,		false, 	   false, 		false,			 
+const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  		false,			 	false,	     		false, 	 	false, 	   		false,		true, 	   			false, 		false,			 true,				true,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
@@ -341,12 +341,12 @@ void Hydro::Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, 
 	a.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		a[ib].SetCount(dt.pots_rad[ib].size());
-		for (int idp = 0; idp < dt.pots_rad[ib].size(); ++idp) {
-			a[ib][idp].SetCount(6);
+		for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) {
+			a[ib][ip].SetCount(6);
 			for (int idf1 = 0; idf1 < 6; ++idf1) {
-				a[ib][idp][idf1].SetCount(6);
+				a[ib][ip][idf1].SetCount(6);
 				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					a[ib][idp][idf1][idf2].SetCount(dt.Nf, val);
+					a[ib][ip][idf1][idf2].SetCount(dt.Nf, val);
 			}
 		}
 	}
@@ -488,61 +488,84 @@ static std::complex<double> MirrorHead(const std::complex<double> &head, bool xA
 }
 
 void Hydro::Copy(const Hydro &hyd) {
-	dt.file = hyd.dt.file;
-	dt.name = hyd.dt.name;
-	dt.g = hyd.dt.g;
-    dt.h = hyd.dt.h;
-    dt.rho = hyd.dt.rho;
-    dt.len = hyd.dt.len;
-    dt.dimen = hyd.dt.dimen;
-    dt.Nb = hyd.dt.Nb;
-    dt.Nf = hyd.dt.Nf;
-    dt.Nh = hyd.dt.Nh;
+	dt.Copy(hyd.dt);
+}
 
-    dt.A = clone(hyd.dt.A);
-	dt.Ainf_w = clone(hyd.dt.Ainf_w);
-    dt.Ainf = clone(hyd.dt.Ainf);
-    dt.A0 = clone(hyd.dt.A0);
+void Hydro::Data::Copy(const Hydro::Data &hyd) {
+	file = hyd.file;
+	name = hyd.name;
+	g = hyd.g;
+    h = hyd.h;
+    rho = hyd.rho;
+    len = hyd.len;
+    dimen = hyd.dimen;
+    Nb = hyd.Nb;
+    Nf = hyd.Nf;
+    Nh = hyd.Nh;
+
+    A = clone(hyd.A);
+	Ainf_w = clone(hyd.Ainf_w);
+    Ainf = clone(hyd.Ainf);
+    A0 = clone(hyd.A0);
+    A_P = clone(hyd.A_P);
 	
-    dt.B = clone(hyd.dt.B);
+    B = clone(hyd.B);
+    B_H = clone(hyd.B_H);
+    B_P = clone(hyd.B_P);
     
-    dt.msh = clone(hyd.dt.msh);
-    
-    dt.head = clone(hyd.dt.head);
+    head = clone(hyd.head);
+	
+	x_w = hyd.x_w;
+	y_w = hyd.y_w;
 
-    dt.solver = hyd.dt.solver;     
+    solver = hyd.solver;     
     
-    dt.Kirf = clone(hyd.dt.Kirf);
-    dt.Tirf = clone(hyd.dt.Tirf);
+    Kirf = clone(hyd.Kirf);
+    Tirf = clone(hyd.Tirf);
     
-    dt.ex = clone(hyd.dt.ex);
-    dt.sc = clone(hyd.dt.sc);
-    dt.fk = clone(hyd.dt.fk);
-    dt.rao = clone(hyd.dt.rao);
+    ex = clone(hyd.ex);
+    sc = clone(hyd.sc);
+    fk = clone(hyd.fk);
+    sc_pot = clone(hyd.sc_pot);
+    fk_pot = clone(hyd.fk_pot);
+    fk_pot_bmr = clone(hyd.fk_pot_bmr);
     
-    dt.description = hyd.dt.description;
+    rao = clone(hyd.rao);
+    
+    description = hyd.description;
 
-    dt.sts = clone(hyd.dt.sts);
-    dt.dimenSTS = hyd.dt.dimenSTS;
-    dt.stsProcessor = hyd.dt.stsProcessor;
+    sts = clone(hyd.sts);
+    dimenSTS = hyd.dimenSTS;
+    stsProcessor = hyd.stsProcessor;
     
-    dt.qtfsum = clone(hyd.dt.qtfsum);
-    dt.qtfdif = clone(hyd.dt.qtfdif);
-    dt.qw = clone(hyd.dt.qw);
-    dt.qh = clone(hyd.dt.qh);
-    dt.qtfdataFromW = hyd.dt.qtfdataFromW;
-    dt.qtftype = hyd.dt.qtftype;
+    qtfsum = clone(hyd.qtfsum);
+    qtfdif = clone(hyd.qtfdif);
+    qw = clone(hyd.qw);
+    qh = clone(hyd.qh);
+    qtfdataFromW = hyd.qtfdataFromW;
+    qtftype = hyd.qtftype;
     
-    dt.mdhead = clone(hyd.dt.mdhead);
-	dt.md = clone(hyd.dt.md);
-	dt.mdtype = hyd.dt.mdtype;
+    mdhead = clone(hyd.mdhead);
+	md = clone(hyd.md);
+	mdtype = hyd.mdtype;
 	    
     //T = clone(hyd.T);
-    dt.w = clone(hyd.dt.w);
-    dt.dataFromW = hyd.dt.dataFromW;
+    w = clone(hyd.w);
+    dataFromW = hyd.dataFromW;
     //Vo = clone(hyd.Vo); 
     
-    dt.SetId(hyd.dt.GetId());
+    msh = clone(hyd.msh);
+    
+    pots_rad = clone(hyd.pots_rad);
+    pots_dif = clone(hyd.pots_dif);
+    pots_inc = clone(hyd.pots_inc);
+    
+    Apan = clone(hyd.Apan);
+    
+    symX = hyd.symX;
+    symY = hyd.symY;
+    
+    SetId(hyd.GetId());
 }
 
 void AvgB(Eigen::MatrixXd &ret, const UArray<const Eigen::MatrixXd*> &d) {
@@ -1234,34 +1257,25 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	}
-	if (type == WAMIT) {
-		Wamit data;
-		data.Save_out(fileName);			
-	} else if (type == WAMIT_1_3) {
-		Wamit data;
-		data.Save(fileName, Status, true, qtfHeading);	
-	} else if (type == FAST_WAMIT) {
-		Fast data;
-		data.Save(fileName, Status, qtfHeading);		
-	} else if (type == BEMROSETTA) {
-		Hydro data;
-		data.SaveSerialization(fileName);		
-	} else if (type == AQWA) {
-		Aqwa data;
-		data.Save(fileName, Status);		
-	} else if (type == CSV_MAT) {
-		Hydro data;
-		data.SaveCSVMat(fileName);		
-	} else if (type == CSV_TABLE) {
-		Hydro data;
-		data.SaveCSVTable(fileName);		
-	} else if (type == DIODORE) {
-		Hydro data;
-		data.SaveDiodoreHDB(fileName);		
-	} else if (type == BEMIOH5) {
-		BemioH5 data;
-		data.Save(fileName);
-	} else
+	if (type == WAMIT)
+		static_cast<Wamit&>(*this).Save_out(fileName);			
+	else if (type == WAMIT_1_3)
+		static_cast<Wamit&>(*this).Save(fileName, Status, true, qtfHeading);	
+	else if (type == FAST_WAMIT)
+		static_cast<Fast&>(*this).Save(fileName, Status, qtfHeading);		
+	else if (type == BEMROSETTA)
+		SaveSerialization(fileName);		
+	else if (type == AQWA)
+		static_cast<Aqwa&>(*this).Save(fileName, Status);		
+	else if (type == CSV_MAT)
+		SaveCSVMat(fileName);		
+	else if (type == CSV_TABLE)
+		SaveCSVTable(fileName);		
+	else if (type == DIODORE)
+		SaveDiodoreHDB(fileName);		
+	else if (type == BEMIOH5)
+		static_cast<BemioH5&>(*this).Save(fileName);
+	else
 		throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	
 	//solver = type;
@@ -1469,10 +1483,7 @@ void Hydro::Report() const {
 String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	SortFrequencies();
 	SortHeadings();
-	
-	if (!IsLoadedA0())  
-		GetA0();
-	
+		
 	if ((!IsLoadedAinf() || !IsLoadedKirf()) && Bem().calcAinf) {
 		if (!IsNum(Bem().maxTimeA) || Bem().maxTimeA == 0) 
 			return t_("Incorrect time for A∞ calculation. Please review it in Options");
@@ -1488,7 +1499,10 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 				return t_("Cancelled by the user");
 			GetAinf();
 		}
+		if (!IsLoadedA0())  
+			GetA0();
 	}
+		
 	if (Bem().calcAinf_w) {
 		if (!IsLoadedKirf())
 			GetK_IRF(min(Bem().maxTimeA, GetK_IRF_MaxT()), Bem().numValsA);
@@ -1498,8 +1512,6 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			return t_("Cancelled by the user");
 		GetAinf_w();
 	}
-	
-	CompleteForces1st();
 	
 	// Fill the other side of the diagonal. If Null, fill with zero
 	auto FillNullQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
@@ -1547,154 +1559,143 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		if (!ret.IsEmpty())
 			return ret;
 		
-		m.dt.fileName = dt.file;
+		//m.dt.fileName = dt.file;
 		if (m.dt.name.IsEmpty())
 			m.dt.name = InitCaps(GetFileTitle(dt.file));
 
-		// Symmetrize radiation potentials
+		// Symmetrize potentials
+		auto DeploySymRadiation = [&](int npan, const UVector<double> &signs) {
+			if (IsLoadedPotsRad(ib)) {
+				dt.pots_rad[ib].SetCount(2*npan);
+				for (int ipan = 0; ipan < npan; ++ipan) {
+					dt.pots_rad[ib][ipan + npan].SetCount(6);
+					for (int idf = 0; idf < 6; ++idf) {
+						dt.pots_rad[ib][ipan + npan][idf].SetCount(dt.Nf);
+						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+							dt.pots_rad[ib][ipan + npan][idf][ifr] = dt.pots_rad[ib][ipan][idf][ifr]*signs[idf];
+					}
+				}
+			}
+		};
+		/*auto DeploySymIncDif = [&](int npan, const UVector<double> &signs, UArray<UArray<UArray<UArray<std::complex<double>>>>> &p) {
+			if (IsLoadedPotsIncDif(ib, p)) {
+				dt.pots_rad[ib].SetCount(2*npan);
+				for (int ipan = 0; ipan < npan; ++ipan) {
+					dt.pots_rad[ib][ipan + npan].SetCount(dt.Nh);
+					for (int ih = 0; ih < dt.Nh; ++ih) {
+						dt.pots_rad[ib][ipan + npan][ih].SetCount(dt.Nf);
+						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+							p[ib][ipan + npan][ih][ifr] = p[ib][ipan][ih][ifr]*signs[idf];
+					}
+				}
+			}
+		};*/
 		if (dt.symX) {
+			const UVector<double> signs = {-1, 1, 1, 1, -1, -1};
 			int npan = m.dt.mesh.panels.size();
 			m.dt.mesh.DeployXSymmetry();
-			if (IsLoadedPotsRad()) {
-				dt.pots_rad[ib].SetCount(2*npan);
-				for (int ipan = 0; ipan < npan; ++ipan) {
-					dt.pots_rad[ib][ipan + npan].SetCount(6);
-					for (int idf = 0; idf < 6; ++idf) 
-						dt.pots_rad[ib][ipan + npan][idf].SetCount(dt.Nf);
-					for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-						dt.pots_rad[ib][ipan + npan][0][ifr] = -dt.pots_rad[ib][ipan][0][ifr];
-						dt.pots_rad[ib][ipan + npan][1][ifr] =  dt.pots_rad[ib][ipan][1][ifr];
-						dt.pots_rad[ib][ipan + npan][2][ifr] =  dt.pots_rad[ib][ipan][2][ifr];
-						dt.pots_rad[ib][ipan + npan][3][ifr] =  dt.pots_rad[ib][ipan][3][ifr];
-						dt.pots_rad[ib][ipan + npan][4][ifr] = -dt.pots_rad[ib][ipan][4][ifr];
-						dt.pots_rad[ib][ipan + npan][5][ifr] = -dt.pots_rad[ib][ipan][5][ifr];
-					}
-				}
-			}
+			DeploySymRadiation(npan, signs);
+			//DeploySymIncDif(npan, signs, dt.pots_inc);
+			//DeploySymIncDif(npan, signs, dt.pots_dif);
 		}
 		if (dt.symY) {
+			UVector<double> signs = {1, -1, 1, -1, 1, -1};
 			int npan = m.dt.mesh.panels.size();
 			m.dt.mesh.DeployYSymmetry();
-			if (IsLoadedPotsRad()) {
-				dt.pots_rad[ib].SetCount(2*npan);
-				for (int ipan = 0; ipan < npan; ++ipan) {
-					dt.pots_rad[ib][ipan + npan].SetCount(6);
-					for (int idf = 0; idf < 6; ++idf) 
-						dt.pots_rad[ib][ipan + npan][idf].SetCount(dt.Nf);
-					for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-						dt.pots_rad[ib][ipan + npan][0][ifr] =  dt.pots_rad[ib][ipan][0][ifr];
-						dt.pots_rad[ib][ipan + npan][1][ifr] = -dt.pots_rad[ib][ipan][1][ifr];
-						dt.pots_rad[ib][ipan + npan][2][ifr] =  dt.pots_rad[ib][ipan][2][ifr];
-						dt.pots_rad[ib][ipan + npan][3][ifr] = -dt.pots_rad[ib][ipan][3][ifr];
-						dt.pots_rad[ib][ipan + npan][4][ifr] =  dt.pots_rad[ib][ipan][4][ifr];
-						dt.pots_rad[ib][ipan + npan][5][ifr] = -dt.pots_rad[ib][ipan][5][ifr];
-					}
-				}
-			}
+			DeploySymRadiation(npan, signs);
+			//DeploySymIncDif(npan, signs, dt.pots_inc);
+			//DeploySymIncDif(npan, signs, dt.pots_dif);
 		}
-		m.AfterLoad(dt.rho, dt.g, false, true);
+		if (m.dt.mesh0.IsEmpty())
+			m.AfterLoad(dt.rho, dt.g, false, true);
 	}
 	if (IsLoadedPotsRad()) {
 		Initialize_AB(dt.A_P, 0);
 		Initialize_AB(dt.B_P, 0);
 		
 		dt.Apan = Tensor<double, 5>(dt.Nb, dt.pots_rad[0].size(), 6, 6, dt.Nf);
-		dt.Bpan = Tensor<double, 5>(dt.Nb, dt.pots_rad[0].size(), 6, 6, dt.Nf);
 		
-		UVector<double> n(6);
-		for (int ib = 0; ib < dt.Nb; ++ib) {
-			const Value3D &c0_ = dt.msh[ib].dt.c0;
+		Value6D n;
+		for (int ib = 0; ib < dt.Nb; ++ib)  {
+			const Value3D &c0 = dt.msh[ib].dt.c0;
 			for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) {
-				const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-				double s = pan.surface0 + pan.surface1;
-				const Value3D &n1 = pan.normalPaint;
-				n[0] = n1[0];	n[1] = n1[1];	n[2] = n1[2];
-				Value3D r = pan.centroidPaint - c0_;
-				Value3D n2 = r%n1;
-				n[3] = n2[0];	n[4] = n2[1];	n[5] = n2[2];
-				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-					double rho_w = dt.rho/dt.w[ifr];
-						
-					for (int idf2 = 0; idf2 < 6; ++idf2) {
-						const std::complex<double> &comp = dt.pots_rad[ib][ip][idf2][ifr];
+				dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+				for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+					for (int idf2 = 0; idf2 < 6; ++idf2) 
 						for (int idf1 = 0; idf1 < 6; ++idf1) {
-							dt.A_P[idf1 + ib*6][idf2 + ib*6][ifr] += (dt.Apan(ib, ip, idf1, idf2, ifr) = rho_w*comp.imag()*n[idf1]*s);
-							dt.B_P[idf1 + ib*6][idf2 + ib*6][ifr] -= (dt.Bpan(ib, ip, idf1, idf2, ifr) = dt.rho*comp.real()*n[idf1]*s);
+							dt.A_P[idf1 + ib*6][idf2 + ib*6][ifr] += (dt.Apan(ib, ip, idf1, idf2, ifr) = A_pan(ib, ip, idf1, idf2, ifr, n));
+							dt.B_P[idf1 + ib*6][idf2 + ib*6][ifr] += B_pan(ib, ip, idf1, idf2, ifr, n);
 						}
-					}
-				}
 			}
 		}
 	}
-	if (!dt.msh.IsEmpty()) {
-		Initialize_PotsIncDiff(dt.pots_inc);
-
-		const std::complex<double> i = std::complex<double>(0, 1);
-
-    	for (int ifr = 0; ifr < dt.Nf; ++ifr) {		
-    		double k = SeaWaves::WaveNumber_w(dt.w[ifr], dt.h, g_dim());
-    		double g_w = g_dim()/dt.w[ifr];
-			for (int ib = 0; ib < dt.Nb; ++ib) {
-				Body &m = dt.msh[ib];
-				int npan = m.dt.mesh.panels.size();
-				for (int ip = 0; ip < npan; ++ip) {
-					const Panel &pan = m.dt.mesh.panels[ip];
-					const Point3D &p = pan.centroidPaint;
-					for (int ih = 0; ih < dt.Nh; ++ih) {	
-						if (p.z < 0) {
-							double th = ToRad(dt.head[ih]);
-							double cs;
-							if (dt.h > 0 && k*dt.h < 700) 
-							 	cs = cosh(k*(p.z + dt.h))/cosh(k*dt.h);
-							else
-								cs = exp(k*p.z);
-							double ex = k*(p.x*cos(th) + p.y*sin(th));
-														
-							dt.pots_inc[ib][ip][ih][ifr] = i*g_w*cs*std::complex<double>(cos(ex), -sin(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))	Wamit criterion	
-						}
-					}
-				}
-			}
-    	}
     	
+    if (IsLoadedPotsInc()) {	
     	Initialize_Forces(dt.fk_pot, -1, 0);
     	
-    	UVector<double> n(6);
-		for (int ih = 0; ih < dt.Nh; ++ih) {
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-				double rho_w = dt.rho*dt.w[ifr];
+    	Value6D n;
+		for (int ih = 0; ih < dt.Nh; ++ih) 
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 				for (int ib = 0; ib < dt.Nb; ++ib) {
 					const Value3D &c0 = dt.msh[ib].dt.c0;
 					for (int ip = 0; ip < dt.pots_inc[ib].size(); ++ip) {
-						const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-						double s = pan.surface0 + pan.surface1;
-						const Value3D &n13 = pan.normalPaint;
-						n[0] = n13[0];	n[1] = n13[1];	n[2] = n13[2];
-						Value3D r = pan.centroidPaint - c0;
-						Value3D n26 = r%n13;
-						n[3] = n26[0];	n[4] = n26[1];	n[5] = n26[2];	
-												
-						for (int idf = 0; idf < 6; ++idf) {
-							const std::complex<double> &pot = dt.pots_inc[ib][ip][ih][ifr];
-							std::complex<double> p = i*rho_w*pot;						// p = iρωΦ
-							dt.fk_pot[ib][ih](ifr, idf) += p*n[idf]*s;			// F += p n ds
-						}
+						dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+						for (int idf = 0; idf < 6; ++idf) 
+							dt.fk_pot[ib][ih](ifr, idf) += Ffk_pan(ib, ip, ih, idf, ifr, n);
 					}
 				}
-			}
-		}
+		//if (!IsLoadedFfk())
+		//	dt.fk = clone(dt.fk_pot);
 	}
+	
+	if (!dt.msh.IsEmpty() && !IsLoadedPotsIncB()) 
+		GeneratePotsInc();
+		
+	if (IsLoadedPotsIncB()) {	
+    	Initialize_Forces(dt.fk_pot_bmr, -1, 0);
+    	
+    	Value6D n;
+		for (int ih = 0; ih < dt.Nh; ++ih) 
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+				for (int ib = 0; ib < dt.Nb; ++ib) {
+					const Value3D &c0 = dt.msh[ib].dt.c0;
+					for (int ip = 0; ip < dt.pots_inc_bmr[ib].size(); ++ip) {
+						dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+						for (int idf = 0; idf < 6; ++idf) 
+							dt.fk_pot_bmr[ib][ih](ifr, idf) += Ffk_pan_bmr(ib, ip, ih, idf, ifr, n);
+					}
+				}
+	}
+	if (IsLoadedPotsDif()) {
+		Initialize_Forces(dt.sc_pot, -1, 0);
+    	
+    	Value6D n;
+		for (int ih = 0; ih < dt.Nh; ++ih) 
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+				for (int ib = 0; ib < dt.Nb; ++ib) {
+					const Value3D &c0 = dt.msh[ib].dt.c0;
+					for (int ip = 0; ip < dt.pots_dif[ib].size(); ++ip) {
+						dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+						for (int idf = 0; idf < 6; ++idf) 
+							dt.sc_pot[ib][ih](ifr, idf) += Fsc_pan(ib, ip, ih, idf, ifr, n);
+					}
+				}
+		//if (!IsLoadedFsc())
+		//	dt.sc = clone(dt.sc_pot);
+	}
+	
+	CompleteForces1st();
 
 	return String();
 }
-
+/*
 int Hydro::GetW0() {
 	for (int i = 0; i < dt.w.size(); ++i) {
 		if (dt.w[i] < 0.0001)
 			return i;
 	}
 	return Null;
-}
+}*/
 
 void Hydro::Get3W0(int &id1, int &id2, int &id3) {
 	UVector<double> ww = clone(dt.w);
@@ -1709,12 +1710,25 @@ void Hydro::GetA0() {
 	if (!IsLoadedA())
 		return;
 	
-	int iw0 = GetW0();
-	if (IsNum(iw0)) {
+	//int iw0 = GetW0();
+	if (dt.w[0] < 0.001) {
+		int iw0 = 0;
 		dt.A0.setConstant(dt.Nb*6, dt.Nb*6, Null);
 		for (int i = 0; i < dt.Nb*6; ++i)
 	        for (int j = 0; j < dt.Nb*6; ++j)
 				dt.A0(i, j) = dt.A[i][j][iw0];
+/*	} else {
+		if (dt.Nf == 0 || !IsLoadedKirf())
+			return;	
+	
+		dt.A0.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
+		
+	    for (int i = 0; i < dt.Nb*6; ++i) 
+	        for (int j = 0; j < dt.Nb*6; ++j) 
+	    		if (IsNum(dt.Kirf[i][j][0]))
+			    	dt.A0(i, j) = ::GetA0(dt.Kirf[i][j], dt.Tirf, dt.Ainf(i, j));
+	}*/	
+	
 	} else if (dt.w.size() < 3)
 		return;
 	else {
@@ -1747,6 +1761,8 @@ void Hydro::GetA0() {
 }
 
 String Hydro::C_units_base(int i, int j) {
+	i %= 6;
+	j %= 6;
 	if (i == 2 && j == 2)
 		return "N/m";
 	else if ((i == 2 && j == 3) || (i == 2 && j == 4))
@@ -2170,6 +2186,112 @@ double Hydro::GMroll(int ib) const {
 
 double Hydro::GMpitch(int ib) const {
 	return GM(ib, 4);
+}
+
+double Hydro::A_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
+	const Value3D &c0 = dt.msh[ib].dt.c0;
+	Value6D n;
+	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+	return A_pan(ib, ip, idf1, idf2, ifr, n);
+}
+
+double Hydro::A_pan(int ib, int ip, int idf1, int idf2, int ifr, const Value6D &n) const {
+	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
+	double s = pan.surface0 + pan.surface1;
+	const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
+	return dt.rho*rad.real()*n[idf1]*s;											// A = ρ Re(Φ) n ds
+}
+
+double Hydro::B_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
+	const Value3D &c0 = dt.msh[ib].dt.c0;
+	Value6D n;
+	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+	return B_pan(ib, ip, idf1, idf2, ifr, n);
+}
+
+double Hydro::B_pan(int ib, int ip, int idf1, int idf2, int ifr, const Value6D &n) const {
+	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
+	double s = pan.surface0 + pan.surface1;
+	const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
+	return -dt.rho*dt.w[ifr]*rad.imag()*n[idf1]*s;								// B = -ρω Im(Φ) n ds
+}
+
+std::complex<double> Hydro::Ffk_pan(int ib, int ip, int ih, int idf, int ifr) const {
+	const Value3D &c0 = dt.msh[ib].dt.c0;
+	Value6D n;
+	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+	return Ffk_pan(ib, ip, ih, idf, ifr, n);
+}
+	
+std::complex<double> Hydro::Ffk_pan(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
+	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
+	double s = pan.surface0 + pan.surface1;
+	double rho_w = dt.rho*dt.w[ifr];
+	const std::complex<double> &pot = dt.pots_inc[ib][ip][ih][ifr];
+	std::complex<double> p = rho_w*std::complex<double>(-pot.imag(), pot.real());	// p = iρωΦ
+	return p*n[idf]*s;									 							// F = p n ds
+}
+
+std::complex<double> Hydro::Ffk_pan_bmr(int ib, int ip, int ih, int idf, int ifr) const {
+	const Value3D &c0 = dt.msh[ib].dt.c0;
+	Value6D n;
+	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+	return Ffk_pan_bmr(ib, ip, ih, idf, ifr, n);
+}
+	
+std::complex<double> Hydro::Ffk_pan_bmr(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
+	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
+	double s = pan.surface0 + pan.surface1;
+	double rho_w = dt.rho*dt.w[ifr];
+	const std::complex<double> &pot = dt.pots_inc_bmr[ib][ip][ih][ifr];
+	std::complex<double> p = rho_w*std::complex<double>(-pot.imag(), pot.real());	// p = iρωΦ
+	return p*n[idf]*s;									 							// F = p n ds
+}
+
+std::complex<double> Hydro::Fsc_pan(int ib, int ip, int ih, int idf, int ifr) const {
+	const Value3D &c0 = dt.msh[ib].dt.c0;
+	Value6D n;
+	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
+	return Fsc_pan(ib, ip, ih, idf, ifr, n);
+}
+
+std::complex<double> Hydro::Fsc_pan(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
+	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
+	double s = pan.surface0 + pan.surface1;
+	double rho_w = dt.rho*dt.w[ifr];
+	const std::complex<double> &pot = dt.pots_dif[ib][ip][ih][ifr];
+	std::complex<double> p = rho_w*std::complex<double>(-pot.imag(), pot.real());	// p = iρωΦ
+	return p*n[idf]*s;									 							// F = p n ds
+}
+
+void Hydro::GeneratePotsInc() {
+	Initialize_PotsIncDiff(dt.pots_inc_bmr);
+
+	for (int ifr = 0; ifr < dt.Nf; ++ifr) {		
+		double k = SeaWaves::WaveNumber_w(dt.w[ifr], dt.h, g_dim());
+		double g_w = g_dim()/dt.w[ifr];
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			Body &m = dt.msh[ib];
+			int npan = m.dt.mesh.panels.size();
+			for (int ip = 0; ip < npan; ++ip) {
+				const Panel &pan = m.dt.mesh.panels[ip];
+				const Point3D &p = pan.centroidPaint;
+				for (int ih = 0; ih < dt.Nh; ++ih) {	
+					if (p.z < 0) {
+						double th = ToRad(dt.head[ih]);
+						double cs;
+						if (dt.h > 0 && k*dt.h < 700) 
+						 	cs = cosh(k*(p.z + dt.h))/cosh(k*dt.h);
+						else
+							cs = exp(k*p.z);
+						double ex = k*(p.x*cos(th) + p.y*sin(th));
+													
+						dt.pots_inc_bmr[ib][ip][ih][ifr] = g_w*cs*std::complex<double>(sin(ex), cos(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))	Wamit criterion	
+					}
+				}
+			}
+		}
+	}
 }
 
 void Hydro::Jsonize(JsonIO &json) {

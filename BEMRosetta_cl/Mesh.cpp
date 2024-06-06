@@ -3,44 +3,60 @@
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	UNKNOWN, NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 CAPY_NC, 		UNKNOWN, NUMMESH};	
+const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Capytaine.nc","Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false, 	    false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.nc", 	    "*.*"};       
 
 int Body::idCount = 0;
 
 
+String Body::GetMeshExt() {
+	String ret;
+	
+	for (int i = 0; i < MESH_FMT::NUMMESH; ++i) {
+		if (ret.FindAfter(meshExt[i]) < 0) {
+			if (!ret.IsEmpty())
+				ret << " ";
+			ret << meshExt[i];		
+		}
+	}
+	return ret;
+}
+	
 void Body::Copy(const Body &msh) {
-	dt.projectionPos = clone(msh.dt.projectionPos);
-	dt.projectionNeg = clone(msh.dt.projectionNeg);
+	dt.Copy(msh.dt);
+}
+
+void Body::Data::Copy(const Body::Data &msh) {
+	projectionPos = clone(msh.projectionPos);
+	projectionNeg = clone(msh.projectionNeg);
 	
-	dt.cgZ0surface = clone(msh.dt.cgZ0surface);
-	dt.cb = clone(msh.dt.cb);
-	dt.cg = clone(msh.dt.cg);
-	dt.cg0 = clone(msh.dt.cg0);
-	dt.c0 = clone(msh.dt.c0);
-	dt.Vo = msh.dt.Vo;
+	cgZ0surface = clone(msh.cgZ0surface);
+	cb = clone(msh.cb);
+	cg = clone(msh.cg);
+	cg0 = clone(msh.cg0);
+	c0 = clone(msh.c0);
+	Vo = msh.Vo;
 	
-	dt.M = clone(msh.dt.M);
-	dt.C = clone(msh.dt.C);
-	dt.Cmoor = clone(msh.dt.Cmoor);
-	dt.Cadd = clone(msh.dt.Cadd);
-	//Dlin = clone(msh.Dlin);
-	//Dquad = clone(msh.Dquad);
-	dt.Aadd = clone(msh.dt.Aadd);
+	M = clone(msh.M);
+	C = clone(msh.C);
+	Cmoor = clone(msh.Cmoor);
+	Cadd = clone(msh.Cadd);
+	Dlin = clone(msh.Dlin);
+	Dquad = clone(msh.Dquad);
+	Aadd = clone(msh.Aadd);
 	
-	dt.name = msh.dt.name;
-	dt.fileName = msh.dt.fileName;
-	dt.fileHeader = msh.dt.fileHeader;
-	dt.lidFile = msh.dt.lidFile;
+	name = msh.name;
+	fileName = msh.fileName;
+	fileHeader = msh.fileHeader;
 	
-	dt.mesh = clone(msh.dt.mesh);
-	dt.under = clone(msh.dt.under);
-	dt.mesh0 = clone(msh.dt.mesh0);
+	mesh = clone(msh.mesh);
+	under = clone(msh.under);
+	mesh0 = clone(msh.mesh0);
 	
-	dt.SetCode(msh.dt.GetCode());
-	dt.SetId(msh.dt.GetId());
+	SetCode(msh.GetCode());
+	SetId(msh.GetId());
 }
 
 String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
@@ -79,8 +95,12 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 					ret = WamitBody::LoadDat(mesh, file);
 					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
 						ret = DiodoreBody::LoadDat(mesh, file);
-						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 	
-							ret = AQWABody::LoadDat(mesh, file, y0z, x0z);
+						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) { 	
+							Hydro hy;
+							ret = AQWABody::Load_DAT(mesh, hy, file);
+							y0z = hy.dt.symX;
+							x0z = hy.dt.symY;
+						}
 					}
 				}
 			}
@@ -99,6 +119,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		ret = HAMSBody::LoadPnl(mesh, file, y0z, x0z); 
 	else if (ext == ".hst") 
 		ret = HydrostarBody::LoadHst(mesh, file, y0z, x0z); 
+	else if (ext == ".nc") 
+		ret = CapyBody::Load_NC(mesh, file, g);
 	else if (ext == ".stl") {
 		bool isText;
 		Body &m = mesh.Add();
@@ -174,7 +196,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 }
 
 void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
-						int &nNodes, int &nPanels) {
+				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
 	UArray<Surface> surfs(meshes.size());
 	nNodes = nPanels = 0;
 	
@@ -210,7 +232,7 @@ void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_T
 			Surface::DetectTriBiP(surf.panels);
 		}
 		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
-			throw Exc(t_("Model is empty. No data found"));
+			throw Exc(t_("Impossible to save mesh. No mesh found"));
 
 		nNodes += surf.nodes.size();
 		nPanels += surf.panels.size();
@@ -225,7 +247,7 @@ void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_T
 	else if (type == HAMS_PNL)		
 		HAMSBody::SavePnl(file, First(surfs), symX, symY);	// Only one symmetry is really available
 	else if (type == AQWA_DAT)		
-		AQWABody::SaveDat(file, meshes, surfs, rho, g, symX, symY);	
+		AQWABody::SaveDat(file, meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
 	else if (type == DIODORE_DAT) 
 		DiodoreBody::SaveDat(file, First(surfs));
 	else if (type == STL_BIN)		
@@ -295,6 +317,8 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		if (GetMass() == 0 && !IsNull(rho))
 			SetMass(dt.under.volume*rho);
 		dt.cb = dt.under.GetCentreOfBuoyancy();
+		if (IsNull(dt.Vo))
+			dt.Vo = dt.under.volume;
 	}
 	if (isFirstTime) {
 		dt.mesh0 = clone(dt.mesh);
@@ -484,7 +508,6 @@ void Body::Jsonize(JsonIO &json) {
 		("name", dt.name)
 		("fileName", dt.fileName)
 		("fileHeader", dt.fileHeader)
-		("lidFile", dt.lidFile)
 		("mesh", dt.mesh)
 		("under", dt.under)
 		("mesh0", dt.mesh0)

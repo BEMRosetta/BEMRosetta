@@ -3,7 +3,7 @@
 #if !defined(flagGUI)
 
 #include "BEMRosetta.h"
-
+#include <SysInfo/Crash.h>
 
 #ifdef PLATFORM_WIN32
 
@@ -15,9 +15,10 @@
 
 CONSOLE_APP_MAIN
 {		
-#if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
+#if defined(flagDEBUG) && defined(PLATFORM_WIN32) && !defined(flagBEMR_TEST_DLL)
 	GetCrashHandler().Enable();
 #endif
+	String errorStr;
 	try {
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		const UVector<String>& command = CommandLine();
@@ -63,7 +64,7 @@ CONSOLE_APP_MAIN
 #endif
 
 		UVector<double> dat = {1, 2, 3};
-		double res = DemoVectorPy_C(dat, 3);
+		//double res = DemoVectorPy_C(dat, 3);
 			
 		Cout() << "\nVersion: " << DLL_Version();
 		Cout() << "\n\nDLL functions list:\n";
@@ -166,9 +167,19 @@ CONSOLE_APP_MAIN
 		DLL_FAST_SaveFile(AFX(GetDesktopFolder(), "InflowWind_test.dat"));
 	#endif
 #endif
-	
-	} catch (Exc err) {
-		Cout() << "\n" << Format(t_("Problem found: %s"), err);
+	} catch (Exc e) {
+		errorStr = e;
+	} catch(const char *cad) {
+		errorStr = cad;
+	} catch(const std::string &e) {
+		errorStr = e.c_str();	
+	} catch (const std::exception &e) {
+		errorStr = e.what();
+	} catch(...) {
+		errorStr = t_("Unknown error");
+	}	
+	if (!errorStr.IsEmpty()) {
+		Cout() << "\n" << Format(t_("Problem found: %s"), errorStr);
 		SetExitCode(-1);
 	}
 #ifdef flagDEBUG

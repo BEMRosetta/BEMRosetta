@@ -35,11 +35,15 @@ FreqSelector::FreqSelector() {
 };
 
 void Main::Init() {
+	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
+	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
+	BEM::PrintError   = [this](String s) {printf("%s", ~s); /*tab.Set(mainOutput); */Status(s);	Exclamation(DeQtfLf(s));};
+	
 	LOG("Init");
 	Sizeable().Zoomable().SetMinSize(Size(800, 600));
 	Icon(Img::Rosetta64());
 	LargeIcon(Img::Rosetta256());
-	ma(this);
+	Ma(this);
 	CtrlLayout(*this);
 	
 	String name, mode;
@@ -73,7 +77,7 @@ void Main::Init() {
 	
 	mainSolver.InitBeforeSerialize();
 	
-	errorJson = bem.LoadSerializeJson();
+	errorJson = Bem().LoadSerializeJson();
 	firstTime = !errorJson.IsEmpty();
 	if (firstTime) {
 		String str = errorJson + "\n" + t_("BEM config. data is not loaded. Defaults values are set"); 
@@ -84,7 +88,7 @@ void Main::Init() {
 	
 	LOG("BEM configuration loaded");
 	
-	if (!bem.ClearTempFiles()) 
+	if (!Bem().ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	
 	bool openOptions = false;
@@ -100,7 +104,7 @@ void Main::Init() {
 	
 	if (parameter.IsEmpty() || parameter == "mesh") {
 		mainBody.Init();			LOG("Init Body");
-		tab.Add(mainBody.SizePos(), t_("Body"));
+		tab.Add(mainBody.SizePos(), t_("Body Mesh"));
 	}
 	if (parameter.IsEmpty()) {
 		mainSolver.Init();		LOG("Init Nemoh");
@@ -119,6 +123,11 @@ void Main::Init() {
 	}
 	
 	if (parameter.IsEmpty()) {
+		mainTools.Init();
+		tab.Add(mainTools.SizePos(), t_("Tools"));
+	}
+	
+	if (parameter.IsEmpty()) {
 		mainMoor.Init();	LOG("Init Moor");
 #ifdef flagDEBUG
 			tab.Add(mainMoor.SizePos(), t_("Mooring"));
@@ -126,11 +135,6 @@ void Main::Init() {
 		if (Bem().experimental)
 			tab.Add(mainMoor.SizePos(), t_("Mooring"));
 #endif
-	}
-	
-	if (parameter.IsEmpty()) {
-		mainTools.Init();
-		tab.Add(mainTools.SizePos(), t_("Tools"));
 	}
 	
 	if (parameter.IsEmpty()) {
@@ -145,7 +149,7 @@ void Main::Init() {
 	mainOutput.Init();			LOG("Init Output");
 	tab.Add(mainOutput.SizePos(), t_("Output"));	
 	
-	menuOptions.Init(bem);		LOG("Init Options");
+	menuOptions.Init(Bem());		LOG("Init Options");
 	menuOptions.Load();			LOG("Init Options.Load");
 	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(), t_("Options"));
 	
@@ -154,19 +158,19 @@ void Main::Init() {
 	
 	editrho.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.rho.SetFocus(); menuOptions.rho.Underline(1);};
 	editrho.SetReadOnly();
-	editrho <<= bem.rho;
+	editrho <<= Bem().rho;
 	
 	editg.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.g.SetFocus(); menuOptions.g.Underline(1);};
 	editg.SetReadOnly();
-	editg <<= bem.g;
+	editg <<= Bem().g;
 	
 	editdofType.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.dofType.SetFocus(); menuOptions.dofType.Underline(1);};
 	editdofType.SetReadOnly();
-	editdofType <<= BEM::strDOFType[bem.dofType];
+	editdofType <<= BEM::strDOFType[Bem().dofType];
 	
 	editHeadingType.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.headingType.SetFocus(); menuOptions.headingType.Underline(1);};
 	editHeadingType.SetReadOnly();
-	editHeadingType <<= BEM::strHeadingType[bem.headingType];
+	editHeadingType <<= BEM::strHeadingType[Bem().headingType];
 	
 	butWindow.SetImage(Img::application_double()).Tip(t_("Open new window"));
 	butWindow.Hide();
@@ -237,10 +241,6 @@ void Main::Init() {
 	tab.WhenSet();
 	
 	AddFrame(bar);
-	
-	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
-	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
-	BEM::PrintError   = [this](String s) {printf("%s", ~s); /*tab.Set(mainOutput); */Status(s);	Exclamation(DeQtfLf(s));};
 }
 
 void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
@@ -283,7 +283,7 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	firstTime = !ret.IsEmpty();
 	
 	mainBody.InitSerialize(!firstTime);
-	mainSolver.InitSerialize(!firstTime);
+	mainSolver.InitAfterSerialize(!firstTime);
 	mainBEM.InitSerialize(!firstTime);
 	menuOptions.InitSerialize(!firstTime, openOptions);
 	
@@ -312,7 +312,7 @@ void Main::Close() {
 
 void Main::CloseMain(bool store) {
 	if (store) {
-		bem.StoreSerializeJson();
+		Bem().StoreSerializeJson();
 		StoreSerializeJson();
 	}
 	Thread::ShutdownThreads(); 
@@ -347,7 +347,7 @@ void MenuAbout::Init() {
 }
 
 			
-Main &ma(Main *m) {
+Main &Ma(Main *m) {
 	static Main *mp = 0;
 	if (m)
 		mp = m;
@@ -356,11 +356,7 @@ Main &ma(Main *m) {
 	return *mp;
 }
 
-BEM &Bem() {
-	return ma().bem;
-}
-
-void Status(String str, int time)	{ma().Status(str, time);}
+void Status(String str, int time)	{Ma().Status(str, time);}
 
 void OnPanic(const char *title, const char *text) {
 	throw Exc(Format(t_("Error type 1 %s: %s"), title, text));	
@@ -368,22 +364,39 @@ void OnPanic(const char *title, const char *text) {
 
 GUI_APP_MAIN {
 #if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
-	GetCrashHandler().Enable();
+	//GetCrashHandler().Enable();
 #endif
 	InstallPanicMessageBox(OnPanic);
 	
 	const UVector<String>& command = CommandLine();
 
+	String errorStr;
+
 	if (!command.IsEmpty() && command[0] != "-gui") {
-		ConsoleOutput con(true);
-		
-		ConsoleMain(command, true, PrintStatus);
+		try {
+			ConsoleOutput con(true);
+			
+			ConsoleMain(command, true, PrintStatus);
+		} catch (Exc e) {
+			errorStr = e;
+		} catch(const char *cad) {
+			errorStr = cad;
+		} catch(const std::string &e) {
+			errorStr = e.c_str();	
+		} catch (const std::exception &e) {
+			errorStr = e.what();
+		} catch(...) {
+			errorStr = t_("Unknown error");
+		}
+		if (!errorStr.IsEmpty()) {
+			Cout() << "\n" << Format(t_("Problem found: %s"), errorStr);
+			SetExitCode(-1);
+		}
 		return;
 	}
+	
 	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
 	Ctrl::GlobalBackPaint();
-	
-	String errorStr;
 
 	try {
 		Main main;

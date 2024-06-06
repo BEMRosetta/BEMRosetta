@@ -52,8 +52,10 @@ void MainBEM::Init() {
 	menuOpen.butJoin <<= THISBACK(OnJoin);
 	menuOpen.butDuplicate.Disable();	
 	menuOpen.butDuplicate <<= THISBACK(OnDuplicate);
-	menuOpen.butDescription.Disable();
-	menuOpen.butDescription <<= THISBACK(OnDescription);
+	menuOpen.butRename.Disable();
+	menuOpen.butRename <<= THISBACK(OnDescription);
+	menuOpen.butSolve.Disable();
+	menuOpen.butSolve <<= THISBACK(OnSolve);
 	menuOpen.butExport <<= THISBACK(OnConvert);
 	menuOpen.butExport.Tip(t_("Exports data file"));
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
@@ -305,6 +307,7 @@ void MainBEM::Init() {
 	menuPlot.opBhask 	<< [&]{LoadSelTab(Bem());};
 	menuPlot.opBpot 	<< [&]{LoadSelTab(Bem());};
 	menuPlot.opFfkpot 	<< [&]{LoadSelTab(Bem());};
+	menuPlot.opFscpot 	<< [&]{LoadSelTab(Bem());};
 		
 	menuPlot.head1st.NoHeader().MultiSelect();
 	menuPlot.head1st.AddColumn("");
@@ -419,8 +422,8 @@ void MainBEM::Init() {
 		} else if (menuTab.IsAt(menuFOAMM)) 
 			;
 		else if (mainTab.IsAt(mainBody)) {
-			mainBody.Load();
-			menuTab.Set(menuBody);	
+			mainBody.Load();	
+			plot = false;
 		} else {
 			plot = false;
 		}
@@ -472,6 +475,10 @@ void MainBEM::Init() {
 			tabMenuProcess.Text("");
 			tabMenuProcess2.Text("");
 			tabMenuAdvanced.Text("");
+			if (menuTab.IsAt(menuPlot) || menuTab.IsAt(menuProcess) || menuTab.IsAt(menuProcess2) || menuTab.IsAt(menuAdvanced))
+				menuTab.Set(0);
+			else if (menuTab.IsAt(menuBody))
+				menuTab.Set(menuBody);
 		}
 		
 		if (convertProcess) {
@@ -482,6 +489,8 @@ void MainBEM::Init() {
 			tabMenuProcess.Text("");
 			tabMenuProcess2.Text("");
 			tabMenuAdvanced.Text("");
+			if (menuTab.IsAt(menuProcess) || menuTab.IsAt(menuProcess2) || menuTab.IsAt(menuAdvanced))
+				menuTab.Set(0);
 		}
 		
 		if (ismesh) {
@@ -490,6 +499,8 @@ void MainBEM::Init() {
 		} else {
 			tabMenuBody.Text("");
 			tabMenuBody.Disable();
+			if (menuTab.IsAt(menuBody))
+				menuTab.Set(0);
 		}
 		
 		TabCtrl::Item& tabMenuFOAMM = menuTab.GetItem(menuTab.Find(menuFOAMM));
@@ -564,7 +575,7 @@ void MainBEM::Init() {
 	mainTab.Add(mainStateSpace.SizePos(), t_("State Space")).Disable();
 	
 	mainBody.Init();
-	mainTab.Add(mainBody.SizePos(), t_("Body Mesh")).Disable();
+	mainTab.Add(mainBody.SizePos(), t_("Mesh & Potentials")).Disable();
 	
 	UpdateButtons();
 	saveFolder = GetDesktopFolder();
@@ -574,36 +585,43 @@ void MainBEM::Init() {
 void MainBEM::ShowMenuPlotItems() {
 	menuPlot.showNdim.Enable();
 
-	bool show = true, showwT = true, showComplex = false, showDim = true, 
-		 showA = false, showB = false, showFfk = false;
+	bool showScatter = true, showwT = true, showComplex = false, showDim = true, 
+		 showA = false, showB = false, showFfk = false, showFsc = false;
 		 
 	if (mainTab.IsAt(mainSetupFOAMM)) {
 		showwT = false;
 		showComplex = true;
-	} else if (mainTab.IsAt(mainK)) 
+	} else if (mainTab.IsAt(mainK)) {
 		showwT = false;
-	else if (mainTab.IsAt(mainQTF)) {
-		show = true;
+	} else if (mainTab.IsAt(mainMatrixK)) {
+		showwT = false;
+		showScatter = false;
+	} else if (mainTab.IsAt(mainQTF)) {
 		showComplex = true;
 	} else if (mainTab.IsAt(mainForceSC) || mainTab.IsAt(mainForceFK) || mainTab.IsAt(mainForceEX) || 
 			   mainTab.IsAt(mainRAO) || mainTab.IsAt(mainStateSpace)) {
 		showComplex = true;
 		if (mainTab.IsAt(mainForceFK))
 			showFfk = true;
+		else if (mainTab.IsAt(mainForceSC))
+			showFsc = true;
 	} else if (mainTab.IsAt(mainA))
 		showA = true;
 	else if (mainTab.IsAt(mainB))
 		showB = true;
-			
+	else if (mainTab.IsAt(mainBody)) {
+		showScatter = false;
+	}
+		
 	menuPlot.showNdim.Enable(showDim);
 	menuPlot.opwT.Enable(showwT);
 	menuPlot.opMP.Show(showComplex);
 	menuPlot.labMP.Show(showComplex || showA || showB);
 
-	menuPlot.butZoomToFit.Enable(show);
-	menuPlot.autoFit.Enable(show);
-	menuPlot.fromY0.Enable(show);
-	menuPlot.showPoints.Enable(show);
+	menuPlot.butZoomToFit.Enable(showScatter);
+	menuPlot.autoFit.Enable(showScatter);
+	menuPlot.fromY0.Enable(showScatter);
+	menuPlot.showPoints.Enable(showScatter);
 
 	menuPlot.opAinf.Show(showA);
 	menuPlot.opA0.Show(showA);
@@ -614,6 +632,7 @@ void MainBEM::ShowMenuPlotItems() {
 	menuPlot.opBpot.Show(showB);
 	
 	menuPlot.opFfkpot.Show(showFfk);
+	menuPlot.opFscpot.Show(showFsc);
 }
 
 void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
@@ -622,8 +641,7 @@ void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
 		return;
 	
 	Hydro &hy = Bem().hydros[id];
-	menuAdvanced.x_w.Enable(!IsNull(hy.dt.x_w));	
-	menuAdvanced.y_w.Enable(!IsNull(hy.dt.y_w));	
+	
 	menuAdvanced.x_w = hy.dt.x_w;
 	menuAdvanced.y_w = hy.dt.y_w;
 	
@@ -670,6 +688,8 @@ void MainBEM::InitSerialize(bool ret) {
 	
 	menuPlot.opFfkpot = true;
 	
+	menuPlot.opFscpot = true;
+	
 	if (!ret || IsNull(menuPlot.showPoints)) 
 		menuPlot.showPoints = true;
 	
@@ -700,6 +720,8 @@ void MainBEM::LoadSelTab(BEM &bem) {
 		mainSetupFOAMM.Load();
 	else if (id == mainTab.Find(mainQTF))
 		mainQTF.Load();
+	else if (id == mainTab.Find(mainBody))
+		mainBody.Load();
 	else 
 		GetSelABForce().Load(ids);
 	
@@ -887,7 +909,8 @@ void MainBEM::UpdateButtons() {
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
 	menuOpen.butDuplicate.Enable(numsel == 1);
-	menuOpen.butDescription.Enable(numsel == 1 || numrow == 1);
+	menuOpen.butRename.Enable(numsel == 1 || numrow == 1);
+	menuOpen.butSolve.Enable(numsel == 1 || numrow == 1);
 	menuOpen.dropExport.Enable(numsel == 1);
 	menuOpen.butExport.Enable(numsel == 1);
 
@@ -1785,7 +1808,7 @@ void MapNodes::OnPasteNodes() {
 
 void MapNodes::OnMapNodes() {
 	const Hydro &hy = Bem().hydros[id];
-	
+		
 	hy.MapNodes(ib, points, Apan, Bpan);
 	
 	RefreshTable();
@@ -1932,6 +1955,21 @@ void MainBEM::OnDescription() {
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
+}
+
+void MainBEM::OnSolve() {
+	try {
+		int id = GetIdOneSelected();
+		if (id < 0) 
+			return;
+	
+		Ma().GetMainSolver().loadFrom <<= Bem().hydros[id].dt.file;
+		Ma().tab.Set(Ma().GetMainSolver());
+		Ma().GetMainSolver().butLoad.WhenAction();
+
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}	
 }
 
 int MainBEM::AskQtfHeading(const Hydro &hy) {
@@ -2423,203 +2461,4 @@ void MainOutput::Init() {
 void MainOutput::Print(String str) {
 	cout.Append(str);
 	cout.ScrollEnd();
-}
-
-void BodyBody::Init() {
-	CtrlLayout(*this);
-	
-	nodes.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	nodes.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, nodes, true);};
-	
-	panels.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject().Absolute();
-	panels.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, panels, true);};
-	
-	dropFreq.WhenAction = [&] {
-		int ifr = dropFreq.GetData();
-		for (auto &d : dataSourcePanels) {
-			d.ifr = ifr;
-			d.w = dropFreq.GetValue();
-		}
-		Refresh();
-	};
-}
-
-void BodyBody::Load(const Hydro &hy, int ib, bool hasPotentials) {
-	const char *xyz[] = {"x", "y", "z"};
-	{
-		int num = hy.dt.msh[ib].dt.mesh.nodes.size();
-		nodes.Clear();
-		nodes.ClearSelection();
-		nodes.SetVirtualCount(num);
-		nodes.Refresh();
-		numNodes <<= num;
-		
-		dataSourceNodes.Clear();
-		nodes.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, -2));
-		for (int c = 0; c < 3; ++c) 
-			nodes.AddRowNumColumn(Format("%s", xyz[c]), 80).SetConvert(dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, c));
-	}{
-		int num = hy.dt.msh[ib].dt.mesh.panels.size();
-		panels.Clear();
-		panels.ClearSelection();
-		panels.SetVirtualCount(num);
-		panels.Refresh();
-		numPanels <<= num;
-		
-		dataSourcePanels.Clear();
-		int n = 0;
-		panels.AddRowNumColumn(t_("#"),   60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-		n++;
-		//panels.AddRowNumColumn(t_("#id"), 60).SetConvert(dataSourcePanels.Add().Init(hydro, ib, n++));
-		for (int c = 0; c < 4; ++c) {
-			panels.AddRowNumColumn(Format(t_("Node %d"), c+1), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-		}
-		panels.AddRowNumColumn(t_("Area"),60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-		for (int c = 0; c < 3; ++c) 
-			panels.AddRowNumColumn(Format(t_("Center %s"), xyz[c]), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-		for (int c = 0; c < 3; ++c) 
-			panels.AddRowNumColumn(Format(t_("Normal %s"), xyz[c]), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-		double freq = dropFreq.GetValue();
-		dropFreq.Clear();
-		if (hasPotentials) {
-			for (int i = 0; i < 6; ++i) {
-				panels.AddRowNumColumn(Format(t_("|Φrad| %s"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-				panels.AddRowNumColumn(Format(t_("arg(Φrad) %s"), Bem().StrDOF(i)), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-			}
-			if (Bem().onlyDiagonal) {
-				for (int r = 0; r < 6; ++r) 
-					panels.AddRowNumColumn(Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(r)), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-			} else {
-				for (int r = 0; r < 6; ++r) 
-					for (int c = 0; c < 6; ++c) 
-						panels.AddRowNumColumn(Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-			}
-			if (Bem().onlyDiagonal) {
-				for (int r = 0; r < 6; ++r) 
-					panels.AddRowNumColumn(Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(r)), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-			} else {
-				for (int r = 0; r < 6; ++r) 
-					for (int c = 0; c < 6; ++c) 
-						panels.AddRowNumColumn(Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)), 60).SetConvert(dataSourcePanels.Add().Init(hy, ib, n++));
-			}
-			for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
-				dropFreq.Add(ifr, hy.dt.w[ifr]);
-			if (!IsNull(freq))
-				dropFreq.SetValue(freq);
-			else
-				dropFreq.SetData(0);
-		} 
-		labFreq.Enable(hasPotentials);
-		dropFreq.Enable(hasPotentials);
-	}
-}
-
-Value BodyBody::DataSourceNodes::Format(const Value& q) const {
-	ASSERT(pmesh);
-	int iq = q;
-	if (pmesh->nodes.size() <= iq)
-		return Null;
-	
-	const Point3D &p = pmesh->nodes[iq];
-	switch (xyz) {
-	case -2:	return iq + 1;		// id
-	case  0:	return p.x;			// x
-	case  1:	return p.y;			// y
-	case  2:	return p.z;			// z
-	default: NEVER();return Null;
-	}
-}
-
-Value BodyBody::DataSourcePanels::Format(const Value& q) const {
-	ASSERT(phydro);
-	int idp = q;
-	const Surface &s = phydro->dt.msh[ib].dt.mesh;
-	if (s.panels.size() <= idp)
-		return Null;
-	
-	switch (col) {
-	case 0:		return idp + 1;		// id
-	case 2:		return s.panels[idp].id[0];
-	case 3:		return s.panels[idp].id[1];
-	case 4:		return s.panels[idp].id[2];
-	case 5:		return s.panels[idp].id[3];
-	case 6:		return s.panels[idp].surface0 + s.panels[idp].surface1;
-	case 7:		return s.panels[idp].centroidPaint.x;
-	case 8:		return s.panels[idp].centroidPaint.y;
-	case 9:		return s.panels[idp].centroidPaint.z;
-	case 10:	return s.panels[idp].normalPaint.x;
-	case 11:	return s.panels[idp].normalPaint.y;
-	case 12:	return s.panels[idp].normalPaint.z;
-	}
-			
-	switch (col) {
-	case 13:	return abs(phydro->dt.pots_rad[ib][idp][0][ifr]);
-	case 14:	return ToDeg(arg(phydro->dt.pots_rad[ib][idp][0][ifr]));
-	case 15:	return abs(phydro->dt.pots_rad[ib][idp][1][ifr]);
-	case 16:	return ToDeg(arg(phydro->dt.pots_rad[ib][idp][1][ifr]));
-	case 17:	return abs(phydro->dt.pots_rad[ib][idp][2][ifr]);
-	case 18:	return ToDeg(arg(phydro->dt.pots_rad[ib][idp][2][ifr]));
-	case 19:	return abs(phydro->dt.pots_rad[ib][idp][3][ifr]);
-	case 20:	return ToDeg(arg(phydro->dt.pots_rad[ib][idp][3][ifr]));
-	case 21:	return abs(phydro->dt.pots_rad[ib][idp][4][ifr]);
-	case 22:	return ToDeg(arg(phydro->dt.pots_rad[ib][idp][4][ifr]));
-	case 23:	return abs(phydro->dt.pots_rad[ib][idp][5][ifr]);
-	case 24:	return ToDeg(arg(phydro->dt.pots_rad[ib][idp][5][ifr]));
-	}
-	
-	int cl = col - 25;
-	if (Bem().onlyDiagonal) {
-		if (cl < 6) {
-			int col2 = cl;	
-			return phydro->dt.Apan(ib, idp, col2, col2, ifr);
-		} else {
-			int col2 = cl - 6;	
-			return phydro->dt.Bpan(ib, idp, col2, col2, ifr);
-		}
-	} else {
-		if (cl < 36) {
-			int row = cl/6;
-			int col2 = cl - 6*row;
-			return phydro->dt.Apan(ib, idp, row, col2, ifr);
-		} else {
-			cl -= 36;	
-			int row = cl/6;
-			int col2 = cl - 6*row;
-			return phydro->dt.Bpan(ib, idp, row, col2, ifr);
-		}
-	}
-}
-	
-void MainBodyTable::Init() {
-	Add(tab.SizePos());
-}
-
-bool MainBodyTable::Load() {
-	try {
-		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
-		int id = ArrayModel_IdHydro(mbm.listLoaded);
-	
-		tab.Reset();
-		bodies.Clear();
-		
-		UArray<Hydro> &hydros = Bem().hydros; 
-		if (hydros.IsEmpty() || id < 0) 
-			return false;
-		
-		const Hydro &hy = hydros[id];
-		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty())
-			return false;
-		
-		bool hasPotentials = hy.IsLoadedPotsRad();
-		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-			BodyBody &b = bodies.Add();
-			b.Init();
-			b.Load(hy, ib, hasPotentials);
-			tab.Add(b.SizePos(), Format("%d. %s", ib+1, hy.dt.msh[ib].dt.name));
-		}
-		return true;
-	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
-		return false;
-	}
 }

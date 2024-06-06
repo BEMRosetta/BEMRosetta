@@ -3,7 +3,7 @@
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include "FastOut.h"
-#include <Eigen/MultiDimMatrixIndex.h>
+#include <Eigen/MultiDimMatrix.h>
 #ifdef PLATFORM_WIN32
 #include "orca.h"
 
@@ -269,9 +269,17 @@ void __stdcall Orca::EnumerateVarsProc(const TVarInfo *lpVarInfo) {
 bool Orca::FindInit() {
 	UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
 	if (orcadata.IsEmpty()) {
-		BEM::PrintWarning("OrcaFlex is not installed");
+		BEM::PrintWarning(t_("OrcaFlex is not installed"));
 		return false;
 	}
+	
+	BEM::Print("\nAvailable OrcaFlex versions");
+	for (int i = 0; i < orcadata.size(); ++i)
+		BEM::Print(Format("\nName: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].description, orcadata[i].path));
+	
+	for (int i = orcadata.size()-1; i >= 0; --i)		// lack of data
+		if (orcadata[i].version.IsEmpty() || orcadata[i].path.IsEmpty())
+			orcadata.Remove(i);
 	
 	int iversion = 0;
 	UVector<int> version = orcadata[0].GetVersion();
@@ -348,7 +356,7 @@ String Orca::GetString(HINSTANCE handle, const wchar_t *name, int id) {
 }
 		
 void Orca::LoadParameters(Hydro &hy) {
-	int sz;
+	int sz, wrongsz;
 	
 	OrcaFactors factor;	
 	
@@ -404,18 +412,11 @@ void Orca::LoadParameters(Hydro &hy) {
 		throwError("Load dotHydrostaticResults 2");
 	
 	hy.dt.msh.SetCount(hy.dt.Nb);
-	//hy.dt.dt.Vo.SetCount(hy.dt.dt.Nb);
-	//hy.dt.dt.cb.resize(3, hy.dt.dt.Nb);
-	//hy.dt.dt.cg.resize(3, hy.dt.dt.Nb);
-	//hy.dt.dt.C.SetCount(hy.dt.dt.Nb);
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 		hy.dt.msh[ib].dt.C.resize(6, 6);
-	//hy.dt.dt.M.SetCount(hy.dt.dt.Nb);
+	
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 		hy.dt.msh[ib].dt.M.resize(6, 6);
-	
-	//hy.dt.dt.c0.setConstant(3, hy.dt.dt.Nb, 0);
-	//hy.dt.dt.names.SetCount(hy.dt.dt.Nb);
 	
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 		const TDiffractionBodyHydrostaticInfo &b = bodies[ib];
@@ -440,8 +441,8 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
 			throwError("Load dotAddedMass_Radiation");	
 		
-		if (sz/sizeof(double) != 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf)		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf));
+		if (sz/sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf))		
+			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), wrongsz));
 		
 		MultiDimMatrixRowMajor<double> a(hy.dt.Nf, 6*hy.dt.Nb, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
@@ -459,8 +460,8 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, NULL))
 		throwError("Load dotInfiniteFrequencyAddedMass");	
 	
-	if (sz/sizeof(double) != 6*hy.dt.Nb*6*hy.dt.Nb)		
-		throw Exc(Format("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), 6*hy.dt.Nb*6*hy.dt.Nb));
+	if (sz/sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb))
+		throw Exc(Format("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), wrongsz));
 	
 	MultiDimMatrixRowMajor<double> a(6*hy.dt.Nb, 6*hy.dt.Nb);
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, a.begin()))
@@ -472,14 +473,17 @@ void Orca::LoadParameters(Hydro &hy) {
 	 		hy.dt.Ainf(r, c) = a(r, c)*factor.A(r%6, c%6);	
 	
 	
-	auto LoadF = [&](Hydro::Forces &f, int type, const char *stype, const Eigen::Vector<double, 6> &factor) {
-		hy.Initialize_Forces(f);
-		
+	auto LoadF = [&](Hydro::Forces &f, int type, const char *stype, const Eigen::Vector<double, 6> &factor)->bool {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
 			throwError("Load dotLoadRAOs");	
 		
-		if (sz/sizeof(TComplex) != 6*hy.dt.Nb*hy.dt.Nf*hy.dt.Nh)		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf));
+		if (sz == 0)
+			return false;
+		
+		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*hy.dt.Nh))
+			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+		
+		hy.Initialize_Forces(f);
 		
 		MultiDimMatrixRowMajor<TComplex> a(hy.dt.Nh, hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
@@ -492,13 +496,14 @@ void Orca::LoadParameters(Hydro &hy) {
 						f[ib][ih](ifr, idf).real(a(ih, ifr, idf + 6*ib).Re*factor(idf));
 						f[ib][ih](ifr, idf).imag(a(ih, ifr, idf + 6*ib).Im*factor(idf));
 					}
+		return true;
 	};
 	
-	LoadF(hy.dt.ex, dotLoadRAOsDiffraction, "diffraction force", factor.F);
-	
+	if (!LoadF(hy.dt.ex, dotLoadRAOsDiffraction, "excitation force diffraction", factor.F))
+		LoadF(hy.dt.ex, dotLoadRAOsHaskind, "excitation force Haskind", factor.F);
+			
 	LoadF(hy.dt.rao, dotDisplacementRAOs, "RAO", factor.RAO);
 	
-
 	if (GetDiffractionOutput(wave, dotQTFAngularFrequencies, &sz, NULL))
 		throwError("Load dotAngularFrequencies");	
 
@@ -533,8 +538,8 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (sz == 0)
 			return false;
 		
-		if (sz/sizeof(TComplex) != 6*hy.dt.Nb*hy.dt.Nf*hy.dt.mdhead.size())		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*hy.dt.Nf*hy.dt.mdhead.size()));
+		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*hy.dt.mdhead.size()))
+			throwError(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 		
 		MultiDimMatrixRowMajor<TComplex> md((int)hy.dt.mdhead.size(), hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, md.begin()))
@@ -591,8 +596,8 @@ void Orca::LoadParameters(Hydro &hy) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != 6*hy.dt.Nb*Nqw*hy.dt.qh.size())		
-				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*Nqw*hy.dt.qh.size()));
+			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qh.size()))
+				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
 			qtf.Resize((int)hy.dt.qh.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
@@ -605,8 +610,8 @@ void Orca::LoadParameters(Hydro &hy) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != 6*hy.dt.Nb*Nqw*hy.dt.qh.size())		
-				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), 6*hy.dt.Nb*Nqw*hy.dt.qh.size()));
+			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qh.size()))
+				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
 			qtfDirect.Resize((int)hy.dt.qh.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, qtfDirect.begin()))
@@ -674,8 +679,10 @@ void Orca::LoadParameters(Hydro &hy) {
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
 		hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
-		//hy.dt.msh[ib].cg = Point3D(hy.dt.cg(0, ib), hy.dt.cg(1, ib), hy.dt.cg(2, ib));
 	}
+	
+	UVector<int> panelId(Np), panelIb(Np);;
+	
 	for (int ip = 0; ip < Np; ++ip) {
 		const TDiffractionPanelGeometry &pan = panels[ip];
 		int ib = pan.ObjectId;
@@ -684,7 +691,8 @@ void Orca::LoadParameters(Hydro &hy) {
 			continue;
 		
 		Panel &p = hy.dt.msh[ib].dt.mesh.panels.Add();
-		
+		panelId[ip] = hy.dt.msh[ib].dt.mesh.panels.size()-1;
+		panelIb[ip] = ib;
 		for (int i = 0; i < 4; ++i) {
 			const TVector &v0 = pan.Vertices[i];
 			
@@ -696,28 +704,66 @@ void Orca::LoadParameters(Hydro &hy) {
 			}
 		}
 	}
+	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+		hy.dt.msh[ib].AfterLoad(hy.dt.rho, hy.dt.g, false, true);
 	
 	if (GetDiffractionOutput(wave, dotPanelPressureRadiation, &sz, NULL))
 		throwError("Load dotPanelPressureRadiation");			
 	
 	if (sz > 0) {
-		if (sz/sizeof(TComplex) != 6*hy.dt.Nb*hy.dt.Nf*Np)
-			throw Exc(Format("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), 6*hy.dt.Nb*hy.dt.Nf*Np));
+		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*Np))
+			throwError(Format("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), wrongsz));
 					
-		MultiDimMatrixRowMajor<TComplex> pres(6*hy.dt.Nb, hy.dt.Nf, Np);
-		if (GetDiffractionOutput(wave, dotPanelPressureRadiation, &sz, pres.begin()))
+		MultiDimMatrixRowMajor<TComplex> presRad(6*hy.dt.Nb, hy.dt.Nf, Np);
+		if (GetDiffractionOutput(wave, dotPanelPressureRadiation, &sz, presRad.begin()))
 			throwError("Load dotPanelPressureRadiation 2");
 		
 		hy.Initialize_PotsRad();
-		for (int ib = 0; ib < hy.dt.Nb; ++ib)
-			for (int idf = 0; idf < 6; ++idf)
-				for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
-					for (int ip = 0; ip < Np; ++ip) {
-						const TComplex &c = pres(idf + 6*ib, ifr, ip);
-						hy.dt.pots_rad[ib][ip][idf][ifr] = std::complex<double>(-c.Re, c.Im)/hy.dt.rho;
-							//std::complex<double>(c.Im, -c.Re)/hy.dt.rho/hy.dt.w[ifr]; // press = i w rho phi(potential)
+		for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) {
+			double rho_w = hy.dt.rho*hy.dt.w[ifr];
+			for (int ip = 0; ip < Np; ++ip) {
+				for (int ib = 0; ib < hy.dt.Nb; ++ib)
+					for (int idf = 0; idf < 6; ++idf) {
+						const TComplex &c = presRad(idf + 6*ib, ifr, ip);
+						if (ib == panelIb[ip])
+							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += std::complex<double>(c.Im, -c.Re)/rho_w; // p = iρωΦ
 					}
+			}
+		}
 	}
+	
+	if (GetDiffractionOutput(wave, dotPanelPressureDiffraction, &sz, NULL))
+		throwError("Load dotPanelPressureDiffraction");	
+	
+	if (sz > 0) {
+		if (sz/sizeof(TComplex) != (wrongsz = hy.dt.Nh*hy.dt.Nf*Np))
+			throwError(Format("Wrong %s size (%d <> %d)", "dotPanelPressureDiffraction", int(sz/sizeof(TComplex)), wrongsz));
+			
+		MultiDimMatrixRowMajor<TComplex> pres(hy.dt.Nh, hy.dt.Nf, Np);
+		if (GetDiffractionOutput(wave, dotPanelPressureDiffraction, &sz, pres.begin()))
+			throwError("Load dotPanelPressureDiffraction 2");
+		
+		hy.Initialize_PotsIncDiff(hy.dt.pots_dif);
+		for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) {
+			double rho_w = hy.dt.rho*hy.dt.w[ifr];
+			for (int ih = 0; ih < hy.dt.Nh; ++ih)
+				for (int ip = 0; ip < Np; ++ip) {
+					const TComplex &c = pres(ih, ifr, ip);
+					hy.dt.pots_dif[panelIb[ip]][panelId[ip]][ih][ifr] -= std::complex<double>(c.Im, -c.Re)/rho_w; // p = iρωΦ
+				}
+		}
+				
+		hy.GeneratePotsInc();
+		
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+			int Np = hy.dt.msh[ib].dt.mesh.panels.size();
+			for (int ip = 0; ip < Np; ++ip) {
+				for (int ih = 0; ih < hy.dt.Nh; ++ih)
+					for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
+						hy.dt.pots_dif[ib][ip][ih][ifr] -= hy.dt.pots_inc_bmr[ib][ip][ih][ifr];		
+			}
+		}
+	}	
 }
 	
 #endif

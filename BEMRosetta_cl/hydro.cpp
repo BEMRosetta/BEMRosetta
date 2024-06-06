@@ -370,6 +370,9 @@ String Hydro::SpreadNegative(Function <bool(String, int)> Status) {
 }
 
 void Hydro::MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan_nodes, Tensor<double, 4> &Bpan_nodes) const {
+	if (points.IsEmpty())
+		throw Exc(t_("No points to map"));
+	
 	Apan_nodes.resize(points.size(), 6, 6, dt.Nf);
 	Apan_nodes.setZero();
 	Bpan_nodes.resize(points.size(), 6, 6, dt.Nf);
@@ -395,7 +398,7 @@ void Hydro::MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan_n
 			for (int idf1 = 0; idf1 < 6; ++idf1) {		
 				for (int idf2 = 0; idf2 < 6; ++idf2) {
 					Apan_nodes(ip, idf1, idf2, ifr) += dt.Apan(ib, idp, idf1, idf2, ifr);
-					Bpan_nodes(ip, idf1, idf2, ifr) += dt.Bpan(ib, idp, idf1, idf2, ifr);
+					Bpan_nodes(ip, idf1, idf2, ifr) += B_pan(ib, idp, idf1, idf2, ifr);
 				}
 			}
 		}

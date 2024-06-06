@@ -1,0 +1,11 @@
+LAYOUT(SelectList, 212, 232)
+	ITEM(Upp::EditInt, number, Min(1).NotNull(true).LeftPosZ(76, 28).TopPosZ(20, 19))
+	ITEM(Upp::EditDouble, from, Min(0).NotNull(true).LeftPosZ(76, 40).TopPosZ(44, 19))
+	ITEM(Upp::EditDouble, to, Min(0).NotNull(true).LeftPosZ(76, 40).TopPosZ(68, 19))
+	ITEM(Upp::Label, dv___3, SetLabel(t_("Number:")).LeftPosZ(8, 52).TopPosZ(20, 19))
+	ITEM(Upp::Label, labTo, SetLabel(t_("Max [%s]:")).LeftPosZ(8, 68).TopPosZ(68, 19))
+	ITEM(Upp::GridCtrl, grid, HSizePosZ(124, 8).VSizePosZ(20, 8))
+	ITEM(Upp::Label, labFrom, SetLabel(t_("Min [%s]:")).LeftPosZ(8, 68).TopPosZ(44, 19))
+	ITEM(Upp::LabelBox, labTitle, SetLabel(t_("Wave frequencies")).HSizePosZ(0, 0).VSizePosZ(0, 0))
+END_LAYOUT
+

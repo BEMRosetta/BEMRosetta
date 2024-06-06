@@ -20,6 +20,10 @@ void MainTools::Init() {
 	
 	waveInfo.Init();
 	tab.Add(waveInfo.SizePos(), t_("Waves"));
+#ifdef PLATFORM_WIN32
+	orcaLicense.Init();
+	tab.Add(orcaLicense.SizePos(), t_("OrcaWave license"));
+#endif 
 };
 
 
@@ -137,3 +141,45 @@ void Tools_WaveInfo::ArraySelect() {
 	gridResultsT.Select(0, gridResultsT.GetCount(), true);
 	gridResultsH.Select(0, gridResultsH.GetCount(), true);
 }
+
+
+#ifdef PLATFORM_WIN32
+
+void Tools_OrcaLicense::Init() {
+	CtrlLayout(*this);
+	
+	butCapture.WhenAction = [&]() {
+		if (!orca.IsLoaded()) {
+			if (!orca.FindInit()) 
+				PromptOK(t_("OrcaWave is not available"));
+		}
+		
+		String label = butCapture.GetLabel();
+		
+		if (label == t_("Check license")) {
+			butCapture.SetLabel(t_("Stop checking"));
+			labCapture.SetText(t_("Checking if an OrcaWave license is available ..."));
+			SetTimeCallback(int(-60*1000), [&]() {CheckAvailable();}, 12);
+			CheckAvailable();
+		} else if (label == t_("Stop checking")) {
+			butCapture.SetLabel(t_("Check license"));
+			labCapture.SetText("");
+			KillTimeCallback(12);
+		}
+	};
+}
+
+void Tools_OrcaLicense::CheckAvailable() {
+	labCapture.SetText(t_("Checking now ..."));
+	Ctrl::ProcessEvents();
+	if (orca.IsAvailable()) {
+		KillTimeCallback(12);
+		butCapture.SetLabel(t_("Check license"));
+		labCapture.SetText(Format(t_("OrcaWave is now available (%s)"), GetSysTime()));
+		PromptOK(t_("OrcaWave is now available"));
+	} else
+		labCapture.SetText(t_("Checking if an OrcaWave license is available ..."));
+}
+
+
+#endif

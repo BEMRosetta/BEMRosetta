@@ -91,7 +91,6 @@ void GetAinf_w(VectorXd &Ainf_w, const VectorXd &Kirf, const VectorXd &Tirf, con
         Ainf_w(iw) = A(iw) + Integral(y, dt, IntegralType::SIMPSON_1_3)/w(iw);	// Ogilvie's formula
 	}
 }
-
     
 double GetAinf(const VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, 
 				const VectorXd &A) {
@@ -103,17 +102,30 @@ double GetAinf(const VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w,
 
 void GetA(VectorXd &A, const VectorXd &Kirf, const VectorXd &w, double ainf, double dt) {
 	int numT = int(Kirf.size());
-	int numF = int(w.size());
+	int Nf = int(w.size());
 
-	Resize(A, numF);
+	Resize(A, Nf);
 
 	VectorXd y(numT);
-    for (int iw = 0; iw < numF; ++iw) {
+    for (int iw = 0; iw < Nf; ++iw) {
         for (int it = 0; it < numT; ++it)
         	y(it) = Kirf(it)*sin(w(iw)*dt*it);
         A(iw) = ainf - Integral(y, dt, IntegralType::SIMPSON_1_3)/w(iw);	
 	}
 }
+
+
+// It seems OK but the results are not correct :-(
+double GetA0(const VectorXd &Kirf, const VectorXd &Tirf, double ainf) {
+	int numT = int(Kirf.size());
+	double dt = Tirf[1];
+
+	VectorXd y(numT);
+    for (int it = 0; it < numT; ++it)
+    	y(it) = Kirf(it)*dt*it;
+    return ainf - Integral(y, dt, IntegralType::SIMPSON_1_3);			
+}
+
 
 /*double Fradiation2(double t, const VectorXd &vel, const VectorXd &irf, double dt) {
 	Eigen::Index numV = int(t/dt);

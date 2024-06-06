@@ -6,6 +6,9 @@
 #include <BEMRosetta_cl/FastOut.h>
 #include "auxiliar.h"
 #include "FastScatter.h"
+#ifdef PLATFORM_WIN32
+#include <BEMRosetta_cl/orca.h>
+#endif
 
 
 class Main;
@@ -139,15 +142,19 @@ public:
 		case Hydro::PLOT_KIRF:		return !hy->IsLoadedKirf(idf, jdf);
 		case Hydro::PLOT_AINFW:		return !hy->IsLoadedAinf_w(idf, jdf);
 		case Hydro::PLOT_FORCE_SC_1:	
-		case Hydro::PLOT_FORCE_SC_2:return !hy->IsLoadedFsc(idf, jdf);		// jdf: heading, idf: body
+		case Hydro::PLOT_FORCE_SC_2:return !hy->IsLoadedFsc(idf%6, jdf, idf/6);		// jdf: heading, idf: body
+		case Hydro::PLOT_FORCE_SC_1_P:	
+		case Hydro::PLOT_FORCE_SC_2_P:return !hy->IsLoadedFsc_P(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1:	
-		case Hydro::PLOT_FORCE_FK_2:return !hy->IsLoadedFfk(idf, jdf);
+		case Hydro::PLOT_FORCE_FK_2:return !hy->IsLoadedFfk(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1_P:	
-		case Hydro::PLOT_FORCE_FK_2_P:return !hy->IsLoadedFfk_P(idf, jdf);
+		case Hydro::PLOT_FORCE_FK_2_P:return !hy->IsLoadedFfk_P(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_FK_1_PB:	
+		case Hydro::PLOT_FORCE_FK_2_PB:return !hy->IsLoadedFfk_PB(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_EX_1:
-		case Hydro::PLOT_FORCE_EX_2:return !hy->IsLoadedFex(idf, jdf);
+		case Hydro::PLOT_FORCE_EX_2:return !hy->IsLoadedFex(idf%6, jdf, idf/6);
 		case Hydro::PLOT_RAO_1:
-		case Hydro::PLOT_RAO_2:		return !hy->IsLoadedRAO(idf, jdf);
+		case Hydro::PLOT_RAO_2:		return !hy->IsLoadedRAO(idf%6, jdf, idf/6);
 		case Hydro::PLOT_TFS_1:
 		case Hydro::PLOT_TFS_2:		return !hy->dt.sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_Z_1:
@@ -172,6 +179,10 @@ public:
 														real(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_FORCE_SC_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6)) : 
 														imag(hy->F_  (ndim, hy->dt.sc, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_SC_1_P:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.sc_pot, jdf, int(id), idf%6, idf/6)) : 
+														  real(hy->F_  (ndim, hy->dt.sc_pot, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_SC_2_P:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.sc_pot, jdf, int(id), idf%6, idf/6)) : 
+														  imag(hy->F_  (ndim, hy->dt.sc_pot, jdf, int(id), idf%6, idf/6));														
 		case Hydro::PLOT_FORCE_FK_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6)) : 
 														real(hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_FORCE_FK_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk, jdf, int(id), idf%6, idf/6)) : 
@@ -179,7 +190,11 @@ public:
 		case Hydro::PLOT_FORCE_FK_1_P:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6)) : 
 														  real(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_FORCE_FK_2_P:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6)) : 
-														  imag(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));														
+														  imag(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));	
+		case Hydro::PLOT_FORCE_FK_1_PB:return show_ma_ph? abs (hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6)) : 
+														  real(hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_FK_2_PB:return show_ma_ph? arg (hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6)) : 
+														  imag(hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6));	
 		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6)) : 
 														real(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6)) : 
@@ -691,7 +706,7 @@ public:
 	bool dim;
 	int markW;
 	bool show_w, show_ma_ph;
-	bool opAinf, opA0, opB, opApot, opBhask, opBpot, opFfkpot;
+	bool opAinf, opA0, opB, opApot, opBhask, opBpot, opFfkpot, opFscpot;
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
@@ -874,6 +889,19 @@ public:
 	MainSolverBody();
 	
 	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
+	Body mesh, lid;
+	
+	void SetTexts() {
+		if (mesh.IsEmpty())
+			labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+		else
+			labMesh.SetText(Format(t_("Panels: %d. Nodes: %d"), mesh.dt.mesh.panels.size(), mesh.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+
+		if (lid.IsEmpty())
+			labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+		else
+			labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+	}
 };
 
 class MainSolver : public WithMainSolver<StaticRect> {
@@ -881,13 +909,13 @@ public:
 	typedef MainSolver CLASSNAME;
 
 	void Init();
-	void InitSerialize(bool ret);
+	void InitAfterSerialize(bool ret);
 	void InitBeforeSerialize();
 	
 	void Load(String file);
 	void Load();
 	
-	bool Save(Hydro &hy, bool isNemoh);
+	bool CopyHydro(Hydro &hy, UArray<Body> &lids);
 	
 	void Jsonize(JsonIO &json);
 	
@@ -897,6 +925,10 @@ public:
 	UArray<MainSolverBody> bodiesEach;
 	UArray<CtrlScroll> bodiesEachScroll;
 	WithMainSolver_Save<StaticRect> save;
+	
+	virtual void DragAndDrop(Point p, PasteClip& d);
+	virtual bool Key(dword key, int count);
+	void LoadDragDrop();
 	
 private:
 	bool OnLoad();
@@ -913,6 +945,9 @@ private:
 	
 	EditDouble editF, editH;
 	int dropSolverVal = 0;
+	
+	TimeCallback timerDrop;
+	UVector<String> filesToDrop;
 };
 
 class ArrayFields {
@@ -1125,6 +1160,20 @@ private:
 	int prevTw;
 };
 
+#ifdef PLATFORM_WIN32
+class Tools_OrcaLicense : public WithTools_OrcaLicense<StaticRect> {
+public:
+	typedef Tools_OrcaLicense CLASSNAME;
+	Tools_OrcaLicense() {}
+	
+	void Init();
+
+private:
+	void CheckAvailable();
+	Orca orca;
+};
+#endif
+
 class MainTools : public StaticRect {
 public:
 	typedef MainDecay CLASSNAME;
@@ -1134,6 +1183,9 @@ public:
 	TabCtrl tab;
 	
 	Tools_WaveInfo waveInfo;
+#ifdef PLATFORM_WIN32
+	Tools_OrcaLicense orcaLicense;
+#endif
 };
 
 class MainSetupFOAMM : public WithMainStateSpaceSetup<StaticRect> {
@@ -1174,43 +1226,9 @@ public:
 	typedef BodyBody CLASSNAME;
 	
 	void Init();
-	void Load(const Hydro &hy, int ib, bool hasPotentials);
-	
-	class DataSourcePanels : public Convert {
-	public:
-		DataSourcePanels() : phydro(0), ib(-1), col(0) {}
-		DataSourcePanels& Init(const Hydro &_hydro, int _ib, int _col) {
-			phydro = &_hydro;	
-			ib = _ib;
-			col = _col;
-			return *this;
-		}
-		Value Format(const Value& q) const;
-		int ifr = 0;
-		double w;
+	void Load(int id, int ib);
 		
-	private:
-		const Hydro *phydro;
-		int ib;
-		int col;
-	};
-	class DataSourceNodes : public Convert {
-	public:
-		DataSourceNodes() : pmesh(0), xyz(0) {}
-		DataSourceNodes& Init(const Surface &_mesh, int _xyz) {
-			pmesh = &_mesh;	
-			xyz = _xyz;
-			return *this;
-		}
-		Value Format(const Value& q) const;
-		
-	private:
-		const Surface *pmesh;
-		int xyz;
-	};
-	
-	UArray<DataSourceNodes> dataSourceNodes;
-	UArray<DataSourcePanels> dataSourcePanels;
+	GridBody grd;
 };
 
 class MainBodyTable : public StaticRect {
@@ -1234,8 +1252,8 @@ class QTFTabDof : public StaticRect {
 public:
 	typedef QTFTabDof CLASSNAME;
 
-	void Init(MainQTF &parent, int posSplitter, int ib, int idof);
-	void Load(const Hydro &hd, int ib, int ih, int idof, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
+	void Init(MainQTF &parent, int posSplitter, int ib, int idf);
+	void Load(const Hydro &hd, int ib, int ih, int idf, bool ndim, bool show_w, bool show_ma_ph, bool isSum, bool opBilinear, bool showPoints, bool fromY0, bool autoFit, int posSplitter, bool resetPf);
 	
 	Splitter splitter;
 	
@@ -1458,6 +1476,7 @@ public:
 	void OnMultiplyDOF(bool isReset);
 	void OnSwapDOF();
 	void OnDescription();
+	void OnSolve();
 	void OnMenuAdvancedArraySel(bool updateBH);
 	void OnSelListLoaded();
 	void UpdateButtons();
@@ -1561,7 +1580,7 @@ public:
 	
 	void Jsonize(JsonIO &json);
 
-	BEM bem;
+	//BEM bem;
 	
 	void Status(String str = String(), int time = 6000)	{
 		if (!str.IsEmpty()) {
@@ -1608,6 +1627,9 @@ private:
 	bool closed;
 	
 	StatusBar bar;
+
+public:
+	MainSolver &GetMainSolver()	{return mainSolver;}
 };
 
 ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool push = false);
@@ -1632,7 +1654,7 @@ String ArrayModel_GetTitle(ArrayCtrl &array, int row = -1);
 
 void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName);
 		
-Main &ma(Main *m = 0);
+Main &Ma(Main *m = 0);
 void Status(String str = String(), int time = 2000);
 
 	

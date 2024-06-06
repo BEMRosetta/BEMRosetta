@@ -30,12 +30,10 @@ String GetSystemInfo() {
 	return systemInfo;
 }
 
-#if defined(flagBEMR_CL)
 BEM &Bem() {
 	static BEM bem;
-	return &bem;
+	return bem;
 }
-#endif
 
 UVector<String> GetCommandLineParams(String str) {
 	UVector<String> ret;

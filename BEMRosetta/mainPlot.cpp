@@ -182,6 +182,7 @@ bool MainPlot::Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVecto
 	opBpot = mbm.menuPlot.opBpot;
 	
 	opFfkpot = mbm.menuPlot.opFfkpot;
+	opFscpot = mbm.menuPlot.opFscpot;
 	
 	if (show_w && dataToShow != Hydro::DATA_KIRF) {
 		scatt.SetLabelX(t_("ω [rad/s]"));
@@ -280,7 +281,10 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 	if (Bem().legend_w_solver)
 		nameType << Format("(%s)", hy.GetCodeStrAbr());
 	
-	String sids = BEM::strDOFnum_sub[plot_idf%6];
+	int idf = plot_idf%6;
+	int ib = plot_idf/6;
+	
+	String sids = BEM::strDOFnum_sub[idf];
 	if (dataToShow == Hydro::DATA_A || dataToShow == Hydro::DATA_AINFW || dataToShow == Hydro::DATA_B || 
 		dataToShow == Hydro::DATA_B_H || dataToShow == Hydro::DATA_A_P || dataToShow == Hydro::DATA_B_P || dataToShow == Hydro::DATA_KIRF)
 		sids += BEM::strDOFnum_sub[plot_jdf%6];
@@ -410,7 +414,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::Kirf_units(!dim, plot_idf, plot_jdf));
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_SC && ih >= 0 && hy.IsLoadedFsc(plot_idf, ih)) {
+	} else if (dataToShow == Hydro::DATA_FORCE_SC && ih >= 0 && (hy.IsLoadedFsc(idf, ih, ib) || (opFscpot && hy.IsLoadedFsc_P(idf, ih, ib)))) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fsc%s%s %s"), st, sids, nameType)).
@@ -427,7 +431,26 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_FK && ih >= 0 && hy.IsLoadedFfk(plot_idf, ih)) {
+		if (opFscpot && hy.IsLoadedFsc_P(idf, ih, ib)) {
+			if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_1_P, show_w, !dim, show_ma_ph)) {
+				loaded = true;
+				scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Fsc potentials%s%s %s"), st, sids, nameType)).
+							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_DOTTED);
+				if (dim)
+					scatt.Units(Hydro::F_units(!dim, plot_idf));
+				if (ABFZ_source2_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_2_P, show_w, !dim, show_ma_ph)) {
+					loaded = true;
+					scatP.AddSeries(ABFZ_source2_p[id]).Legend(Format(t_("Fsc potentials%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
+							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+							Stroke(2, color).Dash(LINE_DOTTED);
+					if (dim && !show_ma_ph)
+						scatP.Units(Hydro::F_units(!dim, plot_idf));
+				}
+			}
+		}
+	} else if (dataToShow == Hydro::DATA_FORCE_FK && ih >= 0 && (hy.IsLoadedFfk(idf, ih, ib) || (opFfkpot && hy.IsLoadedFfk_P(idf, ih, ib)) 
+	 																						 || (opFfkpot && hy.IsLoadedFfk_PB(idf, ih, ib)))) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Ffk%s%s %s"), st, sids, nameType)).
@@ -444,25 +467,45 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
 			}
 		}
-		if (opFfkpot && hy.IsLoadedFfk_P(plot_idf, ih)) {
-			if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1_P, show_w, !dim, show_ma_ph)) {
-				loaded = true;
-				scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), st, sids, nameType)).
-							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
-							Stroke(2, color).Dash(LINE_DOTTED);
-				if (dim)
-					scatt.Units(Hydro::F_units(!dim, plot_idf));
-				if (ABFZ_source2_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_2_P, show_w, !dim, show_ma_ph)) {
+		if (opFfkpot) {
+			if (hy.IsLoadedFfk_P(idf, ih, ib)) {
+				if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1_P, show_w, !dim, show_ma_ph)) {
 					loaded = true;
-					scatP.AddSeries(ABFZ_source2_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
-							SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
-							Stroke(2, color).Dash(LINE_DOTTED);
-					if (dim && !show_ma_ph)
-						scatP.Units(Hydro::F_units(!dim, plot_idf));
+					scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), st, sids, nameType)).
+								SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+								Stroke(2, color).Dash(LINE_DOTTED);
+					if (dim)
+						scatt.Units(Hydro::F_units(!dim, plot_idf));
+					if (ABFZ_source2_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_2_P, show_w, !dim, show_ma_ph)) {
+						loaded = true;
+						scatP.AddSeries(ABFZ_source2_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
+								SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+								Stroke(2, color).Dash(LINE_DOTTED);
+						if (dim && !show_ma_ph)
+							scatP.Units(Hydro::F_units(!dim, plot_idf));
+					}
+				}
+			}
+			if (hy.IsLoadedFfk_PB(idf, ih, ib)) {
+				if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1_PB, show_w, !dim, show_ma_ph)) {
+					loaded = true;
+					scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Ffk poten bemr%s%s %s"), st, sids, nameType)).
+								SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+								Stroke(2, color).Dash(LINE_DASHED);
+					if (dim)
+						scatt.Units(Hydro::F_units(!dim, plot_idf));
+					if (ABFZ_source2_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_2_PB, show_w, !dim, show_ma_ph)) {
+						loaded = true;
+						scatP.AddSeries(ABFZ_source2_p[id]).Legend(Format(t_("Ffk poten bemr%s%s %s"), sp, sids, nameType)).Units(t_("rad")).
+								SetMarkWidth(markW).MarkStyle<SquareMarkPlot>().SetMarkColor(color).
+								Stroke(2, color).Dash(LINE_DASHED);
+						if (dim && !show_ma_ph)
+							scatP.Units(Hydro::F_units(!dim, plot_idf));
+					}
 				}
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_EX && ih >= 0 && hy.IsLoadedFex(plot_idf, ih)) {
+	} else if (dataToShow == Hydro::DATA_FORCE_EX && ih >= 0 && hy.IsLoadedFex(idf, ih, ib)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_EX_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fex%s%s %s"), st, sids, nameType)).
@@ -479,7 +522,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_RAO  && ih >= 0 && hy.IsLoadedRAO(plot_idf, ih)) {
+	} else if (dataToShow == Hydro::DATA_RAO  && ih >= 0 && hy.IsLoadedRAO(idf, ih, ib)) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_RAO_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("RAO%s%s %s"), st, sids, nameType)).Units(Hydro::RAO_units(plot_idf)).

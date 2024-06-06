@@ -19,6 +19,7 @@ void GetAinf_w(Eigen::VectorXd &Ainf_w, const Eigen::VectorXd &Kirf, const Eigen
 			const Eigen::VectorXd &A);
 double GetAinf(const Eigen::VectorXd &Kirf, const Eigen::VectorXd &Tirf, const Eigen::VectorXd &w, 
 			const Eigen::VectorXd &A);
+double GetA0(const VectorXd &Kirf, const VectorXd &Tirf, double ainf);
 void GetA(Eigen::VectorXd &A, const Eigen::VectorXd &Kirf, const Eigen::VectorXd &w, double ainf, double dt);
 
 //double Fradiation2(double t, const Eigen::VectorXd &vel, const Eigen::VectorXd &irf, double dt);

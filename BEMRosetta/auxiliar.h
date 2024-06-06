@@ -3,6 +3,9 @@
 #ifndef _BEMRosetta_BEMRosetta_auxiliar_h_
 #define _BEMRosetta_BEMRosetta_auxiliar_h_
 
+#define LAYOUTFILE <BEMRosetta/auxiliar.lay>
+#include <CtrlCore/lay.h>
+
 class RichTextView2 : public RichTextView {
 public:
 	RichTextView2() {
@@ -141,11 +144,93 @@ private:
 	}
 };
 
+struct HeadConvert : Convert {
+	virtual Value Format(const Value& q) const {
+		if (IsNull(q))
+			return String();
+		return FormatDoubleDecimals(ScanDouble(q.ToString()), 5);
+	}
+};
+
+class SelectList : public WithSelectList<StaticRect> {
+public:
+	typedef SelectList CLASSNAME;	
+	
+	void InitBeforeSerialize(String _title, String _param, String _units, double _from0, double _to0, int _number0) {
+		title = _title;
+		param = _param;
+		units = _units;
+		from0 = _from0;
+		to0 = _to0;
+		number0 = _number0;
+		
+		CtrlLayout(*this);
+	}
+	void Jsonize(JsonIO &json) {
+		if (json.IsLoading()) {
+			grid.AddColumn(Format("%s [%s]", param, units)).SetConvert(Single<HeadConvert>()).Edit(edit);
+			grid.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
+			labFrom.SetText(Format("Min [%s]", units));
+			labTo.SetText(Format("Max [%s]", units));
+			labTitle.SetText(title);
+		}
+		json
+			("grid", grid)
+		;
+		if (json.IsLoading()) {
+			int num = grid.GetRowCount();
+			if (num == 0) {
+				number <<= number0;
+				from <<= from0;
+				to <<= to0;
+			} else {
+				number <<= num;
+				from <<= grid(0, 0);
+				to <<= grid(num - 1, 0);
+			}
+			grid.WhenPaste = grid.WhenEnter = grid.WhenCursor = grid.WhenRemoveRow = [&]() {
+				UVector<double> data;
+				for (int i = 0; i < grid.GetCount(); ++i)
+					data << grid(i, 0);
+				if (data.IsEmpty())
+					return;
+				Sort(data);
+				number <<= data.GetCount();
+				from <<= First(data);
+				to <<= Last(data);
+			};
+			
+			from.WhenAction = to.WhenAction = number.WhenAction = [&]() {
+				if (IsNull(number) || number < 1 || IsNull(from) || from < 0 || IsNull(to) || to <= from)
+					return;
+				double delta;
+				if (number == 1)
+					delta = to - from;
+				else
+					delta = (to - from)/(number - 1);
+				grid.Clear();
+				for (int i = 0; i < number; ++i)
+					grid.Add(from + i*delta);	
+			};
+			if (grid.IsEmpty())
+				from.WhenAction();
+		}
+	}
+	
+private:
+	EditDouble edit;
+	String title;
+	String param;
+	String units;
+	double from0, to0;
+	int number0;
+};
+
 
 const Color &GetColorId(int id);
 
 Eigen::MatrixXd GridCtrlToMatrixXd(const GridCtrl &grid);
-void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat);
-void VectorToGridCtrl(GridCtrl &grid, const Upp::Vector<double> &mat);
+void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat, int rows, int cols, double val);
+void VectorToGridCtrl(GridCtrl &grid, const Upp::Vector<double> &mat, int rows, double val);
 	
 #endif

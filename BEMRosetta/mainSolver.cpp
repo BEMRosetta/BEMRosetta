@@ -42,10 +42,10 @@ MainSolverBody::MainSolverBody() {
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	
-	meshFile.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
-	meshFile.AllFilesType();
-	lidFile.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
-	lidFile.AllFilesType();
+	fileMesh.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	fileMesh.AllFilesType();
+	fileLid.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	fileLid.AllFilesType();
 	
 	x_g <<= 0;
 	y_g <<= 0;
@@ -76,7 +76,7 @@ void MainSolver::Init() {
 	tab.Add(bodies.SizePos(), "2. Bodies");
 	tab.Add(save.SizePos(), "3. Save");
 	
-	WithMainSolver_Body<StaticRect> &b = bodiesEach.Add();
+	MainSolverBody &b = bodiesEach.Add();
 	CtrlScroll &bscroll = bodiesEachScroll.Add();
 	CtrlLayout(b);
 	bodies.array.Add(bscroll.AddPane(b, true, true).SizePos(), "Body 1");
@@ -86,8 +86,7 @@ void MainSolver::Init() {
 	};
 	bodies.array.SetWidth(60);
 	
-	
-	const String bemFiles = ".cal .in .dat";
+	const String bemFiles = ".cal .in .dat .nc .owr .yml";
 	String bemFilesAst = clone(bemFiles);
 	bemFilesAst.Replace(".", "*.");
 	loadFrom.Type(Format("All supported bem files (%s)", bemFiles), bemFilesAst);
@@ -106,11 +105,14 @@ void MainSolver::Init() {
 
 	save.saveTo.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10).UseDropping();
 	save.butSave.WhenAction = [&] {OnSave();};
+	save.withPotentials.WhenAction = [&] {
+		if (save.withPotentials)
+			save.withMesh <<= true;
+	;};
 	
 	bodies.butAdd <<= THISBACK(arrayOnAdd);
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);
 	bodies.butRemove <<= THISBACK(arrayOnRemove);
-	
 	
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
 		if (Hydro::caseCanSave[i])
@@ -118,27 +120,18 @@ void MainSolver::Init() {
 			
 	save.dropSolver.SetIndex(min(dropSolverVal, save.dropSolver.GetCount()-1));
 	save.dropSolver.WhenAction = [&] {
-		bool isNemoh = int(~save.dropSolver) >= Hydro::NEMOH && int(~save.dropSolver) <= Hydro::NEMOHv3;
-		//if (isNemoh)
-			//tab.Set(nemohScroll);
-		//else
-		//	tab.Set(hamsScroll);
+		int solver = ~save.dropSolver;
+		bool isNemoh = solver >= Hydro::NEMOH && solver <= Hydro::NEMOHv3;
 		
-		save.numThreads.Enable(!isNemoh);
-		save.labnumThreads.Enable(!isNemoh);
-		//save.nemohScroll.Enable(isNemoh);
-		save.opIncludeBin.Enable(~save.dropSolver != Hydro::CAPYTAINE);
+		save.symX.Enable(!isNemoh);
+		save.numThreads.Enable(!(isNemoh || solver == Hydro::CAPYTAINE || solver == Hydro::CAPYTAINE_PY));
+		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::ORCAWAVE_YML);
+		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS);
+		save.numSplit.Enable(isNemoh && save.opSplit);
 		
-		//bodies.array.HeaderObject().ShowTab(1, !isNemoh);
-		
-		//bodies.lidFile.Enable(!isNemoh);
-		
-		//bodies.M.Enable(!isNemoh);
-		//bodies.Dlin.Enable(!isNemoh);
-		//bodies.Dquad.Enable(!isNemoh);
-		//bodies.C.Enable(!isNemoh);
-		//bodies.Cext.Enable(!isNemoh);
-		//bodies.Cadd.Enable(false);		// Not used for now
+		save.withMesh.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY);
+		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY);
+		save.withQTF.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT);
 	};
 	save.dropSolver.WhenAction();
 	
@@ -146,76 +139,19 @@ void MainSolver::Init() {
 		gen.height.Enable(!bool(~gen.opInfinite));
 	};
 	gen.opInfinite.WhenAction();
-	
-	//gen.gridFreq.AddColumn("w [rad/s]").SetConvert(Single<HeadFreqConvert>()).Edit(editF);
-//	gen.gridFreq.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
-	gen.gridFreq.WhenPaste = gen.gridFreq.WhenEnter = gen.gridFreq.WhenCursor = gen.gridFreq.WhenRemoveRow = [&]() {
-		UVector<double> data;
-		for (int i = 0; i < gen.gridFreq.GetCount(); ++i)
-			data << gen.gridFreq(i, 0);
-		if (data.IsEmpty())
-			return;
-		Sort(data);
-		gen.Nf <<= data.GetCount();
-		gen.minF <<= First(data);
-		gen.maxF <<= Last(data);
-	};
-	
-	gen.minF.WhenAction = gen.maxF.WhenAction = gen.Nf.WhenAction = [&]() {
-		if (IsNull(gen.Nf) || gen.Nf < 1 || IsNull(gen.minF) || gen.minF < 0 || IsNull(gen.maxF) || gen.maxF <= gen.minF)
-			return;
-		double delta;
-		if (gen.Nf == 1)
-			delta = gen.maxF - gen.minF;
-		else
-			delta = (gen.maxF - gen.minF)/(gen.Nf - 1);
-		gen.gridFreq.Clear();
-		for (int i = 0; i < gen.Nf; ++i)
-			gen.gridFreq.Add(gen.minF + i*delta);	
-	};
-	
-	//gen.gridHead.AddColumn("head [deg]").SetConvert(Single<HeadFreqConvert>()).Edit(editH);
-	//gen.gridHead.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
-	gen.gridHead.WhenPaste = gen.gridHead.WhenEnter = gen.gridHead.WhenCursor = gen.gridHead.WhenRemoveRow = [&]() {
-		UVector<double> data;
-		for (int i = 0; i < gen.gridHead.GetCount(); ++i)
-			data << gen.gridHead(i, 0);
-		if (data.IsEmpty())
-			return;
-		Sort(data);
-		gen.Nh <<= data.GetCount();
-		gen.minH <<= First(data);
-		gen.maxH <<= Last(data);
-	};	
-	
-	gen.minH.WhenAction = gen.maxH.WhenAction = gen.Nh.WhenAction = [&]() {
-		if (IsNull(gen.Nh) || gen.Nh < 1 || IsNull(gen.minH) || gen.minH < 0 || IsNull(gen.maxH) || gen.maxH <= gen.minH)
-			return;
-		double delta;
-		if (gen.Nh == 1)
-			delta = gen.maxH - gen.minH;
-		else
-			delta = (gen.maxH - gen.minH)/(gen.Nh - 1);
-		gen.gridHead.Clear();
-		for (int i = 0; i < gen.Nh; ++i)
-			gen.gridHead.Add(gen.minH + i*delta);	
-	};
 }
 
 void MainSolver::InitBeforeSerialize() {
+	gen.listFreq.InitBeforeSerialize("Wave frequencies", "w", "rad/s", 0.1, 6, 100);
+	gen.listHead.InitBeforeSerialize("Wave directions/headings", "Head", "deg", 0, 180, 5);
+	
 	CtrlLayout(gen);
 	CtrlLayout(bodies);
 	CtrlLayout(save);
 	CtrlLayout(*this);
-	
-	gen.gridFreq.AddColumn("w [rad/s]").SetConvert(Single<HeadFreqConvert>()).Edit(editF);
-	gen.gridFreq.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
-	
-	gen.gridHead.AddColumn("head [deg]").SetConvert(Single<HeadFreqConvert>()).Edit(editH);
-	gen.gridHead.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
 }
 
-void MainSolver::InitSerialize(bool ret) {
+void MainSolver::InitAfterSerialize(bool ret) {
 	if (!ret || IsNull(save.opIncludeBin)) 
 		save.opIncludeBin = true;
 	if (!ret || IsNull(save.numSplit)) 	
@@ -229,44 +165,6 @@ void MainSolver::InitSerialize(bool ret) {
 		gen.xeff <<= 0;
 	if (!ret || IsNull(~gen.yeff))
 		gen.yeff <<= 0;
-	//if (!ret || IsNull(~bodies.cx))
-	//	bodies.cx <<= 0;
-	//if (!ret || IsNull(~bodies.cy))
-	//	bodies.cy <<= 0;
-	//if (!ret || IsNull(~bodies.cz))
-	//	bodies.cz <<= 0;
-	//if (!ret || IsNull(~gen.Nf))
-		//gen.Nf <<= 100;
-	int numF = gen.gridFreq.GetRowCount();
-	if (numF == 0) {
-		gen.Nf <<= 100;
-		gen.minF <<= 0;
-		gen.maxF <<= 4;
-	} else {
-		gen.Nf <<= numF;
-		gen.minF <<= gen.gridFreq(0, 0);
-		gen.maxF <<= gen.gridFreq(numF-1, 0);
-	}
-	//if (!ret || IsNull(~gen.minF))
-	//	gen.minF <<= 0;
-	//if (!ret || IsNull(~gen.maxF))
-	//	gen.maxF <<= 4;
-	/*if (!ret || IsNull(~gen.Nh))
-		gen.Nh <<= 1;
-	if (!ret || IsNull(~gen.minH))
-		gen.minH <<= 0;
-	if (!ret || IsNull(~gen.maxH))
-		gen.maxH <<= 0;*/
-	int numH = gen.gridHead.GetRowCount();
-	if (numH == 0) {
-		gen.Nh <<= 1;
-		gen.minH <<= 0;
-		gen.maxH <<= 0;
-	} else {
-		gen.Nh <<= numH;
-		gen.minH <<= gen.gridHead(0, 0);
-		gen.maxH <<= gen.gridHead(numH-1, 0);
-	}
 	if (!ret || IsNull(~gen.height)) {
 		gen.height <<= Null;
 		gen.opInfinite <<= true;
@@ -279,15 +177,6 @@ void MainSolver::Jsonize(JsonIO &json) {
 		save.numSplit = Null;	
 		gen.xeff <<= Null;
 		gen.yeff <<= Null;
-		//bodies.cx <<= Null;
-		//bodies.cy <<= Null;
-		//bodies.cz <<= Null;
-		//gen.Nf <<= Null;
-		//gen.minF <<= Null;
-		//gen.maxF <<= Null;
-		//gen.Nh <<= Null;
-		//gen.minH <<= Null;
-		//gen.maxH <<= Null;
 	} else {
 		dropSolverVal = save.dropSolver.GetIndex();
 	}
@@ -300,17 +189,8 @@ void MainSolver::Jsonize(JsonIO &json) {
 		("opSplit", save.opSplit)
 		("xeff", gen.xeff)
 		("yeff", gen.yeff)
-		//("cx", bodies.cx)
-		//("cy", bodies.cy)
-		//("cz", bodies.cz)
-		//("Nf", gen.Nf)
-		//("minF", gen.minF)
-		//("maxF", gen.maxF)
-		("gen_gridFreq", gen.gridFreq)
-		//("Nh", gen.Nh)
-		//("minH", gen.minH)
-		//("maxH", gen.maxH)
-		("gen_gridHead", gen.gridHead)
+		("gen_listFreq", gen.listFreq)
+		("gen_listHead", gen.listHead)
 		("dropSolver", dropSolverVal)
 		("height", gen.height)
 		("opInfinite", gen.opInfinite)
@@ -349,95 +229,90 @@ void MainSolver::Load() {
 }
 	
 void MainSolver::Load(String file) {
-	Hydro hy;
+	Hydro tmp_hy;											// Just for loading and transferring to gen and bodies
 	
 	Progress progress(t_("Loading BEM files..."), 100); 
 	
-	hy.LoadCase(file, [&](String str, int _pos) {
+	tmp_hy.LoadCase(file, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
 	});
-	bool isNemoh = hy.IsNemoh();
+	bool isNemoh = tmp_hy.IsNemoh();
 	
-	gen.opInfinite <<= (hy.dt.h < 0);
-	gen.height.Enable(hy.dt.h > 0);
-	gen.height <<= (hy.dt.h > 0 ? hy.dt.h : Null);
+	gen.opInfinite <<= (tmp_hy.dt.h < 0);
+	gen.height.Enable(tmp_hy.dt.h > 0);
+	gen.height <<= (tmp_hy.dt.h > 0 ? tmp_hy.dt.h : Null);
 	
-	//InitArray(true);
-	
-	bodies.array.SetCount(hy.dt.msh.size());
-	bodiesEach.SetCount(hy.dt.msh.size());
-	for (int i = 0; i < hy.dt.msh.size(); ++i) {
-		const Body &b = hy.dt.msh[i];
-		WithMainSolver_Body<StaticRect> &d = bodiesEach[i];
-		//WithMainSolver_Body<StaticRect> &d0 = *bodies.array.Get(i);
-		d.meshFile <<= b.dt.fileName;
-		d.lidFile <<= b.dt.lidFile;  
-		d.x_0 = b.dt.c0[0];
-		d.y_0 = b.dt.c0[1];
-		d.z_0 = b.dt.c0[2];
-		d.x_g = b.dt.cg[0];
-		d.y_g = b.dt.cg[1];
-		d.z_g = b.dt.cg[2];
+	bodies.array.Clear();
+	bodiesEach.Clear();
+	bodiesEachScroll.Clear();
+	for (int i = 0; i < tmp_hy.dt.msh.size(); ++i) {
+		Body &tmp_b = tmp_hy.dt.msh[i];
+		MainSolverBody &d = bodiesEach.Add();
+		CtrlScroll &bscroll = bodiesEachScroll.Add();
+		CtrlLayout(d);
+		bodies.array.Add(bscroll.AddPane(d, true, true).SizePos(), tmp_b.dt.name);
 		
-		MatrixXdToGridCtrl(d.M, b.dt.M);
-		MatrixXdToGridCtrl(d.Dlin, b.dt.Dlin);
-		MatrixXdToGridCtrl(d.Dquad, b.dt.Dquad);
-		MatrixXdToGridCtrl(d.Cadd, b.dt.Cadd);
+		d.name <<= tmp_b.dt.name;
+		d.fileMesh <<= tmp_b.dt.fileName;
+		d.fileLid <<= tmp_b.dt.lidFile;  
+		
+		if (tmp_b.IsEmpty())
+			Body::Load(d.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
+		else
+			d.mesh = clone(tmp_b);
+
+		Body::Load(d.lid, tmp_b.dt.lidFile, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
+		
+		d.SetTexts();
+		
+		d.x_0 = tmp_b.dt.c0[0];
+		d.y_0 = tmp_b.dt.c0[1];
+		d.z_0 = tmp_b.dt.c0[2];
+		d.x_g = tmp_b.dt.cg[0];
+		d.y_g = tmp_b.dt.cg[1];
+		d.z_g = tmp_b.dt.cg[2];
+		
+		MatrixXdToGridCtrl(d.M, tmp_b.dt.M, 6, 6, 0);
+		MatrixXdToGridCtrl(d.Dlin, tmp_b.dt.Dlin, 6, 6, 0);
+		MatrixXdToGridCtrl(d.Dquad, tmp_b.dt.Dquad, 6, 6, 0);
+		MatrixXdToGridCtrl(d.Cadd, tmp_b.dt.Cadd, 6, 6, 0);
 	}
+	
 	bodies.array.SetCursor(0);
 	save.dropSolver.WhenAction();
 		
-	if (!hy.dt.w.IsEmpty()) {
-		gen.Nf <<= hy.dt.Nf;
-		gen.minF <<= First(hy.dt.w);
-		gen.maxF <<= Last(hy.dt.w);
-		VectorToGridCtrl(gen.gridFreq, hy.dt.w);
+	if (!tmp_hy.dt.w.IsEmpty()) {
+		gen.listFreq.number <<= tmp_hy.dt.Nf;
+		gen.listFreq.from <<= First(tmp_hy.dt.w);
+		gen.listFreq.to <<= Last(tmp_hy.dt.w);
+		VectorToGridCtrl(gen.listFreq.grid, tmp_hy.dt.w, 0, Null);
 	}
-	if (!hy.dt.head.IsEmpty()) {
-		gen.Nh <<= hy.dt.Nh;
-		gen.minH <<= First(hy.dt.head);
-		gen.maxH <<= Last(hy.dt.head);
-		VectorToGridCtrl(gen.gridHead, hy.dt.head);
+	if (!tmp_hy.dt.head.IsEmpty()) {
+		gen.listHead.number <<= tmp_hy.dt.Nh;
+		gen.listHead.from <<= First(tmp_hy.dt.head);
+		gen.listHead.to <<= Last(tmp_hy.dt.head);
+		VectorToGridCtrl(gen.listHead.grid, tmp_hy.dt.head, 0, Null);
 	}
 	
 	if (isNemoh) 
 		save.dropSolver <<= Hydro::NEMOHv115;
-	else if (hy.dt.solver == Hydro::HAMS)
+	else if (tmp_hy.dt.solver == Hydro::HAMS)
 		save.dropSolver <<= Hydro::HAMS;
 	
-	gen.g <<= hy.dt.g;
-	gen.rho <<= hy.dt.rho;
+	gen.g <<= tmp_hy.dt.g;
+	gen.rho <<= tmp_hy.dt.rho;
 	
-	gen.xeff <<= hy.dt.x_w;
-	gen.yeff <<= hy.dt.y_w;
+	gen.xeff <<= tmp_hy.dt.x_w;
+	gen.yeff <<= tmp_hy.dt.y_w;
 	
-	gen.boxIrf <<= hy.dt.Tirf.size() > 0;
-	if (hy.dt.Tirf.size() != 0) {
-		gen.irfStep <<= (hy.dt.Tirf[1] - hy.dt.Tirf[0]);
-		gen.irfDuration <<= Last(hy.dt.Tirf);
+	gen.boxIrf <<= tmp_hy.dt.Tirf.size() > 0;
+	if (tmp_hy.dt.Tirf.size() != 0) {
+		gen.irfStep <<= (tmp_hy.dt.Tirf[1] - tmp_hy.dt.Tirf[0]);
+		gen.irfDuration <<= Last(tmp_hy.dt.Tirf);
 	}
 }
-/*
-void MainSolver::InitArray(bool isNemoh) {
-	bodies.array.Reset();
-	bodies.array.SetLineCy(EditField::GetStdHeight());
-	bodies.array.AddColumn("Mesh file", 40);
-	bodies.array.AddColumn("Lid file", 40);
-	bodies.array.AddColumn("RotX",  10);
-	bodies.array.AddColumn("RotY",  10);
-	bodies.array.AddColumn("RotZ",  10);
-	
-	dropSolver.WhenAction();
-
-	InitGrid(bodies.M, editMass);
-	InitGrid(bodies.Dlin, editLinear);
-	InitGrid(bodies.Dquad, editQuadratic);	
-	InitGrid(bodies.C, editInternal);
-	//InitGrid(bodies.Cext, editExternal);
-	InitGrid(bodies.Cadd, editAdd);
-}*/
 
 void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y)
@@ -445,18 +320,23 @@ void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 			grid.Set(y, x, mat(x, y));
 }
 
-bool MainSolver::Save(Hydro &hy, bool isNemoh) {
+bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids) {
 	if (!gen.opInfinite)
 		hy.dt.h = ~gen.height;
 	else
 		hy.dt.h = -1;
 	
 	hy.dt.msh.SetCount(bodiesEach.size());
-	for (int i = 0; i < hy.dt.msh.size(); ++i) {
+	lids.SetCount(bodiesEach.size());
+	hy.dt.Nb = hy.dt.msh.size();
+	
+	for (int i = 0; i < hy.dt.Nb; ++i) {
 		Body &b = hy.dt.msh[i];
+		b = clone(bodiesEach[i].mesh);
+		lids[i] = clone(bodiesEach[i].lid);
 		b.dt.name = ~bodiesEach[i].name;
-		b.dt.fileName = bodiesEach[i].meshFile;
-		b.dt.lidFile  = bodiesEach[i].lidFile;
+		b.dt.fileName = bodiesEach[i].fileMesh;
+		b.dt.lidFile  = bodiesEach[i].fileLid;
 		b.dt.c0[0]    = bodiesEach[i].x_0;
 		b.dt.c0[1]    = bodiesEach[i].y_0;
 		b.dt.c0[2]    = bodiesEach[i].z_0;
@@ -468,16 +348,16 @@ bool MainSolver::Save(Hydro &hy, bool isNemoh) {
 		b.dt.Dquad = GridCtrlToMatrixXd(bodiesEach[i].Dquad);
 		b.dt.Cadd = GridCtrlToMatrixXd(bodiesEach[i].Cadd);
 	}
-		
-	hy.dt.Nf = ~gen.Nf;
-	hy.dt.w.SetCount(~gen.Nf);
-	for (int i = 0; i < ~gen.gridFreq.GetRowCount(); ++i)
-		hy.dt.w[i] = ScanDouble(~gen.gridFreq.Get(i, 0));
 	
-	hy.dt.Nh = ~gen.Nh;
-	hy.dt.head.SetCount(~gen.Nh);
-	for (int i = 0; i < ~gen.gridHead.GetRowCount(); ++i)
-		hy.dt.head[i] = ScanDouble(~gen.gridHead.Get(i, 0));
+	hy.dt.Nf = gen.listFreq.number;
+	hy.dt.w.SetCount(gen.listFreq.number);
+	for (int i = 0; i < gen.listFreq.number; ++i)
+		hy.dt.w[i] = ScanDouble(~gen.listFreq.grid.Get(i, 0));
+	
+	hy.dt.Nh = gen.listHead.number;
+	hy.dt.head.SetCount(gen.listHead.number);
+	for (int i = 0; i < gen.listHead.number; ++i)
+		hy.dt.head[i] = ScanDouble(~gen.listHead.grid.Get(i, 0));
 	
 	hy.dt.g = ~gen.g;
 	hy.dt.rho = ~gen.rho;
@@ -499,58 +379,55 @@ bool MainSolver::Save(Hydro &hy, bool isNemoh) {
 	
 	return true;
 }
-/*
-void MainSolver::arrayOnCursor() {
-	int id = bodies.array.GetCursor();
-	if (id < 0)
-		return;
+
+void MainSolver::LoadDragDrop() {
+	GuiLock __;
 	
-	bodies.meshFile <<= bodies.array.Get(id, 0);
-	bodies.lidFile  <<= bodies.array.Get(id, 1);
-	bodies.cx 		<<= bodies.array.Get(id, 2);
-	bodies.cy 		<<= bodies.array.Get(id, 3);
-	bodies.cz 		<<= bodies.array.Get(id, 4);
-}
-*/
-/*
-bool MainSolver::ArrayUpdateCursor() {
-	try {
-		bool isNemoh = ~dropSolver != Hydro::HAMS;
+	Sort(filesToDrop);
+	for (int i = filesToDrop.size()-1; i > 0; --i)
+		if (ToLower(GetFileTitle(filesToDrop[i])) == ToLower(GetFileTitle(filesToDrop[i-1])))
+			filesToDrop.Remove(i);
 		
-		int id = bodies.array.GetCursor();
-		if (id < 0) {
-			if (bodies.array.GetCount() == 0) {
-				InitArray(isNemoh);
-				bodies.array.Add();
-				id = 0;
-				arrayClear();
-			} else
-				id = bodies.array.GetCount()-1;
-		}	
-		
-		bodies.array.Set(id, 0, ~bodies.meshFile);
-		bodies.array.Set(id, 1, ~bodies.lidFile);
-		bodies.array.Set(id, 2, ~bodies.cx);
-		bodies.array.Set(id, 3, ~bodies.cy);
-		bodies.array.Set(id, 4,~bodies.cz);
-	
-		bodies.array.Update();
-		
-	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
-		return false;
+	bool followWithErrors = false;
+	for (int i = 0; i < filesToDrop.size(); ++i) {
+		loadFrom <<= filesToDrop[i];
+		Status(Format(t_("Loading '%s'"), filesToDrop[i]));
+		if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
+			if (!PromptYesNo(Format(t_("Do you wish to try with the pending %d files?"), filesToDrop.size() - i - 1)))
+				return;
+			followWithErrors = true;
+		}
+		ProcessEvents();
 	}
-	
-	return true;
 }
-*/
+	
+void MainSolver::DragAndDrop(Point , PasteClip& d) {
+	GuiLock __;
+	if (IsDragAndDropSource())
+		return;
+	if (AcceptFiles(d)) {
+		filesToDrop = GetFiles(d);
+		timerDrop.Set(0, [=] {LoadDragDrop();});
+	}
+}
+
+bool MainSolver::Key(dword key, int ) {
+	GuiLock __;
+	if (key == K_CTRL_V) {
+		filesToDrop = GetFiles(Ctrl::Clipboard());
+		timerDrop.Set(0, [=] {LoadDragDrop();});
+		return true;
+	}
+	return false;
+}
+
 void MainSolver::arrayClear() {
 	bodies.array.Clear();
 	bodiesEach.Clear();
 }
 
 void MainSolver::arrayOnAdd() {
-	WithMainSolver_Body<StaticRect> &b = bodiesEach.Add();
+	MainSolverBody &b = bodiesEach.Add();
 	CtrlScroll &bscroll = bodiesEachScroll.Add();
 	CtrlLayout(b);
 	String name = Format("Body %d", bodiesEach.size());
@@ -559,16 +436,6 @@ void MainSolver::arrayOnAdd() {
 	b.name.WhenAction = [&]() {
 		bodies.array.grid.Set(bodies.array.GetCursor(), 0, ~b.name);
 	};
-	
-/*	if (bodies.array.GetCount() == 0) {
-		bool isNemoh = ~dropSolver != Hydro::HAMS;
-		InitArray(isNemoh);
-	}
-	bodies.array.Add();
-	bodies.array.SetCursor(bodies.array.GetCount()-1);	
-	arrayClear();
-	ArrayUpdateCursor();
-	dropSolver.WhenAction();*/
 }
 
 void MainSolver::arrayOnDuplicate() {
@@ -581,9 +448,9 @@ void MainSolver::arrayOnDuplicate() {
 		BEM::PrintError(t_("Please select body to duplicate"));
 		return;
 	}
-	WithMainSolver_Body<StaticRect> &sel = bodiesEach[id];
+	MainSolverBody &sel = bodiesEach[id];
 	
-	WithMainSolver_Body<StaticRect> &last = bodiesEach.Add();
+	MainSolverBody &last = bodiesEach.Add();
 	CtrlScroll &bscroll = bodiesEachScroll.Add();
 	CtrlLayout(last);
 	
@@ -595,13 +462,18 @@ void MainSolver::arrayOnDuplicate() {
 	last.y_g <<= ~sel.y_g;
 	last.z_g <<= ~sel.z_g;
 	
-	last.meshFile <<= ~sel.meshFile;
-	last.lidFile <<= ~sel.lidFile;
+	last.fileMesh <<= ~sel.fileMesh;
+	last.fileLid <<= ~sel.fileLid;
 	
-	MatrixXdToGridCtrl(last.M, GridCtrlToMatrixXd(sel.M));
-	MatrixXdToGridCtrl(last.Cadd, GridCtrlToMatrixXd(sel.Cadd));
-	MatrixXdToGridCtrl(last.Dlin, GridCtrlToMatrixXd(sel.Dlin));
-	MatrixXdToGridCtrl(last.Dquad, GridCtrlToMatrixXd(sel.Dquad));
+	MatrixXdToGridCtrl(last.M, GridCtrlToMatrixXd(sel.M), 6, 6, 0);
+	MatrixXdToGridCtrl(last.Cadd, GridCtrlToMatrixXd(sel.Cadd), 6, 6, 0);
+	MatrixXdToGridCtrl(last.Dlin, GridCtrlToMatrixXd(sel.Dlin), 6, 6, 0);
+	MatrixXdToGridCtrl(last.Dquad, GridCtrlToMatrixXd(sel.Dquad), 6, 6, 0);
+	
+	last.mesh = clone(sel.mesh);
+	last.lid = clone(sel.lid);
+	
+	last.SetTexts();
 	
 	bodies.array.Add(bscroll.AddPane(last, true, true).SizePos(), ~sel.name);
 	last.name.WhenAction = [&]() {
@@ -648,11 +520,15 @@ bool MainSolver::OnSave() {
 	try {
 		String folder = ~save.saveTo;
 		
-		bool isNemoh = ~save.dropSolver != Hydro::HAMS;
+		if (save.withPotentials)
+			save.withMesh <<= true;
+		
+		//bool isNemoh = ~save.dropSolver != Hydro::HAMS;
 		
 		Hydro hy;
+		UArray<Body> lids;
 		
-		if (!Save(hy, isNemoh))
+		if (!CopyHydro(hy, lids))
 			return false;
 		
 		UVector<String> errors = hy.Check(static_cast<Hydro::BEM_FMT>(int(~save.dropSolver)));
@@ -691,13 +567,11 @@ bool MainSolver::OnSave() {
 		
 		WaitCursor waitcursor;
 		
-		if (isNemoh) 
-			hy.SaveFolderCase(folder, ~save.opIncludeBin, ~save.opSplit ? int(~save.numSplit) : 1, Null		 , ~save.dropSolver);
-		else
-			hy.SaveFolderCase(folder, ~save.opIncludeBin, ~save.opSplit ? int(~save.numSplit) : 1, ~save.numThreads, ~save.dropSolver);
+		hy.SaveFolderCase(folder, ~save.opIncludeBin, ~save.opSplit ? int(~save.numSplit) : 1, ~save.numThreads, 
+				~save.dropSolver, ~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids);
 
 	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
+		BEM::PrintError(e);
 		return false;
 	}
 	
@@ -714,15 +588,20 @@ Eigen::MatrixXd GridCtrlToMatrixXd(const GridCtrl &grid) {
 	return mat;
 }
 
-void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat) {
+void MatrixXdToGridCtrl(GridCtrl &grid, const Eigen::MatrixXd &mat, int rows, int cols, double val) {
 	grid.Clear(false);
+	for (int x = 0; x < cols; ++x)
+		for (int y = 0; y < rows; ++y)
+			grid.Set(y, x, val);
 	for (int x = 0; x < mat.cols(); ++x)
 		for (int y = 0; y < mat.cols(); ++y)
 			grid.Set(y, x, mat(x, y));
 }
 
-void VectorToGridCtrl(GridCtrl &grid, const Upp::Vector<double> &mat) {
+void VectorToGridCtrl(GridCtrl &grid, const Upp::Vector<double> &mat, int rows, double val) {
 	grid.Clear(false);
+	for (int x = 0; x < rows; ++x)
+		grid.Set(x, 0, val);
 	for (int x = 0; x < mat.size(); ++x)
 		grid.Set(x, 0, mat[x]);
 }

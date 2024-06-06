@@ -8,7 +8,7 @@ String AQWABody::Load_LIS(UArray<Body> &msh, String fileName, double g, bool &y0
 	y0z = x0z = false;
 	
 	BEM bem;
-	bem.g = 9.8;	// This value is necessary, but discarded
+	bem.g = g;	// This value is necessary, but discarded
 	
 	try {
 		bem.LoadBEM(fileName, Null, false);
@@ -25,7 +25,7 @@ String AQWABody::Load_LIS(UArray<Body> &msh, String fileName, double g, bool &y0
 	return String();
 }
 
-String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z) {
+String AQWABody::Load_DAT(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
@@ -33,7 +33,10 @@ String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x
 	//double factorMass = 1;
 	double factorLength = 1;
 	
-	y0z = x0z = false;
+	hy.dt.symX = hy.dt.symY = false;
+	
+	hy.dt.w.Clear();
+	hy.dt.head.Clear();
 	
 	UArray<Upp::Index<int>> ids;
 	try {
@@ -47,7 +50,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x
 		
 		int deck = -1;
 		while(!f.IsEof()) {
-			line = in.GetLine();
+			line = f.GetLine();
 			int pos;
 			if (line.StartsWith("*")) {
 				if ((pos = line.FindAfter("DECK")) > 0)
@@ -109,9 +112,9 @@ String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x
 						mesh[ib].dt.name = name;
 					} else {
 						if ((ps = line.FindAfter("SYMX")) >= 0) 
-							x0z = true;
+							hy.dt.symY = true;
 						if ((ps = line.FindAfter("SYMY")) >= 0) 
-							y0z = true;
+							hy.dt.symX = true;
 					}
 				} else {
 					ib--;
@@ -141,9 +144,23 @@ String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x
 							panel.id[3] = panel.id[0];
 					}
 				}
-			} else if (deck == 3) 
-				break;
+			} else if (deck == 5) {
+				if (f.GetText(0) == "DPTH")
+					hy.dt.h = f.GetDouble(1);
+				else if (f.GetText(0) == "DENS")
+					hy.dt.rho = f.GetDouble(1);
+				else if (f.GetText(0) == "ACCG")
+					hy.dt.g = f.GetDouble(1);
+			} else if (deck == 6) {
+			    if (f.GetText(0) == "1HRTZ") 
+			     	hy.dt.w << 2*M_PI*f.GetDouble(3);
+			    else if (f.GetText(0) == "1DIRN") 
+					hy.dt.head << f.GetDouble(3);
+			} 
 		}
+		
+		hy.dt.Nf = hy.dt.w.size();
+		hy.dt.Nh = hy.dt.head.size();
 		
 		// Removes mooring, Morison and other points unrelated with panels
 		for (Body &m : mesh) 
@@ -156,28 +173,24 @@ String AQWABody::LoadDat(UArray<Body> &mesh, String fileName, bool &y0z, bool &x
 	return String();
 }
 
-void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z) {
-	FileOut out(fileName);
-	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
+			const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
+	FileOut ret(fileName);
+	if (!ret.IsOpen())
+		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));
 	
-	SaveDat(out, meshes, surf, rho, g, y0z, x0z);
-}
-
-void AQWABody::SaveDat(Stream &ret, const UArray<Body> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z) {
 	ASSERT(meshes.size() == surfs.size());
 	
 	Time t = GetSysTime();
 	String st = Format("%02d/%02d/%4d %02d:%02d:%02d", t.day, t.month, t.year, t.hour, t.minute, t.second);
 	
-	bool getQTF = false;
-	double h = 300;
 	double factorMass = 1;
 	double factorLength = 1;
-	int numCores = 4;
 	
-	VectorXd hrtz = VectorXd::LinSpaced(20, 0.1, 2.5)/2/M_PI;
-	VectorXd head = VectorXd::LinSpaced(8, -135, 180);
+	
+	UVector<double> hrtz(w.size());
+	for (int i = 0; i < w.size(); ++i)
+		hrtz[i] = w[i]/2/M_PI;
 	
 	ret 
 	<< "*********1*********2*********3*********4*********5*********6*********7*********8" << "\n"
@@ -204,7 +217,7 @@ void AQWABody::SaveDat(Stream &ret, const UArray<Body> &meshes, const UArray<Sur
 	<< "TITLE               " << "\n"
 	<< "NUM_CORES         " << numCores << "\n"
 	<< Format("OPTIONS %s%s%s", getQTF ? "AQTF " : "", "GOON ", getQTF ? "CQTF " : "") << "\n"
-	<< "OPTIONS AHD1 " << "\n"
+	<< "OPTIONS AHD1 " << (getPotentials ? "PRPT PRPR" : "") <<"\n"
 	<< Format("OPTIONS %s%s LHFR REST END", getQTF ? "NQTF " : "", "LDRG") << "\n"
 	<< "RESTART  1  5" << "\n"
 	<< "********************************************************************************" << "\n"

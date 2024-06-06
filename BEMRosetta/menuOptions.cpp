@@ -112,9 +112,9 @@ void MenuOptions::OnSave() {
 		bem->headingType = BEM::HeadingType(headingType.GetIndex());
 		bem->UpdateHeadAll();
 		bem->UpdateHeadAllMD();
-		ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
+		Ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);
 	}
-	ma().SetLastTab();
+	Ma().SetLastTab();
 }
 
 bool MenuOptions::IsChanged() {

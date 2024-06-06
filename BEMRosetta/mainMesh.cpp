@@ -467,9 +467,10 @@ void MainBody::LoadSelTab(BEM &bem) {
 void MainBody::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
-	const String meshFiles = ".gdf .dat .stl .pnl .msh .mesh .hst .grd";
+	String meshFiles = Body::GetMeshExt();	//".gdf .dat .stl .pnl .msh .mesh .hst .grd .nc";
+	
 	String meshFilesAst = clone(meshFiles);
-	meshFilesAst.Replace(".", "*.");
+	meshFiles.Replace("*.", ".");
 	menuOpen.file.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	menuOpen.file.AllFilesType();
 	String extView = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
@@ -558,9 +559,9 @@ bool MainBody::OnLoad() {
 				} else
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
 				
-				ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
+				Ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
 			} else
-				ma().Status(Format(t_("Loaded '%s'"), file));			
+				Ma().Status(Format(t_("Loaded '%s'"), file));			
 		}
 		
 		AfterAdd(file, num);
@@ -671,7 +672,7 @@ void MainBody::OnReset() {
 		menuProcess.y_g <<= msh.dt.cg.y;
 		menuProcess.z_g <<= msh.dt.cg.z;
 		
-		ma().Status(t_("Model oriented on the initial layout"));
+		Ma().Status(t_("Model oriented on the initial layout"));
 		
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -706,7 +707,7 @@ void MainBody::OnUpdateMass() {
 
 		OnUpdate(NONE, true);
 		
-		ma().Status(Format(t_("Mass updated to %f kg"), mass));
+		Ma().Status(Format(t_("Mass updated to %f kg"), mass));
 		
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -746,7 +747,7 @@ void MainBody::OnScale() {
 		msh.dt.cg.Translate(rx*(msh.dt.cg.x - msh.dt.c0.x), ry*(msh.dt.cg.y - msh.dt.c0.y),
 						    rz*(msh.dt.cg.z - msh.dt.c0.z));
 		
-		ma().Status(Format(t_("Model scaled %f, %f, %f"), rx, ry, rz));
+		Ma().Status(Format(t_("Model scaled %f, %f, %f"), rx, ry, rz));
 				
 		msh.AfterLoad(Bem().rho, Bem().g, NONE, false);
 			
@@ -995,7 +996,7 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 			msh.dt.mesh.Translate(t_x, t_y, t_z);
 			videoCtrl.AddReg(Point3D(t_x, t_y, t_z));
 			
-			ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
+			Ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
 			
 		} else if (action == ROTATE) {
 			msh.dt.cg.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
@@ -1012,9 +1013,9 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 				} else
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
 				
-				ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
+				Ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
 			} else
-				ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
+				Ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
 		} else if (action == NONE) {
 			msh.SetMass(mass);
 			msh.dt.cg.Set(x_g, y_g, z_g);
@@ -1094,7 +1095,7 @@ void MainBody::OnArchimede() {
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 		
-		ma().Status(Format(t_("Model rotated %f, %f, 0 deg and translated vertically %f m to comply with displacement"), droll, dpitch, dz));
+		Ma().Status(Format(t_("Model rotated %f, %f, 0 deg and translated vertically %f m to comply with displacement"), droll, dpitch, dz));
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}			

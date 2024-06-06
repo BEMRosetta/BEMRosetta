@@ -49,7 +49,7 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 			return Format(t_("File '%s' not found"), fileCal);
 		
 		String fileRad, folderForces;
-		if (dt.solver == Hydro::NEMOH) {
+		if (dt.solver != Hydro::SEAFEM_NEMOH) {
 			BEM::Print(S("\n- ") + t_("Hydrostatics file(s) 'Mesh/Hydrostatics*.dat'"));
 			if (!Load_Hydrostatics(folder, "Mesh"))
 				BEM::PrintWarning(S(": ** Mesh/Hydrostatics*.dat ") + t_("Not found") + "**");
@@ -59,7 +59,7 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 			
 			dynamic_cast<Wamit *>(this)->Load_frc2(ForceExtSafer(fileCal, ".frc"));
 			
-			fileRad = AFX(folder, AFX("Results", "RadiationCoefficients.tec"));
+			fileRad = AFX(folder, "Results", "RadiationCoefficients.tec");
 			folderForces = folder;
 		} else {
 			if (!Load_Inf(file)) 
@@ -165,7 +165,8 @@ bool Nemoh::Load_Cal(String fileName) {
 	if (!in.IsOpen())
 		return false;
 	
-	dt.solver = Hydro::NEMOH;
+	if (dt.solver == UNKNOWN)
+		dt.solver = Hydro::NEMOH;
 	dt.dataFromW = true;
 	
 	String line;
@@ -216,9 +217,9 @@ bool Nemoh::Load_Cal(String fileName) {
 				BEM::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), body.dt.fileName));
 				//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 		}
-		if (npoints < 1 || npoints > 100000000)
+		if (npoints < 1 || npoints > 1e8)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of points %s"), f.GetText(0)));
-		if (npanels < 1 || npanels > 100000000)
+		if (npanels < 1 || npanels > 1e8)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of panels %s"), f.GetText(1)));	
 		f.GetLine();	
 		/*body.*/ int ndof = f.GetInt(0);
@@ -445,23 +446,16 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-void Nemoh::SaveFolder(String folderBase, bool bin, int numCases, int, int solver) const {
-	SaveFolder0(folderBase, bin, 1, true, solver);
+void Nemoh::SaveFolder(String folderBase, bool bin, int numCases, int solver, bool x0z, bool y0z) const {
+	SaveFolder0(folderBase, bin, 1, true, solver, x0z, y0z);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, solver);
+		SaveFolder0(folderBase, bin, numCases, false, solver, x0z, y0z);
 }
 
-void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, 
-							bool deleteFolder, int solver) const {
+void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int solver, bool x0z, bool y0z) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
-	
-	#define MIN_F_NEMOH 0.01
-	
-	double fixminF = max(MIN_F_NEMOH, First(dt.w));
-	
+
 	UVector<int> valsf;
-	int _nf;
-	double _minf, _maxf;
 	int ifr = 0;
 	if (numCases > 1) 
 		valsf = NumSets(dt.Nf, numCases);
@@ -537,21 +531,17 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 	//String sumcases;
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
+		UVector<double> freqs;
 		if (numCases > 1) {
 			folder = AFX(folderBase, Format("%s_Part_%d", batName, i+1));
 			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 			//sumcases << " " << AFX(folder, "Nemoh.cal");
-			_minf = dt.w[ifr];
-			int deltaf = valsf[i];
-			_maxf = dt.w[ifr + deltaf - 1];
-			_nf = deltaf;
-			ifr += deltaf;
+			Upp::Block(dt.w, freqs, ifr, valsf[i]);
+			ifr += valsf[i];
 		} else {
 			folder = folderBase;
-			_nf = dt.Nf;
-			_minf = fixminF;
-			_maxf = Last(dt.w);
+			freqs = clone(dt.w);
 		}
 		
 		String folderMech;
@@ -564,52 +554,39 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 		if (solver != Hydro::NEMOHv3)
 			Save_Id(folder);
 		Save_Input(folder, solver);
-		String folderBody = AFX(folder, "mesh");
-		if (!DirectoryCreateX(folderBody))
-			throw Exc(Format(t_("Problem creating '%s' folder"), folderBody));
+		String folderMesh = AFX(folder, "mesh");
+		if (!DirectoryCreateX(folderMesh))
+			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
-		UVector<String> meshes(dt.msh.size());
-		UVector<int> nodes(dt.msh.size()), panels(dt.msh.size());
+		//UVector<String> meshes(dt.msh.size());
+		UVector<int> numNodes(dt.Nb), numPanels(dt.Nb);
 		for (int ib = 0; ib < dt.msh.size(); ++ib) {
-			String name = GetFileName(dt.msh[ib].dt.fileName);
-			name = RemoveAccents(name);
-			name.Replace(" ", "_");
-			String dest = AFX(folderBody, name);
+			String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
 			
-			bool y0z = false, x0z = false;
-			Body mesh;
-			String err = Body::Load(mesh, dt.msh[ib].dt.fileName, dt.rho, dt.g, false, y0z, x0z);
-			if (!err.IsEmpty()) {
-				err = Body::Load(mesh, AFX(folderBody, GetFileName(dt.msh[ib].dt.fileName)), dt.rho, dt.g, false, y0z, x0z);
-				if (!err.IsEmpty()) {
-					throw Exc(err);
-				}
-			}
-			mesh.dt.c0 = clone(dt.msh[ib].dt.c0);
-			mesh.dt.cg = clone(dt.msh[ib].dt.cg);
-			mesh.AfterLoad(dt.rho, dt.g, true, false);
-			Body::SaveAs(mesh, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, x0z, nodes[ib], panels[ib]);
+			//Body::SaveAs(dt.msh[ib], dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
 			
 			if (solver == Hydro::NEMOHv3) {
 				Save_Body_cal(folder, dt.msh.size() == 1 ? -1 : ib, 
-						dt.msh[ib].dt.fileName, mesh, panels[ib], x0z, dt.msh[ib].dt.cg, dt.rho, dt.g);
+						dest, dt.msh[ib], dt.symY, dt.msh[ib].dt.cg, dt.rho, dt.g);
 				String inertiaName;
 				if (dt.msh.size() == 1)
 					inertiaName = "inertia.dat";
 				else
 					inertiaName = Format("inertia_%d.dat", i);
 				Nemoh::Save_6x6(dt.msh[ib].dt.M, AFX(folderMech, inertiaName));
-				meshes[ib] = GetFileTitle(dt.msh[ib].dt.fileName);
+				//meshes[ib] = GetFileTitle(dt.msh[ib].dt.fileName);
 			} else {
 				String khName;
 				if (dt.msh.size() == 1)
 					khName = "KH.dat";
 				else
 					khName = Format("KH_%d.dat", i);
-				static_cast<NemohBody&>(mesh).SaveKH(AFX(folderBody, khName));			
+				static_cast<const NemohBody&>(dt.msh[ib]).SaveKH(AFX(folderMesh, khName));			
 			}
+			numNodes[ib] = dt.msh[ib].dt.under.nodes.size();
+			numPanels[ib] = dt.msh[ib].dt.under.panels.size();
 		}
-		Save_Cal(folder, _nf, _minf, _maxf, nodes, panels, solver);
+		Save_Cal(folder, freqs, numNodes, numPanels, solver, y0z, x0z);
 				
 		String folderResults = AFX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
@@ -632,13 +609,14 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases,
 	}
 }
 
-void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, Body &mesh, int npanels, bool x0z, const Point3D &cg, double rho, double g) const {
+void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, double rho, double g) const {
 	String title = ForceExt(GetFileTitle(meshFile), ".pmsh");
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
 	Body::SaveAs(mesh, AFX(folder, "Mesh", title), 
 				Body::NEMOH_PRE, Body::UNDERWATER, rho, g, false, x0z);
 	
+	int npanels = mesh.dt.under.panels.size();
 	String fileName;
 	if (ib < 0)
 		fileName = AFX(folder, "Mesh.cal");
@@ -659,15 +637,18 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, Body &mesh, in
 	out << "1                    ! Mesh scale\n";
 	out << Format("%s               ! Water density (kg/m3)\n", FDS(rho, 6, true));
 	out << Format("%s               ! Gravity (m/s2)", FDS(g, 6, true));
-	
 }
 	
-void Nemoh::Save_Cal(String folder, int _nf, double _minf, double _maxf, const UVector<int> &nodes, 
-		const UVector<int> &panels, int solver) const {
+void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, 
+		const UVector<int> &panels, int solver, bool y0z, bool x0z) const {
 	String fileName = AFX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+	
+	int Nf = freqs.size();
+	double minF = First(freqs);
+	double maxF = Last(freqs);
 	
 	int cp = 28;	
 	out << NemohHeader("Environment - Created with BEMRosetta") << "\n";
@@ -682,16 +663,22 @@ void Nemoh::Save_Cal(String folder, int _nf, double _minf, double _maxf, const U
 	out << NemohHeader("Description of floating bodies") << "\n";
 	out << NemohField(Format("%d", dt.msh.size()), cp) << "! Number of bodies" << "\n";
 	
-	for (int i = 0; i < dt.msh.size(); ++i) {
-		const Body &b = dt.msh[i];
-		out << NemohHeader(Format("Body %d", i+1)) << "\n";	
-		String name = GetFileName(b.dt.fileName);
-		name = RemoveAccents(name);
-		name.Replace(" ", "_");
+	String folderMesh = AFX(folder, "mesh");
+	DirectoryCreate(folderMesh);
+	
+	for (int ib = 0; ib < dt.msh.size(); ++ib) {
+		const Body &b = dt.msh[ib];
+		String name = Format("Body_%d.dat", ib+1);
+		
+		int nNodes, nPanels;
+		Body::SaveAs(dt.msh[ib], AFX(folderMesh, name), Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z, nNodes, nPanels);
+		
+		out << NemohHeader(name) << "\n";	
+		
 		String file = AFX("mesh", name);
 		
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
-		out << NemohField(Format("%d %d", nodes[i], panels[i]), cp) << "! Number of points and number of panels" << "\n";	
+		out << NemohField(Format("%d %d", nNodes, nPanels), cp) << "! Number of points and number of panels" << "\n";	
 		out << NemohField(Format("%d", 6/*b.GetNDOF()*/), cp) << "! Number of degrees of freedom" << "\n";	
 		//if (b.dof[BEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Surge" << "\n";	
@@ -722,19 +709,22 @@ void Nemoh::Save_Cal(String folder, int _nf, double _minf, double _maxf, const U
 	}
 	out << NemohHeader("Load cases to be solved") << "\n";
 	if (solver == Hydro::NEMOHv3)
-		out << NemohField(Format("1 %d %f %f", _nf, _minf, _maxf), cp) << "! Freq type 1,2,3=[rad/s,Hz,s], Number of wave frequencies/periods, Min, and Max" << "\n";
+		out << NemohField(Format("1 %d %f %f", Nf, minF, maxF), cp) << "! Freq type 1,2,3=[rad/s,Hz,s], Number of wave frequencies/periods, Min, and Max" << "\n";
 	else	
-		out << NemohField(Format("%d %f %f", _nf, _minf, _maxf), cp)   << "! Number of wave frequencies, Min, and Max (rad/s)" << "\n";
+		out << NemohField(Format("%d %f %f", Nf, minF, maxF), cp)   << "! Number of wave frequencies, Min, and Max (rad/s)" << "\n";
 	
 	//double _minH = !isCapy ? minH : ToRad(minH);	// 29/12/2021 Capytaine issue
 	//double _maxH = !isCapy ? maxH : ToRad(maxH);
 	out << NemohField(Format("%d %f %f", dt.Nh, First(dt.head), Last(dt.head)), cp) << "! Number of wave directions, Min and Max (degrees)" << "\n";
 	
 	out << NemohHeader("Post processing") << "\n";
-	out << NemohField(Format("%4<d %.2f %.2f", dt.Tirf.size() > 0 ? 1 : 0, dt.Tirf[1]-dt.Tirf[0], Last(dt.Tirf)), cp) << "! IRF                    ! IRF calculation (0 for no calculation), time step and duration" << "\n";
+	if (dt.Tirf.size() > 0)
+		out << NemohField(Format("%4<d %.2f %.2f", 1, dt.Tirf[1]-dt.Tirf[0], Last(dt.Tirf)), cp) << "! IRF                    ! IRF calculation (0 for no calculation), time step and duration" << "\n";
+	else
+		out << NemohField(Format("%4<d %.2f %.2f", 0, 0, 0), cp) << "! IRF                    ! IRF calculation (0 for no calculation), time step and duration" << "\n";
 	out << NemohField(Format("%d", 0), cp) << "! Show pressure" << "\n";	
-	out << NemohField(Format("%4<d", 0), cp) << "! Kochin function        ! Number of directions of calculation (0 for no calculations), Min and Max (degrees)" << "\n";
-	out << NemohField(Format("%4<d %4<d", 0, 0), cp) << "! Free surface elevation ! Number of points in x direction (0 for no calculations) and y direction and dimensions of domain in x and y direction" << "\n";
+	out << NemohField(Format("%4<d %.2f %.2f", 0, 0, 0), cp) << "! Kochin function        ! Number of directions of calculation (0 for no calculations), Min and Max (degrees)" << "\n";
+	out << NemohField(Format("%4<d %4<d %.2f %.2f", 0, 0, 0, 0), cp) << "! Free surface elevation ! Number of points in x direction (0 for no calculations) and y direction and dimensions of domain in x and y direction" << "\n";
 	
 	if (solver == Hydro::NEMOHv3) {
 		out << NemohField("0						! Response Amplitude Operator (RAO), 0 no calculation, 1 calculated", cp) << "\n";	
@@ -903,9 +893,9 @@ bool Nemoh::Load_LinearDamping(String folder, String subfolder) {
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 	    String file;
 		if (dt.Nb == 1) 
-			file = AFX(folder, subfolder, "inertia.dat");
+			file = AFX(folder, subfolder, "Badd.dat");
 		else 
-			file = AFX(folder, subfolder, Format("inertia_%d.dat", ib));
+			file = AFX(folder, subfolder, Format("Badd_%d.dat", ib));
 	    
 	    MatrixXd m;
 	    if (!Load_6x6(m, file))
@@ -1078,6 +1068,9 @@ bool Nemoh::Save_Inertia(String folder) const {
 }
 
 bool Nemoh::Save_6x6(const Eigen::MatrixXd &C, String file) {
+	if (C.size() < 36)
+		return false;
+	
     FileOut out(file);
 	if (!out.IsOpen()) 
         return false;
@@ -1231,3 +1224,142 @@ void Nemoh::Save(String ) {
 	throw Exc("Option not implemented");
 }		
 
+void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
+	String name = GetFileTitle(folder);
+	String fileBat  = AFX(folder, name + ".bat");
+	FileOut bat;
+	if (!bat.Open(fileBat))
+		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+	if (!Bem().pythonEnv.IsEmpty())
+		bat << "call conda activate " << Bem().pythonEnv << "\n";
+	bat << "python \"" << name << ".py\"";
+	
+	String filePy  = AFX(folder, name + ".py");
+	String spy;
+	
+	spy <<	"import numpy as np\n"
+			"import capytaine as cpt\n"
+			"from capytaine.io.xarray import problems_from_dataset\n"
+			"from capytaine.bem.airy_waves import airy_waves_pressure\n"
+			"import xarray as xr\n"
+			"import os\n\n";
+
+
+	String listBodies;
+	
+	String folderMesh = AFX(folder, "mesh");
+	if (!DirectoryCreateX(folderMesh))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
+	
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		const Body &b = dt.msh[ib];
+		
+		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
+		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
+		
+		bool lid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
+		
+		if (lid) {
+			String destLid = AFX(folderMesh, Format(t_("Body_%d_lid.dat"), ib+1));
+			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, dt.symY);
+			spy << Format("lid_mesh_%d = cpt.load_mesh('%s', file_format='nemoh')\n", ib+1, destLid);
+		}
+		spy <<	Format("mesh_%d = cpt.load_mesh('%s', file_format='nemoh').immersed_part()\n", ib+1, dest) <<
+				Format("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s')\n", 
+					ib+1, ib+1, 
+					(lid ? Format("lid_mesh=lid_mesh_%d, ", ib+1) : S("")),
+					b.dt.c0.x, b.dt.c0.y, b.dt.c0.z,
+					b.dt.cg.x, b.dt.cg.y, b.dt.cg.z,
+					b.dt.name
+					);
+		spy <<	Format("body_%d.inertia_matrix = body_%d.compute_rigid_body_inertia()\n", ib+1, ib+1) <<
+				Format("body_%d.hydrostatic_stiffness = body_%d.immersed_part().compute_hydrostatic_stiffness()\n", ib+1, ib+1);
+
+		spy <<	"\n";
+		
+		if (!listBodies.IsEmpty())
+			listBodies << ", ";
+		listBodies << Format("body_%d", ib+1);
+	}
+	spy << "list_of_bodies = [" << listBodies << "]\n";
+
+	String somega = "[", shead = "[";
+	for (int iw = 0; iw < dt.w.size(); ++iw) {
+		if (iw > 0)
+			somega << ", ";
+		somega << dt.w[iw];
+	}
+	somega << "]";
+	for (int ih = 0; ih < dt.head.size(); ++ih) {
+		if (ih > 0)
+			shead << ", ";
+		shead << ToRad(dt.head[ih]);
+	}
+	shead << "]";
+	
+	spy <<	"all_bodies = cpt.FloatingBody.join_bodies(*list_of_bodies).immersed_part()\n"
+			"test_matrix = xr.Dataset(coords={\n"
+		    "    'omega': " << somega << ",\n"
+		    "    'wave_direction': " << shead << ",\n"
+		    "    'radiating_dof': list(all_bodies.dofs),\n"
+		    "    'water_depth': " << (dt.h > 0 ? FormatDouble(dt.h) : "np.inf") << ",\n"
+		    "    'rho': " << dt.rho << "\n"
+		    "})\n\n";
+
+	spy <<	"solver = cpt.BEMSolver()\n"
+			"pbs = problems_from_dataset(test_matrix, all_bodies)\n"
+			"results = solver.solve_all(pbs, keep_details=True)\n"
+			"ds = cpt.assemble_dataset(results)\n"
+			"\n"
+			"mesh = all_bodies.mesh\n"
+			"\n"
+			"ds.coords['space_coordinate'] = ['x', 'y', 'z']\n";
+	if (withMesh) 
+		spy <<	"ds['mesh_vertices'] = (['face', 'vertices_of_face', 'space_coordinate'], mesh.vertices[mesh.faces])\n"
+				"ds['mesh_faces_center'] = (['face', 'space_coordinate'], mesh.faces_centers)\n";
+				
+	spy <<	"ds['dof_definition'] = (['radiating_dof', 'face', 'space_coordinate'], np.array([all_bodies.dofs[dof] for dof in all_bodies.dofs]))\n"
+			"\n";
+	
+	if (withMesh && withPotentials) {
+		spy <<	"ds['incident_pressure'] = (\n"
+				"    ['omega', 'wave_direction', 'face'],\n"
+				"    np.zeros((ds.sizes['omega'], ds.sizes['wave_direction'], all_bodies.mesh.nb_faces,), dtype=np.complex128),\n"
+				")\n"
+				"ds['diffraction_pressure'] = (\n"
+				"    ['omega', 'wave_direction', 'face'],\n"
+				"    np.zeros((ds.sizes['omega'], ds.sizes['wave_direction'], all_bodies.mesh.nb_faces), dtype=np.complex128),\n"
+				")\n"
+				"ds['radiation_pressure'] = (\n"
+				"    ['omega', 'radiating_dof', 'face'],\n"
+				"    np.zeros((ds.sizes['omega'], ds.sizes['radiating_dof'], all_bodies.mesh.nb_faces), dtype=np.complex128),\n"
+				")\n"
+				"\n";
+	
+		spy <<	"for res in results:\n"
+				"    if isinstance(res.problem, cpt.DiffractionProblem):\n"
+				"        ds['diffraction_pressure'].loc[dict(omega=res.omega, wave_direction=res.wave_direction)] = res.pressure\n"
+				"        ds['incident_pressure'].loc[dict(omega=res.omega, wave_direction=res.wave_direction)] = airy_waves_pressure(mesh, res)\n"
+				"    elif isinstance(res.problem, cpt.RadiationProblem):\n"
+				"        ds['radiation_pressure'].loc[dict(omega=res.omega, radiating_dof=res.radiating_dof)] = res.pressure\n"
+				"\n";
+	}
+	spy <<	"ds.coords['rigid_body_component'] = [body.name for body in list_of_bodies]\n"
+			"ds['rotation_center'] = (['rigid_body_component', 'point_coordinates'], [body.rotation_center for body in list_of_bodies])\n"
+			"ds['center_of_mass'] = (['rigid_body_component', 'point_coordinates'], [body.center_of_mass for body in list_of_bodies])\n"
+			"\n"
+			"# Export to NetCDF file\n"
+			"from capytaine.io.xarray import separate_complex_values\n"
+			"separate_complex_values(ds).to_netcdf('" << name << ".nc',\n"
+			"                                          encoding={'radiating_dof': {'dtype': 'U'},\n"
+			"                                                    'influenced_dof': {'dtype': 'U'}})\n";	
+	
+	spy.Replace("'", "\"");
+	spy.Replace("\\", "\\\\");
+	
+	FileOut py;
+	if (!py.Open(filePy))
+		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+	
+	py << spy;
+};

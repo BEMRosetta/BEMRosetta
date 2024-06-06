@@ -15,7 +15,7 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 	dt.dimen = true;
 	dt.len = 1;
 	dt.solver = Hydro::AQWA;
-	dt.Nb = Null;
+	dt.Nb = 0;
 	
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
@@ -28,8 +28,9 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
 				BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
-				dt.Nh = dt.Nf = 0;
-			//	throw Exc(t_("No .AH1 or .LIS file found"));
+				if (!AQWABody::Load_DAT(dt.msh, *this, file).IsEmpty()) 
+					dt.Nh = dt.Nf = 0;
+				
 			}
 		}
 		//if (IsNull(dt.Nb))
@@ -39,21 +40,15 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		if (!Load_QTF(factorMass)) 
 			BEM::Print(S(": ** QTF file ") + t_("Not found") + "**");
 		
-		if (IsNull(dt.Nb)) 
+		if (IsNull(dt.Nh) || dt.Nh <= 0) 
 			return t_("No data found");
 		
-		/*dt.dof.Clear();	dt.dof.SetCount(dt.Nb, 0);
-		for (int i = 0; i < dt.Nb; ++i)
-			dt.dof[i] = 6;*/
-			
 		for (int ib = 0; ib < dt.Nb; ++ib)					// Translates all bodies phase to 0,0
 			AddWave(ib, -dt.msh[ib].dt.c0.x, -dt.msh[ib].dt.c0.y);	// Phase is translated -c0_x,-c0_y
 	
 		dt.x_w = dt.y_w = 0;
 			
 	} catch (Exc e) {
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//dt.lastError = Format(t_("file %s "), file) + e;
 		return e;
 	}
 	
@@ -539,7 +534,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			if (ib < 0 || ib >= dt.Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
 			
-			if (!IsLoadedPotsRad())
+			if (!IsLoadedPotsRad(ib))
 				Initialize_PotsRad(); 				// Initialise potentials
 			
 			int trans;
@@ -955,13 +950,17 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			if (abs(1-abs(yProjectionPos/yProjectionNeg)) > 0.2)
 				dt.symY = true;
 		}
-		
-		/*for (int ib = 0; ib < dt.Nb; ++ib) {
-			dt.msh[ib].c0 = Point3D(dt.c0(0, ib), dt.c0(1, ib), dt.c0(2, ib));
-			dt.msh[ib].cg = Point3D(dt.cg(0, ib), dt.cg(1, ib), dt.cg(2, ib));
-		}*/
 	}
- 			
+	if (!dt.pots_rad.IsEmpty()) {		// Transform potentials to Wamit
+		for (int ib = 0; ib < dt.Nb; ++ib) 
+			for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) 
+				for (int idf = 0; idf < 6; ++idf)
+					for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
+						auto &d = dt.pots_rad[ib][ip][idf][ifr];
+						d = std::complex<double>(d.imag()/dt.w[ifr], d.real()/dt.w[ifr]);
+					}	
+	}					
+	
 	return true;
 }
 
@@ -1071,7 +1070,7 @@ bool Aqwa::Load_QTF(double factorMass) {
 	return true;
 }
 
-void Aqwa::Save(String file, Function <bool(String, int)> Status) {
+void Aqwa::Save(String file, Function <bool(String, int)> Status) const {
 	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
 
 	if (IsLoadedQTF(true) || IsLoadedQTF(false)) {
@@ -1080,7 +1079,7 @@ void Aqwa::Save(String file, Function <bool(String, int)> Status) {
 	}
 }		
 
-void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) {
+void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 	FileOut out(file);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), file));
@@ -1360,4 +1359,12 @@ String FastOut::Load_LIS(String file) {
 			data[i] = A*cos(w*time[i]);
 	}
 	return "";	
+}
+
+void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const {
+	String file = AFX(folder, "Analysis.dat");	
+	
+	int nNodes, nPanels;
+	Body::SaveAs(dt.msh, file, Body::AQWA_DAT, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
+		dt.w, dt.head, withQTF, withPotentials, dt.h, numThreads);
 }

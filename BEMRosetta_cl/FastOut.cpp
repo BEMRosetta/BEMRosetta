@@ -374,19 +374,21 @@ String FastOut::LoadOutb(String fileNa) {
 	return "";
 }
 
-String FastOut::LoadCsv(String fileNa) {
+String FastOut::LoadCsv(String _fileName) {
 	Clear();
+	
+	fileName = _fileName;
 		
 	String header;
-	//UVector<String> parameters;
+	UVector<String> params0;
 	char separator;
 	bool repetition;
 	char decimalSign;
 	int64 beginData;
 	int beginDataRow;
 	
-	if (!GuessCSV(fileNa, true, header, parameters, separator, repetition, decimalSign, beginData, beginDataRow))
-		return Format("Problem reading '%s'. Impossible to guess structure", fileNa); 
+	if (!GuessCSV(fileName, true, header, params0, separator, repetition, decimalSign, beginData, beginDataRow))
+		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
 	
 	// Extracts the units from the header
 	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->int {
@@ -405,10 +407,10 @@ String FastOut::LoadCsv(String fileNa) {
 			return -1;
 	};	
    	
-   	for (int i = 0; i < parameters.size(); ++i) {
+   	for (int i = 0; i < params0.size(); ++i) {
 		String param1, param2, unit1, unit2;
-		int id1 = GetUnits(parameters[i], '(', ')', param1, unit1);
-		int id2 = GetUnits(parameters[i], '[', ']', param2, unit2);
+		int id1 = GetUnits(params0[i], '(', ')', param1, unit1);
+		int id2 = GetUnits(params0[i], '[', ']', param2, unit2);
 		
 		String param, unit;	// The most at right is the most probable to be
 		int sit;;
@@ -434,7 +436,7 @@ String FastOut::LoadCsv(String fileNa) {
    			param = param2;
 			unit = unit2;
 		} else
-			param = parameters[i];
+			param = params0[i];
 
 		if (param == "")
 			param = t_("void");
@@ -996,7 +998,7 @@ void FASTCaseDecay::Init(BEM::DOF _dof, double time, double x, double y, double 
 	hydrodyn.SetInt("DiffQTF", 0);
 	hydrodyn.SetInt("SumQTF", 0);
 
-	elastodyn.SetDouble("Gravity", 9.81);
+	elastodyn.SetDouble("Gravity", 9.80665);
 	elastodyn.SetBool("FlapDOF1", false);
 	elastodyn.SetBool("FlapDOF2", false);
 	elastodyn.SetBool("EdgeDOF", false);

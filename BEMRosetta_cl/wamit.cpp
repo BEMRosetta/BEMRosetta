@@ -117,16 +117,10 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 		if (IsNull(dt.Nb)/* || IsNull(dt.Nh) || IsNull(dt.Nf) || dt.Nh == 0 || dt.Nf == 0*/) 
 			throw Exc(t_("No data found"));
 		
-		//dt.dof.Clear();	dt.dof.SetCount(dt.Nb, 6);
-
 	} catch (Exc e) {
 		Status("", -1);
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//dt.lastError = Format(t_("file %s "), file) + e;
 		return e;
 	}
-	/*if (dt.c0.size() == 0)
-		dt.c0.setConstant(3, dt.Nb, 0);*/
 	
 	if (IsNum(dt.msh[0].dt.c0)) {		// In BEMRosetta, cg and cb are referred to global axis, not to XBODY
 		for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -188,15 +182,6 @@ bool Wamit::Load_out(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-	
-	/*dt.Nb = 1;
-	dt.names.SetCount(dt.Nb);
-	dt.cg.setConstant(3, dt.Nb, NaNDouble);
-	dt.cb.setConstant(3, dt.Nb, NaNDouble);
-	dt.c0.setConstant(3, dt.Nb, 0);
-	dt.Vo.SetCount(dt.Nb, NaNDouble);
-	dt.C.SetCount(dt.Nb);
-	dt.M.SetCount(dt.Nb);*/
 				
 	dt.Nf = 0;
 	dt.Nh = 0;
@@ -259,16 +244,8 @@ bool Wamit::Load_out(String fileName) {
 			if (IsNull(ibody))
 				throw Exc(in.Str() + "\n" +  t_("Wrong body index"));
 			dt.Nb = max(dt.Nb, ibody);
-			if (ibody > dt.msh.size()) {
-				//dt.names.SetCount(ib);
+			if (ibody > dt.msh.size()) 
 				dt.msh.SetCount(dt.Nb);
-				//dt.cg.setConstant(3, dt.Nb, NaNDouble);
-				//dt.cb.setConstant(3, dt.Nb, NaNDouble);
-				//dt.c0.setConstant(3, dt.Nb, 0);
-				//dt.Vo.SetCount(dt.Nb, NaNDouble);
-				//dt.C.SetCount(dt.Nb);
-				//dt.M.SetCount(dt.Nb);
-			}
 			ibody--;
 			if (dt.msh[ibody].dt.name.IsEmpty() && !isHydrostar)
 				dt.msh[ibody].dt.name = GetFileTitle(f.GetText(2));
@@ -794,10 +771,10 @@ void Wamit::Save_out(String file) {
 	for (int it = 0; it < T.size(); ++it)
 		out << " " << Format("%9.4f", T[it]) << "    00:00:00          -1      -1\n";
 	out << "\n"
-	   	<< " Gravity:     " << (IsNull(dt.g) ? Bem().g : dt.g)
+	   	<< " Gravity:     " << Bem().g
 	    << "                Length scale:        " << dt.len << "\n"
 		<< " Water depth:        " << (dt.h < 0 ? "infinite" : FDS(dt.h, 9)) << "    "
-		<< " Water density:      " << (IsNull(dt.rho) ? Bem().rho : dt.rho) << "\n"
+		<< " Water density:      " << (Bem().rho) << "\n"
 		<< " Logarithmic singularity index:              ILOG =     1\n"
 		<< " Source formulation index:                   ISOR =     0\n"
 		<< " Diffraction/scattering formulation index: ISCATT =     0\n"
