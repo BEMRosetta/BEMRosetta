@@ -273,9 +273,9 @@ bool Orca::FindInit() {
 		return false;
 	}
 	
-	BEM::Print("\nAvailable OrcaFlex versions");
-	for (int i = 0; i < orcadata.size(); ++i)
-		BEM::Print(Format("\nName: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].description, orcadata[i].path));
+	//BEM::Print("\nAvailable OrcaFlex versions");
+	//for (int i = 0; i < orcadata.size(); ++i)
+	//	BEM::Print(Format("\nName: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].description, orcadata[i].path));
 	
 	for (int i = orcadata.size()-1; i >= 0; --i)		// lack of data
 		if (orcadata[i].version.IsEmpty() || orcadata[i].path.IsEmpty())

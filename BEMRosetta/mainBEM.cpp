@@ -277,7 +277,7 @@ void MainBEM::Init() {
 	menuAdvanced.butAverage <<= THISBACK(OnAverage);
 	menuAdvanced.butAverage.Disable();
 	//menuAdvanced.butUpdateCrot << THISBACK(OnUpdateCrot);
-	menuAdvanced.butUpdateCrot.SetCtrl(menuAdvancedReference).Tip(t_("Click to chage the centre of rotation"));
+	menuAdvanced.butUpdateCrot.SetCtrl(menuAdvancedReference).Tip(t_("Click to change the centre of rotation"));
 	menuAdvanced.c_array.AddColumn(t_("Body"));
 	menuAdvanced.c_array.AddColumn(t_("x"));
 	menuAdvanced.c_array.AddColumn(t_("y"));

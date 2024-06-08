@@ -658,7 +658,7 @@ bool Wamit::Load_out(String fileName) {
 	return true;
 }
 
-void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod) {
+void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod) const {
 	out << 	" ************************************************************************\n\n"
 			" Wave period = " << wavePeriod << "\n"
 			" ------------------------------------------------------------------------\n\n\n"
@@ -671,7 +671,7 @@ void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::M
 	out << "\n\n";
 }
 
-void Wamit::Save_AB(FileOut &out, int ifr) {
+void Wamit::Save_AB(FileOut &out, int ifr) const {
 	out <<	"    ADDED-MASS AND DAMPING COEFFICIENTS\n"
 			"     I     J         A(I,J)         B(I,J)\n\n";
 	for (int r = 0; r < dt.Nb*6; ++r) 
@@ -681,7 +681,7 @@ void Wamit::Save_AB(FileOut &out, int ifr) {
 	out << "\n\n\n\n";
 }
 
-void Wamit::Save_Forces(FileOut &out, int ifr) {
+void Wamit::Save_Forces(FileOut &out, int ifr) const {
 	out <<	"    DIFFRACTION EXCITING FORCES AND MOMENTS\n\n";
 	for (int ih = 0; ih < dt.Nh; ++ih) {
 		out << "  Wave Heading (deg) :      " << dt.head[ih] << "\n\n"
@@ -696,7 +696,7 @@ void Wamit::Save_Forces(FileOut &out, int ifr) {
 	}
 }
 
-void Wamit::Save_RAO(FileOut &out, int ifr) {
+void Wamit::Save_RAO(FileOut &out, int ifr) const {
 	out <<	"    RESPONSE AMPLITUDE OPERATORS\n\n";
 	for (int ih = 0; ih < dt.Nh; ++ih) {
 		out << "  Wave Heading (deg) :      " << dt.head[ih] << "\n\n"
@@ -711,7 +711,7 @@ void Wamit::Save_RAO(FileOut &out, int ifr) {
 	}
 }
 
-void Wamit::Save_MD(FileOut &out, int ifr) {
+void Wamit::Save_MD(FileOut &out, int ifr) const {
 	if (dt.mdtype == 7)
 		out << " SURGE, SWAY, HEAVE, ROLL, PITCH & YAW DRIFT FORCES (Control Surface)";
 	else if (dt.mdtype == 8)
@@ -738,7 +738,7 @@ void Wamit::Save_MD(FileOut &out, int ifr) {
 	}
 }
 
-void Wamit::Save_out(String file) {
+void Wamit::Save_out(String file) const {
 	String filename = GetFileTitle(file);
 	FileOut out(file);
 	if (!out.IsOpen())
@@ -1938,7 +1938,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	return true;
 }
 
-void Wamit::Save_1(String fileName, bool force_T) {
+void Wamit::Save_1(String fileName, bool force_T) const {
 	if (!(IsLoadedA() && IsLoadedB())) 
 		return;
 		
@@ -1991,7 +1991,7 @@ void Wamit::Save_1(String fileName, bool force_T) {
 							 FormatWam(Nvl2(dt.B[i][j][ifr], B_ndim(ifr, i, j), 0.)));
 }
 
-void Wamit::Save_3(String fileName, bool force_T) {
+void Wamit::Save_3(String fileName, bool force_T) const {
 	if (!IsLoadedFex()) 
 		return;
 	
@@ -2024,7 +2024,7 @@ void Wamit::Save_3(String fileName, bool force_T) {
 		for (int ih = 0; ih < dt.Nh; ++ih)
 			for (int ib = 0; ib < dt.Nb; ++ib) 
 				for (int i = 0; i < 6; ++i) {
-					std::complex<double> &f = dt.ex[ib][ih](ifr, i);
+					const std::complex<double> &f = dt.ex[ib][ih](ifr, i);
 					std::complex<double> fn = F_ndim(dt.ex, ih, ifr, i, ib);
 					out << Format(" %s %s %5d %s %s %s %s\n", 
 						FormatWam(data[ifr]), FormatWam(dt.head[ih]), i+1,
@@ -2035,7 +2035,7 @@ void Wamit::Save_3(String fileName, bool force_T) {
 				}
 }
 
-void Wamit::Save_4(String fileName, bool force_T) {
+void Wamit::Save_4(String fileName, bool force_T) const {
 	if (!IsLoadedRAO()) 
 		return;
 		
@@ -2068,7 +2068,7 @@ void Wamit::Save_4(String fileName, bool force_T) {
 		for (int ih = 0; ih < dt.Nh; ++ih)
 			for (int ib = 0; ib < dt.Nb; ++ib) 
 				for (int i = 0; i < 6; ++i) {
-					std::complex<double> &f = dt.rao[ib][ih](ifr, i);	
+					const std::complex<double> &f = dt.rao[ib][ih](ifr, i);	
 					std::complex<double> fn = RAO_ndim(dt.rao, ih, ifr, i, ib);
 					out << Format(" %s %s %5d %s %s %s %s\n", 
 						FormatWam(data[ifr]), FormatWam(dt.head[ih]), i+1,
@@ -2086,7 +2086,7 @@ String WamitField(String str, int length) {
 	return ret + " ";
 }
 
-void Wamit::Save_FRC(String fileName) {
+void Wamit::Save_FRC(String fileName) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
@@ -2153,7 +2153,7 @@ void Wamit::Save_FRC(String fileName) {
 	out << "0 % NFIELD_ARRAYS";
 }
 
-void Wamit::Save_POT(String fileName) {
+void Wamit::Save_POT(String fileName) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
@@ -2182,7 +2182,7 @@ void Wamit::Save_POT(String fileName) {
 	}
 }
 	
-void Wamit::Save_hst(String fileName) {
+void Wamit::Save_hst(String fileName) const {
 	if (!IsLoadedC()) 
 		return;
 		
@@ -2215,7 +2215,7 @@ void Wamit::Save_hst_static(const Eigen::MatrixXd &C, String fileName, double rh
 }
 
 void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
-					bool force_T, bool force_Deg, int qtfHeading) {
+					bool force_T, bool force_Deg, int qtfHeading) const {
 	if (!IsLoadedQTF(isSum)) 
 		return;
 	
@@ -2232,7 +2232,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 			
-	UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? dt.qtfsum : dt.qtfdif;		
+	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? dt.qtfsum : dt.qtfdif;		
 			
 	out << " WAMIT Numeric Output -- Filename  " << Format("%20<s", GetFileName(fileName)) << "  " << Format("%", GetSysTime()) << "\n";
 
@@ -2272,7 +2272,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 			}
 }
 
-void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) {
+void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 	if (!IsLoadedMD()) 
 		return;
 	
@@ -2310,7 +2310,7 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) {
 		ifrDelta = -1;
 	}
 		
-	UArray<UArray<UArray<VectorXd>>> &md = dt.md;		
+	const UArray<UArray<UArray<VectorXd>>> &md = dt.md;		
 			
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < Nh; ++ih) {

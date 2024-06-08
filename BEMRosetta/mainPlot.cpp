@@ -414,7 +414,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			if (dim)
 				scatt.Units(Hydro::Kirf_units(!dim, plot_idf, plot_jdf));
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_SC && ih >= 0 && (hy.IsLoadedFsc(idf, ih, ib) || (opFscpot && hy.IsLoadedFsc_P(idf, ih, ib)))) {
+	} else if (dataToShow == Hydro::DATA_FORCE_SC && ih >= 0 && (hy.IsLoadedFsc(idf, ih, ib) || (opFscpot && hy.IsLoadedFsc_pot(idf, ih, ib)))) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Fsc%s%s %s"), st, sids, nameType)).
@@ -431,7 +431,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatP.Units(Hydro::F_units(!dim, plot_idf));
 			}
 		}
-		if (opFscpot && hy.IsLoadedFsc_P(idf, ih, ib)) {
+		if (opFscpot && hy.IsLoadedFsc_pot(idf, ih, ib)) {
 			if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_SC_1_P, show_w, !dim, show_ma_ph)) {
 				loaded = true;
 				scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Fsc potentials%s%s %s"), st, sids, nameType)).
@@ -449,8 +449,8 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 				}
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_FORCE_FK && ih >= 0 && (hy.IsLoadedFfk(idf, ih, ib) || (opFfkpot && hy.IsLoadedFfk_P(idf, ih, ib)) 
-	 																						 || (opFfkpot && hy.IsLoadedFfk_PB(idf, ih, ib)))) {
+	} else if (dataToShow == Hydro::DATA_FORCE_FK && ih >= 0 && (hy.IsLoadedFfk(idf, ih, ib) || (opFfkpot && hy.IsLoadedFfk_pot(idf, ih, ib)) 
+	 																						 || (opFfkpot && hy.IsLoadedFfk_pot_bmr(idf, ih, ib)))) {
 		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1, show_w, !dim, show_ma_ph)) {
 			loaded = true;
 			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("Ffk%s%s %s"), st, sids, nameType)).
@@ -468,7 +468,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 			}
 		}
 		if (opFfkpot) {
-			if (hy.IsLoadedFfk_P(idf, ih, ib)) {
+			if (hy.IsLoadedFfk_pot(idf, ih, ib)) {
 				if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1_P, show_w, !dim, show_ma_ph)) {
 					loaded = true;
 					scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Ffk potentials%s%s %s"), st, sids, nameType)).
@@ -486,7 +486,7 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					}
 				}
 			}
-			if (hy.IsLoadedFfk_PB(idf, ih, ib)) {
+			if (hy.IsLoadedFfk_pot_bmr(idf, ih, ib)) {
 				if (ABFZ_source_p[id].Init(hy, plot_idf, ih, Hydro::PLOT_FORCE_FK_1_PB, show_w, !dim, show_ma_ph)) {
 					loaded = true;
 					scatt.AddSeries(ABFZ_source_p[id]).Legend(Format(t_("Ffk poten bemr%s%s %s"), st, sids, nameType)).

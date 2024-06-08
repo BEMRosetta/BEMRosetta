@@ -109,6 +109,7 @@ void MainSolver::Init() {
 		if (save.withPotentials)
 			save.withMesh <<= true;
 	;};
+	save.opSplit.WhenAction = [&] {save.numSplit.Enable(save.opSplit);};
 	
 	bodies.butAdd <<= THISBACK(arrayOnAdd);
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);

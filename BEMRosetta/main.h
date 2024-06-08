@@ -144,13 +144,13 @@ public:
 		case Hydro::PLOT_FORCE_SC_1:	
 		case Hydro::PLOT_FORCE_SC_2:return !hy->IsLoadedFsc(idf%6, jdf, idf/6);		// jdf: heading, idf: body
 		case Hydro::PLOT_FORCE_SC_1_P:	
-		case Hydro::PLOT_FORCE_SC_2_P:return !hy->IsLoadedFsc_P(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_SC_2_P:return !hy->IsLoadedFsc_pot(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1:	
 		case Hydro::PLOT_FORCE_FK_2:return !hy->IsLoadedFfk(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1_P:	
-		case Hydro::PLOT_FORCE_FK_2_P:return !hy->IsLoadedFfk_P(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_FK_2_P:return !hy->IsLoadedFfk_pot(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1_PB:	
-		case Hydro::PLOT_FORCE_FK_2_PB:return !hy->IsLoadedFfk_PB(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_FK_2_PB:return !hy->IsLoadedFfk_pot_bmr(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_EX_1:
 		case Hydro::PLOT_FORCE_EX_2:return !hy->IsLoadedFex(idf%6, jdf, idf/6);
 		case Hydro::PLOT_RAO_1:
@@ -787,6 +787,28 @@ private:
 	StaticRect menu;
 };
 
+class MenuProcessInertia : public WithMenuBodyProcessInertia<DropCtrlDialog> {
+public:
+	typedef MenuProcessInertia CLASSNAME;
+	
+	MenuProcessInertia();
+	void Init(MainBody &mb, int id);
+
+private:
+	MainBody *_mb = nullptr;
+	int _id;
+	
+	void Action(bool vol, ArrayCtrl &array, const Point3D &cg);
+	
+	void ActionV() {Action(true,  arrayVol,  Point3D(~x_g_v, ~y_g_v, ~z_g_v));}
+	void ActionS() {Action(false, arraySurf, Point3D(~x_g_s, ~y_g_s, ~z_g_s));}
+	
+	void OpC0_WhenAction(bool action);
+	void OpCG_v_WhenAction(bool action);
+	void OpCG_s_WhenAction(bool action);
+	void OpMass_WhenAction(bool action);
+};
+
 class MainBody : public MainBEMBody {
 public:
 	typedef MainBody CLASSNAME;
@@ -835,7 +857,8 @@ public:
 		
 	WithMenuBody<StaticRect> menuOpen;
 	WithMenuBodyPlot<StaticRect> menuPlot;
-	WithMenuBodyProcess<StaticRect> menuProcess;
+	WithMenuBodyProcess<StaticRect> menuProcess; 
+	MenuProcessInertia menuProcessInertia;
 	WithMenuBodyMove<StaticRect> menuMove;
 	WithMenuBodyEdit<StaticRect> menuEdit;
 	

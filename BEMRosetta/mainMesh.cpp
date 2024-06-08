@@ -15,6 +15,157 @@ using namespace Upp;
 #include "main.h"
 
 
+MenuProcessInertia::MenuProcessInertia() {
+	CtrlLayout(*this);
+	
+	arrayVol.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayVol);};
+	arrayVol.SetLineCy(EditField::GetStdHeight());
+
+	arraySurf.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arraySurf);};
+	arraySurf.SetLineCy(EditField::GetStdHeight());
+
+	opC0 = 0;
+	opMass = 0;
+
+	x_0.WhenEnter = [&]{ActionV();ActionS();};
+	y_0.WhenEnter = [&]{ActionV();ActionS();};
+	z_0.WhenEnter = [&]{ActionV();ActionS();};
+	
+	mass.WhenEnter = [&]{ActionV();ActionS();};
+	
+	opC0.WhenAction   = [&]{OpC0_WhenAction(true);};
+	opMass.WhenAction = [&]{OpMass_WhenAction(true);};
+	
+	update	<< [&] {ActionV();ActionS();};		
+	ok		<< [&] {Close();};
+}
+		
+void MenuProcessInertia::Init(MainBody &b, int id) {
+	_mb = &b;
+	_id = id;
+	
+	Body &mesh = Bem().surfs[id];
+	volume = mesh.dt.mesh.volume;
+	
+	OpC0_WhenAction(false);
+	OpCG_v_WhenAction(false);
+	OpCG_s_WhenAction(false);
+	OpMass_WhenAction(false);
+	
+	ActionV();
+	ActionS();
+}
+
+void MenuProcessInertia::Action(bool vol, ArrayCtrl &array, const Point3D &cg) {
+	try {
+		Point3D c0(~x_0, ~y_0, ~z_0);
+		Body &mesh = Bem().surfs[_id];
+		
+		volume = mesh.dt.mesh.volume;
+		
+		Matrix3d inertia3;
+		mesh.dt.mesh.GetInertia33(inertia3, c0, vol, false);
+		MatrixXd inertia6;
+		mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
+		if (opMass == 2)
+			inertia6 *= volume;
+		else if (opMass < 2)
+			inertia6 *= double(~mass);
+		
+		array.Reset();
+		array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
+		if (opMass < 3) {
+			for (int i = 0; i < 6; ++i)
+				array.AddColumn(BEM::StrDOF(i));
+
+			for (int r = 0; r < 6; ++r)		
+				for (int c = 0; c < 6; ++c)
+					array.Set(r, c, FDS(inertia6(r, c), 8, false));
+		} else {
+			for (int i = 3; i < 6; ++i)
+				array.AddColumn(BEM::StrDOF(i));
+
+			for (int r = 0; r < 3; ++r)	{	
+				for (int c = 0; c < 3; ++c) {
+					double val = inertia3(r, c);
+					int sign = Sign(val);
+					array.Set(r, c, FDS(sign*sqrt(abs(val)), 8, false));
+				}
+			}
+		}
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}	
+}
+
+void MenuProcessInertia::OpC0_WhenAction(bool action) {
+	Body &mesh = Bem().surfs[_id];
+	
+	x_0.Enable(opC0 != 0);
+	y_0.Enable(opC0 != 0);
+	z_0.Enable(opC0 != 0);
+	if (opC0 == 0) {
+		x_0 = mesh.dt.c0.x;
+		y_0 = mesh.dt.c0.y;
+		z_0 = mesh.dt.c0.z;
+	}
+	if (action) {
+		ActionV();
+		ActionS();
+	}
+}
+void MenuProcessInertia::OpCG_v_WhenAction(bool action) {
+	Body &mesh = Bem().surfs[_id];
+	
+	Point3D c = mesh.dt.mesh.GetCentreOfBuoyancy();
+	x_g_v = c.x;
+	y_g_v = c.y;
+	z_g_v = c.z;
+	if (action)
+		ActionV();
+}
+
+void MenuProcessInertia::OpCG_s_WhenAction(bool action) {
+	Body &mesh = Bem().surfs[_id];
+	
+	Point3D c = mesh.dt.mesh.GetCentreOfGravity_Surface();
+	x_g_s = c.x;
+	y_g_s = c.y;
+	z_g_s = c.z;
+	if (action)
+		ActionS();
+}
+
+void MenuProcessInertia::OpMass_WhenAction(bool action) {
+	Body &mesh = Bem().surfs[_id];
+	
+	mass.Enable(opMass == 1);
+	if (opMass == 0) 
+		mass = mesh.GetMass();
+	else if (opMass > 1)
+		mass = Null;
+	else {
+		if (IsNull(mass))
+			mass = mesh.GetMass();
+	}
+	String str;
+	if (opMass == 3) 
+		str = t_("Radii of gyration");
+	else if (opMass == 2)
+		str = t_("Volume moments of inertia");
+	else				
+		str = t_("Moments of inertia");
+	
+	labInertiaV.SetLabel(str);
+	labInertiaS.SetLabel(str);
+		
+	if (action) {
+		ActionV();
+		ActionS();
+	}
+}	
+	
+	
 void MainBody::Init() {
 	MainBEMBody::Init();
 	
@@ -170,7 +321,8 @@ void MainBody::Init() {
 	menuProcess.butScale <<= THISBACK(OnScale);
 	menuProcess.butScale.Tip(t_("Scales the mesh"));
 	
-	menuProcess.butInertia <<= THISBACK(OnInertia);
+	menuProcess.butInertia.SetCtrl(menuProcessInertia).Tip(t_("Click to get the inertia matrix"));
+	menuProcess.butInertia.SetAutoOpen();
 	
 	CtrlLayout(menuMove);	
 	
@@ -392,6 +544,8 @@ void MainBody::OnMenuProcessArraySel() {
 	menuProcess.y_0 <<= msh.dt.c0.y;
 	menuProcess.z_0 <<= msh.dt.c0.z;
 	menuProcess.mass <<= msh.GetMass();
+	
+	menuProcessInertia.Init(*this, id);
 }
 
 void MainBody::OnMenuMoveArraySel() {
@@ -762,168 +916,6 @@ void MainBody::OnScale() {
 	}		
 }
 
-void MainBody::OnInertia() {
-	GuiLock __;
-	
-	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-		int num = ArrayCtrlSelectedGetCount(listLoaded);
-		if (num > 1) {
-			BEM::PrintError(t_("Please select just one model"));
-			return;
-		}
-		int id;
-		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
-		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
-				BEM::PrintError(t_("Please select a model to process"));
-				return;
-			}
-		}
-				
-		Body &mesh = Bem().surfs[id];
-	
-		WithMenuBodyProcessInertia<TopWindow> dialog;
-		CtrlLayout(dialog);
-		
-		double volume = mesh.dt.mesh.volume;
-		dialog.volume = volume;
-		
-		dialog.arrayVol.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, dialog.arrayVol);};
-		dialog.arrayVol.SetLineCy(EditField::GetStdHeight());
-	
-		dialog.arraySurf.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, dialog.arraySurf);};
-		dialog.arraySurf.SetLineCy(EditField::GetStdHeight());
-
-		auto Action = [&](bool vol, ArrayCtrl &array, const Point3D &cg) {
-			Point3D c0(~dialog.x_0, ~dialog.y_0, ~dialog.z_0);
-			
-			Matrix3d inertia3;
-			mesh.dt.mesh.GetInertia33(inertia3, c0, vol, false);
-			MatrixXd inertia6;
-			mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
-			if (dialog.opMass == 2)
-				inertia6 *= volume;
-			else if (dialog.opMass < 2)
-				inertia6 *= double(~dialog.mass);
-			
-			array.Reset();
-			array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
-			if (dialog.opMass < 3) {
-				for (int i = 0; i < 6; ++i)
-					array.AddColumn(BEM::StrDOF(i));
-	
-				for (int r = 0; r < 6; ++r)		
-					for (int c = 0; c < 6; ++c)
-						array.Set(r, c, FDS(inertia6(r, c), 8, false));
-			} else {
-				for (int i = 3; i < 6; ++i)
-					array.AddColumn(BEM::StrDOF(i));
-	
-				for (int r = 0; r < 3; ++r)	{	
-					for (int c = 0; c < 3; ++c) {
-						double val = inertia3(r, c);
-						int sign = Sign(val);
-						array.Set(r, c, FDS(sign*sqrt(abs(val)), 8, false));
-					}
-				}
-			}
-		};
-		auto ActionV = [&]() {
-			Action(true, dialog.arrayVol, Point3D(~dialog.x_g_v, ~dialog.y_g_v, ~dialog.z_g_v));
-		};
-		auto ActionS = [&](){
-			Action(false, dialog.arraySurf, Point3D(~dialog.x_g_s, ~dialog.y_g_s, ~dialog.z_g_s));
-		};
-				
-		dialog.Title(t_("Mass matrices obtained from mesh"));
-		dialog.opC0 = 0;
-		dialog.opMass = 0;
-
-		dialog.x_0.WhenEnter = [&]{ActionV();ActionS();};
-		dialog.y_0.WhenEnter = [&]{ActionV();ActionS();};
-		dialog.z_0.WhenEnter = [&]{ActionV();ActionS();};
-		
-		dialog.mass.WhenEnter = [&]{ActionV();ActionS();};
-
-		auto opC0_WhenAction = [&](bool action) {
-			dialog.x_0.Enable(dialog.opC0 != 0);
-			dialog.y_0.Enable(dialog.opC0 != 0);
-			dialog.z_0.Enable(dialog.opC0 != 0);
-			if (dialog.opC0 == 0) {
-				dialog.x_0 = mesh.dt.c0.x;
-				dialog.y_0 = mesh.dt.c0.y;
-				dialog.z_0 = mesh.dt.c0.z;
-			}
-			if (action) {
-				ActionV();
-				ActionS();
-			}
-		};
-		auto opCG_v_WhenAction = [&](bool action) {
-			Point3D c = mesh.dt.mesh.GetCentreOfBuoyancy();
-			dialog.x_g_v = c.x;
-			dialog.y_g_v = c.y;
-			dialog.z_g_v = c.z;
-			if (action)
-				ActionV();
-		};
-		auto opCG_s_WhenAction = [&](bool action) {
-			Point3D c = mesh.dt.mesh.GetCentreOfGravity_Surface();
-			dialog.x_g_s = c.x;
-			dialog.y_g_s = c.y;
-			dialog.z_g_s = c.z;
-			if (action)
-				ActionS();
-		};
-		auto opMass_WhenAction = [&](bool action) {
-			dialog.mass.Enable(dialog.opMass == 1);
-			if (dialog.opMass == 0) 
-				dialog.mass = mesh.GetMass();
-			else if (dialog.opMass > 1)
-				dialog.mass = Null;
-			else {
-				if (IsNull(dialog.mass))
-					dialog.mass = mesh.GetMass();
-			}
-			String str;
-			if (dialog.opMass == 3) 
-				str = t_("Radii of gyration");
-			else if (dialog.opMass == 2)
-				str = t_("Volume moments of inertia");
-			else				
-				str = t_("Moments of inertia");
-			
-			dialog.labInertiaV.SetLabel(str);
-			dialog.labInertiaS.SetLabel(str);
-				
-			if (action) {
-				ActionV();
-				ActionS();
-			}
-		};
-				
-		dialog.opC0.WhenAction   = [&]{opC0_WhenAction(true);};
-		dialog.opMass.WhenAction = [&]{opMass_WhenAction(true);};
-		
-		opC0_WhenAction(false);
-		opCG_v_WhenAction(false);
-		opCG_s_WhenAction(false);
-		opMass_WhenAction(false);
-		
-		ActionV();
-		ActionS();
-		
-		dialog.update	<< [&] {ActionV();ActionS();};		
-		dialog.ok		<< [&] {dialog.Close();};
-		dialog.Execute();
-	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
-	}		
-}
-	
 void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 	GuiLock __;
 	

@@ -407,7 +407,7 @@ void Hydro::Normalize_RAO(RAO &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 			for (int ib = 0; ib < dt.Nb; ++ib) 
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
+				for (int idf = 0; idf < 6; ++idf) 
 					f[ib][ih](ifr, idf) = RAO_dim(f, ih, ifr, idf, ib);
 }
 
@@ -415,7 +415,7 @@ void Hydro::Dimensionalize_Forces(Forces &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 			for (int ib = 0; ib < dt.Nb; ++ib) 
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
+				for (int idf = 0; idf < 6; ++idf) 
 					f[ib][ih](ifr, idf) = F_dim(f, ih, ifr, idf, ib);
 }
 
@@ -423,7 +423,7 @@ void Hydro::Dimensionalize_RAO(RAO &f) {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 			for (int ib = 0; ib < dt.Nb; ++ib) 
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) 
+				for (int idf = 0; idf < 6; ++idf) 
 					f[ib][ih](ifr, idf) = RAO_dim(f, ih, ifr, idf, ib);
 }
 
@@ -434,7 +434,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hy, const Forces &from) {
 				int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
 					int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
-					for (int idf = 0; idf < 6*dt.Nb; ++idf) 	 
+					for (int idf = 0; idf < 6; ++idf) 	 
 						if (IsNum(from[ib][ihhy](ifrhy, idf))) 
 							to[ib][ih](ifr, idf) = hy.F_ndim(from, ihhy, ifrhy, idf, ib);
 				}
@@ -449,7 +449,7 @@ void Hydro::Add_RAO(RAO &to, const Hydro &hy, const RAO &from) {
 				int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
 					int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
-					for (int idf = 0; idf < 6*dt.Nb; ++idf) 	 
+					for (int idf = 0; idf < 6; ++idf) 	 
 						if (IsNum(from[ib][ihhy](ifrhy, idf))) 
 							to[ib][ih](ifr, idf) = hy.RAO_ndim(from, ihhy, ifrhy, idf, ib);
 				}
@@ -1222,7 +1222,7 @@ void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
 	for (int ib = 0; ib < dt.Nb; ++ib)
 		for (int ih = 0; ih < dt.Nh; ++ih) 	
 			for (int ifr = 0; ifr < dt.Nf; ++ifr)
-				for (int idf = 0; idf < 6*dt.Nb; ++idf) {
+				for (int idf = 0; idf < 6; ++idf) {
 					std::complex<double> Fa = a[ib][ih](ifr, idf);
 					std::complex<double> Fb = b[ib][ih](ifr, idf);
 					if (IsLoadedForce(a, idf, ih) && Fa != Fb)

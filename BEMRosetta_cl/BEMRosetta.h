@@ -709,10 +709,10 @@ public:
 	    		
 	   	UArray<Body> msh;						// [Nb]
 	   	
-	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_rad;	// [Nb][Np][6][Nf]		Radiation complex potentials
-	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_dif;	// [Nb][Np][Nh][Nf]		Diffraction complex potentials
-	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc;	// [Nb][Np][Nh][Nf]		Incident complex potentials
-	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc_bmr;//					Incident complex potentials calculated by BEMRosetta
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_rad;		// [Nb][Np][6][Nf]	Radiation complex potentials
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_dif;		// [Nb][Np][Nh][Nf]	Diffraction complex potentials
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc;		// [Nb][Np][Nh][Nf]	Incident complex potentials
+	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc_bmr;	// [Nb][Np][Nh][Nf]	Incident complex potentials calculated by BEMRosetta
 	   	
 	   	Tensor<double, 5> Apan;		// [Nb][Np][6][6][Nf]	Added mass		Loaded as it can be spread avoiding negatives...
 	   	
@@ -750,7 +750,7 @@ public:
 	
 	static int LoadHydro(UArray<Hydro> &hydro, String file, Function <bool(String, int)> Status);
 	
-	void LoadCase(String file, Function <bool(String, int)> Status);
+	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int solver, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const;
 	
 	void SaveCSVMat(String file);
@@ -791,10 +791,10 @@ public:
 	
 	bool IsLoadedFex(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.ex, idf, ih, ib);}
 	bool IsLoadedFsc(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.sc, idf, ih, ib);}
-	bool IsLoadedFsc_P (int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.sc_pot, idf, ih, ib);}
+	bool IsLoadedFsc_pot(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.sc_pot, idf, ih, ib);}
 	bool IsLoadedFfk(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.fk, idf, ih, ib);}
-	bool IsLoadedFfk_P (int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot, idf, ih, ib);}
-	bool IsLoadedFfk_PB(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot_bmr, idf, ih, ib);}
+	bool IsLoadedFfk_pot(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot, idf, ih, ib);}
+	bool IsLoadedFfk_pot_bmr(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot_bmr, idf, ih, ib);}
 	bool IsLoadedRAO(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.rao,idf, ih, ib);}
 	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0)
 											 const {return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && IsNum(f[ib][ih](0, idf));}
@@ -1111,7 +1111,7 @@ public:
 	Wamit() {}
 	String Load(String file, Function <bool(String, int)> Status);
 	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
-	void Save_out(String file);
+	void Save_out(String file) const;
 	virtual ~Wamit() noexcept {}
 	
 	bool LoadGdfBody(String file);
@@ -1121,7 +1121,7 @@ public:
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
 	bool Load_frc2(String fileName);
-	void Save_4(String fileName, bool force_T = false);
+	void Save_4(String fileName, bool force_T = false) const;
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin);
@@ -1147,20 +1147,20 @@ protected:
 	bool Load_789(String fileName, int iperout);
 	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int iperout);
 	
-	void Save_1(String fileName, bool force_T = false);
-	void Save_3(String fileName, bool force_T = false);
-	void Save_hst(String fileName);
+	void Save_1(String fileName, bool force_T = false) const;
+	void Save_3(String fileName, bool force_T = false) const;
+	void Save_hst(String fileName) const;
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
-				bool force_T = false, bool force_Deg = true, int qtfHeading = Null);
-	void Save_789(String fileName, bool force_T, bool force_Deg);
-	void Save_FRC(String fileName);
-	void Save_POT(String fileName);
+				bool force_T = false, bool force_Deg = true, int qtfHeading = Null) const;
+	void Save_789(String fileName, bool force_T, bool force_Deg) const;
+	void Save_FRC(String fileName) const;
+	void Save_POT(String fileName) const;
 		
-	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod);
-	void Save_AB(FileOut &out, int ifr);
-	void Save_Forces(FileOut &out, int ifr);
-	void Save_RAO(FileOut &out, int ifr);
-	void Save_MD(FileOut &out, int ifr);
+	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
+	void Save_AB(FileOut &out, int ifr) const;
+	void Save_Forces(FileOut &out, int ifr) const;
+	void Save_RAO(FileOut &out, int ifr) const;
+	void Save_MD(FileOut &out, int ifr) const;
 };
 
 class Hams : public Wamit {

@@ -916,6 +916,13 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 		MultiplyAB(dt.Ainf_w);
 	if (b && IsLoadedB())
 		MultiplyAB(dt.B);
+	
+	if (a && IsLoadedA_P())
+		MultiplyAB(dt.A_P);
+	if (b && IsLoadedB_H())
+		MultiplyAB(dt.B_H);
+	if (b && IsLoadedB_P())
+		MultiplyAB(dt.B_P);
 
 	auto MultiplyAinfA0 = [&](MatrixXd &A) {
 		for (int idf = 0; idf < 6*dt.Nb; ++idf) {
@@ -950,6 +957,13 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 		MultiplyF(dt.fk);	
 	if (f && IsLoadedRAO())
 		MultiplyF(dt.rao);
+
+	if (f && IsLoadedFsc_pot())
+		MultiplyF(dt.sc_pot);
+	if (f && IsLoadedFfk_pot())
+		MultiplyF(dt.fk_pot);
+	if (f && IsLoadedFfk_pot_bmr())
+		MultiplyF(dt.fk_pot_bmr);
 
 	auto MultiplyMD = [&]() {
 		for (int ib = 0; ib < dt.Nb; ++ib) 
@@ -1019,8 +1033,14 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		SwapAB(dt.Ainf_w);
 	if (IsLoadedB())
 		SwapAB(dt.B);
-
-		
+	
+	if (IsLoadedA_P())
+		SwapAB(dt.A_P);
+	if (IsLoadedB_H())
+		SwapAB(dt.B_H);
+	if (IsLoadedB_P())
+		SwapAB(dt.B_P);
+				
 	auto SwapAinfA0 = [&](MatrixXd &A) {
 		Swap(A, idof1+6*ib1, idof2+6*ib2);
     };	
@@ -1042,6 +1062,13 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		SwapF(dt.fk);	
 	if (IsLoadedRAO())
 		SwapF(dt.rao);
+
+	if (IsLoadedFsc_pot())
+		SwapF(dt.sc_pot);
+	if (IsLoadedFfk_pot())
+		SwapF(dt.fk_pot);
+	if (IsLoadedFfk_pot_bmr())
+		SwapF(dt.fk_pot_bmr);
 
 	auto SwapMD = [&]() {
 		for (int ih = 0; ih < dt.mdhead.size(); ++ih) 
@@ -1074,100 +1101,115 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 }
 
 void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
-	if (idFreq.size() > 0) {
-		auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
-	        UArray<UArray<VectorXd>> An;
-		
-			An.SetCount(6*dt.Nb);
-			for (int idof = 0; idof < 6*dt.Nb; ++idof) {
-				An[idof].SetCount(6*dt.Nb);
-				for (int jdof = 0; jdof < 6*dt.Nb; ++jdof) {
-					An[idof][jdof].resize(dt.Nf - idFreq.size());	
+	if (idFreq.IsEmpty()) 
+		return;
+	
+	auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
+        UArray<UArray<VectorXd>> An;
+	
+		An.SetCount(6*dt.Nb);
+		for (int idof = 0; idof < 6*dt.Nb; ++idof) {
+			An[idof].SetCount(6*dt.Nb);
+			for (int jdof = 0; jdof < 6*dt.Nb; ++jdof) {
+				An[idof][jdof].resize(dt.Nf - idFreq.size());	
+				int i = 0, j = 0;
+				for (int iif = 0; iif < dt.Nf; ++iif) {
+					if (j >= idFreq.size() || iif != idFreq[j])
+						An[idof][jdof][i++] = A[idof][jdof][iif];		
+					else 
+						j++;
+				}
+			}
+		}
+		A = pick(An);
+    };
+	
+	if (IsLoadedA())
+		DeleteAB(dt.A);
+	if (IsLoadedAinf_w())
+		DeleteAB(dt.Ainf_w);
+	if (IsLoadedB())
+		DeleteAB(dt.B);
+	
+	if (IsLoadedA_P())
+		DeleteAB(dt.A_P);
+	if (IsLoadedB_H())
+		DeleteAB(dt.B_H);
+	if (IsLoadedB_P())
+		DeleteAB(dt.B_P);
+
+	auto DeleteF = [&](Forces &ex) {
+        Forces _ex;
+	
+		_ex.SetCount(dt.Nb);
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			_ex[ib].SetCount(dt.Nh);
+		    for (int ih = 0; ih < dt.Nh; ++ih) {
+		        _ex[ib][ih].resize(dt.Nf - idFreq.size(), 6);
+		    	for (int idof = 0; idof < 6; ++idof) {
 					int i = 0, j = 0;
 					for (int iif = 0; iif < dt.Nf; ++iif) {
-						if (j >= idFreq.size() || iif != idFreq[j])
-							An[idof][jdof][i++] = A[idof][jdof][iif];		
+						if (j >= idFreq.size() || iif != idFreq[j]) 
+							_ex[ib][ih](i++, idof) = ex[ib][ih](iif, idof);
 						else 
 							j++;
 					}
-				}
-			}
-			A = pick(An);
-	    };
-		
-		if (IsLoadedA())
-			DeleteAB(dt.A);
-		if (IsLoadedAinf_w())
-			DeleteAB(dt.Ainf_w);
-		if (IsLoadedB())
-			DeleteAB(dt.B);
-	
-		auto DeleteF = [&](Forces &ex) {
-	        Forces _ex;
-		
-			for (int ib = 0; ib < dt.Nb; ++ib) {
-				_ex[ib].SetCount(dt.Nb);
-			    for (int ih = 0; ih < dt.Nh; ++ih) {
-			        _ex[ib][ih].resize(dt.Nf - idFreq.size(), 6*dt.Nb);
-			    	for (int idof = 0; idof < 6; ++idof) {
-						int i = 0, j = 0;
-						for (int iif = 0; iif < dt.Nf; ++iif) {
-							if (j >= idFreq.size() || iif != idFreq[j]) 
-								_ex[ib][ih](i++, idof) = ex[ib][ih](iif, idof);
-							else 
-								j++;
-						}
-			    	}
-			    }
+		    	}
 		    }
-		    ex = pick(_ex);
-	    };	
+	    }
+	    ex = pick(_ex);
+    };	
+
+	if (IsLoadedFex())
+		DeleteF(dt.ex);
+	if (IsLoadedFsc())
+		DeleteF(dt.sc);
+	if (IsLoadedFfk())
+		DeleteF(dt.fk);	
+	if (IsLoadedRAO())
+		DeleteF(dt.rao);
 	
-		if (IsLoadedFex())
-			DeleteF(dt.ex);
-		if (IsLoadedFsc())
-			DeleteF(dt.sc);
-		if (IsLoadedFfk())
-			DeleteF(dt.fk);	
-		if (IsLoadedRAO())
-			DeleteF(dt.rao);
+	if (IsLoadedFsc_pot())
+		DeleteF(dt.sc_pot);
+	if (IsLoadedFfk_pot())
+		DeleteF(dt.sc_pot);
+	if (IsLoadedFfk_pot_bmr())
+		DeleteF(dt.sc_pot);
 
-		auto DeleteMD = [&]() {
-			UArray<UArray<UArray<VectorXd>>> mdn;
+	auto DeleteMD = [&]() {
+		UArray<UArray<UArray<VectorXd>>> mdn;
 
-			mdn.SetCount(dt.Nb);
-			for (int ib = 0; ib < dt.Nb; ++ib) {
-				mdn[ib].SetCount(int(dt.mdhead.size()));
-	    		for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
-	    			mdn[ib][ih].SetCount(6);
-	    			for (int idf = 0; idf < 6; ++idf) {
-	    				mdn[ib][ih][idf].setConstant(dt.Nf - idFreq.size());
-	    				int i = 0, j = 0;
-						for (int iif = 0; iif < dt.Nf; ++iif) {
-							if (j >= idFreq.size() || iif != idFreq[j])
-								dt.md[ib][ih][idf](i++) = dt.md[ib][ih][idf](iif);		
-							else 
-								j++;
-						}
-	    			}
-	    		}
-			}
-		    dt.md = pick(mdn);			
-	    };
-
-		if (IsLoadedMD())
-			DeleteMD();
-				
-		int j = idFreq.size()-1;	
-		for (int i = dt.w.size()-1; i >= 0 && j >= 0; --i) {
-			if (i == idFreq[j]) {	
-				dt.w.Remove(i);
-				//T.Remove(i);
-				j--;
-			}
+		mdn.SetCount(dt.Nb);
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			mdn[ib].SetCount(int(dt.mdhead.size()));
+    		for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
+    			mdn[ib][ih].SetCount(6);
+    			for (int idf = 0; idf < 6; ++idf) {
+    				mdn[ib][ih][idf].setConstant(dt.Nf - idFreq.size());
+    				int i = 0, j = 0;
+					for (int iif = 0; iif < dt.Nf; ++iif) {
+						if (j >= idFreq.size() || iif != idFreq[j])
+							dt.md[ib][ih][idf](i++) = dt.md[ib][ih][idf](iif);		
+						else 
+							j++;
+					}
+    			}
+    		}
 		}
-		dt.Nf = dt.w.size();
+	    dt.md = pick(mdn);			
+    };
+
+	if (IsLoadedMD())
+		DeleteMD();
+			
+	int j = idFreq.size()-1;	
+	for (int i = dt.w.size()-1; i >= 0 && j >= 0; --i) {
+		if (i == idFreq[j]) {	
+			dt.w.Remove(i);
+			j--;
+		}
 	}
+	dt.Nf = dt.w.size();
 }
 
 void Hydro::DeleteFrequenciesQTF(const UVector<int> &idFreqQTF) {
@@ -1217,6 +1259,13 @@ void Hydro::DeleteHeadings(const UVector<int> &idHead) {
 		if (IsLoadedRAO())
 			DeleteF(dt.rao);
 	
+		if (IsLoadedFsc_pot())
+			DeleteF(dt.sc_pot);	
+		if (IsLoadedFfk_pot())
+			DeleteF(dt.fk_pot);	
+		if (IsLoadedFfk_pot_bmr())
+			DeleteF(dt.fk_pot_bmr);	
+		
 		int j = idHead.size()-1;	
 		for (int i = dt.head.size()-1; i >= 0 && j >= 0; --i) {
 			if (i == idHead[j]) {	
@@ -1308,6 +1357,13 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	if (IsLoadedB())
 		FillAB(dt.B);
 	
+	if (IsLoadedA_P())
+		FillAB(dt.A_P);
+	if (IsLoadedB_H())
+		FillAB(dt.B_H);
+	if (IsLoadedB_P())
+		FillAB(dt.B_P);
+	
 	auto FillF = [&](Forces &ex) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 		    for (int ih = 0; ih < dt.Nh; ++ih) {
@@ -1332,6 +1388,13 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	if (IsLoadedRAO())
 		FillF(dt.rao);	
 	
+	if (IsLoadedFsc_pot())
+		FillF(dt.sc_pot);
+	if (IsLoadedFfk_pot())
+		FillF(dt.fk_pot);	
+	if (IsLoadedFfk_pot_bmr())
+		FillF(dt.fk_pot_bmr);	
+	
 	auto FillMD = [&]() {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
     		for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
@@ -1350,9 +1413,6 @@ void Hydro::FillFrequencyGapsABForces(bool zero, int maxFreq) {
 	
 	dt.Nf = int(nw.size());
 	::Copy(nw, dt.w);
-	/*T.SetCount(Nf);
-	for (int i = 0; i < Nf; ++i) 
-		T[i] = 2*M_PI/w[i];*/
 }
 
 void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
@@ -1405,6 +1465,13 @@ void Hydro::FillFrequencyGapsABForcesZero() {
 	if (IsLoadedB())
 		FillAB(dt.B);
 
+	if (IsLoadedA_P())
+		FillAB(dt.A_P);
+	if (IsLoadedB_H())
+		FillAB(dt.B_H);
+	if (IsLoadedB_P())
+		FillAB(dt.B_P);
+	
 	auto FillA = [&](MatrixXd &A) {
 		if (A.size() == 0)
 			A = MatrixXd::Zero(6*dt.Nb, 6*dt.Nb);
@@ -1443,6 +1510,13 @@ void Hydro::FillFrequencyGapsABForcesZero() {
 		FillF(dt.fk);	
 	if (IsLoadedRAO())
 		FillF(dt.rao);	
+	
+	if (IsLoadedFsc_pot())
+		FillF(dt.sc_pot);
+	if (IsLoadedFfk_pot())
+		FillF(dt.fk_pot);
+	if (IsLoadedFfk_pot_bmr())
+		FillF(dt.fk_pot_bmr);
 	
 	auto FillMD = [&]() {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -1524,6 +1598,14 @@ void Hydro::Symmetrize() {
 		SymmetrizeAB(dt.Ainf_w);
 	if (IsLoadedB())
 		SymmetrizeAB(dt.B);
+
+	if (IsLoadedA_P())
+		SymmetrizeAB(dt.A_P);
+	if (IsLoadedB_H())
+		SymmetrizeAB(dt.B_H);
+	if (IsLoadedB_P())
+		SymmetrizeAB(dt.B_P);
+
 
 	auto SymmetrizeAinfA0 = [&](MatrixXd &A) {
 		for (int idf = 0; idf < 6*dt.Nb; ++idf) 
