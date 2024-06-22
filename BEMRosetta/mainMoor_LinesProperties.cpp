@@ -65,14 +65,14 @@ bool MainMoor_LineProperties::ArrayUpdateCursor() {
 	array.Set(id, 3, ~dropFrom);
 	array.Set(id, 4, ~dropTo);
 
-	auto &mooring = *pmooring;
-	Mooring temp = clone(mooring);
+	Mooring &mooring = *pmooring;
+	//Mooring temp = clone(mooring);
 	
 	Save();
 	String error = mooring.Test();
 	if (!error.IsEmpty()) {
 		BEM::PrintError(error);
-		mooring = clone(temp);
+		//mooring = clone(temp);
 		Load();
 		return false;
 	}

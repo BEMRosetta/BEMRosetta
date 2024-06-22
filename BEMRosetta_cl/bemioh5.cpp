@@ -41,7 +41,7 @@ void BemioH5::Load_H5() {
 	Hdf5File hfile;
 	hfile.Open(fileName, H5F_ACC_RDONLY);
 	
-	dt.dataFromW = true;
+	//dt.dataFromW = true;
 	
 	for (dt.Nb = 0; hfile.ExistGroup(Format("body%d", dt.Nb+1)); dt.Nb++) 
 		;	

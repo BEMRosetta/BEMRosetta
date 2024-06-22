@@ -26,20 +26,65 @@ MenuProcessInertia::MenuProcessInertia() {
 
 	opC0 = 0;
 	opMass = 0;
-
-	x_0.WhenEnter = [&]{ActionV();ActionS();};
-	y_0.WhenEnter = [&]{ActionV();ActionS();};
-	z_0.WhenEnter = [&]{ActionV();ActionS();};
 	
-	mass.WhenEnter = [&]{ActionV();ActionS();};
+	mass.WhenAction    = [&] {density <<= mass/Bem().surfs[_id].dt.mesh.volume;};
+	density.WhenAction = [&] {mass <<= density*Bem().surfs[_id].dt.mesh.volume;};
 	
-	opC0.WhenAction   = [&]{OpC0_WhenAction(true);};
-	opMass.WhenAction = [&]{OpMass_WhenAction(true);};
+	opC0.WhenAction    = [&]{OpC0_WhenAction(true);};
+	opMass.WhenAction  = [&]{OpMass_WhenAction(true);};
+	
+	opC0.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
+	opMass.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
 	
 	update	<< [&] {ActionV();ActionS();};		
 	ok		<< [&] {Close();};
+	
+	butSetC0Sur << [&] {
+		x_0 = ~x_g_s;
+		y_0 = ~y_g_s;
+		z_0 = ~z_g_s;
+		ActionV();ActionS();
+	};
+	butSetC0Vol << [&] {
+		x_0 = ~x_g_v;
+		y_0 = ~y_g_v;
+		z_0 = ~z_g_v;
+		ActionV();ActionS();
+	};
+	
+	butCopyVol  <<= THISBACK1(CopyToBody, 'v');
+	butCopySurf <<= THISBACK1(CopyToBody, 's');
 }
-		
+
+void MenuProcessInertia::CopyToBody(char c) {
+	Body &msh = Bem().surfs[_id];
+	
+	if (opC0 == 1) {
+		msh.dt.c0.x = _mb->menuProcess.x_0 = ~x_0;
+		msh.dt.c0.y = _mb->menuProcess.y_0 = ~y_0;
+		msh.dt.c0.z = _mb->menuProcess.z_0 = ~z_0;
+	}
+	if (c == 'v') {
+		msh.dt.cg.x = _mb->menuProcess.x_g = ~x_g_v;
+		msh.dt.cg.y = _mb->menuProcess.y_g = ~y_g_v;
+		msh.dt.cg.z = _mb->menuProcess.z_g = ~z_g_v;
+	} else {
+		msh.dt.cg.x = _mb->menuProcess.x_g = ~x_g_s;
+		msh.dt.cg.y = _mb->menuProcess.y_g = ~y_g_s;
+		msh.dt.cg.z = _mb->menuProcess.z_g = ~z_g_s;
+	}
+	if (opMass < 3) {
+		const ArrayCtrl &array = c == 'v' ? arrayVol : arraySurf;
+		msh.dt.M.resize(6, 6);
+		for (int r = 0; r < 6; ++r)		
+			for (int c = 0; c < 6; ++c)
+				msh.dt.M(r, c) = ScanDouble(array.Get(r, c).ToString());
+	}
+	
+	msh.AfterLoad(Bem().rho, Bem().g, false, false);
+	_mb->UpdateLast(_id);
+}
+
 void MenuProcessInertia::Init(MainBody &b, int id) {
 	_mb = &b;
 	_id = id;
@@ -58,23 +103,27 @@ void MenuProcessInertia::Init(MainBody &b, int id) {
 
 void MenuProcessInertia::Action(bool vol, ArrayCtrl &array, const Point3D &cg) {
 	try {
-		Point3D c0(~x_0, ~y_0, ~z_0);
+		Point3D c0(~x_0, ~y_0, ~z_0);	
 		Body &mesh = Bem().surfs[_id];
-		
-		volume = mesh.dt.mesh.volume;
 		
 		Matrix3d inertia3;
 		mesh.dt.mesh.GetInertia33(inertia3, c0, vol, false);
 		MatrixXd inertia6;
 		mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
-		if (opMass == 2)
-			inertia6 *= volume;
-		else if (opMass < 2)
-			inertia6 *= double(~mass);
-		
+		int op = opMass;
+		if (op == 3)
+			inertia6 *= mesh.dt.mesh.volume;
+		else if (op < 3) {
+			double m;
+			if (op == 0 || op == 1)
+				m = mass;
+			else
+				m = density*mesh.dt.mesh.volume; 
+			inertia6 *= m;
+		}
 		array.Reset();
 		array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
-		if (opMass < 3) {
+		if (op < 4) {
 			for (int i = 0; i < 6; ++i)
 				array.AddColumn(BEM::StrDOF(i));
 
@@ -140,19 +189,34 @@ void MenuProcessInertia::OpMass_WhenAction(bool action) {
 	Body &mesh = Bem().surfs[_id];
 	
 	mass.Enable(opMass == 1);
-	if (opMass == 0) 
+	//mass.Show(opMass != 2);
+	density.Enable(opMass == 2);
+	//density.Show(opMass != 1);
+	
+	if (opMass == 0) {
 		mass = mesh.GetMass();
-	else if (opMass > 1)
-		mass = Null;
-	else {
-		if (IsNull(mass))
-			mass = mesh.GetMass();
-	}
+		density = mass/mesh.dt.mesh.volume;
+	} else if (opMass == 1) {
+		if (IsNull(mass)) {
+			if (IsNull(density))
+				mass = mesh.GetMass(); 
+			else
+				mass = density*mesh.dt.mesh.volume;
+		}
+	} else if (opMass == 2) {
+		if (IsNull(density)) {
+			if (IsNull(mass))
+				density = mesh.GetMass()/mesh.dt.mesh.volume; 
+			else
+				density = mass/mesh.dt.mesh.volume; 
+		}
+	} 
+	
 	String str;
-	if (opMass == 3) 
-		str = t_("Radii of gyration");
-	else if (opMass == 2)
+	if (opMass == 3)
 		str = t_("Volume moments of inertia");
+	else if (opMass == 4) 
+		str = t_("Radii of gyration");
 	else				
 		str = t_("Moments of inertia");
 	
@@ -329,9 +393,6 @@ void MainBody::Init() {
 	menuMove.butReset <<= THISBACK(OnReset);
 	menuMove.butReset.Tip(t_("Translates the mesh"));
 	
-	menuMove.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, false);
-	menuMove.butUpdateCrot.Tip(t_("Sets the centre of the body axis"));	
-	
 	menuMove.t_x <<= 0;
 	menuMove.t_x.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
 	menuMove.t_y <<= 0;
@@ -350,9 +411,13 @@ void MainBody::Init() {
 	menuMove.butUpdateAng.Tip(t_("Rotates the mesh"));	
 	
 	menuMove.butArchimede <<= THISBACK(OnArchimede);
-	menuMove.butArchimede.Tip(t_("Lets the body fall to rest"));	
+	menuMove.butArchimede.Tip(t_("Let the body fall to rest"));	
+	
+	menuMove.butPCA <<= THISBACK(OnPCA);
+	menuMove.butPCA.Tip(t_("Orient the device to the principal axis"));	
 	
 	menuMove.opZArchimede.WhenAction = [&] {menuMove.t_z.Enable(!menuMove.opZArchimede);};
+	menuMove.backArch.SetBackground(SColorFace());
 	
 	CtrlLayout(menuEdit);
 	menuEdit.edit_x <<= 0;
@@ -385,13 +450,90 @@ void MainBody::Init() {
 	
 	menuEdit.butPolynomial << THISBACK(OnAddPolygonalPanel);
 	menuEdit.polynomialList.WhenLeftDouble << THISBACK(OnAddPolygonalPanel);
+	
+	CtrlLayout(menuStability);
+	menuStability.heelingMoment <<= 0;
+	
+	struct MyConvert : public Convert {
+		virtual Value Format(const Value& q) const	{return FDS(q, 7);}	
+		virtual Value Scan(const Value& text) const	{return ScanDouble(text.ToString());}
+	};
+
+	menuStability.heelingMoment.SetConvert(Single<MyConvert>());
+	menuStability.butPointsA.SetCtrl(dialogPointsA).Tip(t_("Unprotected points (lead to progressive flooding)"));
+	dialogPointsA.WhenClose = [&] {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0) 
+			return;
 		
+		Bem().surfs[id].Reset(Bem().rho, Bem().g);
+		dialogPointsA.FromGrid(Bem().surfs[id].dt.controlPointsA);
+		Bem().surfs[id].dt.controlPointsA0 = clone(Bem().surfs[id].dt.controlPointsA);
+		
+		menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
+	};
+	menuStability.butPointsB.SetCtrl(dialogPointsB).Tip(t_("Weathertight openings (lead to progressive flooding)"));
+	dialogPointsB.WhenClose = [&] {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0) 
+			return;
+		
+		Bem().surfs[id].Reset(Bem().rho, Bem().g);
+		dialogPointsB.FromGrid(Bem().surfs[id].dt.controlPointsB);
+		Bem().surfs[id].dt.controlPointsB0 = clone(Bem().surfs[id].dt.controlPointsB);
+		
+		menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
+	};
+			
+	menuStability.butPointsC.SetCtrl(dialogPointsC).Tip(t_("Watertight openings (do not lead to progressive flooding)"));
+	dialogPointsC.WhenClose = [&] {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0) 
+			return;
+		
+		Bem().surfs[id].Reset(Bem().rho, Bem().g);
+		dialogPointsC.FromGrid(Bem().surfs[id].dt.controlPointsC);
+		Bem().surfs[id].dt.controlPointsC0 = clone(Bem().surfs[id].dt.controlPointsC);
+		
+		menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
+	};
+	
+	menuStability.butLoads.SetCtrl(dialogLoads).Tip(t_("Loads"));
+	dialogLoads.WhenClose = [&] {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0) 
+			return;
+		
+		Bem().surfs[id].Reset(Bem().rho, Bem().g);
+		dialogLoads.FromGrid(Bem().surfs[id].dt.controlLoads);
+		Bem().surfs[id].dt.controlLoads0 = clone(Bem().surfs[id].dt.controlLoads);
+		
+		menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));
+	};
+	
+	menuStability.butDamage.SetCtrl(dialogDamage).Tip(t_("Damage"));
+	dialogDamage.WhenClose = [&] {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0) 
+			return;
+		int num = 0;
+		for (int r = 0; r < dialogDamage.grid.GetRowCount(); ++r)
+			if (dialogDamage.grid.Get(r, 0) != id && dialogDamage.grid.Get(r, 1) == true)
+				num++; 
+		menuStability.labDamage.SetText(Format(t_("%d damage"), num));
+	};
+	
+	menuStability.butArchimede <<= THISBACK(OnArchimede);
+	menuStability.butArchimede.Tip(t_("Let the body fall to rest"));	
+	
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
 	menuTab.Add(menuMove.SizePos(), 	t_("Move")).Disable();
-	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();	
+	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
+	menuTab.Add(menuStability.SizePos(),t_("Stability")).Disable();
 	menuTab.Add(menuEdit.SizePos(), 	t_("Edit"));
-		
+	
+	
 	mainViewData.Init();		// Un-comment this to view video controls
 	//splitterVideo.Vert(mainView.SizePos(), videoCtrl.SizePos());
 	//splitterVideo.SetPositions(8500, 9900).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(20);
@@ -469,7 +611,7 @@ void MainBody::Init() {
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
 		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-		bool plot = true, move = false, convertProcess = true;
+		bool plot = true, move = false, convertProcess = true, stability = false;
 		if (Bem().surfs.IsEmpty()) 
 			plot = convertProcess = false;
 		else if (mainTab.IsAt(splitterAll)) 
@@ -478,7 +620,9 @@ void MainBody::Init() {
 			plot = false;
 			move = true;
 			mainStiffness.Load(Bem().surfs, ids);
-		} else 
+		} else if (mainTab.IsAt(mainGZ)) 
+			stability = true;
+		else 
 			plot = false;
 		
 		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
@@ -487,7 +631,11 @@ void MainBody::Init() {
 		tabMenuMove.Enable(convertProcess);
 		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
 		tabMenuProcess.Enable(convertProcess);
-		if (plot) {
+		TabCtrl::Item& tabMenuStability = menuTab.GetItem(menuTab.Find(menuStability));
+		tabMenuStability.Enable(convertProcess);
+		if (stability)
+			menuTab.Set(menuStability);
+		else if (plot) {
 			tabMenuPlot.Text(t_("Plot"));
 			menuTab.Set(menuPlot);
 		} else {
@@ -500,16 +648,20 @@ void MainBody::Init() {
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));
 			tabMenuMove.Text(t_("Move"));
+			tabMenuStability.Text(t_("Stability"));
 		} else {
 			tabMenuProcess.Text("");
 			tabMenuMove.Text("");
+			tabMenuStability.Text("");
 		}
 	};
 	mainTab.WhenSet();
 	
 	menuTab.WhenSet = [&] {
-	LOGTAB(menuTab);
-	
+		LOGTAB(menuTab);
+		
+		if (menuTab.IsAt(menuStability))
+			mainTab.Set(mainGZ);
 	};
 	menuTab.WhenSet();
 	
@@ -525,6 +677,8 @@ void MainBody::OnMenuOpenArraySel() {
 	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
 	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT) && Bem().surfs[id].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[id].IsSymmetricY();
+	
+	dialogDamage.SelectId(id);
 }
 
 void MainBody::OnMenuProcessArraySel() {
@@ -552,11 +706,6 @@ void MainBody::OnMenuMoveArraySel() {
 	int id = ArrayModel_IdBody(listLoaded);
 	if (id < 0)
 		return;
-	
-	Body &msh = Bem().surfs[id];
-	menuMove.x_0 <<= msh.dt.c0.x;
-	menuMove.y_0 <<= msh.dt.c0.y;
-	menuMove.z_0 <<= msh.dt.c0.z;	
 }
 
 void MainBody::OnMenuAdvancedArraySel() {
@@ -597,6 +746,8 @@ void MainBody::InitSerialize(bool ret) {
 		menuPlot.showCr = true;
 	if (!ret || IsNull(menuPlot.showLines)) 
 		menuPlot.showLines = true;
+	if (!ret || IsNull(menuPlot.showPoints)) 
+		menuPlot.showPoints = true;
 	if (!ret || IsNull(menuPlot.showSel)) 
 		menuPlot.showSel = true;	
 	if (!ret || IsNull(menuPlot.lineThickness)) 
@@ -704,14 +855,16 @@ bool MainBody::OnLoad() {
 		for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
 			Body &msh = Bem().surfs[id];
 			
-			if (!msh.dt.mesh.IsEmpty() && ~menuMove.opZArchimede) {
+			if (!msh.dt.mesh.IsEmpty() && ~menuMove.opZArchimede && msh.GetMass_all() > 0) {
 				double dz = 0.1;
-				Surface under;
-				if (msh.dt.mesh.TranslateArchimede(msh.GetMass(), Bem().rho, dz, under)) {
-					msh.dt.cg.Translate(0, 0, dz);
-					videoCtrl.AddReg(Point3D(0, 0, dz));
-				} else
-					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
+				if (msh.GetMass_all() == 0)
+					throw Exc(t_("Set mass before fitting buoyancy"));
+				if (!msh.TranslateArchimede(Bem().rho, dz)) 
+					throw Exc(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
+				
+				msh.AfterLoad(Bem().rho, Bem().g, false, false, true);
+				
+				videoCtrl.AddReg(Point3D(0, 0, dz));
 				
 				Ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
 			} else
@@ -809,19 +962,14 @@ void MainBody::OnReset() {
 		Body &msh = Bem().surfs[id];
 		msh.Reset(Bem().rho, Bem().g);
 
-	 	mainStiffness.Load(Bem().surfs, ids);
+	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
-		
-		//menuMove.pos_x <<= data.mesh.GetPos().x;
-		//menuMove.pos_y <<= data.mesh.GetPos().y;
-		//menuMove.pos_z <<= data.mesh.GetPos().z;
-		//menuMove.ang_x <<= data.mesh.GetAngle().x;
-		//menuMove.ang_y <<= data.mesh.GetAngle().y;
-		//menuMove.ang_z <<= data.mesh.GetAngle().z;
+
 		menuProcess.x_g <<= msh.dt.cg.x; 
 		menuProcess.y_g <<= msh.dt.cg.y;
 		menuProcess.z_g <<= msh.dt.cg.z;
@@ -905,9 +1053,10 @@ void MainBody::OnScale() {
 				
 		msh.AfterLoad(Bem().rho, Bem().g, NONE, false);
 			
-		mainStiffness.Load(Bem().surfs, ids);
+		/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 			
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -920,16 +1069,6 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 	GuiLock __;
 	
 	try {
-		if (fromMenuProcess) {
-			menuMove.x_0 <<= ~menuProcess.x_0;
-			menuMove.y_0 <<= ~menuProcess.y_0;
-			menuMove.z_0 <<= ~menuProcess.z_0;
-		} else {
-			menuProcess.x_0 <<= ~menuMove.x_0;
-			menuProcess.y_0 <<= ~menuMove.y_0;
-			menuProcess.z_0 <<= ~menuMove.z_0;
-		}
-		
 		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
@@ -963,6 +1102,8 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 		double a_y = ~menuMove.a_y;
 		double a_z = ~menuMove.a_z;
 
+		msh.SetMass(mass);
+
 		if (action == NONE && (IsNull(mass) || IsNull(x_g) || IsNull(y_g) || IsNull(z_g))) {
 			BEM::PrintError(t_("Please fill CG data"));
 			return;
@@ -983,33 +1124,42 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 		
 		WaitCursor wait;
 
+		if (~menuMove.opZArchimede) 
+			if (msh.GetMass_all() == 0)
+				throw Exc(t_("Set mass before fitting buoyancy"));
+				
 		if (action == MOVE) {
-			msh.dt.cg.Translate(t_x, t_y, t_z);
-			msh.dt.mesh.Translate(t_x, t_y, t_z);
+			msh.Translate(t_x, t_y, t_z);
+			
 			videoCtrl.AddReg(Point3D(t_x, t_y, t_z));
 			
-			Ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
+			if (~menuMove.opZArchimede) {
+				double dz = 0;
+				if (!msh.TranslateArchimede(Bem().rho, dz))
+					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
+				else {
+					videoCtrl.AddReg(Point3D(0, 0, dz));
+					Ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z + dz));
+				}
+			} else
+				Ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
 			
 		} else if (action == ROTATE) {
-			msh.dt.cg.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
-			msh.dt.mesh.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
+			msh.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
+			
 			videoCtrl.AddReg(Point3D(a_x, a_y, a_z), Point3D(x_0, y_0, z_0));
 			
 			if (~menuMove.opZArchimede) {
 				double dz = 0;
-				Surface under;
-				msh.dt.mesh.TranslateArchimede(msh.GetMass(), Bem().rho, dz, under);
-				if (!IsNull(dz)) {
-					msh.dt.cg.Translate(0, 0, dz);
+				if (!msh.TranslateArchimede(Bem().rho, dz))
+					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
+				else {
 					videoCtrl.AddReg(Point3D(0, 0, dz));
-				} else
-					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement"));
-				
-				Ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
+					Ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
+				}
 			} else
 				Ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
 		} else if (action == NONE) {
-			msh.SetMass(mass);
 			msh.dt.cg.Set(x_g, y_g, z_g);
 			msh.dt.c0.Set(x_0, y_0, z_0);
 		}
@@ -1018,24 +1168,24 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 		menuProcess.y_g <<= msh.dt.cg.y;
 		menuProcess.z_g <<= msh.dt.cg.z;
 		
-		//menuMove.pos_x <<= data.mesh.GetPos().x;
-		//menuMove.pos_y <<= data.mesh.GetPos().y;
-		//menuMove.pos_z <<= data.mesh.GetPos().z;
-		//menuMove.ang_x <<= data.mesh.GetAngle().x;
-		//menuMove.ang_y <<= data.mesh.GetAngle().y;
-		//menuMove.ang_z <<= data.mesh.GetAngle().z;
-		
 		msh.AfterLoad(Bem().rho, Bem().g, action == NONE, false, mainStiffness.opMassBuoy);
 		
-	 	mainStiffness.Load(Bem().surfs, ids);
+	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
+}
+
+void MainBody::UpdateLast(int id) {
+	mainStiffness.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded));
+	mainView.CalcEnvelope();
+	mainSummary.Report(Bem().surfs, id);
 }
 
 void MainBody::OnArchimede() {
@@ -1061,37 +1211,82 @@ void MainBody::OnArchimede() {
 		
 		Body &msh = Bem().surfs[id];
 		
-		double dz = 0.5, droll = 0.5, dpitch = 0.5;
-		Surface under;
-		if (!msh.dt.mesh.Archimede(msh.GetMass(), msh.dt.cg, msh.dt.c0, Bem().rho, Bem().g, dz, droll, dpitch, under))
+		if (msh.GetMass_all() == 0)
+			throw Exc(t_("Set mass before fitting buoyancy"));
+		if (IsNull(msh.dt.cg))
+			throw Exc(t_("Set cog before fitting buoyancy"));
+
+		double roll, pitch, dz;
+		if (!msh.Archimede(Bem().rho, Bem().g, roll, pitch, dz))
 			BEM::PrintError(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
 		
 		menuProcess.x_g <<= msh.dt.cg.x;
 		menuProcess.y_g <<= msh.dt.cg.y;
 		menuProcess.z_g <<= msh.dt.cg.z;
-				
-		//menuMove.pos_x <<= data.mesh.GetPos().x;
-		//menuMove.pos_y <<= data.mesh.GetPos().y;
-		//menuMove.pos_z <<= data.mesh.GetPos().z;
-		//const Point3D &ang = data.mesh.GetAngle();
-		//menuMove.ang_x <<= data.mesh.GetAngle().x;
-		//menuMove.ang_y <<= data.mesh.GetAngle().y;
-		//menuMove.ang_z <<= data.mesh.GetAngle().z;
 		
 		msh.AfterLoad(Bem().rho, Bem().g, false, false);
 		
-	 	mainStiffness.Load(Bem().surfs, ids);
+	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
 		
-		Ma().Status(Format(t_("Model rotated %f, %f, 0 deg and translated vertically %f m to comply with displacement"), droll, dpitch, dz));
+		Ma().Status(Format(t_("Model rotated %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), 
+						ToDeg(roll), ToDeg(pitch), msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z, dz));
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}			
 }			
+
+void MainBody::OnPCA() {
+	GuiLock __;
+	
+	try {
+		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			BEM::PrintError(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdBody(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdBody(listLoaded);
+			if (id < 0) {
+				BEM::PrintError(t_("Please select a model to process"));
+				return;
+			}
+		}
+		
+		Body &msh = Bem().surfs[id];
+		
+		double yaw;
+		msh.PCA(yaw);
+		
+		menuProcess.x_g <<= msh.dt.cg.x;
+		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.z_g <<= msh.dt.cg.z;
+		
+		msh.AfterLoad(Bem().rho, Bem().g, false, false);
+		
+	 	/*mainStiffness.Load(Bem().surfs, ids);
+		mainView.CalcEnvelope();
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
+		
+		mainView.gl.Refresh();
+		mainViewData.OnRefresh();
+		
+		Ma().Status(Format(t_("Model rotated in yaw %f deg. around %f, %f, %f to be oriented to main axis"), 
+							ToDeg(yaw), msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z));
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}			
+}
 	
 
 void MainBody::OnAddPanel() {
@@ -1283,10 +1478,12 @@ void MainBody::OnHealing(bool basic) {
 		
 		Bem().HealingBody(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		/*UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1324,10 +1521,11 @@ void MainBody::OnOrientSurface() {
 		
 		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false, false);
 		
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		/*UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1336,6 +1534,7 @@ void MainBody::OnOrientSurface() {
 	}	
 	mainView.gl.Enable();
 }
+
 
 void MainBody::OnImage(int axis) {
 	GuiLock __;
@@ -1366,9 +1565,10 @@ void MainBody::OnImage(int axis) {
 	
 		msh.AfterLoad(Bem().rho, Bem().g, false, false);
 		
-	 	mainStiffness.Load(Bem().surfs, ids);
+	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1393,6 +1593,7 @@ void MainBody::OnRemoveSelected(bool all) {
 			int id = ArrayModel_IdBody(listLoaded, r);
 			Bem().RemoveBody(id);
 			listLoaded.Remove(r);
+			dialogDamage.RemoveId(id);
 			selected = true;
 		}
 	}	// Only one available => directly selected
@@ -1400,6 +1601,7 @@ void MainBody::OnRemoveSelected(bool all) {
 		int id = ArrayModel_IdBody(listLoaded, 0);
 		Bem().RemoveBody(id);
 		listLoaded.Remove(0);
+		dialogDamage.RemoveId(id);
 		selected = true;		
 	}	
 	if (!selected) {
@@ -1411,7 +1613,7 @@ void MainBody::OnRemoveSelected(bool all) {
 	mainStiffness.Load(Bem().surfs, ids);
 	mainViewData.ReLoad(mainView);
 	
-	mainGZ.Clear(false);
+	mainGZ.ClearX(false);
 	
 	After();
 }
@@ -1443,6 +1645,7 @@ void MainBody::OnJoin() {
 				if (idDest != id) {
 					Bem().JoinBody(idDest, id);
 					RemoveRow(r);
+					dialogDamage.RemoveId(r);
 					//selected = true;
 				}
 			}
@@ -1462,6 +1665,7 @@ void MainBody::OnJoin() {
 void MainBody::AddRow(const Body &msh) {
 	ArrayModel_Add(listLoaded, msh.GetBodyStr(), msh.dt.name, msh.dt.fileName, msh.dt.GetId(),
 					optionsPlot, [&] {mainView.gl.Refresh();});
+	dialogDamage.AddId(msh.dt.GetId(), msh.dt.name, msh.dt.fileName);
 }
 		
 void MainBody::RemoveRow(int row) {
@@ -1564,6 +1768,8 @@ void MainBody::UpdateButtons() {
 	menuProcess.butWaterFill.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butWaterPlane.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butHull.Enable(numsel == 1 || numrow == 1);
+	
+	menuMove.opZArchimede.WhenAction();
 }
 
 void MainBody::After() {
@@ -1597,6 +1803,7 @@ void MainBody::Jsonize(JsonIO &json) {
 		menuPlot.showCb = Null;
 		menuPlot.showCr = Null;
 		menuPlot.showLines = Null;
+		menuPlot.showPoints = Null;
 		menuPlot.showSel = Null;
 		menuOpen.optBodyType = Null;
 		menuOpen.opClean = false;
@@ -1622,6 +1829,7 @@ void MainBody::Jsonize(JsonIO &json) {
 		("menuPlot_showCr", menuPlot.showCr)
 		("menuPlot_showSel", menuPlot.showSel)
 		("menuPlot_showLines", menuPlot.showLines)
+		("menuPlot_showPoints", menuPlot.showPoints)
 		("menuPlot_showUnderwater", menuPlot.showUnderwater)
 		("menuPlot_showWaterLevel", menuPlot.showWaterLevel)
 		("menuPlot_backColor", menuPlot.backColor)
@@ -1768,7 +1976,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 														FDS(msh.dt.mesh.env.maxZ, 10, false)));
 
 	//Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
-	Force6D fcb = msh.dt.under.GetHydrostaticForceCB(msh.dt.c0, msh.dt.cb, Bem().rho, Bem().g);	
+	Force6D fcb = Surface::GetHydrostaticForceCB(msh.dt.c0, msh.dt.cb, msh.dt.under.volume, Bem().rho, Bem().g);	
 	
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));
 	
@@ -1908,11 +2116,11 @@ void MainView::OnPaint() {
 			if (~GetMenuPlot().showMultiPan)
 				gl.PaintSegments(msh.dt.mesh.segTo3panel, Black());
 			
-			if (~GetMenuPlot().showCb) {
+			if (~GetMenuPlot().showCb && !IsNull(msh.dt.cb)) {
 				gl.PaintDoubleAxis(msh.dt.cb, len, LtBlue());
 				gl.PaintCube(msh.dt.cb, len/10, LtBlue());
 			}
-			if (~GetMenuPlot().showCg) {
+			if (~GetMenuPlot().showCg && !IsNull(msh.dt.cg)) {
 				gl.PaintDoubleAxis(msh.dt.cg, len, Black());
 				gl.PaintCube(msh.dt.cg, len/5, Black());
 			}
@@ -1922,6 +2130,17 @@ void MainView::OnPaint() {
 			}
 			if (~GetMenuPlot().showLines) 
 				gl.PaintLines(msh.dt.mesh.lines, color);
+					
+			if (~GetMenuPlot().showPoints) {
+				for (int i = 0; i < msh.dt.controlPointsA.size(); ++i)
+					gl.PaintCube(msh.dt.controlPointsA[i].p, len/5, msh.dt.controlPointsA[i].p.z > 0 ? Red() : LtBlue());
+				for (int i = 0; i < msh.dt.controlPointsB.size(); ++i)
+					gl.PaintCube(msh.dt.controlPointsB[i].p, len/5, msh.dt.controlPointsB[i].p.z > 0 ? Red() : LtBlue());
+				for (int i = 0; i < msh.dt.controlPointsC.size(); ++i)
+					gl.PaintCube(msh.dt.controlPointsC[i].p, len/5, msh.dt.controlPointsC[i].p.z > 0 ? Red() : LtBlue());
+				for (int i = 0; i < msh.dt.controlLoads.size(); ++i)
+					gl.PaintCube(msh.dt.controlLoads[i].p, len/5, msh.dt.controlLoads[i].p.z > 0 ? LtRed() : LtBlue());
+			}
 			
 			if (paintSelect) {
 				if (~GetMenuPlot().showBody) {
@@ -2046,12 +2265,15 @@ void MainGZ::Init() {
 	splitter.SetPos(7000, 0);
 	
 	scatter.ShowAllMenus().SetSequentialXAll().SetFastViewX();
-	scatter.SetLabelX(t_("Angle [º]"));
+	scatter.SetLabelX(t_("Angle [deg]")).SetLabelY(t_("GZ [m]")).SetLabelY2(t_("Heeling lever [N·m]"));
 	scatter.SetTitle(t_("GZ around Y axis"));
 	scatter.SetLegendFillColor(White());
 	scatter.SetMargin(140, 140, 50, 80);
 	
-	Clear(true);
+	opShowEnvelope 	<< [&]	{OnUpdate();};
+	opShowPOIs 		<< [&]	{OnUpdate();};
+	
+	ClearX();
 	
 	edAngleDelta.WhenAction = [&] {edAngleTo.Enable(!(IsNull(edAngleDelta) || double(~edAngleDelta) == 0));};
 }
@@ -2066,7 +2288,7 @@ void MainGZ::OnUpdate() {
 			return;
 		}
 		
-		Clear(true);
+		ClearX();
 		
 		double angleFrom = ~edAngleFrom;
 		if (IsNull(angleFrom)) {
@@ -2074,11 +2296,11 @@ void MainGZ::OnUpdate() {
 			return;
 		}
 			
-		
 		if (double(~edFrom) > double(~edTo)) {
 			BEM::PrintError(t_("Wrong Y angle range"));
 			return;
 		}
+		
 		double angleTo, angleDelta;
 		if (edAngleTo.IsEnabled()) {
 			angleTo = double(~edAngleTo);
@@ -2095,6 +2317,8 @@ void MainGZ::OnUpdate() {
 			BEM::PrintError(t_("Wrong Z angle range"));
 			return;
 		}
+	
+		
 		Body &msh = Bem().surfs[idOpened];	
 	
 		int numAngle = 1 + int((angleTo - angleFrom)/angleDelta);
@@ -2103,14 +2327,24 @@ void MainGZ::OnUpdate() {
 		
 		datagz.Clear();
 		dataMoment.Clear();
-		
+		datazA.Clear();
+		datazB.Clear();
+		datazC.Clear();
+	
+		moment.Clear();
+	
 		scatter.SetTitle(Format(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), msh.dt.c0.x, msh.dt.c0.y, msh.dt.c0.z));
+		scatter.SetMargin(100, 130, 30, 70);
 		
 		String errors;
 		int iangle = 0;
 		for (double angle = double(~edAngleFrom); angle <= angleTo; angle += angleDelta, iangle++) {
 			UVector<double> &dgz = datagz.Add();
 			UVector<double> &dMoment = dataMoment.Add();
+			UArray<UVector<double>> &zA = datazA.Add();
+			UArray<UVector<double>> &zB = datazB.Add();
+			UArray<UVector<double>> &zC = datazC.Add();
+
 			UVector<double> vol, disp, wett, wplane, draft;
 			UVector<Point3D> cb, cg;
 			
@@ -2118,21 +2352,41 @@ void MainGZ::OnUpdate() {
 				[&](String, int pos)->bool {
 					progress.SetPos(pos + 100*iangle);
 					return !progress.Canceled();
-				}, dangle, dgz, dMoment, vol, disp, wett, wplane, draft, cb, cg, errors);
+				}, dangle, dgz, dMoment, vol, disp, wett, wplane, draft, cb, cg, errors, zA, zB, zC);
 			
 			Upp::Color color = ScatterDraw::GetNewColor(iangle);
+			
+			if (moment.IsEmpty()) {
+				double mom = mm.menuStability.heelingMoment;
+				if (!IsNull(mom) && mom > 0) {
+					for (double a : dangle)
+						moment << mom*cos(ToRad(a));
+					scatter.AddSeries(dangle, moment).NoMark().Legend(t_("Moment"))
+						   .Stroke(3, Cyan()).Dash(LINE_SOLID).SetDataSecondaryY();							
+				}
+			}
 			scatter.AddSeries(dangle, dgz).NoMark().Legend(Format(t_("GZ %.1f"), angle))
-				   .Units(t_("m"), t_("sec")).Stroke(2, color).Dash(LINE_SOLID);	
+				   .Stroke(2, color).Dash(LINE_SOLID);	
 			scatter.AddSeries(dangle, dMoment).NoMark()./*MarkStyle<CircleMarkPlot>().*/MarkWidth(8).MarkColor(color)
-				   .Legend(Format(t_("Healing lever %.1f"), angle))
-				   .Units(t_("N·m"), t_("sec")).NoPlot().SetDataSecondaryY();
-			scatter.ZoomToFit(true, true);
+				   .Legend("").NoPlot().SetDataSecondaryY();
+			if (~opShowPOIs) {
+				for (int j = 0; j < zA.size(); ++j)
+					scatter.AddSeries(dangle, zA[j]).NoMark().Legend(Format(t_("Unpr.%s.z %.1f"), msh.dt.controlPointsA[j].name, angle))
+					   			.Stroke(1, color).Dash(LINE_DASHED);	
+				for (int j = 0; j < zB.size(); ++j)
+					scatter.AddSeries(dangle, zB[j]).NoMark().Legend(Format(t_("WeaT.%s.z %.1f"), msh.dt.controlPointsB[j].name, angle))
+					   			.Stroke(1, color).Dash(LINE_DOTTED);	
+				for (int j = 0; j < zC.size(); ++j)
+					scatter.AddSeries(dangle, zC[j]).NoMark().Legend(Format(t_("WatT.%s.z %.1f"), msh.dt.controlPointsC[j].name, angle))
+					   			.Stroke(1, color).Dash(LINE_DOTTED_FINER);	
+			}
+			scatter.ZoomToFit(true, true);/*
 			double mx = ceil(scatter.GetYMax());
 			double mn = floor(scatter.GetYMin());
 			scatter.SetXYMin(Null, mn);
 			scatter.SetRange(Null, mx-mn);
 			int sz = int((mx-mn)/5);
-			scatter.SetMajorUnits(Null, sz > 0 ? 1 : 0.5);
+			scatter.SetMajorUnits(Null, sz > 0 ? 1 : 0.5);*/
 			
 			for (int i = 0; i < dangle.size(); ++i) {
 				array.AddColumn(Format("%.1f %.1f", angle, dangle[i]), 60);
@@ -2153,6 +2407,12 @@ void MainGZ::OnUpdate() {
 				array.Set(row++, col, FDS(cg[i].x, numdec));
 				array.Set(row++, col, FDS(cg[i].y, numdec));
 				array.Set(row++, col, FDS(cg[i].z, numdec));
+				for (int j = 0; j < zA.size(); ++j)
+					array.Set(row++, col, FDS(zA[j][i], numdec));
+				for (int j = 0; j < zB.size(); ++j)
+					array.Set(row++, col, FDS(zB[j][i], numdec));
+				for (int j = 0; j < zC.size(); ++j)
+					array.Set(row++, col, FDS(zC[j][i], numdec));
 			}
 		}
 		
@@ -2188,18 +2448,11 @@ void MainGZ::OnUpdate() {
 			BEM::PrintError(DeQtfLf("Errors found in mesh:\n" + errors));
 	} catch(Exc e) {
 		BEM::PrintError(DeQtfLf(e));
-		Clear(true);
+		ClearX();
 	}
 }
 
-void MainGZ::Clear(bool force) {
-	if (!force) {
-		MainBody &mm = GetDefinedParent<MainBody>(this);
-		
-		UVector<int> ids = ArrayModel_IdsBody(mm.listLoaded);
-		if (Find(ids, idOpened) >= 0)
-			return;
-	}
+void MainGZ::ClearX(bool all) {
 	scatter.RemoveAllSeries();
 	
 	array.Reset();
@@ -2224,6 +2477,17 @@ void MainGZ::Clear(bool force) {
 	array.Set(row++, 0, t_("Cg_x [m]"));
 	array.Set(row++, 0, t_("Cg_y [m]"));
 	array.Set(row++, 0, t_("Cg_z [m]"));
+	
+	if (idOpened >= 0 && all) {
+		Body &msh = Bem().surfs[idOpened];
+		
+		for (int j = 0; j < msh.dt.controlPointsA.size(); ++j)
+			array.Set(row++, 0, Format(t_("Unpr.%s.z [m]"), msh.dt.controlPointsA[j].name));
+		for (int j = 0; j < msh.dt.controlPointsB.size(); ++j)
+			array.Set(row++, 0, Format(t_("WeaT.%s.z [m]"), msh.dt.controlPointsB[j].name));
+		for (int j = 0; j < msh.dt.controlPointsC.size(); ++j)
+			array.Set(row++, 0, Format(t_("WatT.%s.z [m]"), msh.dt.controlPointsC[j].name));
+	}
 }
 		
 void MainGZ::Jsonize(JsonIO &json) {
@@ -2245,5 +2509,6 @@ void MainGZ::Jsonize(JsonIO &json) {
 		("edAngleDelta", edAngleDelta)
 		("opShowEnvelope", opShowEnvelope)
 		("edTolerance", edTolerance)
+		("opShowPOIs", opShowPOIs)
 	;
 }

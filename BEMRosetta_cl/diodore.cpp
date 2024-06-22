@@ -44,7 +44,7 @@ void Diodore::Load_HDB() {
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	dt.dataFromW = false;
+	//dt.dataFromW = false;
 	dt.dimen = true;
 	
 	dt.Nb = dt.Nf = dt.Nh = Null;

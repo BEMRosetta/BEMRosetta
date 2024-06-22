@@ -49,7 +49,7 @@ void OrcaWave::Load_OWR() {
 	
 	dt.solver = Hydro::ORCAWAVE_OWR;
 	
-	dt.dataFromW = true;
+	//dt.dataFromW = true;
 	dt.dimen = true;
 		
 	dt.x_w = dt.y_w = 0;
@@ -69,8 +69,9 @@ void OrcaWave::Load_OF_YML() {
 	
 	dt.solver = Hydro::ORCAFLEX_YML;
 	
-	dt.dataFromW = true;
-	bool rad_s = true;
+	//dt.dataFromW = true;
+	char dataFrom = 'r';
+	//bool rad_s = true;
 	dt.dimen = true;
 	
 	dt.x_w = dt.y_w = 0;
@@ -79,7 +80,7 @@ void OrcaWave::Load_OF_YML() {
 
 	UArray<Point3D> c0s;	
 
-	auto Origin =[&] (int ib, const UVector<String> &norig) {
+	auto Origin = [&] (int ib, const UVector<String> &norig) {
 		UVector<String> snorig(norig.size());
 		for (int i = 0; i < norig.size(); ++i)
 			snorig[i] = Trim(norig[i]);
@@ -91,7 +92,7 @@ void OrcaWave::Load_OF_YML() {
 			throw Exc(in.Str() + "\n"  + Format(t_("RAOOrigin for body %d (%s, %s, %s) diferent than the previously set (%f, %f, %f)"), 
 							ib, snorig[0], snorig[1], snorig[2], c0s[ib].x, c0s[ib].y, c0s[ib].z));
 	};
-	auto Phase =[&] (const UVector<String> &norig) {
+	auto Phase = [&] (const UVector<String> &norig) {
 		UVector<String> snorig(norig.size());
 		for (int i = 0; i < norig.size(); ++i)
 			snorig[i] = Trim(norig[i]);
@@ -145,21 +146,25 @@ void OrcaWave::Load_OF_YML() {
 				c0s << Null;
 			} else if (fy.FirstIs("WavesReferredToBy") && fy.Index() == 0) {		// Only for the first body
 				String val = fy.GetVal();
-				if (val.Find("frequency") >= 0)
-					dt.dataFromW = true;
-				else if (val.Find("period") >= 0)
-					dt.dataFromW = false;
+				if (val.Find("(rad/s)") >= 0)
+					//dt.dataFromW = true;
+					dataFrom = 'r';
+				else if (val.Find("(s)") >= 0)
+					//dt.dataFromW = false;
+					dataFrom = 's';
+				else if (val.Find("(Hz)") >= 0)
+					dataFrom = 'h';
 				else
 					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));
 				
-				if (val.Find("(rad/s)") >= 0)
+				/*if (val.Find("(rad/s)") >= 0)
 					rad_s = true;
 				else if (val.Find("(Hz)") >= 0)	 
 					rad_s = false;
 				else if (val.Find("(s)") >= 0)	 	
 					;
 				else
-					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));
+					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));*/
 			} else if (fy.FirstIs("SurgePositive")) {	
 				if (fy.GetVal() != "forward")
 					throw Exc(in.Str() + "\n"  + Format(t_("Only SurgePositive: 'forward' is supported. Read '%s'"), fy.GetVal()));
@@ -234,7 +239,8 @@ void OrcaWave::Load_OF_YML() {
 						throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOriginDatumPosition:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
 				} else if (fy.FirstIs("FrequencyDependentAddedMassAndDamping")) {
 					if (fy.FirstIs("AMDPeriodOrFrequency")) {
-						if (fy.GetVal() != "Infinity") {
+						if (((dataFrom == 'r' || dataFrom == 'h') && fy.GetVal() != "Infinity") ||
+							 (dataFrom == 's' && fy.GetVal() != "0")) {
 							if (dt.w.size() != fy.Index() - 1)		// -1 because Infinity is the first
 								throw Exc(in.Str() + "\n" + t_("Failed frequencies count"));			
 							dt.w << ScanDouble(fy.GetVal());
@@ -288,17 +294,10 @@ void OrcaWave::Load_OF_YML() {
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);
 		
-	if (dt.dataFromW) {
-		if (!rad_s) {
-			for (int i = 0; i < dt.w.size(); ++i)
+	if (dataFrom == 'h') {
+		for (int i = 0; i < dt.w.size(); ++i)
 				dt.w[i] *= 2*M_PI;	
-		}
-		/*T.SetCount(w.size());
-		for (int i = 0; i < w.size(); ++i)
-			T[i] = 2*M_PI/w[i];	*/
-	} else {
-		//T = pick(w);
-		//w.SetCount(T.size());
+	} else if (dataFrom == 's'){
 		for (int i = 0; i < dt.w.size(); ++i)
 			dt.w[i] = 2*M_PI/dt.w[i];	
 	}	
@@ -457,12 +456,10 @@ void OrcaWave::Load_OF_YML() {
 								   h1 = mat[row][2],
 								   h2 = mat[row][3];
 								   
-							if (dt.dataFromW) {
-								if (!rad_s) {
-									w1 *= 2*M_PI;
-									w2 *= 2*M_PI;
-								}
-							} else {
+							if (dataFrom == 'h') {
+								w1 *= 2*M_PI;
+								w2 *= 2*M_PI;
+							} else if (dataFrom == 's') {
 								w1 = 2*M_PI/w1;
 								w2 = 2*M_PI/w2;
 							}

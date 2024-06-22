@@ -165,56 +165,55 @@ public:
 		number0 = _number0;
 		
 		CtrlLayout(*this);
+		
+		grid.AddColumn(Format("%s [%s]", param, units)).SetConvert(Single<HeadConvert>()).Edit(edit);
+		grid.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
+		labFrom.SetText(Format("Min [%s]", units));
+		labTo.SetText(Format("Max [%s]", units));
+		labTitle.SetText(title);
 	}
 	void Jsonize(JsonIO &json) {
-		if (json.IsLoading()) {
-			grid.AddColumn(Format("%s [%s]", param, units)).SetConvert(Single<HeadConvert>()).Edit(edit);
-			grid.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
-			labFrom.SetText(Format("Min [%s]", units));
-			labTo.SetText(Format("Max [%s]", units));
-			labTitle.SetText(title);
-		}
 		json
 			("grid", grid)
 		;
-		if (json.IsLoading()) {
-			int num = grid.GetRowCount();
-			if (num == 0) {
-				number <<= number0;
-				from <<= from0;
-				to <<= to0;
-			} else {
-				number <<= num;
-				from <<= grid(0, 0);
-				to <<= grid(num - 1, 0);
-			}
-			grid.WhenPaste = grid.WhenEnter = grid.WhenCursor = grid.WhenRemoveRow = [&]() {
-				UVector<double> data;
-				for (int i = 0; i < grid.GetCount(); ++i)
-					data << grid(i, 0);
-				if (data.IsEmpty())
-					return;
-				Sort(data);
-				number <<= data.GetCount();
-				from <<= First(data);
-				to <<= Last(data);
-			};
-			
-			from.WhenAction = to.WhenAction = number.WhenAction = [&]() {
-				if (IsNull(number) || number < 1 || IsNull(from) || from < 0 || IsNull(to) || to <= from)
-					return;
-				double delta;
-				if (number == 1)
-					delta = to - from;
-				else
-					delta = (to - from)/(number - 1);
-				grid.Clear();
-				for (int i = 0; i < number; ++i)
-					grid.Add(from + i*delta);	
-			};
-			if (grid.IsEmpty())
-				from.WhenAction();
+	}
+	void InitAfterSerialize() {
+		int num = grid.GetRowCount();
+		if (num == 0) {
+			number <<= number0;
+			from <<= from0;
+			to <<= to0;
+		} else {
+			number <<= num;
+			from <<= grid(0, 0);
+			to <<= grid(num - 1, 0);
 		}
+		grid.WhenPaste = grid.WhenEnter = grid.WhenCursor = grid.WhenRemoveRow = [&]() {
+			UVector<double> data;
+			for (int i = 0; i < grid.GetCount(); ++i)
+				data << grid(i, 0);
+			if (data.IsEmpty())
+				return;
+			Sort(data);
+			number <<= data.GetCount();
+			from <<= First(data);
+			to <<= Last(data);
+		};
+		
+		from.WhenAction = to.WhenAction = number.WhenAction = [&]() {
+			if (IsNull(number) || number < 1 || IsNull(from) || from < 0 || IsNull(to) || to <= from)
+				return;
+			double delta;
+			if (number == 1)
+				delta = to - from;
+			else
+				delta = (to - from)/(number - 1);
+			grid.Clear();
+			for (int i = 0; i < number; ++i)
+				grid.Add(from + i*delta);	
+		};
+		if (grid.IsEmpty())
+			from.WhenAction();
 	}
 	
 private:

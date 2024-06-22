@@ -104,7 +104,7 @@ void Main::Init() {
 	
 	if (parameter.IsEmpty() || parameter == "mesh") {
 		mainBody.Init();			LOG("Init Body");
-		tab.Add(mainBody.SizePos(), t_("Body Mesh"));
+		tab.Add(mainBody.SizePos(), t_("Vessel Mesh"));
 	}
 	if (parameter.IsEmpty()) {
 		mainSolver.Init();		LOG("Init Nemoh");
@@ -364,7 +364,7 @@ void OnPanic(const char *title, const char *text) {
 
 GUI_APP_MAIN {
 #if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
-	//GetCrashHandler().Enable();
+	GetCrashHandler().Enable();
 #endif
 	InstallPanicMessageBox(OnPanic);
 	

@@ -14,24 +14,24 @@ using namespace Eigen;
 void BTSWind::LoadBTSHeader(FileInBinary &file, VectorXf &Vslope, VectorXf &Voffset) {
 	turbSimFormat = file.Read<int16>();  
 
-    nz    = file.Read<int32>();      // the number of grid points vertically, INT(4)
-    ny    = file.Read<int32>();      // the number of grid points laterally, INT(4)
-    ntwr  = file.Read<int32>();      // the number of tower points, INT(4)
-    nt    = file.Read<int32>();      // the number of time steps, INT(4)
+    nz    = file.Read<int32>();      // the number of grid points vertically, 	INT(4)
+    ny    = file.Read<int32>();      // the number of grid points laterally, 	INT(4)
+    ntwr  = file.Read<int32>();      // the number of tower points, 			INT(4)
+    nt    = file.Read<int32>();      // the number of time steps, 				INT(4)
 
-    dz    = file.Read<float>();      // grid spacing in vertical direction, REAL(4), in m
-    dy    = file.Read<float>();      // grid spacing in lateral direction, REAL(4), in m
-    dt    = file.Read<float>();      // grid spacing in delta time, REAL(4), in m/s
-    mffws = file.Read<float>();      // the mean wind speed at hub height, REAL(4), in m/s
-    zHub  = file.Read<float>();      // height of the hub, REAL(4), in m
-    zGrid = file.Read<float>();      // height of the bottom of the grid, REAL(4), in m
+    dz    = file.Read<float>();      // grid spacing in vertical direction, 	REAL(4), in m
+    dy    = file.Read<float>();      // grid spacing in lateral direction, 		REAL(4), in m
+    dt    = file.Read<float>();      // grid spacing in delta time, 			REAL(4), in m/s
+    mffws = file.Read<float>();      // the mean wind speed at hub height, 		REAL(4), in m/s
+    zHub  = file.Read<float>();      // height of the hub, 						REAL(4), in m
+    zGrid = file.Read<float>();      // height of the bottom of the grid, 		REAL(4), in m
 
-    Vslope(0)  = file.Read<float>(); // the U-component slope for scaling, REAL(4)
-    Voffset(0) = file.Read<float>(); // the U-component offset for scaling, REAL(4)
-    Vslope(1)  = file.Read<float>(); // the V-component slope for scaling, REAL(4)
-    Voffset(1) = file.Read<float>(); // the V-component offset for scaling, REAL(4)
-    Vslope(2)  = file.Read<float>(); // the W-component slope for scaling, REAL(4)
-    Voffset(2) = file.Read<float>(); // the W-component offset for scaling, REAL(4)
+    Vslope(0)  = file.Read<float>(); // the U-component slope for scaling, 		REAL(4)
+    Voffset(0) = file.Read<float>(); // the U-component offset for scaling, 	REAL(4)
+    Vslope(1)  = file.Read<float>(); // the V-component slope for scaling, 		REAL(4)
+    Voffset(1) = file.Read<float>(); // the V-component offset for scaling, 	REAL(4)
+    Vslope(2)  = file.Read<float>(); // the W-component slope for scaling, 		REAL(4)
+    Voffset(2) = file.Read<float>(); // the W-component offset for scaling, 	REAL(4)
         
     int nchar = file.Read<int32>();  // the number of characters in the description string, max 200, INT(4)
     StringBuffer str(nchar);
@@ -56,6 +56,7 @@ String BTSWind::LoadBTS(String fileName) {
 			file.Seek(pos);
 			ret = LoadBTSBody<int16>(file, Vslope, Voffset);			// If not float, try with int16
 		}
+		nffc = 3;
 		return ret;	
 	} catch(Exc e) {
 		return e;
@@ -65,17 +66,17 @@ String BTSWind::LoadBTS(String fileName) {
 void BTSWind::SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Voffset, int fmtSz) const {
     file.Write(int16(turbSimFormat));  
 
-    file.Write(int32(nz));      // the number of grid points vertically, INT(4)
-    file.Write(int32(ny));      // the number of grid points laterally, INT(4)
-    file.Write(int32(ntwr));    // the number of tower points, INT(4)
-    file.Write(int32(nt));      // the number of time steps, INT(4)
+    file.Write(int32(nz));      // the number of grid points vertically, 	INT(4)
+    file.Write(int32(ny));      // the number of grid points laterally, 	INT(4)
+    file.Write(int32(ntwr));    // the number of tower points, 				INT(4)
+    file.Write(int32(nt));      // the number of time steps, 				INT(4)
 
-    file.Write(float(dz));      // grid spacing in vertical direction, REAL(4), in m
-    file.Write(float(dy));      // grid spacing in lateral direction, REAL(4), in m
-    file.Write(float(dt));      // grid spacing in delta time, REAL(4), in m/s
-    file.Write(float(mffws));   // the mean wind speed at hub height, REAL(4), in m/s
-    file.Write(float(zHub));    // height of the hub, REAL(4), in m
-    file.Write(float(zGrid));   // height of the bottom of the grid, REAL(4), in m
+    file.Write(float(dz));      // grid spacing in vertical direction, 		REAL(4), in m
+    file.Write(float(dy));      // grid spacing in lateral direction, 		REAL(4), in m
+    file.Write(float(dt));      // grid spacing in delta time, 				REAL(4), in m/s
+    file.Write(float(mffws));   // the mean wind speed at hub height, 		REAL(4), in m/s
+    file.Write(float(zHub));    // height of the hub, 						REAL(4), in m
+    file.Write(float(zGrid));   // height of the bottom of the grid, 		REAL(4), in m
 
     VectorXd mn = VectorXd::Constant(3, std::numeric_limits<double>::max());
     VectorXd mx = VectorXd::Constant(3, std::numeric_limits<double>::lowest());
@@ -108,12 +109,12 @@ void BTSWind::SaveBTSHeader(FileOutBinary &file, VectorXf &Vslope, VectorXf &Vof
         Vslope(k) = float(rangeType/(mx(k) - mn(k)));
        	Voffset(k) = float(maxType - mx(k)*Vslope(k));
     }	
-    file.Write(float(Vslope(0)));  	// the U-component slope for scaling, REAL(4)
-    file.Write(float(Voffset(0))); 	// the U-component offset for scaling, REAL(4)
-    file.Write(float(Vslope(1))); 	// the U-component offset for scaling, REAL(4)
-    file.Write(float(Voffset(1)));  // the U-component slope for scaling, REAL(4)
-    file.Write(float(Vslope(2)));  	// the U-component slope for scaling, REAL(4)
-    file.Write(float(Voffset(2))); 	// the U-component offset for scaling, REAL(4)
+    file.Write(float(Vslope(0)));  	// the U-component slope for scaling, 	REAL(4)
+    file.Write(float(Voffset(0))); 	// the U-component offset for scaling, 	REAL(4)
+    file.Write(float(Vslope(1))); 	// the U-component offset for scaling, 	REAL(4)
+    file.Write(float(Voffset(1)));  // the U-component slope for scaling, 	REAL(4)
+    file.Write(float(Vslope(2)));  	// the U-component slope for scaling, 	REAL(4)
+    file.Write(float(Voffset(2))); 	// the U-component offset for scaling, 	REAL(4)
     
     int nchar = description.GetLength();
     file.Write(int32(nchar));

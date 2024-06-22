@@ -61,7 +61,7 @@ void Wind::SetYZ() {
 	zPos = zPos.array()*dz + zGrid;
 }
 
-String Wind::Save(String fileSave, String ext) {
+String Wind::Save(String fileSave, String ext) const {
 	const UVector<String> extStr = {".bts"};
 	UVector<String> extS;
 	
@@ -90,7 +90,7 @@ String Wind::Save(String fileSave, String ext) {
 			file = fileSave + eext;
 		
 		if (eext == ".bts") {
-			if(IsEmpty(ret = static_cast<BTSWind&>(*this).SaveBTS(file)))
+			if(IsEmpty(ret = static_cast<const BTSWind&>(*this).SaveBTS(file)))
 				return "";	
 		} else
 			return Format(t_("'%s' format not supported for writing"), fileSave);
@@ -114,10 +114,9 @@ const char *Wind::GetWindTypeStr() const {
 void Wind::Report(Grid &grid) const {
 	grid.SetCol(0).SetRow(0);
 	grid.SetNumHeaderRows(1);
-	grid.ColWidths({20, 6, 20});
-	grid.AddRow({"Parameter", "Unit", GetFileName(fileName)});
-	
-	grid.AddRow({"File name", 			"", 	fileName});	
+	grid.ColWidths({20, 6, 50});
+	grid.AddRow({"Parameter", 			"Unit", "Data"});	
+	grid.AddRow({"File name", 			"", 	GetFileName(fileName)});	
 	grid.AddRow({"Description", 		"", 	description});
 	grid.AddRow({"Duration", 			"s", 	Grid::Nvl(nt, Format("%.1f", nt*dt))});
 	grid.AddRow({"Time step", 			"s", 	Grid::Nvl(dt, Format("%.6f", dt))});
@@ -137,11 +136,23 @@ void Wind::GetPos(double z, double y, int &idz, int &idy) {
 	idy = FindClosest(yPos, y);
 }
 
-VectorXd Wind::Get(int idz, int idy) {
+VectorXd Wind::GetNorm(int idz, int idy) {
 	VectorXd ret(nt);
 	
 	for (int it = 0; it < nt; ++it)
 		ret(it) = Norm(velocity(it, 0, idy, idz), velocity(it, 1, idy, idz), velocity(it, 2, idy, idz));
+	
+	return ret;
+}
+
+VectorXd Wind::Get(int ic, int idz, int idy) {
+	if (ic >= velocity.dimension(1))
+		throw Exc(Format(t_("Component %d is not available"), ic+1));
+	
+	VectorXd ret(nt);
+	
+	for (int it = 0; it < nt; ++it)
+		ret(it) = velocity(it, ic, idy, idz);
 	
 	return ret;
 }
@@ -157,7 +168,62 @@ VectorXd Wind::GetTime() {
 int Wind::GetTimeId(double time) {
 	return int(time/dt);
 }
+
+void Wind::SetTI(int uvw, float ti, float &tiOld, float offset) {
+	if (uvw >= nffc)
+		throw Exc(Format(t_("Component %d is higher than available components %d"), uvw, nffc));
 	
+	ASSERT(nt   == velocity.dimension(0));
+	ASSERT(nffc == velocity.dimension(1));
+	ASSERT(ny   == velocity.dimension(2));
+	ASSERT(nz   == velocity.dimension(3));
+	
+	for (int it = 0; it < nt; ++it) {
+	    for (int iz = 0; iz < nz; ++iz)
+	        for (int iy = 0; iy < ny; ++iy) 
+	            velocity(it,uvw,iy,iz) = (velocity(it,uvw,iy,iz) - offset)*(ti/tiOld) + offset;
+	}
+	tiOld = ti;       
+}
+
+void Wind::SetPowerLaw(float pl, float zh) {
+	ASSERT(nt   == velocity.dimension(0));
+	ASSERT(nffc == velocity.dimension(1));
+	ASSERT(ny   == velocity.dimension(2));
+	ASSERT(nz   == velocity.dimension(3));
+	ASSERT(nz	== zPos.size());
+	
+	ASSERT(nffc > 0);	// At least 1 component, u
+	int ic = 0;			// Only for u component
+	
+	for (int it = 0; it < nt; ++it) 
+	    for (int iz = 0; iz < nz; ++iz)
+	        for (int iy = 0; iy < ny; ++iy) 
+	            velocity(it,ic,iy,iz) += mffws * (pow(zPos[iz]/zh, pl) - 1);
+}
+
+void Wind::SetFactor(float fu, float fv, float fw) {
+	SetFactor(0, fu);
+	SetFactor(1, fv);
+	SetFactor(2, fw);
+}
+
+void Wind::SetFactor(int ic, float f) {
+	if (ic >= nffc)
+		return;
+	
+	ASSERT(nt   == velocity.dimension(0));
+	ASSERT(nffc == velocity.dimension(1));
+	ASSERT(ny   == velocity.dimension(2));
+	ASSERT(nz   == velocity.dimension(3));
+	ASSERT(nz	== zPos.size());	
+	
+	for (int it = 0; it < nt; ++it) 
+	    for (int iz = 0; iz < nz; ++iz)
+	        for (int iy = 0; iy < ny; ++iy) 
+	            velocity(it,ic,iy,iz) *= f;
+}
+
 void ArrayWind::Report(Grid &grid) {
 	for (const Wind	&w : *this)
 		w.Report(grid);

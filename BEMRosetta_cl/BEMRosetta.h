@@ -24,7 +24,7 @@ String GetSystemInfo();
 bool PrintStatus(String s, int d);
 
 
-class Body : public DeepCopyOption<Body> {
+class Body : public Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
@@ -76,6 +76,13 @@ public:
 	void Move(const double *pos, double rho, double g, bool setnewzero);
 	void Move(const float *pos, double rho, double g, bool setnewzero);
 		
+	void Translate(double dx, double dy, double dz);
+	void Rotate(double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
+	bool TranslateArchimede(double rho, double &dz);
+	bool TranslateArchimede(double rho, double &dz, Surface &under);
+	bool Archimede(double rho, double g, double &roll, double &pitch, double &dz);
+	void PCA(double &yaw);
+		
 	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy = true);
 	void Reset(double rho, double g);
 
@@ -84,7 +91,8 @@ public:
 		Function <bool(String, int pos)> Status, 
 		UVector<double> &dataangle, UVector<double> &dataGZ, UVector<double> &dataMoment,
 		UVector<double> &vol, UVector<double> &disp, UVector<double> &wett, UVector<double> &wplane,
-		UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg, String &error);
+		UVector<double> &draft, UVector<Point3D> &dcb, UVector<Point3D> &dcg, String &error,
+		UArray<UVector<double>> &zA, UArray<UVector<double>> &zB, UArray<UVector<double>> &zC);
 	void GZ(double from, double to, double delta, double angleCalc, double rho, double g,
 		double tolerance, UVector<double> &dataangle, UVector<double> &datagz, String &error);
 
@@ -111,7 +119,29 @@ public:
 	}
 	
 	void SetMass(double m);
-	double GetMass() const		{return dt.M.size() > 0 ? dt.M(0, 0) : 0;}
+	double GetMass() const	{
+		return dt.M.size() > 0 ? dt.M(0, 0) : 0;
+	}
+	double GetMass_all() const	{
+		double mass = GetMass();
+		for (const auto &d : dt.controlLoads)
+			mass += d.mass;
+				
+		return mass;
+	}
+	Point3D GetCG_all() const {
+		double mass = GetMass();
+		Point3D cg = dt.cg*mass;
+		for (const auto &d : dt.controlLoads) {
+			cg.x += d.mass*d.p.x;
+			cg.y += d.mass*d.p.y;
+			cg.z += d.mass*d.p.z;
+			mass += d.mass;
+		}
+		cg /= mass;	
+
+		return cg;		
+	}
 	
 	void Report(double rho) const;
 	
@@ -154,6 +184,21 @@ public:
 		void	 SetCode(MESH_FMT _code)	{code = _code;}
 		MESH_FMT GetCode() const			{return code;}
 			
+		struct ControlPoint {
+			String name;
+			Point3D p;
+		};
+		struct ControlLoad {
+			String name;
+			Point3D p;
+			double mass;
+		};
+		
+		UArray<ControlPoint> controlPointsA, controlPointsA0;
+		UArray<ControlPoint> controlPointsB, controlPointsB0;
+		UArray<ControlPoint> controlPointsC, controlPointsC0;
+		UArray<ControlLoad> controlLoads, controlLoads0;
+		
 	private:
 		MESH_FMT code = UNKNOWN;
 		int id = -1;
@@ -166,7 +211,7 @@ public:
 	static int idCount;
 };
 
-class Hydro : public DeepCopyOption<Hydro> {
+class Hydro : public Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
@@ -310,9 +355,11 @@ public:
 	typedef UArray<UArray<MatrixXcd>> Forces;  	// [Nb][Nh](Nf, 6) 	
   	typedef Forces RAO;
     
-    struct StateSpace : public DeepCopyOption<StateSpace> {
+    struct StateSpace : public Moveable<StateSpace> {
         StateSpace() {}
-        StateSpace(const StateSpace &s, int) {
+        StateSpace(const StateSpace &s, int) {Copy(s);}
+       	StateSpace(const StateSpace &s) 	 {Copy(s);}
+        void Copy(const StateSpace &s) {
         	TFS = clone(s.TFS);
 			A_ss = clone(s.A_ss);
 			B_ss = clone(s.B_ss);
@@ -705,7 +752,7 @@ public:
 		int mdtype = 0;							// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field		
 	    					
 	    UVector<double> w;		 				// [Nf]             Wave frequencies
-	    int dataFromW = Null;
+	    //int dataFromW = Null;
 	    		
 	   	UArray<Body> msh;						// [Nb]
 	   	
@@ -1722,10 +1769,12 @@ bool OUTB(int id, T total) {
 	return false;
 }
 
-class Mooring : public DeepCopyOption<Mooring> {
+class Mooring : public Moveable<Mooring> {
 public:
 	Mooring() {}
-	Mooring(const Mooring &mooring, int) {
+	Mooring(const Mooring &mooring, int) {Copy(mooring);}
+	Mooring(const Mooring &mooring) 	 {Copy(mooring);}
+	void Copy(const Mooring &mooring) {
 		lineTypes = clone(mooring.lineTypes);
 		lineProperties = clone(mooring.lineProperties);
 		connections = clone(mooring.connections);
@@ -1738,6 +1787,15 @@ public:
 	void Jsonize(JsonIO &json);
 	
 	struct LineType : Moveable<LineType> {
+		LineType()	{}
+		LineType(const LineType &d, int) {Copy(d);}
+		LineType(const LineType &d)		 {Copy(d);}
+		void Copy(const LineType &d) {
+			name = clone(d.name);
+			mass = d.mass;
+			diameter = d.diameter;
+			bl = d.bl;
+		}
 		String name;
 		double mass, diameter, bl;
 		void Jsonize(JsonIO &json);
@@ -1746,9 +1804,11 @@ public:
 	
 	LineType &GetLineType(String name);
 	
-	struct LineProperty : MoveableAndDeepCopyOption<LineProperty> {
+	struct LineProperty : Moveable<LineProperty> {
 		LineProperty() {}
-		LineProperty(const LineProperty &line, int) {
+		LineProperty(const LineProperty &line, int) {Copy(line);}
+		LineProperty(const LineProperty &line) 		{Copy(line);}
+		void Copy(const LineProperty &line) {
 			name = line.name;
 			nameType = line.nameType;
 			length = line.length;
@@ -1805,15 +1865,25 @@ UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String 
 class Wind {
 public:
 	String Load(String fileName, String ext = "");
-	String Save(String fileName, String ext = "");
+	String Save(String fileName, String ext = "") const;
 	
 	const char *GetWindTypeStr() const;
-	const String &GetDescription() const {return description;}
-	void SetHubHeight(double h)			 {zHub  = float(h);}
-	void SetGridHeight(double h)		 {zGrid = float(h);	SetYZ();}
+	const String &GetDescription() const	{return description;}
+	void SetHubHeight(float h)			 	{zHub  = h;}
+	void SetGridHeight(float h)		 		{zGrid = h;	SetYZ();}
+	
+	void SetTI_u(float ti)					{SetTI(0, ti, TI_U, mffws);}
+	void SetTI_v(float ti)					{SetTI(1, ti, TI_V, 0);}
+	void SetTI_w(float ti)					{SetTI(2, ti, TI_W, 0);}
+	void SetPowerLaw(float pl, float zh);
+	void SetPeriodic(bool v)				{turbSimFormat = v ? 8 : 7;}
+	void SetFactor(float fu, float fv, float fw);
+	void SetFactor(int ic, float f);
 	
 	void GetPos(double z, double y, int &idz, int &idy);
-	VectorXd Get(int idz, int idy);
+	VectorXd GetNorm(int idz, int idy);
+	VectorXd Get(int ic, int idz, int idy);
+	
 	VectorXd GetTime();
 	int GetTimeId(double time);
 	
@@ -1824,11 +1894,12 @@ protected:
 	String description;
 	Tensor<double, 4> velocity;		// 4-D array: time, velocity component (1=U, 2=V, 3=W), iy, iz 
 	Tensor<double, 3> twrVelocity;	// 3-D array: time, velocity component, iz
-	VectorXd yPos;						// horizontal locations y(iy)
-	VectorXd zPos;						// vertical locations z(iz)
-	//VectorXd zTwr;					// vertical locations of tower points zTwr(iz)
+	VectorXd yPos;					// horizontal locations y(iy)
+	VectorXd zPos;					// vertical locations z(iz)
+	//VectorXd zTwr;				// vertical locations of tower points zTwr(iz)
 	int nz = Null, ny = Null;		// number of points in the vertical and horizontal directions of the grid
 	float dz = Null, dy = Null, dt = Null;		// distance between two points in the vertical [m], horizontal [m], and time [s] dimensions
+	int nffc = Null;				// Number of velocity components (normally 3)
 	float zHub = Null;				// hub height [m]
 	float zGrid = Null;				// vertical location of bottom of grid [m above ground level]
 	float mffws = Null;				// mean hub-height wind speed
@@ -1843,11 +1914,14 @@ protected:
 										// 7 = General Kaimal
 										// 8 = Mann model
     
-    int turbSimFormat = 7;				// TurbSim format identifier (should = 7 or 8 if periodic), INT(2)
+    int turbSimFormat = 7;			// TurbSim format identifier (should = 7 or 8 if periodic), INT(2)
     
-    bool LHR = true;		// Default value for Bladed
+    float TI_U=0, TI_V=0, TI_W=0;	// Turbulence intensity
+    
+    bool LHR = true;				// Default value for Bladed
     
     void SetYZ();
+    void SetTI(int uvw, float ti, float &tiOld, float offset);
 };
 
 class BTSWind : public Wind {

@@ -65,7 +65,7 @@ bool Aqwa::Load_AH1() {
 	dt.head.Clear();
 	dt.w.Clear();
 	dt.rho = dt.g = dt.h = Null;
-	dt.dataFromW = true;
+	//dt.dataFromW = true;
 	
 	String line;
 	LineParser f(in);
@@ -222,7 +222,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	dt.w.Clear();
 	//dt.T.Clear();
 	dt.rho = dt.g = dt.h = Null;
-	dt.dataFromW = true;
+	//dt.dataFromW = true;
 	
 	String line; 
 	LineParser f(in);

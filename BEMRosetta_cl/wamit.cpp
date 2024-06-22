@@ -185,7 +185,7 @@ bool Wamit::Load_out(String fileName) {
 				
 	dt.Nf = 0;
 	dt.Nh = 0;
-	dt.dataFromW = false;
+	//dt.dataFromW = false;
 	
 	int pos;
 	int ibody = -1;
@@ -1347,34 +1347,35 @@ bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int ip
 		else
 			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
 	}
-	if (IsNull(dt.dataFromW))
-		dt.dataFromW = dataFromW;
+	//if (IsNull(dt.dataFromW))
+	//	dt.dataFromW = dataFromW;
 	return dataFromW;
 }
 
 void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin) {	
+	bool dataFromW;
 	if (IsNull(iperin)) 
-		dt.dataFromW = false;
+		/*dt.*/dataFromW = false;
 	else {
 		if (iperin == 1) 
-			dt.dataFromW = false;
+			/*dt.*/dataFromW = false;
 		else if (iperin == 2) 
-			dt.dataFromW = true;
+			/*dt.*/dataFromW = true;
 		else if (iperin == 3) {
-			dt.dataFromW = true;
+			/*dt.*/dataFromW = true;
 			double g = Nvl2(dt.g, Bem().g);
 			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : T)
 				ww = w_iperout3(ww, g, len);
 		} else {
-			dt.dataFromW = true;
+			/*dt.*/dataFromW = true;
 			double g = Nvl2(dt.g, Bem().g);
 			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : T) 
 				ww = w_iperout4(ww, g, len, dt.h);
 		}
 	}
-	if (dt.dataFromW) {
+	if (/*dt.*/dataFromW) {
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			w[ifr] = T[ifr];
 			T[ifr] = 2*M_PI/w[ifr];
@@ -1966,14 +1967,14 @@ void Wamit::Save_1(String fileName, bool force_T) const {
 	VectorXd data;
 	if (force_T)
 		data = TT;
-	else if (dt.dataFromW) 
+	else //if (dt.dataFromW) 
 		data = Get_w();
-	else
-		data = TT;
+	//else
+	//	data = TT;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
-	if ((growing && (dt.dataFromW && !force_T)) || (!growing && !(dt.dataFromW && !force_T))) {
+	if ((growing && (/*dt.dataFromW && */!force_T)) || (!growing && !(/*dt.dataFromW &&*/ !force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;
@@ -2004,13 +2005,13 @@ void Wamit::Save_3(String fileName, bool force_T) const {
 
 	VectorXd data;
 	int ifr0, ifrEnd, ifrDelta;
-	if (dt.dataFromW && !force_T) 
+	if (/*dt.dataFromW &&*/ !force_T) 
 		data = Get_w();
 	else
 		data = Get_T();
 	//UVector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && (dt.dataFromW && !force_T)) || ((data[1] < data[0]) && !(dt.dataFromW && !force_T))) {
+	if (((data[1] > data[0]) && (/*dt.dataFromW &&*/ !force_T)) || ((data[1] < data[0]) && !(/*dt.dataFromW && */!force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;
@@ -2048,13 +2049,13 @@ void Wamit::Save_4(String fileName, bool force_T) const {
 		
 	VectorXd data;
 	int ifr0, ifrEnd, ifrDelta;
-	if (dt.dataFromW && !force_T) 
+	if (/*dt.dataFromW &&*/ !force_T) 
 		data = Get_w();
 	else
 		data = Get_T();
 	//UVector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && (dt.dataFromW && !force_T)) || ((data[1] < data[0]) && !(dt.dataFromW && !force_T))) {
+	if (((data[1] > data[0]) && (/*dt.dataFromW &&*/ !force_T)) || ((data[1] < data[0]) && !(/*dt.dataFromW &&*/ !force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;
@@ -2293,14 +2294,14 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 	VectorXd data;
 	if (force_T)
 		data = TT;
-	else if (dt.dataFromW) 
+	else //if (dt.dataFromW) 
 		data = Get_w();
-	else
-		data = TT;
+	//else
+	//	data = TT;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
-	if ((growing && (dt.dataFromW && !force_T)) || (!growing && !(dt.dataFromW && !force_T))) {
+	if ((growing && (/*dt.dataFromW &&*/ !force_T)) || (!growing && !(/*dt.dataFromW &&*/ !force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;

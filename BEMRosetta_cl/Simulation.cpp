@@ -56,7 +56,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 			
 			stiff = clone(mesh.dt.C);
 			cb = mesh.dt.under.GetCentreOfBuoyancy();
-			Force6D forceb0 = mesh.dt.under.GetHydrostaticForceCB(mesh.dt.c0, cb, rho, g);
+			Force6D forceb0 = Surface::GetHydrostaticForceCB(mesh.dt.c0, cb, mesh.dt.under.volume, rho, g);
 			forceb = forceb0.ToVector();		
 		}
 	}
@@ -165,7 +165,7 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 	Force6D f6;
 	
 	if (calculation == Simulation::NONE)
-		f6.Zero();
+		f6.SetZero();
 	else if (calculation == Simulation::STATIC)
 		f6 = CalcStiff_Static(pos);
 	else if (calculation == Simulation::DYN_STATIC)
@@ -251,8 +251,7 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 }
 	
 Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, const float *acc) {
-	Force6D f6;
-	f6.Zero();
+	Force6D f6 = Force6D::Zero();
 	
 	Affine3d aff;
 	GetTransform(aff, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], mesh.dt.c0.x, mesh.dt.c0.y, mesh.dt.c0.z);

@@ -99,7 +99,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 	
 		float dx;
 		
-		int nffc  = file.Read<int16>();  	           // number of components
+		nffc  = file.Read<int16>();  	           // number of components
 	
 		if (nffc != -99) {  // AN OLD-STYLE AERODYN WIND FILE
 		    dz    = file.Read<int16>();               // delta z in mm
@@ -107,7 +107,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		    dx    = file.Read<int16>();               // delta x (actually t in this case) in mm
 		    nt    = file.Read<int16>();               // half number of time steps
 		    mffws = file.Read<int16>();               // 10 times mean FF wind speed, should be equal to MWS
-		              file.SeekCur(5*sizeof(int16));  // unnecessary lines
+		            file.SeekCur(5*sizeof(int16));    // unnecessary lines
 		    nz    = file.Read<int16>();               // 1000 times number of points in vertical direction, max 32
 		    ny    = file.Read<int16>();               // 1000 times the number of points in horizontal direction, max 32
 		    file.SeekCur(3*(-nffc-1)*sizeof(int16)); 
@@ -131,7 +131,7 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 									// 6 = (not supported)
 									// 7 = General Kaimal
 									// 8 = Mann model
-			float TI_U, TI_V, TI_W;
+			//float TI_U, TI_V, TI_W;
 			
 	    	if (fc == 4) {
 		        nffc     = file.Read<int32>();        	// number of components (should be 3)
@@ -151,12 +151,17 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		        TI_V  = 1;
 		        TI_W  = 1;
 		        
+		        //TI_U  = 10.354;
+		        //TI_V  = 0.8 * TI_U;
+		        //TI_W  = 0.6 * TI_U;
+		        
 				if (fc == 8  //MANN model 
 		         || fc == 7) { // General Kaimal      
 		            /*int HeadRec =*/ file.Read<int32>();	// Number of bytes in the header (Nheader)
 		            nffc    = file.Read<int32>();  		// Number of turbulence components (1, 2 or 3)
 		        }
 		    } 
+		    
 		    dz    = file.Read<float>();  // Grid point spacing z in m 
 		    dy    = file.Read<float>();  // Grid point spacing y in m
 		    dx    = file.Read<float>();  // Grid point spacing x in m           
@@ -167,20 +172,26 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 		   				 2*sizeof(int32));	// unused variables (for BLADED) [unused integer, random seed]
 		    nz    = file.Read<int32>();  // number of points in vertical direction
 		    ny    = file.Read<int32>();  // number of points in horizontal direction
-		    if (nffc == 3)
-		    	file.SeekCur(2*nffc*sizeof(int32));     // other length scales: unused variables (for BLADED)                
 		    
+		    UVector<int> otherScales(2*nffc);
+		    if (nffc == 3) {
+		    	//file.SeekCur(2*nffc*sizeof(int32));     // other length scales: unused variables (for BLADED)                
+		    	for (int i = 0; i < nffc; ++i) {
+		    		otherScales[2*i]   = file.Read<int32>();
+		    		otherScales[2*i+1] = file.Read<int32>();
+		    	}
+		    }
 		    if (fc == 7) {
-		        /*float CohDec =*/ file.Read<float>();		// Coherence decay constant
-		        /*float CohLc  =*/ file.Read<float>();		// Coherence scale parameter in m
+		        /*float CohDec = */file.Read<float>();		// Coherence decay constant
+		        /*float CohLc  = */file.Read<float>();		// Coherence scale parameter in m
 		    } else if (fc == 8) {        
 		        /*float gamma  =*/ file.Read<float>();      // MANN model shear parameter
 		        /*float Scale  =*/ file.Read<float>();      // MANN model scale length
 				file.SeekCur(4*sizeof(float) +
-						  3*sizeof(int32) +
-						  2*sizeof(float) +
-						  3*sizeof(int32) +
-						  2*sizeof(float));
+						  	 3*sizeof(int32) +
+						  	 2*sizeof(float) +
+						  	 3*sizeof(int32) +
+						  	 2*sizeof(float));
 		    }
 	    	varValues[3] = TI_U;
 	    	varValues[4] = TI_V;
@@ -202,14 +213,21 @@ String WNDWind::LoadWND(String fileName, double _zHub) {
 			else 
 				varValues[0] = float(_zHub);
 			varValues[1] = 1;		//clockwise rotation
+		} else {
+			if (varValues[3] > 0)
+				TI_U = varValues[3];
+			if (varValues[4] > 0)
+				TI_V = varValues[4];
+			if (varValues[5] > 0)
+				TI_W = varValues[5];
 		}
 		
-		zHub = varValues[0];
-		zGrid   = zHub - ZGoffset - dz*(nz-1)/2;  //this is the bottom of the grid
+		zHub  = varValues[0];
+		zGrid = zHub - ZGoffset - dz*(nz-1)/2;  //this is the bottom of the grid
 		
 		//READ THE GRID DATA FROM THE BINARY FILE
 	
-		int nv       = nffc*ny*nz;               // the size of one time step
+		int nv        = nffc*ny*nz;               // the size of one time step
 		double factor = 0.00001*mffws;
 		UVector<double> Scale = {factor*varValues[3], factor*varValues[4], factor*varValues[5]};
 		UVector<double> Offset = {mffws, 0, 0};

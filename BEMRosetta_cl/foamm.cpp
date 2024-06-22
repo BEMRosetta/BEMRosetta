@@ -56,7 +56,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		
 		dt.w.SetCount(dt.Nf);
 		//dt.T.SetCount(dt.Nf);
-		dt.dataFromW = true;
+		//dt.dataFromW = true;
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			dt.w[ifr] = w[ifr];
 			//dt.T[ifr] = 2*M_PI/w[ifr];

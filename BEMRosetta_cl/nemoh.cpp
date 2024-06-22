@@ -167,7 +167,7 @@ bool Nemoh::Load_Cal(String fileName) {
 	
 	if (dt.solver == UNKNOWN)
 		dt.solver = Hydro::NEMOH;
-	dt.dataFromW = true;
+	//dt.dataFromW = true;
 	
 	String line;
 	LineParser f(in);

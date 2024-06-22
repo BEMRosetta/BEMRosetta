@@ -30,10 +30,7 @@ String GetSystemInfo() {
 	return systemInfo;
 }
 
-BEM &Bem() {
-	static BEM bem;
-	return bem;
-}
+BEM &Bem() {static BEM bem;		return bem;}
 
 UVector<String> GetCommandLineParams(String str) {
 	UVector<String> ret;
@@ -190,14 +187,21 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
 	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
 	Cout() << "\n" << t_("-setid <id>                     # Set the id of the default BEM model");
-	Cout() << "\n" << t_("-params <param> <value>         # Set parameters:");
-	Cout() << "\n" << t_("               hubheight        # Hub heignt [m]       ");
-	Cout() << "\n" << t_("               gridheight       # Grid base height [m] ");
+	Cout() << "\n" << t_("-params <param> <value/s>       # Set parameters:");
+	Cout() << "\n" << t_("        hubheight               # Hub heignt [m]       ");
+	Cout() << "\n" << t_("        gridheight              # Grid base height [m] ");
+	Cout() << "\n" << t_("        TI <u><v><w>            # Turbulence inten. [\%] (If only u, IEC61400-1 Part 1 is applied: v = 0.8u and w = 0.5u)");
+	Cout() << "\n" << t_("        scale <u><v><w>         # Factor to scale velocities []");
+	Cout() << "\n" << t_("        powerLaw <pl><zh>       # Power law [] at hubheight [m]");
+	Cout() << "\n" << t_("        periodic                # BTS periodic [true/false]");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
-	Cout() << "\n" << t_("              time              # Time series [s]");
-	Cout() << "\n" << t_("              vel <y> <z> <time># Wind speed norm [m/s] at y, z [m] in <time>");
-	Cout() << "\n" << t_("              vel <y> <z> data  # Wind speed norm [m/s] at y, z [m] data series");
-	Cout() << "\n" << t_("              vel <y> <z> avg   # Wind speed norm [m/s] at y, z [m] average");
+	Cout() << "\n" << t_("        time                    # Time series [s]");
+	Cout() << "\n" << t_("        vel <y> <z> <time>      # Wind speed norm [m/s] at y, z [m] in <time>");
+	Cout() << "\n" << t_("        vel <y> <z> data        # Wind speed norm [m/s] at y, z [m] data series");
+	Cout() << "\n" << t_("        vel <y> <z> avg         # Wind speed norm [m/s] at y, z [m] average");
+	Cout() << "\n" << t_("        velComp <comp> <y> <z> <time> # Wind speed [m/s] for 0 (u), 1 (v), ... at y, z [m] in <time>");
+	Cout() << "\n" << t_("        velComp <comp> <y> <z> data   # Wind speed [m/s] for 0 (u), 1 (v), ... at y, z [m] data series");
+	Cout() << "\n" << t_("        velComp <comp> <y> <z> avg    # Wind speed [m/s] for 0 (u), 1 (v), ... at y, z [m] average");
 	
 	Cout() << "\n" << t_("-r  -report                     # Output loaded model main data");
 	Cout() << "\n" << t_("-ra -reportall                  # Output all models main data");
@@ -322,11 +326,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 				else if (param == "-h" || param == "-help") {
 					ShowHelp(bem);
 					break;
-				} else if (param == "-pause") 
+				} else if (param == "-pause") {
+					BEM::Print(S("\n") + t_("Press Enter to continue..."));
 					ReadStdIn();
-				else if (param == "-exit") 
+				} else if (param == "-exit") {
+					BEM::Print(S("\n") + t_("Exit by command"));
 					break;
-				else if (param == "-echo") {
+				} else if (param == "-echo") {
 					CheckIfAvailableArg(command, ++ic, "-echo");
 					
 					Cout() << Replace(command[ic], "\\n", "\n");
@@ -431,7 +437,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
 							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("Report: No file loaded"));
+								throw Exc(t_("No file loaded"));
 							bem.hydros[bemid].Report();
 						} else if (param == "-cl" || param == "-clear") {
 							bem.hydros.Clear();
@@ -483,7 +489,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									throw Exc(Format(t_("Wrong 2nd heading '%s'"), command[ic]));
 								headParams[1] = command[ic];
 							}
-						} else if (param == "-delhead") {	
+						} else if (param == "-delhead") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));	
 							Hydro &hd = bem.hydros[bemid];
 							UVector<int> ids;
 							double head;
@@ -494,6 +502,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 							hd.DeleteHeadings(ids);	
 						} else if (param == "-delheadid") {	
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hd = bem.hydros[bemid];
 							UVector<int> ids;
 							int id;
@@ -505,6 +515,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 							hd.DeleteHeadings(ids);	
 						} else if (param == "-delbuthead") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hd = bem.hydros[bemid];	
 							UVector<int> ids;
 							double head;
@@ -518,7 +530,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								if (Find(ids, i) < 0)
 									idsDel << i;
 							hd.DeleteHeadings(idsDel);	
-						} else if (param == "-delbutheadid") {	
+						} else if (param == "-delbutheadid") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));	
 							Hydro &hd = bem.hydros[bemid];
 							UVector<int> ids;
 							int id;
@@ -533,6 +547,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									idsDel << i;
 							hd.DeleteHeadings(idsDel);	
 						} else if (param == "-delqtfhead") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hd = bem.hydros[bemid];
 							UVector<int> ids;
 							double head1, head2;
@@ -547,6 +563,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 							hd.DeleteHeadingsQTF(ids);
 						} else if (param == "-delqtfheadid") {	
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hd = bem.hydros[bemid];
 							UVector<int> ids;
 							int id;
@@ -558,6 +576,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 							hd.DeleteHeadingsQTF(ids);	
 						} else if (param == "-delbutqtfhead") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hd = bem.hydros[bemid];
 							UVector<int> ids;
 							double head1, head2;
@@ -575,6 +595,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									idsDel << i;
 							hd.DeleteHeadingsQTF(idsDel);
 						} else if (param == "-delbutqtfheadid") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hd = bem.hydros[bemid];	
 							UVector<int> ids;
 							int id;
@@ -612,6 +634,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
 							}
 						} else if (param == "-p" || param == "-print") {
+							if (bem.hydros.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Hydro &hy = bem.hydros[bemid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
@@ -749,7 +773,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
 							if (bem.surfs.IsEmpty()) 
-								throw Exc(t_("Report: No file loaded"));
+								throw Exc(t_("No file loaded"));
 							bem.surfs[meshid].Report(bem.rho);
 						} else if (param == "-cl" || param == "-clear") {
 							bem.surfs.Clear();
@@ -792,6 +816,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							Body::SaveAs(bem.surfs[meshid], file, meshFmt, Body::ALL, bem.rho, bem.g, symX, symY);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), meshid, file));
 						} else if (param == "-t" || param == "-translate") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "x");
 							double x = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "y");
@@ -804,6 +830,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							msh.AfterLoad(bem.rho, bem.g, false, false);	
 							BEM::Print("\n" + Format(t_("Body id %d translated %f, %f, %f"), meshid, x, y, z)); 
 						} else if (param == "-rot" || param == "-rotate") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "ax");
 							double ax = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "ay");
@@ -822,6 +850,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							msh.AfterLoad(bem.rho, bem.g, false, false);	
 							BEM::Print("\n" + Format(t_("Body id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));
 						} else if (param == "-cg") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "cgx");
 							double x = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cgy");
@@ -835,6 +865,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							msh.AfterLoad(bem.rho, bem.g, true, false);
 							BEM::Print("\n" + Format(t_("CG is %f, %f, %f"), x, y, z));
 						} else if (param == "-c0") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "c0x");
 							double x = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "c0y");
@@ -848,6 +880,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							msh.AfterLoad(bem.rho, bem.g, true, false);
 							BEM::Print("\n" + Format(t_("CG is %f, %f, %f"), x, y, z));
 						} else if (param == "-mass") { 
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "mass");
 							double mass = ScanDouble(command[ic]);
 							Body &msh = bem.surfs[meshid];
@@ -855,17 +889,25 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							msh.AfterLoad(bem.rho, bem.g, true, false);
 							BEM::Print("\n" + Format(t_("Mass is %f"), mass));
 						} else if (param == "-reset") {	
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							bem.surfs[meshid].Reset(bem.rho, bem.g);
 							BEM::Print("\n" + Format(t_("Body id %d position is reset"), meshid));
 						} else if (param == "-getwaterplane") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							bem.AddWaterSurface(meshid, 'e');
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d waterplane is got"), meshid));
 						} else if (param == "-gethull") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							bem.AddWaterSurface(meshid, 'r');
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d hull is got"), meshid));
 						} else if (param == "-p" || param == "-print") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
 							Body &msh = bem.surfs[meshid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
@@ -1076,19 +1118,97 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								++ic;
 								if (ToLower(command[ic]) == "hubheight") {
-									CheckIfAvailableArg(command, ++ic, "-p hubheight");
+									if (wind.IsEmpty()) 
+										throw Exc(t_("No file loaded"));
+									CheckIfAvailableArg(command, ++ic, "hubheight");
 									double h = ScanDouble(command[ic]);
 									if (IsNull(h))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetHubHeight(h);
 									BEM::Print("\n" + Format(t_("Hub height is %f"), h));	
 								} else if (ToLower(command[ic]) == "gridheight") {
-									CheckIfAvailableArg(command, ++ic, "-p gridheight");
+									if (wind.IsEmpty()) 
+										throw Exc(t_("No file loaded"));
+									CheckIfAvailableArg(command, ++ic, "gridheight");
 									double h = ScanDouble(command[ic]);
 									if (IsNull(h))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetGridHeight(h);
 									BEM::Print("\n" + Format(t_("Grid height is %f"), h));	
+								} else if (ToLower(command[ic]) == "ti") {	
+									if (wind.IsEmpty()) 
+										throw Exc(t_("No file loaded"));
+									CheckIfAvailableArg(command, ++ic, "TI u");
+									double u = ScanDouble(command[ic]);
+									if (IsNull(u))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									wind[windid].SetTI_u(u);
+									double v = 0.8*u;
+									double w = 0.5*u;
+									if (ic+1 < command.size()) {
+										double num = ScanDouble(command[ic+1]);
+										if (!IsNull(num)) {
+											ic++;
+											v = num;
+											if (ic+1 < command.size()) {		
+												num = ScanDouble(command[ic+1]);	
+												if (!IsNull(num)) {
+													ic++;
+													w = num;	
+												}
+											}
+										}
+									}
+									wind[windid].SetTI_v(v);
+									wind[windid].SetTI_w(w);
+									BEM::Print("\n" + Format(t_("Turbulence intensity is u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
+								} else if (ToLower(command[ic]) == "scale") {	
+									if (wind.IsEmpty()) 
+										throw Exc(t_("No file loaded"));
+									CheckIfAvailableArg(command, ++ic, "scale u");
+									double u = ScanDouble(command[ic]);
+									if (IsNull(u))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									double v = 1;
+									double w = 1;
+									if (ic+1 < command.size()) {
+										double num = ScanDouble(command[ic+1]);
+										if (!IsNull(num)) {
+											ic++;
+											v = num;
+											if (ic+1 < command.size()) {		
+												num = ScanDouble(command[ic+1]);	
+												if (!IsNull(num)) {
+													ic++;
+													w = num;	
+												}
+											}
+										}
+									}
+									wind[windid].SetFactor(u, v, w);
+									BEM::Print("\n" + Format(t_("Velocities scaled by u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
+								} else if (ToLower(command[ic]) == "powerlaw") {	
+									if (wind.IsEmpty()) 
+										throw Exc(t_("No file loaded"));	
+									CheckIfAvailableArg(command, ++ic, "powerLaw");
+									double pl = ScanDouble(command[ic]);
+									if (IsNull(pl))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "hub height for power law");
+									double zh = ScanDouble(command[ic]);
+									if (IsNull(zh))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									wind[windid].SetPowerLaw(pl, zh);
+									BEM::Print("\n" + Format(t_("Power law is %f set at height %f m"), pl, zh));
+								} else if (ToLower(command[ic]) == "periodic") {
+									if (wind.IsEmpty()) 
+										throw Exc(t_("No file loaded"));	
+									CheckIfAvailableArg(command, ++ic, "-p periodic");
+									String s = ToLower(command[ic]);
+									if (s != "true" && s != "false")
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									wind[windid].SetPeriodic(s == "true" ? true : false);
+									BEM::Print("\n" + Format(t_("Set periodic %s"), s));	
 								} else 
 									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
 							}
@@ -1147,7 +1267,38 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									int idz, idy;
 									w.GetPos(zpos, ypos, idz, idy);
 									Eigen::VectorXd v;
-									v = w.Get(idz, idy);
+									v = w.GetNorm(idz, idy);
+									
+									CheckIfAvailableArg(command, ++ic, "<time>/avg/data");
+									String what = command[ic];
+									if (what == "avg")
+										lastPrint << v.mean();
+									else if (what == "data") {
+										for (int i = 0; i < v.size(); ++i) 
+											lastPrint << v(i) << " ";
+									} else {
+										double time = ScanDouble(what);
+										if (IsNull(time))
+											throw Exc(t_("Parameter time not found in vel"));
+										int id = w.GetTimeId(time);
+										lastPrint << v(id);
+									}
+									BEM::Print(lastPrint);
+								} else if (pparam == "velcomp") {
+									BEM::Print("\n");
+									BEM::Print(t_("Velocity component:") + S(" "));
+									lastPrint.Clear();
+									
+									CheckIfAvailableArg(command, ++ic, "Component");
+									int icomp = ScanDouble(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Position Y");
+									double ypos = ScanDouble(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Position Z");
+									double zpos = ScanDouble(command[ic]);
+									int idz, idy;
+									w.GetPos(zpos, ypos, idz, idy);
+									Eigen::VectorXd v;
+									v = w.Get(icomp, idz, idy);
 									
 									CheckIfAvailableArg(command, ++ic, "<time>/avg/data");
 									String what = command[ic];
@@ -1173,7 +1324,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									for (int i = 0; i < t.size(); ++i) 
 										lastPrint << t(i) << " ";
 									BEM::Print(lastPrint);
-								}
+								} else
+									throw Exc(Format(t_("Unknown parameter '%s'"), pparam));
 							}
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));

@@ -600,7 +600,7 @@ public:
 	typedef MainGZ CLASSNAME;
 
 	void Init();
-	void Clear(bool force);
+	void ClearX(bool all = true);
 	
 	void OnUpdate();
 	void Jsonize(JsonIO &json);
@@ -608,7 +608,10 @@ public:
 private:
 	UArray<UVector<double>> datagz, dataMoment;
 	UVector<double> dangle, mingz;
-	int idOpened = Null;
+	UArray<UArray<UVector<double>>> datazA, datazB, datazC;
+	int idOpened = -1;
+	
+	UVector<double> moment;
 	
 	ScatterCtrl scatter;
 	ArrayCtrl array;
@@ -807,6 +810,127 @@ private:
 	void OpCG_v_WhenAction(bool action);
 	void OpCG_s_WhenAction(bool action);
 	void OpMass_WhenAction(bool action);
+	
+	void CopyToBody(char c);
+};
+
+class DropCtrlDialogPointsABC : public DropCtrlDialog {
+public:
+	typedef DropCtrlDialogPointsABC CLASSNAME;
+	
+	GridCtrl grid;
+	
+	DropCtrlDialogPointsABC() {
+		SetRect(Size(300, 200));
+		
+		Add(grid.SizePos());
+			
+		grid.Appending().Removing().Editing().Sorting(false).Navigating();
+		grid.SetToolBar();
+		grid.AddColumn(t_("Name"), 20).Edit(name);
+		grid.AddColumn(t_("x"), 15).Edit(x);
+		grid.AddColumn(t_("y"), 15).Edit(y);
+		grid.AddColumn(t_("z"), 15).Edit(z);
+	}
+	void FromGrid(UArray<Body::Data::ControlPoint> &cpa) const {
+		cpa.Clear();
+		for (int r = 0; r < grid.GetRowCount(); ++r) {
+			Body::Data::ControlPoint &cp = cpa.Add();		
+			cp.name = grid.Get(r, 0);
+			cp.p.x 	= grid.Get(r, 1);
+			cp.p.y 	= grid.Get(r, 2);
+			cp.p.z 	= grid.Get(r, 3);
+		};
+	}
+	void ToGrid(const UArray<Body::Data::ControlPoint> &cpa) {
+		grid.Clear();
+		for (int r = 0; r < cpa.size(); ++r) {
+			const Body::Data::ControlPoint &cp = cpa[r];		
+			grid.Add(cp.name, cp.p.x, cp.p.y, cp.p.z);
+		};
+	}
+private:	
+	EditString name;
+	EditDouble x, y, z;
+};
+
+class DropCtrlDialogLoads : public DropCtrlDialog {
+public:
+	typedef DropCtrlDialogLoads CLASSNAME;
+	
+	GridCtrl grid;
+	
+	DropCtrlDialogLoads() {
+		SetRect(Size(400, 200));
+		
+		Add(grid.SizePos());
+			
+		grid.Appending().Removing().Editing().Sorting(false).Navigating();
+		grid.SetToolBar();
+		grid.AddColumn(t_("Name"), 20).Edit(name);
+		grid.AddColumn(t_("x"), 15).Edit(x);
+		grid.AddColumn(t_("y"), 15).Edit(y);
+		grid.AddColumn(t_("z"), 15).Edit(z);
+		grid.AddColumn(t_("Mass [kg]"), 20).Edit(mass);
+	}
+	void FromGrid(UArray<Body::Data::ControlLoad> &cpa) const {
+		cpa.Clear();
+		for (int r = 0; r < grid.GetRowCount(); ++r) {
+			Body::Data::ControlLoad &cp = cpa.Add();		
+			cp.name = grid.Get(r, 0);
+			cp.p.x 	= grid.Get(r, 1);
+			cp.p.y 	= grid.Get(r, 2);
+			cp.p.z 	= grid.Get(r, 3);
+			cp.mass = grid.Get(r, 4);
+		};
+	}
+	void ToGrid(const UArray<Body::Data::ControlLoad> &cpa) {
+		grid.Clear();
+		for (int r = 0; r < cpa.size(); ++r) {
+			const Body::Data::ControlLoad &cp = cpa[r];		
+			grid.Add(cp.name, cp.p.x, cp.p.y, cp.p.z, cp.mass);
+		};
+	}
+private:	
+	EditString name;
+	EditDouble x, y, z, mass;
+};
+
+class DropCtrlDialogDamage : public DropCtrlDialog {
+public:
+	typedef DropCtrlDialogDamage CLASSNAME;
+	
+	GridCtrl grid;
+	
+	DropCtrlDialogDamage() {
+		SetRect(Size(300, 200));
+		
+		Add(grid.SizePos());
+			
+		grid.Editing().Sorting(false);
+		grid.AddColumn(t_(""), 0);					// The id
+		grid.AddColumn(t_(""), 10).Option();
+		grid.AddColumn(t_("Name"), 50);
+		grid.AddColumn(t_("File name"), 50);
+	}
+	void RemoveId(int id) {
+		for (int r = 0; r < grid.GetRowCount(); ++r)
+			if (grid.Get(r, 0) == id) {
+				grid.Remove(r);
+				return;
+			}
+	}
+	void AddId(int id, String name, String fileName) {
+		grid.Add(id, false, name, fileName);
+	}
+	void SelectId(int id) {
+		for (int r = 0; r < grid.GetRowCount(); ++r) {
+			if (grid.Get(r, 0) == id) 
+				grid.SetRowHeight(r+1, 0);		// The header counts! (r+1)
+			else
+				grid.SetRowHeight(r+1, StdFont().GetHeight());
+		}
+	}
 };
 
 class MainBody : public MainBEMBody {
@@ -829,8 +953,9 @@ public:
 	void OnConvertBody();
 	void OnUpdate(Action action, bool fromMenuProcess);
 	void OnScale();
-	void OnTranslateArchimede(bool fromMenuProcess);
+	//void OnTranslateArchimede(bool fromMenuProcess);
 	void OnArchimede();
+	void OnPCA();
 	void OnUpdateMass();
 	void OnHealing(bool basic);
 	void OnOrientSurface();
@@ -862,9 +987,16 @@ public:
 	WithMenuBodyMove<StaticRect> menuMove;
 	WithMenuBodyEdit<StaticRect> menuEdit;
 	
+	WithMenuBodyStability<StaticRect> menuStability;
+	DropCtrlDialogPointsABC dialogPointsA, dialogPointsB, dialogPointsC;
+	DropCtrlDialogLoads dialogLoads;
+	DropCtrlDialogDamage dialogDamage;
+	
 	bool GetShowBody()			{return menuPlot.showBody;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
 
+	void UpdateLast(int id);
+	
 private:	
 	MainView mainView;
 	VideoCtrl videoCtrl;
@@ -884,6 +1016,8 @@ private:
 	
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
+	
+	FormatConvert convExponential;
 	
 	String saveFolder;
 	int dropExportId;

@@ -259,7 +259,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 				
 				hy.dt.Nb = Nb;
 				
-				hy.dt.dataFromW = true;
+				//hy.dt.dataFromW = true;
 				
 				hy.dt.w = clone(_w);
 

@@ -551,7 +551,7 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
 	    
     //T = clone(hyd.T);
     w = clone(hyd.w);
-    dataFromW = hyd.dataFromW;
+    //dataFromW = hyd.dataFromW;
     //Vo = clone(hyd.Vo); 
     
     msh = clone(hyd.msh);
@@ -732,7 +732,7 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
     dt.len = 1;
     dt.dimen = true;
     
-    dt.dataFromW = dt.qtfdataFromW = true;
+    /*dt.dataFromW = */dt.qtfdataFromW = true;
     
     dt.qtftype = h0.dt.qtftype;
     dt.mdtype = h0.dt.mdtype;
@@ -2328,7 +2328,7 @@ void Hydro::Jsonize(JsonIO &json) {
 		("rao", dt.rao)
 		("sts", dt.sts)
 		("w", dt.w)
-		("dataFromW", dt.dataFromW)
+		//("dataFromW", dt.dataFromW)
 		("stsProcessor", dt.stsProcessor)
 		("dimenSTS", dt.dimenSTS)
 		("description", dt.description)

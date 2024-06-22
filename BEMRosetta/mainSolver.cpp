@@ -153,6 +153,9 @@ void MainSolver::InitBeforeSerialize() {
 }
 
 void MainSolver::InitAfterSerialize(bool ret) {
+	gen.listFreq.InitAfterSerialize();
+	gen.listHead.InitAfterSerialize();
+	
 	if (!ret || IsNull(save.opIncludeBin)) 
 		save.opIncludeBin = true;
 	if (!ret || IsNull(save.numSplit)) 	
