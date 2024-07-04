@@ -548,7 +548,7 @@ public:
 	void OnOp(int id);
 	void Clear();
 	bool Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim);
-	void Load(UArray<Body> &surfs, const UVector<int> &ids);
+	bool Load(UArray<Body> &surfs, const UVector<int> &ids);
 	
 	void Jsonize(JsonIO &json) {
 		bool opdigits = ~opDigits;
@@ -583,8 +583,9 @@ public:
 private:
 	void AddPrepare(int &row0, int &icol0, String name, int icase, String bodyName, int ibody, int idc, int ncol);
 	void Add(const Body &mesh, int icase, bool button);
-	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hy, int idc, bool ndim);
+	void Add(String name, int icase, String bodyName, int ibody, const Hydro &hy, int idc);
 	void PrintData();
+	void SetLabels();
 		
 	UArray<Eigen::MatrixXd> data;
 	UArray<int> row0s, col0s;
@@ -800,18 +801,11 @@ public:
 private:
 	MainBody *_mb = nullptr;
 	int _id;
+	EditDouble edit[6];
 	
-	void Action(bool vol, ArrayCtrl &array, const Point3D &cg);
-	
-	void ActionV() {Action(true,  arrayVol,  Point3D(~x_g_v, ~y_g_v, ~z_g_v));}
-	void ActionS() {Action(false, arraySurf, Point3D(~x_g_s, ~y_g_s, ~z_g_s));}
-	
-	void OpC0_WhenAction(bool action);
-	void OpCG_v_WhenAction(bool action);
-	void OpCG_s_WhenAction(bool action);
+	void Action();
 	void OpMass_WhenAction(bool action);
-	
-	void CopyToBody(char c);
+	void CopyToBody();
 };
 
 class DropCtrlDialogPointsABC : public DropCtrlDialog {
@@ -825,27 +819,28 @@ public:
 		
 		Add(grid.SizePos());
 			
-		grid.Appending().Removing().Editing().Sorting(false).Navigating();
+		grid.Appending().Removing().Editing().Sorting(false).Navigating().MultiSelect().Clipboard();
 		grid.SetToolBar();
 		grid.AddColumn(t_("Name"), 20).Edit(name);
 		grid.AddColumn(t_("x"), 15).Edit(x);
 		grid.AddColumn(t_("y"), 15).Edit(y);
 		grid.AddColumn(t_("z"), 15).Edit(z);
+		grid.Add();
 	}
-	void FromGrid(UArray<Body::Data::ControlPoint> &cpa) const {
+	void FromGrid(UArray<Body::ControlData::ControlPoint> &cpa) const {
 		cpa.Clear();
 		for (int r = 0; r < grid.GetRowCount(); ++r) {
-			Body::Data::ControlPoint &cp = cpa.Add();		
+			Body::ControlData::ControlPoint &cp = cpa.Add();		
 			cp.name = grid.Get(r, 0);
 			cp.p.x 	= grid.Get(r, 1);
 			cp.p.y 	= grid.Get(r, 2);
 			cp.p.z 	= grid.Get(r, 3);
 		};
 	}
-	void ToGrid(const UArray<Body::Data::ControlPoint> &cpa) {
+	void ToGrid(const UArray<Body::ControlData::ControlPoint> &cpa) {
 		grid.Clear();
 		for (int r = 0; r < cpa.size(); ++r) {
-			const Body::Data::ControlPoint &cp = cpa[r];		
+			const Body::ControlData::ControlPoint &cp = cpa[r];		
 			grid.Add(cp.name, cp.p.x, cp.p.y, cp.p.z);
 		};
 	}
@@ -865,18 +860,19 @@ public:
 		
 		Add(grid.SizePos());
 			
-		grid.Appending().Removing().Editing().Sorting(false).Navigating();
+		grid.Appending().Removing().Editing().Sorting(false).Navigating().MultiSelect().Clipboard();
 		grid.SetToolBar();
 		grid.AddColumn(t_("Name"), 20).Edit(name);
 		grid.AddColumn(t_("x"), 15).Edit(x);
 		grid.AddColumn(t_("y"), 15).Edit(y);
 		grid.AddColumn(t_("z"), 15).Edit(z);
 		grid.AddColumn(t_("Mass [kg]"), 20).Edit(mass);
+		grid.Add();
 	}
-	void FromGrid(UArray<Body::Data::ControlLoad> &cpa) const {
+	void FromGrid(UArray<Body::ControlData::ControlLoad> &cpa) const {
 		cpa.Clear();
 		for (int r = 0; r < grid.GetRowCount(); ++r) {
-			Body::Data::ControlLoad &cp = cpa.Add();		
+			Body::ControlData::ControlLoad &cp = cpa.Add();		
 			cp.name = grid.Get(r, 0);
 			cp.p.x 	= grid.Get(r, 1);
 			cp.p.y 	= grid.Get(r, 2);
@@ -884,10 +880,10 @@ public:
 			cp.mass = grid.Get(r, 4);
 		};
 	}
-	void ToGrid(const UArray<Body::Data::ControlLoad> &cpa) {
+	void ToGrid(const UArray<Body::ControlData::ControlLoad> &cpa) {
 		grid.Clear();
 		for (int r = 0; r < cpa.size(); ++r) {
-			const Body::Data::ControlLoad &cp = cpa[r];		
+			const Body::ControlData::ControlLoad &cp = cpa[r];		
 			grid.Add(cp.name, cp.p.x, cp.p.y, cp.p.z, cp.mass);
 		};
 	}
@@ -933,6 +929,32 @@ public:
 	}
 };
 
+class DropCtrlDialogRevolution : public WithMenuBodyEditRevolution<DropCtrlDialog> {
+public:
+	typedef DropCtrlDialogRevolution CLASSNAME;
+	
+	DropCtrlDialogRevolution();
+		
+private:	
+	EditDouble y, z;
+	UVector<Pointf> points;
+	
+	void UpdatePlot();
+};
+
+class DropCtrlDialogPolynomial : public WithMenuBodyEditPolynomial<DropCtrlDialog> {
+public:
+	typedef DropCtrlDialogPolynomial CLASSNAME;
+	
+	DropCtrlDialogPolynomial();
+		
+private:	
+	EditDouble x, y;
+	UVector<Pointf> points;
+	
+	void UpdatePlot();
+};
+
 class MainBody : public MainBEMBody {
 public:
 	typedef MainBody CLASSNAME;
@@ -966,10 +988,12 @@ public:
 	void OnMenuProcessArraySel();
 	void OnMenuAdvancedArraySel();
 	void OnMenuMoveArraySel();
+	void OnMenuStabilityArraySel();
 	void OnAddPanel();
 	void OnAddRevolution();
 	void OnAddPolygonalPanel();
 	void OnAddWaterSurface(char c);
+	void OnExtrude();
 	void OnInertia();
 	void UpdateButtons();
 			
@@ -991,6 +1015,8 @@ public:
 	DropCtrlDialogPointsABC dialogPointsA, dialogPointsB, dialogPointsC;
 	DropCtrlDialogLoads dialogLoads;
 	DropCtrlDialogDamage dialogDamage;
+	DropCtrlDialogRevolution dialogRevolution;
+	DropCtrlDialogPolynomial dialogPolynomial;
 	
 	bool GetShowBody()			{return menuPlot.showBody;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
@@ -1003,7 +1029,7 @@ private:
 	MainViewData mainViewData;
 	SplitterButton splitterAll, splitterVideo;
 	MainSummaryBody mainSummary;
-	MainMatrixKA mainStiffness, mainStiffness2;
+	MainMatrixKA mainStiffness, mainStiffness2, mainM;
 	MainGZ mainGZ;
 
 	UArray<Option> optionsPlot;
@@ -1058,6 +1084,15 @@ public:
 			labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
 		else
 			labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+	}
+	
+	void OnMesh() {
+		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
+		SetTexts();
+	}
+	void OnLid() {
+		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false);
+		SetTexts();
 	}
 };
 

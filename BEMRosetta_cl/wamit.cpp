@@ -137,7 +137,7 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 	return String();
 }
 
-void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) {
+void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) const {
 	String fileext;
 	
 	if (!IsNull(dt.rho) && !IsNull(dt.msh[0].dt.cg) > 0) {
@@ -446,9 +446,9 @@ bool Wamit::Load_out(String fileName) {
 					else if (!foundDif && f.IsInLine("DIFFERENCE-FREQUENCY")) 
 						foundDif = true;
 				}
-				dt.qh.resize(qtfNh = head.size());
+				dt.qhead.resize(qtfNh = head.size());
 				for (int i = 0; i < qtfNh; ++i)
-					dt.qh[i] = head[i];
+					dt.qhead[i] = head[i];
 				dt.qw.resize(qtfNf = qw.size());
 				for (int i = 0; i < qtfNf; ++i)
 					dt.qw[i] = 2*M_PI/qw[i];
@@ -864,16 +864,16 @@ void Wamit::Save_out(String file) const {
 			Save_MD(out, ifr);
 	}
 	UVector<double> heads;
-	UVector<int> id1(int(dt.qh.size())), id2(int(dt.qh.size()));
+	UVector<int> id1(int(dt.qhead.size())), id2(int(dt.qhead.size()));
 	if (IsLoadedQTF(true) || IsLoadedQTF(false)) {
-		for (int ih = 0; ih < dt.qh.size(); ++ih) {
-			id1[ih] = 1+FindAdd(heads, dt.qh[ih].real());
-			id2[ih] = 1+FindAdd(heads, dt.qh[ih].imag());
+		for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+			id1[ih] = 1+FindAdd(heads, dt.qhead[ih].real());
+			id2[ih] = 1+FindAdd(heads, dt.qhead[ih].imag());
 		}
 	}
 		
 	if (IsLoadedQTF(true)) {
-		for (int ih = 0; ih < dt.qh.size(); ++ih) {
+		for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 			for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) {
 				for (int ifr2 = ifr1; ifr2 < dt.qw.size(); ++ifr2) {
 					double TT = 2*M_PI/(dt.qw[ifr1] + dt.qw[ifr2]);
@@ -886,8 +886,8 @@ void Wamit::Save_out(String file) const {
 						   " ------------------------------------------------------------------------\n\n\n"
 						   "SUM-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
 						   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       " 
-						   		<< Format("%4.1f", dt.qh[ih].real()) << "      " 
-						   		<< Format("%4.1f", dt.qh[ih].imag()) << "\n\n\n"
+						   		<< Format("%4.1f", dt.qhead[ih].real()) << "      " 
+						   		<< Format("%4.1f", dt.qhead[ih].imag()) << "\n\n\n"
 						   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";			// Hydrostar only one \n
 					for (int ib = 0; ib < dt.Nb; ++ib) {
 						for (int idf = 0; idf < 6; ++idf) {
@@ -904,7 +904,7 @@ void Wamit::Save_out(String file) const {
 		}
 	}
 	if (IsLoadedQTF(false)) {
-		for (int ih = 0; ih < dt.qh.size(); ++ih) {
+		for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 			for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) {
 				for (int ifr1 = ifr2; ifr1 < dt.qw.size(); ++ifr1) {
 					String sT, units;
@@ -923,8 +923,8 @@ void Wamit::Save_out(String file) const {
 						   " ------------------------------------------------------------------------\n\n\n"
 						   "DIFFERENCE-FREQUENCY EXCITING FORCES AND MOMENTS-DIRECT METHOD\n\n"
 						   "  Heading indices:    " << Format("%2d   %2d", id1[ih], id2[ih]) << "  Headings (deg):       "
-						   		<< Format("%4.1f", dt.qh[ih].real()) << "      " 
-						   		<< Format("%4.1f", dt.qh[ih].imag()) << "\n\n\n"
+						   		<< Format("%4.1f", dt.qhead[ih].real()) << "      " 
+						   		<< Format("%4.1f", dt.qhead[ih].imag()) << "\n\n\n"
 						   "      I     Mod[F2(I)]     Pha[F2(I)]\n\n";			// Hydrostar only one \n
 					for (int ib = 0; ib < dt.Nb; ++ib) {
 						for (int idf = 0; idf < 6; ++idf) {
@@ -1790,7 +1790,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	}
 	
 	::Copy(w, dt.qw);
-	::Copy(head, dt.qh);
+	::Copy(head, dt.qhead);
 	
 	dt.qtfdataFromW = !(w[0] > w[1]);
 	
@@ -2228,7 +2228,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 	
 	int Nf = int(dt.qw.size());
-	int Nh = int(dt.qh.size()); 
+	int Nh = int(dt.qhead.size()); 
 	
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
@@ -2246,8 +2246,8 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 				if (Status && num >= 20 && !(inum%(num/20)) && !Status(Format("Saving %s", fileName), (100*inum)/num))
 					throw Exc(t_("Stop by user"));
 				
-				double h1 = dt.qh[ih].real();
-				double h2 = dt.qh[ih].imag();
+				double h1 = dt.qhead[ih].real();
+				double h2 = dt.qhead[ih].imag();
 				
 				if (IsNull(qtfHeading) ||
 					(qtfHeading == -1 && abs(h1 - h2) < 0.01) ||

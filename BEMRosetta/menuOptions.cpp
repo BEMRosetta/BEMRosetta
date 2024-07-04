@@ -24,10 +24,10 @@ void MenuOptions::Init(BEM &_bem) {
 	
 	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = headingType.isMouseEnter = false;
 	
-	for (int i = 0; BEM::strDOFType[i][0] != '\0'; ++i)
-		dofType.Add(BEM::strDOFType[i]);
-	for (int i = 0; BEM::strHeadingType[i][0] != '\0'; ++i)
-		headingType.Add(BEM::strHeadingType[i]);
+	for (int i = 0; BasicBEM::strDOFType[i][0] != '\0'; ++i)
+		dofType.Add(BasicBEM::strDOFType[i]);
+	for (int i = 0; BasicBEM::strHeadingType[i][0] != '\0'; ++i)
+		headingType.Add(BasicBEM::strHeadingType[i]);
 }
 
 void MenuOptions::InitSerialize(bool ret, bool &openOptions) {
@@ -108,8 +108,8 @@ void MenuOptions::OnSave() {
 		bem->legend_w_solver = ~legend_w_solver;
 		bem->pythonEnv = ~pythonEnv;
 		
-		bem->dofType = BEM::DOFType(dofType.GetIndex());
-		bem->headingType = BEM::HeadingType(headingType.GetIndex());
+		bem->dofType = BasicBEM::DOFType(dofType.GetIndex());
+		bem->headingType = BasicBEM::HeadingType(headingType.GetIndex());
 		bem->UpdateHeadAll();
 		bem->UpdateHeadAllMD();
 		Ma().OptionsUpdated(rho, g, bem->dofType, bem->headingType);

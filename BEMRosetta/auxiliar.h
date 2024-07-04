@@ -201,7 +201,7 @@ public:
 		};
 		
 		from.WhenAction = to.WhenAction = number.WhenAction = [&]() {
-			if (IsNull(number) || number < 1 || IsNull(from) || from < 0 || IsNull(to) || to <= from)
+			if (IsNull(number) || number < 1 || IsNull(from) || IsNull(to) || to <= from)
 				return;
 			double delta;
 			if (number == 1)

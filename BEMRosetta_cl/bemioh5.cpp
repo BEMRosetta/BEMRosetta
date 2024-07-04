@@ -260,7 +260,7 @@ void BemioH5::Load_H5() {
 		Compare_F(dt.fk, fk, "Froude-Krylov");
 }
 
-void BemioH5::Save(String file) {
+void BemioH5::Save(String file) const {
 	String fileName = ForceExt(file, ".h5");
 	
 	Hdf5File hfile;
@@ -316,7 +316,7 @@ void BemioH5::Save(String file) {
 		hfile.Set("all", d).SetDescription(caption);
 	};
 	
-	auto SaveForce = [&](Hydro::Forces &f, int ib, String caption) {
+	auto SaveForce = [&](const Hydro::Forces &f, int ib, String caption) {
 		MatrixXd data(dt.Nf, 2);
 		data.col(0) = Get_T();
 		if (hfile.CreateGroup("components", true)) {
@@ -367,7 +367,7 @@ void BemioH5::Save(String file) {
 			hfile.UpGroup();	
 		}
 	};
-	auto SaveForceAll = [&](Hydro::Forces &f, int ib, String caption) {
+	auto SaveForceAll = [&](const Hydro::Forces &f, int ib, String caption) {
 		MultiDimMatrixRowMajor<double> d_m(6, dt.Nh, dt.Nf), d_p(6, dt.Nh, dt.Nf), d_r(6, dt.Nh, dt.Nf), d_i(6, dt.Nh, dt.Nf);		
 		for (int idf = 0; idf < 6; ++idf) 
 			for (int ih = 0; ih < dt.Nh; ++ih) 

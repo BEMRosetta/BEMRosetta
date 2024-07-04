@@ -28,7 +28,7 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
 				BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
-				if (!AQWABody::Load_DAT(dt.msh, *this, file).IsEmpty()) 
+				if (!AQWABody::LoadDat(dt.msh, *this, file).IsEmpty()) 
 					dt.Nh = dt.Nf = 0;
 				
 			}
@@ -707,10 +707,9 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				static const UVector<int> separatorsh = {8,16,26,36,44,54,62,72,80,90,98,108,116,126};
 				f.Load(in.GetLine(), separatorsh);
 
-				double heading = FixHeading_0_360(f.GetDouble(2));
-				int idh = FindClosest(dt.head, heading);
+				int idh = dt.FindClosestHead(f.GetDouble(2));
 				if (idh < 0)
-					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
+					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(2)));
 				int dd = 1;
 				double factorM = pfrc == &dt.rao ? 1 : factorMass;
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
@@ -869,10 +868,9 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			
 			UVector<int> idhblock(f.size());
 			for (int ih = 0; ih < f.size(); ++ih) {
-				double heading = FixHeading_0_360(f.GetDouble(ih));	
-				id = FindClosest(dt.head, heading);
+				id = dt.FindClosestHead(f.GetDouble(ih));
 				if (id < 0)
-					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), heading));
+					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(ih)));
 				idhblock[ih] = id;
 			}
 
@@ -952,11 +950,11 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		}
 	}
 	if (!dt.pots_rad.IsEmpty()) {		// Transform potentials to Wamit
-		for (int ib = 0; ib < dt.Nb; ++ib) 
-			for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) 
+		for (int iib = 0; iib < dt.Nb; ++iib) 
+			for (int ip = 0; ip < dt.pots_rad[iib].size(); ++ip) 
 				for (int idf = 0; idf < 6; ++idf)
 					for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
-						auto &d = dt.pots_rad[ib][ip][idf][ifr];
+						auto &d = dt.pots_rad[iib][ip][idf][ifr];
 						d = std::complex<double>(d.imag()/dt.w[ifr], d.real()/dt.w[ifr]);
 					}	
 	}					
@@ -1029,7 +1027,7 @@ bool Aqwa::Load_QTF(double factorMass) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
 						
 	::Copy(_qw, dt.qw);
-	::Copy(_qh, dt.qh);
+	::Copy(_qh, dt.qhead);
 	
 	Hydro::Initialize_QTF(dt.qtfsum, Nb, Nh, Nf);
 	Hydro::Initialize_QTF(dt.qtfdif, Nb, Nh, Nf);
@@ -1085,16 +1083,16 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 		throw Exc(Format(t_("Impossible to open '%s'"), file));
 	
 	out << "AQTF-2.0 :                                                            \n";
-	out << Format(" %2d %2d %3d    ", dt.Nb, int(dt.qh.size()), int(dt.qw.size()));
+	out << Format(" %2d %2d %3d    ", dt.Nb, int(dt.qhead.size()), int(dt.qw.size()));
 	int icol = 0;
-	for (int ih = 0; ih < dt.qh.size(); ++ih) {
-		if (dt.qh[ih].real() != dt.qh[ih].imag())
+	for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+		if (dt.qhead[ih].real() != dt.qhead[ih].imag())
 			continue;
 		if (icol > 5) {
 			out << "\n              ";
 			icol = 0;
 		} 
-		out << Format("   % 9.5f", dt.qh[ih].real());
+		out << Format("   % 9.5f", dt.qhead[ih].real());
 		icol++;
 	}
 	out << "\n               ";
@@ -1111,12 +1109,12 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 	//int num = int(dt.Nb*dt.qh.size());
 	//int inum = 0;
 	for (int ib = 0; ib < dt.Nb; ++ib)
-        for (int ih = 0, realih = 0; ih < dt.qh.size(); ++ih) {
+        for (int ih = 0, realih = 0; ih < dt.qhead.size(); ++ih) {
             //inum++;
-    		if (Status && !Status(Format("Saving %s", file), (100*ih)/int(dt.qh.size())))
+    		if (Status && !Status(Format("Saving %s", file), (100*ih)/int(dt.qhead.size())))
 				throw Exc(t_("Stop by user"));
             
-			if (dt.qh[ih].real() != dt.qh[ih].imag())
+			if (dt.qhead[ih].real() != dt.qhead[ih].imag())
 				continue; 
 	        for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
 				for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) {

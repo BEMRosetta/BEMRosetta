@@ -239,7 +239,7 @@ void Diodore::Load_HDB() {
 	dt.qtftype = dt.mdtype = 9;
 }
 
-void Hydro::SaveDiodoreHDB(String file) {
+void Hydro::SaveDiodoreHDB(String file) const {
 	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
 	
 	String folder = GetFileFolder(file);
@@ -284,7 +284,7 @@ void Hydro::SaveDiodoreHDB(String file) {
 	out << "[STRUCTURES_NUMBER]        " << dt.Nb << "\n";							
 
 
-	auto WriteForce = [&](Hydro::Forces &force, int ib, String text) {
+	auto WriteForce = [&](const Hydro::Forces &force, int ib, String text) {
 		for (int ih = 0; ih < dt.Nh; ++ih) {
 			out << Format("[%s_MOD_%03d]   %10.3f\n", text, ih+1, dt.head[ih]);
 			for (int iw = 0; iw < dt.Nf; ++iw) {

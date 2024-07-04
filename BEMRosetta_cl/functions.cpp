@@ -330,18 +330,39 @@ std::complex<double> FixHeading_0_360(const std::complex<double> &head) {
 	return std::complex<double>(FixHeading_0_360(head.real()), FixHeading_0_360(head.imag())); 
 }
 
-double FixHeading(double head, BEM::HeadingType range) {
-	if (range == BEM::HEAD_180_180)
+double FixHeading(double head, BasicBEM::HeadingType range) {
+	if (range == BasicBEM::HEAD_180_180)
 		return FixHeading_180(head);
 	else
 		return FixHeading_0_360(head);
 }
 
-std::complex<double> FixHeading(const std::complex<double> &head, BEM::HeadingType range) {
-	if (range == BEM::HEAD_180_180) 
+std::complex<double> FixHeading(const std::complex<double> &head, BasicBEM::HeadingType range) {
+	if (range == BasicBEM::HEAD_180_180) 
 		return FixHeading_180(head);
 	else
 		return FixHeading_0_360(head);
+}
+
+std::complex<double> RangeHead(const VectorXcd &vals) {
+	if (vals.size() == 0)
+		return 0;
+	double mnr = First(vals).real();
+	double mxr = mnr;
+	double mni = First(vals).imag();
+	double mxi = mni;
+ 
+	for (int i = 1; i < vals.size(); ++i) {
+		if (vals[i].real() > mxr)
+			mxr = vals[i].real();
+		else if (vals[i].real() < mnr)
+			mnr = vals[i].real();
+		if (vals[i].imag() > mxi)
+			mxi = vals[i].imag();
+		else if (vals[i].imag() < mni)
+			mni = vals[i].imag();
+	}
+	return std::complex<double>(mxr - mnr, mxi - mni);
 }
 
 void SetPhaseToMag(std::complex<double> &val, double arg) {

@@ -467,7 +467,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							else if (headParams[0] == "allnocross")
 								qtfHeading = -1;
 							else 
-								qtfHeading = FindClosest(hd.dt.qh, std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
+								qtfHeading = hd.dt.FindClosestQTFHead(std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
 							bem.hydros[bemid].SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
 						} else if (param == "-convqtfheads") {	
@@ -496,11 +496,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							UVector<int> ids;
 							double head;
 							while (ic+1 < command.size() && !IsNull(head = ScanDouble(command[ic+1]))) {
-								int id = FindClosest(hd.dt.head, head);
+								int id = hd.dt.FindClosestHead(head);
+								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hd.dt.head[id]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							hd.DeleteHeadings(ids);	
+							BEM::Print("\n" + S(t_("Headings deleted")));
 						} else if (param == "-delheadid") {	
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -514,6 +516,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								ic++;
 							}
 							hd.DeleteHeadings(ids);	
+							BEM::Print("\n" + S(t_("Headings deleted")));
 						} else if (param == "-delbuthead") {
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -521,7 +524,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							UVector<int> ids;
 							double head;
 							while (ic+1 < command.size() && !IsNull(head = ScanDouble(command[ic+1]))) {
-								int id = FindClosest(hd.dt.head, head);
+								int id = hd.dt.FindClosestHead(head);
+								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hd.dt.head[id]));
 								FindAdd(ids, id);
 								ic++;
 							}
@@ -530,6 +534,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								if (Find(ids, i) < 0)
 									idsDel << i;
 							hd.DeleteHeadings(idsDel);	
+							BEM::Print("\n" + S(t_("Headings deleted")));
 						} else if (param == "-delbutheadid") {
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));	
@@ -545,7 +550,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							for (int i = 0; i < hd.dt.head.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hd.DeleteHeadings(idsDel);	
+							hd.DeleteHeadings(idsDel);
+							BEM::Print("\n" + S(t_("Headings deleted")));	
 						} else if (param == "-delqtfhead") {
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -557,11 +563,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								CheckIfAvailableArg(command, ++ic, "-delqtfhead 2nd head");
 								if (IsNull(head2 = ScanDouble(command[ic])))
 									throw Exc(Format(t_("Wrong head '%s'"), command[ic]));
-								int id = FindClosest(hd.dt.qh, std::complex<double>(head1, head2));
+								int id = hd.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
+								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hd.dt.qhead[id].real(), hd.dt.qhead[id].imag()));
 								FindAdd(ids, id);
 								ic++;
 							}
 							hd.DeleteHeadingsQTF(ids);
+							BEM::Print("\n" + S(t_("QTF headings deleted")));
 						} else if (param == "-delqtfheadid") {	
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -569,12 +577,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
-								if (id < 0 || id >= hd.dt.qh.size())
+								if (id < 0 || id >= hd.dt.qhead.size())
 									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							hd.DeleteHeadingsQTF(ids);	
+							BEM::Print("\n" + S(t_("QTF headings deleted")));
 						} else if (param == "-delbutqtfhead") {
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -586,14 +595,16 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								CheckIfAvailableArg(command, ++ic, "-delqtfhead 2nd head");
 								if (IsNull(head2 = ScanDouble(command[ic])))
 									throw Exc(Format(t_("Wrong head '%s'"), command[ic]));
-								int id = FindClosest(hd.dt.qh, std::complex<double>(head1, head2));
+								int id = hd.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
+								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hd.dt.qhead[id].real(), hd.dt.qhead[id].imag()));
 								FindAdd(ids, id);
 							}
 							UVector<int> idsDel;
-							for (int i = 0; i < hd.dt.qh.size(); ++i)
+							for (int i = 0; i < hd.dt.qhead.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
 							hd.DeleteHeadingsQTF(idsDel);
+							BEM::Print("\n" + S(t_("QTF headings deleted")));
 						} else if (param == "-delbutqtfheadid") {
 							if (bem.hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -601,16 +612,17 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
-								if (id < 0 || id >= hd.dt.qh.size())
+								if (id < 0 || id >= hd.dt.qhead.size())
 									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							UVector<int> idsDel;
-							for (int i = 0; i < hd.dt.qh.size(); ++i)
+							for (int i = 0; i < hd.dt.qhead.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hd.DeleteHeadingsQTF(idsDel);	
+							hd.DeleteHeadingsQTF(idsDel);
+							BEM::Print("\n" + S(t_("QTF headings deleted")));	
 						} else if (param == "-params") {
 							CheckIfAvailableArg(command, ic+1, "-params");
 							

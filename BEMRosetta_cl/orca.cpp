@@ -581,10 +581,10 @@ void Orca::LoadParameters(Hydro &hy) {
 		throwError("Load dotQTFHeadingPairs 2");	
 	
 	sz /= (2*sizeof(double));
-	hy.dt.qh.resize(sz);
+	hy.dt.qhead.resize(sz);
 	for (int i = 0; i < sz; i++) {
-		hy.dt.qh[i].real(qh[2*i]);
-		hy.dt.qh[i].imag(qh[2*i+1]);
+		hy.dt.qhead[i].real(qh[2*i]);
+		hy.dt.qhead[i].imag(qh[2*i+1]);
 	}
 	
 	auto LoadQTF = [&](int type, const char *stype)->bool {
@@ -596,10 +596,10 @@ void Orca::LoadParameters(Hydro &hy) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qh.size()))
+			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qhead.size()))
 				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
-			qtf.Resize((int)hy.dt.qh.size(), Nqw, 6*hy.dt.Nb);
+			qtf.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
 				throwError(Format("Load %s 2", stype));		
 		}
@@ -610,25 +610,25 @@ void Orca::LoadParameters(Hydro &hy) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qh.size()))
+			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qhead.size()))
 				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
-			qtfDirect.Resize((int)hy.dt.qh.size(), Nqw, 6*hy.dt.Nb);
+			qtfDirect.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, qtfDirect.begin()))
 				throwError(Format("Load %s 2", stype));		
 		}
 		int Nb = hy.dt.Nb;
 		
 		for (int ib = 0; ib < Nb; ++ib) 
-			for (int ih = 0; ih < hy.dt.qh.size(); ++ih) 
+			for (int ih = 0; ih < hy.dt.qhead.size(); ++ih) 
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int ifr = 0, iNqw = 0; ifr < 3*Nqw; ifr += 3, iNqw++) {
 						qtf(ih, iNqw, 6*ib + idf).Re += qtfDirect(ih, iNqw, 6*ib + idf).Re;
 						qtf(ih, iNqw, 6*ib + idf).Im += qtfDirect(ih, iNqw, 6*ib + idf).Im;
 					}
 					
-		Hydro::Initialize_QTF(hy.dt.qtfsum, hy.dt.Nb, int(hy.dt.qh.size()), int(hy.dt.qw.size()));
-		Hydro::Initialize_QTF(hy.dt.qtfdif, hy.dt.Nb, int(hy.dt.qh.size()), int(hy.dt.qw.size()));
+		Hydro::Initialize_QTF(hy.dt.qtfsum, hy.dt.Nb, int(hy.dt.qhead.size()), int(hy.dt.qw.size()));
+		Hydro::Initialize_QTF(hy.dt.qtfdif, hy.dt.Nb, int(hy.dt.qhead.size()), int(hy.dt.qw.size()));
 		
 		if (type == dotQuadraticLoadFromControlSurface)
 			hy.dt.qtftype = 7;
@@ -636,7 +636,7 @@ void Orca::LoadParameters(Hydro &hy) {
 			hy.dt.qtftype = 9;
 	
 		for (int ib = 0; ib < Nb; ++ib) 
-			for (int ih = 0; ih < hy.dt.qh.size(); ++ih) 
+			for (int ih = 0; ih < hy.dt.qhead.size(); ++ih) 
 				for (int idf = 0; idf < 6; ++idf) 
 					for (int ifr = 0, iNqw = 0; ifr < 3*Nqw; ifr += 3, iNqw++) {
 						double freq1 = qfreq[ifr];
@@ -681,7 +681,7 @@ void Orca::LoadParameters(Hydro &hy) {
 		hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
 	}
 	
-	UVector<int> panelId(Np), panelIb(Np);;
+	UVector<int> panelId(Np), panelIb(Np);
 	
 	for (int ip = 0; ip < Np; ++ip) {
 		const TDiffractionPanelGeometry &pan = panels[ip];
@@ -756,8 +756,8 @@ void Orca::LoadParameters(Hydro &hy) {
 		hy.GeneratePotsInc();
 		
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-			int Np = hy.dt.msh[ib].dt.mesh.panels.size();
-			for (int ip = 0; ip < Np; ++ip) {
+			int nnp = hy.dt.msh[ib].dt.mesh.panels.size();
+			for (int ip = 0; ip < nnp; ++ip) {
 				for (int ih = 0; ih < hy.dt.Nh; ++ih)
 					for (int ifr = 0; ifr < hy.dt.Nf; ++ifr)
 						hy.dt.pots_dif[ib][ip][ih][ifr] -= hy.dt.pots_inc_bmr[ib][ip][ih][ifr];		

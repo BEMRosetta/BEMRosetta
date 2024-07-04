@@ -995,7 +995,7 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	}
 	
 	::Copy(w, dt.qw);
-	::Copy(head, dt.qh);
+	::Copy(head, dt.qhead);
 	
 	dt.qtfdataFromW = !(w[0] > w[1]);
 	
@@ -1003,8 +1003,8 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		for (int i = 0; i < dt.qw.size(); ++i)
    			dt.qw(i) = 2*M_PI/dt.qw(i);
 	
-	for (int i = 0; i < dt.qh.size(); ++i)
-   		dt.qh(i) = std::complex<double>(dt.qh(i).real(), dt.qh(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
+	for (int i = 0; i < dt.qhead.size(); ++i)
+   		dt.qhead(i) = std::complex<double>(dt.qhead(i).real(), dt.qhead(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
 	
 	return true;
 }	

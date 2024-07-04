@@ -440,7 +440,7 @@ void OrcaWave::Load_OF_YML() {
 									   
 								FindAddDelta(qh, std::complex<double>(h1, h2), 0.0001);	
 							}
-							::Copy(qh, dt.qh);
+							::Copy(qh, dt.qhead);
 	
 	
 							Hydro::Initialize_QTF(q, dt.Nb, int(qh.size()), dt.Nf);
@@ -465,7 +465,7 @@ void OrcaWave::Load_OF_YML() {
 							}
 							int ifr1 = FindDelta(dt.qw, w1, 0.0001),
 								ifr2 = FindDelta(dt.qw, w2, 0.0001),
-								ih = FindDelta(dt.qh, std::complex<double>(h1, h2), 0.0001);	
+								ih = FindDelta(dt.qhead, std::complex<double>(h1, h2), 0.0001);	
 							if (ifr1 < 0)
 								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%d' in QTF"), w1));
 							if (ifr2 < 0)

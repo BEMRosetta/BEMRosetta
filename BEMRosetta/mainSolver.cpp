@@ -69,6 +69,9 @@ MainSolverBody::MainSolverBody() {
 	InitGrid(Dlin, editLinear);
 	InitGrid(Dquad, editQuadratic);	
 	InitGrid(Cadd, editAdd);
+	
+	butMesh <<= THISBACK(OnMesh);
+	butLid <<= THISBACK(OnLid);
 }
 
 void MainSolver::Init() {
@@ -150,6 +153,10 @@ void MainSolver::InitBeforeSerialize() {
 	CtrlLayout(bodies);
 	CtrlLayout(save);
 	CtrlLayout(*this);
+	
+	gen.listFreq.from.Min(0.001);
+	gen.listHead.from.Min(-360);
+	gen.listHead.from.Max(360);
 }
 
 void MainSolver::InitAfterSerialize(bool ret) {

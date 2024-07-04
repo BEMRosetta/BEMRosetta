@@ -67,7 +67,7 @@ void MainBEM::Init() {
 	menuProcess.butSym.Disable();	
 	menuProcess.butSym <<= THISBACK(OnSymmetrizeForces);
 	
-	menuProcess.dropSym.Add(SYM_NO, "No symmetry").Add(SYM_XZ, "XZ").Add(SYM_YZ, "YZ").Add(SYM_XZ_YZ, "XZ+YZ");//.Add(SYM_AXISYMMETRIC, "Axisymmetric");
+	menuProcess.dropSym.Add(BasicBEM::SYM_NO, "No symmetry").Add(BasicBEM::SYM_XZ, "XZ").Add(BasicBEM::SYM_YZ, "YZ").Add(BasicBEM::SYM_XZ_YZ, "XZ+YZ");//.Add(SYM_AXISYMMETRIC, "Axisymmetric");
 	menuProcess.dropSym.SetIndex(0);
 	menuProcess.dropSym.WhenAction = [&]() {UpdateButtons();};
 	
@@ -556,7 +556,7 @@ void MainBEM::Init() {
 	mainMatrixDquad.Init(Hydro::MAT_DAMP_QUAD);
 	mainTab.Add(mainMatrixDquad.SizePos(), t_("DampQuad")).Disable();
 
-	mainMatrixK2.Init(Hydro::MAT_K2);
+	mainMatrixK2.Init(Hydro::MAT_KMOOR);
 	mainTab.Add(mainMatrixK2.SizePos(), t_("StiffMoor")).Disable();
 	
 	mainMD.Init(Hydro::DATA_MD);
@@ -1044,8 +1044,8 @@ void MainBEM::UpdateButtons() {
 			menuProcess2.dropHead.Add(false, hy.dt.head[i]);
 		for (int i = 0; i < hy.dt.mdhead.size(); ++i)
 			menuProcess2.dropHeadMD.Add(false, Format("%.1f-%.1f", hy.dt.mdhead[i].real(), hy.dt.mdhead[i].imag()));
-		for (int i = 0; i < hy.dt.qh.size(); ++i)
-			menuProcess2.dropHeadQTF.Add(false, Format("%.1f-%.1f", hy.dt.qh[i].real(), hy.dt.qh[i].imag()));
+		for (int i = 0; i < hy.dt.qhead.size(); ++i)
+			menuProcess2.dropHeadQTF.Add(false, Format("%.1f-%.1f", hy.dt.qhead[i].real(), hy.dt.qhead[i].imag()));
 		for (int i = 0; i < 6; ++i)
 			menuProcess2.dropDOF.Add(false, BEM::StrDOF(i));
 		
@@ -1146,9 +1146,9 @@ void MainBEM::OnSymmetrizeForces() {
 
 		Progress progress(t_("Symmetrizing forces and RAOs in selected BEM file..."), 100); 
 		
-		if (~menuProcess.dropSym == SYM_YZ || ~menuProcess.dropSym == SYM_XZ_YZ)
+		if (~menuProcess.dropSym == BasicBEM::SYM_YZ || ~menuProcess.dropSym == BasicBEM::SYM_XZ_YZ)
 			Bem().SymmetrizeForces(id, false);
-		if (~menuProcess.dropSym == SYM_XZ || ~menuProcess.dropSym == SYM_XZ_YZ)
+		if (~menuProcess.dropSym == BasicBEM::SYM_XZ || ~menuProcess.dropSym == BasicBEM::SYM_XZ_YZ)
 			Bem().SymmetrizeForces(id, true);
 		
 		AfterBEM();
@@ -1973,7 +1973,7 @@ void MainBEM::OnSolve() {
 }
 
 int MainBEM::AskQtfHeading(const Hydro &hy) {
-	int numH = int(hy.dt.qh.size());
+	int numH = int(hy.dt.qhead.size());
 	if (numH <= 1)
 		return Null;
 	
@@ -1987,8 +1987,8 @@ int MainBEM::AskQtfHeading(const Hydro &hy) {
 	
 	int id0 = Null;
 	for (int i = 0; i < numH; ++i) {
-		dialog.dropHeadings.Add(Format("%.3f-%.3f", hy.dt.qh[i].real(), hy.dt.qh[i].imag()));
-		if (abs(hy.dt.qh[i].real()) < 0.001)
+		dialog.dropHeadings.Add(Format("%.3f-%.3f", hy.dt.qhead[i].real(), hy.dt.qhead[i].imag()));
+		if (abs(hy.dt.qhead[i].real()) < 0.001)
 			id0 = i;
 	}
 	if (!IsNull(id0))

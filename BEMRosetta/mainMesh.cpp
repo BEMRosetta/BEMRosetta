@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2024, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
@@ -17,68 +17,70 @@ using namespace Upp;
 
 MenuProcessInertia::MenuProcessInertia() {
 	CtrlLayout(*this);
-	
-	arrayVol.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayVol);};
-	arrayVol.SetLineCy(EditField::GetStdHeight());
 
-	arraySurf.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arraySurf);};
-	arraySurf.SetLineCy(EditField::GetStdHeight());
-
-	opC0 = 0;
+	opInertia = 0;
 	opMass = 0;
 	
-	mass.WhenAction    = [&] {density <<= mass/Bem().surfs[_id].dt.mesh.volume;};
-	density.WhenAction = [&] {mass <<= density*Bem().surfs[_id].dt.mesh.volume;};
+	mass.WhenAction    = [&] {
+		if (Bem().surfs[_id].dt.mesh.volume > 0)
+			density <<= mass/Bem().surfs[_id].dt.mesh.volume;
+		Action();
+	};
+	density.WhenAction = [&] {
+		mass <<= density*Bem().surfs[_id].dt.mesh.volume; 
+		Action();
+	};
 	
-	opC0.WhenAction    = [&]{OpC0_WhenAction(true);};
-	opMass.WhenAction  = [&]{OpMass_WhenAction(true);};
+	opMass.WhenAction    = [&]{OpMass_WhenAction(true);};
+	opInertia <<= THISBACK(Action);
 	
-	opC0.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
+	opInertia.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
 	opMass.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
 	
-	update	<< [&] {ActionV();ActionS();};		
-	ok		<< [&] {Close();};
+	ok << [&] {Close();};
 	
-	butSetC0Sur << [&] {
-		x_0 = ~x_g_s;
-		y_0 = ~y_g_s;
-		z_0 = ~z_g_s;
-		ActionV();ActionS();
-	};
 	butSetC0Vol << [&] {
-		x_0 = ~x_g_v;
-		y_0 = ~y_g_v;
-		z_0 = ~z_g_v;
-		ActionV();ActionS();
+		x_0 = ~x_g;
+		y_0 = ~y_g;
+		z_0 = ~z_g;
+		Action();
 	};
 	
-	butCopyVol  <<= THISBACK1(CopyToBody, 'v');
-	butCopySurf <<= THISBACK1(CopyToBody, 's');
+	butCopy  <<= THISBACK(CopyToBody);
+	
+	x_0 <<= THISBACK(Action);
+	y_0 <<= THISBACK(Action);
+	z_0 <<= THISBACK(Action);
+	x_g <<= THISBACK(Action);
+	y_g <<= THISBACK(Action);
+	z_g <<= THISBACK(Action);
+	
+	grid.MultiSelect().Removing(false).Clipboard().Sorting(false).Absolute().Editing();
+	for (int i = 0; i < 6; ++i) {
+		edit[i].NotNull();
+		grid.AddColumn(BEM::StrDOF(i), 50).Edit(edit[i]);
+	}
 }
 
-void MenuProcessInertia::CopyToBody(char c) {
+void MenuProcessInertia::CopyToBody() {
 	Body &msh = Bem().surfs[_id];
 	
-	if (opC0 == 1) {
-		msh.dt.c0.x = _mb->menuProcess.x_0 = ~x_0;
-		msh.dt.c0.y = _mb->menuProcess.y_0 = ~y_0;
-		msh.dt.c0.z = _mb->menuProcess.z_0 = ~z_0;
-	}
-	if (c == 'v') {
-		msh.dt.cg.x = _mb->menuProcess.x_g = ~x_g_v;
-		msh.dt.cg.y = _mb->menuProcess.y_g = ~y_g_v;
-		msh.dt.cg.z = _mb->menuProcess.z_g = ~z_g_v;
-	} else {
-		msh.dt.cg.x = _mb->menuProcess.x_g = ~x_g_s;
-		msh.dt.cg.y = _mb->menuProcess.y_g = ~y_g_s;
-		msh.dt.cg.z = _mb->menuProcess.z_g = ~z_g_s;
-	}
+	msh.dt.c0.x = _mb->menuProcess.x_0 = ~x_0;
+	msh.dt.c0.y = _mb->menuProcess.y_0 = ~y_0;
+	msh.dt.c0.z = _mb->menuProcess.z_0 = ~z_0;
+	
+	msh.dt.cg.x = _mb->menuProcess.x_g = ~x_g;
+	msh.dt.cg.y = _mb->menuProcess.y_g = ~y_g;
+	msh.dt.cg.z = _mb->menuProcess.z_g = ~z_g;
+	
+	msh.dt.cg0 = msh.dt.cg;
+	
 	if (opMass < 3) {
-		const ArrayCtrl &array = c == 'v' ? arrayVol : arraySurf;
 		msh.dt.M.resize(6, 6);
 		for (int r = 0; r < 6; ++r)		
 			for (int c = 0; c < 6; ++c)
-				msh.dt.M(r, c) = ScanDouble(array.Get(r, c).ToString());
+				msh.dt.M(r, c) = ScanDouble(grid.Get(r, c).ToString());
+		_mb->menuProcess.mass <<= msh.GetMass();
 	}
 	
 	msh.AfterLoad(Bem().rho, Bem().g, false, false);
@@ -89,56 +91,117 @@ void MenuProcessInertia::Init(MainBody &b, int id) {
 	_mb = &b;
 	_id = id;
 	
+	opInertia = 0;
+	opMass.DisableCase(3);
+	opMass.DisableCase(4);
+	opMass = 0;
+	
 	Body &mesh = Bem().surfs[id];
-	volume = mesh.dt.mesh.volume;
+	volume <<= mesh.dt.mesh.volume;
 	
-	OpC0_WhenAction(false);
-	OpCG_v_WhenAction(false);
-	OpCG_s_WhenAction(false);
-	OpMass_WhenAction(false);
+	x_0 = mesh.dt.c0.x;
+	y_0 = mesh.dt.c0.y;
+	z_0 = mesh.dt.c0.z;
 	
-	ActionV();
-	ActionS();
+	x_g = mesh.dt.cg.x;
+	y_g = mesh.dt.cg.y;
+	z_g = mesh.dt.cg.z;
+	
+	mass <<= mesh.GetMass();
+	if (!IsNull(mesh.dt.mesh.volume) && mesh.dt.mesh.volume > 0)
+		density <<= mesh.GetMass()/mesh.dt.mesh.volume;
+	
+	grid.Clear();
+	if (mesh.dt.M.size() == 36) {
+		for (int r = 0; r < 6; ++r)		
+			for (int c = 0; c < 6; ++c)
+				grid.Set(r, c, mesh.dt.M(r, c));
+	}
 }
 
-void MenuProcessInertia::Action(bool vol, ArrayCtrl &array, const Point3D &cg) {
+void MenuProcessInertia::Action() {
 	try {
+		int opmass = ~opMass;
+		
+		grid.Ready(false);
+		if (opmass <= 3) {
+			for (int c = 0; c < 6; ++c) 
+				grid.GetColumn(c).Width(50);
+		} else {
+			for (int c = 0; c < 3; ++c)
+				grid.GetColumn(c).Hidden();
+		}
+		grid.Ready(true);
+		
 		Point3D c0(~x_0, ~y_0, ~z_0);	
+		Point3D cg(~x_g, ~y_g, ~z_g);
+		
 		Body &mesh = Bem().surfs[_id];
 		
-		Matrix3d inertia3;
-		mesh.dt.mesh.GetInertia33(inertia3, c0, vol, false);
-		MatrixXd inertia6;
-		mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
-		int op = opMass;
-		if (op == 3)
-			inertia6 *= mesh.dt.mesh.volume;
-		else if (op < 3) {
-			double m;
-			if (op == 0 || op == 1)
-				m = mass;
-			else
-				m = density*mesh.dt.mesh.volume; 
-			inertia6 *= m;
-		}
-		array.Reset();
-		array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
-		if (op < 4) {
-			for (int i = 0; i < 6; ++i)
-				array.AddColumn(BEM::StrDOF(i));
+		grid.Editing(opInertia == 0);
+		x_g.SetEditable(opInertia == 0);
+		y_g.SetEditable(opInertia == 0);
+		z_g.SetEditable(opInertia == 0);
 
-			for (int r = 0; r < 6; ++r)		
-				for (int c = 0; c < 6; ++c)
-					array.Set(r, c, FDS(inertia6(r, c), 8, false));
+		for (int i = 0; i < 6; ++i) 
+			edit[i].SetEditable(opInertia == 0);
+					
+		if (opInertia == 0) {
+			opMass.DisableCase(3);
+			opMass.DisableCase(4);
 		} else {
-			for (int i = 3; i < 6; ++i)
-				array.AddColumn(BEM::StrDOF(i));
-
-			for (int r = 0; r < 3; ++r)	{	
-				for (int c = 0; c < 3; ++c) {
-					double val = inertia3(r, c);
-					int sign = Sign(val);
-					array.Set(r, c, FDS(sign*sqrt(abs(val)), 8, false));
+			opMass.EnableCase(3);
+			opMass.EnableCase(4);
+		}
+		if (opMass == 3 || opMass == 4) 
+			opInertia.DisableCase(0);
+		else
+			opInertia.EnableCase(0);
+	
+		bool isvol;
+		if (opInertia == 0) 
+			return;
+		else {
+			if (opInertia == 1) {
+				isvol = true;
+				cg = mesh.dt.mesh.GetCentreOfBuoyancy();
+			} else {
+				isvol = false;
+				cg = mesh.dt.mesh.GetCentreOfGravity_Surface();
+			}
+			x_g <<= cg.x;
+			y_g <<= cg.y;
+			z_g <<= cg.z;
+		}
+		
+		Matrix3d inertia3;
+		if (mesh.dt.mesh.GetInertia33(inertia3, c0, isvol, false) && !IsNull(cg)) {
+			MatrixXd inertia6;
+			mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
+			if (opmass == 3)
+				inertia6 *= mesh.dt.mesh.volume;
+			else if (opmass < 3) {
+				double m;
+				if (!IsNull(mass) && (opmass == 0 || opmass == 1))
+					m = mass;
+				else {
+					if (!IsNull(density))
+						m = density*mesh.dt.mesh.volume; 
+				}
+				inertia6 *= m;
+			}
+			grid.Clear();
+			if (opmass <= 3) {
+				for (int r = 0; r < 6; ++r)		
+					for (int c = 0; c < 6; ++c)
+						grid.Set(r, c, inertia6(r, c));
+			} else {
+				for (int r = 0; r < 3; ++r)	{	
+					for (int c = 0; c < 3; ++c) {
+						double val = inertia3(r, c);
+						int sign = Sign(val);
+						grid.Set(r, c+3, sign*sqrt(abs(val)));
+					}
 				}
 			}
 		}
@@ -147,55 +210,16 @@ void MenuProcessInertia::Action(bool vol, ArrayCtrl &array, const Point3D &cg) {
 	}	
 }
 
-void MenuProcessInertia::OpC0_WhenAction(bool action) {
-	Body &mesh = Bem().surfs[_id];
-	
-	x_0.Enable(opC0 != 0);
-	y_0.Enable(opC0 != 0);
-	z_0.Enable(opC0 != 0);
-	if (opC0 == 0) {
-		x_0 = mesh.dt.c0.x;
-		y_0 = mesh.dt.c0.y;
-		z_0 = mesh.dt.c0.z;
-	}
-	if (action) {
-		ActionV();
-		ActionS();
-	}
-}
-void MenuProcessInertia::OpCG_v_WhenAction(bool action) {
-	Body &mesh = Bem().surfs[_id];
-	
-	Point3D c = mesh.dt.mesh.GetCentreOfBuoyancy();
-	x_g_v = c.x;
-	y_g_v = c.y;
-	z_g_v = c.z;
-	if (action)
-		ActionV();
-}
-
-void MenuProcessInertia::OpCG_s_WhenAction(bool action) {
-	Body &mesh = Bem().surfs[_id];
-	
-	Point3D c = mesh.dt.mesh.GetCentreOfGravity_Surface();
-	x_g_s = c.x;
-	y_g_s = c.y;
-	z_g_s = c.z;
-	if (action)
-		ActionS();
-}
-
 void MenuProcessInertia::OpMass_WhenAction(bool action) {
 	Body &mesh = Bem().surfs[_id];
 	
 	mass.Enable(opMass == 1);
-	//mass.Show(opMass != 2);
 	density.Enable(opMass == 2);
-	//density.Show(opMass != 1);
 	
 	if (opMass == 0) {
 		mass = mesh.GetMass();
-		density = mass/mesh.dt.mesh.volume;
+		if (!IsNull(mass) && mesh.dt.mesh.volume > 0) 
+			density = mass/mesh.dt.mesh.volume;
 	} else if (opMass == 1) {
 		if (IsNull(mass)) {
 			if (IsNull(density))
@@ -207,7 +231,7 @@ void MenuProcessInertia::OpMass_WhenAction(bool action) {
 		if (IsNull(density)) {
 			if (IsNull(mass))
 				density = mesh.GetMass()/mesh.dt.mesh.volume; 
-			else
+			else if (mesh.dt.mesh.volume > 0)
 				density = mass/mesh.dt.mesh.volume; 
 		}
 	} 
@@ -220,13 +244,11 @@ void MenuProcessInertia::OpMass_WhenAction(bool action) {
 	else				
 		str = t_("Moments of inertia");
 	
-	labInertiaV.SetLabel(str);
-	labInertiaS.SetLabel(str);
+	butCopy.Enable(opMass <= 2);
+	
+	labInertia.SetLabel(str);
 		
-	if (action) {
-		ActionV();
-		ActionS();
-	}
+	Action();
 }	
 	
 	
@@ -242,10 +264,7 @@ void MainBody::Init() {
 
 	ArrayModel_Init(listLoaded, true).MultiSelect();
 	listLoaded.WhenSel = [&] {
-		OnMenuOpenArraySel();
-		OnMenuProcessArraySel();
-		OnMenuMoveArraySel();
-		OnMenuAdvancedArraySel();
+		OnArraySel();
 		LoadSelTab(Bem());
 		UpdateButtons();
 	};
@@ -425,31 +444,21 @@ void MainBody::Init() {
 	menuEdit.edit_z <<= 0;
 	menuEdit.edit_size <<= 1;
 	
+	menuEdit.edit_cx <<= 0;
+	menuEdit.edit_cy <<= 0;
+	menuEdit.edit_cz <<= 0;
+	menuEdit.opClose <<= true;
+	menuEdit.butExtrude <<= THISBACK(OnExtrude);
+	
 	menuEdit.butPanel <<= THISBACK(OnAddPanel);
 	menuEdit.panWidthX.WhenEnter << THISBACK(OnAddPanel);
 	menuEdit.panWidthY.WhenEnter << THISBACK(OnAddPanel);
 	
-	menuEdit.revolutionList.AddColumn("H").Ctrls<EditString>().HeaderTab().SetMargin(-2);
-	menuEdit.revolutionList.AddColumn("V").Ctrls<EditString>().HeaderTab().SetMargin(-2);
-	menuEdit.revolutionList.AddColumn("");
-	menuEdit.revolutionList.ColumnWidths("10 10 2");
-	menuEdit.revolutionList.NoHeader().MultiSelect();
-	menuEdit.revolutionList.SetLineCy(int(EditField::GetStdHeight()*2/3));
-	menuEdit.revolutionList.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, menuEdit.revolutionList, true, true);};
+	menuEdit.butRevolution.SetCtrl(dialogRevolution).Tip(t_("Generates a revolution mesh"));
+	menuEdit.butPolynomial.SetCtrl(dialogPolynomial).Tip(t_("Generates a polynomial flat panel"));
 	
-	menuEdit.butRevolution << THISBACK(OnAddRevolution);
-	menuEdit.revolutionList.WhenLeftDouble << THISBACK(OnAddRevolution);
-	
-	menuEdit.polynomialList.AddColumn("H").Ctrls<EditString>().HeaderTab().SetMargin(-2);
-	menuEdit.polynomialList.AddColumn("V").Ctrls<EditString>().HeaderTab().SetMargin(-2);
-	menuEdit.polynomialList.AddColumn("");
-	menuEdit.polynomialList.ColumnWidths("10 10 2");
-	menuEdit.polynomialList.NoHeader().MultiSelect();
-	menuEdit.polynomialList.SetLineCy(int(EditField::GetStdHeight()*2/3));
-	menuEdit.polynomialList.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, menuEdit.polynomialList, true, true);};
-	
-	menuEdit.butPolynomial << THISBACK(OnAddPolygonalPanel);
-	menuEdit.polynomialList.WhenLeftDouble << THISBACK(OnAddPolygonalPanel);
+	dialogRevolution.butOK << THISBACK(OnAddRevolution);
+	dialogPolynomial.butOK << THISBACK(OnAddPolygonalPanel);
 	
 	CtrlLayout(menuStability);
 	menuStability.heelingMoment <<= 0;
@@ -467,8 +476,8 @@ void MainBody::Init() {
 			return;
 		
 		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogPointsA.FromGrid(Bem().surfs[id].dt.controlPointsA);
-		Bem().surfs[id].dt.controlPointsA0 = clone(Bem().surfs[id].dt.controlPointsA);
+		dialogPointsA.FromGrid(Bem().surfs[id].cdt.controlPointsA);
+		Bem().surfs[id].cdt.controlPointsA0 = clone(Bem().surfs[id].cdt.controlPointsA);
 		
 		menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
 	};
@@ -479,8 +488,8 @@ void MainBody::Init() {
 			return;
 		
 		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogPointsB.FromGrid(Bem().surfs[id].dt.controlPointsB);
-		Bem().surfs[id].dt.controlPointsB0 = clone(Bem().surfs[id].dt.controlPointsB);
+		dialogPointsB.FromGrid(Bem().surfs[id].cdt.controlPointsB);
+		Bem().surfs[id].cdt.controlPointsB0 = clone(Bem().surfs[id].cdt.controlPointsB);
 		
 		menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
 	};
@@ -492,8 +501,8 @@ void MainBody::Init() {
 			return;
 		
 		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogPointsC.FromGrid(Bem().surfs[id].dt.controlPointsC);
-		Bem().surfs[id].dt.controlPointsC0 = clone(Bem().surfs[id].dt.controlPointsC);
+		dialogPointsC.FromGrid(Bem().surfs[id].cdt.controlPointsC);
+		Bem().surfs[id].cdt.controlPointsC0 = clone(Bem().surfs[id].cdt.controlPointsC);
 		
 		menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
 	};
@@ -505,8 +514,8 @@ void MainBody::Init() {
 			return;
 		
 		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogLoads.FromGrid(Bem().surfs[id].dt.controlLoads);
-		Bem().surfs[id].dt.controlLoads0 = clone(Bem().surfs[id].dt.controlLoads);
+		dialogLoads.FromGrid(Bem().surfs[id].cdt.controlLoads);
+		Bem().surfs[id].cdt.controlLoads0 = clone(Bem().surfs[id].cdt.controlLoads);
 		
 		menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));
 	};
@@ -517,14 +526,52 @@ void MainBody::Init() {
 		if (id < 0) 
 			return;
 		int num = 0;
-		for (int r = 0; r < dialogDamage.grid.GetRowCount(); ++r)
-			if (dialogDamage.grid.Get(r, 0) != id && dialogDamage.grid.Get(r, 1) == true)
+		Bem().surfs[id].cdt.damagedBodies.Clear();
+		for (int r = 0; r < dialogDamage.grid.GetRowCount(); ++r) {
+			int idd = dialogDamage.grid.Get(r, 0);
+			if (idd != id && dialogDamage.grid.Get(r, 1) == true) {
+				Bem().surfs[id].cdt.damagedBodies << &(Bem().surfs[idd]);
 				num++; 
+			}
+		}
 		menuStability.labDamage.SetText(Format(t_("%d damage"), num));
 	};
 	
 	menuStability.butArchimede <<= THISBACK(OnArchimede);
 	menuStability.butArchimede.Tip(t_("Let the body fall to rest"));	
+	
+	menuStability.butLoad.WhenAction = [&]() {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0)
+			return;
+		if (!LoadFromJsonFile(Bem().surfs[id].cdt, ~menuStability.file))
+			throw Exc(t_("Impossible to load file"));
+		OnMenuStabilityArraySel();
+	};
+	
+	menuStability.file.WhenChange = [&]() {menuStability.butLoad.WhenAction(); return true;};
+	menuStability.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
+	menuStability.butLoad << [&] {menuStability.file.DoGo();};
+	
+	menuStability.butSave.WhenAction = [&]() {
+		int id = ArrayModel_IdBody(listLoaded);
+		if (id < 0)
+			return;
+		
+		FileSel fs;
+		fs.Type(t_("Openings and loads"), "*.json");
+		fs.ActiveDir(saveFolder);
+		fs.ActiveType(0);
+		fs.Set(ForceExtSafer(~menuStability.file, ".json"));
+		
+		if (!fs.ExecuteSaveAs(t_("Save openings and loads data"))) 
+			throw Exc(t_("Cancelled by the user"));
+		
+		String fileName = ~fs;
+				
+		if (!StoreAsJsonFile(Bem().surfs[id].cdt, fileName, true))
+			throw Exc(t_("Impossible to save file"));
+	};
 	
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
@@ -598,15 +645,24 @@ void MainBody::Init() {
 	mainTab.Add(mainSummary.SizePos(), t_("Summary"));
 
 	mainStiffness.Init(Hydro::MAT_K);
-	mainTab.Add(mainStiffness.SizePos(), t_("Hydrostatic Stiffness"));
+	mainTab.Add(mainStiffness.SizePos(), t_("Hydrostatic Stiffness")).Disable();
 	
+	mainStiffness.opMassBuoy.Tip(t_("Obtain stiffness matrix including the effect of mass and buoyancy"));
 	mainStiffness.opMassBuoy.WhenAction = THISBACK2(OnUpdate, NONE, true);
+	mainStiffness.opMassBuoy.Hide();
 	
-	mainStiffness2.Init(Hydro::MAT_K2);
-	mainTab.Add(mainStiffness2.SizePos(), t_("Mooring Stiffness"));
+	mainM.Init(Hydro::MAT_M);
+	mainTab.Add(mainM.SizePos(), t_("Inertia")).Disable();
+	mainM.label.SetText(t_("Inertia Matrices"));
+	mainM.opMassBuoy.Hide();
+	
+	mainStiffness2.Init(Hydro::MAT_KMOOR);
+	mainTab.Add(mainStiffness2.SizePos(), t_("Mooring Stiffness")).Disable();
+	mainStiffness2.label.SetText(t_("Mooring Stiffness Matrices"));
+	mainStiffness2.opMassBuoy.Hide();
 	
 	mainGZ.Init();
-	mainTab.Add(mainGZ.SizePos(), t_("Stability GZ"));
+	mainTab.Add(mainGZ.SizePos(), t_("Stability GZ")).Disable();
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
@@ -616,10 +672,18 @@ void MainBody::Init() {
 			plot = convertProcess = false;
 		else if (mainTab.IsAt(splitterAll)) 
 			;
-		else if (mainTab.IsAt(mainStiffness)) {
+		else if (mainTab.IsAt(mainM)) {
+			plot = false;
+			move = true;
+			mainM.Load(Bem().surfs, ids);
+		} else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
 			move = true;
 			mainStiffness.Load(Bem().surfs, ids);
+		} else if (mainTab.IsAt(mainStiffness2)) {
+			plot = false;
+			move = true;
+			mainStiffness2.Load(Bem().surfs, ids);
 		} else if (mainTab.IsAt(mainGZ)) 
 			stability = true;
 		else 
@@ -690,6 +754,7 @@ void MainBody::OnMenuProcessArraySel() {
 	if (!IsNull(msh.dt.cg)) {
 		menuProcess.x_g <<= msh.dt.cg.x;
 		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.y_g <<= msh.dt.cg.y;
 		menuProcess.z_g <<= msh.dt.cg.z;
 	} else
 		menuProcess.x_g <<= menuProcess.y_g <<= menuProcess.z_g <<= Null;
@@ -714,11 +779,23 @@ void MainBody::OnMenuAdvancedArraySel() {
 		return;
 }
 
+void MainBody::OnMenuStabilityArraySel() {
+	int id = ArrayModel_IdBody(listLoaded);
+	if (id < 0)
+		return;
+	
+	dialogPointsA.ToGrid(Bem().surfs[id].cdt.controlPointsA0);
+	dialogPointsB.ToGrid(Bem().surfs[id].cdt.controlPointsB0);
+	dialogPointsC.ToGrid(Bem().surfs[id].cdt.controlPointsC0);
+	dialogLoads.ToGrid(Bem().surfs[id].cdt.controlLoads0);
+}
+
 void MainBody::OnArraySel() {
 	OnMenuOpenArraySel();
 	OnMenuProcessArraySel();
 	OnMenuMoveArraySel();
 	OnMenuAdvancedArraySel();
+	OnMenuStabilityArraySel();
 }
 	
 void MainBody::InitSerialize(bool ret) {
@@ -772,7 +849,7 @@ void MainBody::LoadSelTab(BEM &bem) {
 void MainBody::OnOpt() {
 	menuOpen.file.ClearTypes(); 
 
-	String meshFiles = Body::GetMeshExt();	//".gdf .dat .stl .pnl .msh .mesh .hst .grd .nc";
+	String meshFiles = Body::GetMeshExt();	//".gdf .dat .stl .pnl .msh .mesh .hst .grd .obj .nc";
 	
 	String meshFilesAst = clone(meshFiles);
 	meshFiles.Replace("*.", ".");
@@ -814,6 +891,8 @@ void MainBody::AfterAdd(String file, int num) {
 		surf.Report(Bem().rho);
 		
 		AddRow(surf);
+		
+		UpdateLast(id);
 	}
 
 	mainView.CalcEnvelope();
@@ -859,7 +938,7 @@ bool MainBody::OnLoad() {
 				double dz = 0.1;
 				if (msh.GetMass_all() == 0)
 					throw Exc(t_("Set mass before fitting buoyancy"));
-				if (!msh.TranslateArchimede(Bem().rho, dz)) 
+				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz)) 
 					throw Exc(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
 				
 				msh.AfterLoad(Bem().rho, Bem().g, false, false, true);
@@ -904,6 +983,21 @@ void MainBody::OnConvertBody() {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
+		} else {
+			for (int i = 0; i < sel.size(); ++i)
+				sel[i] = Bem().GetBodyId(i);
+		}
+		
+		if (type == Body::AQWA_DAT) {
+			bool mismatch = false;
+			for (int i = 0; i < sel.size(); ++i) {
+				if (Bem().surfs[i].dt.c0 != Bem().surfs[i].dt.cg) {
+					mismatch = true;
+					break;
+				}
+			}
+			if (mismatch && !PromptOKCancel(t_("In some body the centre of gravity is not the same that the body axis.&Do you wish to continue?")))
+				return;
 		}
 		
 		Status(t_("Saving mesh data"));
@@ -1135,7 +1229,7 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 			
 			if (~menuMove.opZArchimede) {
 				double dz = 0;
-				if (!msh.TranslateArchimede(Bem().rho, dz))
+				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz))
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
 				else {
 					videoCtrl.AddReg(Point3D(0, 0, dz));
@@ -1151,7 +1245,7 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 			
 			if (~menuMove.opZArchimede) {
 				double dz = 0;
-				if (!msh.TranslateArchimede(Bem().rho, dz))
+				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz))
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
 				else {
 					videoCtrl.AddReg(Point3D(0, 0, dz));
@@ -1183,7 +1277,11 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 }
 
 void MainBody::UpdateLast(int id) {
-	mainStiffness.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded));
+	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainM)).Enable(mainM.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainStiffness2)).Enable(mainStiffness2.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainGZ)).Enable(Bem().surfs.size() > 0);
+
 	mainView.CalcEnvelope();
 	mainSummary.Report(Bem().surfs, id);
 }
@@ -1217,7 +1315,7 @@ void MainBody::OnArchimede() {
 			throw Exc(t_("Set cog before fitting buoyancy"));
 
 		double roll, pitch, dz;
-		if (!msh.Archimede(Bem().rho, Bem().g, roll, pitch, dz))
+		if (!msh.Archimede(Bem().rho, Bem().g, 0.05, roll, pitch, dz))
 			BEM::PrintError(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
 		
 		menuProcess.x_g <<= msh.dt.cg.x;
@@ -1328,18 +1426,82 @@ void MainBody::OnAddPanel() {
 	mainView.gl.Enable();
 }
 
+DropCtrlDialogRevolution::DropCtrlDialogRevolution() {
+	CtrlLayout(*this);
+		
+	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
+	list.SetToolBar();
+	list.AddColumn(t_("y"), 15).Edit(y);
+	list.AddColumn(t_("z"), 15).Edit(z);
+	list.Add();
+	
+	scatter.SetLabelX("y").SetLabelY("z").SetMargin(50, 20, 20, 50).ShowAllMenus();
+	scatter.AddSeries(points);
+	
+	SetDeactivate(false);
+	
+	butCancel.WhenAction = [&]() {Close();};
+	y.WhenAction = z.WhenAction = THISBACK(UpdatePlot);
+}
+	
+void DropCtrlDialogRevolution::UpdatePlot() {
+	points.Clear();
+	for (int r = 0; r < list.GetRowCount(); ++r) {
+		double y = list.Get(r, 0);
+		double z = list.Get(r, 1);
+		if (!IsNull(y) && !IsNull(z))
+			points << Pointf(y, z);
+	}
+	scatter.ZoomToFit(false, true);
+	scatter.SetXYMin(0, Null);
+	scatter.SetXYMax(scatter.GetSeriesMaxX()*1.2, Null);
+}
+
+DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
+	CtrlLayout(*this);
+		
+	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
+	list.SetToolBar();
+	list.AddColumn(t_("x"), 15).Edit(x);
+	list.AddColumn(t_("y"), 15).Edit(y);
+	list.Add();
+
+	scatter.SetLabelX("x").SetLabelY("y").SetMargin(50, 20, 20, 50).ShowAllMenus();
+	scatter.AddSeries(points);
+		
+	SetDeactivate(false);
+	
+	butCancel.WhenAction = [&]() {Close();};
+	
+	x.WhenAction = y.WhenAction = THISBACK(UpdatePlot);
+}
+	
+void DropCtrlDialogPolynomial::UpdatePlot() {
+	points.Clear();
+	for (int r = 0; r < list.GetRowCount(); ++r) {
+		double x = list.Get(r, 0);
+		double y = list.Get(r, 1);
+		if (!IsNull(x) && !IsNull(y))
+			points << Pointf(x, y);
+	}
+	scatter.ZoomToFit(true, true, .2);
+}
+
+
 void MainBody::OnAddRevolution() {
 	GuiLock __;
 	
+	dialogRevolution.Close();
+	
 	UVector<Pointf> vals;
-	for (int r = 0; r < menuEdit.revolutionList.GetCount(); ++r) {
+	for (int r = 0; r < dialogRevolution.list.GetCount(); ++r) {
 		Pointf &val = vals.Add();
-		val.x = ScanDouble(AsString(menuEdit.revolutionList.Get(r, 0)));
+		val.x = ScanDouble(AsString(dialogRevolution.list.Get(r, 0)));
 		if (IsNull(val.x)) {
 			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 0));
 			return;
 		}
-		val.y = ScanDouble(AsString(menuEdit.revolutionList.Get(r, 1)));
+		val.y = ScanDouble(AsString(dialogRevolution.list.Get(r, 1)));
 		if (IsNull(val.x)) {
 			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
@@ -1375,15 +1537,17 @@ void MainBody::OnAddRevolution() {
 void MainBody::OnAddPolygonalPanel() {
 	GuiLock __;
 	
+	dialogPolynomial.Close();
+	
 	UVector<Pointf> vals;
-	for (int r = 0; r < menuEdit.polynomialList.GetCount(); ++r) {
+	for (int r = 0; r < dialogPolynomial.list.GetCount(); ++r) {
 		Pointf &val = vals.Add();
-		val.x = ScanDouble(AsString(menuEdit.polynomialList.Get(r, 0)));
+		val.x = ScanDouble(AsString(dialogPolynomial.list.Get(r, 0)));
 		if (IsNull(val.x)) {
 			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 0));
 			return;
 		}
-		val.y = ScanDouble(AsString(menuEdit.polynomialList.Get(r, 1)));
+		val.y = ScanDouble(AsString(dialogPolynomial.list.Get(r, 1)));
 		if (IsNull(val.x)) {
 			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
@@ -1414,6 +1578,45 @@ void MainBody::OnAddPolygonalPanel() {
 		BEM::PrintError(DeQtfLf(e));
 	}
 	mainView.gl.Enable();
+}
+
+void MainBody::OnExtrude() {
+	GuiLock __;
+
+	try {
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			BEM::PrintError(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IdBody(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IdBody(listLoaded);
+			if (id < 0) {
+				BEM::PrintError(t_("Please select a model to process"));
+				return;
+			}
+		}
+
+		WaitCursor waitcursor;
+		mainView.gl.Disable();
+		
+		Bem().Extrude(id, ~menuEdit.edit_cx, ~menuEdit.edit_cy, ~menuEdit.edit_cz, ~menuEdit.opClose);
+	
+		Body &msh = Bem().surfs[id];
+		
+		msh.AfterLoad(Bem().rho, Bem().g, false, false);
+		
+		msh.Report(Bem().rho);
+		After();
+		mainViewData.OnAddedModel(mainView);
+		OnOpt();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+	mainView.gl.Enable();	
 }
 
 void MainBody::OnAddWaterSurface(char c) {
@@ -1838,6 +2041,7 @@ void MainBody::Jsonize(JsonIO &json) {
 		("menuMove_opZArchimede", menuMove.opZArchimede)
 		("mainGZ", mainGZ)
 		("videoCtrl", videoCtrl)
+		("menuStability_file", menuStability.file)
 	;
 	if (json.IsLoading()) {
 		if (IsNull(dropExportId) || dropExportId < 0)
@@ -2132,14 +2336,14 @@ void MainView::OnPaint() {
 				gl.PaintLines(msh.dt.mesh.lines, color);
 					
 			if (~GetMenuPlot().showPoints) {
-				for (int i = 0; i < msh.dt.controlPointsA.size(); ++i)
-					gl.PaintCube(msh.dt.controlPointsA[i].p, len/5, msh.dt.controlPointsA[i].p.z > 0 ? Red() : LtBlue());
-				for (int i = 0; i < msh.dt.controlPointsB.size(); ++i)
-					gl.PaintCube(msh.dt.controlPointsB[i].p, len/5, msh.dt.controlPointsB[i].p.z > 0 ? Red() : LtBlue());
-				for (int i = 0; i < msh.dt.controlPointsC.size(); ++i)
-					gl.PaintCube(msh.dt.controlPointsC[i].p, len/5, msh.dt.controlPointsC[i].p.z > 0 ? Red() : LtBlue());
-				for (int i = 0; i < msh.dt.controlLoads.size(); ++i)
-					gl.PaintCube(msh.dt.controlLoads[i].p, len/5, msh.dt.controlLoads[i].p.z > 0 ? LtRed() : LtBlue());
+				for (int i = 0; i < msh.cdt.controlPointsA.size(); ++i)
+					gl.PaintCube(msh.cdt.controlPointsA[i].p, len/5, msh.cdt.controlPointsA[i].p.z > 0 ? Red() : LtBlue());
+				for (int i = 0; i < msh.cdt.controlPointsB.size(); ++i)
+					gl.PaintCube(msh.cdt.controlPointsB[i].p, len/5, msh.cdt.controlPointsB[i].p.z > 0 ? Red() : LtBlue());
+				for (int i = 0; i < msh.cdt.controlPointsC.size(); ++i)
+					gl.PaintCube(msh.cdt.controlPointsC[i].p, len/5, msh.cdt.controlPointsC[i].p.z > 0 ? Red() : LtBlue());
+				for (int i = 0; i < msh.cdt.controlLoads.size(); ++i)
+					gl.PaintCube(msh.cdt.controlLoads[i].p, len/5, msh.cdt.controlLoads[i].p.z > 0 ? LtRed() : LtBlue());
 			}
 			
 			if (paintSelect) {
@@ -2191,7 +2395,9 @@ const WithMenuBodyPlot<StaticRect> &MainView::GetMenuPlot() const {
 
 void MainView::CalcEnvelope() {
 	env.Reset();
-	//for (int i = 0; i < Bem().surfs.size(); ++i)
+//	for (int i = 0; i < Bem().surfs.size(); ++i)
+//		env.MixEnvelope(Bem().surfs[i].dt.mesh.env);
+	
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {
 		int id = ArrayModel_IdBody(GetMain().listLoaded, row);
 		if (id < 0)
@@ -2371,13 +2577,13 @@ void MainGZ::OnUpdate() {
 				   .Legend("").NoPlot().SetDataSecondaryY();
 			if (~opShowPOIs) {
 				for (int j = 0; j < zA.size(); ++j)
-					scatter.AddSeries(dangle, zA[j]).NoMark().Legend(Format(t_("Unpr.%s.z %.1f"), msh.dt.controlPointsA[j].name, angle))
+					scatter.AddSeries(dangle, zA[j]).NoMark().Legend(Format(t_("Unpr.%s.z %.1f"), msh.cdt.controlPointsA[j].name, angle))
 					   			.Stroke(1, color).Dash(LINE_DASHED);	
 				for (int j = 0; j < zB.size(); ++j)
-					scatter.AddSeries(dangle, zB[j]).NoMark().Legend(Format(t_("WeaT.%s.z %.1f"), msh.dt.controlPointsB[j].name, angle))
+					scatter.AddSeries(dangle, zB[j]).NoMark().Legend(Format(t_("WeaT.%s.z %.1f"), msh.cdt.controlPointsB[j].name, angle))
 					   			.Stroke(1, color).Dash(LINE_DOTTED);	
 				for (int j = 0; j < zC.size(); ++j)
-					scatter.AddSeries(dangle, zC[j]).NoMark().Legend(Format(t_("WatT.%s.z %.1f"), msh.dt.controlPointsC[j].name, angle))
+					scatter.AddSeries(dangle, zC[j]).NoMark().Legend(Format(t_("WatT.%s.z %.1f"), msh.cdt.controlPointsC[j].name, angle))
 					   			.Stroke(1, color).Dash(LINE_DOTTED_FINER);	
 			}
 			scatter.ZoomToFit(true, true);/*
@@ -2481,12 +2687,12 @@ void MainGZ::ClearX(bool all) {
 	if (idOpened >= 0 && all) {
 		Body &msh = Bem().surfs[idOpened];
 		
-		for (int j = 0; j < msh.dt.controlPointsA.size(); ++j)
-			array.Set(row++, 0, Format(t_("Unpr.%s.z [m]"), msh.dt.controlPointsA[j].name));
-		for (int j = 0; j < msh.dt.controlPointsB.size(); ++j)
-			array.Set(row++, 0, Format(t_("WeaT.%s.z [m]"), msh.dt.controlPointsB[j].name));
-		for (int j = 0; j < msh.dt.controlPointsC.size(); ++j)
-			array.Set(row++, 0, Format(t_("WatT.%s.z [m]"), msh.dt.controlPointsC[j].name));
+		for (int j = 0; j < msh.cdt.controlPointsA.size(); ++j)
+			array.Set(row++, 0, Format(t_("Unpr.%s.z [m]"), msh.cdt.controlPointsA[j].name));
+		for (int j = 0; j < msh.cdt.controlPointsB.size(); ++j)
+			array.Set(row++, 0, Format(t_("WeaT.%s.z [m]"), msh.cdt.controlPointsB[j].name));
+		for (int j = 0; j < msh.cdt.controlPointsC.size(); ++j)
+			array.Set(row++, 0, Format(t_("WatT.%s.z [m]"), msh.cdt.controlPointsC[j].name));
 	}
 }
 		

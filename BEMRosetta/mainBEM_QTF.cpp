@@ -102,7 +102,7 @@ void QTFTabDof::DoClick(Data &data/*, int idof*/) {
 		if (!hy.IsLoadedQTF(isSum))
 			continue;
 		 
-		int idh = FindDelta(hy.dt.qh, FixHeading_0_360(head), 2.);
+		int idh = FindDelta(hy.dt.qhead, FixHeading_0_360(head), 2.);
 		if (idh < 0) 
 			continue;
 		
@@ -306,7 +306,7 @@ void QTFTabDof::Load(const Hydro &hy, int _ib, int _ih, int _idof, bool _ndim, b
 		this->idof = _idof;
 		this->ndim = _ndim;
 		this->show_w = _show_w;
-		this->head = FixHeading(hy.dt.qh[ih], Bem().headingType);
+		this->head = FixHeading(hy.dt.qhead[ih], Bem().headingType);
 		this->showPoints = _showPoints;
 		this->fromY0 = _fromY0;
 		this->autoFit = _autoFit;
@@ -375,8 +375,8 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 	
 		head.real(FixHeading_0_360(headQTF->Get(row, 0)));
 		head.imag(FixHeading_0_360(headQTF->Get(row, 1)));
-		int ih = FindClosest(hy.dt.qh, head);
-		head = FixHeading(hy.dt.qh[ih], Bem().headingType);
+		int ih = hy.dt.FindClosestQTFHead(head);
+		head = FixHeading(hy.dt.qhead[ih], Bem().headingType);
 		
 		bool ndim = mbm.menuPlot.showNdim;
 		bool show_w = mbm.menuPlot.opwT == 0;
@@ -485,7 +485,7 @@ bool MainQTF::Load() {
 				opQTF.SetIndex(0);
 				
 			UArray<std::complex<double>> qh;					// Prepare qtf headings to be shown ordered
-			for (const auto &c : hy.dt.qh)
+			for (const auto &c : hy.dt.qhead)
 				qh << FixHeading(c, Bem().headingType);
 			
 			Sort(qh, SortComplex);

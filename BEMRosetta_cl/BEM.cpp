@@ -22,15 +22,22 @@ const char *BEM::strDOFnum[] 	 = {t_("1"), t_("2"), t_("3"), t_("4"), t_("5"), t
 const char *BEM::strDOFnum_sub[] = {t_("₁"), t_("₂"), t_("₃"), t_("₄"), t_("₅"), t_("₆")};
 const char *BEM::strDOFxyz[] 	 = {t_("x"), t_("y"), t_("z"), t_("rx"), t_("ry"), t_("rz")};
 	
-const char *BEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
-BEM::DOFType BEM::dofType = BEM::DOFSurgeSway;
+const char *BasicBEM::strDOFType[] = {t_("1,2,3,4,5,6"), t_("surge,sway,"), t_("x,y,z,rx,ry,rz"), ""};
+BasicBEM::DOFType BEM::dofType = BasicBEM::DOFSurgeSway;
 
-const char *BEM::strHeadingType[] = {t_("-180->180º"), t_("0->360º"), ""};
-BEM::HeadingType BEM::headingType = BEM::HEAD_180_180;
+const char *BasicBEM::strHeadingType[] = {t_("-180->180º"), t_("0->360º"), ""};
+BasicBEM::HeadingType BEM::headingType = BasicBEM::HEAD_180_180;
 	
 
-bool PrintStatus(String s, int) {
-	Cout() << "\n" << RemoveAccents(s);
+bool PrintStatus(String s, int v) {
+	if (v == 0)
+		printf("\n%s", ~RemoveAccents(s));
+	else {
+		printf("\r%s", ~RemoveAccents(s));
+		int done = v/5;
+		int pending = 20 - done;
+		printf(" |%s%s|                    ", ~String('*', done), ~String('-', pending));
+	}
 	return true;
 };
 
@@ -42,7 +49,7 @@ BEM::BEM() {
 }
 
 int BEM::LoadBEM(String fileName, Function <bool(String, int)> Status, bool checkDuplicated) {
-	Status(t_("Loading files"), 10);
+	Status(t_("Loading files"), 0);
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < hydros.size(); ++i) {
@@ -323,6 +330,17 @@ void BEM::UnderwaterBody(int id, Function <bool(String, int pos)> Status) {
 }
 
 void BEM::RemoveBody(int id) {
+	Body *b = &(surfs[id]);
+	for (int i = 0; i < surfs.size(); ++i) {
+		if (i != id) {
+			for (int j = 0; j < surfs[i].cdt.damagedBodies.size(); ++j) {
+				if (surfs[i].cdt.damagedBodies[j] == b) {
+					surfs[i].cdt.damagedBodies.Remove(j);
+					break;
+				}
+			}
+		}
+	}
 	surfs.Remove(id);
 	if (surfs.IsEmpty())
 		Body::ResetIdCount();
@@ -378,6 +396,7 @@ void BEM::AddFlatRectangle(double x, double y, double z, double size, double pan
 		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddFlatRectangle(panWidth, panHeight, size, size); 
 		surf.dt.mesh.Translate(x, y, z);
+		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
@@ -392,6 +411,7 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddRevolution(vals, size); 
 		surf.dt.mesh.Translate(x, y, z);
+		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
@@ -406,9 +426,25 @@ void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<P
 		surf.dt.SetCode(Body::EDIT);
 		surf.dt.mesh.AddPolygonalPanel(vals, size, true); 
 		surf.dt.mesh.Translate(x, y, z);
+		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		throw std::move(e);
+	}	
+}
+
+void BEM::Extrude(int id, double dx, double dy, double dz, bool close) {
+	try {
+		Body &surf = surfs[id];
+	
+		if (surf.dt.mesh.volume != 0)
+			throw Exc(t_("It is only possible to extrude a flat surface"));
+
+		surf.dt.mesh.Extrude(dx, dy, dz, close);
+		
+	} catch (Exc e) {
+		Print("\n" + Format(t_("Problem extruding surface: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -545,7 +581,7 @@ String Hydro::LoadSerialization(String fileName) {
 	return String();
 }
 	
-void Hydro::SaveSerialization(String fileName) {
+void Hydro::SaveSerialization(String fileName) const {
 	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
 	if (!StoreAsJsonFile(*this, fileName, true)) {
 		BEM::PrintError("\n" + Format(t_("Error saving '%s'"), fileName));
@@ -553,7 +589,7 @@ void Hydro::SaveSerialization(String fileName) {
 	}
 }
 
-void Hydro::SaveForce(FileOut &out, Hydro::Forces &f) {
+void Hydro::SaveForce(FileOut &out, const Hydro::Forces &f) const {
 	const String &sep = Bem().csvSeparator;
 	
 	out << sep;
@@ -593,7 +629,7 @@ void Hydro::SaveForce(FileOut &out, Hydro::Forces &f) {
 	}
 }	
 
-void Hydro::SaveMD(FileOut &out) {
+void Hydro::SaveMD(FileOut &out) const {
 	const String &sep = Bem().csvSeparator;
 	
 	out  << "Head [deg]" << sep << "Frec [rad/s]";
@@ -623,7 +659,7 @@ void Hydro::SaveMD(FileOut &out) {
 	}
 }
 
-void Hydro::SaveC(FileOut &out) {
+void Hydro::SaveC(FileOut &out) const {
 	const String &sep = Bem().csvSeparator;
 	
 	out  << "DoF";
@@ -645,7 +681,7 @@ void Hydro::SaveC(FileOut &out) {
 	}
 }
 
-void Hydro::SaveM(FileOut &out) {
+void Hydro::SaveM(FileOut &out) const {
 	const String &sep = Bem().csvSeparator;
 	
 	out  << "DoF";
@@ -667,7 +703,7 @@ void Hydro::SaveM(FileOut &out) {
 	}
 }
 	
-void Hydro::SaveCSVMat(String fileName) {
+void Hydro::SaveCSVMat(String fileName) const {
 	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
 	
 	String folder = GetFileFolder(fileName);
@@ -823,7 +859,7 @@ void Hydro::SaveCSVMat(String fileName) {
 	}		
 }
 
-void Hydro::SaveCSVTable(String fileName) {
+void Hydro::SaveCSVTable(String fileName) const {
 	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
 	
 	String folder = GetFileFolder(fileName);

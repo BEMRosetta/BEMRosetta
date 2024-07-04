@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String AQWABody::Load_LIS(UArray<Body> &msh, String fileName, double g, bool &y0z, bool &x0z) {
+String AQWABody::LoadLis(UArray<Body> &msh, String fileName, double g, bool &y0z, bool &x0z) {
 	y0z = x0z = false;
 	
 	BEM bem;
@@ -25,7 +25,7 @@ String AQWABody::Load_LIS(UArray<Body> &msh, String fileName, double g, bool &y0
 	return String();
 }
 
-String AQWABody::Load_DAT(UArray<Body> &mesh, Hydro &hy, String fileName) {
+String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_("Impossible to open file");
@@ -144,6 +144,36 @@ String AQWABody::Load_DAT(UArray<Body> &mesh, Hydro &hy, String fileName) {
 							panel.id[3] = panel.id[0];
 					}
 				}
+			} else if (deck == 3) {
+				if (f.IsInt(0)) {
+					int ib = f.GetInt(0)-1;
+					if (ib >= mesh.size())
+						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+					if (f.GetInt(1) > 98000) {
+						if (mesh[ib].dt.M.size() != 36)
+							mesh[ib].dt.M = MatrixXd::Zero(6, 6);
+						mesh[ib].dt.M(0, 0) = mesh[ib].dt.M(1, 1) = mesh[ib].dt.M(2, 2) = f.GetDouble(2);
+					}
+				}	
+			} else if (deck == 4) {
+				String str = f.GetText(0);
+				if (str.Find("PMAS") > 0) {
+					str.Replace("PMAS", "");
+					int ib = ScanInt(str);
+					if (!IsNull(ib) && f.GetInt(1) >= 98000) {
+						ib--;
+						if (ib >= mesh.size())
+							throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+						if (mesh[ib].dt.M.size() != 36)
+							mesh[ib].dt.M = MatrixXd::Zero(6, 6);
+						mesh[ib].dt.M(3, 3) = f.GetDouble(2);
+						mesh[ib].dt.M(3, 4) = mesh[ib].dt.M(4, 3) = f.GetDouble(3);
+						mesh[ib].dt.M(3, 5) = mesh[ib].dt.M(5, 3) = f.GetDouble(4);
+						mesh[ib].dt.M(4, 4) = f.GetDouble(5);
+						mesh[ib].dt.M(4, 5) = mesh[ib].dt.M(5, 4) = f.GetDouble(6);
+						mesh[ib].dt.M(5, 5) = f.GetDouble(7);
+					}
+				}
 			} else if (deck == 5) {
 				if (f.GetText(0) == "DPTH")
 					hy.dt.h = f.GetDouble(1);
@@ -173,13 +203,13 @@ String AQWABody::Load_DAT(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	return String();
 }
 
-void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
+void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
 			const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
 	FileOut ret(fileName);
 	if (!ret.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));
 	
-	ASSERT(meshes.size() == surfs.size());
+	ASSERT(mesh.size() == surfs.size());
 	
 	Time t = GetSysTime();
 	String st = Format("%02d/%02d/%4d %02d:%02d:%02d", t.day, t.month, t.year, t.hour, t.minute, t.second);
@@ -241,7 +271,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray
 			ret << Format("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
 						FDS(p.x/factorLength, 10, true), FDS(p.y/factorLength, 10, true), FDS(p.z/factorLength, 10, true));
 		}
-		const Point3D &cg = meshes[ib].dt.cg;
+		const Point3D &cg = mesh[ib].dt.cg;
 		ret << Format("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
 	}
@@ -306,8 +336,8 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray
 	<< "********************************************************************************\n"
 	<< "          MATE\n";
 		
-	for (int ib = 0; ib < meshes.size(); ++ib)
-		ret << Format("    %2d         %5d  %s", ib+1, 9800+ib, FDS(meshes[ib].GetMass(), 8, true));
+	for (int ib = 0; ib < mesh.size(); ++ib)
+		ret << Format("    %2d         %5d  %s", ib+1, 9800+ib, FDS(mesh[ib].GetMass(), 8, true));
 
 	ret	<< "\n END\n";	
 		
@@ -317,10 +347,10 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray
 	<< "********************************************************************************\n"
 	<< "          GEOM\n";
 
-	for (int ib = 0; ib < meshes.size(); ++ib)
+	for (int ib = 0; ib < mesh.size(); ++ib)
 		ret << Format("%6d%s     %5d%s%s%s%s%s%s", ib+1, "PMAS", 9800+ib, 
-			FDS(meshes[ib].dt.M(3, 3), 10, true), FDS(meshes[ib].dt.M(3, 4), 10, true), FDS(meshes[ib].dt.M(3, 5), 10, true),
-			FDS(meshes[ib].dt.M(4, 4), 10, true), FDS(meshes[ib].dt.M(4, 5), 10, true), FDS(meshes[ib].dt.M(5, 5), 10, true));
+			FDS(mesh[ib].dt.M(3, 3), 10, true), FDS(mesh[ib].dt.M(3, 4), 10, true), FDS(mesh[ib].dt.M(3, 5), 10, true),
+			FDS(mesh[ib].dt.M(4, 4), 10, true), FDS(mesh[ib].dt.M(4, 5), 10, true), FDS(mesh[ib].dt.M(5, 5), 10, true));
 
 	ret	<< "\n END\n";
 	
@@ -342,7 +372,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &meshes, const UArray
 	<< "*********************************** DECK  6 ************************************\n"
 	<< "********************************************************************************\n";
 	
-	for (int ib = 0; ib < meshes.size(); ++ib) {
+	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";
 		ret << Format("          FDR%d\n", ib+1);
 		for (int iw = 0; iw < hrtz.size(); ++iw) 

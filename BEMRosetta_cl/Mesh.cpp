@@ -3,10 +3,10 @@
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 CAPY_NC, 		UNKNOWN, NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Capytaine.nc","Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false, 	    false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.nc", 	    "*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 CAPY_NC, 		OBJ,   UNKNOWN, NUMMESH};	
+const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Capytaine.nc","Obj", "Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false, 	    false, 	false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.nc", 	    "*.obj","*.*"};       
 
 int Body::idCount = 0;
 
@@ -26,6 +26,7 @@ String Body::GetMeshExt() {
 	
 void Body::Copy(const Body &msh) {
 	dt.Copy(msh.dt);
+	cdt.Copy(msh.cdt);
 }
 
 void Body::Data::Copy(const Body::Data &msh) {
@@ -54,7 +55,12 @@ void Body::Data::Copy(const Body::Data &msh) {
 	mesh = clone(msh.mesh);
 	under = clone(msh.under);
 	mesh0 = clone(msh.mesh0);
-	
+		
+	SetCode(msh.GetCode());
+	SetId(msh.GetId());
+}
+
+void Body::ControlData::Copy(const Body::ControlData &msh) {
 	controlPointsA = clone(msh.controlPointsA);
 	controlPointsB = clone(msh.controlPointsB);
 	controlPointsC = clone(msh.controlPointsC);
@@ -64,9 +70,7 @@ void Body::Data::Copy(const Body::Data &msh) {
 	controlPointsB0 = clone(msh.controlPointsB0);
 	controlPointsC0 = clone(msh.controlPointsC0);
 	controlLoads0 = clone(msh.controlLoads0);
-		
-	SetCode(msh.GetCode());
-	SetId(msh.GetId());
+	damagedBodies = clone(msh.damagedBodies);
 }
 
 String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
@@ -107,7 +111,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 						ret = DiodoreBody::LoadDat(mesh, file);
 						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) { 	
 							Hydro hy;
-							ret = AQWABody::Load_DAT(mesh, hy, file);
+							ret = AQWABody::LoadDat(mesh, hy, file);
 							y0z = hy.dt.symX;
 							x0z = hy.dt.symY;
 						}
@@ -116,7 +120,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			}
 		}
 	} else if (ext == ".lis")
-		ret = AQWABody::Load_LIS(mesh, file, g, y0z, x0z);
+		ret = AQWABody::LoadLis(mesh, file, g, y0z, x0z);
 #ifdef PLATFORM_WIN32	
 	else if (ext == ".owr")
 		ret = ORCABody::Load_OWR(mesh, file, g, y0z, x0z);
@@ -163,6 +167,14 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			return std::move(e);
 		}
 		m.dt.SetCode(Body::MIKE21_GRD);
+	} else if (ext == ".obj") {
+		Body &m = mesh.Add();
+		try {
+			LoadOBJ(file, m.dt.mesh);
+		} catch(Exc e) {
+			return std::move(e);
+		}
+		m.dt.SetCode(Body::OBJ);
 	} else if (ext == ".mesh" || ext == ".bem") {
 		Body &m = mesh.Add();
 		try {
@@ -200,7 +212,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		//if (!IsNull(rho))
 		m.AfterLoad(rho, g, false, true);
 		
-		m.IncrementIdCount();
+		//m.IncrementIdCount();
 	}
 	return String();
 }
@@ -296,10 +308,10 @@ void Body::Reset(double rho, double g) {
 	dt.mesh = clone(dt.mesh0);
 	if (!IsNull(dt.cg0))
 		dt.cg = clone(dt.cg0);
-	dt.controlPointsA = clone(dt.controlPointsA0);
-	dt.controlPointsB = clone(dt.controlPointsB0);
-	dt.controlPointsC = clone(dt.controlPointsC0);
-	dt.controlLoads = clone(dt.controlLoads0);
+	cdt.controlPointsA = clone(cdt.controlPointsA0);
+	cdt.controlPointsB = clone(cdt.controlPointsB0);
+	cdt.controlPointsC = clone(cdt.controlPointsC0);
+	cdt.controlLoads = clone(cdt.controlLoads0);
 	
 	AfterLoad(rho, g, false, false);
 }
@@ -337,12 +349,14 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 			dt.Vo = dt.under.volume;
 	}
 	if (isFirstTime) {
+		IncrementIdCount();
+		
 		dt.mesh0 = clone(dt.mesh);
 		dt.cg0 = clone(dt.cg);
-		dt.controlPointsA0 = clone(dt.controlPointsA);
-		dt.controlPointsB0 = clone(dt.controlPointsB);
-		dt.controlPointsC0 = clone(dt.controlPointsC);
-		dt.controlLoads0 = clone(dt.controlLoads);
+		cdt.controlPointsA0 = clone(cdt.controlPointsA);
+		cdt.controlPointsB0 = clone(cdt.controlPointsB);
+		cdt.controlPointsC0 = clone(cdt.controlPointsC);
+		cdt.controlLoads0 = clone(cdt.controlLoads);
 	}
 	if (!onlyCG && !IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb))
 		dt.under.GetHydrostaticStiffness(dt.C, dt.c0, dt.cg, dt.cb, rho, g, GetMass(), massBuoy);
@@ -423,9 +437,9 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 
 	base0.Rotate(0, 0, ToRad(angleCalc), dt.c0.x, dt.c0.y, dt.c0.z);
 	
-	zA.SetCount(dt.controlPointsA.size());
-	zB.SetCount(dt.controlPointsB.size());
-	zC.SetCount(dt.controlPointsC.size());
+	zA.SetCount(cdt.controlPointsA.size());
+	zB.SetCount(cdt.controlPointsB.size());
+	zC.SetCount(cdt.controlPointsC.size());
 	
 	double dz = 0.1;
 	for (double angle = from; angle <= to; angle += delta) {
@@ -437,11 +451,12 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 			
 		base.Rotate(0, ToRad(angle), 0, dt.c0.x, dt.c0.y, dt.c0.z);
 		
-		Surface uunder;
-		if (!base.TranslateArchimede(rho, dz, uunder))
-			throw Exc(t_("Problem obtaining GZ"));
+		Point3D ccb;
+		double allvol;
+		if (!base.TranslateArchimede(rho, tolerance, dz, ccb, allvol)) {
+			//throw Exc(t_("Problem obtaining GZ"));
 		
-		if (uunder.VolumeMatch(tolerance, tolerance) < 0) {
+		//if (uunder.VolumeMatch(tolerance, tolerance) < 0) {
 			if (!error.IsEmpty())
 				error << "\n";
 			error << Format("Around %.2f, angle %.2f", angleCalc, angle);
@@ -463,11 +478,12 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 			for (auto &z : zC)
 				z << Null;
 		} else {
-			Point3D ccb = uunder.GetCentreOfBuoyancy();
-			Force6D fcb = Surface::GetHydrostaticForceCB(dt.c0, ccb, uunder.volume, rho, g);
+			//Point3D ccb = uunder.GetCentreOfBuoyancy();
+			Force6D fcb = Force6D::Zero();//Surface::GetHydrostaticForceCB(dt.c0, ccb, uunder.volume, rho, g);
+			fcb.AddLinear(Direction3D(0, 0, allvol*rho*g), ccb, dt.c0);
 			
 			Force6D fcg = Surface::GetMassForce(dt.c0, base.dt.cg, GetMass(), g);
-			for (const auto &d : base.dt.controlLoads)
+			for (const auto &d : base.cdt.controlLoads)
 				fcg += Surface::GetMassForce(dt.c0, d.p, d.mass, g);
 			
 			double moment = -(fcg.r.y + fcb.r.y);
@@ -476,19 +492,19 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 			dataangle << angle;
 			datagz << gz;
 			dataMoment << moment;
-			vol << uunder.volume;
-			disp << uunder.volume*rho;
-			wett << uunder.GetArea();
-			wplane << uunder.GetWaterPlaneArea();
-			draft << uunder.GetEnvelope().minZ;
+			vol << allvol;
+			disp << allvol*rho;
+			wett << base.dt.under.GetArea();
+			wplane << base.dt.under.GetWaterPlaneArea();
+			draft << base.dt.under.GetEnvelope().minZ;
 			dcb << ccb;
-			dcg << base.dt.cg;
+			dcg << base.GetCG_all();
 			for (int i = 0; i < zA.size(); ++i)
-				zA[i] << base.dt.controlPointsA[i].p.z;
+				zA[i] << base.cdt.controlPointsA[i].p.z;
 			for (int i = 0; i < zB.size(); ++i)
-				zB[i] << base.dt.controlPointsB[i].p.z;
+				zB[i] << base.cdt.controlPointsB[i].p.z;
 			for (int i = 0; i < zC.size(); ++i)
-				zC[i] << base.dt.controlPointsC[i].p.z;
+				zC[i] << base.cdt.controlPointsC[i].p.z;
 		}
 	}	
 }
@@ -501,13 +517,13 @@ void Body::Move(double dx, double dy, double dz, double ax, double ay, double az
 	if (!IsNull(dt.cg))
 		dt.cg.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
 	
-	for (auto &d : dt.controlPointsA)
+	for (auto &d : cdt.controlPointsA)
 		d.p.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
-	for (auto &d : dt.controlPointsB)
+	for (auto &d : cdt.controlPointsB)
 		d.p.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
-	for (auto &d : dt.controlPointsC)
+	for (auto &d : cdt.controlPointsC)
 		d.p.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
-	for (auto &d : dt.controlLoads)
+	for (auto &d : cdt.controlLoads)
 		d.p.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
 	
 	AfterLoad(rho, g, false, setnewzero);	
@@ -536,61 +552,74 @@ void Body::Translate(double dx, double dy, double dz) {
 	dt.mesh.Translate(dx, dy, dz);
 	if (!IsNull(dt.cg))
 		dt.cg.Translate(dx, dy, dz);
-	for (auto &d : dt.controlPointsA)
+	for (auto &d : cdt.controlPointsA)
 		d.p.Translate(dx, dy, dz);
-	for (auto &d : dt.controlPointsB)
+	for (auto &d : cdt.controlPointsB)
 		d.p.Translate(dx, dy, dz);
-	for (auto &d : dt.controlPointsC)
+	for (auto &d : cdt.controlPointsC)
 		d.p.Translate(dx, dy, dz);
-	for (auto &d : dt.controlLoads)
+	for (auto &d : cdt.controlLoads)
 		d.p.Translate(dx, dy, dz);
+	for (Body *b : cdt.damagedBodies)
+		if (b->IsValid())
+			b->Translate(dx, dy, dz);
 }
 
 void Body::Rotate(double a_x, double a_y, double a_z, double c_x, double c_y, double c_z) {
 	dt.mesh.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
 	if (!IsNull(dt.cg))
 		dt.cg.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
-	for (auto &d : dt.controlPointsA)
+	for (auto &d : cdt.controlPointsA)
 		d.p.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
-	for (auto &d : dt.controlPointsB)
+	for (auto &d : cdt.controlPointsB)
 		d.p.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
-	for (auto &d : dt.controlPointsC)
+	for (auto &d : cdt.controlPointsC)
 		d.p.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
-	for (auto &d : dt.controlLoads)
+	for (auto &d : cdt.controlLoads)
 		d.p.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
+	for (Body *b : cdt.damagedBodies)
+		if (b->IsValid())
+			b->Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
 }	
 
-bool Body::TranslateArchimede(double rho, double &dz) {
-	Surface under;
-	return TranslateArchimede(rho, dz, under);
+bool Body::TranslateArchimede(double rho, double tolerance, double &dz) {
+	Point3D cb;
+	double allvol;
+	return TranslateArchimede(rho, tolerance, dz, cb, allvol);
 }
 
-bool Body::TranslateArchimede(double rho, double &dz, Surface &under) {
-	if (!dt.mesh.TranslateArchimede(GetMass_all(), rho, dz, under))
+bool Body::TranslateArchimede(double rho, double tolerance, double &dz, Point3D &cb, double &allvol) {
+	UVector<Surface *> damaged;
+	for (Body *b : cdt.damagedBodies)
+		if (b->IsValid())
+			damaged << &(b->dt.mesh);
+	
+	if (!dt.mesh.TranslateArchimede(GetMass_all(), rho, damaged, tolerance, dz, cb, allvol))
 		return false;
 	if (!IsNull(dt.cg))
 		dt.cg.Translate(0, 0, dz);
-	for (auto &d : dt.controlPointsA)
+	for (auto &d : cdt.controlPointsA)
 		d.p.Translate(0, 0, dz);
-	for (auto &d : dt.controlPointsB)
+	for (auto &d : cdt.controlPointsB)
 		d.p.Translate(0, 0, dz);
-	for (auto &d : dt.controlPointsC)
+	for (auto &d : cdt.controlPointsC)
 		d.p.Translate(0, 0, dz);
-	for (auto &d : dt.controlLoads)
+	for (auto &d : cdt.controlLoads)
 		d.p.Translate(0, 0, dz);
 	return true;
 }
 
 void Body::PCA(double &yaw) {
-	Value3D ax1, ax2, ax3;
-	dt.mesh.PrincipalComponents(ax1, ax2, ax3);
-	yaw = -atan(abs(ax1.y/ax1.x));
+	//Value3D ax1, ax2, ax3;
+	//dt.mesh.PrincipalComponents(ax1, ax2, ax3);
+	//yaw = -atan(abs(ax1.y/ax1.x));
+	
+	yaw = dt.mesh.YawMainAxis();
 	
 	Rotate(0, 0, yaw, dt.c0.x, dt.c0.y, dt.c0.z);		// Adjusts the yaw error
 }
 	
-bool Body::Archimede(double rho, double g, double &roll, double &pitch, double &dz) {
-	Surface under;
+bool Body::Archimede(double rho, double g, double tolerance, double &roll, double &pitch, double &dz) {
 	Point3D cb;
 	double resroll, respitch;
 	double mass = GetMass_all();
@@ -599,12 +628,11 @@ bool Body::Archimede(double rho, double g, double &roll, double &pitch, double &
 		Body bod = clone(*this);
 		
 		bod.Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);
-		bod.TranslateArchimede(rho, dz, under);
+		double allvol;
+		bod.TranslateArchimede(rho, tolerance, dz, cb, allvol);
 		
-		Force6D fcg = Surface::GetMassForce(bod.dt.c0, bod.dt.cg, mass, g);
-		
-		cb = under.GetCentreOfBuoyancy();
-		Force6D fcb = Surface::GetHydrostaticForceCB(bod.dt.c0, cb, under.volume, rho, g);
+		Force6D fcg = Surface::GetMassForce(bod.dt.c0, bod.GetCG_all(), mass, g);
+		Force6D fcb = Surface::GetHydrostaticForceCB(bod.dt.c0, cb, allvol, rho, g);
 	
 		resroll  = fcb.r.x + fcg.r.x;		// ∑ Froll = 0		(around cg, not around c0)
 		respitch = fcb.r.y + fcg.r.y;		// ∑ Fpitch = 0	
@@ -634,6 +662,8 @@ bool Body::Archimede(double rho, double g, double &roll, double &pitch, double &
 		roll += droll;
 		pitch += dpitch;
 		
+		LOG(Format("Archimede roll: %f %f pitch: %f %f", roll, droll, pitch, dpitch));
+		
 		double nresroll, nrespitch;
 		Residual(roll, pitch, nresroll, nrespitch);
 		
@@ -651,7 +681,7 @@ bool Body::Archimede(double rho, double g, double &roll, double &pitch, double &
 	}
 	
 	Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);	// Moves just the necessary
-	TranslateArchimede(rho, dz, under);
+	TranslateArchimede(rho, tolerance, dz);
 	Value3D delta = dt.cg0 - dt.cg;
 	Translate(delta.x, delta.y, 0);
 	
@@ -687,6 +717,7 @@ void Body::Jsonize(JsonIO &json) {
 		("mesh", dt.mesh)
 		("under", dt.under)
 		("mesh0", dt.mesh0)
+		("ControlData", cdt)
 	;
 }
 

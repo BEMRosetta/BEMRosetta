@@ -12,7 +12,15 @@
 
 using namespace Upp;
 
-enum Symmetry {SYM_NO, SYM_XZ, SYM_YZ, SYM_XZ_YZ, SYM_AXISYMMETRIC};
+
+class BasicBEM {
+public:
+	enum DOFType {DOF123, DOFSurgeSway, DOFxyz};
+	enum HeadingType {HEAD_180_180, HEAD_0_360};
+	static const char *strDOFType[];
+	static const char *strHeadingType[];
+	enum Symmetry {SYM_NO, SYM_XZ, SYM_YZ, SYM_XZ_YZ, SYM_AXISYMMETRIC};
+};
 
 class BEM;
 BEM &Bem();
@@ -28,7 +36,7 @@ class Body : public Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, UNKNOWN, NUMMESH};	
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, UNKNOWN, NUMMESH};	
 	static const char *meshStr[];
 	static const bool meshCanSave[];
 	static const char *meshExt[];
@@ -42,6 +50,9 @@ public:
 	Body& operator=(const Body &msh) 	{Copy(msh); return *this;};
 	Body(const Body &msh) 				{Copy(msh);}
 	Body(const Body &msh, int) 			{Copy(msh);}
+	
+	virtual ~Body() {magic = 0;}
+	bool IsValid() {return magic == 0xB0DE;}
 	
 	bool IsEmpty() {return dt.mesh.IsEmpty();}
 	
@@ -78,9 +89,9 @@ public:
 		
 	void Translate(double dx, double dy, double dz);
 	void Rotate(double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
-	bool TranslateArchimede(double rho, double &dz);
-	bool TranslateArchimede(double rho, double &dz, Surface &under);
-	bool Archimede(double rho, double g, double &roll, double &pitch, double &dz);
+	bool TranslateArchimede(double rho, double tolerance, double &dz);
+	bool TranslateArchimede(double rho, double tolerance, double &dz, Point3D &cb, double &allvol);
+	bool Archimede(double rho, double g, double tolerance, double &roll, double &pitch, double &dz);
 	void PCA(double &yaw);
 		
 	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy = true);
@@ -124,7 +135,7 @@ public:
 	}
 	double GetMass_all() const	{
 		double mass = GetMass();
-		for (const auto &d : dt.controlLoads)
+		for (const auto &d : cdt.controlLoads)
 			mass += d.mass;
 				
 		return mass;
@@ -132,7 +143,7 @@ public:
 	Point3D GetCG_all() const {
 		double mass = GetMass();
 		Point3D cg = dt.cg*mass;
-		for (const auto &d : dt.controlLoads) {
+		for (const auto &d : cdt.controlLoads) {
 			cg.x += d.mass*d.p.x;
 			cg.y += d.mass*d.p.y;
 			cg.z += d.mass*d.p.z;
@@ -171,44 +182,70 @@ public:
 		
 		String name;
 		String fileName;
-		//bool useMesh = false;
 		String fileHeader;
 		String lidFile;
 		
 		Surface mesh, under, mesh0;
-		//Surface lid;
 		
-		void SetId(int iid)					{id = iid;}
+		void SetId(int iid) {
+			//ASSERT(iid >= 0);
+			id = iid;
+		}
 		int  GetId() const					{return id;}
 		
 		void	 SetCode(MESH_FMT _code)	{code = _code;}
 		MESH_FMT GetCode() const			{return code;}
 			
-		struct ControlPoint {
-			String name;
-			Point3D p;
-		};
-		struct ControlLoad {
-			String name;
-			Point3D p;
-			double mass;
-		};
-		
-		UArray<ControlPoint> controlPointsA, controlPointsA0;
-		UArray<ControlPoint> controlPointsB, controlPointsB0;
-		UArray<ControlPoint> controlPointsC, controlPointsC0;
-		UArray<ControlLoad> controlLoads, controlLoads0;
-		
 	private:
 		MESH_FMT code = UNKNOWN;
 		int id = -1;
 	};
 	Data dt;
 	
+	class ControlData {
+	public:
+		void Copy(const ControlData &data);
+		ControlData() {}
+		ControlData(const ControlData &data) 		{Copy(data);}
+		ControlData(const ControlData &data, int) 	{Copy(data);}
+		
+		struct ControlPoint {
+			String name;
+			Point3D p;
+			
+			void Jsonize(JsonIO &json) {json ("name", name)("p", p);};
+		};
+		struct ControlLoad {
+			String name;
+			Point3D p;
+			double mass;
+			
+			void Jsonize(JsonIO &json) {json ("name", name)("p", p)("mass", mass);};
+		};
+		
+		UArray<ControlPoint> controlPointsA, controlPointsA0;
+		UArray<ControlPoint> controlPointsB, controlPointsB0;
+		UArray<ControlPoint> controlPointsC, controlPointsC0;
+		UArray<ControlLoad> controlLoads, controlLoads0;
+		UVector<Body *> damagedBodies;
+		
+		void Jsonize(JsonIO &json) {
+			json
+				("controlPointsA0", controlPointsA0)
+				("controlPointsB0", controlPointsB0)
+				("controlPointsC0", controlPointsC0)
+				("controlLoads0", controlLoads0)
+			;
+		}
+	};
+	ControlData cdt;
+	
 	static void ResetIdCount()	{idCount = 0;}
 	void IncrementIdCount()		{dt.SetId(idCount++);}
 	
 	static int idCount;
+private:
+	int magic = 0xB0DE;
 };
 
 class Hydro : public Moveable<Hydro> {
@@ -459,7 +496,7 @@ public:
 	void Converge(const UArray<Hydro> &hydros, const UVector<int> &ids);
 		
 	void SortFrequencies();
-	void SortHeadings();
+	void SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rangeMD, BasicBEM::HeadingType rangeQTF);
 	
 	void MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan, Tensor<double, 4> &Bpan) const;
 	void SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
@@ -678,6 +715,9 @@ public:
 	double GMroll(int ib) const;
 	double GMpitch(int ib) const;
 	
+	static BasicBEM::HeadingType ShortestHeadingRange(const UVector<double> &head);
+	static BasicBEM::HeadingType ShortestHeadingRange(const VectorXcd &head);
+	
 	void CheckNaN();
 		
 	void Jsonize(JsonIO &json);
@@ -736,7 +776,7 @@ public:
 	    String stsProcessor;
 	    
 	    VectorXd  qw;		 			// [Nf]             Wave frequencies
-	    VectorXcd qh;					// [Nh]             Wave headings
+	    VectorXcd qhead;				// [Nh]             Wave headings
 	    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
 	    bool qtfdataFromW = true;
 	    int qtftype = 0;				// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field	
@@ -768,6 +808,11 @@ public:
 		void SetId(int _id)			{id = _id;}
 		int GetId()	const			{return id;}
 	
+		int FindClosestHead(double h) const;
+		int FindClosestMDHead(const std::complex<double> &h) const	{return FindClosestHead(mdhead, h);}
+		int FindClosestQTFHead(const std::complex<double> &h) const	{return FindClosestHead(qhead, h);}
+		static int FindClosestHead(const VectorXcd &list, const std::complex<double> &h);
+		
 	private:
 		int id = -1;
 	};
@@ -786,24 +831,24 @@ public:
 	
 	void ResetForces1st(Hydro::FORCE force);
 	
-	void SaveForce(FileOut &out, Hydro::Forces &f);
-	void SaveMD(FileOut &out);
-	void SaveC(FileOut &out);
-	void SaveM(FileOut &out);
+	void SaveForce(FileOut &out, const Hydro::Forces &f) const;
+	void SaveMD(FileOut &out) const;
+	void SaveC(FileOut &out) const;
+	void SaveM(FileOut &out) const;
 	
 public:
 	String LoadSerialization(String file);
-	void SaveSerialization(String file);
+	void SaveSerialization(String file) const;
 	
 	static int LoadHydro(UArray<Hydro> &hydro, String file, Function <bool(String, int)> Status);
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int solver, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const;
 	
-	void SaveCSVMat(String file);
-	void SaveCSVTable(String file);
+	void SaveCSVMat(String file) const;
+	void SaveCSVTable(String file) const;
 	
-	void SaveDiodoreHDB(String file);
+	void SaveDiodoreHDB(String file) const;
 	
 	UVector<String> Check(BEM_FMT type) const;
 	
@@ -816,7 +861,7 @@ public:
 				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H, PLOT_A_P, PLOT_B_P, 
 				 PLOT_FORCE_FK_1_P, PLOT_FORCE_FK_2_P, PLOT_FORCE_SC_1_P, PLOT_FORCE_SC_2_P,
 				 PLOT_FORCE_FK_1_PB, PLOT_FORCE_FK_2_PB};
-	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_K2, MAT_DAMP_QUAD};
+	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_KMOOR, MAT_DAMP_QUAD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
 		return strDataToPlot[dataToPlot];
@@ -1123,8 +1168,8 @@ public:
 
 class AQWABody : public Body {
 public:
-	static String Load_DAT(UArray<Body> &mesh, Hydro &hy, String fileName);
-	static String Load_LIS(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
+	static String LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName);
+	static String LoadLis(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
 	static void SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z,
 			const UVector<double> &w, const UVector<double> &head, bool getQTF = false, bool getPotentials = false, double h = 300, int numCores = 4);
 
@@ -1157,7 +1202,7 @@ class Wamit : public Hydro {
 public:
 	Wamit() {}
 	String Load(String file, Function <bool(String, int)> Status);
-	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null);
+	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null) const;
 	void Save_out(String file) const;
 	virtual ~Wamit() noexcept {}
 	
@@ -1394,7 +1439,7 @@ private:
 		if (r < 3 && c < 3)
 			return mass;
 		else if (r >= 3 && c >= 3)
-			return len*len*len;
+			return mass*len*len;
 		else
 			return mass*len;
 	}
@@ -1445,7 +1490,7 @@ class BemioH5 : public Hydro {
 public:
 	BemioH5() {}
 	String Load(String file, double rho = Null);
-	void Save(String file);
+	void Save(String file) const;
 	virtual ~BemioH5() noexcept {}	
 	
 private:
@@ -1507,12 +1552,8 @@ public:
 	
 	double depth, rho, g, len;
 	
-	enum DOFType {DOF123, DOFSurgeSway, DOFxyz};
-	static DOFType dofType;
-	enum HeadingType {HEAD_180_180, HEAD_0_360};
-	static HeadingType headingType;
-	static const char *strDOFType[];
-	static const char *strHeadingType[];
+	static BasicBEM::DOFType dofType;
+	static BasicBEM::HeadingType headingType;
 	
 	int calcAinf = false, calcAinf_w = false;
 	int legend_w_units = true, legend_w_solver = true;
@@ -1573,6 +1614,7 @@ public:
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddWaterSurface(int id, char c);
+	void Extrude(int id, double dx, double dy, double dz, bool close);
 	
 	String LoadSerializeJson();
 	bool StoreSerializeJson();
@@ -1640,8 +1682,8 @@ public:
 			("pythonEnv", pythonEnv)
 		;
 		if (json.IsLoading()) {
-			dofType = BEM::DOFType(idofType);
-			headingType = BEM::HeadingType(iheadingType);
+			dofType = BasicBEM::DOFType(idofType);
+			headingType = BasicBEM::HeadingType(iheadingType);
 			if (IsEmpty(nemohPath))
 				nemohPath = GetFileFolder(nemohPathPreprocessor);
 			if (IsEmpty(nemoh115Path))
@@ -1700,27 +1742,27 @@ public:
 			}
 			return mx;
 		};
-		if (dofType == DOF123)
+		if (dofType == BasicBEM::DOF123)
 			return MaxLen(strDOFnum);
-		else if (dofType == DOFSurgeSway)
+		else if (dofType == BasicBEM::DOFSurgeSway)
 			return MaxLen(strDOFtext);
 		else
 			return MaxLen(strDOFxyz);	
 	}
 
 	static const char *StrDOF(int i) {
-		if (dofType == DOF123)
+		if (dofType == BasicBEM::DOF123)
 			return strDOFnum[i];
-		else if (dofType == DOFSurgeSway)
+		else if (dofType == BasicBEM::DOFSurgeSway)
 			return strDOFtext[i];
 		else
 			return strDOFxyz[i];
 	}
 			
 	static const char *StrDOFAbrev(int i) {
-		if (dofType == DOF123)
+		if (dofType == BasicBEM::DOF123)
 			return strDOFnum[i];
-		else if (dofType == DOFSurgeSway)
+		else if (dofType == BasicBEM::DOFSurgeSway)
 			return strDOFtextAbrev[i];
 		else
 			return strDOFxyz[i];

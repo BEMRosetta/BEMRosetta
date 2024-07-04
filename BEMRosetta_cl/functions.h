@@ -89,12 +89,29 @@ void Decay(double mass, double ainf, double av, double Kh, double b, double b2, 
 
 double FixHeading_0_360(double head);
 double FixHeading_180(double head);
-double FixHeading(double head, BEM::HeadingType range);
+double FixHeading(double head, BasicBEM::HeadingType range);
 std::complex<double> FixHeading_180(const std::complex<double> &head);
 std::complex<double> FixHeading_0_360(const std::complex<double> &head);
-std::complex<double> FixHeading(const std::complex<double> &head, BEM::HeadingType range);
+std::complex<double> FixHeading(const std::complex<double> &head, BasicBEM::HeadingType range);
 
 bool SortComplex(const std::complex<double>& a, const std::complex<double>& b);
+
+template <class Rng>
+typename Rng::value_type Range(const Rng &vals) {	
+	if (vals.size() == 0)
+		return 0;
+	typename Rng::value_type mn = First(vals);
+	typename Rng::value_type mx = mn;
+	for (int i = 1; i < vals.size(); ++i) {
+		if (vals[i] > mx)
+			mx = vals[i];
+		else if (vals[i] < mn)
+			mn = vals[i];
+	}
+	return mx - mn;
+}
+
+std::complex<double> RangeHead(const VectorXcd &vals);
 	
 void SetPhaseToMag(std::complex<double> &val, double arg);
 void AddPhase(std::complex<double> &val, double arg);

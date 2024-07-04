@@ -166,11 +166,11 @@ void Main::Init() {
 	
 	editdofType.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.dofType.SetFocus(); menuOptions.dofType.Underline(1);};
 	editdofType.SetReadOnly();
-	editdofType <<= BEM::strDOFType[Bem().dofType];
+	editdofType <<= BasicBEM::strDOFType[Bem().dofType];
 	
 	editHeadingType.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.headingType.SetFocus(); menuOptions.headingType.Underline(1);};
 	editHeadingType.SetReadOnly();
-	editHeadingType <<= BEM::strHeadingType[Bem().headingType];
+	editHeadingType <<= BasicBEM::strHeadingType[Bem().headingType];
 	
 	butWindow.SetImage(Img::application_double()).Tip(t_("Open new window"));
 	butWindow.Hide();
@@ -249,8 +249,8 @@ void Main::OptionsUpdated(double rho, double g, int dofType, int headingType) {
 	
 	editg <<= g;
 	editrho <<= rho;
-	editdofType <<= BEM::strDOFType[dofType];
-	editHeadingType <<= BEM::strHeadingType[headingType];
+	editdofType <<= BasicBEM::strDOFType[dofType];
+	editHeadingType <<= BasicBEM::strHeadingType[headingType];
 	
 	mainBEM.UpdateButtons();
 }

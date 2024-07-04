@@ -541,8 +541,8 @@ void Hydro::AddWave(int ib, double dx, double dy) {
     auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
         int sign = isSum ? 1 : -1;
 		{
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) {
-	            double angle = ToRad(dt.qh[ih].imag());
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+	            double angle = ToRad(dt.qhead[ih].imag());
 	            double dist = dx*cos(angle) + dy*sin(angle);
 				for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) {
@@ -755,7 +755,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 			double dx = delta(0, ib);
 			double dy = delta(1, ib);
 			double dz = delta(2, ib);
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) {
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 				for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) {
 						std::complex<double> &v0 = qtf[ib][ih][0](ifr1, ifr2),
@@ -775,9 +775,9 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
     };
 
 	// QTF translation only valid for same headings. Crossed headings are deleted
-	for (int ih = int(dt.qh.size())-1; ih >= 0; --ih) { 
-		if (dt.qh[ih].real() != dt.qh[ih].imag()) {
-			Remove(dt.qh, ih);
+	for (int ih = int(dt.qhead.size())-1; ih >= 0; --ih) { 
+		if (dt.qhead[ih].real() != dt.qhead[ih].imag()) {
+			Remove(dt.qhead, ih);
 			for (int ib = 0; ib < dt.Nb; ++ib) {
 				if (IsLoadedQTF(true)) 
 					dt.qtfsum[ib].Remove(ih);
@@ -977,7 +977,7 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 			
 	auto MultiplySumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 		for (int ib = 0; ib < dt.Nb; ++ib)
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) 
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) 
 				for (int idof = 0; idof < _idDOF.size(); ++idof) 
 					qtf[ib][ih][_idDOF[idof]] *= factor;													
 	};
@@ -1078,7 +1078,7 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		SwapMD();
 		
 	auto SwapSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
-        for (int ih = 0; ih < dt.qh.size(); ++ih) 
+        for (int ih = 0; ih < dt.qhead.size(); ++ih) 
 			Swap(qtf[ib1][ih][idof1], qtf[ib2][ih][idof2]); 		
 	};
 	if (IsLoadedQTF(true)) 
@@ -1224,7 +1224,7 @@ void Hydro::DeleteFrequenciesQTF(const UVector<int> &idFreqQTF) {
 		
 		auto DeleteSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 			for (int ib = 0; ib < dt.Nb; ++ib)
-		        for (int ih = 0; ih < dt.qh.size(); ++ih) 
+		        for (int ih = 0; ih < dt.qhead.size(); ++ih) 
 					for (int idf = 0; idf < 6; ++idf) {
 						MatrixXcd &m = qtf[ib][ih][idf];
 						m = MatrixXcd(m(indexing::all, ids));
@@ -1310,12 +1310,12 @@ void Hydro::DeleteHeadingsMD(const UVector<int> &idHead) {
 void Hydro::DeleteHeadingsQTF(const UVector<int> &idHeadQTF) {
 	if (idHeadQTF.size() > 0) {
 		UVector<int> vids;
-		LinSpaced(vids, int(dt.qh.size()), 0, int(dt.qh.size())-1);
+		LinSpaced(vids, int(dt.qhead.size()), 0, int(dt.qhead.size())-1);
 		for (int i = idHeadQTF.size()-1; i >= 0; --i) 
 			vids.Remove(idHeadQTF[i]);
 		VectorXi ids;
 		::Copy(vids, ids);
-		dt.qh = VectorXcd(dt.qh(ids));
+		dt.qhead = VectorXcd(dt.qhead(ids));
 			
 		auto DeleteSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 			for (int ib = 0; ib < dt.Nb; ++ib)
@@ -1426,7 +1426,7 @@ void Hydro::FillFrequencyGapsQTF(bool zero, int maxFreq) {
 	
 	auto FillSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) {
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 				for (int idof = 0; idof < 6; ++idof) {
 					MatrixXcd nm, &m = qtf[ib][ih][idof];
 					GapFilling(dt.qw, dt.qw, m, idsx, w0x, idsx, w0x, nw, nw, nm, zero, maxFreq);					
@@ -1541,7 +1541,7 @@ void Hydro::FillFrequencyGapsQTFZero() {
 	
 	auto FillSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) {
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 				for (int idof = 0; idof < 6; ++idof) {
 					MatrixXcd &m = qtf[ib][ih][idof];
 					if (m.size() == 0 || !IsNum(m(0,0)))
@@ -1559,7 +1559,7 @@ void Hydro::FillFrequencyGapsQTFZero() {
 
 void Hydro::CopyQTF_MD() {
 	dt.mdtype = 9;
-	::Copy(dt.qh, dt.mdhead);
+	::Copy(dt.qhead, dt.mdhead);
 	
 	Initialize_MD(dt.md, dt.Nb, int(dt.mdhead.size()), dt.Nf);
 
@@ -1567,7 +1567,7 @@ void Hydro::CopyQTF_MD() {
 	::Copy(dt.w, ww);
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-        for (int ih = 0; ih < dt.qh.size(); ++ih) {
+        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 			for (int idof = 0; idof < 6; ++idof) {
 				const MatrixXcd &m = dt.qtfdif[ib][ih][idof];
 				VectorXd diag = Eigen::abs(m.diagonal().array());
@@ -1619,7 +1619,7 @@ void Hydro::Symmetrize() {
 		
 	auto SymmetrizeSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) {
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 				for (int idf = 0; idf < 6; ++idf) { 
 					MatrixXcd &c = qtf[ib][ih][idf];
 					Eigen::Index rows = c.rows();
@@ -1745,7 +1745,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 	for (int i = hydros.size() - num; i < hydros.size(); ++i) {
 		Hydro &hyd = hydros[i];
 
-		String ret = hyd.AfterLoad(Status);
+		ret = hyd.AfterLoad(Status);
 		if (!ret.IsEmpty()) {
 			//String error = RemoveAccents(ret);
 			hydros.SetCount(hydros.size() - num);

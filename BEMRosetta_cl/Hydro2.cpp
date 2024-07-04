@@ -177,92 +177,185 @@ void Hydro::Dimensionalize() {
 //		0	180
 //		0	1
 
-void Hydro::SortHeadings() {
-	UVector<double> nhead;
-	for (int ih = 0; ih < dt.head.size(); ++ih)
-		FindAdd(nhead, FixHeading_0_360(dt.head[ih]));
-	
-	UVector<int> indices_h = GetSortOrderX(nhead);
-	SetSortOrder(nhead, indices_h);
-	dt.head = pick(nhead);
-	dt.Nh = indices_h.size();
-
-	UArray<std::complex<double>> nmhead;
-	for (int ih = 0; ih < dt.mdhead.size(); ++ih)
-		FindAdd(nmhead, FixHeading_0_360(dt.mdhead[ih]));
-	
-	UVector<int> indices_md = GetSortOrderX(nmhead, SortComplex);
-	
-	dt.mdhead.resize(nmhead.size());		// Cannot pick()
-	for (int ih = 0; ih < dt.mdhead.size(); ++ih)
-		dt.mdhead[ih] = nmhead[indices_md[ih]];
-		
-	auto SortF = [&](Forces &F) {
-		Forces f = clone(F);
-		for (int ih = 0; ih < dt.Nh; ++ih) 
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				for (int ib = 0; ib < dt.Nb; ++ib) 
-					for (int idf = 0; idf < 6; ++idf) 
-						F[ib][ih](ifr, idf) = f[ib][indices_h[ih]](ifr, idf);
-		//F.SetCount(dt.Nh);
-	};
-
-	auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
-		UArray<UArray<UArray<VectorXd>>> _md = clone(MD);
-		for (int ib = 0; ib < dt.Nb; ++ib) {
-			MD[ib].SetCount(int(dt.mdhead.size()));
-			for (int ih = 0; ih < dt.mdhead.size(); ++ih)
-				for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr = 0; ifr < dt.Nf; ++ifr) 		
-						MD[ib][ih][idf][ifr] = _md[ib][indices_md[ih]][idf][ifr];
+void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rangeMD, BasicBEM::HeadingType rangeQTF) {
+	{	// Forces
+		UVector<double> nhead;
+		UVector<int> indices;
+		for (int ih = 0; ih < dt.head.size(); ++ih) {
+			double h = FixHeading(dt.head[ih], range);
+			int id = Find(nhead, h);
+			if (id < 0) {	// Duplicated headings are discarded
+				nhead << h;
+				indices << ih;
+			}
 		}
-	};
+		UVector<int> order = GetSortOrderX(nhead);
+		SetSortOrder(nhead, order);
+		SetSortOrder(indices, order);
+		
+		dt.head = pick(nhead);
+		dt.Nh = dt.head.size();
 			
-	if (IsLoadedFex())
-		SortF(dt.ex);
-	if (IsLoadedFsc())
-		SortF(dt.sc);
-	if (IsLoadedFfk())
-		SortF(dt.fk);
-	if (IsLoadedRAO()) 
-		SortF(dt.rao);	
-
-	if(IsLoadedMD())
-		SortMD(dt.md);
-
-	UArray<std::complex<double>> nqh;
-	for (int ih = 0; ih < dt.qh.size(); ++ih)
-		FindAdd(nqh, FixHeading_0_360(dt.qh[ih]));
-	
-	UVector<int> indices_qw = GetSortOrderX(nqh, SortComplex);
-	
-	dt.qh.resize(nqh.size());
-	for (int ih = 0; ih < dt.qh.size(); ++ih)
-		dt.qh[ih] = nqh[ih];
-	
-	auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
-		UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
-		for (int ib = 0; ib < dt.Nb; ++ib) {
-			QTF[ib].SetCount(int(dt.qh.size()));
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) 
-	        	for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
-						for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
-							QTF[ib][ih][idf](ifr1, ifr2) = qtf[ib][indices_qw[ih]][idf](ifr1, ifr2);
+		auto SortF = [&](Forces &F) {
+			Forces f(dt.Nb);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				f[ib].SetCount(dt.Nh);
+				for (int ih = 0; ih < dt.Nh; ++ih) {
+					f[ib][ih].resize(dt.Nf, 6);
+					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+						for (int idf = 0; idf < 6; ++idf) 
+							f[ib][ih](ifr, idf) = F[ib][indices[ih]](ifr, idf);
+				}
+			}
+			F = pick(f);
+		};
+				
+		if (IsLoadedFex())
+			SortF(dt.ex);
+		if (IsLoadedFsc())
+			SortF(dt.sc);
+		if (IsLoadedFfk())
+			SortF(dt.fk);
+		if (IsLoadedRAO()) 
+			SortF(dt.rao);	
+	}
+	{	// Mean Drift
+		UArray<std::complex<double>> nhead;
+		UVector<int> indices;
+		for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
+			std::complex<double> h = FixHeading(dt.mdhead[ih], rangeMD);
+			int id = Find(nhead, h);
+			if (id < 0) {	// Duplicated headings are discarded
+				nhead << h;
+				indices << ih;
+			}
 		}
-	};
+		UVector<int> order = GetSortOrderX(nhead, SortComplex);
+		SetSortOrder(nhead, order);
+		SetSortOrder(indices, order);
 		
-	if (IsLoadedQTF(true))
-		SortQTF(dt.qtfsum);
-	if (IsLoadedQTF(false))
-		SortQTF(dt.qtfdif);
+		dt.mdhead.resize(nhead.size());		// Cannot pick()
+		for (int ih = 0; ih < dt.mdhead.size(); ++ih)
+			dt.mdhead[ih] = nhead[ih];
+			
+		auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
+			UArray<UArray<UArray<VectorXd>>> md(dt.Nb);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				md[ib].SetCount(int(dt.mdhead.size()));
+				for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
+					md[ib][ih].SetCount(6);
+					for (int idf = 0; idf < 6; ++idf) {
+						md[ib][ih][idf].resize(dt.Nf);
+						for (int ifr = 0; ifr < dt.Nf; ++ifr) 		
+							md[ib][ih][idf][ifr] = MD[ib][indices[ih]][idf][ifr];
+					}
+				}
+			}
+			MD = pick(md);
+		};
+		
+		if(IsLoadedMD())
+			SortMD(dt.md);
+	}
+	{	// Full QTF
+		UArray<std::complex<double>> nhead;
+		UVector<int> indices;
+		for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+			std::complex<double> h = FixHeading(dt.qhead[ih], rangeQTF);
+			int id = Find(nhead, h);
+			if (id < 0) {	// Duplicated headings are discarded
+				nhead << h;
+				indices << ih;
+			}
+		}
+		UVector<int> order = GetSortOrderX(nhead, SortComplex);
+		SetSortOrder(nhead, order);
+		SetSortOrder(indices, order);		
+		
+		dt.qhead.resize(nhead.size());		// Cannot pick()
+		for (int ih = 0; ih < dt.qhead.size(); ++ih)
+			dt.qhead[ih] = nhead[ih];		
+		
+		auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
+			UArray<UArray<UArray<MatrixXcd>>> qtf(dt.Nb);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				qtf[ib].SetCount(int(dt.qhead.size()));
+		        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+		            qtf[ib][ih].SetCount(6);
+		        	for (int idf = 0; idf < 6; ++idf) {
+		        		qtf[ib][ih][idf].resize(dt.qw.size(), dt.qw.size());
+						for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
+							for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
+								qtf[ib][ih][idf](ifr1, ifr2) = QTF[ib][indices[ih]][idf](ifr1, ifr2);
+		        	}
+		        }
+			}
+			QTF = pick(qtf);
+		};
+			
+		if (IsLoadedQTF(true))
+			SortQTF(dt.qtfsum);
+		if (IsLoadedQTF(false))
+			SortQTF(dt.qtfdif);
+	}
+}
+
+BasicBEM::HeadingType Hydro::ShortestHeadingRange(const UVector<double> &head) {
+	if (head.size() == 0)
+		return BasicBEM::HEAD_0_360;
+
+	UVector<double> head180, head360;
+	for (int ih = 0; ih < head.size(); ++ih) {
+		head180 << FixHeading_180(head[ih]);
+		head360 << FixHeading_0_360(head[ih]);
+	}
+	auto MaxAbs = [](const UVector<double> &hd)->double {
+		double ret = First(hd);
+		for (int i = 0; i < hd.size(); ++i) {
+			if (abs(hd[i]) > ret)
+				ret = abs(hd[i]);
+		}
+		return ret;
+	};
+	double mx180 = MaxAbs(head180);
+	double mx360 = MaxAbs(head360);
+	if (mx360 <= mx180)
+		return BasicBEM::HEAD_0_360;
+	else
+		return BasicBEM::HEAD_180_180;
+}
+
+BasicBEM::HeadingType Hydro::ShortestHeadingRange(const VectorXcd &head) {
+	if (head.size() == 0)
+		return BasicBEM::HEAD_0_360;
+	
+	VectorXcd head180(head.size()), head360(head.size());
+	for (int ih = 0; ih < head.size(); ++ih) {
+		head180[ih] = FixHeading_180(head[ih]);
+		head360[ih] = FixHeading_0_360(head[ih]);
+	}
+	auto MaxAbs = [](const VectorXcd &hd)->std::complex<double> {
+		std::complex<double> ret = First(hd);
+		for (int i = 0; i < hd.size(); ++i) {
+			if (abs(hd[i].real()) > ret.real())
+				ret.real(abs(hd[i].real()));
+			if (abs(hd[i].imag()) > ret.imag())
+				ret.imag(abs(hd[i].imag()));
+		}
+		return ret;
+	};	
+	std::complex<double> range180 = MaxAbs(head180);
+	std::complex<double> range360 = MaxAbs(head360);
+	if ((range360.real() + range360.imag()) <= (range180.real() + range180.imag()))
+		return BasicBEM::HEAD_0_360;
+	else
+		return BasicBEM::HEAD_180_180;
 }
 
 void Hydro::SortFrequencies() {
 	if (!IsSorted(dt.w)) {
 		UVector<int> indices = GetSortOrderX(dt.w);
 		dt.w = ApplyIndex(dt.w, indices);
-		//T = ApplyIndex(T, indices);
 	
 		auto SortAB = [&](UArray<UArray<VectorXd>> &_A) {
 			UArray<UArray<VectorXd>> a = clone(_A);
@@ -314,7 +407,7 @@ void Hydro::SortFrequencies() {
 		auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
 			UArray<UArray<UArray<MatrixXcd>>> qtf = clone(QTF);
 			for (int ib = 0; ib < dt.Nb; ++ib) 
-		        for (int ih = 0; ih < dt.qh.size(); ++ih) 
+		        for (int ih = 0; ih < dt.qhead.size(); ++ih) 
 		        	for (int idf = 0; idf < 6; ++idf) 
 						for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
 							for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
@@ -328,6 +421,14 @@ void Hydro::SortFrequencies() {
 	}
 }
 
+int Hydro::Data::FindClosestHead(double h) const {
+	return FindClosest(head, FixHeading_0_360(h));
+}
+
+int Hydro::Data::FindClosestHead(const VectorXcd &list, const std::complex<double> &h) {
+	return FindClosest(list, FixHeading_0_360(h));
+}
+		
 void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a, double val) {
 	a.SetCount(6*dt.Nb);
 	for (int i = 0; i < 6*dt.Nb; ++i) {
@@ -431,7 +532,7 @@ void Hydro::Add_Forces(Forces &to, const Hydro &hy, const Forces &from) {
 	if (hy.IsLoadedForce(from)) {
 		for (int ib = 0; ib < dt.Nb; ++ib) 
 			for (int ihhy = 0; ihhy < hy.dt.Nh; ++ihhy) {
-				int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
+				int ih = dt.FindClosestHead(hy.dt.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
 					int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
 					for (int idf = 0; idf < 6; ++idf) 	 
@@ -446,7 +547,7 @@ void Hydro::Add_RAO(RAO &to, const Hydro &hy, const RAO &from) {
 	if (hy.IsLoadedForce(from)) {
 		for (int ib = 0; ib < dt.Nb; ++ib) 
 			for (int ihhy = 0; ihhy < hy.dt.Nh; ++ihhy) {
-				int ih = FindClosest(dt.head, hy.dt.head[ihhy]);
+				int ih = dt.FindClosestHead(hy.dt.head[ihhy]);
 				for (int ifrhy = 0; ifrhy < hy.dt.Nf; ++ifrhy) {
 					int ifr = FindClosest(dt.w, hy.dt.w[ifrhy]);
 					for (int idf = 0; idf < 6; ++idf) 	 
@@ -541,7 +642,7 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
     qtfsum = clone(hyd.qtfsum);
     qtfdif = clone(hyd.qtfdif);
     qw = clone(hyd.qw);
-    qh = clone(hyd.qh);
+    qhead = clone(hyd.qhead);
     qtfdataFromW = hyd.qtfdataFromW;
     qtftype = hyd.qtftype;
     
@@ -690,7 +791,7 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
     dt.w = clone(h0.dt.w);
     dt.head = clone(h0.dt.head);
 	dt.qw = clone(h0.dt.qw);
-    dt.qh = clone(h0.dt.qh);
+    dt.qhead = clone(h0.dt.qhead);
 	dt.mdhead = clone(h0.dt.mdhead);
 	dt.msh = clone(h0.dt.msh);
 	
@@ -714,7 +815,7 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 			throw Exc(t_("All models have to have the same headings"));
 		if (!CompareDecimals(dt.qw, hy.dt.qw, 2))
 			throw Exc(t_("All models have to have the same frequencies in QTF"));
-		if (!Compare(dt.qh, hy.dt.qh))
+		if (!Compare(dt.qhead, hy.dt.qhead))
 			throw Exc(t_("All models have to have the same headings in QTF"));
 		if (!Compare(dt.mdhead, hy.dt.mdhead))
 			throw Exc(t_("All models have to have the same headings in mean drift"));
@@ -755,8 +856,8 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 	
 	Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.mdhead.size()), dt.Nf);
 		
-	Hydro::Initialize_QTF(dt.qtfsum, dt.Nb, int(dt.qh.size()), int(dt.qw.size()));
-	Hydro::Initialize_QTF(dt.qtfdif, dt.Nb, int(dt.qh.size()), int(dt.qw.size()));
+	Hydro::Initialize_QTF(dt.qtfsum, dt.Nb, int(dt.qhead.size()), int(dt.qw.size()));
+	Hydro::Initialize_QTF(dt.qtfdif, dt.Nb, int(dt.qhead.size()), int(dt.qw.size()));
 			
 	UArray<const MatrixXd*> Ainfs, A0s;
 	UArray<const UArray<UArray<VectorXd>>*> As, Bs;
@@ -923,9 +1024,9 @@ void Hydro::Symmetrize_QTF(bool xAxis) {
 		return;
 	
 	UArray<std::complex<double>> newHead;
-	for (int ih = 0; ih < dt.qh.size(); ++ih) {
-		FindAddDelta(newHead, FixHeading_180(dt.qh[ih]), 0.01);
-		FindAddDelta(newHead, FixHeading_180(MirrorHead(dt.qh[ih], xAxis)), 0.01);
+	for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+		FindAddDelta(newHead, FixHeading_180(dt.qhead[ih]), 0.01);
+		FindAddDelta(newHead, FixHeading_180(MirrorHead(dt.qhead[ih], xAxis)), 0.01);
 	}
 	Sort(newHead, SortComplex);
 
@@ -950,10 +1051,10 @@ void Hydro::Symmetrize_QTF(bool xAxis) {
 		Initialize_QTF(newf, dt.Nb, newHead.size(), int(dt.qw.size()));
 		
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-			for (int ih = 0; ih < dt.qh.size(); ++ih) {
+			for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 				for (int idf = 0; idf < 6; ++idf) {
-					Symmetrize_Forces_Each0(f, newf, FixHeading_180(dt.qh[ih]), ib, ih, idf, false);
-					std::complex<double> he = FixHeading_180(MirrorHead(dt.qh[ih], xAxis));
+					Symmetrize_Forces_Each0(f, newf, FixHeading_180(dt.qhead[ih]), ib, ih, idf, false);
+					std::complex<double> he = FixHeading_180(MirrorHead(dt.qhead[ih], xAxis));
 					bool applysym = false;
 					if (SymmetryRule(idf, xAxis)) {
 						if (xAxis) {
@@ -981,7 +1082,7 @@ void Hydro::Symmetrize_QTF(bool xAxis) {
 		dt.qtfdif = pick(newqtf);
 	}
 	
-	::Copy(newHead, dt.qh);	
+	::Copy(newHead, dt.qhead);	
 }
 
 void Hydro::Symmetrize_MD(bool xAxis) {
@@ -1233,8 +1334,8 @@ void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
 }
 
 void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading) {
-	int realNh = dt.Nh;
-	int realNf = dt.Nf;
+	//int realNh = dt.Nh;
+	//int realNf = dt.Nf;
 	
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(fileName));
@@ -1257,30 +1358,41 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	}
+	BasicBEM::HeadingType htp = Hydro::ShortestHeadingRange(dt.head);
+	BasicBEM::HeadingType mtp = Hydro::ShortestHeadingRange(dt.mdhead);
+	BasicBEM::HeadingType qtp = Hydro::ShortestHeadingRange(dt.qhead);
+	Hydro tosave, *save;
+	if (htp != BasicBEM::HEAD_0_360 || mtp != BasicBEM::HEAD_0_360 || qtp != BasicBEM::HEAD_0_360) {
+		tosave = clone(*this);
+		tosave.SortHeadings(htp, mtp, qtp);
+		save = &tosave;
+	} else
+		save = this;
+	
 	if (type == WAMIT)
-		static_cast<Wamit&>(*this).Save_out(fileName);			
+		static_cast<Wamit&>(*save).Save_out(fileName);			
 	else if (type == WAMIT_1_3)
-		static_cast<Wamit&>(*this).Save(fileName, Status, true, qtfHeading);	
+		static_cast<Wamit&>(*save).Save(fileName, Status, true, qtfHeading);	
 	else if (type == FAST_WAMIT)
-		static_cast<Fast&>(*this).Save(fileName, Status, qtfHeading);		
+		static_cast<Fast&>(*save).Save(fileName, Status, qtfHeading);		
 	else if (type == BEMROSETTA)
-		SaveSerialization(fileName);		
+		save->SaveSerialization(fileName);		
 	else if (type == AQWA)
-		static_cast<Aqwa&>(*this).Save(fileName, Status);		
+		static_cast<Aqwa&>(*save).Save(fileName, Status);		
 	else if (type == CSV_MAT)
-		SaveCSVMat(fileName);		
+		save->SaveCSVMat(fileName);		
 	else if (type == CSV_TABLE)
-		SaveCSVTable(fileName);		
+		save->SaveCSVTable(fileName);		
 	else if (type == DIODORE)
-		SaveDiodoreHDB(fileName);		
+		save->SaveDiodoreHDB(fileName);		
 	else if (type == BEMIOH5)
-		static_cast<BemioH5&>(*this).Save(fileName);
+		static_cast<BemioH5&>(*save).Save(fileName);
 	else
 		throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	
 	//solver = type;
-	dt.Nh = realNh;
-	dt.Nf = realNf;
+	//dt.Nh = realNh;
+	//dt.Nf = realNf;
 }
 
 void Hydro::Join(const UVector<Hydro *> &hydrosp) {
@@ -1482,7 +1594,7 @@ void Hydro::Report() const {
 
 String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	SortFrequencies();
-	SortHeadings();
+	SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);
 		
 	if ((!IsLoadedAinf() || !IsLoadedKirf()) && Bem().calcAinf) {
 		if (!IsNum(Bem().maxTimeA) || Bem().maxTimeA == 0) 
@@ -1516,7 +1628,7 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	// Fill the other side of the diagonal. If Null, fill with zero
 	auto FillNullQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-	        for (int ih = 0; ih < dt.qh.size(); ++ih) {
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 				for (int idf = 0; idf < 6; ++idf) { 
 					MatrixXcd &c = qtf[ib][ih][idf];
 					Eigen::Index rows = c.rows();
