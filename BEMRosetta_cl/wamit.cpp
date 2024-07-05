@@ -140,7 +140,7 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) const {
 	String fileext;
 	
-	if (!IsNull(dt.rho) && !IsNull(dt.msh[0].dt.cg) > 0) {
+	if (!IsNull(dt.rho) && !IsNull(dt.msh[0].dt.cg)) {
 		BEM::Print("\n- " + Format(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt(file, ".frc"))));
 		Save_FRC(fileext);
 	}

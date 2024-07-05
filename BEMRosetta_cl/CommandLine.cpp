@@ -1136,7 +1136,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									double h = ScanDouble(command[ic]);
 									if (IsNull(h))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									wind[windid].SetHubHeight(h);
+									wind[windid].SetHubHeight((float)h);
 									BEM::Print("\n" + Format(t_("Hub height is %f"), h));	
 								} else if (ToLower(command[ic]) == "gridheight") {
 									if (wind.IsEmpty()) 
@@ -1145,7 +1145,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									double h = ScanDouble(command[ic]);
 									if (IsNull(h))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									wind[windid].SetGridHeight(h);
+									wind[windid].SetGridHeight((float)h);
 									BEM::Print("\n" + Format(t_("Grid height is %f"), h));	
 								} else if (ToLower(command[ic]) == "ti") {	
 									if (wind.IsEmpty()) 
@@ -1154,7 +1154,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									double u = ScanDouble(command[ic]);
 									if (IsNull(u))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									wind[windid].SetTI_u(u);
+									wind[windid].SetTI_u((float)u);
 									double v = 0.8*u;
 									double w = 0.5*u;
 									if (ic+1 < command.size()) {
@@ -1171,8 +1171,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 											}
 										}
 									}
-									wind[windid].SetTI_v(v);
-									wind[windid].SetTI_w(w);
+									wind[windid].SetTI_v((float)v);
+									wind[windid].SetTI_w((float)w);
 									BEM::Print("\n" + Format(t_("Turbulence intensity is u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
 								} else if (ToLower(command[ic]) == "scale") {	
 									if (wind.IsEmpty()) 
@@ -1197,7 +1197,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 											}
 										}
 									}
-									wind[windid].SetFactor(u, v, w);
+									wind[windid].SetFactor((float)u, (float)v, (float)w);
 									BEM::Print("\n" + Format(t_("Velocities scaled by u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
 								} else if (ToLower(command[ic]) == "powerlaw") {	
 									if (wind.IsEmpty()) 
@@ -1210,7 +1210,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									double zh = ScanDouble(command[ic]);
 									if (IsNull(zh))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									wind[windid].SetPowerLaw(pl, zh);
+									wind[windid].SetPowerLaw((float)pl, (float)zh);
 									BEM::Print("\n" + Format(t_("Power law is %f set at height %f m"), pl, zh));
 								} else if (ToLower(command[ic]) == "periodic") {
 									if (wind.IsEmpty()) 
@@ -1302,7 +1302,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									lastPrint.Clear();
 									
 									CheckIfAvailableArg(command, ++ic, "Component");
-									int icomp = ScanDouble(command[ic]);
+									int icomp = ScanInt(command[ic]);
 									CheckIfAvailableArg(command, ++ic, "Position Y");
 									double ypos = ScanDouble(command[ic]);
 									CheckIfAvailableArg(command, ++ic, "Position Z");

@@ -538,7 +538,7 @@ void Orca::LoadParameters(Hydro &hy) {
 		if (sz == 0)
 			return false;
 		
-		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*hy.dt.mdhead.size()))
+		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*int(hy.dt.mdhead.size())))
 			throwError(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 		
 		MultiDimMatrixRowMajor<TComplex> md((int)hy.dt.mdhead.size(), hy.dt.Nf, 6*hy.dt.Nb);
@@ -596,7 +596,7 @@ void Orca::LoadParameters(Hydro &hy) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qhead.size()))
+			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
 				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
 			qtf.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
@@ -610,7 +610,7 @@ void Orca::LoadParameters(Hydro &hy) {
 			if (sz == 0)
 				return false;
 			
-			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*hy.dt.qhead.size()))
+			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
 				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
 			qtfDirect.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
