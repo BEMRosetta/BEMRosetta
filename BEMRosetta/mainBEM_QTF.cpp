@@ -367,11 +367,11 @@ void MainQTF::OnHeadingsSel(ArrayCtrl *headQTF, bool resetPf) {
 		
 		MainBEM &mbm = *_mbm;
 
-		int idHydro = mbm.GetIdOneSelected(false);
-		if (idHydro < 0)
+		int idxHydro = mbm.GetIndexOneSelected(false);
+		if (idxHydro < 0)
 			return;
 	
-		const Hydro &hy = Bem().hydros[idHydro];
+		const Hydro &hy = Bem().hydros[idxHydro];
 	
 		head.real(FixHeading_0_360(headQTF->Get(row, 0)));
 		head.imag(FixHeading_0_360(headQTF->Get(row, 1)));
@@ -418,7 +418,7 @@ bool MainQTF::Load() {
 	try {	
 		MainBEM &mbm = *_mbm;
 		
-		int idHydro;
+		int idxHydro;
 		
 		{
 			TempAssign<bool> _isLoading(isLoading, true);
@@ -440,15 +440,15 @@ bool MainQTF::Load() {
 				tab.Set(idof + 6*ib);
 		}
 	
-		idHydro = -1;
+		idxHydro = -1;
 		for (int row = 0; row < mbm.listLoaded.GetCount(); ++row) {
 			if (mbm.listLoaded.IsSelected(row)) {
-				idHydro = ArrayModel_IdHydro(mbm.listLoaded, row);
+				idxHydro = ArrayModel_IndexHydro(mbm.listLoaded, row);
 				break;
 			}
 		}	// Only one available => directly selected
-		if (idHydro < 0 && mbm.listLoaded.GetCount() == 1)
-			idHydro = ArrayModel_IdHydro(mbm.listLoaded, 0);
+		if (idxHydro < 0 && mbm.listLoaded.GetCount() == 1)
+			idxHydro = ArrayModel_IndexHydro(mbm.listLoaded, 0);
 		//if (idHydro < 0) 
 		//	return false;
 		
@@ -467,8 +467,8 @@ bool MainQTF::Load() {
 			return false;
 		////
 		
-		if (idHydro >= 0) {
-			const Hydro &hy = Bem().hydros[idHydro];
+		if (idxHydro >= 0) {
+			const Hydro &hy = Bem().hydros[idxHydro];
 		
 			opQTF.Clear();
 			if (hy.IsLoadedQTF(true))

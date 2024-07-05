@@ -41,7 +41,7 @@ public:
 	static const bool meshCanSave[];
 	static const char *meshExt[];
 	
-	enum MESH_TYPE {MOVED, UNDERWATER, ALL};
+	enum MESH_TYPE {ALL, UNDERWATER};
 	
 	static String GetMeshExt();
 	
@@ -94,7 +94,7 @@ public:
 	bool Archimede(double rho, double g, double tolerance, double &roll, double &pitch, double &dz);
 	void PCA(double &yaw);
 		
-	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy = true);
+	void AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy = true, bool reZero = false);
 	void Reset(double rho, double g);
 
 	void GZ(double from, double to, double delta, double angle, double rho, double g, 
@@ -130,9 +130,7 @@ public:
 	}
 	
 	void SetMass(double m);
-	double GetMass() const	{
-		return dt.M.size() > 0 ? dt.M(0, 0) : 0;
-	}
+	double GetMass() const	{return dt.M.size() > 0 ? dt.M(0, 0) : 0;}
 	double GetMass_all() const	{
 		double mass = GetMass();
 		for (const auto &d : cdt.controlLoads)
@@ -808,9 +806,9 @@ public:
 		void SetId(int _id)			{id = _id;}
 		int GetId()	const			{return id;}
 	
-		int FindClosestHead(double h) const;
-		int FindClosestMDHead(const std::complex<double> &h) const	{return FindClosestHead(mdhead, h);}
-		int FindClosestQTFHead(const std::complex<double> &h) const	{return FindClosestHead(qhead, h);}
+		int FindClosestHead(double hd) const;
+		int FindClosestMDHead(const std::complex<double> &hd) const	{return FindClosestHead(mdhead, hd);}
+		int FindClosestQTFHead(const std::complex<double> &hd) const	{return FindClosestHead(qhead, hd);}
 		static int FindClosestHead(const VectorXcd &list, const std::complex<double> &h);
 		
 	private:
@@ -1528,14 +1526,14 @@ public:
 	UArray<Hydro> hydros;
 	UArray<Body> surfs;
 	
-	int GetHydroId(int id) {
+	int GetHydroIndex(int id) {
 		for (int i = 0; i < hydros.size(); ++i) {
 			if (hydros[i].dt.GetId() == id)
 				return i;
 		}
 		return -1;
 	}
-	int GetBodyId(int id) {	
+	int GetBodyIndex(int id) {	
 		for (int i = 0; i < surfs.size(); ++i) {
 			if (surfs[i].dt.GetId() == id)
 				return i;
@@ -2079,9 +2077,9 @@ public:
 		
 	class DataSourcePanels : public Convert {
 	public:
-		DataSourcePanels() : id(-1), ib(-1), col(0) {}
+		DataSourcePanels() : idx(-1), ib(-1), col(0) {}
 		DataSourcePanels& Init(int _id, int _ib, char _group, int _col) {
-			id = _id;
+			idx = _id;
 			ib = _ib;
 			group = _group;
 			col = _col;
@@ -2090,7 +2088,7 @@ public:
 		}
 		Value Format(const Value& q) const;
 		int ifr, ih;
-		int id, ib;
+		int idx, ib;
 		
 	private:
 		int col;

@@ -19,11 +19,11 @@ void MainViewData::Init() {
 }
 
 void MainViewData::OnAddedModel(MainView &mainView) {
-	int id = Bem().surfs.size()-1;
+	int idx = Bem().surfs.size()-1;
 	
 	MainViewDataEach &model = models.Add();
-	model.Init(Bem().surfs[id], mainView);
-	tab.Add(model.SizePos(), Bem().surfs[id].dt.name);
+	model.Init(Bem().surfs[idx], mainView);
+	tab.Add(model.SizePos(), Bem().surfs[idx].dt.name);
 }
 
 void MainViewData::OnRefresh() {

@@ -328,13 +328,13 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 	AddPrepare(row0, col0, name, icase, bodyName, ib, idc, Bem().onlyDiagonal && what == Hydro::MAT_A ? 6*hy.dt.Nb : 6);
 }
 
-bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim) {
+bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &idxs, bool ndim) {
 	Clear();
 	Ndim = ndim;
 	
 	bool loaded = false; 	
-	for (int i = 0; i < ids.size(); ++i) {
-		int isurf = ids[i];
+	for (int i = 0; i < idxs.size(); ++i) {
+		int isurf = idxs[i];
 		Hydro &hy = hydros[isurf];
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 			Add(hy.dt.name, i, hy.dt.msh[ib].dt.name, ib, hy, hy.dt.GetId());
@@ -348,13 +348,13 @@ bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndi
 	return true;
 }	
 
-bool MainMatrixKA::Load(UArray<Body> &surfs, const UVector<int> &ids) {
+bool MainMatrixKA::Load(UArray<Body> &surfs, const UVector<int> &idxs) {
 	Clear();
 	Ndim = false;
 	
 	bool loaded = false;
-	for (int i = 0; i < ids.size(); ++i) {
-		int isurf = ids[i];
+	for (int i = 0; i < idxs.size(); ++i) {
+		int isurf = idxs[i];
 		if (isurf >= 0)	
 			Add(surfs[isurf], i, true);
 		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0))) 

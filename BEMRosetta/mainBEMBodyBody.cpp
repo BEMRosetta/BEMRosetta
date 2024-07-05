@@ -44,11 +44,11 @@ void BodyBody::Init() {
 	};
 }
 
-void BodyBody::Load(int id, int ib) {
-	const Hydro &hy = Bem().hydros[id];
+void BodyBody::Load(int idx, int ib) {
+	const Hydro &hy = Bem().hydros[idx];
 	
 	int nNodes, nPanels;
-	grd.Load(id, ib, nNodes, nPanels);
+	grd.Load(idx, ib, nNodes, nPanels);
 	
 	numNodes <<= nNodes;
 	ArrayCtrlVirtual(nodes, grd.grdNodes);
@@ -94,23 +94,23 @@ void MainBodyTable::Init() {
 bool MainBodyTable::Load() {
 	try {
 		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
-		int id = ArrayModel_IdHydro(mbm.listLoaded);
+		int idx = ArrayModel_IndexHydro(mbm.listLoaded);
 	
 		tab.Reset();
 		bodies.Clear();
 		
 		UArray<Hydro> &hydros = Bem().hydros; 
-		if (hydros.IsEmpty() || id < 0) 
+		if (hydros.IsEmpty() || idx < 0) 
 			return false;
 		
-		const Hydro &hy = hydros[id];
+		const Hydro &hy = hydros[idx];
 		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty())
 			return false;
 		
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 			BodyBody &b = bodies.Add();
 			b.Init();
-			b.Load(id, ib);
+			b.Load(idx, ib);
 			tab.Add(b.SizePos(), Format("%d. %s", ib+1, hy.dt.msh[ib].dt.name));
 		}
 		return true;

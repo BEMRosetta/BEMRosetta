@@ -22,12 +22,12 @@ MenuProcessInertia::MenuProcessInertia() {
 	opMass = 0;
 	
 	mass.WhenAction    = [&] {
-		if (Bem().surfs[_id].dt.mesh.volume > 0)
-			density <<= mass/Bem().surfs[_id].dt.mesh.volume;
+		if (Bem().surfs[_idx].dt.mesh.volume > 0)
+			density <<= mass/Bem().surfs[_idx].dt.mesh.volume;
 		Action();
 	};
 	density.WhenAction = [&] {
-		mass <<= density*Bem().surfs[_id].dt.mesh.volume; 
+		mass <<= density*Bem().surfs[_idx].dt.mesh.volume; 
 		Action();
 	};
 	
@@ -63,7 +63,7 @@ MenuProcessInertia::MenuProcessInertia() {
 }
 
 void MenuProcessInertia::CopyToBody() {
-	Body &msh = Bem().surfs[_id];
+	Body &msh = Bem().surfs[_idx];
 	
 	msh.dt.c0.x = _mb->menuProcess.x_0 = ~x_0;
 	msh.dt.c0.y = _mb->menuProcess.y_0 = ~y_0;
@@ -84,19 +84,19 @@ void MenuProcessInertia::CopyToBody() {
 	}
 	
 	msh.AfterLoad(Bem().rho, Bem().g, false, false);
-	_mb->UpdateLast(_id);
+	_mb->UpdateLast(_idx);
 }
 
-void MenuProcessInertia::Init(MainBody &b, int id) {
+void MenuProcessInertia::Init(MainBody &b, int idx) {
 	_mb = &b;
-	_id = id;
+	_idx = idx;
 	
 	opInertia = 0;
 	opMass.DisableCase(3);
 	opMass.DisableCase(4);
 	opMass = 0;
 	
-	Body &mesh = Bem().surfs[id];
+	Body &mesh = Bem().surfs[idx];
 	volume <<= mesh.dt.mesh.volume;
 	
 	x_0 = mesh.dt.c0.x;
@@ -136,7 +136,7 @@ void MenuProcessInertia::Action() {
 		Point3D c0(~x_0, ~y_0, ~z_0);	
 		Point3D cg(~x_g, ~y_g, ~z_g);
 		
-		Body &mesh = Bem().surfs[_id];
+		Body &mesh = Bem().surfs[_idx];
 		
 		grid.Editing(opInertia == 0);
 		x_g.SetEditable(opInertia == 0);
@@ -172,6 +172,11 @@ void MenuProcessInertia::Action() {
 			x_g <<= cg.x;
 			y_g <<= cg.y;
 			z_g <<= cg.z;
+		}
+		
+		if (isvol && mesh.dt.mesh.VolumeMatch(Bem().volError, Bem().volError) < 0) {
+			opInertia = 0;
+			throw Exc(t_("Incomplete mesh or wrongly oriented panels"));
 		}
 		
 		Matrix3d inertia3;
@@ -211,7 +216,7 @@ void MenuProcessInertia::Action() {
 }
 
 void MenuProcessInertia::OpMass_WhenAction(bool action) {
-	Body &mesh = Bem().surfs[_id];
+	Body &mesh = Bem().surfs[_idx];
 	
 	mass.Enable(opMass == 1);
 	density.Enable(opMass == 2);
@@ -471,66 +476,66 @@ void MainBody::Init() {
 	menuStability.heelingMoment.SetConvert(Single<MyConvert>());
 	menuStability.butPointsA.SetCtrl(dialogPointsA).Tip(t_("Unprotected points (lead to progressive flooding)"));
 	dialogPointsA.WhenClose = [&] {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0) 
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) 
 			return;
 		
-		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogPointsA.FromGrid(Bem().surfs[id].cdt.controlPointsA);
-		Bem().surfs[id].cdt.controlPointsA0 = clone(Bem().surfs[id].cdt.controlPointsA);
+		Bem().surfs[idx].Reset(Bem().rho, Bem().g);
+		dialogPointsA.FromGrid(Bem().surfs[idx].cdt.controlPointsA);
+		Bem().surfs[idx].cdt.controlPointsA0 = clone(Bem().surfs[idx].cdt.controlPointsA);
 		
 		menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
 	};
 	menuStability.butPointsB.SetCtrl(dialogPointsB).Tip(t_("Weathertight openings (lead to progressive flooding)"));
 	dialogPointsB.WhenClose = [&] {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0) 
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) 
 			return;
 		
-		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogPointsB.FromGrid(Bem().surfs[id].cdt.controlPointsB);
-		Bem().surfs[id].cdt.controlPointsB0 = clone(Bem().surfs[id].cdt.controlPointsB);
+		Bem().surfs[idx].Reset(Bem().rho, Bem().g);
+		dialogPointsB.FromGrid(Bem().surfs[idx].cdt.controlPointsB);
+		Bem().surfs[idx].cdt.controlPointsB0 = clone(Bem().surfs[idx].cdt.controlPointsB);
 		
 		menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
 	};
 			
 	menuStability.butPointsC.SetCtrl(dialogPointsC).Tip(t_("Watertight openings (do not lead to progressive flooding)"));
 	dialogPointsC.WhenClose = [&] {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0) 
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) 
 			return;
 		
-		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogPointsC.FromGrid(Bem().surfs[id].cdt.controlPointsC);
-		Bem().surfs[id].cdt.controlPointsC0 = clone(Bem().surfs[id].cdt.controlPointsC);
+		Bem().surfs[idx].Reset(Bem().rho, Bem().g);
+		dialogPointsC.FromGrid(Bem().surfs[idx].cdt.controlPointsC);
+		Bem().surfs[idx].cdt.controlPointsC0 = clone(Bem().surfs[idx].cdt.controlPointsC);
 		
 		menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
 	};
 	
 	menuStability.butLoads.SetCtrl(dialogLoads).Tip(t_("Loads"));
 	dialogLoads.WhenClose = [&] {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0) 
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) 
 			return;
 		
-		Bem().surfs[id].Reset(Bem().rho, Bem().g);
-		dialogLoads.FromGrid(Bem().surfs[id].cdt.controlLoads);
-		Bem().surfs[id].cdt.controlLoads0 = clone(Bem().surfs[id].cdt.controlLoads);
+		Bem().surfs[idx].Reset(Bem().rho, Bem().g);
+		dialogLoads.FromGrid(Bem().surfs[idx].cdt.controlLoads);
+		Bem().surfs[idx].cdt.controlLoads0 = clone(Bem().surfs[idx].cdt.controlLoads);
 		
 		menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));
 	};
 	
 	menuStability.butDamage.SetCtrl(dialogDamage).Tip(t_("Damage"));
 	dialogDamage.WhenClose = [&] {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0) 
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) 
 			return;
 		int num = 0;
-		Bem().surfs[id].cdt.damagedBodies.Clear();
+		Bem().surfs[idx].cdt.damagedBodies.Clear();
 		for (int r = 0; r < dialogDamage.grid.GetRowCount(); ++r) {
-			int idd = dialogDamage.grid.Get(r, 0);
-			if (idd != id && dialogDamage.grid.Get(r, 1) == true) {
-				Bem().surfs[id].cdt.damagedBodies << &(Bem().surfs[idd]);
+			int iddx = Bem().GetBodyIndex(dialogDamage.grid.Get(r, 0));
+			if (iddx != idx && dialogDamage.grid.Get(r, 1) == true) {
+				Bem().surfs[idx].cdt.damagedBodies << &(Bem().surfs[iddx]);
 				num++; 
 			}
 		}
@@ -540,22 +545,24 @@ void MainBody::Init() {
 	menuStability.butArchimede <<= THISBACK(OnArchimede);
 	menuStability.butArchimede.Tip(t_("Let the body fall to rest"));	
 	
-	menuStability.butLoad.WhenAction = [&]() {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0)
-			return;
-		if (!LoadFromJsonFile(Bem().surfs[id].cdt, ~menuStability.file))
-			throw Exc(t_("Impossible to load file"));
-		OnMenuStabilityArraySel();
-	};
-	
 	menuStability.file.WhenChange = [&]() {menuStability.butLoad.WhenAction(); return true;};
 	menuStability.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10);
-	menuStability.butLoad << [&] {menuStability.file.DoGo();};
+	menuStability.file.ActiveDir(saveFolder);
+	menuStability.file.Type(t_("Openings and loads"), "*.json");
+	menuStability.file.ActiveType(0);
+	menuStability.butLoad.WhenAction = [&]() {
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0)
+			return;
+		if (!LoadFromJsonFile(Bem().surfs[idx].cdt, ~menuStability.file))
+			Exclamation(t_("Impossible to load file"));
+		OnMenuStabilityArraySel();
+		Bem().surfs[idx].Reset(Bem().rho, Bem().g);
+	};
 	
 	menuStability.butSave.WhenAction = [&]() {
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0)
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0)
 			return;
 		
 		FileSel fs;
@@ -565,12 +572,12 @@ void MainBody::Init() {
 		fs.Set(ForceExtSafer(~menuStability.file, ".json"));
 		
 		if (!fs.ExecuteSaveAs(t_("Save openings and loads data"))) 
-			throw Exc(t_("Cancelled by the user"));
+			Exclamation(t_("Cancelled by the user"));
 		
 		String fileName = ~fs;
 				
-		if (!StoreAsJsonFile(Bem().surfs[id].cdt, fileName, true))
-			throw Exc(t_("Impossible to save file"));
+		if (!StoreAsJsonFile(Bem().surfs[idx].cdt, fileName, true))
+			Exclamation(t_("Impossible to save file"));
 	};
 	
 	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
@@ -594,26 +601,26 @@ void MainBody::Init() {
 	String bitmapFolder = AFX(GetDesktopFolder(), "BEMRosetta Body Images");
 	int idBitmapFolder = 0;
 	
-	videoCtrl.Init([&](UVector<int> &ids)->int {
-			ids = ArrayModel_IdsBody(listLoaded);
+	videoCtrl.Init([&](UVector<int> &idxs)->int {
+			idxs = ArrayModel_IndexsBody(listLoaded);
 			int num = ArrayCtrlSelectedGetCount(listLoaded);
 			if (num > 1) {
 				BEM::PrintError(t_("Please select just one model"));
 				return -1;
 			}
-			int id;
+			int idx;
 			if (num == 0 && listLoaded.GetCount() == 1)
-				id = ArrayModel_IdBody(listLoaded, 0);
+				idx = ArrayModel_IndexBody(listLoaded, 0);
 			else {
-			 	id = ArrayModel_IdBody(listLoaded);
-				if (id < 0) {
+			 	idx = ArrayModel_IndexBody(listLoaded);
+				if (idx < 0) {
 					BEM::PrintError(t_("Please select a model to process"));
 					return -1;
 				}
 			}
-			return id;
-		}, [&](int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
-			Body &msh = Bem().surfs[id];			
+			return idx;
+		}, [&](int idx, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap) {
+			Body &msh = Bem().surfs[idx];			
 			
 			msh.dt.cg.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
 			msh.dt.mesh.TransRot(pos.x, pos.y, pos.z, ToRad(angle.x), ToRad(angle.y), ToRad(angle.z), c0.x, c0.y, c0.z);
@@ -628,7 +635,7 @@ void MainBody::Init() {
 				mainStiffness.Load(Bem().surfs, ids);
 			mainView.CalcEnvelope();
 			if (full)
-				mainSummary.Report(Bem().surfs, id);
+				mainSummary.Report(Bem().surfs, idx);
 			
 			mainView.gl.Refresh();
 			if (saveBitmap) {
@@ -666,7 +673,7 @@ void MainBody::Init() {
 			
 	mainTab.WhenSet = [&] {
 		LOGTAB(mainTab);
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		bool plot = true, move = false, convertProcess = true, stability = false;
 		if (Bem().surfs.IsEmpty()) 
 			plot = convertProcess = false;
@@ -675,15 +682,15 @@ void MainBody::Init() {
 		else if (mainTab.IsAt(mainM)) {
 			plot = false;
 			move = true;
-			mainM.Load(Bem().surfs, ids);
+			mainM.Load(Bem().surfs, idxs);
 		} else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
 			move = true;
-			mainStiffness.Load(Bem().surfs, ids);
+			mainStiffness.Load(Bem().surfs, idxs);
 		} else if (mainTab.IsAt(mainStiffness2)) {
 			plot = false;
 			move = true;
-			mainStiffness2.Load(Bem().surfs, ids);
+			mainStiffness2.Load(Bem().surfs, idxs);
 		} else if (mainTab.IsAt(mainGZ)) 
 			stability = true;
 		else 
@@ -734,23 +741,23 @@ void MainBody::Init() {
 }
 
 void MainBody::OnMenuOpenArraySel() {
-	int id = ArrayModel_IdBody(listLoaded);
-	if (id < 0)
+	int idx = ArrayModel_IndexBody(listLoaded);
+	if (idx < 0)
 		return;
 	
 	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
-	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT) && Bem().surfs[id].IsSymmetricX());
-	menuOpen.symY <<= Bem().surfs[id].IsSymmetricY();
+	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT) && Bem().surfs[idx].IsSymmetricX());
+	menuOpen.symY <<= Bem().surfs[idx].IsSymmetricY();
 	
-	dialogDamage.SelectId(id);
+	dialogDamage.SelectId(idx);
 }
 
 void MainBody::OnMenuProcessArraySel() {
-	int id = ArrayModel_IdBody(listLoaded);
-	if (id < 0)
+	int idx = ArrayModel_IndexBody(listLoaded);
+	if (idx < 0)
 		return;
 	
-	Body &msh = Bem().surfs[id];
+	Body &msh = Bem().surfs[idx];
 	if (!IsNull(msh.dt.cg)) {
 		menuProcess.x_g <<= msh.dt.cg.x;
 		menuProcess.y_g <<= msh.dt.cg.y;
@@ -764,30 +771,35 @@ void MainBody::OnMenuProcessArraySel() {
 	menuProcess.z_0 <<= msh.dt.c0.z;
 	menuProcess.mass <<= msh.GetMass();
 	
-	menuProcessInertia.Init(*this, id);
+	menuProcessInertia.Init(*this, idx);
 }
 
 void MainBody::OnMenuMoveArraySel() {
-	int id = ArrayModel_IdBody(listLoaded);
+	int id = ArrayModel_IndexBody(listLoaded);
 	if (id < 0)
 		return;
 }
 
 void MainBody::OnMenuAdvancedArraySel() {
-	int id = ArrayModel_IdBody(listLoaded);
+	int id = ArrayModel_IndexBody(listLoaded);
 	if (id < 0)
 		return;
 }
 
 void MainBody::OnMenuStabilityArraySel() {
-	int id = ArrayModel_IdBody(listLoaded);
-	if (id < 0)
+	int idx = ArrayModel_IndexBody(listLoaded);
+	if (idx < 0)
 		return;
 	
-	dialogPointsA.ToGrid(Bem().surfs[id].cdt.controlPointsA0);
-	dialogPointsB.ToGrid(Bem().surfs[id].cdt.controlPointsB0);
-	dialogPointsC.ToGrid(Bem().surfs[id].cdt.controlPointsC0);
-	dialogLoads.ToGrid(Bem().surfs[id].cdt.controlLoads0);
+	dialogPointsA.ToGrid(Bem().surfs[idx].cdt.controlPointsA0);
+	dialogPointsB.ToGrid(Bem().surfs[idx].cdt.controlPointsB0);
+	dialogPointsC.ToGrid(Bem().surfs[idx].cdt.controlPointsC0);
+	dialogLoads.ToGrid(Bem().surfs[idx].cdt.controlLoads0);
+	
+	menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
+	menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
+	menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
+	menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));	
 }
 
 void MainBody::OnArraySel() {
@@ -839,9 +851,9 @@ void MainBody::InitSerialize(bool ret) {
 }
 
 void MainBody::LoadSelTab(BEM &bem) {
-	const UVector<int> &ids = ArrayModel_IdsBody(listLoaded);
+	const UVector<int> &idxs = ArrayModel_IndexsBody(listLoaded);
 	if (mainTab.Get() == mainTab.Find(mainStiffness))
-		mainStiffness.Load(bem.surfs, ids);
+		mainStiffness.Load(bem.surfs, idxs);
 	else if (mainTab.Get() == mainTab.Find(mainView))
 		mainView.gl.Refresh();
 }
@@ -885,14 +897,14 @@ void MainBody::OnOpt() {
 
 void MainBody::AfterAdd(String file, int num) {
 	mainTab.Set(mainView);
-	for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
-		Body &surf = Bem().surfs[id];
+	for (int idx = Bem().surfs.size() - num; idx < Bem().surfs.size(); ++idx) {
+		Body &surf = Bem().surfs[idx];
 		
 		surf.Report(Bem().rho);
 		
 		AddRow(surf);
 		
-		UpdateLast(id);
+		UpdateLast(idx);
 	}
 
 	mainView.CalcEnvelope();
@@ -912,9 +924,9 @@ bool MainBody::OnLoad() {
 	try {
 		Progress progress(t_("Loading mesh file..."), 100); 
 		
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-		for (int i = 0; i < ids.size(); ++i) {
-			if (Bem().surfs[ids[i]].dt.fileName == file) {
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
+		for (int i = 0; i < idxs.size(); ++i) {
+			if (Bem().surfs[idxs[i]].dt.fileName == file) {
 				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
 					return false;
 				break;
@@ -931,8 +943,8 @@ bool MainBody::OnLoad() {
 		}, ~menuOpen.opClean, false);
 		
 		//int id = Bem().surfs.size()-1;
-		for (int id = Bem().surfs.size() - num; id < Bem().surfs.size(); ++id) {
-			Body &msh = Bem().surfs[id];
+		for (int idx = Bem().surfs.size() - num; idx < Bem().surfs.size(); ++idx) {
+			Body &msh = Bem().surfs[idx];
 			
 			if (!msh.dt.mesh.IsEmpty() && ~menuMove.opZArchimede && msh.GetMass_all() > 0) {
 				double dz = 0.1;
@@ -978,14 +990,14 @@ void MainBody::OnConvertBody() {
 		}
 		if (sel.size() == 0) {
 			if (listLoaded.GetCount() == 1)
-				sel << ArrayModel_IdBody(listLoaded, 0);
+				sel << ArrayModel_IndexBody(listLoaded, 0);
 			else {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		} else {
 			for (int i = 0; i < sel.size(); ++i)
-				sel[i] = Bem().GetBodyId(i);
+				sel[i] = Bem().GetBodyIndex(i);
 		}
 		
 		if (type == Body::AQWA_DAT) {
@@ -1036,7 +1048,7 @@ void MainBody::OnReset() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -1044,9 +1056,9 @@ void MainBody::OnReset() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			id = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
+		 	id = ArrayModel_IndexBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
@@ -1079,24 +1091,24 @@ void MainBody::OnUpdateMass() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> ids = ArrayModel_IndexsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 		
-		Body &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[idx];
 		
 		double mass = msh.dt.under.volume*Bem().rho;
 		menuProcess.mass <<= mass;
@@ -1114,7 +1126,7 @@ void MainBody::OnScale() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> ids = ArrayModel_IndexsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
@@ -1122,9 +1134,9 @@ void MainBody::OnScale() {
 		}
 		int id;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			id = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
+		 	id = ArrayModel_IndexBody(listLoaded);
 			if (id < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
@@ -1163,24 +1175,24 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 				
-		Body &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[idx];
 
 		double mass = ~menuProcess.mass;
 		double x_g = ~menuProcess.x_g;
@@ -1267,7 +1279,7 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);*/
-		UpdateLast(id);
+		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1277,9 +1289,9 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 }
 
 void MainBody::UpdateLast(int id) {
-	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded)));
-	mainTab.GetItem(mainTab.Find(mainM)).Enable(mainM.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded)));
-	mainTab.GetItem(mainTab.Find(mainStiffness2)).Enable(mainStiffness2.Load(Bem().surfs, ArrayModel_IdsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainM)).Enable(mainM.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainStiffness2)).Enable(mainStiffness2.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded)));
 	mainTab.GetItem(mainTab.Find(mainGZ)).Enable(Bem().surfs.size() > 0);
 
 	mainView.CalcEnvelope();
@@ -1290,24 +1302,24 @@ void MainBody::OnArchimede() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 		
-		Body &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[idx];
 		
 		if (msh.GetMass_all() == 0)
 			throw Exc(t_("Set mass before fitting buoyancy"));
@@ -1327,7 +1339,7 @@ void MainBody::OnArchimede() {
 	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);*/
-		UpdateLast(id);
+		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1343,24 +1355,24 @@ void MainBody::OnPCA() {
 	GuiLock __;
 	
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		int num = ArrayCtrlSelectedGetCount(listLoaded);
 		if (num > 1) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
 		}
 		
-		Body &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[idx];
 		
 		double yaw;
 		msh.PCA(yaw);
@@ -1374,7 +1386,7 @@ void MainBody::OnPCA() {
 	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);*/
-		UpdateLast(id);
+		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1447,10 +1459,10 @@ DropCtrlDialogRevolution::DropCtrlDialogRevolution() {
 void DropCtrlDialogRevolution::UpdatePlot() {
 	points.Clear();
 	for (int r = 0; r < list.GetRowCount(); ++r) {
-		double y = list.Get(r, 0);
-		double z = list.Get(r, 1);
-		if (!IsNull(y) && !IsNull(z))
-			points << Pointf(y, z);
+		double yy = list.Get(r, 0);
+		double zz = list.Get(r, 1);
+		if (!IsNull(yy) && !IsNull(zz))
+			points << Pointf(yy, zz);
 	}
 	scatter.ZoomToFit(false, true);
 	scatter.SetXYMin(0, Null);
@@ -1479,10 +1491,10 @@ DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
 void DropCtrlDialogPolynomial::UpdatePlot() {
 	points.Clear();
 	for (int r = 0; r < list.GetRowCount(); ++r) {
-		double x = list.Get(r, 0);
-		double y = list.Get(r, 1);
-		if (!IsNull(x) && !IsNull(y))
-			points << Pointf(x, y);
+		double xx = list.Get(r, 0);
+		double yy = list.Get(r, 1);
+		if (!IsNull(xx) && !IsNull(yy))
+			points << Pointf(xx, yy);
 	}
 	scatter.ZoomToFit(true, true, .2);
 }
@@ -1548,7 +1560,7 @@ void MainBody::OnAddPolygonalPanel() {
 			return;
 		}
 		val.y = ScanDouble(AsString(dialogPolynomial.list.Get(r, 1)));
-		if (IsNull(val.x)) {
+		if (IsNull(val.y)) {
 			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
 		}
@@ -1589,12 +1601,12 @@ void MainBody::OnExtrude() {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
@@ -1603,11 +1615,11 @@ void MainBody::OnExtrude() {
 		WaitCursor waitcursor;
 		mainView.gl.Disable();
 		
-		Bem().Extrude(id, ~menuEdit.edit_cx, ~menuEdit.edit_cy, ~menuEdit.edit_cz, ~menuEdit.opClose);
+		Bem().Extrude(idx, ~menuEdit.edit_cx, ~menuEdit.edit_cy, ~menuEdit.edit_cz, ~menuEdit.opClose);
 	
-		Body &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[idx];
 		
-		msh.AfterLoad(Bem().rho, Bem().g, false, false);
+		msh.AfterLoad(Bem().rho, Bem().g, false, false, true, true);
 		
 		msh.Report(Bem().rho);
 		After();
@@ -1628,12 +1640,12 @@ void MainBody::OnAddWaterSurface(char c) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
@@ -1642,7 +1654,7 @@ void MainBody::OnAddWaterSurface(char c) {
 		WaitCursor waitcursor;
 		mainView.gl.Disable();
 	
-		Bem().AddWaterSurface(id, c);
+		Bem().AddWaterSurface(idx, c);
 		
 		Body &nw = Last(Bem().surfs);
 		AddRow(nw);
@@ -1664,12 +1676,12 @@ void MainBody::OnHealing(bool basic) {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
@@ -1679,14 +1691,14 @@ void MainBody::OnHealing(bool basic) {
 		Progress progress(t_("Healing mesh file..."), 100); 
 		mainView.gl.Disable();
 		
-		Bem().HealingBody(id, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
+		Bem().HealingBody(idx, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
 		/*UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 		
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);*/
-		UpdateLast(id);
+		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1705,12 +1717,12 @@ void MainBody::OnOrientSurface() {
 			BEM::PrintError(t_("Please select just one model"));
 			return;
 		}
-		int id;
+		int idx;
 		if (num == 0 && listLoaded.GetCount() == 1)
-			id = ArrayModel_IdBody(listLoaded, 0);
+			idx = ArrayModel_IndexBody(listLoaded, 0);
 		else {
-		 	id = ArrayModel_IdBody(listLoaded);
-			if (id < 0) {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
 				BEM::PrintError(t_("Please select a model to process"));
 				return;
 			}
@@ -1720,15 +1732,15 @@ void MainBody::OnOrientSurface() {
 		Progress progress(t_("Orienting mesh surface..."), 100); 
 		mainView.gl.Disable();
 		
-		Bem().OrientSurface(id, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
+		Bem().OrientSurface(idx, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		Bem().surfs[id].AfterLoad(Bem().rho, Bem().g, false, false);
+		Bem().surfs[idx].AfterLoad(Bem().rho, Bem().g, false, false);
 		
 		/*UVector<int> ids = ArrayModel_IdsBody(listLoaded);
 	 	mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);*/
-		UpdateLast(id);
+		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1745,16 +1757,16 @@ void MainBody::OnImage(int axis) {
 	String saxis = (axis == 0) ? "X" : ((axis == 1) ? "Y" : "Z");
 
 	try {
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-		int id = ArrayModel_IdBody(listLoaded);
-		if (id < 0) {
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) {
 			BEM::PrintError(t_("Please select a model to process"));
 			return;
 		}
 		
 		WaitCursor waitcursor;
 		
-		Body &msh = Bem().surfs[id];
+		Body &msh = Bem().surfs[idx];
 
 		msh.SetMass(~menuProcess.mass);
 		if (axis == 0)
@@ -1771,7 +1783,7 @@ void MainBody::OnImage(int axis) {
 	 	/*mainStiffness.Load(Bem().surfs, ids);
 		mainView.CalcEnvelope();
 		mainSummary.Report(Bem().surfs, id);*/
-		UpdateLast(id);
+		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
 		mainViewData.OnRefresh();
@@ -1793,18 +1805,18 @@ void MainBody::OnRemoveSelected(bool all) {
 	
 	for (int r = listLoaded.GetCount()-1; r >= 0; --r) {
 		if (all || Find(sel, r) >= 0) {
-			int id = ArrayModel_IdBody(listLoaded, r);
-			Bem().RemoveBody(id);
+			int idx = ArrayModel_IndexBody(listLoaded, r);
+			Bem().RemoveBody(idx);
 			listLoaded.Remove(r);
-			dialogDamage.RemoveId(id);
+			dialogDamage.RemoveId(idx);
 			selected = true;
 		}
 	}	// Only one available => directly selected
 	if (!selected && listLoaded.GetCount() == 1) {
-		int id = ArrayModel_IdBody(listLoaded, 0);
-		Bem().RemoveBody(id);
+		int idx = ArrayModel_IndexBody(listLoaded, 0);
+		Bem().RemoveBody(idx);
 		listLoaded.Remove(0);
-		dialogDamage.RemoveId(id);
+		dialogDamage.RemoveId(idx);
 		selected = true;		
 	}	
 	if (!selected) {
@@ -1812,8 +1824,8 @@ void MainBody::OnRemoveSelected(bool all) {
 		return;
 	}
 
-	UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-	mainStiffness.Load(Bem().surfs, ids);
+	UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
+	mainStiffness.Load(Bem().surfs, idxs);
 	mainViewData.ReLoad(mainView);
 	
 	mainGZ.ClearX(false);
@@ -1826,16 +1838,16 @@ void MainBody::OnJoin() {
 	
 	try {	
 		//bool selected = false;
-		int idDest = Null;
+		int idxDest = Null;
 		for (int r = 0; r < listLoaded.GetCount(); ++r) {
 			if (listLoaded.IsSelected(r)) {
-				if (IsNull(idDest))
-					idDest = ArrayModel_IdBody(listLoaded, r);
+				if (IsNull(idxDest))
+					idxDest = ArrayModel_IndexBody(listLoaded, r);
 				else
-					idDest = min(idDest, ArrayModel_IdBody(listLoaded, r));
+					idxDest = min(idxDest, ArrayModel_IndexBody(listLoaded, r));
 			}
 		}
-		if (IsNull(idDest)) {
+		if (IsNull(idxDest) || idxDest < 0) {
 			BEM::PrintError(t_("No model joined"));
 			return;
 		}
@@ -1844,9 +1856,9 @@ void MainBody::OnJoin() {
 		
 		for (int r = listLoaded.GetCount()-1; r >= 0; --r) {
 			if (listLoaded.IsSelected(r)) {
-				int id = ArrayModel_IdBody(listLoaded, r);
-				if (idDest != id) {
-					Bem().JoinBody(idDest, id);
+				int idx = ArrayModel_IndexBody(listLoaded, r);
+				if (idxDest != idx) {
+					Bem().JoinBody(idxDest, idx);
 					RemoveRow(r);
 					dialogDamage.RemoveId(r);
 					//selected = true;
@@ -1854,8 +1866,8 @@ void MainBody::OnJoin() {
 			}
 		}	
 	
-		UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-		mainStiffness.Load(Bem().surfs, ids);
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
+		mainStiffness.Load(Bem().surfs, idxs);
 		mainViewData.ReLoad(mainView);
 		
 		After();
@@ -1894,7 +1906,7 @@ void MainBody::OnSplit() {
 		}
 		WaitCursor waitcursor;
 				
-		UVector<int> idsmesh;
+		UVector<int> idxsmesh;
 		int row = -1;
 		for (row = listLoaded.GetCount()-1; row >= 0; --row) {
 			if (listLoaded.IsSelected(row)) 
@@ -1903,14 +1915,14 @@ void MainBody::OnSplit() {
 		if (row < 0 && listLoaded.GetCount() == 1) 
 			row = 0;
 	
-		if (idsmesh.size() == 1) {
+		if (idxsmesh.size() == 1) {
 			BEM::PrintError(t_("The mesh is monolithic so it cannot be automatically split"));
 			return;
 		}
-		int id = ArrayModel_IdBody(listLoaded, row);
-		String fileName = Bem().surfs[id].dt.fileName;
-		String name = Bem().surfs[id].dt.name;
-		idsmesh = Bem().SplitBody(id, [&](String str, int _pos) {
+		int idx = ArrayModel_IndexBody(listLoaded, row);
+		String fileName = Bem().surfs[idx].dt.fileName;
+		String name = Bem().surfs[idx].dt.name;
+		idxsmesh = Bem().SplitBody(idx, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			progress.Refresh();
@@ -1919,9 +1931,9 @@ void MainBody::OnSplit() {
 		
 		RemoveRow(row);
 		
-		for (int i = 0; i < idsmesh.size(); ++i) {
-			int idm = idsmesh[i];
-			Body &msh = Bem().surfs[idm];
+		for (int i = 0; i < idxsmesh.size(); ++i) {
+			int idxm = idxsmesh[i];
+			Body &msh = Bem().surfs[idxm];
 			
 			mainTab.Set(mainView);
 			
@@ -1982,8 +1994,8 @@ void MainBody::After() {
 
 	mainSummary.Clear();
 	for (int row = 0; row < listLoaded.GetCount(); ++row) {
-		int id = ArrayModel_IdBody(listLoaded, row);
-		mainSummary.Report(Bem().surfs, id);
+		int idx = ArrayModel_IndexBody(listLoaded, row);
+		mainSummary.Report(Bem().surfs, idx);
 	}		
 
 	mainTab.WhenSet();
@@ -2289,8 +2301,8 @@ void MainView::OnPaint() {
 	
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {
 		if (ArrayModel_IsVisible(GetMain().listLoaded, row)) {
-			int id = ArrayModel_IdBody(GetMain().listLoaded, row);
-			if (id < 0)
+			int idx = ArrayModel_IndexBody(GetMain().listLoaded, row);
+			if (idx < 0)
 				throw Exc(t_("Unexpected problem in OnPaint()"));
 			
 			double len = env.LenRef()/10;
@@ -2300,7 +2312,7 @@ void MainView::OnPaint() {
 				showNormals = true;
 			
 			const Upp::Color &color = ArrayModel_GetColor(GetMain().listLoaded, row);
-			const Body &msh = Bem().surfs[id];
+			const Body &msh = Bem().surfs[idx];
 			
 			gl.PaintSurface(msh.dt.mesh, color, ~GetMenuPlot().showBody, 	
 				showNormals);
@@ -2399,10 +2411,10 @@ void MainView::CalcEnvelope() {
 //		env.MixEnvelope(Bem().surfs[i].dt.mesh.env);
 	
 	for (int row = 0; row < GetMain().listLoaded.GetCount(); ++row) {
-		int id = ArrayModel_IdBody(GetMain().listLoaded, row);
-		if (id < 0)
+		int idx = ArrayModel_IndexBody(GetMain().listLoaded, row);
+		if (idx < 0)
 			throw Exc("Unexpected problem in CalcEnvelope()");
-		env.MixEnvelope(Bem().surfs[id].dt.mesh.env);
+		env.MixEnvelope(Bem().surfs[idx].dt.mesh.env);
 	}
 }
 
@@ -2488,8 +2500,8 @@ void MainGZ::OnUpdate() {
 	try {
 		MainBody &mm = GetDefinedParent<MainBody>(this);
 		
-		idOpened = ArrayModel_IdBody(mm.listLoaded);
-		if (idOpened < 0) {
+		idxOpened = ArrayModel_IndexBody(mm.listLoaded);
+		if (idxOpened < 0) {
 			BEM::PrintError(t_("Please select a model to process"));
 			return;
 		}
@@ -2525,7 +2537,7 @@ void MainGZ::OnUpdate() {
 		}
 	
 		
-		Body &msh = Bem().surfs[idOpened];	
+		Body &msh = Bem().surfs[idxOpened];	
 	
 		int numAngle = 1 + int((angleTo - angleFrom)/angleDelta);
 		
@@ -2684,8 +2696,8 @@ void MainGZ::ClearX(bool all) {
 	array.Set(row++, 0, t_("Cg_y [m]"));
 	array.Set(row++, 0, t_("Cg_z [m]"));
 	
-	if (idOpened >= 0 && all) {
-		Body &msh = Bem().surfs[idOpened];
+	if (idxOpened >= 0 && all) {
+		Body &msh = Bem().surfs[idxOpened];
 		
 		for (int j = 0; j < msh.cdt.controlPointsA.size(); ++j)
 			array.Set(row++, 0, Format(t_("Unpr.%s.z [m]"), msh.cdt.controlPointsA[j].name));

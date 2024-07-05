@@ -218,6 +218,13 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 			SortF(dt.fk);
 		if (IsLoadedRAO()) 
 			SortF(dt.rao);	
+		
+		if (IsLoadedFsc_pot())
+			SortF(dt.sc_pot);
+		if (IsLoadedFfk_pot())
+			SortF(dt.fk_pot);
+		if (IsLoadedFfk_pot_bmr())
+			SortF(dt.fk_pot_bmr);
 	}
 	{	// Mean Drift
 		UArray<std::complex<double>> nhead;
@@ -397,6 +404,13 @@ void Hydro::SortFrequencies() {
 		if (IsLoadedRAO()) 
 			SortF(dt.rao);
 		
+		if (IsLoadedFsc_pot())
+			SortF(dt.sc_pot);
+		if (IsLoadedFfk_pot())
+			SortF(dt.fk_pot);
+		if (IsLoadedFfk_pot_bmr())
+			SortF(dt.fk_pot_bmr);
+		
 		if(IsLoadedMD())
 			SortMD(dt.md);
 	}
@@ -421,12 +435,12 @@ void Hydro::SortFrequencies() {
 	}
 }
 
-int Hydro::Data::FindClosestHead(double h) const {
-	return FindClosest(head, FixHeading_0_360(h));
+int Hydro::Data::FindClosestHead(double hd) const {
+	return FindClosest(head, FixHeading_0_360(hd));
 }
 
-int Hydro::Data::FindClosestHead(const VectorXcd &list, const std::complex<double> &h) {
-	return FindClosest(list, FixHeading_0_360(h));
+int Hydro::Data::FindClosestHead(const VectorXcd &list, const std::complex<double> &hd) {
+	return FindClosest(list, FixHeading_0_360(hd));
 }
 		
 void Hydro::Initialize_AB(UArray<UArray<VectorXd>> &a, double val) {

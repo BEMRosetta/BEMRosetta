@@ -610,7 +610,7 @@ private:
 	UArray<UVector<double>> datagz, dataMoment;
 	UVector<double> dangle, mingz;
 	UArray<UArray<UVector<double>>> datazA, datazB, datazC;
-	int idOpened = -1;
+	int idxOpened = -1;
 	
 	UVector<double> moment;
 	
@@ -626,15 +626,15 @@ public:
 	
 	MenuAdvancedReference();
 	
-	void Init(MainBEM &_mbem, int _id) {
+	void Init(MainBEM &_mbem, int _idx) {
 		mbem = &_mbem;
-		id = _id;
+		idx = _idx;
 	}
 
 private:
 	EditDouble edit[3];		
 	MainBEM *mbem = 0;
-	int id;
+	int idx;
 };
 
 class MenuPlotList : public WithMenuPlotList<DropCtrlDialog> {
@@ -800,7 +800,7 @@ public:
 
 private:
 	MainBody *_mb = nullptr;
-	int _id;
+	int _idx;
 	EditDouble edit[6];
 	
 	void Action();
@@ -899,7 +899,7 @@ public:
 	GridCtrl grid;
 	
 	DropCtrlDialogDamage() {
-		SetRect(Size(300, 200));
+		SetRect(Size(600, 200));
 		
 		Add(grid.SizePos());
 			
@@ -907,7 +907,7 @@ public:
 		grid.AddColumn(t_(""), 0);					// The id
 		grid.AddColumn(t_(""), 10).Option();
 		grid.AddColumn(t_("Name"), 50);
-		grid.AddColumn(t_("File name"), 50);
+		grid.AddColumn(t_("File name"), 100);
 	}
 	void RemoveId(int id) {
 		for (int r = 0; r < grid.GetRowCount(); ++r)
@@ -1628,7 +1628,7 @@ public:
 	void OnClose() {Close();}
 	
 private:
-	int id = -1;
+	int idx = -1;
 	int ib = -1;
 	
 	UVector<int> ids;
@@ -1681,8 +1681,8 @@ public:
 	
 	void AfterBEM();
 		
-	int GetIdOneSelected(bool complain = true);
-	UVector<int> GetIdsSelected(bool complain);
+	int GetIndexOneSelected(bool complain = true);
+	//UVector<int> GetIdsSelected(bool complain);
 		
 	void Jsonize(JsonIO &json);
 		
@@ -1830,12 +1830,12 @@ void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileN
 					UArray<Option> &option, Function <void()>OnPush);
 int ArrayModel_Id(const ArrayCtrl &array);
 int ArrayModel_Id(const ArrayCtrl &array, int row);
-int ArrayModel_IdBody(const ArrayCtrl &array);
-int ArrayModel_IdBody(const ArrayCtrl &array, int row);
-int ArrayModel_IdHydro(const ArrayCtrl &array);
-int ArrayModel_IdHydro(const ArrayCtrl &array, int row);
-UVector<int> ArrayModel_IdsHydro(const ArrayCtrl &array);		
-UVector<int> ArrayModel_IdsBody(const ArrayCtrl &array);
+int ArrayModel_IndexBody(const ArrayCtrl &array);
+int ArrayModel_IndexBody(const ArrayCtrl &array, int row);
+int ArrayModel_IndexHydro(const ArrayCtrl &array);
+int ArrayModel_IndexHydro(const ArrayCtrl &array, int row);
+UVector<int> ArrayModel_IndexsHydro(const ArrayCtrl &array);		
+UVector<int> ArrayModel_IndexsBody(const ArrayCtrl &array);
 void ArrayModel_IdsHydroDel(ArrayCtrl &array, const UVector<int> &ids);
 void ArrayModel_RowsHydroDel(ArrayCtrl &array, const UVector<int> &ids);
 bool ArrayModel_IsVisible(const ArrayCtrl &array, int row);

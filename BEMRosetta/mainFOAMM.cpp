@@ -70,7 +70,7 @@ void MainSetupFOAMM::Init() {
 
 void MenuFOAMM::OnCursor() {
 	MainBEM &mainBEM = GetDefinedParent<MainBEM>(this);
-	int id = ArrayModel_IdHydro(mainBEM.listLoaded);
+	int id = ArrayModel_IndexHydro(mainBEM.listLoaded);
 	if (id < 0)
 		return;
 	if (ArrayCtrlSelectedGetCount(mainBEM.listLoaded) > 1)
@@ -337,8 +337,8 @@ bool MenuFOAMM::OnFOAMM() {
 	try {
 		MainBEM &mainBEM = GetDefinedParent<MainBEM>(this);
 		
-		int id = ArrayModel_IdHydro(mainBEM.listLoaded);
-		if (id < 0)
+		int idx = ArrayModel_IndexHydro(mainBEM.listLoaded);
+		if (idx < 0)
 			return false;
 		if (mainBEM.listLoaded.GetCount() != 1 && ArrayCtrlSelectedGetCount(mainBEM.listLoaded) != 1)
 			return false;
@@ -355,7 +355,7 @@ bool MenuFOAMM::OnFOAMM() {
 		WaitCursor wait;
 		isCancelled = false;
 		status.SetText(t_("Starts processing"));
-		Foamm &foamm = static_cast<Foamm&>(Bem().hydros[id]);
+		Foamm &foamm = static_cast<Foamm&>(Bem().hydros[idx]);
 		foamm.Get(ibs, idfs, jdfs, froms, tos, freqs,
 			[&](String str, int pos)->bool {
 				if (!str.IsEmpty())

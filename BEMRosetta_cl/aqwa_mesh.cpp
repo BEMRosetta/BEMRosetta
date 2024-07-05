@@ -149,7 +149,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 					int ib = f.GetInt(0)-1;
 					if (ib >= mesh.size())
 						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
-					if (f.GetInt(1) > 98000) {
+					if (f.GetInt(1) >= 98000) {
 						if (mesh[ib].dt.M.size() != 36)
 							mesh[ib].dt.M = MatrixXd::Zero(6, 6);
 						mesh[ib].dt.M(0, 0) = mesh[ib].dt.M(1, 1) = mesh[ib].dt.M(2, 2) = f.GetDouble(2);
@@ -337,7 +337,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "          MATE\n";
 		
 	for (int ib = 0; ib < mesh.size(); ++ib)
-		ret << Format("    %2d         %5d  %s", ib+1, 9800+ib, FDS(mesh[ib].GetMass(), 8, true));
+		ret << Format("    %2d         %5d  %s", ib+1, 98000+ib, FDS(mesh[ib].GetMass(), 8, true));
 
 	ret	<< "\n END\n";	
 		
@@ -348,7 +348,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "          GEOM\n";
 
 	for (int ib = 0; ib < mesh.size(); ++ib)
-		ret << Format("%6d%s     %5d%s%s%s%s%s%s", ib+1, "PMAS", 9800+ib, 
+		ret << Format("%6d%s     %5d%s%s%s%s%s%s", ib+1, "PMAS", 98000+ib, 
 			FDS(mesh[ib].dt.M(3, 3), 10, true), FDS(mesh[ib].dt.M(3, 4), 10, true), FDS(mesh[ib].dt.M(3, 5), 10, true),
 			FDS(mesh[ib].dt.M(4, 4), 10, true), FDS(mesh[ib].dt.M(4, 5), 10, true), FDS(mesh[ib].dt.M(5, 5), 10, true));
 

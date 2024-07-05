@@ -228,7 +228,7 @@ void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_T
 			surf = clone(meshes[i].dt.under);
 		else {
 			if (type == AQWA_DAT) {		// Appends dry and wet sides. This way there are no panels between dry and wet side
-				surf = clone(meshes[i].dt.under);		// First the wet
+				surf = clone(meshes[i].dt.under);	// First the wet
 				Surface dry;	
 				dry.CutZ(meshes[i].dt.mesh, 1);
 				surf.Append(dry);					// Next the dry
@@ -313,10 +313,14 @@ void Body::Reset(double rho, double g) {
 	cdt.controlPointsC = clone(cdt.controlPointsC0);
 	cdt.controlLoads = clone(cdt.controlLoads0);
 	
+	for (Body *b : cdt.damagedBodies)
+		if (b->IsValid())
+			b->Reset(rho, g);
+		
 	AfterLoad(rho, g, false, false);
 }
 	
-void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy) {
+void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy, bool reZero) {
 	if (dt.mesh.IsEmpty()) {
 		if (!dt.mesh.lines.IsEmpty())
 			dt.mesh.GetEnvelope();
@@ -348,9 +352,10 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		if (IsNull(dt.Vo))
 			dt.Vo = dt.under.volume;
 	}
-	if (isFirstTime) {
+	if (isFirstTime) 
 		IncrementIdCount();
-		
+	
+	if (isFirstTime || reZero) {
 		dt.mesh0 = clone(dt.mesh);
 		dt.cg0 = clone(dt.cg);
 		cdt.controlPointsA0 = clone(cdt.controlPointsA);
@@ -360,6 +365,10 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 	}
 	if (!onlyCG && !IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb))
 		dt.under.GetHydrostaticStiffness(dt.C, dt.c0, dt.cg, dt.cb, rho, g, GetMass(), massBuoy);
+	
+	for (Body *b : cdt.damagedBodies)
+		if (b->IsValid())
+			b->AfterLoad(rho, g, onlyCG,isFirstTime, massBuoy, reZero);
 }
 
 void Body::Report(double rho) const {
@@ -594,7 +603,7 @@ bool Body::TranslateArchimede(double rho, double tolerance, double &dz, Point3D 
 		if (b->IsValid())
 			damaged << &(b->dt.mesh);
 	
-	if (!dt.mesh.TranslateArchimede(GetMass_all(), rho, damaged, tolerance, dz, cb, allvol))
+	if (!dt.mesh.TranslateArchimede(GetMass_all(), rho, Bem().volError/100., damaged, tolerance, dz, cb, allvol))
 		return false;
 	if (!IsNull(dt.cg))
 		dt.cg.Translate(0, 0, dz);
@@ -620,21 +629,28 @@ void Body::PCA(double &yaw) {
 }
 	
 bool Body::Archimede(double rho, double g, double tolerance, double &roll, double &pitch, double &dz) {
-	Point3D cb;
+	Point3D cb_dmg;
 	double resroll, respitch;
-	double mass = GetMass_all();
 	
 	auto Residual = [&](double roll, double pitch, double &resroll, double &respitch) {
 		Body bod = clone(*this);
 		
 		bod.Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);
-		double allvol;
-		bod.TranslateArchimede(rho, tolerance, dz, cb, allvol);
+		double vol_dmg;
+		bod.TranslateArchimede(rho, tolerance, dz, cb_dmg, vol_dmg);	// All volumes are included
 		
-		Force6D fcg = Surface::GetMassForce(bod.dt.c0, bod.GetCG_all(), mass, g);
-		Force6D fcb = Surface::GetHydrostaticForceCB(bod.dt.c0, cb, allvol, rho, g);
+		UVector<Point3D> cgs;											// All loads are included
+		UVector<double> masses;
+		cgs << dt.cg;
+		masses << GetMass();
+		for (ControlData::ControlLoad &c : cdt.controlLoads) {
+			cgs << c.p;
+			masses << c.mass;
+		}
+		Force6D fcg = Surface::GetMassForce(bod.dt.c0, cgs, masses, g);
+		Force6D fcb = Surface::GetHydrostaticForceCB(bod.dt.c0, cb_dmg, vol_dmg, rho, g);
 	
-		resroll  = fcb.r.x + fcg.r.x;		// ∑ Froll = 0		(around cg, not around c0)
+		resroll  = fcb.r.x + fcg.r.x;		// ∑ Froll = 0	
 		respitch = fcb.r.y + fcg.r.y;		// ∑ Fpitch = 0	
 	};
 	
@@ -643,7 +659,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 	Residual(roll, pitch, resroll, respitch);
 	
 	// First delta is a fraction of the angle between cg and cb
-	Value3D delta_cbcg = dt.cg - cb;
+	Value3D delta_cbcg = GetCG_all() - cb_dmg;
 	
 	double droll  = abs(M_PI/2 - abs(atan2(delta_cbcg.z, delta_cbcg.y)));
 	if (Sign(droll) != Sign(resroll))
@@ -654,7 +670,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 	
 	// Iterate rotating around cg	
 	int nIter = 0;	
-	int maxIter = 200;
+	int maxIter = 500;
 	for (; nIter < maxIter; ++nIter) {
 		if (abs(droll) < M_PI/1000000 && abs(dpitch) < M_PI/1000000) 		// > 0.00018 deg
 			break;
@@ -662,7 +678,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 		roll += droll;
 		pitch += dpitch;
 		
-		LOG(Format("Archimede roll: %f %f pitch: %f %f", roll, droll, pitch, dpitch));
+		LOG(Format("Archimede roll: %f %f %.0f pitch: %f %f %.0f", roll, droll, resroll, pitch, dpitch, respitch));
 		
 		double nresroll, nrespitch;
 		Residual(roll, pitch, nresroll, nrespitch);

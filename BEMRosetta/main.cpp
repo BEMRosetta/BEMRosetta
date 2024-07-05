@@ -507,7 +507,7 @@ int ArrayModel_Id(const ArrayCtrl &array, int row) {
 	return array.Get(row, 0);
 }
 
-int ArrayModel_IdBody(const ArrayCtrl &array) {
+int ArrayModel_IndexBody(const ArrayCtrl &array) {
 	int id;
 	if (array.GetCount() == 1)
 		id = ArrayModel_Id(array, 0);
@@ -516,52 +516,52 @@ int ArrayModel_IdBody(const ArrayCtrl &array) {
 		if (id < 0)
 			return -1;
 	}
-	return Bem().GetBodyId(id);
+	return Bem().GetBodyIndex(id);
 }
 
-int ArrayModel_IdBody(const ArrayCtrl &array, int row) {
+int ArrayModel_IndexBody(const ArrayCtrl &array, int row) {
 	int id = ArrayModel_Id(array, row);
 	if (id < 0)
 		return -1;
-	return Bem().GetBodyId(id);
+	return Bem().GetBodyIndex(id);
 }
 
-int ArrayModel_IdHydro(const ArrayCtrl &array) {
+int ArrayModel_IndexHydro(const ArrayCtrl &array) {
 	int id = ArrayModel_Id(array);
 	if (id < 0)
 		return -1;
-	return Bem().GetHydroId(id);
+	return Bem().GetHydroIndex(id);
 }
 
-int ArrayModel_IdHydro(const ArrayCtrl &array, int row) {
+int ArrayModel_IndexHydro(const ArrayCtrl &array, int row) {
 	int id = ArrayModel_Id(array, row);
 	if (id < 0)
 		return -1;
-	return Bem().GetHydroId(id);
+	return Bem().GetHydroIndex(id);
 }
 
-UVector<int> ArrayModel_IdsHydro(const ArrayCtrl &array) {		
+UVector<int> ArrayModel_IndexsHydro(const ArrayCtrl &array) {		
 	UVector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) {
-		int id = ArrayModel_IdHydro(array, row);		
+		int id = ArrayModel_IndexHydro(array, row);		
 		if (id >= 0)
 			ids << id;
 	}
 	return ids;
 }
 
-UVector<int> ArrayModel_IdsBody(const ArrayCtrl &array) {		
+UVector<int> ArrayModel_IndexsBody(const ArrayCtrl &array) {		
 	UVector<int> ids;
 	for (int row = 0; row < array.GetCount(); ++row) 
-		ids << ArrayModel_IdBody(array, row);		
+		ids << ArrayModel_IndexBody(array, row);		
 	return ids;
 }
 
-void ArrayModel_IdsHydroDel(ArrayCtrl &array, const UVector<int> &ids) {		
+void ArrayModel_IdsHydroDel(ArrayCtrl &array, const UVector<int> &idxs) {		
 	for (int row = array.GetCount() - 1; row >= 0 ; --row) {
-		int idrow = ArrayModel_IdHydro(array, row);
-		for (auto id : ids) {
-			if (idrow == id) {
+		int idxrow = ArrayModel_IndexHydro(array, row);
+		for (auto idx : idxs) {
+			if (idxrow == idx) {
 				array.Remove(row);
 				break;
 			}

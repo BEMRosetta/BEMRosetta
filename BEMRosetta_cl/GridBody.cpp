@@ -86,10 +86,10 @@ void GridBody::TableHeaders(const Hydro &hy, double head, UVector<String> &str, 
 }
 		
 
-void GridBody::Load(int id, int ib, int &numNodes, int &numPanels) {
+void GridBody::Load(int idx, int ib, int &numNodes, int &numPanels) {
 	const char *xyz[] = {"x", "y", "z"};
 	
-	const Hydro &hy = Bem().hydros[id];
+	const Hydro &hy = Bem().hydros[idx];
 	{
 		numNodes = hy.dt.msh[ib].dt.mesh.nodes.size();
 		
@@ -144,7 +144,7 @@ void GridBody::Load(int id, int ib, int &numNodes, int &numPanels) {
 		TableHeaders(hy, head, str, group, col);
 		
 		for (int i = 0; i < str.size(); ++i)
-			grdPanels.AddVirtualCol(str[i], dataSourcePanels.Add().Init(id, ib, group[i], col[i]), 60);		
+			grdPanels.AddVirtualCol(str[i], dataSourcePanels.Add().Init(idx, ib, group[i], col[i]), 60);		
 	}
 }
 
@@ -153,10 +153,10 @@ void GridBody::UpdatePanelHeaders() {
 	if (dataSourcePanels.IsEmpty())
 		return;
 	
-	int id = First(dataSourcePanels).id;
+	int idx = First(dataSourcePanels).idx;
 	int ih = First(dataSourcePanels).ih;
 	
-	const Hydro &hy = Bem().hydros[id];
+	const Hydro &hy = Bem().hydros[idx];
 	
 	double head = hy.dt.head[ih];
 	
@@ -186,8 +186,8 @@ Value GridBody::DataSourceNodes::Format(const Value& q) const {
 }
 
 Value GridBody::DataSourcePanels::Format(const Value& q) const {
-	ASSERT(id >= 0);
-	const Hydro &hy = Bem().hydros[id];
+	ASSERT(idx >= 0);
+	const Hydro &hy = Bem().hydros[idx];
 	int ip = q;
 	const Surface &s = hy.dt.msh[ib].dt.mesh;
 	if (s.panels.size() <= ip)
