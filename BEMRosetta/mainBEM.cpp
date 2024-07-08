@@ -2282,7 +2282,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 	array.Set(row, 0, t_("Description"));		array.Set(row++, col, hy.dt.description);
 	array.Set(row, 0, t_("Software"));			array.Set(row++, col, hy.GetCodeStr());
 	array.Set(row, 0, t_("g [m/s2]"));			array.Set(row++, col, hy.S_g());
-	array.Set(row, 0, t_("rho [kg/m3]"));		array.Set(row++, col, hy.S_rho());
+	array.Set(row, 0, t_("rho [kg/m³]"));		array.Set(row++, col, hy.S_rho());
 	array.Set(row, 0, t_("h (water depth) [m]"));array.Set(row++,col, hy.S_h());
 	array.Set(row, 0, t_("length scale [m]"));	array.Set(row++, col, hy.S_len());
 	
@@ -2362,7 +2362,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 		else 
 			array.Set(row++, col, "-");*/
 		
-		array.Set(row, 0, sib + " " + t_("Vsub [m3]"));
+		array.Set(row, 0, sib + " " + t_("Vsub [m³]"));
 		if (/*data.Vo.size() > ib && */IsNum(hy.dt.msh[ib].dt.Vo)) {
 			
 			array.Set(row++, col, AttrText(FDS(hy.dt.msh[ib].dt.Vo, 10, false)).Paper(hy.dt.msh[ib].dt.Vo < 0 ? lightRed : Null));

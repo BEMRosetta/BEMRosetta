@@ -635,7 +635,7 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &me
 	out << "2\n";
 	out << "0                    ! Mesh z-axis translation from origin\n";
 	out << "1                    ! Mesh scale\n";
-	out << Format("%s               ! Water density (kg/m3)\n", FDS(rho, 6, true));
+	out << Format("%s               ! Water density (kg/m³)\n", FDS(rho, 6, true));
 	out << Format("%s               ! Gravity (m/s2)", FDS(g, 6, true));
 }
 	
@@ -769,7 +769,7 @@ bool Nemoh::Load_Inf(String fileName) {
 			dt.msh[0].dt.cb.y = ScanDouble(line.Mid(pos));
 		else if ((pos = line.FindAfter("ZC [m]=")) >= 0) 
 			dt.msh[0].dt.cb.z = ScanDouble(line.Mid(pos));
-		else if ((pos = line.FindAfter("Displacement [m3]=")) >= 0) 
+		else if ((pos = line.FindAfter("Displacement [m³]=")) >= 0) 
 			dt.msh[0].dt.Vo = ScanDouble(line.Mid(pos));
 		else if ((pos = line.FindAfter("K [3][3] [N/m]=")) >= 0) 
 			dt.msh[0].dt.C(2, 2) = ScanDouble(line.Mid(pos));

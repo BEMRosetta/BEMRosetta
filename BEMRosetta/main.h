@@ -863,6 +863,7 @@ public:
 		grid.Appending().Removing().Editing().Sorting(false).Navigating().MultiSelect().Clipboard();
 		grid.SetToolBar();
 		grid.AddColumn(t_("Name"), 20).Edit(name);
+		grid.AddColumn(t_("Loaded"), 10).Option();
 		grid.AddColumn(t_("x"), 15).Edit(x);
 		grid.AddColumn(t_("y"), 15).Edit(y);
 		grid.AddColumn(t_("z"), 15).Edit(z);
@@ -874,17 +875,18 @@ public:
 		for (int r = 0; r < grid.GetRowCount(); ++r) {
 			Body::ControlData::ControlLoad &cp = cpa.Add();		
 			cp.name = grid.Get(r, 0);
-			cp.p.x 	= grid.Get(r, 1);
-			cp.p.y 	= grid.Get(r, 2);
-			cp.p.z 	= grid.Get(r, 3);
-			cp.mass = grid.Get(r, 4);
+			cp.loaded = grid.Get(r, 1);
+			cp.p.x 	= grid.Get(r, 2);
+			cp.p.y 	= grid.Get(r, 3);
+			cp.p.z 	= grid.Get(r, 4);
+			cp.mass = grid.Get(r, 5);
 		};
 	}
 	void ToGrid(const UArray<Body::ControlData::ControlLoad> &cpa) {
 		grid.Clear();
 		for (int r = 0; r < cpa.size(); ++r) {
 			const Body::ControlData::ControlLoad &cp = cpa[r];		
-			grid.Add(cp.name, cp.p.x, cp.p.y, cp.p.z, cp.mass);
+			grid.Add(cp.name, true, cp.p.x, cp.p.y, cp.p.z, cp.mass);
 		};
 	}
 private:	
@@ -906,7 +908,7 @@ public:
 		grid.Editing().Sorting(false);
 		grid.AddColumn(t_(""), 0);					// The id
 		grid.AddColumn(t_(""), 10).Option();
-		grid.AddColumn(t_("Name"), 50);
+		grid.AddColumn(t_("Name"), 20);
 		grid.AddColumn(t_("File name"), 100);
 	}
 	void RemoveId(int id) {

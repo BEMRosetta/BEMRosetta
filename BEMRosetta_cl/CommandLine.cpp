@@ -80,7 +80,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-paramfile <file>         # Params in a file. New lines are like separators and # indicates a comment");
 	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
 	Cout() << "\n" << t_("               g          # gravity       [m/s2]  ") << md.g;
-	Cout() << "\n" << t_("               rho        # water density [kg/m3] ") << md.rho;
+	Cout() << "\n" << t_("               rho        # water density [kg/m³] ") << md.rho;
 	Cout() << "\n" << t_("-echo off/on              # Show text messages");
 	Cout() << "\n" << t_("-csvseparator <sep>       # Sets the separator for .csv files");
 	Cout() << "\n" << t_("-isEqual <value>          # Stops if last print is not equal to <value>");
@@ -146,8 +146,8 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-reset                          # Restore the mesh to the initial situation");
 	Cout() << "\n" << t_("-r  -report                     # Output last loaded model data");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
-	Cout() << "\n" << t_("     <params> volume            # volx voly volx [m3]");
-	Cout() << "\n" << t_("              underwatervolume  # volx voly volx [m3]");
+	Cout() << "\n" << t_("     <params> volume            # volx voly volx [m³]");
+	Cout() << "\n" << t_("              underwatervolume  # volx voly volx [m³]");
 	Cout() << "\n" << t_("              surface           # [m2]");
 	Cout() << "\n" << t_("              underwatersurface # [m2]");
 	Cout() << "\n" << t_("              cb                # cbx cby cbz [m]");

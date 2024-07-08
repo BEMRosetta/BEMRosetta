@@ -56,6 +56,16 @@ public:
 	
 	bool IsEmpty() {return dt.mesh.IsEmpty();}
 	
+	void cloneDamaged(UVector<Body> &damaged) {	// Points to a copy of the damaged bodies, to avoid moving the real ones
+		damaged.SetCount(cdt.damagedBodies.size());
+		for (int i = 0; i < cdt.damagedBodies.size(); ++i) {
+			if (cdt.damagedBodies[i]->IsValid()) {
+				damaged[i] = clone(*(cdt.damagedBodies[i]));
+				cdt.damagedBodies[i] = &(damaged[i]);
+			}
+		}
+	}
+	
 	const char *GetBodyStr() const {
 		return meshStr[dt.GetCode()];
 	}
@@ -131,26 +141,9 @@ public:
 	
 	void SetMass(double m);
 	double GetMass() const	{return dt.M.size() > 0 ? dt.M(0, 0) : 0;}
-	double GetMass_all() const	{
-		double mass = GetMass();
-		for (const auto &d : cdt.controlLoads)
-			mass += d.mass;
-				
-		return mass;
-	}
-	Point3D GetCG_all() const {
-		double mass = GetMass();
-		Point3D cg = dt.cg*mass;
-		for (const auto &d : cdt.controlLoads) {
-			cg.x += d.mass*d.p.x;
-			cg.y += d.mass*d.p.y;
-			cg.z += d.mass*d.p.z;
-			mass += d.mass;
-		}
-		cg /= mass;	
-
-		return cg;		
-	}
+	double GetMass_all() const;
+	Point3D GetCG_all() const;
+	Point3D GetCB_all() const;
 	
 	void Report(double rho) const;
 	
@@ -215,10 +208,11 @@ public:
 		};
 		struct ControlLoad {
 			String name;
+			bool loaded;
 			Point3D p;
 			double mass;
 			
-			void Jsonize(JsonIO &json) {json ("name", name)("p", p)("mass", mass);};
+			void Jsonize(JsonIO &json) {json ("name", name)("loaded", loaded)("p", p)("mass", mass);};
 		};
 		
 		UArray<ControlPoint> controlPointsA, controlPointsA0;
@@ -234,6 +228,18 @@ public:
 				("controlPointsC0", controlPointsC0)
 				("controlLoads0", controlLoads0)
 			;
+		}
+		
+		void Reset() {
+			controlPointsA.Clear();
+			controlPointsA0.Clear();
+			controlPointsB.Clear();
+			controlPointsB0.Clear();
+			controlPointsC.Clear();
+			controlPointsC0.Clear();
+			controlLoads.Clear();
+			controlLoads0.Clear();
+			damagedBodies.Clear();
 		}
 	};
 	ControlData cdt;

@@ -268,11 +268,11 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		
 		for (int in = 0; in < surf.nodes.size(); ++in) {
 			const Point3D &p = surf.nodes[in];
-			ret << Format("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
+			ret << Format("%6d%5d         %s %s %s\n", ib+1, firstidbody[ib] + in +1, 
 						FDS(p.x/factorLength, 10, true), FDS(p.y/factorLength, 10, true), FDS(p.z/factorLength, 10, true));
 		}
 		const Point3D &cg = mesh[ib].dt.cg;
-		ret << Format("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
+		ret << Format("%6d%5d         %s %s %s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
 	}
 	ret << " END" << "\n"
@@ -348,7 +348,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "          GEOM\n";
 
 	for (int ib = 0; ib < mesh.size(); ++ib)
-		ret << Format("%6d%s     %5d%s%s%s%s%s%s", ib+1, "PMAS", 98000+ib, 
+		ret << Format("%6d%s     %5d %s %s %s %s %s %s", ib+1, "PMAS", 98000+ib, 
 			FDS(mesh[ib].dt.M(3, 3), 10, true), FDS(mesh[ib].dt.M(3, 4), 10, true), FDS(mesh[ib].dt.M(3, 5), 10, true),
 			FDS(mesh[ib].dt.M(4, 4), 10, true), FDS(mesh[ib].dt.M(4, 5), 10, true), FDS(mesh[ib].dt.M(5, 5), 10, true));
 

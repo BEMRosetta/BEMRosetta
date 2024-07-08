@@ -380,9 +380,9 @@ void Body::Report(double rho) const {
 	BEM::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -dt.projectionPos.x, dt.projectionNeg.x, dt.projectionPos.x + dt.projectionNeg.x));
 	BEM::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -dt.projectionPos.y, dt.projectionNeg.y, dt.projectionPos.y + dt.projectionNeg.y));
 	BEM::Print(S("\n") + Format(t_("Surface [m2] %f"), dt.mesh.surface));
-	BEM::Print(S("\n") + Format(t_("Volume [m3] %f"), dt.mesh.volume));
+	BEM::Print(S("\n") + Format(t_("Volume [m³] %f"), dt.mesh.volume));
 	BEM::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), dt.under.surface));
-	BEM::Print(S("\n") + Format(t_("Underwater volume [m3] %f"), dt.under.volume));
+	BEM::Print(S("\n") + Format(t_("Underwater volume [m³] %f"), dt.under.volume));
 	BEM::Print(S("\n") + Format(t_("Displacement [tm] %f"), dt.under.volume*rho/1000));
 	BEM::Print(S("\n") + Format(t_("Centre of buoyancy [m] (%f, %f, %f)"), dt.cb.x, dt.cb.y, dt.cb.z));
 	
@@ -457,6 +457,8 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 			throw Exc(t_("Cancelled by the user"));
 				
 		Body base = clone(base0);
+		UVector<Body> damaged;	// Handles a copy of the damaged bodies
+		base.cloneDamaged(damaged);
 			
 		base.Rotate(0, ToRad(angle), 0, dt.c0.x, dt.c0.y, dt.c0.z);
 		
@@ -615,6 +617,9 @@ bool Body::TranslateArchimede(double rho, double tolerance, double &dz, Point3D 
 		d.p.Translate(0, 0, dz);
 	for (auto &d : cdt.controlLoads)
 		d.p.Translate(0, 0, dz);
+	for (auto &b : cdt.damagedBodies)
+		if (b->IsValid())
+			b->Translate(0, 0, dz);
 	return true;
 }
 
@@ -631,24 +636,29 @@ void Body::PCA(double &yaw) {
 bool Body::Archimede(double rho, double g, double tolerance, double &roll, double &pitch, double &dz) {
 	Point3D cb_dmg;
 	double resroll, respitch;
+	Force6D fcg, fcb;
+	double vol_dmg;
 	
 	auto Residual = [&](double roll, double pitch, double &resroll, double &respitch) {
-		Body bod = clone(*this);
+		Body base = clone(*this);		// Handles a copy of the body
+		UVector<Body> damaged;	// Handles a copy of the damaged bodies
+		base.cloneDamaged(damaged);
 		
-		bod.Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);
-		double vol_dmg;
-		bod.TranslateArchimede(rho, tolerance, dz, cb_dmg, vol_dmg);	// All volumes are included
+		base.Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);
+		base.TranslateArchimede(rho, tolerance, dz, cb_dmg, vol_dmg);	// All volumes are included
 		
 		UVector<Point3D> cgs;											// All loads are included
 		UVector<double> masses;
-		cgs << dt.cg;
-		masses << GetMass();
+		cgs << base.dt.cg;
+		masses << base.GetMass();
 		for (ControlData::ControlLoad &c : cdt.controlLoads) {
-			cgs << c.p;
-			masses << c.mass;
+			if (c.loaded) {
+				cgs << c.p;
+				masses << c.mass;
+			}
 		}
-		Force6D fcg = Surface::GetMassForce(bod.dt.c0, cgs, masses, g);
-		Force6D fcb = Surface::GetHydrostaticForceCB(bod.dt.c0, cb_dmg, vol_dmg, rho, g);
+		fcg = Surface::GetMassForce(base.dt.c0, cgs, masses, g);
+		fcb = Surface::GetHydrostaticForceCB(base.dt.c0, cb_dmg, vol_dmg, rho, g);
 	
 		resroll  = fcb.r.x + fcg.r.x;		// ∑ Froll = 0	
 		respitch = fcb.r.y + fcg.r.y;		// ∑ Fpitch = 0	
@@ -661,10 +671,10 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 	// First delta is a fraction of the angle between cg and cb
 	Value3D delta_cbcg = GetCG_all() - cb_dmg;
 	
-	double droll  = abs(M_PI/2 - abs(atan2(delta_cbcg.z, delta_cbcg.y)));
+	double droll  = 0.25*abs(M_PI/2 - abs(atan2(delta_cbcg.z, delta_cbcg.y)));
 	if (Sign(droll) != Sign(resroll))
 		droll = -droll;
-	double dpitch = abs(M_PI/2 - abs(atan2(delta_cbcg.z, delta_cbcg.x)));
+	double dpitch = 0.25*abs(M_PI/2 - abs(atan2(delta_cbcg.z, delta_cbcg.x)));
 	if (Sign(dpitch) != Sign(respitch))
 		dpitch = -dpitch;
 	
@@ -695,20 +705,66 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 		if (Sign(dpitch) != Sign(respitch))
 			dpitch = -dpitch;
 	}
+		
+	LOG(Format("Archimede NumIter: %d", nIter));
+	
+	if (nIter >= maxIter)
+		return false;
 	
 	Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);	// Moves just the necessary
 	TranslateArchimede(rho, tolerance, dz);
 	Value3D delta = dt.cg0 - dt.cg;
 	Translate(delta.x, delta.y, 0);
 	
-	LOG(Format("Archimede NumIter: %d", nIter));
-	
-	if (nIter >= maxIter)
-		return false;
-	
 	return true;
 }
 
+double Body::GetMass_all() const	{
+	double mass = GetMass();
+	for (const auto &d : cdt.controlLoads)
+		if (d.loaded && !IsNull(d.mass)) 
+			mass += d.mass;
+			
+	return mass;
+}
+
+Point3D Body::GetCG_all() const {
+	double mass = GetMass();
+	Point3D cg = dt.cg*mass;
+	for (const auto &d : cdt.controlLoads) {
+		if (d.loaded && !IsNull(d.p) && !IsNull(d.mass)) {
+			cg.x += d.mass*d.p.x;
+			cg.y += d.mass*d.p.y;
+			cg.z += d.mass*d.p.z;
+			mass += d.mass;
+		}
+	}
+	cg /= mass;	
+
+	return cg;		
+}
+
+Point3D Body::GetCB_all() const {
+	double allvol = dt.under.volume;
+	Point3D cb = dt.under.GetCentreOfBuoyancy()*dt.under.volume;
+	for (Body *pb : cdt.damagedBodies) {
+		const Body &b = *pb;
+		if (b.dt.under.VolumeMatch(Bem().volError, Bem().volError) < 0)
+			return Null;
+		double vv = b.dt.under.volume;
+		if (vv > 0) {
+			Point3D ccb = b.dt.under.GetCentreOfBuoyancy();
+			cb -= ccb*vv;
+			allvol -= vv;
+		}
+	}
+	if (allvol <= 0)
+		return Null;
+	
+	cb /= allvol;
+	return cb;
+}
+	
 void Body::Jsonize(JsonIO &json) {
 	json
 		("projectionPos", dt.projectionPos)

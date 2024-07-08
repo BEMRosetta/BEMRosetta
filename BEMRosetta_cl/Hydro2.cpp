@@ -1542,7 +1542,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 
 void Hydro::Report() const {
 	BEM::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), dt.file));
-	BEM::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s"), 
+	BEM::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m³]: %s, length scale [m]: %s"), 
 								S_g(), S_h(), S_rho(), S_len()));
 	String freqs;
 	if (dt.w.IsEmpty()) 
@@ -1594,7 +1594,7 @@ void Hydro::Report() const {
 		//if (dof.size() > ib)
 		//	str += S(" ") + t_("dof") + ": " + FormatInt(dof[ib]);
 		if (/*Vo.size() > ib && */IsNum(dt.msh[ib].dt.Vo))
-			str += S(" ") + t_("vol [m3]") + ": " + FDS(dt.msh[ib].dt.Vo, 8, false);
+			str += S(" ") + t_("vol [m³]") + ": " + FDS(dt.msh[ib].dt.Vo, 8, false);
 		if (IsNum(dt.msh[ib].dt.cg))
 			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.cg.x, dt.msh[ib].dt.cg.y, dt.msh[ib].dt.cg.z);
 		if (IsNum(dt.msh[ib].dt.cb))

@@ -485,6 +485,7 @@ void MainBody::Init() {
 		Bem().surfs[idx].cdt.controlPointsA0 = clone(Bem().surfs[idx].cdt.controlPointsA);
 		
 		menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
+		menuStability.labPointsA.SetFont(menuStability.labPointsA.GetFont().Bold(dialogPointsA.grid.GetRowCount() > 0));
 	};
 	menuStability.butPointsB.SetCtrl(dialogPointsB).Tip(t_("Weathertight openings (lead to progressive flooding)"));
 	dialogPointsB.WhenClose = [&] {
@@ -497,7 +498,8 @@ void MainBody::Init() {
 		Bem().surfs[idx].cdt.controlPointsB0 = clone(Bem().surfs[idx].cdt.controlPointsB);
 		
 		menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
-	};
+		menuStability.labPointsB.SetFont(menuStability.labPointsB.GetFont().Bold(dialogPointsB.grid.GetRowCount() > 0));
+;	};
 			
 	menuStability.butPointsC.SetCtrl(dialogPointsC).Tip(t_("Watertight openings (do not lead to progressive flooding)"));
 	dialogPointsC.WhenClose = [&] {
@@ -510,6 +512,7 @@ void MainBody::Init() {
 		Bem().surfs[idx].cdt.controlPointsC0 = clone(Bem().surfs[idx].cdt.controlPointsC);
 		
 		menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
+		menuStability.labPointsC.SetFont(menuStability.labPointsC.GetFont().Bold(dialogPointsC.grid.GetRowCount() > 0));
 	};
 	
 	menuStability.butLoads.SetCtrl(dialogLoads).Tip(t_("Loads"));
@@ -523,6 +526,7 @@ void MainBody::Init() {
 		Bem().surfs[idx].cdt.controlLoads0 = clone(Bem().surfs[idx].cdt.controlLoads);
 		
 		menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));
+		menuStability.labLoads.SetFont(menuStability.labLoads.GetFont().Bold(dialogLoads.grid.GetRowCount() > 0));
 	};
 	
 	menuStability.butDamage.SetCtrl(dialogDamage).Tip(t_("Damage"));
@@ -540,6 +544,7 @@ void MainBody::Init() {
 			}
 		}
 		menuStability.labDamage.SetText(Format(t_("%d damage"), num));
+		menuStability.labDamage.SetFont(menuStability.labDamage.GetFont().Bold(num > 0));
 	};
 	
 	menuStability.butArchimede <<= THISBACK(OnArchimede);
@@ -587,6 +592,15 @@ void MainBody::Init() {
 	menuTab.Add(menuStability.SizePos(),t_("Stability")).Disable();
 	menuTab.Add(menuEdit.SizePos(), 	t_("Edit"));
 	
+	menuStability.butClear.WhenAction = [&]() {
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0)
+			return;
+		
+		Bem().surfs[idx].cdt.Reset();
+		OnMenuStabilityArraySel();
+		Bem().surfs[idx].Reset(Bem().rho, Bem().g);
+	};
 	
 	mainViewData.Init();		// Un-comment this to view video controls
 	//splitterVideo.Vert(mainView.SizePos(), videoCtrl.SizePos());
@@ -797,9 +811,13 @@ void MainBody::OnMenuStabilityArraySel() {
 	dialogLoads.ToGrid(Bem().surfs[idx].cdt.controlLoads0);
 	
 	menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
+	menuStability.labPointsA.SetFont(menuStability.labPointsA.GetFont().Bold(dialogPointsA.grid.GetRowCount() > 0));
 	menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
+	menuStability.labPointsB.SetFont(menuStability.labPointsB.GetFont().Bold(dialogPointsB.grid.GetRowCount() > 0));
 	menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
+	menuStability.labPointsC.SetFont(menuStability.labPointsC.GetFont().Bold(dialogPointsC.grid.GetRowCount() > 0));
 	menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));	
+	menuStability.labLoads.SetFont(menuStability.labLoads.GetFont().Bold(dialogLoads.grid.GetRowCount() > 0));
 }
 
 void MainBody::OnArraySel() {
@@ -1326,9 +1344,11 @@ void MainBody::OnArchimede() {
 		if (IsNull(msh.dt.cg))
 			throw Exc(t_("Set cog before fitting buoyancy"));
 
+		WaitCursor waitcursor;
+		
 		double roll, pitch, dz;
 		if (!msh.Archimede(Bem().rho, Bem().g, 0.05, roll, pitch, dz))
-			BEM::PrintError(t_("Problem readjusting the Z, roll and pitch values to comply with buoyancy"));
+			BEM::PrintError(t_("An equilibrium position has not been found.\nApparently this device is unstable."));
 		
 		menuProcess.x_g <<= msh.dt.cg.x;
 		menuProcess.y_g <<= msh.dt.cg.y;
@@ -2103,14 +2123,14 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, msh.dt.mesh.nodes.size());
 
 	array.Set(row, 0, t_("Surface [m²]"));		array.Set(row++, col, FDS(msh.dt.mesh.surface, 8, false));
-	array.Set(row, 0, t_("Volume [m3] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Volume [m³] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
 														FDS(msh.dt.mesh.volume,  10, false),
 														FDS(msh.dt.mesh.volumex, 10, false),
 														FDS(msh.dt.mesh.volumey, 10, false),
 														FDS(msh.dt.mesh.volumez, 10, false))).Paper(backColorBody));
 	
 	array.Set(row, 0, t_("Wetted surface [m²]"));array.Set(row++, col, FDS(msh.dt.under.surface, 10, false));
-	array.Set(row, 0, t_("Immersed volume [m3] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Immersed volume [m³] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
 														FDS(msh.dt.under.volume,  10, false),
 														FDS(msh.dt.under.volumex, 10, false),
 														FDS(msh.dt.under.volumey, 10, false),
@@ -2335,10 +2355,20 @@ void MainView::OnPaint() {
 			if (~GetMenuPlot().showCb && !IsNull(msh.dt.cb)) {
 				gl.PaintDoubleAxis(msh.dt.cb, len, LtBlue());
 				gl.PaintCube(msh.dt.cb, len/10, LtBlue());
+				if (msh.cdt.damagedBodies.size() > 0) {
+					Point3D cball = msh.GetCB_all();
+					gl.PaintDoubleAxis(cball, len, LtBlue());
+					gl.PaintCube(cball, len/5, LtBlue());
+				}
 			}
 			if (~GetMenuPlot().showCg && !IsNull(msh.dt.cg)) {
 				gl.PaintDoubleAxis(msh.dt.cg, len, Black());
 				gl.PaintCube(msh.dt.cg, len/5, Black());
+				if (msh.cdt.controlLoads.size() > 0) {
+					Point3D cgall = msh.GetCG_all();
+					gl.PaintDoubleAxis(cgall, len, Black());
+					gl.PaintCube(cgall, len/3, Black());
+				}
 			}
 			if (~GetMenuPlot().showCr) {
 				gl.PaintDoubleAxis(msh.dt.c0, len*10, Cyan());
@@ -2355,7 +2385,8 @@ void MainView::OnPaint() {
 				for (int i = 0; i < msh.cdt.controlPointsC.size(); ++i)
 					gl.PaintCube(msh.cdt.controlPointsC[i].p, len/5, msh.cdt.controlPointsC[i].p.z > 0 ? Red() : LtBlue());
 				for (int i = 0; i < msh.cdt.controlLoads.size(); ++i)
-					gl.PaintCube(msh.cdt.controlLoads[i].p, len/5, msh.cdt.controlLoads[i].p.z > 0 ? LtRed() : LtBlue());
+					if (msh.cdt.controlLoads[i].loaded)
+						gl.PaintCube(msh.cdt.controlLoads[i].p, len/5, msh.cdt.controlLoads[i].p.z > 0 ? LtRed() : LtBlue());
 			}
 			
 			if (paintSelect) {
@@ -2685,7 +2716,7 @@ void MainGZ::ClearX(bool all) {
 	array.Set(row++, 0, t_("GZ [m]"));
 	array.Set(row++, 0, t_("Heeling lever [N·m]"));
 	array.Set(row++, 0, t_("Displacement [kg]"));
-	array.Set(row++, 0, t_("Sub. volume [m3]"));
+	array.Set(row++, 0, t_("Sub. volume [m³]"));
 	array.Set(row++, 0, t_("Wetted area [m²]"));
 	array.Set(row++, 0, t_("Waterpl. area [m²]"));
 	array.Set(row++, 0, t_("Draft [m]"));
