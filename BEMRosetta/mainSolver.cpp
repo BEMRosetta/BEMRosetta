@@ -382,7 +382,7 @@ bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids) {
 		//hd.irfDuration = ~nemoh.irfDuration;
 		double irfStep = ~gen.irfStep;
 		double irfDuration = ~gen.irfDuration;
-		int n = irfDuration/irfStep; 
+		int n = int(irfDuration/irfStep); 
 		LinSpaced(hy.dt.Tirf, n, 0, irfDuration);
 	} else
 		hy.dt.Tirf.resize(0);

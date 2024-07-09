@@ -34,8 +34,8 @@ MenuProcessInertia::MenuProcessInertia() {
 	opMass.WhenAction    = [&]{OpMass_WhenAction(true);};
 	opInertia <<= THISBACK(Action);
 	
-	opInertia.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
-	opMass.MinCaseHeight(1.5*StdFont().GetHeight()).SetVertical();
+	opInertia.MinCaseHeight(int(1.5*StdFont().GetHeight())).SetVertical();
+	opMass.MinCaseHeight(int(1.5*StdFont().GetHeight())).SetVertical();
 	
 	ok << [&] {Close();};
 	
