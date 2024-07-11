@@ -1225,6 +1225,7 @@ void Nemoh::Save(String ) {
 }		
 
 void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
+	DirectoryCreate(folder);
 	String name = GetFileTitle(folder);
 	String fileBat  = AFX(folder, name + ".bat");
 	FileOut bat;

@@ -301,12 +301,12 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
     dt.rao.Clear();	// Previous RAO is now invalid
 }
 
-void Hydro::GetWaveTo(double xto, double yto) {
+void Hydro::GetWaveTo(double xto, double yto, double g) {
 	double dx = xto - dt.x_w,
 		   dy = yto - dt.y_w;
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) 
-		AddWave(ib, dx, dy);
+		AddWave(ib, dx, dy, g);		// This g is imposed by loaded file when loading, and by BEM when saving
 	
 	dt.x_w = xto;
 	dt.y_w = yto;
@@ -508,7 +508,7 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 	}
 }
 
-void Hydro::AddWave(int ib, double dx, double dy) {
+void Hydro::AddWave(int ib, double dx, double dy, double g) {
 	if (dx == 0 && dy == 0)
 		return;
   	auto CalcF = [&](Forces &ex, const UVector<double> &k) {
@@ -529,7 +529,7 @@ void Hydro::AddWave(int ib, double dx, double dy) {
     
     UVector<double> k(dt.Nf);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-		k[ifr] = SeaWaves::WaveNumber_w(dt.w[ifr], dt.h, g_dim());
+		k[ifr] = SeaWaves::WaveNumber_w(dt.w[ifr], dt.h, g);
     	
 	if (IsLoadedFex())
 		CalcF(dt.ex, k);

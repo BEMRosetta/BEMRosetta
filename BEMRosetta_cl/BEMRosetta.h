@@ -847,7 +847,7 @@ public:
 	static int LoadHydro(UArray<Hydro> &hydro, String file, Function <bool(String, int)> Status);
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
-	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int solver, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const;
+	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const;
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -955,9 +955,9 @@ public:
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void GetTranslationTo(const MatrixXd &to);
-	void GetWaveTo(double xto, double yto);
+	void GetWaveTo(double xto, double yto, double g);
 	String SpreadNegative(Function <bool(String, int)> Status);
-	void AddWave(int ib, double dx, double dy);
+	void AddWave(int ib, double dx, double dy, double g);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);

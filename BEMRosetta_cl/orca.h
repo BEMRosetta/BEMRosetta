@@ -659,7 +659,7 @@ public:
 			return "UNKNOWN";
 	}
 	
-	void LoadWave(String owryml) {
+	void LoadWave(String owdyml) {
 		if (!dll && !FindInit())
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 			
@@ -673,13 +673,13 @@ public:
 		int status;
 		LPCWSTR wcs;
 		
-		if (!StringToWide(owryml, wcs))
+		if (!StringToWide(owdyml, wcs))
 			throwError("StringToWide LoadDiffractionData");
 		LoadDiffractionData(wave, wcs, &status);
 		if (status != 0)
 			throwError("LoadWave.LoadDiffractionData");	
 			
-		String owd = ForceExtSafer(owryml, ".owd");
+		String owd = ForceExtSafer(owdyml, ".owd");
 		
 		if (!StringToWide(owd, wcs))
 			throwError("StringToWide LoadDiffractionData SaveDiffractionData");

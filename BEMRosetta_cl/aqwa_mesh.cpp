@@ -37,6 +37,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	
 	hy.dt.w.Clear();
 	hy.dt.head.Clear();
+	mesh.Clear();
 	
 	UArray<Upp::Index<int>> ids;
 	try {
@@ -191,6 +192,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 		
 		hy.dt.Nf = hy.dt.w.size();
 		hy.dt.Nh = hy.dt.head.size();
+		hy.dt.Nb = mesh.size();
 		
 		// Removes mooring, Morison and other points unrelated with panels
 		for (Body &m : mesh) 

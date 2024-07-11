@@ -542,7 +542,7 @@ bool MainSolver::OnSave() {
 		if (!CopyHydro(hy, lids))
 			return false;
 		
-		UVector<String> errors = hy.Check(static_cast<Hydro::BEM_FMT>(int(~save.dropSolver)));
+		UVector<String> errors = hy.Check((Hydro::BEM_FMT)int(~save.dropSolver));
 		
 		if (!errors.IsEmpty()) {
 			String str;
@@ -579,7 +579,7 @@ bool MainSolver::OnSave() {
 		WaitCursor waitcursor;
 		
 		hy.SaveFolderCase(folder, ~save.opIncludeBin, ~save.opSplit ? int(~save.numSplit) : 1, ~save.numThreads, 
-				~save.dropSolver, ~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids);
+				(Hydro::BEM_FMT)int(~save.dropSolver), ~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids);
 
 	} catch (Exc e) {
 		BEM::PrintError(e);

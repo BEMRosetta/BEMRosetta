@@ -592,6 +592,7 @@ LAYOUT(MainGZ, 400, 432)
 	ITEM(Upp::LabelBox, dv___17, SetLabel(t_("Pitch")).RightPosZ(4, 132).TopPosZ(72, 96))
 	ITEM(Upp::LabelBox, dv___18, SetLabel(t_("Heading")).RightPosZ(4, 132).TopPosZ(172, 96))
 	ITEM(Upp::Option, opShowEnvelope, SetLabel(t_("Show envelope")).RightPosZ(36, 96).TopPosZ(32, 16))
+	ITEM(Upp::Label, dv___20, SetLabel(t_("Fixed Trim")).LeftPosZ(268, 72).TopPosZ(308, 19))
 END_LAYOUT
 
 LAYOUT(BEMList, 404, 200)

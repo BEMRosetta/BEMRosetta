@@ -44,7 +44,7 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 			return t_("No data found");
 		
 		for (int ib = 0; ib < dt.Nb; ++ib)					// Translates all bodies phase to 0,0
-			AddWave(ib, -dt.msh[ib].dt.c0.x, -dt.msh[ib].dt.c0.y);	// Phase is translated -c0_x,-c0_y
+			AddWave(ib, -dt.msh[ib].dt.c0.x, -dt.msh[ib].dt.c0.y, dt.g);	// Phase is translated -c0_x,-c0_y
 	
 		dt.x_w = dt.y_w = 0;
 			

@@ -969,8 +969,8 @@ bool MainBody::OnLoad() {
 				if (msh.GetMass_all() == 0)
 					throw Exc(t_("Set mass before fitting buoyancy"));
 				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz)) 
-					throw Exc(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
-				
+					Exclamation(t_("Problem readjusting the Z value to comply with displacement (Archimede).&Mesh loaded as-is"));
+					
 				msh.AfterLoad(Bem().rho, Bem().g, false, false, true);
 				
 				videoCtrl.AddReg(Point3D(0, 0, dz));

@@ -224,7 +224,7 @@ void BEM::TranslationTo(int id, const MatrixXd &to) {
 }
 
 void BEM::WaveTo(int id, double xto, double yto) {
-	hydros[id].GetWaveTo(xto, yto);
+	hydros[id].GetWaveTo(xto, yto, g);
 }
 
 String BEM::SpreadNegative(int id, Function <bool(String, int)> Status) {
@@ -1096,7 +1096,8 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	AfterLoad();
 }
 
-void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, int ssolver, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const {
+void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT ssolver, 
+			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const {
 	if (ssolver == Hydro::CAPYTAINE || ssolver == Hydro::NEMOH || ssolver == Hydro::NEMOHv115 || ssolver == Hydro::NEMOHv3 || ssolver == Hydro::SEAFEM_NEMOH)
 		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, ssolver, x0z, y0z);
 	else if (ssolver == Hydro::CAPYTAINE_PY)
