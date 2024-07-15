@@ -472,7 +472,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 	String preName, hydroName, solvName, postName, batName = "Nemoh";
 	if (solver == Hydro::CAPYTAINE) {
 		solvName = "capytaine";
-		batName = "Capytaine_bat";
+		batName = GetFileTitle(folderBase);
 		bin = false;
 	} else if (bin) {
 		if (solver == Hydro::NEMOHv115) {
@@ -838,22 +838,24 @@ void Nemoh::Save_Hydrostatics(String subfolder) const {
 
 void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const UArray<Body> &msh) {
 	for (int ib = 0; ib < Nb; ++ib) {
-	    String fileHydro;
-	    if (Nb == 1)
-	        fileHydro = AFX(folder, "Hydrostatics.dat");
-	    else
-	        fileHydro = AFX(folder, Format("Hydrostatics_%d.dat", ib));
-	    
-	    FileOut out(fileHydro);
-		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to create '%s'"), fileHydro));
-	    
-	    const Body &m = msh[ib];
-		out << Format(" XF =   %.3f - XG =   %.3f\n", m.dt.cb.x, m.dt.cg.x);
-		out << Format(" YF =   %.3f - YG =   %.3f\n", m.dt.cb.y, m.dt.cg.y);
-		out << Format(" ZF =   %.3f - ZG =   %.3f\n", m.dt.cb.z, m.dt.cg.z);
-		//if (Vo.size() == 3) 
-			out << Format(" Displacement =  %.7G\n", m.dt.Vo);
+		const Body &m = msh[ib];
+		if (m.dt.Vo > 0) {
+		    String fileHydro;
+		    if (Nb == 1)
+		        fileHydro = AFX(folder, "Hydrostatics.dat");
+		    else
+		        fileHydro = AFX(folder, Format("Hydrostatics_%d.dat", ib));
+		    
+		    FileOut out(fileHydro);
+			if (!out.IsOpen())
+				throw Exc(Format(t_("Impossible to create '%s'"), fileHydro));
+		   
+			out << Format(" XF =   %.3f - XG =   %.3f\n", m.dt.cb.x, m.dt.cg.x);
+			out << Format(" YF =   %.3f - YG =   %.3f\n", m.dt.cb.y, m.dt.cg.y);
+			out << Format(" ZF =   %.3f - ZG =   %.3f\n", m.dt.cb.z, m.dt.cg.z);
+			//if (Vo.size() == 3) 
+				out << Format(" Displacement =  %.7G\n", m.dt.Vo);
+		}
 	}
 }
 
@@ -1227,7 +1229,7 @@ void Nemoh::Save(String ) {
 void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	DirectoryCreate(folder);
 	String name = GetFileTitle(folder);
-	String fileBat  = AFX(folder, name + ".bat");
+	String fileBat  = AFX(folder, "Capytaine_bat.bat");
 	FileOut bat;
 	if (!bat.Open(fileBat))
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
@@ -1251,6 +1253,8 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 	String folderMesh = AFX(folder, "mesh");
 	if (!DirectoryCreateX(folderMesh))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
+
+	bool automaticLid = false;
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		const Body &b = dt.msh[ib];
@@ -1258,21 +1262,26 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
 		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
 		
-		bool lid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
+		spy <<	Format("mesh_%d = cpt.load_mesh('%s', file_format='nemoh').immersed_part()\n", ib+1, dest);
 		
-		if (lid) {
+		bool isLid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
+		if (isLid) {
 			String destLid = AFX(folderMesh, Format(t_("Body_%d_lid.dat"), ib+1));
 			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, dt.symY);
 			spy << Format("lid_mesh_%d = cpt.load_mesh('%s', file_format='nemoh')\n", ib+1, destLid);
-		}
-		spy <<	Format("mesh_%d = cpt.load_mesh('%s', file_format='nemoh').immersed_part()\n", ib+1, dest) <<
-				Format("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s')\n", 
+		} else if (automaticLid)
+			spy << Format("lid_mesh_%d = mesh_%d.generate_lid()\n", ib+1, ib+1);
+		
+		spy <<	"\n";
+		
+		spy << 	Format("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s')\n\n", 
 					ib+1, ib+1, 
-					(lid ? Format("lid_mesh=lid_mesh_%d, ", ib+1) : S("")),
+					(isLid || automaticLid ? Format("lid_mesh=lid_mesh_%d, ", ib+1) : S("")),
 					b.dt.c0.x, b.dt.c0.y, b.dt.c0.z,
 					b.dt.cg.x, b.dt.cg.y, b.dt.cg.z,
 					b.dt.name
 					);
+		
 		spy <<	Format("body_%d.inertia_matrix = body_%d.compute_rigid_body_inertia()\n", ib+1, ib+1) <<
 				Format("body_%d.hydrostatic_stiffness = body_%d.immersed_part().compute_hydrostatic_stiffness()\n", ib+1, ib+1);
 

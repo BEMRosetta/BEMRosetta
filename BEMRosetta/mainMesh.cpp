@@ -1015,7 +1015,7 @@ void MainBody::OnConvertBody() {
 			}
 		} else {
 			for (int i = 0; i < sel.size(); ++i)
-				sel[i] = Bem().GetBodyIndex(i);
+				sel[i] = ArrayModel_IndexBody(listLoaded, sel[i]);//Bem().GetBodyIndex(i);
 		}
 		
 		if (type == Body::AQWA_DAT) {

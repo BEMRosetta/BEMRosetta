@@ -371,7 +371,7 @@ GUI_APP_MAIN {
 	const UVector<String>& command = CommandLine();
 
 	String errorStr;
-ConsoleOutput con(true);
+
 	if (!command.IsEmpty() && command[0] != "-gui") {
 		try {
 			ConsoleOutput con(true);

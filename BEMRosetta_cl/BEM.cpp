@@ -470,7 +470,7 @@ void BEM::AddWaterSurface(int id, char c) {
 			Surface::RemoveDuplicatedPointsAndRenumber(surf.dt.mesh.panels, surf.dt.mesh.nodes);
 			Surface::RemoveDuplicatedPanels(surf.dt.mesh.panels);
 		}
-		surf.AfterLoad(rho, g, false, false);
+		surf.AfterLoad(rho, g, false, true);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
