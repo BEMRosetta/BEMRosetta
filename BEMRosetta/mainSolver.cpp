@@ -70,8 +70,34 @@ MainSolverBody::MainSolverBody() {
 	InitGrid(Dquad, editQuadratic);	
 	InitGrid(Cadd, editAdd);
 	
-	butMesh <<= THISBACK(OnMesh);
-	butLid <<= THISBACK(OnLid);
+	butMesh << [&]() {
+		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
+		SetTexts();
+	};
+	butLid << [&]() {
+		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false);
+		SetTexts();
+	};
+	butMeshClear << [&]() {
+		mesh.Clear();
+		SetTexts();
+	};
+	butLidClear << [&]() {
+		lid.Clear();
+		SetTexts();
+	};
+}
+
+void MainSolverBody::SetTexts() {
+	if (mesh.IsEmpty())
+		labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+	else
+		labMesh.SetText(Format(t_("Panels: %d. Nodes: %d"), mesh.dt.mesh.panels.size(), mesh.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+
+	if (lid.IsEmpty())
+		labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+	else
+		labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
 }
 
 void MainSolver::Init() {

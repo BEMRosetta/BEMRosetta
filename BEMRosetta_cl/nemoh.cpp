@@ -821,12 +821,12 @@ bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, UArray<Body> &msh
 	    f.IsSeparator = IsTabSpace;
 	    for (int i = 0; i < 3 && !in.IsEof(); ++i) {
 			f.Load(in.GetLine());
-			msh[ib].dt.cg[i] = f.GetDouble(6);
-			msh[ib].dt.cb[i] = f.GetDouble(2);
+			msh[ib].dt.cg[i] = f.GetDouble_nothrow(6);
+			msh[ib].dt.cb[i] = f.GetDouble_nothrow(2);
 	    }
 	    if (!f.IsEof() && f.GetCount() > 0) {
 			f.Load(in.GetLine());
-		    msh[ib].dt.Vo = f.GetDouble(2); 		
+		    msh[ib].dt.Vo = f.GetDouble_nothrow(2); 		
 	    }
 	}
 	return true;
@@ -1262,7 +1262,7 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
 		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
 		
-		spy <<	Format("mesh_%d = cpt.load_mesh('%s', file_format='nemoh').immersed_part()\n", ib+1, dest);
+		spy <<	Format("mesh_%d = cpt.load_mesh('%s', file_format='nemoh')\n", ib+1, dest);
 		
 		bool isLid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
 		if (isLid) {
@@ -1283,7 +1283,7 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 					);
 		
 		spy <<	Format("body_%d.inertia_matrix = body_%d.compute_rigid_body_inertia()\n", ib+1, ib+1) <<
-				Format("body_%d.hydrostatic_stiffness = body_%d.immersed_part().compute_hydrostatic_stiffness()\n", ib+1, ib+1);
+				Format("body_%d.hydrostatic_stiffness = body_%d.compute_hydrostatic_stiffness()\n", ib+1, ib+1);
 
 		spy <<	"\n";
 		
@@ -1307,7 +1307,7 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 	}
 	shead << "]";
 	
-	spy <<	"all_bodies = cpt.FloatingBody.join_bodies(*list_of_bodies).immersed_part()\n"
+	spy <<	"all_bodies = cpt.FloatingBody.join_bodies(*list_of_bodies)\n"
 			"test_matrix = xr.Dataset(coords={\n"
 		    "    'omega': " << somega << ",\n"
 		    "    'wave_direction': " << shead << ",\n"

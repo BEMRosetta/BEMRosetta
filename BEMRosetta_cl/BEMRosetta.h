@@ -54,7 +54,8 @@ public:
 	virtual ~Body() {magic = 0;}
 	bool IsValid() {return magic == 0xB0DE;}
 	
-	bool IsEmpty() {return dt.mesh.IsEmpty();}
+	void Clear() 	{dt.mesh.Clear();}
+	bool IsEmpty() 	{return dt.mesh.IsEmpty();}
 	
 	void cloneDamaged(UVector<Body> &damaged) {	// Points to a copy of the damaged bodies, to avoid moving the real ones
 		damaged.SetCount(cdt.damagedBodies.size());

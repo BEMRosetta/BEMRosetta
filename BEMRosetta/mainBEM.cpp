@@ -678,17 +678,25 @@ void MainBEM::InitSerialize(bool ret) {
 	if (!ret || IsNull(menuPlot.opMP)) 
 		menuPlot.opMP = 0;
 	
-	menuPlot.opAinf = true;
-	menuPlot.opA0 = true;
-	menuPlot.opApot = true;
-	menuPlot.opB = false;
+	if (!ret || IsNull(menuPlot.opAinf)) 
+		menuPlot.opAinf = true;	
+	if (!ret || IsNull(menuPlot.opA0)) 
+		menuPlot.opA0 = true;
+	if (!ret || IsNull(menuPlot.opApot)) 
+		menuPlot.opApot = true;
+	if (!ret || IsNull(menuPlot.opB)) 
+		menuPlot.opB = false;
 	
-	menuPlot.opBhask = true;
-	menuPlot.opBpot = true;
+	if (!ret || IsNull(menuPlot.opBhask)) 
+		menuPlot.opBhask = true;
+	if (!ret || IsNull(menuPlot.opBpot)) 
+		menuPlot.opBpot = true;
 	
-	menuPlot.opFfkpot = true;
+	if (!ret || IsNull(menuPlot.opFfkpot)) 
+		menuPlot.opFfkpot = true;
 	
-	menuPlot.opFscpot = true;
+	if (!ret || IsNull(menuPlot.opFscpot)) 
+		menuPlot.opFscpot = true;
 	
 	if (!ret || IsNull(menuPlot.showPoints)) 
 		menuPlot.showPoints = true;
@@ -2110,6 +2118,14 @@ void MainBEM::Jsonize(JsonIO &json) {
 		menuPlot.opMP = Null;
 		menuPlot.showPoints = Null;
 		menuPlot.showNdim = Null;
+		menuPlot.opAinf = Null;
+		menuPlot.opA0 = Null;
+		menuPlot.opApot = Null;
+		menuPlot.opB = Null;
+		menuPlot.opBhask = Null;
+		menuPlot.opBpot = Null;
+		menuPlot.opFfkpot = Null;
+		menuPlot.opFscpot = Null;	
 		dropExportId = 2;
 		menuProcess.opFill = Null;
 		menuProcess.maxFreq = Null;
@@ -2137,6 +2153,14 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("mainMatrixDlin", mainMatrixDlin)
 		("mainMatrixDquad", mainMatrixDquad)
 		("mainMatrixM", mainMatrixM)
+		("menuPlot_opAinf", menuPlot.opAinf)
+		("menuPlot_opA0", menuPlot.opA0)
+		("menuPlot_opApot", menuPlot.opApot)
+		("menuPlot_opB", menuPlot.opB)
+		("menuPlot_opBhask", menuPlot.opBhask)
+		("menuPlot_opBpot", menuPlot.opBpot)
+		("menuPlot_opFfkpot", menuPlot.opFfkpot)
+		("menuPlot_opFscpot", menuPlot.opFscpot)
 	;
 	if (json.IsLoading()) {
 		if (IsNull(dropExportId) || dropExportId < 0)

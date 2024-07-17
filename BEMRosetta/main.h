@@ -1076,26 +1076,7 @@ public:
 	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
 	Body mesh, lid;
 	
-	void SetTexts() {
-		if (mesh.IsEmpty())
-			labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
-		else
-			labMesh.SetText(Format(t_("Panels: %d. Nodes: %d"), mesh.dt.mesh.panels.size(), mesh.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
-
-		if (lid.IsEmpty())
-			labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
-		else
-			labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
-	}
-	
-	void OnMesh() {
-		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
-		SetTexts();
-	}
-	void OnLid() {
-		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false);
-		SetTexts();
-	}
+	void SetTexts();
 };
 
 class MainSolver : public WithMainSolver<StaticRect> {
