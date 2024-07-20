@@ -1174,6 +1174,7 @@ public:
 class AQWABody : public Body {
 public:
 	static String LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName);
+	static String LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName);
 	static String LoadLis(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
 	static void SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z,
 			const UVector<double> &w, const UVector<double> &head, bool getQTF = false, bool getPotentials = false, double h = 300, int numCores = 4);

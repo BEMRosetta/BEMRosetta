@@ -982,7 +982,8 @@ bool MainBody::OnLoad() {
 		
 		AfterAdd(file, num);
 		
-		mainViewData.OnAddedModel(mainView);
+		if (num > 0)
+			mainViewData.OnAddedModel(mainView);
 		OnOpt();
 	} catch (Exc e) {
 		mainView.gl.Enable();

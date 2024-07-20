@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2024, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
@@ -23,6 +23,189 @@ String AQWABody::LoadLis(UArray<Body> &msh, String fileName, double g, bool &y0z
 	}
 		
 	return String();
+}
+
+String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName) {
+	FileInLine in(fileName);
+	if (!in.IsOpen()) 
+		return t_("Impossible to open file");
+		
+	hy.dt.symX = hy.dt.symY = false;
+	
+	hy.dt.w.Clear();
+	hy.dt.head.Clear();
+	mesh.Clear();
+
+	UArray<Upp::Index<int>> ids;
+	try {
+		String line;
+		line = in.GetLine();
+		
+		if (!line.StartsWith("******************************"))
+			return t_("Format error in ANSYSTOAQWA .dat mesh file");	// To detect ANSYSTOAQWA format
+		
+		bool ansysFound = false;
+		for (int i = 0; i < 3; ++i) {
+			line = in.GetLine();
+			if (line.Find("ANSYS") >= 0) {
+				ansysFound = true;
+				break;
+			}
+		}
+		if (!ansysFound)
+			return t_("Format error in ANSYSTOAQWA .dat mesh file");	// To detect ANSYSTOAQWA format
+		
+		LineParser f(in);
+		
+		int ib = -1;
+		int deck = -1;
+		while(!f.IsEof()) {
+			line = f.GetLine();
+			if (line.GetCount() >= 6)
+				deck = ScanInt(line.Mid(4, 2));
+			
+			if (deck == 1) {
+				f.LoadFields(line, {0, 6, 12, 20, 30, 40});
+				if (line.Find("STRC") >= 0) {
+					ib = f.GetInt(2)-1;
+					mesh.SetCount(ib+1);
+					ids.SetCount(ib+1);
+					mesh[ib].dt.fileName = fileName;
+					mesh[ib].dt.SetCode(Body::AQWA_DAT);
+				} else if (f.GetCount() == 6) {
+					if (ib == -1) {	// STRC not found, one body only
+						ib = 0;
+						mesh.SetCount(ib+1);
+						ids.SetCount(ib+1);
+						mesh[ib].dt.fileName = fileName;
+						mesh[ib].dt.SetCode(Body::AQWA_DAT);
+					}
+					int id = f.GetInt(1);
+					if (id == 99999) {
+						mesh[ib].dt.cg.x = f.GetDouble(3);
+						mesh[ib].dt.cg.y = f.GetDouble(4);
+						mesh[ib].dt.cg.z = f.GetDouble(5);
+						mesh[ib].dt.c0 = clone(mesh[ib].dt.cg);		// In AQWA, cg == c0
+					} else {
+						ids[ib] << id;
+						Point3D &node = mesh[ib].dt.mesh.nodes.Add();
+						node.x = f.GetDouble(3);
+						node.y = f.GetDouble(4);
+						node.z = f.GetDouble(5);
+					}
+				}
+			} else if (deck == 2) {
+				f.LoadFields(line, {4, 6, 11, 15, 25, 32, 39, 46, 53});
+				
+				if (line.Find("ELM") >= 0) 
+					ib = ScanInt(line.Mid(13, 2))-1;
+				else if (f.GetCount() > 6) {	
+					String code = f.GetText(1);
+					if (code == "QPPL" || code == "TPPL") {
+						Panel &panel = mesh[ib].dt.mesh.panels.Add();
+						int id;
+						id = f.GetInt(4);
+						if ((id = ids[ib].Find(id)) < 0)
+							throw Exc(in.Str() + "\n"  + t_("id 1 not found"));
+						panel.id[0] = id;
+						id = f.GetInt(5);
+						if ((id = ids[ib].Find(id)) < 0)
+							throw Exc(in.Str() + "\n"  + t_("id 2 not found"));
+						panel.id[1] = id;
+						id = f.GetInt(6);
+						if ((id = ids[ib].Find(id)) < 0)
+							throw Exc(in.Str() + "\n"  + t_("id 3 not found"));
+						panel.id[2] = id;
+						
+						if (code == "QPPL") {
+							id =  f.GetInt(7);
+							if ((id = ids[ib].Find(id)) < 0)
+								throw Exc(in.Str() + "\n"  + t_("id 4 not found"));
+							panel.id[3] = id;
+						} else if (code == "TPPL") 
+							panel.id[3] = panel.id[0];
+					}
+				}
+			} else if (deck == 3) {
+				if (f.GetCount() == 3) {
+					int ib = f.GetInt(1)-1;
+					if (ib >= mesh.size())
+						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+					if (mesh[ib].dt.M.size() != 36)
+						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
+					mesh[ib].dt.M(0, 0) = mesh[ib].dt.M(1, 1) = mesh[ib].dt.M(2, 2) = f.GetDouble(2);
+				}	
+			} else if (deck == 4) {
+				String str = f.GetText(0);
+				if (str.Find("PMAS") > 0) {
+					int ib = f.GetInt(1)-1;
+					if (ib >= mesh.size())
+						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+					if (mesh[ib].dt.M.size() != 36)
+						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
+					mesh[ib].dt.M(3, 3) = f.GetDouble(2);
+					mesh[ib].dt.M(3, 4) = mesh[ib].dt.M(4, 3) = f.GetDouble(3);
+					mesh[ib].dt.M(3, 5) = mesh[ib].dt.M(5, 3) = f.GetDouble(4);
+					mesh[ib].dt.M(4, 4) = f.GetDouble(5);
+					mesh[ib].dt.M(4, 5) = mesh[ib].dt.M(5, 4) = f.GetDouble(6);
+					mesh[ib].dt.M(5, 5) = f.GetDouble(7);
+				}
+			} else if (deck == 5) {
+				f.LoadFields(line, {6, 10, 21});
+				if (f.GetCount() == 2) {
+					if (f.GetText(0) == "DPTH")
+						hy.dt.h = f.GetDouble(1);
+					else if (f.GetText(0) == "DENS")
+						hy.dt.rho = f.GetDouble(1);
+					else if (f.GetText(0) == "ACCG")
+						hy.dt.g = f.GetDouble(1);
+				}
+			} else if (deck == 6) {
+				if (f.GetText(1) == "FDR1") 
+					ib = 0;
+				else if (f.GetText(1).StartsWith("FDR"))
+					ib = -1;	
+			    else if (ib == 0) {
+				    if (f.GetText(0).Find("FREQ") >= 0) {
+				        if (f.GetCount() == 4)
+				        	LinSpaced(hy.dt.w, f.GetInt(1), f.GetDouble(2), f.GetDouble(3)); 
+				        else {
+				            for (int i = 3; i < f.size(); ++i)
+				            	 hy.dt.w << f.GetDouble(i);
+				        }
+				    } else if (f.GetText(0).Find("PERD") >= 0) {
+				        if (f.GetCount() == 4) {
+				            UVector<double> T;
+				        	LinSpaced(T, f.GetInt(1), f.GetDouble(2), f.GetDouble(3));
+				        	hy.dt.w.SetCount(T.size());
+				        	for (int i = 0; i < T.size(); ++i)
+				        		hy.dt.w[i] = 2*M_PI/T[i];
+				        }
+				    } else if (f.GetText(0).Find("DIRN") >= 0) {
+				        if (f.GetCount() == 4 && (f.GetDouble(1) != f.GetDouble(2)))
+				        	LinSpaced(hy.dt.head, f.GetInt(1), f.GetDouble(2), f.GetDouble(3)); 
+				        else {
+				            for (int i = 3; i < f.size(); ++i)
+				            	 hy.dt.head << f.GetDouble(i);
+				        }
+				    }
+			    }
+			} 
+		}
+		
+		hy.dt.Nf = hy.dt.w.size();
+		hy.dt.Nh = hy.dt.head.size();
+		hy.dt.Nb = mesh.size();
+		
+		// Removes mooring, Morison and other points unrelated with panels
+		for (Body &m : mesh) 
+			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+			
+	} catch (Exc e) {
+		return t_("Parsing error: ") + e;
+	}
+	
+	return String();	
 }
 
 String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
@@ -270,11 +453,11 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		
 		for (int in = 0; in < surf.nodes.size(); ++in) {
 			const Point3D &p = surf.nodes[in];
-			ret << Format("%6d%5d         %s %s %s\n", ib+1, firstidbody[ib] + in +1, 
+			ret << Format("%6d%5d        %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
 						FDS(p.x/factorLength, 10, true), FDS(p.y/factorLength, 10, true), FDS(p.z/factorLength, 10, true));
 		}
 		const Point3D &cg = mesh[ib].dt.cg;
-		ret << Format("%6d%5d         %s %s %s\n", ib+1, 98000+ib, 
+		ret << Format("%6d%5d        %s%s%s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
 	}
 	ret << " END" << "\n"

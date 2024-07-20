@@ -112,6 +112,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) { 	
 							Hydro hy;
 							ret = AQWABody::LoadDat(mesh, hy, file);
+							if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
+								ret = AQWABody::LoadDatANSYSTOAQWA(mesh, hy, file);	
 							y0z = hy.dt.symX;
 							x0z = hy.dt.symY;
 						}
