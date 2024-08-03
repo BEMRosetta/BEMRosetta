@@ -217,7 +217,7 @@ bool IsNull(const VectorXd &data) {
 }
 
 bool HealBEM::Load(const VectorXd &_w, const VectorXd &_A, double _Ainf, const VectorXd &_B, int _numT, double _maxT, const MatrixXd &_ex_hf) {
-	if (A.size() == 0 || B.size() == 0)
+	if (_A.size() == 0 || _B.size() == 0)
 		return false;
 	this->w = clone(_w);
 	this->B = clone(_B);
