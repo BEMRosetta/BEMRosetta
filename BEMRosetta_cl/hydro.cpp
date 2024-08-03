@@ -476,7 +476,7 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 				String name = GetFileTitle(fileName);
 				String ext = GetFileExt(fileName);
 				String fname = AFX(folder, Format("%s_%.3f%s", name, dt.w[ifr], ext));
-				SaveFile(fname, grid[ifr].GetString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
+				SaveFile(fname, grid[ifr].AsString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
 			}
 		} else if (type == ".xlsx") {
 			xlnt::workbook wb;
@@ -497,7 +497,7 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 		SaveMap(grid, ifr, onlyDiagonal, ids, points, Apan, Bpan);
 		
 		if (type == ".csv") 
-			SaveFile(fileName, grid.GetString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
+			SaveFile(fileName, grid.AsString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
 		else if (type == ".xlsx") {
 			xlnt::workbook wb;
 			xlnt::worksheet ws = wb.active_sheet();	
