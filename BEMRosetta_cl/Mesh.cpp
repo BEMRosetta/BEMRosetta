@@ -493,7 +493,7 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 		} else {
 			//Point3D ccb = uunder.GetCentreOfBuoyancy();
 			Force6D fcb = Force6D::Zero();//Surface::GetHydrostaticForceCB(dt.c0, ccb, uunder.volume, rho, g);
-			fcb.AddLinear(Direction3D(0, 0, allvol*rho*g), ccb, dt.c0);
+			fcb.Add(Vector3D(0, 0, allvol*rho*g), ccb, dt.c0);
 			
 			Force6D fcg = Surface::GetMassForce(dt.c0, base.dt.cg, GetMass(), g);
 			for (const auto &d : base.cdt.controlLoads)

@@ -2174,7 +2174,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	
 	array.Set(row, 0, t_("GZ [m]"));
 	if (!IsNull(msh.dt.cb) && !IsNull(msh.dt.cg)) {
-		Direction3D cgcb = msh.dt.cg - msh.dt.cb;
+		Vector3D cgcb = msh.dt.cg - msh.dt.cb;
 		double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
 		array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
 	} else
