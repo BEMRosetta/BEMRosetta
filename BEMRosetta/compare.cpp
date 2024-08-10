@@ -77,7 +77,7 @@ void CompareParameters::Load() {
 		bool found = false;
 		for(int i = 0; i < scatter.GetCount(); i++) {
 			String leg = scatter.GetLegend(i);
-			if (leg.StartsWith("A∞(ω)") || !(leg.StartsWith("A∞") || leg.StartsWith("A0"))) {
+			if (leg.StartsWith("A∞(ω)") || !(leg.StartsWith("A∞") || leg.StartsWith("A₀"))) {
 				DataSource &data = scatter.GetDataSource(i);
 				wmin = max(data.MinX(), wmin);
 				wmax = min(data.MaxX(), wmax);
@@ -87,7 +87,8 @@ void CompareParameters::Load() {
 		if (!found)
 			return;
 	}
-	
+	if (wmin > wmax)
+		wmin = wmax;
 	
 	list.Reset();
 	list.SetLineCy(EditField::GetStdHeight()).MultiSelect();
@@ -108,7 +109,7 @@ void CompareParameters::Load() {
 			VectorXd x, y;
 			scatter.GetDataSource(i).CopyXY(x, y);
 				
-			if (str.StartsWith("A∞(ω)") || !(str.StartsWith("A∞") || str.StartsWith("A0"))) {
+			if (str.StartsWith("A∞(ω)") || !(str.StartsWith("A∞") || str.StartsWith("A₀"))) {
 				VectorXd xx, yy;
 				if (!opMinRange) {
 					xx = x;
@@ -132,7 +133,7 @@ void CompareParameters::Load() {
 		if (x.size() == 0 || y.size() == 0)
 			return;
 	
-		if (str.StartsWith("A∞(ω)") || !(str.StartsWith("A∞") || str.StartsWith("A0"))) {
+		if (str.StartsWith("A∞(ω)") || !(str.StartsWith("A∞") || str.StartsWith("A₀"))) {
 			leg << str;
 			VectorXd xx, yy;
 			if (!opMinRange) {

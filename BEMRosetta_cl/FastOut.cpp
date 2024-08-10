@@ -511,8 +511,8 @@ void FastOut::AfterLoad() {
 	if (idsurge >= 0 && idsway >= 0 && idheave >= 0 && idroll >= 0 && idpitch >= 0 && idyaw >= 0) {
 		aff.SetCount(GetNumData());
 		for (int it = 0; it < GetNumData(); ++it)
-			GetTransform000(aff[it], GetVal(it, idsurge), GetVal(it, idsway), GetVal(it, idheave), 
-									ToRad(GetVal(it, idroll)), ToRad(GetVal(it, idpitch)), ToRad(GetVal(it, idyaw)));
+			aff[it] = GetTransform000(Value3D(GetVal(it, idsurge), GetVal(it, idsway), GetVal(it, idheave)), 
+									  Value3D(ToRad(GetVal(it, idroll)), ToRad(GetVal(it, idpitch)), ToRad(GetVal(it, idyaw))));
 	}
 	
 	String folder = GetFileFolder(GetFileName());

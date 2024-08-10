@@ -253,8 +253,7 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, const float *acc) {
 	Force6D f6 = Force6D::Zero();
 	
-	Affine3d aff;
-	GetTransform(aff, pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], mesh.dt.c0.x, mesh.dt.c0.y, mesh.dt.c0.z);
+	Affine3d aff = GetTransform(Value3D(pos[0], pos[1], pos[2]), Value3D(pos[3], pos[4], pos[5]), mesh.dt.c0);
 	
 	Point3D meshc0 = clone(mesh.dt.c0);
 	Point3D dcentre = clone(dampingCentre);
