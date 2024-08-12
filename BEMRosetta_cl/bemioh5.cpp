@@ -196,27 +196,31 @@ void BemioH5::Load_H5() {
 				dt.msh[ib].dt.name = hfile.GetString("name");
 				dt.msh[ib].dt.Vo = hfile.GetDouble("disp_vol");
 				//dt.dof[ib] = int(hfile.GetDouble("dof"));
-				hfile.GetDouble("cb", data);
-				if (data.rows() != 3 && data.cols() != 1)
-					throw Exc("Wrong data dimension in cb");
-				dt.msh[ib].dt.cb = data;
-				hfile.GetDouble("cg", data);
-				if (data.rows() != 3 && data.cols() != 1)
-					throw Exc("Wrong data dimension in cg");
-				dt.msh[ib].dt.cg = data;
-			
+				if (hfile.ExistDataset("cb")) {
+					hfile.GetDouble("cb", data);
+					if (data.rows() != 3 && data.cols() != 1)
+						throw Exc("Wrong data dimension in cb");
+					dt.msh[ib].dt.cb = data;
+				}
+				if (hfile.ExistDataset("cg")) {
+					hfile.GetDouble("cg", data);
+					if (data.rows() != 3 && data.cols() != 1)
+						throw Exc("Wrong data dimension in cg");
+					dt.msh[ib].dt.cg = data;
+				}
 				hfile.UpGroup();	
 			}
 			if (hfile.ChangeGroup("hydro_coeffs")) {
 				if (hfile.ChangeGroup("added_mass")) {
 					LoadAllAB(dt.A, ib);
 					LoadComponentsAB(a, ib);	
-						
-					hfile.GetDouble("inf_freq", data);
-					if (data.rows() != 6 && data.cols() != 6*dt.Nb)
-						throw Exc("Wrong data dimension in inf_freq");
-					dt.Ainf.block(ib*6, 0, 6, 6*dt.Nb) = data;	
-						
+					
+					if (hfile.ExistDataset("inf_freq")) {
+						hfile.GetDouble("inf_freq", data);
+						if (data.rows() != 6 && data.cols() != 6*dt.Nb)
+							throw Exc("Wrong data dimension in inf_freq");
+						dt.Ainf.block(ib*6, 0, 6, 6*dt.Nb) = data;	
+					}
 					hfile.UpGroup();	
 				}
 				if (hfile.ChangeGroup("radiation_damping")) {
@@ -299,8 +303,12 @@ void BemioH5::Save(String file) const {
 		if (hfile.CreateGroup("components", true)) {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6*dt.Nb; ++c) {	
-					for (int iw = 0; iw < dt.Nf; ++iw)
-						data(iw, 1) = a[ib*6 + r][c](iw);
+					for (int iw = 0; iw < dt.Nf; ++iw) {
+						if (a[ib*6 + r][c].size() == dt.Nf)
+							data(iw, 1) = a[ib*6 + r][c](iw);
+						else
+							data(iw, 1) = 0;
+					}
 					hfile.Set(Format("%d_%d", r+1, c+1), data).SetDescription(str);
 				}
 			}
@@ -309,10 +317,15 @@ void BemioH5::Save(String file) const {
 	};
 	auto SaveAllAB = [&](const UArray<UArray<VectorXd>> &a, int ib, String caption) {
 		MultiDimMatrixRowMajor<double> d(6, dt.Nb*6, dt.Nf);
-		for (int r = 0; r < 6; ++r) 
+		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6*dt.Nb; ++c) 
-				for (int iw = 0; iw < dt.Nf; ++iw) 
-					d(r, c, iw) = a[r + 6*ib][c](iw);
+				for (int iw = 0; iw < dt.Nf; ++iw) {
+					if (a[r + 6*ib][c].size() == dt.Nf) 
+						d(r, c, iw) = a[r + 6*ib][c](iw);
+					else
+						d(r, c, iw) = 0;
+				}
+		}
 		hfile.Set("all", d).SetDescription(caption);
 	};
 	
@@ -396,11 +409,16 @@ void BemioH5::Save(String file) const {
 				hfile.Set("dof", 6/*(double)dt.dof[ib]*/).SetDescription("Degrees of freedom");
 				hfile.Set("dof_start", 1.);
 				hfile.Set("dof_end", 6.);
-				mat = dt.msh[ib].dt.cb;
-				hfile.Set("cb", mat).SetDescription("Centre of bouyancy").SetUnits("m");
-				mat = dt.msh[ib].dt.cg;
-				hfile.Set("cg", mat).SetDescription("Centre of gravity").SetUnits("m");
-				
+				if (!IsNull(dt.msh[ib].dt.cb)) {
+					mat = dt.msh[ib].dt.cb;
+					mat = mat.transpose();
+					hfile.Set("cb", mat).SetDescription("Centre of bouyancy").SetUnits("m");
+				}
+				if (!IsNull(dt.msh[ib].dt.cg)) {
+					mat = dt.msh[ib].dt.cg;
+					mat = mat.transpose();
+					hfile.Set("cg", mat).SetDescription("Centre of gravity").SetUnits("m");
+				}
 				hfile.UpGroup();	
 			}
 			if (hfile.CreateGroup("hydro_coeffs", true)) {

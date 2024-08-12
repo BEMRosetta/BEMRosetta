@@ -893,8 +893,8 @@ public:
 	bool IsLoadedFfk_pot(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot, idf, ih, ib);}
 	bool IsLoadedFfk_pot_bmr(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot_bmr, idf, ih, ib);}
 	bool IsLoadedRAO(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.rao,idf, ih, ib);}
-	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0)
-											 const {return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && IsNum(f[ib][ih](0, idf));}
+	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0) const {
+						return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && IsNum(f[ib][ih](0, idf));}
 											 	
 	bool IsLoadedStateSpace()	  			 const {return !dt.sts.IsEmpty();}
 	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !dt.qtfsum.IsEmpty() : !dt.qtfdif.IsEmpty();}
