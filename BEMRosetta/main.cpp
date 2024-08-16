@@ -331,7 +331,7 @@ void Main::Jsonize(JsonIO &json) {
 		("bem", mainBEM)
 		("mooring", mainMoor)
 		("decay", mainDecay)
-		("menuOptions", menuOptions)
+		//("menuOptions", menuOptions)
 		("lastTabS", lastTabS)
 	;
 }

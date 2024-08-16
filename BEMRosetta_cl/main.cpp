@@ -488,7 +488,6 @@ double DemoVectorPy_C(const double *v, int num) noexcept {
 
 #if defined(flagBEMR_CL)
 
-void Fun();
 	
 CONSOLE_APP_MAIN {
 	const UVector<String>& command = CommandLine();

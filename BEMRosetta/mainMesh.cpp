@@ -1285,8 +1285,16 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 			} else
 				Ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
 		} else if (action == NONE) {
-			msh.dt.cg.Set(x_g, y_g, z_g);
-			msh.dt.c0.Set(x_0, y_0, z_0);
+			Point3D ncg(x_g, y_g, z_g);
+			if (msh.dt.cg != ncg) {
+				msh.dt.cg.Set(x_g, y_g, z_g);
+				BEM::PrintError(t_("Warning: Changing the position of the cg may have altered the inertia matrix."));
+			}
+			Point3D nc0(x_0, y_0, z_0);
+			if (msh.dt.c0 != nc0) {
+				Surface::TranslateInertia66(msh.dt.M, Point3D(x_g, y_g, z_g), msh.dt.c0, nc0);
+				msh.dt.c0.Set(nc0);
+			}
 		}
 		
 		menuProcess.x_g <<= msh.dt.cg.x;
