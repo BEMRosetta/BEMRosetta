@@ -28,12 +28,7 @@ String OrcaWave::Load(String _file, double) {
 		if (IsNull(dt.Nb))
 			return t_("No data found");
 	
-		/*dof.Clear();	dof.SetCount(Nb, 0);
-		for (int i = 0; i < Nb; ++i)
-			dof[i] = 6;*/
 	} catch (Exc e) {
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//lastError = e;
 		return e;
 	}
 	return String();
@@ -49,7 +44,6 @@ void OrcaWave::Load_OWR() {
 	
 	dt.solver = Hydro::ORCAWAVE_OWR;
 	
-	//dt.dataFromW = true;
 	dt.dimen = true;
 		
 	dt.x_w = dt.y_w = 0;
@@ -69,9 +63,7 @@ void OrcaWave::Load_OF_YML() {
 	
 	dt.solver = Hydro::ORCAFLEX_YML;
 	
-	//dt.dataFromW = true;
 	char dataFrom = 'r';
-	//bool rad_s = true;
 	dt.dimen = true;
 	
 	dt.x_w = dt.y_w = 0;
@@ -108,6 +100,9 @@ void OrcaWave::Load_OF_YML() {
 	dt.Nb = 0; 
 	
 	dt.g = 9.80665;		// Default value used when SI units
+
+	bool symXZ = false, symYZ = false;
+	bool foundWireFrameSymmetry = false;
 	
 	YmlParser fy(in);
 
@@ -147,24 +142,14 @@ void OrcaWave::Load_OF_YML() {
 			} else if (fy.FirstIs("WavesReferredToBy") && fy.Index() == 0) {		// Only for the first body
 				String val = fy.GetVal();
 				if (val.Find("(rad/s)") >= 0)
-					//dt.dataFromW = true;
 					dataFrom = 'r';
 				else if (val.Find("(s)") >= 0)
-					//dt.dataFromW = false;
 					dataFrom = 's';
 				else if (val.Find("(Hz)") >= 0)
 					dataFrom = 'h';
 				else
 					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));
-				
-				/*if (val.Find("(rad/s)") >= 0)
-					rad_s = true;
-				else if (val.Find("(Hz)") >= 0)	 
-					rad_s = false;
-				else if (val.Find("(s)") >= 0)	 	
-					;
-				else
-					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));*/
+			
 			} else if (fy.FirstIs("SurgePositive")) {	
 				if (fy.GetVal() != "forward")
 					throw Exc(in.Str() + "\n"  + Format(t_("Only SurgePositive: 'forward' is supported. Read '%s'"), fy.GetVal()));
@@ -186,13 +171,7 @@ void OrcaWave::Load_OF_YML() {
 			} else if (fy.FirstIs("QTFConventionsRotationOrder")) {	
 				if (fy.GetVal() != "RzRyRx")
 					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationOrder: 'RzRyRx is supported. Read '%s'"), fy.GetVal()));
-			/*} else if (fy.FirstIs("QTFConventionsRotationAxes")) {	
-				if (fy.GetVal() != "original")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationAxes: 'original' is supported. Read '%s'"), fy.GetVal()));
-			} else if (fy.FirstIs("QTFConventionsFrameOfReference")) {	
-				if (fy.GetVal() != "earth")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsFrameOfReference: 'earth' is supported. Read '%s'"), fy.GetVal()));
-					*/
+			
 			} else if (fy.FirstIs("Draughts")) {
 				ib = fy.GetIndex()[1];
 				if (fy.FirstIs("DisplacementRAOs")) {
@@ -270,19 +249,13 @@ void OrcaWave::Load_OF_YML() {
 		throw Exc(S("\n") + t_("No body found"));
 	
 	dt.msh.SetCount(dt.Nb);
-	//Vo.SetCount(Nb, NaNDouble);
-	//cg.setConstant(3, Nb, NaNDouble);
 	
-	//c0.resize(3, Nb);
 	for (int iib = 0; iib < dt.Nb; ++iib)				
 		for (int idf = 0; idf < 3; ++idf)
 			dt.msh[iib].dt.c0[idf] = c0s[iib][idf];
 	
-	//cb.setConstant(3, Nb, NaNDouble);
-	//C.SetCount(Nb);
 	for (int iib = 0; iib < dt.Nb; ++iib) 
 		dt.msh[iib].dt.C.setConstant(6, 6, 0);
-	//M.SetCount(Nb);
 	for (int iib = 0; iib < dt.Nb; ++iib) 
 		dt.msh[iib].dt.M.setConstant(6, 6, 0);
 
@@ -325,7 +298,35 @@ void OrcaWave::Load_OF_YML() {
 		} else if (fy.FirstIs("VesselTypes")) {
 			if (fy.FirstIs("Name")) 
 				ib = fy.GetIndex()[1];
-			else if (fy.FirstIs("Draughts")) {
+			else if (fy.FirstIs("WireFrameSymmetry")) {
+				String sym = fy.GetVal();
+				dt.symY = sym.Find("xz") >= 0;
+				dt.symX = sym.Find("yz") >= 0;
+				foundWireFrameSymmetry = true;
+			} else if (fy.FirstMatch("Vertex*")) {
+				UVector<UVector<double>> mat = fy.GetMatrixDouble();
+				
+				dt.msh[ib].dt.mesh.nodes.SetCount(mat.size());
+				for (int in = 0; in < mat.size(); ++in) 
+					dt.msh[ib].dt.mesh.nodes[in] = Point3D(mat[in]);
+			} else if (fy.FirstMatch("PanelVertexIndex*")) {
+				UVector<UVector<double>> mat = fy.GetMatrixDouble();
+				
+				int numNodes = dt.msh[ib].dt.mesh.nodes.size();
+				dt.msh[ib].dt.mesh.panels.SetCount(mat.size());
+				for (int ip = 0; ip < mat.size(); ++ip) {
+					const UVector<double> &pan = mat[ip];
+					if (Min(pan) < 1 || Max(pan) > numNodes)
+						throw Exc(in.Str() + "\n" + Format(t_("Wrong panel %d (%d,%d,%d,%d)"), ip+1, pan[0], pan[1], pan[2], pan[3]));
+					for (int i4 = 0; i4 < 4; ++i4)
+						dt.msh[ib].dt.mesh.panels[ip].id[i4] = pan[i4]-1;
+				}
+				if (dt.symX) 
+					dt.msh[ib].dt.mesh.DeployXSymmetry();
+				if (dt.symY) 
+					dt.msh[ib].dt.mesh.DeployYSymmetry();
+				
+			} else if (fy.FirstIs("Draughts")) {
 				Eigen::MatrixXd &inertia = dt.msh[ib].dt.M;
 				if (fy.FirstIs("Mass")) 
 					inertia(0, 0) = inertia(1, 1) = inertia(2, 2) = ScanDouble(fy.GetVal())*factor.mass;
@@ -503,7 +504,6 @@ void OrcaWave::Load_OF_YML() {
 						idf = fy.Index()-1;
 						if (idf < -1 || idf >= dt.w.size())		// Infinity is the first
 							throw Exc(in.Str() + "\n" + t_("Wrong frequency"));			
-						//idf--;
 						
 						if (idf >= 0) {
 							UVector<UVector<double>> mat = fy.GetMatrixDouble();
@@ -541,14 +541,7 @@ void OrcaWave::Load_OF_YML() {
 					idf = fy.Index()-1;
 					if (idf < -1 || idf >= dt.w.size())		// Infinity is the first
 						throw Exc(in.Str() + "\n" + t_("Wrong frequency"));	
-						/*
-					if (fy.GetVal() == "Infinity")
-						idf = -1;
-					else {
-						idf = Find(w, ScanDouble(fy.GetVal()));
-						if (idf < 0)
-							throw Exc(in.Str() + "\n" + t_("Wrong frequency"));	
-					}*/
+						
 				} else if (fy.FirstIs("Matrices")) {
 					if (fy.FirstIs("Row")) 
 						rrow = ScanInt(fy.GetVal())-1;
@@ -596,11 +589,8 @@ void OrcaWave::Load_OF_YML() {
 		throw Exc(t_("Incorrect .yml format"));
 	
 	// Inertia matrices have to be translated from cg to c0
-	for (int iib = 0; iib < dt.Nb; ++iib) //{
-		//Point3D cg(cg.col(ib));
-		//Point3D c0(c0.col(ib));
+	for (int iib = 0; iib < dt.Nb; ++iib)
 		Surface::TranslateInertia66(dt.msh[iib].dt.M, dt.msh[iib].dt.cg, dt.msh[iib].dt.cg, dt.msh[iib].dt.c0);
-	//}
 }
 
 void OrcaWave::SaveFolder_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const {

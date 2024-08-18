@@ -1656,7 +1656,7 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 									if (isSum) 
 										cij = cji;
 									else
-										cij = std::complex<double>(cji.real(), -cji.imag());;
+										cij = std::complex<double>(cji.real(), -cji.imag());
 								}
 							} else {
 								if (IsNull(cji)) {

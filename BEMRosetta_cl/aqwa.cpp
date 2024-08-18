@@ -253,22 +253,10 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	double factorLength = 1;
 	
 	dt.msh.SetCount(dt.Nb);
-	//dt.names.SetCount(dt.Nb);
-	//dt.Vo.SetCount(dt.Nb, NaNDouble);
-	//dt.cg.setConstant(3, dt.Nb, NaNDouble);
-	//dt.c0.setConstant(3, dt.Nb, NaNDouble);
-	//dt.cb.setConstant(3, dt.Nb, NaNDouble);
-	//dt.C.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.C.setConstant(6, 6, 0);
-	//dt.M.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.M.setConstant(6, 6, 0);
-	
-	//dt.meshes.SetCount(dt.Nb);
-	//for (int i = 0; i < dt.Nb; ++i)
-	//	dt.meshes[i].SetCode(Mesh::AQWA_LIS);
-	//dt.pots.SetCount(dt.Nb);		
 	
 	double nlines = in.GetLineNumber();
 	double step = 0.01;
@@ -342,7 +330,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 							continue;
 					}
 					Panel &p = dt.msh[ib].dt.mesh.panels.Add();
-					//UArray<UArray<std::complex<double>>> &pots = dt.pots[ib].Add();
 					panelIDs[ib] << f.GetInt(0);
 					
 					int id;
@@ -373,8 +360,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				}
 			} 
 		} else if ((pos = line.FindAfter("M O O R I N G   S T I F F N E S S   F O R   S T R U C T U R E")) >= 0) {			// LIBRIUM
-			//if (dt.Cmoor.size() == 0) 
-			//	dt.Cmoor.SetCount(dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib) 
 				dt.msh[ib].dt.Cmoor.setConstant(6, 6, 0);
 			
@@ -443,16 +428,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			M(5, 3) = f.GetDouble(0)*factorMass;
 			M(5, 4) = f.GetDouble(1)*factorMass;
 			M(5, 5) = f.GetDouble(2)*factorMass;
-			/*double mass = M(0, 0);
-			double cx = mass*dt.cg(0, ib);
-			double cy = mass*dt.cg(1, ib);
-			double cz = mass*dt.cg(2, ib);
-			M(1, 5) = M(5, 1) =  cx;
-			M(2, 4) = M(4, 2) = -cx;
-			M(0, 5) = M(5, 0) = -cy;
-			M(2, 3) = M(3, 2) =  cy;
-			M(0, 4) = M(4, 0) =  cz;
-			M(1, 3) = M(3, 1) = -cz;*/
 		} else if (IsNull(dt.Nf) && line.Find("W A V E   F R E Q U E N C I E S / P E R I O D S   A N D   D I R E C T I O N S") >= 0) {
 			in.GetLine(5);
 			dt.Nf = 0;
@@ -474,7 +449,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				} else
 					w = f.GetDouble(1);
 				dt.w << w;
-				//dt.T << 2*M_PI/w;
 			}
 			dt.Nf = dt.w.size();
 					
@@ -599,8 +573,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				}
 			}
 		} else if (line.Find("G L O B A L   A D D I T I O N A L   S T R U C T U R E   S T I F F N E S S   M A T R I X") >= 0) {
-			//if (dt.Cmoor.size() == 0) 
-			//	dt.Cmoor.SetCount(dt.Nb);
 			f.GetLine(8);
 			int iib = f.GetInt(1);
 			if (iib < 1 || iib > dt.Nb)

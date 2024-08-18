@@ -185,7 +185,6 @@ bool Wamit::Load_out(String fileName) {
 				
 	dt.Nf = 0;
 	dt.Nh = 0;
-	//dt.dataFromW = false;
 	
 	int pos;
 	int ibody = -1;
@@ -277,34 +276,22 @@ bool Wamit::Load_out(String fileName) {
 			}
 			if (ibody >= dt.Nb)
 				throw Exc(in.Str() + "\n"  + Format(t_("Found additional bodies over %d"), dt.Nb));
-			//if (dt.c0.rows() < 3 || dt.c0.cols() < dt.Nb)
-			// 	throw Exc(in.Str() + "\n"  + t_("c0 matrix is not dimensioned"));
 			dt.msh[ibody].dt.c0.x = f.GetDouble(2);
 			dt.msh[ibody].dt.c0.y = f.GetDouble(5);
 			dt.msh[ibody].dt.c0.z = f.GetDouble(8);
-		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {
-			//if (dt.Vo.size() < dt.Nb)
-			// 	throw Exc(in.Str() + "\n"  + t_("Vo matrix is not dimensioned"));		
+		} else if ((pos = line.FindAfter("Volumes (VOLX,VOLY,VOLZ):")) >= 0) {		
 			dt.msh[ibody].dt.Vo = ScanDouble(line.Mid(pos));
 		} else if (line.Find("Center of Gravity  (Xg,Yg,Zg):") >= 0) {
-			//if (dt.cg.rows() < 3 || dt.cg.cols() < dt.Nb)
-			// 	throw Exc(in.Str() + "\n"  + t_("cg matrix is not dimensioned"));
 			dt.msh[ibody].dt.cg.x = f.GetDouble(4);
 			dt.msh[ibody].dt.cg.y = f.GetDouble(5);
 			dt.msh[ibody].dt.cg.z = f.GetDouble(6);
-//			if (isHydrostar)
-//				dt.c0 = clone(dt.cg);	
 		} else if (line.Find("Center of Buoyancy (Xb,Yb,Zb):") >= 0) {
-			//if (dt.cb.rows() < 3 || dt.cb.cols() < dt.Nb)
-			// 	throw Exc(in.Str() + "\n"  + t_("cb matrix is not dimensioned"));
 			dt.msh[ibody].dt.cb.x = f.GetDouble(4);
 			dt.msh[ibody].dt.cb.y = f.GetDouble(5);
 			dt.msh[ibody].dt.cb.z = f.GetDouble(6);
 		} else if (line.Find("Radii of gyration:") >= 0) {
 			if (IsNum(dt.rho) && IsNum(dt.msh[ibody].dt.Vo)) {
 				double mass = dt.rho*dt.msh[ibody].dt.Vo;
-				//if (dt.M.size() < dt.Nb)
-				// 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
 				if (dt.msh[ibody].dt.M.size() > 0)
 					throw Exc(in.Str() + "\n"  + t_("Problem in M matrix. Please report"));
 				dt.msh[ibody].dt.M.setConstant(6, 6, 0);
@@ -321,9 +308,9 @@ bool Wamit::Load_out(String fileName) {
 				inertia(5, 3) = sqr(f.GetDouble(0));
 				inertia(5, 4) = sqr(f.GetDouble(1));
 				inertia(5, 5) = sqr(f.GetDouble(2));
-				double cx = dt.msh[ibody].dt.cg.x;// - dt.c0(0, ibody); // cg is loaded referred to XBODY
-				double cy = dt.msh[ibody].dt.cg.y;// - dt.c0(1, ibody);
-				double cz = dt.msh[ibody].dt.cg.z;// - dt.c0(2, ibody);
+				double cx = dt.msh[ibody].dt.cg.x;
+				double cy = dt.msh[ibody].dt.cg.y;
+				double cz = dt.msh[ibody].dt.cg.z;
 				inertia(1, 5) = inertia(5, 1) =  cx;
 				inertia(2, 4) = inertia(4, 2) = -cx;
 				inertia(2, 3) = inertia(3, 2) =  cy;
@@ -334,8 +321,6 @@ bool Wamit::Load_out(String fileName) {
 				inertia *= mass;
 			}
 		} else if (line.Find("Global body and external mass matrix:") >= 0) {
-			//if (dt.M.size() < dt.Nb)
-			// 	throw Exc(in.Str() + "\n"  + t_("M matrix is not dimensioned"));
 			if (dt.msh[ibody].dt.M.size() > 0)
 				throw Exc(in.Str() + "\n"  + t_("Problem in M matrix. Please report"));
 			dt.msh[ibody].dt.M.setConstant(6, 6, NaNDouble);
@@ -397,7 +382,6 @@ bool Wamit::Load_out(String fileName) {
 			if (dt.Nb == 0 || dt.Nh == 0 || dt.Nf == 0)
 				throw Exc(Format(t_("No bodies, headings or frequencies found in Wamit file '%s'"), dt.file));
 		
-			//dt.T.SetCount(dt.Nf);
 			dt.w.SetCount(dt.Nf);
 
 			Initialize_AB(dt.A);
@@ -424,19 +408,6 @@ bool Wamit::Load_out(String fileName) {
 					if (f.IsInLine("Period indices:")) {
 						FindAdd(qw, f.GetDouble(f.size()-1));
 						FindAdd(qw, f.GetDouble(f.size()-2));
-						/*int if1, if2;
-						if (f.GetText(3) == "Periods:") {		// Hydrostar joins indexes
-							String stri = f.GetText(2);
-							stri = stri.Left(stri.GetCount()/2);
-							if1 = if2 = ScanInt(stri);
-						} else {
-							if1 = f.GetInt(2);
-							if2 = f.GetInt(3);
-						}
-						if (if1 > qtfNf)
-							qtfNf = if1;
-						if (if2 > qtfNf)
-							qtfNf = if2;*/
 					} else if (f.IsInLine("Headings (deg):")) {
 						double hd1 = f.GetDouble(6);
 						double hd2 = f.GetDouble(7);
@@ -493,8 +464,7 @@ bool Wamit::Load_out(String fileName) {
 				int idT = 3;
 				if (f.GetText(3) == "=")	// Hydrostar
 					idT = 4;
-	            //dt.T[ifr] = f.GetDouble(idT);  			
-	            dt.w[ifr] = 2*M_PI/f.GetDouble(idT);//fround(2*M_PI/dt.T[ifr], 8);	    
+	            dt.w[ifr] = 2*M_PI/f.GetDouble(idT);
 	            
 	            bool nextFreq = false;
 	            while (!in.IsEof() && !nextFreq) {
@@ -516,7 +486,6 @@ bool Wamit::Load_out(String fileName) {
 							dt.A[i][j][ifr] = Aij;
 							dt.B[i][j][ifr] = Bij;
 						}
-						//dt.GetBodyDOF();
 	            	} else if (line.Find("DIFFRACTION EXCITING FORCES AND MOMENTS") >= 0) {
 						if (dt.ex.IsEmpty()) 
 							Initialize_Forces(dt.ex);
@@ -610,10 +579,6 @@ bool Wamit::Load_out(String fileName) {
 				while (!in.IsEof()) {
 					f.GetLine();
 					if (f.IsInLine("Period indices:")) {
-						//ifr1 = f.GetInt(2)-1; 
-						//ifr2 = f.GetInt(3)-1;
-						//dt.qw[ifr1] = 2*M_PI/f.GetDouble(5);
-						//dt.qw[ifr2] = 2*M_PI/f.GetDouble(6);
 						ifr1 = Find(dt.qw, 2*M_PI/f.GetDouble(f.size()-2));
 						ifr2 = Find(dt.qw, 2*M_PI/f.GetDouble(f.size()-1));
 						if (ifr1 < 0 || ifr2 < 0)
@@ -641,7 +606,6 @@ bool Wamit::Load_out(String fileName) {
 								if (OUTB(ih, qtfNh) || OUTB(ifr1, qtfNf) || OUTB(ifr2, qtfNf) || OUTB(ib, dt.Nb))
 									throw Exc(in.Str() + "\n"  + Format(t_("Index [%d][%d](%d, %d) out of bounds"), ib, ih, idof, ifr1, ifr2));
 								(*qtf)[ib][ih][idof](ifr1, ifr2) = std::polar(ma, ph);
-								(*qtf)[ib][ih][idof](ifr2, ifr1) = std::polar(ma, ph);	
 							}
 						}
 					}
@@ -649,8 +613,11 @@ bool Wamit::Load_out(String fileName) {
 			}
 		}
 	}
-	if (isHydrostar)
+	if (isHydrostar) {
 		dt.solver = Hydro::HYDROSTAR;
+		for (int ib = 0; ib < dt.Nb; ++ib)					// Translates all bodies phase to 0,0
+			AddWave(ib, -dt.msh[ib].dt.c0.x, -dt.msh[ib].dt.c0.y, dt.g);	// Phase is translated -c0_x,-c0_y
+	}
 	
 	if (dt.Nb == 0)
 		throw Exc(t_("Incorrect .out format"));
@@ -1001,12 +968,12 @@ bool Wamit::Load_pot(String fileName) {
  	
  	// Commented, as there is no relationship between the units of input and output time/frequency. 
 
-	int /*dt.*/Nf = f.GetInt(0);		
+	int Nf = f.GetInt(0);		
 	
- 	if (abs(/*dt.*/Nf) > 1000)
- 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), /*dt.*/Nf));
+ 	if (abs(Nf) > 1000)
+ 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %s"), Nf));
  	
- 	if (/*dt.*/Nf != 0) {
+ 	if (Nf != 0) {
  		int nf = Nf;
  		if (nf > 0) {
 	 		while (nf > 0 && !f.IsEof()) {
@@ -1017,39 +984,6 @@ bool Wamit::Load_pot(String fileName) {
  			f.GetLine();
  			nf = abs(nf);
  		}
-	 	/*
-	 	if (dt.Nf > 0) {
-	 		dt.T.SetCount(dt.Nf);
-			dt.w.SetCount(dt.Nf);
-		 	if (dt.Nf > f.GetCount())
-		 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of periods %d. Found %d"), dt.Nf, f.GetCount()));
-		 	for (int i = 0; i < dt.Nf; ++i) {
-				dt.T[i] = f.GetDouble(i);
-				if (dt.T[i] < 0.00001)
-					throw Exc(in.Str() + "\n" + Format(t_("Wrong period %f"), dt.T[i]));
-				if (i > 0 && dt.T[i] <= dt.T[i-1])
-					throw Exc(in.Str() + "\n" + Format(t_("Wrong period %f, it should be higher than previous one"), dt.T[i]));	
-		 		dt.w[i] = 2*M_PI/dt.T[i];
-		 	}
-	 	} else {
-	 		dt.Nf = -dt.Nf;
-	 		double init = f.GetDouble(0);
-	 		if (init < 0) {
-	 			init = -init;
-	 			dt.Nf -= 2;		// Removed inf and zero	
-	 		}
-	 		dt.T.SetCount(dt.Nf);
-			dt.w.SetCount(dt.Nf);
-			dt.T[0] = init;
-			dt.w[0] = 2*M_PI/init;
-	 		double delta = f.GetDouble(1);
-		 	for (int i = 1; i < dt.Nf; ++i) {
-		 		dt.T[i] = init + i*delta;
-		 		dt.w[i] = 2*M_PI/dt.T[i];
-		 	}
-	 	}
-	 	ProcessFirstColumnPot(dt.w, dt.T);
-	 	*/
  	}
  	
  	f.GetLine();
@@ -1083,8 +1017,6 @@ bool Wamit::Load_pot(String fileName) {
  	dt.Nb = f.GetInt(0);
  	if (dt.Nb < 1 || dt.Nb > 100)
  		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %s"), f.GetText(0)));
-	//if (dt.names.IsEmpty())
-	//	dt.names.SetCount(dt.Nb);
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
 	//dt.c0.resize(3, dt.Nb);
@@ -1130,7 +1062,6 @@ bool Wamit::Load_frc2(String fileName) {
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %d. They should be %d"), Nb, dt.Nb));
 	
 	dt.Nb = Nb;
-	//dt.cg.resize(3, Nb);
 	
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
@@ -1146,7 +1077,6 @@ bool Wamit::Load_frc2(String fileName) {
 	if (imass < 0 || imass > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IMASS %d"), imass));
 	if (imass == 1) {
-		//dt.M.SetCount(Nb);
 		for (int ib = 0; ib < Nb; ++ib) {
 			dt.msh[ib].dt.M.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
@@ -1162,7 +1092,6 @@ bool Wamit::Load_frc2(String fileName) {
 	if (idamp < 0 || idamp > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IDAMP %d"), idamp));
 	if (idamp == 1) {
-		//dt.Dlin.resize(6*Nb, 6*Nb);
 		for (int ib = 0; ib < Nb; ++ib) {
 			dt.msh[ib].dt.Dlin.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
@@ -1178,7 +1107,6 @@ bool Wamit::Load_frc2(String fileName) {
 	if (imoor < 0 || imoor > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong ISTIF %d"), imoor));
 	if (imoor == 1) {
-		//dt.Cmoor.SetCount(Nb);
 		for (int ib = 0; ib < Nb; ++ib) {
 			dt.msh[ib].dt.Cmoor.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
@@ -1230,19 +1158,14 @@ bool Wamit::Load_mmx(String fileName) {
 		} else if (f.GetText(0) == "NBODY") {
 			dt.Nb = f.GetInt(2);
 			ialtfrc = f.GetInt(5);
-			//dt.Vo.SetCount(dt.Nb, NaNDouble);
+
 			dt.msh.SetCount(dt.Nb);
-			/*if (dt.cb.size() != 3*dt.Nb)
-				dt.cb.setConstant(3, dt.Nb, NaNDouble);
-			if (dt.cg.size() != 3*dt.Nb)
-				dt.cg.setConstant(3, dt.Nb, NaNDouble);*/
+
 			if (!IsLoadedM()) {
-				//dt.M.SetCount(dt.Nb);
 				for (int i = 0; i < dt.Nb; ++i)
 					dt.msh[i].dt.M = MatrixXd::Zero(6, 6);
 			}
 			if (!IsLoadedCMoor()) {
-				//dt.Cmoor.SetCount(dt.Nb);
 				for (int i = 0; i < dt.Nb; ++i)
 					dt.msh[i].dt.Cmoor = MatrixXd::Zero(6, 6);
 			}
@@ -1343,39 +1266,37 @@ bool Wamit::ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int ip
 	}
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 		if (dataFromW)
-			T[ifr] = 2*M_PI/w[ifr];//fround(2*M_PI/w[ifr], 8);
+			T[ifr] = 2*M_PI/w[ifr];
 		else
-			w[ifr] = 2*M_PI/T[ifr];//fround(2*M_PI/T[ifr], 8);
+			w[ifr] = 2*M_PI/T[ifr];
 	}
-	//if (IsNull(dt.dataFromW))
-	//	dt.dataFromW = dataFromW;
 	return dataFromW;
 }
 
 void Wamit::ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin) {	
 	bool dataFromW;
 	if (IsNull(iperin)) 
-		/*dt.*/dataFromW = false;
+		dataFromW = false;
 	else {
 		if (iperin == 1) 
-			/*dt.*/dataFromW = false;
+			dataFromW = false;
 		else if (iperin == 2) 
-			/*dt.*/dataFromW = true;
+			dataFromW = true;
 		else if (iperin == 3) {
-			/*dt.*/dataFromW = true;
+			dataFromW = true;
 			double g = Nvl2(dt.g, Bem().g);
 			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : T)
 				ww = w_iperout3(ww, g, len);
 		} else {
-			/*dt.*/dataFromW = true;
+			dataFromW = true;
 			double g = Nvl2(dt.g, Bem().g);
 			double len = Nvl2(dt.len, Bem().len);
 			for (auto &ww : T) 
 				ww = w_iperout4(ww, g, len, dt.h);
 		}
 	}
-	if (/*dt.*/dataFromW) {
+	if (dataFromW) {
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			w[ifr] = T[ifr];
 			T[ifr] = 2*M_PI/w[ifr];
@@ -1460,19 +1381,12 @@ bool Wamit::Load_1(String fileName, int iperout) {
 		Initialize_AB(dt.B);
 	}
 	
-//	if (dt.names.IsEmpty())
-//		dt.names.SetCount(dt.Nb);
-	
 	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
-		//UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
-		//else if (!CompareRatio(dt.T, T, 0.01) && !CompareRatio(dt.T, rT, 0.001))
-		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(dt.T), ToString(T)));
 	}
 	dt.w = pick(w);
-	//dt.T = pick(T);
 		
 	in.SeekPos(fpos);
 	
@@ -1666,14 +1580,8 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
-		//else if (!CompareRatio(dt.T, T, 0.01) && !CompareRatio(dt.T, rT, 0.001))
-		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(dt.T), ToString(T)));
 	}
 	dt.w = pick(w);
-	//dt.T = pick(T);
-	
-//	if (dt.names.IsEmpty())
-//		dt.names.SetCount(dt.Nb);
 	
 	in.SeekPos(fpos);
 	
@@ -1798,9 +1706,6 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		for (int i = 0; i < dt.qw.size(); ++i)
    			dt.qw(i) = 2*M_PI/dt.qw(i);
 	
-//	for (int i = 0; i < dt.qh.size(); ++i)
-//   		dt.qh(i) = std::complex<double>(dt.qh(i).real(), dt.qh(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
-	
 	return true;
 }
 
@@ -1855,10 +1760,8 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
     UArray<std::complex<double>> head;
 	
 	int Nb = 0;
-	//int nline = 0;
 	while (!in.IsEof()) {
 		f.GetLine();
-		//nline++;
 		double freq = f.GetDouble(0);
 		FindAdd(w, freq);
 		double hd1 = f.GetDouble(1);
@@ -1897,18 +1800,13 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
-		//else if (!CompareRatio(dt.T, T, 0.01) && !CompareRatio(dt.T, rT, 0.001))
-		//	throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of periods.\nIn one %s, in another %s"), ToString(dt.T), ToString(T)));
 	}
 	dt.w = pick(w);
-	//dt.T = pick(T);	
 	
 	in.SeekPos(fpos);
 	
-	//int iline = 0;
 	while (!in.IsEof()) {
 		f.GetLine();
-		//iline++;
 		
 		double freq = f.GetDouble(0);
 		int ifr1 = FindRatio(src, freq, 0.001);
@@ -1932,9 +1830,6 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	}	
 
 	::Copy(head, dt.mdhead);
-
-//	for (int i = 0; i < dt.mdhead.size(); ++i)
- //  		dt.mdhead(i) = std::complex<double>(dt.mdhead(i).real(), dt.mdhead(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
 	
 	return true;
 }
@@ -1969,8 +1864,6 @@ void Wamit::Save_1(String fileName, bool force_T) const {
 		data = TT;
 	else //if (dt.dataFromW) 
 		data = Get_w();
-	//else
-	//	data = TT;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
@@ -2005,13 +1898,12 @@ void Wamit::Save_3(String fileName, bool force_T) const {
 
 	VectorXd data;
 	int ifr0, ifrEnd, ifrDelta;
-	if (/*dt.dataFromW &&*/ !force_T) 
+	if (!force_T) 
 		data = Get_w();
 	else
 		data = Get_T();
-	//UVector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && (/*dt.dataFromW &&*/ !force_T)) || ((data[1] < data[0]) && !(/*dt.dataFromW && */!force_T))) {
+	if (((data[1] > data[0]) && (!force_T)) || ((data[1] < data[0]) && !(!force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;
@@ -2049,13 +1941,12 @@ void Wamit::Save_4(String fileName, bool force_T) const {
 		
 	VectorXd data;
 	int ifr0, ifrEnd, ifrDelta;
-	if (/*dt.dataFromW &&*/ !force_T) 
+	if (!force_T) 
 		data = Get_w();
 	else
 		data = Get_T();
-	//UVector<double> &data = *pdata;
 	
-	if (((data[1] > data[0]) && (/*dt.dataFromW &&*/ !force_T)) || ((data[1] < data[0]) && !(/*dt.dataFromW &&*/ !force_T))) {
+	if (((data[1] > data[0]) && (!force_T)) || ((data[1] < data[0]) && !(!force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;
@@ -2294,14 +2185,12 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 	VectorXd data;
 	if (force_T)
 		data = TT;
-	else //if (dt.dataFromW) 
+	else
 		data = Get_w();
-	//else
-	//	data = TT;
 	
 	int ifr0, ifrEnd, ifrDelta;
 	bool growing = data[1] > data[0];
-	if ((growing && (/*dt.dataFromW &&*/ !force_T)) || (!growing && !(/*dt.dataFromW &&*/ !force_T))) {
+	if ((growing && (!force_T)) || (!growing && !(!force_T))) {
 		ifr0 = 0;
 		ifrEnd = dt.Nf;
 		ifrDelta = 1;
@@ -2320,14 +2209,7 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
     				static int idf12[] = {1, 2, 3, 4, 5, 6};
     				int idof = idf12[idf]-1;
     				double re = F_ndim(md[ib][ih][idof](ifr), idof);
-    		/*if (idof == 0)
-    			re = min(20., re);
-    		else if (idof == 1)
-    			re = min(20., dt.F_ndim(md[ib][ih][0](ifr), idof));
-    		else if (idof == 3)
-				re = min(1000., dt.F_ndim(md[ib][ih][4](ifr), idof));
-    		else if (idof == 4)
-				re = min(1000., re);*/
+    
     				out << Format("   % 8.6E", TT[ifr]);
     				out << Format("   % 8.6E", dt.mdhead[ih].real());
     				out << Format("   % 8.6E", dt.mdhead[ih].imag());

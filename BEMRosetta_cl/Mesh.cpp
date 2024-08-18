@@ -3,10 +3,10 @@
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 CAPY_NC, 		OBJ,   UNKNOWN, NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Capytaine.nc","Obj", "Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false, 	    false, 	false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.nc", 	    "*.obj","*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 CAPY_NC, 		OBJ,    ORCAFLEX_YML,   UNKNOWN, NUMMESH};	
+const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Capytaine.nc","Obj",  "OrcaFlex.yml", "Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false, 	    false,  false, 	        false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.nc", 	    "*.obj","*.yml",        "*.*"};       
 
 int Body::idCount = 0;
 
@@ -123,6 +123,15 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		}
 	} else if (ext == ".lis")
 		ret = AQWABody::LoadLis(mesh, file, g, y0z, x0z);
+	else if (ext == ".yml") {
+		OrcaWave orca;
+		ret = orca.Load(file);
+		if (ret.IsEmpty()) {
+			mesh.Append(orca.dt.msh);
+			y0z = orca.dt.symX;
+			x0z = orca.dt.symY;
+		}
+	}
 #ifdef PLATFORM_WIN32	
 	else if (ext == ".owr")
 		ret = ORCABody::Load_OWR(mesh, file, g, y0z, x0z);
@@ -211,10 +220,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		if (cleanPanels) 
 			m.dt.mesh.Heal(true, grid, eps);
 		
-		//if (!IsNull(rho))
 		m.AfterLoad(rho, g, false, true);
-		
-		//m.IncrementIdCount();
+	
 	}
 	return String();
 }
