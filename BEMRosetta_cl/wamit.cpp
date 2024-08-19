@@ -387,7 +387,6 @@ bool Wamit::Load_out(String fileName) {
 			Initialize_AB(dt.A);
 			Initialize_AB(dt.B);
 			
-			//Sort(qhdrift);
 			dt.mdhead.resize(mdhead.size());
 			::Copy(mdhead, dt.mdhead);
 			
@@ -613,10 +612,25 @@ bool Wamit::Load_out(String fileName) {
 			}
 		}
 	}
-	if (isHydrostar) {
+	if (isHydrostar) {		// Hydrostar corrections due to mismatch with Wamit rules
 		dt.solver = Hydro::HYDROSTAR;
-		for (int ib = 0; ib < dt.Nb; ++ib)					// Translates all bodies phase to 0,0
-			AddWave(ib, -dt.msh[ib].dt.c0.x, -dt.msh[ib].dt.c0.y, dt.g);	// Phase is translated -c0_x,-c0_y
+		
+		UVector<Point3D> refPoint;
+		UVector<Pointf> refWave;
+		if (Wamit::Load_mcn(fileName, dt.Nb, refPoint, refWave)) {
+			for (int ib = 0; ib < dt.Nb; ++ib)
+				dt.msh[ib].dt.c0 = clone(refPoint[ib]);
+			if (IsNull(refWave[0])) {
+				for (int ib = 0; ib < dt.Nb; ++ib)
+					refWave[ib] = Pointf(dt.msh[ib].dt.cb.x + dt.msh[ib].dt.c0.x, 
+										 dt.msh[ib].dt.cb.y + dt.msh[ib].dt.c0.y);
+			}
+		} else {
+			for (int ib = 0; ib < dt.Nb; ++ib)
+				refWave[ib] = Pointf(dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y);
+		}
+		for (int ib = 0; ib < dt.Nb; ++ib)	// Translates all bodies phase to 0,0, by translating -refWave
+			AddWave(ib, -refWave[ib].x, -refWave[ib].y, dt.g);	
 	}
 	
 	if (dt.Nb == 0)
@@ -625,6 +639,56 @@ bool Wamit::Load_out(String fileName) {
 	return true;
 }
 
+// This is really only for Hydrostar
+bool Wamit::Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave) {
+	if (nb == 0)
+		return false;
+	
+	String folder = GetFileFolder(fileName);
+	FindFile mcn(AFX(folder, "*.mcn"));
+	if (!mcn)
+		return false;
+	
+	String mcnFile = mcn.GetPath();
+	
+	FileInLine in(mcnFile);
+	if (!in.IsOpen())
+		return false;
+
+	LineParserWamit f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	UVector<Point3D> cog(nb, Null);
+	refPoint.SetCount(nb, Null);
+	refWave.SetCount(nb, Null);
+	
+	while(!in.IsEof()) {
+		f.GetLine_discard_empty();
+		if (f.IsEof())
+			break;
+
+		if (f.GetText(0) == "COGPOINT_BODY") {
+			int ib = f.GetInt(1);
+			if (ib < 1 || ib > nb)
+				throw Exc(in.Str() + "\n"  + t_("Wrong body in COGPOINT_BODY"));
+			cog[ib-1] = Point3D(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
+		} else if (f.GetText(0).StartsWith("REFPOINT")) {
+			int ib = f.GetInt(1);
+			if (ib < 1 || ib > nb)
+				throw Exc(in.Str() + "\n"  + t_("Wrong body in REFPOINT"));
+			refPoint[ib-1] = Point3D(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
+		} else if (f.GetText(0).StartsWith("REFWAVE")) 
+			refWave.Set(0, Pointf(f.GetDouble(1), f.GetDouble(2)), nb);
+	}
+	if (IsNull(cog[0]))
+		return false;
+	
+	if (IsNull(refPoint[0]))
+		refPoint = clone(cog);
+	
+	return true;
+}
+			
 void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod) const {
 	out << 	" ************************************************************************\n\n"
 			" Wave period = " << wavePeriod << "\n"
@@ -1019,7 +1083,7 @@ bool Wamit::Load_pot(String fileName) {
  		throw Exc(in.Str() + "\n" + Format(t_("Wrong number of bodies %s"), f.GetText(0)));
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
-	//dt.c0.resize(3, dt.Nb);
+	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		f.GetLine();
 		dt.msh[ib].dt.name = f.GetText(0);

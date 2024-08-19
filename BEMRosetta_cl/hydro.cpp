@@ -71,12 +71,12 @@ void Hydro::GetAinf() {
 
 void Hydro::GetRAO() {
 	if (dt.Nf == 0 || dt.A.size() < dt.Nb*6 || dt.B.size() < dt.Nb*6)
-		throw Exc(t_("Insufficient data to get RAO: A and B are required"));	
+		throw Exc(t_("Insufficient data to get RAO: Added mass and Radiation damping are required"));	
 
 	for (int ib = 0; ib < dt.Nb; ++ib) 
-		if (/*C.size() < ib+1 || */dt.msh[ib].dt.C.rows() < 6 || dt.msh[ib].dt.C.cols() < 6 || 
-			  /*M.size() < ib+1 || */dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
-			throw Exc(t_("Insufficient data to get RAO: C and M are required"));   
+		if (dt.msh[ib].dt.C.rows() < 6 || dt.msh[ib].dt.C.cols() < 6 || 
+			dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO: Hydrostatic stiffness and Inertia matrix are required"));   
 			      
 	Initialize_Forces(dt.rao);
 
@@ -108,7 +108,7 @@ VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const 
 	if (!FullPivLU<MatrixXcd>(m).isInvertible())
 	   throw Exc(t_("Problem solving RAO"));
 	
-	return Fwh.transpose()*M.inverse();
+	return Fwh.transpose()*m.inverse();
 }
 	
 void Hydro::InitAinf_w() {

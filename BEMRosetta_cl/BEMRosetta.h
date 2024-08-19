@@ -1231,6 +1231,7 @@ protected:
 	bool Load_mmx(String fileName);
 	
 	bool Load_out(String fileName);							
+	static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
 	void Load_A(FileInLine &in, MatrixXd &A);
 	bool Load_Scattering(String fileName, int iperout);
 	bool Load_FK(String fileName, int iperout);

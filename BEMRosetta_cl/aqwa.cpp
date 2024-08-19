@@ -683,22 +683,21 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				if (idh < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(2)));
 				int dd = 1;
-				double factorM = pfrc == &dt.rao ? 1 : factorMass;
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 					double freq = f.GetDouble(1);
 					int ifrr = FindClosest(dt.w, freq);
 					if (ifrr < 0)
 						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
-						double factorPh;
+						double factorM;
 						if (pfrc != &dt.rao || idf < 3)
-							factorPh = 1;
+							factorM = factorMass;
 						else
-							factorPh = M_PI/180;	// Only for RAO rotations
-						
+							factorM = factorMass*M_PI/180;	// Only for RAO rotations, conversion from degrees to radians
+								
 						pos = 2 + dd + idf*2;
 						frc[ib][idh](ifr, idf) = std::polar<double>(f.GetDouble(pos)*factorM, 
-															 -ToRad(f.GetDouble(pos + 1))*factorPh); // Negative to follow Wamit 
+															 -ToRad(f.GetDouble(pos + 1))); // Negative to follow Wamit 
 					}
 					dd = 0;
 					line = in.GetLine();

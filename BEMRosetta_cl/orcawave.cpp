@@ -101,8 +101,8 @@ void OrcaWave::Load_OF_YML() {
 	
 	dt.g = 9.80665;		// Default value used when SI units
 
-	bool symXZ = false, symYZ = false;
-	bool foundWireFrameSymmetry = false;
+	//bool symXZ = false, symYZ = false;
+	//bool foundWireFrameSymmetry = false;
 	
 	YmlParser fy(in);
 
@@ -302,7 +302,7 @@ void OrcaWave::Load_OF_YML() {
 				String sym = fy.GetVal();
 				dt.symY = sym.Find("xz") >= 0;
 				dt.symX = sym.Find("yz") >= 0;
-				foundWireFrameSymmetry = true;
+				//foundWireFrameSymmetry = true;
 			} else if (fy.FirstMatch("Vertex*")) {
 				UVector<UVector<double>> mat = fy.GetMatrixDouble();
 				
