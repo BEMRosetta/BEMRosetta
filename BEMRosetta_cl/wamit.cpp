@@ -612,6 +612,10 @@ bool Wamit::Load_out(String fileName) {
 			}
 		}
 	}
+	
+	if (dt.Nb == 0)
+		throw Exc(t_("Incorrect .out format"));
+		
 	if (isHydrostar) {		// Hydrostar corrections due to mismatch with Wamit rules
 		dt.solver = Hydro::HYDROSTAR;
 		
@@ -626,15 +630,14 @@ bool Wamit::Load_out(String fileName) {
 										 dt.msh[ib].dt.cb.y + dt.msh[ib].dt.c0.y);
 			}
 		} else {
+			BEM::PrintError(t_("HydroStar .mcn file not found.\nIt is advisable to include it to avoid misunderstandings regarding the global and body axis.\nThe default criteria defined by HydroStar have been considered."));
+			refWave.SetCount(dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				refWave[ib] = Pointf(dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y);
 		}
 		for (int ib = 0; ib < dt.Nb; ++ib)	// Translates all bodies phase to 0,0, by translating -refWave
 			AddWave(ib, -refWave[ib].x, -refWave[ib].y, dt.g);	
 	}
-	
-	if (dt.Nb == 0)
-		throw Exc(t_("Incorrect .out format"));
 	
 	return true;
 }
