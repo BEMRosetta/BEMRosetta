@@ -9,7 +9,7 @@ String BemioH5::Load(String file, double) {
 	dt.name = GetFileTitle(file);
 	dt.dimen = true;
 	dt.len = 1;
-	dt.solver = Hydro::BEMIOH5;
+	dt.solver = Hydro::BEMIO_H5;
 	dt.Nb = Null;
 	dt.x_w = dt.y_w = 0;
 	
@@ -23,12 +23,7 @@ String BemioH5::Load(String file, double) {
 		if (IsNull(dt.Nb))
 			return t_("No data found");
 	
-		/*dt.dof.Clear();	dt.dof.SetCount(dt.Nb, 0);
-		for (int i = 0; i < dt.Nb; ++i)
-			dt.dof[i] = 6;*/
 	} catch (Exc e) {
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
-		//dt.lastError = e;
 		return e;
 	}
 	
@@ -40,8 +35,6 @@ void BemioH5::Load_H5() {
 	
 	Hdf5File hfile;
 	hfile.Open(fileName, H5F_ACC_RDONLY);
-	
-	//dt.dataFromW = true;
 	
 	for (dt.Nb = 0; hfile.ExistGroup(Format("body%d", dt.Nb+1)); dt.Nb++) 
 		;	
@@ -65,7 +58,6 @@ void BemioH5::Load_H5() {
 	{
 		hfile.ChangeGroup("simulation_parameters");
 		
-		//hfile.GetDouble("T", dt.T);
 		hfile.GetDouble("w", dt.w);
 		dt.Nf = dt.w.size();
 		hfile.GetDouble("wave_dir", dt.head);
@@ -103,16 +95,8 @@ void BemioH5::Load_H5() {
 	Initialize_Forces(fk);
 	
 	dt.msh.SetCount(dt.Nb);
-	//dt.names.SetCount(dt.Nb);
-	//dt.Vo.SetCount(dt.Nb);
-	//dt.dof.SetCount(dt.Nb);
-	//dt.cb.resize(3, dt.Nb);
-	//dt.cg.resize(3, dt.Nb);
-	//dt.c0.setConstant(3, dt.Nb, 0);
-	//dt.C.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.C.setConstant(6, 6, 0);
-	//dt.M.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.M.setConstant(6, 6, 0);
 
@@ -195,7 +179,6 @@ void BemioH5::Load_H5() {
 			if (hfile.ChangeGroup("properties")) {
 				dt.msh[ib].dt.name = hfile.GetString("name");
 				dt.msh[ib].dt.Vo = hfile.GetDouble("disp_vol");
-				//dt.dof[ib] = int(hfile.GetDouble("dof"));
 				if (hfile.ExistDataset("cb")) {
 					hfile.GetDouble("cb", data);
 					if (data.rows() != 3 && data.cols() != 1)
@@ -212,8 +195,10 @@ void BemioH5::Load_H5() {
 			}
 			if (hfile.ChangeGroup("hydro_coeffs")) {
 				if (hfile.ChangeGroup("added_mass")) {
-					LoadAllAB(dt.A, ib);
-					LoadComponentsAB(a, ib);	
+					if (hfile.ExistDataset("all")) 
+						LoadAllAB(dt.A, ib);
+					if (hfile.ExistGroup("components")) 
+						LoadComponentsAB(a, ib);	
 					
 					if (hfile.ExistDataset("inf_freq")) {
 						hfile.GetDouble("inf_freq", data);
@@ -224,8 +209,10 @@ void BemioH5::Load_H5() {
 					hfile.UpGroup();	
 				}
 				if (hfile.ChangeGroup("radiation_damping")) {
-					LoadAllAB(dt.B, ib);
-					LoadComponentsAB(b, ib);
+					if (hfile.ExistDataset("all")) 
+						LoadAllAB(dt.B, ib);
+					if (hfile.ExistGroup("components")) 
+						LoadComponentsAB(b, ib);
 						
 					hfile.UpGroup();	
 				}
@@ -412,7 +399,7 @@ void BemioH5::Save(String file) const {
 				if (!IsNull(dt.msh[ib].dt.cb)) {
 					mat = dt.msh[ib].dt.cb;
 					mat = mat.transpose();
-					hfile.Set("cb", mat).SetDescription("Centre of bouyancy").SetUnits("m");
+					hfile.Set("cb", mat).SetDescription("Centre of buoyancy").SetUnits("m");
 				}
 				if (!IsNull(dt.msh[ib].dt.cg)) {
 					mat = dt.msh[ib].dt.cg;

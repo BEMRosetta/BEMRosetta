@@ -566,14 +566,14 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 }
 
 
-void Hydro::GetTranslationTo(const MatrixXd &to) {
+void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)> Status) {
 	MatrixXd delta(3, dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		for (int idf = 0; idf < 3; ++idf) 	
 			delta(idf, ib) = to(idf, ib) - dt.msh[ib].dt.c0[idf];
 		
 	
-	auto CalcAB = [&](auto &A) {
+	auto TransAB = [&](auto &A) {
         auto An = clone(A);
 	
 		for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -633,14 +633,19 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		A = pick(An);
     };
 	
+	Status(t_("Translating A"), 10);
 	if (IsLoadedA())
-		CalcAB(dt.A);
+		TransAB(dt.A);
 	if (IsLoadedAinf_w())
-		CalcAB(dt.Ainf_w);
+		TransAB(dt.Ainf_w);
+
+	Status(t_("Translating B"), 20);
 	if (IsLoadedB())
-		CalcAB(dt.B);
-    
-    auto CalcA = [&](auto &A) {
+		TransAB(dt.B);
+	if (IsLoadedB_H())
+		TransAB(dt.B_H);
+	
+    auto TransA = [&](auto &A) {
         auto An = clone(A);
 	
 		for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -699,11 +704,11 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
     };
     
     if (IsLoadedA0())
-		CalcA(dt.A0);
+		TransA(dt.A0);
     if (IsLoadedAinf())
-		CalcA(dt.Ainf);
+		TransA(dt.Ainf);
 		    
-    auto CalcF = [&](Forces &ex) {
+    auto TransF = [&](Forces &ex) {
     	Forces exforce = clone(ex);
     	
 	    for (int ih = 0; ih < dt.Nh; ++ih) {
@@ -721,15 +726,16 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 	    }
 		ex = pick(exforce);
     };
-    	
+    
+	Status(t_("Translating Forces"), 30);	
 	if (IsLoadedFex())
-		CalcF(dt.ex);
+		TransF(dt.ex);
 	if (IsLoadedFsc())
-		CalcF(dt.sc);
+		TransF(dt.sc);
 	if (IsLoadedFfk())
-		CalcF(dt.fk);
+		TransF(dt.fk);
 
-    auto CalcMD = [&]() {
+    auto TransMD = [&]() {
     	UArray<UArray<UArray<VectorXd>>> mdn = clone(dt.md);
     	
     	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -747,10 +753,12 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 		dt.md = pick(mdn);
     };
     
-	if (IsLoadedMD())
-		CalcMD();
+	if (IsLoadedMD()) {
+		Status(t_("Translating MD"), 40);
+		TransMD();
+	}
 	
-    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+    auto TransQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			double dx = delta(0, ib);
 			double dy = delta(1, ib);
@@ -786,11 +794,28 @@ void Hydro::GetTranslationTo(const MatrixXd &to) {
 			}
 		}
 	}
-			
-	if (IsLoadedQTF(true)) 
-		CalcQTF(dt.qtfsum, true);		
-	if (IsLoadedQTF(false))	
-		CalcQTF(dt.qtfdif, false);
+		
+	if (IsLoadedQTF(true)) {
+		Status(t_("Translating QTF"), 50);
+		TransQTF(dt.qtfsum, true);		
+	}
+	if (IsLoadedQTF(false))	{
+		Status(t_("Translating QTF"), 60);
+		TransQTF(dt.qtfdif, false);
+	}
+	
+	if (IsLoadedPotsRad()) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			for	(int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) {
+				UArray<UArray<std::complex<double>>> &pot = dt.pots_rad[ib][ip];
+				for	(int ifr = 0; ifr < dt.Nf; ++ifr) {	
+					pot[3][ifr] -= (pot[2][ifr]*delta(1, ib) - pot[1][ifr]*delta(2, ib));
+					pot[4][ifr] -= (pot[0][ifr]*delta(2, ib) - pot[2][ifr]*delta(0, ib));
+					pot[5][ifr] -= (pot[1][ifr]*delta(0, ib) - pot[0][ifr]*delta(1, ib));
+				}
+			}
+		}
+	}
 	
 	if (IsLoadedM()) {
 		for (int ib = 0; ib < dt.Nb; ++ib) 
@@ -1700,6 +1725,8 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 	
 	int num = 1;
 	
+	Status(t_("Loading BEM file"), -1);
+	
 	if (ext == ".nc")
 		ret = CapyNC_Load(file, hydros, num);
 	else {
@@ -1707,7 +1734,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 	
 		if (ext == ".cal" || ext == ".tec" || ext == ".inf") 
 			ret = static_cast<Nemoh&>(hyd).Load(file, Status);
-		else if (ext == ".out") 
+		else if (ext == ".out" || ext == ".hdf" || ext == ".mcn") 
 			ret = static_cast<Wamit&>(hyd).Load(file, Status);
 		else if (ext == ".in") 
 			ret = static_cast<Hams&>(hyd).Load(file, Status);

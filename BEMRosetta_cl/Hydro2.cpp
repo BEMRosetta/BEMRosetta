@@ -18,24 +18,24 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
 				t_("|TFS|"), t_("arg(TFS)")};
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	   HAMS_WAMIT,  HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,   AQWA,   			    AQWA_QTF,	  AQWA_DAT, 	FOAMM,   DIODORE,			BEMROSETTA, 	   ORCAFLEX_YML,   		CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, 			HYDROSTAR, 	CAPYNC, 		ORCAWAVE_YML, 		CAPYTAINE_PY, ORCAWAVE.owr,		UNKNOWN, NUMBEM};
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	"AQWA .qtf",  "AQWA .dat", "FOAMM", "Diodore .hdb", 	"BEMRosetta .bem", "OrcaFlex .yml", 	".csv mat", ".csv table", "BEMIO .h5",	"Capytaine .cal",    ".out", 	"Capytaine .nc", "OrcaWave .yml",	"Capytaine .py",
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	   HAMS_WAMIT,  HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,   AQWA,   			    AQWA_QTF,	  AQWA_DAT, 	FOAMM,   DIODORE,			BEMROSETTA, 	   ORCAFLEX_YML,   		CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, 			HYDROSTAR_OUT, 	CAPYNC, 		ORCAWAVE_YML, 		CAPYTAINE_PY, 	 BEMROSETTA_H5,	ORCAWAVE.owr,		UNKNOWN, NUMBEM};
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	"AQWA .qtf",  "AQWA .dat", "FOAMM", "Diodore .hdb", 	"BEMRosetta .bem", "OrcaFlex .yml", 	".csv mat", ".csv table", "BEMIO .h5",	"Capytaine .cal",    ".out", 		"Capytaine .nc", "OrcaWave .yml",	"Capytaine .py", "BEMRosetta .h5",
 #ifdef PLATFORM_WIN32	
 "OrcaWave .owr", 	
 #endif
 				"By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   false,  					 true, 	 	  false,		false,   true,	  		true,			     false,	     		true, 	     true, 		   true,		false, 	   			false, 		false,			 false,				false,		 
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   false,  					 true, 	 	  false,		false,   true,	  			true,			     false,	     		true, 	     true, 		   true,		false, 	   			false, 			false,			 false,				false,		 	  false,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
 				true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "", 				  		 "*.qtf",	  ".dat",		"",      "*.hdb",	  		"*.bem",		   	 "*.yml",	 		"*.csv",    "*.csv", 	   "*.h5",		"",        			"*.out", 	"*.nc", 		 "*.yml",			"*.py",	 
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "", 				  		 "*.qtf",	  ".dat",		"",      "*.hdb",	  		"*.bem",		   	 "*.yml",	 		"*.csv",    "*.csv", 	   "*.h5",		"",        			"*.out", 		"*.nc", 		 "*.yml",			"*.py",	 		  "*.h5",
 #ifdef PLATFORM_WIN32	
 "*.owr",	
 #endif		
 				"*.*"};       
 	
-const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  		false,			 	false,	     		false, 	 	false, 	   		false,		true, 	   			false, 		false,			 true,				true,
+const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  			false,			 	false,	     		false, 	 	false, 	   		false,		true, 	   			false, 			false,			 true,				true,			  true,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
@@ -189,42 +189,67 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 				indices << ih;
 			}
 		}
-		UVector<int> order = GetSortOrderX(nhead);
-		SetSortOrder(nhead, order);
-		SetSortOrder(indices, order);
-		
-		dt.head = pick(nhead);
-		dt.Nh = dt.head.size();
+		if (!Compare(dt.head, nhead)) {
+			UVector<int> order = GetSortOrderX(nhead);
+			SetSortOrder(nhead, order);
+			SetSortOrder(indices, order);
 			
-		auto SortF = [&](Forces &F) {
-			Forces f(dt.Nb);
-			for (int ib = 0; ib < dt.Nb; ++ib) {
-				f[ib].SetCount(dt.Nh);
-				for (int ih = 0; ih < dt.Nh; ++ih) {
-					f[ib][ih].resize(dt.Nf, 6);
-					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-						for (int idf = 0; idf < 6; ++idf) 
-							f[ib][ih](ifr, idf) = F[ib][indices[ih]](ifr, idf);
-				}
-			}
-			F = pick(f);
-		};
+			dt.head = pick(nhead);
+			dt.Nh = dt.head.size();
 				
-		if (IsLoadedFex())
-			SortF(dt.ex);
-		if (IsLoadedFsc())
-			SortF(dt.sc);
-		if (IsLoadedFfk())
-			SortF(dt.fk);
-		if (IsLoadedRAO()) 
-			SortF(dt.rao);	
-		
-		if (IsLoadedFsc_pot())
-			SortF(dt.sc_pot);
-		if (IsLoadedFfk_pot())
-			SortF(dt.fk_pot);
-		if (IsLoadedFfk_pot_bmr())
-			SortF(dt.fk_pot_bmr);
+			auto SortF = [&](Forces &F) {
+				Forces f(dt.Nb);
+				for (int ib = 0; ib < dt.Nb; ++ib) {
+					f[ib].SetCount(dt.Nh);
+					for (int ih = 0; ih < dt.Nh; ++ih) {
+						f[ib][ih].resize(dt.Nf, 6);
+						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+							for (int idf = 0; idf < 6; ++idf) 
+								f[ib][ih](ifr, idf) = F[ib][indices[ih]](ifr, idf);
+					}
+				}
+				F = pick(f);
+			};
+			
+			auto SortPotsDifInc = [&](UArray<UArray<UArray<UArray<std::complex<double>>>>> &pots) {
+				UArray<UArray<UArray<UArray<std::complex<double>>>>> _pots(dt.Nb);
+				for (int ib = 0; ib < dt.Nb; ++ib) {
+					_pots[ib].SetCount(pots[ib].size());
+					for (int ip = 0; ip < pots[ib].size(); ++ip) {
+						_pots[ib][ip].SetCount(dt.Nh);	
+						for (int ih = 0; ih < dt.Nh; ++ih) {
+							_pots[ib][ip][ih].SetCount(dt.Nf);		
+							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+								_pots[ib][ip][ih][ifr] = pots[ib][ip][indices[ih]][ifr];
+						}
+					}
+				}
+				pots = pick(_pots);
+			};
+				
+			if (IsLoadedFex())
+				SortF(dt.ex);
+			if (IsLoadedFsc())
+				SortF(dt.sc);
+			if (IsLoadedFfk())
+				SortF(dt.fk);
+			if (IsLoadedRAO()) 
+				SortF(dt.rao);	
+			
+			if (IsLoadedFsc_pot())
+				SortF(dt.sc_pot);
+			if (IsLoadedFfk_pot())
+				SortF(dt.fk_pot);
+			if (IsLoadedFfk_pot_bmr())
+				SortF(dt.fk_pot_bmr);
+			
+			if (IsLoadedPotsDif()) 
+				SortPotsDifInc(dt.pots_dif);
+			if (IsLoadedPotsInc()) 
+				SortPotsDifInc(dt.pots_inc);
+			if (IsLoadedPotsIncB()) 
+				SortPotsDifInc(dt.pots_inc_bmr);
+		}
 	}
 	{	// Mean Drift
 		UArray<std::complex<double>> nhead;
@@ -237,32 +262,34 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 				indices << ih;
 			}
 		}
-		UVector<int> order = GetSortOrderX(nhead, SortComplex);
-		SetSortOrder(nhead, order);
-		SetSortOrder(indices, order);
-		
-		dt.mdhead.resize(nhead.size());		// Cannot pick()
-		for (int ih = 0; ih < dt.mdhead.size(); ++ih)
-			dt.mdhead[ih] = nhead[ih];
+		if (!Compare(dt.mdhead, nhead)) {
+			UVector<int> order = GetSortOrderX(nhead, SortComplex);
+			SetSortOrder(nhead, order);
+			SetSortOrder(indices, order);
 			
-		auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
-			UArray<UArray<UArray<VectorXd>>> md(dt.Nb);
-			for (int ib = 0; ib < dt.Nb; ++ib) {
-				md[ib].SetCount(int(dt.mdhead.size()));
-				for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
-					md[ib][ih].SetCount(6);
-					for (int idf = 0; idf < 6; ++idf) {
-						md[ib][ih][idf].resize(dt.Nf);
-						for (int ifr = 0; ifr < dt.Nf; ++ifr) 		
-							md[ib][ih][idf][ifr] = MD[ib][indices[ih]][idf][ifr];
+			dt.mdhead.resize(nhead.size());		// Cannot pick()
+			for (int ih = 0; ih < dt.mdhead.size(); ++ih)
+				dt.mdhead[ih] = nhead[ih];
+				
+			auto SortMD = [&](UArray<UArray<UArray<VectorXd>>> &MD) {
+				UArray<UArray<UArray<VectorXd>>> md(dt.Nb);
+				for (int ib = 0; ib < dt.Nb; ++ib) {
+					md[ib].SetCount(int(dt.mdhead.size()));
+					for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
+						md[ib][ih].SetCount(6);
+						for (int idf = 0; idf < 6; ++idf) {
+							md[ib][ih][idf].resize(dt.Nf);
+							for (int ifr = 0; ifr < dt.Nf; ++ifr) 		
+								md[ib][ih][idf][ifr] = MD[ib][indices[ih]][idf][ifr];
+						}
 					}
 				}
-			}
-			MD = pick(md);
-		};
-		
-		if(IsLoadedMD())
-			SortMD(dt.md);
+				MD = pick(md);
+			};
+			
+			if(IsLoadedMD())
+				SortMD(dt.md);
+		}
 	}
 	{	// Full QTF
 		UArray<std::complex<double>> nhead;
@@ -275,35 +302,37 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 				indices << ih;
 			}
 		}
-		UVector<int> order = GetSortOrderX(nhead, SortComplex);
-		SetSortOrder(nhead, order);
-		SetSortOrder(indices, order);		
-		
-		dt.qhead.resize(nhead.size());		// Cannot pick()
-		for (int ih = 0; ih < dt.qhead.size(); ++ih)
-			dt.qhead[ih] = nhead[ih];		
-		
-		auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
-			UArray<UArray<UArray<MatrixXcd>>> qtf(dt.Nb);
-			for (int ib = 0; ib < dt.Nb; ++ib) {
-				qtf[ib].SetCount(int(dt.qhead.size()));
-		        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
-		            qtf[ib][ih].SetCount(6);
-		        	for (int idf = 0; idf < 6; ++idf) {
-		        		qtf[ib][ih][idf].resize(dt.qw.size(), dt.qw.size());
-						for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
-							for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
-								qtf[ib][ih][idf](ifr1, ifr2) = QTF[ib][indices[ih]][idf](ifr1, ifr2);
-		        	}
-		        }
-			}
-			QTF = pick(qtf);
-		};
+		if (!Compare(dt.qhead, nhead)) {
+			UVector<int> order = GetSortOrderX(nhead, SortComplex);
+			SetSortOrder(nhead, order);
+			SetSortOrder(indices, order);		
 			
-		if (IsLoadedQTF(true))
-			SortQTF(dt.qtfsum);
-		if (IsLoadedQTF(false))
-			SortQTF(dt.qtfdif);
+			dt.qhead.resize(nhead.size());		// Cannot pick()
+			for (int ih = 0; ih < dt.qhead.size(); ++ih)
+				dt.qhead[ih] = nhead[ih];		
+			
+			auto SortQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &QTF) {
+				UArray<UArray<UArray<MatrixXcd>>> qtf(dt.Nb);
+				for (int ib = 0; ib < dt.Nb; ++ib) {
+					qtf[ib].SetCount(int(dt.qhead.size()));
+			        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+			            qtf[ib][ih].SetCount(6);
+			        	for (int idf = 0; idf < 6; ++idf) {
+			        		qtf[ib][ih][idf].resize(dt.qw.size(), dt.qw.size());
+							for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
+								for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
+									qtf[ib][ih][idf](ifr1, ifr2) = QTF[ib][indices[ih]][idf](ifr1, ifr2);
+			        	}
+			        }
+				}
+				QTF = pick(qtf);
+			};
+				
+			if (IsLoadedQTF(true))
+				SortQTF(dt.qtfsum);
+			if (IsLoadedQTF(false))
+				SortQTF(dt.qtfdif);
+		}
 	}
 }
 
@@ -390,6 +419,24 @@ void Hydro::SortFrequencies() {
 							MD[ib][ih][idf][ifr] = _md[ib][ih][idf][indices[ifr]];
 		};
 		
+		auto SortPotsRad = [&]() {
+			UArray<UArray<UArray<UArray<std::complex<double>>>>> _pots = clone(dt.pots_rad);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip)
+					for (int idf = 0; idf < 6; ++idf) 
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							dt.pots_rad[ib][ip][idf][ifr] = _pots[ib][ip][idf][indices[ifr]];
+		};
+		
+		auto SortPotsDifInc = [&](UArray<UArray<UArray<UArray<std::complex<double>>>>> &pots) {
+			UArray<UArray<UArray<UArray<std::complex<double>>>>> _pots = clone(pots);
+			for (int ib = 0; ib < dt.Nb; ++ib) 
+				for (int ip = 0; ip < pots[ib].size(); ++ip)
+					for (int ih = 0; ih < dt.Nh; ++ih) 
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							pots[ib][ip][ih][ifr] = _pots[ib][ip][ih][indices[ifr]];		
+		};
+		
 		if (IsLoadedA()) 
 			SortAB(dt.A);
 		if (IsLoadedB()) 
@@ -413,6 +460,15 @@ void Hydro::SortFrequencies() {
 		
 		if(IsLoadedMD())
 			SortMD(dt.md);
+		
+		if (IsLoadedPotsRad())
+			SortPotsRad();
+		if (IsLoadedPotsDif()) 
+			SortPotsDifInc(dt.pots_dif);
+		if (IsLoadedPotsInc()) 
+			SortPotsDifInc(dt.pots_inc);
+		if (IsLoadedPotsIncB()) 
+			SortPotsDifInc(dt.pots_inc_bmr);
 	}
 	if (!IsSorted(dt.qw)) {
 		UVector<int> indices = GetSortOrderX(dt.qw);
@@ -1368,7 +1424,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		else if (ext == ".hdb")
 			type = DIODORE;
 		else if (ext == ".h5")
-			type = BEMIOH5;
+			type = BEMIO_H5;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	}
@@ -1399,7 +1455,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		save->SaveCSVTable(fileName);		
 	else if (type == DIODORE)
 		save->SaveDiodoreHDB(fileName);		
-	else if (type == BEMIOH5)
+	else if (type == BEMIO_H5)
 		static_cast<BemioH5&>(*save).Save(fileName);
 	else
 		throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
@@ -1483,7 +1539,6 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);
 	
-	//C.SetCount(Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.C.setConstant(6, 6, NaNDouble);
 	
@@ -1607,10 +1662,13 @@ void Hydro::Report() const {
 }
 
 String Hydro::AfterLoad(Function <bool(String, int)> Status) {
+	Status(t_("Sorting frequencies and headings"), -1);
 	SortFrequencies();
 	SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);
 		
 	if ((!IsLoadedAinf() || !IsLoadedKirf()) && Bem().calcAinf) {
+		Status(t_("Obtaining Ainf, Kirf, and A0"), -1);
+		
 		if (!IsNum(Bem().maxTimeA) || Bem().maxTimeA == 0) 
 			return t_("Incorrect time for A∞ calculation. Please review it in Options");
 		if (!IsNum(Bem().numValsA) || Bem().numValsA < 10) 
@@ -1630,6 +1688,8 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	}
 		
 	if (Bem().calcAinf_w) {
+		Status(t_("Obtaining Ainf_w"), -1);
+		
 		if (!IsLoadedKirf())
 			GetK_IRF(min(Bem().maxTimeA, GetK_IRF_MaxT()), Bem().numValsA);
 		if (!IsLoadedAinf())
@@ -1672,11 +1732,13 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	        }
 		}
 	};
+	Status(t_("Filling QTF matrices"), -1);
 	if (IsLoadedQTF(true)) 
 		FillNullQTF(dt.qtfsum, true);
 	if (IsLoadedQTF(false))
 		FillNullQTF(dt.qtfdif, false);
 	
+	Status(t_("Postprocessing meshes and symmetrizing potentials"), -1);
 	for (int ib = 0; ib < dt.msh.size(); ++ib) {
 		Body &m = dt.msh[ib];
 		String ret;
@@ -1736,92 +1798,30 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			m.AfterLoad(dt.rho, dt.g, false, true);
 	}
 	if (IsLoadedPotsRad()) {
-		Initialize_AB(dt.A_P, 0);
-		Initialize_AB(dt.B_P, 0);
-		
-		dt.Apan = Tensor<double, 5>(dt.Nb, dt.pots_rad[0].size(), 6, 6, dt.Nf);
-		
-		Value6D n;
-		for (int ib = 0; ib < dt.Nb; ++ib)  {
-			const Value3D &c0 = dt.msh[ib].dt.c0;
-			for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) {
-				dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-				for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-					for (int idf2 = 0; idf2 < 6; ++idf2) 
-						for (int idf1 = 0; idf1 < 6; ++idf1) {
-							dt.A_P[idf1 + ib*6][idf2 + ib*6][ifr] += (dt.Apan(ib, ip, idf1, idf2, ifr) = A_pan(ib, ip, idf1, idf2, ifr, n));
-							dt.B_P[idf1 + ib*6][idf2 + ib*6][ifr] += B_pan(ib, ip, idf1, idf2, ifr, n);
-						}
-			}
-		}
-	}
-    	
+		Status(t_("Obtaining A and B from potentials"), -1);	
+		GetABFromPotentials();
+	}  
     if (IsLoadedPotsInc()) {	
-    	Initialize_Forces(dt.fk_pot, -1, 0);
-    	
-    	Value6D n;
-		for (int ih = 0; ih < dt.Nh; ++ih) 
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				for (int ib = 0; ib < dt.Nb; ++ib) {
-					const Value3D &c0 = dt.msh[ib].dt.c0;
-					for (int ip = 0; ip < dt.pots_inc[ib].size(); ++ip) {
-						dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-						for (int idf = 0; idf < 6; ++idf) 
-							dt.fk_pot[ib][ih](ifr, idf) += Ffk_pan(ib, ip, ih, idf, ifr, n);
-					}
-				}
-		//if (!IsLoadedFfk())
-		//	dt.fk = clone(dt.fk_pot);
+        Status(t_("Obtaining Ffk from potentials"), -1);
+        GetForcesFromPotentials(dt.pots_inc, dt.fk_pot);
 	}
-	
-	if (!dt.msh.IsEmpty() && !IsLoadedPotsIncB()) 
-		GeneratePotsInc();
-		
+	if (!dt.msh.IsEmpty() && !IsLoadedPotsIncB()) {
+		Status(t_("Obtaining incident potentials from mesh"), -1);
+		GetPotentialsIncident();
+	}	
 	if (IsLoadedPotsIncB()) {	
-    	Initialize_Forces(dt.fk_pot_bmr, -1, 0);
-    	
-    	Value6D n;
-		for (int ih = 0; ih < dt.Nh; ++ih) 
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				for (int ib = 0; ib < dt.Nb; ++ib) {
-					const Value3D &c0 = dt.msh[ib].dt.c0;
-					for (int ip = 0; ip < dt.pots_inc_bmr[ib].size(); ++ip) {
-						dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-						for (int idf = 0; idf < 6; ++idf) 
-							dt.fk_pot_bmr[ib][ih](ifr, idf) += Ffk_pan_bmr(ib, ip, ih, idf, ifr, n);
-					}
-				}
+		Status(t_("Obtaining Ffk from bmr potentials"), -1);
+		GetForcesFromPotentials(dt.pots_inc_bmr, dt.fk_pot_bmr);
 	}
 	if (IsLoadedPotsDif()) {
-		Initialize_Forces(dt.sc_pot, -1, 0);
-    	
-    	Value6D n;
-		for (int ih = 0; ih < dt.Nh; ++ih) 
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				for (int ib = 0; ib < dt.Nb; ++ib) {
-					const Value3D &c0 = dt.msh[ib].dt.c0;
-					for (int ip = 0; ip < dt.pots_dif[ib].size(); ++ip) {
-						dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-						for (int idf = 0; idf < 6; ++idf) 
-							dt.sc_pot[ib][ih](ifr, idf) += Fsc_pan(ib, ip, ih, idf, ifr, n);
-					}
-				}
-		//if (!IsLoadedFsc())
-		//	dt.sc = clone(dt.sc_pot);
+		Status(t_("Obtaining Fsc from potentials"), -1);		
+		GetForcesFromPotentials(dt.pots_dif, dt.sc_pot);
 	}
 	
 	CompleteForces1st();
 
 	return String();
 }
-/*
-int Hydro::GetW0() {
-	for (int i = 0; i < dt.w.size(); ++i) {
-		if (dt.w[i] < 0.0001)
-			return i;
-	}
-	return Null;
-}*/
 
 void Hydro::Get3W0(int &id1, int &id2, int &id3) {
 	UVector<double> ww = clone(dt.w);
@@ -2314,83 +2314,7 @@ double Hydro::GMpitch(int ib) const {
 	return GM(ib, 4);
 }
 
-double Hydro::A_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
-	const Value3D &c0 = dt.msh[ib].dt.c0;
-	Value6D n;
-	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-	return A_pan(ib, ip, idf1, idf2, ifr, n);
-}
-
-double Hydro::A_pan(int ib, int ip, int idf1, int idf2, int ifr, const Value6D &n) const {
-	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-	double s = pan.surface0 + pan.surface1;
-	const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
-	return dt.rho*rad.real()*n[idf1]*s;											// A = ρ Re(Φ) n ds
-}
-
-double Hydro::B_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
-	const Value3D &c0 = dt.msh[ib].dt.c0;
-	Value6D n;
-	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-	return B_pan(ib, ip, idf1, idf2, ifr, n);
-}
-
-double Hydro::B_pan(int ib, int ip, int idf1, int idf2, int ifr, const Value6D &n) const {
-	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-	double s = pan.surface0 + pan.surface1;
-	const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
-	return -dt.rho*dt.w[ifr]*rad.imag()*n[idf1]*s;								// B = -ρω Im(Φ) n ds
-}
-
-std::complex<double> Hydro::Ffk_pan(int ib, int ip, int ih, int idf, int ifr) const {
-	const Value3D &c0 = dt.msh[ib].dt.c0;
-	Value6D n;
-	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-	return Ffk_pan(ib, ip, ih, idf, ifr, n);
-}
-	
-std::complex<double> Hydro::Ffk_pan(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
-	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-	double s = pan.surface0 + pan.surface1;
-	double rho_w = dt.rho*dt.w[ifr];
-	const std::complex<double> &pot = dt.pots_inc[ib][ip][ih][ifr];
-	std::complex<double> p = rho_w*std::complex<double>(-pot.imag(), pot.real());	// p = iρωΦ
-	return p*n[idf]*s;									 							// F = p n ds
-}
-
-std::complex<double> Hydro::Ffk_pan_bmr(int ib, int ip, int ih, int idf, int ifr) const {
-	const Value3D &c0 = dt.msh[ib].dt.c0;
-	Value6D n;
-	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-	return Ffk_pan_bmr(ib, ip, ih, idf, ifr, n);
-}
-	
-std::complex<double> Hydro::Ffk_pan_bmr(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
-	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-	double s = pan.surface0 + pan.surface1;
-	double rho_w = dt.rho*dt.w[ifr];
-	const std::complex<double> &pot = dt.pots_inc_bmr[ib][ip][ih][ifr];
-	std::complex<double> p = rho_w*std::complex<double>(-pot.imag(), pot.real());	// p = iρωΦ
-	return p*n[idf]*s;									 							// F = p n ds
-}
-
-std::complex<double> Hydro::Fsc_pan(int ib, int ip, int ih, int idf, int ifr) const {
-	const Value3D &c0 = dt.msh[ib].dt.c0;
-	Value6D n;
-	dt.msh[ib].dt.mesh.panels[ip].NormalExt(n, c0);	
-	return Fsc_pan(ib, ip, ih, idf, ifr, n);
-}
-
-std::complex<double> Hydro::Fsc_pan(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
-	const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
-	double s = pan.surface0 + pan.surface1;
-	double rho_w = dt.rho*dt.w[ifr];
-	const std::complex<double> &pot = dt.pots_dif[ib][ip][ih][ifr];
-	std::complex<double> p = rho_w*std::complex<double>(-pot.imag(), pot.real());	// p = iρωΦ
-	return p*n[idf]*s;									 							// F = p n ds
-}
-
-void Hydro::GeneratePotsInc() {
+void Hydro::GetPotentialsIncident() {
 	Initialize_PotsIncDiff(dt.pots_inc_bmr);
 
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) {		
@@ -2415,6 +2339,45 @@ void Hydro::GeneratePotsInc() {
 						dt.pots_inc_bmr[ib][ip][ih][ifr] = g_w*cs*std::complex<double>(sin(ex), cos(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))	Wamit criterion	
 					}
 				}
+			}
+		}
+	}
+}
+
+void Hydro::GetABFromPotentials() {
+	Initialize_AB(dt.A_P, 0);
+	Initialize_AB(dt.B_P, 0);
+	
+	dt.Apan = Tensor<double, 5>(dt.Nb, dt.pots_rad[0].size(), 6, 6, dt.Nf);
+	
+	for (int ib = 0; ib < dt.Nb; ++ib)  {
+		const Point3D &c0 = dt.msh[ib].dt.c0;
+		for (int ip = 0; ip < dt.pots_rad[ib].size(); ++ip) {
+			Value6D n = dt.msh[ib].dt.mesh.panels[ip].NormalExt(c0);	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+				for (int idf2 = 0; idf2 < 6; ++idf2) {
+					for (int idf1 = 0; idf1 < 6; ++idf1) {
+						double A = dt.Apan(ib, ip, idf1, idf2, ifr) = A_pan(ib, ip, idf1, idf2, ifr, n);
+						dt.A_P[idf1 + ib*6][idf2 + ib*6][ifr] += A_fromDimFactor(idf1, idf2)*A;
+						dt.B_P[idf1 + ib*6][idf2 + ib*6][ifr] += B_fromDimFactor(ifr, idf1, idf2)*B_pan(ib, ip, idf1, idf2, ifr, n);
+					}
+				}
+			}
+		}
+	}
+}
+
+void Hydro::GetForcesFromPotentials(const UArray<UArray<UArray<UArray<std::complex<double>>>>> &pot, Forces &f) {
+	Initialize_Forces(f, -1, 0);
+	
+	for (int ih = 0; ih < dt.Nh; ++ih) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			const Point3D &c0 = dt.msh[ib].dt.c0;
+			for (int ip = 0; ip < pot[ib].size(); ++ip) {
+				Value6D n = dt.msh[ib].dt.mesh.panels[ip].NormalExt(c0);	
+				for (int idf = 0; idf < 6; ++idf) 
+					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+						f[ib][ih](ifr, idf) += F_fromDimFactor(idf)*F_pan(pot, ib, ip, ih, idf, ifr, n);
 			}
 		}
 	}

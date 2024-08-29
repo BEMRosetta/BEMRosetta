@@ -219,8 +219,8 @@ void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UV
 	hydros[id].DeleteHeadingsQTF(idHeadQTF);
 }
 
-void BEM::TranslationTo(int id, const MatrixXd &to) {
-	hydros[id].GetTranslationTo(to);
+void BEM::TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status) {
+	hydros[id].GetTranslationTo(to, Status);
 }
 
 void BEM::WaveTo(int id, double xto, double yto) {
@@ -1096,18 +1096,28 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	AfterLoad();
 }
 
-void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT ssolver, 
-			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) const {
-	if (ssolver == Hydro::CAPYTAINE || ssolver == Hydro::NEMOH || ssolver == Hydro::NEMOHv115 || ssolver == Hydro::NEMOHv3 || ssolver == Hydro::SEAFEM_NEMOH)
-		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, ssolver, x0z, y0z);
-	else if (ssolver == Hydro::CAPYTAINE_PY)
+void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
+			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) {
+	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
+		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, solver, x0z, y0z);
+	else if (solver == Hydro::CAPYTAINE_PY)
 		static_cast<const Nemoh &>(*this).SaveFolder_Capy(folder, withPotentials, withMesh, x0z, y0z, lids);
-	else if (ssolver == Hydro::HAMS)
+	else if (solver == Hydro::HAMS)
 		static_cast<const Hams &>(*this).SaveFolder(folder, bin, numCases, numThreads, x0z, y0z, lids);
-	else if (ssolver == Hydro::ORCAWAVE_YML)
+	else if (solver == Hydro::ORCAWAVE_YML)
 		static_cast<const OrcaWave &>(*this).SaveFolder_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
-	else if (ssolver == Hydro::AQWA_DAT)
+	else if (solver == Hydro::AQWA_DAT)
 		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, withQTF, x0z, y0z);
+	else if (solver == Hydro::BEMROSETTA_H5) {
+		dt.solver = BEMROSETTA_H5;
+		if (!dt.msh.IsEmpty() && !IsLoadedPotsIncB()) 
+			GetPotentialsIncident();
+		if (IsLoadedPotsIncB()) 
+			GetForcesFromPotentials(dt.pots_inc_bmr, dt.fk_pot_bmr);
+		
+		dt.fk = clone(dt.fk_pot_bmr);
+		static_cast<BemioH5&>(*this).Save(AFX(folder, GetFileTitle(folder) + ".h5"));
+	}
 	else
 		throw Exc(t_("Format is not supported"));
 }

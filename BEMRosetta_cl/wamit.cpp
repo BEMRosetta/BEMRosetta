@@ -13,12 +13,17 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 		int iperin = Null, iperout = Null;
 		
 		if (ext == ".out") {
-			dt.solver = Hydro::WAMIT;
-		
 			String fileout = ForceExtSafer(file, ".out");
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
-			if (!Load_out(fileout)) 
+			if (!Load_out(fileout, Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
+		} else if (S(".mcn.hdf").Find(ext) >= 0) {
+			FindFile ff(AFX(GetFileDirectory(file), "*.out"));
+			if (!ff)
+				BEM::Print(S(": ** out associated to input file ") + t_("Not found") + "**");
+			else if (!Load_out(ff.GetPath(), Status)) 
+				BEM::Print(S(": ** out ") + t_("Not found") + "**");
+				
 		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0) {
 			if (GetFileName(GetFileFolder(file)) == "Wamit_format")
 				dt.solver = Hydro::HAMS_WAMIT;
@@ -178,13 +183,16 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	}
 }
 
-bool Wamit::Load_out(String fileName) {
+bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
-				
-	dt.Nf = 0;
-	dt.Nh = 0;
+	
+	Status(Format("Loading .out file %s", fileName), Null);
+			
+	dt.Nf = dt.Nh = 0;
+	
+	dt.solver = Hydro::WAMIT;
 	
 	int pos;
 	int ibody = -1;
@@ -616,8 +624,10 @@ bool Wamit::Load_out(String fileName) {
 	if (dt.Nb == 0)
 		throw Exc(t_("Incorrect .out format"));
 		
-	if (isHydrostar) {		// Hydrostar corrections due to mismatch with Wamit rules
-		dt.solver = Hydro::HYDROSTAR;
+	if (isHydrostar) {		// HydroStar corrections due to mismatch with Wamit rules
+		Status("Processing HydroStar data", Null);
+		
+		dt.solver = Hydro::HYDROSTAR_OUT;
 		
 		UVector<Point3D> refPoint;
 		UVector<Pointf> refWave;
@@ -635,6 +645,8 @@ bool Wamit::Load_out(String fileName) {
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				refWave[ib] = Pointf(dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y);
 		}
+		Load_HDF(Status);
+			
 		for (int ib = 0; ib < dt.Nb; ++ib)	// Translates all bodies phase to 0,0, by translating -refWave
 			AddWave(ib, -refWave[ib].x, -refWave[ib].y, dt.g);	
 	}
@@ -642,7 +654,7 @@ bool Wamit::Load_out(String fileName) {
 	return true;
 }
 
-// This is really only for Hydrostar
+// This is only for HydroStar
 bool Wamit::Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave) {
 	if (nb == 0)
 		return false;

@@ -389,8 +389,8 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	}
 	
 	if (!dt.msh.IsEmpty()) {
-		for (int i = 0; i < dt.Nb; ++i)
-			dt.msh[i].dt.SetCode(Body::AQWA_LIS);
+		for (int ib = 0; ib < dt.Nb; ++ib)
+			dt.msh[ib].dt.SetCode(Body::AQWA_LIS);
 	}
 			
 	int ib;	

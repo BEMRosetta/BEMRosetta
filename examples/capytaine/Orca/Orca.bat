@@ -1,0 +1,1 @@
+bemrosetta_cl -orca -numtries 5 -numthread 10 -rw "C:\Desarrollo\BEMRosetta\examples\capytaine\Orca\Orca.wave.yml" "C:\Desarrollo\BEMRosetta\examples\capytaine\Orca\Orca.flex.yml"

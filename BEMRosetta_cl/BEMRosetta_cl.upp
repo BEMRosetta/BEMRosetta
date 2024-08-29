@@ -47,6 +47,7 @@ file
 	orcawave.cpp,
 	diodore.cpp,
 	bemioh5.cpp,
+	hydrostar.cpp,
 	capytaine.cpp,
 	deeplineswind.cpp,
 	foamm.cpp,

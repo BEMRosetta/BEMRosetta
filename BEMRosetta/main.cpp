@@ -175,20 +175,13 @@ void Main::Init() {
 	butWindow.SetImage(Img::application_double()).Tip(t_("Open new window"));
 	butWindow.Hide();
 
-	auto Exec = [](String command) {
-#if defined(PLATFORM_WIN32) 
-		WinExec(command, SW_SHOWNORMAL);
-#else
-		system(command + "&");
-#endif		
-	};
 	butWindow << [&] {
 		if (tab.IsAt(mainBody)) 
-			Exec(Format("%s -gui mesh", GetExeFilePath()));
+			LaunchCommand(Format("\"%s\" -gui mesh", GetExeFilePath()));
 		else if (tab.IsAt(mainBEM)) 
-			Exec(Format("%s -gui bem", GetExeFilePath()));
+			LaunchCommand(Format("\"%s\" -gui bem", GetExeFilePath()));
 		else if (tab.IsAt(mainFAST)) 
-			Exec(Format("%s -gui time", GetExeFilePath()));
+			LaunchCommand(Format("\"%s\" -gui time", GetExeFilePath()));
 	};
 
 	tab.WhenSet = [&] {

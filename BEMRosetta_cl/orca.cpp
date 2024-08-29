@@ -433,6 +433,7 @@ void Orca::LoadParameters(Hydro &hy) {
 			}
 		}
 		hy.dt.msh[ib].dt.name = FormatInt(ib+1);
+		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
 	}
 	
 	auto LoadAB = [&](UArray<UArray<VectorXd>> &ab, int type, const char *stype, const Matrix<double, 6, 6> &factor) {
@@ -687,7 +688,7 @@ void Orca::LoadParameters(Hydro &hy) {
 		const TDiffractionPanelGeometry &pan = panels[ip];
 		int ib = pan.ObjectId;
 		
-		if (ib < 0)		// Artificial damping lid
+		if (ib < 0)		// Artificial damping lid not loaded
 			continue;
 		
 		Panel &p = hy.dt.msh[ib].dt.mesh.panels.Add();
@@ -726,7 +727,7 @@ void Orca::LoadParameters(Hydro &hy) {
 					for (int idf = 0; idf < 6; ++idf) {
 						const TComplex &c = presRad(idf + 6*ib, ifr, ip);
 						if (ib == panelIb[ip])
-							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += std::complex<double>(c.Im, -c.Re)/rho_w; // p = iρωΦ
+							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += std::complex<double>(c.Im, -c.Re)/rho_w; // p = iρωΦ   Φ = -ip/ρω = Im(p/ρω) - iRe(p/ρω)
 					}
 			}
 		}
@@ -753,7 +754,7 @@ void Orca::LoadParameters(Hydro &hy) {
 				}
 		}
 				
-		hy.GeneratePotsInc();
+		hy.GetPotentialsIncident();
 		
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 			int nnp = hy.dt.msh[ib].dt.mesh.panels.size();

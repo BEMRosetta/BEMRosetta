@@ -249,7 +249,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 					hy.dt.name += Format("_h%.0f", _h[ih]);
 				hy.dt.dimen = true;
 				hy.dt.len = 1;
-				hy.dt.solver = Hydro::CAPYNC;
+				hy.dt.solver = Hydro::CAPY_NC;
 		
 				hy.dt.x_w = hy.dt.y_w = 0;
 				
@@ -314,11 +314,11 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 						int ib = bodyPan[ipall];
 						int ip = bodyIdEachPan[ipall];
 						for (int ifr = 0; ifr < Nf; ++ifr) {
-							double rw2 = hy.dt.rho*sqr(hy.dt.w[ifr]);							
+							double rw = hy.dt.rho*sqr(hy.dt.w[ifr]);							
 							for (int idf = 0; idf < 6; ++idf) {
 								double re = rad_press(irho, ih, 0, ifr, idf + 6*ib, ipall);
 								double im = rad_press(irho, ih, 1, ifr, idf + 6*ib, ipall);
-								hy.dt.pots_rad[ib][ip][idf][ifr] += std::complex<double>(-re, im)/rw2; // p = iρωΦ
+								hy.dt.pots_rad[ib][ip][idf][ifr] += std::complex<double>(-re, im)/rw; // p = iρωΦ
 							}
 						}
 					}
@@ -364,8 +364,8 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 }
 
 
-	void Initialize_PotsRad();
-	void Initialize_PotsIncDiff(UArray<UArray<UArray<UArray<std::complex<double>>>>> &pots);
+//	void Initialize_PotsRad();
+//	void Initialize_PotsIncDiff(UArray<UArray<UArray<UArray<std::complex<double>>>>> &pots);
 	
 // diffraction_force		rexim x Nf x Nh x 6xNb
 
@@ -379,7 +379,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 // radiation_damping
 // diffraction_force		2 x 2 x re/im x Nf x Nh x 6xNb
 // Froude_Krylov_force
-// excitation_force (no esta siempre)
+// excitation_force 
 
 // A						[6*Nb][6*Nb][Nf]
 // C						[Nb](6, 6)

@@ -38,7 +38,7 @@ void InitGrid(GridCtrl &grid, EditDouble edit[]) {
 }
 
 MainSolverBody::MainSolverBody() {
-	const String meshFiles = ".gdf .dat .stl .pnl .msh .grd";
+	const String meshFiles = ".gdf .dat .stl .pnl .msh .grd .hst";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	
@@ -153,8 +153,9 @@ void MainSolver::Init() {
 		int solver = ~save.dropSolver;
 		bool isNemoh = solver >= Hydro::NEMOH && solver <= Hydro::NEMOHv3;
 		
-		save.symX.Enable(!isNemoh);
-		save.numThreads.Enable(!(isNemoh || solver == Hydro::CAPYTAINE || solver == Hydro::CAPYTAINE_PY));
+		save.symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
+		save.symY.Enable(solver != Hydro::BEMROSETTA_H5);
+		save.numThreads.Enable(!(isNemoh || solver == Hydro::CAPYTAINE || solver == Hydro::CAPYTAINE_PY || solver == Hydro::BEMROSETTA_H5));
 		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::ORCAWAVE_YML);
 		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS);
 		save.numSplit.Enable(isNemoh && save.opSplit);
@@ -269,6 +270,8 @@ void MainSolver::Load(String file) {
 	Hydro tmp_hy;											// Just for loading and transferring to gen and bodies
 	
 	Progress progress(t_("Loading BEM files..."), 100); 
+
+	WaitCursor waitcursor;
 	
 	tmp_hy.LoadCase(file, [&](String str, int _pos) {
 			progress.SetText(str); 
@@ -344,11 +347,11 @@ void MainSolver::Load(String file) {
 	gen.xeff <<= tmp_hy.dt.x_w;
 	gen.yeff <<= tmp_hy.dt.y_w;
 	
-	gen.boxIrf <<= tmp_hy.dt.Tirf.size() > 0;
+	/*gen.boxIrf <<= tmp_hy.dt.Tirf.size() > 0;
 	if (tmp_hy.dt.Tirf.size() != 0) {
 		gen.irfStep <<= (tmp_hy.dt.Tirf[1] - tmp_hy.dt.Tirf[0]);
 		gen.irfDuration <<= Last(tmp_hy.dt.Tirf);
-	}
+	}*/
 }
 
 void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
@@ -403,14 +406,14 @@ bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids) {
 	hy.dt.y_w = ~gen.yeff;
 	
 	//hd.irf = ~nemoh.boxIrf;
-	if (~gen.boxIrf) {
+	/*if (~gen.boxIrf) {
 		//hd.irfStep = ~nemoh.irfStep;
 		//hd.irfDuration = ~nemoh.irfDuration;
 		double irfStep = ~gen.irfStep;
 		double irfDuration = ~gen.irfDuration;
 		int n = int(irfDuration/irfStep); 
 		LinSpaced(hy.dt.Tirf, n, 0, irfDuration);
-	} else
+	} else*/
 		hy.dt.Tirf.resize(0);
 		// hd.irfStep = hd.irfDuration = 0;
 	
@@ -560,15 +563,15 @@ bool MainSolver::OnSave() {
 		if (save.withPotentials)
 			save.withMesh <<= true;
 		
-		//bool isNemoh = ~save.dropSolver != Hydro::HAMS;
-		
 		Hydro hy;
 		UArray<Body> lids;
 		
 		if (!CopyHydro(hy, lids))
 			return false;
 		
-		UVector<String> errors = hy.Check((Hydro::BEM_FMT)int(~save.dropSolver));
+		Hydro::BEM_FMT solver = (Hydro::BEM_FMT)int(~save.dropSolver);
+		
+		UVector<String> errors = hy.Check(solver);
 		
 		if (!errors.IsEmpty()) {
 			String str;
@@ -582,8 +585,8 @@ bool MainSolver::OnSave() {
 				return false;
 		}
 		if (!DirectoryExists(folder)) {
-			if (!PromptYesNo(Format(t_("Folder %s does not exist.&Do you wish to create it?"), DeQtfLf(folder))))
-				return false;
+			//if (!PromptYesNo(Format(t_("Folder %s does not exist.&Do you wish to create it?"), DeQtfLf(folder))))
+			//	return false;
 			RealizeDirectory(folder);
 		} else {
 			if (!PromptYesNo(Format(t_("Folder %s contents will be deleted.&Do you wish to continue?"), DeQtfLf(folder))))
@@ -605,7 +608,7 @@ bool MainSolver::OnSave() {
 		WaitCursor waitcursor;
 		
 		hy.SaveFolderCase(folder, ~save.opIncludeBin, ~save.opSplit ? int(~save.numSplit) : 1, ~save.numThreads, 
-				(Hydro::BEM_FMT)int(~save.dropSolver), ~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids);
+				solver, ~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids);
 
 	} catch (Exc e) {
 		BEM::PrintError(e);

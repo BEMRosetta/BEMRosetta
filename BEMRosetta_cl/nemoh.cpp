@@ -1235,7 +1235,8 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
 	if (!Bem().pythonEnv.IsEmpty())
 		bat << "call conda activate " << Bem().pythonEnv << "\n";
-	bat << "python \"" << name << ".py\"";
+	bat << "python \"" << name << ".py\"\n";
+	bat << "@IF \%ERRORLEVEL\% NEQ 0 PAUSE \"Error\"";
 	
 	String filePy  = AFX(folder, name + ".py");
 	String spy;
@@ -1262,13 +1263,13 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
 		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
 		
-		spy <<	Format("mesh_%d = cpt.load_mesh('%s', file_format='nemoh')\n", ib+1, dest);
+		spy <<	Format("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(dest));
 		
 		bool isLid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
 		if (isLid) {
 			String destLid = AFX(folderMesh, Format(t_("Body_%d_lid.dat"), ib+1));
 			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, dt.symY);
-			spy << Format("lid_mesh_%d = cpt.load_mesh('%s', file_format='nemoh')\n", ib+1, destLid);
+			spy << Format("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(destLid));
 		} else if (automaticLid)
 			spy << Format("lid_mesh_%d = mesh_%d.generate_lid()\n", ib+1, ib+1);
 		

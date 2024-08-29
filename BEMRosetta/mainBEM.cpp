@@ -1875,7 +1875,13 @@ MenuAdvancedReference::MenuAdvancedReference() {
 				for (int idf = 0; idf < 3; ++idf) 
 					to(idf, ib) = c_array.Get(ib, idf+1);
 	
-			Bem().TranslationTo(idx, to);
+			Progress progress(t_("Translating data..."), 100);
+			
+			Bem().TranslationTo(idx, to, [&](String str, int _pos) {
+				progress.SetText(str); 
+				progress.SetPos(_pos); 
+				return !progress.Canceled();
+			});
 		
 			mbem->AfterBEM();
 			
@@ -1901,23 +1907,23 @@ void MainBEM::AfterBEM() {
 
 	Progress progress(t_("Processing loaded data..."), 18);
 	int pos = 0;
-	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, idxs, ~menuPlot.showNdim));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixA)).Enable(mainMatrixA.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, idxs, false));					progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, idxs, ~menuPlot.showNdim));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixK2)).Enable(mainMatrixK2.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);	
 	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, idxs, false));			progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixDquad)).Enable(mainMatrixDquad.Load(Bem().hydros, idxs, false));			progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(idxs));											progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(idxs));									progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(idxs));											progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(idxs));											progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(idxs));													progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(idxs));											progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(idxs));													progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(idxs));													progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(idxs, menuPlot.headMD.GetCursor()));				progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(idxs, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(idxs, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(idxs, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(idxs, menuPlot.head1st.GetCursor()));			progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());													progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */idxs.size() > 0);					progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());												progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */idxs.size() > 0);				progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainBody)).Enable(mainBody.Load());											progress.SetPos(pos++);
 	
 	bool isLoadedSS = false;

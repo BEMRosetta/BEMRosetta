@@ -101,9 +101,6 @@ void OrcaWave::Load_OF_YML() {
 	
 	dt.g = 9.80665;		// Default value used when SI units
 
-	//bool symXZ = false, symYZ = false;
-	//bool foundWireFrameSymmetry = false;
-	
 	YmlParser fy(in);
 
 	FileInLine::Pos fpos = in.GetPos();
@@ -137,6 +134,7 @@ void OrcaWave::Load_OF_YML() {
 					throw Exc(in.Str() + "\n" + t_("Failed body count"));
 				dt.msh.SetCount(dt.Nb+1);
 				dt.msh[dt.Nb].dt.name = fy.GetVal();
+				dt.msh[dt.Nb].dt.SetCode(Body::ORCAFLEX_YML);
 				dt.Nb++;
 				c0s << Null;
 			} else if (fy.FirstIs("WavesReferredToBy") && fy.Index() == 0) {		// Only for the first body
@@ -321,10 +319,10 @@ void OrcaWave::Load_OF_YML() {
 					for (int i4 = 0; i4 < 4; ++i4)
 						dt.msh[ib].dt.mesh.panels[ip].id[i4] = pan[i4]-1;
 				}
-				if (dt.symX) 
+				/*if (dt.symX) 
 					dt.msh[ib].dt.mesh.DeployXSymmetry();
 				if (dt.symY) 
-					dt.msh[ib].dt.mesh.DeployYSymmetry();
+					dt.msh[ib].dt.mesh.DeployYSymmetry();*/
 				
 			} else if (fy.FirstIs("Draughts")) {
 				Eigen::MatrixXd &inertia = dt.msh[ib].dt.M;

@@ -42,6 +42,17 @@ void BodyBody::Init() {
 		
 		Refresh();
 	};
+	
+	opPotPress <<= 0;
+	opPotPress.WhenAction = [&] {
+		for (auto &d : grd.dataSourcePanels) 
+			d.pot = opPotPress == 0;
+		
+		grd.UpdatePanelHeaders();
+		ArrayCtrlVirtual_UpdateHeaders(panels, grd.grdPanels);
+		
+		Refresh();
+	};
 }
 
 void BodyBody::Load(int idx, int ib) {

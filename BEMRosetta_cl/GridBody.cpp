@@ -13,7 +13,7 @@ using namespace Upp;
 using namespace Eigen;
 
 
-void GridBody::TableHeaders(const Hydro &hy, double head, UVector<String> &str, UVector<char> &group, UVector<int> &col) {
+void GridBody::TableHeaders(const Hydro &hy, double head, bool pot, UVector<String> &str, UVector<char> &group, UVector<int> &col) {
 	const char *xyz[] = {"x", "y", "z"};
 	
 	str.Clear();			group.Clear();		col.Clear();
@@ -36,8 +36,13 @@ void GridBody::TableHeaders(const Hydro &hy, double head, UVector<String> &str, 
 	if (hy.IsLoadedPotsRad()) {
 		int n = 0;
 		for (int i = 0; i < 6; ++i) {
-			str << Format(t_("|Φrad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
-			str << Format(t_("arg(Φrad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;
+			if (pot) {
+				str << Format(t_("|Φrad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
+				str << Format(t_("arg(Φrad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;
+			} else {
+				str << Format(t_("|Prad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
+				str << Format(t_("arg(Prad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;	
+			}
 		}
 		if (Bem().onlyDiagonal) {
 			for (int r = 0; r < 6; ++r) {
@@ -62,8 +67,13 @@ void GridBody::TableHeaders(const Hydro &hy, double head, UVector<String> &str, 
 	} 
 	if (hy.IsLoadedPotsInc()) {
 		int n = 0;
-		str << Format(t_("|Φinc| %.0f"), head); 	group << 'i'; 	col << n++;
-		str << Format(t_("arg(Φinc) %.0f"), head);	group << 'i'; 	col << n++;
+		if (pot) {
+			str << Format(t_("|Φinc| %.0f"), head); 	group << 'i'; 	col << n++;
+			str << Format(t_("arg(Φinc) %.0f"), head);	group << 'i'; 	col << n++;
+		} else {
+			str << Format(t_("|Pinc| %.0f"), head); 	group << 'i'; 	col << n++;
+			str << Format(t_("arg(Pinc) %.0f"), head);	group << 'i'; 	col << n++;	
+		}
 		for (int idf = 0; idf < 6; ++idf) {
 			str << Format(t_("|Ffk| %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
 			str << Format(t_("arg(Ffk) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
@@ -71,8 +81,13 @@ void GridBody::TableHeaders(const Hydro &hy, double head, UVector<String> &str, 
 	}
 	if (hy.IsLoadedPotsIncB()) {
 		int n = 0;
-		str << Format(t_("|Φinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
-		str << Format(t_("arg(Φinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;
+		if (pot) {
+			str << Format(t_("|Φinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
+			str << Format(t_("arg(Φinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;
+		} else {
+			str << Format(t_("|Pinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
+			str << Format(t_("arg(Pinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;			
+		}
 		for (int idf = 0; idf < 6; ++idf) {
 			str << Format(t_("|Ffk_bmr| %s %.0f"), BEM::StrDOF(idf), head); 	group << 'b'; col << n++;
 			str << Format(t_("arg(Ffk_bmr) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'b'; col << n++;
@@ -80,8 +95,13 @@ void GridBody::TableHeaders(const Hydro &hy, double head, UVector<String> &str, 
 	}
 	if (hy.IsLoadedPotsDif()) {
 		int n = 0;
-		str << Format(t_("|Φdif|"), head); 	group << 'd'; col << n++;
-		str << Format(t_("arg(Φdif) %.0f"), head); 	group << 'd'; col << n++;
+		if (pot) {
+			str << Format(t_("|Φdif|"), head); 	group << 'd'; col << n++;
+			str << Format(t_("arg(Φdif) %.0f"), head); 	group << 'd'; col << n++;
+		} else {
+			str << Format(t_("|Pdif|"), head); 	group << 'd'; col << n++;
+			str << Format(t_("arg(Pdif) %.0f"), head); 	group << 'd'; col << n++;	
+		}
 	}
 }
 		
@@ -141,7 +161,7 @@ void GridBody::Load(int idx, int ib, int &numNodes, int &numPanels) {
 		UVector<String> str;
 		UVector<char> group;
 		UVector<int> col;
-		TableHeaders(hy, head, str, group, col);
+		TableHeaders(hy, head, true, str, group, col);
 		
 		for (int i = 0; i < str.size(); ++i)
 			grdPanels.AddVirtualCol(str[i], dataSourcePanels.Add().Init(idx, ib, group[i], col[i]), 60);		
@@ -155,6 +175,7 @@ void GridBody::UpdatePanelHeaders() {
 	
 	int idx = First(dataSourcePanels).idx;
 	int ih = First(dataSourcePanels).ih;
+	bool pot = First(dataSourcePanels).pot;
 	
 	const Hydro &hy = Bem().hydros[idx];
 	
@@ -163,7 +184,7 @@ void GridBody::UpdatePanelHeaders() {
 	UVector<String> str;
 	UVector<char> group;
 	UVector<int> col;
-	TableHeaders(hy, head, str, group, col);
+	TableHeaders(hy, head, pot, str, group, col);
 	
 	for (int i = 0; i < str.size(); ++i)
 		grdPanels.SetVirtualHeader(i, str[i]);	
@@ -212,10 +233,17 @@ Value GridBody::DataSourcePanels::Format(const Value& q) const {
 	} else if (group == 'r') {
 		if (col < 2*6) {
 			int idf = col/2;
-			if (col%2 == 0)
-				return abs		(hy.dt.pots_rad[ib][ip][idf][ifr]);
-			else
-				return ToDeg(arg(hy.dt.pots_rad[ib][ip][idf][ifr]));
+			if (pot) {
+				if (col%2 == 0)
+					return abs		(hy.dt.pots_rad[ib][ip][idf][ifr]);
+				else
+					return ToDeg(arg(hy.dt.pots_rad[ib][ip][idf][ifr]));
+			} else {
+				if (col%2 == 0)
+					return abs		(hy.P_rad(ib, ip, idf, ifr));
+				else
+					return ToDeg(arg(hy.P_rad(ib, ip, idf, ifr)));
+			}
 		}
 		int cl = col - 12;
 		if (Bem().onlyDiagonal) {
@@ -240,10 +268,17 @@ Value GridBody::DataSourcePanels::Format(const Value& q) const {
 		}
 	} else if (group == 'i') {
 		if (col < 2) {
-			if (col == 0)
-				return abs		(hy.dt.pots_inc[ib][ip][ih][ifr]);
-			else
-				return ToDeg(arg(hy.dt.pots_inc[ib][ip][ih][ifr]));
+			if (pot) {
+				if (col == 0)
+					return abs		(hy.dt.pots_inc[ib][ip][ih][ifr]);
+				else
+					return ToDeg(arg(hy.dt.pots_inc[ib][ip][ih][ifr]));
+			} else {
+				if (col == 0)
+					return abs		(hy.P_inc(ib, ip, ih, ifr));
+				else
+					return ToDeg(arg(hy.P_inc(ib, ip, ih, ifr)));
+			}
 		}
 		int cl = col - 2;
 		int idf = cl/2;
@@ -253,10 +288,17 @@ Value GridBody::DataSourcePanels::Format(const Value& q) const {
 			return ToDeg(arg(hy.Ffk_pan(ib, ip, ih, idf, ifr)));
 	} else if (group == 'b') {
 		if (col < 2) {
-			if (col == 0)
-				return abs		(hy.dt.pots_inc_bmr[ib][ip][ih][ifr]);
-			else
-				return ToDeg(arg(hy.dt.pots_inc_bmr[ib][ip][ih][ifr]));
+			if (pot) {
+				if (col == 0)
+					return abs		(hy.dt.pots_inc_bmr[ib][ip][ih][ifr]);
+				else
+					return ToDeg(arg(hy.dt.pots_inc_bmr[ib][ip][ih][ifr]));
+			} else {
+				if (col == 0)
+					return abs		(hy.P_inc_bmr(ib, ip, ih, ifr));
+				else
+					return ToDeg(arg(hy.P_inc_bmr(ib, ip, ih, ifr)));	
+			}
 		}
 		int cl = col - 2;
 		int idf = cl/2;
@@ -266,10 +308,17 @@ Value GridBody::DataSourcePanels::Format(const Value& q) const {
 			return ToDeg(arg(hy.Ffk_pan_bmr(ib, ip, ih, idf, ifr)));
 	} else if (group == 'd') {
 		if (col < 2) {
-			if (col == 0)
-				return abs		(hy.dt.pots_dif[ib][ip][ih][ifr]);
-			else
-				return ToDeg(arg(hy.dt.pots_dif[ib][ip][ih][ifr]));
+			if (pot) {
+				if (col == 0)
+					return abs		(hy.dt.pots_dif[ib][ip][ih][ifr]);
+				else
+					return ToDeg(arg(hy.dt.pots_dif[ib][ip][ih][ifr]));
+			} else {
+				if (col == 0)
+					return abs		(hy.P_dif(ib, ip, ih, ifr));
+				else
+					return ToDeg(arg(hy.P_dif(ib, ip, ih, ifr)));	
+			}
 		}
 	}
 	return Null;
