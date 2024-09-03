@@ -572,15 +572,33 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 		for (int idf = 0; idf < 3; ++idf) 	
 			delta(idf, ib) = to(idf, ib) - dt.msh[ib].dt.c0[idf];
 		
-	
-	auto TransAB = [&](auto &A) {
-        auto An = clone(A);
-	
+	auto CopyFrom = [](const UArray<UArray<VectorXd>> &a, int i0, int j0, int iif)->Matrix3d {
+		Matrix3d ret;
+		
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				ret(i, j) = a[i0+i][j0+j][iif];
+		return ret;
+	};
+	auto CopyTo = [](const Matrix3d &from, UArray<UArray<VectorXd>> &a, int i0, int j0, int iif){
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				a[i0+i][j0+j][iif] = from(i, j);
+	};
+		
+	auto TransAB = [&](UArray<UArray<VectorXd>> &A) {
+        UArray<UArray<VectorXd>> An;
+        Initialize_AB(An);
+
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			int ib6 = ib*6;
 			double dx = delta(0, ib);
 			double dy = delta(1, ib);
 			double dz = delta(2, ib);
+			
+			Matrix3d Rg {{  0, -dz,  dy},
+						 { dz,   0, -dx},
+						 {-dy,  dx,   0}};
 			
 			for (int jb = 0; jb < dt.Nb; ++jb) {
 				int jb6 = jb*6;
@@ -592,41 +610,15 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 				}
 				
 				for (int iif = 0; iif < dt.Nf; ++iif) {
-					An[ib6 + 0][jb6 + 3][iif] += - dy*A[ib6 + 0][jb6 + 2][iif] + dz*A[ib6 + 0][jb6 + 1][iif];
-					An[ib6 + 1][jb6 + 3][iif] += - dy*A[ib6 + 1][jb6 + 2][iif] + dz*A[ib6 + 1][jb6 + 1][iif];
-					An[ib6 + 2][jb6 + 3][iif] += - dy*A[ib6 + 2][jb6 + 2][iif] + dz*A[ib6 + 2][jb6 + 1][iif];
-
-					An[ib6 + 0][jb6 + 4][iif] += - dz*A[ib6 + 0][jb6 + 0][iif] + dx*A[ib6 + 0][jb6 + 2][iif];
-					An[ib6 + 1][jb6 + 4][iif] += - dz*A[ib6 + 1][jb6 + 0][iif] + dx*A[ib6 + 1][jb6 + 2][iif];
-					An[ib6 + 2][jb6 + 4][iif] += - dz*A[ib6 + 2][jb6 + 0][iif] + dx*A[ib6 + 2][jb6 + 2][iif];
-
-					An[ib6 + 0][jb6 + 5][iif] += - dx*A[ib6 + 0][jb6 + 1][iif] + dy*A[ib6 + 0][jb6 + 0][iif];
-					An[ib6 + 1][jb6 + 5][iif] += - dx*A[ib6 + 1][jb6 + 1][iif] + dy*A[ib6 + 1][jb6 + 0][iif];
-					An[ib6 + 2][jb6 + 5][iif] += - dx*A[ib6 + 2][jb6 + 1][iif] + dy*A[ib6 + 2][jb6 + 0][iif];
-
-					An[ib6 + 3][jb6 + 0][iif] += - dy*A[ib6 + 2][jb6 + 0][iif] + dz*A[ib6 + 1][jb6 + 0][iif];	
-					An[ib6 + 3][jb6 + 1][iif] += - dy*A[ib6 + 2][jb6 + 1][iif] + dz*A[ib6 + 1][jb6 + 1][iif];
-					An[ib6 + 3][jb6 + 2][iif] += - dy*A[ib6 + 2][jb6 + 2][iif] + dz*A[ib6 + 1][jb6 + 2][iif];
-
-					An[ib6 + 4][jb6 + 0][iif] += - dz*A[ib6 + 0][jb6 + 0][iif] + dx*A[ib6 + 2][jb6 + 0][iif];	
-					An[ib6 + 4][jb6 + 1][iif] += - dz*A[ib6 + 0][jb6 + 1][iif] + dx*A[ib6 + 2][jb6 + 1][iif];
-					An[ib6 + 4][jb6 + 2][iif] += - dz*A[ib6 + 0][jb6 + 2][iif] + dx*A[ib6 + 2][jb6 + 2][iif];
-
-					An[ib6 + 5][jb6 + 0][iif] += - dx*A[ib6 + 1][jb6 + 0][iif] + dy*A[ib6 + 0][jb6 + 0][iif];	
-					An[ib6 + 5][jb6 + 1][iif] += - dx*A[ib6 + 1][jb6 + 1][iif] + dy*A[ib6 + 0][jb6 + 1][iif];
-					An[ib6 + 5][jb6 + 2][iif] += - dx*A[ib6 + 1][jb6 + 2][iif] + dy*A[ib6 + 0][jb6 + 2][iif];
-
-					An[ib6 + 3][jb6 + 3][iif] += -    2*dy*A[ib6 + 2][jb6 + 3][iif] +  2*dz*A[ib6 + 1][jb6 + 3][iif]
-												 +   dy*dy*A[ib6 + 2][jb6 + 2][iif] + dz*dz*A[ib6 + 1][jb6 + 1][iif]
-												 - 2*dy*dz*A[ib6 + 1][jb6 + 2][iif];   
-
-		    		An[ib6 + 4][jb6 + 4][iif] += -    2*dz*A[ib6 + 0][jb6 + 4][iif] +  2*dx*A[ib6 + 2][jb6 + 4][iif]
-												 +   dz*dz*A[ib6 + 0][jb6 + 0][iif] + dx*dx*A[ib6 + 2][jb6 + 2][iif]
-												 - 2*dz*dx*A[ib6 + 0][jb6 + 2][iif];
-
-					An[ib6 + 5][jb6 + 5][iif] += -    2*dx*A[ib6 + 1][jb6 + 5][iif] +  2*dy*A[ib6 + 0][jb6 + 5][iif]
-												 +   dx*dx*A[ib6 + 1][jb6 + 1][iif] + dy*dy*A[ib6 + 0][jb6 + 0][iif]
-												 - 2*dx*dy*A[ib6 + 0][jb6 + 1][iif];
+				  	Matrix3d Q11 = CopyFrom(A, ib6 + 0, jb6 + 0, iif);
+	  				Matrix3d Q12 = CopyFrom(A, ib6 + 0, jb6 + 3, iif);
+					Matrix3d Q21 = CopyFrom(A, ib6 + 3, jb6 + 0, iif);
+					Matrix3d Q22 = CopyFrom(A, ib6 + 3, jb6 + 3, iif);
+					
+					CopyTo(Q11, 							  An, ib6 + 0, jb6 + 0, iif);
+					CopyTo(Q12 + Q11*Rg, 					  An, ib6 + 0, jb6 + 3, iif);
+					CopyTo(Q21 - Rg*Q11, 					  An, ib6 + 3, jb6 + 0, iif);
+					CopyTo(Q22 - Rg*Q12 + Q21*Rg - Rg*Q11*Rg, An, ib6 + 3, jb6 + 3, iif);
 				}
 			}
 		}
@@ -645,14 +637,18 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 	if (IsLoadedB_H())
 		TransAB(dt.B_H);
 	
-    auto TransA = [&](auto &A) {
-        auto An = clone(A);
+    auto TransA = [&](MatrixXd &A) {
+        MatrixXd An(6,6);
 	
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			int ib6 = ib*6;
 			double dx = delta(0, ib);
 			double dy = delta(1, ib);
 			double dz = delta(2, ib);
+			
+			Matrix3d Rg {{  0, -dz,  dy},
+						 { dz,   0, -dx},
+						 {-dy,  dx,   0}};
 			
 			for (int jb = 0; jb < dt.Nb; ++jb) {
 				int jb6 = jb*6;
@@ -663,41 +659,15 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 							throw Exc("Coefficient translations require all DOFs to be available");
 				}
 				
-				An(ib6 + 0, jb6 + 3) += - dy*A(ib6 + 0, jb6 + 2) + dz*A(ib6 + 0, jb6 + 1);
-				An(ib6 + 1, jb6 + 3) += - dy*A(ib6 + 1, jb6 + 2) + dz*A(ib6 + 1, jb6 + 1);
-				An(ib6 + 2, jb6 + 3) += - dy*A(ib6 + 2, jb6 + 2) + dz*A(ib6 + 2, jb6 + 1);
-	
-				An(ib6 + 0, jb6 + 4) += - dz*A(ib6 + 0, jb6 + 0) + dx*A(ib6 + 0, jb6 + 2);
-				An(ib6 + 1, jb6 + 4) += - dz*A(ib6 + 1, jb6 + 0) + dx*A(ib6 + 1, jb6 + 2);
-				An(ib6 + 2, jb6 + 4) += - dz*A(ib6 + 2, jb6 + 0) + dx*A(ib6 + 2, jb6 + 2);
-	
-				An(ib6 + 0, jb6 + 5) += - dx*A(ib6 + 0, jb6 + 1) + dy*A(ib6 + 0, jb6 + 0);
-				An(ib6 + 1, jb6 + 5) += - dx*A(ib6 + 1, jb6 + 1) + dy*A(ib6 + 1, jb6 + 0);
-				An(ib6 + 2, jb6 + 5) += - dx*A(ib6 + 2, jb6 + 1) + dy*A(ib6 + 2, jb6 + 0);
-	
-				An(ib6 + 3, jb6 + 0) += - dy*A(ib6 + 2, jb6 + 0) + dz*A(ib6 + 1, jb6 + 0);	
-				An(ib6 + 3, jb6 + 1) += - dy*A(ib6 + 2, jb6 + 1) + dz*A(ib6 + 1, jb6 + 1);
-				An(ib6 + 3, jb6 + 2) += - dy*A(ib6 + 2, jb6 + 2) + dz*A(ib6 + 1, jb6 + 2);
-	
-				An(ib6 + 4, jb6 + 0) += - dz*A(ib6 + 0, jb6 + 0) + dx*A(ib6 + 2, jb6 + 0);	
-				An(ib6 + 4, jb6 + 1) += - dz*A(ib6 + 0, jb6 + 1) + dx*A(ib6 + 2, jb6 + 1);
-				An(ib6 + 4, jb6 + 2) += - dz*A(ib6 + 0, jb6 + 2) + dx*A(ib6 + 2, jb6 + 2);
-	
-				An(ib6 + 5, jb6 + 0) += - dx*A(ib6 + 1, jb6 + 0) + dy*A(ib6 + 0, jb6 + 0);	
-				An(ib6 + 5, jb6 + 1) += - dx*A(ib6 + 1, jb6 + 1) + dy*A(ib6 + 0, jb6 + 1);
-				An(ib6 + 5, jb6 + 2) += - dx*A(ib6 + 1, jb6 + 2) + dy*A(ib6 + 0, jb6 + 2);
+  				Matrix3d Q11 = A.block<3,3>(ib6 + 0, jb6 + 0);
+  				Matrix3d Q12 = A.block<3,3>(ib6 + 0, jb6 + 3);
+				Matrix3d Q21 = A.block<3,3>(ib6 + 3, jb6 + 0);
+				Matrix3d Q22 = A.block<3,3>(ib6 + 3, jb6 + 3);
 				
-				An(ib6 + 3, jb6 + 3) += -    2*dy*A(ib6 + 2, jb6 + 3) +  2*dz*A(ib6 + 1, jb6 + 3)
-									 	+   dy*dy*A(ib6 + 2, jb6 + 2) + dz*dz*A(ib6 + 1, jb6 + 1)
-										- 2*dy*dz*A(ib6 + 1, jb6 + 2);   
-	
-	    		An(ib6 + 4, jb6 + 4) += -    2*dz*A(ib6 + 0, jb6 + 4) +  2*dx*A(ib6 + 2, jb6 + 4)
-										+   dz*dz*A(ib6 + 0, jb6 + 0) + dx*dx*A(ib6 + 2, jb6 + 2)
-										- 2*dz*dx*A(ib6 + 0, jb6 + 2);
-	
-				An(ib6 + 5, jb6 + 5) += -    2*dx*A(ib6 + 1, jb6 + 5) +  2*dy*A(ib6 + 0, jb6 + 5)
-										+   dx*dx*A(ib6 + 1, jb6 + 1) + dy*dy*A(ib6 + 0, jb6 + 0)
-										- 2*dx*dy*A(ib6 + 0, jb6 + 1);
+				An.block<3,3>(ib6 + 0, jb6 + 0) = Q11;
+				An.block<3,3>(ib6 + 0, jb6 + 3) = Q12 + Q11*Rg;
+				An.block<3,3>(ib6 + 3, jb6 + 0) = Q21 - Rg*Q11;
+				An.block<3,3>(ib6 + 3, jb6 + 3) = Q22 - Rg*Q12 + Q21*Rg - Rg*Q11*Rg;
 			} 
 		}
 		A = pick(An);

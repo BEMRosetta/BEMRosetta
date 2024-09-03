@@ -191,6 +191,12 @@ void BemioH5::Load_H5() {
 						throw Exc("Wrong data dimension in cg");
 					dt.msh[ib].dt.cg = data;
 				}
+				if (hfile.ExistDataset("c0")) {
+					hfile.GetDouble("c0", data);
+					if (data.rows() != 3 && data.cols() != 1)
+						throw Exc("Wrong data dimension in c0");
+					dt.msh[ib].dt.c0 = data;
+				}
 				hfile.UpGroup();	
 			}
 			if (hfile.ChangeGroup("hydro_coeffs")) {
@@ -249,6 +255,10 @@ void BemioH5::Load_H5() {
 		Compare_F(dt.sc, sc, "Scattering");
 	if (IsLoadedFfk())
 		Compare_F(dt.fk, fk, "Froude-Krylov");
+	
+	for (int ib = 0; ib < dt.msh.size(); ++ib)
+		if (IsNull(dt.msh[ib].dt.c0))
+			dt.msh[ib].dt.c0 = dt.msh[ib].dt.cg;
 }
 
 void BemioH5::Save(String file) const {
@@ -405,6 +415,11 @@ void BemioH5::Save(String file) const {
 					mat = dt.msh[ib].dt.cg;
 					mat = mat.transpose();
 					hfile.Set("cg", mat).SetDescription("Centre of gravity").SetUnits("m");
+				}
+				if (!IsNull(dt.msh[ib].dt.c0)) {
+					mat = dt.msh[ib].dt.c0;
+					mat = mat.transpose();
+					hfile.Set("c0", mat).SetDescription("Body axis").SetUnits("m");
 				}
 				hfile.UpGroup();	
 			}

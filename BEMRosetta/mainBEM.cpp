@@ -834,7 +834,7 @@ bool MainBEM::OnLoadFile(String file) {
 			ArrayModel_Add(listLoaded, hy.GetCodeStr(), hy.dt.name, hy.dt.file, hy.dt.GetId());
 		}
 		
-		UpdateButtons();
+		//UpdateButtons();
 
 		AfterBEM();
 		
@@ -903,7 +903,7 @@ void MainBEM::OnRemoveSelected(bool all) {
 		BEM::PrintError(t_("No model selected"));
 		return;
 	}
-	UpdateButtons();
+	//UpdateButtons();
 	
 	AfterBEM();
 	
@@ -1117,12 +1117,12 @@ void MainBEM::OnJoin() {
 		if (Bem().hydros.size() > 0) 
 			listLoaded.SetCursor(0);
 
-		AfterBEM();
+//		AfterBEM();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
-		
-	UpdateButtons();
+	AfterBEM();		
+	//UpdateButtons();
 }
 
 void MainBEM::OnDuplicate() {
@@ -1903,6 +1903,34 @@ void MainBEM::AfterBEM() {
 		mainSummary.Report(hy, idx);
 	}
 	
+	UVector<Point3D> c0;
+	UVector<Pointf> c;
+	for (int idx = 0; idx < Bem().hydros.size(); ++idx) {
+		for (int ib = 0; ib < Bem().hydros[idx].dt.msh.size(); ++ib) 
+			c0 << Bem().hydros[idx].dt.msh[ib].dt.c0;
+		c  << Pointf(Bem().hydros[idx].dt.x_w, Bem().hydros[idx].dt.y_w);
+	}
+	bool sameSystem = true;
+	if (c.size() > 0) {
+		for (int i = 1; i < c.size(); ++i) {
+			if (!EqualDecimals(c[i].x, c[i-1].x, 3) || !EqualDecimals(c[i].y, c[i-1].y, 3)) {
+				sameSystem = false;
+				break;
+			}
+		}
+	}
+	if (sameSystem && c0.size() > 0) {
+		for (int i = 1; i < c0.size(); ++i) {
+			if (!EqualDecimals(c0[i].x, c0[i-1].x, 3) || !EqualDecimals(c0[i].y, c0[i-1].y, 3) || !EqualDecimals(c0[i].z, c0[i-1].z, 3)) {
+				sameSystem = false;
+				break;
+			}
+		}
+	}
+	errorMsg.Show(!sameSystem);
+	if (!sameSystem) 
+		errorMsg.SetLabel(t_("Some bodies global or body axis mismatch"));
+	
 	UVector<int> idxs = ArrayModel_IndexsHydro(listLoaded);
 
 	Progress progress(t_("Processing loaded data..."), 18);
@@ -1917,14 +1945,14 @@ void MainBEM::AfterBEM() {
 	mainTab.GetItem(mainTab.Find(mainAinfw)).Enable(mainAinfw.Load(idxs));											progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainB)).Enable(mainB.Load(idxs));													progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainK)).Enable(mainK.Load(idxs));													progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(idxs, menuPlot.headMD.GetCursor()));				progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(idxs, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(idxs, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(idxs, menuPlot.head1st.GetCursor()));	progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(idxs, menuPlot.head1st.GetCursor()));			progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());												progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */idxs.size() > 0);				progress.SetPos(pos++);
-	mainTab.GetItem(mainTab.Find(mainBody)).Enable(mainBody.Load());											progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainMD)).Enable(mainMD.Load(idxs, menuPlot.headMD.GetCursor()));					progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainForceSC)).Enable(mainForceSC.Load(idxs, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainForceFK)).Enable(mainForceFK.Load(idxs, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainForceEX)).Enable(mainForceEX.Load(idxs, menuPlot.head1st.GetCursor()));		progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainRAO)).Enable(mainRAO.Load(idxs, menuPlot.head1st.GetCursor()));				progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainQTF)).Enable(mainQTF.Load());													progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainSetupFOAMM)).Enable(/*data.IsLoadedB() && */idxs.size() > 0);					progress.SetPos(pos++);
+	mainTab.GetItem(mainTab.Find(mainBody)).Enable(mainBody.Load());												progress.SetPos(pos++);
 	
 	bool isLoadedSS = false;
 	for (int idx = 0; idx < Bem().hydros.size(); ++idx) {

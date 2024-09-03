@@ -782,11 +782,14 @@ public:
 		menu.Add(menuTab.HSizePosZ(152, 0).VSizePosZ(0, 0));
 		Add(menu.HSizePosZ(0, 0).TopPosZ(0, 85));
 		Add(mainTab.HSizePosZ(0, 0).VSizePosZ(85, 0));
+		Add(errorMsg.RightPosZ(4, 300).TopPosZ(4, 20));
+		errorMsg.SetAlign(ALIGN_RIGHT).SetInk(LtBlue).Hide();
 	}
 	ArrayCtrl listLoaded;
 	TabCtrl menuTab;
 	TabCtrl mainTab;
-
+	Label errorMsg;
+	
 private:
 	StaticRect menu;
 };

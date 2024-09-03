@@ -892,13 +892,22 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		
 	if (!dt.msh.IsEmpty()) {
 		// Removes mooring, Morison and other points unrelated with panels
+		dt.symX = dt.symY = false;
 		for (Body &m : dt.msh) {
 			m.dt.mesh.GetPanelParams();
 			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+			
+			m.dt.under.CutZ(m.dt.mesh, -1);
+			m.dt.under.GetVolume();
+			Point3D cb = m.dt.under.GetCentreOfBuoyancy();
+			if (abs(m.dt.cb.x) < 0.001 && abs(cb.x) > 0.001)
+				dt.symX = true;
+			if (abs(m.dt.cb.y) < 0.001 && abs(cb.y) > 0.001)
+				dt.symY = true;
 		}
 		
 		// Checks the symmetry
-		dt.symX = dt.symY = false;
+		/*dt.symX = dt.symY = false;
 		
 		Surface full = clone(dt.msh[0].dt.mesh);	
 		for (int i = 1; i < dt.msh.size(); ++i)
@@ -918,7 +927,9 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			double yProjectionNeg = full.GetAreaYProjection(false, true);
 			if (abs(1-abs(yProjectionPos/yProjectionNeg)) > 0.2)
 				dt.symY = true;
-		}
+		}*/
+		
+		
 	}
 	if (!dt.pots_rad.IsEmpty()) {		// Transform potentials to Wamit
 		for (int iib = 0; iib < dt.Nb; ++iib) 

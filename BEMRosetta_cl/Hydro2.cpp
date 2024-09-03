@@ -1787,15 +1787,22 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 			//DeploySymIncDif(npan, signs, dt.pots_dif);
 		}
 		if (dt.symY) {
-			UVector<double> signs = {1, -1, 1, -1, 1, -1};
+			const UVector<double> signs = {1, -1, 1, -1, 1, -1};
 			int npan = m.dt.mesh.panels.size();
 			m.dt.mesh.DeployYSymmetry();
 			DeploySymRadiation(npan, signs);
 			//DeploySymIncDif(npan, signs, dt.pots_inc);
 			//DeploySymIncDif(npan, signs, dt.pots_dif);
 		}
-		if (m.dt.mesh0.IsEmpty())
+		if (m.dt.mesh0.IsEmpty()) {
+			Point3D cb = m.dt.cb;
+			MatrixXd C = m.dt.C;
 			m.AfterLoad(dt.rho, dt.g, false, true);
+			if (!IsNull(cb))		// restores values from original hydrodynamic file
+				m.dt.cb = cb;
+			if (C.size() != 0)
+				m.dt.C = C;
+		}
 	}
 	if (IsLoadedPotsRad()) {
 		Status(t_("Obtaining A and B from potentials"), -1);	

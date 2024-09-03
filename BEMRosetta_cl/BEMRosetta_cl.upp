@@ -13,7 +13,9 @@ uses
 	Hdf5,
 	plugin/zstd,
 	NetCDF,
-	Xlnt;
+	Xlnt,
+	Npy,
+	Npy;
 
 options(MSC) /bigobj;
 

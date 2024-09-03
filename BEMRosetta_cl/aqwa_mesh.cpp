@@ -340,6 +340,8 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 					}
 				}	
 			} else if (deck == 4) {
+				f.LoadFields(line, {1, 15, 21, 30, 41, 51, 61, 71});
+				
 				String str = f.GetText(0);
 				if (str.Find("PMAS") > 0) {
 					str.Replace("PMAS", "");

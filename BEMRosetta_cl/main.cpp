@@ -5,6 +5,7 @@
 #include "BEMRosetta.h"
 #include <SysInfo/Crash.h>
 
+
 #ifdef PLATFORM_WIN32
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
@@ -488,10 +489,10 @@ double DemoVectorPy_C(const double *v, int num) noexcept {
 
 #if defined(flagBEMR_CL)
 
-	
+
 CONSOLE_APP_MAIN {
 	const UVector<String>& command = CommandLine();
-	
+		
 	if (!ConsoleMain(command, false, PrintStatus))
 		SetExitCode(1);
 	
