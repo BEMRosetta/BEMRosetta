@@ -385,7 +385,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 				else if (line.Find("(Control Surface)") >= 0) 
 					found7 = true;
 			}
-			Sort(dt.head);
+			//Sort(dt.head);
 			dt.Nh = dt.head.size();
 			if (dt.Nb == 0 || dt.Nh == 0 || dt.Nf == 0)
 				throw Exc(Format(t_("No bodies, headings or frequencies found in Wamit file '%s'"), dt.file));
@@ -1625,7 +1625,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 		if (dof > maxDof)
 			maxDof = dof-1;
 	}
-	Sort(dt.head);
+	//Sort(dt.head);
 	
 	if (dt.head.size() == 0)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));

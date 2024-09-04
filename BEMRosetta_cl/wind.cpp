@@ -113,21 +113,20 @@ const char *Wind::GetWindTypeStr() const {
 
 void Wind::Report(Grid &grid) const {
 	grid.SetCol(0).SetRow(0);
-	grid.SetNumHeaderRows(1);
 	grid.ColWidths({20, 6, 50});
-	grid.AddRow({"Parameter", 			"Unit", "Data"});	
-	grid.AddRow({"File name", 			"", 	GetFileName(fileName)});	
-	grid.AddRow({"Description", 		"", 	description});
-	grid.AddRow({"Duration", 			"s", 	Grid::Nvl(nt, Format("%.1f", nt*dt))});
-	grid.AddRow({"Time step", 			"s", 	Grid::Nvl(dt, Format("%.6f", dt))});
-	grid.AddRow({"Number of Z points", 	"", 	Grid::Nvl(nz, FormatInt(nz))});
-	grid.AddRow({"Number of Y points", 	"", 	Grid::Nvl(ny, FormatInt(nz))});
-	grid.AddRow({"Number of tower points", "", 	Grid::Nvl(ntwr, FormatInt(nz))});
-	grid.AddRow({"Grid height", 		"m", 	Grid::Nvl(nz, Format("%.1f", (nz-1)*dz))});
-	grid.AddRow({"Grid width", 			"m", 	Grid::Nvl(ny, Format("%.1f", (ny-1)*dy))});
-	grid.AddRow({"Hub height", 			"m", 	Grid::Nvl(zHub, Format("%.1f", zHub))});
-	grid.AddRow({"Z bottom grid", 		"m", 	Grid::Nvl(zGrid, Format("%.2f", zGrid))});
-	grid.AddRow({"Wind type", 			"", 	fc > 0 ? String(GetWindTypeStr()) : String()});
+	grid.SetRow({"Parameter", 			"Unit", "Data"});	
+	grid.SetRow({"File name", 			"", 	GetFileName(fileName)});	
+	grid.SetRow({"Description", 		"", 	description});
+	grid.SetRow({"Duration", 			"s", 	Grid::Nvl(nt, Format("%.1f", nt*dt))});
+	grid.SetRow({"Time step", 			"s", 	Grid::Nvl(dt, Format("%.6f", dt))});
+	grid.SetRow({"Number of Z points", 	"", 	Grid::Nvl(nz, FormatInt(nz))});
+	grid.SetRow({"Number of Y points", 	"", 	Grid::Nvl(ny, FormatInt(nz))});
+	grid.SetRow({"Number of tower points", "", 	Grid::Nvl(ntwr, FormatInt(nz))});
+	grid.SetRow({"Grid height", 		"m", 	Grid::Nvl(nz, Format("%.1f", (nz-1)*dz))});
+	grid.SetRow({"Grid width", 			"m", 	Grid::Nvl(ny, Format("%.1f", (ny-1)*dy))});
+	grid.SetRow({"Hub height", 			"m", 	Grid::Nvl(zHub, Format("%.1f", zHub))});
+	grid.SetRow({"Z bottom grid", 		"m", 	Grid::Nvl(zGrid, Format("%.2f", zGrid))});
+	grid.SetRow({"Wind type", 			"", 	fc > 0 ? String(GetWindTypeStr()) : String()});
 }
 
 

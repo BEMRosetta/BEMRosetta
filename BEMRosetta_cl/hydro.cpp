@@ -7,6 +7,7 @@
 #include "functions.h"
 #include "heal.h"
 #include <Xlnt/Xlnt.h>
+#include <Npy/Npy.h>
 
 using namespace Eigen;
 
@@ -506,6 +507,78 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 			wb.save(~fileName); 
 		}
 	}
+}
+
+void Hydro::SaveAkselos(int ib, String folder) const {
+	{
+		Grid g;
+		g.SetRow({"Id", "heading"});
+		for (int ih = 0; ih < dt.Nh; ++ih) 
+			g.SetRow({ih, dt.head[ih]});
+		SaveFile(AFX(folder, "Akselos_Headings.csv"), g.AsString(false, false, ","));
+	}{
+		Grid g;
+		g.SetRow({"Id", "period"});
+		VectorXd T = Get_T();
+		Sort(T);
+		for (int iT = 0; iT < dt.Nf; ++iT) 
+			g.SetRow({iT, T[iT]});
+		SaveFile(AFX(folder, "Akselos_Periods.csv"), g.AsString(false, false, ","));
+	}{
+		Grid g;
+		g.SetRow({"Id", "period"});
+		for (int idf = 0; idf < dt.Nf; ++idf) 
+			g.SetRow({idf, dt.w[idf]/2/M_PI});
+		SaveFile(AFX(folder, "Akselos_Freq.csv"), g.AsString(false, false, ","));
+	}{
+		Grid g;
+		for (int r = 0; r < 6; ++r)
+			for (int c = 0; c < 6; ++c)
+				g.Set(r, c, dt.msh[ib].dt.C(r, c));
+		SaveFile(AFX(folder, "Hydrostatic_Results.csv"), g.AsString(false, false, ","));
+	}{
+		Grid g;
+		const UVector<String> sdof = {"x", "y", "z"};
+		UVector<Value> header = {"Panel index", "Id", "Area", "centroidX", "centroidY", "centroidZ", "normalX", "normalY", "normalZ"};
+		for (int iv = 0; iv < 4; ++iv)
+			for (int idof = 0; idof < 3; ++idof)	
+				header << Format("Vertex_%d_%s", iv+1, sdof[idof]);
+		g.SetRow(header);
+		for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip) {
+			const Panel &p = dt.msh[ib].dt.mesh.panels[ip];
+			const UVector<Point3D> &nodes = dt.msh[ib].dt.mesh.nodes;
+			g.Set(ip).Set(ib).Set(p.surface0 + p.surface1);
+			g.Set(p.centroidPaint.x).Set(p.centroidPaint.y).Set(p.centroidPaint.z);
+			g.Set(p.normalPaint.x).Set(p.normalPaint.y).Set(p.normalPaint.z);
+			for (int iv = 0; iv < 4; ++iv) {
+				const Point3D &n = nodes[p.id[iv]];
+				g.Set(n.x).Set(n.y).Set(n.z);
+			}
+			g.NextRowLF();
+		}
+		SaveFile(AFX(folder, "Akselos_Panel.csv"), g.AsString(false, false, ","));
+	}
+	
+	MultiDimMatrixRowMajor<std::complex<double>> rad(6, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
+	rad.SetZero();
+	for (int idof = 0; idof < 6; ++idof)
+		for (int idf = 0; idf < dt.Nf; ++idf)	
+			for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip)	
+				rad(idof, idf, ip) = P_rad(ib, ip, idof, dt.Nf - idf - 1);	// Inverse order to save in period order
+
+	MultiDimMatrixRowMajor<std::complex<double>> dif(dt.Nh, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
+	dif.SetZero();
+	for (int ih = 0; ih < dt.Nh; ++ih)
+		for (int idf = 0; idf < dt.Nf; ++idf)	
+			for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip)	
+				dif(ih, idf, ip) = P_dif(ib, ip, ih, dt.Nf - idf - 1);		// Inverse order to save in period order
+
+	Npz npz;
+	Npy &nrad = npz.Add("radiation");
+	nrad.Set(rad);
+	Npy &ndif = npz.Add("diffraction");
+	ndif.Set(dif);
+	npz.Save(AFX(folder, "Akselos_Pressure.npz"));
 }
 
 void Hydro::AddWave(int ib, double dx, double dy, double g) {

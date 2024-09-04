@@ -323,6 +323,7 @@ void MainBEM::Init() {
 	CtrlLayout(menuBody);
 	menuBody.butSpreadNegative <<= THISBACK(OnSpreadNegative);
 	menuBody.butMapNodes <<= THISBACK(OnMapNodes);
+	menuBody.butSaveAkselos <<= THISBACK(OnSaveAkselos);
 	
 	OnOpt();
 	
@@ -1710,23 +1711,67 @@ void MainBEM::OnSpreadNegative() {
 void MainBEM::OnMapNodes() {
 	try {
 		int idx = GetIndexOneSelected();
-		if (idx < 0) 
+		if (idx < 0) {
+			Exclamation(t_("Please select a file"));
 			return;
+		}
 		
 		const Hydro &hy = Bem().hydros[idx];
-		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty())
+		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty()) {
+			Exclamation(t_("No mesh is available"));
 			return;
+		}
 		
-		if (!hy.IsLoadedPotsRad())
-			return;
-
 		int ib = mainBody.GetIb();
+		
+		if (!hy.IsLoadedPotsRad(ib)) {
+			Exclamation(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+			return;
+		}
 		
 		mapNodes.Init(idx, ib);
 		mapNodes.Execute();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
+}
+
+void MainBEM::OnSaveAkselos() {
+	try {
+		int idx = GetIndexOneSelected();
+		if (idx < 0) {
+			Exclamation(t_("Please select a file"));
+			return;
+		}
+		
+		const Hydro &hy = Bem().hydros[idx];
+		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty()) {
+			Exclamation(t_("No mesh is available"));
+			return;
+		}
+		
+		int ib = mainBody.GetIb();
+		
+		if (!hy.IsLoadedPotsRad(ib)) {
+			Exclamation(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+			return;
+		}
+		
+		FileSel fs;
+	
+		fs.ActiveType(0);
+		fs.ActiveDir(GetDesktopFolder());
+	
+		if (!fs.ExecuteSelectDir(t_("Save data in Akselos format")))
+			return;
+	
+		WaitCursor wait;
+		
+		hy.SaveAkselos(ib, ~fs);
+
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}	
 }
 
 void MapNodes::Init(int _idx, int _ib) {

@@ -507,7 +507,9 @@ public:
 				 const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const;
 	void SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids, const UVector<Point3D> &points, 
 		const Tensor<double, 4> &Apan, const Tensor<double, 4> &Bpan) const;
-			
+	
+	void SaveAkselos(int ib, String folder) const;
+	
 	static int GetK_AB(int i, int j) {
 		while (i > 5)
 			i -= 6;

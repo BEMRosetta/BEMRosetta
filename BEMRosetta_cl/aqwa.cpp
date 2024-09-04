@@ -22,17 +22,32 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		
 		double factorMass = 1;
 		
-		BEM::Print("\n- " + S(t_("LIS file")));
-		if (!Load_LIS(factorMass, Status)) {
-			BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
+		if (ToLower(GetFileExt(file)) == ".lis") {
+			BEM::Print("\n- " + S(t_("LIS file")));
+			if (!Load_LIS(factorMass, Status)) {
+				BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
+				BEM::Print("\n- " + S(t_("AH1 file")));
+				if (!Load_AH1()) {
+					BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
+					if (!AQWABody::LoadDat(dt.msh, *this, file).IsEmpty()) 
+						dt.Nh = dt.Nf = 0;
+					
+				}
+			}
+		} else {
 			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
 				BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
-				if (!AQWABody::LoadDat(dt.msh, *this, file).IsEmpty()) 
-					dt.Nh = dt.Nf = 0;
-				
+				BEM::Print("\n- " + S(t_("LIS file")));
+				if (!Load_LIS(factorMass, Status)) {
+					BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
+					if (!AQWABody::LoadDat(dt.msh, *this, file).IsEmpty()) 
+						dt.Nh = dt.Nf = 0;
+					
+				}
 			}
 		}
+		
 		//if (IsNull(dt.Nb))
 		//	return false;
 		
@@ -73,7 +88,7 @@ bool Aqwa::Load_AH1() {
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		
-		if (TrimBoth(line).StartsWith("*"))
+		if (TrimBoth(line) == "*")
 			break;
 	}
 	f.Load(in.GetLine());
@@ -81,11 +96,18 @@ bool Aqwa::Load_AH1() {
 	dt.Nh = f.GetInt(1);
 	dt.Nf = f.GetInt(2);
 	
-	if (dt.Nh != f.size() - 3)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), dt.Nh, f.size() - 3));
-	for (int i = 3; i < f.size(); ++i)
-		FindAdd(dt.head, FixHeading_0_360(f.GetDouble(i)));
-	Sort(dt.head);
+	int i0 = 3;
+	do {
+		for (int i = i0; i < f.size(); ++i)
+			dt.head << f.GetDouble(i);
+
+		if (dt.head.size() == dt.Nh)
+			break;
+		else if (dt.head.size() > dt.Nh)
+			throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), dt.Nh, dt.head.size()));
+		f.GetLine();
+		i0 = 0;
+	} while(!in.IsEof());
 	
 	//dt.names.SetCount(dt.Nb);
 	dt.msh.SetCount(dt.Nb);
@@ -99,14 +121,10 @@ bool Aqwa::Load_AH1() {
 	Initialize_Forces(dt.ex);
 	
 	while(!in.IsEof() && dt.w.size() < dt.Nf) {
-		line = TrimBoth(in.GetLine());
-		f.Load(line);
+		f.GetLine();
 		
-		for (int i = 0; i < f.size(); ++i) {
-			double w = f.GetDouble(i);
-			dt.w << w;
-			//dt.T << 2*M_PI/w;
-		}
+		for (int i = 0; i < f.size(); ++i) 
+			dt.w << f.GetDouble(i);
 	}	
 	if (dt.Nf != dt.w.size())
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies do not match %d<>%d"), dt.Nf, dt.w.size()));
@@ -115,9 +133,9 @@ bool Aqwa::Load_AH1() {
 		line = TrimBoth(in.GetLine());
 		if (line.StartsWith("GENERAL")) {
 			f.Load(in.GetLine());
-			dt.h   = f.GetDouble(0);
-			dt.rho = f.GetDouble(1);
-			dt.g   = f.GetDouble(2);
+			dt.h   = f.GetDouble(1);
+			dt.rho = f.GetDouble(2);
+			dt.g   = f.GetDouble(3);
 		} else if (line.StartsWith("COG")) {
 			for (int i = 0; i < dt.Nb; ++i) {
 				f.Load(in.GetLine());
@@ -129,6 +147,26 @@ bool Aqwa::Load_AH1() {
 				dt.msh[ib].dt.cg.y = f.GetDouble(2);
 				dt.msh[ib].dt.cg.z = f.GetDouble(3);
 				dt.msh[ib].dt.c0 = clone(dt.msh[ib].dt.cg);
+			}
+		} else if (line.StartsWith("COB")) {
+			for (int i = 0; i < dt.Nb; ++i) {
+				f.Load(in.GetLine());
+				int ib = f.GetInt(0) - 1;
+				if (ib < 0 || ib >= dt.Nb)
+					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COB %d (%d)"), ib+1, dt.Nb));
+				
+				dt.msh[ib].dt.cb.x = f.GetDouble(1);
+				dt.msh[ib].dt.cb.y = f.GetDouble(2);
+				dt.msh[ib].dt.cb.z = f.GetDouble(3);
+			}
+		} else if (line.StartsWith("DISPLACEMENT")) {
+			for (int i = 0; i < dt.Nb; ++i) {
+				f.Load(in.GetLine());
+				int ib = f.GetInt(0) - 1;
+				if (ib < 0 || ib >= dt.Nb)
+					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COB %d (%d)"), ib+1, dt.Nb));
+				
+				dt.msh[ib].dt.Vo = f.GetDouble(1);
 			}
 		} else if (line.StartsWith("HYDSTIFFNESS")) {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -146,8 +184,24 @@ bool Aqwa::Load_AH1() {
 	                    dt.msh[ib].dt.C(idf, jdf) = f.GetDouble(jdf + did);
 	            }
 			}
-		} else if (line.StartsWith("ADDEDMASS") || line.StartsWith("DAMPING")) {
-			bool am = line.StartsWith("ADDEDMASS");
+		} else if (line.StartsWith("MASS")) {
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				dt.msh[ib].dt.M.setConstant(6, 6, 0);
+	            for (int idf = 0; idf < 6; ++idf) {
+	                f.Load(in.GetLine());
+	                int did = 0;
+	        		if (idf == 0) {
+	                    did = 1;
+	                    int itb = f.GetInt(0);
+	            		if (itb - 1 != ib)
+	                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
+	                }
+	                for (int jdf = 0; jdf < 6; ++jdf) 
+	                    dt.msh[ib].dt.M(idf, jdf) = f.GetDouble(jdf + did);
+	            }
+			}
+		} else if (line == "ADDEDMASS" || line == "DAMPING") {
+			bool am = line == "ADDEDMASS";
 			String sarea = am ? "ADDEDMASS" : "DAMPING";
 			for (int ib0 = 0; ib0 < dt.Nb; ++ib0) {
 				for (int ib1 = 0; ib1 < dt.Nb; ++ib1) {
@@ -166,8 +220,7 @@ bool Aqwa::Load_AH1() {
 			                    int itfr = f.GetInt(2);
 			            		if (itfr - 1 != ifr)
 			                        throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
-			                } else
-			                    did = 0;
+			                }
 			                for (int jdf = 0; jdf < 6; ++jdf) {
 			            		if (am)
 			                    	dt.A[6*ib0 + idf][6*ib1 + jdf][ifr] = f.GetDouble(jdf + did);
@@ -176,6 +229,48 @@ bool Aqwa::Load_AH1() {
 			                }
 			            }
 					}
+				}
+			}
+		} else if (line.StartsWith("ADDEDMASS_LF")) {
+			dt.A0.setConstant(6*dt.Nb, 6*dt.Nb, NaNDouble);
+			for (int ib0 = 0; ib0 < dt.Nb; ++ib0) {
+				for (int ib1 = 0; ib1 < dt.Nb; ++ib1) {
+		            for (int idf = 0; idf < 6; ++idf) {
+		                f.Load(in.GetLine());
+		                int did = 0;
+		        		if (idf == 0) {
+		                    did = 2;
+		                    int itb0 = f.GetInt(0);
+		            		if (itb0 - 1 != ib0)
+		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb0, ib0+1));
+		                    int itb1 = f.GetInt(1);
+		            		if (itb1 - 1 != ib1)
+		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb1, ib1+1));
+		                }
+		                for (int jdf = 0; jdf < 6; ++jdf) 
+		                    dt.A0(6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
+		            }
+				}
+			}
+		} else if (line.StartsWith("ADDEDMASS_HF")) {
+			dt.Ainf.setConstant(6*dt.Nb, 6*dt.Nb, NaNDouble);
+			for (int ib0 = 0; ib0 < dt.Nb; ++ib0) {
+				for (int ib1 = 0; ib1 < dt.Nb; ++ib1) {
+		            for (int idf = 0; idf < 6; ++idf) {
+		                f.Load(in.GetLine());
+		                int did = 0;
+		        		if (idf == 0) {
+		                    did = 2;
+		                    int itb0 = f.GetInt(0);
+		            		if (itb0 - 1 != ib0)
+		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb0, ib0+1));
+		                    int itb1 = f.GetInt(1);
+		            		if (itb1 - 1 != ib1)
+		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb1, ib1+1));
+		                }
+		                for (int jdf = 0; jdf < 6; ++jdf) 
+		                    dt.Ainf(6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
+		            }
 				}
 			}
 		} else if (line.StartsWith("FORCERAO")) {
@@ -465,14 +560,15 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 					break;
 				f.Load(line);
 				for (int i = idini; i < f.size(); ++i)
-					FindAdd(dt.head, FixHeading_0_360(f.GetDouble(i)));
+					//FindAdd(dt.head, FixHeading_0_360(f.GetDouble(i)));
+					dt.head << f.GetDouble(i);
 				idini = 0;
 			}
 			dt.Nh = dt.head.size();
 			break;
 		} 
 	}
-	Sort(dt.head);
+	//Sort(dt.head);
 	
 	if (IsNull(dt.Nf))
 		dt.Nf = 0;
@@ -486,6 +582,8 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	Initialize_Forces(dt.fk);
 	Initialize_Forces(dt.sc);
 	Initialize_Forces(dt.rao);
+	
+	UVector<double> bouyancyForce(dt.Nb, Null);
 	
 	int ifrPot = -1, prevTrans = Null;
 	
@@ -632,7 +730,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			
 			dt.msh[ib].dt.C *= factorMass;
 		} else if (Trim(line) == "STIFFNESS MATRIX") {		// Other place to get the hydrostatic stiffness, 
-			if (dt.msh[ib].dt.C(2, 2) != 0) {					// ... but less reliable
+			if (dt.msh[ib].dt.C(2, 2) == 0) {					// ... but less reliable
 				MatrixXd C;
 				C.setConstant(6, 6, 0);
 				in.GetLine(6);
@@ -645,6 +743,11 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				if (C(0, 0) == 0 && C(1, 1) == 0)			// Only use if ASTF additional hydrostatics has not been used: surge = sway = 0
 					dt.msh[ib].dt.C = C;							
 			}
+		} else if (line.StartsWith("BUOYANCY FORCE")) {
+			pos = line.FindAfter("=");
+			if (pos < 0)
+				throw Exc(in.Str() + "\n"  + t_("= not found"));
+			bouyancyForce[ib] = ScanDouble(line.Mid(pos));
 		} else if (line.StartsWith("MESH BASED DISPLACEMENT")) {
 			pos = line.FindAfter("=");
 			if (pos < 0)
@@ -894,16 +997,31 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		// Removes mooring, Morison and other points unrelated with panels
 		dt.symX = dt.symY = false;
 		for (Body &m : dt.msh) {
+			if (IsNull(m.dt.Vo) && !IsNull(bouyancyForce[ib]))
+				m.dt.Vo = bouyancyForce[ib]/dt.rho/dt.g;
+			
 			m.dt.mesh.GetPanelParams();
 			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
 			
 			m.dt.under.CutZ(m.dt.mesh, -1);
 			m.dt.under.GetVolume();
 			Point3D cb = m.dt.under.GetCentreOfBuoyancy();
-			if (abs(m.dt.cb.x) < 0.001 && abs(cb.x) > 0.001)
-				dt.symX = true;
-			if (abs(m.dt.cb.y) < 0.001 && abs(cb.y) > 0.001)
-				dt.symY = true;
+			if (!IsNull(m.dt.cb)) {								// Guess the symmetries...
+				if (abs(m.dt.cb.x) < 0.001 && abs(cb.x) > 0.001)// ...comparing real cb vs the obtained through the mesh
+					dt.symX = true;
+				if (abs(m.dt.cb.y) < 0.001 && abs(cb.y) > 0.001)
+					dt.symY = true;
+			} else if (!IsNull(m.dt.Vo)) {						// Guess the symmetries...
+				double ratio = m.dt.Vo/m.dt.under.volume;		// ...depending on the real displacement vs the obtained through the mesh
+				if (EqualRatio(ratio, 4., 0.01))					// Double symmetry
+					dt.symX = dt.symY = true;					
+				else if (EqualRatio(ratio, 2., 0.01)) {				// Simple symmetry
+					if (abs(cb.x) > 0.001 && abs(cb.y) > 0.001)
+						dt.symY = true;
+					else if (abs(cb.y) > 0.001 && abs(cb.x) > 0.001)
+						dt.symX = true;
+				}
+			}
 		}
 		
 		// Checks the symmetry
