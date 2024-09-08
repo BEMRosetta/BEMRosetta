@@ -138,17 +138,25 @@ bool Wamit::Load_HDF(Function <bool(String, int)> Status) {
 			
 			for (int ip = 0; ip < ncell; ++ip) {
 				std::complex<double> *d;
-				if (type == 'r')
+				if (type == 'r') {
 					d = &dt.pots_rad[ib][ip][idf][ifr];
-				else if (type == 'i')	
+					if (real)							// p = iρωΦ		Φ = [Im(p/ρω) - iRe(p/ρω)]ρg
+						d->imag(-data[ip]*factor);
+					else
+						d->real(data[ip]*factor);
+				} else if (type == 'i')	{
 					d = &dt.pots_inc[ib][ip][ihead][ifr];
-				else
+					if (real)							// p = iρωΦ		Φ = [Im(p/ρω) - iRe(p/ρω)]ρg
+						d->imag(-data[ip]*factor);
+					else
+						d->real(data[ip]*factor);
+				} else {
 					d = &dt.pots_dif[ib][ip][ihead][ifr];
-				
-				if (real)							// p = iρωΦ		Φ = Im(p/ρω) - iRe(p/ρω)
-					d->imag(-data[ip]*factor);
-				else
-					d->real(data[ip]*factor);
+					if (real)							// p = iρωΦ		Φ = [Im(p/ρω) - iRe(p/ρω)]ρg
+						d->real(-data[ip]*factor);
+					else
+						d->imag(-data[ip]*factor);
+				}
 			}
 		}
 		hfile.UpGroup();		

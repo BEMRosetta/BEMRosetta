@@ -220,7 +220,7 @@ void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UV
 }
 
 void BEM::TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status) {
-	hydros[id].GetTranslationTo(to, Status);
+	hydros[id].GetTranslationTo(to, zeroIfEmpty, Status);
 }
 
 void BEM::WaveTo(int id, double xto, double yto) {

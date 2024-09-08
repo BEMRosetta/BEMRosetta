@@ -71,18 +71,28 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 		if (!(numaxisF == fk.GetNumAxis()))
 			throw Exc(t_("Wrong dimension in Froude_Krylov_force"));
 			
-	
+
+		MultiDimMatrixRowMajor<double> rao;
+		if (cdf.ExistVar("RAO")) {
+			cdf.GetDouble("RAO", rao);
+			if (!(numaxisF == rao.GetNumAxis()))
+				throw Exc(t_("Wrong dimension in RAO"));
+		}
 		if (_rho.size() == 1) {		// Added to simplify handling later
 			a.InsertAxis(0, 1);
 			b.InsertAxis(0, 1);
 			sc.InsertAxis(0, 1);
 			fk.InsertAxis(0, 1);
+			if (!rao.IsEmpty())
+				rao.InsertAxis(0, 1);
 		}
 		if (_h.size() == 1) {
 			a.InsertAxis(1, 1);
 			b.InsertAxis(1, 1);
 			sc.InsertAxis(1, 1);
 			fk.InsertAxis(1, 1);
+			if (!rao.IsEmpty())
+				rao.InsertAxis(1, 1);
 		}
 		
 		int Nb = a.size(3)/6;
@@ -96,6 +106,8 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 			throw Exc(t_("Wrong dimension in sc"));
 		if (!(fk.size(2) == 2 && fk.size(3) == Nf && fk.size(4) == Nh && fk.size(5) == 6*Nb))
 			throw Exc(t_("Wrong dimension in fk"));
+		if (!rao.IsEmpty() && !(rao.size(2) == 2 && rao.size(3) == Nf && rao.size(4) == Nh && rao.size(5) == 6*Nb))
+			throw Exc(t_("Wrong dimension in rao"));
 		
 		UArray<MatrixXd> M;
 		if (cdf.ExistVar("inertia_matrix")) {
@@ -288,10 +300,14 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 				LoadAB(b, hy.dt.B, irho, ih);
 				
 				hy.Initialize_Forces();
+				if (!rao.IsEmpty())
+					hy.Initialize_Forces(hy.dt.rao);
 	
 				for (int ib = 0; ib < Nb; ++ib) {
 					LoadForce(sc, hy.dt.sc, irho, ih, ib);
 					LoadForce(fk, hy.dt.fk, irho, ih, ib);
+					if (!rao.IsEmpty())
+						LoadForce(rao, hy.dt.rao, irho, ih, ib);
 				}
 				
 				if (pan.size() > 0) {

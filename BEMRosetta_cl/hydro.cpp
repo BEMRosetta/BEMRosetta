@@ -509,13 +509,21 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 	}
 }
 
-void Hydro::SaveAkselos(int ib, String folder) const {
+void Hydro::SaveAkselos(int ib, String file) const {
+	if (dt.msh.IsEmpty() || dt.msh[0].dt.mesh.panels.IsEmpty())
+		throw Exc(t_("No mesh is available"));
+	if (!IsLoadedPotsRad(ib)) 
+		throw Exc(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+
+	String folder = GetFileFolder(file);
+	file = GetFileTitle(file);
+	
 	{
 		Grid g;
 		g.SetRow({"Id", "heading"});
 		for (int ih = 0; ih < dt.Nh; ++ih) 
 			g.SetRow({ih, dt.head[ih]});
-		SaveFile(AFX(folder, "Akselos_Headings.csv"), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, Format("%s_Headings.csv", file)), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		g.SetRow({"Id", "period"});
@@ -523,13 +531,13 @@ void Hydro::SaveAkselos(int ib, String folder) const {
 		Sort(T);
 		for (int iT = 0; iT < dt.Nf; ++iT) 
 			g.SetRow({iT, T[iT]});
-		SaveFile(AFX(folder, "Akselos_Periods.csv"), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, Format("%s_Periods.csv", file)), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		g.SetRow({"Id", "period"});
 		for (int idf = 0; idf < dt.Nf; ++idf) 
 			g.SetRow({idf, dt.w[idf]/2/M_PI});
-		SaveFile(AFX(folder, "Akselos_Freq.csv"), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, Format("%s_Freq.csv", file)), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		for (int r = 0; r < 6; ++r)
@@ -556,18 +564,18 @@ void Hydro::SaveAkselos(int ib, String folder) const {
 			}
 			g.NextRowLF();
 		}
-		SaveFile(AFX(folder, "Akselos_Panel.csv"), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, Format("%s_Panel.csv", file)), g.AsString(false, false, ","));
 	}
 	
 	MultiDimMatrixRowMajor<std::complex<double>> rad(6, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
-	rad.SetZero();
+	//rad.SetZero();
 	for (int idof = 0; idof < 6; ++idof)
 		for (int idf = 0; idf < dt.Nf; ++idf)	
 			for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip)	
 				rad(idof, idf, ip) = P_rad(ib, ip, idof, dt.Nf - idf - 1);	// Inverse order to save in period order
 
 	MultiDimMatrixRowMajor<std::complex<double>> dif(dt.Nh, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
-	dif.SetZero();
+	//dif.SetZero();
 	for (int ih = 0; ih < dt.Nh; ++ih)
 		for (int idf = 0; idf < dt.Nf; ++idf)	
 			for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip)	
@@ -578,7 +586,7 @@ void Hydro::SaveAkselos(int ib, String folder) const {
 	nrad.Set(rad);
 	Npy &ndif = npz.Add("diffraction");
 	ndif.Set(dif);
-	npz.Save(AFX(folder, "Akselos_Pressure.npz"));
+	npz.Save(AFX(folder, Format("%s_Pressure.npz", file)));
 }
 
 void Hydro::AddWave(int ib, double dx, double dy, double g) {
@@ -610,7 +618,16 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 		CalcF(dt.sc, k);
 	if (IsLoadedFfk())
 		CalcF(dt.fk, k);
-
+	if (IsLoadedFsc_pot())
+		CalcF(dt.sc_pot, k);
+	if (IsLoadedFfk_pot())
+		CalcF(dt.fk_pot, k);
+	if (IsLoadedFfk_pot_bmr())
+		CalcF(dt.fk_pot_bmr, k);
+	
+	if (IsLoadedRAO())
+		CalcF(dt.rao, k);
+	
     auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
         int sign = isSum ? 1 : -1;
 		{
@@ -639,12 +656,17 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 }
 
 
-void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)> Status) {
+void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(String, int pos)> Status) {
 	MatrixXd delta(3, dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		for (int idf = 0; idf < 3; ++idf) 	
 			delta(idf, ib) = to(idf, ib) - dt.msh[ib].dt.c0[idf];
-		
+	
+	auto Nvl0 = [](Matrix3d &mat) {
+		for (int i = 0; i < 3; ++i)
+			for (int j = 0; j < 3; ++j)
+				mat(i, j) = ::Nvl(mat(i, j), 0.);		
+	};
 	auto CopyFrom = [](const UArray<UArray<VectorXd>> &a, int i0, int j0, int iif)->Matrix3d {
 		Matrix3d ret;
 		
@@ -676,10 +698,12 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 			for (int jb = 0; jb < dt.Nb; ++jb) {
 				int jb6 = jb*6;
 				
-				for (int idof = 0; idof < 6; ++idof) {		// All dof are available?
-					for (int jdof = 0; jdof < 6; ++jdof)
-						if (!IsNum(A[ib6 + idof][jb6 + jdof][0])) 
-							throw Exc("Coefficient translations require all DOFs to be available");
+				if (!force) {
+					for (int idof = 0; idof < 6; ++idof) {		// All dof are available?
+						for (int jdof = 0; jdof < 6; ++jdof)
+							if (!IsNum(A[ib6 + idof][jb6 + jdof][0])) 
+								throw Exc("Coefficient translations require all DOFs to be available");
+					}
 				}
 				
 				for (int iif = 0; iif < dt.Nf; ++iif) {
@@ -687,6 +711,8 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 	  				Matrix3d Q12 = CopyFrom(A, ib6 + 0, jb6 + 3, iif);
 					Matrix3d Q21 = CopyFrom(A, ib6 + 3, jb6 + 0, iif);
 					Matrix3d Q22 = CopyFrom(A, ib6 + 3, jb6 + 3, iif);
+					
+					Nvl0(Q11);	Nvl0(Q12);	Nvl0(Q21);	Nvl0(Q22);
 					
 					CopyTo(Q11, 							  An, ib6 + 0, jb6 + 0, iif);
 					CopyTo(Q12 + Q11*Rg, 					  An, ib6 + 0, jb6 + 3, iif);
@@ -726,16 +752,20 @@ void Hydro::GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)
 			for (int jb = 0; jb < dt.Nb; ++jb) {
 				int jb6 = jb*6;
 				
-				for (int idof = 0; idof < 6; ++idof) {
-					for (int jdof = 0; jdof < 6; ++jdof)
-						if (!IsNum(A(ib6 + idof, jb6 + jdof))) 
-							throw Exc("Coefficient translations require all DOFs to be available");
+				if (!force) {
+					for (int idof = 0; idof < 6; ++idof) {
+						for (int jdof = 0; jdof < 6; ++jdof)
+							if (!IsNum(A(ib6 + idof, jb6 + jdof))) 
+								throw Exc("Coefficient translations require all DOFs to be available");
+					}
 				}
 				
-  				Matrix3d Q11 = A.block<3,3>(ib6 + 0, jb6 + 0);
+  				Matrix3d Q11 = A.block<3,3>(ib6 + 0, jb6 + 0); 
   				Matrix3d Q12 = A.block<3,3>(ib6 + 0, jb6 + 3);
 				Matrix3d Q21 = A.block<3,3>(ib6 + 3, jb6 + 0);
 				Matrix3d Q22 = A.block<3,3>(ib6 + 3, jb6 + 3);
+				
+				Nvl0(Q11);	Nvl0(Q12);	Nvl0(Q21);	Nvl0(Q22);
 				
 				An.block<3,3>(ib6 + 0, jb6 + 0) = Q11;
 				An.block<3,3>(ib6 + 0, jb6 + 3) = Q12 + Q11*Rg;

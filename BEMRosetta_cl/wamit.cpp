@@ -145,7 +145,7 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T, int qtfHeading) const {
 	String fileext;
 	
-	if (!IsNull(dt.rho) && !IsNull(dt.msh[0].dt.cg)) {
+	if (!IsNull(dt.msh[0].dt.cg)) {
 		BEM::Print("\n- " + Format(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt(file, ".frc"))));
 		Save_FRC(fileext);
 	}
@@ -1433,14 +1433,14 @@ bool Wamit::Load_1(String fileName, int iperout) {
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(dt.Nb) && dt.Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn the previous is %d, in the .1 is %d"), dt.Nb, Nb));
 	dt.Nb = Nb;
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);	
 	
 	int Nf = w.size();
 	if (!IsNull(dt.Nf) && dt.Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), dt.Nf, Nf));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %d, in the .1 is %d"), dt.Nf, Nf));
 	dt.Nf = Nf;
 	
 	if (dt.Nb == 0)// || dt.Nf < 2)
@@ -1463,7 +1463,7 @@ bool Wamit::Load_1(String fileName, int iperout) {
 	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %s, in the .1 is %s"), ToString(dt.w), ToString(w)));
 	}
 	dt.w = pick(w);
 		
@@ -1545,7 +1545,7 @@ bool Wamit::Load_hst(String fileName) {
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(dt.Nb) && dt.Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn the previous is %d, in the .hst is %d"), dt.Nb, Nb));
 	dt.Nb = Nb;
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
@@ -1582,10 +1582,10 @@ bool Wamit::Load_FK(String fileName, int iperout) {
 }
 
 bool Wamit::Load_4(String fileName, int iperout) {
-	return Load_Forces(fileName, dt.rao, iperout);
+	return Load_Forces(fileName, dt.rao, iperout, dt.solver == Hydro::HAMS_WAMIT);
 }
 
-bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
+bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout, bool israohams) {
 	dt.dimen = false;
 	
 	if (IsNull(dt.len))
@@ -1617,7 +1617,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 		}
 		
 		double freq = f.GetDouble(0);
-		double head = f.GetDouble(1);	//FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);
 		FindAdd(w, freq);
 		FindAdd(dt.head, head);
 		
@@ -1631,19 +1631,19 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));
 	
 	if (!IsNull(dt.Nh) && dt.Nh != dt.head.size())
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of headings.\nIn one %d, in another %d"), dt.Nh, dt.head.size()));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of headings.\nIn the previous is %d, in this one is %d"), dt.Nh, dt.head.size()));
 	dt.Nh = dt.head.size();
 	
 	int Nb = 1 + int(maxDof/6);
 	if (!IsNull(dt.Nb) && dt.Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of bodies.\nIn the previous is %d, in this one is %d"), dt.Nb, Nb));
 	dt.Nb = Nb;
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
 		
 	int Nf = w.size();
 	if (!IsNull(dt.Nf) && dt.Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), dt.Nf, Nf));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %d, in this one is %d"), dt.Nf, Nf));
 	dt.Nf = Nf;
 	
 	if (dt.Nb == 0 || dt.Nf < 2)
@@ -1658,7 +1658,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %s, in this one is %s"), ToString(dt.w), ToString(w)));
 	}
 	dt.w = pick(w);
 	
@@ -1679,7 +1679,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 			else 
 				throw Exc(in.Str() + "\n"  + Format(t_("Period %f is unknown"), freq));
 		}		
-		double head = f.GetDouble(1);	//FixHeading_180(f.GetDouble(1));
+		double head = f.GetDouble(1);	
 		int ih = FindRatio(dt.head, head, 0.001);
 		if (ih < 0)
 			throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
@@ -1687,7 +1687,12 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout) {
 		int idof = f.GetInt(2) - 1;		
 		int ib = idof/6;
 		idof %= 6;
-        force[ib][ih](ifr, idof) = std::complex<double>(f.GetDouble(5), f.GetDouble(6));
+		double re = f.GetDouble(5);
+		double im = f.GetDouble(6);
+        if (israohams)
+            force[ib][ih](ifr, idof) = std::complex<double>(im, -re)*g_rho_ndim()*pow(dt.len, GetK_F(idof));
+        else
+            force[ib][ih](ifr, idof) = std::complex<double>(re, im);
 	}
 	
 	return true;
@@ -1742,7 +1747,7 @@ bool Wamit::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		dt.Nb = Nb;
 	else {
 		if (dt.Nb < Nb)
-			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+			throw Exc(Format(t_("The files read have different number of bodies.\nIn the previous is %d, in the 12 is %d"), dt.Nb, Nb));
 	}
 	
 	if (dt.msh.IsEmpty())
@@ -1853,7 +1858,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		dt.Nb = Nb;
 	else {
 		if (dt.Nb < Nb)
-			throw Exc(Format(t_("The files read have different number of bodies.\nIn one %d, in another %d"), dt.Nb, Nb));
+			throw Exc(Format(t_("The files read have different number of bodies.\nIn the previous is %d, in this one is %d"), dt.Nb, Nb));
 	}
 	
 	if (dt.msh.IsEmpty())
@@ -1861,7 +1866,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		
 	int Nf = w.size();
 	if (!IsNull(dt.Nf) && dt.Nf != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %d, in another %d"), dt.Nf, Nf));
+		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %d, in this one is %d"), dt.Nf, Nf));
 	dt.Nf = Nf;
 	
 	int Nh = head.size();
@@ -1878,7 +1883,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn one %s, in another %s"), ToString(dt.w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %s, in this one is %s"), ToString(dt.w), ToString(w)));
 	}
 	dt.w = pick(w);
 	
@@ -2067,7 +2072,7 @@ void Wamit::Save_FRC(String fileName) const {
 										 			 IsLoadedFex() ? 2 : 0,
 										 			 IsLoadedRAO() ? 1 : 0), 22);
 	out << "% 9 digits for Wamit .1 ... .9 files included\n";
-	out << WamitField(Format("%.1f", dt.rho), 22) << "% RHO\n";
+	out << WamitField(Format("%.1f", Bem().rho), 22) << "% RHO\n";
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		out << WamitField(Format("%.2f %.2f %.2f", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 

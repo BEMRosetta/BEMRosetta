@@ -257,7 +257,7 @@ class Hydro : public Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT, HAMS, WADAM_WAMIT,   NEMOH,   NEMOHv115, NEMOHv3, SEAFEM_NEMOH,   AQWA,   AQWA_QTF,	AQWA_DAT,				  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAFLEX_YML,   CSV_MAT,    CSV_TABLE,    BEMIO_H5,		CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5,
+	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT, HAMS, WADAM_WAMIT,   NEMOH,   NEMOHv115, NEMOHv3, SEAFEM_NEMOH,   AQWA,   AQWA_QTF,	AQWA_DAT,				  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAFLEX_YML,   CSV_MAT,    CSV_TABLE,    BEMIO_H5,		CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
 #ifdef PLATFORM_WIN32	
 	ORCAWAVE_OWR, 
 #endif
@@ -285,7 +285,7 @@ public:
 	Hydro& operator=(const Hydro &hyd) 	{Copy(hyd); return *this;};
 	Hydro(const Hydro &hyd) 			{Copy(hyd);}
 	Hydro(const Hydro &hyd, int) 		{Copy(hyd);}
-	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null);
+	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null, int ib = -1);
 	void Report() const;
 	Hydro() {}
 	virtual ~Hydro() noexcept {}	
@@ -318,6 +318,7 @@ public:
 		case CAPY_NC:		return t_("Capytaine.nc");
 		case ORCAWAVE_YML:	return t_("OrcaWave.yml");
 		case CAPYTAINE_PY:	return t_("Capytaine.py");
+		case AKSELOS_NPZ:	return t_("Akselos.npz");
 #ifdef PLATFORM_WIN32	
 		case ORCAWAVE_OWR: 	return t_("OrcaWave.owr");
 #endif
@@ -354,6 +355,7 @@ public:
 		case CAPY_NC:		return t_("Capy.nc");
 		case ORCAWAVE_YML:	return t_("ORCW.yml");
 		case CAPYTAINE_PY:	return t_("Capy.py");
+		case AKSELOS_NPZ:	return t_("Aks.npz");
 #ifdef PLATFORM_WIN32	
 		case ORCAWAVE_OWR: 	return t_("ORC.owr");
 #endif
@@ -951,7 +953,7 @@ public:
 	
 	inline std::complex<double> P_rad(int ib, int ip, int idf, int ifr) const {
 		std::complex<double> ret = dt.pots_rad[ib][ip][idf][ifr]*dt.rho*dt.w[ifr];
-		return std::complex<double>(-ret.imag(), ret.real());
+		return std::complex<double>(-ret.imag(), ret.real());			// p = iρωΦ
 	}
 	
 	inline std::complex<double> P_inc(int ib, int ip, int ih, int ifr) const 	 {return P_(dt.pots_inc, ib, ip, ih, ifr);}
@@ -1007,7 +1009,7 @@ public:
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
-	void GetTranslationTo(const MatrixXd &to, Function <bool(String, int pos)> Status);
+	void GetTranslationTo(const MatrixXd &to, bool force, Function <bool(String, int pos)> Status);
 	void GetWaveTo(double xto, double yto, double g);
 	String SpreadNegative(Function <bool(String, int)> Status);
 	void AddWave(int ib, double dx, double dy, double g);
@@ -1289,7 +1291,7 @@ protected:
 	bool Load_Scattering(String fileName, int iperout);
 	bool Load_FK(String fileName, int iperout);
 	
-	bool Load_Forces(String fileName, Hydro::Forces &force, int iperout);
+	bool Load_Forces(String fileName, Hydro::Forces &force, int iperout, bool israohams = false);
 		
 	bool Load_1(String fileName, int iperout);				
 	bool Load_3(String fileName, int iperout);
@@ -1620,6 +1622,7 @@ public:
 	double maxTimeA = Null;
 	int numValsA = Null;
 	int onlyDiagonal;
+	bool zeroIfEmpty = false;
 	
 	String nemohPath, nemoh115Path, nemoh3Path, nemohPathGREN;
 	bool experimental;
@@ -1641,7 +1644,7 @@ public:
 	void RAO(int id);
 	void BH(int id, int &num);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
-	void TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status);
+	void TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status = Null);
 	void WaveTo(int id, double xto, double yto);
 	String SpreadNegative(int id, Function <bool(String, int)> Status);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
@@ -1740,6 +1743,7 @@ public:
 			("legend_w_units", legend_w_units)
 			("legend_w_solver", legend_w_solver)
 			("pythonEnv", pythonEnv)
+			("zeroIfEmpty", zeroIfEmpty)
 		;
 		if (json.IsLoading()) {
 			dofType = BasicBEM::DOFType(idofType);

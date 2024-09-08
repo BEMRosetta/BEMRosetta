@@ -167,7 +167,7 @@ bool Hams::Load_In(String fileName) {
 		if (var.StartsWith("#"))
 			continue;
 		if (var == "Waterdepth")
-			dt.h = f.GetDouble(1);
+			dt.h = abs(f.GetDouble(1));
 		else if (var == "Input_frequency_type") {
 			input_frequency_type = f.GetInt(1); 
 			if (input_frequency_type != 3 && input_frequency_type != 4)
@@ -182,7 +182,7 @@ bool Hams::Load_In(String fileName) {
 				if (dt.Nf != abs(Nf))
 					throw Exc(Format(t_("Number of frequencies %d does not match with previously loaded %d"), Nf, dt.Nf));
 			} else 
-				dt.Nf = Nf;
+				dt.Nf = abs(Nf);
 			UVector<double> data;
 			if (Nf < 0) {
 				Nf = -Nf;
@@ -193,7 +193,7 @@ bool Hams::Load_In(String fileName) {
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Frequency_step")
 					throw Exc(t_("Frequency_step not found"));
-				double maxF = minF + f.GetDouble(1)*Nf;
+				double maxF = minF + f.GetDouble(1)*(Nf-1);
 				
 				LinSpaced(data, Nf, minF, maxF);
 			} else {
@@ -228,7 +228,7 @@ bool Hams::Load_In(String fileName) {
 				if (dt.Nh != abs(Nh))
 					throw Exc(Format(t_("Number of headings %d does not match with previously loaded %d"), Nh, dt.Nh));
 			} else 
-				dt.Nh = Nh;
+				dt.Nh = abs(Nh);
 			UVector<double> data;
 			if (Nh < 0) {
 				Nh = -Nh;
@@ -239,7 +239,7 @@ bool Hams::Load_In(String fileName) {
 				f.GetLine();
 				if (f.size() < 2 || Trim(f.GetText(0)) != "Heading_step")
 					throw Exc(t_("Heading_step not found"));
-				double maxH = minH + f.GetDouble(1)*Nh;
+				double maxH = minH + f.GetDouble(1)*(Nh-1);
 				
 				LinSpaced(data, Nh, minH, maxH);
 			} else {
@@ -263,7 +263,7 @@ bool Hams::Load_In(String fileName) {
 			else if (!CompareDecimals(dt.head, data, 2))
 				throw Exc(t_("List of headings does not match with previously loaded"));
 
-		} else if (var == "Reference_body_centre") {
+		} else if (var == "Reference_body_centre" || var == "Reference_body_center") {
 			if (f.size() < 4)
 				throw Exc(t_("Lack of data in Reference_body_center"));
 			dt.msh.SetCount(1);
@@ -301,7 +301,7 @@ bool Hams::LoadHydrostatic(String fileName) {
 		
 		String line = Trim(f.GetText());
 	
-		if (line == "Centre of Gravity:") {
+		if (line == "Centre of Gravity:" || line == "Center of Gravity:") {
 			f.GetLine();
 			if (f.size() < 3)
 				throw Exc(t_("Centre of Gravity data is not complete"));
@@ -389,7 +389,7 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
 		
 		if (!lids[0].IsEmpty()) {
-			dest = AFX(folderInput, "WaterplaneBody.pnl");
+			dest = AFX(folderInput, "WaterplaneMesh.pnl");
 			Body::SaveAs(lids[0], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
 		}
 		
@@ -428,13 +428,13 @@ void Hams::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
 }
 
 void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
-	if (mat.size() != 36)
-		return;
+	bool isvoid = mat.size() != 36;
+
 	out << "\n " << header << ":";
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
 		for (int x = 0; x < 6; ++x)
-			out << "   " << FDS(mat(x, y), 11, true);
+			out << "   " << Format("%.5E", isvoid ? 0. : mat(x, y));
 	}
 }
 
@@ -453,21 +453,20 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
-	out << " Centre of Gravity:";
+	out << " Center of Gravity:";
 	
 	if (dt.msh.IsEmpty())
 		throw Exc(t_("No bodies found"));
 	
 	const Body &b = dt.msh[0];
-	out << Format("\n%s %s %s", FDS(b.dt.cg[0], 15, true), 
-								FDS(b.dt.cg[1], 15, true), 
-								FDS(b.dt.cg[2], 15, true));
+	out << Format("\n  %.15E  %.15E  %.15E", b.dt.cg[0], b.dt.cg[1], b.dt.cg[2]);
 
 	OutMatrix(out, "Body Mass Matrix", b.dt.M);
 	OutMatrix(out, "External Linear Damping Matrix", b.dt.Dlin);
 	OutMatrix(out, "External Quadratic Damping Matrix", b.dt.Dquad);
 	OutMatrix(out, "Hydrostatic Restoring Matrix", b.dt.C);
 	OutMatrix(out, "External Restoring Matrix", b.dt.Cadd);
+	out << "\n";
 }
 
 
@@ -501,8 +500,8 @@ void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 		<< "gravity acceleration\n"
 		<< "sea water density\n"
 		<< "mesh file name (gdf format)\n"
-		<< "Centre of rotation\n"
-		<< "Centre of gravity";
+		<< "Center of rotation\n"
+		<< "Center of gravity";
 }
 
 void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
@@ -539,7 +538,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
-	out << "\n    Reference_body_centre " << Format("%11.3f %11.3f %11.3f", 
+	out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
 								dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]) << 
 		   "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";

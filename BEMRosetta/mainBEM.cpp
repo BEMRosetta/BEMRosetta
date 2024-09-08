@@ -323,7 +323,7 @@ void MainBEM::Init() {
 	CtrlLayout(menuBody);
 	menuBody.butSpreadNegative <<= THISBACK(OnSpreadNegative);
 	menuBody.butMapNodes <<= THISBACK(OnMapNodes);
-	menuBody.butSaveAkselos <<= THISBACK(OnSaveAkselos);
+	//menuBody.butSaveAkselos <<= THISBACK(OnSaveAkselos);
 	
 	OnOpt();
 	
@@ -1736,44 +1736,6 @@ void MainBEM::OnMapNodes() {
 	}
 }
 
-void MainBEM::OnSaveAkselos() {
-	try {
-		int idx = GetIndexOneSelected();
-		if (idx < 0) {
-			Exclamation(t_("Please select a file"));
-			return;
-		}
-		
-		const Hydro &hy = Bem().hydros[idx];
-		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty()) {
-			Exclamation(t_("No mesh is available"));
-			return;
-		}
-		
-		int ib = mainBody.GetIb();
-		
-		if (!hy.IsLoadedPotsRad(ib)) {
-			Exclamation(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
-			return;
-		}
-		
-		FileSel fs;
-	
-		fs.ActiveType(0);
-		fs.ActiveDir(GetDesktopFolder());
-	
-		if (!fs.ExecuteSelectDir(t_("Save data in Akselos format")))
-			return;
-	
-		WaitCursor wait;
-		
-		hy.SaveAkselos(ib, ~fs);
-
-	} catch (Exc e) {
-		BEM::PrintError(DeQtfLf(e));
-	}	
-}
-
 void MapNodes::Init(int _idx, int _ib) {
 	idx = _idx;
 	ib = _ib;
@@ -1953,7 +1915,7 @@ void MainBEM::AfterBEM() {
 	for (int idx = 0; idx < Bem().hydros.size(); ++idx) {
 		for (int ib = 0; ib < Bem().hydros[idx].dt.msh.size(); ++ib) 
 			c0 << Bem().hydros[idx].dt.msh[ib].dt.c0;
-		c  << Pointf(Bem().hydros[idx].dt.x_w, Bem().hydros[idx].dt.y_w);
+		c << Pointf(Bem().hydros[idx].dt.x_w, Bem().hydros[idx].dt.y_w);
 	}
 	bool sameSystem = true;
 	if (c.size() > 0) {
@@ -1964,9 +1926,12 @@ void MainBEM::AfterBEM() {
 			}
 		}
 	}
-	if (sameSystem && c0.size() > 0) {
+	if (sameSystem && c0.size() > 1) {
 		for (int i = 1; i < c0.size(); ++i) {
-			if (!EqualDecimals(c0[i].x, c0[i-1].x, 3) || !EqualDecimals(c0[i].y, c0[i-1].y, 3) || !EqualDecimals(c0[i].z, c0[i-1].z, 3)) {
+			if (!IsNull(c0[i]) && 
+				(!EqualDecimals(c0[i].x, c0[i-1].x, 3) || 
+				 !EqualDecimals(c0[i].y, c0[i-1].y, 3) || 
+				 !EqualDecimals(c0[i].z, c0[i-1].z, 3))) {
 				sameSystem = false;
 				break;
 			}
@@ -2145,7 +2110,7 @@ void MainBEM::OnConvert() {
 				progress.SetText(str); 
 			if (_pos >= 0)
 				progress.SetPos(_pos); 
-			return !progress.Canceled();}, type, qtfHeading);
+			return !progress.Canceled();}, type, qtfHeading, mainBody.GetIb());
 			
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {

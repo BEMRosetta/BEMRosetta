@@ -1245,6 +1245,7 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 			"import capytaine as cpt\n"
 			"from capytaine.io.xarray import problems_from_dataset\n"
 			"from capytaine.bem.airy_waves import airy_waves_pressure\n"
+			"from capytaine.post_pro.rao import rao\n"
 			"import xarray as xr\n"
 			"import os\n\n";
 
@@ -1324,6 +1325,7 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 			"\n"
 			"mesh = all_bodies.mesh\n"
 			"\n"
+			"ds['RAO'] = rao(ds)\n"
 			"ds.coords['space_coordinate'] = ['x', 'y', 'z']\n";
 	if (withMesh) 
 		spy <<	"ds['mesh_vertices'] = (['face', 'vertices_of_face', 'space_coordinate'], mesh.vertices[mesh.faces])\n"
