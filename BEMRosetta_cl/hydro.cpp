@@ -568,14 +568,12 @@ void Hydro::SaveAkselos(int ib, String file) const {
 	}
 	
 	MultiDimMatrixRowMajor<std::complex<double>> rad(6, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
-	//rad.SetZero();
 	for (int idof = 0; idof < 6; ++idof)
 		for (int idf = 0; idf < dt.Nf; ++idf)	
 			for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip)	
 				rad(idof, idf, ip) = P_rad(ib, ip, idof, dt.Nf - idf - 1);	// Inverse order to save in period order
 
 	MultiDimMatrixRowMajor<std::complex<double>> dif(dt.Nh, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
-	//dif.SetZero();
 	for (int ih = 0; ih < dt.Nh; ++ih)
 		for (int idf = 0; idf < dt.Nf; ++idf)	
 			for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip)	
@@ -618,15 +616,31 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 		CalcF(dt.sc, k);
 	if (IsLoadedFfk())
 		CalcF(dt.fk, k);
-	if (IsLoadedFsc_pot())
-		CalcF(dt.sc_pot, k);
-	if (IsLoadedFfk_pot())
-		CalcF(dt.fk_pot, k);
-	if (IsLoadedFfk_pot_bmr())
-		CalcF(dt.fk_pot_bmr, k);
 	
 	if (IsLoadedRAO())
 		CalcF(dt.rao, k);
+
+	
+	auto CalcPot = [&](UArray<UArray<UArray<UArray<std::complex<double>>>>> &pot, const UVector<double> &k) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			for	(int ih = 0; ih < dt.Nh; ++ih) {
+				double angle = ToRad(dt.head[ih]);
+				double dist = dx*cos(angle) + dy*sin(angle);
+					
+				for	(int ifr = 0; ifr < dt.Nf; ++ifr) {	
+					double ph = k[ifr]*dist;
+					for	(int ip = 0; ip < dt.pots_rad[ib].size(); ++ip)
+						AddPhase(pot[ib][ip][ih][ifr], ph);	
+				}
+			}
+		}
+	};
+	if (IsLoadedPotsDif())
+		CalcPot(dt.pots_dif, k);
+	if (IsLoadedPotsInc())
+		CalcPot(dt.pots_inc, k);
+	if (IsLoadedPotsIncB())
+		CalcPot(dt.pots_inc_bmr, k);
 	
     auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
         int sign = isSum ? 1 : -1;
@@ -653,6 +667,10 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 		CalcQTF(dt.qtfsum, qk, true);		
 	if (IsLoadedQTF(false))	
 		CalcQTF(dt.qtfdif, qk, false);	
+	
+	String error = AfterLoad();
+	if (!error.IsEmpty())
+		throw Exc(Format(t_("Problem translating global origin: '%s'\n%s"), error));	
 }
 
 
@@ -905,12 +923,11 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 		GetK_IRF(maxT, Bem().numValsA);
 	}
 	
-	// Some previous data are now invalid
+	// Some previous data are now invalid. Translation algorithms are welcome
 	dt.rao.Clear();	
-	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		dt.msh[ib].dt.C = MatrixXd();
-		dt.msh[ib].dt.Dlin = MatrixXd();
+		Clear(dt.msh[ib].dt.C);
+		Clear(dt.msh[ib].dt.Dlin);
 	}
 	
 	for (int ib = 0; ib < dt.Nb; ++ib)

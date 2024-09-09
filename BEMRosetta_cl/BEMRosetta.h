@@ -1622,7 +1622,7 @@ public:
 	double maxTimeA = Null;
 	int numValsA = Null;
 	int onlyDiagonal;
-	bool zeroIfEmpty = false;
+	int zeroIfEmpty = false;
 	
 	String nemohPath, nemoh115Path, nemoh3Path, nemohPathGREN;
 	bool experimental;

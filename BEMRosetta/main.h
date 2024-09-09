@@ -1619,8 +1619,8 @@ private:
 	
 	UVector<int> ids;
 	UVector<Point3D> points;
-	Tensor<double, 4> Apan;		// [Np][6][6][Nf]	Added mass
-	Tensor<double, 4> Bpan;		// [Np][6][6][Nf]	Radiation damping
+	Tensor<double, 4> A_pan;		// [Np][6][6][Nf]	Added mass
+	Tensor<double, 4> B_pan;		// [Np][6][6][Nf]	Radiation damping
 };
 
 class MainBEM : public MainBEMBody {

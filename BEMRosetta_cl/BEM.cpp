@@ -552,6 +552,8 @@ String BEM::LoadSerializeJson() {
 		legend_w_solver = true;
 	if (!ok || IsNull(legend_w_units))
 		legend_w_units = true;
+	if (!ok || IsNull(zeroIfEmpty))
+		zeroIfEmpty = true;
 				
 	return ret;
 }

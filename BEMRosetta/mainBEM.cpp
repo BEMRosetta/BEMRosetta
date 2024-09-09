@@ -1771,7 +1771,7 @@ void MapNodes::RefreshTable() {
 	
 	const Hydro &hy = Bem().hydros[idx];
 	Grid g;
-	hy.SaveMap(g, dropFreq.GetData(), Bem().onlyDiagonal, ids, points, Apan, Bpan);
+	hy.SaveMap(g, dropFreq.GetData(), Bem().onlyDiagonal, ids, points, A_pan, B_pan);
 	ArrayCtrlFill(arrayNodes, g, false);
 	
 	numNodes <<= arrayNodes.GetCount();
@@ -1796,8 +1796,8 @@ void MapNodes::OnPasteNodes() {
 	
 	ids.Clear();
 	points.Clear();
-	Apan = Tensor<double, 4>();
-	Bpan = Tensor<double, 4>();	
+	A_pan = Tensor<double, 4>();
+	B_pan = Tensor<double, 4>();	
 	
 	sin.Seek(par.beginData);
 
@@ -1824,7 +1824,7 @@ void MapNodes::OnPasteNodes() {
 void MapNodes::OnMapNodes() {
 	const Hydro &hy = Bem().hydros[idx];
 		
-	hy.MapNodes(ib, points, Apan, Bpan);
+	hy.MapNodes(ib, points, A_pan, B_pan);
 	
 	RefreshTable();
 }
@@ -1855,13 +1855,13 @@ void MapNodes::OnExport(){
 	
 	const Hydro &hy = Bem().hydros[idx];
 	
-	hy.SaveMap(fileName, fileType, freqId, Bem().onlyDiagonal, ids, points, Apan, Bpan);
+	hy.SaveMap(fileName, fileType, freqId, Bem().onlyDiagonal, ids, points, A_pan, B_pan);
 }
 	
 MenuAdvancedReference::MenuAdvancedReference() {
 	CtrlLayout(*this);
 	
-	c_array.Editing().Clipboard();
+	c_array.Editing().Clipboard().Sorting(false);
 	c_array.AddColumn(t_("Body"));
 	c_array.AddColumn(t_("x")).Edit(edit[0]);
 	c_array.AddColumn(t_("y")).Edit(edit[1]);

@@ -61,6 +61,7 @@ void MenuOptions::Load() {
 	legend_w_units <<= bem->legend_w_units;
 	legend_w_solver <<= bem->legend_w_solver;
 	pythonEnv <<= bem->pythonEnv;
+	zeroIfEmpty <<= bem->zeroIfEmpty;
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -107,6 +108,7 @@ void MenuOptions::OnSave() {
 		bem->legend_w_units = ~legend_w_units;
 		bem->legend_w_solver = ~legend_w_solver;
 		bem->pythonEnv = ~pythonEnv;
+		bem->zeroIfEmpty = ~zeroIfEmpty;
 		
 		bem->dofType = BasicBEM::DOFType(dofType.GetIndex());
 		bem->headingType = BasicBEM::HeadingType(headingType.GetIndex());
@@ -173,6 +175,8 @@ bool MenuOptions::IsChanged() {
 	if (bem->legend_w_units != ~legend_w_units)
 		return true;
 	if (bem->pythonEnv != ~pythonEnv)
+		return true;
+	if (bem->zeroIfEmpty != ~zeroIfEmpty)
 		return true;
 				
 	return false;
