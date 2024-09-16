@@ -13,8 +13,6 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 	dt.file = file;	
 	dt.name = GetFileTitle(file);
 	
-	//dt.g = g;
-	
 	try {
 		FASTCase fast;
 		
@@ -26,10 +24,21 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 			return Format(t_("File '%s' is not of FAST type"), file);
 			
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
-		
-		if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
-			return Format(t_("File '%s' not found"), file);
 
+		if (!Load_HydroDyn(file)) 
+			return Format(t_("File '%s' not found"), file);	
+		if (file != fast.hydrodyn.fileName) {
+			if (!Load_HydroDyn(fast.hydrodyn.fileName)) 
+				return Format(t_("File '%s' not found"), file);
+		}
+		
+		if (IsNull(dt.rho) && IsNull(dt.h) && IsNull(dt.len) && IsNull(dt.msh[0].dt.Vo) && 
+			IsNull(WaveDirRange) && IsNull(dt.g) && IsNull(hydroFolder))
+			return Exc(t_("Wrong file format"));
+		
+		if (IsNull(WaveNDir))
+			WaveNDir = 1;
+		
 		String hydroFile = AFX(GetFileFolder(file), hydroFolder, dt.name);
 		dt.solver = Hydro::FAST_WAMIT;
 		
@@ -43,8 +52,6 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 			return Format(t_("FAST does not support more than one body in file '%s'"), file);	
 		if (dt.head.IsEmpty())
 			return t_("No wave headings found in Wamit file");
-		//if (abs(dt.head[0]) != abs(dt.head[dt.head.size()-1]))
-		//	throw Exc(Format(t_("FAST requires symmetric wave headings. .2.3 file headings found from %f to %f"), dt.head[0], dt.head[dt.head.size()-1])); 
 	
 		String ssFile = ForceExtSafer(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
@@ -54,7 +61,6 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 		}
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
-		//dt.lastError = e;
 		return e;
 	}
 	
@@ -66,10 +72,11 @@ bool Fast::Load_HydroDyn(String fileName) {
 	if (!in.IsOpen())
 		return false;
 
-	dt.Nb = WaveNDir = 1;
+	dt.Nb = 1;
 	dt.msh.SetCount(dt.Nb);
-	//dt.Vo.SetCount(dt.Nb, 0);
-	dt.rho = dt.h = dt.len = WaveDirRange = Null;
+	WaveDirRange = Null;
+	
+	int pos;
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
@@ -89,14 +96,17 @@ bool Fast::Load_HydroDyn(String fileName) {
 			WaveNDir = f.GetInt(0);
 		else if (f.GetText(1) == "WaveDirRange") 
 			WaveDirRange = f.GetDouble(0);
-		else if (f.GetText(1) == "PotFile") { 
-			String path = f.GetText(0);
+		else if (f.GetText(1) == "Gravity") 
+			dt.g = f.GetDouble(0);
+		else if ((pos = f.GetText().Find("PotFile")) >= 0) { 
+			String path = f.GetText().Left(pos);
 			path.Replace("\"", "");
+			path = Trim(path);
 			hydroFolder = GetFileFolder(path);
 			dt.name = GetFileName(path);
 		}
 	}
-	if (IsNull(dt.rho) || IsNull(dt.h) || IsNull(dt.len))
+	if (IsNull(dt.rho) && IsNull(dt.name))
 		throw Exc(Format(t_("Wrong format in FAST file '%s'"), fileName));
 	
 	return true;
@@ -488,3 +498,91 @@ bool Fast::Load_SS(String fileName) {
 }
 
 
+String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
+	FASTCase fst;
+	
+	fst.Load(fileName);
+	
+	{	// Hydrodyn
+		UVector<UVector<String>> sjoints  = fst.hydrodyn.GetFASTArray("NJoints");
+		UVector<UVector<String>> smembers = fst.hydrodyn.GetFASTArray("NMembers");
+		UVector<UVector<String>> sprops   = fst.hydrodyn.GetFASTArray("NPropSets");	
+		
+		if (!sjoints.IsEmpty() && !smembers.IsEmpty()) {
+			UVector<Point3D> joints(sjoints.size());
+			for (int i = 0; i < sjoints.size(); ++i) {
+				joints[i].x = ScanDouble(sjoints[i][1]);
+				joints[i].y = ScanDouble(sjoints[i][2]);
+				joints[i].z = ScanDouble(sjoints[i][3]);
+			}
+			UVector<double> props(sprops.size());
+			for (int i = 0; i < sprops.size(); ++i) 
+				props[i] = ScanDouble(sprops[i][1])/2.;	//Diameters
+			
+			Body &b = mesh.Add();
+			
+			for (int i = 0; i < smembers.size(); ++i) {
+				int id0 = ScanInt(smembers[i][1]);
+				if (id0 < 1 || id0 > joints.size())
+					throw Exc(Format(t_("Wrong member id %s"), smembers[i][1]));
+				int id1 = ScanInt(smembers[i][2]);
+				if (id1 < 1 || id1 > joints.size())
+					throw Exc(Format(t_("Wrong member id %s"), smembers[i][2]));
+				int idp0 = ScanInt(smembers[i][3]);
+				if (idp0 < 1 || idp0 > props.size())
+					throw Exc(Format(t_("Wrong member id %s"), smembers[i][3]));
+				int idp1 = ScanInt(smembers[i][4]);
+				if (idp1 < 1 || idp1 > props.size())
+					throw Exc(Format(t_("Wrong member id %s"), smembers[i][4]));
+				
+				b.dt.mesh.AddLine({joints[id0-1], joints[id1-1]}, {props[idp0-1], props[idp1-1]});
+			}
+			b.dt.fileName = fst.hydrodyn.fileName;
+			b.dt.SetCode(Body::OPENFAST_FST);
+		}
+	}
+	{	// SubDyn
+		UVector<UVector<String>> sjoints  = fst.subdyn.GetFASTArray("NJoints");
+		UVector<UVector<String>> smembers = fst.subdyn.GetFASTArray("NMembers");	
+		UVector<UVector<String>> smasses  = fst.subdyn.GetFASTArray("NCmass");	
+		
+		if (!sjoints.IsEmpty() && !smembers.IsEmpty()) {
+			UVector<Point3D> joints(sjoints.size());
+			for (int i = 0; i < sjoints.size(); ++i) {
+				joints[i].x = ScanDouble(sjoints[i][1]);
+				joints[i].y = ScanDouble(sjoints[i][2]);
+				joints[i].z = ScanDouble(sjoints[i][3]);
+			}
+						
+			Body &b = mesh.Add();
+			
+			for (int i = 0; i < smembers.size(); ++i) {
+				int id0 = ScanInt(smembers[i][1]);
+				if (id0 < 1 || id0 > joints.size())
+					throw Exc(Format(t_("Wrong member id %s"), smembers[i][1]));
+				int id1 = ScanInt(smembers[i][2]);
+				if (id1 < 1 || id1 > joints.size())
+					throw Exc(Format(t_("Wrong member id %s"), smembers[i][2]));
+				
+				b.dt.mesh.AddLine({joints[id0-1], joints[id1-1]});	
+			}
+			
+			for (int i = 0; i < smasses.size(); ++i) {
+				Body::ControlData::ControlLoad &load = b.cdt.controlLoads.Add();
+				load.loaded = true;
+				load.mass = ScanDouble(smasses[i][1]);
+				int id = ScanInt(smasses[i][0]);
+				if (id < 1 || id > joints.size())
+					throw Exc(Format(t_("Wrong member id %s"), smasses[i][1]));
+				
+				load.p = joints[id-1];
+			}
+			
+			b.dt.fileName = fst.subdyn.fileName;
+			b.dt.SetCode(Body::OPENFAST_FST);
+		}
+	}
+	
+	
+	return String();
+}

@@ -85,11 +85,16 @@ void SetFASTVar(String &strFile, String varName, String value, String paragraph)
 	}
 }
 
-String GetFASTVar(const String &strFile, String varName, String paragraph) {
-	int posIni, pos;
+String GetFASTVarPos(const String &strFile, String varName, String paragraph, int &pos) {
+	int posIni;
 	if (!GetFASTVarLine(strFile, varName, paragraph, posIni, pos, 0))
 		return Null;
 	return Trim(strFile.Mid(posIni, pos - posIni));	
+}
+
+String GetFASTVar(const String &strFile, String varName, String paragraph) {
+	int pos;
+	return GetFASTVarPos(strFile, varName, paragraph, pos);
 }
 
 void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd) {

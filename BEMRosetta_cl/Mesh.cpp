@@ -3,10 +3,10 @@
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 CAPY_NC, 		OBJ,    ORCAFLEX_YML,   UNKNOWN, NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit.gdf","Wamit.dat",	"Nemoh.dat", "NemohFS.dat", "Nemoh premesh","AQWA.dat", "AQWA.lis","HAMS.pnl","STL.Binary","STL.Text","Edit","TDyn.msh", "BEMR",   "Diodore.dat", "HydroStar.hst", "OrcaWave.owr", "MIKE21.grd", "Capytaine.nc","Obj",  "OrcaFlex.yml", "Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   true,	   true,		true,	   false, false, 	  true, 	true,		   false,   	   false, 		   true, 		 false, 	    false,  false, 	        false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   "*.pnl",   "*.stl",     "*.stl",    "",	  "*.msh",   "*.bemr",  "*.dat", 	  "*.hst", 	   	   "*.owr",		   "*.grd", 	 "*.nc", 	    "*.obj","*.yml",        "*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		BEM_MESH, 			UNKNOWN, 		NUMMESH};	
+const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"BEMRosetta .bemr", "By extension", "Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true,				true, 		    false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.bemr", 			"*.*"};       
 
 int Body::idCount = 0;
 
@@ -146,6 +146,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		ret = HydrostarBody::LoadHst(mesh, file, y0z, x0z); 
 	else if (ext == ".nc") 
 		ret = CapyBody::Load_NC(mesh, file, g);
+	else if (ext == ".fst") 
+		ret = FASTBody::Load_Fst(mesh, file);
 	else if (ext == ".stl") {
 		bool isText;
 		Body &m = mesh.Add();
@@ -186,16 +188,24 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			return std::move(e);
 		}
 		m.dt.SetCode(Body::OBJ);
-	} else if (ext == ".mesh" || ext == ".bem") {
-		Body &m = mesh.Add();
-		try {
-			m.dt.mesh.Load(file);
-		} catch(Exc e) {
-			return std::move(e);
+	} else if (ext == ".bemr") {
+		Hydro hydro;
+		String error = hydro.LoadSerialization(file);
+		if (error.IsEmpty() && !hydro.dt.msh.IsEmpty())		// .bemr from Hydro
+			mesh.Append(hydro.dt.msh);
+		else {
+			try {
+				Body b;
+				b.dt.mesh.LoadSerialization(file);		// .bemr from Body
+				mesh << b;
+			} catch(Exc e) {
+				return std::move(e);
+			}
 		}
-		m.dt.SetCode(Body::BEM_MESH);
+		//Last(mesh).dt.fileName = file;
+		//Last(mesh).dt.SetCode(Body::BEM_MESH);
 	} else
-		ret = Format(t_("Unknown mesh file format '%s'"), file);	
+		ret = Format(t_("Unknown mesh file format '%s'"), GetFileExt(file));	
 	
 	if (!ret.IsEmpty())
 		return ret;
@@ -226,8 +236,28 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 	return String();
 }
 
-void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
+void Body::SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
+					
+	if (type == UNKNOWN) {
+		String ext = ToLower(GetFileExt(fileName));
+		
+		if (ext == ".gdf") 
+			type = WAMIT_GDF;
+		else if (ext == ".dat")
+			type = NEMOH_DAT;
+		else if (ext == ".pnl")
+			type = HAMS_PNL;
+		else if (ext == ".stl")
+			type = STL_TXT;
+		else if (ext == ".grd")
+			type = MIKE21_GRD;
+		else if (ext == ".bemr")
+			type = BEM_MESH;
+		else
+			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
+	}
+	
 	UArray<Surface> surfs(meshes.size());
 	nNodes = nPanels = 0;
 	
@@ -270,25 +300,25 @@ void Body::SaveAs(const UArray<Body> &meshes, String file, MESH_FMT type, MESH_T
 	}
 	
 	if (type == WAMIT_GDF) 
-		WamitBody::SaveGdf(file, First(surfs), g, symX, symY);	
+		WamitBody::SaveGdf(fileName, First(surfs), g, symX, symY);	
 	else if (type == NEMOH_DAT) 
-		NemohBody::SaveDat(meshes, file, First(surfs), symY, nPanels);
+		NemohBody::SaveDat(meshes, fileName, First(surfs), symY, nPanels);
 	else if (type == NEMOH_PRE) 
-		NemohBody::SavePreBody(file, First(surfs));
+		NemohBody::SavePreBody(fileName, First(surfs));
 	else if (type == HAMS_PNL)		
-		HAMSBody::SavePnl(file, First(surfs), symX, symY);	// Only one symmetry is really available
+		HAMSBody::SavePnl(fileName, First(surfs), symX, symY);	// Only one symmetry is really available
 	else if (type == AQWA_DAT)		
-		AQWABody::SaveDat(file, meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
+		AQWABody::SaveDat(fileName, meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
 	else if (type == DIODORE_DAT) 
-		DiodoreBody::SaveDat(file, First(surfs));
+		DiodoreBody::SaveDat(fileName, First(surfs));
 	else if (type == STL_BIN)		
-		SaveStlBin(file, First(surfs));
+		SaveStlBin(fileName, First(surfs));
 	else if (type == STL_TXT)		
-		SaveStlTxt(file, First(surfs));
+		SaveStlTxt(fileName, First(surfs));
 	else if (type == BEM_MESH)		
-		First(surfs).Save(file);
+		First(surfs).SaveSerialization(fileName);
 	else if (type == MIKE21_GRD)		
-		SaveGRD(file, First(surfs), g, symX, symY);
+		SaveGRD(fileName, First(surfs), g, symX, symY);
 	else
 		throw Exc(t_("Unknown mesh file type"));
 }
@@ -310,7 +340,7 @@ void Body::Orient() {
 void Body::Append(const Surface &orig, double rho, double g) {
 	dt.mesh.Append(orig);
 	
-	AfterLoad(rho, g, false, true);
+	AfterLoad(rho, g, false, false, true, true);
 }
 
 void Body::Reset(double rho, double g) {
@@ -330,6 +360,9 @@ void Body::Reset(double rho, double g) {
 }
 	
 void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy, bool reZero) {
+	if (isFirstTime) 
+		IncrementIdCount();
+	
 	if (dt.mesh.IsEmpty()) {
 		if (!dt.mesh.lines.IsEmpty())
 			dt.mesh.GetEnvelope();
@@ -361,8 +394,6 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		if (IsNull(dt.Vo))
 			dt.Vo = dt.under.volume;
 	}
-	if (isFirstTime) 
-		IncrementIdCount();
 	
 	if (isFirstTime || reZero) {
 		dt.mesh0 = clone(dt.mesh);
@@ -775,7 +806,13 @@ Point3D Body::GetCB_all() const {
 }
 	
 void Body::Jsonize(JsonIO &json) {
+	int icode;
+	UArray<MatrixXd> oldA, oldB, oldKirf;
+	if (json.IsStoring()) 
+		icode = dt.GetCode();
+	
 	json
+		("code", icode)
 		("projectionPos", dt.projectionPos)
 		("projectionNeg", dt.projectionNeg)
 		("cgZ0surface", dt.cgZ0surface)
@@ -800,6 +837,8 @@ void Body::Jsonize(JsonIO &json) {
 		("mesh0", dt.mesh0)
 		("ControlData", cdt)
 	;
+	if(json.IsLoading()) 
+		dt.SetCode(static_cast<Body::MESH_FMT>(icode));
 }
 
 	

@@ -289,6 +289,8 @@ void MainBody::Init() {
 	menuOpen.butRemoveSelected.WhenAction = THISBACK1(OnRemoveSelected, false);
 	menuOpen.butJoin.Disable();	
 	menuOpen.butJoin.WhenAction = THISBACK(OnJoin);
+	menuOpen.butDuplicate.Disable();	
+	menuOpen.butDuplicate.WhenAction = THISBACK(OnDuplicate);
 	menuOpen.butSplit.Disable();	
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
 	menuOpen.butExport <<= THISBACK(OnConvertBody);
@@ -1558,7 +1560,7 @@ void MainBody::OnAddRevolution() {
 	try {
 		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		Body &msh = Bem().surfs[Bem().surfs.size()-1];
+		Body &msh = Last(Bem().surfs);
 		msh.dt.name = t_("Revolution");
 		msh.dt.fileName =  "";
 		
@@ -1604,7 +1606,7 @@ void MainBody::OnAddPolygonalPanel() {
 	try {
 		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
 		
-		Body &msh = Bem().surfs[Bem().surfs.size()-1];
+		Body &msh = Last(Bem().surfs);
 		msh.dt.name = t_("Polynomial");
 		msh.dt.fileName =  "";
 		
@@ -1722,11 +1724,6 @@ void MainBody::OnHealing(bool basic) {
 		
 		Bem().HealingBody(idx, basic, [&](String str, int _pos) {progress.SetText(str); progress.SetPos(_pos); return progress.Canceled();});
 		
-		/*UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-		
-	 	mainStiffness.Load(Bem().surfs, ids);
-		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);*/
 		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
@@ -1765,10 +1762,6 @@ void MainBody::OnOrientSurface() {
 		
 		Bem().surfs[idx].AfterLoad(Bem().rho, Bem().g, false, false);
 		
-		/*UVector<int> ids = ArrayModel_IdsBody(listLoaded);
-	 	mainStiffness.Load(Bem().surfs, ids);
-		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);*/
 		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
@@ -1786,7 +1779,6 @@ void MainBody::OnImage(int axis) {
 	String saxis = (axis == 0) ? "X" : ((axis == 1) ? "Y" : "Z");
 
 	try {
-		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		int idx = ArrayModel_IndexBody(listLoaded);
 		if (idx < 0) {
 			BEM::PrintError(t_("Please select a model to process"));
@@ -1809,9 +1801,6 @@ void MainBody::OnImage(int axis) {
 	
 		msh.AfterLoad(Bem().rho, Bem().g, false, false);
 		
-	 	/*mainStiffness.Load(Bem().surfs, ids);
-		mainView.CalcEnvelope();
-		mainSummary.Report(Bem().surfs, id);*/
 		UpdateLast(idx);
 		
 		mainView.gl.Refresh();
@@ -1866,40 +1855,62 @@ void MainBody::OnJoin() {
 	GuiLock __;
 	
 	try {	
-		//bool selected = false;
-		int idxDest = Null;
+		UVector<int> idsJoin;
 		for (int r = 0; r < listLoaded.GetCount(); ++r) {
 			if (listLoaded.IsSelected(r)) {
-				if (IsNull(idxDest))
-					idxDest = ArrayModel_IndexBody(listLoaded, r);
-				else
-					idxDest = min(idxDest, ArrayModel_IndexBody(listLoaded, r));
+				int id = ArrayModel_IndexBody(listLoaded, r);
+				idsJoin << id;
 			}
 		}
-		if (IsNull(idxDest) || idxDest < 0) {
+		if (idsJoin.IsEmpty()) {
 			BEM::PrintError(t_("No model joined"));
 			return;
 		}
 		
 		WaitCursor waitcursor;
 		
-		for (int r = listLoaded.GetCount()-1; r >= 0; --r) {
-			if (listLoaded.IsSelected(r)) {
-				int idx = ArrayModel_IndexBody(listLoaded, r);
-				if (idxDest != idx) {
-					Bem().JoinBody(idxDest, idx);
-					RemoveRow(r);
-					dialogDamage.RemoveId(r);
-					//selected = true;
-				}
-			}
-		}	
+		Bem().JoinBody(idsJoin);
 	
-		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
-		mainStiffness.Load(Bem().surfs, idxs);
-		mainViewData.ReLoad(mainView);
+		Body &msh = Last(Bem().surfs);
+		msh.dt.name = t_("Joined");
+		msh.AfterLoad(Bem().rho, Bem().g, false, true);
 		
+		msh.Report(Bem().rho);
+		AddRow(msh);
 		After();
+		mainViewData.OnAddedModel(mainView);
+		OnOpt();
+		
+	} catch (Exc e) {
+		mainView.gl.Enable();
+		BEM::PrintError(DeQtfLf(e));
+	}
+}
+
+void MainBody::OnDuplicate() {
+	GuiLock __;
+	
+	try {	
+		int idx = ArrayModel_IndexBody(listLoaded);
+		if (idx < 0) {
+			BEM::PrintError(t_("Please select a model to duplicate"));
+			return;
+		}
+		
+		WaitCursor waitcursor;
+		
+		Bem().DuplicateBody(idx);
+	
+		Body &msh = Last(Bem().surfs);
+		msh.dt.name = t_("Duplicated");
+		msh.AfterLoad(Bem().rho, Bem().g, false, true);
+		
+		msh.Report(Bem().rho);
+		AddRow(msh);
+		After();
+		mainViewData.OnAddedModel(mainView);
+		OnOpt();
+		
 	} catch (Exc e) {
 		mainView.gl.Enable();
 		BEM::PrintError(DeQtfLf(e));
@@ -1988,6 +1999,7 @@ void MainBody::UpdateButtons() {
 	menuOpen.butRemove.Enable(numrow > 0);
 	menuOpen.butRemoveSelected.Enable(numsel > 0);
 	menuOpen.butJoin.Enable(numsel > 1);
+	menuOpen.butDuplicate.Enable(numsel == 1);
 	menuOpen.butSplit.Enable(numsel == 1 || numrow == 1);
 	menuOpen.dropExport.Enable(numsel >= 1);
 	menuOpen.butExport.Enable(numsel >= 1);
@@ -2024,6 +2036,8 @@ void MainBody::After() {
 	mainSummary.Clear();
 	for (int row = 0; row < listLoaded.GetCount(); ++row) {
 		int idx = ArrayModel_IndexBody(listLoaded, row);
+		if (idx < 0)
+			throw Exc("Unexpected problem in After()");
 		mainSummary.Report(Bem().surfs, idx);
 	}		
 
@@ -2383,8 +2397,14 @@ void MainView::OnPaint() {
 				gl.PaintDoubleAxis(msh.dt.c0, len*10, Cyan());
 				gl.PaintCube(msh.dt.c0, len/20, Gray());
 			}
-			if (~GetMenuPlot().showLines) 
-				gl.PaintLines(msh.dt.mesh.lines, color);
+			if (~GetMenuPlot().showLines) {
+				for (const auto &l : msh.dt.mesh.lines) {
+					if (l.toPlot.IsEmpty()) 
+						gl.PaintLines(l.lines, color);
+					else
+						gl.PaintLines(l.toPlot, color);
+				}
+			}
 					
 			if (~GetMenuPlot().showPoints) {
 				for (int i = 0; i < msh.cdt.controlPointsA.size(); ++i)

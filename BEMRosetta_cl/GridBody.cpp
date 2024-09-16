@@ -79,7 +79,7 @@ void GridBody::TableHeaders(const Hydro &hy, double head, bool pot, UVector<Stri
 			str << Format(t_("arg(Ffk) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
 		}
 	}
-	if (hy.IsLoadedPotsIncB()) {
+	if (hy.IsLoadedPotsIncBMR()) {
 		int n = 0;
 		if (pot) {
 			str << Format(t_("|Φinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
@@ -141,7 +141,7 @@ void GridBody::Load(int idx, int ib, int &numNodes, int &numPanels) {
 			nnum << hy.dt.pots_inc[ib].size();
 			snum << "incident";
 		}
-		if (hy.IsLoadedPotsIncB(ib)) {
+		if (hy.IsLoadedPotsIncBMR(ib)) {
 			nnum << hy.dt.pots_inc_bmr[ib].size();
 			snum << "incident_bemr";
 		}

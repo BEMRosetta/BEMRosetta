@@ -36,7 +36,7 @@ class Body : public Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   BEM_MESH, DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, UNKNOWN, NUMMESH};	
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST, BEM_MESH, UNKNOWN, NUMMESH};	
 	static const char *meshStr[];
 	static const bool meshCanSave[];
 	static const char *meshExt[];
@@ -257,11 +257,11 @@ class Hydro : public Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT, HAMS, WADAM_WAMIT,   NEMOH,   NEMOHv115, NEMOHv3, SEAFEM_NEMOH,   AQWA,   AQWA_QTF,	AQWA_DAT,				  FOAMM,   DIODORE,		BEMROSETTA, 	   ORCAFLEX_YML,   CSV_MAT,    CSV_TABLE,    BEMIO_H5,		CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
+	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT, HAMS, WADAM_WAMIT,   NEMOH,   NEMOHv115, NEMOHv3, SEAFEM_NEMOH,   AQWA,   AQWA_QTF,	AQWA_DAT,				  FOAMM,   DIODORE,		ORCAFLEX_YML,   CSV_MAT,    CSV_TABLE,    BEMIO_H5,		CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
 #ifdef PLATFORM_WIN32	
 	ORCAWAVE_OWR, 
 #endif
-	UNKNOWN, NUMBEM};
+	BEMROSETTA, UNKNOWN, NUMBEM};
 	static const char *bemStr[];
 	static const bool bemCanSave[];
 	static const bool caseCanSave[];
@@ -487,6 +487,7 @@ public:
 	void GetFscFromFexFfk();
 	void GetFfkFromFexFsc();
 	void CompleteForces1st();
+	void FillWithPotentials();
 	
 	bool SymmetryRule(int idf6, bool xAxis);
 	void Symmetrize_Forces(bool xAxis);
@@ -810,7 +811,6 @@ public:
 		int mdtype = 0;							// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field		
 	    					
 	    UVector<double> w;		 				// [Nf]             Wave frequencies
-	    //int dataFromW = Null;
 	    		
 	   	UArray<Body> msh;						// [Nb]
 	   	
@@ -879,7 +879,7 @@ public:
 				 PLOT_RAO_1, PLOT_RAO_2, PLOT_Z_1, PLOT_Z_2, PLOT_KR_1, PLOT_KR_2, 
 				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H, PLOT_A_P, PLOT_B_P, 
 				 PLOT_FORCE_FK_1_P, PLOT_FORCE_FK_2_P, PLOT_FORCE_SC_1_P, PLOT_FORCE_SC_2_P,
-				 PLOT_FORCE_FK_1_PB, PLOT_FORCE_FK_2_PB};
+				 PLOT_FORCE_FK_1_P_BMR, PLOT_FORCE_FK_2_P_BMR, PLOT_UNKNOWN};
 	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_KMOOR, MAT_DAMP_QUAD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
@@ -920,8 +920,45 @@ public:
 	bool IsLoadedPotsRad(int ib = 0)		 const {return ib < dt.Nb && !dt.pots_rad.IsEmpty() && !dt.pots_rad[ib].IsEmpty() && !dt.pots_rad[ib][0].IsEmpty();}
 	bool IsLoadedPotsDif(int ib = 0)		 const {return ib < dt.Nb && !dt.pots_dif.IsEmpty() && !dt.pots_dif[ib].IsEmpty() && !dt.pots_dif[ib][0].IsEmpty();}
 	bool IsLoadedPotsInc(int ib = 0)		 const {return ib < dt.Nb && !dt.pots_inc.IsEmpty() && !dt.pots_inc[ib].IsEmpty() && !dt.pots_inc[ib][0].IsEmpty();}
-	bool IsLoadedPotsIncB(int ib = 0)		 const {return ib < dt.Nb && !dt.pots_inc_bmr.IsEmpty() && !dt.pots_inc_bmr[ib].IsEmpty() && !dt.pots_inc_bmr[ib][0].IsEmpty();}
+	bool IsLoadedPotsIncBMR(int ib = 0)		 const {return ib < dt.Nb && !dt.pots_inc_bmr.IsEmpty() && !dt.pots_inc_bmr[ib].IsEmpty() && !dt.pots_inc_bmr[ib][0].IsEmpty();}
 	
+	// Theory
+	// Basics
+	//		Introduction in https://www.wamit.com/manual7.x/html/wamit_v75manualch3.html#x5-190003
+	// Potentials
+	// 		https://www.orcina.com/webhelp/OrcaWave/Default_Left.htm#StartTopic=html/Theory,First-orderequations.htm|SkinName=Web%20Help
+	// 		https://www.orcina.com/webhelp/OrcaWave/Content/html/Theory,Governingequations.htm
+	//		Section 3.3 in https://www.wamit.com/manual7.x/html/wamit_v75manualch3.html#x5-190003
+	// Added mass and damping
+	//		https://www.orcina.com/webhelp/OrcaWave/Content/html/Results,Addedmassanddamping.htm
+	//		Section 3.1 in https://www.wamit.com/manual7.x/html/wamit_v75manualch3.html#x5-190003
+	//
+	// If the wave at x=0 is given by Acos(ωt), this corresponds to a real-valued cosine wave. 
+	// To relate this to the complex exponential form, the cosine function can be expressed as:
+	// 		Acos(ωt) = Re{Ae^iwt}
+	// Φ is the velocity potential, a scalar field whose gradient gives the velocity field of the fluid.
+	// In wave theory, considering time harmonic solutions of the form e^iwt , we have
+	//		Φ(t) = Φ0​e^iωt
+	// where Φ0​is the amplitude of the velocity potential
+	// The velocity vv of the fluid is related to the velocity potential Φ by v = ∇Φ
+	// For the time harmonic case, as Φ(t) = Φ0​e^iωt, then
+	//		v(t) = ∇(Φ0​e^iωt)=∇Φ0​⋅e^iωt
+	// The velocity vv oscillates with time in the same way as the potential.
+	// The linearized Euler equation for compressible flow (assuming no external forces) relates 
+	// the pressure fluctuation p to the velocity v. 
+	// For time-harmonic motion, the pressure and velocity are out of phase by 90 degrees, 
+	// which leads to a time derivative on the velocity potential when calculating the pressure.
+	// The pressure fluctuation p is related to the time derivative of the velocity potential:
+	//		p = −ρ ∂Φ/∂t​
+	// Now substitute Φ(t) = Φ0​e^iωt
+	//		p = −ρ ∂(Φ0​e^iωt)/∂t
+	// Differentiate with respect to tt
+	//		p = −ρ (Φ0​iωe^iωt)
+	// Simplifying
+	//		p = −iρω Φ0​e^iωt
+	// So, p(t) is
+	//		p(t) = −iρω Φ(t)
+		
 	inline double A_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
 		return A_pan(ib, ip, idf1, idf2, ifr, dt.msh[ib].dt.mesh.panels[ip].NormalExt(dt.msh[ib].dt.c0));
 	}
@@ -929,7 +966,7 @@ public:
 		const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
 		double s = pan.surface0 + pan.surface1;
 		const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
-		return dt.rho*rad.real()*n[idf1]*s;											// A = ρ Re(Φ) n ds
+		return dt.rho*rad.real()*n[idf1]*s;									// A = ρ Re(Φ) n ds
 	}
 	
 	inline double B_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
@@ -939,7 +976,7 @@ public:
 		const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
 		double s = pan.surface0 + pan.surface1;
 		const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
-		return -dt.rho*dt.w[ifr]*rad.imag()*n[idf1]*s;								// B = -ρω Im(Φ) n ds
+		return -dt.rho*dt.w[ifr]*rad.imag()*n[idf1]*s;						// B = -ρω Im(Φ) n ds
 	}
 	
 	inline std::complex<double> Ffk_pan(int ib, int ip, int ih, int idf, int ifr) const 					  {return F_pan(dt.pots_inc, ib, ip, ih, idf, ifr);}
@@ -953,7 +990,7 @@ public:
 	
 	inline std::complex<double> P_rad(int ib, int ip, int idf, int ifr) const {
 		std::complex<double> ret = dt.pots_rad[ib][ip][idf][ifr]*dt.rho*dt.w[ifr];
-		return std::complex<double>(-ret.imag(), ret.real());			// p = iρωΦ
+		return std::complex<double>(ret.imag(), -ret.real());			// p = -iρωΦ = ρω [Im(Φ) - iRe(Φ)]
 	}
 	
 	inline std::complex<double> P_inc(int ib, int ip, int ih, int ifr) const 	 {return P_(dt.pots_inc, ib, ip, ih, ifr);}
@@ -966,12 +1003,12 @@ public:
 	inline std::complex<double> F_pan(const UArray<UArray<UArray<UArray<std::complex<double>>>>> &pot, int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const {
 		const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
 		double s = pan.surface0 + pan.surface1;
-		return P_(pot, ib, ip, ih, ifr)*n[idf]*s;							// F = p n ds
+		return -P_(pot, ib, ip, ih, ifr)*n[idf]*s;							// F = -p n ds		// Negative because the normals points outside
 	}
 
 	inline std::complex<double> P_(const UArray<UArray<UArray<UArray<std::complex<double>>>>> &pot, int ib, int ip, int ih, int ifr) const {
-		std::complex<double> ret = pot[ib][ip][ih][ifr]*dt.rho*dt.w[ifr];	// p = iρωΦ
-		return std::complex<double>(-ret.imag(), ret.real());
+		std::complex<double> ret = pot[ib][ip][ih][ifr]*dt.rho*dt.w[ifr];	// p = -iρωΦ = ρω [Im(Φ) - iRe(Φ)]
+		return std::complex<double>(ret.imag(), -ret.real());
 	}
 	
 	void GetPotentialsIncident();
@@ -1011,7 +1048,9 @@ public:
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void GetTranslationTo(const MatrixXd &to, bool force, Function <bool(String, int pos)> Status);
 	void GetWaveTo(double xto, double yto, double g);
+	void TranslateRadiationPotentials(const MatrixXd &delta);
 	String SpreadNegative(Function <bool(String, int)> Status);
+	void MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase);
 	void AddWave(int ib, double dx, double dy, double g);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
@@ -1168,9 +1207,14 @@ public:
 			return t_("Nm/m2");
 		}
 	} 
+	
+protected:
+	// For OpenFAST
+	String hydroFolder;
+	int WaveNDir = Null;
+	double WaveDirRange = Null;
 };
 
-//bool IsNum(const Hydro::Forces &f);
 
 class NemohBody : public Body {
 public:
@@ -1248,6 +1292,12 @@ class CapyBody : public Body {
 public:
 	static String Load_NC(UArray<Body> &mesh, String fileName, double g);
 	virtual ~CapyBody() noexcept {}
+};
+
+class FASTBody : public Body {
+public:
+	static String Load_Fst(UArray<Body> &mesh, String fileName);
+	virtual ~FASTBody() noexcept {}
 };
 
 class DiodoreBody : public Body {
@@ -1346,7 +1396,7 @@ private:
 
 class Fast : public Wamit {
 public:
-	Fast() : WaveNDir(Null), WaveDirRange(Null) {}
+	Fast() {}
 	String Load(String file, Function <bool(String, int)> Status);
 	void Save(String file, Function <bool(String, int)> Status, int qtfHeading = Null);
 	virtual ~Fast() noexcept {}
@@ -1356,10 +1406,6 @@ private:
 	void Save_HydroDyn(String fileName, bool force);
 	bool Load_SS(String fileName);	
 	void Save_SS(String fileName);
-	
-	String hydroFolder;
-	int WaveNDir;
-	double WaveDirRange;
 };
 
 class Foamm : public Hydro {
@@ -1668,9 +1714,11 @@ public:
 	void ImageBody(int id, int axis);
 	void UnderwaterBody(int id, Function <bool(String, int pos)> Status);
 	void RemoveBody(int id);
-	void JoinBody(int idDest, int idOrig);
+	void JoinBody(const UVector<int> &idsJoin);
 	UVector<int> SplitBody(int id, Function <bool(String, int pos)> Status);
-	
+	void DuplicateBody(int id);
+	void MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase);
+		
 	void CopyQTF_MD(int id);
 		
 	void AddFlatRectangle(double x, double y, double z, double size, double panWidthX, double panWidthY);
@@ -1688,7 +1736,7 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bem .yml .h5 .nc"	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc"	// Priority
 #ifdef PLATFORM_WIN32
 		" .owr"
 #endif
@@ -1961,6 +2009,7 @@ String FormatIntEmpty(int val);
 
 
 String GetFASTVar(const String &strFile, String varName, String paragraph = "");
+String GetFASTVarPos(const String &strFile, String varName, String paragraph, int &pos);
 void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
 void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd);
 double GetFASTMatrixVal(const String &strFile, String var, int row, int col);

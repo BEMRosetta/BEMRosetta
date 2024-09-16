@@ -317,13 +317,11 @@ void MainBEM::Init() {
 	menuPlot.butList.SetCtrl(menuPlotList).Tip(t_("Click to select headings"));
 	menuPlotList.Init(*this, menuPlot.head1st, menuPlot.headMD, menuPlot.headQTF);
 	
-	//menuPlot.headQTF.NoHeader().MultiSelect();
-	//menuPlot.headQTF.AddColumn("");
-	
 	CtrlLayout(menuBody);
-	menuBody.butSpreadNegative <<= THISBACK(OnSpreadNegative);
-	menuBody.butMapNodes <<= THISBACK(OnMapNodes);
-	//menuBody.butSaveAkselos <<= THISBACK(OnSaveAkselos);
+	menuBody.butSpreadNegative 	<<= THISBACK(OnSpreadNegative);
+	menuBody.butMapNodes 		<<= THISBACK(OnMapNodes);
+	menuBody.butMapMeshes 		<<= THISBACK(OnMapMeshes);
+	menuBody.butFill1st 		<<= THISBACK(OnFill1st);
 	
 	OnOpt();
 	
@@ -1118,12 +1116,10 @@ void MainBEM::OnJoin() {
 		if (Bem().hydros.size() > 0) 
 			listLoaded.SetCursor(0);
 
-//		AfterBEM();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}
 	AfterBEM();		
-	//UpdateButtons();
 }
 
 void MainBEM::OnDuplicate() {
@@ -1776,8 +1772,7 @@ void MapNodes::RefreshTable() {
 	
 	numNodes <<= arrayNodes.GetCount();
 }	
-	
-	
+		
 void MapNodes::OnPasteNodes() {
 	String str = ReadClipboardText();
 	
@@ -1856,6 +1851,111 @@ void MapNodes::OnExport(){
 	const Hydro &hy = Bem().hydros[idx];
 	
 	hy.SaveMap(fileName, fileType, freqId, Bem().onlyDiagonal, ids, points, A_pan, B_pan);
+}
+
+void MainBEM::OnMapMeshes() {
+	try {
+		int idx = GetIndexOneSelected();
+		if (idx < 0) {
+			Exclamation(t_("Please select a file"));
+			return;
+		}
+		
+		const Hydro &hy = Bem().hydros[idx];
+		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty()) {
+			Exclamation(t_("No mesh is available"));
+			return;
+		}
+		
+		int ib = mainBody.GetIb();
+		
+		if (!hy.IsLoadedPotsRad(ib)) {
+			Exclamation(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+			return;
+		}
+		
+		mapMeshes.Init(idx, ib);
+		mapMeshes.Execute();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+}
+
+void MainBEM::OnFill1st() {
+	try {
+		int idx = GetIndexOneSelected();
+		if (idx < 0) {
+			Exclamation(t_("Please select a file"));
+			return;
+		}
+		
+		Hydro &hy = Bem().hydros[idx];
+		hy.FillWithPotentials();
+		
+		AfterBEM();
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}	
+}
+
+void MapMeshes::Init(int _idx, int _ib) {
+	idx = _idx;
+	ib = _ib;
+	
+	CtrlLayout(*this);
+	Title(Format(t_("Select meshes and map the %d%s body properties"), ib+1, Ordinal(ib+1)));
+	text.Background(Null);
+	int dots = 7*StdFont().GetHeight();
+	text.SetQTF(Format(t_("[A+%d This option allows the hydrodynamic coefficients to be divided into a series of sectional bodies defined by their meshes.&"
+				"These meshes are obtained by dividing the mesh of the calculated body into parts.&"
+				"Therefore, the meshes of each sectional body do not have to be closed underwater.]"), dots));
+	
+	butClose <<= THISBACK(OnClose);
+	butMapMeshes <<= THISBACK(OnMapMeshes);
+	opOneMany = 0;
+	
+	ArrayModel_Init(listLoaded, true, {10, 10, 100}); 
+	for (int i = 0; i < Bem().surfs.size(); ++i) {
+		Body &msh = Bem().surfs[i];
+		ArrayModel_Add(listLoaded, msh.GetBodyStr(), msh.dt.name, msh.dt.fileName, msh.dt.GetId(),
+					optionsPlot, Null);
+	}
+}
+
+void MapMeshes::OnMapMeshes() {
+	try {
+		UVector<int> idmeshes;
+		for (int row = 0; row < listLoaded.GetCount(); ++row) {
+			if (ArrayModel_IsVisible(listLoaded, row)) {
+				int idx = ArrayModel_IndexBody(listLoaded, row);
+				if (idx < 0)
+					throw Exc(t_("Unexpected problem in OnMapMeshes()"));
+				idmeshes << idx;
+			}
+		}
+		WaitCursor wait;
+		
+		int idFrom = Bem().hydros.size();
+		Bem().MapMeshes(idx, ib, idmeshes, int(~opOneMany) == 0);
+		
+		for (int i = idFrom; i < Bem().hydros.size(); ++i) {
+			const Hydro &hy = Bem().hydros[i];
+			ArrayModel_Add(Ma().mainBEM.listLoaded, hy.GetCodeStr(), hy.dt.name, hy.dt.file, hy.dt.GetId());
+		}
+		
+		Ma().mainBEM.mainSummary.Clear();
+		for (int i = 0; i < Bem().hydros.size(); ++i) {
+			const Hydro &hy = Bem().hydros[i];
+			Ma().mainBEM.mainSummary.Report(hy, i);
+		}
+		
+		Ma().mainBEM.AfterBEM();	
+		Ma().mainBEM.LoadSelTab(Bem());
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+	Close();
 }
 	
 MenuAdvancedReference::MenuAdvancedReference() {
@@ -2220,7 +2320,7 @@ String MainBEM::BEMFile(String fileFolder) const {
 		for (FindFile ff(AFX(fileFolder, "*.*")); ff; ff++) {
 			if (ff.IsFile()) {
 				String name = ToLower(ff.GetName());
-				if (GetFileExt(name) == ".bem")
+				if (GetFileExt(name) == ".bemr")
 					return ff.GetPath();
 				if (name == "nemoh.cal")
 					return ff.GetPath();
@@ -2275,7 +2375,7 @@ void MainBEM::LoadDragDrop() {
 		}
 	}
 	if (filesToDrop.IsEmpty()) {
-		BEM::PrintError(t_("Impossible to load files"));
+		BEM::PrintError(t_("Unknown file types"));
 		timerDrop.Kill();
 		return;	
 	}

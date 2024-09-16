@@ -727,7 +727,7 @@ void Orca::LoadParameters(Hydro &hy) {
 					for (int idf = 0; idf < 6; ++idf) {
 						const TComplex &c = presRad(idf + 6*ib, ifr, ip);
 						if (ib == panelIb[ip])
-							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += std::complex<double>(c.Im, -c.Re)/rho_w; // p = iρωΦ   Φ = -ip/ρω = Im(p/ρω) - iRe(p/ρω)
+							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += std::complex<double>(c.Im, -c.Re)/rho_w; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 					}
 			}
 		}
@@ -750,7 +750,7 @@ void Orca::LoadParameters(Hydro &hy) {
 			for (int ih = 0; ih < hy.dt.Nh; ++ih)
 				for (int ip = 0; ip < Np; ++ip) {
 					const TComplex &c = pres(ih, ifr, ip);
-					hy.dt.pots_dif[panelIb[ip]][panelId[ip]][ih][ifr] -= std::complex<double>(c.Im, -c.Re)/rho_w; // p = iρωΦ
+					hy.dt.pots_dif[panelIb[ip]][panelId[ip]][ih][ifr] -= std::complex<double>(c.Im, -c.Re)/rho_w; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 				}
 		}
 				

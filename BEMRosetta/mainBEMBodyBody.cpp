@@ -69,7 +69,7 @@ void BodyBody::Load(int idx, int ib) {
 	
 	double freq = dropFreq.GetValue();
 	dropFreq.Clear();
-	bool showFreq = hy.IsLoadedPotsRad() || hy.IsLoadedPotsDif() || hy.IsLoadedPotsInc() || hy.IsLoadedPotsIncB();
+	bool showFreq = hy.IsLoadedPotsRad() || hy.IsLoadedPotsDif() || hy.IsLoadedPotsInc() || hy.IsLoadedPotsIncBMR();
 	labFreq.Enable (showFreq);
 	dropFreq.Enable(showFreq);
 	
@@ -84,7 +84,7 @@ void BodyBody::Load(int idx, int ib) {
 	
 	double head = dropHead.GetValue();
 	dropHead.Clear();
-	bool showHead = hy.IsLoadedPotsDif() || hy.IsLoadedPotsInc() || hy.IsLoadedPotsIncB();
+	bool showHead = hy.IsLoadedPotsDif() || hy.IsLoadedPotsInc() || hy.IsLoadedPotsIncBMR();
 	labHead.Enable (showHead);
 	dropHead.Enable(showHead);
 	

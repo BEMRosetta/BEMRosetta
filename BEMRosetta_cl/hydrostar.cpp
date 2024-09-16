@@ -140,22 +140,22 @@ bool Wamit::Load_HDF(Function <bool(String, int)> Status) {
 				std::complex<double> *d;
 				if (type == 'r') {
 					d = &dt.pots_rad[ib][ip][idf][ifr];
-					if (real)							// p = iρωΦ		Φ = [Im(p/ρω) - iRe(p/ρω)]ρg
+					if (real)							// p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 						d->imag(-data[ip]*factor);
 					else
 						d->real(data[ip]*factor);
 				} else if (type == 'i')	{
 					d = &dt.pots_inc[ib][ip][ihead][ifr];
-					if (real)							// p = iρωΦ		Φ = [Im(p/ρω) - iRe(p/ρω)]ρg
-						d->imag(-data[ip]*factor);
+					if (real)							// p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
+						d->imag(data[ip]*factor);
 					else
-						d->real(data[ip]*factor);
+						d->real(-data[ip]*factor);
 				} else {
 					d = &dt.pots_dif[ib][ip][ihead][ifr];
-					if (real)							// p = iρωΦ		Φ = [Im(p/ρω) - iRe(p/ρω)]ρg
-						d->real(-data[ip]*factor);
+					if (real)							// p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
+						d->imag(data[ip]*factor);
 					else
-						d->imag(-data[ip]*factor);
+						d->real(-data[ip]*factor);
 				}
 			}
 		}

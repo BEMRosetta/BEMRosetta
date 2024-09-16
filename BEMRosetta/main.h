@@ -118,6 +118,8 @@ public:
 	}
 	bool Init(const Hydro &_data, int _idf, int _j_dof, Hydro::DataToPlot _dataToPlot, bool _show_w, bool _ndim, bool _show_ma_ph) {
 		hy = &_data;
+		if (dataToPlot != Hydro::PLOT_UNKNOWN)		// It is already used
+			throw Exc("HydroSource::Init problem. Id already used");
 		dataToPlot = _dataToPlot;
 		idf = _idf;
 		jdf = _j_dof;
@@ -146,11 +148,11 @@ public:
 		case Hydro::PLOT_FORCE_SC_1_P:	
 		case Hydro::PLOT_FORCE_SC_2_P:return !hy->IsLoadedFsc_pot(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1:	
-		case Hydro::PLOT_FORCE_FK_2:return !hy->IsLoadedFfk(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_FK_2:	  return !hy->IsLoadedFfk(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_FK_1_P:	
-		case Hydro::PLOT_FORCE_FK_2_P:return !hy->IsLoadedFfk_pot(idf%6, jdf, idf/6);
-		case Hydro::PLOT_FORCE_FK_1_PB:	
-		case Hydro::PLOT_FORCE_FK_2_PB:return !hy->IsLoadedFfk_pot_bmr(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_FK_2_P:	  return !hy->IsLoadedFfk_pot(idf%6, jdf, idf/6);
+		case Hydro::PLOT_FORCE_FK_1_P_BMR:	
+		case Hydro::PLOT_FORCE_FK_2_P_BMR:return !hy->IsLoadedFfk_pot_bmr(idf%6, jdf, idf/6);
 		case Hydro::PLOT_FORCE_EX_1:
 		case Hydro::PLOT_FORCE_EX_2:return !hy->IsLoadedFex(idf%6, jdf, idf/6);
 		case Hydro::PLOT_RAO_1:
@@ -191,10 +193,10 @@ public:
 														  real(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_FORCE_FK_2_P:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6)) : 
 														  imag(hy->F_  (ndim, hy->dt.fk_pot, jdf, int(id), idf%6, idf/6));	
-		case Hydro::PLOT_FORCE_FK_1_PB:return show_ma_ph? abs (hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6)) : 
-														  real(hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6));
-		case Hydro::PLOT_FORCE_FK_2_PB:return show_ma_ph? arg (hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6)) : 
-														  imag(hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6));	
+		case Hydro::PLOT_FORCE_FK_1_P_BMR:return show_ma_ph? abs (hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6)) : 
+														  	 real(hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6));
+		case Hydro::PLOT_FORCE_FK_2_P_BMR:return show_ma_ph? arg (hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6)) : 
+															 imag(hy->F_  (ndim, hy->dt.fk_pot_bmr, jdf, int(id), idf%6, idf/6));	
 		case Hydro::PLOT_FORCE_EX_1:return show_ma_ph ? abs (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6)) : 
 														real(hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6));
 		case Hydro::PLOT_FORCE_EX_2:return show_ma_ph ? arg (hy->F_  (ndim, hy->dt.ex, jdf, int(id), idf%6, idf/6)) : 
@@ -252,7 +254,7 @@ public:
 private:
 	const Hydro *hy = nullptr;
 	int idf = -1, jdf = -1;
-	Hydro::DataToPlot dataToPlot;
+	Hydro::DataToPlot dataToPlot = Hydro::PLOT_UNKNOWN;
 	bool show_w = false, show_ma_ph = true, ndim = 0;
 };
 
@@ -699,7 +701,7 @@ public:
 	void Clear();
 	void RefreshScatter()	{scatt.Refresh();	scatP.Refresh();}
 	
-	UArray<HydroSource> ABFZ_source, ABFZ_source2, B_A_source, ABFZ_source_p, ABFZ_source2_p;
+	UArray<HydroSource> ABFZ_source, ABFZ_source2, B_A_source, ABFZ_source_p, ABFZ_source2_p, ABFZ_source_p2, ABFZ_source2_p2;
 	UArray<HydroSource> Ainf_source, A0_source, B_H_source, A_P_source, B_P_source;	
 	UArray<HydroSource> TFS_source, TFS_source2;
 		
@@ -976,6 +978,7 @@ public:
 	void OnReset();
 	void OnRemoveSelected(bool all);
 	void OnJoin();
+	void OnDuplicate();
 	void OnSplit();
 	void OnConvertBody();
 	void OnUpdate(Action action, bool fromMenuProcess);
@@ -1623,6 +1626,22 @@ private:
 	Tensor<double, 4> B_pan;		// [Np][6][6][Nf]	Radiation damping
 };
 
+class MapMeshes : public WithMapMeshes<TopWindow> {
+public:
+	typedef MapMeshes CLASSNAME;	
+	
+	void Init(int _id, int _ib);
+	void OnMapMeshes();
+	void OnClose() {Close();}
+	
+private:
+	int idx = -1;
+	int ib = -1;
+	
+	UVector<int> ids;
+	UArray<Option> optionsPlot;
+};
+
 class MainBEM : public MainBEMBody {
 public:
 	typedef MainBEM CLASSNAME;
@@ -1648,6 +1667,8 @@ public:
 	void OnConvergence();
 	void OnSpreadNegative();
 	void OnMapNodes();
+	void OnMapMeshes();
+	void OnFill1st();
 	void OnSaveAkselos();
 	void OnUpdateCwave();
 	void OnDeleteHeadingsFrequencies();
@@ -1681,6 +1702,7 @@ public:
 	WithMenuBEMBody<StaticRect> menuBody;
 	MenuFOAMM menuFOAMM;
 	MapNodes mapNodes;
+	MapMeshes mapMeshes;
 	
 	MainSummaryCoeff mainSummary;
 	MainABForce mainA;
@@ -1700,12 +1722,12 @@ public:
 	MainBodyTable mainBody;
 	
 	MenuPlotList menuPlotList;
-		
+	void LoadSelTab(BEM &bem);
+	
 private:
 	ScatterCtrl &GetSelScatter();
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
-	void LoadSelTab(BEM &bem);
 
 	int AskQtfHeading(const Hydro &hy);
 		
@@ -1787,11 +1809,12 @@ public:
 	};
 	String parameter;	
 	
+	MainBEM mainBEM;
+		
 private:
 	String lastTabS;
 	
 	MainSolver mainSolver;
-	MainBEM mainBEM;
 	MainOutput mainOutput;
 	MainBody mainBody;
 	FastScatterTabs mainFAST;
@@ -1811,7 +1834,7 @@ public:
 	MainSolver &GetMainSolver()	{return mainSolver;}
 };
 
-ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool push = false);
+ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool push = false, const UVector<int> &w = {});
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id);
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
 					UArray<Option> &option, Function <void()>OnPush);

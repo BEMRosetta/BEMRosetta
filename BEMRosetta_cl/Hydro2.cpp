@@ -18,28 +18,28 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|RAO|"), t_("arg(RAO)"), t_("|Z|"), t_("arg(Z)"), t_("|Kr|"), t_("arg(Kr)"), 
 				t_("|TFS|"), t_("arg(TFS)")};
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	   HAMS_WAMIT,  HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,   AQWA,   			    AQWA_QTF,	  AQWA_DAT, 	FOAMM,   DIODORE,			BEMROSETTA, 	   ORCAFLEX_YML,   		CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, 			HYDROSTAR_OUT, 	CAPYNC, 		ORCAWAVE_YML, 		CAPYTAINE_PY, 	 BEMROSETTA_H5,		AKSELOS_NPZ,	ORCAWAVE.owr,		UNKNOWN, NUMBEM};
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	"AQWA .qtf",  "AQWA .dat", "FOAMM", "Diodore .hdb", 	"BEMRosetta .bem", "OrcaFlex .yml", 	".csv mat", ".csv table", "BEMIO .h5",	"Capytaine .cal",    ".out", 		"Capytaine .nc", "OrcaWave .yml",	"Capytaine .py", "BEMRosetta .h5",	"Akselos .npz",
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	   HAMS_WAMIT,  HAMS,   WADAM_WAMIT,   NEMOH,     NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,   AQWA,   			    AQWA_QTF,	  AQWA_DAT, 	FOAMM,   DIODORE,			ORCAFLEX_YML,   	CSV_MAT,    CSV_TABLE,    BEMIOH5,		CAPYTAINE, 			HYDROSTAR_OUT, 	CAPYNC, 		ORCAWAVE_YML, 		CAPYTAINE_PY, 	 BEMROSETTA_H5,		AKSELOS_NPZ,	ORCAWAVE.owr,		UNKNOWN, NUMBEM};
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.2.3.hst.7.8.9.ss.12", "FAST .dat.1.2.3.hst.789.ss.12", "HAMS Wamit", "HAMS", "Wadam Wamit","Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", 	"AQWA .qtf",  "AQWA .dat", "FOAMM", "Diodore .hdb", 	"OrcaFlex .yml", 	".csv mat", ".csv table", "BEMIO .h5",	"Capytaine .cal",    ".out", 		"Capytaine .nc", "OrcaWave .yml",	"Capytaine .py", "BEMRosetta .h5",	"Akselos .npz",
 #ifdef PLATFORM_WIN32	
 "OrcaWave .owr", 	
 #endif
-				"By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   false,  					 true, 	 	  false,		false,   true,	  			true,			     false,	     		true, 	     true, 		   true,		false, 	   			false, 			false,			 false,				false,		 	  false,			true,
+	"BEMRosetta .bemr", "By extension"};
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     				     true,		 			 	 	  false,		false,  false,		   false,     false,	 	false,	   	false, 		   false,  					 true, 	 	  false,		false,   true,	  			false,	     		true, 	     true, 		   true,		false, 	   			false, 			false,			 false,				false,		 	  false,			true,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
-				true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "", 				  		 "*.qtf",	  ".dat",		"",      "*.hdb",	  		"*.bem",		   	 "*.yml",	 		"*.csv",    "*.csv", 	   "*.h5",		"",        			"*.out", 		"*.nc", 		 "*.yml",			"*.py",	 		  "*.h5",			"*.npz",
+	true, true};       
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	      "",		   	"",	    "",		       "",        "", 		   	"",			"",			   "", 				  		 "*.qtf",	  ".dat",		"",      "*.hdb",	  		"*.yml",	 		"*.csv",    "*.csv", 	   "*.h5",		"",        			"*.out", 		"*.nc", 		 "*.yml",			"*.py",	 		  "*.h5",			"*.npz",
 #ifdef PLATFORM_WIN32	
 "*.owr",	
 #endif		
-				"*.*"};       
+	"*.bemr", "*.*"};       
 	
-const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  			false,			 	false,	     		false, 	 	false, 	   		false,		true, 	   			false, 			false,			 true,				true,			  true,				false,
+const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  			false,	     		false, 	 	false, 	   		false,		true, 	   			false, 			false,			 true,				true,			  true,				false,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
-				true};
+	false, true};
 
 int Hydro::idCount = 0;	
 
@@ -247,7 +247,7 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 				SortPotsDifInc(dt.pots_dif);
 			if (IsLoadedPotsInc()) 
 				SortPotsDifInc(dt.pots_inc);
-			if (IsLoadedPotsIncB()) 
+			if (IsLoadedPotsIncBMR()) 
 				SortPotsDifInc(dt.pots_inc_bmr);
 		}
 	}
@@ -467,7 +467,7 @@ void Hydro::SortFrequencies() {
 			SortPotsDifInc(dt.pots_dif);
 		if (IsLoadedPotsInc()) 
 			SortPotsDifInc(dt.pots_inc);
-		if (IsLoadedPotsIncB()) 
+		if (IsLoadedPotsIncBMR()) 
 			SortPotsDifInc(dt.pots_inc_bmr);
 	}
 	if (!IsSorted(dt.qw)) {
@@ -730,6 +730,7 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
     pots_rad = clone(hyd.pots_rad);
     pots_dif = clone(hyd.pots_dif);
     pots_inc = clone(hyd.pots_inc);
+    pots_inc_bmr = clone(hyd.pots_inc_bmr);
     
     Apan = clone(hyd.Apan);
     
@@ -1414,7 +1415,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 			type = WAMIT;
 		else if (ext == ".dat")
 			type = FAST_WAMIT;	
-		else if (ext == ".bem")
+		else if (ext == ".bemr")
 			type = BEMROSETTA;
 		else if (ext == ".csv")
 			type = CSV_TABLE;
@@ -1460,10 +1461,6 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		SaveAkselos(ib, fileName);
 	else
 		throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
-	
-	//solver = type;
-	//dt.Nh = realNh;
-	//dt.Nf = realNf;
 }
 
 void Hydro::Join(const UVector<Hydro *> &hydrosp) {
@@ -1663,6 +1660,11 @@ void Hydro::Report() const {
 }
 
 String Hydro::AfterLoad(Function <bool(String, int)> Status) {
+	if (IsNull(dt.len) || dt.len < 0)
+		return t_("Incorrect length in model");
+	if (IsNull(dt.dimen))
+		return t_("Incorrect dimension type in model");
+	
 	Status(t_("Sorting frequencies and headings"), -1);
 	SortFrequencies();
 	SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);
@@ -1748,7 +1750,6 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		if (!ret.IsEmpty())
 			return ret;
 		
-		//m.dt.fileName = dt.file;
 		if (m.dt.name.IsEmpty())
 			m.dt.name = InitCaps(GetFileTitle(dt.file));
 
@@ -1813,11 +1814,11 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
         Status(t_("Obtaining Ffk from potentials"), -1);
         GetForcesFromPotentials(dt.pots_inc, dt.fk_pot);
 	}
-	if (!dt.msh.IsEmpty() && !IsLoadedPotsIncB()) {
+	if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) {
 		Status(t_("Obtaining incident potentials from mesh"), -1);
 		GetPotentialsIncident();
 	}	
-	if (IsLoadedPotsIncB()) {	
+	if (IsLoadedPotsIncBMR()) {	
 		Status(t_("Obtaining Ffk from bmr potentials"), -1);
 		GetForcesFromPotentials(dt.pots_inc_bmr, dt.fk_pot_bmr);
 	}
@@ -2328,23 +2329,25 @@ void Hydro::GetPotentialsIncident() {
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) {		
 		double k = SeaWaves::WaveNumber_w(dt.w[ifr], dt.h, g_dim());
 		double g_w = g_dim()/dt.w[ifr];
-		for (int ib = 0; ib < dt.Nb; ++ib) {
-			Body &m = dt.msh[ib];
-			int npan = m.dt.mesh.panels.size();
-			for (int ip = 0; ip < npan; ++ip) {
-				const Panel &pan = m.dt.mesh.panels[ip];
-				const Point3D &p = pan.centroidPaint;
-				for (int ih = 0; ih < dt.Nh; ++ih) {	
-					if (p.z < 0) {
-						double th = ToRad(dt.head[ih]);
+		for (int ih = 0; ih < dt.Nh; ++ih) {	
+			double rad = ToRad(dt.head[ih]);
+			double cosrad = cos(rad);
+			double sinrad = sin(rad);
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				Body &m = dt.msh[ib];
+				int npan = m.dt.mesh.panels.size();
+				for (int ip = 0; ip < npan; ++ip) {
+					const Panel &pan = m.dt.mesh.panels[ip];
+					const Point3D &p = pan.centroidPaint;
+					if (p.z <= 0) {
 						double cs;
 						if (dt.h > 0 && k*dt.h < 700) 
 						 	cs = cosh(k*(p.z + dt.h))/cosh(k*dt.h);
 						else
 							cs = exp(k*p.z);
-						double ex = k*(p.x*cos(th) + p.y*sin(th));
+						double ex = k*(p.x*cosrad + p.y*sinrad);
 													
-						dt.pots_inc_bmr[ib][ip][ih][ifr] = g_w*cs*std::complex<double>(sin(ex), cos(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))	Wamit criterion	
+						dt.pots_inc_bmr[ib][ip][ih][ifr] = i<double>()*g_w*cs*std::complex<double>(cos(ex), -sin(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))  Wamit User Manual 7.4 (15.2)
 					}
 				}
 			}
@@ -2394,12 +2397,9 @@ void Hydro::GetForcesFromPotentials(const UArray<UArray<UArray<UArray<std::compl
 void Hydro::Jsonize(JsonIO &json) {
 	int icode;
 	UArray<MatrixXd> oldA, oldB, oldKirf;
-	if (json.IsStoring()) {
+	if (json.IsStoring()) 
 		icode = dt.solver;
-		SetOldAB(oldA, dt.A);
-		SetOldAB(oldB, dt.B);
-		SetOldAB(oldKirf, dt.Kirf);
-	}
+	
 	json
 		("file", dt.file)
 		("name", dt.name)
@@ -2411,32 +2411,50 @@ void Hydro::Jsonize(JsonIO &json) {
 		("Nb", dt.Nb)
 		("Nf", dt.Nf)
 		("Nh", dt.Nh)
-		("A", oldA)
-		("Awinf", dt.Ainf)
-		("Aw0", dt.A0)
-		("B", oldB)
+		("A", dt.A)
+		("Ainf", dt.Ainf)
+		("Ainf_w", dt.Ainf_w)
+		("A0", dt.A0)
+		("A_P", dt.A_P)
+		("B", dt.B)
+		("B_H", dt.B_H)
+		("B_P", dt.B_P)
 		("head", dt.head)
+		("x_w", dt.x_w)
+		("y_w", dt.y_w)
 		("code", icode)
-		("Kirf", oldKirf)
+		("Kirf", dt.Kirf)
 		("Tirf", dt.Tirf)
 		("ex", dt.ex)
 		("sc", dt.sc)
 		("fk", dt.fk)
 		("rao", dt.rao)
+		("sc_pot", dt.sc_pot)
+		("fk_pot", dt.fk_pot)
+		("fk_pot_bmr", dt.fk_pot_bmr)
 		("sts", dt.sts)
 		("w", dt.w)
-		//("dataFromW", dt.dataFromW)
 		("stsProcessor", dt.stsProcessor)
 		("dimenSTS", dt.dimenSTS)
 		("description", dt.description)
+		("qw", dt.qw)
+		("qhead", dt.qhead)
 		("qtfsum", dt.qtfsum)
 		("qtfdif", dt.qtfdif)
+		("qtfdataFromW", dt.qtfdataFromW)
+		("qtftype", dt.qtftype)
+		("mdhead", dt.mdhead)
+		("md", dt.md)
+		("mdtype", dt.mdtype)
 		("msh", dt.msh)
+		("pots_rad", dt.pots_rad)
+		("pots_dif", dt.pots_dif)
+		("pots_inc", dt.pots_inc)
+		("pots_inc_bmr", dt.pots_inc_bmr)
+		("Apan", dt.Apan)
+		("symX", dt.symX)
+		("symY", dt.symY)
 	;
-	if(json.IsLoading()) {
+	if(json.IsLoading()) 
 		dt.solver = static_cast<Hydro::BEM_FMT>(icode);
-		GetOldAB(oldA, dt.A);
-		GetOldAB(oldB, dt.B);
-		GetOldAB(oldKirf, dt.Kirf);
-	}
 }

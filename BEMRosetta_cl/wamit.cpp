@@ -636,7 +636,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 				dt.msh[ib].dt.c0 = clone(refPoint[ib]);
 			if (IsNull(refWave[0])) {
 				for (int ib = 0; ib < dt.Nb; ++ib)
-					refWave[ib] = Pointf(dt.msh[ib].dt.cb.x + dt.msh[ib].dt.c0.x, 
+					refWave[ib] = Pointf(dt.msh[ib].dt.cb.x + dt.msh[ib].dt.c0.x, 		// Real cb = cb + c0
 										 dt.msh[ib].dt.cb.y + dt.msh[ib].dt.c0.y);
 			}
 		} else {
@@ -645,7 +645,12 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				refWave[ib] = Pointf(dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y);
 		}
-		Load_HDF(Status);
+		if (Load_HDF(Status)) {
+			MatrixXd delta(3, dt.Nb);
+			for (int ib = 0; ib < dt.Nb; ++ib)
+				delta.col(ib) = Vector3d(dt.msh[ib].dt.cb);
+			TranslateRadiationPotentials(-delta);// Radiation are referred to the cb, so they are translated to c0 (remember that here cb is not absolute but referred to c0)
+		}
 			
 		for (int ib = 0; ib < dt.Nb; ++ib)	// Translates all bodies phase to 0,0, by translating -refWave
 			AddWave(ib, -refWave[ib].x, -refWave[ib].y, dt.g);	
@@ -1963,7 +1968,7 @@ void Wamit::Save_1(String fileName, bool force_T) const {
 	
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int i = 0; i < dt.Nb*6; ++i)  
-			for (int j = 0; j < dt.Nb*6; ++j)
+			for (int j = 0; j < dt.Nb*6; ++j) 
 				out << Format(" %s %5d %5d %s %s\n", FormatWam(data[ifr]), i+1, j+1,
 							 FormatWam(Nvl2(dt.A[i][j][ifr], A_ndim(ifr, i, j), 0.)), 
 							 FormatWam(Nvl2(dt.B[i][j][ifr], B_ndim(ifr, i, j), 0.)));
@@ -2000,11 +2005,11 @@ void Wamit::Save_3(String fileName, bool force_T) const {
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < dt.Nh; ++ih)
 			for (int ib = 0; ib < dt.Nb; ++ib) 
-				for (int i = 0; i < 6; ++i) {
-					const std::complex<double> &f = dt.ex[ib][ih](ifr, i);
-					std::complex<double> fn = F_ndim(dt.ex, ih, ifr, i, ib);
+				for (int idf = 0; idf < 6; ++idf) {
+					const std::complex<double> &f = dt.ex[ib][ih](ifr, idf);
+					std::complex<double> fn = F_ndim(dt.ex, ih, ifr, idf, ib);
 					out << Format(" %s %s %5d %s %s %s %s\n", 
-						FormatWam(data[ifr]), FormatWam(dt.head[ih]), i+1,
+						FormatWam(data[ifr]), FormatWam(dt.head[ih]), idf+1 + 6*ib,
 						FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
 						FormatWam(Nvl2(arg(f), arg(fn)*180/M_PI, 0.)),
 						FormatWam(Nvl2(f.real(), fn.real(), 0.)), 
@@ -2043,11 +2048,11 @@ void Wamit::Save_4(String fileName, bool force_T) const {
 	for (int ifr = ifr0; ifr != ifrEnd; ifr += ifrDelta)
 		for (int ih = 0; ih < dt.Nh; ++ih)
 			for (int ib = 0; ib < dt.Nb; ++ib) 
-				for (int i = 0; i < 6; ++i) {
-					const std::complex<double> &f = dt.rao[ib][ih](ifr, i);	
-					std::complex<double> fn = RAO_ndim(dt.rao, ih, ifr, i, ib);
+				for (int idf = 0; idf < 6; ++idf) {
+					const std::complex<double> &f = dt.rao[ib][ih](ifr, idf);	
+					std::complex<double> fn = RAO_ndim(dt.rao, ih, ifr, idf, ib);
 					out << Format(" %s %s %5d %s %s %s %s\n", 
-						FormatWam(data[ifr]), FormatWam(dt.head[ih]), i+1,
+						FormatWam(data[ifr]), FormatWam(dt.head[ih]), idf+1 + 6*ib,
 						FormatWam(Nvl2(abs(f), abs(fn), 0.)), 
 						FormatWam(Nvl2(arg(f), arg(fn)*180/M_PI, 0.)),
 						FormatWam(Nvl2(f.real(), fn.real(), 0.)), 

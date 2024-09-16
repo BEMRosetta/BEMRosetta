@@ -334,7 +334,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 							for (int idf = 0; idf < 6; ++idf) {
 								double re = rad_press(irho, ih, 0, ifr, idf + 6*ib, ipall);
 								double im = rad_press(irho, ih, 1, ifr, idf + 6*ib, ipall);
-								hy.dt.pots_rad[ib][ip][idf][ifr] += std::complex<double>(-re, im)/rw; // p = iρωΦ
+								hy.dt.pots_rad[ib][ip][idf][ifr] += std::complex<double>(-re, im)/rw; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 							}
 						}
 					}
@@ -350,7 +350,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 							for (int ihead = 0; ihead < Nh; ++ihead) {
 								double re = inc_press(irho, ih, 0, ifr, ihead, ipall);
 								double im = inc_press(irho, ih, 1, ifr, ihead, ipall);
-								hy.dt.pots_inc[ib][ip][ihead][ifr] += std::complex<double>(im, re)/rw; // p = iρωΦ
+								hy.dt.pots_inc[ib][ip][ihead][ifr] += std::complex<double>(im, re)/rw; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 							}
 						}
 					}
@@ -366,7 +366,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 							for (int ihead = 0; ihead < Nh; ++ihead) {
 								double re = dif_press(irho, ih, 0, ifr, ihead, ipall);
 								double im = dif_press(irho, ih, 1, ifr, ihead, ipall);
-								hy.dt.pots_dif[ib][ip][ihead][ifr] += std::complex<double>(im, re)/rw; // p = iρωΦ
+								hy.dt.pots_dif[ib][ip][ihead][ifr] += std::complex<double>(im, re)/rw; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 							}
 						}
 					}
@@ -378,6 +378,207 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 	}
 	return String();
 }
+
+void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
+	DirectoryCreate(folder);
+	String name = GetFileTitle(folder);
+	String fileBat  = AFX(folder, "Capytaine_bat.bat");
+	FileOut bat;
+	if (!bat.Open(fileBat))
+		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+	if (!Bem().pythonEnv.IsEmpty())
+		bat << "call conda activate " << Bem().pythonEnv << "\n";
+	bat << "python \"" << name << ".py\"\n";
+	bat << "@IF \%ERRORLEVEL\% NEQ 0 PAUSE \"Error\"";
+	
+	String filePy  = AFX(folder, name + ".py");
+	String spy;
+	
+	spy <<	"import numpy as np\n"
+			"import capytaine as cpt\n"
+			"from capytaine.io.xarray import problems_from_dataset\n"
+			"from capytaine.bem.airy_waves import airy_waves_pressure\n"
+			"from capytaine.post_pro.rao import rao\n"
+			"import xarray as xr\n"
+			"import os\n\n";
+
+	String listBodies;
+	
+	String folderMesh = AFX(folder, "mesh");
+	if (!DirectoryCreateX(folderMesh))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
+
+	bool automaticLid = false;
+	bool dorao = false;
+	
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		const Body &b = dt.msh[ib];
+		
+		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
+		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
+		
+		spy <<	Format("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(dest));
+		
+		bool isLid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
+		if (isLid) {
+			String destLid = AFX(folderMesh, Format(t_("Body_%d_lid.dat"), ib+1));
+			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, dt.symY);
+			spy << Format("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(destLid));
+		} else if (automaticLid)
+			spy << Format("lid_mesh_%d = mesh_%d.translated_z(1e-7).generate_lid()     # See https://github.com/capytaine/capytaine/issues/589\n", ib+1, ib+1);
+		
+		spy <<	"\n";
+		
+		spy << 	Format("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s')\n\n", 
+					ib+1, ib+1, 
+					(isLid || automaticLid ? Format("lid_mesh=lid_mesh_%d, ", ib+1) : S("")),
+					b.dt.c0.x, b.dt.c0.y, b.dt.c0.z,
+					b.dt.cg.x, b.dt.cg.y, b.dt.cg.z,
+					b.dt.name
+					);
+		
+		if (b.dt.M.size() == 36 && b.dt.M.cwiseAbs().maxCoeff() != 0) {
+			dorao = true;
+			spy <<  Format("body_%d.inertia_matrix = [\n", ib+1);
+			for (int r = 0; r < 6; ++r) {
+				spy << "    [";
+				for (int c = 0; c < 6; ++c) {
+					if (c > 0)
+						spy << ", ";
+					spy << b.dt.M(r, c);
+				}
+				spy << "]";
+				if (r < 6-1)
+					spy << ",";
+				spy << "\n";
+			}
+			spy << "]\n\n";
+		}
+		spy <<	Format("body_%d.hydrostatic_stiffness = body_%d.compute_hydrostatic_stiffness()\n", ib+1, ib+1);
+
+		spy <<	"\n";
+		
+		if (!listBodies.IsEmpty())
+			listBodies << ", ";
+		listBodies << Format("body_%d", ib+1);
+	}
+	spy << "list_of_bodies = [" << listBodies << "]\n";
+
+	String somega = "[", shead = "[";
+	for (int iw = 0; iw < dt.w.size(); ++iw) {
+		if (iw > 0)
+			somega << ", ";
+		somega << dt.w[iw];
+	}
+	somega << "]";
+	for (int ih = 0; ih < dt.head.size(); ++ih) {
+		if (ih > 0)
+			shead << ", ";
+		shead << ToRad(dt.head[ih]);
+	}
+	shead << "]";
+	
+	spy <<	"all_bodies = cpt.FloatingBody.join_bodies(*list_of_bodies)\n"
+			"test_matrix = xr.Dataset(coords={\n"
+		    "    'omega': " << somega << ",\n"
+		    "    'wave_direction': " << shead << ",\n"
+		    "    'radiating_dof': list(all_bodies.dofs),\n"
+		    "    'water_depth': " << (dt.h > 0 ? FormatDouble(dt.h) : "np.inf") << ",\n"
+		    "    'rho': " << dt.rho << "\n"
+		    "})\n\n";
+
+	spy <<	"solver = cpt.BEMSolver()\n"
+			"pbs = problems_from_dataset(test_matrix, all_bodies)\n"
+			"results = solver.solve_all(pbs, keep_details=True)\n"
+			"ds = cpt.assemble_dataset(results)\n"
+			"\n"
+			"mesh = all_bodies.mesh\n"
+			"\n";
+	
+	MatrixXd Dlin(6*dt.Nb,6 *dt.Nb);
+	Dlin.setZero();
+	
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		if (dt.msh[0].dt.Dlin.size() == 36)
+			Dlin.block(6*ib, 6*ib, 6, 6) = dt.msh[0].dt.Dlin;
+	}
+	
+	if (dorao) {
+		if (Dlin.size() == 36 && Dlin.cwiseAbs().maxCoeff() != 0) {
+			spy <<  "my_dissipation = all_bodies.add_dofs_labels_to_matrix([\n";
+			for (int r = 0; r < 6*dt.Nb; ++r) {
+				spy << "    [";
+				for (int c = 0; c < 6*dt.Nb; ++c) {
+					if (c > 0)
+						spy << ", ";
+					spy << Dlin(r, c);
+				}
+				spy << "]";
+				if (r < 6*dt.Nb-1)
+					spy << ",";
+				spy << "\n";
+			}
+			spy << "])\n\n";
+		}
+		spy <<	"ds['RAO'] = rao(ds";
+		
+		if (Dlin.cwiseAbs().maxCoeff() != 0) 
+			spy << ", dissipation = my_dissipation";
+		
+		spy <<	")\n";
+	}
+	
+	spy <<	"ds.coords['space_coordinate'] = ['x', 'y', 'z']\n";
+	if (withMesh) 
+		spy <<	"ds['mesh_vertices'] = (['face', 'vertices_of_face', 'space_coordinate'], mesh.vertices[mesh.faces])\n"
+				"ds['mesh_faces_center'] = (['face', 'space_coordinate'], mesh.faces_centers)\n";
+				
+	spy <<	"ds['dof_definition'] = (['radiating_dof', 'face', 'space_coordinate'], np.array([all_bodies.dofs[dof] for dof in all_bodies.dofs]))\n"
+			"\n";
+	
+	if (withMesh && withPotentials) {
+		spy <<	"ds['incident_pressure'] = (\n"
+				"    ['omega', 'wave_direction', 'face'],\n"
+				"    np.zeros((ds.sizes['omega'], ds.sizes['wave_direction'], all_bodies.mesh.nb_faces,), dtype=np.complex128),\n"
+				")\n"
+				"ds['diffraction_pressure'] = (\n"
+				"    ['omega', 'wave_direction', 'face'],\n"
+				"    np.zeros((ds.sizes['omega'], ds.sizes['wave_direction'], all_bodies.mesh.nb_faces), dtype=np.complex128),\n"
+				")\n"
+				"ds['radiation_pressure'] = (\n"
+				"    ['omega', 'radiating_dof', 'face'],\n"
+				"    np.zeros((ds.sizes['omega'], ds.sizes['radiating_dof'], all_bodies.mesh.nb_faces), dtype=np.complex128),\n"
+				")\n"
+				"\n";
+	
+		spy <<	"for res in results:\n"
+    			"    if isinstance(res.problem, cpt.DiffractionProblem):\n"
+        		"        ds['diffraction_pressure'].loc[dict(omega=res.omega, wave_direction=res.wave_direction)] = res.pressure[:mesh.nb_faces]\n"
+        		"        ds['incident_pressure'].loc[dict(omega=res.omega, wave_direction=res.wave_direction)] = airy_waves_pressure(mesh, res)\n"
+    			"    elif isinstance(res.problem, cpt.RadiationProblem):\n"
+        		"        ds['radiation_pressure'].loc[dict(omega=res.omega, radiating_dof=res.radiating_dof)] = res.pressure[:mesh.nb_faces]\n"
+        		"\n";
+
+	}
+	spy <<	"ds.coords['rigid_body_component'] = [body.name for body in list_of_bodies]\n"
+			"ds['rotation_center'] = (['rigid_body_component', 'point_coordinates'], [body.rotation_center for body in list_of_bodies])\n"
+			"ds['center_of_mass'] = (['rigid_body_component', 'point_coordinates'], [body.center_of_mass for body in list_of_bodies])\n"
+			"\n"
+			"# Export to NetCDF file\n"
+			"from capytaine.io.xarray import separate_complex_values\n"
+			"separate_complex_values(ds).to_netcdf('" << name << ".nc',\n"
+			"                                          encoding={'radiating_dof': {'dtype': 'U'},\n"
+			"                                                    'influenced_dof': {'dtype': 'U'}})\n";	
+	
+	spy.Replace("'", "\"");
+	spy.Replace("\\", "\\\\");
+	
+	FileOut py;
+	if (!py.Open(filePy))
+		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+	
+	py << spy;
+};
 
 
 //	void Initialize_PotsRad();

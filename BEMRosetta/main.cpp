@@ -351,75 +351,6 @@ Main &Ma(Main *m) {
 
 void Status(String str, int time)	{Ma().Status(str, time);}
 
-void OnPanic(const char *title, const char *text) {
-	throw Exc(Format(t_("Error type 1 %s: %s"), title, text));	
-}
-
-GUI_APP_MAIN {
-#if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
-	GetCrashHandler().Enable();
-#endif
-	InstallPanicMessageBox(OnPanic);
-	
-	const UVector<String>& command = CommandLine();
-
-	String errorStr;
-
-	if (!command.IsEmpty() && command[0] != "-gui") {
-		try {
-			ConsoleOutput con(true);
-			
-			ConsoleMain(command, true, PrintStatus);
-		} catch (Exc e) {
-			errorStr = e;
-		} catch(const char *cad) {
-			errorStr = cad;
-		} catch(const std::string &e) {
-			errorStr = e.c_str();	
-		} catch (const std::exception &e) {
-			errorStr = e.what();
-		} catch(...) {
-			errorStr = t_("Unknown error");
-		}
-		if (!errorStr.IsEmpty()) {
-			Cout() << "\n" << Format(t_("Problem found: %s"), errorStr);
-			SetExitCode(-1);
-		}
-		return;
-	}
-	
-	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
-	Ctrl::GlobalBackPaint();
-
-	try {
-		Main main;
-		if (command.size() >= 1) {
-			if (command[0] == "-gui") {
-				if (command.size() < 2)
-					throw Exc("-gui option requires to indicate window to show");
-				main.parameter = ToLower(command[1]);
-			} else
-				throw Exc(Format("Unknown command %s", command[0]));
-		}
-		main.Init();
-		main.OpenMain();
-		Ctrl::EventLoop(&main);
-		main.Close();
-	} catch (Exc e) {
-		errorStr = e;
-	} catch(const char *cad) {
-		errorStr = cad;
-	} catch(const std::string &e) {
-		errorStr = e.c_str();	
-	} catch (const std::exception &e) {
-		errorStr = e.what();
-	} catch(...) {
-		errorStr = t_("Unknown error");
-	}
-	if (!errorStr.IsEmpty())
-		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
-}
-
 String TabText(const TabCtrl &tab) {
 	int id = tab.Get();
 	if (id < 0)
@@ -442,7 +373,13 @@ struct RectDisplay : public Display {
 	}
 };
 
-ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option) {
+ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option, const UVector<int> &w) {
+	static const UVector<int> ww = {30, 30, 30};
+	const UVector<int> *pww = &w;
+	if (w.IsEmpty())
+		pww = &ww;
+	
+	array.Reset();
 	array.NoHeader().NoVertGrid().AutoHideSb();
 	array.HeaderObject().HideTab(array.AddColumn().HeaderTab().GetIndex());
 	array.AddColumn("", 5).SetDisplay(Single<RectDisplay>());
@@ -450,9 +387,9 @@ ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option) {
 		array.AddColumn("", 10);
 	else
 		array.AddColumn("", 0);
-	array.AddColumn("", 30);	
-	array.AddColumn("", 30);
-	array.AddColumn("", 30);
+	array.AddColumn("", (*pww)[0]);	
+	array.AddColumn("", (*pww)[1]);
+	array.AddColumn("", (*pww)[2]);
 	array.HeaderTab(1).SetMargin(-2);
 	if (option)
 		array.HeaderTab(2).SetMargin(-2);
@@ -461,6 +398,8 @@ ArrayCtrl &ArrayModel_Init(ArrayCtrl &array, bool option) {
 
 void ArrayModel_Add(ArrayCtrl &array, String codeStr, String title, String fileName, int id, 
 					UArray<Option> &option, Function <void()>OnPush) {
+	if (id < 0)
+		throw Exc(t_("Wrong body id added"));
 	array.Add(id, GetColorId(id), true, codeStr, title, fileName);
 	int row = array.GetCount()-1;
 	Option & opt = option.Add();
@@ -545,8 +484,11 @@ UVector<int> ArrayModel_IndexsHydro(const ArrayCtrl &array) {
 
 UVector<int> ArrayModel_IndexsBody(const ArrayCtrl &array) {		
 	UVector<int> ids;
-	for (int row = 0; row < array.GetCount(); ++row) 
-		ids << ArrayModel_IndexBody(array, row);		
+	for (int row = 0; row < array.GetCount(); ++row) {
+		int id = ArrayModel_IndexBody(array, row);		
+		if (id >= 0)
+			ids << id;
+	}
 	return ids;
 }
 
@@ -599,4 +541,74 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 	if (row < 0)
 		return String();
 	return array.Get(row, 5);
+}
+
+void OnPanic(const char *title, const char *text) {
+	throw Exc(Format(t_("Error type 1 %s: %s"), title, text));	
+}
+
+
+GUI_APP_MAIN {
+#if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
+	GetCrashHandler().Enable();
+#endif
+	InstallPanicMessageBox(OnPanic);
+	
+	const UVector<String>& command = CommandLine();
+
+	String errorStr;
+
+	if (!command.IsEmpty() && command[0] != "-gui") {
+		try {
+			ConsoleOutput con(true);
+			
+			ConsoleMain(command, true, PrintStatus);
+		} catch (Exc e) {
+			errorStr = e;
+		} catch(const char *cad) {
+			errorStr = cad;
+		} catch(const std::string &e) {
+			errorStr = e.c_str();	
+		} catch (const std::exception &e) {
+			errorStr = e.what();
+		} catch(...) {
+			errorStr = t_("Unknown error");
+		}
+		if (!errorStr.IsEmpty()) {
+			Cout() << "\n" << Format(t_("Problem found: %s"), errorStr);
+			SetExitCode(-1);
+		}
+		return;
+	}
+	
+	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
+	Ctrl::GlobalBackPaint();
+
+	try {
+		Main main;
+		if (command.size() >= 1) {
+			if (command[0] == "-gui") {
+				if (command.size() < 2)
+					throw Exc("-gui option requires to indicate window to show");
+				main.parameter = ToLower(command[1]);
+			} else
+				throw Exc(Format("Unknown command %s", command[0]));
+		}
+		main.Init();
+		main.OpenMain();
+		Ctrl::EventLoop(&main);
+		main.Close();
+	} catch (Exc e) {
+		errorStr = e;
+	} catch(const char *cad) {
+		errorStr = cad;
+	} catch(const std::string &e) {
+		errorStr = e.c_str();	
+	} catch (const std::exception &e) {
+		errorStr = e.what();
+	} catch(...) {
+		errorStr = t_("Unknown error");
+	}
+	if (!errorStr.IsEmpty())
+		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
 }

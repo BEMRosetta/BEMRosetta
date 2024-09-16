@@ -656,6 +656,7 @@ public:
 		elastodyn.fileName = AFX(path, fast.GetString("EDFile"));
 		hydrodyn.fileName = AFX(path, fast.GetString("HydroFile"));
 		inflowfile.fileName = AFX(path, fast.GetString("InflowFile"));
+		subdyn.fileName = AFX(path, fast.GetString("SubFile"));
 		try {
 			dlldat.fileName = GetAbsolutePath(path, hydrodyn.GetString("NLFK_DLL_input"));
 		} catch(...) {
@@ -703,9 +704,9 @@ public:
 			String res;
 			UVector<String> vars = Split(var, "/");
 			if (vars.size() == 2)
-				res = GetFASTVar(fileText, vars[1], vars[0]);
+				res = GetFASTVarPos(fileText, vars[1], vars[0], pos);
 			else if (vars.size() == 1)		
-				res = GetFASTVar(fileText, vars[0]);
+				res = GetFASTVarPos(fileText, vars[0], Null, pos);
 			else
 				throw Exc(Format(t_("Wrong variable '%s' in GetString"), var));
 			
@@ -765,6 +766,12 @@ public:
 			fileText = fileText.Left(posIni) + S(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
 		}
 		
+		UVector<UVector<String>> GetFASTArray(String var) {
+			if (!IsAvailable()) 
+				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+			return ::GetFASTArray(fileText, var);
+		}
+		
 		void SetString(String var, String val) {
 			val = S("\"") + val + S("\"");
 			SetString0(var, val);
@@ -778,6 +785,8 @@ public:
 		void SetBool(String var, bool val) {
 			SetString0(var, val ? "True" : "False");
 		}
+		
+		int pos = 0;
 		
 	private:
 		void SetString0(String var, String val) {
@@ -807,7 +816,7 @@ public:
 	};
 	
 public:
-	File fast, elastodyn, hydrodyn, inflowfile, dlldat;
+	File fast, elastodyn, hydrodyn, inflowfile, dlldat, subdyn;
 	String folderCase;
 	String log;
 	String fstFile;
