@@ -329,7 +329,7 @@ void MainBEM::Init() {
 	
 	OnOpt();
 		
-	menuTab.Add(menuOpen.SizePos(), 	t_("Load"));
+	menuTab.Add(menuOpen.SizePos(), 	t_("File"));
 	menuTab.Add(menuPlot.SizePos(), 	t_("Plot")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
 	menuTab.Add(menuProcess2.SizePos(), t_("Remove & Mult")).Disable();
@@ -1491,7 +1491,7 @@ void MainBEM::OnMultiplyDOF(bool isReset) {
 		bool b = menuProcess2.opB || menuProcess2.opBd;
 		bool diag = menuProcess2.opAd || menuProcess2.opBd;
 		
-		Bem().MultiplyDOF(idx, factor, idDOF, a, b, diag, menuProcess2.opF, menuProcess2.opMD, menuProcess2.opQTF);
+		Bem().MultiplyDOF(idx, factor, idDOF, a, b, diag, menuProcess2.opF, menuProcess2.opMD, menuProcess2.opQTF, menuProcess2.opStiffness);
 				
 		AfterBEM();	
 		LoadSelTab(Bem());

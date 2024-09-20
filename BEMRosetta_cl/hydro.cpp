@@ -1785,7 +1785,7 @@ void Hydro::ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf)
 		dt.qtfdif.Clear();
 }
 
-void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool b, bool diag, bool f, bool ismd, bool qtf) {
+void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool b, bool diag, bool f, bool ismd, bool qtf, bool C) {
 	if (_idDOF.size() == 0) 
 		return;
 	
@@ -1882,6 +1882,10 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 		MultiplySumDif(dt.qtfsum);
 	if (qtf && IsLoadedQTF(false))
 		MultiplySumDif(dt.qtfdif);
+	
+	if (C && IsLoadedC()) 
+		for (int ib = 0; ib < dt.Nb; ++ib)
+			dt.msh[ib].dt.C *= factor;
 	
 	// Some previous data is now invalid
 	dt.Kirf.Clear();

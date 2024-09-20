@@ -231,7 +231,7 @@ void DLL_ListFunctions() noexcept {
 
 int DLL_FAST_Load(const char *filename) noexcept {
 	try {
-		String ret = DLL_Fastout().Load(filename);
+		String ret = DLL_Fastout().Load(filename, Null);
 		if (ret.IsEmpty())
 			return 1;
 		else {

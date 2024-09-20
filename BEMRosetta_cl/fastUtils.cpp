@@ -89,7 +89,9 @@ String GetFASTVarPos(const String &strFile, String varName, String paragraph, in
 	int posIni;
 	if (!GetFASTVarLine(strFile, varName, paragraph, posIni, pos, 0))
 		return Null;
-	return Trim(strFile.Mid(posIni, pos - posIni));	
+	String ret = strFile.Mid(posIni, pos - posIni);
+	ret.Replace("\"", "");	
+	return Trim(ret);
 }
 
 String GetFASTVar(const String &strFile, String varName, String paragraph) {

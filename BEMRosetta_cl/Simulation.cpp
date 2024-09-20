@@ -9,7 +9,7 @@ const char *Simulation::strCalculation[] = {t_("None"), t_("Static"), t_("Dynami
 Simulation::~Simulation() {
 	String outFile = AFX(folder, "DLLData.out");
 	if (out.GetParamCount() > 1)
-		out.Save(outFile, ".out");
+		out.Save(outFile, Null, ".out");
 	else
 		DeleteFile(outFile);
 }

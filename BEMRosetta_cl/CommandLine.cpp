@@ -1052,7 +1052,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							String ret = fast.Load(file);
+							String ret = fast.Load(file, Null);
 							if (ret.IsEmpty())
 								BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 							else
@@ -1065,7 +1065,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							String file = FileName(command[ic]);
 							
-							if (fast.Save(file, "", ScatterDraw::GetDefaultCSVSeparator())) 
+							if (fast.Save(file, Null, "", ScatterDraw::GetDefaultCSVSeparator())) 
 								BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
 						} else if (param == "-p" || param == "-print") {
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {

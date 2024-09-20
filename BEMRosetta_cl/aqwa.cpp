@@ -594,7 +594,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			double adv = in.GetLineNumber()/nlines;
 			if (adv > step) {
 				step += 0.01;
-				if (!Status("Loading", int(100*adv)))
+				if (Status && !Status("Loading", int(100*adv)))
 					throw Exc(t_("Stop by user"));
 			}
 		}

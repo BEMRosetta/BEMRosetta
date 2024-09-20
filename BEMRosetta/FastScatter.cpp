@@ -593,7 +593,7 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			
 			left.EnableX(false);
 			
-			ret = fout.Load(fileName);
+			ret = fout.Load(fileName, Null);
 		}
 		if (!ret.IsEmpty()) {
 			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), ~file, ret));
@@ -679,27 +679,33 @@ void FastScatterBase::OnSaveAs() {
 		String fileName = rightT.arrayFiles.Get(row, 1);
 		
 		if (fs.ExecuteSaveAs(t_("Save register data"))) {
-			WaitCursor waitcursor;
+			Progress progress(t_("Saving file"), 100);
+			
+			auto Status = [&](String str, int _pos) {
+				progress.SetText(str); 
+				progress.SetPos(_pos); 
+				return !progress.Canceled();
+			};
 			
 			if (fileType == ".out") {	
-				if (!left.dataFast[row].Save(fileName, ".out")) {
+				if (!left.dataFast[row].Save(fs.Get(), Status, ".out")) {
 					BEM::PrintError(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			} else if (fileType == ".csv") {	
-				if (!left.dataFast[row].Save(fileName, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
+				if (!left.dataFast[row].Save(fs.Get(), Status, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
 					BEM::PrintError(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			} else {
 				int id = opLoad3 == 2 ? row : 0;
-				if (!left.scatter[id].SaveToFileData(fileName)) {
+				if (!left.scatter[id].SaveToFileData(fs.Get())) {
 					BEM::PrintError(Format("Problem saving '%s'", fileName));
 					return;
 				}
 			}
 		}
-		saveFolder = GetFileFolder(fileName);
+		saveFolder = GetFileFolder(fs.Get());
 	} catch (const Exc &e) {
 		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
 	}		

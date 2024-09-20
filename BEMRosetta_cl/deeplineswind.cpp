@@ -9,7 +9,7 @@ using namespace Upp;
 
 #include "FastOut.h"
 
-String FastOut::LoadDb(String file) {
+String FastOut::LoadDb(String file, Function <bool(String, int)> Status) {
 	Clear();
 	
 	parameters << "TIME_SCALE";
@@ -23,6 +23,7 @@ String FastOut::LoadDb(String file) {
 
 	fileName = file;
 	
+	Status(t_("Loading structure"), 10);
 	{
 		Sql sqlvariable(sqlite3);
 		if (!sqlvariable.Execute("SELECT long_name, unit, description FROM 'variable'"))
@@ -35,6 +36,7 @@ String FastOut::LoadDb(String file) {
 		}
 	}
 	
+	Status(t_("Loading wave series"), 20);
 	int idwave = -1;
 	UVector <double> timewave, wave;
 	{
@@ -64,6 +66,7 @@ String FastOut::LoadDb(String file) {
 		dataCols[i] = FindFunction(parameters, [&](const String &param)->bool {return ToLower(param) == par;});
 	}
 
+	Status(t_("Loading data"), 50);
 	while(sqldata.Fetch()) {
 		for (int i = 0; i < dataCols.size(); ++i) {
 			if (dataCols[i] >= 0)

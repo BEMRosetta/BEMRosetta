@@ -120,7 +120,7 @@ String FastOut::GetFileToLoad(String fileName) {
 	return "";
 }
 
-String FastOut::Load(String file) {
+String FastOut::Load(String file, Function <bool(String, int)> Status) {
 	String ext = ToLower(GetFileExt(file));
 	
 	if (ext == ".out")
@@ -149,13 +149,13 @@ String FastOut::Load(String file) {
 	
 	String ret;
 	if (ext == ".out")
-		ret = LoadOut(file);
+		ret = LoadOut(file, Status);
 	else if (ext == ".outb")
-		ret = LoadOutb(file);
+		ret = LoadOutb(file, Status);
 	else if (ext == ".csv" || ext == ".txt")
-		ret = LoadCsv(file);
+		ret = LoadCsv(file, Status);
 	else if (ext == ".db")
-		ret = LoadDb(file);
+		ret = LoadDb(file, Status);
 	else if (ext == ".lis")
 		ret = Load_LIS(file);
 	
@@ -167,7 +167,7 @@ String FastOut::Load(String file) {
 	return ret;
 }
 
-String FastOut::LoadOut(String file) {
+String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
 	String raw = LoadFileBOM(file);
 	if (raw.IsEmpty()) 
 		return Format("Problem reading '%s'", file); 
@@ -178,6 +178,9 @@ String FastOut::LoadOut(String file) {
 	int pos = 0, npos = 0;
 	int numCol;
 	while (npos >= 0) {
+		if (Status && !(pos%10000) && !Status(Format(t_("Loading %s"), file), (100*pos)/raw.GetCount()))
+			throw Exc(t_("Stop by user"));
+		
 		npos = raw.FindAfter("\n", pos);
 		if (npos < 0) 					// The last row in the file
 			npos = raw.GetCount();		
@@ -223,19 +226,19 @@ String FastOut::LoadOut(String file) {
 	return "";
 }
 
-bool FastOut::Save(String fileSave, String type, String sep) {
+bool FastOut::Save(String fileSave, Function <bool(String, int)> Status, String type, String sep) {
 	if (type.IsEmpty())
 		type = GetFileExt(fileSave);
 	if (type == ".out")
-		return SaveOut(fileSave);
+		return SaveOut(fileSave, Status);
 	else if (type == ".csv")
-		return SaveCsv(fileSave, sep);
+		return SaveCsv(fileSave, Status, sep);
 
 	return false;
 }
 	
-bool FastOut::SaveOut(String fileSave) {
-	String data;
+bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status) {
+	FileOut data(fileSave);
 	
 	data << "\n\n\n\n\n\n";
 	for (int i = 0; i < parameters.size(); ++i) {
@@ -250,20 +253,23 @@ bool FastOut::SaveOut(String fileSave) {
 		data << "(" << units[i] << ")";
 	}
 	data << "\n";
-	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
+	int num = dataOut[0].size();
+	for (int idtime = 0; idtime < num; ++idtime) {
+		if (Status && !(idtime%1000) && !Status(Format("Saving %s", fileSave), (100*idtime)/num))
+			throw Exc(t_("Stop by user"));
 		if (idtime > 0)
 			data << "\n";
 		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
 			if (idparam > 0)
 				data << "\t";
 			if (dataOut[idparam].size() > idtime)
-				data << FDS(dataOut[idparam][idtime], 10, true);
+				data << FDS(dataOut[idparam][idtime], 10, false);
 		}
 	}
-	return SaveFile(fileSave, data);
+	return true;//SaveFile(fileSave, data);
 }
 
-String FastOut::LoadOutb(String fileNa) {
+String FastOut::LoadOutb(String fileNa, Function <bool(String, int)> Status) {
 	Clear();
 	
 	enum FILETYPE {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
@@ -272,6 +278,8 @@ String FastOut::LoadOutb(String fileNa) {
 	if (!file.IsOpen())
 		return t_("Impossible to open file");
 
+	Status(t_("Loading header"), 10);
+	
 	int ChanLen2;
 	int16 FileType = file.Read<int16>();
 	if (FileType == FILETYPE::ChanLen_In) 
@@ -294,7 +302,7 @@ String FastOut::LoadOutb(String fileNa) {
 	Buffer<float> ChanNames(NumChans);
 	Buffer<float> ChanUnits(NumChans);
 	
-	//Buffer<float> ColMax, ColMin;	
+	
 	Buffer<float> ColScl, ColOff;
 	Buffer<int32> TmpTimeArray;
 	if (FileType != FILETYPE::NoCompressWithoutTime) {
@@ -333,6 +341,8 @@ String FastOut::LoadOutb(String fileNa) {
     }  
     
     // End of header
+    
+    Status(t_("Loading data"), 40);
     
     int nPts = NumRecs*NumChans;           		   
     dataOut.SetCount(NumChans+1+calcParams.size());
@@ -374,7 +384,7 @@ String FastOut::LoadOutb(String fileNa) {
 	return "";
 }
 
-String FastOut::LoadCsv(String _fileName) {
+String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 	Clear();
 	
 	fileName = _fileName;
@@ -386,6 +396,8 @@ String FastOut::LoadCsv(String _fileName) {
 	char decimalSign;
 	int64 beginData;
 	int beginDataRow;
+	
+	Status(t_("Analizing header"), 10);
 	
 	if (!GuessCSV(fileName, true, header, params0, separator, repetition, decimalSign, beginData, beginDataRow))
 		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
@@ -451,6 +463,8 @@ String FastOut::LoadCsv(String _fileName) {
 
 	in.Seek(beginData);
 
+	Status(t_("Reading file"), 30);
+
 	const char *endptr;	
 	while (!in.IsEof()) {
 		UVector<String> data = Split(in.GetLine(), separator, repetition);
@@ -467,8 +481,8 @@ String FastOut::LoadCsv(String _fileName) {
 	return "";
 }
 
-bool FastOut::SaveCsv(String fileSave, String sep) {
-	String data;
+bool FastOut::SaveCsv(String fileSave, Function <bool(String, int)> Status, String sep) {
+	FileOut data(fileSave);
 	
 	if (sep.IsEmpty())
 		sep = ";";
@@ -478,17 +492,20 @@ bool FastOut::SaveCsv(String fileSave, String sep) {
 		data << parameters[i] << " [" << units[i] << "]";
 	}
 	data << "\n";
-	for (int idtime = 0; idtime < dataOut[0].size(); ++idtime) {
+	int num = dataOut[0].size();
+	for (int idtime = 0; idtime < num; ++idtime) {
+	    if (Status && !(idtime%1000) && !Status(Format("Saving %s", fileSave), (100*idtime)/num))
+			throw Exc(t_("Stop by user"));
 		if (idtime > 0)
 			data << "\n";
 		for (int idparam = 0; idparam < min(dataOut.size(), parameters.size()); ++idparam) {
 			if (idparam > 0)
 				data << sep;
 			if (dataOut[idparam].size() > idtime)
-				data << FDS(dataOut[idparam][idtime], 10, true);
+				data << FDS(dataOut[idparam][idtime], 10, false);
 		}
 	}
-	return SaveFile(fileSave, data);
+	return true;//SaveFile(fileSave, data);
 }
 
 void FastOut::AfterLoad() {
@@ -794,7 +811,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					UVector<String> pars = Split(str, ",");
 					String stat = pars[0];
 					double val;
-					if (stat == "mean") 
+					if (stat == "mean" || stat == "avg") 
 						val = data.mean();
 					else if (stat == "min") 
 						val = data.minCoeff();

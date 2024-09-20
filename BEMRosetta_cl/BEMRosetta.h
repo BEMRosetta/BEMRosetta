@@ -1059,7 +1059,7 @@ public:
 	void DeleteHeadingsMD(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
 	void ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);
-	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
+	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf, bool C);
 	void SwapDOF(int ib1, int idof1, int ib2, int idof2);
 	void SwapDOF(int ib1, int ib2);
 	
@@ -1696,7 +1696,7 @@ public:
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										
-	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf);
+	void MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf, bool C);
 	void SwapDOF(int id, int ib1, int idof1, int ib2, int idof2);
 	
 	void RemoveHydro(int id);

@@ -587,7 +587,7 @@ void MainBody::Init() {
 			Exclamation(t_("Impossible to save file"));
 	};
 	
-	menuTab.Add(menuOpen.SizePos(),    	t_("Load"));
+	menuTab.Add(menuOpen.SizePos(),    	t_("File"));
 	menuTab.Add(menuPlot.SizePos(),    	t_("Plot")).Disable();
 	menuTab.Add(menuMove.SizePos(), 	t_("Move")).Disable();
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();

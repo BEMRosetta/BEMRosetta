@@ -180,8 +180,8 @@ void BEM::ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE for
 	hydros[id].ResetForces(force, forceMD, forceQtf);
 }
 
-void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf) {
-	hydros[id].MultiplyDOF(factor, idDOF, a, b, diag, f, md, qtf);
+void BEM::MultiplyDOF(int id, double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf, bool C) {
+	hydros[id].MultiplyDOF(factor, idDOF, a, b, diag, f, md, qtf, C);
 }
 
 void BEM::SwapDOF(int id, int ib1, int idof1, int ib2, int idof2) {

@@ -568,6 +568,8 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			}
 			
 			for (int i = 0; i < smasses.size(); ++i) {
+				if (smasses[i].size() < 11)
+					throw Exc(Format(t_("Incomplete data in NCmass line %d"), i+1));
 				Body::ControlData::ControlLoad &load = b.cdt.controlLoads.Add();
 				load.loaded = true;
 				load.mass = ScanDouble(smasses[i][1]);
@@ -575,7 +577,8 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 				if (id < 1 || id > joints.size())
 					throw Exc(Format(t_("Wrong member id %s"), smasses[i][1]));
 				
-				load.p = joints[id-1];
+				Value3D delta(ScanDouble(smasses[i][8]), ScanDouble(smasses[i][9]), ScanDouble(smasses[i][10]));
+				load.p = joints[id-1] + delta;
 			}
 			
 			b.dt.fileName = fst.subdyn.fileName;

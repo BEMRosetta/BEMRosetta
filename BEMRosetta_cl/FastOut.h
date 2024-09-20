@@ -14,8 +14,8 @@ public:
 	static UVector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
 	
-	String Load(String fileName);
-	bool Save(String fileName, String type = "", String sep = "");
+	String Load(String fileName, Function <bool(String, int)> Status);
+	bool Save(String fileName, Function <bool(String, int)> Status, String type = "", String sep = "");
 	
 	void Clear();
 	bool IsEmpty();
@@ -127,12 +127,12 @@ public:
 	double Hs = Null, Tp = Null, heading = Null;
     	
 private:
-	String LoadOut(String fileName);
-	String LoadOutb(String fileName);
-	bool SaveOut(String fileName);
-	String LoadCsv(String fileName);
-	bool SaveCsv(String fileName, String sep);
-	String LoadDb(String fileName);
+	String LoadOut(String fileName, Function <bool(String, int)> Status);
+	String LoadOutb(String fileName, Function <bool(String, int)> Status);
+	bool SaveOut(String fileName, Function <bool(String, int)> Status);
+	String LoadCsv(String fileName, Function <bool(String, int)> Status);
+	bool SaveCsv(String fileName, Function <bool(String, int)> Status, String sep);
+	String LoadDb(String fileName, Function <bool(String, int)> Status);
 	String Load_LIS(String fileName);
 	void AfterLoad();
 
@@ -672,7 +672,7 @@ public:
 	void CreateFolderCase(String folder = "");
 	
 	bool LoadOut() {
-		return out.Load(fstFile) > 0;
+		return out.Load(fstFile, Null) > 0;
 	}
 	virtual bool Postprocess() 		{return false;};
 	const String &GetFolderCase()	{return folderCase;}
