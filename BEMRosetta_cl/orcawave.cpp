@@ -317,7 +317,7 @@ void OrcaWave::Load_OF_YML() {
 					if (Min(pan) < 1 || Max(pan) > numNodes)
 						throw Exc(in.Str() + "\n" + Format(t_("Wrong panel %d (%d,%d,%d,%d)"), ip+1, pan[0], pan[1], pan[2], pan[3]));
 					for (int i4 = 0; i4 < 4; ++i4)
-						dt.msh[ib].dt.mesh.panels[ip].id[i4] = pan[i4]-1;
+						dt.msh[ib].dt.mesh.panels[ip].id[i4] = int(pan[i4])-1;
 				}
 				/*if (dt.symX) 
 					dt.msh[ib].dt.mesh.DeployXSymmetry();
