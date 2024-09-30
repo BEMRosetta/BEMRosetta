@@ -167,33 +167,29 @@ String FastOut::Load(String file, Function <bool(String, int)> Status) {
 	return ret;
 }
 
-String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
-	String raw = LoadFileBOM(file);
-	if (raw.IsEmpty()) 
-		return Format("Problem reading '%s'", file); 
-	
+String FastOut::LoadOut(String fileName, Function <bool(String, int)> Status) {
 	Clear();
+	
+	FileIn in(fileName);
+	if (!in)
+		return t_("Impossible to load file");
+
+	Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), 0);
+	
+	int64 sz = in.GetSize();
+
+	int numCol, line = 0;
 	bool begin = false;
-	//int row = -1;
-	int pos = 0, npos = 0;
-	int numCol;
-	while (npos >= 0) {
-		if (Status && !(pos%10000) && !Status(Format(t_("Loading %s"), file), (100*pos)/raw.GetCount()))
+	while (!in.IsEof()) {
+		if (Status && !(line%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz)))
 			throw Exc(t_("Stop by user"));
-		
-		npos = raw.FindAfter("\n", pos);
-		if (npos < 0) 					// The last row in the file
-			npos = raw.GetCount();		
-		String line = raw.Mid(pos, npos-pos);
-		UVector<String> fields = Split(line, IsTabSpaceRet, true);
-		
+				
+		UVector<String> fields = Split(in.GetLine(), IsTabSpaceRet, true);
 		if (!begin) {
 			if (!fields.IsEmpty() && ToLower(fields[0]) == "time") {
 				for (int c = 0; c < fields.size(); ++c) 
 					parameters << fields[c];
-				pos = npos;
-				npos = raw.FindAfter("\n", pos);
-				line = raw.Mid(pos, npos-pos);
+				String line = in.GetLine();
 				UVector<String> ffields = Split(line, IsTabSpaceRet, true);
 				for (int c = 0; c < ffields.size(); ++c) 
 					units << Replace(Replace(ffields[c], "(", ""), ")", "");
@@ -205,7 +201,6 @@ String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
 				dataOut.SetCount(numCol+calcParams.size());
 			}
 		} else {
-			//row++;
 			if (fields.IsEmpty())
 				break;
 
@@ -214,94 +209,101 @@ String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
 			for (int c = fields.size(); c < numCol; ++c) 
 				dataOut[c] << Null;
 		}
-		pos = npos;
+		line++;
 	}
 
 	if (dataOut.IsEmpty()) 
-		return Format("Problem reading '%s'", file); 
+		return t_("File is opened but impossible to process"); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
-    	dataOut[i].SetCount(dataOut[0].size());
+    	dataOut[i].SetCount(GetNumData());
 
 	return "";
 }
 
-bool FastOut::Save(String fileSave, Function <bool(String, int)> Status, String type, String sep) {
+bool FastOut::Save(String fileSave, Function <bool(String, int)> Status, String type, String sep, const UVector<int> &ids) {
 	if (type.IsEmpty())
 		type = GetFileExt(fileSave);
 	if (type == ".out")
-		return SaveOut(fileSave, Status);
+		return SaveOut(fileSave, Status, ids);
 	else if (type == ".csv")
-		return SaveCsv(fileSave, Status, sep);
+		return SaveCsv(fileSave, Status, sep, ids);
 
 	return false;
 }
 	
-bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status) {
+bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status, const UVector<int> &ids) {
+	Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
+	
 	FileOut data(fileSave);
 	
 	data << "\n\n\n\n\n\n";
-	for (int i = 0; i < parameters.size(); ++i) {
-		if (i > 0)
-			data << "\t";
-		data << parameters[i];
+	for (int idparam = 0; idparam < parameters.size(); ++idparam) {
+		if (idparam == 0 || ids.IsEmpty() || Find(ids, idparam) >= 0) {
+			if (idparam > 0)
+				data << "\t";
+			data << parameters[idparam];
+		}
 	}
 	data << "\n";
-	for (int i = 0; i < units.size(); ++i) {
-		if (i > 0)
-			data << "\t";
-		data << "(" << units[i] << ")";
+	for (int idparam = 0; idparam < units.size(); ++idparam) {
+		if (idparam == 0 || ids.IsEmpty() || Find(ids, idparam) >= 0) {
+			if (idparam > 0)
+				data << "\t";
+			data << "(" << units[idparam] << ")";
+		}
 	}
 	data << "\n";
-	int num = dataOut[0].size();
+	int num = GetNumData();
 	for (int idtime = 0; idtime < num; ++idtime) {
-		if (Status && !(idtime%1000) && !Status(Format("Saving %s", fileSave), (100*idtime)/num))
+		if (Status && !(idtime%1000) && !Status(Format("Saving '%s'", ::GetFileName(fileSave)), (100*idtime)/num))
 			throw Exc(t_("Stop by user"));
 		if (idtime > 0)
 			data << "\n";
 		for (int idparam = 0; idparam < dataOut.size(); ++idparam) {
-			if (idparam > 0)
-				data << "\t";
-			if (dataOut[idparam].size() > idtime)
-				data << FDS(dataOut[idparam][idtime], 10, false);
+			if (idparam == 0 || ids.IsEmpty() || Find(ids, idparam) >= 0) {
+				if (idparam > 0)
+					data << "\t";
+				if (dataOut[idparam].size() > idtime)
+					data << FDS(dataOut[idparam][idtime], 10, false);
+			}
 		}
 	}
-	return true;//SaveFile(fileSave, data);
+	return true;
 }
 
-String FastOut::LoadOutb(String fileNa, Function <bool(String, int)> Status) {
+String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
 	Clear();
 	
 	enum FILETYPE {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
 
-	FileInBinary file(fileNa);
-	if (!file.IsOpen())
+	FileInBinary fin(fileName);
+	if (!fin.IsOpen())
 		return t_("Impossible to open file");
 
-	Status(t_("Loading header"), 10);
+	Status(Format(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
 	
 	int ChanLen2;
-	int16 FileType = file.Read<int16>();
+	int16 FileType = fin.Read<int16>();
 	if (FileType == FILETYPE::ChanLen_In) 
-		ChanLen2 = file.Read<int16>();
+		ChanLen2 = fin.Read<int16>();
 	else
 		ChanLen2 = 10;
 
-	int32 NumChans = file.Read<int32>();
-    int32 NumRecs = file.Read<int32>();
+	int32 NumChans = fin.Read<int32>();
+    int32 NumRecs = fin.Read<int32>();
 
 	double TimeScl, TimeOff, TimeOut1, TimeIncr;
     if (FileType == FILETYPE::WithTime) {
-        TimeScl = file.Read<double>(); 
-        TimeOff = file.Read<double>();
+        TimeScl = fin.Read<double>(); 
+        TimeOff = fin.Read<double>();
     } else {
-        TimeOut1 = file.Read<double>();
-        TimeIncr = file.Read<double>();  
+        TimeOut1 = fin.Read<double>();
+        TimeIncr = fin.Read<double>();  
     }
 
 	Buffer<float> ChanNames(NumChans);
 	Buffer<float> ChanUnits(NumChans);
-	
 	
 	Buffer<float> ColScl, ColOff;
 	Buffer<int32> TmpTimeArray;
@@ -314,21 +316,21 @@ String FastOut::LoadOutb(String fileNa, Function <bool(String, int)> Status) {
 	}
 
 	if (FileType != FILETYPE::NoCompressWithoutTime) {
-	    file.Read(ColScl, 4*NumChans);	
-    	file.Read(ColOff, 4*NumChans);
+	    fin.Read(ColScl, 4*NumChans);	
+    	fin.Read(ColOff, 4*NumChans);
 	}
 
-	int32 LenDesc = file.Read<int32>();
+	int32 LenDesc = fin.Read<int32>();
 	
     StringBuffer DescStrB(LenDesc);
-    file.Read(DescStrB, LenDesc);
+    fin.Read(DescStrB, LenDesc);
     String DescStr = DescStrB;
 
 	parameters.SetCount(NumChans+1); 
 	parameters[0] = "Time";
 	Buffer<char> name(ChanLen2);
 	for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
-		file.Read(name, ChanLen2); 	
+		fin.Read(name, ChanLen2); 	
         parameters[iChan] = TrimBoth(String(name, ChanLen2));
     }
     
@@ -336,13 +338,12 @@ String FastOut::LoadOutb(String fileNa, Function <bool(String, int)> Status) {
 	units[0] = "s";
 	Buffer<char> unit(ChanLen2);
     for (int iChan = 0; iChan < NumChans+1; ++iChan) { 
-        file.Read(unit, ChanLen2); 			
+        fin.Read(unit, ChanLen2); 			
         units[iChan] = Replace(Replace(TrimBoth(String(unit, ChanLen2)), "(", ""), ")", "");
     }  
     
     // End of header
-    
-    Status(t_("Loading data"), 40);
+    int64 sz = fin.GetSize();
     
     int nPts = NumRecs*NumChans;           		   
     dataOut.SetCount(NumChans+1+calcParams.size());
@@ -352,25 +353,29 @@ String FastOut::LoadOutb(String fileNa, Function <bool(String, int)> Status) {
     Buffer<int32> bufferTime;
     if (FileType == FILETYPE::WithTime) {
         bufferTime.Alloc(NumRecs);
-        file.Read(bufferTime, 4*NumRecs); 
+        fin.Read(bufferTime, 4*NumRecs); 
     }
     
     Buffer<int16> bufferData;
     Buffer<double> bufferDataFloat;
     int ip = 0;
     if (FileType == FILETYPE::NoCompressWithoutTime) {
-        bufferDataFloat.Alloc(nPts);
-        file.Read(bufferDataFloat, 8*nPts); 
+        bufferDataFloat.Alloc(NumChans); 
         for (int idt = 0; idt < NumRecs; ++idt) {
-	    	for (int i = 1; i < NumChans+1; ++i) 
-		        dataOut[i][idt] = bufferDataFloat[ip++];
+            fin.Read(bufferDataFloat, 8*NumChans);
+            if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*fin.GetPos())/sz)))
+				throw Exc(t_("Stop by user"));
+	    	for (int i = 0; i < NumChans; ++i) 
+		        dataOut[i+1][idt] = bufferDataFloat[i];
         }
     } else {
-	    bufferData.Alloc(nPts);
-    	file.Read(bufferData, 2*nPts); 	
+	    bufferData.Alloc(NumChans);
 	    for (int idt = 0; idt < NumRecs; ++idt) {
-	    	for (int i = 1; i < NumChans+1; ++i) 
-		        dataOut[i][idt] = (bufferData[ip++] - ColOff[i-1])/ColScl[i-1];
+	        fin.Read(bufferData, 2*NumChans); 	
+	        if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*fin.GetPos())/sz)))
+				throw Exc(t_("Stop by user"));
+	    	for (int i = 0; i < NumChans; ++i) 
+		        dataOut[i+1][idt] = (bufferData[i] - ColOff[i])/ColScl[i];
 	    }
     }
     
@@ -383,7 +388,7 @@ String FastOut::LoadOutb(String fileNa, Function <bool(String, int)> Status) {
     }
 	return "";
 }
-
+		
 String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 	Clear();
 	
@@ -397,7 +402,7 @@ String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 	int64 beginData;
 	int beginDataRow;
 	
-	Status(t_("Analizing header"), 10);
+	Status(Format(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
 	
 	if (!GuessCSV(fileName, true, header, params0, separator, repetition, decimalSign, beginData, beginDataRow))
 		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
@@ -461,48 +466,61 @@ String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 	if (!in)
 		return t_("Impossible to load file");
 
+	int64 sz = in.GetSize();
+	
 	in.Seek(beginData);
 
-	Status(t_("Reading file"), 30);
+	Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz));
 
+	int line = 0;
 	const char *endptr;	
 	while (!in.IsEof()) {
+		if (Status && !(line%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz)))
+			throw Exc(t_("Stop by user"));
+		
 		UVector<String> data = Split(in.GetLine(), separator, repetition);
 		for (int i = 0; i < min(numCol, data.size()); ++i) 
 			dataOut[i] << ScanDouble(data[i], &endptr, decimalSign == ',');
+		line++;
 	}
 		
 	if (dataOut.IsEmpty()) 
 		return Format("Problem reading '%s'", fileName); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
-    	dataOut[i].SetCount(dataOut[0].size());
+    	dataOut[i].SetCount(GetNumData());
 	
 	return "";
 }
-
-bool FastOut::SaveCsv(String fileSave, Function <bool(String, int)> Status, String sep) {
+		
+bool FastOut::SaveCsv(String fileSave, Function <bool(String, int)> Status, String sep, const UVector<int> &ids) {
+	Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
+	
 	FileOut data(fileSave);
 	
 	if (sep.IsEmpty())
 		sep = ";";
-	for (int i = 0; i < parameters.size(); ++i) {
-		if (i > 0)
-			data << sep;
-		data << parameters[i] << " [" << units[i] << "]";
+	for (int idparam = 0; idparam < min(dataOut.size(), parameters.size()); ++idparam) {
+		if (idparam == 0 || ids.IsEmpty() || Find(ids, idparam) >= 0) {
+			if (idparam > 0)
+				data << sep;
+			data << parameters[idparam] << " [" << units[idparam] << "]";
+		}
 	}
 	data << "\n";
-	int num = dataOut[0].size();
+	int num = GetNumData();
 	for (int idtime = 0; idtime < num; ++idtime) {
-	    if (Status && !(idtime%1000) && !Status(Format("Saving %s", fileSave), (100*idtime)/num))
+	    if (Status && !(idtime%1000) && !Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), (100*idtime)/num))
 			throw Exc(t_("Stop by user"));
 		if (idtime > 0)
 			data << "\n";
 		for (int idparam = 0; idparam < min(dataOut.size(), parameters.size()); ++idparam) {
-			if (idparam > 0)
-				data << sep;
-			if (dataOut[idparam].size() > idtime)
-				data << FDS(dataOut[idparam][idtime], 10, false);
+			if (idparam == 0 || ids.IsEmpty() || Find(ids, idparam) >= 0) {
+				if (idparam > 0)
+					data << sep;
+				if (dataOut[idparam].size() > idtime)
+					data << FDS(dataOut[idparam][idtime], 15, false);
+			}
 		}
 	}
 	return true;//SaveFile(fileSave, data);
@@ -567,7 +585,7 @@ void FastOut::AfterLoad() {
 			unitsd << ToLower(c->units);
 		}
 	}
-	for (int idt = 0; idt < dataOut[0].size(); ++idt) {
+	for (int idt = 0; idt < GetNumData(); ++idt) {
 		for (CalcParam *c : calcParams) {	
 			if (c->IsEnabled()) 
 				dataOut[c->id][idt] = c->Calc(idt);
@@ -684,6 +702,28 @@ int FastOut::GetIdTime(double time) const {
 	return Null;
 }
 
+double FastOut::GetTimeStart() const {
+	if (dataOut.IsEmpty())
+		return Null;
+	if (dataOut[0].IsEmpty())
+		return Null;
+	return dataOut[0][0];
+}
+	
+double FastOut::GetTimeEnd() const {
+	if (dataOut.IsEmpty())
+		return Null;
+	if (dataOut[0].IsEmpty())
+		return Null;
+	return dataOut[0][GetNumData()-1];
+}
+	
+int FastOut::GetNumData() const {
+	if (dataOut.IsEmpty())
+		return 0;
+	return dataOut[0].size();
+}	
+	
 SortedIndex<String> FastOut::GetParameterList(String filter) {
 	SortedIndex<String> list;
 	

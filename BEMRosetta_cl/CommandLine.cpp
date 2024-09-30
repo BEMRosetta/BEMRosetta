@@ -174,7 +174,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n";
 	Cout() << "\n" << t_("-time                           # The next commands are for time series");
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
-	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
+	Cout() << "\n" << t_("-c  -convert <file> <params>    # Export actual model to output file. If <params>, only included params are saved. '*' allowed");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints file data in a row");
 	Cout() << "\n" << t_("     <params> list              # Parameter names");
 	Cout() << "\n" << t_("              <param> <time>    # Value of <param> in <time>");
@@ -432,6 +432,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
+							BEM::Print("\n");
 							bem.LoadBEM(file, echo ? Status : NoPrint, false);
 							bemid = bem.hydros.size() - 1;
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
@@ -468,6 +469,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								qtfHeading = -1;
 							else 
 								qtfHeading = hd.dt.FindClosestQTFHead(std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
+							
+							BEM::Print("\n");
 							bem.hydros[bemid].SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
 						} else if (param == "-convqtfheads") {	
@@ -780,6 +783,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
+							BEM::Print("\n");
 							bem.LoadBody(file, echo ? Status : NoPrint, false, false);		// Doesn't work for multibody .dat
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
@@ -810,8 +814,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							bool symX = false, symY = false;
 							Body::MESH_FMT meshFmt = Body::UNKNOWN;
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
-								ic++;
-								String pparam = ToLower(command[ic]);
+								String pparam = ToLower(command[++ic]);
 								if (pparam == "symx")
 									symX = true;
 								else if (pparam == "symy")
@@ -922,8 +925,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(t_("No file loaded"));
 							Body &msh = bem.surfs[meshid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
-								ic++;
-								String pparam = ToLower(command[ic]);
+								String pparam = ToLower(command[++ic]);
 								if (pparam == "volume") {
 									Cout() << "\n";
 									BEM::Print(t_("Volume:") + S(" ")); 
@@ -1052,7 +1054,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							if (!FileExists(file)) 
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
-							String ret = fast.Load(file, Null);
+							BEM::Print("\n");
+							String ret = fast.Load(file, echo ? Status : NoPrint);
 							if (ret.IsEmpty())
 								BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 							else
@@ -1065,7 +1068,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							String file = FileName(command[ic]);
 							
-							if (fast.Save(file, Null, "", ScatterDraw::GetDefaultCSVSeparator())) 
+							UVector<int> idds;
+							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
+								String pparam = ToLower(command[++ic]);		
+								UVector<int> ids = fast.FindParameterMatch(pparam);
+								idds.Append(ids);
+							}
+							BEM::Print("\n");
+							if (fast.Save(file, echo ? Status : NoPrint, "", ScatterDraw::GetDefaultCSVSeparator(), idds)) 
 								BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
 						} else if (param == "-p" || param == "-print") {
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
@@ -1421,7 +1431,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									returnval = false;
 								}
 								if (orca.GetModelState() == msSimulationStoppedUnstable)
-									Cerr() << "\n" << t_("Simulation aborted: The simulation has become unstable because the solver parameters (time step, iterations num.) or other, have to ve reviewed.");
+									Cerr() << "\n" << t_("Simulation aborted: The simulation has become unstable because the solver parameters (time step, iterations num.) or other, have to be reviewed.\nCheck here: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Dynamics.htm");
 		
 								if (saved)
 									BEM::Print("\n" + Format(t_("Simulation results saved at '%s'"), to));

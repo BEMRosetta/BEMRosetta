@@ -75,8 +75,8 @@ String FastOut::LoadDb(String file, Function <bool(String, int)> Status) {
 	}
 	
 	if (idwave >= 0) {
-		dataOut[idwave].SetCount(dataOut[0].size(), Null);
-		for (int i = 0; i < dataOut[0].size(); ++i) {
+		dataOut[idwave].SetCount(GetNumData(), Null);
+		for (int i = 0; i < GetNumData(); ++i) {
 			int id = FindFunction(timewave, [&](const double &v)->bool {return abs(v - dataOut[0][i]) < 0.001;});
 			if (id >= 0)
 				dataOut[idwave][i] = wave[id];

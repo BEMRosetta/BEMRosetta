@@ -30,14 +30,21 @@ BasicBEM::HeadingType BEM::headingType = BasicBEM::HEAD_180_180;
 	
 
 bool PrintStatus(String s, int v) {
+	int done;
 	if (v == 0)
-		printf("\n%s", ~RemoveAccents(s));
-	else {
-		printf("\r%s", ~RemoveAccents(s));
-		int done = v/5;
-		int pending = 20 - done;
-		printf(" |%s%s|                    ", ~String('*', done), ~String('-', pending));
-	}
+		done = 0;
+	else
+		done = 20*v/100;
+	int pending = 20 - done;
+	printf("|%s%s|", ~String('*', done), ~String('-', pending));
+	const int totalChar = 80;
+	if (!IsNull(s)) {
+		String str = RemoveAccents(s);
+		int num = totalChar - 1 - str.GetCount();
+		printf(" %s%s", ~str, ~String(' ', num > 0 ? num : 0));
+	} else
+		printf("%s", ~String(' ', totalChar));
+	printf("\r");
 	return true;
 };
 

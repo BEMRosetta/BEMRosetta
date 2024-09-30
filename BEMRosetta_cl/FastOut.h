@@ -15,7 +15,7 @@ public:
 	static String GetFileToLoad(String fileName);
 	
 	String Load(String fileName, Function <bool(String, int)> Status);
-	bool Save(String fileName, Function <bool(String, int)> Status, String type = "", String sep = "");
+	bool Save(String fileName, Function <bool(String, int)> Status, String type = "", String sep = "", const UVector<int> &ids = UVector<int>());
 	
 	void Clear();
 	bool IsEmpty();
@@ -58,9 +58,9 @@ public:
 	void SetNextTime(double time);
 		
 	int GetIdTime(double time) const;
-	double GetTimeStart() const	{return dataOut[0][0];}
-	double GetTimeEnd()	 const	{return dataOut[0][GetNumData()-1];}
-	int GetNumData() const		{return dataOut[0].size();}			
+	double GetTimeStart() const;
+	double GetTimeEnd()	 const;
+	int GetNumData() const;
 	bool IsEmpty() const		{return dataOut.IsEmpty();}	
 	
 	String GetFileName() const	{return fileName;}
@@ -129,9 +129,9 @@ public:
 private:
 	String LoadOut(String fileName, Function <bool(String, int)> Status);
 	String LoadOutb(String fileName, Function <bool(String, int)> Status);
-	bool SaveOut(String fileName, Function <bool(String, int)> Status);
+	bool SaveOut(String fileName, Function <bool(String, int)> Status, const UVector<int> &ids);
 	String LoadCsv(String fileName, Function <bool(String, int)> Status);
-	bool SaveCsv(String fileName, Function <bool(String, int)> Status, String sep);
+	bool SaveCsv(String fileName, Function <bool(String, int)> Status, String sep, const UVector<int> &ids);
 	String LoadDb(String fileName, Function <bool(String, int)> Status);
 	String Load_LIS(String fileName);
 	void AfterLoad();
@@ -566,7 +566,7 @@ private:
 	struct NcIMUTAParam : CalcParam {
 		NcIMUTAParam() {
 			name = "NcIMUTA";
-			units = "m/s²";
+			units = "m/s^2";
 		}
 		virtual void Init() {
 			idx = dF->GetParameterX("NcIMUTAxs");

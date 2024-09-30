@@ -155,12 +155,12 @@ void FastScatter::OnCalc() {
 		if (Trim(editStart) == "-")
 			start = 0;
 		else 
-			start = StringToSeconds(~fscbase.editStart);
+			start = StringToSeconds(String(~fscbase.editStart));
 			
 		String editEnd = ~fscbase.editEnd;
 		if (Trim(editEnd) == "-")
 			editEnd = "";
-		double end = fscbase.opFrom == 0 ? StringToSeconds(editEnd) : StringToSeconds(~fscbase.editFromEnd);
+		double end = fscbase.opFrom == 0 ? StringToSeconds(editEnd) : StringToSeconds(String(~fscbase.editFromEnd));
 
 		UVector<UVector<Value>> table;
 		ParameterMetrics realparams; 
@@ -347,7 +347,7 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	updateTime.Tip(t_("Interval to update data from file"));
 	updateTime <<= "1:00";
 	updateTime.WhenEnter = [&] {
-		int seconds = int(StringToSeconds(~updateTime));
+		int seconds = int(StringToSeconds(String(~updateTime)));
 		updateTime <<= SecondsToString(seconds, 0, false, false, true, false, true);
 		updateTime.CancelSelection();
 	};
@@ -408,7 +408,7 @@ void FastScatterBase::SelCopyTabs() {
 void FastScatterBase::OnTimer() {
 	if (!player.IsRunning())
 		return;
-	int time = int(StringToSeconds(~updateTime));
+	int time = int(StringToSeconds(String(~updateTime)));
 	
 	if (timeStop.Seconds() < time)
 		return;
@@ -593,7 +593,16 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			
 			left.EnableX(false);
 			
-			ret = fout.Load(fileName, Null);
+			Progress progress(t_("Loading file"), 100);
+			
+			auto Status = [&](String str, int _pos) {
+				if (!IsNull(str))
+					progress.SetText(str); 
+				progress.SetPos(_pos); 
+				return !progress.Canceled();
+			};
+			
+			ret = fout.Load(fileName, Status);
 		}
 		if (!ret.IsEmpty()) {
 			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), ~file, ret));
@@ -736,13 +745,15 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 				key = f.tabBar.GetKey(id);
 				idKey = f.tabKeys.Find(key);
 			
-				FastScatterBase &fscbase = f.tabScatters[idKey].fscbase;
-				beginTime = StringToSeconds(~fscbase.editStart);
-				if (fscbase.opFrom == 0)
-					endTime = StringToSeconds(~fscbase.editEnd);
-				else
-					timeFromEnd = StringToSeconds(~fscbase.editFromEnd);
-	
+				if (idKey >= 0) {
+					FastScatterBase &fscbase = f.tabScatters[idKey].fscbase;
+					
+					beginTime = StringToSeconds(String(~fscbase.editStart));
+					if (fscbase.opFrom == 0)
+						endTime = StringToSeconds(String(~fscbase.editEnd));
+					else
+						timeFromEnd = StringToSeconds(String(~fscbase.editFromEnd));
+				}
 				if (IsNull(endTime) && IsNull(timeFromEnd))
 					timeFromEnd = 0;
 				
@@ -754,7 +765,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 						title = GetFileName(GetUpperFolder(title)) + "/" + GetFileTitle(title);
 					f.tabBar.SetValue(key, title);
 				} else
-					f.tabBar.SetValue(key, t_("Multiple files"));
+					f.tabBar.SetValue(key, t_("Multiple files"));				
 			}
 		}
 		
@@ -802,6 +813,9 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 					beginTime = 0;
 				
 				int idBegin = fast.GetIdTime(beginTime);
+				if (IsNull(idBegin))
+					throw Exc(t_("Incorrect start time"));
+				
 				int numData;
 				double end;
 					
@@ -811,8 +825,10 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 					end = beginTime + endTime;
 				
 				int id = fast.GetIdTime(end);	
-				numData = id - idBegin + 1;
+				if (IsNull(id))
+					throw Exc(t_("Incorrect end time"));
 				
+				numData = id - idBegin + 1;
 				if (numData <= 1) 
 					throw Exc(t_("Incorrect start or end times"));
 				
