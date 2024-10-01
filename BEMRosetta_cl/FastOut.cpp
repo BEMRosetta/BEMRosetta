@@ -236,6 +236,8 @@ bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status, cons
 	Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
 	
 	FileOut data(fileSave);
+	if (!data)
+		return false;
 	
 	data << "\n\n\n\n\n\n";
 	for (int idparam = 0; idparam < parameters.size(); ++idparam) {
@@ -345,7 +347,7 @@ String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
     // End of header
     int64 sz = fin.GetSize();
     
-    int nPts = NumRecs*NumChans;           		   
+    //int nPts = NumRecs*NumChans;           		   
     dataOut.SetCount(NumChans+1+calcParams.size());
     for (int i = 0; i < dataOut.size(); ++i)
         dataOut[i].SetCount(NumRecs);
@@ -358,7 +360,7 @@ String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
     
     Buffer<int16> bufferData;
     Buffer<double> bufferDataFloat;
-    int ip = 0;
+    //int ip = 0;
     if (FileType == FILETYPE::NoCompressWithoutTime) {
         bufferDataFloat.Alloc(NumChans); 
         for (int idt = 0; idt < NumRecs; ++idt) {
@@ -497,7 +499,9 @@ bool FastOut::SaveCsv(String fileSave, Function <bool(String, int)> Status, Stri
 	Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
 	
 	FileOut data(fileSave);
-	
+	if (!data)
+		return false;
+			
 	if (sep.IsEmpty())
 		sep = ";";
 	for (int idparam = 0; idparam < min(dataOut.size(), parameters.size()); ++idparam) {
@@ -780,7 +784,7 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 	return list;
 }
 
-void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, ParameterMetrics &params, double start, bool fromEnd, double end, UVector<UVector<Value>> &table) {
+void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, ParameterMetrics &params, double start, double end, UVector<UVector<Value>> &table) {
 	table.Clear();
 	
 	// Gets the real et of parameters taking into account *
@@ -813,7 +817,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 		if (IsNull(idBegin) || idBegin >= num) 
 			throw Exc(t_("Bad start time"));
 
-		int idEnd = fromEnd ? fast.GetIdTime(fast.GetTimeEnd() - end) : fast.GetIdTime(end);
+		int idEnd = fast.GetIdTime(end);
 		if (!IsNull(idEnd)) {
 			if (idEnd >= num) 
 				throw Exc(t_("Bad end time"));

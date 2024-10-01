@@ -387,9 +387,11 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 			}
 			//Sort(dt.head);
 			dt.Nh = dt.head.size();
-			if (dt.Nb == 0 || dt.Nh == 0 || dt.Nf == 0)
-				throw Exc(Format(t_("No bodies, headings or frequencies found in Wamit file '%s'"), dt.file));
-		
+			if (dt.Nb == 0)
+				throw Exc(Format(t_("No bodies found in Wamit file '%s'"), dt.file));
+			if (dt.Nf == 0)
+				throw Exc(Format(t_("No frequencies found in Wamit file '%s'"), dt.file));
+			
 			dt.w.SetCount(dt.Nf);
 
 			Initialize_AB(dt.A);

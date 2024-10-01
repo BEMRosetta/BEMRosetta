@@ -149,22 +149,11 @@ void FastScatter::OnCalc() {
 		GridToParams();
 				
 		WaitCursor waitcursor;
-		
-		double start;
-		String editStart = ~fscbase.editStart;
-		if (Trim(editStart) == "-")
-			start = 0;
-		else 
-			start = StringToSeconds(String(~fscbase.editStart));
-			
-		String editEnd = ~fscbase.editEnd;
-		if (Trim(editEnd) == "-")
-			editEnd = "";
-		double end = fscbase.opFrom == 0 ? StringToSeconds(editEnd) : StringToSeconds(String(~fscbase.editFromEnd));
+
 
 		UVector<UVector<Value>> table;
 		ParameterMetrics realparams; 
-		Calc(fscbase.left.dataFast, params, realparams, start, fscbase.opFrom == 1, end, table);
+		Calc(fscbase.left.dataFast, params, realparams, fscbase.timeStart, fscbase.timeEnd, table);
 		
 		int col = 0;
 		compare.array.AddColumn("");
@@ -252,7 +241,6 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	editStart.WhenEnter = THISBACK1(ShowSelected, true);
 	opFrom.WhenAction = THISBACK1(ShowSelected, true);
 	editEnd.WhenEnter = THISBACK1(ShowSelected, true);
-	editFromEnd.WhenEnter = THISBACK1(ShowSelected, true);
 	
 	UpdateButtons(false);
 	
@@ -321,15 +309,9 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	
 	editStart <<= "-";
 	editEnd <<= "-";
-	editFromEnd <<= "0";
 	
 	opFrom.MinCaseHeight(int(1.2*StdFont().GetCy()));
 	opFrom = 0;
-	opFrom.WhenAction = [&] {
-		editEnd.Enable(opFrom == 0);
-		editFromEnd.Enable(opFrom == 1);
-	};
-	opFrom.WhenAction();
 	
 	player.LoadBuffer(String(animatedStar, animatedStar_length));
 	player.SetSpeed(0.5).Tip(t_("Click to update periodically plot from file"));
@@ -616,18 +598,6 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			UpdateButtons(false);
 			return false;
 		}
-		/*
-		if (ret == -1) {
-			BEM::PrintError(Format(t_("File '%s' is not supported"), ~file));
-			left.EnableX();
-			UpdateButtons(false);
-			return false;
-		} else if (ret == 0) {	
-			statusBar->Temporary(Format(t_("File '%s' temporarily blocked"), ~file));
-			left.EnableX();
-			UpdateButtons(false);
-			return false;
-		}*/
 		
 		if (!justUpdate) {
 			UArray<ScatterLeft::DataSource> &src = left.dataSource[iff];
@@ -639,9 +609,6 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			LoadParams();
 			OnFilter(false);
 			ShowSelected(true);
-		
-			//if (!WhenFile(fileName))
-				//return false;
 			
 			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount()+1, fileName);
 		} else 
@@ -732,30 +699,16 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 		int datasize    = opLoad3 == 0 ? min(1, left.dataFast.size()) : left.dataFast.size();
 		int scattersize = opLoad3 == 2 ? datasize : min(1, left.scatterSize());
 		
-		double beginTime = 0, endTime = Null, timeFromEnd = Null;
-		
 		FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
 		if (pf) {
 			FastScatterTabs &f = *pf;
 			
 			Value key = -1;
-			int idKey = -1;
+			//int idKey = -1;
 			int id = f.tabBar.GetCursor();
 			if (id >= 0) {
 				key = f.tabBar.GetKey(id);
-				idKey = f.tabKeys.Find(key);
-			
-				if (idKey >= 0) {
-					FastScatterBase &fscbase = f.tabScatters[idKey].fscbase;
-					
-					beginTime = StringToSeconds(String(~fscbase.editStart));
-					if (fscbase.opFrom == 0)
-						endTime = StringToSeconds(String(~fscbase.editEnd));
-					else
-						timeFromEnd = StringToSeconds(String(~fscbase.editFromEnd));
-				}
-				if (IsNull(endTime) && IsNull(timeFromEnd))
-					timeFromEnd = 0;
+				//idKey = f.tabKeys.Find(key);
 				
 				if (scattersize == 1) {
 					String title = left.dataFast[0].GetFileName();
@@ -803,32 +756,70 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 				}
 			}
 		}
+
+		if (!left.dataFast.IsEmpty()) {
+			double maxTimeStart = First(left.dataFast).GetTimeStart();
+			for (int i = 1; i < left.dataFast.size(); ++i) 
+				maxTimeStart = max(maxTimeStart, left.dataFast[i].GetTimeStart());
+			double numEditStart = StringToSeconds(String(~editStart));
+			if (~editStart == "-") 
+				timeStart = maxTimeStart;
+			else {
+				if (!IsNull(numEditStart)) {
+					if (numEditStart < 0)
+						throw Exc("Wrong start number");
+					if (numEditStart < maxTimeStart) 
+						editStart <<= timeStart;	
+					timeStart = max(maxTimeStart, numEditStart);
+				}
+			}
+			
+			double minTimeEnd = First(left.dataFast).GetTimeEnd();
+			for (int i = 1; i < left.dataFast.size(); ++i) 
+				minTimeEnd = min(minTimeEnd, left.dataFast[i].GetTimeEnd());
+			double numEditEnd  = StringToSeconds(String(~editEnd));
+			timeEnd = numEditEnd;
+			if (~editEnd == "-") 
+				timeEnd = minTimeEnd;
+			if (!IsNull(numEditEnd)) {
+				if (numEditEnd < 0)
+					throw Exc("Wrong end number");
+				if (opFrom == 0) {
+					if (numEditEnd > minTimeEnd) 
+						editEnd <<= minTimeEnd;
+					timeEnd = min(minTimeEnd, numEditEnd);
+				} else if (opFrom == 1) {
+					timeEnd = timeStart + timeEnd;
+					if (timeEnd > minTimeEnd) {
+						timeEnd = minTimeEnd;
+						editEnd <<= minTimeEnd;
+					}
+				} else {
+					timeEnd = minTimeEnd - timeEnd; 
+					if (timeEnd > minTimeEnd) {
+						timeEnd = minTimeEnd;
+						editEnd <<= 0;
+					}
+				}
+				if (timeEnd <= timeStart)
+					throw Exc("Series ends before it starts");
+			}
+		}
 		
 		for (int iff = 0; iff < datasize; ++iff) {
 			auto &fast = left.dataFast[iff];
 			auto &scat = opLoad3 == 2 ? left.scatter[iff] : left.scatter[0];
 			
 			if (fast.GetNumData() > 0) {
-				if (IsNull(beginTime)) 
-					beginTime = 0;
-				
-				int idBegin = fast.GetIdTime(beginTime);
+				int idBegin = fast.GetIdTime(timeStart);
 				if (IsNull(idBegin))
 					throw Exc(t_("Incorrect start time"));
 				
-				int numData;
-				double end;
-					
-				if (IsNull(endTime)) 
-					end = fast.GetTimeEnd() - timeFromEnd;
-				else 
-					end = beginTime + endTime;
-				
-				int id = fast.GetIdTime(end);	
+				int id = fast.GetIdTime(timeEnd);	
 				if (IsNull(id))
 					throw Exc(t_("Incorrect end time"));
 				
-				numData = id - idBegin + 1;
+				int numData = id - idBegin + 1;
 				if (numData <= 1) 
 					throw Exc(t_("Incorrect start or end times"));
 				

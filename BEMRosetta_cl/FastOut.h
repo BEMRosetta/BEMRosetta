@@ -641,7 +641,7 @@ struct ParameterMetrics {
 	}
 };
 
-void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params, ParameterMetrics &realparams, double start, bool fromEnd, double end, UVector<UVector<Value>> &table);
+void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params, ParameterMetrics &realparams, double start, double end, UVector<UVector<Value>> &table);
 
 
 class FASTCase {

@@ -100,6 +100,7 @@ public:
 	bool IsEmpty()		{return left.dataFast.IsEmpty();}
 	
 	ScatterLeft left;
+	double timeStart = Null, timeEnd = Null;
 	
 private:
 	FastScatter *fastScatter = nullptr;

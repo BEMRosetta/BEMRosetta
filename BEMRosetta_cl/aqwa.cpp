@@ -782,7 +782,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				static const UVector<int> separatorsh = {8,16,26,36,44,54,62,72,80,90,98,108,116,126};
 				f.Load(in.GetLine(), separatorsh);
 
-				int idh = dt.FindClosestHead(f.GetDouble(2));
+				int idh = FindClosest(dt.head, f.GetDouble(2));
 				if (idh < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(2)));
 				int dd = 1;
@@ -942,7 +942,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			
 			UVector<int> idhblock(f.size());
 			for (int ih = 0; ih < f.size(); ++ih) {
-				id = dt.FindClosestHead(f.GetDouble(ih));
+				id = FindClosest(dt.head, f.GetDouble(ih));
 				if (id < 0)
 					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(ih)));
 				idhblock[ih] = id;
