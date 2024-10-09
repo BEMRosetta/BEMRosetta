@@ -16,7 +16,7 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 		
 		String name = GetFileTitle(file);
 	
-		NetCDFFile cdf(file);
+		Upp::NetCDFFile cdf(file);
 
 		double _g = cdf.GetDouble("g");
 		
