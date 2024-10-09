@@ -5,7 +5,6 @@
 #include <ScatterDraw/DataSource.h>
 #include <ScatterDraw/Equation.h>
 #include "functions.h"
-//#include <SysInfo/Crash.h>
 #include <STEM4U/SeaWaves.h>
 #include <MatIO/matio.h>
 

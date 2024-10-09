@@ -1,7 +1,5 @@
 description "Hydrodynamic coefficients converter command line utility\377";
 
-noblitz;
-
 uses
 	Core,
 	ScatterDraw,

@@ -503,6 +503,7 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 	
 	fst.Load(fileName);
 	
+	bool warn = false;
 	{	// Hydrodyn
 		UVector<UVector<String>> sjoints  = fst.hydrodyn.GetFASTArray("NJoints");
 		UVector<UVector<String>> smembers = fst.hydrodyn.GetFASTArray("NMembers");
@@ -524,16 +525,16 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			for (int i = 0; i < smembers.size(); ++i) {
 				int id0 = ScanInt(smembers[i][1]);
 				if (id0 < 1 || id0 > joints.size())
-					throw Exc(Format(t_("Wrong member id %s"), smembers[i][1]));
+					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][1]));
 				int id1 = ScanInt(smembers[i][2]);
 				if (id1 < 1 || id1 > joints.size())
-					throw Exc(Format(t_("Wrong member id %s"), smembers[i][2]));
+					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][2]));
 				int idp0 = ScanInt(smembers[i][3]);
 				if (idp0 < 1 || idp0 > props.size())
-					throw Exc(Format(t_("Wrong member id %s"), smembers[i][3]));
+					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][3]));
 				int idp1 = ScanInt(smembers[i][4]);
 				if (idp1 < 1 || idp1 > props.size())
-					throw Exc(Format(t_("Wrong member id %s"), smembers[i][4]));
+					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][4]));
 				
 				b.dt.mesh.AddLine({joints[id0-1], joints[id1-1]}, {props[idp0-1], props[idp1-1]});
 			}
@@ -559,10 +560,10 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			for (int i = 0; i < smembers.size(); ++i) {
 				int id0 = ScanInt(smembers[i][1]);
 				if (id0 < 1 || id0 > joints.size())
-					throw Exc(Format(t_("Wrong member id %s"), smembers[i][1]));
+					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][1]));
 				int id1 = ScanInt(smembers[i][2]);
 				if (id1 < 1 || id1 > joints.size())
-					throw Exc(Format(t_("Wrong member id %s"), smembers[i][2]));
+					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][2]));
 				
 				b.dt.mesh.AddLine({joints[id0-1], joints[id1-1]});	
 			}
@@ -575,9 +576,11 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 				load.mass = ScanDouble(smasses[i][1]);
 				int id = ScanInt(smasses[i][0]);
 				if (id < 1 || id > joints.size())
-					throw Exc(Format(t_("Wrong member id %s"), smasses[i][1]));
+					throw Exc(Format(t_("Wrong NCmass id %s"), smasses[i][1]));
 				
 				Value3D delta(ScanDouble(smasses[i][8]), ScanDouble(smasses[i][9]), ScanDouble(smasses[i][10]));
+				if (delta != Value3D::Zero())
+					warn = true;
 				load.p = joints[id-1] + delta;
 			}
 			
@@ -585,7 +588,8 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			b.dt.SetCode(Body::OPENFAST_FST);
 		}
 	}
-	
+	if (warn)
+		BEM::PrintWarning(S("\n") + t_("Joints with concentrated masses have to be in nodes. Found MCGX, MCGY, MCGZ different than zero (see https://github.com/OpenFAST/openfast/issues/1710)"));
 	
 	return String();
 }
