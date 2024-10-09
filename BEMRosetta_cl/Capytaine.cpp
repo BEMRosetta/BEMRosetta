@@ -4,6 +4,8 @@
 #include "BEMRosetta_int.h"
 #include <NetCDF/NetCDF.h>
 
+using namespace Upp;
+
 
 String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 	num = 0;
