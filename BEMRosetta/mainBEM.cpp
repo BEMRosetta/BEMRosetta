@@ -150,14 +150,14 @@ void MainBEM::Init() {
 					(menuProcess2.opA || menuProcess2.opAd || 
 					 menuProcess2.opB || menuProcess2.opBd || 
 					 menuProcess2.opF || menuProcess2.opMD ||
-					 menuProcess2.opQTF);
+					 menuProcess2.opStiffness || menuProcess2.opQTF);
 		menuProcess2.butResetDOF.Show(show);
 		menuProcess2.butResetDOF0.Show(show);
 	};
 	menuProcess2.opA.WhenAction = menuProcess2.opAd.WhenAction =
 		menuProcess2.opB.WhenAction = menuProcess2.opBd.WhenAction =
 		menuProcess2.opF.WhenAction = menuProcess2.opMD.WhenAction =
-		menuProcess2.opQTF.WhenAction = menuProcess2.dropDOF.OnFocus;
+		menuProcess2.opQTF.WhenAction = menuProcess2.opStiffness.WhenAction = menuProcess2.dropDOF.OnFocus;
 	
 	
 	menuProcess2.butResetDOF << THISBACK1(OnMultiplyDOF, false);
@@ -651,11 +651,11 @@ void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
 	
 	menuAdvanced.c_array.Clear();
 	for (int ib = 0; ib < hy.dt.Nb; ++ib)
-		menuAdvanced.c_array.Add		 (ib+1, hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);			
+		menuAdvanced.c_array.Add		 (Format("%d.%s", ib+1, hy.dt.msh[ib].dt.name), hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);			
 	
 	menuAdvancedReference.c_array.Clear();
 	for (int ib = 0; ib < hy.dt.Nb; ++ib)
-		menuAdvancedReference.c_array.Add(ib+1, hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);
+		menuAdvancedReference.c_array.Add(Format("%d.%s", ib+1, hy.dt.msh[ib].dt.name), hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);
 	menuAdvancedReference.Init(*this, idx);
 		
 	menuAdvanced.labelBodyAxis.SetLabel(Format(t_("Body Axis (%d)"), hy.dt.Nb)); 
@@ -1975,21 +1975,34 @@ MenuAdvancedReference::MenuAdvancedReference() {
 			if (c_array.GetRowCount() != hy.dt.Nb)
 				throw Exc(t_("Number of centres is different than the number of bodies"));
 		
-			WaitCursor wait;
-			
 			MatrixXd to(3, hy.dt.Nb);
 			for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 				for (int idf = 0; idf < 3; ++idf) 
 					to(idf, ib) = c_array.Get(ib, idf+1);
-	
-			Progress progress(t_("Translating data..."), 100);
 			
-			Bem().TranslationTo(idx, to, [&](String str, int _pos) {
-				progress.SetText(str); 
-				progress.SetPos(_pos); 
-				return !progress.Canceled();
-			});
+			bool justSetCentres	= false;
+			for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+				if (IsNull(hy.dt.msh[ib].dt.c0)) {
+					PromptOK(t_("No translation will be done. New centres will be set."));
+					justSetCentres = true;
+					break;
+				}
+			}
+			if (justSetCentres) {
+				for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+					for (int idf = 0; idf < 3; ++idf) 
+						hy.dt.msh[ib].dt.c0[idf] = c_array.Get(ib, idf+1);
+			} else {
+				WaitCursor wait;
 		
+				Progress progress(t_("Translating data..."), 100);
+				
+				Bem().TranslationTo(idx, to, [&](String str, int _pos) {
+					progress.SetText(str); 
+					progress.SetPos(_pos); 
+					return !progress.Canceled();
+				});
+			}
 			mbem->AfterBEM();
 			
 			Close();

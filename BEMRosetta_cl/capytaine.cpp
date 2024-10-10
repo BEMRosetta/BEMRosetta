@@ -4,8 +4,6 @@
 #include "BEMRosetta_int.h"
 #include <NetCDF/NetCDF.h>
 
-using namespace Upp;
-
 
 String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 	num = 0;
@@ -16,7 +14,9 @@ String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
 		
 		String name = GetFileTitle(file);
 	
-		Upp::NetCDFFile cdf(file);
+		NetCDFFile kk;
+		
+		NetCDFFile cdf(~file);
 
 		double _g = cdf.GetDouble("g");
 		
