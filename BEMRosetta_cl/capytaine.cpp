@@ -4,19 +4,17 @@
 #include "BEMRosetta_int.h"
 #include <NetCDF/NetCDF.h>
 
-using namespace Upp;
 
-
-String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num) {
+String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	num = 0;
 	
 	try {
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
-		BEM::Print("\n- " + S(t_("NC file")));
+		BEM::Print(S("\n\n") + Format(t_("Loading '%s'"), file));
+		BEM::Print(S("\n- ") + S(t_("NC file")));
 		
 		String name = GetFileTitle(file);
 	
-		Upp::NetCDFFile cdf(file);
+		NetCDFFile cdf(file);
 
 		double _g = cdf.GetDouble("g");
 		

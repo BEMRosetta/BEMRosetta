@@ -1605,7 +1605,7 @@ private:
 	void Load_H5();
 };
 
-String CapyNC_Load(const String &file, UArray<Hydro> &hydros, int &num);
+String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num);
 
 class CapyNC : public Hydro {
 public:
