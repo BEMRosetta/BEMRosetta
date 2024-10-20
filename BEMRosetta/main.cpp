@@ -543,16 +543,11 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 	return array.Get(row, 5);
 }
 
-void OnPanic(const char *title, const char *text) {
-	throw Exc(Format(t_("Error type 1 %s: %s"), title, text));	
-}
-
 
 GUI_APP_MAIN {
-#if defined(flagDEBUG) && defined(PLATFORM_WIN32) 
+#if defined(PLATFORM_WIN32) 
 	GetCrashHandler().Enable();
 #endif
-	InstallPanicMessageBox(OnPanic);
 	
 	const UVector<String>& command = CommandLine();
 
