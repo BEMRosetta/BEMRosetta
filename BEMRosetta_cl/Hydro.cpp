@@ -1421,10 +1421,13 @@ void Hydro::TranslateRadiationPotentials(const MatrixXd &delta) {
 }
 
 void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(String, int pos)> Status) {
+	if (IsNull(to))
+		throw Exc(t_("New centres have undefined data"));
+	
 	MatrixXd delta(3, dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) 
 		for (int idf = 0; idf < 3; ++idf) 	
-			delta(idf, ib) = to(idf, ib) - dt.msh[ib].dt.c0[idf];
+			delta(idf, ib) = to(idf, ib) - Nvl(dt.msh[ib].dt.c0[idf], 0.);
 	
 	auto Nvl0 = [](Matrix3d &mat) {
 		for (int i = 0; i < 3; ++i)
@@ -1498,7 +1501,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 		TransAB(dt.B_H);
 	
     auto TransA = [&](MatrixXd &A) {
-        MatrixXd An(6,6);
+        MatrixXd An = MatrixXd::Constant(6*dt.Nb, 6*dt.Nb, 0);
 	
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			int ib6 = ib*6;

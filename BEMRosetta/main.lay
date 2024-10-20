@@ -419,10 +419,10 @@ END_LAYOUT
 
 LAYOUT(MenuBEMBody, 728, 56)
 	ITEM(Upp::LabelBox, dv___0, SetLabel(t_("Process")).LeftPosZ(4, 124).TopPosZ(0, 56))
-	ITEM(Upp::LabelBox, dv___1, SetLabel(t_("Map")).LeftPosZ(132, 124).TopPosZ(0, 56))
+	ITEM(Upp::LabelBox, dv___1, SetLabel(t_("Map to")).LeftPosZ(132, 124).TopPosZ(0, 56))
 	ITEM(Upp::Button, butSpreadNegative, SetLabel(t_("Spread negative")).Tip(t_("Spreads negative values in the diagonal around closest panels")).LeftPosZ(12, 108).TopPosZ(16, 16))
 	ITEM(Upp::Button, butFill1st, SetLabel(t_("Fill 1st order wt pot.")).Tip(t_("Fill in the missing first-order data with data obtained from the potentials.")).LeftPosZ(12, 108).TopPosZ(36, 16))
-	ITEM(Upp::Button, butMapNodes, SetLabel(t_("Map to nodes")).Tip(t_("Map mesh values to set of nodes")).LeftPosZ(140, 108).TopPosZ(16, 16))
+	ITEM(Upp::Button, butMapNodes, SetLabel(t_("Nodes")).Tip(t_("Map mesh values to set of nodes")).LeftPosZ(140, 108).TopPosZ(16, 16))
 	ITEM(Upp::Button, butMapMeshes, SetLabel(t_("Sectional bodies")).Tip(t_("Map mesh values to set of nodes")).LeftPosZ(140, 108).TopPosZ(36, 16))
 END_LAYOUT
 
