@@ -1421,7 +1421,7 @@ void Hydro::TranslateRadiationPotentials(const MatrixXd &delta) {
 }
 
 void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(String, int pos)> Status) {
-	if (IsNull(to))
+	if (!IsNum(to))
 		throw Exc(t_("New centres have undefined data"));
 	
 	MatrixXd delta(3, dt.Nb);
