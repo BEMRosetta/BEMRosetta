@@ -9,12 +9,13 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	num = 0;
 	
 	try {
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
-		BEM::Print("\n- " + S(t_("NC file")));
+		BEM::Print(S("\n\n") + Format(t_("Loading '%s'"), file));
+		BEM::Print(S("\n- ") + S(t_("NC file")));
 		
 		String name = GetFileTitle(file);
 	
 		NetCDFFile cdf(file);
+
 		double _g = cdf.GetDouble("g");
 		
 		UVector<double> _rho;
