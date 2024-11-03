@@ -716,8 +716,8 @@ public:
 	
 	ScatterCtrl scatt, scatP;
 	Splitter splitter;
-	CompareParameters compare;
-	SplitterButton splitCompare;
+	CompareParameters compare, compareP;
+	SplitterButton splitCompare, splitCompareP;
 
 private:
 	bool isInit = false;	

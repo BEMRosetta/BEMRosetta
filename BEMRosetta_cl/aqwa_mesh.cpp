@@ -28,7 +28,7 @@ String AQWABody::LoadLis(UArray<Body> &msh, String fileName, double g, bool &y0z
 String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 		
 	hy.dt.symX = hy.dt.symY = false;
 	
@@ -211,7 +211,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 	
 	//double factorMass = 1;
 	double factorLength = 1;
@@ -391,10 +391,13 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 }
 
 void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
-			const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
+			const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numThreads) {
 	FileOut ret(fileName);
 	if (!ret.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));
+	
+	if (IsNull(numThreads) || numThreads <= 0)
+		numThreads = 8;
 	
 	ASSERT(mesh.size() == surfs.size());
 	
@@ -432,7 +435,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************" << "\n"
 	<< "JOB AQWA  LINE" << "\n"
 	<< "TITLE               " << "\n"
-	<< "NUM_CORES         " << numCores << "\n"
+	<< "NUM_CORES         " << numThreads << "\n"
 	<< Format("OPTIONS %s%s%s", getQTF ? "AQTF " : "", "GOON ", getQTF ? "CQTF " : "") << "\n"
 	<< "OPTIONS AHD1 " << (getPotentials ? "PRPT PRPR" : "") <<"\n"
 	<< Format("OPTIONS %s%s LHFR REST END", getQTF ? "NQTF " : "", "LDRG") << "\n"
@@ -455,8 +458,10 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		
 		for (int in = 0; in < surf.nodes.size(); ++in) {
 			const Point3D &p = surf.nodes[in];
-			ret << Format("%6d%5d        %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
-						FDS(p.x/factorLength, 10, true), FDS(p.y/factorLength, 10, true), FDS(p.z/factorLength, 10, true));
+			ret << Format("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
+						Replace(FDS(p.x/factorLength, 10, true), "E", "e"), 
+						Replace(FDS(p.y/factorLength, 10, true), "E", "e"), 
+						Replace(FDS(p.z/factorLength, 10, true), "E", "e"));
 		}
 		const Point3D &cg = mesh[ib].dt.cg;
 		ret << Format("%6d%5d        %s%s%s\n", ib+1, 98000+ib, 
@@ -536,8 +541,8 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 
 	for (int ib = 0; ib < mesh.size(); ++ib)
 		ret << Format("%6d%s     %5d %s %s %s %s %s %s", ib+1, "PMAS", 98000+ib, 
-			FDS(mesh[ib].dt.M(3, 3), 10, true), FDS(mesh[ib].dt.M(3, 4), 10, true), FDS(mesh[ib].dt.M(3, 5), 10, true),
-			FDS(mesh[ib].dt.M(4, 4), 10, true), FDS(mesh[ib].dt.M(4, 5), 10, true), FDS(mesh[ib].dt.M(5, 5), 10, true));
+			FDS(mesh[ib].dt.M(3, 3), 9, true), FDS(mesh[ib].dt.M(3, 4), 9, true), FDS(mesh[ib].dt.M(3, 5), 9, true),
+			FDS(mesh[ib].dt.M(4, 4), 9, true), FDS(mesh[ib].dt.M(4, 5), 9, true), FDS(mesh[ib].dt.M(5, 5), 9, true));
 
 	ret	<< "\n END\n";
 	
@@ -559,14 +564,52 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "*********************************** DECK  6 ************************************\n"
 	<< "********************************************************************************\n";
 	
+	UVector<double> head180;
+	for (int i = 0; i < head.size(); ++i)
+		FindAdd(head180, FixHeading_180(head[i]));
+	Sort(head180);
+	if (First(head180) != -180)
+		head180.Insert(0, -180);
+	if (Last(head180) != 180)
+		head180.Insert(0, 180);
+	
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";
 		ret << Format("          FDR%d\n", ib+1);
 		for (int iw = 0; iw < hrtz.size(); ++iw) 
-			ret << Format("    %2d%s   %2d   %2d %s\n", ib+1, "HRTZ", iw+1, iw+1, FDS(hrtz[iw], 9, true));
-		for (int ih = 0; ih < head.size(); ++ih) 
-			ret << Format("    %2d%s   %2d   %2d %s\n", ib+1, "DIRN", ih+1, ih+1, FDS(head[ih], 9, true));	
+			ret << Format("    %2d%s  %3d  %3d %s\n", ib+1, "HRTZ", iw+1, iw+1, Replace(FDS(hrtz[iw], 9, true), "E", "e"));
+		for (int ih = 0; ih < head180.size(); ++ih) 
+			ret << Format("    %2d%s   %2d   %2d %s\n", ib+1, "DIRN", ih+1, ih+1, FDS(head180[ih], 9, true));	
 		ret	<< " END\n";
 		ret << "********************************************************************************\n";
 	}
+	ret
+	<< "********************************************************************************\n"
+	<< "*********************************** DECK  7 ************************************\n"
+	<< "********************************************************************************\n"
+	<< "********************************************************************************\n"
+	<< "          WFS1\n"
+	<< " END\n"
+	<< "********************************************************************************\n"
+	<< "********************************************************************************\n"
+	<< "*********************************** DECK  8 ************************************\n"
+	<< "********************************************************************************\n"
+	<< "********************************************************************************\n"
+	<< "          DRC1\n"
+	<< "* No data defined for this structure\n"
+	<< " END\n"
+	<< "********************************************************************************\n"
+	<< "********************************************************************************\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "*********************************** DECK 13 ************************************\n"
+	<< "********************************************************************************\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "          NONE\n"
+	<< "          NONE";
 }

@@ -34,7 +34,7 @@ const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     				 "*.1",		 			 	 
 #endif		
 	"*.bemr", "*.*"};       
 	
-const bool Hydro::caseCanSave[]     = {false, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  			false,	     		false, 	 	false, 	   		false,		true, 	   			false, 			false,			 true,				true,			  true,				false,
+const bool Hydro::caseCanSave[]     = {true, 	      false,	     				 false,		 			 	 	  false,		true,	false,		   true,      true,	 		true,	   	false, 		   false,  					 false, 	 true,			false,   false,	  			false,	     		false, 	 	false, 	   		false,		true, 	   			false, 			false,			 true,				true,			  true,				false,
 #ifdef PLATFORM_WIN32	
 false,
 #endif

@@ -147,11 +147,11 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	
 	if (!IsNull(dt.msh[0].dt.cg)) {
 		BEM::Print("\n- " + Format(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt(file, ".frc"))));
-		Save_FRC(fileext);
+		Save_FRC(fileext, false, false);
 	}
 	if (dt.Nh > 0 && dt.Nf > 0) {
 		BEM::Print("\n- " + Format(t_("Potential Control file '%s'"), GetFileName(fileext = ForceExt(file, ".pot"))));
-		Save_POT(fileext);
+		Save_POT(fileext, false, false, false);
 	}
 	if (IsLoadedA() && IsLoadedB()) {
 		BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(fileext = ForceExt(file, ".1"))));
@@ -2068,102 +2068,6 @@ String WamitField(String str, int length) {
 		ret << String(' ', length - ret.GetCount());
 	return ret + " ";
 }
-
-void Wamit::Save_FRC(String fileName) const {
-	FileOut out(fileName);
-	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
-
-	out << "% BEMRosetta generated .frc file\n";
-	out << WamitField(Format("%d 0 %d %d 0 0 0 0 0", IsLoadedA() && IsLoadedB() ? 1 : 0,
-										 			 IsLoadedFex() ? 2 : 0,
-										 			 IsLoadedRAO() ? 1 : 0), 22);
-	out << "% 9 digits for Wamit .1 ... .9 files included\n";
-	out << WamitField(Format("%.1f", Bem().rho), 22) << "% RHO\n";
-	
-	for (int ib = 0; ib < dt.Nb; ++ib) {
-		out << WamitField(Format("%.2f %.2f %.2f", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 
-												   dt.msh[ib].dt.cg.y - dt.msh[ib].dt.c0.y, 
-												   dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z), 22);
-		out << "% XCG, YCG, ZCG\n";
-		
-		if (IsLoadedM()) {
-			out << "1  % IMASS\n";
-			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
-					if (c > 0)
-						out << " ";
-					out << Format("%.2f", dt.msh[ib].dt.M(r, c));
-				}
-				out << "\n";
-			}
-		} else 
-			out << "0 % IMASS\n";	
-	
-		if (IsLoadedDlin()) {
-			out << "1 % IDAMP\n";
-			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
-					if (c > 0)
-						out << " ";
-					out << Format("%.2f", dt.msh[ib].dt.Dlin(r, c));
-				}
-				out << "\n";
-			}
-		} else 
-			out << "0 % IDAMP\n";
-		
-		if (IsLoadedCMoor()) {
-			out << "1 % ISTIF\n";
-			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
-					if (c > 0)
-						out << " ";
-					out << Format("%.2f", dt.msh[ib].dt.Cmoor(r, c));
-				}
-				out << "\n";
-			}
-		} else 
-			out << "0 % ISTIF\n";
-	}
-	out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
-	UVector<double> head = clone(dt.head);
-	Sort(head);
-	for (int ih = 0; ih < dt.Nh; ++ih) 
-		out << Format("%.4f ", head[ih]);
-	out << "% BETA\n";
-	out << "0 % NFIELD\n";
-	out << "0 % NFIELD_ARRAYS";
-}
-
-void Wamit::Save_POT(String fileName) const {
-	FileOut out(fileName);
-	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
-
-	out << "% BEMRosetta generated .pot file\n";
-	out << WamitField(Format("%.2f", IsNum(dt.h) ? dt.h : -1), 12) << "% HBOT\n";
-	out << WamitField("1 1", 12) << "% IRAD, IDIFF\n";
-	out << WamitField(Format("%d", dt.Nf), 12) << "% NPER\n";
-	VectorXd TT	= Get_T();	
-	Sort(TT);
-	for (int iT = 0; iT < dt.Nf; ++iT) 
-		out << Format("%.4f ", TT[iT]);
-	out << "% PER(1), increment\n";
-	out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
-	UVector<double> head = clone(dt.head);
-	Sort(head);
-	for (int ih = 0; ih < dt.Nh; ++ih) 
-		out << Format("%.4f ", head[ih]);
-	out << "% BETA\n";
-	
-	out << WamitField(Format("%d ", dt.Nb), 12) << "% NBODY";
-	for (int ib = 0; ib < dt.Nb; ++ib) {
-		out << "\n" << ForceExt(dt.msh[ib].dt.name, ".gdf") << "\n";
-		out << Format("%.3f %.3f %.3f 0.0 ", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z) << "% XBODY(1-4)\n";
-		out << "1 1 1 1 1 1  % MODE(1:6)";
-	}
-}
 	
 void Wamit::Save_hst(String fileName) const {
 	if (!IsLoadedC()) 
@@ -2312,4 +2216,207 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
     				out << "\n";
     			}
 		}
+}
+
+void Wamit::Save_FRC(String fileName, bool force1st, bool withQTF) const {
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
+
+	out << "% BEMRosetta generated .frc file\n";
+	out << WamitField(Format("%d %d %d %d 0 0 0 0 0", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
+										 			  force1st || IsLoadedFex() ? 1 : 0,
+										 			  force1st || IsLoadedFex() ? 2 : 0,
+										 			  force1st || IsLoadedRAO() ? 1 : 0), 22);
+	if (withQTF)
+		out << " 0 0 1 0 0 0 0";
+		
+	out << "% 9 digits for Wamit .1 ... ." << (!withQTF ? 9 : 16) << " files included\n";
+	out << WamitField(Format("%.1f", Bem().rho), 22) << "% RHO\n";
+	
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		out << WamitField(Format("%.2f %.2f %.2f", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 
+												   dt.msh[ib].dt.cg.y - dt.msh[ib].dt.c0.y, 
+												   dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z), 22);
+		out << "% XCG, YCG, ZCG\n";
+		
+		if (IsLoadedM()) {
+			out << "1  % IMASS\n";
+			for (int r = 0; r < 6; ++r) {
+				for (int c = 0; c < 6; ++c) {
+					if (c > 0)
+						out << " ";
+					out << Format("%.2f", dt.msh[ib].dt.M(r, c));
+				}
+				out << "\n";
+			}
+		} else 
+			out << "0 % IMASS\n";	
+	
+		if (IsLoadedDlin()) {
+			out << "1 % IDAMP\n";
+			for (int r = 0; r < 6; ++r) {
+				for (int c = 0; c < 6; ++c) {
+					if (c > 0)
+						out << " ";
+					out << Format("%.2f", dt.msh[ib].dt.Dlin(r, c));
+				}
+				out << "\n";
+			}
+		} else 
+			out << "0 % IDAMP\n";
+		
+		if (IsLoadedCMoor()) {
+			out << "1 % ISTIF\n";
+			for (int r = 0; r < 6; ++r) {
+				for (int c = 0; c < 6; ++c) {
+					if (c > 0)
+						out << " ";
+					out << Format("%.2f", dt.msh[ib].dt.Cmoor(r, c));
+				}
+				out << "\n";
+			}
+		} else 
+			out << "0 % ISTIF\n";
+	}
+	out << "0 % NBETA\n";
+	/*out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
+	UVector<double> head = clone(dt.head);
+	Sort(head);
+	for (int ih = 0; ih < dt.Nh; ++ih) 
+		out << Format("%.4f ", head[ih]);
+	out << "% BETA\n";*/
+	out << "0 % NFIELD\n";
+	out << "0 % NFIELD_ARRAYS";
+}
+
+void Wamit::Save_POT(String fileName, bool withMesh, bool x0z, bool y0z) const {
+	String folder = GetFileFolder(fileName);
+	
+	FileOut out(fileName);
+	if (!out.IsOpen())
+		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
+
+	out << "% BEMRosetta generated .pot file\n";
+	if (!IsNum(dt.h) || dt.h < 0 || dt.h > 248)
+		out << "-1           ";
+	else
+		out << WamitField(Format("%.2f", dt.h), 12);
+	out << "% HBOT\n";
+	out << WamitField("1 1", 12) << "% IRAD, IDIFF\n";
+	out << WamitField(Format("%d", dt.Nf), 12) << "% NPER\n";
+	VectorXd TT	= Get_T();	
+	Sort(TT);
+	for (int iT = 0; iT < dt.Nf; ++iT) 
+		out << Format("%.4f ", TT[iT]);
+	out << "% PER(1), increment\n";
+	out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
+	UVector<double> head = clone(dt.head);
+	Sort(head);
+	for (int ih = 0; ih < dt.Nh; ++ih) 
+		out << Format("%.4f ", head[ih]);
+	out << "% BETA\n";
+	
+	out << WamitField(Format("%d ", dt.Nb), 12) << "% NBODY";
+	UVector<String> names;
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		String name = GetFileTitle(dt.msh[ib].dt.name);
+		if (IsEmpty(name))
+			name = Format("Body_%d", ib+1);
+		name = ForceExt(name, ".gdf");
+		out << "\n" << name << "\n";
+		out << Format("%.3f %.3f %.3f 0.0 ", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z) << "% XBODY(1-4)\n";
+		out << "1 1 1 1 1 1  % MODE(1:6)";
+		names << AFX(folder, name);
+	}
+	if (withMesh) {
+		UArray<Body> msh = clone(dt.msh);
+		for (int ib = 0; ib < dt.Nb; ++ib) 
+			msh[ib].dt.under.Translate(-msh[ib].dt.c0.x, -msh[ib].dt.c0.y, -msh[ib].dt.c0.z);	
+		int nNodes, nPanels;
+		Body::SaveAs(msh, names, Body::WAMIT_GDF, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
+			dt.w, dt.head, false, false, dt.h, Null);
+	}
+}
+
+void Wamit::Save_Config(String folder, int numThreads) const {
+	String fileBat = AFX(folder, "config.wam");
+	FileOut file(fileBat);
+	if (!file)
+		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
+	
+	file << "! Generic configuration file:  config.wam\n"
+ 		<< " RAMGBMAX=4\n"
+ 		<< " NCPU=" << numThreads << "\n"
+  		<< " USERID_PATH=c:\\wamitv7   (directory for *.exe, *.dll, and userid.wam)\n"
+  		<< " LICENSE_PATH=c:\\wamitv7\\license\n"
+  	;
+}
+
+void Wamit::Save_CFG(String fileName, bool withQTF) const {
+	FileOut out(fileName);
+	if (!out)
+		throw Exc(Format(t_("Problem creating '%s' file"), fileName));
+	
+	bool isUnderWater = true;
+	for (int ib = 0; ib < dt.Nb && isUnderWater; ++ib) {
+		const UVector<Point3D> &nodes = dt.msh[ib].dt.under.nodes;
+		for (const Point3D &n : nodes) {
+			if (n.z >= -EPS_LEN) {
+				isUnderWater = false;
+				break;
+			}
+		}
+	}
+	
+	out << "! BEMRosetta generated .cfg file\n"
+		<< " IPERIN = 2       (input frequency)\n"
+ 		<< " IPEROUT = 2      (Output Frequency)\n"
+ 		<< " MAXITT = 50\n";
+ 	if (withQTF)
+		out << " I2ND = 1\n";
+ 	if (!isUnderWater)
+ 		out << " IRR = 3\n";
+ 	out << " ILOG = 1\n"
+ 		<< " ISOLVE = 1\n"
+ 		<< " IALTFRC = 2\n"
+		<< " ipltdat = 5\n"
+		<< " ILOWHI = 0\n"
+		<< " NUMHDR = 0\n"
+	;
+}
+
+void Wamit::Save_Fnames(String folder) const {
+	String fileBat = AFX(folder, "fnames.wam");
+	FileOut file(fileBat);
+	if (!file)
+		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
+	
+	String folderName = GetFileTitle(folder);
+	file << folderName << ".cfg\n"
+		<< folderName << ".pot\n"
+		<< folderName << ".frc";
+}
+
+void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const {
+	if (!DirectoryCreateX(folder))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
+
+	Save_Fnames(folder);
+	Save_Config(folder, numThreads);
+	
+	String folderName = GetFileTitle(folder);
+	
+	Save_POT(AFX(folder, folderName + ".pot"), true, x0z, y0z);
+	Save_FRC(AFX(folder, folderName + ".frc"), true, withQTF);
+	Save_CFG(AFX(folder, folderName + ".cfg"), withQTF);
+	
+	String fileBat = AFX(folder, "Wamit.bat");		
+	FileOut bat(fileBat);
+	if (!bat)
+		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
+	
+	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
+	bat << "call \"" << Bem().wamitPath << "\" fnames.wam";
+	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }

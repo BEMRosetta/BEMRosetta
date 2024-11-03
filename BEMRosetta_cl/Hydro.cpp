@@ -556,15 +556,17 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
 			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) {
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
-		static_cast<const Nemoh &>(*this).SaveFolder(folder, bin, numCases, solver, x0z, y0z);
+		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z);
 	else if (solver == Hydro::CAPYTAINE_PY)
-		static_cast<const Nemoh &>(*this).SaveFolder_Capy(folder, withPotentials, withMesh, x0z, y0z, lids);
+		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, lids);
 	else if (solver == Hydro::HAMS)
-		static_cast<const Hams &>(*this).SaveFolder(folder, bin, numCases, numThreads, x0z, y0z, lids);
+		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids);
 	else if (solver == Hydro::ORCAWAVE_YML)
-		static_cast<const OrcaWave &>(*this).SaveFolder_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
+		static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
 	else if (solver == Hydro::AQWA_DAT)
 		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, withQTF, x0z, y0z);
+	else if (solver == Hydro::WAMIT)
+		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, withPotentials, withQTF, x0z, y0z);
 	else if (solver == Hydro::BEMROSETTA_H5) {
 		dt.solver = BEMROSETTA_H5;
 		if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) 
@@ -684,10 +686,12 @@ void Hydro::GetRAO() {
 	if (dt.Nf == 0 || dt.A.size() < dt.Nb*6 || dt.B.size() < dt.Nb*6)
 		throw Exc(t_("Insufficient data to get RAO: Added mass and Radiation damping are required"));	
 
-	for (int ib = 0; ib < dt.Nb; ++ib) 
-		if (dt.msh[ib].dt.C.rows() < 6 || dt.msh[ib].dt.C.cols() < 6 || 
-			dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
-			throw Exc(t_("Insufficient data to get RAO: Hydrostatic stiffness and Inertia matrix are required"));   
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		if (dt.msh[ib].dt.C.rows() < 6 || dt.msh[ib].dt.C.cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO: Hydrostatic stiffness matrix is required"));   
+		if (dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO: Inertia matrix is required"));   
+	}
 			      
 	Initialize_Forces(dt.rao);
 

@@ -281,7 +281,7 @@ String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
 
 	FileInBinary fin(fileName);
 	if (!fin.IsOpen())
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 
 	Status(Format(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
 	

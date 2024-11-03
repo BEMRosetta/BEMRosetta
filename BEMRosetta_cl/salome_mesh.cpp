@@ -18,7 +18,7 @@ String SalomeBody::LoadDat(UArray<Body> &mesh, String fileName) {
 String SalomeBody::LoadDat0(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 	
 	dt.fileName = fileName;
 	dt.SetCode(Body::NEMOH_DAT);

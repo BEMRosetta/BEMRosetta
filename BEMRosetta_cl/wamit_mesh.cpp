@@ -7,7 +7,7 @@
 String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 	
 	try {
 		String line;
@@ -103,7 +103,7 @@ String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 	
 	Body &msh = _mesh.Add();
 	msh.dt.name = fileName;
@@ -198,7 +198,7 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(t_("Impossible to open file"));	
+		throw Exc(Format("Impossible to open '%s'", fileName));	
 	
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;

@@ -372,7 +372,7 @@ void Nemoh::Save_Body_bat(String folder, String caseFolder, const UVector<String
 }
 
 void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName) const {
+		String preName, String hydroName, String solvName, String postName, int numThreads) const {
 	String fileName = AFX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -382,6 +382,8 @@ void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin,
 		out << Format("title \"%s in '%s'\"\n", solvName, caseFolder);
 	else
 		out << Format("title %s\n", solvName);
+	
+	out << "\necho Start: \%date\% \%time\% > time.txt\n";
 	
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
@@ -395,6 +397,9 @@ void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin,
 		out << "\"" << AFX(strBin, hydroName) << "\"\n";
 	if (!solvName.IsEmpty()) {
 		if (solvName == "capytaine") {
+			if (!IsNull(numThreads) && numThreads > 0) 
+				out << "set OMP_NUM_THREADS=" << numThreads << "\n"
+					<< "set MKL_NUM_THREADS=" << numThreads << "\n";
 			if (!IsEmpty(Bem().pythonEnv)) 
 				out << Format("call activate %s\n", Bem().pythonEnv); 
 			out << "\"" << solvName << "\"\n";
@@ -405,6 +410,8 @@ void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin,
 	}
 	if (!postName.IsEmpty()) 
 		out << "\"" << AFX(strBin, postName) << "\"\n";
+	
+	out << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
 
 void Nemoh::Save_Input(String folder, int solver) const {
@@ -446,13 +453,13 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-void Nemoh::SaveFolder(String folderBase, bool bin, int numCases, int solver, bool x0z, bool y0z) const {
-	SaveFolder0(folderBase, bin, 1, true, solver, x0z, y0z);
+void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z) const {
+	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, y0z);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, solver, x0z, y0z);
+		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, y0z);
 }
 
-void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int solver, bool x0z, bool y0z) const {
+void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 
 	UVector<int> valsf;
@@ -601,10 +608,10 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 		if (numCases > 1) {
 			String caseFolder = Format("%s_Part_%d", batName, i+1);
 			//Save_Body_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
-			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName);
+			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName, numThreads);
 		} else {
 			//Save_Body_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
-			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName);
+			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName, numThreads);
 		}
 	}
 }

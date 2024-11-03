@@ -733,7 +733,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			auto &fast = left.dataFast[iff];
 			
 			if (fast.GetNumData() > 0) {
-				scat.SetLabelX(t_("Time"));
+				scat.SetLabelX(t_("time"));
 				scat.RemoveAllSeries().SetSequentialXAll().SetFastViewX();
 				scat.SetLeftMargin(8*StdFont().GetHeight());
 				scat.SetTopMargin(StdFont().GetHeight());

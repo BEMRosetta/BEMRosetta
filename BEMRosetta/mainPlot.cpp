@@ -25,15 +25,21 @@ void MainPlot::Init(bool vert) {
 		
 		splitCompare.Horz(scatt.SizePos(), compare.SizePos());
 		splitCompare.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
+		
+		splitCompareP.Horz(scatP.SizePos(), compareP.SizePos());
+		splitCompareP.SetPositions(7000, 10000).SetInitialPositionId(1).SetButtonNumber(1).SetButtonWidth(len);
+		
 		if (vert)
-			splitter.Vert(splitCompare.SizePos(), scatP.SizePos());
+			splitter.Vert(splitCompare.SizePos(), splitCompareP.SizePos());
 		else
-			splitter.Horz(splitCompare.SizePos(), scatP.SizePos());
+			splitter.Horz(splitCompare.SizePos(), splitCompareP.SizePos());
+		
 		Add(splitter.SizePos());
 		scatt.ShowAllMenus().SetSciExpTop();
 		scatP.ShowAllMenus().SetSciExpTop();
 		
 		compare.Init(scatt, splitCompare);
+		compareP.Init(scatP, splitCompareP);
 		
 		isInit = true;
 	}

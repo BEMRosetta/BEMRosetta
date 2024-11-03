@@ -121,19 +121,21 @@ public:
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;
 	
-	static void SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels,
+	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels,
 		const UVector<double> &w, const UVector<double> &head, bool getQTF = false, bool getPotentials = false, double h = 300, int numCores = 4);
 	
-	static void SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
+	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
 		UVector<double> w, head;
-		SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
+		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
 	}
 	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels) {
 		UArray<Body> meshes;
 		meshes.Add(clone(mesh));
+		UVector<String> fileNames;
+		fileNames << fileName;
 		UVector<double> w, head;
-		SaveAs(meshes, fileName, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
+		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
 	}
 	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
@@ -1325,6 +1327,8 @@ public:
 	bool Load_frc2(String fileName);
 	void Save_4(String fileName, bool force_T = false) const;
 	
+	void SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const;
+	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin);
 	bool ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int iperout);
@@ -1357,14 +1361,18 @@ protected:
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null) const;
 	void Save_789(String fileName, bool force_T, bool force_Deg) const;
-	void Save_FRC(String fileName) const;
-	void Save_POT(String fileName) const;
+	void Save_FRC(String fileName, bool force1st, bool withQTF) const;
+	void Save_POT(String fileName, bool withMesh, bool x0z, bool y0z) const;
 		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
 	void Save_AB(FileOut &out, int ifr) const;
 	void Save_Forces(FileOut &out, int ifr) const;
 	void Save_RAO(FileOut &out, int ifr) const;
 	void Save_MD(FileOut &out, int ifr) const;
+	
+	void Save_Fnames(String folder) const;
+	void Save_Config(String folder, int numThreads) const;
+	void Save_CFG(String fileName, bool withQTF) const;
 };
 
 class Hams : public Wamit {
@@ -1377,7 +1385,7 @@ public:
 	bool Load_HydrostaticBody(String fileName, double rhog);
 	
 	bool Load_In(String fileName);
-	void SaveFolder(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const;
 	UVector<String> Check() const;
 	
 	bool LoadHydrostatic(String fileName);
@@ -1432,8 +1440,8 @@ public:
 	bool LoadDatBody(String file);
 	void SaveDatBody(String file); 
 	
-	void SaveFolder(String folder, bool bin, int numCases, int solver, bool x0z, bool y0z) const;
-	void SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z) const;
+	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	
 	void Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, const UVector<int> &panels, int solver, bool y0z, bool x0z) const;
 	
@@ -1469,13 +1477,13 @@ private:
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName) const;
+		String preName, String hydroName, String solvName, String postName, int numThreads) const;
 	void Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, double rho, double g) const;
 	void Save_Body_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder, int solver) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases,  
-					bool deleteFolder, int solver, bool x0z, bool y0z) const;
+					bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z) const;
 };
 
 class Aqwa : public Hydro {
@@ -1510,7 +1518,7 @@ class OrcaWave : public Hydro {
 public:
 	OrcaWave() {}
 	String Load(String file, double rho = Null);
-	void SaveFolder_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const;
+	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const;
 	virtual ~OrcaWave() noexcept {}	
 	
 private:
@@ -1674,6 +1682,7 @@ public:
 	bool experimental;
 	String foammPath;
 	String hamsPath, hamsBodyPath;
+	String aqwaPath, wamitPath;
 	int volWarning, volError;
 	double roundVal, roundEps;
 	String csvSeparator;
@@ -1792,6 +1801,8 @@ public:
 			("legend_w_solver", legend_w_solver)
 			("pythonEnv", pythonEnv)
 			("zeroIfEmpty", zeroIfEmpty)
+			("aqwaPath", aqwaPath)
+			("wamitPath", wamitPath)
 		;
 		if (json.IsLoading()) {
 			dofType = BasicBEM::DOFType(idofType);
@@ -1800,6 +1811,16 @@ public:
 				nemohPath = GetFileFolder(nemohPathPreprocessor);
 			if (IsEmpty(nemoh115Path))
 				nemoh115Path = GetFileFolder(nemohPathNew);
+			if (IsEmpty(aqwaPath)) {
+				const char *defaultPath = "C:\\Program Files\\ANSYS Inc\\v231\\aqwa\\bin\\winx64\\Aqwa.exe";
+				if (FileExists(defaultPath))
+					aqwaPath = defaultPath;
+			}
+			if (IsEmpty(wamitPath)) {
+				const char *defaultPath = "C:\\c:\\wamitv7\\wamit.exe";
+				if (FileExists(defaultPath))
+					wamitPath = defaultPath;
+			}
 		}
 	}
 	

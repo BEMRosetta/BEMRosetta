@@ -591,7 +591,7 @@ void OrcaWave::Load_OF_YML() {
 		Surface::TranslateInertia66(dt.msh[iib].dt.M, dt.msh[iib].dt.cg, dt.msh[iib].dt.cg, dt.msh[iib].dt.c0);
 }
 
-void OrcaWave::SaveFolder_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const {
+void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const {
 	String exeName = "bemrosetta_cl";
 	if (bin) {
 		String exe = GetExeFilePath();		
@@ -604,14 +604,21 @@ void OrcaWave::SaveFolder_OW_YML(String folder, bool bin, int numThreads, bool w
 			FileCopy(exe, AFX(folder, exeName + ext));
 		}
 	}
-	
+	if (IsNull(numThreads) || numThreads <= 0)
+		numThreads = 8;
+		
 	String name = GetFileTitle(folder); 
 	String fileYaml = AFX(folder, name + ".wave.yml");
-	String fileBat  = AFX(folder, name + ".bat");
+	String fileBat  = AFX(folder, "OrcaWave_bat.bat");
+	
+	DirectoryCreate(folder);
+	
 	FileOut bat;
 	if (!bat.Open(fileBat))
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
-	bat << Format("%s -orca -numtries 5 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, fileYaml, AFX(folder, name + ".flex.yml"));
+	bat << "echo Start: \%date\% \%time\% > time.txt\n";
+	bat << Format("%s -orca -numtries 5 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, name + ".wave.yml", name + ".flex.yml");
+	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 	
 	FileOut	out;
 	if (!out.Open(fileYaml))

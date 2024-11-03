@@ -236,11 +236,12 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 	return String();
 }
 
-void Body::SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
+void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
-					
+	ASSERT(meshes.size() == fileNames.size());
+	
 	if (type == UNKNOWN) {
-		String ext = ToLower(GetFileExt(fileName));
+		String ext = ToLower(GetFileExt(First(fileNames)));
 		
 		if (ext == ".gdf") 
 			type = WAMIT_GDF;
@@ -255,24 +256,24 @@ void Body::SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, ME
 		else if (ext == ".bemr")
 			type = BEM_MESH;
 		else
-			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
+			throw Exc(Format(t_("Conversion to file type '%s' not supported"), First(fileNames)));
 	}
 	
 	UArray<Surface> surfs(meshes.size());
 	nNodes = nPanels = 0;
 	
-	for (int i = 0; i < meshes.size(); ++i) {
-		Surface &surf = surfs[i];
+	for (int ib = 0; ib < meshes.size(); ++ib) {
+		Surface &surf = surfs[ib];
 		if (meshType == UNDERWATER) 
-			surf = clone(meshes[i].dt.under);
+			surf = clone(meshes[ib].dt.under);
 		else {
 			if (type == AQWA_DAT) {		// Appends dry and wet sides. This way there are no panels between dry and wet side
-				surf = clone(meshes[i].dt.under);	// First the wet
+				surf = clone(meshes[ib].dt.under);	// First the wet
 				Surface dry;	
-				dry.CutZ(meshes[i].dt.mesh, 1);
+				dry.CutZ(meshes[ib].dt.mesh, 1);
 				surf.Append(dry);					// Next the dry
 			} else
-				surf = clone(meshes[i].dt.mesh);
+				surf = clone(meshes[ib].dt.mesh);
 		}
 		
 		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || type == MIKE21_GRD)) {
@@ -299,28 +300,34 @@ void Body::SaveAs(const UArray<Body> &meshes, String fileName, MESH_FMT type, ME
 		nPanels += surf.panels.size();
 	}
 	
-	if (type == WAMIT_GDF) 
-		WamitBody::SaveGdf(fileName, First(surfs), g, symX, symY);	
-	else if (type == NEMOH_DAT) 
-		NemohBody::SaveDat(meshes, fileName, First(surfs), symY, nPanels);
-	else if (type == NEMOH_PRE) 
-		NemohBody::SavePreBody(fileName, First(surfs));
-	else if (type == HAMS_PNL)		
-		HAMSBody::SavePnl(fileName, First(surfs), symX, symY);	// Only one symmetry is really available
-	else if (type == AQWA_DAT)		
-		AQWABody::SaveDat(fileName, meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
-	else if (type == DIODORE_DAT) 
-		DiodoreBody::SaveDat(fileName, First(surfs));
-	else if (type == STL_BIN)		
-		SaveStlBin(fileName, First(surfs));
-	else if (type == STL_TXT)		
-		SaveStlTxt(fileName, First(surfs));
-	else if (type == BEM_MESH)		
-		First(surfs).SaveSerialization(fileName);
-	else if (type == MIKE21_GRD)		
-		SaveGRD(fileName, First(surfs), g, symX, symY);
-	else
-		throw Exc(t_("Unknown mesh file type"));
+	if (type == AQWA_DAT)		
+		AQWABody::SaveDat(First(fileNames), meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
+	else {
+		for (int ib = 0; ib < meshes.size(); ++ib) {
+			if (type == WAMIT_GDF) 
+				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY);	
+			else if (type == NEMOH_DAT) 
+				NemohBody::SaveDat(meshes, fileNames[ib], surfs[ib], symY, nPanels);
+			else if (type == NEMOH_PRE) 
+				NemohBody::SavePreBody(fileNames[ib], surfs[ib]);
+			else if (type == HAMS_PNL)		
+				HAMSBody::SavePnl(fileNames[ib], surfs[ib], symX, symY);	// Only one symmetry is really available
+			else if (type == AQWA_DAT)		
+				AQWABody::SaveDat(fileNames[ib], meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
+			else if (type == DIODORE_DAT) 
+				DiodoreBody::SaveDat(fileNames[ib], surfs[ib]);
+			else if (type == STL_BIN)		
+				SaveStlBin(fileNames[ib], surfs[ib]);
+			else if (type == STL_TXT)		
+				SaveStlTxt(fileNames[ib], surfs[ib]);
+			else if (type == BEM_MESH)		
+				surfs[ib].SaveSerialization(fileNames[ib]);
+			else if (type == MIKE21_GRD)		
+				SaveGRD(fileNames[ib], surfs[ib], g, symX, symY);
+			else
+				throw Exc(t_("Unknown mesh file type"));
+		}
+	}
 }
 
 String Body::Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status) {

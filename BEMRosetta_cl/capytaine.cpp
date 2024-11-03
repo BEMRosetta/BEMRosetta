@@ -378,17 +378,23 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	return String();
 }
 
-void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
+void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	DirectoryCreate(folder);
 	String name = GetFileTitle(folder);
 	String fileBat  = AFX(folder, "Capytaine_bat.bat");
 	FileOut bat;
 	if (!bat.Open(fileBat))
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+	
+	bat << "echo Start: \%date\% \%time\% > time.txt\n";
+	if (!IsNull(numThreads) && numThreads > 0) 
+		bat << "set OMP_NUM_THREADS=" << numThreads << "\n"
+			<< "set MKL_NUM_THREADS=" << numThreads << "\n";
 	if (!Bem().pythonEnv.IsEmpty())
 		bat << "call conda activate " << Bem().pythonEnv << "\n";
 	bat << "python \"" << name << ".py\"\n";
-	bat << "@IF \%ERRORLEVEL\% NEQ 0 PAUSE \"Error\"";
+	//bat << "@IF \%ERRORLEVEL\% NEQ 0 PAUSE \"Error\"";
+	bat << "\necho End:   \%date\% \%time\% >> time.txt";
 	
 	String filePy  = AFX(folder, name + ".py");
 	String spy;
@@ -444,7 +450,7 @@ void Nemoh::SaveFolder_Capy(String folder, bool withPotentials, bool withMesh, b
 				for (int c = 0; c < 6; ++c) {
 					if (c > 0)
 						spy << ", ";
-					spy << b.dt.M(r, c);
+					spy << Format("%f", b.dt.M(r, c));
 				}
 				spy << "]";
 				if (r < 6-1)

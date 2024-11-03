@@ -293,7 +293,14 @@ void BEM::SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type
 	for (int i = 0; i < ids.size(); ++i)
 		bds.Add(clone(surfs[ids[i]]));
 	
-	Body::SaveAs(bds, fileName, type, meshType, rho, g, symX, symY);
+	UVector<String> fileNames;
+	if (ids.size() == 1)
+		fileNames << fileName;
+	else {
+		for (int ib = 0; ib < ids.size(); ++ib)
+			fileNames << Format("%s_%d", fileName, ib+1);
+	}
+	Body::SaveAs(bds, fileNames, type, meshType, rho, g, symX, symY);
 }
 
 void BEM::HealingBody(int id, bool basic, Function <bool(String, int)> Status) {

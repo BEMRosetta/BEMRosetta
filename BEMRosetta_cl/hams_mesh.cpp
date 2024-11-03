@@ -7,7 +7,7 @@
 String HAMSBody::LoadPnl(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", fileName));
 	
 	Body &msh = _mesh.Add();
 	msh.dt.fileName = fileName;

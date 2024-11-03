@@ -160,9 +160,9 @@ void MainSolver::Init() {
 		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS);
 		save.numSplit.Enable(isNemoh && save.opSplit);
 		
-		save.withMesh.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY);
+		save.withMesh.Enable(solver == Hydro::CAPYTAINE_PY);
 		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY);
-		save.withQTF.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT);
+		save.withQTF.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::WAMIT);
 	};
 	save.dropSolver.WhenAction();
 	

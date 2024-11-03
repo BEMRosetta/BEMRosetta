@@ -175,7 +175,7 @@ void Tools_OrcaLicense::CheckAvailable() {
 	if (orca.IsAvailable()) {
 		KillTimeCallback(12);
 		butCapture.SetLabel(t_("Check license"));
-		labCapture.SetText(Format(t_("OrcaWave is now available (%s)"), GetSysTime()));
+		labCapture.SetText(Format(t_("OrcaWave is now available (%`)"), GetSysTime()));
 		PromptOK(t_("OrcaWave is now available"));
 	} else
 		labCapture.SetText(t_("Checking if an OrcaWave license is available ..."));

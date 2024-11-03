@@ -322,7 +322,7 @@ bool Hams::LoadHydrostatic(String fileName) {
 	return true;
 }
 
-void Hams::SaveFolder(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const {
+void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const {
 	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids);
 	if (numCases > 1)
 		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids);
@@ -377,6 +377,8 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderInput));
 		
 		
+		if (IsNull(numThreads) || numThreads <= 0)
+			numThreads = 8;
 		Save_ControlFile(folderInput, freqs, numThreads);
 		Save_Hydrostatic(folderInput);
 	
@@ -420,11 +422,15 @@ void Hams::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
 	
 	out << Format("title %s in '%s'\n", solvName, caseFolder);
 	
+	out << "echo Start: \%date\% \%time\% > time.txt\n";
+	
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
 	
 	out << "\"" << meshName << "\"\n";
 	out << "\"" << solvName << "\"\n";
+	
+	out << "echo End:   \%date\% \%time\% >> time.txt\n";
 }
 
 void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {

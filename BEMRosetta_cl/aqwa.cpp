@@ -1241,7 +1241,7 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 String FastOut::Load_LIS(String file) {
 	FileInLine in(file);
 	if (!in.IsOpen())
-		return t_("Impossible to open file");
+		return t_(Format("Impossible to open '%s'", file));
 	
 	fileName = file;
 	
@@ -1460,9 +1460,24 @@ String FastOut::Load_LIS(String file) {
 }
 
 void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const {
+	if (!DirectoryCreateX(folder))
+		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
+	
 	String file = AFX(folder, "Analysis.dat");	
 	
 	int nNodes, nPanels;
-	Body::SaveAs(dt.msh, file, Body::AQWA_DAT, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
+	UVector<String> files;
+	files << file;
+	Body::SaveAs(dt.msh, files, Body::AQWA_DAT, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
 		dt.w, dt.head, withQTF, withPotentials, dt.h, numThreads);
+	
+	String fileBat = AFX(folder, "Aqwa.bat");		
+	FileOut bat(fileBat);
+	if (!bat)
+		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
+	
+	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
+	bat << "call \"" << Bem().aqwaPath << "\" /nowind Analysis.dat";
+	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
+

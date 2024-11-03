@@ -53,6 +53,8 @@ void MenuOptions::Load() {
 	foammPath <<= bem->foammPath;
 	hamsPath <<= bem->hamsPath;
 	hamsBodyPath <<= bem->hamsBodyPath;
+	aqwaPath <<= bem->aqwaPath;
+	wamitPath <<= bem->wamitPath;
 	volWarning <<= bem->volWarning;
 	volError <<= bem->volError;
 	roundVal <<= bem->roundVal;
@@ -99,6 +101,8 @@ void MenuOptions::OnSave() {
 		bem->foammPath = ~foammPath;
 		bem->hamsPath = ~hamsPath;
 		bem->hamsBodyPath = ~hamsBodyPath;
+		bem->aqwaPath = ~aqwaPath;
+		bem->wamitPath = ~wamitPath;
 		bem->volWarning = ~volWarning;
 		bem->volError = ~volError;
 		bem->roundVal = ~roundVal;
@@ -155,6 +159,10 @@ bool MenuOptions::IsChanged() {
 	if (bem->hamsPath != ~hamsPath)
 		return true;
 	if (bem->hamsBodyPath != ~hamsBodyPath)
+		return true;
+	if (bem->aqwaPath != ~aqwaPath)
+		return true;
+	if (bem->wamitPath != ~wamitPath)
 		return true;
 	if (bem->volWarning != ~volWarning)
 		return true;
