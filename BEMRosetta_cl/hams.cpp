@@ -45,7 +45,7 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 		
 		String controlFile = AFX(baseFolder, "Input", "ControlFile.in");
 		if (FileExists(controlFile)) 
-			Load_In(controlFile);
+			Load_ControlFile(controlFile);
 			
 		String hydrostaticFile = AFX(baseFolder, /*"Input", */"Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
@@ -142,7 +142,7 @@ UVector<String> Hams::Check() const {
 	return ret;
 }
 
-bool Hams::Load_In(String fileName) {
+bool Hams::Load_ControlFile(String fileName) {
 	fileName = AFX(GetFileFolder(fileName), "ControlFile.in");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -167,7 +167,7 @@ bool Hams::Load_In(String fileName) {
 		if (var.StartsWith("#"))
 			continue;
 		if (var == "Waterdepth")
-			dt.h = abs(f.GetDouble(1));
+			dt.h = f.GetDouble(1);
 		else if (var == "Input_frequency_type") {
 			input_frequency_type = f.GetInt(1); 
 			if (input_frequency_type != 3 && input_frequency_type != 4)
@@ -376,10 +376,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		if (!DirectoryCreateX(folderInput))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderInput));
 		
+		bool irrRemoval = !lids.IsEmpty() && !lids[0].IsEmpty();
 		
 		if (IsNull(numThreads) || numThreads <= 0)
 			numThreads = 8;
-		Save_ControlFile(folderInput, freqs, numThreads);
+		Save_ControlFile(folderInput, freqs, numThreads, irrRemoval);
 		Save_Hydrostatic(folderInput);
 	
 		int ib = 0;			// Just one file
@@ -390,12 +391,12 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		String dest = AFX(folderInput, "HullMesh.pnl");
 		Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
 		
-		if (!lids[0].IsEmpty()) {
+		if (irrRemoval) {
 			dest = AFX(folderInput, "WaterplaneMesh.pnl");
 			Body::SaveAs(lids[0], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
 		}
 		
-		Save_Settings(folder, !dt.msh[ib].dt.lidFile.IsEmpty());
+		Save_Settings(folder, lids);
 		
 		String folderOutput = AFX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -476,7 +477,7 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 }
 
 
-void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
+void Hams::Save_Settings(String folderInput, UArray<Body> &lids) const {
 	String fileName = AFX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -487,12 +488,12 @@ void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
-	if (thereIsLid) {
-		Body lid;
-		lid.dt.mesh.AddWaterSurface(mesh.dt.mesh, mesh.dt.under, 'f', Bem().roundVal, Bem().roundEps); 
-		lid.AfterLoad(dt.rho, dt.g, false, false);
+	if (!lids.IsEmpty() && !lids[0].IsEmpty()) {
+		//Body lid;
+		//lid.dt.mesh.AddWaterSurface(mesh.dt.mesh, mesh.dt.under, 'f', Bem().roundVal, Bem().roundEps); 
+		//lid.AfterLoad(dt.rho, dt.g, false, false);
 		
-		mesh.Append(lid.dt.mesh, dt.rho, dt.g);
+		mesh.Append(lids[0].dt.mesh, dt.rho, dt.g);
 	}
 	Body::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, false, false);	
 	
@@ -511,7 +512,7 @@ void Hams::Save_Settings(String folderInput, bool thereIsLid) const {
 }
 
 void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
-					int numThreads) const {
+					int numThreads, bool remove_irr_freq) const {
 	String fileName = AFX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -548,7 +549,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 								dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]) << 
 		   "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";
-	bool remove_irr_freq = !dt.msh[0].dt.lidFile.IsEmpty();
+	
 	out << "\n    If_remove_irr_freq      " << (remove_irr_freq ? 1 : 0);
 	out << "\n    Number of threads       " << numThreads;
 	out << "\n"

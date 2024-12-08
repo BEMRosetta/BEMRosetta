@@ -12,6 +12,11 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 		String ext = GetFileExt(file);
 		int iperin = Null, iperout = Null;
 		
+		String filecfg = ForceExtSafer(file, ".cfg");
+		BEM::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
+		if (!Load_cfg(filecfg, iperin, iperout))
+			BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
+			
 		if (ext == ".out") {
 			String fileout = ForceExtSafer(file, ".out");
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
@@ -31,11 +36,6 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 				dt.solver = Hydro::WADAM_WAMIT;
 			else
 				dt.solver = Hydro::WAMIT;
-
-			String filecfg = ForceExtSafer(file, ".cfg");
-			BEM::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
-			if (!Load_cfg(filecfg, iperin, iperout))
-				BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
 	
 			String filepot = ForceExtSafer(file, ".pot");
 			BEM::Print("\n- " + Format(t_("Potential Control file .pot file '%s'"), GetFileName(filepot)));
@@ -188,7 +188,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 	if (!in.IsOpen())
 		return false;
 	
-	Status(Format("Loading .out file %s", fileName), Null);
+	Status(Format("Loading .out file %s", fileName), 0);
 			
 	dt.Nf = dt.Nh = 0;
 	
@@ -627,7 +627,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 		throw Exc(t_("Incorrect .out format"));
 		
 	if (isHydrostar) {		// HydroStar corrections due to mismatch with Wamit rules
-		Status("Processing HydroStar data", Null);
+		Status("Processing HydroStar data", 0);
 		
 		dt.solver = Hydro::HYDROSTAR_OUT;
 		
@@ -1663,9 +1663,9 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout, bool
 	
 	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
-		UVector<double> rT = clone(T);		ReverseX(rT);
+		//UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %s, in this one is %s"), ToString(dt.w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different frequencies.\nIn the previous has %s,\nin this one has %s"), ToString(dt.w), ToString(w)));
 	}
 	dt.w = pick(w);
 	
@@ -1890,7 +1890,7 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 		UVector<double> rw = clone(w);		ReverseX(rw);
 		UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
-			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %s, in this one is %s"), ToString(dt.w), ToString(w)));
+			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %s,\nin this one is %s"), ToString(dt.w), ToString(w)));
 	}
 	dt.w = pick(w);
 	
@@ -2320,9 +2320,7 @@ void Wamit::Save_POT(String fileName, bool withMesh, bool x0z, bool y0z) const {
 	out << WamitField(Format("%d ", dt.Nb), 12) << "% NBODY";
 	UVector<String> names;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		String name = GetFileTitle(dt.msh[ib].dt.name);
-		if (IsEmpty(name))
-			name = Format("Body_%d", ib+1);
+		String name = Format("Body_%d", ib+1);
 		name = ForceExt(name, ".gdf");
 		out << "\n" << name << "\n";
 		out << Format("%.3f %.3f %.3f 0.0 ", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z) << "% XBODY(1-4)\n";
@@ -2370,7 +2368,7 @@ void Wamit::Save_CFG(String fileName, bool withQTF) const {
 	}
 	
 	out << "! BEMRosetta generated .cfg file\n"
-		<< " IPERIN = 2       (input frequency)\n"
+		<< " IPERIN = 1       (input frequency)\n"
  		<< " IPEROUT = 2      (Output Frequency)\n"
  		<< " MAXITT = 50\n";
  	if (withQTF)
@@ -2394,8 +2392,8 @@ void Wamit::Save_Fnames(String folder) const {
 	
 	String folderName = GetFileTitle(folder);
 	file << folderName << ".cfg\n"
-		<< folderName << ".pot\n"
-		<< folderName << ".frc";
+		 << folderName << ".pot\n"
+		 << folderName << ".frc";
 }
 
 void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const {
@@ -2411,7 +2409,7 @@ void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool wi
 	Save_FRC(AFX(folder, folderName + ".frc"), true, withQTF);
 	Save_CFG(AFX(folder, folderName + ".cfg"), withQTF);
 	
-	String fileBat = AFX(folder, "Wamit.bat");		
+	String fileBat = AFX(folder, "Wamit_bat.bat");		
 	FileOut bat(fileBat);
 	if (!bat)
 		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));

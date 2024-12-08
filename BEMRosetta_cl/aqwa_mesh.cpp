@@ -438,7 +438,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "NUM_CORES         " << numThreads << "\n"
 	<< Format("OPTIONS %s%s%s", getQTF ? "AQTF " : "", "GOON ", getQTF ? "CQTF " : "") << "\n"
 	<< "OPTIONS AHD1 " << (getPotentials ? "PRPT PRPR" : "") <<"\n"
-	<< Format("OPTIONS %s%s LHFR REST END", getQTF ? "NQTF " : "", "LDRG") << "\n"
+	<< Format("OPTIONS %s%s REST END", getQTF ? "NQTF " : "", "LHFR") << "\n"
 	<< "RESTART  1  5" << "\n"
 	<< "********************************************************************************" << "\n"
 	<< "*********************************** DECK  1 ************************************" << "\n"
@@ -497,7 +497,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			ret << "\n";
 		}
 		ret
-		<< "      SEAG          ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
+		//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
 		<< "      ZLWL          (        0.)" << "\n";
 		
 		const Surface &surf = surfs[ib];
@@ -539,11 +539,22 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************\n"
 	<< "          GEOM\n";
 
-	for (int ib = 0; ib < mesh.size(); ++ib)
+	for (int ib = 0; ib < mesh.size(); ++ib) {
+		if (mesh[ib].dt.M.size() != 36)
+			throw Exc(Format(t_("Body %d inertia matrix is not correct"), ib+1));
+		double m33 = mesh[ib].dt.M(3, 3);
+		double m44 = mesh[ib].dt.M(3, 3);
+		double m55 = mesh[ib].dt.M(3, 3);
+		if (m33 == 0)
+			m33 = 0.0001;
+		if (m44 == 0)
+			m44 = 0.0001;
+		if (m55 == 0)
+			m55 = 0.0001;
 		ret << Format("%6d%s     %5d %s %s %s %s %s %s", ib+1, "PMAS", 98000+ib, 
-			FDS(mesh[ib].dt.M(3, 3), 9, true), FDS(mesh[ib].dt.M(3, 4), 9, true), FDS(mesh[ib].dt.M(3, 5), 9, true),
-			FDS(mesh[ib].dt.M(4, 4), 9, true), FDS(mesh[ib].dt.M(4, 5), 9, true), FDS(mesh[ib].dt.M(5, 5), 9, true));
-
+			FDS(m33, 9, true), FDS(mesh[ib].dt.M(3, 4), 9, true), FDS(mesh[ib].dt.M(3, 5), 9, true),
+			FDS(m44, 9, true), FDS(mesh[ib].dt.M(4, 5), 9, true), FDS(m55, 9, true));
+	}
 	ret	<< "\n END\n";
 	
 	ret
@@ -564,14 +575,22 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "*********************************** DECK  6 ************************************\n"
 	<< "********************************************************************************\n";
 	
+	bool found0 = false, found180 = false;
 	UVector<double> head180;
-	for (int i = 0; i < head.size(); ++i)
-		FindAdd(head180, FixHeading_180(head[i]));
+	for (int i = 0; i < head.size(); ++i) {
+		double h = FixHeading_180(head[i]);
+		if (abs(h) < 0.1)
+			found0 = true;
+		if (abs(h - 180) < 0.1)
+			found180 = true;
+		FindAdd(head180, h);
+	}
+	if (!found0)
+		head180 << 0;
+	if (!found180)
+		head180 << 180;
 	Sort(head180);
-	if (First(head180) != -180)
-		head180.Insert(0, -180);
-	if (Last(head180) != 180)
-		head180.Insert(0, 180);
+	head180.Insert(0, -180);
 	
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";

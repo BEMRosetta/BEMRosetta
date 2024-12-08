@@ -30,13 +30,15 @@ BasicBEM::HeadingType BEM::headingType = BasicBEM::HEAD_180_180;
 	
 
 bool PrintStatus(String s, int v) {
-	int done;
-	if (v == 0)
-		done = 0;
-	else
-		done = 20*v/100;
-	int pending = 20 - done;
-	printf("|%s%s|", ~String('*', done), ~String('-', pending));
+	if (!IsNull(v) && v >= 0) {
+		int done;
+		if (v == 0)
+			done = 0;
+		else
+			done = 20*v/100;
+		int pending = 20 - done;
+		printf("|%s%s|", ~String('*', done), ~String('-', pending));
+	}
 	const int totalChar = 80;
 	if (!IsNull(s)) {
 		String str = RemoveAccents(s);
@@ -266,6 +268,8 @@ int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool
 	int num = meshes.size();
 	for (int i = 0; i < num; ++i)
 		surfs.Add(pick(meshes[i]));
+	
+	Status(Format(t_("Mesh '%s' loaded"), fileName), 100);
 	return num;
 }
 
@@ -466,7 +470,7 @@ void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<P
 		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		Print("\n" + Format(t_("Problem adding polygonal panel: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -486,12 +490,13 @@ void BEM::Extrude(int id, double dx, double dy, double dz, bool close) {
 	}	
 }
 
-void BEM::AddWaterSurface(int id, char c) {
+void BEM::AddWaterSurface(int id, char c, double meshRatio) {
 	try {
 		Body &surf = surfs.Add();
 
 		surf.dt.SetCode(Body::EDIT);
-		surf.dt.mesh.AddWaterSurface(surfs[id].dt.mesh, surfs[id].dt.under, c, roundVal, roundEps); 
+		surf.dt.mesh.AddWaterSurface(surfs[id].dt.mesh, surfs[id].dt.under, c, roundVal, roundEps, meshRatio); 
+		surf.dt.c0 = surfs[id].dt.c0;
 		
 		if (c == 'r')
 			surf.dt.name = t_("Water surface removed");
@@ -510,7 +515,7 @@ void BEM::AddWaterSurface(int id, char c) {
 		surf.AfterLoad(rho, g, false, true);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		Print("\n" + Format(t_("Problem adding water surface: %s"), e));
 		throw std::move(e);
 	}	
 }

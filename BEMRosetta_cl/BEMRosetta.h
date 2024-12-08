@@ -910,7 +910,7 @@ public:
 	bool IsLoadedFfk_pot_bmr(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot_bmr, idf, ih, ib);}
 	bool IsLoadedRAO(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.rao,idf, ih, ib);}
 	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0) const {
-						return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && IsNum(f[ib][ih](0, idf));}
+						return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && f[ib][ih].rows() > 0 && IsNum(f[ib][ih](0, idf));}
 											 	
 	bool IsLoadedStateSpace()	  			 const {return !dt.sts.IsEmpty();}
 	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !dt.qtfsum.IsEmpty() : !dt.qtfdif.IsEmpty();}
@@ -1384,7 +1384,7 @@ public:
 	bool Load_Settings(String settingsFile);
 	bool Load_HydrostaticBody(String fileName, double rhog);
 	
-	bool Load_In(String fileName);
+	bool Load_ControlFile(String fileName);
 	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const;
 	UVector<String> Check() const;
 	
@@ -1397,8 +1397,8 @@ private:
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, const UVector<double> &freqs,
-							int numThreads) const;
-	void Save_Settings(String folderInput, bool thereIsLid) const;
+							int numThreads, bool remove_irr_freq) const;
+	void Save_Settings(String folderInput, UArray<Body> &lids) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
 };
 
@@ -1733,7 +1733,7 @@ public:
 	void AddFlatRectangle(double x, double y, double z, double size, double panWidthX, double panWidthY);
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);
-	void AddWaterSurface(int id, char c);
+	void AddWaterSurface(int id, char c, double meshRatio);
 	void Extrude(int id, double dx, double dy, double dz, bool close);
 	
 	String LoadSerializeJson();

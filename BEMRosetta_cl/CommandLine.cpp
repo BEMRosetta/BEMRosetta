@@ -79,8 +79,10 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-general                  # The next commands are for any data (default)");
 	Cout() << "\n" << t_("-paramfile <file>         # Params in a file. New lines are like separators and # indicates a comment");
 	Cout() << "\n" << t_("-params <param> <value>   # Set physical parameters:");
-	Cout() << "\n" << t_("               g          # gravity       [m/s2]  ") << md.g;
-	Cout() << "\n" << t_("               rho        # water density [kg/m³] ") << md.rho;
+	Cout() << "\n" << t_("        g                 # gravity       [m/s2]  ") << md.g;
+	Cout() << "\n" << t_("        rho               # water density [kg/m³] ") << md.rho;
+	Cout() << "\n" << t_("        length <length>   # length scale  []      ") << md.len;
+	Cout() << "\n" << t_("        depth  <depth>    # water depth   [m]     ") << md.depth;	
 	Cout() << "\n" << t_("-echo off/on              # Show text messages");
 	Cout() << "\n" << t_("-csvseparator <sep>       # Sets the separator for .csv files");
 	Cout() << "\n" << t_("-isEqual <value>          # Stops if last print is not equal to <value>");
@@ -90,14 +92,44 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-bem                      # The next commands are for BEM data");
 	Cout() << "\n" << t_("-i  -input <file>         # Load model");
 	Cout() << "\n" << t_("-c  -convert <file>       # Export actual model to output file");
+	Cout() << "\n" << t_("-new                      # Create new empty model");
+	Cout() << "\n" << t_("-saveCase                 # Saves a folder with the BEM case files ready to be calculated");
+	Cout() << "\n" << t_("        folder <folder>   # Folder name");
+	Cout() << "\n" << t_("        format <format>   # Solver format: Wamit.out HAMS Nemohv2 Nemohv3 AQWA.dat Capytaine.cal Capytaine.py OrcaWave.yml");
+	Cout() << "\n" << t_("        bin               # Include solver binaries (just for open source solvers) (false by default)");
+	Cout() << "\n" << t_("        symYZ             # Consider YZ symmetry (false by default)");
+	Cout() << "\n" << t_("        symXZ             # Consider XZ symmetry (false by default)");
+	Cout() << "\n" << t_("        mesh              # Include mesh in output files (just for some solvers) (false by default)");
+	Cout() << "\n" << t_("        potentials        # Include panel potentials in output files (just for some solvers) (false by default)");
+	Cout() << "\n" << t_("        QTF               # Include QTF in output files (just for some solvers) (false by default)");
+	Cout() << "\n" << t_("        split <num>       # Splits the calculation in <num> sub cases by frequency range (just for some solvers) (false by default)");	
+	
+	Cout() << "\n" << t_("-setid <id>                   # Set the id of the default BEM model");
+	Cout() << "\n" << t_("-setbodyid <id>               # Set the id of the default BEM model body");
+	Cout() << "\n" << t_("-params <param> <value>       # Set parameters:");
+	Cout() << "\n" << t_("        g      <g>            # gravity       [m/s2]  ");
+	Cout() << "\n" << t_("        rho    <rho>          # water density [kg/m³] ");
+	Cout() << "\n" << t_("        depth  <depth>        # water depth   [m]     ");	
+	Cout() << "\n" << t_("        length <length>       # length scale  []      ");
+	Cout() << "\n" << t_("        depth  <depth>        # water depth   [m]     ");
+	Cout() << "\n" << t_("        w      <frequencies>  # frequencies   [rad/s] ");
+	Cout() << "\n" << t_("        headings <headings>   # frequencies   [deg] ");
+	Cout() << "\n" << t_("-newbody                      # Add additional body (mesh) to current model");
+	Cout() << "\n" << t_("-bodyparams <param> <values>  # Set parameters:");
+	Cout() << "\n" << t_("        cg     <x> <y> <z>    # Set cg: x, y, z [m] cg is the centre of gravity");
+	Cout() << "\n" << t_("        c0     <x> <y> <z>    # Set c0: x, y, z [m] c0 is the centre of motion");
+	Cout() << "\n" << t_("        inertia <6x6 matrix>  # Inertia matrix");
+	Cout() << "\n" << t_("        linearDamping       <6x6 matrix> # Linear damping matrix");
+	Cout() << "\n" << t_("        quadraticDamping    <6x6 matrix> # Quadratic damping matrix");
+	Cout() << "\n" << t_("        additionalStiffness <6x6 matrix> # Additional stiffness matrix");
+	Cout() << "\n" << t_("        mesh <file>           # Load mesh file");	
+	Cout() << "\n" << t_("        lid  <file>           # Load lid file");	
+		
 	Cout() << "\n" << t_("-convQTFHeads <params>    # Set heading save config. for Wamit .1");
 	Cout() << "\n" << t_("               all        # All headings");
 	Cout() << "\n" << t_("               allNoCross # All headings but crossed");
 	Cout() << "\n" << t_("               <h1> <h2>  # Indicated pair of headings [deg]");
-	Cout() << "\n" << t_("-setid <id>               # Set the id of the default BEM model");
-	Cout() << "\n" << t_("-params <param> <value>   # Set parameters:");
-	Cout() << "\n" << t_("               length     # length scale  []      ") << md.len;
-	Cout() << "\n" << t_("               depth      # water depth   [m]     ") << md.depth;
+
 	Cout() << "\n" << t_("-delHead   <h1> ...       # Delete forces for indicated headings [deg]");
 	Cout() << "\n" << t_("-delHeadId <h1> ...       # Delete forces for indicated heading ids");
 	Cout() << "\n" << t_("-delButHead   <h1> ...    # Delete forces for all but indicated headings [deg]");
@@ -106,7 +138,10 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("-delQTFHeadId <h1> <h2> ..# Delete QTF for indicated heading ids");
 	Cout() << "\n" << t_("-delButQTFHead   <h1> <h2>..# Delete QTF for all but indicated pairs of headings [deg]");
 	Cout() << "\n" << t_("-delButQTFHeadId <h1> <h2>..# Delete QTF for all but indicated heading ids");
-	Cout() << "\n" << t_("-p  -print <params>       # Prints model data in a row");
+	
+	Cout() << "\n" << t_("-new                      # Create new empty model");
+	
+	Cout() << "\n" << t_("-p  -print <params>       # Print model data in a row");
 	Cout() << "\n" << t_("        <params> nb                  # Number of bodies  []");
 	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
 	Cout() << "\n" << t_("                 nh                  # Number of headings    []");
@@ -121,7 +156,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("                 GMroll <ibody>      # GM in roll [m]");
 	Cout() << "\n" << t_("                 GMpitch <ibody>     # GM in pitch [m]");
 	Cout() << "\n" << t_("-r  -report               # Output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear                # Clear loaded model");
+	Cout() << "\n" << t_("-cl -clear                # Clear loaded models");
 	Cout() << "\n";
 	Cout() << "\n" << t_("-mesh                     # The next commands are for mesh data");
 	Cout() << "\n" << t_("-i  -input <file>         # Load model");
@@ -141,6 +176,7 @@ void ShowHelp(BEM &md) {
 	
 	Cout() << "\n" << t_("-getwaterplane                  # Extract in new model the waterplane mesh (lid)");
 	Cout() << "\n" << t_("-gethull                        # Extract in new model the mesh underwater hull");
+	Cout() << "\n" << t_("-filllid <ratio>                # Generates in new model the waterplane lid with mesh size ratio bigger than average");
 	
 	Cout() << "\n" << t_("-setid <id>                     # Set the id of the default mesh model");
 	Cout() << "\n" << t_("-reset                          # Restore the mesh to the initial situation");
@@ -170,7 +206,7 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("                                # returns the set of angles [deg] and their gz values [m]");
 	Cout() << "\n" << t_("              GM                # returns GMpitch GMroll [m]");
 
-	Cout() << "\n" << t_("-cl -clear                      # Clear loaded model");
+	Cout() << "\n" << t_("-cl -clear                      # Clear loaded models");
 	Cout() << "\n";
 	Cout() << "\n" << t_("-time                           # The next commands are for time series");
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
@@ -205,7 +241,7 @@ void ShowHelp(BEM &md) {
 	
 	Cout() << "\n" << t_("-r  -report                     # Output loaded model main data");
 	Cout() << "\n" << t_("-ra -reportall                  # Output all models main data");
-	Cout() << "\n" << t_("-cl -clear                      # Clear loaded model");	
+	Cout() << "\n" << t_("-cl -clear                      # Clear loaded models");	
 	
 #ifdef PLATFORM_WIN32
 	Cout() << "\n";
@@ -297,6 +333,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 		Cout() << "\n" << errorJson << "\n" << t_("BEM configuration data is not loaded. Defaults values are set"); 
 
 	
+	UArray<Body> lids;
 	UVector<String> headParams(2);
 	
 	bool echo = true;
@@ -308,7 +345,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 			ShowHelp(bem);
 		} else {
 			String nextcommands = "general";
-			int bemid = -1, meshid = -1, windid = -1;
+			int bemid = -1, bembodyid = -1, meshid = -1, windid = -1;
 			for (int ic = 0; ic < command.size(); ic++) {
 				String param = ToLower(command[ic]);
 				if (param == "-general") 
@@ -394,6 +431,20 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
 									bem.rho = rho;
 									BEM::Print("\n" + Format(t_("Density is %f"), rho));	
+								} else if (ToLower(command[ic]) == "length") {
+									CheckIfAvailableArg(command, ++ic, "-p length");
+									double len = ScanDouble(command[ic]);
+									if (IsNull(len))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									bem.len = len;
+									BEM::Print("\n" + Format(t_("length is %f"), len));	
+								} else if (ToLower(command[ic]) == "depth") {
+									CheckIfAvailableArg(command, ++ic, "-p depth");
+									double depth = ScanDouble(command[ic]);
+									if (IsNull(depth))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									bem.depth = depth;
+									BEM::Print("\n" + Format(t_("depth is %f"), depth));
 								} else 
 									throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
 							}
@@ -435,6 +486,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n");
 							bem.LoadBEM(file, echo ? Status : NoPrint, false);
 							bemid = bem.hydros.size() - 1;
+							bembodyid = bem.hydros[bemid].dt.msh.size() - 1;
 							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
 							if (bem.hydros.IsEmpty()) 
@@ -442,22 +494,33 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							bem.hydros[bemid].Report();
 						} else if (param == "-cl" || param == "-clear") {
 							bem.hydros.Clear();
-							bemid = -1;
+							bemid = bembodyid = -1;
 							BEM::Print("\n" + S(t_("BEM data cleared")));	
 						} else if (param == "-setid") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
 							
 							CheckIfAvailableArg(command, ++ic, "-setid");
 
 							bemid = ScanInt(command[ic]);
 							if (IsNull(bemid) || bemid < 0 || bemid > bem.hydros.size()-1)
 								throw Exc(Format(t_("Invalid id %s"), command[ic]));
+							bembodyid = bem.hydros[bemid].dt.msh.size() - 1;
 							BEM::Print("\n" + Format(t_("BEM active model id is %d"), bemid));	
+						} else if (param == "-setbodyid") {
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							
+							CheckIfAvailableArg(command, ++ic, "-setbodyid");
+
+							bembodyid = ScanInt(command[ic]);
+							if (IsNull(bembodyid) || bembodyid < 0 || bembodyid > bem.hydros[bemid].dt.msh.size()-1)
+								throw Exc(Format(t_("Invalid id %s"), command[ic]));
+							BEM::Print("\n" + Format(t_("BEM active model id is %d"), bemid));
 						} else if (param == "-c" || param == "-convert") {
-							Hydro &hd = bem.hydros[bemid];
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
 							
 							CheckIfAvailableArg(command, ++ic, "-convert");
 							
@@ -468,11 +531,21 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							else if (headParams[0] == "allnocross")
 								qtfHeading = -1;
 							else 
-								qtfHeading = hd.dt.FindClosestQTFHead(std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
+								qtfHeading = hy.dt.FindClosestQTFHead(std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
 							
 							BEM::Print("\n");
 							bem.hydros[bemid].SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading);
 							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
+						} else if (param == "-new") {
+							bem.hydros.Add();
+							bemid = bem.hydros.size() - 1;
+							Hydro &hy = bem.hydros[bemid];
+							hy.dt.x_w = hy.dt.y_w = 0;
+							hy.dt.g = Bem().g;
+							hy.dt.rho = Bem().rho;
+							hy.dt.len = Bem().len;
+							hy.dt.h = Bem().depth;
+							BEM::Print("\n" + S(t_("New model created. Default values (rho, g, ...) set")));
 						} else if (param == "-convqtfheads") {	
 							CheckIfAvailableArg(command, ++ic, "-convqtfheads");
 							if (ToLower(command[ic]) == "all") 
@@ -493,72 +566,72 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								headParams[1] = command[ic];
 							}
 						} else if (param == "-delhead") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));	
-							Hydro &hd = bem.hydros[bemid];
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));	
+							Hydro &hy = bem.hydros[bemid];
 							UVector<int> ids;
 							double head;
 							while (ic+1 < command.size() && !IsNull(head = ScanDouble(command[ic+1]))) {
-								int id = hd.dt.FindClosestHead(head);
-								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hd.dt.head[id]));
+								int id = hy.dt.FindClosestHead(head);
+								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hy.dt.head[id]));
 								FindAdd(ids, id);
 								ic++;
 							}
-							hd.DeleteHeadings(ids);	
+							hy.DeleteHeadings(ids);	
 							BEM::Print("\n" + S(t_("Headings deleted")));
 						} else if (param == "-delheadid") {	
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
-							Hydro &hd = bem.hydros[bemid];
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
-								if (id < 0 || id >= hd.dt.head.size())
+								if (id < 0 || id >= hy.dt.head.size())
 									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
-							hd.DeleteHeadings(ids);	
+							hy.DeleteHeadings(ids);	
 							BEM::Print("\n" + S(t_("Headings deleted")));
 						} else if (param == "-delbuthead") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
-							Hydro &hd = bem.hydros[bemid];	
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];	
 							UVector<int> ids;
 							double head;
 							while (ic+1 < command.size() && !IsNull(head = ScanDouble(command[ic+1]))) {
-								int id = hd.dt.FindClosestHead(head);
-								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hd.dt.head[id]));
+								int id = hy.dt.FindClosestHead(head);
+								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hy.dt.head[id]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							UVector<int> idsDel;
-							for (int i = 0; i < hd.dt.head.size(); ++i)
+							for (int i = 0; i < hy.dt.head.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hd.DeleteHeadings(idsDel);	
+							hy.DeleteHeadings(idsDel);	
 							BEM::Print("\n" + S(t_("Headings deleted")));
 						} else if (param == "-delbutheadid") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));	
-							Hydro &hd = bem.hydros[bemid];
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));	
+							Hydro &hy = bem.hydros[bemid];
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
-								if (id < 0 || id >= hd.dt.head.size())
+								if (id < 0 || id >= hy.dt.head.size())
 									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 							}
 							UVector<int> idsDel;
-							for (int i = 0; i < hd.dt.head.size(); ++i)
+							for (int i = 0; i < hy.dt.head.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hd.DeleteHeadings(idsDel);
+							hy.DeleteHeadings(idsDel);
 							BEM::Print("\n" + S(t_("Headings deleted")));	
 						} else if (param == "-delqtfhead") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
-							Hydro &hd = bem.hydros[bemid];
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
 							UVector<int> ids;
 							double head1, head2;
 							while (ic+1 < command.size() && !IsNull(head1 = ScanDouble(command[ic+1]))) {
@@ -566,31 +639,31 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								CheckIfAvailableArg(command, ++ic, "-delqtfhead 2nd head");
 								if (IsNull(head2 = ScanDouble(command[ic])))
 									throw Exc(Format(t_("Wrong head '%s'"), command[ic]));
-								int id = hd.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
-								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hd.dt.qhead[id].real(), hd.dt.qhead[id].imag()));
+								int id = hy.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
+								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hy.dt.qhead[id].real(), hy.dt.qhead[id].imag()));
 								FindAdd(ids, id);
 								ic++;
 							}
-							hd.DeleteHeadingsQTF(ids);
+							hy.DeleteHeadingsQTF(ids);
 							BEM::Print("\n" + S(t_("QTF headings deleted")));
 						} else if (param == "-delqtfheadid") {	
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
-							Hydro &hd = bem.hydros[bemid];
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
-								if (id < 0 || id >= hd.dt.qhead.size())
+								if (id < 0 || id >= hy.dt.qhead.size())
 									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
-							hd.DeleteHeadingsQTF(ids);	
+							hy.DeleteHeadingsQTF(ids);	
 							BEM::Print("\n" + S(t_("QTF headings deleted")));
 						} else if (param == "-delbutqtfhead") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
-							Hydro &hd = bem.hydros[bemid];
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
 							UVector<int> ids;
 							double head1, head2;
 							while (ic+1 < command.size() && !IsNull(head1 = ScanDouble(command[ic+1]))) {
@@ -598,59 +671,306 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								CheckIfAvailableArg(command, ++ic, "-delqtfhead 2nd head");
 								if (IsNull(head2 = ScanDouble(command[ic])))
 									throw Exc(Format(t_("Wrong head '%s'"), command[ic]));
-								int id = hd.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
-								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hd.dt.qhead[id].real(), hd.dt.qhead[id].imag()));
+								int id = hy.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
+								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hy.dt.qhead[id].real(), hy.dt.qhead[id].imag()));
 								FindAdd(ids, id);
 							}
 							UVector<int> idsDel;
-							for (int i = 0; i < hd.dt.qhead.size(); ++i)
+							for (int i = 0; i < hy.dt.qhead.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hd.DeleteHeadingsQTF(idsDel);
+							hy.DeleteHeadingsQTF(idsDel);
 							BEM::Print("\n" + S(t_("QTF headings deleted")));
 						} else if (param == "-delbutqtfheadid") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
-							Hydro &hd = bem.hydros[bemid];	
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];	
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
-								if (id < 0 || id >= hd.dt.qhead.size())
+								if (id < 0 || id >= hy.dt.qhead.size())
 									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							UVector<int> idsDel;
-							for (int i = 0; i < hd.dt.qhead.size(); ++i)
+							for (int i = 0; i < hy.dt.qhead.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hd.DeleteHeadingsQTF(idsDel);
+							hy.DeleteHeadingsQTF(idsDel);
 							BEM::Print("\n" + S(t_("QTF headings deleted")));	
 						} else if (param == "-params") {
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
 							CheckIfAvailableArg(command, ic+1, "-params");
 							
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								++ic;
-								if (ToLower(command[ic]) == "length") {
-									CheckIfAvailableArg(command, ++ic, "-p length");
-									double len = ScanDouble(command[ic]);
-									if (IsNull(len))
+								if (ToLower(command[ic]) == "depth") {
+									CheckIfAvailableArg(command, ++ic, "depth");
+									double h = ScanDouble(command[ic]);
+									if (IsNull(h))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									bem.len = len;
-									BEM::Print("\n" + Format(t_("length is %f"), len));	
-								} else if (ToLower(command[ic]) == "depth") {
-									CheckIfAvailableArg(command, ++ic, "-p depth");
-									double depth = ScanDouble(command[ic]);
-									if (IsNull(depth))
+									hy.dt.h = h;
+									BEM::Print("\n" + Format(t_("Model %d depth is %f"), bemid+1, h));
+								} else if (ToLower(command[ic]) == "g") {
+									CheckIfAvailableArg(command, ++ic, "g");
+									double g = ScanDouble(command[ic]);
+									if (IsNull(g))
 										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									bem.depth = depth;
-									BEM::Print("\n" + Format(t_("depth is %f"), depth));	
+									hy.dt.g = g;
+									BEM::Print("\n" + Format(t_("Model %d g is %f"), bemid+1, g));
+								} else if (ToLower(command[ic]) == "rho") {
+									CheckIfAvailableArg(command, ++ic, "rho");
+									double rho = ScanDouble(command[ic]);
+									if (IsNull(rho))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									hy.dt.rho = rho;
+									BEM::Print("\n" + Format(t_("Model %d rho is %f"), bemid+1, rho));
+								} else if (ToLower(command[ic]) == "w") {
+									UVector<double> w;
+									double f;
+									while (ic+1 < command.size() && !IsNull(f = ScanDouble(command[ic+1]))) {
+										if (f < 0.001 || f > 50)
+											throw Exc(Format(t_("Wrong frequency '%s'"), command[ic+1]));
+										FindAdd(w, f);
+										ic++;
+									}
+									hy.dt.w = pick(w);
+									hy.dt.Nf = hy.dt.w.size();
+									
+									hy.SortFrequencies();
+									
+									BEM::Print("\n" + Format(t_("Model %d, %d frequencies added"), bemid+1, hy.dt.Nf));
+									
+									hy.dt.A.Clear();
+									hy.dt.Ainf_w.Clear();
+									hy.dt.A_P.Clear();
+									hy.dt.B.Clear();
+									hy.dt.B_H.Clear();
+									hy.dt.B_P.Clear();
+									
+									hy.dt.ex.Clear();
+	    							hy.dt.sc.Clear();
+	    							hy.dt.fk.Clear();
+	    							hy.dt.sc_pot.Clear();
+	   								hy.dt.fk_pot.Clear();
+	   								hy.dt.fk_pot_bmr.Clear();
+	   								hy.dt.rao.Clear();
+	   	
+	    							hy.dt.qw = hy.Get_w();
+	    							hy.dt.qtfsum.Clear();
+	    							hy.dt.qtfdif.Clear();
+	    							hy.dt.md.Clear();
+	    							hy.dt.pots_rad.Clear();
+	    							hy.dt.pots_dif.Clear();
+	    							hy.dt.pots_inc.Clear();
+	    							hy.dt.pots_inc_bmr.Clear();
+	    							hy.dt.Apan = Eigen::Tensor<double, 5>();
+								} else if (ToLower(command[ic]) == "headings") {
+									UVector<double> head;
+									double he;
+									while (ic+1 < command.size() && !IsNull(he = ScanDouble(command[ic+1]))) {
+										if (he < -360 || he > 360)
+											throw Exc(Format(t_("Wrong heading '%s'"), command[ic+1]));
+										FindAdd(head, he);
+										ic++;
+									}
+									hy.dt.head = pick(head);
+									hy.dt.Nh = hy.dt.head.size();
+									
+									hy.SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);
+									
+									BEM::Print("\n" + Format(t_("Model %d, %d headigs added"), bemid+1, hy.dt.Nh));
+									
+									hy.dt.ex.Clear();
+	    							hy.dt.sc.Clear();
+	    							hy.dt.fk.Clear();
+	    							hy.dt.sc_pot.Clear();
+	   								hy.dt.fk_pot.Clear();
+	   								hy.dt.fk_pot_bmr.Clear();
+	   								hy.dt.rao.Clear();									
+									
+									hy.dt.qtfsum.Clear();
+	    							hy.dt.qtfdif.Clear();
+									hy.dt.qhead = VectorXcd();
+
+									hy.dt.mdhead = VectorXcd();
+									hy.dt.md.Clear();
+																		
+									hy.dt.pots_dif.Clear();
+	    							hy.dt.pots_inc.Clear();
+	    							hy.dt.pots_inc_bmr.Clear();									
+								} else 
+									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));	
+							}
+						} else if (param == "-savecase") {
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
+							String folder;
+							Hydro::BEM_FMT solver = Hydro::UNKNOWN;
+							bool bin = false, y0z = false, x0z = false, withMesh = false, withPotentials = false, withQTF = false;
+							int numCases = 0, numThreads = 0;
+							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
+								ic++;
+								String pparam = ToLower(command[ic]);
+								if (pparam == "folder") {
+									CheckIfAvailableArg(command, ++ic, "folder");
+									folder = command[ic];
+									folder.Replace("%DESKTOP%", GetDesktopFolder());
+								} else if (pparam == "solver") {
+									CheckIfAvailableArg(command, ++ic, "solver"); 
+									String fmt = ToLower(command[ic]);
+									for (int i = 0; i < Hydro::NUMBEM; ++i) {
+										if (Hydro::caseCanSave[i]) {
+											if (ToLower(Replace(Hydro::bemStr[i], " ", "")) == fmt) {
+												solver = (Hydro::BEM_FMT)i;
+												break;
+											}
+										}
+									}
+									if (solver == Hydro::UNKNOWN)
+										throw Exc(Format(t_("Unknown format %s"), command[ic]));
+								} else if (pparam == "bin")
+									bin = true;
+								else if (pparam == "symyz") 
+									y0z = true;
+								else if (pparam == "symxz") 
+									x0z = true;
+								else if (pparam == "mesh") 
+									withMesh = true;
+								else if (pparam == "potentials") 
+									withPotentials = true;
+								else if (pparam == "qtf") 
+									withQTF = true;
+								else if (pparam == "split") {
+									CheckIfAvailableArg(command, ++ic, "split");
+									numCases = ScanInt(command[ic]);	
+									if (IsNull(numCases))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+								} else if (pparam == "numthreads") {
+									CheckIfAvailableArg(command, ++ic, "numThreads");
+									numThreads = ScanInt(command[ic]);	
+									if (IsNull(numThreads))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+								} else
+									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
+							}
+							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, withQTF, x0z, y0z, lids);
+							BEM::Print("\n" + Format(t_("Saved model %d in %s case format"), bemid+1, Hydro::GetBemStr(solver)));
+						} else if (param == "-newbody") {
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
+							hy.dt.msh.Add();
+							bembodyid = hy.dt.msh.size() - 1;
+							BEM::Print("\n" + Format(t_("Model %d, body %d created"), bemid+1, bembodyid+1));
+						} else if (param == "-bodyparams") {
+							CheckIfAvailableArg(command, ic+1, "-bodyparams");
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+							Hydro &hy = bem.hydros[bemid];
+							
+							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
+								if (bem.hydros[bemid].dt.msh.size() < bembodyid) 
+									throw Exc(Format(t_("Body %d is not available in model"), bembodyid+1));
+								++ic;	
+								if (ToLower(command[ic]) == "mesh") {
+									CheckIfAvailableArg(command, ++ic, "mesh");
+									String file = command[ic];
+									Body::Load(hy.dt.msh[bembodyid], file, Bem().rho, Bem().g, Null, Null, false);
+									BEM::Print("\n" + Format(t_("Model %d, body %d loaded mesh '%s'"), bemid+1, bembodyid+1, file));
+								} else if (ToLower(command[ic]) == "lid") {
+									CheckIfAvailableArg(command, ++ic, "lid");
+									String file = command[ic];
+									Body::Load(lids, file, Bem().rho, Bem().g, Null, Null, false);
+									BEM::Print("\n" + Format(t_("Model %d, body %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
+								} else if (ToLower(command[ic]) == "c0") {
+									CheckIfAvailableArg(command, ++ic, "c0.x");
+									double c0x = ScanDouble(command[ic]);
+									if (IsNull(c0x))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "c0.y");
+									double c0y = ScanDouble(command[ic]);
+									if (IsNull(c0y))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "c0.z");
+									double c0z = ScanDouble(command[ic]);
+									if (IsNull(c0z))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									hy.dt.msh[bembodyid].dt.c0 = Point3D(c0x, c0y, c0z);
+									BEM::Print("\n" + Format(t_("Model %d, body %d C0 is %f, %f, %f"), bemid+1, bembodyid+1, c0x, c0y, c0z));
+								} else if (ToLower(command[ic]) == "cg") {
+									CheckIfAvailableArg(command, ++ic, "cg.x");
+									double cgx = ScanDouble(command[ic]);
+									if (IsNull(cgx))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "cg.y");
+									double cgy = ScanDouble(command[ic]);
+									if (IsNull(cgy))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "cg.z");
+									double cgz = ScanDouble(command[ic]);
+									if (IsNull(cgz))
+										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									hy.dt.msh[bembodyid].dt.cg = Point3D(cgx, cgy, cgz);
+									BEM::Print("\n" + Format(t_("Model %d, body %d CG is %f, %f, %f"), bemid+1, bembodyid+1, cgx, cgy, cgz));
+								} else if (ToLower(command[ic]) == "inertia") {
+									hy.dt.msh[bembodyid].dt.M.resize(6, 6);
+									for (int r = 0; r < 6; ++r) {
+										for (int c = 0; c < 6; ++c) {
+											CheckIfAvailableArg(command, ++ic, Format("inertia(%d,%d)", r+1, c+1));
+											double d = ScanDouble(command[ic]);
+											if (IsNull(d))
+												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+											hy.dt.msh[bembodyid].dt.M(r, c) = d;
+										}
+									}
+									BEM::Print("\n" + Format(t_("Model %d, body %d inertia matrix loaded"), bemid+1, bembodyid+1));
+								} else if (ToLower(command[ic]) == "lineardamping") {
+									hy.dt.msh[bembodyid].dt.Dlin.resize(6, 6);
+									for (int r = 0; r < 6; ++r) {
+										for (int c = 0; c < 6; ++c) {
+											CheckIfAvailableArg(command, ++ic, Format("linearDamping(%d,%d)", r+1, c+1));
+											double d = ScanDouble(command[ic]);
+											if (IsNull(d))
+												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+											hy.dt.msh[bembodyid].dt.Dlin(r, c) = d;
+										}
+									}
+									BEM::Print("\n" + Format(t_("Model %d, body %d linear damping matrix loaded"), bemid+1, bembodyid+1));
+								} else if (ToLower(command[ic]) == "quadraticdamping") {
+									hy.dt.msh[bembodyid].dt.Dquad.resize(6, 6);
+									for (int r = 0; r < 6; ++r) {
+										for (int c = 0; c < 6; ++c) {
+											CheckIfAvailableArg(command, ++ic, Format("quadraticDamping(%d,%d)", r+1, c+1));
+											double d = ScanDouble(command[ic]);
+											if (IsNull(d))
+												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+											hy.dt.msh[bembodyid].dt.Dquad(r, c) = d;
+										}
+									}
+									BEM::Print("\n" + Format(t_("Model %d, body %d quadratic damping matrix loaded"), bemid+1, bembodyid+1));
+								} else if (ToLower(command[ic]) == "additionalstiffness") {
+									hy.dt.msh[bembodyid].dt.Cadd.resize(6, 6);
+									for (int r = 0; r < 6; ++r) {
+										for (int c = 0; c < 6; ++c) {
+											CheckIfAvailableArg(command, ++ic, Format("additionalStiffness(%d,%d)", r+1, c+1));
+											double d = ScanDouble(command[ic]);
+											if (IsNull(d))
+												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+											hy.dt.msh[bembodyid].dt.Cadd(r, c) = d;
+										}
+									}
+									BEM::Print("\n" + Format(t_("Model %d, body %d additional stiffness matrix loaded"), bemid+1, bembodyid+1));
 								} else 
 									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
 							}
 						} else if (param == "-p" || param == "-print") {
-							if (bem.hydros.IsEmpty()) 
-								throw Exc(t_("No file loaded"));
+							if (bem.hydros.size() < bemid) 
+								throw Exc(Format(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = bem.hydros[bemid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
@@ -775,6 +1095,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+						
 					} else if (nextcommands == "mesh") {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++ic, "--input");
@@ -786,7 +1107,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							BEM::Print("\n");
 							bem.LoadBody(file, echo ? Status : NoPrint, false, false);		// Doesn't work for multibody .dat
 							meshid = bem.surfs.size() - 1;
-							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -911,15 +1231,25 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						} else if (param == "-getwaterplane") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
-							bem.AddWaterSurface(meshid, 'e');
+							bem.AddWaterSurface(meshid, 'e', 1);
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d waterplane is got"), meshid));
 						} else if (param == "-gethull") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
-							bem.AddWaterSurface(meshid, 'r');
+							bem.AddWaterSurface(meshid, 'r', 1);
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d hull is got"), meshid));
+						} else if (param == "-filllid") {
+							if (bem.surfs.IsEmpty()) 
+								throw Exc(t_("No file loaded"));
+							CheckIfAvailableArg(command, ++ic, "ratio");
+							double ratio = ScanDouble(command[ic]);
+							if (ratio < 0 || ratio > 100)
+								throw Exc(Format(t_("Wrong mesh ratio %s"), command[ic]));
+							bem.AddWaterSurface(meshid, 'f', ratio);
+							meshid = bem.surfs.size() - 1;
+							BEM::Print("\n" + Format(t_("Body id %d lid is got"), meshid));
 						} else if (param == "-p" || param == "-print") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -1378,6 +1708,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (errorStr.Find("license") < 0)
 										break;
 									numTry--;
+									Sleep(200);
 									errorStr.Clear();
 								}
 								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));

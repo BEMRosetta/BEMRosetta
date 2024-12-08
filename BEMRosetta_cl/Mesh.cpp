@@ -138,7 +138,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 #endif	
 	else if (ext == ".txt") 
 		ret = DiodoreBody::LoadDat(mesh, file); 
-	else if (ext == ".gdf") 
+	else if (ext == ".gdf" || ext == ".idf") 
 		ret = WamitBody::LoadGdf(mesh, file, y0z, x0z); 
 	else if (ext == ".pnl") 
 		ret = HAMSBody::LoadPnl(mesh, file, y0z, x0z); 

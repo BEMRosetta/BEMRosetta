@@ -201,7 +201,7 @@ void __stdcall Orca::DiffractionHandlerProc(HINSTANCE handle, LPCWSTR lpProgress
 	else {
 		int64 sec = GetSysTime() - startCalc - noLicenseTime;
 		int64 estsec = int64(100*sec/double(perc));
-		et = GetSysTime() + estsec;
+		et = startCalc + estsec;
 	}
 	*lpCancel = WhenWave(msg, perc, et);
 }

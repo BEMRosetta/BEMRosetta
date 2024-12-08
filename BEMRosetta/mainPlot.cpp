@@ -56,6 +56,7 @@ void MainPlot::Init(int _idf, double jdf_ih, Hydro::DataToShow _dataToShow, doub
 	dataToShow = _dataToShow;
 	
 	compare.Init(dataToShow);
+	compareP.Init(dataToShow);
 	
 	String smp_up, smp_down;
 	if (show_ma_ph) {
@@ -223,6 +224,7 @@ bool MainPlot::Load(const UArray<Hydro> &hydro, const MainBEM &mbm, const UVecto
 			scatP.ZoomToFit(true, true);
 	}
 	compare.Load();
+	compareP.Load();
 	
 	return loaded;
 }

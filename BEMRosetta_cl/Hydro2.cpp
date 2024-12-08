@@ -2383,11 +2383,13 @@ void Hydro::GetForcesFromPotentials(const UArray<UArray<UArray<UArray<std::compl
 	for (int ih = 0; ih < dt.Nh; ++ih) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			const Point3D &c0 = dt.msh[ib].dt.c0;
-			for (int ip = 0; ip < pot[ib].size(); ++ip) {
-				Value6D n = dt.msh[ib].dt.mesh.panels[ip].NormalExt(c0);	
-				for (int idf = 0; idf < 6; ++idf) 
-					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-						f[ib][ih](ifr, idf) += F_fromDimFactor(idf)*F_pan(pot, ib, ip, ih, idf, ifr, n);
+			if (!IsNull(c0)) {		// AQWA multibody cases may not have c0 and cg
+				for (int ip = 0; ip < pot[ib].size(); ++ip) {
+					Value6D n = dt.msh[ib].dt.mesh.panels[ip].NormalExt(c0);	
+					for (int idf = 0; idf < 6; ++idf) 
+						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+							f[ib][ih](ifr, idf) += F_fromDimFactor(idf)*F_pan(pot, ib, ip, ih, idf, ifr, n);
+				}
 			}
 		}
 	}

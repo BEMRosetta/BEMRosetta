@@ -34,7 +34,6 @@ String Hydro::LoadSerialization(String fileName) {
 			m.dt.under.GetVolume();
 		}
 	}
-		
 	return String();
 }
 	
@@ -714,14 +713,15 @@ void Hydro::GetRAO() {
 
 VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2) {
-	MatrixXd Aw0 = Aw.unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
-			 Bw0 = Bw.unaryExpr([](double x){return IsNum(x) ? x : 0;});
+	MatrixXd Aw0   = Aw .unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
+			 Bw0   = Bw .unaryExpr([](double x){return IsNum(x) ? x : 0;});
+	VectorXcd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x : 0;});
 	
 	MatrixXcd m = C - sqr(w)*(M + Aw0) + i<double>()*w*(Bw0 + D);
 	if (!FullPivLU<MatrixXcd>(m).isInvertible())
 	   throw Exc(t_("Problem solving RAO"));
 	
-	return Fwh.transpose()*m.inverse();
+	return Fwh0.transpose()*m.inverse();
 }
 	
 void Hydro::InitAinf_w() {
@@ -1328,6 +1328,8 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 void Hydro::AddWave(int ib, double dx, double dy, double g) {
 	if (dx == 0 && dy == 0)
 		return;
+	if (IsNull(dx) || IsNull(dy))
+		return;
   	auto CalcF = [&](Forces &ex, const UVector<double> &k) {
     	Forces exforce = clone(ex);
     	
@@ -1555,7 +1557,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 				double dy = delta(1, ib);
 				double dz = delta(2, ib);
 			
-				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+				for (int ifr = 0; ifr < dt.Nf; ++ifr) {	// Cross product of rotation dof
 					exforce[ib][ih](ifr, 3) += -dy*exforce[ib][ih](ifr, 2) + dz*exforce[ib][ih](ifr, 1);
 	    			exforce[ib][ih](ifr, 4) += -dz*exforce[ib][ih](ifr, 0) + dx*exforce[ib][ih](ifr, 2);
 	    			exforce[ib][ih](ifr, 5) += -dx*exforce[ib][ih](ifr, 1) + dy*exforce[ib][ih](ifr, 0);
@@ -1572,6 +1574,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 		TransF(dt.sc);
 	if (IsLoadedFfk())
 		TransF(dt.fk);
+
 
     auto TransMD = [&]() {
     	UArray<UArray<UArray<VectorXd>>> mdn = clone(dt.md);

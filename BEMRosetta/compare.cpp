@@ -133,21 +133,31 @@ void CompareParameters::Load() {
 			if (opMinRange) 
 				Segment(x, y, wmin, wmax, x, y);
 			
-			if (y.size() > 0)
-				rms << RMS(y);
-			
-			if (swRelative > 0) {
-				VectorXd yyy;
-				ResampleY(x, y, x0, yyy);
+			if ((swRelative == 1 && i == 0) || (swRelative == 2 && i == scatter.GetCount() - 1)) {
+				rms << 1;
+				rmse << 0;
+				xcorr << 1;	
+			} else {
+				if (y.size() > 0)
+					rms << RMS(y);
 				
-				rmse << RMSE(yyy, y0)/y0.mean();
-				
-				VectorXd rr, lags;
-				XCorr(yyy, y0, rr, lags, 'c');
-				if (rr.size() == 0)
-					xcorr << Null;
-				else	
-					xcorr << rr.maxCoeff();
+				if (swRelative > 0) {
+					VectorXd yyy;
+					ResampleY(x, y, x0, yyy);
+					
+					double mean = abs(y0.mean());
+					if (mean > 0)
+						rmse << RMSE(yyy, y0)/mean;
+					else
+						rmse << Null;
+					
+					VectorXd rr, lags;
+					XCorr(yyy, y0, rr, lags, 'c');
+					if (rr.size() == 0)
+						xcorr << Null;
+					else	
+						xcorr << rr.maxCoeff();
+				}
 			}
 		} else if (str.StartsWith("A∞")) {
 			if (ainf.size() == 0)

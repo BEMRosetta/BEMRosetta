@@ -617,7 +617,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	if (!bat.Open(fileBat))
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
 	bat << "echo Start: \%date\% \%time\% > time.txt\n";
-	bat << Format("%s -orca -numtries 5 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, name + ".wave.yml", name + ".flex.yml");
+	bat << Format("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, name + ".wave.yml", name + ".flex.yml");
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 	
 	FileOut	out;

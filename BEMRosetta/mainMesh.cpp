@@ -405,6 +405,8 @@ void MainBody::Init() {
 	menuProcess.butHull		  <<= THISBACK1(OnAddWaterSurface, 'r');
 	menuProcess.butHull.Tip(t_("Extracts underwater (wet) hull from a mesh"));
 	
+	menuProcess.meshRatio <<= 1;
+	menuProcess.meshRatio.Tip(t_("Ratio of generated mesh size to current mesh size"));
 	menuProcess.rat_x <<= 1;
 	menuProcess.rat_y <<= 1;
 	menuProcess.rat_z <<= 1;
@@ -1685,7 +1687,7 @@ void MainBody::OnAddWaterSurface(char c) {
 		WaitCursor waitcursor;
 		mainView.gl.Disable();
 	
-		Bem().AddWaterSurface(idx, c);
+		Bem().AddWaterSurface(idx, c, menuProcess.meshRatio);
 		
 		Body &nw = Last(Bem().surfs);
 		AddRow(nw);

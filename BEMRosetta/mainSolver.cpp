@@ -155,7 +155,7 @@ void MainSolver::Init() {
 		
 		save.symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
 		save.symY.Enable(solver != Hydro::BEMROSETTA_H5);
-		save.numThreads.Enable(!(isNemoh || solver == Hydro::CAPYTAINE || solver == Hydro::CAPYTAINE_PY || solver == Hydro::BEMROSETTA_H5));
+		save.numThreads.Enable(!(isNemoh || solver == Hydro::CAPYTAINE || solver == Hydro::BEMROSETTA_H5));
 		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::ORCAWAVE_YML);
 		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS);
 		save.numSplit.Enable(isNemoh && save.opSplit);
