@@ -22,6 +22,17 @@ String Wamit::Load(String file, Function <bool(String, int)> Status) {
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
 			if (!Load_out(fileout, Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
+			
+			String filefrc = ForceExtSafer(file, ".frc");
+			if (FileExists(filefrc)) {
+				BEM::Print("\n- " + Format(t_("Force Control file .frc file '%s'"), GetFileName(filefrc)));
+				try {
+					if (!Load_frc2(filefrc))
+						BEM::Print(S(": ** frc ") + t_("Not found") + "**");
+				} catch  (Exc e) {
+					BEM::Print(S(": ** frc ") + t_("Only supported .frc alternative form 2") + "**");
+				}
+			}
 		} else if (S(".mcn.hdf").Find(ext) >= 0) {
 			FindFile ff(AFX(GetFileDirectory(file), "*.out"));
 			if (!ff)
@@ -151,7 +162,7 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	}
 	if (dt.Nh > 0 && dt.Nf > 0) {
 		BEM::Print("\n- " + Format(t_("Potential Control file '%s'"), GetFileName(fileext = ForceExt(file, ".pot"))));
-		Save_POT(fileext, false, false, false);
+		Save_POT(fileext, false, false, false, UArray<Body>());
 	}
 	if (IsLoadedA() && IsLoadedB()) {
 		BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(fileext = ForceExt(file, ".1"))));
@@ -1653,7 +1664,7 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout, bool
 		throw Exc(in.Str() + "\n"  + Format(t_("The files read have different number of frequencies.\nIn the previous is %d, in this one is %d"), dt.Nf, Nf));
 	dt.Nf = Nf;
 	
-	if (dt.Nb == 0 || dt.Nf < 2)
+	if (dt.Nb == 0 || dt.Nf < 1)
 		throw Exc(in.Str() + "\n"  + Format(t_("Wrong format in Wamit file '%s'"), dt.file));
 	
 	
@@ -1663,7 +1674,6 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int iperout, bool
 	
 	if (!dt.w.IsEmpty()) {
 		UVector<double> rw = clone(w);		ReverseX(rw);
-		//UVector<double> rT = clone(T);		ReverseX(rT);
 		if (!CompareRatio(dt.w, w, 0.01) && !CompareRatio(dt.w, rw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different frequencies.\nIn the previous has %s,\nin this one has %s"), ToString(dt.w), ToString(w)));
 	}
@@ -2290,7 +2300,7 @@ void Wamit::Save_FRC(String fileName, bool force1st, bool withQTF) const {
 	out << "0 % NFIELD_ARRAYS";
 }
 
-void Wamit::Save_POT(String fileName, bool withMesh, bool x0z, bool y0z) const {
+void Wamit::Save_POT(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	String folder = GetFileFolder(fileName);
 	
 	FileOut out(fileName);
@@ -2329,8 +2339,11 @@ void Wamit::Save_POT(String fileName, bool withMesh, bool x0z, bool y0z) const {
 	}
 	if (withMesh) {
 		UArray<Body> msh = clone(dt.msh);
-		for (int ib = 0; ib < dt.Nb; ++ib) 
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			if (lids.size() > ib) 
+				msh[ib].dt.under.Append(lids[ib].dt.mesh);
 			msh[ib].dt.under.Translate(-msh[ib].dt.c0.x, -msh[ib].dt.c0.y, -msh[ib].dt.c0.z);	
+		}
 		int nNodes, nPanels;
 		Body::SaveAs(msh, names, Body::WAMIT_GDF, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
 			dt.w, dt.head, false, false, dt.h, Null);
@@ -2343,15 +2356,17 @@ void Wamit::Save_Config(String folder, int numThreads) const {
 	if (!file)
 		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
 	
+	String wamitFolder = GetFileFolder(Bem().wamitPath);
+	
 	file << "! Generic configuration file:  config.wam\n"
  		<< " RAMGBMAX=4\n"
  		<< " NCPU=" << numThreads << "\n"
-  		<< " USERID_PATH=c:\\wamitv7   (directory for *.exe, *.dll, and userid.wam)\n"
-  		<< " LICENSE_PATH=c:\\wamitv7\\license\n"
+  		<< " USERID_PATH=" << wamitFolder << "   (directory for *.exe, *.dll, and userid.wam)\n"
+  		<< " LICENSE_PATH=" << AFX(wamitFolder, "license") << "\n"
   	;
 }
 
-void Wamit::Save_CFG(String fileName, bool withQTF) const {
+void Wamit::Save_CFG(String fileName, bool withQTF, bool lid) const {
 	FileOut out(fileName);
 	if (!out)
 		throw Exc(Format(t_("Problem creating '%s' file"), fileName));
@@ -2373,8 +2388,12 @@ void Wamit::Save_CFG(String fileName, bool withQTF) const {
  		<< " MAXITT = 50\n";
  	if (withQTF)
 		out << " I2ND = 1\n";
- 	if (!isUnderWater)
- 		out << " IRR = 3\n";
+ 	if (!isUnderWater) {
+ 		if (lid)
+ 			out << " IRR = 1\n";
+ 		else
+ 			out << " IRR = 3\n";
+ 	}
  	out << " ILOG = 1\n"
  		<< " ISOLVE = 1\n"
  		<< " IALTFRC = 2\n"
@@ -2396,7 +2415,7 @@ void Wamit::Save_Fnames(String folder) const {
 		 << folderName << ".frc";
 }
 
-void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const {
+void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 
@@ -2405,9 +2424,9 @@ void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool wi
 	
 	String folderName = GetFileTitle(folder);
 	
-	Save_POT(AFX(folder, folderName + ".pot"), true, x0z, y0z);
+	Save_POT(AFX(folder, folderName + ".pot"), true, x0z, y0z, lids);
 	Save_FRC(AFX(folder, folderName + ".frc"), true, withQTF);
-	Save_CFG(AFX(folder, folderName + ".cfg"), withQTF);
+	Save_CFG(AFX(folder, folderName + ".cfg"), withQTF, !lids.IsEmpty());
 	
 	String fileBat = AFX(folder, "Wamit_bat.bat");		
 	FileOut bat(fileBat);

@@ -198,8 +198,6 @@ typedef struct {
     TObjectName ObjectName;
 } TObjectInfo;
 
-typedef double TVector[3];
-
 typedef struct {
     int Size;
     TVector EnvironmentPos;
@@ -725,20 +723,28 @@ public:
 		if (!StringToWide(owr, wcs))
 			throwError("StringToWide SaveData");
 
-		LoadDiffractionResults(wave, wcs, &status);
-		if (status != 0)
-			throwError("LoadDiffractionResults");					
+		String errorStr;
+		int numTry = numTries;
+		do {
+			LoadDiffractionResults(wave, wcs, &status);
+			if (status == 0)
+				break;
+			errorStr = GetErrorString();
+			if (errorStr.Find("license") < 0)
+				break;
+			numTry--;
+			Sleep(200);
+			errorStr.Clear();
+		} while (numTry > 0);
+		if (!errorStr.IsEmpty())
+			throw Exc(errorStr);
 	}
-		
+
 	void SaveWaveResults(String owryml) {
 		if (!dll && !FindInit())
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
-		if (!wave) {
-			int status;
-			CreateDiffraction(&wave, &status);
-			if (status != 0)
-				throwError("CreateDiffraction");
-		}
+		if (!wave) 
+			throw Exc("No wave data loaded");
 		
 		int status;
 		LPCWSTR wcs;
@@ -776,7 +782,7 @@ public:
 		}
 	}
 	
-	void LoadParameters(Hydro &hy);
+	void LoadParameters(Hydro &hy, const Point3D &pos);
 	
 	void SetThreadCount(int nth) {
 		if (!dll && !FindInit())
@@ -874,6 +880,20 @@ public:
 		}
 	}
 	
+	bool IsWaveLoaded() {
+		if (!dll && !FindInit())
+			return false;
+		return wave;
+	}
+	
+	bool IsFlexLoaded() {
+		if (!dll && !FindInit())
+			return false;
+		return flex;
+	}
+	
+	void SetNumTries(int num)		{numTries = num;}
+		
 	String GetDLLPath() const		{return dllFile;}	
 	static Function<bool(String, int, const Time &)> WhenWave;
 	static Function<bool(String)> WhenPrint;
@@ -883,6 +903,7 @@ public:
 private:
 	Dl dll;
 	String dllFile;
+	int numTries = 10;
 	
 	HINSTANCE wave = 0, flex = 0;
 	
@@ -898,6 +919,7 @@ private:
 	void (*CalculateDiffraction)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
 	void (*LoadDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
 	void (*SaveDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*TranslateDiffractionOutput)(HINSTANCE handle, int OutputType, int OutputSize, void *lpOutput, const TVector *lpReportingOrigins, int *status);
 	void (*RunSimulation)(HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *par, int *status);
 	void (*CalculateStatics)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
 	void (*LoadSimulation)(HINSTANCE handle, LPCWSTR wcs, int *status);

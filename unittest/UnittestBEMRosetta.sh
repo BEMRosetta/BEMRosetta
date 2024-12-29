@@ -8,7 +8,7 @@ cwd=$(pwd)
 
 echo "Compiling BEMRosetta_cl"
 umk BEMRosetta BEMRosetta_cl CLANG_17 -r +BEMR_CL,SHARED ./.test/bemrosetta_cl
-umk BEMRosetta BEMRosetta_cl CLANG 	  -r +BEMR_CL,SHARED ./.test/bemrosetta_cl
+# umk BEMRosetta BEMRosetta_cl CLANG 	  -r +BEMR_CL,SHARED ./.test/bemrosetta_cl
 
 echo "Testing BEMRosetta_cl"
 ./.test/bemrosetta_cl -paramfile TestBEMRosetta_CL-mesh.txt
@@ -18,7 +18,7 @@ echo "Testing BEMRosetta_cl"
 
 echo "Compiling BEMRosetta"
 umk BEMRosetta BEMRosetta    CLANG_17 -r +GUI,SHARED 	  ./.test/bemrosetta
-umk BEMRosetta BEMRosetta    CLANG 	  -r +GUI,SHARED     ./.test/bemrosetta
+# umk BEMRosetta BEMRosetta    CLANG 	  -r +GUI,SHARED     ./.test/bemrosetta
 
 rm ./.test/TurbSim2.bts
 rm ./.test/hello.*

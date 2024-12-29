@@ -762,7 +762,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			for (int i = 1; i < left.dataFast.size(); ++i) 
 				maxTimeStart = max(maxTimeStart, left.dataFast[i].GetTimeStart());
 			double numEditStart = StringToSeconds(String(~editStart));
-			if (~editStart == "-") 
+			if (~editStart == "-" || ~editStart == "")  
 				timeStart = maxTimeStart;
 			else {
 				if (!IsNull(numEditStart)) {
@@ -779,7 +779,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 				minTimeEnd = min(minTimeEnd, left.dataFast[i].GetTimeEnd());
 			double numEditEnd  = StringToSeconds(String(~editEnd));
 			timeEnd = numEditEnd;
-			if (~editEnd == "-") 
+			if (~editEnd == "-" || ~editEnd == "") 
 				timeEnd = minTimeEnd;
 			if (!IsNull(numEditEnd)) {
 				if (numEditEnd < 0)

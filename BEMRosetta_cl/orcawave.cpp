@@ -43,15 +43,11 @@ void OrcaWave::Load_OWR() {
 	orca.LoadWaveResults(fileName);
 	
 	dt.solver = Hydro::ORCAWAVE_OWR;
-	
 	dt.dimen = true;
-		
 	dt.x_w = dt.y_w = 0;
-	
 	dt.Nb = dt.Nf = dt.Nh = Null;
 	
-	orca.LoadParameters(*this);
-	
+	orca.LoadParameters(*this, Null);
 }
 #endif
 

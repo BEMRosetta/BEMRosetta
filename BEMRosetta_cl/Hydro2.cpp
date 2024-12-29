@@ -2278,16 +2278,12 @@ double Hydro::Tdofw(int ib, int idf) const {
 	if (c == 0)
 		return Null;
 	double m = dt.msh[ib].dt.M(idf, idf);
-	VectorXd nw(dt.w.size());
+	VectorXd delta(dt.w.size());
 	for (int ifr = 0; ifr < dt.w.size(); ++ifr) {
 		double a = A_dim(ifr, ib*6+idf, ib*6+idf);
-		double d = (m + a)/c;
-		if (d < 0)
-			return Null;
-		nw[ifr] = 1/sqrt(d); 
+		double d = c/(m + a);
+		delta[ifr] = sqr(dt.w[ifr]) - d; 	// w^2 = C/(m + A(w)) To allow better continuity if m + A < 0
 	}
-	VectorXd delta = Get_w() - nw;
-	
 	UVector<double> zeros; 
 	ZeroCrossing(Get_w(), delta, true, true, zeros);
 	if (zeros.IsEmpty())
@@ -2346,7 +2342,7 @@ void Hydro::GetPotentialsIncident() {
 							cs = exp(k*p.z);
 						double ex = k*(p.x*cosrad + p.y*sinrad);
 													
-						dt.pots_inc_bmr[ib][ip][ih][ifr] = i<double>()*g_w*cs*std::complex<double>(cos(ex), -sin(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))  Wamit User Manual 7.4 (15.2)
+						dt.pots_inc_bmr[ib][ip][ih][ifr] = i<double>()*g_w*cs*std::complex<double>(cos(ex), -sin(ex));// Φ = i g/ω cs (cos(ex)-isin(ex))  Wamit User Manual 7.4 (15.3)
 					}
 				}
 			}

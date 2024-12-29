@@ -553,7 +553,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 }
 
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids) {
+			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) {
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
 		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z);
 	else if (solver == Hydro::CAPYTAINE_PY)
@@ -565,7 +565,7 @@ void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads
 	else if (solver == Hydro::AQWA_DAT)
 		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, withQTF, x0z, y0z);
 	else if (solver == Hydro::WAMIT)
-		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, withPotentials, withQTF, x0z, y0z);
+		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, withPotentials, withQTF, x0z, y0z, lids);
 	else if (solver == Hydro::BEMROSETTA_H5) {
 		dt.solver = BEMROSETTA_H5;
 		if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) 
@@ -723,7 +723,43 @@ VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const 
 	
 	return Fwh0.transpose()*m.inverse();
 }
-	
+
+void Hydro::GetC() {
+	if (dt.Nf == 0 || dt.A.size() < dt.Nb*6)
+		throw Exc(t_("Insufficient data to get RAO: Added mass is required"));	
+
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		if (dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO: Inertia matrix is required"));   
+	}
+			      
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		const MatrixXd &M_ = dt.msh[ib].dt.M;
+		int num = dt.Nh * dt.Nf;
+		Eigen::MatrixXd X(6, num);
+    	Eigen::MatrixXd F(6, num);
+		int ii = 0;
+		for (int ih = 0; ih < dt.Nh; ++ih) {	
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+				VectorXd X0 = RAO_(false, dt.rao, ih, ifr, ib).unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x.real() : 0;});
+				VectorXd KX = GetC_KX(dt.w[ifr], A_mat(false, ifr, ib, ib), F_(false, dt.ex, ih, ifr, ib), X0, M_);
+				X.col(ii) = X0.transpose();
+        		F.col(ii) = KX.transpose();
+				ii++;
+			}
+		}
+		const double lambda = 0.1;
+		dt.msh[ib].dt.C = F * X.transpose() * (X * X.transpose() + lambda * Eigen::MatrixXd::Identity(6, 6)).inverse();
+	}
+}
+
+VectorXd Hydro::GetC_KX(double w, const MatrixXd &Aw, const VectorXcd &Fwh, const VectorXd &X0, const MatrixXd &M) {
+	MatrixXd Aw0  = Aw .unaryExpr([](double x){return IsNum(x) ? x : 0;});		// Replaces Null with 0
+	VectorXd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x.real() : 0;});
+			
+	return Fwh0 + sqr(w)*(M + Aw0)*X0;
+}
+		
 void Hydro::InitAinf_w() {
 	dt.Ainf_w.SetCount(dt.Nb*6); 			
     for (int i = 0; i < dt.Nb*6; ++i) {

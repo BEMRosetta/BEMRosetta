@@ -481,8 +481,17 @@ String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 			throw Exc(t_("Stop by user"));
 		
 		UVector<String> data = Split(in.GetLine(), separator, repetition);
-		for (int i = 0; i < min(numCol, data.size()); ++i) 
-			dataOut[i] << ScanDouble(data[i], &endptr, decimalSign == ',');
+		for (int i = 0; i < min(numCol, data.size()); ++i) {
+			String str = ToLower(data[i]);
+			if (str == "true")
+				dataOut[i] << 1;
+			else if (str == "false")
+				dataOut[i] << 0;
+			else if (str == "zero")
+				dataOut[i] << 0;
+			else
+				dataOut[i] << ScanDouble(data[i], &endptr, decimalSign == ',');
+		}
 		line++;
 	}
 		

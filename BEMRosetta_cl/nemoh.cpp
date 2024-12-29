@@ -284,8 +284,8 @@ bool Nemoh::Load_Cal(String fileName) {
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of frequencies %s"), f.GetText(0)));
 	if (minF < 0)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect frequency %s"), f.GetText(1)));
-	if (maxF == minF)
-		throw Exc(in.Str() + "\n"  + Format(t_("Minimum frequency %s has to be different than maximum frequency %s"), f.GetText(1), f.GetText(2)));	
+	//if (maxF == minF)
+	//	throw Exc(in.Str() + "\n"  + Format(t_("Minimum frequency %s has to be different than maximum frequency %s"), f.GetText(1), f.GetText(2)));	
 	//if (maxF < minF)
 	//	throw Exc(in.Str() + "\n"  + Format(t_("Minimum frequency %s has to be lower than maximum frequency %s"), f.GetText(1), f.GetText(2)));	
 	

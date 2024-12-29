@@ -142,6 +142,7 @@ bool Orca::Init(String _dllFile) {
 	CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
 	LoadDiffractionResults = DLLGetFunction(dll, void, C_LoadDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
 	SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
+	TranslateDiffractionOutput = DLLGetFunction(dll, void, C_TranslateDiffractionOutput, (HINSTANCE handle, int OutputType, int OutputSize, void *lpOutput, const TVector *lpReportingOrigins, int *status));	
 	CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
 	RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *status));
 	LoadSimulation		   = DLLGetFunction(dll, void, C_LoadSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
@@ -354,8 +355,8 @@ String Orca::GetString(HINSTANCE handle, const wchar_t *name, int id) {
 		throwError(Format("Load GetDataString 2 %s", name));	
 	return WideToString(wcs, len);
 }
-		
-void Orca::LoadParameters(Hydro &hy) {
+
+void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	int sz, wrongsz;
 	
 	OrcaFactors factor;	
@@ -367,6 +368,7 @@ void Orca::LoadParameters(Hydro &hy) {
 	factor.Update();
 
 	hy.dt.symX = hy.dt.symY = false;
+	hy.dt.len = 1;
 	
 	hy.dt.g = GetDouble(wave, L"g")*factor.len;
 
@@ -386,10 +388,6 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotAngularFrequencies, &sz, hy.dt.w.begin()))
 		throwError("Load dotAngularFrequencies 2");	
 		
-	/*hy.dt.dt.T.SetCount(hy.dt.dt.Nf);
-	for (int i = 0; i < hy.dt.dt.Nf; ++i)	
-		hy.dt.dt.T[i] = 2*M_PI/hy.dt.dt.w[i];	*/
-	
 	if (GetDiffractionOutput(wave, dotHeadings, &sz, NULL))
 		throwError("Load dotHeadings");	
 	
@@ -402,6 +400,15 @@ void Orca::LoadParameters(Hydro &hy) {
 		throwError("Load dotHydrostaticResults");			
 	
 	hy.dt.Nb = GetInt(wave, L"NumberOfIncludedBodies");
+	
+	Buffer<TVector> origins(hy.dt.Nb);
+	if (!IsNull(c0)) {
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+			origins[ib][0] = c0.x;
+			origins[ib][1] = c0.y;
+			origins[ib][2] = c0.z;
+		}	
+	}
 	
 	if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo))
 		throwError("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match");			
@@ -432,6 +439,9 @@ void Orca::LoadParameters(Hydro &hy) {
 				hy.dt.msh[ib].dt.M(r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
 			}
 		}
+		if (!IsNull(c0)) 
+			Surface::TranslateInertia66(hy.dt.msh[ib].dt.M, hy.dt.msh[ib].dt.cg, Point3D(0,0,0), c0);
+		
 		hy.dt.msh[ib].dt.name = FormatInt(ib+1);
 		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
 	}
@@ -448,6 +458,13 @@ void Orca::LoadParameters(Hydro &hy) {
 		MultiDimMatrixRowMajor<double> a(hy.dt.Nf, 6*hy.dt.Nb, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
 			throwError("Load dotAddedMass_Radiation 2");		
+		
+		if (!IsNull(c0)) {
+			int status;
+			TranslateDiffractionOutput(wave, type, sz, a.begin(), origins.begin(), &status);
+			if (status != 0)
+				throwError("Load dotAddedMass_Radiation 3");
+		}
 		
 		for (int r = 0; r < 6*hy.dt.Nb; ++r)
 			for (int c = 0; c < 6*hy.dt.Nb; ++c)
@@ -468,6 +485,13 @@ void Orca::LoadParameters(Hydro &hy) {
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, a.begin()))
 		throwError("Load dotInfiniteFrequencyAddedMass 2");		
 	
+	if (!IsNull(c0)) {
+		int status;
+		TranslateDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, sz, a.begin(), origins.begin(), &status);
+		if (status != 0)
+			throwError("Load dotInfiniteFrequencyAddedMass 3");
+	}
+		
 	hy.dt.Ainf.resize(6*hy.dt.Nb, 6*hy.dt.Nb);
 	for (int r = 0; r < 6*hy.dt.Nb; ++r)
 		for (int c = 0; c < 6*hy.dt.Nb; ++c)
@@ -489,6 +513,13 @@ void Orca::LoadParameters(Hydro &hy) {
 		MultiDimMatrixRowMajor<TComplex> a(hy.dt.Nh, hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
 			throwError("Load dotLoadRAOs 2");		
+		
+		if (!IsNull(c0)) {
+			int status;
+			TranslateDiffractionOutput(wave, type, sz, a.begin(), origins.begin(), &status);
+			if (status != 0)
+				throwError("Load dotLoadRAOs 3");
+		}		
 		
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 			for (int idf = 0; idf < 6; ++idf) 
@@ -679,7 +710,12 @@ void Orca::LoadParameters(Hydro &hy) {
 	hy.dt.msh.SetCount(hy.dt.Nb);
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
-		hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
+		if (IsNull(c0))
+			hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
+		else {
+			hy.dt.msh[ib].dt.c0 = c0;
+			hy.GetC();
+		}
 	}
 	
 	UVector<int> panelId(Np), panelIb(Np);

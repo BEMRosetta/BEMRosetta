@@ -883,10 +883,11 @@ LAYOUT(SaveQTF, 300, 120)
 	ITEM(Upp::Label, dv___6, SetLabel(t_("Please choose the QTF headings to save")).SetFont(Upp::StdFont().Bold()).LeftPosZ(8, 232).TopPosZ(4, 19))
 END_LAYOUT
 
-LAYOUT(CompareParameters, 268, 236)
+LAYOUT(CompareParameters, 516, 236)
 	ITEM(Upp::ArrayCtrl, list, HSizePosZ(4, 4).VSizePosZ(24, 24))
 	ITEM(Upp::Label, dv___1, SetLabel(t_("Parameters to compare series")).LeftPosZ(4, 156).TopPosZ(0, 19))
 	ITEM(Upp::Switch, swRelative, SetLabel(t_("Absolute\nRel. first\nRel. last")).LeftPosZ(4, 188).BottomPosZ(4, 16))
 	ITEM(Upp::Option, opMinRange, SetLabel(t_("Fit to min. range")).LeftPosZ(196, 108).BottomPosZ(4, 16))
+	ITEM(Upp::Option, opNormalize, SetLabel(t_("Normalize")).LeftPosZ(308, 72).BottomPosZ(4, 16))
 END_LAYOUT
 

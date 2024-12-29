@@ -247,10 +247,15 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n";
 	Cout() << "\n" << t_("-orca                           # The next commands are for OrcaFlex handling (Required to be installed)");
 	Cout() << "\n" << t_("-isAvailable                    # Test if OrcaFLEX is installed and the license is available");
-	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-numtries <num>                 # Number <num> of attempts to connect to the license");
 	Cout() << "\n" << t_("-numthread <num>                # Set the number of threads for OrcaWave");
 	Cout() << "\n" << t_("-timelog <num>                  # Set minimum clock seconds per each OrcaFlex simulation log");
+	
+	Cout() << "\n" << t_("-loadwave <from>                # Load OrcaWave model <from>");
+	Cout() << "\n" << t_("-translatewave <x> <y> <z>      # Translate OrcaWave model to <x> <y> <z> saved as a new bem case");
+	Cout() << "\n" << t_("-savewave <to>                  # Save OrcaWave model <to>");
+	Cout() << "\n" << t_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results in <to>");
+	
 	Cout() << "\n" << t_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results in <to>");
 	Cout() << "\n" << t_("-ls -loadSim <sim>              # Load OrcaFlex simulation in <sim>");
 	Cout() << "\n" << t_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference system for outputs");
@@ -1698,7 +1703,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							String to = command[ic];
 							
 							int numTry = numOrcaTries;
-							//String errorStr;
 							do {
 								try {
 									orca.LoadWave(from);
@@ -1722,6 +1726,86 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 								BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
 							}
+						} else if (param == "-loadwave") {
+							if (!dllOrcaLoaded) {
+								if (orca.FindInit()) 
+									dllOrcaLoaded = true;		
+							}
+							if (!dllOrcaLoaded)
+								throw Exc(t_("DLL not found"));
+									
+							CheckIfAvailableArg(command, ++ic, "-loadwave from");
+							String from = command[ic];
+							
+							int numTry = numOrcaTries;
+							do {
+								try {
+									orca.LoadWaveResults(from);
+									break;
+								} catch (Exc e) {
+									errorStr = e;
+									if (errorStr.Find("license") < 0)
+										break;
+									numTry--;
+									Sleep(200);
+									errorStr.Clear();
+								}
+								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+							} while (numTry > 0);
+							
+							if (!IsEmpty(errorStr))
+								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+							else {
+								BEM::Print("\n" + Format(t_("Diffraction data loaded from '%s'"), from));
+							}
+						} else if (param == "-translatewave") {
+							if (!orca.IsWaveLoaded())
+								throw t_("OrcaFlex wave model not loaded");
+							
+							Point3D pos;
+							
+							CheckIfAvailableArg(command, ++ic, "-translatewave x");
+							pos.x = ScanDouble(command[ic]);
+							if (IsNull(pos.x))
+								throw Exc(Format(t_("Invalid position %s"), command[ic]));							
+							CheckIfAvailableArg(command, ++ic, "-translatewave y");
+							pos.y = ScanDouble(command[ic]);
+							if (IsNull(pos.y))
+								throw Exc(Format(t_("Invalid position %s"), command[ic]));
+							CheckIfAvailableArg(command, ++ic, "-translatewave z");
+							pos.z = ScanDouble(command[ic]);
+							if (IsNull(pos.z))
+								throw Exc(Format(t_("Invalid position %s"), command[ic]));
+
+							bem.hydros.Add();
+							bemid = bem.hydros.size() - 1;
+							Hydro &hy = bem.hydros[bemid];
+							
+							try {
+								orca.LoadParameters(hy, pos);
+							} catch (Exc e) {
+								errorStr = e;
+							}
+							if (!IsEmpty(errorStr))
+								throw Exc(Format(t_("Problem translating results to %f, %f, %f: %s"), pos.x, pos.y, pos.z, errorStr));
+							else
+								BEM::Print("\n" + Format(t_("Diffraction results translated to %f, %f, %f and loaded as new bem case"), pos.x, pos.y, pos.z));
+						} else if (param == "-savewave") {
+							if (!orca.IsWaveLoaded())
+								throw t_("OrcaFlex wave model not loaded");
+								
+							CheckIfAvailableArg(command, ++ic, "-savewave to");
+							String to = command[ic];
+
+							try {
+								orca.SaveWaveResults(to);
+							} catch (Exc e) {
+								errorStr = e;
+							}
+							if (!IsEmpty(errorStr))
+								throw Exc(Format(t_("Problem saving results to %s: %s"), to, errorStr));
+							else
+								BEM::Print("\n" + Format(t_("Diffraction results saved to %s"), to));		
 						} else if (param == "-rf" || param == "-runflex") {
 							if (!dllOrcaLoaded) {
 								if (orca.FindInit()) 
@@ -1736,7 +1820,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							String to = command[ic];
 							
 							int numTry = numOrcaTries;
-							//String errorStr;
 							do {
 								try {
 									orca.LoadFlex(from);
@@ -1752,7 +1835,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
-								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+								throw Exc(Format(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
 								bool saved = false;
 								try {

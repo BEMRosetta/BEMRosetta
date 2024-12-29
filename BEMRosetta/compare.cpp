@@ -47,12 +47,15 @@ void CompareParameters::Init(ScatterDraw &scatter, SplitterButton &splitter) {
 		for (CompareParameters *c : plist) {
 			c->swRelative <<= ~swRelative;
 			c->opMinRange <<= ~opMinRange;
+			c->opNormalize <<= ~opNormalize;
 			c->Load();
 		}
 	};
 	
 	swRelative.WhenAction = [=]() {Up();};
 	opMinRange.WhenAction = [=]() {Up();};
+	opNormalize.WhenAction = [=]() {Up();};
+	opNormalize <<= true;
 }
 
 CompareParameters::~CompareParameters() {
@@ -66,6 +69,7 @@ void CompareParameters::Init(Hydro::DataToShow _dataToShow) {
 	
 	swRelative.Enable();
 	opMinRange.Enable();
+	opNormalize.Enable();
 }
 
 void CompareParameters::Load() {
@@ -101,11 +105,12 @@ void CompareParameters::Load() {
 	list.AddColumn(t_("Name"), 20);
 	list.AddColumn(t_("RMS"), 10);
 	if (swRelative > 0) {
+		list.AddColumn(t_("MAE"), 10);
 		list.AddColumn(t_("RMSE"), 10);
 		list.AddColumn(t_("Xcorr"), 10);
 	}
 	
-	UVector<double> rms, rmse, xcorr, ainf, a0;
+	UVector<double> rms, mae, rmse, xcorr, ainf, a0;
 	UVector<String> leg;
 	VectorXd x0, y0;		// Reference series
 
@@ -135,6 +140,7 @@ void CompareParameters::Load() {
 			
 			if ((swRelative == 1 && i == 0) || (swRelative == 2 && i == scatter.GetCount() - 1)) {
 				rms << 1;
+				mae << 0;
 				rmse << 0;
 				xcorr << 1;	
 			} else {
@@ -145,7 +151,15 @@ void CompareParameters::Load() {
 					VectorXd yyy;
 					ResampleY(x, y, x0, yyy);
 					
-					double mean = abs(y0.mean());
+					double mean = 1;
+					if (~opNormalize)
+						mean =  abs(y0.mean());
+					
+					if (mean > 0)
+						mae << MAE(yyy, y0)/mean;
+					else
+						mae << Null;
+					
 					if (mean > 0)
 						rmse << RMSE(yyy, y0)/mean;
 					else
@@ -176,7 +190,7 @@ void CompareParameters::Load() {
 		int col = 0;
 		list.Set(row, col++, leg[row]);	
 		
-		double _r = Null, _rm = Null, _x = Null, _ai = Null, _a0 = Null;
+		double _r = Null, _m = Null, _rm = Null, _x = Null, _ai = Null, _a0 = Null;
 		
 		if (swRelative == 0) {
 			_r = rms[row];	
@@ -186,6 +200,8 @@ void CompareParameters::Load() {
 				_a0 = a0[row];
 		} else if (swRelative == 1) {
 			_r = First(rms) != 0 ? rms[row]/First(rms) : Null;	
+			if (mae.size() > row) 
+				_m = mae[row];
 			if (rmse.size() > row) 
 				_rm = rmse[row];
 			if (xcorr.size() > row) 
@@ -196,6 +212,8 @@ void CompareParameters::Load() {
 				_a0 = First(a0) != 0 ? a0[row]/First(a0) : Null;
 		} else {// if (swRelative == 2)
 			_r = Last(rms) != 0 ? rms[row]/Last(rms) : Null;	
+			if (mae.size() > row) 
+				_m = mae[row];
 			if (rmse.size() > row) 
 				_rm = rmse[row];
 			if (xcorr.size() > row) 
@@ -208,6 +226,8 @@ void CompareParameters::Load() {
 		
 		if (!IsNull(_r))
 			list.Set(row, col++, FDS(_r, 10, false));	
+		if (!IsNull(_m))
+			list.Set(row, col++, FDS(_m, 10, false));
 		if (!IsNull(_rm))
 			list.Set(row, col++, FDS(_rm, 10, false));
 		if (!IsNull(_x))

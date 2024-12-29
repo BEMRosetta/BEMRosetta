@@ -322,13 +322,13 @@ bool Hams::LoadHydrostatic(String fileName) {
 	return true;
 }
 
-void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const {
+void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids);
 	if (numCases > 1)
 		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids);
 }
 
-void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const {
+void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
 	UVector<int> valsf;
@@ -477,7 +477,7 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 }
 
 
-void Hams::Save_Settings(String folderInput, UArray<Body> &lids) const {
+void Hams::Save_Settings(String folderInput, const UArray<Body> &lids) const {
 	String fileName = AFX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())

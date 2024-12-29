@@ -504,7 +504,7 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 			throw Exc(t_("Cancelled by the user"));
 				
 		Body base = clone(base0);
-		UVector<Body> damaged;	// Handles a copy of the damaged bodies
+		UArray<Body> damaged;	// Handles a copy of the damaged bodies
 		base.cloneDamaged(damaged);
 			
 		base.Rotate(0, ToRad(angle), 0, dt.c0.x, dt.c0.y, dt.c0.z);
@@ -688,7 +688,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 	
 	auto Residual = [&](double roll, double pitch, double &resroll, double &respitch) {
 		Body base = clone(*this);		// Handles a copy of the body
-		UVector<Body> damaged;	// Handles a copy of the damaged bodies
+		UArray<Body> damaged;	// Handles a copy of the damaged bodies
 		base.cloneDamaged(damaged);
 		
 		base.Rotate(roll, pitch, 0, dt.c0.x, dt.c0.y, dt.c0.z);

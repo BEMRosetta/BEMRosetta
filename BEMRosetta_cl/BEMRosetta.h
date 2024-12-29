@@ -51,13 +51,13 @@ public:
 	Body(const Body &msh) 				{Copy(msh);}
 	Body(const Body &msh, int) 			{Copy(msh);}
 	
-	virtual ~Body() {magic = 0;}
-	bool IsValid() {return magic == 0xB0DE;}
+	virtual ~Body() 		{magic = 0;}
+	bool IsValid()  		{return magic == 0xB0DE;}
 	
-	void Clear() 	{dt.mesh.Clear();}
-	bool IsEmpty() 	{return dt.mesh.IsEmpty();}
+	void Clear() 			{dt.mesh.Clear();}
+	bool IsEmpty() const 	{return dt.mesh.IsEmpty();}
 	
-	void cloneDamaged(UVector<Body> &damaged) {	// Points to a copy of the damaged bodies, to avoid moving the real ones
+	void cloneDamaged(UArray<Body> &damaged) {	// Points to a copy of the damaged bodies, to avoid moving the real ones
 		damaged.SetCount(cdt.damagedBodies.size());
 		for (int i = 0; i < cdt.damagedBodies.size(); ++i) {
 			if (cdt.damagedBodies[i]->IsValid()) {
@@ -864,7 +864,7 @@ public:
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, UArray<Body> &lids);
+		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids);
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -1046,6 +1046,8 @@ public:
 	void GetB_H(int &num);
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
+	void GetC();
+	VectorXd GetC_KX(double w, const MatrixXd &Aw, const VectorXcd &Fwh, const VectorXd &RAOre, const MatrixXd &M);
 	void InitAinf_w();
 	void GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void GetTranslationTo(const MatrixXd &to, bool force, Function <bool(String, int pos)> Status);
@@ -1327,7 +1329,7 @@ public:
 	bool Load_frc2(String fileName);
 	void Save_4(String fileName, bool force_T = false) const;
 	
-	void SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const;
+	void SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin);
@@ -1362,7 +1364,7 @@ protected:
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null) const;
 	void Save_789(String fileName, bool force_T, bool force_Deg) const;
 	void Save_FRC(String fileName, bool force1st, bool withQTF) const;
-	void Save_POT(String fileName, bool withMesh, bool x0z, bool y0z) const;
+	void Save_POT(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
 	void Save_AB(FileOut &out, int ifr) const;
@@ -1372,7 +1374,7 @@ protected:
 	
 	void Save_Fnames(String folder) const;
 	void Save_Config(String folder, int numThreads) const;
-	void Save_CFG(String fileName, bool withQTF) const;
+	void Save_CFG(String fileName, bool withQTF, bool lid) const;
 };
 
 class Hams : public Wamit {
@@ -1385,20 +1387,20 @@ public:
 	bool Load_HydrostaticBody(String fileName, double rhog);
 	
 	bool Load_ControlFile(String fileName);
-	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	UVector<String> Check() const;
 	
 	bool LoadHydrostatic(String fileName);
 
 private:
-	void SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, UArray<Body> &lids) const;
+	void SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
 	static void InMatrix(LineParser &f, MatrixXd &mat);
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, const UVector<double> &freqs,
 							int numThreads, bool remove_irr_freq) const;
-	void Save_Settings(String folderInput, UArray<Body> &lids) const;
+	void Save_Settings(String folderInput, const UArray<Body> &lids) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
 };
 
