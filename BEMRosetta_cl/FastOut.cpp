@@ -96,26 +96,30 @@ String FastOut::GetFileToLoad(String fileName) {
 	if (::GetFileName(fileName).Find(".MD") >= 0)
 		return String::GetVoid();
 	
-	String strOut = ForceExtSafer(fileName, ".out");
-	String strOutB = ForceExtSafer(fileName, ".outb");
-
-	bool exOut = FileExists(strOut);
-	bool exOutB = FileExists(strOutB);
-
-	if (exOut && !exOutB) 
-		return strOut;
-	else if (!exOut && exOutB) 
-		return strOutB;
-	else if (exOut && exOutB) {
-		Time tOut = FileGetTime(strOut);
-		Time tOutB = FileGetTime(strOutB);
-		if (abs(tOut - tOutB) < 5 || tOutB > tOut) 
-			return strOutB;
-		else 
+	String ext = GetFileExt(fileName);
+	if (ext == ".csv" || ext == ".txt" || ext == ".db" || ext == ".lis") {
+		if (FileExists(fileName))
+			return fileName;
+	} else if (ext == ".out" || ext == ".outb") {
+		String strOut = ForceExtSafer(fileName, ".out");
+		String strOutB = ForceExtSafer(fileName, ".outb");
+	
+		bool exOut = FileExists(strOut);
+		bool exOutB = FileExists(strOutB);
+	
+		if (exOut && !exOutB) 
 			return strOut;
+		else if (!exOut && exOutB) 
+			return strOutB;
+		else if (exOut && exOutB) {
+			Time tOut = FileGetTime(strOut);
+			Time tOutB = FileGetTime(strOutB);
+			if (abs(tOut - tOutB) < 5 || tOutB > tOut) 
+				return strOutB;
+			else 
+				return strOut;
+		}
 	}
-	if (FileExists(fileName))
-		return fileName;
 				
 	return "";
 }
@@ -213,7 +217,7 @@ String FastOut::LoadOut(String fileName, Function <bool(String, int)> Status) {
 	}
 
 	if (dataOut.IsEmpty()) 
-		return t_("File is opened but impossible to process"); 
+		return t_("Unknown .out format"); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
     	dataOut[i].SetCount(GetNumData());

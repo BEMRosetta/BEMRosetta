@@ -19,7 +19,7 @@ void MainTools::Init() {
 	Add(tab.SizePos());
 	
 	waveInfo.Init();
-	tab.Add(waveInfo.SizePos(), t_("Waves"));
+	tab.Add(waveInfo.SizePos(), t_("Waves calculator"));
 #ifdef PLATFORM_WIN32
 	orcaLicense.Init();
 	tab.Add(orcaLicense.SizePos(), t_("OrcaWave license"));

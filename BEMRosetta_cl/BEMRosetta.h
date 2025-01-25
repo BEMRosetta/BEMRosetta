@@ -259,7 +259,7 @@ class Hydro : public Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, 		  WAMIT_1_3, 					FAST_WAMIT, 				 	HAMS_WAMIT, HAMS, WADAM_WAMIT,   NEMOH,   NEMOHv115, NEMOHv3, SEAFEM_NEMOH,   AQWA,   AQWA_QTF,	AQWA_DAT,				  FOAMM,   DIODORE,		ORCAFLEX_YML,   CSV_MAT,    CSV_TABLE,    BEMIO_H5,		CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
+	enum BEM_FMT {WAMIT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE, BEMIO_H5, MATLAB, FAST_WAMIT, HAMS_WAMIT, HAMS, WADAM_WAMIT, NEMOH, NEMOHv115, NEMOHv3, SEAFEM_NEMOH, AQWA, AQWA_QTF, AQWA_DAT, FOAMM, DIODORE, ORCAFLEX_YML, CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
 #ifdef PLATFORM_WIN32	
 	ORCAWAVE_OWR, 
 #endif
@@ -296,6 +296,8 @@ public:
 		switch (dt.solver) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
+		case WAMIT_1_3_RAD:	return t_("Wamit.1.2.3");
+		case MATLAB:		return t_("Matlab.mat");
 		case WADAM_WAMIT: 	return t_("Wadam.Wamit");
 		case FAST_WAMIT: 	return t_("Wamit.FAST");
 		case NEMOH:			return t_("Nemoh v2");
@@ -334,6 +336,8 @@ public:
 		switch (dt.solver) {
 		case WAMIT: 		return t_("Wm.o");
 		case WAMIT_1_3: 	return t_("Wm.1");
+		case WAMIT_1_3_RAD:	return t_("Wm.1");
+		case MATLAB:		return t_("Mat.mat");
 		case WADAM_WAMIT: 	return t_("WDM");
 		case FAST_WAMIT: 	return t_("FST");
 		case NEMOH:			return t_("Nmh");

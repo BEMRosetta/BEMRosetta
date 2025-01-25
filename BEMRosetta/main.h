@@ -3,6 +3,7 @@
 #ifndef _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 #define _BEM_Rosetta_GUI_BEM_Rosetta_GUI_h
 
+#include <SysInfo/Crash.h>
 #include <BEMRosetta_cl/FastOut.h>
 #include "auxiliar.h"
 #include "FastScatter.h"
@@ -1810,6 +1811,7 @@ public:
 	String parameter;	
 	
 	MainBEM mainBEM;
+
 		
 private:
 	String lastTabS;

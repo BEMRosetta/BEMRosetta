@@ -7,6 +7,7 @@
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
+#include <SysInfo/Crash.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 
@@ -21,6 +22,7 @@ void MenuOptions::Init(BEM &_bem) {
 	
 	bem = &_bem;
 	butSave <<= butSave2 <<= THISBACK(OnSave);
+	butShowLog << []{EM().OpenLogWindow();};
 	
 	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = headingType.isMouseEnter = false;
 	

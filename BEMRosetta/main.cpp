@@ -15,7 +15,6 @@
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
-#include <SysInfo/Crash.h>
 
 
 using namespace Upp;
@@ -546,6 +545,14 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 GUI_APP_MAIN {
 #if defined(PLATFORM_WIN32) 
 	GetCrashHandler().Enable();
+	#ifndef flagDEBUG
+	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))
+		return;
+	InstallPanicMessageBox([](const char *title, const char *text) {
+		EM().Log(Format("%s: %s", title, text));
+		throw Exc(text);
+	});
+	#endif
 #endif
 	
 	const UVector<String>& command = CommandLine();
@@ -590,7 +597,8 @@ GUI_APP_MAIN {
 		}
 		main.Init();
 		main.OpenMain();
-		Ctrl::EventLoop(&main);
+		
+		Ctrl::EventLoop();
 		main.Close();
 	} catch (Exc e) {
 		errorStr = e;

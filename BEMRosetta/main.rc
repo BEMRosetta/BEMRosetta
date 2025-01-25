@@ -25,10 +25,10 @@ BEGIN
         BEGIN
             VALUE "Comments", "BEMRosetta"
             VALUE "CompanyName", "BEMRosetta"
-            VALUE "FileDescription", "Hydrodynamic coefficients viewer and converter for Boundary Element Method solvers"
+            VALUE "FileDescription", "BEMRosetta"
             VALUE "FileVersion", "00.01.00.0010"
             VALUE "InternalName", "BEMRosetta"
-            VALUE "LegalCopyright", "(C) 2021-2024, BEMRosetta, All rights reserved"
+            VALUE "LegalCopyright", "(C) 2021-2025, BEMRosetta, All rights reserved"
             VALUE "OriginalFilename", "BEMRosetta.exe"
             VALUE "ProductName", "BEMRosetta"
             VALUE "ProductVersion", "00.01.00.0010"
