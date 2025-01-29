@@ -23,6 +23,7 @@ void MenuOptions::Init(BEM &_bem) {
 	bem = &_bem;
 	butSave <<= butSave2 <<= THISBACK(OnSave);
 	butShowLog << []{EM().OpenLogWindow();};
+	labCrashMonitor.SetLabel(EM().IsInit() ? "On" : "Off");
 	
 	g.isMouseEnter = rho.isMouseEnter = dofType.isMouseEnter = headingType.isMouseEnter = false;
 	

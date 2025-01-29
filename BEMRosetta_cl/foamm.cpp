@@ -48,45 +48,35 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	dt.stsProcessor = "FOAMM by COER (http://www.eeng.nuim.ie/coer/)";
 	
 	if (loadCoeff) {
-		MatMatrix<double> w = mat.VarReadMat<double>("w");	
-		if (w.size() == 0)
+		if (!mat.Exist("w"))
 			throw Exc(S("\n") + t_("Vector w not found"));
+		mat.Get<double>("w", dt.w);	
 			
-		dt.Nf = w.size();
+		dt.Nf = dt.w.size();
 		
-		dt.w.SetCount(dt.Nf);
-		//dt.T.SetCount(dt.Nf);
-		//dt.dataFromW = true;
-		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
-			dt.w[ifr] = w[ifr];
-			//dt.T[ifr] = 2*M_PI/w[ifr];
-		}
-		
-		MatMatrix<double> A = mat.VarReadMat<double>("A");	
-		if (A.size() == 0)
-			BEM::Print(S("\n") + t_("Vector A not found"));
-		else {
-			if (dt.Nf != A.size())
-				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
-			dt.A[idf][jdf].setConstant(dt.Nf);	
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				dt.A[idf][jdf][ifr] = A[ifr];
-		}
+		if (!mat.Exist("A"))
+			throw Exc(S("\n") + t_("Vector A not found"));		
+		UVector<double> A;
+		mat.Get<double>("A", A);	
+		if (dt.Nf != A.size())
+			throw Exc(S("\n") + t_("Vectors w and A size does not match"));
+		dt.A[idf][jdf].setConstant(dt.Nf);	
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+			dt.A[idf][jdf][ifr] = A[ifr];
 	
-		MatMatrix<double> B = mat.VarReadMat<double>("B");	
-		if (B.size() == 0)
-			BEM::Print(S("\n") + t_("Vector B not found"));
-		else {
-			if (dt.Nf != B.size())
-				throw Exc(S("\n") + t_("Vectors w and A size does not match"));
-			dt.B[idf][jdf].setConstant(dt.Nf);	
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-				dt.B[idf][jdf][ifr] = B[ifr];
-		}
+		if (!mat.Exist("B"))
+			throw Exc(S("\n") + t_("Vector B not found"));		
+		UVector<double> B;
+		mat.Get<double>("B", B);	
+		if (dt.Nf != B.size())
+			throw Exc(S("\n") + t_("Vectors w and B size does not match"));
+		dt.B[idf][jdf].setConstant(dt.Nf);	
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+			dt.B[idf][jdf][ifr] = B[ifr];
 		
 		dt.msh[0].dt.name = "Body";
 		
-		double Mu = mat.VarRead<double>("Mu");
+		double Mu = mat.Get<double>("Mu");
 		if (!IsNull(Mu)) {
 			dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, 0);
 			dt.Ainf(idf, jdf) = Mu;
@@ -96,64 +86,58 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	Initialize_Sts();
 	Hydro::StateSpace &sts = dt.sts[idf][jdf];
 
-	MatMatrix<std::complex<double>> TFS = mat.VarReadMat<std::complex<double>>("TFSResponse");	
-	if (TFS.size() == 0)
-		BEM::Print(S("\n") + t_("Vector TFSResponse not found"));
-	else {
-		sts.TFS.SetCount(dt.Nf);
-		if (dt.Nf != TFS.size())
-			throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
-		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-			sts.TFS[ifr] = TFS[ifr];
-	}
+	if (!mat.Exist("TFSResponse"))
+		throw Exc(S("\n") + t_("Vector TFSResponse not found"));
+	UVector<std::complex<double>> TFS;
+	mat.Get<std::complex<double>>("TFSResponse", TFS);	
+	sts.TFS.SetCount(dt.Nf);
+	if (dt.Nf != TFS.size())
+		throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
+	for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+		sts.TFS[ifr] = TFS[ifr];
 	
-	MatMatrix<double> A_ss = mat.VarReadMat<double>("A_ss");	
-	if (A_ss.size() == 0)
-		BEM::Print(S("\n") + t_("Matrix A_ss not found"));
-	else {
-		sts.A_ss.setConstant(A_ss.GetRows(), A_ss.GetCols(), Null);
-		for (int r = 0; r < A_ss.GetRows(); ++r)
-			for (int c = 0; c < A_ss.GetCols(); ++c)
-				sts.A_ss(r, c) = A_ss(r, c);
-	}
+	if (!mat.Exist("A_ss"))
+		throw Exc(S("\n") + t_("Matrix A_ss not found"));
+	MatrixXd A_ss;
+	mat.Get("A_ss", A_ss);	
+	sts.A_ss.setConstant(A_ss.rows(), A_ss.cols(), Null);
+	for (int r = 0; r < A_ss.rows(); ++r)
+		for (int c = 0; c < A_ss.cols(); ++c)
+			sts.A_ss(r, c) = A_ss(r, c);
 	
-	MatMatrix<double> B_ss = mat.VarReadMat<double>("B_ss");	
-	if (B_ss.size() == 0)
-		BEM::Print(S("\n") + t_("Matrix B_ss not found"));
-	else {
-		sts.B_ss.setConstant(B_ss.GetRows(), Null);
-		for (int r = 0; r < B_ss.GetRows(); ++r)
-			sts.B_ss(r) = B_ss(r, 0);
-	}
+	if (!mat.Exist("B_ss"))
+		throw Exc(S("\n") + t_("Matrix B_ss not found"));
+	MatrixXd B_ss;
+	mat.Get("B_ss", B_ss);	
+	sts.B_ss.setConstant(B_ss.rows(), Null);
+	for (int r = 0; r < B_ss.rows(); ++r)
+		sts.B_ss(r) = B_ss(r, 0);
 
-	MatMatrix<double> C_ss = mat.VarReadMat<double>("C_ss");	
-	if (C_ss.size() == 0)
-		BEM::Print(S("\n") + t_("Matrix C_ss not found"));
-	else {
-		sts.C_ss.setConstant(C_ss.GetCols(), Null);
-		for (int c = 0; c < C_ss.GetCols(); ++c)
-			sts.C_ss(c) = C_ss(0, c);
-	}
+	if (!mat.Exist("C_ss"))
+		throw Exc(S("\n") + t_("Matrix C_ss not found"));
+	MatrixXd C_ss;
+	mat.Get("C_ss", C_ss);	
+	sts.C_ss.setConstant(C_ss.cols(), Null);
+	for (int c = 0; c < C_ss.cols(); ++c)
+		sts.C_ss(c) = C_ss(0, c);
 	
-	MatMatrix<double> ssFrequencies = mat.VarReadMat<double>("Frequencies");	
-	if (ssFrequencies.GetCols() == 0)
-		BEM::Print(S("\n") + t_("Matrix Frequencies not found"));
-	else {
-		sts.ssFrequencies.setConstant(ssFrequencies.GetCols(), Null);
-		for (int c = 0; c < ssFrequencies.GetCols(); ++c)
-			sts.ssFrequencies[c] = ssFrequencies(0, c);
-	}
+	if (!mat.Exist("Frequencies"))
+		throw Exc(S("\n") + t_("Matrix Frequencies not found"));
+	MatrixXd ssFrequencies;
+	mat.Get("Frequencies", ssFrequencies);	
+	sts.ssFrequencies.setConstant(ssFrequencies.cols(), Null);
+	for (int c = 0; c < ssFrequencies.cols(); ++c)
+		sts.ssFrequencies[c] = ssFrequencies(0, c);
 
-	MatMatrix<double> ssFreqRange = mat.VarReadMat<double>("FreqRange");	
-	if (ssFreqRange.GetCols() == 0)
-		BEM::Print(S("\n") + t_("Matrix FreqRange not found"));
-	else {
-		sts.ssFreqRange.setConstant(ssFreqRange.GetCols(), Null);
-		for (int c = 0; c < ssFreqRange.GetCols(); ++c)
-			sts.ssFreqRange[c] = ssFreqRange(0, c);
-	}
+	if (!mat.Exist("FreqRange"))
+		throw Exc(S("\n") + t_("Matrix FreqRange not found"));
+	MatrixXd ssFreqRange;
+	mat.Get("FreqRange", ssFreqRange);	
+	sts.ssFreqRange.setConstant(ssFreqRange.cols(), Null);
+	for (int c = 0; c < ssFreqRange.cols(); ++c)
+		sts.ssFreqRange[c] = ssFreqRange(0, c);
 
-	sts.ssMAE = mat.VarRead<double>("MAE");	
+	sts.ssMAE = mat.Get<double>("MAE");	
 	
 	dt.dimenSTS = true;	
 }
@@ -185,25 +169,25 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	int idf = ibody*6 + _idf;
 	int jdf = ibody*6 + _jdf;
 
-	MatMatrix<double> matA(dt.Nf, 1);
+	MatrixXd matA(dt.Nf, 1);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matA(ifr, 0) = A_dim(ifr, idf, jdf);
- 	if (!mat.VarWrite("A", matA))
+ 	if (!mat.Set("A", matA))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "A", file));
 
- 	if (!mat.VarWrite<double>("Mu", Ainf_dim(idf, jdf)))
+ 	if (!mat.Set<double>("Mu", Ainf_dim(idf, jdf)))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Mu", file));
  		 	
-	MatMatrix<double> matB(dt.Nf, 1);
+	MatrixXd matB(dt.Nf, 1);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matB(ifr, 0) = B_dim(ifr, idf, jdf);
-	if (!mat.VarWrite("B", matB))
+	if (!mat.Set("B", matB))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "B", file));
 	
-	MatMatrix<double> matw(1, dt.Nf);
+	MatrixXd matw(1, dt.Nf);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matw(0, ifr) = dt.w[ifr];
-	if (!mat.VarWrite("w", matw))
+	if (!mat.Set("w", matw))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "w", file));
 	
 	/*MatMatrix<double> matDof(1, 6);
@@ -220,34 +204,34 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	optionsVars << "Mode" << "Method" << "FreqRangeChoice" << "FreqChoice";
 	MatVar options("Options", 1, 1, optionsVars);
 	
-	options.VarWriteStruct<double>("Mode", 0);
-	options.VarWriteStruct<double>("Method", 0);
+	options.SetStruct<double>("Mode", 0);
+	options.SetStruct<double>("Method", 0);
 	//options.VarWriteStruct("FreqRangeChoice", "G");
 	//options.VarWriteStruct("FreqChoice", "G");
 	
-	MatMatrix<double> freqRangeChoice(1, 2);
+	MatrixXd freqRangeChoice(1, 2);
 	freqRangeChoice(0, 0) = from;
 	freqRangeChoice(0, 1) = to;
-	options.VarWriteStruct<double>("FreqRangeChoice", freqRangeChoice);
+	options.SetStruct("FreqRangeChoice", freqRangeChoice);
 
-	MatMatrix<double> freqChoice(1, freqs.size());
+	MatrixXd freqChoice(1, freqs.size());
 	for (int i = 0; i < freqs.size(); ++i) 
 		freqChoice(0, i) = freqs[i];
-	options.VarWriteStruct<double>("FreqChoice", freqChoice);
+	options.SetStruct("FreqChoice", freqChoice);
 	
 	UVector<String> optimVars;
 	optimVars << "InitCond" << "Tol" << "maxEval" << "maxIter" << "StepTol" << "ThresRel" << "ThresAbs";
 	MatVar optim("Optim", 1, 1, optimVars);
-	optim.VarWriteStruct<double>("InitCond", 50);
-	optim.VarWriteStruct<double>("Tol", 1E-5);
-	optim.VarWriteStruct<double>("maxEval", 1E3);
-	optim.VarWriteStruct<double>("maxIter", 200);
-	optim.VarWriteStruct<double>("StepTol", 1E-6);
-	optim.VarWriteStruct<double>("ThresRel", 0.03);
-	optim.VarWriteStruct<double>("ThresAbs", 0.1);
+	optim.SetStruct<double>("InitCond", 50);
+	optim.SetStruct<double>("Tol", 1E-5);
+	optim.SetStruct<double>("maxEval", 1E3);
+	optim.SetStruct<double>("maxIter", 200);
+	optim.SetStruct<double>("StepTol", 1E-6);
+	optim.SetStruct<double>("ThresRel", 0.03);
+	optim.SetStruct<double>("ThresAbs", 0.1);
 	
-	options.VarWriteStruct("Optim", optim);
-	mat.VarWrite(options);
+	options.SetStruct("Optim", optim);
+	mat.Set(options);
 	
 	mat.Close();
 	

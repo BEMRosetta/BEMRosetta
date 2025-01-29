@@ -1426,6 +1426,8 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 			type = BEMIO_H5;
 		else if (ext == ".npz")
 			type = AKSELOS_NPZ;
+		else if (ext == ".mat")
+			type = MATLAB;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
 	}
@@ -1460,6 +1462,8 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		save->SaveDiodoreHDB(fileName);		
 	else if (type == BEMIO_H5)
 		static_cast<BemioH5&>(*save).Save(fileName);
+	else if (type == MATLAB)
+		static_cast<Matlab&>(*save).Save(fileName);
 	else if (type == AKSELOS_NPZ)
 		SaveAkselos(ib, fileName);
 	else
@@ -1605,8 +1609,9 @@ void Hydro::Report() const {
 		freqs = t_("NONE");
 	else if (dt.w.size() > 1) {
 		String strDeltaH;
-		if (GetIrregularFreq() < 0) 
-			strDeltaH = Format(t_("delta %s [rad/s]"), FDS(dt.w[1] - dt.w[0], 8, false));
+		double avg;
+		if (GetIrregularFreq(avg) < 0) 
+			strDeltaH = Format(t_("delta %s [rad/s]"), FDS(avg, 8, false));
 		else {
 			String strHead;
 			for (int i = 0; i < dt.w.size(); ++i) {
@@ -1626,8 +1631,9 @@ void Hydro::Report() const {
 		heads = t_("NONE");
 	else if (dt.head.size() > 1) {
 		String strDeltaH;
-		if (GetIrregularHead() < 0) 
-			strDeltaH = Format(t_("delta %.1f [º]"), dt.head[1] - dt.head[0]);
+		double avg;
+		if (GetIrregularHead(avg) < 0) 
+			strDeltaH = Format(t_("delta %.1f [º]"), avg);
 		else {
 			String strHead;
 			for (int i = 0; i < dt.head.size(); ++i) {
@@ -1929,27 +1935,33 @@ void Hydro::SetC(int ib, const MatrixXd &K) {		// K is supposed to be dimensiona
 	}
 }
 
-int Hydro::GetIrregularHead() const {
-	if (dt.Nh <= 2)
+int Hydro::GetIrregularHead(double &av) const {
+	if (dt.Nh <= 2) {
+		av = 0;
 		return -1;
-	double delta0 = dt.head[1] - dt.head[0];
-	for (int i = 1; i < dt.Nh - 1; ++i) {
-		double delta = dt.head[i+1] - dt.head[i];
-		if (!EqualRatio(delta, delta0, 0.001))
-			return i;
 	}
+	UVector<double> avg(dt.head.size()-1);
+	for (int i = 0; i < dt.Nh - 1; ++i) 
+		avg[i] = abs(dt.head[i+1] - dt.head[i]);
+	av = Avg(avg);
+	for (int i = 0; i < dt.Nh - 1; ++i) 
+		if (abs(avg[i] - av) > 0.01)
+			return i;
 	return -1;
 }
 
-int Hydro::GetIrregularFreq() const {
-	if (dt.Nf <= 2)
+int Hydro::GetIrregularFreq(double &av) const {
+	if (dt.Nf <= 2) {
+		av = 0;
 		return -1;
-	double delta0 = dt.w[1] - dt.w[0];
-	for (int i = 1; i < dt.Nf - 1; ++i) {
-		double delta = dt.w[i+1] - dt.w[i];
-		if (!EqualRatio(delta, delta0, delta0/10))
-			return i;
 	}
+	UVector<double> avg(dt.w.size()-1);
+	for (int i = 0; i < dt.Nf - 1; ++i) 
+		avg[i] = abs(dt.w[i+1] - dt.w[i]);
+	av = Avg(avg);
+	for (int i = 0; i < dt.Nf - 1; ++i) 
+		if (abs(avg[i] - av) > 0.001)
+			return i;
 	return -1;
 }
 

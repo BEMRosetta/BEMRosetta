@@ -48,6 +48,7 @@ file
 	wamit.cpp,
 	orcawave.cpp,
 	diodore.cpp,
+	matlab.cpp,
 	bemioh5.cpp,
 	hydrostar.cpp,
 	capytaine.cpp,

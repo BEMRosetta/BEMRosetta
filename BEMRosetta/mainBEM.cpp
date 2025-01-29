@@ -2469,14 +2469,15 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 	
 	array.Set(row, 0, t_("#frequencies"));		array.Set(row++, col, Nvl2(hy.dt.Nf, 0)); 
 	if (!hy.dt.w.IsEmpty()) {
-		array.Set(row, 0, t_("freq_0 [rad/s]"));	array.Set(row++, col, hy.dt.w[0]);
+		array.Set(row, 0, t_("freq 0 [rad/s]"));	array.Set(row++, col, hy.dt.w[0]);
 	} else {
-		array.Set(row, 0, t_("freq_0 [rad/s]"));	array.Set(row++, col, "-");
+		array.Set(row, 0, t_("freq 0 [rad/s]"));	array.Set(row++, col, "-");
 	}
 	if (hy.dt.w.size() > 1) {
-		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, hy.dt.w[hy.dt.w.size()-1]);
-		if (hy.GetIrregularFreq() < 0) { 
-			array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, hy.dt.w[1] - hy.dt.w[0]);
+		array.Set(row, 0, t_("freq end [rad/s]"));	array.Set(row++, col, hy.dt.w[hy.dt.w.size()-1]);
+		double avg;
+		if (hy.GetIrregularFreq(avg) < 0) { 
+			array.Set(row, 0, t_("freq delta [rad/s]"));	array.Set(row++, col, avg);
 		} else {
 			String strHead;
 			for (int i = 0; i < hy.dt.w.size(); ++i) {
@@ -2484,24 +2485,25 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 					strHead << ", ";
 				strHead << hy.dt.w[i];
 			}
-			array.Set(row, 0, t_("freq_delta [rad/s]"));
+			array.Set(row, 0, t_("freq delta [rad/s]"));
 			array.Set(row++, col, Format(t_("Non constant delta (%s)"), strHead));
 		}
 	} else {
-		array.Set(row, 0, t_("freq_end [rad/s]"));	array.Set(row++, col, "-");
-		array.Set(row, 0, t_("freq_delta [rad/s]"));array.Set(row++, col, "-");
+		array.Set(row, 0, t_("freq end [rad/s]"));	array.Set(row++, col, "-");
+		array.Set(row, 0, t_("freq delta [rad/s]"));array.Set(row++, col, "-");
 	}
 	
 	array.Set(row, 0, t_("#1st order headings"));			array.Set(row++, col, Nvl2(hy.dt.Nh, 0));
 	if (!hy.dt.head.IsEmpty()) {
-		array.Set(row, 0, t_("head_0 [º]"));	array.Set(row++, col, hy.dt.head[0]);
+		array.Set(row, 0, t_("head 0 [º]"));	array.Set(row++, col, hy.dt.head[0]);
 	} else {
-		array.Set(row, 0, t_("head_0 [º]"));	array.Set(row++, col, "-");
+		array.Set(row, 0, t_("head 0 [º]"));	array.Set(row++, col, "-");
 	}
 	if (hy.dt.head.size() > 1) {
-		array.Set(row, 0, t_("head_end [º]"));	array.Set(row++, col, hy.dt.head[hy.dt.head.size()-1]);
-		if (hy.GetIrregularHead() < 0) { 
-			array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, hy.dt.head[1] - hy.dt.head[0]);
+		array.Set(row, 0, t_("head end [º]"));	array.Set(row++, col, hy.dt.head[hy.dt.head.size()-1]);
+		double avg;
+		if (hy.GetIrregularHead(avg) < 0) { 
+			array.Set(row, 0, t_("head delta [º]"));	array.Set(row++, col, avg);
 		} else {
 			String strHead;
 			for (int i = 0; i < hy.dt.head.size(); ++i) {
@@ -2509,12 +2511,12 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 					strHead << ", ";
 				strHead << hy.dt.head[i];
 			}
-			array.Set(row, 0, t_("head_delta [º]"));
+			array.Set(row, 0, t_("head delta [º]"));
 			array.Set(row++, col, Format(t_("Non constant delta (%s)"), strHead));
 		}
 	} else {
-		array.Set(row, 0, t_("head_end [º]"));	array.Set(row++, col, "-");
-		array.Set(row, 0, t_("head_delta [º]"));array.Set(row++, col, "-");
+		array.Set(row, 0, t_("head end [º]"));	array.Set(row++, col, "-");
+		array.Set(row, 0, t_("head delta [º]"));array.Set(row++, col, "-");
 	}
 	
 	array.Set(row, 0, t_("A0 available"));		array.Set(row++, col, hy.IsLoadedA0()   ? t_("Yes") : t_("No"));

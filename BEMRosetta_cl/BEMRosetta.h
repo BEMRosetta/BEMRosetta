@@ -559,8 +559,8 @@ public:
 			return 4;
 	}
 	
-	int GetIrregularHead() const;	
-	int GetIrregularFreq() const;	
+	int GetIrregularHead(double &av) const;	
+	int GetIrregularFreq(double &av) const;	
 	
 	double g_dim()		const;
 	double g_ndim()		const;
@@ -903,16 +903,27 @@ public:
 	bool IsLoadedB_H   (int i = 0, int j = 0)const {return dt.B_H.size() > i && dt.B_H[i].size() > j && dt.B_H[i][j].size() > 0 && IsNum(dt.B_H[i][j][0]);}
 	bool IsLoadedB_P   (int i = 0, int j = 0)const {return dt.B_P.size() > i && dt.B_P[i].size() > j && dt.B_P[i][j].size() > 0 && IsNum(dt.B_P[i][j][0]);}
 	bool IsLoadedC(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.C.size() > 0 && dt.msh[ib].dt.C.rows() > idf && dt.msh[ib].dt.C.cols() > jdf && IsNum(dt.msh[ib].dt.C(idf, jdf));}
+	bool IsLoadedAnyC() const {
+		for (int ib = 0; ib < dt.Nb; ++ib)
+			if (dt.msh[ib].dt.C.size() < 36)
+				return false;
+		return true;
+	}
 	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.M.size() > 0 && dt.msh[ib].dt.M.rows() > idf && dt.msh[ib].dt.M.cols() > jdf && IsNum(dt.msh[ib].dt.M(idf, jdf));}
-	
-	bool IsLoadedFex(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.ex, idf, ih, ib);}
-	bool IsLoadedFsc(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.sc, idf, ih, ib);}
-	bool IsLoadedFsc_pot(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.sc_pot, idf, ih, ib);}
-	bool IsLoadedFfk(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.fk, idf, ih, ib);}
-	bool IsLoadedFfk_pot(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot, idf, ih, ib);}
-	bool IsLoadedFfk_pot_bmr(int idf = 0, int ih = 0, int ib = 0)const{return IsLoadedForce(dt.fk_pot_bmr, idf, ih, ib);}
-	bool IsLoadedRAO(int idf = 0, int ih = 0, int ib = 0)const 	{return IsLoadedForce(dt.rao,idf, ih, ib);}
+	bool IsLoadedAnyM() const {
+		for (int ib = 0; ib < dt.Nb; ++ib)
+			if (dt.msh[ib].dt.M.size() < 36)
+				return false;
+		return true;
+	}
+	bool IsLoadedFex(int idf = 0, int ih = 0, int ib = 0) const 		{return IsLoadedForce(dt.ex, idf, ih, ib);}
+	bool IsLoadedFsc(int idf = 0, int ih = 0, int ib = 0) const 		{return IsLoadedForce(dt.sc, idf, ih, ib);}
+	bool IsLoadedFsc_pot(int idf = 0, int ih = 0, int ib = 0) const		{return IsLoadedForce(dt.sc_pot, idf, ih, ib);}
+	bool IsLoadedFfk(int idf = 0, int ih = 0, int ib = 0) const 		{return IsLoadedForce(dt.fk, idf, ih, ib);}
+	bool IsLoadedFfk_pot(int idf = 0, int ih = 0, int ib = 0) const		{return IsLoadedForce(dt.fk_pot, idf, ih, ib);}
+	bool IsLoadedFfk_pot_bmr(int idf = 0, int ih = 0, int ib = 0) const	{return IsLoadedForce(dt.fk_pot_bmr, idf, ih, ib);}
+	bool IsLoadedRAO(int idf = 0, int ih = 0, int ib = 0) const 		{return IsLoadedForce(dt.rao,idf, ih, ib);}
 	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0) const {
 						return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && f[ib][ih].rows() > 0 && IsNum(f[ib][ih](0, idf));}
 											 	
@@ -1618,6 +1629,14 @@ public:
 private:
 	void Load_H5();
 };
+
+class Matlab : public Hydro {
+public:
+	Matlab() {}
+	void Save(String file) const;
+	virtual ~Matlab() noexcept {}	
+};
+
 
 String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num);
 

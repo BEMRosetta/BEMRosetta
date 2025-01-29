@@ -534,6 +534,8 @@ LAYOUT(MenuOptions, 800, 700)
 	ITEM(Upp::Option, legend_w_units, SetLabel(t_("Legend with units")).LeftPosZ(420, 124).TopPosZ(36, 16))
 	ITEM(Upp::Option, legend_w_solver, SetLabel(t_("Legend with solver")).LeftPosZ(420, 124).TopPosZ(52, 16))
 	ITEM(Upp::Option, zeroIfEmpty, SetLabel(t_("Zero if DOF is empty")).LeftPosZ(168, 120).TopPosZ(132, 16))
+	ITEM(Upp::Label, dv___81, SetLabel(t_("Crash monitor:")).LeftPosZ(84, 76).TopPosZ(676, 19))
+	ITEM(Upp::Label, labCrashMonitor, SetLabel(t_("Off")).SetFont(Upp::StdFont().Bold()).LeftPosZ(160, 20).TopPosZ(676, 19))
 END_LAYOUT
 
 LAYOUT(MenuAbout, 540, 288)
