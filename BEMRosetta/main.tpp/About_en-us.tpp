@@ -3,8 +3,7 @@ topic "About";
 [{_}%EN-US 
 [s0; [*^https`:`/`/github`.com`/BEMRosetta`/BEMRosetta^+117 BEMRosetta]&]
 [s0;2 &]
-[s0; Hydrodynamic coefficients viewer and converter for Boundary 
-Element Method solver formats.&]
+[s0; Hydrodynamic solvers viewer and converter.&]
 [s0;2 &]
 [s0; [2 Version beta BUILDINFO.]&]
 [s0;_2 &]

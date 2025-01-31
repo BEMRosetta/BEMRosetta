@@ -1633,8 +1633,12 @@ private:
 class Matlab : public Hydro {
 public:
 	Matlab() {}
+	String Load(String file, double rho = Null);
 	void Save(String file) const;
-	virtual ~Matlab() noexcept {}	
+	virtual ~Matlab() noexcept {}
+	
+private:
+	void Load_Mat();
 };
 
 

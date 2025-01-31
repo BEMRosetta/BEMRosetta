@@ -262,7 +262,7 @@ void BemioH5::Load_H5() {
 }
 
 void BemioH5::Save(String file) const {
-	String fileName = ForceExt(file, ".h5");
+	String fileName = ForceExtSafer(file, ".h5");
 	
 	Hdf5File hfile;
 	

@@ -2638,7 +2638,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 void MainOutput::Init() {
 	CtrlLayout(*this);
 	cout.SetReadOnly();
-	Print(t_("BEMRosetta\nHydrodynamic coefficients viewer and converter for Boundary Element Method solver formats\n"));
+	Print(t_("BEMRosetta\nHydrodynamic solvers viewer and converter\n"));
 }
 
 void MainOutput::Print(String str) {

@@ -4,7 +4,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 #pragma code_page(1252)
 
-APP                    ICON                    "BEMRosetta.ico"
+APP ICON "BEMRosetta.ico"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 0,1,0,10
@@ -40,25 +40,4 @@ BEGIN
     END
 END
 
-
-#ifdef APSTUDIO_INVOKED
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    
-
-#endif    
+#endif

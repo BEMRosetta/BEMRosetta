@@ -38,13 +38,2007 @@ esES("")
 euES("")
 frFR("")
 
+T_("Unknown error")
+esES("")
+euES("")
+frFR("")
+
 T_("Problem found: %s")
 esES("")
 euES("")
 frFR("")
 
 
-// BEMRosetta.cpp
+// BEMRosetta.h
+
+T_("Wamit")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit.1.2.3")
+esES("")
+euES("")
+frFR("")
+
+T_("Matlab.mat")
+esES("")
+euES("")
+frFR("")
+
+T_("Wadam.Wamit")
+esES("")
+euES("")
+frFR("")
+
+T_("Wamit.FAST")
+esES("")
+euES("")
+frFR("")
+
+T_("Nemoh v2")
+esES("")
+euES("")
+frFR("")
+
+T_("Nemoh v115")
+esES("")
+euES("")
+frFR("")
+
+T_("Nemoh v3")
+esES("")
+euES("")
+frFR("")
+
+T_("SeaFEM.Nemoh")
+esES("")
+euES("")
+frFR("")
+
+T_("AQWA")
+esES("")
+euES("")
+frFR("")
+
+T_("AQWA.qtf")
+esES("")
+euES("")
+frFR("")
+
+T_("AQWA.dat")
+esES("")
+euES("")
+frFR("")
+
+T_("FOAMM")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMRosetta")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMRosetta.h5")
+esES("")
+euES("")
+frFR("")
+
+T_("Diodore")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFlex.yml")
+esES("")
+euES("")
+frFR("")
+
+T_("CSV.mat")
+esES("")
+euES("")
+frFR("")
+
+T_("CSV.tab")
+esES("")
+euES("")
+frFR("")
+
+T_("BEMIO.h5")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS.1.2.3")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS")
+esES("")
+euES("")
+frFR("")
+
+T_("Capytaine")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydrostar.out")
+esES("")
+euES("")
+frFR("")
+
+T_("Capytaine.nc")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaWave.yml")
+esES("")
+euES("")
+frFR("")
+
+T_("Capytaine.py")
+esES("")
+euES("")
+frFR("")
+
+T_("Akselos.npz")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaWave.owr")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown")
+esES("")
+euES("")
+frFR("")
+
+T_("Wm.o")
+esES("")
+euES("")
+frFR("")
+
+T_("Wm.1")
+esES("")
+euES("")
+frFR("")
+
+T_("Mat.mat")
+esES("")
+euES("")
+frFR("")
+
+T_("WDM")
+esES("")
+euES("")
+frFR("")
+
+T_("FST")
+esES("")
+euES("")
+frFR("")
+
+T_("Nmh")
+esES("")
+euES("")
+frFR("")
+
+T_("Nmh115")
+esES("")
+euES("")
+frFR("")
+
+T_("Nmh3")
+esES("")
+euES("")
+frFR("")
+
+T_("SFM")
+esES("")
+euES("")
+frFR("")
+
+T_("AQW")
+esES("")
+euES("")
+frFR("")
+
+T_("AQW.qtf")
+esES("")
+euES("")
+frFR("")
+
+T_("AQW.dat")
+esES("")
+euES("")
+frFR("")
+
+T_("FMM")
+esES("")
+euES("")
+frFR("")
+
+T_("BMR")
+esES("")
+euES("")
+frFR("")
+
+T_("BMR.h5")
+esES("")
+euES("")
+frFR("")
+
+T_("DIO")
+esES("")
+euES("")
+frFR("")
+
+T_("ORCF.yml")
+esES("")
+euES("")
+frFR("")
+
+T_("CSVm")
+esES("")
+euES("")
+frFR("")
+
+T_("CSVt")
+esES("")
+euES("")
+frFR("")
+
+T_("BMh5")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS_W")
+esES("")
+euES("")
+frFR("")
+
+T_("Capy")
+esES("")
+euES("")
+frFR("")
+
+T_("Capy.nc")
+esES("")
+euES("")
+frFR("")
+
+T_("ORCW.yml")
+esES("")
+euES("")
+frFR("")
+
+T_("Capy.py")
+esES("")
+euES("")
+frFR("")
+
+T_("Aks.npz")
+esES("")
+euES("")
+frFR("")
+
+T_("ORC.owr")
+esES("")
+euES("")
+frFR("")
+
+T_("Hydr")
+esES("")
+euES("")
+frFR("")
+
+T_("\302\277?")
+esES("")
+euES("")
+frFR("")
+
+T_("INFINITY")
+esES("")
+euES("")
+frFR("")
+
+T_("m")
+esES("")
+euES("")
+frFR("")
+
+T_("m2")
+esES("")
+euES("")
+frFR("")
+
+T_("N/m2")
+esES("")
+euES("")
+frFR("")
+
+T_("Nm/m2")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong format")
+esES("")
+euES("")
+frFR("")
+
+
+// BEMRosetta_int.h
+
+T_("Avg() has to have same number of values")
+esES("")
+euES("")
+frFR("")
+
+
+// CommandLine.cpp
+
+T_("BEMRosetta is at '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Build date is %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Compiler is %s, version %d, mode %s, %d bits")
+esES("")
+euES("")
+frFR("")
+
+T_("Missing parameters when reading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Usage: bemrosetta_cl [options]")
+esES("")
+euES("")
+frFR("")
+
+T_("Options:")
+esES("")
+euES("")
+frFR("")
+
+T_("-h  -help                 # Print options")
+esES("")
+euES("")
+frFR("")
+
+T_("-echo \"text\"              # Prints \"text\"")
+esES("")
+euES("")
+frFR("")
+
+T_("-pause")
+esES("")
+euES("")
+frFR("")
+
+T_("-exit                     # Exits BEMRosetta")
+esES("")
+euES("")
+frFR("")
+
+T_("-general                  # The next commands are for any data (default)")
+esES("")
+euES("")
+frFR("")
+
+T_("-paramfile <file>         # Params in a file. New lines are like separators "
+     "and # indicates a comment")
+esES("")
+euES("")
+frFR("")
+
+T_("-params <param> <value>   # Set physical parameters:")
+esES("")
+euES("")
+frFR("")
+
+T_("        g                 # gravity       [m/s2]  ")
+esES("")
+euES("")
+frFR("")
+
+T_("        rho               # water density [kg/m\302\263] ")
+esES("")
+euES("")
+frFR("")
+
+T_("        length <length>   # length scale  []      ")
+esES("")
+euES("")
+frFR("")
+
+T_("        depth  <depth>    # water depth   [m]     ")
+esES("")
+euES("")
+frFR("")
+
+T_("-echo off/on              # Show text messages")
+esES("")
+euES("")
+frFR("")
+
+T_("-csvseparator <sep>       # Sets the separator for .csv files")
+esES("")
+euES("")
+frFR("")
+
+T_("-isEqual <value>          # Stops if last print is not equal to <value>")
+esES("")
+euES("")
+frFR("")
+
+T_("-isSimilar <value>        # Stops if <value> is not included in last print")
+esES("")
+euES("")
+frFR("")
+
+T_("-bem                      # The next commands are for BEM data")
+esES("")
+euES("")
+frFR("")
+
+T_("-i  -input <file>         # Load model")
+esES("")
+euES("")
+frFR("")
+
+T_("-c  -convert <file>       # Export actual model to output file")
+esES("")
+euES("")
+frFR("")
+
+T_("-new                      # Create new empty model")
+esES("")
+euES("")
+frFR("")
+
+T_("-saveCase                 # Saves a folder with the BEM case files ready "
+     "to be calculated")
+esES("")
+euES("")
+frFR("")
+
+T_("        folder <folder>   # Folder name")
+esES("")
+euES("")
+frFR("")
+
+T_("        format <format>   # Solver format: Wamit.out HAMS Nemohv2 Nemohv3 "
+     "AQWA.dat Capytaine.cal Capytaine.py OrcaWave.yml")
+esES("")
+euES("")
+frFR("")
+
+T_("        bin               # Include solver binaries (just for open source "
+     "solvers) (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("        symYZ             # Consider YZ symmetry (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("        symXZ             # Consider XZ symmetry (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("        mesh              # Include mesh in output files (just for some "
+     "solvers) (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("        potentials        # Include panel potentials in output files (just "
+     "for some solvers) (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("        QTF               # Include QTF in output files (just for some "
+     "solvers) (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("        split <num>       # Splits the calculation in <num> sub cases "
+     "by frequency range (just for some solvers) (false by default)")
+esES("")
+euES("")
+frFR("")
+
+T_("-setid <id>                   # Set the id of the default BEM model")
+esES("")
+euES("")
+frFR("")
+
+T_("-setbodyid <id>               # Set the id of the default BEM model body")
+esES("")
+euES("")
+frFR("")
+
+T_("-params <param> <value>       # Set parameters:")
+esES("")
+euES("")
+frFR("")
+
+T_("        g      <g>            # gravity       [m/s2]  ")
+esES("")
+euES("")
+frFR("")
+
+T_("        rho    <rho>          # water density [kg/m\302\263] ")
+esES("")
+euES("")
+frFR("")
+
+T_("        depth  <depth>        # water depth   [m]     ")
+esES("")
+euES("")
+frFR("")
+
+T_("        length <length>       # length scale  []      ")
+esES("")
+euES("")
+frFR("")
+
+T_("        w      <frequencies>  # frequencies   [rad/s] ")
+esES("")
+euES("")
+frFR("")
+
+T_("        headings <headings>   # frequencies   [deg] ")
+esES("")
+euES("")
+frFR("")
+
+T_("-newbody                      # Add additional body (mesh) to current "
+     "model")
+esES("")
+euES("")
+frFR("")
+
+T_("-bodyparams <param> <values>  # Set parameters:")
+esES("")
+euES("")
+frFR("")
+
+T_("        cg     <x> <y> <z>    # Set cg: x, y, z [m] cg is the centre of "
+     "gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("        c0     <x> <y> <z>    # Set c0: x, y, z [m] c0 is the centre of "
+     "motion")
+esES("")
+euES("")
+frFR("")
+
+T_("        inertia <6x6 matrix>  # Inertia matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("        linearDamping       <6x6 matrix> # Linear damping matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("        quadraticDamping    <6x6 matrix> # Quadratic damping matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("        additionalStiffness <6x6 matrix> # Additional stiffness matrix")
+esES("")
+euES("")
+frFR("")
+
+T_("        mesh <file>           # Load mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("        lid  <file>           # Load lid file")
+esES("")
+euES("")
+frFR("")
+
+T_("-convQTFHeads <params>    # Set heading save config. for Wamit .1")
+esES("")
+euES("")
+frFR("")
+
+T_("               all        # All headings")
+esES("")
+euES("")
+frFR("")
+
+T_("               allNoCross # All headings but crossed")
+esES("")
+euES("")
+frFR("")
+
+T_("               <h1> <h2>  # Indicated pair of headings [deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("-delHead   <h1> ...       # Delete forces for indicated headings [deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("-delHeadId <h1> ...       # Delete forces for indicated heading ids")
+esES("")
+euES("")
+frFR("")
+
+T_("-delButHead   <h1> ...    # Delete forces for all but indicated headings "
+     "[deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("-delButHeadId <h1> ...    # Delete forces for all but indicated heading "
+     "ids")
+esES("")
+euES("")
+frFR("")
+
+T_("-delQTFHead   <h1> <h2> ..# Delete QTF for indicated pairs of headings "
+     "[deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("-delQTFHeadId <h1> <h2> ..# Delete QTF for indicated heading ids")
+esES("")
+euES("")
+frFR("")
+
+T_("-delButQTFHead   <h1> <h2>..# Delete QTF for all but indicated pairs of "
+     "headings [deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("-delButQTFHeadId <h1> <h2>..# Delete QTF for all but indicated heading "
+     "ids")
+esES("")
+euES("")
+frFR("")
+
+T_("-p  -print <params>       # Print model data in a row")
+esES("")
+euES("")
+frFR("")
+
+T_("        <params> nb                  # Number of bodies  []")
+esES("")
+euES("")
+frFR("")
+
+T_("                 nf                  # Number of frequencies []")
+esES("")
+euES("")
+frFR("")
+
+T_("                 nh                  # Number of headings    []")
+esES("")
+euES("")
+frFR("")
+
+T_("                 w                   # List of frequencies   [rad/s]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 headings            # List of headings      [deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 a <dof1> <dof2>     # List of A(w)(6*Nb, 6*Nb) [Kg]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 b <dof1> <dof2>     # List of B(w)(6*Nb, 6*Nb)")
+esES("")
+euES("")
+frFR("")
+
+T_("                 ainf                # Ainf(6*Nb, 6*Nb)  [Kg]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 Theave <ibody>      # Heave resonance period for body "
+     "ib [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 Troll <ibody>       # Roll resonance period for body "
+     "ib [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 Tpitch <ibody>      # Pitch resonance period for body "
+     "ib [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 GMroll <ibody>      # GM in roll [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("                 GMpitch <ibody>     # GM in pitch [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("-r  -report               # Output last loaded model data")
+esES("")
+euES("")
+frFR("")
+
+T_("-cl -clear                # Clear loaded models")
+esES("")
+euES("")
+frFR("")
+
+T_("-mesh                     # The next commands are for mesh data")
+esES("")
+euES("")
+frFR("")
+
+T_("-c  -convert <file> <opts># Export actual model to output file")
+esES("")
+euES("")
+frFR("")
+
+T_("        <opts> symx       # - Save only positive X")
+esES("")
+euES("")
+frFR("")
+
+T_("               symy       # - Save only positive Y")
+esES("")
+euES("")
+frFR("")
+
+T_("               symx symy  # - Save only positive X and Y")
+esES("")
+euES("")
+frFR("")
+
+T_("               Wamit.gdf  # - Save in Wamit .gdf format")
+esES("")
+euES("")
+frFR("")
+
+T_("               Nemoh.dat  # - Save in Nemoh .dat format")
+esES("")
+euES("")
+frFR("")
+
+T_("               HAMS.pnl   # - Save in HAMS  .pnl format")
+esES("")
+euES("")
+frFR("")
+
+T_("               STL.Text   # - Save in STL   text format")
+esES("")
+euES("")
+frFR("")
+
+T_("-t   -translate <x> <y> <z>     # Translate x, y, z [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("-rot -rotate   <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az "
+     "[deg] around cx, cy, cz [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("-cg            <x> <y> <z>      # Sets cg: x, y, z [m] cg is the centre "
+     "of gravity")
+esES("")
+euES("")
+frFR("")
+
+T_("-c0            <x> <y> <z>      # Sets c0: x, y, z [m] c0 is the centre "
+     "of motion")
+esES("")
+euES("")
+frFR("")
+
+T_("-mass          <value>          # Sets the body mass [kg]")
+esES("")
+euES("")
+frFR("")
+
+T_("-getwaterplane                  # Extract in new model the waterplane "
+     "mesh (lid)")
+esES("")
+euES("")
+frFR("")
+
+T_("-gethull                        # Extract in new model the mesh underwater "
+     "hull")
+esES("")
+euES("")
+frFR("")
+
+T_("-filllid <ratio>                # Generates in new model the waterplane "
+     "lid with mesh size ratio bigger than average")
+esES("")
+euES("")
+frFR("")
+
+T_("-setid <id>                     # Set the id of the default mesh model")
+esES("")
+euES("")
+frFR("")
+
+T_("-reset                          # Restore the mesh to the initial situation")
+esES("")
+euES("")
+frFR("")
+
+T_("-r  -report                     # Output last loaded model data")
+esES("")
+euES("")
+frFR("")
+
+T_("-p  -print <params>             # Prints model data in a row")
+esES("")
+euES("")
+frFR("")
+
+T_("     <params> volume            # volx voly volx [m\302\263]")
+esES("")
+euES("")
+frFR("")
+
+T_("              underwatervolume  # volx voly volx [m\302\263]")
+esES("")
+euES("")
+frFR("")
+
+T_("              surface           # [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("              underwatersurface # [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("              cb                # cbx cby cbz [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("              cg_vol            # cgx cgy cgz [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("              cg_surf           # cgx cgy cgz [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("              hydrostiffness    # Hydrostatic stiffness around the rotation "
+     "centre")
+esES("")
+euES("")
+frFR("")
+
+T_("                                # returns K(3,3) [N/m]")
+esES("")
+euES("")
+frFR("")
+
+T_("                                #         K(3,4) K(3,5) K(4,3) [N/rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("                                #         K(4,4) K(4,5) K(4,6) [Nm/rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("                                #         K(5,3) [N/rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("                                #         K(5,4) K(5,5) K(5,6) K(6,4) "
+     "K(6,5) K(6,6) [Nm/rad]")
+esES("")
+euES("")
+frFR("")
+
+T_("              hydrostatic_force # Hydrostatic force around the motion "
+     "centre")
+esES("")
+euES("")
+frFR("")
+
+T_("                                # returns Fx, Fy, Fz [N]")
+esES("")
+euES("")
+frFR("")
+
+T_("                                #         Mx(roll), My(pitch), Mz(yaw) "
+     "[N\302\267m]")
+esES("")
+euES("")
+frFR("")
+
+T_("              inertia      <cx> <cy> <cz>")
+esES("")
+euES("")
+frFR("")
+
+T_("              inertia_vol  <cx> <cy> <cz> # Inertia tensor around cx, "
+     "cy, cz [m], considering the mass spread in the volume")
+esES("")
+euES("")
+frFR("")
+
+T_("              inertia_surf <cx> <cy> <cz> # Inertia tensor around cx, "
+     "cy, cz [m], considering the mass spread in the surface")
+esES("")
+euES("")
+frFR("")
+
+T_("                                # returns Ixx Ixy Ixz Iyx Iyy Iyz Izx "
+     "Izy Izz [m2]")
+esES("")
+euES("")
+frFR("")
+
+T_("              GZ <angle> <from> <to> <delta> # GZ around angle [deg] (0 "
+     "is around Y axis), from-to-delta [deg]")
+esES("")
+euES("")
+frFR("")
+
+T_("                                # returns the set of angles [deg] and "
+     "their gz values [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("              GM                # returns GMpitch GMroll [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("-cl -clear                      # Clear loaded models")
+esES("")
+euES("")
+frFR("")
+
+T_("-time                           # The next commands are for time series")
+esES("")
+euES("")
+frFR("")
+
+T_("-i  -input <file>               # Load file")
+esES("")
+euES("")
+frFR("")
+
+T_("-c  -convert <file> <params>    # Export actual model to output file. "
+     "If <params>, only included params are saved. '*' allowed")
+esES("")
+euES("")
+frFR("")
+
+T_("-p  -print <params>             # Prints file data in a row")
+esES("")
+euES("")
+frFR("")
+
+T_("     <params> list              # Parameter names")
+esES("")
+euES("")
+frFR("")
+
+T_("              <param> <time>    # Value of <param> in <time>")
+esES("")
+euES("")
+frFR("")
+
+T_("              <param> avg       # <param> avg")
+esES("")
+euES("")
+frFR("")
+
+T_("              <param> max       # <param> max")
+esES("")
+euES("")
+frFR("")
+
+T_("              <param> min       # <param> min")
+esES("")
+euES("")
+frFR("")
+
+T_("-wind                           # The next commands are for wind series")
+esES("")
+euES("")
+frFR("")
+
+T_("-c  -convert <file>             # Export actual model to output file")
+esES("")
+euES("")
+frFR("")
+
+T_("-setid <id>                     # Set the id of the default BEM model")
+esES("")
+euES("")
+frFR("")
+
+T_("-params <param> <value/s>       # Set parameters:")
+esES("")
+euES("")
+frFR("")
+
+T_("        hubheight               # Hub heignt [m]       ")
+esES("")
+euES("")
+frFR("")
+
+T_("        gridheight              # Grid base height [m] ")
+esES("")
+euES("")
+frFR("")
+
+T_("        TI <u><v><w>            # Turbulence inten. [%] (If only u, IEC61400-1 "
+     "Part 1 is applied: v = 0.8u and w = 0.5u)")
+esES("")
+euES("")
+frFR("")
+
+T_("        scale <u><v><w>         # Factor to scale velocities []")
+esES("")
+euES("")
+frFR("")
+
+T_("        powerLaw <pl><zh>       # Power law [] at hubheight [m]")
+esES("")
+euES("")
+frFR("")
+
+T_("        periodic                # BTS periodic [true/false]")
+esES("")
+euES("")
+frFR("")
+
+T_("        time                    # Time series [s]")
+esES("")
+euES("")
+frFR("")
+
+T_("        vel <y> <z> <time>      # Wind speed norm [m/s] at y, z [m] in "
+     "<time>")
+esES("")
+euES("")
+frFR("")
+
+T_("        vel <y> <z> data        # Wind speed norm [m/s] at y, z [m] data "
+     "series")
+esES("")
+euES("")
+frFR("")
+
+T_("        vel <y> <z> avg         # Wind speed norm [m/s] at y, z [m] average")
+esES("")
+euES("")
+frFR("")
+
+T_("        velComp <comp> <y> <z> <time> # Wind speed [m/s] for 0 (u), 1 "
+     "(v), ... at y, z [m] in <time>")
+esES("")
+euES("")
+frFR("")
+
+T_("        velComp <comp> <y> <z> data   # Wind speed [m/s] for 0 (u), 1 "
+     "(v), ... at y, z [m] data series")
+esES("")
+euES("")
+frFR("")
+
+T_("        velComp <comp> <y> <z> avg    # Wind speed [m/s] for 0 (u), 1 "
+     "(v), ... at y, z [m] average")
+esES("")
+euES("")
+frFR("")
+
+T_("-r  -report                     # Output loaded model main data")
+esES("")
+euES("")
+frFR("")
+
+T_("-ra -reportall                  # Output all models main data")
+esES("")
+euES("")
+frFR("")
+
+T_("-orca                           # The next commands are for OrcaFlex handling "
+     "(Required to be installed)")
+esES("")
+euES("")
+frFR("")
+
+T_("-isAvailable                    # Test if OrcaFLEX is installed and the "
+     "license is available")
+esES("")
+euES("")
+frFR("")
+
+T_("-numtries <num>                 # Number <num> of attempts to connect "
+     "to the license")
+esES("")
+euES("")
+frFR("")
+
+T_("-numthread <num>                # Set the number of threads for OrcaWave")
+esES("")
+euES("")
+frFR("")
+
+T_("-timelog <num>                  # Set minimum clock seconds per each OrcaFlex "
+     "simulation log")
+esES("")
+euES("")
+frFR("")
+
+T_("-loadwave <from>                # Load OrcaWave model <from>")
+esES("")
+euES("")
+frFR("")
+
+T_("-translatewave <x> <y> <z>      # Translate OrcaWave model to <x> <y> "
+     "<z> saved as a new bem case")
+esES("")
+euES("")
+frFR("")
+
+T_("-savewave <to>                  # Save OrcaWave model <to>")
+esES("")
+euES("")
+frFR("")
+
+T_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results "
+     "in <to>")
+esES("")
+euES("")
+frFR("")
+
+T_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results "
+     "in <to>")
+esES("")
+euES("")
+frFR("")
+
+T_("-ls -loadSim <sim>              # Load OrcaFlex simulation in <sim>")
+esES("")
+euES("")
+frFR("")
+
+T_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference "
+     "system for outputs")
+esES("")
+euES("")
+frFR("")
+
+T_("-lp -loadParam <param>          # Load param to be saved")
+esES("")
+euES("")
+frFR("")
+
+T_("-cp -clearParams                # Clear parameters loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("-c  -convert <file>             # Export the loaded params of the actual "
+     "model to output file (csv)")
+esES("")
+euES("")
+frFR("")
+
+T_("              numthread         # Number of threads")
+esES("")
+euES("")
+frFR("")
+
+T_("              <param> data      # <param> data series")
+esES("")
+euES("")
+frFR("")
+
+T_("-dll <file/folder>              # File or folder where OrcaFlex .dll is "
+     "located. Use if detection doesn't work")
+esES("")
+euES("")
+frFR("")
+
+T_("The actions:")
+esES("")
+euES("")
+frFR("")
+
+T_("- are done in sequence: if a physical parameter is changed after export, "
+     "saved files will not include the change")
+esES("")
+euES("")
+frFR("")
+
+T_("- can be repeated as desired")
+esES("")
+euES("")
+frFR("")
+
+T_("Copyright (c) 2024. Hydrodynamic coefficients converter for Boundary Element "
+     "Method solver formats\nVersion beta BUILDINFO")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM configuration data is not loaded. Defaults values are set")
+esES("")
+euES("")
+frFR("")
+
+T_("Command argument list is empty")
+esES("")
+euES("")
+frFR("")
+
+T_("Press Enter to continue...")
+esES("")
+euES("")
+frFR("")
+
+T_("Exit by command")
+esES("")
+euES("")
+frFR("")
+
+T_("Last print is equal to \"%s\"")
+esES("")
+euES("")
+frFR("")
+
+T_("Last print is not equal to \"%s\"")
+esES("")
+euES("")
+frFR("")
+
+T_("Last print is not equal to \"%s\". \"%s\" != \"%s\"")
+esES("")
+euES("")
+frFR("")
+
+T_("Last print is similar to \"%s\"")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong argument '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Gravity is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Density is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("length is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("depth is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown argument '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("File '%s' not found")
+esES("")
+euES("")
+frFR("")
+
+T_("File '%s' loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("No file loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM data cleared")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d is not loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Invalid id %s")
+esES("")
+euES("")
+frFR("")
+
+T_("BEM active model id is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Model id %d saved as '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("New model created. Default values (rho, g, ...) set")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong 1st heading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong 2nd heading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Closest heading to %f is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Headings deleted")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong head id '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong head '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Closest heading to %f:%f is %f:%f")
+esES("")
+euES("")
+frFR("")
+
+T_("QTF headings deleted")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d depth is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d g is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d rho is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong frequency '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, %d frequencies added")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong heading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, %d headigs added")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong command '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown format %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Saved model %d in %s case format")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d created")
+esES("")
+euES("")
+frFR("")
+
+T_("Body %d is not available in model")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d loaded mesh '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d loaded lid '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d C0 is %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d CG is %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d inertia matrix loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d linear damping matrix loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d quadratic damping matrix loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Model %d, body %d additional stiffness matrix loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Nb:")
+esES("")
+euES("")
+frFR("")
+
+T_("Nh:")
+esES("")
+euES("")
+frFR("")
+
+T_("Nf:")
+esES("")
+euES("")
+frFR("")
+
+T_("w:")
+esES("")
+euES("")
+frFR("")
+
+T_("head:")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dof in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("A(%d,%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("Ainf:")
+esES("")
+euES("")
+frFR("")
+
+T_("B:")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong body id. in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Theave(%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("Troll(%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("Tpitch(%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("GMroll(%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("GMpitch(%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("Body data cleared")
+esES("")
+euES("")
+frFR("")
+
+T_("Body active model id is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Saving format '%s' is not implemented")
+esES("")
+euES("")
+frFR("")
+
+T_("Body id %d translated %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Body id %d rotated angles %f, %f, %f around centre %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("CG is %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Mass is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Body id %d position is reset")
+esES("")
+euES("")
+frFR("")
+
+T_("Body id %d waterplane is got")
+esES("")
+euES("")
+frFR("")
+
+T_("Body id %d hull is got")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong mesh ratio %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Body id %d lid is got")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume:")
+esES("")
+euES("")
+frFR("")
+
+T_("UnderwaterVolume:")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface:")
+esES("")
+euES("")
+frFR("")
+
+T_("UnderwaterSurface:")
+esES("")
+euES("")
+frFR("")
+
+T_("CB:")
+esES("")
+euES("")
+frFR("")
+
+T_("CG_vol:")
+esES("")
+euES("")
+frFR("")
+
+T_("CG_surf:")
+esES("")
+euES("")
+frFR("")
+
+T_("HydrostaticStiffness:")
+esES("")
+euES("")
+frFR("")
+
+T_("Body warning_ Maybe incomplete")
+esES("")
+euES("")
+frFR("")
+
+T_("Body error: Probably incomplete")
+esES("")
+euES("")
+frFR("")
+
+T_("HydrostaticForce:")
+esES("")
+euES("")
+frFR("")
+
+T_("Body warning: Maybe incomplete")
+esES("")
+euES("")
+frFR("")
+
+T_("Inertia:")
+esES("")
+euES("")
+frFR("")
+
+T_("GZ:")
+esES("")
+euES("")
+frFR("")
+
+T_("gm:")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem loading '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Results saved as '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("List of parameters:")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameter '%s' not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Hub height is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Grid height is %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Turbulence intensity is u: %f %%, v: %f %%, w: %f %%")
+esES("")
+euES("")
+frFR("")
+
+T_("Velocities scaled by u: %f %%, v: %f %%, w: %f %%")
+esES("")
+euES("")
+frFR("")
+
+T_("Power law is %f set at height %f m")
+esES("")
+euES("")
+frFR("")
+
+T_("Set periodic %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Report: No file loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Wind data cleared")
+esES("")
+euES("")
+frFR("")
+
+T_("Wind active model id is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Velocity:")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameter time not found in vel")
+esES("")
+euES("")
+frFR("")
+
+T_("Velocity component:")
+esES("")
+euES("")
+frFR("")
+
+T_("Time:")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown parameter '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("DLL not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Next try (%d/%d)")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem loading '%s'. %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Diffraction results saved at '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Diffraction data loaded from '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFlex wave model not loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Invalid position %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem translating results to %f, %f, %f: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Diffraction results translated to %f, %f, %f and loaded as new bem case")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem saving results to %s: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Diffraction results saved to %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Error running OrcaFlex: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Simulation aborted: The simulation has become unstable because the solver "
+     "parameters (time step, iterations num.) or other, have to be reviewed.\n"
+     "Check here: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Dynamics.htm")
+esES("")
+euES("")
+frFR("")
+
+T_("Simulation results saved at '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Simulation '%s' loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Invalid thread number %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Thread number set to %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of OrcaFlex license tries set to %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Invalid time between logs %s")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFlex time between logs set to %.1f sec")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFLEX is not installed")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFLEX license is not available")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFLEX is installed and available")
+esES("")
+euES("")
+frFR("")
+
+T_("List of parameters (%d):")
+esES("")
+euES("")
+frFR("")
+
+T_("Last command '%s' is not complete")
+esES("")
+euES("")
+frFR("")
+
+T_("Parameter '%s' not found in -p")
+esES("")
+euES("")
+frFR("")
+
+T_("DLL '%s' not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Orca .dll '%s' loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Error: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("In case of doubt try option -h or -help")
+esES("")
+euES("")
+frFR("")
+
+T_("or just call command line without arguments to open GUI window")
+esES("")
+euES("")
+frFR("")
+
+
+// BEM.cpp
 
 T_("surge")
 esES("")
@@ -191,6 +2185,724 @@ esES("")
 euES("")
 frFR("")
 
+T_("1,2,3,4,5,6")
+esES("")
+euES("")
+frFR("")
+
+T_("surge,sway,")
+esES("")
+euES("")
+frFR("")
+
+T_("x,y,z,rx,ry,rz")
+esES("")
+euES("")
+frFR("")
+
+T_("-180->180\302\272")
+esES("")
+euES("")
+frFR("")
+
+T_("0->360\302\272")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading files")
+esES("")
+euES("")
+frFR("")
+
+T_("Model is already loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Model '%s' is already loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem joining models: '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading mesh '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem loading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh '%s' loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Conversion to file type '%s' not supported")
+esES("")
+euES("")
+frFR("")
+
+T_("Healing mesh '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem healing '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("The mesh is in good condition")
+esES("")
+euES("")
+frFR("")
+
+T_("Orienting surface mesh '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem orienting surface '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Getting underwater mesh '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem duplicating '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem joining '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Splitting mesh '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem adding flat panel: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem adding revolution surface: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem adding polygonal panel: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("It is only possible to extrude a flat surface")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem extruding surface: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface removed")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface")
+esES("")
+euES("")
+frFR("")
+
+T_("Water surface extracted")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem adding water surface: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to create folder '%s' to store configuration file")
+esES("")
+euES("")
+frFR("")
+
+T_("First time")
+esES("")
+euES("")
+frFR("")
+
+T_("Configuration file '%s' is empty")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem loading configuration file '%s': %s")
+esES("")
+euES("")
+frFR("")
+
+T_("'empty'")
+esES("")
+euES("")
+frFR("")
+
+
+// Mesh.cpp
+
+T_("Parsing error: ")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown mesh file format '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to save mesh. No mesh found")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown mesh file type")
+esES("")
+euES("")
+frFR("")
+
+T_("Body file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
+esES("")
+euES("")
+frFR("")
+
+T_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface projection X-axis [m2] %f - %f = %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface projection Y-axis [m2] %f - %f = %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Surface [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume [m\302\263] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater surface [m2] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater volume [m\302\263] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Displacement [tm] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Centre of buoyancy [m] (%f, %f, %f)")
+esES("")
+euES("")
+frFR("")
+
+T_("Loaded %d panels and %d nodes")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem obtaining GZ. Mass is zero")
+esES("")
+euES("")
+frFR("")
+
+T_("Cancelled by the user")
+esES("")
+euES("")
+frFR("")
+
+
+// hams_mesh.cpp
+
+T_("File is not in HAMS .pnl format")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Number of Panels, Nodes, X-Symmetry "
+     "and Y-Symmetry not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Start Definition of Node Coordinates "
+     "not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Points list End not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .dat mesh file. Start Definition of Node Relations "
+     "not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 1 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 2 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 3 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("id 4 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in HAMS .pnl mesh file. Panels list End not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to open '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh contains both waterplane and hull panels. Please separate them before "
+     "saving.")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS only allows one symmetry at a time, either X or Y.")
+esES("")
+euES("")
+frFR("")
+
+
+// orca_mesh.cpp
+
+T_("Error loading owr: ")
+esES("")
+euES("")
+frFR("")
+
+
+// aqwa_mesh.cpp
+
+T_("Format error in ANSYSTOAQWA .dat mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Body %d not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error in AQWA .dat mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Only metric system is supported")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown length unit")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to open '%s'\n")
+esES("")
+euES("")
+frFR("")
+
+T_("Body %d inertia matrix is not correct")
+esES("")
+euES("")
+frFR("")
+
+
+// salome_mesh.cpp
+
+T_("Format error in Nemoh .dat mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Found more nodes that the indicated in the first row")
+esES("")
+euES("")
+frFR("")
+
+
+// wamit_mesh.cpp
+
+T_("'ZONE' field not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong length scale in .gdf file")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of patches not found in .gdf file")
+esES("")
+euES("")
+frFR("")
+
+T_(".gdf files represented by B-splines (IGDEF = 1) are not supported")
+esES("")
+euES("")
+frFR("")
+
+T_(".gdf files represented by MultiSurf .ms2 files (IGDEF = 2) are not supported")
+esES("")
+euES("")
+frFR("")
+
+T_(".gdf files represented by a special subrutine (IGDEF < 0  or > 2) are "
+     "not supported")
+esES("")
+euES("")
+frFR("")
+
+
+// diodore_mesh.cpp
+
+T_("Format error in Diodore .txt mesh file")
+esES("")
+euES("")
+frFR("")
+
+T_("Format error")
+esES("")
+euES("")
+frFR("")
+
+
+// Hydro.cpp
+
+T_("Loading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Saving '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Error saving '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to save '%s'. File already used.")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown BEM input format")
+esES("")
+euES("")
+frFR("")
+
+T_("Format is not supported")
+esES("")
+euES("")
+frFR("")
+
+T_("Number cases must be higher than 1 (%d)")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of cases %d must not be higher than number of frequencies %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to clean folder '%s'. Maybe it is in use")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem creating '%s' folder")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect rho %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect g %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect depth %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect number of frequencies %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect number of headings %s")
+esES("")
+euES("")
+frFR("")
+
+T_("First frequency %f < 0.01 is too low")
+esES("")
+euES("")
+frFR("")
+
+T_("Insufficient data to get RAO: Added mass and Radiation damping are required")
+esES("")
+euES("")
+frFR("")
+
+T_("Insufficient data to get RAO: Hydrostatic stiffness matrix is required")
+esES("")
+euES("")
+frFR("")
+
+T_("Insufficient data to get RAO: Inertia matrix is required")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem solving RAO")
+esES("")
+euES("")
+frFR("")
+
+T_("Insufficient data to get RAO: Added mass is required")
+esES("")
+euES("")
+frFR("")
+
+T_("The excitation force is not loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("No frecuencies loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of headings is higher than available")
+esES("")
+euES("")
+frFR("")
+
+T_("Not enough headings for Haskind calculation")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown depth")
+esES("")
+euES("")
+frFR("")
+
+T_("Haskind got for %d headings %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Spreading negative values in diagonal")
+esES("")
+euES("")
+frFR("")
+
+T_("Stop by user")
+esES("")
+euES("")
+frFR("")
+
+T_("%d.%s Freq %.3f rad/s")
+esES("")
+euES("")
+frFR("")
+
+T_("No points to map")
+esES("")
+euES("")
+frFR("")
+
+T_("Id")
+esES("")
+euES("")
+frFR("")
+
+T_("A_%s_%s")
+esES("")
+euES("")
+frFR("")
+
+T_("B_%s_%s")
+esES("")
+euES("")
+frFR("")
+
+T_("No mesh is available")
+esES("")
+euES("")
+frFR("")
+
+T_("No radiation potentials/pressures are available for body %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Panel cannot be mapped")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem translating global origin: '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+T_("New centres have undefined data")
+esES("")
+euES("")
+frFR("")
+
+T_("Translating A")
+esES("")
+euES("")
+frFR("")
+
+T_("Translating B")
+esES("")
+euES("")
+frFR("")
+
+T_("Translating Forces")
+esES("")
+euES("")
+frFR("")
+
+T_("Translating MD")
+esES("")
+euES("")
+frFR("")
+
+T_("Translating QTF")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem translating model: '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem reseting DOF: '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem swaping DOF: '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem symmetrizing data: '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading BEM file")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaWAVE .owd binary format is not supported.\nHowever OrcaFLEX .yml is "
+     "supported.\nTo get it, load the .owd file in OrcaFlex and save it as .yml")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown BEM file extension in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem processing '%s'\n%s")
+esES("")
+euES("")
+frFR("")
+
+
+// Hydro2.cpp
+
 T_("A(\317\211)")
 esES("")
 euES("")
@@ -291,66 +3003,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("1,2,3,4,5,6")
-esES("")
-euES("")
-frFR("")
-
-T_("surge,sway,")
-esES("")
-euES("")
-frFR("")
-
-T_("x,y,z,rx,ry,rz")
-esES("")
-euES("")
-frFR("")
-
-T_("-180->180\302\272")
-esES("")
-euES("")
-frFR("")
-
-T_("0->360\302\272")
-esES("")
-euES("")
-frFR("")
-
-T_("Nemoh")
-esES("")
-euES("")
-frFR("")
-
-T_("Nemoh v115")
-esES("")
-euES("")
-frFR("")
-
-T_("Nemoh v3")
-esES("")
-euES("")
-frFR("")
-
-T_("Capytaine")
-esES("")
-euES("")
-frFR("")
-
-T_("HAMS")
-esES("")
-euES("")
-frFR("")
-
-T_("AQWA")
-esES("")
-euES("")
-frFR("")
-
-T_("Avg() has to have same number of values")
-esES("")
-euES("")
-frFR("")
-
 T_("All models have to have the same number of bodies")
 esES("")
 euES("")
@@ -372,11 +3024,6 @@ euES("")
 frFR("")
 
 T_("All models have to have the same gravity")
-esES("")
-euES("")
-frFR("")
-
-T_("All models have to have the same periods")
 esES("")
 euES("")
 frFR("")
@@ -406,12 +3053,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("All models have to have the same centre of reference")
-esES("")
-euES("")
-frFR("")
-
-T_("All models have to have the same number of dof")
+T_("All models and bodies have to have the same centre of reference")
 esES("")
 euES("")
 frFR("")
@@ -496,7 +3138,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Conversion to file type '%s' not supported")
+T_("%s is not the same %f:%f<>%f:%f")
+esES("")
+euES("")
+frFR("")
+
+T_("%s[%d][%d](%d, %d)")
 esES("")
 euES("")
 frFR("")
@@ -541,7 +3188,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s")
+T_("g [m/s2]: %s, h [m]: %s, rho [kg/m\302\263]: %s, length scale [m]: %s")
 esES("")
 euES("")
 frFR("")
@@ -601,12 +3248,27 @@ esES("")
 euES("")
 frFR("")
 
-T_("dof")
+T_("vol [m\302\263]")
 esES("")
 euES("")
 frFR("")
 
-T_("vol [m3]")
+T_("Incorrect length in model")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect dimension type in model")
+esES("")
+euES("")
+frFR("")
+
+T_("Sorting frequencies and headings")
+esES("")
+euES("")
+frFR("")
+
+T_("Obtaining Ainf, Kirf, and A0")
 esES("")
 euES("")
 frFR("")
@@ -627,12 +3289,12 @@ esES("")
 euES("")
 frFR("")
 
-T_("Cancelled by the user")
+T_("Obtaining the infinite-frequency added mass (A\342\210\236)")
 esES("")
 euES("")
 frFR("")
 
-T_("Obtaining the infinite-frequency added mass (A\342\210\236)")
+T_("Obtaining Ainf_w")
 esES("")
 euES("")
 frFR("")
@@ -642,1694 +3304,175 @@ esES("")
 euES("")
 frFR("")
 
-T_("Loading files")
+T_("Filling QTF matrices")
 esES("")
 euES("")
 frFR("")
 
-T_("Model '%s' is already loaded")
+T_("Postprocessing meshes and symmetrizing potentials")
 esES("")
 euES("")
 frFR("")
 
-T_("OrcaWAVE .owd binary format is not supported.\nHowever OrcaFLEX .yml is "
-     "supported.\nTo get it, load the .owd file in OrcaFlex and save it as .yml")
+T_("Obtaining A and B from potentials")
 esES("")
 euES("")
 frFR("")
 
-T_("Unknown BEM file extension in '%s'")
+T_("Obtaining Ffk from potentials")
 esES("")
 euES("")
 frFR("")
 
-T_("Problem processing '%s'\n%s")
+T_("Obtaining incident potentials from mesh")
 esES("")
 euES("")
 frFR("")
 
-T_("Problem joining models: '%s'\n%s")
+T_("Obtaining Ffk from bmr potentials")
 esES("")
 euES("")
 frFR("")
 
-T_("Loading mesh '%s'")
+T_("Obtaining Fsc from potentials")
 esES("")
 euES("")
 frFR("")
 
-T_("Model is already loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem loading '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Healing mesh '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem healing '%s': %s")
-esES("")
-euES("")
-frFR("")
-
-T_("The mesh is in good condition")
-esES("")
-euES("")
-frFR("")
-
-T_("Orienting surface mesh '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem orienting surface '%s': %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Getting underwater mesh '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem loading '%s': %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Splitting mesh '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem adding flat panel: %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem adding revolution surface: %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Water surface removed")
-esES("")
-euES("")
-frFR("")
-
-T_("Water surface")
-esES("")
-euES("")
-frFR("")
-
-T_("Water surface extracted")
-esES("")
-euES("")
-frFR("")
-
-T_("Loading '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Error loading '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Saving '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Error saving '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Impossible to save '%s'. File already used.")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem loading '%s' file")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown BEM input format")
-esES("")
-euES("")
-frFR("")
-
-T_("Number cases must be higher than 1 (%d)")
-esES("")
-euES("")
-frFR("")
-
-T_("Number of cases %d must not be higher than number of frequencies %d")
-esES("")
-euES("")
-frFR("")
-
-T_("Impossible to clean folder '%s'. Maybe it is in use")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem creating '%s' folder")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect depth %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect number of frequencies %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect min frequency %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Minimum frequency %s has to be lower than maximum frequency %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect number of headings %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect min heading %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect max heading %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Minimum heading %s has to be lower than maximum heading %s")
-esES("")
-euES("")
-frFR("")
-
-T_("The case has to include at least one body")
-esES("")
-euES("")
-frFR("")
-
-T_("This solver just processes one body")
-esES("")
-euES("")
-frFR("")
-
-T_("'empty'")
-esES("")
-euES("")
-frFR("")
-
-
-// BEMRosetta.h
-
-T_("Wamit")
-esES("")
-euES("")
-frFR("")
-
-T_("Wamit.1.2.3")
-esES("")
-euES("")
-frFR("")
-
-T_("HAMS.Wamit")
-esES("")
-euES("")
-frFR("")
-
-T_("Wadam.Wamit")
-esES("")
-euES("")
-frFR("")
-
-T_("Wamit.FAST")
-esES("")
-euES("")
-frFR("")
-
-T_("SeaFEM.Nemoh")
-esES("")
-euES("")
-frFR("")
-
-T_("FOAMM")
-esES("")
-euES("")
-frFR("")
-
-T_("BEMRosetta")
-esES("")
-euES("")
-frFR("")
-
-T_("Diodore")
-esES("")
-euES("")
-frFR("")
-
-T_("OrcaWave")
-esES("")
-euES("")
-frFR("")
-
-T_("CSV.mat")
-esES("")
-euES("")
-frFR("")
-
-T_("CSV.tab")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown")
-esES("")
-euES("")
-frFR("")
-
-T_("Wm.o")
-esES("")
-euES("")
-frFR("")
-
-T_("Wm.1")
-esES("")
-euES("")
-frFR("")
-
-T_("HAM")
-esES("")
-euES("")
-frFR("")
-
-T_("WDM")
-esES("")
-euES("")
-frFR("")
-
-T_("FST")
-esES("")
-euES("")
-frFR("")
-
-T_("Nmh")
-esES("")
-euES("")
-frFR("")
-
-T_("SFM")
-esES("")
-euES("")
-frFR("")
-
-T_("AQW")
-esES("")
-euES("")
-frFR("")
-
-T_("FMM")
-esES("")
-euES("")
-frFR("")
-
-T_("BMR")
-esES("")
-euES("")
-frFR("")
-
-T_("DIO")
-esES("")
-euES("")
-frFR("")
-
-T_("ORC")
-esES("")
-euES("")
-frFR("")
-
-T_("CSVm")
-esES("")
-euES("")
-frFR("")
-
-T_("CSVt")
-esES("")
-euES("")
-frFR("")
-
-T_("\302\277?")
-esES("")
-euES("")
-frFR("")
-
-T_("INFINITY")
-esES("")
-euES("")
-frFR("")
-
-T_("m")
-esES("")
-euES("")
-frFR("")
-
-T_("m2")
-esES("")
-euES("")
-frFR("")
-
-T_("N/m2")
-esES("")
-euES("")
-frFR("")
-
-T_("Nm/m2")
-esES("")
-euES("")
-frFR("")
-
-
-// CommandLine.cpp
-
-T_("BEMRosetta is at '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Build date is %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Compiler is %s, version %d, mode %s, %d bits")
-esES("")
-euES("")
-frFR("")
-
-T_("Missing parameters when reading '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Usage: bemrosetta_cl [options]")
-esES("")
-euES("")
-frFR("")
-
-T_("Options:")
-esES("")
-euES("")
-frFR("")
-
-T_("-h  -help                 # Print options")
-esES("")
-euES("")
-frFR("")
-
-T_("-echo \"text\"            # Prints \"text\"")
-esES("")
-euES("")
-frFR("")
-
-T_("-pause")
-esES("")
-euES("")
-frFR("")
-
-T_("-general                  # The next commands are for any data (default)")
-esES("")
-euES("")
-frFR("")
-
-T_("-paramfile <file>         # Params in a file. New lines are like separators "
-     "and # indicates a comment")
-esES("")
-euES("")
-frFR("")
-
-T_("-params <param> <value>   # Set physical parameters:")
-esES("")
-euES("")
-frFR("")
-
-T_("               g         \t# gravity       [m/s2]  ")
-esES("")
-euES("")
-frFR("")
-
-T_("               rho        # water density [kg/m3] ")
-esES("")
-euES("")
-frFR("")
-
-T_("-echo off/on              # Show text messages")
-esES("")
-euES("")
-frFR("")
-
-T_("-csvseparator <sep>       # Sets the separator for .csv files")
-esES("")
-euES("")
-frFR("")
-
-T_("-isEqual <value>          # Stops if last print is not equal to <value>")
-esES("")
-euES("")
-frFR("")
-
-T_("-isSimilar <value>        # Stops if <value> is not included in last print")
-esES("")
-euES("")
-frFR("")
-
-T_("-bem                      # The next commands are for BEM data")
-esES("")
-euES("")
-frFR("")
-
-T_("-i  -input <file>         # Load model")
-esES("")
-euES("")
-frFR("")
-
-T_("-c  -convert <file>       # Export actual model to output file")
-esES("")
-euES("")
-frFR("")
-
-T_("-setid <id>               # Set the id of the default BEM model")
-esES("")
-euES("")
-frFR("")
-
-T_("-params <param> <value>   # Set parameters:")
-esES("")
-euES("")
-frFR("")
-
-T_("               length     # length scale  []      ")
-esES("")
-euES("")
-frFR("")
-
-T_("               depth      # water depth   [m]     ")
-esES("")
-euES("")
-frFR("")
-
-T_("-p  -print <params>       # Prints model data in a row")
-esES("")
-euES("")
-frFR("")
-
-T_("        <params> nb                  # Number of bodies  []")
-esES("")
-euES("")
-frFR("")
-
-T_("                 nf                  # Number of frequencies []")
-esES("")
-euES("")
-frFR("")
-
-T_("                 nh                  # Number of headings    []")
-esES("")
-euES("")
-frFR("")
-
-T_("                 w                   # List of frequencies   [rad/s]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 headings            # List of headings      [deg]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 a <dof1> <dof2>     # List of A(w)(6*Nb, 6*Nb) [Kg]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 b <dof1> <dof2>     # List of B(w)(6*Nb, 6*Nb)")
-esES("")
-euES("")
-frFR("")
-
-T_("                 ainf                # Ainf(6*Nb, 6*Nb)  [Kg]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 Theave <ibody>      # Heave resonance period for body "
-     "ib [s]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 Troll <ibody>       # Roll resonance period for body "
-     "ib [s]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 Tpitch <ibody>      # Pitch resonance period for body "
-     "ib [s]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 GMroll <ibody>      # GM in roll [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("                 GMpitch <ibody>     # GM in pitch [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("-r  -report               # Output last loaded model data")
-esES("")
-euES("")
-frFR("")
-
-T_("-cl -clear                # Clear loaded model")
-esES("")
-euES("")
-frFR("")
-
-T_("-mesh                     # The next commands are for mesh data")
-esES("")
-euES("")
-frFR("")
-
-T_("-c  -convert <file> <opts># Export actual model to output file")
-esES("")
-euES("")
-frFR("")
-
-T_("        <opts> symx       # - Save only positive X")
-esES("")
-euES("")
-frFR("")
-
-T_("               symy       # - Save only positive Y")
-esES("")
-euES("")
-frFR("")
-
-T_("               symx symy  # - Save only positive X and Y")
-esES("")
-euES("")
-frFR("")
-
-T_("               Wamit.gdf  # - Save in Wamit .gdf format")
-esES("")
-euES("")
-frFR("")
-
-T_("               Nemoh.dat  # - Save in Nemoh .dat format")
-esES("")
-euES("")
-frFR("")
-
-T_("               HAMS.pnl   # - Save in HAMS  .pnl format")
-esES("")
-euES("")
-frFR("")
-
-T_("               STL.Text   # - Save in STL   text format")
-esES("")
-euES("")
-frFR("")
-
-T_("-t   -translate <x> <y> <z>     # Translate x, y, z [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("-rot -rotate   <ax> <ay> <az> <cx> <cy> <cz>  # Rotate angle ax, ay, az "
-     "[deg] around cx, cy, cz [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("-cg            <x> <y> <z>      # Sets cg: x, y, z [m] cg is the centre "
-     "of gravity")
-esES("")
-euES("")
-frFR("")
-
-T_("-c0            <x> <y> <z>      # Sets c0: x, y, z [m] c0 is the centre "
-     "of motion")
-esES("")
-euES("")
-frFR("")
-
-T_("-mass          <value>          # Sets the body mass [kg]")
-esES("")
-euES("")
-frFR("")
-
-T_("-getwaterplane                  # Extract in new model the waterplane "
-     "mesh (lid)")
-esES("")
-euES("")
-frFR("")
-
-T_("-gethull                        # Extract in new model the mesh underwater "
-     "hull")
-esES("")
-euES("")
-frFR("")
-
-T_("-setid <id>                     # Set the id of the default mesh model")
-esES("")
-euES("")
-frFR("")
-
-T_("-reset                          # Restore the mesh to the initial situation")
-esES("")
-euES("")
-frFR("")
-
-T_("-r  -report                     # Output last loaded model data")
-esES("")
-euES("")
-frFR("")
-
-T_("-p  -print <params>             # Prints model data in a row")
-esES("")
-euES("")
-frFR("")
-
-T_("     <params> volume            # volx voly volx [m3]")
-esES("")
-euES("")
-frFR("")
-
-T_("              underwatervolume  # volx voly volx [m3]")
-esES("")
-euES("")
-frFR("")
-
-T_("              surface           # [m2]")
-esES("")
-euES("")
-frFR("")
-
-T_("              underwatersurface # [m2]")
-esES("")
-euES("")
-frFR("")
-
-T_("              cb                # cbx cby cbz [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("              cg_vol            # cgx cgy cgz [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("              cg_surf           # cgx cgy cgz [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("              hydrostiffness    # Hydrostatic stiffness around the rotation "
-     "centre")
-esES("")
-euES("")
-frFR("")
-
-T_("                                # returns K(3,3) [N/m]")
-esES("")
-euES("")
-frFR("")
-
-T_("                                #         K(3,4) K(3,5) K(4,3) [N/rad]")
-esES("")
-euES("")
-frFR("")
-
-T_("                                #         K(4,4) K(4,5) K(4,6) [Nm/rad]")
-esES("")
-euES("")
-frFR("")
-
-T_("                                #         K(5,3) [N/rad]")
-esES("")
-euES("")
-frFR("")
-
-T_("                                #         K(5,4) K(5,5) K(5,6) K(6,4) "
-     "K(6,5) K(6,6) [Nm/rad]")
-esES("")
-euES("")
-frFR("")
-
-T_("              hydrostatic_force # Hydrostatic force around the motion "
-     "centre")
-esES("")
-euES("")
-frFR("")
-
-T_("                                # returns Fx, Fy, Fz [N]")
-esES("")
-euES("")
-frFR("")
-
-T_("                                #         Mx(roll), My(pitch), Mz(yaw) "
-     "[N\302\267m]")
-esES("")
-euES("")
-frFR("")
-
-T_("              inertia      <cx> <cy> <cz>")
-esES("")
-euES("")
-frFR("")
-
-T_("              inertia_vol  <cx> <cy> <cz> # Inertia tensor around cx, "
-     "cy, cz [m], considering the mass spread in the volume")
-esES("")
-euES("")
-frFR("")
-
-T_("              inertia_surf <cx> <cy> <cz> # Inertia tensor around cx, "
-     "cy, cz [m], considering the mass spread in the surface")
-esES("")
-euES("")
-frFR("")
-
-T_("                                # returns Ixx Ixy Ixz Iyx Iyy Iyz Izx "
-     "Izy Izz [m2]")
-esES("")
-euES("")
-frFR("")
-
-T_("              GZ <angle> <from> <to> <delta> # GZ around angle [deg] (0 "
-     "is around Y axis), from-to-delta [deg]")
-esES("")
-euES("")
-frFR("")
-
-T_("                                # returns the set of angles [deg] and "
-     "their gz values [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("              GM                # returns GMpitch GMroll [m]")
-esES("")
-euES("")
-frFR("")
-
-T_("-cl -clear                      # Clear loaded model")
-esES("")
-euES("")
-frFR("")
-
-T_("-time                           # The next commands are for time series")
-esES("")
-euES("")
-frFR("")
-
-T_("-i  -input <file>               # Load file")
-esES("")
-euES("")
-frFR("")
-
-T_("-c  -convert <file>             # Export actual model to output file")
-esES("")
-euES("")
-frFR("")
-
-T_("-p  -print <params>             # Prints file data in a row")
-esES("")
-euES("")
-frFR("")
-
-T_("     <params> list              # Parameter names")
-esES("")
-euES("")
-frFR("")
-
-T_("              <param> <time>    # Value of <param> in <time>")
-esES("")
-euES("")
-frFR("")
-
-T_("              <param> avg       # <param> avg")
-esES("")
-euES("")
-frFR("")
-
-T_("              <param> max       # <param> max")
-esES("")
-euES("")
-frFR("")
-
-T_("              <param> min       # <param> min")
-esES("")
-euES("")
-frFR("")
-
-T_("-orca                           # The next commands are for OrcaFlex handling "
-     "(Required to be installed)")
-esES("")
-euES("")
-frFR("")
-
-T_("-rw -runwave <from> <to>        # OrcaWave calculation with <from>, results "
-     "in <to>")
-esES("")
-euES("")
-frFR("")
-
-T_("-numtries <num>                 # Number <num> of attempts to connect "
-     "to the license")
-esES("")
-euES("")
-frFR("")
-
-T_("-numthread <num>                # Set the number of threads for OrcaWave")
-esES("")
-euES("")
-frFR("")
-
-T_("-timelog <num>                  # Set minimum clock seconds per each OrcaFlex "
-     "simulation log")
-esES("")
-euES("")
-frFR("")
-
-T_("-rf -runflex <from> <to>        # OrcaFlex calculation with <from>, results "
-     "in <to>")
-esES("")
-euES("")
-frFR("")
-
-T_("-ls -loadSim <sim>       \t\t  # Load OrcaFlex simulation in <sim>")
-esES("")
-euES("")
-frFR("")
-
-T_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference "
-     "system for outputs")
-esES("")
-euES("")
-frFR("")
-
-T_("-lp -loadParam <param>          # Load param to be saved")
-esES("")
-euES("")
-frFR("")
-
-T_("-cp -clearParams                # Clear parameters loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("-c  -convert <file>             # Export the loaded params of the actual "
-     "model to output file (csv)")
-esES("")
-euES("")
-frFR("")
-
-T_("              numthread         # Number of threads")
-esES("")
-euES("")
-frFR("")
-
-T_("              <param> data      # <param> data series")
-esES("")
-euES("")
-frFR("")
-
-T_("-dll <file/folder>              # File or folder where OrcaFlex .dll is "
-     "located. Use if detection doesn't work")
-esES("")
-euES("")
-frFR("")
-
-T_("The actions:")
-esES("")
-euES("")
-frFR("")
-
-T_("- are done in sequence: if a physical parameter is changed after export, "
-     "saved files will not include the change")
-esES("")
-euES("")
-frFR("")
-
-T_("- can be repeated as desired")
-esES("")
-euES("")
-frFR("")
-
-T_("Copyright (c) 2023. Hydrodynamic coefficients converter for Boundary Element "
-     "Method solver formats\nVersion beta BUILDINFO")
-esES("")
-euES("")
-frFR("")
-
-T_("BEM configuration data is not loaded. Defaults values are set")
-esES("")
-euES("")
-frFR("")
-
-T_("Command argument list is empty")
-esES("")
-euES("")
-frFR("")
-
-T_("Last print is equal to \"%s\"")
-esES("")
-euES("")
-frFR("")
-
-T_("Last print is not equal to \"%s\"")
-esES("")
-euES("")
-frFR("")
-
-T_("Last print is similar to \"%s\"")
-esES("")
-euES("")
-frFR("")
-
-T_("Wrong argument '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Gravity is %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Density is %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown argument '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("File '%s' not found")
-esES("")
-euES("")
-frFR("")
-
-T_("File '%s' loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("Report: No file loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("BEM data cleared")
-esES("")
-euES("")
-frFR("")
-
-T_("No file loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("Invalid id %s")
-esES("")
-euES("")
-frFR("")
-
-T_("BEM active model id is %d")
-esES("")
-euES("")
-frFR("")
-
-T_("Model id %d saved as '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("length is %f")
-esES("")
-euES("")
-frFR("")
-
-T_("depth is %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Nb:")
-esES("")
-euES("")
-frFR("")
-
-T_("Nh:")
-esES("")
-euES("")
-frFR("")
-
-T_("Nf:")
-esES("")
-euES("")
-frFR("")
-
-T_("w:")
-esES("")
-euES("")
-frFR("")
-
-T_("head:")
-esES("")
-euES("")
-frFR("")
-
-T_("Wrong dof in '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("A(%d,%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("Ainf:")
-esES("")
-euES("")
-frFR("")
-
-T_("B:")
-esES("")
-euES("")
-frFR("")
-
-T_("Wrong body id. in '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Theave(%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("Troll(%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("Tpitch(%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("GMroll(%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("GMpitch(%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh data cleared")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh active model id is %d")
-esES("")
-euES("")
-frFR("")
-
-T_("Saving format '%s' is not implemented")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh id %d translated %f, %f, %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh id %d rotated angles %f, %f, %f around centre %f, %f, %f")
-esES("")
-euES("")
-frFR("")
-
-T_("CG is %f, %f, %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Mass is %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh id %d position is reset")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh id %d waterplane is got")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh id %d hull is got")
-esES("")
-euES("")
-frFR("")
-
-T_("Volume:")
-esES("")
-euES("")
-frFR("")
-
-T_("UnderwaterVolume:")
-esES("")
-euES("")
-frFR("")
-
-T_("Surface:")
-esES("")
-euES("")
-frFR("")
-
-T_("UnderwaterSurface:")
-esES("")
-euES("")
-frFR("")
-
-T_("CB:")
-esES("")
-euES("")
-frFR("")
 
-T_("CG_vol:")
-esES("")
-euES("")
-frFR("")
-
-T_("CG_surf:")
-esES("")
-euES("")
-frFR("")
-
-T_("HydrostaticStiffness:")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh warning_ Maybe incomplete")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh error: Probably incomplete")
-esES("")
-euES("")
-frFR("")
-
-T_("HydrostaticForce:")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh warning: Maybe incomplete")
-esES("")
-euES("")
-frFR("")
-
-T_("Inertia:")
-esES("")
-euES("")
-frFR("")
-
-T_("GZ:")
-esES("")
-euES("")
-frFR("")
-
-T_("gm:")
-esES("")
-euES("")
-frFR("")
-
-T_("Results saved as '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("List of parameters:")
-esES("")
-euES("")
-frFR("")
-
-T_("Parameter '%s' not found")
-esES("")
-euES("")
-frFR("")
-
-T_("DLL not found")
-esES("")
-euES("")
-frFR("")
-
-T_("Next try (%d/%d)")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem loading '%s'. %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Diffraction results saved at '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Error running OrcaFlex: %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Simulation aborted: The simulation has become unstable because the solver "
-     "parameters (time step, iterations num.) or other, have to ve reviewed.")
-esES("")
-euES("")
-frFR("")
-
-T_("Simulation results saved at '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Simulation '%s' loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("Invalid thread number %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Thread number set to %d")
-esES("")
-euES("")
-frFR("")
-
-T_("Number of OrcaFlex license tries set to %d")
-esES("")
-euES("")
-frFR("")
-
-T_("Invalid time between logs %s")
-esES("")
-euES("")
-frFR("")
-
-T_("OrcaFlex time between logs set to %.1f sec")
-esES("")
-euES("")
-frFR("")
-
-T_("List of parameters (%d):")
-esES("")
-euES("")
-frFR("")
-
-T_("Last command '%s' is not complete")
-esES("")
-euES("")
-frFR("")
-
-T_("Parameter '%s' not found in -p")
-esES("")
-euES("")
-frFR("")
-
-T_("DLL '%s' not found")
-esES("")
-euES("")
-frFR("")
-
-T_("Orca .dll '%s' loaded")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown error")
-esES("")
-euES("")
-frFR("")
-
-T_("Error: %s")
-esES("")
-euES("")
-frFR("")
-
-T_("In case of doubt try option -h or -help")
-esES("")
-euES("")
-frFR("")
-
-T_("or just call command line without arguments to open GUI window")
-esES("")
-euES("")
-frFR("")
-
-
-// hydro.cpp
-
-T_("Insufficient data to get RAO: A and B are required")
-esES("")
-euES("")
-frFR("")
-
-T_("Insufficient data to get RAO: C and M are required")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem solving RAO")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem translating model: '%s'\n%s")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem reseting DOF: '%s'\n%s")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem swaping DOF: '%s'\n%s")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem symmetrizing data: '%s'\n%s")
-esES("")
-euES("")
-frFR("")
-
-
-// Mesh.cpp
-
-T_("Parsing error: ")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown mesh file format '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Model is empty. No data found")
-esES("")
-euES("")
-frFR("")
-
-T_("Unknown mesh file type")
-esES("")
-euES("")
-frFR("")
-
-T_("Mesh file '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("Limits [m] (%f - %f, %f - %f, %f - %f)")
-esES("")
-euES("")
-frFR("")
-
-T_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Surface projection X-axis [m2] %f - %f = %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Surface projection Y-axis [m2] %f - %f = %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Surface [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Volume [m3] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater surface [m2] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Underwater volume [m3] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Displacement [tm] %f")
-esES("")
-euES("")
-frFR("")
-
-T_("Centre of buoyancy [m] (%f, %f, %f)")
-esES("")
-euES("")
-frFR("")
-
-T_("Loaded %d panels and %d nodes")
-esES("")
-euES("")
-frFR("")
-
-T_("Problem obtaining GZ")
-esES("")
-euES("")
-frFR("")
-
+// GridBody.cpp
 
-// hams_mesh.cpp
-
-T_("Impossible to open file '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("File is not in HAMS .pnl format")
-esES("")
-euES("")
-frFR("")
-
-T_("Format error in HAMS .dat mesh file. Number of Panels, Nodes, X-Symmetry "
-     "and Y-Symmetry not found")
+T_("#")
 esES("")
 euES("")
 frFR("")
 
-T_("Format error in HAMS .dat mesh file. Start Definition of Node Coordinates "
-     "not found")
+T_("Node %d")
 esES("")
 euES("")
 frFR("")
 
-T_("Format error in HAMS .dat mesh file. Points list End not found")
+T_("Area")
 esES("")
 euES("")
 frFR("")
 
-T_("Format error in HAMS .dat mesh file. Start Definition of Node Relations "
-     "not found")
+T_("Center %s")
 esES("")
 euES("")
 frFR("")
 
-T_("id 1 not found")
+T_("Normal %s")
 esES("")
 euES("")
 frFR("")
 
-T_("id 2 not found")
+T_("|\316\246rad| %s")
 esES("")
 euES("")
 frFR("")
 
-T_("id 3 not found")
+T_("arg(\316\246rad) %s")
 esES("")
 euES("")
 frFR("")
 
-T_("id 4 not found")
+T_("|Prad| %s")
 esES("")
 euES("")
 frFR("")
 
-T_("Format error in HAMS .pnl mesh file. Panels list End not found")
+T_("arg(Prad) %s")
 esES("")
 euES("")
 frFR("")
 
-T_("Impossible to open '%s'")
+T_("A_%s")
 esES("")
 euES("")
 frFR("")
 
-T_("Mesh contains both waterplane and hull panels. Please separate them before "
-     "saving.")
+T_("B_%s")
 esES("")
 euES("")
 frFR("")
 
-T_("HAMS only allows one symmetry at a time, either X or Y.")
+T_("|\316\246inc| %.0f")
 esES("")
 euES("")
 frFR("")
-
 
-// aqwa_mesh.cpp
-
-T_("Format error in AQWA .dat mesh file")
+T_("arg(\316\246inc) %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Only metric system is supported")
+T_("|Pinc| %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Unknown mass unit")
+T_("arg(Pinc) %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Unknown length unit")
+T_("|Ffk| %s %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Impossible to open '%s'\n")
+T_("arg(Ffk) %s %.0f")
 esES("")
 euES("")
 frFR("")
-
 
-// salome_mesh.cpp
-
-T_("Format error in Nemoh .dat mesh file")
+T_("|\316\246inc_bmr| %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Found more nodes that the indicated in the first row")
+T_("arg(\316\246inc_bmr) %.0f")
 esES("")
 euES("")
 frFR("")
-
 
-// wamit_mesh.cpp
-
-T_("'ZONE' field not found")
+T_("|Pinc_bmr| %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Wrong length scale in .gdf file")
+T_("arg(Pinc_bmr) %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_("Number of patches not found in .gdf file")
+T_("|Ffk_bmr| %s %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_(".gdf files represented by B-splines (IGDEF = 1) are not supported")
+T_("arg(Ffk_bmr) %s %.0f")
 esES("")
 euES("")
 frFR("")
 
-T_(".gdf files represented by MultiSurf .ms2 files (IGDEF = 2) are not supported")
+T_("|\316\246dif|")
 esES("")
 euES("")
 frFR("")
 
-T_(".gdf files represented by a special subrutine (IGDEF < 0  or > 2) are "
-     "not supported")
+T_("arg(\316\246dif) %.0f")
 esES("")
 euES("")
 frFR("")
-
-
-// diodore_mesh.cpp
 
-T_("Format error in Diodore .txt mesh file")
+T_("|Pdif|")
 esES("")
 euES("")
 frFR("")
 
-T_("Format error")
+T_("arg(Pdif) %.0f")
 esES("")
 euES("")
 frFR("")
@@ -2387,42 +3530,12 @@ esES("")
 euES("")
 frFR("")
 
+T_("No body found")
+esES("")
+euES("")
+frFR("")
+
 T_("Error")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect number of points in x direction %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect free surface elevation %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect number of Kochin function directions %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect Kochin direction %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Minimum Kochin direction %s has to be lower than maximum direction %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect rho %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect g %s")
 esES("")
 euES("")
 frFR("")
@@ -2487,36 +3600,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Unexpected data %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Free surface data is already loaded %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Kochin data is already loaded %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect number of points in x direction %s (0 for no free surface calculation)")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect free surface domain X %s")
-esES("")
-euES("")
-frFR("")
-
-T_("Incorrect free surface domain Y %s")
-esES("")
-euES("")
-frFR("")
-
 T_("Impossible to create '%s'")
 esES("")
 euES("")
@@ -2552,6 +3635,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Body_%d.dat")
+esES("")
+euES("")
+frFR("")
+
 T_("Problem copying gren file '%s'")
 esES("")
 euES("")
@@ -2567,12 +3655,19 @@ esES("")
 euES("")
 frFR("")
 
-T_("Wrong format in Wamit file '%s'. No headings found")
+T_("Wrong format in QTF file '%s'. No headings found")
 esES("")
 euES("")
 frFR("")
 
-T_("Stop by user")
+T_("Frecuency not found. May be radiation file doesn't match with Nemoh.cal "
+     "file")
+esES("")
+euES("")
+frFR("")
+
+T_("Frecuency not found. May be excitation file doesn't match with Nemoh.cal "
+     "file")
 esES("")
 euES("")
 frFR("")
@@ -2617,6 +3712,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Number of frequencies %d does not match with previously loaded %d")
+esES("")
+euES("")
+frFR("")
+
 T_("Minimum_frequency_Wmin not found")
 esES("")
 euES("")
@@ -2633,6 +3733,16 @@ euES("")
 frFR("")
 
 T_("HAMS loader just allows equidistant frequencies")
+esES("")
+euES("")
+frFR("")
+
+T_("List of frequencies does not match with previously loaded")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of headings %d does not match with previously loaded %d")
 esES("")
 euES("")
 frFR("")
@@ -2657,6 +3767,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("List of headings does not match with previously loaded")
+esES("")
+euES("")
+frFR("")
+
 T_("Lack of data in Reference_body_center")
 esES("")
 euES("")
@@ -2677,7 +3792,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("Problem copying Hams mesh exe file from '%s'")
+T_("Problem copying Hams WAMIT_MeshTran exe file from '%s'")
 esES("")
 euES("")
 frFR("")
@@ -2725,6 +3840,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Unknown body found in COB %d (%d)")
+esES("")
+euES("")
+frFR("")
+
 T_("Body # does not match in 'HYDSTIFFNESS' %d<>%d")
 esES("")
 euES("")
@@ -2736,6 +3856,11 @@ euES("")
 frFR("")
 
 T_("Frequency # does not match in '%s' %d<>%d")
+esES("")
+euES("")
+frFR("")
+
+T_("Body # does not match in ADDEDMASS_LF %d<>%d")
 esES("")
 euES("")
 frFR("")
@@ -2755,27 +3880,47 @@ esES("")
 euES("")
 frFR("")
 
+T_("Loading")
+esES("")
+euES("")
+frFR("")
+
 T_("Number of bodies not found")
 esES("")
 euES("")
 frFR("")
 
-T_("Wrong body %d")
-esES("")
-euES("")
-frFR("")
-
-T_("Number of frequencies not found")
-esES("")
-euES("")
-frFR("")
-
-T_("Number of headings not found")
+T_("Unknown mass unit")
 esES("")
 euES("")
 frFR("")
 
 T_("Bad body id")
+esES("")
+euES("")
+frFR("")
+
+T_("Node number #1 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Node number #2 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Node number #3 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Node number #4 not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong body %d")
 esES("")
 euES("")
 frFR("")
@@ -2847,11 +3992,6 @@ esES("")
 euES("")
 frFR("")
 
-T_("Impossible to open file")
-esES("")
-euES("")
-frFR("")
-
 T_("Format error in AQWA file")
 esES("")
 euES("")
@@ -2867,20 +4007,20 @@ esES("")
 euES("")
 frFR("")
 
-
-// wamit.cpp
-
-T_("Loading out file '%s'")
+T_("Problem creating '%s' file")
 esES("")
 euES("")
 frFR("")
+
+
+// wamit.cpp
 
 T_("Configuration file .cfg file '%s'")
 esES("")
 euES("")
 frFR("")
 
-T_("Potential Control file .pot file '%s'")
+T_("Output file '%s'")
 esES("")
 euES("")
 frFR("")
@@ -2891,6 +4031,11 @@ euES("")
 frFR("")
 
 T_("Only supported .frc alternative form 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Potential Control file .pot file '%s'")
 esES("")
 euES("")
 frFR("")
@@ -2936,6 +4081,11 @@ euES("")
 frFR("")
 
 T_("Second order mean drift coefficients .12d file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh file .mmx file '%s'")
 esES("")
 euES("")
 frFR("")
@@ -3000,42 +4150,17 @@ esES("")
 euES("")
 frFR("")
 
-T_("c0 matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
-T_("Vo matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
-T_("cg matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
-T_("cb matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
-T_("M matrix is not dimensioned")
-esES("")
-euES("")
-frFR("")
-
 T_("Problem in M matrix. Please report")
 esES("")
 euES("")
 frFR("")
 
-T_("C matrix is not dimensioned")
+T_("No bodies found in Wamit file '%s'")
 esES("")
 euES("")
 frFR("")
 
-T_("Wrong format in Wamit file '%s'")
+T_("No frequencies found in Wamit file '%s'")
 esES("")
 euES("")
 frFR("")
@@ -3061,6 +4186,23 @@ euES("")
 frFR("")
 
 T_("Incorrect .out format")
+esES("")
+euES("")
+frFR("")
+
+T_("HydroStar .mcn file not found.\nIt is advisable to include it to avoid "
+     "misunderstandings regarding the global and body axis.\nThe default criteria "
+     "defined by HydroStar have been considered.")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong body in COGPOINT_BODY")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong body in REFPOINT")
 esES("")
 euES("")
 frFR("")
@@ -3115,6 +4257,21 @@ esES("")
 euES("")
 frFR("")
 
+T_("Wrong ISTIF %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Expected to find 'Length scale:' text in .mmx file")
+esES("")
+euES("")
+frFR("")
+
+T_("Unexpected body %d found")
+esES("")
+euES("")
+frFR("")
+
 T_("Impossible to convert finite-depth wave number into frequency")
 esES("")
 euES("")
@@ -3130,18 +4287,25 @@ esES("")
 euES("")
 frFR("")
 
-T_("Number of frequencies loaded is different than previous (%d != %d)")
+T_("The files read have different number of bodies.\nIn the previous is %d, "
+     "in the .1 is %d")
 esES("")
 euES("")
 frFR("")
 
-T_("Frequencies loaded are different than previous\nPrevious: %s\nSeries: "
-     "  %s")
+T_("The files read have different number of frequencies.\nIn the previous "
+     "is %d, in the .1 is %d")
 esES("")
 euES("")
 frFR("")
 
-T_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s")
+T_("Wrong format in Wamit file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different number of frequencies.\nIn the previous "
+     "is %s, in the .1 is %s")
 esES("")
 euES("")
 frFR("")
@@ -3166,7 +4330,49 @@ esES("")
 euES("")
 frFR("")
 
-T_("Number of headings loaded is different than previous (%d != %d)")
+T_("The files read have different number of bodies.\nIn the previous is %d, "
+     "in the .hst is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different number of headings.\nIn the previous is "
+     "%d, in this one is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different number of bodies.\nIn the previous is %d, "
+     "in this one is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different number of frequencies.\nIn the previous "
+     "is %d, in this one is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different frequencies.\nIn the previous has %s,\nin "
+     "this one has %s")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different number of bodies.\nIn the previous is %d, "
+     "in the 12 is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong format in Wamit file '%s'. No headings found")
+esES("")
+euES("")
+frFR("")
+
+T_("The files read have different number of frequencies.\nIn the previous "
+     "is %s,\nin this one is %s")
 esES("")
 euES("")
 frFR("")
@@ -3189,6 +4395,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("File not found or blocked")
+esES("")
+euES("")
+frFR("")
+
 T_("RAOOrigin for body %d (%s, %s, %s) diferent than the previously set (%f, "
      "%f, %f)")
 esES("")
@@ -3206,21 +4417,6 @@ euES("")
 frFR("")
 
 T_("Only SI and User units are supported. Read '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("This length unit is not supported. Read '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("This mass unit is not supported. Read '%s'")
-esES("")
-euES("")
-frFR("")
-
-T_("This force unit is not supported. Read '%s'")
 esES("")
 euES("")
 frFR("")
@@ -3295,7 +4491,7 @@ esES("")
 euES("")
 frFR("")
 
-T_("No body found")
+T_("Wrong panel %d (%d,%d,%d,%d)")
 esES("")
 euES("")
 frFR("")
@@ -3345,6 +4541,11 @@ esES("")
 euES("")
 frFR("")
 
+T_("Impossible to open file '%s'")
+esES("")
+euES("")
+frFR("")
+
 
 // diodore.cpp
 
@@ -3374,9 +4575,277 @@ euES("")
 frFR("")
 
 
+// matlab.cpp
+
+T_("Mat file")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to load .mat file")
+esES("")
+euES("")
+frFR("")
+
+T_("Frequencies not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Gravity not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Density not found")
+esES("")
+euES("")
+frFR("")
+
+T_("A dimension is not correct (Nf)")
+esES("")
+euES("")
+frFR("")
+
+T_("A dimension is not correct (0-1)")
+esES("")
+euES("")
+frFR("")
+
+T_("A dimension is not correct (!6)")
+esES("")
+euES("")
+frFR("")
+
+T_("Body number mismatch in A")
+esES("")
+euES("")
+frFR("")
+
+T_("B dimension is not correct (0-1)")
+esES("")
+euES("")
+frFR("")
+
+T_("B dimension is not correct (!6)")
+esES("")
+euES("")
+frFR("")
+
+T_("Body number mismatch in B")
+esES("")
+euES("")
+frFR("")
+
+T_("Ainf dimension is not correct (Nf)")
+esES("")
+euES("")
+frFR("")
+
+T_("A0 dimension is not correct (Nf)")
+esES("")
+euES("")
+frFR("")
+
+T_("Vol dimension is not correct")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to create .mat file")
+esES("")
+euES("")
+frFR("")
+
+
+// bemioh5.cpp
+
+T_("H5 file")
+esES("")
+euES("")
+frFR("")
+
+
+// hydrostar.cpp
+
+T_("Mesh data (.hst file) not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh data (.hst file) problem: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("The number of panels in hdf (%d) doesn't match with the number in the "
+     "hst mesh (%d)")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong number of items in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown type in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Unknown dof in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Frequency %f found in the .hdf but not found in the .out file")
+esES("")
+euES("")
+frFR("")
+
+T_("Heading %f found in the .hdf but not found in the .out file")
+esES("")
+euES("")
+frFR("")
+
+
+// capytaine.cpp
+
+T_("NC file")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in added_mass")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in radiation_damping")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in diffraction_force")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in Froude_Krylov_force")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in RAO")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in a")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in b")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in sc")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in fk")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in rao")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in c0")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in cg")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in dofDefinition")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in dofDefinition 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in mesh_vertices")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in mesh_vertices 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in radiation_pressure")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in radiation_pressure 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in diffraction_pressure")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in diffraction_pressure 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in incident_pressure")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong dimension in incident_pressure 2")
+esES("")
+euES("")
+frFR("")
+
+T_("Body_%d_lid.dat")
+esES("")
+euES("")
+frFR("")
+
+
 // deeplineswind.cpp
 
+T_("Loading structure")
+esES("")
+euES("")
+frFR("")
+
 T_("'variable' table not found in .db file")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading wave series")
 esES("")
 euES("")
 frFR("")
@@ -3387,6 +4856,11 @@ euES("")
 frFR("")
 
 T_("'time_serie' table not found in .db file")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading data")
 esES("")
 euES("")
 frFR("")
@@ -3415,6 +4889,11 @@ euES("")
 frFR("")
 
 T_("Vector B not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Vectors w and B size does not match")
 esES("")
 euES("")
 frFR("")
@@ -3498,6 +4977,11 @@ frFR("")
 // fast.cpp
 
 T_("File '%s' is not of FAST type")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong file format")
 esES("")
 euES("")
 frFR("")
@@ -3632,6 +5116,27 @@ esES("")
 euES("")
 frFR("")
 
+T_("Wrong NMembers id %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incomplete data in NCmass line %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Wrong NCmass id %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Joints with concentrated masses have to be in nodes. Found MCGX, MCGY, "
+     "MCGZ different than zero (see https://github.com/OpenFAST/openfast/issues/1710)")
+esES("")
+euES("")
+frFR("")
+
 
 // fastUtils.cpp
 
@@ -3668,12 +5173,22 @@ esES("")
 euES("")
 frFR("")
 
-T_("void")
+T_("Impossible to load file")
 esES("")
 euES("")
 frFR("")
 
-T_("Impossible to load file")
+T_("Unknown .out format")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading '%s' header")
+esES("")
+euES("")
+frFR("")
+
+T_("void")
 esES("")
 euES("")
 frFR("")
@@ -3757,9 +5272,76 @@ euES("")
 frFR("")
 
 
+// wind.cpp
+
+T_("'%s' format not supported for reading")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to save '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("'%s' format not supported for writing")
+esES("")
+euES("")
+frFR("")
+
+T_("Component %d is not available")
+esES("")
+euES("")
+frFR("")
+
+T_("Component %d is higher than available components %d")
+esES("")
+euES("")
+frFR("")
+
+
+// bts.cpp
+
+T_("Impossible to open file %s")
+esES("")
+euES("")
+frFR("")
+
+
 // mooring.cpp
 
 T_("Line '%s' ends '%s' have to be different")
+esES("")
+euES("")
+frFR("")
+
+
+// orca.cpp
+
+T_("OrcaFlex DLL is not found in '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaFlex is not installed")
+esES("")
+euES("")
+frFR("")
+
+
+// functions.cpp
+
+T_("This length unit is not supported. Read '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("This mass unit is not supported. Read '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("This force unit is not supported. Read '%s'")
 esES("")
 euES("")
 frFR("")
@@ -3794,6 +5376,399 @@ frFR("")
 
 
 // Obsolete
+
+T_("Nemoh")
+esES("")
+euES("")
+frFR("")
+
+T_("All models have to have the same periods")
+esES("")
+euES("")
+frFR("")
+
+T_("All models have to have the same centre of reference")
+esES("")
+euES("")
+frFR("")
+
+T_("All models have to have the same number of dof")
+esES("")
+euES("")
+frFR("")
+
+T_("g [m/s2]: %s, h [m]: %s, rho [kg/m3]: %s, length scale [m]: %s")
+esES("")
+euES("")
+frFR("")
+
+T_("dof")
+esES("")
+euES("")
+frFR("")
+
+T_("vol [m3]")
+esES("")
+euES("")
+frFR("")
+
+T_("Error loading '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem loading '%s' file")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect min frequency %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Minimum frequency %s has to be lower than maximum frequency %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect min heading %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect max heading %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Minimum heading %s has to be lower than maximum heading %s")
+esES("")
+euES("")
+frFR("")
+
+T_("The case has to include at least one body")
+esES("")
+euES("")
+frFR("")
+
+T_("This solver just processes one body")
+esES("")
+euES("")
+frFR("")
+
+T_("HAMS.Wamit")
+esES("")
+euES("")
+frFR("")
+
+T_("OrcaWave")
+esES("")
+euES("")
+frFR("")
+
+T_("HAM")
+esES("")
+euES("")
+frFR("")
+
+T_("ORC")
+esES("")
+euES("")
+frFR("")
+
+T_("-echo \"text\"            # Prints \"text\"")
+esES("")
+euES("")
+frFR("")
+
+T_("               g         \t# gravity       [m/s2]  ")
+esES("")
+euES("")
+frFR("")
+
+T_("               rho        # water density [kg/m3] ")
+esES("")
+euES("")
+frFR("")
+
+T_("-setid <id>               # Set the id of the default BEM model")
+esES("")
+euES("")
+frFR("")
+
+T_("-params <param> <value>   # Set parameters:")
+esES("")
+euES("")
+frFR("")
+
+T_("               length     # length scale  []      ")
+esES("")
+euES("")
+frFR("")
+
+T_("               depth      # water depth   [m]     ")
+esES("")
+euES("")
+frFR("")
+
+T_("-p  -print <params>       # Prints model data in a row")
+esES("")
+euES("")
+frFR("")
+
+T_("-cl -clear                # Clear loaded model")
+esES("")
+euES("")
+frFR("")
+
+T_("     <params> volume            # volx voly volx [m3]")
+esES("")
+euES("")
+frFR("")
+
+T_("              underwatervolume  # volx voly volx [m3]")
+esES("")
+euES("")
+frFR("")
+
+T_("-cl -clear                      # Clear loaded model")
+esES("")
+euES("")
+frFR("")
+
+T_("-ls -loadSim <sim>       \t\t  # Load OrcaFlex simulation in <sim>")
+esES("")
+euES("")
+frFR("")
+
+T_("Copyright (c) 2023. Hydrodynamic coefficients converter for Boundary Element "
+     "Method solver formats\nVersion beta BUILDINFO")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh data cleared")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh active model id is %d")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh id %d translated %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh id %d rotated angles %f, %f, %f around centre %f, %f, %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh id %d position is reset")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh id %d waterplane is got")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh id %d hull is got")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh warning_ Maybe incomplete")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh error: Probably incomplete")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh warning: Maybe incomplete")
+esES("")
+euES("")
+frFR("")
+
+T_("Simulation aborted: The simulation has become unstable because the solver "
+     "parameters (time step, iterations num.) or other, have to ve reviewed.")
+esES("")
+euES("")
+frFR("")
+
+T_("Insufficient data to get RAO: A and B are required")
+esES("")
+euES("")
+frFR("")
+
+T_("Insufficient data to get RAO: C and M are required")
+esES("")
+euES("")
+frFR("")
+
+T_("Model is empty. No data found")
+esES("")
+euES("")
+frFR("")
+
+T_("Mesh file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Volume [m3] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Underwater volume [m3] %f")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem obtaining GZ")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect number of points in x direction %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect free surface elevation %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect number of Kochin function directions %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect Kochin direction %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Minimum Kochin direction %s has to be lower than maximum direction %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Unexpected data %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Free surface data is already loaded %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Kochin data is already loaded %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect number of points in x direction %s (0 for no free surface calculation)")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect free surface domain X %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Incorrect free surface domain Y %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Problem copying Hams mesh exe file from '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of frequencies not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of headings not found")
+esES("")
+euES("")
+frFR("")
+
+T_("Impossible to open file")
+esES("")
+euES("")
+frFR("")
+
+T_("Loading out file '%s'")
+esES("")
+euES("")
+frFR("")
+
+T_("c0 matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("Vo matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("cg matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("cb matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("M matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("C matrix is not dimensioned")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of frequencies loaded is different than previous (%d != %d)")
+esES("")
+euES("")
+frFR("")
+
+T_("Frequencies loaded are different than previous\nPrevious: %s\nSeries: "
+     "  %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Periods loaded are different than previous\nPrevious: %s\nSeries:   %s")
+esES("")
+euES("")
+frFR("")
+
+T_("Number of headings loaded is different than previous (%d != %d)")
+esES("")
+euES("")
+frFR("")
 
 T_("Conversion to type of file '%s' not supported")
 esES("")
@@ -3993,11 +5968,6 @@ euES("")
 frFR("")
 
 T_("Nemoh premesh.")
-esES("")
-euES("")
-frFR("")
-
-T_("AQWA.dat")
 esES("")
 euES("")
 frFR("")
@@ -4216,11 +6186,6 @@ euES("")
 frFR("")
 
 T_("Error in file format")
-esES("")
-euES("")
-frFR("")
-
-T_("Vectors w and B size does not match")
 esES("")
 euES("")
 frFR("")

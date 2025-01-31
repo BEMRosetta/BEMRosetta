@@ -5,7 +5,7 @@
   -->
 
 # BEMRosetta
-**Hydrodynamic coefficients viewer and converter for Boundary Element Method solver formats.**
+**Hydrodynamic solvers viewer and converter.**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/platforms-windows_linux-blue.svg" alt="Platforms">
@@ -38,6 +38,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal, Mesh/Hydrostatics*.dat, Mesh/KH*.dat, RadiationCoefficients.tec, ExcitationForce.tec, DiffractionForce.tec, FKForce.tec, IRF.tec
     * [Capytaine](https://github.com/mancellin/capytaine): .nc
     * [Bemio](https://wec-sim.github.io/bemio/api.html#writing-the-data-to-the-standard-bemio-format): .h5
+	* [Matlab]: .mat
     * [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
     * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .out
     * [OpenFAST-Wamit](https://www.nrel.gov/wind/nwtc/openfast.html): HydroDyn.dat
@@ -48,7 +49,8 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Wamit](https://www.wamit.com/): .out, .1, .3, .hst, .4, .7, .8, .9, .12s, .12d
     * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in and all the folder structure.
     * [Bemio](https://wec-sim.github.io/bemio/api.html#writing-the-data-to-the-standard-bemio-format): .h5
-    * [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
+    * [Matlab]: .mat
+	* [Diodore](https://www.principia-group.com/blog/product/diodore/): .hdb
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .qtf
     * [OpenFAST-Wamit](https://nwtc.nrel.gov/FAST): HydroDyn.dat
 
@@ -117,7 +119,7 @@ The goal is to have a good robustness in the handling of files
 
 ### - Forces handling
 
-It simmetrizes the available forces in all directions, averaging them when they are available on both possitive and negative headings. Some examples cases:
+It symmetrizes the available forces in all directions, averaging them when they are available on both possitive and negative headings. Some examples cases:
 * Only the forces on positive headings from 0 to 180º have been processed: Symmetrize duplicates them to the negative heading values from 0 to -180º
 * Both positive and negative headings forces have been processed: Symmetrize averages them
 
@@ -188,7 +190,7 @@ Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
 ## License
 
-Copyright © 2019-2021 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez, Thomas Kelly.
+Copyright © 2019-2025 Iñaki Zabala, Markel Peñalba, Yerai Peña-Sanchez, Thomas Kelly.
 
 BEMRosetta is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\
 BEMRosetta is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for details. You should have received a copy of the GNU General Public License along with BEMRosetta. If not, see http://www.gnu.org/licenses/.<br/>
