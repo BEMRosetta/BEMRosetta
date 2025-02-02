@@ -104,7 +104,7 @@ void Matlab::Load_Mat() {
 			mfile.Get(s[id], dt.Ainf, true);
 			if ((dt.Ainf.rows() != dt.Ainf.cols()) || (!IsNull(dt.Nb) && (6*dt.Ainf.rows() != 6*dt.Nb)))
 				throw Exc(t_("Ainf dimension is not correct (6*nBodies, 6*nBodies)"));
-			dt.Nb = dt.Ainf.cols()/6;
+			dt.Nb = (int)dt.Ainf.cols()/6;
 		}
 	}
 	{
@@ -112,7 +112,7 @@ void Matlab::Load_Mat() {
 			mfile.Get("A0", dt.A0, true);
 			if ((dt.A0.rows() != dt.A0.cols()) || (!IsNull(dt.Nb) && (6*dt.A0.rows() != 6*dt.Nb)))
 				throw Exc(t_("A0 dimension is not correct (6*nBodies, 6*nBodies)"));
-			dt.Nb = dt.A0.cols()/6;
+			dt.Nb = (int)dt.A0.cols()/6;
 		}
 	}
 	{
@@ -136,7 +136,7 @@ void Matlab::Load_Mat() {
 				throw Exc(t_("Cg dimension is not correct (cols != Nb) (3, nBodies)"));
 			if (cg.rows() != 3)
 				throw Exc(t_("Cg dimension is not correct (rows != 3) (3, nBodies)"));
-			dt.Nb = cg.cols();
+			dt.Nb = (int)cg.cols();
 			if (dt.msh.IsEmpty())
 				dt.msh.SetCount(dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib)
@@ -151,7 +151,7 @@ void Matlab::Load_Mat() {
 				throw Exc(t_("Cb dimension is not correct (cols != Nb) (3, nBodies)"));
 			if (cb.rows() != 3)
 				throw Exc(t_("Cb dimension is not correct (rows != 3) (3, nBodies)"));
-			dt.Nb = cb.cols();
+			dt.Nb = (int)cb.cols();
 			if (dt.msh.IsEmpty())
 				dt.msh.SetCount(dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib)
@@ -166,7 +166,7 @@ void Matlab::Load_Mat() {
 				throw Exc(t_("C0 dimension is not correct (cols != Nb) (3, nBodies)"));
 			if (c0.rows() != 3)
 				throw Exc(t_("C0 dimension is not correct (rows != 3) (3, nBodies)"));
-			dt.Nb = c0.cols();
+			dt.Nb = (int)c0.cols();
 			if (dt.msh.IsEmpty())
 				dt.msh.SetCount(dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib)
@@ -181,7 +181,7 @@ void Matlab::Load_Mat() {
 			mfile.Get(sB[id], C, true);
 			if ((C.rows() != C.cols()) || (!IsNull(dt.Nb) && (6*C.rows() != 6*dt.Nb)))
 				throw Exc(t_("Kh dimension is not correct (6*nBodies, 6*nBodies)"));
-			dt.Nb = C.cols()/6;
+			dt.Nb = (int)C.cols()/6;
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				dt.msh[ib].dt.C = C.block<6, 6>(6*ib, 6*ib);
 		}
@@ -194,7 +194,7 @@ void Matlab::Load_Mat() {
 			mfile.Get(sB[id], M, true);
 			if ((M.rows() != M.cols()) || (!IsNull(dt.Nb) && (6*M.rows() != 6*dt.Nb)))
 				throw Exc(t_("Kh dimension is not correct (6*nBodies, 6*nBodies)"));
-			dt.Nb = M.cols()/6;
+			dt.Nb = (int)M.cols()/6;
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				dt.msh[ib].dt.M = M.block<6, 6>(6*ib, 6*ib);
 		}
