@@ -94,8 +94,8 @@ void Matlab::Load_Mat() {
 						a[r][c][ifr] = A(r, c, ifr);
 		}
 	};
-	LoadAB(dt.A, "A", {"A", "added_mass", "addedmass"});
-	LoadAB(dt.B, "B", {"B", "radiation_damping", "radiationdamping"});
+	LoadAB(dt.A, "A", {"A", "addedmass"});
+	LoadAB(dt.B, "B", {"B", "radiationdamping"});
 
 	{
 		UVector<String> s = {"Ainf"};
@@ -228,9 +228,9 @@ void Matlab::Load_Mat() {
 							f[ib][ih](ifr, idf) = F(idf, ih, ifr, ib);			
 		}
 	};
-	LoadF(dt.ex, "Fex", {"excitation_force", "excitationforce", "fex"});
-	LoadF(dt.fk, "Fex", {"froude_krylov", "froudekrylov", "ffk"});
-	LoadF(dt.sc, "Fex", {"scattering_force", "scatteringforce", "diffraction_force", "diffractionforce", "fsc"});	
+	LoadF(dt.ex, "Fex", {"excitationforce", "fex"});
+	LoadF(dt.fk, "Ffk", {"froudekrylov", "ffk"});
+	LoadF(dt.sc, "Fsc", {"scatteringforce", "diffractionforce", "fsc"});	
 }
 	
 	
