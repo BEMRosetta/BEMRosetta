@@ -373,9 +373,6 @@ public:
 	}
 		
 	inline bool IsAvailableDOF(int ib, int idf) {
-		/*if (dof.IsEmpty())
-			return false;*/
-		
 		int i = ib*6+idf;
 		
 		if (dt.Ainf.size() > 0)

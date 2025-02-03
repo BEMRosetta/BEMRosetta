@@ -81,7 +81,7 @@ void Matlab::Load_Mat() {
 			int dim = A.GetAxisDim(0);
 			if (dim != A.GetAxisDim(1))
 				throw Exc(Format(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
-			if (!(dim%6))
+			if (dim%6)
 				throw Exc(Format(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
 			int Nb = dim/6;
 			if (!IsNull(dt.Nb) && dt.Nb != Nb)
@@ -170,7 +170,7 @@ void Matlab::Load_Mat() {
 			if (dt.msh.IsEmpty())
 				dt.msh.SetCount(dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib)
-				dt.msh[ib].dt.cg = Point3D(c0(0, ib), c0(1, ib), c0(2, ib));
+				dt.msh[ib].dt.c0 = Point3D(c0(0, ib), c0(1, ib), c0(2, ib));
 		}
 	}	
 	{
@@ -179,7 +179,7 @@ void Matlab::Load_Mat() {
 		if (id >= 0) {
 			MatrixXd C;
 			mfile.Get(sB[id], C, true);
-			if ((C.rows() != C.cols()) || (!IsNull(dt.Nb) && (6*C.rows() != 6*dt.Nb)))
+			if ((C.rows() != C.cols()) || (!IsNull(dt.Nb) && (C.rows() != 6*dt.Nb)))
 				throw Exc(t_("Kh dimension is not correct (6*nBodies, 6*nBodies)"));
 			dt.Nb = (int)C.cols()/6;
 			for (int ib = 0; ib < dt.Nb; ++ib)
@@ -192,7 +192,7 @@ void Matlab::Load_Mat() {
 		if (id >= 0) {
 			MatrixXd M;
 			mfile.Get(sB[id], M, true);
-			if ((M.rows() != M.cols()) || (!IsNull(dt.Nb) && (6*M.rows() != 6*dt.Nb)))
+			if ((M.rows() != M.cols()) || (!IsNull(dt.Nb) && (M.rows() != 6*dt.Nb)))
 				throw Exc(t_("Kh dimension is not correct (6*nBodies, 6*nBodies)"));
 			dt.Nb = (int)M.cols()/6;
 			for (int ib = 0; ib < dt.Nb; ++ib)
@@ -327,46 +327,58 @@ void Matlab::Save(String file) const {
 	}
 
 	VectorXd vol(dt.Nb);
+	bool vnan = true;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		if (!IsNull(dt.msh[ib].dt.cb)) 
+		if (!IsNull(dt.msh[ib].dt.Vo)) {
 			vol(ib) = dt.msh[ib].dt.Vo;
-		else
+			vnan = false;
+		} else
 			vol(ib) = NaNDouble;
 	}
-	mfile.Set("Vol", vol);
+	if (!vnan)
+		mfile.Set("Vol", vol);
 	
 	MatrixXd Cb(3, dt.Nb);
+	bool cbnan = true;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		for (int i = 0; i < 3; ++i) {
-			if (!IsNull(dt.msh[ib].dt.cb)) 
+			if (!IsNull(dt.msh[ib].dt.cb)) {
 				Cb(i, ib) = dt.msh[ib].dt.cb[i];
-			else
+				cbnan = false;
+			} else
 				Cb(i, ib) = NaNDouble;
 		}
 	}
-	mfile.Set("Cb", Cb);
+	if (!cbnan)
+		mfile.Set("Cb", Cb);
 		
 	MatrixXd Cg(3, dt.Nb);
+	bool cgnan = true;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		for (int i = 0; i < 3; ++i) {
-			if (!IsNull(dt.msh[ib].dt.cb)) 
+			if (!IsNull(dt.msh[ib].dt.cg)) {
 				Cg(i, ib) = dt.msh[ib].dt.cg[i];
-			else
+				cgnan = false;
+			} else
 				Cg(i, ib) = NaNDouble;
 		}
 	}
-	mfile.Set("Cg", Cg);
+	if (!cgnan)
+		mfile.Set("Cg", Cg);
 	
 	MatrixXd C0(3, dt.Nb);
+	bool c0nan = true;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		for (int i = 0; i < 3; ++i) {
-			if (!IsNull(dt.msh[ib].dt.cb)) 
+			if (!IsNull(dt.msh[ib].dt.c0)) {
 				C0(i, ib) = dt.msh[ib].dt.c0[i];
-			else
+				c0nan = false;
+			} else
 				C0(i, ib) = NaNDouble;
 		}
-	}		
-	mfile.Set("C0", C0);
+	}	
+	if (!c0nan)	
+		mfile.Set("C0", C0);
 	
 	UVector<String> legend = {"DoF: surge, sway, heave, roll, pitch, yaw",
 					"Units: m, Kg, N, s, rad",

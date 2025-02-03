@@ -2692,9 +2692,10 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 		else if (ext == ".owr") 
 			ret = static_cast<OrcaWave&>(hy).Load(file, Status);
 	#endif
-		else if (ext == ".mat") 
-			ret = static_cast<Foamm&>(hy).Load(file);
-		else if (ext == ".bemr") 
+		else if (ext == ".mat") {
+			if (!(ret = static_cast<Foamm&>(hy).Load(file)).IsEmpty())
+				ret = static_cast<Matlab&>(hy).Load(file);
+		} else if (ext == ".bemr") 
 			ret = static_cast<Hydro&>(hy).LoadSerialization(file);
 		else if (ext == ".h5") 
 			ret = static_cast<BemioH5&>(hy).Load(file, Status);
