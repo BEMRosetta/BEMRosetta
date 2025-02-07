@@ -1197,7 +1197,6 @@ bool Nemoh::Load_IRF(String fileName) {
 	LineParser f(in);	
 	f.IsSeparator = IsTabSpace;
 	dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, 0);
-	//int ibodydof = 0;
 	dt.Kirf.SetCount(dt.Nb*6); 	// Initialize Kirf		
     for (int i = 0; i < dt.Nb*6; ++i) {
     	dt.Kirf[i].SetCount(dt.Nb*6); 			 
@@ -1211,19 +1210,15 @@ bool Nemoh::Load_IRF(String fileName) {
 	}
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		for (int ibdof = 0; ibdof < 6; ++ibdof) {
-			//if (dcase.IsDof(ib, ibdof)) {
-				for (int iNt = 0; iNt < dt.Tirf.size(); ++iNt) {
-					f.Load(in.GetLine());
-					int col = 1;
-					for (int idf = 0; idf < 6; ++idf) {
-						//if (dcase.IsDof(ib, idf)) {
-							dt.Ainf(ibdof, idf) = f.GetDouble(col++);
-							dt.Kirf[ib*6+ibdof][ib*6+idf][iNt] = f.GetDouble(col++);
-						//}
-					}
+			for (int iNt = 0; iNt < dt.Tirf.size(); ++iNt) {
+				f.Load(in.GetLine());
+				int col = 1;
+				for (int idf = 0; idf < 6; ++idf) {
+					dt.Ainf(ibdof, idf) = f.GetDouble(col++);
+					dt.Kirf[ib*6+ibdof][ib*6+idf][iNt] = f.GetDouble(col++);
 				}
-				in.GetLine();
-			//}
+			}
+			in.GetLine();
 		}
 	}
 	return true;

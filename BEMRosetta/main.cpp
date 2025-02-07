@@ -288,7 +288,7 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 bool Main::StoreSerializeJson() {
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
-		return 0;
+		return false;
 	String fileName = AFX(folder, "config.cf");
 	return StoreAsJsonFile(*this, fileName, true);
 }

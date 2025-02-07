@@ -478,6 +478,10 @@ String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 
 	Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz));
 
+	double timeFactor = 1;
+	if (units[0] == "min")
+		timeFactor = 60;
+	
 	int line = 0;
 	const char *endptr;	
 	while (!in.IsEof()) {
@@ -494,7 +498,7 @@ String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
 			else if (str == "zero")
 				dataOut[i] << 0;
 			else
-				dataOut[i] << ScanDouble(data[i], &endptr, decimalSign == ',');
+				dataOut[i] << (i == 0 ? timeFactor : 1) * ScanDouble(data[i], &endptr, decimalSign == ',');
 		}
 		line++;
 	}
