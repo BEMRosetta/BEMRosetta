@@ -99,11 +99,9 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 		DeleteHeadings(idsRemove);
 		
 		if (dt.solver == Hydro::NEMOH) {
-			//if (!dt.dof.IsEmpty()) {
-				BEM::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
-				if (!Load_IRF(AFX(folder, "Results", "IRF.tec")))
-					BEM::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
-			//}
+			BEM::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
+			if (!Load_IRF(AFX(folder, "Results", "IRF.tec")))
+				BEM::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
 		}
 		if (IsNull(dt.Nb))
 			return t_("No body found");
@@ -114,51 +112,6 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 	}
 	return String();
 }
-
-/*
-int NemohCase::GetNumArgs(const LineParser &f) {
-	for (int i = 0; i < f.size(); ++i) {
-		double num = ScanDouble(f.GetText(i));
-		if (IsNull(num))
-			return i;
-	}
-	return f.size();
-}*/
-/*
-bool Nemoh::Load_Cal(String fileName) {	
-	dt.Nb = dcase.bodies.size();
-	dt.msh.SetCount(dt.Nb);
-	for (int ib = 0; ib < dt.Nb; ++ib) 	
-		dt.msh[ib].name = GetFileTitle(dcase.bodies[ib].fileName);
-	//dt.dof.SetCount(dt.Nb, 6);
-	//for (int i = 0; i < dt.Nb; ++i)
-	//	dt.dof[i] = data.bodies[i].ndof;
-	dt.Nf = dcase.Nf;
-	LinSpaced(dt.w, dt.Nf, dcase.minF, dcase.maxF); 
- 	dt.T.SetCount(dt.Nf);
-    for (int i = 0; i < dt.Nf; ++i) 
-		dt.T[i] = 2*M_PI/dt.w[i];  
-   
-	dt.Nh = dcase.Nh;  						
-    LinSpaced(dt.head, dt.Nh, dcase.minH, dcase.maxH); 		
-    for (int ih = 0; ih < dt.head.size(); ++ih)
-		dt.head[ih] = FixHeading_180(dt.head[ih]);
-
-	dt.dataFromW = true;
-	
-	if (dcase.irf) {
-		dt.Tirf.resize(int(dcase.irfDuration/dcase.irfStep));
-		for (int i = 0; i < dt.Tirf.size(); ++i) 
-			dt.Tirf[i] = i*dcase.irfStep;
-	}
-	
-	//dt.c0.resize(3, dt.Nb);
-	for (int ib = 0; ib < dt.Nb; ++ib) 
-		dt.msh[ib].c0 = dcase.bodies[ib].c0;
-				
-	return true;
-}*/
-
 
 bool Nemoh::Load_Cal(String fileName) {
 	FileInLine in(fileName);
@@ -190,10 +143,10 @@ bool Nemoh::Load_Cal(String fileName) {
 		dt.h = -1;
 	else {
 		dt.h = ScanDouble(sh);
-		if (dt.h < 0 || dt.h > 100000)
+		if (dt.h > 100000)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect depth %s"), f.GetText(0)));
-		else if (dt.h == 0)
-		dt.	h = -1;
+		else if (dt.h <= 0)
+			dt.h = -1;
 	}
 	f.GetLine();	dt.x_w = f.GetDouble(0);	dt.y_w = f.GetDouble(1);
 	in.GetLine();
@@ -201,6 +154,8 @@ bool Nemoh::Load_Cal(String fileName) {
 	if (dt.Nb < 1 || dt.Nb > 100)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of bodies %s"), f.GetText(0)));
 	dt.msh.SetCount(dt.Nb);
+	
+	UVector<String> names;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		int npoints, npanels;
 		
@@ -216,6 +171,11 @@ bool Nemoh::Load_Cal(String fileName) {
 			if (!FileExists(body.dt.fileName)) 
 				BEM::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), body.dt.fileName));
 				//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
+		}
+		body.dt.name = GetFileTitle(body.dt.fileName);
+		if (Find(names, body.dt.name) >= 0) {
+			body.dt.name << "_" << (ib+1);
+			names << body.dt.name;
 		}
 		if (npoints < 1 || npoints > 1e8)
 			throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of points %s"), f.GetText(0)));
@@ -565,12 +525,9 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 		if (!DirectoryCreateX(folderMesh))
 			throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
 	
-		//UVector<String> meshes(dt.msh.size());
 		UVector<int> numNodes(dt.Nb), numPanels(dt.Nb);
 		for (int ib = 0; ib < dt.msh.size(); ++ib) {
 			String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
-			
-			//Body::SaveAs(dt.msh[ib], dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
 			
 			if (solver == Hydro::NEMOHv3) {
 				Save_Body_cal(folder, dt.msh.size() == 1 ? -1 : ib, 
@@ -581,7 +538,6 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 				else
 					inertiaName = Format("inertia_%d.dat", i);
 				Nemoh::Save_6x6(dt.msh[ib].dt.M, AFX(folderMech, inertiaName));
-				//meshes[ib] = GetFileTitle(dt.msh[ib].dt.fileName);
 			} else {
 				String khName;
 				if (dt.msh.size() == 1)
@@ -809,10 +765,6 @@ bool Nemoh::Load_Hydrostatics(String folder, String subfolder) {
 }
 	
 bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, UArray<Body> &msh) {
-	//cg.setConstant(3, Nb, NaNDouble);
-	//cb.setConstant(3, Nb, NaNDouble);
-	//Vo.SetCount(Nb, NaNDouble);
-	
 	for (int ib = 0; ib < Nb; ++ib) {
 	    String fileHydro;
 	    if (Nb == 1)
@@ -827,9 +779,15 @@ bool Nemoh::Load_Hydrostatics_static(String subfolder, int Nb, UArray<Body> &msh
 	    LineParser f(in);
 	    f.IsSeparator = IsTabSpace;
 	    for (int i = 0; i < 3 && !in.IsEof(); ++i) {
-			f.Load(in.GetLine());
-			msh[ib].dt.cg[i] = f.GetDouble_nothrow(6);
-			msh[ib].dt.cb[i] = f.GetDouble_nothrow(2);
+			String line = f.GetLine();
+			line.Replace(" ", "");
+			line = ToUpper(line);
+			int ibu = line.FindAfter("=");
+			if (ibu > 0)
+				msh[ib].dt.cb[i] = ScanDouble(line.Mid(ibu));
+			int ig = line.FindAfter("=", ibu); 
+			if (ig > 0)
+				msh[ib].dt.cg[i] = ScanDouble(line.Mid(ig));
 	    }
 	    if (!f.IsEof() && f.GetCount() > 0) {
 			f.Load(in.GetLine());
@@ -867,7 +825,6 @@ void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const UArray<Body> &
 }
 
 bool Nemoh::Load_KH(String folder, String subfolder) {
-	//dt.C.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 	    String fileKH;
 		if (dt.Nb == 1) 
@@ -882,7 +839,6 @@ bool Nemoh::Load_KH(String folder, String subfolder) {
 }
 
 bool Nemoh::Load_Inertia(String folder, String subfolder) {
-	//dt.M.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 	    String file;
 		if (dt.Nb == 1) 
@@ -897,8 +853,6 @@ bool Nemoh::Load_Inertia(String folder, String subfolder) {
 }
 
 bool Nemoh::Load_LinearDamping(String folder, String subfolder) {
-	//dt.Dlin = MatrixXd::Zero(6*dt.Nb, 6*dt.Nb);
-	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 	    String file;
 		if (dt.Nb == 1) 

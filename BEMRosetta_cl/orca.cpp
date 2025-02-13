@@ -274,9 +274,9 @@ bool Orca::FindInit() {
 		return false;
 	}
 	
-	//BEM::Print("\nAvailable OrcaFlex versions");
-	//for (int i = 0; i < orcadata.size(); ++i)
-	//	BEM::Print(Format("\nName: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].description, orcadata[i].path));
+	BEM::Print("\nAvailable OrcaFlex versions:");
+	for (int i = 0; i < orcadata.size(); ++i)
+		BEM::Print(Format("\n- Name: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].description, orcadata[i].path));
 	
 	for (int i = orcadata.size()-1; i >= 0; --i)		// lack of data
 		if (orcadata[i].version.IsEmpty() || orcadata[i].path.IsEmpty())
@@ -291,6 +291,9 @@ bool Orca::FindInit() {
 			version = pick(each);
 		}
 	}
+	
+	BEM::Print(Format("\nLoaded Name: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[iversion].name, orcadata[iversion].version, orcadata[iversion].description, orcadata[iversion].path));
+	
 	String arch;
 #ifdef CPU_64
 	arch = "Win64";
@@ -411,9 +414,9 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	}
 	
 	if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo))
-		throwError("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match");			
+		throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo)));			
 	
-	hy.dt.Nb = sz/sizeof(TDiffractionBodyHydrostaticInfo);
+	//hy.dt.Nb = sz/sizeof(TDiffractionBodyHydrostaticInfo);
 	Buffer<TDiffractionBodyHydrostaticInfo> bodies(hy.dt.Nb);
 	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, bodies.begin()))
 		throwError("Load dotHydrostaticResults 2");

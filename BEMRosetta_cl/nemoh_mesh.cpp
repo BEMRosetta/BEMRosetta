@@ -89,7 +89,6 @@ String NemohBody::LoadDat(UArray<Body> &mesh, String fileName, bool &x0z) {
 		mesh.Clear();
 		return ret;
 	}
-	//UVector<double> Vo;
 	if (!Nemoh::Load_Hydrostatics_static(GetFileFolder(fileName), 1, mesh))
 		return ret;
 	

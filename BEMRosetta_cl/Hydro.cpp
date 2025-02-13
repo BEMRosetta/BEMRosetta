@@ -619,6 +619,17 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 	if (First(dt.w) <= 0.01)
 		ret << Format(t_("First frequency %f < 0.01 is too low"), First(dt.w));
 	
+	UVector<String> bodynames;
+	for (int ib = 0; ib < dt.msh.size(); ++ib) {
+		if (IsNull(dt.msh[ib].dt.c0))
+			ret << Format(t_("Centre of body #%d has to be set"), ib+1);
+		if (IsNull(dt.msh[ib].dt.cg))
+			ret << Format(t_("Centre of gravity of body #%d has to be set"), ib+1);
+		if (Find(bodynames, dt.msh[ib].dt.name) >= 0)
+			ret << Format(t_("Some bodies have the same name '%s'"), dt.msh[ib].dt.name);
+		else
+			bodynames << dt.msh[ib].dt.name;
+	}
 	return ret;
 }
 

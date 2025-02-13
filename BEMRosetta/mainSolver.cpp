@@ -260,7 +260,8 @@ void MainSolver::Load() {
 	if (IsNull(~gen.rho))
 		gen.rho <<= Bem().rho;	
 	if (IsNull(~gen.height)) {
-		gen.opInfinite <<= (Bem().depth < 0);
+		if (gen.opInfinite == false)
+			gen.opInfinite <<= (Bem().depth < 0);
 		gen.height.Enable(Bem().depth > 0);
 		gen.height <<= (Bem().depth > 0 ? Bem().depth : Null);
 	}
@@ -287,8 +288,8 @@ void MainSolver::Load(String file) {
 	bodies.array.Clear();
 	bodiesEach.Clear();
 	bodiesEachScroll.Clear();
-	for (int i = 0; i < tmp_hy.dt.msh.size(); ++i) {
-		Body &tmp_b = tmp_hy.dt.msh[i];
+	for (int ib = 0; ib < tmp_hy.dt.msh.size(); ++ib) {
+		Body &tmp_b = tmp_hy.dt.msh[ib];
 		MainSolverBody &d = bodiesEach.Add();
 		CtrlScroll &bscroll = bodiesEachScroll.Add();
 		CtrlLayout(d);
@@ -307,12 +308,12 @@ void MainSolver::Load(String file) {
 		
 		d.SetTexts();
 		
-		d.x_0 = tmp_b.dt.c0[0];
-		d.y_0 = tmp_b.dt.c0[1];
-		d.z_0 = tmp_b.dt.c0[2];
-		d.x_g = tmp_b.dt.cg[0];
-		d.y_g = tmp_b.dt.cg[1];
-		d.z_g = tmp_b.dt.cg[2];
+		d.x_0 = tmp_b.dt.c0.x;
+		d.y_0 = tmp_b.dt.c0.y;
+		d.z_0 = tmp_b.dt.c0.z;
+		d.x_g = Nvl(tmp_b.dt.cg.x, d.mesh.dt.cg.x);
+		d.y_g = Nvl(tmp_b.dt.cg.y, d.mesh.dt.cg.y);
+		d.z_g = Nvl(tmp_b.dt.cg.z, d.mesh.dt.cg.z);
 		
 		MatrixXdToGridCtrl(d.M, tmp_b.dt.M, 6, 6, 0);
 		MatrixXdToGridCtrl(d.Dlin, tmp_b.dt.Dlin, 6, 6, 0);
@@ -589,7 +590,7 @@ bool MainSolver::OnSave() {
 			//	return false;
 			RealizeDirectory(folder);
 		} else {
-			if (!PromptYesNo(Format(t_("Folder %s contents will be deleted.&Do you wish to continue?"), DeQtfLf(folder))))
+			if (!PromptYesNo(Format(t_("Folder %s contents will be overwritten.&Do you wish to continue?"), DeQtfLf(folder))))
 				return false;
 		}
 		if (~save.opSplit) {
