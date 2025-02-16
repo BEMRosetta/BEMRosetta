@@ -160,6 +160,8 @@ typedef TVector TMatrix[3];
 typedef TVector2 TMatrix2[2];
 typedef TVector6 TMatrix6[6];
 
+typedef wchar_t TDLLVersionW[16];
+
 typedef struct {
     double Re;
     double Im;
@@ -332,7 +334,10 @@ public:
 			throwError("LoadFlex StringToWide LoadData");
 		LoadData(flex, wcs, &status);
 		if (status != 0)
-			throwError("LoadFlex LoadData");		
+			throwError("LoadFlex LoadData");
+			
+		fileVersion = FileVersion(owryml);
+		BEM::Print(Format("\nFile version: %s", fileVersion));		
 	}
 	
 	void SaveFlex(String owryml) {
@@ -684,6 +689,9 @@ public:
 		SaveDiffractionData(wave, wcs, &status);
 		if (status != 0)
 			throwError("LoadWave.SaveDiffractionData");
+		
+		fileVersion = FileVersion(owdyml);
+		BEM::Print(Format("\nFile version: %s", fileVersion));	
 	}
 		
 	void RunWave() {
@@ -738,6 +746,9 @@ public:
 		} while (numTry > 0);
 		if (!errorStr.IsEmpty())
 			throw Exc(errorStr);
+		
+		fileVersion = FileVersion(owr);
+		BEM::Print(Format("\nFile version: %s", fileVersion));
 	}
 
 	void SaveWaveResults(String owryml) {
@@ -892,6 +903,11 @@ public:
 		return flex;
 	}
 	
+	static String BEMRVersion();
+	String DLLVersion()				{return dllVersion;}
+	String FileVersion(String filename);
+	String FileVersion()			{return fileVersion;}
+	
 	void SetNumTries(int num)		{numTries = num;}
 		
 	String GetDLLPath() const		{return dllFile;}	
@@ -906,6 +922,12 @@ private:
 	int numTries = 10;
 	
 	HINSTANCE wave = 0, flex = 0;
+	
+	String dllVersion;
+	String fileVersion;
+	
+	String FileVersionBin(String filename);
+	String FileVersionYml(String filename);
 	
 	void (*CreateModel)(HINSTANCE *handle, HWND hCaller, int *status);
 	void (*DestroyModel)(HINSTANCE handle, int *status);
@@ -949,7 +971,10 @@ private:
 	int GetInt(HINSTANCE handle, const wchar_t *name, int id = -1);
 	double GetDouble(HINSTANCE handle, const wchar_t *name, int id = -1);
 	String GetString(HINSTANCE handle, const wchar_t *name, int id = -1);
-		
+	
+	//void (*GetDLLVersion)(TDLLVersionW *lpRequiredDLLVersion, TDLLVersionW *lpDLLVersion, int *lpOK, int *status);
+	//int (*GetFileCreatorVersion)(LPCWSTR name, LPWSTR version, int *status);
+	
 	void (*RegisterLicenceNotFoundHandler)(TLicenceNotFoundHandlerProc handler, int *lpStatus);
 	
 	int (*GetLastErrorString)(LPCWSTR wcs);
@@ -968,7 +993,7 @@ private:
 		String str = errorString;
 		if (errorString == "")
 			str = GetErrorString();
-		throw Exc(Format("'%s': %s", where, str));
+		throw Exc(Format("'%s': %s\n(BEMRosetta %s. Orca %s. File %s)", where, str, BEMRVersion(), DLLVersion(), FileVersion()));
 	}
 };
 

@@ -5,5 +5,5 @@ call UnittestBEMRosetta.bat CLANGX64 -r
 @echo call UnittestBEMRosetta.bat MSVS22x64 -r
 @echo IF %ERRORLEVEL% NEQ 0 PAUSE "Error testing and deploying BEMRosetta MSVS22x64"
 @title "Testing BEMRosetta for Linux
-@start call bash UnittestBEMRosetta.sh
+@start bash UnittestBEMRosetta.sh
 @IF %ERRORLEVEL% NEQ 0 PAUSE "Error testing and deploying BEMRosetta Linux"

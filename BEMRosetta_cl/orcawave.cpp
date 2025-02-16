@@ -103,7 +103,7 @@ void OrcaWave::Load_OF_YML() {
 
 	while(fy.GetLine()) {
 		if (fy.FirstIs("LoadRAOCalculationMethod")) 
-			throw Exc(t_("This .yml is an OrcaWave case"));
+			throw Exc(t_("This .yml is an OrcaWave case. Only OrcaFlex .yml can be loaded"));
 		else if (fy.FirstIs("General")) {
 			if (fy.FirstIs("UnitsSystem")) {
 				if (fy.GetVal() == "SI") {
@@ -631,7 +631,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	
 	out << 	"\%YAML 1.1\n"
 			"# Type: Diffraction\n"
-			"# Program: OrcaWave 11.4c\n"
+			"# Program: OrcaWave" << Orca::BEMRVersion() << "\n"
 			"# File: " << fileYaml << "\n"
 			"# Created: " << Format("%02d:%02d", t.hour, t.minute) << " on " << Format("%02d/%02d/%04d", t.day, t.month, t.year) << "\n"
 			"# User: " << GetUserName() << "\n"

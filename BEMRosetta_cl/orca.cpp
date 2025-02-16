@@ -162,12 +162,15 @@ bool Orca::Init(String _dllFile) {
 	GetDataDouble		   = DLLGetFunction(dll, void, C_GetDataDoubleW,		  (HINSTANCE handle, LPCWSTR name, int index, double *lpData, int *status));
 	GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (HINSTANCE handle, LPCWSTR name, int index, LPWSTR lpData, int *status));
 	
-	SetModelThreadCount = DLLGetFunction(dll, void, C_SetModelThreadCount, (HINSTANCE handle, int threadCount, int *status));
-	GetModelThreadCount = DLLGetFunction(dll, int, C_GetModelThreadCount,  (HINSTANCE handle, int *status));
+	SetModelThreadCount    = DLLGetFunction(dll, void, C_SetModelThreadCount, 	  (HINSTANCE handle, int threadCount, int *status));
+	GetModelThreadCount    = DLLGetFunction(dll, int,  C_GetModelThreadCount,     (HINSTANCE handle, int *status));
 	
-	GetDiffractionOutput0 = DLLGetFunction(dll, void, C_GetDiffractionOutput, (HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus));
+	GetDiffractionOutput0  = DLLGetFunction(dll, void, C_GetDiffractionOutput, (HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus));
 
 	RegisterLicenceNotFoundHandler = DLLGetFunction(dll, void, C_RegisterLicenceNotFoundHandler, 	  (TLicenceNotFoundHandlerProc Handler, int *lpStatus));
+	
+	//GetDLLVersion		   = DLLGetFunction(dll, void, C_GetDLLVersionW,		  (TDLLVersionW *lpRequiredDLLVersion, TDLLVersionW *lpDLLVersion, int *lpOK, int *status));
+	//GetFileCreatorVersion  = DLLGetFunction(dll, int,  C_GetFileCreatorVersionW,  (LPCWSTR lpFileName, LPWSTR lpVersion, int *status));
 	
 	GetLastErrorString = DLLGetFunction(dll, int,  C_GetLastErrorStringW, (LPCWSTR wcs));
 	FinaliseLibrary    = DLLGetFunction(dll, void, C_FinaliseLibrary,     (int *status));
@@ -266,6 +269,73 @@ void __stdcall Orca::EnumerateVarsProc(const TVarInfo *lpVarInfo) {
 		varUnits << WideToString(lpVarInfo->lpVarUnits);
 	}
 }
+
+String Orca::BEMRVersion() {
+	return "11.5b";
+}
+
+String Orca::FileVersionBin(String filename) {
+	FileInBinary file(filename);
+	if (!file)
+		throwError("FileVersionBin");
+	
+	file.Read<char>();
+	
+	String str = "OrcaWave";
+	StringBuffer nstr(str.GetCount());
+	
+	for (int i = 0; i < str.GetCount(); ++i)
+		nstr[i] = file.Read<char>();
+	
+	if (str != String(nstr))
+		return String();
+	
+	file.Read<char>();
+	
+	int ver = file.Read<char>();
+	
+	String ret = FormatInt(ver) + ".";
+	
+	file.Read<char>();
+	file.Read<char>();
+	
+	ret << file.Read<char>();
+	ret << file.Read<char>();
+		
+	return ret;
+}
+
+String Orca::FileVersionYml(String filename) {
+	FileIn file(filename);
+	if (!file)
+		throwError("FileVersionYml");
+	
+	String str = Trim(file.GetLine());
+	
+	if (!str.StartsWith("%YAML"))
+		return String();
+	
+	for (int i = 0; i < 10; ++i) {
+		str = Trim(file.GetLine());
+		str.Replace(" ", "");
+		if (str.StartsWith("#Program:")) {
+			int pos = str.FindAfter("OrcaWave");
+			if (pos > 0) 
+				return str.Mid(pos);
+		}
+	}
+	return String();
+}
+
+String Orca::FileVersion(String filename) {
+	String ret = FileVersionBin(filename);
+	if (ret.IsEmpty())
+		ret = FileVersionYml(filename);
+	if (ret.IsEmpty()) 	
+		return "Unknown";
+	else
+		return ret;
+}
 			
 bool Orca::FindInit() {
 	UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
@@ -274,25 +344,37 @@ bool Orca::FindInit() {
 		return false;
 	}
 	
-	BEM::Print("\nAvailable OrcaFlex versions:");
-	for (int i = 0; i < orcadata.size(); ++i)
-		BEM::Print(Format("\n- Name: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].description, orcadata[i].path));
-	
 	for (int i = orcadata.size()-1; i >= 0; --i)		// lack of data
 		if (orcadata[i].version.IsEmpty() || orcadata[i].path.IsEmpty())
 			orcadata.Remove(i);
 	
 	int iversion = 0;
-	UVector<int> version = orcadata[0].GetVersion();
+	UVector<int> version0 = orcadata[0].GetVersion();
 	for (int i = 1; i < orcadata.size(); ++i) {							// Get the newest version from the installed
-		UVector<int> each = orcadata[i].GetVersion();
-		if (SoftwareDetails::IsHigherVersion(each, version)) {			// Version are numbers separated by .
+		UVector<int> version = orcadata[i].GetVersion();
+		if (SoftwareDetails::IsHigherVersion(version, version0) > 0)	// Version are numbers separated by .
 			iversion = i;
-			version = pick(each);
-		}
 	}
 	
-	BEM::Print(Format("\nLoaded Name: '%s'. Version: '%s'. Description: '%s'. Path: '%s'", orcadata[iversion].name, orcadata[iversion].version, orcadata[iversion].description, orcadata[iversion].path));
+	BEM::Print("\nAvailable OrcaFlex versions:");
+	for (int i = 0; i < orcadata.size(); ++i) {
+		String str = "\n";
+		if (i == iversion)
+			str << "Used-";
+		else
+			str << "    -";
+		str << Format("%s. Version: %s. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].path);
+		BEM::Print(str);
+	}
+	UVector<String> split = Split(orcadata[iversion].version, ".");
+	dllVersion = "";
+	if (split.size() > 0)
+		dllVersion << split[0];
+	if (split.size() > 1)	
+ 		dllVersion << "." << split[1];
+ 	if (split.size() > 2)		
+ 		dllVersion << char('a' + ScanInt(split[2]));
+	BEM::Print(Format("\nBEMRosetta version: %s", BEMRVersion()));
 	
 	String arch;
 #ifdef CPU_64
@@ -397,10 +479,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	hy.dt.Nh = sz/sizeof(double);
 	hy.dt.head.SetCount(hy.dt.Nh);
 	if (GetDiffractionOutput(wave, dotHeadings, &sz, hy.dt.head.begin()))
-		throwError("Load dotHeadings 2");	
-	
-	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, NULL))
-		throwError("Load dotHydrostaticResults");			
+		throwError("Load dotHeadings 2");				
 	
 	hy.dt.Nb = GetInt(wave, L"NumberOfIncludedBodies");
 	
@@ -412,6 +491,9 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 			origins[ib][2] = c0.z;
 		}	
 	}
+	
+	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, NULL))
+		throwError("Load dotHydrostaticResults");
 	
 	if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo))
 		throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo)));			

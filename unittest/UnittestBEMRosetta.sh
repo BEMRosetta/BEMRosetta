@@ -22,5 +22,3 @@ umk BEMRosetta BEMRosetta    CLANG_17 -r +GUI,SHARED 	  ./.test/bemrosetta
 
 rm ./.test/TurbSim2.bts
 rm ./.test/hello.*
-
-exit 0
