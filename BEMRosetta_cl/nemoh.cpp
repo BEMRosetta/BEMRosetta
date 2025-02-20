@@ -413,13 +413,13 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z) const {
-	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, y0z);
+void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
+	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, y0z, lids);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, y0z);
+		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, y0z, lids);
 }
 
-void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z) const {
+void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 
 	UVector<int> valsf;
@@ -430,11 +430,6 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 	String binResults = AFX(folderBase, "bin");
 	if (!DirectoryCreateX(binResults))
 		throw Exc(Format(t_("Problem creating '%s' folder"), binResults));
-		
-	//String meshName = GetFileName(bem.nemohPathMesh);
-	//String destMesh = AFX(binResults, meshName);
-	//if (!FileCopy(bem.nemohPathMesh, destMesh)) 
-	//	throw Exc(Format(t_("Problem copying mesh binary from '%s'"), bem.nemohPathMesh));
 	
 	String preName, hydroName, solvName, postName, batName = "Nemoh";
 	if (solver == Hydro::CAPYTAINE) {
@@ -495,7 +490,6 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 		}
 	}
 		
-	//String sumcases;
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		UVector<double> freqs;
@@ -503,7 +497,6 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			folder = AFX(folderBase, Format("%s_Part_%d", batName, i+1));
 			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
-			//sumcases << " " << AFX(folder, "Nemoh.cal");
 			Upp::Block(dt.w, freqs, ifr, valsf[i]);
 			ifr += valsf[i];
 		} else {
@@ -549,7 +542,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			numNodes[ib] = dt.msh[ib].dt.under.nodes.size();
 			numPanels[ib] = dt.msh[ib].dt.under.panels.size();
 		}
-		Save_Cal(folder, freqs, numNodes, numPanels, solver, y0z, x0z);
+		Save_Cal(folder, freqs, numNodes, numPanels, solver, y0z, x0z, lids);
 				
 		String folderResults = AFX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
@@ -563,12 +556,9 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 		
 		if (numCases > 1) {
 			String caseFolder = Format("%s_Part_%d", batName, i+1);
-			//Save_Body_bat(folder, caseFolder, meshes, meshName, bin || BEMCase::CAPYTAINE); 
 			Save_Bat(folderBase, Format("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName, numThreads);
-		} else {
-			//Save_Body_bat(folder, Null, meshes, meshName, bin || BEMCase::CAPYTAINE);
+		} else 
 			Save_Bat(folder, Format("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName, numThreads);
-		}
 	}
 }
 
@@ -603,7 +593,7 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &me
 }
 	
 void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, 
-		const UVector<int> &panels, int solver, bool y0z, bool x0z) const {
+		const UVector<int> &panels, int solver, bool y0z, bool x0z, const UArray<Body> &lids) const {
 	String fileName = AFX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -633,9 +623,14 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 		const Body &b = dt.msh[ib];
 		String name = Format("Body_%d.dat", ib+1);
 		
+		Body under = clone(dt.msh[ib]);
+		bool isLid = solver == Hydro::NEMOHv3 && lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
+		if (isLid) 
+			under.Append(lids[ib].dt.mesh, dt.rho, dt.g);
+			
 		int nNodes, nPanels;
-		Body::SaveAs(dt.msh[ib], AFX(folderMesh, name), Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z, nNodes, nPanels);
-		
+		Body::SaveAs(under, AFX(folderMesh, name), Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, y0z, x0z, nNodes, nPanels);
+				
 		out << NemohHeader(name) << "\n";	
 		
 		String file = AFX("mesh", name);
@@ -676,8 +671,6 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 	else	
 		out << NemohField(Format("%d %f %f", Nf, minF, maxF), cp)   << "! Number of wave frequencies, Min, and Max (rad/s)" << "\n";
 	
-	//double _minH = !isCapy ? minH : ToRad(minH);	// 29/12/2021 Capytaine issue
-	//double _maxH = !isCapy ? maxH : ToRad(maxH);
 	out << NemohField(Format("%d %f %f", dt.Nh, First(dt.head), Last(dt.head)), cp) << "! Number of wave directions, Min and Max (degrees)" << "\n";
 	
 	out << NemohHeader("Post processing") << "\n";
@@ -707,11 +700,6 @@ bool Nemoh::Load_Inf(String fileName) {
 		return false;
 	
 	dt.msh.SetCount(dt.Nb);	
-	//dt.cg.setConstant(3, 1, NaNDouble);
-	//dt.cb.setConstant(3, 1, NaNDouble);
-	//dt.c0.setConstant(3, 1, NaNDouble);
-	//dt.Vo.SetCount(1, NaNDouble);
-	//dt.C.SetCount(1);
 	dt.msh[0].dt.C.setConstant(6, 6, NaNDouble);   
 	
 	double minimumDirectionAngle = 0;
@@ -818,8 +806,7 @@ void Nemoh::Save_Hydrostatics_static(String folder, int Nb, const UArray<Body> &
 			out << Format(" XF =   %.3f - XG =   %.3f\n", m.dt.cb.x, m.dt.cg.x);
 			out << Format(" YF =   %.3f - YG =   %.3f\n", m.dt.cb.y, m.dt.cg.y);
 			out << Format(" ZF =   %.3f - ZG =   %.3f\n", m.dt.cb.z, m.dt.cg.z);
-			//if (Vo.size() == 3) 
-				out << Format(" Displacement =  %.7G\n", m.dt.Vo);
+			out << Format(" Displacement =  %.7G\n", m.dt.Vo);
 		}
 	}
 }

@@ -555,7 +555,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
 			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) {
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
-		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z);
+		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z, lids);
 	else if (solver == Hydro::CAPYTAINE_PY)
 		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, lids);
 	else if (solver == Hydro::HAMS)
@@ -692,7 +692,7 @@ void Hydro::GetAinf() {
 		    	dt.Ainf(i, j) = ::GetAinf(dt.Kirf[i][j], dt.Tirf, Get_w(), dt.A[i][j]);
 }
 
-void Hydro::GetRAO() {
+void Hydro::GetRAO(double critDamp) {
 	if (dt.Nf == 0 || dt.A.size() < dt.Nb*6 || dt.B.size() < dt.Nb*6)
 		throw Exc(t_("Insufficient data to get RAO: Added mass and Radiation damping are required"));	
 
@@ -705,8 +705,10 @@ void Hydro::GetRAO() {
 			      
 	Initialize_Forces(dt.rao);
 
-	MatrixXd D = MatrixXd::Zero(6, 6);		// Unused for now
+	MatrixXd D  = MatrixXd::Zero(6, 6);		// Unused for now
 	MatrixXd D2 = MatrixXd::Zero(6, 6);
+	
+	ASSERT(critDamp >= 0);
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		MatrixXd C = C_(false, ib);
@@ -714,7 +716,7 @@ void Hydro::GetRAO() {
 		for (int ih = 0; ih < dt.Nh; ++ih) {	
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 				VectorXcd RAO = GetRAO(dt.w[ifr], A_mat(false, ifr, ib, ib), B_mat(false, ifr, ib, ib), 
-								F_(false, dt.ex, ih, ifr, ib), C, M_, D, D2);
+								F_(false, dt.ex, ih, ifr, ib), C, M_, D, D2, critDamp);
 				for (int idf = 0; idf < 6; ++idf)
 					dt.rao[ib][ih](ifr, idf) = RAO[idf];
 			}
@@ -722,13 +724,35 @@ void Hydro::GetRAO() {
 	}
 }
 
+MatrixXd SquareRoot(const MatrixXd& m) {	
+    JacobiSVD<MatrixXd> svd(m, ComputeFullU | ComputeFullV);
+
+    MatrixXd U = svd.matrixU();
+    MatrixXd V = svd.matrixV();
+    VectorXd S = svd.singularValues();
+
+    for (int i = 0; i < S.size(); ++i)
+        S(i) = std::sqrt(S(i));
+
+    return U * S.asDiagonal() * V.transpose();
+}
+
+MatrixXd CriticalDamping(double critDamp, const MatrixXd &M, const MatrixXd &A, const MatrixXd &K) {
+    MatrixXd M_eff_sqrt = SquareRoot(M + A);
+    MatrixXd K_sqrt = SquareRoot(K);
+    
+    return 2 * critDamp * K_sqrt * M_eff_sqrt;	
+}
+
 VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
-		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2) {
+		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2, double critDamp) {
 	MatrixXd Aw0   = Aw .unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
 			 Bw0   = Bw .unaryExpr([](double x){return IsNum(x) ? x : 0;});
 	VectorXcd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x : 0;});
+
+	MatrixXd Dc = D + CriticalDamping(critDamp, M, Aw0, C);
 	
-	MatrixXcd m = C - sqr(w)*(M + Aw0) + i<double>()*w*(Bw0 + D);
+	MatrixXcd m = C - sqr(w)*(M + Aw0) + i<double>()*w*(Bw0 + Dc);
 	if (!FullPivLU<MatrixXcd>(m).isInvertible())
 	   throw Exc(t_("Problem solving RAO"));
 	

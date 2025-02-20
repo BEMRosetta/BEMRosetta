@@ -78,6 +78,8 @@ void MainBEM::Init() {
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_KIRF);
 	menuProcess.butRAO.Disable();	
+	menuProcess.critDamp.Disable();	
+	menuProcess.critDamp = 0;
 	menuProcess.butRAO <<= THISBACK(OnRAO);
 	menuProcess.butSymmetrize <<= THISBACK(OnSymmetrize);
 	
@@ -927,6 +929,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butA0.			Enable(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butRAO.			Enable(numsel == 1 || numrow == 1);
+	menuProcess.critDamp.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butBH.			Enable(numsel >= 1);
 	menuAdvanced.butOgilvie.	Enable(numsel == 1 || numrow == 1);
@@ -1234,12 +1237,16 @@ void MainBEM::OnRAO() {
 		int idx = GetIndexOneSelected();
 		if (idx < 0) 
 			return;
+
+		double critDamp = ~menuProcess.critDamp;
+		if (IsNull(critDamp))
+			critDamp = 0;
 			
 		Progress progress(t_("Calculating RAO in selected BEM file..."), 100); 
 		
 		WaitCursor wait;
 
-		Bem().RAO(idx);
+		Bem().RAO(idx, critDamp);
 		
 		AfterBEM();	
 	} catch (Exc e) {

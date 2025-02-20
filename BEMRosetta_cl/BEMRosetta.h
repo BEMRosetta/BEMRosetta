@@ -1054,10 +1054,10 @@ public:
 	static double GetK_IRF_MaxT(const UVector<double> &w);
 	void GetAinf();
 	void GetAinf_w();
-	void GetRAO();
+	void GetRAO(double critDamp);
 	void GetB_H(int &num);
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
-				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2);
+				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2, double critDamp);
 	void GetC();
 	VectorXd GetC_KX(double w, const MatrixXd &Aw, const VectorXcd &Fwh, const VectorXd &RAOre, const MatrixXd &M);
 	void InitAinf_w();
@@ -1454,10 +1454,11 @@ public:
 	bool LoadDatBody(String file);
 	void SaveDatBody(String file); 
 	
-	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z) const;
+	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	
-	void Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, const UVector<int> &panels, int solver, bool y0z, bool x0z) const;
+	void Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, const UVector<int> &panels, int solver, 
+					bool y0z, bool x0z, const UArray<Body> &lids) const;
 	
 	bool Save_KH(String folder) const;
 	bool Save_Inertia(String folder) const;
@@ -1497,7 +1498,7 @@ private:
 	void Save_Input(String folder, int solver) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases,  
-					bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z) const;
+					bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
 };
 
 class Aqwa : public Hydro {
@@ -1509,7 +1510,6 @@ public:
 	virtual ~Aqwa() noexcept {}
 	
 	bool Load(String fileName);
-	//UVector<String> Check() const;	
 	
 private:
 	bool Load_AH1();
@@ -1722,7 +1722,7 @@ public:
 	void Kirf(int id, double maxT);
 	void Ainf(int id);
 	void Ainf_w(int id);
-	void RAO(int id);
+	void RAO(int id, double critDamp);
 	void BH(int id, int &num);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status = Null);

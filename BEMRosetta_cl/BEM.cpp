@@ -169,8 +169,8 @@ void BEM::Ainf_w(int id) {
 	hydros[id].GetAinf_w();
 }
 
-void BEM::RAO(int id) {
-	hydros[id].GetRAO();
+void BEM::RAO(int id, double critDamp) {
+	hydros[id].GetRAO(critDamp);
 }
 
 void BEM::BH(int id, int &num) {

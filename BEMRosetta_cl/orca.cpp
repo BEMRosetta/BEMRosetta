@@ -270,10 +270,6 @@ void __stdcall Orca::EnumerateVarsProc(const TVarInfo *lpVarInfo) {
 	}
 }
 
-String Orca::BEMRVersion() {
-	return "11.5b";
-}
-
 String Orca::FileVersionBin(String filename) {
 	FileInBinary file(filename);
 	if (!file)

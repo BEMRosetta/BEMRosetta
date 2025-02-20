@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2025, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
-#ifdef PLATFORM_WIN32
 #include "orca.h"
-#endif
 
 String OrcaWave::Load(String _file, double) {
 	dt.file = _file;

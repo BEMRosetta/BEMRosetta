@@ -257,8 +257,10 @@ typedef struct {
 
 #define rtTimeHistory 0
 
+#endif
 class Orca {
 public:
+#ifdef PLATFORM_WIN32
 	~Orca();
 	
 	bool Init(String _dllFile);
@@ -902,8 +904,12 @@ public:
 			return false;
 		return flex;
 	}
-	
-	static String BEMRVersion();
+
+#endif	
+
+	static const char * BEMRVersion() {return "11.5b";}
+
+#ifdef PLATFORM_WIN32
 	String DLLVersion()				{return dllVersion;}
 	String FileVersion(String filename);
 	String FileVersion()			{return fileVersion;}
@@ -995,8 +1001,9 @@ private:
 			str = GetErrorString();
 		throw Exc(Format("'%s': %s\n(BEMRosetta %s. Orca %s. File %s)", where, str, BEMRVersion(), DLLVersion(), FileVersion()));
 	}
+#endif
 };
-
+#ifdef PLATFORM_WIN32
 #pragma pack(pop)
 
 #endif
