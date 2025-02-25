@@ -641,13 +641,14 @@ public:
 	inline double Ainf_w_(bool ndim, int ifr, int idf, int jdf)const {return ndim   ? Ainf_w_ndim(ifr, idf, jdf) : Ainf_w_dim(ifr, idf, jdf);}
 	
 	inline double C_dim(int ib, int idf, int jdf)   	const {return dt.msh[ib].dt.C(idf, jdf)*C_toDimFactor(idf, jdf);}
-	MatrixXd C_(bool ndim, int ib) 				   		const;
+	MatrixXd C_mat(bool ndim, int ib) 				   	const;
+	void C_mat_Set(bool ndim, int ib, const MatrixXd &C);
 	void C_dim();	
 	inline double C_ndim(int ib, int idf, int jdf)  	const {return dt.msh[ib].dt.C(idf, jdf)*C_toNDimFactor(idf, jdf);}
 	inline double C_(bool ndim, int ib, int idf, int jdf) const {return ndim ? C_ndim(ib, idf, jdf) : C_dim(ib, idf, jdf);}
 
 	inline double CMoor_dim(int ib, int idf, int jdf)   const {return dt.msh[ib].dt.Cmoor(idf, jdf)*CMoor_toDimFactor(idf, jdf);}
-	MatrixXd CMoor_(bool ndim, int ib) 			   		const;
+	MatrixXd CMoor_mat(bool ndim, int ib) 			   	const;
 	void CMoor_dim();	
 	inline double CMoor_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cmoor(idf, jdf)*CMoor_toNDimFactor(idf, jdf);}
 	inline double CMoor_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CMoor_ndim(ib, idf, jdf) : CMoor_dim(ib, idf, jdf);}
@@ -666,10 +667,10 @@ public:
 	
 	VectorXd Md_dof(bool ndim, int _h, int idf) const;
 	
-	MatrixXd Dlin_dim(int ib) const;
-	MatrixXd Dquad_dim(int ib) const;
+	MatrixXd Dlin_dim_mat(int ib) const;
+	MatrixXd Dquad_dim_mat(int ib) const;
 	
-	MatrixXcd QTF_dof(bool ndim, bool isSum, int _h, int idf, int ib) const;
+	MatrixXcd QTF_dof_mat(bool ndim, bool isSum, int _h, int idf, int ib) const;
 		
 	// F
 		
@@ -725,14 +726,14 @@ public:
 	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dt.dimenSTS ? dt.sts[idf][jdf].TFS[ifr]/**g_rho_ndim()/g_rho_dim()*/ : dt.sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
+	double Tdof_inf(int ib, int idf) const;
 	double Tdof(int ib, int idf) const;
-	double Tdofw(int ib, int idf) const;
-	double Theave(int ib) const;
-	double Theavew(int ib) const;
-	double Troll(int ib) const;
-	double Trollw(int ib) const;
-	double Tpitch(int ib) const;
-	double Tpitchw(int ib) const;
+	
+	VectorXd Tall_inf(int ib) const;
+	VectorXd Tall(int ib) const;
+
+	static VectorXd Tall_inf(int ib, const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf);
+
 	double GM(int ib, int idf) const;
 	double GMroll(int ib) const;
 	double GMpitch(int ib) const;

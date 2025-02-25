@@ -2617,11 +2617,11 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 			/*data.M.size() > ib && */hy.dt.msh[ib].dt.M.size() > 0 && 
 			/*data.C.size() > ib && */hy.dt.msh[ib].dt.C.size() > 0) {
 			//array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(hy.Theavew(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(hy.Tdof(ib, 2), 5, false, FDS(hy.Tdof_inf(ib, 2), 5, false, "-") + S(" (∞)")));
 			//array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(hy.Trollw (ib), 5, false, "-"));
+			array.Set(row++, col, FDS(hy.Tdof(ib, 3), 5, false, FDS(hy.Tdof_inf(ib, 3), 5, false, "-") + S(" (∞)")));
 			//array.Set(row++, col, FDS(data.Tpitch (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(hy.Tpitchw(ib), 5, false, "-"));
+			array.Set(row++, col, FDS(hy.Tdof(ib, 4), 5, false, FDS(hy.Tdof_inf(ib, 4), 5, false, "-") + S(" (∞)")));
 		} else {
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	

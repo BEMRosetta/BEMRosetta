@@ -711,7 +711,7 @@ void Hydro::GetRAO(double critDamp) {
 	ASSERT(critDamp >= 0);
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		MatrixXd C = C_(false, ib);
+		MatrixXd C = C_mat(false, ib);
 		const MatrixXd &M_ = dt.msh[ib].dt.M;
 		for (int ih = 0; ih < dt.Nh; ++ih) {	
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
@@ -729,10 +729,7 @@ MatrixXd SquareRoot(const MatrixXd& m) {
 
     MatrixXd U = svd.matrixU();
     MatrixXd V = svd.matrixV();
-    VectorXd S = svd.singularValues();
-
-    for (int i = 0; i < S.size(); ++i)
-        S(i) = std::sqrt(S(i));
+    VectorXd S = svd.singularValues().unaryExpr([](double x){return sqrt(x);});
 
     return U * S.asDiagonal() * V.transpose();
 }
@@ -1733,29 +1730,71 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 
 		GetK_IRF(maxT, Bem().numValsA);
 	}
-/*	
+	
+	MatrixXd deltaC0CB(3, dt.Nb), deltaCBC0N(3, dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		Vector3d r;
-		r << delta(0, ib), delta(1, ib), delta(2, ib);
-		Eigen::Matrix3d S_r = SkewSymmetricMatrix(r);
-		Eigen::Matrix3d S_r_trans = S_r.transpose();
-			
-		if (IsLoadedC(ib)) {
-			MatrixXd &K = dt.msh[ib].dt.C;
-			Eigen::Matrix3d K_TT = K.topLeftCorner<3,3>();    	// Translational-Translational part
-			Eigen::Matrix3d K_TR = K.topRightCorner<3,3>();   	// Translational-Rotational part
-			Eigen::Matrix3d K_RT = K.bottomLeftCorner<3,3>(); 	// Rotational-Translational part
-			Eigen::Matrix3d K_RR = K.bottomRightCorner<3,3>(); 	// Rotational-Rotational part
-			
-			Eigen::Matrix<double, 6, 6> K_c1;
-			K_c1.topLeftCorner<3,3>() 	  = K_TT;					// Top-left block (Translational-Translational)
-			K_c1.topRightCorner<3,3>() 	  = K_TR - S_r*K_TT;		// Top-right block (Translational-Rotational)
-			K_c1.bottomLeftCorner<3,3>()  = K_RT - K_TT*S_r_trans;	// Bottom-left block (Rotational-Translational)
-			K_c1.bottomRightCorner<3,3>() = K_RR - S_r*K_TR - K_TR.transpose()*S_r_trans; // Bottom-right block (Rotational-Rotational)
-			
-			K = K_c1;			
+		for (int idf = 0; idf < 3; ++idf) {	
+			if (!IsNull(dt.msh[ib].dt.cb[idf]) && !IsNull(dt.msh[ib].dt.c0[idf])) {
+				deltaC0CB(idf, ib) = dt.msh[ib].dt.cb[idf] - dt.msh[ib].dt.c0[idf];
+				deltaCBC0N(idf, ib) = to(idf, ib) - dt.msh[ib].dt.cb[idf];
+			} else
+				deltaC0CB(idf, ib) = deltaCBC0N(idf, ib) = Null;
 		}
-		if (IsLoadedDlin(ib)) {
+	}
+		
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		Matrix3d S_r 	   = SkewSymmetricMatrix(delta.col(ib));
+		Matrix3d S_r_C0CB  = SkewSymmetricMatrix(deltaC0CB.col(ib));
+		Matrix3d S_r_CBC0N = SkewSymmetricMatrix(deltaCBC0N.col(ib));
+	
+		if (IsLoadedC(ib) && IsNull(dt.msh[ib].dt.cb)) {
+			Body::Data &d = dt.msh[ib].dt;
+			double mass = dt.msh[ib].GetMass();
+			if (IsNull(mass))
+				mass = 0;
+			double vol = d.Vo;
+			if (IsNull(vol))
+				vol = mass/dt.rho;
+			Point3D cg = clone(d.cg);
+			if (IsNull(cg))
+				cg.SetZero();
+			double g = dt.g;
+			if (IsNull(g))
+				g = Bem().g;
+			double rho = dt.rho;
+			if (IsNull(rho))
+				rho = Bem().rho;
+			
+			MatrixXd C = C_mat(false, ib);
+			double rho_g_vol = rho*g*vol;
+			double mass_g = mass*g;
+			
+			C(3, 3) -=  rho_g_vol*(d.cb.z - d.c0.z) - mass_g*(cg.z - d.c0.z);
+			C(3, 5) -= -rho_g_vol*(d.cb.x - d.c0.x) + mass_g*(cg.x - d.c0.x);
+			C(4, 4) -=  rho_g_vol*(d.cb.z - d.c0.z) - mass_g*(cg.z - d.c0.z);
+			C(4, 5) -= -rho_g_vol*(d.cb.y - d.c0.y) + mass_g*(cg.y - d.c0.y);	
+			
+			Matrix3d K_FF = C.topLeftCorner<3,3>();    	// FF
+			Matrix3d K_FM = C.topRightCorner<3,3>();   	// FM
+			Matrix3d K_MF = C.bottomLeftCorner<3,3>(); 	// MF
+			Matrix3d K_MM = C.bottomRightCorner<3,3>(); // MM
+			
+			Matrix<double, 6, 6> K;
+			K.topLeftCorner<3,3>() 	   = K_FF;				
+			K.topRightCorner<3,3>()    = K_FM + K_FF*S_r;
+			K.bottomLeftCorner<3,3>()  = K_MF - S_r*K_FF;			
+			K.bottomRightCorner<3,3>() = K_MM + S_r_C0CB* K_FF*S_r_C0CB 
+												 - S_r_CBC0N*K_FF*S_r_CBC0N;
+			C = K;		
+			
+			C(3, 3) +=  rho_g_vol*(d.cb.z - to.col(ib).z()) - mass_g*(cg.z - to.col(ib).z());
+			C(3, 5) += -rho_g_vol*(d.cb.x - to.col(ib).x()) + mass_g*(cg.x - to.col(ib).x());
+			C(4, 4) +=  rho_g_vol*(d.cb.z - to.col(ib).z()) - mass_g*(cg.z - to.col(ib).z());
+			C(4, 5) += -rho_g_vol*(d.cb.y - to.col(ib).y()) + mass_g*(cg.y - to.col(ib).y());	
+			
+			C_mat_Set(false, ib, C);
+		}
+/*		if (IsLoadedDlin(ib)) {
 			MatrixXd &D = dt.msh[ib].dt.Dlin;
 			Eigen::Matrix3d D_TT = D.topLeftCorner<3,3>();    	// Translational-Translational part
 			Eigen::Matrix3d D_TR = D.topRightCorner<3,3>();   	// Translational-Rotational part
@@ -1784,14 +1823,13 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 			D_c1.bottomRightCorner<3,3>() = D_RR - S_r*D_TR - D_TR.transpose()*S_r_trans;	// Bottom-right block (Rotational-Rotational)
 			
 			D = D_c1;
-		}
+		}*/
 	}
-	*/
 	// Some previous data are now invalid. Translation algorithms are welcome
 	dt.rao.Clear();	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		Clear(dt.msh[ib].dt.Aadd);
-		Clear(dt.msh[ib].dt.C);
+		//Clear(dt.msh[ib].dt.C);
 		Clear(dt.msh[ib].dt.Cmoor);
 		Clear(dt.msh[ib].dt.Cadd);
 		Clear(dt.msh[ib].dt.Dlin);

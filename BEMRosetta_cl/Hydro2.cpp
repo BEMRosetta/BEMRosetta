@@ -2096,7 +2096,7 @@ MatrixXd Hydro::B_mat(bool ndim, int ifr, int ib1, int ib2) const {
 	return ret;
 }
 
-MatrixXd Hydro::C_(bool ndim, int ib) const {
+MatrixXd Hydro::C_mat(bool ndim, int ib) const {
 	MatrixXd ret;
 	if (dt.msh[ib].dt.C.size() == 0)
 		return ret;
@@ -2107,7 +2107,19 @@ MatrixXd Hydro::C_(bool ndim, int ib) const {
 	return ret;
 }
 
-MatrixXd Hydro::CMoor_(bool ndim, int ib) const {
+void Hydro::C_mat_Set(bool ndim, int ib, const MatrixXd &C) {
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) {
+			double factor;
+			if (dt.dimen)
+				factor = !ndim  ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));
+			else
+				factor = ndim ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));	
+			dt.msh[ib].dt.C(idf, jdf) = C(idf, jdf)*factor;
+		}
+}
+
+MatrixXd Hydro::CMoor_mat(bool ndim, int ib) const {
 	MatrixXd ret;
 	if (dt.msh[ib].dt.Cmoor.size() == 0)
 		return ret;
@@ -2118,7 +2130,7 @@ MatrixXd Hydro::CMoor_(bool ndim, int ib) const {
 	return ret;
 }
 
-MatrixXd Hydro::Dlin_dim(int ib) const {
+MatrixXd Hydro::Dlin_dim_mat(int ib) const {
 	MatrixXd ret;
 	if (!IsLoadedDlin())
 		return ret;
@@ -2129,7 +2141,7 @@ MatrixXd Hydro::Dlin_dim(int ib) const {
 	return ret;
 }
 
-MatrixXd Hydro::Dquad_dim(int ib) const {
+MatrixXd Hydro::Dquad_dim_mat(int ib) const {
 	MatrixXd ret;
 	if (!IsLoadedDquad())
 		return ret;
@@ -2221,7 +2233,7 @@ VectorXd Hydro::Md_dof(bool ndim, int _h, int idf) const {
 	return ret;
 }
 
-MatrixXcd Hydro::QTF_dof(bool ndim, bool isSum, int _h, int idf, int ib) const {
+MatrixXcd Hydro::QTF_dof_mat(bool ndim, bool isSum, int _h, int idf, int ib) const {
 	const UArray<UArray<UArray<MatrixXcd>>> &qtf = isSum ? dt.qtfsum : dt.qtfdif;
 	
 	MatrixXcd ret;
@@ -2276,6 +2288,7 @@ void Hydro::CheckNaN() {
 	}
 }
 
+/*
 double Hydro::Tdof(int ib, int idf) const {
 	if (!IsLoadedAinf(idf+6*ib, idf+6*ib) || !IsLoadedM(ib, idf, idf) || !IsLoadedC(ib, idf, idf))
 		return Null;
@@ -2309,13 +2322,64 @@ double Hydro::Tdofw(int ib, int idf) const {
 		return Null;
 	return 2*M_PI/First(zeros); 
 }
+*/
 
-double Hydro::Theave(int ib)  const {return Tdof(ib, 2);}
-double Hydro::Theavew(int ib) const {return Tdofw(ib, 2);}
-double Hydro::Troll(int ib)   const {return Tdof(ib, 3);}
-double Hydro::Trollw(int ib)  const {return Tdofw(ib, 3);}
-double Hydro::Tpitch(int ib)  const {return Tdof(ib, 4);}
-double Hydro::Tpitchw(int ib) const {return Tdofw(ib, 4);}
+double Hydro::Tdof_inf(int ib, int idf) const {
+	return Tall_inf(ib)[idf];
+}
+
+double Hydro::Tdof(int ib, int idf) const {
+	return Tall(ib)[idf];
+}
+
+VectorXd Hydro::Tall_inf(int ib) const {
+	if (!IsLoadedAinf() || !IsLoadedM(ib) || !IsLoadedC(ib)) {
+		VectorXd ret(6);
+		return ret.setConstant(Null);
+	}	
+	MatrixXd C    = C_mat(false, ib);
+	MatrixXd Ainf = Ainf_mat(false, ib, ib).unaryExpr([](double x){return IsNum(x) ? x : 0;});
+	const MatrixXd &M = dt.msh[ib].dt.M;
+	
+	return Tall_inf(ib, C, M, Ainf);
+}
+
+VectorXd Hydro::Tall_inf(int ib, const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf) {	
+	VectorXd W2 = (M + Ainf).llt().solve(C).diagonal();
+	return W2.unaryExpr([](double x)->double {
+		if (IsNull(x) || abs(x) < 1E-10)
+			return Null;
+		return 2*M_PI/sqrt(abs(x));});		// Serve both for real and imaginary
+}
+
+VectorXd Hydro::Tall(int ib) const {
+	if (!IsLoadedA() || !IsLoadedM(ib) || !IsLoadedC(ib)) {
+		VectorXd ret(6);
+		return ret.setConstant(Null);
+	}
+	MatrixXd C = C_mat(false, ib);
+	const MatrixXd &M = dt.msh[ib].dt.M;
+	VectorXd W2(6);
+	MatrixXd delta(6, dt.Nf);
+	for (int ifr = 0; ifr < dt.w.size(); ++ifr) {
+		MatrixXd Aw = (A_mat(false, ifr, ib, ib)).unaryExpr([](double x){return IsNum(x) ? x : 0;});
+		W2.setConstant(sqr(dt.w[ifr]));
+		
+		delta.col(ifr) = (M + Aw).llt().solve(C).diagonal() - W2;		// C*(M + Aw)^-1 - W^2
+	}
+	VectorXd w = Get_w();
+	VectorXd ret(6);
+	for (int idf = 0; idf < 6; ++idf) {
+		UVector<double> zeros;
+		VectorXd row = delta.row(idf); 
+		ZeroCrossing(w, row, true, true, zeros);
+		if (zeros.IsEmpty())
+			ret(idf) = Null;
+		else
+			ret(idf) = 2*M_PI/First(zeros); // Smallest frequency
+	}
+	return ret;
+}
 
 double Hydro::GM(int ib, int idf) const {
 	if (!IsNum(dt.msh[ib].dt.Vo) || dt.msh[ib].dt.Vo == 0)

@@ -284,12 +284,12 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		if (!hy.IsLoadedC(ib))
 			data << EigenNull;
 		else
-			data << hy.C_(Ndim, ib);
+			data << hy.C_mat(Ndim, ib);
 	} else if (what == Hydro::MAT_KMOOR) {
 		if (!hy.IsLoadedCMoor())
 			data << EigenNull;
 		else
-			data << hy.CMoor_(Ndim, ib);
+			data << hy.CMoor_mat(Ndim, ib);
 	} else if (what == Hydro::MAT_A) {
 		if (!hy.IsLoadedAinf())
 			data << EigenNull;
@@ -315,12 +315,12 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 		if (!hy.IsLoadedDlin())
 			data << EigenNull;
 		else
-			data << hy.Dlin_dim(ib);
+			data << hy.Dlin_dim_mat(ib);
 	} else if (what == Hydro::MAT_DAMP_QUAD) {
 		if (!hy.IsLoadedDquad())
 			data << EigenNull;
 		else
-			data << hy.Dquad_dim(ib);
+			data << hy.Dquad_dim_mat(ib);
 	} else
 		NEVER();
 

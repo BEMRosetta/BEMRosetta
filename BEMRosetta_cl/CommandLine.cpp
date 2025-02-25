@@ -1056,8 +1056,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (ib < 1 || ib > hy.dt.Nb)
 										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
-									BEM::Print(Format(t_("Theave(%d):"), ib) + " "); 
-									lastPrint = Format("%f", hy.Theave(ib-1));
+									double res = hy.Tdof(ib-1, 2);
+									if (!IsNull(res)) {
+										BEM::Print(Format(t_("Theave(%d):"), ib) + " "); 
+										lastPrint = Format("%f", res);
+									} else {
+										BEM::Print(Format(t_("Theave(%d)(inf):"), ib) + " "); 
+										lastPrint = Format("%f", hy.Tdof_inf(ib-1, 2));
+									}
 									Cout() << lastPrint;
 								} else if (pparam == "troll") {
 									CheckIfAvailableArg(command, ++ic, "Id. body");
@@ -1065,8 +1071,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (ib < 1 || ib > hy.dt.Nb)
 										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
-									BEM::Print(Format(t_("Troll(%d):"), ib) + " "); 
-									lastPrint = Format("%f", hy.Troll(ib-1));
+									double res = hy.Tdof(ib-1, 3);
+									if (!IsNull(res)) {
+										BEM::Print(Format(t_("Troll(%d):"), ib) + " "); 
+										lastPrint = Format("%f", res);
+									} else {
+										BEM::Print(Format(t_("Troll(%d)(inf):"), ib) + " "); 
+										lastPrint = Format("%f", hy.Tdof_inf(ib-1, 3));
+									}
 									Cout() << lastPrint;
 								} else if (pparam == "tpitch") {
 									CheckIfAvailableArg(command, ++ic, "Id. body");
@@ -1074,8 +1086,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									if (ib < 1 || ib > hy.dt.Nb)
 										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
-									BEM::Print(Format(t_("Tpitch(%d):"), ib) + " "); 
-									lastPrint = Format("%f", hy.Tpitch(ib-1));
+									double res = hy.Tdof(ib-1, 4);
+									if (!IsNull(res)) {
+										BEM::Print(Format(t_("Tpitch(%d):"), ib) + " "); 
+										lastPrint = Format("%f", res);
+									} else {
+										BEM::Print(Format(t_("Tpitch(%d)(inf):"), ib) + " "); 
+										lastPrint = Format("%f", hy.Tdof_inf(ib-1, 4));
+									}
 									Cout() << lastPrint;
 								} else if (pparam == "gmroll") {
 									CheckIfAvailableArg(command, ++ic, "Id. body");
