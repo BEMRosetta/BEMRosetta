@@ -38,6 +38,7 @@ file
 	nemoh_mesh.cpp,
 	wamit_mesh.cpp,
 	diodore_mesh.cpp,
+	off_mesh.cpp,
 	Solvers readonly separator,
 	Hydro.cpp,
 	Hydro2.cpp,

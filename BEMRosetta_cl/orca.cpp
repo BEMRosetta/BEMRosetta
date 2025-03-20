@@ -370,7 +370,7 @@ bool Orca::FindInit() {
  		dllVersion << "." << split[1];
  	if (split.size() > 2)		
  		dllVersion << char('a' + ScanInt(split[2]));
-	BEM::Print(Format("\nBEMRosetta version: %s", BEMRVersion()));
+	BEM::Print(Format("\nBEMRosetta OrcaWave version: %s", BEMRVersion()));
 	
 	String arch;
 #ifdef CPU_64
@@ -844,7 +844,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 					for (int idf = 0; idf < 6; ++idf) {
 						const TComplex &c = presRad(idf + 6*ib, ifr, ip);
 						if (ib == panelIb[ip])
-							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += std::complex<double>(c.Im, -c.Re)/rho_w; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
+							hy.dt.pots_rad[panelIb[ip]][panelId[ip]][idf][ifr] += factor.force*std::complex<double>(c.Im, -c.Re)/rho_w; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 					}
 			}
 		}

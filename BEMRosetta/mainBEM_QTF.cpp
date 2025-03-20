@@ -63,7 +63,7 @@ Pointf &QTFTabDof::Pf() {
 	return parent->pf;
 }
 
-void QTFTabDof::DoClick(Data &data/*, int idof*/) {
+void QTFTabDof::DoClick(Data &data) {
 	data.dataPlot.Clear();
 	data.scatter.RemoveAllSeries();
 	
@@ -96,6 +96,7 @@ void QTFTabDof::DoClick(Data &data/*, int idof*/) {
 	data.scatter.SetLabelY(data.labelY);
 	data.scatter.SetLabelX(Format(show_w ? t_("ω%s [rad/s]") : t_("T%s [s]"), typec == 'v' ? CharToSubSupScript('y', true) : CharToSubSupScript('x', true)));
 	
+	String sdiff;
 	double avgT = 0;
 	for (int i = 0; i < Bem().hydros.size(); ++i) {
 		const Hydro &hy = Bem().hydros[i];
@@ -130,9 +131,28 @@ void QTFTabDof::DoClick(Data &data/*, int idof*/) {
 			avgT += Pf().y;
 		else if (typec == 'v')
 			avgT += Pf().x;
-		else if (typec == 'd') 
-			Diagonal (Pf(), First(xAxis), Last(xAxis), from, to, a, b);
-		else
+		else if (typec == 'd') {
+			Diagonal(Pf(), First(xAxis), Last(xAxis), from, to, a, b);
+			double wdiff;
+			if (IsNull(from))
+				sdiff = "-";
+			else {
+				if (isSum)
+					wdiff = from.x + from.y;
+				else
+					wdiff = from.x - from.y;
+				if (!show_w) {
+					if (abs(wdiff) < 1E-8)
+						wdiff = Null;
+					else	
+						wdiff = 2*M_PI/wdiff;
+				}
+				if (!IsNull(wdiff))
+					sdiff = FormatDouble(wdiff, 2);
+				else
+					sdiff = "-";
+			}
+		} else
 			Conjugate(Pf(), First(xAxis), Last(xAxis), from, to, a, b);
 		
 		if (typec == 'h') {
@@ -160,7 +180,7 @@ void QTFTabDof::DoClick(Data &data/*, int idof*/) {
 	
 	String strw;
 	if (typec == 'd')
-		strw = t_("Diagonal");
+		strw = Format(t_("Diagonal %s %s"), sdiff, show_w ? "rad/s" : "s");
 	else if (typec == 'c')
 		strw = t_("Conjugate");
 	else 
@@ -198,8 +218,8 @@ void QTFTabDof::OnClick(Point p, /*int idof, */ScatterCtrl::MouseAction action) 
 	up.surf.Refresh();
 	down.surf.Refresh();
 	
-	DoClick(up/*, idof*/);
-	DoClick(down/*, idof*/);
+	DoClick(up);
+	DoClick(down);
 }
 
 char QTFTabDof::GetWhat(const Data &data) {

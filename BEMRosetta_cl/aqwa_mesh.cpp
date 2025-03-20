@@ -128,7 +128,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 				}
 			} else if (deck == 3) {
 				if (f.GetCount() == 3) {
-					int ib = f.GetInt(1)-1;
+					ib = f.GetInt(1)-1;
 					if (ib >= mesh.size())
 						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
 					if (mesh[ib].dt.M.size() != 36)
@@ -138,7 +138,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 			} else if (deck == 4) {
 				String str = f.GetText(0);
 				if (str.Find("PMAS") > 0) {
-					int ib = f.GetInt(1)-1;
+					ib = f.GetInt(1)-1;
 					if (ib >= mesh.size())
 						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
 					if (mesh[ib].dt.M.size() != 36)
@@ -463,7 +463,12 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 						Replace(FDS(p.y/factorLength, 10, true), "E", "e"), 
 						Replace(FDS(p.z/factorLength, 10, true), "E", "e"));
 		}
-		const Point3D &cg = mesh[ib].dt.cg;
+		Point3D cg = clone(mesh[ib].dt.cg);
+		if (IsNull(cg)) {
+			cg = clone(mesh[ib].dt.c0);
+			if (IsNull(cg)) 
+				cg = Point3D::Zero();
+		}
 		ret << Format("%6d%5d        %s%s%s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
 	}
@@ -578,12 +583,12 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	bool found0 = false, found180 = false;
 	UVector<double> head180;
 	for (int i = 0; i < head.size(); ++i) {
-		double h = FixHeading_180(head[i]);
-		if (abs(h) < 0.1)
+		double hd = FixHeading_180(head[i]);
+		if (abs(hd) < 0.1)
 			found0 = true;
-		if (abs(h - 180) < 0.1)
+		if (abs(hd - 180) < 0.1)
 			found180 = true;
-		FindAdd(head180, h);
+		FindAdd(head180, hd);
 	}
 	if (!found0)
 		head180 << 0;

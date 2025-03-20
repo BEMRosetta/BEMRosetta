@@ -79,7 +79,7 @@ void MainBEM::Init() {
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_KIRF);
 	menuProcess.butRAO.Disable();	
 	menuProcess.critDamp.Disable();	
-	menuProcess.critDamp = 0;
+	menuProcess.critDamp = 0.05;
 	menuProcess.butRAO <<= THISBACK(OnRAO);
 	menuProcess.butSymmetrize <<= THISBACK(OnSymmetrize);
 	
@@ -1935,10 +1935,10 @@ void MapMeshes::OnMapMeshes() {
 		UVector<int> idmeshes;
 		for (int row = 0; row < listLoaded.GetCount(); ++row) {
 			if (ArrayModel_IsVisible(listLoaded, row)) {
-				int idx = ArrayModel_IndexBody(listLoaded, row);
-				if (idx < 0)
+				int idxx = ArrayModel_IndexBody(listLoaded, row);
+				if (idxx < 0)
 					throw Exc(t_("Unexpected problem in OnMapMeshes()"));
-				idmeshes << idx;
+				idmeshes << idxx;
 			}
 		}
 		WaitCursor wait;

@@ -37,7 +37,7 @@ const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     	"*.1",			       "*.
 #endif		
 	"*.bemr", "*.*"};       
 	
-const bool Hydro::caseCanSave[]     = {true, 	      false,	        false,		 		   false, 	   false, 	     false,	 	  false,         false,		           false,	     true,  false,          true,	    true,	   	  true, 	  false,  		 false, 	            false,		 false,       false,   false,	       false, 	   		false, 			  false,		 false,			  true,			   true,			true,            false,
+const bool Hydro::caseCanSave[]     = {true, 	      false,	        false,		 		   false, 	   false, 	     false,	 	  false,         false,		           false,	     true,  false,          true,	    true,	   	  true, 	  false,  		 false, 	            false,		 true,       false,   false,	       false, 	   		false, 			  false,		 false,			  true,			   true,			true,            false,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
@@ -2069,8 +2069,12 @@ MatrixXd Hydro::A_mat(bool ndim, int ifr, int ib1, int ib2) const {
 		return ret;
 	ret.resize(6, 6);
 	for (int idf = 0; idf < 6; ++idf) 	
-		for (int jdf = 0; jdf < 6; ++jdf) 
-			ret(idf, jdf) = A_(ndim, ifr, idf + 6*ib1, jdf + 6*ib2);
+		for (int jdf = 0; jdf < 6; ++jdf) {
+			if (IsLoadedA(idf + 6*ib1, jdf + 6*ib2))
+				ret(idf, jdf) = A_(ndim, ifr, idf + 6*ib1, jdf + 6*ib2);
+			else
+				ret(idf, jdf) = 0;
+		}
 	return ret;
 }
 
@@ -2347,9 +2351,9 @@ VectorXd Hydro::Tall_inf(int ib) const {
 VectorXd Hydro::Tall_inf(int ib, const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf) {	
 	VectorXd W2 = (M + Ainf).llt().solve(C).diagonal();
 	return W2.unaryExpr([](double x)->double {
-		if (IsNull(x) || abs(x) < 1E-10)
+		if (IsNull(x) || x < 1E-10)
 			return Null;
-		return 2*M_PI/sqrt(abs(x));});		// Serve both for real and imaginary
+		return 2*M_PI/sqrt(x);});	
 }
 
 VectorXd Hydro::Tall(int ib) const {
@@ -2538,3 +2542,131 @@ void Hydro::Jsonize(JsonIO &json) {
 	if(json.IsLoading()) 
 		dt.solver = static_cast<Hydro::BEM_FMT>(icode);
 }
+
+
+///EXPERIMENTAL!!!
+
+using namespace std;
+
+typedef complex<double> cplx;
+
+// Function to compute gradient using finite differences
+MatrixXcd computeGradient(const MatrixXcd& phi, double dx) {
+    int rows = phi.rows();
+    MatrixXcd grad = MatrixXcd::Zero(rows, phi.cols());
+
+    // Central differences for interior points
+    grad.middleRows(1, rows - 2) = (phi.bottomRows(rows - 2) - phi.topRows(rows - 2)) / (2.0 * dx);
+
+    // Forward & backward differences for edges
+    grad.row(0) = (phi.row(1) - phi.row(0)) / dx;
+    grad.row(rows - 1) = (phi.row(rows - 1) - phi.row(rows - 2)) / dx;
+
+    return grad;
+}
+
+// Compute Mean Drift Force
+MatrixXcd computeMeanDriftForce(const vector<vector<vector<cplx>>>& incident, 
+                                const vector<vector<vector<cplx>>>& diffraction, 
+                                const vector<vector<cplx>>& radiation, 
+                                const MatrixXcd& RAO, 
+                                const VectorXd& panelAreas, 
+                                const MatrixXd& panelNormals, double dx) {
+    int Np = incident.size();      // Number of panels
+    int Nh = incident[0].size();   // Number of headings
+    int Nf = incident[0][0].size();// Number of frequencies
+
+    MatrixXcd meanDriftForce = MatrixXcd::Zero(Nh, Nf);
+
+    for (int h = 0; h < Nh; ++h) {
+        for (int f = 0; f < Nf; ++f) {
+            MatrixXcd incident_phi = MatrixXcd::Zero(Np, 1);
+            MatrixXcd diffraction_phi = MatrixXcd::Zero(Np, 1);
+            MatrixXcd radiation_phi = MatrixXcd::Zero(Np, 1);
+
+            for (int p = 0; p < Np; ++p) {
+                incident_phi(p, 0) = incident[p][h][f];
+                diffraction_phi(p, 0) = diffraction[p][h][f];
+                radiation_phi(p, 0) = radiation[p][f];  // Radiation is indexed by panel and frequency
+            }
+
+            // Compute gradients
+            MatrixXcd gradIncident = computeGradient(incident_phi, dx);
+            MatrixXcd gradDiffraction = computeGradient(diffraction_phi, dx);
+            MatrixXcd gradRadiation = computeGradient(radiation_phi, dx);
+
+            // Apply RAO (which is indexed by DOF and frequency)
+            MatrixXcd adjustedRAO = RAO.col(f);  // Extract relevant RAO for frequency f
+
+            // Compute mean drift force contributions
+            for (int p = 0; p < Np; ++p) {
+                Vector3d grad_real(gradIncident(p, 0).real() + gradRadiation(p, 0).real(), 
+                                   gradDiffraction(p, 0).real(), 0.0);
+                Vector3d grad_imag(gradIncident(p, 0).imag() + gradRadiation(p, 0).imag(), 
+                                   gradDiffraction(p, 0).imag(), 0.0);
+                Vector3d normal = panelNormals.row(p).transpose();
+
+                double proj_real = grad_real.dot(normal);
+                double proj_imag = grad_imag.dot(normal);
+                cplx projectedGradient(proj_real, proj_imag);
+
+                // Apply RAO scaling
+                cplx scaledForce = conj(projectedGradient) * projectedGradient * adjustedRAO.sum();
+
+                // Compute force contribution from this panel
+                meanDriftForce(h, f) += panelAreas(p) * scaledForce;
+            }
+        }
+    }
+
+    return meanDriftForce;
+}
+
+int DemoDrift() {
+    // Problem setup
+    int Np = 100; // Number of panels
+    int Nh = 3;   // Number of headings
+    int Nf = 5;   // Number of frequencies
+    double dx = 0.1; // Panel spacing for finite differences
+
+    // Random number generator
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<double> dist(-1.0, 1.0);
+
+    // Generate random complex potentials
+    vector<vector<vector<cplx>>> incident(Np, vector<vector<cplx>>(Nh, vector<cplx>(Nf)));
+    vector<vector<vector<cplx>>> diffraction(Np, vector<vector<cplx>>(Nh, vector<cplx>(Nf)));
+    vector<vector<cplx>> radiation(Np, vector<cplx>(Nf));  // Radiation does not depend on heading
+
+    for (int p = 0; p < Np; ++p) {
+        for (int h = 0; h < Nh; ++h) {
+            for (int f = 0; f < Nf; ++f) {
+                incident[p][h][f] = cplx(dist(gen), dist(gen));
+                diffraction[p][h][f] = cplx(dist(gen), dist(gen));
+            }
+        }
+        for (int f = 0; f < Nf; ++f) 
+            radiation[p][f] = cplx(dist(gen), dist(gen));
+    }
+
+    // Generate random RAO (complex values, body-level)
+    MatrixXcd RAO = MatrixXcd::Random(6, Nf);
+
+    // Generate random panel areas
+    VectorXd panelAreas = VectorXd::Random(Np).cwiseAbs();
+
+    // Generate random panel normals
+    MatrixXd panelNormals = MatrixXd::Random(Np, 3);
+    for (int p = 0; p < Np; ++p) 
+        panelNormals.row(p).normalize(); // Ensure unit normals
+
+    // Compute mean drift force
+    MatrixXcd meanDriftForce = computeMeanDriftForce(incident, diffraction, radiation, RAO, panelAreas, panelNormals, dx);
+
+    // Print results
+    Cout() << "Mean Drift Force (Nh x Nf):\n" << meanDriftForce;
+
+    return 0;
+}
+

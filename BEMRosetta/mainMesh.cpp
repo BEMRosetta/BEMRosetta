@@ -133,8 +133,12 @@ void MenuProcessInertia::Action() {
 		}
 		grid.Ready(true);
 		
-		Point3D c0(~x_0, ~y_0, ~z_0);	
+		Point3D c0(~x_0, ~y_0, ~z_0);
+		if (IsNull(c0))
+			return;	
 		Point3D cg(~x_g, ~y_g, ~z_g);
+		if (IsNull(cg))
+			return;	
 		
 		Body &mesh = Bem().surfs[_idx];
 		
@@ -412,6 +416,11 @@ void MainBody::Init() {
 	menuProcess.rat_z <<= 1;
 	menuProcess.butScale <<= THISBACK(OnScale);
 	menuProcess.butScale.Tip(t_("Scales the mesh"));
+	menuProcess.lambda = 0.3;
+	menuProcess.mu = -0.2;
+	menuProcess.iterations = 10;
+	menuProcess.butSmooth <<= THISBACK(OnSmooth);
+	menuProcess.butSmooth.Tip(t_("Smooths the mesh using the Taubin method"));
 	
 	menuProcess.butInertia.SetCtrl(menuProcessInertia).Tip(t_("Click to get the inertia matrix"));
 	menuProcess.butInertia.SetAutoOpen();
@@ -912,7 +921,10 @@ void MainBody::OnOpt() {
 							menuOpen.symY.Enable();
 							break;
 	case Body::NEMOH_DAT:	menuOpen.symY.Enable();
-							break;	
+							break;
+	case Body::MIKE21_GRD:	menuOpen.symX.Enable();
+							menuOpen.symY.Enable();
+							break;		
 	default:				break;		
 	}
 }
@@ -1175,10 +1187,75 @@ void MainBody::OnScale() {
 		double rz = double(~menuProcess.rat_z) - 1;
 		
 		msh.dt.mesh.Scale(rx, ry, rz, msh.dt.c0);
-		msh.dt.cg.Translate(rx*(msh.dt.cg.x - msh.dt.c0.x), ry*(msh.dt.cg.y - msh.dt.c0.y),
-						    rz*(msh.dt.cg.z - msh.dt.c0.z));
+		if (!IsNull(msh.dt.cg))
+			msh.dt.cg.Translate(rx*(msh.dt.cg.x - msh.dt.c0.x), ry*(msh.dt.cg.y - msh.dt.c0.y),
+							    rz*(msh.dt.cg.z - msh.dt.c0.z));
 		
 		Ma().Status(Format(t_("Model scaled %f, %f, %f"), rx, ry, rz));
+				
+		msh.AfterLoad(Bem().rho, Bem().g, NONE, false);
+			
+		/*mainStiffness.Load(Bem().surfs, ids);
+		mainView.CalcEnvelope();
+		mainSummary.Report(Bem().surfs, id);*/
+		UpdateLast(id);
+			
+		mainView.gl.Refresh();
+		mainViewData.OnRefresh();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}		
+}
+
+void MainBody::OnSmooth() {
+	GuiLock __;
+	
+	try {
+		UVector<int> ids = ArrayModel_IndexsBody(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			BEM::PrintError(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IndexBody(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IndexBody(listLoaded);
+			if (id < 0) {
+				BEM::PrintError(t_("Please select a model to process"));
+				return;
+			}
+		}
+				
+		Body &msh = Bem().surfs[id];
+	
+		WaitCursor wait;
+		
+		double lambda = double(~menuProcess.lambda);
+		double mu = double(~menuProcess.mu);
+		
+		if (IsNull(lambda) && IsNull(mu)) {
+			BEM::PrintError(t_("Please fill the parameters"));
+			return;
+		}
+		/*if (lambda < 0) {
+			BEM::PrintError(t_("Lambda (Laplacian forward ratio) has to be positive"));
+			return;
+		}*/
+		if (!IsNull(mu) && mu > 0) {
+			BEM::PrintError(t_("Mu (Laplacian backward ratio) has to be negative"));
+			return;
+		}
+		if (!IsNull(mu) && lambda < abs(mu)) {
+			BEM::PrintError(t_("Lambda (Laplacian forward ratio) has to be higher than Mu (Laplacian backward ratio)"));
+			return;
+		}
+		int iterations = double(~menuProcess.iterations);
+		
+		msh.dt.mesh.SmoothTaubin(lambda, mu, iterations);
+		
+		Ma().Status(t_("Model smoothed"));
 				
 		msh.AfterLoad(Bem().rho, Bem().g, NONE, false);
 			

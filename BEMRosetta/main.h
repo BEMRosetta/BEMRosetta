@@ -984,6 +984,7 @@ public:
 	void OnConvertBody();
 	void OnUpdate(Action action, bool fromMenuProcess);
 	void OnScale();
+	void OnSmooth();
 	//void OnTranslateArchimede(bool fromMenuProcess);
 	void OnArchimede();
 	void OnPCA();
@@ -1524,7 +1525,6 @@ private:
 		if (!s.IsSurf())
 			return;
 		
-		// double (real) calculations
 		double mn = s.GetSurfMinX(), mx = s.GetSurfMaxX();
 			   
 		auto RoundPointPixel = [&](const Pointf &pff, Point &p) {

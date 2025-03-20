@@ -299,8 +299,8 @@ void OrcaWave::Load_OF_YML() {
 				UVector<UVector<double>> mat = fy.GetMatrixDouble();
 				
 				dt.msh[ib].dt.mesh.nodes.SetCount(mat.size());
-				for (int in = 0; in < mat.size(); ++in) 
-					dt.msh[ib].dt.mesh.nodes[in] = Point3D(mat[in]);
+				for (int inn = 0; inn < mat.size(); ++inn) 
+					dt.msh[ib].dt.mesh.nodes[inn] = Point3D(mat[inn]);
 			} else if (fy.FirstMatch("PanelVertexIndex*")) {
 				UVector<UVector<double>> mat = fy.GetMatrixDouble();
 				

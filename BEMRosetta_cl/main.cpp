@@ -14,8 +14,9 @@
 	#include "export.h"
 #endif
 
+
 CONSOLE_APP_MAIN
-{		
+{	
 #if defined(flagDEBUG) && defined(PLATFORM_WIN32) && !defined(flagBEMR_TEST_DLL)
 	GetCrashHandler().Enable();
 #endif

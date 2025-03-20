@@ -171,21 +171,21 @@ String FastOut::Load(String file, Function <bool(String, int)> Status) {
 	return ret;
 }
 
-String FastOut::LoadOut(String fileName, Function <bool(String, int)> Status) {
+String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
 	Clear();
 	
-	FileIn in(fileName);
+	FileIn in(file);
 	if (!in)
 		return t_("Impossible to load file");
 
-	Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), 0);
+	Status(Format(t_("Loading '%s'"), ::GetFileName(file)), 0);
 	
 	int64 sz = in.GetSize();
 
-	int numCol, line = 0;
+	int numCol, nline = 0;
 	bool begin = false;
 	while (!in.IsEof()) {
-		if (Status && !(line%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz)))
+		if (Status && !(nline%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(file)), int((100*in.GetPos())/sz)))
 			throw Exc(t_("Stop by user"));
 				
 		UVector<String> fields = Split(in.GetLine(), IsTabSpaceRet, true);
@@ -213,7 +213,7 @@ String FastOut::LoadOut(String fileName, Function <bool(String, int)> Status) {
 			for (int c = fields.size(); c < numCol; ++c) 
 				dataOut[c] << Null;
 		}
-		line++;
+		nline++;
 	}
 
 	if (dataOut.IsEmpty()) 
@@ -278,16 +278,16 @@ bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status, cons
 	return true;
 }
 
-String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
+String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
 	Clear();
 	
 	enum FILETYPE {WithTime = 1, WithoutTime, NoCompressWithoutTime, ChanLen_In};
 
-	FileInBinary fin(fileName);
+	FileInBinary fin(file);
 	if (!fin.IsOpen())
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(Format("Impossible to open '%s'", file));
 
-	Status(Format(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
+	Status(Format(t_("Loading '%s' header"), ::GetFileName(file)), 0);
 	
 	int ChanLen2;
 	int16 FileType = fin.Read<int16>();
@@ -369,7 +369,7 @@ String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
         bufferDataFloat.Alloc(NumChans); 
         for (int idt = 0; idt < NumRecs; ++idt) {
             fin.Read(bufferDataFloat, 8*NumChans);
-            if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*fin.GetPos())/sz)))
+            if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
 				throw Exc(t_("Stop by user"));
 	    	for (int i = 0; i < NumChans; ++i) 
 		        dataOut[i+1][idt] = bufferDataFloat[i];
@@ -378,7 +378,7 @@ String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
 	    bufferData.Alloc(NumChans);
 	    for (int idt = 0; idt < NumRecs; ++idt) {
 	        fin.Read(bufferData, 2*NumChans); 	
-	        if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*fin.GetPos())/sz)))
+	        if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
 				throw Exc(t_("Stop by user"));
 	    	for (int i = 0; i < NumChans; ++i) 
 		        dataOut[i+1][idt] = (bufferData[i] - ColOff[i])/ColScl[i];
@@ -395,10 +395,10 @@ String FastOut::LoadOutb(String fileName, Function <bool(String, int)> Status) {
 	return "";
 }
 		
-String FastOut::LoadCsv(String _fileName, Function <bool(String, int)> Status) {
+String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	Clear();
 	
-	fileName = _fileName;
+	fileName = file;
 		
 	String header;
 	UVector<String> params0;

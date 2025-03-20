@@ -3,10 +3,10 @@
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		BEM_MESH, 			UNKNOWN, 		NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"BEMRosetta .bemr", "By extension", "Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true,				true, 		    false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.bemr", 			"*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		GEOMVIEW_OFF,    BEM_MESH, 			 UNKNOWN, 		NUMMESH};	
+const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"GEOMVIEW .off", "BEMRosetta .bemr", "By extension", "Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true, 		     true,				 true, 		    false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.off", 	     "*.bemr", 			 "*.*"};       
 
 int Body::idCount = 0;
 
@@ -188,7 +188,9 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			return std::move(e);
 		}
 		m.dt.SetCode(Body::OBJ);
-	} else if (ext == ".bemr") {
+	} else if (ext == ".off")
+		ret = OffBody::LoadOff(mesh, file);
+	else if (ext == ".bemr") {
 		Hydro hydro;
 		String error = hydro.LoadSerialization(file);
 		if (error.IsEmpty() && !hydro.dt.msh.IsEmpty())		// .bemr from Hydro
@@ -253,6 +255,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			type = STL_TXT;
 		else if (ext == ".grd")
 			type = MIKE21_GRD;
+		else if (ext == ".off")
+			type = GEOMVIEW_OFF;
 		else if (ext == ".bemr")
 			type = BEM_MESH;
 		else
@@ -324,6 +328,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 				surfs[ib].SaveSerialization(fileNames[ib]);
 			else if (type == MIKE21_GRD)		
 				SaveGRD(fileNames[ib], surfs[ib], g, symX, symY);
+			else if (type == GEOMVIEW_OFF) 
+				OffBody::SaveOff(fileNames[ib], surfs[ib]);
 			else
 				throw Exc(t_("Unknown mesh file type"));
 		}

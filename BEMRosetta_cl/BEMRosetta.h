@@ -36,7 +36,7 @@ class Body : public Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST, BEM_MESH, UNKNOWN, NUMMESH};	
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST, GEOMVIEW_OFF, BEM_MESH, UNKNOWN, NUMMESH};	
 	static const char *meshStr[];
 	static const bool meshCanSave[];
 	static const char *meshExt[];
@@ -595,7 +595,7 @@ public:
 	inline double F_toNDimFactor(int idf) const 				  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	inline double F_fromDimFactor(int idf)const 				  {return dt.dimen  ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	
-	inline double A_dim(int ifr, int idf, int jdf) 	const {return dt.A[idf][jdf][ifr]*A_toDimFactor(idf, jdf);}
+	inline double A_dim(int ifr, int idf, int jdf) 		const {return dt.A[idf][jdf][ifr]*A_toDimFactor(idf, jdf);}
 	inline VectorXd A_dim(int idf, int jdf) 			const {return dt.A[idf][jdf]	 *A_toDimFactor(idf, jdf);}
 	inline double A_ndim(int ifr, int idf, int jdf) 	const {return dt.A[idf][jdf][ifr]*A_toNDimFactor(idf, jdf);}
 	inline VectorXd A_ndim(int idf, int jdf)			const {return dt.A[idf][jdf]	 *A_toNDimFactor(idf, jdf);}
@@ -1323,6 +1323,14 @@ public:
 	static void SaveDat(String fileName, const Surface &surf);
 	
 	virtual ~DiodoreBody() noexcept {}
+};
+
+class OffBody : public Body {
+public:
+	static String LoadOff(UArray<Body> &mesh, String fileName);
+	static void SaveOff(String fileName, const Surface &surf);
+	
+	virtual ~OffBody() noexcept {}
 };
 
 class Wamit : public Hydro {

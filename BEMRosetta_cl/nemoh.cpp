@@ -567,9 +567,9 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &me
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
 	Body::SaveAs(mesh, AFX(folder, "Mesh", title), 
-				Body::NEMOH_PRE, Body::UNDERWATER, rho, g, false, x0z);
+				Body::NEMOH_PRE, Body::ALL, rho, g, false, x0z);
 	
-	int npanels = mesh.dt.under.panels.size();
+	int npanels = mesh.dt.mesh.panels.size();
 	String fileName;
 	if (ib < 0)
 		fileName = AFX(folder, "Mesh.cal");
