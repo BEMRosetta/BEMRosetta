@@ -625,8 +625,18 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 		
 		Body under = clone(dt.msh[ib]);
 		bool isLid = solver == Hydro::NEMOHv3 && lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
-		if (isLid) 
-			under.Append(lids[ib].dt.mesh, dt.rho, dt.g);
+		if (isLid) {
+			Surface lid = clone(lids[ib].dt.mesh);
+			if (x0z) {			// Assures that even with symmetry, no triangle is in the lid
+				Surface nlid;			
+				nlid.CutY(lid);
+				nlid.TrianglesToFalseQuads();
+				nlid.DeployYSymmetry();
+				lid = pick(nlid);				
+			} else
+				lid.TrianglesToFalseQuads();
+			under.Append(lid, dt.rho, dt.g);
+		}
 			
 		int nNodes, nPanels;
 		Body::SaveAs(under, AFX(folderMesh, name), Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, y0z, x0z, nNodes, nPanels);

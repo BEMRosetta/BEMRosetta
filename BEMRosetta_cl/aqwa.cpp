@@ -573,7 +573,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	if (IsNull(dt.Nf))
 		dt.Nf = 0;
 	if (IsNull(dt.Nh))
-		dt.Nh = 0;
+		dt.Nh = 0;	
 	
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);

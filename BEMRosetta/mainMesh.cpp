@@ -411,6 +411,7 @@ void MainBody::Init() {
 	
 	menuProcess.meshRatio <<= 1;
 	menuProcess.meshRatio.Tip(t_("Ratio of generated mesh size to current mesh size"));
+	menuProcess.meshRatio.Tip(t_("Mix triangles and quads, or set only quads"));
 	menuProcess.rat_x <<= 1;
 	menuProcess.rat_y <<= 1;
 	menuProcess.rat_z <<= 1;
@@ -1253,7 +1254,7 @@ void MainBody::OnSmooth() {
 		}
 		int iterations = double(~menuProcess.iterations);
 		
-		msh.dt.mesh.SmoothTaubin(lambda, mu, iterations);
+		msh.dt.mesh.SmoothTaubin(lambda, mu, iterations, 0);		// 0 weightless, 1, weighted, 2, implicit (to be implemented)
 		
 		Ma().Status(t_("Model smoothed"));
 				
@@ -1683,7 +1684,7 @@ void MainBody::OnAddPolygonalPanel() {
 	WaitCursor waitcursor;
 	mainView.gl.Disable();
 	try {
-		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
+		Bem().AddPolygonalPanel(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals, false);
 		
 		Body &msh = Last(Bem().surfs);
 		msh.dt.name = t_("Polynomial");
@@ -1764,7 +1765,7 @@ void MainBody::OnAddWaterSurface(char c) {
 		WaitCursor waitcursor;
 		mainView.gl.Disable();
 	
-		Bem().AddWaterSurface(idx, c, menuProcess.meshRatio);
+		Bem().AddWaterSurface(idx, c, menuProcess.meshRatio, menuProcess.opQuad);
 		
 		Body &nw = Last(Bem().surfs);
 		AddRow(nw);

@@ -71,8 +71,8 @@ String NemohBody::LoadDatFS(UArray<Body> &_mesh, String fileName, bool &x0z) {
 			if (id0 == 0)
 				break;
 			LineSegment &seg = msh.dt.mesh.segments.Add();
-			seg.inode0 = id0-1;
-			seg.inode1 = f.GetInt(1)-1;	
+			seg.idNod0 = id0-1;
+			seg.idNod1 = f.GetInt(1)-1;	
 		}	
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;

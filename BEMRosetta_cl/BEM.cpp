@@ -460,12 +460,12 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 	}	
 }
 
-void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals) {
+void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads) {
 	try {
 		Body &surf = surfs.Add();
 
 		surf.dt.SetCode(Body::EDIT);
-		surf.dt.mesh.AddPolygonalPanel(vals, size, true); 
+		surf.dt.mesh.AddPolygonalPanel(vals, size, true, quads); 
 		surf.dt.mesh.Translate(x, y, z);
 		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
@@ -490,12 +490,12 @@ void BEM::Extrude(int id, double dx, double dy, double dz, bool close) {
 	}	
 }
 
-void BEM::AddWaterSurface(int id, char c, double meshRatio) {
+void BEM::AddWaterSurface(int id, char c, double meshRatio, bool quads) {
 	try {
 		Body &surf = surfs.Add();
 
 		surf.dt.SetCode(Body::EDIT);
-		surf.dt.mesh.AddWaterSurface(surfs[id].dt.mesh, surfs[id].dt.under, c, roundVal, roundEps, meshRatio); 
+		surf.dt.mesh.AddWaterSurface(surfs[id].dt.mesh, surfs[id].dt.under, c, roundVal, roundEps, meshRatio, quads); 
 		surf.dt.c0 = surfs[id].dt.c0;
 		
 		if (c == 'r')

@@ -1254,13 +1254,13 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 						} else if (param == "-getwaterplane") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
-							bem.AddWaterSurface(meshid, 'e', 1);
+							bem.AddWaterSurface(meshid, 'e', 1, false);
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d waterplane is got"), meshid));
 						} else if (param == "-gethull") {
 							if (bem.surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
-							bem.AddWaterSurface(meshid, 'r', 1);
+							bem.AddWaterSurface(meshid, 'r', 1, false);
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d hull is got"), meshid));
 						} else if (param == "-filllid") {
@@ -1270,7 +1270,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							double ratio = ScanDouble(command[ic]);
 							if (ratio < 0 || ratio > 100)
 								throw Exc(Format(t_("Wrong mesh ratio %s"), command[ic]));
-							bem.AddWaterSurface(meshid, 'f', ratio);
+							bem.AddWaterSurface(meshid, 'f', ratio, false);
 							meshid = bem.surfs.size() - 1;
 							BEM::Print("\n" + Format(t_("Body id %d lid is got"), meshid));
 						} else if (param == "-p" || param == "-print") {

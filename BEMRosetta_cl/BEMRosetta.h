@@ -1767,8 +1767,8 @@ public:
 		
 	void AddFlatRectangle(double x, double y, double z, double size, double panWidthX, double panWidthY);
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
-	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals);
-	void AddWaterSurface(int id, char c, double meshRatio);
+	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads);
+	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
 	void Extrude(int id, double dx, double dy, double dz, bool close);
 	
 	String LoadSerializeJson();
