@@ -2552,7 +2552,7 @@ typedef complex<double> cplx;
 
 // Function to compute gradient using finite differences
 MatrixXcd computeGradient(const MatrixXcd& phi, double dx) {
-    int rows = phi.rows();
+    int rows = (int)phi.rows();
     MatrixXcd grad = MatrixXcd::Zero(rows, phi.cols());
 
     // Central differences for interior points
@@ -2572,9 +2572,9 @@ MatrixXcd computeMeanDriftForce(const vector<vector<vector<cplx>>>& incident,
                                 const MatrixXcd& RAO, 
                                 const VectorXd& panelAreas, 
                                 const MatrixXd& panelNormals, double dx) {
-    int Np = incident.size();      // Number of panels
-    int Nh = incident[0].size();   // Number of headings
-    int Nf = incident[0][0].size();// Number of frequencies
+    int Np = (int)incident.size();      // Number of panels
+    int Nh = (int)incident[0].size();   // Number of headings
+    int Nf = (int)incident[0][0].size();// Number of frequencies
 
     MatrixXcd meanDriftForce = MatrixXcd::Zero(Nh, Nf);
 

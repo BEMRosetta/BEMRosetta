@@ -1252,7 +1252,7 @@ void MainBody::OnSmooth() {
 			BEM::PrintError(t_("Lambda (Laplacian forward ratio) has to be higher than Mu (Laplacian backward ratio)"));
 			return;
 		}
-		int iterations = double(~menuProcess.iterations);
+		int iterations = int(~menuProcess.iterations);
 		
 		msh.dt.mesh.SmoothTaubin(lambda, mu, iterations, 0);		// 0 weightless, 1, weighted, 2, implicit (to be implemented)
 		

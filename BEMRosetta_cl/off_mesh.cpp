@@ -5,9 +5,6 @@
 
 
 String OffBody::LoadOff(UArray<Body> &_mesh, String fileName) {
-	int a, b, c, d;
-	float x, y, z;
-	
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_(Format("Impossible to open '%s'", fileName));
