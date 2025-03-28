@@ -315,9 +315,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	dt.Nb = dt.Nh = dt.Nf = Null;
 	dt.head.Clear();
 	dt.w.Clear();
-	//dt.T.Clear();
 	dt.rho = dt.g = dt.h = Null;
-	//dt.dataFromW = true;
 	
 	String line; 
 	LineParser f(in);
@@ -483,10 +481,9 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		} 
 	}
 	
-	if (!dt.msh.IsEmpty()) {
+	if (!dt.msh.IsEmpty())
 		for (int ib = 0; ib < dt.Nb; ++ib)
 			dt.msh[ib].dt.SetCode(Body::AQWA_LIS);
-	}
 			
 	int ib;	
 	
@@ -560,7 +557,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 					break;
 				f.Load(line);
 				for (int i = idini; i < f.size(); ++i)
-					//FindAdd(dt.head, FixHeading_0_360(f.GetDouble(i)));
 					dt.head << f.GetDouble(i);
 				idini = 0;
 			}
@@ -568,7 +564,6 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			break;
 		} 
 	}
-	//Sort(dt.head);
 	
 	if (IsNull(dt.Nf))
 		dt.Nf = 0;
