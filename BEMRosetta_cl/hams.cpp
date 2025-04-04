@@ -9,8 +9,6 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 	dt.file = file;	
 	dt.name = GetFileTitle(file);
 	
-	//dt.g = g;
-	
 	dt.x_w = dt.y_w = 0;
 	
 	String baseFolder = GetFileFolder(GetFileFolder(file));

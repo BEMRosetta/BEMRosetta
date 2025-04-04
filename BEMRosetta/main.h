@@ -480,7 +480,7 @@ public:
 	void Init(Body &_mesh, MainView &mainView);
 	void OnRefresh();
 	
-	TabCtrl tab;
+	TabCtrlEM tab;
 	Splitter moved, movedUnder;
 	WithMainPlotList<StaticRect> arrayFacetsAll2, arrayNodesMoved,
 								 arrayFacetsUnder, arrayNodesUnder;
@@ -532,7 +532,7 @@ public:
 	void ReLoad(MainView &mainView);
 	
 private:
-	TabCtrl tab;
+	TabCtrlEM tab;
 	UArray<MainViewDataEach> models;
 };
 
@@ -735,7 +735,7 @@ public:
 	void UpdateHead(const UVector<int> &loaded);
 	void UpdateHeadMD();
 		
-	TabCtrl tab;
+	TabCtrlEM tab;
 	UArray<UArray<MainPlot>> plots;
 
 private:
@@ -754,7 +754,7 @@ public:
 	
 	MainPlot mainPlot;
 	Splitter splitterTab;
-	TabCtrl tab;
+	TabCtrlEM tab;
 	UArray<ArrayCtrl> arrays;
 };
 
@@ -789,8 +789,8 @@ public:
 		errorMsg.SetAlign(ALIGN_RIGHT).SetInk(LtBlue).Hide();
 	}
 	ArrayCtrl listLoaded;
-	TabCtrl menuTab;
-	TabCtrl mainTab;
+	TabCtrlEM menuTab;
+	TabCtrlEM mainTab;
 	Label errorMsg;
 	
 private:
@@ -1363,7 +1363,7 @@ public:
 	
 	void Init();
 	
-	TabCtrl tab;
+	TabCtrlEM tab;
 	
 	Tools_WaveInfo waveInfo;
 #ifdef PLATFORM_WIN32
@@ -1423,7 +1423,7 @@ public:
 	int GetIb()	{return tab.Get();}
 	
 private:
-	TabCtrl tab;
+	TabCtrlEM tab;
 	
 	UArray<BodyBody> bodies;
 };

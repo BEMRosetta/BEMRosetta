@@ -161,7 +161,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 	output.ptfmVol = AddVar("ptfmVol", "m^3");
 }
 
-Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves) {
+Force6D Simulation::CalcStiff(double time, const double *pos, double volTolerance, SeaWaves &waves) {
 	Force6D f6;
 	
 	if (calculation == Simulation::NONE)
@@ -211,14 +211,14 @@ Force6D Simulation::CalcStiff(double time, const float *pos, double volTolerance
 	return f6;
 }
 
-Force6D Simulation::CalcStiff_Static(const float *pos) {
+Force6D Simulation::CalcStiff_Static(const double *pos) {
 	VectorXd p = C6ToVector(pos);
 
 	VectorXd res = forceb - stiff*p;
 	return Force6D(res);
 }
 
-Force6D Simulation::CalcStiff_DynamicStatic(double time, const float *pos, double volTolerance) {
+Force6D Simulation::CalcStiff_DynamicStatic(double time, const double *pos, double volTolerance) {
 	mesh.Move(pos, rho, g, false);
 
 	Point3D p(pos[0], pos[1], pos[2]);
@@ -232,7 +232,7 @@ Force6D Simulation::CalcStiff_DynamicStatic(double time, const float *pos, doubl
 	return f6;
 }
 
-Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volTolerance, 
+Force6D Simulation::CalcStiff_Dynamic(double time, const double *pos, double volTolerance, 
 			SeaWaves &waves) {
 	mesh.Move(pos, rho, g, false);
 	
@@ -250,7 +250,7 @@ Force6D Simulation::CalcStiff_Dynamic(double time, const float *pos, double volT
 	return f6;
 }
 	
-Force6D Simulation::CalcForces(double time, const float *pos, const float *vel, const float *acc) {
+Force6D Simulation::CalcForces(double time, const double *pos, const double *vel, const double *acc) {
 	Force6D f6 = Force6D::Zero();
 	
 	Affine3d aff = GetTransform(Value3D(pos[0], pos[1], pos[2]), Value3D(pos[3], pos[4], pos[5]), mesh.dt.c0);

@@ -14,11 +14,11 @@ public:
 	void Load(const String &strFile, int stiffMod, int dllForce, double _rho, double _g, double roundVal, double roundEps,
 			double c0x, double c0y, double c0z);
 
-	Force6D CalcStiff_Static(const float *pos);
-	Force6D CalcStiff_DynamicStatic(double time, const float *pos, double volTolerance);
-	Force6D CalcStiff_Dynamic(double time, const float *pos, double volTolerance, SeaWaves &waves);
-	Force6D CalcStiff(double time, const float *pos, double volTolerance, SeaWaves &waves);
-	Force6D CalcForces(double time, const float *pos, const float *vel, const float *acc);
+	Force6D CalcStiff_Static(const double *pos);
+	Force6D CalcStiff_DynamicStatic(double time, const double *pos, double volTolerance);
+	Force6D CalcStiff_Dynamic(double time, const double *pos, double volTolerance, SeaWaves &waves);
+	Force6D CalcStiff(double time, const double *pos, double volTolerance, SeaWaves &waves);
+	Force6D CalcForces(double time, const double *pos, const double *vel, const double *acc);
 	
 	enum CALC_TYPE {NONE, STATIC, DYN_STATIC, DYNAMIC, OPENFAST, UNKNOWN};
 	static const char *strCalculation[];

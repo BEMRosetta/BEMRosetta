@@ -1450,7 +1450,7 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 	if (IsLoadedPotsIncBMR())
 		CalcPot(dt.pots_inc_bmr, k);
 	
-    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &qk, bool isSum) {
+    auto CalcQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, const UVector<double> &k_q, bool isSum) {
         int sign = isSum ? 1 : -1;
 		{
 	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
@@ -1458,7 +1458,7 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 	            double dist = dx*cos(angle) + dy*sin(angle);
 				for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) {
 					for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) {
-						double ph = (qk[ifr2] + sign*qk[ifr1])*dist;
+						double ph = (k_q[ifr2] + sign*k_q[ifr1])*dist;
 						for (int idf = 0; idf < 6; ++idf) 
 							AddPhase(qtf[ib][ih][idf](ifr1, ifr2), -ph);
 					}
@@ -1467,14 +1467,14 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 		}
     };
 
-    UVector<double> qk(dt.Nf);
+    UVector<double> k_q(dt.Nf);
 	for (int ifr = 0; ifr < dt.qw.size(); ++ifr) 
-		qk[ifr] = SeaWaves::WaveNumber_w(dt.qw[ifr], dt.h, g_dim());
+		k_q[ifr] = SeaWaves::WaveNumber_w(dt.qw[ifr], dt.h, g_dim());
 			
 	if (IsLoadedQTF(true)) 
-		CalcQTF(dt.qtfsum, qk, true);		
+		CalcQTF(dt.qtfsum, k_q, true);		
 	if (IsLoadedQTF(false))	
-		CalcQTF(dt.qtfdif, qk, false);	
+		CalcQTF(dt.qtfdif, k_q, false);	
 	
 	String error = AfterLoad();
 	if (!error.IsEmpty())

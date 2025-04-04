@@ -182,7 +182,8 @@ void NemohBody::SaveDat0(String fileName, const Surface &surf, bool x0z, int &np
 	out << "    2   " << (x0z ? "1" : "0") << "\n";
 	for (int i = 0; i < nodes.size(); ++i) {
 		const Point3D &node = nodes[i];
-		out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", i+1, node.x, node.y, node.z);
+		out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", i+1, 
+				RoundClosest(node.x, 1E-9), RoundClosest(node.y, 1E-9), RoundClosest(node.z, 1E-9));
 	}
 	out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", 0, 0, 0, 0);
 	

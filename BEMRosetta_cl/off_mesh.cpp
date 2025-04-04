@@ -21,7 +21,7 @@ String OffBody::LoadOff(UArray<Body> &_mesh, String fileName) {
 	f.GetLine();
 	int np = f.GetInt(0);
 	int nf = f.GetInt(1);
-	int num = f.GetInt(2);
+	//int num = f.GetInt(2);
 	
 	try {		
 		Body &msh = _mesh.Add();

@@ -62,7 +62,12 @@ void OrcaWave::Load_OF_YML() {
 	
 	dt.x_w = dt.y_w = 0;
 	
-	dt.Nb = dt.Nf = dt.Nh = Null;
+	dt.Nf = dt.Nh = Null;
+	dt.Nb = 0; 
+	
+	dt.g = 9.80665;		// Default value used when SI units
+	
+	int ib = -1;
 
 	UArray<Point3D> c0s;	
 
@@ -89,11 +94,6 @@ void OrcaWave::Load_OF_YML() {
 	};
 		
 	OrcaFactors factor;	
-	
-	int ib = -1;
-	dt.Nb = 0; 
-	
-	dt.g = 9.80665;		// Default value used when SI units
 
 	YmlParser fy(in);
 

@@ -524,7 +524,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			
 			if (solver == Hydro::NEMOHv3) {
 				Save_Body_cal(folder, dt.msh.size() == 1 ? -1 : ib, 
-						dest, dt.msh[ib], dt.symY, dt.msh[ib].dt.cg, dt.rho, dt.g);
+						dest, dt.msh[ib], dt.symY, dt.msh[ib].dt.cg, dt.rho, dt.g, lids);
 				String inertiaName;
 				if (dt.msh.size() == 1)
 					inertiaName = "inertia.dat";
@@ -562,10 +562,29 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 	}
 }
 
-void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, double rho, double g) const {
+void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_mesh, bool x0z, const Point3D &cg, 
+						double rho, double g, const UArray<Body> &lids) const {
 	String title = ForceExt(GetFileTitle(meshFile), ".pmsh");
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
+	
+	Body mesh = clone(_mesh);
+	
+	bool iib = ib >= 0? ib : 0;
+	bool isLid = lids.size() > iib && !lids[iib].dt.mesh.panels.IsEmpty();
+	if (isLid) {
+		Surface lid = clone(lids[iib].dt.mesh);
+		if (x0z) {			// Assures that even with symmetry, no triangle is in the lid
+			Surface nlid;			
+			nlid.CutY(lid);
+			nlid.TrianglesToFalseQuads();
+			nlid.DeployYSymmetry();
+			lid = pick(nlid);				
+		} else
+			lid.TrianglesToFalseQuads();
+		mesh.Append(lid, dt.rho, dt.g);
+	}
+	
 	Body::SaveAs(mesh, AFX(folder, "Mesh", title), 
 				Body::NEMOH_PRE, Body::ALL, rho, g, false, x0z);
 	
@@ -949,7 +968,7 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 		int ib = int(idf/6);
 		idf -= 6*ib;
 		double ma = f.GetDouble(5)*dt.rho*dt.g;
-		double ph = -ToRad(f.GetDouble(6));			//-Phase to follow Wamit
+		double ph = -ToRad(f.GetDouble(6));			// - phase to follow Wamit
 		qtf[ib][ih][idf](ifr1, ifr2) = std::polar(ma, ph);
 		qtf[ib][ih][idf](ifr2, ifr1) = std::polar(ma, ph*phmult);
 	}
@@ -964,7 +983,7 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
    			dt.qw(i) = 2*M_PI/dt.qw(i);
 	
 	for (int i = 0; i < dt.qhead.size(); ++i)
-   		dt.qhead(i) = std::complex<double>(dt.qhead(i).real(), dt.qhead(i).imag()); //FixHeading_180(dt.qh(i).real()), FixHeading_180(dt.qh(i).imag()));
+   		dt.qhead(i) = std::complex<double>(dt.qhead(i).real(), dt.qhead(i).imag()); 
 	
 	return true;
 }	
@@ -1063,22 +1082,18 @@ bool Nemoh::Load_Radiation(String fileName) {
 	
 	for (int ibody = 0; ibody < dt.Nb; ++ibody) {
 		for (int idof = 0; idof < 6; ++idof) {
-			//if (dcase.IsDof(ibody, idof)) {
-				for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
-					f.Load(in.GetLine());
-					if (IsNull(f.GetDouble_nothrow(0)))
-						throw Exc(in.Str() + "\n"  + t_("Frecuency not found. May be radiation file doesn't match with Nemoh.cal file"));		
-					int col = 1;
-					for (int idof2 = 0; idof2 < 6; ++idof2) {			
-						//if (dcase.IsDof(ibody, idof2)) {
-							dt.A[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
-		        			dt.B[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
-			        	//}
-					}
+			for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
+				f.Load(in.GetLine());
+				if (IsNull(f.GetDouble_nothrow(0)))
+					throw Exc(in.Str() + "\n"  + t_("Frecuency not found. May be radiation file doesn't match with Nemoh.cal file"));		
+				int col = 1;
+				for (int idof2 = 0; idof2 < 6; ++idof2) {			
+					dt.A[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
+        			dt.B[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
 				}
-		    	if (idof < 6)
-		    		in.GetLine();
-	    	//}
+			}
+	    	if (idof < 6)
+	    		in.GetLine();
 		}
 	}
 	return true;
@@ -1124,14 +1139,12 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			int il = 0;
 			for (int ib = 0; ib < dt.Nb; ++ib) {
 				for (int ibdof = 0; ibdof < 6; ++ibdof) {
-					//if (dcase.IsDof(ib, ibdof)) {
-						if (ifr >= dt.Nf)
-							throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
-						double ma = f.GetDouble(1 + 2*il);	
-						double ph = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
-						fc[ib][ih](ifr, ibdof) = std::polar(ma, ph); 
-						il++; 
-					//}
+					if (ifr >= dt.Nf)
+						throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
+					double ma = f.GetDouble(1 + 2*il);	
+					double ph = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
+					fc[ib][ih](ifr, ibdof) = std::polar(ma, ph); 
+					il++; 
 				}
 			}
 			ifr++;
@@ -1175,7 +1188,7 @@ bool Nemoh::Load_IRF(String fileName) {
 	return true;
 }
 
-void Nemoh::Save(String ) {
+void Nemoh::Save(String) {
 	throw Exc("Option not implemented");
 }		
 

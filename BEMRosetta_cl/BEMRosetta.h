@@ -1046,7 +1046,6 @@ public:
 	void Compare_cg(Hydro &a);
 	void Compare_F(const Forces &a, const Forces &b, String type);
 	
-	//int GetW0();
 	void Get3W0(int &id1, int &id2, int &id3);
 	void GetA0();
 		
@@ -1501,8 +1500,9 @@ private:
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName, int numThreads) const;
-	void Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, double rho, double g) const;
+				String preName, String hydroName, String solvName, String postName, int numThreads) const;
+	void Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, 
+				double rho, double g, const UArray<Body> &lids) const;
 	void Save_Body_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder, int solver) const;
 	
@@ -2292,13 +2292,7 @@ public:
 
 // Compiler options
 
-// Normal
-// -Wall -Wextra 
+// -Wall -Wextra -Wno-unused-parameter -Wno-logical-op-parentheses -Wno-deprecated-copy-with-user-provided-copy -Wno-overloaded-virtual -Wno-missing-braces -Wshadow  -fcf-protection=full -fno-delete-null-pointer-checks -fno-strict-overflow -fno-strict-aliasing -ftrivial-auto-var-init=zero -Werror=implicit -Werror=incompatible-pointer-types -Werror=int-conversion
 
-// Extra
-// -Wno-unused-parameter -Wno-logical-op-parentheses -Wno-deprecated-copy-with-user-provided-copy -Wno-overloaded-virtual -Wno-missing-braces 
-
-// Full
-// -Wshadow	
 
 #endif
