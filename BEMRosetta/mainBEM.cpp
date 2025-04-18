@@ -2040,7 +2040,9 @@ void MainBEM::AfterBEM() {
 	bool sameSystem = true;
 	if (c.size() > 0) {
 		for (int i = 1; i < c.size(); ++i) {
-			if (!EqualDecimals(c[i].x, c[i-1].x, 3) || !EqualDecimals(c[i].y, c[i-1].y, 3)) {
+			if (!IsNull(c[i]) &&
+				(!EqualDecimals(c[i].x, c[i-1].x, 3) || 
+				 !EqualDecimals(c[i].y, c[i-1].y, 3))) {
 				sameSystem = false;
 				break;
 			}

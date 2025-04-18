@@ -103,7 +103,7 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 			if (!Load_IRF(AFX(folder, "Results", "IRF.tec")))
 				BEM::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
 		}
-		if (IsNull(dt.Nb))
+		if (IsNull(dt.Nb))	
 			return t_("No body found");
 	} catch (Exc e) {
 		BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
@@ -570,8 +570,8 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 	
 	Body mesh = clone(_mesh);
 	
-	bool iib = ib >= 0? ib : 0;
-	bool isLid = lids.size() > iib && !lids[iib].dt.mesh.panels.IsEmpty();
+	int iib = ib >= 0? ib : 0;
+	bool isLid = (lids.size() > iib) && !lids[iib].dt.mesh.panels.IsEmpty();
 	if (isLid) {
 		Surface lid = clone(lids[iib].dt.mesh);
 		if (x0z) {			// Assures that even with symmetry, no triangle is in the lid

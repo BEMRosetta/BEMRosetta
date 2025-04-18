@@ -224,6 +224,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		if (m.dt.name.IsEmpty())
 			m.dt.name = InitCaps(GetFileTitle(file));
 		
+		m.dt.mesh.RedirectTriangles();	// Before anything
+		
 		if (y0z)
 			m.dt.mesh.DeployXSymmetry();
 		if (x0z)

@@ -279,7 +279,6 @@ void MainSolver::Load(String file) {
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
 	});
-	bool isNemoh = tmp_hy.IsNemoh();
 	
 	gen.opInfinite <<= (tmp_hy.dt.h < 0);
 	gen.height.Enable(tmp_hy.dt.h > 0);
@@ -337,10 +336,7 @@ void MainSolver::Load(String file) {
 		VectorToGridCtrl(gen.listHead.grid, tmp_hy.dt.head, 0, Null);
 	}
 	
-	if (isNemoh) 
-		save.dropSolver <<= Hydro::NEMOHv115;
-	else if (tmp_hy.dt.solver == Hydro::HAMS)
-		save.dropSolver <<= Hydro::HAMS;
+	save.dropSolver.SetData(tmp_hy.dt.solver);
 	
 	gen.g <<= tmp_hy.dt.g;
 	gen.rho <<= tmp_hy.dt.rho;
