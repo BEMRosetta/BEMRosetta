@@ -410,8 +410,10 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	
 	Status(Format(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
 	
-	if (!GuessCSV(fileName, true, header, params0, separator, repetition, decimalSign, beginData, beginDataRow))
+	if (!GuessCSV(fileName, true, header, params0, separator, repetition, decimalSign, beginData, beginDataRow)) {
+		Clear();
 		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
+	}
 	
 	// Extracts the units from the header
 	auto GetUnits = [=](String str, char begin, char end, String &param, String &unit)->int {
@@ -436,7 +438,7 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 		int id2 = GetUnits(params0[i], '[', ']', param2, unit2);
 		
 		String param, unit;	// The most at right is the most probable to be
-		int sit;;
+		int sit;
 		if (id1 < 0) {
 			if (id2 < 0)
 				sit = 0;
@@ -465,6 +467,19 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 			param = t_("void");
 		AddParam(param, unit);
 	}
+	
+	bool allheadervoid = true;
+	for (int i = 0; i < parameters.size(); ++i)
+		if (parameters[i] != "void") {
+			allheadervoid = false;
+			break;
+		}
+	
+	if (allheadervoid) {
+		Clear();
+		return t_("Problem reading file parameters header");
+	}
+	
 	int numCol = parameters.size();
 	dataOut.SetCount(numCol+calcParams.size());
 	

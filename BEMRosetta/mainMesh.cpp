@@ -1877,7 +1877,7 @@ void MainBody::OnImage(int axis) {
 		else
 			msh.dt.cg.z = -msh.dt.cg.z;
 		
-		msh.dt.mesh.Image(axis);
+		msh.dt.mesh.Mirror(axis);
 	
 		msh.AfterLoad(Bem().rho, Bem().g, false, false);
 		
@@ -2720,23 +2720,23 @@ void MainGZ::OnUpdate() {
 					for (double a : dangle)
 						moment << mom*cos(ToRad(a));
 					scatter.AddSeries(dangle, moment).NoMark().Legend(t_("Moment"))
-						   .Stroke(3, Cyan()).Dash(LINE_SOLID).SetDataSecondaryY();							
+						   .Stroke(3, Cyan()).Dash(ScatterDraw::LINE_SOLID).SetDataSecondaryY();							
 				}
 			}
 			scatter.AddSeries(dangle, dgz).NoMark().Legend(Format(t_("GZ %.1f"), angle))
-				   .Stroke(2, color).Dash(LINE_SOLID);	
+				   .Stroke(2, color).Dash(ScatterDraw::LINE_SOLID);	
 			scatter.AddSeries(dangle, dMoment).NoMark()./*MarkStyle<CircleMarkPlot>().*/MarkWidth(8).MarkColor(color)
 				   .Legend("").NoPlot().SetDataSecondaryY();
 			if (~opShowPOIs) {
 				for (int j = 0; j < zA.size(); ++j)
 					scatter.AddSeries(dangle, zA[j]).NoMark().Legend(Format(t_("Unpr.%s.z %.1f"), msh.cdt.controlPointsA[j].name, angle))
-					   			.Stroke(1, color).Dash(LINE_DASHED);	
+					   			.Stroke(1, color).Dash(ScatterDraw::LINE_DASHED);	
 				for (int j = 0; j < zB.size(); ++j)
 					scatter.AddSeries(dangle, zB[j]).NoMark().Legend(Format(t_("WeaT.%s.z %.1f"), msh.cdt.controlPointsB[j].name, angle))
-					   			.Stroke(1, color).Dash(LINE_DOTTED);	
+					   			.Stroke(1, color).Dash(ScatterDraw::LINE_DOTTED);	
 				for (int j = 0; j < zC.size(); ++j)
 					scatter.AddSeries(dangle, zC[j]).NoMark().Legend(Format(t_("WatT.%s.z %.1f"), msh.cdt.controlPointsC[j].name, angle))
-					   			.Stroke(1, color).Dash(LINE_DOTTED_FINER);	
+					   			.Stroke(1, color).Dash(ScatterDraw::LINE_DOTTED_FINER);	
 			}
 			scatter.ZoomToFit(true, true);/*
 			double mx = ceil(scatter.GetYMax());
@@ -2800,7 +2800,7 @@ void MainGZ::OnUpdate() {
 				}
 			}
 			scatter.AddSeries(dangle, mingz).NoMark().Legend(t_("Envelope"))
-					   .Units(t_("m"), t_("sec")).Stroke(4, Black()).Dash(LINE_SOLID);
+					   .Units(t_("m"), t_("sec")).Stroke(4, Black()).Dash(ScatterDraw::LINE_SOLID);
 		}
 		if (!errors.IsEmpty()) 
 			BEM::PrintError(DeQtfLf("Errors found in mesh:\n" + errors));

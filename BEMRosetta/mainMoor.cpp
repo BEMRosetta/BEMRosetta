@@ -181,7 +181,7 @@ void MainMoor::OnUpdate() {
 			auto &line = mooring.lineProperties[i];
 			scatLateral.AddSeries(line.x, line.z).NoMark().Legend(line.name).Units("m", "m").Stroke(1).NoDash();
 			if (line.status == MooringStatus::BROKEN || line.status == MooringStatus::BL_EXCEDEED) 
-				scatLateral.Dash(LINE_DASHED);
+				scatLateral.Dash(ScatterDraw::LINE_DASHED);
 		}
 		scatLateral.ZoomToFit(true, true);
 		
@@ -189,7 +189,7 @@ void MainMoor::OnUpdate() {
 			auto &line = mooring.lineProperties[i];
 			scatUp.AddSeries(line.x, line.y).NoMark().Legend(line.name).Units("m", "m").Stroke(1).NoDash();
 			if (line.status == MooringStatus::BROKEN || line.status == MooringStatus::BL_EXCEDEED) 
-				scatUp.Dash(LINE_DASHED);
+				scatUp.Dash(ScatterDraw::LINE_DASHED);
 		}
 		scatUp.ZoomToFit(true, true);
 	} catch (const Exc &e) {	

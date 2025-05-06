@@ -14,7 +14,6 @@ uses
 	plugin/zstd,
 	NetCDF,
 	Xlnt,
-	Npy,
 	Npy;
 
 options(MSC) /bigobj;
