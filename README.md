@@ -186,7 +186,7 @@ All files, mesh, case or BEM files, can be loaded by Drag and Drop or Copy and P
 
 ## Acknowledgments
 
-S. Husain, J. C. C. Portillo, J. C. C. Henriques, M. J. Sanchez-Lara, J. Galvan, A. Otter, M. Alonso, A. Aristondo.<br/>
+J. C. Portillo, J. C. C. Henriques, J. M. Blanco, M. J. Sanchez-Lara, M. Alonso, A. Aristondo, P. P. Ricci, A. Otter, J. Galvan, K. Ruehl, S. Husain, S. Zheng, L. Garcia..<br/>
 Some file parsing strategies taken from the [BEMIO project](https://wec-sim.github.io/bemio/).<br/>
 Done with the [U++ multiplatform library](https://www.ultimatepp.org/).
 
