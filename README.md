@@ -189,7 +189,7 @@ All files, mesh, case or BEM files, can be loaded by Drag and Drop or Copy and P
 **Processing of potentials and hydrodynamic coefficients at panel level, and remapping according to a defined device structure.**<br />
 [Dynamic Modelling of HiveWind Floating Wind Substructure in OpenFAST](https://www.osti.gov/biblio/2482263). R. Bergua, I. Zabala, A. Gomez, L. Wang, O. Pena, J. Jonkman, J. Peña (2024). NAWEA/WindTech 2024, New Brunswick. USA..
 
-**A method for translating the hydrodynamic coefficients to another reference frame. A convergence acceleration method is applied to the hydrodynamic coefficients.**<br />
+**A method for translating the hydrodynamic coefficients to another reference frame. A convergence acceleration method applied to the hydrodynamic coefficients.**<br />
 [Post-processing techniques to improve the results of hydrodynamic boundary element method solvers](https://www.sciencedirect.com/science/article/pii/S0029801824002506). I. Zabala, J.C.C. Henriques, T.E. Kelly, P.P. Ricci, J.M. Blanco. Ocean Engineering 295, 116913.
 
 **Post-processing for irregular frequency removal.**<br />
