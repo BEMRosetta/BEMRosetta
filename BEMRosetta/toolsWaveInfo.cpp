@@ -3,7 +3,7 @@
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
-#include <GLCanvas/GLCanvas.h>
+#include <SurfaceCanvas/SurfaceCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>

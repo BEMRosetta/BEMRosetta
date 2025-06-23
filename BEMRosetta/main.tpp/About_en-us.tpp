@@ -13,11 +13,45 @@ topic "About";
 ]&]
 [s0;2 &]
 [s0;2 &]
+[s0; Citations&]
+[s0; &]
+[s0; [c2 Processing of potentials and hydrodynamic coefficients at 
+panel level, and remapping according to a defined device structure.]&]
+[s0;%- [^https`:`/`/www`.osti`.gov`/biblio`/2482263^2 Dynamic Modelling 
+of HiveWind Floating Wind Substructure in OpenFAST][2 . R. Bergua, 
+I. Zabala, A. Gomez, L. Wang, O. Pena, J. Jonkman, J. Peña (2024). 
+NAWEA/WindTech 2024, New Brunswick. USA..]&]
+[s0; &]
+[s0;%- [c2 A method for translating the hydrodynamic coefficients to 
+another reference frame. A convergence acceleration method applied 
+to the hydrodynamic coefficients.]&]
+[s0;%- [^https`:`/`/www`.sciencedirect`.com`/science`/article`/pii`/S0029801824002506^2 P
+ost`-processing techniques to improve the results of hydrodynamic 
+boundary element method solvers][2 . I. Zabala, J.C.C. Henriques, 
+T.E. Kelly, P.P. Ricci, J.M. Blanco. Ocean Engineering 295, 116913.]&]
+[s0; &]
+[s0; [c2 Post`-processing for irregular frequency removal.]&]
+[s0;%- [^https`:`/`/mural`.maynoothuniversity`.ie`/id`/eprint`/16316`/^2 A 
+post`-processing technique for removing ‘irregular frequencies’ 
+and other issues in the results from BEM solvers][2 . T. Kelly, 
+I. Zabala, Y. Peña`-Sanchez, J. Ringwood, J. Henriques, J.M. 
+Blanco (2022). International Journal of Marine Energy 5 (1), 
+123`-131]&]
+[s0; &]
+[s0; [c2 Review of the main features.]&]
+[s0;%- [^https`:`/`/mural`.maynoothuniversity`.ie`/id`/eprint`/16257`/^2 BEMRosetta: 
+An open`-source hydrodynamic coefficients converter and viewer 
+integrated with Nemoh and FOAMM][2 . I. Zabala, Y. Peña`-Sanchez, 
+T.E. Kelly, J.C.C. Henriques, M. Peñalba, N. Faedo, J. Ringwood, 
+J.M. Blanco (2021). 14th European Wave and Tidal Energy Conference, 
+5`-9th Sept 2021, Plymouth, UK.]&]
+[s0;2%- &]
+[s0; &]
 [s0; Acknowledgments&]
 [s0;2 &]
-[s0; [2 J. C. Portillo, J. C. C. Henriques, M. J. Sanchez`-Lara, J. 
-Galvan, A. Otter, M. Alonso, A. Aristondo, S. Husain, S. Zheng, 
-L. Garcia.]&]
+[s0; [2 J. C. Portillo, J. C. C. Henriques, J. M. Blanco, M. J. Sanchez`-Lara, 
+M. Alonso, A. Aristondo, P. P. Ricci, A. Otter, J. Galvan, K. 
+Ruehl, S. Husain, S. Zheng, L. Garcia.]&]
 [s0; [2 Some file parsing strategies taken from ][^https`:`/`/wec`-sim`.github`.io`/bemio`/^2 t
 he BEMIO project][2 .]&]
 [s0; [2 Based on ][^https`:`/`/www`.ultimatepp`.org`/^2 U`+`+ multiplatform 

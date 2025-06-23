@@ -3,7 +3,7 @@
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
-#include <GLCanvas/GLCanvas.h>
+#include <SurfaceCanvas/SurfaceCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
@@ -138,7 +138,19 @@ void MainSolver::Init() {
 		if (save.withPotentials)
 			save.withMesh <<= true;
 	;};
-	save.opSplit.WhenAction = [&] {save.numSplit.Enable(save.opSplit);};
+	save.opSplit.WhenAction   = [&] {save.numSplit.Enable(save.opSplit);};
+	save.opThreads.WhenAction = [&] {save.numThreads.Enable(!save.opThreads);};
+	
+	save.arrayDOF.Reset();
+	save.arrayDOF.AddColumn(t_("DOF"));
+	save.arrayDOF.AddColumn(t_("Enabled")).With( 
+		[](One<Ctrl>& x) {
+			x.Create<Option>().NoWantFocus();
+		}
+	);
+	
+	for (int i = 0; i < 6; ++i)
+		save.arrayDOF.Add(InitCaps(BEM::StrDOF(i)), true);
 	
 	bodies.butAdd <<= THISBACK(arrayOnAdd);
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);
@@ -155,10 +167,16 @@ void MainSolver::Init() {
 		
 		save.symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
 		save.symY.Enable(solver != Hydro::BEMROSETTA_H5);
-		save.numThreads.Enable(!(isNemoh || solver == Hydro::CAPYTAINE || solver == Hydro::BEMROSETTA_H5));
 		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::ORCAWAVE_YML);
 		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS);
-		save.numSplit.Enable(isNemoh && save.opSplit);
+		save.numSplit.Enable(save.opSplit.IsEnabled() && save.opSplit);
+		save.opThreads.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
+							  solver == Hydro::CAPYTAINE_PY || solver == Hydro::WAMIT || 
+							  solver == Hydro::HAMS);
+		save.numThreads.Enable(save.opThreads.IsEnabled() && !save.opThreads);
+		
+		save.labDOF.  Enable(isNemoh);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
+		save.arrayDOF.Enable(isNemoh);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
 		
 		save.withMesh.Enable(solver == Hydro::CAPYTAINE_PY);
 		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY);
@@ -602,10 +620,22 @@ bool MainSolver::OnSave() {
 			}
 		}
 		
+		UVector<bool> listDOF(6);
+		for (int r = 0; r < 6; ++r) 
+			listDOF[r] = save.arrayDOF.Get(r, 1);
+		
 		WaitCursor waitcursor;
 		
-		hy.SaveFolderCase(folder, ~save.opIncludeBin, ~save.opSplit ? int(~save.numSplit) : 1, ~save.numThreads, 
-				solver, ~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids);
+		int nSplit = 1;
+		if (save.opSplit.IsEnabled() && save.opSplit)
+			nSplit = save.numSplit;
+		
+		int nThreads = Null;
+		if (save.opThreads.IsEnabled() && !save.opThreads)
+			nThreads = save.numThreads;
+		
+		hy.SaveFolderCase(folder, ~save.opIncludeBin, nSplit, nThreads, solver, 
+			~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids, listDOF);
 
 	} catch (Exc e) {
 		BEM::PrintError(e);

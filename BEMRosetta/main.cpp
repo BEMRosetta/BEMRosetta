@@ -11,7 +11,7 @@
 
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
-#include <GLCanvas/GLCanvas.h>
+#include <SurfaceCanvas/SurfaceCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
@@ -33,7 +33,7 @@ FreqSelector::FreqSelector() {
 	Add(add.LeftPos(0, 19).TopPos(3, 19));
 };
 
-void Main::Init() {
+void Main::Init(bool firstTime) {
 	BEM::Print 	  	  = [this](String s) {printf("%s", ~s); mainOutput.Print(s);};
 	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
 	BEM::PrintError   = [this](String s) {printf("%s", ~s); /*tab.Set(mainOutput); */Status(s);	Exclamation(DeQtfLf(s));};
@@ -49,46 +49,11 @@ void Main::Init() {
 	Time date;
 	int version, bits;
 	GetCompilerInfo(name, version, date, mode, bits);
-	
-	SetLanguage(GetSystemLNG());
 	String sdate = Format("%mon %d", date.month, date.year);
 	
-	SetLanguage(LNG_('E', 'N', 'U', 'S'));
-	
-	String title;
-	if (parameter == "")
-		title = "BEMRosetta";
-	else if (parameter == "bem")
-		title = "BEMRosetta BEM models viewer";
-	else if (parameter == "mesh")
-		title = "BEMRosetta mesh files viewer";
-	else if (parameter == "time")
-		title = "BEMRosetta Time domain results viewer";
-	else
-		throw Exc(Format(t_("Unknown -gui parameter %s"), parameter));
-		
-	Title(title + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : ""));
-
-	rectangleButtons.SetBackground(SColorFace());
-	
 	String errorJson;
-	bool firstTime;
 	
 	mainSolver.InitBeforeSerialize();
-	
-	errorJson = Bem().LoadSerializeJson();
-	firstTime = !errorJson.IsEmpty();
-	if (firstTime) {
-		String str = errorJson + "\n" + t_("BEM config. data is not loaded. Defaults values are set"); 
-		if (errorJson != t_("First time")) 
-			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
-		LOG(str);
-	}
-	
-	LOG("BEM configuration loaded");
-	
-	if (!Bem().ClearTempFiles()) 
-		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
 	
 	bool openOptions = false;
 	errorJson = LoadSerializeJson(firstTime, openOptions);
@@ -100,6 +65,31 @@ void Main::Init() {
 	}
 
 	LOG("Configuration loaded");
+
+	
+	String title;
+	
+	if (parameter == "") {
+		if (Bem().windowTitle.IsEmpty())
+			title = "BEMRosetta";
+		else
+			title = Bem().windowTitle;
+	} else if (parameter == "bem")
+		title = "BEMRosetta BEM models viewer";
+	else if (parameter == "mesh")
+		title = "BEMRosetta mesh files viewer";
+	else if (parameter == "time")
+		title = "BEMRosetta Time domain results viewer";
+	else
+		throw Exc(Format(t_("Unknown -gui parameter %s"), parameter));
+	
+	if (Bem().windowTitle.IsEmpty())
+		title = title + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : "");
+	Title(title);
+	
+
+	rectangleButtons.SetBackground(SColorFace());
+		
 	
 	if (parameter.IsEmpty() || parameter == "mesh") {
 		mainBody.Init();			LOG("Init Body");
@@ -543,18 +533,6 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 
 
 GUI_APP_MAIN {
-#if defined(PLATFORM_WIN32) 
-	GetCrashHandler().Enable();
-	#ifndef flagDEBUG
-	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))
-		return;
-	InstallPanicMessageBox([](const char *title, const char *text) {
-		EM().Log(Format("%s: %s", title, text));
-		throw Exc(text);
-	});
-	#endif
-#endif
-	
 	const UVector<String>& command = CommandLine();
 
 	String errorStr;
@@ -582,6 +560,42 @@ GUI_APP_MAIN {
 		return;
 	}
 	
+	String errorJson = Bem().LoadSerializeJson();
+	bool firstTime = !errorJson.IsEmpty();
+	if (firstTime) {
+		String str = errorJson + "\n" + t_("BEM config. data is not loaded. Defaults values are set"); 
+		if (errorJson != t_("First time")) 
+			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
+		LOG(str);
+	}
+	
+	LOG("BEM configuration loaded");
+
+	if (!Bem().ClearTempFiles()) 
+		Cout() << "\n" << t_("BEM temporary files folder cannot be created");
+	
+	SetLanguage(GetSystemLNG());
+	SetLanguage(LNG_('E', 'N', 'U', 'S'));
+
+	Font fnt = GetStdFont();
+	int height = int(fnt.GetHeight()*(Bem().guiScale/100.));
+	fnt.Height(height);
+	SetStdFont(fnt); 
+	
+	
+	#if defined(PLATFORM_WIN32) 
+	GetCrashHandler().Enable();
+	#ifndef flagDEBUG
+	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))
+		return;
+	InstallPanicMessageBox([](const char *title, const char *text) {
+		EM().Log(Format("%s: %s", title, text));
+		throw Exc(text);
+	});
+	#endif
+	#endif
+
+
 	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
 	Ctrl::GlobalBackPaint();
 
@@ -595,7 +609,7 @@ GUI_APP_MAIN {
 			} else
 				throw Exc(Format("Unknown command %s", command[0]));
 		}
-		main.Init();
+		main.Init(firstTime);
 		main.OpenMain();
 		
 		Ctrl::EventLoop();

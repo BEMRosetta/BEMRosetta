@@ -611,7 +611,8 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	if (!bat.Open(fileBat))
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
 	bat << "echo Start: \%date\% \%time\% > time.txt\n";
-	bat << Format("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, name + ".wave.yml", name + ".flex.yml");
+	const Point3D &c0 = dt.msh[0].dt.c0;
+	bat << Format("%s -orca -numtries 10 -numthread %d -rw \"%s\" -translatewave %.5f %.5f %.5f \"%s\"", exeName, numThreads, name + ".wave.yml", c0.x, c0.y, c0.z, name + ".flex.yml");
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 	
 	FileOut	out;
@@ -786,7 +787,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 				"QTFCalculationMethod: Both\n"
 				"PreferredQTFCalculationMethod: Direct method\n"
 				"FreeSurfacePanelledZoneType: Defined by mesh file\n"
-				"FreeSurfacePanelledZoneMeshFileName: n"
+				"FreeSurfacePanelledZoneMeshFileName: \n"
 				"FreeSurfacePanelledZoneMeshFormat: Wamit gdf\n"
 				"FreeSurfacePanelledZoneMeshLengthUnits: m\n";
 	out << 	"...\n";

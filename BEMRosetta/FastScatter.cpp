@@ -228,6 +228,11 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
 	dropFormat.SetIndex(0);
 	
+	opTime <<= 0;
+	opTime.WhenAction = [&] {
+		ShowSelected(false);
+	};
+	
 	opLoad3 <<= 0;
 	opLoad3.WhenAction = [&] {
 		if (opLoad3 == 0)	
@@ -806,6 +811,22 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			}
 		}
 		
+		double xfactor;
+		String unitsx;
+		if (opTime == 0) {
+			xfactor = 1;
+			unitsx = t_("s");
+		} else if (opTime == 1) {
+			xfactor = 1/60.;
+			unitsx = t_("min");
+		} else if (opTime == 2) {
+			xfactor = 1/3600.;
+			unitsx = t_("h");
+		} else if (opTime == 3) {
+			xfactor = 1/3600./24.;
+			unitsx = t_("d");
+		}
+		
 		for (int iff = 0; iff < datasize; ++iff) {
 			auto &fast = left.dataFast[iff];
 			auto &scat = opLoad3 == 2 ? left.scatter[iff] : left.scatter[0];
@@ -833,8 +854,8 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 						else {
 							if (left.dataFast.size() > 1 && opLoad3 != 0)
 								param = Format("%d.", iff+1) + param;
-							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
-								.NoMark().Legend(param).Units(fast.units[col], t_("s")).Stroke(1);	
+							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData, xfactor)
+								.NoMark().Legend(param).Units(fast.units[col], unitsx).Stroke(1);	
 						}
 					}
 				}
@@ -847,8 +868,8 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 						else {
 							if (left.dataFast.size() > 1 && opLoad3 != 0)
 								param = Format("%d.", iff+1) + param;
-							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData)
-								.NoMark().Legend(param).Units(fast.units[col], t_("s")).SetDataSecondaryY().Stroke(1);	
+							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData, xfactor)
+								.NoMark().Legend(param).Units(fast.units[col], unitsx).SetDataSecondaryY().Stroke(1);	
 						}
 					}
 				}

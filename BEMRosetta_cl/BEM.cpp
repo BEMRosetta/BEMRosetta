@@ -460,6 +460,20 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 	}	
 }
 
+void BEM::AddPanels(const Body &surfFrom, UVector<int> &panelList) {
+	try {
+		Body &surf = surfs.Add();
+
+		surf.dt.SetCode(Body::EDIT);
+		surf.dt.mesh.AddPanels(surfFrom.dt.mesh, panelList); 
+		surf.dt.c0 = clone(surfFrom.dt.c0);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.size() - 1);
+		Print("\n" + Format(t_("Problem adding surface from panels: %s"), e));
+		throw std::move(e);
+	}	
+}
+
 void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads) {
 	try {
 		Body &surf = surfs.Add();

@@ -186,16 +186,16 @@ All files, mesh, case or BEM files, can be loaded by Drag and Drop or Copy and P
 
 ## Citations
 
-**Processing of potentials and hydrodynamic coefficients at panel level, and remapping according to a defined device structure.**<br />
+**Processing of potentials and hydrodynamic coefficients at panel level, and remapping according to a defined device structure.**<br/>
 [Dynamic Modelling of HiveWind Floating Wind Substructure in OpenFAST](https://www.osti.gov/biblio/2482263). R. Bergua, I. Zabala, A. Gomez, L. Wang, O. Pena, J. Jonkman, J. Peña (2024). NAWEA/WindTech 2024, New Brunswick. USA..
 
-**A method for translating the hydrodynamic coefficients to another reference frame. A convergence acceleration method applied to the hydrodynamic coefficients.**<br />
+**A method for translating the hydrodynamic coefficients to another reference frame. A convergence acceleration method applied to the hydrodynamic coefficients.**<br/>
 [Post-processing techniques to improve the results of hydrodynamic boundary element method solvers](https://www.sciencedirect.com/science/article/pii/S0029801824002506). I. Zabala, J.C.C. Henriques, T.E. Kelly, P.P. Ricci, J.M. Blanco. Ocean Engineering 295, 116913.
 
-**Post-processing for irregular frequency removal.**<br />
+**Post-processing for irregular frequency removal.**<br/>
 [A post-processing technique for removing ‘irregular frequencies’ and other issues in the results from BEM solvers](https://mural.maynoothuniversity.ie/id/eprint/16316/). T. Kelly, I. Zabala, Y. Peña-Sanchez, J. Ringwood, J. Henriques, J.M. Blanco (2022). International Journal of Marine Energy 5 (1), 123-131
 
-**Review of the main features.**<br />
+**Review of the main features.**<br/>
 [BEMRosetta: An open-source hydrodynamic coefficients converter and viewer integrated with Nemoh and FOAMM](https://mural.maynoothuniversity.ie/id/eprint/16257/). I. Zabala, Y. Peña-Sanchez, T.E. Kelly, J.C.C. Henriques, M. Peñalba, N. Faedo, J. Ringwood, J.M. Blanco (2021). 14th European Wave and Tidal Energy Conference, 5-9th Sept 2021, Plymouth, UK.
 
 

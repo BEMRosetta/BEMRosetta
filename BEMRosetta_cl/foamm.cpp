@@ -88,8 +88,8 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 
 	if (!mat.Exist("TFSResponse"))
 		throw Exc(S("\n") + t_("Vector TFSResponse not found"));
-	UVector<std::complex<double>> TFS;
-	mat.Get<std::complex<double>>("TFSResponse", TFS);	
+	UVector<Complex> TFS;
+	mat.Get<Complex>("TFSResponse", TFS);	
 	sts.TFS.SetCount(dt.Nf);
 	if (dt.Nf != TFS.size())
 		throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));

@@ -7,7 +7,7 @@ export PATH=$PATH:/home/aupa/upp
 cwd=$(pwd)
 
 echo "Compiling BEMRosetta_cl"
-umk BEMRosetta BEMRosetta_cl CLANG_17 -r +BEMR_CL,SHARED ./.test/bemrosetta_cl
+umk BEMRosetta BEMRosetta_cl CLANG_17 -ra +BEMR_CL,SHARED ./.test/bemrosetta_cl
 # umk BEMRosetta BEMRosetta_cl CLANG 	  -r +BEMR_CL,SHARED ./.test/bemrosetta_cl
 
 echo "Testing BEMRosetta_cl"
@@ -17,7 +17,7 @@ echo "Testing BEMRosetta_cl"
 ./.test/bemrosetta_cl -paramfile TestBEMRosetta_CL-wind.txt
 
 echo "Compiling BEMRosetta"
-umk BEMRosetta BEMRosetta    CLANG_17 -r +GUI,SHARED 	  ./.test/bemrosetta
+umk BEMRosetta BEMRosetta    CLANG_17 -ra +GUI,SHARED 	  ./.test/bemrosetta
 # umk BEMRosetta BEMRosetta    CLANG 	  -r +GUI,SHARED     ./.test/bemrosetta
 
 rm ./.test/TurbSim2.bts

@@ -863,7 +863,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								} else
 									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
 							}
-							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, withQTF, x0z, y0z, lids);
+							UVector<bool> listDOF(6, true);
+							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, withQTF, x0z, y0z, lids, listDOF);
 							BEM::Print("\n" + Format(t_("Saved model %d in %s case format"), bemid+1, Hydro::GetBemStr(solver)));
 						} else if (param == "-newbody") {
 							if (bem.hydros.size() < bemid) 

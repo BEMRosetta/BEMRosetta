@@ -8,14 +8,16 @@ uses
 	DropGrid,
 	Controls4U,
 	ScatterCtrl,
-	GLCanvas;
+	SurfaceCanvas;
 
 file
 	main.cpp,
 	main.h,
 	main.lay,
 	mainMesh.cpp,
-	mainMeshView.cpp,
+	mainViewData.cpp,
+	ProcessInertia.cpp,
+	video.cpp,
 	mainSolver.cpp,
 	mainBEM.cpp,
 	mainBEM_QTF.cpp,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2024, the BEMRosetta author and contributors
+// Copyright 2020 - 2025, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <NetCDF/NetCDF.h>
@@ -24,7 +24,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 		UVector<double> _h;
 		cdf.GetDouble("water_depth", _h);
 		for (auto &hh : _h) {
-			if (hh == std::numeric_limits<double>::infinity())
+			if (std::isinf(hh))
 				hh = -1;
 		}
 		
@@ -36,6 +36,16 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 		
 		UVector<double> _w;
 		cdf.GetDouble("omega", _w);
+		
+		int Nftotal = _w.size();
+		
+		bool thereisw0 = _w[0] <= 0.0000001;
+		if (thereisw0)
+			_w.Remove(0);
+		bool thereiswinf = std::isinf(_w[_w.size()-1]);
+		if (thereiswinf)
+			_w.Remove(_w.size()-1);
+		
 		int Nf = _w.size();
 
 		int numaxisAB = 3;
@@ -61,15 +71,18 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 			numaxisF++;
 		
 		MultiDimMatrixRowMajor<double> sc;
-		cdf.GetDouble("diffraction_force", sc);
-		if (!(numaxisF == sc.GetNumAxis()))
-			throw Exc(t_("Wrong dimension in diffraction_force"));
+		if (cdf.ExistVar("diffraction_force")) {
+			cdf.GetDouble("diffraction_force", sc);
+			if (!(numaxisF == sc.GetNumAxis()))
+				throw Exc(t_("Wrong dimension in diffraction_force"));
+		}
 		
 		MultiDimMatrixRowMajor<double> fk;
-		cdf.GetDouble("Froude_Krylov_force", fk);
-		if (!(numaxisF == fk.GetNumAxis()))
-			throw Exc(t_("Wrong dimension in Froude_Krylov_force"));
-			
+		if (cdf.ExistVar("Froude_Krylov_force")) {
+			cdf.GetDouble("Froude_Krylov_force", fk);
+			if (!(numaxisF == fk.GetNumAxis()))
+				throw Exc(t_("Wrong dimension in Froude_Krylov_force"));
+		}
 
 		MultiDimMatrixRowMajor<double> rao;
 		if (cdf.ExistVar("RAO")) {
@@ -77,35 +90,40 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 			if (!(numaxisF == rao.GetNumAxis()))
 				throw Exc(t_("Wrong dimension in RAO"));
 		}
+		
 		if (_rho.size() == 1) {		// Added to simplify handling later
 			a.InsertAxis(0, 1);
 			b.InsertAxis(0, 1);
-			sc.InsertAxis(0, 1);
-			fk.InsertAxis(0, 1);
+			if (!sc.IsEmpty())
+				sc.InsertAxis(0, 1);
+			if (!fk.IsEmpty())
+				fk.InsertAxis(0, 1);
 			if (!rao.IsEmpty())
 				rao.InsertAxis(0, 1);
 		}
 		if (_h.size() == 1) {
 			a.InsertAxis(1, 1);
 			b.InsertAxis(1, 1);
-			sc.InsertAxis(1, 1);
-			fk.InsertAxis(1, 1);
+			if (!sc.IsEmpty())
+				sc.InsertAxis(1, 1);
+			if (!fk.IsEmpty())
+				fk.InsertAxis(1, 1);
 			if (!rao.IsEmpty())
 				rao.InsertAxis(1, 1);
 		}
 		
 		int Nb = a.size(3)/6;
 		
-		if (!(a.size(2) == Nf && a.size(3) == 6*Nb && a.size(4) == 6*Nb))
+		if (!(a.size(2) == Nftotal && a.size(3) == 6*Nb && a.size(4) == 6*Nb))
 			throw Exc(t_("Wrong dimension in a"));
-		if (!(b.size(2) == Nf && b.size(3) == 6*Nb && b.size(4) == 6*Nb))
+		if (!(b.size(2) == Nftotal && b.size(3) == 6*Nb && b.size(4) == 6*Nb))
 			throw Exc(t_("Wrong dimension in b"));
 				
-		if (!(sc.size(2) == 2 && sc.size(3) == Nf && sc.size(4) == Nh && sc.size(5) == 6*Nb))
+		if (!sc.IsEmpty() && !(sc.size(2) == 2 && sc.size(3) == Nftotal && sc.size(4) == Nh && sc.size(5) == 6*Nb))
 			throw Exc(t_("Wrong dimension in sc"));
-		if (!(fk.size(2) == 2 && fk.size(3) == Nf && fk.size(4) == Nh && fk.size(5) == 6*Nb))
+		if (!fk.IsEmpty() && !(fk.size(2) == 2 && fk.size(3) == Nftotal && fk.size(4) == Nh && fk.size(5) == 6*Nb))
 			throw Exc(t_("Wrong dimension in fk"));
-		if (!rao.IsEmpty() && !(rao.size(2) == 2 && rao.size(3) == Nf && rao.size(4) == Nh && rao.size(5) == 6*Nb))
+		if (!rao.IsEmpty() && !(rao.size(2) == 2 && rao.size(3) == Nftotal && rao.size(4) == Nh && rao.size(5) == 6*Nb))
 			throw Exc(t_("Wrong dimension in rao"));
 		
 		UArray<MatrixXd> M;
@@ -204,7 +222,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 			if (_h.size() == 1) 
 				rad_press.InsertAxis(1, 1);
 		
-			if (!(rad_press.size(2) == 2 && rad_press.size(3) == Nf && rad_press.size(4) == 6*Nb && rad_press.size(5) == numPan))
+			if (!(rad_press.size(2) == 2 && rad_press.size(3) == Nftotal && rad_press.size(4) == 6*Nb && rad_press.size(5) == numPan))
 				throw Exc(t_("Wrong dimension in radiation_pressure 2"));
 		}
 		if (cdf.ExistVar("diffraction_pressure")) {
@@ -217,7 +235,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 			if (_h.size() == 1) 
 				dif_press.InsertAxis(1, 1);
 			
-			if (!(dif_press.size(2) == 2 && dif_press.size(3) == Nf && dif_press.size(4) == Nh && dif_press.size(5) == numPan))
+			if (!(dif_press.size(2) == 2 && dif_press.size(3) == Nftotal && dif_press.size(4) == Nh && dif_press.size(5) == numPan))
 				throw Exc(t_("Wrong dimension in diffraction_pressure 2"));
 		}
 		if (cdf.ExistVar("incident_pressure")) {
@@ -229,22 +247,31 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 				inc_press.InsertAxis(0, 1);				
 			if (_h.size() == 1) 
 				inc_press.InsertAxis(1, 1);
-			if (!(inc_press.size(2) == 2 && inc_press.size(3) == Nf && inc_press.size(4) == Nh && inc_press.size(5) == numPan))
+			if (!(inc_press.size(2) == 2 && inc_press.size(3) == Nftotal && inc_press.size(4) == Nh && inc_press.size(5) == numPan))
 				throw Exc(t_("Wrong dimension in incident_pressure 2"));
 		}
 
 		auto LoadAB = [&](const MultiDimMatrixRowMajor<double> &_a, UArray<UArray<VectorXd>> &a, int irho, int ih) {
+			int iwdelta = !thereisw0 ? 0 : 1;
 			for (int r = 0; r < 6*Nb; ++r) 
 				for (int c = 0; c < 6*Nb; ++c) 
 					for (int iw = 0; iw < Nf; ++iw) 
-						a[r][c](iw) = _a(irho, ih, iw, r, c);
+						a[r][c](iw) = _a(irho, ih, iw + iwdelta, r, c);
+		};
+		auto LoadA0inf = [&](const MultiDimMatrixRowMajor<double> &_a, MatrixXd &a, bool is0, int irho, int ih) {
+			int idw = is0 ? 0 : Nftotal-1;
+			for (int r = 0; r < 6*Nb; ++r) 
+				for (int c = 0; c < 6*Nb; ++c) 
+					for (int iw = 0; iw < Nf; ++iw) 
+						a(r, c) = _a(irho, ih, idw, r, c);
 		};
 		auto LoadForce = [&](const MultiDimMatrixRowMajor<double> &_f, Hydro::Forces &f, int irho, int _ih, int ib) {
+			int iwdelta = !thereisw0 ? 0 : 1;
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < Nh; ++ih) 
 					for (int iw = 0; iw < Nf; ++iw) 
-						f[ib][ih](iw, idf) = std::complex<double>(_f(irho, _ih, 0, iw, ih, idf + 6*ib), 
-																 -_f(irho, _ih, 1, iw, ih, idf + 6*ib));	//-Imaginary to follow Wamit
+						f[ib][ih](iw, idf) = std::complex<double>(_f(irho, _ih, 0, iw + iwdelta, ih, idf + 6*ib), 
+																 -_f(irho, _ih, 1, iw + iwdelta, ih, idf + 6*ib));	//-Imaginary to follow Wamit
 		};
 		
 		for (int irho = 0; irho < _rho.size(); ++irho) {
@@ -292,17 +319,31 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 				
 				hy.Initialize_AB(hy.dt.A);
 				hy.Initialize_AB(hy.dt.B);
-								
+				
 				LoadAB(a, hy.dt.A, irho, ih);
 				LoadAB(b, hy.dt.B, irho, ih);
 				
-				hy.Initialize_Forces();
+				if (thereisw0) {
+					hy.dt.A0.setConstant(6*hy.dt.Nb, 6*hy.dt.Nb, NaNDouble);
+					LoadA0inf(a, hy.dt.A0, true, irho, ih);
+				}
+				if (thereiswinf) {
+					hy.dt.Ainf.setConstant(6*hy.dt.Nb, 6*hy.dt.Nb, NaNDouble);
+					LoadA0inf(a, hy.dt.Ainf, false, irho, ih);
+				}
+								
+				if (!sc.IsEmpty())
+					hy.Initialize_Forces(hy.dt.sc);
+				if (!fk.IsEmpty())
+					hy.Initialize_Forces(hy.dt.fk);
 				if (!rao.IsEmpty())
 					hy.Initialize_Forces(hy.dt.rao);
 	
 				for (int ib = 0; ib < Nb; ++ib) {
-					LoadForce(sc, hy.dt.sc, irho, ih, ib);
-					LoadForce(fk, hy.dt.fk, irho, ih, ib);
+					if (!sc.IsEmpty())
+						LoadForce(sc, hy.dt.sc, irho, ih, ib);
+					if (!fk.IsEmpty())
+						LoadForce(fk, hy.dt.fk, irho, ih, ib);
 					if (!rao.IsEmpty())
 						LoadForce(rao, hy.dt.rao, irho, ih, ib);
 				}
@@ -320,6 +361,8 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 					}
 				}
 				
+				int iwdelta = !thereisw0 ? 0 : 1;
+				
 				if (rad_press.size() > 0) {
 					hy.Initialize_PotsRad();
 					
@@ -329,8 +372,8 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 						for (int ifr = 0; ifr < Nf; ++ifr) {
 							double rw = hy.dt.rho*sqr(hy.dt.w[ifr]);							
 							for (int idf = 0; idf < 6; ++idf) {
-								double re = rad_press(irho, ih, 0, ifr, idf + 6*ib, ipall);
-								double im = rad_press(irho, ih, 1, ifr, idf + 6*ib, ipall);
+								double re = rad_press(irho, ih, 0, ifr + iwdelta, idf + 6*ib, ipall);
+								double im = rad_press(irho, ih, 1, ifr + iwdelta, idf + 6*ib, ipall);
 								hy.dt.pots_rad[ib][ip][idf][ifr] += std::complex<double>(-re, im)/rw; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 							}
 						}
@@ -345,8 +388,8 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 						for (int ifr = 0; ifr < Nf; ++ifr) {
 							double rw = hy.dt.rho*hy.dt.w[ifr];
 							for (int ihead = 0; ihead < Nh; ++ihead) {
-								double re = inc_press(irho, ih, 0, ifr, ihead, ipall);
-								double im = inc_press(irho, ih, 1, ifr, ihead, ipall);
+								double re = inc_press(irho, ih, 0, ifr + iwdelta, ihead, ipall);
+								double im = inc_press(irho, ih, 1, ifr + iwdelta, ihead, ipall);
 								hy.dt.pots_inc[ib][ip][ihead][ifr] += std::complex<double>(im, re)/rw; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 							}
 						}
@@ -361,8 +404,8 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 						for (int ifr = 0; ifr < Nf; ++ifr) {
 							double rw = hy.dt.rho*hy.dt.w[ifr];
 							for (int ihead = 0; ihead < Nh; ++ihead) {
-								double re = dif_press(irho, ih, 0, ifr, ihead, ipall);
-								double im = dif_press(irho, ih, 1, ifr, ihead, ipall);
+								double re = dif_press(irho, ih, 0, ifr + iwdelta, ihead, ipall);
+								double im = dif_press(irho, ih, 1, ifr + iwdelta, ihead, ipall);
 								hy.dt.pots_dif[ib][ip][ihead][ifr] += std::complex<double>(im, re)/rw; // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
 							}
 						}
@@ -403,7 +446,8 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			"from capytaine.bem.airy_waves import airy_waves_pressure\n"
 			"from capytaine.post_pro.rao import rao\n"
 			"import xarray as xr\n"
-			"import os\n\n";
+			"import os\n\n"
+			"print(f'Capytaine version is: {cpt.__version__}')\n\n";
 
 	String listBodies;
 	

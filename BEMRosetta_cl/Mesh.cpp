@@ -348,6 +348,12 @@ String Body::Heal(bool basic, double rho, double g, double grid, double eps, Fun
 	return String();
 }
 
+void Body::RemovePanels(const UVector<int> &panels, double rho, double g) {
+	dt.mesh.RemovePanels2(panels);
+	
+	AfterLoad(rho, g, false, false);
+}
+
 void Body::Orient() {
 	dt.mesh.Orient();
 }

@@ -3,7 +3,7 @@
 #include <CtrlLib/CtrlLib.h>
 #include <Controls4U/Controls4U.h>
 #include <ScatterCtrl/ScatterCtrl.h>
-#include <GLCanvas/GLCanvas.h>
+#include <SurfaceCanvas/SurfaceCanvas.h>
 #include <RasterPlayer/RasterPlayer.h>
 #include <TabBar/TabBar.h>
 #include <DropGrid/DropGrid.h>
@@ -74,6 +74,8 @@ void MenuOptions::Load() {
 	legend_w_solver <<= bem->legend_w_solver;
 	pythonEnv <<= bem->pythonEnv;
 	zeroIfEmpty <<= bem->zeroIfEmpty;
+	guiScale <<= bem->guiScale;
+	windowTitle <<= bem->windowTitle;
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -123,6 +125,8 @@ void MenuOptions::OnSave() {
 		bem->legend_w_solver = ~legend_w_solver;
 		bem->pythonEnv = ~pythonEnv;
 		bem->zeroIfEmpty = ~zeroIfEmpty;
+		bem->guiScale = ~guiScale;
+		bem->windowTitle = ~windowTitle;
 		
 		bem->dofType = BasicBEM::DOFType(dofType.GetIndex());
 		bem->headingType = BasicBEM::HeadingType(headingType.GetIndex());
@@ -196,6 +200,10 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->zeroIfEmpty != ~zeroIfEmpty)
 		return true;
-				
+	if (bem->guiScale != ~guiScale)
+		return true;
+	if (bem->windowTitle != ~windowTitle)
+		return true;
+						
 	return false;
 }

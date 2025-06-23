@@ -240,7 +240,7 @@ bool Nemoh::Load_Cal(String fileName) {
 	dt.Nf = f.GetInt(pos + 0);	
 	double minF = f.GetDouble(pos + 1);	
 	double maxF = f.GetDouble(pos + 2);
-	if (dt.Nf < 1 || dt.Nf > 1000)
+	if (dt.Nf < 1 || dt.Nf > 10000)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of frequencies %s"), f.GetText(0)));
 	if (minF < 0)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect frequency %s"), f.GetText(1)));
@@ -269,7 +269,7 @@ bool Nemoh::Load_Cal(String fileName) {
 	dt.Nh = f.GetInt(0);	
 	double minH = f.GetDouble(1);	
 	double maxH = f.GetDouble(2);
-	if (dt.Nh < 1 || dt.Nh > 1000)
+	if (dt.Nh < 1 || dt.Nh > 10000)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect number of headings %s"), f.GetText(0)));
 	if (minH < -360)
 		throw Exc(in.Str() + "\n"  + Format(t_("Incorrect direction %s"), f.GetText(1)));
@@ -413,13 +413,14 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
-	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, y0z, lids);
+void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
+	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, y0z, lids, listDOF);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, y0z, lids);
+		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, y0z, lids, listDOF);
 }
 
-void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
+void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, 
+			int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 
 	UVector<int> valsf;
@@ -542,7 +543,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			numNodes[ib] = dt.msh[ib].dt.under.nodes.size();
 			numPanels[ib] = dt.msh[ib].dt.under.panels.size();
 		}
-		Save_Cal(folder, freqs, numNodes, numPanels, solver, y0z, x0z, lids);
+		Save_Cal(folder, freqs, numNodes, numPanels, solver, y0z, x0z, lids, listDOF);
 				
 		String folderResults = AFX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
@@ -612,7 +613,7 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 }
 	
 void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, 
-		const UVector<int> &panels, int solver, bool y0z, bool x0z, const UArray<Body> &lids) const {
+		const UVector<int> &panels, int solver, bool y0z, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
 	String fileName = AFX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -664,33 +665,35 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 		
 		String file = AFX("mesh", name);
 		
+		int countDOF = std::count(listDOF.Begin(), listDOF.End(), true);		// Number of true
+		
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", nNodes, nPanels), cp) << "! Number of points and number of panels" << "\n";	
-		out << NemohField(Format("%d", 6/*b.GetNDOF()*/), cp) << "! Number of degrees of freedom" << "\n";	
-		//if (b.dof[BEM::SURGE])
+		out << NemohField(Format("%d", countDOF), cp) << "! Number of degrees of freedom" << "\n";	
+		if (listDOF[BEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Surge" << "\n";	
-		//if (b.dof[BEM::SWAY])
+		if (listDOF[BEM::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Sway" << "\n";	
-		//if (b.dof[BEM::HEAVE])
+		if (listDOF[BEM::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Heave" << "\n";	
-		//if (b.dof[BEM::ROLL])
+		if (listDOF[BEM::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Roll about a point" << "\n";	
-		//if (b.dof[BEM::PITCH])
+		if (listDOF[BEM::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Pitch about a point" << "\n";	
-		//if (b.dof[BEM::YAW])		
+		if (listDOF[BEM::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Yaw about a point" << "\n";	
-		out << NemohField(Format("%d", 6/*b.GetNDOF()*/), cp) << "! Number of resulting generalised forces" << "\n";	
-		//if (b.dof[BEM::SURGE])
+		out << NemohField(Format("%d", countDOF), cp) << "! Number of resulting generalised forces" << "\n";	
+		if (listDOF[BEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Force in x direction" << "\n";	
-		//if (b.dof[BEM::SWAY])
+		if (listDOF[BEM::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Force in y direction" << "\n";	
-		//if (b.dof[BEM::HEAVE])
+		if (listDOF[BEM::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Force in z direction" << "\n";	
-		//if (b.dof[BEM::ROLL])
+		if (listDOF[BEM::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Moment force in x direction about a point" << "\n";	
-		//if (b.dof[BEM::PITCH])
+		if (listDOF[BEM::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Moment force in y direction about a point" << "\n";	
-		//if (b.dof[BEM::YAW])		
+		if (listDOF[BEM::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Moment force in z direction about a point" << "\n";	
 		out << NemohField("0", cp) << "! Number of lines of additional information" << "\n";
 	}

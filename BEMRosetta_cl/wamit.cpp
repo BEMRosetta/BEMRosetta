@@ -2358,6 +2358,9 @@ void Wamit::Save_Config(String folder, int numThreads) const {
 	
 	String wamitFolder = GetFileFolder(Bem().wamitPath);
 	
+	if (IsNull(numThreads) || numThreads <= 0)
+		numThreads = 8;
+			
 	file << "! Generic configuration file:  config.wam\n"
  		<< " RAMGBMAX=4\n"
  		<< " NCPU=" << numThreads << "\n"

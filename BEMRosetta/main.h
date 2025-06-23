@@ -305,22 +305,24 @@ public:
 
 class MainBody;
 	
-class MainView : public WithMainView<StaticRect> {
+class MainView : public StaticRect {
 public:
 	typedef MainView CLASSNAME;
 	
-	MainView() {}
-	void Init(MainBody &parent);
-	void CalcEnvelope();
-	void OnPaint();
-	const WithMenuBodyPlot<StaticRect> &GetMenuPlot() const;
-	const MainBody &GetMain() const 						{return *main;}			
+	MainView() {Add(surf.SizePos().SetFrame(ThinInsetFrame()));}
+	//void Init(MainBody &parent);
+	//void CalcEnvelope();
+	void FullRefresh(MainBody &mainBody);
+	void RenderRefresh(MainBody &mainBody);
+	void ViewRefresh(MainBody &mainBody);
+	//const WithMenuBodyPlot<StaticRect> &GetMenuPlot() const;
+	//const MainBody &GetMain() const 						{return *main;}			
 	void SetPaintSelect(bool _paintSelect)					{paintSelect = _paintSelect;}
 	
-	VolumeEnvelope env;
+	SurfaceCanvas surf;
 	
 private:
-	const MainBody *main = nullptr;
+	//const MainBody *main = nullptr;
 	bool paintSelect = true;
 };
 
@@ -481,9 +483,9 @@ public:
 	void OnRefresh();
 	
 	TabCtrlEM tab;
-	Splitter moved, movedUnder;
-	WithMainPlotList<StaticRect> arrayFacetsAll2, arrayNodesMoved,
-								 arrayFacetsUnder, arrayNodesUnder;
+	Splitter moved;//, movedUnder;
+	WithMainPlotList<StaticRect> arrayFacetsAll2, arrayNodesMoved;//,
+								 //arrayFacetsUnder, arrayNodesUnder;
 	StatusBar status;
 	
 	class DataSourceFacets : public Convert {
@@ -510,29 +512,37 @@ public:
 		int origMovedUnder;
 	};
 	
-	UArray<DataSourceFacets> dataSourceFacetsAll, dataSourceFacetsUnder;
-	UArray<DataSourceNodes> dataSourceNodesMoved, dataSourceNodesUnder;
+	UArray<DataSourceFacets> dataSourceFacetsAll;//, dataSourceFacetsUnder;
+	UArray<DataSourceNodes> dataSourceNodesMoved;//, dataSourceNodesUnder;
 
 private:
-	void OnTimer();
-	TimeCallback timeCallback;
-	void UpdateStatus(bool under);
+	//void OnTimer();
+	//TimeCallback timeCallback;
+	void UpdateStatus(/*bool under*/);
 	UVector<int> selectedPanels, selectedNodes;  
-	int lastSel = -1;
+	//int lastSel = -1;
+	
+	void OnSel(Body &msh, MainView &mainView, bool updateStatus, int lsel);
 };
 
-class MainViewData : public StaticRect {
+class MainViewData : public WithMainViewData<StaticRect> {
 public:
 	typedef MainViewData CLASSNAME;
 	
+	MainViewData();
 	void Init();
 	void OnAddedModel(MainView &mainView);
 	void OnRefresh();
 	void Clear();
 	void ReLoad(MainView &mainView);
+	void SelBody(int id, int row, bool select);
+	
+	void OnClose();
+	void OnClear();
+	void OnRemove();
+	void OnExtract();
 	
 private:
-	TabCtrlEM tab;
 	UArray<MainViewDataEach> models;
 };
 
@@ -972,7 +982,7 @@ public:
 	
 	enum Action {NONE, MOVE, ROTATE};
 	
-	void AfterAdd(String file, int num);
+	void AfterAdd(String file, int num, bool isometric);
 	void After();
 	bool OnLoad();
 	void OnRemove();
@@ -1033,9 +1043,15 @@ public:
 
 	void UpdateLast(int id);
 	
-private:	
+	void CloseSplitter() {
+		if (splitterAll.GetPositionId() == 0)
+			splitterAll.SetButton(0);		// Closes the right table};
+	}
 	MainView mainView;
-	VideoCtrl videoCtrl;
+	
+private:	
+	
+	//VideoCtrl videoCtrl;
 	MainViewData mainViewData;
 	SplitterButton splitterAll, splitterVideo;
 	MainSummaryBody mainSummary;
@@ -1773,7 +1789,7 @@ public:
 	virtual void Close();
 	void CloseMain(bool store);
 
-	void Init();
+	void Init(bool firstTime);
 
 	void OptionsUpdated(double rho, double g, int dofType, int headingType);
 

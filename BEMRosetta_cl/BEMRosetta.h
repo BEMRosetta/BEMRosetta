@@ -51,8 +51,8 @@ public:
 	Body(const Body &msh) 				{Copy(msh);}
 	Body(const Body &msh, int) 			{Copy(msh);}
 	
-	virtual ~Body() 		{magic = 0;}
-	bool IsValid()  		{return magic == 0xB0DE;}
+	virtual ~Body() 		{magic = 505;}
+	bool IsValid()  		{return magic == 1234567890;}
 	
 	void Clear() 			{dt.mesh.Clear();}
 	bool IsEmpty() const 	{return dt.mesh.IsEmpty();}
@@ -90,6 +90,7 @@ public:
 	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
+	void RemovePanels(const UVector<int> &panels, double rho, double g);
 	void Orient();
 	void Append(const Surface &orig, double rho, double g);
 	void Image(int axis);
@@ -866,7 +867,7 @@ public:
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids);
+		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF);
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -1462,11 +1463,11 @@ public:
 	bool LoadDatBody(String file);
 	void SaveDatBody(String file); 
 	
-	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	
 	void Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, const UVector<int> &panels, int solver, 
-					bool y0z, bool x0z, const UArray<Body> &lids) const;
+					bool y0z, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 	
 	bool Save_KH(String folder) const;
 	bool Save_Inertia(String folder) const;
@@ -1507,7 +1508,7 @@ private:
 	void Save_Input(String folder, int solver) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases,  
-					bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
+					bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 };
 
 class Aqwa : public Hydro {
@@ -1722,7 +1723,9 @@ public:
 	double roundVal, roundEps;
 	String csvSeparator;
 	String pythonEnv;
-	
+	int guiScale;
+	String windowTitle;
+
 	int LoadBEM(String file, Function <bool(String, int pos)> Status = Null, bool checkDuplicated = false);
 	Hydro &Join(UVector<int> &ids, Function <bool(String, int)> Status = Null);
 	void SymmetrizeForces(int id, bool xAxis);
@@ -1770,6 +1773,7 @@ public:
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads);
 	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
 	void Extrude(int id, double dx, double dy, double dz, bool close);
+	void AddPanels(const Body &surfFrom, UVector<int> &panelList);
 	
 	String LoadSerializeJson();
 	bool StoreSerializeJson();
@@ -1802,6 +1806,7 @@ public:
 		if (json.IsLoading()) {
 			idofType = 0;
 			iheadingType = 0;
+			guiScale = Null;
 		} else {
 			idofType = dofType;
 			iheadingType = headingType;
@@ -1838,6 +1843,8 @@ public:
 			("zeroIfEmpty", zeroIfEmpty)
 			("aqwaPath", aqwaPath)
 			("wamitPath", wamitPath)
+			("guiScale", guiScale)
+			("windowTitle", windowTitle)
 		;
 		if (json.IsLoading()) {
 			dofType = BasicBEM::DOFType(idofType);
@@ -1856,6 +1863,8 @@ public:
 				if (FileExists(defaultPath))
 					wamitPath = defaultPath;
 			}
+			if (IsNull(guiScale))
+				guiScale = 100;
 		}
 	}
 	

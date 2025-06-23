@@ -553,9 +553,9 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 }
 
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) {
+			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) {
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
-		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z, lids);
+		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z, lids, listDOF);
 	else if (solver == Hydro::CAPYTAINE_PY)
 		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, lids);
 	else if (solver == Hydro::HAMS)
@@ -604,14 +604,20 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 	if (IsNull(dt.g) || dt.g < 0 || dt.g > 100)
 		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(dt.g));
 	
-	if (IsNull(dt.h) || dt.h < -1 || dt.h > 100000)
+	if (IsNull(dt.h) || dt.h < -1)
 		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(dt.h));
+	else if (dt.h > 11000)
+		ret << Format(t_("Depth %s seems too high"), FormatDoubleEmpty(dt.h));
 
-	if (IsNull(dt.Nf) || dt.Nf < 1 || dt.Nf > 1000)
+	if (IsNull(dt.Nf) || dt.Nf < 1)
 		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(dt.Nf));
+	else if (dt.Nf > 1000)
+		ret << Format(t_("Number of frequencies %s seems too high"), FormatIntEmpty(dt.Nf));
 	
-	if (IsNull(dt.Nh) || dt.Nh < 1 || dt.Nh > 1000)
+	if (IsNull(dt.Nh) || dt.Nh < 1)
 		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(dt.Nh));
+	else if (dt.Nh > 1000)
+		ret << Format(t_("Number of headings %s seems too high"), FormatIntEmpty(dt.Nh));
 	
 	if (type == BEM_FMT::HAMS)
 		ret = static_cast<const Hams&>(*this).Check();
@@ -1741,7 +1747,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 				deltaC0CB(idf, ib) = deltaCBC0N(idf, ib) = Null;
 		}
 	}
-		
+/*		
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		Matrix3d S_r 	   = SkewSymmetricMatrix(delta.col(ib));
 		Matrix3d S_r_C0CB  = SkewSymmetricMatrix(deltaC0CB.col(ib));
@@ -1794,6 +1800,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 			
 			C_mat_Set(false, ib, C);
 		}
+*/
 /*		if (IsLoadedDlin(ib)) {
 			MatrixXd &D = dt.msh[ib].dt.Dlin;
 			Eigen::Matrix3d D_TT = D.topLeftCorner<3,3>();    	// Translational-Translational part
@@ -1824,12 +1831,12 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 			
 			D = D_c1;
 		}*/
-	}
+	//}
 	// Some previous data are now invalid. Translation algorithms are welcome
 	dt.rao.Clear();	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		Clear(dt.msh[ib].dt.Aadd);
-		//Clear(dt.msh[ib].dt.C);
+		Clear(dt.msh[ib].dt.C);
 		Clear(dt.msh[ib].dt.Cmoor);
 		Clear(dt.msh[ib].dt.Cadd);
 		Clear(dt.msh[ib].dt.Dlin);
