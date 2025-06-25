@@ -995,6 +995,7 @@ public:
 	void OnUpdate(Action action, bool fromMenuProcess);
 	void OnScale();
 	void OnSmooth();
+	void OnExtract();
 	//void OnTranslateArchimede(bool fromMenuProcess);
 	void OnArchimede();
 	void OnPCA();

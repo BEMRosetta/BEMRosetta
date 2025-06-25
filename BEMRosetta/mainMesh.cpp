@@ -83,9 +83,9 @@ void MainBody::Init() {
 		mainView.FullRefresh(*this);
 	};
 	menuPlot.butXYZ.Tip(t_("Orients the camera as isometric")).WhenAction  		= [&] {mainView.surf.SetRotation(Value3D(-M_PI/4, 0, M_PI/4));};
-	menuPlot.butXoY.Tip(t_("Orients the camera through Z axis")).WhenAction  	= [&] {mainView.surf.SetRotation(Value3D(M_PI/2, M_PI, M_PI/2));};	
-	menuPlot.butYoZ.Tip(t_("Orients the camera through X axis")).WhenAction  	= [&] {mainView.surf.SetRotation(Value3D(M_PI/2, M_PI, 0));};
-	menuPlot.butXoZ.Tip(t_("Orients the camera through Y axis")).WhenAction  	= [&] {mainView.surf.SetRotation(Value3D(0, 0, 0));};
+	menuPlot.butYoZ.Tip(t_("Orients the camera through X axis")).WhenAction  	= [&] {mainView.surf.SetRotation(Value3D(M_PI/2, M_PI, M_PI/2));};
+	menuPlot.butXoZ.Tip(t_("Orients the camera through Y axis")).WhenAction  	= [&] {mainView.surf.SetRotation(Value3D(M_PI/2, M_PI, 0));};
+	menuPlot.butXoY.Tip(t_("Orients the camera through Z axis")).WhenAction  	= [&] {mainView.surf.SetRotation(Value3D(0, 0, 0));};	
 	menuPlot.butFit.Tip(t_("Zooms the camera to fit the bodies")).WhenAction	= [&] {mainView.surf.ZoomToFit();};
 	menuPlot.showBodyData.Tip(t_("Shows a list of panels and nodes")).WhenAction= [&] {splitterAll.SetButton(0);};
 	//menuPlot.showBodyData.Tip(t_("Controls for 3D playing")).WhenAction			= [&] {splitterVideo.SetButton(0);};
@@ -186,14 +186,7 @@ void MainBody::Init() {
 	menuProcess.butUpdateMassVol.Tip(t_("Sets mass from inmersed volume"));
 	menuProcess.butUpdateMass  <<= THISBACK2(OnUpdate, NONE, true);
 	menuProcess.butUpdateMass.Tip(t_("Sets mass"));
-	
-	menuProcess.butImageX <<= THISBACK1(OnImage, 0);
-	menuProcess.butImageX.Tip(t_("Mirrors the mesh in X axis"));
-	menuProcess.butImageY <<= THISBACK1(OnImage, 1);
-	menuProcess.butImageY.Tip(t_("Mirrors the mesh in Y axis"));
-	menuProcess.butImageZ <<= THISBACK1(OnImage, 2);
-	menuProcess.butImageZ.Tip(t_("Mirrors the mesh in Z axis"));
-	
+		
 	menuProcess.butSimplify <<= THISBACK1(OnHealing, true);
 	menuProcess.butSimplify.Tip(t_("Simplify mesh removing duplicated elements"));
 	menuProcess.butFullHealing <<= THISBACK1(OnHealing, false);
@@ -211,11 +204,6 @@ void MainBody::Init() {
 	menuProcess.meshRatio <<= 1;
 	menuProcess.meshRatio.Tip(t_("Ratio of generated mesh size to current mesh size"));
 	menuProcess.meshRatio.Tip(t_("Mix triangles and quads, or set only quads"));
-	menuProcess.rat_x <<= 1;
-	menuProcess.rat_y <<= 1;
-	menuProcess.rat_z <<= 1;
-	menuProcess.butScale <<= THISBACK(OnScale);
-	menuProcess.butScale.Tip(t_("Scales the mesh"));
 	menuProcess.lambda = 0.3;
 	menuProcess.mu = -0.2;
 	menuProcess.iterations = 10;
@@ -274,6 +262,23 @@ void MainBody::Init() {
 	
 	menuEdit.butRevolution.SetCtrl(dialogRevolution).Tip(t_("Generates a revolution mesh"));
 	menuEdit.butPolynomial.SetCtrl(dialogPolynomial).Tip(t_("Generates a polynomial flat panel"));
+	
+	menuEdit.butExtract <<= THISBACK(OnExtract);
+	menuEdit.cutXYZ = 2;
+	menuEdit.cutPosNeg = 1;
+	
+	menuEdit.rat_x <<= 1;
+	menuEdit.rat_y <<= 1;
+	menuEdit.rat_z <<= 1;
+	menuEdit.butScale <<= THISBACK(OnScale);
+	menuEdit.butScale.Tip(t_("Scales the mesh"));
+	
+	menuEdit.butImageX <<= THISBACK1(OnImage, 0);
+	menuEdit.butImageX.Tip(t_("Mirrors the mesh in X axis"));
+	menuEdit.butImageY <<= THISBACK1(OnImage, 1);
+	menuEdit.butImageY.Tip(t_("Mirrors the mesh in Y axis"));
+	menuEdit.butImageZ <<= THISBACK1(OnImage, 2);
+	menuEdit.butImageZ.Tip(t_("Mirrors the mesh in Z axis"));
 	
 	dialogRevolution.butOK << THISBACK(OnAddRevolution);
 	dialogPolynomial.butOK << THISBACK(OnAddPolygonalPanel);
@@ -995,9 +1000,9 @@ void MainBody::OnScale() {
 	
 		WaitCursor wait;
 		
-		double rx = double(~menuProcess.rat_x) - 1;
-		double ry = double(~menuProcess.rat_y) - 1;
-		double rz = double(~menuProcess.rat_z) - 1;
+		double rx = double(~menuEdit.rat_x) - 1;
+		double ry = double(~menuEdit.rat_y) - 1;
+		double rz = double(~menuEdit.rat_z) - 1;
 		
 		msh.dt.mesh.Scale(rx, ry, rz, msh.dt.c0);
 		if (!IsNull(msh.dt.cg))
@@ -1346,6 +1351,49 @@ void MainBody::OnAddPanel() {
 		
 		Body &msh = Bem().surfs[Bem().surfs.size()-1];
 		msh.dt.name = t_("Panel");
+		msh.dt.fileName =  "";
+		
+		msh.AfterLoad(Bem().rho, Bem().g, false, true);
+		
+		msh.Report(Bem().rho);
+		AddRow(msh);
+		After();
+		mainViewData.OnAddedModel(mainView);
+		OnOpt();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+	mainView.surf.Enable();
+}
+
+
+void MainBody::OnExtract() {
+	GuiLock __;
+	
+	WaitCursor waitcursor;
+	mainView.surf.Disable();
+	try {
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			BEM::PrintError(t_("Please select just one model"));
+			return;
+		}
+		int idx;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			idx = ArrayModel_IndexBody(listLoaded, 0);
+		else {
+		 	idx = ArrayModel_IndexBody(listLoaded);
+			if (idx < 0) {
+				BEM::PrintError(t_("Please select a model to process"));
+				return;
+			}
+		}
+		
+		Bem().Extract(idx, ~menuEdit.cutXYZ, ~menuEdit.cutPosNeg);
+		
+		Body &msh = Bem().surfs[Bem().surfs.size()-1];
+		msh.dt.name = t_("Extracted");
 		msh.dt.fileName =  "";
 		
 		msh.AfterLoad(Bem().rho, Bem().g, false, true);
@@ -1912,9 +1960,19 @@ void MainBody::UpdateButtons() {
 	menuMove.butUpdateAng.Enable(numsel == 1 || numrow == 1);
 	menuMove.butReset.Enable(numsel == 1 || numrow == 1);
 	
-	menuProcess.butImageX.Enable(numsel == 1 || numrow == 1);
-	menuProcess.butImageY.Enable(numsel == 1 || numrow == 1);
-	menuProcess.butImageZ.Enable(numsel == 1 || numrow == 1);
+	menuEdit.butImageX.Enable(numsel == 1 || numrow == 1);
+	menuEdit.butImageY.Enable(numsel == 1 || numrow == 1);
+	menuEdit.butImageZ.Enable(numsel == 1 || numrow == 1);
+	
+	menuEdit.butExtract.Enable(numsel == 1 || numrow == 1);
+	menuEdit.cutXYZ.Enable(numsel == 1 || numrow == 1);
+	menuEdit.cutPosNeg.Enable(numsel == 1 || numrow == 1);
+	
+	menuEdit.butScale.Enable(numsel == 1 || numrow == 1);
+	menuEdit.rat_x.Enable(numsel == 1 || numrow == 1);
+	menuEdit.rat_y.Enable(numsel == 1 || numrow == 1);
+	menuEdit.rat_z.Enable(numsel == 1 || numrow == 1);
+	
 	menuProcess.butSimplify.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butFullHealing.Enable(numsel == 1 || numrow == 1);
 	menuProcess.butOrientSurface.Enable(numsel == 1 || numrow == 1);

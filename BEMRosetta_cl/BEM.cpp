@@ -460,6 +460,26 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 	}	
 }
 
+void BEM::Extract(int id, int cutXYZ, int cutPosNeg) {
+	try {
+		Body &surf = surfs.Add();
+		Body &orig = surfs[id];
+		
+		surf.dt.SetCode(Body::EDIT);
+		if (cutXYZ == 0)
+			surf.dt.mesh.CutX(orig.dt.mesh, cutPosNeg == 0 ? 1 : -1);
+		else if (cutXYZ == 1)
+			surf.dt.mesh.CutY(orig.dt.mesh, cutPosNeg == 0 ? 1 : -1);
+		else
+			surf.dt.mesh.CutZ(orig.dt.mesh, cutPosNeg == 0 ? 1 : -1);
+		surf.dt.c0 = clone(orig.dt.c0);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.size() - 1);
+		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
+		throw std::move(e);
+	}	
+}	
+	
 void BEM::AddPanels(const Body &surfFrom, UVector<int> &panelList) {
 	try {
 		Body &surf = surfs.Add();

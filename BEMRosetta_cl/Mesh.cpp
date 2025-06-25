@@ -424,7 +424,7 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		cdt.controlPointsC0 = clone(cdt.controlPointsC);
 		cdt.controlLoads0 = clone(cdt.controlLoads);
 	}
-	if (!onlyCG && !IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb))
+	if (/*!onlyCG && */!IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb))
 		dt.under.GetHydrostaticStiffness(dt.C, dt.c0, dt.cg, dt.cb, rho, g, GetMass(), massBuoy);
 	
 	for (Body *b : cdt.damagedBodies)

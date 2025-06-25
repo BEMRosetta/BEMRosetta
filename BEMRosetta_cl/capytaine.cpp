@@ -431,8 +431,12 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	if (!IsNull(numThreads) && numThreads > 0) 
 		bat << "set OMP_NUM_THREADS=" << numThreads << "\n"
 			<< "set MKL_NUM_THREADS=" << numThreads << "\n";
-	if (!Bem().pythonEnv.IsEmpty())
-		bat << "call conda activate " << Bem().pythonEnv << "\n";
+	if (!Bem().pythonEnv.IsEmpty()) {
+		if (Bem().pythonEnv.Find(' ') > 0)
+			bat << Bem().pythonEnv << "\n";
+		else
+			bat << "call conda activate " << Bem().pythonEnv << "\n";
+	}
 	bat << "python \"" << name << ".py\"\n";
 	//bat << "@IF \%ERRORLEVEL\% NEQ 0 PAUSE \"Error\"";
 	bat << "\necho End:   \%date\% \%time\% >> time.txt";

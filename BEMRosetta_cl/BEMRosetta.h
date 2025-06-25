@@ -1774,7 +1774,8 @@ public:
 	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
 	void Extrude(int id, double dx, double dy, double dz, bool close);
 	void AddPanels(const Body &surfFrom, UVector<int> &panelList);
-	
+	void Extract(int id, int cutXYZ, int cutPosNeg);
+		
 	String LoadSerializeJson();
 	bool StoreSerializeJson();
 	bool ClearTempFiles();
