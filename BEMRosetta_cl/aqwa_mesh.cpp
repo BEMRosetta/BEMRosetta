@@ -550,8 +550,8 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		if (mesh[ib].dt.M.size() != 36)
 			throw Exc(Format(t_("Body %d inertia matrix is not correct"), ib+1));
 		double m33 = mesh[ib].dt.M(3, 3);
-		double m44 = mesh[ib].dt.M(3, 3);
-		double m55 = mesh[ib].dt.M(3, 3);
+		double m44 = mesh[ib].dt.M(4, 4);
+		double m55 = mesh[ib].dt.M(5, 5);
 		if (m33 == 0)
 			m33 = 0.0001;
 		if (m44 == 0)

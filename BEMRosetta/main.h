@@ -561,7 +561,7 @@ public:
 	void OnOp(int id);
 	void Clear();
 	bool Load(UArray<Hydro> &hydros, const UVector<int> &ids, bool ndim);
-	bool Load(UArray<Body> &surfs, const UVector<int> &ids);
+	bool Load(UArray<Body> &surfs, const UVector<int> &ids, bool buttonSave);
 	
 	void Jsonize(JsonIO &json) {
 		bool opdigits = ~opDigits;
@@ -1101,7 +1101,7 @@ public:
 	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
 	Body mesh, lid;
 	
-	void SetTexts();
+	void SetTexts(bool updateInertia = false);
 };
 
 class MainSolver : public WithMainSolver<StaticRect> {
@@ -1689,6 +1689,7 @@ public:
 	void OnFill1st();
 	void OnSaveAkselos();
 	void OnUpdateCwave();
+	void OnDeleteBodies();
 	void OnDeleteHeadingsFrequencies();
 	void OnResetForces();
 	void OnMultiplyDOF(bool isReset);

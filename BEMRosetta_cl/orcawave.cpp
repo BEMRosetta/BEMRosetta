@@ -630,7 +630,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	
 	out << 	"\%YAML 1.1\n"
 			"# Type: Diffraction\n"
-			"# Program: OrcaWave" << Orca::BEMRVersion() << "\n"
+			"# Program: OrcaWave " << Orca::BEMRVersion() << "\n"
 			"# File: " << fileYaml << "\n"
 			"# Created: " << Format("%02d:%02d", t.hour, t.minute) << " on " << Format("%02d/%02d/%04d", t.day, t.month, t.year) << "\n"
 			"# User: " << GetUserName() << "\n"
@@ -713,7 +713,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		else
 			out << 	"None";
 		out << 	"\n"
-				"    BodyMeshDipolePanels:\n"
+				"    BodyMeshDipolePanels: \n"
 				"    BodyAddInteriorSurfacePanels: Yes\n"
 				"    BodyInteriorSurfacePanelMethod: Triangulation method\n";
 				
@@ -738,7 +738,8 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			out <<	"      - [0.001, 0, 	0]\n"
 					"      - [0, 	 0.001,	0]\n"
 					"      - [0, 	 0, 	0.001]\n";
-    	out << 	"    BodyInertiaTensorOriginType: Body origin\n"
+    	out << 	"    BodyInertiaTensorOriginType: User specified\n"
+    			"    BodyInertiaTensorUserOrigin: [" << Format("%f, %f, %f", d.c0.x, d.c0.y, d.c0.z) << "]\n"
     			"    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:\n";
     	if (d.Cadd.size() > 0) {
     		for (int r = 0; r < 6; ++r) {

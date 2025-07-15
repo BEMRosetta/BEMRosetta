@@ -194,7 +194,7 @@ void MainMatrixKA::SetLabels() {
 		NEVER();
 }
 
-void MainMatrixKA::Add(const Body &msh, int icase, bool button) {
+void MainMatrixKA::Add(const Body &msh, int icase, bool buttonSave) {
 	String name = msh.dt.fileName;
 	
 	SetLabels();
@@ -210,7 +210,7 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool button) {
 	if (K.size() == 0)
 		return;
 
-	if (button) {
+	if (buttonSave) {
 		array.CreateCtrl<Button>(row0, col0+5, false).SetLabel(t_("Save")).Tip(t_("Saves to Wamit .hst or Nemoh stiffness matrix format"))
 			<< [&] {
 				FileSel fs;
@@ -230,7 +230,7 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool button) {
 				hstFolder = GetFileFolder(~fs);
 			};
 	}
-	if (button && Bem().hydros.size() > 0) {
+	if (buttonSave && Bem().hydros.size() > 0) {
 		array.CreateCtrl<Button>(row0, col0+6, false).SetLabel(t_("Copy")).Tip(t_("Copies matrix and paste it in selected BEM Coefficients file and body"))
 			<< [&] {
 				WithBEMList<TopWindow> w;
@@ -243,8 +243,11 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool button) {
 				w.array.HeaderObject().HideTab(w.array.AddColumn().HeaderTab().GetIndex());
 				for (int f = 0; f < Bem().hydros.size(); ++f) {
 					const Hydro &hy = Bem().hydros[f];
-					for (int ib = 0; ib < hy.dt.Nb; ++ib)
-						w.array.Add(hy.dt.name, hy.dt.msh[ib].dt.name.IsEmpty() ? AsString(ib+1) : hy.dt.msh[ib].dt.name, f, ib);
+					for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+						String bodyName = Format("%d. %s", f+1, hy.dt.name);
+						String meshName = Format("%d. %s", ib+1, hy.dt.msh[ib].dt.name);
+						w.array.Add(bodyName, meshName, f, ib);
+					}
 				}
 				bool cancel = true;
 				w.butSelect << [&] {cancel = false;	w.Close();};
@@ -269,8 +272,10 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool button) {
 						if (!ErrorOKCancel(Format(t_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
 														msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z, hy.dt.msh[ib].dt.cg[0], hy.dt.msh[ib].dt.cg[1], hy.dt.msh[ib].dt.cg[2])))
 							cancel = true;
-					if (!cancel)
+					if (!cancel) {
 						hy.SetC(ib, K);
+						Ma().mainBEM.AfterBEM();
+					}
 				}
 			 };
 	}
@@ -338,8 +343,14 @@ bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &idxs, bool nd
 		Hydro &hy = hydros[isurf];
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 			Add(hy.dt.name, i, hy.dt.msh[ib].dt.name, ib, hy, hy.dt.GetId());
-		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0))) 
+		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0)))
 			loaded = true;
+		/*for (int i = 0; i < data.size(); ++i) { 
+			if (data[i].size() > 0) {
+				loaded = true;
+				break;
+			}
+		}*/
 	}
 	if (!loaded)	
 		return false;
@@ -348,7 +359,7 @@ bool MainMatrixKA::Load(UArray<Hydro> &hydros, const UVector<int> &idxs, bool nd
 	return true;
 }	
 
-bool MainMatrixKA::Load(UArray<Body> &surfs, const UVector<int> &idxs) {
+bool MainMatrixKA::Load(UArray<Body> &surfs, const UVector<int> &idxs, bool buttonSave) {
 	Clear();
 	Ndim = false;
 	
@@ -356,7 +367,7 @@ bool MainMatrixKA::Load(UArray<Body> &surfs, const UVector<int> &idxs) {
 	for (int i = 0; i < idxs.size(); ++i) {
 		int isurf = idxs[i];
 		if (isurf >= 0)	
-			Add(surfs[isurf], i, true);
+			Add(surfs[isurf], i, buttonSave);
 		if (data.size() > i && data[i].size() > 0 && IsNum(data[i](0))) 
 			loaded = true;
 	}

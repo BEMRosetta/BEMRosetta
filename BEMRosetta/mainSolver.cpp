@@ -38,14 +38,16 @@ void InitGrid(GridCtrl &grid, EditDouble edit[]) {
 }
 
 MainSolverBody::MainSolverBody() {
-	const String meshFiles = ".gdf .dat .stl .pnl .msh .grd .hst";
+	const String meshFiles = ".gdf .dat .stl .pnl .msh .grd .hst .mesh";
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	
 	fileMesh.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileMesh.AllFilesType();
+	fileMesh.WhenChange << [&] {butMesh.WhenAction(); return true;};
 	fileLid.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileLid.AllFilesType();
+	fileLid.WhenChange << [&] {butMesh.WhenAction(); return true;};
 	
 	x_g <<= 0;
 	y_g <<= 0;
@@ -72,7 +74,7 @@ MainSolverBody::MainSolverBody() {
 	
 	butMesh << [&]() {
 		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
-		SetTexts();
+		SetTexts(true);
 	};
 	butLid << [&]() {
 		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false);
@@ -88,7 +90,7 @@ MainSolverBody::MainSolverBody() {
 	};
 }
 
-void MainSolverBody::SetTexts() {
+void MainSolverBody::SetTexts(bool updateInertia) {
 	if (mesh.IsEmpty())
 		labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
 	else
@@ -98,6 +100,21 @@ void MainSolverBody::SetTexts() {
 		labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
 	else
 		labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+	
+	if (updateInertia) {
+		if (mesh.dt.M.size() == 36) 
+			MatrixXdToGridCtrl(M, mesh.dt.M, 6, 6, 0);
+		if (!IsNull(mesh.dt.c0)) {
+			x_0 <<= mesh.dt.c0.x;
+			y_0 <<= mesh.dt.c0.y;
+			z_0 <<= mesh.dt.c0.z;
+		}
+		if (!IsNull(mesh.dt.cg)) {
+			x_g <<= mesh.dt.cg.x;
+			y_g <<= mesh.dt.cg.y;
+			z_g <<= mesh.dt.cg.z;
+		}
+	}
 }
 
 void MainSolver::Init() {
@@ -159,7 +176,7 @@ void MainSolver::Init() {
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
 		if (Hydro::caseCanSave[i])
 			save.dropSolver.Add(i, Hydro::bemStr[i]);		
-			
+
 	save.dropSolver.SetIndex(min(dropSolverVal, save.dropSolver.GetCount()-1));
 	save.dropSolver.WhenAction = [&] {
 		int solver = ~save.dropSolver;

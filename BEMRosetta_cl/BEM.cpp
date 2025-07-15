@@ -220,6 +220,10 @@ void BEM::CopyQTF_MD(int id) {
 	hydros[id].CopyQTF_MD();
 }
 
+void BEM::DeleteBodies(int id, const UVector<int> &idBody) {
+	hydros[id].DeleteBodies(idBody);
+}
+
 void BEM::DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF) {
 	hydros[id].DeleteFrequencies(idFreq);
 	hydros[id].DeleteFrequenciesQTF(idFreqQTF);

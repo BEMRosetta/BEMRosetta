@@ -85,6 +85,7 @@ void MenuProcessInertia::CopyToBody() {
 	
 	msh.AfterLoad(Bem().rho, Bem().g, false, false);
 	_mb->UpdateLast(_idx);
+	_mb->mainView.FullRefresh(*_mb);
 }
 
 void MenuProcessInertia::Init(MainBody &b, int idx) {
@@ -137,8 +138,8 @@ void MenuProcessInertia::Action() {
 		if (IsNull(c0))
 			return;	
 		Point3D cg(~x_g, ~y_g, ~z_g);
-		if (IsNull(cg))
-			return;	
+		//if (IsNull(cg))
+		//	return;	
 		
 		Body &mesh = Bem().surfs[_idx];
 		

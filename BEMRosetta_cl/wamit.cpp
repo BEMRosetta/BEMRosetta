@@ -860,14 +860,16 @@ void Wamit::Save_out(String file) const {
 		double Vo = /*dt.Vo.size() > ibody ?*/ dt.msh[ibody].dt.Vo;// : 0;
 		out	<< Format(" Volumes (VOLX,VOLY,VOLZ):      %s %s %s\n", 
 					FormatWam(Vo), FormatWam(Vo), FormatWam(Vo));
-		double cbx = 0, cby = 0, cbz = 0;
+		
 		if (!IsNull(dt.msh[ibody].dt.cb)) {
-			cbx = dt.msh[ibody].dt.cb.x - dt.msh[ibody].dt.c0.x;
-			cby = dt.msh[ibody].dt.cb.y - dt.msh[ibody].dt.c0.y;
-			cbz = dt.msh[ibody].dt.cb.z - dt.msh[ibody].dt.c0.z;
-		}
-		out	<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
+			double cbx = dt.msh[ibody].dt.cb.x - dt.msh[ibody].dt.c0.x;
+			double cby = dt.msh[ibody].dt.cb.y - dt.msh[ibody].dt.c0.y;
+			double cbz = dt.msh[ibody].dt.cb.z - dt.msh[ibody].dt.c0.z;
+			
+			out	<< Format(" Center of Buoyancy (Xb,Yb,Zb): %s %s %s\n", 
 						FormatWam(cbx), FormatWam(cby), FormatWam(cbz));
+		}
+		
 		if (IsLoadedC()) {
 			out	<< " Hydrostatic and gravitational restoring coefficients:\n"; 
 			out	<< " C(3,3),C(3,4),C(3,5): " << Format("%s %s %s\n", 

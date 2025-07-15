@@ -115,6 +115,8 @@ void QTFTabDof::DoClick(Data &data) {
 		}
 		
 		MatrixXd zData = GetMat(hy, data, idh, /*show_w, */!ndim);
+		if (zData.size() == 0)
+			continue;
 		
 		UArray<Pointf> &d = data.dataPlot.Add();	
 		
@@ -259,6 +261,8 @@ void QTFTabDof::UpdateArray(const Hydro &hy, bool show_ma_ph, Data &data, bool o
 		ReverseX(data.xAxis);
 	}
 	data.zData = GetMat(hy, data, ih, /*show_w, */!ndim);
+	if (data.zData.size() == 0)
+		return;
 
 	ArrayCtrl &array = data.array;
 	

@@ -514,15 +514,15 @@ void MainBody::Init() {
 		else if (mainTab.IsAt(mainM)) {
 			plot = false;
 			move = true;
-			mainM.Load(Bem().surfs, idxs);
+			mainM.Load(Bem().surfs, idxs, false);
 		} else if (mainTab.IsAt(mainStiffness)) {
 			plot = false;
 			move = true;
-			mainStiffness.Load(Bem().surfs, idxs);
+			mainStiffness.Load(Bem().surfs, idxs, true);
 		} else if (mainTab.IsAt(mainStiffness2)) {
 			plot = false;
 			move = true;
-			mainStiffness2.Load(Bem().surfs, idxs);
+			mainStiffness2.Load(Bem().surfs, idxs, true);
 		} else if (mainTab.IsAt(mainGZ)) 
 			stability = true;
 		else 
@@ -689,7 +689,7 @@ void MainBody::InitSerialize(bool ret) {
 void MainBody::LoadSelTab(BEM &bem) {
 	const UVector<int> &idxs = ArrayModel_IndexsBody(listLoaded);
 	if (mainTab.Get() == mainTab.Find(mainStiffness))
-		mainStiffness.Load(bem.surfs, idxs);
+		mainStiffness.Load(bem.surfs, idxs, true);
 	else //if (mainTab.Get() == mainTab.Find(mainView))
 		mainView.FullRefresh(*this);
 }
@@ -730,8 +730,13 @@ void MainBody::OnOpt() {
 	case Body::MIKE21_GRD:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;		
+	case Body::BEM_MESH:	menuOpen.symX.Disable();
+							menuOpen.symY.Disable();
 	default:				break;		
 	}
+	
+	menuOpen.optBodyType.Enable(type != Body::BEM_MESH);
+	
 	menuPlot.opShowColor.Enable(menuPlot.opShowMesh.GetIndex() != SurfaceView::SHOW_MESH && 
 								menuPlot.opShowMesh.GetIndex() != SurfaceView::SHOW_VISIBLE_MESH);
 	menuMove.t_z.Enable(!menuMove.opZArchimede);
@@ -1215,9 +1220,9 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 }
 
 void MainBody::UpdateLast(int id) {
-	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded)));
-	mainTab.GetItem(mainTab.Find(mainM)).Enable(mainM.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded)));
-	mainTab.GetItem(mainTab.Find(mainStiffness2)).Enable(mainStiffness2.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded)));
+	mainTab.GetItem(mainTab.Find(mainStiffness)).Enable(mainStiffness.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded), true));
+	mainTab.GetItem(mainTab.Find(mainM)).Enable(mainM.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded), false));
+	mainTab.GetItem(mainTab.Find(mainStiffness2)).Enable(mainStiffness2.Load(Bem().surfs, ArrayModel_IndexsBody(listLoaded), true));
 	mainTab.GetItem(mainTab.Find(mainGZ)).Enable(Bem().surfs.size() > 0);
 
 	//mainView.CalcEnvelope();
@@ -1435,9 +1440,7 @@ void DropCtrlDialogRevolution::UpdatePlot() {
 		if (!IsNull(yy) && !IsNull(zz))
 			points << Pointf(yy, zz);
 	}
-	scatter.ZoomToFit(false, true);
-	scatter.SetXYMin(0, Null);
-	scatter.SetXYMax(scatter.GetSeriesMaxX()*1.2, Null);
+	scatter.ZoomToFit(true, true, .2);
 }
 
 DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
@@ -1787,7 +1790,7 @@ void MainBody::OnRemoveSelected(bool all) {
 	}
 
 	UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
-	mainStiffness.Load(Bem().surfs, idxs);
+	mainStiffness.Load(Bem().surfs, idxs, true);
 	mainViewData.ReLoad(mainView);
 	
 	mainGZ.ClearX(false);

@@ -155,7 +155,10 @@ public:
 	bool IsSymmetricY();
 	
 	void Jsonize(JsonIO &json);
-		
+	
+	void LoadSerialization(String fileName);
+	void SaveSerialization(String fileName) const;
+	
 	// All Body data is here
 	class Data {
 	public:
@@ -927,7 +930,7 @@ public:
 						return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && f[ib][ih].rows() > 0 && IsNum(f[ib][ih](0, idf));}
 											 	
 	bool IsLoadedStateSpace()	  			 const {return !dt.sts.IsEmpty();}
-	bool IsLoadedQTF(bool isSum) 			 const {return isSum ? !dt.qtfsum.IsEmpty() : !dt.qtfdif.IsEmpty();}
+	bool IsLoadedQTF(bool isSum, int ib = 0) const {return isSum ? dt.qtfsum.size() > ib : dt.qtfdif.size() > ib;}
 	bool IsLoadedMD(int ib = 0, int ih = 0)	 const {return dt.md.size() > ib && dt.md[ib].size() > ih && dt.md[ib][ih].size() == 6 && dt.md[ib][ih][0].size() > 0 && IsNum(dt.md[ib][ih][0](0));}
 	static bool IsLoadedMD(const UArray<UArray<UArray<VectorXd>>> &mD, int ib = 0, int ih = 0) {return mD.size() > ib && mD[ib].size() > ih && mD[ib][ih].size() == 6 && mD[ib][ih][0].size() > 0 && IsNum(mD[ib][ih][0](0));}
 	bool IsLoadedKirf(int idf=0,int jdf = 0) const {return dt.Kirf.size() > idf && dt.Kirf[idf].size() > jdf && dt.Kirf[idf][jdf].size() > 0 && IsNum(dt.Kirf[idf][jdf][0]);}
@@ -1075,6 +1078,7 @@ public:
 	void DeleteHeadings(const UVector<int> &idHead);
 	void DeleteHeadingsMD(const UVector<int> &idHead);
 	void DeleteHeadingsQTF(const UVector<int> &idHeadQTF);
+	void DeleteBodies(const UVector<int> &idBody);
 	void ResetForces(Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);
 	void MultiplyDOF(double factor, const UVector<int> &idDOF, bool a, bool b, bool diag, bool f, bool md, bool qtf, bool C);
 	void SwapDOF(int ib1, int idof1, int ib2, int idof2);
@@ -1740,6 +1744,7 @@ public:
 	void TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status = Null);
 	void WaveTo(int id, double xto, double yto);
 	String SpreadNegative(int id, Function <bool(String, int)> Status);
+	void DeleteBodies(int id, const UVector<int> &idBodies);
 	void DeleteHeadingsFrequencies(int id, const UVector<int> &idFreq, const UVector<int> &idFreqQTF, 
 										   const UVector<int> &idHead, const UVector<int> &idHeadMD, const UVector<int> &idHeadQTF);
 	void ResetForces(int id, Hydro::FORCE force, bool forceMD, Hydro::FORCE forceQtf);										

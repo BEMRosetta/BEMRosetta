@@ -34,6 +34,9 @@ String Hydro::LoadSerialization(String fileName) {
 			m.dt.under.GetVolume();
 		}
 	}
+	if (IsNull(dt.len) || IsNull(dt.dimen))
+		return Format("File '%s' does not contain BEM results", fileName);
+	
 	return String();
 }
 	
@@ -2127,6 +2130,123 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
 }
 
+void Hydro::DeleteBodies(const UVector<int> &idBod) {
+	if (idBod.IsEmpty()) 
+		return;
+	
+	int Nb = dt.Nb - idBod.size();
+	
+	
+	
+	
+	auto DeleteAinf0 = [&](MatrixXd &A) {
+		MatrixXd An = MatrixXd::Zero(6*Nb, 6*Nb);
+	
+		int nidof = 0;
+		for (int idof = 0; idof < 6*dt.Nb; ++idof) {
+			if (Find(idBod, idof/6) < 0) {
+				int njdof = 0;
+				for (int jdof = 0; jdof < 6*dt.Nb; ++jdof) {
+					if (Find(idBod, jdof/6) < 0) {
+						An(nidof, njdof) = A(idof, jdof);		
+						njdof++;
+					}
+				}
+				nidof++;
+			}
+		}	
+		A = pick(An);
+	};
+	
+	if (IsLoadedAinf())
+		DeleteAinf0(dt.Ainf);
+	if (IsLoadedA0())
+		DeleteAinf0(dt.A0);
+	
+	auto DeleteAB = [&](UArray<UArray<VectorXd>> &A) {
+        UArray<UArray<VectorXd>> An;
+	
+		An.SetCount(6*Nb);
+		for (int nidof = 0; nidof < 6*Nb; ++nidof) 
+			An[nidof].SetCount(6*Nb);			
+		
+		int nidof = 0;
+		for (int idof = 0; idof < 6*dt.Nb; ++idof) {
+			if (Find(idBod, idof/6) < 0) {
+				int njdof = 0;
+				for (int jdof = 0; jdof < 6*dt.Nb; ++jdof) {
+					if (Find(idBod, jdof/6) < 0) {
+						An[nidof][njdof] = pick(A[idof][jdof]);		
+						njdof++;
+					}
+				}
+				nidof++;
+			}
+		}
+		A = pick(An);
+    };
+	
+	if (IsLoadedA())
+		DeleteAB(dt.A);
+	if (IsLoadedAinf_w())
+		DeleteAB(dt.Ainf_w);
+	if (IsLoadedB())
+		DeleteAB(dt.B);
+	
+	if (IsLoadedA_P())
+		DeleteAB(dt.A_P);
+	if (IsLoadedB_H())
+		DeleteAB(dt.B_H);
+	if (IsLoadedB_P())
+		DeleteAB(dt.B_P);
+
+	auto DeleteF = [&](Forces &ex) {
+        for (int ib = dt.Nb-1; ib >= 0; --ib) {
+            if (Find(idBod, ib) >= 0) 
+                ex.Remove(ib);
+        }
+    };	
+
+	if (IsLoadedFex())
+		DeleteF(dt.ex);
+	if (IsLoadedFsc())
+		DeleteF(dt.sc);
+	if (IsLoadedFfk())
+		DeleteF(dt.fk);	
+	if (IsLoadedRAO())
+		DeleteF(dt.rao);
+	
+	if (IsLoadedFsc_pot())
+		DeleteF(dt.sc_pot);
+	if (IsLoadedFfk_pot())
+		DeleteF(dt.fk_pot);
+	if (IsLoadedFfk_pot_bmr())
+		DeleteF(dt.fk_pot_bmr);
+
+    for (int ib = dt.Nb-1; ib >= 0; --ib) {
+        if (Find(idBod, ib) >= 0) {
+            if (IsLoadedQTF(true, ib))
+            	dt.qtfsum.Remove(ib);
+            if (IsLoadedQTF(false, ib))	
+            	dt.qtfdif.Remove(ib);
+            if (IsLoadedMD(ib))
+            	dt.md.Remove(ib);
+            if (IsLoadedMesh(ib))
+            	dt.msh.Remove(ib);
+            if (IsLoadedPotsRad(ib))
+            	dt.pots_rad.Remove(ib);
+            if (IsLoadedPotsDif(ib))
+            	dt.pots_dif.Remove(ib);
+            if (IsLoadedPotsInc(ib))	
+            	dt.pots_inc.Remove(ib);
+            if (IsLoadedPotsIncBMR(ib))
+            	dt.pots_inc_bmr.Remove(ib);
+        }
+    }
+					
+	dt.Nb = Nb;
+}
+
 void Hydro::DeleteFrequencies(const UVector<int> &idFreq) {
 	if (idFreq.IsEmpty()) 
 		return;
@@ -2726,6 +2846,9 @@ MatrixXd Hydro::GetQTFMat(int ib, int idof, int idh, bool isSum, char what, bool
 	if (m.size() == 0)
 		return ret;
 	
+	if (!IsNum(m))
+		return ret;
+		
 	ret.resize(m.rows(), m.cols());
 
 	switch (what) {

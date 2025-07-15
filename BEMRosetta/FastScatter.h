@@ -130,6 +130,8 @@ private:
 	
 	WithScatterRightTop<StaticRect> rightT;
 	WithScatterRightBottom<StaticRect> rightB;
+	WithScatterRightBottomUp<StaticRect> rightUp;
+	WithScatterRightBottomDown<StaticRect> rightDown;
 	Box right;
 	
 	RectEnterSet frameSet;
@@ -150,6 +152,9 @@ private:
 	};
 	
 	String saveFolder;
+	
+	UArray<EditString> edits;
+	UArray<EditDouble> editNums;
 };
 
 class FastScatter : public StaticRect {

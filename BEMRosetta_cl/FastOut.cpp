@@ -20,7 +20,7 @@ static int IsTabSpaceRet(int c) {
 FastOut::FastOut() {
 	calcParams << ptfmtilt.Init0(this);
 	calcParams << ptfmshift.Init0(this);
-	calcParams << ptfmHeaveCB.Init0(this);
+	//calcParams << ptfmHeaveCB.Init0(this);
 	calcParams << bladeTip1xParam.Init0(this);
 	calcParams << bladeTip1yParam.Init0(this);
 	calcParams << bladeTip1zParam.Init0(this);
@@ -202,7 +202,7 @@ String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
 					throw Exc("Number of parameters and units do not match");
 
 				numCol = parameters.size();
-				dataOut.SetCount(numCol+calcParams.size());
+				dataOut.SetCount(numCol/*+calcParams.size()*/);
 			}
 		} else {
 			if (fields.IsEmpty())
@@ -352,7 +352,7 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
     int64 sz = fin.GetSize();
     
     //int nPts = NumRecs*NumChans;           		   
-    dataOut.SetCount(NumChans+1+calcParams.size());
+    dataOut.SetCount(NumChans+1/*+calcParams.size()*/);
     for (int i = 0; i < dataOut.size(); ++i)
         dataOut[i].SetCount(NumRecs);
     
@@ -481,7 +481,7 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	}
 	
 	int numCol = parameters.size();
-	dataOut.SetCount(numCol+calcParams.size());
+	dataOut.SetCount(numCol/*+calcParams.size()*/);
 	
 	FileIn in(fileName);
 	if (!in)
@@ -569,23 +569,62 @@ void FastOut::AfterLoad() {
 	unitsd.Clear();
 	for (int i = 0; i < units.size(); ++i)
 		unitsd << ToLower(units[i]);
+
+	const char *strPos[] = {"PtfmSurge", "PtfmSway", "PtfmHeave", "PtfmRoll", "PtfmPitch", "PtfmYaw"};
+	const char *strVel[] = {"PtfmTVxi",  "PtfmTVyi", "PtfmTVzi", "PtfmRVxi",  "PtfmRVyi", "PtfmRVzi"};
+	const char *strAcc[] = {"PtfmTAxi",  "PtfmTAyi", "PtfmTAzi", "PtfmRAxi",  "PtfmRAyi", "PtfmRAzi"};
 	
-	idsurge = GetParameterX("PtfmSurge");
-	idsway  = GetParameterX("PtfmSway");
-	idheave = GetParameterX("PtfmHeave");
-	idroll  = GetParameterX("PtfmRoll");
-	idpitch = GetParameterX("PtfmPitch");
-	idyaw   = GetParameterX("PtfmYaw");	
+	UVector<int> idPos(6);
+	for (int i = 0; i < 6; ++i)
+		idPos[i] = GetParameterX(strPos[i]);
+	UVector<int> idVel(6);
+	for (int i = 0; i < 6; ++i)
+		idVel[i] = GetParameterX(strVel[i]);
+	UVector<int> idAcc(6);
+	for (int i = 0; i < 6; ++i)
+		idAcc[i] = GetParameterX(strAcc[i]);
+	
+	idsurge = idPos[0];
+	idsway  = idPos[1];
+	idheave = idPos[2];
+	idroll  = idPos[3];
+	idpitch = idPos[4];
+	idyaw   = idPos[5];
 	idaz    = GetParameterX("Azimuth");	
 	idnacyaw = GetParameterX("NacYaw");
 	
-	if (idsurge >= 0 && idsway >= 0 && idheave >= 0 && idroll >= 0 && idpitch >= 0 && idyaw >= 0) {
+	UVector<Point3D> ppp;
+	if (Min(idPos) >= 0) {
+		ppp.SetCount(GetNumData());
 		aff.SetCount(GetNumData());
-		for (int it = 0; it < GetNumData(); ++it)
-			aff[it] = GetTransform000(Value3D(GetVal(it, idsurge), GetVal(it, idsway), GetVal(it, idheave)), 
+		for (int it = 0; it < GetNumData(); ++it) {
+			ppp[it] = Point3D(GetVal(it, idsurge), GetVal(it, idsway), GetVal(it, idheave));
+			aff[it] = GetTransform000(ppp[it], 
 									  Value3D(ToRad(GetVal(it, idroll)), ToRad(GetVal(it, idpitch)), ToRad(GetVal(it, idyaw))));
+		}
 	}
 	
+	UVector<Velocity6D> www;
+	UVector<Acceleration6D> aaa;
+	if (Min(idPos) >= 0 && Min(idVel) >= 0) {
+		www.SetCount(GetNumData());
+		for (int it = 0; it < www.size(); ++it) {
+			for (int i = 0; i < 3; ++i)
+				www[it][i] = GetVal(it, idVel[i]);
+			for (int i = 3; i < 6; ++i)
+				www[it][i] = ToRad(GetVal(it, idVel[i]));
+		}
+	}
+	if (Min(idPos) >= 0 && Min(idVel) >= 0 && Min(idAcc) >= 0) {
+		aaa.SetCount(GetNumData());
+		for (int it = 0; it < aaa.size(); ++it) {
+			for (int i = 0; i < 3; ++i)
+				aaa[it][i] = GetVal(it, idAcc[i]);
+			for (int i = 4; i < 6; ++i)
+				aaa[it][i] = ToRad(GetVal(it, idAcc[i]));
+		}
+	}
+		
 	String folder = GetFileFolder(GetFileName());
 	FindFile ffpath(AFX(folder, "*.fst"));
 	if (ffpath) {
@@ -599,10 +638,25 @@ void FastOut::AfterLoad() {
 			Precone = ToRad(cas.elastodyn.GetDouble("PreCone(1)"));
 			Twr2Shft = cas.elastodyn.GetDouble("Twr2Shft");
 			TowerHt = cas.elastodyn.GetDouble("TowerHt");
+			for (int i = 0; i < cas.pointNames.size(); ++i)	{
+				int id = FindParam(cas.pointNames[i]);		// Search points in table in elastodyn.dat
+				if (id < 0)
+					pointParams << PointParam(cas.pointNames[i], cas.points[i], this);	// If not found it is added
+				else
+					pointParams[id].pos = cas.points[i];								// If found, the coordinates are overlapped
+			}
 		}
 		if (cas.hydrodyn.IsAvailable()) {
-			ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
-			ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
+			try {
+				if (aff.size() > 0) {
+					double ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
+					double ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
+					int id = FindParam("CB");
+					if (id < 0)
+						pointParams << PointParam("CB", Point3D(ptfmCOBxt, ptfmCOByt, 0), this);
+				}
+			} catch(...) {
+			}
 		}
 		if (!IsNull(TipRad) && !IsNull(Precone)) {
 			double oh = TipRad*sin(Precone);
@@ -610,21 +664,116 @@ void FastOut::AfterLoad() {
 			Hx = (OverHang + oh)*cos(ShftTilt);
 		}
 	}
+
+	int numCalcParams = 0;
+	for (CalcParam *cc : calcParams)	{
+		CalcParam &c = *cc;
+		c.Init();
+		if (c.IsEnabled()) 	
+			numCalcParams++;
+	}
 	
-	for (CalcParam *c : calcParams) {
-		c->Init();
-		if (c->IsEnabled()) {
-			c->id = parameters.size();
-			parameters << c->name;
-			units << c->units;
-			parametersd << ToLower(c->name);
-			unitsd << ToLower(c->units);
+	int numPointParams = 3;
+	if (!www.IsEmpty())
+		numPointParams += 3;
+	if (!aaa.IsEmpty())
+		numPointParams += 3;
+			
+	int sz = parameters.size();
+	parameters .SetCount(sz + numCalcParams + pointParams.size()*numPointParams);
+	units	   .SetCount(sz + numCalcParams + pointParams.size()*numPointParams);
+	parametersd.SetCount(sz + numCalcParams + pointParams.size()*numPointParams);
+	unitsd	   .SetCount(sz + numCalcParams + pointParams.size()*numPointParams);
+	dataOut	   .SetCount(sz + numCalcParams + pointParams.size()*numPointParams);
+	
+	int idc = 0;	
+	for (CalcParam *cc : calcParams) {
+		CalcParam &c = *cc;
+		if (c.IsEnabled()) {
+			c.id = sz + idc++;
+			parameters[c.id] = c.name;
+			units[c.id] = c.units;
+			parametersd[c.id] = ToLower(c.name);
+			unitsd[c.id] = ToLower(c.units);
 		}
+	}
+	sz += numCalcParams;
+	
+	for (int i = 0; i < pointParams.size(); ++i) {
+		int pos = sz + numPointParams*i;
+		int iip = 0;
+		for (int ip = 0; ip < 3; ++ip) {		// Only translation
+			pointParams[i].id = pos;
+			parameters[pos + iip]  = strPos[ip] + S("_") + pointParams[i].name;
+			parametersd[pos + iip] = ToLower(parameters[pos + iip]);
+			units[pos + iip++] = unitsd[pos] = "m";
+		}
+		for (int ip = 0; ip < 3; ++ip) {		// Only translation
+			if (!www.IsEmpty()) {
+				pointParams[i].id = pos;
+				parameters[pos + iip]  = strVel[ip] + S("_") + pointParams[i].name;
+				parametersd[pos + iip] = ToLower(parameters[pos + iip]);
+				units[pos + iip++] = unitsd[pos] = "m/s";
+			}
+		}
+		for (int ip = 0; ip < 3; ++ip) {		// Only translation
+			if (!aaa.IsEmpty()) {
+				pointParams[i].id = pos;
+				parameters[pos + iip]  = strAcc[ip] + S("_") + pointParams[i].name;
+				parametersd[pos + iip] = ToLower(parameters[pos + iip]);
+				units[pos + iip++] = unitsd[pos] = "m/s^2";
+			}
+		}
+	}
+	
+	for (CalcParam *cc : calcParams) {
+		CalcParam &c = *cc;
+		if (c.IsEnabled()) 
+			dataOut[c.id].SetCount(GetNumData());
+	}
+	for (int i = 0; i < pointParams.size(); ++i) {
+		int id = pointParams[i].id;
+		int iip = 0;
+		for (int ip = 0; ip < 3; ++ip)
+			dataOut[id + iip++].SetCount(GetNumData());
+		if (!www.IsEmpty())
+			for (int ip = 0; ip < 3; ++ip)
+				dataOut[id + iip++].SetCount(GetNumData());
+		if (!aaa.IsEmpty())
+			for (int ip = 0; ip < 3; ++ip)
+				dataOut[id + iip++].SetCount(GetNumData());
 	}
 	for (int idt = 0; idt < GetNumData(); ++idt) {
 		for (CalcParam *c : calcParams) {	
 			if (c->IsEnabled()) 
 				dataOut[c->id][idt] = c->Calc(idt);
+		}
+		Velocity6D vel = Null;
+		if (!www.IsEmpty())
+			vel = clone(www[idt]);
+		Acceleration6D acc = Null;
+		if (!aaa.IsEmpty())
+			acc = clone(aaa[idt]);
+		if (aff.size() > 0) {
+			for (int i = 0; i < pointParams.size(); ++i) {
+				int id = pointParams[i].id;
+				Point3D p = pointParams[i].Calc(idt);
+				int iip = 0;
+				for (int ip = 0; ip < 3; ++ip)
+					dataOut[id + iip++][idt] = p[ip];
+				if (!IsNull(vel)) {
+					Velocity6D v = clone(vel);
+					v.Translate(ppp[idt], p);
+					for (int ip = 0; ip < 3; ++ip)
+						dataOut[id + iip++][idt] = v.t[ip];
+				}
+				if (!IsNull(acc)) {
+					Acceleration6D a = clone(acc);
+					a.Translate(ppp[idt], p, vel);
+					for (int ip = 0; ip < 3; ++ip)
+						dataOut[id + iip++][idt] = a.t[ip];
+				}
+			}
 		}
 	}
 	
@@ -641,7 +790,6 @@ void FastOut::Clear() {
 	Hx = Hz = Null;
 	idsurge = idsway = idheave = idroll = idpitch = idyaw = idaz = idnacyaw = Null;
 	TipRad = OverHang = ShftTilt = Precone = Twr2Shft = TowerHt = baseClearance = Null;
-	ptfmCOBxt = ptfmCOByt = Null;
 	Hs = Tp = heading = Null;
 }
 

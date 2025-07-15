@@ -4,9 +4,9 @@
 
 	
 // enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		GEOMVIEW_OFF,    BEM_MESH, 			 UNKNOWN, 		NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"GEOMVIEW .off", "BEMRosetta .bemr", "By extension", "Unknown"};	
+const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"GEOMVIEW .off", "BEMRosetta .mesh", "By extension", "Unknown"};	
 const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true, 		     true,				 true, 		    false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.off", 	     "*.bemr", 			 "*.*"};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.off", 	     "*.mesh", 		     "*.*"};       
 
 int Body::idCount = 0;
 
@@ -190,18 +190,23 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		m.dt.SetCode(Body::OBJ);
 	} else if (ext == ".off")
 		ret = OffBody::LoadOff(mesh, file);
-	else if (ext == ".bemr") {
+	else if (ext == ".mesh") {
 		Hydro hydro;
 		String error = hydro.LoadSerialization(file);
 		if (error.IsEmpty() && !hydro.dt.msh.IsEmpty())		// .bemr from Hydro
 			mesh.Append(hydro.dt.msh);
 		else {
+			Body b;
 			try {
-				Body b;
-				b.dt.mesh.LoadSerialization(file);		// .bemr from Body
+				b.LoadSerialization(file);					// .bemr from Body
 				mesh << b;
 			} catch(Exc e) {
-				return std::move(e);
+				try {
+					b.dt.mesh.LoadSerialization(file);		// .bemr from Surface
+					mesh << b;
+				} catch(Exc e) {	
+					return std::move(e);
+				}
 			}
 		}
 		//Last(mesh).dt.fileName = file;
@@ -259,7 +264,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			type = MIKE21_GRD;
 		else if (ext == ".off")
 			type = GEOMVIEW_OFF;
-		else if (ext == ".bemr")
+		else if (ext == ".mesh")
 			type = BEM_MESH;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), First(fileNames)));
@@ -327,7 +332,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			else if (type == STL_TXT)		
 				SaveStlTxt(fileNames[ib], surfs[ib]);
 			else if (type == BEM_MESH)		
-				surfs[ib].SaveSerialization(fileNames[ib]);
+				meshes[ib].SaveSerialization(fileNames[ib]);
 			else if (type == MIKE21_GRD)		
 				SaveGRD(fileNames[ib], surfs[ib], g, symX, symY);
 			else if (type == GEOMVIEW_OFF) 
@@ -862,4 +867,17 @@ void Body::Jsonize(JsonIO &json) {
 		dt.SetCode(static_cast<Body::MESH_FMT>(icode));
 }
 
+void Body::LoadSerialization(String fileName) {
+	if (!FileExists(fileName))
+		throw Exc(Format("File '%s' does not exist", fileName));
+		
+	String error = LoadFromJsonError(*this, LoadFile(fileName));
+	if (!error.IsEmpty()) 
+		throw Exc(error);
+}
+
+void Body::SaveSerialization(String fileName) const {
+	if (!StoreAsJsonFile(*this, fileName, false))
+		throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
+}
 	

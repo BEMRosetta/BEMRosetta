@@ -166,7 +166,22 @@ void MainBEM::Init() {
 	menuProcess2.butResetDOF.Hide();
 	menuProcess2.butResetDOF0 << THISBACK1(OnMultiplyDOF, true);
 	menuProcess2.butResetDOF0.Hide();
+
+	menuProcess2.dropBodies.Tip(t_("Selects the bodies to be removed."));		
+	menuProcess2.dropBodies.AddColumn("", 20);
+	menuProcess2.dropBodies.AddColumn("", 50);
+	menuProcess2.dropBodies.GetList().GetColumn(0).Option();
+	menuProcess2.dropBodies.Width(100);
+	menuProcess2.dropBodies.GetList().Sorting(false);
+	menuProcess2.butRemoveBodies << THISBACK(OnDeleteBodies);
+	menuProcess2.dropBodies.OnFocus = [&] {
+		menuProcess2.dropBodies.DropGrid::GotFocus();
+		menuProcess2.butRemoveBodies.Show(DropChecked(menuProcess2.dropBodies));
+	};
+	menuProcess2.butRemoveBodies.Hide();
 	
+	menuProcess2.dropFreq.Tip(t_("Selects the frequencies to be removed from the QTF."));
+		
 	menuProcess2.dropFreq.Tip(t_("Selects the frequencies to be removed from the first order hydrodynamic coefficients and mean drift."));		
 	menuProcess2.dropFreq.AddColumn("", 20);
 	menuProcess2.dropFreq.AddColumn("", 50);
@@ -443,6 +458,11 @@ void MainBEM::Init() {
 		menuPlot.labHead1st.Show(is == 0);	menuPlot.head1st.Show(is == 0);
 		menuPlot.labHeadQTF.Show(is == 1);	menuPlot.headQTF.Show(is == 1);
 		menuPlot.labHeadMD.Show(is == 2);	menuPlot.headMD.Show(is == 2);
+
+		menuPlot.headArr1.Show(is >= 0 && is <= 2);	// Arrows
+		menuPlot.headArr2.Show(is >= 0 && is <= 2);
+		menuPlot.headArr3.Show(is >= 0 && is <= 2);
+		menuPlot.headArr4.Show(is >= 0 && is <= 2);
 
 		menuPlot.butList.Show(is >= 0);
 		menuPlotList.head1st.Show(is == 0);
@@ -1012,6 +1032,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.dropBody1.Clear();
 	menuProcess.dropBody2.Clear();
 	
+	menuProcess2.dropBodies.Clear();
 	menuProcess2.dropFreq.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	menuProcess2.dropFreqQTF.GetList().GetColumn(1).Name(show_w ? t_("ω [rad/s]") : t_("T [s]"));
 	menuProcess2.dropFreq.Clear();
@@ -1045,6 +1066,8 @@ void MainBEM::UpdateButtons() {
 		}
 		menuProcess.dropBody2.Enable(hy.dt.Nb > 1);
 		
+		for (int i = 0; i < hy.dt.Nb; ++i)
+			menuProcess2.dropBodies.Add(false, i+1);
 		VectorXd TT	= hy.Get_T();			
 		for (int i = 0; i < hy.dt.w.size(); ++i)
 			menuProcess2.dropFreq.Add(false, show_w ? hy.dt.w[i] : TT[i]);
@@ -1633,6 +1656,28 @@ void MainBEM::OnQTF_MD() {
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
 	}	
+}
+
+void MainBEM::OnDeleteBodies() {
+	try {
+		int id = GetIndexOneSelected();
+		if (id < 0) 
+			return;
+		
+		UVector<int> idBody;
+		for (int i = 0; i < menuProcess2.dropBodies.GetList().GetRowCount(); ++i)
+			if (menuProcess2.dropBodies.GetList().Get(i, 0) == true)
+				idBody << i;
+		
+		WaitCursor wait;
+		
+		Bem().DeleteBodies(id, idBody);
+		
+		AfterBEM();	
+		LoadSelTab(Bem());
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
 }
 
 void MainBEM::OnDeleteHeadingsFrequencies() {

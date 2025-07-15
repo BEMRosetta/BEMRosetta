@@ -93,7 +93,7 @@ public:
 		virtual double Calc(int idt) = 0;
 		bool IsEnabled()	{return enabled;}
 		String name, units;
-		int id;
+		int id = -1;
 		
 	protected:
 		FastOut *dF = nullptr;
@@ -116,13 +116,43 @@ public:
 	UVector<UVector <double> > dataOut;
 	UVector<CalcParam *> calcParams;
 	
+	struct PointParam {
+		Point3D pos;
+		String name;
+		int id = -1;
+		
+		PointParam(String _name, Point3D _pos, FastOut *_dataFast) {
+			name = _name;
+			pos = _pos;
+			dF = _dataFast;
+		}
+		
+		Point3D Calc(int idtime) {
+			Point3D npos;
+			TransRot(dF->aff[idtime], pos, npos);	 
+			return npos;
+		}
+		
+	protected:
+		FastOut *dF = nullptr;	
+	}; 
+	
+	UArray<PointParam> pointParams;
+	
+	int FindParam(String name) {
+		for (int i = 0; i < pointParams.size(); ++i) {
+			if (pointParams[i].name == name)
+				return i;
+		}
+		return -1;
+	}
+	
 	UArray<Affine3d> aff;
 	double Hx = Null, Hz = Null;			// Position of the hub projection to the blade tip rotation plane. with NacYaw = 0
 	
 	int idsurge = Null, idsway = Null, idheave = Null, idroll = Null, idpitch = Null, idyaw = Null, idaz = Null, idnacyaw = Null;
 	
 	double TipRad = Null, OverHang = Null, ShftTilt = Null, Precone = Null, Twr2Shft = Null, TowerHt = Null, baseClearance = Null;
-	double ptfmCOBxt = Null, ptfmCOByt = Null;
 	
 	double Hs = Null, Tp = Null, heading = Null;
     	
@@ -180,22 +210,6 @@ private:
 			return sqrt(surge*surge + sway*sway);
 		}	
 	} ptfmshift; 
-
-	struct HeaveCBParam : CalcParam {
-		HeaveCBParam() {
-			name = "PtfmHeaveCB";
-			units = "m";
-		}
-		virtual void Init() {
-			enabled = !(IsNull(dF->ptfmCOBxt) || IsNull(dF->ptfmCOByt) || dF->idroll < 0 || dF->idpitch < 0 || dF->idheave < 0 || dF->idyaw < 0); 
-		}
-		virtual double Calc(int idtime) {
-			Value3D pos(dF->ptfmCOBxt, dF->ptfmCOByt, 0), npos;
-			TransRot(dF->aff[idtime], pos, npos);
-						 
-			return npos.z;
-		}	
-	} ptfmHeaveCB; 
 
 	bool CalcTipPos(int idBlade, int idtime, double tipdx, double tipdy, double &Tx, double &Ty, double &Tz);
 	
@@ -661,6 +675,28 @@ public:
 			dlldat.fileName = GetAbsolutePath(path, hydrodyn.GetString("NLFK_DLL_input"));
 		} catch(...) {
 		}
+		
+		elastodyn.IsAvailable();
+		int pos;
+		String nums = GetFASTVarPos(elastodyn.fileText, "NumTrack", "", pos);
+		int num = ScanInt(nums);
+		pos = elastodyn.fileText.FindAfter("\n", pos);
+		pos = elastodyn.fileText.FindAfter("\n", pos);
+		pos = elastodyn.fileText.FindAfter("\n", pos);
+		for (int i = 0; i < num; ++i) {
+			int npos = elastodyn.fileText.FindAfter("\n", pos);
+			String str = elastodyn.fileText.Mid(pos, npos-pos);
+			UVector<String> dat = Split(str, " ");
+			if (dat.size() < 4)
+				continue;
+			String name = Trim(dat[0]);
+			Point3D point(ScanDouble(dat[1]), ScanDouble(dat[2]), ScanDouble(dat[3]));
+			if (IsNull(point))
+				continue;
+			pointNames << name;
+			points << point;
+			pos = npos;
+		}
 	}
 	void Save() {
 		fast.Save();
@@ -721,7 +757,7 @@ public:
 		}
 		double GetDouble(String var) {
 			double ddata = ScanDouble(GetString(var));
-			if (!IsNum(ddata))
+			if (IsNull(ddata))
 				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
 			return ddata;
 		}
@@ -821,6 +857,9 @@ public:
 	String log;
 	String fstFile;
 	FastOut out;
+	
+	UVector<String> pointNames;
+	UVector<Point3D> points;
 };
 
 class FASTCaseDecay : public FASTCase {

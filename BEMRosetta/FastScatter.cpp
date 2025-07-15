@@ -54,11 +54,16 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 }
 
 bool FastScatter::OnLoadCompare() {
-	if (!LoadFromJsonFile(params, ~compare.file)) {
+	String filename = Trim(~compare.file);
+	
+	if (filename.IsEmpty()) {
+		compare.file.DoBrowse();
+		return true;
+	}
+	if (!LoadFromJsonFile(params, filename)) {
 		BEM::PrintError(t_("Impossible to load file"));
 		return false;
 	}
-	
 	ParamsToGrid();
 		
 	return true;
@@ -215,8 +220,16 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	CtrlLayout(leftSearch);
 	CtrlLayout(rightSearch);
 	rightB.splitterSearch.Horz(leftSearch.SizePos(), rightSearch.SizePos());
+	CtrlLayout(rightUp);
+	CtrlLayout(rightDown);
+	rightB.splitterDown.Vert(rightUp.SizePos(), rightDown.SizePos());
+	rightB.splitterDown.SetPos(7000, 0);
 	
-	file.WhenChange = [&] {return WhenFile(~file);};
+	rectangleButtons.SetBackground(SColorFace());
+	
+	file.WhenChange = [&] {
+		return WhenFile(~file);
+	};
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
 	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
@@ -283,12 +296,12 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	rightB.filterParam.Tip(t_("Filters parameters to display. * are allowed"));
 	rightB.filterUnits.WhenAction = THISBACK1(OnFilter, true);
 	rightB.filterUnits.Tip(t_("Filters parameters to be displayed according to their units. * are allowed"));
-	rightB.arrayParam.AddColumn(t_("Fields"), 80);
-	rightB.arrayParam.AddColumn(t_("Units"), 20);
-	rightB.arrayParam.SetLineCy(EditField::GetStdHeight()).MultiSelect()
+	rightUp.arrayParam.AddColumn(t_("Fields"), 80);
+	rightUp.arrayParam.AddColumn(t_("Units"), 20);
+	rightUp.arrayParam.SetLineCy(EditField::GetStdHeight()).MultiSelect()
 		 .Tip(t_("Double click to choose parameters to display"));
-	rightB.arrayParam.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &rightB.arrayParam);
-	rightB.arrayParam.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &rightB.arrayParam);
+	rightUp.arrayParam.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &rightUp.arrayParam);
+	rightUp.arrayParam.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &rightUp.arrayParam);
 	
 	rightB.butCopy 		<<= THISBACK(SelCopy);
 	rightB.butCopy.Tip(t_("Copy selected parameters to clipboard"));
@@ -297,10 +310,26 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	rightB.butSetOnAllTabs 	<<= THISBACK(SelCopyTabs);
 	rightB.butSetOnAllTabs.Tip(t_("Copy selected parameters on the other tabs"));
 	
-	rightB.arrayParam.WhenDropInsert= [&] (int line, PasteClip& d) {OnDropInsert(line, d, rightB.arrayParam); };
-	rightB.arrayParam.WhenDrag 		= [&] {OnDrag(rightB.arrayParam, false);};
+	rightUp.arrayParam.WhenDropInsert= [&] (int line, PasteClip& d) {OnDropInsert(line, d, rightUp.arrayParam); };
+	rightUp.arrayParam.WhenDrag 		= [&] {OnDrag(rightUp.arrayParam, false);};
 	
 	rightB.opZoomToFit <<= true;
+	
+	rightDown.arrayPoints.AddColumn(t_("Name"), 80);
+	rightDown.arrayPoints.GetColumn(0).Edit(edits.Add()); 
+	rightDown.arrayPoints.AddColumn(t_("X"), 80);
+	rightDown.arrayPoints.GetColumn(1).Edit(editNums.Add()); 
+	rightDown.arrayPoints.AddColumn(t_("Y"), 80);
+	rightDown.arrayPoints.GetColumn(2).Edit(editNums.Add()); 
+	rightDown.arrayPoints.AddColumn(t_("Z"), 80);
+	rightDown.arrayPoints.GetColumn(3).Edit(editNums.Add()); 
+	rightDown.arrayPoints.Proportional().Clipboard().Editing().Removing().Appending().Duplicating().SetToolBar();
+	rightDown.arrayPoints.WhenInsertRow = [&] {
+		for (int r = 0; r < rightDown.arrayPoints.GetRowCount(); ++r) {
+			if (IsNull(rightDown.arrayPoints.Get(r, 0)))
+				rightDown.arrayPoints.Set(r, 0, FormatInt(r+1));
+		}
+	};
 	
 	rightT.arrayFiles.NoHeader().SetLineCy(EditField::GetStdHeight());
 	rightT.arrayFiles.AddColumn(t_("Id"), 2);
@@ -361,7 +390,15 @@ String FastScatterBase::SelectedStr() {
 			strRight << param;
 		}
 	}
-	return strLeft + ";" + strRight;
+	String strPoints;
+	for (int rw = 0; rw < rightDown.arrayPoints.GetRowCount(); ++rw) {
+		for (int c = 0; c < 4; ++c) {
+			if (!strPoints.IsEmpty())
+				strPoints << ",";
+			strPoints << rightDown.arrayPoints.Get(rw, c);
+		}
+	}
+	return strLeft + ";" + strRight + ";" + strPoints;
 }
 
 void FastScatterBase::SelCopy() {
@@ -372,7 +409,7 @@ void FastScatterBase::SelPaste(String str) {
 	if (str.IsEmpty())
 		str = ReadClipboardText();
 	UVector<String> params = Split(str, ";");
-	params.SetCount(2);
+	params.SetCount(3);
 	UVector<String> leftp = Split(params[0], ",");
 	leftSearch.array.Clear();
 	for (int rw = 0; rw < leftp.size(); ++rw) {
@@ -384,6 +421,12 @@ void FastScatterBase::SelPaste(String str) {
 	for (int rw = 0; rw < rightp.size(); ++rw) {
 		if (left.dataFast[0].GetParameterX(rightp[rw]) >= 0)
 			rightSearch.array.Set(rw, 0, rightp[rw]);
+	}
+	UVector<String> points = Split(params[2], ",");
+	rightDown.arrayPoints.Clear();
+	for (int rw = 0; rw < points.size()/4; ++rw) {
+		for (int c = 0; c < 4; ++c)
+			rightDown.arrayPoints.Set(rw, c, points[rw*4 + c]);
 	}
 	ShowSelected(false);	
 }
@@ -491,11 +534,11 @@ void FastScatterBase::OnFilter(bool show) {
 				ShowSelected(false);
 		}
 	} 
-	rightB.arrayParam.Clear();
+	rightUp.arrayParam.Clear();
 	rightB.filterUnits.ClearList();
 	for (int rw = 0; rw < list.size(); ++rw) {
 		if (ToLower(list.GetKey(rw)) != "time") {
-			rightB.arrayParam.Add(list.GetKey(rw), list[rw]);
+			rightUp.arrayParam.Add(list.GetKey(rw), list[rw]);
 			rightB.filterUnits.FindAddList(list[rw]);
 		}
 	}
@@ -574,6 +617,18 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 		
 		FastOut &fout = left.dataFast[iff];
 		
+		fout.pointParams.Clear();
+		for (int r = 0; r < rightDown.arrayPoints.GetRowCount(); ++r) {
+			String name;
+			if (IsNull(rightDown.arrayPoints.Get(r, 0)))
+				name = FormatInt(r+1);
+			else
+				name = rightDown.arrayPoints.Get(r, 0);
+			Point3D p = Point3D(rightDown.arrayPoints.Get(r, 1), rightDown.arrayPoints.Get(r, 2), rightDown.arrayPoints.Get(r, 3));
+			if (!IsNull(p) && fout.FindParam(name) < 0) 
+				fout.pointParams << FastOut::PointParam(name, p, &fout);
+		}
+		
 		String ret;
 		{
 			WaitCursor waitcursor;
@@ -604,7 +659,14 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			return false;
 		}
 		
-		if (!justUpdate) {
+		for (int r = 0; r < fout.pointParams.size(); ++r) {	// Update with points from elastodyn.dat
+			rightDown.arrayPoints.Set(r, 0, fout.pointParams[r].name);
+			rightDown.arrayPoints.Set(r, 1, fout.pointParams[r].pos.x);
+			rightDown.arrayPoints.Set(r, 2, fout.pointParams[r].pos.y);
+			rightDown.arrayPoints.Set(r, 3, fout.pointParams[r].pos.z);
+		}		
+	
+		/*if (!justUpdate) {
 			UArray<ScatterLeft::DataSource> &src = left.dataSource[iff];
 			src.SetCount(fout.parameters.size());
 		
@@ -617,7 +679,20 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			
 			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount()+1, fileName);
 		} else 
-			ShowSelected(false);
+			ShowSelected(false);*/
+		
+		UArray<ScatterLeft::DataSource> &src = left.dataSource[iff];
+		src.SetCount(fout.parameters.size());
+	
+		for (int c = 0; c < src.size(); ++c) 
+			src[c].Init(fout, c);
+	
+		LoadParams();
+		OnFilter(false);
+		ShowSelected(true);
+		
+		if (!justUpdate)
+			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount()+1, fileName);
 		
 	} catch (const Exc &e) {
 		BEM::PrintError(Format("Error: %s", e));	
@@ -966,6 +1041,7 @@ void FastScatterTabs::AddFile(String filename) {
 			FastScatter &sct = tabScatters.Add();
 			idKey = tabScatters.size()-1;
 			int pos = max(tabBar.GetCount()-1, 0);
+
 			sct.Init([=] (String filename) {
 					if (tabBar.GetCount() == 0)
 						return false; 

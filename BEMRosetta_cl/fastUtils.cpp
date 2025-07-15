@@ -72,8 +72,6 @@ void SetFASTVar(String &strFile, String varName, String value, String paragraph)
 			nleft = sactual.GetCount() - nright - value.GetCount();
 		} else if (sactual.GetCount()-1 > value.GetCount()) {// Value added maintaining varname position
 			int navail = sactual.GetCount() - value.GetCount();	
-			//nright = navail/2;
-			//nleft = navail - nright;
 			nleft = 0;									// Values tend to be at the left
 			nright = navail - nleft;
 		} else 											// Value added moving all

@@ -665,7 +665,7 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 		
 		String file = AFX("mesh", name);
 		
-		int countDOF = std::count(listDOF.Begin(), listDOF.End(), true);		// Number of true
+		int countDOF = (int)std::count(listDOF.Begin(), listDOF.End(), true);		// Number of true
 		
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", nNodes, nPanels), cp) << "! Number of points and number of panels" << "\n";	
