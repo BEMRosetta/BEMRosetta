@@ -149,10 +149,13 @@ void Tools_OrcaLicense::Init() {
 	CtrlLayout(*this);
 	
 	butCapture.WhenAction = [&]() {
-		if (!orca.IsLoaded()) {
-			if (!orca.FindInit()) 
-				PromptOK(t_("OrcaWave is not available"));
-		}
+		int aval = orca.IsAvailable();
+		
+		if (aval == Orca::NOT_INSTALLED) {
+			PromptOK(t_("OrcaWave is not installed"));
+			return;
+		} else if (aval ==	Orca::NOT_AVAILABLE) 
+			PromptOK(t_("OrcaWave is not available"));
 		
 		String label = butCapture.GetLabel();
 		
@@ -172,12 +175,12 @@ void Tools_OrcaLicense::Init() {
 void Tools_OrcaLicense::CheckAvailable() {
 	labCapture.SetText(t_("Checking now ..."));
 	Ctrl::ProcessEvents();
-	if (orca.IsAvailable()) {
+	if (orca.IsAvailable() == Orca::AVAILABLE) {
 		KillTimeCallback(12);
 		butCapture.SetLabel(t_("Check license"));
 		labCapture.SetText(Format(t_("OrcaWave is now available (%`)"), GetSysTime()));
 		PromptOK(t_("OrcaWave is now available"));
-	} else
+	} else // Orca::NOT_AVAILABLE) 
 		labCapture.SetText(t_("Checking if an OrcaWave license is available ..."));
 }
 

@@ -73,7 +73,7 @@ void MenuProcessInertia::CopyToBody() {
 	msh.dt.cg.y = _mb->menuProcess.y_g = ~y_g;
 	msh.dt.cg.z = _mb->menuProcess.z_g = ~z_g;
 	
-	msh.dt.cg0 = msh.dt.cg;
+	//msh.dt.cg0 = msh.dt.cg;
 	
 	if (opMass < 3) {
 		msh.dt.M.resize(6, 6);
@@ -86,6 +86,8 @@ void MenuProcessInertia::CopyToBody() {
 	msh.AfterLoad(Bem().rho, Bem().g, false, false);
 	_mb->UpdateLast(_idx);
 	_mb->mainView.FullRefresh(*_mb);
+	
+	Close();
 }
 
 void MenuProcessInertia::Init(MainBody &b, int idx) {

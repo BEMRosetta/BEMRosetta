@@ -371,8 +371,7 @@ void Body::Append(const Surface &orig, double rho, double g) {
 
 void Body::Reset(double rho, double g) {
 	dt.mesh = clone(dt.mesh0);
-	if (!IsNull(dt.cg0))
-		dt.cg = clone(dt.cg0);
+	dt.cg = clone(dt.cg0);
 	cdt.controlPointsA = clone(cdt.controlPointsA0);
 	cdt.controlPointsB = clone(cdt.controlPointsB0);
 	cdt.controlPointsC = clone(cdt.controlPointsC0);
@@ -560,6 +559,8 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 			fcb.Add(Vector3D(0, 0, allvol*rho*g), ccb, dt.c0);
 			
 			Force6D fcg = Surface::GetMassForce(dt.c0, base.dt.cg, GetMass(), g);
+			if (IsNull(fcg))
+				return;
 			for (const auto &d : base.cdt.controlLoads)
 				fcg += Surface::GetMassForce(dt.c0, d.p, d.mass, g);
 			

@@ -216,7 +216,7 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 	//CtrlLayout(arrayNodesUnder);
 	
 	arrayFacetsAll2.title.SetText(t_("Facet node ids"));
-	arrayFacetsAll2.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
+	arrayFacetsAll2.array.NoFocusSetCursor().MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayFacetsAll2.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsAll2.array);};
 	dataSourceFacetsAll.SetCount(5);
 	dataSourceFacetsAll[0].Init(msh, -1, true);
@@ -256,7 +256,7 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 	const char *xyz[] = {"x", "y", "z"};
 
 	arrayNodesMoved.title.SetText(t_("Node coordinates"));
-	arrayNodesMoved.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
+	arrayNodesMoved.array.NoFocusSetCursor().MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
 	arrayNodesMoved.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesMoved.array);};
 	dataSourceNodesMoved.SetCount(4);
 	dataSourceNodesMoved[0].Init(msh, -1, 0);

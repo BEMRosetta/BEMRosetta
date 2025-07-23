@@ -300,19 +300,20 @@ public:
 
 	static void __stdcall EnumerateVarsProc(const TVarInfo *lpVarInfo);
 	
-	bool IsAvailable() {
+	enum OrcaAvailable {AVAILABLE = 1, NOT_AVAILABLE = -1, NOT_INSTALLED = -2};
+	int IsAvailable() {
 		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
+			return NOT_INSTALLED;
 			
 		HINSTANCE test;
 		int status;	
 		CreateDiffraction(&test, &status);
 		if (status != 0)
-			return false;
+			return NOT_AVAILABLE;
 		DestroyDiffraction(test, &status);
 		if (status != 0)
-			return false;
-		return true;
+			return NOT_AVAILABLE;
+		return AVAILABLE;
 	}
 	
 	void LoadFlex(String owryml) {

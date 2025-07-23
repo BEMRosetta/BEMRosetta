@@ -211,7 +211,7 @@ void MainBody::Init() {
 	menuProcess.butSmooth.Tip(t_("Smooths the mesh using the Taubin method"));
 	
 	menuProcess.butInertia.SetCtrl(menuProcessInertia).Tip(t_("Click to get the inertia matrix"));
-	menuProcess.butInertia.SetAutoOpen();
+	//menuProcess.butInertia.SetAutoOpen();
 	
 	CtrlLayout(menuMove);	
 	
@@ -968,8 +968,18 @@ void MainBody::OnUpdateMass() {
 		
 		Body &msh = Bem().surfs[idx];
 		
+		if (msh.dt.under.volume <= 0) {
+			BEM::PrintError(t_("No body volume is under the water"));
+			return;
+		}
+		if (msh.dt.under.VolumeMatch(0.05, 0.05) < 0) {
+			BEM::PrintError(t_("Underwater mesh have a problem. Please review normals"));
+			return;
+		}
+		
 		double mass = msh.dt.under.volume*Bem().rho;
 		menuProcess.mass <<= mass;
+		menuProcessInertia.mass <<= mass;
 
 		OnUpdate(NONE, true);
 		
@@ -1118,6 +1128,8 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 		Body &msh = Bem().surfs[idx];
 
 		double mass = ~menuProcess.mass;
+		menuProcessInertia.mass <<= mass;
+		
 		double x_g = ~menuProcess.x_g;
 		double y_g = ~menuProcess.y_g;
 		double z_g = ~menuProcess.z_g;
@@ -1133,12 +1145,16 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 
 		msh.SetMass(mass);
 
-		if (action == NONE && (IsNull(mass) || IsNull(x_g) || IsNull(y_g) || IsNull(z_g))) {
-			BEM::PrintError(t_("Please fill CG data"));
+		if (action == NONE && (IsNull(mass) || mass <= 0)) {
+			BEM::PrintError(t_("Please set the mass"));
 			return;
 		}
-		if (action == NONE && (IsNull(mass) || IsNull(x_0) || IsNull(y_0) || IsNull(z_0))) {
-			BEM::PrintError(t_("Please fill centre of rotation data"));
+		if (action == NONE && (IsNull(x_g) || IsNull(y_g) || IsNull(z_g))) {
+			BEM::PrintError(t_("Please set the CG"));
+			return;
+		}
+		if (action == NONE && (IsNull(x_0) || IsNull(y_0) || IsNull(z_0))) {
+			BEM::PrintError(t_("Please set centre of rotation centre"));
 			return;
 		}
 				
@@ -1192,6 +1208,7 @@ void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
 			Point3D ncg(x_g, y_g, z_g);
 			if (msh.dt.cg != ncg) {
 				msh.dt.cg.Set(x_g, y_g, z_g);
+				msh.dt.cg0 = clone(msh.dt.cg);
 				BEM::PrintError(t_("Warning: Changing the position of the cg may have altered the inertia matrix."));
 			}
 			Point3D nc0(x_0, y_0, z_0);
@@ -1351,8 +1368,12 @@ void MainBody::OnAddPanel() {
 	WaitCursor waitcursor;
 	mainView.surf.Disable();
 	try {
-		Bem().AddFlatRectangle(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, 
-							 ~menuEdit.panWidthX, ~menuEdit.panWidthY);
+		double x = ~menuEdit.edit_x;
+		double y = ~menuEdit.edit_y;
+		double z = ~menuEdit.edit_z;
+		double widthX = ~menuEdit.panWidthX;
+		double widthY = ~menuEdit.panWidthY;
+		Bem().AddFlatRectangle(x - widthX/2., y - widthY/2., z, ~menuEdit.edit_size, widthX, widthY);
 		
 		Body &msh = Bem().surfs[Bem().surfs.size()-1];
 		msh.dt.name = t_("Panel");
@@ -1418,6 +1439,7 @@ DropCtrlDialogRevolution::DropCtrlDialogRevolution() {
 	CtrlLayout(*this);
 		
 	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
+	list.WhenPaste = THISBACK(UpdatePlot);
 	list.SetToolBar();
 	list.AddColumn(t_("y"), 15).Edit(y);
 	list.AddColumn(t_("z"), 15).Edit(z);
@@ -1447,6 +1469,7 @@ DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
 	CtrlLayout(*this);
 		
 	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
+	list.WhenPaste = THISBACK(UpdatePlot);
 	list.SetToolBar();
 	list.AddColumn(t_("x"), 15).Edit(x);
 	list.AddColumn(t_("y"), 15).Edit(y);
@@ -2598,10 +2621,14 @@ void MainGZ::OnUpdate() {
 			BEM::PrintError(t_("Wrong Z angle range"));
 			return;
 		}
-	
 		
 		Body &msh = Bem().surfs[idxOpened];	
 	
+		if (IsNull(msh.dt.cg)) {
+			BEM::PrintError(t_("cg is undefined"));
+			return;
+		}
+		
 		int numAngle = 1 + int((angleTo - angleFrom)/angleDelta);
 		
 		Progress progress(t_("GZ calculation..."), 100*numAngle); 
