@@ -1869,7 +1869,7 @@ public:
 				if (FileExists(defaultPath))
 					wamitPath = defaultPath;
 			}
-			if (IsNull(guiScale))
+			if (IsNull(guiScale) || guiScale == 0)
 				guiScale = 100;
 		}
 	}

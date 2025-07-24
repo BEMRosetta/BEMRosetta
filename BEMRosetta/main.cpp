@@ -560,7 +560,13 @@ GUI_APP_MAIN {
 		return;
 	}
 	
-	String errorJson = Bem().LoadSerializeJson();
+	String errorJson;
+	try {
+		errorJson = Bem().LoadSerializeJson();
+	} catch (Exc e) {
+		Exclamation(e);
+		return;
+	}
 	bool firstTime = !errorJson.IsEmpty();
 	if (firstTime) {
 		String str = errorJson + "\n" + t_("BEM config. data is not loaded. Defaults values are set"); 
