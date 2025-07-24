@@ -30,7 +30,7 @@ and next in Exit:
 
 ![Untitled4](https://github.com/BEMRosetta/BEMRosetta/assets/38589221/0297e39d-73de-41a5-8baf-93512e63a6d7)
 
-The sources are downloaded. To compile them, choose MyApps in the in the right, and BEMROsetta in the lower list:
+The sources are downloaded. To compile them, choose MyApps in the in the right, and BEMRosetta in the lower list:
 
 ![Untitled5](https://github.com/BEMRosetta/BEMRosetta/assets/38589221/f0365218-5eb0-40a4-abaa-e504ff2d2819)
 
