@@ -1439,7 +1439,6 @@ DropCtrlDialogRevolution::DropCtrlDialogRevolution() {
 	CtrlLayout(*this);
 		
 	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
-	list.WhenPaste = THISBACK(UpdatePlot);
 	list.SetToolBar();
 	list.AddColumn(t_("y"), 15).Edit(y);
 	list.AddColumn(t_("z"), 15).Edit(z);
@@ -1451,7 +1450,7 @@ DropCtrlDialogRevolution::DropCtrlDialogRevolution() {
 	SetDeactivate(false);
 	
 	butCancel.WhenAction = [&]() {Close();};
-	y.WhenAction = z.WhenAction = THISBACK(UpdatePlot);
+	y.WhenAction = z.WhenAction = list.WhenPaste = list.WhenRemoveRow = THISBACK(UpdatePlot);
 }
 	
 void DropCtrlDialogRevolution::UpdatePlot() {
@@ -1469,7 +1468,6 @@ DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
 	CtrlLayout(*this);
 		
 	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
-	list.WhenPaste = THISBACK(UpdatePlot);
 	list.SetToolBar();
 	list.AddColumn(t_("x"), 15).Edit(x);
 	list.AddColumn(t_("y"), 15).Edit(y);
@@ -1482,7 +1480,7 @@ DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
 	
 	butCancel.WhenAction = [&]() {Close();};
 	
-	x.WhenAction = y.WhenAction = THISBACK(UpdatePlot);
+	x.WhenAction = y.WhenAction = list.WhenPaste = list.WhenRemoveRow = THISBACK(UpdatePlot);
 }
 	
 void DropCtrlDialogPolynomial::UpdatePlot() {
