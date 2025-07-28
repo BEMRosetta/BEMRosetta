@@ -899,7 +899,9 @@ void Wamit::Save_out(String file) const {
 				for (int c = 0; c < 6; ++c)
 					out << Format(" % 10.4E", dt.msh[ibody].dt.M(r, c));
 			}
+			out	<< "\n";
 		}
+		out	<< "\n";
 	}
 	out << "\n\n\n";
 	out << " ------------------------------------------------------------------------\n"

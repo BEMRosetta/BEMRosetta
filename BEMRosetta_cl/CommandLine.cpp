@@ -311,7 +311,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	Cout() << "BEMRosetta";
 	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
 	
-	String str = S(". ") + t_("Copyright (c) 2024. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
+	String str = S(". ") + t_("Copyright (c) 2025. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
 	SetBuildInfo(str);
 	Cout() << str;
 	
