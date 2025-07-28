@@ -212,7 +212,7 @@ A series of short videos has been created to help you use the software's feature
 | [Get Lid and Hull](https://www.youtube.com/watch?v=mOueU1Hnh4U) | | X | | |
 | [Command line Presentation](https://www.youtube.com/watch?v=vY7_t6-_f-o) | X | X | | X |
 
-If you are missing any videos, please request it.
+If you are missing any video, please request it.
 	
 ## Acknowledgments
 
