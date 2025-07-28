@@ -3,16 +3,16 @@
 ## Binaries
 
 ### Windows
-No compiling is required. Just go to the [last release](https://github.com/BEMRosetta/BEMRosetta/releases), copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
+[This short video](https://www.youtube.com/watch?v=VMt0QTr-3SI) describes the steps. No compiling is required. Just go to the [last release](https://github.com/BEMRosetta/BEMRosetta/releases), copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
 
-## Compiling
+## GNU/Linux Compiling
+
+[This short video](https://www.youtube.com/watch?v=VPGCHyuXHa4) describes the steps.
 
 BEMRosetta is proudly developed with the [U++ framework](https://www.ultimatepp.org/) using the C++ language. 
 U++ makes C++ so simple and efficient that it appeals even to scripting language programmers.
 
 U++ is simple to [install](https://www.ultimatepp.org/www$uppweb$download$en-us.html). Uninstalling it is just a matter of deleting the install folder. 
-
-To avoid warnings, install **xdotool**.
 
 To compile BEMRosetta, open TheIDE (the U++ IDE), choose in the right the "MyApps" assembly, and tap on UppHub:
 
