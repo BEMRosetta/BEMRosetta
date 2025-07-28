@@ -3,7 +3,9 @@
 ## Binaries
 
 ### Windows
-[This short video](https://www.youtube.com/watch?v=VMt0QTr-3SI) describes the steps. No compiling is required. Just go to the [last release](https://github.com/BEMRosetta/BEMRosetta/releases), copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
+[This short video](https://www.youtube.com/watch?v=VMt0QTr-3SI) describes the steps. 
+
+No compiling is required. Just go to the [last release](https://github.com/BEMRosetta/BEMRosetta/releases), copy bin/BEMRosetta.exe and bin/BEMRosetta_cl.exe anywhere in your computer and dodge Windows warnings. 
 
 ## GNU/Linux Compiling
 
