@@ -29,7 +29,7 @@ struct HeadFreqConvert : Convert {
 
 void InitGrid(GridCtrl &grid, EditDouble edit[]) {
 	grid.Reset();
-	grid.Absolute().Editing().Clipboard().Sorting(false);
+	grid.Absolute().Editing().Clipboard().Sorting(false).FixedPaste().MultiSelect().SelectRow(false);
 	for (int i = 0; i < 6; ++i)
 		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(edit[i]);
 	for (int y = 0; y < 6; ++y)
@@ -47,7 +47,7 @@ MainSolverBody::MainSolverBody() {
 	fileMesh.WhenChange << [&] {butMesh.WhenAction(); return true;};
 	fileLid.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileLid.AllFilesType();
-	fileLid.WhenChange << [&] {butMesh.WhenAction(); return true;};
+	fileLid.WhenChange  << [&] {butLid.WhenAction(); return true;};
 	
 	x_g <<= 0;
 	y_g <<= 0;
@@ -132,7 +132,7 @@ void MainSolver::Init() {
 	};
 	bodies.array.SetWidth(60);
 	
-	const String bemFiles = ".cal .in .dat .nc .owr .yml";
+	const String bemFiles = ".cal .in .dat .nc .owr .yml .out .1 .2 .3 .3sc .3fk .hst .4 .7 .8 .9 .12d .12s .cfg .frc .pot .mmx";
 	String bemFilesAst = clone(bemFiles);
 	bemFilesAst.Replace(".", "*.");
 	loadFrom.Type(Format("All supported bem files (%s)", bemFiles), bemFilesAst);
@@ -324,35 +324,35 @@ void MainSolver::Load(String file) {
 	bodiesEachScroll.Clear();
 	for (int ib = 0; ib < tmp_hy.dt.msh.size(); ++ib) {
 		Body &tmp_b = tmp_hy.dt.msh[ib];
-		MainSolverBody &d = bodiesEach.Add();
+		MainSolverBody &b = bodiesEach.Add();
 		CtrlScroll &bscroll = bodiesEachScroll.Add();
-		CtrlLayout(d);
-		bodies.array.Add(bscroll.AddPane(d, true, true).SizePos(), tmp_b.dt.name);
+		CtrlLayout(b);
+		bodies.array.Add(bscroll.AddPane(b, true, true).SizePos(), tmp_b.dt.name);
 		
-		d.name <<= tmp_b.dt.name;
-		d.fileMesh <<= tmp_b.dt.fileName;
-		d.fileLid <<= tmp_b.dt.lidFile;  
+		b.name <<= tmp_b.dt.name;
+		b.fileMesh <<= tmp_b.dt.fileName;
+		b.fileLid <<= tmp_b.dt.lidFile;  
 		
 		if (tmp_b.IsEmpty())
-			Body::Load(d.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
+			Body::Load(b.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 		else
-			d.mesh = clone(tmp_b);
+			b.mesh = clone(tmp_b);
 
-		Body::Load(d.lid, tmp_b.dt.lidFile, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
+		Body::Load(b.lid, tmp_b.dt.lidFile, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 		
-		d.SetTexts();
+		b.SetTexts();
 		
-		d.x_0 = tmp_b.dt.c0.x;
-		d.y_0 = tmp_b.dt.c0.y;
-		d.z_0 = tmp_b.dt.c0.z;
-		d.x_g = Nvl(tmp_b.dt.cg.x, d.mesh.dt.cg.x);
-		d.y_g = Nvl(tmp_b.dt.cg.y, d.mesh.dt.cg.y);
-		d.z_g = Nvl(tmp_b.dt.cg.z, d.mesh.dt.cg.z);
+		b.x_0 = tmp_b.dt.c0.x;
+		b.y_0 = tmp_b.dt.c0.y;
+		b.z_0 = tmp_b.dt.c0.z;
+		b.x_g = Nvl(tmp_b.dt.cg.x, b.mesh.dt.cg.x);
+		b.y_g = Nvl(tmp_b.dt.cg.y, b.mesh.dt.cg.y);
+		b.z_g = Nvl(tmp_b.dt.cg.z, b.mesh.dt.cg.z);
 		
-		MatrixXdToGridCtrl(d.M, tmp_b.dt.M, 6, 6, 0);
-		MatrixXdToGridCtrl(d.Dlin, tmp_b.dt.Dlin, 6, 6, 0);
-		MatrixXdToGridCtrl(d.Dquad, tmp_b.dt.Dquad, 6, 6, 0);
-		MatrixXdToGridCtrl(d.Cadd, tmp_b.dt.Cadd, 6, 6, 0);
+		MatrixXdToGridCtrl(b.M, tmp_b.dt.M, 6, 6, 0);
+		MatrixXdToGridCtrl(b.Dlin, tmp_b.dt.Dlin, 6, 6, 0);
+		MatrixXdToGridCtrl(b.Dquad, tmp_b.dt.Dquad, 6, 6, 0);
+		MatrixXdToGridCtrl(b.Cadd, tmp_b.dt.Cadd, 6, 6, 0);
 	}
 	
 	bodies.array.SetCursor(0);
@@ -412,13 +412,13 @@ bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids) {
 		b.dt.c0[0]    = bodiesEach[i].x_0;
 		b.dt.c0[1]    = bodiesEach[i].y_0;
 		b.dt.c0[2]    = bodiesEach[i].z_0;
-		b.dt.cg[0] = bodiesEach[i].x_g;
-		b.dt.cg[1] = bodiesEach[i].y_g;
-		b.dt.cg[2] = bodiesEach[i].z_g;
-		b.dt.M = GridCtrlToMatrixXd(bodiesEach[i].M);
-		b.dt.Dlin = GridCtrlToMatrixXd(bodiesEach[i].Dlin);
-		b.dt.Dquad = GridCtrlToMatrixXd(bodiesEach[i].Dquad);
-		b.dt.Cadd = GridCtrlToMatrixXd(bodiesEach[i].Cadd);
+		b.dt.cg[0]    = bodiesEach[i].x_g;
+		b.dt.cg[1]    = bodiesEach[i].y_g;
+		b.dt.cg[2]    = bodiesEach[i].z_g;
+		b.dt.M 		  = GridCtrlToMatrixXd(bodiesEach[i].M);
+		b.dt.Dlin 	  = GridCtrlToMatrixXd(bodiesEach[i].Dlin);
+		b.dt.Dquad 	  = GridCtrlToMatrixXd(bodiesEach[i].Dquad);
+		b.dt.Cadd 	  = GridCtrlToMatrixXd(bodiesEach[i].Cadd);
 	}
 	
 	hy.dt.Nf = gen.listFreq.number;
@@ -551,16 +551,6 @@ void MainSolver::arrayOnDuplicate() {
 	last.name.WhenAction = [&]() {
 		bodies.array.grid.Set(bodies.array.GetCursor(), 0, ~sel.name);
 	};	
-	
-	
-/*	int nr = id + 1;
-	bodies.array.Insert(nr);
-	for (int c = 0; c < bodies.array.GetColumnCount(); ++c)
-		bodies.array.Set(nr, c, bodies.array.Get(id, c));
-	bodies.array.Disable();
-	bodies.array.SetCursor(nr);
-	bodies.array.Enable();
-	arrayOnCursor();*/
 }
 
 void MainSolver::arrayOnRemove() {
@@ -577,15 +567,6 @@ void MainSolver::arrayOnRemove() {
 	bodiesEach.Remove(id);
 	bodiesEachScroll.Remove(id);
 	bodies.array.SetCursor(max(id, bodiesEach.size()-1));
-	/*if (id >= bodies.array.GetCount()) {
-		id = bodies.array.GetCount()-1;
-		if (id < 0) {
-			arrayClear();
-			ArrayUpdateCursor();
-			return;
-		}
-	} 
-	bodies.array.SetCursor(id);*/
 }
 
 bool MainSolver::OnSave() {
@@ -616,11 +597,9 @@ bool MainSolver::OnSave() {
 			if (!ErrorOKCancel(Format(t_("Errors found in data:%s&Do you wish to continue?"), DeQtfLf(str))))
 				return false;
 		}
-		if (!DirectoryExists(folder)) {
-			//if (!PromptYesNo(Format(t_("Folder %s does not exist.&Do you wish to create it?"), DeQtfLf(folder))))
-			//	return false;
+		if (!DirectoryExists(folder))
 			RealizeDirectory(folder);
-		} else {
+		else {
 			if (!PromptYesNo(Format(t_("Folder %s contents will be overwritten.&Do you wish to continue?"), DeQtfLf(folder))))
 				return false;
 		}

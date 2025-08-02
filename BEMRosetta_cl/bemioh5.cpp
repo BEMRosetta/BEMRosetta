@@ -250,11 +250,11 @@ void BemioH5::Load_H5() {
 	if (IsLoadedB())
 		Compare_B(b);
 	if (IsLoadedFex())
-		Compare_F(dt.ex, ex, "Excitation");
+		Compare_F(dt.ex, ex, "Excitation forces");
 	if (IsLoadedFsc())
-		Compare_F(dt.sc, sc, "Scattering");
+		Compare_F(dt.sc, sc, "Scattering forces");
 	if (IsLoadedFfk())
-		Compare_F(dt.fk, fk, "Froude-Krylov");
+		Compare_F(dt.fk, fk, "Froude-Krylov forces");
 	
 	for (int ib = 0; ib < dt.msh.size(); ++ib)
 		if (IsNull(dt.msh[ib].dt.c0))

@@ -692,8 +692,8 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		const Body &b = dt.msh[ib];
 		const Body::Data &d = b.dt;
 		
-		double panelSize = 0;	///////////////////////////////////////////////////////////////////////
-		double separationFromBody = 0;		//////////////////////////////////////////////////////
+		double panelSize = d.under.GetAvgLenSegment();
+		double separationFromBody = panelSize*4;
 		
 		out <<	"  - BodyName: " << d.name << "\n"
 				"    BodyMeshPosition: [0, 0, 0]\n"

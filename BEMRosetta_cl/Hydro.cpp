@@ -516,19 +516,20 @@ void LineParserWamit::LoadWamitJoinedFields(String _line) {
 
 void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	dt.file = fileName;
+	String ext = ToLower(GetFileExt(fileName));
 	
 	String ret;
 	if (ToLower(GetFileName(fileName)) == "nemoh.cal")
 		ret = static_cast<Nemoh&>(*this).Load(fileName);
-	else if (ToLower(GetFileExt(fileName)) == ".in")
+	else if (ext == ".in")
 		ret = static_cast<Hams&>(*this).Load(fileName, Status); 
-	else if (ToLower(GetFileExt(fileName)) == ".dat") 
+	else if (ext == ".dat") 
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
-	else if (ToLower(GetFileExt(fileName)) == ".lis") 
+	else if (ext == ".lis") 
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
-	else if (ToLower(GetFileExt(fileName)) == ".ah1") 
+	else if (ext == ".ah1") 
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
-	else if (ToLower(GetFileExt(fileName)) == ".nc") {
+	else if (ext == ".nc") {
 		UArray<Hydro> hydros;
 		int num;
 		ret = CapyNC_Load(fileName, hydros, num);
@@ -536,11 +537,15 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 			*this = pick(First(hydros));
 	}
 #ifdef PLATFORM_WIN32	 
-	else if (ToLower(GetFileExt(fileName)) == ".owr")
+	else if (ext == ".owr")
 		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
 #endif	
-	else if (ToLower(GetFileExt(fileName)) == ".yml")
+	else if (ext == ".yml")
 		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
+	else if (ext == ".h5")
+		ret = static_cast<BemioH5&>(*this).Load(fileName, Status);
+	else if (S(".out.1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0)
+		ret = static_cast<Wamit&>(*this).Load(fileName, Status);
 	else
 		ret = t_("Unknown BEM input format");
 	
@@ -624,7 +629,9 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 	
 	if (type == BEM_FMT::HAMS)
 		ret = static_cast<const Hams&>(*this).Check();
-	
+	else if (type == BEM_FMT::AQWA_DAT)
+		ret = static_cast<const Aqwa&>(*this).Check();
+			
 	if (First(dt.w) <= 0.01)
 		ret << Format(t_("First frequency %f < 0.01 is too low"), First(dt.w));
 	

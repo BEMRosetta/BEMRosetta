@@ -1521,6 +1521,8 @@ public:
 	String Load(String file, Function <bool(String, int)> Status, double rho = Null);
 	void Save(String file, Function <bool(String, int)> Status) const;
 	void SaveCaseDat(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const;
+	UVector<String> Check() const;
+	
 	virtual ~Aqwa() noexcept {}
 	
 	bool Load(String fileName);

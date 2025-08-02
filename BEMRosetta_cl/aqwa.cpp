@@ -1232,6 +1232,19 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 			realih++;	
         }
 }
+
+UVector<String> Aqwa::Check() const {
+	UVector<String> ret;
+	
+	if (dt.Nf > 100)
+		ret << t_("The maximum number of allowed wave frequencies by AQWA is 100");
+	if (dt.Nh < 3)
+		ret << t_("The minimum number of allowed wave headings by AQWA is 3");
+	if (First(dt.w) < 0.1)
+		ret << t_("The minimum frequency allowed by AQWA is 0.1 rad/s");
+
+	return ret;
+}
 			
 String FastOut::Load_LIS(String file) {
 	FileInLine in(file);

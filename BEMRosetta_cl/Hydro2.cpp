@@ -1300,41 +1300,41 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 
 void Hydro::Compare_rho(Hydro &a) {
 	if (a.dt.rho != dt.rho)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Density rho"), a.dt.rho, dt.rho));
+		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Density rho"), a.dt.rho, dt.rho));
 }
 
 void Hydro::Compare_g(Hydro &a) {
 	if (a.dt.g != dt.g)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Gravity g"), a.dt.g, dt.g));
+		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Gravity g"), a.dt.g, dt.g));
 }
 
 void Hydro::Compare_h(Hydro &a) {
 	if (a.dt.h != dt.h)
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Water depth h"), a.dt.h, dt.h));
+		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Water depth h"), a.dt.h, dt.h));
 }
 
 void Hydro::Compare_Nb(Hydro &a) {
 	if (a.dt.Nb != dt.Nb)
-		throw Exc(Format(t_("%s is not the same %d<>%d"), t_("Number of bodies"), a.dt.Nb, dt.Nb));
+		throw Exc(Format(t_("When comparing %s values, %d<>%d"), t_("Number of bodies"), a.dt.Nb, dt.Nb));
 }
 
 void Hydro::Compare_w(Hydro &a) {
 	if (a.dt.Nf != dt.Nf)	
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of frequencies"), a.dt.Nf, dt.Nf));
+		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Number of frequencies"), a.dt.Nf, dt.Nf));
 	for (int i = 0; i < a.dt.Nf; ++i) {
 		if (!EqualRatio(a.dt.w[i], dt.w[i], 0.0001))
-			throw Exc(Format(t_("%s is not the same %f<>%f"), 
+			throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
 							Format(t_("#%d %s"), i+1, t_("frequency")), a.dt.w[i], dt.w[i]));
 	}
 }
 
 void Hydro::Compare_head(Hydro &a) {
 	if (a.dt.Nh != dt.Nh)	
-		throw Exc(Format(t_("%s is not the same %f<>%f"), t_("Number of headings"), a.dt.Nh, dt.Nh));
+		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Number of headings"), a.dt.Nh, dt.Nh));
 	for (int i = 0; i < a.dt.Nh; ++i) {
 		if (a.dt.head[i] != dt.head[i])
-			throw Exc(Format(t_("%s is not the same %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("frequency")), a.dt.w[i], dt.w[i]));
+			throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
+							Format(t_("#%d %s"), i+1, t_("heading")), a.dt.w[i], dt.w[i]));
 	}
 }
 
@@ -1344,8 +1344,8 @@ void Hydro::Compare_A(const UArray<UArray<VectorXd>> &a) {
 			for (int jdf = 0; jdf < 6*dt.Nb; ++jdf) {
 				double Aa = a[idf][jdf][ifr];
 				double Ab = dt.A[idf][jdf][ifr];
-				if (IsNum(Aa) && IsNum(Ab) && Aa != Ab)
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+				if (IsNum(Aa) && Aa != Ab)
+					throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idf+1, jdf+1), 
 							Aa, Ab));
 			}
@@ -1359,8 +1359,8 @@ void Hydro::Compare_B(const UArray<UArray<VectorXd>> &b) {
 			for (int jdf = 0; jdf < 6*dt.Nb; ++jdf) {
 				double Ba = b[idf][jdf][ifr];
 				double Bb = dt.B[idf][jdf][ifr];
-				if (IsNum(Ba) && IsNum(Bb) && Ba != Bb)
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+				if (IsNum(Ba) && Ba != Bb)
+					throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idf+1, jdf+1), 
 							Ba, Bb));
 			}
@@ -1375,7 +1375,7 @@ void Hydro::Compare_C(Hydro &a) {
 				double Ca = a.dt.msh[ib].dt.C(idf, jdf);
 				double Cb = dt.msh[ib].dt.C(idf, jdf);
 				if (IsNum(Ca) && IsNum(Cb) && !EqualRatio(Ca, Cb, 0.0001))
-					throw Exc(Format(t_("%s is not the same %f<>%f"), 
+					throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
 							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
 							Ca, Cb));
 			}
@@ -1386,8 +1386,8 @@ void Hydro::Compare_C(Hydro &a) {
 void Hydro::Compare_cg(Hydro &a) {
 	for (int i = 0; i < 3; i++) {
 		for (int ib = 0; ib < a.dt.Nb; ib++) {
-			if (a.dt.msh[ib].dt.cg[i] != dt.msh[ib].dt.cg[i])
-				throw Exc(Format(t_("%s is not the same %f<>%f"), 
+			if (IsNum(a.dt.msh[ib].dt.cg[i]) && a.dt.msh[ib].dt.cg[i] != dt.msh[ib].dt.cg[i])
+				throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
 						Format(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
 							a.dt.msh[ib].dt.cg[i], dt.msh[ib].dt.cg[i]));
 		}
@@ -1401,8 +1401,8 @@ void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
 				for (int idf = 0; idf < 6; ++idf) {
 					std::complex<double> Fa = a[ib][ih](ifr, idf);
 					std::complex<double> Fb = b[ib][ih](ifr, idf);
-					if (IsLoadedForce(a, idf, ih) && Fa != Fb)
-						throw Exc(Format(t_("%s is not the same %f:%f<>%f:%f"), 
+					if (IsLoadedForce(a, idf, ih) && IsNum(Fa) && Fa != Fb)
+						throw Exc(Format(t_("When comparing %s values, %f:%f<>%f:%f"), 
 								Format(t_("%s[%d][%d](%d, %d)"), type, ib+1, ih+1, ifr+1, idf+1), 
 								Fa.real(), Fa.imag(), Fb.real(), Fb.imag()));
 				}

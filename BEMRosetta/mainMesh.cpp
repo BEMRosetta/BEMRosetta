@@ -1438,7 +1438,7 @@ void MainBody::OnExtract() {
 DropCtrlDialogRevolution::DropCtrlDialogRevolution() {
 	CtrlLayout(*this);
 		
-	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
+	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard().FixedPaste().SelectRow(false);;
 	list.SetToolBar();
 	list.AddColumn(t_("y"), 15).Edit(y);
 	list.AddColumn(t_("z"), 15).Edit(z);
@@ -1467,7 +1467,7 @@ void DropCtrlDialogRevolution::UpdatePlot() {
 DropCtrlDialogPolynomial::DropCtrlDialogPolynomial() {
 	CtrlLayout(*this);
 		
-	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard();//.Navigating();
+	list.Appending().Removing().Editing().Sorting(false).MultiSelect().Clipboard().FixedPaste().SelectRow(false);;
 	list.SetToolBar();
 	list.AddColumn(t_("x"), 15).Edit(x);
 	list.AddColumn(t_("y"), 15).Edit(y);
