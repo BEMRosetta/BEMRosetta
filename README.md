@@ -210,6 +210,7 @@ A series of short videos has been created to help you use the software's feature
 | [From mesh to case in less than 4 mins](https://www.youtube.com/watch?v=ACKvyERhNYI) | | X | X | X |
 | [Revolution Mesh](https://www.youtube.com/watch?v=45blMIfCnYc) | | X | | |
 | [Get Lid and Hull](https://www.youtube.com/watch?v=mOueU1Hnh4U) | | X | | |
+| [Mesh Extrusion](https://www.youtube.com/watch?v=IpbnkSVZtuQ&t=97s) | | X | | |
 | [Command line Presentation](https://www.youtube.com/watch?v=vY7_t6-_f-o) | X | X | | X |
 
 If you are missing any video, please request it.
