@@ -55,7 +55,7 @@ MenuProcessInertia::MenuProcessInertia() {
 	y_g <<= THISBACK(Action);
 	z_g <<= THISBACK(Action);
 	
-	grid.MultiSelect().Removing(false).Clipboard().Sorting(false).Absolute().Editing().SelectRow(false);;
+	grid.MultiSelect().Removing(false).Clipboard().Sorting(false).Absolute().Editing().SelectRow(false);
 	for (int i = 0; i < 6; ++i) {
 		edit[i].NotNull();
 		grid.AddColumn(BEM::StrDOF(i), 50).Edit(edit[i]);

@@ -173,8 +173,7 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 					int _idf = ib*6 + idf/*hydro.GetOrder()[ib*6 + idf]*/;
 					int _jdf = ib*6 + jdf/*hydro.GetOrder()[ib*6 + jdf]*/;
 	
-					if (hy.IsLoadedA() && hy.IsLoadedB() && 
-						IsNum(hy.dt.A[_idf][_jdf][0]) && IsNum(hy.dt.B[_idf][_jdf][0])) {
+					if (hy.IsLoadedA(_idf, _jdf) && hy.IsLoadedB(_idf, jdf)) {
 						arrayCases.Add(false, ib+1, BEM::StrDOF(idf), BEM::StrDOF(jdf));
 						int row = arrayCases.GetCount()-1;
 						arrayCases.SetCtrl(row, 0, options.Add());

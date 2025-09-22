@@ -3,10 +3,10 @@
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		GEOMVIEW_OFF,    BEM_MESH, 			 UNKNOWN, 		NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"GEOMVIEW .off", "BEMRosetta .mesh", "By extension", "Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true, 		     true,				 true, 		    false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.off", 	     "*.mesh", 		     "*.*"};       
+// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		GEOMVIEW_OFF,    BEM_MESH, 			 MOORING_MESH, UNKNOWN, 		NUMMESH};	
+const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"GEOMVIEW .off", "BEMRosetta .mesh", "Mooring",    "By extension", "Unknown"};	
+const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true, 		     true,				 false,        true, 		    false};       
+const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.off", 	     "*.mesh", 		     "*.out*",     "*.*"};       
 
 int Body::idCount = 0;
 
@@ -55,7 +55,9 @@ void Body::Data::Copy(const Body::Data &msh) {
 	mesh = clone(msh.mesh);
 	under = clone(msh.under);
 	mesh0 = clone(msh.mesh0);
-		
+	
+	//fastAble = msh.fastAble;
+	
 	SetCode(msh.GetCode());
 	SetId(msh.GetId());
 }
@@ -73,26 +75,27 @@ void Body::ControlData::Copy(const Body::ControlData &msh) {
 	damagedBodies = clone(msh.damagedBodies);
 }
 
-String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
+	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z, idxs);
 }
 	
-String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z, const UVector<int> &idxs) {
 	UArray<Body> msh;
-	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
+	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z, idxs);
 	if (!ret.IsEmpty())
 		return ret;
 	mesh = pick(First(msh));
 	return ret;
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
+	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z, idxs);
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, 
+		bool &y0z, bool &x0z, const UVector<int> &idxs) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
@@ -148,7 +151,12 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		ret = CapyBody::Load_NC(mesh, file, g);
 	else if (ext == ".fst") 
 		ret = FASTBody::Load_Fst(mesh, file);
-	else if (ext == ".stl") {
+	else if (ext == ".out" || ext == ".outb") {
+		String ret = Bem().fast.Load(file);
+		if (!ret.IsEmpty())
+			return ret;
+		MeshBody::Load_Out(mesh);
+	} else if (ext == ".stl") {
 		bool isText;
 		Body &m = mesh.Add();
 		try {
@@ -209,8 +217,6 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 				}
 			}
 		}
-		//Last(mesh).dt.fileName = file;
-		//Last(mesh).dt.SetCode(Body::BEM_MESH);
 	} else
 		ret = Format(t_("Unknown mesh file format '%s'"), GetFileExt(file));	
 	
@@ -247,7 +253,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 
 void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
-	ASSERT(meshes.size() == fileNames.size());
+	//ASSERT(meshes.size() == fileNames.size());
 	
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(First(fileNames)));
@@ -455,10 +461,14 @@ void Body::Report(double rho) const {
 }
 
 bool Body::IsSymmetricX() {
+	if (IsNull(dt.mesh.env.maxX) || IsNull(dt.mesh.env.minX) || IsNull(dt.cb))
+		return false;
 	return abs(dt.cb.x)/abs(dt.mesh.env.maxX - dt.mesh.env.minX) < 0.001 && abs(dt.mesh.env.maxX + dt.mesh.env.minX) < 0.001;
 }
 
 bool Body::IsSymmetricY() {
+	if (IsNull(dt.mesh.env.maxX) || IsNull(dt.mesh.env.minX) || IsNull(dt.cb))
+		return false;
 	return abs(dt.cb.y)/abs(dt.mesh.env.maxY - dt.mesh.env.minY) < 0.001 && abs(dt.mesh.env.maxY + dt.mesh.env.minY) < 0.001;
 }
 

@@ -13,6 +13,17 @@
 using namespace Upp;
 
 
+String FormatDoubleEmpty(double val);
+String FormatIntEmpty(int val);
+
+String GetFASTVar(const String &strFile, String varName, String paragraph = "");
+String GetFASTVarPos(const String &strFile, String varName, String paragraph, int &pos);
+void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
+void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd);
+double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
+MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
+UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
+
 class BasicBEM {
 public:
 	enum DOFType {DOF123, DOFSurgeSway, DOFxyz};
@@ -20,7 +31,11 @@ public:
 	static const char *strDOFType[];
 	static const char *strHeadingType[];
 	enum Symmetry {SYM_NO, SYM_XZ, SYM_YZ, SYM_XZ_YZ, SYM_AXISYMMETRIC};
+	
+	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 };
+
+#include "FastOut.h"
 
 class BEM;
 BEM &Bem();
@@ -36,7 +51,7 @@ class Body : public Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST, GEOMVIEW_OFF, BEM_MESH, UNKNOWN, NUMMESH};	
+	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST, GEOMVIEW_OFF, BEM_MESH, MOORING_MESH, UNKNOWN, NUMMESH};	
 	static const char *meshStr[];
 	static const bool meshCanSave[];
 	static const char *meshExt[];
@@ -84,10 +99,10 @@ public:
 		return UNKNOWN;
 	}
 
-	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
-	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
-	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
-	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z, const UVector<int> &idxs);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z, const UVector<int> &idxs);
 	
 	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
 	void RemovePanels(const UVector<int> &panels, double rho, double g);
@@ -184,6 +199,8 @@ public:
 		String lidFile;
 		
 		Surface mesh, under, mesh0;
+		
+		//bool fastAble = false;
 		
 		void SetId(int iid) {
 			//ASSERT(iid >= 0);
@@ -291,7 +308,7 @@ public:
 	Hydro& operator=(const Hydro &hyd) 	{Copy(hyd); return *this;};
 	Hydro(const Hydro &hyd) 			{Copy(hyd);}
 	Hydro(const Hydro &hyd, int) 		{Copy(hyd);}
-	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null, int ib = -1);
+	void SaveAs(String file, Function <bool(String, int)> Status = Null, BEM_FMT type = UNKNOWN, int qtfHeading = Null, int ib = -1, double heading = Null);
 	void Report() const;
 	Hydro() {}
 	virtual ~Hydro() noexcept {}	
@@ -586,16 +603,19 @@ public:
 	inline double B_toNDimFactor(int ifr, int idf, int jdf) const {return !dt.dimen ? 1 : 1/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	inline double B_fromDimFactor(int ifr, int idf, int jdf)const {return dt.dimen ? 1 : 1/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	
-	inline double C_toDimFactor (int idf, int jdf) const 		  {return dt.dimen  ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
+	inline double C_toDimFactor (int idf, int jdf) const 		  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
 	inline double C_toNDimFactor(int idf, int jdf) const 		  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
 
 	inline double Kirf_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim()  : g_rho_dim()*pow(dt.len, GetK_F(idf));}
 	inline double Kirf_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	
-	inline double CMoor_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? 1 : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
+	inline double CMoor_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
 	inline double CMoor_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
 	
-	inline double F_toDimFactor(int idf)  const 				  {return dt.dimen  ? g_rho_ndim()/g_rho_dim()  : g_rho_dim()*pow(dt.len, GetK_F(idf));}
+	inline double CAdd_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
+	inline double CAdd_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
+	
+	inline double F_toDimFactor(int idf)  const 				  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_F(idf));}
 	inline double F_toNDimFactor(int idf) const 				  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	inline double F_fromDimFactor(int idf)const 				  {return dt.dimen  ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	
@@ -611,6 +631,7 @@ public:
 	inline double A_P_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? A_P_ndim(ifr, idf, jdf) : A_P_dim(ifr, idf, jdf);}
 	
 	inline double A0_dim(int idf, int jdf)   		 	const {return dt.A0(idf, jdf)*A_toDimFactor(idf, jdf);}
+	MatrixXd A0_mat(bool ndim, int ib1, int ib2) 		const;
 	inline double A0_ndim(int idf, int jdf)  		 	const {return dt.A0(idf, jdf)*A_toNDimFactor(idf, jdf);}
 	inline double A0_(bool ndim, int idf, int jdf) 		const {return ndim   ? A0_ndim(idf, jdf) : A0_dim(idf, jdf);}
 	inline double Ainf_dim(int idf, int jdf) 		 	const {return dt.Ainf(idf, jdf)*A_toDimFactor(idf, jdf);}
@@ -657,6 +678,12 @@ public:
 	inline double CMoor_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cmoor(idf, jdf)*CMoor_toNDimFactor(idf, jdf);}
 	inline double CMoor_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CMoor_ndim(ib, idf, jdf) : CMoor_dim(ib, idf, jdf);}
 
+	inline double CAdd_dim(int ib, int idf, int jdf)   const {return dt.msh[ib].dt.Cadd(idf, jdf)*CAdd_toDimFactor(idf, jdf);}
+	MatrixXd CAdd_mat(bool ndim, int ib) 			   	const;
+	void CAdd_dim(bool ndim, int ib) const;
+	inline double CAdd_ndim(int ib, int idf, int jdf)  const {return dt.msh[ib].dt.Cadd(idf, jdf)*CAdd_toNDimFactor(idf, jdf);}
+	inline double CAdd_(bool ndim, int ib, int idf, int jdf)const {return ndim ? CAdd_ndim(ib, idf, jdf) : CAdd_dim(ib, idf, jdf);}
+	
 	// MD
 	
 	double Md_dim(int idf, int ih, int ifr)  const {
@@ -802,10 +829,10 @@ public:
 	    int dimenSTS;					// false if data is dimensionless
 	    String stsProcessor;
 	    
-	    VectorXd  qw;		 			// [Nf]             Wave frequencies
-	    VectorXcd qhead;				// [Nh]             Wave headings
-	    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;// [Nb][Nh][6](Nf, Nf)	
-	    bool qtfdataFromW = true;
+	    VectorXd  qw;		 								// [Nf]             Wave frequencies
+	    VectorXcd qhead;									// [Nh]             Wave headings
+	    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;	// [Nb][Nh][6](Nf, Nf)	
+	    //bool qtfdataFromW = true;
 	    int qtftype = 0;				// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field	
 		
 		/* The priority is:
@@ -817,7 +844,7 @@ public:
 	    VectorXcd mdhead;						// [Nh]             Wave headings
 		UArray<UArray<UArray<VectorXd>>> md;	// [Nb][Nh][6](Nf)	
 		int mdtype = 0;							// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field		
-	    					
+	    				
 	    UVector<double> w;		 				// [Nf]             Wave frequencies
 	    		
 	   	UArray<Body> msh;						// [Nb]
@@ -888,7 +915,7 @@ public:
 				 PLOT_TFS_1, PLOT_TFS_2, PLOT_MD, PLOT_B_H, PLOT_A_P, PLOT_B_P, 
 				 PLOT_FORCE_FK_1_P, PLOT_FORCE_FK_2_P, PLOT_FORCE_SC_1_P, PLOT_FORCE_SC_2_P,
 				 PLOT_FORCE_FK_1_P_BMR, PLOT_FORCE_FK_2_P_BMR, PLOT_UNKNOWN};
-	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_KMOOR, MAT_DAMP_QUAD};
+	enum DataMatrix {MAT_K, MAT_A, MAT_DAMP_LIN, MAT_M, MAT_KMOOR, MAT_DAMP_QUAD, MAT_KADD};
 				 
 	static const char *StrDataToPlot(DataToPlot dataToPlot) {
 		return strDataToPlot[dataToPlot];
@@ -912,6 +939,7 @@ public:
 		return true;
 	}
 	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));}
+	bool IsLoadedCAdd(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cadd.size() > 0 && dt.msh[ib].dt.Cadd.rows() > idf && dt.msh[ib].dt.Cadd.cols() > jdf && IsNum(dt.msh[ib].dt.Cadd(idf, jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.M.size() > 0 && dt.msh[ib].dt.M.rows() > idf && dt.msh[ib].dt.M.cols() > jdf && IsNum(dt.msh[ib].dt.M(idf, jdf));}
 	bool IsLoadedAnyM() const {
 		for (int ib = 0; ib < dt.Nb; ++ib)
@@ -1059,6 +1087,7 @@ public:
 	void GetAinf();
 	void GetAinf_w();
 	void GetRAO(double critDamp);
+	void GetDampingMatrix(double critDamp);
 	void GetB_H(int &num);
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
 				const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2, double critDamp);
@@ -1072,6 +1101,9 @@ public:
 	String SpreadNegative(Function <bool(String, int)> Status);
 	void MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase);
 	void AddWave(int ib, double dx, double dy, double g);
+	
+	//void NewmannApproximation();
+	//void StandingBrendlingWilsonApproximation();
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);
@@ -1234,6 +1266,8 @@ protected:
 	String hydroFolder;
 	int WaveNDir = Null;
 	double WaveDirRange = Null;
+	
+	static bool IsHAMS(String file, String &controlfile);
 };
 
 
@@ -1321,6 +1355,14 @@ public:
 	virtual ~FASTBody() noexcept {}
 };
 
+class MeshBody : public Body {
+public:
+	static void Load_Out(UArray<Body> &mesh);
+	static void SetLineTime(Body &body, int idtime);
+	
+	virtual ~MeshBody() noexcept {}
+};
+
 class DiodoreBody : public Body {
 public:
 	static String LoadDat(UArray<Body> &mesh, String fileName);
@@ -1340,8 +1382,8 @@ public:
 class Wamit : public Hydro {
 public:
 	Wamit() {}
-	String Load(String file, Function <bool(String, int)> Status);
-	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null) const;
+	String Load(String file, bool isHams, int iperout, Function <bool(String, int)> Status);
+	void Save(String file, Function <bool(String, int)> Status, bool force_T = false, int qtfHeading = Null, double heading = Null) const;
 	void Save_out(String file) const;
 	virtual ~Wamit() noexcept {}
 	
@@ -1357,8 +1399,8 @@ public:
 	void SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	
 protected:
-	void ProcessFirstColumnPot(UVector<double> &w, UVector<double> &T, int iperin);
-	bool ProcessFirstColumn1_3(UVector<double> &w, UVector<double> &T, int iperout);
+	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
+	void ProcessFirstColumn1_3(UVector<double> &w, int iperout);
 	
 	bool Load_cfg(String fileName, int &iperin, int &iperout);
 	bool Load_pot(String fileName);
@@ -1369,24 +1411,24 @@ protected:
 	static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
 	bool Load_HDF(Function <bool(String, int)> Status);
 	void Load_A(FileInLine &in, MatrixXd &A);
-	bool Load_Scattering(String fileName, int iperout);
-	bool Load_FK(String fileName, int iperout);
+	bool Load_Scattering(String fileName, int &iperout);
+	bool Load_FK(String fileName, int &iperout);
 	
-	bool Load_Forces(String fileName, Hydro::Forces &force, int iperout, bool israohams = false);
+	bool Load_Forces(String fileName, Hydro::Forces &force, int &iperout, bool israohams = false);
 		
-	bool Load_1(String fileName, int iperout);				
-	bool Load_3(String fileName, int iperout);
+	bool Load_1(String fileName, int &iperout, bool isHams);				
+	bool Load_3(String fileName, int &iperout);
 	bool Load_hst(String fileName);
-	bool Load_4(String fileName, int iperout);
-	bool Load_12(String fileName, bool isSum, Function <bool(String, int)> Status);
-	bool Load_789(String fileName, int iperout);
-	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int iperout);
+	bool Load_4(String fileName, int &iperout);
+	bool Load_12(String fileName, bool isSum, int iperout, Function <bool(String, int)> Status);
+	bool Load_789(String fileName, int &iperout);
+	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int &iperout);
 	
 	void Save_1(String fileName, bool force_T = false) const;
 	void Save_3(String fileName, bool force_T = false) const;
 	void Save_hst(String fileName) const;
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
-				bool force_T = false, bool force_Deg = true, int qtfHeading = Null) const;
+				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T, bool force_Deg) const;
 	void Save_FRC(String fileName, bool force1st, bool withQTF) const;
 	void Save_POT(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
@@ -1399,7 +1441,10 @@ protected:
 	
 	void Save_Fnames(String folder) const;
 	void Save_Config(String folder, int numThreads) const;
-	void Save_CFG(String fileName, bool withQTF, bool lid) const;
+	void Save_CFG(String fileName, bool withQTF, bool lid, bool force_T) const;
+
+private:
+	int GuessIperin(const UVector<double> &w);
 };
 
 class Hams : public Wamit {
@@ -1411,7 +1456,7 @@ public:
 	bool Load_Settings(String settingsFile);
 	bool Load_HydrostaticBody(String fileName, double rhog);
 	
-	bool Load_ControlFile(String fileName);
+	int Load_ControlFile(String fileName);
 	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
 	UVector<String> Check() const;
 	
@@ -1531,6 +1576,7 @@ private:
 	bool Load_AH1();
 	bool Load_LIS(double &factorMass, Function <bool(String, int)> Status);
 	bool Load_QTF(double factorMass);
+	bool Load_MQT();
 	void Save_QTF(String file, Function <bool(String, int)> Status) const;
 };
 
@@ -1719,6 +1765,7 @@ public:
 	int numValsA = Null;
 	int onlyDiagonal;
 	int zeroIfEmpty = false;
+	bool opT = 0;
 	
 	String nemohPath, nemoh115Path, nemoh3Path, nemohPathGREN;
 	bool experimental;
@@ -1761,7 +1808,7 @@ public:
 	void FillFrequencyGapsABForcesZero(int id);
 	void FillFrequencyGapsQTFZero(int id);
 	
-	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
+	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated, const UVector<int> &idxs);
 	void SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type, Body::MESH_TYPE meshType, bool symX, bool symY);
 	void HealingBody(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
@@ -1792,12 +1839,12 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc"	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .3sc .3fk .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc"	// Priority
 #ifdef PLATFORM_WIN32
 		" .owr"
 #endif
 	;
-	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat"};	// Any of these files opens all, and it is avoided to load them again
+	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat.mqt"};	// Any of these files opens all, and it is avoided to load them again
 	String bemFilesAst;
 	
 	int GetBEMExtSet(String file) {
@@ -1853,6 +1900,7 @@ public:
 			("wamitPath", wamitPath)
 			("guiScale", guiScale)
 			("windowTitle", windowTitle)
+			("opT", opT)
 		;
 		if (json.IsLoading()) {
 			dofType = BasicBEM::DOFType(idofType);
@@ -1875,8 +1923,6 @@ public:
 				guiScale = 100;
 		}
 	}
-	
-	enum DOF {SURGE = 0, SWAY, HEAVE, ROLL, PITCH, YAW};
 
 	static String StrBDOF(int i, bool abrev) {
 		int ib = i/6 + 1;
@@ -1983,6 +2029,8 @@ public:
 	static const char *strDOFtext[];
 	static const char *strDOFnum_sub[];
 	
+	FastOut fast;
+	
 private:
 	static const char *strDOFnum[];
 	static const char *strDOFxyz[];
@@ -1998,7 +2046,7 @@ bool OUTB(int id, T total) {
 
 class Mooring : public Moveable<Mooring> {
 public:
-	Mooring() {}
+	Mooring() {vessels.Add(Vessel("vessel", 0, 0));}
 	Mooring(const Mooring &mooring, int) {Copy(mooring);}
 	Mooring(const Mooring &mooring) 	 {Copy(mooring);}
 	void Copy(const Mooring &mooring) {
@@ -2008,8 +2056,10 @@ public:
 	}
 	
 	bool Load(String file);
+	bool LoadMoordyn(String file);
 	bool Save(String file);
-	bool Calc(double x, double y, double rho_water);
+	bool SaveMoordyn(String file, bool fillAll, int mooring);
+	bool Calc(double rho_water, int num = 50, double rho_m3 = 7850);	// Steel);
 	String Test();
 	void Jsonize(JsonIO &json);
 	
@@ -2022,9 +2072,12 @@ public:
 			mass = d.mass;
 			diameter = d.diameter;
 			bl = d.bl;
+			ea = d.ea;
+			bazeta = d.bazeta;
 		}
 		String name;
 		double mass, diameter, bl;
+		String ea, bazeta;
 		void Jsonize(JsonIO &json);
 	};
 	UVector<LineType> lineTypes;
@@ -2039,6 +2092,7 @@ public:
 			name = line.name;
 			nameType = line.nameType;
 			length = line.length;
+			numseg = line.numseg;
 			from = line.from;
 			to = line.to;
 			status = line.status;
@@ -2054,6 +2108,7 @@ public:
 		
 		String name, nameType;
 		double length;
+		int numseg;
 		String from, to;
 		void Jsonize(JsonIO &json);
 		
@@ -2066,7 +2121,7 @@ public:
 
 	struct Connection : Moveable<Connection> {
 		String name;
-		int type;
+		String where;
 		double x, y, z;
 		void Jsonize(JsonIO &json);
 	};
@@ -2074,22 +2129,42 @@ public:
 	
 	Connection &GetConnection(String name);
 	
-	double depth;
+	struct Vessel : Moveable<Vessel> {
+		Vessel() {};
+		Vessel(String name, double dx, double dy) : name(name), dx(dx), dy(dy) {}; 
+		String name;
+		double dx = 0, dy = 0;
+		void Jsonize(JsonIO &json);
+	};
+	UVector<Vessel> vessels;
+	
+	int FindVessel(const String &name) {
+		for (int i = 0; i < vessels.size(); ++i) {
+			if (vessels[i].name == name)
+				return i;
+		}
+		return -1;
+	}
+	
+	struct ClosestInfo {
+	    int line1;
+	    int point1;
+	    int line2;
+	    int point2;
+	    double distance;
+	};		
+	bool FindClosest(ClosestInfo &info);
+	
+	double depth = Null;
+	double dtM = Null;
+	double kbot = Null;
+	double cbot = Null;
+	double dtIC = Null;
+	double TmaxIC = Null;
+	double CdScaleIC = Null;
+	double threshIC = Null;
 };
 	
-String FormatDoubleEmpty(double val);
-String FormatIntEmpty(int val);
-
-
-String GetFASTVar(const String &strFile, String varName, String paragraph = "");
-String GetFASTVarPos(const String &strFile, String varName, String paragraph, int &pos);
-void SetFASTVar(String &strFile, String varName, String value, String paragraph = "");
-void GetFASTMatrixIds(const String &strFile, String var, int row, int col, int &posIni, int &posEnd);
-double GetFASTMatrixVal(const String &strFile, String var, int row, int col);
-MatrixXd GetFASTMatrix(const String &strFile, String var, int rows, int cols);
-UVector<UVector<String>> GetFASTArray(const String &strFile, String var, String paragraph = "");	
-
-
 class Wind {
 public:
 	String Load(String fileName, String ext = "");

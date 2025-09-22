@@ -3,38 +3,76 @@
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <STEM4U/Utility.h>
+#include <STEM4U/SeaWaves.h>
 
 
-String Hams::Load(String file, Function <bool(String, int)> Status) {
-	dt.file = file;	
-	dt.name = GetFileTitle(file);
+String Hams::Load(String filein, Function <bool(String, int)> Status) {
+	dt.file = filein;	
+	dt.name = GetFileTitle(filein);
 	
 	dt.x_w = dt.y_w = 0;
 	
-	String baseFolder = GetFileFolder(GetFileFolder(file));
+	String baseFolder = GetFileFolder(GetFileFolder(filein));
 	
 	try {
-		if (GetFileExt(file) != ".in") 
-			return Format(t_("File '%s' is not of HAMS type"), file);
+		if (GetFileExt(filein) != ".in") 
+			return Format(t_("File '%s' is not of HAMS type"), filein);
 			
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + Format(t_("Loading '%s'"), filein));
 
 		dt.solver = Hydro::HAMS_WAMIT;
 		
-		String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
+		int output_frequency_type = 0;
+		String controlFile = AFX(baseFolder, "Input", "ControlFile.in");
+		if (FileExists(controlFile)) 
+			output_frequency_type = Load_ControlFile(controlFile);
 		
-		String ret = Wamit::Load(wamitFile, Status);
+		int iperout;
+		switch (output_frequency_type) {// HAMS						-> Wamit
+		case 1:	iperout = 3;	break;	// deepwater wave number    -> Infinite-depth wavenumber	KL = ω2L∕g
+		case 2:	iperout = 4;	break;	// finite-depth wave number	-> Finite-depth wavenumber
+		case 3:	iperout = 2;	break;	// wave frequency			-> Frequency 	ω = 2π∕T
+		case 4:	iperout = 1;	break;	// wave period				-> Period in seconds 	T
+		case 5:	iperout = 5;	break;	// 							   wave length
+		}
+
+		String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
+		String ret = Wamit::Load(wamitFile, true, iperout, Status);
 		if (!ret.IsEmpty()) 
 			return ret;
 		
+		String hydroFile = AFX(baseFolder, "Input", "Hydrostatic.in");
+		if (FileExists(hydroFile)) 
+			LoadHydrostatic(hydroFile);
+		
+		String settingsFile = AFX(baseFolder, "Settings.ctrl");
+		if (FileExists(settingsFile))
+			Load_Settings(settingsFile);
+		
+		// If Hydrostatic.in exists and the .hst file is filled with zeroes
+		String hydrostaticFile = AFX(baseFolder, "Hydrostatic.in");
+		if (FileExists(hydrostaticFile)) {
+			bool iszero = true;
+			if (IsLoadedC()) {
+				for (int i = 0; i < 36; ++i) {
+					if (abs(dt.msh[0].dt.C.array()(i)) > 1E-8) {
+						iszero = false;
+						break;
+					}
+				}
+			}
+			if (iszero && !Load_HydrostaticBody(hydrostaticFile, dt.rho*dt.g))
+				return Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile);
+		}
+			
 		if (IsNull(dt.Nb))
 			return t_("No body found");
 
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
-		//dt.lastError = e;
 		return e;
 	}
+	/*
 	try {		
 		double rhog = g_rho_dim();
 		String settingsFile = AFX(baseFolder, "Settings.ctrl");
@@ -45,7 +83,7 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 		if (FileExists(controlFile)) 
 			Load_ControlFile(controlFile);
 			
-		String hydrostaticFile = AFX(baseFolder, /*"Input", */"Hydrostatic.in");
+		String hydrostaticFile = AFX(baseFolder, //"Input", //"Hydrostatic.in");
 		if (FileExists(hydrostaticFile)) {
 			bool iszero = true;
 			if (IsLoadedC()) {
@@ -57,11 +95,11 @@ String Hams::Load(String file, Function <bool(String, int)> Status) {
 				}
 			}
 			if (iszero && !Load_HydrostaticBody(hydrostaticFile, rhog))
-				throw Exc("\n" + Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile));
+				return Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile);
 		}
 	} catch (Exc e) {
-		BEM::PrintWarning("\nWarning: " + e);
-	}
+		return e;	
+	}*/
 	
 	return String();
 }
@@ -135,16 +173,18 @@ UVector<String> Hams::Check() const {
 	UVector<String> ret;
 	
 	if (dt.msh.size() != 1)
-		ret << t_("HAMS just allows one body");
+		ret << t_("HAMS issue: Just one body allowed");
 
 	return ret;
 }
 
-bool Hams::Load_ControlFile(String fileName) {
+int Hams::Load_ControlFile(String fileName) {
+	dt.g = 9.80665;		// Is constant
+
 	fileName = AFX(GetFileFolder(fileName), "ControlFile.in");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
-		return false;
+		return 0;
 	
 	dt.solver = Hydro::HAMS_WAMIT;
 	
@@ -168,12 +208,12 @@ bool Hams::Load_ControlFile(String fileName) {
 			dt.h = f.GetDouble(1);
 		else if (var == "Input_frequency_type") {
 			input_frequency_type = f.GetInt(1); 
-			if (input_frequency_type != 3 && input_frequency_type != 4)
-				throw Exc(t_("HAMS loader just allows loading input_frequency_type = 3 wave frequency or 4 wave period"));
+			if (input_frequency_type < 1 || input_frequency_type > 5)
+				throw Exc(t_("Wrong input_frequency_type"));
 		} else if (var == "Output_frequency_type") {
-			output_frequency_type = f.GetInt(1);
-			if (output_frequency_type != 3 && output_frequency_type != 4)
-				throw Exc(t_("HAMS loader just allows loading output_frequency_type = 3 wave frequency or 4 wave period"));
+			output_frequency_type = f.GetInt(1); 
+			if (output_frequency_type < 1 || output_frequency_type > 5)
+				throw Exc(t_("Wrong output_frequency_type"));
 		} else if (var == "Number_of_frequencies") {
 			int Nf = f.GetInt(1);
 			if (!IsNull(dt.Nf)) {
@@ -199,25 +239,23 @@ bool Hams::Load_ControlFile(String fileName) {
 				if (f.size() < 2)
 					throw Exc(t_("Frequencies or periods not found"));
 
-				double delta;
-				for (int i = 0; i < f.size(); ++i) {
-					if (input_frequency_type == 3)
-						data << f.GetDouble(i);
-					else
-						data.At(0, 2*M_PI/f.GetDouble(i));
-					if (i == 1)
-						delta = data[i] - data[i-1];
-					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 2)) {
-						BEM::PrintWarning(t_("HAMS loader just allows equidistant frequencies"));
-						continue;
-					}
+				for (int i = 0; i < f.size(); ++i)
+					data << f.GetDouble(i);
+				if (Nf != data.size())
+					throw Exc(Format(t_("Number of frequencies mismatch (%d != %d)"), Nf, data.size()));
+			}
+			for (double &dat : data) {
+				switch (input_frequency_type) {
+				case 1:	dat = sqrt(dt.g*dat);										break;
+				case 2:	dat = SeaWaves::FrequencyFromWaveNumber(dat, dt.h, dt.g);	break;
+				case 3:	break;
+				case 4:	dat = 2*M_PI/dat;											break;
+				case 5:	dat = SeaWaves::FrequencyFromWaveLength(dat, dt.h, dt.g);	break;
 				}
 			}
-			if (dt.w.IsEmpty()) {
+			if (dt.w.IsEmpty())
 				dt.w = pick(data);
-				/*for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-					dt.T[ifr] = 2*M_PI/dt.w[ifr];*/
-			} else if (!CompareDecimals(dt.w, data, 3))
+			else if (!CompareDecimals(dt.w, data, 3))
 				throw Exc(t_("List of frequencies does not match with previously loaded"));
 
 		} else if (var == "Number_of_headings") {
@@ -245,18 +283,10 @@ bool Hams::Load_ControlFile(String fileName) {
 				if (f.size() < 1)
 					throw Exc(t_("Headings not found"));
 				
-				double delta = 0;
-				for (int i = 0; i < f.size(); ++i) {
+				for (int i = 0; i < f.size(); ++i)
 					data << f.GetDouble(i);
-					if (i == 1)
-						delta = data[i] - data[i-1];
-					else if (i > 1 && !EqualDecimals(delta, data[i] - data[i-1], 2)) {
-						BEM::PrintWarning(t_("HAMS loader just allows equidistant headings"));
-						continue;
-					}
-				}
 			}
-			if (dt.head.IsEmpty()) 
+			if (dt.head.IsEmpty())
 				dt.head = pick(data);
 			else if (!CompareDecimals(dt.head, data, 2))
 				throw Exc(t_("List of headings does not match with previously loaded"));
@@ -275,9 +305,10 @@ bool Hams::Load_ControlFile(String fileName) {
 			String lidFile = AFX(GetFileFolder(fileName), "WaterplaneMesh.pnl");
 			if (FileExists(lidFile))
 				body.dt.lidFile = lidFile;
-		}
+		} else if (var == "Reference_body_length")
+			dt.len = f.GetDouble(1);
 	}
-	return LoadHydrostatic(AFX(GetFileFolder(fileName), "Hydrostatic.in"));
+	return output_frequency_type;
 }
 
 bool Hams::LoadHydrostatic(String fileName) {
@@ -439,7 +470,7 @@ void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
 		for (int x = 0; x < 6; ++x)
-			out << "   " << Format("%.5E", isvoid ? 0. : mat(x, y));
+			out << Format("  %12.5E", isvoid ? 0. : mat(x, y));
 	}
 }
 
@@ -482,7 +513,8 @@ void Hams::Save_Settings(String folderInput, const UArray<Body> &lids) const {
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
 	Body mesh;
-	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
+	UVector<int> idxs;
+	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false, idxs);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
@@ -530,7 +562,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	out << "\n    Number_of_frequencies      " << freqs.size();
 	
 	out << "\n    ";
-	for (const auto &freq : freqs)
+	for (const double &freq : freqs)
 		out << Format("%.4f ", freq);	
 	out << "\n   #End Definition of Wave Frequencies"
 		   "\n"
@@ -539,7 +571,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	UVector<double> headings;
 	LinSpaced(headings, dt.Nh, First(dt.head), Last(dt.head));
 	out << "\n    ";
-	for (const auto &heading : headings)
+	for (const double &heading : headings)
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";

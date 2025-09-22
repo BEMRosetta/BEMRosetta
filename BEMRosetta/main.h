@@ -322,8 +322,8 @@ public:
 	SurfaceCanvas surf;
 	
 private:
-	//const MainBody *main = nullptr;
 	bool paintSelect = true;
+	double prevTime = Null;
 };
 
 class VideoSequence {
@@ -483,9 +483,8 @@ public:
 	void OnRefresh();
 	
 	TabCtrlEM tab;
-	Splitter moved;//, movedUnder;
-	WithMainPlotList<StaticRect> arrayFacetsAll2, arrayNodesMoved;//,
-								 //arrayFacetsUnder, arrayNodesUnder;
+	Splitter moved;
+	WithMainPlotList<StaticRect> arrayFacetsAll2, arrayNodesMoved;
 	StatusBar status;
 	
 	class DataSourceFacets : public Convert {
@@ -960,11 +959,11 @@ private:
 	void UpdatePlot();
 };
 
-class DropCtrlDialogPolynomial : public WithMenuBodyEditPolynomial<DropCtrlDialog> {
+class DropCtrlDialogPolygon : public WithMenuBodyEditPolygon<DropCtrlDialog> {
 public:
-	typedef DropCtrlDialogPolynomial CLASSNAME;
+	typedef DropCtrlDialogPolygon CLASSNAME;
 	
-	DropCtrlDialogPolynomial();
+	DropCtrlDialogPolygon();
 		
 private:	
 	EditDouble x, y;
@@ -1037,7 +1036,7 @@ public:
 	DropCtrlDialogLoads dialogLoads;
 	DropCtrlDialogDamage dialogDamage;
 	DropCtrlDialogRevolution dialogRevolution;
-	DropCtrlDialogPolynomial dialogPolynomial;
+	DropCtrlDialogPolygon dialogPolygon;
 	
 	bool GetShowBody()			{return menuPlot.showBody;}
 	bool GetShowUnderwater()	{return menuPlot.showUnderwater;}
@@ -1064,11 +1063,10 @@ private:
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
 	void LoadDragDrop();
-	
-	Button::Style styleRed, styleGreen, styleBlue;
-	
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
+	
+	Button::Style styleRed, styleGreen, styleBlue;
 	
 	FormatConvert convExponential;
 	
@@ -1098,7 +1096,7 @@ public:
 	
 	MainSolverBody();
 	
-	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6];
+	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6], editMoor[6];
 	Body mesh, lid;
 	
 	void SetTexts(bool updateInertia = false);
@@ -1126,10 +1124,6 @@ public:
 	UArray<CtrlScroll> bodiesEachScroll;
 	WithMainSolver_Save<StaticRect> save;
 	
-	virtual void DragAndDrop(Point p, PasteClip& d);
-	virtual bool Key(dword key, int count);
-	void LoadDragDrop();
-	
 private:
 	bool OnLoad();
 	bool OnSave();
@@ -1146,6 +1140,9 @@ private:
 	EditDouble editF, editH;
 	int dropSolverVal = 0;
 	
+	virtual void DragAndDrop(Point p, PasteClip& d);
+	virtual bool Key(dword key, int count);
+	void LoadDragDrop();
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
 };
@@ -1186,8 +1183,16 @@ protected:
 		}
 		int nr = id + 1;
 		array.Insert(nr);
-		for (int c = 0; c < array.GetColumnCount(); ++c)
-			array.Set(nr, c, array.Get(id, c));
+		for (int c = 0; c < array.GetColumnCount(); ++c) {
+			if (c == 0) {
+				String name = array.Get(id, c).ToString();		// Increments the first if it is a name and a num
+				int num = ScanDouble(name);
+				if (!IsNull(num))
+					name = FormatInt(++num);
+				array.Set(nr, c, name);
+			} else
+				array.Set(nr, c, array.Get(id, c));
+		}
 		array.Disable();
 		array.SetCursor(nr);
 		array.Enable();
@@ -1210,7 +1215,7 @@ protected:
 			id = array.GetCount()-1;
 			if (id < 0) {
 				ArrayClear();
-				ArrayUpdateCursor();
+				//ArrayUpdateCursor();
 				return;
 			}
 		} 
@@ -1260,6 +1265,25 @@ public:
 	
 	void Init(Mooring &mooring);
 	virtual void Load();
+	void LoadDrop();
+	virtual void Save();
+	
+private:
+	Mooring *pmooring = nullptr;
+	
+	virtual void InitArray();	
+	virtual bool ArrayUpdateCursor();
+	virtual void ArrayOnCursor();
+	virtual void ArrayClear();
+};
+
+class MainMoor_Vessels : public WithMainMoor_Vessels<StaticRect>, public ArrayFields  {
+
+public:
+	typedef MainMoor_Vessels CLASSNAME;
+	
+	void Init(Mooring &mooring);
+	virtual void Load();
 	virtual void Save();
 	
 private:
@@ -1278,33 +1302,58 @@ public:
 	void Init();
 	
 	Splitter splitter;
-	Box scat;
-	ScatterCtrl scatLateral, scatUp;
+	//Box scat;
+	//ScatterCtrl scatLateral, scatUp;
+	SurfaceCanvas view;
+	Surface surf;
+
+	void FullRefresh(bool fit);
+	
 	WithMainMoorRight<StaticRect> right;
 	MainMoor_LinesTypes lineTypes;
 	MainMoor_LineProperties lineProperties;
 	MainMoor_Connections lineConnections;
+	MainMoor_Vessels lineVessels;
 	
 	void Jsonize(JsonIO &json) {
 		if (json.IsLoading())
 			right.fileMoor <<= "";
+		else
+			dropExportId = right.dropExport.GetIndex();
 		json
 			("file", right.fileMoor)
+			("dropExportId", dropExportId)
 		;
 		if (json.IsLoading()) {
 			if (right.fileMoor.IsEmpty())
 				right.fileMoor <<= "You can open 'BEMRosetta/examples/mooring/demo.json'";
+			if (IsNull(dropExportId) || dropExportId < 0)
+				dropExportId = 0;
 		}
 	}
 	
 private:
 	Mooring mooring;
+	Mooring::ClosestInfo cl;
 	
-	UVector<double> px, py, pz;
+	//UVector<double> px, py, pz;
+	int dropExportId = Null;
 	
 	bool OnLoad();
 	bool OnSave();
-	void OnUpdate();
+	void OnUpdate(bool fit = false);
+	void LoadVesselPositionArray();
+	
+	virtual void DragAndDrop(Point p, PasteClip& d);
+	virtual bool Key(dword key, int count);
+	void LoadDragDrop();
+	TimeCallback timerDrop;
+	UVector<String> filesToDrop;
+	
+	friend MainMoor_LinesTypes;
+	friend MainMoor_LineProperties;
+	friend MainMoor_Connections;
+	friend MainMoor_Vessels;
 };
 
 class MainDecay_Files : public WithMainDecay_Files<StaticRect>, public ArrayFields {
@@ -1360,6 +1409,15 @@ private:
 	int prevTw;
 };
 
+class Tools_MooringInfo : public WithTools_MooringInfo<StaticRect> {
+public:
+	typedef Tools_MooringInfo CLASSNAME;
+	Tools_MooringInfo() {}
+	
+	bool Init();
+	void OnCalc();
+};
+
 #ifdef PLATFORM_WIN32
 class Tools_OrcaLicense : public WithTools_OrcaLicense<StaticRect> {
 public:
@@ -1383,6 +1441,7 @@ public:
 	TabCtrlEM tab;
 	
 	Tools_WaveInfo waveInfo;
+	Tools_MooringInfo mooringInfo;
 #ifdef PLATFORM_WIN32
 	Tools_OrcaLicense orcaLicense;
 #endif
@@ -1732,7 +1791,7 @@ public:
 	MainABForce mainMD;
 	MainRAO mainRAO;
 	MainStateSpace mainStateSpace;
-	MainMatrixKA mainMatrixK, mainMatrixK2;
+	MainMatrixKA mainMatrixK, mainMatrixK2, mainMatrixKAdd;
 	MainMatrixKA mainMatrixA;
 	MainMatrixKA mainMatrixDlin, mainMatrixDquad;
 	MainMatrixKA mainMatrixM;
@@ -1748,15 +1807,15 @@ private:
 	MainABForce &GetSelABForce();
 	MainStateSpace &GetSelStateSpace();
 
-	int AskQtfHeading(const Hydro &hy);
+	int AskQtfHeading(const Hydro &hy, double &heading);
 		
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
 	void LoadDragDrop();
-	String BEMFile(String fileFolder) const;
-	
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
+	
+	String BEMFile(String fileFolder) const;
 	
 	String saveFolder;
 	int dropExportId;
@@ -1877,7 +1936,7 @@ String ArrayModel_GetTitle(ArrayCtrl &array, int row = -1);
 void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, String fileName);
 		
 Main &Ma(Main *m = 0);
-void Status(String str = String(), int time = 2000);
+void Status(String str = String(), int time = 6000);
 
 	
 #endif

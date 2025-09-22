@@ -25,13 +25,14 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 
 	butAdd <<= THISBACK(ArrayOnAdd);
 	butDuplicate <<= THISBACK(ArrayOnDuplicate);
-	butRemove <<= THISBACK(ArrayOnRemove);
+	butRemove.WhenAction = [&]{ArrayOnRemove();	GetDefinedParent<MainMoor>(this).OnUpdate();};
 	
 	InitArray();
 	
 	edName.WhenAction 		= [&] {ArrayUpdateCursor();};
 	dropLineType.WhenAction	= [&] {ArrayUpdateCursor();};
 	edLength.WhenAction		= [&] {ArrayUpdateCursor();};
+	edNumSeg.WhenAction		= [&] {ArrayUpdateCursor();};
 	dropFrom.WhenAction		= [&] {ArrayUpdateCursor();};
 	dropTo.WhenAction		= [&] {ArrayUpdateCursor();};
 }
@@ -39,13 +40,14 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 void MainMoor_LineProperties::InitArray() {
 	array.Reset();
 	array.SetLineCy(EditField::GetStdHeight()).MultiSelect();
-	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array);};
+	array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, array, true, true, [&]{ArrayUpdateCursor();});};
 	
 	array.AddColumn(t_("Name"), 40);
 	array.AddColumn(t_("Line type"), 40);
-	array.AddColumn(t_("Length"), 40);
 	array.AddColumn(t_("From"), 40);
 	array.AddColumn(t_("To"), 40);
+	array.AddColumn(t_("Length [m]"), 40);
+	array.AddColumn(t_("Num. Segs."), 40);
 }
 
 bool MainMoor_LineProperties::ArrayUpdateCursor() {
@@ -58,24 +60,26 @@ bool MainMoor_LineProperties::ArrayUpdateCursor() {
 		} else
 			id = array.GetCount()-1;
 	}	
-			
-	array.Set(id, 0, ~edName);
-	array.Set(id, 1, ~dropLineType);
-	array.Set(id, 2, ~edLength);
-	array.Set(id, 3, ~dropFrom);
-	array.Set(id, 4, ~dropTo);
+	
+	int col = 0;		
+	array.Set(id, col++, ~edName);
+	array.Set(id, col++, ~dropLineType);
+	array.Set(id, col++, ~dropFrom);
+	array.Set(id, col++, ~dropTo);
+	array.Set(id, col++, ~edLength);
+	array.Set(id, col++, ~edNumSeg);
 
 	Mooring &mooring = *pmooring;
-	//Mooring temp = clone(mooring);
 	
 	Save();
 	String error = mooring.Test();
 	if (!error.IsEmpty()) {
 		BEM::PrintError(error);
-		//mooring = clone(temp);
 		Load();
 		return false;
 	}
+	
+	GetDefinedParent<MainMoor>(this).OnUpdate();
 	
 	return true;
 }
@@ -85,17 +89,20 @@ void MainMoor_LineProperties::ArrayOnCursor() {
 	if (id < 0)
 		return;
 	
-	edName 		 <<= array.Get(id, 0);
-	dropLineType <<= array.Get(id, 1);
-	edLength 	 <<= array.Get(id, 2);
-	dropFrom 	 <<= array.Get(id, 3);
-	dropTo		 <<= array.Get(id, 4);
+	int col = 0;
+	edName 		 <<= array.Get(id, col++);
+	dropLineType <<= array.Get(id, col++);
+	dropFrom 	 <<= array.Get(id, col++);
+	dropTo		 <<= array.Get(id, col++);
+	edLength 	 <<= ScanDouble(array.Get(id, col++).ToString());
+	edNumSeg 	 <<= ScanInt(array.Get(id, col++).ToString());
 }
 
 void MainMoor_LineProperties::ArrayClear() {
 	edName <<= Null;
 	dropLineType <<= Null;
 	edLength <<= Null;
+	edNumSeg <<= Null;
 	dropFrom <<= Null;
 	dropTo <<= Null;
 }
@@ -106,7 +113,7 @@ void MainMoor_LineProperties::Load() {
 	
 	for (int id = 0; id < mooring.lineProperties.size(); ++id) {
 		const auto &val = mooring.lineProperties[id];
-		array.Add(val.name, val.nameType, val.length, val.from, val.to);
+		array.Add(val.name, val.nameType, val.from, val.to, val.length, val.numseg);
 	}
 	LoadDrop();
 	if (mooring.lineProperties.size() > 0)
@@ -118,11 +125,13 @@ void MainMoor_LineProperties::Save() {
 	
 	mooring.lineProperties.SetCount(array.GetCount());
 	for (int id = 0; id < mooring.lineProperties.size(); ++id) {
-		mooring.lineProperties[id].name 	= array.Get(id, 0);
-		mooring.lineProperties[id].nameType = array.Get(id, 1);
-		mooring.lineProperties[id].length 	= array.Get(id, 2);
-		mooring.lineProperties[id].from 	= array.Get(id, 3);
-		mooring.lineProperties[id].to 		= array.Get(id, 4);
+		int col = 0;
+		mooring.lineProperties[id].name 	= array.Get(id, col++);
+		mooring.lineProperties[id].nameType = array.Get(id, col++);
+		mooring.lineProperties[id].from 	= array.Get(id, col++);
+		mooring.lineProperties[id].to 		= array.Get(id, col++);
+		mooring.lineProperties[id].length 	= ScanDouble(array.Get(id, col++).ToString());
+		mooring.lineProperties[id].numseg 	= ScanInt(array.Get(id, col++).ToString());
 	}
 }
 

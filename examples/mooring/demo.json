@@ -4,7 +4,8 @@
 			"name": "Chain142",
 			"mass": 403.3,
 			"diameter": 0.2556,
-			"BL": 1722000000
+			"BL": 1722000000,
+			"EA": 0
 		}
 	],
 	"lineProperties": [
@@ -54,87 +55,94 @@
 	"connections": [
 		{
 			"name": "1",
-			"type": 118,
+			"where": "vessel",
 			"x": 3.5,
 			"y": 46.062,
 			"z": -8.5
 		},
 		{
 			"name": "5",
-			"type": 118,
+			"where": "vessel",
 			"x": -7,
 			"y": 40,
 			"z": -8.5
 		},
 		{
 			"name": "9",
-			"type": 118,
+			"where": "vessel",
 			"x": -7,
 			"y": -40,
 			"z": -8.5
 		},
 		{
 			"name": "13",
-			"type": 118,
+			"where": "vessel",
 			"x": 3.5,
 			"y": -46.062,
 			"z": -8.5
 		},
 		{
 			"name": "17",
-			"type": 118,
+			"where": "vessel",
 			"x": 72.782,
 			"y": -6.062,
 			"z": -8.5
 		},
 		{
 			"name": "21",
-			"type": 118,
+			"where": "vessel",
 			"x": 72.782,
 			"y": 6.062,
 			"z": -8.5
 		},
 		{
 			"name": "4",
-			"type": 97,
+			"where": "fixed",
 			"x": -250,
 			"y": 533,
 			"z": -135
 		},
 		{
 			"name": "8",
-			"type": 97,
+			"where": "fixed",
 			"x": -302,
 			"y": 503,
 			"z": -135
 		},
 		{
 			"name": "12",
-			"type": 97,
+			"where": "fixed",
 			"x": -302,
 			"y": -503,
 			"z": -135
 		},
 		{
 			"name": "16",
-			"type": 97,
+			"where": "fixed",
 			"x": -250,
 			"y": -533,
 			"z": -135
 		},
 		{
 			"name": "20",
-			"type": 97,
+			"where": "fixed",
 			"x": 621.26,
 			"y": -30.01,
 			"z": -135
 		},
 		{
 			"name": "24",
-			"type": 97,
+			"where": "fixed",
 			"x": 621.26,
 			"y": 30.01,
 			"z": -135
+		}
+	],
+	"vessels": [
+		{
+			"name": "vessel",
+			"dx": 29,
+			"dy": 0
 		}
 	],
 	"depth": 135

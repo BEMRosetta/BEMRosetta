@@ -52,10 +52,10 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 		if (dt.solver != Hydro::SEAFEM_NEMOH) {
 			BEM::Print(S("\n- ") + t_("Hydrostatics file(s) 'Mesh/Hydrostatics*.dat'"));
 			if (!Load_Hydrostatics(folder, "Mesh"))
-				BEM::PrintWarning(S(": ** Mesh/Hydrostatics*.dat ") + t_("Not found") + "**");
+				BEM::Print(S(": ** Mesh/Hydrostatics*.dat ") + t_("Not found") + "**");
 			BEM::Print(S("\n- ") + t_("KH file(s) 'Mesh/KH*.dat'"));
 			if (!Load_KH(folder, "Mesh"))
-				BEM::PrintWarning(S(": ** Mesh/KH ") + t_("Not found") + "**");
+				BEM::Print(S(": ** Mesh/KH ") + t_("Not found") + "**");
 			
 			dynamic_cast<Wamit *>(this)->Load_frc2(ForceExtSafer(fileCal, ".frc"));
 			
@@ -70,19 +70,19 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 		} 
 		BEM::Print(S("\n- ") + t_("Radiation file 'RadiationCoefficients.tec'"));
 		if (!Load_Radiation(fileRad))
-			BEM::PrintWarning(S(": ** RadiationCoefficients.tec ") + t_("Not found") + "**");
+			BEM::Print(S(": ** RadiationCoefficients.tec ") + t_("Not found") + "**");
 
 		BEM::Print(S("\n- ") + t_("Excitation force file 'ExcitationForce.tec'"));
 		if (!Load_Excitation(folderForces))
-			BEM::PrintWarning(S(": ** ExcitationForce.tec ") + t_("Not found") + "**");
+			BEM::Print(S(": ** ExcitationForce.tec ") + t_("Not found") + "**");
 		
 		BEM::Print(S("\n- ") + t_("Diffraction force file 'DiffractionForce.tec'"));
 		if (!Load_Diffraction(folderForces))
-			BEM::PrintWarning(S(": ** DiffractionForce.tec ") + t_("Not found") + "**");
+			BEM::Print(S(": ** DiffractionForce.tec ") + t_("Not found") + "**");
 		
 		BEM::Print(S("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
 		if (!Load_FroudeKrylov(folderForces))
-			BEM::PrintWarning(S(": ** FKForce.tec ") + t_("Not found") + "**");
+			BEM::Print(S(": ** FKForce.tec ") + t_("Not found") + "**");
 		
 		if (dt.solver == Hydro::NEMOHv3) {
 			Load_Inertia(folder, "mechanics");
@@ -101,7 +101,7 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 		if (dt.solver == Hydro::NEMOH) {
 			BEM::Print(S("\n- ") + t_("IRF file(s) 'IRF.tec'"));
 			if (!Load_IRF(AFX(folder, "Results", "IRF.tec")))
-				BEM::PrintWarning(S(": ** IRF.tec ") + t_("Not found") + "**");
+				BEM::Print(S(": ** IRF.tec ") + t_("Not found") + "**");
 		}
 		if (IsNull(dt.Nb))	
 			return t_("No body found");
@@ -170,7 +170,6 @@ bool Nemoh::Load_Cal(String fileName) {
 			body.dt.fileName = AFX(GetFileFolder(fileName), body.dt.fileName);
 			if (!FileExists(body.dt.fileName)) 
 				BEM::PrintWarning(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), body.dt.fileName));
-				//throw Exc(in.Str() + "\n"  + Format(t_("Mesh file '%s ' not found"), file));
 		}
 		body.dt.name = GetFileTitle(body.dt.fileName);
 		if (Find(names, body.dt.name) >= 0) {
@@ -670,30 +669,30 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 		out << NemohField(Format("%s", file), cp) << "! Name of mesh file" << "\n";
 		out << NemohField(Format("%d %d", nNodes, nPanels), cp) << "! Number of points and number of panels" << "\n";	
 		out << NemohField(Format("%d", countDOF), cp) << "! Number of degrees of freedom" << "\n";	
-		if (listDOF[BEM::SURGE])
+		if (listDOF[BasicBEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Surge" << "\n";	
-		if (listDOF[BEM::SWAY])
+		if (listDOF[BasicBEM::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Sway" << "\n";	
-		if (listDOF[BEM::HEAVE])
+		if (listDOF[BasicBEM::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Heave" << "\n";	
-		if (listDOF[BEM::ROLL])
+		if (listDOF[BasicBEM::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Roll about a point" << "\n";	
-		if (listDOF[BEM::PITCH])
+		if (listDOF[BasicBEM::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Pitch about a point" << "\n";	
-		if (listDOF[BEM::YAW])		
+		if (listDOF[BasicBEM::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Yaw about a point" << "\n";	
 		out << NemohField(Format("%d", countDOF), cp) << "! Number of resulting generalised forces" << "\n";	
-		if (listDOF[BEM::SURGE])
+		if (listDOF[BasicBEM::SURGE])
 			out << NemohField("1 1. 0. 0. 0. 0. 0.", cp) << "! Force in x direction" << "\n";	
-		if (listDOF[BEM::SWAY])
+		if (listDOF[BasicBEM::SWAY])
 			out << NemohField("1 0. 1. 0. 0. 0. 0.", cp) << "! Force in y direction" << "\n";	
-		if (listDOF[BEM::HEAVE])
+		if (listDOF[BasicBEM::HEAVE])
 			out << NemohField("1 0. 0. 1. 0. 0. 0.", cp) << "! Force in z direction" << "\n";	
-		if (listDOF[BEM::ROLL])
+		if (listDOF[BasicBEM::ROLL])
 			out << NemohField(Format("2 1. 0. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Moment force in x direction about a point" << "\n";	
-		if (listDOF[BEM::PITCH])
+		if (listDOF[BasicBEM::PITCH])
 			out << NemohField(Format("2 0. 1. 0. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Moment force in y direction about a point" << "\n";	
-		if (listDOF[BEM::YAW])		
+		if (listDOF[BasicBEM::YAW])		
 			out << NemohField(Format("2 0. 0. 1. %.2f %.2f %.2f", b.dt.c0[0], b.dt.c0[1], b.dt.c0[2]), cp) << "! Moment force in z direction about a point" << "\n";	
 		out << NemohField("0", cp) << "! Number of lines of additional information" << "\n";
 	}
@@ -979,9 +978,7 @@ bool Nemoh::Load_12(String fileName, bool isSum, Function <bool(String, int)> St
 	::Copy(w, dt.qw);
 	::Copy(head, dt.qhead);
 	
-	dt.qtfdataFromW = !(w[0] > w[1]);
-	
-	if (!dt.qtfdataFromW) 
+	if (w[0] > w[1]) // Supposed. To be improved by reading "iperout" from nemoh.cal
 		for (int i = 0; i < dt.qw.size(); ++i)
    			dt.qw(i) = 2*M_PI/dt.qw(i);
 	

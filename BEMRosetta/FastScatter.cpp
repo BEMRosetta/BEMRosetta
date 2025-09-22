@@ -28,11 +28,19 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.butCalc <<= THISBACK(OnCalc);
 	compare.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, compare.array);};
 	
-	compare.file.WhenChange  = [&] {return OnLoadCompare();};
-	compare.file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
+	compare.fileMetrics.WhenChange  = [&] {
+		bool ret = OnLoadCompare();
+		if (ret) {
+			FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
+			pf->AddHistoryMetrics(~compare.fileMetrics);
+		}
+		return ret;
+	};
+	compare.fileMetrics.activeDir = GetDesktopFolder();
+	compare.fileMetrics.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file with set of parameters and metrics"));
-	compare.file.Type(t_("json file"), "*.json").Type(t_("All files"), "*.*"); 
-	compare.butLoad.Tip(t_("Loads parameters and metrics file")) << [&] {compare.file.DoGo();};
+	compare.fileMetrics.Type(t_("json file"), "*.json").Type(t_("All files"), "*.*"); 
+	compare.butLoad.Tip(t_("Loads parameters and metrics file")) << [&] {compare.fileMetrics.DoGo();};
 	compare.butSave.Tip(t_("Saves parameters and metrics")) << [&] {OnSaveCompare();};
 	
 	compare.arrayStats.AddColumn(t_("Parameter"), 80);
@@ -41,7 +49,41 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.arrayStats.GetColumn(1).Edit(edits.Add()); 
 	compare.arrayStats.AddColumn(t_("Statistics"), 200);
 	compare.arrayStats.GetColumn(2).Edit(edits.Add()); 
-	compare.arrayStats.Proportional().Clipboard().Editing().Removing().Appending().Duplicating().SetToolBar();
+	compare.arrayStats.Proportional().Clipboard().Editing().Removing().Appending().Duplicating().SetToolBar().MultiSelect().ExtraPaste().SelectRow(false);
+
+	compare.dropOperations.AddColumn("Metric", 10);
+	compare.dropOperations.AddColumn("Comment", 20);
+	compare.dropOperations.Add("mean", "")
+						  .Add("min", "")
+						  .Add("max", "")
+						  .Add("maxval", "max(abs(max), abs(min))")
+						  .Add("minmean", "min - mean")
+						  .Add("maxmean", "max - mean")
+						  .Add("stddev", "stddev")
+						  .Add("amplitude", "RAO*height")
+						  .Add("rao", "RAO from FFT")
+						  .Add("rao_mean", "RAO from average")
+						  .Add("percentile", "Percentile (ratio)")
+						  .Add("weibull", "Weibull fitting percentile (ratio)")
+						  .Add("td", "Design tension (time, γmean, γdyn)");
+	compare.dropOperations.Resizeable(false).Width(200);					  
+	compare.dropOperations.WhenAction = [&] {
+		String operation;
+		int r = compare.dropOperations.GetIndex();
+		if (r < 0)
+			return;
+		operation = compare.dropOperations.Get(r, 0);
+		compare.edOperations <<= operation;
+		r = compare.arrayStats.GetCursorId();
+		if (r < 0)
+			return;
+		String str = compare.arrayStats.Get(r, 2);
+		if (!str.IsEmpty())
+			str << ", ";
+		str << operation << "()";
+		compare.arrayStats.Set(r, 2, str);
+	};
+	compare.edOperations <<= "mean";
 	
 	fscbase.Init(this, OnFile, OnCopyTabs, statusBar);
 //#ifdef flagDEBUG
@@ -54,10 +96,10 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 }
 
 bool FastScatter::OnLoadCompare() {
-	String filename = Trim(~compare.file);
+	String filename = Trim(~compare.fileMetrics);
 	
 	if (filename.IsEmpty()) {
-		compare.file.DoBrowse();
+		compare.fileMetrics.DoBrowse();
 		return true;
 	}
 	if (!LoadFromJsonFile(params, filename)) {
@@ -126,7 +168,7 @@ void FastScatter::OnSaveCompare() {
 		fs.Type("json file", "*.json");
 		
 		fs.ActiveType(0);
-		fs.ActiveDir(GetFileFolder(~compare.file));
+		fs.ActiveDir(GetFileFolder(~compare.fileMetrics));
 		
 		if (!fs.ExecuteSaveAs(t_("Save parameters")))
 			throw Exc(t_("Cancelled by the user"));
@@ -199,7 +241,7 @@ void FastScatter::OnCalc() {
 		}
 			
 	} catch (const Exc &e) {
-		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(DeQtf(e));	
 	}
 }
 	
@@ -232,10 +274,10 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	};
 	file.BrowseRightWidth(40).UseOpenFolder().BrowseOpenFolderWidth(10)
 		.Tip(t_("Enter file path to show, or drop it from file explorer"));
-	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
 	file.Type(t_("All files"), "*.*").Type(t_("FAST output file"), "*.out, *.outb")
 									 .Type(t_("CSV file"), "*.csv").Type(t_("DeepLines Wind file"), "*.db")
 									 .Type(t_("AQWA Naut file"), "*.lis"); 
+	butLoad.Tip(t_("Loads FAST out/outb file")) << [&] {file.DoGo();};
 	butSaveAs <<= THISBACK(OnSaveAs);
 	butSaveAs.Tip(t_("Saves data file"));
 	dropFormat.Add(".out").Add(".csv").Add(".csv only selected");
@@ -763,7 +805,7 @@ void FastScatterBase::OnSaveAs() {
 		}
 		saveFolder = GetFileFolder(fs.Get());
 	} catch (const Exc &e) {
-		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(DeQtf(e));	
 	}		
 }
 	
@@ -784,11 +826,9 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 			FastScatterTabs &f = *pf;
 			
 			Value key = -1;
-			//int idKey = -1;
 			int id = f.tabBar.GetCursor();
 			if (id >= 0) {
 				key = f.tabBar.GetKey(id);
-				//idKey = f.tabKeys.Find(key);
 				
 				if (scattersize == 1) {
 					String title = left.dataFast[0].GetFileName();
@@ -961,7 +1001,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 		
 		SaveParams();
 	} catch (const Exc &e) {
-		BEM::PrintError(Format("Error: %s", DeQtf(e)));	
+		BEM::PrintError(DeQtf(e));	
 	}
 }
 
@@ -1050,10 +1090,14 @@ void FastScatterTabs::AddFile(String filename) {
 						return false;
 					Value key = tabBar.GetKey(id);
 					bool ret = false;
-					for (int i = 0; i < tabKeys.size(); ++i) {
-						if (tabKeys[i] == key) {
-							ret = tabScatters[i].fscbase.OnLoad(filename);
-							break;
+					if (filename == t_("New Tab"))
+						ret = true;
+					else {
+						for (int i = 0; i < tabKeys.size(); ++i) {
+							if (tabKeys[i] == key ) {
+								ret = tabScatters[i].fscbase.OnLoad(filename);
+								break;
+							}
 						}
 					}
 					if (ret)		
@@ -1076,26 +1120,17 @@ void FastScatterTabs::AddFile(String filename) {
 				}, *statusBar);
 			tabBar.InsertKey(pos, key, title);
 			Add(sct.SizePos());
-			
-			/*String title;
-			if (GetUpperFolder(filename).IsEmpty())
-				title = GetFileTitle(filename);
-			else
-				title = GetFileName(GetUpperFolder(filename)) + "/" + GetFileTitle(filename);
-			tabBar.SetValue(key, title);*/
-		} /*else {
-			FastScatterBase &fscbase = tabScatters[idKey].fscbase;
-			
-			if (fscbase.left.dataFast.size() > 1)
-				tabBar.SetValue(key, t_("Multiple files"));
-		}*/
+		}
 	}
 	AddHistory(filename);
-	if (int(key) > -1 && filename != t_("New Tab")) {
+	AddHistoryMetrics("");
+	if (int(key) > -1) {// && filename != t_("New Tab")) {
 		FastScatter &sct = tabScatters[idKey];
 		sct.fscbase.file <<= filename;
 		if (!sct.fscbase.file.WhenChange())
 			OnCloseTab(key); 
+		if (filename == t_("New Tab"))
+			sct.fscbase.file <<= "";
 	}
 }
 
@@ -1112,6 +1147,21 @@ void FastScatterTabs::AddHistory(String filename) {
 			tabScatters[it].fscbase.file.ClearHistory();
 			for (int i = history.size()-1; i >= 0; --i)
 				tabScatters[it].fscbase.file.AddHistory(history[i]);
+		}
+	}
+}
+
+void FastScatterTabs::AddHistoryMetrics(String filename) {
+	int id = historyMetrics.Find(filename);
+	if (id >= 0)
+		historyMetrics.Remove(id);
+	historyMetrics.Insert(0, filename);
+	for (int it = 0; it < tabBar.GetCount(); ++it) {
+		const Value &key = tabBar.GetKey(it);
+		if (int(key) > -1 && it < tabScatters.size()) {
+			tabScatters[it].fscbase.file.ClearHistory();
+			for (int i = historyMetrics.size()-1; i >= 0; --i)
+				tabScatters[it].compare.fileMetrics.AddHistory(historyMetrics[i]);
 		}
 	}
 }

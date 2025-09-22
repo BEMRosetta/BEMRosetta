@@ -67,7 +67,6 @@ file
 	Other readonly separator,
 	mooring.cpp,
 	data.brc,
-	bemrosetta_cl.t,
 	main_cl.rc,
 	heal.cpp,
 	heal.h,

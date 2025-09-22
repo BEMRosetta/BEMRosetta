@@ -14,7 +14,6 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		dt.name = GetFileTitle(GetFileFolder(file));	// The folder names the model
 	dt.dimen = true;
 	dt.len = 1;
-	dt.solver = Hydro::AQWA;
 	dt.Nb = 0;
 	
 	try {
@@ -25,35 +24,40 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		if (ToLower(GetFileExt(file)) == ".lis") {
 			BEM::Print("\n- " + S(t_("LIS file")));
 			if (!Load_LIS(factorMass, Status)) {
-				BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
+				BEM::Print(S(": ** LIS file ") + t_("Not found") + "**");
 				BEM::Print("\n- " + S(t_("AH1 file")));
 				if (!Load_AH1()) {
-					BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
-					if (!AQWABody::LoadDat(dt.msh, *this, file).IsEmpty()) 
+					BEM::Print(S(": ** AH1 file ") + t_("Not found") + "**");
+					String ret = AQWABody::LoadDat(dt.msh, *this, file);
+					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: ")))  
 						dt.Nh = dt.Nf = 0;
-					
 				}
 			}
 		} else {
 			BEM::Print("\n- " + S(t_("AH1 file")));
 			if (!Load_AH1()) {
-				BEM::PrintWarning(S(": ** AH1 file ") + t_("Not found") + "**");
+				BEM::Print(S(": ** AH1 file ") + t_("Not found") + "**");
 				BEM::Print("\n- " + S(t_("LIS file")));
 				if (!Load_LIS(factorMass, Status)) {
-					BEM::PrintWarning(S(": ** LIS file ") + t_("Not found") + "**");
-					if (!AQWABody::LoadDat(dt.msh, *this, file).IsEmpty()) 
+					BEM::Print(S(": ** LIS file ") + t_("Not found") + "**");
+					String ret = AQWABody::LoadDat(dt.msh, *this, file);
+					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: ")))  
 						dt.Nh = dt.Nf = 0;
-					
 				}
 			}
 		}
-		
+							
+								
 		//if (IsNull(dt.Nb))
 		//	return false;
 		
 		BEM::Print("\n- " + S(t_("QTF file")));
 		if (!Load_QTF(factorMass)) 
 			BEM::Print(S(": ** QTF file ") + t_("Not found") + "**");
+		
+		BEM::Print("\n- " + S(t_("MQT file")));
+		if (!Load_MQT()) 
+			BEM::Print(S(": ** MQT file ") + t_("Not found") + "**");
 		
 		if (IsNull(dt.Nh) || dt.Nh <= 0) 
 			return t_("No data found");
@@ -301,6 +305,8 @@ bool Aqwa::Load_AH1() {
 	        }
 		}
 	}
+	dt.solver = Hydro::AQWA;
+	
 	return true;
 }
 
@@ -359,6 +365,8 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	
 	UArray<Upp::Index<int>> panelIDs(dt.Nb);
 	UArray<Upp::Index<int>> nodeIDs(dt.Nb);
+	
+	int ibsstf = 0;
 		
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -417,7 +425,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				
 				String type = f.GetText(1);
 				if (type == "QPPL" || type == "TPPL") {
-					if (!lidGroups.IsEmpty()) {
+					if (!lidGroups.IsEmpty() && f.size() >= 9) {
 						int idGroup = f.GetInt(8);
 						if (lidGroups.Find(idGroup) >= 0)		// Panels in the lid are not loaded
 							continue;
@@ -493,7 +501,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
 			ib = ScanInt(line.Mid(pos)) - 1; 
 			if (ib >= dt.Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
 		} else if (line.StartsWith("PMAS")) {
 			f.Load(line);
 			double mass = f.GetDouble(2)*factorMass;
@@ -562,7 +570,22 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			}
 			dt.Nh = dt.head.size();
 			break;
-		} 
+		} else if (line.StartsWith("SSTF")) {
+			f.LoadFields(line, {0, 4, 9, 14, 24, 34, 44, 54, 64, 74});
+			int ibsstf = f.GetInt(1) - 1;
+			if (dt.msh[ibsstf].dt.Cadd.size() == 0)
+				dt.msh[ibsstf].dt.Cadd.setConstant(6, 6, 0);
+			int idf1 = f.GetInt(2);
+			for (int idf2 = 0; idf2 < 6; ++idf2)
+				dt.msh[ibsstf].dt.Cadd(idf1-1, idf2) = f.GetDouble(idf2+3);
+		} else if (line.StartsWith("FIDP")) {
+			f.LoadFields(line, {0, 4, 9, 14, 24, 34, 44, 54, 64, 74});
+			if (dt.msh[ibsstf].dt.Dlin.size() == 0)
+				dt.msh[ibsstf].dt.Dlin.setConstant(6, 6, 0);
+			int idf1 = f.GetInt(2);
+			for (int idf2 = 0; idf2 < 6; ++idf2)
+				dt.msh[ibsstf].dt.Dlin(idf1-1, idf2) = f.GetDouble(idf2+3);
+		}
 	}
 	
 	if (IsNull(dt.Nf))
@@ -580,7 +603,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	
 	UVector<double> bouyancyForce(dt.Nb, Null);
 	
-	int ifrPot = -1, prevTrans = Null;
+	int ifrPot, previbPot = -1, prevTrans = Null;
 	
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -599,9 +622,14 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			pos = line.FindAfter("S T R U C T U R E");
 			ib = ScanInt(line.Mid(pos)) - 1; 
 			if (ib < 0 || ib >= dt.Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
 			
-			if (!IsLoadedPotsRad(ib))
+			if (previbPot < 0 || previbPot != ib) {
+				previbPot = ib;
+				ifrPot = -1;
+			}
+			
+			if (!IsLoadedPotsRad(ib)) 
 				Initialize_PotsRad(); 				// Initialise potentials
 			
 			int trans;
@@ -614,19 +642,19 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				trans = Null;
 			
 			if (!IsNull(trans)) {
-				if (dt.Nb == 1)
+				//if (dt.Nb == 1)
 					in.GetLine(7);
-				else {
+				/*else {
 					ib = ScanInt(Trim(line).Right(3)) - 1;
 					if (ib < 0 || ib >= dt.Nb)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+						throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
 				
 					in.GetLine(6);
-				}
+				}*/
 				if (trans) {
 				 	if (IsNull(prevTrans) || !prevTrans) {
 						prevTrans = true;
-						if (ib == 0)
+						//if (ib == 0)
 							++ifrPot;
 					}
 				} else
@@ -671,13 +699,13 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			if (iib < 1 || iib > dt.Nb)
 				throw Exc(in.Str() + "\n"  + t_("Bad body id"));
 			iib--;
-			if (dt.msh[iib].dt.Cmoor.size() == 0)
-				dt.msh[iib].dt.Cmoor = Eigen::MatrixXd::Zero(6, 6);
+			if (dt.msh[iib].dt.Cadd.size() == 0)
+				dt.msh[iib].dt.Cadd = Eigen::MatrixXd::Zero(6, 6);
 			in.GetLine(4);
 			for (int idof = 0; idof < 6; ++idof) {
 				f.GetLine();
 				for (int jdof = 0; jdof < 6; ++jdof) 
-					dt.msh[iib].dt.Cmoor(idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
+					dt.msh[iib].dt.Cadd(idof, jdof) = f.GetDouble(jdof + 1)*factorMass;
 				f.GetLine(); 
 			}
 		} else if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
@@ -685,7 +713,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			if (!IsNull(ib)) {
 				ib -= 1; 
 				if (ib >= dt.Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d"), ib));
+					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
 			}
 		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
 				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {		// One place to get the hydrostatic stiffness
@@ -1052,7 +1080,8 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 						auto &d = dt.pots_rad[iib][ip][idf][ifr];
 						d = std::complex<double>(d.imag()/dt.w[ifr], d.real()/dt.w[ifr]);
 					}	
-	}					
+	}	
+	dt.solver = Hydro::AQWA;				
 	
 	return true;
 }
@@ -1072,95 +1101,278 @@ bool Aqwa::Load_QTF(double factorMass) {
 	f.IsSeparator = IsTabSpace;
 	
 	f.GetLine();	// AQWA version	
-	f.GetLine();
 	
-	int Nb = f.GetInt(0);
-	int Nh = f.GetInt(1);
-	int Nf = f.GetInt(2);	
-	
-	if (!IsNull(dt.Nb) && dt.Nb < Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is lower than previous (%d != %d)"), dt.Nb, Nb));
+	// First detects the number of bodies
+	FileInLine::Pos fpos = in.GetPos();
+	int Nb;
+	while (!f.IsEof()) {
+		String str = f.GetLine();
+		if (str.GetLength() > 10) {
+			int ib = ScanInt(str.Left(10)); 
+			if (!IsNull(ib))
+				Nb = ib;
+		}
+	}
+	if (!IsNull(dt.Nb) && dt.Nb != Nb)
+		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is different than previous (%d != %d)"), dt.Nb, Nb));
 	dt.Nb = Nb;
+
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
 			
-    UVector<double> _qw;
-    UArray<std::complex<double>> _qh;
-    
-	int col = 3;
-	int ih = 0;
-	while (!in.IsEof()) {		// Check headings
-		while (col < f.size() && ih < Nh) {
-			double head = f.GetDouble(col++);
-			_qh << std::complex<double>(head, head);
-			ih++;
-		}
-		if (ih >= Nh)
-			break;
+	in.SeekPos(fpos);
+	
+	for (int iib = 0; iib < Nb; ++iib) {
+		f.GetLine();
+		
+		int ib = f.GetInt(0);
+		if (ib-1 != iib)
+			throw Exc(in.Str() + "\n"  + t_("Body number mismatch"));
+		
+		int Nh = f.GetInt(1);
+		int Nf = f.GetInt(2);	
+				
+	    UVector<double> _qw;
+	    UArray<std::complex<double>> _qh;
+	    
+		int col = 3;
+		int ih = 0;
+		while (!in.IsEof()) {		// Check headings
+			while (col < f.size() && ih < Nh) {
+				double head = f.GetDouble(col++);
+				_qh << std::complex<double>(head, head);
+				ih++;
+			}
+			if (ih >= Nh)
+				break;
+			f.Load(in.GetLine());
+			col = 0;
+		}	
+	
 		f.Load(in.GetLine());
 		col = 0;
-	}	
-
-	f.Load(in.GetLine());
-	col = 0;
-	int ifr = 0;
-	while (!in.IsEof()) {		// Check frequencies
-		while (col < f.size() && ifr < Nf) {
-			double w = f.GetDouble(col++);
-			_qw << w;
-			ifr++;
+		int ifr = 0;
+		while (!in.IsEof()) {		// Check frequencies
+			while (col < f.size() && ifr < Nf) {
+				double w = f.GetDouble(col++);
+				_qw << w;
+				ifr++;
+			}
+			if (ifr >= Nf)
+				break;
+			f.Load(in.GetLine());
+			col = 0;
 		}
-		if (ifr >= Nf)
-			break;
-		f.Load(in.GetLine());
-		col = 0;
+	
+		if (_qw.size() != Nf)
+			throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of frequencies %d found in qtf header. They should have to be %d"), _qw.size(), Nf));
+		if (_qh.size() != Nh)
+			throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
+							
+		::Copy(_qw, dt.qw);
+		::Copy(_qh, dt.qhead);
+		
+		if (iib == 0) {
+			Hydro::Initialize_QTF(dt.qtfsum, Nb, Nh, Nf);
+			Hydro::Initialize_QTF(dt.qtfdif, Nb, Nh, Nf);
+		}
+		int nrows = Nh*Nf*Nf;
+		
+		for (int i = 0; i < nrows; ++i) {
+			f.Load(in.GetLine());
+			int ib = f.GetInt(0)-1;
+			if (ib >= Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Body id %d higher than number of bodies"), ib+1, Nb));
+			ih = f.GetInt(1)-1;
+			if (ih >= Nh)
+				throw Exc(in.Str() + "\n"  + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
+			int ifr1 = f.GetInt(2)-1;
+			if (ifr1 >= Nf)
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
+			int ifr2 = f.GetInt(3)-1;
+			if (ifr2 >= Nf)
+				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr2+1, Nf));
+	
+			for (int idf = 0; idf < 6; ++idf) 
+				dt.qtfdif[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(4 + idf)*factorMass);
+				
+	        f.Load(in.GetLine());
+	        for (int idf = 0; idf < 6; ++idf)
+	            dt.qtfdif[ib][ih][idf](ifr1, ifr2).imag(-f.GetDouble(idf)*factorMass);	// Negative to follow Wamit
+	        
+			f.Load(in.GetLine());
+	        for (int idf = 0; idf < 6; ++idf)
+	            dt.qtfsum[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(idf)*factorMass);
+	        
+	        f.Load(in.GetLine());
+	        for (int idf = 0; idf < 6; ++idf)
+	            dt.qtfsum[ib][ih][idf](ifr1, ifr2).imag(-f.GetDouble(idf)*factorMass);
+		}
 	}
-
-	if (_qw.size() != Nf)
-		throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of frequencies %d found in qtf header. They should have to be %d"), _qw.size(), Nf));
-	if (_qh.size() != Nh)
-		throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
-						
-	::Copy(_qw, dt.qw);
-	::Copy(_qh, dt.qhead);
-	
-	Hydro::Initialize_QTF(dt.qtfsum, Nb, Nh, Nf);
-	Hydro::Initialize_QTF(dt.qtfdif, Nb, Nh, Nf);
-	
-	int nrows = Nb*Nh*Nf*Nf;
-	
-	for (int i = 0; i < nrows; ++i) {
-		f.Load(in.GetLine());
-		int ib = f.GetInt(0)-1;
-		if (ib >= Nb)
-			throw Exc(in.Str() + "\n"  + Format(t_("Body id %d higher than number of bodies"), ib+1, Nb));
-		ih = f.GetInt(1)-1;
-		if (ih >= Nh)
-			throw Exc(in.Str() + "\n"  + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
-		int ifr1 = f.GetInt(2)-1;
-		if (ifr1 >= Nf)
-			throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
-		int ifr2 = f.GetInt(3)-1;
-		if (ifr2 >= Nf)
-			throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr2+1, Nf));
-
-		for (int idf = 0; idf < 6; ++idf) 
-			dt.qtfdif[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(4 + idf)*factorMass);
-			
-        f.Load(in.GetLine());
-        for (int idf = 0; idf < 6; ++idf)
-            dt.qtfdif[ib][ih][idf](ifr1, ifr2).imag(-f.GetDouble(idf)*factorMass);	// Negative to follow Wamit
-        
-		f.Load(in.GetLine());
-        for (int idf = 0; idf < 6; ++idf)
-            dt.qtfsum[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(idf)*factorMass);
-        
-        f.Load(in.GetLine());
-        for (int idf = 0; idf < 6; ++idf)
-            dt.qtfsum[ib][ih][idf](ifr1, ifr2).imag(-f.GetDouble(idf)*factorMass);
-	}
+	dt.solver = Hydro::AQWA_QTF;
 	
 	return true;
+}
+
+bool Aqwa::Load_MQT() {
+	String fileName = ForceExtSafer(dt.file, ".MQT");
+	
+	FileInBinary file(fileName);
+	if (!file.IsOpen())
+		return false;
+	
+	int nwNh = dt.Nh*dt.Nh;
+	
+	auto AddCrossHead = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+            qtf[ib].SetCount(nwNh);
+            for (int ih = dt.Nh; ih < nwNh; ++ih) {
+        		qtf[ib][ih].SetCount(6);
+	        	for (int idf = 0; idf < 6; ++idf) 
+	        		qtf[ib][ih][idf].setConstant(dt.Nf, dt.Nf, 0);
+            }
+        }		
+	};
+	
+	auto ReadBlockNhNh = [&]()->MatrixXd {
+		MatrixXd block(dt.Nh, dt.Nh);
+		
+		for (int ih1 = 0; ih1 < dt.Nh; ++ih1)
+			for (int ih2 = 0; ih2 < dt.Nh; ++ih2)
+				block(ih1, ih2) = file.Read<float>();	
+		return block;
+	};
+	
+	{
+		int ih = dt.Nh;
+		dt.qhead.conservativeResize(nwNh);
+		for (int ih1 = 0; ih1 < dt.Nh; ++ih1)
+			for (int ih2 = 0; ih2 < dt.Nh; ++ih2)
+				if (ih1 != ih2)
+					dt.qhead[ih++] = std::complex<double>(dt.head[ih1], dt.head[ih2]);
+	}
+	
+	AddCrossHead(dt.qtfsum);
+	AddCrossHead(dt.qtfdif);
+	
+	file.Seek(4096);
+	
+	int ib = -1;
+	while (!file.IsEof() && ib < dt.Nb-1) {
+		int iib = file.Read<int32>() - 1;
+		if (iib >= dt.Nb)
+			throw Exc(Format(t_("Wrong body number %d found in mqt. They should have to be %d"), iib+1, dt.Nb));
+		if (iib != ib+1)
+			throw Exc(Format(t_("Wrong body number %d found in mqt. Previous was %d"), iib+1, ib+1));
+		ib = iib;
+		int nf = file.Read<int32>();
+		if (nf != dt.Nf)
+			throw Exc(Format(t_("Wrong number of frequencies %d found in mqt. They should have to be %d"), nf, (int)dt.qw.size()));
+		int nh = file.Read<int32>();
+		if (nh != dt.Nh)
+			throw Exc(Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), nh, dt.Nh));
+		
+		file.SeekCur(28);
+		
+		UVector<double> w(nf);
+		for (int ifr = 0; ifr < nf; ++ifr)
+			w[ifr] = file.Read<float>();
+			
+		if (!CompareDecimals(w, dt.qw, 3))
+			throw Exc(t_("List of frequencies does not match with previously loaded"));
+
+		file.SeekCur(512 - nf*4);
+		
+		UVector<double> head(nh);
+		for (int ih = 0; ih < nh; ++ih)
+			head[ih] = file.Read<float>()*180./M_PI;
+		
+		if (!CompareDecimals(head, dt.head, 3))
+			throw Exc(t_("List of headings does not match with previously loaded"));
+	
+		file.SeekCur(1024 - nh*4);
+		file.SeekCur(10*4);
+		
+		MultiDimMatrixRowMajor<std::complex<double>> qtsum(6, dt.Nh, dt.Nh), qtdif(6, dt.Nh, dt.Nh);
+		
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			// Difference
+			for (int idof = 0; idof < 6; ++idof) {
+				MatrixXd block = ReadBlockNhNh();
+				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
+						if (ih1 == ih2)
+							qtdif(idof, ih1, ih1) = std::complex<double>(block(ih1, ih1), 0);
+						else
+							qtdif(idof, ih1, ih2) = qtdif(idof, ih2, ih1) = std::complex<double>(block(ih1, ih2), -block(ih2, ih1));// Negative to follow Wamit
+					}
+				}
+			}
+			//Summation
+			for (int idof = 0; idof < 6; ++idof) {
+				MatrixXd block = ReadBlockNhNh();
+				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
+						if (ih1 == ih2)
+							qtsum(idof, ih1, ih1) = std::complex<double>(block(ih1, ih1), 0);
+						else
+							qtsum(idof, ih1, ih2) = qtsum(idof, ih2, ih1) = std::complex<double>(block(ih1, ih2), -block(ih2, ih1));// Negative to follow Wamit
+					}
+				}
+			}
+			for (int idof = 0; idof < 6; ++idof)
+				for (int ih = 0; ih < dt.Nh; ++ih)			
+					qtsum(idof, ih, ih).imag(-file.Read<float>());
+			
+			// Filling qtf data	
+			for (int idof = 0; idof < 6; ++idof) {
+				int ih = dt.Nh;
+				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+					for (int ih2 = 0; ih2 < dt.Nh; ++ih2) {
+						if (ih1 == ih2) {
+							if (!EqualRatio(dt.qtfdif[ib][ih1][idof](ifr, ifr), qtdif(idof, ih1, ih1), 0.0001, 1E-5))
+								throw Exc(Format(t_("QTF_dif(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
+									ib+1, dt.head[ih1], idof, dt.w[ifr], FormatComplex(dt.qtfdif[ib][ih1][idof](ifr, ifr)), FormatComplex(qtdif(idof, ih1, ih1))));
+							dt.qtfdif[ib][ih1][idof](ifr, ifr) = qtdif(idof, ih1, ih1);		// MQT file has finest value
+						} else
+							dt.qtfdif[ib][ih++][idof](ifr, ifr) = qtdif(idof, ih1, ih2);
+					}
+				}
+			}
+			for (int idof = 0; idof < 6; ++idof) {
+				int ih = dt.Nh;
+				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
+						if (ih1 == ih2) {
+							if (!EqualRatio(dt.qtfsum[ib][ih1][idof](ifr, ifr), qtsum(idof, ih1, ih1), 0.0001, 1E-5))
+								throw Exc(Format(t_("QTF_sum(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
+									ib+1, dt.head[ih1], idof, dt.w[ifr], FormatComplex(dt.qtfsum[ib][ih1][idof](ifr, ifr)), FormatComplex(qtsum(idof, ih1, ih1))));
+							dt.qtfsum[ib][ih1][idof](ifr, ifr) = qtsum(idof, ih1, ih1);		// MQT file has finest value
+						} else
+							dt.qtfsum[ib][ih++][idof](ifr, ifr) = qtsum(idof, ih1, ih2);
+					}
+				}
+			}
+			if (ifr < dt.Nf-1)
+				file.SeekCur(4*10);			
+		}
+		// Newman approximation
+		for (int ih = dt.Nh; ih < nwNh; ++ih)			// Only crossed headings
+			for (int idof = 0; idof < 6; ++idof)
+				for (int ifr1 = 0; ifr1 < dt.Nf; ++ifr1)
+					for (int ifr2 = 0; ifr2 < dt.Nf; ++ifr2)
+						if (ifr1 != ifr2) { // https://ansyshelp.ansys.com/public/account/secured?returnurl=/Views/Secured/corp/v242/en/aqwa_thy/aqwathy_2ndO_xtdnewman.html
+							const std::complex<double> &jj = dt.qtfdif[ib][ih][idof](ifr1, ifr1);
+							const std::complex<double> &kk = dt.qtfdif[ib][ih][idof](ifr2, ifr2);
+							double Pjkmn = 0.5*(jj.real() + kk.real());
+							double Qjkmn = 0.5*(jj.imag() - kk.imag());
+							dt.qtfdif[ib][ih][idof](ifr1, ifr2) = std::complex<double>(Pjkmn, Qjkmn);										
+						}
+	}
+	
+	dt.solver = Hydro::AQWA_QTF;
+	
+	return true;	
 }
 
 void Aqwa::Save(String file, Function <bool(String, int)> Status) const {
@@ -1177,33 +1389,34 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to open '%s'"), file));
 	
-	out << "AQTF-2.0 :                                                            \n";
-	out << Format(" %2d %2d %3d    ", dt.Nb, int(dt.qhead.size()), int(dt.qw.size()));
-	int icol = 0;
-	for (int ih = 0; ih < dt.qhead.size(); ++ih) {
-		if (dt.qhead[ih].real() != dt.qhead[ih].imag())
-			continue;
-		if (icol > 5) {
-			out << "\n              ";
-			icol = 0;
-		} 
-		out << Format("   % 9.5f", dt.qhead[ih].real());
-		icol++;
-	}
-	out << "\n               ";
-	icol = 0;
-	for (int ifr = 0; ifr < dt.qw.size(); ++ifr) {
-		if (icol > 5) {
-			out << "\n               ";
-			icol = 0;
+	out << "AQTF-2.0 :                                                            ";
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		out << Format("\n %2d %2d %3d    ", ib+1, int(dt.qhead.size()), int(dt.qw.size()));
+		int icol = 0;
+		for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+			if (dt.qhead[ih].real() != dt.qhead[ih].imag())
+				continue;
+			if (icol > 5) {
+				out << "\n              ";
+				icol = 0;
+			} 
+			out << Format("   % 9.5f", dt.qhead[ih].real());
+			icol++;
 		}
-		out << Format("   %9.7f", dt.qw[ifr]);
-		icol++;
-	}	
-
-	//int num = int(dt.Nb*dt.qh.size());
-	//int inum = 0;
-	for (int ib = 0; ib < dt.Nb; ++ib)
+		out << "\n               ";
+		icol = 0;
+		for (int ifr = 0; ifr < dt.qw.size(); ++ifr) {
+			if (icol > 5) {
+				out << "\n               ";
+				icol = 0;
+			}
+			out << Format("   %9.7f", dt.qw[ifr]);
+			icol++;
+		}	
+	
+		//int num = int(dt.Nb*dt.qh.size());
+		//int inum = 0;
+	
         for (int ih = 0, realih = 0; ih < dt.qhead.size(); ++ih) {
             //inum++;
     		if (Status && !Status(Format("Saving %s", file), (100*ih)/int(dt.qhead.size())))
@@ -1231,17 +1444,24 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 				}
 			realih++;	
         }
+	}
 }
 
 UVector<String> Aqwa::Check() const {
 	UVector<String> ret;
 	
 	if (dt.Nf > 100)
-		ret << t_("The maximum number of allowed wave frequencies by AQWA is 100");
+		ret << t_("AQWA issue: The maximum number of allowed wave frequencies by AQWA is 100");
 	if (dt.Nh < 3)
-		ret << t_("The minimum number of allowed wave headings by AQWA is 3");
-	if (First(dt.w) < 0.1)
-		ret << t_("The minimum frequency allowed by AQWA is 0.1 rad/s");
+		ret << t_("AQWA issue: The minimum number of allowed wave headings by AQWA is 3");
+	if (First(dt.w) < 0.0999)
+		ret << t_("AQWA issue: The minimum frequency allowed by AQWA is 0.1 rad/s");
+	for (int ih = 1; ih < dt.Nh; ++ih) {
+		if (dt.head[ih] - dt.head[ih-1] > 90) {
+			ret << t_("AQWA issue: Interval between wave headings should not be greater than 90 degrees");
+			break;
+		}
+	}
 
 	return ret;
 }
@@ -1485,7 +1705,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
 	
 	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
-	bat << "call \"" << Bem().aqwaPath << "\" /nowind Analysis.dat";
+	bat << "call \"" << Bem().aqwaPath << "\" Analysis.dat";	// Removed /nowind 
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
 

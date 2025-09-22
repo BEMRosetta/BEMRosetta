@@ -886,12 +886,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								if (ToLower(command[ic]) == "mesh") {
 									CheckIfAvailableArg(command, ++ic, "mesh");
 									String file = command[ic];
-									Body::Load(hy.dt.msh[bembodyid], file, Bem().rho, Bem().g, Null, Null, false);
+									const UVector<int> idxs;
+									Body::Load(hy.dt.msh[bembodyid], file, Bem().rho, Bem().g, Null, Null, false, idxs);
 									BEM::Print("\n" + Format(t_("Model %d, body %d loaded mesh '%s'"), bemid+1, bembodyid+1, file));
 								} else if (ToLower(command[ic]) == "lid") {
 									CheckIfAvailableArg(command, ++ic, "lid");
 									String file = command[ic];
-									Body::Load(lids, file, Bem().rho, Bem().g, Null, Null, false);
+									UVector<int> idxs;
+									Body::Load(lids, file, Bem().rho, Bem().g, Null, Null, false, idxs);
 									BEM::Print("\n" + Format(t_("Model %d, body %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
 								} else if (ToLower(command[ic]) == "c0") {
 									CheckIfAvailableArg(command, ++ic, "c0.x");
@@ -1129,7 +1131,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								throw Exc(Format(t_("File '%s' not found"), file)); 
 							
 							BEM::Print("\n");
-							bem.LoadBody(file, echo ? Status : NoPrint, false, false);		// Doesn't work for multibody .dat
+							UVector<int> idxs;
+							bem.LoadBody(file, echo ? Status : NoPrint, false, false, idxs);		// Doesn't work for multibody .dat
 							meshid = bem.surfs.size() - 1;
 						} else if (param == "-r" || param == "-report") {
 							if (bem.surfs.IsEmpty()) 
@@ -1734,7 +1737,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									Sleep(200);
 									errorStr.Clear();
 								}
-								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
@@ -1769,7 +1772,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									Sleep(200);
 									errorStr.Clear();
 								}
-								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
@@ -1850,7 +1853,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									numTry--;
 									errorStr.Clear();
 								}
-								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
@@ -1893,7 +1896,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									numTry--;
 									errorStr.Clear();
 								}
-								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
@@ -1981,14 +1984,14 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									dllOrcaLoaded = true;		
 							}
 							if (!dllOrcaLoaded) {
-								BEM::PrintWarning(S("\n") + t_("OrcaFLEX is not installed"));
+								BEM::PrintWarning(S("\n") + t_("OrcaFlex is not installed"));
 								break;
 							}
 							int numTry = 2;
 							do {
 								if (orca.IsAvailable())
 									break;
-								BEM::PrintWarning("\n" + Format(t_("Next try (%d/%d)"), 2-numTry+1, 2));
+								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), 2-numTry+1, 2));
 								numTry--;
 							} while (numTry > 0);
 							if (numTry == 0) {

@@ -42,7 +42,7 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 		String hydroFile = AFX(GetFileFolder(file), hydroFolder, dt.name);
 		dt.solver = Hydro::FAST_WAMIT;
 		
-		String ret = Wamit::Load(ForceExtSafer(hydroFile, ".hst"), Status);
+		String ret = Wamit::Load(ForceExtSafer(hydroFile, ".hst"), false, 0, Status);
 		if (!ret.IsEmpty())
 			return ret;
 		
@@ -542,7 +542,7 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			b.dt.SetCode(Body::OPENFAST_FST);
 		}
 	}
-	{	// SubDyn
+	if (!fst.subdyn.fileName.IsEmpty()) {	// SubDyn
 		UVector<UVector<String>> sjoints  = fst.subdyn.GetFASTArray("NJoints");
 		UVector<UVector<String>> smembers = fst.subdyn.GetFASTArray("NMembers");	
 		UVector<UVector<String>> smasses  = fst.subdyn.GetFASTArray("NCmass");	
@@ -592,4 +592,31 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 		BEM::PrintWarning(S("\n") + t_("Joints with concentrated masses have to be in nodes. Found MCGX, MCGY, MCGZ different than zero (see https://github.com/OpenFAST/openfast/issues/1710)"));
 	
 	return String();
+}
+
+void MeshBody::Load_Out(UArray<Body> &mesh) {
+	Body &b = mesh.Add();
+	//b.dt.fastAble = true;
+	b.dt.fileName = Bem().fast.GetFileName();
+	b.dt.SetCode(Body::MOORING_MESH);
+	
+	SetLineTime(b, 0);
+	if (b.IsEmpty())
+		mesh.Remove(mesh.size()-1);
+}
+	
+void MeshBody::SetLineTime(Body &b, int idtime) {
+	ASSERT(!IsNull(idtime));
+	//if (!b.dt.fastAble)
+	//	return t_("No animation");
+	
+	b.dt.mesh.Clear();
+	for (UVector<FastOut::id3d> &lineIds : Bem().fast.mooringPointIds) {
+		UVector<Point3D> joints;
+		for (int i = 0; i < lineIds.size(); i++)
+			joints << Point3D(Bem().fast.GetVal(idtime, lineIds[i].x), 
+							  Bem().fast.GetVal(idtime, lineIds[i].y),
+							  Bem().fast.GetVal(idtime, lineIds[i].z));
+		b.dt.mesh.AddLine(joints);
+	}
 }

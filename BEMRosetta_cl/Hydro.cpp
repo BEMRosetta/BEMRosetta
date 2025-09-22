@@ -545,7 +545,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	else if (ext == ".h5")
 		ret = static_cast<BemioH5&>(*this).Load(fileName, Status);
 	else if (S(".out.1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0)
-		ret = static_cast<Wamit&>(*this).Load(fileName, Status);
+		ret = static_cast<Wamit&>(*this).Load(fileName, false, 0, Status);
 	else
 		ret = t_("Unknown BEM input format");
 	
@@ -603,6 +603,115 @@ void Hydro::BeforeSaveCase(String folderBase, int numCases, bool deleteFolder) c
 	if (!DirectoryCreateX(folderBase))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
 }
+
+
+struct GridFreeSurface {
+    Point3D topLeft;
+    Point3D bottomRight;
+    int cols;
+    int rows;
+};
+
+// Utility: check if a point exists with tolerance
+static bool FindWithTolerance(const UVector<Point3D>& idx, const Point3D& p, int tol) {
+    for (int i = 0; i < idx.GetCount(); i++) {
+        if (abs(idx[i].x - p.x) <= tol && abs(idx[i].y - p.y) <= tol)
+            return true;
+    }
+    return false;
+}
+	
+// Detect grid structures with tolerance in spacing
+GridFreeSurface DetectGrids(UVector<Point3D>& pts) {
+    GridFreeSurface best;
+    UVector<Point3D> bestpts;
+    int bestCount = 0;
+
+    // Sort input for easier grouping
+    Sort(pts, [](const Point3D& a, const Point3D& b) {
+        if (a.y != b.y) 
+        	return a.y < b.y;
+        return a.x < b.x;
+    });
+
+    // Try each point as potential top-left corner
+    for (int i = 0; i < pts.size(); i++) {
+        for (int j = i+1; j < pts.size(); j++) {
+            if (abs(pts[i].z) > EPS_LEN) 
+                break;	// Must be in the free surface
+            if (abs(pts[i].y - pts[j].y) > EPS_LEN) 
+            	break; // Must be same row within tolerance
+            int dx = pts[j].x - pts[i].x;
+            if(dx <= 0) 
+            	continue;
+
+            // Try to detect vertical spacing
+            for (int k = i+1; k < pts.size(); k++) {
+                if (abs(pts[k].x - pts[i].x) <= EPS_LEN && pts[k].y > pts[i].y) {
+                    int dy = pts[k].y - pts[i].y;
+                    if (dy <= 0) 
+                    	continue;
+
+                    // Try to expand a grid with spacing dx, dy
+                    GridFreeSurface g;
+                    g.topLeft = pts[i];
+                    g.cols = 0;
+                    g.rows = 0;
+					UVector<Point3D> pointsin;
+					
+                    int col = 0;
+                    while(FindWithTolerance(pts, Point3D(g.topLeft.x + col*dx, g.topLeft.y), EPS_LEN)) 
+                    	col++;
+                    int row = 0;
+                    while(FindWithTolerance(pts, Point3D(g.topLeft.x, g.topLeft.y + row*dy), EPS_LEN)) 
+                    	row++;
+
+                    g.cols = col;
+                    g.rows = row;
+                    g.bottomRight = Point3D(g.topLeft.x + (col-1)*dx, g.topLeft.y + (row-1)*dy);
+
+                    // Collect valid grid points
+                    for(int r = 0; r < row; r++) {
+                        for(int c = 0; c < col; c++) {
+                            Point3D test(g.topLeft.x + c*dx, g.topLeft.y + r*dy);
+                            if(FindWithTolerance(pts, test, EPS_LEN))
+                                pointsin.Add(test);
+                        }
+                    }
+                    if(pointsin.size() > bestCount) {
+                        best = pick(g);
+                        bestpts = pick(pointsin);
+                        bestCount = bestpts.size();
+                    }
+                }
+            }
+        }
+    }
+    // Remove detected points from original list
+    for (int i = pts.size()-1; i >= 0; --i)
+        if (FindWithTolerance(bestpts, pts[i], EPS_LEN))
+            pts.Remove(i);
+    
+    return best;
+}
+
+/*
+CONSOLE_APP_MAIN {
+    Vector<Pointf> pts = {
+        Pointf(0,0), Pointf(10,0), Pointf(20,0),
+        Pointf(140,120), Pointf(230,204),
+        Pointf(0,10), Pointf(10,10), Pointf(20,10),
+        Pointf(104,100), Pointf(209,200),
+        Pointf(0,20), Pointf(10,20), Pointf(20,20),
+        Pointf(101,130), Pointf(220,200)
+    };
+
+    Grid g = DetectGrids(pts, 0.1);
+
+    Cout() << "Grid found:\n";
+    Cout() << "Top-left: " << g.topLeft << " Bottom-right: " << g.bottomRight << "\n";
+    Cout() << "Columns: " << g.cols << " Rows: " << g.rows << "\n";
+}*/
 
 UVector<String> Hydro::Check(BEM_FMT type) const {
 	UVector<String> ret;
@@ -728,6 +837,9 @@ void Hydro::GetRAO(double critDamp) {
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		MatrixXd C = C_mat(false, ib);
+		MatrixXd C_moor = CMoor_mat(false, ib);
+		if (C_moor.size() == 36)
+			C += C_moor;
 		const MatrixXd &M_ = dt.msh[ib].dt.M;
 		for (int ih = 0; ih < dt.Nh; ++ih) {	
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
@@ -738,6 +850,7 @@ void Hydro::GetRAO(double critDamp) {
 			}
 		}
 	}
+	GetDampingMatrix(critDamp);
 }
 
 MatrixXd SquareRoot(const MatrixXd& m) {	
@@ -763,13 +876,51 @@ VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const 
 			 Bw0   = Bw .unaryExpr([](double x){return IsNum(x) ? x : 0;});
 	VectorXcd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x : 0;});
 
-	MatrixXd Dc = D + CriticalDamping(critDamp, M, Aw0, C);
+	MatrixXd Dc = CriticalDamping(critDamp, M, Aw0, C);
+	Dc += D;
 	
 	MatrixXcd m = C - sqr(w)*(M + Aw0) + i<double>()*w*(Bw0 + Dc);
 	if (!FullPivLU<MatrixXcd>(m).isInvertible())
 	   throw Exc(t_("Problem solving RAO"));
 	
 	return Fwh0.transpose()*m.inverse();
+}
+
+void Hydro::GetDampingMatrix(double critDamp) {
+	if (dt.Nf == 0 || dt.A.size() < dt.Nb*6 || dt.B.size() < dt.Nb*6)
+		throw Exc(t_("Insufficient data to get RAO: Added mass and Radiation damping are required"));	
+
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		if (dt.msh[ib].dt.C.rows() < 6 || dt.msh[ib].dt.C.cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO: Hydrostatic stiffness matrix is required"));   
+		if (dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
+			throw Exc(t_("Insufficient data to get RAO: Inertia matrix is required"));   
+	}	
+
+	BEM::Print("\n");
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		MatrixXd C = C_mat(false, ib);
+		const MatrixXd &M_ = dt.msh[ib].dt.M;
+		MatrixXd avg;
+		avg.setConstant(6, 6, 0);
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			MatrixXd Aw  = A_mat(false, ifr, ib, ib);
+			MatrixXd Aw0 = Aw.unaryExpr([](double x){return IsNum(x) ? x : 0;});		// Replaces Null with 0				
+			MatrixXd Dc  = CriticalDamping(critDamp, M_, Aw0, C);
+			
+			avg += Dc;
+		}
+		avg /= dt.Nf;
+		BEM::Print(Format("\nAverage damping matrix considering %.3f of the critical Damping (body %d)\n", critDamp, ib));
+		for (int idf0 = 0; idf0 < 6; ++idf0) {
+			for (int idf1 = 0; idf1 < 6; ++idf1) {
+				if (idf1 > 0)
+					BEM::Print(", ");
+				BEM::Print(Format("%f", avg(idf0, idf1)));
+			}
+			BEM::Print("\n");
+		}		
+	}	
 }
 
 void Hydro::GetC() {
@@ -973,8 +1124,8 @@ void Hydro::GetOgilvieCompliance(bool zremoval, bool thinremoval, bool decayingT
 		            	vidof << idf;
 		            	vjdof << jdf;
 	            	}
-	    		} else
-	    			data.Reset(dt.A[idf][jdf], dt.Ainf_w[idf][jdf], dt.Ainf(idf, jdf), dt.B[idf][jdf], dt.Kirf[idf][jdf]);
+	    		}// else	// If not healed, is not removed, the original remains
+	    		//	data.Reset(dt.A[idf][jdf], dt.Ainf_w[idf][jdf], dt.Ainf(idf, jdf), dt.B[idf][jdf], dt.Kirf[idf][jdf]);
 	    		if (dt.dimen) {
 	    			dt.dimen = false;
 	    			dt.A[idf][jdf] 	= pick(A_ndim(idf, jdf));
@@ -1492,9 +1643,9 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 	if (IsLoadedQTF(false))	
 		CalcQTF(dt.qtfdif, k_q, false);	
 	
-	String error = AfterLoad();
-	if (!error.IsEmpty())
-		throw Exc(Format(t_("Problem translating global origin: '%s'\n%s"), error));	
+	//String error = AfterLoad();
+	//if (!error.IsEmpty())
+	//	throw Exc(Format(t_("Problem translating global origin: '%s'\n%s"), error));	
 }
 
 void Hydro::TranslateRadiationPotentials(const MatrixXd &delta) {
@@ -1861,6 +2012,39 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 		throw Exc(Format(t_("Problem translating model: '%s'\n%s"), error));	
 }
 
+/*
+void Hydro::NewmannApproximation() {
+	for (int ib= 0; ib < dt.Nb; ++ib)
+	    for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+	        if (dt.qhead[ih].real() != dt.qhead[ih].imag()) {
+		        for (int idf = 0; idf < 6; ++idf)
+					for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1)
+						for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2)
+							if(ifr1 != ifr2)
+								dt.qtfdif[ib][ih][idf](ifr1, ifr2) = 0.5*(dt.qtfdif[ib][ih][idf](ifr1, ifr1) + dt.qtfdif[ib][ih][idf](ifr2, ifr2));										
+	        }
+	    }
+}
+
+void Hydro::StandingBrendlingWilsonApproximation() {
+	for (int ib= 0; ib < dt.Nb; ++ib)
+	    for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+	        if (dt.qhead[ih].real() != dt.qhead[ih].imag()) {
+		        for (int idf = 0; idf < 6; ++idf)
+					for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1)
+						for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
+							if(ifr1 != ifr2) {
+								const std::complex<double> &w11 = dt.qtfdif[ib][ih][idf](ifr1, ifr1),
+														   &w22 = dt.qtfdif[ib][ih][idf](ifr2, ifr2);
+								if (Sign(w11.real()) == Sign(w22.real()))
+									dt.qtfdif[ib][ih][idf](ifr1, ifr2) = double(Sign(w11.real()))*sqrt(w11*w22);
+								else
+									dt.qtfdif[ib][ih][idf](ifr1, ifr2) = 0;										
+							}
+	        }
+	    }
+}
+*/						
 void Hydro::CompleteForces1st() {
 	if (!IsLoadedFex() && IsLoadedFsc() && IsLoadedFfk()) 
 		GetFexFromFscFfk();
@@ -2868,6 +3052,26 @@ MatrixXd Hydro::GetQTFMat(int ib, int idof, int idh, bool isSum, char what, bool
 	return ret;
 }	
 
+bool Hydro::IsHAMS(String file, String &controlfile) {
+	String ext = ToLower(GetFileExt(file));
+	
+	if (!(ext == ".1" || ext == ".3" || ext == ".4" || ext == ".6p" || ext == ".hst"))
+		return false;
+	
+	String folder = GetFileFolder(file);	// /Output/Wamit_format
+	if (ToLower(GetFileTitle(folder)) != "wamit_format")
+		return false;
+	
+	folder = GetFileFolder(folder);			// /Output
+	folder = GetFileFolder(folder);			// /
+	
+	controlfile = AFX(folder, "Input", "ControlFile.in");
+	if (!FileExists(controlfile))
+		controlfile.Clear();			// It is HAMS, but ControlFile.in is not found
+	
+	return true;
+}
+
 int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, int)> Status) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
@@ -2884,15 +3088,20 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 		if (ext == ".cal" || ext == ".tec" || ext == ".inf") 
 			ret = static_cast<Nemoh&>(hy).Load(file, Status);
 		else if (ext == ".out" || ext == ".hdf" || ext == ".mcn") 
-			ret = static_cast<Wamit&>(hy).Load(file, Status);
+			ret = static_cast<Wamit&>(hy).Load(file, false, 0, Status);
 		else if (ext == ".in") 
 			ret = static_cast<Hams&>(hy).Load(file, Status);
 		else if (ext == ".dat" || ext == ".fst") 
 			ret = static_cast<Fast&>(hy).Load(file, Status);
 		else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
-				   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot" || ext == ".mmx") 
-			ret = static_cast<Wamit&>(hy).Load(file, Status);
-		else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") 
+				   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot" || ext == ".mmx") {
+			String controlfile;
+			bool ishams = IsHAMS(file, controlfile);
+			if (!controlfile.IsEmpty())
+				ret = static_cast<Hams&>(hy).Load(controlfile, Status);	
+			else
+				ret = static_cast<Wamit&>(hy).Load(file, ishams, 0, Status);
+		} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") 
 			ret = static_cast<Aqwa&>(hy).Load(file, Status);
 		else if (ext == ".hdb") 
 			ret = static_cast<Diodore&>(hy).Load(file, Status);

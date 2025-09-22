@@ -612,7 +612,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
 	bat << "echo Start: \%date\% \%time\% > time.txt\n";
 	const Point3D &c0 = dt.msh[0].dt.c0;
-	bat << Format("%s -orca -numtries 10 -numthread %d -rw \"%s\" -translatewave %.5f %.5f %.5f \"%s\"", exeName, numThreads, name + ".wave.yml", c0.x, c0.y, c0.z, name + ".flex.yml");
+	bat << Format("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\" -translatewave %.5f %.5f %.5f -savewave \"%s\"", exeName, numThreads, name + ".wave.yml", name + ".flex.yml", c0.x, c0.y, c0.z, name + ".flex.yml");
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 	
 	FileOut	out;
@@ -692,7 +692,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		const Body &b = dt.msh[ib];
 		const Body::Data &d = b.dt;
 		
-		double panelSize = d.under.GetAvgLenSegment();
+		double panelSize = d.under.avgFacetSideLen;
 		double separationFromBody = panelSize*4;
 		
 		out <<	"  - BodyName: " << d.name << "\n"

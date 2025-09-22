@@ -190,15 +190,21 @@ public:
 	void OnCloseTab(Value key);
 	
 	void Jsonize(JsonIO &json) {
+		if (json.IsStoring()) {
+			if (history.size() > 100)			// Saves 100 max
+				history.Trim(100);
+			if (historyMetrics.size() > 100)
+				historyMetrics.Trim(100);
+		}
 		json
 			("history", history)
+			("historyMetrics", historyMetrics)
 		;
 	}
 	
 	TabBar tabBar;
 	UArray<FastScatter> tabScatters;
 	Upp::Index<int> tabKeys;
-	//Value key = -1;
 	
 	bool loadingDragDrop = false;
 	
@@ -206,16 +212,20 @@ private:
 	int tabCounter = 0;
 	
 	Upp::Index<String> history;
+	Upp::Index<String> historyMetrics;
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);
 	bool LoadDragDrop(const UVector<String> &files);
 	
 	void AddHistory(String filename);
+	void AddHistoryMetrics(String filename);
 		
 	TabBar::Style styleTab;
 	
 	StatusBar *statusBar = nullptr;
+	
+	friend FastScatter;
 };
 
 

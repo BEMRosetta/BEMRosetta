@@ -9,6 +9,7 @@
 #include <DropGrid/DropGrid.h>
 
 #include <BEMRosetta_cl/BEMRosetta.h>
+#include <BEMRosetta_cl/functions.h>
 
 using namespace Upp;
 
@@ -389,6 +390,8 @@ void MainBEM::Init() {
 			mainMatrixK.Load(Bem().hydros, idxs, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixK2)) 
 			mainMatrixK2.Load(Bem().hydros, idxs, ~menuPlot.showNdim);
+		else if (mainTab.IsAt(mainMatrixKAdd)) 
+			mainMatrixKAdd.Load(Bem().hydros, idxs, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixA))
 			mainMatrixA.Load(Bem().hydros, idxs, ~menuPlot.showNdim);
 		else if (mainTab.IsAt(mainMatrixM)) {
@@ -580,6 +583,9 @@ void MainBEM::Init() {
 	mainMatrixK2.Init(Hydro::MAT_KMOOR);
 	mainTab.Add(mainMatrixK2.SizePos(), t_("StiffMoor")).Disable();
 	
+	mainMatrixKAdd.Init(Hydro::MAT_KADD);
+	mainTab.Add(mainMatrixKAdd.SizePos(), t_("StiffAdd")).Disable();
+	
 	mainMD.Init(Hydro::DATA_MD);
 	mainTab.Add(mainMD.SizePos(), t_("Mean Drift")).Disable();
 		
@@ -735,6 +741,8 @@ void MainBEM::LoadSelTab(BEM &bem) {
 		mainMatrixK.Load(bem.hydros, idxs, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixK2))
 		mainMatrixK2.Load(bem.hydros, idxs, ~menuPlot.showNdim);
+	else if (id == mainTab.Find(mainMatrixKAdd))
+		mainMatrixKAdd.Load(bem.hydros, idxs, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixA))
 		mainMatrixA.Load(bem.hydros, idxs, ~menuPlot.showNdim);
 	else if (id == mainTab.Find(mainMatrixM))
@@ -894,7 +902,7 @@ bool MainBEM::OnLoadFile(String file) {
 		mainTab.WhenSet();
 	} catch (Exc e) {
 		if (!e.IsEmpty())
-			BEM::PrintError(t_("Error: ") + e);
+			BEM::PrintError(e);
 		return false;
 	}
 	return true;
@@ -2116,6 +2124,7 @@ void MainBEM::AfterBEM() {
 	mainTab.GetItem(mainTab.Find(mainMatrixM)).Enable(mainMatrixM.Load(Bem().hydros, idxs, false));					progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixK)).Enable(mainMatrixK.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixK2)).Enable(mainMatrixK2.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);	
+	mainTab.GetItem(mainTab.Find(mainMatrixKAdd)).Enable(mainMatrixKAdd.Load(Bem().hydros, idxs, ~menuPlot.showNdim));	progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixDlin)).Enable(mainMatrixDlin.Load(Bem().hydros, idxs, false));			progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainMatrixDquad)).Enable(mainMatrixDquad.Load(Bem().hydros, idxs, false));			progress.SetPos(pos++);
 	mainTab.GetItem(mainTab.Find(mainA)).Enable(mainA.Load(idxs));													progress.SetPos(pos++);
@@ -2191,7 +2200,7 @@ void MainBEM::OnSolve() {
 	}	
 }
 
-int MainBEM::AskQtfHeading(const Hydro &hy) {
+int MainBEM::AskQtfHeading(const Hydro &hy, double &heading) {
 	int numH = int(hy.dt.qhead.size());
 	if (numH <= 1)
 		return Null;
@@ -2202,22 +2211,39 @@ int MainBEM::AskQtfHeading(const Hydro &hy) {
 	dialog.Title(t_("Please choose the QTF headings to save"));
 	
 	dialog.swHeadings <<= 0;
-	dialog.dropHeadings.Enable(false);
 	
+	auto EnableFields = [&](bool enable) {
+		dialog.dropHeadings.Enable(enable);
+		dialog.heading.Enable(enable);
+	};
+	
+	EnableFields(false);
+	
+	UArray<std::complex<double>> qh;				// Prepare qtf headings to be shown ordered
+	for (const auto &c : hy.dt.qhead)
+		qh << FixHeading(c, Bem().headingType);
+	Sort(qh, SortComplex);
+
 	int id0 = Null;
 	for (int i = 0; i < numH; ++i) {
-		dialog.dropHeadings.Add(Format("%.3f-%.3f", hy.dt.qhead[i].real(), hy.dt.qhead[i].imag()));
-		if (abs(hy.dt.qhead[i].real()) < 0.001)
+		dialog.dropHeadings.Add(Format("%.3f:%.3f", qh[i].real(), qh[i].imag()));
+		if (abs(qh[i].real()) < 0.001)		// By default tries to select 0 deg
 			id0 = i;
 	}
+	
+	dialog.dropHeadings.WhenAction << [&] {
+		int id = dialog.dropHeadings.GetIndex();
+		dialog.heading = Avg(qh[id].real(), qh[id].imag());
+	};
+	
 	if (!IsNull(id0))
 		dialog.dropHeadings.SetIndex(id0);
 	else
 		dialog.dropHeadings.SetIndex(0);
 	
-	dialog.swHeadings << [&] {
-		dialog.dropHeadings.Enable(dialog.swHeadings == 2);
-	};
+	dialog.dropHeadings.WhenAction();
+	
+	dialog.swHeadings << [&] {EnableFields(dialog.swHeadings == 2);};
 	
 	bool cancel = true;
 	dialog.ok		<< [&] {cancel = false;	dialog.Close();};
@@ -2230,8 +2256,17 @@ int MainBEM::AskQtfHeading(const Hydro &hy) {
 		return Null;
 	else if (dialog.swHeadings == 1)
 		return -1;
-	else
-		return dialog.dropHeadings.GetIndex();
+	else {
+		heading = dialog.heading;
+		if (IsNull(heading))
+			throw Exc(t_("Heading has to be set"));
+		if (heading < -180 || heading > 180)
+			throw Exc(t_("Heading has to be between -180 and 180 deg"));
+		
+		int id = dialog.dropHeadings.GetIndex();
+		int ih = hy.dt.FindClosestQTFHead(hy.dt.qhead[id]);
+		return ih;
+	}
 }
 
 void MainBEM::OnConvert() {
@@ -2263,9 +2298,10 @@ void MainBEM::OnConvert() {
 		String fileName = ~fs;
 		
 		int qtfHeading = Null;
+		double heading;
 		
 		if (type == Hydro::WAMIT_1_3 || type == Hydro::FAST_WAMIT || (type == Hydro::UNKNOWN && GetFileExt(fileName) == ".1"))	
-			qtfHeading = AskQtfHeading(Bem().hydros[idx]);	
+			qtfHeading = AskQtfHeading(Bem().hydros[idx], heading);	
 		
 		Progress progress(t_("Saving BEM files..."), 100); 
 		progress.Granularity(1000);
@@ -2277,7 +2313,7 @@ void MainBEM::OnConvert() {
 				progress.SetText(str); 
 			if (_pos >= 0)
 				progress.SetPos(_pos); 
-			return !progress.Canceled();}, type, qtfHeading, mainBody.GetIb());
+			return !progress.Canceled();}, type, qtfHeading, mainBody.GetIb(), heading);
 			
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
@@ -2372,6 +2408,7 @@ void MainBEM::Jsonize(JsonIO &json) {
 		("menuPlot_opBpot", menuPlot.opBpot)
 		("menuPlot_opFfkpot", menuPlot.opFfkpot)
 		("menuPlot_opFscpot", menuPlot.opFscpot)
+		("mainStiffness2Add", mainMatrixKAdd)
 	;
 	if (json.IsLoading()) {
 		if (IsNull(dropExportId) || dropExportId < 0)
@@ -2472,7 +2509,9 @@ void MainBEM::DragAndDrop(Point , PasteClip& d) {
 	if (AcceptFiles(d)) {
 		filesToDrop = GetFiles(d); 
 		timerDrop.Set(0, [=] {LoadDragDrop();});
+		return;
 	}
+	timerDrop.Kill();
 }
 
 bool MainBEM::Key(dword key, int ) {

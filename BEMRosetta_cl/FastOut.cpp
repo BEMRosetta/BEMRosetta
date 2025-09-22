@@ -5,11 +5,14 @@
 #include <Core/Core.h>
 #include <SysInfo/SysInfo.h>
 #include <Surface/Surface.h>
+#include <Functions4U/Functions4U.h>
 #include <ScatterDraw/Equation.h>
 
 using namespace Upp;
 
 #include "FastOut.h"
+
+int FastOut::staticid = 0;
 
 static int IsTabSpaceRet(int c) {
 	if (c == '\t' || c == ' ' || c == '\r' || c == '\n')
@@ -41,7 +44,7 @@ FastOut::FastOut() {
 	calcParams << rootBend2.Init0(this);
 	calcParams << rootBend3.Init0(this);
 	calcParams << ncIMUTA.Init0(this);
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 40; ++i) {
 		auto &f = fairTens.Add();
 		f.Init00(i+1);
 		calcParams << f.Init0(this);	
@@ -55,6 +58,7 @@ FastOut::FastOut() {
 		syn[i] = ToLower(syn[i]);
 		syn.SetKey(i, ToLower(syn.GetKey(i)));	
 	}
+	id = staticid++;
 }
 
 UVector<String> FastOut::GetFilesToLoad(String path) {
@@ -164,6 +168,15 @@ String FastOut::Load(String file, Function <bool(String, int)> Status) {
 		ret = Load_LIS(file);
 	
 	fileName = file;
+	
+	String prefix = GetFileTitle(file) + ".MD.Line";
+	for (FindFile ff(AFX(GetFileFolder(file), prefix + "*.out")); ff; ff++) {
+		String fileLine = ff.GetPath();
+		int numline = ScanInt(ff.GetName().Mid(prefix.GetCount()));
+		FastOut line;
+		line.LoadOut(fileLine, Status);
+		AppendLine(numline, line);
+	}
 	
 	if (ret.IsEmpty())
 		AfterLoad();
@@ -574,7 +587,7 @@ void FastOut::AfterLoad() {
 	const char *strVel[] = {"PtfmTVxi",  "PtfmTVyi", "PtfmTVzi", "PtfmRVxi",  "PtfmRVyi", "PtfmRVzi"};
 	const char *strAcc[] = {"PtfmTAxi",  "PtfmTAyi", "PtfmTAzi", "PtfmRAxi",  "PtfmRAyi", "PtfmRAzi"};
 	
-	UVector<int> idPos(6);
+	idPos.SetCount(6);
 	for (int i = 0; i < 6; ++i)
 		idPos[i] = GetParameterX(strPos[i]);
 	UVector<int> idVel(6);
@@ -620,7 +633,7 @@ void FastOut::AfterLoad() {
 		for (int it = 0; it < aaa.size(); ++it) {
 			for (int i = 0; i < 3; ++i)
 				aaa[it][i] = GetVal(it, idAcc[i]);
-			for (int i = 4; i < 6; ++i)
+			for (int i = 3; i < 6; ++i)
 				aaa[it][i] = ToRad(GetVal(it, idAcc[i]));
 		}
 	}
@@ -651,9 +664,9 @@ void FastOut::AfterLoad() {
 				if (aff.size() > 0) {
 					double ptfmCOBxt = cas.hydrodyn.GetDouble("PtfmCOBxt");
 					double ptfmCOByt = cas.hydrodyn.GetDouble("PtfmCOByt");
-					int id = FindParam("CB");
+					int id = FindParam("CF");
 					if (id < 0)
-						pointParams << PointParam("CB", Point3D(ptfmCOBxt, ptfmCOByt, 0), this);
+						pointParams << PointParam("CF", Point3D(ptfmCOBxt, ptfmCOByt, 0), this);
 				}
 			} catch(...) {
 			}
@@ -777,7 +790,64 @@ void FastOut::AfterLoad() {
 		}
 	}
 	
+	// Store the mooring lines points to render or check them
+	mooringPointIds.Clear();
+	UVector<UVector<int>> pointNames;
+	UVector<int> lineNames;
+	
+	SortedIndex<String> lst = GetParameterList("L*N*p");
+		
+	for (int i = 0; i < lst.size(); i++) {
+		int lineName  = ScanInt(lst[i].Mid(1));
+		int lineId = Find(lineNames, lineName);
+		if (lineId < 0) {
+			pointNames.Add();
+			mooringPointIds.Add();
+			lineNames << lineName;
+			lineId = lineNames.size() - 1;
+		}
+		
+		int pos = lst[i].FindAfter("N");		// 'N' has to be because of "L*N*p"
+		int pointName = ScanInt(lst[i].Mid(pos));
+		int pointId = Find(pointNames[lineId], pointName);
+		if (pointId < 0) {
+			mooringPointIds[lineId].Add();
+			pointNames[lineId] << pointName;
+			pointId = pointNames[lineId].size() - 1;
+		}
+		FastOut::id3d &id = mooringPointIds[lineId][pointId];
+		
+		switch(*lst[i].Last()) {
+		case 'X':	id.x = GetParameterX(lst[i]);	break;
+		case 'Y':	id.y = GetParameterX(lst[i]);	break;
+		case 'Z':	id.z = GetParameterX(lst[i]);	break;
+		}
+	}
+	for (int i = 0; i < lineNames.size(); ++i) {
+		UVector<int> order = GetSortOrderX(pointNames[i]);
+		mooringPointIds[i] = ApplyIndex(mooringPointIds[i], order);
+	}
+	
 	aff.Clear();
+}
+
+void FastOut::AppendLine(int idline, FastOut &fst) {
+	String strp = Format("L%d", idline) + "N";
+	fst.parameters.Remove(0);
+	for (String &param : fst.parameters) {
+		param = ToUpper(param);
+		param.Replace("NODE", strp);
+	}
+	parameters.Append(fst.parameters);
+	fst.units.Remove(0);
+	units.Append(fst.units);
+
+	int oldnum = dataOut.size();
+	dataOut.SetCount(oldnum + fst.dataOut.size() - 1);
+	for (int id = 1; id < fst.dataOut.size(); ++id) {
+		dataOut[oldnum + id - 1] = pick(fst.dataOut[id]);
+		dataOut[oldnum + id - 1].SetCount(dataOut[0].size(), Null);		// Crop
+	}
 }
 
 void FastOut::Clear() {
@@ -922,8 +992,7 @@ SortedIndex<String> FastOut::GetParameterList(String filter) {
 				list.FindAdd(GetParameter(i));
 		}
 	}
-	//SortIndex(list);
-	return list;//.PickKeys();
+	return list;
 }
 
 SortedIndex<String> FastOut::GetUnitList(String filter) {
@@ -940,8 +1009,7 @@ SortedIndex<String> FastOut::GetUnitList(String filter) {
 				list.FindAdd(GetUnit(i));
 		}
 	}
-	//SortIndex(list);
-	return list;//.PickKeys();
+	return list;
 }
 
 SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filterUnits) {
@@ -967,7 +1035,7 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, ParameterMetrics &params, double start, double end, UVector<UVector<Value>> &table) {
 	table.Clear();
 	
-	// Gets the real et of parameters taking into account *
+	// Gets the real set of parameters taking into account *
 	auto FindParam = [&](String strpartofind)->bool {
 		for (auto &param : params.params) {
 			if (ToLower(strpartofind) == ToLower(param.name))
@@ -1079,6 +1147,27 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 							throw Exc("'weibull' requires one argument");
 						EigenVector v(data, 0, 1);
 						val = v.PercentileWeibullValY(ScanDouble(pars[1]));
+					} else if (stat == "td") {
+						if (pars.size() != 4)
+							throw Exc("'td' requires three arguments");
+						double deltaTime = StringToSeconds(pars[1]);
+						double gamma_mean = ScanDouble(pars[2]);
+						double gamma_dyn = ScanDouble(pars[3]);
+						
+						UVector<double> maxs;
+						int id0 = 0;
+						double t0 = time[id0];
+						for (int i = 0; i < time.size(); ++i) {
+							if (time[i] - t0 >= deltaTime) {
+								maxs << data.segment(id0, i - id0 + 1).maxCoeff();
+								id0 = i+1;
+								t0 = time[id0];
+							}
+						}
+						double mean = data.mean();
+						double mpm = Avg(maxs) - 0.45*StdDev(maxs, mean);
+						double tc_dyn = mpm - mean;
+						val = mean*gamma_mean + tc_dyn*gamma_dyn; 		// From DNV-OS-E301
 					} else if (stat == "demo") {
 						if (pars.size() != 3)
 							throw Exc("'demo' requires two arguments");
@@ -1115,7 +1204,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				String stat = pars[0];
 					
 				double val;
-				if (stat == "mean") 
+				if (stat == "mean" || stat == "avg") 
 					val = (data.array()*time.array()).sum() / time.sum();
 				else if (stat == "min") 
 					val = data.minCoeff();
@@ -1146,6 +1235,8 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				else if (stat == "percentile") 
 					val = Null;
 				else if (stat == "weibull") 
+					val = Null;
+				else if (stat == "td") 
 					val = Null;
 				else if (stat == "demo") 
 					val = Null;
@@ -1218,7 +1309,7 @@ void FASTCase::Setup(String seed, String folderCases) {
 	Load(fstFile);
 }
 
-void FASTCaseDecay::Init(BEM::DOF _dof, double time, double x, double y, double z, double rx, double ry, double rz) {
+void FASTCaseDecay::Init(BasicBEM::DOF _dof, double time, double x, double y, double z, double rx, double ry, double rz) {
 	dof = _dof;
 	
 	fast.SetInt("CompInflow", 0);
@@ -1279,7 +1370,7 @@ bool FASTCaseDecay::Postprocess() {
 	return true;
 }
 
-double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2, double &damp) {
+double GetDecayPeriod(FastOut &fst, BasicBEM::DOF dof, double &r2, double &damp) {
 	r2 = damp = Null;
 	
 	String param = "ptfm" + S(BEM::strDOFtext[dof]);

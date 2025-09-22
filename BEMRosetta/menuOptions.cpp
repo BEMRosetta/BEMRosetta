@@ -76,6 +76,7 @@ void MenuOptions::Load() {
 	zeroIfEmpty <<= bem->zeroIfEmpty;
 	guiScale <<= bem->guiScale;
 	windowTitle <<= bem->windowTitle;
+	opT <<= bem->opT;
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -127,6 +128,7 @@ void MenuOptions::OnSave() {
 		bem->zeroIfEmpty = ~zeroIfEmpty;
 		bem->guiScale = ~guiScale;
 		bem->windowTitle = ~windowTitle;
+		bem->opT = ~opT;
 		
 		bem->dofType = BasicBEM::DOFType(dofType.GetIndex());
 		bem->headingType = BasicBEM::HeadingType(headingType.GetIndex());
@@ -138,13 +140,13 @@ void MenuOptions::OnSave() {
 }
 
 bool MenuOptions::IsChanged() {
-	if (!EqualDecimals(bem->g, ~g, 8)) 
+	if (!EqualDecimals(bem->g, double(~g), 8)) 
 		return true;
-	if (!EqualDecimals(bem->rho, ~rho, 8))
+	if (!EqualDecimals(bem->rho, double(~rho), 8))
 		return true;
-	if (!EqualDecimals(bem->len, ~len, 8))
+	if (!EqualDecimals(bem->len, double(~len), 8))
 		return true;
-	if (!EqualDecimals(bem->depth, ~depth, 8))
+	if (!EqualDecimals(bem->depth, double(~depth), 8))
 		return true;
 	//if (bem->discardNegDOF != ~discardNegDOF)
 	//	return true;
@@ -154,9 +156,9 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->calcAinf_w != ~calcAinf_w)
 		return true;
-	if (!EqualDecimals(bem->maxTimeA, ~maxTimeA, 8))
+	if (!EqualDecimals(bem->maxTimeA, double(~maxTimeA), 8))
 		return true;
-	if (bem->numValsA != ~numValsA)
+	if (bem->numValsA != double(~numValsA))
 		return true;
 	if (bem->onlyDiagonal != ~onlyDiagonal)
 		return true;
@@ -204,6 +206,8 @@ bool MenuOptions::IsChanged() {
 		return true;
 	if (bem->windowTitle != ~windowTitle)
 		return true;
-						
+	if (bem->opT != ~opT)
+		return true;
+							
 	return false;
 }

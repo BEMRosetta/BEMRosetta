@@ -222,170 +222,192 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	hy.dt.head.Clear();
 	mesh.Clear();
 	
+	int ib;
+	
 	UArray<Upp::Index<int>> ids;
-	try {
-		String line;
-		line = in.GetLine();	
-		
-		if (!line.StartsWith("*********1*********2*********3"))
-			return t_("Format error in AQWA .dat mesh file");	// To detect AQWA format
+	
+	String line;
+	line = in.GetLine();	
+	
+	if (!line.StartsWith("*********1*********2*********3"))
+		return t_("Format error in AQWA .dat mesh file");	// To detect AQWA format
 
-		LineParser f(in);
-		
-		int deck = -1;
-		while(!f.IsEof()) {
-			line = f.GetLine();
-			int pos;
-			if (line.StartsWith("*")) {
-				if ((pos = line.FindAfter("DECK")) > 0)
-					deck = ScanInt(line.Mid(pos));
-				else if ((pos = line.FindAfter("Unit System :")) >= 0) {
-					String system = Trim(line.Mid(pos));
-					if (system.Find("Metric") < 0)
-						throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
-					/*if (system.Find("kg") > 0)
-						factorMass = 1;
-					else if (system.Find("tonne") > 0)
-						factorMass = 1000;
-					else 
-						throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));*/
-					if (system.Find("m ") > 0)
-						factorLength = 1;
-					else if (system.Find("km ") > 0)
-						factorLength = 1000;
-					else 
-						throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
-				}
+	LineParser f(in);
+	
+	int deck = -1;
+	while(!f.IsEof()) {
+		line = f.GetLine();
+		int pos;
+		if (line.StartsWith("*")) {
+			if ((pos = line.FindAfter("DECK")) > 0)
+				deck = ScanInt(line.Mid(pos));
+			else if ((pos = line.FindAfter("Unit System :")) >= 0) {
+				String system = Trim(line.Mid(pos));
+				if (system.Find("Metric") < 0)
+					throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
+				/*if (system.Find("kg") > 0)
+					factorMass = 1;
+				else if (system.Find("tonne") > 0)
+					factorMass = 1000;
+				else 
+					throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));*/
+				if (system.Find("m ") > 0)
+					factorLength = 1;
+				else if (system.Find("km ") > 0)
+					factorLength = 1000;
+				else 
+					throw Exc(in.Str() + "\n" + t_("Unknown length unit"));
 			}
-			
-			if (deck == 1) {
-				f.LoadFields(line, {4, 6, 20, 30, 40});
-				
-				int ib = f.GetInt_nothrow(0);
-				if (!IsNull(ib)) {
-					ib--;
-					if (ib+1 > mesh.size()) {
-						mesh.SetCount(ib+1);
-						ids.SetCount(ib+1);
-						mesh[ib].dt.fileName = fileName;
-						mesh[ib].dt.SetCode(Body::AQWA_DAT);
-					}
-					int id = f.GetInt(1);
-					if (id >= 98000 && id < 99000) {
-						mesh[ib].dt.cg.x = f.GetDouble(2);
-						mesh[ib].dt.cg.y = f.GetDouble(3);
-						mesh[ib].dt.cg.z = f.GetDouble(4);
-						mesh[ib].dt.c0 = clone(mesh[ib].dt.cg);		// In AQWA, cg == c0
-					} else {
-						ids[ib] << id;
-						Point3D &node = mesh[ib].dt.mesh.nodes.Add();
-						node.x = f.GetDouble(2)*factorLength;
-						node.y = f.GetDouble(3)*factorLength;
-						node.z = f.GetDouble(4)*factorLength;
-					}
-				}
-			} else if (deck == 2) {
-				f.LoadFields(line, {4, 6, 11, 15, 24, 31, 38, 45, 52});
-				
-				int ib = f.GetInt_nothrow(0);
-				if (IsNull(ib)) {
-					int ps;
-					if ((ps = line.FindAfter("ELM")) >= 0) {
-						ib = ScanInt(line.Mid(ps, 3))-1;
-						String name = Trim(line.Mid(ps+3));
-						mesh[ib].dt.name = name;
-					} else {
-						if ((ps = line.FindAfter("SYMX")) >= 0) 
-							hy.dt.symY = true;
-						if ((ps = line.FindAfter("SYMY")) >= 0) 
-							hy.dt.symX = true;
-					}
-				} else {
-					ib--;
-					String code = f.GetText(1);
-					if (code == "QPPL" || code == "TPPL") {
-						Panel &panel = mesh[ib].dt.mesh.panels.Add();
-						int id;
-						id = f.GetInt(4);
-						if ((id = ids[ib].Find(id)) < 0)
-							throw Exc(in.Str() + "\n"  + t_("id 1 not found"));
-						panel.id[0] = id;
-						id = f.GetInt(5);
-						if ((id = ids[ib].Find(id)) < 0)
-							throw Exc(in.Str() + "\n"  + t_("id 2 not found"));
-						panel.id[1] = id;
-						id = f.GetInt(6);
-						if ((id = ids[ib].Find(id)) < 0)
-							throw Exc(in.Str() + "\n"  + t_("id 3 not found"));
-						panel.id[2] = id;
-						
-						if (code == "QPPL") {
-							id =  f.GetInt(7);
-							if ((id = ids[ib].Find(id)) < 0)
-								throw Exc(in.Str() + "\n"  + t_("id 4 not found"));
-							panel.id[3] = id;
-						} else if (code == "TPPL") 
-							panel.id[3] = panel.id[0];
-					}
-				}
-			} else if (deck == 3) {
-				if (f.IsInt(0)) {
-					int ib = f.GetInt(0)-1;
-					if (ib >= mesh.size())
-						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
-					if (f.GetInt(1) >= 98000) {
-						if (mesh[ib].dt.M.size() != 36)
-							mesh[ib].dt.M = MatrixXd::Zero(6, 6);
-						mesh[ib].dt.M(0, 0) = mesh[ib].dt.M(1, 1) = mesh[ib].dt.M(2, 2) = f.GetDouble(2);
-					}
-				}	
-			} else if (deck == 4) {
-				f.LoadFields(line, {1, 15, 21, 30, 41, 51, 61, 71});
-				
-				String str = f.GetText(0);
-				if (str.Find("PMAS") > 0) {
-					str.Replace("PMAS", "");
-					int ib = ScanInt(str);
-					if (!IsNull(ib) && f.GetInt(1) >= 98000) {
-						ib--;
-						if (ib >= mesh.size())
-							throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
-						if (mesh[ib].dt.M.size() != 36)
-							mesh[ib].dt.M = MatrixXd::Zero(6, 6);
-						mesh[ib].dt.M(3, 3) = f.GetDouble(2);
-						mesh[ib].dt.M(3, 4) = mesh[ib].dt.M(4, 3) = f.GetDouble(3);
-						mesh[ib].dt.M(3, 5) = mesh[ib].dt.M(5, 3) = f.GetDouble(4);
-						mesh[ib].dt.M(4, 4) = f.GetDouble(5);
-						mesh[ib].dt.M(4, 5) = mesh[ib].dt.M(5, 4) = f.GetDouble(6);
-						mesh[ib].dt.M(5, 5) = f.GetDouble(7);
-					}
-				}
-			} else if (deck == 5) {
-				if (f.GetText(0) == "DPTH")
-					hy.dt.h = f.GetDouble(1);
-				else if (f.GetText(0) == "DENS")
-					hy.dt.rho = f.GetDouble(1);
-				else if (f.GetText(0) == "ACCG")
-					hy.dt.g = f.GetDouble(1);
-			} else if (deck == 6) {
-			    if (f.GetText(0) == "1HRTZ") 
-			     	hy.dt.w << 2*M_PI*f.GetDouble(3);
-			    else if (f.GetText(0) == "1DIRN") 
-					hy.dt.head << f.GetDouble(3);
-			} 
 		}
 		
-		hy.dt.Nf = hy.dt.w.size();
-		hy.dt.Nh = hy.dt.head.size();
-		hy.dt.Nb = mesh.size();
-		
-		// Removes mooring, Morison and other points unrelated with panels
-		for (Body &m : mesh) 
-			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
-		
-	} catch (Exc e) {
-		return t_("Parsing error: ") + e;
+		if (deck == 1) {
+			f.LoadFields(line, {4, 6, 20, 30, 40});
+			
+			ib = f.GetInt_nothrow(0);
+			if (!IsNull(ib)) {
+				ib--;
+				if (ib+1 > mesh.size()) {
+					mesh.SetCount(ib+1);
+					ids.SetCount(ib+1);
+					mesh[ib].dt.fileName = fileName;
+					mesh[ib].dt.SetCode(Body::AQWA_DAT);
+				}
+				int id = f.GetInt(1);
+				if (id >= 98000 && id < 99000) {
+					mesh[ib].dt.cg.x = f.GetDouble(2);
+					mesh[ib].dt.cg.y = f.GetDouble(3);
+					mesh[ib].dt.cg.z = f.GetDouble(4);
+					mesh[ib].dt.c0 = clone(mesh[ib].dt.cg);		// In AQWA, cg == c0
+				} else {
+					ids[ib] << id;
+					Point3D &node = mesh[ib].dt.mesh.nodes.Add();
+					node.x = f.GetDouble(2)*factorLength;
+					node.y = f.GetDouble(3)*factorLength;
+					node.z = f.GetDouble(4)*factorLength;
+				}
+			}
+		} else if (deck == 2) {
+			f.LoadFields(line, {4, 6, 11, 15, 24, 31, 38, 45, 52});
+			
+			ib = f.GetInt_nothrow(0);
+			if (IsNull(ib)) {
+				int ps;
+				if ((ps = line.FindAfter("ELM")) >= 0) {
+					ib = ScanInt(line.Mid(ps, 3))-1;
+					String name = Trim(line.Mid(ps+3));
+					mesh[ib].dt.name = name;
+				} else {
+					if ((ps = line.FindAfter("SYMX")) >= 0) 
+						hy.dt.symY = true;
+					if ((ps = line.FindAfter("SYMY")) >= 0) 
+						hy.dt.symX = true;
+				}
+			} else {
+				ib--;
+				String code = f.GetText(1);
+				if (code == "QPPL" || code == "TPPL") {
+					Panel &panel = mesh[ib].dt.mesh.panels.Add();
+					int id;
+					id = f.GetInt(4);
+					if ((id = ids[ib].Find(id)) < 0)
+						throw Exc(in.Str() + "\n"  + t_("id 1 not found"));
+					panel.id[0] = id;
+					id = f.GetInt(5);
+					if ((id = ids[ib].Find(id)) < 0)
+						throw Exc(in.Str() + "\n"  + t_("id 2 not found"));
+					panel.id[1] = id;
+					id = f.GetInt(6);
+					if ((id = ids[ib].Find(id)) < 0)
+						throw Exc(in.Str() + "\n"  + t_("id 3 not found"));
+					panel.id[2] = id;
+					
+					if (code == "QPPL") {
+						id =  f.GetInt(7);
+						if ((id = ids[ib].Find(id)) < 0)
+							throw Exc(in.Str() + "\n"  + t_("id 4 not found"));
+						panel.id[3] = id;
+					} else if (code == "TPPL") 
+						panel.id[3] = panel.id[0];
+				}
+			}
+		} else if (deck == 3) {
+			if (f.IsInt(0)) {
+				ib = f.GetInt(0)-1;
+				if (ib >= mesh.size())
+					throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+				if (f.GetInt(1) >= 98000) {
+					if (mesh[ib].dt.M.size() != 36)
+						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
+					mesh[ib].dt.M(0, 0) = mesh[ib].dt.M(1, 1) = mesh[ib].dt.M(2, 2) = f.GetDouble(2);
+				}
+			}	
+		} else if (deck == 4) {
+			f.LoadFields(line, {1, 15, 21, 30, 41, 51, 61, 71});
+			
+			String str = f.GetText(0);
+			if (str.Find("PMAS") > 0) {
+				str.Replace("PMAS", "");
+				ib = ScanInt(str);
+				if (!IsNull(ib) && f.GetInt(1) >= 98000) {
+					ib--;
+					if (ib >= mesh.size())
+						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+					if (mesh[ib].dt.M.size() != 36)
+						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
+					mesh[ib].dt.M(3, 3) = f.GetDouble(2);
+					mesh[ib].dt.M(3, 4) = mesh[ib].dt.M(4, 3) = f.GetDouble(3);
+					mesh[ib].dt.M(3, 5) = mesh[ib].dt.M(5, 3) = f.GetDouble(4);
+					mesh[ib].dt.M(4, 4) = f.GetDouble(5);
+					mesh[ib].dt.M(4, 5) = mesh[ib].dt.M(5, 4) = f.GetDouble(6);
+					mesh[ib].dt.M(5, 5) = f.GetDouble(7);
+				}
+			}
+		} else if (deck == 5) {
+			if (f.GetText(0) == "DPTH")
+				hy.dt.h = f.GetDouble(1);
+			else if (f.GetText(0) == "DENS")
+				hy.dt.rho = f.GetDouble(1);
+			else if (f.GetText(0) == "ACCG")
+				hy.dt.g = f.GetDouble(1);
+		} else if (deck == 6) {
+		    if (f.GetText(0) == "1HRTZ") 
+		     	hy.dt.w << 2*M_PI*f.GetDouble(3);
+		    else if (f.GetText(0) == "1DIRN") 
+				hy.dt.head << f.GetDouble(3);
+		} else if (deck == 7) { 
+			f.LoadFields(line, {0, 10, 15, 20, 30, 40, 50, 60, 70});
+			if (f.size() > 0) {
+				if (f.size() == 2) {
+					String wfs = f.GetText(1);
+					int id = wfs.FindAfter("WFS");
+					if (id > 0)
+						ib = ScanInt(wfs.Mid(id))-1;
+				} else if (f.GetText(0) == "SSTF") {
+					if (mesh[ib].dt.Cadd.size() == 0)
+						mesh[ib].dt.Cadd.setConstant(6, 6, 0);
+					int idf1 = f.GetInt(2);
+					for (int idf2 = 0; idf2 < 6; ++idf2)
+						mesh[ib].dt.Cadd(idf1-1, idf2) = f.GetDouble(idf2+3);
+				} else if (f.GetText(0) == "FIDP") {
+					if (mesh[ib].dt.Dlin.size() == 0)
+						mesh[ib].dt.Dlin.setConstant(6, 6, 0);
+					int idf1 = f.GetInt(2);
+					for (int idf2 = 0; idf2 < 6; ++idf2)
+						mesh[ib].dt.Dlin(idf1-1, idf2) = f.GetDouble(idf2+3);
+				}
+			}
+		}
 	}
+	
+	hy.dt.Nf = hy.dt.w.size();
+	hy.dt.Nh = hy.dt.head.size();
+	hy.dt.Nb = mesh.size();
+	
+	// Removes mooring, Morison and other points unrelated with panels
+	for (Body &m : mesh) 
+		Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+	
+	hy.dt.solver = Hydro::AQWA_DAT;
 	
 	return String();
 }
@@ -438,7 +460,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "JOB AQWA  LINE" << "\n"
 	<< "TITLE               " << "\n"
 	<< "NUM_CORES         " << numThreads << "\n"
-	<< Format("OPTIONS %s%s%s", getQTF ? "AQTF " : "", "GOON ", getQTF ? "CQTF " : "") << "\n"
+	<< Format("OPTIONS %s%s%s", getQTF ? "AQTF " : "", "GOON ", getQTF ? "CQTF MQTF " : "") << "\n"
 	<< "OPTIONS " << (getPotentials ? "PRPT PRPR" : "") <<"\n"
 	<< Format("OPTIONS %s%s REST END", getQTF&&(!farField) ? "NQTF " : "", "LHFR") << "\n"
 	<< "RESTART  1  5" << "\n"
@@ -471,8 +493,10 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			if (IsNull(cg)) 
 				cg = Point3D::Zero();
 		}
-		ret << Format("%6d%5d        %s%s%s\n", ib+1, 98000+ib, 
-						FDS(cg.x/factorLength, 10, true), FDS(cg.y/factorLength, 10, true), FDS(cg.z/factorLength, 10, true));	
+		ret << Format("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
+						FDS(cg.x/factorLength, 10, true), 
+						FDS(cg.y/factorLength, 10, true), 
+						FDS(cg.z/factorLength, 10, true));	
 	}
 	ret << " END" << "\n"
 	<< "********************************************************************************" << "\n"
@@ -493,8 +517,8 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	
 	for (int ib = 0; ib < surfs.size(); ++ib) {
 		ret << "********************************************************************************\n";
-		if (ib == 0)
-			ret << Format("          ELM%d      Body%d\n", ib+1, ib+1);
+		//if (ib == 0)
+		ret << Format("          ELM%d      Body%d\n", ib+1, ib+1);
 		if (y0z || x0z) {
 			ret << "     ";
 			if (y0z)
@@ -535,9 +559,11 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************\n"
 	<< "          MATE\n";
 		
-	for (int ib = 0; ib < mesh.size(); ++ib)
+	for (int ib = 0; ib < mesh.size(); ++ib) {
+		if (ib > 0)
+			ret << "\n";	
 		ret << Format("    %2d         %5d  %s", ib+1, 98000+ib, FDS(mesh[ib].GetMass(), 8, true));
-
+	}
 	ret	<< "\n END\n";	
 		
 	ret
@@ -558,6 +584,8 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			m44 = 0.0001;
 		if (m55 == 0)
 			m55 = 0.0001;
+		if (ib > 0)
+			ret << "\n";
 		ret << Format("%6d%s     %5d %s %s %s %s %s %s", ib+1, "PMAS", 98000+ib, 
 			FDS(m33, 9, true), FDS(mesh[ib].dt.M(3, 4), 9, true), FDS(mesh[ib].dt.M(3, 5), 9, true),
 			FDS(m44, 9, true), FDS(mesh[ib].dt.M(4, 5), 9, true), FDS(m55, 9, true));
@@ -612,19 +640,47 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	ret
 	<< "********************************************************************************\n"
 	<< "*********************************** DECK  7 ************************************\n"
-	<< "********************************************************************************\n"
-	<< "********************************************************************************\n"
-	<< "          WFS1\n"
-	<< " END\n"
-	<< "********************************************************************************\n"
+	<< "********************************************************************************\n";
+	for (int ib = 0; ib < mesh.size(); ++ib) {
+		ret << "********************************************************************************\n";
+		ret << Format("          WFS%d\n", ib+1);
+		if (mesh[ib].dt.Cadd.size() == 36 || mesh[ib].dt.Cmoor.size() == 36) {
+			MatrixXd K;
+			K.setConstant(6, 6, 0);
+			if (mesh[ib].dt.Cadd.size() == 36)
+				K += mesh[ib].dt.Cadd;		
+			if (mesh[ib].dt.Cmoor.size() == 36)
+				K += mesh[ib].dt.Cmoor;
+			for (int idf0 = 0; idf0 < 6; ++idf0) {
+				ret << Format("      SSTF    1%5d", idf0+1);
+				for (int idf1 = 0; idf1 < 6; ++idf1) 
+					ret << FDS(K(idf0, idf1), 10, true);
+				ret << "\n";
+			}
+		}
+		if (mesh[ib].dt.Dlin.size() == 36) {
+			for (int idf0 = 0; idf0 < 6; ++idf0) {
+				ret << Format("      FIDP     %5d", idf0+1);
+				for (int idf1 = 0; idf1 < 6; ++idf1) 
+					ret << FDS(mesh[ib].dt.Dlin(idf0, idf1), 10, true);
+				ret << "\n";
+			}
+		}
+		ret	<< " END\n"
+			<< "********************************************************************************\n";
+	}
+	ret
 	<< "********************************************************************************\n"
 	<< "*********************************** DECK  8 ************************************\n"
-	<< "********************************************************************************\n"
-	<< "********************************************************************************\n"
-	<< "          DRC1\n"
-	<< "* No data defined for this structure\n"
-	<< " END\n"
-	<< "********************************************************************************\n"
+	<< "********************************************************************************\n";
+	for (int ib = 0; ib < mesh.size(); ++ib) {
+		ret << "********************************************************************************\n";
+		ret << Format("          DRC%d\n", ib+1);
+		ret	<< "* No data defined for this structure\n"
+			<< " END\n"
+			<< "********************************************************************************\n";
+	}
+	ret
 	<< "********************************************************************************\n"
 	<< "          NONE\n"
 	<< "          NONE\n"

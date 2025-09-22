@@ -14,8 +14,10 @@ public:
 	static UVector<String> GetFilesToLoad(String path);
 	static String GetFileToLoad(String fileName);
 	
-	String Load(String fileName, Function <bool(String, int)> Status);
+	String Load(String fileName, Function <bool(String, int)> Status = Null);
 	bool Save(String fileName, Function <bool(String, int)> Status, String type = "", String sep = "", const UVector<int> &ids = UVector<int>());
+	
+	void AppendLine(int numLine, FastOut &fst);
 	
 	void Clear();
 	bool IsEmpty();
@@ -155,7 +157,14 @@ public:
 	double TipRad = Null, OverHang = Null, ShftTilt = Null, Precone = Null, Twr2Shft = Null, TowerHt = Null, baseClearance = Null;
 	
 	double Hs = Null, Tp = Null, heading = Null;
-    	
+    
+    class id3d : public Moveable<id3d> {
+    public:
+        int x = Null, y = Null, z = Null;
+    };
+	UVector<UVector<id3d>> mooringPointIds;
+	UVector<int> idPos;
+	
 private:
 	String LoadOut(String fileName, Function <bool(String, int)> Status);
 	String LoadOutb(String fileName, Function <bool(String, int)> Status);
@@ -167,7 +176,6 @@ private:
 	void AfterLoad();
 
 	String fileName;
-	//Time lastTime;
 	
 	int idActualTime = -1;
 	
@@ -623,6 +631,9 @@ private:
 		int id, idFair;
 	};
 	UArray<Fairten_tParam> fairTens;	
+	
+	int id = -1;
+	static int staticid;
 };
 
 
@@ -668,9 +679,18 @@ public:
 		
 		fast.fileName = file;
 		elastodyn.fileName = AFX(path, fast.GetString("EDFile"));
+		if (GetFileTitle(elastodyn.fileName).Find("unused") >= 0)
+			elastodyn.fileName = "";
 		hydrodyn.fileName = AFX(path, fast.GetString("HydroFile"));
+		if (GetFileTitle(hydrodyn.fileName).Find("unused") >= 0)
+			hydrodyn.fileName = "";
 		inflowfile.fileName = AFX(path, fast.GetString("InflowFile"));
+		if (GetFileTitle(inflowfile.fileName).Find("unused") >= 0)
+			inflowfile.fileName = "";
 		subdyn.fileName = AFX(path, fast.GetString("SubFile"));
+		if (GetFileTitle(subdyn.fileName).Find("unused") >= 0)
+			subdyn.fileName = "";
+		
 		try {
 			dlldat.fileName = GetAbsolutePath(path, hydrodyn.GetString("NLFK_DLL_input"));
 		} catch(...) {
@@ -864,14 +884,14 @@ public:
 
 class FASTCaseDecay : public FASTCase {
 public:
-	void Init(BEM::DOF dof, double time, double x, double y, double z, double rx, double ry, double rz);
+	void Init(BasicBEM::DOF dof, double time, double x, double y, double z, double rx, double ry, double rz);
 	virtual bool Postprocess();
 	
-	BEM::DOF dof;
+	BasicBEM::DOF dof;
 	//double T, r2;
 };
 
-double GetDecayPeriod(FastOut &fst, BEM::DOF dof, double &r2);
+double GetDecayPeriod(FastOut &fst, BasicBEM::DOF dof, double &r2);
 
 double GetRAO(const VectorXd &data, const VectorXd &time, double T, bool onlyFFT, double r2Max);
 void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &A);

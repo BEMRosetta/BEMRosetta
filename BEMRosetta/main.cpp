@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2025, the BEMRosetta author and contributors
 #include <CtrlLib/CtrlLib.h>
 
 #define IMAGECLASS Img
@@ -112,18 +112,13 @@ void Main::Init(bool firstTime) {
 	}
 	
 	if (parameter.IsEmpty()) {
+		mainMoor.Init();	LOG("Init Moor");
+		tab.Add(mainMoor.SizePos(), t_("Mooring"));
+	}
+
+	if (parameter.IsEmpty()) {
 		mainTools.Init();
 		tab.Add(mainTools.SizePos(), t_("Tools"));
-	}
-	
-	if (parameter.IsEmpty()) {
-		mainMoor.Init();	LOG("Init Moor");
-#ifdef flagDEBUG
-			tab.Add(mainMoor.SizePos(), t_("Mooring"));
-#else
-		if (Bem().experimental)
-			tab.Add(mainMoor.SizePos(), t_("Mooring"));
-#endif
 	}
 	
 	if (parameter.IsEmpty()) {
@@ -138,7 +133,7 @@ void Main::Init(bool firstTime) {
 	mainOutput.Init();			LOG("Init Output");
 	tab.Add(mainOutput.SizePos(), t_("Output"));	
 	
-	menuOptions.Init(Bem());		LOG("Init Options");
+	menuOptions.Init(Bem());	LOG("Init Options");
 	menuOptions.Load();			LOG("Init Options.Load");
 	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(), t_("Options"));
 	

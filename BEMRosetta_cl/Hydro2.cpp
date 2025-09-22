@@ -19,7 +19,7 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 
 
 // enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 	    WAMIT_1_3_RAD,         CSV_MAT,    CSV_TABLE,    BEMIO_H5	  MATLAB,        FAST_WAMIT, 		   HAMS_WAMIT,   HAMS,   WADAM_WAMIT,   NEMOH,      NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,  AQWA,   			    AQWA_QTF,	 AQWA_DAT, 	  FOAMM,   DIODORE,		   ORCAFLEX_YML,    CAPYTAINE, 		  HYDROSTAR_OUT, CAPYNC, 		  ORCAWAVE_YML,    CAPYTAINE_PY, 	BEMROSETTA_H5,	  AKSELOS_NPZ,	  
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.3 T(s)", "Wamit .1.3 ω(rad/s)", ".csv mat", ".csv table", "BEMIO .h5", "Matlab .mat", "FAST .dat.1.2.3...", "HAMS Wamit", "HAMS", "Wadam Wamit", "Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", "AQWA .qtf", "AQWA .dat", "FOAMM", "Diodore .hdb", "OrcaFlex .yml", "Capytaine .cal", ".out", 	     "Capytaine .nc", "OrcaWave .yml", "Capytaine .py", "BEMRosetta .h5", "Akselos .npz", 
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.3 T(s) OpenFAST", "Wamit .1.3 ω(rad/s)", ".csv mat", ".csv table", "BEMIO .h5", "Matlab .mat", "FAST .dat.1.2.3...", "HAMS Wamit", "HAMS", "Wadam Wamit", "Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", "AQWA .qtf", "AQWA .dat", "FOAMM", "Diodore .hdb", "OrcaFlex .yml", "Capytaine .cal", ".out", 	     "Capytaine .nc", "OrcaWave .yml", "Capytaine .py", "BEMRosetta .h5", "Akselos .npz", 
 #ifdef PLATFORM_WIN32	
 //  ORCAWAVE.owr,		
 	"OrcaWave .owr", 	
@@ -717,7 +717,6 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
     qtfdif = clone(hyd.qtfdif);
     qw = clone(hyd.qw);
     qhead = clone(hyd.qhead);
-    qtfdataFromW = hyd.qtfdataFromW;
     qtftype = hyd.qtftype;
     
     mdhead = clone(hyd.mdhead);
@@ -907,8 +906,6 @@ void Hydro::Average(const UArray<Hydro> &hydros, const UVector<int> &ids) {
 	
     dt.len = 1;
     dt.dimen = true;
-    
-    /*dt.dataFromW = */dt.qtfdataFromW = true;
     
     dt.qtftype = h0.dt.qtftype;
     dt.mdtype = h0.dt.mdtype;
@@ -1408,7 +1405,7 @@ void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
 				}
 }
 
-void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading, int ib) {
+void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT type, int qtfHeading, int ib, double heading) {
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(fileName));
 		
@@ -1448,14 +1445,16 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 	if (type == WAMIT)
 		static_cast<Wamit&>(*save).Save_out(fileName);			
 	else if (type == WAMIT_1_3)
-		static_cast<Wamit&>(*save).Save(fileName, Status, true, qtfHeading);	
+		static_cast<Wamit&>(*save).Save(fileName, Status, true, qtfHeading, heading);	
 	else if (type == WAMIT_1_3_RAD)
 		static_cast<Wamit&>(*save).Save(fileName, Status, false, qtfHeading);
 	else if (type == FAST_WAMIT)
 		static_cast<Fast&>(*save).Save(fileName, Status, qtfHeading);		
 	else if (type == BEMROSETTA)
 		save->SaveSerialization(fileName);		
-	else if (type == AQWA)
+	//else if (type == AQWA)
+		//static_cast<Aqwa&>(*save).Save(fileName, Status);		
+	else if (type == AQWA_QTF)
 		static_cast<Aqwa&>(*save).Save(fileName, Status);		
 	else if (type == CSV_MAT)
 		save->SaveCSVMat(fileName);		
@@ -2089,6 +2088,17 @@ MatrixXd Hydro::Ainf_mat(bool ndim, int ib1, int ib2) const {
 	return ret;
 }
 
+MatrixXd Hydro::A0_mat(bool ndim, int ib1, int ib2) const {
+	MatrixXd ret;
+	if (!IsLoadedA0())
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = A0_(ndim, idf + 6*ib1, jdf + 6*ib2);
+	return ret;
+}
+
 MatrixXd Hydro::B_mat(bool ndim, int ifr, int ib1, int ib2) const {
 	MatrixXd ret;
 	if (!IsLoadedA())
@@ -2131,6 +2141,17 @@ MatrixXd Hydro::CMoor_mat(bool ndim, int ib) const {
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
 			ret(idf, jdf) = CMoor_(ndim, ib, idf, jdf);
+	return ret;
+}
+
+MatrixXd Hydro::CAdd_mat(bool ndim, int ib) const {
+	MatrixXd ret;
+	if (dt.msh[ib].dt.Cadd.size() == 0)
+		return ret;
+	ret.resize(6, 6);
+	for (int idf = 0; idf < 6; ++idf) 	
+		for (int jdf = 0; jdf < 6; ++jdf) 
+			ret(idf, jdf) = CAdd_(ndim, ib, idf, jdf);
 	return ret;
 }
 
@@ -2525,7 +2546,6 @@ void Hydro::Jsonize(JsonIO &json) {
 		("qhead", dt.qhead)
 		("qtfsum", dt.qtfsum)
 		("qtfdif", dt.qtfdif)
-		("qtfdataFromW", dt.qtfdataFromW)
 		("qtftype", dt.qtftype)
 		("mdhead", dt.mdhead)
 		("md", dt.md)

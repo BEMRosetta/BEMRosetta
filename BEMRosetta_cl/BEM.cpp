@@ -13,8 +13,8 @@ using namespace Eigen;
 
 
 Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
-Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << s;};
-Function <void(String)> BEM::PrintError   = [](String s) {Cout() << s;};
+Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << t_("Warning: ") << s;};
+Function <void(String)> BEM::PrintError   = [](String s) {Cout() << t_("ERROR: ") << s;};
 
 const char *BEM::strDOFtext[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *BEM::strDOFtextAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
@@ -252,7 +252,7 @@ void BEM::MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase) {
 		Bem().Nb = max(Bem().Nb, hydros[i].dt.Nb);	
 }
 
-int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
+int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated, const UVector<int> &idxs) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
@@ -264,7 +264,7 @@ int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool
 		}
 	}
 	UArray<Body> meshes;
-	String error = Body::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps);
+	String error = Body::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps, idxs);
 	if (!error.IsEmpty()) {
 		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
@@ -517,7 +517,7 @@ void BEM::Extrude(int id, double dx, double dy, double dz, bool close) {
 	try {
 		Body &surf = surfs[id];
 	
-		if (surf.dt.mesh.volume != 0)
+		if (surf.dt.mesh.volumex > 0.001 && surf.dt.mesh.volumey > 0.001 && surf.dt.mesh.volumez > 0.001)
 			throw Exc(t_("It is only possible to extrude a flat surface"));
 
 		surf.dt.mesh.Extrude(dx, dy, dz, close);
@@ -634,7 +634,9 @@ String BEM::LoadSerializeJson() {
 		legend_w_units = true;
 	if (!ok || IsNull(zeroIfEmpty))
 		zeroIfEmpty = true;
-				
+	if (!ok || IsNull(opT))
+		opT = 0;
+						
 	return ret;
 }
 

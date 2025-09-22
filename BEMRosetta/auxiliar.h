@@ -157,20 +157,26 @@ public:
 	typedef SelectList CLASSNAME;	
 	
 	void InitBeforeSerialize(String _title, String _param, String _units, double _from0, double _to0, int _number0) {
-		title = _title;
-		param = _param;
-		units = _units;
 		from0 = _from0;
 		to0 = _to0;
 		number0 = _number0;
 		
 		CtrlLayout(*this);
 		
-		grid.AddColumn(Format("%s [%s]", param, units)).SetConvert(Single<HeadConvert>()).Edit(edit);
-		grid.Editing().MultiSelect().Removing().Clipboard().Sorting(false);
+		grid.AddColumn("").SetConvert(Single<HeadConvert>()).Edit(edit);
+		grid.Editing().MultiSelect().Removing().Clipboard().Sorting(false).ExtraPaste();
+		
+		Set(_title, _param, _units);
+	}
+	void Set(String _title, String _param, String _units) {
+		title = _title;
+		param = _param;
+		units = _units;
+		
+		labTitle.SetText(title);
 		labFrom.SetText(Format("Min [%s]", units));
 		labTo.SetText(Format("Max [%s]", units));
-		labTitle.SetText(title);
+		grid.GetColumn(0).Name(Format("%s [%s]", param, units));
 	}
 	void Jsonize(JsonIO &json) {
 		json

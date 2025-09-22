@@ -181,6 +181,9 @@ void MainMatrixKA::SetLabels() {
 	} else if (what == Hydro::MAT_KMOOR) {
 		label.SetText(Format(t_("Mooring Stiffness Matrices (%s)"),
 						Ndim ? t_("'dimensionless'") : t_("dimensional")));
+	} else if (what == Hydro::MAT_KADD) {
+		label.SetText(Format(t_("Additional Stiffness Matrices (%s)"),
+						Ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
 		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
 						Ndim ? t_("'dimensionless'") : t_("dimensional")));
@@ -295,6 +298,11 @@ void MainMatrixKA::Add(String name, int icase, String bodyName, int ib, const Hy
 			data << EigenNull;
 		else
 			data << hy.CMoor_mat(Ndim, ib);
+	} else if (what == Hydro::MAT_KADD) {
+		if (!hy.IsLoadedCAdd())
+			data << EigenNull;
+		else
+			data << hy.CAdd_mat(Ndim, ib);
 	} else if (what == Hydro::MAT_A) {
 		if (!hy.IsLoadedAinf())
 			data << EigenNull;
