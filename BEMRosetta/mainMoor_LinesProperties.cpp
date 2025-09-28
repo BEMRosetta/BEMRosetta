@@ -35,6 +35,31 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 	edNumSeg.WhenAction		= [&] {ArrayUpdateCursor();};
 	dropFrom.WhenAction		= [&] {ArrayUpdateCursor();};
 	dropTo.WhenAction		= [&] {ArrayUpdateCursor();};
+	butTaut.WhenAction 		= [&] {
+		String sfrom = ~dropFrom;
+		Point3D pfrom = Null;
+		for (const Mooring::Connection &c : mooring.connections)
+			if (c.name == sfrom) {
+				pfrom = Point3D(c.x, c.y, c.z);
+				break;
+			}
+		if (IsNull(pfrom))
+			return;
+		String sto = ~dropTo;
+		Point3D pto = Null;
+		for (const Mooring::Connection &c : mooring.connections)
+			if (c.name == sto) {
+				pto = Point3D(c.x, c.y, c.z);
+				break;
+			}
+		if (IsNull(pto))
+			return;
+
+		double elong = ~GetDefinedParent<MainMoor>(this).right.edElong;
+		
+		edLength <<= Distance(pfrom, pto)*(100 + elong)/100.;
+		ArrayUpdateCursor();
+	};
 }
 	
 void MainMoor_LineProperties::InitArray() {

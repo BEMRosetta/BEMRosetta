@@ -39,6 +39,7 @@ void MainMoor::Init() {
 	right.edNumSeg <<= 50;
 	right.edNumSeg.WhenAction = [&] {OnUpdate();};
 	right.edDt <<= 0.001;
+	right.edElong <<= 0;
 	
 	right.arrayPos.Reset();
 	
@@ -221,7 +222,10 @@ void MainMoor::LoadDragDrop() {
 	for (int i = filesToDrop.size()-1; i > 0; --i)
 		if (ToLower(GetFileTitle(filesToDrop[i])) == ToLower(GetFileTitle(filesToDrop[i-1])))
 			filesToDrop.Remove(i);
-		
+	
+	if (filesToDrop.IsEmpty())
+		return;
+
 	bool followWithErrors = false;
 	right.fileMoor <<= filesToDrop[0];
 	Status(Format(t_("Loading '%s'"), filesToDrop[0]));

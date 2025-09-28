@@ -288,6 +288,7 @@ void Main::Close() {
 }
 
 void Main::CloseMain(bool store) {
+	mainBody.StopPlaying();
 	if (store) {
 		Bem().StoreSerializeJson();
 		StoreSerializeJson();

@@ -595,20 +595,24 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 }
 
 void MeshBody::Load_Out(UArray<Body> &mesh) {
-	Body &b = mesh.Add();
-	//b.dt.fastAble = true;
+	int id;
+	for (id = 0; id < Bem().surfs.size(); ++id)
+		if (Bem().surfs[id].dt.GetCode() == Body::MOORING_MESH)
+			break;
+	
+	Body &b = id == Bem().surfs.size() ? mesh.Add() : Bem().surfs[id];
+	
 	b.dt.fileName = Bem().fast.GetFileName();
 	b.dt.SetCode(Body::MOORING_MESH);
 	
 	SetLineTime(b, 0);
-	if (b.IsEmpty())
+	
+	if (b.IsEmpty() && id == Bem().surfs.size())
 		mesh.Remove(mesh.size()-1);
 }
 	
 void MeshBody::SetLineTime(Body &b, int idtime) {
 	ASSERT(!IsNull(idtime));
-	//if (!b.dt.fastAble)
-	//	return t_("No animation");
 	
 	b.dt.mesh.Clear();
 	for (UVector<FastOut::id3d> &lineIds : Bem().fast.mooringPointIds) {
@@ -620,3 +624,4 @@ void MeshBody::SetLineTime(Body &b, int idtime) {
 		b.dt.mesh.AddLine(joints);
 	}
 }
+

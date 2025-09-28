@@ -389,6 +389,21 @@ void Body::Reset(double rho, double g) {
 		
 	AfterLoad(rho, g, false, false);
 }
+
+void Body::SetT0(double rho, double g) {
+	dt.mesh0 = clone(dt.mesh);
+	dt.cg0 = clone(dt.cg);
+	cdt.controlPointsA0 = clone(cdt.controlPointsA);
+	cdt.controlPointsB0 = clone(cdt.controlPointsB);
+	cdt.controlPointsC0 = clone(cdt.controlPointsC);
+	cdt.controlLoads0 = clone(cdt.controlLoads);
+	
+	for (Body *b : cdt.damagedBodies)
+		if (b->IsValid())
+			b->SetT0(rho, g);
+		
+	AfterLoad(rho, g, false, false);
+}
 	
 void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool massBuoy, bool reZero) {
 	if (isFirstTime) 

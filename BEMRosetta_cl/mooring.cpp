@@ -353,6 +353,13 @@ bool Mooring::FindClosest(Mooring::ClosestInfo &info) {
 	    return ::sqrt(sqr(x2 - x1) + sqr(y2 - y1) + sqr(z2 - z1));
 	};
 	
+	auto DistanceClosestConnector = [&](double x, double y, double z)->double {
+		double mind = std::numeric_limits<double>::max();
+		for (Connection &c : connections) 
+			mind = min(mind, Distance3D(x, y, z, c.x, c.y, c.z));
+		return mind;
+	};
+	
 	if (lineProperties.IsEmpty()) {
 		info.distance = Null;
 		return false;
@@ -367,16 +374,20 @@ bool Mooring::FindClosest(Mooring::ClosestInfo &info) {
             const LineProperty& lineB = lineProperties[j];
 
             for(int p1 = 0; p1 < lineA.x.size(); p1++) {
-                for(int p2 = 0; p2 < lineB.x.size(); p2++) {
-                    double dist = Distance3D(lineA.x[p1], lineA.y[p1], lineA.z[p1],
-                                             lineB.x[p2], lineB.y[p2], lineB.z[p2]);
-                    if(dist < info.distance) {
-                        info.distance = dist;
-                        info.line1 = i;
-                        info.point1 = p1;
-                        info.line2 = j;
-                        info.point2 = p2;
-                    }
+                if (DistanceClosestConnector(lineA.x[p1], lineA.y[p1], lineA.z[p1]) > 10) {				// Discards closest connector
+	                for(int p2 = 0; p2 < lineB.x.size(); p2++) {
+	                    if (DistanceClosestConnector(lineB.x[p2], lineB.y[p2], lineB.z[p2]) > 10) {		// Discards closest connector
+		                    double dist = Distance3D(lineA.x[p1], lineA.y[p1], lineA.z[p1],
+		                                             lineB.x[p2], lineB.y[p2], lineB.z[p2]);
+		                    if(dist < info.distance) {
+		                        info.distance = dist;
+		                        info.line1 = i;
+		                        info.point1 = p1;
+		                        info.line2 = j;
+		                        info.point2 = p2;
+		                    }
+	                    }
+	                }
                 }
             }
         }	

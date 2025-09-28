@@ -17,7 +17,6 @@ file
 	mainMesh.cpp,
 	mainViewData.cpp,
 	ProcessInertia.cpp,
-	video.cpp,
 	mainSolver.cpp,
 	mainBEM.cpp,
 	mainBEM_QTF.cpp,

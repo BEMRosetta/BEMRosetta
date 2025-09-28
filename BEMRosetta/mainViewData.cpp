@@ -211,9 +211,7 @@ void MainViewDataEach::UpdateStatus() {
 
 void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 	CtrlLayout(arrayFacetsAll2);
-	//CtrlLayout(arrayFacetsUnder);
 	CtrlLayout(arrayNodesMoved);
-	//CtrlLayout(arrayNodesUnder);
 	
 	arrayFacetsAll2.title.SetText(t_("Facet node ids"));
 	arrayFacetsAll2.array.NoFocusSetCursor().MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
@@ -229,29 +227,8 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 		MainBody &mainBody = GetDefinedParent<MainBody>(this);
 		UpdateStatus();
 		msh.dt.mesh.SelPanels(selectedPanels);	
-		//arrayFacetsUnder.array.ClearSelection();	
 		mainView.FullRefresh(mainBody);		
-		//lastSel = 0;
 	};
-		
-	/*arrayFacetsUnder.title.SetText(t_("Facet node ids"));
-	arrayFacetsUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	arrayFacetsUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayFacetsUnder.array);};
-	dataSourceFacetsUnder.SetCount(5);
-	dataSourceFacetsUnder[0].Init(msh, -1, true);
-	arrayFacetsUnder.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsUnder[0]);
-	for (int c = 0; c < 4; ++c) {
-		dataSourceFacetsUnder[c+1].Init(msh, c, false);
-		arrayFacetsUnder.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsUnder[c+1]);
-	}
-	arrayFacetsUnder.array.WhenSel = [&] {
-		MainBody &mainBody = GetDefinedParent<MainBody>(this);
-		UpdateStatus(true);
-		msh.dt.under.SelPanels(selectedPanels);
-		arrayFacetsAll2.array.ClearSelection();	
-		mainView.FullRefresh(mainBody);			
-		//lastSel = 1;	
-	};*/
 	
 	const char *xyz[] = {"x", "y", "z"};
 
@@ -269,40 +246,16 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 		MainBody &mainBody = GetDefinedParent<MainBody>(this);
 		UpdateStatus();
 		msh.dt.mesh.SelNodes(selectedNodes);
-		//arrayNodesUnder.array.ClearSelection();
 		mainView.FullRefresh(mainBody);			
-		//lastSel = 2;
 	};
-	/*	
-	arrayNodesUnder.title.SetText(t_("Node coordinates"));
-	arrayNodesUnder.array.MultiSelect().SetLineCy(EditField::GetStdHeight()).HeaderObject();
-	arrayNodesUnder.array.WhenBar = [&](Bar &menu) {ArrayCtrlWhenBar(menu, arrayNodesUnder.array);};
-	dataSourceNodesUnder.SetCount(4);
-	dataSourceNodesUnder[0].Init(msh, -1, 1);
-	arrayNodesUnder.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesUnder[0]);
-	for (int c = 0; c < 3; ++c) {
-		dataSourceNodesUnder[c+1].Init(msh, c, 1);
-		arrayNodesUnder.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesUnder[c+1]);
-	}
-	arrayNodesUnder.array.WhenSel = [&] {
-		MainBody &mainBody = GetDefinedParent<MainBody>(this);
-		UpdateStatus(true);
-		msh.dt.under.SelNodes(selectedNodes);	
-		arrayNodesMoved.array.ClearSelection();
-		mainView.FullRefresh(mainBody);			
-		//lastSel = 3;
-	};
-	*/
+
 	moved.Horz(arrayFacetsAll2.SizePos(), arrayNodesMoved.SizePos());
-	//movedUnder.Horz(arrayFacetsUnder.SizePos(), arrayNodesUnder.SizePos());	
 	  					 
 	tab.Add(moved.SizePos(), t_("All mesh"));
-	//tab.Add(movedUnder.SizePos(), t_("Only underwater"));
 	Add(tab.SizePos());	
 	AddFrame(status);
 	
 	OnRefresh();
-	//timeCallback.Set(-1000, THISBACK(OnTimer));
 }
 
 void MainViewDataEach::OnRefresh() {
@@ -316,13 +269,6 @@ void MainViewDataEach::OnRefresh() {
 	arrayFacetsAll2.array.SetVirtualCount(num);
 	arrayFacetsAll2.array.Refresh();
 	arrayFacetsAll2.numRows.SetText(FormatInt(num));
-		
-	/*num = msh.dt.under.panels.size();
-	arrayFacetsUnder.array.Clear();
-	arrayFacetsUnder.array.ClearSelection();
-	arrayFacetsUnder.array.SetVirtualCount(num);
-	arrayFacetsUnder.array.Refresh();
-	arrayFacetsUnder.numRows.SetText(FormatInt(num));*/
 	
 	num = msh.dt.mesh.nodes.size();
 	arrayNodesMoved.array.Clear();
@@ -330,22 +276,5 @@ void MainViewDataEach::OnRefresh() {
 	arrayNodesMoved.array.SetVirtualCount(num);
 	arrayNodesMoved.array.Refresh();
 	arrayNodesMoved.numRows.SetText(FormatInt(num));
-	
-	/*num = msh.dt.under.nodes.size();
-	arrayNodesUnder.array.Clear();
-	arrayNodesUnder.array.ClearSelection();
-	arrayNodesUnder.array.SetVirtualCount(num);
-	arrayNodesUnder.array.Refresh();
-	arrayNodesUnder.numRows.SetText(FormatInt(num));*/
 }
 
-/*
-void MainViewDataEach::OnTimer() {
-	switch (lastSel) {
-	case 0:	arrayFacetsAll2.array.WhenSel();	break;
-	case 1:	arrayFacetsUnder.array.WhenSel();	break;
-	case 2:	arrayNodesMoved.array.WhenSel();	break;
-	case 3:	arrayNodesUnder.array.WhenSel();	break;
-	}
-}
-*/

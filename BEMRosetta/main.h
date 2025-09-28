@@ -404,76 +404,6 @@ private:
 	int lastId = -1;
 };
 
-class VideoCtrl : public WithVideoCtrl<StaticRect> {
-public:
-	typedef VideoCtrl CLASSNAME;
-	
-	enum VideoType {UNKNOWN, JSON, OpenFAST, CSV};
-	
-	VideoCtrl() {}
-	void Init(Function <int(UVector<int> &ids)> _GetBodyId, Function <void(int id, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> _Action);
-	
-	~VideoCtrl() {
-		video.Clear();
-	}
-	
-	void OnPlay();
-	void OnRecord();
-	void OnRecordClear();
-	void OnLoad();
-	void OnSave();
-	
-	VideoType GetVideoType(String name);
-	
-	bool IsBasicOpened() {return video && video->Is<BasicVideoSequence>();}
-	
-	void AddReg(const Point3D &pos, const Point3D &angle, const Point3D &c0) {
-		if (!IsBasicOpened())
-			return;
-		static_cast<BasicVideoSequence&>(*video).Add(pos, angle, c0);
-		numFrames <<= static_cast<BasicVideoSequence&>(*video).size();
-	}
-	void AddReg(const Point3D &angle, const Point3D &c0) {
-		if (!IsBasicOpened())
-			return;
-		static_cast<BasicVideoSequence&>(*video).Add(Point3D(0, 0, 0), angle, c0);
-		numFrames <<= static_cast<BasicVideoSequence&>(*video).size();
-	}
-	void AddReg(const Point3D &pos) {
-		if (!IsBasicOpened())
-			return;
-		static_cast<BasicVideoSequence&>(*video).Add(pos, Point3D(0, 0, 0), Point3D(0, 0, 0));	
-		numFrames <<= static_cast<BasicVideoSequence&>(*video).size();
-	}	
-	void ClearReg() {
-		if (!IsBasicOpened())
-			return;
-		static_cast<BasicVideoSequence&>(*video).Clear();
-		numFrames <<= 0;
-	}
-	void Jsonize(JsonIO &json) {
-		json
-			("deltaT", deltaT)
-			("editFile", editFile)
-			("opSaveBitmap", opSaveBitmap)
-		;
-	}
-	
-private:	
-	void TimerFun();
-	bool playing = false, recording = false;
-	RealTimeStop time;
-	double dT;
-	
-	UVector<int> ids;
-	int meshId = -1;
-	
-	Function <int(UVector<int> &ids)> GetBodyId;
-	Function<void(int meshid, const UVector<int> &ids, const Point3D &pos, const Point3D &angle, const Point3D &c0, bool full, bool saveBitmap)> Action;
-	
-	One<VideoSequence> video;
-};
-
 class MainViewDataEach : public StaticRect {
 public:
 	typedef MainViewDataEach CLASSNAME;
@@ -986,6 +916,7 @@ public:
 	bool OnLoad();
 	void OnRemove();
 	void OnReset();
+	void OnSetT0();
 	void OnRemoveSelected(bool all);
 	void OnJoin();
 	void OnDuplicate();
@@ -1021,7 +952,11 @@ public:
 	void RemoveRow(int row);
 	
 	void LoadSelTab(BEM &bem);
-		
+	
+	void Play(bool forward);
+	void PlayStep();
+	void PlayEnableCtrls(bool enable, int forward);
+	
 	void Jsonize(JsonIO &json);
 		
 	WithMenuBody<StaticRect> menuOpen;
@@ -1030,6 +965,7 @@ public:
 	MenuProcessInertia menuProcessInertia;
 	WithMenuBodyMove<StaticRect> menuMove;
 	WithMenuBodyEdit<StaticRect> menuEdit;
+	WithMenuBodyAnimation<StaticRect> menuAnimation;
 	
 	WithMenuBodyStability<StaticRect> menuStability;
 	DropCtrlDialogPointsABC dialogPointsA, dialogPointsB, dialogPointsC;
@@ -1049,9 +985,10 @@ public:
 	}
 	MainView mainView;
 	
-private:	
+	bool IsPlaying()		{return playing;}
+	void StopPlaying()		{playing = false;}
 	
-	//VideoCtrl videoCtrl;
+private:	
 	MainViewData mainViewData;
 	SplitterButton splitterAll, splitterVideo;
 	MainSummaryBody mainSummary;
@@ -1072,6 +1009,8 @@ private:
 	
 	String saveFolder;
 	int dropExportId;
+	
+	bool playing = false;
 };
 
 class MainBodyW : public TopWindow {

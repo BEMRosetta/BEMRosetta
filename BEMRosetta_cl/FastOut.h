@@ -699,23 +699,25 @@ public:
 		elastodyn.IsAvailable();
 		int pos;
 		String nums = GetFASTVarPos(elastodyn.fileText, "NumTrack", "", pos);
-		int num = ScanInt(nums);
-		pos = elastodyn.fileText.FindAfter("\n", pos);
-		pos = elastodyn.fileText.FindAfter("\n", pos);
-		pos = elastodyn.fileText.FindAfter("\n", pos);
-		for (int i = 0; i < num; ++i) {
-			int npos = elastodyn.fileText.FindAfter("\n", pos);
-			String str = elastodyn.fileText.Mid(pos, npos-pos);
-			UVector<String> dat = Split(str, " ");
-			if (dat.size() < 4)
-				continue;
-			String name = Trim(dat[0]);
-			Point3D point(ScanDouble(dat[1]), ScanDouble(dat[2]), ScanDouble(dat[3]));
-			if (IsNull(point))
-				continue;
-			pointNames << name;
-			points << point;
-			pos = npos;
+		if (pos >= 0) {
+			int num = ScanInt(nums);
+			pos = elastodyn.fileText.FindAfter("\n", pos);
+			pos = elastodyn.fileText.FindAfter("\n", pos);
+			pos = elastodyn.fileText.FindAfter("\n", pos);
+			for (int i = 0; i < num; ++i) {
+				int npos = elastodyn.fileText.FindAfter("\n", pos);
+				String str = elastodyn.fileText.Mid(pos, npos-pos);
+				UVector<String> dat = Split(str, " ");
+				if (dat.size() < 4)
+					continue;
+				String name = Trim(dat[0]);
+				Point3D point(ScanDouble(dat[1]), ScanDouble(dat[2]), ScanDouble(dat[3]));
+				if (IsNull(point))
+					continue;
+				pointNames << name;
+				points << point;
+				pos = npos;
+			}
 		}
 	}
 	void Save() {

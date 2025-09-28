@@ -10,6 +10,11 @@
 
 #include <BEMRosetta_cl/BEMRosetta.h>
 
+#define IMAGECLASS ImgM
+#define IMAGEFILE <BEMRosetta/main.iml>
+#include <Draw/iml.h>
+
+
 using namespace Upp;
 
 #include "main.h"
@@ -120,14 +125,64 @@ void MainBody::Init() {
 	menuPlot.cy 		<< [=]{mainView.FullRefresh(*this);};					menuPlot.cy <<= 0;
 	menuPlot.cz 		<< [=]{mainView.FullRefresh(*this);};					menuPlot.cz <<= 0;	
 	
-	menuPlot.edTime 	<< [=]{
-		if (!IsNull(menuPlot.edTime))
-			mainView.FullRefresh(*this);};					
-	menuPlot.edTime <<= 0;	
-#ifndef flagDEBUG
-	menuPlot.edTime.Hide();
-	menuPlot.labtime.Hide();
-#endif
+	CtrlLayout(menuAnimation);
+	menuAnimation.edTime.Pattern("%.2f");
+	menuAnimation.edTime 	<< [=]{
+		if (!IsNull(menuAnimation.edTime)) {
+			playing = true;
+			menuAnimation.slider <<= ~menuAnimation.edTime;
+			double tprev = tmGetTimeX();
+			mainView.FullRefresh(*this);
+			Ctrl::ProcessEvents();	
+			double deltat = tmGetTimeX() - tprev;
+			menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+			playing = false;
+		}
+	};				
+	if (!IsNull(Bem().fast.GetTimeStart()))
+		menuAnimation.edTime <<= Bem().fast.GetTimeStart();	
+
+	menuAnimation.slider.Step(1, true);
+	menuAnimation.slider.SetMajorTicksSize(4).SetThickness(2);
+	if (!IsNull(Bem().fast.GetTimeStart()) && !IsNull(Bem().fast.GetTimeEnd()))
+		menuAnimation.slider.MinMax(Bem().fast.GetTimeStart(), Bem().fast.GetTimeEnd()).Step(1, true);	
+	menuAnimation.slider <<= Bem().fast.GetTimeStart();	
+	menuAnimation.slider.WhenAction = [&] {
+		playing = true;
+		menuAnimation.edTime <<= ~menuAnimation.slider;
+		double tprev = tmGetTimeX();
+		mainView.FullRefresh(*this);
+		Ctrl::ProcessEvents();	
+		double deltat = tmGetTimeX() - tprev;
+		menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+		playing = false;
+	};
+	
+	menuAnimation.butInit.SetImage(ImgM::resultset_first()).Tip(t_("Go to animation start")).WhenAction = [&]{
+		playing = false;
+		menuAnimation.edTime <<= Bem().fast.GetTimeStart();
+		menuAnimation.slider <<= Bem().fast.GetTimeStart();	
+	};
+	menuAnimation.butPlayStep	.SetImage(ImgM::resultset_nextpause()).Tip(t_("Play step by step"));
+	menuAnimation.butPlayStep.WhenPush   = [&]{PlayStep();};
+	menuAnimation.butPlayStep.WhenRepeat = [&]{PlayStep();};
+	menuAnimation.butPlay		.SetImage(ImgM::resultset_next())	  .Tip(t_("Play animation"))		.WhenAction = [&]{Play(true);};
+	menuAnimation.butPlayReverse.SetImage(ImgM::resultset_previous()) .Tip(t_("Play animation reverse")).WhenAction = [&]{Play(false);};
+	menuAnimation.butEnd		.SetImage(ImgM::resultset_last())	  .Tip(t_("Go to animation end"))   .WhenAction = [&]{
+		playing = false;
+		menuAnimation.edTime <<= Bem().fast.GetTimeEnd();
+		menuAnimation.slider <<= Bem().fast.GetTimeEnd();	
+	};
+	
+	menuAnimation.arraySpeed.AddColumn(t_("Speed"), 10);
+	menuAnimation.arraySpeed.Add("x1");
+	menuAnimation.arraySpeed.Add("x2");
+	menuAnimation.arraySpeed.Add("x4");
+	menuAnimation.arraySpeed.Add("x10");
+	menuAnimation.arraySpeed.Add("x50");
+	menuAnimation.arraySpeed.SetCursor(0);
+	
+	menuAnimation.butSetT0 << THISBACK(OnSetT0);
 	
 	mainView.surf.SetCanSelect();
 	
@@ -326,7 +381,7 @@ void MainBody::Init() {
 		
 		menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
 		menuStability.labPointsB.SetFont(menuStability.labPointsB.GetFont().Bold(dialogPointsB.grid.GetRowCount() > 0));
-;	};
+	};
 			
 	menuStability.butPointsC.SetCtrl(dialogPointsC).Tip(t_("Watertight openings (do not lead to progressive flooding)"));
 	dialogPointsC.WhenClose = [&] {
@@ -418,6 +473,7 @@ void MainBody::Init() {
 	menuTab.Add(menuProcess.SizePos(), 	t_("Process")).Disable();
 	menuTab.Add(menuStability.SizePos(),t_("Stability")).Disable();
 	menuTab.Add(menuEdit.SizePos(), 	t_("Edit"));
+	menuTab.Add(menuAnimation.SizePos(),t_("Animation")).Disable();
 	
 	menuStability.butClear.WhenAction = [&]() {
 		int idx = ArrayModel_IndexBody(listLoaded);
@@ -488,6 +544,8 @@ void MainBody::Init() {
 		
 		TabCtrl::Item& tabMenuPlot = menuTab.GetItem(menuTab.Find(menuPlot));
 		tabMenuPlot.Enable(plot);
+		TabCtrl::Item& tabMenuAnimation = menuTab.GetItem(menuTab.Find(menuAnimation));
+		tabMenuAnimation.Enable(plot && !Bem().fast.IsEmpty());
 		TabCtrl::Item& tabMenuMove = menuTab.GetItem(menuTab.Find(menuMove));
 		tabMenuMove.Enable(convertProcess);
 		TabCtrl::Item& tabMenuProcess = menuTab.GetItem(menuTab.Find(menuProcess));
@@ -506,6 +564,12 @@ void MainBody::Init() {
 			else
 				menuTab.Set(menuOpen);
 		}
+		
+		if (plot && !Bem().fast.IsEmpty())
+			tabMenuAnimation.Text(t_("Animation"));
+		else
+			tabMenuAnimation.Text(t_(""));
+		
 		if (convertProcess) {
 			tabMenuProcess.Text(t_("Process"));
 			tabMenuMove.Text(t_("Move"));
@@ -521,6 +585,10 @@ void MainBody::Init() {
 	menuTab.WhenSet = [&] {
 		LOGTAB(menuTab);
 		
+		if (playing) {
+			menuTab.Set(menuAnimation);
+			return;
+		}
 		if (menuTab.IsAt(menuStability))
 			mainTab.Set(mainGZ);
 	};
@@ -530,6 +598,101 @@ void MainBody::Init() {
 	saveFolder = GetDesktopFolder();
 }
 
+void MainBody::PlayEnableCtrls(bool enable, int forward) {
+	menuAnimation.butInit.Enable(enable);
+	menuAnimation.butEnd.Enable(enable);
+	menuAnimation.butPlayStep.Enable(enable);
+	menuAnimation.arraySpeed.Enable(enable);
+	menuAnimation.edTime.Enable(enable);
+	menuAnimation.slider.Enable(enable);
+	menuAnimation.butPlay.Enable(enable);
+	menuAnimation.butPlayReverse.Enable(enable);
+	menuAnimation.butPlayStep.Enable(enable);
+	if (forward == 1)
+		menuAnimation.butPlay.Enable(true);
+	else if (forward == 0)
+		menuAnimation.butPlayStep.Enable(true);
+	else
+		menuAnimation.butPlayReverse.Enable(true);
+}
+
+void MainBody::PlayStep() {
+	playing = true;
+	String sspeed = menuAnimation.arraySpeed.Get(menuAnimation.arraySpeed.GetCursor(), 0);
+	double speed = ScanDouble(sspeed.Mid(1));
+	
+	double tm = ~menuAnimation.edTime;
+	PlayEnableCtrls(false, 0);
+	double tprev = tmGetTimeX();
+
+	mainView.FullRefresh(*this);
+	Ctrl::ProcessEvents();	
+	double t = tmGetTimeX();
+	double deltat = t - tprev;
+
+	tm += deltat*speed;
+	if (tm >= Bem().fast.GetTimeEnd())
+		tm = Bem().fast.GetTimeEnd();
+
+	menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+	menuAnimation.edTime <<= tm;
+	menuAnimation.slider <<= tm;
+	
+	PlayEnableCtrls(true, 0);	
+	playing = false;
+}
+
+void MainBody::Play(bool forward) {
+	if (playing) {
+		playing = false;
+		if (forward)
+			menuAnimation.butPlay		.SetImage(ImgM::resultset_next())	 .Tip(t_("Play animation"));
+		else
+			menuAnimation.butPlayReverse.SetImage(ImgM::resultset_previous()).Tip(t_("Play animation reverse"));
+	} else {
+		playing = true;
+		
+		if (forward)
+			menuAnimation.butPlay		.SetImage(ImgM::resultset_pause()).Tip(t_("Pause animation"));
+		else
+			menuAnimation.butPlayReverse.SetImage(ImgM::resultset_pause()).Tip(t_("Pause animation"));
+		
+		String sspeed = menuAnimation.arraySpeed.Get(menuAnimation.arraySpeed.GetCursor(), 0);
+		double speed = ScanDouble(sspeed.Mid(1));
+		
+		double tm = ~menuAnimation.edTime;
+		PlayEnableCtrls(false, forward ? 1 : -1);
+		double tprev = tmGetTimeX();
+		long count = 0;
+		while (playing) {
+			mainView.FullRefresh(*this);
+			Ctrl::ProcessEvents();	
+			double t = tmGetTimeX();
+			double deltat = t - tprev;
+			if (forward) {
+				tm += deltat*speed;
+				if (tm >= Bem().fast.GetTimeEnd()) {
+					tm = Bem().fast.GetTimeEnd();
+					Play(forward);
+				}
+			} else {
+				tm -= deltat*speed;
+				if (tm <= Bem().fast.GetTimeStart()) {
+					tm = Bem().fast.GetTimeStart();
+					Play(forward);
+				}
+			}
+			if (!(count%20))
+				menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+			menuAnimation.edTime <<= tm;
+			menuAnimation.slider <<= tm;
+			tprev = t;
+			count++;
+		}
+		PlayEnableCtrls(true, forward ? 1 : -1);
+	}
+}			
+	
 void MainBody::OnMenuOpenArraySel() {
 	int idx = ArrayModel_IndexBody(listLoaded);
 	if (idx < 0)
@@ -698,9 +861,19 @@ void MainBody::OnOpt() {
 	menuPlot.opShowColor.Enable(menuPlot.opShowMesh.GetIndex() != SurfaceView::SHOW_MESH && 
 								menuPlot.opShowMesh.GetIndex() != SurfaceView::SHOW_VISIBLE_MESH);
 								
-	menuPlot.edTime.Enable(!Bem().fast.IsEmpty());							
+	menuAnimation.Enable(!Bem().fast.IsEmpty());							
 	
 	menuMove.t_z.Enable(!menuMove.opZArchimede);
+	
+	if (!Bem().fast.IsEmpty()) {
+		double tm = ~menuAnimation.edTime;
+		if (IsNull(tm) || tm < Bem().fast.GetTimeStart() || tm > Bem().fast.GetTimeEnd()) {
+			menuAnimation.edTime <<= Bem().fast.GetTimeStart();
+			menuAnimation.slider.MinMax(Bem().fast.GetTimeStart(), Bem().fast.GetTimeEnd());
+			menuAnimation.slider.SetMajorTicks().SetMinorTicks(menuAnimation.slider.GetMajorTicks()/4);
+			menuAnimation.slider <<= Bem().fast.GetTimeStart();
+		}
+	}
 }
 
 void MainBody::AfterAdd(String file, int num, bool firstLoad) {
@@ -753,6 +926,8 @@ bool MainBody::OnLoad() {
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
 		}, ~menuOpen.opClean, false, idxs);
+		
+		menuAnimation.animationFile <<= Bem().fast.GetFileName();
 		
 		for (int idx = Bem().surfs.size() - num; idx < Bem().surfs.size(); ++idx) {
 			Body &msh = Bem().surfs[idx];
@@ -896,6 +1071,46 @@ void MainBody::OnReset() {
 		menuProcess.z_g <<= msh.dt.cg.z;
 		
 		Ma().Status(t_("Model oriented on the initial layout"));
+		
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+}
+
+void MainBody::OnSetT0() {
+	GuiLock __;
+	
+	try {
+		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
+		int num = ArrayCtrlSelectedGetCount(listLoaded);
+		if (num > 1) {
+			BEM::PrintError(t_("Please select just one model"));
+			return;
+		}
+		int id;
+		if (num == 0 && listLoaded.GetCount() == 1)
+			id = ArrayModel_IndexBody(listLoaded, 0);
+		else {
+		 	id = ArrayModel_IndexBody(listLoaded);
+			if (id < 0) {
+				BEM::PrintError(t_("Please select a model to process"));
+				return;
+			}
+		}
+				
+		Body &msh = Bem().surfs[id];
+		msh.SetT0(Bem().rho, Bem().g);
+
+		UpdateLast(id);
+		
+		mainView.FullRefresh(*this);
+		mainViewData.OnRefresh();
+
+		menuProcess.x_g <<= msh.dt.cg.x; 
+		menuProcess.y_g <<= msh.dt.cg.y;
+		menuProcess.z_g <<= msh.dt.cg.z;
+		
+		Ma().Status(t_("Model is set the initial layout"));
 		
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -1179,6 +1394,8 @@ void MainBody::UpdateLast(int id) {
 	mainTab.GetItem(mainTab.Find(mainGZ)).Enable(Bem().surfs.size() > 0);
 
 	mainSummary.Report(Bem().surfs, id);
+	
+	Bem().surfs[id].dt.mesh.ClearSelPanels();
 }
 
 void MainBody::OnArchimede() {
@@ -1732,7 +1949,7 @@ void MainBody::OnRemoveSelected(bool all) {
 		listLoaded.Remove(0);
 		dialogDamage.RemoveId(idx);
 		selected = true;		
-	}
+	}	
 	mainView.Enable();
 		
 	if (!selected) {
@@ -2276,6 +2493,7 @@ void MainView::FullRefresh(MainBody &mainBody) {
 	}
 	
 	WithMenuBodyPlot<StaticRect> &menuPlot = mainBody.menuPlot;
+	WithMenuBodyAnimation<StaticRect> &menuAnimation = mainBody.menuAnimation;
 	
 	if (menuPlot.showAxis && mainBody.listLoaded.GetCount() > 0) 
 		surf.PaintAxis(0, 0, 0, env.LenRef()/4., -10);	
@@ -2285,7 +2503,7 @@ void MainView::FullRefresh(MainBody &mainBody) {
 		surf.PaintCuboid(Point3D(env.maxX, env.maxY, env.maxZ), Point3D(env.minX, env.minY, env.minZ), WhiteGray(), -25);
 	}
 	
-	double actualTime = ~menuPlot.edTime;
+	double actualTime = ~menuAnimation.edTime;
 	UVector<double> pos(6);
 	int idtime;
 	if (Bem().fast.IsEmpty())
@@ -2294,7 +2512,7 @@ void MainView::FullRefresh(MainBody &mainBody) {
 		idtime = Bem().fast.GetIdTime(actualTime);
 		if (IsNull(idtime)) {
 			if (!IsNull(actualTime) && actualTime >= 0) {
-				menuPlot.edTime <<= prevTime;
+				menuAnimation.edTime <<= prevTime;
 				idtime = Bem().fast.GetIdTime(prevTime);
 				if (IsNull(idtime))
 					idtime = 0;		// Probably reloaded shorter .out
@@ -2325,9 +2543,8 @@ void MainView::FullRefresh(MainBody &mainBody) {
 			Body &msh = Bem().surfs[idx];
 
 
-			if ((menuPlot.showBody || menuPlot.showUnderwater) && msh.dt.GetCode() != Body::MOORING_MESH && !IsNull(idtime))
+			if (mainBody.IsPlaying() && (menuPlot.showBody || menuPlot.showUnderwater) && msh.dt.GetCode() != Body::MOORING_MESH && !IsNull(idtime))
 				msh.Move(pos, Bem().rho, Bem().g, false);
-	
 			
 			if (menuPlot.showBody && !menuPlot.showUnderwater)
 				surf.PaintSurface(msh.dt.mesh, color, color, 1, idx, showNormals, msh.dt.mesh.avgFacetSideLen);

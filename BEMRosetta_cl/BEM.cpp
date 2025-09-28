@@ -371,9 +371,13 @@ void BEM::RemoveBody(int id) {
 			}
 		}
 	}
+	if (surfs[id].dt.GetCode() == Body::MOORING_MESH)
+		fast.Clear();
 	surfs.Remove(id);
-	if (surfs.IsEmpty())
+	if (surfs.IsEmpty()) {
 		Body::ResetIdCount();
+		fast.Clear();
+	}
 }
 
 void BEM::DuplicateBody(int id) {
