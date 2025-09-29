@@ -22,26 +22,27 @@ using namespace Upp;
 void MainMoor::Init() {
 	Add(splitter.SizePos());
 	
-	splitter.Horz(view.SizePos().SetFrame(ThinInsetFrame()), right.SizePos());
-	splitter.SetPos(4000, 0);
 
-	view.SetShowMesh(SurfaceView::SHOW_MESH_FACES);
-	view.SetBackgroundColor(::Color(220, 220, 230)).SetLineThickness(1);
-	view.SetShowColor(SurfaceView::SHOW_DARKER)
+	splitter.Horz(left.SizePos(), right.SizePos());
+	splitter.SetPos(5000, 0);
+
+	left.view.SetShowMesh(SurfaceView::SHOW_MESH_FACES);
+	left.view.SetBackgroundColor(::Color(220, 220, 230)).SetLineThickness(1);
+	left.view.SetShowColor(SurfaceView::SHOW_DARKER)
 		.SetLightDir(Point3D(1, 0, 1));
-	view.SetCentre(Point3D(0, 0, 0)).SetRotationXYZ();
-	view.SetSort(false);		// No hidden items
+	left.view.SetCentre(Point3D(0, 0, 0)).SetRotationXYZ();
+	left.view.SetSort(false);		// No hidden items
 	
 	CtrlLayout(right);	
 	
 	right.edDepth <<= 100;
 	right.edDepth.WhenAction = [&] {OnUpdate();};
-	right.edNumSeg <<= 50;
-	right.edNumSeg.WhenAction = [&] {OnUpdate();};
+	left.edNumSeg <<= 50;
+	left.edNumSeg.WhenAction = [&] {OnUpdate();};
 	right.edDt <<= 0.001;
 	right.edElong <<= 0;
 	
-	right.arrayPos.Reset();
+	left.arrayPos.Reset();
 	
 	right.showMin.WhenAction = [&] {OnUpdate();};
 	
@@ -83,7 +84,7 @@ void MainMoor::Init() {
 	right.fileMoor.								WhenChange = [&] {OnLoad(); return true;}; 
 	right.butLoad.Tip(t_("Loads mooring file")).WhenAction = [&] {OnLoad();};
 	right.butSave.Tip(t_("Saves mooring file")).WhenAction = [&] {OnSave();};
-	right.butUpdate.Tip(t_("Update mooring"))  .WhenAction = [&] {OnUpdate();};
+	//right.butUpdate.Tip(t_("Update mooring"))  .WhenAction = [&] {OnUpdate();};
 	
 	right.arrayresults.Reset();
 	right.arrayresults.SetLineCy(EditField::GetStdHeight()).MultiSelect();
@@ -118,30 +119,33 @@ void MainMoor::Init() {
 	right.dropExport.SetIndex(dropExportId);
 	right.dropExport.WhenAction();
 	
-	right.opConnection.WhenAction = [&]{FullRefresh(false);};
-	right.opLines.WhenAction = [&]{FullRefresh(false);};
+	left.opConnection.WhenAction = [&]{FullRefresh(false);};
+	left.opLines.WhenAction = [&]{FullRefresh(false);};
+		
+	CtrlLayout(left);
+	
 	
 	LoadVesselPositionArray();
 }
 
 void MainMoor::LoadVesselPositionArray() {
-	right.arrayPos.Reset();
-	right.arrayPos.SetLineCy(EditField::GetStdHeight());
-	right.arrayPos.AddColumn(t_("Vessel"));
-	right.arrayPos.AddColumn(t_("x")).Ctrls([this](int i, One<Ctrl>& ctrl) {
+	left.arrayPos.Reset();
+	left.arrayPos.SetLineCy(EditField::GetStdHeight());
+	left.arrayPos.AddColumn(t_("Vessel"));
+	left.arrayPos.AddColumn(t_("x")).Ctrls([this](int i, One<Ctrl>& ctrl) {
 		ctrl.Create<EditDoubleSpin>().SetInc(1.).SetFrame(NullFrame()).WhenAction = [&] {OnUpdate();};
 	});
-	right.arrayPos.AddColumn(t_("y")).Ctrls([this](int i, One<Ctrl>& ctrl) {
+	left.arrayPos.AddColumn(t_("y")).Ctrls([this](int i, One<Ctrl>& ctrl) {
 		ctrl.Create<EditDoubleSpin>().SetInc(1.).SetFrame(NullFrame()).WhenAction = [&] {OnUpdate();};
 	});
-	right.arrayPos.HeaderTab(1).SetMargin(0);
-	right.arrayPos.HeaderTab(2).SetMargin(0);
+	left.arrayPos.HeaderTab(1).SetMargin(0);
+	left.arrayPos.HeaderTab(2).SetMargin(0);
 #ifdef flagDEBUG
-	right.arrayPos.AddColumn(t_("Fx")).SetFormat("%.1f");
-	right.arrayPos.AddColumn(t_("Fy")).SetFormat("%.1f");
+	left.arrayPos.AddColumn(t_("Fx")).SetFormat("%.1f");
+	left.arrayPos.AddColumn(t_("Fy")).SetFormat("%.1f");
 #endif
 	for (const Mooring::Vessel &v : mooring.vessels)
-		right.arrayPos.Add(v.name, 0., 0., 0., 0.);
+		left.arrayPos.Add(v.name, 0., 0., 0., 0.);
 }
 
 bool MainMoor::OnLoad() {
@@ -264,15 +268,15 @@ void MainMoor::OnUpdate(bool fit) {
 		lineVessels.Save();
 		mooring.depth = ~right.edDepth;
 		
-		for (int r = 0; r < right.arrayPos.GetCount(); ++r) {
-			String name = right.arrayPos.Get(r, 0);
+		for (int r = 0; r < left.arrayPos.GetCount(); ++r) {
+			String name = left.arrayPos.Get(r, 0);
 			int id = mooring.FindVessel(name);
 			if (id < 0) {
 				Exclamation("Unknown vessel");
 				return;
 			}
-			mooring.vessels[id].dx = ScanDouble(right.arrayPos.Get(r, 1).ToString());
-			mooring.vessels[id].dy = ScanDouble(right.arrayPos.Get(r, 2).ToString());
+			mooring.vessels[id].dx = ScanDouble(left.arrayPos.Get(r, 1).ToString());
+			mooring.vessels[id].dy = ScanDouble(left.arrayPos.Get(r, 2).ToString());
 		}
 			
 		//px.Clear();	py.Clear(); pz.Clear();
@@ -288,7 +292,7 @@ void MainMoor::OnUpdate(bool fit) {
 			//pz << conn.z;
 		}*/
 		try {
-			if (!mooring.Calc(Bem().rho, ~right.edNumSeg)) {
+			if (!mooring.Calc(Bem().rho, ~left.edNumSeg)) {
 				Status(t_("Problem in line calculation"));
 				return;
 			}
@@ -349,11 +353,11 @@ void MainMoor::OnUpdate(bool fit) {
 		
 		for (int r = 0; r < mooring.vessels.size(); ++r) {
 			if (!IsNull(forcevessel[r])) {
-				right.arrayPos.Set(r, 3, forcevessel[r].x);
-				right.arrayPos.Set(r, 4, forcevessel[r].y);
+				left.arrayPos.Set(r, 3, forcevessel[r].x);
+				left.arrayPos.Set(r, 4, forcevessel[r].y);
 			} else {
-				right.arrayPos.Set(r, 3, 0);
-				right.arrayPos.Set(r, 4, 0);
+				left.arrayPos.Set(r, 3, 0);
+				left.arrayPos.Set(r, 4, 0);
 			}
 		}
 		if (!mooring.FindClosest(cl))
@@ -373,14 +377,14 @@ void MainMoor::OnUpdate(bool fit) {
 }
 
 void MainMoor::FullRefresh(bool fit) {
-	view.Clear();
+	left.view.Clear();
 	
 	// No sort to hide, painted in order
 	// Shadow
 	for (const auto &line : mooring.lineProperties) {
 		if (line.status == MooringStatus::TAUT) {
 			UVector<double> z(line.x.size(), -mooring.depth);
-			view.PaintLines(line.x, line.y, z, LtGray(), 4);
+			left.view.PaintLines(line.x, line.y, z, LtGray(), 4);
 		} else {
 			UVector<double> z(line.x.size(), -mooring.depth);
 			UVector<double> x = clone(line.x);
@@ -389,7 +393,7 @@ void MainMoor::FullRefresh(bool fit) {
 				if (line.z[i] <= -mooring.depth + 0.1)
 					x[i] = y[i] = Null;
 			}
-			view.PaintLines(x, y, z, LtGray(), 4);
+			left.view.PaintLines(x, y, z, LtGray(), 4);
 		}
 	}
 	// Lines
@@ -398,25 +402,25 @@ void MainMoor::FullRefresh(bool fit) {
 			continue;
 		
 		::Color c = line.status == MooringStatus::BROKEN || line.status == MooringStatus::BL_EXCEDEED ? LtRed() : LtBlue();
-		view.PaintLines(line.x, line.y, line.z, c, 1);
-		if (right.opLines) {
+		left.view.PaintLines(line.x, line.y, line.z, c, 1);
+		if (left.opLines) {
 			double x, y, z;
 			if (line.x.size() == 2) {
 				x = line.x[0] + 0.33*(line.x[1] - line.x[0]);		// 1/3 of the first connection	
 				y = line.y[0] + 0.33*(line.y[1] - line.y[0]);
 				z = line.z[0] + 0.33*(line.z[1] - line.z[0]);
 			} else {
-				int id = line.x.size()*1./3.;
+				int id = int(line.x.size()*1./3.);
 				x = line.x[id];
 				y = line.y[id];
 				z = line.z[id];
 			}
-			view.PaintText(x, y, z, Format("[3@(67.120.120) %s]", line.name));
+			left.view.PaintText(x, y, z, Format("[3@(67.120.120) %s]", line.name));
 		}
 	}
 	// Points
 	for (const Mooring::Connection &con : mooring.connections) {
-		int dx = 0, dy = 0;
+		double dx = 0, dy = 0;
 		::Color col;
 		int id = mooring.FindVessel(con.where);
 		if (id >= 0) {
@@ -428,22 +432,22 @@ void MainMoor::FullRefresh(bool fit) {
 				col = ::Color(67, 120, 120);
 		} else
 			col = ::Color(153, 76, 0);			// Anchor
-		view.PaintCube(con.x + dx, con.y + dy, con.z, 2, col);
-		if (right.opConnection)
-			view.PaintText(con.x + dx, con.y + dy, con.z, Format("[3@(153.76.0) %s]", con.name));
+		left.view.PaintCube(con.x + dx, con.y + dy, con.z, 2, col);
+		if (left.opConnection)
+			left.view.PaintText(con.x + dx, con.y + dy, con.z, Format("[3@(153.76.0) %s]", con.name));
 	}
 	// Closest
 	if (right.showMin && !IsNull(cl.distance)) {
 		const Mooring::LineProperty &prop1 = mooring.lineProperties[cl.line1],
 						   			&prop2 = mooring.lineProperties[cl.line2];
-		view.PaintLine(prop1.x[cl.point1], prop1.y[cl.point1], prop1.z[cl.point1],
+		left.view.PaintLine(prop1.x[cl.point1], prop1.y[cl.point1], prop1.z[cl.point1],
 					   prop2.x[cl.point2], prop2.y[cl.point2], prop2.z[cl.point2], LtRed(), 10);
 	}
 	
 	if (fit) {
-		view.SetRotation(Value3D(ToRad(-45), 0, ToRad(45)));
-		view.ZoomToFit();
+		left.view.SetRotation(Value3D(ToRad(-45), 0, ToRad(45)));
+		left.view.ZoomToFit();
 	}
-	view.Render();
+	left.view.Render();
 	Refresh();
 }

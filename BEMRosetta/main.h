@@ -1125,7 +1125,7 @@ protected:
 		for (int c = 0; c < array.GetColumnCount(); ++c) {
 			if (c == 0) {
 				String name = array.Get(id, c).ToString();		// Increments the first if it is a name and a num
-				int num = ScanDouble(name);
+				int num = ScanInt(name);
 				if (!IsNull(num))
 					name = FormatInt(++num);
 				array.Set(nr, c, name);
@@ -1241,14 +1241,12 @@ public:
 	void Init();
 	
 	Splitter splitter;
-	//Box scat;
-	//ScatterCtrl scatLateral, scatUp;
-	SurfaceCanvas view;
 	Surface surf;
 
 	void FullRefresh(bool fit);
 	
 	WithMainMoorRight<StaticRect> right;
+	WithMainMoorLeft<StaticRect> left;
 	MainMoor_LinesTypes lineTypes;
 	MainMoor_LineProperties lineProperties;
 	MainMoor_Connections lineConnections;

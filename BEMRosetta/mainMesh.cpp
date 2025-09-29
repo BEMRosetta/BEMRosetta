@@ -145,7 +145,7 @@ void MainBody::Init() {
 	menuAnimation.slider.Step(1, true);
 	menuAnimation.slider.SetMajorTicksSize(4).SetThickness(2);
 	if (!IsNull(Bem().fast.GetTimeStart()) && !IsNull(Bem().fast.GetTimeEnd()))
-		menuAnimation.slider.MinMax(Bem().fast.GetTimeStart(), Bem().fast.GetTimeEnd()).Step(1, true);	
+		menuAnimation.slider.MinMax((int)Bem().fast.GetTimeStart(), (int)Bem().fast.GetTimeEnd()).Step(1, true);	
 	menuAnimation.slider <<= Bem().fast.GetTimeStart();	
 	menuAnimation.slider.WhenAction = [&] {
 		playing = true;
@@ -869,7 +869,7 @@ void MainBody::OnOpt() {
 		double tm = ~menuAnimation.edTime;
 		if (IsNull(tm) || tm < Bem().fast.GetTimeStart() || tm > Bem().fast.GetTimeEnd()) {
 			menuAnimation.edTime <<= Bem().fast.GetTimeStart();
-			menuAnimation.slider.MinMax(Bem().fast.GetTimeStart(), Bem().fast.GetTimeEnd());
+			menuAnimation.slider.MinMax((int)Bem().fast.GetTimeStart(), (int)Bem().fast.GetTimeEnd());
 			menuAnimation.slider.SetMajorTicks().SetMinorTicks(menuAnimation.slider.GetMajorTicks()/4);
 			menuAnimation.slider <<= Bem().fast.GetTimeStart();
 		}

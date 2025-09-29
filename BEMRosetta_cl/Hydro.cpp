@@ -613,7 +613,7 @@ struct GridFreeSurface {
 };
 
 // Utility: check if a point exists with tolerance
-static bool FindWithTolerance(const UVector<Point3D>& idx, const Point3D& p, int tol) {
+static bool FindWithTolerance(const UVector<Point3D>& idx, const Point3D& p, double tol) {
     for (int i = 0; i < idx.GetCount(); i++) {
         if (abs(idx[i].x - p.x) <= tol && abs(idx[i].y - p.y) <= tol)
             return true;
@@ -641,14 +641,14 @@ GridFreeSurface DetectGrids(UVector<Point3D>& pts) {
                 break;	// Must be in the free surface
             if (abs(pts[i].y - pts[j].y) > EPS_LEN) 
             	break; // Must be same row within tolerance
-            int dx = pts[j].x - pts[i].x;
-            if(dx <= 0) 
+            double dx = pts[j].x - pts[i].x;
+            if (dx <= 0) 
             	continue;
 
             // Try to detect vertical spacing
             for (int k = i+1; k < pts.size(); k++) {
                 if (abs(pts[k].x - pts[i].x) <= EPS_LEN && pts[k].y > pts[i].y) {
-                    int dy = pts[k].y - pts[i].y;
+                    double dy = pts[k].y - pts[i].y;
                     if (dy <= 0) 
                     	continue;
 
@@ -660,25 +660,25 @@ GridFreeSurface DetectGrids(UVector<Point3D>& pts) {
 					UVector<Point3D> pointsin;
 					
                     int col = 0;
-                    while(FindWithTolerance(pts, Point3D(g.topLeft.x + col*dx, g.topLeft.y), EPS_LEN)) 
+                    while (FindWithTolerance(pts, Point3D(g.topLeft.x + col*dx, g.topLeft.y, 0), EPS_LEN)) 
                     	col++;
                     int row = 0;
-                    while(FindWithTolerance(pts, Point3D(g.topLeft.x, g.topLeft.y + row*dy), EPS_LEN)) 
+                    while (FindWithTolerance(pts, Point3D(g.topLeft.x, g.topLeft.y + row*dy, 0), EPS_LEN)) 
                     	row++;
 
                     g.cols = col;
                     g.rows = row;
-                    g.bottomRight = Point3D(g.topLeft.x + (col-1)*dx, g.topLeft.y + (row-1)*dy);
+                    g.bottomRight = Point3D(g.topLeft.x + (col-1)*dx, g.topLeft.y + (row-1)*dy, 0);
 
                     // Collect valid grid points
-                    for(int r = 0; r < row; r++) {
-                        for(int c = 0; c < col; c++) {
-                            Point3D test(g.topLeft.x + c*dx, g.topLeft.y + r*dy);
-                            if(FindWithTolerance(pts, test, EPS_LEN))
+                    for (int r = 0; r < row; r++) {
+                        for (int c = 0; c < col; c++) {
+                            Point3D test(g.topLeft.x + c*dx, g.topLeft.y + r*dy, 0);
+                            if (FindWithTolerance(pts, test, EPS_LEN))
                                 pointsin.Add(test);
                         }
                     }
-                    if(pointsin.size() > bestCount) {
+                    if (pointsin.size() > bestCount) {
                         best = pick(g);
                         bestpts = pick(pointsin);
                         bestCount = bestpts.size();
