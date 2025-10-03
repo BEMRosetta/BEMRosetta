@@ -68,7 +68,7 @@ bool MainMoor_LinesTypes::ArrayUpdateCursor() {
 	array.Set(id, 4, ~edBAZeta);
 	array.Set(id, 5, ~edBL);
 	
-	GetDefinedParent<MainMoor>(this).OnUpdate();
+	GetParentCtrl<MainMoor>(this).OnUpdate();
 	
 	return true;
 }
@@ -120,3 +120,4 @@ void MainMoor_LinesTypes::Save() {
 		mooring.lineTypes[id].bl = ScanDouble(array.Get(id, 5).ToString());
 	}
 }	
+

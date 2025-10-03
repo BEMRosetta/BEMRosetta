@@ -31,7 +31,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.fileMetrics.WhenChange  = [&] {
 		bool ret = OnLoadCompare();
 		if (ret) {
-			FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
+			FastScatterTabs *pf = GetParentCtrlP<FastScatterTabs>(this);
 			pf->AddHistoryMetrics(~compare.fileMetrics);
 		}
 		return ret;
@@ -606,7 +606,7 @@ void FastScatterBase::OnLoad() {
 }
 
 bool FastScatterBase::OnLoad(String fileName) {
-	FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
+	FastScatterTabs *pf = GetParentCtrlP<FastScatterTabs>(this);
 	
 	if (pf && !pf->loadingDragDrop) {
 		OnLoad();
@@ -821,7 +821,7 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 		int datasize    = opLoad3 == 0 ? min(1, left.dataFast.size()) : left.dataFast.size();
 		int scattersize = opLoad3 == 2 ? datasize : min(1, left.scatterSize());
 		
-		FastScatterTabs *pf = GetDefinedParentP<FastScatterTabs>(this);
+		FastScatterTabs *pf = GetParentCtrlP<FastScatterTabs>(this);
 		if (pf) {
 			FastScatterTabs &f = *pf;
 			

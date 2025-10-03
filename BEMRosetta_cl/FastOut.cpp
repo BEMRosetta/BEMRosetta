@@ -44,7 +44,7 @@ FastOut::FastOut() {
 	calcParams << rootBend2.Init0(this);
 	calcParams << rootBend3.Init0(this);
 	calcParams << ncIMUTA.Init0(this);
-	for (int i = 0; i < 40; ++i) {
+	for (int i = 0; i < 80; ++i) {
 		auto &f = fairTens.Add();
 		f.Init00(i+1);
 		calcParams << f.Init0(this);	
@@ -1059,6 +1059,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 	
 	// Does the real job
 	UVector<UVector<double>> fullData(params.params.size());
+	UVector<double> fullTime;
 	for (const FastOut &fast : dataFast) {
 		int idBegin = fast.GetIdTime(start);
 		int num = fast.GetNumData();
@@ -1074,6 +1075,15 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 		
 		if (idBegin >= idEnd)
 			throw Exc(t_("Begin has to be before end time"));
+		
+		VectorXd time = fast.GetVector(0).segment(idBegin, idEnd - idBegin);
+		if (!fullTime.IsEmpty()) {
+			double delta = fullTime[fullTime.size()-1] - fullTime[fullTime.size()-2];
+			time.array() += fullTime[fullTime.size()-1] + delta;
+		}
+		UVector<double> ntime;
+		Copy(time, ntime);
+		fullTime.Append(ntime);
 		
 		UVector<Value> &t = table.Add();
 		
@@ -1091,18 +1101,19 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					t << "";
 			} else {
 				const VectorXd data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
-				const VectorXd time = fast.GetVector(0).segment(idBegin, idEnd - idBegin);
 				UVector<double> ndata;
 				Copy(data, ndata);
 				fullData[ip].Append(ndata);
-			
+				
+				//fullTime
+				
 				for (int i = 0; i < param.metrics.size(); i++) {
 					String str = param.metrics[i];
 					str.Replace("(", ",");
 					str.Replace(")", ",");
 					UVector<String> pars = Split(str, ",");
 					String stat = pars[0];
-					double val;
+					double val = Null;
 					if (stat == "mean" || stat == "avg") 
 						val = data.mean();
 					else if (stat == "min") 
@@ -1156,7 +1167,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 						
 						UVector<double> maxs;
 						int id0 = 0;
-						double t0 = time[id0];
+						double t0 = time[0];
 						for (int i = 0; i < time.size(); ++i) {
 							if (time[i] - t0 >= deltaTime) {
 								maxs << data.segment(id0, i - id0 + 1).maxCoeff();
@@ -1164,10 +1175,14 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 								t0 = time[id0];
 							}
 						}
-						double mean = data.mean();
-						double mpm = Avg(maxs) - 0.45*StdDev(maxs, mean);
-						double tc_dyn = mpm - mean;
-						val = mean*gamma_mean + tc_dyn*gamma_dyn; 		// From DNV-OS-E301
+						if (Last(time) - t0 >= deltaTime*0.75)
+							maxs << data.segment(id0, data.size() - id0).maxCoeff();
+						if (maxs.size() > 1) {
+							double mean = data.mean();
+							double mpm = Avg(maxs) - 0.45*StdDev(maxs, mean);
+							double tc_dyn = mpm - mean;
+							val = mean*gamma_mean + tc_dyn*gamma_dyn; 		// From DNV-OS-E301
+						}
 					} else if (stat == "demo") {
 						if (pars.size() != 3)
 							throw Exc("'demo' requires two arguments");
@@ -1203,7 +1218,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				Trim(pars);
 				String stat = pars[0];
 					
-				double val;
+				double val = Null;
 				if (stat == "mean" || stat == "avg") 
 					val = (data.array()*time.array()).sum() / time.sum();
 				else if (stat == "min") 
@@ -1232,14 +1247,46 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					val = Null;
 				else if (stat == "rao_mean") 
 					val = Null;
-				else if (stat == "percentile") 
-					val = Null;
-				else if (stat == "weibull") 
-					val = Null;
-				else if (stat == "td") 
-					val = Null;
-				else if (stat == "demo") 
-					val = Null;
+				else if (stat == "percentile") {
+					if (pars.size() != 2)
+						throw Exc("'percentile' requires one argument");
+					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());
+					EigenVector v(d, 0, 1);
+					val = v.PercentileValY(ScanDouble(pars[1]));
+				} else if (stat == "weibull") {
+					if (pars.size() != 2)
+						throw Exc("'weibull' requires one argument");
+					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());
+					EigenVector v(d, 0, 1);
+					val = v.PercentileWeibullValY(ScanDouble(pars[1]));				
+				} else if (stat == "td") {
+					if (pars.size() != 4)
+						throw Exc("'td' requires three arguments");
+					double deltaTime = StringToSeconds(pars[1]);
+					double gamma_mean = ScanDouble(pars[2]);
+					double gamma_dyn = ScanDouble(pars[3]);
+					
+					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());
+					UVector<double> maxs;
+					int id0 = 0;
+					double t0 = fullTime[0];
+					for (int i = 0; i < fullTime.size(); ++i) {
+						if (fullTime[i] - t0 >= deltaTime) {
+							maxs << d.segment(id0, i - id0 + 1).maxCoeff();
+							id0 = i+1;
+							t0 = fullTime[id0];
+						}
+					}
+					if (Last(fullTime) - t0 >= 0.75*deltaTime)
+						maxs << d.segment(id0, fullTime.size() - id0).maxCoeff();
+					if (maxs.size() > 1) {
+						double mean = d.mean();
+						double mpm = Avg(maxs) - 0.45*StdDev(maxs, mean);
+						double tc_dyn = mpm - mean;
+						val = mean*gamma_mean + tc_dyn*gamma_dyn; 		// From DNV-OS-E301				
+					}
+				} else if (stat == "demo") 
+					;
 				else
 					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
 				
@@ -1252,24 +1299,6 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 		table[row][2] = SecondsToString(double(table[row][2]), 0, false, false, true, false, true);
 	}
 }
-/*
-bool FindHydrodynCB(String path, double &ptfmCOBxt, double &ptfmCOByt) {
-	for (FindFile ff(AFX(path, "*.dat")); ff; ++ff) {
-		if (ff.IsFile()) { 
-			String str = LoadFile(ff.GetPath());
-			String strx = GetFASTVar(str, "PtfmCOBxt", "");
-			if (!IsNull(strx)) {
-				ptfmCOBxt = ScanDouble(strx);
-				ptfmCOByt = ScanDouble(GetFASTVar(str, "PtfmCOByt", ""));
-				return true;	
-			}
-		} else if (ff.IsFolder()) { 
-			if (FindHydrodynCB(ff.GetPath(), ptfmCOBxt, ptfmCOByt))
-				return true;
-		}
-	}
-	return false;
-}*/
 
 void FASTCase::CreateFolderCase(String folder) {
 	Time t = GetSysTime();

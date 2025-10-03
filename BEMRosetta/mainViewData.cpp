@@ -23,7 +23,7 @@ MainViewData::MainViewData() {
 }
 
 void MainViewData::OnClose() {
-	MainBody &mainBody = GetDefinedParent<MainBody>(this);
+	MainBody &mainBody = GetParentCtrl<MainBody>(this);
 	mainBody.CloseSplitter();	
 }
 
@@ -49,7 +49,7 @@ void MainViewData::OnRemove() {
 	surf.RemovePanels(list, Bem().rho, Bem().g);
 	models[id].arrayFacetsAll2.array.ClearSelection(true);
 	
-	MainBody &mainBody = GetDefinedParent<MainBody>(this);
+	MainBody &mainBody = GetParentCtrl<MainBody>(this);
 	mainBody.UpdateLast(id);	
 }
 
@@ -65,7 +65,7 @@ void MainViewData::OnExtract() {
 			list << i;
 	}
 	Body &surf = Bem().surfs[id];
-	MainBody &mainBody = GetDefinedParent<MainBody>(this);
+	MainBody &mainBody = GetParentCtrl<MainBody>(this);
 		
 	try {
 		Bem().AddPanels(surf, list);
@@ -189,7 +189,7 @@ Value MainViewDataEach::DataSourceNodes::Format(const Value& q) const {
 }
 
 void MainViewDataEach::UpdateStatus() {
-	MainBody &mainBody = GetDefinedParent<MainBody>(this);
+	MainBody &mainBody = GetParentCtrl<MainBody>(this);
 	
 	bool show = mainBody.GetShowBody();
 	selectedPanels = ArrayCtrlSelectedGet(arrayFacetsAll2.array);
@@ -224,7 +224,7 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
 	arrayFacetsAll2.array.WhenSel = [&] {
-		MainBody &mainBody = GetDefinedParent<MainBody>(this);
+		MainBody &mainBody = GetParentCtrl<MainBody>(this);
 		UpdateStatus();
 		msh.dt.mesh.SelPanels(selectedPanels);	
 		mainView.FullRefresh(mainBody);		
@@ -243,7 +243,7 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
 	arrayNodesMoved.array.WhenSel = [&] {
-		MainBody &mainBody = GetDefinedParent<MainBody>(this);
+		MainBody &mainBody = GetParentCtrl<MainBody>(this);
 		UpdateStatus();
 		msh.dt.mesh.SelNodes(selectedNodes);
 		mainView.FullRefresh(mainBody);			

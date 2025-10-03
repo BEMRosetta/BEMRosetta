@@ -69,7 +69,7 @@ void MainSetupFOAMM::Init() {
 }
 
 void MenuFOAMM::OnCursor() {
-	MainBEM &mainBEM = GetDefinedParent<MainBEM>(this);
+	MainBEM &mainBEM = GetParentCtrl<MainBEM>(this);
 	int id = ArrayModel_IndexHydro(mainBEM.listLoaded);
 	if (id < 0)
 		return;
@@ -214,7 +214,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		int jdf = BEM::DOFStr(arrayCases.Get(row, 3));
 		
 		plots.Init(idf + 6*ib, jdf + 6*ib, Hydro::DATA_STS);
-		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
+		MainBEM &mbm = GetParentCtrl<MainBEM>(this);
 		plots.Load(hy, mbm);
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -334,7 +334,7 @@ bool MenuFOAMM::OnFOAMM() {
 	String ret;
 	
 	try {
-		MainBEM &mainBEM = GetDefinedParent<MainBEM>(this);
+		MainBEM &mainBEM = GetParentCtrl<MainBEM>(this);
 		
 		int idx = ArrayModel_IndexHydro(mainBEM.listLoaded);
 		if (idx < 0)

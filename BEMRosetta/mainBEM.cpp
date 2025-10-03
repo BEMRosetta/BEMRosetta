@@ -2545,7 +2545,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 	
 	Upp::Color lightRed = Upp::Color(255, 165, 158);								
 	
-	const MainBEM &bm = GetDefinedParent<MainBEM>(this);
+	const MainBEM &bm = GetParentCtrl<MainBEM>(this);
 	Upp::Color color = ArrayModel_GetColor(bm.listLoaded, id);
 	::Color textColor = Black();
 	if (Grayscale(color) < 150)

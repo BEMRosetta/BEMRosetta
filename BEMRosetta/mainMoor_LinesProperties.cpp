@@ -25,7 +25,7 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 
 	butAdd <<= THISBACK(ArrayOnAdd);
 	butDuplicate <<= THISBACK(ArrayOnDuplicate);
-	butRemove.WhenAction = [&]{ArrayOnRemove();	GetDefinedParent<MainMoor>(this).OnUpdate();};
+	butRemove.WhenAction = [&]{ArrayOnRemove();	GetParentCtrl<MainMoor>(this).OnUpdate();};
 	
 	InitArray();
 	
@@ -55,7 +55,7 @@ void MainMoor_LineProperties::Init(Mooring &mooring) {
 		if (IsNull(pto))
 			return;
 
-		double elong = ~GetDefinedParent<MainMoor>(this).right.edElong;
+		double elong = ~GetParentCtrl<MainMoor>(this).right.edElong;
 		
 		edLength <<= Distance(pfrom, pto)*(100 + elong)/100.;
 		ArrayUpdateCursor();
@@ -73,6 +73,12 @@ void MainMoor_LineProperties::InitArray() {
 	array.AddColumn(t_("To"), 40);
 	array.AddColumn(t_("Length [m]"), 40);
 	array.AddColumn(t_("Num. Segs."), 40);
+	array.AddColumn(t_("From x"), 10);
+	array.AddColumn(t_("From y"), 10);
+	array.AddColumn(t_("From z"), 10);
+	array.AddColumn(t_("To x"), 10);
+	array.AddColumn(t_("To y"), 10);
+	array.AddColumn(t_("To z"), 10);
 }
 
 bool MainMoor_LineProperties::ArrayUpdateCursor() {
@@ -95,6 +101,27 @@ bool MainMoor_LineProperties::ArrayUpdateCursor() {
 	array.Set(id, col++, ~edNumSeg);
 
 	Mooring &mooring = *pmooring;
+
+	const Mooring::Connection *pfrom = mooring.GetConnectionP(~dropFrom);
+	if (pfrom) {
+		array.Set(id, col++, pfrom->x);
+		array.Set(id, col++, pfrom->y);
+		array.Set(id, col++, pfrom->z);
+	} else {
+		array.Set(id, col++, "-");
+		array.Set(id, col++, "-");
+		array.Set(id, col++, "-");
+	}
+	const Mooring::Connection *pto = mooring.GetConnectionP(~dropTo);
+	if (pfrom) {
+		array.Set(id, col++, pto->x);
+		array.Set(id, col++, pto->y);
+		array.Set(id, col++, pto->z);
+	} else {
+		array.Set(id, col++, "-");
+		array.Set(id, col++, "-");
+		array.Set(id, col++, "-");
+	}
 	
 	Save();
 	String error = mooring.Test();
@@ -104,7 +131,7 @@ bool MainMoor_LineProperties::ArrayUpdateCursor() {
 		return false;
 	}
 	
-	GetDefinedParent<MainMoor>(this).OnUpdate();
+	GetParentCtrl<MainMoor>(this).OnUpdate();
 	
 	return true;
 }
@@ -138,7 +165,22 @@ void MainMoor_LineProperties::Load() {
 	
 	for (int id = 0; id < mooring.lineProperties.size(); ++id) {
 		const auto &val = mooring.lineProperties[id];
-		array.Add(val.name, val.nameType, val.from, val.to, val.length, val.numseg);
+		String fx, fy, fz, tx, ty, tz;
+		const Mooring::Connection *pfrom = mooring.GetConnectionP(val.from);
+		if (pfrom) {
+			fx = FormatDouble(pfrom->x);
+			fy = FormatDouble(pfrom->y);
+			fz = FormatDouble(pfrom->z);
+		} else
+			fx = fy = fz = "-";
+		const Mooring::Connection *pto = mooring.GetConnectionP(val.to);
+		if (pto) {
+			tx = FormatDouble(pto->x);
+			ty = FormatDouble(pto->y);
+			tz = FormatDouble(pto->z);
+		} else
+			tx = ty = tz = "-";	
+		array.Add(val.name, val.nameType, val.from, val.to, val.length, val.numseg, fx, fy, fz, tx, ty, tz);
 	}
 	LoadDrop();
 	if (mooring.lineProperties.size() > 0)
@@ -181,3 +223,32 @@ void MainMoor_LineProperties::LoadDrop() {
 	dropLineType <<= strLineType;
 	
 }
+
+void MainMoor_LineProperties::Renumber() {
+	auto &mooring = *pmooring;
+			
+	for (int i = 0; i < mooring.lineProperties.size(); ++i)	
+		mooring.lineProperties[i].name = FormatInt(i+1);
+	Load();
+}
+
+void MainMoor_LineProperties::DeleteUnused() {
+	auto &mooring = *pmooring;
+	
+	for (int i = mooring.lineProperties.size()-1; i >= 0; --i)	{
+		auto &line = mooring.lineProperties[i];
+		bool foundFrom = false, foundTo = false;
+		for (const auto &con : mooring.connections) {
+			if (con.name == line.from)
+				foundFrom = true;
+			else if (con.name == line.to)
+				foundTo = true;
+			if (foundFrom && foundTo)
+				break;
+		}
+		if (!foundFrom || !foundTo)
+			mooring.lineProperties.Remove(i);
+	}
+	Load();	
+}
+

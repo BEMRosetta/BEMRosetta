@@ -2059,7 +2059,7 @@ public:
 	bool Load(String file);
 	bool LoadMoordyn(String file);
 	bool Save(String file);
-	bool SaveMoordyn(String file, bool fillAll, int mooring);
+	bool SaveMoordyn(String file, bool fillAll, int mooring, bool fairleads, bool anchors);
 	bool Calc(double rho_water, int num = 50, double rho_m3 = 7850);	// Steel);
 	String Test();
 	void Jsonize(JsonIO &json);
@@ -2128,7 +2128,8 @@ public:
 	};
 	UVector<Connection> connections;	
 	
-	Connection &GetConnection(String name);
+	const Connection &GetConnection(String name) const;
+	const Connection *GetConnectionP(String name) const;
 	
 	struct Vessel : Moveable<Vessel> {
 		Vessel() {};

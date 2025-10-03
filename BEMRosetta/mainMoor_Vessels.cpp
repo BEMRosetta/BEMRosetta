@@ -53,7 +53,7 @@ bool MainMoor_Vessels::ArrayUpdateCursor() {
 	
 	array.Set(id, 0, ~edName);
 	
-	GetDefinedParent<MainMoor>(this).OnUpdate();
+	GetParentCtrl<MainMoor>(this).OnUpdate();
 	
 	return true;
 }

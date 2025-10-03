@@ -41,7 +41,7 @@ bool MainStateSpace::Load(const UVector<int> &ids) {
 		tab.Reset();
 		int sdof = 6*Bem().Nb;
 		
-		const MainBEM &mbm = GetDefinedParent<MainBEM>(this);
+		const MainBEM &mbm = GetParentCtrl<MainBEM>(this);
 		plots.SetCount(sdof);
 		for (int i = 0; i < sdof; ++i) {
 			plots[i].SetCount(sdof);

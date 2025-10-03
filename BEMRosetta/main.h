@@ -1188,6 +1188,8 @@ public:
 	virtual void Load();
 	void LoadDrop();
 	virtual void Save();
+	void Renumber();
+	void DeleteUnused();
 	
 private:
 	Mooring *pmooring = nullptr;
@@ -1206,6 +1208,8 @@ public:
 	virtual void Load();
 	void LoadDrop();
 	virtual void Save();
+	void Renumber();
+	void DeleteUnused();
 	
 private:
 	Mooring *pmooring = nullptr;
@@ -1280,6 +1284,8 @@ private:
 	bool OnSave();
 	void OnUpdate(bool fit = false);
 	void LoadVesselPositionArray();
+	void Renumber(bool lines);
+	void DeleteUnused(bool lines);
 	
 	virtual void DragAndDrop(Point p, PasteClip& d);
 	virtual bool Key(dword key, int count);

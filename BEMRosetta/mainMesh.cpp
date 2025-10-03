@@ -867,12 +867,11 @@ void MainBody::OnOpt() {
 	
 	if (!Bem().fast.IsEmpty()) {
 		double tm = ~menuAnimation.edTime;
-		if (IsNull(tm) || tm < Bem().fast.GetTimeStart() || tm > Bem().fast.GetTimeEnd()) {
-			menuAnimation.edTime <<= Bem().fast.GetTimeStart();
-			menuAnimation.slider.MinMax((int)Bem().fast.GetTimeStart(), (int)Bem().fast.GetTimeEnd());
-			menuAnimation.slider.SetMajorTicks().SetMinorTicks(menuAnimation.slider.GetMajorTicks()/4);
-			menuAnimation.slider <<= Bem().fast.GetTimeStart();
-		}
+		if (IsNull(tm) || tm < Bem().fast.GetTimeStart() || tm > Bem().fast.GetTimeEnd())
+			menuAnimation.edTime <<= tm = Bem().fast.GetTimeStart();
+		menuAnimation.slider.MinMax((int)Bem().fast.GetTimeStart(), (int)Bem().fast.GetTimeEnd());
+		menuAnimation.slider.SetMajorTicks().SetMinorTicks(menuAnimation.slider.GetMajorTicks()/4);
+		menuAnimation.slider <<= tm;
 	}
 }
 
@@ -2255,7 +2254,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 									
 	bool healing = msh.dt.mesh.healing;
 
-	const MainBody &mn = GetDefinedParent<MainBody>(this);
+	const MainBody &mn = GetParentCtrl<MainBody>(this);
 	Upp::Color color = ArrayModel_GetColor(mn.listLoaded, id);
 	::Color textColor = Black();
 	if (Grayscale(color) < 150)
@@ -2734,7 +2733,7 @@ void MainGZ::Init() {
 
 void MainGZ::OnUpdate() {
 	try {
-		MainBody &mm = GetDefinedParent<MainBody>(this);
+		MainBody &mm = GetParentCtrl<MainBody>(this);
 		
 		idxOpened = ArrayModel_IndexBody(mm.listLoaded);
 		if (idxOpened < 0) {

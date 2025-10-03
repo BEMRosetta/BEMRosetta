@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2025, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 
@@ -111,7 +111,7 @@ bool Mooring::LoadMoordyn(String file) {
 	double zmin = std::numeric_limits<double>::max();
 	char status = '\0';
 	while (!f.IsEof()) {
-		if (f.GetLineNumber() > 100 && (lT.IsEmpty() || lP.IsEmpty() || connect.IsEmpty()))
+		if (f.GetLineNumber() > 1000 && (lT.IsEmpty() && lP.IsEmpty() && connect.IsEmpty()))
 			return false;
 		String line = Trim(f.GetLine());
 		String lowline = ToLower(line);
@@ -141,7 +141,15 @@ bool Mooring::LoadMoordyn(String file) {
 			} else if (status == 'p') {
 				Connection &conn = connect.Add();
 				conn.name = f.GetText(0);
-				conn.where = ToLower(f.GetText(1)) == "vessel" ? "vessel" : "fixed"; 
+				conn.where = ToLower(f.GetText(1));
+				if (conn.where == "fixed" || conn.where == "anchor" || conn.where == "body")
+					conn.where = "fixed";
+				else if (conn.where == "coupled" || conn.where == "vessel")
+					conn.where = "vessel";
+				else if (conn.where == "free" || conn.where == "point")
+ 					conn.where = "free";
+ 				else
+ 					throw Exc(Format(t_("Unknown type of point '%s'"), f.GetText(1))); 
 				conn.x = f.GetDouble(2);
 				conn.y = f.GetDouble(3);
 				conn.z = f.GetDouble(4);
@@ -180,7 +188,7 @@ bool Mooring::LoadMoordyn(String file) {
 	if (IsNull(depth))
 		depth = abs(zmin);
 	
-	if (lT.IsEmpty() || lP.IsEmpty() || connect.IsEmpty())
+	if (lT.IsEmpty() && lP.IsEmpty() && connect.IsEmpty())
 		return false;
 	
 	lineTypes = pick(lT);
@@ -190,10 +198,9 @@ bool Mooring::LoadMoordyn(String file) {
 	return true;
 }
 
-bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring) {
-	int numSegsToPlot = Null;//= 10;
+bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring, bool fairleads, bool anchors) {
 	double ratioSegsToPlot = 0.1;
-	int minSegsToPlot = 5;
+	int minSegsToPlot = 10;
 	
 	FileOut out(file);
 	if (!out.IsOpen()) 
@@ -216,11 +223,13 @@ bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring) {
 		<<  Format(" %3=s %8=s %12=s %12=s %12=s %6=s %6=s %6=s %6=s\n", "(-)", "(-) ", "(m)", "(m)", "(m)", "(kg)", "(m^3)", "(m^2)", "(-)");
 	for (int i = 0; i < connections.size(); ++i) {		
 		const Connection &conn = connections[i];
-		out << Format(" %3d %8=s %12.4f %12.4f %12.4f %6.1f %6.1f %6.1f %6.1f\n", i+1, conn.where == "vessel" ? "Vessel" : "Fixed", conn.x, conn.y, conn.z, 0, 0, 0, 0);
+		out << Format(" %3d %8=s %12.4f %12.4f %12.4f %6.1f %6.1f %6.1f %6.1f\n", i+1, InitCaps(conn.where), conn.x, conn.y, conn.z, 0, 0, 0, 0);
 	}
 	out <<  "----------------------- LINES -----------------------------------------------\n"
 		<<	Format(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "ID ", "LineType", "AttachA", "AttachB", "UnstrLen", "NumSegs", "Outputs")
 		<<	Format(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "(-)", " (name) ", "  (#)  ", "  (#)  ", "   (m)  ", "  (-)  ", "  (-)  ");
+	
+	String sfair, sanch;
 	for (int i = 0; i < lineProperties.size(); ++i) {		
 		const LineProperty &line = lineProperties[i];
 		int from = -1, to = -1;
@@ -246,16 +255,16 @@ bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring) {
 		if (zfrom > zto)
 			Swap(from, to);		// MoorDyn expects first anchor and second fairlead
 		out << Format(" %3d %12=s %8d %8d %12.3f %8d %8s\n", i+1, line.nameType, from+1, to+1, line.length, line.numseg, mooring == 2 ? "p" : "-");
-	}
-
-	String sfair, sanch;
-	for (int i = 0; i < lineProperties.size(); ++i) {
+		
 		if (i > 0) {
 			sfair << ", ";	
 			sanch << ", ";
 		}
-		sfair << Format("FAIRTEN%d", i + 1);
-		sanch << Format("ANCHTEN%d", i + 1);
+		String snum = FormatInt(i+1);
+		String snfair = "L" + FormatInt(i+1) + "NP" + FormatInt(line.numseg) + "F";
+		sfair << Format("FAIRTEN%d, ", i+1) + snfair + "X, " + snfair + "Y, " + snfair + "Z";
+		String snanch = "L" + FormatInt(i+1) + "NP0F";
+		sanch << Format("ANCHTEN%d, ", i+1) + snanch + "X, " + snanch + "Y, " + snanch + "Z";
 	}
 	
 	double _dtM 		= IsNull(dtM) 		&& fillAll ? 0.001 : dtM;
@@ -286,22 +295,18 @@ bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring) {
 	out << "0                      OutSwitch  - enable .MD output (0/1)\n";
 	if (!sfair.IsEmpty()) {
 		out <<  "------------------------ OUTPUTS --------------------------------------------\n";
-		if (!sfair.IsEmpty())
+		if (!sfair.IsEmpty() && fairleads)
 			out << "\"" << sfair << "\"" << "\n";
-		if (!sanch.IsEmpty())
+		if (!sanch.IsEmpty() && anchors)
 			out << "\"" << sanch << "\"" << "\n";
-		
+			
 		if (mooring == 1) {
 			for (int i = 0; i < lineProperties.size(); ++i) {
 				const LineProperty &line = lineProperties[i];
-				int numseg;
-				if (!IsNull(numSegsToPlot))
-					numseg = min(line.numseg, numSegsToPlot);
-				else
-					numseg = max(int(line.numseg*ratioSegsToPlot), minSegsToPlot);
+				int numseg = max(int(line.numseg*ratioSegsToPlot), min(line.numseg, minSegsToPlot));
 				UVector<int> points(numseg+1);
 				double step = 1;
-				if (line.numseg > numSegsToPlot)
+				if (line.numseg > numseg)
 					step = line.numseg/numseg;
 				for (int i = 0; i < numseg; ++i) 
 		        	points[i] = (int)(i * step);
@@ -332,11 +337,18 @@ String Mooring::Test() {
 	return String();
 }
 
-Mooring::Connection &Mooring::GetConnection(String name) {
-	for (Connection &con : connections) {
+const Mooring::Connection *Mooring::GetConnectionP(String name) const {
+	for (const Connection &con : connections) {
 		if (con.name == name)
-			return con;
+			return &con;
 	}
+	return nullptr;
+}
+
+const Mooring::Connection &Mooring::GetConnection(String name) const {
+	const Mooring::Connection *p = GetConnectionP(name);	
+	if (p) 
+		return *p;
 	throw Exc(t_(Format("Connection '%s' is not found", name)));
 }
 

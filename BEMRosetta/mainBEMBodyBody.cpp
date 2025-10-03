@@ -104,7 +104,7 @@ void MainBodyTable::Init() {
 
 bool MainBodyTable::Load() {
 	try {
-		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
+		MainBEM &mbm = GetParentCtrl<MainBEM>(this);
 		int idx = ArrayModel_IndexHydro(mbm.listLoaded);
 	
 		tab.Reset();

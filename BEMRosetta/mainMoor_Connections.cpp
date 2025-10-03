@@ -25,7 +25,7 @@ void MainMoor_Connections::Init(Mooring &mooring) {
 
 	butAdd <<= THISBACK(ArrayOnAdd);
 	butDuplicate <<= THISBACK(ArrayOnDuplicate);
-	butRemove.WhenAction = [&]{ArrayOnRemove();	GetDefinedParent<MainMoor>(this).OnUpdate();};
+	butRemove.WhenAction = [&]{ArrayOnRemove();	GetParentCtrl<MainMoor>(this).OnUpdate();};
 	
 	InitArray();
 	
@@ -66,7 +66,7 @@ bool MainMoor_Connections::ArrayUpdateCursor() {
 	array.Set(id, 3, ~edy);
 	array.Set(id, 4, ~edz);
 	
-	GetDefinedParent<MainMoor>(this).OnUpdate();
+	GetParentCtrl<MainMoor>(this).OnUpdate();
 	
 	return true;
 }
@@ -127,3 +127,43 @@ void MainMoor_Connections::LoadDrop() {
 	dropVessel.Add("fixed");
 	dropVessel <<= strVessel;
 }
+
+void MainMoor_Connections::Renumber() {
+	auto &mooring = *pmooring;
+	
+	UVector<Mooring::LineProperty> lp = clone(mooring.lineProperties);
+	for (int i = 0; i < mooring.connections.size(); ++i) {		
+		String newname = FormatInt(i+1);
+		auto &con = mooring.connections[i];
+		for (int ip = 0; ip < mooring.lineProperties.size(); ++ip) {
+			if (con.name == mooring.lineProperties[ip].from)
+				lp[ip].from = newname;
+			else if (con.name == mooring.lineProperties[ip].to)
+				lp[ip].to = newname;
+		}
+		con.name = newname;
+	}
+	mooring.lineProperties = pick(lp);
+	
+	Load();
+	GetParentCtrl<MainMoor>(this).lineProperties.Load();
+}
+
+void MainMoor_Connections::DeleteUnused() {
+	auto &mooring = *pmooring;
+	
+	for (int i = mooring.connections.size()-1; i >= 0; --i)	{
+		auto &con = mooring.connections[i];
+		bool found = false;
+		for (const auto &line : mooring.lineProperties) {
+			if (con.name == line.from || con.name == line.to) {
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			mooring.connections.Remove(i);
+	}
+	Load();
+}
+

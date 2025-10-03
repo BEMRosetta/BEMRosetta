@@ -62,12 +62,20 @@ void MainMoor::Init() {
 		lineProperties.Save();
 		lineConnections.Save();
 		lineVessels.Save();
-		if (right.tab.IsAt(lineProperties)) 
+		if (right.tab.IsAt(lineProperties)) {
+			right.butRenumber.Tip(t_("Renumber lines consecutively")).Show();
+			right.butDelete.Tip(t_("Remove lines connected to removed points")).Show();
 			lineProperties.LoadDrop();
-		else if (right.tab.IsAt(lineConnections)) {
+		} else if (right.tab.IsAt(lineConnections)) {
+			right.butRenumber.Tip(t_("Renumber connection points consecutively")).Show();
+			right.butDelete.Tip(t_("Remove unused connections points")).Show();
 			lineConnections.LoadDrop();	
 			OnUpdate();
+		} else {
+			right.butRenumber.Hide();
+			right.butDelete.Hide();
 		}
+		
 		if (wasAtVessel) {
 			LoadVesselPositionArray();		// Modifying vessels forces update
 			OnUpdate();
@@ -119,13 +127,31 @@ void MainMoor::Init() {
 	right.dropExport.SetIndex(dropExportId);
 	right.dropExport.WhenAction();
 	
+	right.butRenumber.WhenAction = [&] {Renumber(right.tab.IsAt(lineProperties));		FullRefresh(false);};
+	right.butRenumber.Hide();
+	right.butDelete.WhenAction   = [&] {DeleteUnused(right.tab.IsAt(lineProperties));	FullRefresh(false);};
+	right.butDelete.Hide();
+	
 	left.opConnection.WhenAction = [&]{FullRefresh(false);};
 	left.opLines.WhenAction = [&]{FullRefresh(false);};
 		
 	CtrlLayout(left);
 	
-	
 	LoadVesselPositionArray();
+}
+
+void MainMoor::Renumber(bool lines) {
+	if (lines)
+		lineProperties.Renumber();
+	else
+		lineConnections.Renumber();
+}
+
+void MainMoor::DeleteUnused(bool lines) {
+	if (lines)
+		lineProperties.DeleteUnused();
+	else
+		lineConnections.DeleteUnused();
 }
 
 void MainMoor::LoadVesselPositionArray() {
@@ -206,7 +232,7 @@ bool MainMoor::OnSave() {
 		if (format == "json")
 			ret = mooring.Save(fileName);
 		else
-			ret = mooring.SaveMoordyn(fileName, right.opFillAll, right.opMooring);
+			ret = mooring.SaveMoordyn(fileName, right.opFillAll, right.opMooring, right.opFairleads, right.opAnchors);
 		if (!ret) {
 			BEM::PrintError(Format(t_("Problem saving %s file"), fileName));
 			return false;
@@ -278,19 +304,7 @@ void MainMoor::OnUpdate(bool fit) {
 			mooring.vessels[id].dx = ScanDouble(left.arrayPos.Get(r, 1).ToString());
 			mooring.vessels[id].dy = ScanDouble(left.arrayPos.Get(r, 2).ToString());
 		}
-			
-		//px.Clear();	py.Clear(); pz.Clear();
-		/*for (auto &conn : mooring.connections) {
-			double dx = 0, dy = 0;
-			int id = mooring.FindVessel(conn.where);
-			if (id >= 0) {
-				dx = mooring.vessels[id].dx;
-				dy = mooring.vessels[id].dy;
-			}
-			//px << conn.x + dx;
-			//py << conn.y + dy;
-			//pz << conn.z;
-		}*/
+		
 		try {
 			if (!mooring.Calc(Bem().rho, ~left.edNumSeg)) {
 				Status(t_("Problem in line calculation"));

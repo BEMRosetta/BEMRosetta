@@ -37,7 +37,7 @@ void MainABForce::Clear() {
 bool MainABForce::Load(const UVector<int> &ids, int ih) {
 	TempAssign<bool> _isFilling(isFilling, true);
 	try {
-		MainBEM &mbm = GetDefinedParent<MainBEM>(this);
+		MainBEM &mbm = GetParentCtrl<MainBEM>(this);
 	
 		tab.Reset();
 		UArray<Hydro> &hydros = Bem().hydros; 
