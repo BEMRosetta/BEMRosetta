@@ -114,13 +114,11 @@ void MainMoor::Init() {
 	right.labresults.Hide();
 #endif
 	
-	right.opFillAll.Tip(t_("Fills the unknown options with reasonable values"));
 	right.opMooring <<= 0;
 	right.opMooring.Tip(t_("Outputs the mooring lines intermediate positions"));
 	right.edDt.     Tip(t_("Time step to use in mooring integration"));
 	right.dropExport.Add("json").Add("MoorDyn");
 	right.dropExport.WhenAction = [&] {
-		right.opFillAll.Enable(right.dropExport.GetData() == "MoorDyn");
 		right.opMooring.Enable(right.dropExport.GetData() == "MoorDyn");
 		right.edDt.     Enable(right.dropExport.GetData() == "MoorDyn");
 	};
@@ -232,7 +230,7 @@ bool MainMoor::OnSave() {
 		if (format == "json")
 			ret = mooring.Save(fileName);
 		else
-			ret = mooring.SaveMoordyn(fileName, right.opFillAll, right.opMooring, right.opFairleads, right.opAnchors);
+			ret = mooring.SaveMoordyn(fileName, right.opMooring, right.opFairleads, right.opAnchors);
 		if (!ret) {
 			BEM::PrintError(Format(t_("Problem saving %s file"), fileName));
 			return false;

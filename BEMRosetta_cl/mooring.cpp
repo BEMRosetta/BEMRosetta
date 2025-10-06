@@ -198,7 +198,7 @@ bool Mooring::LoadMoordyn(String file) {
 	return true;
 }
 
-bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring, bool fairleads, bool anchors) {
+bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors) {
 	double ratioSegsToPlot = 0.1;
 	int minSegsToPlot = 10;
 	
@@ -267,13 +267,13 @@ bool Mooring::SaveMoordyn(String file, bool fillAll, int mooring, bool fairleads
 		sanch << Format("ANCHTEN%d, ", i+1) + snanch + "X, " + snanch + "Y, " + snanch + "Z";
 	}
 	
-	double _dtM 		= IsNull(dtM) 		&& fillAll ? 0.001 : dtM;
-	double _kbot 		= IsNull(kbot) 		&& fillAll ? 3E6 : kbot;
-	double _cbot 		= IsNull(cbot) 		&& fillAll ? 3E5 : cbot;
-	double _dtIC 		= IsNull(dtIC) 		&& fillAll ? 1 : dtIC;
-	double _TmaxIC 		= IsNull(TmaxIC) 	&& fillAll ? 60 : TmaxIC;
-	double _CdScaleIC 	= IsNull(CdScaleIC) && fillAll ? 4 : CdScaleIC;
-	double _threshIC 	= IsNull(threshIC) 	&& fillAll ? 0.001 : threshIC;
+	double _dtM 		= IsNull(dtM) 		? 0.001 : dtM;
+	double _kbot 		= IsNull(kbot) 		? 3E6 : kbot;
+	double _cbot 		= IsNull(cbot) 		? 3E5 : cbot;
+	double _dtIC 		= IsNull(dtIC) 		? 1 : dtIC;
+	double _TmaxIC 		= IsNull(TmaxIC) 	? 60 : TmaxIC;
+	double _CdScaleIC 	= IsNull(CdScaleIC) ? 4 : CdScaleIC;
+	double _threshIC 	= IsNull(threshIC) 	? 0.001 : threshIC;
 	
 	out <<	"---------------------- SOLVER OPTIONS ---------------------------------------\n";
 	if (!IsNull(_dtM))

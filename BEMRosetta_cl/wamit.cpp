@@ -2202,13 +2202,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 					h.real(180);
 				if (h.imag() == -180)
 					h.imag(180);
-				int id = FindRatio(dt.qhead, h, 0.01);
-				if (id >= 0)
-					headids[ic] = id;
-				else {
-					NEVER();
-					throw Exc(t_("Impossible to save .12"));
-				}
+				headids[ic] = FindRatio(dt.qhead, h, 0.01);		// Can be -1 if crossed headings do not exist
 				ic++;
 			}
 		}
@@ -2240,21 +2234,23 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 					(ih == qtfHeadingId)) {
 					if (ih == qtfHeadingId)
 						h1 = h2 = heading;
-					for (int ib = 0; ib < dt.Nb; ++ib)
-	        			for (int idf = 0; idf < 6; ++idf) {
-	        				static int idf12[] = {1, 3, 5, 2, 4, 6};
-	        				int iidf = idf12[idf]-1;
-	        				out << Format("   % 8.6E", data[ifr1]);
-	        				out << Format("   % 8.6E", data[ifr2]);
-	        				out << Format("   % 8.6E", h1);
-	        				out << Format("   % 8.6E", h2);
-	        				out << Format("   %2d", ib*6 + iidf+1);
-	        				out << Format("   % 8.6E", F_ndim(abs(qtf[ib][headids[ih]][iidf](ifr1, ifr2)), iidf));
-	        				out << Format("   % 8.6E", !force_Deg ? arg(qtf[ib][headids[ih]][iidf](ifr1, ifr2)) : ToDeg(arg(qtf[ib][headids[ih]][iidf](ifr1, ifr2))));
-	        				out << Format("   % 8.6E", F_ndim(qtf[ib][headids[ih]][iidf](ifr1, ifr2).real(), iidf));
-	        				out << Format("   % 8.6E", F_ndim(qtf[ib][headids[ih]][iidf](ifr1, ifr2).imag(), iidf));
-	        				out << "\n";
-	        			}
+					if (headids[ih] >= 0) {
+						for (int ib = 0; ib < dt.Nb; ++ib)
+		        			for (int idf = 0; idf < 6; ++idf) {
+		        				static int idf12[] = {1, 3, 5, 2, 4, 6};
+		        				int iidf = idf12[idf]-1;
+		        				out << Format("   % 8.6E", data[ifr1]);
+		        				out << Format("   % 8.6E", data[ifr2]);
+		        				out << Format("   % 8.6E", h1);
+		        				out << Format("   % 8.6E", h2);
+		        				out << Format("   %2d", ib*6 + iidf+1);
+		        				out << Format("   % 8.6E", F_ndim(abs(qtf[ib][headids[ih]][iidf](ifr1, ifr2)), iidf));
+		        				out << Format("   % 8.6E", !force_Deg ? arg(qtf[ib][headids[ih]][iidf](ifr1, ifr2)) : ToDeg(arg(qtf[ib][headids[ih]][iidf](ifr1, ifr2))));
+		        				out << Format("   % 8.6E", F_ndim(qtf[ib][headids[ih]][iidf](ifr1, ifr2).real(), iidf));
+		        				out << Format("   % 8.6E", F_ndim(qtf[ib][headids[ih]][iidf](ifr1, ifr2).imag(), iidf));
+		        				out << "\n";
+		        			}
+					}
 				}
 			}
 }

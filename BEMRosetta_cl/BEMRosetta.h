@@ -2059,7 +2059,7 @@ public:
 	bool Load(String file);
 	bool LoadMoordyn(String file);
 	bool Save(String file);
-	bool SaveMoordyn(String file, bool fillAll, int mooring, bool fairleads, bool anchors);
+	bool SaveMoordyn(String file, int mooring, bool fairleads, bool anchors);
 	bool Calc(double rho_water, int num = 50, double rho_m3 = 7850);	// Steel);
 	String Test();
 	void Jsonize(JsonIO &json);
