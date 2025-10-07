@@ -200,18 +200,22 @@ All files, mesh, case or BEM files, can be loaded by Drag and Drop or Copy and P
 
 ## Short Videos
 
-A series of short videos has been created to help you use the software's features in a simple way. The following table shows their characteristics.
+[A series of short videos](https://www.youtube.com/@BEMRosetta) has been created to help you use the software's features in a simple way. The following table shows their characteristics.
 
-| Videos | Introduction | Vessel Mesh | BEM Solvers | Hydrodynamic Coefficients |
-| --- |:---:|:---:|:---:|:---:|
-| [General Presentation](https://www.youtube.com/watch?v=sEjo7yI6rl0) | X | X | X | X |
+| Videos | Introduction | Vessel Mesh | BEM Solvers | Hydrodynamic Coefficients | Mooring |
+| --- |:---:|:---:|:---:|:---:|:---:|
+| [General Presentation](https://www.youtube.com/watch?v=sEjo7yI6rl0) | X | X | X | X | |
 | [Windows Install](https://www.youtube.com/watch?v=VMt0QTr-3SI) | X | | | |
-| [GNU/Linux Install](https://www.youtube.com/watch?v=VPGCHyuXHa4) | X | | | |
-| [From mesh to case in less than 4 mins](https://www.youtube.com/watch?v=ACKvyERhNYI) | | X | X | X |
-| [Revolution Mesh](https://www.youtube.com/watch?v=45blMIfCnYc) | | X | | |
-| [Get Lid and Hull](https://www.youtube.com/watch?v=mOueU1Hnh4U) | | X | | |
-| [Mesh Extrusion](https://youtu.be/T-To-PC9lFo) | | X | | |
-| [Command line Presentation](https://www.youtube.com/watch?v=vY7_t6-_f-o) | X | X | | X |
+| [GNU/Linux Install](https://www.youtube.com/watch?v=VPGCHyuXHa4) | X | | | | |
+| [Command line Presentation](https://www.youtube.com/watch?v=vY7_t6-_f-o) | X | X | | X | |
+| [Animation](https://www.youtube.com/watch?v=lEvHlYaOB6k) | X | X | | | |
+| [Mooring Editor](https://www.youtube.com/watch?v=qy9UWf7wj_U) | X | | | | X |
+| [Mooring Animation](https://www.youtube.com/watch?v=-5bqJii5ZG4) | X | X | | | X |
+| [From mesh to case in less than 4 mins](https://www.youtube.com/watch?v=ACKvyERhNYI) | | X | X | X | |
+| [Revolution Mesh](https://www.youtube.com/watch?v=45blMIfCnYc) | | X | | | |
+| [Get Lid and Hull](https://www.youtube.com/watch?v=mOueU1Hnh4U) | | X | | | |
+| [Mesh Extrusion](https://youtu.be/T-To-PC9lFo) | | X | | | |
+| [AQWA QTF and OpenFAST](https://www.youtube.com/watch?v=jCG9eQxWajY) | | | | X | |
 
 If you are missing any video, please request it.
 	
