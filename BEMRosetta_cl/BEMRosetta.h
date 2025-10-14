@@ -1840,7 +1840,7 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .3sc .3fk .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc"	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .3sc .3fk .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc .mqt"	// Priority
 #ifdef PLATFORM_WIN32
 		" .owr"
 #endif

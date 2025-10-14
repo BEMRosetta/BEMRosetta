@@ -148,13 +148,15 @@ private:
 			;
 		}
 		void Get(const ArrayCtrl &aleft, const ArrayCtrl &aright);
-		void Set(ArrayCtrl &aleft, ArrayCtrl &aright) const;
+		void Set(FastScatterBase &parent, ArrayCtrl &aleft, ArrayCtrl &aright) const;
 	};
 	
 	String saveFolder;
 	
 	UArray<EditString> edits;
 	UArray<EditDouble> editNums;
+	
+	bool disableShowSelected = false;
 };
 
 class FastScatter : public StaticRect {

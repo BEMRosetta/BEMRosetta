@@ -1277,7 +1277,6 @@ private:
 	Mooring mooring;
 	Mooring::ClosestInfo cl;
 	
-	//UVector<double> px, py, pz;
 	int dropExportId = Null;
 	
 	bool OnLoad();

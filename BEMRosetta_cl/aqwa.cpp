@@ -1221,12 +1221,13 @@ bool Aqwa::Load_MQT() {
 	if (!file.IsOpen())
 		return false;
 	
-	int nwNh = dt.Nh*dt.Nh;
+	int qNh = (int)dt.qhead.size();
+	int nwNh = qNh*qNh;
 	
 	auto AddCrossHead = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
             qtf[ib].SetCount(nwNh);
-            for (int ih = dt.Nh; ih < nwNh; ++ih) {
+            for (int ih = qNh; ih < nwNh; ++ih) {
         		qtf[ib][ih].SetCount(6);
 	        	for (int idf = 0; idf < 6; ++idf) 
 	        		qtf[ib][ih][idf].setConstant(dt.Nf, dt.Nf, 0);
@@ -1235,19 +1236,19 @@ bool Aqwa::Load_MQT() {
 	};
 	
 	auto ReadBlockNhNh = [&]()->MatrixXd {
-		MatrixXd block(dt.Nh, dt.Nh);
+		MatrixXd block(qNh, qNh);
 		
-		for (int ih1 = 0; ih1 < dt.Nh; ++ih1)
-			for (int ih2 = 0; ih2 < dt.Nh; ++ih2)
+		for (int ih1 = 0; ih1 < qNh; ++ih1)
+			for (int ih2 = 0; ih2 < qNh; ++ih2)
 				block(ih1, ih2) = file.Read<float>();	
 		return block;
 	};
 	
 	{
-		int ih = dt.Nh;
+		int ih = qNh;
 		dt.qhead.conservativeResize(nwNh);
-		for (int ih1 = 0; ih1 < dt.Nh; ++ih1)
-			for (int ih2 = 0; ih2 < dt.Nh; ++ih2)
+		for (int ih1 = 0; ih1 < qNh; ++ih1)
+			for (int ih2 = 0; ih2 < qNh; ++ih2)
 				if (ih1 != ih2)
 					dt.qhead[ih++] = std::complex<double>(dt.head[ih1], dt.head[ih2]);
 	}
@@ -1269,8 +1270,8 @@ bool Aqwa::Load_MQT() {
 		if (nf != dt.Nf)
 			throw Exc(Format(t_("Wrong number of frequencies %d found in mqt. They should have to be %d"), nf, (int)dt.qw.size()));
 		int nh = file.Read<int32>();
-		if (nh != dt.Nh)
-			throw Exc(Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), nh, dt.Nh));
+		if (nh != qNh)
+			throw Exc(Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), nh, qNh));
 		
 		file.SeekCur(28);
 		
@@ -1287,19 +1288,19 @@ bool Aqwa::Load_MQT() {
 		for (int ih = 0; ih < nh; ++ih)
 			head[ih] = file.Read<float>()*180./M_PI;
 		
-		if (!CompareDecimals(head, dt.head, 3))
+		if (!CompareDecimals(head, dt.qhead, 3))
 			throw Exc(t_("List of headings does not match with previously loaded"));
 	
 		file.SeekCur(1024 - nh*4);
 		file.SeekCur(10*4);
 		
-		MultiDimMatrixRowMajor<std::complex<double>> qtsum(6, dt.Nh, dt.Nh), qtdif(6, dt.Nh, dt.Nh);
+		MultiDimMatrixRowMajor<std::complex<double>> qtsum(6, qNh, qNh), qtdif(6, qNh, qNh);
 		
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			// Difference
 			for (int idof = 0; idof < 6; ++idof) {
 				MatrixXd block = ReadBlockNhNh();
-				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+				for (int ih1 = 0; ih1 < qNh; ++ih1) {
 					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
 						if (ih1 == ih2)
 							qtdif(idof, ih1, ih1) = std::complex<double>(block(ih1, ih1), 0);
@@ -1311,7 +1312,7 @@ bool Aqwa::Load_MQT() {
 			//Summation
 			for (int idof = 0; idof < 6; ++idof) {
 				MatrixXd block = ReadBlockNhNh();
-				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+				for (int ih1 = 0; ih1 < qNh; ++ih1) {
 					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
 						if (ih1 == ih2)
 							qtsum(idof, ih1, ih1) = std::complex<double>(block(ih1, ih1), 0);
@@ -1321,18 +1322,18 @@ bool Aqwa::Load_MQT() {
 				}
 			}
 			for (int idof = 0; idof < 6; ++idof)
-				for (int ih = 0; ih < dt.Nh; ++ih)			
+				for (int ih = 0; ih < qNh; ++ih)			
 					qtsum(idof, ih, ih).imag(-file.Read<float>());
 			
 			// Filling qtf data	
 			for (int idof = 0; idof < 6; ++idof) {
-				int ih = dt.Nh;
-				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
-					for (int ih2 = 0; ih2 < dt.Nh; ++ih2) {
+				int ih = qNh;
+				for (int ih1 = 0; ih1 < qNh; ++ih1) {
+					for (int ih2 = 0; ih2 < qNh; ++ih2) {
 						if (ih1 == ih2) {
-							if (!EqualRatio(dt.qtfdif[ib][ih1][idof](ifr, ifr), qtdif(idof, ih1, ih1), 0.0001, 1E-5))
+							if (!EqualRatio(dt.qtfdif[ib][ih1][idof](ifr, ifr), qtdif(idof, ih1, ih1), 1E-4, 1.))
 								throw Exc(Format(t_("QTF_dif(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
-									ib+1, dt.head[ih1], idof, dt.w[ifr], FormatComplex(dt.qtfdif[ib][ih1][idof](ifr, ifr)), FormatComplex(qtdif(idof, ih1, ih1))));
+									ib+1, dt.qhead[ih1].real(), idof, dt.w[ifr], FormatComplex(dt.qtfdif[ib][ih1][idof](ifr, ifr)), FormatComplex(qtdif(idof, ih1, ih1))));
 							dt.qtfdif[ib][ih1][idof](ifr, ifr) = qtdif(idof, ih1, ih1);		// MQT file has finest value
 						} else
 							dt.qtfdif[ib][ih++][idof](ifr, ifr) = qtdif(idof, ih1, ih2);
@@ -1340,13 +1341,13 @@ bool Aqwa::Load_MQT() {
 				}
 			}
 			for (int idof = 0; idof < 6; ++idof) {
-				int ih = dt.Nh;
-				for (int ih1 = 0; ih1 < dt.Nh; ++ih1) {
+				int ih = qNh;
+				for (int ih1 = 0; ih1 < qNh; ++ih1) {
 					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
 						if (ih1 == ih2) {
-							if (!EqualRatio(dt.qtfsum[ib][ih1][idof](ifr, ifr), qtsum(idof, ih1, ih1), 0.0001, 1E-5))
+							if (!EqualRatio(dt.qtfsum[ib][ih1][idof](ifr, ifr), qtsum(idof, ih1, ih1), 1E-4, 1.))
 								throw Exc(Format(t_("QTF_sum(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
-									ib+1, dt.head[ih1], idof, dt.w[ifr], FormatComplex(dt.qtfsum[ib][ih1][idof](ifr, ifr)), FormatComplex(qtsum(idof, ih1, ih1))));
+									ib+1, dt.qhead[ih1].real(), idof, dt.w[ifr], FormatComplex(dt.qtfsum[ib][ih1][idof](ifr, ifr)), FormatComplex(qtsum(idof, ih1, ih1))));
 							dt.qtfsum[ib][ih1][idof](ifr, ifr) = qtsum(idof, ih1, ih1);		// MQT file has finest value
 						} else
 							dt.qtfsum[ib][ih++][idof](ifr, ifr) = qtsum(idof, ih1, ih2);
@@ -1357,7 +1358,7 @@ bool Aqwa::Load_MQT() {
 				file.SeekCur(4*10);			
 		}
 		// Newman approximation
-		for (int ih = dt.Nh; ih < nwNh; ++ih)			// Only crossed headings
+		for (int ih = qNh; ih < nwNh; ++ih)			// Only crossed headings
 			for (int idof = 0; idof < 6; ++idof)
 				for (int ifr1 = 0; ifr1 < dt.Nf; ++ifr1)
 					for (int ifr2 = 0; ifr2 < dt.Nf; ++ifr2)

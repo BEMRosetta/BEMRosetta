@@ -195,12 +195,18 @@ void FastScatter::OnCalc() {
 
 		GridToParams();
 				
-		WaitCursor waitcursor;
-
-
 		UVector<UVector<Value>> table;
 		ParameterMetrics realparams; 
-		Calc(fscbase.left.dataFast, params, realparams, fscbase.timeStart, fscbase.timeEnd, table);
+		
+		Progress progress(t_("Calculating"), 100);
+		auto Status = [&](String str, int _pos) {
+			if (!IsNull(str))
+				progress.SetText(str); 
+			progress.SetPos(_pos); 
+			return !progress.Canceled();
+		};
+			
+		Calc(fscbase.left.dataFast, params, realparams, fscbase.timeStart, fscbase.timeEnd, table, Status);
 		
 		int col = 0;
 		compare.array.AddColumn("");
@@ -214,8 +220,10 @@ void FastScatter::OnCalc() {
 		fmt << "s" << "s" << "s";
 				
 		for (const ParameterMetric &param : realparams.params) {				
-			int id = fast.GetParameterX(param.name);
-			String units = fast.GetUnit(id);
+			String units;
+			int id;
+			if ((id = fast.GetParameterX(param.name)) >= 0)
+				units = fast.GetUnit(id);
 			for (int i = 0; i < param.metrics.size(); i++) {
 				compare.array.AddColumn("");
 				if (i == 0) 
@@ -241,7 +249,7 @@ void FastScatter::OnCalc() {
 		}
 			
 	} catch (const Exc &e) {
-		BEM::PrintError(DeQtf(e));	
+		BEM::PrintError(e);	
 	}
 }
 	
@@ -321,7 +329,12 @@ void FastScatterBase::Init(FastScatter *parent, Function <bool(String)> OnFile, 
 	rightSearch.array.WhenLeftDouble = THISBACK1(WhenArrayLeftDouble, &rightSearch.array);	
 	rightSearch.array.WhenEnterKey   = THISBACK1(WhenArrayLeftDouble, &rightSearch.array);	
 	
-	leftSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK1(ShowSelected, false);
+	leftSearch.array.Removing().NoAskRemove().WhenArrayAction = [&] {
+		for(int i = 0; i < leftSearch.array.GetCount(); i++)
+			if (leftSearch.array.IsSelected(i))
+				return;
+		ShowSelected(false);
+	};
 	rightSearch.array.Removing().NoAskRemove().WhenArrayAction = THISBACK1(ShowSelected, false);
 	
 	leftSearch.array.AddColumn("");
@@ -515,18 +528,19 @@ void ArrayRemoveDuplicates(ArrayCtrl &a) {
 }
 
 void FastScatterBase::OnDropInsert(int line, PasteClip& d, ArrayCtrl &array) {
+	disableShowSelected = true;
 	if(AcceptInternal<ArrayCtrl>(d, "array")) {
 		array.InsertDrop(line, d);
 		array.SetFocus();
 		ArrayRemoveDuplicates(array);
-		ShowSelected(true);
 	} else if(AcceptText(d) && !ArrayExists(array, GetString(d))) {
 		array.Insert(line);
 		array.Set(line, 0, GetString(d));
 		array.SetCursor(line);
 		array.SetFocus();
-		ShowSelected(true);
 	}	
+	disableShowSelected = false;
+	ShowSelected(true);
 }
 
 void FastScatterBase::OnDrag(ArrayCtrl &array, bool remove) {
@@ -811,6 +825,9 @@ void FastScatterBase::OnSaveAs() {
 	
 void FastScatterBase::ShowSelected(bool zoomtofit) {
 	NON_REENTRANT_V;
+	
+	if (disableShowSelected)
+		return;
 	
 	try {
 		WaitCursor wait;
@@ -1254,13 +1271,16 @@ void FastScatterBase::Params::Get(const ArrayCtrl &aleft, const ArrayCtrl &arigh
 		right << aright.Get(rw, 0);
 }
 
-void FastScatterBase::Params::Set(ArrayCtrl &aleft, ArrayCtrl &aright) const {
+void FastScatterBase::Params::Set(FastScatterBase &parent, ArrayCtrl &aleft, ArrayCtrl &aright) const {
+	parent.disableShowSelected = true;
 	aleft.Clear();
 	for (int rw = 0; rw < left.size(); ++rw)
 		aleft.Set(rw, 0, left[rw]);
 	aright.Clear();
 	for (int rw = 0; rw < right.size(); ++rw)
 		aright.Set(rw, 0, right[rw]);
+	parent.disableShowSelected = false;
+	parent.ShowSelected(false);
 }
 	
 void FastScatterBase::LoadParams() {
@@ -1287,7 +1307,7 @@ void FastScatterBase::LoadParams() {
 	if (!LoadFromJsonFile(params, fileName))
 		return;
 	
-	params.Set(leftSearch.array, rightSearch.array);
+	params.Set(*this, leftSearch.array, rightSearch.array);
 }
 
 void FastScatterBase::SaveParams() {

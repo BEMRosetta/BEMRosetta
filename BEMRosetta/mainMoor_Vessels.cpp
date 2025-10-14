@@ -27,7 +27,7 @@ void MainMoor_Vessels::Init(Mooring &mooring) {
 	butDuplicate <<= THISBACK(ArrayOnDuplicate);
 	butRemove <<= THISBACK(ArrayOnRemove);
 	
-	Load();	// InitArray();
+	Load();
 	
 	edName.WhenAction	= [&] {ArrayUpdateCursor();};
 }

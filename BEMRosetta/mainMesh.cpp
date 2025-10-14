@@ -135,7 +135,7 @@ void MainBody::Init() {
 			mainView.FullRefresh(*this);
 			Ctrl::ProcessEvents();	
 			double deltat = tmGetTimeX() - tprev;
-			menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+			menuAnimation.labtime <<= Format("%.0f", 1./deltat);
 			playing = false;
 		}
 	};				
@@ -154,7 +154,7 @@ void MainBody::Init() {
 		mainView.FullRefresh(*this);
 		Ctrl::ProcessEvents();	
 		double deltat = tmGetTimeX() - tprev;
-		menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+		menuAnimation.labtime <<= Format("%.0f", 1./deltat);
 		playing = false;
 	};
 	

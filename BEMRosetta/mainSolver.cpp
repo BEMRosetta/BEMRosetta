@@ -180,16 +180,7 @@ void MainSolver::Init() {
 	save.withPotentials.Hide();
 	save.labAdditional.Hide();
 	save.opWaveHeight.Hide();
-	save.x.Hide();
-	save.y.Hide();
-	save.width.Hide();
-	save.height.Hide();
-	save.labFrom.Hide();
-	save.labRange.Hide();
-	save.labx.Hide();
-	save.laby.Hide();
-	save.labwidth.Hide();
-	save.labheight.Hide();
+	save.arrayArea.Hide();
 #endif
 	
 	for (int i = 0; i < 6; ++i)
@@ -200,12 +191,17 @@ void MainSolver::Init() {
 		save.arrayAdditional.AddColumn("y");
 		save.arrayAdditional.AddColumn("z");
 	}
+	if (save.arrayArea.GetColumnCount() != 3) {
+		save.arrayArea.AddColumn("Data", 30);
+		save.arrayArea.AddColumn("x", 10);
+		save.arrayArea.AddColumn("y", 10);
+		save.arrayArea.Add("Left/Top");
+		save.arrayArea.Add("Width/Height");
+		save.arrayArea.Add("Num");
+	}
 	save.opWaveHeight.WhenAction = [&]{
 		bool enabled = save.opWaveHeight.IsEnabled() && save.opWaveHeight;
-		save.x.Enable(enabled);
-		save.y.Enable(enabled);
-		save.width.Enable(enabled);
-		save.height.Enable(enabled);
+		save.arrayArea.Enable(enabled);
 	};
 	save.opWaveHeight.WhenAction();
 	

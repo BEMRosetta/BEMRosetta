@@ -21,7 +21,8 @@ using namespace Upp;
 
 void MainMoor::Init() {
 	Add(splitter.SizePos());
-	
+
+	EM().Log("Initialising mooring...");
 
 	splitter.Horz(left.SizePos(), right.SizePos());
 	splitter.SetPos(5000, 0);
@@ -35,6 +36,8 @@ void MainMoor::Init() {
 	
 	CtrlLayout(right);	
 	
+	EM().Log("Initialising mooring... 1");
+	
 	right.edDepth <<= 100;
 	right.edDepth.WhenAction = [&] {OnUpdate();};
 	left.edNumSeg <<= 50;
@@ -46,9 +49,13 @@ void MainMoor::Init() {
 	
 	right.showMin.WhenAction = [&] {OnUpdate();};
 	
+	EM().Log("Initialising mooring... lineTypes");
 	lineTypes.Init(mooring);
+	EM().Log("Initialising mooring... lineProperties");
 	lineProperties.Init(mooring);
+	EM().Log("Initialising mooring... lineConnections");
 	lineConnections.Init(mooring);
+	EM().Log("Initialising mooring... lineVessels");
 	lineVessels.Init(mooring);
 
 	right.tab.Add(lineTypes.SizePos(), t_("Line Types"));
@@ -82,6 +89,7 @@ void MainMoor::Init() {
 		}
 		wasAtVessel = right.tab.IsAt(lineVessels);
 	};
+	EM().Log("Initialising mooring... 2");
 	
 	const String moorFiles = ".json";
 	String moorFilesAst = clone(moorFiles);
@@ -93,6 +101,8 @@ void MainMoor::Init() {
 	right.butLoad.Tip(t_("Loads mooring file")).WhenAction = [&] {OnLoad();};
 	right.butSave.Tip(t_("Saves mooring file")).WhenAction = [&] {OnSave();};
 	//right.butUpdate.Tip(t_("Update mooring"))  .WhenAction = [&] {OnUpdate();};
+	
+	EM().Log("Initialising mooring... 3");
 	
 	right.arrayresults.Reset();
 	right.arrayresults.SetLineCy(EditField::GetStdHeight()).MultiSelect();
@@ -113,17 +123,24 @@ void MainMoor::Init() {
 	right.arrayresults.Hide();
 	right.labresults.Hide();
 #endif
-	
+	EM().Log("Initialising mooring... 3.1");
 	right.opMooring <<= 0;
 	right.opMooring.Tip(t_("Outputs the mooring lines intermediate positions"));
 	right.edDt.     Tip(t_("Time step to use in mooring integration"));
+	EM().Log("Initialising mooring... 3.2");
 	right.dropExport.Add("json").Add("MoorDyn");
 	right.dropExport.WhenAction = [&] {
 		right.opMooring.Enable(right.dropExport.GetData() == "MoorDyn");
 		right.edDt.     Enable(right.dropExport.GetData() == "MoorDyn");
 	};
+	EM().Log(Format("Initialising mooring... 3.3 '%d'", dropExportId));
+	if (dropExportId < 0 || dropExportId > 1)
+		dropExportId = 0;
+	EM().Log(Format("Initialising mooring... 3.3 '%d'", dropExportId));
 	right.dropExport.SetIndex(dropExportId);
 	right.dropExport.WhenAction();
+	
+	EM().Log("Initialising mooring... 4");
 	
 	right.butRenumber.WhenAction = [&] {Renumber(right.tab.IsAt(lineProperties));		FullRefresh(false);};
 	right.butRenumber.Hide();
@@ -134,6 +151,8 @@ void MainMoor::Init() {
 	left.opLines.WhenAction = [&]{FullRefresh(false);};
 		
 	CtrlLayout(left);
+	
+	EM().Log("Initialising mooring... 5");
 	
 	LoadVesselPositionArray();
 }

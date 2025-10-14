@@ -38,7 +38,7 @@ void Main::Init(bool firstTime) {
 	BEM::PrintWarning = [this](String s) {printf("%s", ~s); mainOutput.Print(s); /*Status(s);*/};
 	BEM::PrintError   = [this](String s) {printf("%s", ~s); /*tab.Set(mainOutput); */Status(s);	Exclamation(DeQtfLf(s));};
 	
-	LOG("Init");
+	EM().Log("Init");
 	Sizeable().Zoomable().SetMinSize(Size(800, 600));
 	Icon(Img::Rosetta64());
 	LargeIcon(Img::Rosetta256());
@@ -61,14 +61,12 @@ void Main::Init(bool firstTime) {
 		String str = errorJson + "\n" + t_("Config. data is not loaded. Defaults values are set"); 
 		if (errorJson != t_("First time")) 
 			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
-		LOG(str);
+		EM().Log(str);
 	}
 
-	LOG("Configuration loaded");
+	EM().Log("Configuration loaded");
 
-	
 	String title;
-	
 	if (parameter == "") {
 		if (Bem().windowTitle.IsEmpty())
 			title = "BEMRosetta";
@@ -92,27 +90,27 @@ void Main::Init(bool firstTime) {
 		
 	
 	if (parameter.IsEmpty() || parameter == "mesh") {
-		mainBody.Init();			LOG("Init Body");
+		mainBody.Init();			EM().Log("Init Body");
 		tab.Add(mainBody.SizePos(), t_("Vessel Mesh"));
 	}
 	if (parameter.IsEmpty()) {
-		mainSolver.Init();		LOG("Init Nemoh");
+		mainSolver.Init();		EM().Log("Init Nemoh");
 		//tab.Add(mainNemohScroll.AddPaneV(mainSolver).SizePos(), tabTexts[TAB_NEMOH]);
 		tab.Add(mainSolver.SizePos(), t_("BEM Solver"));
 	}
 	
 	if (parameter.IsEmpty() || parameter == "bem") {
-		mainBEM.Init();				LOG("Init BEM");
+		mainBEM.Init();				EM().Log("Init BEM");
 		tab.Add(mainBEM.SizePos(),  t_("Hydro Coeff"));
 	}
 	
 	if (parameter.IsEmpty() || parameter == "time") {
-		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	LOG("Init FAST");
+		mainFAST.Init(GetBEMRosettaDataFolder(), bar);	EM().Log("Init FAST");
 		tab.Add(mainFAST.SizePos(), t_("Time series"));
 	}
 	
 	if (parameter.IsEmpty()) {
-		mainMoor.Init();	LOG("Init Moor");
+		mainMoor.Init();	EM().Log("Init Moor");
 		tab.Add(mainMoor.SizePos(), t_("Mooring"));
 	}
 
@@ -122,7 +120,7 @@ void Main::Init(bool firstTime) {
 	}
 	
 	if (parameter.IsEmpty()) {
-		mainDecay.Init();	LOG("Init Decay");
+		mainDecay.Init();	EM().Log("Init Decay");
 		if (false/*Bem().experimental*/)
 			tab.Add(mainDecay.SizePos(), t_("Decay"));
 	}
@@ -130,14 +128,14 @@ void Main::Init(bool firstTime) {
 	if (parameter.IsEmpty())
 		tab.Add().Disable();
 	
-	mainOutput.Init();			LOG("Init Output");
+	mainOutput.Init();			EM().Log("Init Output");
 	tab.Add(mainOutput.SizePos(), t_("Output"));	
 	
-	menuOptions.Init(Bem());	LOG("Init Options");
-	menuOptions.Load();			LOG("Init Options.Load");
+	menuOptions.Init(Bem());	EM().Log("Init Options");
+	menuOptions.Load();			EM().Log("Init Options.Load");
 	tab.Add(menuOptionsScroll.AddPaneV(menuOptions).SizePos(), t_("Options"));
 	
-	menuAbout.Init();			LOG("Init About");
+	menuAbout.Init();			EM().Log("Init About");
 	tab.Add(menuAbout.SizePos(), t_("About"));
 	
 	editrho.OnLeftDown = [&](Point, dword) {tab.Set(menuOptionsScroll); menuOptions.rho.SetFocus(); menuOptions.rho.Underline(1);};
@@ -586,7 +584,9 @@ GUI_APP_MAIN {
 	
 	
 	#if defined(PLATFORM_WIN32) 
+	//#ifdef flagDEBUG
 	GetCrashHandler().Enable();
+	//#endif
 	#ifndef flagDEBUG
 	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))
 		return;

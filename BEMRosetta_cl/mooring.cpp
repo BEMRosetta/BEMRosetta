@@ -142,14 +142,11 @@ bool Mooring::LoadMoordyn(String file) {
 				Connection &conn = connect.Add();
 				conn.name = f.GetText(0);
 				conn.where = ToLower(f.GetText(1));
-				if (conn.where == "fixed" || conn.where == "anchor" || conn.where == "body")
-					conn.where = "fixed";
-				else if (conn.where == "coupled" || conn.where == "vessel")
-					conn.where = "vessel";
-				else if (conn.where == "free" || conn.where == "point")
- 					conn.where = "free";
- 				else
- 					throw Exc(Format(t_("Unknown type of point '%s'"), f.GetText(1))); 
+				const Upp::Index<String> attachments = {"fixed", "anchor", "coupled", "vessel", "free", "point"};
+				if (attachments.Find(conn.where) < 0) {
+					if (!conn.where.StartsWith("body"))
+	 					throw Exc(Format(t_("Unknown type of attachment '%s' in point '%s'"), f.GetText(1), conn.name)); 
+				}
 				conn.x = f.GetDouble(2);
 				conn.y = f.GetDouble(3);
 				conn.z = f.GetDouble(4);
@@ -230,6 +227,22 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 		<<	Format(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "(-)", " (name) ", "  (#)  ", "  (#)  ", "   (m)  ", "  (-)  ", "  (-)  ");
 	
 	String sfair, sanch;
+	for (int i = 0; i < connections.size(); ++i) {
+		const Connection &conn = connections[i];	
+		if (fairleads && conn.where == "vessel") {
+			sfair << "\"";
+			sfair << Format("Point%d", i+1) + "FX, ";
+			sfair << Format("Point%d", i+1) + "FY, ";
+			sfair << Format("Point%d", i+1) + "FZ";
+			sfair << "\"\n";
+		} else if (anchors && (conn.where == "fixed" || conn.where == "anchor")) {
+			sanch << "\"";
+			sanch << Format("Point%d", i+1) + "FX, ";
+			sanch << Format("Point%d", i+1) + "FY, ";
+			sanch << Format("Point%d", i+1) + "FZ";
+			sanch << "\"\n";
+		}
+	}
 	for (int i = 0; i < lineProperties.size(); ++i) {		
 		const LineProperty &line = lineProperties[i];
 		int from = -1, to = -1;
@@ -255,16 +268,6 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 		if (zfrom > zto)
 			Swap(from, to);		// MoorDyn expects first anchor and second fairlead
 		out << Format(" %3d %12=s %8d %8d %12.3f %8d %8s\n", i+1, line.nameType, from+1, to+1, line.length, line.numseg, mooring == 2 ? "p" : "-");
-		
-		if (i > 0) {
-			sfair << ", ";	
-			sanch << ", ";
-		}
-		String snum = FormatInt(i+1);
-		String snfair = "L" + FormatInt(i+1) + "NP" + FormatInt(line.numseg) + "F";
-		sfair << Format("FAIRTEN%d, ", i+1) + snfair + "X, " + snfair + "Y, " + snfair + "Z";
-		String snanch = "L" + FormatInt(i+1) + "NP0F";
-		sanch << Format("ANCHTEN%d, ", i+1) + snanch + "X, " + snanch + "Y, " + snanch + "Z";
 	}
 	
 	double _dtM 		= IsNull(dtM) 		? 0.001 : dtM;
@@ -293,13 +296,11 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 	
 	out << Format("%-22.1f %11<s- water depth (m)\n", depth, "WtrDpth");
 	out << "0                      OutSwitch  - enable .MD output (0/1)\n";
-	if (!sfair.IsEmpty()) {
+	
+	if (fairleads || anchors || mooring == 1) {
 		out <<  "------------------------ OUTPUTS --------------------------------------------\n";
-		if (!sfair.IsEmpty() && fairleads)
-			out << "\"" << sfair << "\"" << "\n";
-		if (!sanch.IsEmpty() && anchors)
-			out << "\"" << sanch << "\"" << "\n";
-			
+		out << sfair << sanch;
+
 		if (mooring == 1) {
 			for (int i = 0; i < lineProperties.size(); ++i) {
 				const LineProperty &line = lineProperties[i];

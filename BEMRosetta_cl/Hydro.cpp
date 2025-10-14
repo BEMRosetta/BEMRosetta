@@ -523,11 +523,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 		ret = static_cast<Nemoh&>(*this).Load(fileName);
 	else if (ext == ".in")
 		ret = static_cast<Hams&>(*this).Load(fileName, Status); 
-	else if (ext == ".dat") 
-		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
-	else if (ext == ".lis") 
-		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
-	else if (ext == ".ah1") 
+	else if (S(".dat.lis.ah1.qtf.mqt").Find(ext) >= 0)
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
 	else if (ext == ".nc") {
 		UArray<Hydro> hydros;
@@ -3101,7 +3097,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 				ret = static_cast<Hams&>(hy).Load(controlfile, Status);	
 			else
 				ret = static_cast<Wamit&>(hy).Load(file, ishams, 0, Status);
-		} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf") 
+		} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf" || ext == ".mqt") 
 			ret = static_cast<Aqwa&>(hy).Load(file, Status);
 		else if (ext == ".hdb") 
 			ret = static_cast<Diodore&>(hy).Load(file, Status);

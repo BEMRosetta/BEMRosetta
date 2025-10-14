@@ -6,6 +6,7 @@
 #include <SysInfo/SysInfo.h>
 #include <Surface/Surface.h>
 #include <Functions4U/Functions4U.h>
+#include <Functions4U/EvalExpr.h>
 #include <ScatterDraw/Equation.h>
 
 using namespace Upp;
@@ -49,7 +50,17 @@ FastOut::FastOut() {
 		f.Init00(i+1);
 		calcParams << f.Init0(this);	
 	}
-	
+	for (int i = 0; i < 80; ++i) {
+		auto &f = anchTens.Add();
+		f.Init00(i+1);
+		calcParams << f.Init0(this);	
+	}
+	for (int i = 0; i < 80; ++i) {
+		auto &f = anchTensV.Add();
+		f.Init00(i+1);
+		calcParams << f.Init0(this);	
+	}
+			
 	syn.Add("PtfmRoll", "roll");
 	syn.Add("PtfmPitch", "pitch");
 	syn.Add("PtfmYaw", "yaw");
@@ -1032,12 +1043,12 @@ SortedVectorMap<String, String> FastOut::GetList(String filterParam, String filt
 	return list;
 }
 
-void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, ParameterMetrics &params, double start, double end, UVector<UVector<Value>> &table) {
+void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, ParameterMetrics &params, double start, double end, UVector<UVector<Value>> &table, Function <bool(String, int)> Status) {
 	table.Clear();
 	
 	// Gets the real set of parameters taking into account *
 	auto FindParam = [&](String strpartofind)->bool {
-		for (auto &param : params.params) {
+		for (const ParameterMetric &param : params.params) {
 			if (ToLower(strpartofind) == ToLower(param.name))
 				return true;
 		}	
@@ -1045,22 +1056,41 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 	};
 	
 	for (const FastOut &fast : dataFast) {
-		for (auto &p0 : params0.params) {
+		for (const ParameterMetric &p0 : params0.params) {
 			UVector<String> names = fast.FindParameterMatchStr(p0.name);
 			for (String name : names) {
 				if (!FindParam(name)) {
-					auto &param = params.params.Add();
+					ParameterMetric &param = params.params.Add();
 					param = clone(p0);
 					param.name = name;
+				}
+			}
+			if (names.IsEmpty()) {
+				EvalExprX exp;
+		    	exp.WhenGetVariableId = [&](const char *name) 		{return fast.GetParameterX(name);};
+				PostFixOperation op = exp.Get(p0.name);
+				if (!op.IsEmpty()) {
+					ParameterMetric &param = params.params.Add();
+					param = clone(p0);
 				}
 			}
 		}
 	}
 	
+	
 	// Does the real job
 	UVector<UVector<double>> fullData(params.params.size());
 	UVector<double> fullTime;
-	for (const FastOut &fast : dataFast) {
+	for (int i = 0; i < dataFast.size(); ++i) {
+		const FastOut &fast = dataFast[i];
+		if (Status && !Status(t_("Calculating"), int(100*(i+1.)/dataFast.size())))
+			throw Exc(t_("Stop by user"));
+				
+		EvalExprX exp;
+		int idtime = 0;
+    	exp.WhenGetVariableId = [&](const char *name) 		{return fast.GetParameterX(name);};
+    	exp.WhenGetVariableValue = [&](int id) 				{return fast.GetVal(idtime, id);};
+    
 		int idBegin = fast.GetIdTime(start);
 		int num = fast.GetNumData();
 		if (IsNull(idBegin) || idBegin >= num) 
@@ -1095,18 +1125,29 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 			if (param.metrics.size() < 1)
 				throw Exc(t_("Wrong number of parameters"));
 			
+			VectorXd data;
+			
 			int id = fast.GetParameterX(param.name);
+			if (id < 0) {
+				try {
+					PostFixOperation op = exp.Get(param.name);
+					data.resize(idEnd - idBegin);
+					for (int i = 0; i < data.size(); ++i) {
+						idtime = i + idBegin;
+						data[i] = exp.Eval(op);
+					}
+					id = 0;
+				} catch (...) {
+				}
+			} else
+				data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
+
 			if (id < 0) {
 				for (int i = 0; i < param.metrics.size(); i++) 
 					t << "";
 			} else {
-				const VectorXd data = fast.GetVector(id).segment(idBegin, idEnd - idBegin);
-				UVector<double> ndata;
-				Copy(data, ndata);
-				fullData[ip].Append(ndata);
-				
-				//fullTime
-				
+				AppendX(data, fullData[ip]);
+
 				for (int i = 0; i < param.metrics.size(); i++) {
 					String str = param.metrics[i];
 					str.Replace("(", ",");

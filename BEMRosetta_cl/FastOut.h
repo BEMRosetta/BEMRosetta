@@ -631,7 +631,56 @@ private:
 		int id, idFair;
 	};
 	UArray<Fairten_tParam> fairTens;	
-	
+
+	struct AnchTenHor : CalcParam {
+		AnchTenHor() {
+			units = "N";
+		}
+		virtual ~AnchTenHor() {}
+		
+		void Init00(int _id) {
+			name = Format("ANCHTEN%d_H", _id);
+			id = _id;
+		}
+		virtual void Init() {
+			idx = dF->GetParameterX(Format("L%d", id) + "NP0FX");
+			idy = dF->GetParameterX(Format("L%d", id) + "NP0FY");
+			enabled = idx >= 0  && idy >= 0;
+		}
+		virtual double Calc(int idtime) {
+			double fx = dF->GetVal(idtime, idx);
+			double fy = dF->GetVal(idtime, idy);
+
+			if (IsNull(fx) || IsNull(fy))
+				return Null;
+							
+			return sqrt(fx*fx + fy*fy);
+		}	
+		int id, idx, idy;
+	};
+	UArray<AnchTenHor> anchTens;
+
+	struct AnchTenV : CalcParam {
+		AnchTenV() {
+			units = "N";
+		}
+		virtual ~AnchTenV() {}
+		
+		void Init00(int _id) {
+			name = Format("ANCHTEN%d_V", _id);
+			id = _id;
+		}
+		virtual void Init() {
+			idz = dF->GetParameterX(Format("L%d", id) + "NP0FZ");
+			enabled = idz >= 0;
+		}
+		virtual double Calc(int idtime) {
+			return dF->GetVal(idtime, idz);
+		}	
+		int id, idz;
+	};
+	UArray<AnchTenV> anchTensV;
+			
 	int id = -1;
 	static int staticid;
 };
@@ -666,7 +715,8 @@ struct ParameterMetrics {
 	}
 };
 
-void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params, ParameterMetrics &realparams, double start, double end, UVector<UVector<Value>> &table);
+void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params, ParameterMetrics &realparams, 
+		double start, double end, UVector<UVector<Value>> &table, Function <bool(String, int)> Status = Null);
 
 
 class FASTCase {
