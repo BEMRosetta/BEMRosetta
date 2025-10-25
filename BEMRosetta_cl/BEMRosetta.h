@@ -296,7 +296,13 @@ public:
 			return "Unknown";
 		return bemStr[c];
 	}
-	
+	static const char *GetBemStrCase(BEM_FMT c) {
+		if (c < 0 || c > UNKNOWN)
+			return "Unknown";
+		if (c == WAMIT)
+			return "Wamit";		// To avoid "Wamit .out"
+		return bemStr[c];
+	}	
 	static BEM_FMT GetCodeBemStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
 		for (int i = 0; i < NUMBEM; ++i)
@@ -595,7 +601,15 @@ public:
 			ret[i] = 2*M_PI/dt.w[i];
 		return ret;
 	}
-	
+
+	VectorXd Get_qw() 							const {return dt.qw;}
+	VectorXd Get_qT()		 					const {
+		VectorXd ret(dt.qw.size());
+		for (int i = 0; i < ret.size(); ++i)
+			ret[i] = 2*M_PI/dt.qw[i];
+		return ret;
+	}
+		
 	inline double A_toDimFactor (int idf, int jdf) const 		  {return dt.dimen  ? rho_dim()/rho_ndim() : rho_dim()*pow(dt.len, GetK_AB(idf, jdf));}
 	inline double A_toNDimFactor(int idf, int jdf) const 		  {return !dt.dimen ? 1 : 1/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
 	inline double A_fromDimFactor(int idf, int jdf) const 		  {return dt.dimen  ? 1 : 1/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf)));}
@@ -872,6 +886,8 @@ public:
 	};
 	Data dt;
 	
+	UVector<Point3D> listPoints;
+	
 	static int idCount;
 	
 	static void ResetIdCount()	{idCount = 0;}
@@ -898,7 +914,8 @@ public:
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF);
+		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
+		const UVector<Point3D> &listPoints);
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -1394,7 +1411,7 @@ public:
 	
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
-	bool Load_frc2(String fileName);
+	bool Load_frc(String fileName);
 	void Save_4(String fileName, bool force_T = false) const;
 	
 	void SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) const;
@@ -1407,6 +1424,9 @@ protected:
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
+	bool Load_wam(String fileName, String &filepot, String &filefrc);
+	bool Load_frc1(String fileName);
+	bool Load_frc2(String fileName);
 	
 	bool Load_out(String fileName, Function <bool(String, int)> Status);							
 	static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
@@ -1431,8 +1451,8 @@ protected:
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T, bool force_Deg) const;
-	void Save_FRC(String fileName, bool force1st, bool withQTF) const;
-	void Save_POT(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void Save_frc(String fileName, bool force1st, bool withQTF) const;
+	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
 	void Save_AB(FileOut &out, int ifr) const;
@@ -1442,7 +1462,7 @@ protected:
 	
 	void Save_Fnames(String folder) const;
 	void Save_Config(String folder, int numThreads) const;
-	void Save_CFG(String fileName, bool withQTF, bool lid, bool force_T) const;
+	void Save_cfg(String fileName, bool withQTF, bool lid, bool force_T) const;
 
 private:
 	int GuessIperin(const UVector<double> &w);
@@ -1451,26 +1471,28 @@ private:
 class Hams : public Wamit {
 public:
 	Hams() {}
-	String Load(String file, Function <bool(String, int)> Status);
+	String Load(String file, bool onlycase, Function <bool(String, int)> Status);
 	virtual ~Hams() noexcept {}
 	
 	bool Load_Settings(String settingsFile);
 	bool Load_HydrostaticBody(String fileName, double rhog);
 	
 	int Load_ControlFile(String fileName);
-	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, 
+				const UArray<Body> &lids, const UVector<Point3D> &listPoints) const;
 	UVector<String> Check() const;
 	
-	bool LoadHydrostatic(String fileName);
+	bool LoadHydrostatic(String fileName, int ib);
 
 private:
-	void SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, 
+				const UArray<Body> &lids, const UVector<Point3D> &listPoints) const;
 	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
 	static void InMatrix(LineParser &f, MatrixXd &mat);
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, const UVector<double> &freqs,
-							int numThreads, bool remove_irr_freq) const;
+							int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints) const;
 	void Save_Settings(String folderInput, const UArray<Body> &lids) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
 };

@@ -29,10 +29,10 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			if (FileExists(filefrc)) {
 				BEM::Print("\n- " + Format(t_("Force Control file .frc file '%s'"), GetFileName(filefrc)));
 				try {
-					if (!Load_frc2(filefrc))
+					if (!Load_frc(filefrc))
 						BEM::Print(S(": ** frc ") + t_("Not found") + "**");
 				} catch  (Exc e) {
-					BEM::Print(S(": ** frc ") + t_("Only supported .frc alternative form 2") + "**");
+					BEM::Print(S(": ** frc ") + e + "**");
 				}
 			}
 		} else if (S(".mcn.hdf").Find(ext) >= 0) {
@@ -42,7 +42,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			else if (!Load_out(ff.GetPath(), Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
 				
-		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0) {
+		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0) {
 			if (isHams)
 				dt.solver = Hydro::HAMS_WAMIT;
 			else if (dt.name == "WAMIT_5S")
@@ -51,18 +51,26 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				dt.solver = Hydro::WAMIT;
 	
 			if (!isHams) {
-				String filepot = ForceExtSafer(file, ".pot");
+				String filepot, filefrc;
+				String filewam = ForceExtSafer(file, ".wam");
+				BEM::Print("\n- " + Format(t_("Wamit file .wam file '%s'"), GetFileName(filewam)));
+				if (!Load_wam(filewam, filepot, filefrc))
+					BEM::Print(S(": ** wam ") + t_("Not found") + "**");
+				
+				if (filepot.IsEmpty())
+					filepot = ForceExtSafer(file, ".pot");
 				BEM::Print("\n- " + Format(t_("Potential Control file .pot file '%s'"), GetFileName(filepot)));
 				if (!Load_pot(filepot))
 					BEM::Print(S(": ** pot ") + t_("Not found") + "**");
 		
-				String filefrc = ForceExtSafer(file, ".frc");
+				if (filefrc.IsEmpty())
+					filefrc = ForceExtSafer(file, ".frc");
 				BEM::Print("\n- " + Format(t_("Force Control file .frc file '%s'"), GetFileName(filefrc)));
 				try {
-					if (!Load_frc2(filefrc))
+					if (!Load_frc(filefrc))
 						BEM::Print(S(": ** frc ") + t_("Not found") + "**");
 				} catch  (Exc e) {
-					BEM::Print(S(": ** frc ") + t_("Only supported .frc alternative form 2") + "**");
+					BEM::Print(S(": ** frc ") + e + "**");
 				}
 				
 				if (dt.msh.size() > 0) {
@@ -174,14 +182,14 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	
 	if (!IsNull(dt.msh[0].dt.cg)) {
 		BEM::Print("\n- " + Format(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt(file, ".frc"))));
-		Save_FRC(fileext, false, IsLoadedQTF(true) || IsLoadedQTF(false));
+		Save_frc(fileext, false, IsLoadedQTF(true) || IsLoadedQTF(false));
 	}
 	BEM::Print("\n- " + Format(t_("Configurarion file '%s'"), GetFileName(fileext = ForceExt(file, ".cfg"))));
-	Save_CFG(fileext, IsLoadedQTF(true) || IsLoadedQTF(false), false, force_T);
+	Save_cfg(fileext, IsLoadedQTF(true) || IsLoadedQTF(false), false, force_T);
 	
 	if (dt.Nh > 0 && dt.Nf > 0) {
 		BEM::Print("\n- " + Format(t_("Potential Control file '%s'"), GetFileName(fileext = ForceExt(file, ".pot"))));
-		Save_POT(fileext, false, false, false, UArray<Body>());
+		Save_pot(fileext, false, false, false, UArray<Body>());
 	}
 	if (IsLoadedA() && IsLoadedB()) {
 		BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(fileext = ForceExt(file, ".1"))));
@@ -1090,6 +1098,29 @@ bool Wamit::Load_cfg(String fileName, int &iperin, int &iperout) {
  	return true;
 }
 
+bool Wamit::Load_wam(String fileName, String &filepot, String &filefrc) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	String folder = GetFileFolder(fileName);
+	LineParser f(in);
+	
+	while (!f.IsEof()) {
+		f.GetLine();
+		if (f.size() < 1)
+			continue;
+		String file = f.GetText(0);
+		if (!FileExists(file))
+			file = AFX(folder, file);
+		String ext = GetFileExt(file);
+		if (ext == ".pot")
+			filepot = file;
+		else if (ext == ".frc")
+			filefrc = file;
+	}
+	return true;
+}
+
 bool Wamit::Load_pot(String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1160,18 +1191,124 @@ bool Wamit::Load_pot(String fileName) {
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
 	
+	UVector<int> idxs;
+	Upp::Index<String> names;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
+		Body &b = dt.msh[ib];
+		
 		f.GetLine();
-		dt.msh[ib].dt.name = f.GetText(0);
+		
+		b.dt.fileName = f.GetText(0);
+		if (!FileExists(b.dt.fileName))
+			b.dt.fileName = AFX(GetFileFolder(fileName), b.dt.fileName);
+		
+		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, idxs);
+		if (!IsEmpty(ret))
+			throw Exc(ret);
+
+		b.dt.name = GetFileTitle(f.GetText(0));
+		if (names.Find(b.dt.name) >= 0)
+			b.dt.name << "_" << FormatInt(ib+1); 
+		names << b.dt.name;
+				
 		f.GetLine();
-		dt.msh[ib].dt.c0.x = f.GetDouble(0);
-		dt.msh[ib].dt.c0.y = f.GetDouble(1);
-		dt.msh[ib].dt.c0.z = f.GetDouble(2);
+		b.dt.c0.x = f.GetDouble(0);
+		b.dt.c0.y = f.GetDouble(1);
+		b.dt.c0.z = f.GetDouble(2);
 		if (f.GetCount() >= 4 && f.GetDouble(3) != 0)
 			BEM::PrintWarning("\n" + Format(t_("XBODY angle %f cannot be handled by BEMRosetta"), f.GetDouble(3)));
+		
+		b.dt.mesh.Translate(b.dt.c0.x, b.dt.c0.y, b.dt.c0.z);
+		b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
+		
+		b.dt.cb -= b.dt.c0;		// This is corrected later
+		
 		in.GetLine();
 	}
  	return true;
+}
+
+bool Wamit::Load_frc(String fileName) {
+	try {
+		if (!Load_frc1(fileName))
+			return false;
+	} catch(...) {
+		if (!Load_frc2(fileName))
+			return false;
+	}
+	return true;
+}
+
+bool Wamit::Load_frc1(String fileName) {
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	LineParser f(in);
+ 	f.IsSeparator = IsTabSpace;
+ 	
+ 	dt.rho = Bem().rho;		// There is no other source
+ 	
+	in.GetLine(2);
+	
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+		UVector<int> idxs;
+		Body &b = dt.msh[ib];
+		
+		if (b.IsEmpty()) {
+			Point3D c0 = b.dt.c0;
+			String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, idxs);
+			if (!IsEmpty(ret))
+				throw Exc(ret);
+			b.dt.c0 = c0;
+			b.dt.mesh.Translate(c0.x, c0.y, c0.z);
+			b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
+			
+			b.dt.cb -= b.dt.c0;		// This is corrected later
+		}
+		
+		f.GetLine();
+		double vcg = f.GetDouble(0);
+		b.dt.cg.x = b.dt.cb.x;
+		b.dt.cg.y = b.dt.cb.y;
+		b.dt.cg.z = vcg;
+		
+		Matrix3d inertia3;
+		for (int r = 0; r < 3; ++r) {
+			f.GetLine();
+			for (int c = 0; c < 3; ++c) 
+				inertia3(r, c) = f.GetDouble(c);
+		}
+		if (inertia3.maxCoeff() > EPS_LEN) {
+			Surface::GetInertia66(b.dt.M, inertia3, b.dt.cg, b.dt.c0, false);
+			double m = dt.rho*b.dt.Vo;
+			b.dt.M *= m;
+		} else
+			Clear(b.dt.M);
+	}
+	
+	f.GetLine();		// NBETAH
+	int nbeta = f.GetInt(0);
+	if (nbeta < 0)
+		throw Exc(in.Str() + "\n" + Format(t_("NBETAH '%s' has to be higher or equal to zero"), f.GetText(0)));
+	if (nbeta > 0)
+		f.GetLine();	// BETAH(1) BETAH(2) ... BETAH(NBETAH)
+	
+	f.GetLine();		// NFIELD
+	int numPoints = f.GetInt(0);
+	if (numPoints < 0)
+		throw Exc(in.Str() + "\n" + Format(t_("NFIELD '%s' has to be higher or equal to zero"), f.GetText(0)));
+	
+	listPoints.SetCount(numPoints);
+	for (int r = 0; r < numPoints; ++r) {
+		f.GetLine();
+		if (f.size() < 3 && f.IsEof())
+			throw Exc(Format(t_("Field points list is incomplete. Read %d from %d"), r, numPoints));	
+		listPoints[r].x = f.GetDouble(0);	// XFIELD(1,1) XFIELD(2,1) XFIELD(3,1)
+		listPoints[r].y = f.GetDouble(1);
+		listPoints[r].z = f.GetDouble(2);
+	}
+	
+	return true;
 }
 
 bool Wamit::Load_frc2(String fileName) {
@@ -1256,6 +1393,25 @@ bool Wamit::Load_frc2(String fileName) {
 			}
 		}
 	}
+	
+	f.GetLine();	// NBETAH
+	f.GetLine();	// BETAH(1) BETAH(2) ... BETAH(NBETAH)
+	
+	f.GetLine();	// NFIELD
+	int numPoints = f.GetInt(0);
+	if (numPoints < 0)
+		throw Exc(in.Str() + "\n" + Format(t_("NFIELD '%s' has to be higher or equal to zero"), f.GetText(0)));
+	
+	listPoints.SetCount(numPoints);
+	for (int r = 0; r < numPoints; ++r) {
+		f.GetLine();
+		if (f.size() < 3 && f.IsEof())
+			throw Exc(Format(t_("Field points list is incomplete. Read %d from %d"), r, numPoints));	
+		listPoints[r].x = f.GetDouble(0);	// XFIELD(1,1) XFIELD(2,1) XFIELD(3,1)
+		listPoints[r].y = f.GetDouble(1);
+		listPoints[r].z = f.GetDouble(2);
+	}
+	
 	return true;
 }
 
@@ -2173,7 +2329,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 	if (Nf < 2)
 		throw Exc(t_("Not enough data to save (at least 2 frequencies)"));
 	
-	VectorXd data = force_T ? Get_T() : Get_w();
+	VectorXd data = force_T ? Get_qT() : Get_qw();
 	
 	// Insert heading -180 if 180 is available
 	UVector<std::complex<double>> head;		// New heading pairs
@@ -2309,7 +2465,7 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 		}
 }
 
-void Wamit::Save_FRC(String fileName, bool force1st, bool withQTF) const {
+void Wamit::Save_frc(String fileName, bool force1st, bool withQTF) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
@@ -2381,7 +2537,7 @@ void Wamit::Save_FRC(String fileName, bool force1st, bool withQTF) const {
 	out << "0 % NFIELD_ARRAYS";
 }
 
-void Wamit::Save_POT(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
+void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
 	String folder = GetFileFolder(fileName);
 	
 	FileOut out(fileName);
@@ -2455,7 +2611,7 @@ void Wamit::Save_Config(String folder, int numThreads) const {
   	;
 }
 
-void Wamit::Save_CFG(String fileName, bool withQTF, bool lid, bool force_T) const {
+void Wamit::Save_cfg(String fileName, bool withQTF, bool lid, bool force_T) const {
 	FileOut out(fileName);
 	if (!out)
 		throw Exc(Format(t_("Problem creating '%s' file"), fileName));
@@ -2516,9 +2672,9 @@ void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool wi
 	
 	String folderName = GetFileTitle(folder);
 	
-	Save_POT(AFX(folder, folderName + ".pot"), true, x0z, y0z, lids);
-	Save_FRC(AFX(folder, folderName + ".frc"), true, withQTF);
-	Save_CFG(AFX(folder, folderName + ".cfg"), withQTF, !lids.IsEmpty(), false);
+	Save_pot(AFX(folder, folderName + ".pot"), true, x0z, y0z, lids);
+	Save_frc(AFX(folder, folderName + ".frc"), true, withQTF);
+	Save_cfg(AFX(folder, folderName + ".cfg"), withQTF, !lids.IsEmpty(), false);
 	
 	String fileBat = AFX(folder, "Wamit_bat.bat");		
 	FileOut bat(fileBat);

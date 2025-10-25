@@ -522,7 +522,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	if (ToLower(GetFileName(fileName)) == "nemoh.cal")
 		ret = static_cast<Nemoh&>(*this).Load(fileName);
 	else if (ext == ".in")
-		ret = static_cast<Hams&>(*this).Load(fileName, Status); 
+		ret = static_cast<Hams&>(*this).Load(fileName, true, Status); 
 	else if (S(".dat.lis.ah1.qtf.mqt").Find(ext) >= 0)
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
 	else if (ext == ".nc") {
@@ -540,7 +540,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
 	else if (ext == ".h5")
 		ret = static_cast<BemioH5&>(*this).Load(fileName, Status);
-	else if (S(".out.1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx").Find(ext) >= 0)
+	else if (S(".out.1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0)
 		ret = static_cast<Wamit&>(*this).Load(fileName, false, 0, Status);
 	else
 		ret = t_("Unknown BEM input format");
@@ -557,13 +557,14 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 }
 
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) {
+			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
+			const UVector<Point3D> &listPoints) {
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
 		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z, lids, listDOF);
 	else if (solver == Hydro::CAPYTAINE_PY)
 		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, lids);
 	else if (solver == Hydro::HAMS)
-		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids);
+		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints);
 	else if (solver == Hydro::ORCAWAVE_YML)
 		static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
 	else if (solver == Hydro::AQWA_DAT)
@@ -3086,7 +3087,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 		else if (ext == ".out" || ext == ".hdf" || ext == ".mcn") 
 			ret = static_cast<Wamit&>(hy).Load(file, false, 0, Status);
 		else if (ext == ".in") 
-			ret = static_cast<Hams&>(hy).Load(file, Status);
+			ret = static_cast<Hams&>(hy).Load(file, false, Status);
 		else if (ext == ".dat" || ext == ".fst") 
 			ret = static_cast<Fast&>(hy).Load(file, Status);
 		else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
@@ -3094,7 +3095,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 			String controlfile;
 			bool ishams = IsHAMS(file, controlfile);
 			if (!controlfile.IsEmpty())
-				ret = static_cast<Hams&>(hy).Load(controlfile, Status);	
+				ret = static_cast<Hams&>(hy).Load(controlfile, false, Status);	
 			else
 				ret = static_cast<Wamit&>(hy).Load(file, ishams, 0, Status);
 		} else if (ext == ".ah1" || ext == ".lis" || ext == ".qtf" || ext == ".mqt") 

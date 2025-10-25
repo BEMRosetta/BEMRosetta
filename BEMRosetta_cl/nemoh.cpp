@@ -57,7 +57,7 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 			if (!Load_KH(folder, "Mesh"))
 				BEM::Print(S(": ** Mesh/KH ") + t_("Not found") + "**");
 			
-			dynamic_cast<Wamit *>(this)->Load_frc2(ForceExtSafer(fileCal, ".frc"));
+			dynamic_cast<Wamit *>(this)->Load_frc(ForceExtSafer(fileCal, ".frc"));
 			
 			fileRad = AFX(folder, "Results", "RadiationCoefficients.tec");
 			folderForces = folder;

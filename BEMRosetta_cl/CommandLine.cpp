@@ -830,8 +830,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									String fmt = ToLower(command[ic]);
 									for (int i = 0; i < Hydro::NUMBEM; ++i) {
 										if (Hydro::caseCanSave[i]) {
-											if (ToLower(Replace(Hydro::bemStr[i], " ", "")) == fmt) {
-												solver = (Hydro::BEM_FMT)i;
+											if (ToLower(Replace(Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)), " ", "")) == fmt) {
+												solver = static_cast<Hydro::BEM_FMT>(i);
 												break;
 											}
 										}
@@ -864,7 +864,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
 							}
 							UVector<bool> listDOF(6, true);
-							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, withQTF, x0z, y0z, lids, listDOF);
+							UVector<Point3D> dummy;
+							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, withQTF, x0z, y0z, lids, listDOF, dummy);
 							BEM::Print("\n" + Format(t_("Saved model %d in %s case format"), bemid+1, Hydro::GetBemStr(solver)));
 						} else if (param == "-newbody") {
 							if (bem.hydros.size() < bemid) 

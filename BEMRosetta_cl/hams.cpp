@@ -6,7 +6,7 @@
 #include <STEM4U/SeaWaves.h>
 
 
-String Hams::Load(String filein, Function <bool(String, int)> Status) {
+String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Status) {
 	dt.file = filein;	
 	dt.name = GetFileTitle(filein);
 	
@@ -36,15 +36,24 @@ String Hams::Load(String filein, Function <bool(String, int)> Status) {
 		case 5:	iperout = 5;	break;	// 							   wave length
 		}
 
-		String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
-		String ret = Wamit::Load(wamitFile, true, iperout, Status);
-		if (!ret.IsEmpty()) 
-			return ret;
+		if (!onlycase) {
+			String wamitFile = AFX(baseFolder, "Output", "Wamit_format", "Buoy.1");
+			String ret = Wamit::Load(wamitFile, true, iperout, Status);
+			if (!ret.IsEmpty()) 
+				return ret;
+		}
 		
-		String hydroFile = AFX(baseFolder, "Input", "Hydrostatic.in");
-		if (FileExists(hydroFile)) 
-			LoadHydrostatic(hydroFile);
-		
+		if (dt.Nb == 1) {
+			String hydroFile = AFX(baseFolder, "Input", "Hydrostatic.in");
+			if (FileExists(hydroFile)) 
+				LoadHydrostatic(hydroFile, 0);
+		} else {
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				String hydroFile = AFX(baseFolder, "Input", Format("Hydrostatic_%d.in", ib+1));
+				if (FileExists(hydroFile)) 
+					LoadHydrostatic(hydroFile, ib);
+			}
+		}
 		String settingsFile = AFX(baseFolder, "Settings.ctrl");
 		if (FileExists(settingsFile))
 			Load_Settings(settingsFile);
@@ -181,7 +190,8 @@ UVector<String> Hams::Check() const {
 int Hams::Load_ControlFile(String fileName) {
 	dt.g = 9.80665;		// Is constant
 
-	fileName = AFX(GetFileFolder(fileName), "ControlFile.in");
+	String folder = GetFileFolder(fileName);
+	fileName = AFX(folder, "ControlFile.in");
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return 0;
@@ -257,7 +267,17 @@ int Hams::Load_ControlFile(String fileName) {
 				dt.w = pick(data);
 			else if (!CompareDecimals(dt.w, data, 3))
 				throw Exc(t_("List of frequencies does not match with previously loaded"));
-
+		} else if (var == "Number_of_bodies") {
+			dt.Nb = f.GetInt(1);
+			dt.msh.SetCount(dt.Nb);
+			for (int ib = 0; ib < dt.Nb; ++ib)
+				dt.msh[ib].dt.name = FormatInt(ib+1);
+			if (dt.Nb == 1)	
+				dt.msh[0].dt.fileName = AFX(folder, "HullMesh.pnl");
+			else {
+				for (int ib = 0; ib < dt.Nb; ++ib)
+					dt.msh[ib].dt.fileName = AFX(folder, Format("HullMesh_%d.pnl", ib+1));
+			}
 		} else if (var == "Number_of_headings") {
 			int Nh = f.GetInt(1);
 			if (!IsNull(dt.Nh)) {
@@ -291,33 +311,62 @@ int Hams::Load_ControlFile(String fileName) {
 			else if (!CompareDecimals(dt.head, data, 2))
 				throw Exc(t_("List of headings does not match with previously loaded"));
 
-		} else if (var == "Reference_body_centre" || var == "Reference_body_center") {
+		} else if (var.StartsWith("Reference_body_centre") || var.StartsWith("Reference_body_center")) {
+			int id = var.FindAfter("Reference_body_center_");
+			int ib;
+			if (id < 0)
+				ib = 0;
+			else {
+				ib = ScanInt(var.Mid(id));
+				if (ib > dt.Nb || ib < 1)
+					throw Exc(t_("Reference_body_center of wrong body"));
+				ib--;
+			}
 			if (f.size() < 4)
 				throw Exc(t_("Lack of data in Reference_body_center"));
-			dt.msh.SetCount(1);
-			Body &body = dt.msh[0];
+			
+			Body &body = dt.msh[ib];
 			body.dt.c0[0] = f.GetDouble(1);
 			body.dt.c0[1] = f.GetDouble(2);
 			body.dt.c0[2] = f.GetDouble(3);
-			String meshFile = AFX(GetFileFolder(fileName), "HullMesh.pnl");
-			if (FileExists(meshFile))
-				body.dt.fileName = meshFile;
-			String lidFile = AFX(GetFileFolder(fileName), "WaterplaneMesh.pnl");
-			if (FileExists(lidFile))
-				body.dt.lidFile = lidFile;
 		} else if (var == "Reference_body_length")
 			dt.len = f.GetDouble(1);
+		else if (var == "Number_of_field_points") {
+			int numPoints = f.GetInt(1);
+			listPoints.SetCount(numPoints);
+			for (int r = 0; r < numPoints; ++r) {
+				f.GetLine();
+				if (f.IsEof())
+					throw Exc(Format(t_("Field points list is incomplete. read %d from %d"), r, numPoints));
+				listPoints[r].x = f.GetDouble(0);
+				listPoints[r].y = f.GetDouble(1);
+				listPoints[r].z = f.GetDouble(2);
+			}
+		} else if (var == "If_remove_irr_freq") {
+			int remove_irr_freq = f.GetInt(1);	
+			if (remove_irr_freq > 0) {
+				if (dt.Nb == 1)	
+					dt.msh[0].dt.lidFile = AFX(folder, "WaterplaneMesh.pnl");
+				else {
+					for (int ib = 0; ib < dt.Nb; ++ib)
+						dt.msh[ib].dt.lidFile = AFX(folder, Format("WaterplaneMesh_%d.pnl", ib+1));
+				}
+			}
+		}
+			
 	}
 	return output_frequency_type;
 }
 
-bool Hams::LoadHydrostatic(String fileName) {
+bool Hams::LoadHydrostatic(String fileName, int ib) {
+	ASSERT(dt.Nb > ib);
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
 	
-	dt.msh.SetCount(1);
-	Body &body = dt.msh[0];
+	if (dt.msh.size() < dt.Nb)
+		dt.msh.SetCount(dt.Nb);
+	Body &body = dt.msh[ib];
 	
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
@@ -330,34 +379,36 @@ bool Hams::LoadHydrostatic(String fileName) {
 		
 		String line = Trim(f.GetText());
 	
-		if (line == "Centre of Gravity:" || line == "Center of Gravity:") {
+		if (line.StartsWith("Centre of Gravity:") || line.StartsWith("Center of Gravity:")) {
 			f.GetLine();
 			if (f.size() < 3)
 				throw Exc(t_("Centre of Gravity data is not complete"));
 			body.dt.cg[0] = f.GetDouble(0);
 			body.dt.cg[1] = f.GetDouble(1);
 			body.dt.cg[2] = f.GetDouble(2);
-		} else if (line == "Body Mass Matrix:") 
+		} else if (line.StartsWith("Body Mass Matrix:"))
 			InMatrix(f, body.dt.M);
-		else if (line == "External Linear Damping Matrix:") 
+		else if (line.StartsWith("External Linear Damping Matrix:")) 
 			InMatrix(f, body.dt.Dlin);
-		else if (line == "External Quadratic Damping Matrix:") 
+		else if (line.StartsWith("External Quadratic Damping Matrix:")) 
 			InMatrix(f, body.dt.Dquad);	
-		else if (line == "Hydrostatic Restoring Matrix:") 
+		else if (line.StartsWith("Hydrostatic Restoring Matrix:")) 
 			InMatrix(f, body.dt.C);	
-		else if (line == "External Restoring Matrix:") 
+		else if (line.StartsWith("External Restoring Matrix:")) 
 			InMatrix(f, body.dt.Cadd);	
 	}
 	return true;
 }
 
-void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
-	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids);
+void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, 
+					const UArray<Body> &lids,const UVector<Point3D> &listPoints) const {
+	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids, listPoints);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids);
+		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids, listPoints);
 }
 
-void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids) const {
+void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, 
+		const UArray<Body> &lids, const UVector<Point3D> &listPoints) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
 	UVector<int> valsf;
@@ -386,7 +437,6 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			throw Exc(Format(t_("Problem copying Hams WAMIT_MeshTran exe file from '%s'"), Bem().hamsBodyPath));				
 	} 
 		
-	//String sumcases;
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		UVector<double> freqs;
@@ -394,7 +444,6 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			folder = AFX(folderBase, Format("HAMS_Part_%d", i+1));
 			if (!DirectoryCreateX(folder))
 				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
-			//sumcases << " " << AFX(folder, "Nemoh.cal");
 			Upp::Block(dt.w, freqs, ifr, valsf[i]);
 			ifr += valsf[i];
 		} else {
@@ -409,7 +458,7 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		
 		if (IsNull(numThreads) || numThreads <= 0)
 			numThreads = 8;
-		Save_ControlFile(folderInput, freqs, numThreads, irrRemoval);
+		Save_ControlFile(folderInput, freqs, numThreads, irrRemoval, listPoints);
 		Save_Hydrostatic(folderInput);
 	
 		int ib = 0;			// Just one file
@@ -542,7 +591,7 @@ void Hams::Save_Settings(String folderInput, const UArray<Body> &lids) const {
 }
 
 void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
-					int numThreads, bool remove_irr_freq) const {
+					int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints) const {
 	String fileName = AFX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -582,12 +631,22 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	
 	out << "\n    If_remove_irr_freq      " << (remove_irr_freq ? 1 : 0);
 	out << "\n    Number of threads       " << numThreads;
+	
 	out << "\n"
-		   "\n   #Start Definition of Pressure and/or Elevation (PE)"
-		   "\n    Number_of_field_points     1                           # number of field points where to calculate PE"
-		   "\n 0.000000    0.000000    0.000000    Global_coords_point_1"
-		   "\n   #End Definition of Pressure and/or Elevation"
-   		   "\n";
+		   "\n   #Start Definition of Pressure and/or Elevation (PE)";
+	if (listPoints.IsEmpty())
+		out << "\n    Number_of_field_points     1                           # number of field points where to calculate PE"
+			   "\n 0.000000    0.000000    0.000000    Global_coords_point_1";
+	else {
+		out << Format("\n    Number_of_field_points     %d                           # number of field points where to calculate PE", listPoints.size());
+		for (int i = 0; listPoints.size(); ++i) {
+			const Point3D &p = listPoints[i];
+			Format("\n %s    %s    %s    Global_coords_point_%d", FDS(p.x, 10), FDS(p.y, 10), FDS(p.z, 10), i+1);
+		}
+	}
+	out << "\n   #End Definition of Pressure and/or Elevation"
+   		   "\n";	   
+   		   
 	out << "\n    ----------End HAMS Control file---------------"
 		   "\n   Input_frequency_type options:"
 		   "\n   1--deepwater wave number; 2--finite-depth wave number; 3--wave frequency; 4--wave period; 5--wave length"

@@ -56,7 +56,7 @@ LAYOUT(Summary, 216, 264)
 	ITEM(Upp::DocEdit, str, HSizePosZ(4, 4).VSizePosZ(4, 4))
 END_LAYOUT
 
-LAYOUT(Compare, 396, 400)
+LAYOUT(Compare, 504, 400)
 	ITEM(Upp::Label, dv___0, SetLabel(t_("Parameters && metrics:")).LeftPosZ(4, 116).TopPosZ(28, 19))
 	ITEM(Upp::GridCtrl, arrayStats, HSizePosZ(4, 4).TopPosZ(52, 136))
 	ITEM(Upp::ArrayCtrl, array, HSizePosZ(4, 4).VSizePosZ(240, 4))
@@ -69,5 +69,6 @@ LAYOUT(Compare, 396, 400)
 	ITEM(Upp::Label, dv___9, SetLabel(t_("Operations:")).LeftPosZ(12, 68).TopPosZ(192, 19))
 	ITEM(Upp::DropGrid, dropOperations, LeftPosZ(168, 20).TopPosZ(192, 19))
 	ITEM(Upp::EditString, edOperations, SetEditable(false).LeftPosZ(84, 84).TopPosZ(192, 19))
+	ITEM(Upp::Option, opHideEquations, SetLabel(t_("Hide equations")).RightPosZ(0, 92).TopPosZ(220, 16))
 END_LAYOUT
 

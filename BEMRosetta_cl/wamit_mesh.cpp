@@ -106,7 +106,7 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		return t_(Format("Impossible to open '%s'", fileName));
 	
 	Body &msh = _mesh.Add();
-	msh.dt.name = fileName;
+	msh.dt.name = GetFileName(fileName);
 	msh.dt.SetCode(Body::WAMIT_GDF);
 	
 	try {

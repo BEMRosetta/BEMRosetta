@@ -140,7 +140,7 @@ void MainSolver::Init() {
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);
 	bodies.butRemove <<= THISBACK(arrayOnRemove);
 	
-	const String bemFiles = ".cal .in .dat .nc .owr .yml .out .1 .2 .3 .3sc .3fk .hst .4 .7 .8 .9 .12d .12s .cfg .frc .pot .mmx";
+	const String bemFiles = ".cal .in .dat .nc .owr .yml .out .1 .2 .3 .3sc .3fk .hst .4 .7 .8 .9 .12d .12s .cfg .frc .pot .mmx .wam";
 	String bemFilesAst = clone(bemFiles);
 	bemFilesAst.Replace(".", "*.");
 	loadFrom.Type(Format("All supported bem files (%s)", bemFiles), bemFilesAst);
@@ -187,17 +187,19 @@ void MainSolver::Init() {
 		save.arrayDOF.Add(InitCaps(BEM::StrDOF(i)), true);
 	
 	if (save.arrayAdditional.GetColumnCount() != 3) {
-		save.arrayAdditional.AddColumn("x");
-		save.arrayAdditional.AddColumn("y");
-		save.arrayAdditional.AddColumn("z");
+		save.arrayAdditional.Appending().Removing().Editing().Sorting(true).MultiSelect().Clipboard().ExtraPaste().SelectRow(false).Duplicating().SetToolBar();
+		save.arrayAdditional.AddColumn(t_("x")).Edit(edAdditionalX);
+		save.arrayAdditional.AddColumn(t_("y")).Edit(edAdditionalY);
+		save.arrayAdditional.AddColumn(t_("z")).Edit(edAdditionalZ);
 	}
 	if (save.arrayArea.GetColumnCount() != 3) {
-		save.arrayArea.AddColumn("Data", 30);
-		save.arrayArea.AddColumn("x", 10);
-		save.arrayArea.AddColumn("y", 10);
-		save.arrayArea.Add("Left/Top");
-		save.arrayArea.Add("Width/Height");
-		save.arrayArea.Add("Num");
+		save.arrayArea.Editing().MultiSelect().Clipboard().Sorting(false).ExtraPaste().SelectRow(false);
+		save.arrayArea.AddColumn(t_("Data"), 30);
+		save.arrayArea.AddColumn(t_("x"), 10).Edit(edAreaX);
+		save.arrayArea.AddColumn(t_("y"), 10).Edit(edAreaY);
+		save.arrayArea.Add(t_("Left/Top [m]"));
+		save.arrayArea.Add(t_("Width/Height [m]"));
+		save.arrayArea.Add(t_("Number of points"));
 	}
 	save.opWaveHeight.WhenAction = [&]{
 		bool enabled = save.opWaveHeight.IsEnabled() && save.opWaveHeight;
@@ -207,7 +209,7 @@ void MainSolver::Init() {
 	
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
 		if (Hydro::caseCanSave[i])
-			save.dropSolver.Add(i, Hydro::bemStr[i]);		
+			save.dropSolver.Add(i, Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)));		
 
 	save.dropSolver.SetIndex(min(dropSolverVal, save.dropSolver.GetCount()-1));
 	save.dropSolver.WhenAction = [&] {
@@ -434,8 +436,12 @@ void MainSolver::Load(String file) {
 	/*gen.boxIrf <<= tmp_hy.dt.Tirf.size() > 0;
 	if (tmp_hy.dt.Tirf.size() != 0) {
 		gen.irfStep <<= (tmp_hy.dt.Tirf[1] - tmp_hy.dt.Tirf[0]);
-		gen.irfDuration <<= Last(tmp_hy.dt.Tirf);
+		gen.irfDuration <<= Last(tmp_hy.dt5.Tirf);
 	}*/
+	// To be improved by extracting panel points and free surface points
+	save.arrayAdditional.Clear();
+	for (const auto &p : tmp_hy.listPoints)
+		save.arrayAdditional.Add(p.x, p.y, p.z);
 }
 
 void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
@@ -683,6 +689,32 @@ bool MainSolver::OnSave() {
 		for (int r = 0; r < 6; ++r) 
 			listDOF[r] = save.arrayDOF.Get(r, 1);
 		
+		// Listing all the points to be measured
+		UVector<Point3D> listPoints;
+		for (int r = 0; r < save.arrayAdditional.GetRowCount(); ++r)
+			listPoints << Point3D(save.arrayAdditional.Get(r, 0),
+								  save.arrayAdditional.Get(r, 1),
+								  save.arrayAdditional.Get(r, 2));
+		double x0 = save.arrayArea.Get(0, 1),
+			   y0 = save.arrayArea.Get(0, 2);
+		double dx = save.arrayArea.Get(1, 1),
+			   dy = save.arrayArea.Get(1, 2);
+		int    nx = save.arrayArea.Get(2, 1),
+			   ny = save.arrayArea.Get(2, 2);
+		
+		if (~save.opWaveHeight) {
+			if (nx <= 1 || ny <= 1) {
+				BEM::PrintError(t_("Number of points has to be higher than 1"));
+				return false;
+			}
+			
+			VectorXd xpoints, ypoints;
+			LinSpaced(xpoints, nx, x0, x0+dx);
+			LinSpaced(ypoints, ny, y0, y0+dy);
+			for (double x : xpoints)
+			 	for (double y : ypoints)
+					listPoints << Point3D(x, y, 0);
+		}
 		WaitCursor waitcursor;
 		
 		int nSplit = 1;
@@ -694,7 +726,7 @@ bool MainSolver::OnSave() {
 			nThreads = save.numThreads;
 		
 		hy.SaveFolderCase(folder, ~save.opIncludeBin, nSplit, nThreads, solver, 
-			~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids, listDOF);
+			~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids, listDOF, listPoints);
 
 	} catch (Exc e) {
 		BEM::PrintError(e);

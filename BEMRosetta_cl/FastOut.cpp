@@ -1055,7 +1055,14 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 		return false;
 	};
 	
-	for (const FastOut &fast : dataFast) {
+	auto GetEquation = [&](String eq) {
+		int id = eq.FindAfter(":");
+		if (id >= 0)
+			return Trim(eq.Mid(id));
+		return eq;
+	};
+	
+	for (const FastOut &fast : dataFast) { 
 		for (const ParameterMetric &p0 : params0.params) {
 			UVector<String> names = fast.FindParameterMatchStr(p0.name);
 			for (String name : names) {
@@ -1065,10 +1072,10 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					param.name = name;
 				}
 			}
-			if (names.IsEmpty()) {
+			if (names.IsEmpty() && !FindParam(p0.name)) {
 				EvalExprX exp;
 		    	exp.WhenGetVariableId = [&](const char *name) 		{return fast.GetParameterX(name);};
-				PostFixOperation op = exp.Get(p0.name);
+				PostFixOperation op = exp.Get(GetEquation(p0.name));
 				if (!op.IsEmpty()) {
 					ParameterMetric &param = params.params.Add();
 					param = clone(p0);
@@ -1076,7 +1083,6 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 			}
 		}
 	}
-	
 	
 	// Does the real job
 	UVector<UVector<double>> fullData(params.params.size());
@@ -1088,8 +1094,8 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				
 		EvalExprX exp;
 		int idtime = 0;
-    	exp.WhenGetVariableId = [&](const char *name) 		{return fast.GetParameterX(name);};
-    	exp.WhenGetVariableValue = [&](int id) 				{return fast.GetVal(idtime, id);};
+    	exp.WhenGetVariableId = [&](const char *name) 	{return fast.GetParameterX(name);};
+    	exp.WhenGetVariableValue = [&](int id) 			{return fast.GetVal(idtime, id);};
     
 		int idBegin = fast.GetIdTime(start);
 		int num = fast.GetNumData();
@@ -1130,7 +1136,7 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 			int id = fast.GetParameterX(param.name);
 			if (id < 0) {
 				try {
-					PostFixOperation op = exp.Get(param.name);
+					PostFixOperation op = exp.Get(GetEquation(param.name));
 					data.resize(idEnd - idBegin);
 					for (int i = 0; i < data.size(); ++i) {
 						idtime = i + idBegin;

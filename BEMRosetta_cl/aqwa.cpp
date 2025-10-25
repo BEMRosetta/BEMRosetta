@@ -59,7 +59,7 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		if (!Load_MQT()) 
 			BEM::Print(S(": ** MQT file ") + t_("Not found") + "**");
 		
-		if (IsNull(dt.Nh) || dt.Nh <= 0) 
+		if ((IsNull(dt.Nh) || dt.Nh <= 0) && dt.qhead.size() == 0)
 			return t_("No data found");
 		
 		for (int ib = 0; ib < dt.Nb; ++ib)					// Translates all bodies phase to 0,0
@@ -1113,7 +1113,7 @@ bool Aqwa::Load_QTF(double factorMass) {
 				Nb = ib;
 		}
 	}
-	if (!IsNull(dt.Nb) && dt.Nb != Nb)
+	if (!IsNull(dt.Nb) && dt.Nb > 0 && dt.Nb != Nb)
 		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is different than previous (%d != %d)"), dt.Nb, Nb));
 	dt.Nb = Nb;
 
@@ -1222,6 +1222,9 @@ bool Aqwa::Load_MQT() {
 		return false;
 	
 	int qNh = (int)dt.qhead.size();
+	UVector<double> qhead0(qNh);
+	for (int i = 0; i < qNh; ++i)
+		qhead0[i] = dt.qhead[i].real();
 	int nwNh = qNh*qNh;
 	
 	auto AddCrossHead = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf) {
@@ -1250,7 +1253,7 @@ bool Aqwa::Load_MQT() {
 		for (int ih1 = 0; ih1 < qNh; ++ih1)
 			for (int ih2 = 0; ih2 < qNh; ++ih2)
 				if (ih1 != ih2)
-					dt.qhead[ih++] = std::complex<double>(dt.head[ih1], dt.head[ih2]);
+					dt.qhead[ih++] = std::complex<double>(dt.qhead[ih1].real(), dt.qhead[ih2].real());
 	}
 	
 	AddCrossHead(dt.qtfsum);
@@ -1267,7 +1270,7 @@ bool Aqwa::Load_MQT() {
 			throw Exc(Format(t_("Wrong body number %d found in mqt. Previous was %d"), iib+1, ib+1));
 		ib = iib;
 		int nf = file.Read<int32>();
-		if (nf != dt.Nf)
+		if (nf != (int)dt.qw.size())
 			throw Exc(Format(t_("Wrong number of frequencies %d found in mqt. They should have to be %d"), nf, (int)dt.qw.size()));
 		int nh = file.Read<int32>();
 		if (nh != qNh)
@@ -1279,7 +1282,7 @@ bool Aqwa::Load_MQT() {
 		for (int ifr = 0; ifr < nf; ++ifr)
 			w[ifr] = file.Read<float>();
 			
-		if (!CompareDecimals(w, dt.qw, 3))
+		if (!CompareDecimals(w, dt.qw, 2))
 			throw Exc(t_("List of frequencies does not match with previously loaded"));
 
 		file.SeekCur(512 - nf*4);
@@ -1288,7 +1291,7 @@ bool Aqwa::Load_MQT() {
 		for (int ih = 0; ih < nh; ++ih)
 			head[ih] = file.Read<float>()*180./M_PI;
 		
-		if (!CompareDecimals(head, dt.qhead, 3))
+		if (!CompareDecimals(head, qhead0, 2))
 			throw Exc(t_("List of headings does not match with previously loaded"));
 	
 		file.SeekCur(1024 - nh*4);

@@ -322,10 +322,12 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 			        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 			            qtf[ib][ih].SetCount(6);
 			        	for (int idf = 0; idf < 6; ++idf) {
-			        		qtf[ib][ih][idf].resize(dt.qw.size(), dt.qw.size());
-							for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
-								for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2) 
-									qtf[ib][ih][idf](ifr1, ifr2) = QTF[ib][indices[ih]][idf](ifr1, ifr2);
+			        		qtf[ib][ih][idf].setConstant(dt.qw.size(), dt.qw.size(), 0);
+			        		if (QTF[ib][indices[ih]][idf].size() > 0) {
+								for (int ifr1 = 0; ifr1 < dt.qw.size(); ++ifr1) 
+									for (int ifr2 = 0; ifr2 < dt.qw.size(); ++ifr2)
+										qtf[ib][ih][idf](ifr1, ifr2) = QTF[ib][indices[ih]][idf](ifr1, ifr2);
+			        		}
 			        	}
 			        }
 				}
@@ -664,6 +666,7 @@ static std::complex<double> MirrorHead(const std::complex<double> &head, bool xA
 
 void Hydro::Copy(const Hydro &hyd) {
 	dt.Copy(hyd.dt);
+	listPoints = clone(hyd.listPoints);
 }
 
 void Hydro::Data::Copy(const Hydro::Data &hyd) {

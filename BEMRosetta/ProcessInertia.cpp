@@ -189,7 +189,7 @@ void MenuProcessInertia::Action() {
 		Matrix3d inertia3;
 		if (mesh.dt.mesh.GetInertia33(inertia3, c0, isvol, false) && !IsNull(cg)) {
 			MatrixXd inertia6;
-			mesh.dt.mesh.GetInertia66(inertia6, inertia3, cg, c0, false);
+			Surface::GetInertia66(inertia6, inertia3, cg, c0, false);
 			if (opmass == 3)
 				inertia6 *= mesh.dt.mesh.volume;
 			else if (opmass < 3) {

@@ -184,6 +184,13 @@ void FastScatter::OnSaveCompare() {
 }
 
 void FastScatter::OnCalc() {
+	auto GetEquationName = [&](String eq) {
+		int id = eq.Find(":");
+		if (id >= 0)
+			return Trim(eq.Left(id));
+		return eq;
+	};
+	
 	try {
 		compare.array.Reset();
 		compare.array.SetLineCy(EditField::GetStdHeight()).MultiSelect().NoHeader();
@@ -226,8 +233,12 @@ void FastScatter::OnCalc() {
 				units = fast.GetUnit(id);
 			for (int i = 0; i < param.metrics.size(); i++) {
 				compare.array.AddColumn("");
-				if (i == 0) 
-					compare.array.Set(0, col, Format("%s [%s]", param.name, units));
+				if (i == 0) {
+					String name = compare.opHideEquations ? GetEquationName(param.name) : param.name;
+					if (name.Find("[") < 0)
+						name = Format("%s [%s]", name, units);
+					compare.array.Set(0, col, name);
+				}
 				compare.array.Set(1, col++, param.metrics[i]);
 				fmt << ("." << FormatInt(param.decimals) << "f");
 			}

@@ -213,7 +213,6 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	if (!in.IsOpen()) 
 		return t_(Format("Impossible to open '%s'", fileName));
 	
-	//double factorMass = 1;
 	double factorLength = 1;
 	
 	hy.dt.symX = hy.dt.symY = false;
@@ -245,12 +244,6 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 				String system = Trim(line.Mid(pos));
 				if (system.Find("Metric") < 0)
 					throw Exc(in.Str() + "\n" + t_("Only metric system is supported"));
-				/*if (system.Find("kg") > 0)
-					factorMass = 1;
-				else if (system.Find("tonne") > 0)
-					factorMass = 1000;
-				else 
-					throw Exc(in.Str() + "\n" + t_("Unknown mass unit"));*/
 				if (system.Find("m ") > 0)
 					factorLength = 1;
 				else if (system.Find("km ") > 0)

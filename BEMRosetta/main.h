@@ -1084,6 +1084,8 @@ private:
 	void LoadDragDrop();
 	TimeCallback timerDrop;
 	UVector<String> filesToDrop;
+	
+	EditDouble edAdditionalX, edAdditionalY, edAdditionalZ, edAreaX, edAreaY;
 };
 
 class ArrayFields {
