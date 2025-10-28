@@ -281,7 +281,7 @@ class Hydro : public Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE, BEMIO_H5, MATLAB, FAST_WAMIT, HAMS_WAMIT, HAMS, WADAM_WAMIT, NEMOH, NEMOHv115, NEMOHv3, SEAFEM_NEMOH, AQWA, AQWA_QTF, AQWA_DAT, FOAMM, DIODORE, ORCAFLEX_YML, CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
+	enum BEM_FMT {WAMIT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE, BEMIO_H5, MATLAB, FAST_WAMIT, HAMS_WAMIT, HAMS, HAMS_MREL, WADAM_WAMIT, NEMOH, NEMOHv115, NEMOHv3, SEAFEM_NEMOH, AQWA, AQWA_QTF, AQWA_DAT, FOAMM, DIODORE, ORCAFLEX_YML, CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
 #ifdef PLATFORM_WIN32	
 	ORCAWAVE_OWR, 
 #endif
@@ -345,6 +345,7 @@ public:
 		case BEMIO_H5:		return t_("BEMIO.h5");
 		case HAMS_WAMIT:	return t_("HAMS.1.2.3");
 		case HAMS:			return t_("HAMS");
+		case HAMS_MREL:		return t_("HAMS.MREL");
 		case CAPYTAINE:		return t_("Capytaine");
 		case HYDROSTAR_OUT:	return t_("Hydrostar.out");
 		case CAPY_NC:		return t_("Capytaine.nc");
@@ -385,6 +386,7 @@ public:
 		case BEMIO_H5:		return t_("BMh5");
 		case HAMS_WAMIT:	return t_("HAMS_W");
 		case HAMS:			return t_("HAMS");
+		case HAMS_MREL:		return t_("HAMS_M");
 		case CAPYTAINE:		return t_("Capy");
 		case CAPY_NC:		return t_("Capy.nc");
 		case ORCAWAVE_YML:	return t_("ORCW.yml");
@@ -1286,6 +1288,8 @@ protected:
 	double WaveDirRange = Null;
 	
 	static bool IsHAMS(String file, String &controlfile);
+	
+	void SwapForcesFreqOrder(Forces &F);
 };
 
 
@@ -1424,7 +1428,7 @@ protected:
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
-	bool Load_wam(String fileName, String &filepot, String &filefrc);
+	bool Load_wam(String fileName, String &filepot, String &filefrc, String &filecfg);
 	bool Load_frc1(String fileName);
 	bool Load_frc2(String fileName);
 	
@@ -1479,20 +1483,20 @@ public:
 	
 	int Load_ControlFile(String fileName);
 	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, 
-				const UArray<Body> &lids, const UVector<Point3D> &listPoints) const;
+				const UArray<Body> &lids, const UVector<Point3D> &listPoints, bool ismrel) const;
 	UVector<String> Check() const;
 	
 	bool LoadHydrostatic(String fileName, int ib);
 
 private:
 	void SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, 
-				const UArray<Body> &lids, const UVector<Point3D> &listPoints) const;
+				const UArray<Body> &lids, const UVector<Point3D> &listPoints, bool ismrel) const;
 	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
 	static void InMatrix(LineParser &f, MatrixXd &mat);
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, const UVector<double> &freqs,
-							int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints) const;
+							int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints, bool ismrel) const;
 	void Save_Settings(String folderInput, const UArray<Body> &lids) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
 };

@@ -18,26 +18,26 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|TFS|"), t_("arg(TFS)")};
 
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 	    WAMIT_1_3_RAD,         CSV_MAT,    CSV_TABLE,    BEMIO_H5	  MATLAB,        FAST_WAMIT, 		   HAMS_WAMIT,   HAMS,   WADAM_WAMIT,   NEMOH,      NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,  AQWA,   			    AQWA_QTF,	 AQWA_DAT, 	  FOAMM,   DIODORE,		   ORCAFLEX_YML,    CAPYTAINE, 		  HYDROSTAR_OUT, CAPYNC, 		  ORCAWAVE_YML,    CAPYTAINE_PY, 	BEMROSETTA_H5,	  AKSELOS_NPZ,	  
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.3 T(s) OpenFAST", "Wamit .1.3 ω(rad/s)", ".csv mat", ".csv table", "BEMIO .h5", "Matlab .mat", "FAST .dat.1.2.3...", "HAMS Wamit", "HAMS", "Wadam Wamit", "Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", "AQWA .qtf", "AQWA .dat", "FOAMM", "Diodore .hdb", "OrcaFlex .yml", "Capytaine .cal", ".out", 	     "Capytaine .nc", "OrcaWave .yml", "Capytaine .py", "BEMRosetta .h5", "Akselos .npz", 
+// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 	             WAMIT_1_3_RAD,         CSV_MAT,    CSV_TABLE,    BEMIO_H5	   MATLAB,        FAST_WAMIT, 		     HAMS_WAMIT,   HAMS,   HAMS_MREL,  WADAM_WAMIT,   NEMOH,      NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,  AQWA,   			    AQWA_QTF,	 AQWA_DAT, 	  FOAMM,   DIODORE,		   ORCAFLEX_YML,    CAPYTAINE, 		  HYDROSTAR_OUT, CAPYNC, 		  ORCAWAVE_YML,    CAPYTAINE_PY, 	BEMROSETTA_H5,	  AKSELOS_NPZ,	  
+const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.3 T(s) OpenFAST", "Wamit .1.3 ω(rad/s)", ".csv mat", ".csv table", "BEMIO .h5", "Matlab .mat", "FAST .dat.1.2.3...", "HAMS Wamit", "HAMS", "HAMS MREL", "Wadam Wamit", "Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", "AQWA .qtf", "AQWA .dat", "FOAMM", "Diodore .hdb", "OrcaFlex .yml", "Capytaine .cal", ".out", 	     "Capytaine .nc", "OrcaWave .yml", "Capytaine .py", "BEMRosetta .h5", "Akselos .npz", 
 #ifdef PLATFORM_WIN32	
 //  ORCAWAVE.owr,		
 	"OrcaWave .owr", 	
 #endif
 // BEMROSETTA,         UNKNOWN,        NUMBEM};
    "BEMRosetta .bemr", "By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     		true,		           true, 	   true, 		 true,        true,          true,		 		   false,		 false,  false,		    false,      false,	 	  false,	  false, 		 false,  			    true, 	 	 false,		  false,   true,	  	   false,	     	false, 	   		  false, 		 false,			  false,		   false,		 	false,			  true,
+const bool Hydro::bemCanSave[] 		= {true, 	      true,	     		         true,		            true, 	   true, 		 true,        true,          true,		 		   false,		  false,  false,       false,		  false,      false,	 	  false,	  false, 		 false,  			    true, 	 	 false,		  false,   true,	  	   false,	     	false, 	   		  false, 		 false,			  false,		   false,		 	false,			  true,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
 	true, true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     	"*.1",			       "*.csv",    "*.csv", 	 "*.h5",      "*.mat",       "*.1",		 		   "",		   	 "",	 "",		    "",         "", 		  "",		  "",			 "", 				  	"*.qtf",	 ".dat",	  "",      "*.hdb",	  	   "*.yml",		    "",        		  "*.out", 		 "*.nc", 		  "*.yml",		   "*.py",	 		"*.h5",			  "*.npz",
+const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     	         "*.1",			        "*.csv",    "*.csv", 	 "*.h5",      "*.mat",       "*.1",		 		   "",		   	  "",	  "",          "",		      "",         "", 		  "",		  "",			 "", 				  	"*.qtf",	 ".dat",	  "",      "*.hdb",	  	   "*.yml",		    "",        		  "*.out", 		 "*.nc", 		  "*.yml",		   "*.py",	 		"*.h5",			  "*.npz",
 #ifdef PLATFORM_WIN32	
 "*.owr",	
 #endif		
 	"*.bemr", "*.*"};       
 	
-const bool Hydro::caseCanSave[]     = {true, 	      false,	        false,		 		   false, 	   false, 	     false,	 	  false,         false,		           false,	     true,  false,          true,	    true,	   	  true, 	  false,  		 false, 	            false,		 true,       false,   false,	       false, 	   		false, 			  false,		 false,			  true,			   true,			true,            false,
+const bool Hydro::caseCanSave[]     = {true, 	      false,	                 false,		 		    false, 	   false, 	     false,	 	  false,         false,		           false,	      true,   true,        false,          true,	     true,	   	  true, 	  false,  		 false, 	            false,		 true,       false,   false,	       false, 	   		false, 			  false,		 false,			  true,			   true,			true,            false,
 #ifdef PLATFORM_WIN32	
 false,
 #endif
@@ -180,6 +180,16 @@ void Hydro::Dimensionalize() {
 //		0	180		0
 //		0	180
 //		0	1
+
+void Hydro::SwapForcesFreqOrder(Forces &F) {
+	for (int ib = 0; ib < dt.Nb; ++ib)
+		for (int ih = 0; ih < dt.Nh; ++ih)
+			for (int idf = 0; idf < 6; ++idf) {
+				int first = 0, last = dt.Nf-1;
+				while ((first != last) && (first != --last)) 
+					Swap(F[ib][ih](first++, idf), F[ib][ih](last, idf));
+			}
+}
 
 void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rangeMD, BasicBEM::HeadingType rangeQTF) {
 	{	// Forces

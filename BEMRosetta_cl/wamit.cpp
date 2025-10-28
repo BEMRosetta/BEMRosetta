@@ -10,14 +10,33 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 	dt.file = file;	
 	
 	try {
+		String folder = GetFileFolder(file);
 		String ext = GetFileExt(file);
 		int iperin = Null;
+		String filepot, filefrc, filecfg;
 		
 		if (!isHams) {
-			String filecfg = ForceExtSafer(file, ".cfg");
-			BEM::Print("\n- " + Format(t_("Configuration file .cfg file '%s'"), GetFileName(filecfg)));
-			if (!Load_cfg(filecfg, iperin, iperout))
-				BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
+			String config_wam = AFX(folder, "config.wam");
+			if (FileExists(config_wam))
+				Load_cfg(config_wam, iperin, iperout);
+			
+			String fnames_wam = AFX(folder, "fnames.wam");
+			BEM::Print("\n- " + Format(t_("Wamit file .wam file '%s'"), GetFileName(fnames_wam)));
+			if (!Load_wam(fnames_wam, filepot, filefrc, filecfg))
+				BEM::Print(S(": ** wam ") + t_("Not found") + "**");
+			
+			if (!filecfg.IsEmpty()) {
+				if (!FileExists(filecfg))
+					filecfg = AFX(folder, filecfg);
+				if (!Load_cfg(filecfg, iperin, iperout))
+					BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
+			}
+			if (!filefrc.IsEmpty())
+				if (!FileExists(filefrc))
+					filefrc = AFX(folder, filefrc);			
+			if (!filepot.IsEmpty())
+				if (!FileExists(filepot))
+					filepot = AFX(folder, filepot);				
 		}	
 		if (ext == ".out") {
 			String fileout = ForceExtSafer(file, ".out");
@@ -25,7 +44,6 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			if (!Load_out(fileout, Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
 			
-			String filefrc = ForceExtSafer(file, ".frc");
 			if (FileExists(filefrc)) {
 				BEM::Print("\n- " + Format(t_("Force Control file .frc file '%s'"), GetFileName(filefrc)));
 				try {
@@ -36,7 +54,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				}
 			}
 		} else if (S(".mcn.hdf").Find(ext) >= 0) {
-			FindFile ff(AFX(GetFileDirectory(file), "*.out"));
+			FindFile ff(AFX(folder, "*.out"));
 			if (!ff)
 				BEM::Print(S(": ** out associated to input file ") + t_("Not found") + "**");
 			else if (!Load_out(ff.GetPath(), Status)) 
@@ -51,12 +69,6 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				dt.solver = Hydro::WAMIT;
 	
 			if (!isHams) {
-				String filepot, filefrc;
-				String filewam = ForceExtSafer(file, ".wam");
-				BEM::Print("\n- " + Format(t_("Wamit file .wam file '%s'"), GetFileName(filewam)));
-				if (!Load_wam(filewam, filepot, filefrc))
-					BEM::Print(S(": ** wam ") + t_("Not found") + "**");
-				
 				if (filepot.IsEmpty())
 					filepot = ForceExtSafer(file, ".pot");
 				BEM::Print("\n- " + Format(t_("Potential Control file .pot file '%s'"), GetFileName(filepot)));
@@ -74,7 +86,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				}
 				
 				if (dt.msh.size() > 0) {
-					String filegdf = AFX(GetFileDirectory(file), dt.msh[0].dt.name);		// To get LEN and g
+					String filegdf = AFX(folder, dt.msh[0].dt.fileName);		// To get LEN and g
 					BEM::Print("\n- " + Format(t_("Mesh file .gdf file '%s'"), GetFileName(filegdf)));
 					if (!Load_gdf(filegdf))
 						BEM::Print(S(": ** gdf ") + t_("Not found") + "**");
@@ -91,13 +103,18 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 								         "\nAn attempt will be made to guess whether the data is included with periods, frequencies, or wavelengths."
 								         "\nPlease review if the results are correct"));
 			}
-			String file1 = ForceExtSafer(file, ".1");
+			String file1;
+			if (FileExists(filefrc))
+				file1 = ForceExtSafer(filefrc, ".1");
+			else
+				file1 = ForceExtSafer(file, ".1");
+			
 			BEM::Print("\n- " + Format(t_("Hydrodynamic coefficients A and B .1 file '%s'"), GetFileName(file1)));
 			if (!Load_1(file1, iperout, isHams))
 				BEM::Print(S(": ** .1 ") + t_("Not found or empty") + "**");
 			
-			String file2 = ForceExtSafer(file, ".2"),
-				   file3 = ForceExtSafer(file, ".3");
+			String file2 = ForceExtSafer(file1, ".2"),
+				   file3 = ForceExtSafer(file1, ".3");
 				   
 			if (ext == ".2")
 				;
@@ -1098,7 +1115,7 @@ bool Wamit::Load_cfg(String fileName, int &iperin, int &iperout) {
  	return true;
 }
 
-bool Wamit::Load_wam(String fileName, String &filepot, String &filefrc) {
+bool Wamit::Load_wam(String fileName, String &filepot, String &filefrc, String &filecfg) {
 	FileInLine in(fileName);
 	if (!in.IsOpen())
 		return false;
@@ -1117,6 +1134,8 @@ bool Wamit::Load_wam(String fileName, String &filepot, String &filefrc) {
 			filepot = file;
 		else if (ext == ".frc")
 			filefrc = file;
+		else if (ext == ".cfg")
+			filecfg = file;
 	}
 	return true;
 }
@@ -1906,14 +1925,17 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int &iperout, boo
 		iperout = GuessIperin(w);
 		
 	ProcessFirstColumn1_3(w, iperout);
-	
+	bool swap = false;
 	if (!dt.w.IsEmpty()) {
 		UVector<double> ww = clone(w);		Sort(ww);
 		UVector<double> dw = clone(dt.w);	Sort(dw);
 		if (!CompareRatio(ww, dw, 0.001))
 			throw Exc(in.Str() + "\n"  + Format(t_("The files read have different frequencies.\nIn the previous has %s,\nin this one has %s"), ToString(dt.w), ToString(w)));
-	}
-	dt.w = pick(w);
+		
+		if (!EqualRatio(dt.w[0], w[0], 0.001))
+			swap = true;	// Swap forces to the same order of original w
+	} else
+		dt.w = pick(w);
 	
 	in.SeekPos(fpos);
 	
@@ -1944,6 +1966,8 @@ bool Wamit::Load_Forces(String fileName, Hydro::Forces &force, int &iperout, boo
         else
             force[ib][ih](ifr, idof) = std::complex<double>(re, im);
 	}
+	if (swap)
+		SwapForcesFreqOrder(force);
 	
 	return true;
 }

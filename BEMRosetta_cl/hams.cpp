@@ -81,35 +81,6 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 		BEM::PrintError("\nError: " + e);
 		return e;
 	}
-	/*
-	try {		
-		double rhog = g_rho_dim();
-		String settingsFile = AFX(baseFolder, "Settings.ctrl");
-		if (FileExists(settingsFile) && !Load_Settings(settingsFile))
-			throw Exc("\n" + Format(t_("Problem loading Settings.ctrl file '%s'"), settingsFile));
-		
-		String controlFile = AFX(baseFolder, "Input", "ControlFile.in");
-		if (FileExists(controlFile)) 
-			Load_ControlFile(controlFile);
-			
-		String hydrostaticFile = AFX(baseFolder, //"Input", //"Hydrostatic.in");
-		if (FileExists(hydrostaticFile)) {
-			bool iszero = true;
-			if (IsLoadedC()) {
-				for (int i = 0; i < 36; ++i) {
-					if (abs(dt.msh[0].dt.C.array()(i)) > 1E-8) {
-						iszero = false;
-						break;
-					}
-				}
-			}
-			if (iszero && !Load_HydrostaticBody(hydrostaticFile, rhog))
-				return Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile);
-		}
-	} catch (Exc e) {
-		return e;	
-	}*/
-	
 	return String();
 }
 
@@ -128,13 +99,11 @@ bool Hams::Load_Settings(String fileName) {
 	
 	in.GetLine();
 	
-	//dt.c0.setConstant(3, dt.Nb, Null);
 	f.Load(in.GetLine());	
 	dt.msh[0].dt.c0.x = f.GetDouble(0);
 	dt.msh[0].dt.c0.y = f.GetDouble(1);
 	dt.msh[0].dt.c0.z = f.GetDouble(2);
 	
-	//dt.cg.setConstant(3, dt.Nb, Null);
 	f.Load(in.GetLine());	
 	dt.msh[0].dt.cg.x = f.GetDouble(0);
 	dt.msh[0].dt.cg.y = f.GetDouble(1);
@@ -156,9 +125,6 @@ bool Hams::Load_HydrostaticBody(String fileName, double rhog) {
 	dt.Nb = 1;
 	dt.msh.SetCount(1);
 	
-	//dt.c0.setConstant(3, dt.Nb, Null);
-	
-	//dt.C.SetCount(dt.Nb);
 	for (int ib = 0; ib < dt.Nb; ++ib)
 		dt.msh[ib].dt.C.setConstant(6, 6, 0);
 
@@ -182,7 +148,7 @@ UVector<String> Hams::Check() const {
 	UVector<String> ret;
 	
 	if (dt.msh.size() != 1)
-		ret << t_("HAMS issue: Just one body allowed");
+		ret << t_("HAMS issue: Just first body will be saved");
 
 	return ret;
 }
@@ -270,13 +236,31 @@ int Hams::Load_ControlFile(String fileName) {
 		} else if (var == "Number_of_bodies") {
 			dt.Nb = f.GetInt(1);
 			dt.msh.SetCount(dt.Nb);
-			for (int ib = 0; ib < dt.Nb; ++ib)
-				dt.msh[ib].dt.name = FormatInt(ib+1);
-			if (dt.Nb == 1)	
+			if (dt.Nb == 1)	{
 				dt.msh[0].dt.fileName = AFX(folder, "HullMesh.pnl");
-			else {
-				for (int ib = 0; ib < dt.Nb; ++ib)
+				dt.msh[0].dt.name = "Body";
+			} else {
+				for (int ib = 0; ib < dt.Nb; ++ib) {
 					dt.msh[ib].dt.fileName = AFX(folder, Format("HullMesh_%d.pnl", ib+1));
+					dt.msh[ib].dt.name = Format("Body_%d", ib+1);
+				}
+			}
+			UVector<Point3D> lcs(dt.Nb);
+			UVector<int> idxs;
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				f.GetLine();
+				lcs[ib].x = f.GetDouble(1);
+				lcs[ib].y = f.GetDouble(2);
+				lcs[ib].z = f.GetDouble(3);
+				if (f.GetDouble(4) != 0)
+					throw Exc(t_("BEMRosetta does not support rotations in local coordinate system LCS"));
+				
+				Body &b = dt.msh[ib];
+				String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, idxs);
+				if (!IsEmpty(ret))
+					BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
+				b.dt.mesh.Translate(lcs[ib].x, lcs[ib].y, lcs[ib].z);
+				b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
 			}
 		} else if (var == "Number_of_headings") {
 			int Nh = f.GetInt(1);
@@ -401,14 +385,14 @@ bool Hams::LoadHydrostatic(String fileName, int ib) {
 }
 
 void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, 
-					const UArray<Body> &lids,const UVector<Point3D> &listPoints) const {
-	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids, listPoints);
+					const UArray<Body> &lids,const UVector<Point3D> &listPoints, bool ismrel) const {
+	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids, listPoints, ismrel);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids, listPoints);
+		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids, listPoints, ismrel);
 }
 
 void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, 
-		const UArray<Body> &lids, const UVector<Point3D> &listPoints) const {
+		const UArray<Body> &lids, const UVector<Point3D> &listPoints, bool ismrel) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
 	UVector<int> valsf;
@@ -458,20 +442,32 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		
 		if (IsNull(numThreads) || numThreads <= 0)
 			numThreads = 8;
-		Save_ControlFile(folderInput, freqs, numThreads, irrRemoval, listPoints);
+		Save_ControlFile(folderInput, freqs, numThreads, irrRemoval, listPoints, ismrel);
 		Save_Hydrostatic(folderInput);
-	
-		int ib = 0;			// Just one file
 		
 		if (y0z == true && x0z == true) 
 			y0z = false;
 
-		String dest = AFX(folderInput, "HullMesh.pnl");
-		Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
-		
-		if (irrRemoval) {
-			dest = AFX(folderInput, "WaterplaneMesh.pnl");
-			Body::SaveAs(lids[0], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+		if (!ismrel) {
+			int ib = 0;
+			
+			String dest = AFX(folderInput, "HullMesh.pnl");
+			Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+			
+			if (irrRemoval) {
+				dest = AFX(folderInput, "WaterplaneMesh.pnl");
+				Body::SaveAs(lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+			}
+		} else {
+			for (int ib = 0; ib < dt.Nb; ++ib) {
+				String dest = AFX(folderInput, Format("HullMesh_%d.pnl", ib+1));
+				Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+				
+				if (irrRemoval) {
+					dest = AFX(folderInput, Format("WaterplaneMesh_%d.pnl", ib+1));
+					Body::SaveAs(lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+				}
+			}
 		}
 		
 		Save_Settings(folder, lids);
@@ -591,7 +587,7 @@ void Hams::Save_Settings(String folderInput, const UArray<Body> &lids) const {
 }
 
 void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
-					int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints) const {
+					int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints, bool ismrel) const {
 	String fileName = AFX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -614,8 +610,21 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	for (const double &freq : freqs)
 		out << Format("%.4f ", freq);	
 	out << "\n   #End Definition of Wave Frequencies"
-		   "\n"
-		   "\n   #Start Definition of Wave Headings";
+		   "\n";
+	
+	if (ismrel) { 
+   		out << "\n   # Start of definition of bodies for multi-body interaction";
+    	out << "\n    Number_of_bodies          " << FormatInt(dt.Nb);
+    	for (int ib = 0; ib < dt.Nb; ++ib) {
+    		out << "\n    LCS_" << FormatInt(ib+1) << "                     0.000        0.000        0.000        0.000";
+    		if (ib == 0)
+    			out << "             # The first three entries refer to the x, y and z coordinates of the origin of LCS w.r.t origin of GCS and the fourth entry refers to the rotation of LCS x-axis w.r.t GCS x-axis";
+    	}
+    	out << "\n   # End of definition of bodies for multi-body interaction";
+		out << "\n";		   
+	}
+	
+	out << "\n   #Start Definition of Wave Headings";
 	out << "\n    Number_of_headings         " << dt.Nh;
 	UVector<double> headings;
 	LinSpaced(headings, dt.Nh, First(dt.head), Last(dt.head));
@@ -624,9 +633,17 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 		out << Format("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
-	out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
-								dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]) << 
-		   "\n    Reference_body_length   1.D0"
+	
+	if (dt.Nb == 1)
+		out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
+									dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]);
+	else {
+		for (int ib = 0; ib < dt.Nb; ++ib)
+			out << "\n    Reference_body_center_" << FormatInt(ib+1) << " " << Format("%11.3f %11.3f %11.3f", 
+									dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]);
+	}
+	
+	out << "\n    Reference_body_length   1.D0"
 		   "\n    Wave_diffrac_solution    2";
 	
 	out << "\n    If_remove_irr_freq      " << (remove_irr_freq ? 1 : 0);
@@ -636,12 +653,12 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 		   "\n   #Start Definition of Pressure and/or Elevation (PE)";
 	if (listPoints.IsEmpty())
 		out << "\n    Number_of_field_points     1                           # number of field points where to calculate PE"
-			   "\n 0.000000    0.000000    0.000000    Global_coords_point_1";
+			   "\n    0.000000    0.000000    0.000000    Global_coords_point_1";
 	else {
 		out << Format("\n    Number_of_field_points     %d                           # number of field points where to calculate PE", listPoints.size());
-		for (int i = 0; listPoints.size(); ++i) {
+		for (int i = 0; i < listPoints.size(); ++i) {
 			const Point3D &p = listPoints[i];
-			Format("\n %s    %s    %s    Global_coords_point_%d", FDS(p.x, 10), FDS(p.y, 10), FDS(p.z, 10), i+1);
+			out << Format("\n    %s    %s    %s    Global_coords_point_%d", FDS(p.x, 10), FDS(p.y, 10), FDS(p.z, 10), i+1);
 		}
 	}
 	out << "\n   #End Definition of Pressure and/or Elevation"

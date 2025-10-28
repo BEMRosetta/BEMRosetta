@@ -564,7 +564,9 @@ void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads
 	else if (solver == Hydro::CAPYTAINE_PY)
 		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, lids);
 	else if (solver == Hydro::HAMS)
-		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints);
+		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints, false);
+	else if (solver == Hydro::HAMS_MREL)
+		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints, true);
 	else if (solver == Hydro::ORCAWAVE_YML)
 		static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
 	else if (solver == Hydro::AQWA_DAT)

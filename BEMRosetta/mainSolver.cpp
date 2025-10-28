@@ -218,12 +218,12 @@ void MainSolver::Init() {
 		
 		save.symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
 		save.symY.Enable(solver != Hydro::BEMROSETTA_H5);
-		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::ORCAWAVE_YML);
-		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS);
+		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::ORCAWAVE_YML);
+		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
 		save.numSplit.Enable(save.opSplit.IsEnabled() && save.opSplit);
 		save.opThreads.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
 							  solver == Hydro::CAPYTAINE_PY || solver == Hydro::WAMIT || 
-							  solver == Hydro::HAMS);
+							  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
 		save.numThreads.Enable(save.opThreads.IsEnabled() && !save.opThreads);
 		
 		save.labDOF.  Enable(isNemoh);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
@@ -231,8 +231,8 @@ void MainSolver::Init() {
 		
 		save.withMesh.Enable(solver == Hydro::CAPYTAINE_PY);
 		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY || solver == Hydro::HAMS || solver == Hydro::WAMIT);
-		save.arrayAdditional.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::CAPYTAINE_PY || solver == Hydro::HAMS || solver == Hydro::WAMIT);
-		save.opWaveHeight.Enable(solver == Hydro::WAMIT ||  solver == Hydro::HAMS);
+		save.arrayAdditional.Enable(solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT);
+		save.opWaveHeight.Enable(solver == Hydro::WAMIT ||  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
 		save.opWaveHeight.WhenAction();
 		save.withQTF.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::WAMIT);
 	};
