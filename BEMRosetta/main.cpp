@@ -526,7 +526,7 @@ String ArrayModel_GetFileName(ArrayCtrl &array, int row) {
 }
 
 
-GUI_APP_MAIN {
+GUI_APP_MAIN {	
 	const UVector<String>& command = CommandLine();
 
 	String errorStr;

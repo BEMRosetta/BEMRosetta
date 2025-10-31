@@ -558,7 +558,14 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
 			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
-			const UVector<Point3D> &listPoints) {
+			UVector<Point3D> &listPoints) {
+	if (withPotentials && (solver == Hydro::WAMIT || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL)) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			const UVector<Panel> &pans = dt.msh[ib].dt.mesh.panels;
+			for (const Panel &p : pans)
+				listPoints << p.centroidPaint;
+		}
+	}	
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
 		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z, lids, listDOF);
 	else if (solver == Hydro::CAPYTAINE_PY)
@@ -2953,25 +2960,46 @@ void Hydro::Symmetrize() {
 		SymmetrizeAinfA0(dt.Ainf);
 	if (IsLoadedA0()) 
 		SymmetrizeAinfA0(dt.A0);
-		
+	
+	// QTF symmetry
+	// Qd(βi,βj,τi,τj) = Qd(βj,βi,τj,τi)∗
+	// Qs(βi,βj,τi,τj) = Qs(βj,βi,τj,τi)
+	// Forcing the average
+	// Qd(βi,βj,τi,τj) = 1/2[Qd(βi,βj,τi,τj) + Qd(βj,βi,τj,τi)∗]
+	// Qs(βi,βj,τi,τj) = 1/2[Qs(βi,βj,τi,τj) + Qs(βj,βi,τj,τi)]
 	auto SymmetrizeSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+		int qwsize = dt.qw.size();
 		for (int ib = 0; ib < dt.Nb; ++ib) {
+			UVector<bool> isdone(dt.qhead.size(), false);
 	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
-				for (int idf = 0; idf < 6; ++idf) { 
-					MatrixXcd &c = qtf[ib][ih][idf];
-					Eigen::Index rows = c.rows();
-					for (int iw = 0; iw < rows; ++iw) {
-						for (int jw = iw+1; jw < rows; ++jw) {
-							std::complex<double> &cij = c(iw, jw), &cji = c(jw, iw);
-							if (isSum)
-								cij = cji = AvgSafe(cij, cji);
-							else {
-								std::complex<double> cji_ = std::complex<double>(cji.real(), -cji.imag());
-								cij = cji_ = AvgSafe(cij, cji_);
-								cji = std::complex<double>(cji_.real(), -cji_.imag());
+	            if (!isdone[ih]) {
+	                UArray<MatrixXcd> &cij = qtf[ib][ih];
+	                cij.SetCount(6);
+	                int idji = FindDelta(dt.qhead, std::complex<double>(dt.qhead[ih].imag(), dt.qhead[ih].real()), 0.1);
+	                if (idji >= 0) {
+	                    isdone[idji] = isdone[ih] = true;
+	                    UArray<MatrixXcd> &cji = qtf[ib][idji];
+	                    cji.SetCount(6);
+						for (int idf = 0; idf < 6; ++idf) { 
+							if (cij[idf].rows() != qwsize || cij[idf].cols() != qwsize)
+								cij[idf] = Eigen::MatrixXcd::Constant(qwsize, qwsize, NaNComplex);
+							if (cji[idf].rows() != qwsize || cji[idf].cols() != qwsize)
+								cji[idf] = Eigen::MatrixXcd::Constant(qwsize, qwsize, NaNComplex);
+							for (int iw = 0; iw < qwsize; ++iw) {
+								for (int jw = iw+1; jw < qwsize; ++jw) {
+									std::complex<double> &c_ij = cij[idf](iw, jw), 
+														 &c_ji = cji[idf](jw, iw);
+									if (isSum)		// Symmetric
+										c_ij = c_ji = AvgSafe(c_ij, c_ji);
+									else {			// Complex conjugate
+										std::complex<double> cji_ = std::complex<double>(c_ji.real(), -c_ji.imag());
+										c_ij = cji_ = AvgSafe(c_ij, cji_);
+										c_ji = std::complex<double>(cji_.real(), -cji_.imag());
+									}
+								}
 							}
-						}
-					}
+	                    }
+	                }
 				}
 	        }
 		}
@@ -2980,6 +3008,17 @@ void Hydro::Symmetrize() {
 		SymmetrizeSumDif(dt.qtfsum, true);
 	if (IsLoadedQTF(false))
 		SymmetrizeSumDif(dt.qtfdif, false);
+	
+	// QTF difference diagonal phase is zero
+	for (int ib = 0; ib < dt.Nb; ++ib) {
+        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+			for (int idf = 0; idf < 6; ++idf) { 
+				MatrixXcd &cij = dt.qtfdif[ib][ih][idf];
+				for (int iw = 0; iw < cij.rows(); ++iw)
+					cij(iw, iw).imag(0); 
+			}
+        }
+	}
 	
 	String error = AfterLoad();
 	if (!error.IsEmpty())

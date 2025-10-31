@@ -917,7 +917,7 @@ public:
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
 		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
-		const UVector<Point3D> &listPoints);
+		UVector<Point3D> &listPoints);
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -1798,6 +1798,7 @@ public:
 	bool experimental;
 	String foammPath;
 	String hamsPath, hamsBodyPath;
+	String hamsmrelPath;
 	String aqwaPath, wamitPath;
 	int volWarning, volError;
 	double roundVal, roundEps;
@@ -1928,6 +1929,7 @@ public:
 			("guiScale", guiScale)
 			("windowTitle", windowTitle)
 			("opT", opT)
+			("hamsmrelPath", hamsmrelPath)
 		;
 		if (json.IsLoading()) {
 			dofType = BasicBEM::DOFType(idofType);

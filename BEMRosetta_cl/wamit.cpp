@@ -2557,8 +2557,9 @@ void Wamit::Save_frc(String fileName, bool force1st, bool withQTF) const {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		out << Format("%.4f ", head[ih]);
 	out << "% BETA\n";*/
-	out << "0 % NFIELD\n";
-	out << "0 % NFIELD_ARRAYS";
+	out << listPoints.size() << " % NFIELD\n";
+	for (const Point3D &p : listPoints)
+		out << "   " << p.x << "\t" << p.y << "\t" << p.z << "\n";
 }
 
 void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {

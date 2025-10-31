@@ -337,7 +337,6 @@ int Hams::Load_ControlFile(String fileName) {
 				}
 			}
 		}
-			
 	}
 	return output_frequency_type;
 }
@@ -402,7 +401,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 	
 	String solvName = "HAMS_x64.exe";
 	if (bin) {
-		String source = Bem().hamsPath;
+		String source;
+		if (!ismrel)
+			source = Bem().hamsPath;
+		else
+			source = Bem().hamsmrelPath;
 		solvName = GetFileName(source);
 		String destNew = AFX(folderBase, solvName);
 		if (!FileCopy(source, destNew)) 
@@ -411,9 +414,10 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		destNew = AFX(folderBase, "libiomp5md.dll");		
 		if (!FileCopy(source, destNew)) 
 			throw Exc(Format(t_("Problem copying Hams dll file from '%s'"), source));					
-	} 
-	String meshName = "WAMIT_MeshTran.exe";
-	if (bin) {
+	}
+	 
+	String meshName;
+	if (bin && !ismrel) {
 		String source = Bem().hamsBodyPath;
 		meshName = GetFileName(source);
 		String destNew = AFX(folderBase, meshName);
@@ -470,7 +474,8 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			}
 		}
 		
-		Save_Settings(folder, lids);
+		if (!ismrel)
+			Save_Settings(folder, lids);
 		
 		String folderOutput = AFX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
@@ -502,7 +507,8 @@ void Hams::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
 	if (!IsNull(caseFolder))
 		out << "cd \"" << caseFolder << "\"\n";
 	
-	out << "\"" << meshName << "\"\n";
+	if (!meshName.IsEmpty())
+		out << "\"" << meshName << "\"\n";
 	out << "\"" << solvName << "\"\n";
 	
 	out << "echo End:   \%date\% \%time\% >> time.txt\n";

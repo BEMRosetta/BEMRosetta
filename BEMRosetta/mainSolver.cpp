@@ -438,7 +438,56 @@ void MainSolver::Load(String file) {
 		gen.irfStep <<= (tmp_hy.dt.Tirf[1] - tmp_hy.dt.Tirf[0]);
 		gen.irfDuration <<= Last(tmp_hy.dt5.Tirf);
 	}*/
-	// To be improved by extracting panel points and free surface points
+	
+	save.withPotentials = false;
+	for (int ib = 0; ib < tmp_hy.dt.Nb; ++ib)
+		if (tmp_hy.dt.pots_dif.size() > 0 || tmp_hy.dt.pots_rad.size() > 0)
+			save.withPotentials = true;
+		
+	for (const Body &b : tmp_hy.dt.msh) {		// The points are in the panels
+		for (const Panel &p : b.dt.mesh.panels) {
+			int id;
+			if ((id = FindDelta(tmp_hy.listPoints, p.centroidPaint, 0.01)) >= 0) {
+				save.withPotentials = true;
+				tmp_hy.listPoints.Remove(id);
+			}
+		}
+	}
+	// Points in the free surface
+	UVector<Pointf> fs;
+	for (const auto &d: tmp_hy.listPoints)
+		if (d.z > -EPS_LEN && d.z < EPS_LEN)
+			fs << Pointf(d.x, d.y);
+	
+	Pointf topLeft;
+	Pointf bottomRight;
+	int cols;
+	int rows;
+	UVector<int> ids;
+	
+	save.opWaveHeight <<= false;
+	if (DetectGrid(fs, EPS_LEN, topLeft, bottomRight, cols, rows, ids)) {
+		save.arrayArea.Set(0, 1, topLeft.x);
+		save.arrayArea.Set(0, 2, topLeft.y);
+		save.arrayArea.Set(1, 1, bottomRight.x - topLeft.x);
+		save.arrayArea.Set(1, 2, bottomRight.y - topLeft.y);
+		save.arrayArea.Set(2, 1, cols);
+		save.arrayArea.Set(2, 2, rows);
+		
+		save.opWaveHeight <<= true;
+		
+		for (int i = tmp_hy.listPoints.size() - 1; i >= 0; --i) {	// Remove detected points from original list
+			const Point3D &d = tmp_hy.listPoints[i];
+			for (int j = 0; j < ids.size(); ++j) {
+				const Pointf &p = fs[ids[j]];
+				if (p.x == d.x && p.y == d.y) {
+					tmp_hy.listPoints.Remove(i);
+					break;
+				}
+			}
+		}
+	}
+	
 	save.arrayAdditional.Clear();
 	for (const auto &p : tmp_hy.listPoints)
 		save.arrayAdditional.Add(p.x, p.y, p.z);
