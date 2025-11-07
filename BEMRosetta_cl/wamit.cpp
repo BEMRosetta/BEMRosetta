@@ -11,7 +11,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 	
 	try {
 		String folder = GetFileFolder(file);
-		String ext = GetFileExt(file);
+		String ext = ToLower(GetFileExt(file));
 		int iperin = Null;
 		String filepot, filefrc, filecfg;
 		
@@ -60,7 +60,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			else if (!Load_out(ff.GetPath(), Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
 				
-		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0) {
+		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam.6p").Find(ext) >= 0) {
 			if (isHams)
 				dt.solver = Hydro::HAMS_WAMIT;
 			else if (dt.name == "WAMIT_5S")
@@ -166,6 +166,11 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 		if (!Load_FK(fileFK, iperout))
 			BEM::Print(S(": ** 3fk ") + t_("Not found") + "**");
 		
+		String file6p = ForceExtSafer(file, ".6p");
+		BEM::Print("\n- " + Format(t_("Pressures file .6p file '%s'"), GetFileName(file6p)));
+		if (!Load_6p(file6p, iperout, Status))
+			BEM::Print(S(": ** 6p ") + t_("Not found") + "**");
+		
 		if (IsNull(dt.Nh))
 			dt.Nh = 0;
 		if (IsNull(dt.Nf))
@@ -199,7 +204,8 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	
 	if (!IsNull(dt.msh[0].dt.cg)) {
 		BEM::Print("\n- " + Format(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt(file, ".frc"))));
-		Save_frc(fileext, false, IsLoadedQTF(true) || IsLoadedQTF(false));
+		UVector<Point3D> list = GetListPointsTemp(IsLoadedPotsRad() || IsLoadedPotsDif());
+		Save_frc2(fileext, false, IsLoadedQTF(true) || IsLoadedQTF(false), list);
 	}
 	BEM::Print("\n- " + Format(t_("Configurarion file '%s'"), GetFileName(fileext = ForceExt(file, ".cfg"))));
 	Save_cfg(fileext, IsLoadedQTF(true) || IsLoadedQTF(false), false, force_T);
@@ -1132,7 +1138,7 @@ bool Wamit::Load_wam(String fileName, String &filepot, String &filefrc, String &
 		String ext = GetFileExt(file);
 		if (ext == ".pot")
 			filepot = file;
-		else if (ext == ".frc")
+		else if (ext == ".frc" || ext == ".gfrc")
 			filefrc = file;
 		else if (ext == ".cfg")
 			filecfg = file;
@@ -1248,12 +1254,16 @@ bool Wamit::Load_pot(String fileName) {
 }
 
 bool Wamit::Load_frc(String fileName) {
-	try {
-		if (!Load_frc1(fileName))
-			return false;
-	} catch(...) {
-		if (!Load_frc2(fileName))
-			return false;
+	if (ToLower(GetFileExt(fileName) == ".gfrc"))
+		Load_frc3(fileName);
+	else {
+		try {
+			if (!Load_frc1(fileName))
+				return false;
+		} catch(...) {
+			if (!Load_frc2(fileName))
+				return false;
+		}
 	}
 	return true;
 }
@@ -1317,14 +1327,14 @@ bool Wamit::Load_frc1(String fileName) {
 	if (numPoints < 0)
 		throw Exc(in.Str() + "\n" + Format(t_("NFIELD '%s' has to be higher or equal to zero"), f.GetText(0)));
 	
-	listPoints.SetCount(numPoints);
+	listPointsTemp.SetCount(numPoints);
 	for (int r = 0; r < numPoints; ++r) {
 		f.GetLine();
 		if (f.size() < 3 && f.IsEof())
 			throw Exc(Format(t_("Field points list is incomplete. Read %d from %d"), r, numPoints));	
-		listPoints[r].x = f.GetDouble(0);	// XFIELD(1,1) XFIELD(2,1) XFIELD(3,1)
-		listPoints[r].y = f.GetDouble(1);
-		listPoints[r].z = f.GetDouble(2);
+		listPointsTemp[r].x = f.GetDouble(0);	// XFIELD(1,1) XFIELD(2,1) XFIELD(3,1)
+		listPointsTemp[r].y = f.GetDouble(1);
+		listPointsTemp[r].z = f.GetDouble(2);
 	}
 	
 	return true;
@@ -1338,13 +1348,13 @@ bool Wamit::Load_frc2(String fileName) {
  	f.IsSeparator = IsTabSpace;
 
 	in.GetLine(2);
-	f.GetLine();
+	f.GetLine_discard_empty();
 	double rho = f.GetDouble(0);
 	if (rho <= 0 || rho > 5000)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong density %s"), f.GetText(0)));
 	dt.rho = rho;
 	
-	f.GetLine();
+	f.GetLine_discard_empty();
 	int mxNb = f.size()/3;
 	int Nb;
 	for (Nb = 0; Nb < mxNb; ++Nb) {
@@ -1368,7 +1378,7 @@ bool Wamit::Load_frc2(String fileName) {
 		dt.msh[ib].dt.cg.z = f.GetDouble(2 + ib*Nb);
 	}
 	
-	f.GetLine();
+	f.GetLine_discard_empty();
 	int imass = f.GetInt(0);
 	if (imass < 0 || imass > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IMASS %d"), imass));
@@ -1376,14 +1386,14 @@ bool Wamit::Load_frc2(String fileName) {
 		for (int ib = 0; ib < Nb; ++ib) {
 			dt.msh[ib].dt.M.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
-				f.GetLine();
+				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
 					dt.msh[ib].dt.M(r, c) = f.GetDouble(c + 6*ib);
 			}
 		}
 	}
 				
-	f.GetLine();
+	f.GetLine_discard_empty();
 	int idamp = f.GetInt(0);
 	if (idamp < 0 || idamp > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong IDAMP %d"), idamp));
@@ -1391,14 +1401,14 @@ bool Wamit::Load_frc2(String fileName) {
 		for (int ib = 0; ib < Nb; ++ib) {
 			dt.msh[ib].dt.Dlin.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
-				f.GetLine();
+				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
 					dt.msh[ib].dt.Dlin(r, c) = f.GetDouble(c + 6*ib);
 			}
 		}
 	}
 
-	f.GetLine();
+	f.GetLine_discard_empty();
 	int imoor = f.GetInt(0);
 	if (imoor < 0 || imoor > 1)
 		throw Exc(in.Str() + "\n" + Format(t_("Wrong ISTIF %d"), imoor));
@@ -1406,32 +1416,42 @@ bool Wamit::Load_frc2(String fileName) {
 		for (int ib = 0; ib < Nb; ++ib) {
 			dt.msh[ib].dt.Cmoor.resize(6, 6);
 			for (int r = 0; r < 6; ++r) {
-				f.GetLine();
+				f.GetLine_discard_empty();
 				for (int c = 0; c < 6; ++c) 	// Discards crossed mass elements
 					dt.msh[ib].dt.Cmoor(r, c) = f.GetDouble(c + 6*ib);
 			}
 		}
 	}
 	
-	f.GetLine();	// NBETAH
-	f.GetLine();	// BETAH(1) BETAH(2) ... BETAH(NBETAH)
+	f.GetLine_discard_empty();	// NBETAH
+	int nbeta = f.GetInt(0);
+	if (nbeta > 0)
+		f.GetLine_discard_empty();	// BETAH(1) BETAH(2) ... BETAH(NBETAH)
 	
-	f.GetLine();	// NFIELD
+	f.GetLine_discard_empty();	// NFIELD
 	int numPoints = f.GetInt(0);
 	if (numPoints < 0)
 		throw Exc(in.Str() + "\n" + Format(t_("NFIELD '%s' has to be higher or equal to zero"), f.GetText(0)));
 	
-	listPoints.SetCount(numPoints);
+	listPointsTemp.SetCount(numPoints);
 	for (int r = 0; r < numPoints; ++r) {
-		f.GetLine();
+		f.GetLine_discard_empty();
 		if (f.size() < 3 && f.IsEof())
 			throw Exc(Format(t_("Field points list is incomplete. Read %d from %d"), r, numPoints));	
-		listPoints[r].x = f.GetDouble(0);	// XFIELD(1,1) XFIELD(2,1) XFIELD(3,1)
-		listPoints[r].y = f.GetDouble(1);
-		listPoints[r].z = f.GetDouble(2);
+		listPointsTemp[r].x = f.GetDouble(0);	// XFIELD(1,1) XFIELD(2,1) XFIELD(3,1)
+		listPointsTemp[r].y = f.GetDouble(1);
+		listPointsTemp[r].z = f.GetDouble(2);
 	}
 	
 	return true;
+}
+
+bool Wamit::Load_frc3(String fileName) {
+	
+	
+	///// To be implemented
+
+	return true;	
 }
 
 bool Wamit::Load_gdf(String fileName) {
@@ -1602,6 +1622,22 @@ int Wamit::GuessIperin(const UVector<double> &w) {
 		return iperout;
 	else
 		return 1;
+}
+
+double Wamit::InputToFreq(double input, int iper, double g, double h, double len) {
+	if (iper == 1)
+		return 2*M_PI/input;
+	else if (iper == 2)
+		return input;
+	else if (iper == 3) 		// 	Infinite-depth wavenumber
+		return w_iperout3(input, g, len);
+	else if (iper == 4)
+		return w_iperout4(input, g, len, h);
+	else if (iper == 5)
+		return SeaWaves::FrequencyFromWaveLength(input/len, h, g);
+	
+	NEVER();
+	return Null;
 }
 
 void Wamit::ProcessFirstColumn1_3(UVector<double> &w, int iperout) {	
@@ -2190,6 +2226,174 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	return true;
 }
 
+bool Wamit::Load_6p(String fileName, int &iperout, Function <bool(String, int)> Status) {
+	dt.dimen = false;
+	
+	if (IsNull(dt.len))
+		dt.len = 1;
+	
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	
+	Status("Loading .6p base data", 0);
+	
+	LineParser f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	FileInLine::Pos fpos = in.GetPos();
+	f.GetLine();		
+	if (!IsNull(f.GetDouble_nothrow(0)))
+		in.SeekPos(fpos);		// No header, rewind
+	else
+		fpos = in.GetPos();		// Avoid header
+
+	int np = listPointsTemp.size();
+	UVector<bool> idPanels;
+	MatrixXi idPanelsM;
+	UVector<int> idFs, idRest;
+	LoadListPointsTemp(idPanels, idPanelsM, idFs, idRest);
+	
+	if (!idPanels.IsEmpty() && Max(idPanels) > 0) {
+		Initialize_PotsRad();
+		Initialize_PotsIncDiff(dt.pots_dif);
+	}
+	if (!idFs.IsEmpty() && Max(idFs) >= 0) {
+		dt.fsPoints.pots_rad.resize(dt.fsPoints.points.size(), 6, dt.Nf);			dt.fsPoints.pots_rad.setConstant(0);
+		dt.fsPoints.pots_dif.resize(dt.fsPoints.points.size(), dt.Nh, dt.Nf);		dt.fsPoints.pots_dif.setConstant(0);
+	}
+	if (!idRest.IsEmpty() && Max(idRest) >= 0) {
+		dt.freePoints.pots_rad.resize(dt.fsPoints.points.size(), 6, dt.Nf);			dt.freePoints.pots_rad.setConstant(0);
+		dt.freePoints.pots_dif.resize(dt.fsPoints.points.size(), dt.Nh, dt.Nf);		dt.freePoints.pots_dif.setConstant(0);
+	}
+
+	double len = Nvl2(dt.len, Bem().len);
+	double g = Nvl2(dt.g, Bem().g);
+	
+	int lifr = -1;
+	
+	bool isdiff = false, israd = false;
+	double rho_g = g_ndim()*rho_ndim();
+	
+	while (!f.IsEof()) {
+		f.GetLine_discard_empty();
+		double freq = Wamit::InputToFreq(f.GetDouble(0), iperout, g, dt.h, len);
+		int ifr = FindDelta(dt.w, freq, 0.001);
+		if (ifr < 0)
+			throw Exc(in.Str() + "\n"  + Format(t_("Period/Frequency %f is unknown"), freq));
+
+		if (Status && ifr > lifr && !Status("Loading .6p base data", (100.*ifr)/dt.Nf))
+			throw Exc(t_("Stop by user"));
+
+		double rho_w = dt.w[ifr]*rho_ndim();
+		
+		lifr = ifr;
+		
+		if (f.size() == 5 || f.size() == 7) {	// pots_diff
+			isdiff = true;
+			double head = f.GetDouble(1);	
+			int ih = FindDelta(dt.head, head, 0.01);
+			if (ih < 0)
+				throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
+	   	
+	   		int ip = f.GetInt(2);
+			if (ip < 1 || ip > np)
+				throw Exc(in.Str() + "\n"  + Format(t_("Point number %d is unknown"), ip));
+			ip--;
+			
+			double re, im;
+			if (f.size() == 5) {
+				re = f.GetDouble(3);
+				im = f.GetDouble(4);
+			} else {
+				re = f.GetDouble(5);
+				im = f.GetDouble(6);
+			}
+			
+			std::complex<double> val(im/rho_w, -re/rho_w); // p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
+			val *= rho_g;		// Dimensionalised
+			
+			if (idPanels[ip]) {
+				for (int ibb = 0; ibb < dt.Nb; ++ibb) {
+					UArray<UArray<UArray<std::complex<double>>>> &pib = dt.pots_dif[ibb];
+					int ipp = idPanelsM(ip, ibb);
+					if (ipp >= 0) {
+						pib[ipp][ih][ifr] = val;
+						break;
+					}
+				}
+			} else if (idFs[ip] >= 0)
+				dt.fsPoints.pots_dif(idFs[ip], ih, ifr) = val;
+			else
+				dt.freePoints.pots_dif(idRest[ip], ih, ifr) = val;
+		} else {								// pots_rad
+			israd = true;
+			int ip = f.GetInt(1);
+			if (ip < 1 || ip > np)
+				throw Exc(in.Str() + "\n"  + Format(t_("Point number %d is unknown"), ip));
+			ip--;
+			
+			if (idPanels[ip]) {
+				for (int ibb = 0; ibb < dt.Nb; ++ibb) {
+					UArray<UArray<UArray<std::complex<double>>>> &pib = dt.pots_rad[ibb];
+					int ipp = idPanelsM(ip, ibb);
+					if (ipp >= 0) {
+						for (int ib = 0; ib < dt.Nb; ++ib) {		
+							int col0 = 0; 
+							if (ib == 0)
+								col0 = 1;
+							
+							for (int idof = 0; idof < 6; ++idof)
+								pib[ipp][idof][ifr] += std::complex<double>(f.GetDouble(col0 + idof*2), f.GetDouble(col0 + idof*2 + 1));
+							
+							if (ib < dt.Nb-1)
+								f.GetLine_discard_empty();
+						}
+						break;
+					}
+				}
+			} else if (idFs[ip] >= 0) {
+				for (int ib = 0; ib < dt.Nb; ++ib) {		
+					int col0 = 0; 
+					if (ib == 0)
+						col0 = 1;
+					
+					for (int idof = 0; idof < 6; ++idof)
+						dt.fsPoints.pots_rad(idFs[ip], idof, ifr) += std::complex<double>(f.GetDouble(col0 + idof*2), f.GetDouble(col0 + idof*2 + 1));
+					
+					if (ib < dt.Nb-1)
+						f.GetLine_discard_empty();
+				}
+			} else {
+				for (int ib = 0; ib < dt.Nb; ++ib) {		
+					int col0 = 0; 
+					if (ib == 0)
+						col0 = 1;
+					
+					for (int idof = 0; idof < 6; ++idof)
+						dt.freePoints.pots_rad(idRest[ip], idof, ifr) += std::complex<double>(f.GetDouble(col0 + idof*2), f.GetDouble(col0 + idof*2 + 1));
+					
+					if (ib < dt.Nb-1)
+						f.GetLine_discard_empty();
+				}
+			}
+		} 
+	}
+	if (!israd) {
+		dt.pots_rad.Clear();
+		dt.fsPoints.pots_rad.resize(0, 0, 0);
+		dt.freePoints.pots_rad.resize(0, 0, 0);
+	}
+	if (!isdiff) {
+		dt.pots_dif.Clear();
+		dt.fsPoints.pots_dif.resize(0, 0, 0);
+		dt.freePoints.pots_dif.resize(0, 0, 0);
+	}
+
+	return true;
+}
+
+
 void Wamit::Save_1(String fileName, bool force_T) const {
 	if (!(IsLoadedA() && IsLoadedB())) 
 		return; 
@@ -2489,67 +2693,87 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 		}
 }
 
-void Wamit::Save_frc(String fileName, bool force1st, bool withQTF) const {
+void Wamit::Save_frc2(String fileName, bool force1st, bool withQTF, UVector<Point3D> &listPoints) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .frc file\n";
-	out << WamitField(Format("%d %d %d %d 0 0 0 0 0", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
-										 			  force1st || IsLoadedFex() ? 1 : 0,
-										 			  force1st || IsLoadedFex() ? 2 : 0,
-										 			  force1st || IsLoadedRAO() ? 1 : 0), 22);
+	out << WamitField(Format("%d %d %d %d 0 %d 0 0 0", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
+										 			   force1st || IsLoadedFex() ? 1 : 0,
+										 			   force1st || IsLoadedFex() ? 2 : 0,
+										 			   force1st || IsLoadedRAO() ? 1 : 0, 
+										 			   !listPoints.IsEmpty() ? 1 : 0), 22);
 	if (withQTF)
 		out << " 0 0 1 0 0 0 0";
 		
 	out << "% 9 digits for Wamit .1 ... ." << (!withQTF ? 9 : 16) << " files included\n";
 	out << WamitField(Format("%.1f", Bem().rho), 22) << "% RHO\n";
 	
-	for (int ib = 0; ib < dt.Nb; ++ib) {
-		out << WamitField(Format("%.2f %.2f %.2f", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 
+	for (int ib = 0; ib < dt.Nb; ++ib)
+		out << Format("%.2f %.2f %.2f ", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 
 												   dt.msh[ib].dt.cg.y - dt.msh[ib].dt.c0.y, 
-												   dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z), 22);
-		out << "% XCG, YCG, ZCG\n";
-		
-		if (IsLoadedM()) {
-			out << "1  % IMASS\n";
-			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
-					if (c > 0)
-						out << " ";
-					out << Format("%.2f", dt.msh[ib].dt.M(r, c));
-				}
-				out << "\n";
-			}
-		} else 
-			out << "0 % IMASS\n";	
+												   dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z);
+	out << "% XCG, YCG, ZCG\n";
 	
-		if (IsLoadedDlin()) {
-			out << "1 % IDAMP\n";
+	if (IsLoadedM()) {
+		out << "1  % IMASS\n";
+		for (int ib = 0; ib < dt.Nb; ++ib) {
 			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
+				int cc = 0;
+				for (int c = 0; c < 6*dt.Nb; ++c) {
 					if (c > 0)
-						out << " ";
-					out << Format("%.2f", dt.msh[ib].dt.Dlin(r, c));
+						out << "\t";
+					if (c < ib*6 || c >= (ib+1)*6)
+						out << 0;
+					else
+						out << Format("%.2f", dt.msh[ib].dt.M(r, cc++));
 				}
 				out << "\n";
 			}
-		} else 
-			out << "0 % IDAMP\n";
-		
-		if (IsLoadedCMoor()) {
-			out << "1 % ISTIF\n";
+		}
+	} else 
+		out << "0 % IMASS\n";	
+	
+	if (IsLoadedDlin()) {
+		out << "1 % IDAMP\n";
+		for (int ib = 0; ib < dt.Nb; ++ib) {
 			for (int r = 0; r < 6; ++r) {
-				for (int c = 0; c < 6; ++c) {
+				int cc = 0;
+				for (int c = 0; c < 6*dt.Nb; ++c) {
 					if (c > 0)
-						out << " ";
-					out << Format("%.2f", dt.msh[ib].dt.Cmoor(r, c));
+						out << "\t";
+					if (c < ib*6 || c >= (ib+1)*6)
+						out << 0;
+					else
+						out << Format("%.2f", dt.msh[ib].dt.Dlin(r, cc++));
 				}
 				out << "\n";
 			}
-		} else 
-			out << "0 % ISTIF\n";
-	}
+		}
+	} else 
+		out << "0 % IDAMP\n";
+	
+	
+	if (IsLoadedCMoor()) {
+		out << "1 % ISTIF\n";
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			for (int r = 0; r < 6; ++r) {
+				int cc = 0;
+				for (int c = 0; c < 6*dt.Nb; ++c) {
+					if (c > 0)
+						out << " ";
+					if (c < ib*6 || c >= (ib+1)*6)
+						out << 0;
+					else
+						out << Format("%.2f", dt.msh[ib].dt.Cmoor(r, cc++));
+				}
+				out << "\n";
+			}
+		}
+	} else 
+		out << "0 % ISTIF\n";
+	
 	out << "0 % NBETA\n";
 	/*out << WamitField(Format("%d", dt.Nh), 12) << "% NBETA\n";
 	UVector<double> head = clone(dt.head);
@@ -2557,6 +2781,7 @@ void Wamit::Save_frc(String fileName, bool force1st, bool withQTF) const {
 	for (int ih = 0; ih < dt.Nh; ++ih) 
 		out << Format("%.4f ", head[ih]);
 	out << "% BETA\n";*/
+	
 	out << listPoints.size() << " % NFIELD\n";
 	for (const Point3D &p : listPoints)
 		out << "   " << p.x << "\t" << p.y << "\t" << p.z << "\n";
@@ -2688,7 +2913,7 @@ void Wamit::Save_Fnames(String folder) const {
 		 << folderName << ".frc";
 }
 
-void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) const {
+void Wamit::SaveCase(String folder, int numThreads, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints) const {
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 
@@ -2698,7 +2923,7 @@ void Wamit::SaveCase(String folder, int numThreads, bool withPotentials, bool wi
 	String folderName = GetFileTitle(folder);
 	
 	Save_pot(AFX(folder, folderName + ".pot"), true, x0z, y0z, lids);
-	Save_frc(AFX(folder, folderName + ".frc"), true, withQTF);
+	Save_frc2(AFX(folder, folderName + ".frc"), true, withQTF, listPoints);
 	Save_cfg(AFX(folder, folderName + ".cfg"), withQTF, !lids.IsEmpty(), false);
 	
 	String fileBat = AFX(folder, "Wamit_bat.bat");		

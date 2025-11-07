@@ -668,7 +668,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 					if (line.GetCount() < 30)
 						continue;
 					
-					f.Load(line.Mid(20));		// Removed the initial 1:( X, Y,Z)
+					f.Load(line.Mid(20));		// Removed the initial 1:(X, Y, Z)
 					
 					if (f.size() == 8) {
 						int idPanel = f.GetInt(0);

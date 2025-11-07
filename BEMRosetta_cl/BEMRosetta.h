@@ -879,16 +879,60 @@ public:
 		int GetId()	const			{return id;}
 	
 		int FindClosestHead(double hd) const;
-		int FindClosestMDHead(const std::complex<double> &hd) const	{return FindClosestHead(mdhead, hd);}
+		int FindClosestMDHead(const std::complex<double> &hd) const		{return FindClosestHead(mdhead, hd);}
 		int FindClosestQTFHead(const std::complex<double> &hd) const	{return FindClosestHead(qhead, hd);}
 		static int FindClosestHead(const VectorXcd &list, const std::complex<double> &h);
+		
+		struct FreePoints {	// Points not in the hull surface	
+		    FreePoints() = default;
+		    FreePoints(const FreePoints& other) {Copy(other);}	// Deep copy constructor
+    		FreePoints& operator=(const FreePoints& other) {	// Deep copy assignment
+		        if (this != &other)
+		            Copy(other);
+		        return *this;
+		    }
+		    void Copy(const FreePoints& other) {				// Deep copy
+        		points = clone(other.points);
+        		pots_rad = clone(other.pots_rad);
+        		pots_dif = clone(other.pots_dif);
+    		}
+	
+			UVector<Point3D> points;
+			Tensor<std::complex<double>, 3> pots_rad;		// [Np][6][Nf]	Radiation complex potentials
+	   		Tensor<std::complex<double>, 3> pots_dif;		// [Np][Nh][Nf]	Diffraction complex potentials			
+		};
+		FreePoints freePoints;
+		
+		struct FSPoints {	// Points in the free surface		
+			FSPoints() = default;
+		    FSPoints(const FSPoints& other) {Copy(other);}	// Deep copy constructor
+    		FSPoints& operator=(const FSPoints& other) {	// Deep copy assignment
+		        if (this != &other)
+		            Copy(other);
+		        return *this;
+		    }
+		    void Copy(const FSPoints& other) {				// Deep copy
+        		points = clone(other.points);
+        		//rows = other.rows;
+        		//cols = other.cols;
+        		pots_rad = clone(other.pots_rad);
+        		pots_dif = clone(other.pots_dif);
+    		}
+    		
+			UVector<Pointf> points;
+			//int rows = -1, cols = -1;		// In the case they form a rectangle
+			Tensor<std::complex<double>, 3> pots_rad;		// [Np][6][Nf]	Radiation complex potentials
+	   		Tensor<std::complex<double>, 3> pots_dif;		// [Np][Nh][Nf]	Diffraction complex potentials			
+		};
+		FSPoints fsPoints;
 		
 	private:
 		int id = -1;
 	};
 	Data dt;
 	
-	UVector<Point3D> listPoints;
+	UVector<Point3D> listPointsTemp;		// Temporal list before being set in fsPoints, freePoints and mesh points 
+	UVector<Point3D> GetListPointsTemp(bool withPotentials) const;
 	
 	static int idCount;
 	
@@ -1033,7 +1077,7 @@ public:
 		const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
 		double s = pan.surface0 + pan.surface1;
 		const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
-		return dt.rho*rad.real()*n[idf1]*s;									// A = ρ Re(Φ) n ds
+		return rho_ndim()*rad.real()*n[idf1]*s;									// A = ρ Re(Φ) n ds
 	}
 	
 	inline double B_pan(int ib, int ip, int idf1, int idf2, int ifr) const {
@@ -1043,7 +1087,7 @@ public:
 		const Panel &pan = dt.msh[ib].dt.mesh.panels[ip];
 		double s = pan.surface0 + pan.surface1;
 		const std::complex<double> &rad = dt.pots_rad[ib][ip][idf2][ifr];
-		return -dt.rho*dt.w[ifr]*rad.imag()*n[idf1]*s;						// B = -ρω Im(Φ) n ds
+		return -rho_ndim()*dt.w[ifr]*rad.imag()*n[idf1]*s;						// B = -ρω Im(Φ) n ds
 	}
 	
 	inline std::complex<double> Ffk_pan(int ib, int ip, int ih, int idf, int ifr) const 					  {return F_pan(dt.pots_inc, ib, ip, ih, idf, ifr);}
@@ -1056,7 +1100,7 @@ public:
 	inline std::complex<double> Fsc_pan(int ib, int ip, int ih, int idf, int ifr, const Value6D &n) const 	  {return F_pan(dt.pots_dif, ib, ip, ih, idf, ifr, n);}
 	
 	inline std::complex<double> P_rad(int ib, int ip, int idf, int ifr) const {
-		std::complex<double> ret = dt.pots_rad[ib][ip][idf][ifr]*dt.rho*dt.w[ifr];
+		std::complex<double> ret = dt.pots_rad[ib][ip][idf][ifr]*rho_ndim()*dt.w[ifr];
 		return std::complex<double>(ret.imag(), -ret.real());			// p = -iρωΦ = ρω [Im(Φ) - iRe(Φ)]
 	}
 	
@@ -1074,7 +1118,7 @@ public:
 	}
 
 	inline std::complex<double> P_(const UArray<UArray<UArray<UArray<std::complex<double>>>>> &pot, int ib, int ip, int ih, int ifr) const {
-		std::complex<double> ret = pot[ib][ip][ih][ifr]*dt.rho*dt.w[ifr];	// p = -iρωΦ = ρω [Im(Φ) - iRe(Φ)]
+		std::complex<double> ret = pot[ib][ip][ih][ifr]*rho_ndim()*dt.w[ifr];	// p = -iρωΦ = ρω [Im(Φ) - iRe(Φ)]
 		return std::complex<double>(ret.imag(), -ret.real());
 	}
 	
@@ -1281,6 +1325,8 @@ public:
 		}
 	} 
 	
+	void LoadListPointsTemp(UVector<bool> &idPanels, MatrixXi &idPanelsM, UVector<int> &idFs, UVector<int> &idRest);
+	
 protected:
 	// For OpenFAST
 	String hydroFolder;
@@ -1418,7 +1464,7 @@ public:
 	bool Load_frc(String fileName);
 	void Save_4(String fileName, bool force_T = false) const;
 	
-	void SaveCase(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void SaveCase(String folder, int numThreads, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints) const;
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
@@ -1431,6 +1477,7 @@ protected:
 	bool Load_wam(String fileName, String &filepot, String &filefrc, String &filecfg);
 	bool Load_frc1(String fileName);
 	bool Load_frc2(String fileName);
+	bool Load_frc3(String fileName);
 	
 	bool Load_out(String fileName, Function <bool(String, int)> Status);							
 	static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
@@ -1448,14 +1495,15 @@ protected:
 	bool Load_12(String fileName, bool isSum, int iperout, Function <bool(String, int)> Status);
 	bool Load_789(String fileName, int &iperout);
 	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int &iperout);
-	
+	bool Load_6p(String fileName, int &iperout, Function <bool(String, int)> Status);
+		
 	void Save_1(String fileName, bool force_T = false) const;
 	void Save_3(String fileName, bool force_T = false) const;
 	void Save_hst(String fileName) const;
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T, bool force_Deg) const;
-	void Save_frc(String fileName, bool force1st, bool withQTF) const;
+	void Save_frc2(String fileName, bool force1st, bool withQTF, UVector<Point3D> &listPoints) const;
 	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
@@ -1470,6 +1518,7 @@ protected:
 
 private:
 	int GuessIperin(const UVector<double> &w);
+	static double InputToFreq(double input, int iper, double g, double h, double len);
 };
 
 class Hams : public Wamit {
@@ -1539,11 +1588,11 @@ public:
 	bool LoadDatBody(String file);
 	void SaveDatBody(String file); 
 	
-	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
-	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
+	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, const UArray<Body> &lids) const;
 	
 	void Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, const UVector<int> &panels, int solver, 
-					bool y0z, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
+					bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 	
 	bool Save_KH(String folder) const;
 	bool Save_Inertia(String folder) const;
@@ -1584,7 +1633,7 @@ private:
 	void Save_Input(String folder, int solver) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases,  
-					bool deleteFolder, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
+					bool deleteFolder, int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 };
 
 class Aqwa : public Hydro {

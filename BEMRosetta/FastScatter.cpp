@@ -145,15 +145,20 @@ void FastScatter::GridToParams() {
 				inparen = 2;
 				met << c;
 			} else if (c == ',' && (inparen == 0 || inparen == 2)) {
-				params.params[r].metrics << Trim(met);
+				String fun = Trim(met);
+				if (!fun.IsEmpty())
+					params.params[r].metrics << fun;
 				met.Clear();
 				inparen = 0;
 			} else if (inparen < 2)
 				met << c;
 			// Discards everything after ')' and before ','
 		}	
-		if (!met.IsEmpty())
-			params.params[r].metrics << Trim(met);
+		if (!met.IsEmpty()) {
+			String fun = Trim(met);
+			if (!fun.IsEmpty())
+				params.params[r].metrics << fun;
+		}
 	}
 }
 

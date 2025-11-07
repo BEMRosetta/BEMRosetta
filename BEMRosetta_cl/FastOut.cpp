@@ -1159,6 +1159,9 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					str.Replace("(", ",");
 					str.Replace(")", ",");
 					UVector<String> pars = Split(str, ",");
+					Trim(pars);
+					if (pars.IsEmpty())
+						continue;
 					String stat = pars[0];
 					double val = Null;
 					if (stat == "mean" || stat == "avg") 
@@ -1263,6 +1266,8 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				str.Replace(")", ",");
 				UVector<String> pars = Split(str, ",");
 				Trim(pars);
+				if (pars.IsEmpty())
+					continue;
 				String stat = pars[0];
 					
 				double val = Null;

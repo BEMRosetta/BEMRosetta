@@ -10,6 +10,7 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 	dt.file = filein;	
 	dt.name = GetFileTitle(filein);
 	
+	dt.dimen = true;
 	dt.x_w = dt.y_w = 0;
 	
 	String baseFolder = GetFileFolder(GetFileFolder(filein));
@@ -70,7 +71,7 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 					}
 				}
 			}
-			if (iszero && !Load_HydrostaticBody(hydrostaticFile, dt.rho*dt.g))
+			if (iszero && !onlycase && !Load_HydrostaticBody(hydrostaticFile, dt.rho*dt.g))
 				return Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile);
 		}
 			
@@ -162,12 +163,18 @@ int Hams::Load_ControlFile(String fileName) {
 	if (!in.IsOpen())
 		return 0;
 	
-	dt.solver = Hydro::HAMS_WAMIT;
-	
+	dt.solver = Hydro::HAMS_WAMIT;	
+	dt.Nb = 1;				// If it is HAMS
+	dt.msh.SetCount(1);	
+	dt.msh[0].dt.fileName = AFX(folder, "HullMesh.pnl");
+	dt.msh[0].dt.name = "Body";
+		
 	String line;
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
+	UVector<int> dummy;
+	bool ismrel = false;
 	int input_frequency_type = 0, output_frequency_type = 0;
 	
 	while (!f.IsEof()) {
@@ -234,19 +241,16 @@ int Hams::Load_ControlFile(String fileName) {
 			else if (!CompareDecimals(dt.w, data, 3))
 				throw Exc(t_("List of frequencies does not match with previously loaded"));
 		} else if (var == "Number_of_bodies") {
+			ismrel = true;
 			dt.Nb = f.GetInt(1);
 			dt.msh.SetCount(dt.Nb);
-			if (dt.Nb == 1)	{
-				dt.msh[0].dt.fileName = AFX(folder, "HullMesh.pnl");
-				dt.msh[0].dt.name = "Body";
-			} else {
+			if (dt.Nb > 1) {
 				for (int ib = 0; ib < dt.Nb; ++ib) {
 					dt.msh[ib].dt.fileName = AFX(folder, Format("HullMesh_%d.pnl", ib+1));
 					dt.msh[ib].dt.name = Format("Body_%d", ib+1);
 				}
 			}
 			UVector<Point3D> lcs(dt.Nb);
-			UVector<int> idxs;
 			for (int ib = 0; ib < dt.Nb; ++ib) {
 				f.GetLine();
 				lcs[ib].x = f.GetDouble(1);
@@ -256,7 +260,7 @@ int Hams::Load_ControlFile(String fileName) {
 					throw Exc(t_("BEMRosetta does not support rotations in local coordinate system LCS"));
 				
 				Body &b = dt.msh[ib];
-				String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, idxs);
+				String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, dummy);
 				if (!IsEmpty(ret))
 					BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
 				b.dt.mesh.Translate(lcs[ib].x, lcs[ib].y, lcs[ib].z);
@@ -317,14 +321,14 @@ int Hams::Load_ControlFile(String fileName) {
 			dt.len = f.GetDouble(1);
 		else if (var == "Number_of_field_points") {
 			int numPoints = f.GetInt(1);
-			listPoints.SetCount(numPoints);
+			listPointsTemp.SetCount(numPoints);
 			for (int r = 0; r < numPoints; ++r) {
 				f.GetLine();
 				if (f.IsEof())
 					throw Exc(Format(t_("Field points list is incomplete. read %d from %d"), r, numPoints));
-				listPoints[r].x = f.GetDouble(0);
-				listPoints[r].y = f.GetDouble(1);
-				listPoints[r].z = f.GetDouble(2);
+				listPointsTemp[r].x = f.GetDouble(0);
+				listPointsTemp[r].y = f.GetDouble(1);
+				listPointsTemp[r].z = f.GetDouble(2);
 			}
 		} else if (var == "If_remove_irr_freq") {
 			int remove_irr_freq = f.GetInt(1);	
@@ -337,6 +341,13 @@ int Hams::Load_ControlFile(String fileName) {
 				}
 			}
 		}
+	}
+	if (!ismrel) {
+		Body &b = dt.msh[0];
+		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, dummy);
+		if (!IsEmpty(ret))
+			BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
+		b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
 	}
 	return output_frequency_type;
 }
@@ -409,11 +420,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		solvName = GetFileName(source);
 		String destNew = AFX(folderBase, solvName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams exe file from '%s'"), Bem().hamsPath));
-		source = AFX(GetFileFolder(Bem().hamsPath), "libiomp5md.dll");		
+			throw Exc(Format(t_("Problem copying exe file from '%s'"), source));
+		source = AFX(GetFileFolder(source), "libiomp5md.dll");		
 		destNew = AFX(folderBase, "libiomp5md.dll");		
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams dll file from '%s'"), source));					
+			throw Exc(Format(t_("Problem copying dll file from '%s'"), source));					
 	}
 	 
 	String meshName;
@@ -640,7 +651,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
 	
-	if (dt.Nb == 1)
+	if (!ismrel || dt.Nb == 1)
 		out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
 									dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]);
 	else {

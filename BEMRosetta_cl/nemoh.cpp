@@ -412,14 +412,14 @@ String NemohField(String str, int length) {
 	return ret + " ";
 }
 
-void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
-	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, y0z, lids, listDOF);
+void Nemoh::SaveCase(String folderBase, bool bin, int numCases, int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
+	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, lids, listDOF);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, y0z, lids, listDOF);
+		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, lids, listDOF);
 }
 
 void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, 
-			int solver, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
+			int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 
 	UVector<int> valsf;
@@ -542,7 +542,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			numNodes[ib] = dt.msh[ib].dt.under.nodes.size();
 			numPanels[ib] = dt.msh[ib].dt.under.panels.size();
 		}
-		Save_Cal(folder, freqs, numNodes, numPanels, solver, y0z, x0z, lids, listDOF);
+		Save_Cal(folder, freqs, numNodes, numPanels, solver, x0z, lids, listDOF);
 				
 		String folderResults = AFX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
@@ -612,7 +612,7 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 }
 	
 void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, 
-		const UVector<int> &panels, int solver, bool y0z, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
+		const UVector<int> &panels, int solver, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
 	String fileName = AFX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -658,7 +658,7 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<
 		}
 			
 		int nNodes, nPanels;
-		Body::SaveAs(under, AFX(folderMesh, name), Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, y0z, x0z, nNodes, nPanels);
+		Body::SaveAs(under, AFX(folderMesh, name), Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, x0z, nNodes, nPanels);
 				
 		out << NemohHeader(name) << "\n";	
 		

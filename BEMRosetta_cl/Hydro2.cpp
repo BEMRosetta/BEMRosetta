@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2024, the BEMRosetta author and contributors
+// Copyright 2020 - 2025, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include <ScatterDraw/DataSource.h>
@@ -214,7 +214,7 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 			auto SortF = [&](Forces &F) {
 				Forces f(dt.Nb);
 				for (int ib = 0; ib < dt.Nb; ++ib) {
-					f[ib].SetCount(dt.Nh);
+					f[ib].SetCount(indices.size());
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						f[ib][ih].resize(dt.Nf, 6);
 						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
@@ -230,7 +230,7 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 				for (int ib = 0; ib < dt.Nb; ++ib) {
 					_pots[ib].SetCount(pots[ib].size());
 					for (int ip = 0; ip < pots[ib].size(); ++ip) {
-						_pots[ib][ip].SetCount(dt.Nh);	
+						_pots[ib][ip].SetCount(indices.size());	
 						for (int ih = 0; ih < dt.Nh; ++ih) {
 							_pots[ib][ip][ih].SetCount(dt.Nf);		
 							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
@@ -238,6 +238,15 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 						}
 					}
 				}
+				pots = pick(_pots);
+			};
+			
+			auto SortPotsDifIncList = [&](Tensor<std::complex<double>, 3> &pots) {
+				Tensor<std::complex<double>, 3> _pots(pots.dimension(0), indices.size(), pots.dimension(2));
+				for (int ip = 0; ip < pots.dimension(0); ++ip)
+					for (int ih = 0; ih < dt.Nh; ++ih)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
+							_pots(ip, ih, ifr) = pots(ip, indices[ih], ifr);
 				pots = pick(_pots);
 			};
 				
@@ -263,6 +272,11 @@ void Hydro::SortHeadings(BasicBEM::HeadingType range, BasicBEM::HeadingType rang
 				SortPotsDifInc(dt.pots_inc);
 			if (IsLoadedPotsIncBMR()) 
 				SortPotsDifInc(dt.pots_inc_bmr);
+			
+			if (dt.fsPoints.pots_dif.size() > 0)
+				SortPotsDifIncList(dt.fsPoints.pots_dif);
+			if (dt.freePoints.pots_dif.size() > 0)
+				SortPotsDifIncList(dt.freePoints.pots_dif);
 		}
 	}
 	{	// Mean Drift
@@ -453,6 +467,14 @@ void Hydro::SortFrequencies() {
 							pots[ib][ip][ih][ifr] = _pots[ib][ip][ih][indices[ifr]];		
 		};
 		
+		auto SortPotsList = [&](Tensor<std::complex<double>, 3> &pots) {
+			Tensor<std::complex<double>, 3> _pots = clone(pots);
+			for (int ip = 0; ip < pots.dimension(0); ++ip)
+				for (int ih = 0; ih < pots.dimension(1); ++ih) 		// 6 or Nh, valid for both
+					for (int ifr = 0; ifr < dt.Nf; ++ifr)
+						pots(ip, ih, ifr) = _pots(ip, ih, indices[ifr]);		
+		};
+				
 		if (IsLoadedA()) 
 			SortAB(dt.A);
 		if (IsLoadedB()) 
@@ -485,6 +507,16 @@ void Hydro::SortFrequencies() {
 			SortPotsDifInc(dt.pots_inc);
 		if (IsLoadedPotsIncBMR()) 
 			SortPotsDifInc(dt.pots_inc_bmr);
+		
+		if (dt.fsPoints.pots_dif.size() > 0)
+			SortPotsList(dt.fsPoints.pots_dif);
+		if (dt.freePoints.pots_dif.size() > 0)
+			SortPotsList(dt.freePoints.pots_dif);
+		
+		if (dt.fsPoints.pots_dif.size() > 0)
+			SortPotsList(dt.fsPoints.pots_rad);
+		if (dt.freePoints.pots_dif.size() > 0)
+			SortPotsList(dt.freePoints.pots_rad);
 	}
 	if (!IsSorted(dt.qw)) {
 		UVector<int> indices = GetSortOrderX(dt.qw);
@@ -676,7 +708,6 @@ static std::complex<double> MirrorHead(const std::complex<double> &head, bool xA
 
 void Hydro::Copy(const Hydro &hyd) {
 	dt.Copy(hyd.dt);
-	listPoints = clone(hyd.listPoints);
 }
 
 void Hydro::Data::Copy(const Hydro::Data &hyd) {
@@ -736,10 +767,7 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
 	md = clone(hyd.md);
 	mdtype = hyd.mdtype;
 	    
-    //T = clone(hyd.T);
     w = clone(hyd.w);
-    //dataFromW = hyd.dataFromW;
-    //Vo = clone(hyd.Vo); 
     
     msh = clone(hyd.msh);
     
@@ -754,6 +782,9 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
     symY = hyd.symY;
     
     SetId(hyd.GetId());
+    
+    freePoints = clone(hyd.freePoints);
+    fsPoints = clone(hyd.fsPoints);
 }
 
 void AvgB(Eigen::MatrixXd &ret, const UArray<const Eigen::MatrixXd*> &d) {
@@ -1683,12 +1714,78 @@ void Hydro::Report() const {
 	}
 }
 
+void Hydro::LoadListPointsTemp(UVector<bool> &idPanels, MatrixXi &idPanelsM, UVector<int> &idFs, UVector<int> &idRest) {
+	UVector<bool> deleted(listPointsTemp.size(), false);
+	
+	// Points in the mesh panels	
+	idPanelsM = MatrixXi::Constant(listPointsTemp.size(), dt.msh.size(), -1);	// Id in the panels list
+	idPanels.SetCount(listPointsTemp.size(), false);	
+	for (int ib = 0; ib < dt.msh.size(); ++ib) {		// The points are in the panels
+		const Body &b = dt.msh[ib];
+		for (int ip = 0; ip < b.dt.mesh.panels.size(); ++ip) {
+			const Panel &p = b.dt.mesh.panels[ip];
+			int id;
+			if ((id = FindDelta(listPointsTemp, p.centroidPaint, 0.01)) >= 0) {
+				idPanelsM(id, ib) = ip;
+				idPanels[id] = true;
+				deleted[id] = true;
+			}
+		}
+	}
+	
+	// Points in the free surface
+	idFs.SetCount(listPointsTemp.size(), -1);		// Id in the free surface list
+	dt.fsPoints.points.Clear();
+	for (int id = 0; id < listPointsTemp.size(); ++id) {
+		if (!deleted[id]) {
+			const auto &d = listPointsTemp[id];
+			if (d.z > -EPS_LEN && d.z < EPS_LEN) {
+				dt.fsPoints.points << Pointf(d.x, d.y);
+				idFs[id] = dt.fsPoints.points.size()-1;
+				deleted[id] = true;
+			}
+		}
+	}
+	
+	/*
+	Pointf topLeft, bottomRight;
+	int cols, rows;
+	UVector<int> ids;
+	
+	// Order fs points of possible
+	if (DetectGrid(dt.fsPoints.points, EPS_LEN, topLeft, bottomRight, cols, rows, ids)) {		
+		if (ids.size() == dt.fsPoints.points.size()) {
+			dt.fsPoints.rows = rows;
+			dt.fsPoints.cols = cols;
+			dt.fsPoints.points = ApplyIndex(dt.fsPoints.points, ids);
+		}
+	}*/
+	
+	
+	idRest.SetCount(listPointsTemp.size(), -1);	// Id in the free points list	
+	dt.freePoints.points.Clear();
+	for (int id = 0; id < listPointsTemp.size(); ++id)
+		if (!deleted[id]) {
+			dt.freePoints.points << listPointsTemp[id];
+			idRest[id] = dt.freePoints.points.size()-1;
+		}
+		
+	listPointsTemp.Clear();
+}
+
 String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	if (IsNull(dt.len) || dt.len < 0)
 		return t_("Incorrect length in model");
 	if (IsNull(dt.dimen))
 		return t_("Incorrect dimension type in model");
 	
+	if (!listPointsTemp.IsEmpty()) {
+		UVector<bool> idPanels;
+		MatrixXi idPanelsM;
+		UVector<int> idFs, idRest;
+		LoadListPointsTemp(idPanels, idPanelsM, idFs, idRest);
+	}
+		
 	Status(t_("Sorting frequencies and headings"), -1);
 	SortFrequencies();
 	SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);
@@ -2510,6 +2607,22 @@ void Hydro::GetForcesFromPotentials(const UArray<UArray<UArray<UArray<std::compl
 			}
 		}
 	}
+}
+
+UVector<Point3D> Hydro::GetListPointsTemp(bool withPotentials) const {
+	UVector<Point3D> ret;
+	
+	if (withPotentials) {
+		for (int ib = 0; ib < dt.Nb; ++ib)
+			for (const Panel &pan : dt.msh[ib].dt.mesh.panels)
+				ret << pan.centroidPaint;
+	}
+	for (const Pointf &p : dt.fsPoints.points)
+		ret << Point3D(p.x, p.y, 0);
+	for (const Point3D &p : dt.freePoints.points)
+		ret << p;
+	
+	return ret;
 }
 
 void Hydro::Jsonize(JsonIO &json) {

@@ -452,7 +452,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	return String();
 }
 
-void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const {
+void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, const UArray<Body> &lids) const {
 	DirectoryCreate(folder);
 	String name = GetFileTitle(folder);
 	String fileBat  = AFX(folder, "Capytaine_bat.bat");
@@ -501,14 +501,14 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 		const Body &b = dt.msh[ib];
 		
 		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
-		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, dt.symY);
+		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, x0z);
 		
 		spy <<	Format("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(dest));
 		
 		bool isLid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
 		if (isLid) {
 			String destLid = AFX(folderMesh, Format(t_("Body_%d_lid.dat"), ib+1));
-			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, dt.symY);
+			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, x0z);
 			spy << Format("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(destLid));
 		} else if (automaticLid)
 			spy << Format("lid_mesh_%d = mesh_%d.translated_z(1e-7).generate_lid()     # See https://github.com/capytaine/capytaine/issues/589\n", ib+1, ib+1);

@@ -540,7 +540,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
 	else if (ext == ".h5")
 		ret = static_cast<BemioH5&>(*this).Load(fileName, Status);
-	else if (S(".out.1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0)
+	else if (S(".out.1.2.3.3sc.3fk.hst.4.6p.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0)
 		ret = static_cast<Wamit&>(*this).Load(fileName, false, 0, Status);
 	else
 		ret = t_("Unknown BEM input format");
@@ -560,16 +560,17 @@ void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads
 			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
 			UVector<Point3D> &listPoints) {
 	if (withPotentials && (solver == Hydro::WAMIT || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL)) {
-		for (int ib = 0; ib < dt.Nb; ++ib) {
+		int Nb = solver == Hydro::HAMS ? 1 : dt.Nb;
+		for (int ib = 0; ib < Nb; ++ib) {
 			const UVector<Panel> &pans = dt.msh[ib].dt.mesh.panels;
 			for (const Panel &p : pans)
 				listPoints << p.centroidPaint;
 		}
 	}	
 	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
-		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, y0z, lids, listDOF);
+		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, lids, listDOF);
 	else if (solver == Hydro::CAPYTAINE_PY)
-		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, lids);
+		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, lids);
 	else if (solver == Hydro::HAMS)
 		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints, false);
 	else if (solver == Hydro::HAMS_MREL)
@@ -579,7 +580,7 @@ void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads
 	else if (solver == Hydro::AQWA_DAT)
 		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, withQTF, x0z, y0z);
 	else if (solver == Hydro::WAMIT)
-		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, withPotentials, withQTF, x0z, y0z, lids);
+		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, withQTF, x0z, y0z, lids, listPoints);
 	else if (solver == Hydro::BEMROSETTA_H5) {
 		dt.solver = BEMROSETTA_H5;
 		if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) 
@@ -760,6 +761,13 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 			ret << Format(t_("Some bodies have the same name '%s'"), dt.msh[ib].dt.name);
 		else
 			bodynames << dt.msh[ib].dt.name;
+		
+		for (int r = 0; r < 6; ++r) {		// Some element of the inertia matrix is zero
+			if (dt.msh[ib].dt.M(r, r) < EPS_LEN) {
+				ret << Format(t_("Inertia matrix of body #%d has a zero in the diagonal"), ib+1);
+				break;
+			}
+		}
 	}
 	return ret;
 }
@@ -2962,15 +2970,15 @@ void Hydro::Symmetrize() {
 		SymmetrizeAinfA0(dt.A0);
 	
 	// QTF symmetry
-	// Qd(βi,βj,τi,τj) = Qd(βj,βi,τj,τi)∗
-	// Qs(βi,βj,τi,τj) = Qs(βj,βi,τj,τi)
+	// Q-(hi,hj,wk,wl) = Q-(hj,hi,wl,wk)∗
+	// Q+(hi,hj,wk,wl) = Q+(hj,hi,wl,wk)
 	// Forcing the average
-	// Qd(βi,βj,τi,τj) = 1/2[Qd(βi,βj,τi,τj) + Qd(βj,βi,τj,τi)∗]
-	// Qs(βi,βj,τi,τj) = 1/2[Qs(βi,βj,τi,τj) + Qs(βj,βi,τj,τi)]
+	// Q-(hi,hj,wk,wl) = 1/2[Q-(hi,hj,wk,wl) + Q-(hj,hi,wl,wk)∗]
+	// Q+(hi,hj,wk,wl) = 1/2[Q+(hi,hj,wk,wl) + Q+(hj,hi,wl,wk)]
 	auto SymmetrizeSumDif = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
-		int qwsize = dt.qw.size();
+		int qwsize = (int)dt.qw.size();
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-			UVector<bool> isdone(dt.qhead.size(), false);
+			UVector<bool> isdone((int)dt.qhead.size(), false);
 	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 	            if (!isdone[ih]) {
 	                UArray<MatrixXcd> &cij = qtf[ib][ih];
@@ -2986,7 +2994,7 @@ void Hydro::Symmetrize() {
 							if (cji[idf].rows() != qwsize || cji[idf].cols() != qwsize)
 								cji[idf] = Eigen::MatrixXcd::Constant(qwsize, qwsize, NaNComplex);
 							for (int iw = 0; iw < qwsize; ++iw) {
-								for (int jw = iw+1; jw < qwsize; ++jw) {
+								for (int jw = iw; jw < qwsize; ++jw) {
 									std::complex<double> &c_ij = cij[idf](iw, jw), 
 														 &c_ji = cji[idf](jw, iw);
 									if (isSum)		// Symmetric
@@ -3006,18 +3014,19 @@ void Hydro::Symmetrize() {
 	};
 	if (IsLoadedQTF(true)) 
 		SymmetrizeSumDif(dt.qtfsum, true);
-	if (IsLoadedQTF(false))
+	if (IsLoadedQTF(false)) {
 		SymmetrizeSumDif(dt.qtfdif, false);
-	
-	// QTF difference diagonal phase is zero
-	for (int ib = 0; ib < dt.Nb; ++ib) {
-        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
-			for (int idf = 0; idf < 6; ++idf) { 
-				MatrixXcd &cij = dt.qtfdif[ib][ih][idf];
-				for (int iw = 0; iw < cij.rows(); ++iw)
-					cij(iw, iw).imag(0); 
-			}
-        }
+
+		// QTF difference diagonal phase is zero
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+	        for (int ih = 0; ih < dt.qhead.size(); ++ih) {
+				for (int idf = 0; idf < 6; ++idf) { 
+					MatrixXcd &cij = dt.qtfdif[ib][ih][idf];
+					for (int iw = 0; iw < cij.rows(); ++iw)
+						cij(iw, iw).imag(0); 
+				}
+	        }
+		}
 	}
 	
 	String error = AfterLoad();
@@ -3125,14 +3134,13 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 	
 		if (ext == ".cal" || ext == ".tec" || ext == ".inf") 
 			ret = static_cast<Nemoh&>(hy).Load(file, Status);
-		else if (ext == ".out" || ext == ".hdf" || ext == ".mcn") 
+		else if (S(".out.hdf.mcn").Find(ext) >= 0) 
 			ret = static_cast<Wamit&>(hy).Load(file, false, 0, Status);
 		else if (ext == ".in") 
 			ret = static_cast<Hams&>(hy).Load(file, false, Status);
 		else if (ext == ".dat" || ext == ".fst") 
 			ret = static_cast<Fast&>(hy).Load(file, Status);
-		else if (ext == ".1" || ext == ".2" || ext == ".3" || ext == ".3sc" || ext == ".3fk" || ext == ".7" || ext == ".8" || ext == ".9" ||
-				   ext == ".hst" || ext == ".4" || ext == ".12s" || ext == ".12d" || ext == ".frc" || ext == ".pot" || ext == ".mmx") {
+		else if (S(".1.2.3.3sc.3fk.7.8.9.hst.4.12s.12d.frc.pot.mmx.6p").Find(ext) >= 0) {
 			String controlfile;
 			bool ishams = IsHAMS(file, controlfile);
 			if (!controlfile.IsEmpty())

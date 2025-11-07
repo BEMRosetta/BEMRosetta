@@ -293,6 +293,9 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 				surf = clone(meshes[ib].dt.mesh);
 		}
 		
+		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
+			throw Exc(t_("Impossible to save mesh. No mesh found"));		
+		
 		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || type == MIKE21_GRD)) {
 			Surface nsurf;
 			nsurf.CutX(surf);
@@ -311,7 +314,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			Surface::DetectTriBiP(surf.panels);
 		}
 		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
-			throw Exc(t_("Impossible to save mesh. No mesh found"));
+			throw Exc(t_("Impossible to save mesh. Symmetry has removed a mesh"));
 
 		nNodes += surf.nodes.size();
 		nPanels += surf.panels.size();
