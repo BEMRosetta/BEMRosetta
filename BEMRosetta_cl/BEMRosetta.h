@@ -1495,6 +1495,7 @@ protected:
 	bool Load_12(String fileName, bool isSum, int iperout, Function <bool(String, int)> Status);
 	bool Load_789(String fileName, int &iperout);
 	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int &iperout);
+	bool Load_5p(String fileName, int &iperout, Function <bool(String, int)> Status);
 	bool Load_6p(String fileName, int &iperout, Function <bool(String, int)> Status);
 		
 	void Save_1(String fileName, bool force_T = false) const;
@@ -1514,7 +1515,7 @@ protected:
 	
 	void Save_Fnames(String folder) const;
 	void Save_Config(String folder, int numThreads) const;
-	void Save_cfg(String fileName, bool withQTF, bool lid, bool force_T) const;
+	void Save_cfg(String fileName, bool withQTF, bool lid, bool force_T, bool is6p) const;
 
 private:
 	int GuessIperin(const UVector<double> &w);
