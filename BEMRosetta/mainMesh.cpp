@@ -78,7 +78,7 @@ void MainBody::Init() {
 	menuPlot.showMultiPan.Tip(t_("Shows wrong panels")).WhenAction    			= [&] {LoadSelTab(Bem());};
 	menuPlot.showAxis.Tip(t_("Shows system axis")).WhenAction  					= [&] {mainView.FullRefresh(*this);};
 	menuPlot.showLimits.Tip(t_("Shows boundaries of the geometry")).WhenAction 	= [&] {mainView.FullRefresh(*this);};
-	menuPlot.showCb.Tip(t_("Shows the centre of buoyancy")).WhenAction  		= [&] {mainView.FullRefresh(*this);};
+	menuPlot.showCb.Tip(t_("Shows the centre of buoyancy of the submerged volume")).WhenAction  		= [&] {mainView.FullRefresh(*this);};
 	menuPlot.showCg.Tip(t_("Shows the centre of gravity")).WhenAction  			= [&] {mainView.FullRefresh(*this);};
 	menuPlot.showCr.Tip(t_("Shows the centre of motion")).WhenAction  		    = [&] {mainView.FullRefresh(*this);};
 	menuPlot.showSel.Tip(t_("Shows volume around selected object")).WhenAction  = [&] {mainView.FullRefresh(*this);};
@@ -344,6 +344,7 @@ void MainBody::Init() {
 	menuEdit.butImageZ <<= THISBACK1(OnImage, 2);
 	menuEdit.butImageZ.Tip(t_("Mirrors the mesh in Z axis"));
 	
+	dialogRevolution.angle <<= 360;
 	dialogRevolution.butOK << THISBACK(OnAddRevolution);
 	dialogPolygon.butOK << THISBACK(OnAddPolygonalPanel);
 	
@@ -1643,6 +1644,10 @@ void DropCtrlDialogPolygon::UpdatePlot() {
 }
 
 void MainBody::OnAddRevolution() {
+	auto Prompt =[](String str)->bool {
+		return !PromptOKCancel(DeQtfLf(str));
+	};
+	
 	GuiLock __;
 	
 	dialogRevolution.Close();
@@ -1665,11 +1670,15 @@ void MainBody::OnAddRevolution() {
 		BEM::PrintError(t_("Unsufficient value number in list"));
 		return;
 	}
+	if (IsNull(~dialogRevolution.angle) || double(~dialogRevolution.angle) <= 0 || double(~dialogRevolution.angle) > 360) {
+		BEM::PrintError(t_("Incorrect or undefined angle"));
+		return;
+	}
 	
 	WaitCursor waitcursor;
 	mainView.surf.Disable();
 	try {
-		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals);
+		Bem().AddRevolution(~menuEdit.edit_x, ~menuEdit.edit_y, ~menuEdit.edit_z, ~menuEdit.edit_size, vals, ~dialogRevolution.angle, ~dialogRevolution.opClose, Prompt);
 		
 		Body &msh = Last(Bem().surfs);
 		msh.dt.name = t_("Revolution");

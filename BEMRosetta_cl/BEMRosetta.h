@@ -187,7 +187,7 @@ public:
 		Point3D projectionPos = Null, projectionNeg = Null;
 		Pointf cgZ0surface = Null;
 		Point3D cb = Null;
-		Point3D cg = Null, cg0 = Null, c0 = Null;
+		Point3D cg = Null, cg0 = Null, c0 = Point3D(Null, Null, Null);
 		double Vo = Null;   				// Displaced volume
 		MatrixXd M,
 				 Dlin, Dquad, 
@@ -770,7 +770,11 @@ public:
 		return std::complex<double>(B_(ndim, ifr, idf, jdf), dt.w[ifr]*(A_(ndim, ifr, idf, jdf) - Ainf_(ndim, idf, jdf))/(!ndim ? 1. : dt.w[ifr]));
 	}
 	
-	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {return dt.dimenSTS  ? dt.sts[idf][jdf].TFS[ifr]*g_rho_dim()/g_rho_ndim() : dt.sts[idf][jdf].TFS[ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
+	std::complex<double> TFS_dim(int ifr, int idf, int jdf) 		const {
+		//if (dt.sts[idf][jdf].TFS.size() <= ifr)
+		//	return std::complex<double>(Null, Null);
+		return dt.dimenSTS  ? dt.sts[idf][jdf].TFS[ifr]*g_rho_dim()/g_rho_ndim() : dt.sts[idf][jdf].TFS[ifr]*(rho_dim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);
+	}
 	std::complex<double> TFS_ndim(int ifr, int idf, int jdf) 		const {return !dt.dimenSTS ? dt.sts[idf][jdf].TFS[ifr]/**g_rho_ndim()/g_rho_dim()*/ : dt.sts[idf][jdf].TFS[ifr]/(rho_ndim()*pow(dt.len, GetK_AB(idf, jdf))*dt.w[ifr]);}
 	std::complex<double> TFS_(bool ndim, int ifr, int idf, int jdf) const {return ndim ? TFS_ndim(ifr, idf, jdf) : TFS_dim(ifr, idf, jdf);}
 	
@@ -832,7 +836,7 @@ public:
 	    VectorXd Tirf;	  				// [Nt]				Time-window for the calculation of the IRF
 	    
 	    Forces ex; 						// Excitation
-	    Forces sc;			 			// Diffraction scattering
+	    Forces sc;			 			// Scattering
 	    Forces fk; 						// Froude-Krylov
 	    Forces sc_pot; 					// Scattering obtained through potentials
 	   	Forces fk_pot; 					// Froude-Krylov obtained through potentials
@@ -1003,7 +1007,7 @@ public:
 		return true;
 	}
 	bool IsLoadedCMoor(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cmoor.size() > 0 && dt.msh[ib].dt.Cmoor.rows() > idf && dt.msh[ib].dt.Cmoor.cols() > jdf && IsNum(dt.msh[ib].dt.Cmoor(idf, jdf));}
-	bool IsLoadedCAdd(int ib = 0, int idf = 0, int jdf = 0)const {return dt.msh[ib].dt.Cadd.size() > 0 && dt.msh[ib].dt.Cadd.rows() > idf && dt.msh[ib].dt.Cadd.cols() > jdf && IsNum(dt.msh[ib].dt.Cadd(idf, jdf));}
+	bool IsLoadedCAdd(int ib = 0, int idf = 0, int jdf = 0) const {return dt.msh[ib].dt.Cadd.size() > 0 && dt.msh[ib].dt.Cadd.rows() > idf && dt.msh[ib].dt.Cadd.cols() > jdf && IsNum(dt.msh[ib].dt.Cadd(idf, jdf));}
 	bool IsLoadedM(int ib = 0, int idf = 0, int jdf = 0)	const {return dt.msh[ib].dt.M.size() > 0 && dt.msh[ib].dt.M.rows() > idf && dt.msh[ib].dt.M.cols() > jdf && IsNum(dt.msh[ib].dt.M(idf, jdf));}
 	bool IsLoadedAnyM() const {
 		for (int ib = 0; ib < dt.Nb; ++ib)
@@ -1021,7 +1025,7 @@ public:
 	bool IsLoadedForce(const Forces &f, int idf = 0, int ih = 0, int ib = 0) const {
 						return f.size() > ib && f[ib].size() > ih && f[ib][ih].cols() > idf && f[ib][ih].rows() > 0 && IsNum(f[ib][ih](0, idf));}
 											 	
-	bool IsLoadedStateSpace()	  			 const {return !dt.sts.IsEmpty();}
+	bool IsLoadedStateSpace(int idf = 0, int jdf = 0) const {return dt.sts.size() > 0 && dt.sts[idf][jdf].TFS.size() > 0;}
 	bool IsLoadedQTF(bool isSum, int ib = 0) const {return isSum ? dt.qtfsum.size() > ib : dt.qtfdif.size() > ib;}
 	bool IsLoadedMD(int ib = 0, int ih = 0)	 const {return dt.md.size() > ib && dt.md[ib].size() > ih && dt.md[ib][ih].size() == 6 && dt.md[ib][ih][0].size() > 0 && IsNum(dt.md[ib][ih][0](0));}
 	static bool IsLoadedMD(const UArray<UArray<UArray<VectorXd>>> &mD, int ib = 0, int ih = 0) {return mD.size() > ib && mD[ib].size() > ih && mD[ib][ih].size() == 6 && mD[ib][ih][0].size() > 0 && IsNum(mD[ib][ih][0](0));}
@@ -1497,6 +1501,7 @@ protected:
 	bool Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>>> &qtf, int &iperout);
 	bool Load_5p(String fileName, int &iperout, Function <bool(String, int)> Status);
 	bool Load_6p(String fileName, int &iperout, Function <bool(String, int)> Status);
+	bool Load_pnl(String fileName, UVector<int> &pnlId, UVector<int> &panelId);
 		
 	void Save_1(String fileName, bool force_T = false) const;
 	void Save_3(String fileName, bool force_T = false) const;
@@ -1901,7 +1906,7 @@ public:
 	void CopyQTF_MD(int id);
 		
 	void AddFlatRectangle(double x, double y, double z, double size, double panWidthX, double panWidthY);
-	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals);
+	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals, double angle = 360, bool close = true, Function <bool(String)> Prompt = Null);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads);
 	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
 	void Extrude(int id, double dx, double dy, double dz, bool close);
@@ -1917,12 +1922,12 @@ public:
 	void UpdateHeadAllMD();
 	
 	//const String bemFilesExt = ".1 .2 .3 .hst .4 .12s .12d .frc .pot .out .in .cal .tec .inf .ah1 .lis .qtf .mat .dat .bem .fst .yml";
-	const String bstFilesExt = ".in .out .fst .1 .2 .3 .3sc .3fk .hst .4 .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc .mqt"	// Priority
+	const String bstFilesExt = ".in .out .fst .1 .2 .3 .3sc .3fk .hst .4 .5p .12s .12d .frc .pot .mmx .cal .tec .inf .ah1 .lis .qtf .hdb .mat .dat .bemr .yml .h5 .nc .mqt"	// Priority
 #ifdef PLATFORM_WIN32
 		" .owr"
 #endif
 	;
-	const UVector<String> bemExtSets = {".1.2.3.hst.4.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat.mqt"};	// Any of these files opens all, and it is avoided to load them again
+	const UVector<String> bemExtSets = {".1.2.3.hst.4.5p.9.12s.12d.frc.pot.mmx", ".lis.qtf.dat.mqt"};	// Any of these files opens all, and it is avoided to load them again
 	String bemFilesAst;
 	
 	int GetBEMExtSet(String file) {

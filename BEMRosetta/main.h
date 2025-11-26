@@ -159,7 +159,7 @@ public:
 		case Hydro::PLOT_RAO_1:
 		case Hydro::PLOT_RAO_2:		return !hy->IsLoadedRAO(idf%6, jdf, idf/6);
 		case Hydro::PLOT_TFS_1:
-		case Hydro::PLOT_TFS_2:		return !hy->dt.sts[idf][jdf].TFS.IsEmpty();
+		case Hydro::PLOT_TFS_2:		return hy->dt.sts[idf][jdf].TFS.IsEmpty();
 		case Hydro::PLOT_Z_1:
 		case Hydro::PLOT_Z_2:		return !hy->IsLoadedA(idf, jdf) || !hy->IsLoadedAinf(idf, jdf) || !hy->IsLoadedB(idf, jdf);
 		default: 		NEVER();	return true;
@@ -1422,6 +1422,7 @@ public:
 private:
 	UArray<Option> options;
 	RectEnterSet frameSet;
+	int idd = -1;
 };
 
 class BodyBody : public WithBodyBodyTable<StaticRect> {

@@ -145,8 +145,8 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
 		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
-	if (!FileExists(Bem().foammPath))
-		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
+//	if (!FileExists(Bem().foammPath))
+//		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ibs.size(); ++i) {
 		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.size()));
 		Get_Each(ibs[i], idfs[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
@@ -160,14 +160,16 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
 	String file = AFX(folder, "temp_file.mat");
-	
+
+file = AFX(GetDesktopFolder(), "temp_file2.mat");
+
+	int idf = ibody*6 + _idf;
+	int jdf = ibody*6 + _jdf;
+
 	MatFile mat;
 	
 	if (!mat.OpenCreate(file, MAT_FT_MAT5)) 
 		throw Exc(Format(t_("Problem creating FOAMM file '%s'"), file));
-
-	int idf = ibody*6 + _idf;
-	int jdf = ibody*6 + _jdf;
 
 	MatrixXd matA(dt.Nf, 1);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
@@ -190,22 +192,26 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	if (!mat.Set("w", matw))
  		throw Exc(Format(t_("Problem writing %s to file '%s'"), "w", file));
 	
-	/*MatMatrix<double> matDof(1, 6);
-	for (int i = 0; i < 6; ++i) {
-		if (i == idf)
-			matDof(0, i) = 1;
-		else
-			matDof(0, i) = 0;
-	}
-	if (!mat.VarWrite("Dof", matDof))
- 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));*/
+				/*MatMatrix<double> matDof(1, 6);
+				for (int i = 0; i < 6; ++i) {
+					if (i == idf)
+						matDof(0, i) = 1;
+					else
+						matDof(0, i) = 0;
+				}
+				if (!mat.VarWrite("Dof", matDof))
+			 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));*/
 	
 	UVector<String> optionsVars;
 	optionsVars << "Mode" << "Method" << "FreqRangeChoice" << "FreqChoice";
 	MatVar options("Options", 1, 1, optionsVars);
 	
-	options.SetStruct<double>("Mode", 0);
-	options.SetStruct<double>("Method", 0);
+	MatrixXd mode(1, 1);
+	mode(0, 0) = 0;
+	options.SetStruct("Mode", mode);
+	MatrixXd method(1, 1);
+	method(0, 0) = 0;
+	options.SetStruct("Method", method);
 	//options.VarWriteStruct("FreqRangeChoice", "G");
 	//options.VarWriteStruct("FreqChoice", "G");
 	
@@ -222,15 +228,31 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 	UVector<String> optimVars;
 	optimVars << "InitCond" << "Tol" << "maxEval" << "maxIter" << "StepTol" << "ThresRel" << "ThresAbs";
 	MatVar optim("Optim", 1, 1, optimVars);
-	optim.SetStruct<double>("InitCond", 50);
-	optim.SetStruct<double>("Tol", 1E-5);
-	optim.SetStruct<double>("maxEval", 1E3);
-	optim.SetStruct<double>("maxIter", 200);
-	optim.SetStruct<double>("StepTol", 1E-6);
-	optim.SetStruct<double>("ThresRel", 0.03);
-	optim.SetStruct<double>("ThresAbs", 0.1);
+
+	MatrixXd InitCond(1, 1);
+	InitCond(0, 0) = 50;	
+	optim.SetStruct("InitCond", InitCond);
+	MatrixXd Tol(1, 1);
+	Tol(0, 0) = 1E-5;	
+	optim.SetStruct("Tol", Tol);
+	MatrixXd maxEval(1, 1);
+	maxEval(0, 0) = 1E3;	
+	optim.SetStruct("maxEval", maxEval);
+	MatrixXd maxIter(1, 1);
+	maxIter(0, 0) = 200;	
+	optim.SetStruct("maxIter", maxIter);
+	MatrixXd StepTol(1, 1);
+	StepTol(0, 0) = 1E-6;	
+	optim.SetStruct("StepTol", StepTol);
+	MatrixXd ThresRel(1, 1);
+	ThresRel(0, 0) = 0.03;	
+	optim.SetStruct("ThresRel", ThresRel);
+	MatrixXd ThresAbs(1, 1);
+	ThresAbs(0, 0) = 0.1;	
+	optim.SetStruct("ThresAbs", ThresAbs);
 	
 	options.SetStruct("Optim", optim);
+	
 	mat.Set(options);
 	
 	mat.Close();
@@ -269,7 +291,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 		DeleteFolderDeep(folder);	Sleep(100);
 		throw Exc(t_("FOAMM ended with error"));
 	}
-	Load_mat(file, idf, jdf, false);
-	DeleteFolderDeep(folder);		Sleep(100);
+	Load_mat(file, idf, jdf, false);	Sleep(100);
+	DeleteFolderDeep(folder);			Sleep(100);
 }
 

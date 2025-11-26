@@ -160,7 +160,7 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 	arrayCases.Clear();
 	options.Clear();
 	
-	//id = _id;
+	idd = _id;
 	
 	ASSERT(_id < Bem().hydros.size());
 	
@@ -170,8 +170,8 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 		for (int idf = 0; idf < 6; ++idf) {
 			for (int jdf = 0; jdf < 6; ++jdf) {
 				if (!bem.onlyDiagonal || idf == jdf) {
-					int _idf = ib*6 + idf/*hydro.GetOrder()[ib*6 + idf]*/;
-					int _jdf = ib*6 + jdf/*hydro.GetOrder()[ib*6 + jdf]*/;
+					int _idf = ib*6 + idf;
+					int _jdf = ib*6 + jdf;
 	
 					if (hy.IsLoadedA(_idf, _jdf) && hy.IsLoadedB(_idf, jdf)) {
 						arrayCases.Add(false, ib+1, BEM::StrDOF(idf), BEM::StrDOF(jdf));
@@ -189,11 +189,16 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 
 void MainSetupFOAMM::WhenSelArrayCases() {
 	try {
+		if (idd < 0)
+			return;
 		int row = arrayCases.GetCursor();
 		if (row < 0)
 			return;
 	
 		bool opChoose = arrayCases.Get(row, 0);
+		int ib = int(arrayCases.Get(row, 1)) - 1;
+		int idf = BEM::DOFStr(arrayCases.Get(row, 2));
+		int jdf = BEM::DOFStr(arrayCases.Get(row, 3));
 		fromFreq <<= arrayCases.Get(row, 4);
 		toFreq   <<= arrayCases.Get(row, 5);
 
@@ -207,11 +212,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		if (opChoose)
 			Status(Check(~fromFreq, ~toFreq, ~freqs));
 		
-		const Hydro &hy = Bem().hydros[row];
-		
-		int ib = int(arrayCases.Get(row, 1)) - 1;
-		int idf = BEM::DOFStr(arrayCases.Get(row, 2));
-		int jdf = BEM::DOFStr(arrayCases.Get(row, 3));
+		const Hydro &hy = Bem().hydros[idd];
 		
 		plots.Init(idf + 6*ib, jdf + 6*ib, Hydro::DATA_STS);
 		MainBEM &mbm = GetParentCtrl<MainBEM>(this);
@@ -375,7 +376,7 @@ bool MenuFOAMM::OnFOAMM() {
 				ProcessEvents(); 
 			});
 	} catch (Exc e) {
-		ret = DeQtfLf(e);
+		ret = e;
 	}
 	foammWorking.Hide();
 	foammWorking.Stop();

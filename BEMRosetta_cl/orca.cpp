@@ -123,7 +123,7 @@ Orca::~Orca() {
 	}
 }
 	
-bool Orca::Init(String _dllFile) {
+bool Orca::InitDll(String _dllFile) {
 	dllFile = _dllFile;
 	if (!dll.Load(dllFile)) {
 		BEM::PrintWarning(Format(t_("OrcaFlex DLL is not found in '%s'"), dllFile));
@@ -277,13 +277,12 @@ String Orca::FileVersionBin(String filename) {
 	
 	file.Read<char>();
 	
-	String str = "OrcaWave";
-	StringBuffer nstr(str.GetCount());
-	
-	for (int i = 0; i < str.GetCount(); ++i)
+	StringBuffer nstr(8);
+	for (int i = 0; i < 8; ++i)
 		nstr[i] = file.Read<char>();
+	String str = ToUpper(String(nstr));
 	
-	if (str != String(nstr))
+	if (ToUpper("OrcaWave") != str && ToUpper("OrcaFlex") != str)
 		return String();
 	
 	file.Read<char>();
@@ -332,24 +331,91 @@ String Orca::FileVersion(String filename) {
 	else
 		return ret;
 }
-			
-bool Orca::FindInit() {
+
+bool Orca::InitNewest() {
+	return InitVersion("");
+}
+
+bool Orca::InitFile(String filename) {
+	return InitVersion(fileVersion = FileVersion(filename));
+}
+
+String Orca::GetVersionString(String version) {
+	UVector<String> ver = Split(version, '.');
+	String ret;
+	ret << ver[0] << "." << ver[1] << String(char(ScanInt(ver[2])) + 'a', 1);
+	return ret;
+}
+
+double Orca::GetVersionNumber(String version) {
+	UVector<String> ver = Split(version, '.');
+	String ret;
+	ret << ver[0] << "." << ver[1];
+	return ScanDouble(ret);
+}
+	
+bool Orca::InitVersion(String version) {
 	UArray<SoftwareDetails> orcadata = GetSoftwareDetails("*OrcaFlex*");	// Get installed versions
+	
+	for (int i = orcadata.size()-1; i >= 0; --i) {		
+		if (orcadata[i].version.IsEmpty())		// Lack of data
+			orcadata.Remove(i);
+		if (orcadata[i].path.IsEmpty()) {		// Path reconstructed
+			String pth = orcadata[i].name;
+			pth.Replace("OrcaFlex", "");
+			pth = AFX(GetProgramsFolderX86(), "Orcina", "OrcaFlex", Trim(pth));
+			if (!DirectoryExists(pth))
+				orcadata.Remove(i);
+			orcadata[i].path = pth;
+		}
+	}
+
 	if (orcadata.IsEmpty()) {
-		BEM::PrintWarning(t_("OrcaFlex is not installed"));
+		BEM::PrintWarning(S("\n") + t_("OrcaFlex is not installed"));
 		return false;
 	}
+		
+	int iversion = -1;
 	
-	for (int i = orcadata.size()-1; i >= 0; --i)		// lack of data
-		if (orcadata[i].version.IsEmpty() || orcadata[i].path.IsEmpty())
-			orcadata.Remove(i);
-	
-	int iversion = 0;
-	UVector<int> version0 = orcadata[0].GetVersion();
-	for (int i = 1; i < orcadata.size(); ++i) {							// Get the newest version from the installed
-		UVector<int> version = orcadata[i].GetVersion();
-		if (SoftwareDetails::IsHigherVersion(version, version0) > 0)	// Version are numbers separated by .
-			iversion = i;
+	if (version.IsEmpty()) {												// Get the newest version from the installed
+		iversion = 0;
+		UVector<int> version0 = orcadata[0].GetVersion();
+		for (int i = 1; i < orcadata.size(); ++i) {
+			UVector<int> version = orcadata[i].GetVersion();
+			if (SoftwareDetails::IsHigherVersion(version, version0) > 0)	// Version are numbers separated by .
+				iversion = i;
+		}
+	} else {
+		double lowest = 1000, highest = 0;
+		int ilowest, ihighest;
+		for (int i = 0; i < orcadata.size(); ++i) {
+			double number = GetVersionNumber(orcadata[i].version);
+			if (number < lowest) {
+				lowest = number;
+				ilowest = number;
+			}
+			if (number > highest) {
+				highest = number;
+				ihighest = number;
+			}
+			if (GetVersionString(orcadata[i].version).StartsWith(version)) {		// 11.6 with 11.6b matches
+				iversion = i;
+				break;
+			}
+		}
+		if (iversion < 0) {		// Trying to use the most compatible version available
+			double number = ScanDouble(version);
+			if (number <= lowest) {
+				iversion = ilowest;
+				BEM::PrintWarning("\n" + Format(t_("Version %s is not installed. Version %.1f will be used instead"), version, lowest));
+			} else if (number >= highest) {
+			 	iversion = ihighest;
+			 	BEM::PrintWarning("\n" + Format(t_("Version %s is not installed. Version %.1f will be used instead"), version, highest));
+			} else {
+				iversion = ihighest;		
+				BEM::PrintWarning("\n" + Format(t_("Version %s is not installed. Version %.1f will be used instead"), version, highest));
+			}
+		}			
 	}
 	
 	BEM::Print("\nAvailable OrcaFlex versions:");
@@ -362,14 +428,7 @@ bool Orca::FindInit() {
 		str << Format("%s. Version: %s. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].path);
 		BEM::Print(str);
 	}
-	UVector<String> split = Split(orcadata[iversion].version, ".");
-	dllVersion = "";
-	if (split.size() > 0)
-		dllVersion << split[0];
-	if (split.size() > 1)	
- 		dllVersion << "." << split[1];
- 	if (split.size() > 2)		
- 		dllVersion << char('a' + ScanInt(split[2]));
+	dllVersion = GetVersionString(orcadata[iversion].version);
 	BEM::Print(Format("\nBEMRosetta OrcaWave version: %s", BEMRVersion()));
 	
 	String arch;
@@ -380,7 +439,7 @@ bool Orca::FindInit() {
 #endif
 	String path = AFX(orcadata[iversion].path, "OrcFxAPI", arch, "OrcFxAPI.dll");	// Assembles the path
 	
-	return Init(path);
+	return InitDll(path);
 }
 		
 int Orca::GetDataType(HINSTANCE handle, const wchar_t *name) {
@@ -491,41 +550,17 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, NULL))
 		throwError("Load dotHydrostaticResults");
 	
-	if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo))
-		throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo)));			
-	
-	//hy.dt.Nb = sz/sizeof(TDiffractionBodyHydrostaticInfo);
-	Buffer<TDiffractionBodyHydrostaticInfo> bodies(hy.dt.Nb);
-	if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, bodies.begin()))
-		throwError("Load dotHydrostaticResults 2");
-	
-	hy.dt.msh.SetCount(hy.dt.Nb);
-	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
-		hy.dt.msh[ib].dt.C.resize(6, 6);
-	
-	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
-		hy.dt.msh[ib].dt.M.resize(6, 6);
-	
-	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-		const TDiffractionBodyHydrostaticInfo &b = bodies[ib];
-		
-		hy.dt.msh[ib].dt.Vo = b.Volume*factor.len*factor.len*factor.len;
-		for (int idf = 0; idf < 3; ++idf) {
-			hy.dt.msh[ib].dt.cb[idf] = b.CentreOfBuoyancy[idf]*factor.len;
-			hy.dt.msh[ib].dt.cg[idf] = b.CentreOfMass[idf]*factor.len;
-		}
-		for (int r = 0; r < 6; ++r) {
-			for (int c = 0; c < 6; ++c) {
-				hy.dt.msh[ib].dt.C(r, c) = b.RestoringMatrix[r][c]*factor.K(r, c);
-				hy.dt.msh[ib].dt.M(r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
-			}
-		}
-		if (!IsNull(c0)) 
-			Surface::TranslateInertia66(hy.dt.msh[ib].dt.M, hy.dt.msh[ib].dt.cg, Point3D(0,0,0), c0);
-		
-		hy.dt.msh[ib].dt.name = FormatInt(ib+1);
-		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
-	}
+	if (dllVersion.StartsWith("11.5")) {
+		if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo_1_5))
+			throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", 
+								sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo_1_5)));			
+		LoadDiffractionBodyHydrostatic<TDiffractionBodyHydrostaticInfo_1_5>(hy, sz, factor, c0);
+	} else {
+		if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo_1_6))
+			throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", 
+								sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo_1_6)));			
+		LoadDiffractionBodyHydrostatic<TDiffractionBodyHydrostaticInfo_1_6>(hy, sz, factor, c0);
+	} 
 	
 	auto LoadAB = [&](UArray<UArray<VectorXd>> &ab, int type, const char *stype, const Matrix<double, 6, 6> &factor) {
 		hy.Initialize_AB(ab);
@@ -780,18 +815,15 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	
 	if (GetDiffractionOutput(wave, dotPanelGeometry, &sz, NULL))
 		throwError("Load dotPanelGeometry");			
-		
-	if (sz/Np != sizeof(TDiffractionPanelGeometry))
-		throwError("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match");			
 	
-	Buffer<TDiffractionPanelGeometry> panels(Np);
-	if (GetDiffractionOutput(wave, dotPanelGeometry, &sz, panels.begin()))
-		throwError("Load dotPanelGeometry 2");
+	UVector<int> panelId(Np), panelIb(Np);
 	
 	hy.dt.msh.SetCount(hy.dt.Nb);
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 		hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
-		if (IsNull(c0))
+		if (!dllVersion.StartsWith("11.5"))
+			;
+		else if (IsNull(c0))
 			hy.dt.msh[ib].dt.c0 = Point3D(0, 0, 0);
 		else {
 			hy.dt.msh[ib].dt.c0 = c0;
@@ -799,29 +831,19 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		}
 	}
 	
-	UVector<int> panelId(Np), panelIb(Np);
-	
-	for (int ip = 0; ip < Np; ++ip) {
-		const TDiffractionPanelGeometry &pan = panels[ip];
-		int ib = pan.ObjectId;
-		
-		if (ib < 0)		// Artificial damping lid not loaded
-			continue;
-		
-		Panel &p = hy.dt.msh[ib].dt.mesh.panels.Add();
-		panelId[ip] = hy.dt.msh[ib].dt.mesh.panels.size()-1;
-		panelIb[ip] = ib;
-		for (int i = 0; i < 4; ++i) {
-			const TVector &v0 = pan.Vertices[i];
-			
-			if (i == 3 && std::isnan<double>(v0[0]))
-				p.id[i] = p.id[0];
-			else {
-				Point3D pnt(v0[0]*factor.len, v0[1]*factor.len, v0[2]*factor.len);
-				p.id[i] = FindAdd(hy.dt.msh[ib].dt.mesh.nodes, pnt);
-			}
-		}
+	if (dllVersion.StartsWith("11.5")) {
+		if (sz/Np != sizeof(TDiffractionPanelGeometry_1_5))
+			throwError(Format("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match (%d != %d)", 
+									sz/Np, (int)sizeof(TDiffractionPanelGeometry_1_5)));	
+		LoadDiffractionPanelGeometry<TDiffractionPanelGeometry_1_5>(hy, sz, factor, Np, panelId, panelIb);
 	}
+	else {
+		if (sz/Np != sizeof(TDiffractionPanelGeometry_1_6))
+			throwError(Format("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match (%d != %d)", 
+									sz/Np, (int)sizeof(TDiffractionPanelGeometry_1_6)));	
+		LoadDiffractionPanelGeometry<TDiffractionPanelGeometry_1_6>(hy, sz, factor, Np, panelId, panelIb);	
+	}	
+	
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) 
 		hy.dt.msh[ib].AfterLoad(hy.dt.rho, hy.dt.g, false, true);
 	
@@ -871,7 +893,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 				}
 		}
 				
-		hy.GetPotentialsIncident();
+		hy.GetPotentialsIncident();		// Remove the incident from the diffraction potentials
 		
 		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
 			int nnp = hy.dt.msh[ib].dt.mesh.panels.size();

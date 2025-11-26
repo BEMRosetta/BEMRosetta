@@ -453,12 +453,12 @@ void BEM::AddFlatRectangle(double x, double y, double z, double size, double pan
 	}	
 }
 
-void BEM::AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals) {
+void BEM::AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals, double angle, bool close, Function <bool(String)> Prompt) {
 	try {
 		Body &surf = surfs.Add();
 
 		surf.dt.SetCode(Body::EDIT);
-		surf.dt.mesh.AddRevolution(vals, size); 
+		surf.dt.mesh.AddRevolution(vals, size, angle, close, Prompt); 
 		surf.dt.mesh.Translate(x, y, z);
 		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {

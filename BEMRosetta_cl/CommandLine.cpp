@@ -325,7 +325,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 	
 #ifdef PLATFORM_WIN32
 	Orca orca;
-	bool dllOrcaLoaded = false;
 	UVector<String> paramList;
 	UArray<Point3D> centreList;
 	Point3D centreOrca = Point3D(0, 0, 0);
@@ -1713,13 +1712,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 #ifdef PLATFORM_WIN32						
 					else if (nextcommands == "orca") {
 						if (param == "-rw" || param == "-runwave") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-									
 							CheckIfAvailableArg(command, ++ic, "-runwave from");
 							String from = command[ic];
 							CheckIfAvailableArg(command, ++ic, "-runwave to");
@@ -1750,13 +1742,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
 							}
 						} else if (param == "-loadwave") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-									
 							CheckIfAvailableArg(command, ++ic, "-loadwave from");
 							String from = command[ic];
 							
@@ -1830,13 +1815,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							else
 								BEM::Print("\n" + Format(t_("Diffraction results saved to %s"), to));		
 						} else if (param == "-rf" || param == "-runflex") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-									
 							CheckIfAvailableArg(command, ++ic, "-runflex from");
 							String from = command[ic];
 							CheckIfAvailableArg(command, ++ic, "-runflex to");
@@ -1874,13 +1852,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									BEM::Print("\n" + Format(t_("Simulation results saved at '%s'"), to));
 							}
 						} else if (param == "-ls" || param == "-loadsim") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-									
 							CheckIfAvailableArg(command, ++ic, "-loadSim sim");
 							String from = command[ic];
 							
@@ -1905,13 +1876,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							else
 								BEM::Print("\n" + Format(t_("Simulation '%s' loaded"), from));
 						} else if (param == "-numthread") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-							
 							CheckIfAvailableArg(command, ++ic, "-numthread num");
 							int numth = ScanInt(command[ic]);
 							if (IsNull(numth))
@@ -1921,13 +1885,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							
 							BEM::Print("\n" + Format(t_("Thread number set to %d"), numth));
 						} else if (param == "-numtries") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-							
 							CheckIfAvailableArg(command, ++ic, "-numtries num");
 							numOrcaTries = ScanInt(command[ic]);
 							if (IsNull(numOrcaTries))
@@ -1935,13 +1892,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 
 							BEM::Print("\n" + Format(t_("Number of OrcaFlex license tries set to %d"), numOrcaTries));
 						} else if (param == "-timelog") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-							
 							CheckIfAvailableArg(command, ++ic, "-timelog num");
 							int timeLog = int(StringToSeconds(command[ic]));
 							if (IsNull(timeLog))
@@ -1956,13 +1906,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							paramList << command[ic];
 							centreList << centreOrca;
 						} else if (param == "-c" || param == "-convert") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-							
 							CheckIfAvailableArg(command, ++ic, "-convert");
 							
 							String file = FileName(command[ic]);
@@ -1980,14 +1923,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							paramList.Clear();
 							centreList.Clear();
 						} else if (param == "-isavailable") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded) {
-								BEM::PrintWarning(S("\n") + t_("OrcaFlex is not installed"));
-								break;
-							}
 							int numTry = 2;
 							do {
 								if (orca.IsAvailable())
@@ -2001,13 +1936,6 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 							BEM::Print(S("\n") + t_("OrcaFLEX is installed and available"));
 						} else if (param == "-p" || param == "-print") {
-							if (!dllOrcaLoaded) {
-								if (orca.FindInit()) 
-									dllOrcaLoaded = true;		
-							}
-							if (!dllOrcaLoaded)
-								throw Exc(t_("DLL not found"));
-							
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
 								String pparam = ToLower(command[ic]);
@@ -2063,9 +1991,9 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 								if (!FileExists(file)) 	
 									throw Exc(Format(t_("File '%s' not found"), file)); 
 							}
-							if (!orca.Init(file))
+							if (!orca.InitDll(file))
 								throw Exc(Format(t_("DLL '%s' not found"), command[ic]));
-							dllOrcaLoaded = true;
+							
 							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), orca.GetDLLPath()));
 						} else 
 							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));

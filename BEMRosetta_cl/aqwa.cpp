@@ -1709,7 +1709,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
 	
 	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
-	bat << "call \"" << Bem().aqwaPath << "\" Analysis.dat";	// Removed /nowind 
+	bat << "call \"" << Bem().aqwaPath << "\" Analysis.dat /nowind";	
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
 

@@ -14,8 +14,6 @@ String OrcaWave::Load(String _file, double) {
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), dt.file));
 
-		BEM::Print("\n- " + S(t_("YML file")));
-
 #ifdef PLATFORM_WIN32
 		if (GetFileExt(dt.file) == ".owr")
 			Load_OWR();
@@ -586,6 +584,8 @@ void OrcaWave::Load_OF_YML() {
 }
 
 void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const {
+	bool isv15 = false;
+	
 	String exeName = "bemrosetta_cl";
 	if (bin) {
 		String exe = GetExeFilePath();		
@@ -645,9 +645,9 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			"g: " << Format("%.5f", dt.g) << "\n";
 	
 	out << 	"# Calculation & output\n"
-			"SolveType: " << (withQTF ? "Full QTF calculation" : "Potential and source formulations") << "\n"
+			"SolveType: " << (withQTF ? "Full QTF calculation" : "Potential formulation only") << "\n"
 			"LoadRAOCalculationMethod: Diffraction\n"
-			"QuadraticLoadPressureIntegration: No\n"
+			//"QuadraticLoadPressureIntegration: No\n"
 			"QuadraticLoadControlSurface: " << (withQTF ? "Yes" : "No") << "\n"
 			"QuadraticLoadMomentumConservation: No\n";
 	out << 	(withQTF ? "PreferredQuadraticLoadCalculationMethod: Control surface\n" : "");
@@ -658,17 +658,23 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			"DivideNonPlanarPanels: Yes\n"
 			"LinearSolverMethod: Direct LU\n"
 			"OutputPanelPressures: " << (withPotentials ? "Yes" : "No") << "\n"
-			"OutputPanelVelocities: No\n"
+			//"OutputPanelVelocities: No\n"
 			"OutputBodyWireFrames: " << (withMesh ? "Yes" : "No") << "\n"
 			"OutputIntermediateResults: " << (withPotentials ? "Yes" : "No") << "\n"
 			"ValidatePanelArrangement: No\n"
 			"BodyVolumeWarningLevel: 1e-12\n"
 			"PanelAspectRatioWarningLevel: 25\n"
-			"PanelsPerWavelengthWarningLevel: 5\n";
+			"PanelsPerWavelengthWarningLevel: 5\n"
+			"ComputationStrategy: Optimised for memory\n";			// Also "Optimised for run time"
 	
-	out << 	"# Environment\n"
-			"WaterDepth: " << (dt.h > 0 ? Format("%.2f", dt.h) : "Infinity") << "\n"
-			"WaterDensity: " << Format("%.2f", dt.rho) << "\n"
+	out << 	"# Environment\n";
+	if (isv15)
+		out << 	"WaterDepth: " << (dt.h > 0 ? Format("%.2f", dt.h) : "Infinity") << "\n";
+	else {
+		out << 	"SeabedOriginDepth: " << (dt.h > 0 ? Format("%.2f", dt.h) : "Infinity") << "\n"
+				"NominalDepth: ~\n"; 
+	}
+	out <<  "WaterDensity: " << Format("%.2f", dt.rho) << "\n"
 			"WavesReferredToBy: frequency (rad/s)\n"
 			"HasWaveSpectrumForDragLinearisation: No\n"
 			"MorisonFluidVelocity: Undisturbed incident wave\n"
@@ -713,8 +719,15 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		else
 			out << 	"None";
 		out << 	"\n"
-				"    BodyMeshDipolePanels: \n"
-				"    BodyAddInteriorSurfacePanels: Yes\n"
+				"    BodyMeshDipolePanels: \n";
+		if (!isv15) {
+			if (!IsNull(d.c0))
+				out <<	"    BodyOriginType: User specified\n"
+						"    BodyUserOrigin: [" << Format("%f, %f, %f", d.c0.x, d.c0.y, d.c0.z) << "]\n";
+			else
+				out <<	"    BodyOriginType: Free surface\n";
+		}
+		out <<	"    BodyAddInteriorSurfacePanels: Yes\n"
 				"    BodyInteriorSurfacePanelMethod: Triangulation method\n";
 				
 		if (withQTF)

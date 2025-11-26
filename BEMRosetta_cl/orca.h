@@ -183,7 +183,24 @@ typedef struct {
     TVector2 CentreOfFloatation;
     TVector MeanHydrostaticForce;
     TVector MeanHydrostaticMoment;
-} TDiffractionBodyHydrostaticInfo;
+} TDiffractionBodyHydrostaticInfo_1_5;
+
+typedef struct {
+    double Volume;
+    TVector CentreOfBuoyancy;
+    double Mass;
+    TVector CentreOfMass;
+    TMatrix6 RestoringMatrix;
+    TMatrix6 InertiaMatrix;
+    double Awp;
+    double Lxx;
+    double Lyy;
+    double Lxy;
+    TVector2 CentreOfFloatation;
+    TVector MeanHydrostaticForce;
+    TVector MeanHydrostaticMoment;
+    TVector Position;
+} TDiffractionBodyHydrostaticInfo_1_6;
 
 typedef struct {
     int ObjectId;
@@ -191,7 +208,17 @@ typedef struct {
     TVector Centroid;
     TVector Normal;
     double Area;
-} TDiffractionPanelGeometry;
+} TDiffractionPanelGeometry_1_5;
+
+typedef struct {
+    int ObjectId;
+    TPanel Vertices;
+    TVector Centroid;
+    TVector Normal;
+    double Area;
+    int MeshFilePanelIndex;
+    int PanelType;
+} TDiffractionPanelGeometry_1_6;
 
 typedef wchar_t TObjectName[50];
 typedef struct {
@@ -263,10 +290,12 @@ public:
 #ifdef PLATFORM_WIN32
 	~Orca();
 	
-	bool Init(String _dllFile);
+	bool InitDll(String _dllFile);
 	
 	int GetDiffractionOutput(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput);
-	bool FindInit();
+	
+	bool InitNewest();
+	bool InitFile(String filename);
 	
 	bool IsLoaded()	{return dll;}
 
@@ -302,7 +331,7 @@ public:
 	
 	enum OrcaAvailable {AVAILABLE = 1, NOT_AVAILABLE = -1, NOT_INSTALLED = -2};
 	int IsAvailable() {
-		if (!dll && !FindInit())
+		if (!dll && !InitNewest())
 			return NOT_INSTALLED;
 			
 		HINSTANCE test;
@@ -317,7 +346,7 @@ public:
 	}
 	
 	void LoadFlex(String owryml) {
-		if (!dll && !FindInit())
+		if (!InitFile(owryml))
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		int status;
@@ -344,7 +373,7 @@ public:
 	}
 	
 	void SaveFlex(String owryml) {
-		if (!dll && !FindInit())
+		if (!InitFile(owryml))
 			throw Exc("OrcaFlexFlex OrcFxAPI.dll not loaded");
 		
 		int status;
@@ -360,8 +389,6 @@ public:
 	void RunFlex(String to, bool &saved) {
 		saved = false;
 		
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!flex) 
 			throwError("RunFlex");	
 		
@@ -392,9 +419,6 @@ public:
 	}
 	
 	void SaveFlexSim(String owryml) {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
-		
 		if (!flex) 
 			throwError("SaveFlexSim");	
 			
@@ -409,7 +433,7 @@ public:
 	}
 
 	void LoadFlexSim(String sim) {
-		if (!dll && !FindInit())
+		if (!InitFile(sim))
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		
 		int status;
@@ -449,9 +473,6 @@ public:
 	}
 		
 	void GetFlexSimObjects() {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
-		
 		if (!flex) 
 			throwError("GetFlexSimObjects");	
 		
@@ -467,9 +488,6 @@ public:
 	};
 	
 	void GetFlexSimVariables(HINSTANCE objHandle, int objType, String name, UVector<int> &IDs, UVector<String> &names, UVector<String> &fullNames, UVector<String> &units) {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
-		
 		if (!flex) 
 			throwError("GetFlexSimVariables");	
 		
@@ -532,9 +550,6 @@ public:
 
 	void GetFlexSimVar(HINSTANCE objHandle, int objType, int varId, const Point3D &centre,
 					UVector<String> &linePoint, VectorXd &data) {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
-		
 		if (!flex) 
 			throwError("GetFlexSimVar");	
 		
@@ -643,9 +658,6 @@ public:
 	}
 	
 	int GetModelState() {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
-		
 		if (!flex) 
 			throwError("GetFlexSimVar");	
 		
@@ -666,7 +678,7 @@ public:
 	}
 	
 	void LoadWave(String owdyml) {
-		if (!dll && !FindInit())
+		if (!InitFile(owdyml))
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 			
 		if (!wave) {
@@ -698,8 +710,6 @@ public:
 	}
 		
 	void RunWave() {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);
@@ -717,7 +727,7 @@ public:
 	}
 
 	void LoadWaveResults(String owr) {
-		if (!dll && !FindInit())
+		if (!InitFile(owr))
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) {
 			int status;
@@ -755,8 +765,6 @@ public:
 	}
 
 	void SaveWaveResults(String owryml) {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 		if (!wave) 
 			throw Exc("No wave data loaded");
 		
@@ -799,34 +807,29 @@ public:
 	void LoadParameters(Hydro &hy, const Point3D &pos);
 	
 	void SetThreadCount(int nth) {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
+		int status;
+		
 		if (!wave) {
-			int status;
+			if (!InitNewest())
+				throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 			CreateDiffraction(&wave, &status);
 			if (status != 0)
 				throwError("CreateDiffraction");
 		}
-		
-		int status;
-
 		SetModelThreadCount(wave, nth, &status);
 		if (status != 0)
 			throwError("SetThreadCount");		
 	}
 
 	int GetThreadCount() {
-		if (!dll && !FindInit())
-			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
+		int status;
 		if (!wave) {
-			int status;
+			if (!InitNewest())
+				throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
 			CreateDiffraction(&wave, &status);
 			if (status != 0)
 				throwError("CreateDiffraction");
 		}
-		
-		int status;
-
 		int nth = GetModelThreadCount(wave, &status);
 		if (status != 0)
 			throwError("GetThreadCount");	
@@ -894,21 +897,12 @@ public:
 		}
 	}
 	
-	bool IsWaveLoaded() {
-		if (!dll && !FindInit())
-			return false;
-		return wave;
-	}
-	
-	bool IsFlexLoaded() {
-		if (!dll && !FindInit())
-			return false;
-		return flex;
-	}
+	bool IsWaveLoaded() {return wave;}
+	bool IsFlexLoaded() {return flex;}
 
 #endif	
 
-	static const char * BEMRVersion() {return "11.5b";}
+	static const char * BEMRVersion() {return "11.6a";}
 
 #ifdef PLATFORM_WIN32
 	String DLLVersion()				{return dllVersion;}
@@ -936,6 +930,10 @@ private:
 	String FileVersionBin(String filename);
 	String FileVersionYml(String filename);
 	
+	static String GetVersionString(String version);
+	static double GetVersionNumber(String version);
+	bool InitVersion(String version);
+		
 	void (*CreateModel)(HINSTANCE *handle, HWND hCaller, int *status);
 	void (*DestroyModel)(HINSTANCE handle, int *status);
 	void (*LoadData)(HINSTANCE handle, LPCWSTR wcs, int *status);
@@ -982,6 +980,75 @@ private:
 	//void (*GetDLLVersion)(TDLLVersionW *lpRequiredDLLVersion, TDLLVersionW *lpDLLVersion, int *lpOK, int *status);
 	//int (*GetFileCreatorVersion)(LPCWSTR name, LPWSTR version, int *status);
 	
+	template <class T>
+	void LoadDiffractionBodyHydrostatic(Hydro &hy, int sz, const OrcaFactors &factor, const Point3D &c0) {
+		Buffer<T> bodies(hy.dt.Nb);
+		if (GetDiffractionOutput(wave, dotHydrostaticResults, &sz, bodies.begin()))
+			throwError("Load dotHydrostaticResults 2");
+		
+		hy.dt.msh.SetCount(hy.dt.Nb);
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+			hy.dt.msh[ib].dt.C.resize(6, 6);
+		
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) 
+			hy.dt.msh[ib].dt.M.resize(6, 6);
+		
+		for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+			const T &b = bodies[ib];
+			
+			hy.dt.msh[ib].dt.Vo = b.Volume*factor.len*factor.len*factor.len;
+			for (int idf = 0; idf < 3; ++idf) {
+				hy.dt.msh[ib].dt.cb[idf] = b.CentreOfBuoyancy[idf]*factor.len;
+				hy.dt.msh[ib].dt.cg[idf] = b.CentreOfMass[idf]*factor.len;
+			}
+			for (int r = 0; r < 6; ++r) {
+				for (int c = 0; c < 6; ++c) {
+					hy.dt.msh[ib].dt.C(r, c) = b.RestoringMatrix[r][c]*factor.K(r, c);
+					hy.dt.msh[ib].dt.M(r, c) = b.InertiaMatrix[r][c]*factor.M(r, c);
+				}
+			}
+			if (!IsNull(c0)) 
+				Surface::TranslateInertia66(hy.dt.msh[ib].dt.M, hy.dt.msh[ib].dt.cg, Point3D(0,0,0), c0);
+			
+			hy.dt.msh[ib].dt.name = FormatInt(ib+1);
+			hy.dt.msh[ib].dt.SetCode(Body::ORCA_OWR);
+			
+			if constexpr (std::is_same_v<T, TDiffractionBodyHydrostaticInfo_1_6>) {
+				for (int i = 0; i < 3;++i)
+					hy.dt.msh[ib].dt.c0[i] = b.Position[i];
+			}
+		}
+	}
+	
+	template <class T>
+	void LoadDiffractionPanelGeometry(Hydro &hy, int sz, const OrcaFactors &factor, int Np, UVector<int> &panelId, UVector<int> &panelIb) {	
+		Buffer<T> panels(Np);
+		if (GetDiffractionOutput(wave, dotPanelGeometry, &sz, panels.begin()))
+			throwError("Load dotPanelGeometry 2");
+		
+		for (int ip = 0; ip < Np; ++ip) {
+			const T &pan = panels[ip];
+			int ib = pan.ObjectId;
+			
+			if (ib < 0)		// Artificial damping lid not loaded
+				continue;
+			
+			Panel &p = hy.dt.msh[ib].dt.mesh.panels.Add();
+			panelId[ip] = hy.dt.msh[ib].dt.mesh.panels.size()-1;
+			panelIb[ip] = ib;
+			for (int i = 0; i < 4; ++i) {
+				const TVector &v0 = pan.Vertices[i];
+				
+				if (i == 3 && std::isnan<double>(v0[0]))
+					p.id[i] = p.id[0];
+				else {
+					Point3D pnt(v0[0]*factor.len, v0[1]*factor.len, v0[2]*factor.len);
+					p.id[i] = FindAdd(hy.dt.msh[ib].dt.mesh.nodes, pnt);
+				}
+			}
+		}
+	}
+
 	void (*RegisterLicenceNotFoundHandler)(TLicenceNotFoundHandlerProc handler, int *lpStatus);
 	
 	int (*GetLastErrorString)(LPCWSTR wcs);

@@ -3140,7 +3140,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 			ret = static_cast<Hams&>(hy).Load(file, false, Status);
 		else if (ext == ".dat" || ext == ".fst") 
 			ret = static_cast<Fast&>(hy).Load(file, Status);
-		else if (S(".1.2.3.3sc.3fk.7.8.9.hst.4.12s.12d.frc.pot.mmx.6p").Find(ext) >= 0) {
+		else if (S(".1.2.3.3sc.3fk.7.8.9.hst.4.12s.12d.frc.pot.mmx.5p.6p").Find(ext) >= 0) {
 			String controlfile;
 			bool ishams = IsHAMS(file, controlfile);
 			if (!controlfile.IsEmpty())

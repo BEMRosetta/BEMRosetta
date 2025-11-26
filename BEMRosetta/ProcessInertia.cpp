@@ -34,6 +34,9 @@ MenuProcessInertia::MenuProcessInertia() {
 	opMass.WhenAction    = [&]{OpMass_WhenAction(true);};
 	opInertia <<= THISBACK(Action);
 	
+	edDivideZ <<= THISBACK(Action);
+	opDivide  <<= THISBACK(Action);
+	
 	opInertia.MinCaseHeight(int(1.5*StdFont().GetHeight())).SetVertical();
 	opMass.MinCaseHeight(int(1.5*StdFont().GetHeight())).SetVertical();
 	
@@ -100,7 +103,7 @@ void MenuProcessInertia::Init(MainBody &b, int idx) {
 	opMass = 0;
 	
 	Body &mesh = Bem().surfs[idx];
-	volume <<= mesh.dt.mesh.volume;
+	edVolume <<= mesh.dt.mesh.volume;
 	
 	x_0 = mesh.dt.c0.x;
 	y_0 = mesh.dt.c0.y;
@@ -120,39 +123,56 @@ void MenuProcessInertia::Init(MainBody &b, int idx) {
 			for (int c = 0; c < 6; ++c)
 				grid.Set(r, c, mesh.dt.M(r, c));
 	}
+	Action();
 }
 
 void MenuProcessInertia::Action() {
-	try {
-		int opmass = ~opMass;
+	int opmass = ~opMass;
+	
+	grid.Ready(false);
+	if (opmass <= 3) {
+		for (int c = 0; c < 6; ++c) 
+			grid.GetColumn(c).Width(50);
+	} else {
+		for (int c = 0; c < 3; ++c)
+			grid.GetColumn(c).Hidden();
+	}
+	grid.Ready(true);
 		
-		grid.Ready(false);
+	auto EmptyGrid = [&] {
+		grid.Clear();
 		if (opmass <= 3) {
-			for (int c = 0; c < 6; ++c) 
-				grid.GetColumn(c).Width(50);
+			for (int r = 0; r < 6; ++r)		
+				for (int c = 0; c < 6; ++c)
+					grid.Set(r, c, "-");
 		} else {
-			for (int c = 0; c < 3; ++c)
-				grid.GetColumn(c).Hidden();
-		}
-		grid.Ready(true);
-		
+			for (int r = 0; r < 3; ++r)	
+				for (int c = 0; c < 3; ++c) 
+					grid.Set(r, c+3, "-");
+		}	
+	};
+	try {
 		Point3D c0(~x_0, ~y_0, ~z_0);
-		if (IsNull(c0))
+		if (IsNull(c0)) {
+			EmptyGrid();
 			return;	
+		}
 		Point3D cg(~x_g, ~y_g, ~z_g);
-		//if (IsNull(cg))
-		//	return;	
 		
 		Body &mesh = Bem().surfs[_idx];
 		
 		grid.Editing(opInertia == 0);
 		x_g.SetEditable(opInertia == 0);
 		y_g.SetEditable(opInertia == 0);
-		z_g.SetEditable(opInertia == 0);
+		z_g.SetEditable(opInertia == 0 || opDivide == true);
 
 		for (int i = 0; i < 6; ++i) 
 			edit[i].SetEditable(opInertia == 0);
-					
+		
+		opDivide.Show(opInertia > 0);
+		edDivideZ.Show(opInertia > 0);
+		edDivideZ.Enable(opDivide == true);
+				
 		if (opInertia == 0) {
 			opMass.DisableCase(3);
 			opMass.DisableCase(4);
@@ -166,54 +186,120 @@ void MenuProcessInertia::Action() {
 			opInertia.EnableCase(0);
 	
 		bool isvol;
-		if (opInertia == 0) 
-			return;
-		else {
-			if (opInertia == 1) {
-				isvol = true;
-				cg = mesh.dt.mesh.GetCentreOfBuoyancy();
-			} else {
-				isvol = false;
-				cg = mesh.dt.mesh.GetCentreOfGravity_Surface();
-			}
-			x_g <<= cg.x;
-			y_g <<= cg.y;
-			z_g <<= cg.z;
+		if (opInertia == 0) {
+			EmptyGrid();
+			return;	
 		}
+		
+		if (opInertia == 1) {
+			isvol = true;
+			Point3D ccg = mesh.dt.mesh.GetCentreOfBuoyancy();
+			cg.x = ccg.x;	cg.y = ccg.y;
+			if (IsNull(cg.z)) {
+				cg.z = ccg.z;
+				z_g <<= cg.z;
+			}
+		} else {
+			isvol = false;
+			Point3D ccg = mesh.dt.mesh.GetCentreOfGravity_Surface();
+			cg.x = ccg.x;	cg.y = ccg.y;
+			if (IsNull(cg.z)) {
+				cg.z = ccg.z;
+				z_g <<= cg.z;
+			}
+		}
+		x_g <<= cg.x;
+		y_g <<= cg.y;
+
 		
 		if (isvol && mesh.dt.mesh.VolumeMatch(Bem().volError, Bem().volError) < 0) {
 			opInertia = 0;
 			throw Exc(t_("Incomplete mesh or wrongly oriented panels"));
 		}
 		
+		if (IsNull(cg)) {
+			EmptyGrid();
+			return;	
+		}
+		
 		Matrix3d inertia3;
-		if (mesh.dt.mesh.GetInertia33(inertia3, c0, isvol, false) && !IsNull(cg)) {
-			MatrixXd inertia6;
-			Surface::GetInertia66(inertia6, inertia3, cg, c0, false);
-			if (opmass == 3)
-				inertia6 *= mesh.dt.mesh.volume;
-			else if (opmass < 3) {
-				double m;
-				if (!IsNull(mass) && (opmass == 0 || opmass == 1))
-					m = mass;
-				else {
-					if (!IsNull(density))
-						m = density*mesh.dt.mesh.volume; 
-				}
-				inertia6 *= m;
+		MatrixXd inertia6;
+		if (!opDivide) {
+			if (!mesh.dt.mesh.GetInertia33(inertia3, c0, isvol, true)) {
+				EmptyGrid();
+				return;	
 			}
-			grid.Clear();
-			if (opmass <= 3) {
-				for (int r = 0; r < 6; ++r)		
-					for (int c = 0; c < 6; ++c)
-						grid.Set(r, c, inertia6(r, c));
-			} else {
-				for (int r = 0; r < 3; ++r)	{	
-					for (int c = 0; c < 3; ++c) {
-						double val = inertia3(r, c);
-						int sign = Sign(val);
-						grid.Set(r, c+3, sign*sqrt(abs(val)));
-					}
+		} else {	// Divide body in 2
+			if (IsNull(edDivideZ)) {
+				EmptyGrid();
+				return;
+			}
+			
+			Surface msh = clone(mesh.dt.mesh);
+			msh.Translate(0, 0, -edDivideZ);
+			
+			Surface msha, mshb;
+			msha.CutZ(msh,  1).GetPanelParams().GetVolume();
+			mshb.CutZ(msh, -1).GetPanelParams().GetVolume();
+			
+			Point3D ca = msha.GetCentreOfBuoyancy();
+			Point3D cb = mshb.GetCentreOfBuoyancy();
+			
+			if (IsNull(ca) || IsNull(cb)) {
+				EmptyGrid();
+				return;	
+			}
+			
+			Surface mshlid = clone(msha);
+			mshlid.Flatten('z');
+			
+			mshb.Append(mshlid);
+			mshlid.Orient();
+			msha.Append(mshlid);
+			
+			Point3D c00 = c0;
+			c00.z -= edDivideZ;
+			
+			Matrix3d ia, ib;
+			if (!msha.GetInertia33(ia, c00, isvol, true) || !mshb.GetInertia33(ib, c00, isvol, true)) {
+				EmptyGrid();
+				return;	
+			}
+			
+			ca.z += edDivideZ;
+			cb.z += edDivideZ;
+			
+			double m = 1;
+			double ma = m*(cg.z - cb.z)/(ca.z - cb.z);
+			double mb = m - ma;
+			
+			inertia3 = ia*ma + ib*mb;
+		}
+		Surface::GetInertia66(inertia6, inertia3, cg, c0, true);
+		
+		if (opmass == 3)
+			inertia6 *= mesh.dt.mesh.volume;
+		else if (opmass < 3) {
+			double m;
+			if (!IsNull(mass) && (opmass == 0 || opmass == 1))
+				m = mass;
+			else {
+				if (!IsNull(density))
+					m = density*mesh.dt.mesh.volume; 
+			}
+			inertia6 *= m;
+		}
+		grid.Clear();
+		if (opmass <= 3) {
+			for (int r = 0; r < 6; ++r)		
+				for (int c = 0; c < 6; ++c)
+					grid.Set(r, c, inertia6(r, c));
+		} else {
+			for (int r = 0; r < 3; ++r)	{	
+				for (int c = 0; c < 3; ++c) {
+					double val = inertia3(r, c);
+					int sign = Sign(val);
+					grid.Set(r, c+3, sign*sqrt(abs(val)));
 				}
 			}
 		}

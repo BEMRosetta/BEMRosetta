@@ -60,7 +60,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			else if (!Load_out(ff.GetPath(), Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
 				
-		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam.6p").Find(ext) >= 0) {
+		} else if (S(".1.2.3.3sc.3fk.hst.4.7.8.9.12d.12s.cfg.frc.pot.mmx.wam.5p.6p").Find(ext) >= 0) {
 			if (isHams)
 				dt.solver = Hydro::HAMS_WAMIT;
 			else if (dt.name == "WAMIT_5S")
@@ -2232,6 +2232,40 @@ bool Wamit::Load_789_0(String fileName, int type, UArray<UArray<UArray<VectorXd>
 	return true;
 }
 
+
+bool Wamit::Load_pnl(String fileName, UVector<int> &pnlId, UVector<int> &panelId) {
+	UVector<int> quadrant;		// Unused for now
+	int ib = 0;					// ????
+	
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+
+	LineParser f(in);
+	f.IsSeparator = IsTabSpace;
+	
+	FileInLine::Pos fpos = in.GetPos();	
+	while (!f.IsEof()) {
+		quadrant << f.GetInt(0);
+		pnlId << f.GetInt(1)-1;
+		Point3D centroid(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
+		
+		const Surface &surf = dt.msh[ib].dt.mesh;
+		const double delta = 0.0001;
+		int i;
+		for (i = 0; i < surf.panels.size(); i++) {
+			if (Distance(surf.panels[i].centroidPaint, centroid) <= delta) {
+				panelId << i;
+				break;
+			}
+		}
+		if (i == surf.panels.size())
+			panelId << Null;
+	}	
+	return true;
+}
+
+
 bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> Status) {
 	dt.dimen = false;
 	
@@ -2254,47 +2288,30 @@ bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> 
 	else
 		fpos = in.GetPos();		// Avoid header
 
-	int np = listPointsTemp.size();
-	UVector<bool> idPanels;
-	MatrixXi idPanelsM;
-	UVector<int> idFs, idRest;
-	LoadListPointsTemp(idPanels, idPanelsM, idFs, idRest);
-	
-	if (!idPanels.IsEmpty() && Max(idPanels) > 0) {
-		Initialize_PotsRad();
-		Initialize_PotsIncDiff(dt.pots_dif);
-	}
-	if (!idFs.IsEmpty() && Max(idFs) >= 0) {
-		dt.fsPoints.pots_rad.resize(dt.fsPoints.points.size(), 6, dt.Nf);			dt.fsPoints.pots_rad.setConstant(0);
-		dt.fsPoints.pots_dif.resize(dt.fsPoints.points.size(), dt.Nh, dt.Nf);		dt.fsPoints.pots_dif.setConstant(0);
-	}
-	if (!idRest.IsEmpty() && Max(idRest) >= 0) {
-		dt.freePoints.pots_rad.resize(dt.fsPoints.points.size(), 6, dt.Nf);			dt.freePoints.pots_rad.setConstant(0);
-		dt.freePoints.pots_dif.resize(dt.fsPoints.points.size(), dt.Nh, dt.Nf);		dt.freePoints.pots_dif.setConstant(0);
-	}
+	bool isdiff = false, israd = false;
+	Initialize_PotsRad();
+	Initialize_PotsIncDiff(dt.pots_dif);
 
 	double len = Nvl2(dt.len, Bem().len);
 	double g = Nvl2(dt.g, Bem().g);
 	
-	int lifr = -1;
-	
-	bool isdiff = false, israd = false;
+	int last_ifr = -1;
 	double rho_g = g_ndim()*rho_ndim();
 	
 	while (!f.IsEof()) {
 		f.GetLine_discard_empty();
 		double freq = Wamit::InputToFreq(f.GetDouble(0), iperout, g, dt.h, len);
-		int ifr = FindDelta(dt.w, freq, 0.001);
-		
-		if (ifr < 0 || ifr == 0)	// Inf and zero frec. Not processed for now
+		if (freq < 0 || freq == 0)	// Inf and zero frec. Not processed for now
 			continue;
 
-		if (Status && ifr > lifr && !Status("Loading .5p base data", (100.*ifr)/dt.Nf))
+		int ifr = FindDelta(dt.w, freq, 0.001);
+		
+		if (Status && ifr != last_ifr && !Status("Loading .5p base data", (100.*ifr)/dt.Nf))
 			throw Exc(t_("Stop by user"));
 
 		double rho_w = dt.w[ifr]*rho_ndim();
 		
-		lifr = ifr;
+		last_ifr = ifr;
 		
 		if (f.size() == 6) {	// pots_diff
 			isdiff = true;
@@ -2303,85 +2320,42 @@ bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> 
 			if (ih < 0)
 				throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), head));
 	   	
-	   		int M = f.GetInt(2);		// Quadrant of symmetry. Unused
+	   		int ib = f.GetInt(2);		// Quadrant of symmetry. Unused for now (used like body)
+	   		if (ib < 1 || ib > dt.Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Body number %d is unknown"), ib));
+	   		ib--;
 	   		
 	   		int ip = f.GetInt(3);
-			if (ip < 1 || ip > np)
-				throw Exc(in.Str() + "\n"  + Format(t_("Point number %d is unknown"), ip));
+			if (ip < 1 || ip > dt.msh[ib].dt.mesh.panels.size())
+				throw Exc(in.Str() + "\n"  + Format(t_("Panel number %d is unknown"), ip));
 			ip--;
 			
 			double re, im;
 			re = f.GetDouble(4);
 			im = f.GetDouble(5);
 			
-			std::complex<double> val(-im, re); 	// p = -iρωΦ ; Φ = [Im(p) - iRe(p)]/ρω
-			val *= g_ndim()/dt.w[ifr];
-			
-			if (idPanels[ip]) {
-				for (int ibb = 0; ibb < dt.Nb; ++ibb) {
-					UArray<UArray<UArray<std::complex<double>>>> &pib = dt.pots_dif[ibb];
-					int ipp = idPanelsM(ip, ibb);
-					if (ipp >= 0) {
-						pib[ipp][ih][ifr] = val;
-						break;
-					}
-				}
-			} else if (idFs[ip] >= 0)
-				dt.fsPoints.pots_dif(idFs[ip], ih, ifr) = val;
-			else
-				dt.freePoints.pots_dif(idRest[ip], ih, ifr) = val;
-		} else {								// pots_rad
-			
-			int M = f.GetInt(2);		// Quadrant of symmetry. Unused
-			
+			std::complex<double> val(-im, re); 						// p = -iρωΦ ; Φ = [-Im(p) + iRe(p)]/ρω
+			dt.pots_dif[ib][ip][ih][ifr] = val*g_ndim()/dt.w[ifr];	// ρg/ρω = g/ω
+		} else {						// pots_rad
 			israd = true;
-			int ip = f.GetInt(1);
-			if (ip < 1 || ip > np)
-				throw Exc(in.Str() + "\n"  + Format(t_("Point number %d is unknown"), ip));
+	   		int ib = f.GetInt(1);		// Quadrant of symmetry. Unused for now (used like body)
+	   		if (ib < 1 || ib > dt.Nb)
+				throw Exc(in.Str() + "\n"  + Format(t_("Body number %d is unknown"), ib));
+	   		ib--;
+	   		
+	   		int ip = f.GetInt(2);
+			if (ip < 1 || ip > dt.msh[ib].dt.mesh.panels.size())
+				throw Exc(in.Str() + "\n"  + Format(t_("Panel number %d is unknown"), ip));
 			ip--;
 			
-			if (idPanels[ip]) {
-				for (int ibb = 0; ibb < dt.Nb; ++ibb) {
-					UArray<UArray<UArray<std::complex<double>>>> &pib = dt.pots_rad[ibb];
-					int ipp = idPanelsM(ip, ibb);
-					if (ipp >= 0) {
-						for (int ib = 0; ib < dt.Nb; ++ib) {		
-							int col0 = 0; 
-							if (ib == 0)
-								col0 = 1;
-							
-							for (int idof = 0; idof < 6; ++idof)
-								pib[ipp][idof][ifr] += std::complex<double>(f.GetDouble(col0 + idof*2), f.GetDouble(col0 + idof*2 + 1));
-							
-							if (ib < dt.Nb-1)
-								f.GetLine_discard_empty();
-						}
-						break;
-					}
-				}
-			} else if (idFs[ip] >= 0) {
-				for (int ib = 0; ib < dt.Nb; ++ib) {		
-					int col0 = 0; 
-					if (ib == 0)
-						col0 = 1;
-					
-					for (int idof = 0; idof < 6; ++idof)
-						dt.fsPoints.pots_rad(idFs[ip], idof, ifr) += std::complex<double>(f.GetDouble(col0 + idof*2), f.GetDouble(col0 + idof*2 + 1));
-					
-					if (ib < dt.Nb-1)
-						f.GetLine_discard_empty();
-				}
-			} else {
-				for (int ib = 0; ib < dt.Nb; ++ib) {		
-					int col0 = 0; 
-					if (ib == 0)
-						col0 = 1;
-					
-					for (int idof = 0; idof < 6; ++idof)
-						dt.freePoints.pots_rad(idRest[ip], idof, ifr) += std::complex<double>(f.GetDouble(col0 + idof*2), f.GetDouble(col0 + idof*2 + 1));
-					
-					if (ib < dt.Nb-1)
-						f.GetLine_discard_empty();
+			int col0 = 3;
+			for (int ibb = 0; ibb < dt.Nb; ++ibb) {
+				UArray<UArray<UArray<std::complex<double>>>> &pib = dt.pots_rad[ibb];
+				for (int idof = 0; idof < 6; ++idof) {
+					double re = f.GetDouble(col0 + ibb*12 + idof*2);
+					double im = f.GetDouble(col0 + ibb*12 + idof*2 + 1);
+					std::complex<double> val(re, im);
+					pib[ip][idof][ifr] -= val*g_ndim()/sqr(dt.w[ifr]); 
 				}
 			}
 		} 
@@ -2395,6 +2369,17 @@ bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> 
 		dt.pots_dif.Clear();
 		dt.fsPoints.pots_dif.resize(0, 0, 0);
 		dt.freePoints.pots_dif.resize(0, 0, 0);
+	} else {		// Remove the incident from the diffraction potentials
+		GetPotentialsIncident();
+		
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			int nnp = dt.msh[ib].dt.mesh.panels.size();
+			for (int ip = 0; ip < nnp; ++ip) {
+				for (int ih = 0; ih < dt.Nh; ++ih)
+					for (int ifr = 0; ifr < dt.Nf; ++ifr)
+						dt.pots_dif[ib][ip][ih][ifr] -= dt.pots_inc_bmr[ib][ip][ih][ifr];		
+			}
+		}	
 	}
 
 	return true;
@@ -2872,10 +2857,11 @@ void Wamit::Save_frc2(String fileName, bool force1st, bool withQTF, UVector<Poin
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .frc file\n";
-	out << WamitField(Format("%d %d %d %d 0 %d 0 0 0", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
+	out << WamitField(Format("%d %d %d %d %d %d 0 0 0", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
 										 			   force1st || IsLoadedFex() ? 1 : 0,
 										 			   force1st || IsLoadedFex() ? 2 : 0,
 										 			   force1st || IsLoadedRAO() ? 1 : 0, 
+										 			   !listPoints.IsEmpty() ? 1 : 0,
 										 			   !listPoints.IsEmpty() ? 1 : 0), 22);
 	if (withQTF)
 		out << " 0 0 1 0 0 0 0";
@@ -3065,8 +3051,10 @@ void Wamit::Save_cfg(String fileName, bool withQTF, bool lid, bool force_T, bool
  		else
  			out << " IRR = 3\n";
  	}
- 	if (is6p)
+ 	if (is6p) {
+ 		out << " INUMOPT5 = 1\n";
  		out << " INUMOPT6 = 1\n";
+ 	}
  	out << " ILOG = 1\n"
  		<< " ISOLVE = 1\n"
  		<< " IALTFRC = 2\n"
