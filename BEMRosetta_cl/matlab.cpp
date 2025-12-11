@@ -39,43 +39,38 @@ void Matlab::Load_Mat() {
 		throw Exc(t_("Impossible to load .mat file"));
 	
 	{
-		UVector<String> freq = {"w", "frequency", "frequencies"};
-		int id = mfile.Exist(freq, true);
-		if (id < 0)
+		MatVar var = mfile.GetVar({"w", "frequency", "frequencies"}, true);
+		if (!var.IsLoaded())
 			throw Exc(t_("Frequencies not found"));
-		mfile.Get(freq[id], dt.w, true);
+		dt.w = mfile.ReadRowMajor<double>(var);
 		dt.Nf = dt.w.size();
 	}
 	{
-		UVector<String> head = {"head", "headings", "h"};
-		int id = mfile.Exist(head, true);
-		if (id < 0)
+		MatVar head = mfile.GetVar({"head", "headings", "h"}, true);
+		if (!head.IsLoaded())
 			throw Exc(t_("Headings not found"));
-		mfile.Get(head[id], dt.head, true);
+		dt.head = mfile.ReadRowMajor<double>(head);
 		dt.Nh = dt.head.size();
 	}
-	dt.h = mfile.Get<double>("depth");
+	dt.h = mfile.ReadDouble(mfile.GetVar("depth", true));
 	{
-		UVector<String> g = {"g", "gravity"};
-		int id = mfile.Exist(g, true);
-		if (id < 0)
+		MatVar g = mfile.GetVar({"g", "gravity"});
+		if (!g.IsLoaded())
 			throw Exc(t_("Gravity not found"));
-		dt.g = mfile.Get<double>(g[id], true);
+		dt.g = mfile.ReadDouble(g);
 	}
 	{
-		UVector<String> rho = {"rho", "density"};
-		int id = mfile.Exist(rho, true);
-		if (id < 0)
+		MatVar rho = mfile.GetVar({"rho", "density"}, true);
+		if (!rho.IsLoaded())
 			throw Exc(t_("Density not found"));
-		dt.rho = mfile.Get<double>(rho[id], true);
+		dt.rho = mfile.ReadDouble(rho);
 	}
 	dt.Nb = Null;
 	
 	auto LoadAB = [&](UArray<UArray<VectorXd>> &a, const char *name, const UVector<String> &sA) {
-		int id = mfile.Exist(sA, true);	
-		if (id >= 0) {
-			MultiDimMatrix<double> A;
-			mfile.Get(sA[id], A, true);
+		MatVar id = mfile.GetVar(sA, true);	
+		if (id.IsLoaded()) {
+			MultiDimMatrix<double> A = MatFile::ReadMultiDim<double>(id);
 			if (A.GetAxisDim(2) != dt.Nf)
 				throw Exc(Format(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
 			int dim = A.GetAxisDim(0);
@@ -98,27 +93,27 @@ void Matlab::Load_Mat() {
 	LoadAB(dt.B, "B", {"B", "radiationdamping"});
 
 	{
-		UVector<String> s = {"Ainf"};
-		int id = mfile.Exist(s, true);	
-		if (id >= 0) {
-			mfile.Get(s[id], dt.Ainf, true);
-			if ((dt.Ainf.rows() != dt.Ainf.cols()) || (!IsNull(dt.Nb) && (6*dt.Ainf.rows() != 6*dt.Nb)))
+		MatVar id = mfile.GetVar("Ainf", true);
+		if (id.IsLoaded()) {
+			dt.Ainf = MatFile::ReadEigenDouble(id);
+			if ((dt.Ainf.rows() != dt.Ainf.cols()) || (!IsNull(dt.Nb) && (dt.Ainf.rows() != 6*dt.Nb)))
 				throw Exc(t_("Ainf dimension is not correct (6*nBodies, 6*nBodies)"));
 			dt.Nb = (int)dt.Ainf.cols()/6;
 		}
 	}
 	{
-		if (mfile.Exist("A0", true)) {
-			mfile.Get("A0", dt.A0, true);
-			if ((dt.A0.rows() != dt.A0.cols()) || (!IsNull(dt.Nb) && (6*dt.A0.rows() != 6*dt.Nb)))
+		MatVar id = mfile.GetVar("A0", true);
+		if (id.IsLoaded()) {
+			dt.A0 = MatFile::ReadEigenDouble(id);
+			if ((dt.A0.rows() != dt.A0.cols()) || (!IsNull(dt.Nb) && (dt.A0.rows() != 6*dt.Nb)))
 				throw Exc(t_("A0 dimension is not correct (6*nBodies, 6*nBodies)"));
 			dt.Nb = (int)dt.A0.cols()/6;
 		}
 	}
 	{
-		if (mfile.Exist("vol", true)) {
-			UVector<double> vol;
-			mfile.Get("vol", vol, true);
+		MatVar id = mfile.GetVar("vol", true);
+		if (id.IsLoaded()) {
+			UVector<double> vol = MatFile::ReadColMajor<double>(id);
 			if (!IsNull(dt.Nb) && vol.size() != dt.Nb)
 				throw Exc(t_("Vol dimension is not correct (1, nBodies)"));
 			dt.Nb = vol.size();
@@ -129,9 +124,9 @@ void Matlab::Load_Mat() {
 		}
 	}
 	{
-		if (mfile.Exist("Cg", true)) {
-			MatrixXd cg;
-			mfile.Get("Cg", cg, true);
+		MatVar id = mfile.GetVar("Cg", true);
+		if (id.IsLoaded()) {
+			MatrixXd cg = MatFile::ReadEigenDouble(id);
 			if (!IsNull(dt.Nb) && cg.cols() != dt.Nb)
 				throw Exc(t_("Cg dimension is not correct (cols != Nb) (3, nBodies)"));
 			if (cg.rows() != 3)
@@ -144,9 +139,9 @@ void Matlab::Load_Mat() {
 		}
 	}
 	{
-		if (mfile.Exist("Cb", true)) {
-			MatrixXd cb;
-			mfile.Get("Cb", cb, true);
+		MatVar id = mfile.GetVar("Cb", true);
+		if (id.IsLoaded()) {
+			MatrixXd cb = MatFile::ReadEigenDouble(id);
 			if (!IsNull(dt.Nb) && cb.cols() != dt.Nb)
 				throw Exc(t_("Cb dimension is not correct (cols != Nb) (3, nBodies)"));
 			if (cb.rows() != 3)
@@ -159,9 +154,9 @@ void Matlab::Load_Mat() {
 		}
 	}
 	{
-		if (mfile.Exist("C0", true)) {
-			MatrixXd c0;
-			mfile.Get("C0", c0, true);
+		MatVar id = mfile.GetVar("C0", true);
+		if (id.IsLoaded()) {
+			MatrixXd c0 = MatFile::ReadEigenDouble(id);
 			if (!IsNull(dt.Nb) && c0.cols() != dt.Nb)
 				throw Exc(t_("C0 dimension is not correct (cols != Nb) (3, nBodies)"));
 			if (c0.rows() != 3)
@@ -174,11 +169,9 @@ void Matlab::Load_Mat() {
 		}
 	}	
 	{
-		UVector<String> sB = {"Kh", "K", "stiffness_matrix", "stiffnessmatrix"};
-		int id = mfile.Exist(sB, true);	
-		if (id >= 0) {
-			MatrixXd C;
-			mfile.Get(sB[id], C, true);
+		MatVar id = mfile.GetVar({"Kh", "K", "stiffness_matrix", "stiffnessmatrix"}, true);
+		if (id.IsLoaded()) {
+			MatrixXd C = MatFile::ReadEigenDouble(id);
 			if ((C.rows() != C.cols()) || (!IsNull(dt.Nb) && (C.rows() != 6*dt.Nb)))
 				throw Exc(t_("Kh dimension is not correct (6*nBodies, 6*nBodies)"));
 			dt.Nb = (int)C.cols()/6;
@@ -187,11 +180,9 @@ void Matlab::Load_Mat() {
 		}
 	}
 	{
-		UVector<String> sB = {"mass", "inertia", "m"};
-		int id = mfile.Exist(sB, true);	
-		if (id >= 0) {
-			MatrixXd M;
-			mfile.Get(sB[id], M, true);
+		MatVar id = mfile.GetVar({"mass", "inertia", "m"}, true);
+		if (id.IsLoaded()) {
+			MatrixXd M = MatFile::ReadEigenDouble(id);
 			if ((M.rows() != M.cols()) || (!IsNull(dt.Nb) && (M.rows() != 6*dt.Nb)))
 				throw Exc(t_("Kh dimension is not correct (6*nBodies, 6*nBodies)"));
 			dt.Nb = (int)M.cols()/6;
@@ -200,10 +191,9 @@ void Matlab::Load_Mat() {
 		}
 	}
 	auto LoadF = [&](Forces &f, const char *name, const UVector<String> &sB) {
-		int id = mfile.Exist(sB, true);	
-		if (id >= 0) {
-			MultiDimMatrix<std::complex<double>> F;
-			mfile.Get(sB[id], F, true);
+		MatVar id = mfile.GetVar(sB, true);	
+		if (id.IsLoaded()) {
+			MultiDimMatrix<std::complex<double>> F = MatFile::ReadMultiDim<std::complex<double>>(id);
 			if (F.GetNumAxis() != 4)
 				throw Exc(Format(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
 			if (F.GetAxisDim(0) != 6)
@@ -242,11 +232,11 @@ void Matlab::Save(String file) const {
 	if (!mfile.OpenCreate(fileName, MAT_FT_MAT73))
 		throw Exc(t_("Impossible to create .mat file"));
 	
-	mfile.Set("w", dt.w);
-	mfile.Set("head", dt.head);
-	mfile.Set("depth", dt.h);
-	mfile.Set("rho", dt.rho);
-	mfile.Set("g", dt.g);
+	mfile.Write("w", dt.w);
+	mfile.Write("head", dt.head);
+	mfile.Write("depth", dt.h);
+	mfile.Write("rho", dt.rho);
+	mfile.Write("g", dt.g);
 	
 	if (IsLoadedA()) {
 		MultiDimMatrix<double> A(6*dt.Nb, 6*dt.Nb, dt.Nf);
@@ -254,13 +244,13 @@ void Matlab::Save(String file) const {
 			for (int c = 0; c < 6*dt.Nb; ++c) {
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 					if (dt.A[r][c].size() == dt.Nf) 
-						A(r, c, ifr) = dt.A[r][c][ifr];
+						A(r, c, ifr) = A_dim(ifr, r, c);
 					else
 						A(r, c, ifr) = 0;
 				}
 			}
 		}
-		mfile.Set("A", A);
+		mfile.Write("A", A);
 	}
 	if (IsLoadedB()) {
 		MultiDimMatrix<double> B(6*dt.Nb, 6*dt.Nb, dt.Nf);
@@ -268,20 +258,20 @@ void Matlab::Save(String file) const {
 			for (int c = 0; c < 6*dt.Nb; ++c) {
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 					if (dt.B[r][c].size() == dt.Nf) 
-						B(r, c, ifr) = dt.B[r][c][ifr];
+						B(r, c, ifr) = B_dim(ifr, r, c);
 					else
 						B(r, c, ifr) = 0;
 				}
 			}
 		}
-		mfile.Set("B", B);
+		mfile.Write("B", B);
 	}
 	
 	if (IsLoadedAinf()) 
-		mfile.Set("Ainf", dt.Ainf);
+		mfile.Write("Ainf", Ainf_mat(false));
 		
 	if (IsLoadedA0()) 
-		mfile.Set("A0", dt.A0);
+		mfile.Write("A0", A0_mat(false));
 	
 	if ((!IsLoadedFsc() || !IsLoadedFfk()) && IsLoadedFex()) {
 		MultiDimMatrix<std::complex<double>> Fex(6, dt.Nh, dt.Nf, dt.Nb);
@@ -289,8 +279,8 @@ void Matlab::Save(String file) const {
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int ib = 0; ib < dt.Nb; ++ib) 		
 					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-						Fex(idf, ih, ifr, ib) = dt.ex[ib][ih](ifr, idf);
-		mfile.Set("Fex", Fex);				
+						Fex(idf, ih, ifr, ib) = F_dim(dt.ex, ih, ifr, idf, ib);
+		mfile.Write("Fex", Fex);				
 	}
 	if (IsLoadedFfk()) {
 		MultiDimMatrix<std::complex<double>> Ffk(6, dt.Nh, dt.Nf, dt.Nb);
@@ -298,8 +288,8 @@ void Matlab::Save(String file) const {
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int ib = 0; ib < dt.Nb; ++ib) 		
 					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-						Ffk(idf, ih, ifr, ib) = dt.fk[ib][ih](ifr, idf);
-		mfile.Set("Ffk", Ffk);	
+						Ffk(idf, ih, ifr, ib) = F_dim(dt.fk, ih, ifr, idf, ib);
+		mfile.Write("Ffk", Ffk);	
 	}
 	if (IsLoadedFsc()) {
 		MultiDimMatrix<std::complex<double>> Fsc(6, dt.Nh, dt.Nf, dt.Nb);
@@ -307,23 +297,23 @@ void Matlab::Save(String file) const {
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int ib = 0; ib < dt.Nb; ++ib) 		
 					for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-						Fsc(idf, ih, ifr, ib) = dt.sc[ib][ih](ifr, idf);
-		mfile.Set("Fsc", Fsc);	
+						Fsc(idf, ih, ifr, ib) = F_dim(dt.sc, ih, ifr, idf, ib);
+		mfile.Write("Fsc", Fsc);	
 	}
 	
 	if (IsLoadedAnyC()) {
 		MatrixXd C = MatrixXd::Zero(6*dt.Nb, 6*dt.Nb);
 		for (int ib = 0; ib < dt.Nb; ++ib)
 			if (IsLoadedC(ib, 5, 5))
-				C.block<6, 6>(6*ib, 6*ib) = dt.msh[ib].dt.C;
-		mfile.Set("Kh", C);	
+				C.block<6, 6>(6*ib, 6*ib) = C_mat(false, ib);
+		mfile.Write("Kh", C);	
 	}
 	
 	if (IsLoadedAnyM()) {
 		MatrixXd M = MatrixXd::Zero(6*dt.Nb, 6*dt.Nb);
 		for (int ib = 0; ib < dt.Nb; ++ib)
 			M.block<6, 6>(6*ib, 6*ib) = dt.msh[ib].dt.M;
-		mfile.Set("Mass", M);	
+		mfile.Write("Mass", M);	
 	}
 
 	VectorXd vol(dt.Nb);
@@ -336,7 +326,7 @@ void Matlab::Save(String file) const {
 			vol(ib) = NaNDouble;
 	}
 	if (!vnan)
-		mfile.Set("Vol", vol);
+		mfile.Write("Vol", vol);
 	
 	MatrixXd Cb(3, dt.Nb);
 	bool cbnan = true;
@@ -350,7 +340,7 @@ void Matlab::Save(String file) const {
 		}
 	}
 	if (!cbnan)
-		mfile.Set("Cb", Cb);
+		mfile.Write("Cb", Cb);
 		
 	MatrixXd Cg(3, dt.Nb);
 	bool cgnan = true;
@@ -364,7 +354,7 @@ void Matlab::Save(String file) const {
 		}
 	}
 	if (!cgnan)
-		mfile.Set("Cg", Cg);
+		mfile.Write("Cg", Cg);
 	
 	MatrixXd C0(3, dt.Nb);
 	bool c0nan = true;
@@ -378,7 +368,7 @@ void Matlab::Save(String file) const {
 		}
 	}	
 	if (!c0nan)	
-		mfile.Set("C0", C0);
+		mfile.Write("C0", C0);
 	
 	UVector<String> legend = {"DoF: surge, sway, heave, roll, pitch, yaw",
 					"Units: m, Kg, N, s, rad",
@@ -405,5 +395,5 @@ void Matlab::Save(String file) const {
 					"- Global axis (wave origin) is at 0, 0",
 					"- The incident wave system follows Wamit criteria",
 					"File generated by BEMRosetta: Hydrodynamic solvers viewer and converter"};
-	mfile.SetCell("Legend", legend);
+	mfile.WriteCell("Legend", legend);
 }

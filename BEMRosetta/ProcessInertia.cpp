@@ -162,16 +162,16 @@ void MenuProcessInertia::Action() {
 		Body &mesh = Bem().surfs[_idx];
 		
 		grid.Editing(opInertia == 0);
-		x_g.SetEditable(opInertia == 0);
-		y_g.SetEditable(opInertia == 0);
-		z_g.SetEditable(opInertia == 0 || opDivide == true);
+		x_g.SetEditable(~opInertia == 0);
+		y_g.SetEditable(~opInertia == 0);
+		z_g.SetEditable(~opInertia == 0 || ~opDivide == true);
 
 		for (int i = 0; i < 6; ++i) 
 			edit[i].SetEditable(opInertia == 0);
 		
 		opDivide.Show(opInertia > 0);
 		edDivideZ.Show(opInertia > 0);
-		edDivideZ.Enable(opDivide == true);
+		edDivideZ.Enable(~opDivide == true);
 				
 		if (opInertia == 0) {
 			opMass.DisableCase(3);

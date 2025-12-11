@@ -171,7 +171,17 @@ void BemioH5::Load_H5() {
 						f[ib][ih](iw, idf).imag(d(idf, ih, iw));			
 		}
 	};
-		
+	auto LoadMD = [&](UArray<UArray<UArray<VectorXd>>> &f, int ib) {	// [Nb][Nh][6](Nf)
+		MultiDimMatrixRowMajor<double> d;
+		if (hfile.ExistDataset("val")) {
+			hfile.GetDouble("val", d);
+			for (int idf = 0; idf < 6; ++idf) 
+				for (int ih = 0; ih < dt.Nh; ++ih) 
+					for (int iw = 0; iw < dt.Nf; ++iw) 
+						f[ib][ih][idf][iw] = d(idf, ih, iw);
+		}
+	};
+			
 	MatrixXd data;
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -238,7 +248,31 @@ void BemioH5::Load_H5() {
 					hfile.UpGroup();	
 				}
 				hfile.GetDouble("linear_restoring_stiffness", dt.msh[ib].dt.C);
-				
+				if (hfile.ChangeGroup("mean_drift")) {
+					if (hfile.ChangeGroup("control_surface")) {
+						Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.head.size()), dt.Nf);
+						LoadMD(dt.md, ib);
+						dt.mdtype = 7;
+						hfile.UpGroup();		
+					} else if (hfile.ChangeGroup("pressure_integration")) {
+						Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.head.size()), dt.Nf);
+						LoadMD(dt.md, ib);
+						dt.mdtype = 9;
+						hfile.UpGroup();	
+					} else if (hfile.ChangeGroup("momentum_conservation")) {
+						Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.head.size()), dt.Nf);
+						LoadMD(dt.md, ib);
+						dt.mdtype = 8;
+						hfile.UpGroup();	
+					} 
+					if (IsLoadedMD()) {
+						dt.mdhead.resize(dt.head.size());
+						for (int ih = 0; ih < dt.head.size(); ++ih)
+							dt.mdhead[ih] = std::complex<double>(dt.head[ih], dt.head[ih]);
+					}		
+					hfile.UpGroup();	
+				}
+								
 				hfile.UpGroup();	
 			}
 			hfile.UpGroup();	
@@ -249,12 +283,21 @@ void BemioH5::Load_H5() {
 		Compare_A(a);
 	if (IsLoadedB())
 		Compare_B(b);
-	if (IsLoadedFex())
-		Compare_F(dt.ex, ex, "Excitation forces");
-	if (IsLoadedFsc())
-		Compare_F(dt.sc, sc, "Scattering forces");
-	if (IsLoadedFfk())
-		Compare_F(dt.fk, fk, "Froude-Krylov forces");
+	if (IsLoadedFex()) {
+		if (IsLoadedForce(ex))
+			Compare_F(dt.ex, ex, "Excitation forces");
+	} else
+		dt.ex = pick(ex);
+	if (IsLoadedFsc()) {
+		if (IsLoadedForce(sc))
+			Compare_F(dt.sc, sc, "Scattering forces");
+	} else
+		dt.sc = pick(sc);
+	if (IsLoadedFfk()) {
+		if (IsLoadedForce(fk))
+			Compare_F(dt.fk, fk, "Froude-Krylov forces");
+	} else
+		dt.fk = pick(fk);
 	
 	for (int ib = 0; ib < dt.msh.size(); ++ib)
 		if (IsNull(dt.msh[ib].dt.c0))
@@ -301,7 +344,7 @@ void BemioH5::Save(String file) const {
 				for (int c = 0; c < 6*dt.Nb; ++c) {	
 					for (int iw = 0; iw < dt.Nf; ++iw) {
 						if (dt.A[ib*6 + r][c].size() == dt.Nf)
-							data(iw, 1) = Nvl2(dt.A[ib*6 + r][c][iw], A_dim(iw, ib*6 + r, c), 0.);
+							data(iw, 1) = Nvl2(dt.A[ib*6 + r][c][iw], 0.);
 						else
 							data(iw, 1) = 0;
 					}
@@ -319,7 +362,7 @@ void BemioH5::Save(String file) const {
 				for (int c = 0; c < 6*dt.Nb; ++c) {	
 					for (int iw = 0; iw < dt.Nf; ++iw) {
 						if (dt.B[ib*6 + r][c].size() == dt.Nf)
-							data(iw, 1) = Nvl2(dt.B[ib*6 + r][c][iw], B_dim(iw, ib*6 + r, c), 0.);
+							data(iw, 1) = Nvl2(dt.B[ib*6 + r][c][iw], 0.);
 						else
 							data(iw, 1) = 0;
 					}
@@ -335,7 +378,7 @@ void BemioH5::Save(String file) const {
 			for (int c = 0; c < 6*dt.Nb; ++c) 
 				for (int iw = 0; iw < dt.Nf; ++iw) {
 					if (dt.A[ib*6 + r][c].size() == dt.Nf) 
-						d(r, c, iw) = Nvl2(dt.A[ib*6 + r][c][iw], A_dim(iw, ib*6 + r, c), 0.);
+						d(r, c, iw) = Nvl2(dt.A[ib*6 + r][c][iw], 0.);
 					else
 						d(r, c, iw) = 0;
 				}
@@ -348,7 +391,7 @@ void BemioH5::Save(String file) const {
 			for (int c = 0; c < 6*dt.Nb; ++c) 
 				for (int iw = 0; iw < dt.Nf; ++iw) {
 					if (dt.B[ib*6 + r][c].size() == dt.Nf) 
-						d(r, c, iw) = Nvl2(dt.B[ib*6 + r][c][iw], B_dim(iw, ib*6 + r, c), 0.);
+						d(r, c, iw) = Nvl2(dt.B[ib*6 + r][c][iw], 0.);
 					else
 						d(r, c, iw) = 0;
 				}
@@ -365,7 +408,7 @@ void BemioH5::Save(String file) const {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = Nvl2(f[ib][ih](iw, idf).real(), 0.)*F_toDimFactor(idf);
+							data(iw, 1) = Nvl2(f[ib][ih](iw, idf).real(), 0.);
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
@@ -376,7 +419,7 @@ void BemioH5::Save(String file) const {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = Nvl2(f[ib][ih](iw, idf).imag(), 0.)*F_toDimFactor(idf);
+							data(iw, 1) = Nvl2(f[ib][ih](iw, idf).imag(), 0.);
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
@@ -387,7 +430,7 @@ void BemioH5::Save(String file) const {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
-							data(iw, 1) = abs(Nvl2(f[ib][ih](iw, idf), std::complex(0.,0.)))*F_toDimFactor(idf);
+							data(iw, 1) = abs(Nvl2(f[ib][ih](iw, idf), std::complex(0.,0.)));
 						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
@@ -412,7 +455,7 @@ void BemioH5::Save(String file) const {
 		for (int idf = 0; idf < 6; ++idf) 
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int iw = 0; iw < dt.Nf; ++iw) {
-					const std::complex<double> &n = Nvl2(f[ib][ih](iw, idf), std::complex(0.,0.))*F_toDimFactor(idf);		
+					const std::complex<double> &n = Nvl2(f[ib][ih](iw, idf), std::complex(0.,0.));		
 					d_r(idf, ih, iw) = n.real();		
 					d_i(idf, ih, iw) = n.imag();		
 					d_m(idf, ih, iw) = abs(n);		
@@ -424,6 +467,14 @@ void BemioH5::Save(String file) const {
 		hfile.Set("mag",   d_m).SetDescription(Format("Magnitude of %s force", caption));
 		hfile.Set("phase", d_p).SetDescription(Format("Phase angle of %s force", caption));
 	};
+	auto SaveMD = [&](int ib, String caption) {
+		MultiDimMatrixRowMajor<double> md(6, dt.Nh, dt.Nf);		
+		for (int idf = 0; idf < 6; ++idf) 
+			for (int ih = 0; ih < dt.Nh; ++ih) 
+				for (int iw = 0; iw < dt.Nf; ++iw)
+					md(idf, ih, iw) = Nvl2(dt.md[ib][ih][idf][iw], 0.);		
+		hfile.Set("val", md).SetDescription(Format("Mean drift obtained with %s method", caption));		
+	};	
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		if (hfile.CreateGroup(Format("body%d", ib+1), true)) {
@@ -459,7 +510,7 @@ void BemioH5::Save(String file) const {
 						MatrixXd mat(6, 6*dt.Nb);
 						for (int r = 0; r < 6; ++r) {
 							for (int c = 0; c < 6*dt.Nb; ++c)
-								mat(r, c) = Nvl2(dt.Ainf(r, c), Ainf_dim(r, c), 0.);
+								mat(r, c) = Nvl2(dt.Ainf(r, c), 0.);
 						}
 						hfile.Set("inf_freq", mat).SetDescription("Infinite frequency added mass").SetUnits("kg");
 					}
@@ -497,7 +548,28 @@ void BemioH5::Save(String file) const {
 					}
 					hfile.UpGroup();	
 				}
-				MatrixXd C = C_mat(false, ib);
+				if (IsLoadedMD()) {
+					if (hfile.CreateGroup("mean_drift", true)) {
+						if (dt.mdtype == 7) {
+							if (hfile.CreateGroup("control_surface", true)) {
+								SaveMD(ib, "control_surface");
+								hfile.UpGroup();
+							}
+						} else if (dt.mdtype == 9) {
+							if (hfile.CreateGroup("pressure_integration", true)) {
+								SaveMD(ib, "pressure_integration");
+								hfile.UpGroup();
+							}
+						} else if (dt.mdtype == 8) {
+							if (hfile.CreateGroup("momentum_conservation", true)) {
+								SaveMD(ib, "momentum_conservation");
+								hfile.UpGroup();
+							}
+						}
+						hfile.UpGroup();
+					}
+				}
+				MatrixXd C = C_mat(!dt.dimen, ib);
 				hfile.Set("linear_restoring_stiffness", C).SetDescription("Hydrostatic stiffness matrix");
 				
 				hfile.UpGroup();	

@@ -30,7 +30,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
 
 * BEM coefficients
   * Load-View
-    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst, .7, .8, .9, .12s, .12d
+    * [Wamit](https://www.wamit.com/): .out, .3sc, 3fk, .1, .3, .4, .hst, .5p, .7, .8, .9, .12s, .12d
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .lis, .ah1, .qtf
 	* [OrcaFlex](https://www.orcina.com/orcaflex/): .yml
     * [OrcaWave](https://www.orcina.com/orcaflex/): .owr (requires OrcaWave installed)
@@ -65,7 +65,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
       
 * Mesh files
   * Load-View
-    * [Wamit](https://www.wamit.com/): .gdf, pan.dat
+    * [Wamit](https://www.wamit.com/): .gdf, .idf, pan.dat
     * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974) and [Capytaine](https://github.com/mancellin/capytaine): .dat
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat

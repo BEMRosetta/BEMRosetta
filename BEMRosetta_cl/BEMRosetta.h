@@ -649,10 +649,12 @@ public:
 	
 	inline double A0_dim(int idf, int jdf)   		 	const {return dt.A0(idf, jdf)*A_toDimFactor(idf, jdf);}
 	MatrixXd A0_mat(bool ndim, int ib1, int ib2) 		const;
+	MatrixXd A0_mat(bool ndim) 							const;
 	inline double A0_ndim(int idf, int jdf)  		 	const {return dt.A0(idf, jdf)*A_toNDimFactor(idf, jdf);}
 	inline double A0_(bool ndim, int idf, int jdf) 		const {return ndim   ? A0_ndim(idf, jdf) : A0_dim(idf, jdf);}
 	inline double Ainf_dim(int idf, int jdf) 		 	const {return dt.Ainf(idf, jdf)*A_toDimFactor(idf, jdf);}
 	MatrixXd Ainf_mat(bool ndim, int ib1, int ib2) 		const;
+	MatrixXd Ainf_mat(bool ndim) 						const;
 	inline double Ainf_ndim(int idf, int jdf)		 	const {return dt.Ainf(idf, jdf)*A_toNDimFactor(idf, jdf);}
 	inline double Ainf_(bool ndim, int idf, int jdf) 	const {return ndim   ? Ainf_ndim(idf, jdf) : Ainf_dim(idf, jdf);}
 	
@@ -784,7 +786,7 @@ public:
 	VectorXd Tall_inf(int ib) const;
 	VectorXd Tall(int ib) const;
 
-	static VectorXd Tall_inf(int ib, const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf);
+	static VectorXd Tall_inf(const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf);
 
 	double GM(int ib, int idf) const;
 	double GMroll(int ib) const;
@@ -1169,9 +1171,6 @@ public:
 	String SpreadNegative(Function <bool(String, int)> Status);
 	void MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase);
 	void AddWave(int ib, double dx, double dy, double g);
-	
-	//void NewmannApproximation();
-	//void StandingBrendlingWilsonApproximation();
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
 	void DeleteFrequenciesQTF(const UVector<int> &idFreqQTF);

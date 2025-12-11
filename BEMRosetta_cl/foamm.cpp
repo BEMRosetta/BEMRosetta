@@ -50,14 +50,13 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	if (loadCoeff) {
 		if (!mat.Exist("w"))
 			throw Exc(S("\n") + t_("Vector w not found"));
-		mat.Get<double>("w", dt.w);	
+		dt.w = mat.ReadColMajor<double>(mat.GetVar("w"));
 			
 		dt.Nf = dt.w.size();
 		
 		if (!mat.Exist("A"))
 			throw Exc(S("\n") + t_("Vector A not found"));		
-		UVector<double> A;
-		mat.Get<double>("A", A);	
+		UVector<double> A = mat.ReadColMajor<double>(mat.GetVar("A"));
 		if (dt.Nf != A.size())
 			throw Exc(S("\n") + t_("Vectors w and A size does not match"));
 		dt.A[idf][jdf].setConstant(dt.Nf);	
@@ -66,8 +65,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 		if (!mat.Exist("B"))
 			throw Exc(S("\n") + t_("Vector B not found"));		
-		UVector<double> B;
-		mat.Get<double>("B", B);	
+		UVector<double> B = mat.ReadColMajor<double>(mat.GetVar("B"));
 		if (dt.Nf != B.size())
 			throw Exc(S("\n") + t_("Vectors w and B size does not match"));
 		dt.B[idf][jdf].setConstant(dt.Nf);	
@@ -76,8 +74,8 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 		
 		dt.msh[0].dt.name = "Body";
 		
-		double Mu = mat.Get<double>("Mu");
-		if (!IsNull(Mu)) {
+		if (mat.Exist("Mu")) {
+			double Mu = mat.ReadDouble(mat.GetVar("Mu"));
 			dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, 0);
 			dt.Ainf(idf, jdf) = Mu;
 		}
@@ -88,8 +86,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 
 	if (!mat.Exist("TFSResponse"))
 		throw Exc(S("\n") + t_("Vector TFSResponse not found"));
-	UVector<Complex> TFS;
-	mat.Get<Complex>("TFSResponse", TFS);	
+	UVector<std::complex<double>> TFS = mat.ReadColMajor<std::complex<double>>(mat.GetVar("TFSResponse"));
 	sts.TFS.SetCount(dt.Nf);
 	if (dt.Nf != TFS.size())
 		throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
@@ -98,8 +95,7 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 	if (!mat.Exist("A_ss"))
 		throw Exc(S("\n") + t_("Matrix A_ss not found"));
-	MatrixXd A_ss;
-	mat.Get("A_ss", A_ss);	
+	MatrixXd A_ss = mat.ReadEigenDouble(mat.GetVar("A_ss"));
 	sts.A_ss.setConstant(A_ss.rows(), A_ss.cols(), Null);
 	for (int r = 0; r < A_ss.rows(); ++r)
 		for (int c = 0; c < A_ss.cols(); ++c)
@@ -107,37 +103,33 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	
 	if (!mat.Exist("B_ss"))
 		throw Exc(S("\n") + t_("Matrix B_ss not found"));
-	MatrixXd B_ss;
-	mat.Get("B_ss", B_ss);	
+	MatrixXd B_ss = mat.ReadEigenDouble(mat.GetVar("B_ss"));	
 	sts.B_ss.setConstant(B_ss.rows(), Null);
 	for (int r = 0; r < B_ss.rows(); ++r)
 		sts.B_ss(r) = B_ss(r, 0);
 
 	if (!mat.Exist("C_ss"))
 		throw Exc(S("\n") + t_("Matrix C_ss not found"));
-	MatrixXd C_ss;
-	mat.Get("C_ss", C_ss);	
+	MatrixXd C_ss = mat.ReadEigenDouble(mat.GetVar("C_ss"));	
 	sts.C_ss.setConstant(C_ss.cols(), Null);
 	for (int c = 0; c < C_ss.cols(); ++c)
 		sts.C_ss(c) = C_ss(0, c);
 	
 	if (!mat.Exist("Frequencies"))
 		throw Exc(S("\n") + t_("Matrix Frequencies not found"));
-	MatrixXd ssFrequencies;
-	mat.Get("Frequencies", ssFrequencies);	
+	MatrixXd ssFrequencies = mat.ReadEigenDouble(mat.GetVar("Frequencies"));
 	sts.ssFrequencies.setConstant(ssFrequencies.cols(), Null);
 	for (int c = 0; c < ssFrequencies.cols(); ++c)
 		sts.ssFrequencies[c] = ssFrequencies(0, c);
 
 	if (!mat.Exist("FreqRange"))
 		throw Exc(S("\n") + t_("Matrix FreqRange not found"));
-	MatrixXd ssFreqRange;
-	mat.Get("FreqRange", ssFreqRange);	
+	MatrixXd ssFreqRange = mat.ReadEigenDouble(mat.GetVar("FreqRange"));
 	sts.ssFreqRange.setConstant(ssFreqRange.cols(), Null);
 	for (int c = 0; c < ssFreqRange.cols(); ++c)
 		sts.ssFreqRange[c] = ssFreqRange(0, c);
 
-	sts.ssMAE = mat.Get<double>("MAE");	
+	sts.ssMAE = mat.ReadDouble(mat.GetVar("MAE"));
 	
 	dt.dimenSTS = true;	
 }
@@ -161,7 +153,7 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 		throw Exc(Format(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
 	String file = AFX(folder, "temp_file.mat");
 
-file = AFX(GetDesktopFolder(), "temp_file2.mat");
+//file = AFX(GetDesktopFolder(), "temp_file2.mat");
 
 	int idf = ibody*6 + _idf;
 	int jdf = ibody*6 + _jdf;
@@ -174,86 +166,51 @@ file = AFX(GetDesktopFolder(), "temp_file2.mat");
 	MatrixXd matA(dt.Nf, 1);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matA(ifr, 0) = A_dim(ifr, idf, jdf);
- 	if (!mat.Set("A", matA))
- 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "A", file));
+ 	mat.Write("A", matA);
 
- 	if (!mat.Set<double>("Mu", Ainf_dim(idf, jdf)))
- 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Mu", file));
+ 	mat.Write("Mu", Ainf_dim(idf, jdf));
  		 	
 	MatrixXd matB(dt.Nf, 1);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matB(ifr, 0) = B_dim(ifr, idf, jdf);
-	if (!mat.Set("B", matB))
- 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "B", file));
+	mat.Write("B", matB);
 	
 	MatrixXd matw(1, dt.Nf);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
 		matw(0, ifr) = dt.w[ifr];
-	if (!mat.Set("w", matw))
- 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "w", file));
+	mat.Write("w", matw);
 	
-				/*MatMatrix<double> matDof(1, 6);
-				for (int i = 0; i < 6; ++i) {
-					if (i == idf)
-						matDof(0, i) = 1;
-					else
-						matDof(0, i) = 0;
-				}
-				if (!mat.VarWrite("Dof", matDof))
-			 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));*/
+//	MatMatrix<double> matDof(1, 6);
+//	for (int i = 0; i < 6; ++i) {
+//		if (i == idf)
+//			matDof(0, i) = 1;
+//		else
+//			matDof(0, i) = 0;
+//	}
+//	if (!mat.VarWrite("Dof", matDof))
+// 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));
 	
-	UVector<String> optionsVars;
-	optionsVars << "Mode" << "Method" << "FreqRangeChoice" << "FreqChoice";
-	MatVar options("Options", 1, 1, optionsVars);
+	MatFile::StructNode options(mat, "Options", {"Mode", "Method", "FreqRangeChoice", "FreqChoice", "Optim"});
 	
-	MatrixXd mode(1, 1);
-	mode(0, 0) = 0;
-	options.SetStruct("Mode", mode);
-	MatrixXd method(1, 1);
-	method(0, 0) = 0;
-	options.SetStruct("Method", method);
-	//options.VarWriteStruct("FreqRangeChoice", "G");
-	//options.VarWriteStruct("FreqChoice", "G");
+	options.Write("Mode", 0.);
+	options.Write("Method", 0.);
 	
-	MatrixXd freqRangeChoice(1, 2);
-	freqRangeChoice(0, 0) = from;
-	freqRangeChoice(0, 1) = to;
-	options.SetStruct("FreqRangeChoice", freqRangeChoice);
+	UVector<double> freqRangeChoice = {from, to};
+	options.Write("FreqRangeChoice", freqRangeChoice);
 
-	MatrixXd freqChoice(1, freqs.size());
-	for (int i = 0; i < freqs.size(); ++i) 
-		freqChoice(0, i) = freqs[i];
-	options.SetStruct("FreqChoice", freqChoice);
+	options.Write("FreqChoice", freqs);
 	
-	UVector<String> optimVars;
-	optimVars << "InitCond" << "Tol" << "maxEval" << "maxIter" << "StepTol" << "ThresRel" << "ThresAbs";
-	MatVar optim("Optim", 1, 1, optimVars);
+	MatFile::StructNode& optim = options.AddChild("Optim", {"InitCond", "Tol", "maxEval", "maxIter", "StepTol", "ThresRel", "ThresAbs"});
 
-	MatrixXd InitCond(1, 1);
-	InitCond(0, 0) = 50;	
-	optim.SetStruct("InitCond", InitCond);
-	MatrixXd Tol(1, 1);
-	Tol(0, 0) = 1E-5;	
-	optim.SetStruct("Tol", Tol);
-	MatrixXd maxEval(1, 1);
-	maxEval(0, 0) = 1E3;	
-	optim.SetStruct("maxEval", maxEval);
-	MatrixXd maxIter(1, 1);
-	maxIter(0, 0) = 200;	
-	optim.SetStruct("maxIter", maxIter);
-	MatrixXd StepTol(1, 1);
-	StepTol(0, 0) = 1E-6;	
-	optim.SetStruct("StepTol", StepTol);
-	MatrixXd ThresRel(1, 1);
-	ThresRel(0, 0) = 0.03;	
-	optim.SetStruct("ThresRel", ThresRel);
-	MatrixXd ThresAbs(1, 1);
-	ThresAbs(0, 0) = 0.1;	
-	optim.SetStruct("ThresAbs", ThresAbs);
+	optim.Write("InitCond", 50.);
+	optim.Write("Tol", 		1E-5);
+	optim.Write("maxEval", 	1E3);
+	optim.Write("maxIter", 	200.);
+	optim.Write("StepTol", 	1E-6);
+	optim.Write("ThresRel", 0.03);
+	optim.Write("ThresAbs", 0.1);
 	
-	options.SetStruct("Optim", optim);
-	
-	mat.Set(options);
+	options.Write(MAT_COMPRESSION_ZLIB);
 	
 	mat.Close();
 	
@@ -291,6 +248,7 @@ file = AFX(GetDesktopFolder(), "temp_file2.mat");
 		DeleteFolderDeep(folder);	Sleep(100);
 		throw Exc(t_("FOAMM ended with error"));
 	}
+
 	Load_mat(file, idf, jdf, false);	Sleep(100);
 	DeleteFolderDeep(folder);			Sleep(100);
 }

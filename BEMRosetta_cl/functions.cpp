@@ -21,9 +21,38 @@ double GetKirfMaxT(const VectorXd &w) {
 void GetTirf(VectorXd &Tirf, int numT, double maxT) {
     Tirf = VectorXd::LinSpaced(numT, 0, maxT);
 }
+
+double GetInterceptFromMaxY(const Eigen::VectorXd& x, const Eigen::VectorXd& y) {
+	double lastx = Last(x);
+
+    int max_idx;
+    y.maxCoeff(&max_idx);
+    
+    int sz = (int)(x.size() - max_idx);
+    const Eigen::VectorXd x_right = x.tail(sz);
+    const Eigen::VectorXd y_right = y.tail(sz);
+    
+    if (sz < 2)
+    	return Null;
+    
+    double slope = Slope(x_right, y_right);
+    double b = Last(y_right) - slope*lastx;
+    double intercept = -b/slope;
+    
+    if (intercept < lastx)
+        intercept = lastx;
+    else if (intercept > lastx*2)
+        intercept = lastx*2;
+
+	return intercept;
+}
+
+void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &_w, const VectorXd &_B) {
+	ASSERT(_B.size() >= 2);
 	
-void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const VectorXd &B) {
-	ASSERT(B.size() >= 2);
+	VectorXd w(_w.size() + 2), B(_w.size() + 2);		// Added start and end tails to B
+	w << 0, _w, GetInterceptFromMaxY(_w, _B);
+	B << 0, _B, 0;
 	
 	VectorXd w2, B2;
 	
@@ -39,7 +68,6 @@ void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &w, const Vect
     for (int it = 0; it < numT; ++it) {
 		for (int iw = 0; iw < Nf; ++iw)
 			y(iw) = B2(iw)*cos(w2(iw)*Tirf(it));
-		//y.array() = B2.array()*(w2.array()*Tirf(it)).cos();
 		Kirf(it) = Integral(w2, y, SIMPSON_1_3)*2/M_PI;
 	}
 }

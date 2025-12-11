@@ -89,7 +89,7 @@ bool MainStateSpacePlot::Load(UArray<Hydro> &hydros, const UVector<int> &ids, co
 	int jdf = mainPlot.plot_jdf;
 	for (int id = 0; id < ids.size(); ++id) {
 		Hydro &hy = hydros[ids[id]];
-		if (hy.IsLoadedStateSpace()) {
+		if (hy.IsLoadedStateSpace(idf, jdf)) {
 			Hydro::StateSpace &sts = hy.dt.sts[idf][jdf];
 			int row = 0;
 			if (sts.A_ss.size() > 0 || sts.B_ss.size() > 0 || sts.C_ss.size() > 0) {

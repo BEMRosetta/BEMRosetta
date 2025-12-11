@@ -511,14 +511,14 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 			while (in.GetLine().Find("Wave period = infinite") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				dt.A0.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
+				dt.A0.setConstant(dt.Nb*6, dt.Nb*6, 0);		// Empty values are zero
 				Load_A(in, dt.A0);
 			}
 			in.SeekPos(fpos);
 			while (in.GetLine().Find("Wave period = zero") < 0 && !in.IsEof())
 				; 
 			if (!in.IsEof()) {
-				dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, NaNDouble);
+				dt.Ainf.setConstant(dt.Nb*6, dt.Nb*6, 0);	// Empty values are zero
 				Load_A(in, dt.Ainf);
 			}
 			
@@ -2306,7 +2306,7 @@ bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> 
 
 		int ifr = FindDelta(dt.w, freq, 0.001);
 		
-		if (Status && ifr != last_ifr && !Status("Loading .5p base data", (100.*ifr)/dt.Nf))
+		if (Status && ifr != last_ifr && !Status("Loading .5p base data", (int)((100.*ifr)/dt.Nf)))
 			throw Exc(t_("Stop by user"));
 
 		double rho_w = dt.w[ifr]*rho_ndim();
@@ -2413,7 +2413,7 @@ bool Wamit::Load_6p(String fileName, int &iperout, Function <bool(String, int)> 
 	UVector<int> idFs, idRest;
 	LoadListPointsTemp(idPanels, idPanelsM, idFs, idRest);
 	
-	if (!idPanels.IsEmpty() && Max(idPanels) > 0) {
+	if (!idPanels.IsEmpty() && Max(idPanels)) {
 		Initialize_PotsRad();
 		Initialize_PotsIncDiff(dt.pots_dif);
 	}
@@ -2442,7 +2442,7 @@ bool Wamit::Load_6p(String fileName, int &iperout, Function <bool(String, int)> 
 		if (ifr < 0 || ifr == 0)	// Inf and zero frec. Not processed for now
 			continue;
 
-		if (Status && ifr > lifr && !Status("Loading .6p base data", (100.*ifr)/dt.Nf))
+		if (Status && ifr > lifr && !Status("Loading .6p base data", (int)((100.*ifr)/dt.Nf)))
 			throw Exc(t_("Stop by user"));
 
 		double rho_w = dt.w[ifr]*rho_ndim();

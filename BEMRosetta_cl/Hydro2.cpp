@@ -1973,7 +1973,9 @@ void Hydro::GetA0() {
 		for (int i = 0; i < dt.Nb*6; ++i)
 	        for (int j = 0; j < dt.Nb*6; ++j)
 				dt.A0(i, j) = dt.A[i][j][iw0];
-/*	} else {
+	} else if (dt.w.size() < 3)
+		return;
+/*	else {
 		if (dt.Nf == 0 || !IsLoadedKirf())
 			return;	
 	
@@ -1983,10 +1985,7 @@ void Hydro::GetA0() {
 	        for (int j = 0; j < dt.Nb*6; ++j) 
 	    		if (IsNum(dt.Kirf[i][j][0]))
 			    	dt.A0(i, j) = ::GetA0(dt.Kirf[i][j], dt.Tirf, dt.Ainf(i, j));
-	}*/	
-	
-	} else if (dt.w.size() < 3)
-		return;
+	}	*/
 	else {
 		int iw1, iw2, iw3;
 		Get3W0(iw1, iw2, iw3);
@@ -2002,15 +2001,21 @@ void Hydro::GetA0() {
 	                dt.A0(i, j) = Null;
 	            else {
 	                double val = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, dt.A[i][j][iw1], dt.A[i][j][iw2], dt.A[i][j][iw3]);
-	        		if (abs(val) < 0.0000001) {
+	        		if (val < 0) {
+	        			val = dt.A[i][j][iw1];
 			    		if (abs(dt.A[i][j][iw1]) < 0.0000001) 
-	                        dt.A0(i, j) = val;
-	                    else
-	                    	dt.A0(i, j) = Null;
-	                } else if (abs(1 - val/dt.A[i][j][iw1]) > 0.3)
-	                    dt.A0(i, j) = Null;	// Too far to be good
-	                else
-						dt.A0(i, j) = val;
+			    			val = 0;
+	                } else if (abs(1 - val/dt.A[i][j][iw1]) > .5) {	// Too far to be good
+	                    VectorXd x(3), y(3);
+	                    x << wiw1, wiw2, wiw3;
+	                    y << dt.A[i][j][iw1], dt.A[i][j][iw2], dt.A[i][j][iw3];
+	                    double a, b;
+	                    LinearRegression(x, y, a, b);
+	                    val = b;
+	                    if (abs(1 - val/dt.A[i][j][iw1]) > 1)		// Too far to be good
+	                    	val = dt.A[i][j][iw1];	
+	                }
+	                dt.A0(i, j) = val;
 	            }
 	        }
 	}
@@ -2198,6 +2203,17 @@ MatrixXd Hydro::Ainf_mat(bool ndim, int ib1, int ib2) const {
 	return ret;
 }
 
+MatrixXd Hydro::Ainf_mat(bool ndim) const {
+	MatrixXd ret;
+	if (!IsLoadedAinf())
+		return ret;
+	ret.resize(6*dt.Nb, 6*dt.Nb);
+	for (int idf = 0; idf < 6*dt.Nb; ++idf) 	
+		for (int jdf = 0; jdf < 6*dt.Nb; ++jdf) 
+			ret(idf, jdf) = Ainf_(ndim, idf, jdf);
+	return ret;
+}
+
 MatrixXd Hydro::A0_mat(bool ndim, int ib1, int ib2) const {
 	MatrixXd ret;
 	if (!IsLoadedA0())
@@ -2206,6 +2222,17 @@ MatrixXd Hydro::A0_mat(bool ndim, int ib1, int ib2) const {
 	for (int idf = 0; idf < 6; ++idf) 	
 		for (int jdf = 0; jdf < 6; ++jdf) 
 			ret(idf, jdf) = A0_(ndim, idf + 6*ib1, jdf + 6*ib2);
+	return ret;
+}
+
+MatrixXd Hydro::A0_mat(bool ndim) const {
+	MatrixXd ret;
+	if (!IsLoadedAinf())
+		return ret;
+	ret.resize(6*dt.Nb, 6*dt.Nb);
+	for (int idf = 0; idf < 6*dt.Nb; ++idf) 	
+		for (int jdf = 0; jdf < 6*dt.Nb; ++jdf) 
+			ret(idf, jdf) = A0_(ndim, idf, jdf);
 	return ret;
 }
 
@@ -2476,10 +2503,10 @@ VectorXd Hydro::Tall_inf(int ib) const {
 	MatrixXd Ainf = Ainf_mat(false, ib, ib).unaryExpr([](double x){return IsNum(x) ? x : 0;});
 	const MatrixXd &M = dt.msh[ib].dt.M;
 	
-	return Tall_inf(ib, C, M, Ainf);
+	return Tall_inf(C, M, Ainf);
 }
 
-VectorXd Hydro::Tall_inf(int ib, const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf) {	
+VectorXd Hydro::Tall_inf(const MatrixXd &C, const MatrixXd &M, const MatrixXd &Ainf) {	
 	VectorXd W2 = (M + Ainf).llt().solve(C).diagonal();
 	return W2.unaryExpr([](double x)->double {
 		if (IsNull(x) || x < 1E-10)

@@ -392,11 +392,11 @@ bool Orca::InitVersion(String version) {
 			double number = GetVersionNumber(orcadata[i].version);
 			if (number < lowest) {
 				lowest = number;
-				ilowest = number;
+				ilowest = (int)number;
 			}
 			if (number > highest) {
 				highest = number;
-				ihighest = number;
+				ihighest = (int)number;
 			}
 			if (GetVersionString(orcadata[i].version).StartsWith(version)) {		// 11.6 with 11.6b matches
 				iversion = i;
