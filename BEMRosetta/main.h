@@ -1411,7 +1411,7 @@ public:
 	void OnPainter(Painter &w, ScatterCtrl *scat);
 	void OnMouse(Point p, dword, ScatterCtrl::MouseAction action, ScatterCtrl *scat);
 	
-	bool Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jdfs,
+	bool Get(UVector<int> &ib0s, UVector<int> &idfs, UVector<int> &ib1s, UVector<int> &jdfs,
 		UVector<double> &froms, UVector<double> &tos, UVector<UVector<double>> &freqs); 
 	void Clear();
 	

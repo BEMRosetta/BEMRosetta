@@ -432,7 +432,7 @@ void MainBEM::Init() {
 		} else if (mainTab.IsAt(mainSetupFOAMM)) {
 			menuTab.Set(menuFOAMM);
 			ismenuFOAMM = true;
-			if (mainSetupFOAMM.arrayCases.GetCount() == 0 && idxs.size() == 1) 
+			if (mainSetupFOAMM.arrayFoamm.GetCount() == 0 && idxs.size() == 1) 
 				listLoaded.SetCursor(0);
 			menuFOAMM.OnCursor();
 		} else if (mainTab.IsAt(mainQTF)) {
@@ -832,7 +832,7 @@ bool MainBEM::OnLoadFile(String file) {
 	
 	try {
 		Progress progress(t_("Loading BEM files..."), 100); 
-		
+		LOG("Loading BEM files...");		
 		for (int i = 0; i < Bem().hydros.size(); ++i) {
 			if (ForceExt(Bem().hydros[i].dt.file, ".") == ForceExt(file, ".") &&
 				(Bem().GetBEMExtSet(file) < 0 || 
@@ -848,6 +848,8 @@ bool MainBEM::OnLoadFile(String file) {
 		int num = Bem().LoadBEM(file, [&](String str, int _pos) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
+	str.Replace("\n", "");
+	LOG(str);
 			return !progress.Canceled();
 		}, false);
 		
@@ -864,7 +866,7 @@ bool MainBEM::OnLoadFile(String file) {
 		}
 		
 		//UpdateButtons();
-
+		
 		AfterBEM();
 		
 		// Sets headings to 0
@@ -2077,6 +2079,7 @@ MenuPlotList::MenuPlotList() {
 }
 
 void MainBEM::AfterBEM() {
+	LOG("AfterBEM");
 	mainSummary.Clear();
 	for (int idx = 0; idx < Bem().hydros.size(); ++idx) {
 		Hydro &hy = Bem().hydros[idx];
@@ -2736,5 +2739,7 @@ void MainOutput::Init() {
 
 void MainOutput::Print(String str) {
 	cout.Append(str);
+	str.Replace("\n", "");
+	LOG(str);
 	cout.ScrollEnd();
 }

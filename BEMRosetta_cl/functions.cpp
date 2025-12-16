@@ -50,9 +50,19 @@ double GetInterceptFromMaxY(const Eigen::VectorXd& x, const Eigen::VectorXd& y) 
 void GetKirf(VectorXd &Kirf, const VectorXd &Tirf, const VectorXd &_w, const VectorXd &_B) {
 	ASSERT(_B.size() >= 2);
 	
-	VectorXd w(_w.size() + 2), B(_w.size() + 2);		// Added start and end tails to B
-	w << 0, _w, GetInterceptFromMaxY(_w, _B);
-	B << 0, _B, 0;
+	VectorXd w, B;
+	double intercept = GetInterceptFromMaxY(_w, _B);
+	if (!IsNull(intercept)) {			// Added start and end tails to B
+		w.resize(_w.size() + 2);
+		B.resize(_w.size() + 2);
+		w << 0, _w, intercept;
+		B << 0, _B, 0;
+	} else {
+		w.resize(_w.size() + 1);
+		B.resize(_w.size() + 1);
+		w << 0, _w;
+		B << 0, _B;
+	}
 	
 	VectorXd w2, B2;
 	

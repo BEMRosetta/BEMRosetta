@@ -23,29 +23,30 @@ using namespace Upp;
 void MainSetupFOAMM::Init() {
 	CtrlLayout(*this);
 	
-	arrayCases.SetLineCy(EditField::GetStdHeight());
-	arrayCases.AddColumn(t_("     Sel"), 30);
-	arrayCases.AddColumn(t_("Body"), 20);
-	arrayCases.AddColumn(t_("Row"), 20);	
-	arrayCases.AddColumn(t_("Column"), 20);
-	arrayCases.AddColumn(t_("From (rad/s)"), 40);
-	arrayCases.AddColumn(t_("To (rad/s)"), 40);
-	arrayCases.AddColumn(t_("Frequencies (rad/s)"), 60);
-	arrayCases.WhenSel = [&] {WhenSelArrayCases();};
+	arrayFoamm.SetLineCy(EditField::GetStdHeight());
+	arrayFoamm.AddColumn(t_("     Sel"), 30);
+	arrayFoamm.AddColumn(t_("Body"), 20);
+	arrayFoamm.AddColumn(t_("Dof"), 20);	
+	arrayFoamm.AddColumn(t_("Body"), 20);	
+	arrayFoamm.AddColumn(t_("Dof"), 20);
+	arrayFoamm.AddColumn(t_("From (rad/s)"), 40);
+	arrayFoamm.AddColumn(t_("To (rad/s)"), 40);
+	arrayFoamm.AddColumn(t_("Frequencies (rad/s)"), 60);
+	arrayFoamm.WhenSel = [&] {WhenSelArrayCases();};
 	
 	selectAll << [&] {
-			for (int i = 0; i < arrayCases.GetCount(); ++i)
-				arrayCases.Set(i, 0, ~selectAll);
+			for (int i = 0; i < arrayFoamm.GetCount(); ++i)
+				arrayFoamm.Set(i, 0, ~selectAll);
 		};
 	setToAll  << [&] {
-			int id = arrayCases.GetCursor();
+			int id = arrayFoamm.GetCursor();
 			if (id < 0)
 				return;
-			for (int i = 0; i < arrayCases.GetCount(); ++i) {
+			for (int i = 0; i < arrayFoamm.GetCount(); ++i) {
 				if (id != i) {
-					arrayCases.Set(i, 4, arrayCases.Get(id, 4));
-					arrayCases.Set(i, 5, arrayCases.Get(id, 5));
-					arrayCases.Set(i, 6, arrayCases.Get(id, 6));
+					arrayFoamm.Set(i, 5, arrayFoamm.Get(id, 5));
+					arrayFoamm.Set(i, 6, arrayFoamm.Get(id, 6));
+					arrayFoamm.Set(i, 7, arrayFoamm.Get(id, 7));
 				}
 			}
 		};
@@ -157,7 +158,7 @@ void MainSetupFOAMM::OnMouse(Point p, dword, ScatterCtrl::MouseAction action, Sc
 }
 
 void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
-	arrayCases.Clear();
+	arrayFoamm.Clear();
 	options.Clear();
 	
 	idd = _id;
@@ -166,45 +167,48 @@ void MainSetupFOAMM::WhenSelArrayModel(int _id, BEM &bem) {
 	
 	const Hydro &hy = Bem().hydros[_id];
 	
-	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
+	for (int ib0 = 0; ib0 < hy.dt.Nb; ++ib0) {
 		for (int idf = 0; idf < 6; ++idf) {
-			for (int jdf = 0; jdf < 6; ++jdf) {
-				if (!bem.onlyDiagonal || idf == jdf) {
-					int _idf = ib*6 + idf;
-					int _jdf = ib*6 + jdf;
-	
-					if (hy.IsLoadedA(_idf, _jdf) && hy.IsLoadedB(_idf, jdf)) {
-						arrayCases.Add(false, ib+1, BEM::StrDOF(idf), BEM::StrDOF(jdf));
-						int row = arrayCases.GetCount()-1;
-						arrayCases.SetCtrl(row, 0, options.Add());
-						options.Top() << [=] {options[row].SetFocus();};
+			for (int ib1 = 0; ib1 < hy.dt.Nb; ++ib1) {
+				for (int jdf = 0; jdf < 6; ++jdf) {
+					if (!bem.onlyDiagonal || idf == jdf) {
+						int _idf = ib0*6 + idf;
+						int _jdf = ib1*6 + jdf;
+		
+						if (hy.IsLoadedA(_idf, _jdf) && hy.IsLoadedB(_idf, jdf)) {
+							arrayFoamm.Add(false, ib0+1, BEM::StrDOF(idf), ib1+1, BEM::StrDOF(jdf));
+							int row = arrayFoamm.GetCount()-1;
+							arrayFoamm.SetCtrl(row, 0, options.Add());
+							options.Top() << [=] {options[row].SetFocus();};
+						}
 					}
 				}
 			}
 		}
 	}
-	if (arrayCases.GetCount() > 0)
-		arrayCases.SetCursor(0);
+	if (arrayFoamm.GetCount() > 0)
+		arrayFoamm.SetCursor(0);
 }
 
 void MainSetupFOAMM::WhenSelArrayCases() {
 	try {
 		if (idd < 0)
 			return;
-		int row = arrayCases.GetCursor();
+		int row = arrayFoamm.GetCursor();
 		if (row < 0)
 			return;
 	
-		bool opChoose = arrayCases.Get(row, 0);
-		int ib = int(arrayCases.Get(row, 1)) - 1;
-		int idf = BEM::DOFStr(arrayCases.Get(row, 2));
-		int jdf = BEM::DOFStr(arrayCases.Get(row, 3));
-		fromFreq <<= arrayCases.Get(row, 4);
-		toFreq   <<= arrayCases.Get(row, 5);
+		bool opChoose = arrayFoamm.Get(row, 0);
+		int ib0 = int(arrayFoamm.Get(row, 1)) - 1;
+		int idf = BEM::DOFStr(arrayFoamm.Get(row, 2));
+		int ib1 = int(arrayFoamm.Get(row, 3)) - 1;
+		int jdf = BEM::DOFStr(arrayFoamm.Get(row, 4));
+		fromFreq <<= arrayFoamm.Get(row, 5);
+		toFreq   <<= arrayFoamm.Get(row, 6);
 
 		selector.Clear();
 			
-		String freqs = arrayCases.Get(row, 6);
+		String freqs = arrayFoamm.Get(row, 7);
 		UVector<String> afreqs = Split(freqs, ';');
 		for (int i = 0; i < afreqs.size(); ++i)
 			selector.AddField(ScanDouble(afreqs[i]));
@@ -214,7 +218,7 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 		
 		const Hydro &hy = Bem().hydros[idd];
 		
-		plots.Init(idf + 6*ib, jdf + 6*ib, Hydro::DATA_STS);
+		plots.Init(idf + 6*ib0, jdf + 6*ib1, Hydro::DATA_STS);
 		MainBEM &mbm = GetParentCtrl<MainBEM>(this);
 		plots.Load(hy, mbm);
 	} catch (Exc e) {
@@ -224,12 +228,12 @@ void MainSetupFOAMM::WhenSelArrayCases() {
 }
 
 void MainSetupFOAMM::WhenArrayCases() {
-	int row = arrayCases.GetCursor();
+	int row = arrayFoamm.GetCursor();
 	if (row < 0)
 		return;
 	
-	arrayCases.Set(row, 4, ~fromFreq);
-	arrayCases.Set(row, 5, ~toFreq);
+	arrayFoamm.Set(row, 5, ~fromFreq);
+	arrayFoamm.Set(row, 6, ~toFreq);
 
 	UVector<double> freqs;
 	for (int i = 0; i < selector.size(); ++i) {
@@ -252,7 +256,7 @@ void MainSetupFOAMM::WhenArrayCases() {
 		sfreqs << freqs[i];
 	}
 	
-	arrayCases.Set(row, 6, sfreqs);
+	arrayFoamm.Set(row, 7, sfreqs);
 	
 	Status(Check(~fromFreq, ~toFreq, sfreqs));
 	
@@ -286,23 +290,25 @@ String MainSetupFOAMM::Check(double fromFreq, double toFreq, String freqs) {
 	return String("");
 }
 
-bool MainSetupFOAMM::Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jdfs,
+bool MainSetupFOAMM::Get(UVector<int> &ib0s, UVector<int> &idfs, UVector<int> &ib1s, UVector<int> &jdfs,
 		UVector<double> &froms, UVector<double> &tos, UVector<UVector<double>> &freqs) {
-	for (int row = 0; row < arrayCases.GetCount(); ++row) {
-		bool proc = arrayCases.Get(row, 0);
+	for (int row = 0; row < arrayFoamm.GetCount(); ++row) {
+		bool proc = arrayFoamm.Get(row, 0);
 		if (proc) {
-			int ib = int(arrayCases.Get(row, 1))-1;
-			ibs << ib;
-			String sidf = arrayCases.Get(row, 2);
+			int ib0 = int(arrayFoamm.Get(row, 1))-1;
+			ib0s << ib0;
+			String sidf = arrayFoamm.Get(row, 2);
 			idfs << BEM::DOFStr(sidf);
-			String sjdf = arrayCases.Get(row, 3);
+			int ib1 = int(arrayFoamm.Get(row, 3))-1;
+			ib1s << ib1;
+			String sjdf = arrayFoamm.Get(row, 4);
 			jdfs << BEM::DOFStr(sjdf);
-			double from = arrayCases.Get(row, 4);
-			double to = arrayCases.Get(row, 5);
-			String strfreqs = arrayCases.Get(row, 6);
+			double from = arrayFoamm.Get(row, 5);
+			double to   = arrayFoamm.Get(row, 6);
+			String strfreqs = arrayFoamm.Get(row, 7);
 			String err = Check(from, to, strfreqs);
 			if (!err.IsEmpty()) {
-				BEM::PrintError(Format(t_("Problem in body %d (%s, %s): %s"), ib+1, sidf, sjdf, err));
+				BEM::PrintError(Format(t_("Problem in body %d (%s), body %s (%s): %s"), ib0+1, sidf, ib1+1, sjdf, err));
 				return false;		
 			}
 			froms << from;
@@ -313,7 +319,7 @@ bool MainSetupFOAMM::Get(UVector<int> &ibs, UVector<int> &idfs, UVector<int> &jd
 				f << ScanDouble(fs[i]);
 		}
 	}
-	if (ibs.IsEmpty()) {
+	if (ib0s.IsEmpty()) {
 		BEM::PrintError(t_("No case has been selected"));
 		return false;			
 	}
@@ -329,7 +335,7 @@ void MenuFOAMM::Clear() {
 }
 		
 bool MenuFOAMM::OnFOAMM() {
-	UVector<int> ibs, idfs, jdfs;
+	UVector<int> ib0s, ib1s, idfs, jdfs;
 	UVector<double> froms, tos;
 	UVector<UVector<double>> freqs;
 	String ret;
@@ -343,7 +349,7 @@ bool MenuFOAMM::OnFOAMM() {
 		if (mainBEM.listLoaded.GetCount() != 1 && ArrayCtrlSelectedGetCount(mainBEM.listLoaded) != 1)
 			return false;
 		
-		if (!setup->Get(ibs, idfs, jdfs, froms, tos, freqs))
+		if (!setup->Get(ib0s, idfs, ib1s, jdfs, froms, tos, freqs))
 			return false;
 		
 		foammWorking.Show();
@@ -356,7 +362,7 @@ bool MenuFOAMM::OnFOAMM() {
 		isCancelled = false;
 		status.SetText(t_("Starts processing"));
 		Foamm &foamm = static_cast<Foamm&>(Bem().hydros[idx]);
-		foamm.Get(ibs, idfs, jdfs, froms, tos, freqs,
+		foamm.Get(ib0s, idfs, ib1s, jdfs, froms, tos, freqs,
 			[&](String str, int pos)->bool {
 				if (!str.IsEmpty())
 					status.SetText(str);	

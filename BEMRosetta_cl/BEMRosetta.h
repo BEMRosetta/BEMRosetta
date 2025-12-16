@@ -1573,8 +1573,8 @@ class Foamm : public Hydro {
 public:
 	Foamm() {}
 	String Load(String file);
-	void Get_Each(int ibody, int idf, int jdf, double from, double to, const UVector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
-	void Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
+	void Get_Each(int ib0, int idf, int ib1, int jdf, double from, double to, const UVector<double> &freqs, Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
+	void Get(const UVector<int> &ib0s, const UVector<int> &idfs, const UVector<int> &ib1s, const UVector<int> &jdfs,
 		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage);
 	virtual ~Foamm() noexcept {}

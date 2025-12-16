@@ -134,18 +134,18 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	dt.dimenSTS = true;	
 }
 
-void Foamm::Get(const UVector<int> &ibs, const UVector<int> &idfs, const UVector<int> &jdfs,
+void Foamm::Get(const UVector<int> &ib0s, const UVector<int> &idfs, const UVector<int> &ib1s, const UVector<int> &jdfs,
 		const UVector<double> &froms, const UVector<double> &tos, const UVector<UVector<double>> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
-//	if (!FileExists(Bem().foammPath))
-//		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
-	for (int i = 0; i < ibs.size(); ++i) {
-		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ibs.size()));
-		Get_Each(ibs[i], idfs[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
+	if (!FileExists(Bem().foammPath))
+		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
+	for (int i = 0; i < ib0s.size(); ++i) {
+		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ib0s.size()));
+		Get_Each(ib0s[i], idfs[i], ib1s[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
 	}
 }
 
-void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, const UVector<double> &freqs, 
+void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double to, const UVector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
 	String folder = AFX(BEM::GetTempFilesFolder(), Format(id));
@@ -155,8 +155,8 @@ void Foamm::Get_Each(int ibody, int _idf, int _jdf, double from, double to, cons
 
 //file = AFX(GetDesktopFolder(), "temp_file2.mat");
 
-	int idf = ibody*6 + _idf;
-	int jdf = ibody*6 + _jdf;
+	int idf = ib0*6 + _idf;
+	int jdf = ib1*6 + _jdf;
 
 	MatFile mat;
 	
