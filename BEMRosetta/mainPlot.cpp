@@ -410,14 +410,16 @@ void MainPlot::LoadEach(const Hydro &hy, int id, bool &loaded, int idc) {
 					scatt.Units(Hydro::B_units(!dim, plot_idf, plot_jdf));
 			}
 		}
-	} else if (dataToShow == Hydro::DATA_MD && ih >= 0 && hy.IsLoadedMD()) {
-		if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
-			loaded = true;
-			scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD%s %s %d"), sids, nameType, hy.dt.mdtype)).
-						SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
-						Stroke(2, color).Dash(ScatterDraw::LINE_SOLID);
-			if (dim)
-				scatt.Units(Hydro::MD_units(!dim, plot_idf));
+	} else if (dataToShow == Hydro::DATA_MD && ih >= 0) {
+		if (hy.IsLoadedMD(ib, ih)) {
+			if (ABFZ_source[id].Init(hy, plot_idf, ih, Hydro::PLOT_MD, show_w, !dim, true)) {
+				loaded = true;
+				scatt.AddSeries(ABFZ_source[id]).Legend(Format(t_("MD%s %s %d"), sids, nameType, hy.dt.mdtype)).
+							SetMarkWidth(markW).MarkStyle<CircleMarkPlot>().SetMarkColor(color).
+							Stroke(2, color).Dash(ScatterDraw::LINE_SOLID);
+				if (dim)
+					scatt.Units(Hydro::MD_units(!dim, plot_idf));
+			}
 		}
 	} else if (dataToShow == Hydro::DATA_KIRF && hy.IsLoadedKirf()) {
 		if (ABFZ_source[id].Init(hy, plot_idf, plot_jdf, Hydro::PLOT_KIRF, show_w, !dim, show_ma_ph)) {

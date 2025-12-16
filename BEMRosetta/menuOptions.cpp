@@ -78,6 +78,7 @@ void MenuOptions::Load() {
 	guiScale <<= bem->guiScale;
 	windowTitle <<= bem->windowTitle;
 	opT <<= bem->opT;
+	opNoWind <<= bem->opNoWind;
 	
 	dofType.SetIndex(bem->dofType);
 	headingType.SetIndex(bem->headingType);
@@ -131,6 +132,7 @@ void MenuOptions::OnSave() {
 		bem->guiScale = ~guiScale;
 		bem->windowTitle = ~windowTitle;
 		bem->opT = ~opT;
+		bem->opNoWind = ~opNoWind;
 		
 		bem->dofType = BasicBEM::DOFType(dofType.GetIndex());
 		bem->headingType = BasicBEM::HeadingType(headingType.GetIndex());
@@ -211,6 +213,8 @@ bool MenuOptions::IsChanged() {
 	if (bem->windowTitle != ~windowTitle)
 		return true;
 	if (bem->opT != ~opT)
+		return true;
+	if (bem->opNoWind != ~opNoWind)
 		return true;
 							
 	return false;

@@ -640,6 +640,8 @@ String BEM::LoadSerializeJson() {
 		zeroIfEmpty = true;
 	if (!ok || IsNull(opT))
 		opT = 0;
+	if (!ok || IsNull(opNoWind))
+		opNoWind = false;
 						
 	return ret;
 }

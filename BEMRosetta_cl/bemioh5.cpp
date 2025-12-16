@@ -249,18 +249,17 @@ void BemioH5::Load_H5() {
 				}
 				hfile.GetDouble("linear_restoring_stiffness", dt.msh[ib].dt.C);
 				if (hfile.ChangeGroup("mean_drift")) {
-					if (hfile.ChangeGroup("control_surface")) {
+					if (!IsLoadedMD())
 						Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.head.size()), dt.Nf);
+					if (hfile.ChangeGroup("control_surface")) {
 						LoadMD(dt.md, ib);
 						dt.mdtype = 7;
 						hfile.UpGroup();		
 					} else if (hfile.ChangeGroup("pressure_integration")) {
-						Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.head.size()), dt.Nf);
 						LoadMD(dt.md, ib);
 						dt.mdtype = 9;
 						hfile.UpGroup();	
 					} else if (hfile.ChangeGroup("momentum_conservation")) {
-						Hydro::Initialize_MD(dt.md, dt.Nb, int(dt.head.size()), dt.Nf);
 						LoadMD(dt.md, ib);
 						dt.mdtype = 8;
 						hfile.UpGroup();	

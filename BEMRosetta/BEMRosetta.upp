@@ -40,7 +40,6 @@ file
 	main.iml,
 	clip.brc,
 	ajax-loader.gif,
-	main.rc,
 	auxiliar.lay,
 	auxiliar.h,
 	resource.h,
@@ -49,6 +48,7 @@ file
 	FastScatter.h,
 	FastScatter.iml,
 	FastScatter.lay,
+	main.rc,
 	Copying;
 
 mainconfig

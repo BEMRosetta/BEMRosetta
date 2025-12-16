@@ -1847,6 +1847,7 @@ public:
 	int onlyDiagonal;
 	int zeroIfEmpty = false;
 	bool opT = 0;
+	bool opNoWind = false;
 	
 	String nemohPath, nemoh115Path, nemoh3Path, nemohPathGREN;
 	bool experimental;
@@ -1984,6 +1985,7 @@ public:
 			("windowTitle", windowTitle)
 			("opT", opT)
 			("hamsmrelPath", hamsmrelPath)
+			("opNoWind", opNoWind)
 		;
 		if (json.IsLoading()) {
 			dofType = BasicBEM::DOFType(idofType);
