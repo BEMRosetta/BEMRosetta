@@ -13,7 +13,7 @@
 <img src="https://img.shields.io/github/last-commit/izabala123/bemrosetta.svg" alt="Last commit">
 
 <p align="center">
-  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/DeepCWind2.png" width="90%" title="DeepCWind mesh in Windows and Linux">
+  <img src="https://github.com/izabala123/BEMRosetta/blob/master/other/md%20resources/DeepCWind2.png" width="100%" title="DeepCWind mesh in Windows and Linux">
 </p>
 
 [Boundary Element Methods](https://en.wikipedia.org/wiki/Boundary_element_method) are extensively used to model hydrodynamic forces in offshore devices like ships, offshore wind platforms and wave energy converters. These solvers use device geometry mesh to get some hydrodynamics coefficients as radiation damping, added mass, wave diffraction force, and wave excitation force. All these data is saved in file formats incompatible between them. These may avoid to use the coefficients between programs. 
