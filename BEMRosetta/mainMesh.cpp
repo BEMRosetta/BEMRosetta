@@ -264,15 +264,19 @@ void MainBody::Init() {
 	menuProcess.butWaterPlane.Tip(t_("Extracts waterplane from a mesh that already includes it"));
 	menuProcess.butHull		  <<= THISBACK1(OnAddWaterSurface, 'r');
 	menuProcess.butHull.Tip(t_("Extracts underwater (wet) hull from a mesh"));
+	menuProcess.butCS <<= THISBACK(OnCS);
+	menuProcess.butCS.Tip(t_("Obtains control surface"));
 	
 	menuProcess.meshRatio <<= 1;
 	menuProcess.meshRatio.Tip(t_("Ratio of generated mesh size to current mesh size"));
-	menuProcess.meshRatio.Tip(t_("Mix triangles and quads, or set only quads"));
+	//menuProcess.butWaterFill.Tip(t_("Mix triangles and quads, or set only quads"));
 	menuProcess.lambda = 0.3;
 	menuProcess.mu = -0.2;
 	menuProcess.iterations = 10;
 	menuProcess.butSmooth <<= THISBACK(OnSmooth);
 	menuProcess.butSmooth.Tip(t_("Smooths the mesh using the Taubin method"));
+	menuProcess.csDistance = 10;
+	menuProcess.csDistance.Tip(t_("Dustance from control surface to model"));
 	
 	menuProcess.butInertia.SetCtrl(menuProcessInertia).Tip(t_("Click to get the inertia matrix"));
 	//menuProcess.butInertia.SetAutoOpen();
@@ -925,7 +929,7 @@ bool MainBody::OnLoad() {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 			return !progress.Canceled();
-		}, ~menuOpen.opClean, false, idxs);
+		}, ~menuOpen.opClean, false);
 		
 		menuAnimation.animationFile <<= Bem().fast.GetFileName();
 		
@@ -1806,6 +1810,38 @@ void MainBody::OnAddWaterSurface(char c) {
 		mainView.surf.Disable();
 	
 		Bem().AddWaterSurface(idx, c, menuProcess.meshRatio, menuProcess.opQuad);
+		
+		Body &nw = Last(Bem().surfs);
+		AddRow(nw);
+		After();
+		mainViewData.OnAddedModel(mainView);
+		OnOpt();
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+	mainView.surf.Enable();
+}
+
+void MainBody::OnCS() {
+	GuiLock __;
+
+	try {
+		UVector<int> idsJoin;
+		for (int r = 0; r < listLoaded.GetCount(); ++r) {
+			if (listLoaded.IsSelected(r)) {
+				int id = ArrayModel_IndexBody(listLoaded, r);
+				idsJoin << id;
+			}
+		}
+		if (idsJoin.IsEmpty()) {
+			BEM::PrintError(t_("No model selected"));
+			return;
+		}
+			
+		WaitCursor waitcursor;
+		mainView.surf.Disable();
+	
+		Bem().GetCS(idsJoin, menuProcess.csDistance, menuProcess.meshRatio, menuProcess.opQuad);
 		
 		Body &nw = Last(Bem().surfs);
 		AddRow(nw);

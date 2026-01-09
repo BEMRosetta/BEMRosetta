@@ -102,7 +102,7 @@ public:
 		bool enabled = true;
 	};
 	
-	int AddParam(String name, String unit, String description = "") {
+	int AddParam(String name, String unit) {
 		parameters << name;
 		units << unit;
 		parametersd << ToLower(name);

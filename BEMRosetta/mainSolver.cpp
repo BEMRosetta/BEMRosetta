@@ -73,14 +73,12 @@ MainSolverBody::MainSolverBody() {
 	InitGrid(Cadd, editAdd);
 	InitGrid(Cmoor, editMoor);
 	
-	UVector<int> idxs;
-	
 	butMesh << [&]() {
-		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false, idxs);
+		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
 		SetTexts(true);
 	};
 	butLid << [&]() {
-		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false, idxs);
+		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false);
 		SetTexts();
 	};
 	butMeshClear << [&]() {
@@ -372,7 +370,6 @@ void MainSolver::Load(String file) {
 	gen.height.Enable(tmp_hy.dt.h > 0);
 	gen.height <<= (tmp_hy.dt.h > 0 ? tmp_hy.dt.h : Null);
 	
-	UVector<int> idxs;
 	bodies.array.Clear();
 	bodiesEach.Clear();
 	bodiesEachScroll.Clear();
@@ -388,11 +385,11 @@ void MainSolver::Load(String file) {
 		b.fileLid <<= tmp_b.dt.lidFile;  
 		
 		if (tmp_b.IsEmpty())
-			Body::Load(b.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false, idxs);
+			Body::Load(b.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 		else
 			b.mesh = clone(tmp_b);
 
-		Body::Load(b.lid, tmp_b.dt.lidFile, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false, idxs);
+		Body::Load(b.lid, tmp_b.dt.lidFile, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 		
 		b.SetTexts();
 		

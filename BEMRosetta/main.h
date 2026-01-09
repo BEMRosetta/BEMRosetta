@@ -87,7 +87,7 @@ private:
 
 String TabText(const TabCtrl &tab);
 
-#define LOGTAB(tab) LOG(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
+#define LOGTAB(tab) EM().Log(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
 
 #define LAYOUTFILE <BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
@@ -944,6 +944,7 @@ public:
 	void OnAddRevolution();
 	void OnAddPolygonalPanel();
 	void OnAddWaterSurface(char c);
+	void OnCS();
 	void OnExtrude();
 	void OnInertia();
 	void UpdateButtons();
@@ -1683,6 +1684,7 @@ public:
 	void OnDuplicate();
 	void OnKirfAinf(Hydro::DataToPlot param);
 	void OnRAO();
+	void OnDampLin();
 	void OnBH(int num);
 	void OnOgilvie();
 	void OnAverage();

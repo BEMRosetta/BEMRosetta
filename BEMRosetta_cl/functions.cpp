@@ -36,6 +36,8 @@ double GetInterceptFromMaxY(const Eigen::VectorXd& x, const Eigen::VectorXd& y) 
     	return Null;
     
     double slope = Slope(x_right, y_right);
+    if (abs(slope) < 0.00000001)
+        return Null;
     double b = Last(y_right) - slope*lastx;
     double intercept = -b/slope;
     

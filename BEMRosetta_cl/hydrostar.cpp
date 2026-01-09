@@ -65,8 +65,7 @@ bool Wamit::Load_HDF(Function <bool(String, int)> Status) {
 	
 	UArray<Body> mesh;
 	bool y0z, x0z;
-	UVector<int> idxs;
-	String ret = Body::Load(mesh, ff2.GetPath(), dt.rho, dt.g, false, Null, Null, y0z, x0z, idxs);
+	String ret = Body::Load(mesh, ff2.GetPath(), dt.rho, dt.g, false, Null, Null, y0z, x0z);
 	if (!ret.IsEmpty())
 		throw Exc (Format(t_("Mesh data (.hst file) problem: %s"), ret));
 	

@@ -40,6 +40,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 		}	
 		if (ext == ".out") {
 			String fileout = ForceExtSafer(file, ".out");
+
 			BEM::Print("\n\n" + Format(t_("Output file '%s'"), GetFileName(fileout)));
 			if (!Load_out(fileout, Status)) 
 				BEM::Print(S(": ** out ") + t_("Not found") + "**");
@@ -1222,7 +1223,6 @@ bool Wamit::Load_pot(String fileName) {
 	if (dt.msh.IsEmpty())
 		dt.msh.SetCount(dt.Nb);
 	
-	UVector<int> idxs;
 	Upp::Index<String> names;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		Body &b = dt.msh[ib];
@@ -1233,7 +1233,7 @@ bool Wamit::Load_pot(String fileName) {
 		if (!FileExists(b.dt.fileName))
 			b.dt.fileName = AFX(GetFileFolder(fileName), b.dt.fileName);
 		
-		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, idxs);
+		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 		if (!IsEmpty(ret))
 			throw Exc(ret);
 
@@ -1286,12 +1286,11 @@ bool Wamit::Load_frc1(String fileName) {
 	in.GetLine(2);
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		UVector<int> idxs;
 		Body &b = dt.msh[ib];
 		
 		if (b.IsEmpty()) {
 			Point3D c0 = b.dt.c0;
-			String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, idxs);
+			String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 			if (!IsEmpty(ret))
 				throw Exc(ret);
 			b.dt.c0 = c0;

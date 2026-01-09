@@ -99,10 +99,10 @@ public:
 		return UNKNOWN;
 	}
 
-	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs);
-	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z, const UVector<int> &idxs);
-	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs);
-	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z, const UVector<int> &idxs);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
 	void RemovePanels(const UVector<int> &panels, double rho, double g);
@@ -623,8 +623,8 @@ public:
 	inline double C_toDimFactor (int idf, int jdf) const 		  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
 	inline double C_toNDimFactor(int idf, int jdf) const 		  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
 
-	inline double Kirf_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim()  : g_rho_dim()*pow(dt.len, GetK_F(idf));}
-	inline double Kirf_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
+	inline double Kirf_toDimFactor (int idf) const 	  			  {return dt.dimen  ? g_rho_dim()/g_rho_ndim()  : g_rho_dim()*pow(dt.len, GetK_F(idf));}
+	inline double Kirf_toNDimFactor(int idf) const 	  			  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_F(idf)));}
 	
 	inline double CMoor_toDimFactor (int idf, int jdf) const 	  {return dt.dimen  ? g_rho_dim()/g_rho_ndim() : g_rho_dim()*pow(dt.len, GetK_C(idf, jdf));}
 	inline double CMoor_toNDimFactor(int idf, int jdf) const 	  {return !dt.dimen ? 1 : 1/(g_rho_ndim()*pow(dt.len, GetK_C(idf, jdf)));}
@@ -673,9 +673,9 @@ public:
 	inline double B_P_ndim(int ifr, int idf, int jdf) 	const {return dt.B_P[idf][jdf][ifr]*B_toNDimFactor(ifr, idf, jdf);}
 	inline double B_P_(bool ndim, int ifr, int idf, int jdf)const {return ndim ? B_P_ndim(ifr, idf, jdf) : B_P_dim(ifr, idf, jdf);}	
 	
-	inline double Kirf_dim(int it, int idf, int jdf)  	const {return dt.Kirf[idf][jdf][it]*Kirf_toDimFactor(idf, jdf);}
-	inline double Kirf_ndim(int it, int idf, int jdf) 	const {return dt.Kirf[idf][jdf][it]*Kirf_toNDimFactor(idf, jdf);}
-	inline VectorXd Kirf_ndim(int idf, int jdf) 	 	const {return dt.Kirf[idf][jdf]*Kirf_toDimFactor(idf, jdf);}
+	inline double Kirf_dim(int it, int idf, int jdf)  	const {return dt.Kirf[idf][jdf][it]*Kirf_toDimFactor(idf);}
+	inline double Kirf_ndim(int it, int idf, int jdf) 	const {return dt.Kirf[idf][jdf][it]*Kirf_toNDimFactor(idf);}
+	inline VectorXd Kirf_ndim(int idf, int jdf) 	 	const {return dt.Kirf[idf][jdf]*Kirf_toDimFactor(idf);}
 	inline double Kirf_(bool ndim, int it, int idf, int jdf) const {return ndim ? Kirf_ndim(it, idf, jdf) : Kirf_dim(it, idf, jdf);}
 	
 	inline double Ainf_w_dim(int ifr, int idf, int jdf) const {return dt.Ainf_w[idf][jdf][ifr]*A_toDimFactor(idf, jdf);}
@@ -1157,6 +1157,7 @@ public:
 	void GetAinf();
 	void GetAinf_w();
 	void GetRAO(double critDamp);
+	void GetDampLin(double critDamp);
 	void GetDampingMatrix(double critDamp);
 	void GetB_H(int &num);
 	static VectorXcd GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
@@ -1871,6 +1872,7 @@ public:
 	void Ainf(int id);
 	void Ainf_w(int id);
 	void RAO(int id, double critDamp);
+	void DampLin(int id, double critDamp);
 	void BH(int id, int &num);
 	void OgilvieCompliance(int id, bool zremoval, bool thinremoval, bool decayingTail, UVector<int> &vidof, UVector<int> &vjdof);
 	void TranslationTo(int id, const MatrixXd &to, Function <bool(String, int pos)> Status = Null);
@@ -1891,7 +1893,7 @@ public:
 	void FillFrequencyGapsABForcesZero(int id);
 	void FillFrequencyGapsQTFZero(int id);
 	
-	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated, const UVector<int> &idxs);
+	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
 	void SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type, Body::MESH_TYPE meshType, bool symX, bool symY);
 	void HealingBody(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
@@ -1909,6 +1911,7 @@ public:
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals, double angle = 360, bool close = true, Function <bool(String)> Prompt = Null);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads);
 	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
+	void GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads);
 	void Extrude(int id, double dx, double dy, double dz, bool close);
 	void AddPanels(const Body &surfFrom, UVector<int> &panelList);
 	void Extract(int id, int cutXYZ, int cutPosNeg);

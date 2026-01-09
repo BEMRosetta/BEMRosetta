@@ -79,9 +79,11 @@ void MainBEM::Init() {
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_KIRF);
 	menuProcess.butRAO.Disable();	
+	menuProcess.butDampLin.Disable();
 	menuProcess.critDamp.Disable();	
 	menuProcess.critDamp = 0.05;
 	menuProcess.butRAO <<= THISBACK(OnRAO);
+	menuProcess.butDampLin <<= THISBACK(OnDampLin);
 	menuProcess.butSymmetrize <<= THISBACK(OnSymmetrize);
 	
 	menuProcess.butABForces << THISBACK(OnABForces);
@@ -832,7 +834,7 @@ bool MainBEM::OnLoadFile(String file) {
 	
 	try {
 		Progress progress(t_("Loading BEM files..."), 100); 
-		LOG("Loading BEM files...");		
+		EM().Log("Loading BEM files...");		
 		for (int i = 0; i < Bem().hydros.size(); ++i) {
 			if (ForceExt(Bem().hydros[i].dt.file, ".") == ForceExt(file, ".") &&
 				(Bem().GetBEMExtSet(file) < 0 || 
@@ -849,7 +851,7 @@ bool MainBEM::OnLoadFile(String file) {
 			progress.SetText(str); 
 			progress.SetPos(_pos); 
 	str.Replace("\n", "");
-	LOG(str);
+	EM().Log(str);
 			return !progress.Canceled();
 		}, false);
 		
@@ -959,6 +961,7 @@ void MainBEM::UpdateButtons() {
 	menuProcess.butA0.			Enable(numsel == 1 || numrow == 1);
 	menuProcess.butAinf.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.butRAO.			Enable(numsel == 1 || numrow == 1);
+	menuProcess.butDampLin.		Enable(numsel == 1 || numrow == 1);
 	menuProcess.critDamp.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butAinfw.		Enable(numsel == 1 || numrow == 1);
 	menuAdvanced.butBH.			Enable(numsel >= 1);
@@ -1280,6 +1283,28 @@ void MainBEM::OnRAO() {
 		WaitCursor wait;
 
 		Bem().RAO(idx, critDamp);
+		
+		AfterBEM();	
+	} catch (Exc e) {
+		BEM::PrintError(DeQtfLf(e));
+	}
+}
+
+void MainBEM::OnDampLin() {
+	try {
+		int idx = GetIndexOneSelected();
+		if (idx < 0) 
+			return;
+
+		double critDamp = ~menuProcess.critDamp;
+		if (IsNull(critDamp))
+			critDamp = 0;
+			
+		Progress progress(t_("Calculating Linear damping in selected BEM file..."), 100); 
+		
+		WaitCursor wait;
+
+		Bem().DampLin(idx, critDamp);
 		
 		AfterBEM();	
 	} catch (Exc e) {
@@ -2079,7 +2104,7 @@ MenuPlotList::MenuPlotList() {
 }
 
 void MainBEM::AfterBEM() {
-	LOG("AfterBEM");
+	EM().Log("AfterBEM");
 	mainSummary.Clear();
 	for (int idx = 0; idx < Bem().hydros.size(); ++idx) {
 		Hydro &hy = Bem().hydros[idx];
@@ -2740,6 +2765,6 @@ void MainOutput::Init() {
 void MainOutput::Print(String str) {
 	cout.Append(str);
 	str.Replace("\n", "");
-	LOG(str);
+	EM().Log(str);
 	cout.ScrollEnd();
 }

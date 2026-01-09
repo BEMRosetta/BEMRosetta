@@ -173,6 +173,10 @@ void BEM::RAO(int id, double critDamp) {
 	hydros[id].GetRAO(critDamp);
 }
 
+void BEM::DampLin(int id, double critDamp) {
+	hydros[id].GetDampLin(critDamp);
+}
+
 void BEM::BH(int id, int &num) {
 	hydros[id].GetB_H(num);
 } 
@@ -252,7 +256,7 @@ void BEM::MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase) {
 		Bem().Nb = max(Bem().Nb, hydros[i].dt.Nb);	
 }
 
-int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated, const UVector<int> &idxs) {
+int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
 	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
@@ -264,7 +268,7 @@ int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool
 		}
 	}
 	UArray<Body> meshes;
-	String error = Body::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps, idxs);
+	String error = Body::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps);
 	if (!error.IsEmpty()) {
 		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
 		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
@@ -558,6 +562,33 @@ void BEM::AddWaterSurface(int id, char c, double meshRatio, bool quads) {
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
 		Print("\n" + Format(t_("Problem adding water surface: %s"), e));
+		throw std::move(e);
+	}	
+}
+
+void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads) {
+	try {
+		Body &surf = surfs.Add();
+		
+		UVector<Surface *>surs(ids.size());
+		for (int i = 0; i < ids.size(); ++i) {
+			surs[i] = &(surfs[ids[i]].dt.under);
+			surs[i]->GetSegments();
+			if (IsNull(surs[i]->GetAvgLenSegment()))
+				throw Exc(t_("Surface does not have underwater panels"));
+		}
+
+		surf.dt.SetCode(Body::EDIT);
+		surf.dt.mesh.AddCS(surs, distance, meshRatio, quads); 
+		surf.dt.c0 = surfs[ids[0]].dt.c0;	// c0 taken from the first
+		
+		surf.dt.name = t_("Control surface");
+		surf.dt.fileName =  "";
+		
+		surf.AfterLoad(rho, g, false, true);
+	} catch (Exc e) {
+		surfs.SetCount(surfs.size() - 1);
+		Print("\n" + Format(t_("Problem obtaining control surface: %s"), e));
 		throw std::move(e);
 	}	
 }

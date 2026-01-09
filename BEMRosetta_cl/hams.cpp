@@ -173,7 +173,6 @@ int Hams::Load_ControlFile(String fileName) {
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	UVector<int> dummy;
 	bool ismrel = false;
 	int input_frequency_type = 0, output_frequency_type = 0;
 	
@@ -260,7 +259,7 @@ int Hams::Load_ControlFile(String fileName) {
 					throw Exc(t_("BEMRosetta does not support rotations in local coordinate system LCS"));
 				
 				Body &b = dt.msh[ib];
-				String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, dummy);
+				String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 				if (!IsEmpty(ret))
 					BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
 				b.dt.mesh.Translate(lcs[ib].x, lcs[ib].y, lcs[ib].z);
@@ -344,7 +343,7 @@ int Hams::Load_ControlFile(String fileName) {
 	}
 	if (!ismrel) {
 		Body &b = dt.msh[0];
-		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false, dummy);
+		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 		if (!IsEmpty(ret))
 			BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
 		b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
@@ -575,8 +574,7 @@ void Hams::Save_Settings(String folderInput, const UArray<Body> &lids) const {
 		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
 	
 	Body mesh;
-	UVector<int> idxs;
-	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false, idxs);
+	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	

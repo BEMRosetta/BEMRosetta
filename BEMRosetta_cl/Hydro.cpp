@@ -875,7 +875,6 @@ void Hydro::GetRAO(double critDamp) {
 			}
 		}
 	}
-	GetDampingMatrix(critDamp);
 }
 
 MatrixXd SquareRoot(const MatrixXd& m) {	
@@ -888,38 +887,22 @@ MatrixXd SquareRoot(const MatrixXd& m) {
     return U * S.asDiagonal() * V.transpose();
 }
 
-MatrixXd CriticalDamping(double critDamp, const MatrixXd &M, const MatrixXd &A, const MatrixXd &K) {
+static MatrixXd CriticalDamping(double critDamp, const MatrixXd &M, const MatrixXd &A, const MatrixXd &K) {
     MatrixXd M_eff_sqrt = SquareRoot(M + A);
     MatrixXd K_sqrt = SquareRoot(K);
     
     return 2 * critDamp * K_sqrt * M_eff_sqrt;	
 }
 
-VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
-		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2, double critDamp) {
-	MatrixXd Aw0   = Aw .unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
-			 Bw0   = Bw .unaryExpr([](double x){return IsNum(x) ? x : 0;});
-	VectorXcd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x : 0;});
-
-	MatrixXd Dc = CriticalDamping(critDamp, M, Aw0, C);
-	Dc += D;
-	
-	MatrixXcd m = C - sqr(w)*(M + Aw0) + i<double>()*w*(Bw0 + Dc);
-	if (!FullPivLU<MatrixXcd>(m).isInvertible())
-	   throw Exc(t_("Problem solving RAO"));
-	
-	return Fwh0.transpose()*m.inverse();
-}
-
-void Hydro::GetDampingMatrix(double critDamp) {
+void Hydro::GetDampLin(double critDamp) {
 	if (dt.Nf == 0 || dt.A.size() < dt.Nb*6 || dt.B.size() < dt.Nb*6)
-		throw Exc(t_("Insufficient data to get RAO: Added mass and Radiation damping are required"));	
+		throw Exc(t_("Insufficient data to get linear damping: Added mass and Radiation damping are required"));	
 
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		if (dt.msh[ib].dt.C.rows() < 6 || dt.msh[ib].dt.C.cols() < 6) 
-			throw Exc(t_("Insufficient data to get RAO: Hydrostatic stiffness matrix is required"));   
+			throw Exc(t_("Insufficient data to get linear damping: Hydrostatic stiffness matrix is required"));   
 		if (dt.msh[ib].dt.M.rows() < 6 || dt.msh[ib].dt.M.cols() < 6) 
-			throw Exc(t_("Insufficient data to get RAO: Inertia matrix is required"));   
+			throw Exc(t_("Insufficient data to get linear damping: Inertia matrix is required"));   
 	}	
 
 	BEM::Print("\n");
@@ -936,16 +919,25 @@ void Hydro::GetDampingMatrix(double critDamp) {
 			avg += Dc;
 		}
 		avg /= dt.Nf;
-		BEM::Print(Format("\nAverage damping matrix considering %.3f of the critical Damping (body %d)\n", critDamp, ib));
-		for (int idf0 = 0; idf0 < 6; ++idf0) {
-			for (int idf1 = 0; idf1 < 6; ++idf1) {
-				if (idf1 > 0)
-					BEM::Print(", ");
-				BEM::Print(Format("%f", avg(idf0, idf1)));
-			}
-			BEM::Print("\n");
-		}		
+		
+		dt.msh[ib].dt.Dlin = avg;
 	}	
+}
+
+VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
+		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2, double critDamp) {
+	MatrixXd Aw0   = Aw .unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
+			 Bw0   = Bw .unaryExpr([](double x){return IsNum(x) ? x : 0;});
+	VectorXcd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x : 0;});
+
+	MatrixXd Dc = CriticalDamping(critDamp, M, Aw0, C);
+	Dc += D;
+	
+	MatrixXcd m = C - sqr(w)*(M + Aw0) + i<double>()*w*(Bw0 + Dc);
+	if (!FullPivLU<MatrixXcd>(m).isInvertible())
+	   throw Exc(t_("Problem solving RAO"));
+	
+	return Fwh0.transpose()*m.inverse();
 }
 
 void Hydro::GetC() {

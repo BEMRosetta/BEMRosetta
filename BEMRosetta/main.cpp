@@ -566,10 +566,10 @@ GUI_APP_MAIN {
 		String str = errorJson + "\n" + t_("BEM config. data is not loaded. Defaults values are set"); 
 		if (errorJson != t_("First time")) 
 			Exclamation(DeQtfLf(str + "\n" + t_("Please send the above file to the authors.\nCheck it beforehand in case protected data is included.")));
-		LOG(str);
+		EM().Log(str);
 	}
 	
-	LOG("BEM configuration loaded");
+	EM().Log("BEM configuration loaded");
 
 	if (!Bem().ClearTempFiles()) 
 		Cout() << "\n" << t_("BEM temporary files folder cannot be created");

@@ -512,7 +512,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		ret << "********************************************************************************\n";
 		//if (ib == 0)
 		ret << Format("          ELM%d      Body%d\n", ib+1, ib+1);
-		if (y0z || x0z) {
+		if (y0z || x0z) {		// Symmetries
 			ret << "     ";
 			if (y0z)
 				ret << " SYMY";
@@ -522,7 +522,8 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		}
 		ret
 		//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
-		<< "      ZLWL          (        0.)" << "\n";
+		<< "      ZLWL          (        0.)" << "\n"	// Free surface height is zero
+		<< Format("%6d%s\n", ib+1, "ILID AUTO");		// Irregular frequencies removal
 		
 		const Surface &surf = surfs[ib];
 		

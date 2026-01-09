@@ -75,27 +75,27 @@ void Body::ControlData::Copy(const Body::ControlData &msh) {
 	damagedBodies = clone(msh.damagedBodies);
 }
 
-String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z, idxs);
+	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z, const UVector<int> &idxs) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
 	UArray<Body> msh;
-	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z, idxs);
+	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 	if (!ret.IsEmpty())
 		return ret;
 	mesh = pick(First(msh));
 	return ret;
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, const UVector<int> &idxs) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z, idxs);
+	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
 String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, 
-		bool &y0z, bool &x0z, const UVector<int> &idxs) {
+		bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
@@ -152,7 +152,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 	else if (ext == ".fst") 
 		ret = FASTBody::Load_Fst(mesh, file);
 	else if (ext == ".out" || ext == ".outb") {
-		String ret = Bem().fast.Load(file);
+		ret = Bem().fast.Load(file);
 		if (!ret.IsEmpty())
 			return ret;
 		MeshBody::Load_Out(mesh);
@@ -783,7 +783,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 		roll += droll;
 		pitch += dpitch;
 		
-		LOG(Format("Archimede roll: %f %f %.0f pitch: %f %f %.0f", roll, droll, resroll, pitch, dpitch, respitch));
+		BEM().Print(Format("Archimede roll: %f %f %.0f pitch: %f %f %.0f", roll, droll, resroll, pitch, dpitch, respitch));
 		
 		double nresroll, nrespitch;
 		Residual(roll, pitch, nresroll, nrespitch);
@@ -801,7 +801,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 			dpitch = -dpitch;
 	}
 		
-	LOG(Format("Archimede NumIter: %d", nIter));
+	BEM().Print(Format("Archimede NumIter: %d", nIter));
 	
 	if (nIter >= maxIter)
 		return false;
