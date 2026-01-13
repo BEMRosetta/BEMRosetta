@@ -49,3 +49,7 @@ rem @IF %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 del .\.test\TurbSim2.bts
 del .\.test\hello.*
+del .\.test\*.log
+del .\.test\*.txt
+
+
