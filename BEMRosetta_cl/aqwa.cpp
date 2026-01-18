@@ -1691,7 +1691,7 @@ String FastOut::Load_LIS(String file) {
 	return "";	
 }
 
-void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const {
+void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool x0z, bool y0z, int qtfType) const {
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 	
@@ -1701,7 +1701,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 	UVector<String> files;
 	files << file;
 	Body::SaveAs(dt.msh, files, Body::AQWA_DAT, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
-		dt.w, dt.head, withQTF, withPotentials, dt.h, numThreads);
+		dt.w, dt.head, qtfType, withPotentials, dt.h, numThreads);
 	
 	String fileBat = AFX(folder, "Aqwa.bat");		
 	FileOut bat(fileBat);

@@ -101,7 +101,13 @@ void ShowHelp(BEM &md) {
 	Cout() << "\n" << t_("        symXZ             # Consider XZ symmetry (false by default)");
 	Cout() << "\n" << t_("        mesh              # Include mesh in output files (just for some solvers) (false by default)");
 	Cout() << "\n" << t_("        potentials        # Include panel potentials in output files (just for some solvers) (false by default)");
-	Cout() << "\n" << t_("        QTF               # Include QTF in output files (just for some solvers) (false by default)");
+	Cout() << "\n" << t_("        qtfNear           #");
+	Cout() << "\n" << t_("        qtfPressure       # Include QTF Pressure integration/Near field in output files");
+	Cout() << "\n" << t_("        qtfFar            #");
+	Cout() << "\n" << t_("        qtfMomentum       # Include QTF Momentum conservation/Far field in output files");
+	Cout() << "\n" << t_("        qtfMiddle         #");
+	Cout() << "\n" << t_("        qtfControl        # Include QTF Control Surface/Middle field in output files");
+	
 	Cout() << "\n" << t_("        split <num>       # Splits the calculation in <num> sub cases by frequency range (just for some solvers) (false by default)");	
 	
 	Cout() << "\n" << t_("-setid <id>                   # Set the id of the default BEM model");
@@ -815,7 +821,8 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							Hydro &hy = bem.hydros[bemid];
 							String folder;
 							Hydro::BEM_FMT solver = Hydro::UNKNOWN;
-							bool bin = false, y0z = false, x0z = false, withMesh = false, withPotentials = false, withQTF = false;
+							bool bin = false, y0z = false, x0z = false, withMesh = false, withPotentials = false;
+							int qtfType = 0;
 							int numCases = 0, numThreads = 0;
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
@@ -828,7 +835,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									CheckIfAvailableArg(command, ++ic, "solver"); 
 									String fmt = ToLower(command[ic]);
 									for (int i = 0; i < Hydro::NUMBEM; ++i) {
-										if (Hydro::caseCanSave[i]) {
+										if (Hydro::bemInfo[i].caseCanSave) {
 											if (ToLower(Replace(Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)), " ", "")) == fmt) {
 												solver = static_cast<Hydro::BEM_FMT>(i);
 												break;
@@ -847,8 +854,12 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									withMesh = true;
 								else if (pparam == "potentials") 
 									withPotentials = true;
-								else if (pparam == "qtf") 
-									withQTF = true;
+								else if (pparam == "qtfControl" || pparam == "qtfMiddle") 
+									qtfType = 7;
+								else if (pparam == "qtfMomentum" || pparam == "qtfFar") 
+									qtfType = 8;
+								else if (pparam == "qtfPressure" || pparam == "qtfNear") 
+									qtfType = 9;
 								else if (pparam == "split") {
 									CheckIfAvailableArg(command, ++ic, "split");
 									numCases = ScanInt(command[ic]);	
@@ -864,7 +875,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 							}
 							UVector<bool> listDOF(6, true);
 							UVector<Point3D> dummy;
-							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, withQTF, x0z, y0z, lids, listDOF, dummy);
+							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, x0z, y0z, lids, listDOF, dummy, qtfType);
 							BEM::Print("\n" + Format(t_("Saved model %d in %s case format"), bemid+1, Hydro::GetBemStr(solver)));
 						} else if (param == "-newbody") {
 							if (bem.hydros.size() < bemid) 
@@ -1167,7 +1178,7 @@ bool ConsoleMain(const UVector<String>& _command, bool gui, Function <bool(Strin
 									symX = symY = true;
 								else if (Body::GetCodeBodyStr(pparam) != Body::UNKNOWN) {
 									meshFmt = Body::GetCodeBodyStr(pparam);
-									if (!Body::meshCanSave[meshFmt])
+									if (!Body::meshInfo[meshFmt].canSave)
 										throw Exc(Format(t_("Saving format '%s' is not implemented"), pparam));									
 								} else
 									throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));

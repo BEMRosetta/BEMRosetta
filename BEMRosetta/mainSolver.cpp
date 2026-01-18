@@ -206,7 +206,7 @@ void MainSolver::Init() {
 	save.opWaveHeight.WhenAction();
 	
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
-		if (Hydro::caseCanSave[i])
+		if (Hydro::bemInfo[i].caseCanSave)
 			save.dropSolver.Add(i, Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)));		
 
 	save.dropSolver.SetIndex(min(dropSolverVal, save.dropSolver.GetCount()-1));
@@ -224,8 +224,8 @@ void MainSolver::Init() {
 							  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
 		save.numThreads.Enable(save.opThreads.IsEnabled() && !save.opThreads);
 		
-		save.labDOF.  Enable(isNemoh);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
-		save.arrayDOF.Enable(isNemoh);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
+		save.labDOF.  Enable(isNemoh || solver == Hydro::HYDROSTAR);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
+		save.arrayDOF.Enable(isNemoh || solver == Hydro::HYDROSTAR);// || solver == Hydro::WAMIT || solver == Hydro::CAPYTAINE_PY);
 		
 		save.withMesh.Enable(solver == Hydro::CAPYTAINE_PY);
 		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
@@ -234,8 +234,29 @@ void MainSolver::Init() {
 		save.arrayAdditional.Enable(solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT);
 		save.opWaveHeight.Enable(solver == Hydro::WAMIT ||  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
 		save.opWaveHeight.WhenAction();
-		save.withQTF.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || solver == Hydro::WAMIT);
+		
+		int idQTF = save.dropQTF.GetIndex();
+		if (idQTF >= 0)
+			idQTF = save.dropQTF.GetKey(idQTF);
+		save.dropQTF.Clear();
+		save.dropQTF.Add(0, t_("No"));
+		for (int i = 0; i < strlen(Hydro::bemInfo[solver].qtf); ++i) {
+			char c = Hydro::bemInfo[solver].qtf[i];
+			if (c == '7')
+				save.dropQTF.Add(7, t_("Control surface/Middle field"));
+			else if (c == '8')
+				save.dropQTF.Add(8, t_("Momentum conservation/Far field"));
+			else if (c == '9')
+				save.dropQTF.Add(9, t_("Pressure integration/Near field"));
+		}
+		if (save.dropQTF.HasKey(idQTF))
+			save.dropQTF.SetIndex(save.dropQTF.FindKey(idQTF));
+		else
+			save.dropQTF.SetData(0);
+		save.dropQTF.DropWidth(GetDropWidth(save.dropQTF));
+		save.dropQTF.Enable(strlen(Hydro::bemInfo[solver].qtf) > 0);
 	};
+	
 	save.dropSolver.WhenAction();
 	
 	gen.opInfinite.WhenAction = [&] {
@@ -754,7 +775,7 @@ bool MainSolver::OnSave() {
 			nThreads = save.numThreads;
 		
 		hy.SaveFolderCase(folder, ~save.opIncludeBin, nSplit, nThreads, solver, 
-			~save.withPotentials, ~save.withMesh, ~save.withQTF, ~save.symY, ~save.symX, lids, listDOF, listPoints);
+			~save.withPotentials, ~save.withMesh, ~save.symY, ~save.symX, lids, listDOF, listPoints, ~save.dropQTF);
 
 	} catch (Exc e) {
 		BEM::PrintError(e);

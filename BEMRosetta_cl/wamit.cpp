@@ -1,4 +1,4 @@
-	// Copyright 2020 - 2025, the BEMRosetta author and contributors
+	// Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 #include "BEMRosetta_int.h"
 #include "functions.h"
@@ -701,7 +701,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 		
 		UVector<Point3D> refPoint;
 		UVector<Pointf> refWave;
-		if (Wamit::Load_mcn(fileName, dt.Nb, refPoint, refWave)) {
+		if (HydroStar::Load_MCN(fileName, dt.Nb, refPoint, refWave)) {
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				dt.msh[ib].dt.c0 = clone(refPoint[ib]);
 			if (IsNull(refWave[0])) {
@@ -715,7 +715,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				refWave[ib] = Pointf(dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y);
 		}
-		if (Load_HDF(Status)) {
+		if (HydroStar::Load_HDF(*this, Status)) {
 			MatrixXd delta(3, dt.Nb);
 			for (int ib = 0; ib < dt.Nb; ++ib)
 				delta.col(ib) = Vector3d(dt.msh[ib].dt.cb);
@@ -729,56 +729,7 @@ bool Wamit::Load_out(String fileName, Function <bool(String, int)> Status) {
 	return true;
 }
 
-// This is only for HydroStar
-bool Wamit::Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave) {
-	if (nb == 0)
-		return false;
-	
-	String folder = GetFileFolder(fileName);
-	FindFile mcn(AFX(folder, "*.mcn"));
-	if (!mcn)
-		return false;
-	
-	String mcnFile = mcn.GetPath();
-	
-	FileInLine in(mcnFile);
-	if (!in.IsOpen())
-		return false;
-
-	LineParserWamit f(in);
-	f.IsSeparator = IsTabSpace;
-	
-	UVector<Point3D> cog(nb, Null);
-	refPoint.SetCount(nb, Null);
-	refWave.SetCount(nb, Null);
-	
-	while(!in.IsEof()) {
-		f.GetLine_discard_empty();
-		if (f.IsEof())
-			break;
-
-		if (f.GetText(0) == "COGPOINT_BODY") {
-			int ib = f.GetInt(1);
-			if (ib < 1 || ib > nb)
-				throw Exc(in.Str() + "\n"  + t_("Wrong body in COGPOINT_BODY"));
-			cog[ib-1] = Point3D(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
-		} else if (f.GetText(0).StartsWith("REFPOINT")) {
-			int ib = f.GetInt(1);
-			if (ib < 1 || ib > nb)
-				throw Exc(in.Str() + "\n"  + t_("Wrong body in REFPOINT"));
-			refPoint[ib-1] = Point3D(f.GetDouble(2), f.GetDouble(3), f.GetDouble(4));
-		} else if (f.GetText(0).StartsWith("REFWAVE")) 
-			refWave.Set(0, Pointf(f.GetDouble(1), f.GetDouble(2)), nb);
-	}
-	if (IsNull(cog[0]))
-		return false;
-	
-	if (IsNull(refPoint[0]))
-		refPoint = clone(cog);
-	
-	return true;
-}
-			
+		
 void Wamit::Save_A(FileOut &out, Function <double(int, int)> fun, const Eigen::MatrixXd &base, String wavePeriod) const {
 	out << 	" ************************************************************************\n\n"
 			" Wave period = " << wavePeriod << "\n"
@@ -2850,7 +2801,7 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 		}
 }
 
-void Wamit::Save_frc2(String fileName, bool force1st, bool withQTF, UVector<Point3D> &listPoints) const {
+void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
@@ -2862,10 +2813,11 @@ void Wamit::Save_frc2(String fileName, bool force1st, bool withQTF, UVector<Poin
 										 			   force1st || IsLoadedRAO() ? 1 : 0, 
 										 			   !listPoints.IsEmpty() ? 1 : 0,
 										 			   !listPoints.IsEmpty() ? 1 : 0), 22);
-	if (withQTF)
-		out << " 0 0 1 0 0 0 0";
-		
-	out << "% 9 digits for Wamit .1 ... ." << (!withQTF ? 9 : 16) << " files included\n";
+	if (qtfType > 0)
+		out << " 1 0 1";
+	
+	out << " 0 0 0 0";		
+	out << "% 9 digits for Wamit .1 ... ." << (qtfType == 0 ? 9 : 16) << " files included\n";
 	out << WamitField(Format("%.1f", Bem().rho), 22) << "% RHO\n";
 	
 	for (int ib = 0; ib < dt.Nb; ++ib)
@@ -3019,7 +2971,7 @@ void Wamit::Save_Config(String folder, int numThreads) const {
   	;
 }
 
-void Wamit::Save_cfg(String fileName, bool withQTF, bool lid, bool force_T, bool is6p) const {
+void Wamit::Save_cfg(String fileName, int qtfType, bool lid, bool force_T, bool is6p) const {
 	FileOut out(fileName);
 	if (!out)
 		throw Exc(Format(t_("Problem creating '%s' file"), fileName));
@@ -3042,8 +2994,10 @@ void Wamit::Save_cfg(String fileName, bool withQTF, bool lid, bool force_T, bool
  	else
  		out << " IPEROUT = 2      (Output frequency [rad/s])\n";
  	out << " MAXITT = 50\n";
- 	if (withQTF)
+ 	if (qtfType > 0)
 		out << " I2ND = 1\n";
+ 	if (qtfType == 9)	// Pressure integration
+ 		out << " ISOR = 1\n";
  	if (!isUnderWater) {
  		if (lid)
  			out << " IRR = 1\n";
@@ -3075,7 +3029,7 @@ void Wamit::Save_Fnames(String folder) const {
 		 << folderName << ".frc";
 }
 
-void Wamit::SaveCase(String folder, int numThreads, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints) const {
+void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints, int qtfType) const {
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 
@@ -3085,8 +3039,8 @@ void Wamit::SaveCase(String folder, int numThreads, bool withQTF, bool x0z, bool
 	String folderName = GetFileTitle(folder);
 	
 	Save_pot(AFX(folder, folderName + ".pot"), true, x0z, y0z, lids);
-	Save_frc2(AFX(folder, folderName + ".frc"), true, withQTF, listPoints);
-	Save_cfg(AFX(folder, folderName + ".cfg"), withQTF, !lids.IsEmpty(), false, !listPoints.IsEmpty());
+	Save_frc2(AFX(folder, folderName + ".frc"), true, qtfType, listPoints);
+	Save_cfg(AFX(folder, folderName + ".cfg"), qtfType, !lids.IsEmpty(), false, !listPoints.IsEmpty());
 	
 	String fileBat = AFX(folder, "Wamit_bat.bat");		
 	FileOut bat(fileBat);

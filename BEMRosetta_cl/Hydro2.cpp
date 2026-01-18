@@ -18,30 +18,43 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 				t_("|TFS|"), t_("arg(TFS)")};
 
 
-// enum BEM_FMT 					  {WAMIT, 		  WAMIT_1_3, 	             WAMIT_1_3_RAD,         CSV_MAT,    CSV_TABLE,    BEMIO_H5	   MATLAB,        FAST_WAMIT, 		     HAMS_WAMIT,   HAMS,   HAMS_MREL,  WADAM_WAMIT,   NEMOH,      NEMOHv115,    NEMOHv3,    SEAFEM_NEMOH,  AQWA,   			    AQWA_QTF,	 AQWA_DAT, 	  FOAMM,   DIODORE,		   ORCAFLEX_YML,    CAPYTAINE, 		  HYDROSTAR_OUT, CAPYNC, 		  ORCAWAVE_YML,    CAPYTAINE_PY, 	BEMROSETTA_H5,	  AKSELOS_NPZ,	  
-const char *Hydro::bemStr[]         = {"Wamit .out", "Wamit .1.3 T(s) OpenFAST", "Wamit .1.3 ω(rad/s)", ".csv mat", ".csv table", "BEMIO .h5", "Matlab .mat", "FAST .dat.1.2.3...", "HAMS Wamit", "HAMS", "HAMS MREL", "Wadam Wamit", "Nemoh v2", "Nemoh v115", "Nemoh v3", "SeaFEM Nemoh","AQWA .lis .ah1 .qtf", "AQWA .qtf", "AQWA .dat", "FOAMM", "Diodore .hdb", "OrcaFlex .yml", "Capytaine .cal", ".out", 	     "Capytaine .nc", "OrcaWave .yml", "Capytaine .py", "BEMRosetta .h5", "Akselos .npz", 
+const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
+    {WAMIT,           "Wamit .out",               true,   "*.out",   true,  "789"},
+    {WAMIT_1_3,       "Wamit .1.3 T(s) OpenFAST", true,   "*.1",     false, ""},
+    {WAMIT_1_3_RAD,   "Wamit .1.3 ω(rad/s)",      true,   "*.1",     false, ""},
+    {CSV_MAT,         ".csv mat",                 true,   "*.csv",   false, ""},
+    {CSV_TABLE,       ".csv table",               true,   "*.csv",   false, ""},
+    {BEMIO_H5,        "BEMIO .h5",                true,   "*.h5",    false, ""},
+    {MATLAB,          "Matlab .mat",              true,   "*.mat",   false, ""},
+    {FAST_WAMIT,      "FAST .dat.1.2.3...",       true,   "*.1",     false, ""},
+    {HAMS_WAMIT,      "HAMS Wamit",               false,  "",        true,  ""},
+    {HAMS,            "HAMS",                     false,  "",        true,  ""},
+    {HAMS_MREL,       "HAMS MREL",                false,  "",        false, ""},
+    {WADAM_WAMIT,     "Wadam Wamit",              false,  "",        false, ""},
+    {NEMOH,           "Nemoh v2",                 false,  "",        true,  ""},
+    {NEMOHv115,       "Nemoh v115",               false,  "",        true,  ""},
+    {NEMOHv3,         "Nemoh v3",                 false,  "",        true,  ""},
+    {SEAFEM_NEMOH,    "SeaFEM Nemoh",             false,  "",        false, ""},
+    {AQWA,            "AQWA .lis .ah1 .qtf",      false,  "",        false, ""},
+    {AQWA_QTF,        "AQWA .qtf",                true,   "*.qtf",   false, ""},
+    {AQWA_DAT,        "AQWA .dat",                false,  ".dat",    true,  "89"},
+    {FOAMM,           "FOAMM",                    false,  "",        false, ""},
+    {DIODORE,         "Diodore .hdb",             false,  "*.hdb",   false, ""},
+    {ORCAFLEX_YML,    "OrcaFlex .yml",            false,  "*.yml",   false, ""},
+    {CAPYTAINE,       "Capytaine .cal",           false,  "",        false, ""},
+    {HYDROSTAR_OUT,   ".out",                     false,  "*.out",   false, ""},
+    {CAPY_NC,         "Capytaine .nc",            false,  "*.nc",    true,  ""},
+    {ORCAWAVE_YML,    "OrcaWave .yml",            false,  "*.yml",   true,  "789"},
+    {CAPYTAINE_PY,    "Capytaine .py",            false,  "*.py",    false, ""},
+    {BEMROSETTA_H5,   "BEMRosetta .h5",           false,  "*.h5",    false, ""},
+    {AKSELOS_NPZ,     "Akselos .npz",             false,  "*.npz",   false, ""},
+    {HYDROSTAR,       "HydroStar .hsg",           false,  "*.npz",   true,  "789"},
 #ifdef PLATFORM_WIN32	
-//  ORCAWAVE.owr,		
-	"OrcaWave .owr", 	
+    {ORCAWAVE_OWR,    "OrcaWave .owr",            false,  "*.owr",   false, ""},
 #endif
-// BEMROSETTA,         UNKNOWN,        NUMBEM};
-   "BEMRosetta .bemr", "By extension"};
-const bool Hydro::bemCanSave[] 		= {true, 	      true,	     		         true,		            true, 	   true, 		 true,        true,          true,		 		   false,		  false,  false,       false,		  false,      false,	 	  false,	  false, 		 false,  			    true, 	 	 false,		  false,   true,	  	   false,	     	false, 	   		  false, 		 false,			  false,		   false,		 	false,			  true,
-#ifdef PLATFORM_WIN32	
-false,
-#endif
-	true, true};       
-const char *Hydro::bemExt[]	   		= {"*.out", 	  "*.1",	     	         "*.1",			        "*.csv",    "*.csv", 	 "*.h5",      "*.mat",       "*.1",		 		   "",		   	  "",	  "",          "",		      "",         "", 		  "",		  "",			 "", 				  	"*.qtf",	 ".dat",	  "",      "*.hdb",	  	   "*.yml",		    "",        		  "*.out", 		 "*.nc", 		  "*.yml",		   "*.py",	 		"*.h5",			  "*.npz",
-#ifdef PLATFORM_WIN32	
-"*.owr",	
-#endif		
-	"*.bemr", "*.*"};       
-	
-const bool Hydro::caseCanSave[]     = {true, 	      false,	                 false,		 		    false, 	   false, 	     false,	 	  false,         false,		           false,	      true,   true,        false,          true,	     true,	   	  true, 	  false,  		 false, 	            false,		 true,       false,   false,	       false, 	   		false, 			  false,		 false,			  true,			   true,			true,            false,
-#ifdef PLATFORM_WIN32	
-false,
-#endif
-	false, false};
+    {BEMROSETTA,      "BEMRosetta .bemr",         true,   "*.bemr",  false, ""},
+    {UNKNOWN,         "By extension",             true,   "*.*",     false, ""}
+};
 
 
 

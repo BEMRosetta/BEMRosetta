@@ -583,7 +583,7 @@ void OrcaWave::Load_OF_YML() {
 		Surface::TranslateInertia66(dt.msh[iib].dt.M, dt.msh[iib].dt.cg, dt.msh[iib].dt.cg, dt.msh[iib].dt.c0);
 }
 
-void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const {
+void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, int qtfType) const {
 	bool isv15 = false;
 	
 	String exeName = "bemrosetta_cl";
@@ -645,12 +645,19 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			"g: " << Format("%.5f", dt.g) << "\n";
 	
 	out << 	"# Calculation & output\n"
-			"SolveType: " << (withQTF ? "Full QTF calculation" : "Potential formulation only") << "\n"
+			"SolveType: " << (qtfType > 0 ? "Full QTF calculation" : "Potential formulation only") << "\n"
 			"LoadRAOCalculationMethod: Diffraction\n"
 			//"QuadraticLoadPressureIntegration: No\n"
-			"QuadraticLoadControlSurface: " << (withQTF ? "Yes" : "No") << "\n"
+			"QuadraticLoadControlSurface: " << (qtfType == 7 ? "Yes" : "No") << "\n"
 			"QuadraticLoadMomentumConservation: No\n";
-	out << 	(withQTF ? "PreferredQuadraticLoadCalculationMethod: Control surface\n" : "");
+	out << 	"PreferredQuadraticLoadCalculationMethod: ";
+	if (qtfType == 7)
+		out << "Control surface";
+	else if (qtfType == 8)
+		out << "Momentum conservation";
+	else if (qtfType == 9)
+		out << "Pressure integration";
+	out << "\n";
 	out << 	"HasResonanceDampingLid: No\n"
 			"LengthTolerance: 100e-9\n"
 			"WaterlineZTolerance: 1e-6\n"
@@ -685,7 +692,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	for (int ih = 0; ih < dt.Nh; ++ih)
 		out << "  - " << Format("%.1f", dt.head[ih]) << "\n";
 	
-	if (withQTF) 
+	if (qtfType > 0) 
 		out << 	"QTFMinCrossingAngle: 0\n"
 				"QTFMaxCrossingAngle: 180\n"
 				"QTFMinPeriodOrFrequency: 0\n"
@@ -730,7 +737,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		out <<	"    BodyAddInteriorSurfacePanels: Yes\n"
 				"    BodyInteriorSurfacePanelMethod: Triangulation method\n";
 				
-		if (withQTF)
+		if (qtfType == 7)
 			out <<	"    BodyControlSurfaceType: Automatically generated\n"
 					"    BodyControlSurfacePanelSize: " << panelSize << "\n"
 					"    BodyControlSurfaceSeparationFromBody: " << separationFromBody << "\n"
@@ -796,7 +803,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	}
 	out <<	"# Field points\n"
 			"DetectAndSkipFieldPointsInsideBodies: Yes\n";
-	if (withQTF) 
+	if (qtfType > 0) 
 		out << 	"# QTFs\n"
 				"QTFCalculationMethod: Both\n"
 				"PreferredQTFCalculationMethod: Direct method\n"

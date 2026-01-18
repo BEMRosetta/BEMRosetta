@@ -55,12 +55,18 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
 
 * Case files
     * Load-View
-      * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in
+      * [HAMS](https://github.com/YingyiLiu/HAMS) and [HAMS-MREL](https://research.tudelft.nl/en/datasets/hydrodynamic-analysis-of-marine-structures-marine-renewable-energ/): ControlFile.in
+      * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal and all the folder structure.
       * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
-      * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal and all the folder structure.
+	  * [Wamit](https://www.wamit.com/): .pot, .frc, .cfg
+	  * [OrcaWave](https://www.orcina.com/orcaflex/): .yml
     * Save
-      * [HAMS](https://github.com/YingyiLiu/HAMS): ControlFile.in and all the folder structure.
+      * [HAMS](https://github.com/YingyiLiu/HAMS) and [HAMS-MREL](https://research.tudelft.nl/en/datasets/hydrodynamic-analysis-of-marine-structures-marine-renewable-energ/): ControlFile.in and all the folder structure.
       * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp) and [Capytaine](https://github.com/mancellin/capytaine): Nemoh.cal and all the folder structure.
+	  * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
+	  * [Wamit](https://www.wamit.com/): .pot, .frc, .cfg 
+	  * [OrcaWave](https://www.orcina.com/orcaflex/): .yml
+	  * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .hsg, .mcn, ,rao, ,qtf, .rdf, .dft
       
 * Mesh files
   * Load-View
@@ -81,6 +87,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
     * [Wamit](https://www.wamit.com/): .gdf
     * [HAMS](https://github.com/YingyiLiu/HAMS): HullMesh.pnl, WaterplaneMesh.pnl
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat
+    * [Hydrostar](https://marine-offshore.bureauveritas.com/hydrostar-software-powerful-hydrodynamic): .hst
     * [STL format](https://en.wikipedia.org/wiki/STL_(file_format)): .stl (binary and text)
 	* [MIKE21](https://www.mikepoweredbydhi.com/products/mike-21-3): [.grd](https://www.mikepoweredbydhi.com/products/-/media/B1DE5EDAD83C4D51B36B380882771D2A.ashx)
 	* [GeomView off](http://www.geomview.org/docs/html/OFF.html#OFF): .off

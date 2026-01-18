@@ -62,7 +62,7 @@ void MainBody::Init() {
 	menuOpen.butSplit.WhenAction = THISBACK(OnSplit);
 	menuOpen.butExport <<= THISBACK(OnConvertBody);
 	for (int i = 0; i < Body::NUMMESH; ++i)
-		if (Body::meshCanSave[i])
+		if (Body::meshInfo[i].canSave)
 			menuOpen.dropExport.Add(Body::GetBodyStr(static_cast<Body::MESH_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
 	menuOpen.dropExport <<= THISBACK(OnOpt);
@@ -276,7 +276,8 @@ void MainBody::Init() {
 	menuProcess.butSmooth <<= THISBACK(OnSmooth);
 	menuProcess.butSmooth.Tip(t_("Smooths the mesh using the Taubin method"));
 	menuProcess.csDistance = 10;
-	menuProcess.csDistance.Tip(t_("Dustance from control surface to model"));
+	menuProcess.csDistance.Tip(t_("Distance from control surface to model"));
+	menuProcess.opQuad.Tip(t_("Forces the triangles to appear as quads"));
 	
 	menuProcess.butInertia.SetCtrl(menuProcessInertia).Tip(t_("Click to get the inertia matrix"));
 	//menuProcess.butInertia.SetAutoOpen();
@@ -704,7 +705,7 @@ void MainBody::OnMenuOpenArraySel() {
 		return;
 	
 	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
-	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT) && Bem().surfs[idx].IsSymmetricX());
+	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT || type == Body::HYDROSTAR_HST) && Bem().surfs[idx].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[idx].IsSymmetricY();
 	
 	dialogDamage.SelectId(idx);
@@ -842,20 +843,17 @@ void MainBody::OnOpt() {
 	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
 		
 	switch (type) {
+	case Body::AQWA_DAT:
+	case Body::HYDROSTAR_HST:
+	case Body::MIKE21_GRD:
 	case Body::WAMIT_GDF:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
 	case Body::HAMS_PNL:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
-	case Body::AQWA_DAT:	menuOpen.symX.Enable();
-							menuOpen.symY.Enable();
-							break;
 	case Body::NEMOH_DAT:	menuOpen.symY.Enable();
 							break;
-	case Body::MIKE21_GRD:	menuOpen.symX.Enable();
-							menuOpen.symY.Enable();
-							break;		
 	case Body::BEM_MESH:	menuOpen.symX.Disable();
 							menuOpen.symY.Disable();
 	default:				break;		
@@ -969,7 +967,7 @@ void MainBody::OnConvertBody() {
 	try {
 		String fileType = ~menuOpen.dropExport;
 		Body::MESH_FMT type = Body::GetCodeBodyStr(fileType);
-		String ext = Replace(Body::meshExt[type], "*", "");
+		String ext = Replace(Body::meshInfo[type].ext, "*", "");
 		
 		UVector<int> sel = ArrayCtrlSelectedGet(listLoaded);
 		
@@ -1006,8 +1004,8 @@ void MainBody::OnConvertBody() {
 		FileSel fs;
 		
 		for (int i = 0; i < Body::NUMMESH; ++i)
-			if (Body::meshCanSave[i] && (i == type || i == Body::UNKNOWN)) 
-				fs.Type(Body::GetBodyStr(static_cast<Body::MESH_FMT>(i)), Body::meshExt[i]);
+			if (Body::meshInfo[i].canSave && (i == type || i == Body::UNKNOWN)) 
+				fs.Type(Body::GetBodyStr(static_cast<Body::MESH_FMT>(i)), Body::meshInfo[i].ext);
 		
 		
 		String fileName;
@@ -1826,22 +1824,24 @@ void MainBody::OnCS() {
 	GuiLock __;
 
 	try {
-		UVector<int> idsJoin;
+		UVector<int> idsCS;
 		for (int r = 0; r < listLoaded.GetCount(); ++r) {
-			if (listLoaded.IsSelected(r)) {
-				int id = ArrayModel_IndexBody(listLoaded, r);
-				idsJoin << id;
-			}
+			if (listLoaded.IsSelected(r))
+				idsCS << ArrayModel_IndexBody(listLoaded, r);
 		}
-		if (idsJoin.IsEmpty()) {
-			BEM::PrintError(t_("No model selected"));
-			return;
+		if (idsCS.IsEmpty()) {
+			if (listLoaded.GetCount() == 1)
+				idsCS << ArrayModel_IndexBody(listLoaded, 0);
+			else {
+				BEM::PrintError(t_("No model selected"));
+				return;
+			}
 		}
 			
 		WaitCursor waitcursor;
 		mainView.surf.Disable();
 	
-		Bem().GetCS(idsJoin, menuProcess.csDistance, menuProcess.meshRatio, menuProcess.opQuad);
+		Bem().GetCS(idsCS, menuProcess.csDistance, menuProcess.meshRatio, menuProcess.opQuad);
 		
 		Body &nw = Last(Bem().surfs);
 		AddRow(nw);

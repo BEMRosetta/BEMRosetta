@@ -406,8 +406,9 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 }
 
 void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
-			const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numThreads) {
-	bool farField = false;
+			const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials, double h, int numThreads) {
+	bool qtf = withQTF > 0;
+	bool farField = withQTF == 8;
 	
 	FileOut ret(fileName);
 	if (!ret.IsOpen())
@@ -453,9 +454,9 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "JOB AQWA  LINE" << "\n"
 	<< "TITLE               " << "\n"
 	<< "NUM_CORES         " << numThreads << "\n"
-	<< Format("OPTIONS %s%s%s", getQTF ? "AQTF " : "", "GOON ", getQTF ? "CQTF MQTF " : "") << "\n"
+	<< Format("OPTIONS %s%s%s", qtf ? "AQTF " : "", "GOON ", qtf ? "CQTF MQTF " : "") << "\n"
 	<< "OPTIONS " << (getPotentials ? "PRPT PRPR" : "") <<"\n"
-	<< Format("OPTIONS %s%s REST END", getQTF&&(!farField) ? "NQTF " : "", "LHFR") << "\n"
+	<< Format("OPTIONS %s%s REST END", qtf&&(!farField) ? "NQTF " : "", "LHFR") << "\n"
 	<< "RESTART  1  5" << "\n"
 	<< "********************************************************************************" << "\n"
 	<< "*********************************** DECK  1 ************************************" << "\n"

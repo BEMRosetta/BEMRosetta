@@ -1,12 +1,34 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include "BEMRosetta.h"
 
 	
-// enum MESH_FMT 			    	  {WAMIT_GDF,  WAMIT_DAT,   NEMOH_DAT,   NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,   AQWA LIS, 	HAMS_PNL,  	STL_BIN,     	STL_TXT,   EDIT,  MSH_TDYN,   	DIODORE_DAT,   	HYDROSTAR_HST,    ORCA_OWR, 	   MIKE21_GRD	 	CAPY_NC, 			OBJ,    			ORCAFLEX_YML,   	OPENFAST_FST, 		GEOMVIEW_OFF,    BEM_MESH, 			 MOORING_MESH, UNKNOWN, 		NUMMESH};	
-const char *Body::meshStr[]         = {"Wamit .gdf","Wamit .dat","Nemoh .dat","NemohFS .dat","Nemoh premesh","AQWA .dat","AQWA .lis","HAMS .pnl","Binary .stl","Text .stl","Edit","TDyn .msh",  "Diodore .dat", "HydroStar .hst", "OrcaWave .owr", "MIKE21 .grd", 	"Capytaine .nc",	"Wavefront .obj",  	"OrcaFlex .yml", 	"OpenFAST .fst", 	"GEOMVIEW .off", "BEMRosetta .mesh", "Mooring",    "By extension", "Unknown"};	
-const bool Body::meshCanSave[] 		= {true, 	   false,	    true,		 false,			false, 		    true,		false,	   	true,	   	true,			true,	   false, false, 	  	true,		   	false,   	   		false, 		   true, 		 	false, 	    		false,  			false, 	        	false,				true, 		     true,				 false,        true, 		    false};       
-const char *Body::meshExt[]	  		= {"*.gdf",    "*.dat",	 	"*.dat",	 "*.dat", 		"",		        "*.dat",	"*.lis",   	"*.pnl",   	"*.stl",     	"*.stl",    "",	  "*.msh",   	"*.dat", 	  	"*.hst", 	   	   "*.owr",		   "*.grd", 	 	"*.nc", 	    	"*.obj",			"*.yml",        	"*.fst", 			"*.off", 	     "*.mesh", 		     "*.out*",     "*.*"};       
+const UVector<Body::MeshInfo> Body::meshInfo = {
+    {Body::WAMIT_GDF,     "Wamit .gdf",      true,   "*.gdf"},
+    {Body::WAMIT_DAT,     "Wamit .dat",      false,  "*.dat"},
+    {Body::NEMOH_DAT,     "Nemoh .dat",      true,   "*.dat"},
+    {Body::NEMOHFS_DAT,   "NemohFS .dat",    false,  "*.dat"},
+    {Body::NEMOH_PRE,     "Nemoh premesh",   false,  ""},
+    {Body::AQWA_DAT,      "AQWA .dat",       true,   "*.dat"},
+    {Body::AQWA_LIS,      "AQWA .lis",       false,  "*.lis"},
+    {Body::HAMS_PNL,      "HAMS .pnl",       true,   "*.pnl"},
+    {Body::STL_BIN,       "Binary .stl",     true,   "*.stl"},
+    {Body::STL_TXT,       "Text .stl",       true,   "*.stl"},
+    {Body::EDIT,          "Edit",            false,  ""},
+    {Body::MSH_TDYN,      "TDyn .msh",       false,  "*.msh"},
+    {Body::DIODORE_DAT,   "Diodore .dat",    true,   "*.dat"},
+    {Body::HYDROSTAR_HST, "HydroStar .hst",  true,   "*.hst"},
+    {Body::ORCA_OWR,      "OrcaWave .owr",   false,  "*.owr"},
+    {Body::MIKE21_GRD,    "MIKE21 .grd",     true,   "*.grd"},
+    {Body::CAPY_NC,       "Capytaine .nc",   false,  "*.nc"},
+    {Body::OBJ,           "Wavefront .obj",  false,  "*.obj"},
+    {Body::ORCAFLEX_YML,  "OrcaFlex .yml",   false,  "*.yml"},
+    {Body::OPENFAST_FST,  "OpenFAST .fst",   false,  "*.fst"},
+    {Body::GEOMVIEW_OFF,  "GEOMVIEW .off",   true,   "*.off"},
+    {Body::BEM_MESH,      "BEMRosetta .mesh",true,   "*.mesh"},
+    {Body::MOORING_MESH,  "Mooring",         false,  "*.out*"},
+    {Body::UNKNOWN,       "Unknown",         false,  "*.*"}
+};
 
 int Body::idCount = 0;
 
@@ -15,10 +37,10 @@ String Body::GetMeshExt() {
 	String ret;
 	
 	for (int i = 0; i < MESH_FMT::NUMMESH; ++i) {
-		if (ret.FindAfter(meshExt[i]) < 0) {
+		if (ret.FindAfter(meshInfo[i].ext) < 0) {
 			if (!ret.IsEmpty())
 				ret << " ";
-			ret << meshExt[i];		
+			ret << meshInfo[i].ext;		
 		}
 	}
 	return ret;
@@ -252,7 +274,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 }
 
 void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
-				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, bool getQTF, bool getPotentials, double h, int numCores) {
+				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials, double h, int numCores) {
 	//ASSERT(meshes.size() == fileNames.size());
 	
 	if (type == UNKNOWN) {
@@ -272,6 +294,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			type = GEOMVIEW_OFF;
 		else if (ext == ".mesh")
 			type = BEM_MESH;
+		else if (ext == ".hst")
+			type = HYDROSTAR_HST;
 		else
 			throw Exc(Format(t_("Conversion to file type '%s' not supported"), First(fileNames)));
 	}
@@ -296,13 +320,15 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
 			throw Exc(t_("Impossible to save mesh. No mesh found"));		
 		
-		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || type == MIKE21_GRD)) {
+		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || 
+					 type == AQWA_DAT || type == MIKE21_GRD || type == HYDROSTAR_HST)) {
 			Surface nsurf;
 			nsurf.CutX(surf);
 			surf = pick(nsurf);
 		}
 		if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
-					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || type == MIKE21_GRD)) {
+					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || 
+					 type == MIKE21_GRD || type == HYDROSTAR_HST)) {
 			Surface nsurf;
 			nsurf.CutY(surf);
 			surf = pick(nsurf);
@@ -321,7 +347,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 	}
 	
 	if (type == AQWA_DAT)		
-		AQWABody::SaveDat(First(fileNames), meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
+		AQWABody::SaveDat(First(fileNames), meshes, surfs, rho, g, symX, symY, w, head, withQTF, getPotentials, h, numCores);	
 	else {
 		for (int ib = 0; ib < meshes.size(); ++ib) {
 			if (type == WAMIT_GDF) 
@@ -332,8 +358,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 				NemohBody::SavePreBody(fileNames[ib], surfs[ib]);
 			else if (type == HAMS_PNL)		
 				HAMSBody::SavePnl(fileNames[ib], surfs[ib], symX, symY);	// Only one symmetry is really available
-			else if (type == AQWA_DAT)		
-				AQWABody::SaveDat(fileNames[ib], meshes, surfs, rho, g, symX, symY, w, head, getQTF, getPotentials, h, numCores);	
+			else if (type == HYDROSTAR_HST)		
+				HydrostarBody::SaveHST(fileNames[ib], surfs[ib], symX, symY);	
 			else if (type == DIODORE_DAT) 
 				DiodoreBody::SaveDat(fileNames[ib], surfs[ib]);
 			else if (type == STL_BIN)		

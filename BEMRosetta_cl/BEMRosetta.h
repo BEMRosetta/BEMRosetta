@@ -51,10 +51,21 @@ class Body : public Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum MESH_FMT {WAMIT_GDF,  WAMIT_DAT,  NEMOH_DAT,  NEMOHFS_DAT,   NEMOH_PRE,      AQWA_DAT,  AQWA_LIS, HAMS_PNL,  STL_BIN,     STL_TXT,   EDIT,  MSH_TDYN,   DIODORE_DAT,   HYDROSTAR_HST,   ORCA_OWR, MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST, GEOMVIEW_OFF, BEM_MESH, MOORING_MESH, UNKNOWN, NUMMESH};	
-	static const char *meshStr[];
-	static const bool meshCanSave[];
-	static const char *meshExt[];
+	enum MESH_FMT {
+	    WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOHFS_DAT, NEMOH_PRE,
+	    AQWA_DAT, AQWA_LIS, HAMS_PNL, STL_BIN, STL_TXT,
+	    EDIT, MSH_TDYN, DIODORE_DAT, HYDROSTAR_HST, ORCA_OWR,
+	    MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST,
+	    GEOMVIEW_OFF, BEM_MESH, MOORING_MESH, UNKNOWN, NUMMESH
+	};
+	
+	struct MeshInfo {
+	    MESH_FMT format;
+	    const char* str;
+	    bool canSave;
+	    const char* ext;
+	};
+	static const UVector<MeshInfo> meshInfo;
 	
 	enum MESH_TYPE {ALL, UNDERWATER};
 	
@@ -83,18 +94,18 @@ public:
 	}
 	
 	const char *GetBodyStr() const {
-		return meshStr[dt.GetCode()];
+		return meshInfo[dt.GetCode()].str;
 	}
 	static const char *GetBodyStr(MESH_FMT c) {
 		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
-		return meshStr[c];
+		return meshInfo[c].str;
 	}
 	
 	static MESH_FMT GetCodeBodyStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
 		for (int i = 0; i < NUMMESH; ++i)
-			if (fmt == ToLower(meshStr[i]))
+			if (fmt == ToLower(meshInfo[i].str))
 				return static_cast<MESH_FMT>(i);
 		return UNKNOWN;
 	}
@@ -139,12 +150,12 @@ public:
 	double GMpitch(double rho, double g) const;
 	
 	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels,
-		const UVector<double> &w, const UVector<double> &head, bool getQTF = false, bool getPotentials = false, double h = 300, int numCores = 4);
+		const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials = false, double h = 300, int numCores = 4);
 	
 	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
 		UVector<double> w, head;
-		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
+		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head, 0);
 	}
 	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels) {
 		UArray<Body> meshes;
@@ -152,7 +163,7 @@ public:
 		UVector<String> fileNames;
 		fileNames << fileName;
 		UVector<double> w, head;
-		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
+		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head, 0);
 	}
 	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
@@ -281,32 +292,45 @@ class Hydro : public Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
-	enum BEM_FMT {WAMIT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE, BEMIO_H5, MATLAB, FAST_WAMIT, HAMS_WAMIT, HAMS, HAMS_MREL, WADAM_WAMIT, NEMOH, NEMOHv115, NEMOHv3, SEAFEM_NEMOH, AQWA, AQWA_QTF, AQWA_DAT, FOAMM, DIODORE, ORCAFLEX_YML, CAPYTAINE, HYDROSTAR_OUT, CAPY_NC, ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ,
-#ifdef PLATFORM_WIN32	
-	ORCAWAVE_OWR, 
-#endif
-	BEMROSETTA, UNKNOWN, NUMBEM};
-	static const char *bemStr[];
-	static const bool bemCanSave[];
-	static const bool caseCanSave[];
-	static const char *bemExt[];
+	enum BEM_FMT {
+	    WAMIT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE,
+	    BEMIO_H5, MATLAB, FAST_WAMIT, HAMS_WAMIT, HAMS,
+	    HAMS_MREL, WADAM_WAMIT, NEMOH, NEMOHv115, NEMOHv3,
+	    SEAFEM_NEMOH, AQWA, AQWA_QTF, AQWA_DAT, FOAMM,
+	    DIODORE, ORCAFLEX_YML, CAPYTAINE, HYDROSTAR_OUT, CAPY_NC,
+	    ORCAWAVE_YML, CAPYTAINE_PY, BEMROSETTA_H5, AKSELOS_NPZ, HYDROSTAR,
+	#ifdef PLATFORM_WIN32
+	    ORCAWAVE_OWR,
+	#endif
+	    BEMROSETTA, UNKNOWN, NUMBEM
+	};
+	
+	struct BEMInfo {
+	    BEM_FMT format;
+	    const char* str;
+	    bool canSave;
+	    const char* ext;
+	    bool caseCanSave;
+	    const char* qtf;
+	};
+	static const UVector<BEMInfo> bemInfo;
 	
 	static const char *GetBemStr(BEM_FMT c) {
 		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
-		return bemStr[c];
+		return bemInfo[c].str;
 	}
 	static const char *GetBemStrCase(BEM_FMT c) {
 		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
 		if (c == WAMIT)
 			return "Wamit";		// To avoid "Wamit .out"
-		return bemStr[c];
+		return bemInfo[c].str;
 	}	
 	static BEM_FMT GetCodeBemStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
 		for (int i = 0; i < NUMBEM; ++i)
-			if (fmt == ToLower(bemStr[i]))
+			if (fmt == ToLower(bemInfo[i].str))
 				return static_cast<BEM_FMT>(i);
 		return UNKNOWN;
 	}
@@ -352,6 +376,7 @@ public:
 		case ORCAWAVE_YML:	return t_("OrcaWave.yml");
 		case CAPYTAINE_PY:	return t_("Capytaine.py");
 		case AKSELOS_NPZ:	return t_("Akselos.npz");
+		case HYDROSTAR:		return t_("HydroStar");
 #ifdef PLATFORM_WIN32	
 		case ORCAWAVE_OWR: 	return t_("OrcaWave.owr");
 #endif
@@ -392,6 +417,7 @@ public:
 		case ORCAWAVE_YML:	return t_("ORCW.yml");
 		case CAPYTAINE_PY:	return t_("Capy.py");
 		case AKSELOS_NPZ:	return t_("Aks.npz");
+		case HYDROSTAR:		return t_("Hyd");
 #ifdef PLATFORM_WIN32	
 		case ORCAWAVE_OWR: 	return t_("ORC.owr");
 #endif
@@ -966,8 +992,8 @@ public:
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
 	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-		bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
-		UVector<Point3D> &listPoints);
+		bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
+		UVector<Point3D> &listPointsm, int qtfType);
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -1371,6 +1397,7 @@ private:
 class HydrostarBody : public Body {
 public:
 	static String LoadHst(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z);
+	static void SaveHST(String fileName, const Surface &surf, bool y0z, bool x0z);
 		
 	virtual ~HydrostarBody() noexcept {}
 
@@ -1402,7 +1429,7 @@ public:
 	static String LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName);
 	static String LoadLis(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
 	static void SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z,
-			const UVector<double> &w, const UVector<double> &head, bool getQTF = false, bool getPotentials = false, double h = 300, int numCores = 4);
+			const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials = false, double h = 300, int numCores = 4);
 
 	virtual ~AQWABody() noexcept {}
 };
@@ -1468,7 +1495,7 @@ public:
 	bool Load_frc(String fileName);
 	void Save_4(String fileName, bool force_T = false) const;
 	
-	void SaveCase(String folder, int numThreads, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints) const;
+	void SaveCase(String folder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints, int qtfType) const;
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
@@ -1484,8 +1511,8 @@ protected:
 	bool Load_frc3(String fileName);
 	
 	bool Load_out(String fileName, Function <bool(String, int)> Status);							
-	static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
-	bool Load_HDF(Function <bool(String, int)> Status);
+	//static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
+	//virtual bool Load_HDF(Function <bool(String, int)> Status) {NEVER();	return false;}
 	void Load_A(FileInLine &in, MatrixXd &A);
 	bool Load_Scattering(String fileName, int &iperout);
 	bool Load_FK(String fileName, int &iperout);
@@ -1509,7 +1536,7 @@ protected:
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T, bool force_Deg) const;
-	void Save_frc2(String fileName, bool force1st, bool withQTF, UVector<Point3D> &listPoints) const;
+	void Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const;
 	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
@@ -1520,7 +1547,7 @@ protected:
 	
 	void Save_Fnames(String folder) const;
 	void Save_Config(String folder, int numThreads) const;
-	void Save_cfg(String fileName, bool withQTF, bool lid, bool force_T, bool is6p) const;
+	void Save_cfg(String fileName, int qtfType, bool lid, bool force_T, bool is6p) const;
 
 private:
 	int GuessIperin(const UVector<double> &w);
@@ -1647,7 +1674,7 @@ public:
 	Aqwa() {}
 	String Load(String file, Function <bool(String, int)> Status, double rho = Null);
 	void Save(String file, Function <bool(String, int)> Status) const;
-	void SaveCaseDat(String folder, int numThreads, bool withPotentials, bool withQTF, bool x0z, bool y0z) const;
+	void SaveCaseDat(String folder, int numThreads, bool withPotentials, bool x0z, bool y0z, int qtfType) const;
 	UVector<String> Check() const;
 	
 	virtual ~Aqwa() noexcept {}
@@ -1672,11 +1699,31 @@ private:
 	void Load_HDB();
 };
 
+class HydroStar : public Wamit {
+public:
+	HydroStar() {}
+	virtual ~HydroStar() noexcept {}
+	
+	static bool Load_HDF(Wamit &wam, Function <bool(String, int)> Status);
+	static bool Load_MCN(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
+	void SaveCase(String folder, bool withPotentials, bool x0z, bool y0z, 
+				const UVector<bool> &listDOF, int qtftype) const;
+
+private:	
+	void Save_HSG(String fileName) const;
+	void Save_MCN(String fileName) const;
+	void Save_QTF(String fileName, int qtftype) const;
+	void Save_RAO(String fileName, const UVector<bool> &listDOF, bool qtf) const;
+	void Save_RDF(String fileName) const;
+	void Save_DFT(String fileName) const;
+	void Save_HST(String fileName) const;
+};
+
 class OrcaWave : public Hydro {
 public:
 	OrcaWave() {}
 	String Load(String file, double rho = Null);
-	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z) const;
+	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, int qtfType) const;
 	virtual ~OrcaWave() noexcept {}	
 	
 private:
@@ -1685,7 +1732,6 @@ private:
 	void Load_OWR();
 #endif
 };
-
 
 class OrcaFactors {
 public:

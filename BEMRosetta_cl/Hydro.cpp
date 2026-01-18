@@ -557,8 +557,8 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 }
 
 void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-			bool withPotentials, bool withMesh, bool withQTF, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
-			UVector<Point3D> &listPoints) {
+			bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, 
+			const UVector<bool> &listDOF, UVector<Point3D> &listPoints, int qtfType) {
 	if (withPotentials && (solver == Hydro::WAMIT || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL)) {
 		int Nb = solver == Hydro::HAMS ? 1 : dt.Nb;
 		for (int ib = 0; ib < Nb; ++ib) {
@@ -576,11 +576,13 @@ void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads
 	else if (solver == Hydro::HAMS_MREL)
 		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints, true);
 	else if (solver == Hydro::ORCAWAVE_YML)
-		static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, withQTF, x0z, y0z);
+		static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, x0z, y0z, qtfType);
 	else if (solver == Hydro::AQWA_DAT)
-		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, withQTF, x0z, y0z);
+		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, x0z, y0z, qtfType);
 	else if (solver == Hydro::WAMIT)
-		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, withQTF, x0z, y0z, lids, listPoints);
+		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, x0z, y0z, lids, listPoints, qtfType);
+	else if (solver == Hydro::HYDROSTAR)
+		static_cast<const HydroStar &>(*this).SaveCase(folder, withPotentials, x0z, y0z, listDOF, qtfType);
 	else if (solver == Hydro::BEMROSETTA_H5) {
 		dt.solver = BEMROSETTA_H5;
 		if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) 

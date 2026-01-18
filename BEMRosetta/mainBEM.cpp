@@ -60,7 +60,7 @@ void MainBEM::Init() {
 	menuOpen.butExport <<= THISBACK(OnConvert);
 	menuOpen.butExport.Tip(t_("Exports data file"));
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
-		if (Hydro::bemCanSave[i])
+		if (Hydro::bemInfo[i].caseCanSave)
 			menuOpen.dropExport.Add(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
 
@@ -2308,13 +2308,13 @@ void MainBEM::OnConvert() {
 		Status(t_("Saving BEM data"));
 		String fileType = ~menuOpen.dropExport;
 		Hydro::BEM_FMT type = Hydro::GetCodeBemStr(fileType);
-		String ext = Replace(Hydro::bemExt[type], "*", "");
+		String ext = Replace(Hydro::bemInfo[type].ext, "*", "");
 		
 		FileSel fs;
 		
 		for (int i = 0; i < Hydro::NUMBEM; ++i)
-			if (Hydro::bemCanSave[i] && (i == type || i == Hydro::UNKNOWN)) 
-				fs.Type(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)), Hydro::bemExt[i]);
+			if (Hydro::bemInfo[i].canSave && (i == type || i == Hydro::UNKNOWN)) 
+				fs.Type(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)), Hydro::bemInfo[i].ext);
 		
 		fs.ActiveType(0);
 		fs.Set(ForceExt(~menuOpen.file, ext));
