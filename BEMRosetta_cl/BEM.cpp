@@ -13,8 +13,8 @@ using namespace Eigen;
 
 
 Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
-Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << t_("Warning: ") << s;};
-Function <void(String)> BEM::PrintError   = [](String s) {Cout() << t_("ERROR: ") << s;};
+Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << "\n" << t_("Warning: ") << s;};
+Function <void(String)> BEM::PrintError   = [](String s) {Cout() << "\n" << t_("ERROR: ") << s;};
 
 const char *BEM::strDOFtext[] 	 = {t_("surge"), t_("sway"), t_("heave"), t_("roll"), t_("pitch"), t_("yaw")};
 const char *BEM::strDOFtextAbrev[] = {t_("s"), t_("w"), t_("h"), t_("r"), t_("p"), t_("y")};
@@ -521,14 +521,14 @@ void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<P
 	}	
 }
 
-void BEM::Extrude(int id, double dx, double dy, double dz, bool close) {
+void BEM::Extrude(int id, double dx, double dy, double dz, double panelWidth, bool close) {
 	try {
 		Body &surf = surfs[id];
 	
 		if (surf.dt.mesh.volumex > 0.001 && surf.dt.mesh.volumey > 0.001 && surf.dt.mesh.volumez > 0.001)
 			throw Exc(t_("It is only possible to extrude a flat surface"));
 
-		surf.dt.mesh.Extrude(dx, dy, dz, close);
+		surf.dt.mesh.Extrude(dx, dy, dz, panelWidth, close);
 		
 	} catch (Exc e) {
 		Print("\n" + Format(t_("Problem extruding surface: %s"), e));

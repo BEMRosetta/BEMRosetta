@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright 2020 - 2023, the BEMRosetta author and contributors
+#ifndef _BEMRosetta_cl_orca_h_
+#define _BEMRosetta_cl_orca_h_
+
 #ifdef PLATFORM_WIN32
 ;
 #pragma pack(push)
@@ -1074,4 +1077,5 @@ private:
 #ifdef PLATFORM_WIN32
 #pragma pack(pop)
 
+#endif
 #endif

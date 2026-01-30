@@ -18,7 +18,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 		if (!isHams) {
 			String config_wam = AFX(folder, "config.wam");
 			if (FileExists(config_wam))
-				Load_cfg(config_wam, iperin, iperout);
+				Load_cfg(config_wam, iperin, iperout, dt.qtftype);
 			
 			String fnames_wam = AFX(folder, "fnames.wam");
 			BEM::Print("\n- " + Format(t_("Wamit file .wam file '%s'"), GetFileName(fnames_wam)));
@@ -28,7 +28,7 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 			if (!filecfg.IsEmpty()) {
 				if (!FileExists(filecfg))
 					filecfg = AFX(folder, filecfg);
-				if (!Load_cfg(filecfg, iperin, iperout))
+				if (!Load_cfg(filecfg, iperin, iperout, dt.qtftype))
 					BEM::Print(S(": ** cfg ") + t_("Not found") + "**");
 			}
 			if (!filefrc.IsEmpty())
@@ -1053,7 +1053,7 @@ void Wamit::Load_A(FileInLine &in, Eigen::MatrixXd &A) {
 	}
 }
 
-bool Wamit::Load_cfg(String fileName, int &iperin, int &iperout) {
+bool Wamit::Load_cfg(String fileName, int &iperin, int &iperout, int &qtftype) {
 	iperout = 0;	// If cfg exists, but no iperout, then it is 1 by default
 	FileInLine in(fileName);
 	if (!in.IsOpen())
@@ -1074,6 +1074,8 @@ bool Wamit::Load_cfg(String fileName, int &iperin, int &iperout) {
 				iperout = f.GetInt(1);
 			else if (f.GetText(0) == "IPERIO") 
 				iperin = iperout = f.GetInt(1);
+			else if (f.GetText(0) == "ICTRSURF") 
+				qtftype = f.GetInt(1) == 1 ? 7 : 9;
 		}
  	}
  	return true;
@@ -1184,9 +1186,7 @@ bool Wamit::Load_pot(String fileName) {
 		if (!FileExists(b.dt.fileName))
 			b.dt.fileName = AFX(GetFileFolder(fileName), b.dt.fileName);
 		
-		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
-		if (!IsEmpty(ret))
-			throw Exc(ret);
+		Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 
 		b.dt.name = GetFileTitle(f.GetText(0));
 		if (names.Find(b.dt.name) >= 0)
@@ -2802,28 +2802,37 @@ void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
 }
 
 void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const {
+	bool bidirectionalQTF = true;
+	
+	int qtfNumber = bidirectionalQTF ? 2 : 1;
+	
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format(t_("Impossible to save '%s'. File already used."), fileName));
 
 	out << "% BEMRosetta generated .frc file\n";
-	out << WamitField(Format("%d %d %d %d %d %d 0 0 0", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
+	out << WamitField(Format("%d %d %d %d %d %d %d %d %f", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
 										 			   force1st || IsLoadedFex() ? 1 : 0,
 										 			   force1st || IsLoadedFex() ? 2 : 0,
 										 			   force1st || IsLoadedRAO() ? 1 : 0, 
 										 			   !listPoints.IsEmpty() ? 1 : 0,
-										 			   !listPoints.IsEmpty() ? 1 : 0), 22);
-	if (qtfType > 0)
-		out << " 1 0 1";
-	
-	out << " 0 0 0 0";		
+										 			   !listPoints.IsEmpty() ? 1 : 0,
+										 			   qtfType == 7 ? qtfNumber : 0,
+										 			   qtfType == 8 ? qtfNumber : 0,
+										 			   qtfType == 9 ? qtfNumber : 0), 22);
+	if (qtfType == 7 || qtfType == 8)
+		out << " 1";		// IOPTN(10): Direct method
+	else
+		out << " 0";
+	out << " 0 0 0";		
 	out << "% 9 digits for Wamit .1 ... ." << (qtfType == 0 ? 9 : 16) << " files included\n";
+	
 	out << WamitField(Format("%.1f", Bem().rho), 22) << "% RHO\n";
 	
 	for (int ib = 0; ib < dt.Nb; ++ib)
 		out << Format("%.2f %.2f %.2f ", dt.msh[ib].dt.cg.x - dt.msh[ib].dt.c0.x, 
-												   dt.msh[ib].dt.cg.y - dt.msh[ib].dt.c0.y, 
-												   dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z);
+										 dt.msh[ib].dt.cg.y - dt.msh[ib].dt.c0.y, 
+										 dt.msh[ib].dt.cg.z - dt.msh[ib].dt.c0.z);
 	out << "% XCG, YCG, ZCG\n";
 	
 	if (IsLoadedM()) {
@@ -2998,6 +3007,10 @@ void Wamit::Save_cfg(String fileName, int qtfType, bool lid, bool force_T, bool 
 		out << " I2ND = 1\n";
  	if (qtfType == 9)	// Pressure integration
  		out << " ISOR = 1\n";
+ 	else if (qtfType == 7) {	// Control surface
+ 		out << " ICTRSURF = 1\n";
+ 		out << " IALTCSF = 1\n";
+ 	}
  	if (!isUnderWater) {
  		if (lid)
  			out << " IRR = 1\n";

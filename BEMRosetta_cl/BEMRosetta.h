@@ -37,10 +37,10 @@ public:
 
 #include "FastOut.h"
 
+
 class BEM;
 BEM &Bem();
 
-bool ConsoleMain(const UVector<String>& command, bool gui, Function <bool(String, int pos)> Status);
 void SetBuildInfo(String &str);
 String GetSystemInfo();
 
@@ -56,7 +56,7 @@ public:
 	    AQWA_DAT, AQWA_LIS, HAMS_PNL, STL_BIN, STL_TXT,
 	    EDIT, MSH_TDYN, DIODORE_DAT, HYDROSTAR_HST, ORCA_OWR,
 	    MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST,
-	    GEOMVIEW_OFF, BEM_MESH, MOORING_MESH, UNKNOWN, NUMMESH
+	    GEOMVIEW_OFF, BEM_MESH, MOORING_MESH, VTK_ASCII, UNKNOWN, NUMMESH
 	};
 	
 	struct MeshInfo {
@@ -104,8 +104,11 @@ public:
 	
 	static MESH_FMT GetCodeBodyStr(String fmt) {
 		fmt = ToLower(Trim(fmt));
-		for (int i = 0; i < NUMMESH; ++i)
+		for (int i = 0; i < NUMMESH; ++i)			// Equal
 			if (fmt == ToLower(meshInfo[i].str))
+				return static_cast<MESH_FMT>(i);
+		for (int i = 0; i < NUMMESH; ++i)			// Just similar
+			if (ToLower(meshInfo[i].str).Find(fmt) >= 0)
 				return static_cast<MESH_FMT>(i);
 		return UNKNOWN;
 	}
@@ -211,8 +214,6 @@ public:
 		String lidFile;
 		
 		Surface mesh, under, mesh0;
-		
-		//bool fastAble = false;
 		
 		void SetId(int iid) {
 			//ASSERT(iid >= 0);
@@ -344,8 +345,8 @@ public:
 	Hydro() {}
 	virtual ~Hydro() noexcept {}	
 	
-	const char *GetCodeStr()	const {
-		switch (dt.solver) {
+	const char *GetCodeStr()	const {return Hydro::bemInfo[dt.solver].str;}
+	/*	switch (dt.solver) {
 		case WAMIT: 		return t_("Wamit");
 		case WAMIT_1_3: 	return t_("Wamit.1.2.3");
 		case WAMIT_1_3_RAD:	return t_("Wamit.1.2.3");
@@ -380,11 +381,11 @@ public:
 #ifdef PLATFORM_WIN32	
 		case ORCAWAVE_OWR: 	return t_("OrcaWave.owr");
 #endif
-		case UNKNOWN:		return t_("Unknown");
+		case UNKNOWN:		return t_("Unknown");         
 		case NUMBEM:		NEVER();
 		}
 		return t_("Unknown");
-	}
+	}*/
 	
 	const char *GetCodeStrAbr() const {
 		switch (dt.solver) {
@@ -1501,7 +1502,7 @@ protected:
 	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
 	void ProcessFirstColumn1_3(UVector<double> &w, int iperout);
 	
-	bool Load_cfg(String fileName, int &iperin, int &iperout);
+	bool Load_cfg(String fileName, int &iperin, int &iperout, int &qtfType);
 	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
@@ -1958,7 +1959,7 @@ public:
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads);
 	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
 	void GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads);
-	void Extrude(int id, double dx, double dy, double dz, bool close);
+	void Extrude(int id, double dx, double dy, double dz, double panelWidth, bool close);
 	void AddPanels(const Body &surfFrom, UVector<int> &panelList);
 	void Extract(int id, int cutXYZ, int cutPosNeg);
 		
@@ -2515,6 +2516,37 @@ public:
 	UArray<DataSourcePanels> dataSourcePanels;
 	
 	Grid grdNodes, grdPanels;
+};
+
+#include "orca.h"
+
+struct DLL_Data {
+	DLL_Data();
+	bool ConsoleMain(const UVector<String>& _command, bool gui);
+	static void DLL_RaiseIfError();
+		
+	FastOut fast;
+	ArrayWind wind;
+	
+	UArray<Body> lids;
+	UVector<String> headParams;
+	int bemid = -1, bembodyid = -1, meshid = -1, windid = -1;
+	String errorStr;
+	
+	String fastFileStr;
+	String fastFileName;
+	bool echo = true;
+
+	Function <bool(String, int pos)> Status;
+	static bool NoPrint(String, int) {return true;}
+
+#ifdef PLATFORM_WIN32
+	Orca orca;
+	UVector<String> paramList;
+	UArray<Point3D> centreList;
+	Point3D centreOrca = Point3D(0, 0, 0);
+	int numOrcaTries = 4;
+#endif
 };
 
 // Compiler options

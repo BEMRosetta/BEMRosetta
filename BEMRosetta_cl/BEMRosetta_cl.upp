@@ -26,6 +26,9 @@ file
 	main.cpp,
 	BEMRosetta.h,
 	BEMRosetta_int.h,
+	python.cpp,
+	dllapi.cpp,
+	export.h,
 	CommandLine.cpp,
 	BEM.cpp,
 	Mesh readonly separator,
@@ -78,8 +81,6 @@ file
 	functions.h,
 	Simulation.cpp,
 	Simulation.h,
-	export.h,
-	export.brc,
 	Copying;
 
 mainconfig

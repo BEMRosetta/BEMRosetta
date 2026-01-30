@@ -1,0 +1,399 @@
+# BEMRosetta python functions list
+import ctypes
+import numpy as np
+
+class BEMRosetta:
+    def __init__(self, path_dll):
+        self.libc = ctypes.CDLL(path_dll)
+
+        self.libc.DLL_Init.argtypes = []
+        self.libc.DLL_Init.restype = None
+
+        self.libc.DLL_Version.argtypes = []
+        self.libc.DLL_Version.restype = ctypes.c_char_p
+
+        self.libc.DLL_NoPrint.argtypes = []
+        self.libc.DLL_NoPrint.restype = None
+
+        self.libc.DLL_GetLastError.argtypes = []
+        self.libc.DLL_GetLastError.restype = ctypes.c_char_p
+
+        self.libc.DLL_Echo.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_Echo.restype = None
+
+        self.libc.DLL_Mesh_Input.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_Mesh_Input.restype = None
+
+        self.libc.DLL_Mesh_Report.argtypes = []
+        self.libc.DLL_Mesh_Report.restype = None
+
+        self.libc.DLL_Mesh_Clear.argtypes = []
+        self.libc.DLL_Mesh_Clear.restype = None
+
+        self.libc.DLL_Mesh_SetId.argtypes = [ctypes.c_int]
+        self.libc.DLL_Mesh_SetId.restype = None
+
+        self.libc.DLL_Mesh_Convert.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
+        self.libc.DLL_Mesh_Convert.restype = None
+
+        self.libc.DLL_Mesh_Translate.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.DLL_Mesh_Translate.restype = None
+
+        self.libc.DLL_Mesh_Rotate.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.DLL_Mesh_Rotate.restype = None
+
+        self.libc.DLL_Mesh_Cg.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.DLL_Mesh_Cg.restype = None
+
+        self.libc.DLL_Mesh_C0.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.DLL_Mesh_C0.restype = None
+
+        self.libc.DLL_Mesh_Mass.argtypes = [ctypes.c_double]
+        self.libc.DLL_Mesh_Mass.restype = None
+
+        self.libc.DLL_Mesh_Reset.argtypes = []
+        self.libc.DLL_Mesh_Reset.restype = None
+
+        self.libc.DLL_Mesh_GetWaterPlane.argtypes = []
+        self.libc.DLL_Mesh_GetWaterPlane.restype = None
+
+        self.libc.DLL_Mesh_GetHull.argtypes = []
+        self.libc.DLL_Mesh_GetHull.restype = None
+
+        self.libc.DLL_Mesh_FillWaterplane.argtypes = [ctypes.c_double]
+        self.libc.DLL_Mesh_FillWaterplane.restype = None
+
+        self.libc.DLL_Mesh_GetVolume.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.DLL_Mesh_GetVolume.restype = None
+
+        self.libc.DLL_Mesh_GetUnderwaterVolume.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.DLL_Mesh_GetUnderwaterVolume.restype = None
+
+        self.libc.DLL_Mesh_GetSurface.argtypes = []
+        self.libc.DLL_Mesh_GetSurface.restype = ctypes.c_double
+
+        self.libc.DLL_Mesh_GetUnderwaterSurface.argtypes = []
+        self.libc.DLL_Mesh_GetUnderwaterSurface.restype = ctypes.c_double
+
+        self.libc.DLL_Mesh_GetCentreOfGravity.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.DLL_Mesh_GetCentreOfGravity.restype = None
+
+        self.libc.DLL_Mesh_GetCentreOfGravity_Volume.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.DLL_Mesh_GetCentreOfGravity_Volume.restype = None
+
+        self.libc.DLL_Mesh_GetCentreOfGravity_Surface.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.DLL_Mesh_GetCentreOfGravity_Surface.restype = None
+
+        self.libc.DLL_Mesh_GetHydrostaticStiffness.argtypes = [ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
+        self.libc.DLL_Mesh_GetHydrostaticStiffness.restype = None
+
+        self.libc.DLL_FAST_Load.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_Load.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_GetParameterName.argtypes = [ctypes.c_int]
+        self.libc.DLL_FAST_GetParameterName.restype = ctypes.c_char_p
+
+        self.libc.DLL_FAST_GetUnitName.argtypes = [ctypes.c_int]
+        self.libc.DLL_FAST_GetUnitName.restype = ctypes.c_char_p
+
+        self.libc.DLL_FAST_GetParameterId.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_GetParameterId.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_GetParameterCount.argtypes = []
+        self.libc.DLL_FAST_GetParameterCount.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_GetLen.argtypes = []
+        self.libc.DLL_FAST_GetLen.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_GetTimeStart.argtypes = []
+        self.libc.DLL_FAST_GetTimeStart.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetTimeEnd.argtypes = []
+        self.libc.DLL_FAST_GetTimeEnd.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetTime.argtypes = [ctypes.c_int]
+        self.libc.DLL_FAST_GetTime.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetData.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.libc.DLL_FAST_GetData.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetAvg.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc.DLL_FAST_GetAvg.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetMax.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc.DLL_FAST_GetMax.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetMin.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc.DLL_FAST_GetMin.restype = ctypes.c_double
+
+        self.libc.DLL_FAST_GetArray.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
+        self.libc.DLL_FAST_GetArray.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_LoadFile.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_LoadFile.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_SaveFile.argtypes = [ctypes.c_char_p]
+        self.libc.DLL_FAST_SaveFile.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_SetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+        self.libc.DLL_FAST_SetVar.restype = ctypes.c_int
+
+        self.libc.DLL_FAST_GetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        self.libc.DLL_FAST_GetVar.restype = ctypes.c_char_p
+
+        self.Mesh = _Mesh(self.libc, self._raise_if_error)
+        self.FAST = _FAST(self.libc, self._raise_if_error)
+
+        self.Init()
+
+
+    def Init(self):
+        self.libc.DLL_Init()
+        self._raise_if_error()
+
+    def Version(self):
+        _ret = self.libc.DLL_Version()
+        self._raise_if_error()
+        return _ret.decode('UTF-8', errors="replace")
+
+    def NoPrint(self):
+        self.libc.DLL_NoPrint()
+        self._raise_if_error()
+
+    def GetLastError(self):
+        _ret = self.libc.DLL_GetLastError()
+        self._raise_if_error()
+        return _ret.decode('UTF-8', errors="replace")
+
+    def Echo(self, str):
+        self.libc.DLL_Echo(str.encode('UTF-8'))
+        self._raise_if_error()
+
+    def _raise_if_error(self):
+        err_ptr = self.libc.DLL_GetLastError()
+        if err_ptr:
+            msg = err_ptr.decode('UTF-8', errors="replace")
+            raise RuntimeError(msg)
+
+
+class _Mesh:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Input(self, file):
+        self.libc.DLL_Mesh_Input(file.encode('UTF-8'))
+        self._raise_if_error()
+
+    def Report(self):
+        self.libc.DLL_Mesh_Report()
+        self._raise_if_error()
+
+    def Clear(self):
+        self.libc.DLL_Mesh_Clear()
+        self._raise_if_error()
+
+    def SetId(self, id):
+        self.libc.DLL_Mesh_SetId(id)
+        self._raise_if_error()
+
+    def Convert(self, file, format, symX, symY):
+        self.libc.DLL_Mesh_Convert(file.encode('UTF-8'), format.encode('UTF-8'), symX, symY)
+        self._raise_if_error()
+
+    def Translate(self, x, y, z):
+        self.libc.DLL_Mesh_Translate(x, y, z)
+        self._raise_if_error()
+
+    def Rotate(self, ax, ay, az, cx, cy, cz):
+        self.libc.DLL_Mesh_Rotate(ax, ay, az, cx, cy, cz)
+        self._raise_if_error()
+
+    def Cg(self, x, y, z):
+        self.libc.DLL_Mesh_Cg(x, y, z)
+        self._raise_if_error()
+
+    def C0(self, x, y, z):
+        self.libc.DLL_Mesh_C0(x, y, z)
+        self._raise_if_error()
+
+    def Mass(self, mass):
+        self.libc.DLL_Mesh_Mass(mass)
+        self._raise_if_error()
+
+    def Reset(self):
+        self.libc.DLL_Mesh_Reset()
+        self._raise_if_error()
+
+    def GetWaterPlane(self):
+        self.libc.DLL_Mesh_GetWaterPlane()
+        self._raise_if_error()
+
+    def GetHull(self):
+        self.libc.DLL_Mesh_GetHull()
+        self._raise_if_error()
+
+    def FillWaterplane(self, ratio):
+        self.libc.DLL_Mesh_FillWaterplane(ratio)
+        self._raise_if_error()
+
+    def GetVolume(self):
+        volx = ctypes.c_double()
+        voly = ctypes.c_double()
+        volz = ctypes.c_double()
+        self.libc.DLL_Mesh_GetVolume(ctypes.byref(volx), ctypes.byref(voly), ctypes.byref(volz))
+        self._raise_if_error()
+        return volx.value, voly.value, volz.value
+
+    def GetUnderwaterVolume(self):
+        volx = ctypes.c_double()
+        voly = ctypes.c_double()
+        volz = ctypes.c_double()
+        self.libc.DLL_Mesh_GetUnderwaterVolume(ctypes.byref(volx), ctypes.byref(voly), ctypes.byref(volz))
+        self._raise_if_error()
+        return volx.value, voly.value, volz.value
+
+    def GetSurface(self):
+        _ret = self.libc.DLL_Mesh_GetSurface()
+        self._raise_if_error()
+        return _ret
+
+    def GetUnderwaterSurface(self):
+        _ret = self.libc.DLL_Mesh_GetUnderwaterSurface()
+        self._raise_if_error()
+        return _ret
+
+    def GetCentreOfGravity(self):
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        self.libc.DLL_Mesh_GetCentreOfGravity(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._raise_if_error()
+        return x.value, y.value, z.value
+
+    def GetCentreOfGravity_Volume(self):
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        self.libc.DLL_Mesh_GetCentreOfGravity_Volume(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._raise_if_error()
+        return x.value, y.value, z.value
+
+    def GetCentreOfGravity_Surface(self):
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        self.libc.DLL_Mesh_GetCentreOfGravity_Surface(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._raise_if_error()
+        return x.value, y.value, z.value
+
+    def GetHydrostaticStiffness(self):
+        _data0 = ctypes.POINTER(ctypes.c_double)()
+        _size0 = (ctypes.c_int * 2)()
+        self.libc.DLL_Mesh_GetHydrostaticStiffness(ctypes.byref(_data0), _size0)
+        self._raise_if_error()
+        if _size0[0]*_size0[1] == 0:
+            return np.empty((_size0[0], _size0[1]), dtype=np.float64)
+        data = np.ctypeslib.as_array(_data0, shape=(_size0[0], _size0[1]))
+        return data
+
+
+class _FAST:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Load(self, filename):
+        _ret = self.libc.DLL_FAST_Load(filename.encode('UTF-8'))
+        self._raise_if_error()
+        return _ret
+
+    def GetParameterName(self, id):
+        _ret = self.libc.DLL_FAST_GetParameterName(id)
+        self._raise_if_error()
+        return _ret.decode('UTF-8', errors="replace")
+
+    def GetUnitName(self, id):
+        _ret = self.libc.DLL_FAST_GetUnitName(id)
+        self._raise_if_error()
+        return _ret.decode('UTF-8', errors="replace")
+
+    def GetParameterId(self, name):
+        _ret = self.libc.DLL_FAST_GetParameterId(name.encode('UTF-8'))
+        self._raise_if_error()
+        return _ret
+
+    def GetParameterCount(self):
+        _ret = self.libc.DLL_FAST_GetParameterCount()
+        self._raise_if_error()
+        return _ret
+
+    def GetLen(self):
+        _ret = self.libc.DLL_FAST_GetLen()
+        self._raise_if_error()
+        return _ret
+
+    def GetTimeStart(self):
+        _ret = self.libc.DLL_FAST_GetTimeStart()
+        self._raise_if_error()
+        return _ret
+
+    def GetTimeEnd(self):
+        _ret = self.libc.DLL_FAST_GetTimeEnd()
+        self._raise_if_error()
+        return _ret
+
+    def GetTime(self, idtime):
+        _ret = self.libc.DLL_FAST_GetTime(idtime)
+        self._raise_if_error()
+        return _ret
+
+    def GetData(self, idtime, idparam):
+        _ret = self.libc.DLL_FAST_GetData(idtime, idparam)
+        self._raise_if_error()
+        return _ret
+
+    def GetAvg(self, idparam, idbegin, idend):
+        _ret = self.libc.DLL_FAST_GetAvg(idparam, idbegin, idend)
+        self._raise_if_error()
+        return _ret
+
+    def GetMax(self, idparam, idbegin, idend):
+        _ret = self.libc.DLL_FAST_GetMax(idparam, idbegin, idend)
+        self._raise_if_error()
+        return _ret
+
+    def GetMin(self, idparam, idbegin, idend):
+        _ret = self.libc.DLL_FAST_GetMin(idparam, idbegin, idend)
+        self._raise_if_error()
+        return _ret
+
+    def GetArray(self, idparam, idbegin, idend):
+        _data0 = ctypes.POINTER(ctypes.c_double)()
+        _size0 = (ctypes.c_int * 1)()
+        _ret = self.libc.DLL_FAST_GetArray(idparam, idbegin, idend, ctypes.byref(_data0), _size0)
+        self._raise_if_error()
+        if _size0[0] == 0:
+            return np.empty((_size0[0],), dtype=np.float64)
+        data = np.ctypeslib.as_array(_data0, shape=(_size0[0],))
+        return data
+
+    def LoadFile(self, file):
+        _ret = self.libc.DLL_FAST_LoadFile(file.encode('UTF-8'))
+        self._raise_if_error()
+        return _ret
+
+    def SaveFile(self, file):
+        _ret = self.libc.DLL_FAST_SaveFile(file.encode('UTF-8'))
+        self._raise_if_error()
+        return _ret
+
+    def SetVar(self, name, paragraph, value):
+        _ret = self.libc.DLL_FAST_SetVar(name.encode('UTF-8'), paragraph.encode('UTF-8'), value.encode('UTF-8'))
+        self._raise_if_error()
+        return _ret
+
+    def GetVar(self, name, paragraph):
+        _ret = self.libc.DLL_FAST_GetVar(name.encode('UTF-8'), paragraph.encode('UTF-8'))
+        self._raise_if_error()
+        return _ret.decode('UTF-8', errors="replace")

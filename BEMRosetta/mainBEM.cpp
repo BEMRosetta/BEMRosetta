@@ -60,7 +60,7 @@ void MainBEM::Init() {
 	menuOpen.butExport <<= THISBACK(OnConvert);
 	menuOpen.butExport.Tip(t_("Exports data file"));
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
-		if (Hydro::bemInfo[i].caseCanSave)
+		if (Hydro::bemInfo[i].canSave)
 			menuOpen.dropExport.Add(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)));
 	menuOpen.dropExport.SetIndex(dropExportId);
 

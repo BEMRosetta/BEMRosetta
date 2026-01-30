@@ -535,7 +535,9 @@ GUI_APP_MAIN {
 		try {
 			ConsoleOutput con(true);
 			
-			ConsoleMain(command, true, PrintStatus);
+			DLL_Data dll;
+			dll.Status = PrintStatus;
+			dll.ConsoleMain(command, true);
 		} catch (Exc e) {
 			errorStr = e;
 		} catch(const char *cad) {

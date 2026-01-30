@@ -323,7 +323,9 @@ void MainBody::Init() {
 	menuEdit.edit_cy <<= 0;
 	menuEdit.edit_cz <<= 0;
 	menuEdit.opClose <<= true;
+	menuEdit.opClose.Tip(t_("Closes the extruded volume at its end"));
 	menuEdit.butExtrude <<= THISBACK(OnExtrude);
+	menuEdit.opAverage.Tip(t_("Extruded volume panel size is the average of actual mesh"));
 	
 	menuEdit.butPanel <<= THISBACK(OnAddPanel);
 	menuEdit.panWidthX.WhenEnter << THISBACK(OnAddPanel);
@@ -856,6 +858,8 @@ void MainBody::OnOpt() {
 							break;
 	case Body::BEM_MESH:	menuOpen.symX.Disable();
 							menuOpen.symY.Disable();
+	case Body::VTK_ASCII:	menuOpen.symX.Disable();
+							menuOpen.symY.Disable();
 	default:				break;		
 	}
 	
@@ -1029,9 +1033,11 @@ void MainBody::OnConvertBody() {
 		
 		WaitCursor waitcursor;
 		
+		bool symX = menuOpen.symX.IsEnabled() ? bool(~menuOpen.symX) : false;
+		bool symY = menuOpen.symY.IsEnabled() ? bool(~menuOpen.symY) : false;
 		Bem().SaveBody(fileName, sel, type, 
 							   static_cast<Body::MESH_TYPE>(int(~menuOpen.optBodyType)),
-							   ~menuOpen.symX, ~menuOpen.symY);	
+							   symX, symY);	
 							   
 		saveFolder = GetFileFolder(~fs);
 	} catch (Exc e) {
@@ -1768,7 +1774,12 @@ void MainBody::OnExtrude() {
 		WaitCursor waitcursor;
 		mainView.surf.Disable();
 		
-		Bem().Extrude(idx, ~menuEdit.edit_cx, ~menuEdit.edit_cy, ~menuEdit.edit_cz, ~menuEdit.opClose);
+		double panelSize;
+		if (~menuEdit.opAverage)
+			panelSize= Null;
+		else
+			panelSize = ~menuEdit.edit_size;
+		Bem().Extrude(idx, ~menuEdit.edit_cx, ~menuEdit.edit_cy, ~menuEdit.edit_cz, panelSize, ~menuEdit.opClose);
 	
 		Body &msh = Bem().surfs[idx];
 		

@@ -27,6 +27,7 @@ const UVector<Body::MeshInfo> Body::meshInfo = {
     {Body::GEOMVIEW_OFF,  "GEOMVIEW .off",   true,   "*.off"},
     {Body::BEM_MESH,      "BEMRosetta .mesh",true,   "*.mesh"},
     {Body::MOORING_MESH,  "Mooring",         false,  "*.out*"},
+    {Body::VTK_ASCII,     "VTK ASCII.vtk",   true,   "*.vtk"},
     {Body::UNKNOWN,       "Unknown",         false,  "*.*"}
 };
 
@@ -210,6 +211,14 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			return std::move(e);
 		}
 		m.dt.SetCode(Body::MIKE21_GRD);
+	} else if (ext == ".vtk") {
+		Body &m = mesh.Add();
+		try {
+			LoadVTK(file, m.dt.mesh, y0z);
+		} catch(Exc e) {
+			return std::move(e);
+		}
+		m.dt.SetCode(Body::VTK_ASCII);
 	} else if (ext == ".obj") {
 		Body &m = mesh.Add();
 		try {
@@ -268,7 +277,6 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			m.dt.mesh.Heal(true, grid, eps);
 		
 		m.AfterLoad(rho, g, false, true);
-	
 	}
 	return String();
 }
@@ -370,6 +378,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 				meshes[ib].SaveSerialization(fileNames[ib]);
 			else if (type == MIKE21_GRD)		
 				SaveGRD(fileNames[ib], surfs[ib], g, symX, symY);
+			else if (type == VTK_ASCII)		
+				SaveVTK(fileNames[ib], surfs[ib], symX);
 			else if (type == GEOMVIEW_OFF) 
 				OffBody::SaveOff(fileNames[ib], surfs[ib]);
 			else

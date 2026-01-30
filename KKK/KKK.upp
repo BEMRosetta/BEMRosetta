@@ -1,0 +1,11 @@
+uses
+	Core,
+	Surface;
+
+file
+	main.cpp,
+	DiffRacModel.h;
+
+mainconfig
+	"" = "";
+

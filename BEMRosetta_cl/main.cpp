@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Copyright 2020 - 2022, the BEMRosetta author and contributors
+// Copyright 2020 - 2026, the BEMRosetta author and contributors
 #if !defined(flagGUI)
 
 #include "BEMRosetta.h"
 #include <SysInfo/Crash.h>
-
+#include "export.h"
 
 #ifdef PLATFORM_WIN32
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)	
 
-#ifdef flagBEMR_TEST_DLL_INTERNAL
-	#include "export.h"
-#endif
+
+String GetPythonDeclaration(const String &name, const String &include);
+	
+String DLL_strPythonDeclaration(String export_h) {
+	return GetPythonDeclaration("BEMRosetta", export_h);	
+}
+
+String DLL_strListFunctions(String export_h) {
+	return CleanCFromDeclaration(export_h);
+}
 
 
 CONSOLE_APP_MAIN
@@ -25,12 +32,14 @@ CONSOLE_APP_MAIN
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		const UVector<String>& command = CommandLine();
 		
-		if (command.GetCount() < 2) 
+		if (command.GetCount() < 1) 
 			throw Exc("Please include in command line binary and BEMRosetta folders");
 		
-		String binFolder = command[0];
-		String bemFolder = command[1];
+		String unittestFolder = command[0];
+		String binFolder = AFX(unittestFolder, ".\\.test");
+		String bemFolder = AFX(unittestFolder, "..");
 		String installFolder = AFX(bemFolder, "install");
+		String export_h = AFX(bemFolder, "BEMRosetta_cl", "export.h"); 
 #endif
 #ifdef flagBEMR_TEST_DLL
 		FileDelete(AFX(binFolder, "libbemrosetta.exp"));
@@ -39,11 +48,10 @@ CONSOLE_APP_MAIN
 		Dl dll;		
 		if (!dll.Load(AFX(binFolder, "libbemrosetta.dll")))
 			throw Exc("DLL not found");
-
+		
+		DLLFunction(dll, void, 		   DLL_Init, ());
 		DLLFunction(dll, const char *, DLL_Version, ());
-		DLLFunction(dll, void, 		   DLL_ListFunctions, ());
-		DLLFunction(dll, const char *, DLL_strListFunctions, ());
-		DLLFunction(dll, const char *, DLL_strPythonDeclaration, ());
+	
 		DLLFunction(dll, int, 		   DLL_FAST_Load, (const char *));
 		DLLFunction(dll, const char *, DLL_FAST_GetParameterName, (int));
 		DLLFunction(dll, const char *, DLL_FAST_GetUnitName, (int));
@@ -57,8 +65,6 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, double, 	   DLL_FAST_GetAvg,   (int idparam, int idbegin, int idend));
 		DLLFunction(dll, double, 	   DLL_FAST_GetArray, (int idparam, int idbegin, int idend, double **, int *));
 		
-		DLLFunction(dll, double, 	   DemoVectorPy_C, (const double *, int));
-		
 		DLLFunction(dll, int, 	   	   DLL_FAST_LoadFile, (const char *file));
 		DLLFunction(dll, int, 	   	   DLL_FAST_SaveFile, (const char *file));
 		DLLFunction(dll, int, 	   	   DLL_FAST_SetVar, (const char *name, const char *paragraph, const char *value));
@@ -66,11 +72,12 @@ CONSOLE_APP_MAIN
 #endif
 
 		UVector<double> dat = {1, 2, 3};
-		//double res = DemoVectorPy_C(dat, 3);
-			
+		//double res = DLL_DemoVectorPyC(dat, 3);
+		
+		DLL_Init();	
 		Cout() << "\nVersion: " << DLL_Version();
 		Cout() << "\n\nDLL functions list:\n";
-		String strList = DLL_strListFunctions();
+		String strList = DLL_strListFunctions(LoadFile(export_h));
 		Cout() << strList;
 #ifdef flagBEMR_TEST_DLL
 		strList = "// BEMRosetta DLL functions list\n\n" + strList;	
@@ -79,14 +86,11 @@ CONSOLE_APP_MAIN
 #endif
 
 		Cout() << "\n\nPython declarations:\n";
-		String strPy = DLL_strPythonDeclaration();
+		String strPy = DLL_strPythonDeclaration(LoadFile(export_h));
 		Cout() << strPy;
 		
-#if defined(flagBEMR_TEST_DLL)
+#if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		if (!SaveFile(AFX(binFolder, "libbemrosetta.py"), strPy))
-			throw Exc(t_("Impossible to save Python declarations file"));
-#elif defined(flagBEMR_TEST_DLL_INTERNAL)
-		if (!SaveFile(AFX(GetDesktopFolder(), "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
 #endif
 
@@ -109,6 +113,22 @@ CONSOLE_APP_MAIN
 #endif
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
+		DLL_Mesh_Input("../examples/hydrostar/Mesh/Ship.hst");
+	    double volx, voly, volz;
+	    DLL_Mesh_GetVolume(&volx, &voly, &volz);
+	    Cout() << Format("\nVolume            x: %f, y: %f, z: %f", volx, voly, volz);
+	    DLL_Mesh_GetUnderwaterVolume(&volx, &voly, &volz);
+	    Cout() << Format("\nUnderwater volume x: %f, y: %f, z: %f", volx, voly, volz);
+		double *C;
+		int dim[2];
+		DLL_Mesh_GetHydrostaticStiffness(&C, dim);
+		Cout() << "\nStiffness matrix   :\n";
+		int ic = 0;
+		for (int r = 0; r < dim[0]; ++r) {
+			for (int c = 0; c < dim[1]; ++c)
+				Cout() << C[ic++] << ",\t";
+			Cout() << "\n";
+		}
 		Cout() << "\n\nLoading FAST .out file";
 		String outfile = AFX(bemFolder, "examples/fast.out/demo.outb");
 		if (!DLL_FAST_Load(outfile))
@@ -149,13 +169,13 @@ CONSOLE_APP_MAIN
 		VERIFY(str == "64");
 		str = DLL_FAST_GetVar("Filename", "");				
 		Cout() << "\nFilename: " << str;
-		VERIFY(str == "\"unifWind.hh\"");
+		VERIFY(str == "unifWind.hh");
 		str = DLL_FAST_GetVar("Filename", "================== Parameters for Uniform wind file");				
 		Cout() << "\nFilename: " << str;
-		VERIFY(str == "\"unifWind.hh\"");
+		VERIFY(str == "unifWind.hh");
 		str = DLL_FAST_GetVar("Filename", "================== Parameters for Binary TurbSim");				
 		Cout() << "\nFilename: " << str;
-		VERIFY(str == "\"TurbSim.bts\"");
+		VERIFY(str == "TurbSim.bts");
 		DLL_FAST_SetVar("nx", "", "23");				
 		str = DLL_FAST_GetVar("nx", "");				
 		Cout() << "\nNew nx: " << str;
@@ -163,7 +183,7 @@ CONSOLE_APP_MAIN
 		DLL_FAST_SetVar("Filename", "================== Parameters for Binary TurbSim", "\"New file\"");				
 		str = DLL_FAST_GetVar("Filename", "================== Parameters for Binary TurbSim");				
 		Cout() << "\nNew Filename: " << str;
-		VERIFY(str == "\"New file\"");
+		VERIFY(str == "New file");
 
 	#ifdef flagDEBUG	
 		DLL_FAST_SaveFile(AFX(GetDesktopFolder(), "InflowWind_test.dat"));
@@ -192,309 +212,19 @@ CONSOLE_APP_MAIN
 
 #endif
 
-#if defined(flagBEMR_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
-
-#include "FastOut.h"
-#include "export.h"
-#include "export.brc"
-
-FastOut &DLL_Fastout() {
-	static FastOut fast;
-	return fast;
-}
-
-
-void DLL_NoPrint() noexcept {
-	CoutStreamX::NoPrint();
-}
-	
-const char *DLL_Version() noexcept {
-	static String version;
-	version << __DATE__ << ", " << __TIME__;
-	return version;	
-}
-
-const char *DLL_strListFunctions() noexcept {
-	static String str;
-	
-	return str = CleanCFromDeclaration(String(BEMR_DLLexport, BEMR_DLLexport_length));
-}
-
-const char *DLL_strPythonDeclaration() noexcept {
-	static String str;
-	
-	return str = GetPythonDeclaration("BEMRosetta", String(BEMR_DLLexport, BEMR_DLLexport_length));	
-}
-
-void DLL_ListFunctions() noexcept {
-	Cout() << DLL_strListFunctions();	
-}
-
-int DLL_FAST_Load(const char *filename) noexcept {
-	try {
-		String ret = DLL_Fastout().Load(filename, Null);
-		if (ret.IsEmpty())
-			return 1;
-		else {
-			CoutX() << Format("Error: %s", ret);
-			return 0;
-		}
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_Load()";
-		return 0;
-	}
-}
-
-const char *DLL_FAST_GetParameterName(int id) noexcept {
-	static String ret;
-	try {
-		return ret = DLL_Fastout().GetParameter(id);
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetParameterName()";
-		return ret = "Error";
-	}
-}
-
-const char *DLL_FAST_GetUnitName(int id) noexcept {
-	static String ret;
-	try {
-		return ret = DLL_Fastout().GetUnit(id);
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetUnitName()";
-		return ret = "Error";
-	}
-}
-
-int DLL_FAST_GetParameterId(const char *name) noexcept {
-	try {
-		UVector<int> p = DLL_Fastout().FindParameterMatch(name);
-		if (p.IsEmpty())
-			return -1;
-		else
-			return p[0];
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetParameterCount()";
-		return Null;
-	}
-}
-
-int DLL_FAST_GetParameterCount() noexcept {
-	try {
-		return DLL_Fastout().GetParameterCount();
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetParameterCount()";
-		return Null;
-	}
-}
-
-int DLL_FAST_GetLen() noexcept {
-	try {
-		return DLL_Fastout().GetNumData();
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetLen()";
-		return Null;
-	}
-}
-
-double DLL_FAST_GetTimeStart() noexcept {
-	try {
-		return DLL_Fastout().GetTimeStart();
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetTimeStart()";
-		return Null;
-	}
-}
-
-double DLL_FAST_GetTimeEnd() noexcept {
-	try {
-		return DLL_Fastout().GetTimeEnd();
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetTimeEnd()";
-		return Null;
-	}
-}
-
-double DLL_FAST_GetTime(int idtime) noexcept {
-	return DLL_FAST_GetData(idtime, 0);
-}
-
-double DLL_FAST_GetData(int idtime, int idparam) noexcept {
-	if (idtime < 0) {
-		CoutX() << "Error in DLL_FAST_GetData() idtime < 0";
-		return Null;
-	}
-	if (idtime >= DLL_Fastout().GetNumData()) {
-		CoutX() << "Error in DLL_FAST_GetData() idtime >= time";
-		return Null;
-	}
-	if (idparam < 0) {
-		CoutX() << "Error in DLL_FAST_GetData() idparam < 0";
-		return Null;
-	}
-	if (idparam >= DLL_Fastout().GetParameterCount()) {
-		CoutX() << "Error in DLL_FAST_GetData() idparam >= num_params";
-		return Null;
-	}
-		
-	return DLL_Fastout().GetVal(idtime, idparam);
-}
-
-static void DLL_FAST_GetData(int idparam, int idbegin, int idend, VectorXd &data) {
-	if (idparam < 0) 
-		throw Exc("idparam < 0");
-	if (idparam >= DLL_Fastout().GetParameterCount()) 
-		throw Exc("idparam >= num_params");
-
-	if (idbegin < 0)
-		idbegin = 0;
-	if (idend < 0)
-		idend = DLL_Fastout().GetNumData()-1;
-	
-	if (idbegin > idend) 
-		throw Exc("idbegin > idend");
-		
-	data = DLL_Fastout().GetVector(idparam).segment(idbegin, idend - idbegin + 1);
-}
-
-int DLL_FAST_GetArray(int idparam, int idbegin, int idend, double **data, int *num) noexcept {
-	static VectorXd v;
-	
-	try {
-		DLL_FAST_GetData(idparam, idbegin, idend, v);
-		
-		*num = int(v.size());
-		*data = v.data();
-		return 1;
-	} catch (Exc e) {
-		CoutX() << Format("Error in DLL_FAST_GetArray(): %s", e);
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetArray()";
-	}
-	return Null;	
-}
-
-double DLL_FAST_GetAvg(int idparam, int idbegin, int idend) noexcept {
-	try {
-		VectorXd data;
-		
-		DLL_FAST_GetData(idparam, idbegin, idend, data);
-		
-		return data.mean();
-	} catch (Exc e) {
-		CoutX() << Format("Error in DLL_FAST_GetAvg(): %s", e);
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
-	}
-	return Null;
-}
-
-double DLL_FAST_GetMax(int idparam, int idbegin, int idend) noexcept {
-	try {
-		VectorXd data;
-		
-		DLL_FAST_GetData(idparam, idbegin, idend, data);
-		
-		return data.maxCoeff();
-	} catch (Exc e) {
-		CoutX() << Format("Error in DLL_FAST_GetMax(): %s", e);
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
-	}
-	return Null;
-}
-
-double DLL_FAST_GetMin(int idparam, int idbegin, int idend) noexcept {
-	try {
-		VectorXd data;
-		
-		DLL_FAST_GetData(idparam, idbegin, idend, data);
-		
-		return data.minCoeff();
-	} catch (Exc e) {
-		CoutX() << Format("Error in DLL_FAST_GetMin(): %s", e);
-	} catch (...) {
-		CoutX() << "Unknown error in DLL_FAST_GetAvg()";
-	}
-	return Null;
-}
-
-int DLL_IsNull(double val) noexcept {return IsNull(val);}
-
-static String fastFileStr;
-static String fastFileName;
-
-int DLL_FAST_LoadFile(const char *file) noexcept {
-	fastFileStr = LoadFile(file);
-	fastFileName = file;
-	return !fastFileStr.IsEmpty();
-}
-
-int DLL_FAST_SaveFile(const char *file) noexcept {
-	bool ret;
-	try {
-		String sfile(file);
-		if (!sfile.IsEmpty()) 
-			fastFileName = sfile;
-		ret = SaveFile(fastFileName, fastFileStr);
-		
-	} catch (Exc e) {
-		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
-		CoutX() << "\n" << "Error: " << e;
-		SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
-		return false;
-	}
-	return ret;	
-}
-
-int DLL_FAST_SetVar(const char *name, const char *paragraph, const char *value) noexcept {
-	try {
-		SetFASTVar(fastFileStr, name, value, paragraph);
-	} catch (Exc e) {
-		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
-		CoutX() << "\n" << "Error: " << e;
-		SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
-		return false;
-	}
-	return true;
-}
-
-const char *DLL_FAST_GetVar(const char *name, const char *paragraph) noexcept {
-	static String ret;
-
-	try {
-		ret = GetFASTVar(fastFileStr, name, paragraph);
-	} catch (Exc e) {
-		SetConsoleColor(CONSOLE_COLOR::LTYELLOW);
-		CoutX() << "\n" << "Error: " << e;
-		SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
-		return ret = "";
-	}
-	if (IsVoid(ret))
-		return "";
-	return ret;
-}
-
-double DemoVectorPy_C(const double *v, int num) noexcept {
-    double res = 0;
-    for (int i = 0; i < num; ++i) 
-        res += v[i];
-    return res;
-}
-
-
-#endif
-
 #endif
 
 #endif
 
 #if defined(flagBEMR_CL)
 
+DLL_Data &DLL();
 
 CONSOLE_APP_MAIN {
 	const UVector<String>& command = CommandLine();
-		
-	if (!ConsoleMain(command, false, PrintStatus))
+	
+	DLL().Status = PrintStatus;
+	if (!DLL().ConsoleMain(command, false))
 		SetExitCode(1);
 	
 #ifdef flagDEBUG
