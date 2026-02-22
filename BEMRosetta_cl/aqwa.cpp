@@ -1024,7 +1024,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				m.dt.Vo = bouyancyForce[ib]/dt.rho/dt.g;
 			
 			m.dt.mesh.GetPanelParams();
-			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes, m.dt.mesh.segments);
 			
 			m.dt.under.CutZ(m.dt.mesh, -1);
 			m.dt.under.GetVolume();

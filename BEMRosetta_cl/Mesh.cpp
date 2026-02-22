@@ -5,6 +5,7 @@
 	
 const UVector<Body::MeshInfo> Body::meshInfo = {
     {Body::WAMIT_GDF,     "Wamit .gdf",      true,   "*.gdf"},
+    {Body::WAMIT_CSF,     "Wamit .csf",      true,   "*.csf"},
     {Body::WAMIT_DAT,     "Wamit .dat",      false,  "*.dat"},
     {Body::NEMOH_DAT,     "Nemoh .dat",      true,   "*.dat"},
     {Body::NEMOHFS_DAT,   "NemohFS .dat",    false,  "*.dat"},
@@ -164,8 +165,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 #endif	
 	else if (ext == ".txt") 
 		ret = DiodoreBody::LoadDat(mesh, file); 
-	else if (ext == ".gdf" || ext == ".idf") 
-		ret = WamitBody::LoadGdf(mesh, file, y0z, x0z); 
+	else if (ext == ".gdf" || ext == ".idf" || ext == ".csf") 
+		ret = WamitBody::LoadGdf(mesh, file, y0z, x0z, g); 
 	else if (ext == ".pnl") 
 		ret = HAMSBody::LoadPnl(mesh, file, y0z, x0z); 
 	else if (ext == ".hst") 
@@ -290,6 +291,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		
 		if (ext == ".gdf") 
 			type = WAMIT_GDF;
+		else if (ext == ".csf") 
+			type = WAMIT_CSF;
 		else if (ext == ".dat")
 			type = NEMOH_DAT;
 		else if (ext == ".pnl")
@@ -328,13 +331,13 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
 			throw Exc(t_("Impossible to save mesh. No mesh found"));		
 		
-		if (symX && (type == WAMIT_GDF || type == HAMS_PNL || type == DIODORE_DAT || 
+		if (symX && (type == WAMIT_GDF || type == WAMIT_CSF || type == HAMS_PNL || type == DIODORE_DAT || 
 					 type == AQWA_DAT || type == MIKE21_GRD || type == HYDROSTAR_HST)) {
 			Surface nsurf;
 			nsurf.CutX(surf);
 			surf = pick(nsurf);
 		}
-		if (symY && (type == WAMIT_GDF || type == NEMOH_DAT || type == NEMOH_PRE || 
+		if (symY && (type == WAMIT_GDF || type == WAMIT_CSF || type == NEMOH_DAT || type == NEMOH_PRE || 
 					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || 
 					 type == MIKE21_GRD || type == HYDROSTAR_HST)) {
 			Surface nsurf;
@@ -343,7 +346,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		}
 		if (meshType == UNDERWATER || symX || symY) {// Some healing before saving
 			Surface::RemoveDuplicatedPanels(surf.panels);
-			Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes);
+			Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes, surf.segments);
 			Surface::RemoveDuplicatedPanels(surf.panels);
 			Surface::DetectTriBiP(surf.panels);
 		}
@@ -360,6 +363,8 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		for (int ib = 0; ib < meshes.size(); ++ib) {
 			if (type == WAMIT_GDF) 
 				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY);	
+			else if (type == WAMIT_CSF) 
+				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, true);
 			else if (type == NEMOH_DAT) 
 				NemohBody::SaveDat(meshes, fileNames[ib], surfs[ib], symY, nPanels);
 			else if (type == NEMOH_PRE) 
@@ -390,7 +395,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 
 String Body::Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status) {
 	String ret = dt.mesh.Heal(basic, grid, eps, Status);
-	if (!ret.IsEmpty())
+	if (ret.IsEmpty())
 		return ret;
 	
 	AfterLoad(rho, g, false, false);

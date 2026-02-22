@@ -113,8 +113,8 @@ bool Mooring::LoadMoordyn(String file) {
 	while (!f.IsEof()) {
 		if (f.GetLineNumber() > 1000 && (lT.IsEmpty() && lP.IsEmpty() && connect.IsEmpty()))
 			return false;
-		String line = Trim(f.GetLine());
-		String lowline = ToLower(line);
+		String sline = Trim(f.GetLine());
+		String lowline = ToLower(sline);
 		if (lowline.StartsWith("---")) {
 			if (lowline.Find("type") > 0) {
 				status = 't';
@@ -247,13 +247,13 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 		const LineProperty &line = lineProperties[i];
 		int from = -1, to = -1;
 		double zfrom, zto;
-		for (int i = 0; i < connections.size(); ++i) {
+		for (int j = 0; i < connections.size(); ++i) {
 			const Connection &conn = connections[i];
 			if (line.from == conn.name) {
-				from = i;
+				from = j;
 				zfrom = conn.z;
 			} else if (line.to == conn.name) {
-				to = i;
+				to = j;
 				zto = conn.z;
 			}
 		}
@@ -309,8 +309,8 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 				double step = 1;
 				if (line.numseg > numseg)
 					step = line.numseg/numseg;
-				for (int i = 0; i < numseg; ++i) 
-		        	points[i] = (int)(i * step);
+				for (int j = 0; j < numseg; ++j) 
+		        	points[j] = (int)(j * step);
 				points[numseg] = line.numseg;
 				
 				out << "\"";

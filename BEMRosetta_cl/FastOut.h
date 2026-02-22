@@ -251,7 +251,7 @@ private:
 		}
 		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
 		
-		virtual double Calc(int idtime) {
+		virtual double Calc(int /*idtime*/) {
 			if (dF->bladeTip1xParam.isnull)
 				return Null;
 			
@@ -267,7 +267,7 @@ private:
 		}
 		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
 		
-		virtual double Calc(int idtime) {
+		virtual double Calc(int /*idtime*/) {
 			if (dF->bladeTip1xParam.isnull)
 				return Null;
 			
@@ -305,7 +305,7 @@ private:
 		}
 		virtual void Init() {enabled = dF->bladeTip2xParam.IsEnabled();}
 		
-		virtual double Calc(int idtime) {
+		virtual double Calc(int /*idtime*/) {
 			if (dF->bladeTip2xParam.isnull)
 				return Null;
 			
@@ -321,7 +321,7 @@ private:
 		}
 		virtual void Init() {enabled = dF->bladeTip2xParam.IsEnabled();}
 		
-		virtual double Calc(int idtime) {
+		virtual double Calc(int /*idtime*/) {
 			if (dF->bladeTip2xParam.isnull)
 				return Null;
 			
@@ -359,7 +359,7 @@ private:
 		}
 		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
 		
-		virtual double Calc(int idtime) {
+		virtual double Calc(int /*idtime*/) {
 			if (dF->bladeTip1xParam.isnull)
 				return Null;
 			
@@ -375,7 +375,7 @@ private:
 		}
 		virtual void Init() {enabled = dF->bladeTip1xParam.IsEnabled();}
 		
-		virtual double Calc(int idtime) {
+		virtual double Calc(int /*idtime*/) {
 			if (dF->bladeTip3xParam.isnull)
 				return Null;
 			

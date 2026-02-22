@@ -5,7 +5,7 @@
 #include <Hdf5/hdf5.h>
 
 
-void HydroStar::SaveCase(String folder, bool withPotentials, bool x0z, bool y0z, 
+void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool y0z, 
 				const UVector<bool> &listDOF, int qtftype) const {
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));

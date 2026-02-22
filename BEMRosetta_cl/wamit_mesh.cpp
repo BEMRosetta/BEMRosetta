@@ -100,7 +100,7 @@ String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 	return String();
 }
 	
-String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z) {
+String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_(Format("Impossible to open '%s'", fileName));
@@ -112,15 +112,29 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 	try {
 		String line;
 		LineParser f(in);	
-		f.IsSeparator = IsTabSpace;
+		f.IsSeparator = [](int c)->int {
+			if (c == '\t' || c == ' ' || c == '!' || c == '=')
+				return true;
+			return false;
+		};
 		
 		in.GetLine();
 		line = in.GetLine();	
 		f.Load(line);
-		double len = f.GetDouble(0);
-		if (len < 1)
-			return t_("Wrong length scale in .gdf file");
-					
+		
+		double len = 1;
+		g = Null;
+		if (line.Find("ILOWHICSF") < 0) {
+			len = f.GetDouble(0);
+			if (len < 1)
+				return t_("Wrong length scale in .gdf file");
+			g = f.GetDouble(1);
+			if (g < 0)
+				return t_("Wrong gravity in .gdf file");
+		} else {
+			if (f.GetInt(1) != 0)
+				return t_("Only ILOWHICSF=0 is supported in .csf file");
+		}
 		line = in.GetLine();	
 		f.Load(line);
 		y0z = f.GetInt(0) != 0;
@@ -195,7 +209,7 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 	return String();
 }
 
-void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z) {
+void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(Format("Impossible to open '%s'", fileName));	
@@ -204,7 +218,10 @@ void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z
 	const UVector<Point3D> &nodes = surf.nodes;
 	
 	out << "BEMRosetta GDF mesh file export\n";
-	out << Format("  %12d   %12f 	ULEN GRAV\n", 1, g);
+	if (!iscsf)
+		out << Format("  %12d   %12f 	ULEN GRAV\n", 1, g);
+	else
+		out << "  ILOWHICSF=0\n";
 	out << Format("  %12d   %12d 	ISX  ISY\n", y0z ? 1 : 0, x0z ? 1 : 0);
 	out << Format("  %12d\n", panels.size());
 	for (int ip = 0; ip < panels.size(); ++ip) {

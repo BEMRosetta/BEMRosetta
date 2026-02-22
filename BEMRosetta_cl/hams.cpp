@@ -498,13 +498,13 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			throw Exc(Format(t_("Problem creating '%s' folder"), AFX(folderOutput, "Wamit_format")));
 		
 		if (numCases > 1) 
-			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), bin, AFX("..", solvName), AFX("..", meshName));
+			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), AFX("..", solvName), AFX("..", meshName));
 		else
-			Save_Bat(folder, "HAMS.bat", Null, bin, solvName, meshName);
+			Save_Bat(folder, "HAMS.bat", Null, solvName, meshName);
 	}
 }
 
-void Hams::Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const {
+void Hams::Save_Bat(String folder, String batname, String caseFolder, /*bool bin, */String solvName, String meshName) const {
 	String fileName = AFX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())

@@ -207,48 +207,48 @@ void MainBody::Init() {
 	CtrlLayout(menuProcess);
 	
 	menuProcess.x_g <<= Null;
-	menuProcess.x_g.WhenEnter = THISBACK2(OnUpdate, NONE, true);
+	menuProcess.x_g.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.y_g <<= Null;
-	menuProcess.y_g.WhenEnter = THISBACK2(OnUpdate, NONE, true);
+	menuProcess.y_g.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.z_g <<= Null;
-	menuProcess.z_g.WhenEnter = THISBACK2(OnUpdate, NONE, true);
+	menuProcess.z_g.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.x_0 <<= 0;
-	menuProcess.x_0.WhenEnter = THISBACK2(OnUpdate, NONE, true);
+	menuProcess.x_0.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.y_0 <<= 0;
-	menuProcess.y_0.WhenEnter = THISBACK2(OnUpdate, NONE, true);
+	menuProcess.y_0.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.z_0 <<= 0;
-	menuProcess.z_0.WhenEnter = THISBACK2(OnUpdate, NONE, true);
+	menuProcess.z_0.WhenEnter = THISBACK1(OnUpdate, NONE);
 	menuProcess.mass <<= 0;
-	menuProcess.mass.WhenEnter = THISBACK2(OnUpdate, NONE, true);
-	menuProcess.butUpdateCg   << THISBACK2(OnUpdate, NONE, true);
+	menuProcess.mass.WhenEnter = THISBACK1(OnUpdate, NONE);
+	menuProcess.butUpdateCg   << THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateCg.Tip(t_("Sets the centre of gravity"));
-	menuProcess.x_g.WhenEnter << THISBACK2(OnUpdate, NONE, true);
-	menuProcess.y_g.WhenEnter << THISBACK2(OnUpdate, NONE, true);
-	menuProcess.z_g.WhenEnter << THISBACK2(OnUpdate, NONE, true);
+	menuProcess.x_g.WhenEnter << THISBACK1(OnUpdate, NONE);
+	menuProcess.y_g.WhenEnter << THISBACK1(OnUpdate, NONE);
+	menuProcess.z_g.WhenEnter << THISBACK1(OnUpdate, NONE);
 	
 	menuProcess.butCgtoC0.WhenAction = [&] {
 		menuProcess.x_0 <<= ~menuProcess.x_g;
 		menuProcess.y_0 <<= ~menuProcess.y_g;
 		menuProcess.z_0 <<= ~menuProcess.z_g;
-		OnUpdate(NONE, true);
+		OnUpdate(NONE);
 	};
 	menuProcess.butCgtoC0.Tip(t_("Sets the centre of motion with the centre of gravity"));
 	menuProcess.butC0toCg.WhenAction = [&] {
 		menuProcess.x_g <<= ~menuProcess.x_0;
 		menuProcess.y_g <<= ~menuProcess.y_0;
 		menuProcess.z_g <<= ~menuProcess.z_0;
-		OnUpdate(NONE, true);
+		OnUpdate(NONE);
 	};
 	menuProcess.butC0toCg.Tip(t_("Sets the centre of gravity with the centre of motion"));
-	menuProcess.butUpdateCrot  <<= THISBACK2(OnUpdate, NONE, true);
+	menuProcess.butUpdateCrot  <<= THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateCrot.Tip(t_("Sets the centre of the body axis"));	
-	menuProcess.x_0.WhenEnter << THISBACK2(OnUpdate, NONE, true);
-	menuProcess.y_0.WhenEnter << THISBACK2(OnUpdate, NONE, true);
-	menuProcess.z_0.WhenEnter << THISBACK2(OnUpdate, NONE, true);	
+	menuProcess.x_0.WhenEnter << THISBACK1(OnUpdate, NONE);
+	menuProcess.y_0.WhenEnter << THISBACK1(OnUpdate, NONE);
+	menuProcess.z_0.WhenEnter << THISBACK1(OnUpdate, NONE);	
 	
 	menuProcess.butUpdateMassVol  <<= THISBACK(OnUpdateMass);
 	menuProcess.butUpdateMassVol.Tip(t_("Sets mass from inmersed volume"));
-	menuProcess.butUpdateMass  <<= THISBACK2(OnUpdate, NONE, true);
+	menuProcess.butUpdateMass  <<= THISBACK1(OnUpdate, NONE);
 	menuProcess.butUpdateMass.Tip(t_("Sets mass"));
 		
 	menuProcess.butSimplify <<= THISBACK1(OnHealing, true);
@@ -288,20 +288,20 @@ void MainBody::Init() {
 	menuMove.butReset.Tip(t_("Translates the mesh to the original position"));
 	
 	menuMove.t_x <<= 0;
-	menuMove.t_x.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
+	menuMove.t_x.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuMove.t_y <<= 0;
-	menuMove.t_y.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
+	menuMove.t_y.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuMove.t_z <<= 0;
-	menuMove.t_z.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
+	menuMove.t_z.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuMove.a_x <<= 0;
-	menuMove.a_x.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
+	menuMove.a_x.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuMove.a_y <<= 0;
-	menuMove.a_y.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
+	menuMove.a_y.WhenEnter = THISBACK1(OnUpdate, ROTATE);
 	menuMove.a_z <<= 0;
-	menuMove.a_z.WhenEnter = THISBACK2(OnUpdate, ROTATE, false);
-	menuMove.butUpdatePos <<= THISBACK2(OnUpdate, MOVE, false);
+	menuMove.a_z.WhenEnter = THISBACK1(OnUpdate, ROTATE);
+	menuMove.butUpdatePos <<= THISBACK1(OnUpdate, MOVE);
 	menuMove.butUpdatePos.Tip(t_("Translates the mesh"));
-	menuMove.butUpdateAng <<= THISBACK2(OnUpdate, ROTATE, false);
+	menuMove.butUpdateAng <<= THISBACK1(OnUpdate, ROTATE);
 	menuMove.butUpdateAng.Tip(t_("Rotates the mesh"));	
 	
 	menuMove.butArchimede <<= THISBACK(OnArchimede);
@@ -509,7 +509,7 @@ void MainBody::Init() {
 	mainTab.Add(mainStiffness.SizePos(), t_("Hydrostatic Stiffness")).Disable();
 	
 	mainStiffness.opMassBuoy.Tip(t_("Obtain stiffness matrix including the effect of mass and buoyancy"));
-	mainStiffness.opMassBuoy.WhenAction = THISBACK2(OnUpdate, NONE, true);
+	mainStiffness.opMassBuoy.WhenAction = THISBACK1(OnUpdate, NONE);
 	mainStiffness.opMassBuoy.Hide();
 	
 	mainM.Init(Hydro::MAT_M);
@@ -707,7 +707,7 @@ void MainBody::OnMenuOpenArraySel() {
 		return;
 	
 	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
-	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::AQWA_DAT || type == Body::HYDROSTAR_HST) && Bem().surfs[idx].IsSymmetricX());
+	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::WAMIT_CSF || type == Body::AQWA_DAT || type == Body::HYDROSTAR_HST) && Bem().surfs[idx].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[idx].IsSymmetricY();
 	
 	dialogDamage.SelectId(idx);
@@ -848,6 +848,7 @@ void MainBody::OnOpt() {
 	case Body::AQWA_DAT:
 	case Body::HYDROSTAR_HST:
 	case Body::MIKE21_GRD:
+	case Body::WAMIT_CSF:	
 	case Body::WAMIT_GDF:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
@@ -1161,7 +1162,7 @@ void MainBody::OnUpdateMass() {
 		menuProcess.mass <<= mass;
 		menuProcessInertia.mass <<= mass;
 
-		OnUpdate(NONE, true);
+		OnUpdate(NONE);
 		
 		Ma().Status(Format(t_("Mass updated to %f kg"), mass));
 		
@@ -1274,7 +1275,7 @@ void MainBody::OnSmooth() {
 	}		
 }
 
-void MainBody::OnUpdate(Action action, bool fromMenuProcess) {
+void MainBody::OnUpdate(Action action/*, bool fromMenuProcess*/) {
 	GuiLock __;
 	
 	try {
@@ -1854,8 +1855,10 @@ void MainBody::OnCS() {
 	
 		Bem().GetCS(idsCS, menuProcess.csDistance, menuProcess.meshRatio, menuProcess.opQuad);
 		
-		Body &nw = Last(Bem().surfs);
-		AddRow(nw);
+		for (int i = 0; i < idsCS.size(); ++i) {
+			Body &nw = Bem().surfs[Bem().surfs.size() - idsCS.size() + i];
+			AddRow(nw);
+		}
 		After();
 		mainViewData.OnAddedModel(mainView);
 		OnOpt();

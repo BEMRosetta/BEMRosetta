@@ -542,7 +542,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			numNodes[ib] = dt.msh[ib].dt.under.nodes.size();
 			numPanels[ib] = dt.msh[ib].dt.under.panels.size();
 		}
-		Save_Cal(folder, freqs, numNodes, numPanels, solver, x0z, lids, listDOF);
+		Save_Cal(folder, freqs, solver, x0z, lids, listDOF);
 				
 		String folderResults = AFX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
@@ -611,8 +611,8 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 	out << Format("%s               ! Gravity (m/s2)", FDS(g, 6, true));
 }
 	
-void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, 
-		const UVector<int> &panels, int solver, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
+void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, /*const UVector<int> &nodes, 
+		const UVector<int> &panels, */int solver, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const {
 	String fileName = AFX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())

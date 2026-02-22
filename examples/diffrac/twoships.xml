@@ -5,7 +5,7 @@
   </parVTKDIF>
   <parINIDIF>
     <runProgram>true</runProgram>
-    <dataBaseFn>SBS_FLNG_LNGC</dataBaseFn>
+    <dataBaseFn>Case_Name</dataBaseFn>
     <quay>
       <apply>false</apply>
       <yQuay>0.0</yQuay>
@@ -167,9 +167,9 @@
       </hstat>
       <index>1</index>
       <mesh>
-        <meshFn>30000_MXXXX_1500pan.vtk</meshFn>
+        <meshFn>mesh1.vtk</meshFn>
       </mesh>
-      <name>FLNG</name>
+      <name>Ship1</name>
       <position>
         <translation>-225.0,38.3,0</translation>
         <rotation>0</rotation>
@@ -191,9 +191,9 @@
       </hstat>
       <index>2</index>
       <mesh>
-        <meshFn>m8383_T=11_1500pan_diff_fullship.vtk</meshFn>
+        <meshFn>mesh2.vtk</meshFn>
       </mesh>
-      <name>LNGC</name>
+      <name>Ship2</name>
       <position>
         <translation>-137.0,-24.4,0</translation>
         <rotation>0</rotation>

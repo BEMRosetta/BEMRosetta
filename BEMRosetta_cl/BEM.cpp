@@ -287,6 +287,8 @@ void BEM::SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type
 		
 		if (ext == ".gdf")
 			type = Body::WAMIT_GDF;
+		else if (ext == ".csf")
+			type = Body::WAMIT_CSF;
 		else if (ext == ".dat")
 			type = Body::NEMOH_DAT;
 		else if (ext == ".")
@@ -555,7 +557,7 @@ void BEM::AddWaterSurface(int id, char c, double meshRatio, bool quads) {
 		
 		if (true) {		// Clean panels
 			Surface::RemoveDuplicatedPanels(surf.dt.mesh.panels);
-			Surface::RemoveDuplicatedPointsAndRenumber(surf.dt.mesh.panels, surf.dt.mesh.nodes);
+			Surface::RemoveDuplicatedPointsAndRenumber(surf.dt.mesh.panels, surf.dt.mesh.nodes, surf.dt.mesh.segments);
 			Surface::RemoveDuplicatedPanels(surf.dt.mesh.panels);
 		}
 		surf.AfterLoad(rho, g, false, true);
@@ -567,27 +569,39 @@ void BEM::AddWaterSurface(int id, char c, double meshRatio, bool quads) {
 }
 
 void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads) {
+	int numCS = ids.size();
+	
 	try {
-		Body &surf = surfs.Add();
-		
-		UVector<Surface *>surs(ids.size());
-		for (int i = 0; i < ids.size(); ++i) {
+		UVector<Surface *>surs(numCS);
+		for (int i = 0; i < numCS; ++i) {
 			surs[i] = &(surfs[ids[i]].dt.under);
 			surs[i]->GetSegments();
 			if (IsNull(surs[i]->GetAvgLenSegment()))
 				throw Exc(t_("Surface does not have underwater panels"));
 		}
-
-		surf.dt.SetCode(Body::EDIT);
-		surf.dt.mesh.AddCS(surs, distance, meshRatio, quads); 
-		surf.dt.c0 = surfs[ids[0]].dt.c0;	// c0 taken from the first
 		
-		surf.dt.name = t_("Control surface");
-		surf.dt.fileName =  "";
+		int idfrom = surfs.size();
+		surfs.SetCount(idfrom + numCS);
+		UVector<Surface *>sursTo(numCS);
+		for (int i = 0; i < numCS; ++i)
+			sursTo[i] = &(surfs[idfrom+i].dt.mesh);
 		
-		surf.AfterLoad(rho, g, false, true);
+		Surface::AddCS(surs, sursTo, distance, meshRatio, quads); 
+		
+		for (int i = 0; i < numCS; ++i) {
+			Body &surf = surfs[idfrom+i];
+			
+			surf.dt.SetCode(Body::EDIT);
+			
+			surf.dt.c0 = surfs[ids[0]].dt.c0;	// c0 taken from the first
+			
+			surf.dt.name = Format(t_("Control surface of %s"), surfs[ids[i]].dt.name);
+			surf.dt.fileName =  "";
+			
+			surf.AfterLoad(rho, g, false, true);
+		}
 	} catch (Exc e) {
-		surfs.SetCount(surfs.size() - 1);
+		surfs.SetCount(surfs.size() - numCS);
 		Print("\n" + Format(t_("Problem obtaining control surface: %s"), e));
 		throw std::move(e);
 	}	

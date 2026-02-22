@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2026, the BEMRosetta author and contributors
 #include <Core/Core.h>
 #include <Surface/Surface.h>
 #include <STEM4U/Utility.h>
 
-#include "DiffRacModel.h"
+#include "diffracmodel.h"
 
 using namespace Upp;
 
@@ -40,26 +42,35 @@ static bool ReadDouble(XmlNode &node, const String &tag, double &ret) {
     return !IsNull(ret);
 }
 
+// 0,45,90,135,180,210; or 0(45)180,210
 static bool ReadVectorDouble(XmlNode &node, const String &tag, UVector<double> &ret) {
 	const XmlNode &child = node(tag);
 	if (child.GetCount() <= 0) 
 		return false;
 	ret.Clear();
 	String str = Trim(child.GatherText());
-	int posleft = str.FindAfter("(");
-	if (posleft > 0) {
-		int posright = str.FindAfter(")", posleft);	
-		if (posright <= 0)
-			return false;
-		double from = ScanDouble(str);
-		double delta = ScanDouble(str.Mid(posleft));
-		double to = ScanDouble(str.Mid(posright));
-		if (from > to)
-			return false;
-		Arange(ret, from, to, delta);
-	} else {
-		UVector<String> t = Split(str, ',');
-		for (const String s : t) {
+	UVector<String> t = Split(str, ',');
+	for (const String s : t) {
+		int posleft = s.FindAfter("(");
+		if (posleft > 0) {
+			int posright = str.FindAfter(")", posleft);	
+			if (posright <= 0)
+				return false;
+			double from = ScanDouble(str);
+			if (!IsNum(from))
+				return false;
+			double delta = ScanDouble(str.Mid(posleft));
+			if (!IsNum(delta))
+				return false;
+			double to = ScanDouble(str.Mid(posright));
+			if (!IsNum(to))
+				return false;
+			if (from > to)
+				return false;
+			UVector<double> r;
+			Arange(r, from, to, delta);
+			ret.Append(r);
+		} else {
 			double d = ScanDouble(s);
 			if (!IsNum(d))
 				return false;
@@ -132,7 +143,10 @@ void DiffracData::LoadXML(const String &xml) {
 		}
 	}
 	XmlNode &parDIFFRAC = sim("parDIFFRAC");
-	if (parDIFFRAC.GetCount()) {		
+	if (parDIFFRAC.GetCount()) {
+		double minFrequency, frequencyStep;
+		int nFrequencies;
+				
 		ReadBool(parDIFFRAC, "runProgram", this->parDIFFRAC.runProgram);
 		ReadVectorDouble(parDIFFRAC, "waveDir", this->parDIFFRAC.waveDir);
 		ReadDouble(parDIFFRAC, "waterDepth", this->parDIFFRAC.waterDepth);
@@ -143,10 +157,17 @@ void DiffracData::LoadXML(const String &xml) {
 		}
 		ReadString(parDIFFRAC, "irregFreqSuppression", this->parDIFFRAC.irregFreqSuppression);
 		ReadDouble(parDIFFRAC, "irregFreqDamping", this->parDIFFRAC.irregFreqDamping);
-		ReadDouble(parDIFFRAC, "frequencyStep", this->parDIFFRAC.frequencyStep);
-		ReadInt(parDIFFRAC, "nFrequencies", this->parDIFFRAC.nFrequencies);
-		ReadDouble(parDIFFRAC, "minFrequency", this->parDIFFRAC.minFrequency);
+		ReadVectorDouble(parDIFFRAC, "waveFreq", this->parDIFFRAC.waveFreq);
+		ReadDouble(parDIFFRAC, "frequencyStep", frequencyStep);
+		ReadInt(parDIFFRAC, "nFrequencies", nFrequencies);
+		ReadDouble(parDIFFRAC, "minFrequency", minFrequency);
 		ReadBool(parDIFFRAC, "exportKinematicsVTK", this->parDIFFRAC.exportKinematicsVTK);
+		
+		if (this->parDIFFRAC.waveFreq.IsEmpty()) {
+			this->parDIFFRAC.waveFreq.SetCount(nFrequencies);
+			for (int i = 0; i < nFrequencies; ++i)
+				this->parDIFFRAC.waveFreq[i] = minFrequency + frequencyStep*i;
+		}
 	}
 	XmlNode &parDBRESP = sim("parDBRESP");
 	if (parDBRESP.GetCount()) {		
@@ -414,9 +435,7 @@ String DiffracData::SaveXML() {
 		<< "    </current>\n"
 		<< Format("    <irregFreqSuppression>%s</irregFreqSuppression>\n", parDIFFRAC.irregFreqSuppression)
 		<< Format("    <irregFreqDamping>%s</irregFreqDamping>\n", ToText(parDIFFRAC.irregFreqDamping))
-		<< Format("    <frequencyStep>%s</frequencyStep>\n", ToText(parDIFFRAC.frequencyStep))
-		<< Format("    <nFrequencies>%s</nFrequencies>\n", ToText(parDIFFRAC.nFrequencies))
-		<< Format("    <minFrequency>%s</minFrequency>\n", ToText(parDIFFRAC.minFrequency))
+		<< Format("    <waveDir>%s</waveDir>\n", ToText(parDIFFRAC.waveFreq))
 		<< Format("    <exportKinematicsVTK>%s</exportKinematicsVTK>\n", ToText(parDIFFRAC.exportKinematicsVTK))
 		<< "  </parDIFFRAC>\n"
 	;
@@ -565,11 +584,11 @@ String DiffracData::SaveXML() {
 	return out;
 }
 
-
+/*
 CONSOLE_APP_MAIN
 {
     StdLogSetup(LOG_COUT|LOG_FILE);
-    String path = "C:\\Desarrollo\\BEMRosetta\\KKK\\SBS.input.xml";
+    String path = "C:\\Desarrollo\\BEMRosetta\\examples\\diffrac\\twoships.xml";
 
     String xml = LoadFile(path);
     if(IsNull(xml)) {
@@ -580,8 +599,8 @@ CONSOLE_APP_MAIN
 	DiffracData data;
 	data.LoadXML(xml);
 	
-	SaveFile("C:\\Desarrollo\\BEMRosetta\\KKK\\SBS.processed.xml", data.SaveXML());
+	SaveFile(AFX(GetDesktopFolder(), "processed.xml"), data.SaveXML());
 	
 	Cout() << "\nEnd:";
 	ReadStdIn();
-}
+}*/

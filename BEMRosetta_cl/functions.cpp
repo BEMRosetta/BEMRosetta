@@ -206,7 +206,7 @@ void DampedSin(double x, double z0, double zDecay, double mass, double ainf, dou
 	d2y = (zDecay/sqr(2*mass))*exp(-gamma*(x-t0))*(4*b*mass*w_d*sin(w_d*(x-t0) + phi) + (b*b - sqr(2*mass*w_d))*cos(w_d*(x-t0) + phi));
 }
 
-double FitToDampedSin(const VectorXd &y, double dt, double mass, double Kh, double g, ParamDampedSin &par) {
+double FitToDampedSin(const VectorXd &y, double dt, double mass, double Kh, ParamDampedSin &par) {
 	int num = int(y.size());
 	
 	double w0 = sqrt(Kh/mass);
@@ -285,7 +285,7 @@ void Decay(double mass, double ainf, double av, double Kh, double b, double b2, 
 }
 
 void FitToDecay(const VectorXd &z, const VectorXd &dz, const VectorXd &d2z, 
-			double dt, double mass, double Kh, double g, ParamDecay &par) {
+			double dt, double mass, double Kh, ParamDecay &par) {
 				
 	int numCoeff = 1 + par.getav + par.getb + par.getb2;
 	if (par.numB > 0) {

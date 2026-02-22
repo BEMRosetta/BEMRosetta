@@ -44,8 +44,8 @@ void QTFTabDof::Init(MainQTF &par, int posSplitter, int _ib, int _idof) {
 	up  .surf.WhenDraw    = THISBACK(OnDraw);
 	down.surf.WhenDraw    = THISBACK(OnDraw);
 	
-	up  .surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, /*this->idof, */action);};
-	down.surf.WhenMouseClick = [&](Point p, dword keyflags, ScatterCtrl::MouseAction action) {OnClick(p, /*this->idof, */action);};
+	up  .surf.WhenMouseClick = [&](Point p, dword /*keyflags*/, ScatterCtrl::MouseAction action) {OnClick(p, /*this->idof, */action);};
+	down.surf.WhenMouseClick = [&](Point p, dword /*keyflags*/, ScatterCtrl::MouseAction action) {OnClick(p, /*this->idof, */action);};
 	
 	int len = StdFont().GetHeight();
 	
@@ -238,7 +238,7 @@ char QTFTabDof::GetWhat(const Data &data) {
 	}
 }
 	
-double QTFTabDof::GetData(const Hydro &hy, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const {
+double QTFTabDof::GetVal(const Hydro &hy, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const {
 	return hy.GetQTFVal(ib, idof, idh, ifr1, ifr2, isSum, GetWhat(data), getDim);
 }
 

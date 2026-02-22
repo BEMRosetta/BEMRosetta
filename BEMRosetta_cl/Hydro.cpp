@@ -28,7 +28,7 @@ String Hydro::LoadSerialization(String fileName) {
 		dt.symX = dt.symY = false;
 		for (Body &m : dt.msh) {
 			m.dt.mesh.GetPanelParams();
-			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes, m.dt.mesh.segments);
 			
 			m.dt.under.CutZ(m.dt.mesh, -1);
 			m.dt.under.GetVolume();
@@ -927,7 +927,7 @@ void Hydro::GetDampLin(double critDamp) {
 }
 
 VectorXcd Hydro::GetRAO(double w, const MatrixXd &Aw, const MatrixXd &Bw, const VectorXcd &Fwh, 
-		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &D2, double critDamp) {
+		const MatrixXd &C, const MatrixXd &M, const MatrixXd &D, const MatrixXd &/*D2*/, double critDamp) {
 	MatrixXd Aw0   = Aw .unaryExpr([](double x){return IsNum(x) ? x : 0;}),		// Replaces Null with 0
 			 Bw0   = Bw .unaryExpr([](double x){return IsNum(x) ? x : 0;});
 	VectorXcd Fwh0 = Fwh.unaryExpr([](const std::complex<double> &x){return IsNum(x) ? x : 0;});
@@ -1853,7 +1853,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 		TransMD();
 	}
 	
-    auto TransQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf, bool isSum) {
+    auto TransQTF = [&](UArray<UArray<UArray<MatrixXcd>>> &qtf/*, bool isSum*/) {
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			double dx = delta(0, ib);
 			double dy = delta(1, ib);
@@ -1892,11 +1892,11 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 		
 	if (IsLoadedQTF(true)) {
 		Status(t_("Translating QTF"), 50);
-		TransQTF(dt.qtfsum, true);		
+		TransQTF(dt.qtfsum/*, true*/);		
 	}
 	if (IsLoadedQTF(false))	{
 		Status(t_("Translating QTF"), 60);
-		TransQTF(dt.qtfdif, false);
+		TransQTF(dt.qtfdif/*, false*/);
 	}
 	
 	if (IsLoadedPotsRad()) 

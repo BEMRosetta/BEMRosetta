@@ -52,7 +52,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
 	enum MESH_FMT {
-	    WAMIT_GDF, WAMIT_DAT, NEMOH_DAT, NEMOHFS_DAT, NEMOH_PRE,
+	    WAMIT_GDF, WAMIT_CSF, WAMIT_DAT, NEMOH_DAT, NEMOHFS_DAT, NEMOH_PRE,
 	    AQWA_DAT, AQWA_LIS, HAMS_PNL, STL_BIN, STL_TXT,
 	    EDIT, MSH_TDYN, DIODORE_DAT, HYDROSTAR_HST, ORCA_OWR,
 	    MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST,
@@ -1417,8 +1417,8 @@ public:
 class WamitBody : public Body {
 public:
 	static String LoadDat(UArray<Body> &mesh, String fileName);
-	static String LoadGdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z);
-	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z);
+	static String LoadGdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
+	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf = false);
 	void SaveHST(String fileName, double rho, double g) const; 
 
 	virtual ~WamitBody() noexcept {}
@@ -1487,9 +1487,9 @@ public:
 	void Save_out(String file) const;
 	virtual ~Wamit() noexcept {}
 	
-	bool LoadGdfBody(String file);
-	bool LoadDatBody(String file);
-	void SaveGdfBody(String fileName);
+	//bool LoadGdfBody(String file);
+	//bool LoadDatBody(String file);
+	//void SaveGdfBody(String fileName);
 	
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
@@ -1536,7 +1536,7 @@ protected:
 	void Save_hst(String fileName) const;
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
-	void Save_789(String fileName, bool force_T, bool force_Deg) const;
+	void Save_789(String fileName, bool force_T/*, bool force_Deg*/) const;
 	void Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const;
 	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
 		
@@ -1581,7 +1581,7 @@ private:
 	void Save_ControlFile(String folderInput, const UVector<double> &freqs,
 							int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints, bool ismrel) const;
 	void Save_Settings(String folderInput, const UArray<Body> &lids) const;
-	void Save_Bat(String folder, String batname, String caseFolder, bool bin, String solvName, String meshName) const;
+	void Save_Bat(String folder, String batname, String caseFolder, /*bool bin, */String solvName, String meshName) const;
 };
 
 class Fast : public Wamit {
@@ -1619,13 +1619,13 @@ public:
 	void Save(String file);
 	virtual ~Nemoh() noexcept {}
 	
-	bool LoadDatBody(String file);
+	//bool LoadDatBody(String file);
 	void SaveDatBody(String file); 
 	
 	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, const UArray<Body> &lids) const;
 	
-	void Save_Cal(String folder, const UVector<double> &freqs, const UVector<int> &nodes, const UVector<int> &panels, int solver, 
+	void Save_Cal(String folder, const UVector<double> &freqs, /*const UVector<int> &nodes, const UVector<int> &panels, */int solver, 
 					bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
 	
 	bool Save_KH(String folder) const;

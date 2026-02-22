@@ -199,7 +199,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 		
 		// Removes mooring, Morison and other points unrelated with panels
 		for (Body &m : mesh) 
-			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+			Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes, m.dt.mesh.segments);
 			
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
@@ -398,7 +398,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	
 	// Removes mooring, Morison and other points unrelated with panels
 	for (Body &m : mesh) 
-		Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes);
+		Surface::RemoveDuplicatedPointsAndRenumber(m.dt.mesh.panels, m.dt.mesh.nodes, m.dt.mesh.segments);
 	
 	hy.dt.solver = Hydro::AQWA_DAT;
 	

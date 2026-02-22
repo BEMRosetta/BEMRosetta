@@ -1,11 +1,13 @@
-#pragma once
-#include <Core/Core.h>
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2020 - 2026, the BEMRosetta author and contributors
+#ifndef _BEMRosetta_cl_diffracmodel_h_
+#define _BEMRosetta_cl_diffracmodel_h_
 
 using namespace Upp;
 
 struct DiffracData {
 	struct ParVTKDIF {
-		bool runProgram = false;
+		bool runProgram = true;
 	};
 	struct ParINIDIF {
 		struct Quay {
@@ -26,7 +28,7 @@ struct DiffracData {
 		    int NrPanelsWidth = 0;
 		    bool dampIncWave = false;
 		};
-		bool runProgram = false;
+		bool runProgram = true;
 	    String dataBaseFn;
 	    Quay quay;
 	    BasinWall basinWall;
@@ -39,16 +41,14 @@ struct DiffracData {
 		    double speed = 0;
 		    double direction = 0;
 		};
-		bool runProgram = false;
+		bool runProgram = true;
 	    UVector<double> waveDir;
 	    double waterDepth = 0.0;
 	    Current current;
 	    String irregFreqSuppression;
 	    double irregFreqDamping = 0.0;
-	    double frequencyStep = 0.0;
-	    int nFrequencies = 0;
-	    double minFrequency = 0.0;
-	    bool exportKinematicsVTK = false;
+	    UVector<double> waveFreq;
+	    bool exportKinematicsVTK = false;	// The user may specify the 'exportKinematicsVTK' (boolean) switch. If &quot;true&quot; is selected, then velocities and pressures on hull panels are exported to a vtk file, for visualisation with paraview. If &quot;false&quot; is selected then velocities and pressures are not exported! (default value = true)
 	};
 	struct ParDBRESP {
 		struct BodyInputDamping {
@@ -61,15 +61,15 @@ struct DiffracData {
 		    int index = 0;
 		    UArray<BodyTotalDamping> total;
 		};
-		bool runProgram = false;
+		bool runProgram = true;
 	    UArray<BodyInputDamping> inputs;
 	};
 	struct ParDRIFTP {
-		bool runProgram = false;
+		bool runProgram = true;
 	    bool exportContribution[5] = {false,false,false,false,false};
 	    double minFrequency = 0;
 	    double maxFrequency = 0;
-	    int numberOfWavefrequencyDiagonals = 0;
+	    int numberOfWavefrequencyDiagonals = 0;	// The user must specify the number of diagonals of the wave drift force matrix that have to be computed
 	    bool waveDirInteraction = false;
 	};
 	struct ParEXPORT {
@@ -143,3 +143,5 @@ struct DiffracData {
     String SaveXML();
 };
 
+
+#endif

@@ -240,7 +240,7 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	
 	if (IsLoadedMD()) {
 		BEM::Print("\n- " + Format(t_("Mean drift file '%s'"), GetFileName(fileext = ForceExt(file, Format(".%d", dt.mdtype)))));
-		Save_789(fileext, force_T, true);
+		Save_789(fileext, force_T);
 	}
 
 	if (IsLoadedQTF(true)) {
@@ -1398,11 +1398,10 @@ bool Wamit::Load_frc2(String fileName) {
 		listPointsTemp[r].y = f.GetDouble(1);
 		listPointsTemp[r].z = f.GetDouble(2);
 	}
-	
 	return true;
 }
 
-bool Wamit::Load_frc3(String fileName) {
+bool Wamit::Load_frc3(String /*fileName*/) {
 	
 	
 	///// To be implemented
@@ -1537,7 +1536,7 @@ double RatioSameDelta(const UVector<double> &w) {
 int Wamit::GuessIperin(const UVector<double> &w) {
 	ASSERT(w.size() > 0);
 	
-	int iperin = 0, iperout = 0;
+	int /*iperin = 0, */iperout = 0;
 	double ratio = 0;
 	
 	double g = Nvl2(dt.g, Bem().g);
@@ -1569,7 +1568,7 @@ int Wamit::GuessIperin(const UVector<double> &w) {
 			double r = RatioSameDelta(win);
 			if (r > ratio) {
 				ratio = r;
-				iperin = ipin;
+				//iperin = ipin;
 				iperout = ipot;
 			}
 		}
@@ -2194,7 +2193,7 @@ bool Wamit::Load_pnl(String fileName, UVector<int> &pnlId, UVector<int> &panelId
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	
-	FileInLine::Pos fpos = in.GetPos();	
+	//FileInLine::Pos fpos = in.GetPos();	
 	while (!f.IsEof()) {
 		quadrant << f.GetInt(0);
 		pnlId << f.GetInt(1)-1;
@@ -2246,7 +2245,7 @@ bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> 
 	double g = Nvl2(dt.g, Bem().g);
 	
 	int last_ifr = -1;
-	double rho_g = g_ndim()*rho_ndim();
+	//double rho_g = g_ndim()*rho_ndim();
 	
 	while (!f.IsEof()) {
 		f.GetLine_discard_empty();
@@ -2259,7 +2258,7 @@ bool Wamit::Load_5p(String fileName, int &iperout, Function <bool(String, int)> 
 		if (Status && ifr != last_ifr && !Status("Loading .5p base data", (int)((100.*ifr)/dt.Nf)))
 			throw Exc(t_("Stop by user"));
 
-		double rho_w = dt.w[ifr]*rho_ndim();
+		//double rho_w = dt.w[ifr]*rho_ndim();
 		
 		last_ifr = ifr;
 		
@@ -2382,7 +2381,7 @@ bool Wamit::Load_6p(String fileName, int &iperout, Function <bool(String, int)> 
 	int lifr = -1;
 	
 	bool isdiff = false, israd = false;
-	double rho_g = g_ndim()*rho_ndim();
+	//double rho_g = g_ndim()*rho_ndim();
 	
 	while (!f.IsEof()) {
 		f.GetLine_discard_empty();
@@ -2395,7 +2394,7 @@ bool Wamit::Load_6p(String fileName, int &iperout, Function <bool(String, int)> 
 		if (Status && ifr > lifr && !Status("Loading .6p base data", (int)((100.*ifr)/dt.Nf)))
 			throw Exc(t_("Stop by user"));
 
-		double rho_w = dt.w[ifr]*rho_ndim();
+		//double rho_w = dt.w[ifr]*rho_ndim();
 		
 		lifr = ifr;
 		
@@ -2747,7 +2746,7 @@ void Wamit::Save_12(String fileName, bool isSum, Function <bool(String, int)> St
 			}
 }
 
-void Wamit::Save_789(String fileName, bool force_T, bool force_Deg) const {
+void Wamit::Save_789(String fileName, bool force_T/*, bool force_Deg*/) const {
 	if (!IsLoadedMD()) 
 		return;
 	

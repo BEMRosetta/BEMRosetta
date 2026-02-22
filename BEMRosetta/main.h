@@ -922,7 +922,7 @@ public:
 	void OnDuplicate();
 	void OnSplit();
 	void OnConvertBody();
-	void OnUpdate(Action action, bool fromMenuProcess);
+	void OnUpdate(Action action/*, bool fromMenuProcess*/);
 	void OnScale();
 	void OnSmooth();
 	void OnExtract();
@@ -1037,7 +1037,7 @@ public:
 	MainSolverBody();
 	
 	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6], editMoor[6];
-	Body mesh, lid;
+	Body mesh, lid, cs;
 	
 	void SetTexts(bool updateInertia = false);
 };
@@ -1053,7 +1053,7 @@ public:
 	void Load(String file);
 	void Load();
 	
-	bool CopyHydro(Hydro &hy, UArray<Body> &lids);
+	bool CopyHydro(Hydro &hy, UArray<Body> &lids, UArray<Body> &css);
 	
 	void Jsonize(JsonIO &json);
 	
@@ -1497,7 +1497,7 @@ private:
 	Pointf &Pf();
 	
 	static char GetWhat(const Data &data);	
-	double GetData(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const;
+	double GetVal(const Hydro &hd, const Data &data, int idh, int ifr1, int ifr2, bool getDim) const;
 	MatrixXd GetMat(const Hydro &hd, const Data &data, int idh, /*bool show_w, */bool getDim) const;
 	
 	

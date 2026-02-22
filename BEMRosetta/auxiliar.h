@@ -31,7 +31,7 @@ public:
 		if(sz.cx >= 2 * n && sz.cy >= 2 * n)
 			r.Deflate(n);
 	}
-	virtual void FrameAddSize(Size& sz) {};//{sz += 2 * thickness;}
+	virtual void FrameAddSize(Size& /*sz*/) {};//{sz += 2 * thickness;}
 	virtual void FramePaint(Draw& draw, const Rect& r) {
 		if (!show)
 			return;

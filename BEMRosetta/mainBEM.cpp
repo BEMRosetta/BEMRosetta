@@ -2326,7 +2326,7 @@ void MainBEM::OnConvert() {
 		String fileName = ~fs;
 		
 		int qtfHeading = Null;
-		double heading;
+		double heading = Null;
 		
 		if (type == Hydro::WAMIT_1_3 || type == Hydro::FAST_WAMIT || (type == Hydro::UNKNOWN && GetFileExt(fileName) == ".1"))	
 			qtfHeading = AskQtfHeading(Bem().hydros[idx], heading);	

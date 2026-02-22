@@ -48,7 +48,10 @@ MainSolverBody::MainSolverBody() {
 	fileLid.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileLid.AllFilesType();
 	fileLid.WhenChange  << [&] {butLid.WhenAction(); return true;};
-	
+	fileCS.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	fileCS.AllFilesType();
+	fileCS.WhenChange  << [&] {butCS.WhenAction(); return true;};
+		
 	x_g <<= 0;
 	y_g <<= 0;
 	z_g <<= 0;
@@ -81,12 +84,20 @@ MainSolverBody::MainSolverBody() {
 		Body::Load(lid, ~fileLid, Bem().rho, Bem().g, Null, Null, false);
 		SetTexts();
 	};
+	butCS << [&]() {
+		Body::Load(cs, ~fileCS, Bem().rho, Bem().g, Null, Null, false);
+		SetTexts();
+	};
 	butMeshClear << [&]() {
 		mesh.Clear();
 		SetTexts();
 	};
 	butLidClear << [&]() {
 		lid.Clear();
+		SetTexts();
+	};
+	butCSClear << [&]() {
+		cs.Clear();
 		SetTexts();
 	};
 }
@@ -101,6 +112,11 @@ void MainSolverBody::SetTexts(bool updateInertia) {
 		labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
 	else
 		labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+	
+	if (cs.IsEmpty())
+		labCS.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
+	else
+		labCS.SetText(Format(t_("Panels: %d. Nodes: %d"), cs.dt.mesh.panels.size(), cs.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
 	
 	if (updateInertia) {
 		if (mesh.dt.M.size() == 36) 
@@ -204,7 +220,7 @@ void MainSolver::Init() {
 		save.arrayArea.Enable(enabled);
 	};
 	save.opWaveHeight.WhenAction();
-	
+		
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
 		if (Hydro::bemInfo[i].caseCanSave)
 			save.dropSolver.Add(i, Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)));		
@@ -255,6 +271,7 @@ void MainSolver::Init() {
 			save.dropQTF.SetData(0);
 		save.dropQTF.DropWidth(GetDropWidth(save.dropQTF));
 		save.dropQTF.Enable(strlen(Hydro::bemInfo[solver].qtf) > 0);
+		save.dropQTF.WhenAction();
 	};
 	
 	save.dropSolver.WhenAction();
@@ -499,7 +516,7 @@ void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 			grid.Set(y, x, mat(x, y));
 }
 
-bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids) {
+bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids, UArray<Body> &css) {
 	if (!gen.opInfinite)
 		hy.dt.h = ~gen.height;
 	else
@@ -507,12 +524,14 @@ bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids) {
 	
 	hy.dt.msh.SetCount(bodiesEach.size());
 	lids.SetCount(bodiesEach.size());
+	css.SetCount(bodiesEach.size());
 	hy.dt.Nb = hy.dt.msh.size();
 	
 	for (int i = 0; i < hy.dt.Nb; ++i) {
 		Body &b = hy.dt.msh[i];
 		b = clone(bodiesEach[i].mesh);
 		lids[i] = clone(bodiesEach[i].lid);
+		css[i] = clone(bodiesEach[i].cs);
 		b.dt.name = ~bodiesEach[i].name;
 		b.dt.fileName = bodiesEach[i].fileMesh;
 		b.dt.lidFile  = bodiesEach[i].fileLid;
@@ -696,8 +715,9 @@ bool MainSolver::OnSave() {
 		
 		Hydro hy;
 		UArray<Body> lids;
+		UArray<Body> css;
 		
-		if (!CopyHydro(hy, lids))
+		if (!CopyHydro(hy, lids, css))
 			return false;
 		
 		Hydro::BEM_FMT solver = (Hydro::BEM_FMT)int(~save.dropSolver);
