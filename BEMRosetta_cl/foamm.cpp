@@ -43,31 +43,31 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	MatFile mat;
 	
 	if (!mat.OpenRead(file)) 
-		throw Exc(S("\n") + t_("File not found or blocked"));
+		throw Exc(F("\n") + t_("File not found or blocked"));
 	
 	dt.stsProcessor = "FOAMM by COER (http://www.eeng.nuim.ie/coer/)";
 	
 	if (loadCoeff) {
 		if (!mat.Exist("w"))
-			throw Exc(S("\n") + t_("Vector w not found"));
+			throw Exc(F("\n") + t_("Vector w not found"));
 		dt.w = mat.ReadColMajor<double>(mat.GetVar("w"));
 			
 		dt.Nf = dt.w.size();
 		
 		if (!mat.Exist("A"))
-			throw Exc(S("\n") + t_("Vector A not found"));		
+			throw Exc(F("\n") + t_("Vector A not found"));		
 		UVector<double> A = mat.ReadColMajor<double>(mat.GetVar("A"));
 		if (dt.Nf != A.size())
-			throw Exc(S("\n") + t_("Vectors w and A size does not match"));
+			throw Exc(F("\n") + t_("Vectors w and A size does not match"));
 		dt.A[idf][jdf].setConstant(dt.Nf);	
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 			dt.A[idf][jdf][ifr] = A[ifr];
 	
 		if (!mat.Exist("B"))
-			throw Exc(S("\n") + t_("Vector B not found"));		
+			throw Exc(F("\n") + t_("Vector B not found"));		
 		UVector<double> B = mat.ReadColMajor<double>(mat.GetVar("B"));
 		if (dt.Nf != B.size())
-			throw Exc(S("\n") + t_("Vectors w and B size does not match"));
+			throw Exc(F("\n") + t_("Vectors w and B size does not match"));
 		dt.B[idf][jdf].setConstant(dt.Nf);	
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 			dt.B[idf][jdf][ifr] = B[ifr];
@@ -85,16 +85,16 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 	Hydro::StateSpace &sts = dt.sts[idf][jdf];
 
 	if (!mat.Exist("TFSResponse"))
-		throw Exc(S("\n") + t_("Vector TFSResponse not found"));
+		throw Exc(F("\n") + t_("Vector TFSResponse not found"));
 	UVector<std::complex<double>> TFS = mat.ReadColMajor<std::complex<double>>(mat.GetVar("TFSResponse"));
 	sts.TFS.SetCount(dt.Nf);
 	if (dt.Nf != TFS.size())
-		throw Exc(S("\n") + t_("Vectors w and TFSResponse size does not match"));
+		throw Exc(F("\n") + t_("Vectors w and TFSResponse size does not match"));
 	for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 		sts.TFS[ifr] = TFS[ifr];
 	
 	if (!mat.Exist("A_ss"))
-		throw Exc(S("\n") + t_("Matrix A_ss not found"));
+		throw Exc(F("\n") + t_("Matrix A_ss not found"));
 	MatrixXd A_ss = mat.ReadEigenDouble(mat.GetVar("A_ss"));
 	sts.A_ss.setConstant(A_ss.rows(), A_ss.cols(), Null);
 	for (int r = 0; r < A_ss.rows(); ++r)
@@ -102,28 +102,28 @@ void Foamm::Load_mat(String file, int idf, int jdf, bool loadCoeff) {
 			sts.A_ss(r, c) = A_ss(r, c);
 	
 	if (!mat.Exist("B_ss"))
-		throw Exc(S("\n") + t_("Matrix B_ss not found"));
+		throw Exc(F("\n") + t_("Matrix B_ss not found"));
 	MatrixXd B_ss = mat.ReadEigenDouble(mat.GetVar("B_ss"));	
 	sts.B_ss.setConstant(B_ss.rows(), Null);
 	for (int r = 0; r < B_ss.rows(); ++r)
 		sts.B_ss(r) = B_ss(r, 0);
 
 	if (!mat.Exist("C_ss"))
-		throw Exc(S("\n") + t_("Matrix C_ss not found"));
+		throw Exc(F("\n") + t_("Matrix C_ss not found"));
 	MatrixXd C_ss = mat.ReadEigenDouble(mat.GetVar("C_ss"));	
 	sts.C_ss.setConstant(C_ss.cols(), Null);
 	for (int c = 0; c < C_ss.cols(); ++c)
 		sts.C_ss(c) = C_ss(0, c);
 	
 	if (!mat.Exist("Frequencies"))
-		throw Exc(S("\n") + t_("Matrix Frequencies not found"));
+		throw Exc(F("\n") + t_("Matrix Frequencies not found"));
 	MatrixXd ssFrequencies = mat.ReadEigenDouble(mat.GetVar("Frequencies"));
 	sts.ssFrequencies.setConstant(ssFrequencies.cols(), Null);
 	for (int c = 0; c < ssFrequencies.cols(); ++c)
 		sts.ssFrequencies[c] = ssFrequencies(0, c);
 
 	if (!mat.Exist("FreqRange"))
-		throw Exc(S("\n") + t_("Matrix FreqRange not found"));
+		throw Exc(F("\n") + t_("Matrix FreqRange not found"));
 	MatrixXd ssFreqRange = mat.ReadEigenDouble(mat.GetVar("FreqRange"));
 	sts.ssFreqRange.setConstant(ssFreqRange.cols(), Null);
 	for (int c = 0; c < ssFreqRange.cols(); ++c)
@@ -140,7 +140,7 @@ void Foamm::Get(const UVector<int> &ib0s, const UVector<int> &idfs, const UVecto
 	if (!FileExists(Bem().foammPath))
 		throw Exc(t_("FOAMM not found. Please set FOAMM path in Options"));
 	for (int i = 0; i < ib0s.size(); ++i) {
-		Status(Format(t_("Processing case %d"), i+1), int((100*i)/ib0s.size()));
+		Status(F(t_("Processing case %d"), i+1), int((100*i)/ib0s.size()));
 		Get_Each(ib0s[i], idfs[i], ib1s[i], jdfs[i], froms[i], tos[i], freqs[i], Status, FOAMMMessage);
 	}
 }
@@ -148,9 +148,9 @@ void Foamm::Get(const UVector<int> &ib0s, const UVector<int> &idfs, const UVecto
 void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double to, const UVector<double> &freqs, 
 		Function <bool(String, int)> Status, Function <void(String)> FOAMMMessage) {
 	Uuid id = Uuid::Create();
-	String folder = AFX(BEM::GetTempFilesFolder(), Format(id));
+	String folder = AFX(BEM::GetTempFilesFolder(), F(id));
 	if (!DirectoryCreateX(folder))
-		throw Exc(Format(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
+		throw Exc(F(t_("Problem creating temporary FOAMM folder '%s'"), folder));			
 	String file = AFX(folder, "temp_file.mat");
 
 //file = AFX(GetDesktopFolder(), "temp_file2.mat");
@@ -161,7 +161,7 @@ void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double t
 	MatFile mat;
 	
 	if (!mat.OpenCreate(file, MAT_FT_MAT5)) 
-		throw Exc(Format(t_("Problem creating FOAMM file '%s'"), file));
+		throw Exc(F(t_("Problem creating FOAMM file '%s'"), file));
 
 	MatrixXd matA(dt.Nf, 1);
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
@@ -188,7 +188,7 @@ void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double t
 //			matDof(0, i) = 0;
 //	}
 //	if (!mat.VarWrite("Dof", matDof))
-// 		throw Exc(Format(t_("Problem writing %s to file '%s'"), "Dof", file));
+// 		throw Exc(F(t_("Problem writing %s to file '%s'"), "Dof", file));
 	
 	MatFile::StructNode options(mat, "Options", {"Mode", "Method", "FreqRangeChoice", "FreqChoice", "Optim"});
 	
@@ -216,7 +216,7 @@ void Foamm::Get_Each(int ib0, int _idf, int ib1, int _jdf, double from, double t
 	
 	LocalProcess process;
 	if (!process.Start(Bem().foammPath, NULL, folder))
-		throw Exc(Format(t_("Problem launching FOAMM from '%s'"), file));
+		throw Exc(F(t_("Problem launching FOAMM from '%s'"), file));
 
 	String msg, reso, rese;
 	bool endProcess = false;

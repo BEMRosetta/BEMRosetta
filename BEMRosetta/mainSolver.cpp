@@ -42,13 +42,13 @@ MainSolverBody::MainSolverBody() {
 	String meshFilesAst = clone(meshFiles);
 	meshFilesAst.Replace(".", "*.");
 	
-	fileMesh.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	fileMesh.Type(F("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileMesh.AllFilesType();
 	fileMesh.WhenChange << [&] {butMesh.WhenAction(); return true;};
-	fileLid.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	fileLid.Type(F("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileLid.AllFilesType();
 	fileLid.WhenChange  << [&] {butLid.WhenAction(); return true;};
-	fileCS.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	fileCS.Type(F("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileCS.AllFilesType();
 	fileCS.WhenChange  << [&] {butCS.WhenAction(); return true;};
 		
@@ -105,18 +105,22 @@ MainSolverBody::MainSolverBody() {
 void MainSolverBody::SetTexts(bool updateInertia) {
 	if (mesh.IsEmpty())
 		labMesh.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
-	else
-		labMesh.SetText(Format(t_("Panels: %d. Nodes: %d"), mesh.dt.mesh.panels.size(), mesh.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
-
+	else {
+		String str;
+		if (!mesh.dt.spline.IsEmpty())
+			str = ". B-splines";
+		labMesh.SetText(F(t_("Panels: %d. Nodes: %d%s"), mesh.dt.mesh.panels.size(), mesh.dt.mesh.nodes.size(), str)).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+	}
+	
 	if (lid.IsEmpty())
 		labLid.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
 	else
-		labLid.SetText(Format(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+		labLid.SetText(F(t_("Panels: %d. Nodes: %d"), lid.dt.mesh.panels.size(), lid.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
 	
 	if (cs.IsEmpty())
 		labCS.SetText(t_("Not loaded")).SetFont(labMesh.GetFont().Bold(false).Italic(true));
 	else
-		labCS.SetText(Format(t_("Panels: %d. Nodes: %d"), cs.dt.mesh.panels.size(), cs.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
+		labCS.SetText(F(t_("Panels: %d. Nodes: %d"), cs.dt.mesh.panels.size(), cs.dt.mesh.nodes.size())).SetFont(labMesh.GetFont().Bold(true).Italic(false));
 	
 	if (updateInertia) {
 		if (mesh.dt.M.size() == 36) 
@@ -157,7 +161,7 @@ void MainSolver::Init() {
 	const String bemFiles = ".cal .in .dat .nc .owr .yml .out .1 .2 .3 .3sc .3fk .hst .4 .7 .8 .9 .12d .12s .cfg .frc .pot .mmx .wam";
 	String bemFilesAst = clone(bemFiles);
 	bemFilesAst.Replace(".", "*.");
-	loadFrom.Type(Format("All supported bem files (%s)", bemFiles), bemFilesAst);
+	loadFrom.Type(F("All supported bem files (%s)", bemFiles), bemFilesAst);
 	loadFrom.AllFilesType();
 	String extView = ToLower(GetFileExt(loadFrom.GetData().ToString()));
 	if (extView.IsEmpty())
@@ -220,7 +224,15 @@ void MainSolver::Init() {
 		save.arrayArea.Enable(enabled);
 	};
 	save.opWaveHeight.WhenAction();
-		
+	
+	save.dropQTF.WhenAction =[&]() {
+		save.opAutoQTF.Enable(~save.dropQTF == 7);
+	};
+	save.opIrregular.WhenAction =[&]() {
+		save.opAutoIrregular.Enable(~save.opIrregular);
+	};
+	save.opIrregular.WhenAction();
+			
 	for (int i = 0; i < Hydro::NUMBEM; ++i)
 		if (Hydro::bemInfo[i].caseCanSave)
 			save.dropSolver.Add(i, Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)));		
@@ -420,15 +432,20 @@ void MainSolver::Load(String file) {
 		
 		b.name <<= tmp_b.dt.name;
 		b.fileMesh <<= tmp_b.dt.fileName;
-		b.fileLid <<= tmp_b.dt.lidFile;  
+		if (tmp_hy.dt.lids.size() > ib)
+			b.fileLid <<= tmp_hy.dt.lids[ib].dt.fileName;  
 		
 		if (tmp_b.IsEmpty())
 			Body::Load(b.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 		else
 			b.mesh = clone(tmp_b);
 
-		Body::Load(b.lid, tmp_b.dt.lidFile, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
-		
+		if (tmp_hy.dt.lids.size() > ib) {
+			if (tmp_hy.dt.lids[ib].dt.mesh.IsEmpty())
+				Body::Load(b.lid, tmp_hy.dt.lids[ib].dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
+			else
+				b.lid = clone(tmp_hy.dt.lids[ib]);
+		}
 		b.SetTexts();
 		
 		b.x_0 = tmp_b.dt.c0.x;
@@ -516,25 +533,24 @@ void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 			grid.Set(y, x, mat(x, y));
 }
 
-bool MainSolver::CopyHydro(Hydro &hy, UArray<Body> &lids, UArray<Body> &css) {
+bool MainSolver::CopyHydro(Hydro &hy) {
 	if (!gen.opInfinite)
 		hy.dt.h = ~gen.height;
 	else
 		hy.dt.h = -1;
 	
 	hy.dt.msh.SetCount(bodiesEach.size());
-	lids.SetCount(bodiesEach.size());
-	css.SetCount(bodiesEach.size());
+	hy.dt.lids.SetCount(bodiesEach.size());
+	hy.dt.css.SetCount(bodiesEach.size());
 	hy.dt.Nb = hy.dt.msh.size();
 	
 	for (int i = 0; i < hy.dt.Nb; ++i) {
 		Body &b = hy.dt.msh[i];
 		b = clone(bodiesEach[i].mesh);
-		lids[i] = clone(bodiesEach[i].lid);
-		css[i] = clone(bodiesEach[i].cs);
-		b.dt.name = ~bodiesEach[i].name;
+		hy.dt.lids[i] = clone(bodiesEach[i].lid);
+		hy.dt.css[i]  = clone(bodiesEach[i].cs);
+		b.dt.name     = ~bodiesEach[i].name;
 		b.dt.fileName = bodiesEach[i].fileMesh;
-		b.dt.lidFile  = bodiesEach[i].fileLid;
 		b.dt.c0[0]    = bodiesEach[i].x_0;
 		b.dt.c0[1]    = bodiesEach[i].y_0;
 		b.dt.c0[2]    = bodiesEach[i].z_0;
@@ -597,9 +613,9 @@ void MainSolver::LoadDragDrop() {
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {
 		loadFrom <<= filesToDrop[i];
-		Status(Format(t_("Loading '%s'"), filesToDrop[i]));
+		Status(F(t_("Loading '%s'"), filesToDrop[i]));
 		if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to try with the pending %d files?"), filesToDrop.size() - i - 1)))
+			if (!PromptYesNo(F(t_("Do you wish to try with the pending %d files?"), filesToDrop.size() - i - 1)))
 				return;
 			followWithErrors = true;
 		}
@@ -638,7 +654,7 @@ void MainSolver::arrayOnAdd() {
 	MainSolverBody &b = bodiesEach.Add();
 	CtrlScroll &bscroll = bodiesEachScroll.Add();
 	CtrlLayout(b);
-	String name = Format("Body %d", bodiesEach.size());
+	String name = F("Body %d", bodiesEach.size());
 	bodies.array.Add(bscroll.AddPane(b, true, true).SizePos(), name);
 	b.name <<= name;
 	b.name.WhenAction = [&]() {
@@ -714,10 +730,8 @@ bool MainSolver::OnSave() {
 			save.withMesh <<= true;
 		
 		Hydro hy;
-		UArray<Body> lids;
-		UArray<Body> css;
 		
-		if (!CopyHydro(hy, lids, css))
+		if (!CopyHydro(hy))
 			return false;
 		
 		Hydro::BEM_FMT solver = (Hydro::BEM_FMT)int(~save.dropSolver);
@@ -732,13 +746,13 @@ bool MainSolver::OnSave() {
 				for (int i = 0; i < errors.size(); ++i)
 				 	str << "\n- " << errors[i];
 			}
-			if (!PromptOKCancel(Format(t_("Problems found in data:%s&Do you wish to continue?"), DeQtfLf(str))))
+			if (!PromptOKCancel(F(t_("Problems found in data:%s&Do you wish to continue?"), DeQtfLf(str))))
 				return false;
 		}
 		if (!DirectoryExists(folder))
 			RealizeDirectory(folder);
 		else {
-			if (!PromptYesNo(Format(t_("Folder %s contents will be overwritten.&Do you wish to continue?"), DeQtfLf(folder))))
+			if (!PromptYesNo(F(t_("Folder %s contents will be overwritten.&Do you wish to continue?"), DeQtfLf(folder))))
 				return false;
 		}
 		if (~save.opSplit) {
@@ -746,8 +760,8 @@ bool MainSolver::OnSave() {
 				BEM::PrintError(t_("Please enter number of parts to split the simulation (min. is 2)"));
 				return false;
 			} else if (int(~save.numSplit) > hy.dt.Nf) {
-				if (PromptOKCancel(Format(t_("Number of split cases %d must not be higher than number of frequencies %d"), int(~save.numSplit), hy.dt.Nf)
-							   + S("&") + t_("Do you wish to fit the number of cases to the number of frequencies?"))) 
+				if (PromptOKCancel(F(t_("Number of split cases %d must not be higher than number of frequencies %d"), int(~save.numSplit), hy.dt.Nf)
+							   + F("&") + t_("Do you wish to fit the number of cases to the number of frequencies?"))) 
 					save.numSplit <<= hy.dt.Nf;
 				else
 					return false;
@@ -794,9 +808,10 @@ bool MainSolver::OnSave() {
 		if (save.opThreads.IsEnabled() && !save.opThreads)
 			nThreads = save.numThreads;
 		
-		hy.SaveFolderCase(folder, ~save.opIncludeBin, nSplit, nThreads, solver, 
-			~save.withPotentials, ~save.withMesh, ~save.symY, ~save.symX, lids, listDOF, listPoints, ~save.dropQTF);
-
+		hy.SaveCase(folder, solver, ~save.symY, ~save.symX,
+					~save.opIrregular, ~save.opAutoIrregular && ~save.opIrregular, ~save.dropQTF, ~save.opAutoQTF,
+					~save.opIncludeBin, nSplit, nThreads,
+					~save.withPotentials, ~save.withMesh, listDOF, listPoints);
 	} catch (Exc e) {
 		BEM::PrintError(e);
 		return false;

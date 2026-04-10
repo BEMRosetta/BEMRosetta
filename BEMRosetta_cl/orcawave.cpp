@@ -12,7 +12,7 @@ String OrcaWave::Load(String _file, double) {
 	dt.Nb = Null;
 	
 	try {
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), dt.file));
+		BEM::Print("\n\n" + F(t_("Loading '%s'"), dt.file));
 
 #ifdef PLATFORM_WIN32
 		if (GetFileExt(dt.file) == ".owr")
@@ -78,7 +78,7 @@ void OrcaWave::Load_OF_YML() {
 		else if (snorig[0] == "~" || snorig[1] == "~" || snorig[2] == "~")
 			;
 		else if (c0s[ib].x != ScanDouble(snorig[0]) || c0s[ib].y != ScanDouble(snorig[1]) || c0s[ib].z != ScanDouble(snorig[2]))
-			throw Exc(in.Str() + "\n"  + Format(t_("RAOOrigin for body %d (%s, %s, %s) diferent than the previously set (%f, %f, %f)"), 
+			throw Exc(in.Str() + "\n"  + F(t_("RAOOrigin for body %d (%s, %s, %s) diferent than the previously set (%f, %f, %f)"), 
 							ib, snorig[0], snorig[1], snorig[2], c0s[ib].x, c0s[ib].y, c0s[ib].z));
 	};
 	auto Phase = [&] (const UVector<String> &norig) {
@@ -88,7 +88,7 @@ void OrcaWave::Load_OF_YML() {
 		if (snorig[0] == "~" || snorig[1] == "~" || snorig[2] == "~")
 			;
 		else if (!IsEqualRange<UVector<String>>({"0","0","0"}, snorig))
-			throw Exc(in.Str() + "\n"  + Format(t_("Only PhaseOrigin:[0,0,0] is supported. Read (%s, %s, %s)"), snorig[0], snorig[1], snorig[2]));
+			throw Exc(in.Str() + "\n"  + F(t_("Only PhaseOrigin:[0,0,0] is supported. Read (%s, %s, %s)"), snorig[0], snorig[1], snorig[2]));
 	};
 		
 	OrcaFactors factor;	
@@ -108,7 +108,7 @@ void OrcaWave::Load_OF_YML() {
 				} else if (fy.GetVal() == "User") 
 					;
 				else
-					throw Exc(in.Str() + "\n" + Format(t_("Only SI and User units are supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n" + F(t_("Only SI and User units are supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("LengthUnits")) 
 				factor.len = FactorLen(fy.GetVal());
 			else if (fy.FirstIs("MassUnits")) 
@@ -119,7 +119,9 @@ void OrcaWave::Load_OF_YML() {
 				dt.g = ScanDouble(fy.GetVal())*factor.len;
 		} else if (fy.FirstIs("Environment")) {
 			if (fy.FirstIs("WaterSurfaceZ") && fy.GetVal() != "0") 
-				throw Exc(in.Str() + "\n" + Format(t_("Only WaterSurfaceZ 0 is supported. Read '%s'"), fy.GetVal()));
+				throw Exc(in.Str() + "\n" + F(t_("Only WaterSurfaceZ 0 is supported. Read '%s'"), fy.GetVal()));
+			else if (fy.FirstIs("SeabedOriginDepth"))
+				dt.h = ScanDouble(fy.GetVal())*factor.len;
 		} else if (fy.FirstIs("VesselTypes")) {
 			if (fy.FirstIs("Name")) {
 				if (fy.Index() != dt.Nb)
@@ -138,29 +140,29 @@ void OrcaWave::Load_OF_YML() {
 				else if (val.Find("(Hz)") >= 0)
 					dataFrom = 'h';
 				else
-					throw Exc(in.Str() + "\n"  + Format(t_("Unknown data in WavesReferredToBy: %s"), val));
+					throw Exc(in.Str() + "\n"  + F(t_("Unknown data in WavesReferredToBy: %s"), val));
 			
 			} else if (fy.FirstIs("SurgePositive")) {	
 				if (fy.GetVal() != "forward")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only SurgePositive: 'forward' is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only SurgePositive: 'forward' is supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("SwayPositive")) {	
 				if (fy.GetVal() != "port")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only SwayPositive: 'port' is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only SwayPositive: 'port' is supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("HeavePositive")) {	
 				if (fy.GetVal() != "up")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only HeavePositive: 'up' is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only HeavePositive: 'up' is supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("RollPositiveStarboard")) {	
 				if (fy.GetVal() != "down")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only RollPositiveStarboard: 'down' is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only RollPositiveStarboard: 'down' is supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("PitchPositiveBowe")) {	
 				if (fy.GetVal() != "down")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only PitchPositiveBowe: 'down' is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only PitchPositiveBowe: 'down' is supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("YawPositiveBow")) {	
 				if (fy.GetVal() != "port")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only YawPositiveBow: 'port' is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only YawPositiveBow: 'port' is supported. Read '%s'"), fy.GetVal()));
 			} else if (fy.FirstIs("QTFConventionsRotationOrder")) {	
 				if (fy.GetVal() != "RzRyRx")
-					throw Exc(in.Str() + "\n"  + Format(t_("Only QTFConventionsRotationOrder: 'RzRyRx is supported. Read '%s'"), fy.GetVal()));
+					throw Exc(in.Str() + "\n"  + F(t_("Only QTFConventionsRotationOrder: 'RzRyRx is supported. Read '%s'"), fy.GetVal()));
 			
 			} else if (fy.FirstIs("Draughts")) {
 				ib = fy.GetIndex()[1];
@@ -186,7 +188,7 @@ void OrcaWave::Load_OF_YML() {
 					}
 				} else if (fy.FirstIs("WaveDrift")) {
 					if (fy.FirstIs("RAOOrigin")) {
-						Origin(ib, fy.GetVector());	
+						;//Origin(ib, fy.GetVector());	// If no QTF is set to 0,0,0
 					} else if (fy.FirstIs("RAOs")) {
 						if (fy.FirstIs("RAODirection") && fy.GetIndex()[1] == 0) {		// Only for the first body
 							FindAdd(dt.head, ScanDouble(fy.GetVal()));
@@ -194,18 +196,20 @@ void OrcaWave::Load_OF_YML() {
 					}
 				} else if (fy.FirstIs("SumFrequencyQTFs")) {
 					if (fy.FirstIs("RAOOrigin")) 
-						Origin(ib, fy.GetVector());	
+						;//Origin(ib, fy.GetVector());	
 					else if (fy.FirstIs("PhaseOrigin")) 
 						Phase(fy.GetVector());
 				} else if (fy.FirstIs("OtherDampingOrigin")) {
-					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
-						throw Exc(in.Str() + "\n"  + Format(t_("Only OtherDampingOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
+					Origin(ib, fy.GetVector());	
+					//if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+					//	throw Exc(in.Str() + "\n"  + F(t_("Only OtherDampingOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
 				} else if (fy.FirstIs("ReferenceOrigin")) {
-					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
-						throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
-				} else if (fy.FirstIs("ReferenceOriginDatumPosition")) {
-					if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
-						throw Exc(in.Str() + "\n"  + Format(t_("Only ReferenceOriginDatumPosition:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
+					Origin(ib, fy.GetVector());	
+					//if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+					//	throw Exc(in.Str() + "\n"  + F(t_("Only ReferenceOrigin:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
+				//} else if (fy.FirstIs("ReferenceOriginDatumPosition")) {
+				//	if (!IsEqualRange<UVector<double>>({0,0,0}, fy.GetVectorDouble()))
+				//		throw Exc(in.Str() + "\n"  + F(t_("Only ReferenceOriginDatumPosition:[0,0,0] is supported. Read '%s'"), fy.StrVar()));
 				} else if (fy.FirstIs("FrequencyDependentAddedMassAndDamping")) {
 					if (fy.FirstIs("AMDPeriodOrFrequency")) {
 						if (((dataFrom == 'r' || dataFrom == 'h') && fy.GetVal() != "Infinity") ||
@@ -236,7 +240,7 @@ void OrcaWave::Load_OF_YML() {
 	factor.Update();
 	
 	if (dt.Nb == 0)
-		throw Exc(S("\n") + t_("No body found"));
+		throw Exc(F("\n") + t_("No body found"));
 	
 	dt.msh.SetCount(dt.Nb);
 	
@@ -259,7 +263,7 @@ void OrcaWave::Load_OF_YML() {
 		
 	if (dataFrom == 'h') {
 		for (int i = 0; i < dt.w.size(); ++i)
-				dt.w[i] *= 2*M_PI;	
+			dt.w[i] *= 2*M_PI;	
 	} else if (dataFrom == 's'){
 		for (int i = 0; i < dt.w.size(); ++i)
 			dt.w[i] = 2*M_PI/dt.w[i];	
@@ -307,15 +311,10 @@ void OrcaWave::Load_OF_YML() {
 				for (int ip = 0; ip < mat.size(); ++ip) {
 					const UVector<double> &pan = mat[ip];
 					if (Min(pan) < 1 || Max(pan) > numNodes)
-						throw Exc(in.Str() + "\n" + Format(t_("Wrong panel %d (%d,%d,%d,%d)"), ip+1, pan[0], pan[1], pan[2], pan[3]));
+						throw Exc(in.Str() + "\n" + F(t_("Wrong panel %d (%d,%d,%d,%d)"), ip+1, pan[0], pan[1], pan[2], pan[3]));
 					for (int i4 = 0; i4 < 4; ++i4)
 						dt.msh[ib].dt.mesh.panels[ip].id[i4] = int(pan[i4])-1;
-				}
-				/*if (dt.symX) 
-					dt.msh[ib].dt.mesh.DeployXSymmetry();
-				if (dt.symY) 
-					dt.msh[ib].dt.mesh.DeployYSymmetry();*/
-				
+				}		
 			} else if (fy.FirstIs("Draughts")) {
 				Eigen::MatrixXd &inertia = dt.msh[ib].dt.M;
 				if (fy.FirstIs("Mass")) 
@@ -362,7 +361,7 @@ void OrcaWave::Load_OF_YML() {
 							UVector<UVector<double>> mat = fy.GetMatrixDouble();
 							
 							if (mat.size() != dt.Nf || mat[0].size() != 13)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in DisplacementRAOs matrix"), fy.GetText()));
+								throw Exc(in.Str() + "\n"  + F(t_("Wrong number of numbers in DisplacementRAOs matrix"), fy.GetText()));
 
 							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
@@ -379,7 +378,7 @@ void OrcaWave::Load_OF_YML() {
 							UVector<UVector<double>> mat = fy.GetMatrixDouble();
 							
 							if (mat.size() != dt.Nf || mat[0].size() != 13)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in LoadRAOs matrix"), fy.GetText()));
+								throw Exc(in.Str() + "\n"  + F(t_("Wrong number of numbers in LoadRAOs matrix"), fy.GetText()));
 
 							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
@@ -405,7 +404,7 @@ void OrcaWave::Load_OF_YML() {
 							UVector<UVector<double>> mat = fy.GetMatrixDouble();
 							
 							if (mat.size() != dt.Nf || mat[0].size() != 7)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of numbers in WaveDrift matrix"), fy.GetText()));
+								throw Exc(in.Str() + "\n"  + F(t_("Wrong number of numbers in WaveDrift matrix"), fy.GetText()));
 
 							for (int ifr = 0; ifr < dt.Nf; ++ifr) 
 								for (int idof = 0; idof < 6; ++idof) 
@@ -458,11 +457,11 @@ void OrcaWave::Load_OF_YML() {
 								ifr2 = FindDelta(dt.qw, w2, 0.0001),
 								ih = FindDelta(dt.qhead, std::complex<double>(h1, h2), 0.0001);	
 							if (ifr1 < 0)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%d' in QTF"), w1));
+								throw Exc(in.Str() + "\n"  + F(t_("Wrong frequency '%d' in QTF"), w1));
 							if (ifr2 < 0)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong frequency '%d' in QTF"), w2));
+								throw Exc(in.Str() + "\n"  + F(t_("Wrong frequency '%d' in QTF"), w2));
 							if (ih < 0)
-								throw Exc(in.Str() + "\n"  + Format(t_("Wrong head (%d,%d) in QTF"), h1, h2));
+								throw Exc(in.Str() + "\n"  + F(t_("Wrong head (%d,%d) in QTF"), h1, h2));
 							for (int iidf = 0; iidf < 6; ++iidf) {
 								double mag = mat[row][4+iidf*2]*factor.F(iidf);
 								double ph  = ToRad(mat[row][4+iidf*2+1]);
@@ -583,7 +582,11 @@ void OrcaWave::Load_OF_YML() {
 		Surface::TranslateInertia66(dt.msh[iib].dt.M, dt.msh[iib].dt.cg, dt.msh[iib].dt.cg, dt.msh[iib].dt.c0);
 }
 
-void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, int qtfType) const {
+void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, 
+								bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const {
+	if (irregular && qtfType == 8)
+		throw Exc(t_("The irregular frequencies removal cannot be set with the far field/momentum conservation method"));
+		
 	bool isv15 = false;
 	
 	String exeName = "bemrosetta_cl";
@@ -602,26 +605,34 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		numThreads = 8;
 		
 	String name = GetFileTitle(folder); 
-	String fileYaml = AFX(folder, name + ".wave.yml");
+	String fileYaml = AFX(folder, "OrcaWave.wave.yml");
 	String fileBat  = AFX(folder, "OrcaWave_bat.bat");
 	
 	DirectoryCreate(folder);
 	
 	FileOut bat;
 	if (!bat.Open(fileBat))
-		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+		throw Exc(F(t_("Impossible to open file '%s'"), fileBat));
 	bat << "echo Start: \%date\% \%time\% > time.txt\n";
 	const Point3D &c0 = dt.msh[0].dt.c0;
-	bat << Format("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\" -translatewave %.5f %.5f %.5f -savewave \"%s\"", exeName, numThreads, name + ".wave.yml", name + ".flex.yml", c0.x, c0.y, c0.z, name + ".flex.yml");
+	bat << F("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\" -savewave \"%s\"", exeName, numThreads, "OrcaWave.wave.yml", "OrcaWave.flex.yml", "OrcaWave.flex.yml");
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 	
 	FileOut	out;
 	if (!out.Open(fileYaml))
-		throw Exc(Format(t_("Impossible to open file '%s'"), fileYaml));
+		throw Exc(F(t_("Impossible to open file '%s'"), fileYaml));
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		const Body &b = dt.msh[ib];
-		Body::SaveAs(b, AFX(folder, Format("Body_%d.gdf", ib+1)), Body::WAMIT_GDF, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		Body::SaveAs(b, AFX(folder, F("Body_%d.gdf", ib+1)), Body::WAMIT_GDF, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		if (irregular && !autoIrregular) {
+			const Body &l = dt.lids[ib];
+			Body::SaveAs(l, AFX(folder, F("Body_%d_lid.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);			
+		}
+		if (qtfType == 7 && !autoQTF) {
+			const Body &c = dt.css[ib];
+			Body::SaveAs(c, AFX(folder, F("Body_%d_cs.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);			
+		}
 	}
 	
 	String machineName, domain, ip4, ip6;
@@ -632,7 +643,7 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			"# Type: Diffraction\n"
 			"# Program: OrcaWave " << Orca::BEMRVersion() << "\n"
 			"# File: " << fileYaml << "\n"
-			"# Created: " << Format("%02d:%02d", t.hour, t.minute) << " on " << Format("%02d/%02d/%04d", t.day, t.month, t.year) << "\n"
+			"# Created: " << F("%02d:%02d", t.hour, t.minute) << " on " << F("%02d/%02d/%04d", t.day, t.month, t.year) << "\n"
 			"# User: " << GetUserName() << "\n"
 			"# Machine: " << machineName << "\n"
 			"---\n";
@@ -642,22 +653,24 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			"LengthUnits: m\n"
 			"MassUnits: kg\n"
 			"ForceUnits: N\n"
-			"g: " << Format("%.5f", dt.g) << "\n";
+			"g: " << F("%.5f", dt.g) << "\n";
 	
 	out << 	"# Calculation & output\n"
-			"SolveType: " << (qtfType > 0 ? "Full QTF calculation" : "Potential formulation only") << "\n"
-			"LoadRAOCalculationMethod: Diffraction\n"
-			//"QuadraticLoadPressureIntegration: No\n"
-			"QuadraticLoadControlSurface: " << (qtfType == 7 ? "Yes" : "No") << "\n"
-			"QuadraticLoadMomentumConservation: No\n";
-	out << 	"PreferredQuadraticLoadCalculationMethod: ";
-	if (qtfType == 7)
-		out << "Control surface";
-	else if (qtfType == 8)
-		out << "Momentum conservation";
-	else if (qtfType == 9)
-		out << "Pressure integration";
-	out << "\n";
+			"SolveType: " << ((qtfType == 7 || qtfType == 9) ? "Full QTF calculation" : "Potential formulation only") << "\n"
+			"LoadRAOCalculationMethod: Diffraction\n";
+	if (qtfType == 7 || qtfType == 9)
+		out << "QuadraticLoadPressureIntegration: " << (qtfType == 9 ? "Yes" : "No") << "\n";
+	out <<	"QuadraticLoadControlSurface: " << (qtfType == 7 ? "Yes" : "No") << "\n"
+			"QuadraticLoadMomentumConservation: " << (qtfType == 8 ? "Yes" : "No") << "\n";
+	if (qtfType > 0) {		
+		if (qtfType == 7)
+			out << "PreferredQuadraticLoadCalculationMethod: Control surface\n";
+		else if (qtfType == 8)
+			out << "PreferredQuadraticLoadCalculationMethod: Momentum conservation\n"
+				   "MomentumConservationNodeCount: 64\n";
+		else if (qtfType == 9)
+			out << "PreferredQuadraticLoadCalculationMethod: Pressure integration\n";
+	}
 	out << 	"HasResonanceDampingLid: No\n"
 			"LengthTolerance: 100e-9\n"
 			"WaterlineZTolerance: 1e-6\n"
@@ -675,27 +688,28 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 			"ComputationStrategy: Optimised for memory\n";			// Also "Optimised for run time"
 	
 	out << 	"# Environment\n";
-	if (isv15)
-		out << 	"WaterDepth: " << (dt.h > 0 ? Format("%.2f", dt.h) : "Infinity") << "\n";
-	else {
-		out << 	"SeabedOriginDepth: " << (dt.h > 0 ? Format("%.2f", dt.h) : "Infinity") << "\n"
-				"NominalDepth: ~\n"; 
-	}
-	out <<  "WaterDensity: " << Format("%.2f", dt.rho) << "\n"
+	//if (isv15)
+		out << 	"WaterDepth: " << (dt.h > 0 ? F("%.2f", dt.h) : "Infinity") << "\n";
+	//else {
+	//	out << 	"SeabedOriginDepth: " << (dt.h > 0 ? F("%.2f", dt.h) : "Infinity") << "\n"
+	//			"NominalDepth: ~\n"; 
+	//}
+	out <<  "WaterDensity: " << F("%.2f", dt.rho) << "\n"
 			"WavesReferredToBy: frequency (rad/s)\n"
 			"HasWaveSpectrumForDragLinearisation: No\n"
 			"MorisonFluidVelocity: Undisturbed incident wave\n"
 			"PeriodOrFrequency:\n";
 	for (int ifr = 0; ifr < dt.Nf; ++ifr)
-		out << "  - " << Format("%.5f", dt.w[ifr]) << "\n";
+		out << "  - " << F("%.5f", dt.w[ifr]) << "\n";
 	out << 	"WaveHeading:\n";
 	for (int ih = 0; ih < dt.Nh; ++ih)
-		out << "  - " << Format("%.1f", dt.head[ih]) << "\n";
+		out << "  - " << F("%.1f", dt.head[ih]) << "\n";
 	
 	if (qtfType > 0) 
 		out << 	"QTFMinCrossingAngle: 0\n"
-				"QTFMaxCrossingAngle: 180\n"
-				"QTFMinPeriodOrFrequency: 0\n"
+				"QTFMaxCrossingAngle: 180\n";
+	if (qtfType == 7 || qtfType == 9) 
+		out <<	"QTFMinPeriodOrFrequency: 0\n"
 				"QTFMaxPeriodOrFrequency: Infinity\n"
 				"QTFFrequencyTypes: Both\n";
 	
@@ -706,13 +720,13 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		const Body::Data &d = b.dt;
 		
 		double panelSize = d.under.avgFacetSideLen;
-		double separationFromBody = panelSize*4;
+		double separationFromBody = panelSize*8;		// Orcina advises 5-10
 		
 		out <<	"  - BodyName: " << d.name << "\n"
 				"    BodyMeshPosition: [0, 0, 0]\n"
 				"    BodyMeshAttitude: [0, 0, 0]\n"
 				"    BodyIncludedInAnalysis: Yes\n"
-				"    BodyMeshFileName: " << Format(".\\Body_%d.gdf", ib+1) << "\n"
+				"    BodyMeshFileName: " << F(".\\Body_%d.gdf", ib+1) << "\n"
 				"    BodyMeshFormat: Wamit gdf\n"
 				"    BodyMeshLengthUnits: m\n"
 				"    BodyMeshSymmetry: ";
@@ -730,36 +744,50 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 		if (!isv15) {
 			if (!IsNull(d.c0))
 				out <<	"    BodyOriginType: User specified\n"
-						"    BodyUserOrigin: [" << Format("%f, %f, %f", d.c0.x, d.c0.y, d.c0.z) << "]\n";
+						"    BodyUserOrigin: [" << F("%f, %f, %f", d.c0.x, d.c0.y, d.c0.z) << "]\n";
 			else
 				out <<	"    BodyOriginType: Free surface\n";
 		}
-		out <<	"    BodyAddInteriorSurfacePanels: Yes\n"
-				"    BodyInteriorSurfacePanelMethod: Triangulation method\n";
-				
-		if (qtfType == 7)
-			out <<	"    BodyControlSurfaceType: Automatically generated\n"
-					"    BodyControlSurfacePanelSize: " << panelSize << "\n"
-					"    BodyControlSurfaceSeparationFromBody: " << separationFromBody << "\n"
-					"    BodyControlSurfaceIncludeFreeSurface: Yes\n";		
+		if (!irregular) 
+			out <<	"    BodyAddInteriorSurfacePanels: No\n";
+		else {
+			if (autoIrregular)
+				out <<	"    BodyAddInteriorSurfacePanels: Yes\n"
+						"    BodyInteriorSurfacePanelMethod: Triangulation method\n";
+			else
+				throw Exc(t_("OrcaWave does not support irregular frequencies removal through user supplied lid"));
+		}
+		if (qtfType == 7) {
+			if (!autoQTF) {
+				out <<	"    BodyControlSurfaceType: Defined by mesh file\n"
+						"    BodyControlSurfaceMeshFileName: " << F("Body_%d_cs.gdf", ib+1) << "\n"
+						"    BodyControlSurfaceMeshFormat: Wamit gdf\n"
+						"    BodyControlSurfaceMeshLengthUnits: m\n";				
+			} else {
+				out <<	"    BodyControlSurfaceType: Automatically generated\n"
+						"    BodyControlSurfacePanelSize: " << panelSize << "\n"
+						"    BodyControlSurfaceSeparationFromBody: " << separationFromBody << "\n"
+						"    BodyControlSurfaceIncludeFreeSurface: Yes\n";	
+			}
+		}
     	out <<	"    BodyOrcaFlexImportSymmetry: Use global mesh symmetry\n"
     			"    BodyOrcaFlexImportLength: ~\n"
     			"    BodyHydrostaticIntegralMethod: Standard\n"
     			"    BodyHydrostaticStiffnessMethod: Displacement\n"
     			"    BodyInertiaSpecifiedBy: Matrix (for a general body)\n"
-    			"    BodyCentreOfMass: [" << Format("%f, %f, %f", d.cg.x, d.cg.y, d.cg.z) << "]\n"
+    			"    BodyCentreOfMass: [" << F("%f, %f, %f", d.cg.x, d.cg.y, d.cg.z) << "]\n"
     			"    BodyMass: " << b.GetMass() << "\n"
     			"    BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:\n";
 		if (d.M.size() > 0)
-			out << 	"      - [" << Format("%f, %f, %f", d.M(3, 3), d.M(3, 4), d.M(3, 5)) << "]\n"
-					"      - [" << Format("%f, %f, %f", d.M(4, 3), d.M(4, 4), d.M(4, 5)) << "]\n"
-					"      - [" << Format("%f, %f, %f", d.M(5, 3), d.M(5, 4), d.M(5, 5)) << "]\n";
+			out << 	"      - [" << F("%f, %f, %f", d.M(3, 3), d.M(3, 4), d.M(3, 5)) << "]\n"
+					"      - [" << F("%f, %f, %f", d.M(4, 3), d.M(4, 4), d.M(4, 5)) << "]\n"
+					"      - [" << F("%f, %f, %f", d.M(5, 3), d.M(5, 4), d.M(5, 5)) << "]\n";
 		else
 			out <<	"      - [0.001, 0, 	0]\n"
 					"      - [0, 	 0.001,	0]\n"
 					"      - [0, 	 0, 	0.001]\n";
     	out << 	"    BodyInertiaTensorOriginType: User specified\n"
-    			"    BodyInertiaTensorUserOrigin: [" << Format("%f, %f, %f", d.c0.x, d.c0.y, d.c0.z) << "]\n"
+    			"    BodyInertiaTensorUserOrigin: [" << F("%f, %f, %f", d.c0.x, d.c0.y, d.c0.z) << "]\n"
     			"    BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz, BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz:\n";
     	if (d.Cadd.size() > 0) {
     		for (int r = 0; r < 6; ++r) {
@@ -803,10 +831,9 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	}
 	out <<	"# Field points\n"
 			"DetectAndSkipFieldPointsInsideBodies: Yes\n";
-	if (qtfType > 0) 
+	if (qtfType == 7 || qtfType == 9) 
 		out << 	"# QTFs\n"
-				"QTFCalculationMethod: Both\n"
-				"PreferredQTFCalculationMethod: Direct method\n"
+				"QTFCalculationMethod: Direct method\n"
 				"FreeSurfacePanelledZoneType: Defined by mesh file\n"
 				"FreeSurfacePanelledZoneMeshFileName: \n"
 				"FreeSurfacePanelledZoneMeshFormat: Wamit gdf\n"

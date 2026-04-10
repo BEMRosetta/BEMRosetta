@@ -94,7 +94,7 @@ void MainMoor::Init() {
 	const String moorFiles = ".json";
 	String moorFilesAst = clone(moorFiles);
 	moorFilesAst.Replace(".", "*.");
-	right.fileMoor.Type(Format("All supported mooring files (%s)", moorFiles), moorFilesAst);
+	right.fileMoor.Type(F("All supported mooring files (%s)", moorFiles), moorFilesAst);
 	right.fileMoor.AllFilesType();
 	right.fileMoor.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	right.fileMoor.								WhenChange = [&] {OnLoad(); return true;}; 
@@ -133,10 +133,10 @@ void MainMoor::Init() {
 		right.opMooring.Enable(right.dropExport.GetData() == "MoorDyn");
 		right.edDt.     Enable(right.dropExport.GetData() == "MoorDyn");
 	};
-	EM().Log(Format("Initialising mooring... 3.3 '%d'", dropExportId));
+	EM().Log(F("Initialising mooring... 3.3 '%d'", dropExportId));
 	if (dropExportId < 0 || dropExportId > 1)
 		dropExportId = 0;
-	EM().Log(Format("Initialising mooring... 3.3 '%d'", dropExportId));
+	EM().Log(F("Initialising mooring... 3.3 '%d'", dropExportId));
 	right.dropExport.SetIndex(dropExportId);
 	right.dropExport.WhenAction();
 	
@@ -195,7 +195,7 @@ bool MainMoor::OnLoad() {
 	try {
 		if (!mooring.Load(~right.fileMoor)) {
 			if (!mooring.LoadMoordyn(~right.fileMoor)) {
-				BEM::PrintError(Format("Problem loading %s file", ~right.fileMoor));
+				BEM::PrintError(F("Problem loading %s file", ~right.fileMoor));
 				return false;
 			}
 		}
@@ -228,12 +228,12 @@ bool MainMoor::OnSave() {
 			ext = ".json";
 		else
 			ext = ".dat";
-		fs.Type(Format(t_("%s file"), format), "*" + ext);
+		fs.Type(F(t_("%s file"), format), "*" + ext);
 		fs.ActiveType(0);
 		fs.Set(ForceExtSafer(fileName, ext));
 		fs.ActiveDir(GetFileDirectory(fileName));
 		
-		if (!fs.ExecuteSaveAs(Format(t_("Save mooring file as %s"), format)))
+		if (!fs.ExecuteSaveAs(F(t_("Save mooring file as %s"), format)))
 			return false;
 		
 		fileName = ~fs;
@@ -251,7 +251,7 @@ bool MainMoor::OnSave() {
 		else
 			ret = mooring.SaveMoordyn(fileName, right.opMooring, right.opFairleads, right.opAnchors);
 		if (!ret) {
-			BEM::PrintError(Format(t_("Problem saving %s file"), fileName));
+			BEM::PrintError(F(t_("Problem saving %s file"), fileName));
 			return false;
 		}
 	} catch (const Exc &e) {
@@ -275,7 +275,7 @@ void MainMoor::LoadDragDrop() {
 
 	bool followWithErrors = false;
 	right.fileMoor <<= filesToDrop[0];
-	Status(Format(t_("Loading '%s'"), filesToDrop[0]));
+	Status(F(t_("Loading '%s'"), filesToDrop[0]));
 	OnLoad();
 }
 	
@@ -396,7 +396,7 @@ void MainMoor::OnUpdate(bool fit) {
 		else {
 			const Mooring::LineProperty &prop1 = mooring.lineProperties[cl.line1],
 							   			&prop2 = mooring.lineProperties[cl.line2];
-			right.minDistance <<= Format("%.1f m. From line %d at (%.1f, %.1f, %.1f) to line %d at (%.1f, %.1f, %.1f)", cl.distance,
+			right.minDistance <<= F("%.1f m. From line %d at (%.1f, %.1f, %.1f) to line %d at (%.1f, %.1f, %.1f)", cl.distance,
 										cl.line1+1, prop1.x[cl.point1], prop1.y[cl.point1], prop1.z[cl.point1], 
 										cl.line2+1, prop2.x[cl.point2], prop2.y[cl.point2], prop2.z[cl.point2]);
 		}
@@ -446,7 +446,7 @@ void MainMoor::FullRefresh(bool fit) {
 				y = line.y[id];
 				z = line.z[id];
 			}
-			left.view.PaintText(x, y, z, Format("[3@(67.120.120) %s]", line.name));
+			left.view.PaintText(x, y, z, F("[3@(67.120.120) %s]", line.name));
 		}
 	}
 	// Points
@@ -465,7 +465,7 @@ void MainMoor::FullRefresh(bool fit) {
 			col = ::Color(153, 76, 0);			// Anchor
 		left.view.PaintCube(con.x + dx, con.y + dy, con.z, 2, col);
 		if (left.opConnection)
-			left.view.PaintText(con.x + dx, con.y + dy, con.z, Format("[3@(153.76.0) %s]", con.name));
+			left.view.PaintText(con.x + dx, con.y + dy, con.z, F("[3@(153.76.0) %s]", con.name));
 	}
 	// Closest
 	if (right.showMin && !IsNull(cl.distance)) {

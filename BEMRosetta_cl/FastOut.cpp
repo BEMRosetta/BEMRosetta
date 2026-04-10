@@ -202,14 +202,14 @@ String FastOut::LoadOut(String file, Function <bool(String, int)> Status) {
 	if (!in)
 		return t_("Impossible to load file");
 
-	Status(Format(t_("Loading '%s'"), ::GetFileName(file)), 0);
+	Status(F(t_("Loading '%s'"), ::GetFileName(file)), 0);
 	
 	int64 sz = in.GetSize();
 
 	int numCol, nline = 0;
 	bool begin = false;
 	while (!in.IsEof()) {
-		if (Status && !(nline%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(file)), int((100*in.GetPos())/sz)))
+		if (Status && !(nline%5000) && !Status(F(t_("Loading '%s'"), ::GetFileName(file)), int((100*in.GetPos())/sz)))
 			throw Exc(t_("Stop by user"));
 				
 		UVector<String> fields = Split(in.GetLine(), IsTabSpaceRet, true);
@@ -261,7 +261,7 @@ bool FastOut::Save(String fileSave, Function <bool(String, int)> Status, String 
 }
 	
 bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status, const UVector<int> &ids) {
-	Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
+	Status(F(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
 	
 	FileOut data(fileSave);
 	if (!data)
@@ -286,7 +286,7 @@ bool FastOut::SaveOut(String fileSave, Function <bool(String, int)> Status, cons
 	data << "\n";
 	int num = GetNumData();
 	for (int idtime = 0; idtime < num; ++idtime) {
-		if (Status && !(idtime%1000) && !Status(Format("Saving '%s'", ::GetFileName(fileSave)), (100*idtime)/num))
+		if (Status && !(idtime%1000) && !Status(F("Saving '%s'", ::GetFileName(fileSave)), (100*idtime)/num))
 			throw Exc(t_("Stop by user"));
 		if (idtime > 0)
 			data << "\n";
@@ -309,9 +309,9 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
 
 	FileInBinary fin(file);
 	if (!fin.IsOpen())
-		return t_(Format("Impossible to open '%s'", file));
+		return t_(F("Impossible to open '%s'", file));
 
-	Status(Format(t_("Loading '%s' header"), ::GetFileName(file)), 0);
+	Status(F(t_("Loading '%s' header"), ::GetFileName(file)), 0);
 	
 	int ChanLen2;
 	int16 FileType = fin.Read<int16>();
@@ -393,7 +393,7 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
         bufferDataFloat.Alloc(NumChans); 
         for (int idt = 0; idt < NumRecs; ++idt) {
             fin.Read(bufferDataFloat, 8*NumChans);
-            if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
+            if (Status && !(idt%5000) && !Status(F(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
 				throw Exc(t_("Stop by user"));
 	    	for (int i = 0; i < NumChans; ++i) 
 		        dataOut[i+1][idt] = bufferDataFloat[i];
@@ -402,7 +402,7 @@ String FastOut::LoadOutb(String file, Function <bool(String, int)> Status) {
 	    bufferData.Alloc(NumChans);
 	    for (int idt = 0; idt < NumRecs; ++idt) {
 	        fin.Read(bufferData, 2*NumChans); 	
-	        if (Status && !(idt%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
+	        if (Status && !(idt%5000) && !Status(F(t_("Loading '%s'"), ::GetFileName(file)), int((100*fin.GetPos())/sz)))
 				throw Exc(t_("Stop by user"));
 	    	for (int i = 0; i < NumChans; ++i) 
 		        dataOut[i+1][idt] = (bufferData[i] - ColOff[i])/ColScl[i];
@@ -432,11 +432,11 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	int64 beginData;
 	int beginDataRow;
 	
-	Status(Format(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
+	Status(F(t_("Loading '%s' header"), ::GetFileName(fileName)), 0);
 	
 	if (!GuessCSV(fileName, true, header, params0, separator, repetition, decimalSign, beginData, beginDataRow)) {
 		Clear();
-		return Format("Problem reading '%s'. Impossible to guess structure", fileName); 
+		return F("Problem reading '%s'. Impossible to guess structure", fileName); 
 	}
 	
 	// Extracts the units from the header
@@ -515,7 +515,7 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	
 	in.Seek(beginData);
 
-	Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz));
+	Status(F(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz));
 
 	double timeFactor = 1;
 	if (units[0] == "min")
@@ -524,7 +524,7 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	int line = 0;
 	const char *endptr;	
 	while (!in.IsEof()) {
-		if (Status && !(line%5000) && !Status(Format(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz)))
+		if (Status && !(line%5000) && !Status(F(t_("Loading '%s'"), ::GetFileName(fileName)), int((100*in.GetPos())/sz)))
 			throw Exc(t_("Stop by user"));
 		
 		UVector<String> data = Split(in.GetLine(), separator, repetition);
@@ -543,7 +543,7 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 	}
 		
 	if (dataOut.IsEmpty()) 
-		return Format("Problem reading '%s'", fileName); 
+		return F("Problem reading '%s'", fileName); 
 	
 	for (int i = numCol; i < dataOut.size(); ++i)	// Size for calc. fields
     	dataOut[i].SetCount(GetNumData());
@@ -552,7 +552,7 @@ String FastOut::LoadCsv(String file, Function <bool(String, int)> Status) {
 }
 		
 bool FastOut::SaveCsv(String fileSave, Function <bool(String, int)> Status, String sep, const UVector<int> &ids) {
-	Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
+	Status(F(t_("Saving '%s'"), ::GetFileName(fileSave)), 0);
 	
 	FileOut data(fileSave);
 	if (!data)
@@ -570,7 +570,7 @@ bool FastOut::SaveCsv(String fileSave, Function <bool(String, int)> Status, Stri
 	data << "\n";
 	int num = GetNumData();
 	for (int idtime = 0; idtime < num; ++idtime) {
-	    if (Status && !(idtime%1000) && !Status(Format(t_("Saving '%s'"), ::GetFileName(fileSave)), (100*idtime)/num))
+	    if (Status && !(idtime%1000) && !Status(F(t_("Saving '%s'"), ::GetFileName(fileSave)), (100*idtime)/num))
 			throw Exc(t_("Stop by user"));
 		if (idtime > 0)
 			data << "\n";
@@ -728,14 +728,14 @@ void FastOut::AfterLoad() {
 		int iip = 0;
 		for (int ip = 0; ip < 3; ++ip) {		// Only translation
 			pointParams[i].id = pos;
-			parameters[pos + iip]  = strPos[ip] + S("_") + pointParams[i].name;
+			parameters[pos + iip]  = strPos[ip] + F("_") + pointParams[i].name;
 			parametersd[pos + iip] = ToLower(parameters[pos + iip]);
 			units[pos + iip++] = unitsd[pos] = "m";
 		}
 		for (int ip = 0; ip < 3; ++ip) {		// Only translation
 			if (!www.IsEmpty()) {
 				pointParams[i].id = pos;
-				parameters[pos + iip]  = strVel[ip] + S("_") + pointParams[i].name;
+				parameters[pos + iip]  = strVel[ip] + F("_") + pointParams[i].name;
 				parametersd[pos + iip] = ToLower(parameters[pos + iip]);
 				units[pos + iip++] = unitsd[pos] = "m/s";
 			}
@@ -743,7 +743,7 @@ void FastOut::AfterLoad() {
 		for (int ip = 0; ip < 3; ++ip) {		// Only translation
 			if (!aaa.IsEmpty()) {
 				pointParams[i].id = pos;
-				parameters[pos + iip]  = strAcc[ip] + S("_") + pointParams[i].name;
+				parameters[pos + iip]  = strAcc[ip] + F("_") + pointParams[i].name;
 				parametersd[pos + iip] = ToLower(parameters[pos + iip]);
 				units[pos + iip++] = unitsd[pos] = "m/s^2";
 			}
@@ -843,7 +843,7 @@ void FastOut::AfterLoad() {
 }
 
 void FastOut::AppendLine(int idline, FastOut &fst) {
-	String strp = Format("L%d", idline) + "N";
+	String strp = F("L%d", idline) + "N";
 	fst.parameters.Remove(0);
 	for (String &param : fst.parameters) {
 		param = ToUpper(param);
@@ -912,7 +912,7 @@ UVector<String> FastOut::FindParameterMatchStr(String param) const {
 int FastOut::GetParameter_throw(String param) const {
 	int ret = GetParameterX(param);
 	if (IsNull(ret))
-		throw Exc(Format("Parameter '%s' not found", param));	
+		throw Exc(F("Parameter '%s' not found", param));	
 	return ret;
 }
 
@@ -1238,9 +1238,9 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 							throw Exc("'demo' requires two arguments");
 						val = ScanDouble(pars[1]) + ScanDouble(pars[2]);
 					} else
-						throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
+						throw Exc(F(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
 					
-					t << val;//Format("%" + format, val);
+					t << val;//F("%" + format, val);
 				}
 			}
 		}
@@ -1340,9 +1340,9 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				} else if (stat == "demo") 
 					;
 				else
-					throw Exc(Format(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
+					throw Exc(F(t_("Unknown '%s' statistic in parameter '%s'"), stat, param.name));
 				
-				t << val;//Format("%" + format, val);
+				t << val;//F("%" + format, val);
 			}
 		}
 	}
@@ -1362,7 +1362,7 @@ void FASTCase::CreateFolderCase(String folder) {
 	std::uniform_int_distribution<int> gen(0, 999); 
 	int rnd = gen(rng);
 	
-	String cas = Format("%4d%02d%02d_%02d%02d%02d_%03d", t.year, t.month, t.day, t.hour, t.minute, t.second, rnd);
+	String cas = F("%4d%02d%02d_%02d%02d%02d_%03d", t.year, t.month, t.day, t.hour, t.minute, t.second, rnd);
 	String base;
 	if (folder.IsEmpty())
 		base = AFX(GetAppDataFolder(), "BEMRosetta", "FASTCases");
@@ -1370,7 +1370,7 @@ void FASTCase::CreateFolderCase(String folder) {
 		base = folder;
 	folderCase = AFX(base, cas);
 	if (!RealizeDirectory(folderCase))
-		throw Exc(Format("Impossible to create folder %s", folderCase));
+		throw Exc(F("Impossible to create folder %s", folderCase));
 }
 	
 void FASTCase::Setup(String seed, String folderCases) {
@@ -1383,7 +1383,7 @@ void FASTCase::Setup(String seed, String folderCases) {
 	
 	FindFile ffpath(AFX(folderCase, "*.fst"));
 	if (!ffpath) 
-		throw Exc(Format("No .fst file found in folder '%s'", seed));
+		throw Exc(F("No .fst file found in folder '%s'", seed));
 	
 	fstFile = ffpath.GetPath();
 	
@@ -1454,10 +1454,10 @@ bool FASTCaseDecay::Postprocess() {
 double GetDecayPeriod(FastOut &fst, BasicBEM::DOF dof, double &r2, double &damp) {
 	r2 = damp = Null;
 	
-	String param = "ptfm" + S(BEM::strDOFtext[dof]);
+	String param = "ptfm" + F(BEM::strDOFtext[dof]);
 	int id = fst.GetParameterX(param);
 	if (id < 0) 
-		throw Exc(Format("Param. %s not found in %s", param, fst.GetFileName()));
+		throw Exc(F("Param. %s not found in %s", param, fst.GetFileName()));
 
 	UVector<int> idsx, idsy, idsFixed;
 	VectorVectorY<double> vect;
@@ -1507,7 +1507,7 @@ void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &H) {
 	String param = "Wave1Elev";
 	int id = dataFast.GetParameterX(param);
 	if (id < 0) 
-		throw Exc(Format("Param. %s not found", param));
+		throw Exc(F("Param. %s not found", param));
 
 	UVector<int> idsx, idsy, idsFixed;
 	VectorVectorY<double> vect;
@@ -1524,10 +1524,10 @@ void GetWaveRegularAmplitude(const FastOut &dataFast, double &T, double &H) {
 	double newT = 2*M_PI/eq.GetCoeff(2);
 	
 	//if (abs((T-newT)/T) > 0.05)
-	//	throw Exc(Format("Wave period %f is too different to the defined %f", newT, T));
+	//	throw Exc(F("Wave period %f is too different to the defined %f", newT, T));
 	
 	//if (abs((A-newA)/A) > 0.05)
-	//	throw Exc(Format("Wave amplitude %f is too different to the defined %f", newA, A));
+	//	throw Exc(F("Wave amplitude %f is too different to the defined %f", newA, A));
 	
 	T = newT;
 	H = newH;

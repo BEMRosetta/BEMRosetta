@@ -96,10 +96,10 @@ void MainMatrixKA::AddPrepare(int &row0, int &col0, String name, int icase, Stri
 		}
 	}
 	if (Nb == 1)
-		array.Set(row0, col0 + 1, AttrText(Format(t_("#%d body %s"), ibody + 1, bodyName)).Bold());
+		array.Set(row0, col0 + 1, AttrText(F(t_("#%d body %s"), ibody + 1, bodyName)).Bold());
 	else {
 		for (int nmat = 0; nmat < Nb; ++nmat) 
-			array.Set(row0, col0 + nmat*7 + 1, AttrText(Format(t_("#%d-%d body %s"), ibody + 1, nmat + 1, bodyName)).Bold());
+			array.Set(row0, col0 + nmat*7 + 1, AttrText(F(t_("#%d-%d body %s"), ibody + 1, nmat + 1, bodyName)).Bold());
 	}
 	
 	for (int i = 0; i < 6; ++i) 
@@ -176,16 +176,16 @@ void MainMatrixKA::SetLabels() {
 	opMassBuoy.Show(what == Hydro::MAT_K);
 	
 	if (what == Hydro::MAT_K) {
-		label.SetText(Format(t_("Hydrostatic Stiffness Matrices (%s)"),
+		label.SetText(F(t_("Hydrostatic Stiffness Matrices (%s)"),
 						Ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_KMOOR) {
-		label.SetText(Format(t_("Mooring Stiffness Matrices (%s)"),
+		label.SetText(F(t_("Mooring Stiffness Matrices (%s)"),
 						Ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_KADD) {
-		label.SetText(Format(t_("Additional Stiffness Matrices (%s)"),
+		label.SetText(F(t_("Additional Stiffness Matrices (%s)"),
 						Ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_A) {
-		label.SetText(Format(t_("Added Mass at infinite frequency (%s)"), 
+		label.SetText(F(t_("Added Mass at infinite frequency (%s)"), 
 						Ndim ? t_("'dimensionless'") : t_("dimensional")));
 	} else if (what == Hydro::MAT_M) {
 		label.SetText(t_("Mass/Inertia matrix (dimensional)"));
@@ -247,8 +247,8 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool buttonSave) {
 				for (int f = 0; f < Bem().hydros.size(); ++f) {
 					const Hydro &hy = Bem().hydros[f];
 					for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-						String bodyName = Format("%d. %s", f+1, hy.dt.name);
-						String meshName = Format("%d. %s", ib+1, hy.dt.msh[ib].dt.name);
+						String bodyName = F("%d. %s", f+1, hy.dt.name);
+						String meshName = F("%d. %s", ib+1, hy.dt.msh[ib].dt.name);
 						w.array.Add(bodyName, meshName, f, ib);
 					}
 				}
@@ -267,12 +267,12 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool buttonSave) {
 					int ib = w.array.Get(id, 3);
 					
 					if (Distance(msh.dt.c0, hy.dt.msh[ib].dt.c0) > 0.1)
-						if (!ErrorOKCancel(Format(t_("Centre of rotation in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
+						if (!ErrorOKCancel(F(t_("Centre of rotation in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
 														msh.dt.c0.x, msh.dt.c0.y, msh.dt.c0.z, hy.dt.msh[ib].dt.c0[0], hy.dt.msh[ib].dt.c0[1], hy.dt.msh[ib].dt.c0[2])))
 							cancel = true;	
 					
 					if (!cancel && Distance(msh.dt.cg, hy.dt.msh[ib].dt.cg) > 0.1)
-						if (!ErrorOKCancel(Format(t_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
+						if (!ErrorOKCancel(F(t_("Centre of gravity in mesh (%.1f,%.1f,%.1f) and in bem model (%.1f,%.1f,%.1f) are different.&Do you wish to continue?"), 
 														msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z, hy.dt.msh[ib].dt.cg[0], hy.dt.msh[ib].dt.cg[1], hy.dt.msh[ib].dt.cg[2])))
 							cancel = true;
 					if (!cancel) {

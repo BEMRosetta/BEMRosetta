@@ -7,7 +7,7 @@ using namespace Upp;
 
 
 int FindSpan(double u, const UVector<double>& knots, int n, int p) {
-	int m = knots.GetCount() - 1;
+	int m = knots.size() - 1;
 	if (u >= knots[m]) 
 		return n;
 	if (u <= knots[0]) 
@@ -83,7 +83,7 @@ void BasisDerivatives(double u, int span, const UVector<double>& knots, int p, d
 			int idx1 = span + i;
 			int idx2 = span + i - p;
 			if (idx2 < 0) idx2 = 0;
-			if (idx1 < knots.GetCount()) {
+			if (idx1 < knots.size()) {
 				double denom = knots[idx1] - knots[idx2];
 				if (denom > 1e-10)
 					dval += p * N[(p-1)%2][i-1] / denom;
@@ -92,8 +92,8 @@ void BasisDerivatives(double u, int span, const UVector<double>& knots, int p, d
 		if (i < p) {					// Second term: -p/(knots[span+i+p+1] - knots[span+i+1]) * N_{span+i+1-p, p-1}
 			int idx1 = span + i + p + 1;
 			int idx2 = span + i + 1;
-			if (idx1 >= knots.GetCount()) 
-				idx1 = knots.GetCount() - 1;
+			if (idx1 >= knots.size()) 
+				idx1 = knots.size() - 1;
 			double denom = knots[idx1] - knots[idx2];
 			if (denom > 1e-10)
 				dval -= p * N[(p-1)%2][i]/denom;
@@ -107,9 +107,9 @@ Point3D BSplinePatch::EvaluateSurface(const UVector<Point3D>& cpts, int nU, int 
                      const UVector<double>& uKnots, const UVector<double>& vKnots,
                      int p, int q, double u, double v) {
 	double umin = uKnots[p];
-	double umax = uKnots[uKnots.GetCount() - p - 1];
+	double umax = uKnots[uKnots.size() - p - 1];
 	double vmin = vKnots[q];
-	double vmax = vKnots[vKnots.GetCount() - q - 1];
+	double vmax = vKnots[vKnots.size() - q - 1];
 	
 	u = clamp(u, umin, umax);
 	v = clamp(v, vmin, vmax);
@@ -126,103 +126,80 @@ Point3D BSplinePatch::EvaluateSurface(const UVector<Point3D>& cpts, int nU, int 
 		int vidx = clamp(vspan - q + l, 0, nV - 1);
 		for (int k = 0; k <= p; k++) {
 			int uidx = clamp(uspan - p + k, 0, nU - 1);
-			result = result + cpts[vidx * nU + uidx]*(Nu[k]*Nv[l]);
+			result += cpts[vidx * nU + uidx]*(Nu[k]*Nv[l]);
 		}
 	}
 	return result;
 }
 
-
-bool SurfaceBSpline::ParseGDF(const String& filename, SurfaceBSpline& manager) {
-	FileIn file(filename);
-	if (!file.IsOpen()) {
-		Cout() << "Cannot open: " << filename << "\n";
-		return false;
-	}
+void BSplinePatch::EvaluateDerivatives(double u, double v, Point3D& Su, Point3D& Sv) const {
+	double du = 0.001*(GetUMax() - GetUMin());
+	double dv = 0.001*(GetVMax() - GetVMin());
 	
-	auto readLine = [&]() -> String {
-		String line = file.GetLine();
-		int pos = min(line.Find('#'), line.Find('!'));
-		if (pos >= 0) line = line.Left(pos);
-		return TrimBoth(line);
-	};
+	Point3D pu  = Evaluate(u - du, v);
+	Point3D puu = Evaluate(u + du, v);
+	Su = (puu - pu)/(2*du);
 	
-	auto read2int = [&](int& a, int& b) -> bool {
-		String s = readLine();
-		CParser p(s);
-		try { a = p.ReadInt(); b = p.ReadInt(); return true; }
-		catch (...) { return false; }
-	};
-	
-	auto read2double = [&](double& a, double& b) -> bool {
-		String s = readLine();
-		CParser p(s);
-		try { a = p.ReadDouble(); b = p.ReadDouble(); return true; }
-		catch (...) { return false; }
-	};
-	
-	String header = readLine();
-	Cout() << "Header: " << header << "\n";
-	
-	double ulen, grav;
-	int isx, isy, npatch, igdef;
-	
-	if (!read2double(ulen, grav)) return false;
-	if (!read2int(isx, isy)) return false;
-	if (!read2int(npatch, igdef)) return false;
-	
-	Cout() << "NPATCH=" << npatch << ", IGDEF=" << igdef << "\n";
-	
-	if (igdef != 1) {
-		Cout() << "Only IGDEF=1 supported\n";
-		return false;
-	}
-	
-	for (int i = 0; i < npatch; i++) {
-		BSplinePatch patch;
-		patch.id = i;
-		
-		if (!read2int(patch.nug, patch.nvg)) return false;
-		if (!read2int(patch.kug, patch.kvg)) return false;
-		
-		int nua = patch.nug + 2*patch.kug - 1;
-		int nva = patch.nvg + 2*patch.kvg - 1;
-		int nb = patch.GetNUBasis() * patch.GetNVBasis();
-		
-		patch.uKnots.SetCount(nua);
-		int read = 0;
-		while (read < nua) {
-			String s = readLine();
-			CParser p(s);
-			while (!p.IsEof() && read < nua)
-				patch.uKnots[read++] = p.ReadDouble();
-		}
-		
-		patch.vKnots.SetCount(nva);
-		read = 0;
-		while (read < nva) {
-			String s = readLine();
-			CParser p(s);
-			while (!p.IsEof() && read < nva)
-				patch.vKnots[read++] = p.ReadDouble();
-		}
-		
-		patch.controlPoints.SetCount(nb);
-		for (int j = 0; j < nb; j++) {
-			String s = readLine();
-			CParser p(s);
-			double x = p.ReadDouble();
-			double y = p.ReadDouble();
-			double z = p.ReadDouble();
-			patch.controlPoints[j] = Point3D(x, y, z);
-		}
-		
-		manager.Add(pick(patch));
-	}
-	
-	return true;
+	Point3D pv  = Evaluate(u, v - dv);
+	Point3D pvv = Evaluate(u, v + dv);
+	Sv = (pvv - pv)/(2*dv);
 }
 
+double BSplinePatch::EvaluateAreaElement(double u, double v) const {
+	Point3D Su, Sv;
+	EvaluateDerivatives(u, v, Su, Sv);
+	return cross(Su, Sv).Length();
+}
+
+double BSplinePatch::ComputeArea(int order) const {
+	static const double gp[5][5] = {		// Gauss-Legendre points
+		{0},
+		{-0.577350269189626, 0.577350269189626},
+		{-0.774596669241483, 0.0, 0.774596669241483},
+		{-0.861136311594053, -0.339981043584856, 0.339981043584856, 0.861136311594053},
+		{-0.906179845938664, -0.538469310105683, 0.0, 0.538469310105683, 0.906179845938664}
+	};
+	static const double gw[5][5] = {		// Gauss-Legendre weights
+		{2},
+		{1.0, 1.0},
+		{0.555555555555556, 0.888888888888889, 0.555555555555556},
+		{0.347854845137454, 0.652145154862546, 0.652145154862546, 0.347854845137454},
+		{0.236926885056189, 0.478628670499366, 0.568888888888889, 0.478628670499366, 0.236926885056189}
+	};
+	
+	order = clamp(order, 1, 5);
+	int n = order;
+	
+	double umin = GetUMin(), umax = GetUMax();
+	double vmin = GetVMin(), vmax = GetVMax();
+	double area = 0;
+	
+	for (int j = 0; j < n; j++) {
+		double v = 0.5*((vmax - vmin)*gp[n-1][j] + (vmax + vmin));
+		double wv = gw[n-1][j];
+		
+		for (int i = 0; i < n; i++) {
+			double u = 0.5*((umax - umin)*gp[n-1][i] + (umax + umin));
+			double wu = gw[n-1][i];
+			
+			area += wu*wv*EvaluateAreaElement(u, v);
+		}
+	}
+	return 0.25*(umax - umin) * (vmax - vmin)*area;	// Jacobian of transformation
+}
+
+void BSplinePatch::GetBoundingBox(Point3D& mn, Point3D& mx) const {
+	if (controlPoints.IsEmpty()) {
+		mn = mx = Point3D(); 
+		return; 
+	}
+	mn = mx = controlPoints[0];
+	for (const auto& cp : controlPoints) {
+		mn.x = min(mn.x, cp.x); mx.x = max(mx.x, cp.x);
+		mn.y = min(mn.y, cp.y); mx.y = max(mx.y, cp.y);
+		mn.z = min(mn.z, cp.z); mx.z = max(mx.z, cp.z);
+	}
+}
 
 UVector<double> MakeUniformKnots(int nSpans, int order) {
 	int nKnots = nSpans + 2*order - 1;
@@ -250,7 +227,6 @@ SurfaceBSpline MakeCylinder(double R, double H, int nU = 4, int nV = 4, int kU =
 	SurfaceBSpline mgr;
 	BSplinePatch patch;
 
-	patch.id = 0;
 	patch.nug = nU;
 	patch.nvg = nV;
 	patch.kug = kU;
@@ -283,7 +259,7 @@ SurfaceBSpline MakeCylinder(double R, double H, int nU = 4, int nV = 4, int kU =
 SurfaceBSpline MakeSphere(double R, int nU = 6, int nV = 6, int kU = 4, int kV = 4) {
 	SurfaceBSpline mgr;
 	BSplinePatch patch;
-	patch.id = 0;
+	
 	patch.nug = nU;
 	patch.nvg = nV;
 	patch.kug = kU;
@@ -320,7 +296,7 @@ SurfaceBSpline MakeSphere(double R, int nU = 6, int nV = 6, int kU = 4, int kV =
 SurfaceBSpline MakeEllipsoid(double a, double b, double c, int nU = 6, int nV = 6, int kU = 4, int kV = 4) {
 	SurfaceBSpline mgr;
 	BSplinePatch patch;
-	patch.id = 0;
+	
 	patch.nug = nU;
 	patch.nvg = nV;
 	patch.kug = kU;
@@ -359,7 +335,7 @@ SurfaceBSpline MakeEllipsoid(double a, double b, double c, int nU = 6, int nV = 
 SurfaceBSpline MakeWigley(double L, double B, double D, int nU = 8, int nV = 4, int kU = 4, int kV = 4) {
 	SurfaceBSpline mgr;
 	BSplinePatch patch;
-	patch.id = 0;
+	
 	patch.nug = nU;
 	patch.nvg = nV;
 	patch.kug = kU;
@@ -399,7 +375,7 @@ SurfaceBSpline MakeBarge(double L, double B, double D, double R, int nU = 6, int
 	
 	{	// Patch 0: Flat bottom
 		BSplinePatch patch;
-		patch.id = 0;
+		
 		patch.nug = nU;
 		patch.nvg = nV;
 		patch.kug = kU;
@@ -422,7 +398,7 @@ SurfaceBSpline MakeBarge(double L, double B, double D, double R, int nU = 6, int
 	}
 	{	// Patch 1: Bilge (rounded)
 		BSplinePatch patch;
-		patch.id = 1;
+		
 		patch.nug = nU;
 		patch.nvg = nV;
 		patch.kug = kU;
@@ -449,7 +425,7 @@ SurfaceBSpline MakeBarge(double L, double B, double D, double R, int nU = 6, int
 	}
 	{	// Patch 2: Side
 		BSplinePatch patch;
-		patch.id = 2;
+		
 		patch.nug = nU;
 		patch.nvg = nV;
 		patch.kug = kU;
@@ -476,47 +452,177 @@ SurfaceBSpline MakeBarge(double L, double B, double D, double R, int nU = 6, int
 	return mgr;
 }
 
-
-bool SaveSurfaceBSpline(const SurfaceBSpline& mgr, const String& filename,
-                         const String& header = "Generated GDF",
-                         double ulen = 1.0, double grav = 9.80665,
-                         int isx = 0, int isy = 0) {
-	FileOut file(filename);
-	if (!file.IsOpen()) return false;
-	
-	file << header << "\n";
-	file << ulen << " " << grav << "\n";
-	file << isx << " " << isy << "\n";
-	file << mgr.GetCount() << " 1\n";  // IGDEF=1
-	
-	for (const BSplinePatch& p : mgr.patches) {
-		file << p.nug << " " << p.nvg << "\n";
-		file << p.kug << " " << p.kvg << "\n";
+void SurfaceBSpline::DeployXSymmetry() {
+	int sz = patches.size();
+	patches.SetCount(2*sz);
+	for (int i = 0; i < sz; ++i) {
+		BSplinePatch &patch = patches[i + sz];
+		patch = clone(patches[i]);
+		for (Point3D &p : patch.controlPoints)
+			p.x = -p.x;
 		
-		// U knots
-		for (int i = 0; i < p.uKnots.GetCount(); i++)
-			file << p.uKnots[i] << ((i % 4 == 3) ? "\n" : " ");
-		if (p.uKnots.GetCount() % 4 != 0) 
-			file << "\n";
-		
-		// V knots
-		for (int i = 0; i < p.vKnots.GetCount(); i++)
-			file << p.vKnots[i] << ((i % 4 == 3) ? "\n" : " ");
-		if (p.vKnots.GetCount() % 4 != 0) 
-			file << "\n";
-		
-		// Control points
-		for (const Point3D& cp : p.controlPoints)
-			file << Format("%.6f %.6f %.6f", cp.x, cp.y, cp.z) << "\n";
+    	int nU = patch.GetNUBasis();
+    	int nV = patch.GetNVBasis();
+    
+   		for (int iV = 0; iV < nV; iV++) {
+        	for (int iU = 0; iU < nU/2; iU++) {
+           		int leftIdx  = iV*nU + iU;      
+            	int rightIdx = iV*nU + (nU - 1 - iU);
+            	Swap(patch.controlPoints[leftIdx], patch.controlPoints[rightIdx]);	
+        	}
+        }
 	}
+}
+
+void SurfaceBSpline::DeployYSymmetry() {
+	int sz = patches.size();
+	patches.SetCount(2*sz);
+	for (int i = 0; i < sz; ++i) {
+		BSplinePatch &patch = patches[i + sz];
+		patch = clone(patches[i]);
+		for (Point3D &p : patch.controlPoints)
+			p.y = -p.y;
+		
+		int nU = patch.GetNUBasis();
+    	int nV = patch.GetNVBasis();
+    
+   		for (int iV = 0; iV < nV; iV++) {
+        	for (int iU = 0; iU < nU/2; iU++) {
+           		int leftIdx  = iV*nU + iU;      
+            	int rightIdx = iV*nU + (nU - 1 - iU);
+            	Swap(patch.controlPoints[leftIdx], patch.controlPoints[rightIdx]);	
+        	}
+        }
+	}	
+}
+
+void SurfaceBSpline::CutX(bool leavePositive) {
+	for (int i = patches.size()-1; i >= 0; --i) {
+		BSplinePatch &patch = patches[i];
+		bool arenegative = true, arepositive = true;
+		for (Point3D &p : patch.controlPoints) {
+			if (p.x > -EPS_LEN)
+				arenegative = false;
+			if (p.x <  EPS_LEN)
+				arepositive = false;
+		}
+		if ((arenegative && leavePositive) || (arepositive && !leavePositive))	// Remove the patch if ALL control points comply
+			patches.Remove(i);
+	}
+}
+
+void SurfaceBSpline::CutY(bool leavePositive) {
+	for (int i = patches.size()-1; i >= 0; --i) {
+		BSplinePatch &patch = patches[i];
+		bool arenegative = true, arepositive = true;
+		for (Point3D &p : patch.controlPoints) {
+			if (p.y > -EPS_LEN)
+				arenegative = false;
+			if (p.y <  EPS_LEN)
+				arepositive = false;
+		}
+		if ((arenegative && leavePositive) || (arepositive && !leavePositive))	// Remove the patch if ALL control points comply
+			patches.Remove(i);
+	}
+}
+
+void SurfaceBSpline::CutZ(bool leavePositive) {
+	for (int i = patches.size()-1; i >= 0; --i) {
+		BSplinePatch &patch = patches[i];
+		bool arenegative = true, arepositive = true;
+		for (Point3D &p : patch.controlPoints) {
+			if (p.z > -EPS_LEN)
+				arenegative = false;
+			if (p.z <  EPS_LEN)
+				arepositive = false;
+		}
+		if ((arenegative && leavePositive) || (arepositive && !leavePositive))	// Remove the patch if ALL control points comply
+			patches.Remove(i);
+	}
+}
 	
-	file.Close();
+void SurfaceBSpline::RoundClosest(double grid, double eps) {
+	for (BSplinePatch &patch : patches) {
+		for (Point3D &p : patch.controlPoints) {
+			p.x = Upp::RoundClosest(p.x, grid, eps);
+			p.y = Upp::RoundClosest(p.y, grid, eps);
+			p.z = Upp::RoundClosest(p.z, grid, eps);
+		}
+	}
+}
+
+int SurfaceBSpline::FitToZ0(double zTolerance) {
+	zTolerance = abs(zTolerance);
+	for (BSplinePatch &patch : patches) {
+		for (const Point3D &p : patch.controlPoints) {
+			if (p.z > zTolerance)	// Just works if mesh is underwater
+				return 0;
+		}
+	}
+	int ret = 0;
+	for (BSplinePatch &patch : patches) {
+		for (Point3D &p : patch.controlPoints) {
+			if (Between(p.z, -zTolerance, zTolerance)) {
+				p.z = 0;
+				ret++;
+			}
+		}
+	}
+	return ret;
+}
+
+String SurfaceBSpline::Heal(double grid, double eps) {
+	String ret;
+	
+	RoundClosest(grid, eps);
+	double zTolerance = -0.1;
+	int num0 = FitToZ0(zTolerance);
+	if (num0 > 0) 
+		ret << "\n" << F(t_("Fitted to Z=0 %d points"), num0);
+	
+	return ret;
+}
+
+bool SurfaceBSpline::SaveGDF(const String& fileName, double g, bool symX, bool symY, bool iscsf) const {
+	if (iscsf)
+		ForceExt(fileName, ".csf");
+	
+	FileOut out(fileName);
+	if (!out.IsOpen()) 
+		return false;
+	
+	out << "BEMRosetta GDF mesh file export\n";
+	if (!iscsf)
+		out << F("%16<s ULEN GRAV\n", F("%d %12f", 1, g));
+	else
+		out << "ILOWHICSF=1\n";
+	out << F("%16<s ISX ISY\n", F("%d %d", (symX ? 1 : 0), (symY ? 1 : 0)));
+	out << F("%16<s NPATCH IGDEF\n", F("%d 1", size()));
+	
+	for (const BSplinePatch& p : patches) {
+		out << p.nug << " " << p.nvg << "\n";
+		out << p.kug << " " << p.kvg << "\n";
+		
+		for (int i = 0; i < p.uKnots.size(); i++)
+			out << p.uKnots[i] << ((i % 4 == 3) ? "\n" : " ");
+		if (p.uKnots.size() % 4 != 0) 
+			out << "\n";
+		
+		for (int i = 0; i < p.vKnots.size(); i++)
+			out << p.vKnots[i] << ((i % 4 == 3) ? "\n" : " ");
+		if (p.vKnots.size() % 4 != 0) 
+			out << "\n";
+		
+		for (const Point3D& cp : p.controlPoints)
+			out << F("%10.5f %10.5f %10.5f", cp.x, cp.y, cp.z) << "\n";
+	}	
 	return true;
 }
 
-
-void SurfaceBSpline::Tessellate(const SurfaceBSpline& manager, int nu, int nv, UArray<FlatPanel>& panels) {
-	for (const BSplinePatch& patch : manager.patches) {
+void SurfaceBSpline::Tessellate(int nu, int nv, Surface& surf) {
+	for (const BSplinePatch& patch : patches) {
+		Surface s;
+		
 		double umin = patch.GetUMin();
 		double umax = patch.GetUMax();
 		double vmin = patch.GetVMin();
@@ -530,28 +636,28 @@ void SurfaceBSpline::Tessellate(const SurfaceBSpline& manager, int nu, int nv, U
 		int p  = patch.GetUDegree();
 		int q  = patch.GetVDegree();
 		
-		UVector<Point3D> grid;
-		grid.SetCount((nu + 1)*(nv + 1));
-		
+		s.nodes.SetCount((nu + 1)*(nv + 1));
 		for (int j = 0; j <= nv; j++) {
 			double v = (j == nv) ? vmax : vmin + j*dv;
 			for (int i = 0; i <= nu; i++) {
 				double u = (i == nu) ? umax : umin + i*du;
-				grid[j*(nu + 1) + i] = patch.Evaluate(u, v);
+				s.nodes[j*(nu + 1) + i] = patch.Evaluate(u, v);
 			}
 		}
 		
-		// Create panels
+		s.panels.SetCount(nu*nv);
+		int ipanel = 0;
 		for (int j = 0; j < nv; j++) {
 			for (int i = 0; i < nu; i++) {
-				FlatPanel panel;
-				panel.v[0] = grid[j*(nu + 1) + i];
-				panel.v[1] = grid[(j + 1)*(nu + 1) + i];
-				panel.v[2] = grid[(j + 1)*(nu + 1) + i + 1];
-				panel.v[3] = grid[j*(nu + 1) + i + 1];
-				
-				panels.Add(panel);
+				s.panels[ipanel].id[0] = j*(nu + 1) + i;
+				s.panels[ipanel].id[1] = (j + 1)*(nu + 1) + i;
+				s.panels[ipanel].id[2] = (j + 1)*(nu + 1) + i + 1;
+				s.panels[ipanel].id[3] = j*(nu + 1) + i + 1;
+				ipanel++;
 			}
 		}
+		surf.Append(s);
 	}
+	surf.GetPanelParams();
+	Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes, surf.segments);
 }

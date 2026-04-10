@@ -9,8 +9,8 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	num = 0;
 	
 	try {
-		BEM::Print(S("\n\n") + Format(t_("Loading '%s'"), file));
-		BEM::Print(S("\n- ") + S(t_("NC file")));
+		BEM::Print(F("\n\n") + F(t_("Loading '%s'"), file));
+		BEM::Print(F("\n- ") + F(t_("NC file")));
 		
 		String name = GetFileTitle(file);
 	
@@ -181,7 +181,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 		} else if (type == NC_STRING)
 			cdf.GetString("body_name", bds);
 		else
-			throw Exc(Format("Data is not text. Found %s", NetCDFFile::TypeName(type)));
+			throw Exc(F("Data is not text. Found %s", NetCDFFile::TypeName(type)));
 			
 		int numPan = 0;
 		UVector<int> bodyPan;
@@ -299,9 +299,9 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 				hy.dt.file = file;
 				hy.dt.name = name;
 				if (_rho.size() > 1)
-					hy.dt.name += Format("_rho%.0f", _rho[irho]);
+					hy.dt.name += F("_rho%.0f", _rho[irho]);
 				if (_h.size() > 1)
-					hy.dt.name += Format("_h%.0f", _h[ih]);
+					hy.dt.name += F("_h%.0f", _h[ih]);
 				hy.dt.dimen = true;
 				hy.dt.len = 1;
 				hy.dt.solver = Hydro::CAPY_NC;
@@ -452,13 +452,17 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	return String();
 }
 
-void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, const UArray<Body> &lids) const {
+void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, 
+				bool irregular, bool autoIrregular, int qtfType) const {
+	if (qtfType > 0)
+		throw Exc(t_("Solver Capytaine does not obtain QTF"));
+					
 	DirectoryCreate(folder);
-	String name = GetFileTitle(folder);
-	String fileBat  = AFX(folder, "Capytaine_bat.bat");
+	String name = "capytaine_case";
+	String fileBat  = AFX(folder, "capytaine.bat");
 	FileOut bat;
 	if (!bat.Open(fileBat))
-		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+		throw Exc(F(t_("Impossible to open file '%s'"), fileBat));
 	
 	bat << "echo Start: \%date\% \%time\% > time.txt\n";
 	if (!Bem().pythonEnv.IsEmpty()) {
@@ -492,46 +496,47 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	
 	String folderMesh = AFX(folder, "mesh");
 	if (!DirectoryCreateX(folderMesh))
-		throw Exc(Format(t_("Problem creating '%s' folder"), folderMesh));
+		throw Exc(F(t_("Problem creating '%s' folder"), folderMesh));
 
-	bool automaticLid = false;
 	bool dorao = false;
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		const Body &b = dt.msh[ib];
 		
-		String dest = AFX(folderMesh, Format(t_("Body_%d.dat"), ib+1));
+		String dest = AFX(folderMesh, F(t_("Body_%d.dat"), ib+1));
 		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, x0z);
 		
-		spy <<	Format("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(dest));
+		spy <<	F("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(dest));
 		
-		bool isLid = lids.size() > ib && !lids[ib].dt.mesh.panels.IsEmpty();
-		if (isLid) {
-			String destLid = AFX(folderMesh, Format(t_("Body_%d_lid.dat"), ib+1));
-			Body::SaveAs(lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, x0z);
-			spy << Format("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(destLid));
-		} else if (automaticLid)
-			spy << Format("lid_mesh_%d = mesh_%d.translated_z(1e-7).generate_lid()     # See https://github.com/capytaine/capytaine/issues/589\n", ib+1, ib+1);
+		bool isLid    = irregular && dt.lids.size() > ib && !dt.lids[ib].dt.mesh.panels.IsEmpty();
+		autoIrregular = irregular && autoIrregular;
+		if (autoIrregular)
+			spy << F("lid_mesh_%d = mesh_%d.translated_z(1e-7).generate_lid()     # See https://github.com/capytaine/capytaine/issues/589\n", ib+1, ib+1);
+		else if (isLid) {
+			String destLid = AFX(folderMesh, F(t_("Body_%d_lid.dat"), ib+1));
+			Body::SaveAs(dt.lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, x0z);
+			spy << F("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(destLid));
+		} 
 		
 		spy <<	"\n";
 		
-		spy << 	Format("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s')\n\n", 
+		spy << 	F("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s_%d')\n\n", 
 					ib+1, ib+1, 
-					(isLid || automaticLid ? Format("lid_mesh=lid_mesh_%d, ", ib+1) : S("")),
+					(isLid || autoIrregular ? F("lid_mesh=lid_mesh_%d, ", ib+1) : F("")),
 					b.dt.c0.x, b.dt.c0.y, b.dt.c0.z,
 					b.dt.cg.x, b.dt.cg.y, b.dt.cg.z,
-					b.dt.name
+					b.dt.name, ib+1
 					);
 		
 		if (b.dt.M.size() == 36 && b.dt.M.cwiseAbs().maxCoeff() != 0) {
 			dorao = true;
-			spy <<  Format("body_%d.inertia_matrix = [\n", ib+1);
+			spy <<  F("body_%d.inertia_matrix = [\n", ib+1);
 			for (int r = 0; r < 6; ++r) {
 				spy << "    [";
 				for (int c = 0; c < 6; ++c) {
 					if (c > 0)
 						spy << ", ";
-					spy << Format("%f", b.dt.M(r, c));
+					spy << F("%f", b.dt.M(r, c));
 				}
 				spy << "]";
 				if (r < 6-1)
@@ -540,13 +545,13 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			}
 			spy << "]\n\n";
 		}
-		spy <<	Format("body_%d.hydrostatic_stiffness = body_%d.compute_hydrostatic_stiffness()\n", ib+1, ib+1);
+		spy <<	F("body_%d.hydrostatic_stiffness = body_%d.compute_hydrostatic_stiffness()\n", ib+1, ib+1);
 
 		spy <<	"\n";
 		
 		if (!listBodies.IsEmpty())
 			listBodies << ", ";
-		listBodies << Format("body_%d", ib+1);
+		listBodies << F("body_%d", ib+1);
 	}
 	spy << "list_of_bodies = [" << listBodies << "]\n";
 
@@ -581,16 +586,19 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			"mesh = all_bodies.mesh\n"
 			"\n";
 	
-	MatrixXd Dlin(6*dt.Nb,6 *dt.Nb);
+	MatrixXd Dlin(6*dt.Nb,6 *dt.Nb), Cmoor(6*dt.Nb,6 *dt.Nb);
 	Dlin.setZero();
+	Cmoor.setZero();
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		if (dt.msh[0].dt.Dlin.size() == 36)
 			Dlin.block(6*ib, 6*ib, 6, 6) = dt.msh[0].dt.Dlin;
+		if (dt.msh[0].dt.Cmoor.size() == 36)
+			Cmoor.block(6*ib, 6*ib, 6, 6) = dt.msh[0].dt.Cmoor;
 	}
 	
 	if (dorao) {
-		if (Dlin.size() == 36 && Dlin.cwiseAbs().maxCoeff() != 0) {
+		if (Dlin.cwiseAbs().maxCoeff() != 0) {
 			spy <<  "my_dissipation = all_bodies.add_dofs_labels_to_matrix([\n";
 			for (int r = 0; r < 6*dt.Nb; ++r) {
 				spy << "    [";
@@ -606,11 +614,29 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			}
 			spy << "])\n\n";
 		}
+		if (Cmoor.cwiseAbs().maxCoeff() != 0) {
+			spy <<  "my_stiffness = all_bodies.add_dofs_labels_to_matrix([\n";
+			for (int r = 0; r < 6*dt.Nb; ++r) {
+				spy << "    [";
+				for (int c = 0; c < 6*dt.Nb; ++c) {
+					if (c > 0)
+						spy << ", ";
+					spy << Cmoor(r, c);
+				}
+				spy << "]";
+				if (r < 6*dt.Nb-1)
+					spy << ",";
+				spy << "\n";
+			}
+			spy << "])\n\n";
+		}
 		spy <<	"ds['RAO'] = rao(ds";
 		
 		if (Dlin.cwiseAbs().maxCoeff() != 0) 
 			spy << ", dissipation = my_dissipation";
-		
+		if (Cmoor.cwiseAbs().maxCoeff() != 0) 
+			spy << ", stiffness = my_stiffness";
+					
 		spy <<	")\n";
 	}
 	
@@ -652,7 +678,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			"ds['center_of_mass'] = (['rigid_body_component', 'point_coordinates'], [body.center_of_mass for body in list_of_bodies])\n"
 			"\n"
 			"# Export to NetCDF file. This may crash if Capytaine version is lower than 2.3\n"
-			"cpt.export_dataset('" << name << ".nc', ds, format=\"netcdf\")\n";
+			"cpt.export_dataset('" << "capytaine" << ".nc', ds, format=\"netcdf\")\n";
 			//"from capytaine.io.xarray import separate_complex_values\n"
 			//"separate_complex_values(ds).to_netcdf('" << name << ".nc',\n"
 			//"                                          encoding={'radiating_dof': {'dtype': 'U'},\n"
@@ -663,7 +689,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	
 	FileOut py;
 	if (!py.Open(filePy))
-		throw Exc(Format(t_("Impossible to open file '%s'"), fileBat));
+		throw Exc(F(t_("Impossible to open file '%s'"), fileBat));
 	
 	py << spy;
 };

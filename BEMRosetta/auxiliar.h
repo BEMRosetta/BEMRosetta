@@ -174,9 +174,9 @@ public:
 		units = _units;
 		
 		labTitle.SetText(title);
-		labFrom.SetText(Format("Min [%s]", units));
-		labTo.SetText(Format("Max [%s]", units));
-		grid.GetColumn(0).Name(Format("%s [%s]", param, units));
+		labFrom.SetText(F("Min [%s]", units));
+		labTo.SetText(F("Max [%s]", units));
+		grid.GetColumn(0).Name(F("%s [%s]", param, units));
 	}
 	void Jsonize(JsonIO &json) {
 		json

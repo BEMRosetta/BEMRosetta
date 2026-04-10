@@ -122,7 +122,7 @@ bool MainBodyTable::Load() {
 			BodyBody &b = bodies.Add();
 			b.Init();
 			b.Load(idx, ib);
-			tab.Add(b.SizePos(), Format("%d. %s", ib+1, hy.dt.msh[ib].dt.name));
+			tab.Add(b.SizePos(), F("%d. %s", ib+1, hy.dt.msh[ib].dt.name));
 		}
 		return true;
 	} catch (Exc e) {

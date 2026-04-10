@@ -319,7 +319,7 @@ static String ToText(int d) {
 static String ToText(double d) {
 	//if (abs(d) < 0.000000001)
 	//	return "0.0";
-	String ret = Format("%f", d);
+	String ret = F("%f", d);
 	if (ret.Find(".") >= 0) {
 		while (*(ret.Last()) == '0')
 			ret.Remove(ret.GetCount()-1);
@@ -330,11 +330,11 @@ static String ToText(double d) {
 }
 
 static String ToText(const Pointf &d) {
-	return Format("%s,%s", ToText(d.x), ToText(d.y));
+	return F("%s,%s", ToText(d.x), ToText(d.y));
 }
 
 static String ToText(const Point3D &d) {
-	return Format("%s,%s,%s", ToText(d.x), ToText(d.y), ToText(d.z));
+	return F("%s,%s,%s", ToText(d.x), ToText(d.y), ToText(d.z));
 }
 
 bool AnalyzeStep(const UVector<double>& data, double tolerance, double &minVal, double &step, double &maxVal) {
@@ -363,7 +363,7 @@ template <class Range>
 String ToText(const Range& a) {
 	double minVal, step, maxVal;
 	if (AnalyzeStep(a, 1e-7, minVal, step, maxVal)) {
-		return Format("%s(%s)%s", ToText(minVal), ToText(step), ToText(maxVal));
+		return F("%s(%s)%s", ToText(minVal), ToText(step), ToText(maxVal));
 	} else {
 		String ret;
 		for (int i = 0; i < a.size(); i++) {
@@ -381,79 +381,79 @@ String DiffracData::SaveXML() {
 		   "<sim xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"I:\\Applications\\Diffrac\\releases\\v3.5.6\\XML\\XML_input\\DIFFRAC_input.xsd\">\n";
     
 	out << "  <parVTKDIF>\n"
-		<< Format("    <runProgram>%s</runProgram>\n", ToText(parVTKDIF.runProgram))
+		<< F("    <runProgram>%s</runProgram>\n", ToText(parVTKDIF.runProgram))
 		<< "  </parVTKDIF>\n"
 	;
 	out << "  <parINIDIF>\n"
-		<< Format("    <runProgram>%s</runProgram>\n", ToText(parINIDIF.runProgram))
-		<< Format("    <dataBaseFn>%s</dataBaseFn>\n", parINIDIF.dataBaseFn)
+		<< F("    <runProgram>%s</runProgram>\n", ToText(parINIDIF.runProgram))
+		<< F("    <dataBaseFn>%s</dataBaseFn>\n", parINIDIF.dataBaseFn)
 		<< "    <quay>\n"
-		<< Format("      <apply>%s</apply>\n", ToText(parINIDIF.quay.apply))
-		<< Format("      <yQuay>%s</yQuay>\n", ToText(parINIDIF.quay.yQuay))
+		<< F("      <apply>%s</apply>\n", ToText(parINIDIF.quay.apply))
+		<< F("      <yQuay>%s</yQuay>\n", ToText(parINIDIF.quay.yQuay))
 		<< "    </quay>\n"
 		<< "    <basinWall>\n"
-		<< Format("      <apply>%s</apply>\n", ToText(parINIDIF.basinWall.apply))
+		<< F("      <apply>%s</apply>\n", ToText(parINIDIF.basinWall.apply))
 		<< "      <origin>\n"
-		<< Format("            %s\n", ToText(parINIDIF.basinWall.origin))
+		<< F("            %s\n", ToText(parINIDIF.basinWall.origin))
 		<< "          </origin>\n"
 		<< "    </basinWall>\n"
 		<< "    <density>\n"
-		<< Format("          %s\n", ToText(parINIDIF.density))
+		<< F("          %s\n", ToText(parINIDIF.density))
 		<< "        </density>\n"
 		<< "    <springMatrix>\n"
-		<< Format("      <fromGeometry>%s</fromGeometry>\n", ToText(parINIDIF.springMatrixfromGeometry))
+		<< F("      <fromGeometry>%s</fromGeometry>\n", ToText(parINIDIF.springMatrixfromGeometry))
 		<< "      <springMatrixFn></springMatrixFn>\n"
 		<< "    </springMatrix>\n"
     ;
 	out	<< "    <dampLids>\n";
 	for (int i = 0; i < parINIDIF.lids.size(); ++i) {
 		out << "      <dampLid>\n";
-		out << Format("        <origin>%s</origin>\n", ToText(parINIDIF.lids[i].origin));
-		out << Format("        <orientation>%s</orientation>\n", ToText(parINIDIF.lids[i].orientation));
-		out << Format("        <dampingValue>%s</dampingValue>\n", ToText(parINIDIF.lids[i].dampingValue));
-		out << Format("        <length>%s</length>\n", ToText(parINIDIF.lids[i].length));
-		out << Format("        <width>%s</width>\n", ToText(parINIDIF.lids[i].width));
-		out << Format("        <NrPanelsLength>%s</NrPanelsLength>\n", ToText(parINIDIF.lids[i].NrPanelsLength));
-		out << Format("        <NrPanelsWidth>%s</NrPanelsWidth>\n", ToText(parINIDIF.lids[i].NrPanelsWidth));
-		out << Format("        <dampIncWave>%s</dampIncWave>\n", ToText(parINIDIF.lids[i].dampIncWave));
+		out << F("        <origin>%s</origin>\n", ToText(parINIDIF.lids[i].origin));
+		out << F("        <orientation>%s</orientation>\n", ToText(parINIDIF.lids[i].orientation));
+		out << F("        <dampingValue>%s</dampingValue>\n", ToText(parINIDIF.lids[i].dampingValue));
+		out << F("        <length>%s</length>\n", ToText(parINIDIF.lids[i].length));
+		out << F("        <width>%s</width>\n", ToText(parINIDIF.lids[i].width));
+		out << F("        <NrPanelsLength>%s</NrPanelsLength>\n", ToText(parINIDIF.lids[i].NrPanelsLength));
+		out << F("        <NrPanelsWidth>%s</NrPanelsWidth>\n", ToText(parINIDIF.lids[i].NrPanelsWidth));
+		out << F("        <dampIncWave>%s</dampIncWave>\n", ToText(parINIDIF.lids[i].dampIncWave));
 		out << "      </dampLid>\n";
 	}
 	out << "    </dampLids>\n";
 	out << "  </parINIDIF>\n";	
 	
 	out << "  <parDIFFRAC>\n"
-		<< Format("    <runProgram>%s</runProgram>\n", ToText(parDIFFRAC.runProgram))
-		<< Format("    <waveDir>%s</waveDir>\n", ToText(parDIFFRAC.waveDir))
-		<< Format("    <waterDepth>%s</waterDepth>\n", ToText(parDIFFRAC.waterDepth))
+		<< F("    <runProgram>%s</runProgram>\n", ToText(parDIFFRAC.runProgram))
+		<< F("    <waveDir>%s</waveDir>\n", ToText(parDIFFRAC.waveDir))
+		<< F("    <waterDepth>%s</waterDepth>\n", ToText(parDIFFRAC.waterDepth))
 		<< "    <current>\n"
 		<< "      <speed>\n"
-		<< Format("            %s\n", ToText(parDIFFRAC.current.speed))
+		<< F("            %s\n", ToText(parDIFFRAC.current.speed))
 		<< "          </speed>\n"
 		<< "      <direction>\n"
-		<< Format("            %s\n", ToText(parDIFFRAC.current.direction))
+		<< F("            %s\n", ToText(parDIFFRAC.current.direction))
 		<< "          </direction>\n"
 		<< "    </current>\n"
-		<< Format("    <irregFreqSuppression>%s</irregFreqSuppression>\n", parDIFFRAC.irregFreqSuppression)
-		<< Format("    <irregFreqDamping>%s</irregFreqDamping>\n", ToText(parDIFFRAC.irregFreqDamping))
-		<< Format("    <waveDir>%s</waveDir>\n", ToText(parDIFFRAC.waveFreq))
-		<< Format("    <exportKinematicsVTK>%s</exportKinematicsVTK>\n", ToText(parDIFFRAC.exportKinematicsVTK))
+		<< F("    <irregFreqSuppression>%s</irregFreqSuppression>\n", parDIFFRAC.irregFreqSuppression)
+		<< F("    <irregFreqDamping>%s</irregFreqDamping>\n", ToText(parDIFFRAC.irregFreqDamping))
+		<< F("    <waveDir>%s</waveDir>\n", ToText(parDIFFRAC.waveFreq))
+		<< F("    <exportKinematicsVTK>%s</exportKinematicsVTK>\n", ToText(parDIFFRAC.exportKinematicsVTK))
 		<< "  </parDIFFRAC>\n"
 	;
 
 	out << "  <parDBRESP>\n"
-		<< Format("    <runProgram>%s</runProgram>\n", ToText(parDBRESP.runProgram))
+		<< F("    <runProgram>%s</runProgram>\n", ToText(parDBRESP.runProgram))
 		<< "    <BodyInputs>\n";
 	for (int i = 0; i < parDBRESP.inputs.size(); ++i) {
 		out << "      <BodyInput>\n"
-			<< Format("        <index>%s</index>\n", ToText(parDBRESP.inputs[i].index))
+			<< F("        <index>%s</index>\n", ToText(parDBRESP.inputs[i].index))
 			<< "        <totalDampings>\n"
 		;
 		for (int j = 0; j < parDBRESP.inputs[i].total.size(); ++j) {
 			out	<< "          <totalDamping>\n"
-				<< Format("            <allowNegativeAddedDamping>%s</allowNegativeAddedDamping>\n", ToText(parDBRESP.inputs[i].total[j].allowNegativeAddedDamping))
-				<< Format("            <mode>%s</mode>\n", parDBRESP.inputs[i].total[j].mode)
-				<< Format("            <type>%s</type>\n", parDBRESP.inputs[i].total[j].type)
-				<< Format("            <value>%s</value>\n", ToText(parDBRESP.inputs[i].total[j].value))
+				<< F("            <allowNegativeAddedDamping>%s</allowNegativeAddedDamping>\n", ToText(parDBRESP.inputs[i].total[j].allowNegativeAddedDamping))
+				<< F("            <mode>%s</mode>\n", parDBRESP.inputs[i].total[j].mode)
+				<< F("            <type>%s</type>\n", parDBRESP.inputs[i].total[j].type)
+				<< F("            <value>%s</value>\n", ToText(parDBRESP.inputs[i].total[j].value))
 				<< "          </totalDamping>\n"
 			;
 		}
@@ -466,43 +466,43 @@ String DiffracData::SaveXML() {
 	;
 
 	out << "  <parDRIFTP>\n"
-		<< Format("    <runProgram>%s</runProgram>\n", ToText(parDRIFTP.runProgram))
-		<< Format("    <exportContribution1>%s</exportContribution1>\n", ToText(parDRIFTP.exportContribution[0]))
-		<< Format("    <exportContribution2>%s</exportContribution2>\n", ToText(parDRIFTP.exportContribution[1]))
-		<< Format("    <exportContribution3>%s</exportContribution3>\n", ToText(parDRIFTP.exportContribution[2]))
-		<< Format("    <exportContribution4>%s</exportContribution4>\n", ToText(parDRIFTP.exportContribution[3]))
-		<< Format("    <exportContribution5>%s</exportContribution5>\n", ToText(parDRIFTP.exportContribution[4]))
-		<< Format("    <minFrequency>%s</minFrequency>\n", ToText(parDRIFTP.minFrequency))
-		<< Format("    <maxFrequency>%s</maxFrequency>\n", ToText(parDRIFTP.maxFrequency))
-		<< Format("    <numberOfWavefrequencyDiagonals>%s</numberOfWavefrequencyDiagonals>\n", ToText(parDRIFTP.numberOfWavefrequencyDiagonals))
-		<< Format("    <waveDirInteraction>%s</waveDirInteraction>\n", ToText(parDRIFTP.waveDirInteraction))
+		<< F("    <runProgram>%s</runProgram>\n", ToText(parDRIFTP.runProgram))
+		<< F("    <exportContribution1>%s</exportContribution1>\n", ToText(parDRIFTP.exportContribution[0]))
+		<< F("    <exportContribution2>%s</exportContribution2>\n", ToText(parDRIFTP.exportContribution[1]))
+		<< F("    <exportContribution3>%s</exportContribution3>\n", ToText(parDRIFTP.exportContribution[2]))
+		<< F("    <exportContribution4>%s</exportContribution4>\n", ToText(parDRIFTP.exportContribution[3]))
+		<< F("    <exportContribution5>%s</exportContribution5>\n", ToText(parDRIFTP.exportContribution[4]))
+		<< F("    <minFrequency>%s</minFrequency>\n", ToText(parDRIFTP.minFrequency))
+		<< F("    <maxFrequency>%s</maxFrequency>\n", ToText(parDRIFTP.maxFrequency))
+		<< F("    <numberOfWavefrequencyDiagonals>%s</numberOfWavefrequencyDiagonals>\n", ToText(parDRIFTP.numberOfWavefrequencyDiagonals))
+		<< F("    <waveDirInteraction>%s</waveDirInteraction>\n", ToText(parDRIFTP.waveDirInteraction))
 		<< "  </parDRIFTP>\n"
 	;
 	
 	out << "  <parEXPORT>\n"
-		<< Format("    <runProgram>%s</runProgram>\n", ToText(parEXPORT.runProgram))
+		<< F("    <runProgram>%s</runProgram>\n", ToText(parEXPORT.runProgram))
 		<< "    <hydFile>\n"
-		<< Format("      <export>%s</export>\n", ToText(parEXPORT.hyd.exportOn))
-		<< Format("      <exportQTFContribution1>%s</exportQTFContribution1>\n", ToText(parEXPORT.hyd.exportQTF[0]))
-		<< Format("      <exportQTFContribution2>%s</exportQTFContribution2>\n", ToText(parEXPORT.hyd.exportQTF[1]))
-		<< Format("      <exportQTFContribution3>%s</exportQTFContribution3>\n", ToText(parEXPORT.hyd.exportQTF[2]))
-		<< Format("      <exportQTFContribution4>%s</exportQTFContribution4>\n", ToText(parEXPORT.hyd.exportQTF[3]))
-		<< Format("      <exportQTFContribution5>%s</exportQTFContribution5>\n", ToText(parEXPORT.hyd.exportQTF[4]))
-		<< Format("      <numberOfWavefrequencyDiagonals>%s</numberOfWavefrequencyDiagonals>\n", ToText(parEXPORT.hyd.numberOfWavefrequencyDiagonals))
+		<< F("      <export>%s</export>\n", ToText(parEXPORT.hyd.exportOn))
+		<< F("      <exportQTFContribution1>%s</exportQTFContribution1>\n", ToText(parEXPORT.hyd.exportQTF[0]))
+		<< F("      <exportQTFContribution2>%s</exportQTFContribution2>\n", ToText(parEXPORT.hyd.exportQTF[1]))
+		<< F("      <exportQTFContribution3>%s</exportQTFContribution3>\n", ToText(parEXPORT.hyd.exportQTF[2]))
+		<< F("      <exportQTFContribution4>%s</exportQTFContribution4>\n", ToText(parEXPORT.hyd.exportQTF[3]))
+		<< F("      <exportQTFContribution5>%s</exportQTFContribution5>\n", ToText(parEXPORT.hyd.exportQTF[4]))
+		<< F("      <numberOfWavefrequencyDiagonals>%s</numberOfWavefrequencyDiagonals>\n", ToText(parEXPORT.hyd.numberOfWavefrequencyDiagonals))
 		<< "    </hydFile>\n"
 	;
 	out << "    <MonitorRelativeWaveHeights>\n";
 	for (int i = 0; i < parEXPORT.relHeights.size(); ++i) {
 		out << "      <MonitorRelativeWaveHeight>\n"
-			<< Format("        <name>%s</name>\n", parEXPORT.relHeights[i].name)
-			<< Format("        <includeIncidentWave>%s</includeIncidentWave>\n", ToText(parEXPORT.relHeights[i].incIncident))
-			<< Format("        <includeDiffractedWave>%s</includeDiffractedWave>\n", ToText(parEXPORT.relHeights[i].incDiffracted))
-			<< Format("        <includeRadiatedWave>%s</includeRadiatedWave>\n", ToText(parEXPORT.relHeights[i].incRadiated))
-			<< Format("        <includeMotions>%s</includeMotions>\n", ToText(parEXPORT.relHeights[i].incMotions))
+			<< F("        <name>%s</name>\n", parEXPORT.relHeights[i].name)
+			<< F("        <includeIncidentWave>%s</includeIncidentWave>\n", ToText(parEXPORT.relHeights[i].incIncident))
+			<< F("        <includeDiffractedWave>%s</includeDiffractedWave>\n", ToText(parEXPORT.relHeights[i].incDiffracted))
+			<< F("        <includeRadiatedWave>%s</includeRadiatedWave>\n", ToText(parEXPORT.relHeights[i].incRadiated))
+			<< F("        <includeMotions>%s</includeMotions>\n", ToText(parEXPORT.relHeights[i].incMotions))
 			<< "        <relWaveHeightBodyInput>\n"
-			<< Format("          <index>%s</index>\n", ToText(parEXPORT.relHeights[i].index))
+			<< F("          <index>%s</index>\n", ToText(parEXPORT.relHeights[i].index))
 			<< "          <referencePoint2D>\n"
-			<< Format("            <coordinate>%s</coordinate>\n", ToText(parEXPORT.relHeights[i].referencePoint))
+			<< F("            <coordinate>%s</coordinate>\n", ToText(parEXPORT.relHeights[i].referencePoint))
 			<< "          </referencePoint2D>\n"
 			<< "        </relWaveHeightBodyInput>\n"
 			<< "      </MonitorRelativeWaveHeight>\n"
@@ -511,8 +511,8 @@ String DiffracData::SaveXML() {
 	out << "    </MonitorRelativeWaveHeights>\n";
 	
 	out << "    <CGNS>\n"
-		<< Format("      <export>false</export>\n", ToText(parEXPORT.cgns.exportOn))
-		<< Format("      <waveFreq>0.8</waveFreq>\n", ToText(parEXPORT.cgns.exportOn))
+		<< F("      <export>false</export>\n", ToText(parEXPORT.cgns.exportOn))
+		<< F("      <waveFreq>0.8</waveFreq>\n", ToText(parEXPORT.cgns.exportOn))
 		<< "      <MonitorFlowDatas>\n"
 	;
 	for (int i = 0; i < parEXPORT.cgns.monitorFlowData.size(); ++i) {
@@ -520,14 +520,14 @@ String DiffracData::SaveXML() {
 			<< "          <grids>\n";
 		for (int j = 0; j < parEXPORT.cgns.monitorFlowData[i].grids.size(); ++j) {
 			out	<< "            <grid>\n"
-				<< Format("              <NrOfPointsX>201</NrOfPointsX>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].Nx))
-				<< Format("              <NrOfPointsY>101</NrOfPointsY>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].Ny))
-				<< Format("              <origin>0.0,0.0,0.0</origin>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].origin))
-				<< Format("              <spacing_x>5</spacing_x>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].sx))
-				<< Format("              <spacing_y>5</spacing_y>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].sy))
-				<< Format("              <orientation>0.0</orientation>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].orientation))
-				<< Format("              <NrOfPointsZ>1</NrOfPointsZ>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].Nz))
-				<< Format("              <spacing_z>1e-6</spacing_z>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].sz))
+				<< F("              <NrOfPointsX>201</NrOfPointsX>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].Nx))
+				<< F("              <NrOfPointsY>101</NrOfPointsY>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].Ny))
+				<< F("              <origin>0.0,0.0,0.0</origin>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].origin))
+				<< F("              <spacing_x>5</spacing_x>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].sx))
+				<< F("              <spacing_y>5</spacing_y>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].sy))
+				<< F("              <orientation>0.0</orientation>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].orientation))
+				<< F("              <NrOfPointsZ>1</NrOfPointsZ>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].Nz))
+				<< F("              <spacing_z>1e-6</spacing_z>\n", ToText(parEXPORT.cgns.monitorFlowData[i].grids[j].sz))
 				<< "            </grid>\n"
 			;
 		}
@@ -535,11 +535,11 @@ String DiffracData::SaveXML() {
 			<< "        </MonitorFlowData>\n";
 	}
 	out	<< "      </MonitorFlowDatas>\n"
-		<< Format("      <movingBodies>%s</movingBodies>\n", ToText(parEXPORT.cgns.movingBodies))
-		<< Format("      <movingFreeSurface>%s</movingFreeSurface>\n", ToText(parEXPORT.cgns.movingFreeSurface))
-		<< Format("      <numberOfTimeSteps>%s</numberOfTimeSteps>\n", ToText(parEXPORT.cgns.numberOfTimeSteps))
-		<< Format("      <waveAmplificationFactor>%s</waveAmplificationFactor>\n", ToText(parEXPORT.cgns.waveAmplificationFactor))
-		<< Format("      <waveDir>%s</waveDir>\n", ToText(parEXPORT.cgns.waveDir))
+		<< F("      <movingBodies>%s</movingBodies>\n", ToText(parEXPORT.cgns.movingBodies))
+		<< F("      <movingFreeSurface>%s</movingFreeSurface>\n", ToText(parEXPORT.cgns.movingFreeSurface))
+		<< F("      <numberOfTimeSteps>%s</numberOfTimeSteps>\n", ToText(parEXPORT.cgns.numberOfTimeSteps))
+		<< F("      <waveAmplificationFactor>%s</waveAmplificationFactor>\n", ToText(parEXPORT.cgns.waveAmplificationFactor))
+		<< F("      <waveDir>%s</waveDir>\n", ToText(parEXPORT.cgns.waveDir))
 		<< "    </CGNS>\n"
     ;	
 	out << "  </parEXPORT>\n";
@@ -548,27 +548,27 @@ String DiffracData::SaveXML() {
 	for(int i = 0; i < bodies.size(); ++i) {
 		out << "    <body>\n"
 			<< "      <hstat>\n"
-			<< Format("        <lengthBetweenPerp>%s</lengthBetweenPerp>\n", ToText(bodies[i].hstat.lengthBetweenPerp))
-			<< Format("        <draft>%s</draft>\n", ToText(bodies[i].hstat.draft))
+			<< F("        <lengthBetweenPerp>%s</lengthBetweenPerp>\n", ToText(bodies[i].hstat.lengthBetweenPerp))
+			<< F("        <draft>%s</draft>\n", ToText(bodies[i].hstat.draft))
 			<< "      </hstat>\n"
-			<< Format("      <index>%s</index>\n", ToText(bodies[i].index))
+			<< F("      <index>%s</index>\n", ToText(bodies[i].index))
 			<< "      <mesh>\n"
-			<< Format("        <meshFn>%s</meshFn>\n", bodies[i].meshFn)
+			<< F("        <meshFn>%s</meshFn>\n", bodies[i].meshFn)
 			<< "      </mesh>\n"
-			<< Format("      <name>%s</name>\n", bodies[i].name)
+			<< F("      <name>%s</name>\n", bodies[i].name)
 			<< "      <position>\n"
-			<< Format("        <translation>%s</translation>\n", ToText(bodies[i].translation))
-			<< Format("        <rotation>0</rotation>\n", ToText(bodies[i].rotation))
+			<< F("        <translation>%s</translation>\n", ToText(bodies[i].translation))
+			<< F("        <rotation>0</rotation>\n", ToText(bodies[i].rotation))
 			<< "      </position>\n"
 			<< "      <massElements>\n"
 		;
 		for (int j = 0; j < bodies[i].massElements.size(); ++j) {
 			out << "        <massElement>\n"
-				<< Format("          <COGwrtKeel>%s</COGwrtKeel>\n", ToText(bodies[i].massElements[j].COGwrtKeel))
-				<< Format("          <mass>%s</mass>\n", ToText(bodies[i].massElements[j].mass))
-				<< Format("          <rollRadiusGyr>%s</rollRadiusGyr>\n", ToText(bodies[i].massElements[j].rollRadiusGyr))
-				<< Format("          <pitchRadiusGyr>%s</pitchRadiusGyr>\n", ToText(bodies[i].massElements[j].pitchRadiusGyr))
-				<< Format("          <yawRadiusGyr>%s</yawRadiusGyr>\n", ToText(bodies[i].massElements[j].yawRadiusGyr))
+				<< F("          <COGwrtKeel>%s</COGwrtKeel>\n", ToText(bodies[i].massElements[j].COGwrtKeel))
+				<< F("          <mass>%s</mass>\n", ToText(bodies[i].massElements[j].mass))
+				<< F("          <rollRadiusGyr>%s</rollRadiusGyr>\n", ToText(bodies[i].massElements[j].rollRadiusGyr))
+				<< F("          <pitchRadiusGyr>%s</pitchRadiusGyr>\n", ToText(bodies[i].massElements[j].pitchRadiusGyr))
+				<< F("          <yawRadiusGyr>%s</yawRadiusGyr>\n", ToText(bodies[i].massElements[j].yawRadiusGyr))
 				<< "        </massElement>\n"
 				<< "      </massElements>\n"
 			;
@@ -577,8 +577,8 @@ String DiffracData::SaveXML() {
 	}
     out	<< "  </bodies>\n";	
 	
-	out << Format("  <projectNumber>98800</projectNumber>\n", ToText(projectNumber))
-		<< Format("  <nProcs>4</nProcs>\n", ToText(nProcs)) 
+	out << F("  <projectNumber>98800</projectNumber>\n", ToText(projectNumber))
+		<< F("  <nProcs>4</nProcs>\n", ToText(nProcs)) 
 		<< "</sim>"
 	;
 	return out;

@@ -497,7 +497,7 @@ bool HealBEM::Heal(bool zremoval, bool thinremoval, bool decayingTail, bool &don
 							double r2;
 							real.Fit(fit, r2);				// Fitting
 							if (!IsNull(r2)) {				// Fitting OK
-								title += Format("R2:%.3f", r2);
+								title += F("R2:%.3f", r2);
 								break;
 							}
 							

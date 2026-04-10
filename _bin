@@ -1,4 +1,5 @@
 # BEMRosetta python functions list
+import os
 import ctypes
 import numpy as np
 
@@ -6,297 +7,735 @@ class BEMRosetta:
     def __init__(self, path_dll):
         self.libc = ctypes.CDLL(path_dll)
 
-        self.libc.DLL_Init.argtypes = []
-        self.libc.DLL_Init.restype = None
+        self.libc.BMR_Init.argtypes = []
+        self.libc.BMR_Init.restype = None
 
-        self.libc.DLL_Version.argtypes = []
-        self.libc.DLL_Version.restype = ctypes.c_char_p
+        self.libc.BMR_Version.argtypes = []
+        self.libc.BMR_Version.restype = ctypes.c_char_p
 
-        self.libc.DLL_NoPrint.argtypes = []
-        self.libc.DLL_NoPrint.restype = None
+        self.libc.BMR_NoPrint.argtypes = []
+        self.libc.BMR_NoPrint.restype = None
 
-        self.libc.DLL_GetLastError.argtypes = []
-        self.libc.DLL_GetLastError.restype = ctypes.c_char_p
+        self.libc.BMR_GetLastError.argtypes = []
+        self.libc.BMR_GetLastError.restype = ctypes.c_char_p
 
-        self.libc.DLL_Echo.argtypes = [ctypes.c_char_p]
-        self.libc.DLL_Echo.restype = None
+        self.libc.BMR_Echo.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_Echo.restype = None
 
-        self.libc.DLL_Mesh_Input.argtypes = [ctypes.c_char_p]
-        self.libc.DLL_Mesh_Input.restype = None
+        self.libc.BMR_Mesh_Clear.argtypes = []
+        self.libc.BMR_Mesh_Clear.restype = None
 
-        self.libc.DLL_Mesh_Report.argtypes = []
-        self.libc.DLL_Mesh_Report.restype = None
+        self.libc.BMR_Mesh_Load.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_Mesh_Load.restype = None
 
-        self.libc.DLL_Mesh_Clear.argtypes = []
-        self.libc.DLL_Mesh_Clear.restype = None
+        self.libc.BMR_Mesh_Report.argtypes = []
+        self.libc.BMR_Mesh_Report.restype = None
 
-        self.libc.DLL_Mesh_SetId.argtypes = [ctypes.c_int]
-        self.libc.DLL_Mesh_SetId.restype = None
+        self.libc.BMR_Mesh_Id_Set.argtypes = [ctypes.c_int]
+        self.libc.BMR_Mesh_Id_Set.restype = None
 
-        self.libc.DLL_Mesh_Convert.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
-        self.libc.DLL_Mesh_Convert.restype = None
+        self.libc.BMR_Mesh_Id_Get.argtypes = []
+        self.libc.BMR_Mesh_Id_Get.restype = ctypes.c_int
 
-        self.libc.DLL_Mesh_Translate.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        self.libc.DLL_Mesh_Translate.restype = None
+        self.libc.BMR_Mesh_Save.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
+        self.libc.BMR_Mesh_Save.restype = None
 
-        self.libc.DLL_Mesh_Rotate.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        self.libc.DLL_Mesh_Rotate.restype = None
+        self.libc.BMR_Mesh_Translate.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Mesh_Translate.restype = None
 
-        self.libc.DLL_Mesh_Cg.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        self.libc.DLL_Mesh_Cg.restype = None
+        self.libc.BMR_Mesh_Rotate.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Mesh_Rotate.restype = None
 
-        self.libc.DLL_Mesh_C0.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        self.libc.DLL_Mesh_C0.restype = None
+        self.libc.BMR_Mesh_Cg_Set.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Mesh_Cg_Set.restype = None
 
-        self.libc.DLL_Mesh_Mass.argtypes = [ctypes.c_double]
-        self.libc.DLL_Mesh_Mass.restype = None
+        self.libc.BMR_Mesh_C0_Set.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Mesh_C0_Set.restype = None
 
-        self.libc.DLL_Mesh_Reset.argtypes = []
-        self.libc.DLL_Mesh_Reset.restype = None
+        self.libc.BMR_Mesh_Mass_Set.argtypes = [ctypes.c_double]
+        self.libc.BMR_Mesh_Mass_Set.restype = None
 
-        self.libc.DLL_Mesh_GetWaterPlane.argtypes = []
-        self.libc.DLL_Mesh_GetWaterPlane.restype = None
+        self.libc.BMR_Mesh_Inertia_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Mesh_Inertia_Set.restype = None
 
-        self.libc.DLL_Mesh_GetHull.argtypes = []
-        self.libc.DLL_Mesh_GetHull.restype = None
+        self.libc.BMR_Mesh_LinearDamping_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Mesh_LinearDamping_Set.restype = None
 
-        self.libc.DLL_Mesh_FillWaterplane.argtypes = [ctypes.c_double]
-        self.libc.DLL_Mesh_FillWaterplane.restype = None
+        self.libc.BMR_Mesh_MooringStiffness_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Mesh_MooringStiffness_Set.restype = None
 
-        self.libc.DLL_Mesh_GetVolume.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-        self.libc.DLL_Mesh_GetVolume.restype = None
+        self.libc.BMR_Mesh_Reset.argtypes = []
+        self.libc.BMR_Mesh_Reset.restype = None
 
-        self.libc.DLL_Mesh_GetUnderwaterVolume.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-        self.libc.DLL_Mesh_GetUnderwaterVolume.restype = None
+        self.libc.BMR_Mesh_Duplicate.argtypes = []
+        self.libc.BMR_Mesh_Duplicate.restype = ctypes.c_int
 
-        self.libc.DLL_Mesh_GetSurface.argtypes = []
-        self.libc.DLL_Mesh_GetSurface.restype = ctypes.c_double
+        self.libc.BMR_Mesh_GetWaterPlane.argtypes = []
+        self.libc.BMR_Mesh_GetWaterPlane.restype = ctypes.c_int
 
-        self.libc.DLL_Mesh_GetUnderwaterSurface.argtypes = []
-        self.libc.DLL_Mesh_GetUnderwaterSurface.restype = ctypes.c_double
+        self.libc.BMR_Mesh_GetHull.argtypes = []
+        self.libc.BMR_Mesh_GetHull.restype = ctypes.c_int
 
-        self.libc.DLL_Mesh_GetCentreOfGravity.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-        self.libc.DLL_Mesh_GetCentreOfGravity.restype = None
+        self.libc.BMR_Mesh_FillWaterplane.argtypes = [ctypes.c_double, ctypes.c_int]
+        self.libc.BMR_Mesh_FillWaterplane.restype = ctypes.c_int
 
-        self.libc.DLL_Mesh_GetCentreOfGravity_Volume.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-        self.libc.DLL_Mesh_GetCentreOfGravity_Volume.restype = None
+        self.libc.BMR_Mesh_GetControlSurface.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int]
+        self.libc.BMR_Mesh_GetControlSurface.restype = ctypes.c_int
 
-        self.libc.DLL_Mesh_GetCentreOfGravity_Surface.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
-        self.libc.DLL_Mesh_GetCentreOfGravity_Surface.restype = None
+        self.libc.BMR_Mesh_Volume_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Mesh_Volume_Get.restype = None
 
-        self.libc.DLL_Mesh_GetHydrostaticStiffness.argtypes = [ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
-        self.libc.DLL_Mesh_GetHydrostaticStiffness.restype = None
+        self.libc.BMR_Mesh_UnderwaterVolume_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Mesh_UnderwaterVolume_Get.restype = None
 
-        self.libc.DLL_FAST_Load.argtypes = [ctypes.c_char_p]
-        self.libc.DLL_FAST_Load.restype = ctypes.c_int
+        self.libc.BMR_Mesh_Surface_Get.argtypes = []
+        self.libc.BMR_Mesh_Surface_Get.restype = ctypes.c_double
 
-        self.libc.DLL_FAST_GetParameterName.argtypes = [ctypes.c_int]
-        self.libc.DLL_FAST_GetParameterName.restype = ctypes.c_char_p
+        self.libc.BMR_Mesh_UnderwaterSurface_Get.argtypes = []
+        self.libc.BMR_Mesh_UnderwaterSurface_Get.restype = ctypes.c_double
 
-        self.libc.DLL_FAST_GetUnitName.argtypes = [ctypes.c_int]
-        self.libc.DLL_FAST_GetUnitName.restype = ctypes.c_char_p
+        self.libc.BMR_Mesh_Centre_Volume_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Mesh_Centre_Volume_Get.restype = None
 
-        self.libc.DLL_FAST_GetParameterId.argtypes = [ctypes.c_char_p]
-        self.libc.DLL_FAST_GetParameterId.restype = ctypes.c_int
+        self.libc.BMR_Mesh_Centre_Surface_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Mesh_Centre_Surface_Get.restype = None
 
-        self.libc.DLL_FAST_GetParameterCount.argtypes = []
-        self.libc.DLL_FAST_GetParameterCount.restype = ctypes.c_int
+        self.libc.BMR_Mesh_HydrostaticStiffness_Get.argtypes = [ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Mesh_HydrostaticStiffness_Get.restype = None
 
-        self.libc.DLL_FAST_GetLen.argtypes = []
-        self.libc.DLL_FAST_GetLen.restype = ctypes.c_int
+        self.libc.BMR_Mesh_NumPanels_Get.argtypes = [ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Mesh_NumPanels_Get.restype = None
 
-        self.libc.DLL_FAST_GetTimeStart.argtypes = []
-        self.libc.DLL_FAST_GetTimeStart.restype = ctypes.c_double
+        self.libc.BMR_Mesh_VolumeEnvelope_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Mesh_VolumeEnvelope_Get.restype = None
 
-        self.libc.DLL_FAST_GetTimeEnd.argtypes = []
-        self.libc.DLL_FAST_GetTimeEnd.restype = ctypes.c_double
+        self.libc.BMR_Bem_Clear.argtypes = []
+        self.libc.BMR_Bem_Clear.restype = None
 
-        self.libc.DLL_FAST_GetTime.argtypes = [ctypes.c_int]
-        self.libc.DLL_FAST_GetTime.restype = ctypes.c_double
+        self.libc.BMR_Bem_New.argtypes = []
+        self.libc.BMR_Bem_New.restype = ctypes.c_int
 
-        self.libc.DLL_FAST_GetData.argtypes = [ctypes.c_int, ctypes.c_int]
-        self.libc.DLL_FAST_GetData.restype = ctypes.c_double
+        self.libc.BMR_Bem_Id_Set.argtypes = [ctypes.c_int]
+        self.libc.BMR_Bem_Id_Set.restype = None
 
-        self.libc.DLL_FAST_GetAvg.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
-        self.libc.DLL_FAST_GetAvg.restype = ctypes.c_double
+        self.libc.BMR_Bem_Id_Get.argtypes = []
+        self.libc.BMR_Bem_Id_Get.restype = ctypes.c_int
 
-        self.libc.DLL_FAST_GetMax.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
-        self.libc.DLL_FAST_GetMax.restype = ctypes.c_double
+        self.libc.BMR_Bem_Support.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Bem_Support.restype = None
 
-        self.libc.DLL_FAST_GetMin.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
-        self.libc.DLL_FAST_GetMin.restype = ctypes.c_double
+        self.libc.BMR_Bem_depth_Set.argtypes = [ctypes.c_double]
+        self.libc.BMR_Bem_depth_Set.restype = None
 
-        self.libc.DLL_FAST_GetArray.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
-        self.libc.DLL_FAST_GetArray.restype = ctypes.c_int
+        self.libc.BMR_Bem_g_Set.argtypes = [ctypes.c_double]
+        self.libc.BMR_Bem_g_Set.restype = None
 
-        self.libc.DLL_FAST_LoadFile.argtypes = [ctypes.c_char_p]
-        self.libc.DLL_FAST_LoadFile.restype = ctypes.c_int
+        self.libc.BMR_Bem_rho_Set.argtypes = [ctypes.c_double]
+        self.libc.BMR_Bem_rho_Set.restype = None
 
-        self.libc.DLL_FAST_SaveFile.argtypes = [ctypes.c_char_p]
-        self.libc.DLL_FAST_SaveFile.restype = ctypes.c_int
+        self.libc.BMR_Bem_w_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int]
+        self.libc.BMR_Bem_w_Set.restype = None
 
-        self.libc.DLL_FAST_SetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
-        self.libc.DLL_FAST_SetVar.restype = ctypes.c_int
+        self.libc.BMR_Bem_headings_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.c_int]
+        self.libc.BMR_Bem_headings_Set.restype = None
 
-        self.libc.DLL_FAST_GetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-        self.libc.DLL_FAST_GetVar.restype = ctypes.c_char_p
+        self.libc.BMR_Bem_Duplicate.argtypes = []
+        self.libc.BMR_Bem_Duplicate.restype = ctypes.c_int
+
+        self.libc.BMR_Bem_SaveCase.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool, ctypes.c_char_p, ctypes.c_bool, ctypes.c_bool, ctypes.c_int, ctypes.c_int, ctypes.c_bool, ctypes.c_bool]
+        self.libc.BMR_Bem_SaveCase.restype = None
+
+        self.libc.BMR_Bem_Body_Id_Set.argtypes = [ctypes.c_int]
+        self.libc.BMR_Bem_Body_Id_Set.restype = None
+
+        self.libc.BMR_Bem_Body_Id_Get.argtypes = []
+        self.libc.BMR_Bem_Body_Id_Get.restype = ctypes.c_int
+
+        self.libc.BMR_Bem_Body_LoadMesh.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_Bem_Body_LoadMesh.restype = None
+
+        self.libc.BMR_Bem_Body_LoadLid.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_Bem_Body_LoadLid.restype = None
+
+        self.libc.BMR_Bem_Body_LoadControlSurface.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_Bem_Body_LoadControlSurface.restype = None
+
+        self.libc.BMR_Bem_Body_LoadMeshFromMesh.argtypes = [ctypes.c_int]
+        self.libc.BMR_Bem_Body_LoadMeshFromMesh.restype = None
+
+        self.libc.BMR_Bem_Body_LoadLidFromMesh.argtypes = [ctypes.c_int]
+        self.libc.BMR_Bem_Body_LoadLidFromMesh.restype = None
+
+        self.libc.BMR_Bem_Body_LoadControlSurfaceFromMesh.argtypes = [ctypes.c_int]
+        self.libc.BMR_Bem_Body_LoadControlSurfaceFromMesh.restype = None
+
+        self.libc.BMR_Bem_Body_C0_Set.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Bem_Body_C0_Set.restype = None
+
+        self.libc.BMR_Bem_Body_Cg_Set.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Bem_Body_Cg_Set.restype = None
+
+        self.libc.BMR_Bem_Body_Inertia_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_Bem_Body_Inertia_Set.restype = None
+
+        self.libc.BMR_Bem_Body_Name_Set.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_Bem_Body_Name_Set.restype = None
+
+        self.libc.BMR_FAST_Load.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_FAST_Load.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_GetParameterName.argtypes = [ctypes.c_int]
+        self.libc.BMR_FAST_GetParameterName.restype = ctypes.c_char_p
+
+        self.libc.BMR_FAST_GetUnitName.argtypes = [ctypes.c_int]
+        self.libc.BMR_FAST_GetUnitName.restype = ctypes.c_char_p
+
+        self.libc.BMR_FAST_GetParameterId.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_FAST_GetParameterId.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_GetParameterCount.argtypes = []
+        self.libc.BMR_FAST_GetParameterCount.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_GetLen.argtypes = []
+        self.libc.BMR_FAST_GetLen.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_GetTimeStart.argtypes = []
+        self.libc.BMR_FAST_GetTimeStart.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetTimeEnd.argtypes = []
+        self.libc.BMR_FAST_GetTimeEnd.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetTime.argtypes = [ctypes.c_int]
+        self.libc.BMR_FAST_GetTime.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetData.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.libc.BMR_FAST_GetData.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetAvg.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc.BMR_FAST_GetAvg.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetMax.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc.BMR_FAST_GetMax.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetMin.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int]
+        self.libc.BMR_FAST_GetMin.restype = ctypes.c_double
+
+        self.libc.BMR_FAST_GetArray.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.POINTER(ctypes.c_double)), ctypes.POINTER(ctypes.c_int)]
+        self.libc.BMR_FAST_GetArray.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_LoadFile.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_FAST_LoadFile.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_SaveFile.argtypes = [ctypes.c_char_p]
+        self.libc.BMR_FAST_SaveFile.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_SetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+        self.libc.BMR_FAST_SetVar.restype = ctypes.c_int
+
+        self.libc.BMR_FAST_GetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
+        self.libc.BMR_FAST_GetVar.restype = ctypes.c_char_p
 
         self.Mesh = _Mesh(self.libc, self._raise_if_error)
+        self.Bem = _Bem(self.libc, self._raise_if_error)
         self.FAST = _FAST(self.libc, self._raise_if_error)
-
         self.Init()
 
-
     def Init(self):
-        self.libc.DLL_Init()
+        self.libc.BMR_Init()
         self._raise_if_error()
 
     def Version(self):
-        _ret = self.libc.DLL_Version()
+        _ret = self.libc.BMR_Version()
         self._raise_if_error()
         return _ret.decode('UTF-8', errors="replace")
 
     def NoPrint(self):
-        self.libc.DLL_NoPrint()
+        self.libc.BMR_NoPrint()
         self._raise_if_error()
 
     def GetLastError(self):
-        _ret = self.libc.DLL_GetLastError()
+        _ret = self.libc.BMR_GetLastError()
         self._raise_if_error()
         return _ret.decode('UTF-8', errors="replace")
 
     def Echo(self, str):
-        self.libc.DLL_Echo(str.encode('UTF-8'))
+        self.libc.BMR_Echo(os.fspath(str).encode('utf-8'))
         self._raise_if_error()
 
     def _raise_if_error(self):
-        err_ptr = self.libc.DLL_GetLastError()
+        err_ptr = self.libc.BMR_GetLastError()
         if err_ptr:
             msg = err_ptr.decode('UTF-8', errors="replace")
             raise RuntimeError(msg)
-
 
 class _Mesh:
     def __init__(self, lib, raise_if_error):
         self.libc = lib
         self._raise_if_error = raise_if_error
 
-    def Input(self, file):
-        self.libc.DLL_Mesh_Input(file.encode('UTF-8'))
+        self.Id = _MeshId(self.libc, self._raise_if_error)
+        self.Cg = _MeshCg(self.libc, self._raise_if_error)
+        self.C0 = _MeshC0(self.libc, self._raise_if_error)
+        self.Mass = _MeshMass(self.libc, self._raise_if_error)
+        self.Inertia = _MeshInertia(self.libc, self._raise_if_error)
+        self.LinearDamping = _MeshLinearDamping(self.libc, self._raise_if_error)
+        self.MooringStiffness = _MeshMooringStiffness(self.libc, self._raise_if_error)
+        self.Volume = _MeshVolume(self.libc, self._raise_if_error)
+        self.UnderwaterVolume = _MeshUnderwaterVolume(self.libc, self._raise_if_error)
+        self.Surface = _MeshSurface(self.libc, self._raise_if_error)
+        self.UnderwaterSurface = _MeshUnderwaterSurface(self.libc, self._raise_if_error)
+        self.Centre = _MeshCentre(self.libc, self._raise_if_error)
+        self.HydrostaticStiffness = _MeshHydrostaticStiffness(self.libc, self._raise_if_error)
+        self.NumPanels = _MeshNumPanels(self.libc, self._raise_if_error)
+        self.VolumeEnvelope = _MeshVolumeEnvelope(self.libc, self._raise_if_error)
+    def Clear(self):
+        self.libc.BMR_Mesh_Clear()
+        self._raise_if_error()
+
+    def Load(self, file):
+        self.libc.BMR_Mesh_Load(os.fspath(file).encode('utf-8'))
         self._raise_if_error()
 
     def Report(self):
-        self.libc.DLL_Mesh_Report()
+        self.libc.BMR_Mesh_Report()
         self._raise_if_error()
 
-    def Clear(self):
-        self.libc.DLL_Mesh_Clear()
-        self._raise_if_error()
-
-    def SetId(self, id):
-        self.libc.DLL_Mesh_SetId(id)
-        self._raise_if_error()
-
-    def Convert(self, file, format, symX, symY):
-        self.libc.DLL_Mesh_Convert(file.encode('UTF-8'), format.encode('UTF-8'), symX, symY)
+    def Save(self, file, format, symX, symY):
+        self.libc.BMR_Mesh_Save(os.fspath(file).encode('utf-8'), os.fspath(format).encode('utf-8'), symX, symY)
         self._raise_if_error()
 
     def Translate(self, x, y, z):
-        self.libc.DLL_Mesh_Translate(x, y, z)
+        self.libc.BMR_Mesh_Translate(x, y, z)
         self._raise_if_error()
 
     def Rotate(self, ax, ay, az, cx, cy, cz):
-        self.libc.DLL_Mesh_Rotate(ax, ay, az, cx, cy, cz)
-        self._raise_if_error()
-
-    def Cg(self, x, y, z):
-        self.libc.DLL_Mesh_Cg(x, y, z)
-        self._raise_if_error()
-
-    def C0(self, x, y, z):
-        self.libc.DLL_Mesh_C0(x, y, z)
-        self._raise_if_error()
-
-    def Mass(self, mass):
-        self.libc.DLL_Mesh_Mass(mass)
+        self.libc.BMR_Mesh_Rotate(ax, ay, az, cx, cy, cz)
         self._raise_if_error()
 
     def Reset(self):
-        self.libc.DLL_Mesh_Reset()
+        self.libc.BMR_Mesh_Reset()
         self._raise_if_error()
+
+    def Duplicate(self):
+        _ret = self.libc.BMR_Mesh_Duplicate()
+        self._raise_if_error()
+        return _ret
 
     def GetWaterPlane(self):
-        self.libc.DLL_Mesh_GetWaterPlane()
+        _ret = self.libc.BMR_Mesh_GetWaterPlane()
         self._raise_if_error()
+        return _ret
 
     def GetHull(self):
-        self.libc.DLL_Mesh_GetHull()
-        self._raise_if_error()
-
-    def FillWaterplane(self, ratio):
-        self.libc.DLL_Mesh_FillWaterplane(ratio)
-        self._raise_if_error()
-
-    def GetVolume(self):
-        volx = ctypes.c_double()
-        voly = ctypes.c_double()
-        volz = ctypes.c_double()
-        self.libc.DLL_Mesh_GetVolume(ctypes.byref(volx), ctypes.byref(voly), ctypes.byref(volz))
-        self._raise_if_error()
-        return volx.value, voly.value, volz.value
-
-    def GetUnderwaterVolume(self):
-        volx = ctypes.c_double()
-        voly = ctypes.c_double()
-        volz = ctypes.c_double()
-        self.libc.DLL_Mesh_GetUnderwaterVolume(ctypes.byref(volx), ctypes.byref(voly), ctypes.byref(volz))
-        self._raise_if_error()
-        return volx.value, voly.value, volz.value
-
-    def GetSurface(self):
-        _ret = self.libc.DLL_Mesh_GetSurface()
+        _ret = self.libc.BMR_Mesh_GetHull()
         self._raise_if_error()
         return _ret
 
-    def GetUnderwaterSurface(self):
-        _ret = self.libc.DLL_Mesh_GetUnderwaterSurface()
+    def FillWaterplane(self, ratio, quads):
+        _ret = self.libc.BMR_Mesh_FillWaterplane(ratio, quads)
         self._raise_if_error()
         return _ret
 
-    def GetCentreOfGravity(self):
+    def GetControlSurface(self, distance, ratio, quads):
+        _ret = self.libc.BMR_Mesh_GetControlSurface(distance, ratio, quads)
+        self._raise_if_error()
+        return _ret
+
+class _MeshId:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, id):
+        self.libc.BMR_Mesh_Id_Set(id)
+        self._raise_if_error()
+
+    def Get(self):
+        _ret = self.libc.BMR_Mesh_Id_Get()
+        self._raise_if_error()
+        return _ret
+
+class _MeshCg:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, x, y, z):
+        self.libc.BMR_Mesh_Cg_Set(x, y, z)
+        self._raise_if_error()
+
+class _MeshC0:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, x, y, z):
+        self.libc.BMR_Mesh_C0_Set(x, y, z)
+        self._raise_if_error()
+
+class _MeshMass:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, mass):
+        self.libc.BMR_Mesh_Mass_Set(mass)
+        self._raise_if_error()
+
+class _MeshInertia:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, data):
+        data = np.asarray(data, dtype=np.float64)
+        if data.ndim != 2:
+            raise ValueError('Function expects a 2D array')
+        data = np.ascontiguousarray(data)
+        self.libc.BMR_Mesh_Inertia_Set(data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), (ctypes.c_int * 2)(*data.shape))
+        self._raise_if_error()
+
+class _MeshLinearDamping:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, data):
+        data = np.asarray(data, dtype=np.float64)
+        if data.ndim != 2:
+            raise ValueError('Function expects a 2D array')
+        data = np.ascontiguousarray(data)
+        self.libc.BMR_Mesh_LinearDamping_Set(data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), (ctypes.c_int * 2)(*data.shape))
+        self._raise_if_error()
+
+class _MeshMooringStiffness:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, data):
+        data = np.asarray(data, dtype=np.float64)
+        if data.ndim != 2:
+            raise ValueError('Function expects a 2D array')
+        data = np.ascontiguousarray(data)
+        self.libc.BMR_Mesh_MooringStiffness_Set(data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), (ctypes.c_int * 2)(*data.shape))
+        self._raise_if_error()
+
+class _MeshVolume:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
+        volx = ctypes.c_double()
+        voly = ctypes.c_double()
+        volz = ctypes.c_double()
+        self.libc.BMR_Mesh_Volume_Get(ctypes.byref(volx), ctypes.byref(voly), ctypes.byref(volz))
+        self._raise_if_error()
+        return volx.value, voly.value, volz.value
+
+class _MeshUnderwaterVolume:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
+        volx = ctypes.c_double()
+        voly = ctypes.c_double()
+        volz = ctypes.c_double()
+        self.libc.BMR_Mesh_UnderwaterVolume_Get(ctypes.byref(volx), ctypes.byref(voly), ctypes.byref(volz))
+        self._raise_if_error()
+        return volx.value, voly.value, volz.value
+
+class _MeshSurface:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
+        _ret = self.libc.BMR_Mesh_Surface_Get()
+        self._raise_if_error()
+        return _ret
+
+class _MeshUnderwaterSurface:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
+        _ret = self.libc.BMR_Mesh_UnderwaterSurface_Get()
+        self._raise_if_error()
+        return _ret
+
+class _MeshCentre:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+        self.Volume = _MeshCentreVolume(self.libc, self._raise_if_error)
+        self.Surface = _MeshCentreSurface(self.libc, self._raise_if_error)
+class _MeshCentreVolume:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
-        self.libc.DLL_Mesh_GetCentreOfGravity(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self.libc.BMR_Mesh_Centre_Volume_Get(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
         self._raise_if_error()
         return x.value, y.value, z.value
 
-    def GetCentreOfGravity_Volume(self):
+class _MeshCentreSurface:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
         x = ctypes.c_double()
         y = ctypes.c_double()
         z = ctypes.c_double()
-        self.libc.DLL_Mesh_GetCentreOfGravity_Volume(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self.libc.BMR_Mesh_Centre_Surface_Get(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
         self._raise_if_error()
         return x.value, y.value, z.value
 
-    def GetCentreOfGravity_Surface(self):
-        x = ctypes.c_double()
-        y = ctypes.c_double()
-        z = ctypes.c_double()
-        self.libc.DLL_Mesh_GetCentreOfGravity_Surface(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
-        self._raise_if_error()
-        return x.value, y.value, z.value
+class _MeshHydrostaticStiffness:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
 
-    def GetHydrostaticStiffness(self):
+    def Get(self):
         _data0 = ctypes.POINTER(ctypes.c_double)()
         _size0 = (ctypes.c_int * 2)()
-        self.libc.DLL_Mesh_GetHydrostaticStiffness(ctypes.byref(_data0), _size0)
+        self.libc.BMR_Mesh_HydrostaticStiffness_Get(ctypes.byref(_data0), _size0)
         self._raise_if_error()
         if _size0[0]*_size0[1] == 0:
             return np.empty((_size0[0], _size0[1]), dtype=np.float64)
         data = np.ctypeslib.as_array(_data0, shape=(_size0[0], _size0[1]))
         return data
 
+class _MeshNumPanels:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
+        num = ctypes.c_int()
+        self.libc.BMR_Mesh_NumPanels_Get(ctypes.byref(num))
+        self._raise_if_error()
+        return num.value
+
+class _MeshVolumeEnvelope:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Get(self):
+        minx = ctypes.c_double()
+        maxx = ctypes.c_double()
+        miny = ctypes.c_double()
+        maxy = ctypes.c_double()
+        minz = ctypes.c_double()
+        maxz = ctypes.c_double()
+        self.libc.BMR_Mesh_VolumeEnvelope_Get(ctypes.byref(minx), ctypes.byref(maxx), ctypes.byref(miny), ctypes.byref(maxy), ctypes.byref(minz), ctypes.byref(maxz))
+        self._raise_if_error()
+        return minx.value, maxx.value, miny.value, maxy.value, minz.value, maxz.value
+
+class _Bem:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+        self.Id = _BemId(self.libc, self._raise_if_error)
+        self.depth = _Bemdepth(self.libc, self._raise_if_error)
+        self.g = _Bemg(self.libc, self._raise_if_error)
+        self.rho = _Bemrho(self.libc, self._raise_if_error)
+        self.w = _Bemw(self.libc, self._raise_if_error)
+        self.headings = _Bemheadings(self.libc, self._raise_if_error)
+        self.Body = _BemBody(self.libc, self._raise_if_error)
+    def Clear(self):
+        self.libc.BMR_Bem_Clear()
+        self._raise_if_error()
+
+    def New(self):
+        _ret = self.libc.BMR_Bem_New()
+        self._raise_if_error()
+        return _ret
+
+    def Support(self, solver):
+        irregular = ctypes.c_int()
+        autoIrregular = ctypes.c_int()
+        middle7 = ctypes.c_int()
+        far8 = ctypes.c_int()
+        near9 = ctypes.c_int()
+        autoCS = ctypes.c_int()
+        multibody = ctypes.c_int()
+        self.libc.BMR_Bem_Support(os.fspath(solver).encode('utf-8'), ctypes.byref(irregular), ctypes.byref(autoIrregular), ctypes.byref(middle7), ctypes.byref(far8), ctypes.byref(near9), ctypes.byref(autoCS), ctypes.byref(multibody))
+        self._raise_if_error()
+        return irregular.value, autoIrregular.value, middle7.value, far8.value, near9.value, autoCS.value, multibody.value
+
+    def Duplicate(self):
+        _ret = self.libc.BMR_Bem_Duplicate()
+        self._raise_if_error()
+        return _ret
+
+    def SaveCase(self, folder, solver, x0z, y0z, irregular, autoIrregular, qtfType, autoQTF, bin, numCases, numThreads, withPotentials, withMesh):
+        self.libc.BMR_Bem_SaveCase(os.fspath(folder).encode('utf-8'), os.fspath(solver).encode('utf-8'), x0z, y0z, irregular, autoIrregular, os.fspath(qtfType).encode('utf-8'), autoQTF, bin, numCases, numThreads, withPotentials, withMesh)
+        self._raise_if_error()
+
+class _BemId:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, id):
+        self.libc.BMR_Bem_Id_Set(id)
+        self._raise_if_error()
+
+    def Get(self):
+        _ret = self.libc.BMR_Bem_Id_Get()
+        self._raise_if_error()
+        return _ret
+
+class _Bemdepth:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, h):
+        self.libc.BMR_Bem_depth_Set(h)
+        self._raise_if_error()
+
+class _Bemg:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, g):
+        self.libc.BMR_Bem_g_Set(g)
+        self._raise_if_error()
+
+class _Bemrho:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, rho):
+        self.libc.BMR_Bem_rho_Set(rho)
+        self._raise_if_error()
+
+class _Bemw:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, w):
+        w = np.asarray(w, dtype=np.float64)
+        if w.ndim != 1:
+            raise ValueError('Function expects a 1D array')
+        self.libc.BMR_Bem_w_Set(w.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), w.size)
+        self._raise_if_error()
+
+class _Bemheadings:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, head):
+        head = np.asarray(head, dtype=np.float64)
+        if head.ndim != 1:
+            raise ValueError('Function expects a 1D array')
+        self.libc.BMR_Bem_headings_Set(head.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), head.size)
+        self._raise_if_error()
+
+class _BemBody:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+        self.Id = _BemBodyId(self.libc, self._raise_if_error)
+        self.C0 = _BemBodyC0(self.libc, self._raise_if_error)
+        self.Cg = _BemBodyCg(self.libc, self._raise_if_error)
+        self.Inertia = _BemBodyInertia(self.libc, self._raise_if_error)
+        self.Name = _BemBodyName(self.libc, self._raise_if_error)
+    def LoadMesh(self, file):
+        self.libc.BMR_Bem_Body_LoadMesh(os.fspath(file).encode('utf-8'))
+        self._raise_if_error()
+
+    def LoadLid(self, file):
+        self.libc.BMR_Bem_Body_LoadLid(os.fspath(file).encode('utf-8'))
+        self._raise_if_error()
+
+    def LoadControlSurface(self, file):
+        self.libc.BMR_Bem_Body_LoadControlSurface(os.fspath(file).encode('utf-8'))
+        self._raise_if_error()
+
+    def LoadMeshFromMesh(self, id):
+        self.libc.BMR_Bem_Body_LoadMeshFromMesh(id)
+        self._raise_if_error()
+
+    def LoadLidFromMesh(self, id):
+        self.libc.BMR_Bem_Body_LoadLidFromMesh(id)
+        self._raise_if_error()
+
+    def LoadControlSurfaceFromMesh(self, id):
+        self.libc.BMR_Bem_Body_LoadControlSurfaceFromMesh(id)
+        self._raise_if_error()
+
+class _BemBodyId:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, id):
+        self.libc.BMR_Bem_Body_Id_Set(id)
+        self._raise_if_error()
+
+    def Get(self):
+        _ret = self.libc.BMR_Bem_Body_Id_Get()
+        self._raise_if_error()
+        return _ret
+
+class _BemBodyC0:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, x, y, z):
+        self.libc.BMR_Bem_Body_C0_Set(x, y, z)
+        self._raise_if_error()
+
+class _BemBodyCg:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, x, y, z):
+        self.libc.BMR_Bem_Body_Cg_Set(x, y, z)
+        self._raise_if_error()
+
+class _BemBodyInertia:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, data):
+        data = np.asarray(data, dtype=np.float64)
+        if data.ndim != 2:
+            raise ValueError('Function expects a 2D array')
+        data = np.ascontiguousarray(data)
+        self.libc.BMR_Bem_Body_Inertia_Set(data.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), (ctypes.c_int * 2)(*data.shape))
+        self._raise_if_error()
+
+class _BemBodyName:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, name):
+        self.libc.BMR_Bem_Body_Name_Set(os.fspath(name).encode('utf-8'))
+        self._raise_if_error()
 
 class _FAST:
     def __init__(self, lib, raise_if_error):
@@ -304,74 +743,74 @@ class _FAST:
         self._raise_if_error = raise_if_error
 
     def Load(self, filename):
-        _ret = self.libc.DLL_FAST_Load(filename.encode('UTF-8'))
+        _ret = self.libc.BMR_FAST_Load(os.fspath(filename).encode('utf-8'))
         self._raise_if_error()
         return _ret
 
     def GetParameterName(self, id):
-        _ret = self.libc.DLL_FAST_GetParameterName(id)
+        _ret = self.libc.BMR_FAST_GetParameterName(id)
         self._raise_if_error()
         return _ret.decode('UTF-8', errors="replace")
 
     def GetUnitName(self, id):
-        _ret = self.libc.DLL_FAST_GetUnitName(id)
+        _ret = self.libc.BMR_FAST_GetUnitName(id)
         self._raise_if_error()
         return _ret.decode('UTF-8', errors="replace")
 
     def GetParameterId(self, name):
-        _ret = self.libc.DLL_FAST_GetParameterId(name.encode('UTF-8'))
+        _ret = self.libc.BMR_FAST_GetParameterId(os.fspath(name).encode('utf-8'))
         self._raise_if_error()
         return _ret
 
     def GetParameterCount(self):
-        _ret = self.libc.DLL_FAST_GetParameterCount()
+        _ret = self.libc.BMR_FAST_GetParameterCount()
         self._raise_if_error()
         return _ret
 
     def GetLen(self):
-        _ret = self.libc.DLL_FAST_GetLen()
+        _ret = self.libc.BMR_FAST_GetLen()
         self._raise_if_error()
         return _ret
 
     def GetTimeStart(self):
-        _ret = self.libc.DLL_FAST_GetTimeStart()
+        _ret = self.libc.BMR_FAST_GetTimeStart()
         self._raise_if_error()
         return _ret
 
     def GetTimeEnd(self):
-        _ret = self.libc.DLL_FAST_GetTimeEnd()
+        _ret = self.libc.BMR_FAST_GetTimeEnd()
         self._raise_if_error()
         return _ret
 
     def GetTime(self, idtime):
-        _ret = self.libc.DLL_FAST_GetTime(idtime)
+        _ret = self.libc.BMR_FAST_GetTime(idtime)
         self._raise_if_error()
         return _ret
 
     def GetData(self, idtime, idparam):
-        _ret = self.libc.DLL_FAST_GetData(idtime, idparam)
+        _ret = self.libc.BMR_FAST_GetData(idtime, idparam)
         self._raise_if_error()
         return _ret
 
     def GetAvg(self, idparam, idbegin, idend):
-        _ret = self.libc.DLL_FAST_GetAvg(idparam, idbegin, idend)
+        _ret = self.libc.BMR_FAST_GetAvg(idparam, idbegin, idend)
         self._raise_if_error()
         return _ret
 
     def GetMax(self, idparam, idbegin, idend):
-        _ret = self.libc.DLL_FAST_GetMax(idparam, idbegin, idend)
+        _ret = self.libc.BMR_FAST_GetMax(idparam, idbegin, idend)
         self._raise_if_error()
         return _ret
 
     def GetMin(self, idparam, idbegin, idend):
-        _ret = self.libc.DLL_FAST_GetMin(idparam, idbegin, idend)
+        _ret = self.libc.BMR_FAST_GetMin(idparam, idbegin, idend)
         self._raise_if_error()
         return _ret
 
     def GetArray(self, idparam, idbegin, idend):
         _data0 = ctypes.POINTER(ctypes.c_double)()
         _size0 = (ctypes.c_int * 1)()
-        _ret = self.libc.DLL_FAST_GetArray(idparam, idbegin, idend, ctypes.byref(_data0), _size0)
+        _ret = self.libc.BMR_FAST_GetArray(idparam, idbegin, idend, ctypes.byref(_data0), _size0)
         self._raise_if_error()
         if _size0[0] == 0:
             return np.empty((_size0[0],), dtype=np.float64)
@@ -379,21 +818,21 @@ class _FAST:
         return data
 
     def LoadFile(self, file):
-        _ret = self.libc.DLL_FAST_LoadFile(file.encode('UTF-8'))
+        _ret = self.libc.BMR_FAST_LoadFile(os.fspath(file).encode('utf-8'))
         self._raise_if_error()
         return _ret
 
     def SaveFile(self, file):
-        _ret = self.libc.DLL_FAST_SaveFile(file.encode('UTF-8'))
+        _ret = self.libc.BMR_FAST_SaveFile(os.fspath(file).encode('utf-8'))
         self._raise_if_error()
         return _ret
 
     def SetVar(self, name, paragraph, value):
-        _ret = self.libc.DLL_FAST_SetVar(name.encode('UTF-8'), paragraph.encode('UTF-8'), value.encode('UTF-8'))
+        _ret = self.libc.BMR_FAST_SetVar(os.fspath(name).encode('utf-8'), os.fspath(paragraph).encode('utf-8'), os.fspath(value).encode('utf-8'))
         self._raise_if_error()
         return _ret
 
     def GetVar(self, name, paragraph):
-        _ret = self.libc.DLL_FAST_GetVar(name.encode('UTF-8'), paragraph.encode('UTF-8'))
+        _ret = self.libc.BMR_FAST_GetVar(os.fspath(name).encode('utf-8'), os.fspath(paragraph).encode('utf-8'))
         self._raise_if_error()
         return _ret.decode('UTF-8', errors="replace")

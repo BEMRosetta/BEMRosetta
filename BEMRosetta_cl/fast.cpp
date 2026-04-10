@@ -49,15 +49,15 @@ String Fast::Load(String file, Function <bool(String, int)> Status) {
 		dt.msh[0].dt.Dlin = fast.hydrodyn.GetMatrix("AddBLin", 6, 6);
 		
 		if (dt.Nb > 1)
-			return Format(t_("FAST does not support more than one body in file '%s'"), file);	
+			return F(t_("FAST does not support more than one body in file '%s'"), file);	
 		if (dt.head.IsEmpty())
 			return t_("No wave headings found in Wamit file");
 	
 		String ssFile = ForceExtSafer(hydroFile, ".ss");
 		if (FileExists(ssFile)) {
-			BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
+			BEM::Print("\n\n" + F(t_("Loading '%s'"), file));
 			if (!Load_SS(ssFile)) 
-				return Format(t_("File '%s' not found"), file);	
+				return F(t_("File '%s' not found"), file);	
 		}
 	} catch (Exc e) {
 		BEM::PrintError("\nError: " + e);
@@ -107,7 +107,7 @@ bool Fast::Load_HydroDyn(String fileName) {
 		}
 	}
 	if (IsNull(dt.rho) && IsNull(dt.name))
-		throw Exc(Format(t_("Wrong format in FAST file '%s'"), fileName));
+		throw Exc(F(t_("Wrong format in FAST file '%s'"), fileName));
 	
 	return true;
 }
@@ -119,7 +119,7 @@ void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 	if (IsLoadedA() && IsLoadedB()) 
 		Save_HydroDyn(file, true);
 	else
-		BEM::Print("\n- " + S(t_("No coefficients available. Hydrodyn is not saved")));
+		BEM::Print("\n- " + F(t_("No coefficients available. Hydrodyn is not saved")));
 		
 	String hydroFile = AFX(GetFileFolder(file), hydroFolder, dt.name);
 	DirectoryCreateX(AFX(GetFileFolder(file), hydroFolder));
@@ -128,7 +128,7 @@ void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading
 	
 	if (IsLoadedStateSpace()) {
 		String fileSts = ForceExtSafer(hydroFile, ".ss");
-		BEM::Print("\n- " + Format(t_("State Space file '%s'"), GetFileName(fileSts)));
+		BEM::Print("\n- " + F(t_("State Space file '%s'"), GetFileName(fileSts)));
 		Save_SS(fileSts);
 	}
 }
@@ -170,82 +170,82 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 		in.Close();
 		
 		if (IsNull(lVo))
-			throw Exc(Format(t_("Volume (PtfmVol0) not found in FAST file '%s'"), fileName));
+			throw Exc(F(t_("Volume (PtfmVol0) not found in FAST file '%s'"), fileName));
 		if (IsNull(lrho))
-			throw Exc(Format(t_("Density (WtrDens) not found in FAST file '%s'"), fileName));
+			throw Exc(F(t_("Density (WtrDens) not found in FAST file '%s'"), fileName));
 		if (IsNull(lh))
-			throw Exc(Format(t_("Water depth (WtrDpth) not found in FAST file '%s'"), fileName));
+			throw Exc(F(t_("Water depth (WtrDpth) not found in FAST file '%s'"), fileName));
 		if (IsNull(llen))
-			throw Exc(Format(t_("Length scale (WAMITULEN) not found in FAST file '%s'"), fileName));
+			throw Exc(F(t_("Length scale (WAMITULEN) not found in FAST file '%s'"), fileName));
 		if (IsNull(lWaveNDir))
-			throw Exc(Format(t_("Number of wave directions (WaveNDir) not found in FAST file '%s'"), fileName));
+			throw Exc(F(t_("Number of wave directions (WaveNDir) not found in FAST file '%s'"), fileName));
 		if (IsNull(lWaveDirRange))
-			throw Exc(Format(t_("Range of wave directions (WaveDirRange) not found in FAST file '%s'"), fileName));
+			throw Exc(F(t_("Range of wave directions (WaveDirRange) not found in FAST file '%s'"), fileName));
 		
 		strFile = LoadFile(fileName);
 		int poslf, pos;
 			
 		if (!force) {
 			if (lVo != dt.msh[0].dt.Vo)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("volume"), dt.msh[0].dt.Vo, lVo, dt.file));
+				throw Exc(F(t_("Different %s (%f != %f) in FAST file '%s'"), t_("volume"), dt.msh[0].dt.Vo, lVo, dt.file));
 			if (lrho != dt.rho)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("density"), dt.rho, lrho, dt.file));
+				throw Exc(F(t_("Different %s (%f != %f) in FAST file '%s'"), t_("density"), dt.rho, lrho, dt.file));
 			if (lh != dt.h)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("water depth"), dt.h, lh, dt.file));
+				throw Exc(F(t_("Different %s (%f != %f) in FAST file '%s'"), t_("water depth"), dt.h, lh, dt.file));
 			if (llen != dt.len)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("length scale"), dt.len, llen, dt.file));
+				throw Exc(F(t_("Different %s (%f != %f) in FAST file '%s'"), t_("length scale"), dt.len, llen, dt.file));
 			if (!IsNull(WaveNDir) && lWaveNDir != WaveNDir)
-				throw Exc(Format(t_("Different %s (%d != %d) in FAST file '%s'"), t_("number of wave headings"), WaveNDir, lWaveNDir, dt.file));
+				throw Exc(F(t_("Different %s (%d != %d) in FAST file '%s'"), t_("number of wave headings"), WaveNDir, lWaveNDir, dt.file));
 			if (!IsNull(WaveDirRange) && lWaveDirRange != WaveDirRange)
-				throw Exc(Format(t_("Different %s (%f != %f) in FAST file '%s'"), t_("headings range"), WaveDirRange, lWaveDirRange, dt.file));
+				throw Exc(F(t_("Different %s (%f != %f) in FAST file '%s'"), t_("headings range"), WaveDirRange, lWaveDirRange, dt.file));
 		} else {		
 			pos   = strFile.Find("WtrDens");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WtrDens"));
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", dt.rho) + strFile.Mid(pos);
+				throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WtrDens"));
+			strFile = strFile.Left(poslf+1) + F("%14>f   ", dt.rho) + strFile.Mid(pos);
 			pos   = strFile.Find("WtrDpth");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WtrDpth"));
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", dt.h) + strFile.Mid(pos);
+				throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WtrDpth"));
+			strFile = strFile.Left(poslf+1) + F("%14>f   ", dt.h) + strFile.Mid(pos);
 			pos   = strFile.Find("WAMITULEN");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WAMITULEN"));
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", dt.len) + strFile.Mid(pos);
+				throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WAMITULEN"));
+			strFile = strFile.Left(poslf+1) + F("%14>f   ", dt.len) + strFile.Mid(pos);
 			pos   = strFile.Find("PtfmVol0");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "PtfmVol0"));
+				throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "PtfmVol0"));
 			double hdVo0 = 0;
 			//if (dt.Vo.size() > 0) 				
 				hdVo0 = dt.msh[0].dt.Vo;
-			strFile = strFile.Left(poslf+1) + Format("%14>f   ", hdVo0) + strFile.Mid(pos);
+			strFile = strFile.Left(poslf+1) + F("%14>f   ", hdVo0) + strFile.Mid(pos);
 			pos   = strFile.Find("WaveNDir");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WaveNDir"));
+				throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WaveNDir"));
 			if (IsNull(WaveNDir))
-				strFile = strFile.Left(poslf+1) + Format("%14>d   ", dt.Nh) + strFile.Mid(pos);
+				strFile = strFile.Left(poslf+1) + F("%14>d   ", dt.Nh) + strFile.Mid(pos);
 			else
-				strFile = strFile.Left(poslf+1) + Format("%14>d   ", WaveNDir) + strFile.Mid(pos);
+				strFile = strFile.Left(poslf+1) + F("%14>d   ", WaveNDir) + strFile.Mid(pos);
 			pos   = strFile.Find("WaveDirRange");
 			poslf = strFile.ReverseFind("\n", pos);
 			if (pos < 0 || poslf < 0)
-				throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WaveDirRange"));
+				throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "WaveDirRange"));
 			if (IsNull(WaveDirRange))
-				strFile = strFile.Left(poslf+1) + Format("%14>f   ", (dt.head[dt.Nh-1] - dt.head[0])/2) + strFile.Mid(pos);
+				strFile = strFile.Left(poslf+1) + F("%14>f   ", (dt.head[dt.Nh-1] - dt.head[0])/2) + strFile.Mid(pos);
 			else
-				strFile = strFile.Left(poslf+1) + Format("%14>f   ", WaveDirRange) + strFile.Mid(pos);
+				strFile = strFile.Left(poslf+1) + F("%14>f   ", WaveDirRange) + strFile.Mid(pos);
 		}
 		pos   = strFile.Find("PotFile");
 		poslf = strFile.ReverseFind("\n", pos);
 		if (pos < 0 || poslf < 0)
-			throw Exc(Format(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "PotFile"));
+			throw Exc(F(t_("Bad format parsing FAST file '%s' for %s"), dt.file, "PotFile"));
 		
 		String folder = AFX(hydroFolder, dt.name);
-		strFile = strFile.Left(poslf+1) + Format("\"%s\" ", folder) + strFile.Mid(pos);
+		strFile = strFile.Left(poslf+1) + F("\"%s\" ", folder) + strFile.Mid(pos);
 	} else {
 		strFile = ZstdDecompress(hydroDyn, hydroDyn_length);
 		
@@ -279,23 +279,23 @@ void Fast::Save_HydroDyn(String fileName, bool force) {
 			strFile.Replace("[WaveDirRange]", FDS((dt.head[dt.Nh-1] - dt.head[0])/2, 10));
 		else
 			strFile.Replace("[WaveDirRange]", FDS(WaveDirRange, 10));
-		strFile.Replace("[PotFile]", Format("\"%s\"", AFX(hydroFolder, dt.name)));
+		strFile.Replace("[PotFile]", F("\"%s\"", AFX(hydroFolder, dt.name)));
 	}
 	if (!SaveFile(fileName, strFile))
-		throw Exc(Format(t_("Imposible to save file '%s'"), dt.file));
+		throw Exc(F(t_("Imposible to save file '%s'"), dt.file));
 }
 
 // Just can save the first body			
 void Fast::Save_SS(String fileName) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));
+		throw Exc(F(t_("Impossible to open '%s'"), fileName));
 	
 	if (dt.Nb > 1)
-		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
+		BEM::PrintWarning(F("\n") + t_(".ss format only allows to save one body. Only first body is saved"));	
 
 	if (!dt.stsProcessor.IsEmpty())
-		out << Format("BEMRosetta state space matrices obtained with %s", dt.stsProcessor) << "\n";
+		out << F("BEMRosetta state space matrices obtained with %s", dt.stsProcessor) << "\n";
 	else	
 		out << "BEMRosetta state space matrices" << "\n";
 	Eigen::Index nstates = 0;
@@ -314,9 +314,9 @@ void Fast::Save_SS(String fileName) {
 		nstatesdof << num;
 	}
 	out << "  %Enabled DoFs\n";
-	out << Format("%20<d", int(nstates)) << "%Radiation states\n";
+	out << F("%20<d", int(nstates)) << "%Radiation states\n";
 	for (int i = 0; i < nstatesdof.size(); ++i)
-		out << Format("%3<d", int(nstatesdof[i]));
+		out << F("%3<d", int(nstatesdof[i]));
 	out << "  %Radiation states per DOFs\n";	
 
 	Eigen::MatrixXd A, B, C;
@@ -340,17 +340,17 @@ void Fast::Save_SS(String fileName) {
 	}
 	for (int r = 0; r < A.rows(); ++r) {
 		for (int c = 0; c < A.cols(); ++c) 
-			out << Format("%e ", A(r, c));
+			out << F("%e ", A(r, c));
 		out << "\n";
 	}
 	for (int r = 0; r < B.rows(); ++r) {
 		for (int c = 0; c < B.cols(); ++c) 
-			out << Format("%e ", B(r, c));
+			out << F("%e ", B(r, c));
 		out << "\n";
 	}
 	for (int r = 0; r < C.rows(); ++r) {
 		for (int c = 0; c < C.cols(); ++c) 
-			out << Format("%e ", -C(r, c));
+			out << F("%e ", -C(r, c));
 		out << "\n";
 	}
 }
@@ -416,7 +416,7 @@ bool Fast::Load_SS(String fileName) {
 		return false;
 
 	if (dt.Nb > 1)
-		BEM::PrintWarning(S("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
+		BEM::PrintWarning(F("\n") + t_(".ss format only allows to save one body. Only first body is retrieved"));
 	
 	String line; 
 	LineParser f(in);
@@ -441,7 +441,7 @@ bool Fast::Load_SS(String fileName) {
 		numtot += num;
 	}
 	if (numtot != nstates)
-		throw Exc(Format(t_("Sum of states %d does no match total radiation states %d"), numtot, nstates));
+		throw Exc(F(t_("Sum of states %d does no match total radiation states %d"), numtot, nstates));
 	
 	Eigen::MatrixXd A, B, C;
 	A.setConstant(nstates, nstates, Null);
@@ -470,7 +470,7 @@ bool Fast::Load_SS(String fileName) {
 	int pos0 = 0;
 	for (int idf = 0; idf < dofdof.size(); ++idf) {
 		if (!FillDOF(C, idf, pos0, int(nstatesdof[idf]), dofdof[idf], ndofdof[idf]))
-			throw Exc(Format(t_("Unknown structure in C matrix (%d, %d, %d)"), idf, pos0, int(nstatesdof[idf])));
+			throw Exc(F(t_("Unknown structure in C matrix (%d, %d, %d)"), idf, pos0, int(nstatesdof[idf])));
 		dofdof[idf].Insert(0, idf);
 		pos0 += int(nstatesdof[idf]);
 	}
@@ -525,16 +525,16 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			for (int i = 0; i < smembers.size(); ++i) {
 				int id0 = ScanInt(smembers[i][1]);
 				if (id0 < 1 || id0 > joints.size())
-					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][1]));
+					throw Exc(F(t_("Wrong NMembers id %s"), smembers[i][1]));
 				int id1 = ScanInt(smembers[i][2]);
 				if (id1 < 1 || id1 > joints.size())
-					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][2]));
+					throw Exc(F(t_("Wrong NMembers id %s"), smembers[i][2]));
 				int idp0 = ScanInt(smembers[i][3]);
 				if (idp0 < 1 || idp0 > props.size())
-					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][3]));
+					throw Exc(F(t_("Wrong NMembers id %s"), smembers[i][3]));
 				int idp1 = ScanInt(smembers[i][4]);
 				if (idp1 < 1 || idp1 > props.size())
-					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][4]));
+					throw Exc(F(t_("Wrong NMembers id %s"), smembers[i][4]));
 				
 				b.dt.mesh.AddLine({joints[id0-1], joints[id1-1]}, {props[idp0-1], props[idp1-1]});
 			}
@@ -560,23 +560,23 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 			for (int i = 0; i < smembers.size(); ++i) {
 				int id0 = ScanInt(smembers[i][1]);
 				if (id0 < 1 || id0 > joints.size())
-					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][1]));
+					throw Exc(F(t_("Wrong NMembers id %s"), smembers[i][1]));
 				int id1 = ScanInt(smembers[i][2]);
 				if (id1 < 1 || id1 > joints.size())
-					throw Exc(Format(t_("Wrong NMembers id %s"), smembers[i][2]));
+					throw Exc(F(t_("Wrong NMembers id %s"), smembers[i][2]));
 				
 				b.dt.mesh.AddLine({joints[id0-1], joints[id1-1]});	
 			}
 			
 			for (int i = 0; i < smasses.size(); ++i) {
 				if (smasses[i].size() < 11)
-					throw Exc(Format(t_("Incomplete data in NCmass line %d"), i+1));
+					throw Exc(F(t_("Incomplete data in NCmass line %d"), i+1));
 				Body::ControlData::ControlLoad &load = b.cdt.controlLoads.Add();
 				load.loaded = true;
 				load.mass = ScanDouble(smasses[i][1]);
 				int id = ScanInt(smasses[i][0]);
 				if (id < 1 || id > joints.size())
-					throw Exc(Format(t_("Wrong NCmass id %s"), smasses[i][1]));
+					throw Exc(F(t_("Wrong NCmass id %s"), smasses[i][1]));
 				
 				Value3D delta(ScanDouble(smasses[i][8]), ScanDouble(smasses[i][9]), ScanDouble(smasses[i][10]));
 				if (delta != Value3D::Zero())
@@ -589,7 +589,7 @@ String FASTBody::Load_Fst(UArray<Body> &mesh, String fileName) {
 		}
 	}
 	if (warn)
-		BEM::PrintWarning(S("\n") + t_("Joints with concentrated masses have to be in nodes. Found MCGX, MCGY, MCGZ different than zero (see https://github.com/OpenFAST/openfast/issues/1710)"));
+		BEM::PrintWarning(F("\n") + t_("Joints with concentrated masses have to be in nodes. Found MCGX, MCGY, MCGZ different than zero (see https://github.com/OpenFAST/openfast/issues/1710)"));
 	
 	return String();
 }

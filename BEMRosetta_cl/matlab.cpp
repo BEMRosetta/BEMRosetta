@@ -16,7 +16,7 @@ String Matlab::Load(String file, double) {
 	try {
 		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
 
-		BEM::Print("\n- " + S(t_("Mat file")));
+		BEM::Print("\n- " + F(t_("Mat file")));
 		
 		Load_Mat();
 		
@@ -72,15 +72,15 @@ void Matlab::Load_Mat() {
 		if (id.IsLoaded()) {
 			MultiDimMatrix<double> A = MatFile::ReadMultiDim<double>(id);
 			if (A.GetAxisDim(2) != dt.Nf)
-				throw Exc(Format(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
+				throw Exc(F(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
 			int dim = A.GetAxisDim(0);
 			if (dim != A.GetAxisDim(1))
-				throw Exc(Format(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
+				throw Exc(F(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
 			if (dim%6)
-				throw Exc(Format(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
+				throw Exc(F(t_("%s dimension is not correct (Nf) (6*nBodies, 6*nBodies, nFrequencies)"), name));
 			int Nb = dim/6;
 			if (!IsNull(dt.Nb) && dt.Nb != Nb)
-				throw Exc(Format(t_("Body number mismatch in %s"), name));
+				throw Exc(F(t_("Body number mismatch in %s"), name));
 			dt.Nb = Nb;
 			Initialize_AB(a, 0);
 			for (int r = 0; r < 6*dt.Nb; ++r) 
@@ -193,29 +193,29 @@ void Matlab::Load_Mat() {
 	auto LoadF = [&](Forces &f, const char *name, const UVector<String> &sB) {
 		MatVar id = mfile.GetVar(sB, true);	
 		if (id.IsLoaded()) {
-			MultiDimMatrix<std::complex<double>> F = MatFile::ReadMultiDim<std::complex<double>>(id);
-			if (F.GetNumAxis() != 4)
-				throw Exc(Format(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
-			if (F.GetAxisDim(0) != 6)
-				throw Exc(Format(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
-			if (!IsNull(dt.Nh) &&  dt.Nh != F.GetAxisDim(1)) 
-				throw Exc(Format(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
+			MultiDimMatrix<std::complex<double>> FF = MatFile::ReadMultiDim<std::complex<double>>(id);
+			if (FF.GetNumAxis() != 4)
+				throw Exc(F(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
+			if (FF.GetAxisDim(0) != 6)
+				throw Exc(F(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
+			if (!IsNull(dt.Nh) &&  dt.Nh != FF.GetAxisDim(1)) 
+				throw Exc(F(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
 			else
-				dt.Nh = F.GetAxisDim(1);
-			if (!IsNull(dt.Nf) &&  dt.Nf != F.GetAxisDim(2)) 
-				throw Exc(Format(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
+				dt.Nh = FF.GetAxisDim(1);
+			if (!IsNull(dt.Nf) &&  dt.Nf != FF.GetAxisDim(2)) 
+				throw Exc(F(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
 			else
-				dt.Nf = F.GetAxisDim(2);
-			if (!IsNull(dt.Nb) &&  dt.Nb != F.GetAxisDim(3)) 
-				throw Exc(Format(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
+				dt.Nf = FF.GetAxisDim(2);
+			if (!IsNull(dt.Nb) &&  dt.Nb != FF.GetAxisDim(3)) 
+				throw Exc(F(t_("%s dimension is not correct (6, nHeadings, nFrequencies, nBodies)"), name));
 			else
-				dt.Nb = F.GetAxisDim(3);
+				dt.Nb = FF.GetAxisDim(3);
 			Initialize_Forces(f);
 			for (int idf = 0; idf < 6; ++idf) 
 				for (int ih = 0; ih < dt.Nh; ++ih) 
 					for (int ib = 0; ib < dt.Nb; ++ib) 		
 						for (int ifr = 0; ifr < dt.Nf; ++ifr) 
-							f[ib][ih](ifr, idf) = F(idf, ih, ifr, ib);			
+							f[ib][ih](ifr, idf) = FF(idf, ih, ifr, ib);			
 		}
 	};
 	LoadF(dt.ex, "Fex", {"excitationforce", "fex"});

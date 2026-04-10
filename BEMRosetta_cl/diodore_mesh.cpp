@@ -7,7 +7,7 @@
 String DiodoreBody::LoadDat(UArray<Body> &_mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	String line;
 	LineParser f(in);	
@@ -88,14 +88,14 @@ String DiodoreBody::LoadDat(UArray<Body> &_mesh, String fileName) {
 void DiodoreBody::SaveDat(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(t_(Format("Impossible to open '%s'", fileName)));	
+		throw Exc(t_(F("Impossible to open '%s'", fileName)));	
 	
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;
 	
 	for (int i = 0; i < nodes.size(); ++i) {
 		const Point3D &node = nodes[i];
-		out << Format("  %8d    % 014.7E   %014.7E   % 014.7E\n", i+1, node.x, node.y, node.z);
+		out << F("  %8d    % 014.7E   %014.7E   % 014.7E\n", i+1, node.x, node.y, node.z);
 	}
 	out << "*RETURN\n";
 	
@@ -103,18 +103,18 @@ void DiodoreBody::SaveDat(String fileName, const Surface &surf) {
 	for (const Panel &panel : panels) {		// First Quads
 		if (panel.IsTriangle())
 			continue;
-		out << Format("  %8d", panelId++);
+		out << F("  %8d", panelId++);
 		for (int i = 0; i < 4; ++i)
-			out << Format("   %8d", panel.id[i]+1);
+			out << F("   %8d", panel.id[i]+1);
 		out << "\n";
 	}
 	out << "*RETURN\n";
 	for (const Panel &panel : panels) {		// Second triangles
 		if (!panel.IsTriangle())
 			continue;
-		out << Format("  %8d", panelId++);
+		out << F("  %8d", panelId++);
 		for (int i = 0; i < 3; ++i)
-			out << Format("   %8d", panel.id[i]+1);
+			out << F("   %8d", panel.id[i]+1);
 		out << "\n";
 	}
 	out << "*RETURN";	

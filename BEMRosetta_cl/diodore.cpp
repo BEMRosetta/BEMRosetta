@@ -13,9 +13,9 @@ String Diodore::Load(String file, double) {
 	dt.Nb = Null;
 	
 	try {
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + F(t_("Loading '%s'"), file));
 
-		BEM::Print("\n- " + S(t_("HDB file")));
+		BEM::Print("\n- " + F(t_("HDB file")));
 		
 		Load_HDB();
 		
@@ -26,7 +26,7 @@ String Diodore::Load(String file, double) {
 		for (int i = 0; i < dt.Nb; ++i)
 			dt.dof[i] = 6;*/
 	} catch (Exc e) {
-		//BEM::PrintError(Format("\n%s: %s", t_("Error"), e));
+		//BEM::PrintError(F("\n%s: %s", t_("Error"), e));
 		//dt.lastError = e;
 		return e;
 	}
@@ -65,10 +65,10 @@ void Diodore::Load_HDB() {
 					ismod = false;
 					idh = ScanInt(str.Mid(3));
 				} else
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong text in %s"), f.GetText()));
+					throw Exc(in.Str() + "\n"  + F(t_("Wrong text in %s"), f.GetText()));
 					
 				if (IsNull(idh) || idh < 1 || idh > dt.Nh)
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong force id in %s"), f.GetText()));
+					throw Exc(in.Str() + "\n"  + F(t_("Wrong force id in %s"), f.GetText()));
 		
 				idh--;
 				
@@ -137,7 +137,7 @@ void Diodore::Load_HDB() {
 		} else if ((id = f.GetText().FindAfter("[STRUCTURE_")) > 0) {
 			ib = ScanInt(f.GetText().Mid(id));
 			if (ib < 1 || ib > dt.Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body %d (%s)"), ib, f.GetText()));
+				throw Exc(in.Str() + "\n"  + F(t_("Wrong body %d (%s)"), ib, f.GetText()));
 			ib--;
 			dt.msh[ib].dt.name = f.GetText(1);
 		} else if (f.GetText(0) == "[UNDERWATER_VOLUME]") 
@@ -190,7 +190,7 @@ void Diodore::Load_HDB() {
 					int idh = ScanInt(str);
 	
 					if (IsNull(idh) || idh < 1 || idh > dt.Nh)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong force id in %s"), f.GetText()));
+						throw Exc(in.Str() + "\n"  + F(t_("Wrong force id in %s"), f.GetText()));
 			
 					idh--;
 				
@@ -209,7 +209,7 @@ void Diodore::Load_HDB() {
 					int idrow = ScanInt(str);
 			
 					if (IsNull(idrow) || idrow < 1 || idrow > 6)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong row id in %s"), f.GetText()));
+						throw Exc(in.Str() + "\n"  + F(t_("Wrong row id in %s"), f.GetText()));
 			
 					idrow--;
 			
@@ -223,7 +223,7 @@ void Diodore::Load_HDB() {
 					int idrow = ScanInt(str);
 			
 					if (IsNull(idrow) || idrow < 1 || idrow > 6)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong row id in %s"), f.GetText()));
+						throw Exc(in.Str() + "\n"  + F(t_("Wrong row id in %s"), f.GetText()));
 			
 					idrow--;
 			
@@ -240,7 +240,7 @@ void Diodore::Load_HDB() {
 }
 
 void Hydro::SaveDiodoreHDB(String file) const {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+	BEM::Print("\n\n" + F(t_("Saving '%s'"), file));
 	
 	String folder = GetFileFolder(file);
 	String name = GetFileTitle(file);
@@ -248,11 +248,11 @@ void Hydro::SaveDiodoreHDB(String file) const {
 	
 	FileOut out(file);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to save '%s'. File already used."), file));
+		throw Exc(F(t_("Impossible to save '%s'. File already used."), file));
 	
 	out << "[SOFT]          DIODORE" << "\n" 	
 		<< "[VERSION]       5.5.2" << "\n"
-		<< "[Date]          " << Format("%02d:%02d:%02d    %Mon %02d %d\n", t.hour, t.minute, t.second, t.month, t.day, t.year)
+		<< "[Date]          " << F("%02d:%02d:%02d    %Mon %02d %d\n", t.hour, t.minute, t.second, t.month, t.day, t.year)
 		<< "[INPUT_FILE]    " << name << "\n"
 		<< "[Locally_At]    " << folder << "\n"
 		<< "[UNIT]" << "\n"          
@@ -268,54 +268,54 @@ void Hydro::SaveDiodoreHDB(String file) const {
 		<< "[QTF_SWEEPING_NUMBER]   " << 0 << "\n"	
 		<< "[QTF_SWEEPING_STEP]          0.000\n"		
 		<< "[HEADINGS_NUMBER]   " << dt.Nh << "\n"
-		<< Format("[LOWEST_HEADING]    %.2f\n", (dt.Nh > 0 ? First(dt.head) : 0))
-		<< Format("[HIGHEST_HEADING]   %.2f\n", (dt.Nh > 0 ? Last(dt.head) : 0));	
+		<< F("[LOWEST_HEADING]    %.2f\n", (dt.Nh > 0 ? First(dt.head) : 0))
+		<< F("[HIGHEST_HEADING]   %.2f\n", (dt.Nh > 0 ? Last(dt.head) : 0));	
 
 	out << "[List_calculated_periods]   \n";
 	
 	VectorXd TT	= Get_T();							
 	for (auto T : TT)
-		out << Format("%10.3f\n", T);							
+		out << F("%10.3f\n", T);							
 								
 	out << "[List_calculated_headings]  \n";								
 	for (auto h : dt.head)
-		out << Format("%10.3f\n", h);	
+		out << F("%10.3f\n", h);	
 										
 	out << "[STRUCTURES_NUMBER]        " << dt.Nb << "\n";							
 
 
 	auto WriteForce = [&](const Hydro::Forces &force, int ib, String text) {
 		for (int ih = 0; ih < dt.Nh; ++ih) {
-			out << Format("[%s_MOD_%03d]   %10.3f\n", text, ih+1, dt.head[ih]);
+			out << F("[%s_MOD_%03d]   %10.3f\n", text, ih+1, dt.head[ih]);
 			for (int iw = 0; iw < dt.Nf; ++iw) {
-				out << Format("%7.2f", TT[iw]);
+				out << F("%7.2f", TT[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
-					out << Format(" % .7E", abs(F_dim(force, ih, iw, idof, ib)));	
+					out << F(" % .7E", abs(F_dim(force, ih, iw, idof, ib)));	
 				out << "\n";
 			}
 		}
 		for (int ih = 0; ih < dt.Nh; ++ih) {
-			out << Format("[%s_PH_%03d]   %10.3f\n", text, ih+1, dt.head[ih]);
+			out << F("[%s_PH_%03d]   %10.3f\n", text, ih+1, dt.head[ih]);
 			for (int iw = 0; iw < dt.Nf; ++iw) {
-				out << Format("%7.2f", TT[iw]);
+				out << F("%7.2f", TT[iw]);
 				for (int idof = 0; idof < 6; ++idof) 
-					out << Format(" % .7E", arg(F_dim(force, ih, iw, idof, ib)));	
+					out << F(" % .7E", arg(F_dim(force, ih, iw, idof, ib)));	
 				out << "\n";
 			}
 		}
 	};
 		
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		out << Format("[STRUCTURE_%02d] %s\n", ib+1, dt.msh[ib].dt.name);
-		out << Format("[UNDERWATER_VOLUME]        %.3f\n", dt.msh[ib].dt.Vo);
-		out << Format("[CENTER_OF_BUOYANCY]     %.4f   %.4f   %.4f\n", dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.x);
-		out << Format("[CENTER_OF_GRAVITY]      %.4f   %.4f   %.4f\n", dt.msh[ib].dt.cg.x, dt.msh[ib].dt.cg.y, dt.msh[ib].dt.cg.z);
+		out << F("[STRUCTURE_%02d] %s\n", ib+1, dt.msh[ib].dt.name);
+		out << F("[UNDERWATER_VOLUME]        %.3f\n", dt.msh[ib].dt.Vo);
+		out << F("[CENTER_OF_BUOYANCY]     %.4f   %.4f   %.4f\n", dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.x);
+		out << F("[CENTER_OF_GRAVITY]      %.4f   %.4f   %.4f\n", dt.msh[ib].dt.cg.x, dt.msh[ib].dt.cg.y, dt.msh[ib].dt.cg.z);
 		
 		out << "[Mass_Inertia_matrix]   \n";		
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				double d = IsLoadedM() ? dt.msh[ib].dt.M(r, c) : 0;
-				out << Format("% .2E   ", d);
+				out << F("% .2E   ", d);
 			}
 			out << "\n";
 		}
@@ -323,7 +323,7 @@ void Hydro::SaveDiodoreHDB(String file) const {
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				double d = IsLoadedC() ? C_dim(ib, r, c) : 0;
-				out << Format("% .7E ", d);
+				out << F("% .7E ", d);
 			}
 			out << "\n";
 		}
@@ -331,7 +331,7 @@ void Hydro::SaveDiodoreHDB(String file) const {
 		for (int r = 0; r < 6; ++r) {
 			for (int c = 0; c < 6; ++c) {
 				double d = IsLoadedCMoor() ? CMoor_dim(ib, r, c) : 0;
-				out << Format("% .7E ", d);
+				out << F("% .7E ", d);
 			}
 			out << "\n";
 		}
@@ -356,11 +356,11 @@ void Hydro::SaveDiodoreHDB(String file) const {
 		if (IsLoadedMD()) {
 			out << "[DRIFT_FORCES_AND_MOMENTS]\n";
 			for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
-				out << Format("[INCIDENCE_DFM_%03d]   %10.3f\n", ih+1, real(dt.mdhead[ih]));
+				out << F("[INCIDENCE_DFM_%03d]   %10.3f\n", ih+1, real(dt.mdhead[ih]));
 				for (int iw = 0; iw < dt.Nf; ++iw) {
-					out << Format("%7.2f", TT[iw]);
+					out << F("%7.2f", TT[iw]);
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % .7E", Md_dim(idf, ih, iw));
+						out << F(" % .7E", Md_dim(idf, ih, iw));
 					out << "\n";
 				}
 			}
@@ -369,22 +369,22 @@ void Hydro::SaveDiodoreHDB(String file) const {
 			out << "[Added_mass_Radiation_Damping]\n";
 			if (IsLoadedA()) {
 				for (int idrow = 0; idrow < 6; ++idrow) {
-					out << Format("[ADDED_MASS_LINE_%d]\n", idrow+1);
+					out << F("[ADDED_MASS_LINE_%d]\n", idrow+1);
 					for (int iw = 0; iw < dt.Nf; ++iw) {
-						out << Format("%7.2f", TT[iw]);
+						out << F("%7.2f", TT[iw]);
 						for (int idof = 0; idof < 6; ++idof) 
-							out << Format(" % .7E", A_dim(iw, idrow + 6*ib, idof + 6*ib));
+							out << F(" % .7E", A_dim(iw, idrow + 6*ib, idof + 6*ib));
 						out << "\n";
 					}
 				}
 			}
 			if (IsLoadedB()) {
 				for (int idrow = 0; idrow < 6; ++idrow) {
-					out << Format("[DAMPING_TERM_%d]\n", idrow+1);
+					out << F("[DAMPING_TERM_%d]\n", idrow+1);
 					for (int iw = 0; iw < dt.Nf; ++iw) {
-						out << Format("%7.2f", TT[iw]);
+						out << F("%7.2f", TT[iw]);
 						for (int idof = 0; idof < 6; ++idof) 
-							out << Format(" % .7E", B_dim(iw, idrow + 6*ib, idof + 6*ib));
+							out << F(" % .7E", B_dim(iw, idrow + 6*ib, idof + 6*ib));
 						out << "\n";
 					}
 				}

@@ -7,7 +7,7 @@
 String HAMSBody::LoadPnl(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	Body &msh = _mesh.Add();
 	msh.dt.fileName = fileName;
@@ -134,7 +134,7 @@ String HAMSBody::LoadPnl(UArray<Body> &_mesh, String fileName, bool &y0z, bool &
 void HAMSBody::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
+		throw Exc(F(t_("Impossible to open '%s'"), fileName));	
 	
 	char type = surf.IsWaterPlaneMesh();
 	if (type == 'x')
@@ -153,12 +153,12 @@ void HAMSBody::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z)
 		out << "    --------------Hull Mesh File---------------";
 	
 	out	<< "\n \n    # Number of Panels, Nodes, X-Symmetry and Y-Symmetry\n";
-	out << Format("       %5d       %5d       %5d       %5d\n \n", panels.size(), nodes.size(), 
+	out << F("       %5d       %5d       %5d       %5d\n \n", panels.size(), nodes.size(), 
 																	y0z ? 1 : 0, x0z ? 1 : 0);
 	out << "    # Start Definition of Node Coordinates     ! node_number   x   y   z\n";
 	for (int in = 0; in < nodes.size(); ++in) {
 		const Point3D &p = nodes[in]; 
-		out << Format("%5d         % .6f         % .6f          % .6f\n", in+1, p.x, p.y, p.z);
+		out << F("%5d         % .6f         % .6f          % .6f\n", in+1, p.x, p.y, p.z);
 	}
 	out << "    # End Definition of Node Coordinates\n \n";
 	out << "  # Start Definition of Node Relations   ! panel_number  number_of_vertices   Vertex1_ID   Vertex2_ID   Vertex3_ID   (Vertex4_ID\n";
@@ -167,10 +167,10 @@ void HAMSBody::SavePnl(String fileName, const Surface &surf, bool y0z, bool x0z)
 		const Panel &pan = panels[ip];
 		int num = pan.GetNumNodes();
 
-		out << Format("%5d    %5d         %5d         %5d         %5d", ip+1, num, 
+		out << F("%5d    %5d         %5d         %5d         %5d", ip+1, num, 
 						pan.id[0]+1, pan.id[1]+1, pan.id[2]+1);
 		if (num == 4)
-			out << Format("         %5d", pan.id[3]+1);
+			out << F("         %5d", pan.id[3]+1);
 		out << "\n";
 	}	 
 	out << "    # End Definition of Node Relations\n \n";

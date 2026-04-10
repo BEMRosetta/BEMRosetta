@@ -10,7 +10,7 @@
 int Orca::deltaLogSimulation = 10;
 UVector<int> Orca::objTypes;
 UVector<String> Orca::objNames;
-UVector<HINSTANCE> Orca::objHandles;
+UVector<THHANDLE> Orca::objHandles;
 int Orca::actualBlade;
 UVector<int> Orca::varIDs, Orca::varBlades;
 UVector<String> Orca::varNames, Orca::varFullNames, Orca::varUnits;
@@ -126,46 +126,46 @@ Orca::~Orca() {
 bool Orca::InitDll(String _dllFile) {
 	dllFile = _dllFile;
 	if (!dll.Load(dllFile)) {
-		BEM::PrintWarning(Format(t_("OrcaFlex DLL is not found in '%s'"), dllFile));
+		BEM::PrintWarning(F(t_("OrcaFlex DLL is not found in '%s'"), dllFile));
 		return false;
 	}
 
-	CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (HINSTANCE *handle, HWND hCaller, int *status));
-	DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(HINSTANCE handle, int *status));
-	LoadData     = DLLGetFunction(dll, void, C_LoadDataW,   (HINSTANCE handle, LPCWSTR wcs, int *status));
-	SaveData     = DLLGetFunction(dll, void, C_SaveDataW,   (HINSTANCE handle, LPCWSTR wcs, int *status));
+	CreateModel  = DLLGetFunction(dll, void, C_CreateModel, (THHANDLE *handle, HWND hCaller, int *status));
+	DestroyModel = DLLGetFunction(dll, void, C_DestroyModel,(THHANDLE handle, int *status));
+	LoadData     = DLLGetFunction(dll, void, C_LoadDataW,   (THHANDLE handle, LPCWSTR wcs, int *status));
+	SaveData     = DLLGetFunction(dll, void, C_SaveDataW,   (THHANDLE handle, LPCWSTR wcs, int *status));
 	
-	CreateDiffraction      = DLLGetFunction(dll, void, C_CreateDiffraction, 	  (HINSTANCE *handle, int *status));
-	DestroyDiffraction     = DLLGetFunction(dll, void, C_DestroyDiffraction,	  (HINSTANCE handle, int *status));
-	LoadDiffractionData    = DLLGetFunction(dll, void, C_LoadDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
-	SaveDiffractionData    = DLLGetFunction(dll, void, C_SaveDiffractionDataW,    (HINSTANCE handle, LPCWSTR wcs, int *status));
-	CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
-	LoadDiffractionResults = DLLGetFunction(dll, void, C_LoadDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
-	SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (HINSTANCE handle, LPCWSTR wcs, int *status));
-	TranslateDiffractionOutput = DLLGetFunction(dll, void, C_TranslateDiffractionOutput, (HINSTANCE handle, int OutputType, int OutputSize, void *lpOutput, const TVector *lpReportingOrigins, int *status));	
-	CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (HINSTANCE handle, TProgressHandlerProc proc, int *status));
-	RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *status));
-	LoadSimulation		   = DLLGetFunction(dll, void, C_LoadSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
-	SaveSimulation		   = DLLGetFunction(dll, void, C_SaveSimulationW,		  (HINSTANCE handle, LPCWSTR wcs, int *status));
-	GetTimeHistory2		   = DLLGetFunction(dll, void, C_GetTimeHistory2W,		  (HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status));
-	GetVarID			   = DLLGetFunction(dll, void, C_GetVarIDW,				  (HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *status));
-	GetNumOfSamples		   = DLLGetFunction(dll, int,  C_GetNumOfSamples, 		  (HINSTANCE handle, const TPeriod *period, int *status));
-	EnumerateObjects	   = DLLGetFunction(dll, void, C_EnumerateObjectsW, 	  (HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status));
-	EnumerateVars2		   = DLLGetFunction(dll, void, C_EnumerateVars2W, 		  (HINSTANCE handle, const TObjectExtra2 *objectextra, int ResultType, 
+	CreateDiffraction      = DLLGetFunction(dll, void, C_CreateDiffraction, 	  (THHANDLE *handle, int *status));
+	DestroyDiffraction     = DLLGetFunction(dll, void, C_DestroyDiffraction,	  (THHANDLE handle, int *status));
+	LoadDiffractionData    = DLLGetFunction(dll, void, C_LoadDiffractionDataW,    (THHANDLE handle, LPCWSTR wcs, int *status));
+	SaveDiffractionData    = DLLGetFunction(dll, void, C_SaveDiffractionDataW,    (THHANDLE handle, LPCWSTR wcs, int *status));
+	CalculateDiffraction   = DLLGetFunction(dll, void, C_CalculateDiffractionW,	  (THHANDLE handle, TProgressHandlerProc proc, int *status));
+	LoadDiffractionResults = DLLGetFunction(dll, void, C_LoadDiffractionResultsW, (THHANDLE handle, LPCWSTR wcs, int *status));
+	SaveDiffractionResults = DLLGetFunction(dll, void, C_SaveDiffractionResultsW, (THHANDLE handle, LPCWSTR wcs, int *status));
+	TranslateDiffractionOutput = DLLGetFunction(dll, void, C_TranslateDiffractionOutput, (THHANDLE handle, int OutputType, int OutputSize, void *lpOutput, const TVector *lpReportingOrigins, int *status));	
+	CalculateStatics	   = DLLGetFunction(dll, void, C_CalculateStaticsW, 	  (THHANDLE handle, TProgressHandlerProc proc, int *status));
+	RunSimulation		   = DLLGetFunction(dll, void, C_RunSimulation2W, 		  (THHANDLE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *lpRunSimulationParameters, int *status));
+	LoadSimulation		   = DLLGetFunction(dll, void, C_LoadSimulationW,		  (THHANDLE handle, LPCWSTR wcs, int *status));
+	SaveSimulation		   = DLLGetFunction(dll, void, C_SaveSimulationW,		  (THHANDLE handle, LPCWSTR wcs, int *status));
+	GetTimeHistory2		   = DLLGetFunction(dll, void, C_GetTimeHistory2W,		  (THHANDLE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status));
+	GetVarID			   = DLLGetFunction(dll, void, C_GetVarIDW,				  (THHANDLE handle, LPCWSTR wcs, int *lpVarID, int *status));
+	GetNumOfSamples		   = DLLGetFunction(dll, int,  C_GetNumOfSamples, 		  (THHANDLE handle, const TPeriod *period, int *status));
+	EnumerateObjects	   = DLLGetFunction(dll, void, C_EnumerateObjectsW, 	  (THHANDLE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status));
+	EnumerateVars2		   = DLLGetFunction(dll, void, C_EnumerateVars2W, 		  (THHANDLE handle, const TObjectExtra2 *objectextra, int ResultType, 
 																						TEnumerateVarsProc EnumerateVarsProc, int *lpNumberOfVars, int *status));
-	ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (HINSTANCE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
-	CGetModelState		   = DLLGetFunction(dll, void, C_GetModelState,		  	  (HINSTANCE handle, int *lpModelState, int *status));
+	ObjectCalled		   = DLLGetFunction(dll, void, C_ObjectCalledW,			  (THHANDLE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status));
+	CGetModelState		   = DLLGetFunction(dll, void, C_GetModelState,		  	  (THHANDLE handle, int *lpModelState, int *status));
 
-	GetDataType_	   	   = DLLGetFunction(dll, void, C_GetDataTypeW,		  	  (HINSTANCE handle, LPCWSTR name, int *lpType, int *status));
-	GetDataRowCount_	   = DLLGetFunction(dll, void, C_GetDataRowCountW,		  (HINSTANCE handle, LPCWSTR name, int *lpCount, int *status));
-	GetDataInteger		   = DLLGetFunction(dll, void, C_GetDataIntegerW,		  (HINSTANCE handle, LPCWSTR name, int index, int *lpData, int *status));
-	GetDataDouble		   = DLLGetFunction(dll, void, C_GetDataDoubleW,		  (HINSTANCE handle, LPCWSTR name, int index, double *lpData, int *status));
-	GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (HINSTANCE handle, LPCWSTR name, int index, LPWSTR lpData, int *status));
+	GetDataType_	   	   = DLLGetFunction(dll, void, C_GetDataTypeW,		  	  (THHANDLE handle, LPCWSTR name, int *lpType, int *status));
+	GetDataRowCount_	   = DLLGetFunction(dll, void, C_GetDataRowCountW,		  (THHANDLE handle, LPCWSTR name, int *lpCount, int *status));
+	GetDataInteger		   = DLLGetFunction(dll, void, C_GetDataIntegerW,		  (THHANDLE handle, LPCWSTR name, int index, int *lpData, int *status));
+	GetDataDouble		   = DLLGetFunction(dll, void, C_GetDataDoubleW,		  (THHANDLE handle, LPCWSTR name, int index, double *lpData, int *status));
+	GetDataString		   = DLLGetFunction(dll, int,  C_GetDataStringW,		  (THHANDLE handle, LPCWSTR name, int index, LPWSTR lpData, int *status));
 	
-	SetModelThreadCount    = DLLGetFunction(dll, void, C_SetModelThreadCount, 	  (HINSTANCE handle, int threadCount, int *status));
-	GetModelThreadCount    = DLLGetFunction(dll, int,  C_GetModelThreadCount,     (HINSTANCE handle, int *status));
+	SetModelThreadCount    = DLLGetFunction(dll, void, C_SetModelThreadCount, 	  (THHANDLE handle, int threadCount, int *status));
+	GetModelThreadCount    = DLLGetFunction(dll, int,  C_GetModelThreadCount,     (THHANDLE handle, int *status));
 	
-	GetDiffractionOutput0  = DLLGetFunction(dll, void, C_GetDiffractionOutput, (HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus));
+	GetDiffractionOutput0  = DLLGetFunction(dll, void, C_GetDiffractionOutput, (THHANDLE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus));
 
 	RegisterLicenceNotFoundHandler = DLLGetFunction(dll, void, C_RegisterLicenceNotFoundHandler, 	  (TLicenceNotFoundHandlerProc Handler, int *lpStatus));
 	
@@ -178,13 +178,13 @@ bool Orca::InitDll(String _dllFile) {
 	return true;
 }
 
-int Orca::GetDiffractionOutput(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput) {
+int Orca::GetDiffractionOutput(THHANDLE handle, int OutputType, int *lpOutputSize, void *lpOutput) {
 	int lpStatus;
 	GetDiffractionOutput0(handle, OutputType, lpOutputSize, lpOutput, &lpStatus);
 	return lpStatus;
 }
 
-void __stdcall Orca::DiffractionHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+void __stdcall Orca::DiffractionHandlerProc(THHANDLE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
 	static int lastPerc = -1;
 	String msg = WideToString(lpProgress);
 	int perc = -1;
@@ -210,7 +210,7 @@ void __stdcall Orca::DiffractionHandlerProc(HINSTANCE handle, LPCWSTR lpProgress
 	*lpCancel = WhenWave(msg, perc, et);
 }
 
-void __stdcall Orca::StaticsHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
+void __stdcall Orca::StaticsHandlerProc(THHANDLE handle, LPCWSTR lpProgress, BOOL *lpCancel) {
 	String msg = WideToString(lpProgress);
 	*lpCancel = WhenPrint(msg);
 }
@@ -228,7 +228,7 @@ void __stdcall Orca::LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnect
 		*lpAttemptReconnection = TRUE;	//*lpData < 10; 
 		if (*lpAttemptReconnection) {
 			Sleep(60*1000);
-			WhenPrint(Format("License lost for %d min. Attemping reconnection in a minute", *lpData));
+			WhenPrint(F("License lost for %d min. Attemping reconnection in a minute", *lpData));
 			(*lpData)++; 
 		}
 		return;
@@ -237,7 +237,7 @@ void __stdcall Orca::LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnect
 	}
 }
 
-void __stdcall Orca::SimulationHandlerProc(HINSTANCE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel) {
+void __stdcall Orca::SimulationHandlerProc(THHANDLE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel) {
 	Time tm = GetSysTime();
 	if (IsNull(startCalc))		// Time starts here. Statics calculation delay is discarded
 		startCalc = tm;
@@ -248,11 +248,11 @@ void __stdcall Orca::SimulationHandlerProc(HINSTANCE handle, double simulationTi
 		   total    = simulationStop - simulationStart;
 	int64  elapsedT = tm - startCalc - noLicenseTime,
 		   pending  = int64(elapsedT*(total/elapsed - 1));		// elapsedT*total/elapsed - elapsedT
-	*lpCancel = WhenPrint(Format("Elap/Total:%.1f/%.0f ET:%s Clk/Sim:%.1f", elapsed, total,
+	*lpCancel = WhenPrint(F("Elap/Total:%.1f/%.0f ET:%s Clk/Sim:%.1f", elapsed, total,
 										   					  SecondsToString(double(pending), 0, false, false, true, false, true), elapsedT/elapsed));
 }
 
-void __stdcall Orca::EnumerateObjectsProc(HINSTANCE handle, const TObjectInfo *info) {
+void __stdcall Orca::EnumerateObjectsProc(THHANDLE handle, const TObjectInfo *info) {
 	objTypes << info->ObjectType;
 	WString str(info->ObjectName);
 	objNames << str.ToString();
@@ -273,7 +273,7 @@ void __stdcall Orca::EnumerateVarsProc(const TVarInfo *lpVarInfo) {
 String Orca::FileVersionBin(String filename) {
 	FileInBinary file(filename);
 	if (!file)
-		throwError("FileVersionBin");
+		throw Exc(F(t_("FileVersionBin '%s' does not found"), filename));
 	
 	file.Read<char>();
 	
@@ -305,6 +305,8 @@ String Orca::FileVersionYml(String filename) {
 	if (!file)
 		throwError("FileVersionYml");
 	
+	Utf8BOM(file);
+	
 	String str = Trim(file.GetLine());
 	
 	if (!str.StartsWith("%YAML"))
@@ -327,7 +329,7 @@ String Orca::FileVersion(String filename) {
 	if (ret.IsEmpty())
 		ret = FileVersionYml(filename);
 	if (ret.IsEmpty()) 	
-		return "Unknown";
+		return "unknown";
 	else
 		return ret;
 }
@@ -371,13 +373,13 @@ bool Orca::InitVersion(String version) {
 	}
 
 	if (orcadata.IsEmpty()) {
-		BEM::PrintWarning(S("\n") + t_("OrcaFlex is not installed"));
+		BEM::PrintWarning(F("\n") + t_("OrcaFlex is not installed"));
 		return false;
 	}
 		
 	int iversion = -1;
 	
-	if (version.IsEmpty()) {												// Get the newest version from the installed
+	if (version.IsEmpty() || version == "unknown") {												// Get the newest version from the installed
 		iversion = 0;
 		UVector<int> version0 = orcadata[0].GetVersion();
 		for (int i = 1; i < orcadata.size(); ++i) {
@@ -407,13 +409,13 @@ bool Orca::InitVersion(String version) {
 			double number = ScanDouble(version);
 			if (number <= lowest) {
 				iversion = ilowest;
-				BEM::PrintWarning("\n" + Format(t_("Version %s is not installed. Version %.1f will be used instead"), version, lowest));
+				BEM::PrintWarning("\n" + F(t_("Version %s is not installed. Version %.1f will be used instead"), version, lowest));
 			} else if (number >= highest) {
 			 	iversion = ihighest;
-			 	BEM::PrintWarning("\n" + Format(t_("Version %s is not installed. Version %.1f will be used instead"), version, highest));
+			 	BEM::PrintWarning("\n" + F(t_("Version %s is not installed. Version %.1f will be used instead"), version, highest));
 			} else {
 				iversion = ihighest;		
-				BEM::PrintWarning("\n" + Format(t_("Version %s is not installed. Version %.1f will be used instead"), version, highest));
+				BEM::PrintWarning("\n" + F(t_("Version %s is not installed. Version %.1f will be used instead"), version, highest));
 			}
 		}			
 	}
@@ -425,11 +427,11 @@ bool Orca::InitVersion(String version) {
 			str << "Used-";
 		else
 			str << "    -";
-		str << Format("%s. Version: %s. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].path);
+		str << F("%s. Version: %s. Path: '%s'", orcadata[i].name, orcadata[i].version, orcadata[i].path);
 		BEM::Print(str);
 	}
 	dllVersion = GetVersionString(orcadata[iversion].version);
-	BEM::Print(Format("\nBEMRosetta OrcaWave version: %s", BEMRVersion()));
+	BEM::Print(F("\nBEMRosetta OrcaWave version: %s", BEMRVersion()));
 	
 	String arch;
 #ifdef CPU_64
@@ -442,57 +444,57 @@ bool Orca::InitVersion(String version) {
 	return InitDll(path);
 }
 		
-int Orca::GetDataType(HINSTANCE handle, const wchar_t *name) {
+int Orca::GetDataType(THHANDLE handle, const wchar_t *name) {
 	int status;
 	int ret;
 	
 	GetDataType_(handle, name, &ret, &status);
 	if (status != 0)
-		throwError(Format("Load GetDataType %s", name));	
+		throwError(F("Load GetDataType %s", name));	
 	return ret;
 }
 
-int Orca::GetDataRowCount(HINSTANCE handle, const wchar_t *name) {
+int Orca::GetDataRowCount(THHANDLE handle, const wchar_t *name) {
 	int status;
 	int ret;
 	
 	GetDataRowCount_(handle, name, &ret, &status);
 	if (status != 0)
-		throwError(Format("Load GetDataRowCount %s", name));	
+		throwError(F("Load GetDataRowCount %s", name));	
 	return ret;
 }
 
-int Orca::GetInt(HINSTANCE handle, const wchar_t *name, int id) {
+int Orca::GetInt(THHANDLE handle, const wchar_t *name, int id) {
 	int status;
 	int ret;
 	
 	GetDataInteger(handle, name, id, &ret, &status);
 	if (status != 0)
-		throwError(Format("Load GetDataInteger %s", name));	
+		throwError(F("Load GetDataInteger %s", name));	
 	return ret;
 }
 
-double Orca::GetDouble(HINSTANCE handle, const wchar_t *name, int id) {
+double Orca::GetDouble(THHANDLE handle, const wchar_t *name, int id) {
 	int status;
 	double ret;
 	
 	GetDataDouble(handle, name, id, &ret, &status);
 	if (status != 0)
-		throwError(Format("Load GetDataDouble %s", name));	
+		throwError(F("Load GetDataDouble %s", name));	
 	return ret;
 }
 	
-String Orca::GetString(HINSTANCE handle, const wchar_t *name, int id) {
+String Orca::GetString(THHANDLE handle, const wchar_t *name, int id) {
 	int status;
 		
 	int len = GetDataString(wave, name, -1, NULL, &status);
 	if (status != 0)
-		throwError(Format("Load GetDataString %s", name));	
+		throwError(F("Load GetDataString %s", name));	
 	Buffer<wchar_t> rw(len);
 	LPWSTR wcs = (LPWSTR)rw.begin();
 	GetDataString(wave, name, -1, wcs, &status);
 	if (status != 0)
-		throwError(Format("Load GetDataString 2 %s", name));	
+		throwError(F("Load GetDataString 2 %s", name));	
 	return WideToString(wcs, len);
 }
 
@@ -552,12 +554,12 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	
 	if (dllVersion.StartsWith("11.5")) {
 		if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo_1_5))
-			throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", 
+			throwError(F("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", 
 								sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo_1_5)));			
 		LoadDiffractionBodyHydrostatic<TDiffractionBodyHydrostaticInfo_1_5>(hy, sz, factor, c0);
 	} else {
 		if (sz/hy.dt.Nb != sizeof(TDiffractionBodyHydrostaticInfo_1_6))
-			throwError(Format("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", 
+			throwError(F("Incompatible OrcaFlex version. TDiffractionBodyHydrostaticInfo size does not match (%d != %d)", 
 								sz/hy.dt.Nb, (int)sizeof(TDiffractionBodyHydrostaticInfo_1_6)));			
 		LoadDiffractionBodyHydrostatic<TDiffractionBodyHydrostaticInfo_1_6>(hy, sz, factor, c0);
 	} 
@@ -569,7 +571,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 			throwError("Load dotAddedMass_Radiation");	
 		
 		if (sz/sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb*hy.dt.Nf))		
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), wrongsz));
+			throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(double)), wrongsz));
 		
 		MultiDimMatrixRowMajor<double> a(hy.dt.Nf, 6*hy.dt.Nb, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, a.begin()))
@@ -595,7 +597,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		throwError("Load dotInfiniteFrequencyAddedMass");	
 	
 	if (sz/sizeof(double) != (wrongsz = 6*hy.dt.Nb*6*hy.dt.Nb))
-		throw Exc(Format("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), wrongsz));
+		throw Exc(F("Wrong %s size (%d <> %d)", "infinite frequency added mass", int(sz/sizeof(double)), wrongsz));
 	
 	MultiDimMatrixRowMajor<double> a(6*hy.dt.Nb, 6*hy.dt.Nb);
 	if (GetDiffractionOutput(wave, dotInfiniteFrequencyAddedMass, &sz, a.begin()))
@@ -622,7 +624,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 			return false;
 		
 		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*hy.dt.Nh))
-			throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+			throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 		
 		hy.Initialize_Forces(f);
 		
@@ -681,17 +683,17 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	
 	auto LoadMD = [&](int type, const char *stype)->bool {
 		if (GetDiffractionOutput(wave, type, &sz, NULL))
-			throwError(Format("Load %s", stype));	
+			throwError(F("Load %s", stype));	
 	
 		if (sz == 0)
 			return false;
 		
 		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*int(hy.dt.mdhead.size())))
-			throwError(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+			throwError(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 		
 		MultiDimMatrixRowMajor<TComplex> md((int)hy.dt.mdhead.size(), hy.dt.Nf, 6*hy.dt.Nb);
 		if (GetDiffractionOutput(wave, type, &sz, md.begin()))
-			throwError(Format("Load %s 2", stype));		
+			throwError(F("Load %s 2", stype));		
 		
 		Hydro::Initialize_MD(hy.dt.md, hy.dt.Nb, int(hy.dt.mdhead.size()), hy.dt.Nf);
 		
@@ -739,31 +741,31 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 		MultiDimMatrixRowMajor<TComplex> qtf, qtfDirect;
 		{
 			if (GetDiffractionOutput(wave, type, &sz, NULL))
-				throwError(Format("Load %s", stype));	
+				throwError(F("Load %s", stype));	
 		
 			if (sz == 0)
 				return false;
 			
 			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
-				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+				throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
 			qtf.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, type, &sz, qtf.begin()))
-				throwError(Format("Load %s 2", stype));		
+				throwError(F("Load %s 2", stype));		
 		}
 		{
 			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, NULL))
-				throwError(Format("Load %s", stype));	
+				throwError(F("Load %s", stype));	
 		
 			if (sz == 0)
 				return false;
 			
 			if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*Nqw*int(hy.dt.qhead.size())))
-				throw Exc(Format("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
+				throw Exc(F("Wrong %s size (%d <> %d)", stype, int(sz/sizeof(TComplex)), wrongsz));
 			
 			qtfDirect.Resize((int)hy.dt.qhead.size(), Nqw, 6*hy.dt.Nb);
 			if (GetDiffractionOutput(wave, dotDirectPotentialLoad, &sz, qtfDirect.begin()))
-				throwError(Format("Load %s 2", stype));		
+				throwError(F("Load %s 2", stype));		
 		}
 		int Nb = hy.dt.Nb;
 		
@@ -833,13 +835,13 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	
 	if (dllVersion.StartsWith("11.5")) {
 		if (sz/Np != sizeof(TDiffractionPanelGeometry_1_5))
-			throwError(Format("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match (%d != %d)", 
+			throwError(F("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match (%d != %d)", 
 									sz/Np, (int)sizeof(TDiffractionPanelGeometry_1_5)));	
 		LoadDiffractionPanelGeometry<TDiffractionPanelGeometry_1_5>(hy, sz, factor, Np, panelId, panelIb);
 	}
 	else {
 		if (sz/Np != sizeof(TDiffractionPanelGeometry_1_6))
-			throwError(Format("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match (%d != %d)", 
+			throwError(F("Incompatible OrcaFlex version. TDiffractionPanelGeometry size does not match (%d != %d)", 
 									sz/Np, (int)sizeof(TDiffractionPanelGeometry_1_6)));	
 		LoadDiffractionPanelGeometry<TDiffractionPanelGeometry_1_6>(hy, sz, factor, Np, panelId, panelIb);	
 	}	
@@ -852,7 +854,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	
 	if (sz > 0) {
 		if (sz/sizeof(TComplex) != (wrongsz = 6*hy.dt.Nb*hy.dt.Nf*Np))
-			throwError(Format("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), wrongsz));
+			throwError(F("Wrong %s size (%d <> %d)", "dotPanelPressureRadiation", int(sz/sizeof(TComplex)), wrongsz));
 					
 		MultiDimMatrixRowMajor<TComplex> presRad(6*hy.dt.Nb, hy.dt.Nf, Np);
 		if (GetDiffractionOutput(wave, dotPanelPressureRadiation, &sz, presRad.begin()))
@@ -877,7 +879,7 @@ void Orca::LoadParameters(Hydro &hy, const Point3D &c0) {
 	
 	if (sz > 0) {
 		if (sz/sizeof(TComplex) != (wrongsz = hy.dt.Nh*hy.dt.Nf*Np))
-			throwError(Format("Wrong %s size (%d <> %d)", "dotPanelPressureDiffraction", int(sz/sizeof(TComplex)), wrongsz));
+			throwError(F("Wrong %s size (%d <> %d)", "dotPanelPressureDiffraction", int(sz/sizeof(TComplex)), wrongsz));
 			
 		MultiDimMatrixRowMajor<TComplex> pres(hy.dt.Nh, hy.dt.Nf, Np);
 		if (GetDiffractionOutput(wave, dotPanelPressureDiffraction, &sz, pres.begin()))

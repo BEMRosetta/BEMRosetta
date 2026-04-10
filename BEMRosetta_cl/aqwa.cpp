@@ -17,29 +17,29 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 	dt.Nb = 0;
 	
 	try {
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + F(t_("Loading '%s'"), file));
 		
 		double factorMass = 1;
 		
 		if (ToLower(GetFileExt(file)) == ".lis") {
-			BEM::Print("\n- " + S(t_("LIS file")));
+			BEM::Print("\n- " + F(t_("LIS file")));
 			if (!Load_LIS(factorMass, Status)) {
-				BEM::Print(S(": ** LIS file ") + t_("Not found") + "**");
-				BEM::Print("\n- " + S(t_("AH1 file")));
+				BEM::Print(F(": ** LIS file ") + t_("Not found") + "**");
+				BEM::Print("\n- " + F(t_("AH1 file")));
 				if (!Load_AH1()) {
-					BEM::Print(S(": ** AH1 file ") + t_("Not found") + "**");
+					BEM::Print(F(": ** AH1 file ") + t_("Not found") + "**");
 					String ret = AQWABody::LoadDat(dt.msh, *this, file);
 					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: ")))  
 						dt.Nh = dt.Nf = 0;
 				}
 			}
 		} else {
-			BEM::Print("\n- " + S(t_("AH1 file")));
+			BEM::Print("\n- " + F(t_("AH1 file")));
 			if (!Load_AH1()) {
-				BEM::Print(S(": ** AH1 file ") + t_("Not found") + "**");
-				BEM::Print("\n- " + S(t_("LIS file")));
+				BEM::Print(F(": ** AH1 file ") + t_("Not found") + "**");
+				BEM::Print("\n- " + F(t_("LIS file")));
 				if (!Load_LIS(factorMass, Status)) {
-					BEM::Print(S(": ** LIS file ") + t_("Not found") + "**");
+					BEM::Print(F(": ** LIS file ") + t_("Not found") + "**");
 					String ret = AQWABody::LoadDat(dt.msh, *this, file);
 					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: ")))  
 						dt.Nh = dt.Nf = 0;
@@ -51,13 +51,13 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, double) {
 		//if (IsNull(dt.Nb))
 		//	return false;
 		
-		BEM::Print("\n- " + S(t_("QTF file")));
+		BEM::Print("\n- " + F(t_("QTF file")));
 		if (!Load_QTF(factorMass)) 
-			BEM::Print(S(": ** QTF file ") + t_("Not found") + "**");
+			BEM::Print(F(": ** QTF file ") + t_("Not found") + "**");
 		
-		BEM::Print("\n- " + S(t_("MQT file")));
-		if (!Load_MQT()) 
-			BEM::Print(S(": ** MQT file ") + t_("Not found") + "**");
+		BEM::Print("\n- " + F(t_("MQT file")));
+		if (dt.qhead.size() > 0 && !Load_MQT()) 
+			BEM::Print(F(": ** MQT file ") + t_("Not found") + "**");
 		
 		if ((IsNull(dt.Nh) || dt.Nh <= 0) && dt.qhead.size() == 0)
 			return t_("No data found");
@@ -108,7 +108,7 @@ bool Aqwa::Load_AH1() {
 		if (dt.head.size() == dt.Nh)
 			break;
 		else if (dt.head.size() > dt.Nh)
-			throw Exc(in.Str() + "\n"  + Format(t_("Number of headings do not match %d<>%d"), dt.Nh, dt.head.size()));
+			throw Exc(in.Str() + "\n"  + F(t_("Number of headings do not match %d<>%d"), dt.Nh, dt.head.size()));
 		f.GetLine();
 		i0 = 0;
 	} while(!in.IsEof());
@@ -118,8 +118,10 @@ bool Aqwa::Load_AH1() {
 	//dt.cg.setConstant(3, dt.Nb, NaNDouble);
 	//dt.c0.setConstant(3, dt.Nb, NaNDouble);
 	//dt.C.SetCount(dt.Nb);
-	for (int ib = 0; ib < dt.Nb; ++ib) 
+	for (int ib = 0; ib < dt.Nb; ++ib) {
 		dt.msh[ib].dt.C.setConstant(6, 6, NaNDouble); 
+		dt.msh[ib].dt.name = F(t_("Element %d"), ib+1);
+	}
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);
 	Initialize_Forces(dt.ex);
@@ -131,7 +133,7 @@ bool Aqwa::Load_AH1() {
 			dt.w << f.GetDouble(i);
 	}	
 	if (dt.Nf != dt.w.size())
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of frequencies do not match %d<>%d"), dt.Nf, dt.w.size()));
+		throw Exc(in.Str() + "\n"  + F(t_("Number of frequencies do not match %d<>%d"), dt.Nf, dt.w.size()));
 
 	while(!in.IsEof()) {
 		line = TrimBoth(in.GetLine());
@@ -145,7 +147,7 @@ bool Aqwa::Load_AH1() {
 				f.Load(in.GetLine());
 				int ib = f.GetInt(0) - 1;
 				if (ib < 0 || ib >= dt.Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COG %d (%d)"), ib+1, dt.Nb));
+					throw Exc(in.Str() + "\n"  + F(t_("Unknown body found in COG %d (%d)"), ib+1, dt.Nb));
 				
 				dt.msh[ib].dt.cg.x = f.GetDouble(1);
 				dt.msh[ib].dt.cg.y = f.GetDouble(2);
@@ -157,7 +159,7 @@ bool Aqwa::Load_AH1() {
 				f.Load(in.GetLine());
 				int ib = f.GetInt(0) - 1;
 				if (ib < 0 || ib >= dt.Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COB %d (%d)"), ib+1, dt.Nb));
+					throw Exc(in.Str() + "\n"  + F(t_("Unknown body found in COB %d (%d)"), ib+1, dt.Nb));
 				
 				dt.msh[ib].dt.cb.x = f.GetDouble(1);
 				dt.msh[ib].dt.cb.y = f.GetDouble(2);
@@ -168,7 +170,7 @@ bool Aqwa::Load_AH1() {
 				f.Load(in.GetLine());
 				int ib = f.GetInt(0) - 1;
 				if (ib < 0 || ib >= dt.Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Unknown body found in COB %d (%d)"), ib+1, dt.Nb));
+					throw Exc(in.Str() + "\n"  + F(t_("Unknown body found in COB %d (%d)"), ib+1, dt.Nb));
 				
 				dt.msh[ib].dt.Vo = f.GetDouble(1);
 			}
@@ -182,7 +184,7 @@ bool Aqwa::Load_AH1() {
 	                    did = 1;
 	                    int itb = f.GetInt(0);
 	            		if (itb - 1 != ib)
-	                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
+	                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
 	                }
 	                for (int jdf = 0; jdf < 6; ++jdf) 
 	                    dt.msh[ib].dt.C(idf, jdf) = f.GetDouble(jdf + did);
@@ -198,7 +200,7 @@ bool Aqwa::Load_AH1() {
 	                    did = 1;
 	                    int itb = f.GetInt(0);
 	            		if (itb - 1 != ib)
-	                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
+	                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in 'HYDSTIFFNESS' %d<>%d"), itb, ib+1));
 	                }
 	                for (int jdf = 0; jdf < 6; ++jdf) 
 	                    dt.msh[ib].dt.M(idf, jdf) = f.GetDouble(jdf + did);
@@ -217,13 +219,13 @@ bool Aqwa::Load_AH1() {
 			                    did = 3;
 			                    int itb0 = f.GetInt(0);
 			            		if (itb0 - 1 != ib0)
-			                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb0, ib0+1));
+			                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in '%s' %d<>%d"), sarea, itb0, ib0+1));
 			                    int itb1 = f.GetInt(1);
 			            		if (itb1 - 1 != ib1)
-			                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in '%s' %d<>%d"), sarea, itb1, ib1+1));
+			                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in '%s' %d<>%d"), sarea, itb1, ib1+1));
 			                    int itfr = f.GetInt(2);
 			            		if (itfr - 1 != ifr)
-			                        throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
+			                        throw Exc(in.Str() + "\n"  + F(t_("Frequency # does not match in '%s' %d<>%d"), sarea, itfr, ifr+1));
 			                }
 			                for (int jdf = 0; jdf < 6; ++jdf) {
 			            		if (am)
@@ -246,10 +248,10 @@ bool Aqwa::Load_AH1() {
 		                    did = 2;
 		                    int itb0 = f.GetInt(0);
 		            		if (itb0 - 1 != ib0)
-		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb0, ib0+1));
+		                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb0, ib0+1));
 		                    int itb1 = f.GetInt(1);
 		            		if (itb1 - 1 != ib1)
-		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb1, ib1+1));
+		                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb1, ib1+1));
 		                }
 		                for (int jdf = 0; jdf < 6; ++jdf) 
 		                    dt.A0(6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
@@ -267,10 +269,10 @@ bool Aqwa::Load_AH1() {
 		                    did = 2;
 		                    int itb0 = f.GetInt(0);
 		            		if (itb0 - 1 != ib0)
-		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb0, ib0+1));
+		                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb0, ib0+1));
 		                    int itb1 = f.GetInt(1);
 		            		if (itb1 - 1 != ib1)
-		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb1, ib1+1));
+		                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in ADDEDMASS_LF %d<>%d"), itb1, ib1+1));
 		                }
 		                for (int jdf = 0; jdf < 6; ++jdf) 
 		                    dt.Ainf(6*ib0 + idf, 6*ib1 + jdf) = f.GetDouble(jdf + did);
@@ -286,13 +288,13 @@ bool Aqwa::Load_AH1() {
 	                  	for (int idf = 0; idf < 6; ++idf) {
 		                    int itb = f.GetInt(0);
 		            		if (itb - 1 != ib)
-		                        throw Exc(in.Str() + "\n"  + Format(t_("Body # does not match in 'FORCERAO' %d<>%d"), itb, ib+1));
+		                        throw Exc(in.Str() + "\n"  + F(t_("Body # does not match in 'FORCERAO' %d<>%d"), itb, ib+1));
 		                    int ith = f.GetInt(1);
 		            		if (ith - 1 != ih)
-		                        throw Exc(in.Str() + "\n"  + Format(t_("Heading # does not match in 'FORCERAO' %d<>%d"), ith, ih+1));
+		                        throw Exc(in.Str() + "\n"  + F(t_("Heading # does not match in 'FORCERAO' %d<>%d"), ith, ih+1));
 		                    int itfr = f.GetInt(2);
 							if (itfr - 1 != ifr)
-								throw Exc(in.Str() + "\n"  + Format(t_("Frequency # does not match in 'FORCERAO' %d<>%d"), itfr, ifr+1));
+								throw Exc(in.Str() + "\n"  + F(t_("Frequency # does not match in 'FORCERAO' %d<>%d"), itfr, ifr+1));
 			                ma(idf) = f.GetDouble(idf + 3);
 	                  	}
 	                  	f.Load(in.GetLine());
@@ -352,10 +354,11 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 	double factorLength = 1;
 	
 	dt.msh.SetCount(dt.Nb);
-	for (int ib = 0; ib < dt.Nb; ++ib) 
+	for (int ib = 0; ib < dt.Nb; ++ib) {
 		dt.msh[ib].dt.C.setConstant(6, 6, 0);
-	for (int ib = 0; ib < dt.Nb; ++ib) 
 		dt.msh[ib].dt.M.setConstant(6, 6, 0);
+		dt.msh[ib].dt.name = F(t_("Element %d"), ib+1);
+	}
 	
 	double nlines = in.GetLineNumber();
 	double step = 0.01;
@@ -501,7 +504,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		if ((pos = line.FindAfter("S T R U C T U R E")) >= 0) {
 			ib = ScanInt(line.Mid(pos)) - 1; 
 			if (ib >= dt.Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
+				throw Exc(in.Str() + "\n"  + F(t_("Wrong body id %d found"), ib));
 		} else if (line.StartsWith("PMAS")) {
 			f.Load(line);
 			double mass = f.GetDouble(2)*factorMass;
@@ -622,7 +625,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			pos = line.FindAfter("S T R U C T U R E");
 			ib = ScanInt(line.Mid(pos)) - 1; 
 			if (ib < 0 || ib >= dt.Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
+				throw Exc(in.Str() + "\n"  + F(t_("Wrong body id %d found"), ib));
 			
 			if (previbPot < 0 || previbPot != ib) {
 				previbPot = ib;
@@ -647,7 +650,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				/*else {
 					ib = ScanInt(Trim(line).Right(3)) - 1;
 					if (ib < 0 || ib >= dt.Nb)
-						throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
+						throw Exc(in.Str() + "\n"  + F(t_("Wrong body id %d found"), ib));
 				
 					in.GetLine(6);
 				}*/
@@ -713,7 +716,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			if (!IsNull(ib)) {
 				ib -= 1; 
 				if (ib >= dt.Nb)
-					throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib));
+					throw Exc(in.Str() + "\n"  + F(t_("Wrong body id %d found"), ib));
 			}
 		} else if (line.Find("STIFFNESS MATRIX AT THE CENTRE OF GRAVITY") >= 0 ||
 				   line.Find("TOTAL HYDROSTATIC STIFFNESS") >= 0) {		// One place to get the hydrostatic stiffness
@@ -807,13 +810,13 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 
 				int idh = FindClosest(dt.head, f.GetDouble(2));
 				if (idh < 0)
-					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(2)));
+					throw Exc(in.Str() + "\n"  + F(t_("Heading %f is unknown"), f.GetDouble(2)));
 				int dd = 1;
 				for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 					double freq = f.GetDouble(1);
 					int ifrr = FindClosest(dt.w, freq);
 					if (ifrr < 0)
-						throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
+						throw Exc(in.Str() + "\n"  + F(t_("Frequency %f is unknown"), freq));
 					for (int idf = 0; idf < 6; ++idf) {
 						double factorM;
 						if (pfrc != &dt.rao || idf < 3)
@@ -839,7 +842,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				throw Exc(in.Str() + "\n"  + t_("Problem loading frequency"));
 			int ifr = FindClosest(dt.w, freq);
 			if (ifr < 0)
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency %f is unknown"), freq));
+				throw Exc(in.Str() + "\n"  + F(t_("Frequency %f is unknown"), freq));
 			
 			in.GetLine(2);
 			line = in.GetLine();
@@ -861,7 +864,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 					in.GetLine();
 					f.Load(in.GetLine());
 					if (f.GetText(0) != textDOF[idf])
-						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
+						throw Exc(in.Str() + "\n"  + F(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
 						dt.A[6*ib + idf][6*ib2 + jdf][ifr] = f.GetDouble(1 + jdf)*factorMass;
 				}
@@ -870,7 +873,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 					in.GetLine();
 					f.Load(in.GetLine());
 					if (f.GetText(0) != textDOF[idf])
-						throw Exc(in.Str() + "\n"  + Format(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
+						throw Exc(in.Str() + "\n"  + F(t_("Expected %s data, found '%s'"), textDOF[idf], f.GetText())); 
 					for (int jdf = 0; jdf < 6; ++jdf) 
 						dt.B[6*ib + idf][6*ib2 + jdf][ifr] = f.GetDouble(1 + jdf)*factorMass;
 				}
@@ -955,7 +958,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				line = in.GetLine();
 			int iib = ScanInt(line.Mid(id));
 			if (iib < 1 || iib > dt.Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong body id %d found"), ib)); 
+				throw Exc(in.Str() + "\n"  + F(t_("Wrong body id %d found"), ib)); 
 			iib -= 1;
 			
 			while(!in.IsEof() && (id = f.GetText().FindAfter("(RADIANS/SEC)")) < 0)
@@ -967,7 +970,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			for (int ih = 0; ih < f.size(); ++ih) {
 				id = FindClosest(dt.head, f.GetDouble(ih));
 				if (id < 0)
-					throw Exc(in.Str() + "\n"  + Format(t_("Heading %f is unknown"), f.GetDouble(ih)));
+					throw Exc(in.Str() + "\n"  + F(t_("Heading %f is unknown"), f.GetDouble(ih)));
 				idhblock[ih] = id;
 			}
 
@@ -989,7 +992,7 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			else if (line.StartsWith("yaw"))
 				idof = 5;
 			else 
-				throw Exc(in.Str() + "\n"  + Format(t_("Wrong DOF %s found"), line));
+				throw Exc(in.Str() + "\n"  + F(t_("Wrong DOF %s found"), line));
 
 			for (int idf = 0; idf < dt.Nf; ++idf) {
 				f.GetLine();
@@ -1114,7 +1117,7 @@ bool Aqwa::Load_QTF(double factorMass) {
 		}
 	}
 	if (!IsNull(dt.Nb) && dt.Nb > 0 && dt.Nb != Nb)
-		throw Exc(in.Str() + "\n"  + Format(t_("Number of bodies loaded is different than previous (%d != %d)"), dt.Nb, Nb));
+		throw Exc(in.Str() + "\n"  + F(t_("Number of bodies loaded is different than previous (%d != %d)"), dt.Nb, Nb));
 	dt.Nb = Nb;
 
 	if (dt.msh.IsEmpty())
@@ -1165,9 +1168,9 @@ bool Aqwa::Load_QTF(double factorMass) {
 		}
 	
 		if (_qw.size() != Nf)
-			throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of frequencies %d found in qtf header. They should have to be %d"), _qw.size(), Nf));
+			throw Exc(in.Str() + "\n"  + F(t_("Wrong number of frequencies %d found in qtf header. They should have to be %d"), _qw.size(), Nf));
 		if (_qh.size() != Nh)
-			throw Exc(in.Str() + "\n"  + Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
+			throw Exc(in.Str() + "\n"  + F(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), _qh.size(), Nh));
 							
 		::Copy(_qw, dt.qw);
 		::Copy(_qh, dt.qhead);
@@ -1182,16 +1185,16 @@ bool Aqwa::Load_QTF(double factorMass) {
 			f.Load(in.GetLine());
 			int ib = f.GetInt(0)-1;
 			if (ib >= Nb)
-				throw Exc(in.Str() + "\n"  + Format(t_("Body id %d higher than number of bodies"), ib+1, Nb));
+				throw Exc(in.Str() + "\n"  + F(t_("Body id %d higher than number of bodies"), ib+1, Nb));
 			ih = f.GetInt(1)-1;
 			if (ih >= Nh)
-				throw Exc(in.Str() + "\n"  + Format(t_("Heading id %d higher than number of headings"), ih+1, Nh));
+				throw Exc(in.Str() + "\n"  + F(t_("Heading id %d higher than number of headings"), ih+1, Nh));
 			int ifr1 = f.GetInt(2)-1;
 			if (ifr1 >= Nf)
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
+				throw Exc(in.Str() + "\n"  + F(t_("Frequency id %d higher than number of frequencies"), ifr1+1, Nf));
 			int ifr2 = f.GetInt(3)-1;
 			if (ifr2 >= Nf)
-				throw Exc(in.Str() + "\n"  + Format(t_("Frequency id %d higher than number of frequencies"), ifr2+1, Nf));
+				throw Exc(in.Str() + "\n"  + F(t_("Frequency id %d higher than number of frequencies"), ifr2+1, Nf));
 	
 			for (int idf = 0; idf < 6; ++idf) 
 				dt.qtfdif[ib][ih][idf](ifr1, ifr2).real(f.GetDouble(4 + idf)*factorMass);
@@ -1222,6 +1225,8 @@ bool Aqwa::Load_MQT() {
 		return false;
 	
 	int qNh = (int)dt.qhead.size();
+	if (qNh == 0)
+		throw Exc(t_("No headings fund in QTF file"));
 	UVector<double> qhead0(qNh);
 	for (int i = 0; i < qNh; ++i)
 		qhead0[i] = dt.qhead[i].real();
@@ -1265,16 +1270,16 @@ bool Aqwa::Load_MQT() {
 	while (!file.IsEof() && ib < dt.Nb-1) {
 		int iib = file.Read<int32>() - 1;
 		if (iib >= dt.Nb)
-			throw Exc(Format(t_("Wrong body number %d found in mqt. They should have to be %d"), iib+1, dt.Nb));
+			throw Exc(F(t_("Wrong body number %d found in mqt. They should have to be %d"), iib+1, dt.Nb));
 		if (iib != ib+1)
-			throw Exc(Format(t_("Wrong body number %d found in mqt. Previous was %d"), iib+1, ib+1));
+			throw Exc(F(t_("Wrong body number %d found in mqt. Previous was %d"), iib+1, ib+1));
 		ib = iib;
 		int nf = file.Read<int32>();
 		if (nf != (int)dt.qw.size())
-			throw Exc(Format(t_("Wrong number of frequencies %d found in mqt. They should have to be %d"), nf, (int)dt.qw.size()));
+			throw Exc(F(t_("Wrong number of frequencies %d found in mqt. They should have to be %d"), nf, (int)dt.qw.size()));
 		int nh = file.Read<int32>();
 		if (nh != qNh)
-			throw Exc(Format(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), nh, qNh));
+			throw Exc(F(t_("Wrong number of headings %d found in qtf header. They should have to be %d"), nh, qNh));
 		
 		file.SeekCur(28);
 		
@@ -1335,7 +1340,7 @@ bool Aqwa::Load_MQT() {
 					for (int ih2 = 0; ih2 < qNh; ++ih2) {
 						if (ih1 == ih2) {
 							if (!EqualRatio(dt.qtfdif[ib][ih1][idof](ifr, ifr), qtdif(idof, ih1, ih1), 1E-4, 1.))
-								throw Exc(Format(t_("QTF_dif(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
+								throw Exc(F(t_("QTF_dif(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
 									ib+1, dt.qhead[ih1].real(), idof, dt.w[ifr], FormatComplex(dt.qtfdif[ib][ih1][idof](ifr, ifr)), FormatComplex(qtdif(idof, ih1, ih1))));
 							dt.qtfdif[ib][ih1][idof](ifr, ifr) = qtdif(idof, ih1, ih1);		// MQT file has finest value
 						} else
@@ -1349,7 +1354,7 @@ bool Aqwa::Load_MQT() {
 					for (int ih2 = 0; ih2 < ih1 + 1; ++ih2) {
 						if (ih1 == ih2) {
 							if (!EqualRatio(dt.qtfsum[ib][ih1][idof](ifr, ifr), qtsum(idof, ih1, ih1), 1E-4, 1.))
-								throw Exc(Format(t_("QTF_sum(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
+								throw Exc(F(t_("QTF_sum(ib %d, head %.2f, idof %d, freq %.2f) does not match (%s != %s)"), 
 									ib+1, dt.qhead[ih1].real(), idof, dt.w[ifr], FormatComplex(dt.qtfsum[ib][ih1][idof](ifr, ifr)), FormatComplex(qtsum(idof, ih1, ih1))));
 							dt.qtfsum[ib][ih1][idof](ifr, ifr) = qtsum(idof, ih1, ih1);		// MQT file has finest value
 						} else
@@ -1380,10 +1385,10 @@ bool Aqwa::Load_MQT() {
 }
 
 void Aqwa::Save(String file, Function <bool(String, int)> Status) const {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), file));
+	BEM::Print("\n\n" + F(t_("Saving '%s'"), file));
 
 	if (IsLoadedQTF(true) || IsLoadedQTF(false)) {
-		BEM::Print("\n- " + S(t_("QTF file")));
+		BEM::Print("\n- " + F(t_("QTF file")));
 		Save_QTF(ForceExt(file, ".qtf"), Status);
 	}
 }		
@@ -1391,11 +1396,11 @@ void Aqwa::Save(String file, Function <bool(String, int)> Status) const {
 void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 	FileOut out(file);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), file));
+		throw Exc(F(t_("Impossible to open '%s'"), file));
 	
 	out << "AQTF-2.0 :                                                            ";
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		out << Format("\n %2d %2d %3d    ", ib+1, int(dt.qhead.size()), int(dt.qw.size()));
+		out << F("\n %2d %2d %3d    ", ib+1, int(dt.qhead.size()), int(dt.qw.size()));
 		int icol = 0;
 		for (int ih = 0; ih < dt.qhead.size(); ++ih) {
 			if (dt.qhead[ih].real() != dt.qhead[ih].imag())
@@ -1404,7 +1409,7 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 				out << "\n              ";
 				icol = 0;
 			} 
-			out << Format("   % 9.5f", dt.qhead[ih].real());
+			out << F("   % 9.5f", dt.qhead[ih].real());
 			icol++;
 		}
 		out << "\n               ";
@@ -1414,7 +1419,7 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 				out << "\n               ";
 				icol = 0;
 			}
-			out << Format("   %9.7f", dt.qw[ifr]);
+			out << F("   %9.7f", dt.qw[ifr]);
 			icol++;
 		}	
 	
@@ -1423,7 +1428,7 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 	
         for (int ih = 0, realih = 0; ih < dt.qhead.size(); ++ih) {
             //inum++;
-    		if (Status && !Status(Format("Saving %s", file), (100*ih)/int(dt.qhead.size())))
+    		if (Status && !Status(F("Saving %s", file), (100*ih)/int(dt.qhead.size())))
 				throw Exc(t_("Stop by user"));
             
 			if (dt.qhead[ih].real() != dt.qhead[ih].imag())
@@ -1433,18 +1438,18 @@ void Aqwa::Save_QTF(String file, Function <bool(String, int)> Status) const {
 					bool nosum = dt.qtfsum.size() <= ib || dt.qtfsum[ib].size() <= ih || dt.qtfsum[ib][ih][0].rows() <= ifr1 || dt.qtfsum[ib][ih][0].cols() <= ifr2;
 			        bool nodif = dt.qtfdif.size() <= ib || dt.qtfdif[ib].size() <= ih || dt.qtfdif[ib][ih][0].rows() <= ifr1 || dt.qtfdif[ib][ih][0].cols() <= ifr2;
 			
-					out << Format("\n %2d %2d %3d %3d ", ib+1, realih+1, ifr1+1, ifr2+1);
+					out << F("\n %2d %2d %3d %3d ", ib+1, realih+1, ifr1+1, ifr2+1);
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nodif ? 0 : F_dim(dt.qtfdif[ib][ih][idf](ifr1, ifr2), idf).real());
+						out << F(" % 6.4E", nodif ? 0 : F_dim(dt.qtfdif[ib][ih][idf](ifr1, ifr2), idf).real());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nodif ? 0 : F_dim(dt.qtfdif[ib][ih][idf](ifr1, ifr2), idf).imag());
+						out << F(" % 6.4E", nodif ? 0 : F_dim(dt.qtfdif[ib][ih][idf](ifr1, ifr2), idf).imag());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nosum ? 0 : F_dim(dt.qtfsum[ib][ih][idf](ifr1, ifr2), idf).real());
+						out << F(" % 6.4E", nosum ? 0 : F_dim(dt.qtfsum[ib][ih][idf](ifr1, ifr2), idf).real());
 					out << "\n               ";
 					for (int idf = 0; idf < 6; ++idf) 
-						out << Format(" % 6.4E", nosum ? 0 : F_dim(dt.qtfsum[ib][ih][idf](ifr1, ifr2), idf).imag());
+						out << F(" % 6.4E", nosum ? 0 : F_dim(dt.qtfsum[ib][ih][idf](ifr1, ifr2), idf).imag());
 				}
 			realih++;	
         }
@@ -1456,8 +1461,8 @@ UVector<String> Aqwa::Check() const {
 	
 	if (dt.Nf > 100)
 		ret << t_("AQWA issue: The maximum number of allowed wave frequencies by AQWA is 100");
-	if (dt.Nh < 3)
-		ret << t_("AQWA issue: The minimum number of allowed wave headings by AQWA is 3");
+	//if (dt.Nh < 3)
+	//	ret << t_("AQWA issue: The minimum number of allowed wave headings by AQWA is 3");
 	if (First(dt.w) < 0.0999)
 		ret << t_("AQWA issue: The minimum frequency allowed by AQWA is 0.1 rad/s");
 	for (int ih = 1; ih < dt.Nh; ++ih) {
@@ -1473,7 +1478,7 @@ UVector<String> Aqwa::Check() const {
 String FastOut::Load_LIS(String file) {
 	FileInLine in(file);
 	if (!in.IsOpen())
-		return t_(Format("Impossible to open '%s'", file));
+		return t_(F("Impossible to open '%s'", file));
 	
 	fileName = file;
 	
@@ -1549,13 +1554,13 @@ String FastOut::Load_LIS(String file) {
 						if ((id = par.FindAfter("NODE")) > 0) {
 							inparameters = false;
 							String node = Trim(par.Mid(id));
-							Add3_dof(S("Node_pos_") + node); units << "m";		units << "m";		units << "m";
-							Add3_dof(S("Node_vel_") + node); units << "m/s";	units << "m/s";		units << "m/s";
-							Add3_dof(S("Node_acc_") + node); units << "m/s2";	units << "m/s2";	units << "m/s2";
+							Add3_dof(F("Node_pos_") + node); units << "m";		units << "m";		units << "m";
+							Add3_dof(F("Node_vel_") + node); units << "m/s";	units << "m/s";		units << "m/s";
+							Add3_dof(F("Node_acc_") + node); units << "m/s2";	units << "m/s2";	units << "m/s2";
 						} else if (f.GetText(0) == "FORCE") {
 							inparameters = false;
 							line = f.GetText(2);
-							Add3_dof(S("Force_") + line);	   units << "N";	units << "N";		units << "N";
+							Add3_dof(F("Force_") + line);	   units << "N";	units << "N";		units << "N";
 							parameters << ("Tension_" << line);units << "N";
 						} else if (f.GetText(0) == "TENSION") {
 							inparameters = false;
@@ -1659,7 +1664,7 @@ String FastOut::Load_LIS(String file) {
 	}			
 	
 	if (dataOut.IsEmpty()) 
-		return Format(t_("Problem reading '%s'"), fileName); 
+		return F(t_("Problem reading '%s'"), fileName); 
 	
 	if (!IsNull(Hs)) {
 		parameters << "Hs";
@@ -1691,9 +1696,16 @@ String FastOut::Load_LIS(String file) {
 	return "";	
 }
 
-void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool x0z, bool y0z, int qtfType) const {
+void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool x0z, bool y0z, 
+		bool irregular, bool autoIrregular, int qtfType) const {
+	if (irregular && !autoIrregular)
+		throw Exc(t_("AQWA irregular frequencies removal through user supplied lid is not supported. Try with automatic mesh generation"));
+	
+	if (qtfType == 7 || qtfType == 8)
+		throw Exc(t_("AQWA only supports pressure integration QTF calculation"));
+				
 	if (!DirectoryCreateX(folder))
-		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
+		throw Exc(F(t_("Problem creating '%s' folder"), folder));
 	
 	String file = AFX(folder, "Analysis.dat");	
 	
@@ -1701,12 +1713,12 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 	UVector<String> files;
 	files << file;
 	Body::SaveAs(dt.msh, files, Body::AQWA_DAT, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
-		dt.w, dt.head, qtfType, withPotentials, dt.h, numThreads);
+		dt.w, dt.head, irregular, autoIrregular, qtfType, withPotentials, dt.h, numThreads);
 	
 	String fileBat = AFX(folder, "Aqwa.bat");		
 	FileOut bat(fileBat);
 	if (!bat)
-		throw Exc(Format(t_("Problem creating '%s' file"), fileBat));
+		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
 	
 	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
 	bat << "call \"" << Bem().aqwaPath << "\" Analysis.dat";

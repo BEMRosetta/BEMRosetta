@@ -94,7 +94,7 @@ void QTFTabDof::DoClick(Data &data) {
 		data.units = idof < 3 ? t_("N/m²") : t_("N m/m²");
 	}
 	data.scatter.SetLabelY(data.labelY);
-	data.scatter.SetLabelX(Format(show_w ? t_("ω%s [rad/s]") : t_("T%s [s]"), typec == 'v' ? CharToSubSupScript('y', true) : CharToSubSupScript('x', true)));
+	data.scatter.SetLabelX(F(show_w ? t_("ω%s [rad/s]") : t_("T%s [s]"), typec == 'v' ? CharToSubSupScript('y', true) : CharToSubSupScript('x', true)));
 	
 	String sdiff;
 	double avgT = 0;
@@ -172,7 +172,7 @@ void QTFTabDof::DoClick(Data &data) {
 		}
 		int idc = hy.dt.GetId();
 		const Upp::Color &color = GetColorId(idc);
-		String nameType = Format(t_("QTF %s %s(%s) %d"), data.ma_ph, hy.dt.name, hy.GetCodeStrAbr(), hy.dt.qtftype);
+		String nameType = F(t_("QTF %s %s(%s) %d"), data.ma_ph, hy.dt.name, hy.GetCodeStrAbr(), hy.dt.qtftype);
 		data.scatter.AddSeries(d).Legend(nameType).Units(data.units).SetMarkColor(color).Stroke(2, color);
 		if (!showPoints)
 			data.scatter.NoMark();
@@ -182,12 +182,12 @@ void QTFTabDof::DoClick(Data &data) {
 	
 	String strw;
 	if (typec == 'd')
-		strw = Format(t_("Diagonal %s %s"), sdiff, show_w ? "rad/s" : "s");
+		strw = F(t_("Diagonal %s %s"), sdiff, show_w ? "rad/s" : "s");
 	else if (typec == 'c')
 		strw = t_("Conjugate");
 	else 
-		strw = Format("%.2f %s", avgT, show_w ? "rad/s" : "s");
-	data.scatter.SetTitle(Format(t_("QTF %s %d.%s %s heading %.1f:%.1fº %s"), isSum ? "sum" : "dif", ib+1, BEM::StrDOF(idof), strw, real(head), imag(head), strmag));
+		strw = F("%.2f %s", avgT, show_w ? "rad/s" : "s");
+	data.scatter.SetTitle(F(t_("QTF %s %d.%s %s heading %.1f:%.1fº %s"), isSum ? "sum" : "dif", ib+1, BEM::StrDOF(idof), strw, real(head), imag(head), strmag));
 	
 	if (autoFit) {
 		data.scatter.ZoomToFit(true, true);
@@ -457,7 +457,7 @@ bool MainQTF::Load() {
 			for (int iib = 0; iib < Bem().Nb; ++iib) {
 				for (int idf = 0; idf < 6; ++idf) {
 					dof[idf + 6*iib].Init(*this, posSplitter, iib, idf);
-					tab.Add(dof[idf + 6*iib].SizePos(), Format("%d.%s", iib+1, BEM::StrDOF(idf)));
+					tab.Add(dof[idf + 6*iib].SizePos(), F("%d.%s", iib+1, BEM::StrDOF(idf)));
 				}
 			}
 			if (tab.GetCount() >= idof + 6*ib && idof >= 0)

@@ -25,7 +25,7 @@ void MainDecay::Init() {
 	const String moorFiles = ".json";
 	String moorFilesAst = clone(moorFiles);
 	moorFilesAst.Replace(".", "*.");
-	file.Type(Format("All supported mooring files (%s)", moorFiles), moorFilesAst);
+	file.Type(F("All supported mooring files (%s)", moorFiles), moorFilesAst);
 	file.AllFilesType();
 	file.BrowseRightWidth(40).UseOpenFolder(true).BrowseOpenFolderWidth(10);
 	butLoad.Tip(t_("Loads mooring file")).WhenAction = [&] {OnLoad();};

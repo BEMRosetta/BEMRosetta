@@ -88,16 +88,16 @@ void MenuOptions::OnSave() {
 	String warning;
 	
 	if (Trim(~nemohPath) != "" && !DirectoryExists(~nemohPath))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPath);
+		warning << F("'%s' file doesn't exist\n", ~nemohPath);
 	if (Trim(~nemoh115Path) != "" && !DirectoryExists(~nemoh115Path))
-		warning << Format("'%s' file doesn't exist\n", ~nemoh115Path);
+		warning << F("'%s' file doesn't exist\n", ~nemoh115Path);
 	if (Trim(~nemoh3Path) != "" && !DirectoryExists(~nemoh3Path))
-		warning << Format("'%s' file doesn't exist\n", ~nemoh3Path);
+		warning << F("'%s' file doesn't exist\n", ~nemoh3Path);
 	if (Trim(~nemohPathGREN) != "" && !FileExists(~nemohPathGREN))
-		warning << Format("'%s' file doesn't exist\n", ~nemohPathGREN);
+		warning << F("'%s' file doesn't exist\n", ~nemohPathGREN);
 	
 	if (warning.IsEmpty() || 
-		ErrorOKCancel(DeQtfLf(Format(t_("Some errors found:\n%s Do you wish to save them?"), warning)))) {
+		ErrorOKCancel(DeQtfLf(F(t_("Some errors found:\n%s Do you wish to save them?"), warning)))) {
 		bem->g = ~g;
 		bem->rho = ~rho;
 		bem->len = ~len;

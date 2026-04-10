@@ -23,84 +23,84 @@ void GridBody::TableHeaders(const Hydro &hy, double head, bool pot, UVector<Stri
 	if (hy.IsLoadedMesh()) {
 		int n = 0;
 		for (int c = 0; c < 4; ++c) {
-			str << Format(t_("Node %d"), c+1);			group << 'm';	col << n++;
+			str << F(t_("Node %d"), c+1);			group << 'm';	col << n++;
 		}		
 		str << t_("Area");								group << 'm';	col << n++;
 		for (int c = 0; c < 3; ++c) {
-			str << Format(t_("Center %s"), xyz[c]);		group << 'm';	col << n++;
+			str << F(t_("Center %s"), xyz[c]);		group << 'm';	col << n++;
 		}
 		for (int c = 0; c < 3; ++c) {
-			str << Format(t_("Normal %s"), xyz[c]);		group << 'm';	col << n++;
+			str << F(t_("Normal %s"), xyz[c]);		group << 'm';	col << n++;
 		}
 	}
 	if (hy.IsLoadedPotsRad()) {
 		int n = 0;
 		for (int i = 0; i < 6; ++i) {
 			if (pot) {
-				str << Format(t_("|Φrad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
-				str << Format(t_("arg(Φrad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;
+				str << F(t_("|Φrad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
+				str << F(t_("arg(Φrad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;
 			} else {
-				str << Format(t_("|Prad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
-				str << Format(t_("arg(Prad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;	
+				str << F(t_("|Prad| %s"), 		BEM::StrDOF(i));	group << 'r'; col << n++;
+				str << F(t_("arg(Prad) %s"), 	BEM::StrDOF(i));	group << 'r'; col << n++;	
 			}
 		}
 		if (Bem().onlyDiagonal) {
 			for (int r = 0; r < 6; ++r) {
-				str << Format(t_("A_%s"), BEM::StrDOF(r));		group << 'r';		col << n++;
+				str << F(t_("A_%s"), BEM::StrDOF(r));		group << 'r';		col << n++;
 			}
 		} else {
 			for (int r = 0; r < 6; ++r) 
 				for (int c = 0; c < 6; ++c) {
-					str << Format(t_("A_%s_%s"),BEM::StrDOF(r), BEM::StrDOF(c));	group << 'r';	col << n++;
+					str << F(t_("A_%s_%s"),BEM::StrDOF(r), BEM::StrDOF(c));	group << 'r';	col << n++;
 				}
 		}
 		if (Bem().onlyDiagonal) {
 			for (int r = 0; r < 6; ++r) {
-				str << Format(t_("B_%s"), BEM::StrDOF(r)); 		group << 'r'; col << n++;
+				str << F(t_("B_%s"), BEM::StrDOF(r)); 		group << 'r'; col << n++;
 			}
 		} else {
 			for (int r = 0; r < 6; ++r) 
 				for (int c = 0; c < 6; ++c) {
-					str << Format(t_("B_%s_%s"),BEM::StrDOF(r), BEM::StrDOF(c)); 	group << 'r'; 	col << n++;
+					str << F(t_("B_%s_%s"),BEM::StrDOF(r), BEM::StrDOF(c)); 	group << 'r'; 	col << n++;
 				}
 		}
 	} 
 	if (hy.IsLoadedPotsInc()) {
 		int n = 0;
 		if (pot) {
-			str << Format(t_("|Φinc| %.0f"), head); 	group << 'i'; 	col << n++;
-			str << Format(t_("arg(Φinc) %.0f"), head);	group << 'i'; 	col << n++;
+			str << F(t_("|Φinc| %.0f"), head); 	group << 'i'; 	col << n++;
+			str << F(t_("arg(Φinc) %.0f"), head);	group << 'i'; 	col << n++;
 		} else {
-			str << Format(t_("|Pinc| %.0f"), head); 	group << 'i'; 	col << n++;
-			str << Format(t_("arg(Pinc) %.0f"), head);	group << 'i'; 	col << n++;	
+			str << F(t_("|Pinc| %.0f"), head); 	group << 'i'; 	col << n++;
+			str << F(t_("arg(Pinc) %.0f"), head);	group << 'i'; 	col << n++;	
 		}
 		for (int idf = 0; idf < 6; ++idf) {
-			str << Format(t_("|Ffk| %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
-			str << Format(t_("arg(Ffk) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
+			str << F(t_("|Ffk| %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
+			str << F(t_("arg(Ffk) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'i'; col << n++;
 		}
 	}
 	if (hy.IsLoadedPotsIncBMR()) {
 		int n = 0;
 		if (pot) {
-			str << Format(t_("|Φinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
-			str << Format(t_("arg(Φinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;
+			str << F(t_("|Φinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
+			str << F(t_("arg(Φinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;
 		} else {
-			str << Format(t_("|Pinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
-			str << Format(t_("arg(Pinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;			
+			str << F(t_("|Pinc_bmr| %.0f"), head), 	group << 'b'; 	col << n++;
+			str << F(t_("arg(Pinc_bmr) %.0f"), head),	group << 'b'; 	col << n++;			
 		}
 		for (int idf = 0; idf < 6; ++idf) {
-			str << Format(t_("|Ffk_bmr| %s %.0f"), BEM::StrDOF(idf), head); 	group << 'b'; col << n++;
-			str << Format(t_("arg(Ffk_bmr) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'b'; col << n++;
+			str << F(t_("|Ffk_bmr| %s %.0f"), BEM::StrDOF(idf), head); 	group << 'b'; col << n++;
+			str << F(t_("arg(Ffk_bmr) %s %.0f"), BEM::StrDOF(idf), head); 	group << 'b'; col << n++;
 		}
 	}
 	if (hy.IsLoadedPotsDif()) {
 		int n = 0;
 		if (pot) {
-			str << Format(t_("|Φdif|"), head); 	group << 'd'; col << n++;
-			str << Format(t_("arg(Φdif) %.0f"), head); 	group << 'd'; col << n++;
+			str << F(t_("|Φdif|"), head); 	group << 'd'; col << n++;
+			str << F(t_("arg(Φdif) %.0f"), head); 	group << 'd'; col << n++;
 		} else {
-			str << Format(t_("|Pdif|"), head); 	group << 'd'; col << n++;
-			str << Format(t_("arg(Pdif) %.0f"), head); 	group << 'd'; col << n++;	
+			str << F(t_("|Pdif|"), head); 	group << 'd'; col << n++;
+			str << F(t_("arg(Pdif) %.0f"), head); 	group << 'd'; col << n++;	
 		}
 	}
 }
@@ -120,7 +120,7 @@ void GridBody::Load(int idx, int ib, int &numNodes, int &numPanels) {
 		if (hy.IsLoadedMesh()) {
 			grdNodes.AddVirtualCol(t_("#"), dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, -2), 60);
 			for (int c = 0; c < 3; ++c) 
-				grdNodes.AddVirtualCol(Format("%s", xyz[c]), dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, -2), 80);
+				grdNodes.AddVirtualCol(F("%s", xyz[c]), dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, -2), 80);
 		}
 	}{
 		UVector<int> nnum;
@@ -147,7 +147,7 @@ void GridBody::Load(int idx, int ib, int &numNodes, int &numPanels) {
 		}
 		for (int i = 0; i < nnum.size()-1; ++i)
 			if (nnum[i] != nnum[i+1]) 
-				throw Exc(Format("Number of panels doesn't match between %s and %s", snum[i], snum[i+1]));
+				throw Exc(F("Number of panels doesn't match between %s and %s", snum[i], snum[i+1]));
 			
 		numPanels = First(nnum);
 			
@@ -190,7 +190,7 @@ void GridBody::UpdatePanelHeaders() {
 		grdPanels.SetVirtualHeader(i, str[i]);	
 }
 
-Value GridBody::DataSourceNodes::Format(const Value& q) const {
+Value GridBody::DataSourceNodes::F(const Value& q) const {
 	ASSERT(pmesh);
 	int iq = q;
 	if (pmesh->nodes.size() <= iq)
@@ -206,7 +206,7 @@ Value GridBody::DataSourceNodes::Format(const Value& q) const {
 	}
 }
 
-Value GridBody::DataSourcePanels::Format(const Value& q) const {
+Value GridBody::DataSourcePanels::F(const Value& q) const {
 	ASSERT(idx >= 0);
 	const Hydro &hy = Bem().hydros[idx];
 	int ip = q;

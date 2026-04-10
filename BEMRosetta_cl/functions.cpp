@@ -435,7 +435,7 @@ double FactorLen(const char *units) {
 	else if (strcmp(units, "km") == 0) 
 		return 1000;
 	else
-		throw Exc(Format(t_("This length unit is not supported. Read '%s'"), units));
+		throw Exc(F(t_("This length unit is not supported. Read '%s'"), units));
 }
 
 double FactorMass(const char *units) {
@@ -444,7 +444,7 @@ double FactorMass(const char *units) {
 	else if (strcmp(units, "te") == 0) 
 		return 1000;
 	else
-		throw Exc(Format(t_("This mass unit is not supported. Read '%s'"), units));
+		throw Exc(F(t_("This mass unit is not supported. Read '%s'"), units));
 }
 
 double FactorForce(const char *units) {
@@ -455,6 +455,6 @@ double FactorForce(const char *units) {
 	else if (strcmp(units, "MN") == 0) 
 		return 1e6;
 	else
-		throw Exc(Format(t_("This force unit is not supported. Read '%s'"), units));
+		throw Exc(F(t_("This force unit is not supported. Read '%s'"), units));
 }
 

@@ -14,9 +14,9 @@ String BemioH5::Load(String file, double) {
 	dt.x_w = dt.y_w = 0;
 	
 	try {
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), file));
+		BEM::Print("\n\n" + F(t_("Loading '%s'"), file));
 
-		BEM::Print("\n- " + S(t_("H5 file")));
+		BEM::Print("\n- " + F(t_("H5 file")));
 		
 		Load_H5();
 		
@@ -36,7 +36,7 @@ void BemioH5::Load_H5() {
 	Hdf5File hfile;
 	hfile.Open(fileName, H5F_ACC_RDONLY);
 	
-	for (dt.Nb = 0; hfile.ExistGroup(Format("body%d", dt.Nb+1)); dt.Nb++) 
+	for (dt.Nb = 0; hfile.ExistGroup(F("body%d", dt.Nb+1)); dt.Nb++) 
 		;	
 	
 	{
@@ -71,7 +71,7 @@ void BemioH5::Load_H5() {
 			if (str == "infinite")
 				dt.h = -1;
 			else
-				throw Exc(Format("Unknown depth '%s'", str));
+				throw Exc(F("Unknown depth '%s'", str));
 		} else 
 			dt.h = hfile.GetDouble("water_depth");
 
@@ -105,7 +105,7 @@ void BemioH5::Load_H5() {
 		if (hfile.ChangeGroup("components")) {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6*dt.Nb; ++c) {	
-					hfile.GetDouble(Format("%d_%d", r+1, c+1), data);
+					hfile.GetDouble(F("%d_%d", r+1, c+1), data);
 					if (data.rows() != dt.Nf && data.cols() != 2)
 						throw Exc("Wrong data dimension reading added_mass components");
 					for (int iw = 0; iw < dt.Nf; ++iw)
@@ -130,7 +130,7 @@ void BemioH5::Load_H5() {
 			if (hfile.ChangeGroup("re")) {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
-						hfile.GetDouble(Format("%d_%d", idf+1, ih+1), data);
+						hfile.GetDouble(F("%d_%d", idf+1, ih+1), data);
 						if (data.rows() != dt.Nf && data.cols() != 2)
 							throw Exc("Wrong data dimension reading force real component");
 						for (int iw = 0; iw < dt.Nf; ++iw)
@@ -142,7 +142,7 @@ void BemioH5::Load_H5() {
 			if (hfile.ChangeGroup("im")) {
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
-						hfile.GetDouble(Format("%d_%d", idf+1, ih+1), data);
+						hfile.GetDouble(F("%d_%d", idf+1, ih+1), data);
 						if (data.rows() != dt.Nf && data.cols() != 2)
 							throw Exc("Wrong data dimension reading force imag component");
 						for (int iw = 0; iw < dt.Nf; ++iw)
@@ -185,7 +185,7 @@ void BemioH5::Load_H5() {
 	MatrixXd data;
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		if (hfile.ChangeGroup(Format("body%d", ib+1))) {
+		if (hfile.ChangeGroup(F("body%d", ib+1))) {
 			if (hfile.ChangeGroup("properties")) {
 				dt.msh[ib].dt.name = hfile.GetString("name");
 				dt.msh[ib].dt.Vo = hfile.GetDouble("disp_vol");
@@ -347,7 +347,7 @@ void BemioH5::Save(String file) const {
 						else
 							data(iw, 1) = 0;
 					}
-					hfile.Set(Format("%d_%d", r+1, c+1), data).SetDescription("Added mass components as a function of frequency");
+					hfile.Set(F("%d_%d", r+1, c+1), data).SetDescription("Added mass components as a function of frequency");
 				}
 			}
 			hfile.UpGroup();	
@@ -365,7 +365,7 @@ void BemioH5::Save(String file) const {
 						else
 							data(iw, 1) = 0;
 					}
-					hfile.Set(Format("%d_%d", r+1, c+1), data).SetDescription("Radiation damping components as a function of frequency");
+					hfile.Set(F("%d_%d", r+1, c+1), data).SetDescription("Radiation damping components as a function of frequency");
 				}
 			}
 			hfile.UpGroup();	
@@ -403,45 +403,45 @@ void BemioH5::Save(String file) const {
 		data.col(0) = Get_T();
 		if (hfile.CreateGroup("components", true)) {
 			if (hfile.CreateGroup("re", true)) {
-				String str = Format("Real component of %s force as a function of frequency", caption);
+				String str = F("Real component of %s force as a function of frequency", caption);
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
 							data(iw, 1) = Nvl2(f[ib][ih](iw, idf).real(), 0.);
-						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
+						hfile.Set(F("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
 				hfile.UpGroup();	
 			}
 			if (hfile.CreateGroup("im", true)) {
-				String str = Format("Imaginary component of %s force as a function of frequency", caption);
+				String str = F("Imaginary component of %s force as a function of frequency", caption);
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
 							data(iw, 1) = Nvl2(f[ib][ih](iw, idf).imag(), 0.);
-						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
+						hfile.Set(F("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
 				hfile.UpGroup();	
 			}
 			if (hfile.CreateGroup("mag", true)) {
-				String str = Format("Magnitude of %s force as a function of frequency", caption);
+				String str = F("Magnitude of %s force as a function of frequency", caption);
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
 							data(iw, 1) = abs(Nvl2(f[ib][ih](iw, idf), std::complex(0.,0.)));
-						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str);
+						hfile.Set(F("%d_%d", idf+1, ih+1), data).SetDescription(str);
 					}
 				}
 				hfile.UpGroup();	
 			}
 			if (hfile.CreateGroup("phase", true)) {
-				String str = Format("Phase of %s force as a function of frequency", caption);
+				String str = F("Phase of %s force as a function of frequency", caption);
 				for (int idf = 0; idf < 6; ++idf) {
 					for (int ih = 0; ih < dt.Nh; ++ih) {
 						for (int iw = 0; iw < dt.Nf; ++iw)
 							data(iw, 1) = arg(f[ib][ih](iw, idf));
-						hfile.Set(Format("%d_%d", idf+1, ih+1), data).SetDescription(str).SetUnits("rad");
+						hfile.Set(F("%d_%d", idf+1, ih+1), data).SetDescription(str).SetUnits("rad");
 					}
 				}
 				hfile.UpGroup();	
@@ -461,10 +461,10 @@ void BemioH5::Save(String file) const {
 					d_p(idf, ih, iw) = arg(n);		
 				}
 				
-		hfile.Set("re",    d_r).SetDescription(Format("Real component of %s force", caption));		
-		hfile.Set("im",    d_i).SetDescription(Format("Imaginary component of %s force", caption));
-		hfile.Set("mag",   d_m).SetDescription(Format("Magnitude of %s force", caption));
-		hfile.Set("phase", d_p).SetDescription(Format("Phase angle of %s force", caption));
+		hfile.Set("re",    d_r).SetDescription(F("Real component of %s force", caption));		
+		hfile.Set("im",    d_i).SetDescription(F("Imaginary component of %s force", caption));
+		hfile.Set("mag",   d_m).SetDescription(F("Magnitude of %s force", caption));
+		hfile.Set("phase", d_p).SetDescription(F("Phase angle of %s force", caption));
 	};
 	auto SaveMD = [&](int ib, String caption) {
 		MultiDimMatrixRowMajor<double> md(6, dt.Nh, dt.Nf);		
@@ -472,11 +472,11 @@ void BemioH5::Save(String file) const {
 			for (int ih = 0; ih < dt.Nh; ++ih) 
 				for (int iw = 0; iw < dt.Nf; ++iw)
 					md(idf, ih, iw) = Nvl2(dt.md[ib][ih][idf][iw], 0.);		
-		hfile.Set("val", md).SetDescription(Format("Mean drift obtained with %s method", caption));		
+		hfile.Set("val", md).SetDescription(F("Mean drift obtained with %s method", caption));		
 	};	
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		if (hfile.CreateGroup(Format("body%d", ib+1), true)) {
+		if (hfile.CreateGroup(F("body%d", ib+1), true)) {
 			if (hfile.CreateGroup("properties", true)) {
 				MatrixXd mat;
 				hfile.Set("body_number", ib+1.).SetDescription("Number of rigid body from the BEM simulation");

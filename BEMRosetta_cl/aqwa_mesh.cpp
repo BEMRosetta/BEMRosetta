@@ -28,7 +28,7 @@ String AQWABody::LoadLis(UArray<Body> &msh, String fileName, double g, bool &y0z
 String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 		
 	hy.dt.symX = hy.dt.symY = false;
 	
@@ -130,7 +130,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 				if (f.GetCount() == 3) {
 					ib = f.GetInt(1)-1;
 					if (ib >= mesh.size())
-						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+						throw Exc(in.Str() + "\n"  + F(t_("Body %d not found"), ib+1));
 					if (mesh[ib].dt.M.size() != 36)
 						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
 					mesh[ib].dt.M(0, 0) = mesh[ib].dt.M(1, 1) = mesh[ib].dt.M(2, 2) = f.GetDouble(2);
@@ -140,7 +140,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 				if (str.Find("PMAS") > 0) {
 					ib = f.GetInt(1)-1;
 					if (ib >= mesh.size())
-						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+						throw Exc(in.Str() + "\n"  + F(t_("Body %d not found"), ib+1));
 					if (mesh[ib].dt.M.size() != 36)
 						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
 					mesh[ib].dt.M(3, 3) = f.GetDouble(2);
@@ -211,7 +211,7 @@ String AQWABody::LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileNa
 String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	double factorLength = 1;
 	
@@ -291,9 +291,9 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 					mesh[ib].dt.name = name;
 				} else {
 					if ((ps = line.FindAfter("SYMX")) >= 0) 
-						hy.dt.symY = true;
-					if ((ps = line.FindAfter("SYMY")) >= 0) 
 						hy.dt.symX = true;
+					if ((ps = line.FindAfter("SYMY")) >= 0) 
+						hy.dt.symY = true;
 				}
 			} else {
 				ib--;
@@ -327,7 +327,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 			if (f.IsInt(0)) {
 				ib = f.GetInt(0)-1;
 				if (ib >= mesh.size())
-					throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+					throw Exc(in.Str() + "\n"  + F(t_("Body %d not found"), ib+1));
 				if (f.GetInt(1) >= 98000) {
 					if (mesh[ib].dt.M.size() != 36)
 						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
@@ -344,7 +344,7 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 				if (!IsNull(ib) && f.GetInt(1) >= 98000) {
 					ib--;
 					if (ib >= mesh.size())
-						throw Exc(in.Str() + "\n"  + Format(t_("Body %d not found"), ib+1));
+						throw Exc(in.Str() + "\n"  + F(t_("Body %d not found"), ib+1));
 					if (mesh[ib].dt.M.size() != 36)
 						mesh[ib].dt.M = MatrixXd::Zero(6, 6);
 					mesh[ib].dt.M(3, 3) = f.GetDouble(2);
@@ -406,13 +406,18 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 }
 
 void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
-			const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials, double h, int numThreads) {
-	bool qtf = withQTF > 0;
-	bool farField = withQTF == 8;
+			const UVector<double> &w, const UVector<double> &head, bool irregular, bool autoIrregular, int qtfType, bool getPotentials, double h, int numThreads) {
+	if (qtfType == 7 || qtfType == 8)
+		throw Exc(t_("AQWA only supports pressure integration QTF calculation"));
+
+	bool qtf = qtfType > 0;
+
+	if (irregular && !autoIrregular)
+		throw Exc(t_("AQWA irregular frequencies removal through user supplied lid is not supported. Try with automatic mesh generation"));
 	
 	FileOut ret(fileName);
 	if (!ret.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));
+		throw Exc(F(t_("Impossible to open '%s'\n"), fileName));
 	
 	if (IsNull(numThreads) || numThreads <= 0)
 		numThreads = 8;
@@ -420,7 +425,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	ASSERT(mesh.size() == surfs.size());
 	
 	Time t = GetSysTime();
-	String st = Format("%02d/%02d/%4d %02d:%02d:%02d", t.day, t.month, t.year, t.hour, t.minute, t.second);
+	String st = F("%02d/%02d/%4d %02d:%02d:%02d", t.day, t.month, t.year, t.hour, t.minute, t.second);
 	
 	double factorMass = 1;
 	double factorLength = 1;
@@ -446,7 +451,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	String kg = factorMass == 1 ? "kg" : "tonne";
 	String N = factorMass == 1 ? "N" : "kN";
 	String m = factorLength == 1 ? "m" : "km";
-	ret << Format("* Hydrodynamic Solver Unit System : Metric: %s, %s [%s]\n", kg, m, N);
+	ret << F("* Hydrodynamic Solver Unit System : Metric: %s, %s [%s]\n", kg, m, N);
 	ret
 	<< "********************************************************************************" << "\n"
 	<< "*********************************** DECK  0 ************************************" << "\n"
@@ -454,9 +459,9 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "JOB AQWA  LINE" << "\n"
 	<< "TITLE               " << "\n"
 	<< "NUM_CORES         " << numThreads << "\n"
-	<< Format("OPTIONS %s%s%s", qtf ? "AQTF " : "", "GOON ", qtf ? "CQTF MQTF " : "") << "\n"
+	<< F("OPTIONS %s%s%s", qtf ? "AQTF " : "", "GOON ", qtf ? "CQTF MQTF " : "") << "\n"
 	<< "OPTIONS " << (getPotentials ? "PRPT PRPR" : "") <<"\n"
-	<< Format("OPTIONS %s%s REST END", qtf&&(!farField) ? "NQTF " : "", "LHFR") << "\n"
+	<< F("OPTIONS %s%s REST END", qtf ? "NQTF " : "", "LHFR") << "\n"
 	<< "RESTART  1  5" << "\n"
 	<< "********************************************************************************" << "\n"
 	<< "*********************************** DECK  1 ************************************" << "\n"
@@ -470,13 +475,13 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		firstidbody[ib] = firstidbody[ib-1] + surfs[ib-1].nodes.size();	
 		
 	for (int ib = 0; ib < surfs.size(); ++ib) {
-		ret << Format("      STRC       %2d\n", ib+1);
+		ret << F("      STRC       %2d\n", ib+1);
 		
 		const Surface &surf = surfs[ib];
 		
 		for (int in = 0; in < surf.nodes.size(); ++in) {
 			const Point3D &p = surf.nodes[in];
-			ret << Format("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
+			ret << F("%6d%5d         %s%s%s\n", ib+1, firstidbody[ib] + in +1, 
 						Replace(FDS(p.x/factorLength, 10, true), "E", "e"), 
 						Replace(FDS(p.y/factorLength, 10, true), "E", "e"), 
 						Replace(FDS(p.z/factorLength, 10, true), "E", "e"));
@@ -487,7 +492,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			if (IsNull(cg)) 
 				cg = Point3D::Zero();
 		}
-		ret << Format("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
+		ret << F("%6d%5d         %s%s%s\n", ib+1, 98000+ib, 
 						FDS(cg.x/factorLength, 10, true), 
 						FDS(cg.y/factorLength, 10, true), 
 						FDS(cg.z/factorLength, 10, true));	
@@ -511,20 +516,20 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	
 	for (int ib = 0; ib < surfs.size(); ++ib) {
 		ret << "********************************************************************************\n";
-		//if (ib == 0)
-		ret << Format("          ELM%d      Body%d\n", ib+1, ib+1);
+		ret << F("          ELM%d      Body%d\n", ib+1, ib+1);
 		if (y0z || x0z) {		// Symmetries
 			ret << "     ";
 			if (y0z)
-				ret << " SYMY";
-			if (x0z)
 				ret << " SYMX";
+			if (x0z)
+				ret << " SYMY";
 			ret << "\n";
 		}
 		ret
-		//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
-		<< "      ZLWL          (        0.)" << "\n"	// Free surface height is zero
-		<< Format("%6d%s\n", ib+1, "ILID AUTO");		// Irregular frequencies removal
+			//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
+			<< "      ZLWL          (        0.)" << "\n";	// Free surface height is zero
+		if (autoIrregular)
+			ret << F("%6d%s   %d\n", ib+1, "ILID AUTO", 60+ib);		// Irregular frequencies removal
 		
 		const Surface &surf = surfs[ib];
 		
@@ -534,15 +539,15 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			String diff = IsDry(surf, ip) ? "    " : "DIFF";
 			
 			if (p.IsTriangle())
-				ret << Format("%6d%s %s%5d(1)(%5d)(%5d)(%5d)  WB Elem Id:%5d Aqwa Elem No:%5d\n", ib+1, "TPPL", diff, 14+ib, 
+				ret << F("%6d%s %s%5d(1)(%5d)(%5d)(%5d)  WB Elem Id:%5d Aqwa Elem No:%5d\n", ib+1, "TPPL", diff, 14+ib, 
 							p.id[0]+1+firstidbody[ib], p.id[1]+1+firstidbody[ib], p.id[2]+1+firstidbody[ib], ipall, ip+1);
 			else
-				ret << Format("%6d%s %s%5d(1)(%5d)(%5d)(%5d)(%5d)  WB Elem Id:%5d Aqwa Elem No:%5d\n", ib+1, "QPPL", diff, 14+ib, 
+				ret << F("%6d%s %s%5d(1)(%5d)(%5d)(%5d)(%5d)  WB Elem Id:%5d Aqwa Elem No:%5d\n", ib+1, "QPPL", diff, 14+ib, 
 							p.id[0]+1+firstidbody[ib], p.id[1]+1+firstidbody[ib], p.id[2]+1+firstidbody[ib], p.id[3]+1+firstidbody[ib], ipall, ip+1);
 		     
 			ipall++;
 		}
-		ret << Format("%6d%s     %5d(1)(%5d)(%5d)(%5d)\n", ib+1, "PMAS", 50+ib, 98000+ib, 98000+ib, 98000+ib);
+		ret << F("%6d%s     %5d(1)(%5d)(%5d)(%5d)\n", ib+1, "PMAS", 50+ib, 98000+ib, 98000+ib, 98000+ib);
 		ret
 		<< " END\n"
 		<< "********************************************************************************\n";
@@ -557,7 +562,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		if (ib > 0)
 			ret << "\n";	
-		ret << Format("    %2d         %5d  %s", ib+1, 98000+ib, FDS(mesh[ib].GetMass(), 8, true));
+		ret << F("    %2d         %5d  %s", ib+1, 98000+ib, FDS(mesh[ib].GetMass(), 8, true));
 	}
 	ret	<< "\n END\n";	
 		
@@ -569,7 +574,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		if (mesh[ib].dt.M.size() != 36)
-			throw Exc(Format(t_("Body %d inertia matrix is not correct"), ib+1));
+			throw Exc(F(t_("Body %d inertia matrix is not correct"), ib+1));
 		double m33 = mesh[ib].dt.M(3, 3);
 		double m44 = mesh[ib].dt.M(4, 4);
 		double m55 = mesh[ib].dt.M(5, 5);
@@ -581,7 +586,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 			m55 = 0.0001;
 		if (ib > 0)
 			ret << "\n";
-		ret << Format("%6d%s     %5d %s %s %s %s %s %s", ib+1, "PMAS", 98000+ib, 
+		ret << F("%6d%s     %5d %s %s %s %s %s %s", ib+1, "PMAS", 98000+ib, 
 			FDS(m33, 9, true), FDS(mesh[ib].dt.M(3, 4), 9, true), FDS(mesh[ib].dt.M(3, 5), 9, true),
 			FDS(m44, 9, true), FDS(mesh[ib].dt.M(4, 5), 9, true), FDS(m55, 9, true));
 	}
@@ -594,9 +599,9 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "          GLOB\n";
 	
 	ret 
-	<<	Format("      DPTH%s\n", FDS(h/factorLength, 10, true))
-	<<	Format("      DENS%s\n", FDS(rho/factorMass, 10, true))
-	<<	Format("      ACCG%s\n", FDS(g/factorLength, 10, true));
+	<<	F("      DPTH%s\n", FDS(h/factorLength, 10, true))
+	<<	F("      DENS%s\n", FDS(rho/factorMass, 10, true))
+	<<	F("      ACCG%s\n", FDS(g/factorLength, 10, true));
 
 	ret	<< " END\n";
 
@@ -624,11 +629,11 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";
-		ret << Format("          FDR%d\n", ib+1);
+		ret << F("          FDR%d\n", ib+1);
 		for (int iw = 0; iw < hrtz.size(); ++iw) 
-			ret << Format("    %2d%s  %3d  %3d %s\n", ib+1, "HRTZ", iw+1, iw+1, Replace(FDS(hrtz[iw], 9, true), "E", "e"));
+			ret << F("    %2d%s  %3d  %3d %s\n", ib+1, "HRTZ", iw+1, iw+1, Replace(FDS(hrtz[iw], 9, true), "E", "e"));
 		for (int ih = 0; ih < head180.size(); ++ih) 
-			ret << Format("    %2d%s   %2d   %2d %s\n", ib+1, "DIRN", ih+1, ih+1, FDS(head180[ih], 9, true));	
+			ret << F("    %2d%s   %2d   %2d %s\n", ib+1, "DIRN", ih+1, ih+1, FDS(head180[ih], 9, true));	
 		ret	<< " END\n";
 		ret << "********************************************************************************\n";
 	}
@@ -638,7 +643,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************\n";
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";
-		ret << Format("          WFS%d\n", ib+1);
+		ret << F("          WFS%d\n", ib+1);
 		if (mesh[ib].dt.Cadd.size() == 36 || mesh[ib].dt.Cmoor.size() == 36) {
 			MatrixXd K;
 			K.setConstant(6, 6, 0);
@@ -646,19 +651,23 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 				K += mesh[ib].dt.Cadd;		
 			if (mesh[ib].dt.Cmoor.size() == 36)
 				K += mesh[ib].dt.Cmoor;
-			for (int idf0 = 0; idf0 < 6; ++idf0) {
-				ret << Format("      SSTF    1%5d", idf0+1);
-				for (int idf1 = 0; idf1 < 6; ++idf1) 
-					ret << FDS(K(idf0, idf1), 10, true);
-				ret << "\n";
+			if (K.cwiseAbs().maxCoeff() != 0) {
+				for (int idf0 = 0; idf0 < 6; ++idf0) {
+					ret << F("      SSTF%5d%5d", ib+1, idf0+1);
+					for (int idf1 = 0; idf1 < 6; ++idf1) 
+						ret << FDS(K(idf0, idf1), 10, true);
+					ret << "\n";
+				}
 			}
 		}
 		if (mesh[ib].dt.Dlin.size() == 36) {
-			for (int idf0 = 0; idf0 < 6; ++idf0) {
-				ret << Format("      FIDP     %5d", idf0+1);
-				for (int idf1 = 0; idf1 < 6; ++idf1) 
-					ret << FDS(mesh[ib].dt.Dlin(idf0, idf1), 10, true);
-				ret << "\n";
+			if (mesh[ib].dt.Dlin.cwiseAbs().maxCoeff() != 0) {
+				for (int idf0 = 0; idf0 < 6; ++idf0) {
+					ret << F("      FIDP     %5d", idf0+1);
+					for (int idf1 = 0; idf1 < 6; ++idf1) 
+						ret << FDS(mesh[ib].dt.Dlin(idf0, idf1), 10, true);
+					ret << "\n";
+				}
 			}
 		}
 		ret	<< " END\n"
@@ -670,7 +679,7 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	<< "********************************************************************************\n";
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";
-		ret << Format("          DRC%d\n", ib+1);
+		ret << F("          DRC%d\n", ib+1);
 		ret	<< "* No data defined for this structure\n"
 			<< " END\n"
 			<< "********************************************************************************\n";

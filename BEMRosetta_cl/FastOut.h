@@ -67,7 +67,7 @@ public:
 	
 	String GetFileName() const	{return fileName;}
 	
-	int ColFairlead(int i) const{return GetParameter_throw(Format("T[%d]", i-1));}
+	int ColFairlead(int i) const{return GetParameter_throw(F("T[%d]", i-1));}
 		
 	int GetNumFairlead() const {
 		for (int i = 0; i < 100; ++i) {
@@ -613,11 +613,11 @@ private:
 		virtual ~Fairten_tParam() {}
 		
 		void Init00(int _id) {
-			name = Format("FAIRTEN%d_t", _id);
+			name = F("FAIRTEN%d_t", _id);
 			id = _id;
 		}
 		virtual void Init() {
-			idFair = dF->GetParameterX(Format("FAIRTEN%d", id));
+			idFair = dF->GetParameterX(F("FAIRTEN%d", id));
 			enabled = !(idFair < 0);
 		}
 		virtual double Calc(int idtime) {
@@ -639,12 +639,12 @@ private:
 		virtual ~AnchTenHor() {}
 		
 		void Init00(int _id) {
-			name = Format("ANCHTEN%d_H", _id);
+			name = F("ANCHTEN%d_H", _id);
 			id = _id;
 		}
 		virtual void Init() {
-			idx = dF->GetParameterX(Format("L%d", id) + "NP0FX");
-			idy = dF->GetParameterX(Format("L%d", id) + "NP0FY");
+			idx = dF->GetParameterX(F("L%d", id) + "NP0FX");
+			idy = dF->GetParameterX(F("L%d", id) + "NP0FY");
 			enabled = idx >= 0  && idy >= 0;
 		}
 		virtual double Calc(int idtime) {
@@ -667,11 +667,11 @@ private:
 		virtual ~AnchTenV() {}
 		
 		void Init00(int _id) {
-			name = Format("ANCHTEN%d_V", _id);
+			name = F("ANCHTEN%d_V", _id);
 			id = _id;
 		}
 		virtual void Init() {
-			idz = dF->GetParameterX(Format("L%d", id) + "NP0FZ");
+			idz = dF->GetParameterX(F("L%d", id) + "NP0FZ");
 			enabled = idz >= 0;
 		}
 		virtual double Calc(int idtime) {
@@ -796,7 +796,7 @@ public:
 			if (!isChanged || fileName.IsEmpty())
 				return;
 			if (!SaveFile(fileName, fileText))
-				throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
+				throw Exc(F(t_("Impossible to save file '%s'"), fileName));
 		}
 		
 		bool IsAvailable() {
@@ -807,7 +807,7 @@ public:
 		
 		String GetString(String var) {
 			if (!IsAvailable()) 
-				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+				throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			
 			String res;
 			UVector<String> vars = Split(var, "/");
@@ -816,10 +816,10 @@ public:
 			else if (vars.size() == 1)		
 				res = GetFASTVarPos(fileText, vars[0], Null, pos);
 			else
-				throw Exc(Format(t_("Wrong variable '%s' in GetString"), var));
+				throw Exc(F(t_("Wrong variable '%s' in GetString"), var));
 			
 			if (res == "")
-				throw Exc(Format(t_("Unknown variable '%s' in GetString"), var));
+				throw Exc(F(t_("Unknown variable '%s' in GetString"), var));
 			
 			if (res[0] == '\"')		// Remove quotes
 				res = res.Mid(1);
@@ -830,13 +830,13 @@ public:
 		double GetDouble(String var) {
 			double ddata = ScanDouble(GetString(var));
 			if (IsNull(ddata))
-				throw Exc(Format(t_("Wrong variable '%s' in GetDouble"), var));
+				throw Exc(F(t_("Wrong variable '%s' in GetDouble"), var));
 			return ddata;
 		}
 		int GetInt(String var) {
 			int ddata = ScanInt(GetString(var));
 			if (!IsNum(ddata))
-				throw Exc(Format(t_("Wrong variable '%s' in GetInt"), var));
+				throw Exc(F(t_("Wrong variable '%s' in GetInt"), var));
 			return ddata;
 		}
 		bool GetBool(String var) {
@@ -850,38 +850,38 @@ public:
 				return true;
 			if (idata == 0)
 				return false;
-			throw Exc(Format(t_("Wrong variable '%s' in GetBool"), var));
+			throw Exc(F(t_("Wrong variable '%s' in GetBool"), var));
 		}
 		double GetMatrixVal(String var, int row, int col) {
 			if (!IsAvailable()) 
-				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+				throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			return GetFASTMatrixVal(fileText, var, row, col);
 		}
 		Eigen::MatrixXd GetMatrix(String var, int rows, int cols) {
 			if (!IsAvailable()) 
-				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+				throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			return GetFASTMatrix(fileText, var, rows, cols);
 		}
 		void SetMatrixVal(String var, int row, int col, double val) {
 			if (!IsAvailable()) 
-				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+				throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			int posIni, posEnd;
 			GetMatrixIds(var, row, col, posIni, posEnd);
 			
 			int delta = posEnd-posIni-1;
 			
 			isChanged = true;
-			fileText = fileText.Left(posIni) + S(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
+			fileText = fileText.Left(posIni) + F(" ") + FDS(val, delta, true) + fileText.Mid(posEnd);
 		}
 		
 		UVector<UVector<String>> GetFASTArray(String var) {
 			if (!IsAvailable()) 
-				throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+				throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			return ::GetFASTArray(fileText, var);
 		}
 		
 		void SetString(String var, String val) {
-			val = S("\"") + val + S("\"");
+			val = F("\"") + val + F("\"");
 			SetString0(var, val);
 		}
 		void SetInt(String var, int val) {
@@ -901,7 +901,7 @@ public:
 			if (fileText.IsEmpty()) {
 				fileText = LoadFile(fileName);
 				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+					throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			}
 			UVector<String> vars = Split(var, "/");
 			if (vars.size() == 2) {
@@ -911,13 +911,13 @@ public:
 				isChanged = true;	
 				return SetFASTVar(fileText, vars[0], val);
 			} else
-				throw Exc(Format(t_("Wrong variable '%s' in SetString"), var));
+				throw Exc(F(t_("Wrong variable '%s' in SetString"), var));
 		}
 		void GetMatrixIds(String var, int row, int col, int &posIni, int &posEnd) {
 			if (fileText.IsEmpty()) {
 				fileText = LoadFile(fileName);
 				if (fileText.IsEmpty())
-					throw Exc(Format(t_("Impossible to read file '%s'"), fileName));
+					throw Exc(F(t_("Impossible to read file '%s'"), fileName));
 			}
 			GetFASTMatrixIds(fileText, var, row, col, posIni, posEnd);
 		}

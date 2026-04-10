@@ -17,9 +17,9 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 	
 	try {
 		if (GetFileExt(filein) != ".in") 
-			return Format(t_("File '%s' is not of HAMS type"), filein);
+			return F(t_("File '%s' is not of HAMS type"), filein);
 			
-		BEM::Print("\n\n" + Format(t_("Loading '%s'"), filein));
+		BEM::Print("\n\n" + F(t_("Loading '%s'"), filein));
 
 		dt.solver = Hydro::HAMS_WAMIT;
 		
@@ -50,7 +50,7 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 				LoadHydrostatic(hydroFile, 0);
 		} else {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
-				String hydroFile = AFX(baseFolder, "Input", Format("Hydrostatic_%d.in", ib+1));
+				String hydroFile = AFX(baseFolder, "Input", F("Hydrostatic_%d.in", ib+1));
 				if (FileExists(hydroFile)) 
 					LoadHydrostatic(hydroFile, ib);
 			}
@@ -72,7 +72,7 @@ String Hams::Load(String filein, bool onlycase, Function <bool(String, int)> Sta
 				}
 			}
 			if (iszero && !onlycase && !Load_HydrostaticBody(hydrostaticFile, dt.rho*dt.g))
-				return Format(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile);
+				return F(t_("Problem loading Hydrostatic file '%s'"), hydrostaticFile);
 		}
 			
 		if (IsNull(dt.Nb))
@@ -200,7 +200,7 @@ int Hams::Load_ControlFile(String fileName) {
 			int Nf = f.GetInt(1);
 			if (!IsNull(dt.Nf)) {
 				if (dt.Nf != abs(Nf))
-					throw Exc(Format(t_("Number of frequencies %d does not match with previously loaded %d"), Nf, dt.Nf));
+					throw Exc(F(t_("Number of frequencies %d does not match with previously loaded %d"), Nf, dt.Nf));
 			} else 
 				dt.Nf = abs(Nf);
 			UVector<double> data;
@@ -224,7 +224,7 @@ int Hams::Load_ControlFile(String fileName) {
 				for (int i = 0; i < f.size(); ++i)
 					data << f.GetDouble(i);
 				if (Nf != data.size())
-					throw Exc(Format(t_("Number of frequencies mismatch (%d != %d)"), Nf, data.size()));
+					throw Exc(F(t_("Number of frequencies mismatch (%d != %d)"), Nf, data.size()));
 			}
 			for (double &dat : data) {
 				switch (input_frequency_type) {
@@ -243,10 +243,11 @@ int Hams::Load_ControlFile(String fileName) {
 			ismrel = true;
 			dt.Nb = f.GetInt(1);
 			dt.msh.SetCount(dt.Nb);
+			dt.lids.SetCount(dt.Nb);
 			if (dt.Nb > 1) {
 				for (int ib = 0; ib < dt.Nb; ++ib) {
-					dt.msh[ib].dt.fileName = AFX(folder, Format("HullMesh_%d.pnl", ib+1));
-					dt.msh[ib].dt.name = Format("Body_%d", ib+1);
+					dt.msh[ib].dt.fileName = AFX(folder, F("HullMesh_%d.pnl", ib+1));
+					dt.msh[ib].dt.name = F("Body_%d", ib+1);
 				}
 			}
 			UVector<Point3D> lcs(dt.Nb);
@@ -261,7 +262,7 @@ int Hams::Load_ControlFile(String fileName) {
 				Body &b = dt.msh[ib];
 				String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 				if (!IsEmpty(ret))
-					BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
+					BEM::PrintWarning(F(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
 				b.dt.mesh.Translate(lcs[ib].x, lcs[ib].y, lcs[ib].z);
 				b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
 			}
@@ -269,7 +270,7 @@ int Hams::Load_ControlFile(String fileName) {
 			int Nh = f.GetInt(1);
 			if (!IsNull(dt.Nh)) {
 				if (dt.Nh != abs(Nh))
-					throw Exc(Format(t_("Number of headings %d does not match with previously loaded %d"), Nh, dt.Nh));
+					throw Exc(F(t_("Number of headings %d does not match with previously loaded %d"), Nh, dt.Nh));
 			} else 
 				dt.Nh = abs(Nh);
 			UVector<double> data;
@@ -324,7 +325,7 @@ int Hams::Load_ControlFile(String fileName) {
 			for (int r = 0; r < numPoints; ++r) {
 				f.GetLine();
 				if (f.IsEof())
-					throw Exc(Format(t_("Field points list is incomplete. read %d from %d"), r, numPoints));
+					throw Exc(F(t_("Field points list is incomplete. read %d from %d"), r, numPoints));
 				listPointsTemp[r].x = f.GetDouble(0);
 				listPointsTemp[r].y = f.GetDouble(1);
 				listPointsTemp[r].z = f.GetDouble(2);
@@ -333,10 +334,10 @@ int Hams::Load_ControlFile(String fileName) {
 			int remove_irr_freq = f.GetInt(1);	
 			if (remove_irr_freq > 0) {
 				if (dt.Nb == 1)	
-					dt.msh[0].dt.lidFile = AFX(folder, "WaterplaneMesh.pnl");
+					dt.lids[0].dt.fileName = AFX(folder, "WaterplaneMesh.pnl");
 				else {
 					for (int ib = 0; ib < dt.Nb; ++ib)
-						dt.msh[ib].dt.lidFile = AFX(folder, Format("WaterplaneMesh_%d.pnl", ib+1));
+						dt.lids[ib].dt.fileName = AFX(folder, F("WaterplaneMesh_%d.pnl", ib+1));
 				}
 			}
 		}
@@ -345,7 +346,7 @@ int Hams::Load_ControlFile(String fileName) {
 		Body &b = dt.msh[0];
 		String ret = Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
 		if (!IsEmpty(ret))
-			BEM::PrintWarning(Format(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
+			BEM::PrintWarning(F(t_("Problem loading mesh '%s': %s"), b.dt.fileName, ret));
 		b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
 	}
 	return output_frequency_type;
@@ -394,14 +395,17 @@ bool Hams::LoadHydrostatic(String fileName, int ib) {
 }
 
 void Hams::SaveCase(String folderBase, bool bin, int numCases, int numThreads, bool x0z, bool y0z, 
-					const UArray<Body> &lids,const UVector<Point3D> &listPoints, bool ismrel) const {
-	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, lids, listPoints, ismrel);
+					const UVector<Point3D> &listPoints, bool ismrel, bool irregular, bool autoIrregular, int qtfType) const {
+	if (qtfType > 0)
+		throw Exc(t_("Solver HAMS does not obtain QTF"));
+		
+	SaveFolder0(folderBase, bin, 1, true, numThreads,  x0z, y0z, listPoints, ismrel, irregular, autoIrregular);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, lids, listPoints, ismrel);
+		SaveFolder0(folderBase, bin, numCases, false, numThreads, x0z, y0z, listPoints, ismrel, irregular, autoIrregular);
 }
 
 void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, 
-		const UArray<Body> &lids, const UVector<Point3D> &listPoints, bool ismrel) const {
+		const UVector<Point3D> &listPoints, bool ismrel, bool irregular, bool autoIrregular) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 	
 	UVector<int> valsf;
@@ -419,11 +423,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		solvName = GetFileName(source);
 		String destNew = AFX(folderBase, solvName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying exe file from '%s'"), source));
+			throw Exc(F(t_("Problem copying exe file from '%s'"), source));
 		source = AFX(GetFileFolder(source), "libiomp5md.dll");		
 		destNew = AFX(folderBase, "libiomp5md.dll");		
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying dll file from '%s'"), source));					
+			throw Exc(F(t_("Problem copying dll file from '%s'"), source));					
 	}
 	 
 	String meshName;
@@ -432,16 +436,16 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		meshName = GetFileName(source);
 		String destNew = AFX(folderBase, meshName);
 		if (!FileCopy(source, destNew)) 
-			throw Exc(Format(t_("Problem copying Hams WAMIT_MeshTran exe file from '%s'"), Bem().hamsBodyPath));				
+			throw Exc(F(t_("Problem copying Hams WAMIT_MeshTran exe file from '%s'"), Bem().hamsBodyPath));				
 	} 
 		
 	for (int i = 0; i < numCases; ++i) {
 		String folder;
 		UVector<double> freqs;
 		if (numCases > 1) {
-			folder = AFX(folderBase, Format("HAMS_Part_%d", i+1));
+			folder = AFX(folderBase, F("HAMS_Part_%d", i+1));
 			if (!DirectoryCreateX(folder))
-				throw Exc(Format(t_("Problem creating '%s' folder"), folder));
+				throw Exc(F(t_("Problem creating '%s' folder"), folder));
 			Upp::Block(dt.w, freqs, ifr, valsf[i]);
 			ifr += valsf[i];
 		} else {
@@ -450,9 +454,9 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 		}
 		String folderInput = AFX(folder, "Input");
 		if (!DirectoryCreateX(folderInput))
-			throw Exc(Format(t_("Problem creating '%s' folder"), folderInput));
+			throw Exc(F(t_("Problem creating '%s' folder"), folderInput));
 		
-		bool irrRemoval = !lids.IsEmpty() && !lids[0].IsEmpty();
+		bool irrRemoval = !dt.lids.IsEmpty() && !dt.lids[0].IsEmpty();
 		
 		if (IsNull(numThreads) || numThreads <= 0)
 			numThreads = 8;
@@ -470,35 +474,35 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			
 			if (irrRemoval) {
 				dest = AFX(folderInput, "WaterplaneMesh.pnl");
-				Body::SaveAs(lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+				Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
 			}
 		} else {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
-				String dest = AFX(folderInput, Format("HullMesh_%d.pnl", ib+1));
+				String dest = AFX(folderInput, F("HullMesh_%d.pnl", ib+1));
 				Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
 				
 				if (irrRemoval) {
-					dest = AFX(folderInput, Format("WaterplaneMesh_%d.pnl", ib+1));
-					Body::SaveAs(lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+					dest = AFX(folderInput, F("WaterplaneMesh_%d.pnl", ib+1));
+					Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
 				}
 			}
 		}
 		
 		if (!ismrel)
-			Save_Settings(folder, lids);
+			Save_Settings(folder);
 		
 		String folderOutput = AFX(folder, "Output");
 		if (!DirectoryCreateX(folderOutput))
-			throw Exc(Format(t_("Problem creating '%s' folder"), folderOutput));
+			throw Exc(F(t_("Problem creating '%s' folder"), folderOutput));
 		if (!DirectoryCreateX(AFX(folderOutput, "Hams_format")))
-			throw Exc(Format(t_("Problem creating '%s' folder"), AFX(folderOutput, "Hams_format")));
+			throw Exc(F(t_("Problem creating '%s' folder"), AFX(folderOutput, "Hams_format")));
 		if (!DirectoryCreateX(AFX(folderOutput, "Hydrostar_format")))
-			throw Exc(Format(t_("Problem creating '%s' folder"), AFX(folderOutput, "Hydrostar_format")));
+			throw Exc(F(t_("Problem creating '%s' folder"), AFX(folderOutput, "Hydrostar_format")));
 		if (!DirectoryCreateX(AFX(folderOutput, "Wamit_format")))
-			throw Exc(Format(t_("Problem creating '%s' folder"), AFX(folderOutput, "Wamit_format")));
+			throw Exc(F(t_("Problem creating '%s' folder"), AFX(folderOutput, "Wamit_format")));
 		
 		if (numCases > 1) 
-			Save_Bat(folderBase, Format("HAMS_Part_%d.bat", i+1), Format("HAMS_Part_%d", i+1), AFX("..", solvName), AFX("..", meshName));
+			Save_Bat(folderBase, F("HAMS_Part_%d.bat", i+1), F("HAMS_Part_%d", i+1), AFX("..", solvName), AFX("..", meshName));
 		else
 			Save_Bat(folder, "HAMS.bat", Null, solvName, meshName);
 	}
@@ -508,9 +512,9 @@ void Hams::Save_Bat(String folder, String batname, String caseFolder, /*bool bin
 	String fileName = AFX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
+		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
-	out << Format("title %s in '%s'\n", solvName, caseFolder);
+	out << F("title %s in '%s'\n", solvName, caseFolder);
 	
 	out << "echo Start: \%date\% \%time\% > time.txt\n";
 	
@@ -531,7 +535,7 @@ void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y) {
 		out << "\n";
 		for (int x = 0; x < 6; ++x)
-			out << Format("  %12.5E", isvoid ? 0. : mat(x, y));
+			out << F("  %12.5E", isvoid ? 0. : mat(x, y));
 	}
 }
 
@@ -549,14 +553,14 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 	String fileName = AFX(folderInput, "Hydrostatic.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
+		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	out << " Center of Gravity:";
 	
 	if (dt.msh.IsEmpty())
 		throw Exc(t_("No bodies found"));
 	
 	const Body &b = dt.msh[0];
-	out << Format("\n  %.15E  %.15E  %.15E", b.dt.cg[0], b.dt.cg[1], b.dt.cg[2]);
+	out << F("\n  %.15E  %.15E  %.15E", b.dt.cg[0], b.dt.cg[1], b.dt.cg[2]);
 
 	OutMatrix(out, "Body Mass Matrix", b.dt.M);
 	OutMatrix(out, "External Linear Damping Matrix", b.dt.Dlin);
@@ -567,23 +571,23 @@ void Hams::Save_Hydrostatic(String folderInput) const {
 }
 
 
-void Hams::Save_Settings(String folderInput, const UArray<Body> &lids) const {
+void Hams::Save_Settings(String folderInput) const {
 	String fileName = AFX(folderInput, "Settings.ctrl");
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to create '%s'"), fileName));
+		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
 	Body mesh;
 	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
-	if (!lids.IsEmpty() && !lids[0].IsEmpty()) {
+	if (!dt.lids.IsEmpty() && !dt.lids[0].IsEmpty()) {
 		//Body lid;
 		//lid.dt.mesh.AddWaterSurface(mesh.dt.mesh, mesh.dt.under, 'f', Bem().roundVal, Bem().roundEps); 
 		//lid.AfterLoad(dt.rho, dt.g, false, false);
 		
-		mesh.Append(lids[0].dt.mesh, dt.rho, dt.g);
+		mesh.Append(dt.lids[0].dt.mesh, dt.rho, dt.g);
 	}
 	Body::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, false, false);	
 	
@@ -606,14 +610,14 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	String fileName = AFX(folderInput, "ControlFile.in");
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to create '%s'"), fileName));	
+		throw Exc(F(t_("Impossible to create '%s'"), fileName));	
 	
 	out << "   --------------HAMS Control file---------------"
 		   "\n";
 	double depth = dt.h;
 	if (depth >= 400)
 		depth = -1;
-	out << "\n   Waterdepth  " << Format("%.4f", depth) << "D0";
+	out << "\n   Waterdepth  " << F("%.4f", depth) << "D0";
 	out << "\n"
 		   "\n   #Start Definition of Wave Frequencies"
 		   "\n    0_inf_frequency_limits      1"
@@ -623,7 +627,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	
 	out << "\n    ";
 	for (const double &freq : freqs)
-		out << Format("%.4f ", freq);	
+		out << F("%.4f ", freq);	
 	out << "\n   #End Definition of Wave Frequencies"
 		   "\n";
 	
@@ -645,16 +649,16 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	LinSpaced(headings, dt.Nh, First(dt.head), Last(dt.head));
 	out << "\n    ";
 	for (const double &heading : headings)
-		out << Format("%.4f ", heading);	
+		out << F("%.4f ", heading);	
 	out << "\n   #End Definition of Wave Headings"
 		   "\n";
 	
 	if (!ismrel || dt.Nb == 1)
-		out << "\n    Reference_body_center " << Format("%11.3f %11.3f %11.3f", 
+		out << "\n    Reference_body_center " << F("%11.3f %11.3f %11.3f", 
 									dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]);
 	else {
 		for (int ib = 0; ib < dt.Nb; ++ib)
-			out << "\n    Reference_body_center_" << FormatInt(ib+1) << " " << Format("%11.3f %11.3f %11.3f", 
+			out << "\n    Reference_body_center_" << FormatInt(ib+1) << " " << F("%11.3f %11.3f %11.3f", 
 									dt.msh[0].dt.c0[0], dt.msh[0].dt.c0[1], dt.msh[0].dt.c0[2]);
 	}
 	
@@ -670,10 +674,10 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 		out << "\n    Number_of_field_points     1                           # number of field points where to calculate PE"
 			   "\n    0.000000    0.000000    0.000000    Global_coords_point_1";
 	else {
-		out << Format("\n    Number_of_field_points     %d                           # number of field points where to calculate PE", listPoints.size());
+		out << F("\n    Number_of_field_points     %d                           # number of field points where to calculate PE", listPoints.size());
 		for (int i = 0; i < listPoints.size(); ++i) {
 			const Point3D &p = listPoints[i];
-			out << Format("\n    %s    %s    %s    Global_coords_point_%d", FDS(p.x, 10), FDS(p.y, 10), FDS(p.z, 10), i+1);
+			out << F("\n    %s    %s    %s    Global_coords_point_%d", FDS(p.x, 10), FDS(p.y, 10), FDS(p.z, 10), i+1);
 		}
 	}
 	out << "\n   #End Definition of Pressure and/or Elevation"

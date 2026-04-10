@@ -13,7 +13,7 @@ void SetBuildInfo(String &str) {
 	Time date;
 	int version, bits;
 	GetCompilerInfo(name, version, date, mode, bits);
-	str.Replace("BUILDINFO", Format("%4d%02d%02d%02d, %s, %d bits", 
+	str.Replace("BUILDINFO", F("%4d%02d%02d%02d, %s, %d bits", 
 				date.year, date.month, date.day, date.hour, mode, bits)); 
 }
 
@@ -24,9 +24,9 @@ String GetSystemInfo() {
 	GetCompilerInfo(name, version, date, mode, bits);
 
 	String systemInfo;
-	systemInfo << Format(t_("BEMRosetta is at '%s'"), GetExeFilePath());
-	systemInfo << "\n" << Format(t_("Build date is %s"), Format(date));
-	systemInfo << "\n" << Format(t_("Compiler is %s, version %d, mode %s, %d bits"), name, version, mode, bits);
+	systemInfo << F(t_("BEMRosetta is at '%s'"), GetExeFilePath());
+	systemInfo << "\n" << F(t_("Build date is %s"), F(date));
+	systemInfo << "\n" << F(t_("Compiler is %s, version %d, mode %s, %d bits"), name, version, mode, bits);
 	
 	return systemInfo;
 }
@@ -62,8 +62,30 @@ UVector<String> GetCommandLineParams(String str) {
 
 void CheckIfAvailableArg(const UVector<String>& command, int i, String param) {
 	if (i >= command.size())	
-		throw Exc(Format(t_("Missing parameters when reading '%s'"), param));
+		throw Exc(F(t_("Missing parameters when reading '%s'"), param));
 }
+
+
+BMR_Data::BMR_Data() {
+	headParams.SetCount(2);
+	
+	SetConsoleColor(CONSOLE_COLOR::LTCYAN);
+	Cout() << "BEMRosetta";
+	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
+	
+	String str = F(". ") + t_("Copyright (c) 2026. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
+	SetBuildInfo(str);
+	Cout() << str << "\n";
+	
+	ChangeCurrentDirectory(GetExeFilePath());
+	
+	String errorJson = Bem().LoadSerializeJson();
+	bool firstTime = !errorJson.IsEmpty();
+	if (firstTime) 
+		Cout() << "\n" << errorJson << "\n" << t_("BEM configuration data is not loaded. Defaults values are set"); 
+}
+
+#if defined(flagBEMR_CL) || defined (flagGUI) || defined(flagBEMR_TEST_DLL_INTERNAL)
 
 void ShowHelp() {
 	Cout() << "\n" << t_("Usage: bemrosetta_cl [options]");
@@ -86,29 +108,26 @@ void ShowHelp() {
 	Cout() << "\n" << t_("-csvseparator <sep>       # Sets the separator for .csv files");
 	Cout() << "\n" << t_("-isEqual <value>          # Stops if last print is not equal to <value>");
 	Cout() << "\n" << t_("-isSimilar <value>        # Stops if <value> is not included in last print");
-	
 	Cout() << "\n";
 	Cout() << "\n" << t_("-bem                      # The next commands are for BEM data");
 	Cout() << "\n" << t_("-i  -input <file>         # Load model");
-	Cout() << "\n" << t_("-c  -convert <file>       # Export actual model to output file");
-	Cout() << "\n" << t_("-new                      # Create new empty model");
+	Cout() << "\n" << t_("-save -c  -convert <file> # Export actual model to output file");
+	Cout() << "\n" << t_("-cl -clear                # Clear loaded models");
 	Cout() << "\n" << t_("-saveCase                 # Saves a folder with the BEM case files ready to be calculated");
-	Cout() << "\n" << t_("        folder <folder>   # Folder name");
-	Cout() << "\n" << t_("        format <format>   # Solver format: Wamit.out HAMS Nemohv2 Nemohv3 AQWA.dat Capytaine.cal Capytaine.py OrcaWave.yml");
-	Cout() << "\n" << t_("        bin               # Include solver binaries (just for open source solvers) (false by default)");
-	Cout() << "\n" << t_("        symYZ             # Consider YZ symmetry (false by default)");
-	Cout() << "\n" << t_("        symXZ             # Consider XZ symmetry (false by default)");
-	Cout() << "\n" << t_("        mesh              # Include mesh in output files (just for some solvers) (false by default)");
-	Cout() << "\n" << t_("        potentials        # Include panel potentials in output files (just for some solvers) (false by default)");
-	Cout() << "\n" << t_("        qtfNear           #");
-	Cout() << "\n" << t_("        qtfPressure       # Include QTF Pressure integration/Near field in output files");
-	Cout() << "\n" << t_("        qtfFar            #");
-	Cout() << "\n" << t_("        qtfMomentum       # Include QTF Momentum conservation/Far field in output files");
-	Cout() << "\n" << t_("        qtfMiddle         #");
-	Cout() << "\n" << t_("        qtfControl        # Include QTF Control Surface/Middle field in output files");
-	
-	Cout() << "\n" << t_("        split <num>       # Splits the calculation in <num> sub cases by frequency range (just for some solvers) (false by default)");	
-	
+	Cout() << "\n" << t_("   folder <folder>        # Folder name");
+	Cout() << "\n" << t_("   format <format>        # Solver format: Wamit.out HAMS Nemohv2 Nemohv3 AQWA.dat Capytaine.cal Capytaine.py OrcaWave.yml");
+	Cout() << "\n" << t_("   bin                    # Include solver binaries (just for open source solvers) (false by default)");
+	Cout() << "\n" << t_("   symYZ                  # Consider YZ symmetry (false by default)");
+	Cout() << "\n" << t_("   symXZ                  # Consider XZ symmetry (false by default)");
+	Cout() << "\n" << t_("   irregRemoval  <yes/no> # Remove irregular frequencies using internal lid");
+	Cout() << "\n" << t_("   irregAutoMesh <yes/no> # Auto generates irregular frequencies removal lid");
+	Cout() << "\n" << t_("   mesh                   # Include mesh in output files (just for some solvers) (false by default)");
+	Cout() << "\n" << t_("   potentials             # Include panel potentials in output files (just for some solvers) (false by default)");
+	Cout() << "\n" << t_("   qtfNear/qtfPressure    # Include QTF Pressure integration/Near field in output files");
+	Cout() << "\n" << t_("   qtfFar/qtfMomentum     # Include QTF Momentum conservation/Far field in output files");
+	Cout() << "\n" << t_("   qtfMiddle/qtfControl   # Include QTF Control Surface/Middle field in output files");
+	Cout() << "\n" << t_("   qtfMiddle/qtfControl   # Include QTF Control Surface/Middle field in output files");
+	Cout() << "\n" << t_("   qtfAutoMesh <yes/no>   # Auto generates Control Surface mesh");	
 	Cout() << "\n" << t_("-setid <id>                   # Set the id of the default BEM model");
 	Cout() << "\n" << t_("-setbodyid <id>               # Set the id of the default BEM model body");
 	Cout() << "\n" << t_("-params <param> <value>       # Set parameters:");
@@ -116,25 +135,22 @@ void ShowHelp() {
 	Cout() << "\n" << t_("        rho    <rho>          # water density [kg/m³] ");
 	Cout() << "\n" << t_("        depth  <depth>        # water depth   [m]     ");	
 	Cout() << "\n" << t_("        length <length>       # length scale  []      ");
-	Cout() << "\n" << t_("        depth  <depth>        # water depth   [m]     ");
 	Cout() << "\n" << t_("        w      <frequencies>  # frequencies   [rad/s] ");
 	Cout() << "\n" << t_("        headings <headings>   # frequencies   [deg] ");
-	Cout() << "\n" << t_("-newbody                      # Add additional body (mesh) to current model");
-	Cout() << "\n" << t_("-bodyparams <param> <values>  # Set parameters:");
+	Cout() << "\n" << t_("-body <param> <values>        # Set parameters:");
+	Cout() << "\n" << t_("        mesh <file>           # Load mesh file");	
+	Cout() << "\n" << t_("        lid  <file>           # Load lid file");	
+	Cout() << "\n" << t_("        controlSurface <file> # Control surface file");	
 	Cout() << "\n" << t_("        cg     <x> <y> <z>    # Set cg: x, y, z [m] cg is the centre of gravity");
 	Cout() << "\n" << t_("        c0     <x> <y> <z>    # Set c0: x, y, z [m] c0 is the centre of motion");
 	Cout() << "\n" << t_("        inertia <6x6 matrix>  # Inertia matrix");
 	Cout() << "\n" << t_("        linearDamping       <6x6 matrix> # Linear damping matrix");
 	Cout() << "\n" << t_("        quadraticDamping    <6x6 matrix> # Quadratic damping matrix");
-	Cout() << "\n" << t_("        additionalStiffness <6x6 matrix> # Additional stiffness matrix");
-	Cout() << "\n" << t_("        mesh <file>           # Load mesh file");	
-	Cout() << "\n" << t_("        lid  <file>           # Load lid file");	
-		
+	Cout() << "\n" << t_("        additionalStiffness <6x6 matrix> # Additional stiffness matrix");	
 	Cout() << "\n" << t_("-convQTFHeads <params>    # Set heading save config. for Wamit .1");
 	Cout() << "\n" << t_("               all        # All headings");
 	Cout() << "\n" << t_("               allNoCross # All headings but crossed");
 	Cout() << "\n" << t_("               <h1> <h2>  # Indicated pair of headings [deg]");
-
 	Cout() << "\n" << t_("-delHead   <h1> ...       # Delete forces for indicated headings [deg]");
 	Cout() << "\n" << t_("-delHeadId <h1> ...       # Delete forces for indicated heading ids");
 	Cout() << "\n" << t_("-delButHead   <h1> ...    # Delete forces for all but indicated headings [deg]");
@@ -143,9 +159,10 @@ void ShowHelp() {
 	Cout() << "\n" << t_("-delQTFHeadId <h1> <h2> ..# Delete QTF for indicated heading ids");
 	Cout() << "\n" << t_("-delButQTFHead   <h1> <h2>..# Delete QTF for all but indicated pairs of headings [deg]");
 	Cout() << "\n" << t_("-delButQTFHeadId <h1> <h2>..# Delete QTF for all but indicated heading ids");
-	
-	Cout() << "\n" << t_("-new                      # Create new empty model");
-	
+	Cout() << "\n" << t_("-supportMultibody <format># Support multibody cases");
+	Cout() << "\n" << t_("-supportNear      <format># Support QTF by the Pressure integration/Near field");
+	Cout() << "\n" << t_("-supportFar       <format># Support QTF by the Momentum conservation/Far field");
+	Cout() << "\n" << t_("-supportMiddle    <format># Support QTF by the Control Surface/Middle field");
 	Cout() << "\n" << t_("-p  -print <params>       # Print model data in a row");
 	Cout() << "\n" << t_("        <params> nb                  # Number of bodies  []");
 	Cout() << "\n" << t_("                 nf                  # Number of frequencies []");
@@ -161,11 +178,10 @@ void ShowHelp() {
 	Cout() << "\n" << t_("                 GMroll <ibody>      # GM in roll [m]");
 	Cout() << "\n" << t_("                 GMpitch <ibody>     # GM in pitch [m]");
 	Cout() << "\n" << t_("-r  -report               # Output last loaded model data");
-	Cout() << "\n" << t_("-cl -clear                # Clear loaded models");
 	Cout() << "\n";
 	Cout() << "\n" << t_("-mesh                     # The next commands are for mesh data");
 	Cout() << "\n" << t_("-i  -input <file>         # Load model");
-	Cout() << "\n" << t_("-c  -convert <file> <opts># Export actual model to output file");
+	Cout() << "\n" << t_("-save -c  -convert <file> <opts># Export actual model to output file");
 	Cout() << "\n" << t_("        <opts> symx       # - Save only positive X");
 	Cout() << "\n" << t_("               symy       # - Save only positive Y");
 	Cout() << "\n" << t_("               symx symy  # - Save only positive X and Y");
@@ -181,8 +197,8 @@ void ShowHelp() {
 	Cout() << "\n" << t_("-getwaterplane                  # Extract in new model the waterplane mesh (lid)");
 	Cout() << "\n" << t_("-gethull                        # Extract in new model the mesh underwater hull");
 	Cout() << "\n" << t_("-filllid <ratio>                # Generates in new model the waterplane lid with mesh size ratio");
-	
 	Cout() << "\n" << t_("-setid <id>                     # Set the id of the default mesh model");
+	Cout() << "\n" << t_("-getid                          # Get the id of the actual mesh model");
 	Cout() << "\n" << t_("-reset                          # Restore the mesh to the initial situation");
 	Cout() << "\n" << t_("-r  -report                     # Output last loaded model data");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
@@ -190,7 +206,6 @@ void ShowHelp() {
 	Cout() << "\n" << t_("              underwatervolume  # volx voly volx [m³]");
 	Cout() << "\n" << t_("              surface           # [m2]");
 	Cout() << "\n" << t_("              underwatersurface # [m2]");
-	Cout() << "\n" << t_("              cb                # cbx cby cbz [m]");
 	Cout() << "\n" << t_("              cg_vol            # cgx cgy cgz [m]");
 	Cout() << "\n" << t_("              cg_surf           # cgx cgy cgz [m]");
 	Cout() << "\n" << t_("              hydrostiffness <ibody>   # Hydrostatic stiffness around the rotation centre");
@@ -209,23 +224,21 @@ void ShowHelp() {
 	Cout() << "\n" << t_("              GZ <angle> <from> <to> <delta> # GZ around angle [deg] (0 is around Y axis), from-to-delta [deg]");
 	Cout() << "\n" << t_("                                # returns the set of angles [deg] and their gz values [m]");
 	Cout() << "\n" << t_("              GM                # returns GMpitch GMroll [m]");
-
 	Cout() << "\n" << t_("-cl -clear                      # Clear loaded models");
 	Cout() << "\n";
 	Cout() << "\n" << t_("-time                           # The next commands are for time series");
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
-	Cout() << "\n" << t_("-c  -convert <file> <params>    # Export actual model to output file. If <params>, only included params are saved. '*' allowed");
+	Cout() << "\n" << t_("-save -c  -convert <file> <params>    # Export actual model to output file. If <params>, only included params are saved. '*' allowed");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints file data in a row");
 	Cout() << "\n" << t_("     <params> list              # Parameter names");
 	Cout() << "\n" << t_("              <param> <time>    # Value of <param> in <time>");
 	Cout() << "\n" << t_("              <param> avg       # <param> avg");
 	Cout() << "\n" << t_("              <param> max       # <param> max");
 	Cout() << "\n" << t_("              <param> min       # <param> min");	
-	
 	Cout() << "\n";
 	Cout() << "\n" << t_("-wind                           # The next commands are for wind series");
 	Cout() << "\n" << t_("-i  -input <file>               # Load file");
-	Cout() << "\n" << t_("-c  -convert <file>             # Export actual model to output file");
+	Cout() << "\n" << t_("-save -c  -convert <file>       # Export actual model to output file");
 	Cout() << "\n" << t_("-setid <id>                     # Set the id of the default BEM model");
 	Cout() << "\n" << t_("-params <param> <value/s>       # Set parameters:");
 	Cout() << "\n" << t_("        hubheight               # Hub heignt [m]       ");
@@ -265,7 +278,7 @@ void ShowHelp() {
 	Cout() << "\n" << t_("-rs -refsystem <cx> <cy> <cz>   # Sets the coordinates of the reference system for outputs");
 	Cout() << "\n" << t_("-lp -loadParam <param>          # Load param to be saved");
 	Cout() << "\n" << t_("-cp -clearParams                # Clear parameters loaded");
-	Cout() << "\n" << t_("-c  -convert <file>             # Export the loaded params of the actual model to output file (csv)");
+	Cout() << "\n" << t_("-save -c  -convert <file>       # Export the loaded params of the actual model to output file (csv)");
 	Cout() << "\n" << t_("-p  -print <params>             # Prints model data in a row");
 	Cout() << "\n" << t_("              numthread         # Number of threads");
 	Cout() << "\n" << t_("     <params> list              # Parameter names");
@@ -287,32 +300,13 @@ String FileName(String file) {
 	return file;
 }
 
-DLL_Data::DLL_Data() {
-	headParams.SetCount(2);
-	
-	SetConsoleColor(CONSOLE_COLOR::LTCYAN);
-	Cout() << "BEMRosetta";
-	SetConsoleColor(CONSOLE_COLOR::PREVIOUS);
-	
-	String str = S(". ") + t_("Copyright (c) 2026. Hydrodynamic coefficients converter for Boundary Element Method solver formats\nVersion beta BUILDINFO");
-	SetBuildInfo(str);
-	Cout() << str << "\n";
-	
-	ChangeCurrentDirectory(GetExeFilePath());
-	
-	String errorJson = Bem().LoadSerializeJson();
-	bool firstTime = !errorJson.IsEmpty();
-	if (firstTime) 
-		Cout() << "\n" << errorJson << "\n" << t_("BEM configuration data is not loaded. Defaults values are set"); 
-}
-
-void DLL_Data::DLL_RaiseIfError() {
-	const char *error = DLL_GetLastError();
+void BMR_Data::BMR_RaiseIfError() {
+	const char *error = BMR_GetLastError();
     if (error)
         throw Exc(error);
 }
 	
-bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {	
+bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {	
 	UVector<String> command = clone(_command);
 	
 	bool returnval = true;
@@ -345,23 +339,23 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 					ShowHelp();
 					break;
 				} else if (param == "-pause") {
-					BEM::Print(S("\n") + t_("Press Enter to continue..."));
+					BEM::Print(F("\n") + t_("Press Enter to continue..."));
 					ReadStdIn();
 				} else if (param == "-exit") {
-					BEM::Print(S("\n") + t_("Exit by command"));
+					BEM::Print(F("\n") + t_("Exit by command"));
 					break;
 				} else if (param == "-echo") {
 					CheckIfAvailableArg(command, ++ic, "-echo");
 					
-					DLL_Echo(Replace(command[ic], "\\n", "\n"));
+					BMR_Echo(Replace(command[ic], "\\n", "\n"));
 				} else if (param == "-isequal") { 
 					CheckIfAvailableArg(command, ++ic, "-isequal");
 					
 					String data = Trim(command[ic]);
 					if (Trim(lastPrint) == data) 
-						BEM::Print("\n" + Format(t_("Last print is equal to \"%s\""), data));
+						BEM::Print("\n" + F(t_("Last print is equal to \"%s\""), data));
 					else
-						throw Exc(Format(t_("Last print is not equal to \"%s\""), data));
+						throw Exc(F(t_("Last print is not equal to \"%s\""), data));
 				} else if (param.StartsWith("-issimilar")) { 
 					CheckIfAvailableArg(command, ++ic, "-isSimilar");
 					
@@ -374,14 +368,14 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								double p = ScanDouble(prnt[i]),
 									   d = ScanDouble(data[i]);
 								if (!EqualRatio(p, d, 0.001))
-									throw Exc(Format(t_("Last print is not equal to \"%s\". \"%s\" != \"%s\""), Trim(command[i]), prnt[i], data[i])); 	
+									throw Exc(F(t_("Last print is not equal to \"%s\". \"%s\" != \"%s\""), Trim(command[i]), prnt[i], data[i])); 	
 							} else {
 								if (prnt[i].Find(data[i]) < 0) 
-									throw Exc(Format(t_("Last print is not equal to \"%s\". \"%s\" != \"%s\""), Trim(command[i]), prnt[i], data[i])); 	
+									throw Exc(F(t_("Last print is not equal to \"%s\". \"%s\" != \"%s\""), Trim(command[i]), prnt[i], data[i])); 	
 							}
 						}
 					}
-					BEM::Print("\n" + Format(t_("Last print is similar to \"%s\""), Trim(command[ic])));
+					BEM::Print("\n" + F(t_("Last print is similar to \"%s\""), Trim(command[ic])));
 				} else {
 					if (nextcommands == "general") {
 						if (param == "-paramfile") {
@@ -390,7 +384,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							String paramfile = command[ic];
 							String strfile = LoadFile(paramfile);
 							if (strfile.IsVoid())
-								throw Exc(Format("-paramfile file '%s' not found", paramfile));
+								throw Exc(F("-paramfile file '%s' not found", paramfile));
 							ChangeCurrentDirectory(GetFileFolder(paramfile));
 							command.Insert(ic+1 , pick(GetCommandLineParams(strfile)));
 						} else if (param == "-params") {
@@ -402,32 +396,32 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									CheckIfAvailableArg(command, ++ic, "-p g");
 									double g = ScanDouble(command[ic]);
 									if (IsNull(g))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									Bem().g = g;
-									BEM::Print("\n" + Format(t_("Gravity is %f"), g));	
+									BEM::Print("\n" + F(t_("Gravity is %f"), g));	
 								} else if (ToLower(command[ic]) == "rho") {
 									CheckIfAvailableArg(command, ++ic, "-p rho");
 									double rho = ScanDouble(command[ic]);
 									if (IsNull(rho))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									Bem().rho = rho;
-									BEM::Print("\n" + Format(t_("Density is %f"), rho));	
+									BEM::Print("\n" + F(t_("Density is %f"), rho));	
 								} else if (ToLower(command[ic]) == "length") {
 									CheckIfAvailableArg(command, ++ic, "-p length");
 									double len = ScanDouble(command[ic]);
 									if (IsNull(len))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									Bem().len = len;
-									BEM::Print("\n" + Format(t_("length is %f"), len));	
+									BEM::Print("\n" + F(t_("length is %f"), len));	
 								} else if (ToLower(command[ic]) == "depth") {
 									CheckIfAvailableArg(command, ++ic, "-p depth");
 									double depth = ScanDouble(command[ic]);
 									if (IsNull(depth))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									Bem().depth = depth;
-									BEM::Print("\n" + Format(t_("depth is %f"), depth));
+									BEM::Print("\n" + F(t_("depth is %f"), depth));
 								} else 
-									throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+									throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 							}
 						} else if (param == "-echo") {
 							CheckIfAvailableArg(command, ++ic, "-echo");
@@ -447,7 +441,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								OldWarning = BEM::PrintWarning;
 								BEM::PrintWarning.Clear();
 							} else
-								throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+								throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
 						} else if (param == "-csvseparator") {
 							CheckIfAvailableArg(command, ++ic, "-csvseparator");
 							
@@ -455,78 +449,67 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							
 							ScatterDraw::SetDefaultCSVSeparator(sep);
 						} else
-							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
-					} else if (nextcommands == "bem") {
+							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
+/*bem*/				} else if (nextcommands == "bem") {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++ic, "--input");
 							
 							String file = FileName(command[ic]);
 							if (!FileExists(file)) 
-								throw Exc(Format(t_("File '%s' not found"), file)); 
+								throw Exc(F(t_("File '%s' not found"), file)); 
 							
 							BEM::Print("\n");
 							Bem().LoadBEM(file, echo ? Status : NoPrint, false);
 							bemid = Bem().hydros.size() - 1;
 							bembodyid = Bem().hydros[bemid].dt.msh.size() - 1;
-							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
+							BEM::Print("\n" + F(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
 							if (Bem().hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							Bem().hydros[bemid].Report();
 						} else if (param == "-cl" || param == "-clear") {
-							Bem().hydros.Clear();
-							bemid = bembodyid = -1;
-							BEM::Print("\n" + S(t_("BEM data cleared")));	
+							BMR_Bem_Clear();
+							BEM::Print("\n" + F(t_("BEM data cleared")));	
 						} else if (param == "-setid") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							
 							CheckIfAvailableArg(command, ++ic, "-setid");
 
 							bemid = ScanInt(command[ic]);
-							if (IsNull(bemid) || bemid < 0 || bemid > Bem().hydros.size()-1)
-								throw Exc(Format(t_("Invalid id %s"), command[ic]));
+/*bem*/						if (IsNull(bemid) || bemid < 0 || bemid > Bem().hydros.size()-1)
+								throw Exc(F(t_("Invalid id %s"), command[ic]));
 							bembodyid = Bem().hydros[bemid].dt.msh.size() - 1;
-							BEM::Print("\n" + Format(t_("BEM active model id is %d"), bemid));	
+							BEM::Print("\n" + F(t_("BEM active model id is %d"), bemid));	
 						} else if (param == "-setbodyid") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							
 							CheckIfAvailableArg(command, ++ic, "-setbodyid");
 
 							bembodyid = ScanInt(command[ic]);
 							if (IsNull(bembodyid) || bembodyid < 0 || bembodyid > Bem().hydros[bemid].dt.msh.size()-1)
-								throw Exc(Format(t_("Invalid id %s"), command[ic]));
-							BEM::Print("\n" + Format(t_("BEM active model id is %d"), bemid));
-						} else if (param == "-c" || param == "-convert") {
+								throw Exc(F(t_("Invalid id %s"), command[ic]));
+							BEM::Print("\n" + F(t_("BEM active model id is %d"), bemid));
+						} else if (param == "-c" || param == "-convert" || param == "-save") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							
-							CheckIfAvailableArg(command, ++ic, "-convert");
+							CheckIfAvailableArg(command, ++ic, "-save");
 							
 							String file = FileName(command[ic]);
 							int qtfHeading;
 							if (headParams[0] == "all" || IsEmpty(headParams[0]))
 								qtfHeading = Null;
 							else if (headParams[0] == "allnocross")
-								qtfHeading = -1;
+/*bem*/							qtfHeading = -1;
 							else 
 								qtfHeading = hy.dt.FindClosestQTFHead(std::complex<double>(ScanDouble(headParams[0]), ScanDouble(headParams[1])));
 							
 							BEM::Print("\n");
 							Bem().hydros[bemid].SaveAs(file, echo ? Status : NoPrint, Hydro::UNKNOWN, qtfHeading);
-							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), bemid, file));
-						} else if (param == "-new") {
-							Bem().hydros.Add();
-							bemid = Bem().hydros.size() - 1;
-							Hydro &hy = Bem().hydros[bemid];
-							hy.dt.x_w = hy.dt.y_w = 0;
-							hy.dt.g = Bem().g;
-							hy.dt.rho = Bem().rho;
-							hy.dt.len = Bem().len;
-							hy.dt.h = Bem().depth;
-							BEM::Print("\n" + S(t_("New model created. Default values (rho, g, ...) set")));
+							BEM::Print("\n" + F(t_("Model id %d saved as '%s'"), bemid, file));
 						} else if (param == "-convqtfheads") {	
 							CheckIfAvailableArg(command, ++ic, "-convqtfheads");
 							if (ToLower(command[ic]) == "all") 
@@ -537,52 +520,52 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								double d;
 								d = ScanDouble(command[ic]);
 								if (IsNull(d))
-									throw Exc(Format(t_("Wrong 1st heading '%s'"), command[ic]));
-								headParams[0] = command[ic];
+									throw Exc(F(t_("Wrong 1st heading '%s'"), command[ic]));
+/*bem*/							headParams[0] = command[ic];
 							
 								CheckIfAvailableArg(command, ++ic, "-convqtfheads 2nd head");
 								d = ScanDouble(command[ic]);
 								if (IsNull(d))
-									throw Exc(Format(t_("Wrong 2nd heading '%s'"), command[ic]));
+									throw Exc(F(t_("Wrong 2nd heading '%s'"), command[ic]));
 								headParams[1] = command[ic];
 							}
 						} else if (param == "-delhead") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));	
+								throw Exc(F(t_("Model %d is not loaded"), bemid));	
 							Hydro &hy = Bem().hydros[bemid];
 							UVector<int> ids;
 							double head;
 							while (ic+1 < command.size() && !IsNull(head = ScanDouble(command[ic+1]))) {
 								int id = hy.dt.FindClosestHead(head);
-								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hy.dt.head[id]));
+								BEM::Print("\n" + F(t_("Closest heading to %f is %f"), head, hy.dt.head[id]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							hy.DeleteHeadings(ids);	
-							BEM::Print("\n" + S(t_("Headings deleted")));
+							BEM::Print("\n" + F(t_("Headings deleted")));
 						} else if (param == "-delheadid") {	
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
 								if (id < 0 || id >= hy.dt.head.size())
-									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
+/*bem*/								throw Exc(F(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							hy.DeleteHeadings(ids);	
-							BEM::Print("\n" + S(t_("Headings deleted")));
+							BEM::Print("\n" + F(t_("Headings deleted")));
 						} else if (param == "-delbuthead") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];	
 							UVector<int> ids;
 							double head;
 							while (ic+1 < command.size() && !IsNull(head = ScanDouble(command[ic+1]))) {
 								int id = hy.dt.FindClosestHead(head);
-								BEM::Print("\n" + Format(t_("Closest heading to %f is %f"), head, hy.dt.head[id]));
+								BEM::Print("\n" + F(t_("Closest heading to %f is %f"), head, hy.dt.head[id]));
 								FindAdd(ids, id);
 								ic++;
 							}
@@ -591,16 +574,16 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								if (Find(ids, i) < 0)
 									idsDel << i;
 							hy.DeleteHeadings(idsDel);	
-							BEM::Print("\n" + S(t_("Headings deleted")));
+							BEM::Print("\n" + F(t_("Headings deleted")));
 						} else if (param == "-delbutheadid") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));	
+								throw Exc(F(t_("Model %d is not loaded"), bemid));	
 							Hydro &hy = Bem().hydros[bemid];
 							UVector<int> ids;
-							int id;
+/*bem*/						int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
 								if (id < 0 || id >= hy.dt.head.size())
-									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
+									throw Exc(F(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 							}
 							UVector<int> idsDel;
@@ -608,10 +591,10 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								if (Find(ids, i) < 0)
 									idsDel << i;
 							hy.DeleteHeadings(idsDel);
-							BEM::Print("\n" + S(t_("Headings deleted")));	
+							BEM::Print("\n" + F(t_("Headings deleted")));	
 						} else if (param == "-delqtfhead") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							UVector<int> ids;
 							double head1, head2;
@@ -619,41 +602,41 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								ic++;
 								CheckIfAvailableArg(command, ++ic, "-delqtfhead 2nd head");
 								if (IsNull(head2 = ScanDouble(command[ic])))
-									throw Exc(Format(t_("Wrong head '%s'"), command[ic]));
+									throw Exc(F(t_("Wrong head '%s'"), command[ic]));
 								int id = hy.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
-								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hy.dt.qhead[id].real(), hy.dt.qhead[id].imag()));
+								BEM::Print("\n" + F(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hy.dt.qhead[id].real(), hy.dt.qhead[id].imag()));
 								FindAdd(ids, id);
-								ic++;
+/*bem*/							ic++;
 							}
 							hy.DeleteHeadingsQTF(ids);
-							BEM::Print("\n" + S(t_("QTF headings deleted")));
+							BEM::Print("\n" + F(t_("QTF headings deleted")));
 						} else if (param == "-delqtfheadid") {	
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
 								if (id < 0 || id >= hy.dt.qhead.size())
-									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
+									throw Exc(F(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
 							hy.DeleteHeadingsQTF(ids);	
-							BEM::Print("\n" + S(t_("QTF headings deleted")));
+							BEM::Print("\n" + F(t_("QTF headings deleted")));
 						} else if (param == "-delbutqtfhead") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							UVector<int> ids;
 							double head1, head2;
 							while (ic+1 < command.size() && !IsNull(head1 = ScanDouble(command[ic+1]))) {
 								ic++;
 								CheckIfAvailableArg(command, ++ic, "-delqtfhead 2nd head");
-								if (IsNull(head2 = ScanDouble(command[ic])))
-									throw Exc(Format(t_("Wrong head '%s'"), command[ic]));
+/*bem*/							if (IsNull(head2 = ScanDouble(command[ic])))
+									throw Exc(F(t_("Wrong head '%s'"), command[ic]));
 								int id = hy.dt.FindClosestQTFHead(std::complex<double>(head1, head2));
-								BEM::Print("\n" + Format(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hy.dt.qhead[id].real(), hy.dt.qhead[id].imag()));
+								BEM::Print("\n" + F(t_("Closest heading to %f:%f is %f:%f"), head1, head2, hy.dt.qhead[id].real(), hy.dt.qhead[id].imag()));
 								FindAdd(ids, id);
 							}
 							UVector<int> idsDel;
@@ -661,16 +644,16 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								if (Find(ids, i) < 0)
 									idsDel << i;
 							hy.DeleteHeadingsQTF(idsDel);
-							BEM::Print("\n" + S(t_("QTF headings deleted")));
+							BEM::Print("\n" + F(t_("QTF headings deleted")));
 						} else if (param == "-delbutqtfheadid") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];	
 							UVector<int> ids;
 							int id;
 							while (ic+1 < command.size() && !IsNull(id = ScanInt(command[ic+1]))) {
 								if (id < 0 || id >= hy.dt.qhead.size())
-									throw Exc(Format(t_("Wrong head id '%s'"), command[ic+1]));
+									throw Exc(F(t_("Wrong head id '%s'"), command[ic+1]));
 								FindAdd(ids, id);
 								ic++;
 							}
@@ -678,11 +661,11 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							for (int i = 0; i < hy.dt.qhead.size(); ++i)
 								if (Find(ids, i) < 0)
 									idsDel << i;
-							hy.DeleteHeadingsQTF(idsDel);
-							BEM::Print("\n" + S(t_("QTF headings deleted")));	
+/*bem*/						hy.DeleteHeadingsQTF(idsDel);
+							BEM::Print("\n" + F(t_("QTF headings deleted")));	
 						} else if (param == "-params") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							CheckIfAvailableArg(command, ic+1, "-params");
 							
@@ -691,130 +674,65 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								if (ToLower(command[ic]) == "depth") {
 									CheckIfAvailableArg(command, ++ic, "depth");
 									double h = ScanDouble(command[ic]);
-									if (IsNull(h))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									hy.dt.h = h;
-									BEM::Print("\n" + Format(t_("Model %d depth is %f"), bemid+1, h));
+									BMR_Bem_depth_Set(h);
+									BEM::Print("\n" + F(t_("Model %d depth is %f"), bemid+1, h));
 								} else if (ToLower(command[ic]) == "g") {
 									CheckIfAvailableArg(command, ++ic, "g");
 									double g = ScanDouble(command[ic]);
-									if (IsNull(g))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									hy.dt.g = g;
-									BEM::Print("\n" + Format(t_("Model %d g is %f"), bemid+1, g));
+									BMR_Bem_g_Set(g);
+									BEM::Print("\n" + F(t_("Model %d g is %f"), bemid+1, g));
 								} else if (ToLower(command[ic]) == "rho") {
 									CheckIfAvailableArg(command, ++ic, "rho");
 									double rho = ScanDouble(command[ic]);
-									if (IsNull(rho))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									hy.dt.rho = rho;
-									BEM::Print("\n" + Format(t_("Model %d rho is %f"), bemid+1, rho));
+/*bem*/								BMR_Bem_rho_Set(rho);
+									BEM::Print("\n" + F(t_("Model %d rho is %f"), bemid+1, rho));
 								} else if (ToLower(command[ic]) == "w") {
 									UVector<double> w;
 									double f;
 									while (ic+1 < command.size() && !IsNull(f = ScanDouble(command[ic+1]))) {
 										if (f < 0.001 || f > 50)
-											throw Exc(Format(t_("Wrong frequency '%s'"), command[ic+1]));
+											throw Exc(F(t_("Wrong frequency '%s'"), command[ic+1]));
 										FindAdd(w, f);
 										ic++;
 									}
-									hy.dt.w = pick(w);
-									hy.dt.Nf = hy.dt.w.size();
-									
-									hy.SortFrequencies();
-									
-									BEM::Print("\n" + Format(t_("Model %d, %d frequencies added"), bemid+1, hy.dt.Nf));
-									
-									hy.dt.A.Clear();
-									hy.dt.Ainf_w.Clear();
-									hy.dt.A_P.Clear();
-									hy.dt.B.Clear();
-									hy.dt.B_H.Clear();
-									hy.dt.B_P.Clear();
-									
-									hy.dt.ex.Clear();
-	    							hy.dt.sc.Clear();
-	    							hy.dt.fk.Clear();
-	    							hy.dt.sc_pot.Clear();
-	   								hy.dt.fk_pot.Clear();
-	   								hy.dt.fk_pot_bmr.Clear();
-	   								hy.dt.rao.Clear();
-	   	
-	    							hy.dt.qw = hy.Get_w();
-	    							hy.dt.qtfsum.Clear();
-	    							hy.dt.qtfdif.Clear();
-	    							hy.dt.md.Clear();
-	    							hy.dt.pots_rad.Clear();
-	    							hy.dt.pots_dif.Clear();
-	    							hy.dt.pots_inc.Clear();
-	    							hy.dt.pots_inc_bmr.Clear();
-	    							hy.dt.Apan = Eigen::Tensor<double, 5>();
+									BMR_Bem_w_Set(w, w.size());
+									BEM::Print("\n" + F(t_("Model %d, %d frequencies added"), bemid+1, hy.dt.Nf));
 								} else if (ToLower(command[ic]) == "headings") {
 									UVector<double> head;
 									double he;
 									while (ic+1 < command.size() && !IsNull(he = ScanDouble(command[ic+1]))) {
 										if (he < -360 || he > 360)
-											throw Exc(Format(t_("Wrong heading '%s'"), command[ic+1]));
+											throw Exc(F(t_("Wrong heading '%s'"), command[ic+1]));
 										FindAdd(head, he);
 										ic++;
 									}
-									hy.dt.head = pick(head);
-									hy.dt.Nh = hy.dt.head.size();
-									
-									hy.SortHeadings(BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360, BasicBEM::HEAD_0_360);
-									
-									BEM::Print("\n" + Format(t_("Model %d, %d headigs added"), bemid+1, hy.dt.Nh));
-									
-									hy.dt.ex.Clear();
-	    							hy.dt.sc.Clear();
-	    							hy.dt.fk.Clear();
-	    							hy.dt.sc_pot.Clear();
-	   								hy.dt.fk_pot.Clear();
-	   								hy.dt.fk_pot_bmr.Clear();
-	   								hy.dt.rao.Clear();									
-									
-									hy.dt.qtfsum.Clear();
-	    							hy.dt.qtfdif.Clear();
-									hy.dt.qhead = VectorXcd();
-
-									hy.dt.mdhead = VectorXcd();
-									hy.dt.md.Clear();
-																		
-									hy.dt.pots_dif.Clear();
-	    							hy.dt.pots_inc.Clear();
-	    							hy.dt.pots_inc_bmr.Clear();									
+									BMR_Bem_headings_Set(head, head.size());
+									BEM::Print("\n" + F(t_("Model %d, %d headigs added"), bemid+1, hy.dt.Nh));
 								} else 
-									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));	
+									throw Exc(F(t_("Wrong command '%s'"), command[ic]));	
 							}
 						} else if (param == "-savecase") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							String folder;
-							Hydro::BEM_FMT solver = Hydro::UNKNOWN;
+							String solver;
 							bool bin = false, y0z = false, x0z = false, withMesh = false, withPotentials = false;
-							int qtfType = 0;
+							bool irregular = true;
+							bool autoIrregular = false; 
+							String qtfType;
+							bool autoQTF = false;
 							int numCases = 0, numThreads = 0;
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
 								String pparam = ToLower(command[ic]);
 								if (pparam == "folder") {
-									CheckIfAvailableArg(command, ++ic, "folder");
+/*bem*/								CheckIfAvailableArg(command, ++ic, "folder");
 									folder = command[ic];
 									folder.Replace("%DESKTOP%", GetDesktopFolder());
 								} else if (pparam == "solver") {
 									CheckIfAvailableArg(command, ++ic, "solver"); 
-									String fmt = ToLower(command[ic]);
-									for (int i = 0; i < Hydro::NUMBEM; ++i) {
-										if (Hydro::bemInfo[i].caseCanSave) {
-											if (ToLower(Replace(Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(i)), " ", "")) == fmt) {
-												solver = static_cast<Hydro::BEM_FMT>(i);
-												break;
-											}
-										}
-									}
-									if (solver == Hydro::UNKNOWN)
-										throw Exc(Format(t_("Unknown format %s"), command[ic]));
+									String solver = ToLower(command[ic]);
 								} else if (pparam == "bin")
 									bin = true;
 								else if (pparam == "symyz") 
@@ -826,310 +744,329 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								else if (pparam == "potentials") 
 									withPotentials = true;
 								else if (pparam == "qtfControl" || pparam == "qtfMiddle") 
-									qtfType = 7;
+									qtfType = "qtfMiddle";
 								else if (pparam == "qtfMomentum" || pparam == "qtfFar") 
-									qtfType = 8;
+/*bem*/								qtfType = "qtfFar";
 								else if (pparam == "qtfPressure" || pparam == "qtfNear") 
-									qtfType = 9;
-								else if (pparam == "split") {
+									qtfType = "qtfNear";
+								else if (pparam == "qtfAutoMesh") {
+									CheckIfAvailableArg(command, ++ic, "qtfAutoMesh");
+									String val = ToLower(command[ic]);
+									autoQTF = val == "true" || val == "yes";
+								} else if (pparam == "irregRemoval") {
+									CheckIfAvailableArg(command, ++ic, "irregRemoval");
+									String val = ToLower(command[ic]);
+									irregular = val == "true" || val == "yes";
+								} else if (pparam == "irregAutoMesh") {
+									CheckIfAvailableArg(command, ++ic, "irregAutoMesh");
+									String val = ToLower(command[ic]);
+									autoIrregular = val == "true" || val == "yes";
+								} else if (pparam == "split") {
 									CheckIfAvailableArg(command, ++ic, "split");
 									numCases = ScanInt(command[ic]);	
 									if (IsNull(numCases))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 								} else if (pparam == "numthreads") {
 									CheckIfAvailableArg(command, ++ic, "numThreads");
 									numThreads = ScanInt(command[ic]);	
 									if (IsNull(numThreads))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 								} else
-									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
-							}
-							UVector<bool> listDOF(6, true);
-							UVector<Point3D> dummy;
-							hy.SaveFolderCase(folder, bin, numCases, numThreads, solver, withPotentials, withMesh, x0z, y0z, lids, listDOF, dummy, qtfType);
-							BEM::Print("\n" + Format(t_("Saved model %d in %s case format"), bemid+1, Hydro::GetBemStr(solver)));
-						} else if (param == "-newbody") {
-							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
-							Hydro &hy = Bem().hydros[bemid];
-							hy.dt.msh.Add();
-							bembodyid = hy.dt.msh.size() - 1;
-							BEM::Print("\n" + Format(t_("Model %d, body %d created"), bemid+1, bembodyid+1));
-						} else if (param == "-bodyparams") {
+									throw Exc(F(t_("Wrong command '%s'"), command[ic]));
+/*bem*/						}
+							BMR_Bem_SaveCase(folder, solver, x0z, y0z, irregular, autoIrregular, qtfType, autoQTF, bin, numCases, numThreads, withPotentials, withMesh);
+							BEM::Print("\n" + F(t_("Saved model %d in %s case format"), bemid+1, solver));
+						} else if (param == "-bodyparams" || param == "-body" ) {
 							CheckIfAvailableArg(command, ic+1, "-bodyparams");
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								if (Bem().hydros[bemid].dt.msh.size() < bembodyid) 
-									throw Exc(Format(t_("Body %d is not available in model"), bembodyid+1));
+									throw Exc(F(t_("Body %d is not available in model"), bembodyid+1));
 								++ic;	
 								if (ToLower(command[ic]) == "mesh") {
-									CheckIfAvailableArg(command, ++ic, "mesh");
-									String file = command[ic];
-									Body::Load(hy.dt.msh[bembodyid], file, Bem().rho, Bem().g, Null, Null, false);
-									BEM::Print("\n" + Format(t_("Model %d, body %d loaded mesh '%s'"), bemid+1, bembodyid+1, file));
+									CheckIfAvailableArg(command, ++ic, "mesh");							String file = command[ic];
+									BMR_Bem_Body_LoadMesh(file);
+									BEM::Print("\n" + F(t_("Model %d, body %d loaded mesh '%s'"), bemid+1, bembodyid+1, file));
 								} else if (ToLower(command[ic]) == "lid") {
-									CheckIfAvailableArg(command, ++ic, "lid");
-									String file = command[ic];
-									Body::Load(lids, file, Bem().rho, Bem().g, Null, Null, false);
-									BEM::Print("\n" + Format(t_("Model %d, body %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
+									CheckIfAvailableArg(command, ++ic, "lid");							String file = command[ic];
+									BMR_Bem_Body_LoadLid(file);
+									BEM::Print("\n" + F(t_("Model %d, lid %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
+								} else if (ToLower(command[ic]) == "controlSurface") {
+									CheckIfAvailableArg(command, ++ic, "controlSurface");				String file = command[ic];
+									BMR_Bem_Body_LoadControlSurface(file);
+									BEM::Print("\n" + F(t_("Model %d, css %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
 								} else if (ToLower(command[ic]) == "c0") {
-									CheckIfAvailableArg(command, ++ic, "c0.x");
-									double c0x = ScanDouble(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "c0.x");							double c0x = ScanDouble(command[ic]);
 									if (IsNull(c0x))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									CheckIfAvailableArg(command, ++ic, "c0.y");
-									double c0y = ScanDouble(command[ic]);
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "c0.y");							double c0y = ScanDouble(command[ic]);
 									if (IsNull(c0y))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									CheckIfAvailableArg(command, ++ic, "c0.z");
-									double c0z = ScanDouble(command[ic]);
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "c0.z");							double c0z = ScanDouble(command[ic]);
 									if (IsNull(c0z))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									hy.dt.msh[bembodyid].dt.c0 = Point3D(c0x, c0y, c0z);
-									BEM::Print("\n" + Format(t_("Model %d, body %d C0 is %f, %f, %f"), bemid+1, bembodyid+1, c0x, c0y, c0z));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+									BMR_Bem_Body_C0_Set(c0x, c0y, c0z);
+									BEM::Print("\n" + F(t_("Model %d, body %d C0 is %f, %f, %f"), bemid+1, bembodyid+1, c0x, c0y, c0z));
 								} else if (ToLower(command[ic]) == "cg") {
-									CheckIfAvailableArg(command, ++ic, "cg.x");
-									double cgx = ScanDouble(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "cg.x");							double cgx = ScanDouble(command[ic]);
 									if (IsNull(cgx))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									CheckIfAvailableArg(command, ++ic, "cg.y");
-									double cgy = ScanDouble(command[ic]);
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "cg.y");							double cgy = ScanDouble(command[ic]);
 									if (IsNull(cgy))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									CheckIfAvailableArg(command, ++ic, "cg.z");
-									double cgz = ScanDouble(command[ic]);
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "cg.z");							double cgz = ScanDouble(command[ic]);					
 									if (IsNull(cgz))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-									hy.dt.msh[bembodyid].dt.cg = Point3D(cgx, cgy, cgz);
-									BEM::Print("\n" + Format(t_("Model %d, body %d CG is %f, %f, %f"), bemid+1, bembodyid+1, cgx, cgy, cgz));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+									BMR_Bem_Body_Cg_Set(cgx, cgy, cgz);
+									BEM::Print("\n" + F(t_("Model %d, body %d CG is %f, %f, %f"), bemid+1, bembodyid+1, cgx, cgy, cgz));
 								} else if (ToLower(command[ic]) == "inertia") {
-									hy.dt.msh[bembodyid].dt.M.resize(6, 6);
+									MatrixXd M(6, 6);
 									for (int r = 0; r < 6; ++r) {
 										for (int c = 0; c < 6; ++c) {
-											CheckIfAvailableArg(command, ++ic, Format("inertia(%d,%d)", r+1, c+1));
-											double d = ScanDouble(command[ic]);
+											CheckIfAvailableArg(command, ++ic, F("inertia(%d,%d)", r+1, c+1));			double d = ScanDouble(command[ic]);
 											if (IsNull(d))
-												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
-											hy.dt.msh[bembodyid].dt.M(r, c) = d;
+												throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
+											M(r, c) = d;
 										}
 									}
-									BEM::Print("\n" + Format(t_("Model %d, body %d inertia matrix loaded"), bemid+1, bembodyid+1));
+									int dim[] = {6,6};
+									BMR_Bem_Body_Inertia_Set(M.data(), dim);
+									BEM::Print("\n" + F(t_("Model %d, body %d inertia matrix loaded"), bemid+1, bembodyid+1));
 								} else if (ToLower(command[ic]) == "lineardamping") {
 									hy.dt.msh[bembodyid].dt.Dlin.resize(6, 6);
 									for (int r = 0; r < 6; ++r) {
 										for (int c = 0; c < 6; ++c) {
-											CheckIfAvailableArg(command, ++ic, Format("linearDamping(%d,%d)", r+1, c+1));
-											double d = ScanDouble(command[ic]);
+											CheckIfAvailableArg(command, ++ic, F("linearDamping(%d,%d)", r+1, c+1));	double d = ScanDouble(command[ic]);
 											if (IsNull(d))
-												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+												throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 											hy.dt.msh[bembodyid].dt.Dlin(r, c) = d;
 										}
 									}
-									BEM::Print("\n" + Format(t_("Model %d, body %d linear damping matrix loaded"), bemid+1, bembodyid+1));
+									BEM::Print("\n" + F(t_("Model %d, body %d linear damping matrix loaded"), bemid+1, bembodyid+1));
 								} else if (ToLower(command[ic]) == "quadraticdamping") {
 									hy.dt.msh[bembodyid].dt.Dquad.resize(6, 6);
 									for (int r = 0; r < 6; ++r) {
 										for (int c = 0; c < 6; ++c) {
-											CheckIfAvailableArg(command, ++ic, Format("quadraticDamping(%d,%d)", r+1, c+1));
-											double d = ScanDouble(command[ic]);
+/*bem*/										CheckIfAvailableArg(command, ++ic, F("quadraticDamping(%d,%d)", r+1, c+1));	double d = ScanDouble(command[ic]);
 											if (IsNull(d))
-												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+												throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 											hy.dt.msh[bembodyid].dt.Dquad(r, c) = d;
 										}
 									}
-									BEM::Print("\n" + Format(t_("Model %d, body %d quadratic damping matrix loaded"), bemid+1, bembodyid+1));
+									BEM::Print("\n" + F(t_("Model %d, body %d quadratic damping matrix loaded"), bemid+1, bembodyid+1));
 								} else if (ToLower(command[ic]) == "additionalstiffness") {
 									hy.dt.msh[bembodyid].dt.Cadd.resize(6, 6);
 									for (int r = 0; r < 6; ++r) {
 										for (int c = 0; c < 6; ++c) {
-											CheckIfAvailableArg(command, ++ic, Format("additionalStiffness(%d,%d)", r+1, c+1));
-											double d = ScanDouble(command[ic]);
+											CheckIfAvailableArg(command, ++ic, F("additionalStiffness(%d,%d)", r+1, c+1));	double d = ScanDouble(command[ic]);
 											if (IsNull(d))
-												throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+												throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 											hy.dt.msh[bembodyid].dt.Cadd(r, c) = d;
 										}
 									}
-									BEM::Print("\n" + Format(t_("Model %d, body %d additional stiffness matrix loaded"), bemid+1, bembodyid+1));
+									BEM::Print("\n" + F(t_("Model %d, body %d additional stiffness matrix loaded"), bemid+1, bembodyid+1));
 								} else 
-									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
+									throw Exc(F(t_("Wrong command '%s'"), command[ic]));
 							}
 						} else if (param == "-p" || param == "-print") {
 							if (Bem().hydros.size() < bemid) 
-								throw Exc(Format(t_("Model %d is not loaded"), bemid));
+								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
 								String pparam = ToLower(command[ic]);
 								if (pparam == "nb") {
 									Cout() << "\n";
-									BEM::Print(t_("Nb:") + S(" ")); 
-									lastPrint = FormatInt(hy.dt.Nb);
+									BEM::Print(t_("Nb:") + F(" ")); 
+/*bem*/								lastPrint = FormatInt(hy.dt.Nb);
 									Cout() << lastPrint;
 								} else if (pparam == "nh") {
 									Cout() << "\n";
-									BEM::Print(t_("Nh:") + S(" ")); 
+									BEM::Print(t_("Nh:") + F(" ")); 
 									lastPrint = FormatInt(hy.dt.Nh);
 									Cout() << lastPrint;
 								} else if (pparam == "nf") {
 									Cout() << "\n";
-									BEM::Print(t_("Nf:") + S(" ")); 
+									BEM::Print(t_("Nf:") + F(" ")); 
 									lastPrint = FormatInt(hy.dt.Nf);
 									Cout() << lastPrint;
 								} else if (pparam == "w" || pparam == "frequencies") {
 									Cout() << "\n";
-									BEM::Print(t_("w:") + S(" ")); 
+									BEM::Print(t_("w:") + F(" ")); 
 									lastPrint.Clear();
 									for (double d : hy.dt.w)
 										lastPrint << d << " "; 
 									Cout() << lastPrint;
 								} else if (pparam == "headings") {
 									Cout() << "\n";
-									BEM::Print(t_("head:") + S(" ")); 
+									BEM::Print(t_("head:") + F(" ")); 
 									lastPrint.Clear();
 									for (double d : hy.dt.head)
 										lastPrint << d << " "; 
 									Cout() << lastPrint; 
 								} else if (pparam == "a") {
-									CheckIfAvailableArg(command, ++ic, "A #dof 1");									
-									int idf = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "A #dof 1");				int idf = ScanInt(command[ic]);
 									if (idf < 1 || idf > 6*hy.dt.Nb)
-										throw Exc(Format(t_("Wrong dof in '%s'"), command[ic]));
-									CheckIfAvailableArg(command, ++ic, "A #dof 2");									
-									int jdf = ScanInt(command[ic]);
+										throw Exc(F(t_("Wrong dof in '%s'"), command[ic]));
+									CheckIfAvailableArg(command, ++ic, "A #dof 2");				int jdf = ScanInt(command[ic]);
 									if (jdf < 1 || jdf > 6*hy.dt.Nb)
-										throw Exc(Format(t_("Wrong dof in '%s'"), command[ic]));
+/*bem*/									throw Exc(F(t_("Wrong dof in '%s'"), command[ic]));
 									Cout() << "\n";
-									BEM::Print(Format(t_("A(%d,%d):"), idf, jdf) + S(" "));
+									BEM::Print(F(t_("A(%d,%d):"), idf, jdf) + F(" "));
 									idf--;	jdf--;
 									lastPrint.Clear();
 									for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) 
-										lastPrint << Format("%f ", hy.A_dim(ifr, idf, jdf));
+										lastPrint << F("%f ", hy.A_dim(ifr, idf, jdf));
 									Cout() << lastPrint;
 								} else if (pparam == "ainf") {
 									Cout() << "\n";
-									BEM::Print(t_("Ainf:") + S(" "));
+									BEM::Print(t_("Ainf:") + F(" "));
 									lastPrint.Clear();
 									for (int idf = 0; idf < 6*hy.dt.Nb; ++idf) 
 										for (int jdf = 0; jdf < 6*hy.dt.Nb; ++jdf) 
-											lastPrint << Format("%f ", hy.Ainf_dim(idf, jdf));
+											lastPrint << F("%f ", hy.Ainf_dim(idf, jdf));
 									Cout() << lastPrint;
 								} else if (pparam == "b") {
-									CheckIfAvailableArg(command, ++ic, "B #dof 1");									
-									int idf = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "B #dof 1");				int idf = ScanInt(command[ic]);
 									if (idf < 1 || idf > 6*hy.dt.Nb)
-										throw Exc(Format(t_("Wrong dof in '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong dof in '%s'"), command[ic]));
 									idf--;
-									CheckIfAvailableArg(command, ++ic, "B #dof 2");									
-									int jdf = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "B #dof 2");				int jdf = ScanInt(command[ic]);
 									if (jdf < 1 || jdf > 6*hy.dt.Nb)
-										throw Exc(Format(t_("Wrong dof in '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong dof in '%s'"), command[ic]));
 									jdf--;
 									Cout() << "\n";
-									BEM::Print(t_("B:") + S(" "));
-									lastPrint.Clear();
+									BEM::Print(t_("B:") + F(" "));
+/*bem*/								lastPrint.Clear();
 									for (int ifr = 0; ifr < hy.dt.Nf; ++ifr) 
-										lastPrint << Format("%f ", hy.B_dim(ifr, idf, jdf));
+										lastPrint << F("%f ", hy.B_dim(ifr, idf, jdf));
 									Cout() << lastPrint;
 								} else if (pparam == "theave") {
-									CheckIfAvailableArg(command, ++ic, "Id. body");
-									int ib = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Id. body");				int ib = ScanInt(command[ic]);
 									if (ib < 1 || ib > hy.dt.Nb)
-										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
 									double res = hy.Tdof(ib-1, 2);
 									if (!IsNull(res)) {
-										BEM::Print(Format(t_("Theave(%d):"), ib) + " "); 
-										lastPrint = Format("%f", res);
+										BEM::Print(F(t_("Theave(%d):"), ib) + " "); 
+										lastPrint = F("%f", res);
 									} else {
-										BEM::Print(Format(t_("Theave(%d)(inf):"), ib) + " "); 
-										lastPrint = Format("%f", hy.Tdof_inf(ib-1, 2));
+										BEM::Print(F(t_("Theave(%d)(inf):"), ib) + " "); 
+										lastPrint = F("%f", hy.Tdof_inf(ib-1, 2));
 									}
 									Cout() << lastPrint;
 								} else if (pparam == "troll") {
-									CheckIfAvailableArg(command, ++ic, "Id. body");
-									int ib = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Id. body");				int ib = ScanInt(command[ic]);
 									if (ib < 1 || ib > hy.dt.Nb)
-										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
 									double res = hy.Tdof(ib-1, 3);
 									if (!IsNull(res)) {
-										BEM::Print(Format(t_("Troll(%d):"), ib) + " "); 
-										lastPrint = Format("%f", res);
+/*bem*/									BEM::Print(F(t_("Troll(%d):"), ib) + " "); 
+										lastPrint = F("%f", res);
 									} else {
-										BEM::Print(Format(t_("Troll(%d)(inf):"), ib) + " "); 
-										lastPrint = Format("%f", hy.Tdof_inf(ib-1, 3));
+										BEM::Print(F(t_("Troll(%d)(inf):"), ib) + " "); 
+										lastPrint = F("%f", hy.Tdof_inf(ib-1, 3));
 									}
 									Cout() << lastPrint;
 								} else if (pparam == "tpitch") {
-									CheckIfAvailableArg(command, ++ic, "Id. body");
-									int ib = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Id. body");				int ib = ScanInt(command[ic]);
 									if (ib < 1 || ib > hy.dt.Nb)
-										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
 									double res = hy.Tdof(ib-1, 4);
 									if (!IsNull(res)) {
-										BEM::Print(Format(t_("Tpitch(%d):"), ib) + " "); 
-										lastPrint = Format("%f", res);
+										BEM::Print(F(t_("Tpitch(%d):"), ib) + " "); 
+										lastPrint = F("%f", res);
 									} else {
-										BEM::Print(Format(t_("Tpitch(%d)(inf):"), ib) + " "); 
-										lastPrint = Format("%f", hy.Tdof_inf(ib-1, 4));
+										BEM::Print(F(t_("Tpitch(%d)(inf):"), ib) + " "); 
+										lastPrint = F("%f", hy.Tdof_inf(ib-1, 4));
 									}
 									Cout() << lastPrint;
 								} else if (pparam == "gmroll") {
-									CheckIfAvailableArg(command, ++ic, "Id. body");
-									int ib = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Id. body");				int ib = ScanInt(command[ic]);
 									if (ib < 1 || ib > hy.dt.Nb)
-										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
-									Cout() << "\n";
-									BEM::Print(Format(t_("GMroll(%d):"), ib) + " "); 
-									lastPrint = Format("%f", hy.GMroll(ib-1));
+										throw Exc(F(t_("Wrong body id. in '%s'"), command[ic]));
+/*bem*/								Cout() << "\n";
+									BEM::Print(F(t_("GMroll(%d):"), ib) + " "); 
+									lastPrint = F("%f", hy.GMroll(ib-1));
 									Cout() << lastPrint;
 								} else if (pparam == "gmpitch") {
-									CheckIfAvailableArg(command, ++ic, "Id. body");
-									int ib = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "Id. body");				int ib = ScanInt(command[ic]);
 									if (ib < 1 || ib > hy.dt.Nb)
-										throw Exc(Format(t_("Wrong body id. in '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong body id. in '%s'"), command[ic]));
 									Cout() << "\n";
-									BEM::Print(Format(t_("GMpitch(%d):"), ib) + " "); 
-									lastPrint = Format("%f", hy.GMpitch(ib-1));
+									BEM::Print(F(t_("GMpitch(%d):"), ib) + " "); 
+									lastPrint = F("%f", hy.GMpitch(ib-1));
 									Cout() << lastPrint;
 								} else
-									throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+									throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
 							}
+						} else if (param == "-supportMultibody") {
+							CheckIfAvailableArg(command, ++ic, "supportMultibody");
+							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
+							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							lastPrint = multibody ? "true" : "false"; 
+							Cout() << lastPrint;
+						} else if (param == "-supportNear") {
+/*bem*/							CheckIfAvailableArg(command, ++ic, "supportNear");
+							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
+							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							lastPrint = near9 ? "true" : "false"; 
+							Cout() << lastPrint;
+						} else if (param == "-supportFar") {
+							CheckIfAvailableArg(command, ++ic, "supportFar");
+							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
+							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							lastPrint = far8 ? "true" : "false"; 
+							Cout() << lastPrint;
+						} else if (param == "-supportMiddle") {
+							CheckIfAvailableArg(command, ++ic, "supportMiddle");
+							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
+							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							lastPrint = middle7 ? "true" : "false"; 
+							Cout() << lastPrint;
 						} else if (mainCommands.Find(param) >= 0) {
 							nextcommands = "general";
 							ic--;				
 						} else 
-							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
 						
-					} else if (nextcommands == "mesh") {
+/*mesh*/			} else if (nextcommands == "mesh") {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++ic, "--input");			String file = FileName(command[ic]);
 							
-							DLL_Mesh_Input(file);
-							DLL_RaiseIfError();
+							BMR_Mesh_Load(file);
+							BMR_RaiseIfError();
 						} else if (param == "-r" || param == "-report") {
-							DLL_Mesh_Report();
-							DLL_RaiseIfError();
+							BMR_Mesh_Report();
+							BMR_RaiseIfError();
 						} else if (param == "-cl" || param == "-clear") {
-							DLL_Mesh_Clear();
-							DLL_RaiseIfError();
+							BMR_Mesh_Clear();
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Body data cleared")));
 						} else if (param == "-setid") {
 							CheckIfAvailableArg(command, ++ic, "-setid");			int id = ScanInt(command[ic]);
 							
-							DLL_Mesh_SetId(id);
-							DLL_RaiseIfError();
-						} else if (param == "-c" || param == "-convert") {
-							CheckIfAvailableArg(command, ++ic, "-convert");			String file = FileName(command[ic]);
+							BMR_Mesh_Id_Set(id);
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Body active model id is %d"), meshid));	
+						} else if (param == "-getid") {
+							int id = BMR_Mesh_Id_Get();
+							BMR_RaiseIfError();
+							lastPrint = FormatInt(id);
+							Cout() << lastPrint;
+						} else if (param == "-c" || param == "-convert" || param == "-save") {
+							CheckIfAvailableArg(command, ++ic, "-save");			String file = FileName(command[ic]);
 							
 							bool symX = false, symY = false;
 							String format;
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								String pparam = ToLower(command[++ic]);
-								if (pparam == "symx")
+/*mesh*/						if (pparam == "symx")
 									symX = true;
 								else if (pparam == "symy")
 									symY = true;
@@ -1139,15 +1076,17 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									format = pparam;
 							}
 							
-							DLL_Mesh_Convert(file, format, symX, symY);
-							DLL_RaiseIfError();
+							BMR_Mesh_Save(file, format, symX, symY);
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Model id %d saved as '%s'"), meshid, file));	
 						} else if (param == "-t" || param == "-translate") {
 							CheckIfAvailableArg(command, ++ic, "x");				double x = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "y");				double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "z");				double z = ScanDouble(command[ic]);
 							
-							DLL_Mesh_Translate(x, y, z);
-							DLL_RaiseIfError();
+							BMR_Mesh_Translate(x, y, z);
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Body id %d translated %f, %f, %f"), meshid, x, y, z)); 
 						} else if (param == "-rot" || param == "-rotate") {
 							if (Bem().surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -1158,17 +1097,19 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "cy");				double cy = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cz");				double cz = ScanDouble(command[ic]);
 							
-							DLL_Mesh_Rotate(ax, ay, az, cx, cy, cz);
-							DLL_RaiseIfError();							
+							BMR_Mesh_Rotate(ax, ay, az, cx, cy, cz);
+							BMR_RaiseIfError();		
+							BEM::Print("\n" + F(t_("Body id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));					
 						} else if (param == "-cg") {
-							if (Bem().surfs.IsEmpty()) 
+/*mesh*/					if (Bem().surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "cgx");				double x = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cgy");				double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cgz");				double z = ScanDouble(command[ic]);
 							
-							DLL_Mesh_Cg(x, y, z);
-							DLL_RaiseIfError();							
+							BMR_Mesh_Cg_Set(x, y, z);
+							BMR_RaiseIfError();	
+							BEM::Print("\n" + F(t_("CG is %f, %f, %f"), x, y, z));							
 						} else if (param == "-c0") {
 							if (Bem().surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -1176,29 +1117,35 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "c0y");				double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "c0z");				double z = ScanDouble(command[ic]);
 							
-							DLL_Mesh_C0(x, y, z);
-							DLL_RaiseIfError();							
+							BMR_Mesh_C0_Set(x, y, z);
+							BMR_RaiseIfError();	
+							BEM::Print("\n" + F(t_("C0 is %f, %f, %f"), x, y, z));							
 						} else if (param == "-mass") { 
 							if (Bem().surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "mass");				double mass = ScanDouble(command[ic]);
 							
-							DLL_Mesh_Mass(mass);
-							DLL_RaiseIfError();							
+							BMR_Mesh_Mass_Set(mass);
+							BMR_RaiseIfError();	
+							BEM::Print("\n" + F(t_("Mass is %f"), mass));						
 						} else if (param == "-reset") {	
-							DLL_Mesh_Reset();
-							DLL_RaiseIfError();							
+							BMR_Mesh_Reset();
+							BMR_RaiseIfError();	
+							BEM::Print("\n" + F(t_("Body id %d position is reset"), meshid));						
 						} else if (param == "-getwaterplane") {
-							DLL_Mesh_GetWaterPlane();
-							DLL_RaiseIfError();
-						} else if (param == "-gethull") {
-							DLL_Mesh_GetHull();
-							DLL_RaiseIfError();
+							BMR_Mesh_GetWaterPlane();
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Body id %d waterplane is got"), meshid));
+/*mesh*/				} else if (param == "-gethull") {
+							BMR_Mesh_GetHull();
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Body id %d hull is got"), meshid));
 						} else if (param == "-filllid") {
 							CheckIfAvailableArg(command, ++ic, "ratio");			double ratio = ScanDouble(command[ic]);
 							
-							DLL_Mesh_FillWaterplane(ratio);
-							DLL_RaiseIfError();
+							BMR_Mesh_FillWaterplane(ratio, true);
+							BMR_RaiseIfError();
+							BEM::Print("\n" + F(t_("Body id %d lid is got"), meshid));
 						} else if (param == "-p" || param == "-print") {
 							if (Bem().surfs.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -1207,56 +1154,49 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								String pparam = ToLower(command[++ic]);
 								if (pparam == "volume") {
 									Cout() << "\n";
-									BEM::Print(t_("Volume:") + S(" "));
+									BEM::Print(t_("Volume:") + F(" "));
 									double vx, vy, vz;
-									DLL_Mesh_GetVolume(&vx, &vy, &vz);
-									DLL_RaiseIfError();
-									lastPrint = Format("%f %f %f", vx, vy, vz);
+									BMR_Mesh_Volume_Get(&vx, &vy, &vz);
+									BMR_RaiseIfError();
+									lastPrint = F("%f %f %f", vx, vy, vz);
 									Cout() << lastPrint;
 								} else if (pparam == "underwatervolume") {
 									Cout() << "\n";
-									BEM::Print(t_("UnderwaterVolume:") + S(" ")); 
+									BEM::Print(t_("UnderwaterVolume:") + F(" ")); 
 									double vx, vy, vz; 
-									DLL_Mesh_GetUnderwaterVolume(&vx, &vy, &vz);
-									DLL_RaiseIfError();
-									lastPrint = Format("%f %f %f", vx, vy, vz);
+									BMR_Mesh_UnderwaterVolume_Get(&vx, &vy, &vz);
+									BMR_RaiseIfError();
+									lastPrint = F("%f %f %f", vx, vy, vz);
 									Cout() << lastPrint;
-								} else if (pparam == "surface") {
+/*mesh*/						} else if (pparam == "surface") {
 									Cout() << "\n";
-									BEM::Print(t_("Surface:") + S(" ")); 
-									lastPrint = Format("%f", DLL_Mesh_GetSurface());
-									DLL_RaiseIfError();
+									BEM::Print(t_("Surface:") + F(" ")); 
+									lastPrint = F("%f", BMR_Mesh_Surface_Get());
+									BMR_RaiseIfError();
 									Cout() << lastPrint;
 								} else if (pparam == "underwatersurface") {
 									Cout() << "\n";
-									BEM::Print(t_("UnderwaterSurface:") + S(" ")); 
-									lastPrint = Format("%f", DLL_Mesh_GetUnderwaterSurface());
-									DLL_RaiseIfError();
-									Cout() << lastPrint;
-								} else if (pparam == "cb") {
-									Cout() << "\n";
-									BEM::Print(t_("CB:") + S(" ")); 
-									double x, y, z;
-									DLL_Mesh_GetCentreOfGravity(&x, &y, &z);
-									lastPrint = Format("%f %f %f", x, y, z);
+									BEM::Print(t_("UnderwaterSurface:") + F(" ")); 
+									lastPrint = F("%f", BMR_Mesh_UnderwaterSurface_Get());
+									BMR_RaiseIfError();
 									Cout() << lastPrint;
 								} else if (pparam == "cg_vol") {
 									Cout() << "\n";
-									BEM::Print(t_("CG_vol:") + S(" "));
+									BEM::Print(t_("CG_vol:") + F(" "));
 									double x, y, z;
-									DLL_Mesh_GetCentreOfGravity_Volume(&x, &y, &z);
-									lastPrint = Format("%f %f %f", x, y, z);
+									BMR_Mesh_Centre_Volume_Get(&x, &y, &z);
+									lastPrint = F("%f %f %f", x, y, z);
 									Cout() << lastPrint;
-								} else if (pparam == "cg_surf") {
+/*mesh*/						} else if (pparam == "cg_surf") {
 									Cout() << "\n";
-									BEM::Print(t_("CG_surf:") + S(" ")); 
+									BEM::Print(t_("CG_surf:") + F(" ")); 
 									double x, y, z;
-									DLL_Mesh_GetCentreOfGravity_Surface(&x, &y, &z);
-									lastPrint = Format("%f %f %f", x, y, z);
+									BMR_Mesh_Centre_Surface_Get(&x, &y, &z);
+									lastPrint = F("%f %f %f", x, y, z);
 									Cout() << lastPrint;
 								} else if (pparam == "hydrostiffness") {
 									Cout() << "\n";
-									BEM::Print(t_("HydrostaticStiffness:") + S(" "));
+									BEM::Print(t_("HydrostaticStiffness:") + F(" "));
 									lastPrint.Clear();
 									for (int i = 0; i < 6; ++i) {
 										for (int j = 0; j < 6; ++j) {
@@ -1272,8 +1212,8 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Cout() << lastPrint;
 								} else if (pparam == "hydrostatic_force") {
 									Cout() << "\n";
-									BEM::Print(t_("HydrostaticForce:") + S(" "));
-									lastPrint.Clear();
+									BEM::Print(t_("HydrostaticForce:") + F(" "));
+/*mesh*/							lastPrint.Clear();
 									Force6D f = msh.dt.under.GetHydrostaticForce(msh.dt.c0, Bem().rho, Bem().g);
 									for (int i = 0; i < 6; ++i) 				
 										lastPrint << f[i] << " ";
@@ -1285,7 +1225,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Cout() << lastPrint;
 								} else if (pparam.StartsWith("inertia")) {
 									Cout() << "\n";
-									BEM::Print(t_("Inertia:") + S(" "));
+									BEM::Print(t_("Inertia:") + F(" "));
 									lastPrint.Clear();
 									Eigen::Matrix3d inertia;
 									Point3D centre;
@@ -1300,13 +1240,13 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										volume = true;
 									
 									msh.dt.mesh.GetInertia33_Radii(inertia, centre, volume, false);
-									for (int i = 0; i < 3; ++i) 
+/*mesh*/							for (int i = 0; i < 3; ++i) 
 										for (int j = 0; j < 3; ++j) 
 											lastPrint << inertia(i, j) << " ";
 									Cout() << lastPrint;
 								} else if (pparam == "gz") {
 									Cout() << "\n";
-									BEM::Print(t_("GZ:") + S(" "));
+									BEM::Print(t_("GZ:") + F(" "));
 									lastPrint.Clear();
 									
 									CheckIfAvailableArg(command, ++ic, "Angle");
@@ -1325,40 +1265,40 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										lastPrint << dataangle[i] << " ";
 									lastPrint << "\n";
 									for (int i = 0; i < datagz.size(); ++i) 
-										lastPrint << datagz[i] << " ";
+/*mesh*/								lastPrint << datagz[i] << " ";
 									Cout() << lastPrint;
 								} else if (pparam == "gm") {
 									Cout() << "\n";
-									BEM::Print(t_("gm:") + S(" ")); 
-									lastPrint = Format("%f %f", msh.GMpitch(Bem().rho, Bem().g), msh.GMroll(Bem().rho, Bem().g));
+									BEM::Print(t_("gm:") + F(" ")); 
+									lastPrint = F("%f %f", msh.GMpitch(Bem().rho, Bem().g), msh.GMroll(Bem().rho, Bem().g));
 									Cout() << lastPrint;
 								} else
-									throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+									throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
 							}
 						} else if (mainCommands.Find(param) >= 0) {
 							nextcommands = "general";
 							ic--;
 						} else 
-							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
-					} else if (nextcommands == "time") {
+							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
+/*time*/			} else if (nextcommands == "time") {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++ic, "-input");
 
 							String file = FileName(command[ic]);
 							if (!FileExists(file)) 
-								throw Exc(Format(t_("File '%s' not found"), file)); 
+								throw Exc(F(t_("File '%s' not found"), file)); 
 							
 							BEM::Print("\n");
 							String ret = fast.Load(file, echo ? Status : NoPrint);
 							if (ret.IsEmpty())
-								BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
+								BEM::Print("\n" + F(t_("File '%s' loaded"), file));
 							else
-								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s': %s"), file, ret));
-						} else if (param == "-c" || param == "-convert") {
+								BEM::PrintWarning("\n" + F(t_("Problem loading '%s': %s"), file, ret));
+/*time*/				} else if (param == "-c" || param == "-convert" || param == "-save") {
 							if (fast.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							
-							CheckIfAvailableArg(command, ++ic, "-convert");
+							CheckIfAvailableArg(command, ++ic, "-save");
 							
 							String file = FileName(command[ic]);
 							
@@ -1370,14 +1310,14 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							}
 							BEM::Print("\n");
 							if (fast.Save(file, echo ? Status : NoPrint, "", ScatterDraw::GetDefaultCSVSeparator(), idds)) 
-								BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
+								BEM::Print("\n" + F(t_("Results saved as '%s'"), file));
 						} else if (param == "-p" || param == "-print") {
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
 								String pparam = ToLower(command[ic]);
 								if (pparam == "list") {
 									Cout() << "\n";
-									BEM::Print(t_("List of parameters:") + S(" ")); 
+									BEM::Print(t_("List of parameters:") + F(" ")); 
 									lastPrint = "";
 									for (int i = 0; i < fast.GetParamCount(); ++i) {
 										if (i > 0)
@@ -1385,11 +1325,11 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										lastPrint << fast.GetParameter(i);
 									}
 									Cout() << lastPrint;
-								} else {
+/*time*/						} else {
 									Cout() << "\n";
 									UVector<int> p = fast.FindParameterMatch(pparam);
 									if (p.IsEmpty())
-										throw Exc(Format(t_("Parameter '%s' not found"), pparam));
+										throw Exc(F(t_("Parameter '%s' not found"), pparam));
 
 									int id = p[0];
 									ic++;
@@ -1406,7 +1346,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										else if (command[ic] == "min") 
 											lastPrint = FormatDouble(d.minCoeff());
 										else  
-											throw Exc(Format(t_("Parameter '%s' not found"), command[ic]));
+											throw Exc(F(t_("Parameter '%s' not found"), command[ic]));
 									}
 									Cout() << lastPrint;
 								}
@@ -1415,14 +1355,14 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							nextcommands = "general";
 							ic--;							
 						} else
-							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
-					} else if (nextcommands == "wind") {
+							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
+/*wind*/			} else if (nextcommands == "wind") {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++ic, "--input");
 							
 							String file = FileName(command[ic]);
 							if (!FileExists(file)) 
-								throw Exc(Format(t_("File '%s' not found"), file)); 
+								throw Exc(F(t_("File '%s' not found"), file)); 
 							
 							Wind &w = wind.Add();
 							String ret;
@@ -1430,7 +1370,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								throw Exc(ret);
 							
 							windid = wind.size() - 1;
-							BEM::Print("\n" + Format(t_("File '%s' loaded"), file));
+							BEM::Print("\n" + F(t_("File '%s' loaded"), file));
 						} else if (param == "-params") {
 							CheckIfAvailableArg(command, ic+1, "-params");
 							
@@ -1442,25 +1382,25 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									CheckIfAvailableArg(command, ++ic, "hubheight");
 									double h = ScanDouble(command[ic]);
 									if (IsNull(h))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetHubHeight((float)h);
-									BEM::Print("\n" + Format(t_("Hub height is %f"), h));	
+									BEM::Print("\n" + F(t_("Hub height is %f"), h));	
 								} else if (ToLower(command[ic]) == "gridheight") {
 									if (wind.IsEmpty()) 
 										throw Exc(t_("No file loaded"));
 									CheckIfAvailableArg(command, ++ic, "gridheight");
 									double h = ScanDouble(command[ic]);
 									if (IsNull(h))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetGridHeight((float)h);
-									BEM::Print("\n" + Format(t_("Grid height is %f"), h));	
+									BEM::Print("\n" + F(t_("Grid height is %f"), h));	
 								} else if (ToLower(command[ic]) == "ti") {	
 									if (wind.IsEmpty()) 
 										throw Exc(t_("No file loaded"));
 									CheckIfAvailableArg(command, ++ic, "TI u");
 									double u = ScanDouble(command[ic]);
 									if (IsNull(u))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetTI_u((float)u);
 									double v = 0.8*u;
 									double w = 0.5*u;
@@ -1480,14 +1420,14 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									}
 									wind[windid].SetTI_v((float)v);
 									wind[windid].SetTI_w((float)w);
-									BEM::Print("\n" + Format(t_("Turbulence intensity is u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
+									BEM::Print("\n" + F(t_("Turbulence intensity is u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
 								} else if (ToLower(command[ic]) == "scale") {	
 									if (wind.IsEmpty()) 
 										throw Exc(t_("No file loaded"));
 									CheckIfAvailableArg(command, ++ic, "scale u");
 									double u = ScanDouble(command[ic]);
 									if (IsNull(u))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									double v = 1;
 									double w = 1;
 									if (ic+1 < command.size()) {
@@ -1505,31 +1445,31 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										}
 									}
 									wind[windid].SetFactor((float)u, (float)v, (float)w);
-									BEM::Print("\n" + Format(t_("Velocities scaled by u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
+									BEM::Print("\n" + F(t_("Velocities scaled by u: %f %%, v: %f %%, w: %f %%"), u, v, w));	
 								} else if (ToLower(command[ic]) == "powerlaw") {	
 									if (wind.IsEmpty()) 
 										throw Exc(t_("No file loaded"));	
 									CheckIfAvailableArg(command, ++ic, "powerLaw");
 									double pl = ScanDouble(command[ic]);
 									if (IsNull(pl))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									CheckIfAvailableArg(command, ++ic, "hub height for power law");
 									double zh = ScanDouble(command[ic]);
 									if (IsNull(zh))
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetPowerLaw((float)pl, (float)zh);
-									BEM::Print("\n" + Format(t_("Power law is %f set at height %f m"), pl, zh));
+									BEM::Print("\n" + F(t_("Power law is %f set at height %f m"), pl, zh));
 								} else if (ToLower(command[ic]) == "periodic") {
 									if (wind.IsEmpty()) 
 										throw Exc(t_("No file loaded"));	
 									CheckIfAvailableArg(command, ++ic, "-p periodic");
 									String s = ToLower(command[ic]);
 									if (s != "true" && s != "false")
-										throw Exc(Format(t_("Wrong argument '%s'"), command[ic]));
+										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 									wind[windid].SetPeriodic(s == "true" ? true : false);
-									BEM::Print("\n" + Format(t_("Set periodic %s"), s));	
+									BEM::Print("\n" + F(t_("Set periodic %s"), s));	
 								} else 
-									throw Exc(Format(t_("Wrong command '%s'"), command[ic]));
+									throw Exc(F(t_("Wrong command '%s'"), command[ic]));
 							}
 						} else if (param == "-r" || param == "-report") {
 							if (wind.IsEmpty()) 
@@ -1546,7 +1486,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 						} else if (param == "-cl" || param == "-clear") {
 							wind.Clear();
 							windid = -1;
-							BEM::Print("\n" + S(t_("Wind data cleared")));	
+							BEM::Print("\n" + F(t_("Wind data cleared")));	
 						} else if (param == "-setid") {
 							if (wind.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
@@ -1555,20 +1495,20 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 
 							windid = ScanInt(command[ic]);
 							if (IsNull(windid) || windid < 0 || windid > wind.size()-1)
-								throw Exc(Format(t_("Invalid id %s"), command[ic]));
-							BEM::Print("\n" + Format(t_("Wind active model id is %d"), windid));	
-						} else if (param == "-c" || param == "-convert") {
+								throw Exc(F(t_("Invalid id %s"), command[ic]));
+							BEM::Print("\n" + F(t_("Wind active model id is %d"), windid));	
+						} else if (param == "-c" || param == "-convert" || param == "-save") {
 							if (wind.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							
-							CheckIfAvailableArg(command, ++ic, "-convert");
+							CheckIfAvailableArg(command, ++ic, "-save");
 							
 							String file = FileName(command[ic]);
 							
 							String ret;
 							if (!IsEmpty(ret = wind[windid].Save(file)))
 								throw Exc(ret);
-							BEM::Print("\n" + Format(t_("Model id %d saved as '%s'"), windid, file));
+							BEM::Print("\n" + F(t_("Model id %d saved as '%s'"), windid, file));
 						} else if (param == "-p" || param == "-print") {
 							Wind &w = wind[windid];
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
@@ -1576,7 +1516,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								String pparam = ToLower(command[ic]);
 								if (pparam == "vel") {
 									BEM::Print("\n");
-									BEM::Print(t_("Velocity:") + S(" "));
+									BEM::Print(t_("Velocity:") + F(" "));
 									lastPrint.Clear();
 									
 									CheckIfAvailableArg(command, ++ic, "Position Y");
@@ -1605,7 +1545,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									BEM::Print(lastPrint);
 								} else if (pparam == "velcomp") {
 									BEM::Print("\n");
-									BEM::Print(t_("Velocity component:") + S(" "));
+									BEM::Print(t_("Velocity component:") + F(" "));
 									lastPrint.Clear();
 									
 									CheckIfAvailableArg(command, ++ic, "Component");
@@ -1636,7 +1576,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									BEM::Print(lastPrint);
 								} else if (pparam == "time") {
 									BEM::Print("\n");
-									BEM::Print(t_("Time:") + S(" "));
+									BEM::Print(t_("Time:") + F(" "));
 									lastPrint.Clear();
 									Eigen::VectorXd t;
 									t = w.GetTime();
@@ -1644,13 +1584,13 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										lastPrint << t(i) << " ";
 									BEM::Print(lastPrint);
 								} else
-									throw Exc(Format(t_("Unknown parameter '%s'"), pparam));
+									throw Exc(F(t_("Unknown parameter '%s'"), pparam));
 							}
 						} else if (mainCommands.Find(param) >= 0) {
 							nextcommands = "general";
 							ic--;							
 						} else 
-							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
 					}
 #ifdef PLATFORM_WIN32						
 					else if (nextcommands == "orca") {
@@ -1673,16 +1613,19 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Sleep(200);
 									errorStr.Clear();
 								}
-								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + F(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
+							if (threadCount > 0)
+								orca.SetThreadCount(threadCount);
+							
 							if (!IsEmpty(errorStr))
-								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+								BEM::PrintWarning("\n" + F(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
 								orca.RunWave();
 								orca.SaveWaveResults(to);							
 							
-								BEM::Print("\n" + Format(t_("Diffraction results saved at '%s'"), to));
+								BEM::Print("\n" + F(t_("Diffraction results saved at '%s'"), to));
 							}
 						} else if (param == "-loadwave") {
 							CheckIfAvailableArg(command, ++ic, "-loadwave from");
@@ -1701,13 +1644,13 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Sleep(200);
 									errorStr.Clear();
 								}
-								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + F(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
-								BEM::PrintWarning("\n" + Format(t_("Problem loading '%s'. %s"), from, errorStr));
+								BEM::PrintWarning("\n" + F(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
-								BEM::Print("\n" + Format(t_("Diffraction data loaded from '%s'"), from));
+								BEM::Print("\n" + F(t_("Diffraction data loaded from '%s'"), from));
 							}
 						} else if (param == "-translatewave") {
 							if (!orca.IsWaveLoaded())
@@ -1718,15 +1661,15 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "-translatewave x");
 							pos.x = ScanDouble(command[ic]);
 							if (IsNull(pos.x))
-								throw Exc(Format(t_("Invalid position %s"), command[ic]));							
+								throw Exc(F(t_("Invalid position %s"), command[ic]));							
 							CheckIfAvailableArg(command, ++ic, "-translatewave y");
 							pos.y = ScanDouble(command[ic]);
 							if (IsNull(pos.y))
-								throw Exc(Format(t_("Invalid position %s"), command[ic]));
+								throw Exc(F(t_("Invalid position %s"), command[ic]));
 							CheckIfAvailableArg(command, ++ic, "-translatewave z");
 							pos.z = ScanDouble(command[ic]);
 							if (IsNull(pos.z))
-								throw Exc(Format(t_("Invalid position %s"), command[ic]));
+								throw Exc(F(t_("Invalid position %s"), command[ic]));
 
 							Bem().hydros.Add();
 							bemid = Bem().hydros.size() - 1;
@@ -1738,9 +1681,9 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								errorStr = e;
 							}
 							if (!IsEmpty(errorStr))
-								throw Exc(Format(t_("Problem translating results to %f, %f, %f: %s"), pos.x, pos.y, pos.z, errorStr));
+								throw Exc(F(t_("Problem translating results to %f, %f, %f: %s"), pos.x, pos.y, pos.z, errorStr));
 							else
-								BEM::Print("\n" + Format(t_("Diffraction results translated to %f, %f, %f and loaded as new bem case"), pos.x, pos.y, pos.z));
+								BEM::Print("\n" + F(t_("Diffraction results translated to %f, %f, %f and loaded as new bem case"), pos.x, pos.y, pos.z));
 						} else if (param == "-savewave") {
 							if (!orca.IsWaveLoaded())
 								throw t_("OrcaFlex wave model not loaded");
@@ -1754,9 +1697,9 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								errorStr = e;
 							}
 							if (!IsEmpty(errorStr))
-								throw Exc(Format(t_("Problem saving results to %s: %s"), to, errorStr));
+								throw Exc(F(t_("Problem saving results to %s: %s"), to, errorStr));
 							else
-								BEM::Print("\n" + Format(t_("Diffraction results saved to %s"), to));		
+								BEM::Print("\n" + F(t_("Diffraction results saved to %s"), to));		
 						} else if (param == "-rf" || param == "-runflex") {
 							CheckIfAvailableArg(command, ++ic, "-runflex from");
 							String from = command[ic];
@@ -1775,24 +1718,24 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									numTry--;
 									errorStr.Clear();
 								}
-								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + F(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
-								throw Exc(Format(t_("Problem loading '%s'. %s"), from, errorStr));
+								throw Exc(F(t_("Problem loading '%s'. %s"), from, errorStr));
 							else {
 								bool saved = false;
 								try {
 									orca.RunFlex(to, saved);
 								} catch (Exc e) {
-									Cerr() << "\n" << Format(t_("Error running OrcaFlex: %s"), e);
+									Cerr() << "\n" << F(t_("Error running OrcaFlex: %s"), e);
 									returnval = false;
 								}
 								if (orca.GetModelState() == msSimulationStoppedUnstable)
 									Cerr() << "\n" << t_("Simulation aborted: The simulation has become unstable because the solver parameters (time step, iterations num.) or other, have to be reviewed.\nCheck here: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Generaldata,Dynamics.htm");
 		
 								if (saved)
-									BEM::Print("\n" + Format(t_("Simulation results saved at '%s'"), to));
+									BEM::Print("\n" + F(t_("Simulation results saved at '%s'"), to));
 							}
 						} else if (param == "-ls" || param == "-loadsim") {
 							CheckIfAvailableArg(command, ++ic, "-loadSim sim");
@@ -1811,36 +1754,36 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									numTry--;
 									errorStr.Clear();
 								}
-								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
+								BEM::Print("\n" + F(t_("Next try (%d/%d)"), numOrcaTries-numTry+1, numOrcaTries));
 							} while (numTry > 0);
 							
 							if (!IsEmpty(errorStr))
-								throw Exc(Format(t_("Problem loading '%s'. %s"), from, errorStr));
+								throw Exc(F(t_("Problem loading '%s'. %s"), from, errorStr));
 							else
-								BEM::Print("\n" + Format(t_("Simulation '%s' loaded"), from));
+								BEM::Print("\n" + F(t_("Simulation '%s' loaded"), from));
 						} else if (param == "-numthread") {
 							CheckIfAvailableArg(command, ++ic, "-numthread num");
 							int numth = ScanInt(command[ic]);
 							if (IsNull(numth))
-								throw Exc(Format(t_("Invalid thread number %s"), command[ic]));							
+								throw Exc(F(t_("Invalid thread number %s"), command[ic]));							
 
-							orca.SetThreadCount(numth);
+							threadCount = numth;
 							
-							BEM::Print("\n" + Format(t_("Thread number set to %d"), numth));
+							BEM::Print("\n" + F(t_("Thread number set to %d"), numth));
 						} else if (param == "-numtries") {
 							CheckIfAvailableArg(command, ++ic, "-numtries num");
 							numOrcaTries = ScanInt(command[ic]);
 							if (IsNull(numOrcaTries))
-								throw Exc(Format(t_("Invalid thread number %s"), command[ic]));							
+								throw Exc(F(t_("Invalid thread number %s"), command[ic]));							
 
-							BEM::Print("\n" + Format(t_("Number of OrcaFlex license tries set to %d"), numOrcaTries));
+							BEM::Print("\n" + F(t_("Number of OrcaFlex license tries set to %d"), numOrcaTries));
 						} else if (param == "-timelog") {
 							CheckIfAvailableArg(command, ++ic, "-timelog num");
 							int timeLog = int(StringToSeconds(command[ic]));
 							if (IsNull(timeLog))
-								throw Exc(Format(t_("Invalid time between logs %s"), command[ic]));							
+								throw Exc(F(t_("Invalid time between logs %s"), command[ic]));							
 
-							BEM::Print("\n" + Format(t_("OrcaFlex time between logs set to %.1f sec"), timeLog));							
+							BEM::Print("\n" + F(t_("OrcaFlex time between logs set to %.1f sec"), timeLog));							
 							
 							orca.deltaLogSimulation = timeLog;
 						} else if (param == "-lp" || param == "-loadparam") {
@@ -1848,13 +1791,13 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							
 							paramList << command[ic];
 							centreList << centreOrca;
-						} else if (param == "-c" || param == "-convert") {
-							CheckIfAvailableArg(command, ++ic, "-convert");
+						} else if (param == "-c" || param == "-convert" || param == "-save") {
+							CheckIfAvailableArg(command, ++ic, "-save");
 							
 							String file = FileName(command[ic]);
 
 							orca.SaveCsv(file, paramList, centreList, ScatterDraw::GetDefaultCSVSeparator());
-							BEM::Print("\n" + Format(t_("Results saved as '%s'"), file));
+							BEM::Print("\n" + F(t_("Results saved as '%s'"), file));
 						} else if (param == "-rs" || param == "-refsystem") {	
 							CheckIfAvailableArg(command, ++ic, "Reference cx");
 							centreOrca.x = ScanDouble(command[ic]);
@@ -1870,14 +1813,14 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							do {
 								if (orca.IsAvailable())
 									break;
-								BEM::Print("\n" + Format(t_("Next try (%d/%d)"), 2-numTry+1, 2));
+								BEM::Print("\n" + F(t_("Next try (%d/%d)"), 2-numTry+1, 2));
 								numTry--;
 							} while (numTry > 0);
 							if (numTry == 0) {
-								BEM::Print(S("\n") + t_("OrcaFLEX license is not available"));
+								BEM::Print(F("\n") + t_("OrcaFLEX license is not available"));
 								break;
 							}
-							BEM::Print(S("\n") + t_("OrcaFLEX is installed and available"));
+							BEM::Print(F("\n") + t_("OrcaFLEX is installed and available"));
 						} else if (param == "-p" || param == "-print") {
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
 								ic++;
@@ -1885,7 +1828,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								if (pparam == "list") {
 									Cout() << "\n";
 									UVector<String> list = orca.GetFlexSimVariablesList();
-									BEM::Print(Format(t_("List of parameters (%d):"), list.size()) + S(" ")); 
+									BEM::Print(F(t_("List of parameters (%d):"), list.size()) + F(" ")); 
 									lastPrint = "";
 									for (int i = 0; i < list.size(); ++i) {
 										if (i > 0)
@@ -1895,7 +1838,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Cout() << lastPrint;
 								} else if (pparam == "numthread") {
 									int numth = orca.GetThreadCount();
-									BEM::Print("\n" + Format("%d", numth));
+									BEM::Print("\n" + F("%d", numth));
 								} else {
 									Cout() << "\n";
 
@@ -1906,7 +1849,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									
 									ic++;
 									if (command.size() <= ic)
-										throw Exc(Format(t_("Last command '%s' is not complete"), pparam));
+										throw Exc(F(t_("Last command '%s' is not complete"), pparam));
 									if (command[ic] == "data") {
 										lastPrint = "";
 										for (int i = 0; i < d.size(); ++i) {
@@ -1921,7 +1864,7 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									else if (command[ic] == "min") 
 										lastPrint = FormatDouble(d.minCoeff());
 									else  
-										throw Exc(Format(t_("Parameter '%s' not found in -p"), command[ic]));
+										throw Exc(F(t_("Parameter '%s' not found in -p"), command[ic]));
 									Cout() << lastPrint;
 								}
 							}
@@ -1932,17 +1875,17 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							if (!FileExists(file)) {
 								file = AFX(file, "OrcFxAPI.dll");
 								if (!FileExists(file)) 	
-									throw Exc(Format(t_("File '%s' not found"), file)); 
+									throw Exc(F(t_("File '%s' not found"), file)); 
 							}
 							if (!orca.InitDll(file))
-								throw Exc(Format(t_("DLL '%s' not found"), command[ic]));
+								throw Exc(F(t_("DLL '%s' not found"), command[ic]));
 							
-							BEM::Print("\n" + Format(t_("Orca .dll '%s' loaded"), orca.GetDLLPath()));
+							BEM::Print("\n" + F(t_("Orca .dll '%s' loaded"), orca.GetDLLPath()));
 						} else if (mainCommands.Find(param) >= 0) {
 							nextcommands = "general";
 							ic--;							
 						} else 
-							throw Exc(Format(t_("Unknown argument '%s'"), command[ic]));
+							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
 					}
 #endif
 				}
@@ -1960,12 +1903,14 @@ bool DLL_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 		errorStr = t_("Unknown error");
 	}	
 	if (!errorStr.IsEmpty()) {
-		Cerr() << "\n" << Format(t_("Error: %s"), errorStr);
-		Cerr() << S("\n\n") + t_("In case of doubt try option -h or -help") + S("\n");
+		Cerr() << "\n" << F(t_("Error: %s"), errorStr);
+		Cerr() << F("\n\n") + t_("In case of doubt try option -h or -help") + F("\n");
 		if (gui)
-			Cerr() << S("\n") + t_("or just call command line without arguments to open GUI window");
+			Cerr() << F("\n") + t_("or just call command line without arguments to open GUI window");
 		returnval = false;
 	}
 	Cout() << "\n";
 	return returnval;
 }
+
+#endif

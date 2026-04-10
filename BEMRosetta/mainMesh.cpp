@@ -135,7 +135,7 @@ void MainBody::Init() {
 			mainView.FullRefresh(*this);
 			Ctrl::ProcessEvents();	
 			double deltat = tmGetTimeX() - tprev;
-			menuAnimation.labtime <<= Format("%.0f", 1./deltat);
+			menuAnimation.labtime <<= F("%.0f", 1./deltat);
 			playing = false;
 		}
 	};				
@@ -154,7 +154,7 @@ void MainBody::Init() {
 		mainView.FullRefresh(*this);
 		Ctrl::ProcessEvents();	
 		double deltat = tmGetTimeX() - tprev;
-		menuAnimation.labtime <<= Format("%.0f", 1./deltat);
+		menuAnimation.labtime <<= F("%.0f", 1./deltat);
 		playing = false;
 	};
 	
@@ -359,7 +359,7 @@ void MainBody::Init() {
 	menuStability.heelingMoment <<= 0;
 	
 	struct MyConvert : public Convert {
-		virtual Value Format(const Value& q) const	{return FDS(q, 7);}	
+		virtual Value F(const Value& q) const	{return FDS(q, 7);}	
 		virtual Value Scan(const Value& text) const	{return ScanDouble(text.ToString());}
 	};
 
@@ -374,7 +374,7 @@ void MainBody::Init() {
 		dialogPointsA.FromGrid(Bem().surfs[idx].cdt.controlPointsA);
 		Bem().surfs[idx].cdt.controlPointsA0 = clone(Bem().surfs[idx].cdt.controlPointsA);
 		
-		menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
+		menuStability.labPointsA.SetText(F(t_("%d points"), dialogPointsA.grid.GetRowCount()));
 		menuStability.labPointsA.SetFont(menuStability.labPointsA.GetFont().Bold(dialogPointsA.grid.GetRowCount() > 0));
 	};
 	menuStability.butPointsB.SetCtrl(dialogPointsB).Tip(t_("Weathertight openings (lead to progressive flooding)"));
@@ -387,7 +387,7 @@ void MainBody::Init() {
 		dialogPointsB.FromGrid(Bem().surfs[idx].cdt.controlPointsB);
 		Bem().surfs[idx].cdt.controlPointsB0 = clone(Bem().surfs[idx].cdt.controlPointsB);
 		
-		menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
+		menuStability.labPointsB.SetText(F(t_("%d points"), dialogPointsB.grid.GetRowCount()));
 		menuStability.labPointsB.SetFont(menuStability.labPointsB.GetFont().Bold(dialogPointsB.grid.GetRowCount() > 0));
 	};
 			
@@ -401,7 +401,7 @@ void MainBody::Init() {
 		dialogPointsC.FromGrid(Bem().surfs[idx].cdt.controlPointsC);
 		Bem().surfs[idx].cdt.controlPointsC0 = clone(Bem().surfs[idx].cdt.controlPointsC);
 		
-		menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
+		menuStability.labPointsC.SetText(F(t_("%d points"), dialogPointsC.grid.GetRowCount()));
 		menuStability.labPointsC.SetFont(menuStability.labPointsC.GetFont().Bold(dialogPointsC.grid.GetRowCount() > 0));
 	};
 	
@@ -415,7 +415,7 @@ void MainBody::Init() {
 		dialogLoads.FromGrid(Bem().surfs[idx].cdt.controlLoads);
 		Bem().surfs[idx].cdt.controlLoads0 = clone(Bem().surfs[idx].cdt.controlLoads);
 		
-		menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));
+		menuStability.labLoads.SetText(F(t_("%d loads"), dialogLoads.grid.GetRowCount()));
 		menuStability.labLoads.SetFont(menuStability.labLoads.GetFont().Bold(dialogLoads.grid.GetRowCount() > 0));
 	};
 	
@@ -433,7 +433,7 @@ void MainBody::Init() {
 				num++; 
 			}
 		}
-		menuStability.labDamage.SetText(Format(t_("%d damage"), num));
+		menuStability.labDamage.SetText(F(t_("%d damage"), num));
 		menuStability.labDamage.SetFont(menuStability.labDamage.GetFont().Bold(num > 0));
 	};
 	
@@ -642,7 +642,7 @@ void MainBody::PlayStep() {
 	if (tm >= Bem().fast.GetTimeEnd())
 		tm = Bem().fast.GetTimeEnd();
 
-	menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+	menuAnimation.labtime <<= F("%.2f", 1./deltat);
 	menuAnimation.edTime <<= tm;
 	menuAnimation.slider <<= tm;
 	
@@ -691,7 +691,7 @@ void MainBody::Play(bool forward) {
 				}
 			}
 			if (!(count%20))
-				menuAnimation.labtime <<= Format("%.2f", 1./deltat);
+				menuAnimation.labtime <<= F("%.2f", 1./deltat);
 			menuAnimation.edTime <<= tm;
 			menuAnimation.slider <<= tm;
 			tprev = t;
@@ -707,7 +707,7 @@ void MainBody::OnMenuOpenArraySel() {
 		return;
 	
 	Body::MESH_FMT type = Body::GetCodeBodyStr(~menuOpen.dropExport);
-	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::WAMIT_CSF || type == Body::AQWA_DAT || type == Body::HYDROSTAR_HST) && Bem().surfs[idx].IsSymmetricX());
+	menuOpen.symX <<= ((type == Body::WAMIT_GDF || type == Body::WAMIT_GDF2 || type == Body::WAMIT_CSF || type == Body::AQWA_DAT || type == Body::HYDROSTAR_HST) && Bem().surfs[idx].IsSymmetricX());
 	menuOpen.symY <<= Bem().surfs[idx].IsSymmetricY();
 	
 	dialogDamage.SelectId(idx);
@@ -757,13 +757,13 @@ void MainBody::OnMenuStabilityArraySel() {
 	dialogPointsC.ToGrid(Bem().surfs[idx].cdt.controlPointsC0);
 	dialogLoads.ToGrid(Bem().surfs[idx].cdt.controlLoads0);
 	
-	menuStability.labPointsA.SetText(Format(t_("%d points"), dialogPointsA.grid.GetRowCount()));
+	menuStability.labPointsA.SetText(F(t_("%d points"), dialogPointsA.grid.GetRowCount()));
 	menuStability.labPointsA.SetFont(menuStability.labPointsA.GetFont().Bold(dialogPointsA.grid.GetRowCount() > 0));
-	menuStability.labPointsB.SetText(Format(t_("%d points"), dialogPointsB.grid.GetRowCount()));
+	menuStability.labPointsB.SetText(F(t_("%d points"), dialogPointsB.grid.GetRowCount()));
 	menuStability.labPointsB.SetFont(menuStability.labPointsB.GetFont().Bold(dialogPointsB.grid.GetRowCount() > 0));
-	menuStability.labPointsC.SetText(Format(t_("%d points"), dialogPointsC.grid.GetRowCount()));
+	menuStability.labPointsC.SetText(F(t_("%d points"), dialogPointsC.grid.GetRowCount()));
 	menuStability.labPointsC.SetFont(menuStability.labPointsC.GetFont().Bold(dialogPointsC.grid.GetRowCount() > 0));
-	menuStability.labLoads.SetText(Format(t_("%d loads"), dialogLoads.grid.GetRowCount()));	
+	menuStability.labLoads.SetText(F(t_("%d loads"), dialogLoads.grid.GetRowCount()));	
 	menuStability.labLoads.SetFont(menuStability.labLoads.GetFont().Bold(dialogLoads.grid.GetRowCount() > 0));
 }
 
@@ -830,7 +830,7 @@ void MainBody::OnOpt() {
 	
 	String meshFilesAst = clone(meshFiles);
 	meshFiles.Replace("*.", ".");
-	menuOpen.file.Type(Format("All supported mesh files (%s)", meshFiles), meshFilesAst);
+	menuOpen.file.Type(F("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	menuOpen.file.AllFilesType();
 	String extView = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extView.IsEmpty())
@@ -849,6 +849,7 @@ void MainBody::OnOpt() {
 	case Body::HYDROSTAR_HST:
 	case Body::MIKE21_GRD:
 	case Body::WAMIT_CSF:	
+	case Body::WAMIT_GDF2:
 	case Body::WAMIT_GDF:	menuOpen.symX.Enable();
 							menuOpen.symY.Enable();
 							break;
@@ -917,7 +918,7 @@ bool MainBody::OnLoad() {
 		UVector<int> idxs = ArrayModel_IndexsBody(listLoaded);
 		for (int i = 0; i < idxs.size(); ++i) {
 			if (Bem().surfs[idxs[i]].dt.fileName == file) {
-				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
+				if (!PromptYesNo(t_("Model is already loaded") + F("&") + t_("Do you wish to open it anyway?")))
 					return false;
 				break;
 			}
@@ -948,9 +949,9 @@ bool MainBody::OnLoad() {
 					
 				msh.AfterLoad(Bem().rho, Bem().g, false, false, true);
 				
-				Ma().Status(Format(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
+				Ma().Status(F(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
 			} else
-				Ma().Status(Format(t_("Loaded '%s'"), file));			
+				Ma().Status(F(t_("Loaded '%s'"), file));			
 		}
 		
 		AfterAdd(file, num, firstLoad);
@@ -1024,7 +1025,7 @@ void MainBody::OnConvertBody() {
 		fs.Set(ForceExtSafer(fileName, ext));
 		fs.ActiveDir(saveFolder);
 		
-		if (!fs.ExecuteSaveAs(Format(t_("Save mesh file as %s"), fileType)))
+		if (!fs.ExecuteSaveAs(F(t_("Save mesh file as %s"), fileType)))
 			return;
 		
 		fileName = ~fs;
@@ -1164,7 +1165,7 @@ void MainBody::OnUpdateMass() {
 
 		OnUpdate(NONE);
 		
-		Ma().Status(Format(t_("Mass updated to %f kg"), mass));
+		Ma().Status(F(t_("Mass updated to %f kg"), mass));
 		
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -1204,8 +1205,9 @@ void MainBody::OnScale() {
 		if (!IsNull(msh.dt.cg))
 			msh.dt.cg.Translate(rx*(msh.dt.cg.x - msh.dt.c0.x), ry*(msh.dt.cg.y - msh.dt.c0.y),
 							    rz*(msh.dt.cg.z - msh.dt.c0.z));
+		msh.dt.spline.Scale(Value3D(rx, ry, rz), msh.dt.c0);
 		
-		Ma().Status(Format(t_("Model scaled %f, %f, %f"), rx, ry, rz));
+		Ma().Status(F(t_("Model scaled %f, %f, %f"), rx, ry, rz));
 				
 		msh.AfterLoad(Bem().rho, Bem().g, NONE, false);
 			
@@ -1352,9 +1354,9 @@ void MainBody::OnUpdate(Action action/*, bool fromMenuProcess*/) {
 				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz))
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
 				else
-					Ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z + dz));
+					Ma().Status(F(t_("Model moved %f, %f, %f"), t_x, t_y, t_z + dz));
 			} else
-				Ma().Status(Format(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
+				Ma().Status(F(t_("Model moved %f, %f, %f"), t_x, t_y, t_z));
 			
 		} else if (action == ROTATE) {
 			msh.Rotate(ToRad(a_x), ToRad(a_y), ToRad(a_z), x_0, y_0, z_0);
@@ -1364,9 +1366,9 @@ void MainBody::OnUpdate(Action action/*, bool fromMenuProcess*/) {
 				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz))
 					BEM::PrintError(t_("Problem readjusting the Z value to comply with displacement (Archimede)"));
 				else
-					Ma().Status(Format(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
+					Ma().Status(F(t_("Model rotated %f, %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), a_x, a_y, a_z, x_0, y_0, z_0, dz));
 			} else
-				Ma().Status(Format(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
+				Ma().Status(F(t_("Model rotated %f, %f, %f around %f, %f, %f"), a_x, a_y, a_z, x_0, y_0, z_0));
 		} else if (action == NONE) {
 			Point3D ncg(x_g, y_g, z_g);
 			if (msh.dt.cg != ncg) {
@@ -1455,7 +1457,7 @@ void MainBody::OnArchimede() {
 		mainView.FullRefresh(*this);
 		mainViewData.OnRefresh();
 		
-		Ma().Status(Format(t_("Model rotated %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), 
+		Ma().Status(F(t_("Model rotated %f, %f deg. around %f, %f, %f, and translated vertically %f m to comply with displacement"), 
 						ToDeg(roll), ToDeg(pitch), msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z, dz));
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -1499,7 +1501,7 @@ void MainBody::OnPCA() {
 		mainView.FullRefresh(*this);
 		mainViewData.OnRefresh();
 		
-		Ma().Status(Format(t_("Model rotated in yaw %f deg. around %f, %f, %f to be oriented to main axis"), 
+		Ma().Status(F(t_("Model rotated in yaw %f deg. around %f, %f, %f to be oriented to main axis"), 
 							ToDeg(yaw), msh.dt.cg.x, msh.dt.cg.y, msh.dt.cg.z));
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -1666,12 +1668,12 @@ void MainBody::OnAddRevolution() {
 		Pointf &val = vals.Add();
 		val.x = ScanDouble(AsString(dialogRevolution.list.Get(r, 0)));
 		if (IsNull(val.x)) {
-			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 0));
+			BEM::PrintError(F(t_("Incorrect data in row %d, col %d"), r, 0));
 			return;
 		}
 		val.y = ScanDouble(AsString(dialogRevolution.list.Get(r, 1)));
 		if (IsNull(val.x)) {
-			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
+			BEM::PrintError(F(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
 		}
 	}
@@ -1716,12 +1718,12 @@ void MainBody::OnAddPolygonalPanel() {
 		Pointf &val = vals.Add();
 		val.x = ScanDouble(AsString(dialogPolygon.list.Get(r, 0)));
 		if (IsNull(val.x)) {
-			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 0));
+			BEM::PrintError(F(t_("Incorrect data in row %d, col %d"), r, 0));
 			return;
 		}
 		val.y = ScanDouble(AsString(dialogPolygon.list.Get(r, 1)));
 		if (IsNull(val.y)) {
-			BEM::PrintError(Format(t_("Incorrect data in row %d, col %d"), r, 1));
+			BEM::PrintError(F(t_("Incorrect data in row %d, col %d"), r, 1));
 			return;
 		}
 	}
@@ -2153,7 +2155,7 @@ void MainBody::OnSplit() {
 			msh.Report(Bem().rho);
 	
 			msh.dt.fileName = fileName;
-			msh.dt.name = name + S("-") + FormatInt(i+1);		
+			msh.dt.name = name + F("-") + FormatInt(i+1);		
 			AddRow(msh);
 		}
 		
@@ -2292,7 +2294,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	if (array.GetColumnCount() == 0)
 		array.AddColumn("Param");
 	if (id >= array.GetColumnCount()-1)
-		array.AddColumn(Format("#%d %s", id+1, name));
+		array.AddColumn(F("#%d %s", id+1, name));
 	int row = 0;
 	int col = id + 1;
 
@@ -2320,21 +2322,21 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 		textColor = White();
 														
 	array.Set(row, 0, t_("File"));				array.Set(row++, col, AttrText(msh.dt.fileName).Paper(color).Ink(textColor).Bold()); 
-	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (S(" ") + t_("(healed)")) : ""));
+	array.Set(row, 0, t_("Name"));				array.Set(row++, col, name + (healing ? (F(" ") + t_("(healed)")) : ""));
 	array.Set(row, 0, t_("Format"));			array.Set(row++, col, msh.GetBodyStr());	
 	
 	array.Set(row, 0, t_("# Panels"));			array.Set(row++, col, msh.dt.mesh.panels.size());
 	array.Set(row, 0, t_("# Nodes"));			array.Set(row++, col, msh.dt.mesh.nodes.size());
 
 	array.Set(row, 0, t_("Surface [m²]"));		array.Set(row++, col, FDS(msh.dt.mesh.surface, 8, false));
-	array.Set(row, 0, t_("Volume [m³] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Volume [m³] Vavg (Vx,Vy,Vz)"));		  array.Set(row++, col, AttrText(F(t_("%s (%s, %s, %s)"), 
 														FDS(msh.dt.mesh.volume,  10, false),
 														FDS(msh.dt.mesh.volumex, 10, false),
 														FDS(msh.dt.mesh.volumey, 10, false),
 														FDS(msh.dt.mesh.volumez, 10, false))).Paper(backColorBody));
 	
-	array.Set(row, 0, t_("Wetted surface [m²]"));array.Set(row++, col, FDS(msh.dt.under.surface, 10, false));
-	array.Set(row, 0, t_("Immersed volume [m³] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(Format(t_("%s (%s, %s, %s)"), 
+	array.Set(row, 0, t_("Wetted surface [m²]"));				   array.Set(row++, col, FDS(msh.dt.under.surface, 10, false));
+	array.Set(row, 0, t_("Immersed volume [m³] Vavg (Vx,Vy,Vz)")); array.Set(row++, col, AttrText(F(t_("%s (%s, %s, %s)"), 
 														FDS(msh.dt.under.volume,  10, false),
 														FDS(msh.dt.under.volumex, 10, false),
 														FDS(msh.dt.under.volumey, 10, false),
@@ -2342,7 +2344,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FDS(msh.dt.under.volume*Bem().rho, 10, false));
 	array.Set(row, 0, t_("Cg [m]"));			
 	if (!IsNull(msh.dt.cg))
-		array.Set(row++, col, Format(t_("%s, %s, %s"),
+		array.Set(row++, col, F(t_("%s, %s, %s"),
 														FDS(msh.dt.cg.x, 10, false),			
 														FDS(msh.dt.cg.y, 10, false),
 														FDS(msh.dt.cg.z, 10, false)));
@@ -2351,13 +2353,13 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 			
 	array.Set(row, 0, t_("Cb [m]"));
 	if (!IsNull(msh.dt.cb))	
-		array.Set(row++, col, Format(t_("%s, %s, %s"),  FDS(msh.dt.cb.x, 10, false),			
+		array.Set(row++, col, F(t_("%s, %s, %s"),  FDS(msh.dt.cb.x, 10, false),			
 														FDS(msh.dt.cb.y, 10, false),
 														FDS(msh.dt.cb.z, 10, false)));
 	else 
 		array.Set(row++, col, "-");
 	
-	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, Format(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, F(t_("%s, %s, %s"),
 														FDS(msh.dt.c0.x, 10, false),			
 														FDS(msh.dt.c0.y, 10, false),
 														FDS(msh.dt.c0.z, 10, false)));
@@ -2384,30 +2386,30 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 		array.Set(row++, col, "-");
 												
 	array.Set(row, 0, t_("Surface projection Z-axis (waterplane area) [m²]"));	
-												array.Set(row++, col, Format(t_("%s - %s = %s"),
+												array.Set(row++, col, F(t_("%s - %s = %s"),
 														FDS(-msh.dt.projectionPos.z, 10, false),
 														FDS(msh.dt.projectionNeg.z,  10, false),
 														FDS(msh.dt.projectionPos.z + msh.dt.projectionNeg.z, 10, false)));
 	
 	array.Set(row, 0, t_("Waterplane geometric centre (centre of flotation) [m]"));
 	if (!IsNull(msh.dt.cgZ0surface)) 
-		array.Set(row++, col, Format(t_("%s, %s"), FDS(msh.dt.cgZ0surface.x, 10, false),			
+		array.Set(row++, col, F(t_("%s, %s"), FDS(msh.dt.cgZ0surface.x, 10, false),			
 												   FDS(msh.dt.cgZ0surface.y, 10, false)));
 	else
 		array.Set(row++, col, "-");
 	array.Set(row, 0, t_("Surface projection X-axis [m²]"));	
-												array.Set(row++, col, Format(t_("%s - %s = %s"),
+												array.Set(row++, col, F(t_("%s - %s = %s"),
 														FDS(-msh.dt.projectionPos.x, 10, false),
 														FDS(msh.dt.projectionNeg.x,  10, false),
 														FDS(msh.dt.projectionPos.x + msh.dt.projectionNeg.x, 10, false)));
 	
 	array.Set(row, 0, t_("Surface projection Y-axis [m²]"));	
-												array.Set(row++, col, Format(t_("%s - %s = %s"),
+												array.Set(row++, col, F(t_("%s - %s = %s"),
 														FDS(-msh.dt.projectionPos.y, 10, false),
 														FDS(msh.dt.projectionNeg.y,  10, false),
 														FDS(msh.dt.projectionPos.y + msh.dt.projectionNeg.y, 10, false)));
 	
-	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, Format(t_("From (%s, %s, %s) to (%s, %s, %s)"),
+	array.Set(row, 0, t_("Dimensions [m]"));	array.Set(row++, col, F(t_("From (%s, %s, %s) to (%s, %s, %s)"),
 														FDS(msh.dt.mesh.env.minX, 10, false),
 														FDS(msh.dt.mesh.env.minY, 10, false),
 														FDS(msh.dt.mesh.env.minZ, 10, false),
@@ -2421,7 +2423,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));
 	
 	if (!IsNull(msh.dt.cb))
-		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
+		array.Set(row++, col, AttrText(F(t_("%s, %s, %s"),
 														FDS(fcb[0], 10, false),
 														FDS(fcb[1], 10, false),
 														FDS(fcb[2], 10, false))).Paper(backColorUnder));
@@ -2430,7 +2432,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 
 	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));
 	if (!IsNull(msh.dt.cb))
-		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
+		array.Set(row++, col, AttrText(F(t_("%s, %s, %s"),
 														FDS(fcb[3], 10, false),
 														FDS(fcb[4], 10, false),
 														FDS(fcb[5], 10, false))));							
@@ -2443,7 +2445,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	
 	array.Set(row, 0, t_("Mass moments [N·m]"));
 	if (!IsNull(fcg)) 
-		array.Set(row++, col, Format(t_("%s, %s, %s"),
+		array.Set(row++, col, F(t_("%s, %s, %s"),
 														FDS(fcg[3], 10, false),
 														FDS(fcg[4], 10, false),
 														FDS(fcg[5], 10, false)));
@@ -2452,7 +2454,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	
 	array.Set(row, 0, t_("Mass+Hydrostatics forces [N]"));
 	if (!IsNull(fcg) && !IsNull(fcb))
-		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
+		array.Set(row++, col, AttrText(F(t_("%s, %s, %s"),
 														"0",
 														"0",
 														FDS(fcg[2]+fcb[2], 10, false))).Paper(backColorUnder));
@@ -2461,7 +2463,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	
 	array.Set(row, 0, t_("Mass+Hydrostatics moments [N·m]"));
 	if (!IsNull(fcb))
-		array.Set(row++, col, AttrText(Format(t_("%s, %s, %s"),
+		array.Set(row++, col, AttrText(F(t_("%s, %s, %s"),
 														FDS(fcg[3]+fcb[3], 10, false),
 														FDS(fcg[4]+fcb[4], 10, false),
 														"0")));		
@@ -2473,7 +2475,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 		for (int i = 0; i < 6; ++i) {
 			for (int j = 0; j < 6; ++j) {
 				if (!Hydro::C_units(i, j).IsEmpty()) {
-					array.Set(row, 0, Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, Format("%12E", msh.dt.C(i, j)));		
+					array.Set(row, 0, F(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, F("%12E", msh.dt.C(i, j)));		
 				}
 			}
 		}
@@ -2481,7 +2483,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 		for (int i = 0; i < 6; ++i) {
 			for (int j = 0; j < 6; ++j) {
 				if (!Hydro::C_units(i, j).IsEmpty()) {
-					array.Set(row, 0, Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, "-");		
+					array.Set(row, 0, F(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, "-");		
 				}
 			}
 		}
@@ -2721,9 +2723,9 @@ void MainBody::LoadDragDrop() {
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {
 		menuOpen.file <<= filesToDrop[i];
-		Status(Format(t_("Loading '%s'"), filesToDrop[i]));
+		Status(F(t_("Loading '%s'"), filesToDrop[i]));
 		if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
-			if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1)))
+			if (!PromptYesNo(F(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1)))
 				return;
 			followWithErrors = true;
 		}
@@ -2849,7 +2851,7 @@ void MainGZ::OnUpdate() {
 	
 		moment.Clear();
 	
-		scatter.SetTitle(Format(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), msh.dt.c0.x, msh.dt.c0.y, msh.dt.c0.z));
+		scatter.SetTitle(F(t_("GZ around Y axis at (%.2f, %.2f, %.2f)"), msh.dt.c0.x, msh.dt.c0.y, msh.dt.c0.z));
 		scatter.SetMargin(100, 130, 30, 70);
 		
 		String errors;
@@ -2881,19 +2883,19 @@ void MainGZ::OnUpdate() {
 						   .Stroke(3, Cyan()).Dash(ScatterDraw::LINE_SOLID).SetDataSecondaryY();							
 				}
 			}
-			scatter.AddSeries(dangle, dgz).NoMark().Legend(Format(t_("GZ %.1f"), angle))
+			scatter.AddSeries(dangle, dgz).NoMark().Legend(F(t_("GZ %.1f"), angle))
 				   .Stroke(2, color).Dash(ScatterDraw::LINE_SOLID);	
 			scatter.AddSeries(dangle, dMoment).NoMark()./*MarkStyle<CircleMarkPlot>().*/MarkWidth(8).MarkColor(color)
 				   .Legend("").NoPlot().SetDataSecondaryY();
 			if (~opShowPOIs) {
 				for (int j = 0; j < zA.size(); ++j)
-					scatter.AddSeries(dangle, zA[j]).NoMark().Legend(Format(t_("Unpr.%s.z %.1f"), msh.cdt.controlPointsA[j].name, angle))
+					scatter.AddSeries(dangle, zA[j]).NoMark().Legend(F(t_("Unpr.%s.z %.1f"), msh.cdt.controlPointsA[j].name, angle))
 					   			.Stroke(1, color).Dash(ScatterDraw::LINE_DASHED);	
 				for (int j = 0; j < zB.size(); ++j)
-					scatter.AddSeries(dangle, zB[j]).NoMark().Legend(Format(t_("WeaT.%s.z %.1f"), msh.cdt.controlPointsB[j].name, angle))
+					scatter.AddSeries(dangle, zB[j]).NoMark().Legend(F(t_("WeaT.%s.z %.1f"), msh.cdt.controlPointsB[j].name, angle))
 					   			.Stroke(1, color).Dash(ScatterDraw::LINE_DOTTED);	
 				for (int j = 0; j < zC.size(); ++j)
-					scatter.AddSeries(dangle, zC[j]).NoMark().Legend(Format(t_("WatT.%s.z %.1f"), msh.cdt.controlPointsC[j].name, angle))
+					scatter.AddSeries(dangle, zC[j]).NoMark().Legend(F(t_("WatT.%s.z %.1f"), msh.cdt.controlPointsC[j].name, angle))
 					   			.Stroke(1, color).Dash(ScatterDraw::LINE_DOTTED_FINER);	
 			}
 			scatter.ZoomToFit(true, true);/*
@@ -2905,7 +2907,7 @@ void MainGZ::OnUpdate() {
 			scatter.SetMajorUnits(Null, sz > 0 ? 1 : 0.5);*/
 			
 			for (int i = 0; i < dangle.size(); ++i) {
-				array.AddColumn(Format("%.1f %.1f", angle, dangle[i]), 60);
+				array.AddColumn(F("%.1f %.1f", angle, dangle[i]), 60);
 				int row = 0, col = array.GetColumnCount()-1;
 				array.Set(row++, col, angle);
 				array.Set(row++, col, dangle[i]);
@@ -2998,11 +3000,11 @@ void MainGZ::ClearX(bool all) {
 		Body &msh = Bem().surfs[idxOpened];
 		
 		for (int j = 0; j < msh.cdt.controlPointsA.size(); ++j)
-			array.Set(row++, 0, Format(t_("Unpr.%s.z [m]"), msh.cdt.controlPointsA[j].name));
+			array.Set(row++, 0, F(t_("Unpr.%s.z [m]"), msh.cdt.controlPointsA[j].name));
 		for (int j = 0; j < msh.cdt.controlPointsB.size(); ++j)
-			array.Set(row++, 0, Format(t_("WeaT.%s.z [m]"), msh.cdt.controlPointsB[j].name));
+			array.Set(row++, 0, F(t_("WeaT.%s.z [m]"), msh.cdt.controlPointsB[j].name));
 		for (int j = 0; j < msh.cdt.controlPointsC.size(); ++j)
-			array.Set(row++, 0, Format(t_("WatT.%s.z [m]"), msh.cdt.controlPointsC[j].name));
+			array.Set(row++, 0, F(t_("WatT.%s.z [m]"), msh.cdt.controlPointsC[j].name));
 	}
 }
 		

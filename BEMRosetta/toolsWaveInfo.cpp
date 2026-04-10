@@ -240,9 +240,9 @@ void Tools_MooringInfo::OnCalc() {
 		uForce = "t";
 		fcoeff = 1/1000./9.8;
 	}
-	gridResults.Set(3, 0, Format(t_("Proof Load [%s]"), uForce));
-	gridResults.Set(4, 0, Format(t_("Minimum Breaking Load MBL [%s]"), uForce));
-	gridResults.Set(5, 0, Format(t_("Axial stiffness EA [%s]"), uForce));
+	gridResults.Set(3, 0, F(t_("Proof Load [%s]"), uForce));
+	gridResults.Set(4, 0, F(t_("Minimum Breaking Load MBL [%s]"), uForce));
+	gridResults.Set(5, 0, F(t_("Axial stiffness EA [%s]"), uForce));
 	
 	double od = Null, ocd = Null, ml = Null, pl = Null, mbl = Null, 
 		   as = Null, adc = Null, adcm = Null, add = Null, aam = Null, 
@@ -353,20 +353,20 @@ void Tools_MooringInfo::OnCalc() {
 		nam = 1.1;
 	}
 	int row = 0;	
-	gridResults.Set(row++, 1, Nvl2(od,  FDS(od, 6),  S("-")));										// Outer diameter [m]: The diameter of a circular line with equivalent cross section
-	gridResults.Set(row++, 1, Nvl2(ocd, FDS(ocd, 6), S("-")));										// Outer contact diameter [m]: Chain link width
-	gridResults.Set(row++, 1, Nvl2(ml,  FDS(ml, 9),  S("-")));										// Mass/length [kg/m]: Dry weight per unit of length
-	gridResults.Set(row++, 1, Nvl2(pl,  FDS(pl, 8),  S("-")));										// Proof Load [N]
-	gridResults.Set(row  , 1, Nvl2(mbl, FDS(mbl, 8), S("-")));	gridResults.Set(row++, 2, smbl);	// Minimum Breaking Load MBL [N]
-	gridResults.Set(row++, 1, Nvl2(as,  FDS(as, 8),  S("-")));										// Longitudinal/Axial/Tangential stiffness EA [N]: Product of Young's modulus (E) and cross-sectional area (A)
-	gridResults.Set(row  , 1, Nvl2(adc, FDS(adc, 4), S("-")));	gridResults.Set(row++, 2, sadc);	// Longitudinal/Axial/Tangential drag coefficient
-	gridResults.Set(row  , 1, Nvl2(adcm,FDS(adcm,6), S("-")));	gridResults.Set(row++, 2, sadcm);	// Longitudinal/Axial/Tangential drag coefficient CdAx
-	gridResults.Set(row++, 1, Nvl2(add, FDS(add, 8), S("-")));										// Longitudinal/Axial/Tangential drag diameter [m]
-	gridResults.Set(row  , 1, Nvl2(aam, FDS(aam, 4), S("-")));	gridResults.Set(row++, 2, saam);	// Longitudinal/Axial/Tangential added mass coefficient CaAx
-	gridResults.Set(row  , 1, Nvl2(ndc, FDS(ndc, 4), S("-")));	gridResults.Set(row++, 2, sndc);	// Transverse/Normal drag coefficient 	
-	gridResults.Set(row  , 1, Nvl2(ndcm,FDS(ndcm,6), S("-")));	gridResults.Set(row++, 2, sndcm);	// Transverse/Normal drag coefficient Cd
-	gridResults.Set(row++, 1, Nvl2(ndd, FDS(ndd, 4), S("-")));										// Transverse/Normal drag diameter [m]
-	gridResults.Set(row  , 1, Nvl2(nam, FDS(nam, 4), S("-")));	gridResults.Set(row++, 2, snam);	// Transverse/Normal added mass coefficient Ca
+	gridResults.Set(row++, 1, Nvl2(od,  FDS(od, 6),  F("-")));										// Outer diameter [m]: The diameter of a circular line with equivalent cross section
+	gridResults.Set(row++, 1, Nvl2(ocd, FDS(ocd, 6), F("-")));										// Outer contact diameter [m]: Chain link width
+	gridResults.Set(row++, 1, Nvl2(ml,  FDS(ml, 9),  F("-")));										// Mass/length [kg/m]: Dry weight per unit of length
+	gridResults.Set(row++, 1, Nvl2(pl,  FDS(pl, 8),  F("-")));										// Proof Load [N]
+	gridResults.Set(row  , 1, Nvl2(mbl, FDS(mbl, 8), F("-")));	gridResults.Set(row++, 2, smbl);	// Minimum Breaking Load MBL [N]
+	gridResults.Set(row++, 1, Nvl2(as,  FDS(as, 8),  F("-")));										// Longitudinal/Axial/Tangential stiffness EA [N]: Product of Young's modulus (E) and cross-sectional area (A)
+	gridResults.Set(row  , 1, Nvl2(adc, FDS(adc, 4), F("-")));	gridResults.Set(row++, 2, sadc);	// Longitudinal/Axial/Tangential drag coefficient
+	gridResults.Set(row  , 1, Nvl2(adcm,FDS(adcm,6), F("-")));	gridResults.Set(row++, 2, sadcm);	// Longitudinal/Axial/Tangential drag coefficient CdAx
+	gridResults.Set(row++, 1, Nvl2(add, FDS(add, 8), F("-")));										// Longitudinal/Axial/Tangential drag diameter [m]
+	gridResults.Set(row  , 1, Nvl2(aam, FDS(aam, 4), F("-")));	gridResults.Set(row++, 2, saam);	// Longitudinal/Axial/Tangential added mass coefficient CaAx
+	gridResults.Set(row  , 1, Nvl2(ndc, FDS(ndc, 4), F("-")));	gridResults.Set(row++, 2, sndc);	// Transverse/Normal drag coefficient 	
+	gridResults.Set(row  , 1, Nvl2(ndcm,FDS(ndcm,6), F("-")));	gridResults.Set(row++, 2, sndcm);	// Transverse/Normal drag coefficient Cd
+	gridResults.Set(row++, 1, Nvl2(ndd, FDS(ndd, 4), F("-")));										// Transverse/Normal drag diameter [m]
+	gridResults.Set(row  , 1, Nvl2(nam, FDS(nam, 4), F("-")));	gridResults.Set(row++, 2, snam);	// Transverse/Normal added mass coefficient Ca
 }
 
 #ifdef PLATFORM_WIN32
@@ -404,7 +404,7 @@ void Tools_OrcaLicense::CheckAvailable() {
 	if (orca.IsAvailable() == Orca::AVAILABLE) {
 		KillTimeCallback(12);
 		butCapture.SetLabel(t_("Check license"));
-		labCapture.SetText(Format(t_("OrcaWave is now available (%`)"), GetSysTime()));
+		labCapture.SetText(F(t_("OrcaWave is now available (%`)"), GetSysTime()));
 		PromptOK(t_("OrcaWave is now available"));
 	} else // Orca::NOT_AVAILABLE) 
 		labCapture.SetText(t_("Checking if an OrcaWave license is available ..."));

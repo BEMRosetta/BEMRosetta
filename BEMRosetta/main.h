@@ -87,7 +87,7 @@ private:
 
 String TabText(const TabCtrl &tab);
 
-#define LOGTAB(tab) EM().Log(Format("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
+#define LOGTAB(tab) EM().Log(F("Tab %s, Set %s, file: %s, line: %d", #tab, TabText(tab), __FILE__, __LINE__))
 
 #define LAYOUTFILE <BEMRosetta/main.lay>
 #include <CtrlCore/lay.h>
@@ -1053,7 +1053,7 @@ public:
 	void Load(String file);
 	void Load();
 	
-	bool CopyHydro(Hydro &hy, UArray<Body> &lids, UArray<Body> &css);
+	bool CopyHydro(Hydro &hy);
 	
 	void Jsonize(JsonIO &json);
 	

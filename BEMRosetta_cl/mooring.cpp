@@ -83,7 +83,7 @@ bool Mooring::Load(String file) {
 bool Mooring::Save(String file) {
 	try {
 		if (!StoreAsJsonFile(*this, file, true)) {
-			BEM::PrintError(Format("Problem loading %s file", file));
+			BEM::PrintError(F("Problem loading %s file", file));
 			return false;
 		}
 	} catch (const Exc &e) {
@@ -145,7 +145,7 @@ bool Mooring::LoadMoordyn(String file) {
 				const Upp::Index<String> attachments = {"fixed", "anchor", "coupled", "vessel", "free", "point"};
 				if (attachments.Find(conn.where) < 0) {
 					if (!conn.where.StartsWith("body"))
-	 					throw Exc(Format(t_("Unknown type of attachment '%s' in point '%s'"), f.GetText(1), conn.name)); 
+	 					throw Exc(F(t_("Unknown type of attachment '%s' in point '%s'"), f.GetText(1), conn.name)); 
 				}
 				conn.x = f.GetDouble(2);
 				conn.y = f.GetDouble(3);
@@ -208,38 +208,38 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 			"FALSE    Echo      - echo the input file data (flag)\n";
 			
 	out <<  "----------------------- LINE TYPES ------------------------------------------\n"
-		<<  Format(" %12=s %7=s %8=s %13=s %8=s %6=s %6=s %6=s %6=s %6=s\n", "Name", "Diam", "MassDen", "EA ", "BA/-zeta", "EI ", "Cd ", "Ca ", "CdAx", "CaAx")
-		<<  Format(" %12=s %7=s %8=s %13=s %8=s %6=s %6=s %6=s %6=s %6=s\n", "(-) ", "(m) ", "(kg/m) ", "(N)", "(N-s/-) ", "(-)", "(-)", "(-)", "(-) ", "(-) ");
+		<<  F(" %12=s %7=s %8=s %13=s %8=s %6=s %6=s %6=s %6=s %6=s\n", "Name", "Diam", "MassDen", "EA ", "BA/-zeta", "EI ", "Cd ", "Ca ", "CdAx", "CaAx")
+		<<  F(" %12=s %7=s %8=s %13=s %8=s %6=s %6=s %6=s %6=s %6=s\n", "(-) ", "(m) ", "(kg/m) ", "(N)", "(N-s/-) ", "(-)", "(-)", "(-)", "(-) ", "(-) ");
 	for (int i = 0; i < lineTypes.size(); ++i) {
 		const LineType &line = lineTypes[i];
-		out << Format(" %12=s %7.4f %8.1f %13s %8s %6.1f %6.4f %6.1f %6.4f %6.1f\n", line.name, line.diameter, line.mass, line.ea, line.bazeta, 0, 1.3325, 1, 0.2032, 0.5);
+		out << F(" %12=s %7.4f %8.1f %13s %8s %6.1f %6.4f %6.1f %6.4f %6.1f\n", line.name, line.diameter, line.mass, line.ea, line.bazeta, 0, 1.3325, 1, 0.2032, 0.5);
 	}
 			
 	out <<  "----------------------- POINTS ----------------------------------------------\n"
-		<<  Format(" %3=s %8=s %12=s %12=s %12=s %6=s %6=s %6=s %6=s\n", "ID ", "Type", " X ", " Y ", " Z ", " M  ", "  V  ", " CdA ", "CA ")
-		<<  Format(" %3=s %8=s %12=s %12=s %12=s %6=s %6=s %6=s %6=s\n", "(-)", "(-) ", "(m)", "(m)", "(m)", "(kg)", "(m^3)", "(m^2)", "(-)");
+		<<  F(" %3=s %8=s %12=s %12=s %12=s %6=s %6=s %6=s %6=s\n", "ID ", "Type", " X ", " Y ", " Z ", " M  ", "  V  ", " CdA ", "CA ")
+		<<  F(" %3=s %8=s %12=s %12=s %12=s %6=s %6=s %6=s %6=s\n", "(-)", "(-) ", "(m)", "(m)", "(m)", "(kg)", "(m^3)", "(m^2)", "(-)");
 	for (int i = 0; i < connections.size(); ++i) {		
 		const Connection &conn = connections[i];
-		out << Format(" %3d %8=s %12.4f %12.4f %12.4f %6.1f %6.1f %6.1f %6.1f\n", i+1, InitCaps(conn.where), conn.x, conn.y, conn.z, 0, 0, 0, 0);
+		out << F(" %3d %8=s %12.4f %12.4f %12.4f %6.1f %6.1f %6.1f %6.1f\n", i+1, InitCaps(conn.where), conn.x, conn.y, conn.z, 0, 0, 0, 0);
 	}
 	out <<  "----------------------- LINES -----------------------------------------------\n"
-		<<	Format(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "ID ", "LineType", "AttachA", "AttachB", "UnstrLen", "NumSegs", "Outputs")
-		<<	Format(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "(-)", " (name) ", "  (#)  ", "  (#)  ", "   (m)  ", "  (-)  ", "  (-)  ");
+		<<	F(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "ID ", "LineType", "AttachA", "AttachB", "UnstrLen", "NumSegs", "Outputs")
+		<<	F(" %3=s %12=s %8=s %8=s %12=s %8=s %8=s\n", "(-)", " (name) ", "  (#)  ", "  (#)  ", "   (m)  ", "  (-)  ", "  (-)  ");
 	
 	String sfair, sanch;
 	for (int i = 0; i < connections.size(); ++i) {
 		const Connection &conn = connections[i];	
 		if (fairleads && conn.where == "vessel") {
 			sfair << "\"";
-			sfair << Format("Point%d", i+1) + "FX, ";
-			sfair << Format("Point%d", i+1) + "FY, ";
-			sfair << Format("Point%d", i+1) + "FZ";
+			sfair << F("Point%d", i+1) + "FX, ";
+			sfair << F("Point%d", i+1) + "FY, ";
+			sfair << F("Point%d", i+1) + "FZ";
 			sfair << "\"\n";
 		} else if (anchors && (conn.where == "fixed" || conn.where == "anchor")) {
 			sanch << "\"";
-			sanch << Format("Point%d", i+1) + "FX, ";
-			sanch << Format("Point%d", i+1) + "FY, ";
-			sanch << Format("Point%d", i+1) + "FZ";
+			sanch << F("Point%d", i+1) + "FX, ";
+			sanch << F("Point%d", i+1) + "FY, ";
+			sanch << F("Point%d", i+1) + "FZ";
 			sanch << "\"\n";
 		}
 	}
@@ -258,16 +258,16 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 			}
 		}
 		if (from < 0) {
-			BEM::PrintError(Format(t_("Point from %s of line %s not found"), line.from, line.name));
+			BEM::PrintError(F(t_("Point from %s of line %s not found"), line.from, line.name));
 			return false;
 		}
 		if (to < 0) {
-			BEM::PrintError(Format(t_("Point to %s of line %s not found"), line.to, line.name));
+			BEM::PrintError(F(t_("Point to %s of line %s not found"), line.to, line.name));
 			return false;
 		}
 		if (zfrom > zto)
 			Swap(from, to);		// MoorDyn expects first anchor and second fairlead
-		out << Format(" %3d %12=s %8d %8d %12.3f %8d %8s\n", i+1, line.nameType, from+1, to+1, line.length, line.numseg, mooring == 2 ? "p" : "-");
+		out << F(" %3d %12=s %8d %8d %12.3f %8d %8s\n", i+1, line.nameType, from+1, to+1, line.length, line.numseg, mooring == 2 ? "p" : "-");
 	}
 	
 	double _dtM 		= IsNull(dtM) 		? 0.001 : dtM;
@@ -280,21 +280,21 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 	
 	out <<	"---------------------- SOLVER OPTIONS ---------------------------------------\n";
 	if (!IsNull(_dtM))
-		out << Format("%-22.4f %11<s- time step to use in mooring integration (s). In case of NaNs reduce < 0.001, although slows down speed\n", _dtM, "dtM");
+		out << F("%-22.4f %11<s- time step to use in mooring integration (s). In case of NaNs reduce < 0.001, although slows down speed\n", _dtM, "dtM");
 	if (!IsNull(_kbot))
-		out << Format("%-22.1e %11<s- bottom stiffness (Pa/m)\n", _kbot, "kbot");
+		out << F("%-22.1e %11<s- bottom stiffness (Pa/m)\n", _kbot, "kbot");
 	if (!IsNull(_cbot))
-		out << Format("%-22.1e %11<s- bottom damping (Pa-s/m)\n", _cbot, "cbot");
+		out << F("%-22.1e %11<s- bottom damping (Pa-s/m)\n", _cbot, "cbot");
 	if (!IsNull(_dtIC))
-		out << Format("%-22.1f %11<s- time interval for analyzing convergence during IC gen (s)\n", _dtIC, "dtIC");
+		out << F("%-22.1f %11<s- time interval for analyzing convergence during IC gen (s)\n", _dtIC, "dtIC");
 	if (!IsNull(_TmaxIC))
-		out << Format("%-22.1f %11<s- max time for ic gen (s)\n", _TmaxIC, "TmaxIC");
+		out << F("%-22.1f %11<s- max time for ic gen (s)\n", _TmaxIC, "TmaxIC");
 	if (!IsNull(_CdScaleIC))
-		out << Format("%-22.1f %11<s- factor by which to scale drag coefficients during dynamic relaxation (-)\n", _CdScaleIC, "CdScaleIC");
+		out << F("%-22.1f %11<s- factor by which to scale drag coefficients during dynamic relaxation (-)\n", _CdScaleIC, "CdScaleIC");
 	if (!IsNull(_threshIC))
-		out << Format("%-22.3f %11<s- threshold for IC convergence (-)\n", _threshIC, "threshIC");
+		out << F("%-22.3f %11<s- threshold for IC convergence (-)\n", _threshIC, "threshIC");
 	
-	out << Format("%-22.1f %11<s- water depth (m)\n", depth, "WtrDpth");
+	out << F("%-22.1f %11<s- water depth (m)\n", depth, "WtrDpth");
 	out << "0                      OutSwitch  - enable .MD output (0/1)\n";
 	
 	if (fairleads || anchors || mooring == 1) {
@@ -333,7 +333,7 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 String Mooring::Test() {
 	for (const auto &line : lineProperties)
 		if (line.from != "" && line.from == line.to)
-			return Format(t_("Line '%s' ends '%s' have to be different"), line.name, line.from);
+			return F(t_("Line '%s' ends '%s' have to be different"), line.name, line.from);
 		
 	return String();
 }
@@ -350,7 +350,7 @@ const Mooring::Connection &Mooring::GetConnection(String name) const {
 	const Mooring::Connection *p = GetConnectionP(name);	
 	if (p) 
 		return *p;
-	throw Exc(t_(Format("Connection '%s' is not found", name)));
+	throw Exc(t_(F("Connection '%s' is not found", name)));
 }
 
 Mooring::LineType &Mooring::GetLineType(String name) {
@@ -358,7 +358,7 @@ Mooring::LineType &Mooring::GetLineType(String name) {
 		if (line.name == name)
 			return line;
 	}
-	throw Exc(t_(Format("Line type '%s' is not found", name)));
+	throw Exc(t_(F("Line type '%s' is not found", name)));
 }
 
 bool Mooring::FindClosest(Mooring::ClosestInfo &info) {

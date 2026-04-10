@@ -22,7 +22,7 @@ String HydrostarBody::LoadHst(UArray<Body> &mesh, String fileName, bool &y0z, bo
 String HydrostarBody::LoadHst0(String fileName, Body &mesh, Body &damp, bool &y0z, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	mesh.dt.fileName = damp.dt.fileName = fileName;
 	mesh.dt.SetCode(Body::HYDROSTAR_HST);
@@ -109,17 +109,17 @@ String HydrostarBody::LoadHst0(String fileName, Body &mesh, Body &damp, bool &y0
 void HydrostarBody::SaveHST(String fileName, const Surface &surf, bool y0z, bool x0z) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'"), fileName));	
+		throw Exc(F(t_("Impossible to open '%s'"), fileName));	
 	
 	out << "NBBODY 1\n";
 	out << "SYMMETRY_BODY " << (x0z ? 1 : 0) << " " << (y0z ? 2 : 1) << "\n";
 	out << " COORDINATES TYPE 0\n";
 	for (int i = 0; i < surf.nodes.size(); ++i)
-		out << Format("   %d   %f   %f   %f\n", i+1, surf.nodes[i].x, surf.nodes[i].y, surf.nodes[i].z);
+		out << F("   %d   %f   %f   %f\n", i+1, surf.nodes[i].x, surf.nodes[i].y, surf.nodes[i].z);
 	out << " ENDCOORDINATES\n";
 	out << " PANEL TYPE 1\n";
 	for (int i = 0; i < surf.panels.size(); ++i)
-		out << Format("   %d   %d   %d   %d   %d\n", i+1, surf.panels[i].id[0]+1, surf.panels[i].id[1]+1, 
+		out << F("   %d   %d   %d   %d   %d\n", i+1, surf.panels[i].id[0]+1, surf.panels[i].id[1]+1, 
 														  surf.panels[i].id[2]+1, surf.panels[i].id[3]+1);
 	out << " ENDPANEL\n";	
 	out << " ENDFILE";	

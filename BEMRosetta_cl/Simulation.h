@@ -48,7 +48,7 @@ private:
 				for (int i = 0; i < svals.size(); ++i) {
 					UVector<String> sxy = Split(svals[i], ',');
 					if (sxy.size() != 2)
-						throw Exc(Format("Format problem in '%s'", str));
+						throw Exc(F("Format problem in '%s'", str));
 					vx << ScanDouble(sxy[0]);
 					vy << ScanDouble(sxy[1]);
 				}

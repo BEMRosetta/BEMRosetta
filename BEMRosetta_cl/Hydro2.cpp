@@ -19,44 +19,43 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 
 
 const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
-    {WAMIT,           "Wamit .out",               true,   "*.out",   true,  "789"},
-    {WAMIT_1_3,       "Wamit .1.3 T(s) OpenFAST", true,   "*.1",     false, ""},
-    {WAMIT_1_3_RAD,   "Wamit .1.3 ω(rad/s)",      true,   "*.1",     false, ""},
-    {CSV_MAT,         ".csv mat",                 true,   "*.csv",   false, ""},
-    {CSV_TABLE,       ".csv table",               true,   "*.csv",   false, ""},
-    {BEMIO_H5,        "BEMIO .h5",                true,   "*.h5",    false, ""},
-    {MATLAB,          "Matlab .mat",              true,   "*.mat",   false, ""},
-    {FAST_WAMIT,      "FAST .dat.1.2.3...",       true,   "*.1",     false, ""},
-    {HAMS_WAMIT,      "HAMS Wamit",               false,  "",        true,  ""},
-    {HAMS,            "HAMS",                     false,  "",        true,  ""},
-    {HAMS_MREL,       "HAMS MREL",                false,  "",        false, ""},
-    {WADAM_WAMIT,     "Wadam Wamit",              false,  "",        false, ""},
-    {NEMOH,           "Nemoh v2",                 false,  "",        true,  ""},
-    {NEMOHv115,       "Nemoh v115",               false,  "",        true,  ""},
-    {NEMOHv3,         "Nemoh v3",                 false,  "",        true,  ""},
-    {SEAFEM_NEMOH,    "SeaFEM Nemoh",             false,  "",        false, ""},
-    {AQWA,            "AQWA .lis .ah1 .qtf",      false,  "",        false, ""},
-    {AQWA_QTF,        "AQWA .qtf",                true,   "*.qtf",   false, ""},
-    {AQWA_DAT,        "AQWA .dat",                false,  ".dat",    true,  "89"},
-    {FOAMM,           "FOAMM",                    false,  "",        false, ""},
-    {DIODORE,         "Diodore .hdb",             false,  "*.hdb",   false, ""},
-    {ORCAFLEX_YML,    "OrcaFlex .yml",            false,  "*.yml",   false, ""},
-    {CAPYTAINE,       "Capytaine .cal",           false,  "",        false, ""},
-    {HYDROSTAR_OUT,   ".out",                     false,  "*.out",   false, ""},
-    {CAPY_NC,         "Capytaine .nc",            false,  "*.nc",    false, ""},
-    {ORCAWAVE_YML,    "OrcaWave .yml",            false,  "*.yml",   true,  "789"},
-    {CAPYTAINE_PY,    "Capytaine .py",            false,  "*.py",    true,  ""},
-    {BEMROSETTA_H5,   "BEMRosetta .h5",           false,  "*.h5",    false, ""},
-    {AKSELOS_NPZ,     "Akselos .npz",             false,  "*.npz",   false, ""},
-    {HYDROSTAR,       "HydroStar .hsg",           false,  "*.npz",   true,  "789"},
+    {WAMIT,           "Wamit .out",               true,   "*.out",   true,  true,  true,  "789", true , true},
+    {WAMIT_1_3,       "Wamit .1.3 T(s) OpenFAST", true,   "*.1",     false, false, false, "", 	 false, true},
+    {WAMIT_1_3_RAD,   "Wamit .1.3 ω(rad/s)",      true,   "*.1",     false, false, false, "", 	 false, true},
+    {CSV_MAT,         ".csv mat",                 true,   "*.csv",   false, false, false, "", 	 false, false},
+    {CSV_TABLE,       ".csv table",               true,   "*.csv",   false, false, false, "", 	 false, false},
+    {BEMIO_H5,        "BEMIO .h5",                true,   "*.h5",    false, false, false, "", 	 false, true},
+    {MATLAB,          "Matlab .mat",              true,   "*.mat",   false, false, false, "", 	 false, false},
+    {FAST_WAMIT,      "FAST .dat.1.2.3...",       true,   "*.1",     false, false, false, "", 	 false, true},
+    {HAMS_WAMIT,      "HAMS Wamit",               false,  "",        true,  true,  false, "", 	 false, true},
+    {HAMS,            "HAMS",                     false,  "",        true,  true,  false, "", 	 false, true},
+    {HAMS_MREL,       "HAMS MREL",                false,  "",        false, false, false, "", 	 false, true},
+    {WADAM_WAMIT,     "Wadam Wamit",              false,  "",        false, false, false, "", 	 false, true},
+    {NEMOH,           "Nemoh v2",                 false,  "",        true,  false, false, "", 	 false, false},
+    {NEMOHv115,       "Nemoh v115",               false,  "",        true,  false, false, "", 	 false, false},
+    {NEMOHv3,         "Nemoh v3",                 false,  "",        true,  false, false, "", 	 false, true},
+    {SEAFEM_NEMOH,    "SeaFEM Nemoh",             false,  "",        false, false, false, "", 	 false, false},
+    {AQWA,            "AQWA .lis .ah1 .qtf",      false,  "",        false, false, false, "", 	 false, true},
+    {AQWA_QTF,        "AQWA .qtf",                true,   "*.qtf",   false, false, false, "", 	 false, true},
+    {AQWA_DAT,        "AQWA .dat",                false,  ".dat",    true,  true,  true,  "9", 	 false, true},
+    {FOAMM,           "FOAMM",                    false,  "",        false, false, false, "", 	 false, false},
+    {DIODORE,         "Diodore .hdb",             false,  "*.hdb",   false, false, false, "", 	 false, true},
+    {ORCAFLEX_YML,    "OrcaFlex .yml",            false,  "*.yml",   false, false, false, "", 	 false, true},
+    {CAPYTAINE,       "Capytaine .cal",           false,  "",        false, false, false, "", 	 false, true},
+    {HYDROSTAR_OUT,   ".out",                     false,  "*.out",   false, false, false, "", 	 false, true},
+    {CAPY_NC,         "Capytaine .nc",            false,  "*.nc",    false, false, false, "", 	 false, true},
+    {ORCAWAVE_YML,    "OrcaWave .yml",            false,  "*.yml",   true,  true,  true,  "789", true , true},
+    {CAPYTAINE_PY,    "Capytaine .py",            false,  "*.py",    true,  true,  true,  "", 	 false, true},
+    {BEMROSETTA_H5,   "BEMRosetta .h5",           false,  "*.h5",    false, false, false, "", 	 false, true},
+    {AKSELOS_NPZ,     "Akselos .npz",             false,  "*.npz",   false, false, false, "", 	 false, false},
+    {HYDROSTAR,       "HydroStar .hsg",           false,  "*.npz",   true,  true,  true,  "79",  false, true},
+    //{DIFFRAC,       "Diffrac .xml",             false,  "",   	 true,  false, false, "789", false, true},
 #ifdef PLATFORM_WIN32	
-    {ORCAWAVE_OWR,    "OrcaWave .owr",            false,  "*.owr",   false, ""},
+    {ORCAWAVE_OWR,    "OrcaWave .owr",            false,  "*.owr",   false, false, false, "", 	 false, true},
 #endif
-    {BEMROSETTA,      "BEMRosetta .bemr",         true,   "*.bemr",  false, ""},
-    {UNKNOWN,         "By extension",             true,   "*.*",     false, ""}
+    {BEMROSETTA,      "BEMRosetta .bemr",         true,   "*.bemr",  false, false, false, "", 	 false, true},
+    {UNKNOWN,         "By extension",             true,   "*.*",     false, false, false, "", 	 false, false}
 };
-
-
 
 int Hydro::idCount = 0;	
 
@@ -783,6 +782,8 @@ void Hydro::Data::Copy(const Hydro::Data &hyd) {
     w = clone(hyd.w);
     
     msh = clone(hyd.msh);
+    lids = clone(hyd.lids);
+    css = clone(hyd.css);
     
     pots_rad = clone(hyd.pots_rad);
     pots_dif = clone(hyd.pots_dif);
@@ -1354,41 +1355,41 @@ void Hydro::RemoveThresDOF_Force(Forces &f, double thres) {
 
 void Hydro::Compare_rho(Hydro &a) {
 	if (a.dt.rho != dt.rho)
-		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Density rho"), a.dt.rho, dt.rho));
+		throw Exc(F(t_("When comparing %s values, %f<>%f"), t_("Density rho"), a.dt.rho, dt.rho));
 }
 
 void Hydro::Compare_g(Hydro &a) {
 	if (a.dt.g != dt.g)
-		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Gravity g"), a.dt.g, dt.g));
+		throw Exc(F(t_("When comparing %s values, %f<>%f"), t_("Gravity g"), a.dt.g, dt.g));
 }
 
 void Hydro::Compare_h(Hydro &a) {
 	if (a.dt.h != dt.h)
-		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Water depth h"), a.dt.h, dt.h));
+		throw Exc(F(t_("When comparing %s values, %f<>%f"), t_("Water depth h"), a.dt.h, dt.h));
 }
 
 void Hydro::Compare_Nb(Hydro &a) {
 	if (a.dt.Nb != dt.Nb)
-		throw Exc(Format(t_("When comparing %s values, %d<>%d"), t_("Number of bodies"), a.dt.Nb, dt.Nb));
+		throw Exc(F(t_("When comparing %s values, %d<>%d"), t_("Number of bodies"), a.dt.Nb, dt.Nb));
 }
 
 void Hydro::Compare_w(Hydro &a) {
 	if (a.dt.Nf != dt.Nf)	
-		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Number of frequencies"), a.dt.Nf, dt.Nf));
+		throw Exc(F(t_("When comparing %s values, %f<>%f"), t_("Number of frequencies"), a.dt.Nf, dt.Nf));
 	for (int i = 0; i < a.dt.Nf; ++i) {
 		if (!EqualRatio(a.dt.w[i], dt.w[i], 0.0001))
-			throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("frequency")), a.dt.w[i], dt.w[i]));
+			throw Exc(F(t_("When comparing %s values, %f<>%f"), 
+							F(t_("#%d %s"), i+1, t_("frequency")), a.dt.w[i], dt.w[i]));
 	}
 }
 
 void Hydro::Compare_head(Hydro &a) {
 	if (a.dt.Nh != dt.Nh)	
-		throw Exc(Format(t_("When comparing %s values, %f<>%f"), t_("Number of headings"), a.dt.Nh, dt.Nh));
+		throw Exc(F(t_("When comparing %s values, %f<>%f"), t_("Number of headings"), a.dt.Nh, dt.Nh));
 	for (int i = 0; i < a.dt.Nh; ++i) {
 		if (a.dt.head[i] != dt.head[i])
-			throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
-							Format(t_("#%d %s"), i+1, t_("heading")), a.dt.w[i], dt.w[i]));
+			throw Exc(F(t_("When comparing %s values, %f<>%f"), 
+							F(t_("#%d %s"), i+1, t_("heading")), a.dt.w[i], dt.w[i]));
 	}
 }
 
@@ -1399,8 +1400,8 @@ void Hydro::Compare_A(const UArray<UArray<VectorXd>> &a) {
 				double Aa = a[idf][jdf][ifr];
 				double Ab = dt.A[idf][jdf][ifr];
 				if (IsNum(Aa) && Aa != Ab)
-					throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idf+1, jdf+1), 
+					throw Exc(F(t_("When comparing %s values, %f<>%f"), 
+							F(t_("%s[%d](%d, %d)"), t_("A"), ifr+1, idf+1, jdf+1), 
 							Aa, Ab));
 			}
 		}
@@ -1414,8 +1415,8 @@ void Hydro::Compare_B(const UArray<UArray<VectorXd>> &b) {
 				double Ba = b[idf][jdf][ifr];
 				double Bb = dt.B[idf][jdf][ifr];
 				if (IsNum(Ba) && Ba != Bb)
-					throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idf+1, jdf+1), 
+					throw Exc(F(t_("When comparing %s values, %f<>%f"), 
+							F(t_("%s[%d](%d, %d)"), t_("B"), ifr+1, idf+1, jdf+1), 
 							Ba, Bb));
 			}
 		}
@@ -1429,8 +1430,8 @@ void Hydro::Compare_C(Hydro &a) {
 				double Ca = a.dt.msh[ib].dt.C(idf, jdf);
 				double Cb = dt.msh[ib].dt.C(idf, jdf);
 				if (IsNum(Ca) && IsNum(Cb) && !EqualRatio(Ca, Cb, 0.0001))
-					throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
-							Format(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
+					throw Exc(F(t_("When comparing %s values, %f<>%f"), 
+							F(t_("%s[%d](%d, %d)"), t_("C"), ib+1, idf+1, jdf+1), 
 							Ca, Cb));
 			}
 		}
@@ -1441,8 +1442,8 @@ void Hydro::Compare_cg(Hydro &a) {
 	for (int i = 0; i < 3; i++) {
 		for (int ib = 0; ib < a.dt.Nb; ib++) {
 			if (IsNum(a.dt.msh[ib].dt.cg[i]) && a.dt.msh[ib].dt.cg[i] != dt.msh[ib].dt.cg[i])
-				throw Exc(Format(t_("When comparing %s values, %f<>%f"), 
-						Format(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
+				throw Exc(F(t_("When comparing %s values, %f<>%f"), 
+						F(t_("%s(%d, %d)"), t_("cg"), i+1, ib+1), 
 							a.dt.msh[ib].dt.cg[i], dt.msh[ib].dt.cg[i]));
 		}
 	}
@@ -1456,8 +1457,8 @@ void Hydro::Compare_F(const Forces &a, const Forces &b, String type) {
 					std::complex<double> Fa = a[ib][ih](ifr, idf);
 					std::complex<double> Fb = b[ib][ih](ifr, idf);
 					if (IsLoadedForce(a, idf, ih) && IsNum(Fa) && Fa != Fb)
-						throw Exc(Format(t_("When comparing %s values, %f:%f<>%f:%f"), 
-								Format(t_("%s[%d][%d](%d, %d)"), type, ib+1, ih+1, ifr+1, idf+1), 
+						throw Exc(F(t_("When comparing %s values, %f:%f<>%f:%f"), 
+								F(t_("%s[%d][%d](%d, %d)"), type, ib+1, ih+1, ifr+1, idf+1), 
 								Fa.real(), Fa.imag(), Fb.real(), Fb.imag()));
 				}
 }
@@ -1486,7 +1487,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		else if (ext == ".mat")
 			type = MATLAB;
 		else
-			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
+			throw Exc(F(t_("Conversion to file type '%s' not supported"), fileName));
 	}
 	BasicBEM::HeadingType htp = Hydro::ShortestHeadingRange(dt.head);
 	BasicBEM::HeadingType mtp = Hydro::ShortestHeadingRange(dt.mdhead);
@@ -1526,7 +1527,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 	else if (type == AKSELOS_NPZ)
 		SaveAkselos(ib, fileName);
 	else
-		throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
+		throw Exc(F(t_("Conversion to file type '%s' not supported"), fileName));
 }
 
 void Hydro::Join(const UVector<Hydro *> &hydrosp) {
@@ -1550,7 +1551,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		if (IsNum(hy.dt.h))
 			dt.h = hy.dt.h;
 		else if (dt.h != hy.dt.h)
-			throw Exc(Format(t_("Water depth does not match between '%s'(%d) and '%s'(%d)"), 
+			throw Exc(F(t_("Water depth does not match between '%s'(%d) and '%s'(%d)"), 
 					hydrosp[0]->dt.name, hydrosp[0]->dt.h, hy.dt.name, hy.dt.h));			
 	}	
 	if (!IsNum(dt.h))
@@ -1562,7 +1563,7 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 		if (!IsNum(dt.Nb))
 			dt.Nb = hy.dt.Nb;
 		else if (dt.Nb != hy.dt.Nb)
-			throw Exc(Format(t_("Number of bodies does not match between '%s'(%d) and '%s'(%d)"), 
+			throw Exc(F(t_("Number of bodies does not match between '%s'(%d) and '%s'(%d)"), 
 					hydrosp[0]->dt.name, hydrosp[0]->dt.Nb, hy.dt.name, hy.dt.Nb));			
 	}
 	if (!IsNum(dt.Nb))
@@ -1660,8 +1661,8 @@ void Hydro::Join(const UVector<Hydro *> &hydrosp) {
 }
 
 void Hydro::Report() const {
-	BEM::Print("\n" + Format(t_("%s file '%s'"), GetCodeStr(), dt.file));
-	BEM::Print("\n" + Format(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m³]: %s, length scale [m]: %s"), 
+	BEM::Print("\n" + F(t_("%s file '%s'"), GetCodeStr(), dt.file));
+	BEM::Print("\n" + F(t_("g [m/s2]: %s, h [m]: %s, rho [kg/m³]: %s, length scale [m]: %s"), 
 								S_g(), S_h(), S_rho(), S_len()));
 	String freqs;
 	if (dt.w.IsEmpty()) 
@@ -1670,7 +1671,7 @@ void Hydro::Report() const {
 		String strDeltaH;
 		double avg;
 		if (GetIrregularFreq(avg) < 0) 
-			strDeltaH = Format(t_("delta %s [rad/s]"), FDS(avg, 8, false));
+			strDeltaH = F(t_("delta %s [rad/s]"), FDS(avg, 8, false));
 		else {
 			String strHead;
 			for (int i = 0; i < dt.w.size(); ++i) {
@@ -1678,12 +1679,12 @@ void Hydro::Report() const {
 					strHead << ", ";
 				strHead << dt.w[i];
 			}
-			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
+			strDeltaH = F(t_("Non constant delta (%s)"), strHead); 
 		}
-	 	freqs = Format(t_("%s to %s %s"), FDS(dt.w[0], 8, false), 
+	 	freqs = F(t_("%s to %s %s"), FDS(dt.w[0], 8, false), 
 	 									  FDS(dt.w[dt.w.size()-1], 8, false), strDeltaH);	
 	} else
-		freqs = Format(t_("%s [rad/s]"), FDS(dt.w[0], 8, false));
+		freqs = F(t_("%s [rad/s]"), FDS(dt.w[0], 8, false));
 	
 	String heads;
 	if (dt.head.IsEmpty())
@@ -1692,7 +1693,7 @@ void Hydro::Report() const {
 		String strDeltaH;
 		double avg;
 		if (GetIrregularHead(avg) < 0) 
-			strDeltaH = Format(t_("delta %.1f [º]"), avg);
+			strDeltaH = F(t_("delta %.1f [º]"), avg);
 		else {
 			String strHead;
 			for (int i = 0; i < dt.head.size(); ++i) {
@@ -1700,28 +1701,28 @@ void Hydro::Report() const {
 					strHead << ", ";
 				strHead << dt.head[i];
 			}
-			strDeltaH = Format(t_("Non constant delta (%s)"), strHead); 
+			strDeltaH = F(t_("Non constant delta (%s)"), strHead); 
 		}
-	 	heads = Format(t_("%.1f to %.1f %s"), dt.head[0], dt.head[dt.head.size()-1], strDeltaH);	
+	 	heads = F(t_("%.1f to %.1f %s"), dt.head[0], dt.head[dt.head.size()-1], strDeltaH);	
 	} else
-		heads = Format(t_("%.1f [º]"), dt.head[0]);
+		heads = F(t_("%.1f [º]"), dt.head[0]);
 	
-	BEM::Print("\n" + Format(t_("#freqs: %d (%s)"), dt.Nf, freqs)); 
-	BEM::Print("\n" + Format(t_("#1st order headings: %d (%s)"), dt.Nh, heads)); 
-	BEM::Print("\n" + Format(t_("#bodies: %d"), dt.Nb));
+	BEM::Print("\n" + F(t_("#freqs: %d (%s)"), dt.Nf, freqs)); 
+	BEM::Print("\n" + F(t_("#1st order headings: %d (%s)"), dt.Nh, heads)); 
+	BEM::Print("\n" + F(t_("#bodies: %d"), dt.Nb));
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		String str = Format("\n%d.", ib+1);
+		String str = F("\n%d.", ib+1);
 		str += " '" + dt.msh[ib].dt.name + "'";
 		//if (dof.size() > ib)
 		//	str += S(" ") + t_("dof") + ": " + FormatInt(dof[ib]);
 		if (/*Vo.size() > ib && */IsNum(dt.msh[ib].dt.Vo))
-			str += S(" ") + t_("vol [m³]") + ": " + FDS(dt.msh[ib].dt.Vo, 8, false);
+			str += F(" ") + t_("vol [m³]") + ": " + FDS(dt.msh[ib].dt.Vo, 8, false);
 		if (IsNum(dt.msh[ib].dt.cg))
-			str += " " + Format("Cg(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.cg.x, dt.msh[ib].dt.cg.y, dt.msh[ib].dt.cg.z);
+			str += " " + F("Cg(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.cg.x, dt.msh[ib].dt.cg.y, dt.msh[ib].dt.cg.z);
 		if (IsNum(dt.msh[ib].dt.cb))
-			str += " " + Format("Cb(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y, dt.msh[ib].dt.cb.z);
+			str += " " + F("Cb(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.cb.x, dt.msh[ib].dt.cb.y, dt.msh[ib].dt.cb.z);
 		if (IsNum(dt.msh[ib].dt.c0))
-			str += " " + Format("C0(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z);
+			str += " " + F("C0(%.3f, %.3f, %.3f)[m]", dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z);
 		
 		BEM::Print(str);
 	}
@@ -2014,7 +2015,7 @@ void Hydro::GetA0() {
 	                dt.A0(i, j) = Null;
 	            else {
 	                double val = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, dt.A[i][j][iw1], dt.A[i][j][iw2], dt.A[i][j][iw3]);
-	        		if (val <= 0) {
+	        		if (val < 0 || abs(val) < 1E-7) {
 	        			val = dt.A[i][j][iw1];
 			    		if (abs(dt.A[i][j][iw1]) < 0.0000001) 
 			    			val = 0;

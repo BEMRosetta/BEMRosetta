@@ -5,7 +5,9 @@
 	
 const UVector<Body::MeshInfo> Body::meshInfo = {
     {Body::WAMIT_GDF,     "Wamit .gdf",      true,   "*.gdf"},
+    {Body::WAMIT_GDF2,    "Wamit B-spline .gdf",true,"*.gdf"},
     {Body::WAMIT_CSF,     "Wamit .csf",      true,   "*.csf"},
+    {Body::WAMIT_CSF2,    "Wamit B-spline .csf",true,"*.csf"},
     {Body::WAMIT_DAT,     "Wamit .dat",      false,  "*.dat"},
     {Body::NEMOH_DAT,     "Nemoh .dat",      true,   "*.dat"},
     {Body::NEMOHFS_DAT,   "NemohFS .dat",    false,  "*.dat"},
@@ -80,10 +82,45 @@ void Body::Data::Copy(const Body::Data &msh) {
 	under = clone(msh.under);
 	mesh0 = clone(msh.mesh0);
 	
-	//fastAble = msh.fastAble;
+	spline = clone(msh.spline);
+	spline0 = clone(msh.spline0);
 	
 	SetCode(msh.GetCode());
 	SetId(msh.GetId());
+}
+
+Body::Data::Data(Body::Data &&msh) noexcept {
+	projectionPos = pick(msh.projectionPos);
+	projectionNeg = pick(msh.projectionNeg);
+	
+	cgZ0surface = pick(msh.cgZ0surface);
+	cb = pick(msh.cb);
+	cg = pick(msh.cg);
+	cg0 = pick(msh.cg0);
+	c0 = pick(msh.c0);
+	Vo = msh.Vo;
+	
+	M = pick(msh.M);
+	C = pick(msh.C);
+	Cmoor = pick(msh.Cmoor);
+	Cadd = pick(msh.Cadd);
+	Dlin = pick(msh.Dlin);
+	Dquad = pick(msh.Dquad);
+	Aadd = pick(msh.Aadd);
+	
+	name = msh.name;
+	fileName = msh.fileName;
+	fileHeader = msh.fileHeader;
+	
+	mesh = pick(msh.mesh);
+	under = pick(msh.under);
+	mesh0 = pick(msh.mesh0);
+	
+	spline = pick(msh.spline);
+	spline0 = pick(msh.spline0);
+	
+	SetCode(msh.GetCode());
+	SetId(msh.GetId());	
 }
 
 void Body::ControlData::Copy(const Body::ControlData &msh) {
@@ -97,6 +134,19 @@ void Body::ControlData::Copy(const Body::ControlData &msh) {
 	controlPointsC0 = clone(msh.controlPointsC0);
 	controlLoads0 = clone(msh.controlLoads0);
 	damagedBodies = clone(msh.damagedBodies);
+}
+
+Body::ControlData::ControlData(Body::ControlData &&msh) noexcept {
+	controlPointsA = pick(msh.controlPointsA);
+	controlPointsB = pick(msh.controlPointsB);
+	controlPointsC = pick(msh.controlPointsC);
+	controlLoads = pick(msh.controlLoads);
+	
+	controlPointsA0 = pick(msh.controlPointsA0);
+	controlPointsB0 = pick(msh.controlPointsB0);
+	controlPointsC0 = pick(msh.controlPointsC0);
+	controlLoads0 = pick(msh.controlLoads0);
+	damagedBodies = pick(msh.damagedBodies);	
 }
 
 String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
@@ -115,7 +165,24 @@ String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanel
 	
 String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
-	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
+	UArray<Body> meshLoaded;
+	String ret = Load(meshLoaded, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
+	if (!ret.IsEmpty())
+		return ret;
+	mesh.SetCount(meshLoaded.size());
+	// Old c0 and M may be better than new ones
+	for (int i = 0; i < mesh.size(); ++i) {
+		Body &msh = meshLoaded[i];
+		if ((IsNull(msh.dt.c0) || msh.dt.c0 == Point3D(0,0,0)) && !IsNull(mesh[i].dt.c0))
+			msh.dt.c0 = pick(mesh[i].dt.c0);
+		if ((msh.dt.M.size() < 36 || 
+			(msh.dt.M(5,5) == 0)  ||
+			(msh.dt.M(4,4) == 0)  ||
+			(msh.dt.M(3,3) == 0)) && mesh[i].dt.M.size() == 36) 
+			msh.dt.M = pick(mesh[i].dt.M);
+		mesh[i] = pick(msh);	
+	}
+	return ret;
 }
 	
 String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, 
@@ -250,7 +317,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 			}
 		}
 	} else
-		ret = Format(t_("Unknown mesh file format '%s'"), GetFileExt(file));	
+		ret = F(t_("Unknown mesh file format '%s'"), GetFileExt(file));	
 	
 	if (!ret.IsEmpty())
 		return ret;
@@ -259,9 +326,11 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		if (IsNull(m.dt.c0))
 			m.dt.c0 = Point3D(0, 0, 0);
 		
-		ret = m.dt.mesh.CheckErrors();
-		if (!ret.IsEmpty())
-			return ret;
+		if (m.dt.spline.IsEmpty()) {
+			ret = m.dt.mesh.CheckErrors();
+			if (!ret.IsEmpty())
+				return ret;
+		}
 		
 		m.dt.fileName = file;
 		if (m.dt.name.IsEmpty())
@@ -269,23 +338,26 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		
 		m.dt.mesh.RedirectTriangles();	// Before anything
 		
-		if (y0z)
+		if (y0z) {
 			m.dt.mesh.DeployXSymmetry();
-		if (x0z)
+			m.dt.spline.DeployXSymmetry();
+		}
+		if (x0z) {
 			m.dt.mesh.DeployYSymmetry();	
-		
-		if (cleanPanels) 
+			m.dt.spline.DeployYSymmetry();	
+		}
+		if (cleanPanels) {
 			m.dt.mesh.Heal(true, grid, eps);
-		
+			m.dt.spline.Heal(grid, eps);
+		}
 		m.AfterLoad(rho, g, false, true);
 	}
 	return String();
 }
 
 void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
-				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials, double h, int numCores) {
-	//ASSERT(meshes.size() == fileNames.size());
-	
+				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, 
+				bool irregular, bool autoIrregular, int qtfType, bool getPotentials, double h, int numCores) {
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(First(fileNames)));
 		
@@ -308,13 +380,21 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		else if (ext == ".hst")
 			type = HYDROSTAR_HST;
 		else
-			throw Exc(Format(t_("Conversion to file type '%s' not supported"), First(fileNames)));
+			throw Exc(F(t_("Conversion to file type '%s' not supported"), First(fileNames)));
 	}
 	
 	UArray<Surface> surfs(meshes.size());
+	UArray<SurfaceBSpline> splines(meshes.size());
 	nNodes = nPanels = 0;
 	
 	for (int ib = 0; ib < meshes.size(); ++ib) {
+		SurfaceBSpline &spline = splines[ib];
+		if (type == WAMIT_GDF2 || type == WAMIT_CSF2) {
+			if (meshes[ib].dt.spline.IsEmpty())
+				throw Exc(F(t_("Body %d mesh does not include BSpline information to save"), ib+1));
+			spline = clone(meshes[ib].dt.spline);
+		}
+		
 		Surface &surf = surfs[ib];
 		if (meshType == UNDERWATER) 
 			surf = clone(meshes[ib].dt.under);
@@ -329,7 +409,7 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		}
 		
 		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
-			throw Exc(t_("Impossible to save mesh. No mesh found"));		
+			throw Exc(F(t_("Impossible to save body %d mesh. No mesh found"), ib+1));		
 		
 		if (symX && (type == WAMIT_GDF || type == WAMIT_CSF || type == HAMS_PNL || type == DIODORE_DAT || 
 					 type == AQWA_DAT || type == MIKE21_GRD || type == HYDROSTAR_HST)) {
@@ -337,6 +417,9 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			nsurf.CutX(surf);
 			surf = pick(nsurf);
 		}
+		if (symX && (type == WAMIT_GDF2 || type == WAMIT_CSF2))
+			spline.CutX();
+				
 		if (symY && (type == WAMIT_GDF || type == WAMIT_CSF || type == NEMOH_DAT || type == NEMOH_PRE || 
 					 type == HAMS_PNL || type == DIODORE_DAT || type == AQWA_DAT || 
 					 type == MIKE21_GRD || type == HYDROSTAR_HST)) {
@@ -344,6 +427,9 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			nsurf.CutY(surf);
 			surf = pick(nsurf);
 		}
+		if (symY && (type == WAMIT_GDF2 || type == WAMIT_CSF2))
+			spline.CutY();
+			
 		if (meshType == UNDERWATER || symX || symY) {// Some healing before saving
 			Surface::RemoveDuplicatedPanels(surf.panels);
 			Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes, surf.segments);
@@ -351,20 +437,25 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			Surface::DetectTriBiP(surf.panels);
 		}
 		if (surf.panels.IsEmpty() && surf.lines.IsEmpty())
-			throw Exc(t_("Impossible to save mesh. Symmetry has removed a mesh"));
+			throw Exc(F(t_("Impossible to save body %d mesh. Symmetry has removed a mesh"), ib+1));
 
 		nNodes += surf.nodes.size();
 		nPanels += surf.panels.size();
 	}
 	
 	if (type == AQWA_DAT)		
-		AQWABody::SaveDat(First(fileNames), meshes, surfs, rho, g, symX, symY, w, head, withQTF, getPotentials, h, numCores);	
+		AQWABody::SaveDat(First(fileNames), meshes, surfs, rho, g, symX, symY, w, head, 
+						  irregular, autoIrregular, qtfType, getPotentials, h, numCores);	
 	else {
 		for (int ib = 0; ib < meshes.size(); ++ib) {
 			if (type == WAMIT_GDF) 
-				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY);	
+				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, false);
+			else if (type == WAMIT_GDF2)
+				splines[ib].SaveGDF(fileNames[ib], g, symX, symY, false);
 			else if (type == WAMIT_CSF) 
 				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, true);
+			else if (type == WAMIT_CSF2)
+				splines[ib].SaveGDF(fileNames[ib], g, symX, symY, true);
 			else if (type == NEMOH_DAT) 
 				NemohBody::SaveDat(meshes, fileNames[ib], surfs[ib], symY, nPanels);
 			else if (type == NEMOH_PRE) 
@@ -421,6 +512,7 @@ void Body::Append(const Surface &orig, double rho, double g) {
 
 void Body::Reset(double rho, double g) {
 	dt.mesh = clone(dt.mesh0);
+	dt.spline = clone(dt.spline0);
 	dt.cg = clone(dt.cg0);
 	cdt.controlPointsA = clone(cdt.controlPointsA0);
 	cdt.controlPointsB = clone(cdt.controlPointsB0);
@@ -436,6 +528,7 @@ void Body::Reset(double rho, double g) {
 
 void Body::SetT0(double rho, double g) {
 	dt.mesh0 = clone(dt.mesh);
+	dt.spline0 = clone(dt.spline);
 	dt.cg0 = clone(dt.cg);
 	cdt.controlPointsA0 = clone(cdt.controlPointsA);
 	cdt.controlPointsB0 = clone(cdt.controlPointsB);
@@ -453,6 +546,9 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 	if (isFirstTime) 
 		IncrementIdCount();
 	
+	if (!dt.spline.IsEmpty())
+		dt.spline.Tessellate(10, 10, dt.mesh);
+		
 	if (dt.mesh.IsEmpty()) {
 		if (!dt.mesh.lines.IsEmpty())
 			dt.mesh.GetEnvelope();
@@ -487,6 +583,7 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 	
 	if (isFirstTime || reZero) {
 		dt.mesh0 = clone(dt.mesh);
+		dt.spline0 = clone(dt.spline);
 		dt.cg0 = clone(dt.cg);
 		cdt.controlPointsA0 = clone(cdt.controlPointsA);
 		cdt.controlPointsB0 = clone(cdt.controlPointsB);
@@ -502,21 +599,25 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 }
 
 void Body::Report(double rho) const {
-	BEM::Print("\n\n" + Format(t_("Body file '%s'"), dt.fileName));
+	BEM::Print("\n\n" + F(t_("Body file '%s'"), dt.fileName));
 	
-	BEM::Print(S("\n") + Format(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
+	BEM::Print(F("\n") + F(t_("Limits [m] (%f - %f, %f - %f, %f - %f)"), 
 			dt.mesh.env.minX, dt.mesh.env.maxX, dt.mesh.env.minY, dt.mesh.env.maxY, dt.mesh.env.minZ, dt.mesh.env.maxZ));
-	BEM::Print(S("\n") + Format(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -dt.projectionPos.z, dt.projectionNeg.z, dt.projectionPos.z + dt.projectionNeg.z));
-	BEM::Print(S("\n") + Format(t_("Surface projection X-axis [m2] %f - %f = %f"), -dt.projectionPos.x, dt.projectionNeg.x, dt.projectionPos.x + dt.projectionNeg.x));
-	BEM::Print(S("\n") + Format(t_("Surface projection Y-axis [m2] %f - %f = %f"), -dt.projectionPos.y, dt.projectionNeg.y, dt.projectionPos.y + dt.projectionNeg.y));
-	BEM::Print(S("\n") + Format(t_("Surface [m2] %f"), dt.mesh.surface));
-	BEM::Print(S("\n") + Format(t_("Volume [m³] %f"), dt.mesh.volume));
-	BEM::Print(S("\n") + Format(t_("Underwater surface [m2] %f"), dt.under.surface));
-	BEM::Print(S("\n") + Format(t_("Underwater volume [m³] %f"), dt.under.volume));
-	BEM::Print(S("\n") + Format(t_("Displacement [tm] %f"), dt.under.volume*rho/1000));
-	BEM::Print(S("\n") + Format(t_("Centre of buoyancy [m] (%f, %f, %f)"), dt.cb.x, dt.cb.y, dt.cb.z));
+	BEM::Print(F("\n") + F(t_("Water-plane area. Surface projection Z-axis [m2] %f - %f = %f"), -dt.projectionPos.z, dt.projectionNeg.z, dt.projectionPos.z + dt.projectionNeg.z));
+	BEM::Print(F("\n") + F(t_("Surface projection X-axis [m2] %f - %f = %f"), -dt.projectionPos.x, dt.projectionNeg.x, dt.projectionPos.x + dt.projectionNeg.x));
+	BEM::Print(F("\n") + F(t_("Surface projection Y-axis [m2] %f - %f = %f"), -dt.projectionPos.y, dt.projectionNeg.y, dt.projectionPos.y + dt.projectionNeg.y));
+	BEM::Print(F("\n") + F(t_("Surface [m2] %f"), dt.mesh.surface));
+	BEM::Print(F("\n") + F(t_("Volume [m³] %f"), dt.mesh.volume));
+	BEM::Print(F("\n") + F(t_("Underwater surface [m2] %f"), dt.under.surface));
+	BEM::Print(F("\n") + F(t_("Underwater volume [m³] %f"), dt.under.volume));
+	BEM::Print(F("\n") + F(t_("Displacement [tm] %f"), dt.under.volume*rho/1000));
+	BEM::Print(F("\n") + F(t_("Centre of buoyancy [m] (%f, %f, %f)"), dt.cb.x, dt.cb.y, dt.cb.z));
+	Point3D cv = dt.mesh.GetCentreOfBuoyancy();
+	BEM::Print(F("\n") + F(t_("Volume centroid [m] (%f, %f, %f)"), cv.x, cv.y, cv.z));
+	Point3D cs = dt.mesh.GetCentreOfGravity_Surface();
+	BEM::Print(F("\n") + F(t_("Surface centroid [m] (%f, %f, %f)"), cs.x, cs.y, cs.z));
 	
-	BEM::Print(S("\n") + Format(t_("Loaded %d panels and %d nodes"), dt.mesh.panels.size(), dt.mesh.nodes.size()));
+	BEM::Print(F("\n") + F(t_("Loaded %d panels and %d nodes"), dt.mesh.panels.size(), dt.mesh.nodes.size()));
 }
 
 bool Body::IsSymmetricX() {
@@ -604,7 +705,7 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 		//if (uunder.VolumeMatch(tolerance, tolerance) < 0) {
 			if (!error.IsEmpty())
 				error << "\n";
-			error << Format("Around %.2f, angle %.2f", angleCalc, angle);
+			error << F("Around %.2f, angle %.2f", angleCalc, angle);
 			
 			dataangle << angle;
 			datagz << Null;
@@ -658,9 +759,13 @@ void Body::GZ(double from, double to, double delta, double angleCalc, double rho
 
 void Body::Move(double dx, double dy, double dz, double ax, double ay, double az, double rho, double g, bool setnewzero) {
 	dt.mesh = clone(dt.mesh0);
-	if (!IsNull(dt.cg0))
-		dt.cg = clone(dt.cg0);					
 	dt.mesh.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
+	
+	dt.spline = clone(dt.spline0);
+	dt.spline.TransRot(Value3D(dx, dy, dz), Value3D(ax, ay, az), Point3D(dt.c0.x, dt.c0.y, dt.c0.z));
+	
+	if (!IsNull(dt.cg0))
+		dt.cg = clone(dt.cg0);
 	if (!IsNull(dt.cg))
 		dt.cg.TransRot(dx, dy, dz, ax, ay, az, dt.c0.x, dt.c0.y, dt.c0.z);
 	
@@ -697,6 +802,7 @@ void Body::SetMass(double m) {
 
 void Body::Translate(double dx, double dy, double dz) {
 	dt.mesh.Translate(dx, dy, dz);
+	dt.spline.Translate(Value3D(dx, dy, dz));
 	if (!IsNull(dt.cg))
 		dt.cg.Translate(dx, dy, dz);
 	for (auto &d : cdt.controlPointsA)
@@ -714,6 +820,7 @@ void Body::Translate(double dx, double dy, double dz) {
 
 void Body::Rotate(double a_x, double a_y, double a_z, double c_x, double c_y, double c_z) {
 	dt.mesh.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
+	dt.spline.Rotate(Value3D(a_x, a_y, a_z), Point3D(c_x, c_y, c_z));
 	if (!IsNull(dt.cg))
 		dt.cg.Rotate(a_x, a_y, a_z, c_x, c_y, c_z);
 	for (auto &d : cdt.controlPointsA)
@@ -824,7 +931,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 		roll += droll;
 		pitch += dpitch;
 		
-		BEM().Print(Format("Archimede roll: %f %f %.0f pitch: %f %f %.0f", roll, droll, resroll, pitch, dpitch, respitch));
+		BEM().Print(F("Archimede roll: %f %f %.0f pitch: %f %f %.0f", roll, droll, resroll, pitch, dpitch, respitch));
 		
 		double nresroll, nrespitch;
 		Residual(roll, pitch, nresroll, nrespitch);
@@ -842,7 +949,7 @@ bool Body::Archimede(double rho, double g, double tolerance, double &roll, doubl
 			dpitch = -dpitch;
 	}
 		
-	BEM().Print(Format("Archimede NumIter: %d", nIter));
+	BEM().Print(F("Archimede NumIter: %d", nIter));
 	
 	if (nIter >= maxIter)
 		return false;
@@ -932,6 +1039,8 @@ void Body::Jsonize(JsonIO &json) {
 		("under", dt.under)
 		("mesh0", dt.mesh0)
 		("ControlData", cdt)
+		("spline", dt.spline)
+		("spline0", dt.spline0)
 	;
 	if(json.IsLoading()) 
 		dt.SetCode(static_cast<Body::MESH_FMT>(icode));
@@ -939,7 +1048,7 @@ void Body::Jsonize(JsonIO &json) {
 
 void Body::LoadSerialization(String fileName) {
 	if (!FileExists(fileName))
-		throw Exc(Format("File '%s' does not exist", fileName));
+		throw Exc(F("File '%s' does not exist", fileName));
 		
 	String error = LoadFromJsonError(*this, LoadFile(fileName));
 	if (!error.IsEmpty()) 
@@ -948,6 +1057,6 @@ void Body::LoadSerialization(String fileName) {
 
 void Body::SaveSerialization(String fileName) const {
 	if (!StoreAsJsonFile(*this, fileName, false))
-		throw Exc(Format(t_("Impossible to save file '%s'"), fileName));
+		throw Exc(F(t_("Impossible to save file '%s'"), fileName));
 }
 	

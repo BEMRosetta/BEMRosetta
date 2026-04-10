@@ -63,8 +63,8 @@ int BEM::LoadBEM(String fileName, Function <bool(String, int)> Status, bool chec
 	if (checkDuplicated) {
 		for (int i = 0; i < hydros.size(); ++i) {
 			if (hydros[i].dt.file == fileName) {
-				BEM::Print(S("\n") + t_("Model is already loaded"));
-				throw Exc(Format(t_("Model '%s' is already loaded"), fileName));
+				BEM::Print(F("\n") + t_("Model is already loaded"));
+				throw Exc(F(t_("Model '%s' is already loaded"), fileName));
 			}
 		}
 	}
@@ -92,7 +92,7 @@ Hydro &BEM::Join(UVector<int> &ids, Function <bool(String, int)> Status) {
 	hy.Join(hydrosp);
 	String error = hy.AfterLoad(Status);
 	if (!error.IsEmpty()) 
-		throw Exc(Format(t_("Problem joining models: '%s'\n%s"), error));	
+		throw Exc(F(t_("Problem joining models: '%s'\n%s"), error));	
 	
 	Sort(ids, StdLess<int>());
 	for (int i = ids.size()-1; i >= 0; --i)
@@ -256,13 +256,13 @@ void BEM::MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase) {
 		Bem().Nb = max(Bem().Nb, hydros[i].dt.Nb);	
 }
 
-int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated) {
-	Status(Format(t_("Loading mesh '%s'"), fileName), 10);
+int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated, int idFrom) {
+	Status(F(t_("Loading mesh '%s'"), fileName), 10);
 	
 	if (checkDuplicated) {
 		for (int i = 0; i < surfs.size(); ++i) {
 			if (surfs[i].dt.fileName == fileName) {
-				BEM::Print(S("\n") + t_("Model is already loaded"));
+				BEM::Print(F("\n") + t_("Model is already loaded"));
 				throw Exc(t_("Model is already loaded"));
 			}
 		}
@@ -270,14 +270,18 @@ int BEM::LoadBody(String fileName, Function <bool(String, int pos)> Status, bool
 	UArray<Body> meshes;
 	String error = Body::Load(meshes, fileName, rho, g, cleanPanels, roundVal, roundEps);
 	if (!error.IsEmpty()) {
-		BEM::Print("\n" + Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
-		throw Exc(Format(t_("Problem loading '%s'") + S("\n%s"), fileName, error));
+		BEM::Print("\n" + F(t_("Problem loading '%s'") + F("\n%s"), fileName, error));
+		throw Exc(F(t_("Problem loading '%s'") + F("\n%s"), fileName, error));
 	}
 	int num = meshes.size();
+	if (idFrom < 0)
+		idFrom = surfs.size();
+	int len = idFrom + num;
+	surfs.SetCount(max(surfs.size(), len));
 	for (int i = 0; i < num; ++i)
-		surfs.Add(pick(meshes[i]));
+		surfs[idFrom + i] = pick(meshes[i]);
 	
-	Status(Format(t_("Mesh '%s' loaded"), fileName), 100);
+	Status(F(t_("Mesh '%s' loaded"), fileName), 100);
 	return num;
 }
 
@@ -300,7 +304,7 @@ void BEM::SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type
 		else if (ext == ".mesh")
 			type = Body::BEM_MESH;
 		else
-			throw Exc(Format(t_("Conversion to file type '%s' not supported"), fileName));
+			throw Exc(F(t_("Conversion to file type '%s' not supported"), fileName));
 	}
 	
 	UArray<Body> bds;
@@ -312,45 +316,45 @@ void BEM::SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type
 		fileNames << fileName;
 	else {
 		for (int ib = 0; ib < ids.size(); ++ib)
-			fileNames << Format("%s_%d", fileName, ib+1);
+			fileNames << F("%s_%d", fileName, ib+1);
 	}
 	Body::SaveAs(bds, fileNames, type, meshType, rho, g, symX, symY);
 }
 
 void BEM::HealingBody(int id, bool basic, Function <bool(String, int)> Status) {
-	Status(Format(t_("Healing mesh '%s'"), surfs[id].dt.fileName), 10);
-	Print(S("\n\n") + Format(t_("Healing mesh '%s'"), surfs[id].dt.fileName));
+	Status(F(t_("Healing mesh '%s'"), surfs[id].dt.fileName), 10);
+	Print(F("\n\n") + F(t_("Healing mesh '%s'"), surfs[id].dt.fileName));
 	
 	String ret;
 	try {
 		ret = surfs[id].Heal(basic, rho, g, roundVal, roundEps, Status);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
-		Print("\n" + Format(t_("Problem healing '%s': %s") + S("\n%s"), e));
+		Print("\n" + F(t_("Problem healing '%s': %s") + F("\n%s"), e));
 		throw std::move(e);
 	}
 	if (!ret.IsEmpty()) {
 		ret.Replace("\n", "\n- ");
 		Print(ret);
 	} else
-		Print(S(". ") + t_("The mesh is in good condition"));
+		Print(F(". ") + t_("The mesh is in good condition"));
 }
 
 void BEM::OrientSurface(int id, Function <bool(String, int)> Status) {
-	Status(Format(t_("Orienting surface mesh '%s'"), surfs[id].dt.fileName), 10);
-	Print(S("\n\n") + Format(t_("Orienting surface mesh '%s'"), surfs[id].dt.fileName));
+	Status(F(t_("Orienting surface mesh '%s'"), surfs[id].dt.fileName), 10);
+	Print(F("\n\n") + F(t_("Orienting surface mesh '%s'"), surfs[id].dt.fileName));
 	
 	try {
 		surfs[id].Orient();
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
-		Print("\n" + Format(t_("Problem orienting surface '%s': %s") + S("\n%s"), e));
+		Print("\n" + F(t_("Problem orienting surface '%s': %s") + F("\n%s"), e));
 		throw std::move(e);
 	}
 }
 
 void BEM::UnderwaterBody(int id, Function <bool(String, int pos)> Status) {
-	Status(Format(t_("Getting underwater mesh '%s'"), surfs[id].dt.fileName), 10);
+	Status(F(t_("Getting underwater mesh '%s'"), surfs[id].dt.fileName), 10);
 	
 	Body &mesh = surfs.Add();
 	Body &orig = surfs[id];
@@ -360,7 +364,7 @@ void BEM::UnderwaterBody(int id, Function <bool(String, int pos)> Status) {
 		mesh.dt.mesh.CutZ(orig.dt.mesh, -1);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
-		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
+		Print("\n" + F(t_("Problem loading '%s': %s") + F("\n%s"), e));
 		throw std::move(e);
 	}
 }
@@ -394,7 +398,7 @@ void BEM::DuplicateBody(int id) {
 		surf = clone(surfs[id]);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
-		Print("\n" + Format(t_("Problem duplicating '%s': %s") + S("\n%s"), e));
+		Print("\n" + F(t_("Problem duplicating '%s': %s") + F("\n%s"), e));
 		throw std::move(e);
 	}
 }
@@ -411,13 +415,13 @@ void BEM::JoinBody(const UVector<int> &idsJoin) {
 		}
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size()-1);
-		Print("\n" + Format(t_("Problem joining '%s': %s") + S("\n%s"), e));
+		Print("\n" + F(t_("Problem joining '%s': %s") + F("\n%s"), e));
 		throw std::move(e);
 	}
 }
 
 UVector<int> BEM::SplitBody(int id, Function <bool(String, int pos)> Status) {
-	Status(Format(t_("Splitting mesh '%s'"), surfs[id].dt.fileName), 0);
+	Status(F(t_("Splitting mesh '%s'"), surfs[id].dt.fileName), 0);
 	Body &orig = surfs[id];
 	
 	UVector<int> ret;
@@ -438,7 +442,7 @@ UVector<int> BEM::SplitBody(int id, Function <bool(String, int pos)> Status) {
 		RemoveBody(id);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - ret.size());
-		Print("\n" + Format(t_("Problem loading '%s': %s") + S("\n%s"), e));
+		Print("\n" + F(t_("Problem loading '%s': %s") + F("\n%s"), e));
 		throw std::move(e);
 	}
 	return ret;
@@ -454,7 +458,7 @@ void BEM::AddFlatRectangle(double x, double y, double z, double size, double pan
 		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
+		Print("\n" + F(t_("Problem adding flat panel: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -469,7 +473,7 @@ void BEM::AddRevolution(double x, double y, double z, double size, UVector<Point
 		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding revolution surface: %s"), e));
+		Print("\n" + F(t_("Problem adding revolution surface: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -489,7 +493,7 @@ void BEM::Extract(int id, int cutXYZ, int cutPosNeg) {
 		surf.dt.c0 = clone(orig.dt.c0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding flat panel: %s"), e));
+		Print("\n" + F(t_("Problem adding flat panel: %s"), e));
 		throw std::move(e);
 	}	
 }	
@@ -503,7 +507,7 @@ void BEM::AddPanels(const Body &surfFrom, UVector<int> &panelList) {
 		surf.dt.c0 = clone(surfFrom.dt.c0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding surface from panels: %s"), e));
+		Print("\n" + F(t_("Problem adding surface from panels: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -518,7 +522,7 @@ void BEM::AddPolygonalPanel(double x, double y, double z, double size, UVector<P
 		surf.dt.c0 = Point3D(0, 0, 0);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding polygonal panel: %s"), e));
+		Print("\n" + F(t_("Problem adding polygonal panel: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -533,7 +537,7 @@ void BEM::Extrude(int id, double dx, double dy, double dz, double panelWidth, bo
 		surf.dt.mesh.Extrude(dx, dy, dz, panelWidth, close);
 		
 	} catch (Exc e) {
-		Print("\n" + Format(t_("Problem extruding surface: %s"), e));
+		Print("\n" + F(t_("Problem extruding surface: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -563,7 +567,7 @@ void BEM::AddWaterSurface(int id, char c, double meshRatio, bool quads) {
 		surf.AfterLoad(rho, g, false, true);
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - 1);
-		Print("\n" + Format(t_("Problem adding water surface: %s"), e));
+		Print("\n" + F(t_("Problem adding water surface: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -595,14 +599,14 @@ void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool
 			
 			surf.dt.c0 = surfs[ids[0]].dt.c0;	// c0 taken from the first
 			
-			surf.dt.name = Format(t_("Control surface of %s"), surfs[ids[i]].dt.name);
+			surf.dt.name = F(t_("Control surface of %s"), surfs[ids[i]].dt.name);
 			surf.dt.fileName =  "";
 			
 			surf.AfterLoad(rho, g, false, true);
 		}
 	} catch (Exc e) {
 		surfs.SetCount(surfs.size() - numCS);
-		Print("\n" + Format(t_("Problem obtaining control surface: %s"), e));
+		Print("\n" + F(t_("Problem obtaining control surface: %s"), e));
 		throw std::move(e);
 	}	
 }
@@ -615,7 +619,7 @@ String BEM::LoadSerializeJson() {
 	String ret;
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
-		ret = Format(t_("Impossible to create folder '%s' to store configuration file"), folder);
+		ret = F(t_("Impossible to create folder '%s' to store configuration file"), folder);
 	else {
 		String fileName = AFX(folder, "configdata.cf");
 		if (!FileExists(fileName)) 
@@ -623,11 +627,11 @@ String BEM::LoadSerializeJson() {
 		else {
 			String jsonText = LoadFile(fileName);
 			if (jsonText.IsEmpty())
-				ret = Format(t_("Configuration file '%s' is empty"), fileName);
+				ret = F(t_("Configuration file '%s' is empty"), fileName);
 			else {
 				ret = LoadFromJsonError(*this, jsonText);
 				if (!ret.IsEmpty())
-					ret = Format(t_("Problem loading configuration file '%s': %s"), fileName, ret);
+					ret = F(t_("Problem loading configuration file '%s': %s"), fileName, ret);
 			}
 			if (!ret.IsEmpty()) {
 				DirectoryCreateX(AFX(folder, "Errors"));

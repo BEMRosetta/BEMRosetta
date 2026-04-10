@@ -30,7 +30,7 @@ String Wind::Load(String _fileName, String ext) {
 	} else
 		extS << ext;
 
-	String ret = Format(t_("File '%s' not found"), fileName);
+	String ret = F(t_("File '%s' not found"), fileName);
 	for (const String &eext : extS) {
 		String file;
 		if (hasExt)		
@@ -45,7 +45,7 @@ String Wind::Load(String _fileName, String ext) {
 				if(IsEmpty(ret = static_cast<WNDWind&>(*this).LoadWND(file)))
 					break;	
 			} else
-				return Format(t_("'%s' format not supported for reading"), fileName);
+				return F(t_("'%s' format not supported for reading"), fileName);
 		}
 	}
 	if (IsEmpty(ret))
@@ -81,7 +81,7 @@ String Wind::Save(String fileSave, String ext) const {
 	} else
 		extS << ext;
 
-	String ret = Format(t_("Impossible to save '%s'"), fileSave);
+	String ret = F(t_("Impossible to save '%s'"), fileSave);
 	for (const String &eext : extS) {
 		String file;
 		if (hasExt)		
@@ -93,7 +93,7 @@ String Wind::Save(String fileSave, String ext) const {
 			if(IsEmpty(ret = static_cast<const BTSWind&>(*this).SaveBTS(file)))
 				return "";	
 		} else
-			return Format(t_("'%s' format not supported for writing"), fileSave);
+			return F(t_("'%s' format not supported for writing"), fileSave);
 	}
 	return ret;
 }
@@ -117,15 +117,15 @@ void Wind::Report(Grid &grid) const {
 	grid.SetRow({"Parameter", 			"Unit", "Data"});	
 	grid.SetRow({"File name", 			"", 	GetFileName(fileName)});	
 	grid.SetRow({"Description", 		"", 	description});
-	grid.SetRow({"Duration", 			"s", 	Grid::Nvl(nt, Format("%.1f", nt*dt))});
-	grid.SetRow({"Time step", 			"s", 	Grid::Nvl(dt, Format("%.6f", dt))});
+	grid.SetRow({"Duration", 			"s", 	Grid::Nvl(nt, F("%.1f", nt*dt))});
+	grid.SetRow({"Time step", 			"s", 	Grid::Nvl(dt, F("%.6f", dt))});
 	grid.SetRow({"Number of Z points", 	"", 	Grid::Nvl(nz, FormatInt(nz))});
 	grid.SetRow({"Number of Y points", 	"", 	Grid::Nvl(ny, FormatInt(nz))});
 	grid.SetRow({"Number of tower points", "", 	Grid::Nvl(ntwr, FormatInt(nz))});
-	grid.SetRow({"Grid height", 		"m", 	Grid::Nvl(nz, Format("%.1f", (nz-1)*dz))});
-	grid.SetRow({"Grid width", 			"m", 	Grid::Nvl(ny, Format("%.1f", (ny-1)*dy))});
-	grid.SetRow({"Hub height", 			"m", 	Grid::Nvl(zHub, Format("%.1f", zHub))});
-	grid.SetRow({"Z bottom grid", 		"m", 	Grid::Nvl(zGrid, Format("%.2f", zGrid))});
+	grid.SetRow({"Grid height", 		"m", 	Grid::Nvl(nz, F("%.1f", (nz-1)*dz))});
+	grid.SetRow({"Grid width", 			"m", 	Grid::Nvl(ny, F("%.1f", (ny-1)*dy))});
+	grid.SetRow({"Hub height", 			"m", 	Grid::Nvl(zHub, F("%.1f", zHub))});
+	grid.SetRow({"Z bottom grid", 		"m", 	Grid::Nvl(zGrid, F("%.2f", zGrid))});
 	grid.SetRow({"Wind type", 			"", 	fc > 0 ? String(GetWindTypeStr()) : String()});
 }
 
@@ -146,7 +146,7 @@ VectorXd Wind::GetNorm(int idz, int idy) {
 
 VectorXd Wind::Get(int ic, int idz, int idy) {
 	if (ic >= velocity.dimension(1))
-		throw Exc(Format(t_("Component %d is not available"), ic+1));
+		throw Exc(F(t_("Component %d is not available"), ic+1));
 	
 	VectorXd ret(nt);
 	
@@ -170,7 +170,7 @@ int Wind::GetTimeId(double time) {
 
 void Wind::SetTI(int uvw, float ti, float &tiOld, float offset) {
 	if (uvw >= nffc)
-		throw Exc(Format(t_("Component %d is higher than available components %d"), uvw, nffc));
+		throw Exc(F(t_("Component %d is higher than available components %d"), uvw, nffc));
 	
 	ASSERT(nt   == velocity.dimension(0));
 	ASSERT(nffc == velocity.dimension(1));

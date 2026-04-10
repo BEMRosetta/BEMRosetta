@@ -10,16 +10,16 @@ try:
 
     print(bemr.Version())
     
-    bemr.Mesh.Input("../examples/hydrostar/Mesh/Ship.hst")
-    bemr.Mesh.Convert("./.test/kk.gdf", ".gdf", 0, 0)
-    bemr.Mesh.Input("./.test/kk.gdf")
-    volx, voly, volz = bemr.Mesh.GetVolume()
+    bemr.Mesh.Load("../examples/hydrostar/Mesh/Ship.hst")
+    bemr.Mesh.Save("./.test/kk.gdf", ".gdf", 0, 0)
+    bemr.Mesh.Load("./.test/kk.gdf")
+    volx, voly, volz = bemr.Mesh.Volume.Get()
     print(f"Volume            x: {volx}, y: {voly}, z: {volz}")
-    volx, voly, volz  = bemr.Mesh.GetUnderwaterVolume()
+    volx, voly, volz  = bemr.Mesh.UnderwaterVolume.Get()
     print(f"Underwater volume x: {volx}, y: {voly}, z: {volz}")
-    print(f"Surface            : {bemr.Mesh.GetSurface()}")
-    print(f"Underwater surface : {bemr.Mesh.GetUnderwaterSurface()}")
-    print(f"Stiffness matrix   : {bemr.Mesh.GetHydrostaticStiffness()}")
+    print(f"Surface            : {bemr.Mesh.Surface.Get()}")
+    print(f"Underwater surface : {bemr.Mesh.UnderwaterSurface.Get()}")
+    print(f"Stiffness matrix   : {bemr.Mesh.HydrostaticStiffness.Get()}")
     
     
     

@@ -241,7 +241,7 @@ void FastScatter::OnCalc() {
 				if (i == 0) {
 					String name = compare.opHideEquations ? GetEquationName(param.name) : param.name;
 					if (name.Find("[") < 0)
-						name = Format("%s [%s]", name, units);
+						name = F("%s [%s]", name, units);
 					compare.array.Set(0, col, name);
 				}
 				compare.array.Set(1, col++, param.metrics[i]);
@@ -252,13 +252,13 @@ void FastScatter::OnCalc() {
 			for (col = 0; col < table[row].size(); ++col) {
 				String val;
 				if (col < 3)
-					val = Format("%" + fmt[col], S(table[row][col]));
+					val = F("%" + fmt[col], F(table[row][col]));
 				else {
 					double d = double(table[row][col]);
 					if (IsNull(d))
 						val = "-";
 					else
-						val = Format("%" + fmt[col], d);
+						val = F("%" + fmt[col], d);
 				}
 				compare.array.Set(row+2, col, val);
 			}
@@ -660,9 +660,9 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 		if (IsNull(fileName) || IsVoid(fileName)) {
 			String error;
 			if (IsVoid(fileName))
-			 	error = Format(t_("File '%s' not supported"), fileName0);
+			 	error = F(t_("File '%s' not supported"), fileName0);
 			else
-			 	error = Format(t_("File '%s' not found"), fileName0);
+			 	error = F(t_("File '%s' not found"), fileName0);
 			//Exclamation(DeQtf(error));
 			//statusBar->Temporary(error);
 			BEM::PrintError(error);
@@ -719,13 +719,13 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			ret = fout.Load(fileName, Status);
 		}
 		if (!ret.IsEmpty()) {
-			BEM::PrintError(Format(t_("Problem reading file '%s': %s"), ~file, ret));
+			BEM::PrintError(F(t_("Problem reading file '%s': %s"), ~file, ret));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
 		}
 		if (fout.GetNumData() == 0) {
-			BEM::PrintError(Format(t_("File '%s' is empty"), ~file));
+			BEM::PrintError(F(t_("File '%s' is empty"), ~file));
 			left.EnableX();
 			UpdateButtons(false);
 			return false;
@@ -767,7 +767,7 @@ bool FastScatterBase::OnLoad0(String fileName0) {
 			rightT.arrayFiles.Add(rightT.arrayFiles.GetCount()+1, fileName);
 		
 	} catch (const Exc &e) {
-		BEM::PrintError(Format("Error: %s", e));	
+		BEM::PrintError(F("Error: %s", e));	
 		left.EnableX();
 		UpdateButtons(false);
 		return false;
@@ -817,18 +817,18 @@ void FastScatterBase::OnSaveAs() {
 			
 			if (fileType == ".out") {	
 				if (!left.dataFast[row].Save(fs.Get(), Status, ".out")) {
-					BEM::PrintError(Format("Problem saving '%s'", fileName));
+					BEM::PrintError(F("Problem saving '%s'", fileName));
 					return;
 				}
 			} else if (fileType == ".csv") {	
 				if (!left.dataFast[row].Save(fs.Get(), Status, ".csv", ScatterDraw::GetDefaultCSVSeparator())) {
-					BEM::PrintError(Format("Problem saving '%s'", fileName));
+					BEM::PrintError(F("Problem saving '%s'", fileName));
 					return;
 				}
 			} else {
 				int id = opLoad3 == 2 ? row : 0;
 				if (!left.scatter[id].SaveToFileData(fs.Get())) {
-					BEM::PrintError(Format("Problem saving '%s'", fileName));
+					BEM::PrintError(F("Problem saving '%s'", fileName));
 					return;
 				}
 			}
@@ -998,10 +998,10 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 					if (!param.IsEmpty()) {
 						int col = fast.GetParameterX(param);
 						if (col < 0)
-							statusBar->Temporary(Format("Parameter %s does not exist", param));
+							statusBar->Temporary(F("Parameter %s does not exist", param));
 						else {
 							if (left.dataFast.size() > 1 && opLoad3 != 0)
-								param = Format("%d.", iff+1) + param;
+								param = F("%d.", iff+1) + param;
 							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData, xfactor)
 								.NoMark().Legend(param).Units(fast.units[col], unitsx).Stroke(1);	
 						}
@@ -1012,10 +1012,10 @@ void FastScatterBase::ShowSelected(bool zoomtofit) {
 					if (!param.IsEmpty()) {
 						int col = fast.GetParameterX(param);
 						if (col < 0)
-							statusBar->Temporary(Format("Parameter %s does not exist", param));
+							statusBar->Temporary(F("Parameter %s does not exist", param));
 						else {
 							if (left.dataFast.size() > 1 && opLoad3 != 0)
-								param = Format("%d.", iff+1) + param;
+								param = F("%d.", iff+1) + param;
 							scat.AddSeries(fast.dataOut, 0, col, idsx, idsy, idsFixed, false, idBegin, numData, xfactor)
 								.NoMark().Legend(param).Units(fast.units[col], unitsx).SetDataSecondaryY().Stroke(1);	
 						}
@@ -1256,7 +1256,7 @@ bool FastScatterTabs::LoadDragDrop(const UVector<String> &files) {
 	Sort(filesDrop);
 	
 	if (filesDrop.size() > 6) {
-		if (!PromptYesNo(Format(t_("You are about to open %d files"), filesDrop.size())))
+		if (!PromptYesNo(F(t_("You are about to open %d files"), filesDrop.size())))
 			return false;
 	}
 	

@@ -197,14 +197,14 @@ void MainViewDataEach::UpdateStatus() {
 
 	int numPanels = selectedPanels.size();
 	int numNodes  = selectedNodes.size();
-	String strPanels = numPanels > 0 ? FormatInt(numPanels) : S(t_("no"));
-	String strNodes  = numNodes > 0  ? FormatInt(numNodes)  : S(t_("no"));
+	String strPanels = numPanels > 0 ? FormatInt(numPanels) : F(t_("no"));
+	String strNodes  = numNodes > 0  ? FormatInt(numNodes)  : F(t_("no"));
 	
 	if (numPanels + numNodes > 0) {
 		if (!show)
-			status.Set(Format(t_("%s is hidden in Plot menu so selection will not be shown"), t_("Mesh")));
+			status.Set(F(t_("%s is hidden in Plot menu so selection will not be shown"), t_("Mesh")));
 		else
-			status.Set(Format(t_("Selected %s panels and %s nodes"), strPanels, strNodes));
+			status.Set(F(t_("Selected %s panels and %s nodes"), strPanels, strNodes));
 	} else
 		status.Set("");
 }
@@ -221,7 +221,7 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 	arrayFacetsAll2.array.AddRowNumColumn(t_("#panel"), 60).SetConvert(dataSourceFacetsAll[0]);
 	for (int c = 0; c < 4; ++c) {
 		dataSourceFacetsAll[c+1].Init(msh, c, true);
-		arrayFacetsAll2.array.AddRowNumColumn(Format(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
+		arrayFacetsAll2.array.AddRowNumColumn(F(t_("#%d"), c+1), 60).SetConvert(dataSourceFacetsAll[c+1]);
 	}
 	arrayFacetsAll2.array.WhenSel = [&] {
 		MainBody &mainBody = GetParentCtrl<MainBody>(this);
@@ -240,7 +240,7 @@ void MainViewDataEach::Init(Body &msh, MainView &mainView) {
 	arrayNodesMoved.array.AddRowNumColumn(t_("#node"), 60).SetConvert(dataSourceNodesMoved[0]);
 	for (int c = 0; c < 3; ++c) {
 		dataSourceNodesMoved[c+1].Init(msh, c, 0);
-		arrayNodesMoved.array.AddRowNumColumn(Format(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
+		arrayNodesMoved.array.AddRowNumColumn(F(t_("%s"), xyz[c]), 80).SetConvert(dataSourceNodesMoved[c+1]);
 	}
 	arrayNodesMoved.array.WhenSel = [&] {
 		MainBody &mainBody = GetParentCtrl<MainBody>(this);

@@ -7,7 +7,7 @@
 String NemohBody::LoadDatFS(UArray<Body> &_mesh, String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	try {
 		String line;
@@ -98,7 +98,7 @@ String NemohBody::LoadDat(UArray<Body> &mesh, String fileName, bool &x0z) {
 String NemohBody::LoadDat0(String fileName, bool &x0z) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	dt.fileName = fileName;
 	dt.SetCode(Body::NEMOH_DAT);
@@ -172,7 +172,7 @@ void NemohBody::SaveDat(const UArray<Body> &msh, String fileName, const Surface 
 void NemohBody::SaveDat0(String fileName, const Surface &surf, bool x0z, int &npanels) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+		throw Exc(F(t_("Impossible to open '%s'\n"), fileName));	
 	
 	npanels = 0;
 	
@@ -182,23 +182,23 @@ void NemohBody::SaveDat0(String fileName, const Surface &surf, bool x0z, int &np
 	out << "    2   " << (x0z ? "1" : "0") << "\n";
 	for (int i = 0; i < nodes.size(); ++i) {
 		const Point3D &node = nodes[i];
-		out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", i+1, 
+		out << F("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", i+1, 
 				RoundClosest(node.x, 1E-9), RoundClosest(node.y, 1E-9), RoundClosest(node.z, 1E-9));
 	}
-	out << Format("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", 0, 0, 0, 0);
+	out << F("  %8d    % 014.7E   %0 14.7E   % 014.7E\n", 0, 0, 0, 0);
 	
 	for (int i = 0; i < panels.size(); ++i) {
 		const Panel &panel = panels[i];
-		out << Format("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
+		out << F("  %8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
 		npanels++;
 	}
-	out << Format("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
+	out << F("  %8d   %8d   %8d   %8d\n", 0, 0, 0, 0);
 }
 
 void NemohBody::SavePreBody(String fileName, const Surface &surf) {
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format(t_("Impossible to open '%s'\n"), fileName));	
+		throw Exc(F(t_("Impossible to open '%s'\n"), fileName));	
 	
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;
@@ -208,12 +208,12 @@ void NemohBody::SavePreBody(String fileName, const Surface &surf) {
 	
 	for (int i = 0; i < nodes.size(); ++i) {
 		const Point3D &node = nodes[i];
-		out << Format("%014.7E   %014.7E   % 014.7E\n", node.x, node.y, node.z);
+		out << F("%014.7E   %014.7E   % 014.7E\n", node.x, node.y, node.z);
 	}
 	
 	for (int i = 0; i < panels.size(); ++i) {
 		const Panel &panel = panels[i];
-		out << Format("%8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
+		out << F("%8d   %8d   %8d   %8d\n", panel.id[0]+1, panel.id[1]+1, panel.id[2]+1, panel.id[3]+1);
 	}
 }
 

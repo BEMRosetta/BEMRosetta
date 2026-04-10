@@ -308,7 +308,7 @@ bool MainSetupFOAMM::Get(UVector<int> &ib0s, UVector<int> &idfs, UVector<int> &i
 			String strfreqs = arrayFoamm.Get(row, 7);
 			String err = Check(from, to, strfreqs);
 			if (!err.IsEmpty()) {
-				BEM::PrintError(Format(t_("Problem in body %d (%s), body %s (%s): %s"), ib0+1, sidf, ib1+1, sjdf, err));
+				BEM::PrintError(F(t_("Problem in body %d (%s), body %s (%s): %s"), ib0+1, sidf, ib1+1, sjdf, err));
 				return false;		
 			}
 			froms << from;

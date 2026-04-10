@@ -49,7 +49,7 @@ void Main::Init(bool firstTime) {
 	Time date;
 	int version, bits;
 	GetCompilerInfo(name, version, date, mode, bits);
-	String sdate = Format("%mon %d", date.month, date.year);
+	String sdate = F("%mon %d", date.month, date.year);
 	
 	String errorJson;
 	
@@ -79,7 +79,7 @@ void Main::Init(bool firstTime) {
 	else if (parameter == "time")
 		title = "BEMRosetta Time domain results viewer";
 	else
-		throw Exc(Format(t_("Unknown -gui parameter %s"), parameter));
+		throw Exc(F(t_("Unknown -gui parameter %s"), parameter));
 	
 	if (Bem().windowTitle.IsEmpty())
 		title = title + " " + sdate + (Bem().experimental ? " EXPERIMENTAL" : "");
@@ -159,11 +159,11 @@ void Main::Init(bool firstTime) {
 
 	butWindow << [&] {
 		if (tab.IsAt(mainBody)) 
-			LaunchCommand(Format("\"%s\" -gui mesh", GetExeFilePath()));
+			LaunchCommand(F("\"%s\" -gui mesh", GetExeFilePath()));
 		else if (tab.IsAt(mainBEM)) 
-			LaunchCommand(Format("\"%s\" -gui bem", GetExeFilePath()));
+			LaunchCommand(F("\"%s\" -gui bem", GetExeFilePath()));
 		else if (tab.IsAt(mainFAST)) 
-			LaunchCommand(Format("\"%s\" -gui time", GetExeFilePath()));
+			LaunchCommand(F("\"%s\" -gui time", GetExeFilePath()));
 	};
 
 	tab.WhenSet = [&] {
@@ -234,7 +234,7 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 	String ret;
 	String folder = GetBEMRosettaDataFolder();
 	if (!DirectoryCreateX(folder))
-		ret = Format(t_("Impossible to create folder '%s' to store configuration file"), folder);
+		ret = F(t_("Impossible to create folder '%s' to store configuration file"), folder);
 	else {
 		String fileName = AFX(folder, "config.cf");
 		if (!FileExists(fileName)) 
@@ -242,11 +242,11 @@ String Main::LoadSerializeJson(bool &firstTime, bool &openOptions) {
 		else {
 			String jsonText = LoadFile(fileName);
 			if (jsonText.IsEmpty())
-				ret = Format(t_("Configuration file '%s' is empty"), fileName);
+				ret = F(t_("Configuration file '%s' is empty"), fileName);
 			else {
 				ret = LoadFromJsonError(*this, jsonText);
 				if (!ret.IsEmpty())
-					ret = Format(t_("Problem loading configuration file '%s': %s"), fileName, ret);
+					ret = F(t_("Problem loading configuration file '%s': %s"), fileName, ret);
 			}
 			if (!ret.IsEmpty()) {
 				DirectoryCreateX(AFX(folder, "Errors"));
@@ -315,7 +315,7 @@ void Main::Jsonize(JsonIO &json) {
 void MenuAbout::Init() {
 	CtrlLayout(*this);
 	
-	String qtf = GetTopic(S("BEMRosetta/main/About$en-us")); 
+	String qtf = GetTopic(F("BEMRosetta/main/About$en-us")); 
 	SetBuildInfo(qtf);
 	qtf.Replace("SYSTEMINFO", DeQtf(GetSystemInfo()));
 	info.SetQTF(qtf);
@@ -407,7 +407,7 @@ void ArrayModel_Change(ArrayCtrl &array, int id, String codeStr, String title, S
 			return;
 		}
 	}
-	throw Exc(Format(t_("Id %d not found in ArrayModel_Change()"), id));
+	throw Exc(F(t_("Id %d not found in ArrayModel_Change()"), id));
 }
 
 int ArrayModel_Id(const ArrayCtrl &array) {
@@ -535,7 +535,7 @@ GUI_APP_MAIN {
 		try {
 			ConsoleOutput con(true);
 			
-			DLL_Data dll;
+			BMR_Data dll;
 			dll.Status = PrintStatus;
 			dll.ConsoleMain(command, true);
 		} catch (Exc e) {
@@ -550,7 +550,7 @@ GUI_APP_MAIN {
 			errorStr = t_("Unknown error");
 		}
 		if (!errorStr.IsEmpty()) {
-			Cout() << "\n" << Format(t_("Problem found: %s"), errorStr);
+			Cout() << "\n" << F(t_("Problem found: %s"), errorStr);
 			SetExitCode(-1);
 		}
 		return;
@@ -593,7 +593,7 @@ GUI_APP_MAIN {
 	if (EM().Init("BEMRosetta", "BEMRosetta", EM().DefaultExitError, Null))
 		return;
 	InstallPanicMessageBox([](const char *title, const char *text) {
-		EM().Log(Format("%s: %s", title, text));
+		EM().Log(F("%s: %s", title, text));
 		throw Exc(text);
 	});
 	#endif
@@ -611,7 +611,7 @@ GUI_APP_MAIN {
 					throw Exc("-gui option requires to indicate window to show");
 				main.parameter = ToLower(command[1]);
 			} else
-				throw Exc(Format("Unknown command %s", command[0]));
+				throw Exc(F("Unknown command %s", command[0]));
 		}
 		main.Init(firstTime);
 		main.OpenMain();
@@ -630,5 +630,5 @@ GUI_APP_MAIN {
 		errorStr = t_("Unknown error");
 	}
 	if (!errorStr.IsEmpty())
-		Exclamation(t_("Internal error:") + S("&") + DeQtf(errorStr) + S("&") + t_("Program ended"));
+		Exclamation(t_("Internal error:") + F("&") + DeQtf(errorStr) + F("&") + t_("Program ended"));
 }

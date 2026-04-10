@@ -9,6 +9,7 @@
 #include <Surface/Surface.h>
 #include <STEM4U/Mooring.h>
 #include <STEM4U/Utility.h>
+#include "SurfaceBSpline.h"
 
 using namespace Upp;
 
@@ -47,12 +48,12 @@ String GetSystemInfo();
 bool PrintStatus(String s, int d);
 
 
-class Body : public Moveable<Body> {
+class Body : Moveable<Body> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
 	enum MESH_FMT {
-	    WAMIT_GDF, WAMIT_CSF, WAMIT_DAT, NEMOH_DAT, NEMOHFS_DAT, NEMOH_PRE,
+	    WAMIT_GDF, WAMIT_GDF2, WAMIT_CSF, WAMIT_CSF2, WAMIT_DAT, NEMOH_DAT, NEMOHFS_DAT, NEMOH_PRE,
 	    AQWA_DAT, AQWA_LIS, HAMS_PNL, STL_BIN, STL_TXT,
 	    EDIT, MSH_TDYN, DIODORE_DAT, HYDROSTAR_HST, ORCA_OWR,
 	    MIKE21_GRD, CAPY_NC, OBJ, ORCAFLEX_YML, OPENFAST_FST,
@@ -152,13 +153,14 @@ public:
 	double GMroll(double rho, double g) const;
 	double GMpitch(double rho, double g) const;
 	
-	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels,
-		const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials = false, double h = 300, int numCores = 4);
+	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, 
+		double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, 
+		bool irregular = false, bool autoIrregular = false, int qtfType = -1, bool getPotentials = false, double h = 300, int numCores = 4);
 	
 	static void SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
 		UVector<double> w, head;
-		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head, 0);
+		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
 	}
 	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, int &nNodes, int &nPanels) {
 		UArray<Body> meshes;
@@ -166,7 +168,7 @@ public:
 		UVector<String> fileNames;
 		fileNames << fileName;
 		UVector<double> w, head;
-		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head, 0);
+		SaveAs(meshes, fileNames, type, meshType, rho, g, symX, symY, nNodes, nPanels, w, head);
 	}
 	static void SaveAs(const Body &mesh, String fileName, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY) {
 		int nNodes, nPanels;
@@ -197,6 +199,7 @@ public:
 		Data() {}
 		Data(const Data &data) 				{Copy(data);}
 		Data(const Data &data, int) 		{Copy(data);}
+		Data(Data &&data) noexcept;
 			
 		Point3D projectionPos = Null, projectionNeg = Null;
 		Pointf cgZ0surface = Null;
@@ -211,9 +214,9 @@ public:
 		String name;
 		String fileName;
 		String fileHeader;
-		String lidFile;
 		
 		Surface mesh, under, mesh0;
+		SurfaceBSpline spline, spline0;
 		
 		void SetId(int iid) {
 			//ASSERT(iid >= 0);
@@ -236,6 +239,7 @@ public:
 		ControlData() {}
 		ControlData(const ControlData &data) 		{Copy(data);}
 		ControlData(const ControlData &data, int) 	{Copy(data);}
+		ControlData(ControlData &&data) noexcept;
 		
 		struct ControlPoint {
 			String name;
@@ -289,7 +293,7 @@ private:
 	int magic = 0xB0DE;
 };
 
-class Hydro : public Moveable<Hydro> {
+class Hydro : Moveable<Hydro> {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
@@ -312,7 +316,11 @@ public:
 	    bool canSave;
 	    const char* ext;
 	    bool caseCanSave;
+	    bool irregular;
+	    bool autoIrregular;
 	    const char* qtf;
+	    bool autoCS;
+	    bool multibody;
 	};
 	static const UVector<BEMInfo> bemInfo;
 	
@@ -458,7 +466,7 @@ public:
 	typedef UArray<UArray<MatrixXcd>> Forces;  	// [Nb][Nh](Nf, 6) 	
   	typedef Forces RAO;
     
-    struct StateSpace : public Moveable<StateSpace> {
+    struct StateSpace : Moveable<StateSpace> {
         StateSpace() {}
         StateSpace(const StateSpace &s, int) {Copy(s);}
        	StateSpace(const StateSpace &s) 	 {Copy(s);}
@@ -882,7 +890,6 @@ public:
 	    VectorXd  qw;		 								// [Nf]             Wave frequencies
 	    VectorXcd qhead;									// [Nh]             Wave headings
 	    UArray<UArray<UArray<MatrixXcd>>> qtfsum, qtfdif;	// [Nb][Nh][6](Nf, Nf)	
-	    //bool qtfdataFromW = true;
 	    int qtftype = 0;				// 7. Control surface, 8. Momentum conservation/Far field, 9. Pressure integration/Near field	
 		
 		/* The priority is:
@@ -897,7 +904,7 @@ public:
 	    				
 	    UVector<double> w;		 				// [Nf]             Wave frequencies
 	    		
-	   	UArray<Body> msh;						// [Nb]
+	   	UArray<Body> msh, lids, css;				// [Nb]
 	   	
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_rad;		// [Nb][Np][6][Nf]	Radiation complex potentials
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_dif;		// [Nb][Np][Nh][Nf]	Diffraction complex potentials
@@ -992,9 +999,10 @@ public:
 	static int LoadHydro(UArray<Hydro> &hydro, String file, Function <bool(String, int)> Status);
 	
 	void LoadCase(String file, Function <bool(String, int)> Status = Null);
-	void SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-		bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, const UVector<bool> &listDOF,
-		UVector<Point3D> &listPointsm, int qtfType);
+	void SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
+			bool irregular, bool autoIrregular, int qtfType, bool autoQTF,
+			bool bin, int numCases, int numThreads, 
+			bool withPotentials, bool withMesh, const UVector<bool> &listDOF, UVector<Point3D> &listPoints);
 	
 	void SaveCSVMat(String file) const;
 	void SaveCSVTable(String file) const;
@@ -1223,10 +1231,10 @@ public:
 	
 	void Join(const UVector<Hydro *> &hydrosp);
 	
-	String S_g()	const {return !IsNum(dt.g)   ? S("-") : Format("%.3f", dt.g);}
-	String S_h()	const {return !IsNum(dt.h)   ? S("-") : (dt.h < 0 ? S(t_("INFINITY")) : Format("%.1f", dt.h));}
-	String S_rho() 	const {return !IsNum(dt.rho) ? S("-") : Format("%.3f", dt.rho);}
-	String S_len() 	const {return !IsNum(dt.len) ? S("-") : Format("%.1f", dt.len);}
+	String S_g()	const {return !IsNum(dt.g)   ? F("-") : F("%.3f", dt.g);}
+	String S_h()	const {return !IsNum(dt.h)   ? F("-") : (dt.h < 0 ? F(t_("INFINITY")) : F("%.1f", dt.h));}
+	String S_rho() 	const {return !IsNum(dt.rho) ? F("-") : F("%.3f", dt.rho);}
+	String S_len() 	const {return !IsNum(dt.len) ? F("-") : F("%.1f", dt.len);}
 	
 	static String K_units(bool ndim, int r, int c) {
 		r %= 6;
@@ -1418,7 +1426,7 @@ class WamitBody : public Body {
 public:
 	static String LoadDat(UArray<Body> &mesh, String fileName);
 	static String LoadGdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
-	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf = false);
+	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf);
 	void SaveHST(String fileName, double rho, double g) const; 
 
 	virtual ~WamitBody() noexcept {}
@@ -1430,7 +1438,8 @@ public:
 	static String LoadDatANSYSTOAQWA(UArray<Body> &mesh, Hydro &hy, String fileName);
 	static String LoadLis(UArray<Body> &mesh, String fileName, double g, bool &y0z, bool &x0z);
 	static void SaveDat(String fileName, const UArray<Body> &meshes, const UArray<Surface> &surf, double rho, double g, bool y0z, bool x0z,
-			const UVector<double> &w, const UVector<double> &head, int withQTF, bool getPotentials = false, double h = 300, int numCores = 4);
+			const UVector<double> &w, const UVector<double> &head, bool irregular, bool autoIrregular, 
+			int qtfType, bool getPotentials = false, double h = 300, int numCores = 4);
 
 	virtual ~AQWABody() noexcept {}
 };
@@ -1487,16 +1496,13 @@ public:
 	void Save_out(String file) const;
 	virtual ~Wamit() noexcept {}
 	
-	//bool LoadGdfBody(String file);
-	//bool LoadDatBody(String file);
-	//void SaveGdfBody(String fileName);
-	
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
 	bool Load_frc(String fileName);
 	void Save_4(String fileName, bool force_T = false) const;
 	
-	void SaveCase(String folder, int numThreads, bool x0z, bool y0z, const UArray<Body> &lids, UVector<Point3D> &listPoints, int qtfType) const;
+	void SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<Point3D> &listPoints, 
+					bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
@@ -1538,7 +1544,9 @@ protected:
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T/*, bool force_Deg*/) const;
 	void Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const;
-	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids) const;
+	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular) const;
+	void Save_pt2(String fileName) const;
+	void Save_fdf(String fileName, double rpart) const;
 		
 	void Save_A(FileOut &out, Function <double(int, int)> fun, const MatrixXd &base, String wavePeriod) const;
 	void Save_AB(FileOut &out, int ifr) const;
@@ -1546,13 +1554,15 @@ protected:
 	void Save_RAO(FileOut &out, int ifr) const;
 	void Save_MD(FileOut &out, int ifr) const;
 	
-	void Save_Fnames(String folder) const;
+	void Save_Fnames(String folder, int qtfType) const;
 	void Save_Config(String folder, int numThreads) const;
-	void Save_cfg(String fileName, int qtfType, bool lid, bool force_T, bool is6p) const;
+	void Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh) const;
 
 private:
 	int GuessIperin(const UVector<double> &w);
 	static double InputToFreq(double input, int iper, double g, double h, double len);
+	double SaveAutoCSF_Circle(String folder, bool x0z, bool y0z) const;
+	void SaveAutoCSF_Rectangle(String folder, bool x0z, bool y0z) const;
 };
 
 class Hams : public Wamit {
@@ -1566,21 +1576,21 @@ public:
 	
 	int Load_ControlFile(String fileName);
 	void SaveCase(String folder, bool bin, int numCases, int numThreads, bool x0z, bool y0z, 
-				const UArray<Body> &lids, const UVector<Point3D> &listPoints, bool ismrel) const;
+				const UVector<Point3D> &listPoints, bool ismrel, bool irregular, bool autoIrregular, int qtfType) const;
 	UVector<String> Check() const;
 	
 	bool LoadHydrostatic(String fileName, int ib);
 
 private:
 	void SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, int numThreads, bool x0z, bool y0z, 
-				const UArray<Body> &lids, const UVector<Point3D> &listPoints, bool ismrel) const;
+				const UVector<Point3D> &listPoints, bool ismrel, bool irregular, bool autoIrregular) const;
 	static void OutMatrix(FileOut &out, String header, const MatrixXd &mat);
 	static void InMatrix(LineParser &f, MatrixXd &mat);
 		
 	void Save_Hydrostatic(String folderInput) const;
 	void Save_ControlFile(String folderInput, const UVector<double> &freqs,
 							int numThreads, bool remove_irr_freq, const UVector<Point3D> &listPoints, bool ismrel) const;
-	void Save_Settings(String folderInput, const UArray<Body> &lids) const;
+	void Save_Settings(String folderInput) const;
 	void Save_Bat(String folder, String batname, String caseFolder, /*bool bin, */String solvName, String meshName) const;
 };
 
@@ -1622,11 +1632,11 @@ public:
 	//bool LoadDatBody(String file);
 	void SaveDatBody(String file); 
 	
-	void SaveCase(String folder, bool bin, int numCases, int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
-	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, const UArray<Body> &lids) const;
+	void SaveCase(String folder, bool bin, int numCases, BEM_FMT solver, int numThreads, bool x0z, const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType) const;
+	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool irregular, bool autoIrregular, int qtfType) const;
 	
 	void Save_Cal(String folder, const UVector<double> &freqs, /*const UVector<int> &nodes, const UVector<int> &panels, */int solver, 
-					bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
+					bool x0z, const UVector<bool> &listDOF) const;
 	
 	bool Save_KH(String folder) const;
 	bool Save_Inertia(String folder) const;
@@ -1662,12 +1672,12 @@ private:
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
 				String preName, String hydroName, String solvName, String postName, int numThreads) const;
 	void Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, 
-				double rho, double g, const UArray<Body> &lids) const;
+				double rho, double g, const UArray<Body> &lid) const;
 	void Save_Body_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder, int solver) const;
 	
-	void SaveFolder0(String folder, bool bin, int numCases,  
-					bool deleteFolder, int solver, int numThreads, bool x0z, const UArray<Body> &lids, const UVector<bool> &listDOF) const;
+	void SaveFolder0(String folder, bool bin, int numCases, bool deleteFolder, int solver, int numThreads, bool x0z, 
+					 const UVector<bool> &listDOF, bool irregular, bool autoIrregular) const;
 };
 
 class Aqwa : public Hydro {
@@ -1675,7 +1685,7 @@ public:
 	Aqwa() {}
 	String Load(String file, Function <bool(String, int)> Status, double rho = Null);
 	void Save(String file, Function <bool(String, int)> Status) const;
-	void SaveCaseDat(String folder, int numThreads, bool withPotentials, bool x0z, bool y0z, int qtfType) const;
+	void SaveCaseDat(String folder, int numThreads, bool withPotentials, bool x0z, bool y0z, bool irregular, bool autoIrregular, int qtfType) const;
 	UVector<String> Check() const;
 	
 	virtual ~Aqwa() noexcept {}
@@ -1708,7 +1718,7 @@ public:
 	static bool Load_HDF(Wamit &wam, Function <bool(String, int)> Status);
 	static bool Load_MCN(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
 	void SaveCase(String folder, bool withPotentials, bool x0z, bool y0z, 
-				const UVector<bool> &listDOF, int qtftype) const;
+				const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
 
 private:	
 	void Save_HSG(String fileName) const;
@@ -1724,7 +1734,8 @@ class OrcaWave : public Hydro {
 public:
 	OrcaWave() {}
 	String Load(String file, double rho = Null);
-	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, int qtfType) const;
+	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, 
+						bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
 	virtual ~OrcaWave() noexcept {}	
 	
 private:
@@ -1940,7 +1951,7 @@ public:
 	void FillFrequencyGapsABForcesZero(int id);
 	void FillFrequencyGapsQTFZero(int id);
 	
-	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated);
+	int LoadBody(String file, Function <bool(String, int pos)> Status, bool cleanPanels, bool checkDuplicated, int idFrom = -1);
 	void SaveBody(String fileName, const UVector<int> &ids, Body::MESH_FMT type, Body::MESH_TYPE meshType, bool symX, bool symY);
 	void HealingBody(int id, bool basic, Function <bool(String, int pos)> Status);
 	void OrientSurface(int id, Function <bool(String, int)> Status);
@@ -2062,7 +2073,7 @@ public:
 	static String StrBDOF(int i, bool abrev) {
 		int ib = i/6 + 1;
 		int idf = i - (ib - 1)*6;
-		return Format("%d%s%s", ib, abrev ? "" : ".", StrDOF(idf, abrev));
+		return F("%d%s%s", ib, abrev ? "" : ".", StrDOF(idf, abrev));
 	}
 	
 	static String StrBDOF2(int i, int j, bool abrev) {
@@ -2072,9 +2083,9 @@ public:
 			int jb = j/6 + 1;
 			int jdf = j - (jb - 1)*6;
 			if (ib != jb)
-				return Format("%d%s%s_%d.%s", ib, abrev ? "" : ".", StrDOF(idf, abrev), jb, StrDOF(jdf, abrev));
+				return F("%d%s%s_%d.%s", ib, abrev ? "" : ".", StrDOF(idf, abrev), jb, StrDOF(jdf, abrev));
 			else
-				return Format("%d%s%s_%s", ib, abrev ? "" : ".", StrDOF(idf, abrev), StrDOF(jdf, abrev));
+				return F("%d%s%s_%s", ib, abrev ? "" : ".", StrDOF(idf, abrev), StrDOF(jdf, abrev));
 		} else
 			return StrBDOF(i, abrev);
 	}
@@ -2082,7 +2093,7 @@ public:
 	static String StrBDOFFull(int i) {
 		int ib = i/6 + 1;
 		int idf = i - (ib - 1)*6;
-		return Format("Body #%d. DoF: %s", ib, StrDOF(idf));
+		return F("Body #%d. DoF: %s", ib, StrDOF(idf));
 	}
 
 	static String StrBDOFFull(int i, int j) {
@@ -2092,9 +2103,9 @@ public:
 			int jb = j/6 + 1;
 			int jdf = j - (jb - 1)*6;
 			if (ib != jb)
-				return Format("Body #%d, DoF: %s. Body #%d, DoF: %s", ib, StrDOF(idf), jb, StrDOF(jdf));
+				return F("Body #%d, DoF: %s. Body #%d, DoF: %s", ib, StrDOF(idf), jb, StrDOF(jdf));
 			else
-				return Format("Body #%d. DoF: %s, DoF: %s", ib, StrDOF(idf), StrDOF(jdf));
+				return F("Body #%d. DoF: %s, DoF: %s", ib, StrDOF(idf), StrDOF(jdf));
 		} else
 			return StrBDOF(i, false);
 	}
@@ -2179,7 +2190,7 @@ bool OUTB(int id, T total) {
 	return false;
 }
 
-class Mooring : public Moveable<Mooring> {
+class Mooring : Moveable<Mooring> {
 public:
 	Mooring() {vessels.Add(Vessel("vessel", 0, 0));}
 	Mooring(const Mooring &mooring, int) {Copy(mooring);}
@@ -2485,7 +2496,7 @@ public:
 			ifr = ih = 0;
 			return *this;
 		}
-		Value Format(const Value& q) const;
+		Value F(const Value& q) const;
 		int ifr, ih;
 		int idx, ib;
 		bool pot;
@@ -2503,7 +2514,7 @@ public:
 			xyz = _xyz;
 			return *this;
 		}
-		Value Format(const Value& q) const;
+		Value F(const Value& q) const;
 		
 	private:
 		const Surface *pmesh;
@@ -2520,17 +2531,16 @@ public:
 
 #include "orca.h"
 
-struct DLL_Data {
-	DLL_Data();
+struct BMR_Data {
+	BMR_Data();
 	bool ConsoleMain(const UVector<String>& _command, bool gui);
-	static void DLL_RaiseIfError();
+	static void BMR_RaiseIfError();
 		
 	FastOut fast;
 	ArrayWind wind;
 	
-	UArray<Body> lids;
 	UVector<String> headParams;
-	int bemid = -1, bembodyid = -1, meshid = -1, windid = -1;
+	int bemid = 0, bembodyid = 0, meshid = 0, windid = 0;
 	String errorStr;
 	
 	String fastFileStr;
@@ -2542,6 +2552,7 @@ struct DLL_Data {
 
 #ifdef PLATFORM_WIN32
 	Orca orca;
+	int threadCount = -1;
 	UVector<String> paramList;
 	UArray<Point3D> centreList;
 	Point3D centreOrca = Point3D(0, 0, 0);

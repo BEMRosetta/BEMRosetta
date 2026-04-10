@@ -13,10 +13,10 @@
 using namespace Eigen;
 
 String Hydro::LoadSerialization(String fileName) {
-	BEM::Print("\n\n" + Format(t_("Loading '%s'"), dt.file));
+	BEM::Print("\n\n" + F(t_("Loading '%s'"), dt.file));
 	
 	if (!FileExists(fileName))
-		return Format("File '%s' does not exist", fileName);
+		return F("File '%s' does not exist", fileName);
 	
 	String error = LoadFromJsonError(*this, LoadFile(fileName));
 	if (!error.IsEmpty()) 
@@ -35,16 +35,16 @@ String Hydro::LoadSerialization(String fileName) {
 		}
 	}
 	if (IsNull(dt.len) || IsNull(dt.dimen))
-		return Format("File '%s' does not contain BEM results", fileName);
+		return F("File '%s' does not contain BEM results", fileName);
 	
 	return String();
 }
 	
 void Hydro::SaveSerialization(String fileName) const {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
+	BEM::Print("\n\n" + F(t_("Saving '%s'"), fileName));
 	if (!StoreAsJsonFile(*this, fileName, false)) {
-		BEM::PrintError("\n" + Format(t_("Error saving '%s'"), fileName));
-		throw Exc(Format(t_("Error saving '%s'"), fileName));
+		BEM::PrintError("\n" + F(t_("Error saving '%s'"), fileName));
+		throw Exc(F(t_("Error saving '%s'"), fileName));
 	}
 }
 
@@ -54,7 +54,7 @@ void Hydro::SaveForce(FileOut &out, const Hydro::Forces &f) const {
 	out << sep;
 	for (int ib = 0; ib < dt.Nb; ++ib) {			
 		for (int idf = 0; idf < 6; ++idf) 			
-			out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf)) << sep;
+			out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf)) << sep;
 	}
 	out << "\n";
 	
@@ -94,7 +94,7 @@ void Hydro::SaveMD(FileOut &out) const {
 	out  << "Head [deg]" << sep << "Frec [rad/s]";
 	for (int ib = 0; ib < dt.Nb; ++ib) {			
 		for (int idf = 0; idf < 6; ++idf) 			
-			out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+			out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf));
 	}
 	out << "\n";
 	
@@ -102,7 +102,7 @@ void Hydro::SaveMD(FileOut &out) const {
 	
 	for (int ih = 0; ih < dt.mdhead.size(); ++ih) {
 		const std::complex<double> &hh = dt.mdhead[ih];
-		out << Format("%s %s", FormatDouble(hh.real()), FormatDouble(hh.imag()));
+		out << F("%s %s", FormatDouble(hh.real()), FormatDouble(hh.imag()));
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			for (int ib = 0; ib < dt.Nb; ++ib) {		
 				out << sep;
@@ -128,7 +128,7 @@ void Hydro::SaveC(FileOut &out) const {
 		
 	for (int ib = 0; ib < dt.Nb; ++ib) {		
 		for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-			out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+			out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1));
 			out << sep;	
 			for (int idf2 = 0; idf2 < 6; ++idf2) {
 				if (IsNum(dt.msh[ib].dt.C(idf1, idf2)))	
@@ -150,7 +150,7 @@ void Hydro::SaveM(FileOut &out) const {
 		
 	for (int ib = 0; ib < dt.Nb; ++ib) {		
 		for (int idf1 = 0; idf1 < 6; ++idf1) { 	
-			out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+			out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1));
 			out << sep;	
 			for (int idf2 = 0; idf2 < 6; ++idf2) {
 				if (IsNum(dt.msh[ib].dt.M(idf1, idf2)))	
@@ -163,7 +163,7 @@ void Hydro::SaveM(FileOut &out) const {
 }
 	
 void Hydro::SaveCSVMat(String fileName) const {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
+	BEM::Print("\n\n" + F(t_("Saving '%s'"), fileName));
 	
 	String folder = GetFileFolder(fileName);
 	String nname = GetFileTitle(fileName);
@@ -173,7 +173,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		String files = AFX(folder, nname + "_A" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		const String &sep = Bem().csvSeparator;
@@ -181,7 +181,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		out  << "Frec [rad/s]" << sep << "DoF";
 		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf = 0; idf < 6; ++idf) 			
-				out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+				out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf));
 		}
 		out << "\n";
 	
@@ -192,7 +192,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 					out << "0";				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
 						if (IsNum(dt.A0(idf1 + 6*ib, idf2 + 6*ib)))	
@@ -211,7 +211,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 					out << dt.w[ow[ifr]];				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
 						if (IsNum(dt.A[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
@@ -228,7 +228,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 					out << "inf";				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
 						if (IsNum(dt.Ainf(idf1 + 6*ib, idf2 + 6*ib)))	
@@ -245,7 +245,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		String files = AFX(folder, nname + "_B" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		const String &sep = Bem().csvSeparator;
@@ -253,7 +253,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		out  << "Frec [rad/s]" << sep << "DoF";
 		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf = 0; idf < 6; ++idf) 			
-				out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf));
+				out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf));
 		}
 		out << "\n";
 	
@@ -266,7 +266,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 					out << dt.w[ow[ifr]];				
 				for (int idf1 = 0; idf1 < 6; ++idf1) { 	
 					out << sep;	
-					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1));
+					out << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1));
 					out << sep;	
 					for (int idf2 = 0; idf2 < 6; ++idf2) {
 						if (IsNum(dt.B[idf1 + 6*ib][idf2 + 6*ib][ow[ifr]]))	
@@ -283,7 +283,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		String files = AFX(folder, nname + "_C" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		SaveC(out);
@@ -293,7 +293,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		String files = AFX(folder, nname + "_M" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		SaveM(out);
@@ -303,7 +303,7 @@ void Hydro::SaveCSVMat(String fileName) const {
 		String files = AFX(folder, nname + "_Fex" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 		SaveForce(out, dt.ex);
 	}
@@ -312,14 +312,14 @@ void Hydro::SaveCSVMat(String fileName) const {
 		String files = AFX(folder, nname + "_MD" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 		SaveMD(out);
 	}		
 }
 
 void Hydro::SaveCSVTable(String fileName) const {
-	BEM::Print("\n\n" + Format(t_("Saving '%s'"), fileName));
+	BEM::Print("\n\n" + F(t_("Saving '%s'"), fileName));
 	
 	String folder = GetFileFolder(fileName);
 	String nname = GetFileTitle(fileName);
@@ -329,7 +329,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		String files = AFX(folder, nname + "_A" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		const String &sep = Bem().csvSeparator;
@@ -338,7 +338,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf1 = 0; idf1 < 6; ++idf1) 
 				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+					out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
 		}
 		out << "\n";
 	
@@ -392,7 +392,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		String files = AFX(folder, nname + "_B" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		const String &sep = Bem().csvSeparator;
@@ -401,7 +401,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		for (int ib = 0; ib < dt.Nb; ++ib) {			
 			for (int idf1 = 0; idf1 < 6; ++idf1) 
 				for (int idf2 = 0; idf2 < 6; ++idf2) 
-					out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : S("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
+					out << sep << ((dt.Nb > 1 ? (FormatInt(ib+1) + "-") : F("")) + BEM::StrDOF(idf1) + "-" + BEM::StrDOF(idf2));
 		}
 		out << "\n";
 		
@@ -427,7 +427,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		String files = AFX(folder, nname + "_C" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		SaveC(out);
@@ -437,7 +437,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		String files = AFX(folder, nname + "_M" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 
 		SaveM(out);
@@ -447,7 +447,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		String files = AFX(folder, nname + "_Fex" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 		SaveForce(out, dt.ex);
 	}	
@@ -456,7 +456,7 @@ void Hydro::SaveCSVTable(String fileName) const {
 		String files = AFX(folder, nname + "_MD" + ext);
 		FileOut out(files);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to save '%s'. File already used."), files));
+			throw Exc(F(t_("Impossible to save '%s'. File already used."), files));
 
 		SaveMD(out);
 	}	
@@ -485,7 +485,7 @@ UVector<int> NumSets(int num, int numsets) {
 String FormatWam(double d) {
 	if (!IsNum(d))
 		return "0.0";
-	return (d >= 0 ? " " : "-") + Format("%12E", abs(d));
+	return (d >= 0 ? " " : "-") + F("%12E", abs(d));
 }
 
 void LineParserWamit::LoadWamitJoinedFields(String _line) {	
@@ -523,7 +523,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 		ret = static_cast<Nemoh&>(*this).Load(fileName);
 	else if (ext == ".in")
 		ret = static_cast<Hams&>(*this).Load(fileName, true, Status); 
-	else if (S(".dat.lis.ah1.qtf.mqt").Find(ext) >= 0)
+	else if (F(".dat.lis.ah1.qtf.mqt").Find(ext) >= 0)
 		ret = static_cast<Aqwa&>(*this).Load(fileName, Status);
 	else if (ext == ".nc") {
 		UArray<Hydro> hydros;
@@ -540,7 +540,7 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 		ret = static_cast<OrcaWave&>(*this).Load(fileName, Status);
 	else if (ext == ".h5")
 		ret = static_cast<BemioH5&>(*this).Load(fileName, Status);
-	else if (S(".out.1.2.3.3sc.3fk.hst.4.6p.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0)
+	else if (F(".out.1.2.3.3sc.3fk.hst.4.6p.7.8.9.12d.12s.cfg.frc.pot.mmx.wam").Find(ext) >= 0)
 		ret = static_cast<Wamit&>(*this).Load(fileName, false, 0, Status);
 	else
 		ret = t_("Unknown BEM input format");
@@ -556,9 +556,19 @@ void Hydro::LoadCase(String fileName, Function <bool(String, int)> Status) {
 	AfterLoad();
 }
 
-void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads, BEM_FMT solver, 
-			bool withPotentials, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, 
-			const UVector<bool> &listDOF, UVector<Point3D> &listPoints, int qtfType) {
+void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
+			bool irregular, bool autoIrregular, int qtfType, bool autoQTF,
+			bool bin, int numCases, int numThreads, 
+			bool withPotentials, bool withMesh, const UVector<bool> &listDOF, UVector<Point3D> &listPoints) {
+	if (autoIrregular && !irregular)
+		throw Exc(t_("The option to get automatic lid generation for irregular frequencies removal has to be activated only if the irregular frequencies removal option is activated"));
+	
+	if (autoQTF && (qtfType != 7))
+		throw Exc(t_("The option to get automatic control surface has to be activated only for control surface QTF calculation"));
+	
+	if (qtfType == 8 && dt.Nb > 1)
+		throw Exc(t_("The near field methos can not be ised with a multibody case"));
+		
 	if (withPotentials && (solver == Hydro::WAMIT || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL)) {
 		int Nb = solver == Hydro::HAMS ? 1 : dt.Nb;
 		for (int ib = 0; ib < Nb; ++ib) {
@@ -566,51 +576,55 @@ void Hydro::SaveFolderCase(String folder, bool bin, int numCases, int numThreads
 			for (const Panel &p : pans)
 				listPoints << p.centroidPaint;
 		}
-	}	
-	if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
-		static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, lids, listDOF);
-	else if (solver == Hydro::CAPYTAINE_PY)
-		static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, lids);
-	else if (solver == Hydro::HAMS)
-		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints, false);
-	else if (solver == Hydro::HAMS_MREL)
-		static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, lids, listPoints, true);
-	else if (solver == Hydro::ORCAWAVE_YML)
-		static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, x0z, y0z, qtfType);
-	else if (solver == Hydro::AQWA_DAT)
-		static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, x0z, y0z, qtfType);
-	else if (solver == Hydro::WAMIT)
-		static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, x0z, y0z, lids, listPoints, qtfType);
-	else if (solver == Hydro::HYDROSTAR)
-		static_cast<const HydroStar &>(*this).SaveCase(folder, withPotentials, x0z, y0z, listDOF, qtfType);
-	else if (solver == Hydro::BEMROSETTA_H5) {
-		dt.solver = BEMROSETTA_H5;
-		if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) 
-			GetPotentialsIncident();
-		if (IsLoadedPotsIncBMR()) 
-			GetForcesFromPotentials(dt.pots_inc_bmr, dt.fk_pot_bmr);
-		
-		dt.fk = clone(dt.fk_pot_bmr);
-		static_cast<BemioH5&>(*this).Save(AFX(folder, GetFileTitle(folder) + ".h5"));
 	}
-	else
-		throw Exc(t_("Format is not supported"));
+	try {	
+		if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
+			static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, listDOF, irregular, autoIrregular, qtfType);
+		else if (solver == Hydro::CAPYTAINE_PY)
+			static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, irregular, autoIrregular, qtfType);
+		else if (solver == Hydro::HAMS)
+			static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, listPoints, false, irregular, autoIrregular, qtfType);
+		else if (solver == Hydro::HAMS_MREL)
+			static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, listPoints, true, irregular, autoIrregular, qtfType);
+		else if (solver == Hydro::ORCAWAVE_YML)
+			static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, x0z, y0z, irregular, autoIrregular, qtfType, autoQTF);
+		else if (solver == Hydro::AQWA_DAT)
+			static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, x0z, y0z, irregular, autoIrregular, qtfType);
+		else if (solver == Hydro::WAMIT)
+			static_cast<const Wamit &>(*this).SaveCase(folder, numThreads, x0z, y0z, listPoints, irregular, autoIrregular, qtfType, autoQTF);
+		else if (solver == Hydro::HYDROSTAR)
+			static_cast<const HydroStar &>(*this).SaveCase(folder, withPotentials, x0z, y0z, listDOF, irregular, autoIrregular, qtfType, autoQTF);
+		else if (solver == Hydro::BEMROSETTA_H5) {
+			dt.solver = BEMROSETTA_H5;
+			if (!dt.msh.IsEmpty() && !IsLoadedPotsIncBMR()) 
+				GetPotentialsIncident();
+			if (IsLoadedPotsIncBMR()) 
+				GetForcesFromPotentials(dt.pots_inc_bmr, dt.fk_pot_bmr);
+			
+			dt.fk = clone(dt.fk_pot_bmr);
+			static_cast<BemioH5&>(*this).Save(AFX(folder, GetFileTitle(folder) + ".h5"));
+		} else
+			throw Exc(F(t_("Format %d is not supported"), solver));
+	} catch (...) {
+		DeleteFolderDeepX(folder);
+		throw;	
+	}
 }
 
 void Hydro::BeforeSaveCase(String folderBase, int numCases, bool deleteFolder) const {
 	if (numCases < 1)
-		throw Exc(Format(t_("Number cases must be higher than 1 (%d)"), numCases));
+		throw Exc(F(t_("Number cases must be higher than 1 (%d)"), numCases));
 	
 	if (numCases > dt.Nf)
-		throw Exc(Format(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, dt.Nf));
+		throw Exc(F(t_("Number of cases %d must not be higher than number of frequencies %d"), numCases, dt.Nf));
 	
 	if (deleteFolder) {		// If called from GUI, user has been warned
 		if (!DeleteFileDeepWildcardsX(folderBase))
-			throw Exc(Format(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
+			throw Exc(F(t_("Impossible to clean folder '%s'. Maybe it is in use"), folderBase));
 		Sleep(100);
 	}
 	if (!DirectoryCreateX(folderBase))
-		throw Exc(Format(t_("Problem creating '%s' folder"), folderBase));
+		throw Exc(F(t_("Problem creating '%s' folder"), folderBase));
 }
 
 
@@ -726,24 +740,24 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 	UVector<String> ret;
 	
 	if (IsNull(dt.rho) || dt.rho < 0 || dt.rho > 10000)
-		 ret << Format(t_("Incorrect rho %s"), FormatDoubleEmpty(dt.rho));
+		 ret << F(t_("Incorrect rho %s"), FormatDoubleEmpty(dt.rho));
 	if (IsNull(dt.g) || dt.g < 0 || dt.g > 100)
-		ret << Format(t_("Incorrect g %s"), FormatDoubleEmpty(dt.g));
+		ret << F(t_("Incorrect g %s"), FormatDoubleEmpty(dt.g));
 	
 	if (IsNull(dt.h) || dt.h < -1)
-		ret << Format(t_("Incorrect depth %s"), FormatDoubleEmpty(dt.h));
+		ret << F(t_("Incorrect depth %s"), FormatDoubleEmpty(dt.h));
 	else if (dt.h > 11000)
-		ret << Format(t_("Depth %s seems too high"), FormatDoubleEmpty(dt.h));
+		ret << F(t_("Depth %s seems too high"), FormatDoubleEmpty(dt.h));
 
 	if (IsNull(dt.Nf) || dt.Nf < 1)
-		ret << Format(t_("Incorrect number of frequencies %s"), FormatIntEmpty(dt.Nf));
+		ret << F(t_("Incorrect number of frequencies %s"), FormatIntEmpty(dt.Nf));
 	else if (dt.Nf > 1000)
-		ret << Format(t_("Number of frequencies %s seems too high"), FormatIntEmpty(dt.Nf));
+		ret << F(t_("Number of frequencies %s seems too high"), FormatIntEmpty(dt.Nf));
 	
 	if (IsNull(dt.Nh) || dt.Nh < 1)
-		ret << Format(t_("Incorrect number of headings %s"), FormatIntEmpty(dt.Nh));
+		ret << F(t_("Incorrect number of headings %s"), FormatIntEmpty(dt.Nh));
 	else if (dt.Nh > 1000)
-		ret << Format(t_("Number of headings %s seems too high"), FormatIntEmpty(dt.Nh));
+		ret << F(t_("Number of headings %s seems too high"), FormatIntEmpty(dt.Nh));
 	
 	if (type == BEM_FMT::HAMS)
 		ret = static_cast<const Hams&>(*this).Check();
@@ -751,22 +765,22 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 		ret = static_cast<const Aqwa&>(*this).Check();
 			
 	if (First(dt.w) <= 0.01)
-		ret << Format(t_("First frequency %f < 0.01 is too low"), First(dt.w));
+		ret << F(t_("First frequency %f < 0.01 is too low"), First(dt.w));
 	
 	UVector<String> bodynames;
 	for (int ib = 0; ib < dt.msh.size(); ++ib) {
 		if (IsNull(dt.msh[ib].dt.c0))
-			ret << Format(t_("Centre of body #%d has to be set"), ib+1);
+			ret << F(t_("Centre of body #%d has to be set"), ib+1);
 		if (IsNull(dt.msh[ib].dt.cg))
-			ret << Format(t_("Centre of gravity of body #%d has to be set"), ib+1);
+			ret << F(t_("Centre of gravity of body #%d has to be set"), ib+1);
 		if (Find(bodynames, dt.msh[ib].dt.name) >= 0)
-			ret << Format(t_("Some bodies have the same name '%s'"), dt.msh[ib].dt.name);
+			ret << F(t_("Some bodies have the same name '%s'"), dt.msh[ib].dt.name);
 		else
 			bodynames << dt.msh[ib].dt.name;
 		
 		for (int r = 0; r < 6; ++r) {		// Some element of the inertia matrix diagonal is zero
 			if (dt.msh[ib].dt.M(r, r) < EPS_LEN) {
-				ret << Format(t_("Inertia matrix of body #%d has a zero in the diagonal"), ib+1);
+				ret << F(t_("Inertia matrix of body #%d has a zero in the diagonal"), ib+1);
 				break;
 			}
 		}
@@ -775,7 +789,7 @@ UVector<String> Hydro::Check(BEM_FMT type) const {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
 					if (r != c && abs(dt.msh[ib].dt.M(r, c) > 0.01)) {
-						ret << Format(t_("Inertia matrix of body #%d has a zero outside the diagonal, and cg == cb"), ib+1);
+						ret << F(t_("Inertia matrix of body #%d has a zero outside the diagonal, and cg == cb"), ib+1);
 						break;
 					}
 				}
@@ -909,7 +923,16 @@ void Hydro::GetDampLin(double critDamp) {
 
 	BEM::Print("\n");
 	for (int ib = 0; ib < dt.Nb; ++ib) {
-		MatrixXd C = C_mat(false, ib);
+		MatrixXd Cstiff = C_mat(false, ib);
+		MatrixXd Cmoor = CMoor_mat(false, ib);
+		MatrixXd Cadd = CAdd_mat(false, ib);
+		MatrixXd C = Eigen::MatrixXd::Zero(6, 6);
+		if (Cstiff.size() == 36)
+			C += Cstiff;
+		if (Cmoor.size() == 36)
+			C += Cmoor;
+		if (Cadd.size() == 36)
+			C += Cadd;
 		const MatrixXd &M_ = dt.msh[ib].dt.M;
 		MatrixXd avg;
 		avg.setConstant(6, 6, 0);
@@ -1036,7 +1059,7 @@ void Hydro::GetB_H(int &num) {
 	String shead = FormatF(head360[0], 1);
 	for (int i = 1; i < head360.size(); ++i) 
 		shead << ", " + FormatF(head360[i], 1);
-	BEM::Print("\n" + Format(t_("Haskind got for %d headings %s"), num, shead));
+	BEM::Print("\n" + F(t_("Haskind got for %d headings %s"), num, shead));
 
 	enum RangeType {R_0_360, R_x_360, R_0_x, R_x_x};	// There must be data from 0 to 360 deg
 	RangeType rangeType;
@@ -1217,7 +1240,7 @@ String Hydro::SpreadNegative(Function <bool(String, int)> Status) {
 							}
 						}
 						if (apan < 0) {			// Impossible to spread
-							FindAdd(errors, Format(t_("%d.%s Freq %.3f rad/s"), ib+1, BEM::strDOFtext[idf], dt.w[ifr]));
+							FindAdd(errors, F(t_("%d.%s Freq %.3f rad/s"), ib+1, BEM::strDOFtext[idf], dt.w[ifr]));
 							// Resets this dof and frequency for all panels
 							for (int i = 0; i < dt.pots_rad[ib].size(); ++i) 
 								dt.Apan(ib, i, idf, idf, ifr) = 0;
@@ -1285,19 +1308,19 @@ void Hydro::SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids
 	if (Apan.size() > 0) {
 		if (onlyDiagonal) {
 			for (int c = 0; c < 6; ++c) {
-				g.Set(Null, col++, Format(t_("A_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
+				g.Set(Null, col++, F(t_("A_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
 			}
 			for (int c = 0; c < 6; ++c) {
-				g.Set(Null, col++, Format(t_("B_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
+				g.Set(Null, col++, F(t_("B_%s_%s"), BEM::StrDOF(c), BEM::StrDOF(c)));		g.AddCol(60);
 			}
 		} else {
 			for (int r = 0; r < 6; ++r) 
 				for (int c = 0; c < 6; ++c) {
-					g.Set(Null, col++, Format(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
+					g.Set(Null, col++, F(t_("A_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
 				}
 			for (int r = 0; r < 6; ++r) 
 				for (int c = 0; c < 6; ++c) {
-					g.Set(Null, col++, Format(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
+					g.Set(Null, col++, F(t_("B_%s_%s"), BEM::StrDOF(r), BEM::StrDOF(c)));	g.AddCol(60);
 				}
 		}
 	}
@@ -1342,14 +1365,14 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 				String folder = GetFileFolder(fileName);
 				String name = GetFileTitle(fileName);
 				String ext = GetFileExt(fileName);
-				String fname = AFX(folder, Format("%s_%.3f%s", name, dt.w[ifr], ext));
+				String fname = AFX(folder, F("%s_%.3f%s", name, dt.w[ifr], ext));
 				SaveFile(fname, grid[ifr].AsString(false, false, ScatterDraw::GetDefaultCSVSeparator()));
 			}
 		} else if (type == ".xlsx") {
 			xlnt::workbook wb;
 			for (ifr = 0; ifr < dt.Nf; ++ifr) { 
 				xlnt::worksheet ws;
-				String title = Format("%.3f", dt.w[ifr]); 
+				String title = F("%.3f", dt.w[ifr]); 
 				if (ifr == 0)
 					ws = wb.active_sheet();	
 				else
@@ -1379,7 +1402,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 	if (dt.msh.IsEmpty() || dt.msh[0].dt.mesh.panels.IsEmpty())
 		throw Exc(t_("No mesh is available"));
 	if (!IsLoadedPotsRad(ib)) 
-		throw Exc(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+		throw Exc(F(t_("No radiation potentials/pressures are available for body %d"), ib+1));
 
 	String folder = GetFileFolder(file);
 	file = GetFileTitle(file);
@@ -1389,7 +1412,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 		g.SetRow({"Id", "heading"});
 		for (int ih = 0; ih < dt.Nh; ++ih) 
 			g.SetRow({ih, dt.head[ih]});
-		SaveFile(AFX(folder, Format("%s_Headings.csv", file)), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, F("%s_Headings.csv", file)), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		g.SetRow({"Id", "period"});
@@ -1397,13 +1420,13 @@ void Hydro::SaveAkselos(int ib, String file) const {
 		Sort(T);
 		for (int iT = 0; iT < dt.Nf; ++iT) 
 			g.SetRow({iT, T[iT]});
-		SaveFile(AFX(folder, Format("%s_Periods.csv", file)), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, F("%s_Periods.csv", file)), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		g.SetRow({"Id", "period"});
 		for (int idf = 0; idf < dt.Nf; ++idf) 
 			g.SetRow({idf, dt.w[idf]/2/M_PI});
-		SaveFile(AFX(folder, Format("%s_Freq.csv", file)), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, F("%s_Freq.csv", file)), g.AsString(false, false, ","));
 	}{
 		Grid g;
 		for (int r = 0; r < 6; ++r)
@@ -1416,7 +1439,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 		UVector<Value> header = {"Panel index", "Id", "Area", "centroidX", "centroidY", "centroidZ", "normalX", "normalY", "normalZ"};
 		for (int iv = 0; iv < 4; ++iv)
 			for (int idof = 0; idof < 3; ++idof)	
-				header << Format("Vertex_%d_%s", iv+1, sdof[idof]);
+				header << F("Vertex_%d_%s", iv+1, sdof[idof]);
 		g.SetRow(header);
 		for (int ip = 0; ip < dt.msh[ib].dt.mesh.panels.size(); ++ip) {
 			const Panel &p = dt.msh[ib].dt.mesh.panels[ip];
@@ -1430,7 +1453,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 			}
 			g.NextRowLF();
 		}
-		SaveFile(AFX(folder, Format("%s_Panel.csv", file)), g.AsString(false, false, ","));
+		SaveFile(AFX(folder, F("%s_Panel.csv", file)), g.AsString(false, false, ","));
 	}
 	
 	MultiDimMatrixRowMajor<std::complex<double>> rad(6, dt.Nf, dt.msh[ib].dt.mesh.panels.size());
@@ -1450,7 +1473,7 @@ void Hydro::SaveAkselos(int ib, String file) const {
 	nrad.Set(rad);
 	Npy &ndif = npz.Add("diffraction");
 	ndif.Set(dif);
-	npz.Save(AFX(folder, Format("%s_Pressure.npz", file)));
+	npz.Save(AFX(folder, F("%s_Pressure.npz", file)));
 }
 
 void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase) {
@@ -1479,7 +1502,7 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 		idpan[idMin] << ip;									// It is stored for each Body in idms what is the closest panel in this Hydro
 		maxalld = max(maxalld, mind);
 	}
-	Bem().Print(Format("\nWorst mapping distance is %d", maxalld));
+	Bem().Print(F("\nWorst mapping distance is %d", maxalld));
 	
 	// The hydro coefficients are generated for each Body in idms
 	// Based on the properties of the closest list of panels from this Hydro
@@ -1544,7 +1567,7 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 			hy.dt.rho = Bem().rho;
 			hy.dt.g = Bem().g;
 			hy.dt.solver = dt.solver;
-			hy.dt.name = Format("%s mapped", Bem().surfs[idms[i]].dt.name);
+			hy.dt.name = F("%s mapped", Bem().surfs[idms[i]].dt.name);
 			hy.dt.len = 1;
 			hy.dt.dimen = true;
 			hy.dt.h = dt.h;
@@ -1664,7 +1687,7 @@ void Hydro::AddWave(int ib, double dx, double dy, double g) {
 	
 	//String error = AfterLoad();
 	//if (!error.IsEmpty())
-	//	throw Exc(Format(t_("Problem translating global origin: '%s'\n%s"), error));	
+	//	throw Exc(F(t_("Problem translating global origin: '%s'\n%s"), error));	
 }
 
 void Hydro::TranslateRadiationPotentials(const MatrixXd &delta) {
@@ -2028,7 +2051,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 	
 	String error = AfterLoad();
 	if (!error.IsEmpty())
-		throw Exc(Format(t_("Problem translating model: '%s'\n%s"), error));	
+		throw Exc(F(t_("Problem translating model: '%s'\n%s"), error));	
 }
 
 /*
@@ -2231,7 +2254,7 @@ void Hydro::MultiplyDOF(double factor, const UVector<int> &_idDOF, bool a, bool 
 	
 	String error = AfterLoad();
 	if (!error.IsEmpty())
-		throw Exc(Format(t_("Problem reseting DOF: '%s'\n%s"), error));
+		throw Exc(F(t_("Problem reseting DOF: '%s'\n%s"), error));
 }
 
 void Hydro::SwapDOF(int ib1, int ib2) {
@@ -2337,7 +2360,7 @@ void Hydro::SwapDOF(int ib1, int idof1, int ib2, int idof2) {
 		
 	String error = AfterLoad();
 	if (!error.IsEmpty())
-		throw Exc(Format(t_("Problem swaping DOF: '%s'\n%s"), error));	
+		throw Exc(F(t_("Problem swaping DOF: '%s'\n%s"), error));	
 }
 
 void Hydro::DeleteBodies(const UVector<int> &idBod) {
@@ -3036,7 +3059,7 @@ void Hydro::Symmetrize() {
 	
 	String error = AfterLoad();
 	if (!error.IsEmpty())
-		throw Exc(Format(t_("Problem symmetrizing data: '%s'\n%s"), error));	
+		throw Exc(F(t_("Problem symmetrizing data: '%s'\n%s"), error));	
 	
 }
 
@@ -3139,13 +3162,13 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 	
 		if (ext == ".cal" || ext == ".tec" || ext == ".inf") 
 			ret = static_cast<Nemoh&>(hy).Load(file, Status);
-		else if (S(".out.hdf.mcn").Find(ext) >= 0) 
+		else if (F(".out.hdf.mcn").Find(ext) >= 0) 
 			ret = static_cast<Wamit&>(hy).Load(file, false, 0, Status);
 		else if (ext == ".in") 
 			ret = static_cast<Hams&>(hy).Load(file, false, Status);
 		else if (ext == ".dat" || ext == ".fst") 
 			ret = static_cast<Fast&>(hy).Load(file, Status);
-		else if (S(".1.2.3.3sc.3fk.7.8.9.hst.4.12s.12d.frc.pot.mmx.5p.6p").Find(ext) >= 0) {
+		else if (F(".1.2.3.3sc.3fk.7.8.9.hst.4.12s.12d.frc.pot.mmx.5p.6p").Find(ext) >= 0) {
 			String controlfile;
 			bool ishams = IsHAMS(file, controlfile);
 			if (!controlfile.IsEmpty())
@@ -3172,11 +3195,11 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 		else if (ext == ".owd") 
 			ret = t_("OrcaWAVE .owd binary format is not supported.\nHowever OrcaFLEX .yml is supported.\nTo get it, load the .owd file in OrcaFlex and save it as .yml");
 		else 
-			ret = Format(t_("Unknown BEM file extension in '%s'"), file);	
+			ret = F(t_("Unknown BEM file extension in '%s'"), file);	
 	}
 	if (!ret.IsEmpty()) {
 		hydros.SetCount(hydros.size() - num);
-		throw Exc(ret);//Format(t_("Problem loading '%s'\n%s"), file, error));	
+		throw Exc(ret);//F(t_("Problem loading '%s'\n%s"), file, error));	
 	}
 	
 	for (int i = hydros.size() - num; i < hydros.size(); ++i) {
@@ -3186,7 +3209,7 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 		if (!ret.IsEmpty()) {
 			//String error = RemoveAccents(ret);
 			hydros.SetCount(hydros.size() - num);
-			throw Exc(Format(t_("Problem processing '%s'\n%s"), file, ret));	
+			throw Exc(F(t_("Problem processing '%s'\n%s"), file, ret));	
 		}
 		hy.IncrementIdCount();
 	}

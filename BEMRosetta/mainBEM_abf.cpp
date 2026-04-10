@@ -57,9 +57,9 @@ bool MainABForce::Load(const UVector<int> &ids, int ih) {
 						if (plots[idf][jdf].Load(hydros, mbm, ids)) {
 							nloaded++;
 							if (idf != jdf)
-								tab.Add(plots[idf][jdf].SizePos(), Format(t_("%s"), BEM::StrBDOF2(idf, jdf, false)));
+								tab.Add(plots[idf][jdf].SizePos(), F(t_("%s"), BEM::StrBDOF2(idf, jdf, false)));
 							else
-								tab.Add(plots[idf][jdf].SizePos(), Format(t_("%s"), BEM::StrBDOF(idf, false)));
+								tab.Add(plots[idf][jdf].SizePos(), F(t_("%s"), BEM::StrBDOF(idf, false)));
 						}
 					}
 				}
@@ -123,7 +123,7 @@ void MainABForce::UpdateHead(const UVector<int> &loaded) {
 		tab.Reset();
 		for (int i = 0; i < loaded.size(); ++i) {
 			int idf = loaded[i];
-			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false)));//, bem.headAll[ih/*bem.orderHeadAll[ih]*/]));
+			tab.Add(plots[0][idf].SizePos(), F("%s", BEM::StrBDOF(idf, false)));//, bem.headAll[ih/*bem.orderHeadAll[ih]*/]));
 		}
 	}
 	tab.Set(it);
@@ -135,7 +135,7 @@ void MainABForce::UpdateHeadMD() {
 		TempAssign<bool> _isFilling(isFilling, true);
 		tab.Reset();
 		for (int idf = 0; idf < 6*Bem().Nb; ++idf) 
-			tab.Add(plots[0][idf].SizePos(), Format("%s", BEM::StrBDOF(idf, false)));///*, h.real(), h.imag())*/);
+			tab.Add(plots[0][idf].SizePos(), F("%s", BEM::StrBDOF(idf, false)));///*, h.real(), h.imag())*/);
 	}
 	tab.Set(it);
 }

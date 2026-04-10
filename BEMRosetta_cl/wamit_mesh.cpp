@@ -7,7 +7,7 @@
 String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
 	try {
 		String line;
@@ -103,11 +103,10 @@ String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
-		return t_(Format("Impossible to open '%s'", fileName));
+		return t_(F("Impossible to open '%s'", fileName));
 	
-	Body &msh = _mesh.Add();
-	msh.dt.name = GetFileName(fileName);
-	msh.dt.SetCode(Body::WAMIT_GDF);
+	Body &body = _mesh.Add();
+	body.dt.name = GetFileName(fileName);
 	
 	try {
 		String line;
@@ -132,8 +131,8 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 			if (g < 0)
 				return t_("Wrong gravity in .gdf file");
 		} else {
-			if (f.GetInt(1) != 0)
-				return t_("Only ILOWHICSF=0 is supported in .csf file");
+			if (f.GetInt(1) > 1)
+				return t_("Only ILOWHICSF=0/1 is supported in .csf file");
 		}
 		line = in.GetLine();	
 		f.Load(line);
@@ -143,62 +142,110 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		line = in.GetLine();	
 		f.Load(line);
 		int nPatches = f.GetInt(0);
-		if (nPatches < 1)
-			return t_("Number of patches not found in .gdf file");
+		
+		int igdef = 0;
 		
 		if (f.size() >= 2) {
-			int igdef = f.GetInt_nothrow(1);
+			igdef = f.GetInt_nothrow(1);
 			if (!IsNull(igdef)) {
-				if (igdef == 0)
+				if (igdef == 0 || igdef == 1)
 					;
-				else if (igdef == 1)
-					return t_(".gdf files represented by B-splines (IGDEF = 1) are not supported");
 				else if (igdef == 2)
 					return t_(".gdf files represented by MultiSurf .ms2 files (IGDEF = 2) are not supported");
 				else
 					return t_(".gdf files represented by a special subrutine (IGDEF < 0  or > 2) are not supported");
-			}
+			} else
+				igdef = 0;		// There was text
 		}
+		if (nPatches < 1)
+			return t_("Number of patches not found or zero in .gdf file");
+					
+		body.dt.SetCode(igdef == 0 ? Body::WAMIT_GDF : Body::WAMIT_GDF2);
 		
-		while(!in.IsEof()) {
+		if (igdef == 0) {
+			Surface &mesh = body.dt.mesh;
 			int ids[4];
 			bool npand = false;
-			for (int i = 0; i < 4; ++i) {
-				line = in.GetLine();	
-				f.Load(line);
-				
-				if (f.GetText(1) == "NPAND") { // Dipoles loaded as normal panels
-					npand = true;
-					break;
-				}
-				double x = f.GetDouble(0)*len;	
-				double y = f.GetDouble(1)*len;	
-				double z = f.GetDouble(2)*len;	
-				
-				bool found = false;
-				for (int iin = 0; iin < msh.dt.mesh.nodes.size(); ++iin) {
-					Point3D &node = msh.dt.mesh.nodes[iin];
-					if (x == node.x && y == node.y && z == node.z) {
-						ids[i] = iin;
-						found = true;
+			while(!in.IsEof()) {
+				for (int i = 0; i < 4; ++i) {
+					line = in.GetLine();	
+					f.Load(line);
+					
+					if (f.GetText(1) == "NPAND") { // Dipoles loaded as normal panels
+						npand = true;
 						break;
 					}
+					double x = f.GetDouble(0)*len;	
+					double y = f.GetDouble(1)*len;	
+					double z = f.GetDouble(2)*len;	
+					
+					bool found = false;
+					for (int iin = 0; iin < mesh.nodes.size(); ++iin) {
+						Point3D &node = mesh.nodes[iin];
+						if (x == node.x && y == node.y && z == node.z) {
+							ids[i] = iin;
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						Point3D &node = mesh.nodes.Add();
+						node.x = x;
+						node.y = y;
+						node.z = z;
+						ids[i] = mesh.nodes.size() - 1;
+					}
 				}
-				if (!found) {
-					Point3D &node = msh.dt.mesh.nodes.Add();
-					node.x = x;
-					node.y = y;
-					node.z = z;
-					ids[i] = msh.dt.mesh.nodes.size() - 1;
+				if (!npand) {
+					Panel &panel = mesh.panels.Add();
+					for (int i = 0; i < 4; ++i)
+						panel.id[i] = ids[i];
 				}
+				if (mesh.panels.size() == nPatches)
+					break;
+			} 
+		} else if (igdef == 1) {
+			SurfaceBSpline &spline = body.dt.spline;
+			
+			while(!in.IsEof()) {
+				BSplinePatch patch;
+				
+				f.GetLine_discard_empty();
+				patch.nug = f.GetInt(0);
+				patch.nvg = f.GetInt(1);
+				f.GetLine_discard_empty();
+				patch.kug = f.GetInt(0);
+				patch.kvg = f.GetInt(1);
+				
+				int nua = patch.nug + 2*patch.kug - 1;
+				int nva = patch.nvg + 2*patch.kvg - 1;
+				int nb = patch.GetNUBasis() * patch.GetNVBasis();
+				
+				patch.uKnots.SetCount(nua);
+				for (int read = 0; read < nua;) {
+					f.GetLine_discard_empty();
+					for (int iline = 0; iline < f.size() && read < nua; ++iline)
+						patch.uKnots[read++] = f.GetDouble(iline);
+				}
+				patch.vKnots.SetCount(nva);
+				for (int read = 0; read < nva;) {
+					f.GetLine_discard_empty();
+					for (int iline = 0; iline < f.size() && read < nva; ++iline)
+						patch.vKnots[read++] = f.GetDouble(iline);
+				}
+				patch.controlPoints.SetCount(nb);
+				for (int j = 0; j < nb; j++) {
+					f.GetLine_discard_empty();
+					double x = f.GetDouble(0);
+					double y = f.GetDouble(1);
+					double z = f.GetDouble(2);
+					patch.controlPoints[j] = Point3D(x, y, z);
+				}
+				spline.Add(pick(patch));
+				
+				if (spline.patches.size() == nPatches)
+					break;
 			}
-			if (!npand) {
-				Panel &panel = msh.dt.mesh.panels.Add();
-				for (int i = 0; i < 4; ++i)
-					panel.id[i] = ids[i];
-			}
-			if (msh.dt.mesh.panels.size() == nPatches)
-				break;
 		}
 		//if (mesh.panels.size() != nPatches)
 		//	return t_("Wrong number of patches in .gdf file");
@@ -210,25 +257,28 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 }
 
 void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf) {
+	if (iscsf)
+		ForceExt(fileName, ".csf");
+	
 	FileOut out(fileName);
 	if (!out.IsOpen())
-		throw Exc(Format("Impossible to open '%s'", fileName));	
+		throw Exc(F("Impossible to open '%s'", fileName));	
 	
 	const UVector<Panel> &panels = surf.panels;
 	const UVector<Point3D> &nodes = surf.nodes;
 	
 	out << "BEMRosetta GDF mesh file export\n";
 	if (!iscsf)
-		out << Format("  %12d   %12f 	ULEN GRAV\n", 1, g);
+		out << F("  %12d   %12f 	ULEN GRAV\n", 1, g);
 	else
 		out << "  ILOWHICSF=0\n";
-	out << Format("  %12d   %12d 	ISX  ISY\n", y0z ? 1 : 0, x0z ? 1 : 0);
-	out << Format("  %12d\n", panels.size());
+	out << F("  %12d   %12d 	ISX  ISY\n", y0z ? 1 : 0, x0z ? 1 : 0);
+	out << F("  %12d\n", panels.size());
 	for (int ip = 0; ip < panels.size(); ++ip) {
 		for (int i = 0; i < 4; ++i) {
 			int id = panels[ip].id[i];
 			const Point3D &p = nodes[id]; 
-			out << Format("  % 014.7E   %0 14.7E   % 014.7E\n", p.x, p.y, p.z);
+			out << F("  % 014.7E   %0 14.7E   % 014.7E\n", p.x, p.y, p.z);
 		}
 	}	 
 }

@@ -156,6 +156,9 @@
 #define dtIntegerIndex 4
 #define dtBoolean 5
 
+struct TORCAHANDLEImpl;
+typedef struct TORCAHANDLEImpl *THHANDLE;
+
 typedef double TVector[3];
 typedef double TVector2[2];
 typedef double TVector6[6];
@@ -225,7 +228,7 @@ typedef struct {
 
 typedef wchar_t TObjectName[50];
 typedef struct {
-    HINSTANCE ObjectHandle;
+    THHANDLE ObjectHandle;
     int ObjectType;
     TObjectName ObjectName;
 } TObjectInfo;
@@ -257,12 +260,12 @@ typedef struct {
 	LPCWSTR lpVarName;
 	LPCWSTR lpVarUnits;
 	LPCWSTR lpFullName;
-	HINSTANCE ObjectHandle;
+	THHANDLE ObjectHandle;
 } TVarInfo;
 
-typedef void (__stdcall *TProgressHandlerProc)(HINSTANCE, LPCWSTR, int *);
-typedef void (__stdcall *TSimulationHandlerProc)(HINSTANCE handle, double SimulationTime, double SimulationStart, double SimulationStop, int *);
-typedef void (__stdcall *TEnumerateObjectsProc)(HINSTANCE handle, const TObjectInfo*);
+typedef void (__stdcall *TProgressHandlerProc)(THHANDLE, LPCWSTR, int *);
+typedef void (__stdcall *TSimulationHandlerProc)(THHANDLE handle, double SimulationTime, double SimulationStart, double SimulationStop, int *);
+typedef void (__stdcall *TEnumerateObjectsProc)(THHANDLE handle, const TObjectInfo*);
 typedef void (__stdcall *TEnumerateVarsProc)(const TVarInfo *lpVarInfo);
 typedef void (__stdcall *TLicenceNotFoundHandlerProc)(int, BOOL*, INT_PTR*);
 
@@ -272,6 +275,7 @@ typedef struct {
 	int AutoSaveIntervalMinutes;
 	LPCTSTR AutoSaveFileName;
 } TRunSimulationParameters;
+
 typedef struct {
 	int PeriodNum;
 	int Unused;
@@ -295,20 +299,20 @@ public:
 	
 	bool InitDll(String _dllFile);
 	
-	int GetDiffractionOutput(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput);
+	int GetDiffractionOutput(THHANDLE handle, int OutputType, int *lpOutputSize, void *lpOutput);
 	
 	bool InitNewest();
 	bool InitFile(String filename);
 	
 	bool IsLoaded()	{return dll;}
 
-	static void __stdcall DiffractionHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel);
-	static void __stdcall StaticsHandlerProc(HINSTANCE handle, LPCWSTR lpProgress, BOOL *lpCancel);
+	static void __stdcall DiffractionHandlerProc(THHANDLE handle, LPCWSTR lpProgress, BOOL *lpCancel);
+	static void __stdcall StaticsHandlerProc(THHANDLE handle, LPCWSTR lpProgress, BOOL *lpCancel);
 	static void __stdcall LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnection, INT_PTR *lpData);
 	
 	static int deltaLogSimulation;
 	
-	static void __stdcall SimulationHandlerProc(HINSTANCE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel);
+	static void __stdcall SimulationHandlerProc(THHANDLE handle, double simulationTime, double simulationStart, double simulationStop, BOOL *lpCancel);
 
 	static VectorMap<int, String> objectTypes;
 	static VectorMap<int, String> state;
@@ -317,19 +321,19 @@ public:
 		int type;
 		String typeName;
 		String name;
-		HINSTANCE handle;
+		THHANDLE handle;
 	};
 	
 	static UVector<int> objTypes;
 	static UVector<String> objNames;
-	static UVector<HINSTANCE> objHandles;
+	static UVector<THHANDLE> objHandles;
 	
-	static void __stdcall EnumerateObjectsProc(HINSTANCE handle, const TObjectInfo *info);
+	static void __stdcall EnumerateObjectsProc(THHANDLE handle, const TObjectInfo *info);
 	
 	static int actualBlade;
 	static UVector<int> varIDs, varBlades;
 	static UVector<String> varNames, varFullNames, varUnits;
-
+	
 	static void __stdcall EnumerateVarsProc(const TVarInfo *lpVarInfo);
 	
 	enum OrcaAvailable {AVAILABLE = 1, NOT_AVAILABLE = -1, NOT_INSTALLED = -2};
@@ -337,7 +341,7 @@ public:
 		if (!dll && !InitNewest())
 			return NOT_INSTALLED;
 			
-		HINSTANCE test;
+		THHANDLE test;
 		int status;	
 		CreateDiffraction(&test, &status);
 		if (status != 0)
@@ -372,7 +376,7 @@ public:
 			throwError("LoadFlex LoadData");
 			
 		fileVersion = FileVersion(owryml);
-		BEM::Print(Format("\nFile version: %s", fileVersion));		
+		BEM::Print(F("\nFile version: %s", fileVersion));		
 	}
 	
 	void SaveFlex(String owryml) {
@@ -490,7 +494,7 @@ public:
 			throwError("GetFlexSimObjects");	
 	};
 	
-	void GetFlexSimVariables(HINSTANCE objHandle, int objType, String name, UVector<int> &IDs, UVector<String> &names, UVector<String> &fullNames, UVector<String> &units) {
+	void GetFlexSimVariables(THHANDLE objHandle, int objType, String name, UVector<int> &IDs, UVector<String> &names, UVector<String> &fullNames, UVector<String> &units) {
 		if (!flex) 
 			throwError("GetFlexSimVariables");	
 		
@@ -513,7 +517,7 @@ public:
 		if (status == stInvalidHandle)
 			return;
 		if (status != 0) 
-			throwError(Format("GetFlexSimVariables.EnumerateVars2 (type: %d name: %s)", objType, name));		
+			throwError(F("GetFlexSimVariables.EnumerateVars2 (type: %d name: %s)", objType, name));		
 		
 		if (objType == otTurbine) {		// Adds the parameters related with each blade
 			int from = varNames.size();
@@ -523,8 +527,8 @@ public:
 				if (status != 0)
 					throwError("GetFlexSimVariables.EnumerateVars2 Turbine");		
 				for (int i = from; i < varNames.size(); ++i) {
-					varNames[i] = varNames[i] + Format("|Blade|%d", ib);
-					varFullNames[i] = varFullNames[i] + Format("|Blade|%d", ib);
+					varNames[i] = varNames[i] + F("|Blade|%d", ib);
+					varFullNames[i] = varFullNames[i] + F("|Blade|%d", ib);
 				}
 				from = varNames.size();
 			}
@@ -545,13 +549,13 @@ public:
 				UVector<String> vnames, fullNames, units;
 				GetFlexSimVariables(objHandles[i], objTypes[i], objNames[i], IDs, vnames, fullNames, units);
 				for (const String &n : vnames)
-					ret << Format("%s|%s", objNames[i], n);
+					ret << F("%s|%s", objNames[i], n);
 			}
 		}
 		return ret;
 	}
 
-	void GetFlexSimVar(HINSTANCE objHandle, int objType, int varId, const Point3D &centre,
+	void GetFlexSimVar(THHANDLE objHandle, int objType, int varId, const Point3D &centre,
 					UVector<String> &linePoint, VectorXd &data) {
 		if (!flex) 
 			throwError("GetFlexSimVar");	
@@ -591,7 +595,7 @@ public:
 					throwError("GetFlexSimVar Node number not found");
 				int num = ScanInt(linePoint[1]);
 				if (IsNull(num) || num < 0 || num > 10000)
-					throwError(Format("GetFlexSimVar Invalid node number %s", linePoint[1]));
+					throwError(F("GetFlexSimVar Invalid node number %s", linePoint[1]));
 				objectExtra.NodeNum = num;
 			} else if (linePoint[0] == "ArcLength") {
 				objectExtra.LinePoint = ptArcLength;
@@ -599,17 +603,17 @@ public:
 					throwError("GetFlexSimVar Arc length not found");
 				double len = ScanDouble(linePoint[1]);
 				if (IsNull(len) || len < 0 || len > 10000)
-					throwError(Format("GetFlexSimVar Invalid arc length %s", linePoint[1]));
+					throwError(F("GetFlexSimVar Invalid arc length %s", linePoint[1]));
 				objectExtra.ArcLength = len;
 			} else if (linePoint[0] == "Blade") {	
 				if (linePoint.size() != 2)
 					throwError("GetFlexSimVar Blade number not found");
 				int num = ScanInt(linePoint[1]);
 				if (IsNull(num) || num < 1 || num > 3)
-					throwError(Format("GetFlexSimVar Invalid blade number %s", linePoint[1]));
+					throwError(F("GetFlexSimVar Invalid blade number %s", linePoint[1]));
 				objectExtra.BladeIndex = num;
 			} else
-				throwError(Format("GetFlexSimVar Invalid option %s", linePoint[0]));
+				throwError(F("GetFlexSimVar Invalid option %s", linePoint[0]));
 		}
 		
 		data.resize(numS);
@@ -621,18 +625,18 @@ public:
 	void GetFlexSimVar(String name, const Point3D &centre, String &unit, int &objType, VectorXd &data) {
 		UVector<String> sp = Split(name, "|");
 		if (sp.size() < 2 || sp.size() > 4)
-			throwError(Format("GetFlexSimVar incorrect varName %s", name));
+			throwError(F("GetFlexSimVar incorrect varName %s", name));
 		
 		String object = sp[0];
 		String var = sp[1];
 		sp.Remove(0, 2);
 		UVector<String> &linePoint = sp;
 		if (linePoint.size() == 2 && linePoint[0] == "Blade")
-			var << Format("|Blade|%s", linePoint[1]);
+			var << F("|Blade|%s", linePoint[1]);
 		
 		GetFlexSimObjects();
 		
-		HINSTANCE objHandle = 0;
+		THHANDLE objHandle = 0;
 		for (int i = 0; i < objNames.size(); ++i) {
 			if (objNames[i] == object) {
 				objHandle = objHandles[i];
@@ -641,7 +645,7 @@ public:
 			}
 		}
 		if (objHandle == 0)
-			throwError(Format("GetFlexSimVar object '%s' not found", object));
+			throwError(F("GetFlexSimVar object '%s' not found", object));
 		
 		int varId = -1;
 		UVector<int> IDs;
@@ -655,7 +659,7 @@ public:
 			}
 		}
 		if (varId == -1)
-			throwError(Format("GetFlexSimVar variable '%s' not found", name));
+			throwError(F("GetFlexSimVar variable '%s' not found", name));
 		
 		GetFlexSimVar(objHandle, objType, varId, centre, linePoint, data); 
 	}
@@ -709,7 +713,7 @@ public:
 			throwError("LoadWave.SaveDiffractionData");
 		
 		fileVersion = FileVersion(owdyml);
-		BEM::Print(Format("\nFile version: %s", fileVersion));	
+		BEM::Print(F("\nFile version: %s", fileVersion));	
 	}
 		
 	void RunWave() {
@@ -732,6 +736,7 @@ public:
 	void LoadWaveResults(String owr) {
 		if (!InitFile(owr))
 			throw Exc("OrcaFlex not installed or OrcFxAPI.dll not found");
+		
 		if (!wave) {
 			int status;
 			CreateDiffraction(&wave, &status);
@@ -764,7 +769,7 @@ public:
 			throw Exc(errorStr);
 		
 		fileVersion = FileVersion(owr);
-		BEM::Print(Format("\nFile version: %s", fileVersion));
+		BEM::Print(F("\nFile version: %s", fileVersion));
 	}
 
 	void SaveWaveResults(String owryml) {
@@ -783,7 +788,7 @@ public:
 			throwError("SaveDiffractionResults");		
 		
 		if (GetFileExt(owryml) == ".yml") {
-			HINSTANCE temp;
+			THHANDLE temp;
 			
 			CreateModel(&temp, 0, &status);
 			if (status != 0)
@@ -874,13 +879,13 @@ public:
 			units[i] = unit;
 			datas[i] = pick(data);
 			if (objType ==  otEnvironment || objType == otVessel || objType == ot6DBuoy)
-				parameters[i] << Format("(%s%s%s%s%s)", 
+				parameters[i] << F("(%s%s%s%s%s)", 
 						SetDec(FDS(centres[i].x, 5)), decParam, SetDec(FDS(centres[i].y, 5)), decParam, SetDec(FDS(centres[i].z, 5))); 
 		}
 		
 		FileOut out(file);
 		if (!out.IsOpen())
-			throw Exc(Format(t_("Impossible to open '%s'"), file));
+			throw Exc(F(t_("Impossible to open '%s'"), file));
 		
 		for (int i = 0; i < parameters.size(); ++i) {
 			if (i > 0)
@@ -925,7 +930,8 @@ private:
 	String dllFile;
 	int numTries = 10;
 	
-	HINSTANCE wave = 0, flex = 0;
+	THHANDLE wave = 0;
+	THHANDLE flex = 0;
 	
 	String dllVersion;
 	String fileVersion;
@@ -937,51 +943,48 @@ private:
 	static double GetVersionNumber(String version);
 	bool InitVersion(String version);
 		
-	void (*CreateModel)(HINSTANCE *handle, HWND hCaller, int *status);
-	void (*DestroyModel)(HINSTANCE handle, int *status);
-	void (*LoadData)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*SaveData)(HINSTANCE handle, LPCWSTR wcs, int *status);
+	void (*CreateModel)(THHANDLE *handle, HWND hCaller, int *status);
+	void (*DestroyModel)(THHANDLE handle, int *status);
+	void (*LoadData)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*SaveData)(THHANDLE handle, LPCWSTR wcs, int *status);
 	
-	void (*CreateDiffraction)(HINSTANCE *handle, int *status);
-	void (*DestroyDiffraction)(HINSTANCE handle, int *status);
-	void (*LoadDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*SaveDiffractionData)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*CalculateDiffraction)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
-	void (*LoadDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*SaveDiffractionResults)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*TranslateDiffractionOutput)(HINSTANCE handle, int OutputType, int OutputSize, void *lpOutput, const TVector *lpReportingOrigins, int *status);
-	void (*RunSimulation)(HINSTANCE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *par, int *status);
-	void (*CalculateStatics)(HINSTANCE handle, TProgressHandlerProc proc, int *status);
-	void (*LoadSimulation)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*SaveSimulation)(HINSTANCE handle, LPCWSTR wcs, int *status);
-	void (*GetTimeHistory2)(HINSTANCE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status);	
-	void (*GetVarID)(HINSTANCE handle, LPCWSTR wcs, int *lpVarID, int *status);
-	int  (*GetNumOfSamples)(HINSTANCE handle, const TPeriod *lpPeriod, int *status);
-	void (*EnumerateObjects)(HINSTANCE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status);
-	void (*EnumerateVars2)(HINSTANCE handle, const TObjectExtra2 *lpObjectextra, int ResultType, TEnumerateVarsProc EnumerateVarsProc,
+	void (*CreateDiffraction)(THHANDLE *handle, int *status);
+	void (*DestroyDiffraction)(THHANDLE handle, int *status);
+	void (*LoadDiffractionData)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*SaveDiffractionData)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*CalculateDiffraction)(THHANDLE handle, TProgressHandlerProc proc, int *status);
+	void (*LoadDiffractionResults)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*SaveDiffractionResults)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*TranslateDiffractionOutput)(THHANDLE handle, int OutputType, int OutputSize, void *lpOutput, const TVector *lpReportingOrigins, int *status);
+	void (*RunSimulation)(THHANDLE handle, TSimulationHandlerProc proc, const TRunSimulationParameters *par, int *status);
+	void (*CalculateStatics)(THHANDLE handle, TProgressHandlerProc proc, int *status);
+	void (*LoadSimulation)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*SaveSimulation)(THHANDLE handle, LPCWSTR wcs, int *status);
+	void (*GetTimeHistory2)(THHANDLE handle, void *nil, const TPeriod *period, int varID, double *lpValues, int *status);	
+	void (*GetVarID)(THHANDLE handle, LPCWSTR wcs, int *lpVarID, int *status);
+	int  (*GetNumOfSamples)(THHANDLE handle, const TPeriod *lpPeriod, int *status);
+	void (*EnumerateObjects)(THHANDLE handle, TEnumerateObjectsProc proc, int *lpNumOfObjects, int *status);
+	void (*EnumerateVars2)(THHANDLE handle, const TObjectExtra2 *lpObjectextra, int ResultType, TEnumerateVarsProc EnumerateVarsProc,
 					int *lpNumberOfVars, int *status);
-	void (*ObjectCalled)(HINSTANCE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status);
-	void (*CGetModelState)(HINSTANCE handle, int *lpModelState, int *status);
+	void (*ObjectCalled)(THHANDLE handle, LPCWSTR lpObjectName, TObjectInfo *lpObjectInfo, int *status);
+	void (*CGetModelState)(THHANDLE handle, int *lpModelState, int *status);
 	
-	void (*SetModelThreadCount)(HINSTANCE handle, int threadCount, int *status);
-	int (*GetModelThreadCount)(HINSTANCE handle, int *status);
+	void (*SetModelThreadCount)(THHANDLE handle, int threadCount, int *status);
+	int (*GetModelThreadCount)(THHANDLE handle, int *status);
 	
-	void (*GetDiffractionOutput0)(HINSTANCE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus);
+	void (*GetDiffractionOutput0)(THHANDLE handle, int OutputType, int *lpOutputSize, void *lpOutput, int *lpStatus);
 	
-	void (*GetDataType_)(HINSTANCE handle, LPCWSTR name, int *lpType, int *status);
-	void (*GetDataRowCount_)(HINSTANCE handle, LPCWSTR name, int *lpCount, int *status);
-	void (*GetDataInteger)(HINSTANCE handle, LPCWSTR name, int index, int *lpData, int *status);
-	void (*GetDataDouble)(HINSTANCE handle, LPCWSTR name, int index, double *lpData, int *status);
-	int (*GetDataString)(HINSTANCE handle, LPCWSTR name, int index, LPWSTR lpData, int *status);
+	void (*GetDataType_)(THHANDLE handle, LPCWSTR name, int *lpType, int *status);
+	void (*GetDataRowCount_)(THHANDLE handle, LPCWSTR name, int *lpCount, int *status);
+	void (*GetDataInteger)(THHANDLE handle, LPCWSTR name, int index, int *lpData, int *status);
+	void (*GetDataDouble)(THHANDLE handle, LPCWSTR name, int index, double *lpData, int *status);
+	int (*GetDataString)(THHANDLE handle, LPCWSTR name, int index, LPWSTR lpData, int *status);
 	
-	int GetDataType(HINSTANCE handle, const wchar_t *name);
-	int GetDataRowCount(HINSTANCE handle, const wchar_t *name);
-	int GetInt(HINSTANCE handle, const wchar_t *name, int id = -1);
-	double GetDouble(HINSTANCE handle, const wchar_t *name, int id = -1);
-	String GetString(HINSTANCE handle, const wchar_t *name, int id = -1);
-	
-	//void (*GetDLLVersion)(TDLLVersionW *lpRequiredDLLVersion, TDLLVersionW *lpDLLVersion, int *lpOK, int *status);
-	//int (*GetFileCreatorVersion)(LPCWSTR name, LPWSTR version, int *status);
+	int GetDataType(THHANDLE handle, const wchar_t *name);
+	int GetDataRowCount(THHANDLE handle, const wchar_t *name);
+	int GetInt(THHANDLE handle, const wchar_t *name, int id = -1);
+	double GetDouble(THHANDLE handle, const wchar_t *name, int id = -1);
+	String GetString(THHANDLE handle, const wchar_t *name, int id = -1);
 	
 	template <class T>
 	void LoadDiffractionBodyHydrostatic(Hydro &hy, int sz, const OrcaFactors &factor, const Point3D &c0) {
@@ -1054,11 +1057,13 @@ private:
 
 	void (*RegisterLicenceNotFoundHandler)(TLicenceNotFoundHandlerProc handler, int *lpStatus);
 	
-	int (*GetLastErrorString)(LPCWSTR wcs);
+	int (*GetLastErrorString)(LPCWSTR wcs) = nullptr;
 	
-	void (*FinaliseLibrary)(int *status);
+	void (*FinaliseLibrary)(int *status) = nullptr;
 	
 	String GetErrorString() {
+		if (!GetLastErrorString)
+			return "";
 		int len = GetLastErrorString(NULL);
 		Buffer<wchar_t> rw(len);
 		LPWSTR wcs = (LPWSTR)rw.begin();
@@ -1070,7 +1075,7 @@ private:
 		String str = errorString;
 		if (errorString == "")
 			str = GetErrorString();
-		throw Exc(Format("'%s': %s\n(BEMRosetta %s. Orca %s. File %s)", where, str, BEMRVersion(), DLLVersion(), FileVersion()));
+		throw Exc(F("'%s': %s\n(BEMRosetta %s. Orca %s. File %s)", where, str, BEMRVersion(), DLLVersion(), FileVersion()));
 	}
 #endif
 };

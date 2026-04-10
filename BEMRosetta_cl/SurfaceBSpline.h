@@ -5,7 +5,6 @@ namespace Upp {
 	
 class BSplinePatch : Moveable<BSplinePatch> {
 public:
-	int id;
 	int nug, nvg;
 	int kug, kvg;
 	UVector<double> uKnots, vKnots;
@@ -13,11 +12,10 @@ public:
 
 	BSplinePatch() {}
 	BSplinePatch(const BSplinePatch &patch, int)		{Copy(patch);}
-	BSplinePatch(const BSplinePatch &patch)			{Copy(patch);}
-	BSplinePatch& operator=(const BSplinePatch &patch) {Copy(patch); return *this;};
+	BSplinePatch(const BSplinePatch &patch)				{Copy(patch);}
+	BSplinePatch& operator=(const BSplinePatch &patch) 	{Copy(patch); return *this;};
 	BSplinePatch& operator=(BSplinePatch&&) noexcept = default;
 	void Copy(const BSplinePatch &patch) {
-		id = patch.id;
 		nug = patch.nug;
 		nvg = patch.nvg;
 		kug = patch.kug;
@@ -26,15 +24,24 @@ public:
 		vKnots = clone(patch.vKnots);
 		controlPoints = clone(patch.controlPoints);
 	}
+	BSplinePatch(BSplinePatch &&patch) noexcept {
+		nug = patch.nug;
+		nvg = patch.nvg;
+		kug = patch.kug;
+		kvg = patch.kvg;
+		uKnots = pick(patch.uKnots);
+		vKnots = pick(patch.vKnots);
+		controlPoints = pick(patch.controlPoints);		
+	}
 		
-	int GetNUBasis() const { return nug + kug - 1; }
-	int GetNVBasis() const { return nvg + kvg - 1; }
-	double GetUMin() const { return uKnots[kug - 1]; }
-	double GetUMax() const { return uKnots[uKnots.GetCount() - kug]; }
-	double GetVMin() const { return vKnots[kvg - 1]; }
-	double GetVMax() const { return vKnots[vKnots.GetCount() - kvg]; }
-	int GetUDegree() const { return kug - 1; }
-	int GetVDegree() const { return kvg - 1; }
+	int GetNUBasis() const {return nug + kug - 1;}
+	int GetNVBasis() const {return nvg + kvg - 1;}
+	double GetUMin() const {return uKnots[kug - 1];}
+	double GetUMax() const {return uKnots[uKnots.GetCount() - kug];}
+	double GetVMin() const {return vKnots[kvg - 1];}
+	double GetVMax() const {return vKnots[vKnots.GetCount() - kvg];}
+	int GetUDegree() const {return kug - 1;}
+	int GetVDegree() const {return kvg - 1;}
 	
 	Point3D GetControlPoint(int i, int j) const {return controlPoints[j * GetNUBasis() + i];}
 	void SetControlPoint(int i, int j, const Point3D& pt) {controlPoints[j * GetNUBasis() + i] = pt;}
@@ -48,149 +55,95 @@ public:
 			uKnots, vKnots, GetUDegree(), GetVDegree(), u, v);
 	}
 	
-	void EvaluateDerivatives(double u, double v, Point3D& Su, Point3D& Sv) const {
-		double du = 0.001*(GetUMax() - GetUMin());
-		double dv = 0.001*(GetVMax() - GetVMin());
-		
-		Point3D pu  = Evaluate(u - du, v);
-		Point3D puu = Evaluate(u + du, v);
-		Su = (puu - pu)/(2*du);
-		
-		Point3D pv  = Evaluate(u, v - dv);
-		Point3D pvv = Evaluate(u, v + dv);
-		Sv = (pvv - pv)/(2*dv);
-	}
+	void EvaluateDerivatives(double u, double v, Point3D& Su, Point3D& Sv) const;
+	double EvaluateAreaElement(double u, double v) const;
+	double ComputeArea(int order = 3) const;
 	
-	double EvaluateAreaElement(double u, double v) const {
-		Point3D Su, Sv;
-		EvaluateDerivatives(u, v, Su, Sv);
-		return cross(Su, Sv).Length();
+	void Scale(const Value3D& scale) {
+		for (auto& cp : controlPoints)
+			cp = cp.dot(scale);
 	}
-
-	double ComputeArea(int order = 3) const {
-		static const double gp[5][5] = {		// Gauss-Legendre points
-			{0},
-			{-0.577350269189626, 0.577350269189626},
-			{-0.774596669241483, 0.0, 0.774596669241483},
-			{-0.861136311594053, -0.339981043584856, 0.339981043584856, 0.861136311594053},
-			{-0.906179845938664, -0.538469310105683, 0.0, 0.538469310105683, 0.906179845938664}
-		};
-		static const double gw[5][5] = {		// Gauss-Legendre weights
-			{2},
-			{1.0, 1.0},
-			{0.555555555555556, 0.888888888888889, 0.555555555555556},
-			{0.347854845137454, 0.652145154862546, 0.652145154862546, 0.347854845137454},
-			{0.236926885056189, 0.478628670499366, 0.568888888888889, 0.478628670499366, 0.236926885056189}
-		};
-		
-		order = clamp(order, 1, 5);
-		int n = order;
-		
-		double umin = GetUMin(), umax = GetUMax();
-		double vmin = GetVMin(), vmax = GetVMax();
-		double area = 0;
-		
-		for (int j = 0; j < n; j++) {
-			double v = 0.5*((vmax - vmin)*gp[n-1][j] + (vmax + vmin));
-			double wv = gw[n-1][j];
-			
-			for (int i = 0; i < n; i++) {
-				double u = 0.5*((umax - umin)*gp[n-1][i] + (umax + umin));
-				double wu = gw[n-1][i];
-				
-				area += wu*wv*EvaluateAreaElement(u, v);
-			}
-		}
-		return 0.25*(umax - umin) * (vmax - vmin)*area;	// Jacobian of transformation
+	void Scale(const Value3D& scale, const Point3D &c0) {
+		for (auto& cp : controlPoints)
+			cp.Translate((cp - c0)*scale); 
 	}
-	
-	void Scale(double sx, double sy, double sz) {
-		for (auto& cp : controlPoints) {
-			cp.x *= sx;
-			cp.y *= sy;
-			cp.z *= sz;
-		}
-	}
-	void Scale(double s) { Scale(s, s, s); }
 	
 	void Translate(const Point3D& offset) {
-		for (auto& cp : controlPoints) {
-			cp = cp + offset;
-		}
+		for (auto& cp : controlPoints)
+			cp.Translate(offset);
 	}
+	void Rotate(const Value3D& angle, const Point3D& c0, RotationOrder order = RotationOrder::XYZ) {
+		for (auto& cp : controlPoints)
+			cp.Rotate(angle, c0, order);
+	}
+	void TransRot(const Point3D& offset, const Value3D& angle, const Point3D& c0, RotationOrder order = RotationOrder::XYZ) {
+		for (auto& cp : controlPoints)
+			cp.TransRot(offset, angle, c0, order);
+	}
+		
+	void GetBoundingBox(Point3D& mn, Point3D& mx) const;
 	
-	void RotateX(double angle) {
-		double c = cos(angle), s = sin(angle);
-		for (auto& cp : controlPoints) {
-			double y = cp.y*c - cp.z*s;
-			double z = cp.y*s + cp.z*c;
-			cp.y = y; 
-			cp.z = z;
-		}
-	}
-	void RotateY(double angle) {
-		double c = cos(angle), s = sin(angle);
-		for (auto& cp : controlPoints) {
-			double x =  cp.x*c + cp.z*s;
-			double z = -cp.x*s + cp.z*c;
-			cp.x = x; 
-			cp.z = z;
-		}
-	}
-	void RotateZ(double angle) {
-		double c = cos(angle), s = sin(angle);
-		for (auto& cp : controlPoints) {
-			double x = cp.x*c - cp.y*s;
-			double y = cp.x*s + cp.y*c;
-			cp.x = x; 
-			cp.y = y;
-		}
-	}
-	
-	void GetBoundingBox(Point3D& mn, Point3D& mx) const {
-		if (controlPoints.IsEmpty()) { 
-			mn = mx = Point3D(); 
-			return; 
-		}
-		mn = mx = controlPoints[0];
-		for (const auto& cp : controlPoints) {
-			mn.x = min(mn.x, cp.x); mx.x = max(mx.x, cp.x);
-			mn.y = min(mn.y, cp.y); mx.y = max(mx.y, cp.y);
-			mn.z = min(mn.z, cp.z); mx.z = max(mx.z, cp.z);
-		}
+	void Jsonize(JsonIO &json) {
+		json
+			("nug", nug)
+			("nvg", nvg)
+			("kug", kug)
+			("kvg", kvg)
+			("uKnots", uKnots)
+			("vKnots", vKnots)
+			("controlPoints", controlPoints)
+		;
 	}
 };
 
-class SurfaceBSpline {
+class SurfaceBSpline : Moveable<SurfaceBSpline> {
 public:
 	UVector<BSplinePatch> patches;
+
+	SurfaceBSpline() {}
+	SurfaceBSpline(const SurfaceBSpline &patch, int)		{Copy(patch);}
+	SurfaceBSpline(const SurfaceBSpline &patch)				{Copy(patch);}
+	SurfaceBSpline& operator=(const SurfaceBSpline &patch) 	{Copy(patch); return *this;};
+	SurfaceBSpline& operator=(SurfaceBSpline&&) noexcept = default;
+	void Copy(const SurfaceBSpline &surf) 					{patches = clone(surf.patches);}
+	SurfaceBSpline(SurfaceBSpline &&surf) noexcept 			{patches = pick(surf.patches);}
 	
+	void Append(const SurfaceBSpline &surf) 	{patches.Append(surf.patches);}
+		
 	void Add(BSplinePatch&& p) 					{patches.Add(pick(p));}
-	int GetCount() const 						{return patches.GetCount();}
+	int size() const 							{return patches.size();}
+	bool IsEmpty() const						{return patches.IsEmpty();}
 	BSplinePatch& operator[](int i) 			{return patches[i];}
 	const BSplinePatch& operator[](int i) const {return patches[i];}
 	
-	// Batch transformations
-	void Scale(double sx, double sy, double sz) {
+	void DeployXSymmetry();
+	void DeployYSymmetry();
+	void CutX(bool leavePositive = true);
+	void CutY(bool leavePositive = true);
+	void CutZ(bool leavePositive = true);
+
+	String Heal(double grid, double eps);
+	
+	void Scale(const Value3D& scale) {
 		for (auto& p : patches) 
-			p.Scale(sx, sy, sz);
+			p.Scale(scale);
 	}
-	void Scale(double s) { Scale(s, s, s); }
-	void Translate(const Point3D& offset) {
+	void Scale(const Value3D& scale, const Point3D &c0) {
+		for (auto& p : patches) 
+			p.Scale(scale, c0);
+	}
+		
+	void Translate(const Value3D& offset) {
 		for (auto& p : patches) 
 			p.Translate(offset);
 	}
-	void RotateX(double angle) { 
+	void Rotate(const Value3D& angle, const Point3D& centre) {
 		for (auto& p : patches) 
-			p.RotateX(angle); 
+			p.Rotate(angle, centre);
 	}
-	void RotateY(double angle) { 
+	void TransRot(const Value3D& offset, const Value3D& angle, const Point3D& centre) {
 		for (auto& p : patches) 
-			p.RotateY(angle); 
-	}
-	void RotateZ(double angle) { 
-		for (auto& p : patches) 
-			p.RotateZ(angle); 
+			p.TransRot(offset, angle, centre);
 	}
 	
 	double ComputeTotalArea(int order = 3) const {
@@ -201,7 +154,7 @@ public:
 	}
 
 	void GetBoundingBox(Point3D& mn, Point3D& mx) const {
-		if (patches.IsEmpty()) { 
+		if (patches.IsEmpty()) {
 			mn = mx = Point3D(); 
 			return; 
 		}
@@ -214,16 +167,19 @@ public:
 			mn.z = min(mn.z, pmin.z); mx.z = max(mx.z, pmax.z);
 		}
 	}
-
-	static bool ParseGDF(const String& filename, SurfaceBSpline& manager);
-	struct FlatPanel {
-		Point3D v[4];
-	};
-	static void Tessellate(const SurfaceBSpline& manager, int nu, int nv, UArray<FlatPanel>& panels);
+	void Tessellate(int nu, int nv, Surface& surf);
+	bool SaveGDF(const String& filename, double g, bool symx, bool symy, bool iscsf) const;
+	
+	void Jsonize(JsonIO &json) {
+		json
+			("patches", patches)
+		;
+	}
+	
+private:
+	void RoundClosest(double grid, double eps);
+	int FitToZ0(double zTolerance);
 };
-
-
-
 
 
 }

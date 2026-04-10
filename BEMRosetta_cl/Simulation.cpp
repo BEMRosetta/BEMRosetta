@@ -21,7 +21,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 	
 	String strFile = LoadFile(datfile);
 	if (IsNull(strFile)) 
-		throw Exc(Format("File '%s' not found", datfile));
+		throw Exc(F("File '%s' not found", datfile));
 	
 	folder = GetFileFolder(datfile);
 	
@@ -38,7 +38,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 		else if (strcalc == "Dynamic")
 			calculation = DYNAMIC;
 		else 
-			throw Exc(Format("Unknown Hydrostatics '%s'", strcalc));
+			throw Exc(F("Unknown Hydrostatics '%s'", strcalc));
 	
 		if (calculation != NONE) {
 			String meshfile = GetFASTVar(strFile, "MeshFile", "");
@@ -48,7 +48,7 @@ void Simulation::Load(const String &datfile, int stiffMod, int dllForce,
 			
 			String ret = Body::Load(mesh, meshfile, rho, g, roundVal, roundEps, false);
 			if (!ret.IsEmpty()) 
-				throw Exc(Format("Error loading mesh: %s", ret));
+				throw Exc(F("Error loading mesh: %s", ret));
 		
 			mesh.dt.c0.Set(c0x, c0y, c0z);		// Reference system
 			mesh.SetMass(0.);

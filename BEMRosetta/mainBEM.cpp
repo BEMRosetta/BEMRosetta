@@ -677,18 +677,18 @@ void MainBEM::OnMenuAdvancedArraySel(bool updateBH) {
 	menuAdvanced.numBH.Enable(hy.dt.Nh > 0);
 	if (updateBH)
 		menuAdvanced.numBH = hy.dt.Nh;
-	menuAdvanced.labNum.SetText(Format("/\%d", hy.dt.Nh));
+	menuAdvanced.labNum.SetText(F("/\%d", hy.dt.Nh));
 	
 	menuAdvanced.c_array.Clear();
 	for (int ib = 0; ib < hy.dt.Nb; ++ib)
-		menuAdvanced.c_array.Add		 (Format("%d.%s", ib+1, hy.dt.msh[ib].dt.name), hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);			
+		menuAdvanced.c_array.Add		 (F("%d.%s", ib+1, hy.dt.msh[ib].dt.name), hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);			
 	
 	menuAdvancedReference.c_array.Clear();
 	for (int ib = 0; ib < hy.dt.Nb; ++ib)
-		menuAdvancedReference.c_array.Add(Format("%d.%s", ib+1, hy.dt.msh[ib].dt.name), hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);
+		menuAdvancedReference.c_array.Add(F("%d.%s", ib+1, hy.dt.msh[ib].dt.name), hy.dt.msh[ib].dt.c0.x, hy.dt.msh[ib].dt.c0.y, hy.dt.msh[ib].dt.c0.z);
 	menuAdvancedReference.Init(*this, idx);
 		
-	menuAdvanced.labelBodyAxis.SetLabel(Format(t_("Body Axis (%d)"), hy.dt.Nb)); 
+	menuAdvanced.labelBodyAxis.SetLabel(F(t_("Body Axis (%d)"), hy.dt.Nb)); 
 	
 	menuAdvanced.butUpdateCrot.Enable(hy.dt.Nb > 0);
 	menuAdvanced.c_array.Enable(hy.dt.Nb > 0);
@@ -813,7 +813,7 @@ ScatterCtrl &MainBEM::GetSelScatter() {
 void MainBEM::OnOpt() {
 	menuOpen.file.ClearTypes();
 
-	menuOpen.file.Type(Format(t_("All supported BEM files (%s)"), Bem().bstFilesExt/*bemFilesExt*/), Bem().bemFilesAst);
+	menuOpen.file.Type(F(t_("All supported BEM files (%s)"), Bem().bstFilesExt/*bemFilesExt*/), Bem().bemFilesAst);
 	menuOpen.file.AllFilesType();
 	String extOpen = ToLower(GetFileExt(menuOpen.file.GetData().ToString()));
 	if (extOpen.IsEmpty())
@@ -839,7 +839,7 @@ bool MainBEM::OnLoadFile(String file) {
 			if (ForceExt(Bem().hydros[i].dt.file, ".") == ForceExt(file, ".") &&
 				(Bem().GetBEMExtSet(file) < 0 || 
 				 Bem().GetBEMExtSet(file) == Bem().GetBEMExtSet(Bem().hydros[i].dt.file))) {
-				if (!PromptYesNo(t_("Model is already loaded") + S("&") + t_("Do you wish to open it anyway?")))
+				if (!PromptYesNo(t_("Model is already loaded") + F("&") + t_("Do you wish to open it anyway?")))
 					return false;
 				break;
 			}
@@ -1089,9 +1089,9 @@ void MainBEM::UpdateButtons() {
 		for (int i = 0; i < hy.dt.head.size(); ++i)
 			menuProcess2.dropHead.Add(false, hy.dt.head[i]);
 		for (int i = 0; i < hy.dt.mdhead.size(); ++i)
-			menuProcess2.dropHeadMD.Add(false, Format("%.1f-%.1f", hy.dt.mdhead[i].real(), hy.dt.mdhead[i].imag()));
+			menuProcess2.dropHeadMD.Add(false, F("%.1f-%.1f", hy.dt.mdhead[i].real(), hy.dt.mdhead[i].imag()));
 		for (int i = 0; i < hy.dt.qhead.size(); ++i)
-			menuProcess2.dropHeadQTF.Add(false, Format("%.1f-%.1f", hy.dt.qhead[i].real(), hy.dt.qhead[i].imag()));
+			menuProcess2.dropHeadQTF.Add(false, F("%.1f-%.1f", hy.dt.qhead[i].real(), hy.dt.qhead[i].imag()));
 		for (int i = 0; i < 6; ++i)
 			menuProcess2.dropDOF.Add(false, BEM::StrDOF(i));
 		
@@ -1207,7 +1207,7 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 		if (idx < 0) 
 			return;
 			
-		Progress progress(Format(t_("Calculating %s in selected BEM file..."), Hydro::StrDataToPlot(param)), 100); 
+		Progress progress(F(t_("Calculating %s in selected BEM file..."), Hydro::StrDataToPlot(param)), 100); 
 		
 		double maxT = Null;
 		
@@ -1218,7 +1218,7 @@ void MainBEM::OnKirfAinf(Hydro::DataToPlot param) {
 			if (maxT < 0)
 				maxT = Bem().maxTimeA;
 			else if (Bem().maxTimeA > maxT) {
-				if (!PromptYesNo(Format(t_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
+				if (!PromptYesNo(F(t_("Defined time for Kirf calculation (%.1f) may be longer than advised (%.1f). Do you wish to used advised time?"), Bem().maxTimeA, maxT)))
 					maxT = Bem().maxTimeA;
 			} else
 				maxT = Bem().maxTimeA;
@@ -1349,7 +1349,7 @@ void MainBEM::OnOgilvie() {
 		if (vidof.size() > 0) {
 			str = "The degrees of freedom healed are:\n";
 			for (int i = 0; i < vidof.size(); ++i) {
-				str << Format("[%d, %d] ", vidof[i]+1, vjdof[i]+1);
+				str << F("[%d, %d] ", vidof[i]+1, vjdof[i]+1);
 				if (i > 0 && vidof[i-1] != vidof[i])
 					str << "\n";
 			}
@@ -1420,7 +1420,7 @@ void MainBEM::OnConvergence() {
 		if (vidof.size() > 0) {
 			str = "The degrees of freedom healed are:\n";
 			for (int i = 0; i < vidof.size(); ++i) {
-				str << Format("[%d, %d] ", vidof[i]+1, vjdof[i]+1);
+				str << F("[%d, %d] ", vidof[i]+1, vjdof[i]+1);
 				if (i > 0 && vidof[i-1] != vidof[i])
 					str << "\n";
 			}
@@ -1808,7 +1808,7 @@ void MainBEM::OnMapNodes() {
 		int ib = mainBody.GetIb();
 		
 		if (!hy.IsLoadedPotsRad(ib)) {
-			Exclamation(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+			Exclamation(F(t_("No radiation potentials/pressures are available for body %d"), ib+1));
 			return;
 		}
 		
@@ -1824,7 +1824,7 @@ void MapNodes::Init(int _idx, int _ib) {
 	ib = _ib;
 	
 	CtrlLayout(*this);
-	Title(Format(t_("Paste points and map to them the %d%s body mesh properties"), ib+1, Ordinal(ib+1)));
+	Title(F(t_("Paste points and map to them the %d%s body mesh properties"), ib+1, Ordinal(ib+1)));
 	
 	butClose <<= THISBACK(OnClose);
 	butPaste <<= THISBACK(OnPasteNodes);
@@ -1924,7 +1924,7 @@ void MapNodes::OnExport(){
 	fs.ActiveType(0);
 	fs.ActiveDir(GetDesktopFolder());
 	
-	if (!fs.ExecuteSaveAs(Format(t_("Save nodes data as %s"), fileType)))
+	if (!fs.ExecuteSaveAs(F(t_("Save nodes data as %s"), fileType)))
 		return;
 	
 	WaitCursor wait;
@@ -1957,7 +1957,7 @@ void MainBEM::OnMapMeshes() {
 		int ib = mainBody.GetIb();
 		
 		if (!hy.IsLoadedPotsRad(ib)) {
-			Exclamation(Format(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+			Exclamation(F(t_("No radiation potentials/pressures are available for body %d"), ib+1));
 			return;
 		}
 		
@@ -1991,10 +1991,10 @@ void MapMeshes::Init(int _idx, int _ib) {
 	ib = _ib;
 	
 	CtrlLayout(*this);
-	Title(Format(t_("Select meshes and map the %d%s body properties"), ib+1, Ordinal(ib+1)));
+	Title(F(t_("Select meshes and map the %d%s body properties"), ib+1, Ordinal(ib+1)));
 	text.Background(Null);
 	int dots = 7*StdFont().GetHeight();
-	text.SetQTF(Format(t_("[A+%d This option allows the hydrodynamic coefficients to be divided into a series of sectional bodies defined by their meshes.&"
+	text.SetQTF(F(t_("[A+%d This option allows the hydrodynamic coefficients to be divided into a series of sectional bodies defined by their meshes.&"
 				"These meshes are obtained by dividing the mesh of the calculated body into parts.&"
 				"Therefore, the meshes of each sectional body do not have to be closed underwater.]"), dots));
 	
@@ -2254,7 +2254,7 @@ int MainBEM::AskQtfHeading(const Hydro &hy, double &heading) {
 
 	int id0 = Null;
 	for (int i = 0; i < numH; ++i) {
-		dialog.dropHeadings.Add(Format("%.3f:%.3f", qh[i].real(), qh[i].imag()));
+		dialog.dropHeadings.Add(F("%.3f:%.3f", qh[i].real(), qh[i].imag()));
 		if (abs(qh[i].real()) < 0.001)		// By default tries to select 0 deg
 			id0 = i;
 	}
@@ -2320,7 +2320,7 @@ void MainBEM::OnConvert() {
 		fs.Set(ForceExt(~menuOpen.file, ext));
 		fs.ActiveDir(saveFolder);
 		
-		if (!fs.ExecuteSaveAs(Format(t_("Save BEM data as %s"), fileType)))
+		if (!fs.ExecuteSaveAs(F(t_("Save BEM data as %s"), fileType)))
 			return;
 		
 		String fileName = ~fs;
@@ -2516,9 +2516,9 @@ void MainBEM::LoadDragDrop() {
 		String file = BEMFile(filesToDrop[i]);
 		if (!file.IsEmpty()) {
 			menuOpen.file <<= file;
-			Status(Format(t_("Loading '%s'"), file));
+			Status(F(t_("Loading '%s'"), file));
 			if (!OnLoad() && !followWithErrors && filesToDrop.size() - i > 1) {
-				if (!PromptYesNo(Format(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1))) {
+				if (!PromptYesNo(F(t_("Do you wish to load the pending %d files?"), filesToDrop.size() - i - 1))) {
 					timerDrop.Kill();
 					return;
 				}
@@ -2567,7 +2567,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 	if (array.GetColumnCount() == 0)
 		array.AddColumn("Param");
 	if (id >= array.GetColumnCount()-1)
-		array.AddColumn(Format("#%d %s", id+1, hy.dt.name));
+		array.AddColumn(F("#%d %s", id+1, hy.dt.name));
 	int row = 0;
 	int col = id + 1;
 	
@@ -2607,7 +2607,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 				strHead << hy.dt.w[i];
 			}
 			array.Set(row, 0, t_("freq delta [rad/s]"));
-			array.Set(row++, col, Format(t_("Non constant delta (%s)"), strHead));
+			array.Set(row++, col, F(t_("Non constant delta (%s)"), strHead));
 		}
 	} else {
 		array.Set(row, 0, t_("freq end [rad/s]"));	array.Set(row++, col, "-");
@@ -2633,7 +2633,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 				strHead << hy.dt.head[i];
 			}
 			array.Set(row, 0, t_("head delta [º]"));
-			array.Set(row++, col, Format(t_("Non constant delta (%s)"), strHead));
+			array.Set(row++, col, F(t_("Non constant delta (%s)"), strHead));
 		}
 	} else {
 		array.Set(row, 0, t_("head end [º]"));	array.Set(row++, col, "-");
@@ -2657,7 +2657,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 	
 	array.Set(row, 0, t_("#bodies"));			array.Set(row++, col, hy.dt.Nb);
 	for (int ib = 0; ib < hy.dt.Nb; ++ib) {
-		String sib = Format("#%d", ib+1);
+		String sib = F("#%d", ib+1);
 		//sib += " " + data.msh[ib].name;
 		array.Set(row, 0, sib + " " + t_("Name"));		array.Set(row++, col, hy.dt.msh[ib].dt.name);
 		/*array.Set(row, 0, sib + " " + t_("#dof"));
@@ -2675,7 +2675,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("Cg [m]"));
 		if (IsNum(hy.dt.msh[ib].dt.cg)) 
-			array.Set(row++, col, Format(t_("%s, %s, %s"),
+			array.Set(row++, col, F(t_("%s, %s, %s"),
 									FDS(hy.dt.msh[ib].dt.cg.x, 10, false),
 									FDS(hy.dt.msh[ib].dt.cg.y, 10, false),
 									FDS(hy.dt.msh[ib].dt.cg.z, 10, false)));
@@ -2684,7 +2684,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 
 		array.Set(row, 0, sib + " " + t_("Cb [m]"));
 		if (IsNum(hy.dt.msh[ib].dt.cb)) 
-			array.Set(row++, col, Format(t_("%s, %s, %s"),
+			array.Set(row++, col, F(t_("%s, %s, %s"),
 									FDS(hy.dt.msh[ib].dt.cb.x, 10, false),
 									FDS(hy.dt.msh[ib].dt.cb.y, 10, false),
 									FDS(hy.dt.msh[ib].dt.cb.z, 10, false)));
@@ -2693,7 +2693,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 		
 		array.Set(row, 0, sib + " " + t_("C0 [m]"));
 		if (IsNum(hy.dt.msh[ib].dt.c0)) 
-			array.Set(row++, col, Format(t_("%s, %s, %s"),
+			array.Set(row++, col, F(t_("%s, %s, %s"),
 									FDS(hy.dt.msh[ib].dt.c0.x, 10, false),
 									FDS(hy.dt.msh[ib].dt.c0.y, 10, false),
 									FDS(hy.dt.msh[ib].dt.c0.z, 10, false)));
@@ -2707,7 +2707,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
-						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FDS(hy.C_dim(ib, i, j), 10, false));		
+						array.Set(row, 0, sib + " " + F(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, FDS(hy.C_dim(ib, i, j), 10, false));		
 					}
 				}
 			}
@@ -2716,7 +2716,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 			for (int i = 0; i < 6; ++i) {
 				for (int j = 0; j < 6; ++j) {
 					if (!Hydro::C_units(i, j).IsEmpty()) {
-						array.Set(row, 0, sib + " " + Format(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, "-");		
+						array.Set(row, 0, sib + " " + F(t_("K(%d,%d) [%s]"), i+1, j+1, Hydro::C_units(i, j)));	array.Set(row++, col, "-");		
 					}
 				}
 			}
@@ -2731,11 +2731,11 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 			/*data.M.size() > ib && */hy.dt.msh[ib].dt.M.size() > 0 && 
 			/*data.C.size() > ib && */hy.dt.msh[ib].dt.C.size() > 0) {
 			//array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(hy.Tdof(ib, 2), 5, false, FDS(hy.Tdof_inf(ib, 2), 5, false, "-") + S(" (∞)")));
+			array.Set(row++, col, FDS(hy.Tdof(ib, 2), 5, false, FDS(hy.Tdof_inf(ib, 2), 5, false, "-") + F(" (∞)")));
 			//array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(hy.Tdof(ib, 3), 5, false, FDS(hy.Tdof_inf(ib, 3), 5, false, "-") + S(" (∞)")));
+			array.Set(row++, col, FDS(hy.Tdof(ib, 3), 5, false, FDS(hy.Tdof_inf(ib, 3), 5, false, "-") + F(" (∞)")));
 			//array.Set(row++, col, FDS(data.Tpitch (ib), 5, false, "-"));
-			array.Set(row++, col, FDS(hy.Tdof(ib, 4), 5, false, FDS(hy.Tdof_inf(ib, 4), 5, false, "-") + S(" (∞)")));
+			array.Set(row++, col, FDS(hy.Tdof(ib, 4), 5, false, FDS(hy.Tdof_inf(ib, 4), 5, false, "-") + F(" (∞)")));
 		} else {
 			array.Set(row++, col, "-");	
 			array.Set(row++, col, "-");	
