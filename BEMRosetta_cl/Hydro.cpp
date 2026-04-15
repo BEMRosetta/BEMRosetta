@@ -567,8 +567,14 @@ void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
 		throw Exc(t_("The option to get automatic control surface has to be activated only for control surface QTF calculation"));
 	
 	if (qtfType == 8 && dt.Nb > 1)
-		throw Exc(t_("The near field methos can not be ised with a multibody case"));
-		
+		throw Exc(t_("The near field method cannot be used with a multibody case"));
+	
+	if (!autoQTF && qtfType == 7) {
+		for (int ib = 0; ib < dt.Nb; ++ib) 
+			if (dt.css.size() <= ib)
+				throw Exc(F(t_("Control surface not found for body %d"), ib+1));
+	}
+	
 	if (withPotentials && (solver == Hydro::WAMIT || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL)) {
 		int Nb = solver == Hydro::HAMS ? 1 : dt.Nb;
 		for (int ib = 0; ib < Nb; ++ib) {

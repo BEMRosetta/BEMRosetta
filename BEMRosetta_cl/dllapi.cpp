@@ -950,7 +950,7 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 				for (int i = 0; i < errors.size(); ++i)
 				 	str << "\n- " << errors[i];
 			}
-			throw Exc(F(t_("Problems found in data:%s"), str));
+			throw Exc(F(t_("Problems found in data: %s"), str));
 		}
 		UVector<bool> listDOF(6, true);
 		UVector<Point3D> dummy;

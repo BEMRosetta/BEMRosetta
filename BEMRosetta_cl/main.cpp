@@ -134,7 +134,7 @@ CONSOLE_APP_MAIN
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 
 /*
-    BMR_Mesh_Load("C:/Temas/2025 BEM Benchmark++/2025 BEM Benchmark++/30 Solvers/ANSYS Aqwa/CorPower/10 mesh/corpower_0p1m.dat");	BEM_Throw();  
+    BMR_Mesh_Load("C:/Temas/2025 BEM Benchmark++/2025 BEM Benchmark++/30 Solvers/Synopsys Aqwa/CorPower/10 mesh/CorPower_0p45.dat");	BEM_Throw();  
     //BMR_Mesh_Translate(0, 0, 14.2617);
     int idHull = BMR_Mesh_GetHull();
 	BMR_Mesh_C0_Set(0, 0, -0.314);

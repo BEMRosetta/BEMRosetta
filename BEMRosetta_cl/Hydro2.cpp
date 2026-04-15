@@ -48,7 +48,7 @@ const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
     {CAPYTAINE_PY,    "Capytaine .py",            false,  "*.py",    true,  true,  true,  "", 	 false, true},
     {BEMROSETTA_H5,   "BEMRosetta .h5",           false,  "*.h5",    false, false, false, "", 	 false, true},
     {AKSELOS_NPZ,     "Akselos .npz",             false,  "*.npz",   false, false, false, "", 	 false, false},
-    {HYDROSTAR,       "HydroStar .hsg",           false,  "*.npz",   true,  true,  true,  "79",  false, true},
+    {HYDROSTAR,       "HydroStar .hsg",           false,  "*.npz",   true,  true,  true,  "79",  true, true},
     //{DIFFRAC,       "Diffrac .xml",             false,  "",   	 true,  false, false, "789", false, true},
 #ifdef PLATFORM_WIN32	
     {ORCAWAVE_OWR,    "OrcaWave .owr",            false,  "*.owr",   false, false, false, "", 	 false, true},

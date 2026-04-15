@@ -1429,7 +1429,9 @@ public:
 	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf);
 	void SaveHST(String fileName, double rho, double g) const; 
 
+private:
 	virtual ~WamitBody() noexcept {}
+	static String LoadGGdf(LineParser &f, String folder, UArray<Body> &_mesh, bool &y0z, bool &x0z);
 };
 
 class AQWABody : public Body {
@@ -1721,9 +1723,9 @@ public:
 				const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
 
 private:	
-	void Save_HSG(String fileName) const;
+	void Save_HSG(String fileName, bool autoQTF) const;
 	void Save_MCN(String fileName) const;
-	void Save_QTF(String fileName, int qtftype) const;
+	void Save_QTF(String fileName, int qtftype, bool autoQTF) const;
 	void Save_RAO(String fileName, const UVector<bool> &listDOF, bool qtf) const;
 	void Save_RDF(String fileName) const;
 	void Save_DFT(String fileName) const;

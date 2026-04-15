@@ -10,9 +10,9 @@ void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool 
 	if (!DirectoryCreateX(folder))
 		throw Exc(Format(t_("Problem creating '%s' folder"), folder));
 	
-	Save_HSG(AFX(folder, "input.hsg"));
+	Save_HSG(AFX(folder, "input.hsg"), autoQTF);
 	Save_MCN(AFX(folder, "input.mcn"));
-	Save_QTF(AFX(folder, "input.qtf"), qtfType);
+	Save_QTF(AFX(folder, "input.qtf"), qtfType, autoQTF);
 	Save_RAO(AFX(folder, "input.rao"), listDOF, qtfType > 0);
 	Save_RDF(AFX(folder, "input.rdf"));
 	Save_DFT(AFX(folder, "input.dft"));
@@ -20,10 +20,14 @@ void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool 
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		String dest = AFX(folder, F("Body_%d.hst", ib+1));
 		Body::SaveAs(dt.msh[ib], dest, Body::HYDROSTAR_HST, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		if (!autoQTF && qtfType == 7) {
+			String dest = AFX(folder, F("Body_cs%d.hst", ib+1));
+			Body::SaveAs(dt.css[ib], dest, Body::HYDROSTAR_HST, Body::ALL, dt.rho, dt.g, y0z, x0z);
+		}
 	}
 }
 
-void HydroStar::Save_HSG(String fileName) const {
+void HydroStar::Save_HSG(String fileName, bool autoQTF) const {
 	FileOut out(fileName);
 	if (!out.IsOpen())
 		throw Exc(F(t_("Impossible to save '%s'. File already used."), fileName));
@@ -34,8 +38,11 @@ void HydroStar::Save_HSG(String fileName) const {
 		<< "	<InputFiles Name=\"input.qtf\"/>\n"
 		<< "	<InputFiles Name=\"input.rao\"/>\n"
 		<< "	<InputFiles Name=\"input.rdf\"/>\n";
-	for (int ib = 0; ib < dt.Nb; ++ib)
+	for (int ib = 0; ib < dt.Nb; ++ib) {
 		out << F("	<InputFiles Name=\"Body_%d.hst\"/>\n", ib+1);
+		if (!autoQTF)
+			out << F("	<InputFiles Name=\"Body_cs%d.hst\"/>\n", ib+1);	
+	}
 	out	<< "	<InputFiles Name=\"input.dft\"/>\n"
 	   	<< "</hydrostar_project>";
 }
@@ -116,7 +123,7 @@ void HydroStar::Save_MCN(String fileName) const {
 	out << "ENDFILE";
 }
 
-void HydroStar::Save_QTF(String fileName, int qtftype) const {
+void HydroStar::Save_QTF(String fileName, int qtftype, bool autoQTF) const {
 	if (qtftype <= 0)
 		return;
 	
@@ -144,12 +151,15 @@ void HydroStar::Save_QTF(String fileName, int qtftype) const {
 	if (qtftype == 7) {
 		out << F("NBBOITE %d\n", dt.Nb);
 		for (int ib = 0; ib < dt.Nb; ++ib) {
-			Surface s = clone(dt.msh[ib].dt.under);
-			s.GetSegments();
-			s.GetEnvelope();
-			double dz = s.GetAvgLenSegment();
-			double zmin = 1.5*s.env.minZ;
-			out << F("CSFILE AUTO BODY %d %.3f  %3f  %3f\n", ib+1, zmin, 0, dz);
+			if (autoQTF) {
+				Surface s = clone(dt.msh[ib].dt.under);
+				s.GetSegments();
+				s.GetEnvelope();
+				double dz = s.GetAvgLenSegment();
+				double zmin = 1.5*s.env.minZ;
+				out << F("CSFILE AUTO BODY %d %.3f  %3f  %3f\n", ib+1, zmin, 0, dz);
+			} else
+				out << F("CSFILE %d \"Body_cs%d.hst\"\n", ib+1, ib+1);
 		}
 	}
 		

@@ -99,14 +99,56 @@ String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 	
 	return String();
 }
+
+
+String WamitBody::LoadGGdf(LineParser &f, String folder, UArray<Body> &mesh, bool &y0z, bool &x0z) {
+	try {
+		f.GetLine();
+		int Nb = f.GetInt(0);
+		
+		for (int ib = 0;ib <Nb; ++ib) {
+			f.GetLine();
+			String fileName = f.GetText(0);
+			if (!FileExists(fileName)) {
+				fileName = AFX(folder, fileName);
+				if (!FileExists(fileName))
+					return F(t_("File '%s' does not exist"), f.GetText(0));
+			}
+			double dummy_g;
+			String ret = WamitBody::LoadGdf(mesh, fileName, y0z, x0z, dummy_g);
+			if (!ret.IsEmpty())
+				return ret;
+			f.GetLine();
+			double xbody = f.GetDouble(0);
+			double ybody = f.GetDouble(1);
+			double zbody = f.GetDouble(2);
+			double rbody = f.GetDouble(3);
+			
+			Body &b = Last(mesh);
+			if (y0z) {
+				b.dt.mesh.DeployXSymmetry();
+				b.dt.spline.DeployXSymmetry();
+			}
+			if (x0z) {
+				b.dt.mesh.DeployYSymmetry();	
+				b.dt.spline.DeployYSymmetry();	
+			}
+			b.Rotate(0, 0, -ToRad(rbody), 0, 0, 0);
+			b.Translate(-xbody, -ybody, -zbody);
+			
+			f.GetLine();
+		}
+	} catch (Exc e) {
+		return t_("Parsing error: ") + e;
+	}	
+	x0z = y0z = false;
+	return String();
+}
 	
 String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_(F("Impossible to open '%s'", fileName));
-	
-	Body &body = _mesh.Add();
-	body.dt.name = GetFileName(fileName);
 	
 	try {
 		String line;
@@ -124,14 +166,16 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		double len = 1;
 		g = Null;
 		if (line.Find("ILOWHICSF") < 0) {
-			len = f.GetDouble(0);
-			if (len < 1)
-				return t_("Wrong length scale in .gdf file");
 			g = f.GetDouble(1);
 			if (g < 0)
 				return t_("Wrong gravity in .gdf file");
+			len = f.GetDouble(0);
+			if (len == -1)
+				return LoadGGdf(f, GetFileFolder(fileName), _mesh, y0z, x0z);
+			if (len < 1)
+				return t_("Wrong length scale in .gdf file");
 		} else {
-			if (f.GetInt(1) > 1)
+			if (f.GetInt(0) > 1)
 				return t_("Only ILOWHICSF=0/1 is supported in .csf file");
 		}
 		line = in.GetLine();	
@@ -159,7 +203,10 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		}
 		if (nPatches < 1)
 			return t_("Number of patches not found or zero in .gdf file");
-					
+		
+		Body &body = _mesh.Add();
+		body.dt.name = GetFileName(fileName);
+				
 		body.dt.SetCode(igdef == 0 ? Body::WAMIT_GDF : Body::WAMIT_GDF2);
 		
 		if (igdef == 0) {
@@ -167,17 +214,16 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 			int ids[4];
 			bool npand = false;
 			while(!in.IsEof()) {
+				int ip = 0;
+				f.GetLine();
 				for (int i = 0; i < 4; ++i) {
-					line = in.GetLine();	
-					f.Load(line);
-					
 					if (f.GetText(1) == "NPAND") { // Dipoles loaded as normal panels
 						npand = true;
 						break;
 					}
-					double x = f.GetDouble(0)*len;	
-					double y = f.GetDouble(1)*len;	
-					double z = f.GetDouble(2)*len;	
+					double x = f.GetDouble(0+ip);///len;	// Test05 from v6 manuals seems to indicate this
+					double y = f.GetDouble(1+ip);///len;	
+					double z = f.GetDouble(2+ip);///len;	
 					
 					bool found = false;
 					for (int iin = 0; iin < mesh.nodes.size(); ++iin) {
@@ -194,7 +240,12 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 						node.y = y;
 						node.z = z;
 						ids[i] = mesh.nodes.size() - 1;
-					}
+					} 
+					// To read multi point rows
+					if (f.size() >= ip + 6 && f.IsDouble(ip + 3) && f.IsDouble(ip + 4) && f.IsDouble(ip + 5))
+						ip += 3;
+					else if (i < 3)
+						f.GetLine();
 				}
 				if (!npand) {
 					Panel &panel = mesh.panels.Add();
@@ -271,7 +322,7 @@ void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z
 	if (!iscsf)
 		out << F("  %12d   %12f 	ULEN GRAV\n", 1, g);
 	else
-		out << "  ILOWHICSF=0\n";
+		out << "  0                           	ILOWHICSF\n";
 	out << F("  %12d   %12d 	ISX  ISY\n", y0z ? 1 : 0, x0z ? 1 : 0);
 	out << F("  %12d\n", panels.size());
 	for (int ip = 0; ip < panels.size(); ++ip) {
