@@ -28,8 +28,8 @@ END_LAYOUT
 
 LAYOUT(MenuProcess, 1092, 56)
 	ITEM(ButtonEM, butAinf, SetLabel(t_("A∞")).Tip(t_("Recalculates A∞ based on IRF calculation using the Ogilvie's formula")).LeftPosZ(60, 44).TopPosZ(32, 20))
-	ITEM(ButtonEM, butRAO, SetLabel(t_("RAO")).Tip(t_("Gets the RAO")).LeftPosZ(12, 32).TopPosZ(12, 20))
-	ITEM(ButtonEM, butDampLin, SetLabel(t_("DampLin")).Tip(t_("Gets the RAO")).LeftPosZ(48, 56).TopPosZ(12, 20))
+	ITEM(ButtonEM, butRAO, SetLabel(t_("RAO")).LeftPosZ(12, 32).TopPosZ(12, 20))
+	ITEM(ButtonEM, butDampLin, SetLabel(t_("DampLin")).LeftPosZ(48, 56).TopPosZ(12, 20))
 	ITEM(ButtonEM, butA0, SetLabel(t_("A0")).Tip(t_("Recalculates A0 based on closest data")).LeftPosZ(12, 44).TopPosZ(32, 20))
 	ITEM(ButtonEM, butKirf, SetLabel(t_("Kirf")).Tip(t_("Recalculates IRF using the Ogilvie's formula")).LeftPosZ(108, 44).TopPosZ(32, 20))
 	ITEM(ButtonEM, butSym, SetLabel(t_("Forces QTF")).Tip(t_("Spreads the available forces around Y axis (90-270º), averaging them when they are available on both sides")).LeftPosZ(168, 68).TopPosZ(32, 20))

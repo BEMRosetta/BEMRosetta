@@ -2376,14 +2376,6 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 		array.Set(row++, col, FDS(gmroll, 5, false));
 	else
 		array.Set(row++, col, "-");
-	
-	array.Set(row, 0, t_("GZ [m]"));
-	if (!IsNull(msh.dt.cb) && !IsNull(msh.dt.cg)) {
-		Vector3D cgcb = msh.dt.cg - msh.dt.cb;
-		double gz = sqrt(sqr(cgcb.x) + sqr(cgcb.y));
-		array.Set(row++, col, AttrText(FormatDouble(gz, 4)));	
-	} else
-		array.Set(row++, col, "-");
 												
 	array.Set(row, 0, t_("Surface projection Z-axis (waterplane area) [m²]"));	
 												array.Set(row++, col, F(t_("%s - %s = %s"),

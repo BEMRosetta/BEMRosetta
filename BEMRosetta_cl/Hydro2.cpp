@@ -2015,11 +2015,11 @@ void Hydro::GetA0() {
 	                dt.A0(i, j) = Null;
 	            else {
 	                double val = QuadraticInterpolate<double>(0, wiw1, wiw2, wiw3, dt.A[i][j][iw1], dt.A[i][j][iw2], dt.A[i][j][iw3]);
-	        		if (val < 0 || abs(val) < 1E-7) {
+	        		if (val < 0 || abs(val) < 1E-7 || abs(dt.A[i][j][iw1]) < 1E-12) {
 	        			val = dt.A[i][j][iw1];
-			    		if (abs(dt.A[i][j][iw1]) < 0.0000001) 
+			    		if (abs(dt.A[i][j][iw1]) < 1E-8) 
 			    			val = 0;
-	                } else if (abs(1 - val/dt.A[i][j][iw1]) > .5) {	// Too far to be good
+	                } else if (abs(1 - val/dt.A[i][j][iw1]) > .4) {	// Too far to be good
 	                    VectorXd x(3), y(3);
 	                    x << wiw1, wiw2, wiw3;
 	                    y << dt.A[i][j][iw1], dt.A[i][j][iw2], dt.A[i][j][iw3];

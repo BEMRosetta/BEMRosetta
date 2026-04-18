@@ -927,7 +927,6 @@ void Hydro::GetDampLin(double critDamp) {
 			throw Exc(t_("Insufficient data to get linear damping: Inertia matrix is required"));   
 	}	
 
-	BEM::Print("\n");
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		MatrixXd Cstiff = C_mat(false, ib);
 		MatrixXd Cmoor = CMoor_mat(false, ib);

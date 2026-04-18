@@ -1199,10 +1199,15 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					} else if (stat == "rao_mean") 
 						val = data.tail(data.size()/2).mean();	// mean of the half end
 					else if (stat == "percentile") {
-						if (pars.size() != 2)
-							throw Exc("'percentile' requires one argument");
-						EigenVector v(data, 0, 1);
-						val = v.PercentileValY(ScanDouble(pars[1]));
+						if (pars.size() == 2) {
+							EigenVector v(data, 0, 1);
+							val = v.PercentileValY(ScanDouble(pars[1]));	
+						} else if (pars.size() == 3) {
+							EigenVector v(data, 0, 1);
+							val = v.PercentileValRangeY(ScanDouble(pars[1]), ScanDouble(pars[2]));	
+						} else
+							throw Exc("'percentile' requires one or two arguments");
+						
 					} else if (stat == "weibull") {
 						if (pars.size() != 2)
 							throw Exc("'weibull' requires one argument");

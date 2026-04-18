@@ -78,8 +78,10 @@ void MainBEM::Init() {
 	menuProcess.butAinf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_AINF);
 	menuProcess.butKirf.Disable();	
 	menuProcess.butKirf <<= THISBACK1(OnKirfAinf, Hydro::PLOT_KIRF);
-	menuProcess.butRAO.Disable();	
+	menuProcess.butRAO.Disable();
+	menuProcess.butRAO.Tip(t_("Get the RAO"));
 	menuProcess.butDampLin.Disable();
+	menuProcess.butDampLin.Tip(t_("Get the linear damping matrix"));
 	menuProcess.critDamp.Disable();	
 	menuProcess.critDamp = 0.05;
 	menuProcess.butRAO <<= THISBACK(OnRAO);
