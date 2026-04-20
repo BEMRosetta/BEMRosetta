@@ -1170,6 +1170,8 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 						val = data.minCoeff();
 					else if (stat == "max") 
 						val = data.maxCoeff();
+					else if (stat == "rangeminmax") 
+						val = data.maxCoeff() - data.minCoeff();
 					else if (stat == "maxval") { 
 						double mx = data.maxCoeff();
 						double mn = data.minCoeff();
@@ -1207,7 +1209,6 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 							val = v.PercentileValRangeY(ScanDouble(pars[1]), ScanDouble(pars[2]));	
 						} else
 							throw Exc("'percentile' requires one or two arguments");
-						
 					} else if (stat == "weibull") {
 						if (pars.size() != 2)
 							throw Exc("'weibull' requires one argument");
@@ -1282,6 +1283,8 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 					val = data.minCoeff();
 				else if (stat == "max") 
 					val = data.maxCoeff();
+				else if (stat == "rangeminmax") 
+					val = data.maxCoeff() - data.minCoeff();
 				else if (stat == "maxval") { 
 					double mx = data.maxCoeff();
 					double mn = data.minCoeff();
@@ -1305,11 +1308,22 @@ void Calc(const UArray<FastOut> &dataFast, const ParameterMetrics &params0, Para
 				else if (stat == "rao_mean") 
 					val = Null;
 				else if (stat == "percentile") {
-					if (pars.size() != 2)
-						throw Exc("'percentile' requires one argument");
-					VectorXd d = Map<VectorXd>(fullData[ip], fullData[ip].size());
-					EigenVector v(d, 0, 1);
-					val = v.PercentileValY(ScanDouble(pars[1]));
+					if (pars.size() == 2) {
+						double percent = ScanDouble(pars[1]);
+						if (IsNull(percent) || percent < 0 || percent > 1)
+							throw Exc(F("percentile(%s) argument is not correct", pars[1]));	
+						EigenVector v(data, 0, 1);
+						val = v.PercentileValY(percent);	
+					} else if (pars.size() == 3) {
+						double percentMin = ScanDouble(pars[1]);
+						double percentMax = ScanDouble(pars[2]);
+						if (IsNull(percentMin) || percentMin < 0 || percentMin > 1 ||
+							IsNull(percentMax) || percentMax < 0 || percentMax > 1)
+							throw Exc(F("percentile(%s, %s) arguments are not correct", pars[1], pars[2]));	
+						EigenVector v(data, 0, 1);
+						val = v.PercentileValRangeY(percentMin, percentMax);	
+					} else
+						throw Exc("'percentile' requires one or two arguments");
 				} else if (stat == "weibull") {
 					if (pars.size() != 2)
 						throw Exc("'weibull' requires one argument");

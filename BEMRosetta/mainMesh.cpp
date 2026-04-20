@@ -2364,16 +2364,17 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 														FDS(msh.dt.c0.y, 10, false),
 														FDS(msh.dt.c0.z, 10, false)));
 
-	array.Set(row, 0, t_("GMroll [m]"));
-	double gmpitch = msh.GMpitch(Bem().rho, Bem().g); 	
-	if (IsNum(gmpitch))
- 		array.Set(row++, col, FDS(gmpitch, 5, false));
-	else
-		array.Set(row++, col, "-");
-	array.Set(row, 0, t_("GMpitch [m]")); 		
+	array.Set(row, 0, t_("GMroll [m]")); 		
 	double gmroll = msh.GMroll(Bem().rho, Bem().g); 	
 	if (IsNum(gmroll))
 		array.Set(row++, col, FDS(gmroll, 5, false));
+	else
+		array.Set(row++, col, "-");
+	
+	array.Set(row, 0, t_("GMpitch [m]"));
+	double gmpitch = msh.GMpitch(Bem().rho, Bem().g); 	
+	if (IsNum(gmpitch))
+ 		array.Set(row++, col, FDS(gmpitch, 5, false));
 	else
 		array.Set(row++, col, "-");
 												

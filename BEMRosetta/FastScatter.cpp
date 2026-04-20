@@ -56,6 +56,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.dropOperations.Add("mean", "")
 						  .Add("min", "")
 						  .Add("max", "")
+						  .Add("rangeminmax", "")
 						  .Add("maxval", "max(abs(max), abs(min))")
 						  .Add("minmean", "min - mean")
 						  .Add("maxmean", "max - mean")

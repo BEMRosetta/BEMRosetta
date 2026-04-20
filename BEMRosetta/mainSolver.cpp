@@ -242,7 +242,7 @@ void MainSolver::Init() {
 		int solver = ~save.dropSolver;
 		bool isNemoh = solver >= Hydro::NEMOH && solver <= Hydro::NEMOHv3;
 		
-		save.symX.Enable(!isNemoh && solver != Hydro::CAPYTAINE_PY && solver != Hydro::BEMROSETTA_H5);
+		save.symX.Enable(!isNemoh && solver != Hydro::BEMROSETTA_H5);
 		save.symY.Enable(solver != Hydro::BEMROSETTA_H5);
 		save.opIncludeBin.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::ORCAWAVE_YML);
 		save.opSplit.Enable(isNemoh || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);

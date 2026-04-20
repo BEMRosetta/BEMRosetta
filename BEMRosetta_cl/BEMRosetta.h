@@ -1635,7 +1635,7 @@ public:
 	void SaveDatBody(String file); 
 	
 	void SaveCase(String folder, bool bin, int numCases, BEM_FMT solver, int numThreads, bool x0z, const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType) const;
-	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool irregular, bool autoIrregular, int qtfType) const;
+	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, bool irregular, bool autoIrregular, int qtfType) const;
 	
 	void Save_Cal(String folder, const UVector<double> &freqs, /*const UVector<int> &nodes, const UVector<int> &panels, */int solver, 
 					bool x0z, const UVector<bool> &listDOF) const;

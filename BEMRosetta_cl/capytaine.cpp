@@ -452,7 +452,7 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 	return String();
 }
 
-void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, 
+void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z,  
 				bool irregular, bool autoIrregular, int qtfType) const {
 	if (qtfType > 0)
 		throw Exc(t_("Solver Capytaine does not obtain QTF"));
@@ -503,19 +503,18 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		const Body &b = dt.msh[ib];
 		
-		String dest = AFX(folderMesh, F(t_("Body_%d.dat"), ib+1));
-		Body::SaveAs(b, dest, Body::NEMOH_DAT, Body::UNDERWATER, dt.rho, dt.g, false, x0z);
-		
-		spy <<	F("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(dest));
+		String dest = AFX(folderMesh, F(t_("Body_%d.gdf"), ib+1));
+		Body::SaveAs(b, dest, Body::WAMIT_GDF, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		spy <<	F("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='wamit')\n", ib+1, GetFileName(dest));
 		
 		bool isLid    = irregular && dt.lids.size() > ib && !dt.lids[ib].dt.mesh.panels.IsEmpty();
 		autoIrregular = irregular && autoIrregular;
 		if (autoIrregular)
 			spy << F("lid_mesh_%d = mesh_%d.translated_z(1e-7).generate_lid()     # See https://github.com/capytaine/capytaine/issues/589\n", ib+1, ib+1);
 		else if (isLid) {
-			String destLid = AFX(folderMesh, F(t_("Body_%d_lid.dat"), ib+1));
-			Body::SaveAs(dt.lids[ib], destLid, Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, x0z);
-			spy << F("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='nemoh')\n", ib+1, GetFileName(destLid));
+			String destLid = AFX(folderMesh, F(t_("Body_%d_lid.gdf"), ib+1));
+			Body::SaveAs(dt.lids[ib], destLid, Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);
+			spy << F("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='wamit')\n", ib+1, GetFileName(destLid));
 		} 
 		
 		spy <<	"\n";

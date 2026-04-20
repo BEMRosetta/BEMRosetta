@@ -60,7 +60,7 @@ MenuProcessInertia::MenuProcessInertia() {
 	
 	grid.MultiSelect().Removing(false).Clipboard().Sorting(false).Absolute().Editing().SelectRow(false);
 	for (int i = 0; i < 6; ++i) {
-		edit[i].NotNull();
+		edit[i].NullText("-");
 		grid.AddColumn(BEM::StrDOF(i), 50).Edit(edit[i]);
 	}
 }
@@ -82,7 +82,7 @@ void MenuProcessInertia::CopyToBody() {
 		msh.dt.M.resize(6, 6);
 		for (int r = 0; r < 6; ++r)		
 			for (int c = 0; c < 6; ++c)
-				msh.dt.M(r, c) = ScanDouble(grid.Get(r, c).ToString());
+				msh.dt.M(r, c) = Nvl(ScanDouble(grid.Get(r, c).ToString()), 0.);
 		_mb->menuProcess.mass <<= msh.GetMass();
 	}
 	
@@ -144,11 +144,11 @@ void MenuProcessInertia::Action() {
 		if (opmass <= 3) {
 			for (int r = 0; r < 6; ++r)		
 				for (int c = 0; c < 6; ++c)
-					grid.Set(r, c, "-");
+					grid.Set(r, c, Null);
 		} else {
 			for (int r = 0; r < 3; ++r)	
 				for (int c = 0; c < 3; ++c) 
-					grid.Set(r, c+3, "-");
+					grid.Set(r, c+3, Null);
 		}	
 	};
 	try {

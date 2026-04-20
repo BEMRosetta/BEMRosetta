@@ -26,16 +26,16 @@ String Wamit::Load(String file, bool isHams, int iperout, Function <bool(String,
 				BEM::Print(F(": ** wam ") + t_("Not found") + "**");
 			
 			if (!filecfg.IsEmpty()) {
-				if (!FileExists(filecfg))
+				if (FileExists(AFX(folder, filecfg)))
 					filecfg = AFX(folder, filecfg);
 				if (!Load_cfg(filecfg, iperin, iperout, dt.qtftype))
 					BEM::Print(F(": ** cfg ") + t_("Not found") + "**");
 			}
 			if (!filefrc.IsEmpty())
-				if (!FileExists(filefrc))
+				if (FileExists(AFX(folder, filefrc)))
 					filefrc = AFX(folder, filefrc);			
 			if (!filepot.IsEmpty())
-				if (!FileExists(filepot))
+				if (FileExists(AFX(folder, filepot)))
 					filepot = AFX(folder, filepot);				
 		}	
 		if (ext == ".out") {

@@ -587,7 +587,7 @@ void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
 		if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
 			static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, listDOF, irregular, autoIrregular, qtfType);
 		else if (solver == Hydro::CAPYTAINE_PY)
-			static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, irregular, autoIrregular, qtfType);
+			static_cast<const Nemoh &>(*this).SaveCase_Capy(folder, numThreads, withPotentials, withMesh, x0z, y0z, irregular, autoIrregular, qtfType);
 		else if (solver == Hydro::HAMS)
 			static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, listPoints, false, irregular, autoIrregular, qtfType);
 		else if (solver == Hydro::HAMS_MREL)
