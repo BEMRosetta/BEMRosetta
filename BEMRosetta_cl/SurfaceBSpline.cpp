@@ -583,7 +583,7 @@ String SurfaceBSpline::Heal(double grid, double eps) {
 	return ret;
 }
 
-bool SurfaceBSpline::SaveGDF(const String& fileName, double g, bool symX, bool symY, bool iscsf) const {
+bool SurfaceBSpline::SaveGdf(const String& fileName, double g, bool symX, bool symY, bool iscsf) const {
 	if (iscsf)
 		ForceExt(fileName, ".csf");
 	

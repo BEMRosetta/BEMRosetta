@@ -36,11 +36,11 @@ void MainBEM::Init() {
 		UpdateButtons();
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
-		listLoaded.StdBar(menu);
-		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), Null, [&]{
+		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), CtrlImg::open(), [&]{
 			LaunchWebBrowser(GetFileFolder(ArrayModel_GetFileName(listLoaded)));}).Help(t_("Opens file explorer in the file folder"));
-		menu.Add(listLoaded.GetCount() > 0, t_("Remove"), Null, [&]{
-			OnRemoveSelected(false);}).Help(t_("Remove model"));	
+		menu.Add(listLoaded.GetCount() > 0, t_("Remove"), CtrlImg::Remove(), [&]{
+			OnRemoveSelected(false);}).Help(t_("Remove model")).Key(K_DELETE);	
+		listLoaded.StdBar(menu);
 		menu.Add(listLoaded.GetCount() > 0, t_("Deselect all"), Null, [&]{listLoaded.ClearSelection();})
 			.Help(t_("Deselect all table rows"));
 	};

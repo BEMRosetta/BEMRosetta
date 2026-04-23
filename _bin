@@ -22,11 +22,17 @@ class BEMRosetta:
         self.libc.BMR_Echo.argtypes = [ctypes.c_char_p]
         self.libc.BMR_Echo.restype = None
 
+        self.libc.BMR_Wamit_V6s_Set.argtypes = [ctypes.c_int]
+        self.libc.BMR_Wamit_V6s_Set.restype = None
+
+        self.libc.BMR_AQWA_ShowCalculationDialog_Set.argtypes = [ctypes.c_int]
+        self.libc.BMR_AQWA_ShowCalculationDialog_Set.restype = None
+
         self.libc.BMR_Mesh_Clear.argtypes = []
         self.libc.BMR_Mesh_Clear.restype = None
 
         self.libc.BMR_Mesh_Load.argtypes = [ctypes.c_char_p]
-        self.libc.BMR_Mesh_Load.restype = None
+        self.libc.BMR_Mesh_Load.restype = ctypes.c_int
 
         self.libc.BMR_Mesh_Report.argtypes = []
         self.libc.BMR_Mesh_Report.restype = None
@@ -172,8 +178,14 @@ class BEMRosetta:
         self.libc.BMR_Bem_Body_C0_Set.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
         self.libc.BMR_Bem_Body_C0_Set.restype = None
 
+        self.libc.BMR_Bem_Body_C0_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Bem_Body_C0_Get.restype = None
+
         self.libc.BMR_Bem_Body_Cg_Set.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_double]
         self.libc.BMR_Bem_Body_Cg_Set.restype = None
+
+        self.libc.BMR_Bem_Body_Cg_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
+        self.libc.BMR_Bem_Body_Cg_Get.restype = None
 
         self.libc.BMR_Bem_Body_Inertia_Set.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int)]
         self.libc.BMR_Bem_Body_Inertia_Set.restype = None
@@ -235,6 +247,8 @@ class BEMRosetta:
         self.libc.BMR_FAST_GetVar.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
         self.libc.BMR_FAST_GetVar.restype = ctypes.c_char_p
 
+        self.Wamit = _Wamit(self.libc, self._raise_if_error)
+        self.AQWA = _AQWA(self.libc, self._raise_if_error)
         self.Mesh = _Mesh(self.libc, self._raise_if_error)
         self.Bem = _Bem(self.libc, self._raise_if_error)
         self.FAST = _FAST(self.libc, self._raise_if_error)
@@ -268,6 +282,36 @@ class BEMRosetta:
             msg = err_ptr.decode('UTF-8', errors="replace")
             raise RuntimeError(msg)
 
+class _Wamit:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+        self.V6s = _WamitV6s(self.libc, self._raise_if_error)
+class _WamitV6s:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, force):
+        self.libc.BMR_Wamit_V6s_Set(force)
+        self._raise_if_error()
+
+class _AQWA:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+        self.ShowCalculationDialog = _AQWAShowCalculationDialog(self.libc, self._raise_if_error)
+class _AQWAShowCalculationDialog:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, show):
+        self.libc.BMR_AQWA_ShowCalculationDialog_Set(show)
+        self._raise_if_error()
+
 class _Mesh:
     def __init__(self, lib, raise_if_error):
         self.libc = lib
@@ -293,8 +337,9 @@ class _Mesh:
         self._raise_if_error()
 
     def Load(self, file):
-        self.libc.BMR_Mesh_Load(os.fspath(file).encode('utf-8'))
+        _ret = self.libc.BMR_Mesh_Load(os.fspath(file).encode('utf-8'))
         self._raise_if_error()
+        return _ret
 
     def Report(self):
         self.libc.BMR_Mesh_Report()
@@ -706,6 +751,14 @@ class _BemBodyC0:
         self.libc.BMR_Bem_Body_C0_Set(x, y, z)
         self._raise_if_error()
 
+    def Get(self):
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        self.libc.BMR_Bem_Body_C0_Get(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._raise_if_error()
+        return x.value, y.value, z.value
+
 class _BemBodyCg:
     def __init__(self, lib, raise_if_error):
         self.libc = lib
@@ -714,6 +767,14 @@ class _BemBodyCg:
     def Set(self, x, y, z):
         self.libc.BMR_Bem_Body_Cg_Set(x, y, z)
         self._raise_if_error()
+
+    def Get(self):
+        x = ctypes.c_double()
+        y = ctypes.c_double()
+        z = ctypes.c_double()
+        self.libc.BMR_Bem_Body_Cg_Get(ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+        self._raise_if_error()
+        return x.value, y.value, z.value
 
 class _BemBodyInertia:
     def __init__(self, lib, raise_if_error):

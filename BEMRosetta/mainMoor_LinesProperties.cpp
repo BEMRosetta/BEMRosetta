@@ -113,7 +113,7 @@ bool MainMoor_LineProperties::ArrayUpdateCursor() {
 		array.Set(id, col++, "-");
 	}
 	const Mooring::Connection *pto = mooring.GetConnectionP(~dropTo);
-	if (pfrom) {
+	if (pto) {
 		array.Set(id, col++, pto->x);
 		array.Set(id, col++, pto->y);
 		array.Set(id, col++, pto->z);

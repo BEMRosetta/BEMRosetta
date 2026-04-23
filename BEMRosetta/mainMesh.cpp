@@ -39,11 +39,11 @@ void MainBody::Init() {
 		UpdateButtons();
 	};
 	listLoaded.WhenBar = [&](Bar &menu) {
-		listLoaded.StdBar(menu);
-		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), Null, [&]{
+		menu.Add(listLoaded.GetCount() > 0, t_("Open file folder"), CtrlImg::open(), [&]{
 			LaunchWebBrowser(GetFileFolder(ArrayModel_GetFileName(listLoaded)));}).Help(t_("Opens file explorer in the file folder"));
-		menu.Add(listLoaded.GetCount() > 0, t_("Remove"), Null, [&]{
-			OnRemoveSelected(false);}).Help(t_("Remove model"));
+		menu.Add(listLoaded.GetCount() > 0, t_("Remove"), CtrlImg::Remove(), [&]{
+			OnRemoveSelected(false);}).Help(t_("Remove model")).Key(K_DELETE);
+		listLoaded.StdBar(menu);
 		menu.Add(listLoaded.GetCount() > 0, t_("Deselect all"), Null, [&]{listLoaded.ClearSelection();})
 			.Help(t_("Deselect all table rows"));
 	};
@@ -945,7 +945,7 @@ bool MainBody::OnLoad() {
 				if (msh.GetMass_all() == 0)
 					throw Exc(t_("Set mass before fitting buoyancy"));
 				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz)) 
-					Exclamation(t_("Problem readjusting the Z value to comply with displacement (Archimede).&Mesh loaded as-is"));
+					Exclamation(t_("Problem readjusting the Z value to comply with displacement (Archimede).&The mesh is loaded as-is"));
 					
 				msh.AfterLoad(Bem().rho, Bem().g, false, false, true);
 				
@@ -2709,10 +2709,10 @@ void MainBody::LoadDragDrop() {
 	GuiLock __;
 	
 	Sort(filesToDrop);
-	for (int i = filesToDrop.size()-1; i > 0; --i)
+/*	for (int i = filesToDrop.size()-1; i > 0; --i)
 		if (ToLower(GetFileTitle(filesToDrop[i])) == ToLower(GetFileTitle(filesToDrop[i-1])))
 			filesToDrop.Remove(i);
-		
+*/		
 	bool followWithErrors = false;
 	for (int i = 0; i < filesToDrop.size(); ++i) {
 		menuOpen.file <<= filesToDrop[i];

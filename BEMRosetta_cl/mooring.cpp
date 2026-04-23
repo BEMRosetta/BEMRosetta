@@ -243,17 +243,17 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 			sanch << "\"\n";
 		}
 	}
-	for (int i = 0; i < lineProperties.size(); ++i) {		
-		const LineProperty &line = lineProperties[i];
+	for (int il = 0; il < lineProperties.size(); ++il) {		
+		const LineProperty &line = lineProperties[il];
 		int from = -1, to = -1;
 		double zfrom, zto;
-		for (int j = 0; i < connections.size(); ++i) {
-			const Connection &conn = connections[i];
+		for (int ic = 0; ic < connections.size(); ++ic) {
+			const Connection &conn = connections[ic];
 			if (line.from == conn.name) {
-				from = j;
+				from = ic;
 				zfrom = conn.z;
 			} else if (line.to == conn.name) {
-				to = j;
+				to = ic;
 				zto = conn.z;
 			}
 		}
@@ -267,7 +267,7 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 		}
 		if (zfrom > zto)
 			Swap(from, to);		// MoorDyn expects first anchor and second fairlead
-		out << F(" %3d %12=s %8d %8d %12.3f %8d %8s\n", i+1, line.nameType, from+1, to+1, line.length, line.numseg, mooring == 2 ? "p" : "-");
+		out << F(" %3d %12=s %8d %8d %12.3f %8d %8s\n", il+1, line.nameType, from+1, to+1, line.length, line.numseg, mooring == 2 ? "p" : "-");
 	}
 	
 	double _dtM 		= IsNull(dtM) 		? 0.001 : dtM;
@@ -297,7 +297,7 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 	out << F("%-22.1f %11<s- water depth (m)\n", depth, "WtrDpth");
 	out << "0                      OutSwitch  - enable .MD output (0/1)\n";
 	
-	if (fairleads || anchors || mooring == 1) {
+	if (fairleads || anchors || mooring > 0) {
 		out <<  "------------------------ OUTPUTS --------------------------------------------\n";
 		out << sfair << sanch;
 

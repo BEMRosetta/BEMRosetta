@@ -2821,20 +2821,24 @@ void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point
 
 	out << "% BEMRosetta generated .frc file\n";
 	out << F("%d %d %d %d %d %d %d %d %d", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
-								 			    force1st || IsLoadedFex() ? 1 : 0,
+								 			    0,
 								 			    force1st || IsLoadedFex() ? 2 : 0,
 								 			    force1st || IsLoadedRAO() ? 1 : 0, 
 								 			    !listPoints.IsEmpty() ? 1 : 0,
 								 			    !listPoints.IsEmpty() ? 1 : 0,
 								 			    qtfType == 7 ? qtfNumber : 0,
-								 			    qtfType == 8 ? qtfNumber : 0,
-								 			    qtfType == 9 ? qtfNumber : 0);	// Get mean drift
-	if (qtfType == 7 || qtfType == 8)
+								 			    qtfType == 8 ? 1 : 0,				// Get mean drift
+								 			    qtfType == 9 ? qtfNumber : 0);	
+	if (qtfType == 7 || qtfType == 9)
 		out << " 1";		// IOPTN(10): Direct method
 	else
 		out << " 0";
-	out << " 0 0 0";		
-	out << " % 9 digits for Wamit .1 ... ." << (qtfType == 0 ? 9 : 16) << " files included\n";
+	out << " 0";
+	if (qtfType == 7 || qtfType == 9)
+		out << " 1";	
+	else
+		out << " 0";
+	out << " 0 0 0 0     IOPTN(1-16)\n";
 	
 	out << WamitField(F("%.1f", Bem().rho), 22) << "% RHO\n";
 	
@@ -2902,7 +2906,7 @@ void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point
 	} else 
 		out << "0 % ISTIF\n";
 	
-	out << "0 % NBETA\n";
+	out << "0 % NBETAH\n";
 	/*out << WamitField(F("%d", dt.Nh), 12) << "% NBETA\n";
 	UVector<double> head = clone(dt.head);
 	Sort(head);
@@ -2982,13 +2986,17 @@ void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const U
 	}
 }
 
-void Wamit::Save_Config(String folder, int numThreads) const {
+void Wamit::Save_Config(String folder, int qtfType, int numThreads) const {
 	String fileBat = AFX(folder, "config.wam");
 	FileOut file(fileBat);
 	if (!file)
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
 	
-	String wamitFolder = GetFileFolder(Bem().wamitPath);
+	String wamitFolder;
+	if (qtfType > 0 || Bem().opForceV6)
+		wamitFolder = GetFileFolder(Bem().wamitPath6s);
+	else
+		wamitFolder = GetFileFolder(Bem().wamitPath7);
 	
 	if (IsNull(numThreads) || numThreads <= 0)
 		numThreads = 8;
@@ -3102,8 +3110,8 @@ void Wamit::Save_Fnames(String folder, int qtfType) const {
 		 << "Wamit_pot.pot\n"
 		 << "Wamit_frc.frc";
 	if (qtfType > 0) {
-		file << "Wamit_pt2.pt2";
-		file << "Wamit_fdf.fdf";
+		file << "\nWamit_pt2.pt2";
+		file << "\nWamit_fdf.fdf";
 	}
 }
 
@@ -3115,7 +3123,7 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 		throw Exc(F(t_("Problem creating '%s' folder"), folder));
 
 	Save_Fnames(folder, qtfType);
-	Save_Config(folder, numThreads);
+	Save_Config(folder, qtfType, numThreads);
 	
 	String folderName = GetFileTitle(folder);
 
@@ -3161,7 +3169,10 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
 	
 	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
-	bat << "call \"" << Bem().wamitPath << "\" fnames.wam";
+	if (qtfType > 0 || Bem().opForceV6)
+		bat << "call \"" << Bem().wamitPath6s << "\" fnames.wam";
+	else
+		bat << "call \"" << Bem().wamitPath7 << "\" fnames.wam";
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
 

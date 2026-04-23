@@ -1557,7 +1557,7 @@ protected:
 	void Save_MD(FileOut &out, int ifr) const;
 	
 	void Save_Fnames(String folder, int qtfType) const;
-	void Save_Config(String folder, int numThreads) const;
+	void Save_Config(String folder, int qtfType, int numThreads) const;
 	void Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh) const;
 
 private:
@@ -1915,7 +1915,8 @@ public:
 	String foammPath;
 	String hamsPath, hamsBodyPath;
 	String hamsmrelPath;
-	String aqwaPath, wamitPath;
+	bool opForceV6;
+	String aqwaPath, wamitPath7, wamitPath6s;
 	int volWarning, volError;
 	double roundVal, roundEps;
 	String csvSeparator;
@@ -2043,7 +2044,9 @@ public:
 			("pythonEnv", pythonEnv)
 			("zeroIfEmpty", zeroIfEmpty)
 			("aqwaPath", aqwaPath)
-			("wamitPath", wamitPath)
+			("opForceV6", opForceV6)
+			("wamitPath6s", wamitPath6s)
+			("wamitPath", wamitPath7)
 			("guiScale", guiScale)
 			("windowTitle", windowTitle)
 			("opT", opT)
@@ -2062,10 +2065,15 @@ public:
 				if (FileExists(defaultPath))
 					aqwaPath = defaultPath;
 			}
-			if (IsEmpty(wamitPath)) {
+			if (IsEmpty(wamitPath6s)) {
+				const char *defaultPath = "C:\\c:\\wamitv6s\\wamit.exe";
+				if (FileExists(defaultPath))
+					wamitPath6s = defaultPath;
+			}
+			if (IsEmpty(wamitPath7)) {
 				const char *defaultPath = "C:\\c:\\wamitv7\\wamit.exe";
 				if (FileExists(defaultPath))
-					wamitPath = defaultPath;
+					wamitPath7 = defaultPath;
 			}
 			if (IsNull(guiScale) || guiScale == 0)
 				guiScale = 100;
@@ -2542,7 +2550,7 @@ struct BMR_Data {
 	ArrayWind wind;
 	
 	UVector<String> headParams;
-	int bemid = 0, bembodyid = 0, meshid = 0, windid = 0;
+	int bemid = -1, bembodyid = -1, meshid = -1, windid = -1;		// Last valid id
 	String errorStr;
 	
 	String fastFileStr;

@@ -20,11 +20,15 @@ extern "C" {
 	L_EXPORT const char *BMR_GetLastError() noexcept;
 	// Prints a text
 	L_EXPORT void BMR_Echo(const char *str) noexcept;
-	
+	// Consider that the Wamit solver to run the cases will be always WamitV6s
+	L_EXPORT void BMR_Wamit_V6s_Set(int force) noexcept;
+	// Show the calculation dialog when running AQWA
+	L_EXPORT void BMR_AQWA_ShowCalculationDialog_Set(int show) noexcept;
+		
 	// Clear all meshes previously loaded	
 	L_EXPORT void BMR_Mesh_Clear() noexcept;
 	// Loads a mesh file
-	L_EXPORT void BMR_Mesh_Load(const char *file) noexcept;
+	L_EXPORT int BMR_Mesh_Load(const char *file) noexcept;
 	// Prints main mesh data
 	L_EXPORT void BMR_Mesh_Report() noexcept;
 	// Sets the id of the active mesh
@@ -124,8 +128,12 @@ extern "C" {
 	L_EXPORT void BMR_Bem_Body_LoadControlSurfaceFromMesh(int id) noexcept;
 	// Sets the centre of reference of the body
 	L_EXPORT void BMR_Bem_Body_C0_Set(double x, double y, double z) noexcept;
+	// Gets the centre of reference of the body
+	L_EXPORT void BMR_Bem_Body_C0_Get(double *x, double *y, double *z) noexcept;
 	// Sets the centre of gravity of the body
 	L_EXPORT void BMR_Bem_Body_Cg_Set(double x, double y, double z) noexcept;
+	// Gets the centre of gravity of the body
+	L_EXPORT void BMR_Bem_Body_Cg_Get(double *x, double *y, double *z) noexcept;
 	// Sets the 6x6 inertia matrix of the body
 	L_EXPORT void BMR_Bem_Body_Inertia_Set(const double *data, const int dim[2]) noexcept;
 	// Sets the name of the body

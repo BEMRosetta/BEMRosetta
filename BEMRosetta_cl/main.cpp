@@ -268,8 +268,8 @@ CONSOLE_APP_MAIN
 		Cout() << "\nSimulation begins at " << BMR_FAST_GetTimeStart() << " and ends at " << BMR_FAST_GetTimeEnd();
 		
 		int idptfmheave = BMR_FAST_GetParameterId("ptfmHeave");
-		int num;
 		double *v;
+		int num;
 		BMR_FAST_GetArray(idptfmheave, -1, -1, &v, &num);
 		Cout() << "\nRead " << num << " heave values"; 
 

@@ -168,7 +168,7 @@ public:
 		}
 	}
 	void Tessellate(int nu, int nv, Surface& surf);
-	bool SaveGDF(const String& filename, double g, bool symx, bool symy, bool iscsf) const;
+	bool SaveGdf(const String& filename, double g, bool symx, bool symy, bool iscsf) const;
 	
 	void Jsonize(JsonIO &json) {
 		json

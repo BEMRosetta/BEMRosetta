@@ -71,18 +71,39 @@ void BMR_Echo(const char *str) noexcept {
 	BMR().errorStr.Clear();
 }
 
-
-void BMR_Mesh_Load(const char *file) noexcept {
+void BMR_Wamit_V6s_Set(int force) noexcept {
 	try {
-		if (!FileExists(file))
-			throw Exc(F(t_("File '%s' not found"), file)); 
-								
-		Bem().LoadBody(file, BMR().echo ? BMR().Status : BMR().NoPrint, false, false, BMR().meshid);
+		Bem().opForceV6 = force;
 	} catch(Exc err) {
 		BMR().errorStr = err;
 		return;
 	}
 	BMR().errorStr.Clear();
+}
+
+L_EXPORT void BMR_AQWA_ShowCalculationDialog_Set(int show) noexcept {
+	try {
+		Bem().opNoWind = show;
+	} catch(Exc err) {
+		BMR().errorStr = err;
+		return;
+	}
+	BMR().errorStr.Clear();
+}
+
+int BMR_Mesh_Load(const char *file) noexcept {
+	try {
+		if (!FileExists(file))
+			throw Exc(F(t_("File '%s' not found"), file)); 
+		
+		BMR_Mesh_Id_Set(Bem().surfs.size());						
+		Bem().LoadBody(file, BMR().echo ? BMR().Status : BMR().NoPrint, false, false, BMR().meshid);
+	} catch(Exc err) {
+		BMR().errorStr = err;
+		return -1;
+	}
+	BMR().errorStr.Clear();
+	return BMR().meshid;
 }
 
 void BMR_Mesh_Report() noexcept {
@@ -98,14 +119,8 @@ void BMR_Mesh_Report() noexcept {
 }
 
 void BMR_Mesh_Clear() noexcept {
-	try {
-		Bem().surfs.Clear();
-		BMR_Mesh_Id_Set(0);
-	} catch(Exc err) {
-		BMR().errorStr = err;
-		return;
-	}
-	BMR().errorStr.Clear();
+	Bem().surfs.Clear();
+	BMR().meshid = -1;
 }
 
 void BMR_Mesh_Id_Set(int id) noexcept {
@@ -126,8 +141,8 @@ void BMR_Mesh_Id_Set(int id) noexcept {
 
 int BMR_Mesh_Id_Get() noexcept {
 	try {
-		if (Bem().surfs.IsEmpty()) 
-			throw Exc(t_("No file loaded"));
+//		if (Bem().surfs.IsEmpty()) 
+//			throw Exc(t_("No file loaded"));
 		
 		return BMR().meshid;
 	} catch(Exc err) {
@@ -516,7 +531,7 @@ void BMR_Mesh_VolumeEnvelope_Get(double *minx, double *maxx, double *miny, doubl
 
 void BMR_Bem_Clear() noexcept {
 	Bem().hydros.Clear();
-	BMR_Bem_Id_Set(0);
+	BMR().bemid = -1;
 }
 
 int BMR_Bem_New() noexcept {
@@ -543,8 +558,8 @@ void BMR_Bem_Id_Set(int id) noexcept {
 
 int BMR_Bem_Id_Get() noexcept {
 	try {
-		if (Bem().hydros.IsEmpty()) 
-			throw Exc(t_("No file loaded"));
+//		if (Bem().hydros.IsEmpty()) 
+//			throw Exc(t_("No file loaded"));
 		
 		return BMR().bemid;
 	} catch(Exc err) {
@@ -855,12 +870,44 @@ void BMR_Bem_Body_C0_Set(double x, double y, double z) noexcept {
 	BMR().errorStr.Clear();
 }
 
+void BMR_Bem_Body_C0_Get(double *x, double *y, double *z) noexcept {
+	try {
+		if (Bem().hydros.size() < BMR().bemid) 
+			throw Exc(F(t_("Model %d is not set"), BMR().bemid));
+		const Hydro &hy = Bem().hydros[BMR().bemid];
+		const Point3D &p = hy.dt.msh[BMR().bembodyid].dt.c0;
+		*x = p.x;
+		*y = p.y;
+		*z = p.z;
+	} catch(Exc err) {
+		BMR().errorStr = err;
+		return;
+	}
+	BMR().errorStr.Clear();
+}
+
 void BMR_Bem_Body_Cg_Set(double x, double y, double z) noexcept {
 	try {
 		if (Bem().hydros.size() < BMR().bemid) 
 			throw Exc(F(t_("Model %d is not set"), BMR().bemid));
 		Hydro &hy = Bem().hydros[BMR().bemid];
 		hy.dt.msh[BMR().bembodyid].dt.cg = Point3D(x, y, z);
+	} catch(Exc err) {
+		BMR().errorStr = err;
+		return;
+	}
+	BMR().errorStr.Clear();
+}
+
+void BMR_Bem_Body_Cg_Get(double *x, double *y, double *z) noexcept {
+	try {
+		if (Bem().hydros.size() < BMR().bemid) 
+			throw Exc(F(t_("Model %d is not set"), BMR().bemid));
+		const Hydro &hy = Bem().hydros[BMR().bemid];
+		const Point3D &p = hy.dt.msh[BMR().bembodyid].dt.cg;
+		*x = p.x;
+		*y = p.y;
+		*z = p.z;
 	} catch(Exc err) {
 		BMR().errorStr = err;
 		return;
@@ -915,7 +962,12 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 		for (type = 0; type < Hydro::NUMBEM; ++type) {
 			if (Hydro::bemInfo[type].caseCanSave) {
 				String fmt = Hydro::GetBemStrCase(static_cast<Hydro::BEM_FMT>(type));
-				if (ToLower(Replace(fmt, " ", "")).Find(ToLower(lsolver)) >= 0) {
+				if (ToLower(Replace(fmt, " ", "")) == lsolver) {				// Found the same
+					candidates.Clear();
+					candidates << fmt;
+					icase = type;
+					break;
+				} else if (ToLower(Replace(fmt, " ", "")).Find(lsolver) >= 0) {	// Found similar
 					candidates << fmt;
 					icase = type;
 				}
@@ -930,7 +982,7 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 					ret << ", ";
 				ret << candidates[i];
 			}
-			throw Exc(F(t_("Format %s can be confused with %s"), solver, ret));
+			throw Exc(F(t_("Format %s has more than one option: %s"), solver, ret));
 		}
 		int iqtfType = -1;
 		String sqtfType = ToLower(qtfType);

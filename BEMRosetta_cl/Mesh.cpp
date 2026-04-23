@@ -451,11 +451,11 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 			if (type == WAMIT_GDF) 
 				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, false);
 			else if (type == WAMIT_GDF2)
-				splines[ib].SaveGDF(fileNames[ib], g, symX, symY, false);
+				splines[ib].SaveGdf(fileNames[ib], g, symX, symY, false);
 			else if (type == WAMIT_CSF) 
 				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, true);
 			else if (type == WAMIT_CSF2)
-				splines[ib].SaveGDF(fileNames[ib], g, symX, symY, true);
+				splines[ib].SaveGdf(fileNames[ib], g, symX, symY, true);
 			else if (type == NEMOH_DAT) 
 				NemohBody::SaveDat(meshes, fileNames[ib], surfs[ib], symY, nPanels);
 			else if (type == NEMOH_PRE) 
