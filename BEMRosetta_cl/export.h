@@ -64,7 +64,7 @@ extern "C" {
 	// Generates in new model the waterplane lid with mesh size ratio
 	L_EXPORT int BMR_Mesh_FillWaterplane(double ratio, int quads) noexcept;
 	// Generates in new model a control surface mesh at a distance and with a size ratio
-	L_EXPORT int BMR_Mesh_GetControlSurface(double distance, double ratio, int quads) noexcept;
+	L_EXPORT int BMR_Mesh_GetControlSurface(double distance, double ratio, int quads, int bottom, int top) noexcept;
 	// Returns an array with the volumes x, y and z
 	L_EXPORT void BMR_Mesh_Volume_Get(double *volx, double *voly, double *volz) noexcept;
 	// Returns an array with the underwater volumes x, y and z
@@ -95,6 +95,8 @@ extern "C" {
 	// Returns the multibody and QTF capabilities of the solver: "Wamit .out", "AQWA .dat",
 	// "OrcaWave .yml", "HydroStar .hsg", "HAMS", "HAMS MREL", "Nemoh v3", "Diffrac .xml", "Capytaine .py"
 	L_EXPORT void BMR_Bem_Support(const char *solver, int *irregular, int *autoIrregular, int *middle7, int *far8, int *near9, int *autoCS, int *multibody) noexcept;
+	// Sets the wave origin
+	L_EXPORT void BMR_Bem_WaveOrigin_Set(double x, double y) noexcept;
 	// Set the depth
 	L_EXPORT void BMR_Bem_depth_Set(double h) noexcept;
 	// Sets the gravity

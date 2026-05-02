@@ -521,7 +521,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 		
 		spy << 	F("body_%d = cpt.FloatingBody(mesh=mesh_%d,%s dofs=cpt.rigid_body_dofs(rotation_center=(%f, %f, %f)), center_of_mass=(%f, %f, %f), name='%s_%d')\n\n", 
 					ib+1, ib+1, 
-					(isLid || autoIrregular ? F("lid_mesh=lid_mesh_%d, ", ib+1) : F("")),
+					(isLid || autoIrregular ? F(" lid_mesh=lid_mesh_%d,", ib+1) : F("")),
 					b.dt.c0.x, b.dt.c0.y, b.dt.c0.z,
 					b.dt.cg.x, b.dt.cg.y, b.dt.cg.z,
 					b.dt.name, ib+1
@@ -555,11 +555,13 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	spy << "list_of_bodies = [" << listBodies << "]\n";
 
 	String somega = "[", shead = "[";
-	for (int iw = 0; iw < dt.w.size(); ++iw) {
-		if (iw > 0)
-			somega << ", ";
-		somega << dt.w[iw];
-	}
+	
+	somega << "float('inf')";
+	if (dt.h <= 0)					// Zero frequency in finite depth is not supported
+		somega << ", 0";
+	
+	for (int iw = 0; iw < dt.w.size(); ++iw) 
+		somega << ", " << dt.w[iw];
 	somega << "]";
 	for (int ih = 0; ih < dt.head.size(); ++ih) {
 		if (ih > 0)

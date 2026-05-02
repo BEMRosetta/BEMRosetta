@@ -222,14 +222,14 @@ void Wamit::Save(String file, Function <bool(String, int)> Status, bool force_T,
 	
 	if (!IsNull(dt.msh[0].dt.cg)) {
 		BEM::Print("\n- " + F(t_("Force Control file '%s'"), GetFileName(fileext = ForceExt("Wamit_frc", ".frc"))));
-		Save_frc2(fileext, false, IsLoadedQTF(true) || IsLoadedQTF(false), listPoints);
+		Save_frc2(fileext, false, IsLoadedQTF(true) || IsLoadedQTF(false), listPoints, false);
 	}
 	BEM::Print("\n- " + F(t_("Configurarion file '%s'"), GetFileName(fileext = ForceExt("Wamit_cfg", ".cfg"))));
-	Save_cfg(fileext, IsLoadedQTF(true) || IsLoadedQTF(false), false, true, force_T, !listPoints.IsEmpty(), false);
+	Save_cfg(fileext, IsLoadedQTF(true) || IsLoadedQTF(false), false, true, force_T, !listPoints.IsEmpty(), false, false);
 	
 	if (dt.Nh > 0 && dt.Nf > 0) {
 		BEM::Print("\n- " + F(t_("Potential Control file '%s'"), GetFileName(fileext = ForceExt("Wamit_pot", ".pot"))));
-		Save_pot(fileext, false, false, false, UArray<Body>(), false);
+		Save_pot(fileext, false, false, false, UArray<Body>(), false, false);
 	}
 	if (IsLoadedA() && IsLoadedB()) {
 		BEM::Print("\n- " + F(t_("Hydrodynamic coefficients A and B file '%s'"), GetFileName(fileext = ForceExt(file, ".1"))));
@@ -1211,6 +1211,7 @@ bool Wamit::Load_pot(String fileName) {
 			BEM::PrintWarning("\n" + F(t_("XBODY angle %f cannot be handled by BEMRosetta"), f.GetDouble(3)));
 		
 		b.dt.mesh.Translate(b.dt.c0.x, b.dt.c0.y, b.dt.c0.z);
+		b.dt.spline.Translate(Point3D(b.dt.c0.x, b.dt.c0.y, b.dt.c0.z));
 		b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
 		
 		b.dt.cb -= b.dt.c0;		// This is corrected later
@@ -2810,7 +2811,7 @@ void Wamit::Save_789(String fileName, bool force_T/*, bool force_Deg*/) const {
 		}
 }
 
-void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const {
+void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints, bool is6) const {
 	bool bidirectionalQTF = true;
 	
 	int qtfNumber = bidirectionalQTF ? 2 : 1;
@@ -2821,14 +2822,14 @@ void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point
 
 	out << "% BEMRosetta generated .frc file\n";
 	out << F("%d %d %d %d %d %d %d %d %d", force1st || (IsLoadedA() && IsLoadedB()) ? 1 : 0,
-								 			    0,
-								 			    force1st || IsLoadedFex() ? 2 : 0,
-								 			    force1st || IsLoadedRAO() ? 1 : 0, 
-								 			    !listPoints.IsEmpty() ? 1 : 0,
-								 			    !listPoints.IsEmpty() ? 1 : 0,
-								 			    qtfType == 7 ? qtfNumber : 0,
-								 			    qtfType == 8 ? 1 : 0,				// Get mean drift
-								 			    qtfType == 9 ? qtfNumber : 0);	
+								 		   0,
+								 		   force1st || IsLoadedFex() ? (is6 ? 1 : 2) : 0,
+								 		   force1st || IsLoadedRAO() ? 1 : 0, 
+								 		   !listPoints.IsEmpty() ? 1 : 0,
+								 		   !listPoints.IsEmpty() ? 1 : 0,
+								 		   qtfType == 7 ? qtfNumber : 0,
+								 		   qtfType == 8 ? 1 : 0,				// Get mean drift
+								 		   qtfType == 9 ? qtfNumber : 0);	
 	if (qtfType == 7 || qtfType == 9)
 		out << " 1";		// IOPTN(10): Direct method
 	else
@@ -2919,7 +2920,7 @@ void Wamit::Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point
 		out << "   " << p.x << "\t" << p.y << "\t" << p.z << "\n";
 }
 
-void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular) const {
+void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular, bool autoirregular) const {
 	String folder = GetFileFolder(fileName);
 	
 	FileOut out(fileName);
@@ -2950,7 +2951,6 @@ void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const U
 	for (int ih = 0; ih < head.size(); ++ih) 
 		out << F("%.4f ", head[ih]);
 	out << "% BETA\n";
-	
 	out << WamitField(F("%d ", dt.Nb), 12) << "% NBODY";
 	UVector<String> names;
 	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -2966,23 +2966,27 @@ void Wamit::Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const U
 		bool is2 = false;
 		for (int ib = 0; ib < dt.Nb; ++ib) {
 			if (msh[ib].dt.spline.IsEmpty()) {
-				if (lids.size() > ib && irregular) 
+				if (!lids.IsEmpty() && !lids[ib].IsEmpty() > ib && irregular && !autoirregular) 
 					msh[ib].dt.under.Append(lids[ib].dt.mesh);
 				msh[ib].dt.under.Translate(-msh[ib].dt.c0.x, -msh[ib].dt.c0.y, -msh[ib].dt.c0.z);	
+				msh[ib].dt.mesh = clone(msh[ib].dt.under);
 			} else {
 				is2 = true;
-				msh[ib].dt.spline.CutZ(false);
-				if (lids.size() > ib && irregular) {
-					Body lid = clone(lids[ib]);
-					lid.dt.spline.CutZ(false);
-					msh[ib].dt.spline.Append(lid.dt.spline);
+				if (irregular) {
+					if (autoirregular)
+						msh[ib].dt.spline.CutZ(false);
+					else if (!lids.IsEmpty() && !lids[ib].IsEmpty()) {
+						Body lid = clone(lids[ib]);
+						lid.dt.spline.CutZ(false);
+						msh[ib].dt.spline.Append(lid.dt.spline);
+					}
 				}
 				msh[ib].dt.spline.Translate(-msh[ib].dt.c0);	
 			}
 		}
 		int nNodes, nPanels;
-		Body::SaveAs(msh, names, is2 ? Body::WAMIT_GDF2 : Body::WAMIT_GDF, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
-			dt.w, dt.head, false, false, false, false, dt.h, Null);
+		Body::SaveAs(msh, names, is2 ? Body::WAMIT_GDF2 : Body::WAMIT_GDF, Body::ALL, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
+			dt.w, dt.head, irregular, autoirregular, false, false, dt.h, Null);
 	}
 }
 
@@ -3009,7 +3013,7 @@ void Wamit::Save_Config(String folder, int qtfType, int numThreads) const {
   	;
 }
 
-void Wamit::Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh) const {
+void Wamit::Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6, bool ishigh, bool ispoints) const {
 	FileOut out(fileName);
 	if (!out)
 		throw Exc(F(t_("Problem creating '%s' file"), fileName));
@@ -3029,13 +3033,20 @@ void Wamit::Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular,
 		undersurf += dt.msh[ib].dt.under.surface;
 	undersurf /= dt.Nb;
 	
-	out << "! BEMRosetta generated .cfg file\n"
-		<< " IPERIN   = 1      (Input period)\n";
-	if (force_T)
- 		out << " IPEROUT  = 1      (Output period [s])\n";
+	out << "! BEMRosetta generated .cfg file\n";
+	if (is6)
+		out << " IPERIO  = " << (force_T ? 1 : 2) << "\n"; 
+	else {
+		out	<< " IPERIN   = 1      (Input period)\n";
+		if (force_T)
+	 		out << " IPEROUT  = 1      (Output period [s])\n";
+	 	else
+	 		out << " IPEROUT  = 2      (Output frequency [rad/s])\n";
+	}
+ 	if (autoIrregular)
+ 		out << " MAXITT   = 100\n";
  	else
- 		out << " IPEROUT  = 2      (Output frequency [rad/s])\n";
- 	out << " MAXITT   = 50\n";
+ 		out << " MAXITT   = 50\n";
  	if (qtfType > 0)
 		out << " I2ND     = 1\n";
  	if (qtfType == 9)	// Pressure integration
@@ -3054,21 +3065,28 @@ void Wamit::Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular,
  		else
  			out << " IRR      = 0\n";
  	}
- 	if (is6p) {
+ 	if (ispoints) {
  		out << " INUMOPT5 = 1\n";
  		out << " INUMOPT6 = 1\n";
  	}
- 	out << " ILOG     = 1\n"
- 		<< " ISOLVE   = 1\n"
- 		<< " IALTFRC  = 2\n"		// Alternative Form 2 of .frc
+ 	out << " ILOG     = 1\n";
+ 	if (autoIrregular)
+ 		out	<< " ISOLVE   = 0\n";
+ 	else
+ 		out	<< " ISOLVE   = 1\n";
+ 	out	<< " IALTFRC  = 2\n"		// Alternative Form 2 of .frc
  		<< " IALTPOT  = 2\n"
 		<< " IPLTDAT  = 5\n"
 		<< " NUMHDR   = 0\n"
 	;
 	out << " ILOWHI   = " << (ishigh ? 1 : 0) << "\n";
 	if (ishigh) {
+		UVector<double> x = {0, 500,  800, 8500, 500000},	// 8500 m2 -> 2.5 m (IEA 240), 1445 m2 -> 1 m 
+					    y = {0, 0.5,    1,  2.5,     40};
+		double panelsize = LinearInterpolate(undersurf, x, y);
+
 		out << " ILOWGDF  = 5\n"
-			<< " PANEL_SIZE = " << F("%.3f", 0.00029*undersurf); // 8500 m2 -> 2.5 m (IEA 240)
+			<< " PANEL_SIZE = " << F("%.2f", panelsize); 
 	}
 }
 
@@ -3094,7 +3112,7 @@ void Wamit::Save_fdf(String fileName, double rpart) const {
 	if (dt.h > 0)
 		rinner = max(rinner, dt.h);
 	out << "% BEMRosetta generated .fdf file\n";	
-	out << F("%7f", rinner) << "    RINNER (radius of partitioning circle inside of which minimal approximations are used)\n"
+	out << F("%.3f", rinner) << "    RINNER (radius of partitioning circle inside of which minimal approximations are used)\n"
 		<< "   -1 4    NPATCHF NTCLH (NPATCHF=-1 to auto-generate free surface panels based on body GDF, Scale factor: free surface panels are 4× larger than body waterline panels)\n"
 		<< "0 0 0 0    NAL DELR NCIRE NGSP (NAL=0: no intermediate annuli -skip annular integration regions-)";
 }
@@ -3128,17 +3146,21 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 	String folderName = GetFileTitle(folder);
 
 	bool ishigh = !First(dt.msh).dt.spline.IsEmpty();
+	bool is6 = qtfType > 0 || Bem().opForceV6;
 				
-	Save_pot (AFX(folder, "Wamit_pot.pot"), true, x0z, y0z, dt.lids, !dt.lids.IsEmpty() && irregular && (!autoIrregular));
-	Save_frc2(AFX(folder, "Wamit_frc.frc"), true, qtfType, listPoints);
-	Save_cfg (AFX(folder, "Wamit_cfg.cfg"), qtfType, !dt.lids.IsEmpty() && irregular, autoIrregular, false, !listPoints.IsEmpty(), ishigh);
+	Save_pot (AFX(folder, "Wamit_pot.pot"), true, x0z, y0z, dt.lids, irregular, autoIrregular);
+
+	Save_frc2(AFX(folder, "Wamit_frc.frc"), true, qtfType, listPoints, is6);
+
+	Save_cfg (AFX(folder, "Wamit_cfg.cfg"), qtfType, !dt.lids.IsEmpty() && !dt.lids[0].IsEmpty() && irregular, autoIrregular, false, is6, ishigh, !listPoints.IsEmpty());
+
 	if (qtfType > 0)
 		Save_pt2(AFX(folder, "Wamit_pt2.pt2"));
 	
 	double rpart = 0;	// Maximum radius of the area covered by the set of bodies
 	if (qtfType == 7) {
 		if (autoQTF)
-			rpart = SaveAutoCSF_Circle(folder, x0z, y0z);
+			rpart = SaveAutoCSF_Circle(folder, x0z, y0z, true);
 			//SaveAutoCSF_Rectangle();
 		else {
 			UArray<Body> cs = clone(dt.css);
@@ -3159,7 +3181,9 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 			Body::SaveAs(cs, names, iscs2 ? Body::WAMIT_CSF2 : Body::WAMIT_CSF, Body::UNDERWATER, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
 				dt.w, dt.head, false, false, false, false, dt.h, Null);
 		}
-	}
+	} else
+		rpart = SaveAutoCSF_Circle(folder, x0z, y0z, false);
+	
 	if (qtfType > 0)
 		Save_fdf(AFX(folder, "Wamit_fdf.fdf"), rpart);
 			
@@ -3176,20 +3200,27 @@ void Wamit::SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<
 	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
 
-double Wamit::SaveAutoCSF_Circle(String folder, bool x0z, bool y0z) const {
+double Wamit::SaveAutoCSF_Circle(String folder, bool x0z, bool y0z, bool saveCsf) const {
 	double ratio = 1.2;
 	UVector<Pointf> centres(dt.Nb);
 	UVector<double> radius(dt.Nb);
 	double minZ = 0;
 	
 	// Get the volumes
+	VolumeEnvelope total;
+	total.Reset();
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		VolumeEnvelope env(dt.msh[ib].dt.mesh.nodes);
 		centres[ib] = Pointf(Avg(env.minX, env.maxX), Avg(env.minY, env.maxY));
 		radius[ib]  = ratio*(sqrt(sqr(env.maxX - env.minX) + sqr(env.maxY - env.minY))/2.); // 20% outer
 		minZ = min(minZ, env.minZ);	
+		total.MixEnvelope(env);
 	}
-	double ret = Max(radius);
+	double ret = max(abs(total.maxX), abs(total.minX), abs(total.maxY), abs(total.minY));
+	
+	if (!saveCsf)
+		return ret;
+	
 	minZ *= ratio;
 	// Removes the intersections
 	for (int ib = 0; ib < dt.Nb; ++ib) {

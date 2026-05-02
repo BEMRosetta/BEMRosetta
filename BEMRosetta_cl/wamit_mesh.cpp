@@ -144,6 +144,17 @@ String WamitBody::LoadGGdf(LineParser &f, String folder, UArray<Body> &mesh, boo
 	x0z = y0z = false;
 	return String();
 }
+
+String WamitBody::LoadPot(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g) {
+	Wamit wam;
+	
+	wam.Load_pot(fileName);
+	for (int ib = 0; ib < wam.dt.msh.size(); ++ib)
+		mesh << pick(wam.dt.msh[ib]);
+	
+	return String();	
+}
+
 	
 String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
 	FileInLine in(fileName);

@@ -43,7 +43,7 @@ void FastScatter::Init(Function <bool(String)> OnFile, Function <void(String)> O
 	compare.butLoad.Tip(t_("Loads parameters and metrics file")) << [&] {compare.fileMetrics.DoGo();};
 	compare.butSave.Tip(t_("Saves parameters and metrics")) << [&] {OnSaveCompare();};
 	
-	compare.arrayStats.AddColumn(t_("Parameter"), 80);
+	compare.arrayStats.AddColumn(t_("Parameter or equation"), 80);
 	compare.arrayStats.GetColumn(0).Edit(edits.Add()); 
 	compare.arrayStats.AddColumn(t_("# decimals"), 80);
 	compare.arrayStats.GetColumn(1).Edit(edits.Add()); 

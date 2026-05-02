@@ -83,7 +83,11 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 		BEM::Print(F("\n- ") + t_("Froude Krylov file 'FKForce.tec'"));
 		if (!Load_FroudeKrylov(folderForces))
 			BEM::Print(F(": ** FKForce.tec ") + t_("Not found") + "**");
-		
+
+		BEM::Print(F("\n- ") + t_("RAO file 'RAO.dat'"));
+		if (!Load_RAO(folder))
+			BEM::Print(F(": ** FKForce.tec ") + t_("Not found") + "**");
+					
 		if (dt.solver == Hydro::NEMOHv3) {
 			Load_Inertia(folder, "mechanics");
 			Load_LinearDamping(folder, "mechanics");
@@ -106,7 +110,7 @@ String Nemoh::Load(String file, Function <bool(String, int)> Status, double) {
 		if (IsNull(dt.Nb))	
 			return t_("No body found");
 	} catch (Exc e) {
-		BEM::PrintError(F("\n%s: %s", t_("Error"), e));
+		//BEM::PrintError(F("\n%s: %s", t_("Error"), e));
 		//dt.lastError = e;
 		return e;
 	}
@@ -181,38 +185,55 @@ bool Nemoh::Load_Cal(String fileName) {
 		if (npanels < 1 || npanels > 1e8)
 			throw Exc(in.Str() + "\n"  + F(t_("Incorrect number of panels %s"), f.GetText(1)));	
 		f.GetLine();	
-		/*body.*/ int ndof = f.GetInt(0);
-		if (/*body.*/ndof < 0 || /*body.*/ndof > 6)
+		int ndof = f.GetInt(0);
+		if (ndof < 0 || ndof > 6)
 			throw Exc(in.Str() + "\n"  + F(t_("Incorrect DOF number %s in body %d"), f.GetText(0), ib+1));
+		body.dt.dof.Set(0, false, 6);
+		Point3D c0_trans = Null, c0_rot = Null, c0;
 		for (int idf = 0; idf < /*body.*/ndof; ++idf) {
 			f.GetLine();
 			int type = f.GetInt(0);
-			//bool x = f.GetDouble(1) > 0;		
-			//bool y = f.GetDouble(2) > 0;
-			//bool z = f.GetDouble(3) > 0;
+			bool x = f.GetDouble(1) > 0;		
+			bool y = f.GetDouble(2) > 0;
+			bool z = f.GetDouble(3) > 0;
 			double cx = f.GetDouble(4);
 			double cy = f.GetDouble(5);
 			double cz = f.GetDouble(6);
 			if (type == 1) {
-			//	if (x) 
-			//		body.dof[BEM::SURGE] = true;
-			//	else if (y)
-			//		body.dof[BEM::SWAY] = true;
-			//	else if (z)
-			;//		body.dof[BEM::HEAVE] = true;
+				c0.Set(cx, cy, cz);
+				if (IsNull(c0_trans))
+					c0_trans = pick(c0);
+				else if (c0_trans != c0)
+					throw Exc(in.Str() + "\n"  + F(t_("BEMRosetta cannot handle bodies with degrees of freedom with different reference systems: (%s,%s,%s) != (%s,%s,%s)"),
+													FDS(c0_trans.x,5), FDS(c0_trans.y,5), FDS(c0_trans.z,5), FDS(c0.x,5), FDS(c0.y,5), FDS(c0.z,5)));
+				if (x) 
+					body.dt.dof[BasicBEM::SURGE] = true;
+				else if (y)
+					body.dt.dof[BasicBEM::SWAY] = true;
+				else if (z)
+					body.dt.dof[BasicBEM::HEAVE] = true;
 			} else if (type == 2) {
-				body.dt.c0[0] = cx;
-				body.dt.c0[1] = cy;
-				body.dt.c0[2] = cz;
-			//	if (x) 
-			//		body.dof[BEM::ROLL] = true;
-			//	else if (y)
-			//		body.dof[BEM::PITCH] = true;
-			//	else if (z)
-			//		body.dof[BEM::YAW] = true;
+				c0.Set(cx, cy, cz);
+				if (IsNull(c0_rot))
+					c0_rot = pick(c0);
+				else if (c0_rot != c0)
+					throw Exc(in.Str() + "\n"  + F(t_("BEMRosetta cannot handle bodies with degrees of freedom with different reference systems: (%s,%s,%s) != (%s,%s,%s)"),
+													FDS(c0_rot.x,5), FDS(c0_rot.y,5), FDS(c0_rot.z,5), FDS(c0.x,5), FDS(c0.y,5), FDS(c0.z,5)));
+				if (x) 
+					body.dt.dof[BasicBEM::ROLL] = true;
+				else if (y)
+					body.dt.dof[BasicBEM::PITCH] = true;
+				else if (z)
+					body.dt.dof[BasicBEM::YAW] = true;
 			} else
 				throw Exc(in.Str() + "\n"  + F(t_("Incorrect DOF type %d set in body %d"), f.GetText(0), ib+1));
 		}
+		if (c0_trans.x != c0_rot.x || c0_trans.y != c0_rot.y)
+			throw Exc(in.Str() + "\n"  + F(t_("BEMRosetta cannot handle bodies with degrees of freedom with different reference systems: (%s,%s,%s) != (%s,%s,%s)"),
+													FDS(c0_trans.x,5), FDS(c0_trans.y,5), FDS(c0_trans.z,5), FDS(c0_rot.x,5), FDS(c0_rot.y,5), FDS(c0_rot.z,5)));
+		
+		body.dt.c0 = pick(c0_rot);
+		
 		f.GetLine();	int nforces = f.GetInt(0);
 		in.GetLine(nforces);	// Discarded
 		f.GetLine();	int nadditional = f.GetInt(0);	
@@ -331,7 +352,8 @@ void Nemoh::Save_Body_bat(String folder, String caseFolder, const UVector<String
 }
 
 void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-		String preName, String hydroName, String solvName, String postName, int numThreads) const {
+		String preName, String hydroName, String solvName, String postName, 
+		String QTFpreName, String QTFsolvName, String QTFpostName, int numThreads, int qtfType) const {
 	String fileName = AFX(folder, batname);
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -369,7 +391,14 @@ void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin,
 	}
 	if (!postName.IsEmpty()) 
 		out << "\"" << AFX(strBin, postName) << "\"\n";
-	
+	if (qtfType > 0) {
+		if (!QTFpreName.IsEmpty()) 
+			out << "\"" << AFX(strBin, QTFpreName) << "\"\n";
+		if (!QTFsolvName.IsEmpty()) 
+			out << "\"" << AFX(strBin, QTFsolvName) << "\"\n";
+		if (!QTFpostName.IsEmpty()) 
+			out << "\"" << AFX(strBin, QTFpostName) << "\"\n";
+	}
 	out << "\necho End:   \%date\% \%time\% >> time.txt\n";
 }
 
@@ -417,13 +446,13 @@ void Nemoh::SaveCase(String folderBase, bool bin, int numCases, BEM_FMT solver, 
 	if (qtfType > 0 && solver != Hydro::NEMOHv3)
 		throw Exc(F(t_("Solver %s does not obtain QTF"), GetBemStr(solver)));
 	
-	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, listDOF, irregular, autoIrregular);
+	SaveFolder0(folderBase, bin, 1, true, solver, numThreads, x0z, listDOF, irregular, autoIrregular, qtfType);
 	if (numCases > 1)
-		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, listDOF, irregular, autoIrregular);
+		SaveFolder0(folderBase, bin, numCases, false, solver, numThreads, x0z, listDOF, irregular, autoIrregular, qtfType);
 }
 
 void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFolder, 
-			int solver, int numThreads, bool x0z, const UVector<bool> &listDOF, bool irregular, bool autoIrregular) const {
+			int solver, int numThreads, bool x0z, const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType) const {
 	BeforeSaveCase(folderBase, numCases, deleteFolder);
 
 	UVector<int> valsf;
@@ -435,7 +464,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 	if (!DirectoryCreateX(binResults))
 		throw Exc(F(t_("Problem creating '%s' folder"), binResults));
 	
-	String preName, hydroName, solvName, postName, batName = "Nemoh";
+	String preName, hydroName, solvName, postName, QTFpreName, QTFsolvName, QTFpostName, batName = "Nemoh";
 	if (solver == Hydro::CAPYTAINE) {
 		solvName = "capytaine";
 		batName = GetFileTitle(folderBase);
@@ -476,6 +505,20 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			if (!FileCopy(AFX(Bem().nemoh3Path, postName), 
 						  AFX(binResults, postName))) 
 				throw Exc(F(t_("Problem copying postproc binary from '%s'"), Bem().nemoh3Path));
+			if (qtfType > 0) {
+				QTFpreName  = "QTFpreProc";
+				if (!FileCopy(AFX(Bem().nemoh3Path, QTFpreName), 
+						  AFX(binResults, solvName))) 
+					throw Exc(F(t_("Problem copying QTF preprocessor binary from '%s'"), Bem().nemoh3Path));
+				QTFsolvName = "QTFsolver";
+				if (!FileCopy(AFX(Bem().nemoh3Path, QTFsolvName), 
+						  AFX(binResults, solvName))) 
+					throw Exc(F(t_("Problem copying QTF solver binary from '%s'"), Bem().nemoh3Path));
+				QTFpostName = "QTFpostProc";
+				if (!FileCopy(AFX(Bem().nemoh3Path, QTFpostName), 
+						  AFX(binResults, solvName))) 
+					throw Exc(F(t_("Problem copying QTF postprocessor binary from '%s'"), Bem().nemoh3Path));
+			}
 		} else if (solver == Hydro::CAPYTAINE) 
 			solvName = "capytaine";
 
@@ -491,6 +534,9 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			hydroName = "hydroscal.exe";
 			solvName = "solver.exe";
 			postName = "postproc.exe";
+			QTFpreName = "QTFpreProc.exe";
+			QTFsolvName = "QTFsolver.exe";
+			QTFpostName = "QTFpostProc.exe";
 		}
 	}
 		
@@ -513,6 +559,12 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			folderMech = AFX(folder, "mechanics");
 			if (!DirectoryCreateX(folderMech))
 				throw Exc(F(t_("Problem creating '%s' folder"), folderMech));
+			if (!DirectoryCreateX(AFX(folder, "motion")))
+				throw Exc(F(t_("Problem creating '%s' folder"), "motion"));
+			if (qtfType > 0) {
+				if (!DirectoryCreateX(AFX(folder, "QTFPreprocOut")))
+					throw Exc(F(t_("Problem creating '%s' folder"), "QTFPreprocOut"));
+			}
 		}
 		
 		if (solver != Hydro::NEMOHv3)
@@ -546,11 +598,18 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			numNodes[ib] = dt.msh[ib].dt.under.nodes.size();
 			numPanels[ib] = dt.msh[ib].dt.under.panels.size();
 		}
-		Save_Cal(folder, freqs, solver, x0z, listDOF);
+		Save_Cal(folder, freqs, solver, x0z, listDOF, qtfType);
 				
 		String folderResults = AFX(folder, "results");
 		if (!DirectoryCreateX(folderResults))
 			throw Exc(F(t_("Problem creating '%s' folder"), folderResults));
+		
+		if (solver == Hydro::NEMOHv3 && qtfType > 0) {
+			if (!DirectoryCreateX(AFX(folder, "results", "QTF")))
+				throw Exc(F(t_("Problem creating '%s' folder"), "results\\QTF"));
+			if (!DirectoryCreateX(AFX(folder, "results", "sources")))
+				throw Exc(F(t_("Problem creating '%s' folder"), "results\\sources"));
+		}
 		
 		if (bin && solver != Hydro::NEMOHv3 && !GetFileName(Bem().nemohPathGREN).IsEmpty()) {
 			String destGREN = AFX(folder, GetFileName(Bem().nemohPathGREN));
@@ -560,9 +619,9 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 		
 		if (numCases > 1) {
 			String caseFolder = F("%s_Part_%d", batName, i+1);
-			Save_Bat(folderBase, F("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName, numThreads);
+			Save_Bat(folderBase, F("%s_Part_%d.bat", batName, i+1), caseFolder, bin, preName, hydroName, solvName, postName, QTFpreName, QTFsolvName, QTFpostName, numThreads, qtfType);
 		} else 
-			Save_Bat(folder, F("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName, numThreads);
+			Save_Bat(folder, F("%s.bat", batName), Null, bin, preName, hydroName, solvName, postName, QTFpreName, QTFsolvName, QTFpostName, numThreads, qtfType);
 	}
 }
 
@@ -575,9 +634,9 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 	Body mesh = clone(_mesh);
 	
 	int iib = ib >= 0? ib : 0;
-	bool isLid = _lids.size() > iib && !_lids[ib].dt.mesh.panels.IsEmpty();
+	bool isLid = _lids.size() > iib && !_lids[iib].dt.mesh.panels.IsEmpty();
 	if (isLid) {
-		Surface lid = clone(_lids[ib].dt.mesh);
+		Surface lid = clone(_lids[iib].dt.mesh);
 		if (x0z) {			// Assures that even with symmetry, no triangle is in the lid
 			Surface nlid;			
 			nlid.CutY(lid);
@@ -615,8 +674,7 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 	out << F("%s               ! Gravity (m/s2)", FDS(g, 6, true));
 }
 	
-void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, /*const UVector<int> &nodes, 
-		const UVector<int> &panels, */int solver, bool x0z, const UVector<bool> &listDOF) const {
+void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, int solver, bool x0z, const UVector<bool> &listDOF, int qtfType) const {
 	String fileName = AFX(folder, "Nemoh.cal");
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -718,12 +776,28 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, /*const UVecto
 	out << NemohField(F("%4<d %4<d %.2f %.2f", 0, 0, 0, 0), cp) << "! Free surface elevation ! Number of points in x direction (0 for no calculations) and y direction and dimensions of domain in x and y direction" << "\n";
 	
 	if (solver == Hydro::NEMOHv3) {
-		out << NemohField("0						! Response Amplitude Operator (RAO), 0 no calculation, 1 calculated", cp) << "\n";	
-		out << NemohField("1						! output freq type, 1,2,3=[rad/s,Hz,s]", cp) << "\n";	 
+		out << NemohField("1                            ! Response Amplitude Operator (RAO), 0 no calculation, 1 calculated", cp) << "\n";	
+		out << NemohField("1                            ! output freq type, 1,2,3=[rad/s,Hz,s]", cp) << "\n";	 
 		out << NemohHeader("QTF") << "\n";	
-		out << NemohField("0", cp) << "! QTF flag, 1 is calculated" << "\n";	
+		if (qtfType <= 0)
+			out << NemohField("0", cp) << "! QTF flag, 1 is calculated" << "\n";	
+		else {
+			out << NemohField("1", cp) << "! QTF flag, 1 is calculated" << "\n";	
+			out << NemohField(F("%d %f %f", Nf, minF, maxF), cp) << "! Number of radial frequencies, Min, and Max values for the QTF computation" << "\n";
+			out << "1                            ! 0 Unidirection, Bidirection 1\n";
+			
+			out << "2                            ! Contrib, 1 DUOK, 2 DUOK+HASBO, 3 Full QTF (DUOK+HASBO+HASFS+ASYMP)\n";
+			out << "NA                           ! Name of free surface meshfile (Only for Contrib 3), type 'NA' if not applicable\n"; 
+			out << "0  0  0                      ! Free surface QTF parameters: Re Nre NBessel (for Contrib 3)\n";
+
+			out << "0                            ! 1 Includes Hydrostatic terms of the quadratic first order motion, -[K]xi2_tilde\n"
+				   "1                            ! For QTFposProc, output freq type, 1,2,3=[rad/s,Hz,s]\n"
+				   "1                            ! For QTFposProc, 1 includes DUOK in total QTFs, 0 otherwise\n"
+				   "1                            ! For QTFposProc, 1 includes HASBO in total QTFs, 0 otherwise\n" 
+				   "0	                         ! For QTFposProc, 1 includes HASFS+ASYMP in total QTFs, 0 otherwise\n";			  
+		}
 	}
-	out << "---";
+	out << NemohHeader("") << "\n";;
 }
 
 bool Nemoh::Load_Inf(String fileName) {
@@ -1084,20 +1158,24 @@ bool Nemoh::Load_Radiation(String fileName) {
 	Initialize_AB(dt.A);
 	Initialize_AB(dt.B);
 	
-	for (int ibody = 0; ibody < dt.Nb; ++ibody) {
+	for (int ib = 0; ib < dt.Nb; ++ib) {
 		for (int idof = 0; idof < 6; ++idof) {
-			for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
-				f.Load(in.GetLine());
-				if (IsNull(f.GetDouble_nothrow(0)))
-					throw Exc(in.Str() + "\n"  + t_("Frecuency not found. May be radiation file doesn't match with Nemoh.cal file"));		
-				int col = 1;
-				for (int idof2 = 0; idof2 < 6; ++idof2) {			
-					dt.A[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
-        			dt.B[ibody*6 + idof][ibody*6 + idof2][ifr] = f.GetDouble(col++);
+			if (dt.msh[ib].dt.dof[idof]) {
+				for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
+					f.Load(in.GetLine());
+					if (IsNull(f.GetDouble_nothrow(0)))
+						throw Exc(in.Str() + "\n"  + t_("Frecuency not found. May be radiation file doesn't match with Nemoh.cal file"));		
+					int col = 1;
+					for (int idof2 = 0; idof2 < 6; ++idof2) {
+						if (dt.msh[ib].dt.dof[idof2]) {			
+							dt.A[ib*6 + idof][ib*6 + idof2][ifr] = f.GetDouble(col++);
+		        			dt.B[ib*6 + idof][ib*6 + idof2][ifr] = f.GetDouble(col++);
+						}
+					}
 				}
+		    	if (idof < 6)
+		    		in.GetLine();
 			}
-	    	if (idof < 6)
-	    		in.GetLine();
 		}
 	}
 	return true;
@@ -1123,8 +1201,8 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 	LineParser f(in);
 	f.IsSeparator = IsTabSpace;
 	in.GetLine();
-	UVector<UVector<int>> dof;
-	dof.SetCount(dt.Nb);
+	//UVector<UVector<int>> dof;
+	//dof.SetCount(dt.Nb);
 	while(!in.IsEof()) {
 		line = in.GetLine();
 		if (line.StartsWith("Zone") || line.StartsWith("angle"))
@@ -1143,17 +1221,62 @@ bool Nemoh::Load_Forces(Hydro::Forces &fc, String nfolder, String fileName) {
 			int il = 0;
 			for (int ib = 0; ib < dt.Nb; ++ib) {
 				for (int ibdof = 0; ibdof < 6; ++ibdof) {
-					if (ifr >= dt.Nf)
-						throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
-					double ma = f.GetDouble(1 + 2*il);	
-					double ph = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
-					fc[ib][ih](ifr, ibdof) = std::polar(ma, ph); 
-					il++; 
+					if (dt.msh[ib].dt.dof[ibdof]) {
+						if (ifr >= dt.Nf)
+							throw Exc(in.Str() + "\n"  + t_("Number of frequencies higher than the defined in Nemoh.cal file"));		
+						double ma = f.GetDouble(1 + 2*il);	
+						double ph = -f.GetDouble(1 + 2*il + 1); //-Phase to follow Wamit
+						fc[ib][ih](ifr, ibdof) = std::polar(ma, ph); 
+						il++; 
+					}
 				}
 			}
 			ifr++;
 		}
 	}
+	return true;
+}
+
+bool Nemoh::Load_RAO(String folder) {
+	String fileName = AFX(folder, "motion", "RAO.dat");
+	
+	FileInLine in(fileName);
+	if (!in.IsOpen())
+		return false;
+	String line;
+	LineParser f(in);	
+	f.IsSeparator = IsTabSpace;
+	
+	Initialize_Forces(dt.rao);
+	
+	double angfactor = 1;
+	line = f.GetLine();
+	if (line.Find("ang(x) (deg)") > 0)
+		angfactor = M_PI/180;
+	f.GetLine();
+	
+	for (int ih = 0; ih < dt.Nh; ++ih) {
+		if (dt.Nh > 1)
+			f.GetLine();
+		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
+			f.GetLine();
+			int ic = 1;
+			for (int ib = 0; ib < dt.Nb; ++ib) {	
+				for (int idof = 0; idof < 6; ++idof) {
+					if (dt.msh[ib].dt.dof[idof])
+						dt.rao[ib][ih](ifr, idof).real(f.GetDouble(ic++));
+				}
+				for (int idof = 0; idof < 6; ++idof) {
+					if (dt.msh[ib].dt.dof[idof]) {
+						double ma = dt.rao[ib][ih](ifr, idof).real();
+						double ph = -f.GetDouble(ic++)*angfactor;		//-Phase to follow Wamit
+						dt.rao[ib][ih](ifr, idof) = std::polar(ma, ph); 
+					}
+				}
+			}
+		}
+	}
+	
 	return true;
 }
 

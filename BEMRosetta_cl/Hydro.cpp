@@ -568,11 +568,30 @@ void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
 	
 	if (qtfType == 8 && dt.Nb > 1)
 		throw Exc(t_("The near field method cannot be used with a multibody case"));
-	
+
 	if (!autoQTF && qtfType == 7) {
 		for (int ib = 0; ib < dt.Nb; ++ib) 
 			if (dt.css.size() <= ib)
 				throw Exc(F(t_("Control surface not found for body %d"), ib+1));
+	}
+	
+	if (irregular && !autoIrregular) {
+		for (int ib = 0; ib < dt.Nb; ++ib) {
+			if (dt.lids[ib].dt.mesh.IsEmpty()) {
+				if (dt.msh[ib].dt.spline.IsEmpty()) {
+					dt.lids[ib].dt.mesh.GetDryPanels(dt.msh[ib].dt.mesh, true, Null, Null);
+					dt.lids[ib].AfterLoad(Bem().rho, Bem().g, false, true);
+					dt.msh[ib].dt.mesh = pick(dt.msh[ib].dt.under);
+					dt.msh[ib].AfterLoad(Bem().rho, Bem().g, false, true);
+				} else {
+					dt.lids[ib].dt.spline = clone(dt.msh[ib].dt.spline); 
+					dt.lids[ib].dt.spline.GetLid();
+					dt.lids[ib].AfterLoad(Bem().rho, Bem().g, false, true);
+					dt.msh[ib].dt.spline.GetHull();
+					dt.msh[ib].AfterLoad(Bem().rho, Bem().g, false, true);
+				}
+			}
+		}
 	}
 	
 	if (withPotentials && (solver == Hydro::WAMIT || solver == Hydro::HAMS || solver == Hydro::HAMS_MREL)) {
@@ -583,6 +602,7 @@ void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
 				listPoints << p.centroidPaint;
 		}
 	}
+
 	try {	
 		if (solver == Hydro::CAPYTAINE || solver == Hydro::NEMOH || solver == Hydro::NEMOHv115 || solver == Hydro::NEMOHv3 || solver == Hydro::SEAFEM_NEMOH)
 			static_cast<const Nemoh &>(*this).SaveCase(folder, bin, numCases, solver, numThreads,x0z, listDOF, irregular, autoIrregular, qtfType);
@@ -742,8 +762,24 @@ CONSOLE_APP_MAIN {
     Cout() << "Columns: " << g.cols << " Rows: " << g.rows << "\n";
 }*/
 
-UVector<String> Hydro::Check(BEM_FMT type) const {
+UVector<String> Hydro::Check(BEM_FMT type, bool irregular, bool autoIrregular, int qtfType, bool autoCS) const {
 	UVector<String> ret;
+
+	if (!Hydro::bemInfo[type].irregular && irregular)
+		ret << F(t_("Solver does not support irregular frequencies removal"));
+
+	if (!Hydro::bemInfo[type].autoIrregular && autoIrregular)
+		ret << F(t_("Solver cannot generate itself the irregular frequencies removal lid"));
+		
+	if (qtfType > 0 && F(Hydro::bemInfo[type].qtf).Find(FormatInt(qtfType)) < 0)
+		ret << F(t_("Solver does not support QTF calculation type"));
+
+	if (!Hydro::bemInfo[type].autoCS && autoCS)
+		ret << F(t_("Solver cannot generate itself the control surface"));
+	
+	if (!Hydro::bemInfo[type].multibody && dt.msh.size() > 1)
+	    ret << F(t_("Solver does not support multibody calculations"));
+
 	
 	if (IsNull(dt.rho) || dt.rho < 0 || dt.rho > 10000)
 		 ret << F(t_("Incorrect rho %s"), FormatDoubleEmpty(dt.rho));
@@ -825,7 +861,7 @@ double Hydro::GetK_IRF_MaxT() const {
 }
 
 void Hydro::GetK_IRF(double maxT, int numT) {
-	if (dt.Nf == 0 || dt.B.IsEmpty())
+	if (dt.Nf <= 1 || dt.B.IsEmpty())
 		return;
 	
     dt.Kirf.SetCount(dt.Nb*6); 			

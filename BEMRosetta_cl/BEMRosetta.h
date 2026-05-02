@@ -81,8 +81,8 @@ public:
 	virtual ~Body() 		{magic = 505;}
 	bool IsValid()  		{return magic == 1234567890;}
 	
-	void Clear() 			{dt.mesh.Clear();}
-	bool IsEmpty() const 	{return dt.mesh.IsEmpty();}
+	void Clear() 			{dt.mesh.Clear(); dt.spline.Clear();}
+	bool IsEmpty() const 	{return dt.mesh.IsEmpty() && dt.spline.IsEmpty();}
 	
 	void cloneDamaged(UArray<Body> &damaged) {	// Points to a copy of the damaged bodies, to avoid moving the real ones
 		damaged.SetCount(cdt.damagedBodies.size());
@@ -196,7 +196,7 @@ public:
 	public:
 		void Copy(const Data &data);
 		Data& operator=(const Data &data) 	{Copy(data); return *this;};
-		Data() {}
+		Data() 								{dof.SetCount(6, true);}
 		Data(const Data &data) 				{Copy(data);}
 		Data(const Data &data, int) 		{Copy(data);}
 		Data(Data &&data) noexcept;
@@ -222,6 +222,9 @@ public:
 			//ASSERT(iid >= 0);
 			id = iid;
 		}
+		
+		UVector<bool> dof;
+		
 		int  GetId() const					{return id;}
 		
 		void	 SetCode(MESH_FMT _code)	{code = _code;}
@@ -332,8 +335,8 @@ public:
 	static const char *GetBemStrCase(BEM_FMT c) {
 		if (c < 0 || c > UNKNOWN)
 			return "Unknown";
-		if (c == WAMIT)
-			return "Wamit";		// To avoid "Wamit .out"
+		//if (c == WAMIT)
+		//	return "Wamit";		// To avoid "Wamit .out"
 		return bemInfo[c].str;
 	}	
 	static BEM_FMT GetCodeBemStr(String fmt) {
@@ -1009,7 +1012,7 @@ public:
 	
 	void SaveDiodoreHDB(String file) const;
 	
-	UVector<String> Check(BEM_FMT type) const;
+	UVector<String> Check(BEM_FMT type, bool irregular, bool autoIrregular, int qtfType, bool autoCS) const;
 	
 	
 	enum DataToShow {DATA_A, DATA_B, DATA_AINFW, DATA_KIRF, DATA_FORCE_SC, DATA_FORCE_FK, DATA_FORCE_EX, DATA_RAO, 
@@ -1426,6 +1429,7 @@ class WamitBody : public Body {
 public:
 	static String LoadDat(UArray<Body> &mesh, String fileName);
 	static String LoadGdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
+	static String LoadPot(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
 	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf);
 	void SaveHST(String fileName, double rho, double g) const; 
 
@@ -1505,13 +1509,13 @@ public:
 	
 	void SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<Point3D> &listPoints, 
 					bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
+	bool Load_pot(String fileName);
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
 	void ProcessFirstColumn1_3(UVector<double> &w, int iperout);
 	
 	bool Load_cfg(String fileName, int &iperin, int &iperout, int &qtfType);
-	bool Load_pot(String fileName);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
 	bool Load_wam(String fileName, String &filepot, String &filefrc, String &filecfg);
@@ -1545,8 +1549,8 @@ protected:
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T/*, bool force_Deg*/) const;
-	void Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints) const;
-	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular) const;
+	void Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints, bool is6) const;
+	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular, bool autoirregular) const;
 	void Save_pt2(String fileName) const;
 	void Save_fdf(String fileName, double rpart) const;
 		
@@ -1558,12 +1562,12 @@ protected:
 	
 	void Save_Fnames(String folder, int qtfType) const;
 	void Save_Config(String folder, int qtfType, int numThreads) const;
-	void Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh) const;
+	void Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh, bool ispoints) const;
 
 private:
 	int GuessIperin(const UVector<double> &w);
 	static double InputToFreq(double input, int iper, double g, double h, double len);
-	double SaveAutoCSF_Circle(String folder, bool x0z, bool y0z) const;
+	double SaveAutoCSF_Circle(String folder, bool x0z, bool y0z, bool saveCsf) const;
 	void SaveAutoCSF_Rectangle(String folder, bool x0z, bool y0z) const;
 };
 
@@ -1638,7 +1642,7 @@ public:
 	void SaveCase_Capy(String folder, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, bool irregular, bool autoIrregular, int qtfType) const;
 	
 	void Save_Cal(String folder, const UVector<double> &freqs, /*const UVector<int> &nodes, const UVector<int> &panels, */int solver, 
-					bool x0z, const UVector<bool> &listDOF) const;
+					bool x0z, const UVector<bool> &listDOF, int qtfType) const;
 	
 	bool Save_KH(String folder) const;
 	bool Save_Inertia(String folder) const;
@@ -1667,19 +1671,21 @@ private:
 	bool Load_LinearDamping(String folder, String subfolder);
 	bool Load_QTF(String folder, String subfolder, Function <bool(String, int)> Status);
 	bool Load_12(String fileName, bool isSum, Function <bool(String, int)> Status);
-	
+	bool Load_RAO(String folder);
+		
 	static int GetNumArgs(const LineParser &f);
 
 	void Save_Id(String folder) const;
 	void Save_Bat(String folder, String batname, String caseFolder, bool bin, 
-				String preName, String hydroName, String solvName, String postName, int numThreads) const;
+				String preName, String hydroName, String solvName, String postName, 
+				String QTFpreName, String QTFsolvName, String QTFpostName, int numThreads, int qtfType) const;
 	void Save_Body_cal(String folder, int ib, String meshFile, const Body &mesh, bool x0z, const Point3D &cg, 
 				double rho, double g, const UArray<Body> &lid) const;
 	void Save_Body_bat(String folder, String caseFolder, const UVector<String> &meshes, String meshName, bool bin) const;
 	void Save_Input(String folder, int solver) const;
 	
 	void SaveFolder0(String folder, bool bin, int numCases, bool deleteFolder, int solver, int numThreads, bool x0z, 
-					 const UVector<bool> &listDOF, bool irregular, bool autoIrregular) const;
+					 const UVector<bool> &listDOF, bool irregular, bool autoIrregular, int qtfType) const;
 };
 
 class Aqwa : public Hydro {
@@ -1972,7 +1978,7 @@ public:
 	void AddRevolution(double x, double y, double z, double size, UVector<Pointf> &vals, double angle = 360, bool close = true, Function <bool(String)> Prompt = Null);
 	void AddPolygonalPanel(double x, double y, double z, double size, UVector<Pointf> &vals, bool quads);
 	void AddWaterSurface(int id, char c, double meshRatio, bool quads);
-	void GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads);
+	void GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads, bool bottom, bool top);
 	void Extrude(int id, double dx, double dy, double dz, double panelWidth, bool close);
 	void AddPanels(const Body &surfFrom, UVector<int> &panelList);
 	void Extract(int id, int cutXYZ, int cutPosNeg);

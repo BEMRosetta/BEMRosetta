@@ -78,6 +78,25 @@ MainSolverBody::MainSolverBody() {
 	
 	butMesh << [&]() {
 		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
+		if (mesh.dt.spline.IsEmpty()) {
+			Surface lid0;	
+			lid0.GetDryPanels(mesh.dt.mesh, true, Null, Null);
+			if (!lid0.IsEmpty()) {
+				lid.dt.mesh = pick(lid0);	
+				lid.AfterLoad(Bem().rho, Bem().g, false, true);
+				mesh.dt.mesh = pick(mesh.dt.under);
+				mesh.AfterLoad(Bem().rho, Bem().g, false, true);
+			}
+		} else {
+			SurfaceBSpline lid0 = clone(mesh.dt.spline); 
+			lid0.GetLid();
+			if (!lid0.IsEmpty()) {
+				lid.dt.spline = pick(lid0);
+				lid.AfterLoad(Bem().rho, Bem().g, false, true);
+				mesh.dt.spline.GetHull();
+				mesh.AfterLoad(Bem().rho, Bem().g, false, true);
+			}
+		}
 		SetTexts(true);
 	};
 	butLid << [&]() {
@@ -152,7 +171,7 @@ void MainSolver::Init() {
 	b.name.WhenAction = [&]() {
 		bodies.array.grid.Set(bodies.array.GetCursor(), 0, ~b.name);
 	};
-	bodies.array.SetWidth(60);
+	bodies.array.SetWidth(80);
 	
 	bodies.butAdd <<= THISBACK(arrayOnAdd);
 	bodies.butDuplicate <<= THISBACK(arrayOnDuplicate);
@@ -736,7 +755,7 @@ bool MainSolver::OnSave() {
 		
 		Hydro::BEM_FMT solver = (Hydro::BEM_FMT)int(~save.dropSolver);
 		
-		UVector<String> errors = hy.Check(solver);
+		UVector<String> errors = hy.Check(solver, ~save.opIrregular, ~save.opAutoIrregular, ~save.dropQTF, ~save.opAutoQTF);
 		
 		if (!errors.IsEmpty()) {
 			String str;
@@ -807,7 +826,7 @@ bool MainSolver::OnSave() {
 		int nThreads = Null;
 		if (save.opThreads.IsEnabled() && !save.opThreads)
 			nThreads = save.numThreads;
-		
+				
 		hy.SaveCase(folder, solver, ~save.symY, ~save.symX,
 					~save.opIrregular, ~save.opAutoIrregular && ~save.opIrregular, ~save.dropQTF, ~save.opAutoQTF,
 					~save.opIncludeBin, nSplit, nThreads,

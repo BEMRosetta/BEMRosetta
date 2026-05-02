@@ -572,7 +572,7 @@ void BEM::AddWaterSurface(int id, char c, double meshRatio, bool quads) {
 	}	
 }
 
-void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads) {
+void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool quads, bool bottom, bool top) {
 	int numCS = ids.size();
 	
 	try {
@@ -590,7 +590,7 @@ void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool
 		for (int i = 0; i < numCS; ++i)
 			sursTo[i] = &(surfs[idfrom+i].dt.mesh);
 		
-		Surface::AddCS(surs, sursTo, distance, meshRatio, quads); 
+		Surface::AddCS(surs, sursTo, distance, meshRatio, quads, bottom, top); 
 		
 		for (int i = 0; i < numCS; ++i) {
 			Body &surf = surfs[idfrom+i];
@@ -605,7 +605,8 @@ void BEM::GetCS(const UVector<int> &ids, double distance, double meshRatio, bool
 			surf.AfterLoad(rho, g, false, true);
 		}
 	} catch (Exc e) {
-		surfs.SetCount(surfs.size() - numCS);
+		if (e != t_("Surface does not have underwater panels"))
+			surfs.SetCount(surfs.size() - numCS);
 		Print("\n" + F(t_("Problem obtaining control surface: %s"), e));
 		throw std::move(e);
 	}	

@@ -85,6 +85,8 @@ void Body::Data::Copy(const Body::Data &msh) {
 	spline = clone(msh.spline);
 	spline0 = clone(msh.spline0);
 	
+	dof = clone(dof);
+	
 	SetCode(msh.GetCode());
 	SetId(msh.GetId());
 }
@@ -118,6 +120,8 @@ Body::Data::Data(Body::Data &&msh) noexcept {
 	
 	spline = pick(msh.spline);
 	spline0 = pick(msh.spline0);
+	
+	dof = pick(dof);
 	
 	SetCode(msh.GetCode());
 	SetId(msh.GetId());	
@@ -234,6 +238,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		ret = DiodoreBody::LoadDat(mesh, file); 
 	else if (ext == ".gdf" || ext == ".idf" || ext == ".csf") 
 		ret = WamitBody::LoadGdf(mesh, file, y0z, x0z, g); 
+	else if (ext == ".pot")
+		ret = WamitBody::LoadPot(mesh, file, y0z, x0z, g); 
 	else if (ext == ".pnl") 
 		ret = HAMSBody::LoadPnl(mesh, file, y0z, x0z); 
 	else if (ext == ".hst") 
@@ -358,6 +364,10 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, MESH_FMT type, MESH_TYPE meshType, double rho, double g, bool symX, bool symY, 
 				int &nNodes, int &nPanels, const UVector<double> &w, const UVector<double> &head, 
 				bool irregular, bool autoIrregular, int qtfType, bool getPotentials, double h, int numCores) {
+	
+	if (irregular && autoIrregular)		// No mesh in the lid if anyway the solver is going to get a lid...
+		meshType = UNDERWATER;
+					
 	if (type == UNKNOWN) {
 		String ext = ToLower(GetFileExt(First(fileNames)));
 		
@@ -429,7 +439,10 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 		}
 		if (symY && (type == WAMIT_GDF2 || type == WAMIT_CSF2))
 			spline.CutY();
-			
+		
+		if (meshType == UNDERWATER && (type == WAMIT_GDF2 || type == WAMIT_CSF2))
+			spline.GetHull();
+				
 		if (meshType == UNDERWATER || symX || symY) {// Some healing before saving
 			Surface::RemoveDuplicatedPanels(surf.panels);
 			Surface::RemoveDuplicatedPointsAndRenumber(surf.panels, surf.nodes, surf.segments);

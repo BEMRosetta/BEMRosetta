@@ -267,8 +267,10 @@ void MainBody::Init() {
 	menuProcess.butCS <<= THISBACK(OnCS);
 	menuProcess.butCS.Tip(t_("Obtains control surface"));
 	
-	menuProcess.meshRatio <<= 1;
-	menuProcess.meshRatio.Tip(t_("Ratio of generated mesh size to current mesh size"));
+	menuProcess.meshRatioLid <<= 1;
+	menuProcess.meshRatioLid.Tip(t_("Ratio of generated mesh size to current mesh size"));
+	menuProcess.meshRatioCS <<= 1;
+	menuProcess.meshRatioCS.Tip(t_("Ratio of generated mesh size to current mesh size"));
 	//menuProcess.butWaterFill.Tip(t_("Mix triangles and quads, or set only quads"));
 	menuProcess.lambda = 0.3;
 	menuProcess.mu = -0.2;
@@ -277,7 +279,11 @@ void MainBody::Init() {
 	menuProcess.butSmooth.Tip(t_("Smooths the mesh using the Taubin method"));
 	menuProcess.csDistance = 10;
 	menuProcess.csDistance.Tip(t_("Distance from control surface to model"));
-	menuProcess.opQuad.Tip(t_("Forces the triangles to appear as quads"));
+	menuProcess.opQuadLid.Tip(t_("Forces the triangles to appear as quads"));
+	menuProcess.opQuadCS.Tip(t_("Forces the triangles to appear as quads"));
+	
+	menuProcess.opTop <<= true;
+	menuProcess.opBottom <<= true;
 	
 	menuProcess.butInertia.SetCtrl(menuProcessInertia).Tip(t_("Click to get the inertia matrix"));
 	//menuProcess.butInertia.SetAutoOpen();
@@ -938,20 +944,23 @@ bool MainBody::OnLoad() {
 		menuAnimation.animationFile <<= Bem().fast.GetFileName();
 		
 		for (int idx = Bem().surfs.size() - num; idx < Bem().surfs.size(); ++idx) {
-			Body &msh = Bem().surfs[idx];
+			Body &b = Bem().surfs[idx];
 			
-			if (!msh.dt.mesh.IsEmpty() && ~menuMove.opZArchimede && msh.GetMass_all() > 0) {
+			if (!b.dt.mesh.IsEmpty() && ~menuMove.opZArchimede && b.GetMass_all() > 0) {
 				double dz = 0.1;
-				if (msh.GetMass_all() == 0)
+				if (b.GetMass_all() == 0)
 					throw Exc(t_("Set mass before fitting buoyancy"));
-				if (!msh.TranslateArchimede(Bem().rho, 0.05, dz)) 
+				if (!b.TranslateArchimede(Bem().rho, 0.05, dz)) 
 					Exclamation(t_("Problem readjusting the Z value to comply with displacement (Archimede).&The mesh is loaded as-is"));
 					
-				msh.AfterLoad(Bem().rho, Bem().g, false, false, true);
+				b.AfterLoad(Bem().rho, Bem().g, false, false, true);
 				
 				Ma().Status(F(t_("Loaded '%s', and translated vertically %f m to comply with displacement"), file, dz));
 			} else
-				Ma().Status(F(t_("Loaded '%s'"), file));			
+				Ma().Status(F(t_("Loaded '%s'"), file));
+				
+			if (b.dt.GetCode() == Body::MOORING_MESH)
+				menuPlot.showLines = true;	
 		}
 		
 		AfterAdd(file, num, firstLoad);
@@ -1821,7 +1830,7 @@ void MainBody::OnAddWaterSurface(char c) {
 		WaitCursor waitcursor;
 		mainView.surf.Disable();
 	
-		Bem().AddWaterSurface(idx, c, menuProcess.meshRatio, menuProcess.opQuad);
+		Bem().AddWaterSurface(idx, c, menuProcess.meshRatioLid, menuProcess.opQuadLid);
 		
 		Body &nw = Last(Bem().surfs);
 		AddRow(nw);
@@ -1855,7 +1864,7 @@ void MainBody::OnCS() {
 		WaitCursor waitcursor;
 		mainView.surf.Disable();
 	
-		Bem().GetCS(idsCS, menuProcess.csDistance, menuProcess.meshRatio, menuProcess.opQuad);
+		Bem().GetCS(idsCS, menuProcess.csDistance, menuProcess.meshRatioCS, menuProcess.opQuadCS, menuProcess.opBottom, menuProcess.opTop);
 		
 		for (int i = 0; i < idsCS.size(); ++i) {
 			Body &nw = Bem().surfs[Bem().surfs.size() - idsCS.size() + i];

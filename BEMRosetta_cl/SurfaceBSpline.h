@@ -113,6 +113,7 @@ public:
 	void Add(BSplinePatch&& p) 					{patches.Add(pick(p));}
 	int size() const 							{return patches.size();}
 	bool IsEmpty() const						{return patches.IsEmpty();}
+	void Clear()								{return patches.Clear();}
 	BSplinePatch& operator[](int i) 			{return patches[i];}
 	const BSplinePatch& operator[](int i) const {return patches[i];}
 	
@@ -121,7 +122,9 @@ public:
 	void CutX(bool leavePositive = true);
 	void CutY(bool leavePositive = true);
 	void CutZ(bool leavePositive = true);
-
+	void GetHull();
+	void GetLid();
+	
 	String Heal(double grid, double eps);
 	
 	void Scale(const Value3D& scale) {

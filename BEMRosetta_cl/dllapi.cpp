@@ -176,6 +176,7 @@ void BMR_Mesh_Translate(double x, double y, double z) noexcept {
 			throw Exc(t_("No file loaded"));
 		Body &msh = Bem().surfs[BMR().meshid];
 		msh.dt.mesh.Translate(x, y, z);
+		msh.dt.spline.Translate(Point3D(x, y, z));
 		msh.dt.cg.Translate(x, y, z);
 		msh.AfterLoad(Bem().rho, Bem().g, false, false);	
 	} catch(Exc err) {
@@ -191,6 +192,7 @@ void BMR_Mesh_Rotate(double ax, double ay, double az, double cx, double cy, doub
 			throw Exc(t_("No file loaded"));
 		Body &msh = Bem().surfs[BMR().meshid];
 		msh.dt.mesh.Rotate(ToRad(ax), ToRad(ay), ToRad(az), cx, cy, cz);	
+		msh.dt.spline.Rotate(Point3D(ToRad(ax), ToRad(ay), ToRad(az)), Point3D(cx, cy, cz));
 		msh.dt.cg.Rotate(ToRad(ax), ToRad(ay), ToRad(az), cx, cy, cz);
 		msh.AfterLoad(Bem().rho, Bem().g, false, false);	
 	} catch(Exc err) {
@@ -374,15 +376,17 @@ int BMR_Mesh_FillWaterplane(double ratio, int quads) noexcept {
 	return BMR().meshid;
 }
 		
-int BMR_Mesh_GetControlSurface(double distance, double ratio, int quads) noexcept {
+int BMR_Mesh_GetControlSurface(double distance, double ratio, int quads, int bottom, int top) noexcept {
 	try {
 		if (Bem().surfs.IsEmpty()) 
 			throw Exc(t_("No file loaded"));
 		if (ratio < 0 || ratio > 100)
 			throw Exc(F(t_("Wrong mesh ratio %s"), ratio));
+		if (!bottom && !top)
+			throw Exc(t_("Some surface has to be indicated, bottom/side or top"));
 		UVector<int> ids;
 		ids << BMR().meshid;
-		Bem().GetCS(ids, distance, ratio, quads);
+		Bem().GetCS(ids, distance, ratio, quads, bottom, top);
 		BMR().meshid = Bem().surfs.size() - 1;
 	} catch(Exc err) {
 		BMR().errorStr = err;
@@ -583,6 +587,20 @@ void BMR_Bem_Support(const char *solver, int *irregular, int *autoIrregular, int
 			*autoCS = info.autoCS;
 		}
 	}
+}
+
+void BMR_Bem_WaveOrigin_Set(double x, double y) noexcept {
+	try {
+		if (Bem().hydros.IsEmpty()) 
+			throw Exc(t_("No file loaded"));
+		
+		Bem().hydros[BMR().bemid].dt.x_w = x;
+		Bem().hydros[BMR().bemid].dt.y_w = y;
+	} catch(Exc err) {
+		BMR().errorStr = err;
+		return;
+	}
+	BMR().errorStr.Clear();
 }
 
 void BMR_Bem_depth_Set(double h) noexcept {
@@ -946,8 +964,6 @@ void BMR_Bem_Body_Name_Set(const char *name) noexcept {
 	BMR().errorStr.Clear();
 }
 
-
-
 void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z, 
 		bool irregular, bool autoIrregular, const char *qtfType, bool autoQTF, 
 		bool bin, int numCases, int numThreads, bool withPotentials, bool withMesh) noexcept {
@@ -973,6 +989,7 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 				}
 			}
 		}
+
 		if (candidates.IsEmpty())
 			throw Exc(F(t_("Unknown format %s"), solver));
 		if (candidates.size() > 1) {
@@ -984,6 +1001,7 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 			}
 			throw Exc(F(t_("Format %s has more than one option: %s"), solver, ret));
 		}
+
 		int iqtfType = -1;
 		String sqtfType = ToLower(qtfType);
 		if (sqtfType.Find("control") >= 0 || sqtfType.Find("middle") >= 0)
@@ -992,8 +1010,8 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 			iqtfType = 8;
 		else if (sqtfType.Find("pressure") >= 0 || sqtfType.Find("near") >= 0)
 			iqtfType = 9;
-		
-		UVector<String> errors = hy.Check(static_cast<Hydro::BEM_FMT>(icase));
+	
+		UVector<String> errors = hy.Check(static_cast<Hydro::BEM_FMT>(icase), irregular, autoIrregular, iqtfType, autoQTF);
 		if (!errors.IsEmpty()) {
 			String str;
 			if (errors.size() == 1)
@@ -1003,7 +1021,7 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 				 	str << "\n- " << errors[i];
 			}
 			throw Exc(F(t_("Problems found in data: %s"), str));
-		}
+		}		
 		UVector<bool> listDOF(6, true);
 		UVector<Point3D> dummy;
 		hy.SaveCase(folder, static_cast<Hydro::BEM_FMT>(icase), x0z, y0z, 

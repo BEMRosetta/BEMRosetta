@@ -297,34 +297,34 @@ bool Mooring::SaveMoordyn(String file, int mooring, bool fairleads, bool anchors
 	out << F("%-22.1f %11<s- water depth (m)\n", depth, "WtrDpth");
 	out << "0                      OutSwitch  - enable .MD output (0/1)\n";
 	
-	if (fairleads || anchors || mooring > 0) {
-		out <<  "------------------------ OUTPUTS --------------------------------------------\n";
-		out << sfair << sanch;
+	//if (fairleads || anchors || mooring > 0) {
+	out <<  "------------------------ OUTPUTS --------------------------------------------\n";
+	out << sfair << sanch;
 
-		if (mooring == 1) {
-			for (int i = 0; i < lineProperties.size(); ++i) {
-				const LineProperty &line = lineProperties[i];
-				int numseg = max(int(line.numseg*ratioSegsToPlot), min(line.numseg, minSegsToPlot));
-				UVector<int> points(numseg+1);
-				double step = 1;
-				if (line.numseg > numseg)
-					step = line.numseg/numseg;
-				for (int j = 0; j < numseg; ++j) 
-		        	points[j] = (int)(j * step);
-				points[numseg] = line.numseg;
-				
-				out << "\"";
-				for (int ip = 0; ip < points.size(); ip++) {
-					if (ip > 0)
-						out << ", ";
-					String str = "L" + FormatInt(i+1) + "N" + FormatInt(points[ip]) + "P";
-					out << str << "X, " << str << "Y, " << str << "Z";
-				}
-				out << "\"\n";	
+	if (mooring == 1) {
+		for (int i = 0; i < lineProperties.size(); ++i) {
+			const LineProperty &line = lineProperties[i];
+			int numseg = max(int(line.numseg*ratioSegsToPlot), min(line.numseg, minSegsToPlot));
+			UVector<int> points(numseg+1);
+			double step = 1;
+			if (line.numseg > numseg)
+				step = line.numseg/numseg;
+			for (int j = 0; j < numseg; ++j) 
+	        	points[j] = (int)(j * step);
+			points[numseg] = line.numseg;
+			
+			out << "\"";
+			for (int ip = 0; ip < points.size(); ip++) {
+				if (ip > 0)
+					out << ", ";
+				String str = "L" + FormatInt(i+1) + "N" + FormatInt(points[ip]) + "P";
+				out << str << "X, " << str << "Y, " << str << "Z";
 			}
+			out << "\"\n";	
 		}
-		out << "END\n";
 	}
+	out << "END\n";
+	//}
 	out <<  "------------------------- need this line ------------------------------------";
 	
 	return true;

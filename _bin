@@ -85,7 +85,7 @@ class BEMRosetta:
         self.libc.BMR_Mesh_FillWaterplane.argtypes = [ctypes.c_double, ctypes.c_int]
         self.libc.BMR_Mesh_FillWaterplane.restype = ctypes.c_int
 
-        self.libc.BMR_Mesh_GetControlSurface.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int]
+        self.libc.BMR_Mesh_GetControlSurface.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_int, ctypes.c_int]
         self.libc.BMR_Mesh_GetControlSurface.restype = ctypes.c_int
 
         self.libc.BMR_Mesh_Volume_Get.argtypes = [ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double)]
@@ -129,6 +129,9 @@ class BEMRosetta:
 
         self.libc.BMR_Bem_Support.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int)]
         self.libc.BMR_Bem_Support.restype = None
+
+        self.libc.BMR_Bem_WaveOrigin_Set.argtypes = [ctypes.c_double, ctypes.c_double]
+        self.libc.BMR_Bem_WaveOrigin_Set.restype = None
 
         self.libc.BMR_Bem_depth_Set.argtypes = [ctypes.c_double]
         self.libc.BMR_Bem_depth_Set.restype = None
@@ -381,8 +384,8 @@ class _Mesh:
         self._raise_if_error()
         return _ret
 
-    def GetControlSurface(self, distance, ratio, quads):
-        _ret = self.libc.BMR_Mesh_GetControlSurface(distance, ratio, quads)
+    def GetControlSurface(self, distance, ratio, quads, bottom, top):
+        _ret = self.libc.BMR_Mesh_GetControlSurface(distance, ratio, quads, bottom, top)
         self._raise_if_error()
         return _ret
 
@@ -593,6 +596,7 @@ class _Bem:
         self._raise_if_error = raise_if_error
 
         self.Id = _BemId(self.libc, self._raise_if_error)
+        self.WaveOrigin = _BemWaveOrigin(self.libc, self._raise_if_error)
         self.depth = _Bemdepth(self.libc, self._raise_if_error)
         self.g = _Bemg(self.libc, self._raise_if_error)
         self.rho = _Bemrho(self.libc, self._raise_if_error)
@@ -642,6 +646,15 @@ class _BemId:
         _ret = self.libc.BMR_Bem_Id_Get()
         self._raise_if_error()
         return _ret
+
+class _BemWaveOrigin:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Set(self, x, y):
+        self.libc.BMR_Bem_WaveOrigin_Set(x, y)
+        self._raise_if_error()
 
 class _Bemdepth:
     def __init__(self, lib, raise_if_error):

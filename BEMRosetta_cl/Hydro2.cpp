@@ -33,7 +33,7 @@ const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
     {WADAM_WAMIT,     "Wadam Wamit",              false,  "",        false, false, false, "", 	 false, true},
     {NEMOH,           "Nemoh v2",                 false,  "",        true,  false, false, "", 	 false, false},
     {NEMOHv115,       "Nemoh v115",               false,  "",        true,  false, false, "", 	 false, false},
-    {NEMOHv3,         "Nemoh v3",                 false,  "",        true,  false, false, "", 	 false, true},
+    {NEMOHv3,         "Nemoh v3",                 false,  "",        true,  true,  false, "9", 	 false, false},
     {SEAFEM_NEMOH,    "SeaFEM Nemoh",             false,  "",        false, false, false, "", 	 false, false},
     {AQWA,            "AQWA .lis .ah1 .qtf",      false,  "",        false, false, false, "", 	 false, true},
     {AQWA_QTF,        "AQWA .qtf",                true,   "*.qtf",   false, false, false, "", 	 false, true},

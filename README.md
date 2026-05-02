@@ -70,7 +70,7 @@ BEMRosetta runs on Windows and Linux, **no install is necessary in Windows** [(s
       
 * Mesh files
   * Load-View
-    * [Wamit](https://www.wamit.com/): .gdf, .idf, pan.dat
+    * [Wamit](https://www.wamit.com/): .gdf, .idf, pan.dat, .pot
     * [HAMS](https://github.com/YingyiLiu/HAMS): .pnl
     * [Nemoh](https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp?RH=1489593406974) and [Capytaine](https://github.com/mancellin/capytaine): .dat
     * [Ansys AQWA](https://www.ansys.com/products/structures/ansys-aqwa): .dat

@@ -540,6 +540,37 @@ void SurfaceBSpline::CutZ(bool leavePositive) {
 			patches.Remove(i);
 	}
 }
+
+void SurfaceBSpline::GetHull() {
+	for (int i = patches.size()-1; i >= 0; --i) {
+		BSplinePatch &patch = patches[i];
+		bool ishull = false;
+		for (Point3D &p : patch.controlPoints) {
+			if (p.z < -EPS_LEN) {		// If just a point is underwater, it is hull
+				ishull = true;
+				break;
+			}
+		}
+		if (!ishull)	
+			patches.Remove(i);
+	}	
+}
+
+void SurfaceBSpline::GetLid() {
+	for (int i = patches.size()-1; i >= 0; --i) {
+		BSplinePatch &patch = patches[i];
+		bool islid = true;
+		for (Point3D &p : patch.controlPoints) {
+			if (p.z > EPS_LEN || p.z < -EPS_LEN) {
+				islid = false;
+				break;
+			}
+		}
+		if (!islid)	
+			patches.Remove(i);
+	}	
+}
+
 	
 void SurfaceBSpline::RoundClosest(double grid, double eps) {
 	for (BSplinePatch &patch : patches) {

@@ -188,7 +188,7 @@ CONSOLE_APP_MAIN
     double span = max(maxx - minx, maxy - miny);
     BMR_Mesh_Id_Set(idMesh);
     BMR_Mesh_Save(AFX(GetDesktopFolder(), "Mesh.gdf"), "Wamit .gdf", false, false);	BEM_Throw();  
-    int idCS = BMR_Mesh_GetControlSurface(0.5*span, 1, true);						BEM_Throw();  
+    int idCS = BMR_Mesh_GetControlSurface(0.5*span, 1, true, true, true);						BEM_Throw();  
     BMR_Mesh_Save(AFX(GetDesktopFolder(), "CS.gdf"), "Wamit .gdf", false, false);	BEM_Throw();  
     
     BMR_Bem_depth_Set(50);
@@ -204,8 +204,19 @@ CONSOLE_APP_MAIN
     BMR_Bem_Body_LoadLidFromMesh(idLid);
 	BMR_Bem_Body_LoadControlSurfaceFromMesh(idCS);
 	
- 	String eachfolder;*/
+ 	String eachfolder;
+ 	
+ 
+    
+    eachfolder = AFX(GetDesktopFolder(), "Wamit");
+    BMR_Bem_SaveCase(eachfolder, "Wamit .out", true, true, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();
+    
+    */
+ 	
 /* 	
+ 	eachfolder = AFX(GetDesktopFolder(), "Nemoh");
+    BMR_Bem_SaveCase(eachfolder, "NEMOHv3", true, true, true, false, "No", false, false, 1, -1, false, false);	BEM_Throw(); 
+    
     eachfolder = AFX(GetDesktopFolder(), "CapytaineAutoSym");
     BMR_Bem_SaveCase(eachfolder, "Capytaine", true, true, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();  
 */   

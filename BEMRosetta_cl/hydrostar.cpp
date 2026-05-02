@@ -265,7 +265,7 @@ void HydroStar::Save_RDF(String fileName) const {
 	
 	out << "\n";
 	
-	out << "REFWAVE  0.0   0.0\n";
+	out << F("REFWAVE  %.3f   %.3f\n", dt.x_w, dt.y_w);
 	for (int ib = 0; ib < dt.Nb; ++ib)
 		out << F("REFPOINT %d   %.3f   %.3f   %.3f\n", ib+1, dt.msh[ib].dt.c0.x, dt.msh[ib].dt.c0.y, dt.msh[ib].dt.c0.z);
 	
