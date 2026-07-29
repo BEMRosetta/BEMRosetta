@@ -14,7 +14,8 @@ uses
 	plugin/zstd,
 	NetCDF,
 	Xlnt,
-	Npy;
+	Npy,
+	plugin/pcre;
 
 options(MSC) /bigobj;
 
@@ -28,7 +29,7 @@ file
 	BEMRosetta_int.h,
 	python.cpp,
 	dllapi.cpp,
-	export.h,
+	libbemrosetta.h,
 	CommandLine.cpp,
 	BEM.cpp,
 	Mesh readonly separator,

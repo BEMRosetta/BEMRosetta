@@ -167,6 +167,8 @@ public:
 		grid.Editing().MultiSelect().Removing().Clipboard().Sorting(false).ExtraPaste();
 		
 		Set(_title, _param, _units);
+		
+		text.Hide();
 	}
 	void Set(String _title, String _param, String _units) {
 		title = _title;
@@ -220,6 +222,10 @@ public:
 		};
 		if (grid.IsEmpty())
 			from.WhenAction();
+	}
+	void SetText(const String &str) {
+		text.Show(!str.IsEmpty());
+		text.SetText(str);
 	}
 	
 private:

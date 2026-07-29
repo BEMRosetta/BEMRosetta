@@ -1070,6 +1070,8 @@ public:
 	void Load(String file);
 	void Load();
 	
+	void MessageMaxFreq();
+	
 	bool CopyHydro(Hydro &hy);
 	
 	void Jsonize(JsonIO &json);

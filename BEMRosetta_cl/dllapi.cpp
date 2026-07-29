@@ -23,7 +23,7 @@ int64 Orca::noLicenseTime = 0;
 //#if defined(flagBEMR_DLL) || defined(flagBEMR_TEST_BMR_INTERNAL) || defined(flagBEMR_TEST_DLL) || defined(flagBEMR_CL)
 
 #include "FastOut.h"
-#include "export.h"
+#include "libbemrosetta.h"
 
 BMR_Data &BMR() {
 	static BMR_Data dll;

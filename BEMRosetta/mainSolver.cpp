@@ -154,6 +154,9 @@ void MainSolverBody::SetTexts(bool updateInertia) {
 			z_g <<= mesh.dt.cg.z;
 		}
 	}
+	
+	MainSolver &main = GetParentCtrl<MainSolver>(this);
+	main.MessageMaxFreq();
 }
 
 void MainSolver::Init() {
@@ -209,15 +212,6 @@ void MainSolver::Init() {
 			x.Create<Option>().NoWantFocus();
 		}
 	);
-	
-/*
-	save.arrayAdditional.Hide();
-	save.labBoxPot.Hide();
-	save.withPotentials.Hide();
-	save.labAdditional.Hide();
-	save.opWaveHeight.Hide();
-	save.arrayArea.Hide();
-*/
 	
 	for (int i = 0; i < 6; ++i)
 		save.arrayDOF.Add(InitCaps(BEM::StrDOF(i)), true);
@@ -326,6 +320,7 @@ void MainSolver::Init() {
 		case 1:		gen.listFreq.Set("Wave frequencies", "ω", "rad/s");	break;
 		default:	gen.listFreq.Set("Wave frequencies", "ω", "Hz");
 		}		
+		MessageMaxFreq();
 	};
 	gen.opFreq.WhenAction();
 }
@@ -557,6 +552,30 @@ void MainSolver::Load(String file) {
 		save.arrayAdditional.Add(p.x, p.y, p.z);
 }
 
+void MainSolver::MessageMaxFreq() {
+	double maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency, minF = 10000;
+	for (int i = 0; i < bodiesEach.size(); ++i) {
+		bodiesEach[i].mesh.dt.under.CalcSegmentDimensions(-1, Bem().g, maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency);
+		if (maxFrequency > 0)
+			minF = min(minF, maxFrequency);
+		bodiesEach[i].lid.dt.under.CalcSegmentDimensions(-1, Bem().g, maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency);
+		if (maxFrequency > 0)
+			minF = min(minF, maxFrequency);
+		bodiesEach[i].cs.dt.under.CalcSegmentDimensions(-1, Bem().g, maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency);
+		if (maxFrequency > 0)
+			minF = min(minF, maxFrequency);
+	}
+	if (minF != 10000) {
+		if (gen.opFreq == 0)
+			gen.listFreq.SetText(F(t_("(Advised %.2f s)"), 2*M_PI/minF));
+		else if (gen.opFreq == 1)
+			gen.listFreq.SetText(F(t_("(Advised %.2f rad/s)"), minF));
+		else
+			gen.listFreq.SetText(F(t_("(Advised %.2f Hz)"), minF/2/M_PI));
+	} else
+		gen.listFreq.SetText("");
+}
+
 void MainSolver::LoadMatrix(GridCtrl &grid, const Eigen::MatrixXd &mat) {
 	for (int y = 0; y < 6; ++y)
 		for (int x = 0; x < 6; ++x)
@@ -779,7 +798,7 @@ bool MainSolver::OnSave() {
 		if (!errors.IsEmpty()) {
 			String str;
 			if (errors.size() == 1)
-				str << "\n " << errors[0];
+				str << "\n" << errors[0];
 			else {
 				for (int i = 0; i < errors.size(); ++i)
 				 	str << "\n- " << errors[i];

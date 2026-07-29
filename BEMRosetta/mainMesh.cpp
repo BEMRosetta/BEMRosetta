@@ -2545,6 +2545,13 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 														"0")));		
 	else
 		array.Set(row++, col, "-");
+
+	double maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency;
+	msh.dt.mesh.CalcSegmentDimensions(-1, Bem().g, maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency);
+	array.Set(row, 0, t_("Max/Avg panel side/radius [m]"));	array.Set(row++, col, F("%.2f/%.2f %.2f/%.2f", maxSide, avgSide, maxRadius, avgRadius));
+	array.Set(row, 0, t_("Max/Avg panel surface [m²]"));	array.Set(row++, col, F("%.2f/%.2f", maxSurface, avgSurface));
+	array.Set(row, 0, t_("ω_max (λ/9) [rad/s]"));			array.Set(row++, col, FDS(maxFrequency, 6, false));
+	array.Set(row, 0, t_("T_min (λ/9) [s]"));				array.Set(row++, col, FDS(2*M_PI/maxFrequency, 6, false));
 														
 	array.Set(row++, 0, t_("Stiffness Matrix"));	
 	if (msh.dt.C.size() > 0) {
@@ -2578,7 +2585,6 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 	array.Set(row, 0, t_("# Dup panels"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numDupPan);
 	array.Set(row, 0, t_("# Dup nodes"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numDupP);
 	array.Set(row, 0, t_("# Skewed pan"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.numSkewed);
-	array.Set(row, 0, t_("Avg. side [m]"));		array.Set(row++, col, !healing ? Null : msh.dt.mesh.GetAvgLenSegment());
 }
 
 void MainView::ViewRefresh(MainBody &mainBody) {

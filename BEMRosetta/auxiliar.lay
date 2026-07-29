@@ -7,5 +7,6 @@ LAYOUT(SelectList, 212, 232)
 	ITEM(Upp::GridCtrl, grid, HSizePosZ(124, 8).VSizePosZ(20, 8))
 	ITEM(Upp::Label, labFrom, SetLabel(t_("Min [%s]:")).LeftPosZ(8, 68).TopPosZ(44, 19))
 	ITEM(Upp::LabelBox, labTitle, SetLabel(t_("Wave frequencies")).HSizePosZ(0, 0).VSizePosZ(0, 0))
+	ITEM(Upp::EditString, text, SetEditable(false).SetFrame(NullFrame()).LeftPosZ(8, 108).TopPosZ(92, 19))
 END_LAYOUT
 

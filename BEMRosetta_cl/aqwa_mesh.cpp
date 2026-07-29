@@ -412,9 +412,6 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 
 	bool qtf = qtfType > 0;
 
-	//if (irregular && !autoIrregular)
-	//	throw Exc(t_("AQWA irregular frequencies removal through user supplied lid is not supported. Try with automatic mesh generation"));
-	
 	FileOut ret(fileName);
 	if (!ret.IsOpen())
 		throw Exc(F(t_("Impossible to open '%s'\n"), fileName));
@@ -520,7 +517,9 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		}
 		return true;
 	};
-		
+	
+	UVector<double> lidSize	= {1, 1, 1, 1, 1, 1, 1, 1};
+	bool userLidSize = false;
 	int ipall = 1;
 	
 	for (int ib = 0; ib < surfs.size(); ++ib) {
@@ -537,7 +536,9 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 		ret
 			//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
 			<< "      ZLWL          (        0.)" << "\n";	// Free surface height is zero
-		if (autoIrregular)
+		if (userLidSize)
+			ret << F("%6d%s   %d (LID_SIZE=%.3f)\n", ib+1, "ILID AUTO", 60+ib, lidSize[ib]);	// Irregular frequencies removal, user supplied automatic lid size
+		else if (autoIrregular)
 			ret << F("%6d%s   %d\n", ib+1, "ILID AUTO", 60+ib);		// Irregular frequencies removal
 		else if (irregular)
 			ret << F("%6d%s   %d\n", ib+1, "ILID     ", 60+ib);		// Irregular frequencies removal

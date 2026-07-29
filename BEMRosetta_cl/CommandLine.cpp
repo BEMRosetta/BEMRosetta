@@ -5,8 +5,9 @@
 #ifdef PLATFORM_WIN32
 #include "orca.h"
 #endif
-#include "export.h"
+#include "libbemrosetta.h"
 #include <ScatterDraw/ScatterDraw.h>
+
 
 void SetBuildInfo(String &str) {
 	String name, mode;
@@ -286,7 +287,12 @@ void ShowHelp() {
 	Cout() << "\n" << t_("              <param> avg       # <param> avg");
 	Cout() << "\n" << t_("              <param> max       # <param> max");
 	Cout() << "\n" << t_("              <param> min       # <param> min");	
-	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located. Use if detection doesn't work");		
+	Cout() << "\n" << t_("-dll <file/folder>              # File or folder where OrcaFlex .dll is located. Use if detection doesn't work");	
+	
+	Cout() << "\n";
+	Cout() << "\n" << t_("-aqwa                           # The next commands are for AQWA handling (Required to be installed)");	
+	Cout() << "\n" << t_("-r -run <file>                  # AQWA calculation with <file>");
+	
 #endif
 	Cout() << "\n";
 	Cout() << "\n" << t_("The actions:");
@@ -333,6 +339,8 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 					nextcommands = "time";
 				else if (param == "-orca") 
 					nextcommands = "orca";
+				else if (param == "-aqwa") 
+					nextcommands = "aqwa";
 				else if (param == "-wind") 
 					nextcommands = "wind";
 				else if (param == "-h" || param == "-help") {
@@ -1899,6 +1907,101 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							ic--;							
 						} else 
 							throw Exc(F(t_("Unknown argument '%s'"), command[ic]));
+					} else if (nextcommands == "aqwa") {
+						if (param == "-r" || param == "-run") {
+							CheckIfAvailableArg(command, ++ic, "-run from");
+							String dat = command[ic];
+							
+							auto RunAqwa = [](String dat) {
+								String comm = F("cmd.exe /c \"\"%s\" \"%s\" /nowind\"", Bem().aqwaPath, dat);
+								BEM::Print(F("\n") + F(t_("Command is '%s'"), comm));
+								
+								LocalProcess process;
+								if (!process.Start(comm))
+									throw Exc(t_("Problem launching AQWA"));
+	
+								BEM::Print(F("\n") + F(t_("AQWA starting")));
+								
+								for (uint64 i = 0; process.IsRunning(); ++i) {
+									String reso, rese;
+									if (process.Read2(reso, rese)) {
+										if (reso.Find("License") >= 0)
+											throw Exc(F("\n") + F(t_("Problem with AQWA license")));
+										if (reso.Find("WINDOW") >= 0)
+											BEM::Print(F("\n") + F(t_("AQWA running")));			
+									}
+									if (!(i%(10*8)))
+										Cout() << ".";
+									Sleep(500);
+								}
+								BEM::Print(F("\n") + F(t_("AQWA ended")));
+							};
+							
+							RunAqwa(dat);
+							
+							String mes = ForceExt(dat, ".mes");
+							UArray<Body> body;
+							double sz = 0;
+							
+							while (true) {
+								if (!FileExists(mes))
+									throw Exc(F(t_(".mes file '%s' not found"), mes));
+							
+								String smes = LoadFile(mes);
+					
+								int ibody = -1;	
+								
+								String size;
+								int idpos = smes.FindAfter("LIDMES:FAILED TO CREATE INTERIOR LID FOR STRUCTURE#");
+								if (idpos < 0) {
+									if (sz == 0)
+										BEM::Print(F("\n") + F(t_("AQWA has ended succesfully with original lid")));
+									else
+										BEM::Print(F("\n") + F(t_("AQWA has ended succesfully with lid size %.3f"), sz));
+									break;
+								}
+								String sbody = smes.Mid(idpos, 10);
+							    ibody = ScanInt(sbody);
+							    if (IsNull(ibody))
+									throw Exc(F(t_("Wrong body id '%s' in .mes file '%s'"), sbody, mes));
+							    ibody--;
+							    
+							    if (body.IsEmpty()) 
+							    	Body::Load(body, dat, Bem().rho, Bem().g, Null, Null, false);
+						    	
+						    	double maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency;
+								body[ibody].dt.mesh.CalcSegmentDimensions(-1, Bem().g, maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency);
+						    	sz = avgSide;
+						    	
+						    	BEM::Print(F("\n") + F(t_("Failed to create lid for body #%d"), ibody+1));
+									
+								String sdat = LoadFile(dat);
+								int i60 = sdat.FindAfter(F("ILID AUTO   %d", 60+ibody));
+								if (i60 < 0)
+									throw Exc(F(t_("Section 'ILID AUTO   %d' not found"), 60+ibody));
+								int i60end = sdat.Mid(i60, 100).Find("\n");
+								if (i60end < 0)
+									throw Exc(F(t_("Section 'ILID AUTO   %d' incorrect"), 60+ibody));	
+								
+								if (i60end > 1) {
+									String s = Trim(sdat.Mid(i60, 50));
+									s.Replace("(LID_SIZE=", "");
+									double oldsize = ScanDouble(s);
+									sz = 0.98*oldsize;
+									BEM::Print(F("\n") + F(t_("Previous lid size %.3f failed, now reduced to %.3f"), oldsize, sz));
+								}
+								
+								if (sz < avgSide*0.25)
+									throw Exc(F(t_("Mesh %.3f too small. Ended iteration"), sz));	
+								
+								sdat = sdat.Left(i60) + F(" (LID_SIZE=%.3f)", sz) + sdat.Mid(i60+i60end);
+								SaveFile(dat, sdat);
+								
+								BEM::Print(F("\n") + F(t_("New lid mesh size is %.3f for body #%d"), sz, ibody+1));
+								
+								RunAqwa(dat);
+							}
+						}
 					}
 #endif
 				}

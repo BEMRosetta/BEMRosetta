@@ -9,7 +9,7 @@
 
 
 extern "C" {
-	// Libary initialization. Called automatically
+	// Library initialisation. Called automatically
 	L_EXPORT void BMR_Init() noexcept;
 	// Returns the library time and date
 	L_EXPORT const char *BMR_Version() noexcept; 		

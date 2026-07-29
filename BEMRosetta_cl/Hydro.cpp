@@ -818,35 +818,45 @@ UVector<String> Hydro::Check(BEM_FMT type, bool irregular, bool autoIrregular, i
 	if (First(dt.w) <= 0.01)
 		ret << F(t_("First frequency %f < 0.01 is too low"), First(dt.w));
 	
+	double mFrequency = 10000;
 	UVector<String> bodynames;
 	for (int ib = 0; ib < dt.msh.size(); ++ib) {
-		if (IsNull(dt.msh[ib].dt.c0))
+		const Body &msh = dt.msh[ib];
+		
+		if (IsNull(msh.dt.c0))
 			ret << F(t_("Centre of body #%d has to be set"), ib+1);
-		if (IsNull(dt.msh[ib].dt.cg))
+		if (IsNull(msh.dt.cg))
 			ret << F(t_("Centre of gravity of body #%d has to be set"), ib+1);
-		if (Find(bodynames, dt.msh[ib].dt.name) >= 0)
-			ret << F(t_("Some bodies have the same name '%s'"), dt.msh[ib].dt.name);
+		if (Find(bodynames, msh.dt.name) >= 0)
+			ret << F(t_("Some bodies have the same name '%s'"), msh.dt.name);
 		else
-			bodynames << dt.msh[ib].dt.name;
+			bodynames << msh.dt.name;
 		
 		for (int r = 0; r < 6; ++r) {		// Some element of the inertia matrix diagonal is zero
-			if (dt.msh[ib].dt.M(r, r) < EPS_LEN) {
+			if (msh.dt.M(r, r) < EPS_LEN) {
 				ret << F(t_("Inertia matrix of body #%d has a zero in the diagonal"), ib+1);
 				break;
 			}
 		}
 		// If cg == c0, terms out of the diagonal has to be zero
-		if (!IsNull(dt.msh[ib].dt.c0) && IsNull(dt.msh[ib].dt.cg) && Distance(dt.msh[ib].dt.c0, dt.msh[ib].dt.c0) < 0.01) {
+		if (!IsNull(msh.dt.c0) && IsNull(msh.dt.cg) && Distance(msh.dt.c0, msh.dt.c0) < 0.01) {
 			for (int r = 0; r < 6; ++r) {
 				for (int c = 0; c < 6; ++c) {
-					if (r != c && abs(dt.msh[ib].dt.M(r, c)) > 0.01) {
+					if (r != c && abs(msh.dt.M(r, c)) > 0.01) {
 						ret << F(t_("Inertia matrix of body #%d has a zero outside the diagonal, and cg == cb"), ib+1);
 						break;
 					}
 				}
 			}
 		}
+		
+		double maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency;
+		msh.dt.mesh.CalcSegmentDimensions(dt.h, Bem().g, maxRadius, maxSide, maxSurface, avgRadius, avgSide, avgSurface, maxFrequency);
+		mFrequency = min(mFrequency, maxFrequency);
 	}
+	if (mFrequency < Last(dt.w))
+		ret << F("Highest frequency is higher than wavelength/9 (%.3f > %.3f)", Last(dt.w), mFrequency);
+		
 	return ret;
 }
 
@@ -932,6 +942,9 @@ void Hydro::GetRAO(double critDamp) {
 		MatrixXd C_moor = CMoor_mat(false, ib);
 		if (C_moor.size() == 36)
 			C += C_moor;
+		MatrixXd C_add = CAdd_mat(false, ib);
+		if (C_add.size() == 36)
+			C += C_add;
 		const MatrixXd &M_ = dt.msh[ib].dt.M;
 		for (int ih = 0; ih < dt.Nh; ++ih) {	
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {

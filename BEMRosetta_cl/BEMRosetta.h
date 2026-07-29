@@ -81,7 +81,7 @@ public:
 	virtual ~Body() 		{magic = 505;}
 	bool IsValid()  		{return magic == 1234567890;}
 	
-	void Clear() 			{dt.mesh.Clear(); dt.spline.Clear();}
+	void Clear() 			{dt.mesh.Clear(); dt.under.Clear(); dt.spline.Clear();}
 	bool IsEmpty() const 	{return dt.mesh.IsEmpty() && dt.spline.IsEmpty();}
 	
 	void cloneDamaged(UArray<Body> &damaged) {	// Points to a copy of the damaged bodies, to avoid moving the real ones

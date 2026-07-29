@@ -4,7 +4,7 @@
 
 #include "BEMRosetta.h"
 #include <SysInfo/Crash.h>
-#include "export.h"
+#include "libbemrosetta.h"
 
 #ifdef PLATFORM_WIN32
 
@@ -42,7 +42,7 @@ CONSOLE_APP_MAIN
 		String binFolder = AFX(unittestFolder, ".\\.test");
 		String bemFolder = AFX(unittestFolder, "..");
 		String installFolder = AFX(bemFolder, "install");
-		String export_h = AFX(bemFolder, "BEMRosetta_cl", "export.h"); 
+		String export_h = AFX(bemFolder, "BEMRosetta_cl", "libbemrosetta.h"); 
 #endif
 #ifdef flagBEMR_TEST_DLL
 		FileDelete(AFX(binFolder, "libbemrosetta.exp"));
@@ -111,6 +111,8 @@ CONSOLE_APP_MAIN
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 		if (!SaveFile(AFX(binFolder, "libbemrosetta.py"), strPy))
 			throw Exc(t_("Impossible to save Python declarations file"));
+		if (!FileCopy(export_h, AFX(binFolder, "libbemrosetta.h")))
+			throw Exc(t_("Impossible to save C declarations file"));		
 #endif
 
 #if defined(COMPILER_MSC) && defined(flagBEMR_TEST_DLL)

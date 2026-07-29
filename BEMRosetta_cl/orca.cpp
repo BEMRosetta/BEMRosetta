@@ -188,17 +188,17 @@ static String StringDuration(int64 duration) {
     if (duration < 60)
         return F("%d s", int(duration));
 	else if (duration < 3600) {
-        int minutes = duration / 60;
-        int seconds = duration % 60;
+        int minutes = int(duration/60);
+        int seconds = duration%60;
         return F("%d:%02d m", minutes, seconds);
     } else if (duration < 86400) {
-        int hours = duration / 3600;
-        int minutes = (duration % 3600) / 60;
+        int hours = int(duration/3600);
+        int minutes = (duration%3600)/60;
         return F("%d:%02d h", hours, minutes);
     } else {
-	    int days = duration / 86400;
-	    int hours = (duration % 86400) / 3600;
-	    int minutes = (duration % 3600) / 60;
+	    int days = int(duration/86400);
+	    int hours = (duration%86400)/3600;
+	    int minutes = (duration%3600)/60;
 	
 	    if (hours == 0 && minutes == 0)
 	        return F("%d d", days);
@@ -257,14 +257,13 @@ void __stdcall Orca::LicenceNotFoundHandler(int action, BOOL *lpAttemptReconnect
 		*lpData = 1;
 		return;
 	case lrContinue:
-		*lpAttemptReconnection = TRUE;	//*lpData < 10; 
-		if (*lpAttemptReconnection) {
-			Sleep(60*1000);
-			WhenPrint(F("License lost for %d min. Attemping reconnection in a minute", *lpData));
-			(*lpData)++; 
-		}
+		*lpAttemptReconnection = TRUE;
+		Sleep(60*1000);
+		WhenPrint(F("License lost for %d min. Attemping reconnection in a minute", *lpData));
+		(*lpData)++; 
 		return;
 	case lrEnd:
+		WhenPrint("License definitively lost");
 		noLicenseTime += (GetSysTime() - beginNoLicense);
 	}
 }
@@ -437,11 +436,11 @@ bool Orca::InitVersion(String version) {
 			double number = GetVersionNumber(orcadata[i].version);
 			if (number < lowest) {
 				lowest = number;
-				ilowest = (int)number;
+				ilowest = i;
 			}
 			if (number > highest) {
 				highest = number;
-				ihighest = (int)number;
+				ihighest = i;
 			}
 			if (GetVersionString(orcadata[i].version).StartsWith(version)) {		// 11.6 with 11.6b matches
 				iversion = i;
