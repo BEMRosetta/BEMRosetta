@@ -1,5 +1,7 @@
 @if not exist .\.test mkdir .\.test
 @del .\.test\*.* /q
+@if exist .\.test\__pycache__ rd /s /q .\.test\__pycache__
+@if exist .\.test\Capy        rd /s /q .\.test\Capy
 
 @title Compiling BEMRosetta_cl %1
 @echo Compiling BEMRosetta_cl %1
@@ -48,27 +50,27 @@ umk BEMRosetta BEMRosetta %1 %2 +GUI  -r	.\.test\BEMRosetta.exe
 @title Copying BEMRosetta %1
 @echo Copying BEMRosetta %1
 copy .\.test\BEMRosetta.exe ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta.exe"
 copy .\.test\BEMRosetta_cl.exe ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta_cl.exe"
 copy .\.test\libbemrosetta.dll ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying libbemrosetta.dll"
 copy .\.test\libbemrosetta.h ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying libbemrosetta.h"
 copy .\.test\libbemrosetta.a ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying libbemrosetta.a"
 copy .\.test\libbemrosetta.lib ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying libbemrosetta.lib"
 copy .\.test\libbemrosetta.txt ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying libbemrosetta.txt"
 copy .\.test\libbemrosetta.py ..\_bin
-@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying BEMRosetta"
+@IF %ERRORLEVEL% NEQ 0 PAUSE "Error copying libbemrosetta.py"
 
 del /Q /F .\.test\TurbSim2.bts
 del /Q /F .\.test\hello.*
 del /Q /F .\.test\*.log
 del /Q /F .\.test\*.txt
 del /Q /F .\.test\*.csv
-del /Q /F .\.test\__pycache__\*.*
-rd  .\.test\__pycache__
+rd /s /q .\.test\__pycache__
+rd /s /q .\.test\Capy
 

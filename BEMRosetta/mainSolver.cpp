@@ -751,9 +751,10 @@ void MainSolver::arrayOnDuplicate() {
 	last.mesh = clone(sel.mesh);
 	last.lid = clone(sel.lid);
 	
+	bodies.array.Add(bscroll.AddPane(last, true, true).SizePos(), ~sel.name);
+	
 	last.SetTexts();
 	
-	bodies.array.Add(bscroll.AddPane(last, true, true).SizePos(), ~sel.name);
 	last.name.WhenAction = [&]() {
 		int id = bodies.array.GetCursor();
 		if (id < 0)

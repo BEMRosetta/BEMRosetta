@@ -21,8 +21,6 @@ try:
     print(f"Underwater surface : {bemr.Mesh.UnderwaterSurface.Get()}")
     print(f"Stiffness matrix   : {bemr.Mesh.HydrostaticStiffness.Get()}")
     
-    
-    
     os.remove("./.test/kk.gdf")
     
 except Exception as e:

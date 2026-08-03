@@ -508,9 +508,26 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 		
 		bool isLid    = irregular && dt.lids.size() > ib && !dt.lids[ib].dt.mesh.panels.IsEmpty();
 		autoIrregular = irregular && autoIrregular;
-		if (autoIrregular)
-			spy << F("lid_mesh_%d = mesh_%d.translated_z(1e-7).generate_lid()     # See https://github.com/capytaine/capytaine/issues/589\n", ib+1, ib+1);
-		else if (isLid) {
+		if (autoIrregular) {
+			if (ib == 0) {
+				spy << 	"\ndef generate_lid_iterative(hull):\n"
+						"    z = 1e-7\n"
+						"    lid = hull.translated_z(z).generate_lid(z)\n"
+						"    if lid.nb_faces > 0:\n"
+						"        print('Lid correctly generated')\n"
+						"        return lid\n"
+						"    radius = mesh_1.faces_radiuses.mean()\n"
+						"    factor = 1.0\n"
+						"    while factor > 0.3:\n"
+						"        lid = hull.translated_z(z).generate_lid(z, faces_max_radius = radius*factor)\n"
+						"        if lid.nb_faces > 0:\n"
+						"            print(f'Lid generated with radius reduced from {radius:.4f} to {radius*factor:.4f}')\n"
+						"            return lid\n"
+						"        factor *= 0.95\n"
+						"    raise RuntimeError('Problem generating the lid')\n\n";
+			}
+			spy << F("lid_mesh_%d = generate_lid_iterative(mesh_%d)\n", ib+1, ib+1);
+		} else if (isLid) {
 			String destLid = AFX(folderMesh, F(t_("Body_%d_lid.gdf"), ib+1));
 			Body::SaveAs(dt.lids[ib], destLid, Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);
 			spy << F("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='wamit')\n", ib+1, GetFileName(destLid));

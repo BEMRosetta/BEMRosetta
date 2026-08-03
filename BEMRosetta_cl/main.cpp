@@ -46,7 +46,7 @@ CONSOLE_APP_MAIN
 #endif
 #ifdef flagBEMR_TEST_DLL
 		FileDelete(AFX(binFolder, "libbemrosetta.exp"));
-		FileDelete(AFX(binFolder, "libbemrosetta.lib"));
+		//FileDelete(AFX(binFolder, "libbemrosetta.lib"));
 		
 		Dl dll;		
 		if (!dll.Load(AFX(binFolder, "libbemrosetta.dll")))
@@ -71,6 +71,12 @@ CONSOLE_APP_MAIN
     	DLLFunction(dll, void, BMR_Bem_Body_LoadMeshFromMesh, (int id));
     	DLLFunction(dll, void, BMR_Bem_SaveCase, (const char *folder, const char *solver, bool x0z, bool y0z, bool irregular, bool autoIrregular, const char *qtfType, bool autoQTF, bool bin, int numCases, int numThreads, bool withPotentials, bool withMesh));
     
+    	DLLFunction(dll, void, BMR_Bem_Body_LoadMesh, (const char *file));
+		DLLFunction(dll, void, BMR_Bem_Body_Cg_Set, (double x, double y, double z));
+		DLLFunction(dll, void, BMR_Bem_Body_Inertia_Set, (const double *data, const int dim[2]));
+		DLLFunction(dll, int,  BMR_Bem_Load, (const char *file));
+		DLLFunction(dll, void, BMR_Bem_Save, (const char *file));
+			
     	DLLFunction(dll, void, BMR_Mesh_Volume_Get, (double *volx, double *voly, double *volz));
     	DLLFunction(dll, void, BMR_Mesh_UnderwaterVolume_Get, (double *volx, double *voly, double *volz));
     	DLLFunction(dll, void, BMR_Mesh_HydrostaticStiffness_Get, (double **data, int dim[2]));
@@ -135,124 +141,36 @@ CONSOLE_APP_MAIN
 
 #if defined(flagBEMR_TEST_DLL) || defined(flagBEMR_TEST_DLL_INTERNAL)
 
-/*
-    BMR_Mesh_Load("C:/Temas/2025 BEM Benchmark++/2025 BEM Benchmark++/30 Solvers/Synopsys Aqwa/CorPower/10 mesh/CorPower_0p45.dat");	BEM_Throw();  
-    //BMR_Mesh_Translate(0, 0, 14.2617);
-    int idHull = BMR_Mesh_GetHull();
-	BMR_Mesh_C0_Set(0, 0, -0.314);
-	BMR_Mesh_Cg_Set(0, 0, -0.314);
-	int dm66[] = {6, 6};
-    UVector<double> inertia =  {60000, 0,     0,     0,     0,     0,
-                           		0,     60000, 0,     0,     0,     0,
-                           		0,     0,     60000, 0,     0,     0,
-                           		0,     0,     0,     2.5E6, 0,     0,
-                           		0,     0,     0,     0,     2.5E6, 0,
-                           		0,     0,     0,     0,     0,     5E5};
-  
-    BMR_Mesh_Inertia_Set(inertia, dm66);
-
-    double T = 1400000;
-    double K33 = 510000;
-    double h = 50;
-    double z_f = - 5.479;
-    double LTK = h + T / K33;
-    double K11 = T / LTK;
-    double K22 = K11;
-    double K24 = T * z_f / LTK;
-    double K42 = K24;
-    double K15 = -K24;
-    double K51 = K15;
-    double K44 = T * sqr(z_f) / LTK;
-    double K55 = K44;
-    
-    UVector<double> mooringStiffness =  {K11, 0,   0,   0,   K15, 0,
-                                    	 0,   K22, 0,   K24, 0,   0,
-                                    	 0,   0,   K33, 0,   0,   0,
-                                    	 0,   K42, 0,   K44, 0,   0,
-                                    	 K51, 0,   0,   0,   K55, 0,
-                                    	 0,   0,   0,   0,   0,   0};
-                                    
-    BMR_Mesh_MooringStiffness_Set(mooringStiffness, dm66);
-    
-    UVector<double> linearDamping =  {   2200,0,   0,    0,     0,     0,
-                                    	 0,   2200,0,    0,     0,     0,
-                                    	 0,   0,   41213,0,     0,     0,
-                                    	 0,   0,   0,    144000,0,     0,
-                                    	 0,   0,   0,    0,     144000,0,
-                                    	 0,   0,   0,    0,     0,     0};
-                                    
-    BMR_Mesh_LinearDamping_Set(linearDamping, dm66);
-    
-    int idMesh = BMR_Mesh_Id_Get();
-    int idLid = BMR_Mesh_FillWaterplane(1, true);
-    double minx, maxx, miny, maxy, minz, maxz;
-    BMR_Mesh_VolumeEnvelope_Get(&minx, &maxx, &miny, &maxy, &minz, &maxz);
-    double span = max(maxx - minx, maxy - miny);
-    BMR_Mesh_Id_Set(idMesh);
-    BMR_Mesh_Save(AFX(GetDesktopFolder(), "Mesh.gdf"), "Wamit .gdf", false, false);	BEM_Throw();  
-    int idCS = BMR_Mesh_GetControlSurface(0.5*span, 1, true, true, true);						BEM_Throw();  
-    BMR_Mesh_Save(AFX(GetDesktopFolder(), "CS.gdf"), "Wamit .gdf", false, false);	BEM_Throw();  
-    
-    BMR_Bem_depth_Set(50);
-    BMR_Bem_g_Set(9.81);
-    BMR_Bem_rho_Set(1025);
-    UVector<double> w;
-    LinSpaced(w, 30, 0.1, 3); 
-    BMR_Bem_w_Set(w, w.size());
-    UVector<double> head = {0}; 
-    BMR_Bem_headings_Set(head, head.size());
-
-    BMR_Bem_Body_LoadMeshFromMesh(idHull);
-    BMR_Bem_Body_LoadLidFromMesh(idLid);
-	BMR_Bem_Body_LoadControlSurfaceFromMesh(idCS);
-	
- 	String eachfolder;
- 	
- 
-    
-    eachfolder = AFX(GetDesktopFolder(), "Wamit");
-    BMR_Bem_SaveCase(eachfolder, "Wamit .out", true, true, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();
-    
-    */
- 	
-/* 	
- 	eachfolder = AFX(GetDesktopFolder(), "Nemoh");
-    BMR_Bem_SaveCase(eachfolder, "NEMOHv3", true, true, true, false, "No", false, false, 1, -1, false, false);	BEM_Throw(); 
-    
-    eachfolder = AFX(GetDesktopFolder(), "CapytaineAutoSym");
-    BMR_Bem_SaveCase(eachfolder, "Capytaine", true, true, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();  
-*/   
-/* 
-	eachfolder = AFX(GetDesktopFolder(), "AQWAAuto");
-    BMR_Bem_SaveCase(eachfolder, "AQWA", false, false, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();  
-    
-    eachfolder = AFX(GetDesktopFolder(), "AQWA_QTF_Near");
-    BMR_Bem_SaveCase(eachfolder, "AQWA", false, false, true, true, "Near", false, false, 1, -1, false, false);	BEM_Throw();  
-    
-    
-    
-    eachfolder = AFX(GetDesktopFolder(), "OrcaNo");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", false, false, false, false, "No", false, false, 1, -1, false, false);	BEM_Throw(); 
-    
-	eachfolder = AFX(GetDesktopFolder(), "OrcaAuto");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", false, false, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();  
-    
-    eachfolder = AFX(GetDesktopFolder(), "OrcaAutoSym");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", true, true, true, true, "No", false, false, 1, -1, false, false);	BEM_Throw();  
-    
-    eachfolder = AFX(GetDesktopFolder(), "Orca_QTF_Near");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", true, true, true, true, "Near", false, false, 1, -1, false, false);	BEM_Throw();    
-    
-    eachfolder = AFX(GetDesktopFolder(), "Orca_QTF_Far");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", true, true, false, false, "Far", false, false, 1, -1, false, false);	BEM_Throw();  
-    
-    eachfolder = AFX(GetDesktopFolder(), "Orca_QTF_Middle");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", true, true, true, true, "Middle", false, false, 1, -1, false, false);	BEM_Throw();      
-    
-    eachfolder = AFX(GetDesktopFolder(), "Orca_QTF_MiddleAuto");
-    BMR_Bem_SaveCase(eachfolder, "OrcaWave", true, true, true, true, "Middle", true, false, 1, -1, false, false);	BEM_Throw();  
-        
-  */  
+		{
+			printf("\nGenerating new case");
+			const char *meshFile = "../examples/capytaine/Orca/Body_1.gdf";	
+			BMR_Bem_depth_Set(50);
+			BMR_Bem_g_Set(9.81);
+			BMR_Bem_rho_Set(1025);
+			double w[] = {0.1, 0.5, 1, 1.5, 2};
+			BMR_Bem_w_Set(w, sizeof(w)/sizeof(double));
+			double head[] = {0, 45, 90};
+			BMR_Bem_headings_Set(head, sizeof(head)/sizeof(double));
+			BMR_Bem_Body_LoadMesh(meshFile);
+			BMR_Bem_Body_Cg_Set(0, 0, 0);
+			double M[] = {9.8E5,     0,     0,   0,   0,   0,
+						      0, 9.8E5,     0,   0,   0,   0,
+						      0,     0, 9.8E5,   0,   0,   0,
+						      0,     0,     0, 1E7,   0,   0,
+						      0,     0,     0,   0, 1E7,   0,
+						      0,     0,     0,   0,   0, 1E7};
+			int dim[] = {6, 6};
+			BMR_Bem_Body_Inertia_Set(M, dim);
+			printf("\nSaving it in Capytaine format");
+			BMR_Bem_SaveCase("../unittest/.test/Capy", "Capytaine .py", false, false, true, true, "No", false, false, 1, 4, false, false);
+			printf("\nRunning it in Capytaine");
+			system("cd /d ..\\unittest\\.test\\Capy && capytaine.bat");
+			printf("\nLoading the results in .nc format");
+			BMR_Bem_Load("..\\unittest\\.test\\Capy\\capytaine.nc");
+			printf("\nSaving the results in .h5 format");
+			BMR_Bem_Save("..\\unittest\\.test\\Capy\\capytaine.h5");
+		}
+	  
 		BMR_Mesh_Load("../examples/hydrostar/Mesh/Ship.hst");
 	    double volx, voly, volz;
 	    BMR_Mesh_Volume_Get(&volx, &voly, &volz);

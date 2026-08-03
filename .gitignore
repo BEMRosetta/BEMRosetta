@@ -1,3 +1,4 @@
 unittest/.test/
 Benchmark_pre/
 /MoorDyn
+unittest/clang_path.bat

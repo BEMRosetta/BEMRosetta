@@ -536,6 +536,16 @@ int BMR_Bem_New() noexcept {
 	return BMR().bemid;
 }
 
+int BMR_Bem_Load(const char *file) noexcept {
+	Bem().LoadBEM(file);
+	BMR_Bem_Id_Set(Bem().hydros.size()-1);
+	return BMR().bemid;
+}
+
+void BMR_Bem_Save(const char *file) noexcept {
+	Bem().hydros[BMR().bemid].SaveAs(file, Null, Hydro::UNKNOWN, Null);
+}
+							
 void BMR_Bem_Id_Set(int id) noexcept {
 	try {
 		if (IsNull(id) || id < 0)
@@ -555,9 +565,6 @@ void BMR_Bem_Id_Set(int id) noexcept {
 
 int BMR_Bem_Id_Get() noexcept {
 	try {
-//		if (Bem().hydros.IsEmpty()) 
-//			throw Exc(t_("No file loaded"));
-		
 		return BMR().bemid;
 	} catch(Exc err) {
 		BMR().errorStr = err;
@@ -796,8 +803,10 @@ void BMR_Bem_Body_LoadMesh(const char *file) noexcept {
 	try {
 		if (Bem().hydros.size() < BMR().bemid) 
 			throw Exc(F(t_("Model %d is not set"), BMR().bemid));
+
 		Hydro &hy = Bem().hydros[BMR().bemid];
 		hy.dt.msh.SetCount(max(BMR().bembodyid+1, hy.dt.msh.size()));
+
 		Body::Load(hy.dt.msh[BMR().bembodyid], file, Bem().rho, Bem().g, Null, Null, false);
 		hy.dt.Nb = hy.dt.msh.size();
 	} catch(Exc err) {
@@ -1029,7 +1038,7 @@ void BMR_Bem_SaveCase(const char *folder, const char *solver, bool x0z, bool y0z
 				for (int i = 0; i < errors.size(); ++i)
 				 	str << "\n- " << errors[i];
 			}
-			throw Exc(F(t_("Problems found in data: %s"), str));
+			BEM::Print(F(t_("\nProblems found in data: %s"), str));
 		}		
 		UVector<bool> listDOF(6, true);
 		UVector<Point3D> dummy;

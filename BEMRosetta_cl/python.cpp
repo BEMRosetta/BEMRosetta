@@ -213,20 +213,6 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 				strSubIds << (idParent < 0 ? 0 : idParent);
 			}
 		}
-		/*
-		int pos1 = fname.Find("_");
-		int idsubname = 0;
-		if (pos1 > 0) {
-			String subname = fname.Left(pos1);
-			idsubname = subnamespaces.Find(subname);
-			if (idsubname < 0) {
-				idsubname = subnamespaces.size();
-				subnamespaces << subname;
-				strSubnames.Add();
-			}
-			fname = fname.Mid(pos1+1);
-		}
-		*/
 		strSubNames[idsubname] << "    def " << fname << "(self";
 		if (!pargs.IsEmpty())
 			strSubNames[idsubname] << ", " << ToArgs(pargs);
@@ -263,7 +249,7 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 
 	strSubNames[0].Insert(0, "\n");
 	strSubNames[0].Insert(0, "        self.Init()\n");
-	//strSubNames[0].Insert(0, "\n");
+	
 	for (int i = strSubNames.size()-1; i > 0; --i)
 		strSubNames[strSubIds[i]].Insert(0, F("        self.%s = _%s(self.libc, self._raise_if_error)\n", subnamespaces_name[i], subnamespaces[i]));
 	
@@ -288,7 +274,7 @@ String GetPythonDeclaration(const String &name, const String &prefix, const Stri
 	}
 	
 	for (int i = 0; i < strSubNames.size(); ++i) 
-		str << /*"\n" << */strSubNames[i];
+		str << strSubNames[i];
 	
 	return str = Trim(str);	
 }
