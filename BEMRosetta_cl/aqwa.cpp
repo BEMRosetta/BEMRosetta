@@ -50,10 +50,6 @@ String Aqwa::Load(String file, Function <bool(String, int)> Status, bool onlyCas
 				}
 			}
 		}
-							
-								
-		//if (IsNull(dt.Nb))
-		//	return false;
 		
 		if (!onlyCase) {
 			BEM::Print("\n- " + F(t_("QTF file")));
@@ -652,7 +648,15 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 			
 			if (!IsNull(trans)) {
 				//if (dt.Nb == 1)
-					in.GetLine(7);
+					in.GetLine();
+					line = in.GetLine();
+					int id = line.FindAfter("=");	// INCIDENT WAVE FREQUENCY =      0.5149 (RAD/S)
+					if (id < 0)
+						throw Exc(in.Str() + "\n"  + F(t_("Frequency not found")));
+					double w = ScanDouble(line.Mid(id));
+					ifrPot = FindClosest(dt.w, w);
+					in.GetLine(5);
+					
 				/*else {
 					ib = ScanInt(Trim(line).Right(3)) - 1;
 					if (ib < 0 || ib >= dt.Nb)
@@ -664,7 +668,9 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 				 	if (IsNull(prevTrans) || !prevTrans) {
 						prevTrans = true;
 						//if (ib == 0)
-							++ifrPot;
+						//++ifrPot;
+						//if (ifrPot >= dt.Nf)
+						//	throw Exc(in.Str() + "\n"  + F(t_("Wrong number of frequencies")));
 					}
 				} else
 					prevTrans = false;
@@ -1081,13 +1087,19 @@ bool Aqwa::Load_LIS(double &factorMass, Function <bool(String, int)> Status) {
 		
 		
 	}
+	double factorPot = 1;
+	if (dt.symX)
+		factorPot *= 2;
+	if (dt.symY)
+		factorPot *= 2;
+
 	if (!dt.pots_rad.IsEmpty()) {		// Transform potentials to Wamit
 		for (int iib = 0; iib < dt.Nb; ++iib) 
 			for (int ip = 0; ip < dt.pots_rad[iib].size(); ++ip) 
 				for (int idf = 0; idf < 6; ++idf)
 					for (int ifr = 0; ifr < dt.Nf; ++ifr) {	
 						auto &d = dt.pots_rad[iib][ip][idf][ifr];
-						d = std::complex<double>(d.imag()/dt.w[ifr], d.real()/dt.w[ifr]);
+						d = factorPot*std::complex<double>(d.imag()/dt.w[ifr], d.real()/dt.w[ifr]);
 					}	
 	}	
 	dt.solver = Hydro::AQWA;				

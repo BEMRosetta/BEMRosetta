@@ -1,4 +1,5 @@
 PREMULTIPLIED
+VERSION(20260403)
 IMAGE_ID(resultset_previous) IMAGE_META("exp", "")
 IMAGE_ID(resultset_next)
 IMAGE_ID(resultset_nextpause)

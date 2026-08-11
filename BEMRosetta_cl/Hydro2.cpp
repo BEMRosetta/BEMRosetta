@@ -1885,6 +1885,18 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 	if (IsLoadedQTF(false))
 		FillNullQTF(dt.qtfdif, false);
 	
+	
+	if (dt.symY) {	// Deploy symmetries in forces
+		Symmetrize_Forces(true);
+		Symmetrize_MD(true);
+		Symmetrize_QTF(true);
+	}
+	if (dt.symX) {
+		Symmetrize_Forces(false);
+		Symmetrize_MD(false);
+		Symmetrize_QTF(false);
+	}
+	
 	Status(t_("Postprocessing meshes and symmetrizing potentials"), -1);
 	for (int ib = 0; ib < dt.msh.size(); ++ib) {
 		Body &m = dt.msh[ib];

@@ -73,11 +73,11 @@ void Main::Init(bool firstTime) {
 		else
 			title = Bem().windowTitle;
 	} else if (parameter == "bem")
-		title = "BEMRosetta BEM models viewer";
+		title = t_("BEMRosetta BEM models viewer");
 	else if (parameter == "mesh")
-		title = "BEMRosetta mesh files viewer";
+		title = t_("BEMRosetta mesh files viewer");
 	else if (parameter == "time")
-		title = "BEMRosetta Time domain results viewer";
+		title = t_("BEMRosetta Time domain results viewer");
 	else
 		throw Exc(F(t_("Unknown -gui parameter %s"), parameter));
 	

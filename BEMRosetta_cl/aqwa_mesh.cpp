@@ -290,10 +290,10 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 					String name = Trim(line.Mid(ps+3));
 					mesh[ib].dt.name = name;
 				} else {
-					if ((ps = line.FindAfter("SYMX")) >= 0) 
-						hy.dt.symX = true;
-					if ((ps = line.FindAfter("SYMY")) >= 0) 
+					if ((ps = line.FindAfter("SYMX")) >= 0) // XZ symmetry
 						hy.dt.symY = true;
+					if ((ps = line.FindAfter("SYMY")) >= 0) // YZ symmetry 
+						hy.dt.symX = true;
 				}
 			} else {
 				ib--;
@@ -403,6 +403,78 @@ String AQWABody::LoadDat(UArray<Body> &mesh, Hydro &hy, String fileName) {
 	hy.dt.solver = Hydro::AQWA_DAT;
 	
 	return String();
+}
+
+struct HeadingRange {
+	double from;
+	double to;
+};
+
+static bool InRangeTol(double h, const HeadingRange& r, double eps) {return h >= r.from - eps && h <= r.to + eps;}
+
+static double SnapToRangeLimits(double h, const HeadingRange& r, double eps) {
+	if (abs(h - r.from) <= eps)
+		return r.from;
+	if (abs(h - r.to) <= eps)
+		return r.to;
+	return h;
+}
+
+static int CountValuesInRange(const UVector<double>& headings, const HeadingRange& r, double eps) {
+	int count = 0;
+
+	for (double h : headings)
+		if (InRangeTol(h, r, eps))
+			count++;
+
+	return count;
+}
+
+static const HeadingRange &SelectBestRange(const UVector<double>& headings, const UArray<HeadingRange>& ranges, double eps) {
+	int best_i = 0;
+	int best_count = -1;
+
+	for (int i = 0; i < ranges.GetCount(); ++i) {
+		int count = CountValuesInRange(headings, ranges[i], eps);
+
+		if (count > best_count) {
+			best_count = count;
+			best_i = i;
+		}
+	}
+	return ranges[best_i];
+}
+
+UVector<double> FilterWaveHeadings(const UVector<double>& headings, bool x0z, bool y0z, double eps = 1e-3) {
+	UArray<HeadingRange> ranges;
+
+	if (!x0z && !y0z)				// 1ST/LAST DIRECTION FOR NO SYMMETRY MUST BE -180 & +180 DEGREES
+		ranges.Add({-180., 180.});
+	else if (x0z && !y0z) {			// x0z -180/0 OR 0/180 DEGREES
+		ranges.Add({-180.,   0.}), 
+		ranges.Add({   0., 180.});
+	} else if (!x0z && y0z)			// y0z -90 & 90 DEGREES
+		ranges.Add({ -90.,  90.});
+	else {							// 1ST/LAST DIRECTION FOR BOTH X/Y AXIS SYMMETRY MUST BE -180/-90 -90/0 OR 0/90 OR 90/180 DEGREES.
+		ranges.Add({-180., -90.});
+		ranges.Add({ -90.,   0.});
+		ranges.Add({   0.,  90.});
+		ranges.Add({  90., 180.});
+	}
+
+	const HeadingRange& selected = SelectBestRange(headings, ranges, eps);
+
+	UVector<double> filtered;
+
+	filtered << selected.from;
+	filtered << selected.to;
+	for (double h : headings)
+		if (InRangeTol(h, selected, eps))
+			FindAddDelta(filtered, SnapToRangeLimits(h, selected, eps), eps);
+	
+	Sort(filtered);	
+	
+	return filtered;
 }
 
 void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<Surface> &surfs, double rho, double g, bool y0z, bool x0z,
@@ -525,14 +597,11 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	for (int ib = 0; ib < surfs.size(); ++ib) {
 		ret << "********************************************************************************\n";
 		ret << F("          ELM%d      Body%d\n", ib+1, ib+1);
-		if (y0z || x0z) {		// Symmetries
-			ret << "     ";
-			if (y0z)
-				ret << " SYMX";
-			if (x0z)
-				ret << " SYMY";
-			ret << "\n";
-		}
+		if (x0z)		// Symmetries
+			ret << "      SYMX\n";
+		if (y0z)		// Symmetries
+			ret << "      SYMY\n";
+
 		ret
 			//<< "      *SEAG         ( 81, 51,-270.24102, 339.52305,-230.62436, 230.62436)" << "\n"
 			<< "      ZLWL          (        0.)" << "\n";	// Free surface height is zero
@@ -628,24 +697,15 @@ void AQWABody::SaveDat(String fileName, const UArray<Body> &mesh, const UArray<S
 	ret
 	<< "********************************************************************************\n"
 	<< "*********************************** DECK  6 ************************************\n"
-	<< "********************************************************************************\n";
-	
+	<< "********************************************************************************\n";	
 	bool found0 = false, found180 = false;
 	UVector<double> head180;
 	for (int i = 0; i < head.size(); ++i) {
 		double hd = FixHeading_180(head[i]);
-		if (abs(hd) < 0.1)
-			found0 = true;
-		if (abs(hd - 180) < 0.1)
-			found180 = true;
 		FindAdd(head180, hd);
 	}
-	if (!found0)
-		head180 << 0;
-	if (!found180)
-		head180 << 180;
 	Sort(head180);
-	head180.Insert(0, -180);
+	head180 = FilterWaveHeadings(head180, x0z, y0z);
 	
 	for (int ib = 0; ib < mesh.size(); ++ib) {
 		ret << "********************************************************************************\n";

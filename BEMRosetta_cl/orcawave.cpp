@@ -69,6 +69,8 @@ bool OrcaWave::Load_OW_YML() {
 	
 	dt.g = 9.80665;		// Default value used when SI units
 
+	dt.symX = dt.symY = false;
+	
 	int ib = -1;
 	Point3D bodyMeshPosition;
 	bool originCM = false;
@@ -163,8 +165,8 @@ bool OrcaWave::Load_OW_YML() {
 				GetMsh().AfterLoad(dt.rho, dt.g, false, true);
 			} else if (fy.FirstIs("BodyMeshSymmetry")) {	
 				String sym = fy.GetVal(); 
-				dt.symY = sym.Find("xz") >= 0;
-				dt.symX = sym.Find("yz") >= 0;
+				//dt.symY = sym.Find("xz") >= 0;		// mesh file already includes symmetry. If not it will be deployed twice
+				//dt.symX = sym.Find("yz") >= 0;
 			} else if (fy.FirstIs("BodyUserOrigin")) {
 				UVector<double> line = fy.GetVectorDouble();
 				if (line.size() != 3)
