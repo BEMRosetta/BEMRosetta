@@ -315,10 +315,16 @@ void Main::Jsonize(JsonIO &json) {
 void MenuAbout::Init() {
 	CtrlLayout(*this);
 	
-	String qtf = GetTopic(F("BEMRosetta/main/About$en-us")); 
+	String qtf = GetTopic(F("topic://BEMRosetta/main/About$en-us")); 
 	SetBuildInfo(qtf);
 	qtf.Replace("SYSTEMINFO", DeQtf(GetSystemInfo()));
 	info.SetQTF(qtf);
+	info.WhenLink = [=](const String &link) {
+		if (link == "do:help") {
+			help.GoTo("topic://BEMRosetta/main/Help_en-us");
+			help.Open();	
+		}
+	};
 }
 
 			

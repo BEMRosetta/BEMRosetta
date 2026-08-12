@@ -295,7 +295,10 @@ class MenuAbout : public WithMenuAbout<StaticRect> {
 public:
 	typedef MenuAbout CLASSNAME;
 	void Init();
-	void HelpHandler(String &str);
+	//void HelpHandler(String &str);
+
+private:
+	HelpWindow help;
 };
 
 class MainSummary : public WithMainSummary<StaticRect> {
