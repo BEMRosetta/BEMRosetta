@@ -182,8 +182,9 @@ along with BEMRosetta. If not, see ][^http`:`/`/www`.gnu`.org`/licenses`/^2 http
 ww.gnu.org/licenses/][2 .]&]
 [s0;2 &]
 [s0;2 &]
-[s0; Help&]
+[s0; Help (To be done)&]
 [s0;2 &]
-[s0; [^do`:help^2 To be done][2 .]&]
-[s0; &]
+[s0;i150;O0; [^do`:help^2 In Window][2 .]&]
+[s0;i150;O0; [^https`:`/`/bemrosetta`.github`.io`/main`$BEMRosetta`$Help`_en`-us`.html^2 I
+n Web]&]
 [s0; ]]

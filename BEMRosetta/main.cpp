@@ -323,6 +323,9 @@ void MenuAbout::Init() {
 		if (link == "do:help") {
 			help.GoTo("topic://BEMRosetta/main/Help_en-us");
 			help.Open();	
+		} else {
+			if (PromptOKCancelOpt(t_("This will open your web browser to:") + F("&") + DeQtf(link), "open_external_url"))
+				LaunchWebBrowser(link);
 		}
 	};
 }
