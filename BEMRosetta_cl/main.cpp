@@ -73,6 +73,7 @@ CONSOLE_APP_MAIN
     
     	DLLFunction(dll, void, BMR_Bem_Body_LoadMesh, (const char *file));
 		DLLFunction(dll, void, BMR_Bem_Body_Cg_Set, (double x, double y, double z));
+		DLLFunction(dll, void, BMR_Bem_Body_C0_Set, (double x, double y, double z));
 		DLLFunction(dll, void, BMR_Bem_Body_Inertia_Set, (const double *data, const int dim[2]));
 		DLLFunction(dll, int,  BMR_Bem_Load, (const char *file));
 		DLLFunction(dll, void, BMR_Bem_Save, (const char *file));
@@ -144,6 +145,7 @@ CONSOLE_APP_MAIN
 		{
 			printf("\nGenerating new case");
 			const char *meshFile = "../examples/capytaine/Orca/Body_1.gdf";	
+			
 			BMR_Bem_depth_Set(50);
 			BMR_Bem_g_Set(9.81);
 			BMR_Bem_rho_Set(1025);
@@ -152,7 +154,8 @@ CONSOLE_APP_MAIN
 			double head[] = {0, 45, 90};
 			BMR_Bem_headings_Set(head, sizeof(head)/sizeof(double));
 			BMR_Bem_Body_LoadMesh(meshFile);
-			BMR_Bem_Body_Cg_Set(0, 0, 0);
+			BMR_Bem_Body_Cg_Set(0, 0, -1);
+			BMR_Bem_Body_C0_Set(0, 0, -1);
 			double M[] = {9.8E5,     0,     0,   0,   0,   0,
 						      0, 9.8E5,     0,   0,   0,   0,
 						      0,     0, 9.8E5,   0,   0,   0,

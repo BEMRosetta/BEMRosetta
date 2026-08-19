@@ -157,12 +157,12 @@ Body::ControlData::ControlData(Body::ControlData &&msh) noexcept {
 	damagedBodies = pick(msh.damagedBodies);	
 }
 
-String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
+String Body::Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
 	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
+String Body::Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
 	UArray<Body> msh;
 	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 	if (!ret.IsEmpty())
@@ -171,7 +171,7 @@ String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanel
 	return ret;
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
 	UArray<Body> meshLoaded;
 	String ret = Load(meshLoaded, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
@@ -193,7 +193,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 	return ret;
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, 
+String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, 
 		bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
@@ -335,8 +335,8 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cl
 		return ret;
 	
 	for (Body &m : mesh) {
-		if (IsNull(m.dt.c0))
-			m.dt.c0 = Point3D(0, 0, 0);
+		//if (IsNull(m.dt.c0))
+		//	m.dt.c0 = Point3D(0, 0, 0);
 		
 		if (m.dt.spline.IsEmpty()) {
 			ret = m.dt.mesh.CheckErrors();
@@ -606,10 +606,10 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		dt.under.GetArea();
 		dt.under.GetVolume();
 		
-		if (dt.M.size() != 36)
-			dt.M = MatrixXd::Zero(6,6);
-		if (GetMass() == 0 && !IsNull(rho))
-			SetMass(dt.under.volume*rho);
+		//if (dt.M.size() != 36)
+		//	dt.M = MatrixXd::Zero(6,6);
+		//if (GetMass() == 0 && !IsNull(rho))
+		//	SetMass(dt.under.volume*rho);
 		dt.cb = dt.under.GetCentreOfBuoyancy();
 		if (IsNull(dt.Vo))
 			dt.Vo = dt.under.volume;
@@ -624,7 +624,7 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 		cdt.controlPointsC0 = clone(cdt.controlPointsC);
 		cdt.controlLoads0 = clone(cdt.controlLoads);
 	}
-	if (/*!onlyCG && */!IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb))
+	if (/*!onlyCG && */!IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb) && !IsNull(dt.c0))
 		dt.under.GetHydrostaticStiffness(dt.C, dt.c0, dt.cg, dt.cb, rho, g, GetMass(), massBuoy);
 	
 	for (Body *b : cdt.damagedBodies)

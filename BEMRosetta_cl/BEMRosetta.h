@@ -114,10 +114,10 @@ public:
 		return UNKNOWN;
 	}
 
-	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
-	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
-	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
-	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps);
+	static String Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps);
+	static String Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
 	void GetBoundary();
@@ -305,7 +305,7 @@ public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	
 	enum BEM_FMT {
-	    WAMIT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE,
+	    WAMIT, WAMIT_OUT, WAMIT_1_3, WAMIT_1_3_RAD, CSV_MAT, CSV_TABLE,
 	    BEMIO_H5, MATLAB, FAST_WAMIT, HAMS_WAMIT, HAMS,
 	    HAMS_MREL, WADAM_WAMIT, NEMOH, NEMOHv115, NEMOHv3,
 	    SEAFEM_NEMOH, AQWA, AQWA_QTF, AQWA_DAT, FOAMM,
@@ -366,7 +366,8 @@ public:
 	
 	const char *GetCodeStrAbr() const {
 		switch (dt.solver) {
-		case WAMIT: 		return t_("Wm.o");
+		case WAMIT: 		return t_("Wam");
+		case WAMIT_OUT:		return t_("Wm.o");
 		case WAMIT_1_3: 	return t_("Wm.1");
 		case WAMIT_1_3_RAD:	return t_("Wm.1");
 		case MATLAB:		return t_("Mat.mat");
@@ -1722,7 +1723,7 @@ class OrcaWave : public Hydro {
 public:
 	OrcaWave() {}
 	String Load(String file, double rho = Null);
-	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, 
+	void SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, UVector<Point3D> &listPoints,
 						bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
 	virtual ~OrcaWave() noexcept {}	
 	
@@ -1737,11 +1738,13 @@ private:
 class OrcaFactors {
 public:
 	double mass = 1, len = 1, force = 1;
+	double rho;
 	
 	Matrix<double, 6, 6> A, K, B, M, C, Dlin;
 	Eigen::Vector<double, 6> F, RAO, MD;
 	
 	void Update() {
+		rho = mass/len/len/len;
 		for (int r = 0; r < 6; ++r)	{
 			for (int c = 0; c < 6; ++c) {
 				A(r, c) = A_(r, c);
@@ -2528,7 +2531,7 @@ public:
 			ifr = ih = 0;
 			return *this;
 		}
-		Value F(const Value& q) const;
+		virtual Value Format(const Value& q) const override;
 		int ifr, ih;
 		int idx, ib;
 		bool pot;
@@ -2546,7 +2549,7 @@ public:
 			xyz = _xyz;
 			return *this;
 		}
-		Value F(const Value& q) const;
+		virtual Value Format(const Value& q) const override;
 		
 	private:
 		const Surface *pmesh;

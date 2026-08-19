@@ -1,4 +1,4 @@
-LAYOUT(Main, 640, 396)
+LAYOUT(Main, 640, 464)
 	ITEM(TabCtrlEM, tab, HSizePosZ(0, 0).VSizePosZ(0, 0))
 	ITEM(StaticRectangle, rectangleButtons, SetColor(Upp::Null).SetBackground(Upp::LtGray).RightPosZ(-1, 428).TopPosZ(3, 20))
 	ITEM(ButtonEM, butWindow, RightPosZ(-1, 24).TopPosZ(3, 20))

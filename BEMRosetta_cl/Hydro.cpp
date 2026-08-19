@@ -617,7 +617,7 @@ void Hydro::SaveCase(String folder, BEM_FMT solver, bool x0z, bool y0z,
 		else if (solver == Hydro::HAMS_MREL)
 			static_cast<const Hams &>(*this).SaveCase(folder, bin, numCases, numThreads, x0z, y0z, listPoints, true, irregular, autoIrregular);
 		else if (solver == Hydro::ORCAWAVE_YML)
-			static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, x0z, y0z, irregular, autoIrregular, qtfType, autoQTF);
+			static_cast<const OrcaWave &>(*this).SaveCase_OW_YML(folder, bin, numThreads, withPotentials, withMesh, x0z, y0z, listPoints, irregular, autoIrregular, qtfType, autoQTF);
 		else if (solver == Hydro::AQWA_DAT)
 			static_cast<const Aqwa &>(*this).SaveCaseDat(folder, numThreads, withPotentials, x0z, y0z, irregular, autoIrregular, qtfType);
 		else if (solver == Hydro::WAMIT)

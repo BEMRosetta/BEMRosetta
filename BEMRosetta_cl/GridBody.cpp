@@ -120,7 +120,7 @@ void GridBody::Load(int idx, int ib, int &numNodes, int &numPanels) {
 		if (hy.IsLoadedMesh()) {
 			grdNodes.AddVirtualCol(t_("#"), dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, -2), 60);
 			for (int c = 0; c < 3; ++c) 
-				grdNodes.AddVirtualCol(F("%s", xyz[c]), dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, -2), 80);
+				grdNodes.AddVirtualCol(F("%s", xyz[c]), dataSourceNodes.Add().Init(hy.dt.msh[ib].dt.mesh, c), 80);
 		}
 	}{
 		UVector<int> nnum;
@@ -190,7 +190,7 @@ void GridBody::UpdatePanelHeaders() {
 		grdPanels.SetVirtualHeader(i, str[i]);	
 }
 
-Value GridBody::DataSourceNodes::F(const Value& q) const {
+Value GridBody::DataSourceNodes::Format(const Value& q) const {
 	ASSERT(pmesh);
 	int iq = q;
 	if (pmesh->nodes.size() <= iq)
@@ -206,7 +206,7 @@ Value GridBody::DataSourceNodes::F(const Value& q) const {
 	}
 }
 
-Value GridBody::DataSourcePanels::F(const Value& q) const {
+Value GridBody::DataSourcePanels::Format(const Value& q) const {
 	ASSERT(idx >= 0);
 	const Hydro &hy = Bem().hydros[idx];
 	int ip = q;

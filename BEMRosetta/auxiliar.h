@@ -236,6 +236,25 @@ private:
 	int number0;
 };
 
+struct ConvertRound : Convert {
+    int sig;
+    double abs_eps;
+    ConvertRound(int sig = 10, double abs_eps = 1e-9) : sig(sig), abs_eps(abs_eps) {}
+
+    Value Format(const Value& q) const override {
+        if(IsNull(q))
+        	return Null;
+        double d = (double)q;
+        if(fabs(d) < abs_eps)     // snap true near-zero noise first
+            return AsString(0);
+        double mag = pow(10.0, sig - 1 - (int)floor(log10(fabs(d))));
+        d = round(d * mag) / mag; // then clean relative noise on real values
+        return AsString(d);
+    }
+    Value Scan(const Value& text) const override {
+        return StdConvertDouble().Scan(text);
+    }
+};
 
 const Color &GetColorId(int id);
 

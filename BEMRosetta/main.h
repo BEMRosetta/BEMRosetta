@@ -1056,7 +1056,6 @@ public:
 	
 	MainSolverBody();
 	
-	EditDouble editMass[6], editLinear[6], editQuadratic[6], editInternal[6], editExternal[6], editAdd[6], editMoor[6];
 	Body mesh, lid, cs;
 	
 	void SetTexts(bool updateInertia = false);

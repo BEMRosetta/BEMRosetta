@@ -21,7 +21,8 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 const UVector<String> Hydro::paramsToProcess = {"A", "B", "M", "Fex", "Stiff", "Stiff_add", "Dlin", "Dquad", "Mean Drift", "QTF_+", "QTF_-"};
 	    
 const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
-    {WAMIT,           "Wamit .out",               true,   "*.out",   true,  true,  true,  "789", "79", true , true},
+    {WAMIT,           "Wamit",                    false,  "*.out",   true,  false, false, "789", "79", false, false},
+    {WAMIT_OUT,       "Wamit .out",               true,   "*.out",   false, true,  true,  "",    "",   true , true},
     {WAMIT_1_3,       "Wamit .1.3 T(s) OpenFAST", true,   "*.1",     false, false, false, "", 	 "",   false, true},
     {WAMIT_1_3_RAD,   "Wamit .1.3 ω(rad/s)",      true,   "*.1",     false, false, false, "", 	 "",   false, true},
     {CSV_MAT,         ".csv mat",                 true,   "*.csv",   false, false, false, "", 	 "",   false, false},
@@ -30,7 +31,7 @@ const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
     {BEMIO_H5,        "BEMIO .h5",                true,   "*.h5",    false, false, false, "", 	 "",   false, true},
     {MATLAB,          "Matlab .mat",              true,   "*.mat",   false, false, false, "", 	 "",   false, false},
     {FAST_WAMIT,      "FAST .dat.1.2.3...",       true,   "*.1",     false, false, false, "", 	 "",   false, true},
-    {HAMS_WAMIT,      "HAMS Wamit",               false,  "",        true,  true,  false, "", 	 "",   false, true},
+    {HAMS_WAMIT,      "HAMS Wamit",               false,  "",        false, true,  false, "", 	 "",   false, true},
     {HAMS,            "HAMS",                     false,  "",        true,  true,  false, "", 	 "",   false, false},
     
     {HAMS_MREL,       "HAMS MREL",                false,  "",        true,  true,  false, "", 	 "",   false, true},

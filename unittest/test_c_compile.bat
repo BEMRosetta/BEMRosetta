@@ -5,7 +5,7 @@ echo Compiling test.c
 clang -Wall test.c .test\\libbemrosetta.lib -o test.exe
 if errorlevel 1 (
 	echo Compilation failed
-	exit /b 1
+	exit /b 1 
 )
 echo Compilation successful
 

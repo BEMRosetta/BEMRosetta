@@ -2494,20 +2494,21 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 														FDS(msh.dt.mesh.env.maxZ, 10, false)));
 
 	//Force6D f = data.under.GetHydrostaticForce(data.c0, Bem().rho, Bem().g);	
-	Force6D fcb = Surface::GetHydrostaticForceCB(msh.dt.c0, msh.dt.cb, msh.dt.under.volume, Bem().rho, Bem().g);	
-	
 	array.Set(row, 0, t_("Hydrostatic forces [N]"));
 	
-	if (!IsNull(msh.dt.cb))
+	Force6D fcb;
+	
+	if (!IsNull(msh.dt.cb) && !IsNull(msh.dt.c0)) {
+		fcb = Surface::GetHydrostaticForceCB(msh.dt.c0, msh.dt.cb, msh.dt.under.volume, Bem().rho, Bem().g);	
 		array.Set(row++, col, AttrText(F(t_("%s, %s, %s"),
 														FDS(fcb[0], 10, false),
 														FDS(fcb[1], 10, false),
 														FDS(fcb[2], 10, false))).Paper(backColorUnder));
-	else
+	} else
 		array.Set(row++, col, "-");
 
 	array.Set(row, 0, t_("Hydrostatic moments [N·m]"));
-	if (!IsNull(msh.dt.cb))
+	if (!IsNull(msh.dt.cb) && !IsNull(msh.dt.c0))
 		array.Set(row++, col, AttrText(F(t_("%s, %s, %s"),
 														FDS(fcb[3], 10, false),
 														FDS(fcb[4], 10, false),

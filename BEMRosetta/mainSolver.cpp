@@ -27,11 +27,11 @@ struct HeadFreqConvert : Convert {
 	}
 };
 
-void InitGrid(GridCtrl &grid, EditDouble edit[]) {
+void InitGrid(GridCtrl &grid) {
 	grid.Reset();
 	grid.Absolute().Editing().Clipboard().Sorting(false).FixedPaste().MultiSelect().SelectRow(false);
 	for (int i = 0; i < 6; ++i)
-		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(edit[i]);
+		grid.AddColumn(InitCaps(BEM::StrDOF(i))).Edit(Single<EditDouble>()).SetConvert(Single<ConvertRound>());
 	for (int y = 0; y < 6; ++y)
 		for (int x = 0; x < 6; ++x)
 			grid.Set(y, x, 0.);
@@ -51,10 +51,18 @@ MainSolverBody::MainSolverBody() {
 	fileCS.Type(F("All supported mesh files (%s)", meshFiles), meshFilesAst);
 	fileCS.AllFilesType();
 	fileCS.WhenChange  << [&] {butCS.WhenAction(); return true;};
+	
+	x_g.SetConvert(Single<ConvertRound>());
+	y_g.SetConvert(Single<ConvertRound>());
+	z_g.SetConvert(Single<ConvertRound>());
 		
 	x_g <<= 0;
 	y_g <<= 0;
 	z_g <<= 0;
+	
+	x_0.SetConvert(Single<ConvertRound>());
+	y_0.SetConvert(Single<ConvertRound>());
+	z_0.SetConvert(Single<ConvertRound>());
 	
 	x_0 <<= 0;
 	y_0 <<= 0;
@@ -70,11 +78,11 @@ MainSolverBody::MainSolverBody() {
 		y_0 <<= ~y_g;
 		z_0 <<= ~z_g;
 	};	
-	InitGrid(M, editMass);
-	InitGrid(Dlin, editLinear);
-	InitGrid(Dquad, editQuadratic);	
-	InitGrid(Cadd, editAdd);
-	InitGrid(Cmoor, editMoor);
+	InitGrid(M);
+	InitGrid(Dlin);
+	InitGrid(Dquad);	
+	InitGrid(Cadd);
+	InitGrid(Cmoor);
 	
 	butMesh << [&]() {
 		Body::Load(mesh, ~fileMesh, Bem().rho, Bem().g, Null, Null, false);
@@ -271,7 +279,7 @@ void MainSolver::Init() {
 		save.withPotentials.Enable(solver == Hydro::ORCAWAVE_YML || solver == Hydro::AQWA_DAT || 
 								   solver == Hydro::CAPYTAINE_PY || solver == Hydro::HAMS || 
 								   solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT);
-		save.arrayAdditional.Enable(solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT);
+		save.arrayAdditional.Enable(solver == Hydro::HAMS || solver == Hydro::HAMS_MREL || solver == Hydro::WAMIT || solver == Hydro::ORCAWAVE_YML);
 		save.opWaveHeight.Enable(solver == Hydro::WAMIT ||  solver == Hydro::HAMS || solver == Hydro::HAMS_MREL);
 		save.opWaveHeight.WhenAction();
 		
@@ -567,11 +575,11 @@ void MainSolver::MessageMaxFreq() {
 	}
 	if (minF != 10000) {
 		if (gen.opFreq == 0)
-			gen.listFreq.SetText(F(t_("(Advised %.2f s)"), 2*M_PI/minF));
+			gen.listFreq.SetText(F(t_("(Advised > %.2f s)"), 2*M_PI/minF));
 		else if (gen.opFreq == 1)
-			gen.listFreq.SetText(F(t_("(Advised %.2f rad/s)"), minF));
+			gen.listFreq.SetText(F(t_("(Advised < %.2f rad/s)"), minF));
 		else
-			gen.listFreq.SetText(F(t_("(Advised %.2f Hz)"), minF/2/M_PI));
+			gen.listFreq.SetText(F(t_("(Advised < %.2f Hz)"), minF/2/M_PI));
 	} else
 		gen.listFreq.SetText("");
 }

@@ -1196,7 +1196,8 @@ bool Wamit::Load_pot(String fileName) {
 		if (!FileExists(b.dt.fileName))
 			b.dt.fileName = AFX(GetFileFolder(fileName), b.dt.fileName);
 		
-		Body::Load(b, b.dt.fileName, dt.rho, Bem().g, Null, Null, false);
+		dt.g = Bem().g;
+		Body::Load(b, b.dt.fileName, dt.rho, dt.g, Null, Null, false);
 
 		b.dt.name = GetFileTitle(f.GetText(0));
 		if (names.Find(b.dt.name) >= 0)
@@ -1212,7 +1213,7 @@ bool Wamit::Load_pot(String fileName) {
 		
 		b.dt.mesh.Translate(b.dt.c0.x, b.dt.c0.y, b.dt.c0.z);
 		b.dt.spline.Translate(Point3D(b.dt.c0.x, b.dt.c0.y, b.dt.c0.z));
-		b.AfterLoad(dt.rho, Bem().g, false, false, false, false);
+		b.AfterLoad(dt.rho, dt.g, false, false, false, false);
 		
 		b.dt.cb -= b.dt.c0;		// This is corrected later
 		

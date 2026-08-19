@@ -82,7 +82,7 @@ bool OrcaWave::Load_OW_YML() {
 
 	YmlParser fy(in);
 
-	FileInLine::Pos fpos = in.GetPos();
+		FileInLine::Pos fpos = in.GetPos();
 	
 	auto GetMsh = [&]()->Body& {
 		if (ib < 0)
@@ -95,6 +95,7 @@ bool OrcaWave::Load_OW_YML() {
 			if (fy.GetVal() == "SI") {
 				factor.mass = factor.force = 1000;
 				factor.len = 1;	
+				factor.Update();
 			} else if (fy.GetVal() == "User") 
 				;
 			else
@@ -113,7 +114,7 @@ bool OrcaWave::Load_OW_YML() {
 		else if (fy.FirstIs("WaterDepth")) 
 			dt.h = fy.GetDouble()*factor.len;
 		else if (fy.FirstIs("WaterDensity")) 
-			dt.rho = fy.GetDouble()*factor.len;
+			dt.rho = fy.GetDouble()*factor.rho;
 		else if (fy.FirstIs("PeriodOrFrequency")) {
 			const UVector<UVector<String>> &mat = fy.GetMatrix();
 			dt.w.SetCount(mat.size());
@@ -165,8 +166,13 @@ bool OrcaWave::Load_OW_YML() {
 				GetMsh().AfterLoad(dt.rho, dt.g, false, true);
 			} else if (fy.FirstIs("BodyMeshSymmetry")) {	
 				String sym = fy.GetVal(); 
-				//dt.symY = sym.Find("xz") >= 0;		// mesh file already includes symmetry. If not it will be deployed twice
+				//dt.symY = sym.Find("xz") >= 0;		// mesh file already includes symmetry. If not it would be deployed twice
 				//dt.symX = sym.Find("yz") >= 0;
+			} else if (fy.FirstIs("BodyCentreOfMassZRelativeToFreeSurface")) {
+				double z = fy.GetDouble()*factor.len;
+				GetMsh().dt.c0.x = GetMsh().dt.cg.x = GetMsh().dt.cb.x;
+				GetMsh().dt.c0.y = GetMsh().dt.cg.y = GetMsh().dt.cb.y;
+				GetMsh().dt.c0.z = GetMsh().dt.cg.z = z;
 			} else if (fy.FirstIs("BodyUserOrigin")) {
 				UVector<double> line = fy.GetVectorDouble();
 				if (line.size() != 3)
@@ -175,6 +181,22 @@ bool OrcaWave::Load_OW_YML() {
 				GetMsh().dt.c0.x = line[0]*factor.len;
 				GetMsh().dt.c0.y = line[1]*factor.len;
 				GetMsh().dt.c0.z = line[2]*factor.len;	
+			} else if (fy.FirstMatch("BodyRadiiOfGyrationRx*")) {	
+				UVector<UVector<double>> rad = fy.GetMatrixDouble(true);
+				if (rad.size() != 3)
+					throw Exc(in.Str() + "\n" + t_("Incorrect BodyRadiiOfGyration matrix"));
+				
+				GetMsh().SetMass(GetMsh().dt.under.volume*dt.rho);
+				
+				MatrixXd &M = GetMsh().dt.M;
+				
+				for (int r = 0; r < 3; ++r) {
+					if (rad[r].size() != 3)
+						throw Exc(in.Str() + "\n" + t_("Incorrect BodyRadiiOfGyration matrix"));
+					for (int c = 0; c < 3; ++c) 
+						M(r+3, c+3) = M(0, 0)*sqr(rad[r][c]*factor.len);
+				}				
+				
 			} else if (fy.FirstMatch("BodyExternalStiffnessMatrixx*")) {
 				UVector<UVector<double>> mat = fy.GetMatrixDouble(true);
 				if (mat.size() != 6)
@@ -196,7 +218,7 @@ bool OrcaWave::Load_OW_YML() {
 				for (int r = 0; r < 6; ++r) {
 					if (mat[r].size() != 6)
 						throw Exc(in.Str() + "\n" + t_("Incorrect BodyExternalDampingMatrix"));
-					for (int c = 0; c < 6; ++c) 
+					for (int c = 0; c < 6; ++c)
 						GetMsh().dt.Dlin(r, c) = mat[r][c]*factor.Dlin(r, c);
 				}
 			} else if (fy.FirstIs("BodyMass"))
@@ -270,6 +292,15 @@ bool OrcaWave::Load_OW_YML() {
 				Vector3d ref(line[0], line[1], line[2]);
 				TranslateMatrix6(GetMsh().dt.Cadd, ref, Eigen::Vector3d(GetMsh().dt.c0));
 			}
+		} else if (fy.FirstMatch("FieldPointX*")) {
+			UVector<UVector<double>> dat = fy.GetMatrixDouble(false);
+			listPointsTemp.SetCount(dat.size());
+			for (int r = 0; r < dat.size(); ++r) {
+				if (dat[r].size() != 3)
+					throw Exc(in.Str() + "\n" + t_("FieldPoint have to contain x, y, z"));
+				for (int c = 0; c < 3; ++c) 
+					listPointsTemp[r][c] = dat[r][c];
+			}
 		}
 	}
 
@@ -337,17 +368,21 @@ bool OrcaWave::Load_OF_YML() {
 				if (fy.GetVal() == "SI") {
 					factor.mass = factor.force = 1000;
 					factor.len = 1;	
+					factor.Update();
 				} else if (fy.GetVal() == "User") 
 					;
 				else
 					throw Exc(in.Str() + "\n" + F(t_("Only SI and User units are supported. Read '%s'"), fy.GetVal()));
-			} else if (fy.FirstIs("LengthUnits")) 
+			} else if (fy.FirstIs("LengthUnits")) {
 				factor.len = FactorLen(fy.GetVal());
-			else if (fy.FirstIs("MassUnits")) 
+				factor.Update();
+			} else if (fy.FirstIs("MassUnits")) {
 				factor.mass = FactorMass(fy.GetVal());
-			else if (fy.FirstIs("ForceUnits")) 
+				factor.Update();
+			} else if (fy.FirstIs("ForceUnits")) {
 				factor.force = FactorForce(fy.GetVal());
-			else if (fy.FirstIs("g")) 
+				factor.Update();
+			} else if (fy.FirstIs("g")) 
 				dt.g = ScanDouble(fy.GetVal())*factor.len;
 		} else if (fy.FirstIs("Environment")) {
 			if (fy.FirstIs("WaterSurfaceZ") && fy.GetVal() != "0") 
@@ -513,7 +548,7 @@ bool OrcaWave::Load_OF_YML() {
 	while(fy.GetLine()) {
 		if (fy.FirstIs("Environment")) {
 			if (fy.FirstIs("Density")) 
-				dt.rho = ScanDouble(fy.GetVal())*factor.mass/factor.len/factor.len/factor.len;		// In kg/m3
+				dt.rho = ScanDouble(fy.GetVal())*factor.rho;		// In kg/m3
 			else if (fy.FirstIs("WaterDepth")) { 
 				String sh = fy.GetVal(); 
 				if (ToLower(sh) == "infinite")
@@ -816,7 +851,7 @@ bool OrcaWave::Load_OF_YML() {
 	return true;
 }
 
-void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, 
+void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool withPotentials, bool withMesh, bool x0z, bool y0z, UVector<Point3D> &listPoints,
 								bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const {
 	bool createQTFFreeSurface = true;
 	bool onlyMeanDrift = qtfType > 10;
@@ -899,7 +934,9 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	
 	out << 	"# Calculation & output\n";
 	out << 	"SolveType: ";
-	if (qtfType > 0 ) {
+	if (!listPoints.IsEmpty())
+		out << "Potential and source formulations";
+	else if (qtfType > 0 ) {
 		if (onlyMeanDrift)
 			out << "Potential and source formulations";
 		else
@@ -1090,8 +1127,14 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
     			"    BodyFixedDOFRy: No\n"
     			"    BodyFixedDOFRz: No\n";
 	}
-	out <<	"# Field points\n"
-			"DetectAndSkipFieldPointsInsideBodies: Yes\n";
+	out <<	"# Field points\n";
+	if (!listPoints.IsEmpty()) {
+		out << "FieldPointX, FieldPointY, FieldPointZ:\n";
+		for (int i = 0; i < listPoints.size(); ++i) 
+			out << F("- [%8.6g, %8.6g, %8.6g]\n", listPoints[i].x, listPoints[i].y, listPoints[i].z);
+	}
+	out <<	"DetectAndSkipFieldPointsInsideBodies: Yes\n";
+						
 	if (!onlyMeanDrift && (qtfType == 7 || qtfType == 9)) {
 		out << 	"# QTFs\n"
 					"QTFCalculationMethod: Direct method\n";

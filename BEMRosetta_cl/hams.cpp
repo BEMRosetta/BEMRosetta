@@ -594,7 +594,8 @@ void Hams::Save_Settings(String folderInput) const {
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
 	Body mesh;
-	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dt.g, Null, Null, false);
+	double dummyg;
+	String res = Body::Load(mesh, AFX(folderInput, "Input", "HullMesh.pnl"), dt.rho, dummyg, Null, Null, false);
 	if (!res.IsEmpty())
 		throw Exc(res);
 	
@@ -683,6 +684,7 @@ void Hams::Save_ControlFile(String folderInput, const UVector<double> &freqs,
 	
 	out << "\n    If_remove_irr_freq      " << (remove_irr_freq ? 1 : 0);
 	out << "\n    Number of threads       " << numThreads;
+	out << "\n    Solver_type             2    # 1 = direct LU (LAPACK), faster. 2 = restarted GMRES, less memory";
 	
 	out << "\n"
 		   "\n   #Start Definition of Pressure and/or Elevation (PE)";
