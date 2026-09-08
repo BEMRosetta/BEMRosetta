@@ -60,7 +60,7 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, const char *, _BMR_Version, ());
 		DLLFunction(dll, const char *, _BMR_GetLastError, ());
 		
-		DLLFunction(dll, bool,  _BMR_Mesh_Load, (const char *file));
+		DLLFunction(dll, bool, _BMR_Mesh_Load, (const char *file));
     	DLLFunction(dll, void, _BMR_Mesh_Translate, (double x, double y, double z));
 		DLLFunction(dll, void, _BMR_Mesh_C0_Set, (double x, double y, double z));	
 		DLLFunction(dll, void, _BMR_Mesh_Cg_Set, (double x, double y, double z));
@@ -75,8 +75,8 @@ CONSOLE_APP_MAIN
 		DLLFunction(dll, void, _BMR_Bem_headings_Set, (const double *head, int dim));
     	DLLFunction(dll, void, _BMR_Bem_SaveCase, (const char *folder, const char *solver, bool x0z, bool y0z, bool irregular, bool autoIrregular, const char *qtfType, bool autoQTF, bool bin, int numCases, int numThreads, bool withPotentials, bool withMesh));
     
-    	DLLFunction(dll, void, _BMR_Bem_LoadMesh, (int idBody, int idMesh));
-		DLLFunction(dll, bool,  _BMR_Bem_Load, (const char *file));
+    	DLLFunction(dll, void, _BMR_Bem_Mesh_Load, (int idBody, int idMesh));
+		DLLFunction(dll, bool, _BMR_Bem_Load, (const char *file));
 		DLLFunction(dll, void, _BMR_Bem_Save, (const char *file));
 			
     	DLLFunction(dll, void, _BMR_Mesh_Volume_Get, (double *volx, double *voly, double *volz));

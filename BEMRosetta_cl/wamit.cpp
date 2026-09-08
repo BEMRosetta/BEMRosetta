@@ -1196,8 +1196,8 @@ bool Wamit::Load_pot(String fileName, int iperin) {
  	f.GetLine();
  	
  	int Nh = f.GetInt(0);
- 	if (abs(dt.Nh) > 1000)
- 		throw Exc(in.Str() + "\n" + F(t_("Wrong number of headings %d"), dt.Nh));
+ 	if (abs(Nh) > 1000)
+ 		throw Exc(in.Str() + "\n" + F(t_("Wrong number of headings %d"), Nh));
  	
  	dt.Nh = abs(Nh);
  	dt.head.SetCount(dt.Nh);

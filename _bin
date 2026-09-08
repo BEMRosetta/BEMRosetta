@@ -151,6 +151,9 @@ class BEMRosetta:
         self.libc._BMR_Bem_Id_Get.argtypes = []
         self.libc._BMR_Bem_Id_Get.restype = ctypes.c_int
 
+        self.libc._BMR_Bem_size.argtypes = []
+        self.libc._BMR_Bem_size.restype = ctypes.c_int
+
         self.libc._BMR_Bem_Support.argtypes = [ctypes.c_char_p, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int)]
         self.libc._BMR_Bem_Support.restype = ctypes.c_bool
 
@@ -226,14 +229,17 @@ class BEMRosetta:
         self.libc._BMR_Bem_MapToMesh.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool, ctypes.c_bool]
         self.libc._BMR_Bem_MapToMesh.restype = ctypes.c_int
 
-        self.libc._BMR_Bem_LoadMesh.argtypes = [ctypes.c_int, ctypes.c_int]
-        self.libc._BMR_Bem_LoadMesh.restype = ctypes.c_bool
+        self.libc._BMR_Bem_Mesh_Load.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.libc._BMR_Bem_Mesh_Load.restype = ctypes.c_bool
 
-        self.libc._BMR_Bem_LoadLid.argtypes = [ctypes.c_int, ctypes.c_int]
-        self.libc._BMR_Bem_LoadLid.restype = ctypes.c_bool
+        self.libc._BMR_Bem_Lid_Load.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.libc._BMR_Bem_Lid_Load.restype = ctypes.c_bool
 
-        self.libc._BMR_Bem_LoadControlSurface.argtypes = [ctypes.c_int, ctypes.c_int]
-        self.libc._BMR_Bem_LoadControlSurface.restype = ctypes.c_bool
+        self.libc._BMR_Bem_ControlSurface_Load.argtypes = [ctypes.c_int, ctypes.c_int]
+        self.libc._BMR_Bem_ControlSurface_Load.restype = ctypes.c_bool
+
+        self.libc._BMR_Bem_Mesh_size.argtypes = []
+        self.libc._BMR_Bem_Mesh_size.restype = ctypes.c_int
 
         self.libc._BMR_FAST_Load.argtypes = [ctypes.c_char_p]
         self.libc._BMR_FAST_Load.restype = ctypes.c_bool
@@ -690,6 +696,9 @@ class _Bem:
         self.Excitation = _BemExcitation(self.libc, self._raise_if_error)
         self.AddedMass = _BemAddedMass(self.libc, self._raise_if_error)
         self.RadiationDamping = _BemRadiationDamping(self.libc, self._raise_if_error)
+        self.Mesh = _BemMesh(self.libc, self._raise_if_error)
+        self.Lid = _BemLid(self.libc, self._raise_if_error)
+        self.ControlSurface = _BemControlSurface(self.libc, self._raise_if_error)
     def Clear(self):
         self.libc._BMR_Bem_Clear()
         self._raise_if_error()
@@ -706,6 +715,11 @@ class _Bem:
 
     def Save(self, file):
         _ret = self.libc._BMR_Bem_Save(os.fspath(file).encode('utf-8'))
+        self._raise_if_error()
+        return _ret
+
+    def size(self):
+        _ret = self.libc._BMR_Bem_size()
         self._raise_if_error()
         return _ret
 
@@ -733,21 +747,6 @@ class _Bem:
 
     def MapToMesh(self, idBody, idMesh, tolerance, rad, diff, inc, relatedToBody):
         _ret = self.libc._BMR_Bem_MapToMesh(idBody, idMesh, tolerance, rad, diff, inc, relatedToBody)
-        self._raise_if_error()
-        return _ret
-
-    def LoadMesh(self, idBody, idMesh):
-        _ret = self.libc._BMR_Bem_LoadMesh(idBody, idMesh)
-        self._raise_if_error()
-        return _ret
-
-    def LoadLid(self, idBody, idMesh):
-        _ret = self.libc._BMR_Bem_LoadLid(idBody, idMesh)
-        self._raise_if_error()
-        return _ret
-
-    def LoadControlSurface(self, idBody, idMesh):
-        _ret = self.libc._BMR_Bem_LoadControlSurface(idBody, idMesh)
         self._raise_if_error()
         return _ret
 
@@ -954,6 +953,41 @@ class _BemRadiationDamping:
 
     def Set(self, idBodyRow, idBodyCol, idBemFrom, idBodyFromRow, idBodyFromCol):
         _ret = self.libc._BMR_Bem_RadiationDamping_Set(idBodyRow, idBodyCol, idBemFrom, idBodyFromRow, idBodyFromCol)
+        self._raise_if_error()
+        return _ret
+
+class _BemMesh:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Load(self, idBody, idMesh):
+        _ret = self.libc._BMR_Bem_Mesh_Load(idBody, idMesh)
+        self._raise_if_error()
+        return _ret
+
+    def size(self):
+        _ret = self.libc._BMR_Bem_Mesh_size()
+        self._raise_if_error()
+        return _ret
+
+class _BemLid:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Load(self, idBody, idMesh):
+        _ret = self.libc._BMR_Bem_Lid_Load(idBody, idMesh)
+        self._raise_if_error()
+        return _ret
+
+class _BemControlSurface:
+    def __init__(self, lib, raise_if_error):
+        self.libc = lib
+        self._raise_if_error = raise_if_error
+
+    def Load(self, idBody, idMesh):
+        _ret = self.libc._BMR_Bem_ControlSurface_Load(idBody, idMesh)
         self._raise_if_error()
         return _ret
 
