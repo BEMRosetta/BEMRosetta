@@ -114,10 +114,10 @@ public:
 		return UNKNOWN;
 	}
 
-	static String Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps);
-	static String Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
-	static String Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps);
-	static String Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps);
+	static String Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z);
 	
 	String Heal(bool basic, double rho, double g, double grid, double eps, Function <bool(String, int pos)> Status);
 	void GetBoundary();
@@ -133,6 +133,7 @@ public:
 	void Translate(double dx, double dy, double dz);
 	void Translate(const Value3D &p) 						{Translate(p.x, p.y, p.z);}
 	void Rotate(double a_x, double a_y, double a_z, double c_x, double c_y, double c_z);
+	void Rotate(const Value3D &p, const Point3D &c) 		{Rotate(p.x, p.y, p.z,c.x, c.y, c.z);}
 	bool TranslateArchimede(double rho, double tolerance, double &dz);
 	bool TranslateArchimede(double rho, double tolerance, double &dz, Point3D &cb, double &allvol);
 	bool Archimede(double rho, double g, double tolerance, double &roll, double &pitch, double &dz);
@@ -515,7 +516,7 @@ public:
 	void Initialize_ABpan(UArray<UArray<UArray<UArray<UArray<double>>>>> &a, double val = NaNDouble);
 	
 	void Initialize_Forces();
-	void Initialize_Forces(Forces &f, int _Nh = -1, double val = NaNDouble);
+	void Initialize_Forces(Forces &f, int _Nh = -1, std::complex<double> val = NaNComplex);
 	void Normalize_Forces(Forces &f);
 	void Normalize_RAO(RAO &f);
 	void Dimensionalize_Forces(Forces &f);
@@ -529,6 +530,9 @@ public:
 	void CompleteForces1st();
 	void FillWithPotentials();
 	
+	void Set_AB(UArray<UArray<VectorXd>> &a, int idBodyRow, int idBodyCol, const UArray<UArray<VectorXd>> &aFrom, int idBodyFromRow, int idBodyFromCol);
+	void Set_Force(Forces &a, int idBody, const Forces &aFrom, int idBodyFrom, const UVector<double> &headFrom);	
+		
 	bool SymmetryRule(int idf6, bool xAxis);
 	void Symmetrize_Forces(bool xAxis);
 	void Symmetrize_QTF(bool xAxis);
@@ -820,7 +824,7 @@ public:
 	    double g = Null;        	   	// gravity
 	    double h = Null;    	       	// water depth
 	   	double rho = Null;        		// density
-	   	double len = Null;				// Length scale
+	   	double len = 1;					// Length scale
 	   	int dimen = Null;				// false if data is dimensionless
 	    int Nb = Null;          		// number of bodies
 	    int Nf = Null;          		// number of wave frequencies
@@ -883,7 +887,7 @@ public:
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc;		// [Nb][Np][Nh][Nf]	Incident complex potentials
 	   	UArray<UArray<UArray<UArray<std::complex<double>>>>> pots_inc_bmr;	// [Nb][Np][Nh][Nf]	Incident complex potentials calculated by BEMRosetta
 	   	
-	   	Tensor<double, 5> Apan;		// [Nb][Np][6][6][Nf]	Added mass		Loaded as it can be spread avoiding negatives...
+	   	UArray<UArray<UArray<UArray<UArray<double>>>>> Apan;				// [Nb][Np][6][6][Nf]	Added mass		Loaded as it can be spread avoiding negatives...
 	   	
 	   	bool symX = false, symY = false;
 		
@@ -925,14 +929,11 @@ public:
 		    }
 		    void Copy(const FSPoints& other) {				// Deep copy
         		points = clone(other.points);
-        		//rows = other.rows;
-        		//cols = other.cols;
         		pots_rad = clone(other.pots_rad);
         		pots_dif = clone(other.pots_dif);
     		}
     		
 			UVector<Pointf> points;
-			//int rows = -1, cols = -1;		// In the case they form a rectangle
 			Tensor<std::complex<double>, 3> pots_rad;		// [Np][6][Nf]	Radiation complex potentials
 	   		Tensor<std::complex<double>, 3> pots_dif;		// [Np][Nh][Nf]	Diffraction complex potentials			
 		};
@@ -1177,7 +1178,7 @@ public:
 	void GetWaveTo(double xto, double yto, double g);
 	void TranslateRadiationPotentials(const MatrixXd &delta);
 	String SpreadNegative(Function <bool(String, int)> Status);
-	void MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase);
+	void MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase, bool relatedToBody, double tolerance, bool rad, bool diff, bool inc);
 	void AddWave(int ib, double dx, double dy, double g);
 	
 	void DeleteFrequencies(const UVector<int> &idFreq);
@@ -1404,16 +1405,16 @@ public:
 
 class WamitBody : public Body {
 public:
-	static String LoadDat(UArray<Body> &mesh, String fileName);
-	static String LoadGdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
+	static String Load_dat(UArray<Body> &mesh, String fileName);
+	static String Load_gdf(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
 	static String Load_fdf(UArray<Body> &_mesh, String fileName);
-	static String LoadPot(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g);
-	static void SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf);
-	void SaveHST(String fileName, double rho, double g) const; 
+	static String Load(UArray<Body> &mesh, String fileName);
+	static void Save_gdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf);
+	void Save_hst(String fileName, double rho, double g) const; 
 
 private:
 	virtual ~WamitBody() noexcept {}
-	static String LoadGGdf(LineParser &f, String folder, UArray<Body> &_mesh, bool &y0z, bool &x0z);
+	static String Load_ggdf(LineParser &f, String folder, UArray<Body> &_mesh, bool &y0z, bool &x0z);
 };
 
 class AQWABody : public Body {
@@ -1482,24 +1483,27 @@ public:
 	
 	static void Save_hst_static(const MatrixXd &C, String fileName, double rho, double g);
 	
-	bool Load_frc(String fileName);
+	bool Load_frc(String fileName, int ialtfrc = -1);
 	void Save_4(String fileName, bool force_T = false) const;
 	
 	void SaveCase(String folder, int numThreads, bool x0z, bool y0z, UVector<Point3D> &listPoints, 
 					bool irregular, bool autoIrregular, int qtfType, bool autoQTF) const;
-	bool Load_pot(String fileName);
+	bool Load_pot(String fileName, int iperin);
+	
+	friend WamitBody;
 	
 protected:
 	void ProcessFirstColumnPot(UVector<double> &w, int iperin);
 	void ProcessFirstColumn1_3(UVector<double> &w, int iperout);
 	
-	bool Load_cfg(String fileName, int &iperin, int &iperout, int &qtfType);
+	bool Load_cfg(String fileName, int &iperin, int &iperout, int &qtfType, int &ialtfrc);
 	bool Load_gdf(String fileName);
 	bool Load_mmx(String fileName);
 	bool Load_wam(String fileName, String &filepot, String &filefrc, String &filecfg);
 	bool Load_frc1(String fileName);
-	bool Load_frc2(String fileName);
+	bool Load_frc2(String fileName, int ialtfrc);
 	bool Load_frc3(String fileName);
+	bool Load_frc1_3(String fileName, int ib);
 	
 	bool Load_out(String fileName, Function <bool(String, int)> Status);							
 	//static bool Load_mcn(String fileName, int nb, UVector<Point3D> &refPoint, UVector<Pointf> &refWave);
@@ -1522,13 +1526,16 @@ protected:
 	bool Load_pnl(String fileName, UVector<int> &pnlId, UVector<int> &panelId);
 		
 	void Save_1(String fileName, bool force_T = false) const;
+	void Save_Forces(String fileName, const Hydro::Forces &force, bool force_T = false) const;
+	void Save_Scattering(String fileName, bool force_T = false) const;
+	void Save_FK(String fileName, bool force_T = false) const;
 	void Save_3(String fileName, bool force_T = false) const;
 	void Save_hst(String fileName) const;
 	void Save_12(String fileName, bool isSum, Function <bool(String, int)> Status,
 				bool force_T = false, bool force_Deg = true, int qtfHeading = Null, double heading = Null) const;
 	void Save_789(String fileName, bool force_T/*, bool force_Deg*/) const;
-	void Save_frc2(String fileName, bool force1st, int qtfType, UVector<Point3D> &listPoints, bool is6) const;
-	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular, bool autoirregular) const;
+	void Save_frc2(String fileName, bool force1st, int qtfType, bool onlyMeanDrift, UVector<Point3D> &listPoints, bool is6) const;
+	void Save_pot(String fileName, bool withMesh, bool x0z, bool y0z, const UArray<Body> &lids, bool irregular, bool autoirregular, bool is6) const;
 	void Save_pt2(String fileName) const;
 	void Save_fdf(String fileName, double rpart) const;
 		
@@ -1538,9 +1545,9 @@ protected:
 	void Save_RAO(FileOut &out, int ifr) const;
 	void Save_MD(FileOut &out, int ifr) const;
 	
-	void Save_Fnames(String folder, int qtfType) const;
-	void Save_Config(String folder, int qtfType, int numThreads) const;
-	void Save_cfg(String fileName, int qtfType, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh, bool ispoints) const;
+	void Save_Fnames(String folder, int qtfType, bool onlyMeanDrift) const;
+	void Save_Config(String folder, int qtfType, bool onlyMeanDrift, int numThreads) const;
+	void Save_cfg(String fileName, int qtfType, bool onlyMeanDrift, bool lid, bool autoIrregular, bool force_T, bool is6p, bool ishigh, bool ispoints) const;
 
 private:
 	int GuessIperin(const UVector<double> &w);
@@ -1913,6 +1920,7 @@ public:
 	}
 		
 	static Function <void(String)> Print, PrintWarning, PrintError;	
+	bool print = true;
 	
 	UVector<double> headAll;	// Common models data
 	UArray<std::complex<double>> headAllMD;
@@ -1989,7 +1997,7 @@ public:
 	void JoinBody(const UVector<int> &idsJoin);
 	UVector<int> SplitBody(int id, Function <bool(String, int pos)> Status);
 	void DuplicateBody(int id);
-	void MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase);
+	void MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase, bool relatedToBody, double tolerance, bool rad, bool diff, bool inc);
 		
 	void CopyQTF_MD(int id);
 		
@@ -2566,6 +2574,8 @@ public:
 
 #include "orca.h"
 
+typedef void (*error_callback_t)(const char *, void *);
+
 struct BMR_Data {
 	BMR_Data();
 	bool ConsoleMain(const UVector<String>& _command, bool gui);
@@ -2575,7 +2585,7 @@ struct BMR_Data {
 	ArrayWind wind;
 	
 	UVector<String> headParams;
-	int bemid = -1, bembodyid = -1, meshid = -1, windid = -1;		// Last valid id
+	int bemid = -1, meshid = -1, windid = -1;		// Last valid id
 	String errorStr;
 	
 	String fastFileStr;
@@ -2585,6 +2595,9 @@ struct BMR_Data {
 	Function <bool(String, int pos)> Status;
 	static bool NoPrint(String, int) {return true;}
 
+	error_callback_t error_callback = nullptr;
+	void *user_data = nullptr;
+	
 #ifdef PLATFORM_WIN32
 	Orca orca;
 	int threadCount = -1;

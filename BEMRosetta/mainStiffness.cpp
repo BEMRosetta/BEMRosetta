@@ -224,7 +224,7 @@ void MainMatrixKA::Add(const Body &msh, int icase, bool buttonSave) {
 				if (fs.ExecuteSaveAs(t_("Save to stiffness matrix format"))) {
 					String ext = GetFileExt(~fs);
 					if (ext == ".hst")
-						static_cast<const WamitBody &>(msh).SaveHST(~fs, Bem().rho, Bem().g);
+						static_cast<const WamitBody &>(msh).Save_hst(~fs, Bem().rho, Bem().g);
 					else if (ext == ".dat")
 						static_cast<const NemohBody &>(msh).SaveKH(~fs);
 					else

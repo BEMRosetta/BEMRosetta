@@ -474,11 +474,11 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 			int ib = 0;
 			
 			String dest = AFX(folderInput, "HullMesh.pnl");
-			Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+			Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 			
 			if (irrRemoval) {
 				dest = AFX(folderInput, "WaterplaneMesh.pnl");
-				Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+				Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 			}
 		} else {
 			for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -487,14 +487,14 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 					dest = AFX(folderInput, "HullMesh.pnl");
 				else
 					dest = AFX(folderInput, F("HullMesh_%d.pnl", ib+1));
-				Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+				Body::SaveAs(dt.msh[ib], dest, Body::HAMS_PNL, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 				
 				if (irrRemoval) {
 					if (dt.Nb == 1)
 						dest = AFX(folderInput, "WaterplaneMesh.pnl");
 					else
 						dest = AFX(folderInput, F("WaterplaneMesh_%d.pnl", ib+1));
-					Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, dt.rho, dt.g, y0z, x0z);
+					Body::SaveAs(dt.lids[ib], dest, Body::HAMS_PNL, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 				}
 			}
 		}
@@ -521,22 +521,22 @@ void Hams::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFol
 
 void Hams::Save_Bat(String folder, String batname, String caseFolder, /*bool bin, */String solvName, String meshName) const {
 	String fileName = AFX(folder, batname);
-	FileOut out(fileName);
-	if (!out.IsOpen())
+	FileOut bat(fileName);
+	if (!bat.IsOpen())
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
-	out << F("title %s in '%s'\n", solvName, caseFolder);
+	bat << F("title %s in '%s'\n", solvName, caseFolder);
 	
-	out << "echo Start: \%date\% \%time\% > time.txt\n";
+	bat << BatchStart();
 	
 	if (!IsNull(caseFolder))
-		out << "cd \"" << caseFolder << "\"\n";
+		bat << "cd \"" << caseFolder << "\"\n";
 	
 	if (!meshName.IsEmpty())
-		out << "\"" << meshName << "\"\n";
-	out << "\"" << solvName << "\"\n";
+		bat << "\"" << meshName << "\"\n";
+	bat << "\"" << solvName << "\"\n";
 	
-	out << "echo End:   \%date\% \%time\% >> time.txt\n";
+	bat << BatchEnd();
 }
 
 void Hams::OutMatrix(FileOut &out, String header, const Eigen::MatrixXd &mat) {
@@ -604,9 +604,9 @@ void Hams::Save_Settings(String folderInput) const {
 		//lid.dt.mesh.AddWaterSurface(mesh.dt.mesh, mesh.dt.under, 'f', Bem().roundVal, Bem().roundEps); 
 		//lid.AfterLoad(dt.rho, dt.g, false, false);
 		
-		mesh.Append(dt.lids[0].dt.mesh, dt.rho, dt.g);
+		mesh.Append(dt.lids[0].dt.mesh, rho_ndim(), g_ndim());
 	}
-	Body::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, false, false);	
+	Body::SaveAs(mesh, AFX(folderInput, "Input", "mesh.gdf"), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), false, false);	
 	
 	out << dt.g << "\n";
 	out << dt.rho << "\n";

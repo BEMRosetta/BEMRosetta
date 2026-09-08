@@ -22,10 +22,10 @@ void HydroStar::SaveCase(String folder, bool /*withPotentials*/, bool x0z, bool 
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		String dest = AFX(folder, F("Body_%d.hst", ib+1));
-		Body::SaveAs(dt.msh[ib], dest, Body::HYDROSTAR_HST, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		Body::SaveAs(dt.msh[ib], dest, Body::HYDROSTAR_HST, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 		if (!autoQTF && qtfType == 7) {
 			String dest = AFX(folder, F("Body_cs%d.hst", ib+1));
-			Body::SaveAs(dt.css[ib], dest, Body::HYDROSTAR_HST, Body::ALL, dt.rho, dt.g, y0z, x0z);
+			Body::SaveAs(dt.css[ib], dest, Body::HYDROSTAR_HST, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 		}
 	}
 }

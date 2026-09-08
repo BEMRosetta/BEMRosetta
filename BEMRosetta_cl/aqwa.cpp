@@ -1407,7 +1407,7 @@ void Aqwa::Save(String file, Function <bool(String, int)> Status) const {
 
 	if (IsLoadedQTF(true) || IsLoadedQTF(false)) {
 		BEM::Print("\n- " + F(t_("QTF file")));
-		Save_QTF(ForceExt(file, ".qtf"), Status);
+		Save_QTF(ForceExtSafer(file, ".qtf"), Status);
 	}
 }		
 
@@ -1747,7 +1747,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 					nlid.DeployXSymmetry();
 					lid = pick(nlid);				
 				} 
-				msh[ib].Append(lid, dt.rho, dt.g);
+				msh[ib].Append(lid, rho_ndim(), g_ndim());
 			}
 		}
 	}
@@ -1755,7 +1755,7 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 	int nNodes, nPanels;
 	UVector<String> files;
 	files << file;
-	Body::SaveAs(msh, files, Body::AQWA_DAT, Body::ALL, Bem().rho, Bem().g, y0z, x0z, nNodes, nPanels,
+	Body::SaveAs(msh, files, Body::AQWA_DAT, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z, nNodes, nPanels,
 		dt.w, dt.head, irregular, autoIrregular, qtfType, withPotentials, dt.h, numThreads);
 	
 	String fileBat = AFX(folder, "Aqwa.bat");		
@@ -1763,10 +1763,10 @@ void Aqwa::SaveCaseDat(String folder, int numThreads, bool withPotentials, bool 
 	if (!bat)
 		throw Exc(F(t_("Problem creating '%s' file"), fileBat));
 	
-	bat << "echo Start: \%date\% \%time\% >  time.txt\n";
+	bat << BatchStart();
 	bat << "call \"" << Bem().aqwaPath << "\" Analysis.dat";
 	if (!Bem().opNoWind)	
  		bat << " /nowind";	
-	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
+	bat << BatchEnd();
 }
 

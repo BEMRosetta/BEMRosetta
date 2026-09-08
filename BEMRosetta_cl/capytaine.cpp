@@ -173,15 +173,29 @@ String CapyNC_Load(const char *file, UArray<Hydro> &hydros, int &num) {
 		
 		nc_type type;
 		UVector<int> dims;
-		cdf.GetVariableData("body_name", type, dims);
 		UVector<String> bds;
-		if (type == NC_CHAR) {
-			String bodies = cdf.GetString("body_name");
-			bds = Split(bodies, "+");	
-		} else if (type == NC_STRING)
-			cdf.GetString("body_name", bds);
-		else
-			throw Exc(F("Data is not text. Found %s", NetCDFFile::TypeName(type)));
+		if (cdf.ExistVar("body_name")) {
+			cdf.GetVariableData("body_name", type, dims);
+			if (type == NC_CHAR) {
+				String bodies = cdf.GetString("body_name");
+				bds = Split(bodies, "+");	
+			} else if (type == NC_STRING)
+				cdf.GetString("body_name", bds);
+			else
+				throw Exc(F("Data is not text. Found %s", NetCDFFile::TypeName(type)));
+		} else if (cdf.ExistVar("body")) {		// From v3
+			cdf.GetVariableData("body", type, dims, false);
+			if (type == NC_CHAR) {
+				if (dims.size() == 1) {
+					String bodies = cdf.GetString("body");
+					bds = Split(bodies, "+");	
+				} else
+					cdf.GetString("body", bds);
+			} else if (type == NC_STRING)
+				cdf.GetString("body", bds);
+			else
+				throw Exc(F("Data is not text. Found %s", NetCDFFile::TypeName(type)));
+		}
 			
 		int numPan = 0;
 		UVector<int> bodyPan;
@@ -461,7 +475,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	if (!bat.Open(fileBat))
 		throw Exc(F(t_("Impossible to open file '%s'"), fileBat));
 	
-	bat << "echo Start: \%date\% \%time\% > time.txt\n";
+	bat << BatchStart();
 	if (!Bem().pythonEnv.IsEmpty()) {
 		if (Bem().pythonEnv.Find(' ') > 0)
 			bat << Bem().pythonEnv << "\n";
@@ -470,7 +484,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 	}
 	bat << "python \"" << name << ".py\"\n";
 	//bat << "@IF \%ERRORLEVEL\% NEQ 0 PAUSE \"Error\"";
-	bat << "\necho End:   \%date\% \%time\% >> time.txt";
+	bat << BatchEnd();
 	
 	String filePy  = AFX(folder, name + ".py");
 	String spy;
@@ -503,7 +517,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 		const Body &b = dt.msh[ib];
 		
 		String dest = AFX(folderMesh, F(t_("Body_%d.gdf"), ib+1));
-		Body::SaveAs(b, dest, Body::WAMIT_GDF, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		Body::SaveAs(b, dest, Body::WAMIT_GDF, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 		spy <<	F("mesh_%d = cpt.load_mesh('./mesh/%s', file_format='wamit')\n", ib+1, GetFileName(dest));
 		
 		bool isLid    = irregular && dt.lids.size() > ib && !dt.lids[ib].dt.mesh.panels.IsEmpty();
@@ -529,7 +543,7 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			spy << F("lid_mesh_%d = generate_lid_iterative(mesh_%d)\n", ib+1, ib+1);
 		} else if (isLid) {
 			String destLid = AFX(folderMesh, F(t_("Body_%d_lid.gdf"), ib+1));
-			Body::SaveAs(dt.lids[ib], destLid, Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);
+			Body::SaveAs(dt.lids[ib], destLid, Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 			spy << F("lid_mesh_%d = cpt.load_mesh('./mesh/%s', file_format='wamit')\n", ib+1, GetFileName(destLid));
 		} 
 		
@@ -662,9 +676,6 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 		spy <<	"ds['mesh_vertices'] = (['face', 'vertices_of_face', 'space_coordinate'], mesh.vertices[mesh.faces])\n"
 				"ds['mesh_faces_center'] = (['face', 'space_coordinate'], mesh.faces_centers)\n";
 				
-	spy <<	"ds['dof_definition'] = (['radiating_dof', 'face', 'space_coordinate'], np.array([all_bodies.dofs[dof] for dof in all_bodies.dofs]))\n"
-			"\n";
-	
 	if (withMesh && withPotentials) {
 		spy <<	"ds['incident_pressure'] = (\n"
 				"    ['omega', 'wave_direction', 'face'],\n"
@@ -694,15 +705,22 @@ void Nemoh::SaveCase_Capy(String folder, int numThreads, bool withPotentials, bo
 			"    ds['rotation_center'] = (['rigid_body_component', 'point_coordinates'], [body.rotation_center for body in list_of_bodies])\n"
 			"    ds['center_of_buoyancy'] = (['rigid_body_component', 'point_coordinates'], [body.center_of_buoyancy for body in list_of_bodies])\n"
 			"    ds['center_of_mass'] = (['rigid_body_component', 'point_coordinates'], [body.center_of_mass for body in list_of_bodies])\n"
+			"    ds['dof_definition'] = (['radiating_dof', 'face', 'point_coordinates'], np.array([all_bodies.dofs[dof] for dof in all_bodies.dofs]))\n"
+			"else:\n"
+			"    def extract_dof_values(mesh, dof):\n"
+			"        from capytaine.bodies.dofs import AbstractDof\n"
+			"        if isinstance(dof, AbstractDof):\n"
+			"            return dof.evaluate_motion_at_points(mesh.faces_centers)\n"
+			"        else:\n"
+			"            return dof\n"
+			"    ds['dof_definition'] = (['radiating_dof', 'face', 'point_coordinates'], np.array([extract_dof_values(all_bodies.mesh, all_bodies.dofs[dof]) for dof in all_bodies.dofs]))\n"
 			"\n"
 			"# Export to NetCDF file\n"
 			"if Version(cpt.__version__) >= Version('2.3'):\n"
 			"    cpt.export_dataset('" << "capytaine" << ".nc', ds, format='netcdf')\n"
 			"else:\n"
 			"    from capytaine.io.xarray import separate_complex_values\n"
-			"    separate_complex_values(ds).to_netcdf('" << name << ".nc',\n"
-			"                                          encoding={'radiating_dof':  {'dtype': 'U'},\n"
-			"                                                    'influenced_dof': {'dtype': 'U'}})\n";	
+			"    separate_complex_values(ds).to_netcdf('" << name << ".nc', encoding={'radiating_dof': {'dtype': 'U'}, 'influenced_dof': {'dtype': 'U'}})\n";	
 	
 	spy.Replace("'", "\"");
 	spy.Replace("\\", "\\\\");

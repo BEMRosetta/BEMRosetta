@@ -458,3 +458,14 @@ double FactorForce(const char *units) {
 		throw Exc(F(t_("This force unit is not supported. Read '%s'"), units));
 }
 
+String BatchStart() {
+	return "@echo Start:   \%date\% \%time\% >  time.txt\n"
+		   "@for /f \"delims=\" %%I in ('powershell -NoProfile -Command \"Get-Date -Format 'yyyy-MM-dd HH:mm:ss'\"') do @set \"START_TIME=%%I\"\n";
+}
+
+String BatchEnd() {
+	return "\n@echo End:     \%date\% \%time\% >> time.txt"
+		   "\n@for /f \"delims=\" \%\%I in ('powershell -NoProfile -Command \"Get-Date -Format 'yyyy-MM-dd HH:mm:ss'\"') do set \"END_TIME=\%\%I\""
+		   "\n@for /f \"delims=\" \%\%I in ('powershell -NoProfile -Command \"$start = [datetime]'\%START_TIME\%'; $end = [datetime]'\%END_TIME\%'; $diff = $end - $start; '{0:D2}:{1:D2}:{2:D2}:{3:D2}' -f [int]$diff.TotalDays, $diff.Hours, $diff.Minutes, $diff.Seconds\"') do @set \"ELAPSED=\%\%I\""
+		   "\n@echo Elapsed: \%ELAPSED\% >> time.txt";
+}

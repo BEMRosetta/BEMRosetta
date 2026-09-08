@@ -2426,7 +2426,7 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 														FDS(msh.dt.under.volumez, 10, false))).Paper(backColorUnder));
 	array.Set(row, 0, t_("Displacement [kg]")); array.Set(row++, col, FDS(msh.dt.under.volume*Bem().rho, 10, false));
 	array.Set(row, 0, t_("Cg [m]"));			
-	if (!IsNull(msh.dt.cg))
+	if (IsNum(msh.dt.cg))
 		array.Set(row++, col, F(t_("%s, %s, %s"),
 														FDS(msh.dt.cg.x, 10, false),			
 														FDS(msh.dt.cg.y, 10, false),
@@ -2435,18 +2435,22 @@ void MainSummaryBody::Report(const UArray<Body> &surfs, int id) {
 		array.Set(row++, col, "-");
 			
 	array.Set(row, 0, t_("Cb [m]"));
-	if (!IsNull(msh.dt.cb))	
-		array.Set(row++, col, F(t_("%s, %s, %s"),  FDS(msh.dt.cb.x, 10, false),			
+	if (IsNum(msh.dt.cb))	
+		array.Set(row++, col, F(t_("%s, %s, %s"),  		FDS(msh.dt.cb.x, 10, false),			
 														FDS(msh.dt.cb.y, 10, false),
 														FDS(msh.dt.cb.z, 10, false)));
 	else 
 		array.Set(row++, col, "-");
 	
-	array.Set(row, 0, t_("C0 [m]"));			array.Set(row++, col, F(t_("%s, %s, %s"),
+	array.Set(row, 0, t_("C0 [m]"));
+	if (IsNum(msh.dt.c0))		
+		array.Set(row++, col, F(t_("%s, %s, %s"),
 														FDS(msh.dt.c0.x, 10, false),			
 														FDS(msh.dt.c0.y, 10, false),
 														FDS(msh.dt.c0.z, 10, false)));
-
+	else 
+		array.Set(row++, col, "-");
+	
 	array.Set(row, 0, t_("GMroll [m]")); 		
 	double gmroll = msh.GMroll(Bem().rho, Bem().g); 	
 	if (IsNum(gmroll))

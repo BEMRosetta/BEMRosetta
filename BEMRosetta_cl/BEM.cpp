@@ -12,7 +12,7 @@ using namespace Upp;
 using namespace Eigen;
 
 
-Function <void(String)> BEM::Print 		  = [](String s) {Cout() << s;};
+Function <void(String)> BEM::Print 		  = [](String s) {if (Bem().print) Cout() << s;};
 Function <void(String)> BEM::PrintWarning = [](String s) {Cout() << "\n" << t_("Warning: ") << s;};
 Function <void(String)> BEM::PrintError   = [](String s) {Cout() << "\n" << t_("ERROR: ") << s;};
 
@@ -257,8 +257,8 @@ String BEM::SpreadNegative(int id, Function <bool(String, int)> Status) {
 	return hydros[id].SpreadNegative(Status);
 }
 
-void BEM::MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase) {
-	hydros[idh].MapMeshes(hydros, ib, idms, oneCase);	
+void BEM::MapMeshes(int idh, int ib, const UVector<int> &idms, bool oneCase, bool relatedToBody, double tolerance, bool rad, bool diff, bool inc) {
+	hydros[idh].MapMeshes(hydros, ib, idms, oneCase, relatedToBody, tolerance, rad, diff, inc);	
 	
 	Bem().Nb = 0;
 	for (int i = 0; i < hydros.size(); ++i) 

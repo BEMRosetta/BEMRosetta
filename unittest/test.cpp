@@ -1,25 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h> 
-#include ".test\\libbemrosetta.h"
-
-void my_error_handler(const char *message, void *dummy) {
-	printf("\nError %s", message);
-	printf("\nClick Enter to end");
-	getchar();	
-	exit(-1);
-}
+#include ".test\\libbemrosetta.hpp"
 
 int main() {
-	
-		printf("BEMRosetta C demo\n");
+	try {
+		printf("BEMRosetta C++ demo\n");
 
 	#ifdef BEMROSETTA_DYNAMIC
-		BEMRosetta bmr = BEMRosetta_Init("libbemrosetta.dll");
+		BEMRosetta bmr("libbemrosetta.dll");
 	#else
-		BEMRosetta bmr = BEMRosetta_Init();
+		BEMRosetta bmr;
 	#endif
 	
-		bmr.SetErrorHandler(my_error_handler, 0);
 		printf("\nBEMRosetta version is %s\n", bmr.Version());
 
 		printf("\n- Mesh handling");
@@ -68,12 +60,14 @@ int main() {
 		bmr.Bem.Load("..\\unittest\\.test\\Capy\\capytaine.nc");
 		printf("\nSaving the results in .h5 format");
 		bmr.Bem.Save("..\\unittest\\.test\\Capy\\capytaine.h5");
+		
+	} catch(std::runtime_error e) {
+		printf("\nError found: %s", e.what());
+	} catch (...) {
+		printf("\nError found");
+	}
 	
 	printf("\nProgram ended\n");
-
-#ifdef BEMROSETTA_DYNAMIC
-    BEMRosetta_Free();
-#endif
 		
 	return 0;
 }

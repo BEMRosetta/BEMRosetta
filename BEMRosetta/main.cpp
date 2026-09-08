@@ -612,7 +612,6 @@ GUI_APP_MAIN {
 
 
 	Ctrl::SetAppName(t_("Hydrodynamic coefficients viewer and converter"));
-	//Ctrl::GlobalBackPaint();
 
 	try {
 		Main main;

@@ -249,7 +249,7 @@ Value GridBody::DataSourcePanels::Format(const Value& q) const {
 		if (Bem().onlyDiagonal) {
 			if (cl < 6) {
 				int col2 = cl;	
-				return hy.dt.Apan(ib, ip, col2, col2, ifr);
+				return hy.dt.Apan[ib][ip][col2][col2][ifr];
 			} else {
 				int col2 = cl - 6;	
 				return hy.B_pan(ib, ip, col2, col2, ifr);
@@ -258,7 +258,7 @@ Value GridBody::DataSourcePanels::Format(const Value& q) const {
 			if (cl < 36) {
 				int row = cl/6;
 				int col2 = cl - 6*row;
-				return hy.dt.Apan(ib, ip, row, col2, ifr);
+				return hy.dt.Apan[ib][ip][row][col2][ifr];
 			} else {
 				cl -= 36;	
 				int row = cl/6;

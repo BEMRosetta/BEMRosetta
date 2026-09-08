@@ -157,12 +157,12 @@ Body::ControlData::ControlData(Body::ControlData &&msh) noexcept {
 	damagedBodies = pick(msh.damagedBodies);	
 }
 
-String Body::Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
 	return Load(mesh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 }
 	
-String Body::Load(Body &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
+String Body::Load(Body &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps, bool &y0z, bool &x0z) {
 	UArray<Body> msh;
 	String ret = Load(msh, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 	if (!ret.IsEmpty())
@@ -171,9 +171,10 @@ String Body::Load(Body &mesh, String file, double rho, double &g, bool cleanPane
 	return ret;
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps) {
+String Body::Load(UArray<Body> &mesh, String file, double rho, double g, bool cleanPanels, double grid, double eps) {
 	bool y0z, x0z;
 	UArray<Body> meshLoaded;
+
 	String ret = Load(meshLoaded, file, rho, g, cleanPanels, grid, eps, y0z, x0z);
 	if (!ret.IsEmpty())
 		return ret;
@@ -193,29 +194,29 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 	return ret;
 }
 	
-String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool cleanPanels, double grid, double eps, 
+String Body::Load(UArray<Body> &bodies, String file, double rho, double g, bool cleanPanels, double grid, double eps, 
 		bool &y0z, bool &x0z) {
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	y0z = x0z = false;
 	
-	mesh.Clear();
+	bodies.Clear();
 	
 	if (ext == ".dat") {
-		ret = NemohBody::LoadDat(mesh, file, x0z);
+		ret = NemohBody::LoadDat(bodies, file, x0z);
 		if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-			ret = NemohBody::LoadDatFS(mesh, file, x0z);
+			ret = NemohBody::LoadDatFS(bodies, file, x0z);
 			if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-				ret = SalomeBody::LoadDat(mesh, file);
+				ret = SalomeBody::LoadDat(bodies, file);
 				if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-					ret = WamitBody::LoadDat(mesh, file);
+					ret = WamitBody::Load_dat(bodies, file);
 					if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) {
-						ret = DiodoreBody::LoadDat(mesh, file);
+						ret = DiodoreBody::LoadDat(bodies, file);
 						if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) { 	
 							Hydro hy;
-							ret = AQWABody::LoadDat(mesh, hy, file);
+							ret = AQWABody::LoadDat(bodies, hy, file);
 							if (!ret.IsEmpty() && !ret.StartsWith(t_("Parsing error: "))) 
-								ret = AQWABody::LoadDatANSYSTOAQWA(mesh, hy, file);	
+								ret = AQWABody::LoadDatANSYSTOAQWA(bodies, hy, file);	
 							y0z = hy.dt.symX;
 							x0z = hy.dt.symY;
 						}
@@ -224,44 +225,49 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 			}
 		}
 	} else if (ext == ".lis")
-		ret = AQWABody::LoadLis(mesh, file, g, y0z, x0z);
+		ret = AQWABody::LoadLis(bodies, file, g, y0z, x0z);
 	else if (ext == ".yml") {
 		OrcaWave orca;
 		ret = orca.Load(file);
 		if (ret.IsEmpty()) {
-			mesh.Append(orca.dt.msh);
+			for (const Body &b : orca.dt.msh)
+				bodies << pick(b);
+			for (const Body &b : orca.dt.lids)
+				bodies << pick(b);
+			for (const Body &b : orca.dt.css)
+				bodies << pick(b);
 			y0z = orca.dt.symX;
 			x0z = orca.dt.symY;
 		}
 	}
 #ifdef PLATFORM_WIN32	
 	else if (ext == ".owr")
-		ret = ORCABody::Load_OWR(mesh, file, g, y0z, x0z);
+		ret = ORCABody::Load_OWR(bodies, file, g, y0z, x0z);
 #endif	
 	else if (ext == ".txt") 
-		ret = DiodoreBody::LoadDat(mesh, file); 
+		ret = DiodoreBody::LoadDat(bodies, file); 
 	else if (ext == ".gdf" || ext == ".idf" || ext == ".csf") 
-		ret = WamitBody::LoadGdf(mesh, file, y0z, x0z, g); 
+		ret = WamitBody::Load_gdf(bodies, file, y0z, x0z, g); 
 	else if (ext == ".fdf") 
-		ret = WamitBody::Load_fdf(mesh, file);
-	else if (ext == ".pot")
-		ret = WamitBody::LoadPot(mesh, file, y0z, x0z, g); 
+		ret = WamitBody::Load_fdf(bodies, file);
+	else if (ext == ".pot" || ext == ".wam")
+		ret = WamitBody::Load(bodies, file);	 
 	else if (ext == ".pnl") 
-		ret = HAMSBody::LoadPnl(mesh, file, y0z, x0z); 
+		ret = HAMSBody::LoadPnl(bodies, file, y0z, x0z); 
 	else if (ext == ".hst") 
-		ret = HydrostarBody::LoadHst(mesh, file, y0z, x0z); 
+		ret = HydrostarBody::LoadHst(bodies, file, y0z, x0z); 
 	else if (ext == ".nc") 
-		ret = CapyBody::Load_NC(mesh, file, g);
+		ret = CapyBody::Load_NC(bodies, file, g);
 	else if (ext == ".fst") 
-		ret = FASTBody::Load_Fst(mesh, file);
+		ret = FASTBody::Load_Fst(bodies, file);
 	else if (ext == ".out" || ext == ".outb") {
 		ret = Bem().fast.Load(file);
 		if (!ret.IsEmpty())
 			return ret;
-		MeshBody::Load_Out(mesh);
+		MeshBody::Load_Out(bodies);
 	} else if (ext == ".stl") {
 		bool isText;
-		Body &m = mesh.Add();
+		Body &m = bodies.Add();
 		try {
 			LoadStl(file, m.dt.mesh, isText, m.dt.fileHeader);
 		} catch(Exc e) {
@@ -269,7 +275,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 		}
 		m.dt.SetCode(isText ? Body::STL_TXT : Body::STL_BIN);
 	} else if (ext == ".msh") {
-		Body &m = mesh.Add();
+		Body &m = bodies.Add();
 		try {
 			LoadTDynMsh(file, m.dt.mesh);
 		} catch(Exc e) {
@@ -284,7 +290,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 		}
 		m.dt.SetCode(Body::MSH_TDYN);
 	} else if (ext == ".grd") {
-		Body &m = mesh.Add();
+		Body &m = bodies.Add();
 		try {
 			LoadGRD(file, m.dt.mesh, y0z, x0z);
 		} catch(Exc e) {
@@ -292,7 +298,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 		}
 		m.dt.SetCode(Body::MIKE21_GRD);
 	} else if (ext == ".vtk") {
-		Body &m = mesh.Add();
+		Body &m = bodies.Add();
 		try {
 			LoadVTK(file, m.dt.mesh, y0z);
 		} catch(Exc e) {
@@ -300,7 +306,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 		}
 		m.dt.SetCode(Body::VTK_ASCII);
 	} else if (ext == ".obj") {
-		Body &m = mesh.Add();
+		Body &m = bodies.Add();
 		try {
 			LoadOBJ(file, m.dt.mesh);
 		} catch(Exc e) {
@@ -308,21 +314,21 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 		}
 		m.dt.SetCode(Body::OBJ);
 	} else if (ext == ".off")
-		ret = OffBody::LoadOff(mesh, file);
+		ret = OffBody::LoadOff(bodies, file);
 	else if (ext == ".mesh") {
 		Hydro hydro;
 		String error = hydro.LoadSerialization(file);
 		if (error.IsEmpty() && !hydro.dt.msh.IsEmpty())		// .bemr from Hydro
-			mesh.Append(hydro.dt.msh);
+			bodies.Append(hydro.dt.msh);
 		else {
 			Body b;
 			try {
 				b.LoadSerialization(file);					// .bemr from Body
-				mesh << b;
+				bodies << b;
 			} catch(Exc e) {
 				try {
 					b.dt.mesh.LoadSerialization(file);		// .bemr from Surface
-					mesh << b;
+					bodies << b;
 				} catch(Exc e) {	
 					return std::move(e);
 				}
@@ -334,7 +340,7 @@ String Body::Load(UArray<Body> &mesh, String file, double rho, double &g, bool c
 	if (!ret.IsEmpty())
 		return ret;
 	
-	for (Body &m : mesh) {
+	for (Body &m : bodies) {
 		//if (IsNull(m.dt.c0))
 		//	m.dt.c0 = Point3D(0, 0, 0);
 		
@@ -468,11 +474,11 @@ void Body::SaveAs(const UArray<Body> &meshes, const UVector<String> &fileNames, 
 	else {
 		for (int ib = 0; ib < meshes.size(); ++ib) {
 			if (type == WAMIT_GDF) 
-				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, false);
+				WamitBody::Save_gdf(fileNames[ib], surfs[ib], g, symX, symY, false);
 			else if (type == WAMIT_GDF2)
 				splines[ib].SaveGdf(fileNames[ib], g, symX, symY, false);
 			else if (type == WAMIT_CSF) 
-				WamitBody::SaveGdf(fileNames[ib], surfs[ib], g, symX, symY, true);
+				WamitBody::Save_gdf(fileNames[ib], surfs[ib], g, symX, symY, true);
 			else if (type == WAMIT_CSF2)
 				splines[ib].SaveGdf(fileNames[ib], g, symX, symY, true);
 			else if (type == NEMOH_DAT) 
@@ -626,6 +632,9 @@ void Body::AfterLoad(double rho, double g, bool onlyCG, bool isFirstTime, bool m
 	}
 	if (/*!onlyCG && */!IsNull(rho) && !IsNull(g) && !IsNull(dt.cg) && !IsNull(dt.cb) && !IsNull(dt.c0))
 		dt.under.GetHydrostaticStiffness(dt.C, dt.c0, dt.cg, dt.cb, rho, g, GetMass(), massBuoy);
+	
+	if (IsNull(dt.c0))
+		dt.c0 = Point3D(0, 0, 0);
 	
 	for (Body *b : cdt.damagedBodies)
 		if (b->IsValid())

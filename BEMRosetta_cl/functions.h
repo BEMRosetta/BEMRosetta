@@ -119,5 +119,8 @@ void AddPhase(std::complex<double> &val, double arg);
 double FactorLen(const char *units);
 double FactorMass(const char *units);
 double FactorForce(const char *units);
-	
+
+String BatchStart();
+String BatchEnd();
+
 #endif

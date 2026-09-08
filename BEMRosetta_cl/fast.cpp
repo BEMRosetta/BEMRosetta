@@ -114,7 +114,7 @@ bool Fast::Load_HydroDyn(String fileName) {
 
 
 void Fast::Save(String file, Function <bool(String, int)> Status, int qtfHeading) {
-	file = ForceExt(file, ".dat");
+	file = ForceExtSafer(file, ".dat");
 	
 	if (IsLoadedA() && IsLoadedB()) 
 		Save_HydroDyn(file, true);

@@ -71,8 +71,11 @@ bool OrcaWave::Load_OW_YML() {
 
 	dt.symX = dt.symY = false;
 	
+	char dataFrom = 'r';
+	
 	int ib = -1;
 	Point3D bodyMeshPosition;
+	Value3D bodyMeshAttitude;
 	bool originCM = false;
 	double mass;
 	Matrix3d inertia;
@@ -82,14 +85,19 @@ bool OrcaWave::Load_OW_YML() {
 
 	YmlParser fy(in);
 
-		FileInLine::Pos fpos = in.GetPos();
+	FileInLine::Pos fpos = in.GetPos();
 	
 	auto GetMsh = [&]()->Body& {
 		if (ib < 0)
 			throw Exc(in.Str() + "\n" + t_("BodyName not found"));
 		return dt.msh[ib];
 	};
-	
+	auto GetCss = [&]()->Body& {
+		if (ib < 0)
+			throw Exc(in.Str() + "\n" + t_("BodyName not found"));
+		return dt.css[ib];
+	};
+		
 	while(fy.GetLine()) {
 		if (fy.FirstIs("UnitsSystem")) {
 			if (fy.GetVal() == "SI") {
@@ -115,7 +123,17 @@ bool OrcaWave::Load_OW_YML() {
 			dt.h = fy.GetDouble()*factor.len;
 		else if (fy.FirstIs("WaterDensity")) 
 			dt.rho = fy.GetDouble()*factor.rho;
-		else if (fy.FirstIs("PeriodOrFrequency")) {
+		else if (fy.FirstIs("WavesReferredToBy")) {	
+			String val = fy.GetVal();
+			if (val.Find("(rad/s)") >= 0)
+				dataFrom = 'r';
+			else if (val.Find("(s)") >= 0)
+				dataFrom = 's';
+			else if (val.Find("(Hz)") >= 0)
+				dataFrom = 'h';
+			else
+				throw Exc(in.Str() + "\n"  + F(t_("Unknown data in WavesReferredToBy: %s"), val));
+		} else if (fy.FirstIs("PeriodOrFrequency")) {
 			const UVector<UVector<String>> &mat = fy.GetMatrix();
 			dt.w.SetCount(mat.size());
 			for (int i = 0; i < mat.size(); ++i)
@@ -154,25 +172,47 @@ bool OrcaWave::Load_OW_YML() {
 				bodyMeshPosition.x = line[0]*factor.len;
 				bodyMeshPosition.y = line[1]*factor.len;
 				bodyMeshPosition.z = line[2]*factor.len;
+				GetMsh().dt.c0 = bodyMeshPosition;
+			} else if (fy.FirstIs("BodyMeshAttitude")) {
+				UVector<double> line = fy.GetVectorDouble();
+				if (line.size() != 3)
+					throw Exc(in.Str() + "\n" + t_("Incorrect BodyMeshAttitude"));
+						
+				bodyMeshAttitude.x = ToRad(line[0]);
+				bodyMeshAttitude.y = ToRad(line[1]);
+				bodyMeshAttitude.z = ToRad(line[2]);
 			} else if (fy.FirstIs("BodyMeshFileName")) {
 				String meshname = fy.GetVal();
 				if (!FileExists(meshname))
 					meshname = AFX(GetFileFolder(fileName), meshname);
 			
-				Body::Load(GetMsh(), meshname, dt.rho, dt.g, Null, Null, false);
+				Body::Load(GetMsh(), meshname, rho_ndim(), g_ndim(), Null, Null, false);
 				GetMsh().dt.fileName = meshname;
 				GetMsh().dt.name = bodyname;
 				GetMsh().Translate(bodyMeshPosition);
-				GetMsh().AfterLoad(dt.rho, dt.g, false, true);
+				GetMsh().Rotate(bodyMeshAttitude, bodyMeshPosition);
+				GetMsh().AfterLoad(rho_ndim(), g_ndim(), false, true);
+			} else if (fy.FirstIs("BodyControlSurfaceMeshFileName")) {
+				dt.css.SetCount(dt.Nb);
+				String meshname = fy.GetVal();
+				if (!FileExists(meshname))
+					meshname = AFX(GetFileFolder(fileName), meshname);
+			
+				Body::Load(GetCss(), meshname, rho_ndim(), g_ndim(), Null, Null, false);
+				GetCss().dt.fileName = meshname;
+				GetCss().dt.name = bodyname;
+				GetCss().Translate(bodyMeshPosition);
+				GetCss().Rotate(bodyMeshAttitude, bodyMeshPosition);
+				GetCss().AfterLoad(rho_ndim(), g_ndim(), false, true);	
 			} else if (fy.FirstIs("BodyMeshSymmetry")) {	
 				String sym = fy.GetVal(); 
 				//dt.symY = sym.Find("xz") >= 0;		// mesh file already includes symmetry. If not it would be deployed twice
 				//dt.symX = sym.Find("yz") >= 0;
 			} else if (fy.FirstIs("BodyCentreOfMassZRelativeToFreeSurface")) {
 				double z = fy.GetDouble()*factor.len;
-				GetMsh().dt.c0.x = GetMsh().dt.cg.x = GetMsh().dt.cb.x;
-				GetMsh().dt.c0.y = GetMsh().dt.cg.y = GetMsh().dt.cb.y;
-				GetMsh().dt.c0.z = GetMsh().dt.cg.z = z;
+				GetMsh().dt.cg.x = bodyMeshPosition.x;
+				GetMsh().dt.cg.y = bodyMeshPosition.y;
+				GetMsh().dt.cg.z = z;
 			} else if (fy.FirstIs("BodyUserOrigin")) {
 				UVector<double> line = fy.GetVectorDouble();
 				if (line.size() != 3)
@@ -304,8 +344,19 @@ bool OrcaWave::Load_OW_YML() {
 		}
 	}
 
+	if (dataFrom == 'h') {
+		for (double &w : dt.w)
+			w *= 2*M_PI;	
+	} else if (dataFrom == 's') {
+		for (double &w : dt.w)
+			w = 2*M_PI/w;	
+	}
+
 	if (dt.Nb == 0)
 		throw Exc(t_("Incorrect .yml format"));
+	
+	for (ib = 0; ib < dt.css.size(); ++ib)
+		dt.css[ib].dt.c0 = clone(dt.msh[ib].dt.c0);
 	
 	return true;
 }
@@ -890,10 +941,10 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	FileOut bat;
 	if (!bat.Open(fileBat))
 		throw Exc(F(t_("Impossible to open file '%s'"), fileBat));
-	bat << "echo Start: \%date\% \%time\% > time.txt\n";
+	bat << BatchStart();
 	const Point3D &c0 = dt.msh[0].dt.c0;
 	bat << F("%s -orca -numtries 10 -numthread %d -rw \"%s\" \"%s\"", exeName, numThreads, "OrcaWave.wave.yml", "OrcaWave.flex.yml");
-	bat << "\necho End:   \%date\% \%time\% >> time.txt\n";
+	bat << BatchEnd();
 	
 	FileOut	out;
 	if (!out.Open(fileYaml))
@@ -901,14 +952,14 @@ void OrcaWave::SaveCase_OW_YML(String folder, bool bin, int numThreads, bool wit
 	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
 		const Body &b = dt.msh[ib];
-		Body::SaveAs(b, AFX(folder, F("Body_%d.gdf", ib+1)), Body::WAMIT_GDF, Body::UNDERWATER, dt.rho, dt.g, y0z, x0z);
+		Body::SaveAs(b, AFX(folder, F("Body_%d.gdf", ib+1)), Body::WAMIT_GDF, Body::UNDERWATER, rho_ndim(), g_ndim(), y0z, x0z);
 		if (irregular && !autoIrregular) {
 			const Body &l = dt.lids[ib];
-			Body::SaveAs(l, AFX(folder, F("Body_%d_lid.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);			
+			Body::SaveAs(l, AFX(folder, F("Body_%d_lid.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
 		}
 		if (qtfType == 7 && !autoQTF) {
 			const Body &c = dt.css[ib];
-			Body::SaveAs(c, AFX(folder, F("Body_%d_cs.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, dt.rho, dt.g, y0z, x0z);			
+			Body::SaveAs(c, AFX(folder, F("Body_%d_cs.gdf", ib+1)), Body::WAMIT_GDF, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);			
 		}
 	}
 	

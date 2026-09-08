@@ -130,7 +130,7 @@ void ShowHelp() {
 	Cout() << "\n" << t_("   qtfMiddle/qtfControl   # Include QTF Control Surface/Middle field in output files");
 	Cout() << "\n" << t_("   qtfAutoMesh <yes/no>   # Auto generates Control Surface mesh");	
 	Cout() << "\n" << t_("-setid <id>                   # Set the id of the default BEM model");
-	Cout() << "\n" << t_("-setbodyid <id>               # Set the id of the default BEM model body");
+	//Cout() << "\n" << t_("-setbodyid <id>               # Set the id of the default BEM model body");
 	Cout() << "\n" << t_("-params <param> <value>       # Set parameters:");
 	Cout() << "\n" << t_("        g      <g>            # gravity       [m/s2]  ");
 	Cout() << "\n" << t_("        rho    <rho>          # water density [kg/m³] ");
@@ -139,15 +139,15 @@ void ShowHelp() {
 	Cout() << "\n" << t_("        w      <frequencies>  # frequencies   [rad/s] ");
 	Cout() << "\n" << t_("        headings <headings>   # frequencies   [deg] ");
 	Cout() << "\n" << t_("-body <param> <values>        # Set parameters:");
-	Cout() << "\n" << t_("        mesh <file>           # Load mesh file");	
-	Cout() << "\n" << t_("        lid  <file>           # Load lid file");	
-	Cout() << "\n" << t_("        controlSurface <file> # Control surface file");	
-	Cout() << "\n" << t_("        cg     <x> <y> <z>    # Set cg: x, y, z [m] cg is the centre of gravity");
+	Cout() << "\n" << t_("        mesh <id> <idMesh>    # Load mesh file");	
+	Cout() << "\n" << t_("        lid  <id> <idMesh>    # Load lid file");	
+	Cout() << "\n" << t_("        controlSurface <id> <idMesh> # Control surface file");	
+	/*Cout() << "\n" << t_("        cg     <x> <y> <z>    # Set cg: x, y, z [m] cg is the centre of gravity");
 	Cout() << "\n" << t_("        c0     <x> <y> <z>    # Set c0: x, y, z [m] c0 is the centre of motion");
 	Cout() << "\n" << t_("        inertia <6x6 matrix>  # Inertia matrix");
 	Cout() << "\n" << t_("        linearDamping       <6x6 matrix> # Linear damping matrix");
 	Cout() << "\n" << t_("        quadraticDamping    <6x6 matrix> # Quadratic damping matrix");
-	Cout() << "\n" << t_("        additionalStiffness <6x6 matrix> # Additional stiffness matrix");	
+	Cout() << "\n" << t_("        additionalStiffness <6x6 matrix> # Additional stiffness matrix");	*/
 	Cout() << "\n" << t_("-convQTFHeads <params>    # Set heading save config. for Wamit .1");
 	Cout() << "\n" << t_("               all        # All headings");
 	Cout() << "\n" << t_("               allNoCross # All headings but crossed");
@@ -307,7 +307,7 @@ String FileName(String file) {
 }
 
 void BMR_Data::BMR_RaiseIfError() {
-	const char *error = BMR_GetLastError();
+	const char *error = _BMR_GetLastError();
     if (error)
         throw Exc(error);
 }
@@ -355,7 +355,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 				} else if (param == "-echo") {
 					CheckIfAvailableArg(command, ++ic, "-echo");
 					
-					BMR_Echo(Replace(command[ic], "\\n", "\n"));
+					Cout() << Replace(command[ic], "\\n", "\n");
 				} else if (param == "-isequal") { 
 					CheckIfAvailableArg(command, ++ic, "-isequal");
 					
@@ -470,14 +470,14 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							BEM::Print("\n");
 							Bem().LoadBEM(file, echo ? Status : NoPrint, false);
 							bemid = Bem().hydros.size() - 1;
-							bembodyid = Bem().hydros[bemid].dt.msh.size() - 1;
+							//bembodyid = Bem().hydros[bemid].dt.msh.size() - 1;
 							BEM::Print("\n" + F(t_("File '%s' loaded"), file));
 						} else if (param == "-r" || param == "-report") {
 							if (Bem().hydros.IsEmpty()) 
 								throw Exc(t_("No file loaded"));
 							Bem().hydros[bemid].Report();
 						} else if (param == "-cl" || param == "-clear") {
-							BMR_Bem_Clear();
+							_BMR_Bem_Clear();
 							BEM::Print("\n" + F(t_("BEM data cleared")));	
 						} else if (param == "-setid") {
 							if (Bem().hydros.size() < bemid) 
@@ -488,9 +488,9 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							bemid = ScanInt(command[ic]);
 /*bem*/						if (IsNull(bemid) || bemid < 0 || bemid > Bem().hydros.size()-1)
 								throw Exc(F(t_("Invalid id %s"), command[ic]));
-							bembodyid = Bem().hydros[bemid].dt.msh.size() - 1;
+							//bembodyid = Bem().hydros[bemid].dt.msh.size() - 1;
 							BEM::Print("\n" + F(t_("BEM active model id is %d"), bemid));	
-						} else if (param == "-setbodyid") {
+						/*} else if (param == "-setbodyid") {
 							if (Bem().hydros.size() < bemid) 
 								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							
@@ -500,7 +500,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							if (IsNull(bembodyid) || bembodyid < 0 || bembodyid > Bem().hydros[bemid].dt.msh.size()-1)
 								throw Exc(F(t_("Invalid id %s"), command[ic]));
 							BEM::Print("\n" + F(t_("BEM active model id is %d"), bemid));
-						} else if (param == "-c" || param == "-convert" || param == "-save") {
+						*/} else if (param == "-c" || param == "-convert" || param == "-save") {
 							if (Bem().hydros.size() < bemid) 
 								throw Exc(F(t_("Model %d is not loaded"), bemid));
 							Hydro &hy = Bem().hydros[bemid];
@@ -683,17 +683,17 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								if (ToLower(command[ic]) == "depth") {
 									CheckIfAvailableArg(command, ++ic, "depth");
 									double h = ScanDouble(command[ic]);
-									BMR_Bem_depth_Set(h);
+									_BMR_Bem_depth_Set(h);
 									BEM::Print("\n" + F(t_("Model %d depth is %f"), bemid+1, h));
 								} else if (ToLower(command[ic]) == "g") {
 									CheckIfAvailableArg(command, ++ic, "g");
 									double g = ScanDouble(command[ic]);
-									BMR_Bem_g_Set(g);
+									_BMR_Bem_g_Set(g);
 									BEM::Print("\n" + F(t_("Model %d g is %f"), bemid+1, g));
 								} else if (ToLower(command[ic]) == "rho") {
 									CheckIfAvailableArg(command, ++ic, "rho");
 									double rho = ScanDouble(command[ic]);
-/*bem*/								BMR_Bem_rho_Set(rho);
+/*bem*/								_BMR_Bem_rho_Set(rho);
 									BEM::Print("\n" + F(t_("Model %d rho is %f"), bemid+1, rho));
 								} else if (ToLower(command[ic]) == "w") {
 									UVector<double> w;
@@ -704,7 +704,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										FindAdd(w, f);
 										ic++;
 									}
-									BMR_Bem_w_Set(w, w.size());
+									_BMR_Bem_w_Set(w, w.size());
 									BEM::Print("\n" + F(t_("Model %d, %d frequencies added"), bemid+1, hy.dt.Nf));
 								} else if (ToLower(command[ic]) == "headings") {
 									UVector<double> head;
@@ -715,7 +715,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										FindAdd(head, he);
 										ic++;
 									}
-									BMR_Bem_headings_Set(head, head.size());
+									_BMR_Bem_headings_Set(head, head.size());
 									BEM::Print("\n" + F(t_("Model %d, %d headigs added"), bemid+1, hy.dt.Nh));
 								} else 
 									throw Exc(F(t_("Wrong command '%s'"), command[ic]));	
@@ -783,7 +783,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								} else
 									throw Exc(F(t_("Wrong command '%s'"), command[ic]));
 /*bem*/						}
-							BMR_Bem_SaveCase(folder, solver, x0z, y0z, irregular, autoIrregular, qtfType, autoQTF, bin, numCases, numThreads, withPotentials, withMesh);
+							_BMR_Bem_SaveCase(folder, solver, x0z, y0z, irregular, autoIrregular, qtfType, autoQTF, bin, numCases, numThreads, withPotentials, withMesh);
 							BEM::Print("\n" + F(t_("Saved model %d in %s case format"), bemid+1, solver));
 						} else if (param == "-bodyparams" || param == "-body" ) {
 							CheckIfAvailableArg(command, ic+1, "-bodyparams");
@@ -792,22 +792,25 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							Hydro &hy = Bem().hydros[bemid];
 							
 							while (command.size() > ic+1 && !command[ic+1].StartsWith("-")) {
-								if (Bem().hydros[bemid].dt.msh.size() < bembodyid) 
-									throw Exc(F(t_("Body %d is not available in model"), bembodyid+1));
+								/*if (Bem().hydros[bemid].dt.msh.size() < bembodyid) 
+									throw Exc(F(t_("Body %d is not available in model"), bembodyid+1));*/
 								++ic;	
 								if (ToLower(command[ic]) == "mesh") {
-									CheckIfAvailableArg(command, ++ic, "mesh");							String file = command[ic];
-									BMR_Bem_Body_LoadMesh(file);
-									BEM::Print("\n" + F(t_("Model %d, body %d loaded mesh '%s'"), bemid+1, bembodyid+1, file));
+									CheckIfAvailableArg(command, ++ic, "idBody");							int idBody = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "idMesh");							int idMesh = ScanInt(command[ic]);
+									_BMR_Bem_Mesh_Load(idBody, idMesh);
+									BEM::Print("\n" + F(t_("Model %d, body %d loaded mesh %d"), bemid+1, idBody, idMesh));
 								} else if (ToLower(command[ic]) == "lid") {
-									CheckIfAvailableArg(command, ++ic, "lid");							String file = command[ic];
-									BMR_Bem_Body_LoadLid(file);
-									BEM::Print("\n" + F(t_("Model %d, lid %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
+									CheckIfAvailableArg(command, ++ic, "idLid");							int idBody = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "idMesh");							int idMesh = ScanInt(command[ic]);
+									_BMR_Bem_Lid_Load(idBody, idMesh);
+									BEM::Print("\n" + F(t_("Model %d, lid %d loaded lid '%s'"), bemid+1, idBody, idMesh));
 								} else if (ToLower(command[ic]) == "controlSurface") {
-									CheckIfAvailableArg(command, ++ic, "controlSurface");				String file = command[ic];
-									BMR_Bem_Body_LoadControlSurface(file);
-									BEM::Print("\n" + F(t_("Model %d, css %d loaded lid '%s'"), bemid+1, bembodyid+1, file));
-								} else if (ToLower(command[ic]) == "c0") {
+									CheckIfAvailableArg(command, ++ic, "idControlSurface");					int idBody = ScanInt(command[ic]);
+									CheckIfAvailableArg(command, ++ic, "idMesh");							int idMesh = ScanInt(command[ic]);
+									_BMR_Bem_ControlSurface_Load(idBody, idMesh);
+									BEM::Print("\n" + F(t_("Model %d, css %d loaded lid '%s'"), bemid+1, idBody, idMesh));
+								} /*else if (ToLower(command[ic]) == "c0") {
 									CheckIfAvailableArg(command, ++ic, "c0.x");							double c0x = ScanDouble(command[ic]);
 									if (IsNull(c0x))
 										throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
@@ -859,7 +862,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									hy.dt.msh[bembodyid].dt.Dquad.resize(6, 6);
 									for (int r = 0; r < 6; ++r) {
 										for (int c = 0; c < 6; ++c) {
-/*bem*/										CheckIfAvailableArg(command, ++ic, F("quadraticDamping(%d,%d)", r+1, c+1));	double d = ScanDouble(command[ic]);
+**bem**										CheckIfAvailableArg(command, ++ic, F("quadraticDamping(%d,%d)", r+1, c+1));	double d = ScanDouble(command[ic]);
 											if (IsNull(d))
 												throw Exc(F(t_("Wrong argument '%s'"), command[ic]));
 											hy.dt.msh[bembodyid].dt.Dquad(r, c) = d;
@@ -877,7 +880,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 										}
 									}
 									BEM::Print("\n" + F(t_("Model %d, body %d additional stiffness matrix loaded"), bemid+1, bembodyid+1));
-								} else 
+								}*/ else 
 									throw Exc(F(t_("Wrong command '%s'"), command[ic]));
 							}
 						} else if (param == "-p" || param == "-print") {
@@ -1017,25 +1020,25 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 						} else if (param == "-supportMultibody") {
 							CheckIfAvailableArg(command, ++ic, "supportMultibody");
 							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
-							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							_BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
 							lastPrint = multibody ? "true" : "false"; 
 							Cout() << lastPrint;
 						} else if (param == "-supportNear") {
 /*bem*/							CheckIfAvailableArg(command, ++ic, "supportNear");
 							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
-							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							_BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
 							lastPrint = near9 ? "true" : "false"; 
 							Cout() << lastPrint;
 						} else if (param == "-supportFar") {
 							CheckIfAvailableArg(command, ++ic, "supportFar");
 							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
-							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							_BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
 							lastPrint = far8 ? "true" : "false"; 
 							Cout() << lastPrint;
 						} else if (param == "-supportMiddle") {
 							CheckIfAvailableArg(command, ++ic, "supportMiddle");
 							int irregular, autoIrregular, middle7, far8, near9, autoCS, multibody;
-							BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
+							_BMR_Bem_Support(command[ic], &irregular, &autoIrregular, &middle7, &far8, &near9, &autoCS, &multibody);
 							lastPrint = middle7 ? "true" : "false"; 
 							Cout() << lastPrint;
 						} else if (mainCommands.Find(param) >= 0) {
@@ -1049,23 +1052,23 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 						if (param == "-i" || param == "-input") {
 							CheckIfAvailableArg(command, ++ic, "--input");			String file = FileName(command[ic]);
 							
-							BMR_Mesh_Load(file);
+							_BMR_Mesh_Load(file);
 							BMR_RaiseIfError();
 						} else if (param == "-r" || param == "-report") {
-							BMR_Mesh_Report();
+							_BMR_Mesh_Report();
 							BMR_RaiseIfError();
 						} else if (param == "-cl" || param == "-clear") {
-							BMR_Mesh_Clear();
+							_BMR_Mesh_Clear();
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Body data cleared")));
 						} else if (param == "-setid") {
 							CheckIfAvailableArg(command, ++ic, "-setid");			int id = ScanInt(command[ic]);
 							
-							BMR_Mesh_Id_Set(id);
+							_BMR_Mesh_Id_Set(id);
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Body active model id is %d"), meshid));	
 						} else if (param == "-getid") {
-							int id = BMR_Mesh_Id_Get();
+							int id = _BMR_Mesh_Id_Get();
 							BMR_RaiseIfError();
 							lastPrint = FormatInt(id);
 							Cout() << lastPrint;
@@ -1086,7 +1089,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									format = pparam;
 							}
 							
-							BMR_Mesh_Save(file, format, symX, symY);
+							_BMR_Mesh_Save(file, format, symX, symY);
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Model id %d saved as '%s'"), meshid, file));	
 						} else if (param == "-t" || param == "-translate") {
@@ -1094,7 +1097,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "y");				double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "z");				double z = ScanDouble(command[ic]);
 							
-							BMR_Mesh_Translate(x, y, z);
+							_BMR_Mesh_Translate(x, y, z);
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Body id %d translated %f, %f, %f"), meshid, x, y, z)); 
 						} else if (param == "-rot" || param == "-rotate") {
@@ -1107,7 +1110,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "cy");				double cy = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cz");				double cz = ScanDouble(command[ic]);
 							
-							BMR_Mesh_Rotate(ax, ay, az, cx, cy, cz);
+							_BMR_Mesh_Rotate(ax, ay, az, cx, cy, cz);
 							BMR_RaiseIfError();		
 							BEM::Print("\n" + F(t_("Body id %d rotated angles %f, %f, %f around centre %f, %f, %f"), meshid, ax, ay, az, cx, cy, cz));					
 						} else if (param == "-cg") {
@@ -1117,7 +1120,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "cgy");				double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "cgz");				double z = ScanDouble(command[ic]);
 							
-							BMR_Mesh_Cg_Set(x, y, z);
+							_BMR_Mesh_Cg_Set(x, y, z);
 							BMR_RaiseIfError();	
 							BEM::Print("\n" + F(t_("CG is %f, %f, %f"), x, y, z));							
 						} else if (param == "-c0") {
@@ -1127,7 +1130,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							CheckIfAvailableArg(command, ++ic, "c0y");				double y = ScanDouble(command[ic]);
 							CheckIfAvailableArg(command, ++ic, "c0z");				double z = ScanDouble(command[ic]);
 							
-							BMR_Mesh_C0_Set(x, y, z);
+							_BMR_Mesh_C0_Set(x, y, z);
 							BMR_RaiseIfError();	
 							BEM::Print("\n" + F(t_("C0 is %f, %f, %f"), x, y, z));							
 						} else if (param == "-mass") { 
@@ -1135,25 +1138,25 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 								throw Exc(t_("No file loaded"));
 							CheckIfAvailableArg(command, ++ic, "mass");				double mass = ScanDouble(command[ic]);
 							
-							BMR_Mesh_Mass_Set(mass);
+							_BMR_Mesh_Mass_Set(mass);
 							BMR_RaiseIfError();	
 							BEM::Print("\n" + F(t_("Mass is %f"), mass));						
 						} else if (param == "-reset") {	
-							BMR_Mesh_Reset();
+							_BMR_Mesh_Reset();
 							BMR_RaiseIfError();	
 							BEM::Print("\n" + F(t_("Body id %d position is reset"), meshid));						
 						} else if (param == "-getwaterplane") {
-							BMR_Mesh_GetWaterPlane();
+							_BMR_Mesh_GetWaterPlane();
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Body id %d waterplane is got"), meshid));
 /*mesh*/				} else if (param == "-gethull") {
-							BMR_Mesh_GetHull();
+							_BMR_Mesh_GetHull();
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Body id %d hull is got"), meshid));
 						} else if (param == "-filllid") {
 							CheckIfAvailableArg(command, ++ic, "ratio");			double ratio = ScanDouble(command[ic]);
 							
-							BMR_Mesh_FillWaterplane(ratio, true);
+							_BMR_Mesh_FillWaterplane(ratio, true);
 							BMR_RaiseIfError();
 							BEM::Print("\n" + F(t_("Body id %d lid is got"), meshid));
 						} else if (param == "-p" || param == "-print") {
@@ -1166,7 +1169,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Cout() << "\n";
 									BEM::Print(t_("Volume:") + F(" "));
 									double vx, vy, vz;
-									BMR_Mesh_Volume_Get(&vx, &vy, &vz);
+									_BMR_Mesh_Volume_Get(&vx, &vy, &vz);
 									BMR_RaiseIfError();
 									lastPrint = F("%f %f %f", vx, vy, vz);
 									Cout() << lastPrint;
@@ -1174,34 +1177,34 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 									Cout() << "\n";
 									BEM::Print(t_("UnderwaterVolume:") + F(" ")); 
 									double vx, vy, vz; 
-									BMR_Mesh_UnderwaterVolume_Get(&vx, &vy, &vz);
+									_BMR_Mesh_UnderwaterVolume_Get(&vx, &vy, &vz);
 									BMR_RaiseIfError();
 									lastPrint = F("%f %f %f", vx, vy, vz);
 									Cout() << lastPrint;
 /*mesh*/						} else if (pparam == "surface") {
 									Cout() << "\n";
 									BEM::Print(t_("Surface:") + F(" ")); 
-									lastPrint = F("%f", BMR_Mesh_Surface_Get());
+									lastPrint = F("%f", _BMR_Mesh_Surface_Get());
 									BMR_RaiseIfError();
 									Cout() << lastPrint;
 								} else if (pparam == "underwatersurface") {
 									Cout() << "\n";
 									BEM::Print(t_("UnderwaterSurface:") + F(" ")); 
-									lastPrint = F("%f", BMR_Mesh_UnderwaterSurface_Get());
+									lastPrint = F("%f", _BMR_Mesh_UnderwaterSurface_Get());
 									BMR_RaiseIfError();
 									Cout() << lastPrint;
 								} else if (pparam == "cg_vol") {
 									Cout() << "\n";
 									BEM::Print(t_("CG_vol:") + F(" "));
 									double x, y, z;
-									BMR_Mesh_Centre_Volume_Get(&x, &y, &z);
+									_BMR_Mesh_Centre_Volume_Get(&x, &y, &z);
 									lastPrint = F("%f %f %f", x, y, z);
 									Cout() << lastPrint;
 /*mesh*/						} else if (pparam == "cg_surf") {
 									Cout() << "\n";
 									BEM::Print(t_("CG_surf:") + F(" ")); 
 									double x, y, z;
-									BMR_Mesh_Centre_Surface_Get(&x, &y, &z);
+									_BMR_Mesh_Centre_Surface_Get(&x, &y, &z);
 									lastPrint = F("%f %f %f", x, y, z);
 									Cout() << lastPrint;
 								} else if (pparam == "hydrostiffness") {
@@ -1939,7 +1942,7 @@ bool BMR_Data::ConsoleMain(const UVector<String>& _command, bool gui) {
 							
 							RunAqwa(dat);
 							
-							String mes = ForceExt(dat, ".mes");
+							String mes = ForceExtSafer(dat, ".mes");
 							UArray<Body> body;
 							double sz = 0;
 							

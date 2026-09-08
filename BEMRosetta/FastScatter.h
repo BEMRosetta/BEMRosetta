@@ -49,7 +49,7 @@ public:
 		for (int iff = 0; iff < dataFast.size(); ++iff) {
 			String file = dataFast[iff].GetFileName();
 			if (fileName == file || 
-				(ForceExt(fileName, "") == ForceExt(file, "") && 
+				(ForceExtSafer(fileName, "") == ForceExtSafer(file, "") && 
 				 PatternMatch(".out*", GetFileExt(fileName)) && 
 				 PatternMatch(".out*", GetFileExt(file)))) 
 				return iff;

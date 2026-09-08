@@ -21,7 +21,7 @@ const char *Hydro::strDataToPlot[] = {t_("A(ω)"), t_("A∞"), t_("A₀"), t_("B
 const UVector<String> Hydro::paramsToProcess = {"A", "B", "M", "Fex", "Stiff", "Stiff_add", "Dlin", "Dquad", "Mean Drift", "QTF_+", "QTF_-"};
 	    
 const UVector<Hydro::BEMInfo> Hydro::bemInfo = {
-    {WAMIT,           "Wamit",                    false,  "*.out",   true,  false, false, "789", "79", false, false},
+    {WAMIT,           "Wamit",                    false,  "*.out",   true,  true,  false, "789", "79", false, true},
     {WAMIT_OUT,       "Wamit .out",               true,   "*.out",   false, true,  true,  "",    "",   true , true},
     {WAMIT_1_3,       "Wamit .1.3 T(s) OpenFAST", true,   "*.1",     false, false, false, "", 	 "",   false, true},
     {WAMIT_1_3_RAD,   "Wamit .1.3 ω(rad/s)",      true,   "*.1",     false, false, false, "", 	 "",   false, true},
@@ -625,7 +625,7 @@ void Hydro::Initialize_Forces() {
 	Initialize_Forces(dt.fk);
 }
 
-void Hydro::Initialize_Forces(Forces &f, int _Nh, double val) {
+void Hydro::Initialize_Forces(Forces &f, int _Nh, std::complex<double> val) {
 	if (_Nh == -1)
 		_Nh = dt.Nh;
 	f.SetCount(dt.Nb);
@@ -727,6 +727,34 @@ static std::complex<double> MirrorHead(const std::complex<double> &head, bool xA
 	}
 	return std::complex<double>(h1, h2);
 }
+
+
+void Hydro::Set_AB(UArray<UArray<VectorXd>> &a, int idBodyRow, int idBodyCol, const UArray<UArray<VectorXd>> &aFrom, int idBodyFromRow, int idBodyFromCol) {
+	ASSERT(a.size() == aFrom.size());
+	
+	for (int idof1 = 0; idof1 < 6; ++idof1)
+		for (int idof2 = 0; idof2 < 6; ++idof2)
+			a[6*idBodyRow + idof1][6*idBodyCol + idof2] = aFrom[6*idBodyFromRow + idof1][6*idBodyFromCol + idof2];
+}
+
+void Hydro::Set_Force(Forces &f, int idBody, const Forces &fFrom, int idBodyFrom, const UVector<double> &headFrom) {
+	ASSERT(fFrom.size() > idBodyFrom);
+	
+	if (f.size() <= idBody)
+		f.SetCount(idBody+1);
+	
+	UArray<MatrixXcd> &fbody = f[idBody];
+	const UArray<MatrixXcd> &fbodyfrom = fFrom[idBodyFrom];
+	
+	fbody.SetCount(dt.Nh);
+	for (int ih = 0; ih < fbody.size(); ++ih) {
+		int idFrom = FindDelta(headFrom, dt.head[ih], 0.1);
+		if (idFrom < 0)
+			throw Exc(F(t_("Heading %.2f does not found"), dt.head[ih]));
+		fbody[ih] = fbodyfrom[idFrom];
+	}
+}
+
 
 void Hydro::Copy(const Hydro &hyd) {
 	dt.Copy(hyd.dt);
@@ -1497,7 +1525,7 @@ void Hydro::SaveAs(String fileName, Function <bool(String, int)> Status, BEM_FMT
 		else if (ext == ".mat")
 			type = MATLAB;
 		else
-			throw Exc(F(t_("Conversion to file type '%s' not supported"), fileName));
+			throw Exc(F(t_("Conversion to file type '%s' not supported"), ext));
 	}
 	BasicBEM::HeadingType htp = Hydro::ShortestHeadingRange(dt.head);
 	BasicBEM::HeadingType mtp = Hydro::ShortestHeadingRange(dt.mdhead);
@@ -1956,7 +1984,7 @@ String Hydro::AfterLoad(Function <bool(String, int)> Status) {
 		if (m.dt.mesh0.IsEmpty()) {
 			Point3D cb = m.dt.cb;
 			MatrixXd C = m.dt.C;
-			m.AfterLoad(dt.rho, dt.g, false, true);
+			m.AfterLoad(rho_ndim(), g_ndim(), false, true);
 			if (!IsNull(cb))		// restores values from original hydrodynamic file
 				m.dt.cb = cb;
 			if (C.size() != 0)
@@ -2635,7 +2663,7 @@ void Hydro::GetABFromPotentials() {
 	Initialize_AB(dt.A_P, 0);
 	Initialize_AB(dt.B_P, 0);
 	
-	dt.Apan = Tensor<double, 5>(dt.Nb, dt.pots_rad[0].size(), 6, 6, dt.Nf);
+	Initialize_ABpan(dt.Apan);
 	
 	for (int ib = 0; ib < dt.Nb; ++ib)  {
 		const Point3D &c0 = dt.msh[ib].dt.c0;
@@ -2644,7 +2672,7 @@ void Hydro::GetABFromPotentials() {
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 				for (int idf2 = 0; idf2 < 6; ++idf2) {
 					for (int idf1 = 0; idf1 < 6; ++idf1) {
-						double A = dt.Apan(ib, ip, idf1, idf2, ifr) = A_pan(ib, ip, idf1, idf2, ifr, n);
+						double A = dt.Apan[ib][ip][idf1][idf2][ifr] = A_pan(ib, ip, idf1, idf2, ifr, n);
 						dt.A_P[idf1 + ib*6][idf2 + ib*6][ifr] += A_fromDimFactor(idf1, idf2)*A;
 						dt.B_P[idf1 + ib*6][idf2 + ib*6][ifr] += B_fromDimFactor(ifr, idf1, idf2)*B_pan(ib, ip, idf1, idf2, ifr, n);
 					}

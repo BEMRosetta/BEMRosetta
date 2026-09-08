@@ -4,7 +4,7 @@
 #include "BEMRosetta_int.h"
 
 
-String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
+String WamitBody::Load_dat(UArray<Body> &mesh, String fileName) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_(F("Impossible to open '%s'", fileName));
@@ -101,7 +101,7 @@ String WamitBody::LoadDat(UArray<Body> &mesh, String fileName) {
 }
 
 
-String WamitBody::LoadGGdf(LineParser &f, String folder, UArray<Body> &mesh, bool &y0z, bool &x0z) {
+String WamitBody::Load_ggdf(LineParser &f, String folder, UArray<Body> &mesh, bool &y0z, bool &x0z) {
 	try {
 		f.GetLine();
 		int Nb = f.GetInt(0);
@@ -115,7 +115,7 @@ String WamitBody::LoadGGdf(LineParser &f, String folder, UArray<Body> &mesh, boo
 					return F(t_("File '%s' does not exist"), f.GetText(0));
 			}
 			double dummy_g;
-			String ret = WamitBody::LoadGdf(mesh, fileName, y0z, x0z, dummy_g);
+			String ret = WamitBody::Load_gdf(mesh, fileName, y0z, x0z, dummy_g);
 			if (!ret.IsEmpty())
 				return ret;
 			f.GetLine();
@@ -145,17 +145,24 @@ String WamitBody::LoadGGdf(LineParser &f, String folder, UArray<Body> &mesh, boo
 	return String();
 }
 
-String WamitBody::LoadPot(UArray<Body> &mesh, String fileName, bool &y0z, bool &x0z, double &g) {
+String WamitBody::Load(UArray<Body> &mesh, String fileName) {
 	Wamit wam;
 	
-	wam.Load_pot(fileName);
+	String err = wam.Load(fileName, false, -1, Null);
+	if (!err.IsEmpty())
+		return err;
+	
 	for (int ib = 0; ib < wam.dt.msh.size(); ++ib)
 		mesh << pick(wam.dt.msh[ib]);
+	for (int ib = 0; ib < wam.dt.lids.size(); ++ib)
+		mesh << pick(wam.dt.lids[ib]);
+	for (int ib = 0; ib < wam.dt.css.size(); ++ib)
+		mesh << pick(wam.dt.css[ib]);
 	
 	return String();	
 }
 
-String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
+String WamitBody::Load_gdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool &x0z, double &g) {
 	FileInLine in(fileName);
 	if (!in.IsOpen()) 
 		return t_(F("Impossible to open '%s'", fileName));
@@ -172,16 +179,17 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		in.GetLine();
 		line = in.GetLine();	
 		f.Load(line);
-		
+	
 		double len = 1;
 		g = Null;
+
 		if (line.Find("ILOWHICSF") < 0) {
 			g = f.GetDouble(1);
 			if (g < 0)
 				return t_("Wrong gravity in .gdf file");
 			len = f.GetDouble(0);
 			if (len == -1)
-				return LoadGGdf(f, GetFileFolder(fileName), _mesh, y0z, x0z);
+				return Load_ggdf(f, GetFileFolder(fileName), _mesh, y0z, x0z);
 			if (len < 1)
 				return t_("Wrong length scale in .gdf file");
 		} else {
@@ -192,7 +200,7 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		f.Load(line);
 		y0z = f.GetInt(0) != 0;
 		x0z = f.GetInt(1) != 0;
-		
+	
 		line = in.GetLine();	
 		f.Load(line);
 		int nPatches = f.GetInt(0);
@@ -218,7 +226,7 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 		body.dt.name = GetFileName(fileName);
 				
 		body.dt.SetCode(igdef == 0 ? Body::WAMIT_GDF : Body::WAMIT_GDF2);
-		
+	
 		if (igdef == 0) {
 			Surface &mesh = body.dt.mesh;
 			int ids[4];
@@ -313,13 +321,13 @@ String WamitBody::LoadGdf(UArray<Body> &_mesh, String fileName, bool &y0z, bool 
 	} catch (Exc e) {
 		return t_("Parsing error: ") + e;
 	}
-		
+	
 	return String();
 }
 
-void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf) {
+void WamitBody::Save_gdf(String fileName, const Surface &surf, double g, bool y0z, bool x0z, bool iscsf) {
 	if (iscsf)
-		ForceExt(fileName, ".csf");
+		ForceExtSafer(fileName, ".csf");
 	
 	FileOut out(fileName);
 	if (!out.IsOpen())
@@ -344,7 +352,7 @@ void WamitBody::SaveGdf(String fileName, const Surface &surf, double g, bool y0z
 	}	 
 }
 
-void WamitBody::SaveHST(String fileName, double rho, double g) const {
+void WamitBody::Save_hst(String fileName, double rho, double g) const {
 	Wamit::Save_hst_static(dt.C, fileName, rho, g);
 }
 
@@ -374,13 +382,31 @@ String WamitBody::Load_fdf(UArray<Body> &_mesh, String fileName) {
 		
 		double x[4], y[4];
 		while (!f.IsEof()) {
-			f.GetLine();
-			for (int i = 0; i < 4; ++i)
-				x[i] = f.GetDouble(i);
-			f.GetLine();
-			for (int i = 0; i < 4; ++i)
-				y[i] = f.GetDouble(i);
-			
+			int ival = 0;
+			while (ival < 8) {
+				f.GetLine();
+				int iline = 0;
+				while (iline < f.size()) {
+					if      (ival == 0)
+						x[0] = f.GetDouble(iline);
+					else if (ival == 1)
+						x[1] = f.GetDouble(iline);
+					else if (ival == 2)
+						x[2] = f.GetDouble(iline);
+					else if (ival == 3)
+						x[3] = f.GetDouble(iline);
+					else if (ival == 4)
+						y[0] = f.GetDouble(iline);
+					else if (ival == 5)
+						y[1] = f.GetDouble(iline);
+					else if (ival == 6)
+						y[2] = f.GetDouble(iline);
+					else if (ival == 7)
+						y[3] = f.GetDouble(iline);
+					iline++;
+					ival++;
+				}
+			}		
 			Panel &p = mesh.panels.Add();
 			
 			for (int i = 0; i < 4; ++i) {

@@ -669,7 +669,7 @@ bool FastScatterBase::OnLoad(String fileName) {
 		for (int r = 0; r < rightT.arrayFiles.GetCount(); ++r) {		
 			String file = rightT.arrayFiles.Get(r, 1);
 			if (fileName == file || 
-				(ForceExt(fileName, "") == ForceExt(file, "") && 
+				(ForceExtSafer(fileName, "") == ForceExtSafer(file, "") && 
 				 PatternMatch(".out*", GetFileExt(fileName)) && 
 				 PatternMatch(".out*", GetFileExt(file)))) 
 				return true;

@@ -134,13 +134,15 @@ void MainBEM::Init() {
 		menuProcess.maxFreq <<= 150;
 	
 	menuProcess.butQTF_MD << THISBACK(OnQTF_MD);
-	
+
+/*	
 #ifdef flagDEBUG
 		menuProcess.butMixWizard << THISBACK(OnMixWizard);
 #else
 		menuProcess.Hide();
 #endif
-	
+*/	
+
 	CtrlLayout(menuProcess2);
 	
 	auto DropChecked = [&](DropGrid &drop)->bool {
@@ -349,6 +351,8 @@ void MainBEM::Init() {
 	menuBody.butSpreadNegative 	<<= THISBACK(OnSpreadNegative);
 	menuBody.butMapNodes 		<<= THISBACK(OnMapNodes);
 	menuBody.butMapMeshes 		<<= THISBACK(OnMapMeshes);
+	menuBody.editTolerance = 0.001;
+	menuBody.editTolerance.Tip(t_("Maximum distance to a panel centroid to be considered mapped"));
 	menuBody.butFill1st 		<<= THISBACK(OnFill1st);
 	
 	OnOpt();
@@ -844,7 +848,7 @@ bool MainBEM::OnLoadFile(String file) {
 		Progress progress(t_("Loading BEM files..."), 100); 
 		EM().Log("Loading BEM files...");		
 		for (int i = 0; i < Bem().hydros.size(); ++i) {
-			if (ForceExt(Bem().hydros[i].dt.file, ".") == ForceExt(file, ".") &&
+			if (ForceExtSafer(Bem().hydros[i].dt.file, ".") == ForceExtSafer(file, ".") &&
 				(Bem().GetBEMExtSet(file) < 0 || 
 				 Bem().GetBEMExtSet(file) == Bem().GetBEMExtSet(Bem().hydros[i].dt.file))) {
 				if (!PromptYesNo(t_("Model is already loaded") + F("&") + t_("Do you wish to open it anyway?")))
@@ -1582,7 +1586,7 @@ void MainBEM::OnSwapDOF() {
 		WaitCursor wait;
 		
 		Bem().SwapDOF(idx, menuProcess.dropBody1.GetIndex(), menuProcess.dropDOF1.GetIndex() - 1, 
-						  menuProcess.dropBody2.GetIndex(), menuProcess.dropDOF2.GetIndex() - 1);
+						   menuProcess.dropBody2.GetIndex(), menuProcess.dropDOF2.GetIndex() - 1);
 				
 		mainSummary.Clear();
 		for (int i = 0; i < Bem().hydros.size(); ++i)
@@ -1920,7 +1924,7 @@ void MainBEM::OnMapNodes() {
 		
 		const Hydro &hy = Bem().hydros[idx];
 		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty()) {
-			Exclamation(t_("No mesh is available"));
+			Exclamation(F(t_("No mesh is available in case '%s'"), DeQtf(hy.dt.file)));
 			return;
 		}
 		
@@ -1928,6 +1932,11 @@ void MainBEM::OnMapNodes() {
 		
 		if (!hy.IsLoadedPotsRad(ib)) {
 			Exclamation(F(t_("No radiation potentials/pressures are available for body %d"), ib+1));
+			return;
+		}
+		
+		if (Bem().surfs.IsEmpty()) {
+			Exclamation(F(t_("No surfaces are available to be mapped")));
 			return;
 		}
 		
@@ -2069,7 +2078,7 @@ void MainBEM::OnMapMeshes() {
 		
 		const Hydro &hy = Bem().hydros[idx];
 		if (hy.dt.msh.IsEmpty() || hy.dt.msh[0].dt.mesh.panels.IsEmpty()) {
-			Exclamation(t_("No mesh is available"));
+			Exclamation(F(t_("No mesh is available in case '%s'"), DeQtf(hy.dt.file)));
 			return;
 		}
 		
@@ -2080,7 +2089,12 @@ void MainBEM::OnMapMeshes() {
 			return;
 		}
 		
-		mapMeshes.Init(idx, ib);
+		if (Bem().surfs.IsEmpty()) {
+			Exclamation(F(t_("No surfaces are available to be mapped")));
+			return;
+		}
+		
+		mapMeshes.Init(idx, ib, ~menuBody.editTolerance);
 		mapMeshes.Execute();
 	} catch (Exc e) {
 		BEM::PrintError(DeQtfLf(e));
@@ -2105,7 +2119,7 @@ void MainBEM::OnFill1st() {
 	}	
 }
 
-void MapMeshes::Init(int _idx, int _ib) {
+void MapMeshes::Init(int _idx, int _ib, double _tolerance) {
 	idx = _idx;
 	ib = _ib;
 	
@@ -2114,8 +2128,9 @@ void MapMeshes::Init(int _idx, int _ib) {
 	text.Background(Null);
 	int dots = 7*StdFont().GetHeight();
 	text.SetQTF(F(t_("[A+%d This option allows the hydrodynamic coefficients to be divided into a series of sectional bodies defined by their meshes.&"
-				"These meshes are obtained by dividing the mesh of the calculated body into parts.&"
-				"Therefore, the meshes of each sectional body do not have to be closed underwater.]"), dots));
+				"These meshes are obtained by dividing the full mesh of the calculated body into parts.&"
+				"Therefore, the meshes of each sectional body do not have to be closed underwater.&"
+				"The potentials can be mapped to all the meshes in one new case, or as each mesh is a new case]"), dots));
 	
 	butClose <<= THISBACK(OnClose);
 	butMapMeshes <<= THISBACK(OnMapMeshes);
@@ -2130,6 +2145,7 @@ void MapMeshes::Init(int _idx, int _ib) {
 }
 
 void MapMeshes::OnMapMeshes() {
+	int rad, diff, inc;
 	try {
 		UVector<int> idmeshes;
 		for (int row = 0; row < listLoaded.GetCount(); ++row) {
@@ -2143,7 +2159,7 @@ void MapMeshes::OnMapMeshes() {
 		WaitCursor wait;
 		
 		int idFrom = Bem().hydros.size();
-		Bem().MapMeshes(idx, ib, idmeshes, int(~opOneMany) == 0);
+		Bem().MapMeshes(idx, ib, idmeshes, int(~opOneMany) == 0, true, tolerance, rad, diff, inc);
 		
 		for (int i = idFrom; i < Bem().hydros.size(); ++i) {
 			const Hydro &hy = Bem().hydros[i];
@@ -2436,7 +2452,7 @@ void MainBEM::OnConvert() {
 				fs.Type(Hydro::GetBemStr(static_cast<Hydro::BEM_FMT>(i)), Hydro::bemInfo[i].ext);
 		
 		fs.ActiveType(0);
-		fs.Set(ForceExt(~menuOpen.file, ext));
+		fs.Set(ForceExtSafer(~menuOpen.file, ext));
 		fs.ActiveDir(saveFolder);
 		
 		if (!fs.ExecuteSaveAs(F(t_("Save BEM data as %s"), fileType)))
@@ -2839,7 +2855,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 					}
 				}
 			}
-		}
+		} 
 		//array.Set(row,   0, sib + " " + t_("Theave(∞) [s]"));
 		array.Set(row, 0, sib + " " + t_("Theave(ω) [s]"));
 		//array.Set(row+2, 0, sib + " " + t_("Troll(∞)  [s]"));
@@ -2847,8 +2863,7 @@ void MainSummaryCoeff::Report(const Hydro &hy, int id) {
 		//array.Set(row+4, 0, sib + " " + t_("Tpitch(∞) [s]"));
 		array.Set(row+2, 0, sib + " " + t_("Tpitch(ω) [s]"));
 		if (/*IsNum(data.rho) && IsNum(data.g) &&*/ 
-			/*data.M.size() > ib && */hy.dt.msh[ib].dt.M.size() > 0 && 
-			/*data.C.size() > ib && */hy.dt.msh[ib].dt.C.size() > 0) {
+			hy.IsLoadedAinf() && hy.IsLoadedM(ib) && hy.IsLoadedC(ib)) {
 			//array.Set(row++, col, FDS(data.Theave (ib), 5, false, "-"));
 			array.Set(row++, col, FDS(hy.Tdof(ib, 2), 5, false, FDS(hy.Tdof_inf(ib, 2), 5, false, "-") + F(" (∞)")));
 			//array.Set(row++, col, FDS(data.Troll  (ib), 5, false, "-"));

@@ -356,51 +356,51 @@ void Nemoh::Save_Bat(String folder, String batname, String caseFolder, bool bin,
 		String preName, String hydroName, String solvName, String postName, 
 		String QTFpreName, String QTFsolvName, String QTFpostName, int numThreads, int qtfType) const {
 	String fileName = AFX(folder, batname);
-	FileOut out(fileName);
-	if (!out.IsOpen())
+	FileOut bat(fileName);
+	if (!bat.IsOpen())
 		throw Exc(F(t_("Impossible to create '%s'"), fileName));
 	
 	if (!IsEmpty(caseFolder))
-		out << F("title \"%s in '%s'\"\n", solvName, caseFolder);
+		bat << F("title \"%s in '%s'\"\n", solvName, caseFolder);
 	else
-		out << F("title %s\n", solvName);
+		bat << F("title %s\n", solvName);
 	
-	out << "\necho Start: \%date\% \%time\% > time.txt\n";
+	bat << BatchStart();
 	
 	if (!IsNull(caseFolder))
-		out << "cd \"" << caseFolder << "\"\n";
+		bat << "cd \"" << caseFolder << "\"\n";
 	String strBin;
 	if (bin)
 		strBin = AFX(caseFolder.IsEmpty() ? "." : "..", "bin");
-	//out << "call Mesh_cal.bat\n";
+	//bat << "call Mesh_cal.bat\n";
 	if (!preName.IsEmpty()) 
-		out << "\"" << AFX(strBin, preName) << "\"\n";
+		bat << "\"" << AFX(strBin, preName) << "\"\n";
 	if (!hydroName.IsEmpty()) 
-		out << "\"" << AFX(strBin, hydroName) << "\"\n";
+		bat << "\"" << AFX(strBin, hydroName) << "\"\n";
 	if (!solvName.IsEmpty()) {
 		if (solvName == "capytaine") {
 			if (!IsNull(numThreads) && numThreads > 0) 
-				out << "set OMP_NUM_THREADS=" << numThreads << "\n"
+				bat << "set OMP_NUM_THREADS=" << numThreads << "\n"
 					<< "set MKL_NUM_THREADS=" << numThreads << "\n";
 			if (!IsEmpty(Bem().pythonEnv)) 
-				out << F("call activate %s\n", Bem().pythonEnv); 
-			out << "\"" << solvName << "\"\n";
+				bat << F("call activate %s\n", Bem().pythonEnv); 
+			bat << "\"" << solvName << "\"\n";
 		} else if (preName.IsEmpty()) 
-			out << "\"" << AFX(strBin, solvName) << "\" -all\n";
+			bat << "\"" << AFX(strBin, solvName) << "\" -all\n";
 		else
-			out << "\"" << AFX(strBin, solvName) << "\"\n";
+			bat << "\"" << AFX(strBin, solvName) << "\"\n";
 	}
 	if (!postName.IsEmpty()) 
-		out << "\"" << AFX(strBin, postName) << "\"\n";
+		bat << "\"" << AFX(strBin, postName) << "\"\n";
 	if (qtfType > 0) {
 		if (!QTFpreName.IsEmpty()) 
-			out << "\"" << AFX(strBin, QTFpreName) << "\"\n";
+			bat << "\"" << AFX(strBin, QTFpreName) << "\"\n";
 		if (!QTFsolvName.IsEmpty()) 
-			out << "\"" << AFX(strBin, QTFsolvName) << "\"\n";
+			bat << "\"" << AFX(strBin, QTFsolvName) << "\"\n";
 		if (!QTFpostName.IsEmpty()) 
-			out << "\"" << AFX(strBin, QTFpostName) << "\"\n";
+			bat << "\"" << AFX(strBin, QTFpostName) << "\"\n";
 	}
-	out << "\necho End:   \%date\% \%time\% >> time.txt\n";
+	bat << BatchEnd();
 }
 
 void Nemoh::Save_Input(String folder, int solver) const {
@@ -587,7 +587,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 			
 			if (solver == Hydro::NEMOHv3) {
 				Save_Body_cal(folder, dt.msh.size() == 1 ? -1 : ib, 
-						dest, dt.msh[ib], dt.symY, dt.msh[ib].dt.cg, dt.rho, dt.g, dt.lids);
+						dest, dt.msh[ib], dt.symY, dt.msh[ib].dt.cg, rho_ndim(), g_ndim(), dt.lids); 
 			} else {
 				String khName;
 				if (dt.msh.size() == 1)
@@ -628,7 +628,7 @@ void Nemoh::SaveFolder0(String folderBase, bool bin, int numCases, bool deleteFo
 
 void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_mesh, bool x0z, const Point3D &cg, 
 						double rho, double g, const UArray<Body> &_lids) const {
-	String title = ForceExt(GetFileTitle(meshFile), ".pmsh");
+	String title = ForceExtSafer(GetFileTitle(meshFile), ".pmsh");
 	title = RemoveAccents(title);
 	title.Replace(" ", "_");
 	
@@ -646,7 +646,7 @@ void Nemoh::Save_Body_cal(String folder, int ib, String meshFile, const Body &_m
 			lid = pick(nlid);				
 		} else
 			lid.TrianglesToFalseQuads();
-		mesh.Append(lid, dt.rho, dt.g);
+		mesh.Append(lid, rho_ndim(), g_ndim());
 	}
 	
 	Body::SaveAs(mesh, AFX(folder, "Mesh", title), 
@@ -717,11 +717,11 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, int solver, bo
 				lid = pick(nlid);				
 			} else
 				lid.TrianglesToFalseQuads();
-			under.Append(lid, dt.rho, dt.g);
+			under.Append(lid, rho_ndim(), g_ndim());
 		}
 			
 		int nNodes, nPanels;
-		Body::SaveAs(under, AFX(folderMesh, name), Body::NEMOH_DAT, Body::ALL, dt.rho, dt.g, false, x0z, nNodes, nPanels);
+		Body::SaveAs(under, AFX(folderMesh, name), Body::NEMOH_DAT, Body::ALL, rho_ndim(), g_ndim(), false, x0z, nNodes, nPanels);
 				
 		out << NemohHeader(name) << "\n";	
 		
@@ -792,7 +792,7 @@ void Nemoh::Save_Cal(String folder, const UVector<double> &freqs, int solver, bo
 			
 				int nNodes, nPanels;
 				String name = "lid.dat";
-				Body::SaveAs(dt.css[0], AFX(folderMesh, name), Body::NEMOHFS_DAT, Body::ALL, dt.rho, dt.g, false, x0z, nNodes, nPanels);
+				Body::SaveAs(dt.css[0], AFX(folderMesh, name), Body::NEMOHFS_DAT, Body::ALL, rho_ndim(), g_ndim(), false, x0z, nNodes, nPanels);
 				String file = AFX("mesh", name);
 				out << NemohField(F("%s", file), cp) << "! Name of free surface meshfile (Only for Contrib 3), type 'NA' if not applicable\n"; 
 				double rad = (dt.css[0].dt.mesh.env.maxX - dt.css[0].dt.mesh.env.minX)/2;

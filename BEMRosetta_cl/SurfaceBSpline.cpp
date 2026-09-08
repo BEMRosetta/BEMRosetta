@@ -637,7 +637,7 @@ String SurfaceBSpline::Heal(double grid, double eps) {
 
 bool SurfaceBSpline::SaveGdf(const String& fileName, double g, bool symX, bool symY, bool iscsf) const {
 	if (iscsf)
-		ForceExt(fileName, ".csf");
+		ForceExtSafer(fileName, ".csf");
 	
 	FileOut out(fileName);
 	if (!out.IsOpen()) 

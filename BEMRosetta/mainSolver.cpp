@@ -466,7 +466,9 @@ void MainSolver::Load(String file) {
 		b.fileMesh <<= tmp_b.dt.fileName;
 		if (tmp_hy.dt.lids.size() > ib)
 			b.fileLid <<= tmp_hy.dt.lids[ib].dt.fileName;  
-		
+		if (tmp_hy.dt.css.size() > ib)
+			b.fileCS <<= tmp_hy.dt.css[ib].dt.fileName; 
+					
 		if (tmp_b.IsEmpty())
 			Body::Load(b.mesh, tmp_b.dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 		else
@@ -477,6 +479,12 @@ void MainSolver::Load(String file) {
 				Body::Load(b.lid, tmp_hy.dt.lids[ib].dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
 			else
 				b.lid = clone(tmp_hy.dt.lids[ib]);
+		}
+		if (tmp_hy.dt.css.size() > ib) {
+			if (tmp_hy.dt.css[ib].dt.mesh.IsEmpty())
+				Body::Load(b.cs, tmp_hy.dt.css[ib].dt.fileName, tmp_hy.dt.rho, tmp_hy.dt.g, Null, Null, false);
+			else
+				b.cs = clone(tmp_hy.dt.css[ib]);
 		}
 		b.SetTexts();
 		

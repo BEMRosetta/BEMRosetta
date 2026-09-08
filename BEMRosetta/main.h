@@ -1675,13 +1675,14 @@ class MapMeshes : public WithMapMeshes<TopWindow> {
 public:
 	typedef MapMeshes CLASSNAME;	
 	
-	void Init(int _id, int _ib);
+	void Init(int _id, int _ib, double tolerance);
 	void OnMapMeshes();
 	void OnClose() {Close();}
 	
 private:
 	int idx = -1;
 	int ib = -1;
+	double tolerance;
 	
 	UVector<int> ids;
 	UArray<Option> optionsPlot;

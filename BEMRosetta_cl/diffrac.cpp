@@ -919,7 +919,7 @@ void Diffrac::SaveCase(String folder, int numThreads, bool withPotentials, bool 
 				lid = pick(nlid);				
 			} else
 				lid.TrianglesToFalseQuads();
-			bodies[ib].Append(lid, dt.rho, dt.g);
+			bodies[ib].Append(lid, rho_ndim(), g_ndim());
 		}
 	}
 	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -940,7 +940,7 @@ void Diffrac::SaveCase(String folder, int numThreads, bool withPotentials, bool 
 		}
 		if (save) {
 			String dest = AFX(folder, F("Body_%d.vtk", ib+1));
-			Body::SaveAs(bodies[ib], dest, Body::VTK_ASCII_4, Body::ALL, dt.rho, dt.g, y0z, x0z);
+			Body::SaveAs(bodies[ib], dest, Body::VTK_ASCII_4, Body::ALL, rho_ndim(), g_ndim(), y0z, x0z);
 		}
 	}
 	SaveFile(AFX(folder, "diffrac.xml"), data.SaveXML());				

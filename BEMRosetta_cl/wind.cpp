@@ -85,7 +85,7 @@ String Wind::Save(String fileSave, String ext) const {
 	for (const String &eext : extS) {
 		String file;
 		if (hasExt)		
- 			file = ForceExt(fileSave, eext);
+ 			file = ForceExtSafer(fileSave, eext);
 		else
 			file = fileSave + eext;
 		

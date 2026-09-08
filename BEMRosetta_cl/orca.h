@@ -750,7 +750,7 @@ public:
 		int status;
 		LPCWSTR wcs;		
 
-		owr = ForceExt(owr, ".owr");
+		owr = ForceExtSafer(owr, ".owr");
 		
 		if (!StringToWide(owr, wcs))
 			throwError("StringToWide SaveData");
@@ -782,7 +782,7 @@ public:
 		int status;
 		LPCWSTR wcs;
 		
-		String owr = ForceExt(owryml, ".owr");
+		String owr = ForceExtSafer(owryml, ".owr");
 		
 		if (!StringToWide(owr, wcs))
 			throwError("StringToWide SaveData");

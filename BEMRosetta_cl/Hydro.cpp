@@ -1285,12 +1285,12 @@ String Hydro::SpreadNegative(Function <bool(String, int)> Status) {
 			UVector<int> panIDs;
 			for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 				for (int idf = 0; idf < 6; ++idf) {		// Only diagonal
-					double &apan = dt.Apan(ib, idp, idf, idf, ifr);
+					double &apan = dt.Apan[ib][idp][idf][idf][ifr];
 					if (apan < 0) {
 						if (panIDs.IsEmpty())			// It is only get if the added mass in any dof is negative
 							dt.msh[ib].dt.mesh.GetClosestPanels(idp, panIDs);
 						for (int i = 0; i < panIDs.size(); ++i) {
-							double &apan_i = dt.Apan(ib, panIDs[i], idf, idf, ifr);
+							double &apan_i = dt.Apan[ib][panIDs[i]][idf][idf][ifr];
 							if (apan_i > 0) {
 								if (apan_i + apan >= 0) {	// apan_i has enough mass
 									apan_i += apan;
@@ -1306,7 +1306,7 @@ String Hydro::SpreadNegative(Function <bool(String, int)> Status) {
 							FindAdd(errors, F(t_("%d.%s Freq %.3f rad/s"), ib+1, BEM::strDOFtext[idf], dt.w[ifr]));
 							// Resets this dof and frequency for all panels
 							for (int i = 0; i < dt.pots_rad[ib].size(); ++i) 
-								dt.Apan(ib, i, idf, idf, ifr) = 0;
+								dt.Apan[ib][i][idf][idf][ifr] = 0;
 						}
 					}
 				}
@@ -1350,7 +1350,7 @@ void Hydro::MapNodes(int ib, UVector<Point3D> &points, Tensor<double, 4> &Apan_n
 		for (int ifr = 0; ifr < dt.Nf; ++ifr) {
 			for (int idf1 = 0; idf1 < 6; ++idf1) {		
 				for (int idf2 = 0; idf2 < 6; ++idf2) {
-					Apan_nodes(ip, idf1, idf2, ifr) += dt.Apan(ib, idp, idf1, idf2, ifr);
+					Apan_nodes(ip, idf1, idf2, ifr) += dt.Apan[ib][idp][idf1][idf2][ifr];
 					Bpan_nodes(ip, idf1, idf2, ifr) += B_pan(ib, idp, idf1, idf2, ifr);
 				}
 			}
@@ -1403,14 +1403,12 @@ void Hydro::SaveMap(Grid &g, int ifr, bool onlyDiagonal, const UVector<int> &ids
 				for (int c = 0; c < 6; ++c) 	
 					g.Set(Null, col++, Bpan(row, c, c, ifr));
 			} else {
-				//for (int row = 0; row < ids.size(); ++row) {
-					for (int r = 0; r < 6; ++r) 
-						for (int c = 0; c < 6; ++c)
-							g.Set(Null, col++, Apan(row, r, c, ifr));	
-					for (int r = 0; r < 6; ++r) 
-						for (int c = 0; c < 6; ++c)
-							g.Set(Null, col++, Bpan(row, r, c, ifr));		
-				//}
+				for (int r = 0; r < 6; ++r) 
+					for (int c = 0; c < 6; ++c)
+						g.Set(Null, col++, Apan(row, r, c, ifr));	
+				for (int r = 0; r < 6; ++r) 
+					for (int c = 0; c < 6; ++c)
+						g.Set(Null, col++, Bpan(row, r, c, ifr));		
 			}
 		}
 	}
@@ -1463,7 +1461,7 @@ void Hydro::SaveMap(String fileName, String type, int ifr, bool onlyDiagonal, co
 
 void Hydro::SaveAkselos(int ib, String file) const {
 	if (dt.msh.IsEmpty() || dt.msh[0].dt.mesh.panels.IsEmpty())
-		throw Exc(t_("No mesh is available"));
+		throw Exc(F(t_("No mesh is available in case '%s'"), dt.file));
 	if (!IsLoadedPotsRad(ib)) 
 		throw Exc(F(t_("No radiation potentials/pressures are available for body %d"), ib+1));
 
@@ -1539,19 +1537,21 @@ void Hydro::SaveAkselos(int ib, String file) const {
 	npz.Save(AFX(folder, F("%s_Pressure.npz", file)));
 }
 
-void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase) {
+void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, bool oneCase, bool relatedToBody, double tolerance, bool rad, bool diff, bool inc) {
+	// tolerance is the maximum distance for a panel to be considered found
 	if (dt.msh.IsEmpty())
 		return;
 	
-	UVector<UVector<int>> idpan(idms.size());	
+	UVector<UVector<int>> idpan(idms.size());				// For each mesh, which panels from ib apply
 	const UVector<Panel> &pans = dt.msh[ib].dt.mesh.panels;
 	double maxalld = 0;
+	int numUnMapped = 0;
 	for (int ip = 0; ip < pans.size(); ++ip) {				// For each panel of this Hydro
 		const Point3D &p = pans[ip].centroidPaint;			// looks for the Body in idms
 		double mind = std::numeric_limits<double>::max();	// that has a panel closest to it
 		int idMin = Null;
 		for (int im = 0; im < idms.size(); ++im) {	
-			const UVector<Panel> &panels = Bem().surfs[im].dt.mesh.panels;
+			const UVector<Panel> &panels = Bem().surfs[idms[im]].dt.mesh.panels;
 			for (int imp = 0; imp < panels.size(); ++imp) {		
 				double d = Distance(p, panels[imp].centroidPaint);
 				if (d < mind) {
@@ -1560,12 +1560,24 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 				}
 			}
 		}
-		if (IsNull(idMin))
-			throw Exc(t_("Panel cannot be mapped"));
-		idpan[idMin] << ip;									// It is stored for each Body in idms what is the closest panel in this Hydro
-		maxalld = max(maxalld, mind);
+		if (mind <= tolerance)
+			idpan[idMin] << ip;									// It is stored for each Body in idms what is the closest panel in this Hydro
+		else
+			numUnMapped++;
 	}
-	Bem().Print(F("\nWorst mapping distance is %d", maxalld));
+	double surf = 0;
+	for (const Panel &p : pans)
+		surf += (p.surface0 + p.surface1);
+	String sprnt = F("\nFrom %d panels (%.2f m2), have been mapped ", pans.size(), surf);
+	for (int im = 0; im < idms.size(); ++im) {
+		if (im > 0) sprnt << ", ";
+		double s = 0;
+		for (int ip : idpan[im]) 
+			s += (pans[ip].surface0 + pans[ip].surface1);
+		sprnt << F("%d panels (%.2f m2) to mesh id %d", idpan[im].size(), s, idms[im]);
+	}
+	sprnt << F(" and %d panels have not been mapped", numUnMapped);
+	Bem().Print(sprnt);
 	
 	// The hydro coefficients are generated for each Body in idms
 	// Based on the properties of the closest list of panels from this Hydro
@@ -1589,35 +1601,42 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 		
 		hy.dt.msh.SetCount(hy.dt.Nb);
 		
-		for (int i = 0; i < idms.size(); ++i) {	
-			Body &b = hy.dt.msh[i];				
+		for (int im = 0; im < idms.size(); ++im) {	
+			Body &b = hy.dt.msh[im];				
 			b.dt.SetCode(Body::EDIT);
-			b.dt.c0 = dt.msh[ib].dt.c0;
-			b.dt.name = Bem().surfs[idms[i]].dt.name;
-			b.dt.mesh.GetSelPanels(dt.msh[ib].dt.mesh, idpan[i], Null, Null); 			
+			if (relatedToBody)
+				b.dt.c0 = dt.msh[ib].dt.c0;
+			else
+				b.dt.c0 = Bem().surfs[idms[im]].dt.c0;
+			b.dt.name = Bem().surfs[idms[im]].dt.name;
+			b.dt.mesh.GetSelPanels(dt.msh[ib].dt.mesh, idpan[im], Null, Null); 			
 			
-			hy.Initialize_PotsRad();
-			for (int ipot = 0; ipot < hy.dt.pots_rad[i].size(); ++ipot) 
-				for (int idf = 0; idf < 6; ++idf)
-					for (int ifr = 0; ifr < dt.Nf; ++ifr)
-						hy.dt.pots_rad[i][ipot][idf][ifr] = dt.pots_rad[ib][idpan[i][ipot]][idf][ifr];
-			
-			hy.Initialize_PotsIncDiff(hy.dt.pots_dif);
-			for (int ipot = 0; ipot < hy.dt.pots_dif[i].size(); ++ipot) 
-				for (int ih = 0; ih < dt.Nh; ++ih)
-					for (int ifr = 0; ifr < dt.Nf; ++ifr)
-						hy.dt.pots_dif[i][ipot][ih][ifr] = dt.pots_dif[ib][idpan[i][ipot]][ih][ifr];
-			
-			hy.Initialize_PotsIncDiff(hy.dt.pots_inc);
-			for (int ipot = 0; ipot < hy.dt.pots_inc[i].size(); ++ipot) 
-				for (int ih = 0; ih < dt.Nh; ++ih)
-					for (int ifr = 0; ifr < dt.Nf; ++ifr)
-						hy.dt.pots_inc[i][ipot][ih][ifr] = dt.pots_inc[ib][idpan[i][ipot]][ih][ifr];
+			if (rad && IsLoadedPotsRad()) {
+				hy.Initialize_PotsRad();
+				for (int ipot = 0; ipot < hy.dt.pots_rad[im].size(); ++ipot) 
+					for (int idf = 0; idf < 6; ++idf)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							hy.dt.pots_rad[im][ipot][idf][ifr] = dt.pots_rad[ib][idpan[im][ipot]][idf][ifr];
+			}
+			if (diff && IsLoadedPotsDif()) {
+				hy.Initialize_PotsIncDiff(hy.dt.pots_dif);
+				for (int ipot = 0; ipot < hy.dt.pots_dif[im].size(); ++ipot) 
+					for (int ih = 0; ih < dt.Nh; ++ih)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							hy.dt.pots_dif[im][ipot][ih][ifr] = dt.pots_dif[ib][idpan[im][ipot]][ih][ifr];
+			}
+			if (inc && IsLoadedPotsInc()) {
+				hy.Initialize_PotsIncDiff(hy.dt.pots_inc);
+				for (int ipot = 0; ipot < hy.dt.pots_inc[im].size(); ++ipot) 
+					for (int ih = 0; ih < dt.Nh; ++ih)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							hy.dt.pots_inc[im][ipot][ih][ifr] = dt.pots_inc[ib][idpan[im][ipot]][ih][ifr];
+			}
 		}
 		hy.AfterLoad();
 		hy.IncrementIdCount();			
 	} else {
-		for (int i = 0; i < idms.size(); ++i) {					
+		for (int im = 0; im < idms.size(); ++im) {
 			Hydro &hy = hydros.Add();
 			
 			hy.dt.Nb = 1;
@@ -1630,35 +1649,41 @@ void Hydro::MapMeshes(UArray<Hydro> &hydros, int ib, const UVector<int> &idms, b
 			hy.dt.rho = Bem().rho;
 			hy.dt.g = Bem().g;
 			hy.dt.solver = dt.solver;
-			hy.dt.name = F("%s mapped", Bem().surfs[idms[i]].dt.name);
+			hy.dt.name = F("%s mapped", Bem().surfs[idms[im]].dt.name);
 			hy.dt.len = 1;
 			hy.dt.dimen = true;
 			hy.dt.h = dt.h;
 			
 			Body &b = hy.dt.msh.Add();
 			b.dt.SetCode(Body::EDIT);
-			b.dt.c0 = dt.msh[ib].dt.c0;
-			b.dt.name = Bem().surfs[idms[i]].dt.name;
-			b.dt.mesh.GetSelPanels(dt.msh[ib].dt.mesh, idpan[i], Null, Null); 
+			if (relatedToBody)
+				b.dt.c0 = dt.msh[ib].dt.c0;
+			else
+				b.dt.c0 = Bem().surfs[idms[im]].dt.c0;
+			b.dt.name = Bem().surfs[idms[im]].dt.name;
+			b.dt.mesh.GetSelPanels(dt.msh[ib].dt.mesh, idpan[im], Null, Null); 
 			
-			hy.Initialize_PotsRad();
-			for (int ipot = 0; ipot < hy.dt.pots_rad[0].size(); ++ipot) 
-				for (int idf = 0; idf < 6; ++idf)
-					for (int ifr = 0; ifr < dt.Nf; ++ifr)
-						hy.dt.pots_rad[0][ipot][idf][ifr] = dt.pots_rad[ib][idpan[i][ipot]][idf][ifr];
-			
-			hy.Initialize_PotsIncDiff(hy.dt.pots_dif);
-			for (int ipot = 0; ipot < hy.dt.pots_dif[0].size(); ++ipot) 
-				for (int ih = 0; ih < dt.Nh; ++ih)
-					for (int ifr = 0; ifr < dt.Nf; ++ifr)
-						hy.dt.pots_dif[0][ipot][ih][ifr] = dt.pots_dif[ib][idpan[i][ipot]][ih][ifr];
-			
-			hy.Initialize_PotsIncDiff(hy.dt.pots_inc);
-			for (int ipot = 0; ipot < hy.dt.pots_inc[0].size(); ++ipot) 
-				for (int ih = 0; ih < dt.Nh; ++ih)
-					for (int ifr = 0; ifr < dt.Nf; ++ifr)
-						hy.dt.pots_inc[0][ipot][ih][ifr] = dt.pots_inc[ib][idpan[i][ipot]][ih][ifr];
-				
+			if (rad && IsLoadedPotsInc()) {
+				hy.Initialize_PotsRad();
+				for (int ipot = 0; ipot < hy.dt.pots_rad[0].size(); ++ipot) 
+					for (int idf = 0; idf < 6; ++idf)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							hy.dt.pots_rad[0][ipot][idf][ifr] = dt.pots_rad[ib][idpan[im][ipot]][idf][ifr];
+			}
+			if (diff && IsLoadedPotsDif()) {
+				hy.Initialize_PotsIncDiff(hy.dt.pots_dif);
+				for (int ipot = 0; ipot < hy.dt.pots_dif[0].size(); ++ipot) 
+					for (int ih = 0; ih < dt.Nh; ++ih)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							hy.dt.pots_dif[0][ipot][ih][ifr] = dt.pots_dif[ib][idpan[im][ipot]][ih][ifr];
+			}
+			if (inc && IsLoadedPotsInc()) {
+				hy.Initialize_PotsIncDiff(hy.dt.pots_inc);
+				for (int ipot = 0; ipot < hy.dt.pots_inc[0].size(); ++ipot) 
+					for (int ih = 0; ih < dt.Nh; ++ih)
+						for (int ifr = 0; ifr < dt.Nf; ++ifr)
+							hy.dt.pots_inc[0][ipot][ih][ifr] = dt.pots_inc[ib][idpan[im][ipot]][ih][ifr];
+			}
 			hy.AfterLoad();
 			hy.IncrementIdCount();
 		}
@@ -2013,91 +2038,7 @@ void Hydro::GetTranslationTo(const MatrixXd &to, bool force, Function <bool(Stri
 				deltaC0CB(idf, ib) = deltaCBC0N(idf, ib) = Null;
 		}
 	}
-/*		
-	for (int ib = 0; ib < dt.Nb; ++ib) {
-		Matrix3d S_r 	   = SkewSymmetricMatrix(delta.col(ib));
-		Matrix3d S_r_C0CB  = SkewSymmetricMatrix(deltaC0CB.col(ib));
-		Matrix3d S_r_CBC0N = SkewSymmetricMatrix(deltaCBC0N.col(ib));
-	
-		if (IsLoadedC(ib) && IsNull(dt.msh[ib].dt.cb)) {
-			Body::Data &d = dt.msh[ib].dt;
-			double mass = dt.msh[ib].GetMass();
-			if (IsNull(mass))
-				mass = 0;
-			double vol = d.Vo;
-			if (IsNull(vol))
-				vol = mass/dt.rho;
-			Point3D cg = clone(d.cg);
-			if (IsNull(cg))
-				cg.SetZero();
-			double g = dt.g;
-			if (IsNull(g))
-				g = Bem().g;
-			double rho = dt.rho;
-			if (IsNull(rho))
-				rho = Bem().rho;
-			
-			MatrixXd C = C_mat(false, ib);
-			double rho_g_vol = rho*g*vol;
-			double mass_g = mass*g;
-			
-			C(3, 3) -=  rho_g_vol*(d.cb.z - d.c0.z) - mass_g*(cg.z - d.c0.z);
-			C(3, 5) -= -rho_g_vol*(d.cb.x - d.c0.x) + mass_g*(cg.x - d.c0.x);
-			C(4, 4) -=  rho_g_vol*(d.cb.z - d.c0.z) - mass_g*(cg.z - d.c0.z);
-			C(4, 5) -= -rho_g_vol*(d.cb.y - d.c0.y) + mass_g*(cg.y - d.c0.y);	
-			
-			Matrix3d K_FF = C.topLeftCorner<3,3>();    	// FF
-			Matrix3d K_FM = C.topRightCorner<3,3>();   	// FM
-			Matrix3d K_MF = C.bottomLeftCorner<3,3>(); 	// MF
-			Matrix3d K_MM = C.bottomRightCorner<3,3>(); // MM
-			
-			Matrix<double, 6, 6> K;
-			K.topLeftCorner<3,3>() 	   = K_FF;				
-			K.topRightCorner<3,3>()    = K_FM + K_FF*S_r;
-			K.bottomLeftCorner<3,3>()  = K_MF - S_r*K_FF;			
-			K.bottomRightCorner<3,3>() = K_MM + S_r_C0CB* K_FF*S_r_C0CB 
-												 - S_r_CBC0N*K_FF*S_r_CBC0N;
-			C = K;		
-			
-			C(3, 3) +=  rho_g_vol*(d.cb.z - to.col(ib).z()) - mass_g*(cg.z - to.col(ib).z());
-			C(3, 5) += -rho_g_vol*(d.cb.x - to.col(ib).x()) + mass_g*(cg.x - to.col(ib).x());
-			C(4, 4) +=  rho_g_vol*(d.cb.z - to.col(ib).z()) - mass_g*(cg.z - to.col(ib).z());
-			C(4, 5) += -rho_g_vol*(d.cb.y - to.col(ib).y()) + mass_g*(cg.y - to.col(ib).y());	
-			
-			C_mat_Set(false, ib, C);
-		}
-*/
-/*		if (IsLoadedDlin(ib)) {
-			MatrixXd &D = dt.msh[ib].dt.Dlin;
-			Eigen::Matrix3d D_TT = D.topLeftCorner<3,3>();    	// Translational-Translational part
-			Eigen::Matrix3d D_TR = D.topRightCorner<3,3>();   	// Translational-Rotational part
-			Eigen::Matrix3d D_RT = D.bottomLeftCorner<3,3>(); 	// Rotational-Translational part
-			Eigen::Matrix3d D_RR = D.bottomRightCorner<3,3>();	// Rotational-Rotational part
 
-			Eigen::Matrix<double, 6, 6> D_c1;			
-			D_c1.topLeftCorner<3,3>()     = D_TT;				// Top-left block (Translational-Translational)
-			D_c1.topRightCorner<3,3>()    = D_TR - S_r*D_TT;	// Top-right block (Translational-Rotational)
-			D_c1.bottomLeftCorner<3,3>()  = D_RT - D_TT*S_r_trans;		// Bottom-left block (Rotational-Translational)
-			D_c1.bottomRightCorner<3,3>() = D_RR - S_r*D_TR - D_TR.transpose()*S_r_trans;	// Bottom-right block (Rotational-Rotational)
-			
-			D = D_c1;
-		}
-		if (IsLoadedDquad(ib)) {
-			MatrixXd &D = dt.msh[ib].dt.Dquad;
-			Eigen::Matrix3d D_TT = D.topLeftCorner<3,3>();    	// Translational-Translational part
-			Eigen::Matrix3d D_TR = D.topRightCorner<3,3>();   	// Translational-Rotational part
-			Eigen::Matrix3d D_RT = D.bottomLeftCorner<3,3>(); 	// Rotational-Translational part
-			Eigen::Matrix3d D_RR = D.bottomRightCorner<3,3>();	// Rotational-Rotational part
-
-			Eigen::Matrix<double, 6, 6> D_c1;			
-			D_c1.topLeftCorner<3,3>()     = D_TT;				// Top-left block (Translational-Translational)
-			D_c1.topRightCorner<3,3>()    = D_TR - S_r*D_TT;	// Top-right block (Translational-Rotational)
-			D_c1.bottomLeftCorner<3,3>()  = D_RT - D_TT*S_r_trans;		// Bottom-left block (Rotational-Translational)
-			D_c1.bottomRightCorner<3,3>() = D_RR - S_r*D_TR - D_TR.transpose()*S_r_trans;	// Bottom-right block (Rotational-Rotational)
-			
-			D = D_c1;
-		}*/
-	//}
 	// Some previous data are now invalid. Translation algorithms are welcome
 	dt.rao.Clear();	
 	for (int ib = 0; ib < dt.Nb; ++ib) {
@@ -3293,6 +3234,9 @@ bool Hydro::IsHAMS(String file, String &controlfile) {
 }
 
 int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, int)> Status) {
+	if (!FileExists(file))
+		throw Exc(F(t_("File '%s' does not exist"), file));
+	
 	String ext = ToLower(GetFileExt(file));
 	String ret;
 	
@@ -3300,7 +3244,9 @@ int Hydro::LoadHydro(UArray<Hydro> &hydros, String file, Function <bool(String, 
 	
 	Status(t_("Loading BEM file"), -1);
 	
-	if (ext == ".nc")
+	if (ext.IsEmpty())
+		throw Exc(t_("Undefined file extension"));
+	else if (ext == ".nc")
 		ret = CapyNC_Load(file, hydros, num);
 	else {
 		Hydro &hy = hydros.Add();	
